@@ -1,0 +1,14 @@
+# Context is the backend owner's standalone runtime package and compiled bundle.
+ARG NODE_IMAGE=node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df
+FROM ${NODE_IMAGE}
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=3000
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+COPY build/yepwatch-release/ ./build/yepwatch-release/
+USER 1000:1000
+EXPOSE 3000
+HEALTHCHECK --interval=5s --timeout=4s --start-period=30s --retries=12 \
+  CMD node -e "fetch('http://127.0.0.1:3000/api/yepwatch/v1/proposal/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+STOPSIGNAL SIGTERM
+CMD ["node", "build/yepwatch-release/server.mjs"]

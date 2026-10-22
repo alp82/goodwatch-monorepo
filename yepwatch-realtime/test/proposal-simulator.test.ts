@@ -34,12 +34,21 @@ test('Actual proposal API/simulator: independent phone identity, exact retries, 
     const data = await r.json(); assert.equal(r.status, 200, `Ordinary API result: ${data.error?.code ?? 'unknown'}`); return data as T
   }
   // This is an actual independent native credential client, not physical phone evidence.
-  const human = await request<GuestAdmission>(paths.join(roomId), { contractVersion: 3, commandId: nonce(), admissionSecret: nonce(), nickname: 'Disposable phone-protocol observer', inviteCode: fresh.inviteCode, screenId: 'demo' })
+  const human = await request<GuestAdmission>(paths.join(roomId), { contractVersion: 3, commandId: nonce(), admissionSecret: nonce(), nickname: 'Disposable phone-protocol observer', inviteCode: fresh.inviteCode })
   const read = () => request<RoomSnapshot>(paths.snapshot(roomId), undefined, human.credential)
   async function command(input: (s: RoomSnapshot) => RoomCommand) {
     const s = await read(); return request<{ snapshot: RoomSnapshot }>(paths.commands(roomId), { commandId: nonce(), sequence: s.own.nextSequence, command: input(s) }, human.credential)
   }
+  // The app automatically inherits the single confirmed screen and readies its
+  // own context. Protocol readiness remains explicit; there is no guest UI gate.
+  const joined = await read()
+  assert.equal(joined.shared.participants.find(p => p.participantId === human.credential.participantId)?.ready, false)
+  assert.equal(joined.own.agreement.agreed, false)
+  await command(s => ({ type: 'assign_screen', expectedContextVersion: s.shared.contextVersion, screenId: 'demo' }))
   await command(s => ({ type: 'ready', expectedContextVersion: s.shared.contextVersion, ready: true }))
+  const prepared = await read()
+  assert.equal(prepared.shared.participants.find(p => p.participantId === human.credential.participantId)?.ready, true)
+  assert.equal(prepared.own.agreement.agreed, false)
   const ticket = await request<{ ticket: string }>(paths.realtimeTicket(roomId), {}, human.credential)
   const observer = await connect<ServerRealtimeFrame>(`${ws}${paths.realtime}`, ticket.ticket, {}, roomId)
   t.after(() => observer.ws.close())

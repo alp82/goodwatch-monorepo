@@ -161,7 +161,7 @@ export class ProposalSimulator extends EventEmitter {
         if (!actor.snapshot.shared.participants.find(p => p.participantId === actor.id)?.ready)
           await this.command(actor, { type: 'ready', expectedContextVersion: actor.snapshot.shared.contextVersion, ready: true })
       }
-      this.notice = `Fresh proposal room. Join from your actual phone with the invitation, confirm readiness there, then Start here. ${this.config.catalog === 'real-sample' ? 'Finite real catalog sample' : 'Synthetic catalog'} · DE / provider${this.config.serviceId}. Artificial timings omitted; Quickest may be unavailable.`
+      this.notice = `Fresh proposal room. Join from your actual phone with the invitation. The app inherits a single confirmed screen or asks you to choose, then readies your own context automatically. Start here afterwards; agreement stays explicit. ${this.config.catalog === 'real-sample' ? 'Finite real catalog sample' : 'Synthetic catalog'} · DE / provider${this.config.serviceId}. Artificial timings omitted; Quickest may be unavailable.`
       return { inviteCode: this.inviteCode, joinUrl: new URL(this.hostPath, this.config.appOrigin).href }
     } finally { this.starting = false; this.changed() }
   }
@@ -175,7 +175,7 @@ export class ProposalSimulator extends EventEmitter {
     try {
       const host = this.actors[0]
       await this.queue(host, () => this.read(host))
-      if (host.snapshot.shared.participants.length <= this.actors.length) throw new Error('Join and ready from the actual phone before starting')
+      if (host.snapshot.shared.participants.length <= this.actors.length) throw new Error('Join from the actual phone before starting; its app readies the confirmed screen automatically')
       for (const actor of this.actors) await this.queue(actor, async () => {
         await this.read(actor)
         if (!actor.snapshot.shared.participants.find(p => p.participantId === actor.id)?.ready)

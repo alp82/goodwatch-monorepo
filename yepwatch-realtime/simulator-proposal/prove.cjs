@@ -33,8 +33,14 @@ const path = require('node:path');
     const invite = (await state()).inviteCode;
     await guest.goto('http://127.0.0.1:8133');
     await guest.getByLabel('Your nickname').fill('Manual phone UI surrogate');
-    await button(guest, 'Join with an invitation'); await guest.getByLabel('Room code or invitation').fill(invite); await button(guest, 'Join room');
-    await guest.getByRole('button', { name: 'Ready to watch', exact: true }).click();
+    await button(guest, 'Join with an invitation'); await guest.getByLabel('Room code or invitation').fill(invite);
+    const readyResponse = guest.waitForResponse(r => r.url().endsWith('/commands') && r.request().postDataJSON()?.command.type === 'ready');
+    await button(guest, 'Join room');
+    const ready = await readyResponse; expect(ready.status()).toBe(200);
+    const prepared = (await ready.json()).snapshot;
+    expect(prepared.shared.participants.find(p => p.participantId === prepared.own.participantId).ready).toBe(true);
+    expect(prepared.own.agreement.agreed).toBe(false);
+    await expect(guest.getByRole('button', { name: 'Ready to watch', exact: true })).toHaveCount(0);
     await expect.poll(async () => (await state()).people).toBe(3);
     await button(controls, 'Ready artificial peers + start choosing');
     await expect(guest.getByRole('button', { name: 'Yep', exact: true })).toBeEnabled({ timeout: 15000 });
@@ -72,7 +78,7 @@ const path = require('node:path');
     const report = { result: 'PASS', completedAt: new Date().toISOString(), api: 'http://127.0.0.1:15992', gateway: 'ws://127.0.0.1:4324', app: 'http://127.0.0.1:8133',
       controller: 'Own ephemeral process, no retained8126 access', catalog: 'Finite real sample over new disposable Crate; not full catalog',
       manualClient: 'Actual browser UI surrogate; not Android/USB proof', candidates: count, sharedFrames: shared.length, activityFrames: activity.length, javaScriptErrors: errors.length,
-      checks: ['Fresh native controlled peers and independent ordinary browser admission', 'Independent cards and one-person isolation', 'Actual UI votes and complete-roster timing honestly unavailable',
+      checks: ['Fresh native controlled peers and independent ordinary browser admission', 'Single confirmed screen inherited and protocol-readied automatically without guest Ready gate or agreement', 'Independent cards and one-person isolation', 'Actual UI votes and complete-roster timing honestly unavailable',
         'Propose/agree/withdraw/replacement', 'Pending proposal retained across latejoin', 'Current shared-match poster/lens/dice actions', 'Disconnected participant remains required', 'Reconnect and automatic fresh-check Done'],
       credentialsInvitationsAndRoomIdentifiersRedacted: true, privateFieldsOnProductFrames: false };
     fs.writeFileSync(path.join(root, 'artifacts', 'proposal-simulator-visible.json'), JSON.stringify(report, null, 2) + '\n'); console.log(JSON.stringify(report));

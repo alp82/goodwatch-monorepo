@@ -1,0 +1,114 @@
+# Prepared only. No public ports. Owner activates after explicit release approval.
+x-service: &service
+  restart: unless-stopped
+  init: true
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  user: "1000:1000"
+  pids_limit: 96
+  stop_grace_period: 30s
+  logging:
+    driver: json-file
+    options: {max-size: "10m", max-file: "3"}
+services:
+  front:
+    <<: *service
+    image: ${YEPWATCH_FRONT_IMAGE:?Set immutable front image tag or digest}
+    mem_limit: 128m
+    cpus: 0.5
+    tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=32m"]
+    networks:
+      edge: {aliases: [yepwatch-front]}
+      control: {}
+    depends_on:
+      api: {condition: service_healthy}
+      gateway: {condition: service_healthy}
+    labels:
+      traefik.enable: "false"
+  api:
+    <<: *service
+    image: ${YEPWATCH_API_IMAGE:?Set immutable API image tag or digest}
+    mem_limit: 3g
+    cpus: 2
+    tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=128m"]
+    env_file:
+      - ${YEPWATCH_API_ENV_FILE:?Private API runtime env file required}
+    environment:
+      HOST: 0.0.0.0
+      PORT: "3000"
+      SOURCE_COMMIT: ${YEPWATCH_SOURCE_COMMIT:?Set reviewed release commit}
+      YEPWATCH_PROPOSAL_ALLOWED_ORIGINS: https://yepwatch.com
+      YEPWATCH_PROPOSAL_SECRET_FILE: /run/secrets/room_key
+      YEPWATCH_PROPOSAL_GATEWAY_SECRET_FILE: /run/secrets/gateway_service
+      YEPWATCH_PROPOSAL_CRATEDB_PASSWORD_FILE: /run/secrets/room_password
+      YEPWATCH_PROPOSAL_REVISION_REDIS_URL_FILE: /run/secrets/revision_url
+      CRATE_PASS_FILE: /run/secrets/catalog_password
+      REDIS_PASS_FILE: /run/secrets/catalog_cache_password
+    secrets: [room_key, gateway_service, room_password, revision_url, catalog_password, catalog_cache_password]
+    networks: [control, fanout, catalog]
+    depends_on:
+      fanout: {condition: service_healthy}
+  gateway:
+    <<: *service
+    image: ${YEPWATCH_GATEWAY_IMAGE:?Set immutable gateway image tag or digest}
+    mem_limit: 512m
+    cpus: 1
+    tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=32m"]
+    environment:
+      YEPWATCH_ALLOWED_ORIGINS: https://yepwatch.com
+      YEPWATCH_API_ORIGIN: http://api:3000
+      YEPWATCH_VALKEY_URL: redis://fanout:6379
+      YEPWATCH_GATEWAY_SECRET_FILE: /run/secrets/gateway_service
+      YEPWATCH_VALKEY_PASSWORD_FILE: /run/secrets/fanout_password
+    secrets: [gateway_service, fanout_password]
+    networks: [control, fanout]
+    depends_on:
+      api: {condition: service_healthy}
+      fanout: {condition: service_healthy}
+  fanout:
+    <<: *service
+    image: valkey/valkey:8.1.10@sha256:640c5e62cea04b6d6f2084232651d0cc70362d31f4f805e7be94dbed6855e8f2
+    mem_limit: 128m
+    cpus: 0.5
+    tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=32m"]
+    working_dir: /tmp
+    entrypoint: [/bin/sh, -ec]
+    # Password is read from a private file, never passed in process arguments.
+    command:
+      - |
+        umask 077
+        password=$$(cat /run/secrets/fanout_password)
+        case "$$password" in *[!A-Za-z0-9_-]*|'') exit 1;; esac
+        test "$${#password}" -ge 32
+        printf 'bind 0.0.0.0\nprotected-mode yes\nport 6379\nsave ""\nappendonly no\nmaxmemory 64mb\nmaxmemory-policy noeviction\nrequirepass %s\n' "$$password" > /tmp/valkey.conf
+        unset password
+        exec valkey-server /tmp/valkey.conf
+    secrets: [fanout_password]
+    networks: [fanout]
+    healthcheck:
+      test: [CMD-SHELL, 'REDISCLI_AUTH=$$(cat /run/secrets/fanout_password) valkey-cli -h 127.0.0.1 ping | grep -qx PONG']
+      interval: 5s
+      timeout: 3s
+      retries: 3
+secrets:
+  room_key:
+    file: ${YEPWATCH_ROOM_KEY_FILE:?Private stable room encryption/signing key file required}
+  room_password:
+    file: ${YEPWATCH_ROOM_PASSWORD_FILE:?Private room-only Crate role password file required}
+  revision_url:
+    file: ${YEPWATCH_REVISION_URL_FILE:?Private dedicated bus URL file required}
+  catalog_password:
+    file: ${YEPWATCH_CATALOG_PASSWORD_FILE:?Private read-only catalog role password file required}
+  catalog_cache_password:
+    file: ${YEPWATCH_CATALOG_CACHE_PASSWORD_FILE:?Private catalog-cache password file required}
+  gateway_service:
+    file: ${YEPWATCH_GATEWAY_SECRET_FILE:?Private gateway service bearer file required}
+  fanout_password:
+    file: ${YEPWATCH_FANOUT_PASSWORD_FILE:?Private dedicated bus password file required}
+networks:
+  edge: {}
+  control: {internal: true}
+  fanout: {internal: true}
+  # API only: existing private catalog/Crate endpoints via host routing/SNAT.
+  catalog: {}

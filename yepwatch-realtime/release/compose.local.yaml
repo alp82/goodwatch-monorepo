@@ -1,0 +1,5 @@
+# Local rehearsal only. All upstreams remain unpublished.
+services:
+  front:
+    ports:
+      - "127.0.0.1:${YEPWATCH_REHEARSAL_PORT:?Choose an unused loopback port}:8080"

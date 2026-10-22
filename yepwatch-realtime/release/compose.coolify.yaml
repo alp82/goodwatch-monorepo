@@ -1,0 +1,5 @@
+# Owner-only activation override; base compose has no live network dependency.
+networks:
+  edge:
+    external: true
+    name: coolify

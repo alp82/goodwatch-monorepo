@@ -1,0 +1,86 @@
+{
+  admin off
+  auto_https off
+  persist_config off
+  grace_period 10s
+}
+:8080 {
+  root * /srv
+  encode zstd gzip
+  header {
+    X-Content-Type-Options nosniff
+    Referrer-Policy no-referrer
+  }
+  request_body {
+    max_size 64KB
+  }
+  # Exclusive handlers prevent internal/unknown API paths reaching SPA fallback.
+  @internal path /api/yepwatch/v1/proposal/realtime/internal /api/yepwatch/v1/proposal/realtime/internal/* /api/yepwatch/v1/proposal/realtime/health
+  handle @internal {
+    respond "Not found" 404
+  }
+  handle /api/yepwatch/v1/proposal/realtime {
+    reverse_proxy gateway:4311 {
+      stream_close_delay 30s
+    }
+  }
+  @read {
+    method GET
+    path /api/yepwatch/v1/proposal/catalog/metadata /api/yepwatch/v1/proposal/health/live /api/yepwatch/v1/proposal/health/ready
+  }
+  handle @read {
+    reverse_proxy api:3000
+  }
+  @snapshot {
+    method GET
+    path_regexp snapshot ^/api/yepwatch/v1/proposal/rooms/[A-Za-z0-9_-]{1,256}$
+  }
+  handle @snapshot {
+    reverse_proxy api:3000
+  }
+  @admission {
+    method POST
+    path /api/yepwatch/v1/proposal/rooms /api/yepwatch/v1/proposal/guest/resolve-invite
+  }
+  handle @admission {
+    reverse_proxy api:3000
+  }
+  @commands {
+    method POST
+    path_regexp command ^/api/yepwatch/v1/proposal/rooms/[A-Za-z0-9_-]{1,256}/(join|commands|realtime-ticket)$
+  }
+  handle @commands {
+    reverse_proxy api:3000
+  }
+  @unknown_api path /api /api/*
+  handle @unknown_api {
+    respond "Not found" 404
+  }
+  # Association files must return actual JSON or404, never index.html.
+  handle /.well-known/* {
+    header Content-Type application/json
+    header Cache-Control "public, max-age=300"
+    file_server
+  }
+  handle /_expo/* {
+    header Cache-Control "public, max-age=31536000, immutable"
+    file_server
+  }
+  handle /assets/* {
+    header Cache-Control "public, max-age=31536000, immutable"
+    file_server
+  }
+  handle /downloads/* {
+    @apk path *.apk
+    header @apk Content-Type application/vnd.android.package-archive
+    header Cache-Control "public, max-age=3600"
+    file_server
+  }
+  handle {
+    route {
+      try_files {path} /index.html
+      header Cache-Control no-store
+      file_server
+    }
+  }
+}

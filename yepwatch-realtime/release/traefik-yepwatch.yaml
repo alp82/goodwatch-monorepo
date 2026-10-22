@@ -1,0 +1,33 @@
+# Prepared owner paste in Coolify > Servers > abio > Proxy > Dynamic Configurations.
+# New isolated file yepwatch-beta.yaml; never replace shared GoodWatch routes.
+# Existing abio entryPoints/resolver verified read-only2026-10-22.
+http:
+  routers:
+    yepwatch-beta-http:
+      entryPoints: [http]
+      rule: Host(`yepwatch.com`)
+      priority: 1000
+      middlewares: [yepwatch-beta-https]
+      service: noop@internal
+    yepwatch-beta-https:
+      entryPoints: [https]
+      rule: Host(`yepwatch.com`)
+      priority: 1000
+      service: yepwatch-beta-front
+      tls:
+        certResolver: letsencrypt
+  middlewares:
+    yepwatch-beta-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+  services:
+    yepwatch-beta-front:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: http://yepwatch-front:8080
+        healthCheck:
+          path: /api/yepwatch/v1/proposal/health/ready
+          interval: 5s
+          timeout: 3s

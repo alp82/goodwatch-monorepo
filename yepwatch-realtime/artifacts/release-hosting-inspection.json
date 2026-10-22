@@ -1,0 +1,62 @@
+{
+  "recordedDate": "2026-10-22",
+  "scope": "Read-only DNS, HTTPS certificate validation, SSH host/container/network/resource inspection; no remote mutation",
+  "publicOrigin": "https://yepwatch.com",
+  "dns": {
+    "A": [
+      "159.69.247.66"
+    ],
+    "AAAAObserved": false
+  },
+  "tls": "Public certificate did not yet match yepwatch.com (curl validation failure); no validation bypass used",
+  "host": {
+    "name": "abio/abusive",
+    "privateAddress": "10.0.0.21",
+    "publicAddress": "159.69.247.66",
+    "availableMemoryMiBApprox": 10267,
+    "freeDiskGiBApprox": 86
+  },
+  "existingProxy": {
+    "container": "coolify-proxy",
+    "software": "Traefik v2.10",
+    "entryPoints": [
+      "http=:80",
+      "https=:443"
+    ],
+    "resolver": "letsencrypt",
+    "challenge": "HTTP01 on http",
+    "providers": [
+      "Docker exposedByDefault=false",
+      "watched file directory /traefik/dynamic"
+    ],
+    "network": "coolify",
+    "networkSubnetObserved": "172.23.0.0/16",
+    "logPrivacy": "Existing access log excludes paths and headers; keep this configuration"
+  },
+  "proposedOwnerActions": [
+    "Build/pin exact reviewed release images",
+    "Place private role/key/bus files outside checkout",
+    "Backend operator provisioning/preflight/backup with owner approval",
+    "Create isolated Compose resource on existing coolify network",
+    "Add only new YepWatch dynamic router using existing HTTP01 resolver",
+    "Verify public HTTPS/WSS and actual standalone app after activation"
+  ],
+  "missingOrUnverified": [
+    "Owner Coolify release activation",
+    "Production dedicated room role/table/key provisioning",
+    "API-container private catalog connectivity on abio",
+    "Public apex certificate issuance",
+    "Expo/EAS account/project and Apple team identity",
+    "Production Android signing identity; preview identity only supplied",
+    "Physical expired-room cleanup/retention plan unfinished",
+    "Distributed admission/command rates unfinished",
+    "Full key rotation/re-encryption unfinished",
+    "No service-wide invite-only boundary; apex is public if activated",
+    "Later independent release implementation review unavailable",
+    "Final read-only-source connected release proof and root gap acceptance pending"
+  ],
+  "newPaidResources": false,
+  "newFirewallRulesProposed": false,
+  "dnsChangeRequiredForObservedApex": false,
+  "productionWritesOrDeployment": false
+}
