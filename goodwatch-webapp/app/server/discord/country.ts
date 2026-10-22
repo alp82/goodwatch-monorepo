@@ -1,0 +1,40 @@
+import { FALLBACK_COUNTRY } from "../cache-identity.server.ts"
+const countries: Record<string, string> = {
+	"en-US": "US",
+	"en-GB": "GB",
+	de: "DE",
+	fr: "FR",
+	"es-ES": "ES",
+	"es-419": "MX",
+	"pt-BR": "BR",
+	"sv-SE": "SE",
+	ja: "JP",
+	ko: "KR",
+	"zh-CN": "CN",
+	"zh-TW": "TW",
+	bg: "BG",
+	cs: "CZ",
+	da: "DK",
+	el: "GR",
+	fi: "FI",
+	hi: "IN",
+	hr: "HR",
+	hu: "HU",
+	id: "ID",
+	it: "IT",
+	lt: "LT",
+	nl: "NL",
+	no: "NO",
+	pl: "PL",
+	"pt-PT": "PT",
+	ro: "RO",
+	ru: "RU",
+	th: "TH",
+	tr: "TR",
+	uk: "UA",
+	vi: "VN",
+}
+export const localeCountry = (locale?: string) =>
+	Object.prototype.hasOwnProperty.call(countries, locale ?? "")
+		? countries[locale!]
+		: FALLBACK_COUNTRY

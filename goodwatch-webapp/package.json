@@ -9,6 +9,7 @@
 		"start": "remix-serve ./build/server/index.js",
 		"build": "patch-package && remix vite:build && node scripts/precompress.mjs",
 		"typecheck": "tsc",
+		"discord:register": "node scripts/discord-register.ts",
 		"test": "node --test 'app/**/*.test.ts'",
 		"test:imports:crate": "bash scripts/test-import-resolution-crate.sh",
 		"test:title-timeouts": "node --test scripts/title-page-timeouts.test.mjs",

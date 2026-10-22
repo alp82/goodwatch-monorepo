@@ -234,7 +234,7 @@ async function library(
 	}
 }
 
-async function lookup(
+export async function lookup(
 	query: string,
 	offset: number,
 	limit: number,

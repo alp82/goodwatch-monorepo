@@ -117,7 +117,7 @@ export async function getMemberViewerContext(
 	}
 }
 
-function guestContext(
+export function guestContext(
 	guest: GuestProgress | undefined,
 	guessedCountry: string,
 ): ViewerContext {

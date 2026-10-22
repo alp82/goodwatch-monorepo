@@ -15,6 +15,7 @@ export async function watchAvailability(
 	title: CatalogTitle,
 	ctx: ViewerContext,
 	evidence?: AvailabilityEvidence | null,
+	options: { allServices?: boolean } = {},
 ) {
 	const scope = {
 		mediaType: title.media_type,
@@ -26,6 +27,7 @@ export async function watchAvailability(
 	const evaluated = evaluateAvailability(raw, {
 		...scope,
 		serviceIds: ctx.services,
+		...(options.allServices ? { allServices: true, includePaid: true } : {}),
 	})
 	if (ctx.viewer.kind === "member")
 		captureProductEvent(ctx.viewer.userId, "availability checked", {

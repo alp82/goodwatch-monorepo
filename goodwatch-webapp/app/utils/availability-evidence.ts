@@ -43,6 +43,7 @@ export type AvailabilitySelection = {
 	country: string
 	serviceIds: number[]
 	includePaid?: boolean
+	allServices?: boolean
 }
 export type Watchability = {
 	state: "watchable" | "no_match" | "unknown"
@@ -55,7 +56,7 @@ export type Watchability = {
 /** Pure and browser-safe: call again as time passes, including after cache hits. */
 export function evaluateAvailability(raw: unknown, selection: AvailabilitySelection, now = Date.now()): Watchability {
 	const result = (state: Watchability["state"], reason: string, offers: AvailabilityOffer[] = [], expiresAt: number | null = null): Watchability => ({ state, reason, offers, evaluatedAt: now, expiresAt })
-	if (!selection.country || !selection.serviceIds.length) return result("unknown", "needs_selection")
+	if (!selection.country || (!selection.allServices && !selection.serviceIds.length)) return result("unknown", "needs_selection")
 	if (!Number.isFinite(now)) return result("unknown", "invalid_time")
 	const parsed = availabilityEvidenceSchema.safeParse(raw)
 	if (!parsed.success) return result("unknown", raw == null ? "missing_evidence" : "invalid_evidence")
@@ -70,7 +71,7 @@ export function evaluateAvailability(raw: unknown, selection: AvailabilitySelect
 	const offers: AvailabilityOffer[] = []
 	for (const source of current) {
 		for (const candidate of source.offers) {
-			if (!types.includes(candidate.offer_type) || !selection.serviceIds.includes(candidate.service_id)) continue
+			if (!types.includes(candidate.offer_type) || (!selection.allServices && !selection.serviceIds.includes(candidate.service_id))) continue
 			if (current.some(other => other.source !== source.source && other.offer_types.includes(candidate.offer_type) && !other.offers.some(item => item.service_id === candidate.service_id && item.offer_type === candidate.offer_type))) {
 				conflict = true
 				continue
