@@ -89,6 +89,11 @@ export interface OwnPrivateSnapshot {
 	participantId: string
 	nextSequence: number
 	canHost: boolean
+	/** Retained candidates ordered by this actor's last successful vote mutation,
+	 * oldest first. Null (undo) entries retain their mutation position. Exact
+	 * command replay does not reorder; retirement removes entries; generation
+	 * reset clears them. For immediate Undo, take the last non-null entry still
+	 * present in shared.candidates from this same authoritative snapshot. */
 	votes: { candidateId: string; value: VoteValue | null; revision: number }[]
 	pick: { candidateId: string | null; revision: number }
 	/** First unanswered retained candidate, not a public activity field. UI retains exact focus while inspecting matches. */
