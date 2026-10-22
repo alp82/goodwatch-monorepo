@@ -1,0 +1,14 @@
+ARG CADDY_IMAGE=caddy:2.11.7@sha256:3095ad245c353e3bdb27a38f22a095c1cfa9e295ab21c0214c3e72b0e2960525
+FROM ${CADDY_IMAGE}
+COPY Caddyfile /etc/caddy/Caddyfile
+COPY public/ /srv/
+# The upstream binary carries a low-port capability. This image uses8080 and
+# cap_drop ALL; remove the file capability so exec works without extra powers.
+RUN setcap -r /usr/bin/caddy \
+    && test -s /srv/index.html \
+    && caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+USER 1000:1000
+EXPOSE 8080
+HEALTHCHECK --interval=5s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget -q -O /dev/null http://127.0.0.1:8080/api/yepwatch/v1/proposal/health/ready || exit 1
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

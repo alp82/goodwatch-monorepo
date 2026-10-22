@@ -1,0 +1,40 @@
+{
+  "result": "pass",
+  "clients": 3,
+  "viewingScreens": 2,
+  "setting": "mixed",
+  "server": "Actual YepWatch HTTP handler/domain + actual WS gateway + disposable Valkey",
+  "storage": "Memory repository, not Crate",
+  "catalog": "Real GoodWatch adapters; finite 36-title local snapshot, full country/service choice lists; no full-catalog coverage claim",
+  "kinds": [
+    "movie",
+    "show_start",
+    "show_continue"
+  ],
+  "chosen": "show_continue",
+  "episodeApproval": "Host explicitly published canonical episode proposal; all three clients privately supplied progress and approved it",
+  "chosenEpisode": {
+    "tmdbId": 62085,
+    "season": 1,
+    "number": 1
+  },
+  "deckCount": 8,
+  "observedKinds": [
+    "show_continue",
+    "show_start",
+    "movie"
+  ],
+  "assertions": [
+    "Visible landing-page create and fresh browser invitation joins",
+    "HttpOnly browser admissions",
+    "Explicit public host episode proposal, separate private history/approval",
+    "Realtime joins/readiness/progress",
+    "Own vote does not advance other client card",
+    "Browser reload restores own state and authenticates fresh socket",
+    "No early shortlist before all complete_round confirmations",
+    "Server shortlist, fenced proposal, all-client consent and confirmed decision",
+    "No private own or participant choice fields in received WS frames"
+  ],
+  "receivedSharedFrames": 133,
+  "javascriptErrors": 0
+}

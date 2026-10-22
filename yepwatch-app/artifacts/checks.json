@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-21",
+  "typecheck": "pass",
+  "expoLint": "pass",
+  "stateApiReconnectTests": {
+    "passed": 15,
+    "failed": 0
+  },
+  "browserComponentTests": {
+    "passed": 3,
+    "failed": 0
+  },
+  "connectedPoc": "artifacts/connected-poc.json",
+  "expoWebExport": "pass",
+  "expoIosAndroidHermesExports": "pass",
+  "isolatedDependencyResolution": "artifacts/resolution.json",
+  "sdkCompatibleVersions": "pass",
+  "androidNativeGeneration": "pass",
+  "androidDebugCompilation": "failed: installed JDK21 runtime has no jlink; system JDK27 incompatible with Gradle",
+  "deviceExecution": "not run",
+  "memberLogin": "API not_implemented; no successful auth claim",
+  "commitsPushesDeployments": "none",
+  "realCatalogPoc": "artifacts/real-catalog-poc.json",
+  "creationRegression": "artifacts/create-after.json",
+  "independentCreationRegression": "artifacts/independent-create-ui.json",
+  "privateRepairFaultRecovery": "artifacts/independent-private-repair-ui.json",
+  "testExportIsolation": "artifacts/test-export-isolation.json"
+}

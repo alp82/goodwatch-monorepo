@@ -1,0 +1,263 @@
+{
+  "actualApi": "http://127.0.0.1:15993",
+  "catalog": "Finite real 36-title sample, DE Netflix 8",
+  "results": [
+    {
+      "index": 0,
+      "iframeUrl": "https://www.youtube.com/embed/VFkjBy2b50Q?autoplay=1&playsinline=1&rel=0&widget_referrer=http%3A%2F%2F127.0.0.1%3A8132%2F&enablejsapi=1&widgetid=1&forigin=about%3Asrcdoc&aoriginsup=1&aorigins=http%3A%2F%2F127.0.0.1%3A8132&gporigin=http%3A%2F%2F127.0.0.1%3A8132%2F&vf=6",
+      "refused": true,
+      "sourceLinkCorrect": true,
+      "mediaProgress": null,
+      "reports": [
+        {
+          "state": -1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": -1,
+          "muted": false,
+          "volume": 100,
+          "error": "150"
+        },
+        {
+          "state": -1,
+          "muted": false,
+          "volume": 100,
+          "error": "150"
+        },
+        {
+          "state": -1,
+          "muted": false,
+          "volume": 100,
+          "error": "150"
+        }
+      ],
+      "closePreservedCard": true
+    },
+    {
+      "index": 1,
+      "iframeUrl": "https://www.youtube.com/embed/mnd7sFt5c3A?autoplay=1&playsinline=1&rel=0&widget_referrer=http%3A%2F%2F127.0.0.1%3A8132%2F&enablejsapi=1&widgetid=1&forigin=about%3Asrcdoc&aoriginsup=1&aorigins=http%3A%2F%2F127.0.0.1%3A8132&gporigin=http%3A%2F%2F127.0.0.1%3A8132%2F&vf=6",
+      "refused": false,
+      "sourceLinkCorrect": false,
+      "mediaProgress": {
+        "first": 0.049673,
+        "second": 1.650844,
+        "advanced": true
+      },
+      "reports": [
+        {
+          "state": 3,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        }
+      ],
+      "closePreservedCard": true
+    },
+    {
+      "index": 2,
+      "iframeUrl": "https://www.youtube.com/embed/U2Qp5pL3ovA?autoplay=1&playsinline=1&rel=0&widget_referrer=http%3A%2F%2F127.0.0.1%3A8132%2F&enablejsapi=1&widgetid=1&forigin=about%3Asrcdoc&aoriginsup=1&aorigins=http%3A%2F%2F127.0.0.1%3A8132&gporigin=http%3A%2F%2F127.0.0.1%3A8132%2F&vf=6",
+      "refused": false,
+      "sourceLinkCorrect": false,
+      "mediaProgress": {
+        "first": 0.066427,
+        "second": 1.650316,
+        "advanced": true
+      },
+      "reports": [
+        {
+          "state": 3,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        }
+      ],
+      "closePreservedCard": true
+    },
+    {
+      "index": 3,
+      "iframeUrl": "https://www.youtube.com/embed/w0HgHet0sxg?autoplay=1&playsinline=1&rel=0&widget_referrer=http%3A%2F%2F127.0.0.1%3A8132%2F&enablejsapi=1&widgetid=1&forigin=about%3Asrcdoc&aoriginsup=1&aorigins=http%3A%2F%2F127.0.0.1%3A8132&gporigin=http%3A%2F%2F127.0.0.1%3A8132%2F&vf=6",
+      "refused": false,
+      "sourceLinkCorrect": false,
+      "mediaProgress": {
+        "first": 0.065977,
+        "second": 1.641305,
+        "advanced": true
+      },
+      "reports": [
+        {
+          "state": 3,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        }
+      ],
+      "closePreservedCard": true
+    },
+    {
+      "index": 4,
+      "iframeUrl": "https://www.youtube.com/embed/ESEUoa-mz2c?autoplay=1&playsinline=1&rel=0&widget_referrer=http%3A%2F%2F127.0.0.1%3A8132%2F&enablejsapi=1&widgetid=1&forigin=about%3Asrcdoc&aoriginsup=1&aorigins=http%3A%2F%2F127.0.0.1%3A8132&gporigin=http%3A%2F%2F127.0.0.1%3A8132%2F&vf=6",
+      "refused": false,
+      "sourceLinkCorrect": false,
+      "mediaProgress": {
+        "first": 0.054338,
+        "second": 1.626506,
+        "advanced": true
+      },
+      "reports": [
+        {
+          "state": 3,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        }
+      ],
+      "closePreservedCard": true
+    },
+    {
+      "index": 5,
+      "iframeUrl": "https://www.youtube.com/embed/kajCUhg36R0?autoplay=1&playsinline=1&rel=0&widget_referrer=http%3A%2F%2F127.0.0.1%3A8132%2F&enablejsapi=1&widgetid=1&forigin=about%3Asrcdoc&aoriginsup=1&aorigins=http%3A%2F%2F127.0.0.1%3A8132&gporigin=http%3A%2F%2F127.0.0.1%3A8132%2F&vf=6",
+      "refused": false,
+      "sourceLinkCorrect": false,
+      "mediaProgress": {
+        "first": 0.052721,
+        "second": 1.623767,
+        "advanced": true
+      },
+      "reports": [
+        {
+          "state": 3,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        },
+        {
+          "state": 1,
+          "muted": false,
+          "volume": 100
+        }
+      ],
+      "closePreservedCard": true
+    },
+    {
+      "index": 6,
+      "noTrailer": true
+    }
+  ],
+  "embedRefererOrigins": [
+    "http://127.0.0.1:8132"
+  ],
+  "audioEvidence": "Browser reports only; audible physical-device playback not verified",
+  "nativeDevice": "Not tested"
+}

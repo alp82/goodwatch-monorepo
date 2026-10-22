@@ -1,0 +1,52 @@
+[
+  {
+    "path": "app.config.ts",
+    "previousSha256": "c60c78ed5d4090cd416325bf2c4fe0908fa4e972213b836e1e75d7426741ba3c",
+    "sha256": "8f32976957fe94d04d8c029df8b2d96a342729cdbd15d0f044a4d7aecd9b380c"
+  },
+  {
+    "path": "docs/private-beta-builds.md",
+    "previousSha256": "348b3b948fb0a026a8e549a629f1d2369bcd54285d946fece3d9d7c80739044b",
+    "sha256": "5df1698cdc6a4c2bce875c387565c626beee2fdd78dffc77f8711521374d9782"
+  },
+  {
+    "path": "docs/r4-retry-compatibility.md",
+    "previousSha256": "7d6169815705594c9f83f4b120e8568fb46cba2330d51266c35f03c6bbddd9e4",
+    "sha256": "92324d0e5b19b2f264e4ac7f1a8fb124d26ebcd23a608290dadec7df61ba7614"
+  },
+  {
+    "path": "eas.json",
+    "previousSha256": "81bbd46cfd023c0f4b0c1c9c1331f14737a3a3c2674f71d3609c96ded9351c61",
+    "sha256": "8c36552cc54b69113204c8aaadd768c885305f3be5bccece188b719b4e41e74b"
+  },
+  {
+    "path": "package.json",
+    "previousSha256": "de75accb81911423a92647d88e4e7079bd90e36cc0bbb0bf6426d191abcfd7d5",
+    "sha256": "b7878224a16702e1611a577f5c420a57d796da7ad7774ce84e73327c02889948"
+  },
+  {
+    "path": "scripts/build-preview-android.py",
+    "previousSha256": "2f40ee9d92c9a86c44236c13c4d6833687410e7f7ec584d7baf955e3084770da",
+    "sha256": "6572665ae8446b8bd96ef4398684f663ca588e48b65a4d0d79a6ff2b74949cb8"
+  },
+  {
+    "path": "scripts/release-env.cjs",
+    "previousSha256": "61a95645cd4f0021dfa651ae41678b76e1923898f637c802ee8e84c883963cc1",
+    "sha256": "de2ccbcecaf7a89bb0898b48d50adf9ea4af986e20b8e8dc8eec8e348706d2ef"
+  },
+  {
+    "path": "src/features/Entrance.tsx",
+    "previousSha256": "91baae54c3b89977fba8471f068a13f19334c271fa6555e8a67455cce6fe9bcf",
+    "sha256": "ee066211cff411638836bcebbde7a350be62c9bfdaf41a8d05ab5eccc977893b"
+  },
+  {
+    "path": "tests/glow-browser/retry.spec.ts",
+    "previousSha256": "3120ade9fcd3ebfa06e3886f9c7dede7ec1e222ae7e9d54062472a845c681ce1",
+    "sha256": "18ab67403b463dc5747f2f56f344c959fe5077ef9ed672cc06333de5d15f40de"
+  },
+  {
+    "path": "tests/retry.test.ts",
+    "previousSha256": "5f83beb5b6032e2350bed19102d9f34ba8a7d6d3a4a620d3bdafffc5492bff98",
+    "sha256": "491879500a6a222c585e60aaaf5d6a902acc34ffd008da338829903f8ea0a86d"
+  }
+]

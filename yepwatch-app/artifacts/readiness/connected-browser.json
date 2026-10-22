@@ -1,0 +1,20 @@
+{
+  "stagedStaticExport": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/exports/ready-r1",
+  "apiAndWebsocketFixtures": false,
+  "app": "http://127.0.0.1:8133",
+  "api": "http://127.0.0.1:15992",
+  "gateway": "ws://127.0.0.1:4324",
+  "catalog": "Finite real catalog sample, durable isolated Crate",
+  "checks": [
+    "Fresh visible create/invite/join and independent three-client readiness/start",
+    "Measured current-roster Yep timing, inspection-only dice/lenses, explicit proposal/withdraw/replacement, same card and reload Undo",
+    "Late join preserves proposal, explicit newcomer Agree implies untimed Yep; Undo invalidates; fresh proposal plus all current Agree produces server-confirmed Done"
+  ],
+  "measuredRosterAveragesAvailable": true,
+  "passed": true,
+  "identities": 4,
+  "sharedFrames": 95,
+  "activityFrames": 66,
+  "javascriptErrors": [],
+  "completedAt": "2026-10-22T12:57:17.248Z"
+}

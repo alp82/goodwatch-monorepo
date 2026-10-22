@@ -1,0 +1,27 @@
+{
+  "result": "PASS",
+  "completedAt": "2026-10-22T13:04:38.451Z",
+  "api": "http://127.0.0.1:15992",
+  "gateway": "ws://127.0.0.1:4324",
+  "app": "http://127.0.0.1:8133",
+  "controller": "Own ephemeral process, no retained8126 access",
+  "catalog": "Finite real sample over new disposable Crate; not full catalog",
+  "manualClient": "Actual browser UI surrogate; not Android/USB proof",
+  "candidates": 7,
+  "sharedFrames": 36,
+  "activityFrames": 12,
+  "javaScriptErrors": 0,
+  "checks": [
+    "Fresh native controlled peers and independent ordinary browser admission",
+    "Single confirmed screen inherited and protocol-readied automatically without guest Ready gate or agreement",
+    "Independent cards and one-person isolation",
+    "Actual UI votes and complete-roster timing honestly unavailable",
+    "Propose/agree/withdraw/replacement",
+    "Pending proposal retained across latejoin",
+    "Current shared-match poster/lens/dice actions",
+    "Disconnected participant remains required",
+    "Reconnect and automatic fresh-check Done"
+  ],
+  "credentialsInvitationsAndRoomIdentifiersRedacted": true,
+  "privateFieldsOnProductFrames": false
+}

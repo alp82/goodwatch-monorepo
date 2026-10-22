@@ -1,0 +1,48 @@
+{
+  "result": "PASS",
+  "completedAt": "2026-10-22T14:34:30.853Z",
+  "scope": "Own disposable Compose project, no retained stack or production room writes",
+  "publicOriginUnderTest": "https://yepwatch.com",
+  "tls": "Local ephemeral certificate, exact intended hostname; Node trusts only that certificate and browser allows only its SPKI; no system DNS/trust mutations or public deployment",
+  "topology": "Traefik2.10.7 TLS -> actual release static/Caddy -> bundled API + gateway -> own fanout/room Crate; API-only existing catalog read egress",
+  "images": {
+    "YEPWATCH_SOURCE_COMMIT": "e96519f59951f268ecc1e6f136839c87b56326ce",
+    "YEPWATCH_FRONT_IMAGE": "yepwatch-front:release-r4-20261022",
+    "YEPWATCH_API_IMAGE": "yepwatch-api:release-r4-20261022",
+    "YEPWATCH_GATEWAY_IMAGE": "yepwatch-gateway:release-r3-20261022"
+  },
+  "fullCatalog": "Existing full snapshot/catalog dependencies; no sample Redis URL or fixtures",
+  "candidates": 20,
+  "clientArtifacts": {
+    "indexSha256": "fdcc379d6891bd5e45de72af9ce53deed295375242440daee5dccc7804d45570",
+    "apkFilename": "yepwatch-preview-r3.apk",
+    "apkSha256": "eac3f80e64c5afe0eb7edc18af0e4acb4c558126c5b8c69a3a16f42d985f7061"
+  },
+  "checks": [
+    "SPA invite fallback returns exact index",
+    "Preview Android association JSON; absent AASA404",
+    "Preview APK hash/Android MIME; missing download404",
+    "Internal hooks not public",
+    "Secure browser cookie and authenticated WSS snapshot",
+    "Three independent guest identities; actual standalone web build and two native protocol clients",
+    "Automatic screen readiness without guest Ready button",
+    "Unanimous match, explicit proposal/agreement and fresh-check Done",
+    "Strict shared-only frames",
+    "Gateway SIGTERM1012 and fresh-ticket recovery",
+    "API restart preserves actor and durable decision without installer"
+  ],
+  "browserSharedFrames": 12,
+  "javaScriptErrors": 0,
+  "apiRestartRecoveryMs": 33999,
+  "apiContainerMemoryAfterReload": "152.2MiB / 3GiB",
+  "screenshot": "artifacts/release-rehearsal-r4-browser-done.png",
+  "physicalPhoneOrPublicTlsClaimed": false,
+  "retainedProcessesChanged": false,
+  "credentialsInvitesAndRoomIdentifiersRedacted": true,
+  "controls": {
+    "YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS": "20",
+    "YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE": "20",
+    "YEPWATCH_PROPOSAL_COMMANDS_PER_MINUTE": "600",
+    "YEPWATCH_PROPOSAL_ACTOR_COMMANDS_PER_MINUTE": "60"
+  }
+}

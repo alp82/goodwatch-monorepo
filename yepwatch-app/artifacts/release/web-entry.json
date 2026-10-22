@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "screens": [
+    "artifacts/release/entry-390.png",
+    "artifacts/release/entry-1440.png"
+  ],
+  "javascriptErrors": [],
+  "publicBackendRequests": false,
+  "scope": "Standalone guest entry only; no deployed backend claim"
+}

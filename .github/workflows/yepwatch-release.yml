@@ -1,0 +1,68 @@
+name: YepWatch checks
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "yepwatch-app/**"
+      - "yepwatch-realtime/**"
+      - "goodwatch-webapp/**"
+      - ".github/workflows/yepwatch-release.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yepwatch-images-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.19.0
+          package-manager-cache: false
+      - name: Install locked dependencies
+        run: |
+          npm --prefix goodwatch-webapp ci --no-audit --no-fund
+          npm --prefix yepwatch-app ci --install-links --no-audit --no-fund
+          npm --prefix yepwatch-realtime ci --no-audit --no-fund
+      - name: Validate client and gateway
+        run: |
+          npm --prefix yepwatch-app run typecheck
+          npm --prefix yepwatch-app run lint
+          npm --prefix yepwatch-app test
+          npm --prefix yepwatch-realtime run build
+          npm --prefix yepwatch-realtime test
+      - name: Validate typed storage and concurrency on disposable Crate
+        working-directory: goodwatch-webapp
+        env:
+          YEPWATCH_TEST_CONTROL_CRATE: '1'
+          YEPWATCH_TEST_RELATIONAL_CRATE: '1'
+        run: |
+          node app/server/yepwatch/build-release.mjs
+          node --experimental-strip-types --test \
+            app/server/yepwatch/proposal.test.ts \
+            app/server/yepwatch/proposal-release.test.ts \
+            app/server/yepwatch/proposal-release-members.test.ts \
+            app/server/yepwatch/proposal-release-control.test.ts \
+            app/server/yepwatch/proposal-release-control-crate.test.ts \
+            app/server/yepwatch/proposal-relational-crate.test.ts
+          node app/server/yepwatch/write-storage-schema.mjs
+          git diff --exit-code -- app/server/yepwatch/schema.sql
+      - name: Validate Coolify configuration
+        run: python3 yepwatch-realtime/release/test-repository-compose.py
+      - name: Build the same repository targets as Coolify
+        run: |
+          for service in api gateway front; do
+            docker build --target "$service" -f yepwatch-realtime/release/Dockerfile.repository -t "yepwatch-ci-$service:$GITHUB_SHA" .
+          done

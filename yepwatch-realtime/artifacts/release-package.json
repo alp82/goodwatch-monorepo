@@ -1,0 +1,49 @@
+{
+  "recordedAt": "2026-10-22T13:47:53.676128+00:00",
+  "scope": "Prepared local release packaging; no public activation, production writes or retained restart",
+  "branch": "feat/shared-scoring",
+  "backendSourceCommit": "d3702ac1fa10650b968d767096129236815fd4d5",
+  "appSourceCommit": "42505717",
+  "images": {
+    "front": {
+      "tag": "yepwatch-front:release-r3-20261022",
+      "imageId": "sha256:2ee5b107e4cb84e0548ad1725879d69fb85082efbdf49262361f04221d619470"
+    },
+    "api": {
+      "tag": "yepwatch-api:release-r3-20261022",
+      "imageId": "sha256:a104e77abfb794198309efe8f31128ad185999bd9f599a6aa384b6df7e3f9e7d"
+    },
+    "gateway": {
+      "tag": "yepwatch-gateway:release-r3-20261022",
+      "imageId": "sha256:4c15a848f8b7c60e932e50f26d99446f43cec21adf10ac8be85d0806701f1994"
+    }
+  },
+  "buildContext": "/tmp/yepwatch-release-full-r3-20261022",
+  "buildContextManifestSha256": "f9cfe3ddc6bd30ab99b6c5a1a872995229113589ca2616dd9c77f9fd5bc67dbd",
+  "verification": {
+    "packageTests": "33 pass / 8 opt-in skip",
+    "buildAndTypecheck": "PASS",
+    "releaseScriptsSyntax": "PASS",
+    "staticContainer": "PASS",
+    "r3ConnectedContainerTLSWSSRestart": "PASS; artifact release-rehearsal.json",
+    "publicTLSOrPhysicalPhone": "Not tested by hosting rehearsal",
+    "laterIndependentReleaseReview": "Unavailable; not claimed"
+  },
+  "retainedListenersObserved": {
+    "4324": 2654867,
+    "8126": 2665854,
+    "8133": 2854295,
+    "8141": 996973,
+    "4322": 2045976,
+    "4323": 3261428
+  },
+  "unfinishedReleaseConditions": [
+    "Enforced durable rate budgets/global active-room capacity controls require separately checked follow-up",
+    "Physical cleanup/retention unfinished",
+    "Full key rotation/re-encryption unfinished",
+    "No service-wide invite-only access boundary",
+    "Final root gap acceptance and owner activation/provisioning/network/TLS preflight",
+    "EAS/Apple identity unanswered for later platform distribution"
+  ],
+  "productionActionsPerformed": false
+}

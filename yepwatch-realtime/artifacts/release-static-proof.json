@@ -1,0 +1,17 @@
+{
+  "result": "PASS",
+  "scope": "Own ephemeral front container only; no API or production dependencies",
+  "checks": [
+    "UID1000/read-only root/cap-drop ALL startup",
+    "Exact frozen index",
+    "Invite/room SPA fallback",
+    "Actual preview APK hash/content type/checksum",
+    "Association JSON",
+    "Missing static/internal/unknown API404"
+  ],
+  "apkBytes": 56891143,
+  "image": "yepwatch-front:release-download-r2-20261022",
+  "completedAt": "2026-10-22T13:32:17.101Z",
+  "imageId": "sha256:2ee5b107e4cb84e0548ad1725879d69fb85082efbdf49262361f04221d619470",
+  "finalImageAlias": "yepwatch-front:release-r3-20261022"
+}

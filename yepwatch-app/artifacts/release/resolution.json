@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "installedContractIsCopy": true,
+  "resolutions": [
+    {
+      "name": "react",
+      "path": "node_modules/react/index.js"
+    },
+    {
+      "name": "react-native",
+      "path": "node_modules/react-native/index.js"
+    },
+    {
+      "name": "react-native-web",
+      "path": "node_modules/react-native-web/dist/cjs/index.js"
+    },
+    {
+      "name": "expo",
+      "path": "node_modules/expo/build/Expo.js"
+    }
+  ],
+  "graphs": [
+    {
+      "platform": "web",
+      "maps": 9,
+      "modules": 1040,
+      "sharedContractPresent": true,
+      "webappServerImports": false
+    },
+    {
+      "platform": "android-release",
+      "maps": 1,
+      "modules": 1472,
+      "sharedContractPresent": true,
+      "webappServerImports": false
+    }
+  ]
+}

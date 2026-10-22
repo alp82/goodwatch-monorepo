@@ -1,0 +1,121 @@
+{
+  "servedExport": ".expo/exports/guest-recovery-reviewed-20261021",
+  "servedFiles": {
+    "metadata.json": "aa5f19cc84d41c0f8c70ececb2bc82e863227ea1e121632aca879eb616056991",
+    "index.html": "d378dae8fedae89a864e4334454149ce9d8a28600e1edaa2af3c4b28a667cfd5",
+    "_expo/static/js/web/__common-00f6f89c600dd2351fff38d2a3eb5a17.js": "9a9db630d97a6107fc1e15836fb4a95579913be99451b8cb79679b63cc7360b8",
+    "_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js": "1dda0ff5ea4566f7514a446ddb5cf9de51f44e09d2e18c05c9bb1fdc85bc7860",
+    "_expo/static/js/web/_layout-6c5575278c2c0fc889ebfd255fbd0246.js.map": "9d01cfbb9d15e939d20bff42ad90572168087414c76f855fd40d20d1ce557d9f",
+    "_expo/static/js/web/_layout-6c5575278c2c0fc889ebfd255fbd0246.js": "e4b8fe7d1d04f767f272119cde9f173eca244b4006008cf08b1f29fedec6852e",
+    "_expo/static/js/web/__common-00f6f89c600dd2351fff38d2a3eb5a17.js.map": "f2bddd0426dea20c2b61601c3407f6352882cf5de8a91136d9e70a1bdcbcea1a",
+    "_expo/static/js/web/[id]-05cc4b4965d562bec2e2b0200061fdc5.js.map": "82a6f3b336bf5bff2d647e9ed82f39d138ad5626813836cc0b71e067896b5ff4",
+    "_expo/static/js/web/[invite]-ad9f4227077f3e08e49cac25874cd661.js": "e810c625b1e5cd9b56394b146d8908ccb39ac507512b5a6070545e99e796b3e3",
+    "_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js.map": "1f2bcee3e7f52ae71eb44544a6a9511b45cf46cf5c836dac13a92badec336824",
+    "_expo/static/js/web/callback-8c0dff6c29dc7c5a331df08753be00c8.js.map": "0a6d43266c6b41b5dfa9971546d24e7c55e001d9cf7428d746f0950c498221f5",
+    "_expo/static/js/web/entry-1b6051993a71f83339350c88d90d2571.js": "b2128f1b2c1d33fca350e26311b068dac9d5e3cfa793a82c405d34bd8c24c628",
+    "_expo/static/js/web/index-a13c24b2e3050cca12e18b201176552a.js": "7798f99a02082b3af0cbf9b7e548618219fbc4e003032331c9c029b6214095c5",
+    "_expo/static/js/web/callback-8c0dff6c29dc7c5a331df08753be00c8.js": "d55adb45ad7fdfd9b2c0a6eb1f9065cb4e2a85fcd56b2d892c9841b7dff96c27",
+    "_expo/static/js/web/[invite]-ad9f4227077f3e08e49cac25874cd661.js.map": "f5f454fa091deb62e078f006ce13bcf5658a61adf258a271e1556de8c08d8271",
+    "_expo/static/js/web/entry-1b6051993a71f83339350c88d90d2571.js.map": "e85518d3ef82098d67cc492065cb43b40db9aa90de8d2b15955c4d805db96464",
+    "_expo/static/js/web/preview-ad32c4ebd5da258a7d4b969ec0c12c8c.js": "8a12737ccfcdaf439f48ec8cb5a2e4ab9e1fc23e43b41e0e9f3c5a86069cea07",
+    "_expo/static/js/web/index-a13c24b2e3050cca12e18b201176552a.js.map": "8de6712842ca5c092f19acad72e647b11a3e6278ca21381d53fb94d8bbca1693",
+    "_expo/static/js/web/preview-ad32c4ebd5da258a7d4b969ec0c12c8c.js.map": "62b4dc740eae8277ca224c34fef80365fab8af69a85d8f3477b1256fe5dfa5b7",
+    "_expo/static/js/web/[id]-05cc4b4965d562bec2e2b0200061fdc5.js": "e6e9050d7ba2a18559812e2617f0ae3ebf53536d4b3e457ab1c5fc9dfb716ba7",
+    "_expo/static/js/web/__common-563f2394f247e295829122849054b818.js": "124ec15eb2ad903687b90164b32f9b19797b394e46bda27885dcf26ef45946a7",
+    "_expo/static/js/web/[id]-9b692cfed55be1d2f9473edc5fad0462.js": "b3e8521b8b5e68881a89ab15c8eaa87316d65e792a2f3a3a98676b5bc63beef1",
+    "_expo/static/js/web/[id]-9b692cfed55be1d2f9473edc5fad0462.js.map": "593a32dd337d45b3682621ded436982e7303200a403be55658fb4f8fe3d2034f",
+    "_expo/static/js/web/__common-563f2394f247e295829122849054b818.js.map": "41495d7c38a62d1d66e87c5d5289587c275f593ae7f941345b790fb83f4d0fd0",
+    "_expo/static/js/web/entry-c41b6452a93556b41199594f328704ce.js.map": "de2d8d9dfa445930a2ecf2d88871ce2ab4a3554493044fe15d939ca09ff6f655",
+    "_expo/static/js/web/entry-c41b6452a93556b41199594f328704ce.js": "4894eace67384ad2a4ace94c2b23f7b79b85b564c49d855afc56fa2d25bbefe6",
+    "assets/assets/Gabarito-Regular.a60d5386c3bad06005d5b47ceb0ad0ef.ttf": "a936de73165607d73d690ca6861a7b1c79cf67b6e5bd590a7b4bdedd60662cd8",
+    "assets/assets/Gabarito-Bold.370606a02e13f0962a7ced4f9bc9c037.ttf": "2f93a2dacd279c2206c74adbcba17db99e540bd1b4faae3fc166c6a42480da08",
+    "assets/node_modules/expo-router/assets/error.d1ea1496f9057eb392d5bbf3732a61b7.png": "c15ec72a74d13957211808313d5c35deb7f7606c6d22dbddceb0000d4e0547ad",
+    "assets/node_modules/expo-router/assets/file.19eeb73b9593a38f8e9f418337fc7d10.png": "a69a2edb5b6c60b8433d5b6d23c69f520ccd8a602f3f60e7996e489718bc175c",
+    "assets/node_modules/expo-router/assets/forward.d8b800c443b8972542883e0b9de2bdc6.png": "708a79cf561b8a2a4850ce0254584d3a5231046be08fb7fadf4b6edfdb31178b",
+    "assets/node_modules/expo-router/assets/pkg.ab19f4cbc543357183a20571f68380a3.png": "27f4d229d440925bf7212d5dfffa45d596b2c7b3bb2905c96b839b2081a1dbeb",
+    "assets/node_modules/expo-router/assets/arrow_down.017bc6ba3fc25503e5eb5e53826d48a8.png": "6deca32b56b97fa1fa87facd6996b46cc45190a553400e7febdf1d2093099b57",
+    "assets/node_modules/expo-router/assets/sitemap.412dd9275b6b48ad28f5e3d81bb1f626.png": "acf691957a3bcce7d195856dce98a5cf14dce10bea28aa5c10b3550c078e23b5",
+    "assets/node_modules/expo-router/assets/unmatched.20e71bdf79e3a97bf55fd9e164041578.png": "efc79da3c4c97dfb1571bff6202958ab0529c5aa31e8392600578b3e359d1447",
+    "assets/node_modules/expo-router/assets/react-navigation/elements/back-icon.35ba0eaec5a4f5ed12ca16fabeae451d.png": "84cf5eb3b20250f69e0e4733beb4da5f417f0682892a5ad1b5e62570753c21b1",
+    "assets/node_modules/expo-router/assets/react-navigation/elements/back-icon-mask.0a328cd9c1afd0afe8e3b1ec5165b1b4.png": "9adb8c5efca932e2b732b293da813bd2e31952263056bce9e2517fec0f0b6a76",
+    "assets/node_modules/expo-router/assets/react-navigation/elements/close-icon.808e1b1b9b53114ec2838071a7e6daa7.png": "b1bc1810ca23e2c38cd76971c43591d726161061240d8b792b05757196ddb528",
+    "assets/node_modules/expo-router/assets/react-navigation/elements/close-icon.808e1b1b9b53114ec2838071a7e6daa7@3x.png": "d05c9d30d79f45a78e5585a2e7ec67c6a06a883dd9137e1d5059e8c87b33ce76",
+    "assets/node_modules/expo-router/assets/react-navigation/elements/clear-icon.c94f6478e7ae0cdd9f15de1fcb9e5e55@4x.png": "c86bb485eee687e06c500fc4234f51a6784b4530c2ae11d0c76481110bce3105",
+    "assets/node_modules/expo-router/assets/react-navigation/elements/clear-icon.c94f6478e7ae0cdd9f15de1fcb9e5e55@3x.png": "c4e54e6a0a7de636aa153378fbc62ea4a41695bfedf807f90df7b18ffd733f67",
+    "assets/node_modules/expo-router/assets/react-navigation/elements/close-icon.808e1b1b9b53114ec2838071a7e6daa7@4x.png": "2325c53a73e54c438cbbc60dffdd8b513d471ba42e2f56713ef404b95e0ca1fc",
+    "assets/node_modules/expo-router/assets/react-navigation/elements/clear-icon.c94f6478e7ae0cdd9f15de1fcb9e5e55@2x.png": "ab5613d2ce70fa67c5926e831353664945199fc195fa6fe76c5fe3cec452e31a",
+    "assets/node_modules/expo-router/assets/react-navigation/elements/search-icon.286d67d3f74808a60a78d3ebf1a5fb57.png": "5d075e0c287c4f4441b5b5c8fc7ea5cd27c11bb617ecea09755955bcb1889083",
+    "assets/node_modules/expo-router/assets/react-navigation/elements/close-icon.808e1b1b9b53114ec2838071a7e6daa7@2x.png": "cbdf9213e55f65c48d076acd8423b7c9aee4f1b81101ff6c95a38c4cd8a86461",
+    "assets/node_modules/expo-router/assets/react-navigation/elements/clear-icon.c94f6478e7ae0cdd9f15de1fcb9e5e55.png": "d03a5cd7a66ef10c5147916f9d5878b2d0a0a5ad46f405a31cd9967efaa55afd"
+  },
+  "sourceHashes": {
+    "src/app/_layout.tsx": "78cee3deac20fd80b41747ff2a5bede87f579095fd168438ba2818e1354c83aa",
+    "src/app/index.tsx": "8da6697890be3839f959dc9fb1ae6226019d6f759ff0074f921a2a705d72caf2",
+    "src/app/preview.tsx": "f357ae1f4524a7eba6bf28d9bad6c09252e3aa00f23a5847c0223b52e7c7c5f4",
+    "src/components/ui.tsx": "fda5d8ba69d9a13377784d3f940faa69e54d01de227213450735e5c5431197a5",
+    "src/core/config.ts": "c66f41c869d656c60678378f2ea84c24f6313f3466ef6fb5a85ca4efccc4f064",
+    "src/core/credentials.ts": "94eeb378c86a4403179d897a5987795b03690a5bbeb2fd35e0ea7b5111436555",
+    "src/core/credentials.web.ts": "4569b9dd18770f645d82efef7a7ec25b9b485630abbe98dc6ac495231a404703",
+    "src/core/api.ts": "903b50d7bc7e245feb35bd45590e43bb74920c07d5b36e814a2f645ead436402",
+    "src/core/room-state.ts": "e32d78d9fc8c36d9d334bc829b566b2c61e8168679e7456f869bd09c364f9696",
+    "src/core/invites.ts": "b6d81b75645dd7768c2bd82ea95a47f6f0fb85d135cc91995fcdaade2ff4618f",
+    "src/core/realtime.ts": "b42ac19715100a10e66da61f403bab17127ecc7e68e56835e03538836ede38fe",
+    "src/core/providers.tsx": "bda3e078e63823f1741199e04500d916ee7d9612d545bbe376a3522c6ab7160f",
+    "src/core/errors.ts": "74c04541d809893907d5a7dae9cfdaccfd3e767b3538cd338ea4d71c02ed1358",
+    "src/core/api-client.ts": "55bdb7f84de28cfc6dcf23356bdac0b714e4fa7e50caecb0e2e0bf969003f72f",
+    "src/core/wire.ts": "ac1c710c020b7493505306f0672858c67433250b86634f8418181ba87f0c0fe7",
+    "src/core/lobby.ts": "b491371919b5856ae08e3daa6ca5e661cf79484d2797a6cdcce8beab08f55bbd",
+    "src/core/episode.ts": "60ba88aa8f1dffaf56ecf1a747e827a1dcf6bade9c0f458b886a5a532f3610f4",
+    "src/core/recovery.ts": "a120373784f547bb7751e34259da8d6e6d1db1ce96e1f92de4c44004443ef4c3",
+    "src/features/Entrance.tsx": "70fa7105f16adc0acd03c251b4ce8e0ab46604a824cdbbf75be7259adf3f89f4",
+    "src/features/useRoom.ts": "8b6f3340a7436d33f38b3c54f9ec099e8c1b56f5648e86c5199cfa229c67d6a8",
+    "src/features/Lobby.tsx": "8b9b1b91b1daa6479d6630c231fc1f310db18586ec12a31f931b341f0df619a7",
+    "src/features/Voting.tsx": "b652f9b3035c6b459364f262b0203f7467585dff295c896869d69d042840816e",
+    "src/features/Shortlist.tsx": "658f5280168e692c3adb7df50231e0c88300063df29be48ccb0abb4e6a69dce0",
+    "src/features/Decision.tsx": "a8d36df364786373762b0c1e80701ae177688284b8f3d80673db9836eeb84374",
+    "src/features/LegacyRound.tsx": "f55fcd125fda47cc9f2cd1636b6212dcfadc87c1f529e3fd542e35e8024a6251",
+    "src/dev/fixtures.ts": "77a43735dcef1142a63feb811be7ea65d984c8ccc86b18eb8837d93d91c377eb",
+    "src/app/r/[invite].tsx": "ecd5001a0bfa4f67b3deb9ad32c7d39676397b507aaf8371e67a9f004dd99482",
+    "src/app/room/[id].tsx": "7d03020a9dc2f5fc4d87b64cb20a71dacf84db7b02abf1b86aee19dad4212cc2",
+    "src/app/auth/callback.tsx": "90547a5f19c195a9f1e93d32d3ca09dfd913ebbcf5e626cf18ffe0e62939a6b9",
+    "tests/state.test.ts": "a3d25b2917b6e709343be0b35a271fc34c6c0b16b01a507382aaf9b26c3183d3",
+    "tests/realtime.test.ts": "e79048621145a22ddc928e8d79083e13ad598299e87d91b920598ad706bca353",
+    "tests/api.test.ts": "7d2383794fd8b2c36f233c12c1ec24994b821c12038d224bef551762842b5e2d",
+    "tests/lobby.test.ts": "b809fedde6fce60a25ea670a42cc48add0269fe2eabab372d68bfcf45a677b93",
+    "tests/browser/client.spec.ts": "b3002ef7dc8a5862d2b6965b8b17dad5d7785a7e7e698b41b083b11c3620d18e",
+    "tests/browser/expiry.spec.ts": "78dfcd640ff1c90821e2c86f5882b35ab06771487173e4cf0e5de1445f5a4741",
+    "tests/browser/recovery.spec.ts": "3234c9f42621d88aae8d6d11e73a8adeb4bafee29f6d61dbf43c843fb955d1c7",
+    "tests/browser/legacy-round.spec.ts": "87b3ce086a042f1b555239af1f46df51a4c51c0eabac4a50571f0bcf66281c23"
+  },
+  "listeners": {
+    "8099": [
+      "3434776"
+    ],
+    "8100": [
+      "3817599"
+    ],
+    "8101": [
+      "517987"
+    ],
+    "15995": [
+      "271191"
+    ],
+    "15996": [
+      "3807338"
+    ],
+    "4319": [
+      "156786"
+    ],
+    "4318": [
+      "3799881"
+    ],
+    "4317": [
+      "3410466"
+    ],
+    "15997": [
+      "3410395"
+    ],
+    "46397": [],
+    "15990": []
+  }
+}

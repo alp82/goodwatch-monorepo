@@ -1,0 +1,41 @@
+{
+  "result": "PASS",
+  "completedAt": "2026-10-22T13:45:42.974Z",
+  "scope": "Own disposable Compose project, no retained stack or production room writes",
+  "publicOriginUnderTest": "https://yepwatch.com",
+  "tls": "Local ephemeral certificate, exact intended hostname; Node trusts only that certificate and browser allows only its SPKI; no system DNS/trust mutations or public deployment",
+  "topology": "Traefik2.10.7 TLS -> actual release static/Caddy -> bundled API + gateway -> own fanout/room Crate; API-only existing catalog read egress",
+  "images": {
+    "YEPWATCH_SOURCE_COMMIT": "d3702ac1fa10650b968d767096129236815fd4d5",
+    "YEPWATCH_FRONT_IMAGE": "yepwatch-front:release-r3-20261022",
+    "YEPWATCH_API_IMAGE": "yepwatch-api:release-r3-20261022",
+    "YEPWATCH_GATEWAY_IMAGE": "yepwatch-gateway:release-r3-20261022"
+  },
+  "fullCatalog": "Existing full snapshot/catalog dependencies; no sample Redis URL or fixtures",
+  "candidates": 20,
+  "checks": [
+    "SPA invite fallback returns exact index",
+    "Preview Android association JSON; absent AASA404",
+    "Preview APK hash/Android MIME; missing download404",
+    "Internal hooks not public",
+    "Secure browser cookie and authenticated WSS snapshot",
+    "Three independent guest identities; actual standalone web build and two native protocol clients",
+    "Automatic screen readiness without guest Ready button",
+    "Unanimous match, explicit proposal/agreement and fresh-check Done",
+    "Strict shared-only frames",
+    "Gateway SIGTERM1012 and fresh-ticket recovery",
+    "API restart preserves actor and durable decision without installer"
+  ],
+  "browserSharedFrames": 12,
+  "javaScriptErrors": 0,
+  "apiRestartRecoveryMs": 30970,
+  "apiContainerMemoryAfterReload": "176.6MiB / 3GiB",
+  "physicalPhoneOrPublicTlsClaimed": false,
+  "retainedProcessesChanged": false,
+  "credentialsInvitesAndRoomIdentifiersRedacted": true,
+  "backendBundleManifestSha256": "e51fb4a3f8417355ede1b43816eb5bff9e8722bdb0e1f6de64376151f3654d66",
+  "backendServerSha256": "9a492aec8e240dbbe6a7da71e28fdd7961c90388d33d6d25a7a058639a6f75dd",
+  "appSourceCommit": "42505717",
+  "activationAccepted": false,
+  "nextRequired": "Separately checked enforced rate budgets/global active-room capacity follow-up and root reconciliation of remaining gaps"
+}

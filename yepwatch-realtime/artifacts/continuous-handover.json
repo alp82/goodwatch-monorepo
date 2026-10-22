@@ -1,0 +1,123 @@
+{
+  "recordedAt": "2026-10-21T23:54:44.327693+00:00",
+  "result": "PASS",
+  "branch": "feat/shared-scoring",
+  "baseHead": "ef529f28a53c752705bfe54b11b32f2356445587",
+  "noCommitPushDeploy": true,
+  "review": {
+    "result": "PASS",
+    "fixedPin": "/tmp/yepwatch-continuous-gateway-review-20261022/fixed-manifest.json",
+    "configurationPin": "/tmp/yepwatch-continuous-gateway-review-20261022/final-manifest.json",
+    "gatewayCoreByteIdenticalToReviewedPin": true,
+    "onlyChangesAfterConfigurationPin": [
+      "yepwatch-realtime/README.md",
+      "yepwatch-realtime/README-continuous.md",
+      "yepwatch-realtime/simulator-continuous/prove.cjs"
+    ],
+    "report": "docs/verification/yepwatch-continuous-review.md",
+    "reviewerUsedRetainedServices": false,
+    "configurationResult": "Independent PASS:14 invalid configs,4 malformed env starts,default/real provider bootstrap and override rejection; no unresolved finding"
+  },
+  "tests": {
+    "fullOwnerSuitePassed": 33,
+    "skipped": 0,
+    "buildTypecheck": "PASS",
+    "relevantTestsAfterProviderConfigPassed": 7,
+    "realProtocol": "continuous-live-real-smoke.json",
+    "syntheticProtocol": "continuous-live-smoke.json",
+    "syntheticVisible": "continuous-simulator-proof.json",
+    "realVisible": "continuous-simulator-real-proof.json",
+    "exactCurrentCompiledStartAuthAndDrain": "continuous-current-build-smoke.json"
+  },
+  "runtime": {
+    "synthetic": {
+      "api": "http://127.0.0.1:15994",
+      "ws": "ws://127.0.0.1:4321/api/yepwatch/v1/continuous/realtime",
+      "app": "http://127.0.0.1:8131",
+      "latestSimulator": "http://127.0.0.1:8124"
+    },
+    "real": {
+      "api": "http://127.0.0.1:15993",
+      "ws": "ws://127.0.0.1:4322/api/yepwatch/v1/continuous/realtime",
+      "app": "http://127.0.0.1:8132",
+      "latestSimulator": "http://127.0.0.1:8125",
+      "roomStorage": "Backend-owned separate disposable Crate15986/tablev2",
+      "catalog": "Finite SELECT-only36-record real sample",
+      "broker": "redis://127.0.0.1:46398"
+    }
+  },
+  "simulatorHandoverStates": {
+    "8124": {
+      "room": false,
+      "actors": 0,
+      "automatic": false,
+      "pid": 2012931
+    },
+    "8125": {
+      "room": false,
+      "actors": 0,
+      "automatic": false,
+      "pid": 2111605
+    }
+  },
+  "verifiedRetainedListenerPids": {
+    "8120": 2852397,
+    "8121": 3145807,
+    "8122": 1790844,
+    "8124": 2012931,
+    "8125": 2111605,
+    "4321": 1694346,
+    "4322": 2045976,
+    "15995": 271191,
+    "4319": 156786,
+    "8101": 2627213,
+    "15996": 3807338,
+    "4318": 3799881,
+    "8100": 3817599,
+    "15997": 3410395,
+    "4317": 3410466,
+    "8099": 3434776
+  },
+  "retainedOldServicesRestartedOrUserRoomSelected": false,
+  "gatewayRuntimeDatabaseOrAccountCredentialKeys": [],
+  "gatewayBuildSha256": "093e0307324905b2a67bde17de1de80af7fe09793d5a7342024e8774911901c4",
+  "finalSourceSha256": {
+    "yepwatch-realtime/src/projection.ts": "6974095bc3cfa1f352a5dc1dc5380a1436347b6d5570e346133f009a1625ccd0",
+    "yepwatch-realtime/src/authority.ts": "c06a3b7dce802bf3779140c1369bbb2e144d5500aa16a95898d3c32448c32008",
+    "yepwatch-realtime/src/bus.ts": "9467551ca40db2c0daf8cebf125600094a96720cbdaeed48b13148c42a2b6fe5",
+    "yepwatch-realtime/src/gateway.ts": "c6028ceef9d3c366a4429d6791715f4b29863bd6cfa7bfb73f75a1d78b0bb125",
+    "yepwatch-realtime/src/main.ts": "2d51f8362f92cd18bb5df67c10c8b7ca960e85bdbd9c63660055e821aaa7f679",
+    "yepwatch-realtime/src/continuous-projection.ts": "b71cc23ec5ac22bc7f9f4e0ce69dcdf1981ae26294e35543162c5514ce2834c2",
+    "yepwatch-realtime/src/activity-protocol.ts": "29a9f7675c325776d998d6cf9f2d09d753d1bd107d169f9c84b012f7821eec57",
+    "yepwatch-realtime/src/activity.ts": "01f9eb44e09768eed4abf80915704829491345220e772ff1e0212d732a053736",
+    "yepwatch-realtime/test/fixture.ts": "0df4c22217222e5fe49219ae89c5e0b08adf6192c96736c7e015ee96230c0ace",
+    "yepwatch-realtime/test/gateway.test.ts": "4f9f05b46753b1396ddc3891e6fb25a7f2b50cd0671c964cc001106af0458b1f",
+    "yepwatch-realtime/test/client.ts": "7ae9f2e81e22e74d95cfc952d477bbf70c6df2a65e1faf074d68c28d6174bc5e",
+    "yepwatch-realtime/test/valkey.test.ts": "02bd6dd3c5f80efe41a166cec311bb211605d487435fa4c51952ab2601f5b7bc",
+    "yepwatch-realtime/test/backend.integration.test.ts": "fd8515523b51bbea4fdf1d96723a052bc1e16121d9c12ce7f3769883c4c5d1d7",
+    "yepwatch-realtime/test/simulator.test.ts": "6a7a6c4feb297d47de1bccfe77276ae6956f9521e74addfcc25142e4f86a6b2e",
+    "yepwatch-realtime/test/continuous.test.ts": "0b5cc5fbb829d89da3d5f1faa23c3d758f551875432f5cd1d6784879f6671a48",
+    "yepwatch-realtime/test/continuous-valkey.test.ts": "7eebbf40686652030f1edbf984f44d46aef65650958fc36185e24e55c1b932b4",
+    "yepwatch-realtime/test/continuous-live-smoke.ts": "902817ced7a0dfad4ec1ba1c5c48c0e5415fe13e8dbe872e5726b59dc87f9d4e",
+    "yepwatch-realtime/test/continuous-simulator.test.ts": "e40b46d24065ba97d4a908fd5ee370befe3339c1782c63721baad08ad92a1835",
+    "yepwatch-realtime/simulator-continuous/engine.ts": "589e27a528150a267daec69f156c1c495f645d980837183167fca49c448daee9",
+    "yepwatch-realtime/simulator-continuous/server.ts": "eba365f00a59b3e9415a01666d0fa14fa986eb68399b638989ec8a3c3383558f",
+    "yepwatch-realtime/simulator-continuous/ui.html": "64bec1be756a062f39b6810493fed4187a53ce22b59c009a0a6038734e77f26d",
+    "yepwatch-realtime/simulator-continuous/ui.js": "fd9f0dcb13e4c0bacd03f22ec8dc820703346c528ff103787aae62764b6b91f1",
+    "yepwatch-realtime/simulator-continuous/prove.cjs": "4170cab4fd3dd279d029166c89acca21357f8af1033eb05f5c1d0655bcf7bc21",
+    "yepwatch-realtime/README.md": "2dec9a0a60d38e30aebda59ad35ed5a3ae29db1bdcb98a9aebff9d4af9680216",
+    "yepwatch-realtime/README-continuous.md": "7a3703c8c70a4303363fc23e465d888f84350a36acd93e2eabe9e6e884a8ba10",
+    "yepwatch-realtime/package.json": "2871a2568e8ddf54bfabe681caebdced0d273c3f0e3b7b677920daafe4090387",
+    "yepwatch-realtime/package-lock.json": "189201d13d995a09cd18dc159057126196de0155f8d27790b06734b63e7b6342",
+    "yepwatch-realtime/tsconfig.json": "8164786383aede53fc3a79c3f0f7a88693e52509c5573d77f36f5ccd370b56e8",
+    "yepwatch-realtime/.continuous.env.example": "2b06c7015a71254d0d4fd193eae5fbdf50b38fba5c7c795faa6bd08c7470a1ac"
+  },
+  "limits": [
+    "Finite real sample, not full production catalog",
+    "Activity presence is per-session/TTL; no authoritative offline inference or quorum removal",
+    "Connection/rate/replay maps bounded per gateway; Pub/Sub is trusted internal fanout",
+    "Simulator identities/pending commands memory-only; bootstrap loss may require fresh demo",
+    "Physical-device/load/production proxy/TLS and embedded-video playback not claimed by this gateway proof"
+  ],
+  "buildEvidenceNote": "Retained gateways were not hot-reloaded; additive unused memberProgress path in the portable contract changes bundle hash. Exact current built bundle independently started/authenticated/drained on a disposable gateway against real API; reviewed core source is unchanged."
+}

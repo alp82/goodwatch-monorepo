@@ -1,0 +1,40 @@
+{
+  "result": "PASS",
+  "completedAt": "2026-10-22T14:37:01.043Z",
+  "scope": "Separate own disposable rate phase; no live quotas reset or fixture responses",
+  "publicOriginUnderTest": "https://yepwatch.com",
+  "tls": "Local ephemeral cert/exact hostname/SPKI; no public deployment or system DNS/trust changes",
+  "controls": {
+    "YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS": "20",
+    "YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE": "20",
+    "YEPWATCH_PROPOSAL_COMMANDS_PER_MINUTE": "600",
+    "YEPWATCH_PROPOSAL_ACTOR_COMMANDS_PER_MINUTE": "1"
+  },
+  "clientArtifacts": {
+    "indexSha256": "fdcc379d6891bd5e45de72af9ce53deed295375242440daee5dccc7804d45570",
+    "apkFilename": "yepwatch-preview-r3.apk",
+    "apkSha256": "eac3f80e64c5afe0eb7edc18af0e4acb4c558126c5b8c69a3a16f42d985f7061"
+  },
+  "retryAfterSeconds": 59,
+  "checks": [
+    "Actual durable actor-rate429 with retryable and Retry-After",
+    "Pending exact envelope/cooldown survives actual browser reload",
+    "Zero automatic command POSTs before manual Retry",
+    "Natural SQL window recovery without quota reset",
+    "Manual Retry posts same command ID/sequence/body and succeeds once",
+    "Two independent guests remain in setup; no automatic agreement",
+    "Strict shared-only frames"
+  ],
+  "commandPostCount": 3,
+  "javaScriptErrors": 0,
+  "screenshot": "artifacts/release-rehearsal-r4-rate-browser-done.png",
+  "physicalPhoneOrPublicTlsClaimed": false,
+  "retainedProcessesChanged": false,
+  "credentialsInvitesAndRoomIdentifiersRedacted": true,
+  "images": {
+    "YEPWATCH_SOURCE_COMMIT": "e96519f59951f268ecc1e6f136839c87b56326ce",
+    "YEPWATCH_FRONT_IMAGE": "yepwatch-front:release-r4-20261022",
+    "YEPWATCH_API_IMAGE": "yepwatch-api:release-r4-20261022",
+    "YEPWATCH_GATEWAY_IMAGE": "yepwatch-gateway:release-r3-20261022"
+  }
+}

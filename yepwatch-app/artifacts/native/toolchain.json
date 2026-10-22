@@ -1,0 +1,59 @@
+{
+  "sourceCommit": "a72308ab75f35a9c760b5bfeb7626f139f90ada0",
+  "host": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "checkedAt": "2026-10-22T00:48:50.881582+00:00",
+  "defaultJava": "OpenJDK27; unchanged",
+  "jdkSource": {
+    "release": "jdk-21.0.12.1+1",
+    "url": "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jdk_x64_linux_hotspot_21.0.12.1_1.tar.gz",
+    "sha256": "ce79869e1307ed8ee1e2baa86a412b1eb5b75d10a01006d788a6f968bcfaee94"
+  },
+  "buildJdk": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/native-toolchain/jdk-21.0.12.1+1",
+  "jdkVersion": "openjdk version \"21.0.12.1\" 2026-08-18 LTS\nOpenJDK Runtime Environment Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS)\nOpenJDK 64-Bit Server VM Temurin-21.0.12.1+1 (build 21.0.12.1+1-LTS, mixed mode, sharing)",
+  "jlinkVersion": "21.0.12.1",
+  "androidSdk": "/home/alp/Android/Sdk",
+  "platforms": [
+    "android-34",
+    "android-35",
+    "android-36",
+    "android-37.0"
+  ],
+  "buildTools": [
+    "34.0.0",
+    "35.0.0",
+    "36.0.0",
+    "37.0.0"
+  ],
+  "ndks": [
+    "27.1.12297006",
+    "27.2.12479018"
+  ],
+  "emulator": {
+    "avd": "pixel8_api35",
+    "serial": "emulator-5562",
+    "api": 35,
+    "architecture": "x86_64",
+    "flags": [
+      "-read-only",
+      "-no-snapshot-load",
+      "-no-snapshot-save",
+      "-no-window",
+      "-no-audio",
+      "-gpu swiftshader"
+    ],
+    "kvm": "Usable"
+  },
+  "iOS": {
+    "xcodebuildAvailable": false,
+    "host": "Linux",
+    "nativeCompile": "Requires macOS and Xcode; not attempted on unsupported host"
+  },
+  "gradle": "9.4.1",
+  "agp": "9.2.1",
+  "architectures": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "devServerPort": 8140,
+  "productionSigningChanges": false
+}

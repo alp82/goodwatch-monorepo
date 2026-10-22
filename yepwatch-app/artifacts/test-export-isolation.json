@@ -1,0 +1,6 @@
+{
+  "result": "pass",
+  "retainedExport": "dist/index.html",
+  "componentTestExport": "dist-test",
+  "unchangedSha256": "344181980ef62bc599d07f1e313eab4517af9ee0304ca6a0e0f4b792737132ae"
+}

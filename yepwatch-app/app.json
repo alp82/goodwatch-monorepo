@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "YepWatch",
+    "slug": "yepwatch",
+    "version": "0.1.0",
+    "scheme": "yepwatch",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "dev.yepwatch.foundation"
+    },
+    "android": {
+      "predictiveBackGestureEnabled": true,
+      "package": "dev.yepwatch.foundation"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "name": "YepWatch",
+      "description": "Choose something to watch, together."
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "autolinkingModuleResolution": true
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Visible create, invite, independent cookie admission, explicit screen readiness, start for three clients",
+    "Immediate confirmed shared match on every client without completion gate",
+    "Inspect and Keep voting preserves own next card",
+    "All current picks automatically produce confirmed Done on three clients"
+  ],
+  "frames": 56,
+  "errors": [],
+  "catalog": "synthetic, explicitly labeled; actual durable API15994/Crate + WS4321",
+  "firstTitleObserved": true
+}

@@ -1,0 +1,60 @@
+{
+  "checkedBeforeActivationDocumentation": true,
+  "matchedSourceCount": 13,
+  "files": {
+    "yepwatch-realtime/README.md": {
+      "sha256": "c8e70011267927606c6446206bd18b05497e63dcf0a467612a42ff615a838f29",
+      "matchesFixedPin": true
+    },
+    "yepwatch-realtime/package-lock.json": {
+      "sha256": "189201d13d995a09cd18dc159057126196de0155f8d27790b06734b63e7b6342",
+      "matchesFixedPin": true
+    },
+    "yepwatch-realtime/package.json": {
+      "sha256": "74699fedf2b0cd7fe9f15e964b9ddbbc7f93bc59f1b2a72861f31fd3370a0ad5",
+      "matchesFixedPin": true
+    },
+    "yepwatch-realtime/simulator/README.md": {
+      "sha256": "9eb44b5493c00ea6c4f7e883883cf32a09273e7b4c8643778f5038f3e0ee7574",
+      "matchesFixedPin": true
+    },
+    "yepwatch-realtime/simulator/engine.ts": {
+      "sha256": "d8e4002b0dd91cf6e2ddacc58728af8a432f58c9bb1918ffb42dca92f68e0193",
+      "matchesFixedPin": true
+    },
+    "yepwatch-realtime/simulator/prove.cjs": {
+      "sha256": "1687ebb0b91c729385f175deea6000d2cb07444c0ea6d280d62c6b073ea2d7c5",
+      "matchesFixedPin": true
+    },
+    "yepwatch-realtime/simulator/server.ts": {
+      "sha256": "e55b1bbf72562aa83a49546d6e87d5e6caaf81b9dcacc4f812574153b5e02544",
+      "matchesFixedPin": true
+    },
+    "yepwatch-realtime/simulator/style.css": {
+      "sha256": "908a7669c8270d1cda92a95ca43a7182dcdab6f6d15fb66c86be84be658503cf",
+      "matchesFixedPin": true
+    },
+    "yepwatch-realtime/simulator/ui.html": {
+      "sha256": "b2b071b1dc31edf22e04c6fccc30bfbada8a9f5438ef0aecbb61342e8a1fb6db",
+      "matchesFixedPin": true
+    },
+    "yepwatch-realtime/simulator/ui.js": {
+      "sha256": "7a9e2335ad4b2e15d92dc0321adf9c8b6126eddaa88dbe64bbe0a6fe46a463cc",
+      "matchesFixedPin": true
+    },
+    "yepwatch-realtime/test/backend.integration.test.ts": {
+      "sha256": "fd8515523b51bbea4fdf1d96723a052bc1e16121d9c12ce7f3769883c4c5d1d7",
+      "matchesFixedPin": true
+    },
+    "yepwatch-realtime/test/simulator.test.ts": {
+      "sha256": "1c630b49efa5bb93c9b9df29a53586d012a9d3e15cb971306a4137f0831f49ed",
+      "matchesFixedPin": true
+    },
+    "yepwatch-realtime/tsconfig.json": {
+      "sha256": "4ad6e12dcafdf40be9d6906a52594dd7107b9a8398c7759c4b6dd8f49e9c4b7f",
+      "matchesFixedPin": true
+    }
+  },
+  "gatewayBuildSha256": "97fb2418850fa5424e1295a6a668f19e49f52ef84a100cebe12183eb781c2cdc",
+  "execution": "Simulator runs reviewed TypeScript via tsx, not gateway dist/main.js"
+}

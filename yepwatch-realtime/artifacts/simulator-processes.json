@@ -1,0 +1,81 @@
+{
+  "recordedAt": "2026-10-21T15:36:03.620Z",
+  "scope": "Only simulator8120 was started/restarted by this task; existing app/API/gateway/bus services and rooms retained.",
+  "processes": [
+    {
+      "port": 4317,
+      "name": "retained synthetic gateway",
+      "listening": true,
+      "pid": 3410466,
+      "samePidAsBaseline": true
+    },
+    {
+      "port": 4318,
+      "name": "retained original gateway",
+      "listening": true,
+      "pid": 3799881,
+      "samePidAsBaseline": true
+    },
+    {
+      "port": 4319,
+      "name": "retained guest gateway",
+      "listening": true,
+      "pid": 156786,
+      "samePidAsBaseline": true
+    },
+    {
+      "port": 8099,
+      "name": "retained synthetic app",
+      "listening": true,
+      "pid": 3434776,
+      "samePidAsBaseline": true
+    },
+    {
+      "port": 8100,
+      "name": "retained original app",
+      "listening": true,
+      "pid": 3817599,
+      "samePidAsBaseline": true
+    },
+    {
+      "port": 8101,
+      "name": "retained binary app",
+      "listening": true,
+      "pid": 2627213,
+      "samePidAsBaseline": true
+    },
+    {
+      "port": 8120,
+      "name": "local simulator",
+      "listening": true,
+      "pid": 2852397
+    },
+    {
+      "port": 15995,
+      "name": "retained guest API",
+      "listening": true,
+      "pid": 271191,
+      "samePidAsBaseline": true
+    },
+    {
+      "port": 15996,
+      "name": "retained original API",
+      "listening": true,
+      "pid": 3807338,
+      "samePidAsBaseline": true
+    },
+    {
+      "port": 15997,
+      "name": "retained synthetic API",
+      "listening": true,
+      "pid": 3410395,
+      "samePidAsBaseline": true
+    },
+    {
+      "port": 46397,
+      "name": "retained disposable revision bus",
+      "listening": true,
+      "pid": null
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "extends": "../../../tsconfig.json",
+  "include": ["./**/*.ts", "../../../packages/yepwatch-contracts/**/*.ts", "../../routes/api.yepwatch.v1.$.ts"],
+  "compilerOptions": { "target": "ES2022" }
+}

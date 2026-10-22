@@ -1,0 +1,24 @@
+ARG NODE_IMAGE=node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df
+FROM ${NODE_IMAGE} AS build
+WORKDIR /build/yepwatch-realtime
+COPY goodwatch-webapp/packages/yepwatch-contracts/ ../goodwatch-webapp/packages/yepwatch-contracts/
+COPY yepwatch-realtime/package.json yepwatch-realtime/package-lock.json ./
+RUN npm ci --ignore-scripts --no-audit --no-fund
+COPY yepwatch-realtime/src/ ./src/
+COPY yepwatch-realtime/tsconfig.json ./
+RUN npm run build && npm prune --omit=dev --ignore-scripts --no-audit --no-fund \
+    && rm -f node_modules/@goodwatch/yepwatch-contracts
+FROM ${NODE_IMAGE}
+ENV NODE_ENV=production YEPWATCH_DEPLOYMENT=container YEPWATCH_PROPOSAL=1 \
+    YEPWATCH_REALTIME_HOST=0.0.0.0 YEPWATCH_REALTIME_PORT=4311
+WORKDIR /app
+COPY --from=build /build/yepwatch-realtime/node_modules/ ./node_modules/
+COPY --from=build /build/yepwatch-realtime/dist/ ./dist/
+COPY yepwatch-realtime/release/runtime.package.json ./package.json
+COPY yepwatch-realtime/release/launch-gateway.mjs ./release/launch-gateway.mjs
+USER 1000:1000
+EXPOSE 4311
+HEALTHCHECK --interval=5s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:4311/api/yepwatch/v1/proposal/realtime/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+STOPSIGNAL SIGTERM
+CMD ["node", "release/launch-gateway.mjs"]

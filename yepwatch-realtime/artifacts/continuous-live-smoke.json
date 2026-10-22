@@ -1,0 +1,25 @@
+{
+  "result": "PASS",
+  "api": "http://127.0.0.1:15994",
+  "gateway": "ws://127.0.0.1:4321",
+  "secondGateway": "Ephemeral actual second gateway",
+  "storage": "Backend-owner isolated disposable Crate5.10.16/tablev2",
+  "catalog": "Explicitly synthetic backend catalog; not real-catalog coverage",
+  "checks": [
+    "3 independent actual identities",
+    "Actual browser HttpOnly ticket/session",
+    "One-use replay rejected",
+    "Same-envelope command retry",
+    "Immediate unanimous match without completion",
+    "Aggregate pickcount only",
+    "Latejoin invalidates match and own pick",
+    "Disconnect preserves required voter",
+    "Fresh-ticket reconnect/new activity session",
+    "All current picks trigger fresh-check automatic Done",
+    "Cross-gateway neutral trailer activity",
+    "Strict nested shared-only snapshots",
+    "Internal service auth required"
+  ],
+  "frames": 37,
+  "capabilitiesInvitesAndPrivateVotesRedacted": true
+}

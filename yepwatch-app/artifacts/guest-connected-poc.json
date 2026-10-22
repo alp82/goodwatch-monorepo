@@ -1,0 +1,105 @@
+{
+  "result": "pass",
+  "scope": "Actual real-catalog API15995 + gateway4319, finite36-title local sample, memory rooms. Visible UI only; fresh isolated rooms.",
+  "appOrigin": "http://127.0.0.1:8101",
+  "interactionsToFirstRound": 6,
+  "interactionsDefinition": "Each click or field fill counts once; country locale suggestion accepted and one actual service selected. Excludes navigation and screenshots.",
+  "beforeMinimumAttempt": {
+    "interactions": 13,
+    "evidence": "Retained pre-simplification source: guest,nickname,create,edit,add screen,find country,select country,find service,select service,confirm screen,save,ready,start. Minimum attempt, not diagnosis of user incident."
+  },
+  "config": {
+    "kinds": [
+      "movie",
+      "show_start"
+    ],
+    "screens": [
+      {
+        "country": "DE",
+        "serviceIds": [
+          8
+        ],
+        "confirmed": true
+      }
+    ],
+    "hostReadyBeforeStart": false
+  },
+  "candidateKinds": [
+    "show_start",
+    "movie"
+  ],
+  "candidateCount": 7,
+  "confirmedVotes": 7,
+  "hostReadySent": true,
+  "binaryChoiceUi": true,
+  "noMapsToPassConfirmed": true,
+  "undoPassConfirmed": true,
+  "votingProgressBarAbsent": true,
+  "manualProgressControls": false,
+  "freshBrowserInviteJoined": true,
+  "appOriginInvite": true,
+  "guestReadinessExplicit": true,
+  "twoClientsVoting": true,
+  "sharedFrameCount": 18,
+  "privateFieldsOnSharedFrames": false,
+  "commands": [
+    {
+      "type": "setup",
+      "status": 200
+    },
+    {
+      "type": "start_round",
+      "status": 200
+    },
+    {
+      "type": "vote",
+      "status": 200
+    },
+    {
+      "type": "vote",
+      "status": 200
+    },
+    {
+      "type": "vote",
+      "status": 200
+    },
+    {
+      "type": "vote",
+      "status": 200
+    },
+    {
+      "type": "vote",
+      "status": 200
+    },
+    {
+      "type": "vote",
+      "status": 200
+    },
+    {
+      "type": "vote",
+      "status": 200
+    },
+    {
+      "type": "vote",
+      "status": 200
+    },
+    {
+      "type": "vote",
+      "status": 200
+    },
+    {
+      "type": "complete_round",
+      "status": 200
+    },
+    {
+      "type": "new_round",
+      "status": 200
+    },
+    {
+      "type": "start_round",
+      "status": 200
+    }
+  ],
+  "pageErrors": [],
+  "capabilitiesRedacted": true
+}

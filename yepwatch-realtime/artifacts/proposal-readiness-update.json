@@ -1,0 +1,50 @@
+{
+  "recordedAt": "2026-10-22T12:44:24.780Z",
+  "status": "SOURCE AND ACTIVATED APP BROWSER PROOF PASS",
+  "baseSourceManifestSha256": "5ee8fe85b7b4e96da7908c88860a1dd40370f8bb9e337cf8a45b14be26e87b28",
+  "sourceCopyRoot": "/tmp/yepwatch-proposal-readiness-source-20261022/source",
+  "changes": "Guest app inherits single confirmed couch screen or asks for explicit multi-screen choice, then issues own assignment/readiness commands automatically. Controller Start and proposal agreement remain explicit.",
+  "tests": {
+    "typecheck": "PASS",
+    "proofJavaScriptSyntax": "PASS",
+    "controllerTestsPassed": 6,
+    "liveTestSkipped": 1,
+    "liveProof": "Not run before coordinated new app export READY"
+  },
+  "processesRestarted": [],
+  "activeRoomsAccessed": false,
+  "retainedSimulator8126": "Unchanged process; generated notice uses previously loaded copy until safe later activation",
+  "files": [
+    {
+      "path": "yepwatch-realtime/README-proposal.md",
+      "sha256": "1d621233f144819f891dcdf37cd44c4804beace6a10701cc57e0bb50c3b9b520"
+    },
+    {
+      "path": "yepwatch-realtime/simulator-proposal/ui.html",
+      "sha256": "34b6761eca11207006f203add3d59a41b1023426d0a9ee90be2b8f878c26a7d6"
+    },
+    {
+      "path": "yepwatch-realtime/simulator-proposal/engine.ts",
+      "sha256": "e72f20c2ddbacba5795efdb0328a2f1ff70d769bb34099e565ce23b636f142d1"
+    },
+    {
+      "path": "yepwatch-realtime/simulator-proposal/prove.cjs",
+      "sha256": "d9349696dd825a60bd2be3b777cfe1f444ce835e574513a3b59985a6b487e153"
+    },
+    {
+      "path": "yepwatch-realtime/test/proposal-simulator.test.ts",
+      "sha256": "ea79d83d6ae8ebab7cac086b1ea8ebd51b806781118478d7cc1067bae6f8305d"
+    }
+  ],
+  "verificationAfterAppActivation": {
+    "result": "PASS",
+    "completedAt": "2026-10-22T13:04:38.451Z",
+    "sharedFrames": 36,
+    "neutralActivityFrames": 12,
+    "javaScriptErrors": 0,
+    "guestReadyGate": false,
+    "automaticAgreement": false,
+    "retained8126Accessed": false,
+    "artifact": "artifacts/proposal-simulator-visible.json"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "src/core/lobby.ts": {
+    "before": "07e786f4d03f125b42511a24235f842071b1aaac146d25b3b9cafe9f2e828471",
+    "after": "b491371919b5856ae08e3daa6ca5e661cf79484d2797a6cdcce8beab08f55bbd"
+  },
+  "src/features/LegacyRound.tsx": {
+    "before": null,
+    "after": "f55fcd125fda47cc9f2cd1636b6212dcfadc87c1f529e3fd542e35e8024a6251"
+  },
+  "src/app/room/[id].tsx": {
+    "before": "614435ef92a65c10f26d4fa805f6ffee2542a94037e1546e66b01ae0d5d1a95b",
+    "after": "7d03020a9dc2f5fc4d87b64cb20a71dacf84db7b02abf1b86aee19dad4212cc2"
+  },
+  "tests/browser/legacy-round.spec.ts": {
+    "before": null,
+    "after": "87b3ce086a042f1b555239af1f46df51a4c51c0eabac4a50571f0bcf66281c23"
+  },
+  "tests/browser/expiry.spec.ts": {
+    "before": "1b969d09c4a67611340886ebbcc31123bd0d8d1c6aa3168f9f945cee727bd1e8",
+    "after": "78dfcd640ff1c90821e2c86f5882b35ab06771487173e4cf0e5de1445f5a4741"
+  },
+  "tests/lobby.test.ts": {
+    "before": "f363e5d824f136685974ca7155f1d07ab7fd0fe8f84350077b9ce559baa9ecc0",
+    "after": "b809fedde6fce60a25ea670a42cc48add0269fe2eabab372d68bfcf45a677b93"
+  },
+  "docs/verification.md": {
+    "before": "9b759c7fe80718471c685d3f31f3437828786a59a8c027ba8eca307c550c7998",
+    "after": "d08ec8dda7481141226302b002bf73832ca9e3d06d217680f56f4c945d86ba00"
+  }
+}

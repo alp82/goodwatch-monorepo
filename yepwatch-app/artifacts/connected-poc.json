@@ -1,0 +1,27 @@
+{
+  "result": "pass",
+  "clients": 3,
+  "viewingScreens": 2,
+  "setting": "mixed",
+  "server": "Actual YepWatch HTTP handler/domain + actual WS gateway + disposable Valkey",
+  "storage": "Memory repository, not Crate",
+  "catalog": "Synthetic all-kind catalog; no verified real offers",
+  "kinds": [
+    "movie",
+    "show_start",
+    "show_continue"
+  ],
+  "chosen": "show_continue",
+  "episodeApproval": "All three clients explicitly approved canonical fixture episode 102",
+  "assertions": [
+    "HttpOnly browser admissions",
+    "Realtime joins/readiness/progress",
+    "Own vote does not advance other client card",
+    "Browser reload restores own state and authenticates fresh socket",
+    "No early shortlist before all complete_round confirmations",
+    "Server shortlist, fenced proposal, all-client consent and confirmed decision",
+    "No private own or participant choice fields in received WS frames"
+  ],
+  "receivedSharedFrames": 85,
+  "javascriptErrors": 0
+}

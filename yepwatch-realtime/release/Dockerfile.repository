@@ -1,0 +1,62 @@
+# syntax=docker/dockerfile:1
+# Build context: repository root. Targets: api, gateway, front.
+ARG NODE_IMAGE=node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df
+ARG CADDY_IMAGE=caddy:2.11.7@sha256:3095ad245c353e3bdb27a38f22a095c1cfa9e295ab21c0214c3e72b0e2960525
+FROM ${NODE_IMAGE} AS api-build
+WORKDIR /source/goodwatch-webapp
+COPY goodwatch-webapp/package.json goodwatch-webapp/package-lock.json goodwatch-webapp/.npmrc ./
+COPY goodwatch-webapp/packages ./packages
+COPY goodwatch-webapp/patches ./patches
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
+COPY goodwatch-webapp/tsconfig.json ./
+COPY goodwatch-webapp/app ./app
+RUN node app/server/yepwatch/build-release.mjs
+
+FROM ${NODE_IMAGE} AS api
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=3000
+WORKDIR /app
+COPY --from=api-build /source/goodwatch-webapp/build/yepwatch-release/package*.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+COPY --from=api-build /source/goodwatch-webapp/build/yepwatch-release ./build/yepwatch-release
+USER 1000:1000
+EXPOSE 3000
+HEALTHCHECK --interval=5s --timeout=4s --start-period=60s --retries=24 CMD node -e "fetch('http://127.0.0.1:3000/api/yepwatch/v1/proposal/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+STOPSIGNAL SIGTERM
+CMD ["node", "build/yepwatch-release/server.mjs"]
+
+FROM ${NODE_IMAGE} AS gateway-build
+WORKDIR /source/yepwatch-realtime
+COPY goodwatch-webapp/packages/yepwatch-contracts ../goodwatch-webapp/packages/yepwatch-contracts
+COPY yepwatch-realtime/package*.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci --ignore-scripts --no-audit --no-fund
+COPY yepwatch-realtime/tsconfig.json ./
+COPY yepwatch-realtime/src ./src
+RUN npm run build && npm prune --omit=dev --ignore-scripts --no-audit --no-fund && rm -f node_modules/@goodwatch/yepwatch-contracts
+FROM ${NODE_IMAGE} AS gateway
+ENV NODE_ENV=production YEPWATCH_DEPLOYMENT=container YEPWATCH_PROPOSAL=1 YEPWATCH_REALTIME_HOST=0.0.0.0 YEPWATCH_REALTIME_PORT=4311
+WORKDIR /app
+COPY --from=gateway-build /source/yepwatch-realtime/node_modules ./node_modules
+COPY --from=gateway-build /source/yepwatch-realtime/dist ./dist
+COPY yepwatch-realtime/release/runtime.package.json ./package.json
+USER 1000:1000
+EXPOSE 4311
+HEALTHCHECK --interval=5s --timeout=3s --start-period=5s --retries=12 CMD node -e "fetch('http://127.0.0.1:4311/api/yepwatch/v1/proposal/realtime/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+STOPSIGNAL SIGTERM
+CMD ["node", "dist/main.js"]
+
+FROM ${NODE_IMAGE} AS front-build
+WORKDIR /source/yepwatch-app
+COPY goodwatch-webapp/packages/yepwatch-contracts ../goodwatch-webapp/packages/yepwatch-contracts
+COPY yepwatch-app/package*.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci --install-links --no-audit --no-fund
+COPY yepwatch-app/ ./
+ENV CI=1
+RUN node scripts/release-env.cjs export --platform web --output-dir /web --clear
+FROM ${CADDY_IMAGE} AS front
+COPY yepwatch-realtime/release/Caddyfile /etc/caddy/Caddyfile
+COPY --from=front-build /web /srv
+RUN setcap -r /usr/bin/caddy && test -s /srv/index.html && caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+USER 1000:1000
+EXPOSE 8080
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=12 CMD wget -q -O /dev/null http://127.0.0.1:8080/api/yepwatch/v1/proposal/health/ready || exit 1
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

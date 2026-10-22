@@ -1,0 +1,15 @@
+{
+  "status": 200,
+  "countries": 251,
+  "services": 964,
+  "exercisedServices": [
+    {
+      "id": 337,
+      "name": "Disney Plus"
+    },
+    {
+      "id": 8,
+      "name": "Netflix"
+    }
+  ]
+}

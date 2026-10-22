@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "case": "visible guest defaults and actual structured unknown failure",
+      "countryConfirmed": true,
+      "noAssumedServices": true,
+      "noFakeCards": true,
+      "noFilterChange": true,
+      "noRetryOnRefresh": true
+    },
+    {
+      "case": "split API/app origins and fresh browser invitation",
+      "appOriginCorrect": true,
+      "explicitGuestReadiness": true,
+      "twoClientsVoting": true,
+      "exactFiltersOnRetry": true
+    },
+    {
+      "case": "legacy continuation voting recovery",
+      "explicitReturnToSetup": true,
+      "noSilentScopeRewrite": true,
+      "explicitGuestCorrection": true,
+      "restartedGuestVoting": true
+    }
+  ],
+  "sharedFrames": 12,
+  "pageErrors": [],
+  "scope": "temporary isolated Expo export/actual API+gateway/memory repo/FakeBus/synthetic catalog; no retained services"
+}

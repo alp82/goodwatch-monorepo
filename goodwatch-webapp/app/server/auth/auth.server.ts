@@ -1,3 +1,4 @@
+import { assertYepWatchOAuthRequest, validateYepWatchOAuthConfig, YEPWATCH_READ_SCOPE, type YepWatchOAuthConfig } from "./yepwatch-oauth-policy.ts"
 import { createHash, randomUUID } from "node:crypto"
 import { type BetterAuthOptions, betterAuth } from "@goodwatch/auth-stack"
 import {
@@ -71,9 +72,11 @@ export function createGoodwatchAuth(options: {
 	trustedIpHeader?: string
 	rateLimit?: BetterAuthOptions["rateLimit"]
 	mcp?: { resource: string; accessTokenExpiresIn?: number }
+	yepwatch?: YepWatchOAuthConfig
 	google: { clientId: string; clientSecret: string }
 }) {
 	const { mail } = options
+	if (options.yepwatch) { validateYepWatchOAuthConfig(options.yepwatch); if (!options.mcp) throw new Error("YepWatch requires the existing central OAuth issuer") }
 	const origin = new URL(options.baseURL).origin
 	const send = (to: string, message: AuthEmail) =>
 		mail.enqueue(to, message.subject, message.text, message.html)
@@ -115,12 +118,14 @@ export function createGoodwatchAuth(options: {
 						loginPage: "/sign-in",
 						consentPage: "/auth/mcp/consent",
 						resource: options.mcp.resource,
+						...(options.yepwatch ? { resources: [{ identifier: options.yepwatch.resource, allowedScopes: [YEPWATCH_READ_SCOPE, "offline_access"] }] } : {}),
 						scopes: [
 							"openid",
 							"profile",
 							"email",
 							"mcp:read",
 							"mcp:write",
+							...(options.yepwatch ? [YEPWATCH_READ_SCOPE] : []),
 							"offline_access",
 						],
 						postLogin: {
@@ -357,6 +362,18 @@ export function createGoodwatchAuth(options: {
 		},
 		hooks: {
 			before: createAuthMiddleware(async (ctx) => {
+				if (options.yepwatch && ["/oauth2/authorize", "/oauth2/consent", "/oauth2/token"].includes(ctx.path)) {
+					try {
+						const input = { ...ctx.query, ...ctx.body }
+						assertYepWatchOAuthRequest(options.yepwatch, ctx.path, input)
+						const intent = typeof input.oauth_query === "string" ? Object.fromEntries(new URLSearchParams(input.oauth_query)) : input
+						if (intent.client_id === options.yepwatch.clientId) {
+							const client = await ctx.context.adapter.findOne<{ tokenEndpointAuthMethod: string; disabled?: boolean }>({ model: "oauthClient", where: [{ field: "clientId", value: options.yepwatch.clientId }] })
+							if (!client || client.disabled || client.tokenEndpointAuthMethod !== "none") throw new Error("YepWatch requires its registered public client")
+						}
+					}
+					catch { throw new APIError("BAD_REQUEST", { error: "invalid_request", message: "Invalid YepWatch authorization request" }) }
+				}
 				if (options.mcp && ctx.path === "/oauth2/register") {
 					if (ctx.body?.dpop_bound_access_tokens === true)
 						throw new APIError("BAD_REQUEST", {

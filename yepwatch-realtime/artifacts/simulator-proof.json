@@ -1,0 +1,25 @@
+{
+  "result": "PASS",
+  "scope": "One operator, localhost controller + actual app8101/API15995/WS4319; finite real sample, fresh memory rooms only.",
+  "simulatedPeople": 2,
+  "scenarios": [
+    "S02 independent cards, no early shortlist",
+    "S03 agreement through consent/decision",
+    "S04 disagreement produces empty shortlist",
+    "S05 slow/pause/disconnect wait",
+    "S14 fresh-ticket reconnect/private recovery"
+  ],
+  "visibleUiOnly": true,
+  "hostVotes": 7,
+  "independentPrivateCards": true,
+  "onePersonStepDoesNotAdvanceAnother": true,
+  "disconnectedRequiredVoterPreserved": true,
+  "pauseResume": true,
+  "freshTicketReconnect": true,
+  "noInventedActivity": true,
+  "disagreementNoMajorityOverride": true,
+  "sharedFrameCount": 66,
+  "privateFieldsOnSharedFrames": false,
+  "javascriptErrors": [],
+  "capabilitiesAndInvitesRedacted": true
+}

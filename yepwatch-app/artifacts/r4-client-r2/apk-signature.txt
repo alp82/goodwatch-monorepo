@@ -1,0 +1,4 @@
+V2 Signer: certificate DN: CN=YepWatch local preview
+V2 Signer: certificate SHA-256 digest: 7a4b9faa194c068222940ebe1661ab6f8fd3d714785a15bf76d23352a9752d1d
+V2 Signer: certificate SHA-1 digest: 339033d60222d29ed651738f03f63a4e95d8be3f
+V2 Signer: certificate MD5 digest: 6a569e0ad97a34b319681a2df87b3cb4

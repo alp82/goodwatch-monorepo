@@ -1,0 +1,86 @@
+# Coolify: Docker Compose from Git; base directory /; file /yepwatch-app/compose.yaml.
+# Domain on front only: https://yepwatch.com:8080 (8080 is the internal port).
+x-common: &common
+  restart: unless-stopped
+  init: true
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  user: "1000:1000"
+  stop_grace_period: 30s
+  pids_limit: 96
+  logging:
+    driver: json-file
+    options: {max-size: "10m", max-file: "3"}
+services:
+  front:
+    <<: *common
+    build:
+      context: ..
+      dockerfile: yepwatch-realtime/release/Dockerfile.repository
+      target: front
+    expose: ["8080"]
+    mem_limit: 128m
+    tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=32m"]
+    depends_on:
+      api: {condition: service_healthy}
+      gateway: {condition: service_healthy}
+  api:
+    <<: *common
+    build:
+      context: ..
+      dockerfile: yepwatch-realtime/release/Dockerfile.repository
+      target: api
+    expose: ["3000"]
+    mem_limit: 3g
+    tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=128m"]
+    environment:
+      SOURCE_COMMIT: ${SOURCE_COMMIT:-unknown}
+      YEPWATCH_PROPOSAL_PUBLIC_ORIGIN: https://yepwatch.com
+      YEPWATCH_PROPOSAL_ALLOWED_ORIGINS: https://yepwatch.com
+      YEPWATCH_PROPOSAL_SECRET: ${YEPWATCH_ROOM_KEY:?Set a stable random room key of at least 32 characters}
+      YEPWATCH_PROPOSAL_KEY_ID: ${YEPWATCH_KEY_ID:-yepwatch-first-release-01}
+      YEPWATCH_PROPOSAL_GATEWAY_SECRET: ${YEPWATCH_GATEWAY_SECRET:?Set a separate random service secret of at least 32 characters}
+      YEPWATCH_PROPOSAL_CRATEDB_ORIGIN: ${YEPWATCH_ROOM_ORIGIN:-http://10.0.0.11:4200}
+      YEPWATCH_PROPOSAL_CRATEDB_USERNAME: ${YEPWATCH_ROOM_USER:-yepwatch_runtime}
+      YEPWATCH_PROPOSAL_CRATEDB_PASSWORD: ${YEPWATCH_ROOM_PASSWORD:?Set room database password}
+      YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS: "20"
+      YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE: "20"
+      YEPWATCH_PROPOSAL_COMMANDS_PER_MINUTE: "600"
+      YEPWATCH_PROPOSAL_ACTOR_COMMANDS_PER_MINUTE: "60"
+      YEPWATCH_PROPOSAL_REDIS_NODES: '[{"host":"10.0.0.14","port":6379},{"host":"10.0.0.15","port":6379},{"host":"10.0.0.16","port":6379}]'
+      YEPWATCH_PROPOSAL_REDIS_USER: ${YEPWATCH_REDIS_USER:-default}
+      YEPWATCH_PROPOSAL_REDIS_PASSWORD: ${YEPWATCH_REDIS_PASSWORD:?Set existing Redis password}
+      CRATE_HOSTS: 10.0.0.11,10.0.0.12,10.0.0.13
+      CRATE_PORT: "4200"
+      CRATE_USER: ${YEPWATCH_CATALOG_USER:-yepwatch_catalog}
+      CRATE_PASS: ${YEPWATCH_CATALOG_PASSWORD:?Set read-only catalog database password}
+      REDIS_HOST: 10.0.0.14
+      REDIS_HOST2: 10.0.0.15
+      REDIS_HOST3: 10.0.0.16
+      REDIS_PORT: "6379"
+      REDIS_USER: ${YEPWATCH_CATALOG_REDIS_USER:-${YEPWATCH_REDIS_USER:-default}}
+      REDIS_PASS: ${YEPWATCH_CATALOG_REDIS_PASSWORD:-${YEPWATCH_REDIS_PASSWORD}}
+      YEPWATCH_MEMBER_ENABLED: ${YEPWATCH_MEMBER_ENABLED:-false}
+      YEPWATCH_MEMBER_ISSUER_ORIGIN: https://goodwatch.app
+      AUTH_YEPWATCH_RESOURCE: https://yepwatch.com/api/yepwatch
+      AUTH_YEPWATCH_CLIENT_ID: ${YEPWATCH_GOODWATCH_CLIENT_ID:-}
+      AUTH_YEPWATCH_REDIRECT_URIS: https://yepwatch.com/api/yepwatch/v1/proposal/member/callback
+  gateway:
+    <<: *common
+    build:
+      context: ..
+      dockerfile: yepwatch-realtime/release/Dockerfile.repository
+      target: gateway
+    expose: ["4311"]
+    mem_limit: 512m
+    tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=32m"]
+    environment:
+      YEPWATCH_ALLOWED_ORIGINS: https://yepwatch.com
+      YEPWATCH_API_ORIGIN: http://api:3000
+      YEPWATCH_GATEWAY_SECRET: ${YEPWATCH_GATEWAY_SECRET}
+      YEPWATCH_VALKEY_NODES: '[{"host":"10.0.0.14","port":6379},{"host":"10.0.0.15","port":6379},{"host":"10.0.0.16","port":6379}]'
+      YEPWATCH_VALKEY_USER: ${YEPWATCH_REDIS_USER:-default}
+      YEPWATCH_VALKEY_PASSWORD: ${YEPWATCH_REDIS_PASSWORD}
+    depends_on:
+      api: {condition: service_healthy}

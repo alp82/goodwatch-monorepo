@@ -1,0 +1,225 @@
+{
+  "verifiedAt": "2026-10-22T00:43:35.097383+00:00",
+  "url": "http://127.0.0.1:8132",
+  "exportDirectory": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/exports/glow-real-r13",
+  "rollbackDirectories": [
+    "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/exports/glow-real-r10",
+    "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/exports/glow-real-r9"
+  ],
+  "config": {
+    "apiOrigin": "http://127.0.0.1:15993",
+    "webSocketOrigin": "ws://127.0.0.1:4322",
+    "webSocketPath": "/api/yepwatch/v1/continuous/realtime",
+    "browserInviteOrigin": "http://127.0.0.1:8132",
+    "fixtureMode": false,
+    "developmentNotice": "Local development: real 36-title sample \u00b7 isolated room storage"
+  },
+  "sourcePin": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/review-pins/glow-r13-guest-recovery",
+  "sourceManifestSha256": "1c1ba22a6c0cad7c456b15a68880d37ed1850ca21fc4859bed1f2fdaaa11e1eb",
+  "allPriorPinsVerifiedUnchanged": true,
+  "indexSha256": "972c10303455b3839cddf3761497439ddea1cd35070bfb668bc2ec5719273387",
+  "initialScriptsHttpVerified": [
+    {
+      "path": "/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "sha256": "1dda0ff5ea4566f7514a446ddb5cf9de51f44e09d2e18c05c9bb1fdc85bc7860"
+    },
+    {
+      "path": "/_expo/static/js/web/__common-9decabd41249cffe2bcc67191d2e2752.js",
+      "sha256": "73f1690bd91ad4698b866aa32dec22cb0b910c6c64ac919d60741297c77fe5bc"
+    },
+    {
+      "path": "/_expo/static/js/web/entry-7a22d6a4d59bbb032cb0cbe546d5b4e7.js",
+      "sha256": "8acb7acb7112e6b5c0adc4562ab1adab28534bed50b2b605c094ca920dfbc008"
+    }
+  ],
+  "files": [
+    {
+      "path": "_expo/static/js/web/[id]-57c5ca09e1d2711bc3ca8dad2b801864.js",
+      "sha256": "94772ef2a4324f087fe575ea93c7634a3ffadb0a276972304596d525542e9cc8"
+    },
+    {
+      "path": "_expo/static/js/web/[id]-8bd64c858a109f44fc552fa6a9f84c29.js",
+      "sha256": "93ac25f5d19ba5fcd3af701bb6310a5b6dbd6e3a9fa366327a24280a7f7affc4"
+    },
+    {
+      "path": "_expo/static/js/web/[id]-8bd64c858a109f44fc552fa6a9f84c29.js.map",
+      "sha256": "a4dff760ed6e85ef5a1adc7672327f937f0908ee7e904d5bc625817513027360"
+    },
+    {
+      "path": "_expo/static/js/web/[id]-a28f15e70a06e0d6b9855f7b15b28091.js",
+      "sha256": "2f872a6fc2b1c0228e0bda3be6f1670a360a717a620048f62b1463bca9f7649e"
+    },
+    {
+      "path": "_expo/static/js/web/[invite]-ad9f4227077f3e08e49cac25874cd661.js",
+      "sha256": "e810c625b1e5cd9b56394b146d8908ccb39ac507512b5a6070545e99e796b3e3"
+    },
+    {
+      "path": "_expo/static/js/web/[invite]-ad9f4227077f3e08e49cac25874cd661.js.map",
+      "sha256": "f5f454fa091deb62e078f006ce13bcf5658a61adf258a271e1556de8c08d8271"
+    },
+    {
+      "path": "_expo/static/js/web/__common-823810eb649628c4164ded4ed4c4ccfa.js",
+      "sha256": "0f9997d124c221336cc7dcf8eb0fd96704e05c49eeaacc2bc30b6b15b5698a56"
+    },
+    {
+      "path": "_expo/static/js/web/__common-9decabd41249cffe2bcc67191d2e2752.js",
+      "sha256": "73f1690bd91ad4698b866aa32dec22cb0b910c6c64ac919d60741297c77fe5bc"
+    },
+    {
+      "path": "_expo/static/js/web/__common-9decabd41249cffe2bcc67191d2e2752.js.map",
+      "sha256": "3a9e8decbdf57b63184bc869f34d9501be2cb21efe070e02c4ed2e959bbd960f"
+    },
+    {
+      "path": "_expo/static/js/web/__common-a02f5b7b04e7ca092536a9ae8bf88b64.js",
+      "sha256": "30bedfa365251b7bbcbb9a211bea8ec3a30b97b42a1bb659e3f7ffa1a2a2f471"
+    },
+    {
+      "path": "_expo/static/js/web/__common-abb98ec7a1a9ee33820d1eaa0fd1742a.js",
+      "sha256": "750df9aa33e7d0a8ac3f4f80032e9a3b7faf1ada62b8cb8f3f197f1f2b1303d7"
+    },
+    {
+      "path": "_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "sha256": "1dda0ff5ea4566f7514a446ddb5cf9de51f44e09d2e18c05c9bb1fdc85bc7860"
+    },
+    {
+      "path": "_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js.map",
+      "sha256": "1f2bcee3e7f52ae71eb44544a6a9511b45cf46cf5c836dac13a92badec336824"
+    },
+    {
+      "path": "_expo/static/js/web/_layout-6c5575278c2c0fc889ebfd255fbd0246.js",
+      "sha256": "e4b8fe7d1d04f767f272119cde9f173eca244b4006008cf08b1f29fedec6852e"
+    },
+    {
+      "path": "_expo/static/js/web/_layout-6c5575278c2c0fc889ebfd255fbd0246.js.map",
+      "sha256": "9d01cfbb9d15e939d20bff42ad90572168087414c76f855fd40d20d1ce557d9f"
+    },
+    {
+      "path": "_expo/static/js/web/callback-b26fe81f6d50b7b45a5b77235a13711f.js",
+      "sha256": "770a8a0de22cf795acb68d5ac88514c285bdaeb4ddd0f24fc0cecac75dba33e1"
+    },
+    {
+      "path": "_expo/static/js/web/callback-b26fe81f6d50b7b45a5b77235a13711f.js.map",
+      "sha256": "a52c21a51ebdee570996df1be65b5c41cb1fa4ae1fcfb3caad666af04474737a"
+    },
+    {
+      "path": "_expo/static/js/web/entry-6357d578dd7b4060ec3e6d367e3f4c25.js",
+      "sha256": "b71a92da4ed09735e0e4b8fbc0f37728e30146f94cae516d702f84114b12bcda"
+    },
+    {
+      "path": "_expo/static/js/web/entry-7a22d6a4d59bbb032cb0cbe546d5b4e7.js",
+      "sha256": "8acb7acb7112e6b5c0adc4562ab1adab28534bed50b2b605c094ca920dfbc008"
+    },
+    {
+      "path": "_expo/static/js/web/entry-7a22d6a4d59bbb032cb0cbe546d5b4e7.js.map",
+      "sha256": "6511fac6b86cd8b265b1ae1886056a5b01d0db893027c0ff452961cb6d425f1d"
+    },
+    {
+      "path": "_expo/static/js/web/entry-f9f232c6016c43d8734fae494342814e.js",
+      "sha256": "212067917ced3bbea589c0bbc8224ba1685d8bc8a70bc44fcdb1b9cb671b3d7b"
+    },
+    {
+      "path": "_expo/static/js/web/index-a13c24b2e3050cca12e18b201176552a.js",
+      "sha256": "7798f99a02082b3af0cbf9b7e548618219fbc4e003032331c9c029b6214095c5"
+    },
+    {
+      "path": "_expo/static/js/web/index-a13c24b2e3050cca12e18b201176552a.js.map",
+      "sha256": "8de6712842ca5c092f19acad72e647b11a3e6278ca21381d53fb94d8bbca1693"
+    },
+    {
+      "path": "_expo/static/js/web/preview-92d560b452d40a5580451d4e04787190.js",
+      "sha256": "ec056caa5ac8dad9d1c267ee000b721eb084f89f492f5281aaad3558408e51ef"
+    },
+    {
+      "path": "_expo/static/js/web/preview-92d560b452d40a5580451d4e04787190.js.map",
+      "sha256": "d0dc4b74c1a7d276099cd88491bbee0c3af3ee19122ae9f5428683eb42de711c"
+    },
+    {
+      "path": "assets/assets/Gabarito-Bold.370606a02e13f0962a7ced4f9bc9c037.ttf",
+      "sha256": "2f93a2dacd279c2206c74adbcba17db99e540bd1b4faae3fc166c6a42480da08"
+    },
+    {
+      "path": "assets/assets/Gabarito-Regular.a60d5386c3bad06005d5b47ceb0ad0ef.ttf",
+      "sha256": "a936de73165607d73d690ca6861a7b1c79cf67b6e5bd590a7b4bdedd60662cd8"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/arrow_down.017bc6ba3fc25503e5eb5e53826d48a8.png",
+      "sha256": "6deca32b56b97fa1fa87facd6996b46cc45190a553400e7febdf1d2093099b57"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/error.d1ea1496f9057eb392d5bbf3732a61b7.png",
+      "sha256": "c15ec72a74d13957211808313d5c35deb7f7606c6d22dbddceb0000d4e0547ad"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/file.19eeb73b9593a38f8e9f418337fc7d10.png",
+      "sha256": "a69a2edb5b6c60b8433d5b6d23c69f520ccd8a602f3f60e7996e489718bc175c"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/forward.d8b800c443b8972542883e0b9de2bdc6.png",
+      "sha256": "708a79cf561b8a2a4850ce0254584d3a5231046be08fb7fadf4b6edfdb31178b"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/pkg.ab19f4cbc543357183a20571f68380a3.png",
+      "sha256": "27f4d229d440925bf7212d5dfffa45d596b2c7b3bb2905c96b839b2081a1dbeb"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/react-navigation/elements/back-icon-mask.0a328cd9c1afd0afe8e3b1ec5165b1b4.png",
+      "sha256": "9adb8c5efca932e2b732b293da813bd2e31952263056bce9e2517fec0f0b6a76"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/react-navigation/elements/back-icon.35ba0eaec5a4f5ed12ca16fabeae451d.png",
+      "sha256": "84cf5eb3b20250f69e0e4733beb4da5f417f0682892a5ad1b5e62570753c21b1"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/react-navigation/elements/clear-icon.c94f6478e7ae0cdd9f15de1fcb9e5e55.png",
+      "sha256": "d03a5cd7a66ef10c5147916f9d5878b2d0a0a5ad46f405a31cd9967efaa55afd"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/react-navigation/elements/clear-icon.c94f6478e7ae0cdd9f15de1fcb9e5e55@2x.png",
+      "sha256": "ab5613d2ce70fa67c5926e831353664945199fc195fa6fe76c5fe3cec452e31a"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/react-navigation/elements/clear-icon.c94f6478e7ae0cdd9f15de1fcb9e5e55@3x.png",
+      "sha256": "c4e54e6a0a7de636aa153378fbc62ea4a41695bfedf807f90df7b18ffd733f67"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/react-navigation/elements/clear-icon.c94f6478e7ae0cdd9f15de1fcb9e5e55@4x.png",
+      "sha256": "c86bb485eee687e06c500fc4234f51a6784b4530c2ae11d0c76481110bce3105"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/react-navigation/elements/close-icon.808e1b1b9b53114ec2838071a7e6daa7.png",
+      "sha256": "b1bc1810ca23e2c38cd76971c43591d726161061240d8b792b05757196ddb528"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/react-navigation/elements/close-icon.808e1b1b9b53114ec2838071a7e6daa7@2x.png",
+      "sha256": "cbdf9213e55f65c48d076acd8423b7c9aee4f1b81101ff6c95a38c4cd8a86461"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/react-navigation/elements/close-icon.808e1b1b9b53114ec2838071a7e6daa7@3x.png",
+      "sha256": "d05c9d30d79f45a78e5585a2e7ec67c6a06a883dd9137e1d5059e8c87b33ce76"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/react-navigation/elements/close-icon.808e1b1b9b53114ec2838071a7e6daa7@4x.png",
+      "sha256": "2325c53a73e54c438cbbc60dffdd8b513d471ba42e2f56713ef404b95e0ca1fc"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/react-navigation/elements/search-icon.286d67d3f74808a60a78d3ebf1a5fb57.png",
+      "sha256": "5d075e0c287c4f4441b5b5c8fc7ea5cd27c11bb617ecea09755955bcb1889083"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/sitemap.412dd9275b6b48ad28f5e3d81bb1f626.png",
+      "sha256": "acf691957a3bcce7d195856dce98a5cf14dce10bea28aa5c10b3550c078e23b5"
+    },
+    {
+      "path": "assets/node_modules/expo-router/assets/unmatched.20e71bdf79e3a97bf55fd9e164041578.png",
+      "sha256": "efc79da3c4c97dfb1571bff6202958ab0529c5aa31e8392600578b3e359d1447"
+    },
+    {
+      "path": "index.html",
+      "sha256": "972c10303455b3839cddf3761497439ddea1cd35070bfb668bc2ec5719273387"
+    },
+    {
+      "path": "metadata.json",
+      "sha256": "aa5f19cc84d41c0f8c70ececb2bc82e863227ea1e121632aca879eb616056991"
+    }
+  ]
+}

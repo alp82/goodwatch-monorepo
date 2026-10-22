@@ -1,0 +1,28 @@
+{
+  "apk": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/release/preview-r3/yepwatch-app/android/app/build/outputs/apk/release/app-release.apk",
+  "sha256": "eac3f80e64c5afe0eb7edc18af0e4acb4c558126c5b8c69a3a16f42d985f7061",
+  "package": "com.yepwatch.preview",
+  "version": "0.1.0",
+  "versionCode": 3,
+  "signing": "Dedicated private local preview key; NOT production/store ownership",
+  "bundledJavascript": true,
+  "metroRequired": false,
+  "publicBackendDeployed": false,
+  "api": "https://yepwatch.com",
+  "websocket": "wss://yepwatch.com",
+  "physicalDeviceInstalled": false,
+  "sourceHash": "ffeedc36a22eade4a8c8a7f35759fac61ebe661d9417f514616ab038cee2189e",
+  "build": "assembleRelease PASS, 2m53s, 618 tasks",
+  "signatureVerified": true,
+  "certificateSha256": "7a4b9faa194c068222940ebe1661ab6f8fd3d714785a15bf76d23352a9752d1d",
+  "samePreviewSigningIdentity": true,
+  "architectures": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "bytes": 56900675,
+  "installedOrLaunched": false,
+  "runtimeActivated": false,
+  "upgradeDeviceValidation": false,
+  "publicConnectedR4Validation": false
+}

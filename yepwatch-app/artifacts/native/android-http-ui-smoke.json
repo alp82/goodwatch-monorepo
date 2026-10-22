@@ -1,0 +1,15 @@
+{
+  "emulator": "emulator-5562",
+  "api": "http://127.0.0.1:15993",
+  "catalog": "Real finite36-title sample",
+  "checks": [
+    "Native guest create, explicit DE/Netflix8 setup and actual API-backed title deck rendered",
+    "Native Nope and authoritative Undo restore the same real title",
+    "Native immediate match, pick and server-confirmed fresh-check Done succeeded",
+    "Ordinary background/resume retained the confirmed decision"
+  ],
+  "physicalDevice": false,
+  "authOrCredentialTesting": false,
+  "passed": true,
+  "transport": "HTTP-backed solo proof only; initial4322 native Origin was not configured, no live claim"
+}

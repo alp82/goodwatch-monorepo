@@ -1,0 +1,136 @@
+{
+  "recordedAt": "2026-10-22T10:31:25.200Z",
+  "result": "PASS",
+  "sourceManifest": "artifacts/proposal-source-manifest.json",
+  "immutableSourceCopy": "/tmp/yepwatch-proposal-gateway-review-20261022/source",
+  "manifestSha256": "5ee8fe85b7b4e96da7908c88860a1dd40370f8bb9e337cf8a45b14be26e87b28",
+  "bundleSha256": "0fcab04e0f4577152b058980390a41b42cc3bcb7cd1cc4430034f90817685011",
+  "gateway": {
+    "pid": 2654867,
+    "host": "127.0.0.1",
+    "port": 4324,
+    "url": "ws://127.0.0.1:4324/api/yepwatch/v1/proposal/realtime",
+    "origins": [
+      "http://127.0.0.1:4324",
+      "http://127.0.0.1:8133"
+    ],
+    "apiOrigin": "http://127.0.0.1:15992",
+    "valkey": "redis://127.0.0.1:46401",
+    "revisionChannel": "yepwatch:v3:revision",
+    "activityChannel": "yepwatch:v3:activity",
+    "privateConfig": "Ignored .poc/proposal-gateway.env mode0600; only service bearer and transport fields"
+  },
+  "simulator": {
+    "pid": 2665854,
+    "url": "http://127.0.0.1:8126",
+    "source": "simulator-proposal/server.ts",
+    "peers": "1-3 independent native artificial identities including controller host; real phone joins ordinary displayed invitation",
+    "cookieName": "yepwatch_sim_control_8126",
+    "memoryOnly": true
+  },
+  "tests": [
+    {
+      "command": "npm run build",
+      "result": "PASS: typecheck and compiled Node bundle"
+    },
+    {
+      "command": "YEPWATCH_TEST_BACKEND=1 YEPWATCH_TEST_VALKEY_IMAGE=valkey/valkey:8.1 YEPWATCH_TEST_PROPOSAL_LIVE=1 npm test",
+      "passed": 39,
+      "failed": 0,
+      "skipped": 2,
+      "skips": "Old continuous live-stack tests not enabled; no old room mutations"
+    },
+    {
+      "command": "node simulator-proposal/prove.cjs",
+      "result": "PASS: actual8133 app plus own ephemeral controller",
+      "sharedFrames": 36,
+      "neutralActivityFrames": 10,
+      "javaScriptErrors": 0
+    }
+  ],
+  "contractAgreement": {
+    "version": 3,
+    "prefix": "/api/yepwatch/v1/proposal",
+    "internalTicketLeaseShapes": "Unchanged scoped shapes at new proposal paths",
+    "shared": "Anonymous revisioned proposal/counts; no proposer/approver identities, individual timing or private voting cards",
+    "inspection": "Matches only; poster current shared match at sender/queue/receiver, lens/dice targetless;1.5s action pulse; answer voting-only",
+    "timing": "Bot exposure omitted; complete-roster mean unavailable when any valid measurement missing"
+  },
+  "retainedListeners": {
+    "gateway4322": 2045976,
+    "gateway4323": 3261428,
+    "simulator8125": 2111605,
+    "app8132": 3015782,
+    "metro8140": 3286493,
+    "untouched": true
+  },
+  "limits": [
+    "Finite real catalog sample,7 DE/Netflix8 cards; not full-catalog coverage",
+    "New API runtime guest-only; member501 per backend owner",
+    "Gateway/controller scope tested; physical USB Android test belongs to app owner and is not claimed here",
+    "Ephemeral presence is TTL/session scoped, not authoritative online membership; per-gateway bounds, no global registry",
+    "Controller identities and exact pending commands are memory-only; keep existing controller processes intact",
+    "No production TLS/proxy/routing/deployment, commits, pushes or auth investigations"
+  ],
+  "credentialsInvitesAndRoomIdentifiersRedacted": true,
+  "nativeEmulator": {
+    "result": "PASS",
+    "completedAt": "2026-10-22T10:30:31Z",
+    "evidenceOwner": "YepWatch hybrid app G8x8t",
+    "artifact": "yepwatch-app/artifacts/hybrid/android-solo.json",
+    "package": "dev.yepwatch.hybrid",
+    "apkSha256": "37865aa22d4a744033d729b43277385c321d25856fa6147575500a933e67ae3c",
+    "compiledArchitectures": [
+      "arm64-v8a",
+      "x86_64"
+    ],
+    "api": 15992,
+    "gateway": 4324,
+    "checks": [
+      "Native guest create, explicit DE/Netflix8 and authenticated WebSocket choosing",
+      "Native Yep, immediate match, honest lenses, explicit proposal and fresh-check Done",
+      "Native background/resume preserves confirmed decision"
+    ],
+    "physicalUsbVerified": false
+  },
+  "nativeMixedProof": {
+    "result": "PASS",
+    "completedAt": "2026-10-22T10:33:53Z",
+    "evidenceOwner": "YepWatch hybrid app G8x8t",
+    "artifact": "yepwatch-app/artifacts/hybrid/native-mixed.json",
+    "emulator": 5562,
+    "independentClients": 3,
+    "sharedFrames": 41,
+    "neutralActivityFrames": 54,
+    "javaScriptErrors": 0,
+    "checks": [
+      "Native explicit proposal received independent browser agreement without unilateral Done",
+      "Browser replacement cleared native approval; native Agree and withdrawal were explicit and live",
+      "All three current identities explicitly agreed to replacement; fresh availability produced confirmed Done on native and browsers"
+    ],
+    "physicalUsbVerified": false
+  },
+  "updatedAt": "2026-10-22T10:38:27.133Z",
+  "backendRuntime": {
+    "api": 15992,
+    "pid": 2820395,
+    "source": "/tmp/yepwatch-hybrid-implementation-20261022/source",
+    "sourceAttribution": "Exact frozen source activated by backend owner G9wjs",
+    "crate": 15982,
+    "valkey": 46401,
+    "keysPreserved": true,
+    "installerEnabled": false
+  },
+  "postFrozenApiActivation": {
+    "result": "PASS",
+    "completedAt": "2026-10-22T10:38:27.133Z",
+    "command": "YEPWATCH_TEST_PROPOSAL_LIVE=1 node --import tsx --test test/proposal-simulator.test.ts",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "Fresh disposable rooms only, actual API/WS proposal/agree/withdraw/replacement/latejoin/undo/lost-ack/reconnect/fresh-check Done",
+    "retainedControllerAccessed": false,
+    "gatewayRestarted": false,
+    "sourceManifestUnchanged": true
+  }
+}

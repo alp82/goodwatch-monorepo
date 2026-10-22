@@ -1,3 +1,4 @@
+import { YEPWATCH_READ_SCOPE } from "./yepwatch-oauth-policy.ts"
 import type { ConnectState, ConsentApp, ConsentView } from "../../utils/mcp-connect.ts"
 import { isAddressedTo } from "../site-origin.server.ts"
 import type { createGoodwatchAuth } from "./auth.server.ts"
@@ -8,7 +9,7 @@ export type { ConnectState, ConsentApp, ConsentView }
 type AuthService = ReturnType<typeof createGoodwatchAuth>
 
 /** The scopes a member can grant on the consent page. */
-const GRANTABLE_SCOPES = new Set(["mcp:read", "mcp:write", "offline_access"])
+const GRANTABLE_SCOPES = new Set(["mcp:read", "mcp:write", "offline_access", YEPWATCH_READ_SCOPE])
 
 // The consent page of an app connecting through MCP (#570): what it shows, and the member's answer. The provider sends
 // the member here with a signed query; nothing in it is trusted before the signature is checked. The sign-in step is
@@ -102,7 +103,7 @@ export async function decideMcpConsent(request: Request, auth: AuthService): Pro
 		(scope) => GRANTABLE_SCOPES.has(scope) && (scope !== "mcp:write" || access === "write"),
 	)
 	// Every MCP call needs mcp:read, so a grant without it would only issue a token that can't be used.
-	if (decision === "allow" && !granted.includes("mcp:read"))
+	if (decision === "allow" && !granted.includes("mcp:read") && !granted.includes(YEPWATCH_READ_SCOPE))
 		return new Response("This app did not ask to see your GoodWatch", { status: 400 })
 	const scope = granted.join(" ")
 	const headers = new Headers(request.headers)

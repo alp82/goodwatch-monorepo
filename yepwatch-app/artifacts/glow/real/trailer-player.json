@@ -1,0 +1,23 @@
+{
+  "inAppIframe": true,
+  "connected": true,
+  "reportedStatus": "The player needs your attention. Use its controls or try Play with sound.",
+  "soundClaim": false,
+  "embedRefererOrigins": [
+    "http://127.0.0.1:8132"
+  ],
+  "playerReports": [
+    {
+      "state": -1,
+      "muted": false,
+      "volume": 100
+    },
+    {
+      "state": -1,
+      "muted": false,
+      "volume": 100,
+      "error": "150"
+    }
+  ],
+  "nativeDevice": "Not tested"
+}

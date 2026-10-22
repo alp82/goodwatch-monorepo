@@ -1,0 +1,45 @@
+{
+  "sourceCommit": "e7d616f23d4dc88b17d61d3d3d1c3be1aae8baed",
+  "imageArchive": "/tmp/yepwatch-images-e7d616f2/images.tar.gz",
+  "archiveSha256": "55f16a485afa17f8f7f421934e02fd8d20b4cda0d6d51d7709c6fed0a82d0130",
+  "images": [
+    {
+      "tags": [
+        "yepwatch-api:sha-e7d616f23d4dc88b17d61d3d3d1c3be1aae8baed"
+      ],
+      "id": "sha256:1f07f2f63cde9c3f2666aad2b8c87d811bec768eaca4abfbeaadcdf32bbdec14",
+      "platform": "linux/amd64"
+    },
+    {
+      "tags": [
+        "yepwatch-gateway:sha-e7d616f23d4dc88b17d61d3d3d1c3be1aae8baed"
+      ],
+      "id": "sha256:5207d10c1c84c4bb6a9b95b86f46668bdac16cb36fbc9f762af9d11ae725d5f2",
+      "platform": "linux/amd64"
+    },
+    {
+      "tags": [
+        "yepwatch-front:sha-e7d616f23d4dc88b17d61d3d3d1c3be1aae8baed"
+      ],
+      "id": "sha256:a80ccbbbf672f62010347073d635f11caa7a8e6a36ffede93e6b85f035bb4de4",
+      "platform": "linux/amd64"
+    }
+  ],
+  "android": {
+    "file": "/tmp/yepwatch-images-e7d616f2/yepwatch-preview-r4.apk",
+    "sha256": "84c7ffeb8f89561ce6f719df3dd98fc93774708a44ced5643f2b78ba1016190b",
+    "versionCode": 4,
+    "package": "com.yepwatch.preview",
+    "signatureVerified": true,
+    "installed": false
+  },
+  "publishedToRegistry": false,
+  "deployed": false,
+  "workflowSourceCommit": "0a77bf9770e52f7ce5fd6a20d20d97d94f0c41bb",
+  "validation": {
+    "imageBuilds": "all three passed",
+    "workflow": "actionlint passed; no GitHub run observed; dispatch returned 404",
+    "staticSmoke": "root and room route 200; internal API/missing association/missing APK 404",
+    "android": "release compile ARM64 and x86_64; signature verified; no device installation"
+  }
+}

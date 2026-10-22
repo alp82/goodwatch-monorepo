@@ -1,0 +1,173 @@
+--- r4-client-r1/app.config.ts
++++ r4-client-r2/app.config.ts
+@@ -7,7 +7,7 @@
+     throw new Error('APP_VARIANT must be development, preview or production.');
+   if (variant === 'development') return config as ExpoConfig;
+   const preview = variant === 'preview';
+-  const build = Number(process.env.APP_BUILD_NUMBER ?? '2');
++  const build = Number(process.env.APP_BUILD_NUMBER ?? '3');
+   if (!Number.isSafeInteger(build) || build < 1) throw new Error('APP_BUILD_NUMBER must be a positive integer.');
+   for (const key of ['EXPO_PUBLIC_API_ORIGIN', 'EXPO_PUBLIC_APP_ORIGIN']) {
+     if (process.env[key] !== 'https://yepwatch.com') throw new Error(`${key} must be https://yepwatch.com for release builds.`);
+--- r4-client-r1/docs/private-beta-builds.md
++++ r4-client-r2/docs/private-beta-builds.md
+@@ -11,17 +11,17 @@
+ | Preview | `com.yepwatch.preview` | Separate standalone YepWatch Beta APK / iOS Simulator |
+ | Production | `com.yepwatch.app` | Intended store identity, not registered/submitted here |
+ 
+-Version is0.1.0. Increment `APP_BUILD_NUMBER` (positive Android versionCode / iOS buildNumber) in the base EAS profile for each new distributed build; do not reuse a store build counter. Current default2 is the R4 retry-compatible preview; the first preview remains code1. No OTA update service is configured.
++Version is0.1.0. Increment `APP_BUILD_NUMBER` (positive Android versionCode / iOS buildNumber) in the base EAS profile for each new distributed build; do not reuse a store build counter. Current default3 is the R4 retry-compatible preview; the first preview remains code1. No OTA update service is configured.
+ 
+ ## Local Android preview
+ 
+ Full repo and Node24 are required because the contracts are a sibling file dependency. Run `npm ci --install-links` inside `yepwatch-app`.
+ 
+ - `npm run release:config` validates/prints public production configuration.
+-- `npm run release:web` creates isolated `.expo/exports/beta-web-r2` (choose a new output for subsequent exports).
+-- `npm run release:preview:android` creates isolated `.expo/release/preview-r2`, installs copied dependencies, prebuilds and compiles an ARM64+x86_64 standalone release APK. It requires the full JDK21 and AndroidSDK configured in the script; it never installs on a device or starts Metro.
++- `npm run release:web` creates isolated `.expo/exports/beta-web-r3` (choose a new output for subsequent exports).
++- `npm run release:preview:android` creates isolated `.expo/release/preview-r3`, installs copied dependencies, prebuilds and compiles an ARM64+x86_64 standalone release APK. It requires the full JDK21 and AndroidSDK configured in the script; it never installs on a device or starts Metro.
+ 
+-The APK and SHA256 are recorded in `.expo/release/preview-r2/build-result.json`. A dedicated preview key lives only under ignored `.expo/signing/preview` with private file permissions. Preserve it privately for compatible preview updates. This key is **not** a production/store signing or upload key. Do not copy its passwords/keystore into source, logs, EAS uploads or public reports. Local Gradle signing is enabled only for the preview variant through the config plugin; production cloud credentials are separate.
++The APK and SHA256 are recorded in `.expo/release/preview-r3/build-result.json`. A dedicated preview key lives only under ignored `.expo/signing/preview` with private file permissions. Preserve it privately for compatible preview updates. This key is **not** a production/store signing or upload key. Do not copy its passwords/keystore into source, logs, EAS uploads or public reports. Local Gradle signing is enabled only for the preview variant through the config plugin; production cloud credentials are separate.
+ 
+ A bundled APK can compile/launch without Metro, USB or a deployed backend. Ordinary entry working offline does not prove network rooms. Do not replace/relaunch the user's active `dev.yepwatch.hybrid` app to test the preview.
+ 
+--- r4-client-r1/docs/r4-retry-compatibility.md
++++ r4-client-r2/docs/r4-retry-compatibility.md
+@@ -10,4 +10,6 @@
+ 
+ A stored request is restored without replay after app/tab reload. Its nickname/invite remain fixed until reconciliation, and the remaining cooldown is retained. Storage failure blocks creating a new bootstrap or sending an unpersisted command. Backgrounding does not turn countdown expiry into a network action.
+ 
+-Preview package/signing identity remain `com.yepwatch.preview` and the original private preview certificate. New versionCode/buildNumber2 and separate `preview-r2`/`beta-web-r2` outputs preserve the first APK/export. No permanent store key, account or cloud job is created. The public HTTPS/WSS origins stay `yepwatch.com`; local checks do not imply deployment.
++Preview package/signing identity remain `com.yepwatch.preview` and the original private preview certificate. New versionCode/buildNumber3 and separate `preview-r3`/`beta-web-r3` outputs preserve the first APK/export. No permanent store key, account or cloud job is created. The public HTTPS/WSS origins stay `yepwatch.com`; local checks do not imply deployment.
++
++The first R4 client pin and code2 APK are superseded: an in-memory bootstrap could bypass a failed initial storage write. The correction always persists the exact saved bootstrap before every admission submit, including manual retries; injected repeated storage failures must produce zero create/join requests until persistence succeeds. Frozen prior pins/artifacts remain unchanged.
+--- r4-client-r1/eas.json
++++ r4-client-r2/eas.json
+@@ -8,7 +8,7 @@
+       "node": "24.15.0",
+       "env": {
+         "APP_VARIANT": "production",
+-        "APP_BUILD_NUMBER": "2",
++        "APP_BUILD_NUMBER": "3",
+         "EXPO_PUBLIC_API_ORIGIN": "https://yepwatch.com",
+         "EXPO_PUBLIC_APP_ORIGIN": "https://yepwatch.com",
+         "EXPO_PUBLIC_WS_ORIGIN": "wss://yepwatch.com",
+--- r4-client-r1/package.json
++++ r4-client-r2/package.json
+@@ -48,7 +48,7 @@
+     "export:native": "expo export --platform ios --platform android --source-maps --output-dir dist-native",
+     "check:resolution": "node scripts/check-resolution.cjs",
+     "release:config": "node scripts/release-env.cjs config --type public",
+-    "release:web": "node scripts/release-env.cjs export --platform web --output-dir .expo/exports/beta-web-r2 --clear",
++    "release:web": "node scripts/release-env.cjs export --platform web --output-dir .expo/exports/beta-web-r3 --clear",
+     "release:preview:android": "python3 scripts/build-preview-android.py"
+   },
+   "private": true
+--- r4-client-r1/scripts/build-preview-android.py
++++ r4-client-r2/scripts/build-preview-android.py
+@@ -3,7 +3,7 @@
+ import hashlib, json, os, secrets, shutil, subprocess
+ 
+ APP = Path(__file__).resolve().parent.parent
+-BUILD = int(os.environ.get('APP_BUILD_NUMBER', '2'))
++BUILD = int(os.environ.get('APP_BUILD_NUMBER', '3'))
+ assert BUILD >= 1, 'Positive APP_BUILD_NUMBER required.'
+ RUN = APP / f'.expo/release/preview-r{BUILD}'
+ PROJECT = RUN / 'yepwatch-app'
+--- r4-client-r1/scripts/release-env.cjs
++++ r4-client-r2/scripts/release-env.cjs
+@@ -1,5 +1,5 @@
+ const { spawnSync } = require('node:child_process');
+-const env = { ...process.env, APP_VARIANT: process.env.APP_VARIANT ?? 'production', APP_BUILD_NUMBER: process.env.APP_BUILD_NUMBER ?? '2',
++const env = { ...process.env, APP_VARIANT: process.env.APP_VARIANT ?? 'production', APP_BUILD_NUMBER: process.env.APP_BUILD_NUMBER ?? '3',
+   EXPO_NO_DOTENV: '1', EXPO_PUBLIC_API_ORIGIN: 'https://yepwatch.com', EXPO_PUBLIC_APP_ORIGIN: 'https://yepwatch.com',
+   EXPO_PUBLIC_WS_ORIGIN: 'wss://yepwatch.com', EXPO_PUBLIC_ENABLE_FIXTURES: 'false', EXPO_PUBLIC_GUEST_ONLY: 'true' };
+ delete env.EXPO_PUBLIC_DEVELOPMENT_NOTICE;
+--- r4-client-r1/src/features/Entrance.tsx
++++ r4-client-r2/src/features/Entrance.tsx
+@@ -122,9 +122,11 @@
+           intent,
+           retryAt: 0,
+         };
+-        await writeAdmission(intent, saved);
+-        setAdmission(saved);
+-      }
++      }
++      // A prior failed write may have retained this request only in memory.
++      // Persist the exact bootstrap before EVERY possible admission submit.
++      await writeAdmission(intent, saved);
++      setAdmission(saved);
+       let result;
+       if (saved.code) {
+         const { roomId } = await api.resolve(saved.code);
+--- r4-client-r1/tests/glow-browser/retry.spec.ts
++++ r4-client-r2/tests/glow-browser/retry.spec.ts
+@@ -73,3 +73,39 @@
+   await page.goto('/room/test-room');await page.getByRole('button',{name:'Yep',exact:true}).click();
+   await expect(page.getByText('This room has expired',{exact:false})).toBeVisible();await expect(page.getByRole('button',{name:'Retry pending action',exact:true})).toHaveCount(0);expect(commands).toBe(1);
+ });
++
++for (const mode of ['create', 'join'] as const) test(`${mode} must persist the exact bootstrap before every submit after repeated storage failures`, async ({page}) => {
++  await common(page);
++  if (mode === 'join') await page.route('**/proposal/rooms/test-room', route => route.fulfill({status:401,json:{error:{code:'unauthorized',message:'No existing membership',retryable:false}}}));
++  await page.addInitScript(() => {
++    const original = Storage.prototype.setItem;
++    const state = { allow: false, writes: [] as string[] };
++    Object.defineProperty(window, 'admissionStorageTest', {value:state});
++    Storage.prototype.setItem = function(key, value) {
++      if (key.startsWith('yepwatch.v3.admission.')) {
++        state.writes.push(value);
++        if (!state.allow) throw new Error('Injected admission storage write failure');
++      }
++      return original.call(this,key,value);
++    };
++  });
++  const bodies: GuestAdmissionRequest[] = [];
++  await page.route(mode === 'create' ? '**/proposal/rooms' : '**/proposal/rooms/test-room/join', route => {
++    bodies.push(route.request().postDataJSON());
++    return route.fulfill({status:429,headers:{'Retry-After':'1'},json:{error:{code:'limit_reached',message:'Manual retry only',retryable:true}}});
++  });
++  await page.goto('/'); await page.getByLabel('Your nickname').fill('Persist first');
++  if (mode === 'join') { await page.getByRole('button',{name:'Join with an invitation',exact:true}).click();await page.getByLabel('Room code or invitation').fill('fixture-invite'); }
++  const action=page.getByRole('button',{name:mode==='create'?'Create a room':'Join room',exact:true});
++  await action.click();await expect(page.getByText(/storage is unavailable/)).toBeVisible();expect(bodies).toHaveLength(0);
++  await expect(action).toBeEnabled();await action.click();await expect(action).toBeDisabled();await expect(action).toHaveText(/Retry in/);
++  expect(bodies).toHaveLength(0); // A retained in-memory request is not proof of persistence.
++  const first = await page.evaluate(() => {
++    const state = (window as unknown as {admissionStorageTest:{allow:boolean;writes:string[]}}).admissionStorageTest;
++    state.allow=true; return JSON.parse(state.writes[0]);
++  });
++  await expect(action).toBeEnabled();await action.click();await expect.poll(()=>bodies.length).toBe(1);
++  expect(bodies[0]).toEqual({...first.request,...(mode==='join'?{inviteCode:first.code}:{})});
++  const stored=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('yepwatch.v3.admission.')!));
++  expect(stored.request).toEqual(first.request); expect(stored.code).toBe(first.code);
++});
+--- r4-client-r1/tests/retry.test.ts
++++ r4-client-r2/tests/retry.test.ts
+@@ -69,3 +69,24 @@
+   assert.throws(()=>decodeAdmissionRecovery(JSON.stringify(saved),'different-invite'));
+   assert.deepEqual(decodeCommandRecovery(JSON.stringify({commandId:'legacy',sequence:3,command:{type:'ready',ready:true,expectedContextVersion:1}})).envelope?.commandId,'legacy');
+ });
++
++test('native SecureStore admission write failures propagate on every attempt, with unchanged bootstrap when storage recovers', async () => {
++  const { readFileSync } = await import('node:fs');
++  const { runInNewContext } = await import('node:vm');
++  const ts = await import('typescript');
++  const source = readFileSync(new URL('../src/core/continuous/storage.ts', import.meta.url), 'utf8');
++  const exports: {writeAdmission?: (intent: string, saved: unknown) => Promise<void>} = {};
++  const writes: {key:string;value:string}[] = []; let allow = false;
++  const code = ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
++  runInNewContext(code,{exports,require:(name: string) => {
++    if(name==='expo-secure-store') return {WHEN_UNLOCKED_THIS_DEVICE_ONLY:'device',setItemAsync:async(key:string,value:string)=>{writes.push({key,value});if(!allow)throw new Error('Injected SecureStore failure');}};
++    if(name==='expo-crypto') return {CryptoDigestAlgorithm:{SHA256:'SHA256'},digestStringAsync:async()=> 'stable-intent-hash'};
++    if(name==='./recovery-state') return {};
++    throw new Error('Unexpected native storage dependency');
++  }});
++  const saved={intent:'',code:'',retryAt:0,request:{contractVersion:3,commandId:'same-id',admissionSecret:'isolated-test-bootstrap',nickname:'Guest'}};
++  await assert.rejects(exports.writeAdmission!('',saved),/Injected SecureStore failure/);
++  await assert.rejects(exports.writeAdmission!('',saved),/Injected SecureStore failure/);
++  allow=true;await exports.writeAdmission!('',saved);
++  assert.equal(writes.length,3);assert.ok(writes.every(w=>w.key==='yepwatch.v3.admission.stable-intent-hash' && w.value===JSON.stringify(saved)));
++});

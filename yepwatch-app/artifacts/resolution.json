@@ -1,0 +1,37 @@
+{
+  "installedContractIsCopy": true,
+  "resolutions": [
+    {
+      "name": "react",
+      "resolved": "node_modules/react/index.js"
+    },
+    {
+      "name": "react-native",
+      "resolved": "node_modules/react-native/index.js"
+    },
+    {
+      "name": "react-native-web",
+      "resolved": "node_modules/react-native-web/dist/cjs/index.js"
+    },
+    {
+      "name": "expo",
+      "resolved": "node_modules/expo/build/Expo.js"
+    }
+  ],
+  "graphs": [
+    {
+      "folder": ".expo/exports/hybrid-r2",
+      "sourceMaps": 11,
+      "modules": 1804,
+      "sharedContractPresent": true,
+      "webappOrServerCodePresent": false
+    },
+    {
+      "folder": ".expo/exports/hybrid-native-r2",
+      "sourceMaps": 2,
+      "modules": 2946,
+      "sharedContractPresent": true,
+      "webappOrServerCodePresent": false
+    }
+  ]
+}

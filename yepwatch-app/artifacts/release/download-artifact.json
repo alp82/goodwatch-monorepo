@@ -1,0 +1,19 @@
+{
+  "directory": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/release/preview-download-r1",
+  "staticInput": "Copy downloads/ into static document root; INSTALL.md is optional operator notes. Frozen beta-web-r1 stays unchanged.",
+  "filename": "yepwatch-preview-r1.apk",
+  "intendedUrl": "https://yepwatch.com/downloads/yepwatch-preview-r1.apk",
+  "sha256": "e6b059d942f0d10c53daff0afafac1b7f52198a86534897bc340c389e1aa9a53",
+  "bytes": 56891143,
+  "package": "com.yepwatch.preview",
+  "version": "0.1.0",
+  "versionCode": 1,
+  "privateSigningMaterialIncluded": false,
+  "deployed": false,
+  "physicalDeviceActions": false,
+  "files": [
+    "downloads/yepwatch-preview-r1.apk",
+    "downloads/yepwatch-preview-r1.apk.sha256",
+    "INSTALL.md"
+  ]
+}

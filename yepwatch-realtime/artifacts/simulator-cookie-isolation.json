@@ -1,0 +1,113 @@
+{
+  "recordedAt": "2026-10-21T15:56:24.631326+00:00",
+  "replaced8121Pid": 3067136,
+  "immediatePreReplacementState": {
+    "room": false,
+    "actors": 0,
+    "starting": false,
+    "automatic": false
+  },
+  "retained8120Pid": 2852397,
+  "retainedListenersBeforeReplacement": [
+    "LISTEN 0      511                                 127.0.0.1:4317       0.0.0.0:*    users:((\"MainThread\",pid=3410466,fd=21))",
+    "LISTEN 0      511                                 127.0.0.1:4319       0.0.0.0:*    users:((\"MainThread\",pid=156786,fd=21))",
+    "LISTEN 0      511                                 127.0.0.1:4318       0.0.0.0:*    users:((\"MainThread\",pid=3799881,fd=21))",
+    "LISTEN 0      511                                 127.0.0.1:8101       0.0.0.0:*    users:((\"MainThread\",pid=2627213,fd=21))",
+    "LISTEN 0      511                                 127.0.0.1:8100       0.0.0.0:*    users:((\"MainThread\",pid=3817599,fd=21))",
+    "LISTEN 0      511                                 127.0.0.1:8099       0.0.0.0:*    users:((\"MainThread\",pid=3434776,fd=21))",
+    "LISTEN 0      511                                 127.0.0.1:8121       0.0.0.0:*    users:((\"MainThread\",pid=3067136,fd=23))",
+    "LISTEN 0      511                                 127.0.0.1:8120       0.0.0.0:*    users:((\"MainThread\",pid=2852397,fd=23))",
+    "LISTEN 0      511                                 127.0.0.1:15997      0.0.0.0:*    users:((\"MainThread\",pid=3410395,fd=21))",
+    "LISTEN 0      511                                 127.0.0.1:15996      0.0.0.0:*    users:((\"MainThread\",pid=3807338,fd=24))",
+    "LISTEN 0      511                                 127.0.0.1:15995      0.0.0.0:*    users:((\"MainThread\",pid=271191,fd=24))",
+    "LISTEN 0      4096                                127.0.0.1:46397      0.0.0.0:*   "
+  ],
+  "replacementAuthorizedBecause": "8121 remains empty; no operator demo or pending actor command exists",
+  "legacy8120Accessed": false,
+  "liveBrowserCheck": {
+    "result": "PASS",
+    "url": "http://127.0.0.1:8121",
+    "controlCookieName": "yepwatch_sim_control_8121",
+    "legacyCookiePreserved": true,
+    "authenticatedSse": true,
+    "authenticatedControls": true,
+    "rootReload": true,
+    "emptyControllerReady": true,
+    "apiOrOtherPortRequests": 0,
+    "javascriptErrors": [],
+    "screenshot": "simulator-cookie-isolation-ready.png"
+  },
+  "completedAt": "2026-10-21T15:58:05.732044+00:00",
+  "result": "PASS",
+  "activeUrl": "http://127.0.0.1:8121",
+  "activePid": 3145807,
+  "controlCookieName": "yepwatch_sim_control_8121",
+  "legacyControlCookieName": "yepwatch_sim_control",
+  "separateBrowserProfileRequired": false,
+  "retainedServicePidsUnchanged": true,
+  "listenerPids": {
+    "8120": 2852397,
+    "8121": 3145807,
+    "15995": 271191,
+    "4319": 156786,
+    "8101": 2627213,
+    "15996": 3807338,
+    "4318": 3799881,
+    "8100": 3817599,
+    "15997": 3410395,
+    "4317": 3410466,
+    "8099": 3434776
+  },
+  "listenersAfterReplacement": [
+    "LISTEN 0      511                                 127.0.0.1:4317       0.0.0.0:*    users:((\"MainThread\",pid=3410466,fd=21))",
+    "LISTEN 0      511                                 127.0.0.1:4319       0.0.0.0:*    users:((\"MainThread\",pid=156786,fd=21))",
+    "LISTEN 0      511                                 127.0.0.1:4318       0.0.0.0:*    users:((\"MainThread\",pid=3799881,fd=21))",
+    "LISTEN 0      511                                 127.0.0.1:8101       0.0.0.0:*    users:((\"MainThread\",pid=2627213,fd=21))",
+    "LISTEN 0      511                                 127.0.0.1:8100       0.0.0.0:*    users:((\"MainThread\",pid=3817599,fd=21))",
+    "LISTEN 0      511                                 127.0.0.1:8099       0.0.0.0:*    users:((\"MainThread\",pid=3434776,fd=21))",
+    "LISTEN 0      511                                 127.0.0.1:8121       0.0.0.0:*    users:((\"MainThread\",pid=3145807,fd=23))",
+    "LISTEN 0      511                                 127.0.0.1:8120       0.0.0.0:*    users:((\"MainThread\",pid=2852397,fd=23))",
+    "LISTEN 0      511                                 127.0.0.1:15997      0.0.0.0:*    users:((\"MainThread\",pid=3410395,fd=21))",
+    "LISTEN 0      511                                 127.0.0.1:15996      0.0.0.0:*    users:((\"MainThread\",pid=3807338,fd=24))",
+    "LISTEN 0      511                                 127.0.0.1:15995      0.0.0.0:*    users:((\"MainThread\",pid=271191,fd=24))",
+    "LISTEN 0      4096                                127.0.0.1:46397      0.0.0.0:*   "
+  ],
+  "command": "cd yepwatch-realtime && YEPWATCH_SIM_PORT=8121 npm run simulator",
+  "regression": {
+    "command": "node --import tsx --test test/simulator.test.ts",
+    "beforeFix": "FAIL: first controller controls returned 403 after second controller root overwrote generic token",
+    "afterFix": "PASS: 3 tests, 0 skipped",
+    "coverage": [
+      "Two actual disposable controller processes",
+      "One shared hostname/path cookie jar across instance ports",
+      "Three alternating root/action/SSE cycles",
+      "Live SSE updates for each independent controller",
+      "Generic legacy cookie preserved",
+      "Generic-only and wrong-instance token rejected",
+      "Zero requests to disposable upstream; no API/user room mutation"
+    ]
+  },
+  "build": {
+    "command": "npm run build",
+    "result": "PASS (includes tsc --noEmit)",
+    "gatewayBundleSha256": "97fb2418850fa5424e1295a6a668f19e49f52ef84a100cebe12183eb781c2cdc",
+    "simulatorExecution": "TypeScript through tsx; not the gateway bundle"
+  },
+  "fullSuiteRerun": false,
+  "noCommitPush": true,
+  "limits": [
+    "Finite local real-catalog sample",
+    "API rooms and simulator pending commands are memory-only",
+    "Cookie follow-up created no room; prior activation smoke remains separate historical evidence"
+  ],
+  "sourceSha256": {
+    "yepwatch-realtime/simulator/server.ts": "e83e3dbb58b51f38b7b3f4bed544a133fe3632e80e83d3114cbb91ae5441ece1",
+    "yepwatch-realtime/test/simulator.test.ts": "b7bc2a33c9413c33e95c0ab4c660c86780ff72f5a4657b4a7d9c5d04a271be2a",
+    "yepwatch-realtime/simulator/engine.ts": "d8e4002b0dd91cf6e2ddacc58728af8a432f58c9bb1918ffb42dca92f68e0193",
+    "yepwatch-realtime/simulator/README.md": "1c939627fcb55a4ee35e77c32245d88855901776fe944d8012757c35c535e23f",
+    "yepwatch-realtime/README.md": "ae3977d3fb7e31a6a597a5ebf434937e760faf5400b134778928d8bb41361823",
+    "yepwatch-realtime/package.json": "74699fedf2b0cd7fe9f15e964b9ddbbc7f93bc59f1b2a72861f31fd3370a0ad5",
+    "yepwatch-realtime/package-lock.json": "189201d13d995a09cd18dc159057126196de0155f8d27790b06734b63e7b6342"
+  },
+  "hostRoomCookieForwardingUnchanged": true
+}

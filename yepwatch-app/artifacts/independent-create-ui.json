@@ -1,0 +1,10 @@
+{
+  "url": "http://127.0.0.1:8099/",
+  "apiOrigin": "http://127.0.0.1:15997",
+  "freshCreate": true,
+  "secondCreate": true,
+  "reopenNoJoin": true,
+  "newTabCookieRecovery": true,
+  "manualCodeNoJoin": true,
+  "freshGuestJoin": true
+}

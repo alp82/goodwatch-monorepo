@@ -1,0 +1,440 @@
+{
+  "pin": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/review-pins/glow-r13-guest-recovery",
+  "sourceRoot": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/review-pins/glow-r13-guest-recovery/yepwatch-app",
+  "parentPin": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/review-pins/glow-r12-layout",
+  "parentManifestSha256": "746330d587d5761079aff8d922f664e8fe6c4f80183adee3f9ca73482bc4fedb",
+  "files": 103,
+  "manifestEncoding": "SHA256 of compact JSON entries in listed order",
+  "manifestSha256": "1c1ba22a6c0cad7c456b15a68880d37ed1850ca21fc4859bed1f2fdaaa11e1eb",
+  "changed": [
+    {
+      "path": "yepwatch-app/docs/glow-implementation.md",
+      "before": "36f0dfa811b05f6f4512781275c12b790b0fae0cbe4ff8131ebef0fd73e77391",
+      "after": "2815c1daefe11e436178cde2d423f31ec2f920accd758f338489c3873786425b"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/Lobby.tsx",
+      "before": "61ae0c1c3c61244c8b80ab594e1f9592d8c71ef915cddbe7f2df214da1975f04",
+      "after": "704f3e416b9f2331763363b5c29c9003f81a6d2255f52ffc427409f55a3fd1f1"
+    },
+    {
+      "path": "yepwatch-app/tests/glow-browser/client.spec.ts",
+      "before": "60fbe7ff20ada7105ae7ba181c4ab505b5294014ebb1c9b172f5642645efdd7a",
+      "after": "2a6f41a5eed32ef91aa5b8b695baceff86d39ab096838c74232ef5a8984bd504"
+    }
+  ],
+  "entries": [
+    {
+      "path": "goodwatch-webapp/packages/yepwatch-contracts/CONTINUOUS.md",
+      "sha256": "eaf556a664efec77a946b50297c02d58206b755cedfb2ad83abd2f0362f43590"
+    },
+    {
+      "path": "goodwatch-webapp/packages/yepwatch-contracts/README.md",
+      "sha256": "8035d4e04b1ac91bf5542df4b38f2dd7df539288d8441a2640b3eccd27ad373d"
+    },
+    {
+      "path": "goodwatch-webapp/packages/yepwatch-contracts/continuous.ts",
+      "sha256": "df8b70fb186ba7b3e0f3af657a69748319a5b703dba614dfd0b3c290dacbd5fe"
+    },
+    {
+      "path": "goodwatch-webapp/packages/yepwatch-contracts/index.ts",
+      "sha256": "be9f921fc64a4245f272129d721bca38c40eb632e719323435474ab047ad8fdd"
+    },
+    {
+      "path": "goodwatch-webapp/packages/yepwatch-contracts/package.json",
+      "sha256": "9f127e3ca9560106ed3cbfdc655b76d3f743a4e415a717612cf18ec0e537b22d"
+    },
+    {
+      "path": "yepwatch-app/.env.example",
+      "sha256": "37b8a22bd9a4d248fe544068d45ea184cca259c99a1eedd1d54a3b81b6d34db8"
+    },
+    {
+      "path": "yepwatch-app/.npmrc",
+      "sha256": "0ed44e7d606cd7a9eba915a10f13a13a09ea85e4b2bb4415bb0c481dbdcded51"
+    },
+    {
+      "path": "yepwatch-app/AGENTS.md",
+      "sha256": "b7d381dd55800d242252e8bf89a40b026586d254e34908210931bc35582396a3"
+    },
+    {
+      "path": "yepwatch-app/README.md",
+      "sha256": "8037f0cc21dc13c10cc869a71c42d8150214c4d1792bddd6478438361e7dc0ec"
+    },
+    {
+      "path": "yepwatch-app/app.json",
+      "sha256": "6030581d01a7d6356a597e13712c24ea31dce42a74ccd4289b5baa7c2a12d1b4"
+    },
+    {
+      "path": "yepwatch-app/assets/Gabarito-Bold.ttf",
+      "sha256": "2f93a2dacd279c2206c74adbcba17db99e540bd1b4faae3fc166c6a42480da08"
+    },
+    {
+      "path": "yepwatch-app/assets/Gabarito-Regular.ttf",
+      "sha256": "a936de73165607d73d690ca6861a7b1c79cf67b6e5bd590a7b4bdedd60662cd8"
+    },
+    {
+      "path": "yepwatch-app/assets/OFL-Gabarito.txt",
+      "sha256": "21506cc7106bbfd4aa1c40371f33f9f4296182a8e4bb46658e99af24feb4bfca"
+    },
+    {
+      "path": "yepwatch-app/docs/creation-regression.md",
+      "sha256": "302e29b896b5dc65e171ca5a0b4a76c4b940c626b29ff731e1ac61b9627cc63b"
+    },
+    {
+      "path": "yepwatch-app/docs/glow-implementation.md",
+      "sha256": "2815c1daefe11e436178cde2d423f31ec2f920accd758f338489c3873786425b"
+    },
+    {
+      "path": "yepwatch-app/docs/verification.md",
+      "sha256": "1aba9127b5d456eb6089d9e2f511a87812bd94d77be0c4d59ddfc8f4b9d3e111"
+    },
+    {
+      "path": "yepwatch-app/eslint.config.js",
+      "sha256": "cd1d9a891ee8be16fe5b0fc05c93d4bdb9acd25d585d95e808d479a9f656fa19"
+    },
+    {
+      "path": "yepwatch-app/package-lock.json",
+      "sha256": "73857624902a5fcc231f0019d0da072d9a56f4eb14048948a17dff438ca8fdd9"
+    },
+    {
+      "path": "yepwatch-app/package.json",
+      "sha256": "7117859f8bd1b9241810c8d1a10ca2232320247da4b91eab396f0bcfcc79d6f4"
+    },
+    {
+      "path": "yepwatch-app/playwright.config.ts",
+      "sha256": "b799c6482265bb527776b223928dd3c195ed00b7675b42fe6d7e181d93808c4d"
+    },
+    {
+      "path": "yepwatch-app/scripts/check-resolution.cjs",
+      "sha256": "8c6961a312f00b2217e64dce834fc41f82b272d1bad3f82ad0ad240af1e9b761"
+    },
+    {
+      "path": "yepwatch-app/scripts/glow-activity-video.cjs",
+      "sha256": "d1351c7a24d81d35c021abbd906cf3ad7554e6b1f690cac64b1cdc98be78ca66"
+    },
+    {
+      "path": "yepwatch-app/scripts/glow-member-smoke.cjs",
+      "sha256": "98642de90c9bdde9da6349b9b1252ca0d458a411d2625f23c71b8212218eee72"
+    },
+    {
+      "path": "yepwatch-app/scripts/glow-multiplayer.cjs",
+      "sha256": "4be24206027dbd88fbcbd5b4c31a79c863d72ed8c07f834063665e349da72b44"
+    },
+    {
+      "path": "yepwatch-app/scripts/glow-smoke.cjs",
+      "sha256": "8db94e04291280f3ef7937d9df48680461b761c6ee263dd1a8cf2122d80d5164"
+    },
+    {
+      "path": "yepwatch-app/scripts/glow-trailer-smoke.cjs",
+      "sha256": "2c14096e8c6c6b021007456f14ac153b212a393b97f6331a14570e419499452a"
+    },
+    {
+      "path": "yepwatch-app/scripts/poc-browser.cjs",
+      "sha256": "8729e5e1a2379ecbe73a3f0d8d2ba1983dd778f6f73513653ee2a05cc0d1b46e"
+    },
+    {
+      "path": "yepwatch-app/scripts/poc-guest-browser.cjs",
+      "sha256": "d2e0a79e8e5276d327a6dcce1416674ba44eb5859d4aa67d4eff6bf3714a76b3"
+    },
+    {
+      "path": "yepwatch-app/scripts/poc-real-browser.cjs",
+      "sha256": "d0b4e442396bae651e6bf6e949ae7f6798706b75ad741c055fd87ba2418b1e90"
+    },
+    {
+      "path": "yepwatch-app/scripts/repro-create.cjs",
+      "sha256": "5fe2e728efd51878aa56aaa79bd40042d6ef17c5140c1a44fa70ea91291f2e4d"
+    },
+    {
+      "path": "yepwatch-app/scripts/serve.cjs",
+      "sha256": "e99e989581285309f4ae4e95df1e2aca067e85901b37847c895673e61f5dec3d"
+    },
+    {
+      "path": "yepwatch-app/src/app/_layout.tsx",
+      "sha256": "78cee3deac20fd80b41747ff2a5bede87f579095fd168438ba2818e1354c83aa"
+    },
+    {
+      "path": "yepwatch-app/src/app/auth/callback.tsx",
+      "sha256": "89a163658ccf978e1d25ed9a7ecef8be66f0aace5998e2bb4abd66a9b460ea75"
+    },
+    {
+      "path": "yepwatch-app/src/app/index.tsx",
+      "sha256": "8da6697890be3839f959dc9fb1ae6226019d6f759ff0074f921a2a705d72caf2"
+    },
+    {
+      "path": "yepwatch-app/src/app/preview.tsx",
+      "sha256": "f357ae1f4524a7eba6bf28d9bad6c09252e3aa00f23a5847c0223b52e7c7c5f4"
+    },
+    {
+      "path": "yepwatch-app/src/app/r/[invite].tsx",
+      "sha256": "ecd5001a0bfa4f67b3deb9ad32c7d39676397b507aaf8371e67a9f004dd99482"
+    },
+    {
+      "path": "yepwatch-app/src/app/room/[id].tsx",
+      "sha256": "51aabf0dcd3ecf767ae2c09da0281c20e7e50b56048d21f85efc928b69afbeee"
+    },
+    {
+      "path": "yepwatch-app/src/components/ui.tsx",
+      "sha256": "d47389d8791d41ed78eabad758faca2a5e938f806164b614e42582043febf913"
+    },
+    {
+      "path": "yepwatch-app/src/core/api-client.ts",
+      "sha256": "55bdb7f84de28cfc6dcf23356bdac0b714e4fa7e50caecb0e2e0bf969003f72f"
+    },
+    {
+      "path": "yepwatch-app/src/core/api.ts",
+      "sha256": "903b50d7bc7e245feb35bd45590e43bb74920c07d5b36e814a2f645ead436402"
+    },
+    {
+      "path": "yepwatch-app/src/core/config.ts",
+      "sha256": "8e21bc2cd1cd6992ee899de6c5e017860419e7bf162d2db999ad95660f481891"
+    },
+    {
+      "path": "yepwatch-app/src/core/continuous/activity.ts",
+      "sha256": "e0030535e8ea019f16405b32db07a3f40edaa2fffc1de4c2199bb9f6b8def405"
+    },
+    {
+      "path": "yepwatch-app/src/core/continuous/api-client.ts",
+      "sha256": "3f3290e5be2f845903570b2d8f26058eee15b32daab8964ba4f21bdccee93f7e"
+    },
+    {
+      "path": "yepwatch-app/src/core/continuous/api.ts",
+      "sha256": "df8da6cf86cf22ca1c4e31326ded2713af7488341b59dfc5ac7a6f4e31afbf7c"
+    },
+    {
+      "path": "yepwatch-app/src/core/continuous/invite-store.ts",
+      "sha256": "87777d6fb949050e8fb6fced5376ca05f3cb4a24f64fbf09beef16be5f06bc45"
+    },
+    {
+      "path": "yepwatch-app/src/core/continuous/invite-store.web.ts",
+      "sha256": "5120adcd9380e49f367285f1971f00f66c47acc1b1d4d120c04d7175b964963c"
+    },
+    {
+      "path": "yepwatch-app/src/core/continuous/member-state.ts",
+      "sha256": "2eac0141f835d0da938acebd8d930c6612994541918068bcb7d73d3f2db34bc9"
+    },
+    {
+      "path": "yepwatch-app/src/core/continuous/member.ts",
+      "sha256": "cafae834384e63eb1d9a4f4612b188e04cc54c52811068aac4c74c7f28de84df"
+    },
+    {
+      "path": "yepwatch-app/src/core/continuous/member.web.ts",
+      "sha256": "ede4dc82c7604a5506ef398d2b125fc6c07ef6f999dc568c31459c2bc5ece750"
+    },
+    {
+      "path": "yepwatch-app/src/core/continuous/realtime.ts",
+      "sha256": "5a6f474295dafac59d42551b028dceb595a939bde24767063c1691217435121d"
+    },
+    {
+      "path": "yepwatch-app/src/core/continuous/state.ts",
+      "sha256": "25d04895fed0e85b3043b33e95e9e2d1cc46a798e7f1840fc6d6f6309454bdc5"
+    },
+    {
+      "path": "yepwatch-app/src/core/continuous/storage.ts",
+      "sha256": "fd00607bf0c16c9d0d64a726809a6ac07c9bd29916ba3e03ab6255574a246bf8"
+    },
+    {
+      "path": "yepwatch-app/src/core/continuous/storage.web.ts",
+      "sha256": "6bc30876ff8677fb4c1cb246cda61ba734e638baf419e571bfd638139568f3ea"
+    },
+    {
+      "path": "yepwatch-app/src/core/continuous/useRoom.ts",
+      "sha256": "365fc6b999a83f6b0fada1734791b07ecaa13afa6027db112d66d6a12551939b"
+    },
+    {
+      "path": "yepwatch-app/src/core/continuous/wire.ts",
+      "sha256": "862cb17caa005db32cd0b13044cffae9fbcf1c29ec38619d5efcc0dd2703abaf"
+    },
+    {
+      "path": "yepwatch-app/src/core/credentials.ts",
+      "sha256": "94eeb378c86a4403179d897a5987795b03690a5bbeb2fd35e0ea7b5111436555"
+    },
+    {
+      "path": "yepwatch-app/src/core/credentials.web.ts",
+      "sha256": "4569b9dd18770f645d82efef7a7ec25b9b485630abbe98dc6ac495231a404703"
+    },
+    {
+      "path": "yepwatch-app/src/core/episode.ts",
+      "sha256": "60ba88aa8f1dffaf56ecf1a747e827a1dcf6bade9c0f458b886a5a532f3610f4"
+    },
+    {
+      "path": "yepwatch-app/src/core/errors.ts",
+      "sha256": "74c04541d809893907d5a7dae9cfdaccfd3e767b3538cd338ea4d71c02ed1358"
+    },
+    {
+      "path": "yepwatch-app/src/core/invites.ts",
+      "sha256": "b6d81b75645dd7768c2bd82ea95a47f6f0fb85d135cc91995fcdaade2ff4618f"
+    },
+    {
+      "path": "yepwatch-app/src/core/lobby.ts",
+      "sha256": "b491371919b5856ae08e3daa6ca5e661cf79484d2797a6cdcce8beab08f55bbd"
+    },
+    {
+      "path": "yepwatch-app/src/core/providers.tsx",
+      "sha256": "bda3e078e63823f1741199e04500d916ee7d9612d545bbe376a3522c6ab7160f"
+    },
+    {
+      "path": "yepwatch-app/src/core/realtime.ts",
+      "sha256": "b42ac19715100a10e66da61f403bab17127ecc7e68e56835e03538836ede38fe"
+    },
+    {
+      "path": "yepwatch-app/src/core/recovery.ts",
+      "sha256": "c8185cd8976ecce91495fad55a39648b0d1e367db4159fecd9371c6b6f8bbbd0"
+    },
+    {
+      "path": "yepwatch-app/src/core/room-state.ts",
+      "sha256": "e32d78d9fc8c36d9d334bc829b566b2c61e8168679e7456f869bd09c364f9696"
+    },
+    {
+      "path": "yepwatch-app/src/core/wire.ts",
+      "sha256": "ac1c710c020b7493505306f0672858c67433250b86634f8418181ba87f0c0fe7"
+    },
+    {
+      "path": "yepwatch-app/src/dev/fixtures.ts",
+      "sha256": "77a43735dcef1142a63feb811be7ea65d984c8ccc86b18eb8837d93d91c377eb"
+    },
+    {
+      "path": "yepwatch-app/src/features/Decision.tsx",
+      "sha256": "a8d36df364786373762b0c1e80701ae177688284b8f3d80673db9836eeb84374"
+    },
+    {
+      "path": "yepwatch-app/src/features/Entrance.tsx",
+      "sha256": "fbdd756971983b52710939ec80a924453c3192440da599f661e673ad66dca11f"
+    },
+    {
+      "path": "yepwatch-app/src/features/LegacyRound.tsx",
+      "sha256": "f55fcd125fda47cc9f2cd1636b6212dcfadc87c1f529e3fd542e35e8024a6251"
+    },
+    {
+      "path": "yepwatch-app/src/features/Lobby.tsx",
+      "sha256": "7c63ebebaca04c30afcfe71614d20e2785849e0b68f059ed9cafcf3fa4f23136"
+    },
+    {
+      "path": "yepwatch-app/src/features/Shortlist.tsx",
+      "sha256": "658f5280168e692c3adb7df50231e0c88300063df29be48ccb0abb4e6a69dce0"
+    },
+    {
+      "path": "yepwatch-app/src/features/Voting.tsx",
+      "sha256": "da3ea5305eba7a02cef9287db39078106357e88d7ce1e1e2ccd0acab90575f13"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/Backdrop.tsx",
+      "sha256": "37180082b4028603b4c6a6a5b2488a36ea18387edc1c2b9c35d50dc41d4f81bd"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/Backdrop.web.tsx",
+      "sha256": "c5e188180ab448a6e75e204bcbce6b8c39e33803ff4ad99d0776fe1a3222b05d"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/Done.tsx",
+      "sha256": "ad09bab98b4f489820b50cecf1fe20e5061e5fca6fc6ef74ad0abe3a963b2d2c"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/Drawer.tsx",
+      "sha256": "9e96132a19c55a7404163d857e097245387bea0c717b4f1b2b8728cca5ea7228"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/Lobby.tsx",
+      "sha256": "704f3e416b9f2331763363b5c29c9003f81a6d2255f52ffc427409f55a3fd1f1"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/Peers.tsx",
+      "sha256": "23e1aa29a060873e73754b619069788dd7e3d1646533a8bbc7a35ead82dbed3c"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/Poster.tsx",
+      "sha256": "f9be13e5e32f7429fa10ce58438e21fcda98a5134dc7d7f749cd1043e10fbac9"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/Room.tsx",
+      "sha256": "7e1890a7a7aa8ebe7d0f53c47caf0fe472faa93981bd0286defaabe2af19ad5f"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/Trailer.tsx",
+      "sha256": "36990c77112b9178b9f9b76ae3d8deddda314ca1916b590c835927c6df66a7ef"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/Trailer.web.tsx",
+      "sha256": "ddea429c21730db7fcca8a3d52df3713bd3a63e059924dcc62b9a6089181f2ad"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/adapter.ts",
+      "sha256": "1c4a985f6defacab745cfd06e23264dea72295f0830ef73ff038d5dc810801ad"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/model.ts",
+      "sha256": "875d736a7822ed7955fa39e2055d222aac103570a71a346261c4c281a24bb2cb"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/theme.tsx",
+      "sha256": "ebaff0a4c96a003922da175f6e3630797fc4fcea645514e82e8be8b2d0637633"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/trailer.ts",
+      "sha256": "d7fde10bbbd9cea76a0ebda6b8cc80ae076b02d400000e3d87243f368e12c0a5"
+    },
+    {
+      "path": "yepwatch-app/src/features/glow/useDrag.ts",
+      "sha256": "aa654de8ee9eb41c1bf34a74b49389a0c66e6e89f63f5126191e8da8496d7084"
+    },
+    {
+      "path": "yepwatch-app/src/features/useRoom.ts",
+      "sha256": "8b6f3340a7436d33f38b3c54f9ec099e8c1b56f5648e86c5199cfa229c67d6a8"
+    },
+    {
+      "path": "yepwatch-app/tests/api.test.ts",
+      "sha256": "7d2383794fd8b2c36f233c12c1ec24994b821c12038d224bef551762842b5e2d"
+    },
+    {
+      "path": "yepwatch-app/tests/browser/binary-voting.spec.ts",
+      "sha256": "01cce7125a4950ac18e471ef73a6905a7a82393f4e06650bbdd15d107183b6ec"
+    },
+    {
+      "path": "yepwatch-app/tests/browser/client.spec.ts",
+      "sha256": "03744027b656387172eaa92323ff2f4000a9a39bc4e161c81477d6b7ca05d713"
+    },
+    {
+      "path": "yepwatch-app/tests/browser/expiry.spec.ts",
+      "sha256": "74331ece0bcbd85b246024061c28de479751bc3f7e325268403d524a09da59aa"
+    },
+    {
+      "path": "yepwatch-app/tests/browser/legacy-round.spec.ts",
+      "sha256": "ebff7bf1d00faff9cecd30fb3cf319d7c0b55ca30c4488a266bd3f521246fde8"
+    },
+    {
+      "path": "yepwatch-app/tests/browser/recovery.spec.ts",
+      "sha256": "4539d8ffd63615897838961a382eb04d2e1af6f1e511f6fcc55b61ab3edcb8d9"
+    },
+    {
+      "path": "yepwatch-app/tests/continuous-fixture.ts",
+      "sha256": "3c1546c7c1dd958ef537df5be36f959507f53bebaa23f85601cce01780b3082f"
+    },
+    {
+      "path": "yepwatch-app/tests/continuous-realtime.test.ts",
+      "sha256": "698ca4a66c906d5fb98525923c4111b7445b301ffdfa6c67ce5c1722f78066af"
+    },
+    {
+      "path": "yepwatch-app/tests/continuous.test.ts",
+      "sha256": "5850c579c3a1a7980f39191cb110d6b5ac597cb13eecb3d2d893aebf9229bdcf"
+    },
+    {
+      "path": "yepwatch-app/tests/glow-browser/client.spec.ts",
+      "sha256": "2a6f41a5eed32ef91aa5b8b695baceff86d39ab096838c74232ef5a8984bd504"
+    },
+    {
+      "path": "yepwatch-app/tests/lobby.test.ts",
+      "sha256": "740711c41edc0e14a8ac311dd5bbdd1d975d3a4d6c2fdf099e5284ce7cc94cae"
+    },
+    {
+      "path": "yepwatch-app/tests/realtime.test.ts",
+      "sha256": "e79048621145a22ddc928e8d79083e13ad598299e87d91b920598ad706bca353"
+    },
+    {
+      "path": "yepwatch-app/tests/state.test.ts",
+      "sha256": "a3d25b2917b6e709343be0b35a271fc34c6c0b16b01a507382aaf9b26c3183d3"
+    },
+    {
+      "path": "yepwatch-app/tsconfig.json",
+      "sha256": "b6d63fc2582c0485c0c5f973234cd31e0ea283b14d9306f417500ea35858c6a1"
+    }
+  ]
+}

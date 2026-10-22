@@ -1,0 +1,30 @@
+{
+  "app": "http://127.0.0.1:8133",
+  "export": ".expo/exports/hybrid-r2",
+  "previousExportPreserved": ".expo/exports/hybrid-r1",
+  "indexSha256": "7c315a2ddbce3f3ef9dcf91a7bccd8f2323c6c3ae674c8f667f841e2c5fc577a",
+  "initialBundles": [
+    {
+      "path": "/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "sha256": "1dda0ff5ea4566f7514a446ddb5cf9de51f44e09d2e18c05c9bb1fdc85bc7860"
+    },
+    {
+      "path": "/_expo/static/js/web/__common-ab8d55e5b91be1dbcaa510c6fe183012.js",
+      "sha256": "04c67db9359a671167e57723d0c71668d5051c66ab0a08f7e0d4c97f97bd30aa"
+    },
+    {
+      "path": "/_expo/static/js/web/entry-afeb9a813e39726bee3fedc54f6bdc4a.js",
+      "sha256": "0e9a520bf69da2ddbfba0c932b5d45b05da0bf643e7841ae8e099c9b95fbea09"
+    }
+  ],
+  "sourceHash": "f989c97f9c002f5d0d18d01e7c8efe266c9ed71a5e21c07f3b5a979182feff2d",
+  "publicConfig": {
+    "api": "http://127.0.0.1:15992",
+    "websocket": "ws://127.0.0.1:4324",
+    "appOrigin": "http://127.0.0.1:8133",
+    "fixtures": false
+  },
+  "contractVersion": 3,
+  "credentialsEmbedded": false,
+  "catalog": "Finite real sample; guest-only local runtime; sign-in501"
+}

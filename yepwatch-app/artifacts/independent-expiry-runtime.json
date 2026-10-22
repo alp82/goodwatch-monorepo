@@ -1,0 +1,31 @@
+{
+  "cases": [
+    {
+      "case": "actual HTTP snapshot410 with cached setup",
+      "terminal": true
+    },
+    {
+      "case": "actual HTTP410 after reload without query cache",
+      "terminal": true
+    },
+    {
+      "case": "actual gateway room deadline with browser cookie expiration",
+      "terminal": true,
+      "actualExpiredFrame": true
+    },
+    {
+      "case": "actual gateway short lease before room expiry",
+      "terminal": false,
+      "freshTicket": true
+    },
+    {
+      "case": "delayed real HTTP200 released after terminal HTTP410",
+      "terminalPreserved": true
+    },
+    {
+      "case": "recoverable503 and actual HTTP manual repair",
+      "terminal": false,
+      "recovered": true
+    }
+  ]
+}

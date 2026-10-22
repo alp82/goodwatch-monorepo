@@ -1,0 +1,23 @@
+{
+  "url": "http://127.0.0.1:8132",
+  "beforeRecord": "artifacts/glow/served-8132.json",
+  "unchanged": true,
+  "checks": [
+    {
+      "path": "index.html",
+      "sha256": "972c10303455b3839cddf3761497439ddea1cd35070bfb668bc2ec5719273387"
+    },
+    {
+      "path": "_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js",
+      "sha256": "1dda0ff5ea4566f7514a446ddb5cf9de51f44e09d2e18c05c9bb1fdc85bc7860"
+    },
+    {
+      "path": "_expo/static/js/web/__common-9decabd41249cffe2bcc67191d2e2752.js",
+      "sha256": "73f1690bd91ad4698b866aa32dec22cb0b910c6c64ac919d60741297c77fe5bc"
+    },
+    {
+      "path": "_expo/static/js/web/entry-7a22d6a4d59bbb032cb0cbe546d5b4e7.js",
+      "sha256": "8acb7acb7112e6b5c0adc4562ab1adab28534bed50b2b605c094ca920dfbc008"
+    }
+  ]
+}

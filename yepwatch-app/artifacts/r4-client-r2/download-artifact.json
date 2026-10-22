@@ -1,0 +1,13 @@
+{
+  "directory": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/.expo/release/preview-download-r3",
+  "staticInput": "Copy downloads/ into a separate static document root input; preserve frozen previous exports/downloads.",
+  "filename": "yepwatch-preview-r3.apk",
+  "sha256": "eac3f80e64c5afe0eb7edc18af0e4acb4c558126c5b8c69a3a16f42d985f7061",
+  "bytes": 56900675,
+  "package": "com.yepwatch.preview",
+  "versionCode": 3,
+  "signing": "Same dedicated preview certificate; no private material included",
+  "intendedUrl": "https://yepwatch.com/downloads/yepwatch-preview-r3.apk",
+  "activated": false,
+  "physicalDeviceActions": false
+}

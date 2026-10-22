@@ -1,0 +1,13 @@
+{
+  "result": "PASS",
+  "api": "http://127.0.0.1:15993",
+  "checks": [
+    "Actual DE metadata includesNetflix8",
+    "Fresh native admission persisted by API",
+    "Authenticated unexpired one-use ticket issued for exact continuous WS path"
+  ],
+  "country": "DE",
+  "serviceId": 8,
+  "credentialConfigContainsOnlyGatewayBearerAndTransportSettings": true,
+  "capabilitiesAndInvitesRedacted": true
+}

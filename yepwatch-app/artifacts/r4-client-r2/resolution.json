@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "installedContractIsCopy": true,
+  "graphs": [
+    {
+      "platform": "web",
+      "maps": 9,
+      "modules": 1043,
+      "contractPresent": true,
+      "webappServerImports": false
+    },
+    {
+      "platform": "android-release",
+      "maps": 1,
+      "modules": 1475,
+      "contractPresent": true,
+      "webappServerImports": false
+    }
+  ]
+}
