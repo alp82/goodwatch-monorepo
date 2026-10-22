@@ -1,0 +1,41 @@
+{
+  "verifiedAt": "2026-10-22T11:20:23.809687+00:00",
+  "physicalDevice": true,
+  "model": "Pixel 8 Pro",
+  "device": "husky",
+  "androidRelease": "17",
+  "buildId": "CP3A.261005.005",
+  "appPackage": "dev.yepwatch.hybrid",
+  "apkSha256": "37865aa22d4a744033d729b43277385c321d25856fa6147575500a933e67ae3c",
+  "installMethod": "adb explicit authorized target install -r",
+  "installResult": "Success",
+  "launchResult": "Status ok; own MainActivity running; intent delivered to current top-most instance",
+  "readiness": {
+    "ownAppVisuallyConfirmed": true,
+    "observedSurface": "Existing room voting screen rendered",
+    "existingStatePreserved": true,
+    "freshEntryRequired": false,
+    "verificationMethod": "App-only visual check; Android17 accessibility dump did not expose entry labels"
+  },
+  "servicesReady": {
+    "metro8141": "packager-status:running",
+    "api15992": "metadata200",
+    "gateway4324": "health200 ready:true",
+    "web8133": "HTML200"
+  },
+  "deviceReversePorts": [
+    8141,
+    15992,
+    4324,
+    8133
+  ],
+  "automatedRoomFlowPerformed": false,
+  "userTestedFlowsVerified": false,
+  "appDataCleared": false,
+  "uninstallOrReset": false,
+  "servicesRestarted": false,
+  "sourceChanged": false,
+  "serialRedacted": true,
+  "noRoomActionsDriven": true,
+  "screenshotPublished": false
+}
