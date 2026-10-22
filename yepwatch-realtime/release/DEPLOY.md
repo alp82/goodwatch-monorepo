@@ -1,5 +1,7 @@
 # Deploy the typed-storage YepWatch release
 
+Current locally built artifacts and the archive-loading path: [BUILD-20261022.md](BUILD-20261022.md).
+
 You control Coolify activation. The GitHub Action builds/publishes images only; it never accesses the host, creates database tables, changes Redis ACLs or registers accounts. This document replaces the historical R4 activation instructions.
 
 ## What runs
