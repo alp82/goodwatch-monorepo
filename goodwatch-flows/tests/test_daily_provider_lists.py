@@ -53,6 +53,8 @@ class Storage:
         self.metadata = {}
         self.crate = HistoryCrate()
         self.commits = 0
+        import mongomock
+        self.db = mongomock.MongoClient().db
 
     @contextmanager
     def run_lease(self):
@@ -81,6 +83,11 @@ class Storage:
         self.snapshots[identity] = deepcopy(snapshot)
         self.intents.pop(identity, None)
         self.commits += 1
+        self.db.tmdb_daily_provider_list_pending.delete_one({'_id': identity})
+
+    def record_failure(self, identity, at, failure):
+        from f.tmdb_api.daily_list_storage import ListStorage
+        return ListStorage(db=self.db, connector=self.crate, dry_run=self.dry_run).record_failure(identity, at, failure)
 
     def pending(self, identity):
         return set(self.intents.get(identity, []))
@@ -542,6 +549,75 @@ class DailyListTests(unittest.TestCase):
                 self.assertEqual(row['query_retries'], 0)
                 self.assertEqual(row['count_shortfall'], 1)
                 self.assertEqual(row['count_agreements'][0]['reported_total'], reported)
+
+    def test_stable_py_two_title_shortfall_already_passes_the_agreement_bound(self):
+        original = self.api.get
+        def stable(path, **params):
+            if not path.startswith('/discover/'):
+                return original(path, **params)
+            ids = list(range(1, 2204))
+            if params['sort_by'] == 'primary_release_date.desc':
+                ids.reverse()
+            page = params['page']
+            return dict(page=page, total_pages=111, total_results=2205,
+                results=[{'id': i} for i in ids[(page - 1) * 20:page * 20]])
+        self.api.get = stable
+        report = job.run_daily_lists(self.api, self.store, countries=['PY'], service_ids=[337],
+            media_types=['movie'], now=datetime(2026, 10, 22, 14))
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (1, 0))
+        self.assertEqual(report['lists'][0]['count_shortfall'], 2)
+        self.assertEqual(report['lists'][0]['sort_fallbacks'], 1)
+        self.assertEqual(report['lists'][0]['query_retries'], 0)
+
+    def test_py_root_retry_uses_integer_zero_without_reusing_the_torn_decimal_query(self):
+        original = self.api.get
+        def origin_snapshots(path, **params):
+            if not path.startswith('/discover/'):
+                return original(path, **params)
+            self.api.calls.append((path, params))
+            retry = type(params.get('vote_count.gte')) is int and params['vote_count.gte'] == 0
+            ids = list(range(1, 2222 if retry else 2204))
+            if params['sort_by'] == 'primary_release_date.desc':
+                ids.reverse()
+            page = params['page']
+            return dict(page=page, total_pages=112 if retry else 111,
+                total_results=2221 if retry else 2206 if page == 2 else 2205,
+                results=[{'id': i} for i in ids[(page - 1) * 20:page * 20]])
+        self.api.get = origin_snapshots
+        report = job.run_daily_lists(self.api, self.store, countries=['PY'], service_ids=[337],
+            media_types=['movie'], now=datetime(2026, 10, 22, 14))
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (1, 0), report)
+        self.assertEqual(report['lists'][0]['titles'], 2221)
+        self.assertEqual(report['lists'][0]['count_shortfall'], 0)
+        self.assertEqual(report['lists'][0]['query_retries'], 1)
+        retried = [p['vote_count.gte'] for path, p in self.api.calls if 'vote_count.gte' in p]
+        self.assertTrue(retried)
+        self.assertTrue(all(type(value) is int and value == 0 for value in retried))
+
+    def test_py_shortfall_reports_why_its_traversals_cannot_agree(self):
+        original = self.api.get
+        def mixed_pages(path, **params):
+            if not path.startswith('/discover/'):
+                return original(path, **params)
+            ids = list(range(1, 2204))
+            if params['sort_by'] == 'primary_release_date.desc':
+                ids.reverse()
+            page = params['page']
+            return dict(page=page, total_pages=111,
+                total_results=2206 if page == 2 else 2205,
+                results=[{'id': i} for i in ids[(page - 1) * 20:page * 20]])
+        self.api.get = mixed_pages
+        report = job.run_daily_lists(self.api, self.store, countries=['PY'], service_ids=[337],
+            media_types=['movie'], now=datetime(2026, 10, 22, 14))
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (0, 1))
+        failure = report['lists'][0]
+        self.assertEqual(failure['reason'], 'Expected 2205 distinct titles, read 2203')
+        self.assertEqual(len(failure['read_attempts']), 4)
+        self.assertTrue(all(row['rejection'] == 'paging_metadata_changed' for row in failure['read_attempts']))
+        self.assertEqual(failure['read_attempts'][-1]['reported_total'], 2205)
+        self.assertEqual(failure['read_attempts'][-1]['returned_total'], 2203)
+        self.assertEqual(self.store.snapshots, {})
+        self.assertEqual(self.store.crate.writes, [])
 
     def test_oct20_lc_netflix_retry_can_complete_after_three_titles_leave(self):
         original = self.api.get
@@ -1172,6 +1248,83 @@ class DailyListTests(unittest.TestCase):
             namespace['main']({'lists_failed': 1, 'lists': [{'key': 'US:show:8', 'error': 'IncompleteList'}]})
         report = {'lists_failed': 0, 'lists_completed': 1}
         self.assertEqual(namespace['main'](report), report)
+
+    def test_three_consecutive_failed_days_alert_without_counting_same_day_retries(self):
+        import mongomock
+        from f.tmdb_api.daily_list_storage import ListStorage
+        from windmill_preview import load_flow
+        db = mongomock.MongoClient().db
+        self.store = ListStorage(db=db, connector=HistoryCrate(), dry_run=False)
+        original = self.api.get
+        def unavailable(path, **params):
+            raise job.IncompleteList('Expected 2205 distinct titles, read 2203')
+        self.api.get = unavailable
+        namespace = {}
+        exec(load_flow('f/tmdb_api/read_daily_provider_lists')['value']['modules'][-1]['value']['content'], namespace)
+        for date, expected in [('2026-10-14T20:00:00', 1), ('2026-10-14T21:00:00', 1),
+                               ('2026-10-15T20:00:00', 2), ('2026-10-16T20:00:00', 3),
+                               ('2026-10-18T20:00:00', 1)]:
+            with self.subTest(date=date):
+                report = self.run_day(date, dry_run=False)
+                self.assertEqual(report['lists'][0]['consecutive_failure_days'], expected)
+                report['lists_completed'] = 199
+                if expected == 3:
+                    with self.assertRaisesRegex(RuntimeError, '3 consecutive days'):
+                        namespace['main'](report)
+                else:
+                    self.assertIs(namespace['main'](report), report)
+        # A successful empty read clears the failure record before later
+        # scheduled failures.
+        self.api.get, self.api.ids = original, []
+        self.run_day('2026-10-19T20:00:00', dry_run=False)
+        self.api.get = unavailable
+        report = self.run_day('2026-10-20T20:00:00', dry_run=False)
+        self.assertEqual(report['lists'][0]['consecutive_failure_days'], 1)
+        self.assertEqual(self.store.connector.writes, [])
+
+    def test_failed_preview_reports_a_streak_without_changing_production_state(self):
+        import mongomock
+        from f.tmdb_api.daily_list_storage import ListStorage
+        db = mongomock.MongoClient().db
+        db.tmdb_daily_provider_list_pending.insert_one(dict(_id='US:show:8', ids=[42],
+            failure_day=day('2026-10-15'), consecutive_failure_days=2))
+        before = list(db.tmdb_daily_provider_list_pending.find())
+        self.store = ListStorage(db=db, connector=HistoryCrate(), dry_run=True)
+        self.api.get = lambda *args, **kwargs: (_ for _ in ()).throw(job.IncompleteList('Incomplete catalog'))
+        report = self.run_day('2026-10-16T20:00:00', dry_run=True)
+        self.assertEqual(report['lists'][0]['consecutive_failure_days'], 3)
+        self.assertEqual(list(db.tmdb_daily_provider_list_pending.find()), before)
+        self.assertEqual(db.tmdb_daily_provider_lists.count_documents({}), 0)
+        self.assertEqual(self.store.connector.writes, [])
+
+    def test_flow_report_succeeds_with_one_isolated_failure_and_returns_it(self):
+        from windmill_preview import load_flow
+        flow = load_flow('f/tmdb_api/read_daily_provider_lists')
+        namespace = {}
+        exec(flow['value']['modules'][-1]['value']['content'], namespace)
+        failure = dict(key='PY:movie:337', error='IncompleteList',
+                       reason='Expected 2205 distinct titles, read 2203', consecutive_failure_days=1)
+        report = dict(lists_completed=3659, lists_failed=1, lists=[failure])
+        self.assertIs(namespace['main'](report), report)
+        self.assertEqual(report['failed_lists'], [failure])
+
+    def test_flow_report_distinguishes_one_percent_from_systemic_failures(self):
+        from windmill_preview import load_flow
+        namespace = {}
+        exec(load_flow('f/tmdb_api/read_daily_provider_lists')['value']['modules'][-1]['value']['content'], namespace)
+        ordinary = dict(key='PY:movie:337', error='IncompleteList', consecutive_failure_days=1)
+        at_limit = dict(lists_completed=99, lists_failed=1, lists=[ordinary])
+        self.assertIs(namespace['main'](at_limit), at_limit)
+        with self.assertRaisesRegex(RuntimeError, 'more than 1%'):
+            namespace['main'](dict(lists_completed=98, lists_failed=1, lists=[ordinary]))
+        for error in ('TMDBAccessDenied', 'RequestBudgetExceeded', 'BaselineBudgetExceeded'):
+            with self.subTest(error=error), self.assertRaisesRegex(RuntimeError, 'access|budget'):
+                namespace['main'](dict(lists_completed=199, lists_failed=1,
+                                      lists=[dict(ordinary, error=error)]))
+        with self.assertRaisesRegex(RuntimeError, 'budget'):
+            namespace['main'](dict(lists_completed=199, lists_failed=0, lists=[],
+                baseline_deferred_country='DE', baseline_deferred_budget='requests',
+                baseline_deferred_reason='requests'))
 
     def test_flow_report_rejects_a_run_skipped_for_a_held_lease(self):
         from windmill_preview import load_flow

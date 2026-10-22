@@ -219,12 +219,15 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
     diagnostics = {} if diagnostics is None else diagnostics
     diagnostics.update(sort_fallbacks=0, partitions=0, query_retries=0)
     equivalent_query = False
+    attempts = []
     def read_range(lo=None, hi=None):
         extra = {}
         if lo is not None:
-            # Numerically identical float spelling also changes a bounded leaf's
-            # origin cache key (50 -> 50.0); adding zero only changes the root.
-            extra['vote_count.gte'] = float(lo) if equivalent_query else lo
+            # Introduce integer zero at the root; its decimal spelling can
+            # retain another mixed origin snapshot. Bounded leaves still need
+            # a fresh spelling of their existing floor (50 -> 50.0).
+            root_zero = lo == 0 and hi is None
+            extra['vote_count.gte'] = float(lo) if equivalent_query and not root_zero else lo
         if hi is not None:
             extra['vote_count.lte'] = hi
         previous_read, expected, last_count = None, None, 0
@@ -256,11 +259,20 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
             rows = [row['id'] for result in results for row in result['results']]
             read_ids = set(rows)
             last_count = len(read_ids)
-            if any(result['total_results'] != expected or result['total_pages'] != pages or result['page'] != page
-                   for page, result in enumerate(results, 1)):
+            metadata_changed = any(result['total_results'] != expected or result['total_pages'] != pages
+                                   or result['page'] != page for page, result in enumerate(results, 1))
+            attempt = dict(sort=sort, vote_min=extra.get('vote_count.gte'), vote_max=hi, equivalent_query=equivalent_query,
+                           reported_total=expected, returned_total=last_count,
+                           duplicate_count=len(rows) - last_count,
+                           metadata_values=sorted({(result['total_results'], result['total_pages']) for result in results}),
+                           rejection=None)
+            attempts.append(attempt)
+            if metadata_changed:
+                attempt['rejection'] = 'paging_metadata_changed'
                 previous_read = None  # Do not mix a torn page traversal into the fallback.
                 continue
             if len(rows) != len(read_ids):
+                attempt['rejection'] = 'duplicate_ids'
                 previous_read = None  # Duplicated IDs can hide omissions even at a matching total.
                 continue
             if len(read_ids) == expected:
@@ -273,6 +285,9 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
                     and 0 < missing <= 5 and missing * 1000 <= expected):
                 return sorted(read_ids), [dict(vote_min=lo, vote_max=hi,
                     reported_total=expected, returned_total=len(read_ids), missing_count=missing)]
+            attempt['rejection'] = ('sorts_disagree' if previous_read is not None and previous_read != (expected, read_ids)
+                                    else 'shortfall_outside_bound' if not (0 < missing <= 5 and missing * 1000 <= expected)
+                                    else 'needs_independent_agreement')
             previous_read = (expected, read_ids)
         raise IncompleteList(f'Expected {expected} distinct titles, read {last_count}')
 
@@ -285,7 +300,11 @@ def read_list(client, country, media_type, service_id, diagnostics=None):
         # a live catalog need not keep the first traversal's total.
         diagnostics['query_retries'] = 1
         equivalent_query = True
-        ids, gaps = read_range(0)
+        try:
+            ids, gaps = read_range(0)
+        except IncompleteList as error:
+            error.read_attempts = attempts
+            raise
     diagnostics.update(count_shortfall=sum(gap['missing_count'] for gap in gaps),
                        count_agreements=gaps)
     return ids
@@ -404,6 +423,8 @@ def list_failure(country, media_type, service_id, error):
                    http_status=getattr(error, 'http_status', None), error=type(error).__name__)
     if isinstance(error, (IncompleteList, TMDBReadError)):
         failure['reason'] = str(error)
+    if hasattr(error, 'read_attempts'):
+        failure['read_attempts'] = error.read_attempts
     return failure
 
 
@@ -431,6 +452,7 @@ def run_daily_lists(client, store, *, countries, service_ids, media_types=('movi
             except Exception as error:
                 report['lists_failed'] += 1
                 failure = list_failure(country, media_type, service_id, error)
+                failure['consecutive_failure_days'] = store.record_failure(failure['key'], utc_ms(clock()), failure)
                 report['lists'].append(failure)
                 print(json.dumps(failure), flush=True)
                 client.consecutive_list_failures = (getattr(client, 'consecutive_list_failures', 0) + 1

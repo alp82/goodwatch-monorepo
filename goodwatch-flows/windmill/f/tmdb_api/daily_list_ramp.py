@@ -55,8 +55,9 @@ def list_context(country, media_type, service_id):
         raise
 
 
-def record_baseline_failure(client, report, country, media_type, service_id, error):
+def record_baseline_failure(client, store, report, country, media_type, service_id, error, clock):
     failure = job.list_failure(country, media_type, service_id, error)
+    failure['consecutive_failure_days'] = store.record_failure(failure['key'], job.utc_ms(clock()), failure)
     report['lists_failed'] += 1
     report['lists'].append(failure)
     print(json.dumps(failure), flush=True)
@@ -83,11 +84,11 @@ def prepare_country(client, store, country, missing, clock, report):
         except (job.TMDBAccessDenied, job.LeaseLost):
             raise
         except Exception as error:
-            record_baseline_failure(client, report, country, media_type, service_id, error)
+            record_baseline_failure(client, store, report, country, media_type, service_id, error, clock)
     return prepared, False
 
 
-def confirm_country(title_reads, prepared, clock, client, report):
+def confirm_country(title_reads, prepared, clock, client, store, report):
     # Finish every source check for a list before its first history write.
     confirmed = []
     for item in prepared:
@@ -102,7 +103,7 @@ def confirm_country(title_reads, prepared, clock, client, report):
         except (job.TMDBAccessDenied, job.LeaseLost):
             raise
         except Exception as error:
-            record_baseline_failure(client, report, item.country, item.media_type, item.service_id, error)
+            record_baseline_failure(client, store, report, item.country, item.media_type, item.service_id, error, clock)
     return confirmed, False
 
 
@@ -132,7 +133,7 @@ def publish_country(store, title_reads, prepared, clock, client, report, summari
         except (job.RequestBudgetExceeded, job.TMDBAccessDenied, job.LeaseLost):
             raise
         except Exception as error:
-            record_baseline_failure(client, report, item.country, item.media_type, item.service_id, error)
+            record_baseline_failure(client, store, report, item.country, item.media_type, item.service_id, error, clock)
     return summaries
 
 
@@ -185,7 +186,7 @@ def run_ramp(client, store, *, countries, service_ids, baseline_max_requests=120
                         report.update(baseline_deferred_country=country, baseline_deferred_budget='memberships',
                                       baseline_deferred_reason='memberships' if started else 'country_exceeds_budget')
                         break
-                    prepared, confirmation_budget_stop = confirm_country(title_reads, prepared, clock, client, report)
+                    prepared, confirmation_budget_stop = confirm_country(title_reads, prepared, clock, client, store, report)
                     publish_country(store, title_reads, prepared, clock, client, report, summaries)
                 except job.RequestBudgetExceeded:
                     report.update(baseline_deferred_country=country, baseline_deferred_budget='requests',

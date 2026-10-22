@@ -177,6 +177,33 @@ class DailyRampTests(unittest.TestCase):
         self.assertEqual(self.store.crate.history, prior)
         self.assertNotIn('GB:movie:9', self.store.intents)
 
+    def test_missing_baseline_keeps_its_failure_streak_across_scheduled_days(self):
+        self.ids = {'AR': []}
+        original = self.respond
+        def unavailable(url, **kwargs):
+            if '/discover/movie' in url:
+                raise job.IncompleteList('Expected 2205 distinct titles, read 2203')
+            return original(url, **kwargs)
+        self.session.get.side_effect = unavailable
+        for day in (17, 18, 19):
+            class ScheduledDay(FixedDateTime):
+                @classmethod
+                def now(cls, tz=None):
+                    return datetime(2026, 10, day, 14, tzinfo=timezone.utc)
+            with patch(__name__ + '.FixedDateTime', ScheduledDay):
+                report = self.run_job()
+            failure = next(row for row in report['lists'] if 'error' in row)
+            self.assertEqual(failure['consecutive_failure_days'], day - 16)
+            self.assertNotIn('AR:movie:8', self.store.snapshots)
+            self.assertEqual(report['countries_partial'], {'AR': ['AR:movie:8']})
+        namespace = {}
+        exec((Path(job.__file__).parent / 'read_daily_provider_lists.flow/report.inline_script.py').read_text(), namespace)
+        # One failure among 200 is below the percentage gate; the third day
+        # still fails even though a first-read checkpoint has never existed.
+        report['lists_completed'] = 199
+        with self.assertRaisesRegex(RuntimeError, '3 consecutive days'):
+            namespace['main'](report)
+
     def test_report_warns_when_the_next_country_cannot_fit_after_progress(self):
         self.ids = {'AR': [42], 'DE': [42]}
         report = self.run_job(baseline_max_memberships=3)
@@ -185,6 +212,17 @@ class DailyRampTests(unittest.TestCase):
         namespace = {}
         exec((Path(job.__file__).parent / 'read_daily_provider_lists.flow/report.inline_script.py').read_text(), namespace)
         with self.assertWarnsRegex(RuntimeWarning, 'DE.*memberships'):
+            self.assertIs(namespace['main'](report), report)
+
+    def test_explicitly_paused_expansion_does_not_alert_as_budget_exhaustion(self):
+        self.checkpoint('US', 'movie')
+        self.checkpoint('US', 'show')
+        report = self.run_job(baseline_max_requests=0)
+        self.assertEqual(report['lists_completed'], 2)
+        self.assertEqual(report['countries_started'], [])
+        namespace = {}
+        exec((Path(job.__file__).parent / 'read_daily_provider_lists.flow/report.inline_script.py').read_text(), namespace)
+        with self.assertWarnsRegex(RuntimeWarning, 'AR.*requests'):
             self.assertIs(namespace['main'](report), report)
 
     def test_report_fails_when_the_first_country_cannot_fit_the_daily_budget(self):
@@ -491,6 +529,34 @@ class DailyRampMongoTests(unittest.TestCase):
         self.db = self.mongo['gw682_test_' + uuid4().hex]
         self.addCleanup(self.mongo.close)
         self.addCleanup(lambda: self.mongo.drop_database(self.db.name))
+
+    def test_failed_baseline_streak_survives_a_new_adapter_and_clears_on_commit(self):
+        from f.tmdb_api.daily_list_storage import ListStorage
+        from test_daily_provider_lists import HistoryCrate
+        self.ids = {'AR': []}
+        original = self.respond
+        def unavailable(url, **kwargs):
+            if '/discover/movie' in url:
+                raise job.IncompleteList('Expected 2205 distinct titles, read 2203')
+            return original(url, **kwargs)
+        self.session.get.side_effect = unavailable
+        for day in (17, 18, 19):
+            # Recreate storage as independent scheduled jobs do.
+            self.store = ListStorage(db=self.db, connector=HistoryCrate(), dry_run=False)
+            class ScheduledDay(FixedDateTime):
+                @classmethod
+                def now(cls, tz=None):
+                    return datetime(2026, 10, day, 14, tzinfo=timezone.utc)
+            with patch(__name__ + '.FixedDateTime', ScheduledDay):
+                report = self.run_job()
+            failure = next(row for row in report['lists'] if 'error' in row)
+            self.assertEqual(failure['consecutive_failure_days'], day - 16)
+            intent = self.db.tmdb_daily_provider_list_pending.find_one({'_id': 'AR:movie:8'})
+            self.assertEqual(intent['consecutive_failure_days'], day - 16)
+        self.session.get.side_effect = original
+        self.run_job()
+        self.assertEqual(self.db.tmdb_daily_provider_list_pending.count_documents({}), 0)
+        self.assertEqual(self.db.tmdb_daily_provider_lists.count_documents({}), 2)
 
     def test_late_checkpoint_failure_retains_only_its_list_and_retries_it_independently(self):
         from pymongo.synchronous.collection import Collection

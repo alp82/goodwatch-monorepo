@@ -9,11 +9,15 @@ The [October 21 production diagnosis](october-21-completeness.md) records the
 rollout, corrected job dates, exact-day counts, and the revised completeness rule.
 The [GB follow-up](october-21-gb-partial-admission.md) records repeated page
 captures, the bounded-range cache retry, and independent list admission.
+The [October 22 runtime and alerting follow-up](october-22-runtime-and-alerts.md)
+records phase timings, projections, PY page evidence, and systemic alert thresholds.
 
 ## Scope and entrypoints
 
 `f/tmdb_api/read_daily_provider_lists` calls `f/tmdb_api/daily_provider_lists` and
-fails its report step if any list failed or the whole run was skipped for a held lease. Both default to `dry_run: true`; only
+returns isolated failed lists without failing the flow. Its report fails for access
+errors, exhausted request budgets, more than 1% failed lists, three consecutive
+failed days for one list, or a skipped run. Both default to `dry_run: true`; only
 an explicit Boolean `false` enables publication. A null flow argument cannot enable data publication.
 Windmill CE v1.803 ignores `concurrent_limit`; the main entrypoint instead takes
 one Mongo run lease before any TMDB request. It renews every minute with a
@@ -413,7 +417,8 @@ budgeting. Failed lists are reported and excluded from that preflight. If the
 successful lists do not fit, none starts and the run stops adding countries. It does not skip ahead to smaller
 countries. Discovery for this deferred country still counts toward the new-request
 budget, but no history or checkpoint writes occur for it. The report names that
-country and the limiting budget, and the report step emits a warning. If the
+country and the limiting budget. Membership deferrals warn; exhausting a nonzero
+request budget fails the report. If the
 first pending country cannot fit a nonzero budget, the reason is
 `country_exceeds_budget` and the report step fails, exposing a ramp that would
 otherwise stall each day. Explicit zero budgets pause expansion with a warning.
@@ -549,7 +554,9 @@ dependencies for the local lock files.
    not guaranteed real-world service arrival days.
 6. After two consecutive daily reads, inspect exact arrivals/drops, failed lists,
    pending IDs, request/refusal counts, and duration. The report fails the flow
-   when any list is rejected, while independent completed lists retain progress.
+   for systemic problems under the thresholds above; independent completed lists
+   retain progress. Failure-only pending documents track streaks, while nonempty
+   `ids` still indicate title recovery work.
 
 To stop, disable the new schedule and wait for its active job. Preserve history
 and checkpoints. A pause introduces an unknown gap, not an exact day. For rollback,
@@ -581,6 +588,12 @@ increase the request budget/runtime before enabling that larger scope; oversized
 indivisible bins remain explicit failures rather than truncated lists.
 
 ## Verification and files
+
+The October 22 runtime/alert follow-up ran **148 focused tests: 141 passed, seven
+opt-in Windmill previews skipped**, including disposable localhost Crate and Mongo
+replica-set checks. The fixed read-only PY preview completed 1/1 list with no
+failures (396 GETs / 29.117 seconds); the XK component probe completed 30/30.
+See the [runtime and alerting evidence](october-22-runtime-and-alerts.md).
 
 The October 22 review follow-up ran **138 focused tests: 131 passed, seven opt-in
 Windmill previews skipped**, with disposable local Crate and a Mongo replica set.

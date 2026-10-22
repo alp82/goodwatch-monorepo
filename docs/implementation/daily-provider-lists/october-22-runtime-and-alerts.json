@@ -1,0 +1,621 @@
+{
+  "production_data_writes": 0,
+  "job_id": "01a163e9-5b47-5209-9ff4-e0e867c77019",
+  "measured": {
+    "reader_seconds": 22828.195,
+    "requests": {
+      "title": 103068,
+      "catalog": 1,
+      "refused": 0,
+      "retries": 1,
+      "discover": 131843,
+      "requests": 234912,
+      "deleted_responses": 16
+    },
+    "reread_seconds": 8920.19471899414,
+    "baseline_seconds": 13908.00028100586,
+    "requests_rereads": 120451,
+    "requests_new_baselines": 114460,
+    "reread_lists": 3030,
+    "baseline_lists": 630,
+    "baseline_memberships": 540168,
+    "reread_candidates": 16732,
+    "baseline_first_discovery_at": "2026-10-22T16:28:40.279000+00:00",
+    "baseline_non_pacing_seconds": 6277.3336143391925,
+    "reread_non_pacing_seconds": 890.1280523274736
+  },
+  "census": {
+    "prior_primary_pages": 104499,
+    "next_reread_primary_pages": 128014,
+    "remaining_primary_pages": 16468,
+    "remaining_entries": 321162,
+    "remaining_open_history_memberships": 371437,
+    "global_primary_pages": 144399,
+    "remaining_countries": [
+      "GT",
+      "HK",
+      "HN",
+      "HU",
+      "LB",
+      "LI",
+      "LY",
+      "ML",
+      "MX",
+      "MY",
+      "NE",
+      "NL",
+      "NZ",
+      "TN",
+      "TT",
+      "UG",
+      "XK"
+    ],
+    "requests": {
+      "requests": 512,
+      "retries": 0,
+      "refused": 0,
+      "discover": 512,
+      "title": 0,
+      "catalog": 0,
+      "deleted_responses": 0
+    },
+    "seconds": 35.363
+  },
+  "model": {
+    "method": "Scale observed reread phase by census discover-page work, including title checks and publication. Baseline HTTP scales by new-country pages; its residual scales by memberships, using the complete October 22 apply. Residual includes leases, DB work, cache/JSON/SQLite, connection startup, and HTTP latency beyond pacing; it is not an isolated write benchmark.",
+    "baseline_residual_seconds_per_membership": 0.011621076432404719,
+    "next_reread_requests": 147556,
+    "next_baseline_requests": 80159,
+    "next_requests": 227715,
+    "next_baseline_memberships": 375357,
+    "next_reread_hours": 3.035408650261714,
+    "next_baseline_hours": 2.6960984454307027,
+    "next_hours": 5.731507095692416,
+    "next_planning_hours": 7.507511351995757,
+    "steady_requests": 166443,
+    "steady_hours": 3.4239221779582016,
+    "steady_planning_requests": 191409,
+    "steady_planning_hours": 3.8862633499630372,
+    "timeout_hours": 8,
+    "requests_per_second": 15,
+    "http_workers": 6
+  },
+  "small_read_only_profile": {
+    "lists_completed": 30,
+    "lists_failed": 0,
+    "lists_skipped": 0,
+    "dry_run": true,
+    "requests": {
+      "requests": 1173,
+      "retries": 0,
+      "refused": 0,
+      "discover": 83,
+      "title": 1090,
+      "catalog": 0,
+      "deleted_responses": 2
+    },
+    "history": {
+      "planned_rows": 13,
+      "published_titles": 0,
+      "planned_exact_arrivals": 0,
+      "planned_unknown_arrivals": 0,
+      "planned_exact_drops": 0,
+      "planned_unknown_drops": 13
+    },
+    "seconds": 92.805,
+    "component_seconds": {
+      "discover_seconds": 7.887,
+      "open_ids_seconds": 1.173,
+      "flush_seconds": 2.427,
+      "title_checks_and_cache_seconds": 75.599,
+      "details_seconds": 2.454
+    },
+    "production_data_writes": 0
+  },
+  "py_reads": [
+    {
+      "iteration": 0,
+      "sort": "title.asc",
+      "reported": 2202,
+      "distinct": 1998,
+      "rows": 2220,
+      "metadata_values": [
+        [
+          2202,
+          111
+        ],
+        [
+          2203,
+          111
+        ],
+        [
+          2204,
+          111
+        ],
+        [
+          2221,
+          112
+        ]
+      ],
+      "seconds": 7.731,
+      "query": "unbounded",
+      "duplicate_id_count": 222,
+      "ids_sha256": "40cee285525706f136e2a2403ebf205e873021bae6987ee9cd559ba679ad0725",
+      "set_difference_counts": {}
+    },
+    {
+      "iteration": 0,
+      "sort": "primary_release_date.desc",
+      "reported": 2221,
+      "distinct": 1907,
+      "rows": 2206,
+      "metadata_values": [
+        [
+          2204,
+          111
+        ],
+        [
+          2205,
+          111
+        ],
+        [
+          2221,
+          112
+        ]
+      ],
+      "seconds": 8.318,
+      "query": "unbounded",
+      "duplicate_id_count": 299,
+      "ids_sha256": "1238661fafa2eb64fb74fae5be7fb5865fa5e2f9bf07d25d5eb7174493a09c4c",
+      "set_difference_counts": {
+        "only_previous": 280,
+        "only_current": 189
+      }
+    },
+    {
+      "iteration": 1,
+      "sort": "title.asc",
+      "reported": 2202,
+      "distinct": 1998,
+      "rows": 2220,
+      "metadata_values": [
+        [
+          2202,
+          111
+        ],
+        [
+          2203,
+          111
+        ],
+        [
+          2204,
+          111
+        ],
+        [
+          2221,
+          112
+        ]
+      ],
+      "seconds": 7.555,
+      "query": "unbounded",
+      "duplicate_id_count": 222,
+      "ids_sha256": "40cee285525706f136e2a2403ebf205e873021bae6987ee9cd559ba679ad0725",
+      "set_difference_counts": {
+        "only_previous": 189,
+        "only_current": 280
+      }
+    },
+    {
+      "iteration": 1,
+      "sort": "primary_release_date.desc",
+      "reported": 2221,
+      "distinct": 1907,
+      "rows": 2206,
+      "metadata_values": [
+        [
+          2204,
+          111
+        ],
+        [
+          2205,
+          111
+        ],
+        [
+          2221,
+          112
+        ]
+      ],
+      "seconds": 7.613,
+      "query": "unbounded",
+      "duplicate_id_count": 299,
+      "ids_sha256": "1238661fafa2eb64fb74fae5be7fb5865fa5e2f9bf07d25d5eb7174493a09c4c",
+      "set_difference_counts": {
+        "only_previous": 280,
+        "only_current": 189
+      }
+    },
+    {
+      "iteration": 2,
+      "sort": "title.asc",
+      "reported": 2202,
+      "distinct": 1998,
+      "rows": 2220,
+      "metadata_values": [
+        [
+          2202,
+          111
+        ],
+        [
+          2203,
+          111
+        ],
+        [
+          2204,
+          111
+        ],
+        [
+          2221,
+          112
+        ]
+      ],
+      "seconds": 7.536,
+      "query": "unbounded",
+      "duplicate_id_count": 222,
+      "ids_sha256": "40cee285525706f136e2a2403ebf205e873021bae6987ee9cd559ba679ad0725",
+      "set_difference_counts": {
+        "only_previous": 189,
+        "only_current": 280
+      }
+    },
+    {
+      "iteration": 2,
+      "sort": "primary_release_date.desc",
+      "reported": 2221,
+      "distinct": 1907,
+      "rows": 2206,
+      "metadata_values": [
+        [
+          2204,
+          111
+        ],
+        [
+          2205,
+          111
+        ],
+        [
+          2221,
+          112
+        ]
+      ],
+      "seconds": 7.612,
+      "query": "unbounded",
+      "duplicate_id_count": 299,
+      "ids_sha256": "1238661fafa2eb64fb74fae5be7fb5865fa5e2f9bf07d25d5eb7174493a09c4c",
+      "set_difference_counts": {
+        "only_previous": 280,
+        "only_current": 189
+      }
+    },
+    {
+      "iteration": 0,
+      "sort": "title.asc",
+      "reported": 2221,
+      "distinct": 2221,
+      "rows": 2221,
+      "metadata_values": [
+        [
+          2221,
+          112
+        ]
+      ],
+      "seconds": 7.753,
+      "query": "vote_count.gte=0",
+      "duplicate_id_count": 0,
+      "ids_sha256": "9b15d2ff5f2517c66966f230234b7fcf68fbee5155c7de7efc89b7ccadab082e",
+      "set_difference_counts": {}
+    },
+    {
+      "iteration": 0,
+      "sort": "primary_release_date.desc",
+      "reported": 2221,
+      "distinct": 2221,
+      "rows": 2221,
+      "metadata_values": [
+        [
+          2221,
+          112
+        ]
+      ],
+      "seconds": 7.638,
+      "query": "vote_count.gte=0",
+      "duplicate_id_count": 0,
+      "ids_sha256": "9b15d2ff5f2517c66966f230234b7fcf68fbee5155c7de7efc89b7ccadab082e",
+      "set_difference_counts": {
+        "only_previous": 0,
+        "only_current": 0
+      }
+    },
+    {
+      "iteration": 0.0,
+      "sort": "title.asc",
+      "reported": 2221,
+      "distinct": 1978,
+      "rows": 2221,
+      "metadata_values": [
+        [
+          2204,
+          111
+        ],
+        [
+          2205,
+          111
+        ],
+        [
+          2221,
+          112
+        ]
+      ],
+      "seconds": 7.673,
+      "query": "vote_count.gte=0.0",
+      "duplicate_id_count": 243,
+      "ids_sha256": "6a1b3b489db4dd09521749b7246524505b0f858c672e5d6f4f52ba0b37e82da5",
+      "set_difference_counts": {
+        "only_previous": 243,
+        "only_current": 0
+      }
+    },
+    {
+      "iteration": 0.0,
+      "sort": "primary_release_date.desc",
+      "reported": 2221,
+      "distinct": 1892,
+      "rows": 2221,
+      "metadata_values": [
+        [
+          2205,
+          111
+        ],
+        [
+          2206,
+          111
+        ],
+        [
+          2221,
+          112
+        ]
+      ],
+      "seconds": 7.648,
+      "query": "vote_count.gte=0.0",
+      "duplicate_id_count": 329,
+      "ids_sha256": "0349328d03a3a8a6fb1e1e98e4a57d190aef631e7c4e5225d1cbda8f0828938d",
+      "set_difference_counts": {
+        "only_previous": 295,
+        "only_current": 209
+      }
+    }
+  ],
+  "py_request_totals": [
+    {
+      "query": "py-reads.json",
+      "requests": {
+        "requests": 669,
+        "retries": 0,
+        "refused": 0,
+        "discover": 669,
+        "title": 0,
+        "catalog": 0,
+        "deleted_responses": 0
+      },
+      "seconds": 46.376
+    },
+    {
+      "query": "py-retry-reads.json",
+      "requests": {
+        "requests": 448,
+        "retries": 0,
+        "refused": 0,
+        "discover": 448,
+        "title": 0,
+        "catalog": 0,
+        "deleted_responses": 0
+      },
+      "seconds": 30.715
+    }
+  ],
+  "py_public_before_root_fix": {
+    "lists_completed": 0,
+    "lists_failed": 1,
+    "lists_skipped": 0,
+    "dry_run": true,
+    "lists": [
+      {
+        "key": "PY:movie:337",
+        "media_type": "movie",
+        "tmdb_id": null,
+        "endpoint": "/discover/movie",
+        "http_status": null,
+        "error": "IncompleteList",
+        "reason": "Expected 2221 distinct titles, read 1907",
+        "read_attempts": [
+          {
+            "sort": "title.asc",
+            "vote_min": null,
+            "vote_max": null,
+            "equivalent_query": false,
+            "reported_total": 2202,
+            "returned_total": 1998,
+            "duplicate_count": 222,
+            "metadata_values": [
+              [
+                2202,
+                111
+              ],
+              [
+                2203,
+                111
+              ],
+              [
+                2204,
+                111
+              ],
+              [
+                2221,
+                112
+              ]
+            ],
+            "rejection": "paging_metadata_changed"
+          },
+          {
+            "sort": "primary_release_date.desc",
+            "vote_min": null,
+            "vote_max": null,
+            "equivalent_query": false,
+            "reported_total": 2221,
+            "returned_total": 1907,
+            "duplicate_count": 299,
+            "metadata_values": [
+              [
+                2204,
+                111
+              ],
+              [
+                2205,
+                111
+              ],
+              [
+                2221,
+                112
+              ]
+            ],
+            "rejection": "paging_metadata_changed"
+          },
+          {
+            "sort": "title.asc",
+            "vote_min": 0,
+            "vote_max": null,
+            "equivalent_query": true,
+            "reported_total": 2221,
+            "returned_total": 1978,
+            "duplicate_count": 243,
+            "metadata_values": [
+              [
+                2204,
+                111
+              ],
+              [
+                2205,
+                111
+              ],
+              [
+                2221,
+                112
+              ]
+            ],
+            "rejection": "paging_metadata_changed"
+          },
+          {
+            "sort": "primary_release_date.desc",
+            "vote_min": 0,
+            "vote_max": null,
+            "equivalent_query": true,
+            "reported_total": 2221,
+            "returned_total": 1907,
+            "duplicate_count": 314,
+            "metadata_values": [
+              [
+                2205,
+                111
+              ],
+              [
+                2206,
+                111
+              ],
+              [
+                2221,
+                112
+              ]
+            ],
+            "rejection": "paging_metadata_changed"
+          }
+        ],
+        "consecutive_failure_days": 1
+      }
+    ],
+    "requests": {
+      "requests": 447,
+      "retries": 0,
+      "refused": 0,
+      "discover": 447,
+      "title": 0,
+      "catalog": 0,
+      "deleted_responses": 0
+    },
+    "history": {
+      "planned_rows": 0,
+      "published_titles": 0,
+      "planned_exact_arrivals": 0,
+      "planned_unknown_arrivals": 0,
+      "planned_exact_drops": 0,
+      "planned_unknown_drops": 0
+    },
+    "seconds": 32.094,
+    "component_seconds": {
+      "discover_seconds": 30.609
+    },
+    "production_data_writes": 0
+  },
+  "py_public_after_root_fix": {
+    "lists_completed": 1,
+    "lists_failed": 0,
+    "lists_skipped": 0,
+    "dry_run": true,
+    "lists": [
+      {
+        "key": "PY:movie:337",
+        "titles": 2221,
+        "changes_checked": 61,
+        "baseline": false,
+        "retry_titles": 17,
+        "sort_fallbacks": 1,
+        "partitions": 0,
+        "query_retries": 1,
+        "count_shortfall": 0,
+        "count_agreements": []
+      }
+    ],
+    "requests": {
+      "requests": 396,
+      "retries": 0,
+      "refused": 0,
+      "discover": 335,
+      "title": 61,
+      "catalog": 0,
+      "deleted_responses": 0
+    },
+    "history": {
+      "planned_rows": 41,
+      "published_titles": 0,
+      "planned_exact_arrivals": 41,
+      "planned_unknown_arrivals": 0,
+      "planned_exact_drops": 0,
+      "planned_unknown_drops": 0
+    },
+    "seconds": 29.117,
+    "component_seconds": {
+      "discover_seconds": 22.879,
+      "title_checks_and_cache_seconds": 4.193,
+      "details_seconds": 0.326,
+      "flush_seconds": 0.214
+    },
+    "production_data_writes": 0
+  },
+  "verification": {
+    "tests_run": 148,
+    "passed": 141,
+    "skipped": 7,
+    "skipped_reason": "Opt-in inert Windmill previews",
+    "disposable_crate": "5.10.16",
+    "disposable_mongo": "8.0 replica set",
+    "production_data_writes": 0
+  }
+}

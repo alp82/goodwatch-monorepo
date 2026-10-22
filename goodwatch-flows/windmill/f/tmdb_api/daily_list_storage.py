@@ -13,7 +13,7 @@ import time
 import threading
 
 from f.sync.availability_history import publish_history, read_history, select_transitions, title_writes
-from f.tmdb_api.provider_evidence import utc_ms
+from f.tmdb_api.provider_evidence import utc_ms, utc_day
 
 
 class LeaseBusy(RuntimeError):
@@ -89,6 +89,19 @@ class ListStorage:
     def pending(self, identity):
         intent = self.db.tmdb_daily_provider_list_pending.find_one({'_id': identity})
         return set((intent or {}).get('ids', []))
+
+    def record_failure(self, identity, at, failure):
+        """Persist calendar-day streaks with existing retry intents, never in previews."""
+        collection = self.db.tmdb_daily_provider_list_pending
+        previous = collection.find_one({'_id': identity}) or {}
+        today, last = utc_day(at), previous.get('failure_day')
+        count = previous.get('consecutive_failure_days', 0)
+        if last != today:
+            count = count + 1 if last == today - 86400000 else 1
+        if not self.dry_run:
+            collection.update_one({'_id': identity}, {'$set': dict(failure_day=today,
+                consecutive_failure_days=count, last_failure=failure)}, upsert=True)
+        return count
 
     def details(self, media_type, ids):
         collection = self.db.tmdb_tv_details if media_type == 'show' else self.db.tmdb_movie_details
