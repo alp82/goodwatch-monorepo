@@ -5,6 +5,8 @@ import { createHash } from 'node:crypto'
 const args = new Map()
 for (let i = 2; i < process.argv.length; i += 2) args.set(process.argv[i], process.argv[i + 1])
 const source = resolve(args.get('--source') ?? '.')
+const apkName = args.get('--preview-apk-filename') ?? 'yepwatch-preview-r1.apk'
+if (!/^yepwatch-preview-r[1-9][0-9]*\.apk$/.test(apkName)) throw new Error('Expected a versioned preview APK filename')
 if (!args.get('--out')) throw new Error('Explicit new --out build-context directory required')
 const out = resolve(args.get('--out'))
 try { await access(out); throw new Error('Refusing an existing build-context directory') } catch (error) { if (error.code !== 'ENOENT') throw error }
@@ -42,10 +44,10 @@ if (args.has('--web-export')) {
 if (args.has('--preview-download')) {
   if (!args.has('--web-export')) throw new Error('Preview download requires --web-export')
   const downloads = join(resolve(args.get('--preview-download')), 'downloads')
-  for (const file of ['yepwatch-preview-r1.apk', 'yepwatch-preview-r1.apk.sha256'])
+  for (const file of [apkName, `${apkName}.sha256`])
     await copy(join(downloads, file), join('front/public/downloads', file))
-  const apk = await readFile(join(downloads, 'yepwatch-preview-r1.apk'))
-  const checksum = (await readFile(join(downloads, 'yepwatch-preview-r1.apk.sha256'), 'utf8')).split(/\s+/)[0]
+  const apk = await readFile(join(downloads, apkName))
+  const checksum = (await readFile(join(downloads, `${apkName}.sha256`), 'utf8')).split(/\s+/)[0]
   if (createHash('sha256').update(apk).digest('hex') !== checksum) throw new Error('Preview APK checksum mismatch')
 }
 if (args.has('--api-bundle')) {

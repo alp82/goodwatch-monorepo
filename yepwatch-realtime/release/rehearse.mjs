@@ -26,6 +26,17 @@ for (const path of [resultPath, screenshotPath]) {
   try { await access(path); throw new Error('Refusing to overwrite existing rehearsal evidence') }
   catch (error) { if (error.code !== 'ENOENT') throw error }
 }
+const expectedIndex = args.get('--expected-index-sha256'), expectedApk = args.get('--expected-apk-sha256')
+const apkName = args.get('--apk-filename')
+assert(/^[a-f0-9]{64}$/.test(expectedIndex ?? ''), 'Explicit --expected-index-sha256 required')
+assert(/^[a-f0-9]{64}$/.test(expectedApk ?? ''), 'Explicit --expected-apk-sha256 required')
+assert(/^yepwatch-preview-r[1-9][0-9]*\.apk$/.test(apkName ?? ''), 'Explicit versioned --apk-filename required')
+const rateCompatibility = args.get('--rate-compatibility') === '1'
+assert(!args.has('--rate-compatibility') || rateCompatibility, 'Use --rate-compatibility 1 only for a separate disposable phase')
+const controls = {
+  YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS: '20', YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE: '20',
+  YEPWATCH_PROPOSAL_COMMANDS_PER_MINUTE: '600', YEPWATCH_PROPOSAL_ACTOR_COMMANDS_PER_MINUTE: rateCompatibility ? '1' : '60',
+}
 const metadata = {
   YEPWATCH_SOURCE_COMMIT: args.get('--source-commit') ?? 'local-release-rehearsal',
   YEPWATCH_FRONT_IMAGE: args.get('--front-image') ?? 'yepwatch-front:release-r3-20261022',
@@ -86,7 +97,7 @@ try {
   metadata.YEPWATCH_CATALOG_PASSWORD_FILE = join(secrets, 'catalog-password')
   metadata.YEPWATCH_CATALOG_CACHE_PASSWORD_FILE = join(secrets, 'catalog-cache-password')
   metadata.YEPWATCH_API_ENV_FILE = join(work, 'api.env')
-  await writeFile(metadata.YEPWATCH_API_ENV_FILE, Object.entries({ ...catalog,
+  await writeFile(metadata.YEPWATCH_API_ENV_FILE, Object.entries({ ...catalog, ...controls,
     YEPWATCH_PROPOSAL_CRATEDB_ORIGIN: 'http://room-store:4200', YEPWATCH_PROPOSAL_CRATEDB_USERNAME: 'crate',
     YEPWATCH_PROPOSAL_KEY_ID: 'disposable-rehearsal', YEPWATCH_PROPOSAL_PUBLIC_ORIGIN: 'https://yepwatch.com',
   }).map(([k, v]) => `${k}=${JSON.stringify(v)}`).join('\n') + '\n', { mode: 0o600 })
@@ -133,27 +144,68 @@ try {
     '--mount', `type=bind,src=${metadata.YEPWATCH_ROOM_KEY_FILE},dst=/run/secrets/room_key,readonly`,
     '-e', 'YEPWATCH_PROPOSAL_CRATEDB_ORIGIN=http://127.0.0.1:4200', '-e', 'YEPWATCH_PROPOSAL_CRATEDB_USERNAME=crate',
     '-e', 'YEPWATCH_PROPOSAL_KEY_ID=disposable-rehearsal', '-e', 'YEPWATCH_PROPOSAL_SECRET_FILE=/run/secrets/room_key',
+    ...Object.entries(controls).flatMap(([key, value]) => ['-e', `${key}=${value}`]),
     metadata.YEPWATCH_API_IMAGE, 'node', 'build/yepwatch-release/operator.mjs', 'provision', '--apply', '--disposable-single-node'], { timeout: 30_000 })
   status('Explicit operator provision passed on own loopback store; starting release API/full catalog, gateway and front.')
   await compose('up', '-d', 'api', 'gateway', 'front', 'tls')
   const health = await ready(); assert(Object.values(health.checks).every(Boolean))
   status('Release readiness green with full catalog; testing HTTPS, WSS and real guest room.')
   const index = await request('/'); assert.equal(index.status, 200)
-  assert.equal(createHash('sha256').update(index.raw).digest('hex'), 'ea268f1f06d7655a5af643c5429a1d0deceea307f32cfa86ffd2cf61af9c26a8')
+  assert.equal(createHash('sha256').update(index.raw).digest('hex'), expectedIndex)
   const inviteShell = await request('/r/disposable-route-check'); assert.equal(inviteShell.status, 200); assert(inviteShell.raw.equals(index.raw))
   assert.equal((await request('/.well-known/apple-app-site-association')).status, 404)
   const association = await request('/.well-known/assetlinks.json'); assert.equal(association.status, 200); assert.equal(association.data[0].target.package_name, 'com.yepwatch.preview')
-  const apk = await request('/downloads/yepwatch-preview-r1.apk'); assert.equal(apk.status, 200)
-  assert.equal(createHash('sha256').update(apk.raw).digest('hex'), 'e6b059d942f0d10c53daff0afafac1b7f52198a86534897bc340c389e1aa9a53')
+  const apk = await request(`/downloads/${apkName}`); assert.equal(apk.status, 200)
+  assert.equal(createHash('sha256').update(apk.raw).digest('hex'), expectedApk)
   assert.equal(apk.headers['content-type'], 'application/vnd.android.package-archive')
   assert.equal((await request('/downloads/missing.apk')).status, 404)
   assert.equal((await request(paths.realtimeAttach, {})).status, 404)
+  if (rateCompatibility) {
+    // Align this disposable test with the real SQL clock, never reset a quota
+    // or alter a timestamp. Keep enough natural window left to observe reload.
+    const clock = await fetch(`${crateUrl}/_sql`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stmt: 'SELECT CURRENT_TIMESTAMP' }) }).then(r => r.json())
+    const remaining = 60_000 - Number(clock.rows[0][0]) % 60_000
+    if (remaining < 15_000) await sleep(remaining + 100)
+  }
   const admission = nickname => ({ contractVersion: 3, nickname, commandId: nonce(), admissionSecret: nonce() })
   const created = await request(paths.rooms, admission('Release native host'), undefined, { 'X-YepWatch-Client': 'native' }); assert.equal(created.status, 200)
   const host = created.data, room = host.credential.roomId
   const read = async credential => { const r = await request(paths.snapshot(room), undefined, credential); assert.equal(r.status, 200); return r.data }
   async function command(credential, input) { const s = await read(credential), value = input(s); const r = await request(paths.commands(room), { commandId: nonce(), sequence: s.own.nextSequence, command: value }, credential); assert.equal(r.status, 200, `Ordinary ${value.type} command failed: ${r.data?.error?.code}`); return r.data.snapshot }
   await command(host.credential, s => ({ type: 'setup', expectedContextVersion: s.shared.contextVersion, screens: [{ id: 'screen', label: 'Release rehearsal screen', country: 'DE', serviceIds: [8], confirmed: true }], constraints: { kinds: ['movie', 'show_start'], maxMinutes: null, moods: [] }, screenId: 'screen' }))
+  if (rateCompatibility) {
+    browser = await chromium.launch({ headless: true, args: ['--no-proxy-server', '--host-resolver-rules=MAP yepwatch.com 127.0.0.1', `--ignore-certificate-errors-spki-list=${spki}`] })
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } }), errors = [], commands = [], frames = []
+    page.on('pageerror', e => errors.push(e.message))
+    page.on('request', r => { if (r.url().endsWith('/commands') && r.method() === 'POST') commands.push(r.postDataJSON()) })
+    page.on('websocket', ws => ws.on('framereceived', event => { try { frames.push(JSON.parse(event.payload.toString())) } catch {} }))
+    await page.goto('https://yepwatch.com'); await page.getByLabel('Your nickname').fill('Release bounded retry peer')
+    await page.getByRole('button', { name: 'Join with an invitation', exact: true }).click(); await page.getByLabel('Room code or invitation').fill(host.invite.code)
+    const denial = page.waitForResponse(r => r.url().endsWith('/commands') && r.status() === 429)
+    await page.getByRole('button', { name: 'Join room', exact: true }).click()
+    const denied = await denial, deniedBody = denied.request().postDataJSON(), error = await denied.json()
+    assert.equal(deniedBody.command.type, 'ready'); assert.equal(error.error.retryable, true)
+    const retryAfter = Number(denied.headers()['retry-after']); assert(retryAfter >= 1 && retryAfter <= 60)
+    assert.equal(commands.length, 2); assert.equal(commands[0].command.type, 'assign_screen')
+    const retry = page.getByRole('button', { name: 'Retry pending action', exact: true })
+    await expect(retry).toBeDisabled(); await page.reload(); await expect(retry).toBeDisabled()
+    status('Actual rate429/Retry-After observed; reload retained the pending envelope. Waiting natural SQL minute boundary, without replay.')
+    await expect(retry).toBeEnabled({ timeout: 70_000 }); assert.equal(commands.length, 2, 'No automatic POST during reload/cooldown')
+    const confirmed = page.waitForResponse(r => r.url().endsWith('/commands') && r.status() === 200)
+    await retry.click(); const response = await confirmed
+    assert.deepEqual(response.request().postDataJSON(), deniedBody); assert.equal(commands.length, 3)
+    const own = (await response.json()).snapshot.own; assert.equal(own.nextSequence, deniedBody.sequence + 1); assert.equal(own.agreement.agreed, false)
+    const current = await read(host.credential); assert.equal(current.shared.phase, 'setup'); assert.equal(current.shared.participants.length, 2)
+    for (const frame of frames) if (frame.type === 'room.snapshot' || frame.type === 'room.updated') proposalProjection(frame.snapshot, room)
+    assert.deepEqual(errors, []); await writeFile(screenshotPath, await page.screenshot(), { flag: 'wx' })
+    proof = { result: 'PASS', completedAt: new Date().toISOString(), scope: 'Separate own disposable rate phase; no live quotas reset or fixture responses',
+      publicOriginUnderTest: 'https://yepwatch.com', tls: 'Local ephemeral cert/exact hostname/SPKI; no public deployment or system DNS/trust changes',
+      controls, clientArtifacts: { indexSha256: expectedIndex, apkFilename: apkName, apkSha256: expectedApk },
+      retryAfterSeconds: retryAfter, checks: ['Actual durable actor-rate429 with retryable and Retry-After', 'Pending exact envelope/cooldown survives actual browser reload',
+        'Zero automatic command POSTs before manual Retry', 'Natural SQL window recovery without quota reset', 'Manual Retry posts same command ID/sequence/body and succeeds once',
+        'Two independent guests remain in setup; no automatic agreement', 'Strict shared-only frames'], commandPostCount: commands.length, javaScriptErrors: 0,
+      screenshot: `artifacts/${screenshotName}`, physicalPhoneOrPublicTlsClaimed: false, retainedProcessesChanged: false, credentialsInvitesAndRoomIdentifiersRedacted: true }
+  } else {
   const joined = await request(paths.join(room), { ...admission('Release native peer'), inviteCode: host.invite.code, screenId: 'screen' }, undefined, { 'X-YepWatch-Client': 'native' }); assert.equal(joined.status, 200); const peer = joined.data
   async function socket(credential) { const r = await request(paths.realtimeTicket(room), {}, credential); assert.equal(r.status, 200); const client = await connect(`wss://yepwatch.com${paths.realtime}`, r.data.ticket, { lookup, ca }, room); clients.push(client); await until(() => client.frames.some(f => f.type === 'activity.session'), 10_000); return client }
   const observer = await socket(host.credential)
@@ -205,12 +257,15 @@ try {
     publicOriginUnderTest: 'https://yepwatch.com', tls: 'Local ephemeral certificate, exact intended hostname; Node trusts only that certificate and browser allows only its SPKI; no system DNS/trust mutations or public deployment',
     topology: 'Traefik2.10.7 TLS -> actual release static/Caddy -> bundled API + gateway -> own fanout/room Crate; API-only existing catalog read egress',
     images: metadata, fullCatalog: 'Existing full snapshot/catalog dependencies; no sample Redis URL or fixtures', candidates: choosing.shared.candidates.length,
+    clientArtifacts: { indexSha256: expectedIndex, apkFilename: apkName, apkSha256: expectedApk },
     checks: ['SPA invite fallback returns exact index', 'Preview Android association JSON; absent AASA404', 'Preview APK hash/Android MIME; missing download404', 'Internal hooks not public', 'Secure browser cookie and authenticated WSS snapshot',
       'Three independent guest identities; actual standalone web build and two native protocol clients', 'Automatic screen readiness without guest Ready button', 'Unanimous match, explicit proposal/agreement and fresh-check Done',
       'Strict shared-only frames', 'Gateway SIGTERM1012 and fresh-ticket recovery', 'API restart preserves actor and durable decision without installer'],
     browserSharedFrames: browserFrames.filter(f => f.type === 'room.snapshot' || f.type === 'room.updated').length, javaScriptErrors: 0, apiRestartRecoveryMs: Date.now() - restartAt, apiContainerMemoryAfterReload: apiStats,
     screenshot: `artifacts/${screenshotName}`,
     physicalPhoneOrPublicTlsClaimed: false, retainedProcessesChanged: false, credentialsInvitesAndRoomIdentifiersRedacted: true }
+  }
+  proof.controls = controls
   // Keep source image references; remove host-private metadata paths from public evidence.
   proof.images = Object.fromEntries(Object.entries(metadata).filter(([key]) => /_IMAGE$|SOURCE_COMMIT/.test(key)))
   await writeFile(resultPath, JSON.stringify(proof, null, 2) + '\n', { flag: 'wx' }); status('PASS local release container/HTTPS/WSS rehearsal; sanitized incremental artifact recorded.')

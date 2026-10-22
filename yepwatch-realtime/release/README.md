@@ -65,7 +65,8 @@ node yepwatch-realtime/release/prepare-context.mjs \
   --out NEW_CONTEXT_DIRECTORY \
   --api-bundle FINAL_BACKEND_BUNDLE \
   --web-export FROZEN_PUBLIC_WEB_EXPORT \
-  --preview-download PREVIEW_DOWNLOAD_COMPANION
+  --preview-download PREVIEW_DOWNLOAD_COMPANION \
+  --preview-apk-filename yepwatch-preview-r3.apk
 docker build -f NEW_CONTEXT_DIRECTORY/gateway/yepwatch-realtime/release/Dockerfile.gateway \
   -t yepwatch-gateway:RELEASE_ID NEW_CONTEXT_DIRECTORY/gateway
 docker build -f NEW_CONTEXT_DIRECTORY/api/Dockerfile.api \
@@ -79,7 +80,7 @@ hashed `_expo`/`assets` files. A same-path/different-content conflict fails the
 build. This supports already-open tabs; retain the prior complete image for
 rollback too. Do not replace the active local phone export to build images.
 
-Current app release input: committed `42505717`, frozen `beta-web-r1`, index
+Historical r3 rehearsal app input: committed `42505717`, frozen `beta-web-r1`, index
 SHA256 `ea268f1f06d7655a5af643c5429a1d0deceea307f32cfa86ffd2cf61af9c26a8`.
 The companion APK is `com.yepwatch.preview`, a distinct preview package with
 bundled JS, not the active Hybrid app or a store signing identity. Its path is
@@ -88,6 +89,14 @@ bundled JS, not the active Hybrid app or a store signing identity. Its path is
 The adjacent `.apk.sha256` is served too. No private signing material belongs in
 the context/image. See the app owner's `artifacts/release/download-artifact.json`
 and `INSTALL.md` companion for Android installation instructions.
+
+R4 compatible client input is committed `932d14c0`, frozen `beta-web-r3`, index
+SHA256 `fdcc379d6891bd5e45de72af9ce53deed295375242440daee5dccc7804d45570`.
+Its separate `/downloads/yepwatch-preview-r3.apk` is 56900675 bytes, versionCode3,
+SHA256 `eac3f80e64c5afe0eb7edc18af0e4acb4c558126c5b8c69a3a16f42d985f7061`,
+with the same preview package/certificate. See app `artifacts/r4-client-r2/`.
+Client r4-r1/beta-web-r2/APKcode2 was superseded and is not an accepted input.
+These inputs/images do not change frozen earlier exports/downloads or devices.
 
 ## Private configuration and provisioning
 
@@ -100,6 +109,10 @@ YEPWATCH_PROPOSAL_PUBLIC_ORIGIN=https://yepwatch.com
 YEPWATCH_PROPOSAL_CRATEDB_ORIGIN=PRIVATE_ROOM_CRATE_HTTP_ORIGIN
 YEPWATCH_PROPOSAL_CRATEDB_USERNAME=ROOM_ONLY_RUNTIME_ROLE
 YEPWATCH_PROPOSAL_KEY_ID=STABLE_OWNER_SELECTED_KEY_ID
+YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS=20
+YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE=20
+YEPWATCH_PROPOSAL_COMMANDS_PER_MINUTE=600
+YEPWATCH_PROPOSAL_ACTOR_COMMANDS_PER_MINUTE=60
 CRATE_HOSTS=COMMA_SEPARATED_PRIVATE_CATALOG_HOSTS
 CRATE_PORT=4200
 CRATE_USER=READ_ONLY_CATALOG_ROLE
@@ -129,7 +142,14 @@ Losing/changing them can invalidate encrypted rooms, tickets and capabilities.
 
 The API performs no startup DDL or purge. The backend owner's operator command
 must check/provision the dedicated room table and runtime metadata with explicit
-owner approval, using a separate provisioning role. Follow its final runbook for
+owner approval, using a separate provisioning role. R4 also provisions
+`doc.yepwatch_room_v3_control`; the runtime needs DQL+DML on this table. Initial
+control provisioning requires an **empty room store and quiesced writers**.
+Never bootstrap over retained r3/tester history or reset a live quota. Supply
+identical control settings to the operator and every API; a fingerprint mismatch
+refuses readiness/requests. There is no policy migration command. The harness
+always uses a fresh own store, with explicit matching settings for provision/API.
+Follow the backend runbook for
 role grants, key compatibility, inventory and encrypted backup. Never point
 `--disposable-single-node` at a production table; it is reserved for an explicitly
 disposable loopback Crate store. Do not use local demo keys or share production
@@ -150,7 +170,10 @@ node --import tsx release/rehearse.mjs \
   --api-image yepwatch-api:FINAL_RELEASE_ID \
   --front-image yepwatch-front:FINAL_RELEASE_ID \
   --gateway-image yepwatch-gateway:FINAL_RELEASE_ID \
-  --result release-rehearsal-r4.json
+  --result release-rehearsal-r4.json \
+  --expected-index-sha256 CHECKED_WEB_INDEX_SHA256 \
+  --apk-filename yepwatch-preview-r3.apk \
+  --expected-apk-sha256 CHECKED_APK_SHA256
 ```
 
 It requires Docker/Compose, OpenSSL and the app workspace's installed Playwright
@@ -184,35 +207,62 @@ project was removed; retained phone/demo listeners stayed unchanged. See
 This was not a physical phone test, public TLS activation, capacity test or
 acceptance of the r3 operational gaps below.
 
+For a separate real rate/cooldown compatibility phase, use another new result
+filename and add `--rate-compatibility 1` to the same command. It provisions a new
+store/control row with actor command budget1/minute (other settings unchanged),
+then observes an actual browser guest's assignment success and readiness429.
+It checks Retry-After, reload persistence, no automatic command replay and manual
+same-envelope Retry after the natural SQL minute boundary. This test-specific
+policy is not a proposed production limit. It never resets a quota, edits a clock
+or fabricates a response. Keep both phases' evidence separate from r3.
+
+R4 default-policy rehearsal **passed 2026-10-22T14:34:30.853Z** with backend
+`e96519f59951f268ecc1e6f136839c87b56326ce`, frozen bundle manifest SHA256
+`1dc465eed79122d6d78eb4a40a484df13a7ce280dab3196ad6b7b95496aa37a4`,
+and checked client `932d14c0`/beta-web-r3/APKcode3. The real full-catalog 20-card
+three-person flow, shared-only output, gateway1012/fresh ticket and API actor/
+decision recovery all passed (12 browser shared frames, zero JS errors; about34s
+API restart recovery in this run). See `artifacts/release-rehearsal-r4.json`.
+
+The separate fresh-store rate phase **passed 2026-10-22T14:37:01.043Z** with the
+test-only actor budget1/minute. Actual429 returned retryable/Retry-After59;
+reload retained the pending readiness command and cooldown, no automatic command
+POST occurred, and manual Retry after the natural window sent the same command
+ID/sequence/body and succeeded once. Three browser command POSTs total were
+assignment success, denied ready, manual ready success. No automatic agreement,
+fixture denial, clock edit or quota reset occurred. See
+`artifacts/release-rehearsal-r4-rate.json`. Both projects were removed; prior r3
+evidence and all retained listeners were preserved. This adds functional
+compatibility evidence, not public TLS/physical-phone/load/independent-review
+or activation acceptance.
+
 ## Release acceptance and known gaps
 
 Container readiness means dependencies are usable. It does not mean the service
 is ready for unrestricted public exposure. Activation remains paused until the
-final image including the no-source-cache-write bundle passes connected checks, enforced rate
-budgets/global active-room capacity controls receive their separately checked
-operational follow-up, and root reconciles the remaining gaps with the owner. A later independent
+final image including the no-source-cache-write path and checked capacity controls
+passes connected checks, and root reconciles the remaining gaps with the owner.
+A later independent
 implementation review is currently unavailable; no such review is claimed by
 these packaging and ordinary functional checks.
 
 | Capability | Current scope and acceptance needed |
 | --- | --- |
-| Room state and transport | Durable Crate/API state, ticket/lease authorization, bounded sockets and repair are implemented; r3 connected release proof passed. The final image with operational follow-up still needs its relevant checks. |
-| Admission and commands | R3 has no admission/command/IP rate limiter and no global room-count cap. Enforced durable capacity/rate controls are a separate required follow-up before public activation. Gateway socket/frame bounds and container CPU/memory caps do not bound HTTP room creation or durable storage growth. No public-service abuse/capacity claim follows from them. |
+| Room state and transport | Durable Crate/API state, ticket/lease authorization, bounded sockets and repair are implemented; r3 and checked R4 connected release proofs passed, plus real R4 rate/cooldown/manual-retry compatibility. |
+| Admission and commands | Checked R4 `e96519f5` adds SQL-clock durable global active-room reservations and logical admission/command/actor grants. Defaults20 rooms,20 admissions/minute,600 commands/minute,60 actor commands/minute. These are not comprehensive raw HTTP/read/metadata/IP protection; exact retries can bypass new logical-operation charges. No unrestricted public-service abuse/capacity claim follows. |
 | Expiry and physical cleanup | Logical room expiry does not physically delete encrypted records. Automated physical cleanup is unfinished; owner needs an explicit retention, storage monitoring and cleanup plan before sustained use. No automatic purge is enabled here. |
 | Keys | Stable-key compatibility and restart/rollback are supported. Full key rotation/re-encryption is unfinished. Owner must retain the current key securely and accept that ordinary rollback cannot rotate it; compromise recovery requires a separate plan. |
 | Service access | Apex/API/APK are public if this router is activated. A service-wide invite-only access boundary is not implemented. Root must choose whether to add one or explicitly accept a publicly reachable supervised trial. |
-| Scale and review | Local functional proof is not a load test or independent release review. Multiple API instances do not acquire distributed rate limits by being replicated. |
+| Scale and review | Local functional proof is not a load test or independent release review. R4 APIs sharing the same checked store/control policy coordinate logical grants; this does not establish sustained concurrency capacity. |
 
 A small supervised trial can exercise ordinary guest movie/new-show choosing,
 matches/proposals, anonymous agreement, reconnect and durable restart recovery.
 It must not be described as unrestricted public readiness or as a private service
-without an actual service access boundary. Backend suggested one API/gateway and
-voluntary observation budgets of five rooms/20 people, with inventory/container/SQL
-checks every 15 minutes and before/after sessions. These are optional observation
-suggestions only: **not enforced admission control, product limits, measured load
-capacity or a release acceptance substitute**. Root requires separately verified
-enforced rate budgets and a global active-room cap before public activation.
-The r3 rehearsal establishes functional evidence only. Pause public
+without an actual service access boundary. Inventory/container/SQL monitoring
+during scheduled testing remains useful observation, never a substitute for
+enforced controls or release acceptance. Defaults above are backend-enforced
+logical budgets, not a measured load capacity guarantee. Connected rehearsals
+establish functional evidence only. Pause public
 API/WebSocket access at the front proxy on unexpected growth or errors; removing
 only the new YepWatch router is a full-service stop option. Preserve stores/keys
 for diagnosis; no ad-hoc DELETE, reset or unreviewed cleanup. Physical retention
@@ -280,6 +330,10 @@ the same Compose command, preserving private config, room table, runtime metadat
 and keys. Never use `down --volumes`, purge tables, rotate keys or restore a backup
 over a live store as an ordinary rollback. If a schema is incompatible, stop and
 use the backend owner's explicit backup/restore procedure into a separate store.
+Do not roll an activated R4 store back to an R3 API without capacity controls;
+that would bypass its policy. Rollback must retain compatible control semantics
+and the same fingerprint. Format2 backend backups include control state; neither
+policy replacement nor migration over prior room history is provided here.
 Removing only the new YepWatch router disables public access without touching
 GoodWatch routes or deleting durable rooms.
 

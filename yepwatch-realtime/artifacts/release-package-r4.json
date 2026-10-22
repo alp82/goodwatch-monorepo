@@ -1,0 +1,88 @@
+{
+  "recordedAt": "2026-10-22T14:39:31.803873+00:00",
+  "scope": "Incremental R4 ordinary release rehearsal only; no deployment or retained changes",
+  "branch": "feat/shared-scoring",
+  "backendSourceCommit": "e96519f59951f268ecc1e6f136839c87b56326ce",
+  "backendBundleManifestSha256": "1dc465eed79122d6d78eb4a40a484df13a7ce280dab3196ad6b7b95496aa37a4",
+  "backendServerSha256": "6b4e21e75a5c4f91de0c646c0307d97e196349720b2ce8aefd599f3e4ff688d6",
+  "clientSourceCommit": "932d14c0aea595589fac26e4418bfa65f6f114c3",
+  "clientSourcePinSha256": "ffeedc36a22eade4a8c8a7f35759fac61ebe661d9417f514616ab038cee2189e",
+  "webTreeSha256": "a75d41fc31014d7bc4130d41e7bb5704d610ea496f4628d41580b71ba3fe19e6",
+  "images": {
+    "api": {
+      "tag": "yepwatch-api:release-r4-20261022",
+      "imageId": "sha256:f1ec65af2e7e81cc9abdaa8bc7fa2e9aca07514fb2976afcc3b960a2aa910f79"
+    },
+    "front": {
+      "tag": "yepwatch-front:release-r4-20261022",
+      "imageId": "sha256:69f5eb4bc821e0ffeab0ba27d484d79f973632fe1f706af8ab7910806e1e2074"
+    },
+    "gateway": {
+      "tag": "yepwatch-gateway:release-r3-20261022",
+      "imageId": "sha256:4c15a848f8b7c60e932e50f26d99446f43cec21adf10ac8be85d0806701f1994"
+    }
+  },
+  "buildContext": "/tmp/yepwatch-release-full-r4-20261022",
+  "buildContextManifestSha256": "57dc61d906275fac018e869d1e183532ff30395def6396dc414868b5152514a9",
+  "verification": {
+    "releaseScriptsSyntax": "PASS",
+    "newContextVersionedApkAndSidecarHash": "PASS",
+    "defaultPolicyTLSWSSDecisionRestart": "PASS; release-rehearsal-r4.json",
+    "separateActorBudget1Actual429ReloadManualExactEnvelopeRetry": "PASS; release-rehearsal-r4-rate.json",
+    "r3AlreadyPassedTestsNotRepeated": true,
+    "fixturesOrQuotaResetUsedForRateProof": false,
+    "newGatewayCodeOrDependencyChanges": false
+  },
+  "phases": {
+    "release-rehearsal-r4.json": {
+      "sha256": "98885d0bc42de2c7bdd875bda5c11ec236cb7553842f9a3085b5cd89b1f503ce",
+      "completedAt": "2026-10-22T14:34:30.853Z",
+      "controls": {
+        "YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS": "20",
+        "YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE": "20",
+        "YEPWATCH_PROPOSAL_COMMANDS_PER_MINUTE": "600",
+        "YEPWATCH_PROPOSAL_ACTOR_COMMANDS_PER_MINUTE": "60"
+      },
+      "screenshot": "artifacts/release-rehearsal-r4-browser-done.png",
+      "screenshotSha256": "9a86cf7a9b3fe474c2691087c4b717d8016adc24a0447b884ba1ca8441570e03"
+    },
+    "release-rehearsal-r4-rate.json": {
+      "sha256": "d849816d98c82f6e11c10dea56ff97491833ae180d9c42be7f8af9df3cc02039",
+      "completedAt": "2026-10-22T14:37:01.043Z",
+      "controls": {
+        "YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS": "20",
+        "YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE": "20",
+        "YEPWATCH_PROPOSAL_COMMANDS_PER_MINUTE": "600",
+        "YEPWATCH_PROPOSAL_ACTOR_COMMANDS_PER_MINUTE": "1"
+      },
+      "screenshot": "artifacts/release-rehearsal-r4-rate-browser-done.png",
+      "screenshotSha256": "f7adf3ea1ce466fe49fc382444d1c65f8094eb447f35bafeb095c141af32cfe3"
+    }
+  },
+  "baselineCommittedR3Unchanged": {
+    "release-package.json": "9a868a8466e24bf8bcd19fc3bd5a06fc24ed859e71e0ee1406a2c10d44b7a3ea",
+    "release-rehearsal.json": "81151de839e437db8b5c9eb14c1bb0387ac9130e6c1e530c2fdf03e30567e4f9",
+    "release-static-proof.json": "1e9519c04d266fe25ad778102aeed86a883f90e859f011b0b232831a77e32ae5",
+    "release-hosting-inspection.json": "4911333595953685c9a8b6b78d7a85e748947d68dee5211b9fe357557e8d2c3d"
+  },
+  "retainedListenerPidsObserved": {
+    "4324": 2654867,
+    "8126": 2665854,
+    "8133": 2854295,
+    "8141": 996973,
+    "4322": 2045976,
+    "4323": 3261428
+  },
+  "ownDisposableProjectsRemoved": true,
+  "remainingGaps": [
+    "Public TLS/proxy/deployment and target-host connectivity/roles/key preflight not activated",
+    "Physical cleanup/retention and full key rotation unfinished",
+    "Raw HTTP/read/metadata/IP protection incomplete; logical operation budgets are not comprehensive protection",
+    "No service-wide tester gate; apex/API/download public if activated",
+    "No sustained load proof or later independent release review",
+    "New APK3 not installed or exercised on physical phone by hosting rehearsal",
+    "Root acceptance of remaining scope still required"
+  ],
+  "productionOperationsPerformed": false,
+  "credentialsInvitesAndRoomIdentifiersRedacted": true
+}
