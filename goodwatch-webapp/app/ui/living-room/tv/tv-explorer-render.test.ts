@@ -60,7 +60,8 @@ const tag = (html: string, id: string) =>
 	)?.[0] ?? ""
 const count = (html: string, part: string) => html.split(part).length - 1
 
-const BAR = ["bar:back", "bar:search", "bar:menu"]
+/** The desktop bar of a screen without the navigation: the white G (since 2026-10-22), Back, Search, Menu. */
+const BAR = ["nav:home", "bar:back", "bar:search", "bar:menu"]
 const DESKTOP_BAR = BAR
 /** The phone's header: the white G and Menu. */
 /** The phone's header on every screen but home (2026-10-22): Back, the white G and Menu. */

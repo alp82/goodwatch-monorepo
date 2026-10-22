@@ -102,6 +102,7 @@ test("My shows draws the machine's items in its order, in both editions", () => 
 		"title:show-21",
 		"title:show-22",
 		"expand",
+		"nav:home",
 		"bar:back",
 		"bar:search",
 		"bar:menu",
@@ -189,6 +190,7 @@ test("the New episodes signal: what is new under the screen's name, and New on i
 test("a member without a show to continue or to start is told how one gets here", () => {
 	assert.deepEqual(rendered.emptyItems, [
 		"expand",
+		"nav:home",
 		"bar:back",
 		"bar:search",
 		"bar:menu",
@@ -214,6 +216,7 @@ test("a member without a show to continue or to start is told how one gets here"
 test("the server draws My shows as its bar and Expand key alone, and nothing of the member's shows", () => {
 	assert.deepEqual(ids(rendered.first), [
 		"expand",
+		"nav:home",
 		"bar:back",
 		"bar:search",
 		"bar:menu",
@@ -365,6 +368,7 @@ test("What is GoodWatch?: its two answers are touch targets on every phone, unde
 	assert.deepEqual(rendered.aboutItems, [
 		"got-it",
 		"rate",
+		"nav:home",
 		"bar:back",
 		"bar:search",
 		"bar:menu",

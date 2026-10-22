@@ -18,6 +18,7 @@ import {
 	useState,
 	useSyncExternalStore,
 } from "react"
+import { GoodWatchG } from "~/ui/brand/GoodWatchWordmark"
 import { HowGoodWatchWorks } from "../HowGoodWatchWorks"
 import type { HomeHeadingTag } from "../tv/screens/Home"
 import type { TvPower } from "../tv/tv-machine"
@@ -279,6 +280,19 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 		screen: (
 			<>
 				{film}
+				{/* The desktop's white G over the film, where the TV's own G stands on its screens: it leaves the film for
+				    the TV's home, as Look around does (the owner, 2026-10-22: the G always there). The phone keeps its film
+				    as it is (intro.css). */}
+				{film && (
+					<button
+						type="button"
+						className="film-home"
+						aria-label={member ? "Start" : "Home"}
+						onClick={leave}
+					>
+						<GoodWatchG height={28} />
+					</button>
+				)}
 				{holding && (
 					<div
 						className="film-hold"

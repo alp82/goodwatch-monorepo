@@ -672,6 +672,10 @@ export const amongItems = (items: readonly string[], item: string) => {
  */
 export const TITLE_SECTIONS = ["section:watch", "fingerprint"]
 
+/** The TV's navigation along the top, tabs and all, as against a screen's bar with the white G alone. */
+const navigates = (items: readonly string[]) =>
+	items.some((id) => id.startsWith("nav:") && id !== "nav:home")
+
 /** Keys that stand over a phone screen's content, where its focus never starts. */
 const SECTION_KEYS: ReadonlySet<string> = new Set([
 	...TITLE_SECTIONS,
@@ -834,6 +838,8 @@ export function tvItems(screen: TvScreen, ctx: TvContext): string[] {
 			: hasNav(screen, ctx)
 			? navItems(ctx)
 			: [
+					// The white G on every desktop screen but home (the owner, 2026-10-22: always there on any subpage).
+					...(screen.name === "home" ? [] : ["nav:home"]),
 					...(screen.name === "home" ? [] : ["bar:back"]),
 					...(screen.name === "search" ? [] : ["bar:search"]),
 					"bar:menu",
@@ -927,7 +933,9 @@ function screenFocus(state: TvState, ctx: TvContext): string {
 			item !== "expand" &&
 			item !== "browse:all" &&
 			!item.startsWith("tab:") &&
-			!SECTION_KEYS.has(item),
+			!SECTION_KEYS.has(item) &&
+			// A screen with nothing of its own starts on Back, not on the white G before it in the desktop's bar.
+			!(item === "nav:home" && !navigates(items)),
 	)
 	return (content ??
 		items.find((item) => item !== "expand" && !item.startsWith("tab:")) ??

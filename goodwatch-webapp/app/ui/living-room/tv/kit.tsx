@@ -436,15 +436,40 @@ export function Bar({
 }
 
 /** Where a screen without a `Frame` puts the bar: the picture's top right corner, or the navigation along the top. */
+/** The TV's navigation along the top, tabs and all (`navItems`), as against a screen's bar with the G alone. */
+const navigates = (items: readonly string[]) =>
+	items.some((id) => id.startsWith("nav:") && id !== "nav:home")
+
+/**
+ * The white G on a desktop screen without the navigation: at the picture's top left, before the screen's name. It
+ * returns to Start (Home for a guest), as the navigation's does (the owner, 2026-10-22: always there).
+ */
+function HomeG({ className = "" }: { className?: string }) {
+	const { here, member } = useTvView()
+	return (
+		<Item
+			id="nav:home"
+			label={member ? "Start" : "Home"}
+			pressed={here === "nav:home"}
+			// As tall as the bar's keys beside it.
+			className={`tvc-act flex h-[64px] w-[64px] shrink-0 items-center justify-center ${className}`}
+		>
+			<GoodWatchG height={28} />
+		</Item>
+	)
+}
+
 export function CornerBar({ items }: { items: readonly string[] }) {
 	const P = usePhone()
 	if (P) return <PhoneHeader items={items} />
-	if (items.includes("nav:home")) return <NavBar items={items} />
+	if (navigates(items)) return <NavBar items={items} />
 	return (
-		<Bar
-			items={items}
-			className={`absolute z-10 ${P ? "right-5 top-3" : "right-14 top-[22px]"}`}
-		/>
+		<>
+			{items.includes("nav:home") && (
+				<HomeG className="absolute left-14 top-[22px] z-10" />
+			)}
+			<Bar items={items} className="absolute right-14 top-[22px] z-10" />
+		</>
 	)
 }
 
@@ -915,7 +940,7 @@ export function Frame({
 	children: ReactNode
 }) {
 	const P = usePhone()
-	const nav = items.includes("nav:home")
+	const nav = navigates(items)
 	const words = (
 		<>
 			<div
@@ -973,6 +998,7 @@ export function Frame({
 			<div
 				className={`absolute inset-x-0 top-0 flex items-center justify-between gap-4 ${P ? "h-[78px] px-5" : "h-[108px] px-14"}`}
 			>
+				{items.includes("nav:home") && <HomeG />}
 				{/* The toast takes this place while it shows (TvScreen.tsx). */}
 				<div
 					className={`min-w-0 flex-1 transition-opacity [[data-tv-toast]_&]:opacity-0 ${mark ? `flex items-center ${P ? "gap-3" : "gap-5"}` : ""}`}

@@ -267,6 +267,7 @@ describe("what the screens show", () => {
 			"hop:thrilling",
 			"hop:dark",
 			"expand",
+			"nav:home",
 			"bar:back",
 			"bar:search",
 			"bar:menu",
@@ -282,6 +283,7 @@ describe("what the screens show", () => {
 		assert.deepEqual(tvItems(screen, ctx), [
 			...SIX.map((id) => `island:${id}`),
 			"expand",
+			"nav:home",
 			"bar:back",
 			"bar:search",
 			"bar:menu",

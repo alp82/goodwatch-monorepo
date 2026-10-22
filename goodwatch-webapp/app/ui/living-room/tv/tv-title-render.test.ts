@@ -92,7 +92,8 @@ const focused = (html: string) =>
 const count = (html: string, part: string) => html.split(part).length - 1
 /** A screen's own items and its bar's, without the Expand key: for the lists written out here. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
-const BAR = ["bar:back", "bar:search", "bar:menu"]
+/** The desktop bar of a screen without the navigation: the white G (since 2026-10-22), Back, Search, Menu. */
+const BAR = ["nav:home", "bar:back", "bar:search", "bar:menu"]
 /** Watch next has the TV's navigation along the top, in the bar's place. */
 const NAV = [
 	"nav:home",
@@ -340,8 +341,9 @@ test("the phone's title sections draw their keys in the machine's reading order"
 
 test("every key of the title screen is a real button, 54 canvas px tall on the desktop", () => {
 	const { known } = rendered.title
-	assert.equal(count(known.desktop, "<button"), 9)
-	assert.equal(count(known.desktop, '<button type="button" data-tv-item='), 9)
+	// The four keys, the fingerprint, Expand, and the bar: the white G, Back, Search and Menu.
+	assert.equal(count(known.desktop, "<button"), 10)
+	assert.equal(count(known.desktop, '<button type="button" data-tv-item='), 10)
 	// The four keys take their height from the rule; the Expand key and the bar's keys are drawn as designed.
 	assert.deepEqual(sizes(known.desktop), [
 		{ id: "watch", height: 54, width: Number.NaN },
@@ -349,7 +351,7 @@ test("every key of the title screen is a real button, 54 canvas px tall on the d
 		{ id: "want-to-see", height: 54, width: Number.NaN },
 		{ id: "seen", height: 54, width: Number.NaN },
 	])
-	assert.equal(count(known.desktop, "h-[64px]"), 4)
+	assert.equal(count(known.desktop, "h-[64px]"), 5)
 	// The Fingerprint is a card as tall as its readings.
 	assert.match(
 		known.desktop,

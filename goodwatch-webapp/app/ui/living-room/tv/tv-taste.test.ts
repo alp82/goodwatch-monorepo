@@ -358,7 +358,8 @@ const picks = [
 	"movie-13",
 	"movie-14",
 ].map((key) => ({ key, title: key, poster: null, backdrop: null, facts: "" }))
-const BAR = ["bar:back", "bar:search", "bar:menu"]
+/** The desktop bar of a screen without the navigation: the white G (since 2026-10-22), Back, Search, Menu. */
+const BAR = ["nav:home", "bar:back", "bar:search", "bar:menu"]
 const NAV = [
 	"nav:home",
 	"nav:tonight",

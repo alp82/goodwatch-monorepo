@@ -89,7 +89,8 @@ const item = (html: string, id: string) =>
 /** The marks in a piece of markup: "drawn" or "logo", in its order. */
 const marks = (html: string) =>
 	[...html.matchAll(/data-service-mark="([a-z]+)"/g)].map((match) => match[1])
-const BAR = ["bar:back", "bar:search", "bar:menu"]
+/** The desktop bar of a screen without the navigation: the white G (since 2026-10-22), Back, Search, Menu. */
+const BAR = ["nav:home", "bar:back", "bar:search", "bar:menu"]
 /** The phone's header: the white G and Menu. */
 /** The phone's header on every screen but home (2026-10-22): Back, the white G and Menu; home has no Back. */
 const PHONE_BAR = ["bar:back", "nav:home", "bar:menu"]
@@ -271,7 +272,8 @@ test("the service screen's items in the markup are the machine's, in reading ord
 		)
 	}
 	const { netflix } = rendered.service
-	assert.equal(netflix.items.length, 12 + 1 + 3)
+	// Twelve titles, Expand, and the bar: the white G, Back, Search and Menu.
+	assert.equal(netflix.items.length, 12 + 1 + 4)
 	assert.deepEqual(netflix.items.slice(0, 4), [
 		"title:movie-161",
 		"title:movie-388",

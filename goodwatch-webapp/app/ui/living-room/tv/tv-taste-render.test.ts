@@ -112,7 +112,8 @@ const phoneFoot = (html: string) => {
 }
 /** A screen's own items and its bar's, without the Expand key: for the lists written out here. */
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
-const BAR = ["bar:back", "bar:search", "bar:menu"]
+/** The desktop bar of a screen without the navigation: the white G (since 2026-10-22), Back, Search, Menu. */
+const BAR = ["nav:home", "bar:back", "bar:search", "bar:menu"]
 /** The phone's header on every screen. */
 /** The phone's header on every screen but home (2026-10-22): Back, the white G and Menu. */
 const HEADER = ["bar:back", "nav:home", "bar:menu"]

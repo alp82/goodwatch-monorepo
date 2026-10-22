@@ -61,7 +61,8 @@ const member: TvContext = {
 /** A person with the Remote's two streaming keys: Netflix (8) and Disney Plus (337). */
 const keyed: TvContext = { ...guest, services: [8, 337] }
 
-const BAR = ["bar:back", "bar:search", "bar:menu"]
+/** The desktop bar of a screen without the navigation: the white G (since 2026-10-22), Back, Search, Menu. */
+const BAR = ["nav:home", "bar:back", "bar:search", "bar:menu"]
 /** The TV's navigation along the top of its own screens (Watch next, Discover, Search, the quiz, a member's Start). */
 const NAV = [
 	"nav:home",
@@ -2626,7 +2627,7 @@ describe("on a service", () => {
 		const ctx = { ...keyed, titles: twelve }
 		let state = at("tv=service&service=8", 1, ctx)
 		const seen: string[] = []
-		for (let n = 0; n < 16; n++) {
+		for (let n = 0; n < 17; n++) {
 			seen.push(focusedItem(state, ctx))
 			state = run(state, ctx, { type: "step", by: 1 }).state
 		}
@@ -2802,7 +2803,10 @@ describe("every screen", () => {
 					...(destinationHref(screen, ctx) ? ["expand"] : []),
 					...(withNav
 						? NAV.slice(0, -1)
-						: [...(screen.name === "home" ? [] : ["bar:back"]), "bar:search"]),
+						: [
+								...(screen.name === "home" ? [] : ["nav:home", "bar:back"]),
+								"bar:search",
+							]),
 					"bar:menu",
 				],
 				`${screen.name} ${ctx.member ? "member" : "guest"}`,

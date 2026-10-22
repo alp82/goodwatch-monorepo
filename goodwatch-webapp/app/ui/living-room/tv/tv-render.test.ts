@@ -209,6 +209,7 @@ test("What is GoodWatch? and the menu draw the machine's items", () => {
 	assert.deepEqual(rendered.items.about, [
 		"got-it",
 		"rate",
+		"nav:home",
 		"bar:back",
 		"bar:search",
 		"bar:menu",
@@ -248,6 +249,7 @@ test("What is GoodWatch? and the menu draw the machine's items", () => {
 
 test("a screen in a chunk of its own is not in the server's HTML: its bar alone is", () => {
 	assert.deepEqual(ids(rendered.aboutFirst), [
+		"nav:home",
 		"bar:back",
 		"bar:search",
 		"bar:menu",
@@ -266,6 +268,7 @@ test("every screen has its own code: before it is there the server draws the scr
 	assert.deepEqual(ids(rendered.lazy.results), ["expand", ...NAV])
 	assert.deepEqual(ids(rendered.lazy.shows), [
 		"expand",
+		"nav:home",
 		"bar:back",
 		"bar:search",
 		"bar:menu",

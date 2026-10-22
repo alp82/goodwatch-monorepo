@@ -4880,3 +4880,37 @@
 		font-size: max(12px, 2.6cqw);
 	}
 }
+
+/* The desktop's white G over the film (HomeIntro.tsx), in the place and size of the TV's own G on its screens: 56 of
+   the canvas's 1200 px from the left, 22 of its 648 from the top, 64 px square. The phone's film keeps the whole
+   picture. */
+.film-home {
+	position: absolute;
+	z-index: 27;
+	left: 4.667%;
+	top: 3.395%;
+	width: 5.333%;
+	aspect-ratio: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 999px;
+	background: rgba(0, 0, 0, 0.4);
+	color: rgba(255, 255, 255, 0.88);
+	cursor: pointer;
+	transition: background-color 0.15s, color 0.15s;
+}
+.film-home:hover,
+.film-home:focus-visible {
+	background: #fff;
+	color: #000;
+	outline: none;
+}
+.tvr:not([data-room="desktop"]) .film-home {
+	display: none;
+}
+/* The Explorer chapter's headline starts in the picture's top left corner, where the desktop's G stands over the
+   film: it starts to the G's right there. */
+.tvr[data-room="desktop"] [data-scene="explorer"] .intro-atlas-head {
+	left: 11.5cqw;
+}
