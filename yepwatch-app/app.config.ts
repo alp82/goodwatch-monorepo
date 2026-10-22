@@ -7,7 +7,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     throw new Error('APP_VARIANT must be development, preview or production.');
   if (variant === 'development') return config as ExpoConfig;
   const preview = variant === 'preview';
-  const build = Number(process.env.APP_BUILD_NUMBER ?? '1');
+  const build = Number(process.env.APP_BUILD_NUMBER ?? '3');
   if (!Number.isSafeInteger(build) || build < 1) throw new Error('APP_BUILD_NUMBER must be a positive integer.');
   for (const key of ['EXPO_PUBLIC_API_ORIGIN', 'EXPO_PUBLIC_APP_ORIGIN']) {
     if (process.env[key] !== 'https://yepwatch.com') throw new Error(`${key} must be https://yepwatch.com for release builds.`);

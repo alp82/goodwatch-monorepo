@@ -3,7 +3,9 @@ from pathlib import Path
 import hashlib, json, os, secrets, shutil, subprocess
 
 APP = Path(__file__).resolve().parent.parent
-RUN = APP / '.expo/release/preview-r1'
+BUILD = int(os.environ.get('APP_BUILD_NUMBER', '3'))
+assert BUILD >= 1, 'Positive APP_BUILD_NUMBER required.'
+RUN = APP / f'.expo/release/preview-r{BUILD}'
 PROJECT = RUN / 'yepwatch-app'
 SIGNING = APP / '.expo/signing/preview'
 JAVA = APP / '.expo/native-toolchain/jdk-21.0.12.1+1'
@@ -12,11 +14,13 @@ assert not PROJECT.exists(), 'Use a new isolated output; never overwrite an exis
 assert (JAVA / 'bin/jlink').exists(), 'Full JDK21 required.'
 SIGNING.mkdir(parents=True, exist_ok=True, mode=0o700)
 private = SIGNING / 'credentials.json'
+if BUILD > 1:
+    assert private.exists() and (SIGNING/'preview.jks').exists(), 'Preview upgrades require the original private preview signing identity.'
 if not private.exists():
     private.write_text(json.dumps({'storePassword': secrets.token_urlsafe(32), 'keyPassword': secrets.token_urlsafe(32)}))
     private.chmod(0o600)
 credentials = json.loads(private.read_text())
-env = dict(os.environ, APP_VARIANT='preview', APP_BUILD_NUMBER='1', EXPO_NO_DOTENV='1', CI='1',
+env = dict(os.environ, APP_VARIANT='preview', APP_BUILD_NUMBER=str(BUILD), EXPO_NO_DOTENV='1', CI='1',
     EXPO_PUBLIC_API_ORIGIN='https://yepwatch.com', EXPO_PUBLIC_APP_ORIGIN='https://yepwatch.com',
     EXPO_PUBLIC_WS_ORIGIN='wss://yepwatch.com', EXPO_PUBLIC_ENABLE_FIXTURES='false', EXPO_PUBLIC_GUEST_ONLY='true',
     YEPWATCH_LOCAL_PREVIEW_SIGNING='1', YEPWATCH_PREVIEW_KEYSTORE=str(SIGNING/'preview.jks'),
@@ -48,7 +52,7 @@ with (RUN/'build.log').open('w') as log:
         subprocess.run(command, cwd=cwd, env=env, check=True, stdout=log, stderr=subprocess.STDOUT)
 apk = PROJECT/'android/app/build/outputs/apk/release/app-release.apk'
 result = {'apk': str(apk), 'sha256': hashlib.sha256(apk.read_bytes()).hexdigest(),
-    'package': 'com.yepwatch.preview', 'version': '0.1.0', 'versionCode': 1,
+    'package': 'com.yepwatch.preview', 'version': '0.1.0', 'versionCode': BUILD,
     'signing': 'Dedicated private local preview key; NOT production/store ownership',
     'bundledJavascript': True, 'metroRequired': False, 'publicBackendDeployed': False,
     'api': 'https://yepwatch.com', 'websocket': 'wss://yepwatch.com', 'physicalDeviceInstalled': False}

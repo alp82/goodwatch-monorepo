@@ -17,7 +17,8 @@ import { publicFailureMessage } from '../recovery';
 import { continuousRealtimeUrl } from '../config';
 import type { Connection } from '../realtime';
 import { mergeRoom, mergePublic, PersistentCommands, type CachedRoom } from './state';
-import { readPending, writePending } from './storage';
+import { readCommandRecovery, writePending } from './storage';
+import { useRetryCountdown } from './useRetryCountdown';
 import { ContinuousRealtime } from './realtime';
 import { applyActivity, pruneActivity, type PeerActivity } from './activity';
 export const continuousKey = (id: string) => ['proposal-room', id] as const;
@@ -30,11 +31,13 @@ export function useContinuousRoom(roomId: string) {
   const [terminal, setTerminal] = useState<'expired' | 'access' | null>(null);
   const terminalRef = useRef<typeof terminal>(null);
   const [pending, setPending] = useState<CommandEnvelope | null>(null);
+  const [retryAt, setRetryAt] = useState(0);
+  const retrySeconds = useRetryCountdown(retryAt);
   const [activities, setActivities] = useState(new Map<string, PeerActivity>());
   const clock = useRef(0);
   const channel = useRef<ContinuousRealtime | null>(null);
   const queue = useRef(
-    new PersistentCommands(() => Crypto.randomUUID(), { write: (e) => writePending(roomId, e) })
+    new PersistentCommands(() => Crypto.randomUUID(), { write: (e, until) => writePending(roomId, e, until) })
   );
   const cached = useCallback(
     () => queryClient.getQueryData<CachedRoom>(continuousKey(roomId)),
@@ -67,7 +70,7 @@ export function useContinuousRoom(roomId: string) {
   const authority = useCallback(
     (e: unknown) => {
       if (expired(e)) return;
-      if (e instanceof RoomFailure && ['unauthorized', 'forbidden', 'not_found'].includes(e.code))
+      if (e instanceof RoomFailure && ([401, 403, 404].includes(e.status ?? 0) || ['unauthorized', 'forbidden', 'not_found'].includes(e.code)))
         end('access');
     },
     [end, expired]
@@ -121,8 +124,9 @@ export function useContinuousRoom(roomId: string) {
   });
   useEffect(() => {
     let active = true;
-    void Promise.all([loadAccess(roomId), readPending(roomId)])
-      .then(([stored, envelope]) => {
+    void Promise.all([loadAccess(roomId), readCommandRecovery(roomId)])
+      .then(([stored, recovery]) => {
+        const { envelope, retryAt: until } = recovery;
         if (!active) return;
         if (
           envelope &&
@@ -131,6 +135,8 @@ export function useContinuousRoom(roomId: string) {
           envelope.command?.type
         ) {
           queue.current.pending = envelope;
+          queue.current.retryAt = until;
+          setRetryAt(until);
           setPending(envelope);
         }
         setAccess(
@@ -240,7 +246,7 @@ export function useContinuousRoom(roomId: string) {
   }, [room.data?.shared.expiresAt, terminal, expired]);
   async function send(command?: RoomCommand) {
     const snapshot = cached();
-    if (!access || !snapshot || expired() || privateError || queue.current.busy) return false;
+    if (!access || !snapshot || expired() || privateError || queue.current.busy || Date.now() < queue.current.retryAt) return false;
     setBusy(true);
     setError('');
     try {
@@ -251,8 +257,7 @@ export function useContinuousRoom(roomId: string) {
       return !terminalRef.current;
     } catch (e) {
       if (e instanceof RoomFailure && e.snapshot) apply(e.snapshot);
-      if (e instanceof RoomFailure && e.code === 'unauthorized') authority(e);
-      else expired(e);
+      authority(e);
       if (!terminalRef.current)
         setError(
           e instanceof RoomFailure
@@ -265,6 +270,7 @@ export function useContinuousRoom(roomId: string) {
       return false;
     } finally {
       setBusy(false);
+      setRetryAt(terminalRef.current ? 0 : queue.current.retryAt);
       setPending(terminalRef.current ? null : queue.current.pending);
     }
   }
@@ -277,6 +283,7 @@ export function useContinuousRoom(roomId: string) {
     privateError,
     terminal,
     pending,
+    retrySeconds,
     send,
     refetch,
     reconnect: () => {

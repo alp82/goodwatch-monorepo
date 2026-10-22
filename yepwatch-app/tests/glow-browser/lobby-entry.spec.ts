@@ -57,7 +57,7 @@ async function guest(
             error: {
               code: 'catalog_unavailable',
               message: 'Temporary entry write failure',
-              retryable: true,
+              retryable: false,
             },
           },
         });

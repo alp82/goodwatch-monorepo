@@ -447,7 +447,9 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           }}
         >
           <GText size={12} lines={2} style={{ flex: 1 }}>
-            {notice ||
+            {state.retrySeconds > 0
+              ? `Try again in ${state.retrySeconds}s. Your action is saved.`
+              : notice ||
               entry.error ||
               (state.privateError
                 ? 'Private state needs a refresh before choosing.'
@@ -475,10 +477,10 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                 state.reconnect();
               }
             }}
-            disabled={state.busy}
+            disabled={state.busy || state.retrySeconds > 0}
           >
             <GText size={12} bold>
-              {state.pending ? 'Retry' : entry.error ? 'Retry connection' : 'Refresh'}
+              {state.retrySeconds > 0 ? `Retry in ${state.retrySeconds}s` : state.pending ? 'Retry' : entry.error ? 'Retry connection' : 'Refresh'}
             </GText>
           </Press>
         </View>

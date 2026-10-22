@@ -1,3 +1,4 @@
+import { retainRequest, retryDeadline } from './retry';
 import type {
   CommandEnvelope,
   RoomCommand,
@@ -46,18 +47,20 @@ export function latestRetainedVote(snapshot: RoomSnapshot) {
   return [...snapshot.own.votes].reverse().find((vote) => vote.value !== null && retained.has(vote.candidateId));
 }
 export interface QueueStorage {
-  write: (envelope: CommandEnvelope | null) => Promise<void>;
+  write: (envelope: CommandEnvelope | null, retryAt?: number) => Promise<void>;
 }
 /** Persist before sending. Reload/reconnect can retry the identical command rather than guessing its outcome. */
 export class PersistentCommands {
   pending: CommandEnvelope | null = null;
   busy = false;
+  retryAt = 0;
   constructor(private readonly id: () => string, private readonly storage: QueueStorage) {}
   async send(
     command: RoomCommand | undefined,
     snapshot: RoomSnapshot,
     submit: (body: CommandEnvelope) => Promise<{ snapshot: RoomSnapshot }>
   ) {
+    if (Date.now() < this.retryAt) throw new Error('Wait before retrying this action.');
     if (this.busy || (this.pending && command))
       throw new Error('Reconcile the pending action first.');
     const envelope =
@@ -73,12 +76,16 @@ export class PersistentCommands {
       const result = await submit(envelope);
       await this.storage.write(null);
       this.pending = null;
+      this.retryAt = 0;
       return result.snapshot;
     } catch (error) {
-      const code = error instanceof Error && 'code' in error ? error.code : null;
-      if (code && code !== 'outcome_unknown' && code !== 'busy') {
+      if (!retainRequest(error)) {
         await this.storage.write(null);
         this.pending = null;
+        this.retryAt = 0;
+      } else if (this.pending) {
+        this.retryAt = retryDeadline(error);
+        await this.storage.write(this.pending, this.retryAt);
       }
       throw error;
     } finally {

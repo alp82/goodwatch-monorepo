@@ -1,5 +1,5 @@
 import { guestOnly } from '../core/config';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Drawer } from './glow/Drawer';
@@ -14,21 +14,46 @@ import { queryClient } from '../core/providers';
 import { continuousKey as roomKey } from '../core/continuous/useRoom';
 import { saveInvite } from '../core/continuous/invite-store';
 import { mergeRoom } from '../core/continuous/state';
-import type { GuestAdmissionRequest } from '@goodwatch/yepwatch-contracts/proposal';
+import { readAdmission, writeAdmission } from '../core/continuous/storage';
+import type { AdmissionRecovery } from '../core/continuous/recovery-state';
+import { retainRequest, retryDeadline } from '../core/continuous/retry';
+import { useRetryCountdown } from '../core/continuous/useRetryCountdown';
 
 export function Entrance({ invite }: { invite?: string }) {
   const [joining, setJoining] = useState(Boolean(invite));
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState(invite ?? '');
   const [busy, setBusy] = useState(false);
+  const inFlight = useRef(false);
   const [error, setError] = useState('');
   const [checkingInvite, setCheckingInvite] = useState(Boolean(invite));
   const [recoveryBlocked, setRecoveryBlocked] = useState(false);
   const [checkVersion, setCheckVersion] = useState(0);
-  const [admission, setAdmission] = useState<{
-    request: GuestAdmissionRequest;
-    code: string;
-  } | null>(null);
+  const intent = invite ?? '';
+  const [admission, setAdmission] = useState<AdmissionRecovery | null>(null);
+  const [restoring, setRestoring] = useState(true);
+  const [restoreFailed, setRestoreFailed] = useState(false);
+  const [restoreVersion, setRestoreVersion] = useState(0);
+  const retrySeconds = useRetryCountdown(admission?.retryAt ?? 0);
+  useEffect(() => {
+    let active = true;
+    void readAdmission(intent).then((saved) => {
+      if (!active) return;
+      setAdmission(saved);
+      if (saved) {
+        setNickname(saved.request.nickname);
+        setCode(saved.code);
+        setJoining(Boolean(saved.code));
+      }
+      setRestoreFailed(false);
+    }).catch(() => {
+      if (active) {
+        setRestoreFailed(true);
+        setError('Could not restore your saved room request. Retry before creating another.');
+      }
+    }).finally(() => { if (active) setRestoring(false); });
+    return () => { active = false; };
+  }, [intent, restoreVersion]);
   useEffect(() => {
     if (!invite) return;
     let active = true;
@@ -53,6 +78,7 @@ export function Entrance({ invite }: { invite?: string }) {
           code: invite,
           path: inviteIntent(invite),
         });
+        await writeAdmission(intent, null);
         router.replace({ pathname: '/room/[id]', params: { id: roomId } });
       } catch (e) {
         if (!active) return;
@@ -72,15 +98,17 @@ export function Entrance({ invite }: { invite?: string }) {
     return () => {
       active = false;
     };
-  }, [invite, checkVersion]);
+  }, [invite, checkVersion, intent]);
   async function enter(join: boolean, member = false) {
+    if (inFlight.current || restoring || restoreFailed || (admission && admission.intent !== intent) || Date.now() < (admission?.retryAt ?? 0)) return;
+    inFlight.current = true;
     setBusy(true);
     setError('');
+    let saved = admission;
     try {
       const cleanCode = join ? parseInvite(code) : '';
       if (join && !cleanCode)
         throw new Error('Enter the complete room code or YepWatch invitation link.');
-      let saved = admission;
       if (!saved) {
         const bytes = await Crypto.getRandomBytesAsync(32);
         saved = {
@@ -91,9 +119,14 @@ export function Entrance({ invite }: { invite?: string }) {
             nickname: nickname.trim(),
           },
           code: cleanCode,
+          intent,
+          retryAt: 0,
         };
-        setAdmission(saved);
       }
+      // A prior failed write may have retained this request only in memory.
+      // Persist the exact bootstrap before EVERY possible admission submit.
+      await writeAdmission(intent, saved);
+      setAdmission(saved);
       let result;
       if (saved.code) {
         const { roomId } = await api.resolve(saved.code);
@@ -115,6 +148,7 @@ export function Entrance({ invite }: { invite?: string }) {
               code: saved.code,
               path: inviteIntent(saved.code),
             });
+            await writeAdmission(intent, null);
             router.replace({
               pathname: '/room/[id]',
               params: { id: roomId, ...(member ? { signin: '1' } : {}) },
@@ -138,15 +172,22 @@ export function Entrance({ invite }: { invite?: string }) {
       // Retain the invitation across OAuth navigation without exposing it to activity or telemetry.
       await saveInvite(result.credential.roomId, result.invite);
       queryClient.setQueryData(['continuous-invite', result.credential.roomId], result.invite);
+      await writeAdmission(intent, null);
+      setAdmission(null);
       router.replace({
         pathname: '/room/[id]',
         params: { id: result.credential.roomId, ...(member ? { signin: '1' } : {}) },
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not join this room.');
-      if (e instanceof ApiFailure && !['outcome_unknown', 'busy'].includes(e.code))
-        setAdmission(null);
+      if (saved) {
+        const next = retainRequest(e) ? { ...saved, retryAt: retryDeadline(e) } : null;
+        setAdmission(next);
+        try { await writeAdmission(intent, next); }
+        catch { setError('Your request is still awaiting confirmation, but storage is unavailable. Keep this screen open to retry.'); }
+      }
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   }
@@ -154,7 +195,7 @@ export function Entrance({ invite }: { invite?: string }) {
   const compact = height < 700;
   const landscape = height < 500 && width > height;
   const [options, setOptions] = useState(false);
-  const locked = busy || checkingInvite || recoveryBlocked;
+  const locked = busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: glow.bg, overflow: 'hidden' }}>
       <View
@@ -204,6 +245,10 @@ export function Entrance({ invite }: { invite?: string }) {
                 {error}
               </GText>
             )}
+            {restoreFailed && <Pill label="Retry saved request" onPress={() => {
+              setRestoring(true); setError(''); setRestoreVersion(v => v + 1);
+            }}>Retry saved request</Pill>}
+            {retrySeconds > 0 && <GText size={13} color={glow.muted}>Try again in {retrySeconds}s. Your room request is saved.</GText>}
             {checkingInvite && (
               <GText size={14} color={glow.muted}>
                 Restoring your place in the room…
@@ -246,7 +291,7 @@ export function Entrance({ invite }: { invite?: string }) {
               disabled={locked || !nickname.trim() || (joining && !code.trim())}
               onPress={() => void enter(Boolean(invite || joining))}
             >
-              {busy
+              {retrySeconds > 0 ? `Retry in ${retrySeconds}s` : busy
                 ? 'Connecting…'
                 : admission
                 ? 'Retry room request'

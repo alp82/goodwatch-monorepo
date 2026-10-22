@@ -1,0 +1,16 @@
+{
+  "sourcePin": ".expo/review-pins/r4-client-r1",
+  "sourceHash": "e0d3cc1881cfb3784ce75d0c829167d93645aae05959377854549be8016f3d23",
+  "status": "Superseded before acceptance; preserved unchanged",
+  "reason": "Initial admission write and catch retry write can both fail; old next manual retry bypasses persistence for in-memory saved bootstrap.",
+  "apk": ".expo/release/preview-r2/yepwatch-app/android/app/build/outputs/apk/release/app-release.apk",
+  "apkSha256": "ebfdee6a740efd9d9242f7378fb05b163bbe7c83d2c58a9618db339e37a4d18d",
+  "webExport": ".expo/exports/beta-web-r2",
+  "webIndexSha256": "2b17b88eb3e9e7fa6e810767e56a762cdc5044d0a17696bddef390c5d6719b1e",
+  "activated": false,
+  "regression": {
+    "baselineCreateAdmissionStorageFailures": "RED: expected zero admission submits after repeated failed persistence; observed one. Isolated fixture only.",
+    "secretsIncluded": false
+  },
+  "correction": "Always await persistence of exact saved request before every possible admission submit; new pin and build3 follow."
+}

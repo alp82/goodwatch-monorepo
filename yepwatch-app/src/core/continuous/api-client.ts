@@ -16,6 +16,7 @@ import {
   type MemberExchangeRequest,
 } from '@goodwatch/yepwatch-contracts/proposal';
 import { apiUrl } from '../config';
+import { parseRetryAfter } from './retry';
 import type { RoomAccess } from '../credentials';
 export class RoomFailure extends Error {
   constructor(
@@ -23,7 +24,9 @@ export class RoomFailure extends Error {
     message: string,
     readonly status?: number,
     readonly snapshot?: RoomSnapshot,
-    readonly details?: ApiError['error']['details']
+    readonly details?: ApiError['error']['details'],
+    readonly retryable = false,
+    readonly retryAfterSeconds?: number
   ) {
     super(message);
     this.name = 'RoomFailure';
@@ -69,7 +72,9 @@ export class ContinuousApi {
           e.error?.message ?? 'The room is temporarily unavailable.',
           response.status,
           e.snapshot,
-          e.error?.details
+          e.error?.details,
+          e.error?.retryable === true,
+          parseRetryAfter(response.headers.get('Retry-After'))
         );
       }
       return result as T;
@@ -80,7 +85,11 @@ export class ContinuousApi {
         body === undefined
           ? 'Could not refresh the room. Check your connection.'
           : 'Your action has not been confirmed. Retry the same action to reconcile it.',
-        response?.status
+        response?.status,
+        undefined,
+        undefined,
+        false,
+        response ? parseRetryAfter(response.headers.get('Retry-After')) : undefined
       );
     } finally {
       clearTimeout(timer);

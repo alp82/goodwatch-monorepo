@@ -11,17 +11,17 @@ The public target is `https://yepwatch.com`, with WSS on the same host and propo
 | Preview | `com.yepwatch.preview` | Separate standalone YepWatch Beta APK / iOS Simulator |
 | Production | `com.yepwatch.app` | Intended store identity, not registered/submitted here |
 
-Version is0.1.0. Increment `APP_BUILD_NUMBER` (positive Android versionCode / iOS buildNumber) in the base EAS profile for each new distributed build; do not reuse a store build counter. Default1 is the first local preview. No OTA update service is configured.
+Version is0.1.0. Increment `APP_BUILD_NUMBER` (positive Android versionCode / iOS buildNumber) in the base EAS profile for each new distributed build; do not reuse a store build counter. Current default3 is the R4 retry-compatible preview; the first preview remains code1. No OTA update service is configured.
 
 ## Local Android preview
 
 Full repo and Node24 are required because the contracts are a sibling file dependency. Run `npm ci --install-links` inside `yepwatch-app`.
 
 - `npm run release:config` validates/prints public production configuration.
-- `npm run release:web` creates isolated `.expo/exports/beta-web-r1` (choose a new output for subsequent exports).
-- `npm run release:preview:android` creates isolated `.expo/release/preview-r1`, installs copied dependencies, prebuilds and compiles an ARM64+x86_64 standalone release APK. It requires the full JDK21 and AndroidSDK configured in the script; it never installs on a device or starts Metro.
+- `npm run release:web` creates isolated `.expo/exports/beta-web-r3` (choose a new output for subsequent exports).
+- `npm run release:preview:android` creates isolated `.expo/release/preview-r3`, installs copied dependencies, prebuilds and compiles an ARM64+x86_64 standalone release APK. It requires the full JDK21 and AndroidSDK configured in the script; it never installs on a device or starts Metro.
 
-The APK and SHA256 are recorded in `.expo/release/preview-r1/build-result.json`. A dedicated preview key lives only under ignored `.expo/signing/preview` with private file permissions. Preserve it privately for compatible preview updates. This key is **not** a production/store signing or upload key. Do not copy its passwords/keystore into source, logs, EAS uploads or public reports. Local Gradle signing is enabled only for the preview variant through the config plugin; production cloud credentials are separate.
+The APK and SHA256 are recorded in `.expo/release/preview-r3/build-result.json`. A dedicated preview key lives only under ignored `.expo/signing/preview` with private file permissions. Preserve it privately for compatible preview updates. This key is **not** a production/store signing or upload key. Do not copy its passwords/keystore into source, logs, EAS uploads or public reports. Local Gradle signing is enabled only for the preview variant through the config plugin; production cloud credentials are separate.
 
 A bundled APK can compile/launch without Metro, USB or a deployed backend. Ordinary entry working offline does not prove network rooms. Do not replace/relaunch the user's active `dev.yepwatch.hybrid` app to test the preview.
 
@@ -40,3 +40,5 @@ Android app links request only `https://yepwatch.com/r/*`; `/room/*` remains bro
 After public hosting is ready, verify on separate test installs: cold launch with Metro stopped, fresh create/invite join, automatic single-screen entry, explicit remote-screen selection, private Yep/Nope/Undo, shared proposal replacement/Agree/withdraw, reconnect/background resume and confirmed Done. Report device/OS/build hash, steps and actual errors; never include room credentials, invite codes, keys or account grants. Physical iPhone playback/audio/link return and standalone public-endpoint room journeys remain unverified.
 
 References: [Expo variants](https://docs.expo.dev/build-reference/variants/), [APK builds](https://docs.expo.dev/build-reference/apk/), [EAS configuration](https://docs.expo.dev/eas/json/), [monorepos](https://docs.expo.dev/build-reference/build-with-monorepos/), [versioning](https://docs.expo.dev/build-reference/app-versions/), [iOS submission](https://docs.expo.dev/submit/ios/).
+
+[R4 exact-request retention and manual retry details](r4-retry-compatibility.md).
