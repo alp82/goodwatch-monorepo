@@ -1458,6 +1458,15 @@ html[data-tv-transition] .tvr-bracket {
 		background: rgba(255, 255, 255, 0.15);
 		color: #fff;
 	}
+	/* The G keeps its shape on the brand amber plate, for pointer, touch and keyboard input alike. */
+	.tvc-home:is(.tvc-on, :hover, :active, :focus-visible, [aria-pressed="true"]) {
+		background: #fbbf24;
+		color: #0a0a0a;
+	}
+	.tvc-home:focus-visible {
+		outline: 2px solid #fff;
+		outline-offset: 3px;
+	}
 	/* The menu's keys: rows, not pills. They stand 8 px apart, so the focus lifts them only a little. */
 	.tvc-menu-key {
 		border-radius: 14px;

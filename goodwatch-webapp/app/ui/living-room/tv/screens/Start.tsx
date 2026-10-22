@@ -243,11 +243,11 @@ export function Start({
 			"Score what you've seen",
 			// The site's fingerprint mark (the title page's Fingerprint heading) over the areas' colours.
 			<span aria-hidden className={`absolute flex items-start ${P ? "inset-x-2.5 top-2 gap-2" : "inset-x-5 top-5 gap-3"}`}>
-				<span className={`mt-1.5 flex flex-1 gap-1 ${P ? "h-2" : "h-3"}`}>
+				<span className={`mt-1.5 grid min-w-0 flex-1 grid-cols-3 ${P ? "auto-rows-[8px] gap-1" : "auto-rows-[12px] gap-1.5"}`}>
 					{AREAS.map((area) => (
 						<span
 							key={area}
-							className="flex-1 rounded-sm"
+							className="rounded-sm"
 							style={{ background: AREA_COLOR[area] }}
 						/>
 					))}
