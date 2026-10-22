@@ -17,9 +17,9 @@ import {
 	Ambient,
 	CornerBar,
 	ExpandCorner,
-	Expand,
 	Img,
 	Item,
+	PhoneFoot,
 	backdropSize,
 	keySize,
 	useTvView,
@@ -58,6 +58,19 @@ export function StreamLine({
 }
 
 /**
+ * Whether a wheel turn over the screen should scroll the room instead: the room scrolls first while it can still
+ * move that way, and the screen steps after. Otherwise a TV that fills the window keeps the Remote under it out of
+ * the wheel's reach.
+ */
+function roomScrolls(screen: HTMLElement, dy: number) {
+	const room = screen.closest<HTMLElement>(".tvr-scroll")
+	if (!room || !dy) return false
+	return dy > 0
+		? room.scrollTop + room.clientHeight < room.scrollHeight - 1
+		: room.scrollTop > 0
+}
+
+/**
  * One step per wheel notch, or per stretch of a trackpad swipe, at most one every 130 ms. A pause or a turn starts a
  * new gesture; nothing is saved up at an end of the list, so turning back never jumps.
  */
@@ -70,10 +83,15 @@ export function useWheelSteps(onStep: (by: 1 | -1) => void) {
 		if (!el) return
 		const w = { acc: 0, last: 0, at: 0 }
 		const onWheel = (e: WheelEvent) => {
+			const dy =
+				e.deltaMode === 1
+					? e.deltaY * 40
+					: e.deltaMode === 2
+						? e.deltaY * 600
+						: e.deltaY
+			if (roomScrolls(el, dy)) return
 			e.preventDefault()
 			const now = performance.now()
-			const dy =
-				e.deltaMode === 1 ? e.deltaY * 40 : e.deltaMode === 2 ? e.deltaY * 600 : e.deltaY
 			if (!dy) return
 			if (now - w.last > 200 || Math.sign(dy) !== Math.sign(w.acc)) w.acc = 0
 			w.last = now
@@ -193,12 +211,21 @@ export default function Tonight({
 			className={`tvc-btn tvc-watch flex shrink-0 items-center gap-2.5 whitespace-nowrap ${P ? "px-5 text-[20px]" : "px-7 text-[24px]"}`}
 			style={{ height: h }}
 		>
-			{offer && !P ? `Watch on ${offer.name}` : offer ? "Watch" : "Where to watch"}
+			{offer && !P
+				? `Watch on ${offer.name}`
+				: offer
+					? "Watch"
+					: "Where to watch"}
 		</Item>
 	)
 	const keyClass = `tvc-btn flex shrink-0 items-center justify-center gap-2 whitespace-nowrap ${P ? "px-4 text-[20px]" : "px-7 text-[24px]"}`
 	const trailer = items.includes("trailer") && (
-		<Item id="trailer" label="Trailer" className={keyClass} style={{ height: h }}>
+		<Item
+			id="trailer"
+			label="Trailer"
+			className={keyClass}
+			style={{ height: h }}
+		>
 			Trailer
 		</Item>
 	)
@@ -213,7 +240,12 @@ export default function Tonight({
 		</Item>
 	)
 	const another = items.includes("another") && (
-		<Item id="another" label="Not now" className={keyClass} style={{ height: h }}>
+		<Item
+			id="another"
+			label="Not now"
+			className={keyClass}
+			style={{ height: h }}
+		>
 			Not now
 		</Item>
 	)
@@ -232,8 +264,13 @@ export default function Tonight({
 							"linear-gradient(0deg, rgba(7,8,12,1) 0%, rgba(7,8,12,.85) 38%, rgba(7,8,12,.15) 70%, rgba(7,8,12,.75) 100%)",
 					}}
 				/>
-				<div className="absolute inset-x-0 bottom-2">
-					<div className="px-5">
+				{/* Anchored at the bottom; on a short phone it scrolls (mt-auto, not justify-end, so its top stays in
+				    reach). */}
+				<div
+					data-tv-scroll
+					className="absolute inset-x-0 bottom-2 top-[78px] flex flex-col overflow-hidden [&>*]:shrink-0"
+				>
+					<div className="mt-auto px-5">
 						{canvas.h >= 380 && (
 							<div className="flex items-center justify-between text-[18px] font-semibold text-amber-300">
 								<span className="truncate">{words.crumb}</span>
@@ -263,28 +300,38 @@ export default function Tonight({
 						{details}
 						{another}
 					</div>
-					<div
-						data-tv-row
-						className="flex gap-2 overflow-x-auto px-5 pb-1 pt-1 [scrollbar-width:none]"
+					{/* The stack's row gives way to the Expand key, which ends it (kit.tsx, `PhoneFoot`): its words say where
+					    it goes, so it is as wide as they are and never rides past the picture's edge. */}
+					<PhoneFoot
+						items={items}
+						height={Math.max(64, h) * 1.5 + 8}
+						className="px-5"
 					>
-						{picks.map((p, i) => (
-							<Item
-								key={`${p.card.media_type}-${p.card.tmdb_id}`}
-								id={`pick:${i}`}
-								label={p.card.title}
-								className="tvc-ring tvc-lift block shrink-0 overflow-hidden rounded-[10px]"
-								style={{ width: Math.max(64, h), height: Math.max(64, h) * 1.5 }}
-							>
-								{p.card.poster_path && (
-									<Img
-										src={tmdbImageUrl(p.card.poster_path, "w154")}
-										className="absolute inset-0 h-full w-full"
-									/>
-								)}
-							</Item>
-						))}
-						{items.includes("expand") && <Expand />}
-					</div>
+						<div
+							data-tv-row
+							className="flex min-w-0 flex-1 gap-2 overflow-x-auto py-1 [scrollbar-width:none]"
+						>
+							{picks.map((p, i) => (
+								<Item
+									key={`${p.card.media_type}-${p.card.tmdb_id}`}
+									id={`pick:${i}`}
+									label={p.card.title}
+									className="tvc-ring tvc-lift block shrink-0 overflow-hidden rounded-[10px]"
+									style={{
+										width: Math.max(64, h),
+										height: Math.max(64, h) * 1.5,
+									}}
+								>
+									{p.card.poster_path && (
+										<Img
+											src={tmdbImageUrl(p.card.poster_path, "w154")}
+											className="absolute inset-0 h-full w-full"
+										/>
+									)}
+								</Item>
+							))}
+						</div>
+					</PhoneFoot>
 				</div>
 				<CornerBar items={items} />
 			</div>

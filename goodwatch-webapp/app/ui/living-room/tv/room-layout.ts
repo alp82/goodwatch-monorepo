@@ -56,8 +56,6 @@ export const REMOTE_REST_TRANSFORM = `perspective(${REMOTE_PERSPECTIVE}px) rotat
 // ---------------------------------------------------------------------------------------------------------
 // The desktop
 
-/** Beside the TV the whole Remote shows at rest, in its own pixels from its top: all of it and the start of the palm. */
-const REMOTE_SHOWN = 880
 /** Under the TV it shows down to its streaming keys (they end at 522) and the fingertips under them. */
 const REMOTE_SHOWN_UNDER = 548
 /**
@@ -65,15 +63,17 @@ const REMOTE_SHOWN_UNDER = 548
  * screen keeps free at its bottom edge, so it covers no type and no focus target.
  */
 const REMOTE_OVER_TV = 18
-/** Under the TV the Remote may shrink this far to keep the TV's type at 18 px; smaller, its wheel stops being a control. */
+/** The Remote's scale where the height leaves it free to choose: its size for a scene of that height. */
+const remoteScaleFor = (h: number) => Math.max(0.5, Math.min(0.68, h / 1800))
+/** Under the TV the Remote may shrink this far before it moves under the fold; smaller, its wheel stops being a control. */
 const REMOTE_MIN_UNDER = 0.46
-/** How far the hand reaches past the Remote's sides, in Remote widths: the fingers on the left, the palm on the right. */
-const HAND_LEFT = 0.3
-const HAND_RIGHT = 0.42
+/** Under the Remote's streaming keys and fingertips, in scene pixels: room for the lip's tab beside it. */
+const REMOTE_FOOT = 8
 /** Type of 20 canvas pixels prints at 18 once the TV shows its canvas at 0.9. */
 export const TV_MIN_WIDTH = TV_CANVAS.w * 0.9
 
-export type RemotePlace = "below" | "beside"
+/** Where the desktop's Remote is: under the TV, always (the owner, 2026-10-21: no Remote beside a smaller TV). */
+export type RemotePlace = "below"
 
 export type RoomLayout = {
 	place: RemotePlace
@@ -87,6 +87,11 @@ export type RoomLayout = {
 	remote: { left: number; top: number; scale: number }
 	/** The hand photo, relative to the Remote's box. */
 	hand: Rect
+	/**
+	 * How tall the room's content is: the scene's height, or more where the TV at the scene's width and the
+	 * Remote under it don't both fit. The room then scrolls to the Remote (TvRoom.tsx).
+	 */
+	height: number
 }
 
 function canvasIn(tv: Rect, canvas: { w: number; h: number }) {
@@ -101,77 +106,45 @@ function canvasIn(tv: Rect, canvas: { w: number; h: number }) {
 
 /**
  * The desktop room, in a scene of `w` x `h` (the window without the site's header, and without a scrollbar's
- * gutter). Two ways to seat the TV and the Remote:
- * - `below`: the TV centred at the top and the Remote under it, in the hand, free to swing toward the cursor.
- *   The TV is as tall as the scene leaves once the Remote shows down to its streaming keys; in a shorter scene
- *   the Remote gives way first, so the TV keeps the width that holds its type at 18 px. The Remote's top
- *   reaches a little over the picture's bottom margin, which lets it sit higher and be larger.
- * - `beside`: for a scene too small for that (under about 853 px tall or 1107 wide: a window under about 918 by
- *   1122): the TV on the left, as large as the scene allows, and the whole Remote to its right, its end on
- *   the scene's bottom edge.
- * `want` forces one; "auto" takes `below` wherever it keeps 18 px type.
+ * gutter): the TV at the top, as wide as the scene but for its margins, and the Remote centred under it, in the
+ * hand, free to swing toward the cursor. At every size (the owner, 2026-10-21: only full-width TVs, with the
+ * Remote centred).
+ * - The TV's height follows from its width: in a wide, short window it is taller than the scene, and the room
+ *   scrolls to its bottom and to the Remote.
+ * - Where the height leaves room, the Remote shows down to its streaming keys inside the scene, at the size the
+ *   height suggests or smaller, down to REMOTE_MIN_UNDER; its top reaches a little over the picture's bottom
+ *   margin, which lets it sit higher and be larger.
+ * - Where it doesn't, the Remote keeps the size the height suggests and stands under the TV, below the fold: the
+ *   room's content is taller than the scene (`height`), and the room scrolls to it.
  */
-export function layoutRoom(
-	w: number,
-	h: number,
-	want: RemotePlace | "auto" = "auto",
-): RoomLayout {
+export function layoutRoom(w: number, h: number): RoomLayout {
 	const aspect = ROOM_PHOTO.tv.w / ROOM_PHOTO.tv.h
 	const pad = Math.max(14, Math.min(28, w * 0.0125))
-	// Under the TV. The TV's size is settled first: what the scene leaves over a Remote of the size the height
-	// suggests, or over a smaller one if that is what 18 px type costs.
-	const leaves = (scale: number) =>
-		Math.min(
-			h - Math.max(8, h * 0.012) - 8 - REMOTE_SHOWN_UNDER * scale,
-			(w - 2 * pad) / aspect,
-		)
-	const needed = TV_MIN_WIDTH / aspect
-	let tvUnder = leaves(Math.max(0.5, Math.min(0.68, h / 1800)))
-	if (tvUnder < needed) tvUnder = Math.min(needed, leaves(REMOTE_MIN_UNDER))
-	const place: RemotePlace =
-		want === "auto" ? (tvUnder >= needed - 0.5 ? "below" : "beside") : want
-	let tv: Rect
-	let remote: RoomLayout["remote"]
-	if (place === "below") {
-		// Then the Remote takes all the height under that TV, and a little of the TV.
-		const top = Math.max(6, h * 0.008)
-		const tvW = tvUnder * aspect
-		const scale = Math.max(
-			REMOTE_MIN_UNDER,
-			Math.min(0.8, (h - top - tvUnder + REMOTE_OVER_TV) / REMOTE_SHOWN_UNDER),
-		)
-		tv = { left: (w - tvW) / 2, top, width: tvW, height: tvUnder }
-		remote = {
-			left: w / 2 - (REMOTE_W * scale) / 2,
-			top: h - REMOTE_SHOWN_UNDER * scale,
-			scale,
-		}
-	} else {
-		const column = (scale: number) =>
-			REMOTE_W * scale * (1 + HAND_LEFT + HAND_RIGHT)
-		// As large as the height shows all of it, and no larger than a Remote in a hand looks next to this TV.
-		let scale = Math.min(Math.max(0.9, h / 1130), 1.15, (h - 10) / REMOTE_SHOWN)
-		const room = w - 3 * pad - TV_MIN_WIDTH
-		if (column(scale) > room) scale = Math.max(0.5, room / column(1))
-		const tvW = Math.min(w - 3 * pad - column(scale), h * 0.92 * aspect)
-		const tvH = tvW / aspect
-		const left = (w - (tvW + pad + column(scale))) / 2
-		tv = {
-			left,
-			top: Math.max(10, (h - tvH) * 0.32),
-			width: tvW,
-			height: tvH,
-		}
-		remote = {
-			left: left + tvW + pad + REMOTE_W * scale * HAND_LEFT,
-			top: Math.max(6, h - REMOTE_SHOWN * scale),
-			scale,
-		}
+	const top = Math.max(6, h * 0.008)
+	const tvW = w - 2 * pad
+	const tvH = tvW / aspect
+	const under = h - top - tvH + REMOTE_OVER_TV - REMOTE_FOOT
+	const fits = under >= REMOTE_SHOWN_UNDER * REMOTE_MIN_UNDER
+	const scale = fits
+		? Math.min(0.8, under / REMOTE_SHOWN_UNDER)
+		: remoteScaleFor(h)
+	const tv: Rect = { left: (w - tvW) / 2, top, width: tvW, height: tvH }
+	const remote = {
+		left: w / 2 - (REMOTE_W * scale) / 2,
+		// Down to its streaming keys inside the scene where it fits; else right under the TV, below the fold.
+		top: fits
+			? h - REMOTE_FOOT - REMOTE_SHOWN_UNDER * scale
+			: top + tvH - REMOTE_OVER_TV,
+		scale,
 	}
+	const height = Math.max(
+		h,
+		remote.top + REMOTE_SHOWN_UNDER * scale + REMOTE_FOOT,
+	)
 	const s = tv.width / ROOM_PHOTO.tv.w
 	const k = (REMOTE_W * remote.scale) / HAND.pw
 	return {
-		place,
+		place: "below",
 		tv,
 		photo: {
 			left: tv.left - ROOM_PHOTO.tv.x * s,
@@ -187,6 +160,7 @@ export function layoutRoom(
 			width: HAND.w * k,
 			height: HAND.h * k,
 		},
+		height,
 	}
 }
 
@@ -204,10 +178,12 @@ export const PHONE_REMOTE: Record<
 	PhoneRemoteForm,
 	{ w: number; keys: number; grow: number; share: number; fingers: number }
 > = {
-	hand: { w: 236, keys: 222, grow: 1.3, share: 0.68, fingers: 168 },
+	hand: { w: 236, keys: 288, grow: 1.3, share: 0.68, fingers: 234 },
 	table: { w: 336, keys: 176, grow: 1.25, share: 0.935, fingers: 0 },
 }
 
+/** Held, how much of the Remote's body shows under its keys, in its units, before the scene's bottom edge. */
+const HELD_GRIP = 40
 /** The wall left and right of the TV, the TV's bezel, the wall over it, and the stand's neck under it. */
 const WALL = 9
 const BEZEL = 5
@@ -224,6 +200,8 @@ const FINGERS = 612
 
 export type PhoneRoomLayout = {
 	form: PhoneRemoteForm
+	/** How tall the room's content is (`RoomLayout.height`). */
+	height: number
 	/** The form the scene's height takes by itself, whatever `want` forced. */
 	auto: PhoneRemoteForm
 	w: number
@@ -276,7 +254,7 @@ export type PhoneRig = {
  * the section below the room (PHONE_LIP in room.ts).
  * - The Remote is held in the hand wherever that leaves the TV its full height. Held, it is 46 px taller than
  *   lying; in a scene too short for that it lies on the table instead, as the desktop's Remote moves beside the
- *   TV in a small window. That is a scene shorter than reserve + 259 + (w - 28) / 1.2 px. `want` forces a form.
+ *   TV in a small window. That is a scene shorter than reserve + 325 + (w - 28) / 1.2 px. `want` forces a form.
  * - The TV takes the width but for a little wall, and is as tall as a TV may be (`TV_ASPECT`) or as the Remote
  *   leaves, whichever is less. Its canvas keeps its width, so a shorter TV shows less, not smaller.
  * - The Remote is as small as its keys allow (44 px) on a short phone and grows with the phone.
@@ -308,7 +286,11 @@ export function layoutPhoneRoom(
 	// The spare height: part above the Remote (the sideboard shows), part under its keys (the grip and the hand).
 	const above =
 		strip +
-		(form === "table" ? Math.min(spare * 0.78, 150) : Math.min(spare * 0.5, 84))
+		(form === "table"
+			? Math.min(spare * 0.78, 150)
+			: // Held, the Remote keeps a short grip in view under its keys; all the other spare height goes above it,
+				// however tall the scene (a tall, narrow window left a long empty body under the keys).
+				Math.max(0, spare - HELD_GRIP * u))
 	const outer: Rect = {
 		left: WALL,
 		top: TOP,
@@ -338,6 +320,7 @@ export function layoutPhoneRoom(
 	const stretch = seam / (CUT - SKY)
 	return {
 		form,
+		height: h,
 		auto,
 		w,
 		h,
@@ -382,21 +365,12 @@ export function layoutPhoneRoom(
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// The phone in landscape (the owner's decision after the prototype, which did not design it): the TV on the
-// left on the phone's canvas, the phone's Remote on the right. The room is the whole window there, above the
-// site's header (living-room.css), so a phone of 844 x 390 is a scene of 844 x 390.
+// The phone in landscape: the TV across the window's width on a phone's canvas, the phone's Remote centred under
+// it (the owner, 2026-10-21: only full-width TVs, with the Remote centred). The room is the whole window there,
+// above the site's header (living-room.css), so a phone of 844 x 390 is a scene of 844 x 390, and it scrolls.
 
-/**
- * In landscape the picture may be this much wider than tall at most: a canvas of 500 x 373, the shortest the
- * phone's screens are laid out for (the prototype's shortest was 375).
- */
-const LANDSCAPE_MAX_ASPECT = 1.34
-/** The scene's right edge cuts the palm off: this much of the scene stays free right of the held Remote. */
-const PALM = 12
-/** Turned toward the picture, the Remote's top corner stays this far from the picture's edge. */
-const LANDSCAPE_GAP = 3
-/** Held, the Remote turns no further than this however much room it has; lying, it only shifts on the table. */
-const LANDSCAPE_SWING = { hand: 22, table: 3.5 } as const
+/** In landscape the phone's canvas is drawn no larger than this: wider than 500 where the picture is. */
+const LANDSCAPE_MAX_SCALE = 1.15
 
 /**
  * How far a Remote may turn about its grip toward a picture on its left, in degrees: until its top corner on
@@ -418,6 +392,8 @@ export function turnLimit(
 
 export type LandscapeRoomLayout = {
 	form: PhoneRemoteForm
+	/** How tall the room's content is (`RoomLayout.height`). */
+	height: number
 	auto: PhoneRemoteForm
 	w: number
 	h: number
@@ -432,14 +408,13 @@ export type LandscapeRoomLayout = {
 }
 
 /**
- * Seats the TV and the Remote on a phone in landscape, in a scene of `w` x `h`. `reserve` is what lies over
- * the scene's bottom edge: under the TV (`tv`) and under the Remote (`remote`). The lip of the section below
- * the room is a tab there, which living-room.css moves to the Remote's side, so the TV keeps the height.
- * - The TV comes first: as tall as the scene, and as wide as its canvas allows (`LANDSCAPE_MAX_ASPECT`) or as
- *   the Remote at its smallest leaves.
- * - The Remote is held in the hand where its keys fit the height, and lies on the table in a shorter scene. It
- *   grows into the width the TV leaves. Held, its fingers come round its left side, toward the TV, and the
- *   scene's right edge cuts the palm off.
+ * Seats the TV and the Remote on a phone in landscape, in a scene of `w` x `h` (the owner, 2026-10-21: only
+ * full-width TVs, with the Remote centred). `reserve` is what lies over the scene's bottom edge: under the TV (`tv`)
+ * and under the Remote (`remote`), the lip of the section below the room.
+ * - The TV takes the scene's width but for a little wall, and is as tall as a TV may be (`TV_ASPECT`) or as the
+ *   scene, whichever is less: it shows whole.
+ * - The phone's Remote stands centred under it, below the fold: the room is taller than the scene (`height`) and
+ *   scrolls to it. Held where its keys would fit the height (as before), lying on the table in a shorter scene.
  */
 export function layoutPhoneLandscape(
 	w: number,
@@ -452,50 +427,47 @@ export function layoutPhoneLandscape(
 		keysMay >= PHONE_REMOTE.hand.keys ? "hand" : "table"
 	const form = want === "auto" ? auto : want
 	const R = PHONE_REMOTE[form]
-	// Left of the Remote: the fingers of the hand that holds it, or a little table. Right of it: the scene's edge.
-	const beside = form === "hand" ? HAND_LEFT : 0.03
-	const edge = form === "hand" ? PALM : WALL
-	const column = (u: number) => R.w * u * (1 + beside) + edge
-	const frame = 2 * WALL + 2 * BEZEL
-	const phMax = Math.max(60, h - reserve.tv - 2 * TOP - 2 * BEZEL)
-	const pw = Math.max(
-		72,
-		Math.min(w - frame - column(1), phMax * LANDSCAPE_MAX_ASPECT),
+	const outerW = w - 2 * WALL
+	const pw = outerW - 2 * BEZEL
+	const ph = Math.max(
+		60,
+		Math.min(pw / TV_ASPECT, h - reserve.tv - 2 * TOP - 2 * BEZEL),
 	)
-	const ph = Math.min(phMax, pw / TV_ASPECT)
+	const outer: Rect = {
+		left: WALL,
+		top: TOP,
+		width: outerW,
+		height: ph + 2 * BEZEL,
+	}
+	const tv: Rect = {
+		left: WALL + BEZEL,
+		top: TOP + BEZEL,
+		width: pw,
+		height: ph,
+	}
+	// The phone's canvas, wider where the picture is: drawn at no more than LANDSCAPE_MAX_SCALE, so its type stays
+	// a phone's and the short picture shows as much of a screen as it can.
+	const cw = Math.max(PHONE_TV_CANVAS.w, Math.round(pw / LANDSCAPE_MAX_SCALE))
+	const k = pw / cw
+	// As large as its share of the width allows, and never taller than the window: its keys all show at once.
 	const u = Math.max(
 		1,
 		Math.min(
 			R.grow,
-			(w - frame - pw - edge) / (R.w * (1 + beside)),
-			keysMay / R.keys,
+			(w * R.share) / R.w,
+			(h - 2 * TOP - reserve.remote) / R.keys,
 		),
 	)
-	const outer: Rect = {
-		left: WALL,
-		top: TOP + (phMax - ph) / 2,
-		width: pw + 2 * BEZEL,
-		height: ph + 2 * BEZEL,
-	}
-	const tv: Rect = {
-		left: outer.left + BEZEL,
-		top: outer.top + BEZEL,
-		width: pw,
-		height: ph,
-	}
-	const k = pw / PHONE_TV_CANVAS.w
 	const remoteW = R.w * u
-	// The Remote's column runs from the wall right of the TV to the scene's edge; what it does not need is
-	// shared between its two sides.
-	const columnLeft = outer.left + outer.width + WALL
-	const spare = Math.max(0, w - columnLeft - column(u))
-	const remoteLeft = columnLeft + beside * remoteW + spare / 2
-	// Its keys sit a little above the middle of the height they may take; held, its body runs on under the edge.
-	const remoteTop =
-		TOP + Math.max(0, keysMay - R.keys * u) * (form === "hand" ? 0.4 : 0.5)
+	const remoteLeft = (w - remoteW) / 2
+	const remoteTop = outer.top + outer.height + PHONE_STAND + 16
 	const keysEnd = remoteTop + R.keys * u
+	const height = Math.max(
+		h,
+		keysEnd + (form === "hand" ? 40 : 16) + reserve.remote,
+	)
 	// The desktop's photo, as wide as makes its TV ours; a little less, so its TV hides behind ours. Larger where
-	// that would not cover the scene.
+	// that would not cover the room's content.
 	const cx = outer.left + outer.width / 2
 	const cy = outer.top + outer.height / 2
 	const px = ROOM_PHOTO.tv.x + ROOM_PHOTO.tv.w / 2
@@ -505,25 +477,20 @@ export function layoutPhoneLandscape(
 		cx / px,
 		(w - cx) / (ROOM_PHOTO.w - px),
 		cy / py,
-		(h - cy) / (ROOM_PHOTO.h - py),
+		(height - cy) / (ROOM_PHOTO.h - py),
 	)
 	const kh = remoteW / HAND.pw
 	const pivot =
 		form === "hand" ? keysEnd + 30 * u : remoteTop + (R.keys * u) / 2
-	const swing = turnLimit(
-		remoteLeft + remoteW / 2 - (tv.left + tv.width) - LANDSCAPE_GAP,
-		remoteW / 2,
-		pivot - remoteTop,
-		LANDSCAPE_SWING[form],
-	)
 	return {
 		form,
+		height,
 		auto,
 		w,
 		h,
 		tv,
 		outer,
-		canvas: { w: PHONE_TV_CANVAS.w, h: ph / k, scale: k, x: 0, y: 0 },
+		canvas: { w: cw, h: ph / k, scale: k, x: 0, y: 0 },
 		remote: { left: remoteLeft, top: remoteTop, u, width: remoteW, keysEnd },
 		photo: {
 			left: cx - px * s,
@@ -540,21 +507,17 @@ export function layoutPhoneLandscape(
 						height: HAND.h * kh,
 					}
 				: null,
-		// The picture is left of the Remote here, not above it. The Remote turns about its grip toward the spot it
-		// points at: by the angle to the spot's share of a quarter turn, so a spot straight over it leaves it
-		// upright and one level with the grip turns it as far as it may go (`swing`). That is as far as its top
-		// corner stays off the picture, and no further than a hand turns. Over the Remote is the scene's edge
-		// (`clear`); it lifts by `slide` for a spot high up.
+		// Under the picture, as on a phone upright: it turns a few degrees about the grip and leans back.
 		rig: {
-			tv: "left",
-			x: remoteLeft + remoteW / 2,
+			tv: "above",
+			x: w / 2,
 			y: pivot,
 			arm: pivot - remoteTop,
 			half: remoteW / 2,
-			clear: Math.max(0, remoteTop - 3),
-			swing,
-			turn: swing / 90,
-			...(form === "hand" ? { lean: 11, slide: 8 } : { lean: 0, slide: 6 }),
+			clear: Math.max(0, remoteTop - outer.top - outer.height - 3),
+			...(form === "hand"
+				? { swing: 11, lean: 11, slide: 8, turn: 0.65 }
+				: { swing: 3.5, lean: 0, slide: 6, turn: 0.2 }),
 		},
 	}
 }

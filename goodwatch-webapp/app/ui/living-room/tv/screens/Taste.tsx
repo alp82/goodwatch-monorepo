@@ -11,6 +11,7 @@ import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { TASTE_GROUPS_NAME } from "../../../taste/taste-groups-name"
 import { TitleList } from "../TitleList"
 import {
+	Expand,
 	Frame,
 	Img,
 	Item,
@@ -95,6 +96,7 @@ function Ask({
 			items={items}
 			art={backdrop ? tmdbImageUrl(backdrop, backdropSize(canvas)) : undefined}
 			dim={0.8}
+			inlineExpand
 		>
 			<div className="flex min-h-full flex-col justify-center">
 				<div
@@ -110,10 +112,11 @@ function Ask({
 						{line}
 					</div>
 				)}
-				{items.includes("start-quiz") && (
+				{(items.includes("start-quiz") || (P && items.includes("expand"))) && (
 					<div
 							className={`flex flex-wrap items-center ${P ? "mt-6 gap-2.5" : "mt-9 gap-5"}`}
 						>
+						{items.includes("start-quiz") && (
 						<Item
 							id="start-quiz"
 							className={`tvc-btn flex items-center ${P ? "px-7 text-[22px]" : "h-[76px] px-10 text-[30px]"}`}
@@ -121,7 +124,10 @@ function Ask({
 						>
 							{label}
 						</Item>
+						)}
 							{items.includes("sign-up") && <SignUp />}
+						{/* On the phone the Expand key wraps with the keys, so no key lands under a corner. */}
+						{P && items.includes("expand") && <Expand />}
 					</div>
 				)}
 			</div>

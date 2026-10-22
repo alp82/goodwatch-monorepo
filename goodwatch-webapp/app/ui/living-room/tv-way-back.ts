@@ -33,6 +33,12 @@ export type TvTrip = {
 	art: string | null
 	/** The person is on a page reached through the TV. The room clears it when they are back. */
 	out: boolean
+	/** How far the room was scrolled, where it is taller than the window. Missing in a trip an older build stored. */
+	scroll?: number
+	/** How far each of the screen's columns (`data-tv-scroll`) was scrolled, in the page's order. */
+	columns?: number[]
+	/** The router's key of the TV's entry: a new visit at the same place in history is another entry. */
+	key?: string
 }
 
 const isNumber = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value)
@@ -51,7 +57,10 @@ export function parseTrip(raw: string | null | undefined): TvTrip | null {
 	if (!isNumber(trip.idx) || typeof trip.to !== "string" || !isNumber(trip.w) || !isNumber(trip.h)) return null
 	const box = trip.box
 	if (box != null && !(isNumber(box.left) && isNumber(box.top) && isNumber(box.width) && isNumber(box.height) && box.width > 0 && box.height > 0)) return null
-	return { idx: trip.idx, to: trip.to, box: box ?? null, w: trip.w, h: trip.h, art: typeof trip.art === "string" ? trip.art : null, out: trip.out === true }
+	const scroll = isNumber(trip.scroll) && trip.scroll >= 0 ? { scroll: trip.scroll } : {}
+	const columns = Array.isArray(trip.columns) && trip.columns.length <= 8 && trip.columns.every((top) => isNumber(top) && top >= 0) ? { columns: trip.columns } : {}
+	const key = typeof trip.key === "string" ? { key: trip.key } : {}
+	return { idx: trip.idx, to: trip.to, box: box ?? null, w: trip.w, h: trip.h, art: typeof trip.art === "string" ? trip.art : null, out: trip.out === true, ...scroll, ...columns, ...key }
 }
 
 /**

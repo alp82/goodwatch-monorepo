@@ -1,8 +1,7 @@
 // Where the Remote should be for the spot it points at: the geometry of pointing (pointing.ts), pure, so the
 // tests run it as it is. Three Remotes aim in three ways:
 // - in the hand on the desktop it turns about the wrist toward the cursor while that is over the picture (anywhere
-//   else, even a pixel outside its edge, it rests): a swing of up to 42 degrees under the TV, a nod of 13 beside it,
-//   where a swing would carry it over the picture;
+//   else, even a pixel outside its edge, it rests): a swing of up to 42 degrees, under the TV;
 // - the phone's Remote under the TV (portrait) stays in its place: it turns a few degrees about the grip, leans
 //   back and slides a little, and only for a spot on the picture;
 // - the phone's Remote beside the TV (landscape) turns about the grip toward the picture on its left, as far as
@@ -28,7 +27,7 @@ export const REST: Aim = { rz: 0, rx: REMOTE_TILT_DEG, ry: 0, tx: 0, ty: 0 }
 export const FLAT: Aim = { rz: 0, rx: 0, ry: 0, tx: 0, ty: 0 }
 
 /** How far the desktop's Remote turns about the wrist: 42 degrees reaches the top corners of a 16:9 window. */
-export const SWING: Record<RemotePlace, number> = { below: 42, beside: 13 }
+export const SWING: Record<RemotePlace, number> = { below: 42 }
 
 /** A press that moves further than this is a drag. Until then it points under the finger, however long it is held. */
 export const DRAG = 10
@@ -168,17 +167,15 @@ export function aimFor(scene: AimScene, spot: Spot, still: boolean): Aim {
 	// -1 at the scene's far edge on the left of the wrist, 1 at the far edge on its right.
 	const side = clamp(dx / Math.max(pivot.x, scene.width - pivot.x), -1, 1)
 	const reach = clamp(Math.hypot(dx, up) / (scene.height * 1.05), 0, 1)
-	// With room to swing, the Remote turns by the angle to the spot. Held to a nod, it turns by a part of that
-	// angle and rolls more instead.
+	// It turns by the angle to the spot.
 	const swing = SWING[hand.place]
-	const nod = hand.place === "beside"
-	const rz = clamp(degrees(Math.atan2(dx, up)) * (nod ? 0.3 : 1), -swing, swing)
+	const rz = clamp(degrees(Math.atan2(dx, up)), -swing, swing)
 	return {
 		rz,
 		// It leans further back for a far spot and less for a near one.
 		rx: REMOTE_TILT_DEG + clamp((reach - 0.75) * 40, -14, 14),
-		ry: side * (nod ? 26 : 16),
-		tx: side * (nod ? 10 : 44),
+		ry: side * 16,
+		tx: side * 44,
 		// Turned, the streaming key on the far side dips by about a third of the Remote's width: the hand lifts
 		// the Remote by that much, so the row stays in the window under the TV.
 		ty:

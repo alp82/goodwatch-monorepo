@@ -395,3 +395,31 @@ test("a screen in a chunk of its own is not in the server's HTML: its bar alone 
 		assert.equal(count(html, "<h1"), 0)
 	}
 })
+
+// Regression (2026-10-21): on the phone the Expand key ("All my movies") stood at the end of the stack's scrolling
+// row and rode past the picture's right edge. It ends the row now, outside what scrolls.
+test("on every phone Watch next's Expand key ends the stack's row, outside the row that scrolls", () => {
+	for (const p of rendered.phones) {
+		const html = p.tonight
+		assert.equal(count(html, 'data-tv-item="expand"'), 1, p.phone)
+		const rows = [...html.matchAll(/<div data-tv-row="[^"]*"[^>]*>/g)]
+		assert.ok(rows.length >= 2, `${p.phone}: the keys' row and the stack's`)
+		for (const row of rows) {
+			const start = row.index ?? 0
+			// The row's own markup: up to its closing tag, by counting its divs.
+			let depth = 0
+			let end = start
+			for (const m of html.slice(start).matchAll(/<div[\s>]|<\/div>/g)) {
+				depth += m[0] === "</div>" ? -1 : 1
+				if (depth === 0) {
+					end = start + (m.index ?? 0) + 6
+					break
+				}
+			}
+			assert.ok(
+				!html.slice(start, end).includes('data-tv-item="expand"'),
+				`${p.phone}: the Expand key inside a scrolling row`,
+			)
+		}
+	}
+})

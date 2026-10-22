@@ -71,3 +71,20 @@ test("failed and pending reads are distinct from empty personal picks", () => {
 	)
 	assert.ok(rendered.loading.html.includes("Your picks are on their way."))
 })
+
+// Regression (2026-10-21): on the phone's shorter Start tile the Popular fan (64 x 96 at 16 px from the top)
+// reached into the tile's name, and covered "Popular".
+test("on the phone the Popular fan ends above the tile's name", () => {
+	const { html } = rendered.episode
+	const at = html.indexOf('data-tv-item="start:popular"')
+	assert.ok(at >= 0)
+	const tile = html.slice(at, html.indexOf("</button>", at))
+	const tileH = Number(/style="height:(\d+)px"/.exec(tile)?.[1])
+	const fanTop = Number(/absolute flex right-\d top-(\d+)/.exec(tile)?.[1]) * 4
+	const posterH = Number(/h-\[(\d+)px\] w-\[\d+px\]/.exec(tile)?.[1])
+	assert.ok(tileH > 0 && posterH > 0 && fanTop > 0, `${tileH} ${fanTop} ${posterH}`)
+	// The name and its line at the tile's bottom: 16 px of padding, 24 px type and 16 px type with their leading.
+	const nameTop = tileH - (16 + 30 + 23)
+	// A poster turned by 7 degrees reaches a little lower: 4 px at these sizes.
+	assert.ok(fanTop + posterH + 4 <= nameTop, `the fan ends at ${fanTop + posterH + 4}, the name starts at ${nameTop}`)
+})

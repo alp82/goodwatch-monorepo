@@ -70,9 +70,12 @@ export default function Menu({ items }: { items: readonly string[] }) {
 		<div
 			role="menu"
 			aria-label="Menu"
-			className={`absolute inset-y-0 right-0 flex flex-col justify-center bg-[#0b0c11]/95 ${P ? "w-full px-5" : "w-[440px] gap-1.5 border-l border-white/10 px-9"}`}
-			style={P ? { gap: phone.gap } : undefined}
+			// On the phone it scrolls when a short picture can't hold its keys (living-room.css), centred while it fits:
+			// the auto margins of the column inside, not justify-center, so its top stays in reach.
+			{...(P ? { "data-tv-scroll": "" } : {})}
+			className={`absolute inset-y-0 right-0 flex flex-col bg-[#0b0c11]/95 ${P ? "w-full px-5" : "w-[440px] justify-center gap-1.5 border-l border-white/10 px-9"}`}
 		>
+			<div className={P ? "my-auto flex flex-col py-1.5" : "contents"} style={P ? { gap: phone.gap } : undefined}>
 			{(!P || phone.head) && (
 				<GoodWatchWordmark
 					fontSize={P ? 24 : 30}
@@ -108,6 +111,7 @@ export default function Menu({ items }: { items: readonly string[] }) {
 						</Item>
 					)
 				})}
+			</div>
 			</div>
 		</div>
 	)

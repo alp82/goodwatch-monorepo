@@ -23,6 +23,20 @@ describe("parseTrip", () => {
 	it("reads `out` as false unless it is true", () => {
 		assert.equal(parseTrip(JSON.stringify({ ...trip, out: undefined }))?.out, false)
 	})
+	it("reads back where the room and its columns stood, and the TV entry's key", () => {
+		const scrolled = { ...trip, scroll: 260, columns: [105, 0], key: "k7" }
+		assert.deepEqual(parseTrip(JSON.stringify(scrolled)), scrolled)
+	})
+	it("takes a trip an older build stored, without them", () => {
+		const parsed = parseTrip(JSON.stringify(trip))
+		assert.equal(parsed?.scroll, undefined)
+		assert.equal(parsed?.columns, undefined)
+		assert.equal(parsed?.key, undefined)
+	})
+	it("drops a scroll or columns that are not distances, and keeps the trip", () => {
+		const parsed = parseTrip(JSON.stringify({ ...trip, scroll: -4, columns: [10, "x"], key: 3 }))
+		assert.deepEqual(parsed, trip)
+	})
 })
 
 describe("pagesFromTv", () => {

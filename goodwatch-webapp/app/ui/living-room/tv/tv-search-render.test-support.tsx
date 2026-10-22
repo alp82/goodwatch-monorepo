@@ -55,6 +55,8 @@ const CANVAS: Record<"desktop" | "phone", TvCanvas> = {
 }
 /** The phones of the room's table (docs/implementation/tv-screen-revamp/room), as tv-title-render has them. */
 const PHONES = [
+	// The smallest phone still in use: a picture of 292 x 159, too short to spare the actions' row.
+	{ phone: "320x568", scale: 292 / 500, h: 272 },
 	{ phone: "360x740", scale: 332 / 500, h: 417 },
 	{ phone: "375x667", scale: 347 / 500, h: 372 },
 	{ phone: "390x700", scale: 362 / 500, h: 402 },

@@ -177,7 +177,8 @@ export function TitleList({
 					)}
 					<div
 						{...{ [TV_ROW_ATTR]: "" }}
-						className="relative -mx-5 flex min-h-0 flex-1 gap-3.5 overflow-hidden px-5 py-3.5"
+						// Never shorter than this (posters a touch target wide): on a short phone the screen scrolls instead.
+						className="relative -mx-5 flex min-h-[140px] flex-1 gap-3.5 overflow-hidden px-5 py-3.5"
 					>
 						{posters}
 					</div>

@@ -1,5 +1,6 @@
+import { useNavigationType } from "@remix-run/react"
 // The new TV's room (docs/implementation/tv-screen-revamp, slice 2): the softened room photo, the TV as large as
-// the window allows, and the Remote in the hand under it, or beside it in a small window. A scene narrower than
+// the window allows, and the Remote in the hand centred under it, at every size. A scene narrower than
 // PHONE_BELOW is the phone's room: a framed TV on the wall, the sideboard under it, and the phone's Remote. A
 // phone in landscape has the framed TV on the left and the phone's Remote on the right. The section with the
 // start titles and the hubs follows the room, as on the start page today (BelowRoom.tsx).
@@ -33,7 +34,7 @@ import { BelowRoom } from "../BelowRoom"
 import { Remote, type RemoteService } from "../Remote"
 import type { StartTitle } from "../living-room-data"
 import { HAND_IMAGE, PHONE_LIP, ROOM } from "../room"
-import { TV_SCREEN_ATTR } from "../tv-transition"
+import { TV_SCREEN_ATTR, wayBackScroll } from "../tv-transition"
 import { bracketArm } from "../tv-way-back"
 import { ROOM_ID, useBelowRoom } from "../use-below-room"
 import { PhoneRemote } from "./PhoneRemote"
@@ -57,6 +58,7 @@ import {
 	layoutRoom,
 } from "./room-layout"
 import type { RoomTv, TvCanvas } from "./room-tv"
+import { TV_ITEM_ATTR, bringIntoView } from "./tv-dom"
 
 const useIsoLayoutEffect =
 	typeof window === "undefined" ? useEffect : useLayoutEffect
@@ -71,8 +73,11 @@ const LANDSCAPE = "(orientation: landscape) and (max-height: 540px)"
  * out the lip and living-room.css the first paint: on a desktop with a scrollbar's gutter the two differ by its width.
  */
 const PHONE = `(max-width: ${PHONE_BELOW - 0.02}px)`
-/** The lip in landscape: a tab of 46 px, which living-room.css puts under the Remote. */
-const LANDSCAPE_TAB = { tv: 0, remote: 46 }
+/**
+ * The lip in landscape: a tab of 46 px at the window's bottom edge (living-room.css). The full-width TV ends
+ * above it, and the Remote under the TV keeps its keys clear of it.
+ */
+const LANDSCAPE_TAB = { tv: 46, remote: 46 }
 /** Under 768 px of width the room is not the whole window in landscape, and the lip is a bar across it. */
 const LANDSCAPE_BAR = { tv: PHONE_LIP, remote: PHONE_LIP }
 
@@ -187,13 +192,49 @@ export function TvRoom({
 		[size, room, want?.form],
 	)
 	const D = useMemo(
-		() =>
-			size && room === "desktop"
-				? layoutRoom(size.w, size.h, want?.place ?? "auto")
-				: null,
-		[size, room, want?.place],
+		() => (size && room === "desktop" ? layoutRoom(size.w, size.h) : null),
+		[size, room],
 	)
 	const L = P ?? S ?? D
+
+	// ---- Back from a page the TV opened: the room shows what it showed on leaving, once, as soon as it has
+	// measured the window and drawn its screen at its size. Before that the canvas is drawn at the first paint's
+	// size, so an item paged into view then lands short. The room's scroll and its screen's columns come back from
+	// the trip; the focused item (the key that left) is paged into view if it still needs it; and if the window still
+	// cuts it (a trip an older build stored), the room centers it. Once only, before any input: a scroll after it
+	// is the person's own.
+	const navigationType = useNavigationType()
+	const wayBack = useRef<ReturnType<typeof wayBackScroll> | undefined>(
+		undefined,
+	)
+	useIsoLayoutEffect(() => {
+		if (wayBack.current === undefined)
+			wayBack.current = wayBackScroll(navigationType)
+		const back = wayBack.current
+		const el = root.current
+		if (!back || !L || !el) return
+		wayBack.current = null
+		el.scrollTop = back.room
+		// The same screen comes back, with the same columns: each where it was (the focused item's growth isn't in
+		// a paging, which stops at the item's edge).
+		const columns = el.querySelectorAll<HTMLElement>(
+			`[${TV_SCREEN_ATTR}] [data-tv-scroll]`,
+		)
+		if (columns.length === back.columns.length)
+			columns.forEach((column, i) => {
+				column.scrollTop = back.columns[i]
+			})
+		const item = el.querySelector<HTMLElement>(
+			`[${TV_ITEM_ATTR}][aria-current="true"]`,
+		)
+		if (!item) return
+		bringIntoView(item, false)
+		const box = el.getBoundingClientRect()
+		const r = item.getBoundingClientRect()
+		// Centered then, clear of what stands at the window's edges (the lip, the header).
+		if (r.bottom > box.bottom || r.top < box.top)
+			el.scrollTop += r.top + r.height / 2 - (box.top + box.height / 2)
+	}, [L])
 	/** The phone's Remote and its hand, upright or sideways. */
 	const held = P ?? S
 
@@ -253,181 +294,197 @@ export function TvRoom({
 				data-room={room ?? "unmeasured"}
 				data-remote-place={D?.place}
 				data-remote-form={held?.form}
+				// The room is taller than the window: a swipe over the picture scrolls it too (living-room.css).
+				data-room-scrolls={L && size && L.height > size.h + 1 ? "" : undefined}
 				// Not `data-power`: that marks the Remote's power key (Remote.tsx).
 				data-tv-power={on ? "on" : "off"}
 				// Scrolled out of the window, the room takes no input: the keys and the pointer are the page's.
 				{...(travel.away && { inert: "" })}
-				className={`living-room lr-page tvr overflow-clip bg-[#07080b] text-white ${held ? "select-none [-webkit-touch-callout:none]" : ""}`}
+				className={`living-room lr-page tvr tvr-scroll bg-[#07080b] text-white ${held ? "select-none [-webkit-touch-callout:none]" : ""}`}
 			>
-				{/* The room photo: the desktop's, and a phone's in landscape, where the framed TV stands in front of it. */}
-				{(first || D || S) && (
-					<div
-						key="photo"
-						data-tvr-part="photo"
-						className={`absolute ${first ? "tvr-f-photo" : ""}`}
-						style={D?.photo ?? S?.photo}
-					>
-						<picture>
-							{/* A phone upright draws its own photo: before the window is measured this one asks for nothing there. */}
-							{first && <source media={UPRIGHT_PHONE} srcSet={NO_PICTURE} />}
-							<source type="image/avif" srcSet={assetUrl(ROOM_ART.avif)} />
-							{/* Without credentials on the static hostname, as the 103 Early Hints response preloads it (server/early-hints.ts). */}
-							<img
-								{...{ fetchpriority: "high" }}
-								{...HERO_TIMING}
-								crossOrigin={assetBase() ? "anonymous" : undefined}
-								src={assetUrl(ROOM_ART.webp)}
-								alt={ROOM.alt}
-								width={ROOM_PHOTO.w}
-								height={ROOM_PHOTO.h}
-								className="absolute inset-0 h-full w-full select-none"
-								draggable={false}
-							/>
-						</picture>
-						{(first || D) && (
-							<>
-								{/* The lights are low: the TV is the brightest thing in the room. Lower still with the TV off. */}
-								<div
-									className={`tvr-dim absolute inset-0 ${first ? "tvr-f-desk" : ""}`}
-									style={{ opacity: on ? 0.34 : 0.66 }}
-								/>
-								{/* And they fall off toward the corners: a plain gradient around the TV, no blend mode. */}
-								<div
-									className={`absolute inset-0 ${first ? "tvr-f-desk" : ""}`}
-									style={{
-										background: `radial-gradient(62% 70% at ${tvCenter.x}% ${tvCenter.y}%, rgba(5,6,10,0) 45%, rgba(5,6,10,.5) 100%)`,
-									}}
-								/>
-							</>
-						)}
-					</div>
-				)}
-				{(first || P) && <PhoneRoom key="phone" L={P} on={on} />}
-				{(first || S) && <LandscapeRoom key="landscape" L={S} on={on} />}
-
-				{/* The TV's picture. Its screens are drawn on a fixed canvas, scaled to cover it; before the window is
-				    measured, in both editions, and CSS shows the one the window's layout draws. */}
+				{/* The stage: as tall as the room's content (`height` of the layout), which may be taller than the room
+				    where the TV at the room's width and the Remote under it don't both fit; the room then scrolls to the
+				    Remote (living-room.css, `tvr-scroll`). It clips what reaches past it: the photos and the hand. */}
 				<div
-					key="tv"
-					{...{ [TV_SCREEN_ATTR]: "" }}
-					data-tvr-part="tv"
-					data-tv-framed={tv.framed ? "" : undefined}
-					className={`tvr-tv absolute touch-none select-none overflow-hidden bg-black [-webkit-touch-callout:none] ${first ? "tvr-f-tv" : held ? "rounded-[3px]" : "rounded-[4px]"}`}
-					style={L?.tv}
+					className="tvr-stage relative overflow-clip"
+					style={L ? { height: L.height } : undefined}
 				>
-					{canvases.map((one) => (
+					{/* The room photo: the desktop's, and a phone's in landscape, where the framed TV stands in front of it. */}
+					{(first || D || S) && (
 						<div
-							key={one.edition}
-							data-tv-canvas={one.edition}
-							className={`absolute left-0 top-0 origin-top-left ${one.first ? `tvr-f-cv tvr-f-cv-${one.edition}` : ""}`}
+							key="photo"
+							data-tvr-part="photo"
+							className={`absolute ${first ? "tvr-f-photo" : ""}`}
+							style={D?.photo ?? S?.photo}
+						>
+							<picture>
+								{/* A phone upright draws its own photo: before the window is measured this one asks for nothing there. */}
+								{first && <source media={UPRIGHT_PHONE} srcSet={NO_PICTURE} />}
+								<source type="image/avif" srcSet={assetUrl(ROOM_ART.avif)} />
+								{/* Without credentials on the static hostname, as the 103 Early Hints response preloads it (server/early-hints.ts). */}
+								<img
+									{...{ fetchpriority: "high" }}
+									{...HERO_TIMING}
+									crossOrigin={assetBase() ? "anonymous" : undefined}
+									src={assetUrl(ROOM_ART.webp)}
+									alt={ROOM.alt}
+									width={ROOM_PHOTO.w}
+									height={ROOM_PHOTO.h}
+									className="absolute inset-0 h-full w-full select-none"
+									draggable={false}
+								/>
+							</picture>
+							{(first || D) && (
+								<>
+									{/* The lights are low: the TV is the brightest thing in the room. Lower still with the TV off. */}
+									<div
+										className={`tvr-dim absolute inset-0 ${first ? "tvr-f-desk" : ""}`}
+										style={{ opacity: on ? 0.34 : 0.66 }}
+									/>
+									{/* And they fall off toward the corners: a plain gradient around the TV, no blend mode. */}
+									<div
+										className={`absolute inset-0 ${first ? "tvr-f-desk" : ""}`}
+										style={{
+											background: `radial-gradient(62% 70% at ${tvCenter.x}% ${tvCenter.y}%, rgba(5,6,10,0) 45%, rgba(5,6,10,.5) 100%)`,
+										}}
+									/>
+								</>
+							)}
+						</div>
+					)}
+					{(first || P) && <PhoneRoom key="phone" L={P} on={on} />}
+					{(first || S) && <LandscapeRoom key="landscape" L={S} on={on} />}
+
+					{/* The TV's picture. Its screens are drawn on a fixed canvas, scaled to cover it; before the window is
+				    measured, in both editions, and CSS shows the one the window's layout draws. */}
+					<div
+						key="tv"
+						{...{ [TV_SCREEN_ATTR]: "" }}
+						data-tvr-part="tv"
+						data-tv-framed={tv.framed ? "" : undefined}
+						className={`tvr-tv absolute touch-none select-none overflow-hidden bg-black [-webkit-touch-callout:none] ${first ? "tvr-f-tv" : held ? "rounded-[3px]" : "rounded-[4px]"}`}
+						style={L?.tv}
+					>
+						{canvases.map((one) => (
+							<div
+								key={one.edition}
+								data-tv-canvas={one.edition}
+								className={`absolute left-0 top-0 origin-top-left ${one.first ? `tvr-f-cv tvr-f-cv-${one.edition}` : ""}`}
+								style={
+									L
+										? {
+												width: one.w,
+												height: one.h,
+												transform: `translate(${L.canvas.x}px, ${L.canvas.y}px) scale(${one.scale})`,
+											}
+										: undefined
+								}
+							>
+								{on && renderScreen?.(one)}
+							</div>
+						))}
+						{screenOverlay}
+						{/* The hint while the Expand key has the focus: brackets that come out to the picture's corners. */}
+						{tv.framed &&
+							L &&
+							[0, 1, 2, 3].map((corner) => (
+								<i
+									key={corner}
+									aria-hidden
+									className="tvr-bracket"
+									data-corner={corner}
+									style={{ width: arm, height: arm }}
+								/>
+							))}
+					</div>
+
+					{/* The desktop: the hand holds the Remote from behind, and the pair leans back toward the screen. */}
+					{(first || D) && (
+						<div
+							key="remote"
+							ref={D ? remoteEl : undefined}
+							data-remote
+							data-tvr-part="remote"
+							className={`absolute will-change-transform ${first ? "tvr-f-remote" : ""}`}
 							style={
-								L
+								D
 									? {
-											width: one.w,
-											height: one.h,
-											transform: `translate(${L.canvas.x}px, ${L.canvas.y}px) scale(${one.scale})`,
+											left: D.remote.left,
+											top: D.remote.top,
+											width: REMOTE_W * D.remote.scale,
+											height: REMOTE_H * D.remote.scale,
+											transformOrigin: `50% ${REMOTE_WRIST * 100}%`,
+											transform: REMOTE_REST_TRANSFORM,
 										}
 									: undefined
 							}
 						>
-							{on && renderScreen?.(one)}
-						</div>
-					))}
-					{screenOverlay}
-					{/* The hint while the Expand key has the focus: brackets that come out to the picture's corners. */}
-					{tv.framed &&
-						L &&
-						[0, 1, 2, 3].map((corner) => (
-							<i
-								key={corner}
-								aria-hidden
-								className="tvr-bracket"
-								data-corner={corner}
-								style={{ width: arm, height: arm }}
-							/>
-						))}
-				</div>
-
-				{/* The desktop: the hand holds the Remote from behind, and the pair leans back toward the screen. */}
-				{(first || D) && (
-					<div
-						key="remote"
-						ref={D ? remoteEl : undefined}
-						data-remote
-						data-tvr-part="remote"
-						className={`absolute will-change-transform ${first ? "tvr-f-remote" : ""}`}
-						style={
-							D
-								? {
-										left: D.remote.left,
-										top: D.remote.top,
-										width: REMOTE_W * D.remote.scale,
-										height: REMOTE_H * D.remote.scale,
-										transformOrigin: `50% ${REMOTE_WRIST * 100}%`,
-										transform: REMOTE_REST_TRANSFORM,
-									}
-								: undefined
-						}
-					>
-						<Hand style={D?.hand} className={first ? "tvr-f-dhand" : ""} />
-						<div
-							className={`absolute left-0 top-0 origin-top-left ${first ? "tvr-f-rscale" : ""}`}
-							style={D ? { transform: `scale(${D.remote.scale})` } : undefined}
-						>
-							<StillRemote
-								power={tv.power}
-								menuOpen={tv.menuOpen}
-								searching={tv.searching}
-								services={services}
-								openService={tv.openService}
-								press={press}
-							/>
-						</div>
-					</div>
-				)}
-
-				{/* The phone: the Remote and the hand that holds it move as one when the Remote aims. Before the window is
-				    measured both forms are here, and the rig's width tells living-room.css which one the window's height holds. */}
-				{(first || held) && (
-					<div
-						key="rig"
-						ref={held ? remoteEl : undefined}
-						data-remote-rig
-						className={`absolute left-0 top-0 will-change-transform ${first ? "tvr-f-rig" : ""}`}
-						style={
-							held
-								? { transformOrigin: `${held.rig.x}px ${held.rig.y}px` }
-								: undefined
-						}
-					>
-						{forms.map((form) => (
+							<Hand style={D?.hand} className={first ? "tvr-f-dhand" : ""} />
 							<div
-								key={form}
-								data-tvr-form={form}
-								className={first ? "tvr-f-form" : undefined}
+								className={`absolute left-0 top-0 origin-top-left ${first ? "tvr-f-rscale" : ""}`}
+								style={
+									D ? { transform: `scale(${D.remote.scale})` } : undefined
+								}
 							>
-								{form === "hand" && (
-									<Hand
-										style={held?.hand ?? undefined}
-										className={first ? "tvr-f-phand" : ""}
-									/>
-								)}
-								<StillPhoneRemote
-									tv={tv}
+								<StillRemote
+									power={tv.power}
+									menuOpen={tv.menuOpen}
+									searching={tv.searching}
 									services={services}
-									form={form}
-									at={held?.remote}
-									bottom={held?.h}
+									openService={tv.openService}
+									press={press}
 								/>
 							</div>
-						))}
-					</div>
-				)}
+						</div>
+					)}
 
-				{/* The TV's own pointer: over the picture it takes the system cursor's place. */}
-				{L && (
-					<TvPointer key="pointer" pointer={pointerEl} small={Boolean(held)} />
-				)}
+					{/* The phone: the Remote and the hand that holds it move as one when the Remote aims. Before the window is
+				    measured both forms are here, and the rig's width tells living-room.css which one the window's height holds. */}
+					{(first || held) && (
+						<div
+							key="rig"
+							ref={held ? remoteEl : undefined}
+							data-remote-rig
+							className={`absolute left-0 top-0 will-change-transform ${first ? "tvr-f-rig" : ""}`}
+							style={
+								held
+									? { transformOrigin: `${held.rig.x}px ${held.rig.y}px` }
+									: undefined
+							}
+						>
+							{forms.map((form) => (
+								<div
+									key={form}
+									data-tvr-form={form}
+									className={first ? "tvr-f-form" : undefined}
+								>
+									{form === "hand" && (
+										<Hand
+											style={held?.hand ?? undefined}
+											className={first ? "tvr-f-phand" : ""}
+										/>
+									)}
+									<StillPhoneRemote
+										tv={tv}
+										services={services}
+										form={form}
+										at={held?.remote}
+										bottom={held?.height}
+									/>
+								</div>
+							))}
+						</div>
+					)}
+
+					{/* The TV's own pointer: over the picture it takes the system cursor's place. */}
+					{L && (
+						<TvPointer
+							key="pointer"
+							pointer={pointerEl}
+							small={Boolean(held)}
+						/>
+					)}
+				</div>
 			</div>
 			<StillBelowRoom
 				intro={belowIntro}

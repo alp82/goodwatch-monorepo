@@ -337,7 +337,7 @@ test("the desktop's menu: a column of keys at the right edge, under the GoodWatc
 	const { desktop } = rendered.menu
 	assert.deepEqual(ids(desktop), rendered.guestMenu)
 	assert.equal(count(desktop, "h-[54px] gap-4 px-6 text-[23px]"), 7)
-	assert.match(desktop, /w-\[440px\] gap-1\.5 border-l border-white\/10 px-9/)
+	assert.match(desktop, /w-\[440px\] justify-center gap-1\.5 border-l border-white\/10 px-9/)
 	// A member's nine keys fit the canvas's 648 px with the wordmark (30 px type, 8 px under it): 9 × 54 px and
 	// 8 gaps of 6 px.
 	assert.ok(9 * 54 + 8 * 6 + 38 + 8 < 648)

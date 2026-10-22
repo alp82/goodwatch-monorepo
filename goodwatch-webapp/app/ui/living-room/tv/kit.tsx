@@ -163,8 +163,12 @@ export function Item({
 	// anew once it has measured the window. A focus that moves later is paged to by the TV's hook (use-tv.ts).
 	const el = useRef<HTMLButtonElement & HTMLAnchorElement>(null)
 	const arrivedOn = useRef(focused)
+	// Not when the pointer gave it the focus: it is under the cursor or the finger, and paging to it would pull a
+	// phone's column from its end in the middle of a swipe.
+	const byPointer = useRef(view.byPointer)
 	useIsoLayoutEffect(() => {
-		if (arrivedOn.current && el.current) bringIntoView(el.current, false)
+		if (arrivedOn.current && !byPointer.current && el.current)
+			bringIntoView(el.current, false)
 	}, [])
 	const Tag = href ? "a" : "button"
 	return (
@@ -624,7 +628,10 @@ export function Frame({
 					style={{ background: edge }}
 				/>
 			)}
+			{/* On the phone the content scrolls when a short picture can't hold it (living-room.css): the keys stay
+			    touch targets and the posters keep a size, and a finger or the focus brings the rest into view. */}
 			<div
+				{...(P ? { "data-tv-scroll": "" } : {})}
 				className={`absolute inset-x-0 bottom-0 ${P ? "top-[78px] overflow-hidden px-5 pb-5" : `top-[108px] px-14 ${reserve ? "pb-[120px]" : "pb-10"}`}`}
 			>
 				{/* The navigation takes the bar's place, so the crumb stands over the content. */}

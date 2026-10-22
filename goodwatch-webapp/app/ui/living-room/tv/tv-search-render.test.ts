@@ -144,10 +144,47 @@ test("Keyboard focus and bar focus remain represented in markup", () => {
 		assert.deepEqual(focused(rendered.question.onBar[edition]), ["bar:menu"])
 	}
 })
-test("Phone keyboard scrolls while the input and action row stay outside it; keys are touch targets", () => {
+/** The element that opens at `at` in `html`, whole: its tags balanced by name (the markup is the server's). */
+const element = (html: string, at: number) => {
+	const tag = /^<([a-z]+)/.exec(html.slice(at))?.[1] ?? "div"
+	let depth = 0
+	const re = new RegExp(`<${tag}[\\s>]|</${tag}>`, "g")
+	re.lastIndex = at
+	for (let m = re.exec(html); m; m = re.exec(html)) {
+		depth += m[0].startsWith("</") ? -1 : 1
+		if (depth === 0) return html.slice(at, m.index + m[0].length)
+	}
+	return html.slice(at)
+}
+
+// Regression (2026-10-21): on the phone the keys scrolled in a box of their own under the field and the ideas,
+// a row and a half of them. The field, the ideas and the keys now scroll as one column (a finger or the focus).
+test("Phone keyboard: the field, the ideas and the keys scroll as one column; the actions stay under it; keys are touch targets", () => {
 	for (const phone of rendered.phones) {
-		assert.match(phone.question, /data-tv-scroll/)
-		assert.match(phone.question, /overflow-y-auto/)
+		const start = phone.question.indexOf("<div data-tv-scroll")
+		assert.ok(start >= 0, `${phone.phone}: a scrolling column`)
+		assert.equal(
+			phone.question.indexOf("data-tv-scroll", start + 20),
+			-1,
+			`${phone.phone}: one scrolling box, not a box for the keys`,
+		)
+		const column = element(phone.question, start)
+		for (const inside of [
+			"data-tv-input",
+			'data-tv-item="idea:',
+			'data-tv-item="key:q"',
+			'data-tv-item="key:0"',
+		])
+			assert.ok(
+				column.includes(inside),
+				`${phone.phone}: ${inside} in the column`,
+			)
+		// The actions: under the column, or at its end on a picture too short to spare their row.
+		assert.equal(
+			column.includes('data-tv-item="go"'),
+			phone.h < 330,
+			`${phone.phone}: the actions`,
+		)
 		for (const id of [
 			"key:q",
 			"key:0",

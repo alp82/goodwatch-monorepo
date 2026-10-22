@@ -315,13 +315,19 @@ test("five scores and no sides yet: the quiz's picks as Made for you, four of th
 
 test("the Expand key stands in its corner on Taste and a side, the quiz has it once, and the rating has none", () => {
 	for (const screen of all(rendered.taste)) {
-		// In its corner, or on the phone at the end of the last row where the screen has one: never both.
+		// In its corner, or on the phone at the end of the last row where the screen has one, or (Your taste's
+		// start) wrapping with its keys: never two of them.
 		const corner =
 			/<div data-tv-expand-place="true"[^>]*><button type="button" data-tv-item="expand"[^>]*aria-label="Expand"[^>]*>.*?Expand<\/button><\/div>/.test(
 				screen.html,
 			)
+		const inRow =
+			Boolean(phoneFoot(screen.html)) ||
+			/<div class="flex flex-wrap items-center mt-6 gap-2\.5">(?:(?!<\/div><\/div>).)*data-tv-item="expand"/.test(
+				screen.html,
+			)
 		assert.ok(
-			screen.edition === "desktop" ? corner : corner !== Boolean(phoneFoot(screen.html)),
+			screen.edition === "desktop" ? corner : corner !== inRow,
 			`${screen.name} ${screen.edition}`,
 		)
 		assert.ok(screen.items.includes("expand"))

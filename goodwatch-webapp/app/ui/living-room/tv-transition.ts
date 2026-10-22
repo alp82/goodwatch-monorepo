@@ -19,6 +19,7 @@ import { useLocation, useNavigate, useNavigationType } from "@remix-run/react"
 import { useCallback, useEffect } from "react"
 import { warmTvWayBack } from "./TvWayBackHost"
 import { TRIP_KEY, TV_BACK_ATTR, TV_BRACKET_ATTR, TV_PROPERTIES, type TvBox, type TvTrip, parseTrip, tvProperties } from "./tv-way-back"
+import { ROOM_ID } from "./use-below-room"
 
 /** Marks the TV's screen in either scene, so its box can be measured. */
 export const TV_SCREEN_ATTR = "data-tv-screen"
@@ -37,6 +38,8 @@ function canAnimate() {
 
 /** The router's count of this tab's history entries. */
 export const historyIdx = () => (window.history.state as { idx?: number } | null)?.idx ?? 0
+/** The router's key of this history entry. */
+const historyKey = () => (window.history.state as { key?: string } | null)?.key
 
 function tvBox(): TvBox | null {
 	const tv = document.querySelector(`[${TV_SCREEN_ATTR}]`)
@@ -205,6 +208,10 @@ export function useLeaveThroughTv() {
 				// What the TV shows, for the TV button's picture: the file is in the browser's cache already.
 				art: document.querySelector<HTMLImageElement>(`[${TV_SCREEN_ATTR}] img`)?.currentSrc || null,
 				out: true,
+				// Where the room stood, for the way back (`wayBackScroll`): taller than the window, it scrolls.
+				scroll: document.getElementById(ROOM_ID)?.scrollTop ?? 0,
+				key: historyKey(),
+				columns: Array.from(document.querySelectorAll(`[${TV_SCREEN_ATTR}] [data-tv-scroll]`), (el) => el.scrollTop).slice(0, 8),
 			})
 			warmTvWayBack()
 			if (!box) {
@@ -231,6 +238,22 @@ export function useLeaveThroughTv() {
 	)
 }
 
+/** Back to the TV's own entry from a page the TV opened (`out`), by any history move. */
+const isWayBack = (trip: TvTrip | null, navigationType: string) =>
+	Boolean(trip?.out && navigationType === "POP" && trip.idx === historyIdx())
+
+/**
+ * How far the room and its screen's columns were scrolled when the person left through its TV, on the way back
+ * to it, and null on any other arrival: a fresh visit, a reload, Forward, a link. The room reads it as it mounts, before
+ * `useReturnIntoTv` clears the trip's `out` (a child's effects run before its parent's).
+ */
+export function wayBackScroll(navigationType: string): { room: number; columns: number[] } | null {
+	const trip = readTrip()
+	// The same entry, not a new visit that has the same index (a typed address, a link from the page the TV opened).
+	if (!trip || !isWayBack(trip, navigationType) || (trip.key && trip.key !== historyKey())) return null
+	return { room: trip.scroll ?? 0, columns: trip.columns ?? [] }
+}
+
 /**
  * Back after leaving through the TV: points the replayed transition at the TV's box, so the page shrinks into
  * the same TV screen. It runs on mount, before the router lets the transition animate. The box from leaving is
@@ -241,7 +264,7 @@ export function useReturnIntoTv() {
 	useEffect(() => {
 		const trip = readTrip()
 		// `out`: the person was on a page the TV opened. A page reached another way does not shrink into the TV.
-		const back = Boolean(trip?.out && navigationType === "POP" && trip.idx === historyIdx())
+		const back = isWayBack(trip, navigationType)
 		if (trip?.out) writeTrip({ ...trip, out: false })
 		const sameWindow = trip?.w === window.innerWidth && trip?.h === window.innerHeight
 		const box = back && trip?.box && canAnimate() ? (sameWindow ? trip.box : tvBox()) : null

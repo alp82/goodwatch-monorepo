@@ -6,7 +6,9 @@
 // The headline stays the start page's H1 for the page's outline (`HomeHeading`), read out but not drawn: Start's
 // tiles say what the TV offers.
 import { useContext } from "react"
-import fingerprintIcon from "~/img/fingerprint-72.webp"
+// A file of its own, not inlined into the script: Start is a member's home, and an inlined copy, shared with the
+// title page's, became a script that every guest's start page and every title page loaded.
+import fingerprintIcon from "~/img/fingerprint-72.webp?no-inline"
 import { AREAS, AREA_COLOR } from "~/ui/details/fingerprint/area-colors"
 import { assetUrl } from "~/utils/asset-url"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
@@ -171,11 +173,12 @@ export function Start({
 			"start:popular",
 			"Popular",
 			"Titles many people watch",
-			<span aria-hidden className="absolute right-4 top-4 flex">
+			// On the phone's shorter tile the fan is smaller, so it ends above the tile's name.
+			<span aria-hidden className={`absolute flex ${P ? "right-3 top-3" : "right-4 top-4"}`}>
 				{popularPosters.map((path, i) => (
 					<span
 						key={path}
-						className="relative -ml-8 h-[96px] w-[64px] overflow-hidden rounded-lg shadow-xl ring-2 ring-[#151821]"
+						className={`relative overflow-hidden rounded-lg shadow-xl ring-2 ring-[#151821] ${P ? "-ml-5 h-[60px] w-[40px]" : "-ml-8 h-[96px] w-[64px]"}`}
 						style={{ transform: `rotate(${(i - 1) * 7}deg)`, zIndex: 3 - i }}
 					>
 						<Img src={tmdbImageUrl(path, "w154")} className="h-full w-full" />

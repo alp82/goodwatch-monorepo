@@ -124,8 +124,14 @@ export function startPointing(
 		pressed = setTimeout(() => set("press", false), ms)
 	}
 	const picture = () => els.root.current?.querySelector(SCREEN) ?? null
-	const origin = () =>
-		els.root.current?.getBoundingClientRect() ?? { left: 0, top: 0 }
+	// The room's content origin: the layout's coordinates are the stage's, which scrolls with the room when its
+	// content is taller than it (TvRoom.tsx).
+	const origin = () => {
+		const el = els.root.current
+		if (!el) return { left: 0, top: 0 }
+		const r = el.getBoundingClientRect()
+		return { left: r.left - el.scrollLeft, top: r.top - el.scrollTop }
+	}
 
 	const frame = () => {
 		raf = 0
@@ -212,17 +218,24 @@ export function startPointing(
 	}
 
 	// ---- The mouse.
+	/** Where the mouse last was in the window, for a scroll that moves the room under a mouse that stays put. */
+	const mouse = { x: 0, y: 0, known: false }
 	const onMove = (e: PointerEvent) => {
+		if (e.pointerType !== "mouse") return
+		Object.assign(mouse, { x: e.clientX, y: e.clientY, known: true })
+		place(e.target instanceof Element ? e.target : null)
+	}
+	/** The ring and the Remote go to the mouse's point of the room, over `target`. */
+	const place = (target: Element | null) => {
 		const g = scene()
-		if (!g || e.pointerType !== "mouse") return
+		if (!g) return
 		const r = origin()
 		Object.assign(cursor, {
-			x: e.clientX - r.left,
-			y: e.clientY - r.top,
+			x: mouse.x - r.left,
+			y: mouse.y - r.top,
 			here: true,
 			tap: false,
 		})
-		const target = e.target instanceof Element ? e.target : null
 		// Over the picture, and not over something of the page that lies on top of the room.
 		const onTv =
 			g.live &&
@@ -235,6 +248,17 @@ export function startPointing(
 		clearTimeout(idle)
 		if (onTv) idle = setTimeout(() => show(false), IDLE_MS)
 		kick()
+	}
+
+	/**
+	 * The room or the page scrolled: what is under a mouse that didn't move changed. The ring is placed again from the
+	 * mouse's point, or rests if that is off the picture now. A finger's touch is cancelled by the browser's scroll.
+	 * Not for the screens' own boxes: the focus scrolls those, and a key has just put the ring away.
+	 */
+	const onScroll = (e: Event) => {
+		if (e.target !== document && e.target !== els.root.current) return
+		if (!mouse.known || !cursor.here || cursor.tap || touch) return
+		place(document.elementFromPoint(mouse.x, mouse.y))
 	}
 
 	// ---- A finger.
@@ -382,6 +406,11 @@ export function startPointing(
 	const root = els.root.current
 	// On the window, not on the room: the cursor leaving the room (for the site's header or dock) rests the Remote.
 	window.addEventListener("pointermove", onMove)
+	// Every scroll, the room's and the page's: a scroll event doesn't bubble, so it is caught on its way down.
+	document.addEventListener("scroll", onScroll, {
+		capture: true,
+		passive: true,
+	})
 	window.addEventListener("pointerdown", onDown)
 	window.addEventListener("pointermove", onTouchMove)
 	window.addEventListener("pointerup", onUp)
@@ -398,6 +427,7 @@ export function startPointing(
 		refresh,
 		stop() {
 			window.removeEventListener("pointermove", onMove)
+			document.removeEventListener("scroll", onScroll, { capture: true })
 			window.removeEventListener("pointerdown", onDown)
 			window.removeEventListener("pointermove", onTouchMove)
 			window.removeEventListener("pointerup", onUp)

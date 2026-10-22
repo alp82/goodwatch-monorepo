@@ -818,15 +818,6 @@ main:has(.lr-page) + footer {
 		rgba(251, 191, 36, 0.16), 0 0 16px 1px rgba(251, 191, 36, 0.2);
 }
 
-/* Beside the TV the Remote stands at the right, where the lip's tab is. With its second line the tab is wide
-   enough to reach the TV's corner in a small window (1366 x 650), so beside the TV it is its first line alone.
-   It then lies over the Remote's grip, clear of its keys and of the TV at every size. */
-@media (min-width: 768px) {
-	.tvr[data-remote-place="beside"] + .lrb .lrb-lip small {
-		display: none;
-	}
-}
-
 /* A phone in landscape: the TV is on the left, down to the room's bottom edge, so the lip's tab, which
    living-room.css puts at the bottom left, goes to the right, under the keys of the Remote. */
 @media (orientation: landscape) and (max-height: 540px) and (min-width: 768px) {
@@ -994,8 +985,7 @@ html[data-tv-transition] .tvr-bracket {
      lengths, so a value computed in a child is in pixels for every part under it.
    - Which layout: the window's width (PHONE, under 768 px) and its landscape query (LANDSCAPE), as in TvRoom.tsx
      and as living-room.css lays out the lip.
-     The desktop's Remote is under the TV in a room of at least 1107.075 x 853.124 px (where `layoutRoom` keeps
-     18 px type with the Remote under it), beside it otherwise.
+     The desktop's Remote is under the TV in every room.
    - Which form of the phone's Remote: the rig's width says it, 2 px in the hand and 1 px on the table, and the two
      forms ask the rig (`tvr-form`). The phone's condition joins its width and height, which no query can.
    - Scales are lengths here (a scale of 0.8 is 0.8px); tan(atan2(x, 1px)) turns one into the number scale() needs.
@@ -1013,52 +1003,32 @@ html[data-tv-transition] .tvr-bracket {
 .tvr[data-room="unmeasured"] {
 	container: tvr / size;
 }
-/* The desktop with the Remote beside the TV (`layoutRoom`, "beside"); further down, under it. */
+/* The desktop (`layoutRoom`): the TV at the top, as wide as the room but for its margins, its height by its
+   aspect; the Remote centred under it, inside the room where it fits down to its streaming keys, else under the TV
+   below the fold, where the room scrolls to it (`--f-height`, the stage's). Which of the two: --f-fit, 1px where
+   it fits, 0px where not, chosen with a clamp as the forms are. */
 .tvr[data-room="unmeasured"] > * {
 	--f-w: 100cqw;
 	--f-h: 100cqh;
 	--f-pad: clamp(14px, var(--f-w) * 0.0125, 28px);
-	/* The Remote's scale, and its column with the hand: 312 * (1 + 0.3 + 0.42) = 536.64 of its pixels. */
-	--f-r: min(
-		max(0.9px, var(--f-h) / 1130),
-		1.15px,
-		(var(--f-h) - 10px) / 880,
-		max(0.5px, (var(--f-w) - 3 * var(--f-pad) - 1080px) / 536.64)
-	);
-	--f-tvw: min(
-		var(--f-w) - 3 * var(--f-pad) - 536.64 * var(--f-r),
-		var(--f-h) * 0.92 * 1.851515151515
-	);
+	--f-tvt: max(6px, var(--f-h) * 0.008);
+	--f-tvw: calc(var(--f-w) - 2 * var(--f-pad));
 	--f-tvh: calc(var(--f-tvw) / 1.851515151515);
-	--f-tvl: calc(
-		(var(--f-w) - var(--f-tvw) - var(--f-pad) - 536.64 * var(--f-r)) / 2
+	--f-tvl: calc((var(--f-w) - var(--f-tvw)) / 2);
+	--f-under: calc(var(--f-h) - var(--f-tvt) - var(--f-tvh) + 18px - 8px);
+	--f-fit: clamp(0px, (var(--f-under) - 252.08px) * 10000 + 1px, 1px);
+	--f-r: calc(
+		clamp(0.5px, var(--f-h) / 1800, 0.68px) +
+		(min(0.8px, var(--f-under) / 548) - clamp(0.5px, var(--f-h) / 1800, 0.68px)) *
+		tan(atan2(var(--f-fit), 1px))
 	);
-	--f-tvt: max(10px, (var(--f-h) - var(--f-tvh)) * 0.32);
-	--f-rl: calc(var(--f-tvl) + var(--f-tvw) + var(--f-pad) + 93.6 * var(--f-r));
-	--f-rt: max(6px, var(--f-h) - 880 * var(--f-r));
-}
-@container tvr (min-width: 1107.075px) and (min-height: 853.124px) {
-	.tvr[data-room="unmeasured"] > * {
-		/* As tall as the room leaves over a Remote of the size the height suggests, and never under 18 px type. */
-		--f-tvh: max(
-			583.306055646px,
-			min(
-				var(--f-h) - max(8px, var(--f-h) * 0.012) - 8px - 548 *
-				clamp(0.5px, var(--f-h) / 1800, 0.68px),
-				(var(--f-w) - 2 * var(--f-pad)) / 1.851515151515
-			)
-		);
-		--f-tvw: calc(var(--f-tvh) * 1.851515151515);
-		--f-tvt: max(6px, var(--f-h) * 0.008);
-		--f-tvl: calc((var(--f-w) - var(--f-tvw)) / 2);
-		--f-r: clamp(
-			0.46px,
-			(var(--f-h) - var(--f-tvt) - var(--f-tvh) + 18px) / 548,
-			0.8px
-		);
-		--f-rl: calc(var(--f-w) / 2 - 156 * var(--f-r));
-		--f-rt: calc(var(--f-h) - 548 * var(--f-r));
-	}
+	--f-rl: calc(var(--f-w) / 2 - 156 * var(--f-r));
+	--f-rt: calc(
+		var(--f-tvt) + var(--f-tvh) - 18px +
+		(var(--f-h) - 8px - 548 * var(--f-r) - var(--f-tvt) - var(--f-tvh) + 18px) *
+		tan(atan2(var(--f-fit), 1px))
+	);
+	--f-height: max(var(--f-h), var(--f-rt) + 548 * var(--f-r) + 8px);
 }
 .tvr[data-room="unmeasured"] .tvr-f-photo {
 	left: calc(var(--f-tvl) - 531 * var(--f-tvw) / 611);
@@ -1076,6 +1046,29 @@ html[data-tv-transition] .tvr-bracket {
 .tvr[data-room="unmeasured"][data-tv-power="on"] .tvr-f-tv {
 	box-shadow: 0 0 120px 10px rgba(251, 191, 36, 0.14), 0 0 22px 1px
 		rgba(251, 191, 36, 0.18);
+}
+/* The room scrolls when its content is taller than it (`height` of the layouts): where the TV at the room's width
+   and the Remote under it don't both fit, the Remote is a scroll away. The wheel and a swipe outside the picture
+   move it; once at its end, the wheel turned down goes below as before (use-below-room.ts skips a box that can
+   still scroll down). No scrollbar: its gutter would change the room's width, and with it the layout. */
+.tvr-scroll {
+	overflow-x: hidden;
+	overflow-y: auto;
+	scrollbar-width: none;
+	touch-action: pan-y pinch-zoom;
+}
+/* Where the room scrolls, the picture takes a vertical swipe too, or a TV that fills the window would keep the
+   Remote out of a finger's reach. A finger still points by moving sideways or by a tap; the browser cancels the
+   pointing touch once it scrolls (pointing.ts, `onCancel`). */
+.tvr[data-room-scrolls] .tvr-tv {
+	touch-action: pan-y pinch-zoom;
+}
+.tvr-scroll::-webkit-scrollbar {
+	display: none;
+}
+/* The stage is as tall as the room's content; the room scrolls to what lies under its bottom edge. */
+.tvr[data-room="unmeasured"] .tvr-stage {
+	height: var(--f-height);
 }
 /* The canvas covers the TV from the middle: its scale is the TV's height over 648. */
 .tvr[data-room="unmeasured"] .tvr-f-cv-desktop {
@@ -1115,6 +1108,7 @@ html[data-tv-transition] .tvr-bracket {
 	@media (max-width: 767.98px) {
 		.tvr[data-room="unmeasured"] > * {
 			--f-pw: calc(var(--f-w) - 28px);
+			--f-height: var(--f-h);
 			--f-ph: min(var(--f-pw) / 1.2, var(--f-h) - 273px);
 			--f-k: calc(var(--f-pw) / 500);
 			--f-seam: calc(var(--f-ph) + 27px);
@@ -1190,7 +1184,7 @@ html[data-tv-transition] .tvr-bracket {
 			display: block;
 			width: clamp(
 				1px,
-				2px + (var(--f-h) - 319px - var(--f-pw) / 1.2) * 10000,
+				2px + (var(--f-h) - 385px - var(--f-pw) / 1.2) * 10000,
 				2px
 			);
 		}
@@ -1202,12 +1196,12 @@ html[data-tv-transition] .tvr-bracket {
 				min(
 					1.3px,
 					var(--f-w) * 0.68 / 236,
-					(var(--f-h) - 97px - var(--f-ph)) / 222
+					(var(--f-h) - 97px - var(--f-ph)) / 288
 				)
 			);
 			--f-pt: calc(
 				var(--f-ph) + 31px +
-				min((var(--f-h) - 97px - var(--f-ph) - 222 * var(--f-u)) * 0.5, 84px)
+				max(0px, var(--f-h) - 97px - var(--f-ph) - 288 * var(--f-u) - 40 * var(--f-u))
 			);
 			--f-pl2: calc((var(--f-w) - 236 * var(--f-u)) / 2);
 		}
@@ -1230,60 +1224,49 @@ html[data-tv-transition] .tvr-bracket {
 	}
 }
 
-/* A phone in landscape (`layoutPhoneLandscape`): the framed TV on the left in front of the desktop's photo, the
-   Remote on the right. The lip is a tab of 46 px under the Remote from 768 px of width, a bar of 60 px below. */
+/* A phone in landscape (`layoutPhoneLandscape`): the framed TV across the room's width in front of the desktop's
+   photo, as tall as the room allows, and the phone's Remote centred under it, below the fold. The lip is a tab of
+   46 px from 768 px of width, a bar of 60 px below. */
 @media (orientation: landscape) and (max-height: 540px) {
 	.tvr[data-room="unmeasured"] > * {
 		--f-rr: 46px;
-		--f-rtv: 0px;
-		/* On the table (PHONE_REMOTE.table): its width, keys, growth, column per scale, and what flanks it. */
+		--f-rtv: 46px;
+		/* On the table (PHONE_REMOTE.table): its width, keys, growth, share of the width, and the room under it. */
 		--f-Rw: 336;
 		--f-Rk: 176;
 		--f-grow: 1.25px;
-		--f-col: 346.08;
-		--f-edge: 9px;
-		--f-bes: 0.03;
-		--f-tf: 0.5;
+		--f-share: 0.935;
+		--f-tail: 16px;
 		--f-keys: calc(var(--f-h) - 14px - var(--f-rr));
 		--f-phm: max(60px, var(--f-h) - var(--f-rtv) - 26px);
-		--f-pw: max(
-			72px,
-			min(
-				var(--f-w) - 28px - var(--f-col) * 1px - var(--f-edge),
-				var(--f-phm) * 1.34
-			)
-		);
-		--f-ph: min(var(--f-phm), var(--f-pw) / 1.2);
-		--f-k: calc(var(--f-pw) / 500);
-		--f-ot: calc(8px + (var(--f-phm) - var(--f-ph)) / 2);
+		--f-pw: calc(var(--f-w) - 28px);
+		--f-ph: max(60px, min(var(--f-phm), var(--f-pw) / 1.2));
+		/* The canvas: wider than 500 where the picture is, so it is drawn at 1.15 at most. */
+		--f-cw: max(500px, round(nearest, var(--f-pw) / 1.15, 1px));
+		--f-k: min(var(--f-pw) / 500, 1.15px);
+		--f-ot: 8px;
 		--f-u: max(
 			1px,
 			min(
 				var(--f-grow),
-				(var(--f-w) - 28px - var(--f-pw) - var(--f-edge)) / var(--f-col),
-				var(--f-keys) / var(--f-Rk)
+				var(--f-w) * var(--f-share) / var(--f-Rw),
+				(var(--f-h) - 16px - var(--f-rr)) / var(--f-Rk)
 			)
 		);
-		--f-pl2: calc(
-			var(--f-pw) + 28px + var(--f-bes) * var(--f-Rw) * var(--f-u) +
-			max(
-				0px,
-				var(--f-w) - var(--f-pw) - 28px - var(--f-col) * var(--f-u) -
-				var(--f-edge)
-			) /
-			2
+		--f-pl2: calc((var(--f-w) - var(--f-Rw) * var(--f-u)) / 2);
+		--f-pt: calc(var(--f-ph) + 43px);
+		--f-height: max(
+			var(--f-h),
+			var(--f-pt) + var(--f-Rk) * var(--f-u) + var(--f-tail) + var(--f-rr)
 		);
-		--f-pt: calc(
-			8px + max(0px, var(--f-keys) - var(--f-Rk) * var(--f-u)) * var(--f-tf)
-		);
-		--f-cx: calc(var(--f-pw) / 2 + 14px);
+		--f-cx: calc(var(--f-w) / 2);
 		--f-cy: calc(var(--f-ot) + var(--f-ph) / 2 + 5px);
 		--f-ls: max(
 			(var(--f-pw) + 10px) * 0.985 / 611,
 			var(--f-cx) / 836.5,
 			(var(--f-w) - var(--f-cx)) / 835.5,
 			var(--f-cy) / 255,
-			(var(--f-h) - var(--f-cy)) / 686
+			(var(--f-height) - var(--f-cy)) / 686
 		);
 	}
 	@media (max-width: 767.98px) {
@@ -1292,30 +1275,26 @@ html[data-tv-transition] .tvr-bracket {
 			--f-rtv: 60px;
 		}
 	}
-	/* In the hand where its keys fit the height: H - 14 - reserve >= 222. */
+	/* In the hand where its keys fit the height: H - 14 - reserve >= 288. */
 	@media (min-width: 768px) {
-		@container tvr (min-height: 282px) {
+		@container tvr (min-height: 348px) {
 			.tvr[data-room="unmeasured"] > * {
 				--f-Rw: 236;
-				--f-Rk: 222;
+				--f-Rk: 288;
 				--f-grow: 1.3px;
-				--f-col: 306.8;
-				--f-edge: 12px;
-				--f-bes: 0.3;
-				--f-tf: 0.4;
+				--f-share: 0.68;
+				--f-tail: 40px;
 			}
 		}
 	}
 	@media (max-width: 767.98px) {
-		@container tvr (min-height: 296px) {
+		@container tvr (min-height: 362px) {
 			.tvr[data-room="unmeasured"] > * {
 				--f-Rw: 236;
-				--f-Rk: 222;
+				--f-Rk: 288;
 				--f-grow: 1.3px;
-				--f-col: 306.8;
-				--f-edge: 12px;
-				--f-bes: 0.3;
-				--f-tf: 0.4;
+				--f-share: 0.68;
+				--f-tail: 40px;
 			}
 		}
 	}
@@ -1357,14 +1336,14 @@ html[data-tv-transition] .tvr-bracket {
 	}
 	/* The room's height chose the form above; the rig says the same to the forms. */
 	.tvr[data-room="unmeasured"] .tvr-f-rig {
-		width: clamp(1px, 2px + (var(--f-keys) - 222px) * 10000, 2px);
+		width: clamp(1px, 2px + (var(--f-keys) - 288px) * 10000, 2px);
 	}
 }
 
 /* Both phone rooms: the canvas keeps its width and shows as much height as the picture has; the keys the server
    draws are as tall as they will be (`keyLength`, kit.tsx: 44 px of the phone's screen at the least). */
 .tvr[data-room="unmeasured"] .tvr-f-cv-phone {
-	width: 500px;
+	width: var(--f-cw, 500px);
 	height: calc(var(--f-ph) / tan(atan2(var(--f-k), 1px)));
 	transform: translate(0px, 0px) scale(tan(atan2(var(--f-k), 1px)));
 	--tv-key: round(up, 44px / tan(atan2(var(--f-k), 1px)), 1px);
@@ -1395,20 +1374,19 @@ html[data-tv-transition] .tvr-bracket {
 }
 /* Held, the body runs on under the room's bottom edge, into the hand. */
 .tvr[data-room="unmeasured"] .tvr-f-grip {
-	height: calc((var(--f-h) - var(--f-pt)) / tan(atan2(var(--f-u), 1px)) + 60px);
+	height: calc((var(--f-height, var(--f-h)) - var(--f-pt)) / tan(atan2(var(--f-u), 1px)) + 60px);
 }
 /* The hand around the held Remote: its fingers come round the body at the streaming keys. */
 .tvr[data-room="unmeasured"] .tvr-f-phand {
 	left: calc(var(--f-pl2) - 321 * var(--f-Rw) * var(--f-u) / 382);
-	top: calc(var(--f-pt) + 168 * var(--f-u) - 680 * var(--f-Rw) * var(--f-u) / 382);
+	top: calc(var(--f-pt) + 234 * var(--f-u) - 680 * var(--f-Rw) * var(--f-u) / 382);
 	width: calc(1024 * var(--f-Rw) * var(--f-u) / 382);
 	height: calc(1536 * var(--f-Rw) * var(--f-u) / 382);
 }
-/* Beside the TV the lip's tab has its first line alone (as `[data-remote-place="beside"]` above). The lip is
-   outside the room, so the first paint reads the window: the room is beside the TV in every window this covers,
-   with up to 15 px of a scrollbar's gutter, and the rule holds after hydration too, so the lip never changes. */
-@media (min-width: 768px) and (min-height: 540.02px) and (max-width: 1122.07px),
-	(min-width: 768px) and (min-height: 540.02px) and (max-height: 917.12px) {
+/* In a narrow desktop room the lip's tab has its first line alone: with its second it reaches over the
+   Remote's right streaming key, centred under the TV. The lip is outside the room, so the window decides, the
+   same before and after hydration. */
+@media (min-width: 768px) and (max-width: 1122.07px) {
 	.tvr + .lrb .lrb-lip small {
 		display: none;
 	}
@@ -1696,6 +1674,32 @@ html[data-tv-transition] .tvr-bracket {
 	.tvc-menu {
 		background: rgba(0, 0, 0, 0.6);
 		animation: tvc-fade 0.2s both;
+	}
+	/* On the phone a finger scrolls what the screen holds beyond the picture. On the TV the screens' long columns
+	   (`data-tv-scroll`) and rows (`data-tv-row`) move with the focus only (tv-dom.ts, `bringIntoView`); on a
+	   phone that left everything under the picture's edge out of reach of a finger. The picture itself takes no
+	   panning (touch points, pointing.ts); a scrolling box inside it does, and the browser cancels the pointing
+	   touch once it scrolls. The focus keeps scrolling them the same way, by scrollTop and scrollLeft. */
+	[data-tv-canvas="phone"] [data-tv-scroll] {
+		overflow-y: auto !important;
+		overscroll-behavior: contain;
+		touch-action: pan-y;
+		scrollbar-width: none;
+	}
+	[data-tv-canvas="phone"] [data-tv-row] {
+		overflow-x: auto !important;
+		overscroll-behavior-x: contain;
+		touch-action: pan-x pan-y;
+		scrollbar-width: none;
+	}
+	[data-tv-canvas="phone"] [data-tv-scroll]::-webkit-scrollbar,
+	[data-tv-canvas="phone"] [data-tv-row]::-webkit-scrollbar {
+		display: none;
+	}
+	/* Where the room scrolls (a phone on its side), a swipe that reaches the column's end goes on to the room, or
+	   the Remote under the picture would be out of a finger's reach. */
+	.tvr[data-room-scrolls] [data-tv-canvas="phone"] [data-tv-scroll] {
+		overscroll-behavior: auto;
 	}
 	/* The menu over the intro film. The film (intro.css, `.film-screen`, z-index 25) lies over the canvas, which is
 	   a stacking context of its own (it is scaled), so no z-index inside it reaches over the film. While the menu

@@ -7,8 +7,9 @@
 // opens the TV screen "On <service>", and is pressed while that screen shows.
 //
 // Two forms; the scene's height chooses (`layoutPhoneRoom`):
-//   hand    upright, held in the hand, rising from the bottom edge: the wheel with a round key in each of its
-//           corners (Search, Menu, Back, Home), the streaming keys under it, then the grip and the fingers
+//   hand    upright, held in the hand, rising from the bottom edge: the wheel, a round key in each corner of a box
+//           a little taller than it (Search, Menu, Back, Home), the streaming keys under it, then the grip and
+//           the fingers
 //   table   lying in front of the TV: a wide, short body, the wheel in the middle and three keys on either side
 // Neither has the power key: "Turn off" is in the TV's menu, and a dark TV turns on with any key here.
 import type { ReactNode } from "react"
@@ -24,6 +25,12 @@ import type { RoomDirection, RoomKey, RoomTv } from "./room-tv"
 
 const WHEEL = 156
 const KEY = 44
+/**
+ * Held, the wheel stands in the middle of a box this tall, a round key in each corner: a little taller than the
+ * wheel, so the keys stand clear of its ring (about 123 units from its centre, not 103) and the Remote's keys
+ * fill more of its body (PHONE_REMOTE.hand.keys: 10 + 216 + 14 + 44, and a little slack).
+ */
+const HELD = 216
 const ARROW: Record<RoomDirection, string> = {
 	up: "M6 15l6-6 6 6",
 	down: "M6 9l6 6 6-6",
@@ -161,7 +168,7 @@ export function PhoneRemote({
 	const R = PHONE_REMOTE[form]
 	let body: ReactNode
 	if (form === "hand") {
-		// A key in each corner of the wheel's square: the wheel is round, so the corners are free.
+		// A key in each corner of a box a little taller than the wheel: the wheel is round, so the corners are free.
 		const corner = (
 			key: ReactNode,
 			word: string,
@@ -189,7 +196,7 @@ export function PhoneRemote({
 			>
 				<div
 					className="relative flex items-center justify-center"
-					style={{ height: WHEEL }}
+					style={{ height: HELD }}
 				>
 					{wheel}
 					{corner(keys.search, "Search", "left-0 top-0", "left-0 top-[46px]")}
@@ -202,7 +209,7 @@ export function PhoneRemote({
 						"bottom-[46px] right-0",
 					)}
 				</div>
-				<div className="mt-2 grid grid-cols-2 gap-2">
+				<div className="mt-[14px] grid grid-cols-2 gap-2">
 					{first}
 					{second}
 				</div>

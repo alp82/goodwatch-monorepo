@@ -139,11 +139,15 @@ export function RatingScreen({
 			<Shade dim={0.82} />
 			{P ? (
 				// The phone: the strip stands at the bottom, as large as a thumb needs, and the words in what is left
-				// over it, under the bar's keys. Both words and exact scores stay visible.
-				<div className="absolute inset-0 flex flex-col px-5 pb-4 pt-[84px]">
+				// over it, under the bar's keys. Both words and exact scores stay visible. On a short phone it scrolls
+				// rather than squeeze the words under the strip (living-room.css).
+				<div
+					data-tv-scroll
+					className="absolute inset-x-0 bottom-0 top-[78px] flex flex-col px-5 pb-4 pt-1.5"
+				>
 					<div
 						key={titleKey}
-						className={`flex min-h-0 flex-1 flex-col justify-center ${titleKey ? motion : ""}`}
+						className={`flex flex-1 flex-col justify-center ${titleKey ? motion : ""}`}
 					>
 						<div
 							className={

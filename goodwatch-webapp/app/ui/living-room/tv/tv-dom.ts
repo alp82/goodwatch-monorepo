@@ -68,11 +68,16 @@ export function bringIntoView(item: HTMLElement, smooth: boolean) {
 				: box.bottom > viewport.bottom
 					? box.bottom - viewport.bottom
 					: 0
-		if (delta)
+		if (delta) {
+			// Within 2 px of an end it goes to the end: a column left a pixel short takes a phone's next swipe itself,
+			// where at its end the swipe goes on to the room (living-room.css, `data-room-scrolls`).
+			const end = vertical.scrollHeight - vertical.clientHeight
+			const top = vertical.scrollTop + delta / scale
 			vertical.scrollTo({
-				top: vertical.scrollTop + delta / scale,
+				top: top > end - 2 ? end : top < 2 ? 0 : top,
 				behavior: "instant",
 			})
+		}
 	}
 	const row = item.closest<HTMLElement>(`[${TV_ROW_ATTR}]`)
 	if (!row || row.scrollWidth <= row.clientWidth) return

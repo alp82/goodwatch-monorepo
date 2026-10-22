@@ -148,25 +148,17 @@ describe("the Remote in the hand, under the TV", () => {
 	})
 })
 
-describe("the Remote in the hand, beside the TV", () => {
-	// 1440 x 800, where the Remote stands beside the TV.
+describe("the Remote in the hand at 1440 x 800", () => {
+	// Where the Remote stood beside the TV until 2026-10-21: it is under it now, as at every size.
 	const scene = desktop(1425, 736)
 
-	it("is beside the TV there", () => {
-		assert.equal(scene.hand?.place, "beside")
-	})
-
-	it("nods toward the picture on its left, further for its far corners, 13 degrees at most", () => {
+	it("is under the TV there, and swings toward the picture's sides, 42 degrees at most", () => {
+		assert.equal(scene.hand?.place, "below")
 		const [tl, tr, bl, br] = corners(scene).map((c) => aimFor(scene, c, false))
-		assert.ok(tl.rz < -8 && bl.rz < -8, `left: ${tl.rz}, ${bl.rz}`)
-		assert.ok(tl.rz < tr.rz && bl.rz <= br.rz, `right: ${tr.rz}, ${br.rz}`)
+		assert.ok(tl.rz < 0 && bl.rz < 0, `left: ${tl.rz}, ${bl.rz}`)
+		assert.ok(tr.rz > 0 && br.rz > 0, `right: ${tr.rz}, ${br.rz}`)
 		for (const a of [tl, tr, bl, br])
-			assert.ok(Math.abs(a.rz) <= SWING.beside + 1e-9)
-	})
-
-	it("rolls more instead of turning: up to 26 degrees", () => {
-		const [tl] = corners(scene).map((c) => aimFor(scene, c, false))
-		assert.ok(tl.ry < -16 && tl.ry >= -26)
+			assert.ok(Math.abs(a.rz) <= SWING.below + 1e-9)
 	})
 })
 
@@ -259,8 +251,10 @@ describe("the phone's Remote under the TV", () => {
 	})
 })
 
-describe("the phone's Remote beside the TV, in landscape", () => {
-	const TAB = { tv: 0, remote: 46 }
+describe("the phone's Remote under the TV, in landscape", () => {
+	// Since 2026-10-21 the Remote stands centred under a full-width TV in landscape too, so it aims as it does
+	// on a phone upright: a few degrees about its grip, toward the spot's side, leaning back.
+	const TAB = { tv: 46, remote: 46 }
 	const BAR = { tv: 60, remote: 60 }
 	const layouts = [
 		layoutPhoneLandscape(844, 390, TAB),
@@ -284,88 +278,21 @@ describe("the phone's Remote beside the TV, in landscape", () => {
 				)
 		return out
 	}
-	/** Where a point of the Remote is once it has turned: `out` left of the grip and `up` above it at rest. */
-	const turned = (rig: PhoneRig, out: number, up: number, deg: number) => {
-		const t = (Math.abs(deg) * Math.PI) / 180
-		return {
-			x: rig.x - (out * Math.cos(t) + up * Math.sin(t)),
-			y: rig.y - (up * Math.cos(t) - out * Math.sin(t)),
-		}
-	}
 
-	it("turns toward the picture on its left, for every spot on it", () => {
-		for (const L of layouts)
-			for (const spot of spots(L.tv)) {
-				const a = aimFor(phone(L), spot, false)
-				assert.ok(a.rz < 0, `${L.w} x ${L.h}: ${a.rz}`)
-				assert.ok(a.rz >= -L.rig.swing - 1e-9)
-				assert.equal(a.tx, 0)
-			}
-	})
-
-	it("its top corner never crosses the picture's edge, wherever it points", () => {
-		for (const L of layouts) {
-			const edge = L.tv.left + L.tv.width
-			for (const spot of spots(L.tv)) {
-				const a = aimFor(phone(L), spot, false)
-				const corner = turned(L.rig, L.rig.half, L.rig.arm, a.rz)
-				assert.ok(
-					corner.x >= edge + 3 - 1e-6,
-					`${L.w} x ${L.h}: ${corner.x} against ${edge}`,
-				)
-			}
-		}
-	})
-
-	it("held, it has about 20 degrees to turn by, and uses them", () => {
+	it("held, it turns 11 degrees at most toward the spot's side, leans back up to 11 and slides up to 8 px", () => {
 		for (const L of layouts.filter((l) => l.form === "hand")) {
-			assert.ok(L.rig.swing >= 18 && L.rig.swing <= 22, `${L.rig.swing}`)
-			const { tv } = L
-			// A spot level with the grip is a quarter turn away: as far as it goes.
-			const low = aimFor(phone(L), at(tv.left + 20, L.rig.y - 20), false)
-			assert.ok(-low.rz > L.rig.swing * 0.9, `${low.rz}`)
-			// The picture's top right corner is the nearest to straight up: less than half of it.
-			const high = aimFor(phone(L), at(tv.left + tv.width, tv.top), false)
-			assert.ok(-high.rz < L.rig.swing * 0.5 && -high.rz > 3, `${high.rz}`)
-		}
-	})
-
-	it("turns further for a spot further left and for one lower down", () => {
-		const L = layouts[0]
-		const { tv } = L
-		const row = [0.9, 0.6, 0.3, 0.05].map(
-			(x) =>
-				-aimFor(phone(L), at(tv.left + tv.width * x, tv.top + 120), false).rz,
-		)
-		const column = [0.1, 0.4, 0.7, 0.95].map(
-			(y) =>
-				-aimFor(phone(L), at(tv.left + 250, tv.top + tv.height * y), false).rz,
-		)
-		for (const run of [row, column])
-			for (let i = 1; i < run.length; i++)
-				assert.ok(run[i] > run[i - 1], JSON.stringify(run))
-	})
-
-	it("leans back further for a spot higher up and rolls toward the TV for one further left", () => {
-		const L = layouts[0]
-		const { tv } = L
-		const scene = phone(L)
-		const high = aimFor(scene, at(tv.left + 250, tv.top + 10), false)
-		const low = aimFor(scene, at(tv.left + 250, tv.top + tv.height - 10), false)
-		assert.ok(high.rx > low.rx + 2 && high.rx <= 11 && low.rx > 3)
-		const far = aimFor(scene, at(tv.left + 10, tv.top + 150), false)
-		const near = aimFor(scene, at(tv.left + tv.width - 10, tv.top + 150), false)
-		assert.ok(far.ry < near.ry - 2 && near.ry < 0 && far.ry >= -11 * 0.9)
-	})
-
-	it("lifts a little for a spot high up, and its turned corner stays inside the scene", () => {
-		for (const L of layouts)
+			assert.equal(L.rig.tv, "above")
+			const scene = phone(L)
 			for (const spot of spots(L.tv)) {
-				const a = aimFor(phone(L), spot, false)
-				assert.ok(a.ty >= -L.rig.slide - 1e-9)
-				const corner = turned(L.rig, L.rig.half, L.rig.arm, a.rz)
-				assert.ok(corner.y + a.ty >= 3 - 1e-6, `${L.w} x ${L.h}: ${corner.y}`)
+				const a = aimFor(scene, spot, false)
+				assert.ok(Math.abs(a.rz) <= 11 + 1e-9, `${L.w} x ${L.h}: ${a.rz}`)
+				assert.ok(a.rx <= 11 + 1e-9 && Math.abs(a.tx) <= 8 + 1e-9, `${L.w} x ${L.h}`)
 			}
+			const { tv } = L
+			const left = aimFor(scene, at(tv.left + 10, tv.top + 100, true), false)
+			const right = aimFor(scene, at(tv.left + tv.width - 10, tv.top + 100, true), false)
+			assert.ok(left.rz < 0 && right.rz > 0, `${L.w} x ${L.h}: ${left.rz} ${right.rz}`)
+		}
 	})
 
 	it("lying, it only shifts on the table: 3.5 degrees at most, no lean", () => {
@@ -374,9 +301,8 @@ describe("the phone's Remote beside the TV, in landscape", () => {
 		assert.equal(L.form, "table")
 		for (const spot of spots(L.tv)) {
 			const a = aimFor(phone(L), spot, false)
-			assert.ok(-a.rz <= 3.5)
+			assert.ok(Math.abs(a.rz) <= 3.5 + 1e-9)
 			assert.equal(a.rx, 0)
-			assert.equal(Math.abs(a.ry), 0)
 		}
 	})
 
