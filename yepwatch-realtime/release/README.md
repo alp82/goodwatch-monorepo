@@ -1,3 +1,5 @@
+> Current deployment: [DEPLOY.md](DEPLOY.md). GitHub builds images; the owner activates Coolify.
+
 > Current source uses shared Redis, stable table names and optional GoodWatch accounts. Follow [SHARED-SERVICES.md](SHARED-SERVICES.md). The R4 image hashes/topology below describe the preserved earlier guest release.
 
 # Guest beta release preparation
