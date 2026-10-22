@@ -46,7 +46,31 @@
       ],
       "requiresLive": true
     },
-    "mixedAndroidBrowser": "RUNNING: native4323 and retained browser8132/gateway4322; native-owner fresh smoke room only"
+    "mixedAndroidBrowser": {
+      "result": "PASS",
+      "evidenceOwner": "YepWatch native build G8x8t",
+      "completedAt": "2026-10-22T01:04:14.908287+00:00",
+      "artifact": "yepwatch-app/artifacts/native/android-browser-mixed.json",
+      "screenshots": [
+        "yepwatch-app/artifacts/native/mixed-native-match.png",
+        "yepwatch-app/artifacts/native/mixed-native-done.png",
+        "yepwatch-app/artifacts/native/mixed-browser-done.png"
+      ],
+      "nativeEmulator": 5562,
+      "nativeGateway": 4323,
+      "browserGateway": 4322,
+      "browserOrigin": "http://127.0.0.1:8132",
+      "checks": [
+        "Ordinary native host restart/invite and independent browser admission/readiness reached choosing over separate real gateways",
+        "Native received the browser answer as an immediate confirmed match without another native command",
+        "Browser final pick produced server-confirmed Done on both platforms; native received the peer decision"
+      ],
+      "browserSharedFrames": 9,
+      "browserNeutralActivityFrames": 9,
+      "browserJavaScriptErrors": 0,
+      "physicalDeviceVerified": false,
+      "headerOverridesUsed": false
+    }
   },
   "gateway4322": {
     "pid": 2045976,
@@ -55,5 +79,5 @@
   "existingRoomsAccessed": false,
   "otherServicesRestarted": false,
   "credentialsInvitesAndRoomIdentifiersRedacted": true,
-  "updatedAt": "2026-10-22T01:04:29.473Z"
+  "updatedAt": "2026-10-22T01:06:02.851Z"
 }
