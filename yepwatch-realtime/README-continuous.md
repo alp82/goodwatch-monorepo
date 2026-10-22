@@ -32,6 +32,19 @@ Do not start duplicates when4321/8124 are already running. The source default co
 
 Gateway v2 is selected by `YEPWATCH_CONTINUOUS=1`. Revision subscription is `yepwatch:v2:revision`, carrying only strict `{roomId,revision}`. Ephemeral fanout uses the separate `yepwatch:v2:activity`; no legacy channel payload changes. Standalone and three-master ioredis-compatible cluster configurations are supported. Health is `GET /api/yepwatch/v1/continuous/realtime/health`; both subscription and activity publication/subscription must be confirmed before live delivery.
 
+## Separate Android smoke gateway
+
+The separate native-smoke listener is `ws://127.0.0.1:4323/api/yepwatch/v1/continuous/realtime`, PID3261428 at activation. It uses the reviewed API15993 and isolated Valkey46398 without restarting gateway4322 or any retained service. RN Android sends an endpoint Origin; this listener allows exactly `http://127.0.0.1:4323` plus `http://127.0.0.1:8132` for mixed browser proof. Set the native app's `EXPO_PUBLIC_WS_ORIGIN=ws://127.0.0.1:4323`; emulator localhost must already reach the host loopback port through the native owner's local forwarding setup. Tickets and scoped lease authorization remain required.
+
+Its ignored mode0600 `.poc/continuous-native-gateway.env` contains only the existing gateway service bearer and these transport settings: `YEPWATCH_CONTINUOUS=1`, `YEPWATCH_REALTIME_HOST=127.0.0.1`, `YEPWATCH_REALTIME_PORT=4323`, `YEPWATCH_API_ORIGIN=http://127.0.0.1:15993`, `YEPWATCH_VALKEY_URL=redis://127.0.0.1:46398`, and `YEPWATCH_ALLOWED_ORIGINS=http://127.0.0.1:4323,http://127.0.0.1:8132`. No wildcard, custom Origin override, new auth behavior or database credentials are used.
+
+```bash
+# Only when no retained listener is using4323:
+node --env-file=.poc/continuous-native-gateway.env dist/main.js
+```
+
+`artifacts/continuous-native-gateway-activation.json` records the exact committed source, compiled bundle hash, PID and verification. Build/typecheck, broker health and a fresh ordinary browser-Origin ticket/snapshot/session check passed. That transport check used a Node WebSocket client. The native owner's actual emulator5562 run using the installed a72308ab debug APK separately passed authenticated live after a shared snapshot, real-catalog choosing, Nope/Undo, immediate match/pick/fresh-check Done and background/resume. Evidence: `yepwatch-app/artifacts/native/android-ui-smoke.json`, `android-voting.png` and `android-done.png`. Native endpoint Origin handling stayed unchanged. This proves the emulator connection; physical-device return is not claimed. No new security probes or existing user-room access were part of this activation.
+
 ## Authenticated ephemeral activity
 
 The API exports the agreed types and owns one-use30s tickets plus signed rotating60s shared leases capped by room expiry. The gateway ACKs the subscription before the final authorized read, emits strict `room.snapshot`, then emits:
