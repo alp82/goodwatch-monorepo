@@ -366,8 +366,7 @@ function payload(n) {
 
 // ---------- cards ----------
 // Taste match: tasteMatchLabel (ui/title-card/TasteMatchPill.tsx) plus the Explorer's band names (domain/explorer.ts MATCH_BANDS).
-const MATCH_BANDS = [{ name: "Near you", min: 70 }, { name: "A step out", min: 60 }, { name: "Unexplored", min: 0 }];
-const matchText = (t) => `**${t.match}% taste match** · ${MATCH_BANDS.find((b) => t.match >= b.min).name}`;
+const matchText = (t) => `**${t.match}% taste match**`;
 // Member state: defaults from the scenario, overridden by presses in the mock. Labels never change; style shows the state.
 const mstate = (vs, d) => ({ want: vs.want ?? d.want, seen: vs.seen ?? d.seen, rated: vs.rated ?? d.rated ?? null });
 const memberStatus = (ms) => [ms.want && "In your Want to see", ms.seen ? "Seen" : "Not seen yet", ms.rated && `you rated it **${ms.rated} · ${LABELS[ms.rated]}**`].filter(Boolean).join("  ·  ");
