@@ -1,3 +1,4 @@
+import { yepwatchOAuthEnvironment } from "./yepwatch-oauth-policy.ts"
 import { captureMessage } from "@sentry/remix"
 import type { User } from "@supabase/auth-js"
 import Redis, { type Cluster } from "ioredis"
@@ -65,6 +66,7 @@ export async function getBetterAuth(): Promise<AuthService> {
 			secret: required("BETTER_AUTH_SECRET"),
 			baseURL: required("BETTER_AUTH_URL"),
 			mcp: { resource: required("MCP_RESOURCE_URL") },
+			yepwatch: yepwatchOAuthEnvironment(process.env),
 			trustedIpHeader: required("AUTH_TRUSTED_IP_HEADER"),
 			storage,
 			mail,

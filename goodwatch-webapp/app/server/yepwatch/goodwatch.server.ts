@@ -42,7 +42,7 @@ export const goodwatchReads: CatalogReads = {
   async displays(keys) {
     const { getDisplayFields } = await import('../title-cards.server')
     const rows = await getDisplayFields(keys)
-    return new Map([...rows].map(([key, t]) => [key, { key, tmdbId: t.tmdb_id, mediaType: t.media_type, title: t.title, year: t.release_year, overview: t.tagline, posterUrl: t.poster_path ? `https://image.tmdb.org/t/p/w500${t.poster_path}` : null, runtimeMinutes: t.runtime }]))
+    return new Map([...rows].map(([key, t]) => [key, { key, tmdbId: t.tmdb_id, mediaType: t.media_type, title: t.title, year: t.release_year, overview: t.tagline, posterUrl: t.poster_path ? `https://image.tmdb.org/t/p/w500${t.poster_path}` : null, runtimeMinutes: t.runtime, backdropUrl: t.backdrop_path ? `https://image.tmdb.org/t/p/w1280${t.backdrop_path}` : null, goodwatchScore: t.goodwatch_overall_score_normalized_percent }]))
   },
   episodes,
   async availability(titles, screens, fresh) {

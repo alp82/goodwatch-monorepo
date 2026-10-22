@@ -18,11 +18,11 @@ export interface Room {
   proposedId: string | null; decision: { candidateId: string; proposalVersion: number; decidedAt: number; availability: Candidate['availability'] } | null
   tickets: { hash: string; participantId: string; epoch: number; expiresAt: number }[]
 }
-export interface StoredRoom { room: Room; seq: number; term: number; pendingRevision: number }
-export interface RoomRepository {
-  read(id: string): Promise<StoredRoom | null>
-  insert(room: Room): Promise<boolean>
-  compareAndSwap(previous: StoredRoom, room: Room, notify: boolean): Promise<boolean>
+export interface StoredRoom<T = Room> { room: T; seq: number; term: number; pendingRevision: number }
+export interface RoomRepository<T = Room> {
+  read(id: string): Promise<StoredRoom<T> | null>
+  insert(room: T): Promise<boolean>
+  compareAndSwap(previous: StoredRoom<T>, room: T, notify: boolean): Promise<boolean>
   pending(limit: number): Promise<string[]>
   acknowledge(id: string, revision: number): Promise<void>
 }
