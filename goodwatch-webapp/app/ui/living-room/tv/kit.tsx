@@ -454,7 +454,7 @@ function HomeG({ className = "" }: { className?: string }) {
 			// As tall as the bar's keys beside it.
 			className={`tvc-act tvc-home flex h-[64px] w-[64px] shrink-0 items-center justify-center ${className}`}
 		>
-			<GoodWatchG height={28} color="currentColor" />
+			<GoodWatchG height={28} />
 		</Item>
 	)
 }
@@ -505,7 +505,7 @@ export function NavBar({ items }: { items: readonly string[] }) {
 					className={`tvc-act tvc-home flex shrink-0 items-center justify-center ${here === "nav:home" ? "tvc-here" : ""}`}
 					style={{ width: side, height: side }}
 				>
-					<GoodWatchG height={P ? 26 : 28} color="currentColor" />
+					<GoodWatchG height={P ? 26 : 28} />
 				</Item>
 			)}
 			<span aria-hidden className={P ? "w-1" : "w-3"} />
@@ -593,7 +593,7 @@ export function PhoneHeader({
 				className={`tvc-act tvc-home flex shrink-0 items-center justify-center ${here === "nav:home" ? "tvc-here" : ""}`}
 				style={{ width: side, height: side }}
 			>
-				<GoodWatchG height={26} color="currentColor" />
+				<GoodWatchG height={26} />
 			</Item>
 			{/* The toast takes this place while it shows (TvScreen.tsx). */}
 			<div className="ml-1 flex min-w-0 flex-1 items-center gap-2.5 transition-opacity [[data-tv-toast]_&]:opacity-0">

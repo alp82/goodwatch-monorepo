@@ -118,6 +118,17 @@ export function startPointing(
 		shown = on
 		set("shown", on)
 	}
+	/**
+	 * The item a finger is pressing, marked while the finger is down on it (`data-touch-press`): the browser gives a
+	 * finger on the picture no :active, as this code takes the touch. The white G shows its press by it.
+	 */
+	let pressing: HTMLElement | null = null
+	const pressItem = (el: HTMLElement | null) => {
+		if (pressing === el) return
+		pressing?.removeAttribute("data-touch-press")
+		pressing = el
+		el?.setAttribute("data-touch-press", "")
+	}
 	const press = (ms: number) => {
 		set("press", true)
 		clearTimeout(pressed)
@@ -196,6 +207,7 @@ export function startPointing(
 		cursor.here = false
 		cursor.tap = false
 		item = null
+		pressItem(null)
 		clearTimeout(idle)
 		show(false)
 		kick()
@@ -307,6 +319,7 @@ export function startPointing(
 		set("over", false)
 		set("out", false)
 		over(itemAt(x, y), true)
+		pressItem(item)
 		set("hold", false)
 		set("press", true)
 		show(true)
@@ -321,6 +334,7 @@ export function startPointing(
 		if (!touch.drags) {
 			if (Math.hypot(touch.fx - touch.x, touch.fy - touch.y) <= DRAG) return
 			touch.drags = true
+			pressItem(null)
 			touch.since = performance.now()
 			set("hold", true)
 			set("press", false)
@@ -332,6 +346,7 @@ export function startPointing(
 		if (!touch || e.pointerId !== touch.id) return
 		const dragged = touch.drags
 		touch = null
+		pressItem(null)
 		// Letting go is OK on the item the ring is over. The browser's own click, if one follows, would be a second
 		// OK, or after a drag an OK on what is under the finger: it is dropped. After a plain tap on no item it is
 		// let through: it is a press beside the menu, which closes it.
@@ -354,6 +369,7 @@ export function startPointing(
 	const onCancel = (e: PointerEvent) => {
 		if (!touch || e.pointerId !== touch.id) return
 		touch = null
+		pressItem(null)
 		set("hold", false)
 		set("press", false)
 		rest()
@@ -394,6 +410,7 @@ export function startPointing(
 		if (root) root.dataset.pointing = g?.live ? "live" : "idle"
 		if (!g?.live) {
 			touch = null
+			pressItem(null)
 			set("hold", false)
 			set("press", false)
 			clearTimeout(after)
@@ -426,6 +443,8 @@ export function startPointing(
 	return {
 		refresh,
 		stop() {
+			// A finger still down loses its release with the listeners: its item lets go of the press now.
+			pressItem(null)
 			window.removeEventListener("pointermove", onMove)
 			document.removeEventListener("scroll", onScroll, { capture: true })
 			window.removeEventListener("pointerdown", onDown)

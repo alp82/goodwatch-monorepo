@@ -243,7 +243,9 @@ export function Start({
 			"Score what you've seen",
 			// The site's fingerprint mark (the title page's Fingerprint heading) over the areas' colours.
 			<span aria-hidden className={`absolute flex items-start ${P ? "inset-x-2.5 top-2 gap-2" : "inset-x-5 top-5 gap-3"}`}>
-				<span className={`mt-1.5 grid min-w-0 flex-1 grid-cols-3 ${P ? "auto-rows-[8px] gap-1" : "auto-rows-[12px] gap-1.5"}`}>
+				{/* The areas' colours: a small accent beside the mark, three by two (on the desktop a fifth smaller than
+				    they were, the owner, 2026-10-22; the phone's are small already). */}
+				<span className={`mt-1.5 grid min-w-0 flex-1 grid-cols-3 ${P ? "auto-rows-[8px] gap-1" : "max-w-[78%] auto-rows-[9px] gap-[5px]"}`}>
 					{AREAS.map((area) => (
 						<span
 							key={area}

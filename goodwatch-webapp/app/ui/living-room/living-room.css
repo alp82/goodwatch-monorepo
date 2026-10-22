@@ -1458,14 +1458,26 @@ html[data-tv-transition] .tvr-bracket {
 		background: rgba(255, 255, 255, 0.15);
 		color: #fff;
 	}
-	/* The G keeps its shape on the brand amber plate, for pointer, touch and keyboard input alike. */
-	.tvc-home:is(.tvc-on, :hover, :active, :focus-visible, [aria-pressed="true"]) {
-		background: #fbbf24;
-		color: #0a0a0a;
+	/* The white G keeps its look. Its focus is a white ring on its own plate: the keys' white plate would hide the
+	   white G. The amber plate is for a pointer over it and a finger pressing it only (the owner, 2026-10-22), never for
+	   the screen on show or the focus. */
+	.tvc-home.tvc-on {
+		background: rgba(0, 0, 0, 0.4);
+		box-shadow: 0 0 0 3px #fff;
 	}
-	.tvc-home:focus-visible {
-		outline: 2px solid #fff;
-		outline-offset: 3px;
+	.tvc-home.tvc-here.tvc-on {
+		background: rgba(255, 255, 255, 0.15);
+	}
+	@media (hover: hover) {
+		.tvc-act.tvc-home:hover {
+			background: #fbbf24;
+			box-shadow: none;
+		}
+	}
+	.tvc-act.tvc-home:active,
+	.tvc-act.tvc-home[data-touch-press] {
+		background: #fbbf24;
+		box-shadow: none;
 	}
 	/* The menu's keys: rows, not pills. They stand 8 px apart, so the focus lifts them only a little. */
 	.tvc-menu-key {
