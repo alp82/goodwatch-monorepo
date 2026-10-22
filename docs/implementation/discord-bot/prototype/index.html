@@ -365,7 +365,7 @@ function payload(n) {
 }
 
 // ---------- cards ----------
-// Taste match: tasteMatchLabel (ui/title-card/TasteMatchPill.tsx) plus the Explorer's band names (domain/explorer.ts MATCH_BANDS).
+// Taste match: the MCP match_label ("70% taste match").
 const matchText = (t) => `**${t.match}% taste match**`;
 // Member state: defaults from the scenario, overridden by presses in the mock. Labels never change; style shows the state.
 const mstate = (vs, d) => ({ want: vs.want ?? d.want, seen: vs.seen ?? d.seen, rated: vs.rated ?? d.rated ?? null });
