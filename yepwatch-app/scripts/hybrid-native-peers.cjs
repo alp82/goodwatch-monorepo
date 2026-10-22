@@ -17,9 +17,9 @@ const out=path.join(__dirname,'../artifacts/hybrid');
           page.on('pageerror',e=>errors.push(e.message));
           page.on('websocket',socket=>socket.on('framereceived',e=>{try{const f=JSON.parse(String(e.payload));if(['room.snapshot','room.updated','activity'].includes(f.type))frames.push(f);}catch{}}));
           page.on('response',async response=>{if(!response.url().includes('/proposal/'))return;try{const d=await response.json(),s=d.snapshot??d;if(s.shared&&s.own)snapshots.set(page,s);}catch{}});
-          await page.goto(command.invite);await page.getByLabel('Your nickname').fill(`Browser Friend ${i+1}`);await click(page,'Join room');await page.getByRole('button',{name:'Ready to watch',exact:true}).waitFor();
+          await page.goto(command.invite);await page.getByLabel('Your nickname').fill(`Browser Friend ${i+1}`);await click(page,'Join room');await page.getByText('Waiting for the host to start.',{exact:true}).waitFor();
         }
-        for(const page of pages){await click(page,'Ready to watch');await page.getByText('You’re ready. Waiting for the host.',{exact:true}).waitFor();}
+        for(const page of pages){await page.getByText('Waiting for the host to start.',{exact:true}).waitFor();await snapshotWait(()=>snapshots.get(page)?.shared.participants.find(p=>p.participantId===snapshots.get(page)?.own.participantId)?.ready);}
         console.log(JSON.stringify({type:'ready'}));
       }else if(command.type==='voteTwo') {
         for(let card=0;card<2;card++)for(const page of pages){await page.getByRole('button',{name:'Yep',exact:true}).waitFor();await click(page,'Yep');}

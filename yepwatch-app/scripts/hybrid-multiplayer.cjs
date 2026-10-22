@@ -3,16 +3,36 @@ const { chromium, expect } = require('@playwright/test');
 const fs = require('node:fs');
 const path = require('node:path');
 const origin = process.env.YEPWATCH_HYBRID_ORIGIN ?? 'http://127.0.0.1:8133';
-const out = path.join(__dirname, '../artifacts/hybrid');
+const out = path.resolve(__dirname, process.env.YEPWATCH_PROOF_DIR ?? '../artifacts/hybrid');
+const staged = process.env.YEPWATCH_STATIC_EXPORT ? path.resolve(__dirname, '..', process.env.YEPWATCH_STATIC_EXPORT) : null;
 fs.mkdirSync(out, {recursive:true});
 (async () => {
   const browser = await chromium.launch({headless:true});
   const pages=[], snapshots=new Map(), frames=[], errors=[], checks=[];
   const commandCount = new Map();
-  const result = {app:origin,api:'http://127.0.0.1:15992',gateway:'ws://127.0.0.1:4324',catalog:'Finite real catalog sample, durable isolated Crate',checks};
+  const result = {stagedStaticExport:staged,apiAndWebsocketFixtures:false,app:origin,api:'http://127.0.0.1:15992',gateway:'ws://127.0.0.1:4324',catalog:'Finite real catalog sample, durable isolated Crate',checks};
   async function makePage(name) {
     const context = await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});
-    const page=await context.newPage(); pages.push(page); commandCount.set(page,0);
+    const page=await context.newPage();
+    if (staged) await page.route(`${origin}/**`, async route => {
+      // Keep the real loopback document response/address space. Only this fresh test context's
+      // static bundles are replaced; cross-origin API/WS use actual transport and normal Origin.
+      if (route.request().resourceType() === 'document') return route.continue();
+      const pathname=decodeURIComponent(new URL(route.request().url()).pathname);
+      let file=path.resolve(staged, '.'+pathname);
+      if (!file.startsWith(staged+path.sep)) return route.abort();
+      if (!fs.existsSync(file)) {
+        const hashed=path.basename(file).match(/^(.*?)-[a-f0-9]+(\.js(?:\.map)?)$/);
+        if (hashed && fs.existsSync(path.dirname(file))) {
+          const name=fs.readdirSync(path.dirname(file)).find(n=>n.startsWith(hashed[1]+'-') && n.endsWith(hashed[2]));
+          if (name) file=path.join(path.dirname(file),name);
+        }
+      }
+      if (!fs.existsSync(file) || !fs.statSync(file).isFile()) return route.continue();
+      const mime={'.js':'application/javascript','.css':'text/css','.ttf':'font/ttf','.png':'image/png','.json':'application/json','.map':'application/json'};
+      await route.fulfill({path:file,contentType:mime[path.extname(file)]??'application/octet-stream'});
+    });
+    pages.push(page); commandCount.set(page,0);
     page.on('pageerror',e=>errors.push(e.message));
     page.on('websocket',s=>s.on('framereceived',e=>{try{ const f=JSON.parse(String(e.payload)); if (['room.snapshot','room.updated','activity'].includes(f.type)) frames.push(f); }catch{}}));
     page.on('response',async response=>{if(!response.url().includes('/proposal/'))return;try {const data=await response.json();const snapshot=data.snapshot ?? data;if(snapshot.shared && snapshot.own)snapshots.set(page,snapshot);}catch{}});
@@ -22,7 +42,8 @@ fs.mkdirSync(out, {recursive:true});
   async function click(page,name) { await page.getByRole('button',{name,exact:true}).click(); }
   async function join(page,invite) {
     await page.goto(invite); await page.getByLabel('Your nickname').fill(page.nickname); await click(page,'Join room');
-    await page.getByRole('button',{name:'Ready to watch',exact:true}).waitFor();
+    await expect(page.getByRole('button',{name:'Ready to watch',exact:true})).toHaveCount(0);
+    await expect.poll(()=>snapshots.get(page)?.shared.participants.find(p=>p.participantId===snapshots.get(page)?.own.participantId)?.ready).toBe(true);
   }
   async function enterWall(page) { await page.getByRole('button',{name:/^Inspect (\d+ matches|proposal)$/}).click(); await page.getByRole('button',{name:'Keep voting',exact:true}).waitFor(); }
   async function select(page,title) {
@@ -40,7 +61,7 @@ fs.mkdirSync(out, {recursive:true});
     await host.getByRole('button',{name:'Close panel',exact:true}).last().click();
     const one=await makePage('Friend One'), two=await makePage('Friend Two');
     await join(one,invite); await join(two,invite);
-    await Promise.all([one,two].map(async p=>{await click(p,'Ready to watch');await p.getByText('You’re ready. Waiting for the host.',{exact:true}).waitFor();}));
+    await Promise.all([one,two].map(async p=>{await expect.poll(()=>snapshots.get(p)?.shared.participants.find(m=>m.participantId===snapshots.get(p)?.own.participantId)?.ready).toBe(true);}));
     await click(host,'Start choosing');
     for(const p of [host,one,two]) await p.getByRole('button',{name:'Yep',exact:true}).waitFor();
     checks.push('Fresh visible create/invite/join and independent three-client readiness/start');
@@ -76,7 +97,7 @@ fs.mkdirSync(out, {recursive:true});
     await host.reload();await host.getByRole('button',{name:'Undo last choice',exact:true}).waitFor();
     await expect(host.getByRole('button',{name:'Undo last choice',exact:true})).toBeEnabled();
     checks.push('Measured current-roster Yep timing, inspection-only dice/lenses, explicit proposal/withdraw/replacement, same card and reload Undo');
-    const late=await makePage('Late Friend');await join(late,invite);await click(late,'Ready to watch');
+    const late=await makePage('Late Friend');await join(late,invite);
     await late.getByRole('button',{name:'Yep',exact:true}).waitFor();
     await enterWall(late);
     await late.getByRole('button',{name:new RegExp('^Agree to ')}).click();
@@ -106,7 +127,7 @@ fs.mkdirSync(out, {recursive:true});
     }
     if(errors.length)throw new Error(errors.join('\n'));
     result.passed=true;result.identities=pages.length;result.sharedFrames=frames.filter(f=>f.type!=='activity').length;result.activityFrames=frames.filter(f=>f.type==='activity').length;result.javascriptErrors=errors;
-  }catch(e){result.passed=false;result.failure=e.message;console.error(e.message);process.exitCode=1;}
+  }catch(e){result.passed=false;result.failure=e.message;result.javascriptErrors=errors; if(checks.length===0 && pages[0]) { result.initialPageState=(await pages[0].locator('body').innerText()).split('\n').filter(line=>!line.includes('/r/')).slice(0,30); } console.error(e.message);process.exitCode=1;}
   finally{result.completedAt=new Date().toISOString();fs.writeFileSync(path.join(out,'connected-browser.json'),JSON.stringify(result,null,2)+'\n');await browser.close();}
   console.log(checks.join('\n'));
 })();

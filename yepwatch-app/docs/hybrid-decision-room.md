@@ -43,7 +43,7 @@ ADB=/home/alp/Android/Sdk/platform-tools/adb
 
 If installation reports a signature conflict, stop and ask the maintainer; do not uninstall or erase app data. Keep USB connected and the local processes running. These loopback addresses work only through the device-specific reverse mappings.
 
-Create a guest room, confirm country and actual services, invite two friends through the browser link, then Yep/Nope/Undo. Inspect the matches, try lenses/dice, Propose, replace the proposal from another participant, Agree/Take back, and let everyone Agree to reach Done. Alternatively create a **fresh** session in the local8126 operator controller, enter its complete invite code through **Join with an invitation**, tap Ready, and explicitly Start in the controller. Artificial controller participants are a labelled development harness; product activity is never fabricated.
+Create a guest room, confirm country and actual services, invite two friends through the browser link, then Yep/Nope/Undo. Inspect the matches, try lenses/dice, Propose, replace the proposal from another participant, Agree/Take back, and let everyone Agree to reach Done. Alternatively create a **fresh** session in the local8126 operator controller, enter its complete invite code through **Join with an invitation**, select a viewing screen if more than one is offered, and explicitly Start in the controller after connection. A single confirmed couch screen is inherited automatically; there is no separate Ready confirmation. Artificial controller participants are a labelled development harness; product activity is never fabricated.
 
 ## Evidence and limits
 

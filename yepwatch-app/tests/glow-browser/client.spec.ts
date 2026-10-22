@@ -75,7 +75,7 @@ async function fixture(page: Page, setupGuest = false) {
         }
         if (c.type === 'setup') { room.shared.screens = c.screens; room.shared.constraints = c.constraints; room.shared.contextVersion++; }
         if (c.type === 'assign_screen') {
-          room.shared.contextVersion++;
+          room.shared.rosterVersion++;
           room.shared.participants[0].screenId = c.screenId;
         }
         if (c.type === 'ready') {
@@ -109,9 +109,8 @@ async function fixture(page: Page, setupGuest = false) {
     return route.fulfill({ json: room });
   });
   await page.goto('/room/test-room');
-  await page
-    .getByRole('button', { name: setupGuest ? 'Ready to watch' : 'Yep', exact: true })
-    .waitFor();
+  if (setupGuest) await page.getByText('Waiting for the host to start.',{exact:true}).waitFor();
+  else await page.getByRole('button',{name:'Yep',exact:true}).waitFor();
   return {
     room,
     commands,
@@ -219,18 +218,14 @@ test('authoritative expiry is terminal and a delayed room response cannot resurr
   await expect(page.getByRole('button', { name: 'Refresh room', exact: true })).toHaveCount(0);
 });
 
-test('one explicit guest readiness uses the confirmed screen assignment fence', async ({
-  page,
-}) => {
-  const f = await fixture(page, true);
-  await page.getByRole('button', { name: 'Ready to watch', exact: true }).click();
-  await expect(
-    page.getByText('You’re ready. Waiting for the host.', { exact: true })
-  ).toBeVisible();
-  expect(f.commands.map((e) => e.command.type)).toEqual(['assign_screen', 'ready']);
-  expect(f.commands[1].command).toMatchObject({ expectedContextVersion: 2 });
+test('guest inherits the confirmed couch screen and becomes protocol ready without another confirmation', async ({page}) => {
+  const f=await fixture(page,true);
+  await expect(page.getByRole('button',{name:'Ready to watch',exact:true})).toHaveCount(0);
+  expect(f.commands.map(c=>c.command.type)).toEqual(['assign_screen','ready']);
+  expect(f.commands.at(-1)?.command).toEqual({type:'ready',expectedContextVersion:1,ready:true});
+  expect(f.room.shared.participants[0].ready).toBe(true);
+  expect(f.room.own.agreement.agreed).toBe(false);
 });
-
 test('unavailable account start stays an honest guest state inside the room drawer', async ({
   page,
 }) => {

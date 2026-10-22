@@ -7,8 +7,6 @@ import type {
   RoomSnapshot,
   ScreenContext,
 } from '@goodwatch/yepwatch-contracts/proposal';
-import { queryClient } from '../../core/providers';
-import { continuousKey } from '../../core/continuous/useRoom';
 import { continuousApi } from '../../core/continuous/api';
 import { countryHint } from '../../core/lobby';
 import { Button, Field, Notice, Row, Words } from '../../components/ui';
@@ -19,21 +17,17 @@ export function Lobby({
   disabled,
   send,
   invite,
-  refresh,
 }: {
   snapshot: RoomSnapshot;
   disabled: boolean;
   send: (c: RoomCommand) => Promise<boolean>;
   invite: () => void;
-  refresh: () => Promise<RoomSnapshot | undefined>;
 }) {
   const { shared, own } = snapshot;
   const { width, height } = useWindowDimensions();
   const compact = height < 600;
   const landscape = compact && width > height;
   const me = shared.participants.find((p) => p.participantId === own.participantId);
-  const [confirming, setConfirming] = useState(false);
-  const [readinessError, setReadinessError] = useState('');
   const [screenPicker, setScreenPicker] = useState(false);
   const [editing, setEditing] = useState(false);
   const [advanced, setAdvanced] = useState(false);
@@ -87,7 +81,7 @@ export function Lobby({
         constraints: { ...constraints, maxMinutes: minutes ? Number(minutes) : null },
         screenId: screens.some((s) => s.id === me?.screenId)
           ? me!.screenId
-          : screens[0]?.id ?? null,
+          : (screens[0]?.id ?? null),
       })
     )
       setEditing(false);
@@ -95,7 +89,7 @@ export function Lobby({
   const popular = [8, 9, 337, 350];
   const quick = metadata.data?.services.some((s) => popular.includes(s.id))
     ? popular
-    : metadata.data?.services.slice(0, 4).map((s) => s.id) ?? [];
+    : (metadata.data?.services.slice(0, 4).map((s) => s.id) ?? []);
   const valid = Boolean(
     metadata.data &&
       screens.length &&
@@ -116,52 +110,12 @@ export function Lobby({
   const ready =
     setup && shared.participants.every((p) => p.participantId === own.participantId || p.ready);
   async function joinScreen(id: string) {
-    await send({
+    if (me?.screenId === id) return true;
+    return send({
       type: 'assign_screen',
       expectedContextVersion: shared.contextVersion,
       screenId: id,
     });
-  }
-  async function becomeReady() {
-    if (confirming) return;
-    setConfirming(true);
-    setReadinessError('');
-    try {
-      // Another person may have just assigned a screen before their WS revision reaches this device.
-      // Refresh before this explicit confirmation; never silently confirm changed services.
-      const fresh = await refresh();
-      if (!fresh) return;
-      if (JSON.stringify(fresh.shared.screens) !== JSON.stringify(shared.screens)) {
-        setReadinessError('Screen details changed. Review them and tap Ready again.');
-        return;
-      }
-      const participant = fresh.shared.participants.find(
-        (p) => p.participantId === own.participantId
-      );
-      const screenId = participant?.screenId ?? fresh.shared.screens[0]?.id;
-      if (!screenId) return;
-      if (
-        !participant?.screenId &&
-        !(await send({
-          type: 'assign_screen',
-          expectedContextVersion: fresh.shared.contextVersion,
-          screenId,
-        }))
-      )
-        return;
-      const latest = queryClient.getQueryData<RoomSnapshot>(continuousKey(shared.roomId)) ?? fresh;
-      await send({
-        type: 'ready',
-        expectedContextVersion: latest.shared.contextVersion,
-        ready: true,
-      });
-    } catch {
-      setReadinessError(
-        'Couldn’t refresh your screen confirmation. Try Ready again when connected.'
-      );
-    } finally {
-      setConfirming(false);
-    }
   }
 
   return (
@@ -194,11 +148,6 @@ export function Lobby({
           )}
         </View>
         <View style={{ flex: landscape ? 1 : undefined, gap: compact ? 8 : 20 }}>
-          {readinessError && (
-            <GText size={14} lines={2} color="#fca5a5">
-              {readinessError}
-            </GText>
-          )}
           {setup && (
             <View
               style={{
@@ -209,7 +158,11 @@ export function Lobby({
               }}
             >
               {shared.screens
-                .filter((s) => s.id === (me?.screenId ?? shared.screens[0]?.id))
+                .filter(
+                  (s) =>
+                    s.id ===
+                    (me?.screenId ?? (shared.screens.length === 1 ? shared.screens[0]?.id : null))
+                )
                 .map((s) => (
                   <GText key={s.id} size={15} lines={2}>
                     {s.label} · {s.country} · {s.serviceIds.length} selected services
@@ -243,7 +196,7 @@ export function Lobby({
               </Pill>
               {setup && !ready && (
                 <GText color={glow.muted} size={14}>
-                  Waiting for friends to confirm their screen.
+                  Connecting friends to their viewing screens.
                 </GText>
               )}
               {setup && (
@@ -262,27 +215,19 @@ export function Lobby({
               <GText color={glow.muted}>
                 {setup
                   ? me?.ready
-                    ? 'You’re ready. Waiting for the host.'
-                    : 'Confirm the screen you’ll watch on.'
+                    ? 'Waiting for the host to start.'
+                    : me?.screenId || shared.screens.length === 1
+                      ? 'Connecting to your viewing screen…'
+                      : 'Choose the screen you’ll watch on.'
                   : 'The host is choosing the country and services.'}
               </GText>
               {shared.screens.length > 1 && (
                 <Pill
-                  label="Choose another screen"
+                  label={me?.screenId ? 'Choose another screen' : 'Choose your viewing screen'}
                   onPress={() => setScreenPicker(true)}
                   disabled={disabled}
                 >
-                  Watching elsewhere?
-                </Pill>
-              )}
-              {setup && !me?.ready && (
-                <Pill
-                  label="Ready to watch"
-                  gold
-                  onPress={() => void becomeReady()}
-                  disabled={disabled || confirming}
-                >
-                  Ready to watch
+                  {me?.screenId ? 'Watching elsewhere?' : 'Choose your screen'}
                 </Pill>
               )}
             </>
@@ -301,7 +246,9 @@ export function Lobby({
               gold={me?.screenId === screen.id}
               disabled={disabled}
               onPress={() => {
-                void joinScreen(screen.id).then(() => setScreenPicker(false));
+                void joinScreen(screen.id).then((ok) => {
+                  if (ok) setScreenPicker(false);
+                });
               }}
             >
               {screen.label} · {screen.country}
@@ -486,8 +433,8 @@ export function Lobby({
                     {kind === 'movie'
                       ? 'Movies'
                       : kind === 'show_start'
-                      ? 'New shows'
-                      : 'Continue my shows'}
+                        ? 'New shows'
+                        : 'Continue my shows'}
                   </Button>
                 ))}
               </Row>

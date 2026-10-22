@@ -24,8 +24,10 @@ import { DecisionRoom } from './DecisionRoom';
 import { titleYear } from './decision-model';
 import { useActiveTime } from './useActiveTime';
 import { Lobby } from './Lobby';
+import { useLobbyEntry } from './useLobbyEntry';
 export function GlowRoom({ id, signin: initialSignin = false }: { id: string; signin?: boolean }) {
   const state = useContinuousRoom(id);
+  const entry = useLobbyEntry(state);
   const invitation = useQuery<StoredInvite | null>({
     queryKey: ['continuous-invite', id],
     queryFn: () => loadInvite(id),
@@ -72,6 +74,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
       !snapshot.shared.participants.find((p) => p.participantId === snapshot.own.participantId)
         ?.screenId ||
       state.busy ||
+      entry.required ||
       state.pending ||
       state.privateError ||
       state.terminal
@@ -89,7 +92,15 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
         expectedStreamVersion: snapshot.shared.stream.version,
       });
     }
-  }, [snapshot, state.busy, state.pending, state.privateError, state.terminal, send]);
+  }, [
+    snapshot,
+    state.busy,
+    state.pending,
+    state.privateError,
+    state.terminal,
+    entry.required,
+    send,
+  ]);
   const observedCard = snapshot ? ownCard(snapshot, optimistic) : null;
   const observedVote = snapshot?.own.votes.find((v) => v.candidateId === observedCard?.id);
   const exposureKey =
@@ -102,6 +113,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
     Boolean(observedCard) &&
       view === 'voting' &&
       !drawer &&
+      !entry.working &&
+      !entry.required &&
       !state.busy &&
       !state.pending &&
       !state.privateError &&
@@ -173,7 +186,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
       : ownCard(snapshot, optimistic);
   const title = card ? titlePresentation(card) : null;
   const dimensions = presentationSize(stage.width, stage.height, wide);
-  const disabled = state.busy || Boolean(state.pending) || state.privateError;
+  const disabled =
+    state.busy || Boolean(state.pending) || state.privateError || entry.working || entry.required;
   const people = shared.participants.map((p) => ({
     id: p.participantId,
     nickname: p.nickname,
@@ -418,6 +432,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
       )}
       {(state.error ||
         state.privateError ||
+        entry.error ||
         state.pending ||
         state.connection !== 'live' ||
         notice) && (
@@ -433,6 +448,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
         >
           <GText size={12} lines={2} style={{ flex: 1 }}>
             {notice ||
+              entry.error ||
               (state.privateError
                 ? 'Private state needs a refresh before choosing.'
                 : state.pending
@@ -443,10 +459,17 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                       : 'Connecting to the room…'))}
           </GText>
           <Press
-            label={state.pending ? 'Retry pending action' : 'Refresh room'}
+            label={
+              state.pending
+                ? 'Retry pending action'
+                : entry.error
+                  ? 'Retry connection'
+                  : 'Refresh room'
+            }
             onPress={() => {
               setNotice('');
               if (state.pending) void send();
+              else if (entry.error) void entry.retry();
               else {
                 void state.refetch().catch(() => undefined);
                 state.reconnect();
@@ -455,7 +478,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
             disabled={state.busy}
           >
             <GText size={12} bold>
-              {state.pending ? 'Retry' : 'Refresh'}
+              {state.pending ? 'Retry' : entry.error ? 'Retry connection' : 'Refresh'}
             </GText>
           </Press>
         </View>
@@ -467,7 +490,6 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           snapshot={snapshot}
           disabled={disabled}
           send={send}
-          refresh={state.refetch}
           invite={() => setDrawer('room')}
         />
       ) : decided && title ? (
