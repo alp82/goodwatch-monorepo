@@ -1,7 +1,9 @@
 """Automatic ramp through the daily job's public entrypoint."""
-from contextlib import contextmanager
+from contextlib import contextmanager, redirect_stdout
 from copy import deepcopy
 from datetime import datetime, timezone
+import io
+import json
 import os
 from pathlib import Path
 import types
@@ -18,7 +20,7 @@ class RampStorage(Storage):
         return {key: deepcopy(value) for key, value in self.snapshots.items()}
 
     @contextmanager
-    def country_checkpoints(self):
+    def checkpoint_batch(self):
         before = deepcopy(self.snapshots)
         try:
             yield
@@ -75,7 +77,7 @@ class DailyRampTests(unittest.TestCase):
              patch.object(job, 'datetime', FixedDateTime):
             return job.main(**options)
 
-    def test_rereads_checkpoints_first_then_admits_only_whole_countries_in_order(self):
+    def test_rereads_checkpoints_first_then_admits_countries_in_order(self):
         self.checkpoint('US', 'movie')
         self.checkpoint('US', 'show')
         report = self.run_job(baseline_max_memberships=3)
@@ -116,6 +118,65 @@ class DailyRampTests(unittest.TestCase):
         self.assertEqual({row['appeared_source'] for row in self.store.crate.history.values()}, {'backfill'})
         self.assertEqual({row['appeared_precision'] for row in self.store.crate.history.values()}, {'unknown'})
 
+    def test_shortfall_baseline_cannot_make_the_next_days_arrival_exact(self):
+        self.ids = {'AR': []}
+        phase, original = [1], self.respond
+        def respond(url, **kwargs):
+            params = kwargs['params']
+            if '/discover/movie' not in url:
+                return original(url, **kwargs)
+            ids = list(range(1, 1000 if phase[0] == 1 else 1001))
+            if params['sort_by'] == 'primary_release_date.desc':
+                ids.reverse()
+            page = params['page']
+            return Mock(status_code=200, json=lambda: dict(page=page, total_pages=50, total_results=1000,
+                results=[{'id': i} for i in ids[(page - 1) * 20:page * 20]]))
+        self.session.get.side_effect = respond
+        first = self.run_job(baseline_max_requests=5000, baseline_max_memberships=2000)
+        checkpoint = self.store.load('AR:movie:8')
+        self.assertEqual(first['lists'][0]['count_shortfall'], 1)
+        phase[0] = 2
+        class FollowingDay(FixedDateTime):
+            @classmethod
+            def now(cls, tz=None):
+                return datetime(2026, 10, 18, 14, tzinfo=timezone.utc)
+        with patch(__name__ + '.FixedDateTime', FollowingDay):
+            second = self.run_job(baseline_max_requests=5000, baseline_max_memberships=2000)
+        arrival = next(row for row in self.store.crate.history.values() if row['media_tmdb_id'] == 1000)
+        self.assertEqual((second['lists_completed'], second['lists_failed']), (2, 0))
+        self.assertEqual(arrival['appeared_precision'], 'unknown')
+        self.assertIs(checkpoint['complete'], False)
+        self.assertIs(self.store.load('AR:movie:8')['complete'], True)
+
+    def test_a_torn_gb_movie_list_preserves_its_stays_and_commits_the_other_29_lists(self):
+        from test_daily_provider_lists import TMDB
+        seed = TMDB(ids=[99])
+        seed.results = {'GB': {'flatrate': [{'provider_id': 9}]}}
+        job.run_daily_lists(seed, self.store, countries=['GB'], service_ids=[9],
+                            media_types=['movie'], now=datetime(2026, 10, 15, 14))
+        del self.store.snapshots['GB:movie:9']
+        prior = deepcopy(self.store.crate.history)
+        self.ids = {'GB': []}
+        original = self.respond
+        def torn(url, **kwargs):
+            params = kwargs['params']
+            if '/discover/movie' in url and params['with_watch_providers'] == 9:
+                page = params['page']
+                ids = [41, 42] if page == 1 else [42, 43]
+                return Mock(status_code=200, json=lambda: dict(page=page, total_pages=2,
+                    total_results=3 if page == 1 else 4, results=[{'id': i} for i in ids]))
+            return original(url, **kwargs)
+        self.session.get.side_effect = torn
+        report = self.run_job(service_ids=list(job.SERVICE_NAMES), baseline_max_requests=1000,
+                              baseline_max_memberships=1000)
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (29, 1))
+        self.assertEqual(report['countries_started'], ['GB'])
+        self.assertEqual(report['countries_partial'], {'GB': ['GB:movie:9']})
+        self.assertEqual(len(self.store.snapshots), 29)
+        self.assertNotIn('GB:movie:9', self.store.snapshots)
+        self.assertEqual(self.store.crate.history, prior)
+        self.assertNotIn('GB:movie:9', self.store.intents)
+
     def test_report_warns_when_the_next_country_cannot_fit_after_progress(self):
         self.ids = {'AR': [42], 'DE': [42]}
         report = self.run_job(baseline_max_memberships=3)
@@ -149,13 +210,79 @@ class DailyRampTests(unittest.TestCase):
                     for url, params in self.calls if '/discover/' in url]
         self.assertEqual(discover, [('US', True)])
 
-    def test_request_budget_during_country_confirmation_starts_none_of_its_lists(self):
+    def test_budget_during_later_confirmation_keeps_the_already_confirmed_list(self):
         self.ids = {'AR': [42]}
         report = self.run_job(baseline_max_requests=3)
-        self.assertEqual(report['countries_started'], [])
+        self.assertEqual(report['countries_started'], ['AR'])
         self.assertEqual(report['countries_remaining'], ['AR'])
         self.assertEqual(report['requests_new_baselines'], 3)
-        self.assertEqual(report['baseline_deferred_reason'], 'country_exceeds_budget')
+        self.assertEqual(report['baseline_deferred_reason'], 'requests')
+        self.assertEqual(set(self.store.snapshots), {'AR:movie:8'})
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (1, 0))
+        self.assertEqual({row['media_type'] for row in self.store.crate.history.values()}, {'movie'})
+
+    def test_budget_after_a_completed_empty_list_keeps_its_checkpoint(self):
+        self.ids = {'AR': []}
+        report = self.run_job(baseline_max_requests=1)
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (1, 0))
+        self.assertEqual(set(self.store.snapshots), {'AR:movie:8'})
+        self.assertEqual(report['countries_partial'], {'AR': ['AR:show:8']})
+        self.assertEqual(report['requests_new_baselines'], 1)
+        self.assertEqual(report['baseline_deferred_reason'], 'requests')
+
+    def test_publication_stop_reports_every_list_already_committed_in_its_country(self):
+        for error_type in (job.RequestBudgetExceeded, job.TMDBAccessDenied, job.LeaseLost):
+            for after_commit in (False, True):
+                with self.subTest(error=error_type.__name__, after_commit=after_commit):
+                    self.setUp()
+                    self.ids = {'AR': [42]}
+                    original_lease = self.store.lease
+                    @contextmanager
+                    def lease(identity):
+                        stop = identity == 'AR:show:8'
+                        if stop and not after_commit:
+                            raise error_type('Injected publication stop')
+                        with original_lease(identity) as owned:
+                            yield owned
+                        if stop:
+                            raise error_type('Injected publication stop after commit')
+                    output = io.StringIO()
+                    with patch.object(self.store, 'lease', lease), redirect_stdout(output):
+                        if error_type is job.RequestBudgetExceeded:
+                            report = self.run_job()
+                        else:
+                            with self.assertRaises(error_type) as stopped:
+                                self.run_job()
+                            events = [json.loads(line) for line in output.getvalue().splitlines()
+                                      if line.startswith('{')]
+                            summaries = [event['report'] for event in events
+                                         if event.get('event') == 'daily_list_run_stopped']
+                            self.assertEqual(len(summaries), 1)
+                            report = summaries[0]
+                            self.assertEqual(stopped.exception.report, report)
+                    expected = {'AR:movie:8', 'AR:show:8'} if after_commit else {'AR:movie:8'}
+                    self.assertEqual(set(self.store.snapshots), expected)
+                    self.assertEqual({row['key'] for row in report['lists']}, expected)
+                    self.assertEqual(report['lists_completed'], len(expected))
+                    self.assertEqual(report['countries_started'], ['AR'])
+                    self.assertEqual(report['countries_partial'], {} if after_commit else {'AR': ['AR:show:8']})
+                    self.assertEqual(report['countries_remaining'], [] if after_commit else ['AR'])
+                    self.assertEqual(report['baseline_memberships'], len(expected))
+                    self.assertEqual(report['requests_new_baselines'], 4)
+
+    def test_twenty_failing_baselines_stop_http_work_across_partial_countries(self):
+        self.ids = {country: [42] for country in ('AR', 'BS', 'CD', 'CO', 'CV', 'GH',
+                                                 'ID', 'IQ', 'LC', 'MA', 'MC')}
+        def unavailable(url, **kwargs):
+            self.calls.append((url, kwargs['params']))
+            return Mock(status_code=404)
+        self.session.get.side_effect = unavailable
+        output = io.StringIO()
+        with redirect_stdout(output), self.assertRaisesRegex(job.TMDBReadError, '20 consecutive'):
+            self.run_job(baseline_max_requests=100, baseline_max_memberships=100)
+        failures = [json.loads(line) for line in output.getvalue().splitlines() if line.startswith('{')]
+        self.assertEqual(len(failures), 20)
+        self.assertEqual(len(self.calls), 20)
         self.assertEqual(self.store.snapshots, {})
         self.assertEqual(self.store.crate.history, {})
 
@@ -171,7 +298,7 @@ class DailyRampTests(unittest.TestCase):
         self.assertEqual(report['baseline_deferred_reason'], 'rereads_exceed_hard_budget')
         self.assertFalse(any(key.startswith('AR:') or key.startswith('DE:') for key in self.store.snapshots))
 
-    def test_failed_country_publishes_no_checkpoints_and_does_not_stall_the_next_country(self):
+    def test_failed_list_keeps_its_country_siblings_and_the_next_country_independent(self):
         self.ids = {'AR': [42], 'DE': [42]}
         respond = self.respond
         def fail_show(url, **kwargs):
@@ -179,17 +306,92 @@ class DailyRampTests(unittest.TestCase):
                 return Mock(status_code=404)
             return respond(url, **kwargs)
         self.session.get.side_effect = fail_show
-        report = self.run_job()
-        self.assertEqual(report['countries_started'], ['DE'])
+        report = self.run_job(baseline_max_memberships=4)
+        self.assertEqual(report['countries_started'], ['AR', 'DE'])
         self.assertEqual(report['countries_remaining'], ['AR'])
-        self.assertEqual(set(self.store.snapshots), {'DE:movie:8', 'DE:show:8'})
-        self.assertEqual(report['lists_failed'], 2)
+        self.assertEqual(set(self.store.snapshots), {'AR:movie:8', 'DE:movie:8', 'DE:show:8'})
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (3, 1))
         failures = [item for item in report['lists'] if 'error' in item]
-        self.assertEqual({item['key'] for item in failures}, {'AR:movie:8', 'AR:show:8'})
-        failure = next(item for item in failures if item['key'] == 'AR:show:8')
+        self.assertEqual({item['key'] for item in failures}, {'AR:show:8'})
+        failure = failures[0]
         self.assertEqual(failure['key'], 'AR:show:8')
         self.assertEqual(failure['endpoint'], '/discover/tv')
         self.assertEqual(failure['media_type'], 'show')
+
+    def test_late_title_failure_cannot_publish_or_close_stays_for_its_list(self):
+        from test_daily_provider_lists import TMDB
+        seed = TMDB(ids=[99])
+        seed.results = {'AR': {'flatrate': [{'provider_id': 8}]}}
+        job.run_daily_lists(seed, self.store, countries=['AR'], service_ids=[8],
+                            media_types=['show'], now=datetime(2026, 10, 15, 14))
+        del self.store.snapshots['AR:show:8']  # History predates the list's first read.
+        prior = deepcopy(self.store.crate.history)
+        self.ids = {'AR': [42]}
+        original = self.respond
+        def fail_last_check(url, **kwargs):
+            if '/tv/99/watch/providers' in url:
+                return Mock(status_code=400)
+            return original(url, **kwargs)
+        self.session.get.side_effect = fail_last_check
+        report = self.run_job(baseline_max_memberships=10)
+        self.assertEqual((report['lists_completed'], report['lists_failed']), (1, 1))
+        self.assertEqual(set(self.store.snapshots), {'AR:movie:8'})
+        self.assertEqual(report['countries_started'], ['AR'])
+        self.assertEqual(report['countries_remaining'], ['AR'])
+        self.assertEqual(report['baseline_memberships'], 1)
+        failures = [item for item in report['lists'] if 'error' in item]
+        self.assertEqual((failures[0]['key'], failures[0]['tmdb_id']), ('AR:show:8', 99))
+        for key, stay in prior.items():
+            self.assertEqual(self.store.crate.history[key], stay)
+        shows = [row for row in self.store.crate.history.values() if row['media_type'] == 'show']
+        self.assertEqual([row['media_tmdb_id'] for row in shows], [99])
+        self.assertIsNone(shows[0]['dropped_on'])
+        movies = [row for row in self.store.crate.history.values() if row['media_type'] == 'movie']
+        self.assertEqual({row['appeared_precision'] for row in movies}, {'unknown'})
+        self.assertEqual({row['appeared_source'] for row in movies}, {'backfill'})
+
+    def test_failed_first_list_retries_unknown_while_its_checkpointed_sibling_gets_exact_days(self):
+        from test_availability_history import day
+        self.ids = {'GB': [42]}
+        phase = [1]
+        def respond(url, **kwargs):
+            params = kwargs['params']
+            self.calls.append((url, params))
+            if '/discover/' in url:
+                if phase[0] == 1 and '/movie' in url and params['with_watch_providers'] == 9:
+                    return Mock(status_code=404)
+                ids = [43] if phase[0] == 2 and '/movie' in url else [42]
+                return Mock(status_code=200, json=lambda: dict(page=1, total_pages=1,
+                    total_results=1, results=[{'id': i} for i in ids]))
+            tmdb_id = int(url.split('/')[-3])
+            removed = phase[0] == 2 and '/movie/42/' in url
+            body = dict(id=tmdb_id, results={} if removed else
+                        {'GB': {'flatrate': [{'provider_id': 8}, {'provider_id': 9}]}})
+            return Mock(status_code=200, json=lambda: body)
+        self.session.get.side_effect = respond
+        first = self.run_job(service_ids=[8, 9], baseline_max_memberships=10)
+        self.assertEqual((first['lists_completed'], first['lists_failed']), (3, 1))
+        self.assertEqual(first['countries_partial'], {'GB': ['GB:movie:9']})
+        self.assertNotIn('GB:movie:9', self.store.snapshots)
+        phase[0] = 2
+        class FollowingDay(FixedDateTime):
+            @classmethod
+            def now(cls, tz=None):
+                return datetime(2026, 10, 18, 14, tzinfo=timezone.utc)
+        with patch(__name__ + '.FixedDateTime', FollowingDay):
+            second = self.run_job(service_ids=[8, 9], baseline_max_memberships=10)
+        self.assertEqual((second['lists_completed'], second['lists_failed']), (4, 0))
+        self.assertEqual(second['countries_partial'], {})
+        self.assertEqual(second['countries_remaining'], [])
+        movies = {(row['media_tmdb_id'], row['streaming_service_id']): row
+                  for row in self.store.crate.history.values() if row['media_type'] == 'movie'}
+        self.assertEqual((movies[42, 8]['dropped_precision'], movies[42, 8]['dropped_on']),
+                         ('exact', day('2026-10-18')))
+        self.assertEqual((movies[43, 8]['appeared_precision'], movies[43, 8]['appeared_on']),
+                         ('exact', day('2026-10-18')))
+        self.assertEqual((movies[43, 9]['appeared_precision'], movies[43, 9]['appeared_source']),
+                         ('unknown', 'backfill'))
+        self.assertNotIn((42, 9), movies)
 
     def test_zero_membership_budget_rereads_but_does_not_probe_new_countries(self):
         self.checkpoint('US', 'movie')
@@ -224,7 +426,7 @@ class DailyRampTests(unittest.TestCase):
         self.assertEqual(third['countries_started'], [])
         self.assertTrue(third['ramp_complete'])
 
-    def test_retained_country_checkpoints_are_reread_even_if_tmdb_drops_the_country(self):
+    def test_retained_checkpoints_are_reread_even_if_tmdb_drops_the_country(self):
         self.checkpoint('US', 'movie')
         self.checkpoint('US', 'show')
         report = self.run_job(countries=['AR'], baseline_max_requests=0)
@@ -232,7 +434,7 @@ class DailyRampTests(unittest.TestCase):
         self.assertEqual(report['countries_remaining'], ['AR'])
         self.assertEqual(report['countries_started'], [])
 
-    def test_windmill_entry_module_reports_a_normal_country_budget_stop(self):
+    def test_windmill_entry_keeps_completed_lists_at_a_normal_budget_stop(self):
         # Windmill executes the entry script separately from its f.* import.
         entry = types.ModuleType('windmill_entry')
         source = Path(job.__file__).read_text()
@@ -246,9 +448,9 @@ class DailyRampTests(unittest.TestCase):
                                 baseline_max_requests=3, baseline_max_memberships=2,
                                 requests_per_second=20)
         self.assertEqual(report['lists_failed'], 0)
-        self.assertEqual(report['baseline_deferred_reason'], 'country_exceeds_budget')
-        self.assertEqual(report['countries_started'], [])
-        self.assertEqual(self.store.snapshots, {})
+        self.assertEqual(report['baseline_deferred_reason'], 'requests')
+        self.assertEqual(report['countries_started'], ['AR'])
+        self.assertEqual(set(self.store.snapshots), {'AR:movie:8'})
 
     def test_invalid_budgets_are_rejected_before_network_or_storage_access(self):
         for options in ({'max_requests': 350001}, {'max_requests': 0},
@@ -290,7 +492,7 @@ class DailyRampMongoTests(unittest.TestCase):
         self.addCleanup(self.mongo.close)
         self.addCleanup(lambda: self.mongo.drop_database(self.db.name))
 
-    def test_country_checkpoint_transaction_aborts_all_lists_on_a_late_storage_failure(self):
+    def test_late_checkpoint_failure_retains_only_its_list_and_retries_it_independently(self):
         from pymongo.synchronous.collection import Collection
         from f.tmdb_api.daily_list_storage import ListStorage
         from test_daily_provider_lists import HistoryCrate
@@ -304,13 +506,14 @@ class DailyRampMongoTests(unittest.TestCase):
             return replace(collection, selector, *args, **kwargs)
         with patch.object(Collection, 'replace_one', new=fail_second):
             failed = self.run_job()
-        self.assertEqual(failed['lists_failed'], 2)
-        self.assertEqual(failed['countries_started'], [])
-        self.assertEqual(self.db.tmdb_daily_provider_lists.count_documents({}), 0)
-        self.assertEqual(self.db.tmdb_daily_provider_list_pending.count_documents({}), 2)
-        # A retry reuses durable intents and commits the whole country.
+        self.assertEqual((failed['lists_completed'], failed['lists_failed']), (1, 1))
+        self.assertEqual(failed['countries_started'], ['AR'])
+        self.assertEqual(self.db.tmdb_daily_provider_lists.count_documents({}), 1)
+        self.assertEqual(self.db.tmdb_daily_provider_list_pending.count_documents({}), 1)
+        # A retry keeps the completed sibling and reuses only the failed list's intent.
         recovered = self.run_job()
-        self.assertEqual(recovered['lists_failed'], 0)
+        self.assertEqual((recovered['lists_completed'], recovered['lists_failed']), (1, 0))
+        self.assertEqual(recovered['lists_skipped'], 1)
         self.assertEqual(recovered['countries_started'], ['AR'])
         self.assertEqual(self.db.tmdb_daily_provider_lists.count_documents({}), 2)
         self.assertEqual(self.db.tmdb_daily_provider_list_pending.count_documents({}), 0)

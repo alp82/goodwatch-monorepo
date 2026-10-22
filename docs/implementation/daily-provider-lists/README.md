@@ -7,6 +7,8 @@ Research: `docs/research/offer-arrival-everywhere.md` and
 The existing [history contract](../availability-history/README.md) remains authoritative.
 The [October 21 production diagnosis](october-21-completeness.md) records the
 rollout, corrected job dates, exact-day counts, and the revised completeness rule.
+The [GB follow-up](october-21-gb-partial-admission.md) records repeated page
+captures, the bounded-range cache retry, and independent list admission.
 
 ## Scope and entrypoints
 
@@ -56,8 +58,12 @@ still read. Empty lists are read and baselined too. Explicit `countries` and
 For a list, a checkpoint holds its UTC read time, sorted discover IDs, verified
 eligible offer types for members, and IDs where discover and the title check
 disagreed. It also records version 1, completeness, and cache-bypass provenance.
-Only a successful complete read advances it. An already completed UTC day's
-list is skipped on rerun. Gaps are retained: they cannot establish exact days.
+Only a successful accepted read advances it. Its `complete` flag is true only
+when `count_shortfall == 0`; an accepted two-sort shortfall saves `complete: false`.
+Such a checkpoint retains its IDs and read day but cannot prove a missing title's
+absence on the next day. A later zero-shortfall read restores completeness for
+following comparisons. An already completed UTC day's list is skipped on rerun.
+Gaps are retained: they cannot establish exact days.
 
 The first read verifies listed titles and opens missing stays with unknown
 precision and `appeared_source='backfill'`, without substituting a premiere. These
@@ -69,7 +75,7 @@ check keeps it open and queues another check. Failed checks leave the checkpoint
 unchanged. No first-read transition is exact. An empty first read establishes an
 absence baseline for later arrivals.
 
-After the baseline, the job compares today's discover IDs with the last complete
+After the baseline, the job compares today's discover IDs with the last accepted
 checkpoint. It also includes unresolved disagreements and interrupted publications.
 Every changed title is checked with a fresh `/movie/{id}/watch/providers` or
 `/tv/{id}/watch/providers` GET. The response must have the requested title ID and
@@ -159,10 +165,20 @@ one-title gap in 1,723 can pass, while a one-title gap in 999 cannot. This handl
 TMDB's observed counted-but-unreturned title without admitting the earlier
 mixed-page snapshots. `count_shortfall` and `count_agreements` report the admitted
 count and the vote range, reported total, and returned total of each agreement.
+The shared writer receives the saved completeness flag; no separate arrival-day
+rule is added. Existing checkpoints are not rewritten by this code change. Deploy
+it before the first accepted shortfall is checkpointed, or separately review any
+older shortfall checkpoint still marked complete before the following daily read.
 
-If neither sort passes, discard both and retry once with `vote_count.gte=0`, an
-equivalent query that avoids mixed origin-cache snapshots even when `cb` bypasses
-the CDN. Judge that retry by its own totals and the same rules. Never require its
+If neither sort passes, discard both and retry once with an equivalent query:
+add `vote_count.gte=0.0` at the root and spell each existing lower range bound as
+an exactly equal float (`50` becomes `50.0`). Adding zero at the root alone leaves
+bounded leaf queries unchanged. TMDB documents these parameters as
+[floats](https://developer.themoviedb.org/reference/discover-movie); the numeric
+predicate is preserved while its spelling changes the origin-cache key. Fractional
+bounds would change the predicate and are not used. GB's repeated cached pages
+remained torn despite unique `cb` values; the equivalent leaf retry returned a
+consistent snapshot. Judge that retry by its own totals and the same rules. Never require its
 total to equal an older failed traversal's total. If it still fails, retain the
 checkpoint and report the last observed distinct-title count. No changes are
 staged or published before the list passes.
@@ -203,6 +219,9 @@ immediately through the acquisition predicate, independently of TTL cleanup:
 | `tmdb_daily_provider_list_pending` | Candidate title IDs staged before any history writes |
 | `tmdb_daily_provider_list_leases` | Renewable, token-owned 15-minute run and list leases |
 
+All discover and per-title source checks for a list finish before its first
+history write, including rereads. A failed source check leaves that list's stays
+and checkpoint unchanged, even if it follows more than 200 successful checks.
 History writes are batched in groups of 200 under the existing
 `streaming_publication_leases`. The shared writer reads history only for that
 country/service in list mode. The normal publisher's title-wide query stays
@@ -389,8 +408,9 @@ headroom over the proposed groups' roughly 550k open memberships and day-1's
 116k-request reserve; groups are an admission order, not fixed daily quotas.
 Memberships are measured from complete live lists, not stale census estimates.
 Set either budget to zero to pause expansion while keeping daily rereads.
-A country's missing configured lists are prepared together; if they do not fit,
-none starts and the run stops adding countries. It does not skip ahead to smaller
+A country's missing configured lists are discovered together for membership
+budgeting. Failed lists are reported and excluded from that preflight. If the
+successful lists do not fit, none starts and the run stops adding countries. It does not skip ahead to smaller
 countries. Discovery for this deferred country still counts toward the new-request
 budget, but no history or checkpoint writes occur for it. The report names that
 country and the limiting budget, and the report step emits a warning. If the
@@ -398,19 +418,25 @@ first pending country cannot fit a nonzero budget, the reason is
 `country_exceeds_budget` and the report step fails, exposing a ramp that would
 otherwise stall each day. Explicit zero budgets pause expansion with a warning.
 
-All country discovery and per-title confirmation finishes **before any of that
-country's history is published**. Exhausting either the new-request budget or the
-remaining hard budget while checking a country abandons its admission. Successful
-publication commits all new country checkpoints and removes their pending markers
-in one Mongo replica-set transaction. A failed checkpoint transaction leaves none
-of those checkpoints. History remains outside that Mongo transaction: an
-infrastructure failure can leave partial unknown history publication, with durable
-pending IDs for idempotent reconciliation on retry. This retains the shared writer
-and introduces no second precision decision. A failed country is reported and the
-next country can proceed. `lists_failed` counts every missing list whose country
-checkpoint was withheld; unaffected sibling lists have `CountryBaselineAborted`
-entries naming the offending list. Authentication failures and the existing 20-consecutive
-TMDB-failure stop remain fatal.
+Each list now succeeds independently. All its source checks must finish before
+publication; a failed discovery or title check publishes no history and receives
+no checkpoint. Other completed lists in that country publish normally, and only
+the missing lists get a first read on the next day. A failed list cannot establish
+an exact day; its eventual first successful read remains unknown/backfill. Already
+checkpointed sibling lists can establish exact days through the shared writer.
+There are no synthetic sibling failures: `lists_failed` counts actual failing
+lists, with their own scopes and errors.
+
+Each successful baseline list commits its checkpoint and pending-marker removal
+in its own Mongo replica-set transaction. A later list's checkpoint failure does
+not roll back earlier checkpoints. History remains outside that Mongo transaction:
+an infrastructure failure during publication can leave partial history writes,
+with durable pending IDs for idempotent reconciliation on retry. Source validation
+failure occurs before publication and leaves stays untouched. This retains the
+shared writer and introduces no second precision decision. Budget exhaustion
+preserves lists whose source checks already finished, and defers the rest without
+exceeding either request ceiling. Authentication failures and the existing
+20-consecutive-TMDB-failure stop remain fatal.
 
 The **350,000-request hard ceiling** includes rereads, new baselines, catalog GETs,
 retries, and discarded country preflights. The eight-hour Windmill timeout stays
@@ -421,13 +447,21 @@ consume the remaining hard budget leave no room for country admission. No new
 country can consume requests reserved implicitly by performing rereads first.
 
 The report includes `countries_started`, ordered `countries_remaining`,
+`countries_partial` (partially checkpointed countries mapped to missing list keys),
 `requests_rereads`, `requests_new_baselines`, `baseline_memberships`, both baseline
 budgets, `baseline_deferred_reason`, `baseline_deferred_country`,
 `baseline_deferred_budget`, `rereads_estimated_requests`,
 `rereads_complete`, `rereads_budget_exceeded`, and `ramp_complete`. The single
 regions GET is catalog overhead outside the two phase counters. Dry runs report
-hypothetical starts without persisting them. Once no countries remain, every run
+hypothetical starts without persisting them. A partially started country appears
+in both `countries_started` and `countries_remaining`. Once no countries remain, every run
 performs the complete daily reread and has zero new-baseline requests.
+
+Country summaries, membership totals, and inventory are finalized even when a
+budget, access, or lease error interrupts publication. A checkpoint committed
+before lease release is included too. Access and lease errors remain fatal; the
+entrypoint logs `daily_list_run_stopped` with the partial report and attaches that
+report to the exception. No source request or publication continues after it.
 
 The original grouping models about 116k, 142k, 169k, 195k, 214k, and 238k total
 requests on successive days, including a 15% discover reserve and 5,000 daily
@@ -501,8 +535,8 @@ dependencies for the local lock files.
    ordinary publication, so there is no reliable list-only undo filter. Then run
    the baseline at 14:00 UTC, allowing its larger cost and duration. The apply
    creates the checkpoint/pending collections; the TTL lease index is automatic.
-   Each new country commits all its configured list checkpoints atomically on the
-   existing Mongo replica set. Preserve checkpoints; deleting them discards daily
+   Each successful baseline list commits its checkpoint and pending cleanup
+   atomically on the existing Mongo replica set. Preserve checkpoints; deleting them discards daily
    evidence. The following scheduled runs continue expansion automatically.
 5. Create the disabled schedule from [proposed-schedule.json](proposed-schedule.json),
    then enable it after checking day 1 and pending markers. Do not run the other
@@ -547,6 +581,15 @@ increase the request budget/runtime before enabling that larger scope; oversized
 indivisible bins remain explicit failures rather than truncated lists.
 
 ## Verification and files
+
+The October 22 review follow-up ran **138 focused tests: 131 passed, seven opt-in
+Windmill previews skipped**, with disposable local Crate and a Mongo replica set.
+The reader and ramp regressions first reproduced a false exact arrival after a
+one-title shortfall. Six publication-stop cases first lost committed summaries;
+they now retain counts, countries, and membership totals, including commits before
+lease release fails. The strengthened retry test rejects a deliberately widened
+upper bound that the older test accepted, and checks both spellings return the
+same ID set. The full monorepo suite and production Windmill previews were not run.
 
 Tests were written red before implementation at the agreed seams. The two
 re-review scratch cases (genuine pending removal and retained offer after an
@@ -665,8 +708,9 @@ The reviewer's `test_deleted_baseline.py` scenario is now an assertion-based
 regression: one listed 404 during DE's baseline leaves the US stay untouched, and
 DE's next successful check opens an unknown stay. Listed conflicts retain prior
 members; unlisted 404s close only the current scope. Local SQL tests exercise the
-same writer against disposable Crate, and a replica-set test checks atomic country
-checkpoints. Dependency versions are preserved while refreshing script/flow hashes.
+same writer against disposable Crate. The original replica-set country transaction
+test is superseded by the GB follow-up's independent list checkpoint test.
+Dependency versions are preserved while refreshing script/flow hashes.
 
 The short [post-review RU preview](ramp-review-preview.json) read all **30 lists**
 with **zero failures or skips** in **114.317 seconds**. It used **1,508 GETs**:

@@ -5,7 +5,7 @@
 # requests==2.34.2
 # wmill==1.815.0
 # pydantic==2.13.5
-"""Reread checkpointed lists, then prepare and publish whole new countries."""
+"""Reread checkpoints, then baseline missing lists without blocking their siblings."""
 from contextlib import contextmanager
 from dataclasses import dataclass
 from itertools import product
@@ -55,53 +55,84 @@ def list_context(country, media_type, service_id):
         raise
 
 
-def prepare_country(client, store, country, missing, clock):
+def record_baseline_failure(client, report, country, media_type, service_id, error):
+    failure = job.list_failure(country, media_type, service_id, error)
+    report['lists_failed'] += 1
+    report['lists'].append(failure)
+    print(json.dumps(failure), flush=True)
+    client.consecutive_list_failures = (getattr(client, 'consecutive_list_failures', 0) + 1
+                                        if isinstance(error, job.TMDBReadError) else 0)
+    if client.consecutive_list_failures >= 20:
+        raise job.TMDBReadError('Stopping after 20 consecutive TMDB list failures') from error
+
+
+def prepare_country(client, store, country, missing, clock, report):
     prepared = []
     for media_type, service_id in missing:
-        with list_context(country, media_type, service_id):
-            diagnostics = {}
-            at = job.utc_ms(clock())
-            ids = job.read_list(client, country, media_type, service_id, diagnostics)
-            key = f'{country}:{media_type}:{service_id}'
-            candidates = sorted(set(ids) | store.open_ids(country, media_type, service_id) | store.pending(key))
-            prepared.append(PreparedList(country, media_type, service_id, at, ids, candidates, diagnostics))
-    return prepared
+        try:
+            with list_context(country, media_type, service_id):
+                diagnostics = {}
+                at = job.utc_ms(clock())
+                ids = job.read_list(client, country, media_type, service_id, diagnostics)
+                key = f'{country}:{media_type}:{service_id}'
+                candidates = sorted(set(ids) | store.open_ids(country, media_type, service_id) | store.pending(key))
+                prepared.append(PreparedList(country, media_type, service_id, at, ids, candidates, diagnostics))
+                client.consecutive_list_failures = 0
+        except job.RequestBudgetExceeded:
+            return prepared, True
+        except (job.TMDBAccessDenied, job.LeaseLost):
+            raise
+        except Exception as error:
+            record_baseline_failure(client, report, country, media_type, service_id, error)
+    return prepared, False
 
 
-def confirm_country(title_reads, prepared, clock):
-    # All network work finishes before any history or checkpoint publication.
+def confirm_country(title_reads, prepared, clock, client, report):
+    # Finish every source check for a list before its first history write.
+    confirmed = []
     for item in prepared:
-        with list_context(item.country, item.media_type, item.service_id):
-            media = 'tv' if item.media_type == 'show' else 'movie'
-            listed = set(item.ids)
-            for offset in range(0, len(item.candidates), 200):
-                reads = title_reads.read(media, item.candidates[offset:offset + 200], item.country,
-                                         item.service_id, listed, item.at)
-                if any(job.utc_day(proof['checked_at']) != job.utc_day(item.at) for _, _, proof in reads):
-                    raise job.IncompleteList('Country read crossed UTC midnight')
-    if any(job.utc_day(job.utc_ms(clock())) != job.utc_day(item.at) for item in prepared):
-        raise job.IncompleteList('Country read crossed UTC midnight')
+        try:
+            with list_context(item.country, item.media_type, item.service_id):
+                job.confirm_list(title_reads, item.country, item.media_type, item.service_id,
+                                 set(item.ids), item.at, item.candidates, clock)
+                confirmed.append(item)
+                client.consecutive_list_failures = 0
+        except job.RequestBudgetExceeded:
+            return confirmed, True
+        except (job.TMDBAccessDenied, job.LeaseLost):
+            raise
+        except Exception as error:
+            record_baseline_failure(client, report, item.country, item.media_type, item.service_id, error)
+    return confirmed, False
 
 
-def publish_country(store, title_reads, prepared, clock):
-    summaries = []
-    with store.country_checkpoints():
-        for item in prepared:
+def publish_country(store, title_reads, prepared, clock, client, report, summaries):
+    for item in prepared:
+        try:
             with store.lease(item.key) as owned:
-                with list_context(item.country, item.media_type, item.service_id):
-                    store.stage(item.key, item.candidates)
-                    members, retry_ids = job.publish_list_changes(store, title_reads, item.country, item.media_type,
-                        item.service_id, set(item.ids), None, item.at, item.candidates, owned)
-                    if job.utc_day(job.utc_ms(clock())) != job.utc_day(item.at):
-                        raise job.IncompleteList('Country read crossed UTC midnight')
-                    store.flush()
-                    owned()
-                    if not store.dry_run:
-                        store.save(item.key, dict(checked_at=item.at, ids=item.ids,
-                            members={key: kinds for key, kinds in members.items() if kinds}, retry_ids=retry_ids,
-                            version=1, complete=True, cache_bypassed=True))
-                    summaries.append(dict(key=item.key, titles=len(item.ids), changes_checked=len(item.candidates),
-                                          baseline=True, retry_titles=len(retry_ids), **item.diagnostics))
+                with store.checkpoint_batch():
+                    with list_context(item.country, item.media_type, item.service_id):
+                        if job.utc_day(job.utc_ms(clock())) != job.utc_day(item.at):
+                            raise job.IncompleteList('List read crossed UTC midnight')
+                        store.stage(item.key, item.candidates)
+                        members, retry_ids = job.publish_list_changes(store, title_reads, item.country, item.media_type,
+                            item.service_id, set(item.ids), None, item.at, item.candidates, owned)
+                        if job.utc_day(job.utc_ms(clock())) != job.utc_day(item.at):
+                            raise job.IncompleteList('List read crossed UTC midnight')
+                        store.flush()
+                        owned()
+                        if not store.dry_run:
+                            store.save(item.key, dict(checked_at=item.at, ids=item.ids,
+                                members={key: kinds for key, kinds in members.items() if kinds}, retry_ids=retry_ids,
+                                version=1, complete=item.diagnostics['count_shortfall'] == 0, cache_bypassed=True))
+                # The checkpoint committed, even if releasing its lease fails.
+                summaries.append(dict(key=item.key, titles=len(item.ids), changes_checked=len(item.candidates),
+                                      baseline=True, retry_titles=len(retry_ids), **item.diagnostics))
+            client.consecutive_list_failures = 0
+        except (job.RequestBudgetExceeded, job.TMDBAccessDenied, job.LeaseLost):
+            raise
+        except Exception as error:
+            record_baseline_failure(client, report, item.country, item.media_type, item.service_id, error)
     return summaries
 
 
@@ -146,54 +177,51 @@ def run_ramp(client, store, *, countries, service_ids, baseline_max_requests=120
                     report.update(baseline_deferred_reason=budget, baseline_deferred_country=country,
                                   baseline_deferred_budget=budget)
                     break
+                summaries = []
                 try:
-                    prepared = prepare_country(client, store, country, missing, clock)
+                    prepared, discovery_budget_stop = prepare_country(client, store, country, missing, clock, report)
                     memberships = sum(len(item.candidates) for item in prepared)
                     if used + memberships > baseline_max_memberships:
                         report.update(baseline_deferred_country=country, baseline_deferred_budget='memberships',
                                       baseline_deferred_reason='memberships' if started else 'country_exceeds_budget')
                         break
-                    confirm_country(title_reads, prepared, clock)
-                    summaries = publish_country(store, title_reads, prepared, clock)
+                    prepared, confirmation_budget_stop = confirm_country(title_reads, prepared, clock, client, report)
+                    publish_country(store, title_reads, prepared, clock, client, report, summaries)
                 except job.RequestBudgetExceeded:
+                    report.update(baseline_deferred_country=country, baseline_deferred_budget='requests',
+                                  baseline_deferred_reason='requests' if started or summaries else 'country_exceeds_budget')
+                    break
+                except (job.TMDBAccessDenied, job.LeaseLost) as error:
+                    error.report = report
+                    raise
+                finally:
+                    report['lists_completed'] += len(summaries)
+                    report['lists'].extend(summaries)
+                    for summary in summaries:
+                        inventory[summary['key']] = {}
+                    committed_memberships = sum(summary['changes_checked'] for summary in summaries)
+                    used += committed_memberships
+                    if summaries:
+                        started.append(country)
+                        print(json.dumps(dict(country_started=country, memberships=committed_memberships)), flush=True)
+                if discovery_budget_stop or confirmation_budget_stop:
                     report.update(baseline_deferred_country=country, baseline_deferred_budget='requests',
                                   baseline_deferred_reason='requests' if started else 'country_exceeds_budget')
                     break
-                except (job.TMDBAccessDenied, job.LeaseLost):
-                    raise
-                except Exception as error:
-                    scope = getattr(error, 'list_scope', (country, *missing[0]))
-                    failure = job.list_failure(*scope, error)
-                    report['lists_failed'] += len(missing)
-                    for media, service in missing:
-                        key = f'{country}:{media}:{service}'
-                        item = failure if key == failure['key'] else dict(
-                            key=key, media_type=media, tmdb_id=None, endpoint=None, http_status=None,
-                            error='CountryBaselineAborted', failed_list_key=failure['key'],
-                            reason='Country checkpoint withheld after another list failed')
-                        report['lists'].append(item)
-                        print(json.dumps(item), flush=True)
-                    client.consecutive_list_failures = (getattr(client, 'consecutive_list_failures', 0) + 1
-                                                        if isinstance(error, job.TMDBReadError) else 0)
-                    if client.consecutive_list_failures >= 20:
-                        raise job.TMDBReadError('Stopping after 20 consecutive TMDB list failures') from error
-                    continue
-                client.consecutive_list_failures = 0
-                report['lists_completed'] += len(summaries)
-                report['lists'].extend(summaries)
-                for item in prepared:
-                    inventory[item.key] = {}
-                used += memberships
-                started.append(country)
-                print(json.dumps(dict(country_started=country, memberships=memberships)), flush=True)
-            report['requests_new_baselines'] = client.stats['requests'] - baseline_start
         finally:
             client.baseline_limit = None
-    report['countries_remaining'] = [country for country in countries if any(
-        f'{country}:{media}:{service}' not in inventory for media, service in required)]
-    report['baseline_memberships'] = used
-    report['baseline_budget'] = dict(max_requests=baseline_max_requests, max_memberships=baseline_max_memberships)
-    report['ramp_complete'] = not report['countries_remaining']
+            report['requests_new_baselines'] = client.stats['requests'] - baseline_start
+            report['countries_remaining'] = [country for country in countries if any(
+                f'{country}:{media}:{service}' not in inventory for media, service in required)]
+            report['countries_partial'] = {
+                country: [f'{country}:{media}:{service}' for media, service in required
+                          if f'{country}:{media}:{service}' not in inventory]
+                for country in report['countries_remaining']
+                if any(f'{country}:{media}:{service}' in inventory for media, service in required)
+            }
+            report['baseline_memberships'] = used
+            report['baseline_budget'] = dict(max_requests=baseline_max_requests, max_memberships=baseline_max_memberships)
+            report['ramp_complete'] = not report['countries_remaining']
     return report
 
 
@@ -228,6 +256,13 @@ def run_daily_job(*, countries, service_ids, dry_run, requests_per_second, max_r
             report['history'] = getattr(store, 'stats', {})
             report['countries'] = countries
             return report
+    except (job.TMDBAccessDenied, job.LeaseLost) as error:
+        if hasattr(error, 'report'):
+            error.report.update(seconds=round(time.monotonic() - started, 3), requests=client.stats,
+                                history=getattr(store, 'stats', {}), countries=countries)
+            print(json.dumps(dict(event='daily_list_run_stopped', error=type(error).__name__,
+                                  report=error.report)), flush=True)
+        raise
     except job.LeaseBusy:
         return dict(lists_completed=0, lists_failed=0, lists_skipped=0, lists=[],
                     dry_run=dry_run, run_skipped=True)

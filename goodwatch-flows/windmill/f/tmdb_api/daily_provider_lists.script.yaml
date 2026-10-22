@@ -13,7 +13,7 @@ schema:
   properties:
     baseline_max_memberships:
       type: integer
-      description: Maximum new title/list checks; admit complete countries only.
+      description: Maximum new title/list checks; failed lists do not block their siblings.
       default: 570000
       minimum: 0
     baseline_max_requests:
