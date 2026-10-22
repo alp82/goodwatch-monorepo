@@ -1,0 +1,69 @@
+import type { ReactNode } from 'react';
+import { Modal, Pressable, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { GText, Icon, Press, glow } from './theme';
+export function Drawer({
+  title,
+  children,
+  close,
+}: {
+  title: string;
+  children: ReactNode;
+  close: () => void;
+}) {
+  return (
+    <Modal transparent animationType="fade" onRequestClose={close} statusBarTranslucent>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'flex-end',
+          backgroundColor: '#000b',
+          alignItems: 'center',
+        }}
+      >
+        <Pressable
+          accessibilityLabel="Close panel"
+          onPress={close}
+          style={{ position: 'absolute', inset: 0 }}
+        />
+        <SafeAreaView
+          edges={['bottom']}
+          style={{
+            maxHeight: '90%',
+            width: '100%',
+            maxWidth: 620,
+            backgroundColor: glow.panel,
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            borderWidth: 1,
+            borderColor: glow.line,
+          }}
+          accessibilityViewIsModal
+        >
+          <View
+            style={{
+              paddingHorizontal: 24,
+              paddingTop: 16,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <GText size={25} bold>
+              {title}
+            </GText>
+            <Press label="Close panel" onPress={close}>
+              <Icon name="close" />
+            </Press>
+          </View>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ padding: 24, gap: 18 }}
+          >
+            {children}
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    </Modal>
+  );
+}

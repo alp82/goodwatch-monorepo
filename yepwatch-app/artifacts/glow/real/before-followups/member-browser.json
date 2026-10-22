@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "Existing central issuer local login and signed read consent return to the exact app room without code/state in app URL",
+    "Same participant, host authority and room cookie retained; invitation survives OAuth reload",
+    "DE/Netflix prefill explicitly confirmed and continuation uses saved canonical S1 E2 without manual progress",
+    "Saved continuation Yep/pick reaches fresh-check automatic Done; title-only entitlement remains explicit"
+  ],
+  "errors": [],
+  "identitySource": "Disposable local identity and tracking data with existing central GoodWatch issuer, signed consent, live grant verification and real public catalog reads; no production user writes",
+  "physicalNativeReturn": "Not tested"
+}

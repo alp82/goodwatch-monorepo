@@ -20,16 +20,16 @@
   ],
   "graphs": [
     {
-      "folder": "dist-guest",
+      "folder": ".expo/exports/glow-real-r13",
       "sourceMaps": 9,
-      "modules": 987,
+      "modules": 1033,
       "sharedContractPresent": true,
       "webappOrServerCodePresent": false
     },
     {
-      "folder": "dist-native",
+      "folder": ".expo/exports/glow-native-r13",
       "sourceMaps": 2,
-      "modules": 2651,
+      "modules": 2936,
       "sharedContractPresent": true,
       "webappOrServerCodePresent": false
     }

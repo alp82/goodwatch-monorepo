@@ -26,7 +26,7 @@ test('incomplete availability/search and verified no matches have distinct actio
   const details = { type: 'deck' as const, reason: 'scan_limit' as const, reasons: ['scan_limit' as const], actions: ['retry' as const], scannedTitles: 20, poolSize: 100, scanComplete: false, uncertainTitles: 0, noMatchTitles: 0, missingMetadataTitles: 0, missingEpisodeTitles: 0, screens: [] };
   assert.match(recoveryMessage(new ApiFailure('catalog_unavailable', 'Raw internal message', undefined, 503, details)), /search did not finish/);
   assert.match(recoveryMessage(new ApiFailure('no_intersection', 'Raw internal message', undefined, 409, { ...details, reason: 'verified_no_intersection' })), /No titles matched across/);
-  assert.match(recoveryMessage(new ApiFailure('member_required', 'Raw')), /Sign-in is not connected yet/);
+  assert.match(recoveryMessage(new ApiFailure('member_required', 'Raw')), /GoodWatch sign-in with saved progress/);
 });
 
 test('legacy recovery follows actual active continuation deck, including completed own state and shortlist', () => {

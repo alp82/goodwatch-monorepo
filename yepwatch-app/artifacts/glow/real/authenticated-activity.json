@@ -1,0 +1,28 @@
+{
+  "recorded": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "file": "authenticated-activity-1440.webm",
+      "activityFrames": 7,
+      "source": "Another independently authenticated browser participant using actual visible UI",
+      "cueVerified": "peer-cursor",
+      "trailerViewObserved": true
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "file": "authenticated-activity-390.webm",
+      "activityFrames": 7,
+      "source": "Another independently authenticated browser participant using actual visible UI",
+      "cueVerified": "peer-touch",
+      "trailerViewObserved": true
+    }
+  ],
+  "errors": [],
+  "catalog": "Finite real catalog, actual HTTP15993 + gateway4322 + isolated durable Crate; no fixture interception"
+}

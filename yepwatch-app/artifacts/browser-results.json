@@ -6,7 +6,7 @@
       "test"
     ],
     "configFile": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/playwright.config.ts",
-    "rootDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/browser",
+    "rootDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/glow-browser",
     "failOnFlakyTests": false,
     "forbidOnly": false,
     "fullyParallel": false,
@@ -30,7 +30,7 @@
         },
         "id": "",
         "name": "",
-        "testDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/browser",
+        "testDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/glow-browser",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -49,8 +49,8 @@
           "actualWorkers": 1
         },
         "name": "",
-        "testDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/browser",
-        "snapshotDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/browser",
+        "testDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/glow-browser",
+        "snapshotDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/glow-browser",
         "testIgnore": [],
         "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
         "timeout": 30000,
@@ -92,7 +92,7 @@
     "version": "1.64.1",
     "workers": 1,
     "webServer": {
-      "command": "EXPO_PUBLIC_ENABLE_FIXTURES=true npx expo export --platform web --source-maps --output-dir dist-test && EXPORT_DIR=dist-test PORT=8097 node scripts/serve.cjs",
+      "command": "EXPO_PUBLIC_ENABLE_FIXTURES=true npx expo export --platform web --source-maps --output-dir dist-test --clear && EXPORT_DIR=dist-test PORT=8097 node scripts/serve.cjs",
       "url": "http://127.0.0.1:8097",
       "reuseExistingServer": false,
       "timeout": 120000
@@ -100,89 +100,13 @@
   },
   "suites": [
     {
-      "title": "binary-voting.spec.ts",
-      "file": "binary-voting.spec.ts",
-      "column": 0,
-      "line": 0,
-      "specs": [
-        {
-          "title": "No and Watch preserve pass/undo/completion semantics",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1395,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-21T15:18:05.009Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "a3ae279b9f1f6921e22c-ca262df022b62f554d8c",
-          "file": "binary-voting.spec.ts",
-          "line": 5,
-          "column": 7
-        },
-        {
-          "title": "No and Watch preserve pass/undo/completion semantics with a historical veto",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1428,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-21T15:18:06.448Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "a3ae279b9f1f6921e22c-d59e674ef6bfd1bc8b64",
-          "file": "binary-voting.spec.ts",
-          "line": 5,
-          "column": 7
-        }
-      ]
-    },
-    {
       "title": "client.spec.ts",
       "file": "client.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [
         {
-          "title": "invitation intent, optional sign-in failure, browser guest admission and honest transport state",
+          "title": "Glow fits 375x667, binary controls and spoiler rail",
           "ok": true,
           "tags": [],
           "tests": [
@@ -197,12 +121,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3005,
+                  "duration": 926,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-21T15:18:07.883Z",
+                  "startTime": "2026-10-22T00:39:49.615Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -210,13 +134,13 @@
               "status": "expected"
             }
           ],
-          "id": "e8997666eb3abf7f4bb0-ce1591e848a613cab46b",
+          "id": "e8997666eb3abf7f4bb0-da33a4e5e6466aff02ee",
           "file": "client.spec.ts",
-          "line": 5,
-          "column": 5
+          "line": 118,
+          "column": 7
         },
         {
-          "title": "fixture components cover mixed screens, all media kinds, accessible voting, shortlist and episode caveat",
+          "title": "Glow fits 390x844, binary controls and spoiler rail",
           "ok": true,
           "tags": [],
           "tests": [
@@ -231,12 +155,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1026,
+                  "duration": 908,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-21T15:18:10.893Z",
+                  "startTime": "2026-10-22T00:39:50.582Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -244,13 +168,149 @@
               "status": "expected"
             }
           ],
-          "id": "e8997666eb3abf7f4bb0-888f235643c157fce9f5",
+          "id": "e8997666eb3abf7f4bb0-a88c4c3f624cc5d63391",
           "file": "client.spec.ts",
-          "line": 40,
+          "line": 118,
+          "column": 7
+        },
+        {
+          "title": "Glow fits 1440x900, binary controls and spoiler rail",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 908,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T00:39:51.496Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-ab8dc8d2b8bd1b17f3a3",
+          "file": "client.spec.ts",
+          "line": 118,
+          "column": 7
+        },
+        {
+          "title": "inspection, replacement pick and Keep voting preserve own card; no local unilateral Done",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1077,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T00:39:52.409Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-67a0222eda6fea9a1cc8",
+          "file": "client.spec.ts",
+          "line": 143,
           "column": 5
         },
         {
-          "title": "entry fits mobile and desktop without a forced account or horizontal scrolling",
+          "title": "left swipe after reversal sends exactly the same pass as Nope and recenters",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1251,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T00:39:53.491Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-b20b140316f78a74591e",
+          "file": "client.spec.ts",
+          "line": 164,
+          "column": 5
+        },
+        {
+          "title": "lost command response persists exact envelope over reload and blocks new gestures until reconciliation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1797,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T00:39:54.748Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-dea59c74b54fbad3694f",
+          "file": "client.spec.ts",
+          "line": 189,
+          "column": 5
+        },
+        {
+          "title": "authoritative expiry is terminal and a delayed room response cannot resurrect controls",
           "ok": true,
           "tags": [],
           "tests": [
@@ -270,7 +330,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-21T15:18:11.924Z",
+                  "startTime": "2026-10-22T00:39:56.550Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -278,55 +338,13 @@
               "status": "expected"
             }
           ],
-          "id": "e8997666eb3abf7f4bb0-760ec25b43deedf9a765",
+          "id": "e8997666eb3abf7f4bb0-8a45cd3942ff2f14e742",
           "file": "client.spec.ts",
-          "line": 60,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "title": "expiry.spec.ts",
-      "file": "expiry.spec.ts",
-      "column": 0,
-      "line": 0,
-      "specs": [
-        {
-          "title": "cached room closes only after ambiguous WS expiry is confirmed by HTTP410",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 2042,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-21T15:18:12.861Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "9c12f706d7ccaf47276a-6faacb853ee9dd444c63",
-          "file": "expiry.spec.ts",
-          "line": 36,
+          "line": 204,
           "column": 5
         },
         {
-          "title": "subscription lease expiry with live HTTP state reconnects rather than ending room",
+          "title": "one explicit guest readiness uses the confirmed screen assignment fence",
           "ok": true,
           "tags": [],
           "tests": [
@@ -341,12 +359,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1755,
+                  "duration": 926,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-21T15:18:14.908Z",
+                  "startTime": "2026-10-22T00:39:57.486Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -354,13 +372,13 @@
               "status": "expected"
             }
           ],
-          "id": "9c12f706d7ccaf47276a-baf992d0c7899146eb70",
-          "file": "expiry.spec.ts",
-          "line": 42,
+          "id": "e8997666eb3abf7f4bb0-60c9be7700fb09cc499d",
+          "file": "client.spec.ts",
+          "line": 215,
           "column": 5
         },
         {
-          "title": "HTTP command410 ends cached room and late successful repair cannot restore controls",
+          "title": "unavailable account start stays an honest guest state inside the room drawer",
           "ok": true,
           "tags": [],
           "tests": [
@@ -375,12 +393,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1184,
+                  "duration": 1001,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-21T15:18:16.667Z",
+                  "startTime": "2026-10-22T00:39:58.418Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -388,13 +406,13 @@
               "status": "expected"
             }
           ],
-          "id": "9c12f706d7ccaf47276a-cd3d169bea0ccd2481e0",
-          "file": "expiry.spec.ts",
-          "line": 48,
+          "id": "e8997666eb3abf7f4bb0-8fea29975487410ca494",
+          "file": "client.spec.ts",
+          "line": 227,
           "column": 5
         },
         {
-          "title": "initial HTTP410 is terminal while503 remains manually recoverable",
+          "title": "the creator invitation survives a full navigation/reload without bearer storage",
           "ok": true,
           "tags": [],
           "tests": [
@@ -409,12 +427,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1087,
+                  "duration": 1738,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-21T15:18:17.855Z",
+                  "startTime": "2026-10-22T00:39:59.423Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -422,13 +440,13 @@
               "status": "expected"
             }
           ],
-          "id": "9c12f706d7ccaf47276a-ba7ce07ec3df4bd49e6b",
-          "file": "expiry.spec.ts",
-          "line": 54,
+          "id": "e8997666eb3abf7f4bb0-06146695042d03a2d703",
+          "file": "client.spec.ts",
+          "line": 246,
           "column": 5
         },
         {
-          "title": "server-confirmed deadline plus missing browser credential is terminal, never a generic outage",
+          "title": "embedding refusal 101 offers YouTube and closing preserves card and pick",
           "ok": true,
           "tags": [],
           "tests": [
@@ -443,12 +461,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 906,
+                  "duration": 3426,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-21T15:18:18.945Z",
+                  "startTime": "2026-10-22T00:40:01.165Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -456,123 +474,13 @@
               "status": "expected"
             }
           ],
-          "id": "9c12f706d7ccaf47276a-dac3266326ee5ab2132f",
-          "file": "expiry.spec.ts",
-          "line": 63,
-          "column": 5
-        },
-        {
-          "title": "initial authoritative410 offers a new room without cached controls",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 896,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-21T15:18:19.855Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "9c12f706d7ccaf47276a-9561b14fcb6fc2e3073f",
-          "file": "expiry.spec.ts",
-          "line": 69,
-          "column": 5
-        },
-        {
-          "title": "authoritative shared expired snapshot fences a delayed successful command",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1937,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-21T15:18:20.755Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "9c12f706d7ccaf47276a-7227ceffb499c7bd2732",
-          "file": "expiry.spec.ts",
-          "line": 72,
-          "column": 5
-        }
-      ]
-    },
-    {
-      "title": "legacy-round.spec.ts",
-      "file": "legacy-round.spec.ts",
-      "column": 0,
-      "line": 0,
-      "specs": [
-        {
-          "title": "legacy continuation voting has explicit recovery for host",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1008,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-21T15:18:22.698Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "1ccb57fbe086b1034298-89842cfc2e662e5bdb4f",
-          "file": "legacy-round.spec.ts",
-          "line": 6,
+          "id": "e8997666eb3abf7f4bb0-459b01f731ce15f511fc",
+          "file": "client.spec.ts",
+          "line": 265,
           "column": 7
         },
         {
-          "title": "legacy continuation voting has explicit recovery for completed host",
+          "title": "embedding refusal 150 offers YouTube and closing preserves card and pick",
           "ok": true,
           "tags": [],
           "tests": [
@@ -587,12 +495,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 999,
+                  "duration": 3409,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-21T15:18:23.710Z",
+                  "startTime": "2026-10-22T00:40:04.595Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -600,13 +508,13 @@
               "status": "expected"
             }
           ],
-          "id": "1ccb57fbe086b1034298-59a91f361bd31de260ed",
-          "file": "legacy-round.spec.ts",
-          "line": 6,
+          "id": "e8997666eb3abf7f4bb0-7b14eeeab87a21369f55",
+          "file": "client.spec.ts",
+          "line": 265,
           "column": 7
         },
         {
-          "title": "legacy continuation voting has explicit recovery for guest",
+          "title": "authoritative Undo survives an accepted vote followed by a full reload",
           "ok": true,
           "tags": [],
           "tests": [
@@ -621,12 +529,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 887,
+                  "duration": 1780,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-21T15:18:24.712Z",
+                  "startTime": "2026-10-22T00:40:08.007Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -634,21 +542,13 @@
               "status": "expected"
             }
           ],
-          "id": "1ccb57fbe086b1034298-429f793cc3914a76119c",
-          "file": "legacy-round.spec.ts",
-          "line": 6,
-          "column": 7
-        }
-      ]
-    },
-    {
-      "title": "recovery.spec.ts",
-      "file": "recovery.spec.ts",
-      "column": 0,
-      "line": 0,
-      "specs": [
+          "id": "e8997666eb3abf7f4bb0-d3f10e313d73a96612f7",
+          "file": "client.spec.ts",
+          "line": 290,
+          "column": 5
+        },
         {
-          "title": "public deck errors give plain distinct recovery, without raw counters or progress entry",
+          "title": "exact-envelope replay restores Undo from the confirmed receipt snapshot",
           "ok": true,
           "tags": [],
           "tests": [
@@ -663,12 +563,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1114,
+                  "duration": 993,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-21T15:18:25.604Z",
+                  "startTime": "2026-10-22T00:40:09.791Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -676,9 +576,247 @@
               "status": "expected"
             }
           ],
-          "id": "ef78f3da5c9c24fceacf-319a499e02f9b4db58ec",
-          "file": "recovery.spec.ts",
-          "line": 4,
+          "id": "e8997666eb3abf7f4bb0-fd239eb629b68511d61d",
+          "file": "client.spec.ts",
+          "line": 301,
+          "column": 5
+        },
+        {
+          "title": "retired history cannot leave an enabled Undo that silently does nothing",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1098,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T00:40:10.787Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-2b8c7cfe7b45e59e4dff",
+          "file": "client.spec.ts",
+          "line": 312,
+          "column": 5
+        },
+        {
+          "title": "entry, setup and long-title Done remain reachable without page scroll at 320x568",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3828,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T00:40:11.889Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-a4c4ffe66cc862ec378a",
+          "file": "client.spec.ts",
+          "line": 329,
+          "column": 7
+        },
+        {
+          "title": "entry, setup and long-title Done remain reachable without page scroll at 844x390",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3798,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T00:40:15.721Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-0790a95823a015b592be",
+          "file": "client.spec.ts",
+          "line": 329,
+          "column": 7
+        },
+        {
+          "title": "entry, setup and long-title Done remain reachable without page scroll at 375x667",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3829,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T00:40:19.523Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-508a361b5445c46e85b7",
+          "file": "client.spec.ts",
+          "line": 329,
+          "column": 7
+        },
+        {
+          "title": "entry, setup and long-title Done remain reachable without page scroll at 390x844",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3762,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T00:40:23.357Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-1e11956748c9b560c830",
+          "file": "client.spec.ts",
+          "line": 329,
+          "column": 7
+        },
+        {
+          "title": "entry, setup and long-title Done remain reachable without page scroll at 1440x900",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3819,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T00:40:27.123Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-77d04549a645cab41fc1",
+          "file": "client.spec.ts",
+          "line": 329,
+          "column": 7
+        },
+        {
+          "title": "retained continuing-only setup has an explicit guest fallback without silent constraint rewrites",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2774,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-22T00:40:30.946Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-097c0f8a5830a9b5ead0",
+          "file": "client.spec.ts",
+          "line": 383,
           "column": 5
         }
       ]
@@ -686,9 +824,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-21T15:18:02.852Z",
-    "duration": 23898.601000000002,
-    "expected": 16,
+    "startTime": "2026-10-22T00:39:44.484Z",
+    "duration": 49268.241,
+    "expected": 21,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

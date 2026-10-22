@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "Two independent visible Ready actions succeed concurrently against unchanged screen configuration",
+    "Visible create, invite, independent cookie admission, explicit screen readiness, start for three clients",
+    "Immediate confirmed shared match on every client without completion gate",
+    "Inspect and Keep voting preserves own next card",
+    "All current picks automatically produce confirmed Done on three clients"
+  ],
+  "frames": 65,
+  "errors": [],
+  "catalog": "finite real catalog sample; actual durable API15993/Crate + WS4322",
+  "firstTitleObserved": true
+}

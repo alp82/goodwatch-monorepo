@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextStyle } from 'react-native';
+import { AccessibilityInfo, Animated, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { developmentNotice } from '../core/config';
 
@@ -11,7 +11,7 @@ export function Heading({ children }: { children: ReactNode }) { return <Text ac
 export function Panel({ children }: { children: ReactNode }) { return <View style={s.panel}>{children}</View>; }
 export function Row({ children }: { children: ReactNode }) { return <View style={s.row}>{children}</View>; }
 export function Button({ children, onPress, disabled = false, secondary = false, selected, label }: { children: ReactNode; onPress: () => void; disabled?: boolean; secondary?: boolean; selected?: boolean; label?: string }) {
-  return <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled, selected }} disabled={disabled} onPress={onPress} style={({ pressed }) => [s.button, secondary && s.secondary, selected && s.selected, pressed && { opacity: 0.72 }, disabled && { opacity: 0.45 }]}><Text style={[s.buttonText, secondary && { color: colors.ink }]}>{children}</Text></Pressable>;
+  return <Pressable {...(Platform.OS === 'web' && selected !== undefined ? { 'aria-pressed': selected } : {})} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled, selected }} disabled={disabled} onPress={onPress} style={({ pressed }) => [s.button, secondary && s.secondary, selected && s.selected, pressed && { opacity: 0.72 }, disabled && { opacity: 0.45 }]}><Text style={[s.buttonText, secondary && { color: colors.ink }]}>{children}</Text></Pressable>;
 }
 export function Field({ label, value, onChange, placeholder, numeric = false, secret = false }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; numeric?: boolean; secret?: boolean }) {
   return <View style={s.field}><Words>{label}</Words><TextInput accessibilityLabel={label} value={value} onChangeText={onChange} placeholder={placeholder} placeholderTextColor="#999" keyboardType={numeric ? 'number-pad' : 'default'} autoCapitalize="none" autoCorrect={false} secureTextEntry={secret} style={s.input} /></View>;

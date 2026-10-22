@@ -1,0 +1,47 @@
+{
+  "branch": "feat/shared-scoring",
+  "headAtHandover": "27eaaaf11d9a391495bf2cfdc54e61ef818d74be",
+  "scope": "yepwatch-app only; no commit/push/deploy by app agent",
+  "runtime": "http://127.0.0.1:8132",
+  "sourceManifest": "artifacts/glow/final-source-manifest.json",
+  "sourceSha256": "1c1ba22a6c0cad7c456b15a68880d37ed1850ca21fc4859bed1f2fdaaa11e1eb",
+  "checks": {
+    "unit": 38,
+    "browserComponent": 21,
+    "typecheck": "PASS",
+    "lint": "PASS, one existing unused View warning in legacy Voting.tsx",
+    "webExport": "PASS .expo/exports/glow-real-r13",
+    "iosAndroid": "PASS Hermes JavaScript exports .expo/exports/glow-native-r13; not native compilation/device validation",
+    "resolution": "PASS isolated contract copy; app-local dependencies; no server/webapp implementation in native/web graphs",
+    "realThreeBrowser": "PASS65frames0JSerrors",
+    "memberBrowser": "PASS existing central issuer with disposable local identity/tracking fixture",
+    "trailer": "Actual150 refusal recovery + five actual allowed embeds with reported unmuted volume100 and advancing media clocks"
+  },
+  "review": {
+    "r9": "Original103-file pin immutable; review baseline",
+    "r10-player": "Independent ordinary fixture review PASS; actual external playback owner-proven",
+    "r11-undo": "Independent ordinary state/UI review PASS",
+    "r12-layout": "Owner tests PASS; independent review pending (reviewer unavailable)",
+    "r13-guest-recovery": "Owner tests PASS; independent review pending (reviewer unavailable)"
+  },
+  "limits": [
+    "Finite36-title real local catalog sample, not full-catalog proof",
+    "Identity/tracking source is disposable local fixture through existing issuer/adapters; not deployed production account authorization",
+    "Physical iOS/Android build, auth return, hardware audio, accessibility/installed links and provider handoff unverified",
+    "YouTube embedding permissions vary per actual trailer; explicit source recovery available",
+    "Member refresh follow-up intentionally excluded"
+  ],
+  "artifacts": [
+    "artifacts/glow/real/connected-three-client.json",
+    "artifacts/glow/real/member-browser.json",
+    "artifacts/glow/real/trailer-recovery-playback.json",
+    "artifacts/glow/real/authenticated-activity.json",
+    "artifacts/glow/real/authenticated-activity-390.webm",
+    "artifacts/glow/real/authenticated-activity-1440.webm",
+    "artifacts/glow/comparison.html",
+    "artifacts/glow/layout-entry-320.png",
+    "artifacts/glow/layout-setup-320.png",
+    "artifacts/glow/layout-done-844.png",
+    "artifacts/glow/served-8132.json"
+  ]
+}
