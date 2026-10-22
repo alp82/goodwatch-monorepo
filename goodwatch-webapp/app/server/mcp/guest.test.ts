@@ -88,3 +88,21 @@ test("guest title reads have no member fields and use all services", async () =>
 	})
 	assert.deepEqual(availability.args[3], { allServices: true })
 })
+
+for (const query of [undefined, "", " ", "\t\n"])
+	test(`guest search rejects blank query without lookup: ${JSON.stringify(query)}`, async () => {
+		calls.length = 0
+		await assert.rejects(
+			readGuestTool(
+				{ country: "DE" },
+				"https://goodwatch.app",
+				"search_titles",
+				{ query },
+			),
+			/nonblank query/,
+		)
+		assert.equal(
+			calls.some((call) => call.kind === "lookup"),
+			false,
+		)
+	})

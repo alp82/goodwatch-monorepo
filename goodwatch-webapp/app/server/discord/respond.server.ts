@@ -17,10 +17,17 @@ export async function within<T>(
 	}
 }
 export function defer(
-	work: () => Promise<unknown>,
+	work: () => Promise<ReturnType<typeof textCard>>,
 	edit: (body: unknown) => Promise<void>,
 	finish: (outcome: string) => void,
+	options: { type?: 5 | 6; ephemeral?: boolean } = {},
 ) {
+	const patch = (body: ReturnType<typeof textCard>) =>
+		edit(
+			options.type === 6 || options.ephemeral === false
+				? { ...body, flags: body.flags & ~EPHEMERAL }
+				: body,
+		)
 	setTimeout(() => {
 		void (async () => {
 			try {
@@ -29,11 +36,11 @@ export function defer(
 					12_000,
 					textCard("The search took too long. Please try again."),
 				)
-				await edit(body)
+				await patch(body)
 				finish("ok")
 			} catch {
 				try {
-					await edit(textCard("Something went wrong. Please try again."))
+					await patch(textCard("Something went wrong. Please try again."))
 				} catch {
 					/* The interaction webhook may be unavailable. */
 				}
@@ -41,5 +48,7 @@ export function defer(
 			}
 		})()
 	}, 0)
-	return { type: 5, data: { flags: EPHEMERAL } }
+	return options.type === 6
+		? { type: 6 }
+		: { type: 5, data: { flags: options.ephemeral === false ? 0 : EPHEMERAL } }
 }

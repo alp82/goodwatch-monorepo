@@ -78,12 +78,9 @@ export async function routeInteraction(
 		const user = interaction.member?.user?.id ?? interaction.user?.id
 		if (!user)
 			return reply(textCard("This interaction has no user."), "invalid")
-		const verdict = await within(deps.take(user), 300, {
-			allowed: false,
-			store: "memory",
-			retryAfterSeconds: 1,
-		} as RateVerdict)
-		if (!verdict.allowed) {
+		const verdict = await within<RateVerdict | null>(deps.take(user), 300, null)
+		if (verdict === null) finish("limit_timeout")
+		if (verdict && !verdict.allowed) {
 			if (interaction.type === 4) return reply({ choices: [] }, "limited", 8)
 			return reply(
 				textCard(
@@ -95,9 +92,13 @@ export async function routeInteraction(
 		if (interaction.type === 4) {
 			if (interaction.data?.name !== commands[0].name)
 				return reply({ choices: [] }, "unsupported", 8)
-			const query =
+			const query = (
 				interaction.data.options?.find((o) => o.name === "title" && o.focused)
 					?.value ?? ""
+			)
+				.trim()
+				.slice(0, 120)
+			if (query.length < 2) return reply({ choices: [] }, "ok", 8)
 			const result = await within(
 				read("search_titles", { query, limit: 25 }),
 				2000,
@@ -149,23 +150,23 @@ export async function routeInteraction(
 			)
 		}
 		if (interaction.type === 3 && parsed) {
-			const result = await within(
-				card(
-					parsed.titleId,
-					parsed.action === "share" ||
-						(interaction.message != null &&
-							!((interaction.message.flags ?? 0) & EPHEMERAL)),
-					parsed.action === "watch",
-				),
-				2000,
-				null,
+			if (!interaction.application_id || !interaction.token)
+				return reply(textCard("Invalid interaction."), "invalid")
+			const watch = parsed.action === "watch"
+			return defer(
+				() =>
+					card(
+						parsed.titleId,
+						!watch ||
+							(interaction.message != null &&
+								!((interaction.message.flags ?? 0) & EPHEMERAL)),
+						watch,
+					),
+				(body) =>
+					deps.edit(interaction.application_id!, interaction.token!, body),
+				finish,
+				{ type: watch ? 6 : 5, ephemeral: false },
 			)
-			if (!result)
-				return reply(
-					textCard("The search took too long. Please try again."),
-					"timeout",
-				)
-			return reply(result, "ok", parsed.action === "watch" ? 7 : 4)
 		}
 		if (interaction.type === 5)
 			return reply(

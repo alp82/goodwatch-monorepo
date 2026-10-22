@@ -40,9 +40,12 @@ const title: GuestTitle = {
 		],
 	},
 }
-function signed(value: unknown, corrupt = false) {
-	const body = JSON.stringify(value),
-		timestamp = "1234567890"
+function signed(
+	value: unknown,
+	corrupt = false,
+	timestamp = String(Math.floor(Date.now() / 1000)),
+) {
+	const body = JSON.stringify(value)
 	const signature = sign(
 		null,
 		Buffer.from(timestamp + body),
@@ -176,7 +179,14 @@ test("autocomplete caps choices, uses plain guest reads and logs no query", asyn
 test("autocomplete timeout returns an empty list within the deadline", async () => {
 	const f = fixture({ read: () => new Promise(() => {}) })
 	const start = Date.now()
-	const body = await (await f.run(interaction(4, { name: "search" }))).json()
+	const body = await (
+		await f.run(
+			interaction(4, {
+				name: "search",
+				options: [{ name: "title", value: "title", focused: true }],
+			}),
+		)
+	).json()
 	assert.deepEqual(body, { type: 8, data: { choices: [] } })
 	assert.ok(Date.now() - start < 2800)
 })
@@ -221,27 +231,44 @@ test("failed deferred work replaces thinking with an error card", async () => {
 	assert.match(JSON.stringify(f.edits), /Something went wrong/)
 	assert.doesNotMatch(JSON.stringify(f.edits), /private data/)
 })
-test("Where to watch updates the card with country offers", async () => {
-	const f = fixture()
+test("Where to watch defers the update then patches country offers", async () => {
+	let done!: () => void
+	const finished = new Promise<void>((resolve) => {
+		done = resolve
+	})
+	const f = fixture({ log: () => done() })
 	const body = await (
 		await f.run(
 			interaction(3, { custom_id: formatCustomId("watch", "movie:42") }),
 		)
 	).json()
-	assert.equal(body.type, 7)
-	assert.match(JSON.stringify(body), /https:\/\/example.com\/watch/)
-	assert.match(JSON.stringify(body), /DE/)
+	assert.deepEqual(body, { type: 6 })
+	await finished
+	assert.equal(
+		(f.edits[0] as [string, string, { flags: number }])[2].flags,
+		IS_COMPONENTS_V2,
+	)
+	assert.match(JSON.stringify(f.edits), /https:\/\/example.com\/watch/)
+	assert.match(JSON.stringify(f.edits), /DE/)
 })
-test("Share reads by IDs and produces a public guest card without Share", async () => {
-	const f = fixture()
+test("Share defers publicly then patches a guest card without Share", async () => {
+	let done!: () => void
+	const finished = new Promise<void>((resolve) => {
+		done = resolve
+	})
+	const f = fixture({ log: () => done() })
 	const body = await (
 		await f.run(
 			interaction(3, { custom_id: formatCustomId("share", "movie:42") }),
 		)
 	).json()
-	assert.equal(body.type, 4)
-	assert.equal(body.data.flags, IS_COMPONENTS_V2)
-	assert.doesNotMatch(JSON.stringify(body), /Share to channel|member|match/)
+	assert.deepEqual(body, { type: 5, data: { flags: 0 } })
+	await finished
+	assert.equal(
+		(f.edits[0] as [string, string, { flags: number }])[2].flags,
+		IS_COMPONENTS_V2,
+	)
+	assert.doesNotMatch(JSON.stringify(f.edits), /Share to channel|member|match/)
 	assert.deepEqual(f.reads, [
 		{
 			viewer: { country: "DE" },
@@ -388,15 +415,23 @@ test("REST stops after two retries and surfaces errors", async () => {
 })
 
 test("Where to watch on a shared card keeps its public flags and omits Share", async () => {
-	const f = fixture()
+	let done!: () => void
+	const finished = new Promise<void>((resolve) => {
+		done = resolve
+	})
+	const f = fixture({ log: () => done() })
 	const value = {
 		...interaction(3, { custom_id: formatCustomId("watch", "movie:42") }),
 		message: { flags: IS_COMPONENTS_V2 },
 	}
 	const body = await (await f.run(value)).json()
-	assert.equal(body.type, 7)
-	assert.equal(body.data.flags, IS_COMPONENTS_V2)
-	assert.doesNotMatch(JSON.stringify(body), /Share to channel/)
+	assert.deepEqual(body, { type: 6 })
+	await finished
+	assert.equal(
+		(f.edits[0] as [string, string, { flags: number }])[2].flags,
+		IS_COMPONENTS_V2,
+	)
+	assert.doesNotMatch(JSON.stringify(f.edits), /Share to channel/)
 })
 test("interaction responses work with Remix's Response without static json", async () => {
 	const json = Response.json
@@ -415,5 +450,132 @@ test("interaction responses work with Remix's Response without static json", asy
 			writable: true,
 			value: json,
 		})
+	}
+})
+
+for (const query of ["", " ", "a", " a "])
+	test(`short autocomplete skips catalog reads: ${JSON.stringify(query)}`, async () => {
+		const f = fixture()
+		const body = await (
+			await f.run(
+				interaction(4, {
+					name: "search",
+					options: [{ name: "title", value: query, focused: true }],
+				}),
+			)
+		).json()
+		assert.deepEqual(body, { type: 8, data: { choices: [] } })
+		assert.equal(f.reads.length, 0)
+	})
+test("autocomplete trims and caps the query at 120 characters", async () => {
+	const f = fixture()
+	await f.run(
+		interaction(4, {
+			name: "search",
+			options: [{ name: "title", value: " " + "x".repeat(200), focused: true }],
+		}),
+	)
+	assert.deepEqual((f.reads[0] as { args: unknown }).args, {
+		query: "x".repeat(120),
+		limit: 25,
+	})
+})
+test("rate limiter timeout allows the request and logs limit_timeout", async () => {
+	const f = fixture({ take: () => new Promise(() => {}) })
+	const body = await (
+		await f.run(
+			interaction(4, {
+				name: "search",
+				options: [{ name: "title", value: "title", focused: true }],
+			}),
+		)
+	).json()
+	assert.equal(body.data.choices.length, 25)
+	assert.equal(f.reads.length, 1)
+	assert.equal(f.logs.length, 1)
+	assert.match(f.logs[0], /"outcome":"limit_timeout"/)
+})
+for (const action of ["watch", "share"] as const) {
+	test(`${action} acknowledges before a cold title read finishes`, async () => {
+		let release!: (value: Record<string, unknown>) => void
+		let done!: () => void
+		const finished = new Promise<void>((resolve) => {
+			done = resolve
+		})
+		const result = new Promise<Record<string, unknown>>((resolve) => {
+			release = resolve
+		})
+		const f = fixture({ read: () => result, log: () => done() })
+		const body = await (
+			await f.run(
+				interaction(3, { custom_id: formatCustomId(action, "movie:42") }),
+			)
+		).json()
+		assert.deepEqual(
+			body,
+			action === "watch" ? { type: 6 } : { type: 5, data: { flags: 0 } },
+		)
+		assert.equal(f.edits.length, 0)
+		release({ title })
+		await finished
+		assert.equal(f.edits.length, 1)
+	})
+	test(`${action} deferred failures patch a safe error without EPHEMERAL`, async () => {
+		let done!: () => void
+		const finished = new Promise<void>((resolve) => {
+			done = resolve
+		})
+		const f = fixture({
+			read: async () => {
+				throw new Error("private data")
+			},
+			log: () => done(),
+		})
+		await f.run(
+			interaction(3, { custom_id: formatCustomId(action, "movie:42") }),
+		)
+		await finished
+		assert.match(JSON.stringify(f.edits), /Something went wrong/)
+		assert.doesNotMatch(JSON.stringify(f.edits), /private data/)
+		assert.equal(
+			(f.edits[0] as [string, string, { flags: number }])[2].flags,
+			IS_COMPONENTS_V2,
+		)
+	})
+}
+test("signature timestamp window accepts boundaries and rejects stale, future and malformed timestamps", async () => {
+	const seconds = 1_800_000_000
+	for (const [timestamp, expected] of [
+		[String(seconds), true],
+		[String(seconds - 300), true],
+		[String(seconds - 301), false],
+		[String(seconds + 60), true],
+		[String(seconds + 61), false],
+		["NaN", false],
+		["1e9", false],
+		["9".repeat(400), false],
+	] as const) {
+		const request = signed({ type: 1 }, false, timestamp)
+		assert.equal(
+			verifySignature(
+				publicKey,
+				request.headers.get("X-Signature-Ed25519"),
+				timestamp,
+				await request.text(),
+				() => seconds * 1000,
+			),
+			expected,
+			timestamp,
+		)
+	}
+})
+test("endpoint rejects correctly signed stale and future requests", async () => {
+	for (const offset of [-301, 62]) {
+		const request = signed(
+			{ type: 1 },
+			false,
+			String(Math.floor(Date.now() / 1000) + offset),
+		)
+		assert.equal((await handleInteraction(request, { publicKey })).status, 401)
 	}
 })

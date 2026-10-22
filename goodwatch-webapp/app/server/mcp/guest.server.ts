@@ -17,8 +17,10 @@ export async function readGuestTool(
 		viewer.country,
 	)
 	if (name === "search_titles") {
+		const query = args.query?.trim()
+		if (!query) throw new Error("search_titles requires a nonblank query")
 		const limit = Math.min(25, Math.max(1, args.limit ?? 25))
-		const titles = await lookup(args.query ?? "", 0, limit)
+		const titles = await lookup(query, 0, limit)
 		return {
 			items: titles.map((title) => summary(title, origin)),
 			ranked: false,
