@@ -5,6 +5,7 @@ import { paths, type RealtimeAttachment, type SharedRoomSnapshot, type RoomInval
 import type { RevisionBus } from '../src/bus.js'
 import { paths as continuousPaths, type SharedRoomSnapshot as ContinuousSnapshot } from '@goodwatch/yepwatch-contracts/continuous'
 import { HttpAuthority } from '../src/authority.js'
+import { paths as proposalPaths, type SharedRoomSnapshot as ProposalSnapshot } from '@goodwatch/yepwatch-contracts/proposal'
 
 export const secret = 'fixture-only-' + 'x'.repeat(40)
 export function snapshot(revision = 1): SharedRoomSnapshot {
@@ -31,10 +32,13 @@ export function continuousSnapshot(): ContinuousSnapshot {
     screens: [], constraints: { ...legacy.constraints, kinds: ['movie', 'show_start'] }, candidates: [],
     matches: [], stream: { version: 1, state: 'ready', reason: null }, agreement: { version: 1, state: 'none', error: null }, decision: null }
 }
-export async function fixture(continuous = false) {
-  const routes = continuous ? continuousPaths : paths
+export function proposalSnapshot(): ProposalSnapshot {
+  return { ...continuousSnapshot(), contractVersion: 3, candidates: [], matches: [], proposalVersion: 0, proposal: null, decision: null }
+}
+export async function fixture(continuous: boolean | 'proposal' = false) {
+  const routes = continuous === 'proposal' ? proposalPaths : continuous ? continuousPaths : paths
   const state = {
-    shared: (continuous ? continuousSnapshot() : snapshot()) as any, leaseMs: 2000, revoked: false, unavailable: false, viewCalls: 0,
+    shared: (continuous === 'proposal' ? proposalSnapshot() : continuous ? continuousSnapshot() : snapshot()) as any, leaseMs: 2000, revoked: false, unavailable: false, viewCalls: 0,
     beforeView: undefined as undefined | (() => Promise<void>),
     corruptAttachment: undefined as undefined | Record<string, unknown>,
   }

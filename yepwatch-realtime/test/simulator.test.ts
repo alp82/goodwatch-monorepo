@@ -22,7 +22,7 @@ test('Simulator only accepts controlled fresh-demo actor IDs and bounded choices
   assert.equal(sim.state().room, false)
 })
 
-for (const entrypoint of ['simulator/server.ts', 'simulator-continuous/server.ts']) test(`Two controller instances keep independent authorization in one cookie jar across root, actions and SSE (${entrypoint})`, { timeout: 20_000 }, async t => {
+for (const entrypoint of ['simulator/server.ts', 'simulator-continuous/server.ts', 'simulator-proposal/server.ts']) test(`Two controller instances keep independent authorization in one cookie jar across root, actions and SSE (${entrypoint})`, { timeout: 20_000 }, async t => {
   let upstreamRequests = 0
   const upstream = createServer((_request, response) => { upstreamRequests++; response.writeHead(500).end() })
   await new Promise<void>(resolve => upstream.listen(0, '127.0.0.1', resolve))

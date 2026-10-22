@@ -2,6 +2,10 @@
 
 Isolated Node 24 / ws service. Durable mutations, account/catalog access, room credentials and private own state belong to the YepWatch HTTP API. This gateway has no Crate adapter, database credentials, OAuth implementation, HTTP room commands or UI. Only files in this directory are owned by this slice. No deployment configuration is included.
 
+## Shared proposal flow
+
+The isolated contract3 gateway and Android peer simulator are documented in [README-proposal.md](./README-proposal.md). Existing gateway modes and retained rooms remain separate.
+
 ## Continuous Glow v2
 
 The additive contractVersion2 gateway and separate simulator are documented in [continuous transport/runbook](README-continuous.md). New local stack uses API15994, WS4321, app8131 and latest fixed simulator8124 (first continuous8122 retained). Legacy round-based rooms and controllers below remain separate and running. The first new integration uses disposable Crate with an explicitly synthetic catalog. A separate finite real-catalog stack now runs API15993/WS4322/app8132 with the latest real simulator at **http://127.0.0.1:8125**;7 real cards/6 trailers and a three-to-four-client visible flow passed. Both gateway/admission and simulator-config independent reviews passed. See the runbook for exact commands, evidence and sample limits.

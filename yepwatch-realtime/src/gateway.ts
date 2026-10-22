@@ -3,8 +3,11 @@ import type { Socket } from 'node:net'
 import { WebSocket, WebSocketServer } from 'ws'
 import { paths, type RealtimeAttachment, type ServerRealtimeFrame, type SharedRoomSnapshot } from '@goodwatch/yepwatch-contracts'
 import { paths as continuousPaths, type ServerRealtimeFrame as ContinuousFrame, type SharedRoomSnapshot as ContinuousSnapshot } from '@goodwatch/yepwatch-contracts/continuous'
+import { paths as proposalPaths, type SharedRoomSnapshot as ProposalSnapshot } from '@goodwatch/yepwatch-contracts/proposal'
 import { AuthorityError, validateAttachment, validateView, validateScopedView, type Authority } from './authority.js'
 import { continuousProjection } from './continuous-projection.js'
+import { proposalProjection } from './proposal-projection.js'
+import { inspectionAllowed, proposalClientActivitySchema, proposalServerActivitySchema } from './proposal-activity.js'
 import { ActivityRelay, type ActivityBus, type ActivitySender } from './activity.js'
 import type { RevisionBus } from './bus.js'
 import { authenticateSchema } from './projection.js'
@@ -26,14 +29,15 @@ interface Client {
   frames: number; unauthControlFrames: number; windowAt: number; authTimer: NodeJS.Timeout; expiryTimer?: NodeJS.Timeout; closeTimer?: NodeJS.Timeout
   room?: Room
   activity?: ActivitySender; participantIds?: Set<string>
+  inspectionMatches?: { matches: { candidateId: string }[] }
 }
 interface Room { id: string; clients: Set<Client>; target: number; epoch: number; running: boolean }
 type OutputFrame = Exclude<ServerRealtimeFrame | ContinuousFrame, { snapshot: unknown }> |
-  { type: 'room.snapshot' | 'room.updated'; snapshot: SharedRoomSnapshot | ContinuousSnapshot }
+  { type: 'room.snapshot' | 'room.updated'; snapshot: SharedRoomSnapshot | ContinuousSnapshot | ProposalSnapshot }
 
-export function createGateway(authority: Authority, bus: RevisionBus, overrides: Partial<GatewayOptions> = {}, continuous?: { activityBus: ActivityBus }) {
+export function createGateway(authority: Authority, bus: RevisionBus, overrides: Partial<GatewayOptions> = {}, continuous?: { activityBus: ActivityBus; proposal?: boolean }) {
   const options = { ...defaults, ...(continuous ? { maxFramesPerWindow: 64 } : {}), ...overrides }
-  const routes = continuous ? continuousPaths : paths
+  const routes = continuous?.proposal ? proposalPaths : continuous ? continuousPaths : paths
   const deliveryReady = () => bus.ready && (!continuous || continuous.activityBus.ready)
   let draining = false
   const clients = new Set<Client>()
@@ -133,7 +137,8 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
           const previous = client.attachment
           const raw = await bounded(authority.view({ roomId: room.id, lease: previous.lease }))
           if (client.ws.readyState !== WebSocket.OPEN || draining) continue
-          const result = continuous ? validateScopedView(raw, previous, options.maxLeaseMs, continuousProjection) : validateView(raw, previous, options.maxLeaseMs)
+          const result = continuous ? validateScopedView<ContinuousSnapshot | ProposalSnapshot>(raw, previous, options.maxLeaseMs,
+            continuous.proposal ? proposalProjection : continuousProjection) : validateView(raw, previous, options.maxLeaseMs)
           if (previous.leaseExpiresAt <= Date.now()) { fail(client, 'expired'); continue }
           client.attachment = result.attachment
           expiry(client)
@@ -144,10 +149,12 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
             if (send(client, { type: client.initial || client.degraded ? 'room.snapshot' : 'room.updated', snapshot: result.snapshot })) {
               client.lastRevision = result.snapshot.revision; client.initial = false; client.degraded = false
               client.participantIds = new Set(result.snapshot.participants.map(p => p.participantId))
+              if ('matches' in result.snapshot) client.inspectionMatches = { matches: result.snapshot.matches.map(m => ({ candidateId: m.candidateId })) }
               if (relay && !client.activity) {
                 client.activity = relay.open(room.id, result.attachment.participantId,
                   () => !draining && !client.degraded && !client.initial && client.lastRevision >= room.target && deliveryReady() && client.ws.readyState === WebSocket.OPEN,
-                  () => Math.min(client.attachment!.leaseExpiresAt, client.attachment!.roomExpiresAt))
+                  () => Math.min(client.attachment!.leaseExpiresAt, client.attachment!.roomExpiresAt),
+                  activity => !continuous?.proposal || inspectionAllowed(activity, client.inspectionMatches))
                 send(client, { type: 'activity.session', roomId: room.id, sessionId: client.activity.sessionId, serverTime: Date.now() })
               }
             }
@@ -184,9 +191,10 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
       const a = client.attachment
       if (!a || client.initial || client.degraded || client.lastRevision < room.target || a.participantId === frame.participantId ||
           a.leaseExpiresAt <= Date.now() || a.roomExpiresAt <= Date.now() || !client.participantIds?.has(frame.participantId)) continue
+      if (continuous?.proposal && !inspectionAllowed(frame, client.inspectionMatches)) continue
       send(client, frame)
     }
-  }, () => onState(false)) : undefined
+  }, () => onState(false), 2048, continuous.proposal ? { client: proposalClientActivitySchema, server: proposalServerActivitySchema } : undefined) : undefined
   continuous?.activityBus.on('state', onState)
   bus.on('hint', onHint).on('state', onState)
   server.on('upgrade', (request, socket, head) => {
