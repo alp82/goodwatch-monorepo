@@ -1,4 +1,4 @@
-name: YepWatch images
+name: YepWatch checks
 
 on:
   workflow_dispatch:
@@ -18,7 +18,6 @@ jobs:
     timeout-minutes: 45
     permissions:
       contents: read
-      packages: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -54,40 +53,10 @@ jobs:
             app/server/yepwatch/proposal-relational-crate.test.ts
           node app/server/yepwatch/write-storage-schema.mjs
           git diff --exit-code -- app/server/yepwatch/schema.sql
-      - name: Build commit-tagged images
-        env:
-          CI: '1'
-          RELEASE_OUTPUT: ${{ runner.temp }}/yepwatch-release
-          IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/yepwatch
-        run: bash yepwatch-realtime/release/build-images.sh
-      - name: Publish images (does not deploy)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REGISTRY_USER: ${{ github.actor }}
-          RELEASE_OUTPUT: ${{ runner.temp }}/yepwatch-release
+      - name: Validate Coolify configuration
+        run: python3 yepwatch-realtime/release/test-repository-compose.py
+      - name: Build the same repository targets as Coolify
         run: |
-          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$REGISTRY_USER" --password-stdin
-          trap 'docker logout ghcr.io' EXIT
-          : > "$RELEASE_OUTPUT/published-images.env"
           for service in api gateway front; do
-            image=$(cat "$RELEASE_OUTPUT/$service.image")
-            docker push "$image"
-            digest=$(docker image inspect "$image" --format '{{index .RepoDigests 0}}')
-            printf 'YEPWATCH_%s_IMAGE=%s\n' "${service^^}" "$digest" >> "$RELEASE_OUTPUT/published-images.env"
+            docker build --target "$service" -f yepwatch-realtime/release/Dockerfile.repository -t "yepwatch-ci-$service:$GITHUB_SHA" .
           done
-          printf 'YEPWATCH_SOURCE_COMMIT=%s\n' "$GITHUB_SHA" >> "$RELEASE_OUTPUT/published-images.env"
-          cat "$RELEASE_OUTPUT/published-images.env" >> "$GITHUB_STEP_SUMMARY"
-      - name: Upload exact deployment inputs
-        uses: actions/upload-artifact@v7
-        with:
-          name: yepwatch-deployment-${{ github.sha }}
-          path: |
-            ${{ runner.temp }}/yepwatch-release/published-images.env
-            ${{ runner.temp }}/yepwatch-release/images.json
-            ${{ runner.temp }}/yepwatch-release/context/manifest.json
-            yepwatch-realtime/release/compose.yaml
-            yepwatch-realtime/release/compose.coolify.yaml
-            yepwatch-realtime/release/release.env.example
-            yepwatch-realtime/release/api.env.example
-            yepwatch-realtime/release/DEPLOY.md
-            goodwatch-webapp/app/server/yepwatch/schema.sql

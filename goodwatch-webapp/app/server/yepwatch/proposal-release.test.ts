@@ -41,12 +41,14 @@ test("Source snapshot configuration is captured and all general cache-writer con
 	const input: Env = {
 		...env(),
 		REDIS_HOST2: "catalog-cache2.invalid",
+		REDIS_USER: "existing_reader",
 		REDIS_PASS: "reader-value",
 	}
 	const source = readonlyCatalogEnvironment(input)
 	assert.equal(source.nodes.length, 2)
 	assert.equal(source.password, "reader-value")
-	for (const key of ["REDIS_HOST", "REDIS_HOST2", "REDIS_HOST3", "REDIS_PASS"])
+	assert.equal(source.username, "existing_reader")
+	for (const key of ["REDIS_HOST", "REDIS_HOST2", "REDIS_HOST3", "REDIS_USER", "REDIS_PASS"])
 		assert.equal((input as Env)[key], undefined)
 	assert.equal(input.CRATE_HOSTS, "catalog.invalid")
 	assert.equal(

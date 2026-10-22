@@ -1,3 +1,5 @@
+> **Normal Coolify setup:** follow [COOLIFY.md](COOLIFY.md) and `/compose.yepwatch.yaml`. The registry/archive route below is optional; the new path supports reusing your existing Redis user.
+
 # Shared Redis and GoodWatch accounts
 
 This source revision supersedes the R4 deployment topology and table names. R4 image/APK hashes remain historical evidence, not artifacts for this revision. Rebuild before activation. No production provisioning or Coolify changes are performed by these files.
@@ -19,7 +21,7 @@ Use `release.env.example` with all three existing seeds in `YEPWATCH_MESSAGING_R
 
 Messaging uses ordinary global Pub/Sub channels `yepwatch:v3:revision` and `yepwatch:v3:activity`; the version is wire compatibility, not a table suffix. No room data is stored in Redis. Room recovery reads Crate after notification loss.
 
-The operator should provision the messaging ACL user consistently on every Redis cluster node, via the existing private secret management process. Required commands for ioredis discovery/readiness and Pub/Sub: `PING`, `INFO`, `CLUSTER SLOTS`, `CLUSTER INFO`, `PUBLISH`, `SUBSCRIBE`, `UNSUBSCRIBE`, `QUIT`; connection metadata uses `CLIENT SETNAME` and may use `CLIENT SETINFO`. Restrict channels to the two names above; grant no key access, cache-writing commands or administrative commands. Do not reuse the catalog credential. Confirm the actual deployed Redis version and ACL support when provisioning. No ACL changes have been executed by this implementation.
+The operator should provision the messaging ACL user consistently on every Redis cluster node, via the existing private secret management process. Required commands for ioredis discovery/readiness and Pub/Sub: `PING`, `INFO`, `CLUSTER SLOTS`, `CLUSTER INFO`, `PUBLISH`, `SUBSCRIBE`, `UNSUBSCRIBE`, `QUIT`; connection metadata uses `CLIENT SETNAME` and may use `CLIENT SETINFO`. Restrict channels to the two names above; grant no key access, cache-writing commands or administrative commands. A separate messaging credential limits gateway access. The repository-based Coolify configuration also supports explicitly reusing an existing user; its broader privileges are then available to the gateway. Confirm the actual deployed Redis version and ACL support when provisioning. No ACL changes have been executed by this implementation.
 
 Reference: [Redis ACL documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/).
 

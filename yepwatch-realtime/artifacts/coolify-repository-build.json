@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-23",
+  "mode": "Coolify repository builds; owner activates",
+  "images": [
+    {
+      "tag": "yepwatch-repo-api:20261023",
+      "id": "sha256:29fcee52b77686abbd5498a29078030eafa1eaff819f31fead5c98ad58a6b2a4"
+    },
+    {
+      "tag": "yepwatch-repo-gateway:20261023",
+      "id": "sha256:488737b365c9ff98c2962997efbaf05320af6ff28be46ffdf0ce37e96d15dd7f"
+    },
+    {
+      "tag": "yepwatch-repo-front:20261023",
+      "id": "sha256:6de205baff444f66fc8f654b5144be181ab47339a73ae251eba52a28f921c302"
+    }
+  ],
+  "checks": [
+    "All three repository Docker targets built from locked dependencies",
+    "Compose interpolation: missing secrets rejected; same named Redis user/password reaches snapshot and both messaging clients",
+    "Separate snapshot credentials remain supported",
+    "No runtime secrets in build arguments; no published host ports or private-file mounts",
+    "9 focused release/member tests passed",
+    "Focused strict TypeScript passed",
+    "Actionlint and diff whitespace passed",
+    "Front root and room 200; internal API and absent association 404"
+  ],
+  "productionAclInspected": false,
+  "deployed": false,
+  "retainedServicesChanged": false
+}

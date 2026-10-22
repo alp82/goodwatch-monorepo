@@ -18,6 +18,7 @@ const source = new Redis.Cluster(sourceConfig.nodes, {
 	clusterRetryStrategy: () => null,
 	slotsRefreshTimeout: 3000,
 	redisOptions: {
+		username: sourceConfig.username,
 		password: sourceConfig.password,
 		connectTimeout: 3000,
 		commandTimeout: sourceConfig.timeoutMs,

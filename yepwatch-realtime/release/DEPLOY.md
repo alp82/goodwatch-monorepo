@@ -1,3 +1,5 @@
+> **Normal Coolify setup:** follow [COOLIFY.md](COOLIFY.md) and `/compose.yepwatch.yaml`. The registry/archive route below is optional; the new path supports reusing your existing Redis user.
+
 # Deploy the typed-storage YepWatch release
 
 Current locally built artifacts and the archive-loading path: [BUILD-20261022.md](BUILD-20261022.md).

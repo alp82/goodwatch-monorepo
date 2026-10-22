@@ -27,6 +27,7 @@ export function readonlyCatalogEnvironment(env: Env) {
 				[host, env.REDIS_HOST2, env.REDIS_HOST3].filter((v): v is string => !!v)
 			),
 		].map((host) => ({ host, port })),
+		username: env.REDIS_USER || undefined,
 		password: env.REDIS_PASS ?? "",
 		timeoutMs: Number(env.REDIS_COMMAND_TIMEOUT_MS) || 10000,
 	}
@@ -34,6 +35,7 @@ export function readonlyCatalogEnvironment(env: Env) {
 		"REDIS_HOST",
 		"REDIS_HOST2",
 		"REDIS_HOST3",
+		"REDIS_USER",
 		"REDIS_PASS",
 		"REDIS_PASS_FILE",
 	])
