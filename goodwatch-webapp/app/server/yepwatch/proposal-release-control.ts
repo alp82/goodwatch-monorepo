@@ -1,3 +1,9 @@
+import {
+	controlTable,
+	columns,
+	parseRow,
+	tableDdl,
+} from "./proposal-storage-schema.ts"
 import { createHash } from "node:crypto"
 import { RoomError, IndeterminateWrite } from "./errors.ts"
 import type { Sql } from "./repository.server.ts"
@@ -32,7 +38,7 @@ export function controlFingerprint(p: ControlPolicy) {
 		])
 	)
 }
-interface Control {
+export interface Control {
 	format: 1
 	fingerprint: string
 	window: number
@@ -41,6 +47,47 @@ interface Control {
 	admissions: string[]
 	/** Logical command digest, hashed authenticated actor identity. */
 	commands: [string, string][]
+}
+export const CONTROL_COLUMNS = columns(controlTable)
+export function controlRow(s: Control) {
+	return parseRow(controlTable, {
+		id: ID,
+		format: s.format,
+		fingerprint: s.fingerprint,
+		window_number: s.window,
+		room_reservations: s.rooms.map(
+			([room_id, admission_digest, expires_at]) => ({
+				room_id,
+				admission_digest,
+				expires_at,
+			})
+		),
+		admission_digests: s.admissions,
+		command_grants: s.commands.map(([command_digest, actor_digest]) => ({
+			command_digest,
+			actor_digest,
+		})),
+	})
+}
+export function controlState(raw: Record<string, unknown>): Control {
+	const s = parseRow(controlTable, raw)
+	if (s.id !== ID)
+		throw new RoomError("busy", "Invalid control identity", 503, true)
+	return {
+		format: s.format,
+		fingerprint: s.fingerprint,
+		window: s.window_number,
+		rooms: s.room_reservations.map((r: any) => [
+			r.room_id,
+			r.admission_digest,
+			r.expires_at,
+		]),
+		admissions: s.admission_digests,
+		commands: s.command_grants.map((r: any) => [
+			r.command_digest,
+			r.actor_digest,
+		]),
+	}
 }
 interface Read {
 	state: Control
@@ -71,26 +118,24 @@ export async function provisionControl(
 	policy: ControlPolicy,
 	replicas: 0 | 2
 ) {
-	await sql(
-		`CREATE TABLE IF NOT EXISTS ${CONTROL_TABLE} (id TEXT PRIMARY KEY,payload TEXT NOT NULL INDEX OFF STORAGE WITH (columnstore=false)) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas=${replicas}, "write.wait_for_active_shards"='${
-			replicas + 1
-		}')`
-	)
+	await sql(tableDdl(controlTable, replicas))
 	const existing = (
-		await sql(`SELECT payload FROM ${CONTROL_TABLE} WHERE id=?`, [ID])
+		await sql(`SELECT id FROM ${CONTROL_TABLE} WHERE id=?`, [ID])
 	).rows[0]
 	if (!existing) {
 		await sql("REFRESH TABLE doc.yepwatch_room")
-		const count = (await sql("SELECT count(*) FROM doc.yepwatch_room"))
-			.rows[0]
+		const count = (await sql("SELECT count(*) FROM doc.yepwatch_room")).rows[0]
 		if (Number(count?.[0]) !== 0)
 			throw new Error(
 				"Control initialization requires an empty room store and quiesced writers; never reset live capacity"
 			)
-		await sql(`INSERT INTO ${CONTROL_TABLE} (id,payload) VALUES (?,?)`, [
-			ID,
-			JSON.stringify(initial(policy)),
-		])
+		const row = controlRow(initial(policy))
+		await sql(
+			`INSERT INTO ${CONTROL_TABLE} (${CONTROL_COLUMNS.join(
+				","
+			)}) VALUES (${CONTROL_COLUMNS.map(() => "?").join(",")})`,
+			CONTROL_COLUMNS.map((k) => row[k])
+		)
 	}
 	await new ReleaseControl(sql, policy).check()
 }
@@ -104,7 +149,9 @@ export class ReleaseControl {
 	private async read(): Promise<Read> {
 		const row = (
 			await this.sql(
-				`SELECT payload,_seq_no,_primary_term,CURRENT_TIMESTAMP FROM ${CONTROL_TABLE} WHERE id=?`,
+				`SELECT ${CONTROL_COLUMNS.join(
+					","
+				)},_seq_no,_primary_term,CURRENT_TIMESTAMP FROM ${CONTROL_TABLE} WHERE id=?`,
 				[ID]
 			)
 		).rows[0]
@@ -115,7 +162,9 @@ export class ReleaseControl {
 				503,
 				true
 			)
-		const state = JSON.parse(String(row[0])) as Control
+		const state = controlState(
+			Object.fromEntries(CONTROL_COLUMNS.map((k, i) => [k, row[i]]))
+		)
 		if (
 			state.format !== 1 ||
 			state.fingerprint !== controlFingerprint(this.policy)
@@ -135,10 +184,15 @@ export class ReleaseControl {
 			state.admissions.length > this.policy.admissions
 		)
 			throw new RoomError("busy", "Capacity state unavailable", 503, true)
-		const now = Number(row[3])
+		const now = Number(row[CONTROL_COLUMNS.length + 2])
 		if (!Number.isFinite(now) || !Number.isInteger(now))
 			throw new RoomError("busy", "Store clock unavailable", 503, true)
-		return { state, seq: Number(row[1]), term: Number(row[2]), now }
+		return {
+			state,
+			seq: Number(row[CONTROL_COLUMNS.length]),
+			term: Number(row[CONTROL_COLUMNS.length + 1]),
+			now,
+		}
 	}
 	async check() {
 		await this.read()
@@ -184,20 +238,20 @@ export class ReleaseControl {
 		return s
 	}
 	private async update(r: Read, state: Control) {
-		const raw = JSON.stringify(state)
-		if (Buffer.byteLength(raw) > 512_000)
-			throw new RoomError(
-				"busy",
-				"Capacity bookkeeping limit reached",
-				503,
-				true
-			)
+		const row = controlRow(state)
+		const changed = CONTROL_COLUMNS.filter((k) => k !== "id")
+		const end = (state.window + 1) * WINDOW_MS
 		try {
 			return (
 				(
 					await this.sql(
-						`UPDATE ${CONTROL_TABLE} SET payload=CASE WHEN CURRENT_TIMESTAMP < ? THEN ? ELSE payload END WHERE id=? AND _seq_no=? AND _primary_term=?`,
-						[(state.window + 1) * WINDOW_MS, raw, ID, r.seq, r.term]
+						`UPDATE ${CONTROL_TABLE} SET ${changed
+							.map(
+								(k) =>
+									`${k}=CASE WHEN CURRENT_TIMESTAMP < ? THEN ? ELSE ${k} END`
+							)
+							.join(",")} WHERE id=? AND _seq_no=? AND _primary_term=?`,
+						[...changed.flatMap((k) => [end, row[k]]), ID, r.seq, r.term]
 					)
 				).rowcount === 1
 			)

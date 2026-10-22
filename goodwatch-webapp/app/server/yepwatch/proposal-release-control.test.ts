@@ -3,6 +3,9 @@ import assert from "node:assert/strict"
 import { randomBytes } from "node:crypto"
 import {
 	ReleaseControl,
+	CONTROL_COLUMNS,
+	controlRow,
+	controlState,
 	DEFAULT_CONTROL,
 	CONTROL_TABLE,
 	provisionControl,
@@ -31,14 +34,14 @@ const who = (a: Awaited<ReturnType<ProposalService["create"]>>) => ({
 	token: a.credential.token,
 })
 function database(policy = DEFAULT_CONTROL) {
-	let payload = JSON.stringify({
+	let state = {
 			format: 1,
 			fingerprint: controlFingerprint(policy),
 			window: -1,
 			rooms: [],
 			admissions: [],
 			commands: [],
-		}),
+		} as import("./proposal-release-control.ts").Control,
 		seq = 0,
 		now = 1_800_000_010_000,
 		lost = false,
@@ -46,20 +49,34 @@ function database(policy = DEFAULT_CONTROL) {
 		late = false,
 		failAfterUpdate = false
 	const sql: Sql = async (stmt, args = []) => {
-		if (stmt.startsWith("SELECT payload,_seq_no")) {
+		if (stmt.startsWith("SELECT " + CONTROL_COLUMNS.join(","))) {
 			if (failProof) {
 				failProof = false
 				throw new RoomError("busy", "Read unavailable", 503, true)
 			}
-			return { rows: [[payload, seq, 1, now]], rowcount: 1 }
+			const row = controlRow(state)
+			return {
+				rows: [[...CONTROL_COLUMNS.map((k) => row[k]), seq, 1, now]],
+				rowcount: 1,
+			}
 		}
 		if (stmt.startsWith("UPDATE " + CONTROL_TABLE)) {
 			if (late) {
 				now = Number(args[0])
 				late = false
 			}
-			if (args[3] !== seq || args[4] !== 1) return { rows: [], rowcount: 0 }
-			if (now < Number(args[0])) payload = String(args[1])
+			if (args.at(-2) !== seq || args.at(-1) !== 1)
+				return { rows: [], rowcount: 0 }
+			if (now < Number(args[0]))
+				state = controlState({
+					id: "proposal3",
+					...Object.fromEntries(
+						CONTROL_COLUMNS.filter((k) => k !== "id").map((k, i) => [
+							k,
+							args[i * 2 + 1],
+						])
+					),
+				})
 			seq++
 			if (failAfterUpdate) {
 				failAfterUpdate = false
@@ -79,7 +96,7 @@ function database(policy = DEFAULT_CONTROL) {
 		advance: (ms: number) => {
 			now += ms
 		},
-		state: () => JSON.parse(payload),
+		state: () => structuredClone(state),
 		loseAndHideProof: () => {
 			lost = true
 			failAfterUpdate = true

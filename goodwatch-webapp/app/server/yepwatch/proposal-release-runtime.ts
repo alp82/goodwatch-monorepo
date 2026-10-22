@@ -7,9 +7,10 @@ import {
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
 import { ProposalService } from "./proposal-service.server.ts"
-import { CrateRoomRepository, type Sql } from "./repository.server.ts"
+import type { Sql } from "./repository.server.ts"
+import { RelationalProposalRepository } from "./proposal-relational-repository.ts"
 import { checkReleaseStore } from "./proposal-release-store.ts"
-import type { ProposalCatalog, ProposalRoom } from "./proposal-types.ts"
+import type { ProposalCatalog } from "./proposal-types.ts"
 import type { ReleaseConfig } from "./proposal-release-config.ts"
 export const RELEASE_HEALTH = {
 	live: `${API_PREFIX}/health/live`,
@@ -33,14 +34,12 @@ export function createReleaseRuntime(
 	deps: ReleaseDependencies
 ) {
 	const now = deps.now ?? Date.now
-	const repository = new CrateRoomRepository<ProposalRoom>(
-		deps.sql,
-		config.secret,
-		"doc.yepwatch_room",
-		true
-	)
-	const members = config.member ? releaseMembers(repository, config.member) : undefined
-	if (members && !deps.memberCatalog) throw new Error("Member catalog adapter required")
+	const repository = new RelationalProposalRepository(deps.sql, config.secret)
+	const members = config.member
+		? releaseMembers(repository, config.member)
+		: undefined
+	if (members && !deps.memberCatalog)
+		throw new Error("Member catalog adapter required")
 	const control = new ReleaseControl(deps.sql, config.control)
 	const service = new ProposalService(
 		repository,

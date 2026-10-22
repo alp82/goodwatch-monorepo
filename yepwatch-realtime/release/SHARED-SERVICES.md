@@ -27,7 +27,7 @@ The API standalone URL setting remains available for disposable tests, mutually 
 
 ## Database
 
-See [all three exact schemas and JSON payloads](../../goodwatch-webapp/app/server/yepwatch/SCHEMA.md) (repository path: `goodwatch-webapp/app/server/yepwatch/SCHEMA.md`). Stable names: `doc.yepwatch_room`, `doc.yepwatch_runtime`, `doc.yepwatch_control`. Provision through the updated operator on a new/empty production store. Do not run R4's old-table provisioning commands or point this build at a legacy room table.
+See [all 14 typed schemas and current-state SQL examples](../../goodwatch-webapp/app/server/yepwatch/SCHEMA.md). Votes, proposals, agreements, decisions and related entities have dedicated tables; no generic payload columns remain in the release. Provision through the updated operator on a new/empty production store. Historical R4 commands/images and the previous three-table schema are not compatible with this source.
 
 ## Signup / sign-in
 
@@ -66,4 +66,4 @@ Use the same browser for signup and email confirmation; if verification is compl
 - Build new API/front artifacts and APK with this revision; old APK3 and R4 images are unchanged.
 - Check real signup/email confirmation/consent and existing-account login through public HTTPS back to the same room.
 - Check the rebuilt preview APK return on the physical phone. Local protocol tests do not prove Android browser return.
-- Coolify/TLS activation remains with the owner. Retention, key rotation and comprehensive HTTP/read protection remain separate unfinished release work.
+- Coolify/TLS activation remains with the owner. A stopped-writer expired-record cleanup command is now implemented; scheduling, full key rotation and comprehensive HTTP/read protection remain separate release work.

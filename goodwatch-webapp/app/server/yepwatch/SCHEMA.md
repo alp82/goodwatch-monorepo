@@ -1,84 +1,59 @@
-# YepWatch first-release storage
+# YepWatch first-release database schema
 
-The production release uses three stable table names. Format numbers remain in data so incompatible clients/storage are rejected; they are not public release numbers. Existing development runtimes keep their historical tables. This is an empty-store installation, not a migration of an existing legacy `doc.yepwatch_room` table. The operator must stop on an incompatible existing schema.
+The release stores interactions in **14 explicit typed tables**, not three opaque containers. There are no `payload`, dynamic-object or arbitrary JSON columns. [schema.sql](schema.sql) contains the complete generated DDL. [proposal-storage-schema.ts](proposal-storage-schema.ts) is the shared SQL/runtime-validation definition; regenerate with `node app/server/yepwatch/write-storage-schema.mjs` from `goodwatch-webapp`.
 
-The explicit operator provisions these tables with two replicas on the three-node cluster. Application startup never creates tables. Equivalent DDL:
+## Tables
 
-```sql
-CREATE TABLE IF NOT EXISTS doc.yepwatch_room (
-  id TEXT PRIMARY KEY,
-  payload TEXT NOT NULL INDEX OFF STORAGE WITH (columnstore=false),
-  expires_at BIGINT NOT NULL,
-  pending_revision BIGINT NOT NULL,
-  pending_agreement BOOLEAN NOT NULL
-) CLUSTERED INTO 4 SHARDS WITH (
-  number_of_replicas=2,
-  "write.wait_for_active_shards"='3',
-  refresh_interval=1000
-);
+All names below are in the `doc` schema. Every immutable domain record has `record_id TEXT PRIMARY KEY`, `room_id TEXT`, `generation BIGINT` and `expires_at BIGINT`. The remaining columns describe that entity explicitly.
 
-CREATE TABLE IF NOT EXISTS doc.yepwatch_runtime (
-  id TEXT PRIMARY KEY,
-  format_version INTEGER NOT NULL,
-  key_id TEXT NOT NULL,
-  key_check TEXT NOT NULL,
-  room_ttl_ms BIGINT NOT NULL
-) CLUSTERED INTO 1 SHARDS WITH (
-  number_of_replicas=2,
-  "write.wait_for_active_shards"='3'
-);
+| Table | Main fields / purpose |
+|---|---|
+| `yepwatch_room` | `id`, `revision`, `phase`, `expires_at`, `host_id`, roster/context/generation counters; typed constraints, stream and final-check state; exact references to current domain records; pending notification/check markers |
+| `yepwatch_participant` | Participant ID, nickname, credential hashes/epoch/sequence, screen/readiness, member status; references to this participant's votes, agreement, receipts and grant |
+| `yepwatch_vote` | Participant ID, candidate ID, `choice` (`watch`, `pass`, NULL), vote revision, active exposure milliseconds and timing source |
+| `yepwatch_proposal` | Candidate ID, proposal version, proposer ID, previous candidate ID, participant IDs present when proposed |
+| `yepwatch_agreement` | Participant ID, approved proposal version (nullable), agreement revision |
+| `yepwatch_decision` | Candidate ID, agreement-check version, decision time, strictly typed availability evidence |
+| `yepwatch_screen` | Screen ID/label, country, service IDs, explicit context confirmation |
+| `yepwatch_candidate` | Candidate ID, typed movie/show/episode identity, title/year, summary, poster/backdrop/trailer URLs, score/genres/runtime, typed availability and viewing duration |
+| `yepwatch_command_receipt` | Participant ID, command ID, sequence, request digest and accepted room revision |
+| `yepwatch_ticket` | Ticket hash, participant ID, credential epoch and ticket expiry |
+| `yepwatch_member_grant` | Participant ID, encrypted access token and grant expiry |
+| `yepwatch_member_intent` | State hash, participant ID, epoch, client/return URI, PKCE challenge and encrypted verifier, connection status, code hash and intent expiry |
+| `yepwatch_runtime` | Compatibility marker, key ID/check (not the key), fixed room TTL |
+| `yepwatch_control` | Explicit configuration fingerprint/window, typed room reservations, admission digests and typed command grants; bounded capacity/rate bookkeeping |
 
-CREATE TABLE IF NOT EXISTS doc.yepwatch_control (
-  id TEXT PRIMARY KEY,
-  payload TEXT NOT NULL INDEX OFF STORAGE WITH (columnstore=false)
-) CLUSTERED INTO 1 SHARDS WITH (
-  number_of_replicas=2,
-  "write.wait_for_active_shards"='3'
-);
-```
+**Time-column detail:** common record `expires_at` is the room lifetime. Ticket/grant/intent deadlines use their own `ticket_expires_at`, `grant_expires_at`, `intent_expires_at` columns. These are separate so cleanup cannot delete a currently referenced record merely because a credential expires.
 
-## Room
+Typed objects such as episode identity, constraints, provider offers and control reservations use `OBJECT(STRICT)` with declared fields. They remain SQL-queryable, not JSON strings. SQL rejects undeclared fields; runtime validation also rejects malformed stored records and inconsistent relationships. Votes/agreements/decisions do not contain encrypted JSON documents.
 
-One encrypted JSON aggregate per room. The typed source is [ProposalRoom](proposal-types.ts), extending [ContinuousRoom](continuous-types.ts). It contains:
+## Concurrency and current state
 
-- Identity, revision, six-hour expiry, host and hashed invitation.
-- Roster, viewing screens, country/services and constraints.
-- Candidate deck, already-seen titles, private votes and active-exposure measurements.
-- Current proposal/version, each participant's agreement, final decision and interrupted final-check state.
-- Retry receipts, credential epochs, hashed tickets and admission credentials.
-- Optional linked GoodWatch subject, encrypted access grant and pending OAuth intents. No account password is stored here.
+A row's `record_id` identifies an immutable version, distinct from a domain `participant_id` or `candidate_id`. Only changed records are inserted. One small room-head compare-and-swap publishes their references together. Readers follow full primary keys and never infer committed state from the newest timestamp or search refresh. A failed publication leaves unpublished records that are not current votes or agreements.
 
-Only `payload` contains these fields. The clear columns support expiry and interrupted-work discovery. `pending_revision` marks a notification awaiting acknowledgement; `pending_agreement` marks a final decision check awaiting repair. Full-primary-key reads and Crate's system `_seq_no`/`_primary_term` columns implement compare-and-swap.
+**Commands still contend on publication within one room**, with bounded retries and exact-command recovery. They no longer rewrite everybody's votes or the deck. See [the storage ADR](../../../../docs/adr/yepwatch-typed-room-storage.md) for the crash/consistency protocol and CrateDB constraints.
 
-Expiry makes rooms inaccessible; it does not physically delete ciphertext. Retention cleanup remains separate work.
-
-## Runtime
-
-One compatibility row (`id='proposal3'`, an internal format identifier): format version `3`, operator key ID, a keyed check value (not the key), and `room_ttl_ms=21600000`. Startup refuses mismatched settings. The encryption/signing key stays in a private secret file.
-
-## Control
-
-One JSON control record (`id='proposal3'`), not encrypted because it contains no votes, account data or bearer secrets:
-
-```ts
-{
-  format: 1;
-  fingerprint: string; // hash of immutable capacity/window configuration
-  window: number;     // fixed window derived from database time
-  rooms: [roomId: string, admissionDigest: string, expiresAtMs: number][];
-  admissions: string[]; // granted operation digests in this window
-  commands: [commandDigest: string, actorDigest: string][];
-}
-```
-
-Defaults: 20 active room reservations, 20 admissions/minute, 600 commands/minute globally and 60/actor/minute. Failed/uncertain creation conservatively retains its reservation until expiry. Exact retries do not consume a second grant. The control table is initialized only with an empty room store and quiesced writers.
-
-## Database permissions
+This reporting query follows the current published vote references (verified against disposable Crate). SQL search/join results can lag index refresh; they are not the authoritative realtime read path. For a complete operator snapshot, stop writers and refresh the referenced tables first. The API uses full-primary-key reads instead:
 
 ```sql
-GRANT DQL,DML ON TABLE doc.yepwatch_room TO yepwatch_runtime;
-GRANT DQL ON TABLE doc.yepwatch_runtime TO yepwatch_runtime;
-GRANT DQL,DML ON TABLE doc.yepwatch_control TO yepwatch_runtime;
+SELECT p.participant_id, v.candidate_id, v.choice,
+       v.active_exposure_ms, v.revision
+FROM doc.yepwatch_room r
+JOIN doc.yepwatch_participant p ON p.record_id = ANY(r.participant_records)
+JOIN doc.yepwatch_vote v ON v.record_id = ANY(p.vote_records)
+WHERE r.id = ?;
 ```
 
-GoodWatch account tables remain owned by GoodWatch. Signup does not add another YepWatch account table.
+Likewise, join `r.proposal_record` to `yepwatch_proposal.record_id`, `r.decision_record` to `yepwatch_decision.record_id`, or `p.agreement_record` to `yepwatch_agreement.record_id`. A raw scan includes superseded and unpublished records; it is **not an action history**. Do not use these private SQL queries as public room projections.
+
+## Installation, privacy and lifecycle
+
+This is an explicit empty-store install, not an automatic migration of legacy `doc.yepwatch_room`. Startup checks every table and refuses incompatible schemas/metadata. Internal storage format 1 and wire contract 3 have different purposes; table names have no version suffix. The operator uses four room shards, one shard per related table and two replicas on the three-node cluster; tests use zero on disposable local Crate only.
+
+Only access tokens and pending PKCE verifiers are encrypted fields. Guest credentials remain hashed. No passwords or duplicated GoodWatch accounts are stored. Votes and private relationships are now queryable application data: restrict database roles, SQL logs and backups accordingly. Never expose catalog readers to room tables.
+
+The API role needs DQL/DML on room/domain/control tables and DQL on runtime metadata. The gateway still receives no database credentials. Provisioning and cleanup use separate operator credentials.
+
+Room access expires after six hours. Each domain record carries the same room lifetime, including unreferenced preparations. `purge-expired --apply --writers-stopped` deletes expired records and heads using the database clock; it does not reset capacity or change active rooms. Stop writers and back up first. This operator command is implemented and tested locally; no automatic cleanup schedule or production purge is configured. Never reclaim unreferenced versions of a live room without a separate safe reclamation protocol.
+
+`backup FILE --writers-stopped` exports all typed records, runtime metadata and controls into a new mode-0600 file. It contains private interaction data; credential fields remain encrypted. Keep the file and matching secret private. Restore only to an empty compatible store with writers stopped, inserting domain rows before room heads.

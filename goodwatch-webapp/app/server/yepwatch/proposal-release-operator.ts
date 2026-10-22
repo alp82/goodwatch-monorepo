@@ -1,4 +1,10 @@
 import {
+	tables,
+	controlTable,
+	columns,
+	runtimeTable,
+} from "./proposal-storage-schema.ts"
+import {
 	provisionControl,
 	ReleaseControl,
 	CONTROL_TABLE,
@@ -56,15 +62,44 @@ if (command === "provision") {
 			logicallyExpired: row?.[1] ?? 0,
 			firstExpiry: row?.[2] ?? null,
 			lastExpiry: row?.[3] ?? null,
-			physicalDeletionImplemented: false,
+			physicalDeletionImplemented: true,
+			cleanupRequiresStoppedWriters: true,
 		})
 	)
+} else if (command === "purge-expired") {
+	if (!args.includes("--apply") || !args.includes("--writers-stopped"))
+		throw new Error(
+			"purge-expired requires --apply --writers-stopped; stop writers and back up first"
+		)
+	await checkReleaseStore(sql, config.keyId, config.secret)
+	const cutoff = Number((await sql("SELECT CURRENT_TIMESTAMP")).rows[0][0])
+	if (!Number.isSafeInteger(cutoff)) throw new Error("Store clock unavailable")
+	const deleted: Record<string, number> = {}
+	// Immutable records carry the original room expiry, including abandoned preparations without a head.
+	// Credentials are included; runtime marker and capacity bookkeeping are not reset.
+	for (const table of [
+		...Object.values(tables).filter((t) => t.name !== RELEASE_TABLE),
+		tables.room,
+	]) {
+		await sql(`REFRESH TABLE ${table.name}`)
+		deleted[table.name] = (
+			await sql(`DELETE FROM ${table.name} WHERE expires_at<=?`, [cutoff])
+		).rowcount
+	}
+	console.log(JSON.stringify({ operation: "purge-expired", cutoff, deleted }))
 } else if (command === "backup") {
 	const filename = args[0]
-	if (!filename || filename.startsWith("--"))
-		throw new Error("backup requires a new private output filename")
+	if (
+		!filename ||
+		filename.startsWith("--") ||
+		!args.includes("--writers-stopped")
+	)
+		throw new Error(
+			"backup requires a new private output filename and --writers-stopped"
+		)
 	await checkReleaseStore(sql, config.keyId, config.secret)
-	// Stop room writers for a consistent whole-table backup. Individual ciphertext rows are always intact aggregates.
+	await control.check()
+	// Stop room writers: include every referenced immutable record and its room head.
 	const file = await open(filename, "wx", 0o600)
 	let count = 0,
 		cursor = ""
@@ -76,45 +111,44 @@ if (command === "provision") {
 	}
 	try {
 		await line({
-			type: "yepwatch-proposal3-backup",
-			format: 2,
+			type: "yepwatch-relational-backup",
+			format: 3,
 			keyId: config.keyId,
 			createdAt: new Date().toISOString(),
 			requiresMatchingSecret: true,
 			globallyConsistentOnlyWithWritersStopped: true,
 		})
-		const capacity = (
-			await sql(`SELECT payload FROM ${CONTROL_TABLE} WHERE id=?`, [
-				"proposal3",
-			])
-		).rows[0]
-		if (!capacity)
-			throw new Error("Capacity control record missing from backup")
-		await line({ type: "capacity-control", payload: capacity[0] })
-		for (;;) {
-			const rows = (
-				await sql(
-					`SELECT id,payload,expires_at,pending_revision,pending_agreement FROM ${RELEASE_TABLE} WHERE id>? ORDER BY id LIMIT 200`,
-					[cursor]
-				)
-			).rows
-			if (!rows.length) break
-			for (const [
-				id,
-				payload,
-				expiresAt,
-				pendingRevision,
-				pendingAgreement,
-			] of rows) {
-				await line({
-					id,
-					payload,
-					expiresAt,
-					pendingRevision,
-					pendingAgreement,
-				})
-				cursor = String(id)
-				count++
+		const definitions = [
+			...Object.values(tables)
+				.filter((t) => t.name !== RELEASE_TABLE)
+				.map((t) => ({ name: t.name, primary: t.primary, names: columns(t) })),
+			{ name: runtimeTable.name, primary: "id", names: columns(runtimeTable) },
+			{ name: controlTable.name, primary: "id", names: columns(controlTable) },
+			{ name: tables.room.name, primary: "id", names: columns(tables.room) },
+		]
+		for (const table of definitions) {
+			cursor = ""
+			await sql(`REFRESH TABLE ${table.name}`)
+			for (;;) {
+				const rows = (
+					await sql(
+						`SELECT ${table.names.join(",")} FROM ${table.name} WHERE ${
+							table.primary
+						}>? ORDER BY ${table.primary} LIMIT 200`,
+						[cursor]
+					)
+				).rows
+				if (!rows.length) break
+				for (const values of rows) {
+					await line({
+						table: table.name,
+						columns: Object.fromEntries(
+							table.names.map((k, i) => [k, values[i]])
+						),
+					})
+					cursor = String(values[table.names.indexOf(table.primary)])
+					count++
+				}
 			}
 		}
 		await file.sync()
@@ -126,12 +160,13 @@ if (command === "provision") {
 			operation: "backup",
 			rows: count,
 			sha256: checksum.digest("hex"),
-			encryptedRoomPayloads: true,
+			containsPrivateInteractions: true,
+			credentialFieldsEncrypted: true,
 			controlIncluded: true,
 			secretIncluded: false,
 		})
 	)
 } else
 	throw new Error(
-		"Choose check, provision --apply, inventory, or backup FILE. No purge/rotation is implemented."
+		"Choose check, provision --apply, inventory, or backup FILE --writers-stopped. purge-expired --apply --writers-stopped. No key rotation is implemented."
 	)

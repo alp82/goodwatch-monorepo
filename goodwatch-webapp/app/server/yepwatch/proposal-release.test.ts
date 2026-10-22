@@ -1,4 +1,8 @@
-import { controlFingerprint } from "./proposal-release-control.ts"
+import {
+	controlFingerprint,
+	CONTROL_COLUMNS,
+	controlRow,
+} from "./proposal-release-control.ts"
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import {
@@ -102,25 +106,30 @@ test("Readiness stays red indefinitely without loaded snapshot; probes recover a
 		if (!stmt.startsWith("SELECT")) writes++
 		return {
 			rows: stmt.includes(
-				"SELECT payload,_seq_no,_primary_term,CURRENT_TIMESTAMP"
+				"SELECT " +
+					CONTROL_COLUMNS.join(",") +
+					",_seq_no,_primary_term,CURRENT_TIMESTAMP"
 			)
 				? [
 						[
-							JSON.stringify({
-								format: 1,
-								fingerprint: controlFingerprint(config.control),
-								window: -1,
-								rooms: [],
-								admissions: [],
-								commands: [],
-							}),
+							...CONTROL_COLUMNS.map(
+								(k) =>
+									controlRow({
+										format: 1,
+										fingerprint: controlFingerprint(config.control),
+										window: -1,
+										rooms: [],
+										admissions: [],
+										commands: [],
+									})[k]
+							),
 							0,
 							1,
 							clock,
 						],
 				  ]
 				: stmt.includes("format_version")
-				? [[3, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
+				? [[1, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
 				: [],
 			rowcount: 0,
 		}
@@ -193,15 +202,14 @@ test("Operator provisioning is explicit and idempotent; ordinary startup only re
 		writes = 0
 	const sql: Sql = async (stmt) => {
 		if (!stmt.startsWith("SELECT")) writes++
-		if (stmt.includes("INSERT INTO doc.yepwatch_runtime"))
-			installed = true
+		if (stmt.includes("INSERT INTO doc.yepwatch_runtime")) installed = true
 		const rows = stmt.includes("SELECT id FROM doc.yepwatch_runtime")
 			? installed
 				? [["proposal3"]]
 				: []
 			: stmt.includes("SELECT format_version")
 			? installed
-				? [[3, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
+				? [[1, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
 				: []
 			: []
 		return { rows, rowcount: 1 }
@@ -212,7 +220,7 @@ test("Operator provisioning is explicit and idempotent; ordinary startup only re
 	await checkReleaseStore(sql, "test-key", secret)
 	assert.equal(writes, before)
 	await provisionReleaseStore(sql, 0, "test-key", secret)
-	assert.equal(writes, before + 2)
+	assert.equal(writes, before + 13)
 })
 test("Container listener uses configured bind/port and preserves Secure HttpOnly cookie headers", async () => {
 	const server = await releaseHttp(
@@ -235,17 +243,37 @@ test("Container listener uses configured bind/port and preserves Secure HttpOnly
 	}
 })
 
-test('shared Redis uses explicit cluster nodes and separate messaging credentials', () => {
-  const input = env()
-  delete input.YEPWATCH_PROPOSAL_REVISION_REDIS_URL
-  input.YEPWATCH_PROPOSAL_REDIS_NODES = JSON.stringify([{ host: 'redis1.internal', port: 6379 }, { host: 'redis2.internal', port: 6379 }])
-  input.YEPWATCH_PROPOSAL_REDIS_USER = 'yepwatch_messaging'
-  input.YEPWATCH_PROPOSAL_REDIS_PASSWORD = 'fixture-messaging-password'
-  const config = releaseConfig(input)
-  assert.equal(config.redisNodes?.length, 2)
-  assert.equal(config.redisUsername, 'yepwatch_messaging')
-  assert.equal(config.revisionUrl, undefined)
-  assert.throws(() => releaseConfig({ ...input, YEPWATCH_PROPOSAL_REVISION_REDIS_URL: 'redis://localhost:6379' }), /not both/)
-  assert.throws(() => releaseConfig({ ...input, YEPWATCH_PROPOSAL_REDIS_PASSWORD: '' }), /dedicated/)
-  assert.throws(() => releaseConfig({ ...input, YEPWATCH_PROPOSAL_REDIS_NODES: '[{"host":"r","port":0}]' }), /Invalid/)
+test("shared Redis uses explicit cluster nodes and separate messaging credentials", () => {
+	const input = env()
+	delete input.YEPWATCH_PROPOSAL_REVISION_REDIS_URL
+	input.YEPWATCH_PROPOSAL_REDIS_NODES = JSON.stringify([
+		{ host: "redis1.internal", port: 6379 },
+		{ host: "redis2.internal", port: 6379 },
+	])
+	input.YEPWATCH_PROPOSAL_REDIS_USER = "yepwatch_messaging"
+	input.YEPWATCH_PROPOSAL_REDIS_PASSWORD = "fixture-messaging-password"
+	const config = releaseConfig(input)
+	assert.equal(config.redisNodes?.length, 2)
+	assert.equal(config.redisUsername, "yepwatch_messaging")
+	assert.equal(config.revisionUrl, undefined)
+	assert.throws(
+		() =>
+			releaseConfig({
+				...input,
+				YEPWATCH_PROPOSAL_REVISION_REDIS_URL: "redis://localhost:6379",
+			}),
+		/not both/
+	)
+	assert.throws(
+		() => releaseConfig({ ...input, YEPWATCH_PROPOSAL_REDIS_PASSWORD: "" }),
+		/dedicated/
+	)
+	assert.throws(
+		() =>
+			releaseConfig({
+				...input,
+				YEPWATCH_PROPOSAL_REDIS_NODES: '[{"host":"r","port":0}]',
+			}),
+		/Invalid/
+	)
 })

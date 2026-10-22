@@ -1,3 +1,4 @@
+import { RelationalProposalRepository } from "./proposal-relational-repository.ts"
 import { mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -6,8 +7,14 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { randomBytes } from "node:crypto"
-import { ReleaseControl, CONTROL_TABLE } from "./proposal-release-control.ts"
-import { crateSql, CrateRoomRepository, type Sql } from "./repository.server.ts"
+import {
+	ReleaseControl,
+	CONTROL_TABLE,
+	CONTROL_COLUMNS,
+	controlState,
+	controlRow,
+} from "./proposal-release-control.ts"
+import { crateSql, type Sql } from "./repository.server.ts"
 import { ProposalService } from "./proposal-service.server.ts"
 import { proposalFixtureCatalog } from "./proposal-test-support.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
@@ -51,6 +58,7 @@ test(
 		}
 		const policy = { rooms: 3, admissions: 4, commands: 3, actorCommands: 2 }
 		let servers: Awaited<ReturnType<typeof releaseHttp>>[] = []
+		let backupRows: { table: string; columns: Record<string, unknown> }[] = []
 		try {
 			docker(
 				"run",
@@ -67,10 +75,7 @@ test(
 			)
 			await ready()
 			const operator = fileURLToPath(
-				new URL(
-					"../../../build/yepwatch-release/operator.mjs",
-					import.meta.url
-				)
+				new URL("../../../build/yepwatch-release/operator.mjs", import.meta.url)
 			)
 			const operatorEnv = {
 				PATH: process.env.PATH,
@@ -97,6 +102,11 @@ test(
 			)
 			assert.equal(operate("check").ready, true)
 			assert.equal(operate("inventory").controls.activeReservations, 0)
+			// All assertions below intentionally share a real database window. Avoid beginning just before rollover.
+			const windowPosition =
+				Number((await sql("SELECT CURRENT_TIMESTAMP")).rows[0][0]) % 60000
+			if (windowPosition > 45000)
+				await new Promise((r) => setTimeout(r, 60000 - windowPosition + 25))
 			let fenceFirstControl = true,
 				loseControl = true,
 				loseRoom = false
@@ -105,7 +115,7 @@ test(
 				if (fenceFirstControl && stmt.startsWith("UPDATE " + CONTROL_TABLE)) {
 					fenceFirstControl = false
 					const delayedArgs = [...(args ?? [])]
-					delayedArgs[0] = 0
+					for (let i = 0; i < delayedArgs.length - 3; i += 2) delayedArgs[i] = 0
 					return sql(stmt, delayedArgs)
 				}
 				const result = await sql(stmt, args)
@@ -122,11 +132,7 @@ test(
 			}
 			const build = (connection: Sql) =>
 				new ProposalService(
-					new CrateRoomRepository<ProposalRoom>(
-						connection,
-						secret,
-						"doc.yepwatch_room", true
-					),
+					new RelationalProposalRepository(connection, secret),
 					proposalFixtureCatalog,
 					secret,
 					async () => {},
@@ -249,15 +255,19 @@ test(
 			)
 			try {
 				const destination = join(backupDirectory, "rooms.jsonl")
-				const report = operate("backup", destination)
+				const report = operate("backup", destination, "--writers-stopped")
 				assert.equal(report.controlIncluded, true)
 				const lines = readFileSync(destination, "utf8")
 					.trim()
 					.split("\n")
 					.map((line) => JSON.parse(line))
-				assert.equal(lines[0].format, 2)
-				assert.equal(lines[1].type, "capacity-control")
-				assert.equal(JSON.parse(lines[1].payload).rooms.length, 3)
+				assert.equal(lines[0].format, 3)
+				backupRows = lines.slice(1)
+				assert.equal(
+					lines.find((line) => line.table === CONTROL_TABLE).columns
+						.room_reservations.length,
+					3
+				)
 			} finally {
 				rmSync(backupDirectory, { recursive: true })
 			}
@@ -268,8 +278,12 @@ test(
 			const childSource = `
               import {readFileSync} from 'node:fs';
               const input=JSON.parse(readFileSync(0,'utf8'));
-              const {crateSql,CrateRoomRepository}=await import(${JSON.stringify(
+              const {crateSql}=await import(${JSON.stringify(
 								new URL("./repository.server.ts", import.meta.url).href
+							)});
+              const {RelationalProposalRepository}=await import(${JSON.stringify(
+								new URL("./proposal-relational-repository.ts", import.meta.url)
+									.href
 							)});
               const {ReleaseControl}=await import(${JSON.stringify(
 								new URL("./proposal-release-control.ts", import.meta.url).href
@@ -281,8 +295,8 @@ test(
 								new URL("./proposal-test-support.ts", import.meta.url).href
 							)});
               const sql=crateSql(input.origin,'crate','');
-              const service=new ProposalService(new CrateRoomRepository(sql,input.secret,'doc.yepwatch_room',true),proposalFixtureCatalog,input.secret,async()=>{},Date.now,new ReleaseControl(sql,input.policy));
-              const s=await service.read(input.id,input.credential);
+              const service=new ProposalService(new RelationalProposalRepository(sql,input.secret),proposalFixtureCatalog,input.secret,async()=>{},Date.now,new ReleaseControl(sql,input.policy));
+              let s; for(let attempt=0;attempt<65;attempt++){try{s=await service.read(input.id,input.credential);break}catch(error){if(error.status!==503 || attempt===64)throw error;await new Promise(r=>setTimeout(r,500))}}
               console.log(JSON.stringify({actor:s.own.participantId,host:s.shared.hostParticipantId,sequence:s.own.nextSequence}));
             `
 			const recoveredChild = JSON.parse(
@@ -325,12 +339,8 @@ test(
 				new ReleaseControl(sql, { ...policy, rooms: 4 }).check(),
 				/mismatch/
 			)
-			// Controlled fixture expiry on this disposable store only: keep room payload and reservation expiry identical.
-			const repository = new CrateRoomRepository<ProposalRoom>(
-				sql,
-				secret,
-				"doc.yepwatch_room", true
-			)
+			// Controlled fixture expiry on this disposable store only: keep room expiry and reservation expiry identical.
+			const repository = new RelationalProposalRepository(sql, secret)
 			const stored = (await repository.read(id))!,
 				dbNow = Number((await sql("SELECT CURRENT_TIMESTAMP")).rows[0][0]),
 				expiredAt = dbNow - 1
@@ -339,18 +349,27 @@ test(
 			expired.revision++
 			assert.equal(await repository.compareAndSwap(stored, expired, true), true)
 			const row = (
-				await sql(`SELECT payload FROM ${CONTROL_TABLE} WHERE id=?`, [
-					"proposal3",
-				])
+				await sql(
+					`SELECT ${CONTROL_COLUMNS.join(
+						","
+					)} FROM ${CONTROL_TABLE} WHERE id=?`,
+					["proposal3"]
+				)
 			).rows[0]
-			const state = JSON.parse(String(row[0]))
-			state.rooms.find((r: string[]) => r[0] === id)[2] = expiredAt
+			const state = controlState(
+				Object.fromEntries(CONTROL_COLUMNS.map((k, i) => [k, row[i]]))
+			)
+			state.rooms.find((r) => r[0] === id)![2] = expiredAt
 			// Reset only budget-window fixture to the previous SQL minute, exercising rollover without waiting a minute.
 			state.window = Math.floor(dbNow / 60000) - 1
-			await sql(`UPDATE ${CONTROL_TABLE} SET payload=? WHERE id=?`, [
-				JSON.stringify(state),
-				"proposal3",
-			])
+			const changed = CONTROL_COLUMNS.filter((k) => k !== "id"),
+				typed = controlRow(state)
+			await sql(
+				`UPDATE ${CONTROL_TABLE} SET ${changed
+					.map((k) => `${k}=?`)
+					.join(",")} WHERE id=?`,
+				[...changed.map((k) => typed[k]), "proposal3"]
+			)
 			await assert.rejects(
 				a.read(id, credential(first)),
 				(e: RoomError) => e.status === 410
@@ -361,10 +380,33 @@ test(
 				(await new ReleaseControl(sql, policy).summary()).activeReservations,
 				3
 			)
-			// Existing repository's database-side insert fence refuses an expired delayed payload; no reservation can resurrect it.
+			// Existing repository's database-side insert fence refuses an expired delayed room; no reservation can resurrect it.
 			const delayed = { ...expired, id: "delayed-expired-fixture" }
 			await assert.rejects(repository.insert(delayed))
 			assert.equal(await repository.read(delayed.id), null)
+			const purge = operate("purge-expired", "--apply", "--writers-stopped")
+			assert.equal(purge.deleted["doc.yepwatch_room"], 1)
+			assert.equal(await repository.read(id), null)
+			assert.ok(await repository.read(replacement.credential.roomId))
+			// Restore the complete quiesced typed backup into an empty store in THIS disposable container only.
+			// No shared database or retained services are used by this harness.
+			const names = [...new Set(backupRows.map((r) => r.table))]
+			for (const table of names) await sql(`DELETE FROM ${table}`)
+			for (const row of backupRows) {
+				const keys = Object.keys(row.columns)
+				await sql(
+					`INSERT INTO ${row.table} (${keys.join(",")}) VALUES (${keys
+						.map(() => "?")
+						.join(",")})`,
+					keys.map((k) => row.columns[k])
+				)
+			}
+			const restored = build(sql)
+			assert.equal(
+				(await restored.read(id, credential(first))).own.participantId,
+				first.credential.participantId
+			)
+
 			console.log(
 				JSON.stringify({
 					proof: "disposable-control-crate",
@@ -378,6 +420,8 @@ test(
 					restartRecovery: true,
 					expiryReplacement: true,
 					delayedExpiredInsertDenied: true,
+					expiredTypedCleanup: true,
+					typedBackupRestore: true,
 					productionAccess: false,
 				})
 			)
