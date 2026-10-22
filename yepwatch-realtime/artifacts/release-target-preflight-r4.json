@@ -1,0 +1,109 @@
+{
+  "recordedAt": "2026-10-22T14:52:20.811854+00:00",
+  "scope": "Read-only abio preflight; not deployment or authorization/security review",
+  "target": {
+    "hostname": "abusive / abio",
+    "privateAddress": "10.0.0.21",
+    "publicAddress": "159.69.247.66",
+    "platform": "linux/amd64",
+    "docker": "26.1.3",
+    "compose": "2.20.3",
+    "logicalCpus": 8,
+    "loadAverage": [
+      3.05,
+      3.07,
+      3.28
+    ],
+    "memoryTotalMiB": 15618,
+    "memoryAvailableMiB": 10463,
+    "swapMiB": 0,
+    "diskFreeGiBApprox": 81
+  },
+  "proxy": {
+    "containerId": "ded9a0f0f1261826a54190b6292518e0600758afe859d00ec442bcb6db0338a5",
+    "image": "traefik:v2.10",
+    "healthy": true,
+    "startedAt": "2026-10-11T19:16:02.062150901Z",
+    "entryPoints": [
+      "http=:80",
+      "https=:443"
+    ],
+    "resolver": "letsencrypt",
+    "challenge": "HTTP01 via http",
+    "fileProvider": "/traefik/dynamic/ watched",
+    "network": "coolify",
+    "subnet": "172.23.0.0/16",
+    "publicPorts": [
+      "80/tcp IPv4+IPv6",
+      "443/tcp IPv4+IPv6"
+    ],
+    "existingYepwatchDynamicHostRouteFiles": [],
+    "existingYepwatchNamedNetworkContainers": [],
+    "accessLog": "Existing method/status/router/time only; headers/path excluded"
+  },
+  "dns": {
+    "AObserved": "159.69.247.66",
+    "tlsIssuanceNotPerformed": true
+  },
+  "dependencyTcp": {
+    "abioHost": "All six connected,1-4ms",
+    "existingCoolifyWebappContainer": "All six connected,3-6ms",
+    "existingContainerId": "35d6fe5b9e84",
+    "crateHttp": [
+      "10.0.0.11:4200",
+      "10.0.0.12:4200",
+      "10.0.0.13:4200"
+    ],
+    "snapshotRedisClient": [
+      "10.0.0.14:6379",
+      "10.0.0.15:6379",
+      "10.0.0.16:6379"
+    ],
+    "snapshotPeerSource": "Backend normal read-only CLUSTER SLOTS confirmation2026-10-22T14:45:36.980Z",
+    "redisClusterBus16379NeededByApi": false,
+    "dataOrAuthenticationRequestsSentByHostingPreflight": false
+  },
+  "proposedNotProvisioned": {
+    "roomCoordinator": "http://10.0.0.11:4200",
+    "roomRole": "yepwatch_runtime",
+    "catalogRole": "yepwatch_catalog",
+    "roomTables": [
+      "doc.yepwatch_room_v3",
+      "doc.yepwatch_room_v3_runtime",
+      "doc.yepwatch_room_v3_control"
+    ],
+    "replicas": 2,
+    "activeShardCopies": 3
+  },
+  "notVerified": [
+    "Future dedicated API catalog bridge egress",
+    "New room/catalog role grants and ordinary functional reads",
+    "New store emptiness/schema/key/control compatibility",
+    "Public TLS/router activation",
+    "Sustained capacity under traffic"
+  ],
+  "localOnlyTransferArchives": {
+    "yepwatch-r4-images.tar": {
+      "directory": "/tmp/yepwatch-activation-r4-transfer-20261022",
+      "bytes": 462910464,
+      "sha256": "88686063f1f53232086df55a70c923f2504b46ba1b67d2d0a11bc4aadac23f7f",
+      "uploaded": false
+    },
+    "yepwatch-r4-operator-api.tar": {
+      "directory": "/tmp/yepwatch-activation-r4-transfer-20261022",
+      "bytes": 276602880,
+      "sha256": "a2ad23538044327513357f94c293115c134abadacd1346baa575b8c2111968a3",
+      "uploaded": false
+    }
+  },
+  "remoteMutationsPerformed": [],
+  "retainedServicesRestarted": false,
+  "credentialsReadOrPrinted": false,
+  "newFirewallRulesProposed": false,
+  "notes": [
+    "TCP success does not prove application grants or new-bridge reachability",
+    "No production origin/roles selected or provisioned; values remain proposals",
+    "Cleanup/key rotation/read protection/service-wide admission gaps remain"
+  ],
+  "localArchivesConfigIdsVerifiedWithoutLoading": true
+}

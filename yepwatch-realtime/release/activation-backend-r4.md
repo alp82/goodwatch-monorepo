@@ -1,0 +1,105 @@
+# Backend activation handoff — prepared only, 2026-10-22
+
+No role/table/file/proxy/container mutation below has been performed. Public activation remains an owner action after final approval. Backend source `e96519f5`; exact r4 bundle is `/tmp/yepwatch-capacity-r4-20261022/bundle`, server SHA256 `6b4e21e75a5c4f91de0c646c0307d97e196349720b2ce8aefd599f3e4ff688d6`. Hosting owns exact image/config/digest and compatible client mapping.
+
+## Dependency facts versus proposed selections
+
+- Actual read-only `CLUSTER SLOTS` at 2026-10-22T14:45:36.980Z advertised `10.0.0.14:6379`, `.15:6379`, `.16:6379`. API egress needs all three client ports; the API does not need the 16379 cluster bus. No cache write or auth-denial test was performed.
+- Existing catalog configuration uses `10.0.0.11,10.0.0.12,10.0.0.13`, HTTP port4200. The local successful catalog proof used its pre-existing catalog credential, **not newly provisioned YepWatch roles**.
+- No production YepWatch room origin/role has been selected or created by this task. Proposed selection: existing three-node Crate cluster, room coordinator `http://10.0.0.11:4200`, room user `yepwatch_runtime`, catalog reader `yepwatch_catalog`. Room API configuration supports one coordinator origin; table replication across the three-node cluster does not give the HTTP client automatic coordinator failover.
+- Do not use the existing `admin` catalog credential as the intended release setting. No issuer/account role is needed. No new general-purpose provisioning account is proposed: reuse existing trusted container-loopback administration for the explicit one-off owner step.
+
+## Later owner-only role creation: established mechanism
+
+The existing procedure is `docs/implementation/auth/cratedb-production-rollout.md` (role creation around line221) and its executed example `docs/implementation/auth/cratedb-production/20261016-auth-preparation/README.md`: trusted `crate-01` container-loopback HTTP, JSON request on stdin, bound password parameter, server-side random password, exclusive root0600 credential file; no password argv/stdout. The code below adapts only the two proposed names. It is **not a command for current preflight**.
+
+On crate-01, after owner approval, stop on any pre-existing user/file; do not rotate or repair automatically:
+
+```sh
+ssh root@10.0.0.11 python3 - <<'PY'
+import json, os, pathlib, secrets, subprocess
+roles = ('yepwatch_runtime', 'yepwatch_catalog')
+def sql(stmt, args=()):
+    p = subprocess.run(['docker','exec','-i','crate-01','curl','-fsS','--max-time','300',
+        '-H','Content-Type:application/json','--data-binary','@-','http://127.0.0.1:4200/_sql'],
+        input=json.dumps({'stmt':stmt,'args':list(args)}),text=True,capture_output=True)
+    if p.returncode: raise SystemExit('STOP: administrative request failed; response suppressed')
+    d=json.loads(p.stdout)
+    if 'error' in d: raise SystemExit('STOP: SQL failed; response suppressed')
+    return d
+existing={r[0] for r in sql('SELECT name FROM sys.users')['rows']}
+if existing.intersection(roles): raise SystemExit('STOP: proposed role already exists')
+directory=pathlib.Path('/root/.config/goodwatch/crate-credentials')
+if not directory.is_dir(): raise SystemExit('STOP: established protected directory missing')
+if any((directory/r).exists() for r in roles): raise SystemExit('STOP: credential file already exists')
+for role in roles:
+    password=secrets.token_hex(32)
+    fd=os.open(directory/role,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+    with os.fdopen(fd,'w') as f: f.write(password+'\n')
+    sql('CREATE USER '+role+' WITH (password=?)',[password])
+    print(role+': created; credential retained privately')
+PY
+```
+
+A partial failure stops; retained files are the recovery material, not permission to rerun/overwrite. Transfer only each named password through the owner's private secret mechanism to its distinct release `_FILE`; never a general env dump. This task has not verified production existence or grants for these proposed identities.
+
+## Stable room key and explicit empty-store provisioning
+
+Later, on the selected operator host only: generate a new independent room key once into a private file, store a separately recoverable copy, select a stable key ID (example `yepwatch-beta-20261022-01`), and retain it across restart/rollback. Do not use local-demo keys. Example generation only:
+
+```python
+import os, secrets
+path='/PRIVATE/OWNER_DIRECTORY/yepwatch-room-key'
+fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o400)
+with os.fdopen(fd,'w') as f:
+    f.write(secrets.token_hex(32)+'\n')
+    os.fchmod(f.fileno(),0o400)
+    os.fchown(f.fileno(),1000,1000)  # Current nonroot runtime image UID.
+```
+
+Parent directory must already be owner-private0700; Docker daemon binds the file to `/run/secrets/room_key`. Gateway bearer/fanout key/file generation and UID-readable mounts stay in the hosting owner's runbook. No secret file is generated by this handoff.
+
+Use trusted local administration on crate-01 for the one-off operator container, sharing **only that container's network namespace**. This is not a startup role for the normal API and does not enable remote passwordless administration. Prepared `/PRIVATE/yepwatch-operator.env` (mode0600) contains:
+
+```dotenv
+YEPWATCH_PROPOSAL_CRATEDB_ORIGIN=http://127.0.0.1:4200
+YEPWATCH_PROPOSAL_CRATEDB_USERNAME=crate
+YEPWATCH_PROPOSAL_SECRET_FILE=/run/secrets/room_key
+YEPWATCH_PROPOSAL_KEY_ID=OWNER_SELECTED_STABLE_KEY_ID
+YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS=20
+YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE=20
+YEPWATCH_PROPOSAL_COMMANDS_PER_MINUTE=600
+YEPWATCH_PROPOSAL_ACTOR_COMMANDS_PER_MINUTE=60
+```
+
+With the exact reviewed API image already made available on that operator host by the owner:
+
+```sh
+# PREPARED, NOT EXECUTED. Production default: 2 replicas /3 active copies; never add disposable flag.
+docker run --rm --network container:crate-01 --read-only --cap-drop ALL \
+  --security-opt no-new-privileges \
+  --env-file /PRIVATE/yepwatch-operator.env \
+  --mount type=bind,src=/PRIVATE/yepwatch-room-key,dst=/run/secrets/room_key,readonly \
+  --entrypoint node OWNER_REVIEWED_API_IMAGE_DIGEST \
+  build/yepwatch-release/operator.mjs provision --apply
+```
+
+Quiesce all YepWatch writers first. All three intended Crate shard copies must be available. Initialization refreshes/checks the room table and refuses any existing room history if controls are absent. Never use retained tester stores, bootstrap/reconstruct controls over history, reset quotas, or switch key/config to force readiness. No migration of existing history or runtime quota changes is supported. The operation can partially create tables before a later failure; stop and inspect the specific operator result rather than erase tables. It creates only room/runtime/control tables; no account schema.
+
+After these tables exist, apply each exact grant below separately through the same trusted loopback `sql()` mechanism, checking success and suppressing credential-bearing responses. No shell password literal is needed:
+
+```sql
+GRANT DQL,DML ON TABLE doc.yepwatch_room_v3 TO yepwatch_runtime;
+GRANT DQL ON TABLE doc.yepwatch_room_v3_runtime TO yepwatch_runtime;
+GRANT DQL,DML ON TABLE doc.yepwatch_room_v3_control TO yepwatch_runtime;
+GRANT DQL ON TABLE
+ doc.movie,doc.show,doc.episode,doc.imdb_episode,doc.country,
+ doc.streaming_service,doc.streaming_availability,doc.streaming_evidence,
+ doc.movie_series,doc.season,doc.person,doc.person_appeared_in,
+ doc.person_worked_on,doc.media_image,doc.media_video
+ TO yepwatch_catalog;
+```
+
+The same `sql(stmt)` Python function above executes one grant at a time (inside a later owner-controlled SSH Python block). Runtime DML also includes DELETE at the database privilege level; there is no application deletion endpoint. These grants are prepared, not executed, and the newly restricted catalog role still needs an ordinary release functional check after provisioning; no new authorization audit/probe matrix is requested.
+
+Normal API settings then use the selected private coordinator + `yepwatch_runtime` password `_FILE`, all three catalog hosts + `yepwatch_catalog` password `_FILE`, existing snapshot source credential and separate fanout credential. Copy identical four budget settings/key ID/key to operator/API. Later owner runs `operator.mjs check` with the **runtime** room credential, not the admin environment, and confirms readiness before exposing routes. Exact public route/TLS/rollback ownership stays with hosting. Physical cleanup/full key rotation/raw-request protection remain explicitly unfinished; no service-wide invite-only gate exists.
