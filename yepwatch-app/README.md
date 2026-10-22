@@ -1,5 +1,7 @@
 # YepWatch Expo client
 
+**Have a Mac? [Build and test the iPhone Simulator app](docs/ios-quickstart.md).**
+
 Expo SDK58 / React Native0.88 / TypeScript / Expo Router, with native and browser guest participation. The current source implements continuous contract2 and the approved Glow design. Individual Yep/Nope choices stay private; server-confirmed matches appear while choosing. Inspect matches, pick or keep voting; unanimous current picks automatically produce a freshly checked decision.
 
 ```bash
