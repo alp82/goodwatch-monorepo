@@ -113,7 +113,11 @@ const text = (html: string) =>
 const keySize54 = (scale: number) => Math.max(54, Math.ceil(44 / scale))
 const EDITIONS = ["desktop", "phone"] as const
 /** The phone's header on every screen (2026-10-22): the white G and Menu. */
-const HEADER = ["nav:home", "bar:menu"]
+/** The phone's header on every screen but home (2026-10-22): Back, the white G and Menu. */
+const HEADER = ["bar:back", "nav:home", "bar:menu"]
+/** What a key says for a screen reader, where its words are short: the phone's "Watch". */
+const ariaOf = (html: string, id: string) =>
+	new RegExp(`data-tv-item="${id}"[^>]*aria-label="([^"]*)"`).exec(html)?.[1]
 /** The rating strip: its four levels, then its ten exact scores. */
 const LINE = [
 	...["level:3", "level:5", "level:7", "level:9"],
@@ -201,10 +205,12 @@ test("Tonight shows one pick at a time, says which, and wraps", () => {
 	assert.ok(text(second.phone).includes("|Title 2|86|2 of 4|"))
 	assert.ok(text(wrapped.phone).includes("|Title 2|86|2 of 4|"))
 	for (const edition of EDITIONS) {
+		// The compact phone TV says "Watch" (2026-10-22); its name for a screen reader says where it leads.
+		const words = edition === "phone" ? "Watch" : "Where to watch"
 		assert.deepEqual(focused(guest[edition]), ["watch"])
-		assert.equal(label(guest[edition], "watch"), "Where to watch")
+		assert.equal(label(guest[edition], "watch"), words)
 		assert.ok(
-			text(guest[edition]).includes("|Where to watch|Trailer|Details|"),
+			text(guest[edition]).includes(`|${words}|Trailer|Details|`),
 			edition,
 		)
 		assert.equal(label(guest[edition], "details"), "Details")
@@ -286,9 +292,9 @@ test("the title screen's items in the markup are the machine's, in reading order
 	])
 	const { items, phoneItems, watchItems, printItems, short, ...states } =
 		rendered.title
-	// The phone's overview (2026-10-22): the four keys, the keys of the other two sections and Expand, the header.
+	// The phone's overview (2026-10-22): the hub, its keys to the two sections and Expand at its top, then its four
+	// keys, then the header with Back.
 	assert.deepEqual(phoneItems, [
-		"section:overview",
 		"section:watch",
 		"fingerprint",
 		"expand",
@@ -298,14 +304,18 @@ test("the title screen's items in the markup are the machine's, in reading order
 		"seen",
 		...HEADER,
 	])
-	// It draws every item but its own section's key; the reading order is the test after this one.
-	const overview = phoneItems.filter((id) => id !== "section:overview")
+	// It draws every item; the reading order is the test after this one.
+	const overview = phoneItems
 	for (const state of Object.values(states)) {
 		assert.deepEqual(ids(state.desktop), items)
 		sameSet(ids(state.phone), overview)
 	}
 	sameSet(ids(short), overview)
-	// Where to watch and the fingerprint: their own items, every section's key among them.
+	// Where to watch and the fingerprint: their own items and the header, with its Back to the overview.
+	for (const sectionItems of [watchItems, printItems]) {
+		assert.ok(!sectionItems.some((id) => id.startsWith("section:")))
+		assert.deepEqual(sectionItems.slice(-3), HEADER)
+	}
 	for (const p of rendered.phones) {
 		sameSet(ids(p.watch), watchItems, p.phone)
 		sameSet(ids(p.print), printItems, p.phone)
@@ -486,7 +496,13 @@ test("without an offer URL the watch action honestly leads to Where to watch", (
 		rendered.title.unknown,
 	])
 		for (const edition of EDITIONS)
-			assert.equal(label(state[edition], "watch"), "Where to watch")
+			if (edition === "desktop")
+				assert.equal(label(state[edition], "watch"), "Where to watch")
+			// The phone's key says "Watch", and where it leads to a screen reader.
+			else {
+				assert.equal(label(state[edition], "watch"), "Watch")
+				assert.match(ariaOf(state[edition], "watch") ?? "", /^Watch: where it streams/)
+			}
 })
 
 test("Want to See and Seen it say what is", () => {

@@ -63,7 +63,8 @@ const count = (html: string, part: string) => html.split(part).length - 1
 const BAR = ["bar:back", "bar:search", "bar:menu"]
 const DESKTOP_BAR = BAR
 /** The phone's header: the white G and Menu. */
-const PHONE_BAR = ["nav:home", "bar:menu"]
+/** The phone's header on every screen but home (2026-10-22): Back, the white G and Menu. */
+const PHONE_BAR = ["bar:back", "nav:home", "bar:menu"]
 /** What the phone draws of a list's items: its first page of five titles, the arrow to the next page, the rest. */
 const phonePage = (items: readonly string[]) => {
 	const titles = items.filter((id) => id.startsWith("title:"))
@@ -96,7 +97,7 @@ test("every screen's items in the markup are exactly the machine's, in reading o
 			if (edition === "desktop") assert.match(html, /data-tv-expand-place/)
 			else {
 				assert.deepEqual(
-					items.slice(-2),
+					items.slice(-3),
 					PHONE_BAR,
 					`${name} phone: the header`,
 				)

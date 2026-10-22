@@ -54,6 +54,8 @@ export type TvView = {
 	unpoint?: (id: string) => void
 	/** The screen's name, as the phone's header shows it ("Watch next"). */
 	screenName?: string
+	/** The screen is home (Start, or a guest's Home): the phone's header has no Back there. */
+	atHome?: boolean
 }
 
 const ViewContext = createContext<TvView | null>(null)
@@ -535,18 +537,30 @@ export function PhoneHeader({
 	/** What stands before the name: a service's mark. */
 	mark?: ReactNode
 }) {
-	const { canvas, here, member, screenName } = useTvView()
+	const { canvas, here, member, screenName, atHome } = useTvView()
 	const side = keyLength(canvas, 54)
 	const words = name ?? screenName ?? ""
-	// Both keys are every phone screen's (tv-machine.ts, `navItems`). Before the window is measured the screen is
-	// drawn with the desktop's items, and the header already has them: nothing appears once the phone is known.
+	// The keys are every phone screen's (tv-machine.ts, `tvItems`): Back on every screen but home, the G and Menu.
+	// Before the window is measured the screen is drawn with the desktop's items, and the header already has them:
+	// nothing appears once the phone is known.
 	void items
 	return (
 		<nav
 			aria-label="TV"
-			className="absolute inset-x-0 top-0 z-10 flex items-center gap-3 px-3"
+			className="absolute inset-x-0 top-0 z-10 flex items-center gap-2 px-3"
 			style={{ height: PHONE_HEAD }}
 		>
+			{/* Back: the Remote's Back key on the screen, an arrow, never the G's way home. */}
+			{!atHome && (
+				<Item
+					id="bar:back"
+					label="Back"
+					className="tvc-act flex shrink-0 items-center justify-center"
+					style={{ width: side, height: side }}
+				>
+					<Icon d={ICON.back} className="h-[26px] w-[26px]" />
+				</Item>
+			)}
 			<Item
 				id="nav:home"
 				label={member ? "Start" : "Home"}
@@ -557,7 +571,7 @@ export function PhoneHeader({
 				<GoodWatchG height={26} />
 			</Item>
 			{/* The toast takes this place while it shows (TvScreen.tsx). */}
-			<div className="flex min-w-0 flex-1 items-center gap-2.5 transition-opacity [[data-tv-toast]_&]:opacity-0">
+			<div className="ml-1 flex min-w-0 flex-1 items-center gap-2.5 transition-opacity [[data-tv-toast]_&]:opacity-0">
 				{mark}
 				{/* A long name (a title's) takes two lines at a smaller size rather than losing its end. */}
 				<span
@@ -575,6 +589,42 @@ export function PhoneHeader({
 				<Icon d={MENU_ICON} className="h-[26px] w-[26px]" />
 			</Item>
 		</nav>
+	)
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Tabs on the phone: quiet words with an underline, not pills (2026-10-22). `primary` for a screen's sections
+// (Discover's All, Moods, Themes, Styles), `secondary` for parts within one (the fingerprint's Summary, Feel, Story,
+// Look): smaller and softer. A tab is a full touch target however small its words; the one on show is underlined,
+// and the focus rings it. Nothing grows (living-room.css, `tvc-utab`).
+
+export function Tab({
+	id,
+	on,
+	level = "primary",
+	label,
+	className = "",
+	children,
+}: {
+	id: string
+	/** The tab on show. */
+	on: boolean
+	level?: "primary" | "secondary"
+	label?: string
+	className?: string
+	children: ReactNode
+}) {
+	const { canvas } = useTvView()
+	return (
+		<Item
+			id={id}
+			pressed={on}
+			label={label}
+			className={`tvc-utab flex shrink-0 items-center justify-center whitespace-nowrap ${level === "primary" ? "px-2 text-[18px] font-bold" : "tvc-utab-2 px-2 text-[16px] font-semibold"} ${on ? "tvc-utab-on" : ""} ${className}`}
+			style={{ height: keySize(canvas, 54), minWidth: keySize(canvas, 0) }}
+		>
+			{children}
+		</Item>
 	)
 }
 
@@ -751,20 +801,26 @@ const MOTIF = { w: 44, h: 32, arm: 9 }
  * living-room.css) and its own move out from the small picture: both rest after a few strokes (#190). The picture
  * keeps its size.
  */
-export function Expand() {
+export function Expand({
+	compact = false,
+}: {
+	/** On the phone, in a row of tabs: smaller words and motif, the same touch target. */
+	compact?: boolean
+} = {}) {
 	const { canvas, expands, expandLabel } = useTvView()
 	const P = canvas.edition === "phone"
 	const words = expandLabel ?? "Expand"
+	const motif = compact ? { w: 30, h: 22, arm: 7 } : MOTIF
 	return (
 		<Item
 			id="expand"
 			label={expands ? `${words}: opens ${expands} on GoodWatch` : words}
-			className={`tvc-x flex shrink-0 items-center whitespace-nowrap ${P ? "gap-2.5 px-3.5 text-[20px]" : "h-[64px] gap-4 px-6 text-[26px]"}`}
+			className={`tvc-x flex shrink-0 items-center whitespace-nowrap ${P ? (compact ? "gap-1.5 px-2.5 text-[17px]" : "gap-2.5 px-3.5 text-[20px]") : "h-[64px] gap-4 px-6 text-[26px]"}`}
 			style={P ? { height: keyLength(canvas, 54) } : undefined}
 		>
 			<span
 				className="relative block shrink-0"
-				style={{ width: MOTIF.w, height: MOTIF.h }}
+				style={{ width: motif.w, height: motif.h }}
 			>
 				<span className="absolute inset-[30%] rounded-[3px] bg-current opacity-75" />
 				{[0, 1, 2, 3].map((corner) => (
@@ -772,7 +828,7 @@ export function Expand() {
 						key={corner}
 						className="tvc-x-arm"
 						data-corner={corner}
-						style={{ width: MOTIF.arm, height: MOTIF.arm }}
+						style={{ width: motif.arm, height: motif.arm }}
 					/>
 				))}
 			</span>

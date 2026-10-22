@@ -106,9 +106,10 @@ test("My shows draws the machine's items in its order, in both editions", () => 
 		"bar:search",
 		"bar:menu",
 	])
-	// The phone's header has the G and Menu; Back is the Remote's.
-	assert.deepEqual(rendered.phoneItems.slice(-3), [
+	// The phone's header has Back, the G and Menu (2026-10-22: Back on every screen but home).
+	assert.deepEqual(rendered.phoneItems.slice(-4), [
 		"expand",
+		"bar:back",
 		"nav:home",
 		"bar:menu",
 	])
@@ -192,7 +193,12 @@ test("a member without a show to continue or to start is told how one gets here"
 		"bar:search",
 		"bar:menu",
 	])
-	assert.deepEqual(rendered.emptyPhoneItems, ["expand", "nav:home", "bar:menu"])
+	assert.deepEqual(rendered.emptyPhoneItems, [
+		"expand",
+		"bar:back",
+		"nav:home",
+		"bar:menu",
+	])
 	for (const [edition, html] of Object.entries(rendered.shows.empty)) {
 		assert.deepEqual(
 			ids(html),
@@ -267,7 +273,7 @@ test("on every phone of the room's table every key of My shows and of a show's t
 			assert.ok(item.height * p.scale >= 44, `${p.phone} shows ${item.id}`)
 		assert.deepEqual(
 			heights(p.shows).map((item) => item.id),
-			["jump:title:show-22", "expand", "nav:home", "bar:menu"],
+			["jump:title:show-22", "expand", "bar:back", "nav:home", "bar:menu"],
 		)
 		assert.ok(!p.shows.includes("data-tv-expand-place"), p.phone)
 		assert.ok(!p.shows.includes("data-tv-scroll"), p.phone)
@@ -366,6 +372,7 @@ test("What is GoodWatch?: its two answers are touch targets on every phone, unde
 	assert.deepEqual(rendered.aboutPhoneItems, [
 		"got-it",
 		"rate",
+		"bar:back",
 		"nav:home",
 		"bar:menu",
 	])

@@ -1,7 +1,7 @@
 // Plays the film's scenes (film.ts) one after another on the TV's picture, with a hand-over between them, the
-// chapter bar under them and a Next button at the bottom right. Once the quiz shows, Next and the chapter bar go
-// and Replay stands at the bottom left (the owner, 2026-10-22): a quick second press of Next lands nowhere near it,
-// and a press that reaches Replay as it appears does nothing (REPLAY_GUARD_MS).
+// chapter bar under them and a Next button at the bottom right. Once the quiz shows, Next and the chapter bar go and
+// nothing takes their place (the owner, 2026-10-22: no Replay at the end; the quiz's own keys lead on, and the TV's
+// menu plays the film again with "What is GoodWatch?"). A quick second press of Next lands on nothing.
 import {
 	type CSSProperties,
 	type ReactNode,
@@ -18,9 +18,6 @@ const OVERLAP: Record<Enter, number> = {
 	wipe: 900,
 	deal: 800,
 }
-
-/** How long Replay takes no press after it appears: a double press of Next at the last chapter never restarts the film. */
-export const REPLAY_GUARD_MS = 700
 
 /** The stage: fills the TV's picture, sizes scenes by container units, scales all their timing by `k`. */
 export function Stage({ k, children }: { k: number; children: ReactNode }) {
@@ -69,7 +66,7 @@ export function Player({
 	atRef.current = onAt
 	const [at, setAt] = useState(startAt)
 	const [prev, setPrev] = useState<number | null>(null)
-	// A jump (the chapter bar, Next, Replay) starts that scene at once, with no hand-over.
+	// A jump (the chapter bar, Next) starts that scene at once, with no hand-over.
 	const [jumps, setJumps] = useState(0)
 	const jump = (i: number) => {
 		setPrev(null)
@@ -77,8 +74,6 @@ export function Player({
 		setJumps((n) => n + 1)
 	}
 	const enterOf = (i: number): Enter => scenes[i]?.enter ?? "fade"
-	// When Replay appeared: a press before REPLAY_GUARD_MS has passed is the end of a double press of Next.
-	const replayFrom = useRef(0)
 	const overlap = OVERLAP[enterOf(at)]
 
 	useEffect(() => atRef.current?.(at), [at])
@@ -124,10 +119,6 @@ export function Player({
 		)
 	}
 	const chapters = chapterCount(scenes)
-	const ended = at >= chapters
-	useEffect(() => {
-		if (ended) replayFrom.current = performance.now()
-	}, [ended])
 	return (
 		<>
 			{prev !== null && slot(prev, "out")}
@@ -148,7 +139,7 @@ export function Player({
 					onJump={jump}
 				/>
 			)}
-			{at < chapters ? (
+			{at < chapters && (
 				<button
 					type="button"
 					className="film-skip"
@@ -159,24 +150,6 @@ export function Player({
 					<svg viewBox="0 0 24 24" aria-hidden="true">
 						<path d="M6 5l8 7-8 7V5zm10 0h2.5v14H16z" fill="currentColor" />
 					</svg>
-				</button>
-			) : (
-				<button
-					type="button"
-					className="film-skip film-replay"
-					onClick={() => {
-						if (performance.now() - replayFrom.current < REPLAY_GUARD_MS) return
-						jump(0)
-					}}
-					aria-label="Replay the intro"
-				>
-					<svg viewBox="0 0 24 24" aria-hidden="true">
-						<path
-							d="M12 5a7 7 0 1 1-6.6 4.7l1.9.6A5 5 0 1 0 12 7v3L7.5 6 12 2v3z"
-							fill="currentColor"
-						/>
-					</svg>
-					Replay
 				</button>
 			)}
 		</>

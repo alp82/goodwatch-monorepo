@@ -114,7 +114,8 @@ const phoneFoot = (html: string) => {
 const drawn = (items: string[]) => items.filter((item) => item !== "expand")
 const BAR = ["bar:back", "bar:search", "bar:menu"]
 /** The phone's header on every screen. */
-const HEADER = ["nav:home", "bar:menu"]
+/** The phone's header on every screen but home (2026-10-22): Back, the white G and Menu. */
+const HEADER = ["bar:back", "nav:home", "bar:menu"]
 const barOf = (edition: "desktop" | "phone") =>
 	edition === "phone" ? HEADER : BAR
 /** The items a screen draws: the machine's, but the phone's quiz leaves Your taste to the menu where it asks. */

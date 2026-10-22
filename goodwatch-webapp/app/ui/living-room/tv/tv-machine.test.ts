@@ -2834,7 +2834,7 @@ describe("the phone edition (2026-10-22): a header, pages, sections, and the pho
 	}
 	const guestPhone: TvContext = { ...guest, phone: true }
 
-	it("every screen ends with the header's two keys, the white G and Menu, and has no tabs", () => {
+	it("every screen ends with the header's keys: Back (not on home), the white G and Menu, and has no tabs", () => {
 		for (const [query, ctx] of [
 			["", guestPhone],
 			["", phone],
@@ -2847,13 +2847,14 @@ describe("the phone edition (2026-10-22): a header, pages, sections, and the pho
 			["tv=about", guestPhone],
 		] as const) {
 			const all = items(query, ctx)
-			assert.deepEqual(all.slice(-2), ["nav:home", "bar:menu"], query)
-			assert.ok(
-				!all.some(
-					(id) => id.startsWith("bar:back") || id.startsWith("bar:search"),
-				),
+			// Back stands first in the header on every screen but home (2026-10-22); home has none.
+			assert.deepEqual(
+				all.slice(query ? -3 : -2),
+				[...(query ? ["bar:back"] : []), "nav:home", "bar:menu"],
 				query,
 			)
+			assert.equal(all.filter((id) => id === "bar:back").length, query ? 1 : 0, query)
+			assert.ok(!all.some((id) => id.startsWith("bar:search")), query)
 			assert.ok(
 				!all.some((id) =>
 					/^nav:(tonight|popular|discover|search|quiz)$/.test(id),
@@ -2910,29 +2911,26 @@ describe("the phone edition (2026-10-22): a header, pages, sections, and the pho
 		assert.equal(focusedItem(chosen.state, phone), "offer:3")
 	})
 
-	it("a title has three sections: the overview, Where to watch and the fingerprint, each with the sections' keys", () => {
-		const sections = ["section:overview", "section:watch", "fingerprint"]
-		// The sections' keys stand at the top of each section, first in reading order; the focus starts on the content.
+	it("a title has three sections: the overview is their hub, with a key to each; a section has its content and the header's Back", () => {
+		const header = ["bar:back", "nav:home", "bar:menu"]
 		assert.deepEqual(items("tv=title&title=movie-1", phone), [
-			...sections,
+			"section:watch",
+			"fingerprint",
 			"expand",
 			"watch",
 			"trailer",
 			"want-to-see",
 			"seen",
-			"nav:home",
-			"bar:menu",
+			...header,
 		])
 		assert.deepEqual(items("tv=title&title=movie-1&panel=watch", phone), [
-			...sections,
 			...Array.from({ length: 6 }, (_, i) => `offer:${i}`),
 			"where",
-			"nav:home",
-			"bar:menu",
+			...header,
 		])
 		assert.deepEqual(
 			items("tv=title&title=movie-1&panel=fingerprint", phone),
-			[...sections, "group:-1", "group:0", "group:1", "group:2", "nav:home", "bar:menu"],
+			["group:-1", "group:0", "group:1", "group:2", ...header],
 		)
 		for (const [query, first] of [
 			["tv=title&title=movie-1", "watch"],
@@ -2942,19 +2940,20 @@ describe("the phone edition (2026-10-22): a header, pages, sections, and the pho
 			assert.equal(focusedItem(at(query, 0, phone), phone), first, query)
 	})
 
-	it("a section is a step from the overview; another section takes its place; Back returns to the key that opened it", () => {
+	it("a section is a step from the overview; the header's Back returns to the key that opened it", () => {
 		const watch = choose("tv=title&title=movie-1", "section:watch", phone)
 		assert.equal(watch.history, "push")
 		assert.equal(watch.url, "tv=title&title=movie-1&panel=watch")
-		const print = run(watch.state, phone, {
-			type: "choose",
-			item: "fingerprint",
-		})
-		assert.equal(print.history, "replace")
+		const print = choose("tv=title&title=movie-1", "fingerprint", phone)
+		assert.equal(print.history, "push")
 		assert.equal(print.url, "tv=title&title=movie-1&panel=fingerprint")
+		// From a section there is no key to another one: Back to the overview, as the header's Back does.
 		assert.equal(
-			run(watch.state, phone, { type: "choose", item: "section:overview" })
-				.history,
+			run(watch.state, phone, { type: "choose", item: "fingerprint" }).history,
+			"none",
+		)
+		assert.equal(
+			run(watch.state, phone, { type: "choose", item: "bar:back" }).history,
 			"back",
 		)
 		// A deep link to a section: Back takes the overview's place, on the section's key.
@@ -2965,6 +2964,13 @@ describe("the phone edition (2026-10-22): a header, pages, sections, and the pho
 		)
 		assert.equal(deep.url, "tv=title&title=movie-1")
 		assert.equal(focusedItem(deep.state, phone), "section:watch")
+		const deepPrint = run(
+			at("tv=title&title=movie-1&panel=fingerprint", 0, phone),
+			phone,
+			{ type: "choose", item: "bar:back" },
+		)
+		assert.equal(deepPrint.url, "tv=title&title=movie-1")
+		assert.equal(focusedItem(deepPrint.state, phone), "fingerprint")
 	})
 
 	it("search types with the phone's own keyboard: no TV keys, and its line opens it", () => {
@@ -2972,6 +2978,7 @@ describe("the phone edition (2026-10-22): a header, pages, sections, and the pho
 			"field",
 			...searchIdeas(),
 			"go",
+			"bar:back",
 			"nav:home",
 			"bar:menu",
 		])

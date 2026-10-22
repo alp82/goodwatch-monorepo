@@ -34,6 +34,7 @@ import {
 	Item,
 	PageArrow,
 	PageCount,
+	Tab,
 	TrailerKey,
 	backdropSize,
 	keySize,
@@ -421,47 +422,37 @@ export default function Title({
 // The phone: three sections.
 
 const SECTION_WORDS: Record<string, string> = {
-	"section:overview": "Overview",
-	"section:watch": "Where to watch",
+	"section:watch": "Watch",
 	fingerprint: "Fingerprint",
 }
 
 /**
- * The sections' keys at the top of each section: the one on show marked. The overview leaves its own key out and
- * has the Expand key there instead, so the title's page is one key away.
+ * The overview's keys to the other two sections, and the Expand key to the title's page: words, not pills, so the
+ * overview's own keys stay the strongest (2026-10-22). In a section the header's Back returns here.
  */
-function Sections({
-	items,
-	here,
-	end,
-}: {
-	items: readonly string[]
-	here: "section:overview" | "section:watch" | "fingerprint"
-	end?: React.ReactNode
-}) {
-	const { canvas } = useTvView()
-	const h = keySize(canvas, 54)
-	const keys = Object.keys(SECTION_WORDS).filter(
-		(id) => items.includes(id) && !(here === "section:overview" && id === here),
-	)
+function SectionLinks({ items, end }: { items: readonly string[]; end?: React.ReactNode }) {
 	return (
-		<div className="flex shrink-0 items-center gap-[5px]" style={{ height: h }}>
-			{keys.map((id) => (
-				<Item
-					key={id}
-					id={id}
-					pressed={id === here}
-					label={
-						id === here
-							? `${SECTION_WORDS[id]}, showing now`
-							: SECTION_WORDS[id]
-					}
-					className={`tvc-btn flex shrink-0 items-center whitespace-nowrap px-3 text-[17px] ${id === here ? "tvc-tab-open" : ""}`}
-					style={{ height: h }}
-				>
-					{SECTION_WORDS[id]}
-				</Item>
-			))}
+		<div className="flex shrink-0 items-center gap-1">
+			{Object.keys(SECTION_WORDS)
+				.filter((id) => items.includes(id))
+				.map((id) => (
+					<Tab key={id} id={id} on={false} label={SECTION_WORDS[id]}>
+						{SECTION_WORDS[id]}
+						<span aria-hidden className="ml-1.5 text-white/45">
+							›
+						</span>
+					</Tab>
+				))}
+			{end && <div className="ml-auto">{end}</div>}
+		</div>
+	)
+}
+
+/** A section's name over its content, as a quiet label: the header has its Back. */
+function SectionName({ children, end }: { children: React.ReactNode; end?: React.ReactNode }) {
+	return (
+		<div className="flex shrink-0 items-center gap-3 text-[15px] font-bold uppercase tracking-[0.14em] text-white/60">
+			{children}
 			{end}
 		</div>
 	)
@@ -522,10 +513,9 @@ function Overview({
 		)
 	return (
 		<>
-			<Sections
+			<SectionLinks
 				items={items}
-				here="section:overview"
-				end={items.includes("expand") && <Expand />}
+				end={items.includes("expand") && <Expand compact />}
 			/>
 			<div className="tvc-rise flex min-h-0 flex-1 flex-col justify-center">
 				<div className="flex h-[20px] items-center gap-2 text-[17px] leading-[20px] text-white/85">
@@ -563,15 +553,13 @@ function Overview({
 						label={
 							offer
 								? `Watch on ${offer.name} (opens in a new tab)`
-								: "Where to watch, on the title's page"
+								: "Watch: where it streams, on the title's page"
 						}
-						// Without a direct offer its words are longer: upright they take two lines, so the row keeps its four
-						// keys; a phone's wide canvas has room for one.
-						className={`tvc-btn tvc-watch flex shrink-0 items-center justify-center px-3.5 text-[17px] ${offer || phoneSpan(canvas) >= 600 ? "whitespace-nowrap" : "w-[92px] text-center leading-[1.05]"}`}
+						className="tvc-btn tvc-watch flex shrink-0 items-center justify-center whitespace-nowrap px-4 text-[17px]"
 						style={{ height: keyH }}
 					>
-						{/* Honest without a direct offer: it leads to where the title streams, on its page. */}
-						{offer ? "Watch" : "Where to watch"}
+						{/* "Watch" in the compact TV (2026-10-22); its name says where it leads to a screen reader. */}
+						Watch
 					</Item>
 				)}
 				{items.includes("trailer") && (
@@ -604,13 +592,11 @@ function WatchSection({
 	const page = usePage(ids, wide ? 4 : 2, useListAnchor("title-offers", ids))
 	return (
 		<>
-			<Sections
-				items={items}
-				here="section:watch"
-				end={
-					<PageCount page={page.page} pages={page.pages} className="ml-auto" />
-				}
-			/>
+			<SectionName
+				end={<PageCount page={page.page} pages={page.pages} className="ml-auto normal-case tracking-normal" />}
+			>
+				Watch
+			</SectionName>
 			<div className="flex min-h-0 flex-1 items-center gap-2">
 				<div className={`grid min-w-0 flex-1 gap-1.5 ${wide ? "grid-cols-2" : ""}`}>
 					{!extras && (
@@ -692,24 +678,18 @@ function FingerprintSection({
 			: -1
 	return (
 		<>
-			<Sections items={items} here="fingerprint" />
-			<div
-				className="flex shrink-0 items-center gap-1.5"
-				style={{ height: keyH }}
-			>
+			{/* One quiet row: the section's name, then its parts as secondary tabs. The readings have the rest. */}
+			<div className="flex shrink-0 items-center gap-1" style={{ height: keyH }}>
+				<span className="mr-2 text-[15px] font-bold uppercase tracking-[0.14em] text-white/60">
+					Fingerprint
+				</span>
 				{GROUP_KEYS.map((g, at) => {
 					const id = `group:${at - 1}`
 					return (
 						items.includes(id) && (
-							<Item
-								key={id}
-								id={id}
-								pressed={group === at - 1}
-								className={`tvc-btn flex shrink-0 items-center whitespace-nowrap px-4 text-[18px] ${group === at - 1 ? "tvc-tab-open" : ""}`}
-								style={{ height: keyH }}
-							>
+							<Tab key={id} id={id} on={group === at - 1} level="secondary">
 								{g.name}
-							</Item>
+							</Tab>
 						)
 					)
 				})}
@@ -727,7 +707,7 @@ function FingerprintSection({
 							: "No fingerprint for this title yet."}
 					</output>
 				) : group < 0 ? (
-					<p className="line-clamp-2 text-[19px] font-bold leading-[24px]">
+					<p className="line-clamp-3 text-[23px] font-bold leading-[29px]">
 						{composeHeadline(t).map((seg, i) => (
 							<span
 								// biome-ignore lint/suspicious/noArrayIndexKey: the headline's segments have no other identity
@@ -745,13 +725,13 @@ function FingerprintSection({
 						))}
 					</p>
 				) : (
-					<dl className="grid grid-cols-2 gap-x-5">
+					<dl className="grid grid-cols-2 gap-x-6 gap-y-2.5">
 						{SCALE_GROUPS[group].scales.map((sc) => {
 							const { word } = readScale(sc, t)
 							return (
 								<div
 									key={sc.name}
-									className="flex items-center gap-2 text-[17px] leading-[20px]"
+									className="flex items-center gap-2 text-[19px] leading-[23px]"
 								>
 									<span
 										aria-hidden

@@ -87,7 +87,8 @@ const BAR = [
 ]
 const TABS = ["tab:moods", "tab:themes", "tab:styles"]
 /** The phone's header: the white G and Menu. */
-const PHONE_BAR = ["nav:home", "bar:menu"]
+/** The phone's header on every screen but home (2026-10-22): Back, the white G and Menu. */
+const PHONE_BAR = ["bar:back", "nav:home", "bar:menu"]
 /** What the phone draws of a list's items: its first page of five titles, the arrow to the next page, the rest. */
 const phonePage = (items: readonly string[]) => {
 	const titles = items.filter((id) => id.startsWith("title:"))
@@ -108,7 +109,9 @@ test("the choice screen's items in the markup are the machine's, in reading orde
 	for (const screen of Object.values(rendered.choice)) {
 		assert.deepEqual(ids(screen.desktop), screen.items)
 		assert.deepEqual(ids(screen.phone), screen.phoneItems)
-		assert.deepEqual(screen.phoneItems.slice(-3), ["expand", ...PHONE_BAR])
+		// The phone's Expand key ends the row of tabs (2026-10-22): right after them, before the options.
+		assert.deepEqual(screen.phoneItems.slice(-3), PHONE_BAR)
+		assert.deepEqual(screen.phoneItems.slice(0, 5), ["browse:all", ...TABS, "expand"])
 	}
 	assert.deepEqual(rendered.choice.themes.items, [
 		"browse:all",
@@ -139,13 +142,15 @@ test("three tabs with their names, and the open one marked, with or without the 
 		assert.ok(!ids(onTab[edition]).includes("style:slow"))
 		assert.deepEqual(focused(onBar[edition]), ["bar:menu"])
 		assert.deepEqual(open(onBar[edition]), ["tab:styles"])
-		// The open tab has its own look, and the others the quiet one.
-		assert.match(
-			tag(themes[edition], "tab:themes"),
-			/tvc-tab tvc-tab-open|tvc-tab [^"]*tvc-tab-open/,
-		)
-		assert.ok(!/tvc-tab-open/.test(tag(themes[edition], "tab:moods")))
-		assert.match(tag(themes[edition], "tab:moods"), /tvc-tab /)
+		// The open tab has its own look, and the others the quiet one: on the phone quiet words with an underline
+		// (kit.tsx, `Tab`, 2026-10-22), on the desktop the TV's tabs.
+		const [quiet, marked] =
+			edition === "phone"
+				? [/tvc-utab /, /tvc-utab-on/]
+				: [/tvc-tab /, /tvc-tab-open/]
+		assert.match(tag(themes[edition], "tab:themes"), marked)
+		assert.ok(!marked.test(tag(themes[edition], "tab:moods")))
+		assert.match(tag(themes[edition], "tab:moods"), quiet)
 	}
 })
 
@@ -340,8 +345,8 @@ test("the Expand key stands in its corner on the desktop and ends the last row o
 	// On the desktop the band under the content is kept free for it.
 	assert.match(rendered.choice.themes.desktop, /pb-\[120px\]/)
 	assert.match(rendered.list.theme.desktop, /pb-\[120px\]/)
-	// On the phone (nothing scrolls) the key carries its words: a column of its own beside the options, and the
-	// end of the keys' row under the list. Nothing lies under it, and no corner is kept.
+	// On the phone (nothing scrolls) the key carries its words: at the end of the row of tabs, over the options, and
+	// at the end of the keys' row under the list. Nothing lies under it, and no corner is kept.
 	for (const html of [
 		rendered.choice.themes.phone,
 		rendered.list.theme.phone,
@@ -353,7 +358,7 @@ test("the Expand key stands in its corner on the desktop and ends the last row o
 	}
 	assert.match(
 		rendered.choice.themes.phone,
-		/data-tv-item="expand"[^>]*class="[^"]*flex-col/,
+		/data-tv-item="tab:styles".*?<\/button><div class="ml-auto"><button type="button" data-tv-item="expand"/,
 	)
 	assert.match(
 		rendered.list.theme.phone,

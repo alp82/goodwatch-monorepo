@@ -665,8 +665,12 @@ export const amongItems = (items: readonly string[], item: string) => {
 	return items.includes(target ?? item)
 }
 
-/** The phone's title sections, as their keys at the top of each: the overview, Where to watch, the fingerprint. */
-export const TITLE_SECTIONS = ["section:overview", "section:watch", "fingerprint"]
+/**
+ * The phone's title sections: the overview is their hub, with a key to each of the other two (Watch, the
+ * fingerprint); in a section the header's Back returns to it (2026-10-22: the sections' own row of keys left their
+ * content too little room).
+ */
+export const TITLE_SECTIONS = ["section:watch", "fingerprint"]
 
 /** Keys that stand over a phone screen's content, where its focus never starts. */
 const SECTION_KEYS: ReadonlySet<string> = new Set([
@@ -758,15 +762,15 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 			// The phone's sections: the overview's keys, Where to watch's rows, the fingerprint's groups, and the
 			// sections' own keys at the top of each.
 			if (ctx.phone && screen.panel !== "trailer")
-				// The sections' keys stand at the top of each section: first in reading order.
+				// The overview's keys to the sections stand at its top, first in reading order; a section has its own
+				// content only, and the header's Back.
 				return screen.panel === "watch"
 					? [
-							...TITLE_SECTIONS,
 							...Array.from({ length: ctx.titleOffers ?? 0 }, (_, i) => `offer:${i}`),
 							...(ctx.titleWhere ? ["where"] : []),
 						]
 					: screen.panel === "fingerprint"
-						? [...TITLE_SECTIONS, "group:-1", "group:0", "group:1", "group:2"]
+						? ["group:-1", "group:0", "group:1", "group:2"]
 						: // The overview's Expand key (Full details) stands with the sections' keys at its top.
 							[
 								...TITLE_SECTIONS,
@@ -819,11 +823,15 @@ export function tvItems(screen: TvScreen, ctx: TvContext): string[] {
 		!(
 			screen.name === "title" &&
 			((screen.panel && screen.panel !== "watch") || ctx.phone)
-		)
+		) &&
+		!(ctx.phone && screen.name === "discover" && !screen.filters && !screen.choice && !screen.all)
 			? ["expand"]
 			: []),
-		// The phone's header on every screen: the white G (Start) and Menu, with the screen's name between them.
-		...(hasNav(screen, ctx) || ctx.phone
+		// The phone's header on every screen: Back (not on home), the white G (Start) and Menu, with the screen's name
+		// between them (2026-10-22: Back was the Remote's alone).
+		...(ctx.phone
+			? [...(screen.name === "home" ? [] : ["bar:back"]), ...navItems(ctx)]
+			: hasNav(screen, ctx)
 			? navItems(ctx)
 			: [
 					...(screen.name === "home" ? [] : ["bar:back"]),
@@ -1280,6 +1288,8 @@ function discoverItems(screen: DiscoverScreen, ctx: TvContext): string[] {
 	return [
 		"browse:all",
 		...DISCOVER_TABS.map(({ tab }) => `tab:${tab}`),
+		// The phone's Expand key ends the row of tabs, over the options (2026-10-22): in reading order there.
+		...(ctx.phone && destinationHref(screen, ctx) ? ["expand"] : []),
 		...keys.map((key) => `${kind}:${key}`),
 	]
 }

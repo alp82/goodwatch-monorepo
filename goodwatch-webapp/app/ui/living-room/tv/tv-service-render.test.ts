@@ -91,7 +91,9 @@ const marks = (html: string) =>
 	[...html.matchAll(/data-service-mark="([a-z]+)"/g)].map((match) => match[1])
 const BAR = ["bar:back", "bar:search", "bar:menu"]
 /** The phone's header: the white G and Menu. */
-const PHONE_BAR = ["nav:home", "bar:menu"]
+/** The phone's header on every screen but home (2026-10-22): Back, the white G and Menu; home has no Back. */
+const PHONE_BAR = ["bar:back", "nav:home", "bar:menu"]
+const HOME_BAR = ["nav:home", "bar:menu"]
 /**
  * What the phone draws of a list's items: the page of five titles with the focused one (the first by default),
  * the arrows to the pages around it, then the rest.
@@ -126,7 +128,8 @@ function assertPhonePage(html: string, items: readonly string[]) {
 	)
 	for (const id of drawn.filter((one) => one.startsWith("jump:")))
 		assert.ok(items.includes(id.slice(5)) && !own.includes(id.slice(5)), id)
-	assert.deepEqual(own.slice(-2), PHONE_BAR)
+	assert.deepEqual(own.slice(-2), HOME_BAR)
+	assert.ok(!own.includes("bar:back"), "no Back on home")
 	return drawn
 }
 
@@ -143,7 +146,7 @@ test("home's items in the markup are the machine's: the apps, then a tile per se
 			"app:discover",
 			"app:taste",
 			"jump:service:8",
-			...PHONE_BAR,
+			...HOME_BAR,
 		],
 	)
 	assert.deepEqual(
@@ -151,7 +154,7 @@ test("home's items in the markup are the machine's: the apps, then a tile per se
 			rendered.home.guestServices.phone,
 			rendered.home.guestServices.phoneItems,
 		),
-		["jump:app:taste", "service:8", "service:337", ...PHONE_BAR],
+		["jump:app:taste", "service:8", "service:337", ...HOME_BAR],
 	)
 	assert.deepEqual(rendered.home.guest.items, [
 		"app:tonight",
@@ -418,7 +421,8 @@ test("on every phone of the room's table the header's keys are touch targets and
 					/data-tv-item="(?:nav|bar):[a-z]+"[^>]*style="width:(\d+)px;height:(\d+)px"/g,
 				),
 			]
-			assert.equal(sides.length, 2, phone)
+			// Back, the G and Menu.
+			assert.equal(sides.length, 3, phone)
 			for (const [, w, h] of sides) {
 				assert.ok(Number(w) * scale >= 44, `${phone} header ${w}`)
 				assert.ok(Number(h) * scale >= 44, `${phone} header ${h}`)

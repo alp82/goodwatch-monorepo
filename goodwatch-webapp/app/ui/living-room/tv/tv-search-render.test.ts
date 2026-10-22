@@ -87,7 +87,8 @@ const BAR = [
 ]
 const EDITIONS = ["desktop", "phone"] as const
 /** The phone's header: the white G and Menu. */
-const PHONE_BAR = ["nav:home", "bar:menu"]
+/** The phone's header on every screen but home (2026-10-22): Back, the white G and Menu. */
+const PHONE_BAR = ["bar:back", "nav:home", "bar:menu"]
 /**
  * What the phone draws of a list's items: its first page of five titles, the arrow to the next page, then the
  * rest; the server's own Previous and Next are the list's arrows at its ends.

@@ -216,8 +216,10 @@ export function TvScreen({
 			byPointer,
 			unpoint,
 			screenName,
+			atHome: screen.name === "home",
 		}),
 		[
+			screen.name,
 			screenName,
 			canvas,
 			screenFocus,

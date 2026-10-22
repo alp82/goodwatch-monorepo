@@ -223,14 +223,15 @@ export default function Tonight({
 			label={
 				offer
 					? `Watch on ${offer.name} (opens in a new tab)`
-					: "Where to watch, on its page"
+					: "Watch: where it streams, on its page"
 			}
 			className={`tvc-btn tvc-watch flex shrink-0 items-center gap-2.5 whitespace-nowrap ${P ? "px-4 text-[19px]" : "px-7 text-[24px]"}`}
 			style={{ height: h }}
 		>
+			{/* The compact phone TV says "Watch" (2026-10-22); its name says where it leads to a screen reader. */}
 			{offer && !P
 				? `Watch on ${offer.name}`
-				: offer
+				: offer || P
 					? "Watch"
 					: "Where to watch"}
 		</Item>

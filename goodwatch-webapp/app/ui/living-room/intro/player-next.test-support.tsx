@@ -19,7 +19,7 @@ for (const name of [
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
 const { createElement: h, act } = await import("react")
 const { createRoot } = await import("react-dom/client")
-const { Player, REPLAY_GUARD_MS } = await import("./player")
+const { Player } = await import("./player")
 const container = document.createElement("div")
 document.body.append(container)
 const root = createRoot(container)
@@ -45,35 +45,17 @@ try {
 			expected,
 		)
 	}
-	// At the end Next has gone and Replay stands apart from it (bottom left, intro.css). A press that reaches Replay
-	// as it appears, the second of a quick double press of Next, does nothing; a deliberate one replays.
+	// At the end Next has gone, and nothing takes its place (2026-10-22: no Replay at the end): a quick second press
+	// of Next lands on nothing, and the film stays on its last scene.
 	assert.equal(
 		container.querySelector('button[aria-label="Next chapter"]'),
 		null,
 	)
-	const replay = () =>
-		(
-			container.querySelector(
-				'button[aria-label="Replay the intro"]',
-			) as HTMLElement
-		).click()
-	assert.match(
-		container.querySelector('button[aria-label="Replay the intro"]')
-			?.className ?? "",
-		/film-replay/,
-	)
-	await act(async () => replay())
+	assert.equal(container.querySelector('button[aria-label="Replay the intro"]'), null)
+	assert.equal(container.querySelector(".film-skip"), null)
 	assert.equal(
 		container.querySelector(".film-on")?.getAttribute("data-scene"),
 		"closer",
-	)
-	await act(async () => {
-		await new Promise((resolve) => setTimeout(resolve, REPLAY_GUARD_MS + 50))
-	})
-	await act(async () => replay())
-	assert.equal(
-		container.querySelector(".film-on")?.getAttribute("data-scene"),
-		"opener",
 	)
 	// Next during an automatic handover must discard the outgoing scene and its pending cleanup.
 	const timed = scenes.map((scene, i) => ({

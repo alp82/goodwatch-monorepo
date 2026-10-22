@@ -1551,6 +1551,44 @@ html[data-tv-transition] .tvr-bracket {
 		transform: none;
 		animation: tvc-x-out 0.9s ease-in-out 3 alternate both;
 	}
+	/* The phone's tabs (kit.tsx, `Tab`): words with an underline, no pill. The one on show is white and underlined in
+	   amber; a secondary tab's mark is thinner and white. The focus rings the tab with a calm radius; nothing grows. */
+	.tvc-utab {
+		color: rgba(255, 255, 255, 0.62);
+		border-radius: 8px;
+		box-shadow: none;
+	}
+	.tvc-utab-on {
+		color: #fff;
+	}
+	/* The mark under the words: a short straight bar, inside the tab's touch target. */
+	.tvc-utab-on::after {
+		content: "";
+		position: absolute;
+		left: 10px;
+		right: 10px;
+		bottom: 7px;
+		height: 3px;
+		border-radius: 2px;
+		background: #fbbf24;
+		pointer-events: none;
+	}
+	.tvc-utab-2 {
+		color: rgba(255, 255, 255, 0.55);
+	}
+	.tvc-utab-2.tvc-utab-on {
+		color: #fff;
+	}
+	.tvc-utab-2.tvc-utab-on::after {
+		height: 2px;
+		background: rgba(255, 255, 255, 0.85);
+	}
+	.tvc-utab.tvc-on {
+		color: #fff;
+		background: rgba(255, 255, 255, 0.12);
+		outline: 2px solid #fff;
+		outline-offset: -2px;
+	}
 	/* Mini Discover's tabs: quiet until open. The open one is marked whether or not it has the focus. */
 	.tvc-tab {
 		color: rgba(255, 255, 255, 0.72);

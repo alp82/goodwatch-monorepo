@@ -8,16 +8,17 @@ import { useRef } from "react"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { TitleList, type TvListTitle } from "../TitleList"
 import {
+	Expand,
 	Frame,
 	Img,
 	Item,
+	Tab,
 	backdropSize,
 	keySize,
 	useListAnchor,
 	useReport,
 	useTvView,
 } from "../kit"
-import { ExpandStack } from "./phone-parts"
 import {
 	DISCOVER_TAB_KEYS,
 	type TvDiscoverOption,
@@ -154,25 +155,24 @@ function Choice({
 		return (
 			<Frame name="Discover" items={items} art={behind} dim={0.86} inlineExpand>
 				<div className="flex h-full flex-col gap-[4px]">
-					<div className="flex shrink-0 gap-2" style={{ height: key }}>
-						<Item id="browse:all" className={`${TAB} px-4 text-[20px]`}>
+					{/* The tabs as quiet words, and the Expand key at the row's end (2026-10-22): the options have the
+					    width. */}
+					<div className="flex shrink-0 items-center gap-0.5" style={{ height: key }}>
+						<Tab id="browse:all" on={false}>
 							All
-						</Item>
+						</Tab>
 						{DISCOVER_TAB_KEYS.filter((one) => items.includes(one.item)).map((one) => (
-							<Item
-								key={one.item}
-								id={one.item}
-								pressed={one.tab === tab}
-								className={`${TAB} ${one.tab === tab ? "tvc-tab-open" : ""} min-w-0 flex-1 text-[20px]`}
-							>
+							<Tab key={one.item} id={one.item} on={one.tab === tab}>
 								{one.name}
-							</Item>
+							</Tab>
 						))}
+						{items.includes("expand") && (
+							<div className="ml-auto">
+								<Expand compact />
+							</div>
+						)}
 					</div>
-					<div className="flex min-h-0 flex-1 gap-[6px]">
-						<div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-x-[6px] gap-y-[4px]">{tiles}</div>
-						{items.includes("expand") && <ExpandStack className="h-full w-[104px] shrink-0" />}
-					</div>
+					<div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-x-[6px] gap-y-[4px]">{tiles}</div>
 				</div>
 			</Frame>
 		)

@@ -269,17 +269,6 @@
 	width: max(12px, 1.4cqw);
 	height: max(12px, 1.4cqw);
 }
-/* Replay: at the bottom left, away from where Next was (player.tsx). The chapter bar has gone by then. */
-.film-replay {
-	right: auto;
-	left: 3cqw;
-	background: #fbbf24;
-	color: #111;
-	animation: film-fade-in 0.4s ease-out both;
-}
-.film-replay:hover {
-	background: #fcd34d;
-}
 @container (max-width: 760px) or (max-height: 360px) {
 	.film-chapters {
 		right: 22cqw;
@@ -4826,7 +4815,7 @@
 		font-size: max(10px, 2.7cqw);
 	}
 }
-/* On a phone the film's Next and Replay are small on the picture: each takes a finger's press a little beyond its edge. */
+/* On a phone the film's Next is small on the picture: it takes a finger's press a little beyond its edge. */
 @container (max-width: 760px) or (max-height: 360px) {
 	.film-skip::before {
 		content: "";
@@ -4836,7 +4825,7 @@
 }
 
 /* The phone's picture (upright about 350 x 200, on its side up to 816 x 285 and wider than 16:9): no word of the film
-   under 12 px, and Next and Replay at 13 px or more (the owner, 2026-10-22). Each rule keeps its own size where that
+   under 12 px, and Next at 13 px or more (the owner, 2026-10-22). Each rule keeps its own size where that
    is larger. The scenes that were crowded show fewer items on the phone instead (their own rules above and
    explorer.tsx), so the larger words don't overlap. */
 @container (max-width: 760px) or (max-height: 360px) {
