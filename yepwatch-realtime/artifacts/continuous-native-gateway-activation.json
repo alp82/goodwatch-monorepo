@@ -21,7 +21,6 @@
     "actualAndroid": {
       "result": "PASS",
       "evidenceOwner": "YepWatch native build G8x8t",
-      "observedAtApproximate": "2026-10-22T01:04:00Z",
       "sourceCommit": "a72308ab75f35a9c760b5bfeb7626f139f90ada0",
       "artifact": "yepwatch-app/artifacts/native/android-ui-smoke.json",
       "screenshots": [
@@ -37,7 +36,15 @@
         "Ordinary background/resume retained the confirmed decision"
       ],
       "physicalDeviceVerified": false,
-      "unchangedNativeOrigin": true
+      "unchangedNativeOrigin": true,
+      "completedAt": "2026-10-22T00:59:45.001943+00:00",
+      "completionTimeSource": "Native owner G8x8t exact completedAt correction",
+      "apkSha256": "ee91eeb3a4708eaa46f7c9ac32f80c836935b477dfd74edcb3b26a79cc27ec55",
+      "compiledArchitectures": [
+        "arm64-v8a",
+        "x86_64"
+      ],
+      "requiresLive": true
     },
     "mixedAndroidBrowser": "RUNNING: native4323 and retained browser8132/gateway4322; native-owner fresh smoke room only"
   },
@@ -48,5 +55,5 @@
   "existingRoomsAccessed": false,
   "otherServicesRestarted": false,
   "credentialsInvitesAndRoomIdentifiersRedacted": true,
-  "updatedAt": "2026-10-22T01:00:57.082Z"
+  "updatedAt": "2026-10-22T01:04:29.473Z"
 }
