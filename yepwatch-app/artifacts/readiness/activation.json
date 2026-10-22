@@ -1,0 +1,26 @@
+{
+  "activatedAt": "2026-10-22T13:04:07.003568+00:00",
+  "readinessCommit": "cafbd7c0",
+  "sourcePin": ".expo/review-pins/auto-ready-r1",
+  "web": {
+    "origin": "http://127.0.0.1:8133",
+    "servedIndexSha256": "a1cc7879a95f3cd1d634eb8c7621be097b6b90df35addc6e82e3b439bd4ba93c",
+    "allPreviousAssetsPreserved": true,
+    "rollbackIndex": ".expo/activation-backups/ready-r1/index.html"
+  },
+  "native": {
+    "metro": "http://127.0.0.1:8141",
+    "health": "packager-status:running",
+    "source": "4 pinned runtime files only",
+    "ci": true,
+    "cacheCleared": true,
+    "forcedReloadOrLaunch": false,
+    "deviceCommands": false,
+    "apkChanged": false
+  },
+  "api": "http://127.0.0.1:15992",
+  "websocket": "ws://127.0.0.1:4324",
+  "roomMutations": false,
+  "releaseConfigIncluded": false,
+  "availability": "Next normal user navigation/open/reload; no device execution claimed"
+}
