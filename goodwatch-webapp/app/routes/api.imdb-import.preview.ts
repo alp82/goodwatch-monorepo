@@ -13,7 +13,7 @@ import { createImdbFilePreview } from "~/server/imdb-import/dispatch.server"
 const requestSchema = z.object({
 	fileName: z.string(),
 	csv: z.string(),
-	listKind: z.enum(["watchlist", "custom-list"]).optional(),
+	listKind: z.enum(["watchlist", "custom-list", "ratings"]).optional(),
 })
 
 const TOO_LARGE = `That file is larger than ${Math.round(IMDB_IMPORT_MAX_BYTES / 1024 / 1024)} MB, which is more than an IMDb CSV export should be.`

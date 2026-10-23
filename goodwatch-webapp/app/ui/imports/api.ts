@@ -6,7 +6,7 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query"
 import { sourceImportKeys } from "./SourceImportHooks"
-import type { ImdbListKind } from "~/domain/imdb-file"
+import type { ImdbFileChoice } from "~/domain/imdb-file"
 import { useEffect, useRef } from "react"
 import {
 	IMDB_IMPORT_MAX_BYTES,
@@ -138,7 +138,7 @@ export function usePreviewImdbImport() {
 	return useMutation<
 		ImdbFilePreviewResponse,
 		Error,
-		File | { file: File; listKind: ImdbListKind }
+		File | { file: File; listKind: ImdbFileChoice }
 	>({
 		mutationFn: async (input) => {
 			const file = "file" in input ? input.file : input

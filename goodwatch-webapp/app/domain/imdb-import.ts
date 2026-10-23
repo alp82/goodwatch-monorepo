@@ -1,5 +1,5 @@
 import type { ImportSummary } from "./imports"
-import type { ImdbListKind } from "./imdb-file"
+import type { ImdbFileChoice } from "./imdb-file"
 // IMDb ratings import: a member uploads the ratings CSV that IMDb exports, reviews a preview, and confirms.
 // These are the shapes the `/api/imdb-import/*` endpoints return and the Imports settings page draws.
 // Pure and shared by the server and the browser. See docs/research/imdb-ratings-import.md.
@@ -103,7 +103,7 @@ export interface ImdbFilePreviewResponse {
 	import: ImdbFileSummary
 }
 export interface ImdbImportPreviewRequest {
-	listKind?: ImdbListKind
+	listKind?: ImdbFileChoice
 	fileName: string
 	/** The file's text. */
 	csv: string

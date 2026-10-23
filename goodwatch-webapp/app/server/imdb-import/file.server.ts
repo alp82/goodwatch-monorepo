@@ -157,7 +157,7 @@ export function readRatingsFile(text: string): FileRow[] {
 		dateRated: column("date rated"),
 	}
 	if (
-		classifyImdbHeader(table[0]) !== "ratings" ||
+		!["ratings", "legacy-ambiguous"].includes(classifyImdbHeader(table[0])) ||
 		at.id < 0 ||
 		at.rating < 0 ||
 		at.type < 0
@@ -241,7 +241,7 @@ export function readImdbListFile(
 ): ParsedImport {
 	const table = parseCsv(csv)
 	if (!table.length) throw new ImdbImportError(400, "That file is empty.")
-	if (classifyImdbHeader(table[0]) !== "list")
+	if (!["list", "legacy-ambiguous"].includes(classifyImdbHeader(table[0])))
 		throw new ImdbImportError(
 			400,
 			"Choose the Watchlist or custom-list CSV you downloaded from IMDb.",

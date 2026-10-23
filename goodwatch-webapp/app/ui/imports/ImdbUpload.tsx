@@ -2,7 +2,7 @@
 import { ArrowUpTrayIcon } from "@heroicons/react/24/solid"
 import { type DragEvent, useRef, useState } from "react"
 import { imdbCsvKind } from "~/domain/imdb-file"
-import type { ImdbListKind } from "~/domain/imdb-file"
+import type { ImdbFileChoice } from "~/domain/imdb-file"
 import {
 	IMDB_IMPORT_MAX_BYTES,
 	type ImdbFileSummary,
@@ -29,21 +29,27 @@ export function ImdbUpload({
 	const readSequence = useRef(0)
 	const [dragging, setDragging] = useState(false)
 	const [listFile, setListFile] = useState<File | null>(null)
-	const [listKind, setListKind] = useState<ImdbListKind | null>(null)
+	const [legacyAmbiguous, setLegacyAmbiguous] = useState(false)
+	const [listKind, setListKind] = useState<ImdbFileChoice | null>(null)
 	const preview = usePreviewImdbImport()
 	const wrongSource = useWrongSourceCatch("imdb")
 
 	const upload = async (file: File) => {
 		setListFile(null)
 		setListKind(null)
+		setLegacyAmbiguous(false)
 		const sequence = ++readSequence.current
 		try {
-			if (
-				file.size <= IMDB_IMPORT_MAX_BYTES &&
-				imdbCsvKind(await file.text()) === "list"
-			) {
-				if (sequence === readSequence.current) setListFile(file)
-				return
+			if (file.size <= IMDB_IMPORT_MAX_BYTES) {
+				const kind = imdbCsvKind(await file.text())
+				if (kind === "list" || kind === "legacy-ambiguous") {
+					if (sequence === readSequence.current) {
+						setListFile(file)
+						setListKind(/watchlist/i.test(file.name) ? "watchlist" : null)
+						setLegacyAmbiguous(kind === "legacy-ambiguous")
+					}
+					return
+				}
 			}
 		} catch {
 			/* The mutation presents the existing file-read error. */
@@ -122,25 +128,40 @@ export function ImdbUpload({
 			{listFile && (
 				<fieldset className="space-y-3">
 					<legend className="font-semibold text-gray-100">
-						Which IMDb list did this file come from?
+						{legacyAmbiguous
+							? "Which IMDb export is this?"
+							: "Which IMDb list did this file come from?"}
 					</legend>
 					<p className="text-sm text-gray-400">
-						Watchlist and custom lists use the same columns. Choose the list you
-						exported.
+						{legacyAmbiguous
+							? "This may be an old ratings or Watchlist export. Choose the export you downloaded."
+							: "Watchlist and custom lists use the same columns. Choose the list you exported."}
 					</p>
-					{(
-						[
-							[
-								"watchlist",
-								"My Watchlist",
-								"Adds movies and shows to Want to See and imports personal ratings when present.",
-							],
-							[
-								"custom-list",
-								"A custom list",
-								"Imports personal ratings. List membership, order and notes are kept in the receipt; they aren't added to Want to See.",
-							],
-						] as const
+					{(legacyAmbiguous
+						? ([
+								[
+									"ratings",
+									"Ratings",
+									"Imports personal ratings without adding titles to Want to See.",
+								],
+								[
+									"watchlist",
+									"My Watchlist",
+									"Adds movies and shows to Want to See and imports personal ratings when present.",
+								],
+							] as const)
+						: ([
+								[
+									"watchlist",
+									"My Watchlist",
+									"Adds movies and shows to Want to See and imports personal ratings when present.",
+								],
+								[
+									"custom-list",
+									"A custom list",
+									"Imports personal ratings. List membership, order and notes are kept in the receipt; they aren't added to Want to See.",
+								],
+							] as const)
 					).map(([value, label, detail]) => (
 						<label
 							key={value}

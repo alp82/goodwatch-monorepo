@@ -472,3 +472,14 @@ test("IMDb list exports are recognized before Ratings even when they include You
 		})
 	}
 })
+
+test("legacy Position/Created/You rated headers route to IMDb with an explicit Ratings-or-Watchlist label", async () => {
+	const result = await recognizeImportFile(
+		file(
+			"old-export.csv",
+			"Position,Const,Created,Title,Title Type,You rated\n1,tt0114709,2010-02-01,Synthetic movie,Movie,7\n",
+		),
+	)
+	assert.equal(result.source, "imdb")
+	assert.equal(result.label, "IMDb legacy Ratings or Watchlist export")
+})

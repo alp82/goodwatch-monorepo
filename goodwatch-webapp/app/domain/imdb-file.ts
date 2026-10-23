@@ -1,8 +1,9 @@
 /** IMDb uses the same title-list columns for Watchlist and arbitrary lists. Intent needs a member choice. */
 export type ImdbListKind = "watchlist" | "custom-list"
+export type ImdbFileChoice = ImdbListKind | "ratings"
 export function classifyImdbHeader(
 	header: readonly string[],
-): "ratings" | "list" | "unknown" {
+): "ratings" | "list" | "legacy-ambiguous" | "unknown" {
 	const names = header.map((value) =>
 		value
 			.trim()
@@ -16,7 +17,8 @@ export function classifyImdbHeader(
 		!columns.has("title type")
 	)
 		return "unknown"
-	if (columns.has("position") && columns.has("created")) return "list"
+	if (columns.has("position") && columns.has("created"))
+		return columns.has("you rated") ? "legacy-ambiguous" : "list"
 	return columns.has("your rating") || columns.has("you rated")
 		? "ratings"
 		: "unknown"

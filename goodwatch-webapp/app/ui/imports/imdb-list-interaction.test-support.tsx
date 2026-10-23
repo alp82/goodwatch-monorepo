@@ -102,13 +102,13 @@ const file = new window.File(
 	[
 		readFileSync(
 			new URL(
-				"../../server/imdb-import/fixtures/imdb-watchlist-synthetic.csv",
+				`../../server/imdb-import/fixtures/imdb-${process.env.IMDB_UI_LEGACY ? "legacy" : "watchlist"}-synthetic.csv`,
 				import.meta.url,
 			),
 			"utf8",
 		),
 	],
-	"renamed.csv",
+	process.env.IMDB_UI_FILENAME ?? "renamed.csv",
 	{ type: "text/csv" },
 )
 const input = host.querySelector<HTMLInputElement>('input[type="file"]')!
@@ -118,9 +118,19 @@ await act(async () => {
 	await new Promise((r) => setTimeout(r, 50))
 })
 const before = sent.length
+const initiallySelected = Array.from(
+	host.querySelectorAll<HTMLInputElement>('input[name="imdb-list-kind"]'),
+)
+	.filter((input) => input.checked)
+	.map((input) => input.closest("label")?.textContent)
+const chooserText = host.textContent
 const radio = Array.from(
 	host.querySelectorAll<HTMLInputElement>('input[name="imdb-list-kind"]'),
-)[0]
+).find((input) =>
+	input
+		.closest("label")
+		?.textContent?.includes(process.env.IMDB_UI_CHOICE ?? "My Watchlist"),
+)
 if (!radio) throw new Error("Missing explicit IMDb list choice")
 await act(async () => radio.click())
 const preview = Array.from(host.querySelectorAll("button")).find(
@@ -130,20 +140,22 @@ await act(async () => {
 	preview.click()
 	await new Promise((r) => setTimeout(r, 50))
 })
-const rewatch = Array.from(
-	host.querySelectorAll<HTMLInputElement>('input[name="wishlist-rewatch"]'),
-)[1]
-if (!rewatch) throw new Error("Missing independent rewatch choice")
-await act(async () => rewatch.click())
-const confirm = Array.from(host.querySelectorAll("button")).find(
-	(b) => b.textContent === "Start import",
-)!
-await act(async () => {
-	confirm.click()
-	await new Promise((r) => setTimeout(r, 25))
-})
+if (process.env.IMDB_UI_CHOICE !== "Ratings") {
+	const rewatch = Array.from(
+		host.querySelectorAll<HTMLInputElement>('input[name="wishlist-rewatch"]'),
+	)[1]
+	if (!rewatch) throw new Error("Missing independent rewatch choice")
+	await act(async () => rewatch.click())
+	const confirm = Array.from(host.querySelectorAll("button")).find(
+		(b) => b.textContent === "Start import",
+	)!
+	await act(async () => {
+		confirm.click()
+		await new Promise((r) => setTimeout(r, 25))
+	})
+}
 process.stdout.write(
-	`__IMDB_LIST_UI__${JSON.stringify({ before, sent, text: host.textContent })}`,
+	`__IMDB_LIST_UI__${JSON.stringify({ before, sent, initiallySelected, chooserText, text: host.textContent })}`,
 )
 await act(async () => root.unmount())
 client.clear()

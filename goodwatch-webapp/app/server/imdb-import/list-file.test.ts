@@ -98,3 +98,15 @@ it("retains ambiguous or invalid Created dates and malformed personal scores ind
 	assert.ok(parsed.warnings.some((warning) => warning.kind === "actionable"))
 	assert.equal(parsed.observations[0].imdbList?.created, "02/03/24")
 })
+
+it("recognizes legacy Position/Created/You rated files as ambiguous and can read either explicitly chosen meaning", () => {
+	const csv = fixture("legacy")
+	assert.equal(classifyImdbHeader(parseCsv(csv)[0]), "legacy-ambiguous")
+	assert.equal(readRatingsFile(csv)[0].score, 7)
+	assert.equal(readRatingsFile(csv)[0].dateRated, "2011-03-04")
+	const watchlist = readImdbListFile(csv, "watchlist")
+	assert.equal(
+		watchlist.observations.find((row) => row.kind === "want")?.addedAt,
+		"2010-02-01",
+	)
+})

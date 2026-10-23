@@ -170,6 +170,11 @@ function recognize(peek: Peek, fileName: string): ImportFileRecognition {
 		// Each import finds its columns by name, trimmed and in any case.
 		const header = new Set(peek.header.map((name) => name.trim().toLowerCase()))
 		const has = (...names: string[]) => names.every((name) => header.has(name))
+		if (classifyImdbHeader(peek.header) === "legacy-ambiguous")
+			return {
+				source: "imdb",
+				label: "IMDb legacy Ratings or Watchlist export",
+			}
 		if (classifyImdbHeader(peek.header) === "list")
 			return { source: "imdb", label: "IMDb Watchlist or custom-list export" }
 		if (classifyImdbHeader(peek.header) === "ratings")
