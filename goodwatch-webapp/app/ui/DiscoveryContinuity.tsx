@@ -1,32 +1,34 @@
+import { useLocation, useNavigate } from "@remix-run/react"
 import { useEffect, useRef } from "react"
-import { useLocation } from "@remix-run/react"
+import {
+	type Context,
+	emptyContext,
+	isDiscovery,
+	remember,
+	restoredEntry,
+} from "~/ui/discovery-continuity"
 import { TRIP_KEY, openedByTv, parseTrip } from "~/ui/living-room/tv-way-back"
 
 const key = "goodwatch_discovery"
-type Visit = { url: string; y: number }
-type Context = {
-	last?: Visit
-	routes: Record<string, Visit>
-	positions: Record<string, number>
-}
+/** Scroll positions are written at most this often; `pagehide` and leaving the page write the last one. */
+const SAVE_EVERY = 250
+
 function read(): Context {
 	try {
-		return (
-			JSON.parse(localStorage.getItem(key) || "null") || {
-				routes: {},
-				positions: {},
-			}
-		)
+		const stored = JSON.parse(
+			localStorage.getItem(key) || "null",
+		) as Context | null
+		return stored
+			? {
+					...stored,
+					routes: stored.routes ?? {},
+					positions: stored.positions ?? {},
+				}
+			: emptyContext()
 	} catch {
-		return { routes: {}, positions: {} }
+		return emptyContext()
 	}
 }
-// No auth/account screens: a failed login must not replace the discovery return target.
-const isDiscovery = (path: string) =>
-	path === "/" ||
-	/^\/(taste|discover|wishlist|search|movie|show|movies|shows|explore|lists|categories)(\/|$)/.test(
-		path,
-	)
 /** This arrival is the page the living room's TV just opened (tv-way-back.ts): it starts at its top. */
 function arrivedThroughTv(pathname: string) {
 	try {
@@ -42,27 +44,55 @@ function arrivedThroughTv(pathname: string) {
 
 export function DiscoveryContinuity() {
 	const location = useLocation()
+	const navigate = useNavigate()
 	const previousPath = useRef<string | null>(null)
+	// A followed link to a listing's entry point goes straight to its last filters. Resolving it at the click means one
+	// page change and one loader run, and the unfiltered page never shows. The capture phase runs before the Link's own
+	// handler, which skips a click whose default is prevented.
+	useEffect(() => {
+		const follow = (event: MouseEvent) => {
+			if (
+				event.defaultPrevented ||
+				event.button !== 0 ||
+				event.metaKey ||
+				event.ctrlKey ||
+				event.shiftKey ||
+				event.altKey
+			)
+				return
+			const link = (event.target as Element | null)?.closest?.("a[href]")
+			if (!(link instanceof HTMLAnchorElement)) return
+			if (
+				(link.target && link.target !== "_self") ||
+				link.hasAttribute("download")
+			)
+				return
+			if (link.origin !== window.location.origin || link.hash) return
+			const target = restoredEntry(link.pathname, link.search, read())
+			if (!target) return
+			event.preventDefault()
+			navigate(target)
+		}
+		document.addEventListener("click", follow, true)
+		return () => document.removeEventListener("click", follow, true)
+	}, [navigate])
 	useEffect(() => {
 		const entering = previousPath.current !== location.pathname
 		previousPath.current = location.pathname
 		if (!isDiscovery(location.pathname)) return
 		const url = location.pathname + location.search
 		const stored = read()
-		const previous = stored.routes[location.pathname]
 		// A page the TV opened starts at its top with what the TV sent, not where or how an earlier visit left it.
 		const fromTv = entering && arrivedThroughTv(location.pathname)
-		// Restore a listing's last filters when revisiting its unqualified entry point.
-		if (
-			entering &&
-			!fromTv &&
-			!location.pathname.startsWith("/taste") &&
-			!location.search &&
-			previous?.url.includes("?") &&
-			!/^\/(movie|show)\//.test(location.pathname) &&
-			location.pathname !== "/"
-		) {
-			window.location.replace(previous.url)
+		// An entry point that was not opened by a followed link (a document load, the back button, a navigate call)
+		// still gets its last filters. A client-side replace keeps the document, so this costs one loader run, not a
+		// reload of the whole page.
+		const restored =
+			entering && !fromTv
+				? restoredEntry(location.pathname, location.search, stored)
+				: null
+		if (restored) {
+			navigate(restored, { replace: true })
 			return
 		}
 		// The start page keeps its own place: it moves between the living room and the section below it by its own
@@ -84,26 +114,30 @@ export function DiscoveryContinuity() {
 			else frame = requestAnimationFrame(restore)
 		}
 		frame = requestAnimationFrame(restore)
+		let pending = 0
 		const save = () => {
+			window.clearTimeout(pending)
+			pending = 0
 			if (restoring) return
-			const context = read()
-			const visit = { url, y: ownPlace ? 0 : window.scrollY }
-			context.last = visit
-			context.routes[location.pathname] = visit
-			context.positions[url] = visit.y
-			// Bound snapshots to recent routes.
-			context.positions = Object.fromEntries(
-				Object.entries(context.positions).slice(-100),
+			const next = remember(
+				read(),
+				location.pathname,
+				url,
+				ownPlace ? 0 : window.scrollY,
 			)
 			try {
-				localStorage.setItem(key, JSON.stringify(context))
+				localStorage.setItem(key, JSON.stringify(next))
 			} catch {}
+		}
+		// Reading and writing the whole history on every scroll event costs a frame on a slow phone.
+		const scrolled = () => {
+			if (!pending) pending = window.setTimeout(save, SAVE_EVERY)
 		}
 		const cancelRestore = () => {
 			restoring = false
 		}
 		const timer = window.setTimeout(save, 100)
-		window.addEventListener("scroll", save, { passive: true })
+		window.addEventListener("scroll", scrolled, { passive: true })
 		window.addEventListener("pagehide", save)
 		window.addEventListener("wheel", cancelRestore, { passive: true })
 		window.addEventListener("touchstart", cancelRestore, { passive: true })
@@ -111,11 +145,11 @@ export function DiscoveryContinuity() {
 			save()
 			clearTimeout(timer)
 			cancelAnimationFrame(frame)
-			window.removeEventListener("scroll", save)
+			window.removeEventListener("scroll", scrolled)
 			window.removeEventListener("pagehide", save)
 			window.removeEventListener("wheel", cancelRestore)
 			window.removeEventListener("touchstart", cancelRestore)
 		}
-	}, [location.pathname, location.search])
+	}, [location.pathname, location.search, navigate])
 	return null
 }
