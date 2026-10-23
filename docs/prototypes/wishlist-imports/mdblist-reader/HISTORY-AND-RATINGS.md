@@ -56,7 +56,7 @@ GoodWatch's existing Trakt archive import (`files.server.ts`) already handles th
 | Season row | Nothing | It's derived from episode watches. |
 | Show row | Nothing directly | A show is listed once any episode is watched. GoodWatch derives Seen from the last aired regular episode. `completed` is set by a background job and can lag. |
 | Dropped show | Dropped | Only with nothing contradicting it, as the existing show-status imports do. |
-| Movie or show rating | Score | Whole numbers 1 to 10 pass as is. Half steps follow the TMDB import's rule and round up (7.5 becomes 8). Rating a movie also makes it Seen, as GoodWatch's rule says. |
+| Movie or show rating | Score | `rating_precise` rounded half up (observed: 7.5 → 8, matching MDBList's own `rating`). Rating a movie also makes it Seen, as GoodWatch's rule says. |
 | Season or episode rating | Unsupported, kept visible | As in the Trakt import: "GoodWatch doesn't import season or episode ratings yet." |
 | Custom lists | Unsupported, kept visible | As in the Trakt import. A custom list isn't Want to See. |
 | Collection, liked lists, favorite people, Up Next, stats | Not read | Not GoodWatch concepts, or derived. |
@@ -80,6 +80,37 @@ Assume 500 Watchlist titles, 2,000 movie plays, 20,000 episode plays, 300 shows,
 
 That's 4 to 7% of the free 1,000 a day, shared with the member's other MDBList apps, and well under the 1,000 reads per 5 minutes.
 
+## Second probe: ratings and rewatches (owner data, October 23, 2026)
+
+The owner rated a movie 7.5 (also watched), rated one episode of a miniseries 4.5 with no show rating, and added another watch of a second movie. 9 GET requests: ratings (full and `ids_only`), watched (full and `ids_only`), `plays=all`, journal, a movie-only watched read, and `/sync/history` for 2 movies.
+
+### Ratings
+
+| Bucket | Rows | `rating` / `rating_precise` | Fields |
+| --- | --- | --- | --- |
+| movies | 1 | 8 / 7.5 | `rated_at`, `rating`, `rating_precise`, `movie{title, year, ids{imdb, mdblist, tmdb, trakt, tvdb}}` |
+| shows | 0 | | |
+| seasons | 0 | | |
+| episodes | 1 | 5 / 4.5 | `rated_at`, `rating`, `rating_precise`, `episode{season, number, name, ids{tmdb, tvdb}, show{title, year, ids}}` |
+
+- `rating` is `rating_precise` rounded half up, the same rule the TMDB import uses. Reading `rating_precise` and rounding gives the same scores and keeps the rule in GoodWatch's hands.
+- `rated_at` is a millisecond UTC timestamp. `ids_only` gives movies `{id, tmdb, rating, rating_precise, rated_at}` and episodes `{tmdb, rating, rating_precise, rated_at}`.
+- Rating an episode doesn't rate its show: 0 of 1 episode-rated shows has a show rating. The rated movie and the rated episode are also both watched.
+- Headers: `X-Has-More: false`, `X-Matched-Items: 2`; no `pagination.total` or `X-Total-Items`, as on the other history routes.
+
+### Watched and rewatches
+
+- `/sync/watched` now has 2 movies, 2 shows, 2 seasons, and 8 episodes (14 rows, `X-Matched-Items: 14`). Both shows are `inprogress: true`, `completed: false`.
+- `plays=all` returns 3 movie plays and 8 episode plays (11). The rewatched movie has 2 plays with 2 distinct `play_id` and 2 distinct `watched_at`, 101 days apart. `/sync/history` agrees: `play_count: 2`, not truncated.
+- **Gap:** that movie's one-row-per-item `last_watched_at` is later than both plays. The latest watch date exists only on the item row, with no play behind it. The other movie has 1 play equal to its `last_watched_at`.
+- The journal now lists 2 watched movies, 8 watched episodes, 1 watched season, 1 rated movie, and 1 rated episode, all `added`.
+
+### What this means for the import
+
+- **Scores:** movie and show `rating_precise` rounded half up. Episode ratings stay unsupported until season and episode scores exist.
+- **Watches:** one watch per `plays=all` row. When an item's `last_watched_at` is later than all of its plays, that date is a watch too, or the latest watch is lost. Reading both the per-item snapshot and the plays costs about one extra request per 1,000 items.
+- **Not yet known:** whether the owner added 2 or 3 watches, so whether the extra date is a real third watch or a changed item timestamp.
+
 ## Not observed
 
-Rating rows (no ratings on the account), a movie watch, a rewatch, a dropped show, a custom list, and a large account's paging.
+A show-level rating, a season rating, a dropped show, a custom list, and a large account's paging.
