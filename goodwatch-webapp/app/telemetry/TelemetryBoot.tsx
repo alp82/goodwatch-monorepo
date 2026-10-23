@@ -24,7 +24,7 @@ const NAVIGATION_TYPES = {
  * Starts analytics and error tracking for the document it is rendered in, and keeps them informed about the route and
  * the signed-in member. Its effects run after hydration, which is the first condition of the loading rule.
  */
-export function TelemetryBoot() {
+export function TelemetryBoot({ faststatsSiteKey }: { faststatsSiteKey?: string }) {
 	const { user } = useUser()
 	const location = useLocation()
 	const matches = useMatches()
@@ -48,7 +48,7 @@ export function TelemetryBoot() {
 		setAnalyticsUser(user?.id ?? null)
 		installProductInteractions()
 		setTelemetryMember(Boolean(user))
-		startTelemetry()
+		startTelemetry(faststatsSiteKey)
 		// The call waits until PostHog has loaded, so a sign-in before that point is still identified.
 		withPostHog((posthog) => {
 			if (!user) {
@@ -66,7 +66,7 @@ export function TelemetryBoot() {
 
 			identified.current = true
 		})
-	}, [user])
+	}, [user, faststatsSiteKey])
 
 	return null
 }

@@ -1,5 +1,5 @@
 import { trackDiscoveryNavigation } from "./product-analytics"
-// The page's one door to analytics and error tracking (PostHog, Sentry, the Google tag). The tools load after the page
+// The page's one door to analytics and error tracking (PostHog, FastStats, Sentry, the Google tag). The tools load after the page
 // is interactive, so nothing here imports an SDK statically. Calls made before a tool loaded wait in a queue.
 import type { PostHog } from "posthog-js"
 import { TELEMETRY_AFTER_INTERACTION, TELEMETRY_LOAD } from "./config"
@@ -66,7 +66,13 @@ const isLocalhost = () =>
 // A task boundary between the tools, so that their start-up work doesn't add up to one long task.
 const nextTask = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
 
-async function loadTools(reason: LoadReason) {
+async function loadTools(reason: LoadReason, faststatsSiteKey?: string) {
+	// Independent of the other tools: an unavailable provider must not delay the comparison.
+	if (faststatsSiteKey && !isLocalhost()) {
+		void import("./faststats-browser")
+			.then((module) => module.startFastStats(faststatsSiteKey))
+			.catch((error) => console.error("FastStats failed to load", error))
+	}
 	const early = readEarlyTelemetry(window)
 	;(window as unknown as { __gwTelemetryLoad?: string }).__gwTelemetryLoad =
 		reason
@@ -113,14 +119,14 @@ async function loadTools(reason: LoadReason) {
 }
 
 /** Arms the loading trigger. Call it after hydration; later calls do nothing. */
-export function startTelemetry(): void {
+export function startTelemetry(faststatsSiteKey?: string): void {
 	if (state.started || typeof window === "undefined") return
 	state.started = true
 	state.landingTitle = document.title
 	state.hydratedAt = Date.now()
 	// The tools never start inside a visitor's gesture: an interaction makes them wait for a pause.
 	whenPageIsInteractive(
-		(reason) => void loadTools(reason),
+		(reason) => void loadTools(reason, faststatsSiteKey),
 		browserLoadTriggerEnv(window),
 		{ ...TELEMETRY_LOAD, afterInteraction: TELEMETRY_AFTER_INTERACTION },
 	)

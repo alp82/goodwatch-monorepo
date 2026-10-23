@@ -128,6 +128,7 @@ type LoaderData = {
 		BETTER_AUTH_ENABLED: boolean
 		/** The cut-over notice is on (AUTH_MAINTENANCE, #552). */
 		AUTH_MAINTENANCE: boolean
+		FASTSTATS_SITE_KEY: string
 	}
 	/** This browser still holds a Supabase sign-in from before the move to Better Auth: ask once to sign in again. */
 	signInAgain: boolean
@@ -172,6 +173,7 @@ export const loader: LoaderFunction = async ({
 				SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
 				BETTER_AUTH_ENABLED: betterAuth,
 				AUTH_MAINTENANCE: authMaintenanceOn(),
+				FASTSTATS_SITE_KEY: process.env.FASTSTATS_SITE_KEY?.trim() ?? "",
 			},
 			signInAgain:
 				betterAuth && !user && hasSupabaseCookie(request.headers.get("Cookie")),
@@ -285,7 +287,9 @@ export function ErrorBoundary() {
 						</AuthContext.Provider>
 					)}
 					<ToastContainer />
-					<TelemetryBoot />
+					<TelemetryBoot
+						faststatsSiteKey={typeof root === "object" ? root.env.FASTSTATS_SITE_KEY : undefined}
+					/>
 					<InstantRouteScroll />
 					<ScrollRestoration />
 					<Scripts />
@@ -383,7 +387,7 @@ function Root() {
 								<App />
 								{/* <CookieConsent /> */}
 								<ToastContainer />
-								<TelemetryBoot />
+								<TelemetryBoot faststatsSiteKey={env.FASTSTATS_SITE_KEY} />
 								<InstantRouteScroll />
 								{shouldUseScrollRestoration && <ScrollRestoration />}
 								{/* The start page's scripts start after its first paint (utils/start-after-paint.ts). */}

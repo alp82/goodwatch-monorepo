@@ -28,6 +28,7 @@
 		"test:auth-importer": "bash scripts/auth-importer/run.sh"
 	},
 	"dependencies": {
+		"@faststats/web": "^0.13.2",
 		"@goodwatch/auth-stack": "file:packages/auth-stack",
 		"@headlessui/react": "^2.2.0",
 		"@heroicons/react": "^2.1.5",
