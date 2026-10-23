@@ -1,7 +1,3 @@
-// The hub: every destination, laid out like the Living room remote's feature well. On phones it's a sheet above the
-// dock (opened by the hub key); on desktop it's the Browse panel under the header. Both are the same labeled modal
-// dialog, with a focus trap, Escape to close, and focus returned to the key or button that opened it. The phone sheet
-// can also be dragged down to close.
 import {
 	Dialog,
 	DialogBackdrop,
@@ -13,7 +9,11 @@ import { Link, useLocation } from "@remix-run/react"
 import type React from "react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
 import { landedWords, showsWords } from "~/domain/newly-available-words"
-import { myListsPath } from "~/ui/share-card/links"
+// The hub: every destination, laid out like the Living room remote's feature well. On phones it's a sheet above the
+// dock (opened by the hub key); on desktop it's the Browse panel under the header. Both are the same labeled modal
+// dialog, with a focus trap, Escape to close, and focus returned to the key or button that opened it. The phone sheet
+// can also be dragged down to close.
+import { PhoneAccountPanel } from "~/ui/account/AccountPanels"
 import { TASTE_GROUPS_NAME } from "~/ui/taste/taste-groups-name"
 import { useUser } from "~/utils/auth"
 import { useOpenAfterMount } from "~/utils/first-use"
@@ -159,7 +159,7 @@ function SecondaryKey({
 function AccountRow() {
 	const { user } = useUser()
 	const signUp = useSignUpHref()
-	const destinations = getDestinations()
+	const navigation = useNavigation()
 	if (!user)
 		return (
 			<Link
@@ -174,36 +174,17 @@ function AccountRow() {
 				<ArrowRightIcon className="ml-auto h-4 w-4 shrink-0" aria-hidden />
 			</Link>
 		)
-	const name: string = user.user_metadata?.name ?? user.email ?? "You"
-	const avatar: string | undefined = user.user_metadata?.avatar_url
-	const link = "rounded-md px-1 py-2 text-gray-400 hover:text-gray-100"
+	// The account menu's phone layout: who you are, your places, Settings and Sign out (#member-profile Q24).
 	return (
-		<div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 p-1 font-bold text-gray-100">
-			{avatar ? (
-				<img src={avatar} alt="" className="h-[34px] w-[34px] rounded-full" />
-			) : (
-				<span className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-linear-135 from-amber-400 to-amber-700 text-[15px] font-extrabold text-amber-950">
-					{name.slice(0, 1).toUpperCase()}
-				</span>
-			)}
-			<span className="min-w-0 truncate">{name}</span>
-			<span className="grow" />
-			<nav aria-label="Your account" className="flex text-[13px] font-medium">
-				<Link
-					// The Wishlist is the first choice of My library.
-					to={destinations.myLibrary.href}
-					className={link}
-				>
-					Wishlist
-				</Link>
-				<Link to={myListsPath} className={link}>
-					Lists
-				</Link>
-				<Link to="/settings" className={link}>
-					Settings
-				</Link>
-			</nav>
-		</div>
+		<nav
+			aria-label="Your account"
+			className="overflow-hidden rounded-2xl bg-white/[0.03] ring-1 ring-white/[0.08]"
+		>
+			<PhoneAccountPanel
+				close={() => navigation.setHubOpen(false)}
+				framed={false}
+			/>
+		</nav>
 	)
 }
 
@@ -232,8 +213,7 @@ function HubContent() {
 		: `${wishlistCount} on your Wishlist`
 	// A link to the page the person is already on changes no location, so close on any link click.
 	const closeOnLink = (event: React.MouseEvent) => {
-		if ((event.target as HTMLElement).closest("a"))
-			navigation.setHubOpen(false)
+		if ((event.target as HTMLElement).closest("a")) navigation.setHubOpen(false)
 	}
 	return (
 		// biome-ignore lint/a11y/useKeyWithClickEvents: only observes clicks on the links inside
