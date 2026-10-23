@@ -146,3 +146,29 @@ Measured on October 23, 2026, with `nav.mjs` against two local production builds
 - **Desktop tap without hover:** no change. The press prefetch starts only a few ms before the click.
 - **Back and Forward didn't change on the bench (about 50 ms desktop, 205 ms phone).** Every history step in this flow lands on a title page, and every bench title page is incomplete (the related map has no data source locally), so the cache doesn't keep it. A step back to a complete page (`/movies/best`) committed 2 to 4 ms after the press. On production most title pages are complete.
 - **HTML:** 15 URLs fetched as a browser and as Googlebot were identical between the builds after normalizing asset hashes.
+
+### On production after tickets 1 to 4
+
+Measured on October 23, 2026, with the same script, flow, profiles, and three runs as [Results on production](#results-on-production), after commit `16e27739` and a later deploy that contains it. Anonymous visitor. Paint time in ms from the press. Raw results: `navigation-speed/after-*.json`.
+
+| Profile, mode | Before: median, p90 | After: median, p90 |
+| --- | --- | --- |
+| Desktop, hover | 165, 475 | 36, 338 |
+| Desktop, tap | 188, 303 | 91, 308 |
+| Phone (slow 4G, 4× CPU), tap | 355, 1,448 | 51, 675 |
+
+| Step | Desktop hover, before → after | Phone tap, before → after |
+| --- | --- | --- |
+| List → first title | 90 → 22 | 1,119 → 88 |
+| Title → first person | 91 → 25 | 1,744 → 1,170 |
+| Person → title | 197 → 21 | 312 → 51 |
+| Back or Forward | 198 → 36 | 274 → 26 |
+| Category → title | 89 → 21 | 397 → 62 |
+
+What is still slow:
+
+- **A click with no hover before it** (the desktop tap mode presses at once) still waits for one server round trip: 200 to 300 ms right after two deploys. Server work was 1 to 80 ms per request (`Server-Timing`); the rest is network and proxy time. People moving a mouse onto a link rest on it long enough for the hover prefetch, so the hover row is closer to what they see.
+- **The phone's first person page** took about 1.2 s (1.7 s before). Its data was already being prefetched when the tap came, but on slow 4G that request shared the connection with poster pictures and other prefetches.
+- **Hub → Discover** didn't get faster: the hub's links open in a dialog and the step waits for Discover's own server answer (170 to 340 ms).
+
+Documents: a Googlebot and browser snapshot of 60 production URLs after the deploy, compared with the snapshot from before any change, showed no change in structure apart from two title pages that were incomplete (`no-store`) on one side, which the page cache never stores, and loader data keys that differ with them. Text differences are data updates and [#754](https://github.com/alp82/goodwatch-monorepo/issues/754).
