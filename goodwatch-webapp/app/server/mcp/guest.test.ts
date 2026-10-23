@@ -25,7 +25,7 @@ registerHooks({
 				'export const getDetailsForMovie=async()=>({details:{synopsis:"Story",genres:["Drama"]}});export const getDetailsForShow=getDetailsForMovie'
 		if (specifier === "../viewer.server")
 			body =
-				'export const guestContext=(progress,country)=>{globalThis.__discordGuestCalls.push({kind:"context",args:[progress,country]});return {viewer:{kind:"guest"},country,services:[]}}'
+				'export const guestContext=(progress,country)=>{globalThis.__discordGuestCalls.push({kind:"context",args:[progress,country]});return {viewer:{kind:"guest"},country,services:progress.services??[]}}'
 		if (specifier === "../title-cards.server")
 			body =
 				'export const getDisplayFields=async()=>new Map([[42,{runtime:120,poster_path:"/poster.jpg",goodwatch_overall_score_normalized_percent:80}]])'
@@ -167,4 +167,19 @@ test("guest person tools reject blank searches and missing person IDs", async ()
 		readGuestTool({ country: "DE" }, "https://goodwatch.app", "get_person", {}),
 		/person_id/,
 	)
+})
+
+test("guest title reads use saved guild services for availability", async () => {
+	calls.length = 0
+	await readGuestTool(
+		{ country: "DE", services: [8] },
+		"https://goodwatch.app",
+		"get_title",
+		{ title_id: "movie:42" },
+	)
+	const availability = calls.find((c) => c.kind === "availability")!
+	assert.deepEqual(availability.args[3], { allServices: false })
+	assert.deepEqual((availability.args[1] as { services: number[] }).services, [
+		8,
+	])
 })

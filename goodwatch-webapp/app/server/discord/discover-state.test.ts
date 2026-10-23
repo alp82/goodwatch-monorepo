@@ -41,7 +41,6 @@ registerHooks({
 })
 test("long filter state uses a short Valkey key for one hour, with bounded paging IDs", async () => {
 	const state = {
-		country: "DE",
 		args: {
 			type: "show" as const,
 			genres: ["Action & Adventure"],
@@ -87,8 +86,7 @@ test("forged inline filters fail strict MCP validation", async () => {
 		{ providers: [-1] },
 	]) {
 		const key =
-			"i" +
-			Buffer.from(JSON.stringify({ country: "DE", args })).toString("base64url")
+			"i" + Buffer.from(JSON.stringify({ args })).toString("base64url")
 		assert.ok(key.length <= 66)
 		assert.equal(await loadDiscoverState(key), null)
 	}

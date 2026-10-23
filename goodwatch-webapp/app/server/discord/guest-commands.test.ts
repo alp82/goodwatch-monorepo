@@ -52,6 +52,7 @@ function fixture() {
 	})
 	const deps: Dependencies = {
 		linkedUser: async () => null,
+		getGuild: async () => null,
 		unlink: async () => {},
 		memberRead: async () => {
 			throw new Error("Unexpected member read")
@@ -281,7 +282,7 @@ for (const [action, value] of [
 ] as const)
 	test(`${action} rebuilds public guest content from its ID`, async () => {
 		const f = fixture()
-		f.states.set(key, { country: "DE", args: { type: "movie" } })
+		f.states.set(key, { args: { type: "movie" } })
 		assert.deepEqual(
 			await f.run(3, { custom_id: listCustomId(action, value) }),
 			{ type: 5, data: { flags: 0 } },
@@ -347,7 +348,6 @@ test("discover applies local service IDs, filters and ten-title pagination", asy
 	await f.finished
 	const state = f.states.get(key)
 	assert.deepEqual(state, {
-		country: "DE",
 		args: {
 			type: "show",
 			moods: ["funny"],
@@ -395,7 +395,7 @@ test("expired discovery and unavailable local service explain how to recover", a
 	)
 })
 test("small discovery state round trips inline; invalid IDs are rejected", async () => {
-	const state = { country: "DE", args: {} }
+	const state = { args: {} }
 	const inline = await saveDiscoverState(state)
 	assert.equal(inline[0], "i")
 	assert.deepEqual(await loadDiscoverState(inline), state)
@@ -442,23 +442,23 @@ test("static registration pins choices to the real domain definitions", async ()
 for (const action of ["similar", "watch", "open", "previous", "next"]) {
 	test(`public ${action} creates a private card`, async () => {
 		const f = fixture()
-		f.states.set(key, { country: "DE", args: {} })
+		f.states.set(key, { args: {} })
 		const data =
 			action === "open"
 				? { custom_id: listCustomId("open", "public"), values: ["movie:42"] }
 				: action === "previous" || action === "next"
-					? {
-							custom_id: listCustomId(
-								"discover",
-								`${key}:${action === "previous" ? 0 : 2}`,
-							),
-						}
-					: {
-							custom_id: formatCustomId(
-								action as "similar" | "watch",
-								"movie:42",
-							),
-						}
+				? {
+						custom_id: listCustomId(
+							"discover",
+							`${key}:${action === "previous" ? 0 : 2}`,
+						),
+				  }
+				: {
+						custom_id: formatCustomId(
+							action as "similar" | "watch",
+							"movie:42",
+						),
+				  }
 		assert.deepEqual(await f.run(3, data, true), {
 			type: 5,
 			data: { flags: EPHEMERAL },
@@ -571,7 +571,7 @@ test("a linked member opens a discover title with match_label and shares a fresh
 							match_label: "Excellent taste fit",
 						},
 						member: { score: 9, want_to_see: true },
-					}
+				  }
 		}
 		return f
 	}
@@ -656,7 +656,7 @@ for (const source of ["similar", "person", "hot", "similar-button"]) {
 								match_label: "Excellent taste fit",
 							},
 							member: {},
-						}
+					  }
 			assert.deepEqual(
 				await g.run(
 					3,

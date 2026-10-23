@@ -94,7 +94,7 @@ export function titleCard(
 			? "Not rated yet"
 			: `${score}/100 · ${
 					scoreLabels[Math.min(10, Math.max(1, Math.round(score / 10)))]
-				}`
+			  }`
 	}\n${title.runtime_minutes ? `${title.runtime_minutes} min · ` : ""}${(
 		title.genres ?? []
 	)
@@ -134,8 +134,8 @@ export function titleCard(
 					.map((o) => escape(o.name ?? "Provider"))
 					.join(", ")
 		: title.availability?.state === "no_match"
-			? "No current offers found."
-			: "Availability unknown."
+		? "No current offers found."
+		: "Availability unknown."
 	const buttons: Component[] = [
 		{
 			type: 2,
@@ -170,7 +170,7 @@ export function titleCard(
 							media: { url: title.poster_url },
 							description: title.name.slice(0, 100),
 						},
-					}
+				  }
 				: titleText,
 			{
 				type: 10,
@@ -178,11 +178,10 @@ export function titleCard(
 			},
 			{
 				type: 10,
-				content:
-					`**Where to watch · ${country}**${options.member && !options.share ? "" : " (all services)"}\n${availability}`.slice(
-						0,
-						4000,
-					),
+				content: `**Where to watch · ${country}**\n${availability}`.slice(
+					0,
+					4000,
+				),
 			},
 			{ type: 1, components: buttons },
 		],
@@ -252,7 +251,7 @@ export function titleSelect(titles: GuestTitle[], share = false): Component[] {
 						},
 					],
 				},
-			]
+		  ]
 		: []
 }
 export function titleListCard(
@@ -361,7 +360,7 @@ export function personCard(person: GuestPerson, share = false) {
 							media: { url: person.profile_url },
 							description: person.name.slice(0, 100),
 						},
-					}
+				  }
 				: heading,
 			{
 				type: 10,

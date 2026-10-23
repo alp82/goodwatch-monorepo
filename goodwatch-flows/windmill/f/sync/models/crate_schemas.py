@@ -1080,6 +1080,20 @@ SCHEMAS = {
         "timestamps": False,
         "replicas": "0-1",
     },
+    "discord_guild": {
+        "columns": {
+            "guild_id": "TEXT",
+            "country": "TEXT",
+            "service_ids": "ARRAY(INTEGER)",
+            "digest_channel_id": "TEXT",
+            "updated_by": "TEXT",
+            "updated_at": "TIMESTAMP WITH TIME ZONE",
+        },
+        "primary_key": ["guild_id"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
     # Crate has no unique index on non-key columns, so handles are claimed here: the handle is the key, and an
     # insert with ON CONFLICT DO NOTHING lets exactly one person claim it. A handle renamed away from (released_at)
     # or of a deleted account (deleted_at) is on hold for 90 days before anyone else can claim it.

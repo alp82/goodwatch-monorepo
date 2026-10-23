@@ -6,12 +6,10 @@ import {
 } from "../mcp/discover-filters.ts"
 import type { ReadArgs } from "../mcp/tools.server.ts"
 export interface DiscoverState {
-	country: string
 	args: ReadArgs
 }
 const stateSchema = z
 	.object({
-		country: z.string().regex(/^[A-Z]{2}$/),
 		args: z
 			.object({
 				...discoverFilters,

@@ -78,6 +78,7 @@ function fixture(overrides: Partial<Dependencies> = {}) {
 		edits: unknown[] = []
 	const dependencies: Dependencies = {
 		linkedUser: async () => null,
+		getGuild: async () => null,
 		unlink: async () => {},
 		memberRead: async () => {
 			throw new Error("Unexpected member read")

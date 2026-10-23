@@ -1,5 +1,6 @@
 import { appOrigin } from "./oauth.server.ts"
 import { commands } from "./commands.ts"
+import { FALLBACK_COUNTRY } from "../cache-identity.server.ts"
 import {
 	type GuestTitle,
 	type GuestPerson,
@@ -17,7 +18,9 @@ import {
 	parseListId,
 	listCustomId,
 } from "./custom-id.ts"
-import { localeCountry } from "./country.ts"
+import { resolveViewerPlace, type PlaceDependencies } from "./place.server.ts"
+import { guildSettingsAvailable, type GuildSettings } from "./guild.server.ts"
+import { setup, setupAutocomplete, canManageGuild } from "./setup.server.ts"
 import { defer, within } from "./respond.server.ts"
 import { discordRest } from "./rest.server.ts"
 import type { DiscoverState } from "./discover-state.server.ts"
@@ -32,7 +35,7 @@ export interface Interaction {
 	guild_id?: string
 	message?: { flags?: number }
 	user?: { id: string }
-	member?: { user?: { id: string } }
+	member?: { user?: { id: string }; permissions?: string }
 	data?: {
 		name?: string
 		custom_id?: string
@@ -40,7 +43,7 @@ export interface Interaction {
 		options?: { name: string; value?: string; focused?: boolean }[]
 	}
 }
-export interface Dependencies {
+export interface Dependencies extends PlaceDependencies {
 	linkedUser: (discordId: string) => Promise<string | null>
 	unlink: (target: { byDiscordUserId: string }) => Promise<void>
 	memberRead: (
@@ -49,6 +52,9 @@ export interface Dependencies {
 		args: Parameters<typeof readGuestTool>[3],
 	) => Promise<Record<string, unknown>>
 
+	saveGuild?: (settings: GuildSettings) => Promise<boolean>
+	guildAvailable?: () => boolean
+	countries?: () => Promise<{ code: string; name: string }[]>
 	read: typeof readGuestTool
 	take: (user: string) => Promise<RateVerdict>
 	edit: (app: string, token: string, body: unknown) => Promise<void>
@@ -57,25 +63,29 @@ export interface Dependencies {
 	saveState?: (state: DiscoverState) => Promise<string>
 	loadState?: (key: string) => Promise<DiscoverState | null>
 }
-const defaults: Required<Dependencies> = {
+const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
 	linkedUser: async (id) =>
 		(await import("./link.server.ts")).getLinkedUserId(id),
 	unlink: async (target) => (await import("./link.server.ts")).unlink(target),
 	memberRead: async (userId, name, args) => {
-		const data = await (await import("../mcp/data.server.ts")).readMemberTool(
-			userId,
-			"https://goodwatch.app",
-			name,
-			args,
-		)
+		const data = await (
+			await import("../mcp/data.server.ts")
+		).readMemberTool(userId, "https://goodwatch.app", name, args)
 		return name === "get_title"
 			? (await import("../mcp/title-results.server.ts")).enrichTitleResults(
 					userId,
 					data,
 					{ posters: true },
-				)
+			  )
 			: data
 	},
+	getGuild: async (id) =>
+		(await import("./guild.server.ts")).getGuildSettings(id),
+	saveGuild: async (settings) =>
+		(await import("./guild.server.ts")).saveGuildSettings(settings),
+	guildAvailable: guildSettingsAvailable,
+	countries: async () =>
+		(await import("../countries.server.ts")).getCountries({}),
 	read: async (...args) =>
 		(await import("../mcp/guest.server.ts")).readGuestTool(...args),
 	take: async (user) =>
@@ -123,13 +133,13 @@ export async function routeInteraction(
 							command: commands.some((c) => c.name === interaction.data?.name)
 								? interaction.data?.name
 								: "unknown",
-						}),
+					  }),
 				context:
 					interaction.context === 2
 						? "private"
 						: interaction.context === 0 || interaction.guild_id
-							? "guild"
-							: "dm",
+						? "guild"
+						: "dm",
 				viewer: memberId ? "member" : "guest",
 				duration_ms: Date.now() - start,
 				outcome,
@@ -140,84 +150,138 @@ export async function routeInteraction(
 		finish(outcome)
 		return { type, data }
 	}
-	const country = localeCountry(interaction.locale)
+	let viewer: Awaited<ReturnType<typeof resolveViewerPlace>> = {
+		country: FALLBACK_COUNTRY,
+	}
+	let country = viewer.country
+	const place = async () => {
+		const discordId = interaction.member?.user?.id ?? interaction.user?.id
+		const share = parsed?.action === "share" || list?.action.endsWith("-share")
+		const member = await within(
+			(async () => {
+				const id = discordId ? await deps.linkedUser(discordId) : null
+				const settings =
+					id && !share ? await deps.memberRead(id, "get_settings", {}) : null
+				return {
+					id,
+					place:
+						settings && typeof settings.country === "string"
+							? {
+									country: settings.country,
+									services: settings.service_ids as number[] | undefined,
+							  }
+							: null,
+				}
+			})(),
+			300,
+			null,
+		).catch(() => null)
+		return {
+			memberId: member?.id ?? null,
+			viewer: await resolveViewerPlace(interaction, {
+				...deps,
+				resolveMemberPlace:
+					deps.resolveMemberPlace ?? (async () => member?.place ?? null),
+			}),
+		}
+	}
+	const usePlace = (resolved: Awaited<ReturnType<typeof place>>) => {
+		viewer = resolved.viewer
+		country = viewer.country
+		memberId = resolved.memberId
+	}
+	const annotate = (
+		body: ReturnType<typeof textCard>,
+		allServices = !viewer.services?.length,
+	) => {
+		if (allServices)
+			body.components.splice(1, 0, {
+				type: 10,
+				content: `-# Using every service in ${country}.`,
+			})
+		return body
+	}
 	const read = (
 		name: Parameters<typeof readGuestTool>[2],
 		args: Parameters<typeof readGuestTool>[3],
-	) => deps.read({ country }, "https://goodwatch.app", name, args)
+	) => deps.read(viewer, "https://goodwatch.app", name, args)
 	const card = async (id: string, share = false, offers = false) => {
 		// Shared copies always come from a fresh guest read, with no member context or fields.
 		let personal = !share ? memberId : null
-		let cardCountry = localeCountry(interaction.locale)
 		let result: Awaited<ReturnType<typeof deps.read>> | null = null
 		if (personal) {
 			try {
-				const settings = await deps.memberRead(personal, "get_settings", {})
-				if (typeof settings.country === "string") cardCountry = settings.country
 				result = await deps.memberRead(personal, "get_title", { title_id: id })
 			} catch {
-				// A failed member read falls back to the guest card.
 				personal = null
-				cardCountry = localeCountry(interaction.locale)
 			}
 		}
-		result ??= await deps.read(
-			{ country: cardCountry },
-			"https://goodwatch.app",
-			"get_title",
-			{ title_id: id },
-		)
-		return result.title
-			? titleCard(result.title as GuestTitle, cardCountry, {
-					share,
-					offers,
-					member: personal ? (result.member as MemberMarks) : undefined,
-				})
-			: textCard("No matching title found. Try /search again.")
+		result ??= await read("get_title", { title_id: id })
+		if (!result.title)
+			return textCard("No matching title found. Try /search again.")
+		const body = titleCard(result.title as GuestTitle, country, {
+			share,
+			offers,
+			member: personal ? (result.member as MemberMarks) : undefined,
+		})
+		return personal ? body : annotate(body)
 	}
 	const similar = async (id: string, share = false) => {
 		const result = await read("get_similar_titles", {
 			title_id: id,
 			limit: 10,
 		})
-		return titleListCard(
-			"Similar titles",
-			(result.items ?? []) as GuestTitle[],
-			{ share, shareId: listCustomId("similar-share", id) },
+		return annotate(
+			titleListCard("Similar titles", (result.items ?? []) as GuestTitle[], {
+				share,
+				shareId: listCustomId("similar-share", id),
+			}),
 		)
 	}
 	const person = async (id: number, share = false) => {
 		const result = await read("get_person", { person_id: id, limit: 10 })
 		return result.person
-			? personCard(result.person as GuestPerson, share)
+			? annotate(personCard(result.person as GuestPerson, share))
 			: textCard("No matching person found.")
 	}
 	const hot = async (share = false) =>
-		titleListCard("Hot on socials", await deps.hot(), {
-			share,
-			shareId: listCustomId("hot-share", "now"),
-			url: "https://goodwatch.app/hot-on-socials",
-		})
+		annotate(
+			titleListCard("Hot on socials", await deps.hot(), {
+				share,
+				shareId: listCustomId("hot-share", "now"),
+				url: "https://goodwatch.app/hot-on-socials",
+			}),
+		)
 	const discover = async (key: string, page: number, share = false) => {
 		const state = await deps.loadState(key)
 		if (!state)
 			return textCard("This discovery expired. Start again with /discover.")
 		const result = await deps.read(
-			{ country: state.country },
+			viewer,
 			"https://goodwatch.app",
 			"discover_titles",
-			{ ...state.args, cursor: `offset:${page * 10}`, limit: 10 },
-		)
-		return titleListCard(
-			`Discover · ${state.country}`,
-			(result.items ?? []) as GuestTitle[],
 			{
-				share,
-				stateKey: key,
-				page,
-				next: !!result.next_cursor,
-				shareId: listCustomId("discover-share", `${key}:${page}`),
+				...state.args,
+				...(!state.args.providers?.length && viewer.services?.length
+					? { providers: viewer.services }
+					: {}),
+				cursor: `offset:${page * 10}`,
+				limit: 10,
 			},
+		)
+		return annotate(
+			titleListCard(
+				`Discover · ${country}`,
+				(result.items ?? []) as GuestTitle[],
+				{
+					share,
+					stateKey: key,
+					page,
+					next: !!result.next_cursor,
+					shareId: listCustomId("discover-share", `${key}:${page}`),
+				},
+			),
+			!state.args.providers?.length && !viewer.services?.length,
 		)
 	}
 	const options = Object.fromEntries(
@@ -253,7 +317,49 @@ export async function routeInteraction(
 				"limited",
 			)
 		}
+		if (
+			interaction.data?.name === "setup" ||
+			(interaction.type === 3 &&
+				/^setup:(clear|remove:[1-9]\d*|page:\d+)$/.test(customId))
+		) {
+			if (!canManageGuild(interaction))
+				return interaction.type === 4
+					? reply({ choices: [] }, "forbidden", 8)
+					: reply(
+							textCard(
+								"You need Manage Server permission to change server setup.",
+							),
+							"forbidden",
+					  )
+			if (interaction.type === 4)
+				return reply(
+					{
+						choices: await within(
+							setupAutocomplete(interaction, deps),
+							2000,
+							[],
+						).catch(() => []),
+					},
+					"ok",
+					8,
+				)
+			if (!interaction.application_id || !interaction.token)
+				return reply(textCard("Invalid interaction."), "invalid")
+			return defer(
+				() => setup(interaction, deps),
+				(body) =>
+					deps.edit(interaction.application_id!, interaction.token!, body),
+				finish,
+				{ type: interaction.type === 3 ? 6 : 5 },
+			)
+		}
 		if (interaction.type === 4) {
+			usePlace(
+				await within(place(), 400, { viewer, memberId }).catch(() => ({
+					viewer,
+					memberId,
+				})),
+			)
 			if (interaction.data?.name === "discover") {
 				const focused = interaction.data.options?.find((o) => o.focused)
 				if (!focused || !["genre", "service"].includes(focused.name))
@@ -261,7 +367,7 @@ export async function routeInteraction(
 				const query = (focused.value ?? "").trim().slice(0, 120).toLowerCase()
 				const filters = await within<Record<string, unknown>>(
 					read("get_discover_filters", {}),
-					2000,
+					1800,
 					{},
 				).catch((): Record<string, unknown> => ({}))
 				const entries =
@@ -269,10 +375,10 @@ export async function routeInteraction(
 						? ((filters.genres ?? []) as string[]).map((id) => ({
 								name: id,
 								value: id,
-							}))
+						  }))
 						: ((filters.providers ?? []) as { id: number; name: string }[]).map(
 								(p) => ({ name: p.name, value: String(p.id) }),
-							)
+						  )
 				return reply(
 					{
 						choices: entries
@@ -299,18 +405,14 @@ export async function routeInteraction(
 				.trim()
 				.slice(0, 120)
 			if (query.length < 2) return reply({ choices: [] }, "ok", 8)
-			const identity = within(deps.linkedUser(user), 300, null).catch(
-				() => null,
-			)
 			const result = await within(
 				read(isPerson ? "search_people" : "search_titles", {
 					query,
 					limit: 25,
 				}),
-				2000,
+				1800,
 				{ items: [] },
 			).catch(() => ({ items: [] }))
-			memberId = await identity
 			const items = (result.items ?? []) as (GuestTitle & GuestPerson)[]
 			return reply(
 				{
@@ -319,8 +421,8 @@ export async function routeInteraction(
 							isPerson
 								? "Person"
 								: t.id.startsWith("movie:")
-									? "Movie"
-									: "TV show"
+								? "Movie"
+								: "TV show"
 						}`.slice(0, 100),
 						value: isPerson ? String(t.person_id) : t.id,
 					})),
@@ -392,7 +494,7 @@ export async function routeInteraction(
 											label: "Keep",
 											custom_id: "gw:unlink:keep",
 										},
-									]
+								  ]
 								: [
 										{
 											type: 2,
@@ -400,7 +502,7 @@ export async function routeInteraction(
 											label: "Unlink",
 											custom_id: "gw:unlink:ask",
 										},
-									],
+								  ],
 						},
 					])
 				},
@@ -416,9 +518,7 @@ export async function routeInteraction(
 				return reply(textCard("Invalid interaction."), "invalid")
 			return defer(
 				async () => {
-					memberId = await within(deps.linkedUser(user), 300, null).catch(
-						() => null,
-					)
+					usePlace(await place())
 					switch (interaction.data?.name) {
 						case "search":
 						case "similar": {
@@ -490,7 +590,7 @@ export async function routeInteraction(
 									args.providers = [provider.id]
 								}
 							}
-							const key = await deps.saveState({ country, args })
+							const key = await deps.saveState({ args })
 							return discover(key, 0)
 						}
 						default:
@@ -498,7 +598,11 @@ export async function routeInteraction(
 					}
 				},
 				(body) =>
-					deps.edit(interaction.application_id ?? "", interaction.token ?? "", body),
+					deps.edit(
+						interaction.application_id ?? "",
+						interaction.token ?? "",
+						body,
+					),
 				finish,
 			)
 		}
@@ -512,9 +616,7 @@ export async function routeInteraction(
 				!((interaction.message.flags ?? 0) & EPHEMERAL)
 			return defer(
 				async () => {
-					memberId = await within(deps.linkedUser(user), 300, null).catch(
-						() => null,
-					)
+					usePlace(await place())
 					if (parsed) {
 						if (parsed.action === "similar") return similar(parsed.titleId)
 						return card(parsed.titleId, !!share, parsed.action === "watch")
@@ -539,7 +641,11 @@ export async function routeInteraction(
 					return textCard("Unsupported action.")
 				},
 				(body) =>
-					deps.edit(interaction.application_id ?? "", interaction.token ?? "", body),
+					deps.edit(
+						interaction.application_id ?? "",
+						interaction.token ?? "",
+						body,
+					),
 				finish,
 				{
 					type: share || publicMessage ? 5 : 6,

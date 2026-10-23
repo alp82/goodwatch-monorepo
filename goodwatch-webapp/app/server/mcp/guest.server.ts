@@ -88,7 +88,7 @@ export async function readGuestTool(
 						language: "en_US",
 					}),
 			getDisplayFields([titleKey(title.media_type, title.tmdb_id)]),
-			watchAvailability(title, ctx, undefined, { allServices: true }),
+			watchAvailability(title, ctx, undefined, { allServices: ctx.services.length === 0 }),
 		])
 		const display = displays.get(titleKey(title.media_type, title.tmdb_id))
 		return {

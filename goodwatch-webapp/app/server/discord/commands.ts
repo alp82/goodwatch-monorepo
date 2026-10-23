@@ -21,6 +21,25 @@ export function defineCommands() {
 	}
 	return [
 		{
+			name: "setup",
+			description: "Set this server's country and streaming services",
+			default_member_permissions: "32",
+			options: [
+				{
+					name: "country",
+					description: "Server country",
+					type: 3,
+					autocomplete: true,
+				},
+				{
+					name: "service",
+					description: "Add a streaming service",
+					type: 3,
+					autocomplete: true,
+				},
+			],
+		},
+		{
 			name: "search",
 			description: "Find a movie or TV show on GoodWatch",
 			options: [title],
@@ -93,8 +112,8 @@ export function defineCommands() {
 	].map((command) => ({
 		...command,
 		type: 1,
-		integration_types: [0, 1],
-		contexts: [0, 1, 2],
+		integration_types: command.name === "setup" ? [0] : [0, 1],
+		contexts: command.name === "setup" ? [0] : [0, 1, 2],
 	}))
 }
 export const commands = defineCommands()
