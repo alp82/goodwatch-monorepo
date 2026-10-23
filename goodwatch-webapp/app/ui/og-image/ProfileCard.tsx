@@ -27,6 +27,14 @@ import { FAMILY_COLOR } from "~/ui/profile/taste/model"
 export type { OgProfileContent, OgProfileTabContent }
 
 const HEADER_H = 128
+// One line that never leaves its box: text is clipped by characters first (clip), the box hides the rest.
+const ONE_LINE = {
+	display: "flex",
+	overflow: "hidden",
+	whiteSpace: "nowrap",
+} as const
+const clip = (text: string, max: number) =>
+	text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`
 const MUTED = "#a1a1aa"
 
 function Avatar({ person, size }: { person: CardPerson; size: number }) {
@@ -68,16 +76,17 @@ function Avatar({ person, size }: { person: CardPerson; size: number }) {
 	)
 }
 
-// Anton sets about 0.48 em per character; the handle shrinks to fit its room.
-const handleSize = (handle: string, room: number) =>
-	Math.min(
-		fitFontSize(`@${handle}`, [
-			[12, 64],
-			[18, 54],
-			[999, 44],
-		]),
-		Math.floor(room / ((handle.length + 1) * 0.48)),
+// Anton's advance widths in em, roughly: wide letters, narrow ones, the rest. The estimate errs wide, and the handle
+// box clips as a last guard, so the logo always stays on the card.
+const antonWidth = (text: string) =>
+	[...text].reduce(
+		(sum, c) =>
+			sum +
+			(/[mwMW@]/.test(c) ? 0.72 : /[ijlrtf1I!.,:;'|]/.test(c) ? 0.3 : 0.5),
+		0,
 	)
+const handleSize = (handle: string, room: number) =>
+	Math.min(64, Math.floor(room / antonWidth(`@${handle}`)))
 
 function Header({ person, tab }: { person: CardPerson; tab?: string }) {
 	return (
@@ -99,9 +108,12 @@ function Header({ person, tab }: { person: CardPerson; tab?: string }) {
 				<div
 					style={{
 						display: "flex",
+						maxWidth: tab ? 420 : 680,
+						overflow: "hidden",
+						whiteSpace: "nowrap",
 						fontFamily: "Anton",
 						fontSize: handleSize(person.handle, tab ? 420 : 680),
-						lineHeight: 1,
+						lineHeight: 1.1,
 						color: INK,
 					}}
 				>
@@ -727,13 +739,14 @@ function TabVisual({ visual }: { visual: ProfileTabVisual }) {
 						<div key={i} style={col({ width: cw, gap: 12 })}>
 							<div
 								style={{
-									display: "flex",
+									...ONE_LINE,
+									width: cw,
 									fontSize: 28,
 									fontWeight: 900,
 									color: "#fff",
 								}}
 							>
-								{l.title}
+								{clip(l.title, Math.floor(cw / 15))}
 							</div>
 							<PosterRow
 								posters={l.posters.slice(0, per)}
@@ -763,13 +776,14 @@ function TabVisual({ visual }: { visual: ProfileTabVisual }) {
 							<div key={g.name} style={col({ gap: 6 })}>
 								<div
 									style={{
-										display: "flex",
+										...ONE_LINE,
+										width: gw,
 										fontSize: 22,
 										fontWeight: 900,
 										color: "#fff",
 									}}
 								>
-									{g.name}
+									{clip(g.name, Math.floor(gw / 12))}
 								</div>
 								<div style={row({ alignItems: "center", gap: 14 })}>
 									<div
@@ -831,16 +845,17 @@ export function ProfileTabCard({ content }: { content: OgProfileTabContent }) {
 			</div>
 			<div
 				style={{
-					display: "flex",
+					...ONE_LINE,
 					position: "absolute",
 					left: 56,
 					bottom: 30,
+					width: VIS_W,
 					fontSize: 26,
 					fontWeight: 700,
 					color: MUTED,
 				}}
 			>
-				{content.line}
+				{clip(content.line, 80)}
 			</div>
 		</Frame>
 	)

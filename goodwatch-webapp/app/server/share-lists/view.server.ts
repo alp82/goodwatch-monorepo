@@ -1,5 +1,6 @@
 // Viewer-independent share-list reads. Store writes invalidate the combined view after refreshing Crate.
 import { hotCards } from "~/server/og-image/hot-cards.server"
+import { forgetStoredCard } from "~/server/og-image/store.server"
 import { resetPageCache } from "~/server/page-cache.server"
 import {
 	type CardTitle,
@@ -9,6 +10,7 @@ import {
 import {
 	cached,
 	declareResettableCache,
+	getRedisCluster,
 	resetCacheConfirmed,
 } from "~/utils/cache"
 import { query } from "~/utils/crate"
@@ -224,7 +226,14 @@ export async function resetListView(id: string): Promise<void> {
 			"SELECT user_id FROM doc.user_list WHERE id = ?",
 			[id],
 		)
-		if (row) await resetProfileViews(row.user_id)
+		if (row) {
+			await resetProfileViews(row.user_id)
+			// The profile's Lists card shows list titles and posters: a list made private or deleted must leave it.
+			// The handle comes from Crate: the profile cache was just reset and must stay empty.
+			const handle = (await getProfileByUserId(row.user_id))?.handle
+			if (handle)
+				await forgetStoredCard(getRedisCluster(), `/u/${handle}/lists`)
+		}
 	} catch (error) {
 		console.error("Looking up list owner for cache reset failed:", error)
 	}

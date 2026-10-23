@@ -63,6 +63,31 @@ type Dependencies = {
 
 // When a resettable card was last forgotten: the time, kept as long as a card could be.
 export const RESET_PREFIX = "og-card-reset:v1:"
+
+/**
+ * Drops a resettable card from Valkey and marks it reset, so no instance serves it from memory either. For callers
+ * that can't load the card renderer (forgetOgCard in og-image.server.tsx also clears this process's memory at once).
+ * Never throws; bounded by `timeoutMs`.
+ */
+export async function forgetStoredCard(
+	redis: Pick<Redis, "del" | "setex"> | null | undefined,
+	path: string,
+	{ keptSeconds = STORE_SECONDS, now = Date.now(), timeoutMs = 1000 } = {},
+) {
+	if (!redis) return
+	try {
+		await bounded(
+			Promise.all([
+				redis.del?.(CACHE_PREFIX + path),
+				redis.setex(RESET_PREFIX + path, keptSeconds, Buffer.from(String(now))),
+			]),
+			timeoutMs,
+			undefined,
+		)
+	} catch (error) {
+		console.warn("[og-image] cache forget failed", error)
+	}
+}
 /** A strong ETag for an image: computed once per stored image and kept with it. */
 export function imageEtag(image: Buffer) {
 	return `"${createHash("sha1").update(image).digest("hex").slice(0, 16)}"`
@@ -246,24 +271,11 @@ export function createOgStore(deps: Dependencies) {
 			bytes -= old.image.length
 			memory.delete(path)
 		}
-		const redis = deps.redis()
-		if (!redis) return
-		try {
-			await bounded(
-				Promise.all([
-					redis.del?.(CACHE_PREFIX + path),
-					redis.setex(
-						RESET_PREFIX + path,
-						deps.keptSeconds ?? STORE_SECONDS,
-						Buffer.from(String(now())),
-					),
-				]),
-				deps.redisTimeoutMs ?? 1000,
-				undefined,
-			)
-		} catch (error) {
-			console.warn("[og-image] cache forget failed", error)
-		}
+		await forgetStoredCard(deps.redis(), path, {
+			keptSeconds: deps.keptSeconds ?? STORE_SECONDS,
+			now: now(),
+			timeoutMs: deps.redisTimeoutMs ?? 1000,
+		})
 	}
 	/**
 	 * The card for a page path. "ok" with a stored or freshly rendered card, "missing" when the path has no card or
