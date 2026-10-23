@@ -4,6 +4,7 @@ import {
 	episodeScoreKey,
 	episodeScoreLabel,
 	importedScoreTarget,
+	isWholeTmdbSeason,
 	parseEpisodeScoreTarget,
 	partCoversSeason,
 } from "./episode-scores.ts"
@@ -147,4 +148,29 @@ test("an import row names its target only once the preview has placed it", () =>
 			],
 		},
 	)
+})
+
+test("a shown season is scored as a TMDB season only when it holds exactly that season's episodes", () => {
+	const tmdb = (season: number, count: number, from = 0) =>
+		Array.from({ length: count }, (_, i) => ({
+			id: season * 1000 + from + i,
+			season,
+		}))
+	const whole = tmdb(1, 37)
+	// The shown season is TMDB's season 1, all of it.
+	assert.equal(isWholeTmdbSeason(1, whole, [...whole, ...tmdb(2, 10)]), true)
+	// A regrouped show shows 12 of TMDB season 1's 37 episodes as its season 1 (MF Ghost).
+	assert.equal(isWholeTmdbSeason(1, whole.slice(0, 12), whole), false)
+	assert.equal(isWholeTmdbSeason(2, whole.slice(12), whole), false)
+	// A shown season that mixes TMDB seasons, or renumbers one, isn't a TMDB season.
+	assert.equal(
+		isWholeTmdbSeason(
+			1,
+			[...tmdb(1, 3), ...tmdb(2, 2)],
+			[...tmdb(1, 3), ...tmdb(2, 2)],
+		),
+		false,
+	)
+	assert.equal(isWholeTmdbSeason(2, tmdb(1, 3), tmdb(1, 3)), false)
+	assert.equal(isWholeTmdbSeason(1, [], []), false)
 })

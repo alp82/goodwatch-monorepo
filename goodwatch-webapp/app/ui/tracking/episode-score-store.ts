@@ -1,6 +1,6 @@
 // The member's season, episode and part scores of one show on its page (#759), outside React: seeded from the
-// show's tracking read, changed at once on the page and sent in the background. A change the server refuses goes
-// back to what the server last confirmed. Separate from the tracking session: a score never records a watch or
+// show's tracking read, changed at once on the page and sent in the background, one change per score at a time so
+// the server keeps the member's latest. A change the server refuses goes back to what the server last confirmed. Separate from the tracking session: a score never records a watch or
 // changes the show's status, so it needs none of the session's ordering.
 import {
 	type EpisodeScoreTarget,
@@ -38,6 +38,8 @@ export class EpisodeScoreStore {
 		{ shown: MemberEpisodeScore | null; write: number }
 	>()
 	private writes = 0
+	/** Per key, the write on its way: the next one waits for it, so the server gets them in the member's order. */
+	private queues = new Map<string, Promise<unknown>>()
 	private listeners = new Set<() => void>()
 	/** Changes with every change, for useSyncExternalStore. */
 	version = 0
@@ -114,8 +116,27 @@ export class EpisodeScoreStore {
 						} as MemberEpisodeScore),
 		})
 		this.changed()
+		const body = { ...requestOf(target, key), score }
+		const waiting = this.queues.get(key)
+		const sent = waiting
+			? waiting.then(() =>
+					// A newer change came while this one waited: that one is sent instead.
+					this.pending.get(key)?.write === write
+						? this.deliver(key, write, body)
+						: true,
+				)
+			: this.deliver(key, write, body)
+		const queued = sent.catch(() => {})
+		this.queues.set(key, queued)
+		void queued.then(() => {
+			if (this.queues.get(key) === queued) this.queues.delete(key)
+		})
+		return sent
+	}
+
+	private async deliver(key: string, write: number, body: object) {
 		try {
-			const answer = await this.send({ ...requestOf(target, key), score })
+			const answer = await this.send(body)
 			if (answer.score) this.confirmed.set(key, answer.score)
 			else this.confirmed.delete(key)
 			if (this.pending.get(key)?.write === write) this.pending.delete(key)

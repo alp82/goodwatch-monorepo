@@ -10,8 +10,12 @@ const { setImportDbForTest } = await import("./store.server.ts")
 const { applyImportedEpisodeScore, undoImportedEpisodeScore } = await import(
 	"./episode-score-apply.server.ts"
 )
-const { getEpisodeScores, setEpisodeScore, setEpisodeScoreDbForTest } =
-	await import("../episode-scores.server.ts")
+const {
+	getEpisodeScore,
+	getEpisodeScores,
+	setEpisodeScore,
+	setEpisodeScoreDbForTest,
+} = await import("../episode-scores.server.ts")
 
 // The member's season and episode scores (#759) on a real Crate: the migration, the constraints, the missing-table
 // fallback with Crate's own error, and the import journal's optimistic writes. Run against a throwaway local Crate:
@@ -180,6 +184,25 @@ test("a member's season and episode scores round-trip on real Crate, and a chang
 	)
 	await sql("REFRESH TABLE user_episode_score")
 	assert.deepEqual(await getEpisodeScores("member", SHOW), [])
+})
+
+test("a score is read back by its key right after it's written, before any refresh", async () => {
+	for (const score of [5, 8]) {
+		await setEpisodeScore(
+			"fresh",
+			SHOW,
+			{ scope: "episode", episodeTmdbId: 62161 },
+			score,
+		)
+		assert.equal((await getEpisodeScore("fresh", SHOW, "e62161"))?.score, score)
+	}
+	await setEpisodeScore(
+		"fresh",
+		SHOW,
+		{ scope: "episode", episodeTmdbId: 62161 },
+		null,
+	)
+	assert.equal(await getEpisodeScore("fresh", SHOW, "e62161"), null)
 })
 
 test("an imported episode score is written once through its journal, resumes without a second write, and Undo takes it back", async () => {

@@ -853,3 +853,11 @@ test("the Watcharr show-status footnote explains recorded completion dates and t
 		/Whole-show completion marks aired regular episodes with unknown dates/,
 	)
 })
+
+test("a Watcharr file with only Want to See and season or episode scores offers the scores in the full preview", () => {
+	const page = text(rendered.plannedWithScores)
+	assert.match(page, /What should GoodWatch import\?/)
+	assert.match(page, /Season and episode scores 2/)
+	assert.match(page, /Start import/)
+	assert.doesNotMatch(page, /Add to Want to See/)
+})

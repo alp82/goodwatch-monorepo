@@ -124,6 +124,27 @@ export async function getEpisodeScores(
 	}
 }
 
+/**
+ * One score by its whole key; null when there is none, and before the migration. Crate answers a read by the whole
+ * primary key at once, so this sees a write made just before it, unlike getEpisodeScores until the next refresh.
+ */
+export async function getEpisodeScore(
+	userId: string,
+	showId: number,
+	key: string,
+): Promise<MemberEpisodeScore | null> {
+	try {
+		const [row] = await db.select<EpisodeScoreRow>(
+			"SELECT score_key, scope, season_number, episode_number, episode_tmdb_id, ranges, label, score, updated_at FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ?",
+			[userId, canonicalTitleId("show", showId), key],
+		)
+		return row ? episodeScoreFromRow(row) : null
+	} catch (error) {
+		if (isMissingEpisodeScoreTable(error)) return null
+		throw error
+	}
+}
+
 /** The requested season or episode, in TMDB's numbering, as the catalog has it now. */
 async function resolveTarget(
 	showId: number,

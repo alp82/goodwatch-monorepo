@@ -115,6 +115,19 @@ const receipt = () => {
 
 process.stdout.write(
 	`__WISHLIST_RENDER__${JSON.stringify({
+		// A Planned show whose only other data is its season and episode scores (#759 review).
+		plannedWithScores: preview({
+			...summary({ new: 3 }),
+			kinds: {
+				rating: 0,
+				episode_rating: 2,
+				watch: 0,
+				want: 1,
+				favorite: 0,
+				review: 0,
+				show_status: 0,
+			},
+		}),
 		watcharrLibrary: preview({
 			...summary({ new: 12, conflict: 1 }),
 			wishlistRewatchChoiceCount: 1,

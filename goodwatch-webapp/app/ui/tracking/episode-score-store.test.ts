@@ -22,6 +22,8 @@ const episode = {
 	episodeTmdbId: 62087,
 }
 
+const tick = () => new Promise((resolve) => setImmediate(resolve))
+
 /** A send that answers when the test says so. */
 function controlled() {
 	const calls: { body: unknown; resolve: () => void; reject: () => void }[] = []
@@ -112,10 +114,62 @@ test("only the latest of two quick changes decides what shows; a reload while sa
 	assert.equal(store.get("e62087")?.score, 8)
 	calls[0].reject()
 	await first
+	await tick()
 	assert.equal(store.get("e62087")?.score, 8)
 	calls[1].resolve()
 	await second
 	assert.equal(store.get("e62087")?.score, 8)
+})
+
+test("changes to one score go out one at a time, so an older answer can't win (#759 review)", async () => {
+	const { send, calls } = controlled()
+	const store = new EpisodeScoreStore(send)
+	store.seed([])
+	const first = store.set(episode, 5)
+	const second = store.set(episode, 8)
+	// 8 waits for 5's answer: the server gets them in the member's order.
+	assert.deepEqual(
+		calls.map((call) => (call.body as { score: number }).score),
+		[5],
+	)
+	assert.equal(store.get("e62087")?.score, 8)
+	calls[0].resolve()
+	await first
+	await tick()
+	// 5's answer doesn't replace the newer choice on screen.
+	assert.equal(store.get("e62087")?.score, 8)
+	assert.deepEqual(
+		calls.map((call) => (call.body as { score: number }).score),
+		[5, 8],
+	)
+	calls[1].resolve()
+	assert.equal(await second, true)
+	assert.equal(store.get("e62087")?.score, 8)
+})
+
+test("of several changes made while one is on its way, only the latest is sent next", async () => {
+	const { send, calls } = controlled()
+	const store = new EpisodeScoreStore(send)
+	store.seed([])
+	const first = store.set(episode, 5)
+	const skipped = store.set(episode, 8)
+	const latest = store.set(episode, 6)
+	calls[0].resolve()
+	await first
+	assert.equal(await skipped, true)
+	await tick()
+	assert.deepEqual(
+		calls.map((call) => (call.body as { score: number }).score),
+		[5, 6],
+	)
+	calls[1].resolve()
+	await latest
+	assert.equal(store.get("e62087")?.score, 6)
+	// Another score isn't held up by this one.
+	const other = store.set({ scope: "season", season: 2 }, 4)
+	assert.equal(calls.length, 3)
+	calls[2].resolve()
+	await other
 })
 
 test("a part is sent by its stored key and keeps its range and name while it changes", async () => {

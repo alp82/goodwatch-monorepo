@@ -125,3 +125,25 @@ export function importedScoreTarget(row: {
 		}
 	return null
 }
+
+/**
+ * Whether a season as the show page shows it is TMDB's season of that number, whole: every shown episode is in it,
+ * and every episode of it is shown there. A presentation that regroups a season (12 of TMDB season 1's 37 shown as
+ * season 1) isn't, so its season score would name episodes the member didn't see in that season.
+ */
+export function isWholeTmdbSeason(
+	shownNumber: number,
+	shown: { id: number; season: number }[],
+	allEpisodes: { id: number; season: number }[],
+): boolean {
+	if (!shown.length || shown.some((episode) => episode.season !== shownNumber))
+		return false
+	const ids = new Set(shown.map((episode) => episode.id))
+	const tmdbSeason = allEpisodes.filter(
+		(episode) => episode.season === shownNumber,
+	)
+	return (
+		tmdbSeason.length === ids.size &&
+		tmdbSeason.every((episode) => ids.has(episode.id))
+	)
+}

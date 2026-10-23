@@ -1258,6 +1258,7 @@ test("A part score names an aired season or episode of a show in TMDB's numberin
 	)
 	const day = Date.UTC(2026, 9, 1)
 	const sets: unknown[] = []
+	const asked: string[] = []
 	let unavailable = false
 	const deps = {
 		episodes: async () => [
@@ -1270,18 +1271,22 @@ test("A part score names an aired season or episode of a show in TMDB's numberin
 				air_date: Date.UTC(2027, 0, 1),
 			},
 		],
-		scores: async () => [
-			{
-				scope: "episode" as const,
-				key: "e502",
-				season: 1,
-				episode: 2,
-				episodeTmdbId: 502,
-				score: 6,
-				label: null,
-				updatedAt: "",
-			},
-		],
+		// Read by its whole key: Crate answers that at once, also right after a write (#759 review).
+		score: async (_user: string, _show: number, key: string) => {
+			asked.push(key)
+			return key === "e502"
+				? {
+						scope: "episode" as const,
+						key: "e502",
+						season: 1,
+						episode: 2,
+						episodeTmdbId: 502,
+						score: 6,
+						label: null,
+						updatedAt: "",
+					}
+				: null
+		},
 		set: (async (
 			_user: string,
 			_show: number,
@@ -1345,4 +1350,5 @@ test("A part score names an aired season or episode of a show in TMDB's numberin
 		await readPartScore("m", show, { season: 1, episode: 9 }, deps),
 		null,
 	)
+	assert.deepEqual(asked, ["e502", "s1"])
 })

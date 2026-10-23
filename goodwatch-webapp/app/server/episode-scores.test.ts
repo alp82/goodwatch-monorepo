@@ -3,6 +3,7 @@ import { afterEach, test } from "node:test"
 import {
 	EpisodeScoreTargetError,
 	EpisodeScoresUnavailable,
+	getEpisodeScore,
 	getEpisodeScores,
 	setEpisodeScore,
 	setEpisodeScoreDbForTest,
@@ -189,4 +190,14 @@ test("a member changes or clears an imported part score, keeping its range and n
 	const cleared = await setPartScore("member", SHOW, "p:s1e1-2", null)
 	assert.equal(cleared.status, "cleared")
 	assert.equal(db.scores.length, 0)
+})
+
+test("one score is read by its whole key, and none before the migration", async () => {
+	const db = fake()
+	await setEpisodeScore("member", SHOW, { scope: "season", season: 2 }, 7)
+	assert.equal((await getEpisodeScore("member", SHOW, "s2"))?.score, 7)
+	assert.equal(await getEpisodeScore("member", SHOW, "s1"), null)
+	assert.equal(await getEpisodeScore("other", SHOW, "s2"), null)
+	db.missingTable = true
+	assert.equal(await getEpisodeScore("member", SHOW, "s2"), null)
 })

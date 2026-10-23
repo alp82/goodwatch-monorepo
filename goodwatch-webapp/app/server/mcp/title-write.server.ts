@@ -2,7 +2,7 @@ import type { UserData } from "../../types/user-data"
 import {
 	EpisodeScoreTargetError,
 	EpisodeScoresUnavailable,
-	getEpisodeScores,
+	getEpisodeScore,
 	setEpisodeScore,
 } from "../episode-scores.server"
 import { updateNotInterested } from "../not-interested.server"
@@ -59,13 +59,14 @@ export interface PartDeps {
 			air_date: number | null
 		}[]
 	>
-	scores: typeof getEpisodeScores
+	/** One score by its whole key, which sees a write made just before it. */
+	score: typeof getEpisodeScore
 	set: typeof setEpisodeScore
 	now(): number
 }
 const livePartDeps: PartDeps = {
 	episodes: getEpisodeList,
-	scores: getEpisodeScores,
+	score: getEpisodeScore,
 	set: setEpisodeScore,
 	now: () => Date.now(),
 }
@@ -89,11 +90,7 @@ export async function readPartScore(
 		if (!episode) return null
 		key = `e${episode.tmdb_id}`
 	}
-	return (
-		(await deps.scores(userId, title.tmdb_id)).find(
-			(score) => score.key === key,
-		)?.score ?? null
-	)
+	return (await deps.score(userId, title.tmdb_id, key))?.score ?? null
 }
 
 /** Sets or clears a part score; answers with a refusal, or null once written. */

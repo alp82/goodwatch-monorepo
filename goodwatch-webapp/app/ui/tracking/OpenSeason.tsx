@@ -5,6 +5,7 @@
 // head, a line for each part score an import brought whose episodes are in this season. Then the season's rows.
 import { CheckIcon, ChevronDownIcon } from "@heroicons/react/24/solid"
 import { episodeScoreLabel } from "~/domain/episode-scores"
+import { isWholeTmdbSeason } from "~/domain/episode-scores"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { ScoreTile } from "~/ui/details/episode-grid/ScoreTile"
 import { formatScore } from "~/ui/details/episode-grid/scale"
@@ -76,11 +77,15 @@ export default function OpenSeason({
 	// The head closes the season; its buttons do only their own thing.
 	const own = (event: { stopPropagation: () => void }) =>
 		event.stopPropagation()
-	// A season score names a TMDB season: offered where the shown season is one, with an aired episode.
+	// A season score names a TMDB season: offered where the shown season is one, whole, with an aired episode.
 	const scorable =
 		!special &&
 		count.aired > 0 &&
-		season.episodes.every((episode) => episode.season === season.number)
+		isWholeTmdbSeason(
+			season.number,
+			season.episodes,
+			model.seasons.flatMap((each) => each.episodes),
+		)
 	const parts = model.scores
 		.parts()
 		.filter(
