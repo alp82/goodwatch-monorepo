@@ -8,6 +8,7 @@ import {
 	flushProductEvents,
 	identifyProductUser,
 	productEnvelope,
+	setAnalyticsFetch,
 	withProductContext,
 } from "./product-analytics.server.ts"
 import { discoveryProperties, productProperties } from "./product-events.ts"
@@ -88,16 +89,15 @@ test("durable receipt UUIDs are deterministic and distinct per action", () => {
 })
 test("transport retries the same batch and isolates ingestion failure from product writes", async () => {
 	const env = { ...process.env }
-	const original = globalThis.fetch
 	process.env.NODE_ENV = "production"
 	process.env.POSTHOG_API_KEY = "test"
 	process.env.POSTHOG_DISABLED = "false"
 	const bodies: string[] = []
-	globalThis.fetch = async (_input, init) => {
+	setAnalyticsFetch(async (_input, init) => {
 		bodies.push(String(init?.body))
 		if (bodies.length === 1) throw new Error("network")
 		return new Response("{}")
-	}
+	})
 	try {
 		captureProductEvent("member", "rating saved", { score: 10 })
 		await flushProductEvents()
@@ -105,13 +105,13 @@ test("transport retries the same batch and isolates ingestion failure from produ
 		assert.equal(bodies[0], bodies[1])
 		const event = JSON.parse(bodies[0]).batch[0]
 		assert.equal(event.properties.user_id, "member")
-		globalThis.fetch = async () => {
+		setAnalyticsFetch(async () => {
 			throw new Error("down")
-		}
+		})
 		assert.doesNotThrow(() => captureProductEvent("member", "rating cleared"))
 		await assert.doesNotReject(flushProductEvents())
 	} finally {
-		globalThis.fetch = original
+		setAnalyticsFetch(null)
 		process.env = env
 	}
 })
@@ -167,17 +167,16 @@ test("server profile fields can only be attached to the matching authenticated a
 })
 test("profile refreshes are bounded and changes update the same account without inventing activity", async () => {
 	const env = { ...process.env }
-	const original = globalThis.fetch
 	const batches: {
 		batch: { event: string; properties: Record<string, unknown> }[]
 	}[] = []
 	process.env.NODE_ENV = "production"
 	process.env.POSTHOG_API_KEY = "test"
 	process.env.POSTHOG_DISABLED = "false"
-	globalThis.fetch = async (_input, init) => {
+	setAnalyticsFetch(async (_input, init) => {
 		batches.push(JSON.parse(String(init?.body)))
 		return new Response("{}")
-	}
+	})
 	try {
 		identifyProductUser({ id: "profile-test", email: "old@example.com" })
 		identifyProductUser({ id: "profile-test", email: "old@example.com" })
@@ -193,7 +192,7 @@ test("profile refreshes are bounded and changes update the same account without 
 			email: "new@example.com",
 		})
 	} finally {
-		globalThis.fetch = original
+		setAnalyticsFetch(null)
 		process.env = env
 	}
 })

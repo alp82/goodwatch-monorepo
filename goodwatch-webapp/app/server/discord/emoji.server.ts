@@ -1,3 +1,4 @@
+import { nativeFetch } from "../native-fetch.server.ts"
 import { drain, fetchWithTimeout } from "./fetch-timeout.ts"
 // The bot's application emoji IDs (gw_score_1 to gw_score_10), read once with the bot token and cached for 24 hours in
 // Valkey and in process. Cards fall back to plain text for any name missing here, so a failed read never breaks a card.
@@ -45,7 +46,7 @@ async function valkey(): Promise<Store | null> {
 export async function listApplicationEmojis(
 	appId: string,
 	botToken: string,
-	send: typeof fetch = fetch,
+	send: typeof fetch = nativeFetch,
 ): Promise<{ id: string; name: string }[]> {
 	const data = await fetchWithTimeout(
 		send,

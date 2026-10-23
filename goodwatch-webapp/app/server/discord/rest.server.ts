@@ -1,3 +1,4 @@
+import { nativeFetch } from "../native-fetch.server.ts"
 import { drain, fetchWithTimeout } from "./fetch-timeout.ts"
 export function discordRest(
 	options: {
@@ -6,7 +7,7 @@ export function discordRest(
 		sleep?: (ms: number) => Promise<void>
 	} = {},
 ) {
-	const send = options.fetch ?? fetch
+	const send = options.fetch ?? nativeFetch
 	const sleep =
 		options.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)))
 	async function request(

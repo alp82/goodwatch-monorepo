@@ -1,3 +1,4 @@
+import { nativeFetch } from "../native-fetch.server.ts"
 import { drain, fetchWithTimeout } from "./fetch-timeout.ts"
 import { randomBytes } from "node:crypto"
 export class DiscordStateError extends Error {}
@@ -120,7 +121,7 @@ export function authorizeUrl(state: string) {
 /** Keep tokens local to this call; neither provider bodies nor codes appear in errors or logs. */
 export async function discordIdentity(
 	code: string,
-	fetcher: typeof fetch = fetch,
+	fetcher: typeof fetch = nativeFetch,
 ) {
 	const token = await fetchWithTimeout(
 		fetcher,

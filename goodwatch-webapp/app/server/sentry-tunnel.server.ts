@@ -4,6 +4,7 @@
 // change. A script can still send them, so every step also has a bound: the body's size, the time the upstream may
 // take, and the number of requests in flight. No answer is cacheable.
 
+import { nativeFetch } from "./native-fetch.server.ts"
 import { isSiteRequest } from "./site-origin.server.ts"
 
 export const SENTRY_HOST = "o4507456417169408.ingest.de.sentry.io"
@@ -68,7 +69,7 @@ export function createSentryTunnel(options: SentryTunnelOptions = {}) {
 	const upstreamTimeoutMs = options.upstreamTimeoutMs ?? UPSTREAM_TIMEOUT_MS
 	const maxInFlight = options.maxInFlight ?? MAX_IN_FLIGHT
 	const retryAfter = String(options.retryAfterSeconds ?? RETRY_AFTER_SECONDS)
-	const send = options.fetch ?? fetch
+	const send = options.fetch ?? nativeFetch
 	const log = options.log ?? ((line: string) => console.warn(line))
 	const now = options.now ?? Date.now
 	const fromSite = options.fromSite ?? isSiteRequest

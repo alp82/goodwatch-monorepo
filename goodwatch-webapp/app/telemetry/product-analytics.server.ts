@@ -1,6 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 import { createHash, randomUUID } from "node:crypto"
 import { onShutdown } from "../server/lifecycle.server.ts"
+import { nativeFetch } from "../server/native-fetch.server.ts"
 import { type AnalyticsUser, personProperties } from "./person-properties.ts"
 import {
 	type EventProperties,
@@ -9,6 +10,12 @@ import {
 	discoveryProperties,
 	productProperties,
 } from "./product-events.ts"
+
+let analyticsFetch: typeof fetch | null = null
+/** Tests swap the transport here; production always uses Node's own fetch. */
+export function setAnalyticsFetch(send: typeof fetch | null) {
+	analyticsFetch = send
+}
 
 interface Context {
 	properties: EventProperties
@@ -197,7 +204,7 @@ export async function flushProductEvents(): Promise<void> {
 		}
 		for (let attempt = 0; attempt < 2; attempt++) {
 			try {
-				const response = await fetch(
+				const response = await (analyticsFetch ?? nativeFetch)(
 					`${process.env.POSTHOG_HOST ?? "https://eu.i.posthog.com"}/batch/`,
 					{
 						method: "POST",
@@ -206,6 +213,8 @@ export async function flushProductEvents(): Promise<void> {
 						signal: AbortSignal.timeout(750),
 					},
 				)
+				// Read the body so the connection is released.
+				await response.text().catch(() => "")
 				if (!response.ok) throw new Error(`HTTP ${response.status}`)
 				return
 			} catch {
