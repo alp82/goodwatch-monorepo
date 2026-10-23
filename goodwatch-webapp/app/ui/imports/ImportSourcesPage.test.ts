@@ -90,7 +90,7 @@ test("TV Time's official export dropped in the one box goes to the TV Time previ
 test("streaming services are named as not importable yet, with where to import from instead", () => {
 	assert.match(
 		runs.list.text,
-		/Netflix, Prime Video, Disney\+ and other streaming services don't give you a file of your list yet\. If you also keep a watchlist on Trakt, TMDB, or Plex, or your anime on MyAnimeList or Kitsu, import it from there\./,
+		/Netflix, Prime Video, Disney\+ and other streaming services don't give you a file of your list yet\. If you also keep a watchlist on Trakt, TMDB, Plex, or MDBList, or your anime on MyAnimeList or Kitsu, import it from there\./,
 	)
 })
 

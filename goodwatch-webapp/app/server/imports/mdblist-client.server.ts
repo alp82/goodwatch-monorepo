@@ -581,7 +581,7 @@ export function createMdblistClient(options: {
 
 			warnings.push(
 				importInfo(
-					"MDBList custom lists, collection, liked lists and favorite people aren't part of this import.",
+					"MDBList custom lists, collection, liked lists, and favorite people aren't part of this import.",
 				),
 			)
 			const parsed: ParsedImport = { source: "mdblist", observations, warnings }

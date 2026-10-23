@@ -330,8 +330,8 @@ function Notes({
 			<p>
 				Netflix, Prime Video, Disney+ and other streaming services don't give
 				you a file of your list yet. If you also keep a watchlist on Trakt,
-				TMDB, or Plex, or your anime on MyAnimeList or Kitsu, import it from
-				there.
+				TMDB, Plex, or MDBList, or your anime on MyAnimeList or Kitsu, import it
+				from there.
 			</p>
 			<p className="text-xs text-gray-500">
 				The logos show where a file comes from; no source endorses GoodWatch.
