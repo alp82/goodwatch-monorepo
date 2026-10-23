@@ -192,7 +192,7 @@ export function LibraryHubPage({ hub }: { hub: LibraryHub }) {
 				<div className="grid gap-4 md:grid-cols-2">
 					<Tile
 						tile="scores"
-						name="Your scores"
+						name="My scores"
 						hint="Every title you rated, with all ten scores beside it to change any of them"
 						to={SCORES_PAGE}
 						mark={<NewMark />}

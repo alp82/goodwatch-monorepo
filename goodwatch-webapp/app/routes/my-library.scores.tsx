@@ -17,7 +17,7 @@ import { getUserIdFromRequest } from "~/utils/auth"
 export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction = () => [
-	{ title: "Your scores | My library | GoodWatch" },
+	{ title: "My scores | My library | GoodWatch" },
 	{
 		name: "description",
 		content: "Every title you have scored, with all ten scores beside it to change at once.",
@@ -50,7 +50,7 @@ export default function MyScoresRoute() {
 	if (!loaded)
 		return (
 			<GuestPage
-				name="Your scores"
+				name="My scores"
 				line="Every title you have scored, to change any score in place."
 				words={{
 					title: "Sign up to keep your scores",

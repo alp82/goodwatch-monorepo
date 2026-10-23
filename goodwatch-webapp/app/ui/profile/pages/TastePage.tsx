@@ -230,20 +230,22 @@ function OwnerBar() {
 			</Link>
 			<Link
 				to="/taste/quiz"
-				className={`${AMBER_BUTTON} shrink-0 whitespace-nowrap max-sm:px-3`}
+				className={`${AMBER_BUTTON} shrink-0 whitespace-nowrap max-lg:px-3`}
 			>
 				<SparklesIcon className="size-4" aria-hidden />
-				<span className="sm:hidden">Sharpen taste</span>
-				<span className="max-sm:hidden">Sharpen your taste</span>
+				<span className="lg:hidden">Rate more</span>
+				<span className="max-lg:hidden">
+					Rate more for better recommendations
+				</span>
 			</Link>
 			<Link
 				to="/taste"
-				className={`${QUIET_BUTTON} min-w-0 whitespace-nowrap max-sm:px-3`}
+				className={`${QUIET_BUTTON} min-w-0 whitespace-nowrap max-lg:px-3`}
 			>
-				<span className="sm:hidden">Taste groups</span>
-				<span className="max-sm:hidden">Groups with suggestions</span>
+				<span className="lg:hidden">Recommended</span>
+				<span className="max-lg:hidden">Recommendations for your taste</span>
 			</Link>
-			<span className="ml-auto hidden text-xs text-gray-500 lg:inline">
+			<span className="ml-auto hidden text-xs text-gray-500 xl:inline">
 				You choose who sees this page in Edit profile.
 			</span>
 		</div>

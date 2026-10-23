@@ -197,7 +197,7 @@ export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 	if (!titles.length)
 		return (
 			<div className="pb-24" data-my-scores>
-				<PageHead name="Your scores" line="Every title you have scored." back={{ label: "My library", to: LIBRARY_HUB }} />
+				<PageHead name="My scores" line="Every title you have scored." back={{ label: "My library", to: LIBRARY_HUB }} />
 				<div className={WRAP}>
 					<Empty title="No scores yet">A score you give a title on its page appears here, to change any time.</Empty>
 				</div>
@@ -208,7 +208,7 @@ export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 	return (
 		<div className="overflow-x-clip pb-32" data-my-scores>
 			<PageHead
-				name="Your scores"
+				name="My scores"
 				line={`${count(titles.length)} titles you have scored. Change any score right in the list.`}
 				back={{ label: "My library", to: LIBRARY_HUB }}
 			/>

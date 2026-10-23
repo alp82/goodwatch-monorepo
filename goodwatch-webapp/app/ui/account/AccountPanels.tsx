@@ -31,6 +31,7 @@ function CopyLink({
 	return (
 		<button
 			type="button"
+			data-copy-link
 			onClick={() => {
 				navigator.clipboard
 					?.writeText(`${window.location.origin}${profilePath(handle)}`)
@@ -38,7 +39,7 @@ function CopyLink({
 				setDone(true)
 				setTimeout(() => setDone(false), 1500)
 			}}
-			className={`flex shrink-0 items-center justify-center gap-1.5 rounded-full text-gray-300 ring-1 ring-white/10 hover:bg-white/[0.06] hover:text-white ${className}`}
+			className={`relative z-10 flex shrink-0 items-center justify-center gap-1.5 rounded-full text-gray-300 active:bg-white/10 ring-1 ring-white/10 hover:bg-white/[0.06] hover:text-white ${className}`}
 			aria-label={
 				iconOnly
 					? done
@@ -95,8 +96,12 @@ function Identity({
 				</span>
 			</Link>
 		)
+	// The whole section opens the profile: the profile link stretches over it, and Copy link sits on top. The section
+	// lights up on hover and press, except while the pointer is on Copy link, which has its own state.
 	return (
-		<div className={compact ? "flex items-center gap-3 p-3" : "px-4 pt-4 pb-3"}>
+		<div
+			className={`group relative transition-colors hover:bg-white/[0.04] active:bg-white/[0.07] has-[[data-copy-link]:hover]:bg-transparent has-[[data-copy-link]:active]:bg-transparent ${compact ? "flex items-center gap-3 p-3" : "px-4 pt-4 pb-3"}`}
+		>
 			<div className="flex min-w-0 grow items-center gap-3">
 				{avatar}
 				<div className="min-w-0">
@@ -116,7 +121,7 @@ function Identity({
 				<Link
 					to={profilePath(me.handle)}
 					onClick={close}
-					className={`flex h-10 items-center justify-center rounded-full bg-white/[0.06] px-4 text-sm font-bold text-white ring-1 ring-white/10 hover:bg-white/10 ${compact ? "" : "grow"}`}
+					className={`flex h-10 items-center justify-center rounded-full bg-white/[0.06] px-4 text-sm font-bold text-white ring-1 ring-white/10 group-hover:bg-white/10 group-has-[[data-copy-link]:hover]:bg-white/[0.06] after:absolute after:inset-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-amber-400 ${compact ? "" : "grow"}`}
 				>
 					{compact ? "Profile" : "View profile"}
 				</Link>

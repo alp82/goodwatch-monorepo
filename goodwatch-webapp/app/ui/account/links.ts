@@ -6,7 +6,6 @@ import {
 	Cog6ToothIcon,
 	EyeIcon,
 	FingerPrintIcon,
-	LifebuoyIcon,
 	ListBulletIcon,
 	SparklesIcon,
 	StarIcon,
@@ -14,6 +13,8 @@ import {
 } from "@heroicons/react/24/outline"
 import type { ComponentType, SVGProps } from "react"
 import { SCORES_PAGE, statusPage } from "~/domain/my-library"
+import { DISCORD_BOT_PATH } from "~/ui/discord-bot/links"
+import { DiscordMark } from "~/ui/footer/links"
 import { IMPORTS_PATH } from "~/ui/imports/shared"
 import { myListsPath } from "~/ui/share-card/links"
 
@@ -46,7 +47,7 @@ export const LIBRARY_PLACES: AccountPlace[] = [
 		count: "seen",
 	},
 	{
-		label: "Your scores",
+		label: "My scores",
 		short: "Scores",
 		to: SCORES_PAGE,
 		icon: StarIcon,
@@ -69,5 +70,5 @@ export const SETTINGS_PLACE: AccountPlace = {
 export const APP_PLACES: AccountPlace[] = [
 	{ label: "Imports", to: IMPORTS_PATH, icon: ArrowDownTrayIcon },
 	{ label: "Use with AI", to: "/use-with-ai", icon: SparklesIcon },
-	{ label: "Support", to: "/support", icon: LifebuoyIcon },
+	{ label: "Discord bot", to: DISCORD_BOT_PATH, icon: DiscordMark },
 ]
