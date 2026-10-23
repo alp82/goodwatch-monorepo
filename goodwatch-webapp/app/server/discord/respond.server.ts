@@ -38,13 +38,15 @@ export function defer(
 				)
 				await patch(body)
 				finish("ok")
-			} catch {
+			} catch (error) {
+				// Log only the error class, never messages that could carry user input.
+				const kind = error instanceof Error ? error.name : "unknown"
 				try {
 					await patch(textCard("Something went wrong. Please try again."))
 				} catch {
 					/* The interaction webhook may be unavailable. */
 				}
-				finish("error")
+				finish(`error:${kind}`)
 			}
 		})()
 	}, 0)
