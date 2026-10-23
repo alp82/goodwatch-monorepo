@@ -1,3 +1,4 @@
+import { drain, fetchWithTimeout } from "./fetch-timeout.ts"
 // The bot's application emoji IDs (gw_score_1 to gw_score_10), read once with the bot token and cached for 24 hours in
 // Valkey and in process. Cards fall back to plain text for any name missing here, so a failed read never breaks a card.
 import type { EmojiIds } from "./cards.ts"
@@ -46,19 +47,21 @@ export async function listApplicationEmojis(
 	botToken: string,
 	send: typeof fetch = fetch,
 ): Promise<{ id: string; name: string }[]> {
-	const response = await send(
-		`https://discord.com/api/v10/applications/${encodeURIComponent(
-			appId,
-		)}/emojis`,
-		{
-			headers: { Authorization: `Bot ${botToken}` },
-			signal: AbortSignal.timeout(5_000),
+	const data = await fetchWithTimeout(
+		send,
+		`https://discord.com/api/v10/applications/${encodeURIComponent(appId)}/emojis`,
+		{ headers: { Authorization: `Bot ${botToken}` } },
+		5_000,
+		async (response) => {
+			if (!response.ok) {
+				await drain(response)
+				throw new Error(`Discord REST status ${response.status}`)
+			}
+			return (await response.json()) as {
+				items?: { id?: unknown; name?: unknown }[]
+			}
 		},
 	)
-	if (!response.ok) throw new Error(`Discord REST status ${response.status}`)
-	const data = (await response.json()) as {
-		items?: { id?: unknown; name?: unknown }[]
-	}
 	return (data.items ?? []).flatMap((e) =>
 		typeof e.id === "string" && typeof e.name === "string"
 			? [{ id: e.id, name: e.name }]

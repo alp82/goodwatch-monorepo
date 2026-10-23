@@ -1,3 +1,4 @@
+import { drain, fetchWithTimeout } from "./fetch-timeout.ts"
 export function discordRest(
 	options: {
 		fetch?: typeof fetch
@@ -17,24 +18,34 @@ export function discordRest(
 		if (bot && !options.botToken)
 			throw new Error("Discord bot token is missing")
 		for (let attempt = 0; ; attempt++) {
-			const response = await send(`https://discord.com/api/v10${path}`, {
-				method,
-				headers: {
-					"Content-Type": "application/json",
-					...(bot ? { Authorization: `Bot ${options.botToken}` } : {}),
+			const outcome = await fetchWithTimeout(
+				send,
+				`https://discord.com/api/v10${path}`,
+				{
+					method,
+					headers: {
+						"Content-Type": "application/json",
+						...(bot ? { Authorization: `Bot ${options.botToken}` } : {}),
+					},
+					body: JSON.stringify(body),
 				},
-				body: JSON.stringify(body),
-				signal: AbortSignal.timeout(10_000),
-			})
-			if (response.status === 429 && attempt < 2) {
-				const data = (await response.json()) as { retry_after: number }
-				if (!Number.isFinite(data.retry_after) || data.retry_after < 0)
+				10_000,
+				async (response) => {
+					if (response.status === 429 && attempt < 2) {
+						const data = (await response.json()) as { retry_after: number }
+						return { retryAfter: data.retry_after }
+					}
+					await drain(response)
+					return { status: response.status, ok: response.ok }
+				},
+			)
+			if ("retryAfter" in outcome && outcome.retryAfter !== undefined) {
+				if (!Number.isFinite(outcome.retryAfter) || outcome.retryAfter < 0)
 					throw new Error("Invalid Discord retry delay")
-				await sleep(data.retry_after * 1000)
+				await sleep(outcome.retryAfter * 1000)
 				continue
 			}
-			if (!response.ok)
-				throw new Error(`Discord REST status ${response.status}`)
+			if (!outcome.ok) throw new Error(`Discord REST status ${outcome.status}`)
 			return
 		}
 	}

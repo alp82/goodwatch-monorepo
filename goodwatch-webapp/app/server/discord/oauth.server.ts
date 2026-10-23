@@ -1,3 +1,4 @@
+import { drain, fetchWithTimeout } from "./fetch-timeout.ts"
 import { randomBytes } from "node:crypto"
 export class DiscordStateError extends Error {}
 export const STATE_TTL_SECONDS = 600
@@ -109,7 +110,10 @@ export async function discordIdentity(
 	code: string,
 	fetcher: typeof fetch = fetch,
 ) {
-	const response = await fetcher("https://discord.com/api/v10/oauth2/token", {
+	const token = await fetchWithTimeout(
+		fetcher,
+		"https://discord.com/api/v10/oauth2/token",
+		{
 		method: "POST",
 		headers: { "Content-Type": "application/x-www-form-urlencoded" },
 		body: new URLSearchParams({
@@ -119,21 +123,32 @@ export async function discordIdentity(
 			code,
 			redirect_uri: callbackUri(),
 		}),
-		signal: AbortSignal.timeout(10_000),
-	})
-	if (!response.ok)
-		throw new Error("Discord could not complete sign-in. Please try again.")
-	const token = await response.json()
+	},
+		10_000,
+		async (response) => {
+			if (!response.ok) {
+				await drain(response)
+				throw new Error("Discord could not complete sign-in. Please try again.")
+			}
+			return await response.json()
+		},
+	)
 	if (typeof token.access_token !== "string")
 		throw new Error("Discord could not complete sign-in. Please try again.")
 	try {
-		const me = await fetcher("https://discord.com/api/v10/users/@me", {
-			headers: { Authorization: `Bearer ${token.access_token}` },
-			signal: AbortSignal.timeout(10_000),
-		})
-		if (!me.ok)
-			throw new Error("Discord could not read your account. Please try again.")
-		const user = await me.json()
+		const user = await fetchWithTimeout(
+			fetcher,
+			"https://discord.com/api/v10/users/@me",
+			{ headers: { Authorization: `Bearer ${token.access_token}` } },
+			10_000,
+			async (me) => {
+				if (!me.ok) {
+					await drain(me)
+					throw new Error("Discord could not read your account. Please try again.")
+				}
+				return await me.json()
+			},
+		)
 		if (
 			typeof user.id !== "string" ||
 			!/^\d+$/.test(user.id) ||
@@ -143,7 +158,10 @@ export async function discordIdentity(
 		return { id: user.id as string, username: user.username as string }
 	} finally {
 		try {
-			await fetcher("https://discord.com/api/v10/oauth2/token/revoke", {
+			await fetchWithTimeout(
+				fetcher,
+				"https://discord.com/api/v10/oauth2/token/revoke",
+				{
 				method: "POST",
 				headers: { "Content-Type": "application/x-www-form-urlencoded" },
 				body: new URLSearchParams({
@@ -152,8 +170,10 @@ export async function discordIdentity(
 					token: token.access_token,
 					token_type_hint: "access_token",
 				}),
-				signal: AbortSignal.timeout(10_000),
-			})
+			},
+				10_000,
+				drain,
+			)
 		} catch {
 			// Revocation is best effort; account identification already completed.
 		}
