@@ -184,7 +184,12 @@ const attr = (tag: string, name: string) =>
  * A browser that holds the server's HTML: as much of a document as the engine reads before it draws, with a stage
  * wider than a phone's, so that the engine draws its own picture. `answer` is what a request for a pack gets.
  */
-function browser(html: string, answer: () => Promise<unknown>, sectionTag = '<section data-pl-root="m1" data-pl-title="The Middle">') {
+function browser(
+	html: string,
+	answer: () => Promise<unknown>,
+	sectionTag = '<section data-pl-root="m1" data-pl-title="The Middle">',
+	win: Record<string, unknown> = {},
+) {
 	const el = (tag: string, more: Record<string, unknown> = {}) => ({
 		getAttribute: (name: string) => attr(tag, name),
 		hasAttribute: (name: string) => attr(tag, name) !== null,
@@ -220,7 +225,8 @@ function browser(html: string, answer: () => Promise<unknown>, sectionTag = '<se
 		addEventListener() {},
 	}
 	const asked: string[] = []
-	relatedMap({
+	const signals: (AbortSignal | undefined)[] = []
+	const w: Record<string, unknown> = {
 		document: {
 			querySelectorAll: (selector: string) =>
 				selector === "[data-related-map]" ? [section] : [],
@@ -232,13 +238,55 @@ function browser(html: string, answer: () => Promise<unknown>, sectionTag = '<se
 		setTimeout() {},
 		clearTimeout() {},
 		performance: { now: () => 0 },
-		fetch: (url: string) => {
+		fetch: (url: string, init?: { signal?: AbortSignal }) => {
 			asked.push(url)
+			signals.push(init?.signal)
 			return answer()
 		},
-	})
-	return { stage, asked }
+		...win,
+	}
+	relatedMap(w)
+	return { stage, asked, signals, win: w }
 }
+
+/** A window whose listeners and timers a test runs by hand. */
+function handWindow() {
+	const listeners: Record<string, ((event: unknown) => void)[]> = {}
+	let timers: (() => void)[] = []
+	return {
+		win: {
+			addEventListener: (type: string, run: (event: unknown) => void) => {
+				listeners[type] = (listeners[type] ?? []).concat([run])
+			},
+			removeEventListener: (type: string, run: (event: unknown) => void) => {
+				listeners[type] = (listeners[type] ?? []).filter((one) => one !== run)
+			},
+			setTimeout: (run: () => void) => {
+				timers.push(run)
+				return timers.length
+			},
+			AbortController,
+		},
+		fire(type: string, target: unknown, more: Record<string, unknown> = {}) {
+			for (const run of listeners[type] ?? []) run({ type, target, ...more })
+		},
+		tick() {
+			const due = timers
+			timers = []
+			for (const run of due) run()
+		},
+	}
+}
+const outsideLink = {
+	closest: (selector: string) =>
+		selector === "a[href]"
+			? { closest: () => null, getAttribute: () => "/person/31-tom-hanks" }
+			: null,
+}
+const plainSpot = { closest: () => null }
+const engineOf = (win: Record<string, unknown>) =>
+	(win as { __gwRelatedMap: { navigating: (on: boolean) => void } }).__gwRelatedMap
+const ahead = (asked: string[]) => asked.filter((url) => url !== "/api/related-map?key=m1")
 const settled = () => new Promise((done) => setTimeout(done, 0))
 
 test("a browser that may not ask for the pack keeps the chips of the page's title", async () => {
@@ -272,4 +320,42 @@ test("localized map SSR redraw keeps actual field languages and canonical neighb
 	assert.ok(page.stage.innerHTML.includes("Traduit The Middle"))
 	assert.match(html, /href="\/movie\/2-neighbor2th"/)
 	assert.doesNotMatch(html, /href="\/movie\/2-traduit-/)
+})
+
+test("a press on a link that leaves the page asks for no packs ahead", async () => {
+	const hand = handWindow()
+	const page = browser(served(), () => new Promise(() => {}), undefined, hand.win)
+	await settled()
+	hand.fire("touchstart", outsideLink)
+	hand.fire("pointerdown", outsideLink)
+	hand.fire("keydown", outsideLink, { key: "Enter" })
+	hand.tick()
+	hand.tick()
+	assert.deepEqual(ahead(page.asked), [])
+	hand.fire("pointerdown", plainSpot)
+	hand.tick()
+	assert.deepEqual(ahead(page.asked), [], "the packs wait for a moment after the first use")
+	hand.tick()
+	hand.tick()
+	assert.equal(ahead(page.asked).length, 8)
+})
+
+test("packs ahead wait while the app loads another page, and stop when one starts", async () => {
+	const hand = handWindow()
+	const page = browser(served(), () => new Promise(() => {}), undefined, hand.win)
+	await settled()
+	const engine = engineOf(page.win)
+	hand.fire("pointerdown", plainSpot)
+	engine.navigating(true)
+	hand.tick()
+	hand.tick()
+	assert.deepEqual(ahead(page.asked), [])
+	engine.navigating(false)
+	hand.tick()
+	assert.equal(ahead(page.asked).length, 8)
+	const first = page.signals.slice(1)
+	assert.ok(first.every((signal) => signal && !signal.aborted))
+	engine.navigating(true)
+	assert.ok(first.every((signal) => signal?.aborted))
+	assert.equal(page.signals[0], undefined, "the page title's own pack is never stopped")
 })

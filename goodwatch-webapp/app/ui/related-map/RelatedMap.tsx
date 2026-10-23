@@ -12,7 +12,7 @@
 // heading, asks for the pack from the browser, and the engine draws the picture.
 //
 // A walk is forgotten when the page is left.
-import { useMatches, useNavigate } from "@remix-run/react"
+import { useMatches, useNavigate, useNavigation } from "@remix-run/react"
 import { useEffect, useRef, useState } from "react"
 import type { RelatedMapData } from "~/server/related-map.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
@@ -28,6 +28,7 @@ interface MapWindow {
 	__gwRelatedMap?: {
 		boot: () => void
 		nav: ((href: string) => void) | null
+		navigating?: (on: boolean) => void
 		render: (input: {
 			root: string
 			title: string
@@ -120,6 +121,22 @@ function whenEngine(
 		gone = true
 		clearTimeout(late)
 	}
+}
+
+/**
+ * Tells the engine while the app loads another page, so that the packs it asks for ahead don't share the connection
+ * with the next page's data. Its own component, so that a page change doesn't render the section again.
+ */
+function NavigationWatch() {
+	const loading = useNavigation().state !== "idle"
+	useEffect(() => {
+		;(window as MapWindow).__gwRelatedMap?.navigating?.(loading)
+	}, [loading])
+	useEffect(
+		() => () => (window as MapWindow).__gwRelatedMap?.navigating?.(false),
+		[],
+	)
+	return null
 }
 
 /** The section's data from the title route's loader, or undefined when the page shows the related titles carousel. */
@@ -254,6 +271,7 @@ export default function RelatedMap({
 				// biome-ignore lint/security/noDangerouslySetInnerHtml: markup drawn by the engine on the server.
 				dangerouslySetInnerHTML={{ __html: held.current?.html ?? "" }}
 			/>
+			<NavigationWatch />
 			{inDocument && (
 				<>
 					{/* The inline script puts the style's link in here. React never looks inside. */}

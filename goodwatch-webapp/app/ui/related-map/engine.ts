@@ -6,6 +6,8 @@
 // - The page title's pack loads when the section wakes: within 600 px of the viewport, or on first touch.
 // - Once a person uses the page, the packs of the first PREFETCH titles on the map load on idle, and the pack of a
 //   title being pressed or pointed at loads at once. At most SESSION_CAP packs per page visit are asked for ahead.
+//   A press on a link that leaves the page is not use, and nothing is asked for ahead while the app loads another
+//   page: those requests would share a slow connection with the next page's data.
 // - A step onto a title whose pack isn't there yet shows the title in the middle at once, with what is known around
 //   the title you came from or with calm placeholders, and fills in when the pack arrives.
 // - A pack request that fails is asked for again for as long as someone stands on that title.
@@ -159,6 +161,9 @@ export function relatedMapEngine(
 		again: Record<string, number>
 		none: Record<string, boolean>
 		used: boolean
+		busy: boolean
+		ctl: Record<string, AbortController>
+		navigating: (on: boolean) => void
 	} = {
 		language: "",
 		t: {},
@@ -175,6 +180,9 @@ export function relatedMapEngine(
 		again: {},
 		none: {},
 		used: false,
+		busy: false,
+		ctl: {},
+		navigating: () => {},
 	}
 	const ESC: Record<string, string> = {
 		"&": "&amp;",
@@ -433,25 +441,36 @@ export function relatedMapEngine(
 		} catch {}
 		if (out.length) G.dom[root] = out
 	}
-	const fetchPack = (url: string, urgent: boolean): Promise<RawPack> =>
+	const fetchPack = (url: string, urgent: boolean, signal?: AbortSignal): Promise<RawPack> =>
 		win
-			.fetch(url, { priority: urgent ? "high" : "low" })
+			.fetch(url, { priority: urgent ? "high" : "low", signal })
 			.then((response: Response) => {
 				if (!response.ok) throw new Error(String(response.status))
 				return response.json()
 			}).then((pack: RawPack) => { if (pack.language && pack.language !== G.language) throw new Error("Stale presentation language"); return pack })
 	function ask(key: string, urgent: boolean): Promise<unknown> {
 		if (G.packs[key] || G.none[key]) return Promise.resolve()
+		// Someone needs a pack that was only asked for ahead: a page change no longer stops it.
+		if (urgent) delete G.ctl[key]
 		if (!G.wait[key]) {
-			if (!urgent && G.asked >= SESSION_CAP) return Promise.resolve()
+			if (!urgent && (G.busy || G.asked >= SESSION_CAP)) return Promise.resolve()
 			G.asked++
-			G.wait[key] = fetchPack(PACK_PATH + key + (G.language ? `&displayLanguage=${encodeURIComponent(G.language)}` : ""), urgent)
+			const ctl = !urgent && win.AbortController ? new win.AbortController() as AbortController : undefined
+			if (ctl) G.ctl[key] = ctl
+			G.wait[key] = fetchPack(PACK_PATH + key + (G.language ? `&displayLanguage=${encodeURIComponent(G.language)}` : ""), urgent, ctl?.signal)
 				.then((raw) => {
+					if (G.ctl[key] === ctl) delete G.ctl[key]
 					take(raw)
 					arrived(key)
 				})
 				.catch((error: Error) => {
+					if (G.ctl[key] === ctl) delete G.ctl[key]
 					delete G.wait[key]
+					// Stopped for a page change: it is asked for again on the next idle moment, if the map is still there.
+					if (ctl?.signal.aborted) {
+						G.asked--
+						return
+					}
 					// The server has no pack for this title, and will not have one in a moment.
 					if (error?.message === "404") {
 						G.none[key] = true
@@ -509,8 +528,9 @@ export function relatedMapEngine(
 	 * visitor who never touches it asks for the page title's pack and no other.
 	 */
 	const ahead = (s: Section) => {
-		if (!G.used) return
+		if (!G.used || G.busy) return
 		idle(() => {
+			if (G.busy) return
 			const seen: Record<string, boolean> = {}
 			let asked = 0
 			const steps = s.querySelectorAll("[data-pl-stage] [data-pl-step]")
@@ -524,13 +544,34 @@ export function relatedMapEngine(
 		})
 	}
 	const USE = ["pointerdown", "pointermove", "touchstart", "keydown", "wheel"]
-	const used = () => {
+	/** A press or a touch on a link that leaves the page: the start of a page change, not use of this one. */
+	const leaving = (event: Event) => {
+		if (event.type === "keydown" && (event as KeyboardEvent).key !== "Enter") return false
+		if (event.type === "pointermove" || event.type === "wheel") return false
+		const link = hit(event, "a[href]")
+		return Boolean(link && !sec(link) && !(link.getAttribute("href") ?? "").startsWith("#"))
+	}
+	const used = (event: Event) => {
+		if (leaving(event)) return
 		G.used = true
 		for (const type of USE) win.removeEventListener(type, used, true)
-		for (const s of sections()) if (s.__awake) ahead(s)
+		// The press that counted may still turn into a page change (a click comes after it): the packs wait a moment.
+		win.setTimeout(() => {
+			for (const s of sections()) if (s.__awake) ahead(s)
+		}, 400)
 	}
 	for (const type of USE)
 		win.addEventListener(type, used, { capture: true, passive: true })
+	/** The app says when it loads another page (RelatedMap.tsx): packs asked for ahead stop, and come back after. */
+	G.navigating = (on: boolean) => {
+		if (G.busy === on) return
+		G.busy = on
+		if (on) {
+			const stopping = G.ctl
+			G.ctl = {}
+			for (const key in stopping) stopping[key].abort()
+		} else for (const s of sections()) if (s.__awake) ahead(s)
+	}
 	let keyboard = false
 	const adopt = (s: Section) => {
 		if (s.__own) return

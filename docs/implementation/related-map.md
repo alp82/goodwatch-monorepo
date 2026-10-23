@@ -92,6 +92,13 @@ memory.
 - The page title's pack is asked for when the section comes within 600 px of the viewport, or on the first touch.
 - Once a person uses the page (a pointer, a key, a touch, the wheel), the packs of the first 8 titles on the map are
   asked for on idle, again after every step. At most 80 packs per page visit are asked for ahead.
+- A press, touch, or Enter on a link outside the map that leaves the page is not use: it starts a page change, and on
+  a phone the 8 packs (about 72 KB) would share the connection with the next page's data. After the first use the
+  packs wait 400 ms and then an idle moment, so a press that turns into a click on a link counts as nothing.
+- While the app loads another page (`useNavigation()` is not idle, told to the engine by `RelatedMap.tsx`), no pack is
+  asked for ahead, and packs asked for ahead that are still on their way are aborted. They are asked for again when
+  the page change ends and the map is still there. The page title's pack and the pack of a pressed poster are never
+  aborted.
 - The pack of a poster that is pressed or pointed at is asked for at once.
 - A step onto a title without a pack shows that title at once, with what is known around the title before it or with
   empty places, and fills in when the pack arrives.
