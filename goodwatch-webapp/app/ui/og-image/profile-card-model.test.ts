@@ -226,3 +226,18 @@ test("a profile's card paths: main, each tab, and the two Taste tab sections", (
 	assert.ok(paths.includes("/u/film_fan/taste/sides"))
 	assert.equal(paths.length, 1 + PROFILE_CARD_TABS.length + 2)
 })
+
+test("the everyone card ranks by the plain gap between the two scores it shows", () => {
+	// A generous scorer: the view's lists adjust for generosity, so a title scored above everyone can sit in "lower".
+	const takes = everyoneTakes(
+		ready(
+			[r("Mild", 8, 75), r("Big", 10, 50)],
+			[r("Above", 7, 60), r("Below", 3, 70)],
+		),
+		true,
+	)
+	assert.deepEqual(
+		takes?.map((t) => t.title),
+		["Big", "Below"],
+	)
+})

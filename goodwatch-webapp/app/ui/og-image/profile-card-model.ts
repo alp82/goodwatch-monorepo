@@ -184,8 +184,8 @@ const take = (r: EveryoneRowInput): EveryoneTake => ({
 })
 
 /**
- * The two titles the everyone card shows: the strongest one they score above everyone and the strongest one below
- * (rows come strongest first). With one side empty, the two strongest of the other. Rows without a poster or title are
+ * The two titles the everyone card shows: the one they score furthest above everyone and the one furthest below, by
+ * the plain gap between the two scores. With one side empty, the two strongest of the other. Rows without a poster or title are
  * skipped. Null when scores are hidden from guests, the view isn't ready, or no row is left: the card falls back to the
  * main one.
  */
@@ -198,14 +198,22 @@ export function everyoneTakes(
 	scoresVisible: boolean,
 ): EveryoneTake[] | null {
 	if (!scoresVisible || !view || view.status !== "ready") return null
-	const usable = (r: EveryoneRowInput) => Boolean(r.title && r.poster)
-	const higher = view.higher.filter(usable)
-	const lower = view.lower.filter(usable)
-	const rows =
-		higher.length && lower.length
-			? [higher[0], lower[0]]
-			: [...higher, ...lower].slice(0, 2)
-	return rows.length ? rows.map(take) : null
+	// The view's lists rank by a gap adjusted for the member's generosity; the card shows plain scores, so it ranks by
+	// the plain gap between the two numbers it draws.
+	const gap = (r: EveryoneRowInput) => r.mine - Math.round(r.everyone) / 10
+	const seen = new Set<EveryoneRowInput>()
+	const rows = [...view.higher, ...view.lower].filter(
+		(r) => r.title && r.poster && !seen.has(r) && seen.add(r),
+	)
+	const above = rows.filter((r) => gap(r) > 0).sort((a, b) => gap(b) - gap(a))
+	const below = rows.filter((r) => gap(r) < 0).sort((a, b) => gap(a) - gap(b))
+	const picked =
+		above.length && below.length
+			? [above[0], below[0]]
+			: [...above, ...below]
+					.sort((a, b) => Math.abs(gap(b)) - Math.abs(gap(a)))
+					.slice(0, 2)
+	return picked.length ? picked.map(take) : null
 }
 
 /**
