@@ -37,7 +37,7 @@ export default function Privacy() {
 		>
 			<h1 className="mb-8 text-3xl font-semibold">Privacy Policy</h1>
 			{updated ? (
-				<p>Last updated: October 17, 2026</p>
+				<p>Last updated: October 23, 2026</p>
 			) : (
 				<p>Last updated: June 15, 2024</p>
 			)}
