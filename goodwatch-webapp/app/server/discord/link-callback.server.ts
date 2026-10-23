@@ -4,10 +4,14 @@ import {
 	stateCookie,
 	DiscordStateError,
 } from "./oauth.server.ts"
+import { confirmLinkMessage } from "./link-message.server.ts"
 import { LinkingUnavailable } from "./link.server.ts"
 interface Dependencies {
 	userId: (request: Request) => Promise<string | undefined>
-	consume: typeof consumeState
+	consume: (
+		...args: Parameters<typeof consumeState>
+	) => Promise<Awaited<ReturnType<typeof consumeState>> | void>
+	confirm?: (nonce: string, userId: string) => Promise<void>
 	identity: typeof discordIdentity
 	link: (discordId: string, userId: string, username: string) => Promise<void>
 }
@@ -15,8 +19,9 @@ interface Dependencies {
 export async function finishLink(request: Request, deps: Dependencies) {
 	const cookie = stateCookie("", 0)
 	const userId = await deps.userId(request)
+	let nonce: string | undefined
 	try {
-		await deps.consume(request, userId)
+		nonce = (await deps.consume(request, userId))?.nonce
 	} catch (error) {
 		return {
 			error:
@@ -54,6 +59,13 @@ export async function finishLink(request: Request, deps: Dependencies) {
 	try {
 		const identity = await deps.identity(code)
 		await deps.link(identity.id, userId, identity.username)
+		if (nonce) {
+			try {
+				await (deps.confirm ?? confirmLinkMessage)(nonce, userId)
+			} catch {
+				// Message confirmation is best effort after the link has succeeded.
+			}
+		}
 		return {
 			error: null,
 			username: identity.username,

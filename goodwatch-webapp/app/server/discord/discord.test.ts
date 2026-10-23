@@ -78,6 +78,7 @@ function fixture(overrides: Partial<Dependencies> = {}) {
 		edits: unknown[] = []
 	const dependencies: Dependencies = {
 		linkedUser: async () => null,
+		storeLinkMessage: async () => "a".repeat(24),
 		getGuild: async () => null,
 		unlink: async () => {},
 		memberRead: async () => {
@@ -734,6 +735,12 @@ test("/link gives guests a link and members an unlink button; /unlink requires c
 	for (const linked of [false, true]) {
 		const removed: unknown[] = []
 		const f = fixture({
+			storeLinkMessage: async (app, token) => {
+				assert.equal(app, "test-app")
+				assert.equal(token, "test-token")
+				return "a".repeat(24)
+			},
+			memberHandle: async () => "gwtester",
 			linkedUser: async () => (linked ? "member-id" : null),
 			unlink: async (target) => {
 				removed.push(target)
@@ -754,7 +761,11 @@ test("/link gives guests a link and members an unlink button; /unlink requires c
 			link,
 			linked ? /Linked to GoodWatch/ : /https:\/\/goodwatch.app\/discord\/link/,
 		)
-		if (!linked) continue
+		if (!linked) {
+			assert.match(link, /\?n=aaaaaaaaaaaaaaaaaaaaaaaa/)
+			continue
+		}
+		assert.match(link, /gwtester/)
 		assert.match(link, /gw:unlink:ask/)
 		assert.match(
 			await run(2, { name: "unlink" }),
@@ -816,5 +827,31 @@ for (const failure of ["reject", "timeout"])
 				data.data.name === "link" ? /Link GoodWatch/ : /Where to watch/,
 			)
 			assert.doesNotMatch(card, /Something went wrong/)
-			assert.match(f.logs[0], /"viewer":"guest"/)
+			assert.ok(f.logs.some((line) => /"viewer":"guest"/.test(line)))
 		})
+
+test("link storage failure logs only the nonce and still renders the prompt", async () => {
+	const { storeLinkMessage } = await import("./link-message.server.ts")
+	const f = fixture({
+		storeLinkMessage: (app, token) =>
+			storeLinkMessage(app, token, {
+				put: async () => {
+					throw new Error(`private storage payload ${token}`)
+				},
+				take: async () => null,
+			}),
+	})
+	await f.run(interaction(2, { name: "link" }))
+	for (let i = 0; !f.edits.length && i < 150; i++)
+		await new Promise((resolve) => setTimeout(resolve, 5))
+	assert.equal(f.edits.length, 1)
+	assert.match(JSON.stringify(f.edits), /Link GoodWatch/)
+	const diagnostic = f.logs.find((line) =>
+		line.startsWith("discord link message storage failed"),
+	)!
+	assert.match(
+		diagnostic,
+		/^discord link message storage failed nonce=[A-Za-z0-9_-]{24}$/,
+	)
+	assert.doesNotMatch(f.logs.join("\n"), /test-token|private storage payload/)
+})

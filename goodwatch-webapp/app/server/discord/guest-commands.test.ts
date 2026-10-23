@@ -11,6 +11,8 @@ import {
 	titleListCard,
 	titleSelect,
 	personCard,
+	linkPromptCard,
+	linkedCard,
 	titleCard,
 	textCard,
 	message,
@@ -575,8 +577,15 @@ test("a linked member opens a discover title with match_label and shares a fresh
 		f.deps.memberRead = async (user, name, args) => {
 			assert.equal(user, "linked-member")
 			memberCalls.push(name)
+			if (name === "discover_titles") {
+				assert.equal(args.exclude_seen, true)
+				assert.equal(args.order, "for_you")
+				assert.equal(args.for_you, true)
+				assert.deepEqual(args.providers, [8])
+				return { items: [title], next_cursor: "offset:10" }
+			}
 			return name === "get_settings"
-				? { country: "FR" }
+				? { country: "FR", service_ids: [8] }
 				: {
 						title: {
 							...title,
@@ -592,6 +601,20 @@ test("a linked member opens a discover title with match_label and shares a fresh
 	const discovery = configure(fixture())
 	await discovery.run(2, { name: "discover" })
 	await discovery.finished
+	assert.equal(discovery.reads.length, 0)
+	assert.match(
+		JSON.stringify(discovery.edits[0]),
+		/For you · streaming in France/,
+	)
+	const next = buttonsIn(discovery.edits[0].components).find(
+		(c) => c.label === "Next",
+	)!
+	const paging = configure(fixture())
+	paging.deps.loadState = discovery.deps.loadState
+	await paging.run(3, { custom_id: String(next.custom_id) })
+	await paging.finished
+	assert.equal(paging.reads.length, 0)
+	assert.match(JSON.stringify(paging.edits[0]), /page 2/)
 	const select = selectIn(discovery.edits[0].components)
 	const selected = (select.options as { value: string }[])[0].value
 	const opened = configure(fixture())
@@ -609,7 +632,7 @@ test("a linked member opens a discover title with match_label and shares a fresh
 	assert.match(personal, /You rated it|Wishlist/)
 	// The top block is the share place (locale Germany); the member's France is in the member block.
 	assert.match(personal, /Where to watch on every service in Germany/)
-	assert.match(personal, /On every service in France/)
+	assert.match(personal, /On your services in France/)
 	const shareButton = buttonsIn(opened.edits[0].components).find(
 		(c) => c.label === "Share to channel",
 	)!
@@ -732,4 +755,29 @@ test("hot adapter maps the Hot on socials row, poster paths included, into 4D li
 		titles,
 	).components[0].components!.find((c) => c.type === 12)!
 	assert.equal((gallery.items as unknown[]).length, 9)
+})
+
+test("8B link prompt and linked cards obey component limits and use only the GoodWatch handle", () => {
+	const prompt = linkPromptCard("https://goodwatch.app/discord/link?n=nonce")
+	assert.equal(prompt.flags, IS_COMPONENTS_V2 | EPHEMERAL)
+	assert.equal(prompt.components[0].type, 17)
+	assert.deepEqual(prompt.components[0].components![0], {
+		type: 10,
+		content:
+			"## Link GoodWatch\n- Your taste match on every title\n- Picks from your own services\n- Rate, log, and add to your Wishlist without leaving Discord",
+	})
+	assert.equal(
+		prompt.components[0].components![1].components![0].label,
+		"Link GoodWatch",
+	)
+	for (const body of [prompt, linkedCard("goodwatch_member"), linkedCard()])
+		assertLimits(body.components)
+	assert.match(
+		JSON.stringify(linkedCard("goodwatch_member")),
+		/＠goodwatch|@goodwatch/,
+	)
+	assert.equal(
+		linkedCard().components[0].components![0].content,
+		"## Linked to GoodWatch",
+	)
 })

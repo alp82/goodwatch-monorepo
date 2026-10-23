@@ -1,3 +1,4 @@
+import "../title-filter/test-alias.ts"
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
@@ -231,4 +232,29 @@ test("failed identity reads still revoke the token", async () => {
 		}),
 	)
 	assert.equal(urls[2], "https://discord.com/api/v10/oauth2/token/revoke")
+})
+
+test("OAuth state carries only the stored message nonce, never the callback query nonce", async () => {
+	const store = states()
+	const nonce = "a".repeat(24)
+	const { state, cookie } = await createState("member", store, 1000, nonce)
+	assert.deepEqual(
+		await consumeState(
+			callback(state, cookie, `&n=${"b".repeat(24)}`),
+			"member",
+			store,
+			2000,
+		),
+		{ nonce },
+	)
+	const plain = await createState("member", store, 1000)
+	assert.deepEqual(
+		await consumeState(
+			callback(plain.state, plain.cookie, `&n=${nonce}`),
+			"member",
+			store,
+			2000,
+		),
+		{ nonce: undefined },
+	)
 })

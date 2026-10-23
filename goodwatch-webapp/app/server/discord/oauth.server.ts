@@ -14,21 +14,25 @@ export interface StateStore {
 	put: (key: string, value: string, ttl: number) => Promise<void>
 	take: (key: string) => Promise<string | null>
 }
-async function stateStore(): Promise<StateStore> {
-	const { getRedisCluster } = await import("../../utils/cache.ts")
+export async function stateStore(): Promise<StateStore> {
+	const { getRedisCluster, withRedisDeadline } = await import(
+		"../../utils/cache.ts"
+	)
 	const redis = getRedisCluster()
 	if (!redis)
 		throw new Error("Linking is temporarily unavailable. Please try again.")
 	return {
 		put: async (key, value, ttl) => {
-			await redis.set(key, value, "EX", ttl)
+			await withRedisDeadline(redis.set(key, value, "EX", ttl))
 		},
 		// GET + DEL must be atomic even with concurrent callbacks (GETDEL requires newer Valkey).
 		take: async (key) =>
-			(await redis.eval(
-				"local v = redis.call('GET', KEYS[1]); redis.call('DEL', KEYS[1]); return v",
-				1,
-				key,
+			(await withRedisDeadline(
+				redis.eval(
+					"local v = redis.call('GET', KEYS[1]); redis.call('DEL', KEYS[1]); return v",
+					1,
+					key,
+				),
 			)) as string | null,
 	}
 }
@@ -50,6 +54,7 @@ export async function createState(
 	userId: string,
 	store?: StateStore,
 	now = Date.now(),
+	nonce?: string | null,
 ) {
 	const state = randomBytes(32).toString("base64url")
 	const browser = randomBytes(32).toString("base64url")
@@ -58,6 +63,7 @@ export async function createState(
 		JSON.stringify({
 			userId,
 			browser,
+			nonce: validLinkNonce(nonce) ? nonce : undefined,
 			expires: now + STATE_TTL_SECONDS * 1000,
 		}),
 		STATE_TTL_SECONDS,
@@ -93,6 +99,12 @@ export async function consumeState(
 		throw new DiscordStateError(
 			"Use the same browser to link Discord. Please try again.",
 		)
+	return {
+		nonce: validLinkNonce(saved.nonce) ? (saved.nonce as string) : undefined,
+	}
+}
+export function validLinkNonce(value: unknown): value is string {
+	return typeof value === "string" && /^[A-Za-z0-9_-]{24}$/.test(value)
 }
 export function authorizeUrl(state: string) {
 	const url = new URL("https://discord.com/oauth2/authorize")

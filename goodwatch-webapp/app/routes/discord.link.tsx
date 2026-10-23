@@ -33,7 +33,14 @@ export { pageHeaders as headers } from "~/utils/headers"
 const privateHeaders = { "Cache-Control": "private, no-store" }
 async function requireUser(request: Request) {
 	const id = await getUserIdFromRequest({ request })
-	if (!id) throw redirect("/sign-in?redirectTo=%2Fdiscord%2Flink")
+	if (!id) {
+		const url = new URL(request.url)
+		throw redirect(
+			`/sign-in?${new URLSearchParams({
+				redirectTo: url.pathname + url.search,
+			})}`,
+		)
+	}
 	return id
 }
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -67,7 +74,12 @@ export async function action({ request }: ActionFunctionArgs) {
 			{ status: 503, headers: privateHeaders },
 		)
 	try {
-		const { state, cookie } = await createState(userId)
+		const { state, cookie } = await createState(
+			userId,
+			undefined,
+			Date.now(),
+			new URL(request.url).searchParams.get("n"),
+		)
 		return redirect(authorizeUrl(state), {
 			headers: { ...privateHeaders, "Set-Cookie": cookie },
 		})

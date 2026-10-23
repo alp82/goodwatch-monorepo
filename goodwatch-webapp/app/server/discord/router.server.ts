@@ -19,6 +19,8 @@ import {
 	slowDownCard,
 	countryName,
 	type EmojiIds,
+	type LinkedIdentity,
+	linkedCard,
 } from "./cards.ts"
 import {
 	isTitleId,
@@ -35,6 +37,18 @@ import type { DiscoverState } from "./discover-state.server.ts"
 import type { readGuestTool } from "../mcp/guest.server.ts"
 import type { RateVerdict } from "../rate-limit.server.ts"
 import type { TalkedRow } from "../../domain/talked-about-now.ts"
+function discoverArgs(
+	args: Parameters<typeof readGuestTool>[3],
+	member: boolean,
+): Parameters<typeof readGuestTool>[3] {
+	const order = args.order ?? (member ? "for_you" : undefined)
+	return {
+		...args,
+		order,
+		...(member ? { exclude_seen: true } : {}),
+		for_you: member && (order === "for_you" || order === "match"),
+	}
+}
 export interface Interaction {
 	type: number
 	id?: string
@@ -60,11 +74,13 @@ export interface Interaction {
 }
 export interface Dependencies extends PlaceDependencies {
 	write?: typeof discordWrite
+	storeLinkMessage?: (app: string, token: string) => Promise<string>
+	memberHandle?: (userId: string) => Promise<LinkedIdentity | null>
 	linkedUser: (discordId: string) => Promise<string | null>
 	unlink: (target: { byDiscordUserId: string }) => Promise<void>
 	memberRead: (
 		userId: string,
-		name: "get_title" | "get_settings",
+		name: "get_title" | "get_settings" | "discover_titles",
 		args: Parameters<typeof readGuestTool>[3],
 	) => Promise<Record<string, unknown>>
 
@@ -82,6 +98,10 @@ export interface Dependencies extends PlaceDependencies {
 }
 const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
 	write: discordWrite,
+	storeLinkMessage: async (app, token) =>
+		(await import("./link-message.server.ts")).storeLinkMessage(app, token),
+	memberHandle: async (id) =>
+		(await import("./link-message.server.ts")).memberHandle(id),
 	linkedUser: async (id) =>
 		(await import("./link.server.ts")).getLinkedUserId(id),
 	unlink: async (target) => (await import("./link.server.ts")).unlink(target),
@@ -345,20 +365,27 @@ export async function routeInteraction(
 		const state = await deps.loadState(key)
 		if (!state)
 			return textCard("This discovery expired. Start again with /discover.")
-		const result = await deps.read(
-			viewer,
-			"https://goodwatch.app",
-			"discover_titles",
-			{
-				...state.args,
-				...(!state.args.providers?.length && viewer.services?.length
-					? { providers: viewer.services }
-					: {}),
-				cursor: `offset:${page * 10}`,
-				limit: 10,
-			},
-		)
-		const sort = state.args.order ? sortNames[state.args.order] : undefined
+		const args = {
+			...state.args,
+			...(!state.args.providers?.length && viewer.services?.length
+				? { providers: viewer.services }
+				: {}),
+			cursor: `offset:${page * 10}`,
+			limit: 10,
+		}
+		const effectiveArgs = discoverArgs(args, !!memberId && !share)
+		const result =
+			memberId && !share
+				? await deps.memberRead(memberId, "discover_titles", effectiveArgs)
+				: await deps.read(
+						viewer,
+						"https://goodwatch.app",
+						"discover_titles",
+						effectiveArgs,
+					)
+		const sort = effectiveArgs.order
+			? sortNames[effectiveArgs.order]
+			: undefined
 		return titleListCard(
 			discoverHeading(state.args),
 			(result.items ?? []) as GuestTitle[],
@@ -741,42 +768,49 @@ export async function routeInteraction(
 					}
 					if (action === "gw:unlink:keep")
 						return textCard("Your GoodWatch account stays linked.")
-					if (!memberId)
-						return linkPromptCard(new URL("/discord/link", appOrigin()).href)
+					if (!memberId) {
+						const url = new URL("/discord/link", appOrigin())
+						try {
+							url.searchParams.set(
+								"n",
+								await deps.storeLinkMessage(applicationId, token),
+							)
+						} catch (error) {
+							const nonce =
+								error instanceof Error &&
+								"nonce" in error &&
+								typeof error.nonce === "string" &&
+								/^[A-Za-z0-9_-]{24}$/.test(error.nonce)
+									? error.nonce
+									: "unavailable"
+							deps.log(`discord link message storage failed nonce=${nonce}`)
+						}
+						return linkPromptCard(url.href)
+					}
 					const confirming =
 						interaction.data?.name === "unlink" || action === "gw:unlink:ask"
+					if (!confirming)
+						return linkedCard(
+							await deps.memberHandle(memberId).catch(() => null),
+						)
 					return message([
-						{
-							type: 10,
-							content: confirming
-								? "Unlink your GoodWatch account?"
-								: "Linked to GoodWatch",
-						},
+						{ type: 10, content: "Unlink your GoodWatch account?" },
 						{
 							type: 1,
-							components: confirming
-								? [
-										{
-											type: 2,
-											style: 4,
-											label: "Unlink",
-											custom_id: "gw:unlink:yes",
-										},
-										{
-											type: 2,
-											style: 2,
-											label: "Keep",
-											custom_id: "gw:unlink:keep",
-										},
-									]
-								: [
-										{
-											type: 2,
-											style: 2,
-											label: "Unlink",
-											custom_id: "gw:unlink:ask",
-										},
-									],
+							components: [
+								{
+									type: 2,
+									style: 4,
+									label: "Unlink",
+									custom_id: "gw:unlink:yes",
+								},
+								{
+									type: 2,
+									style: 2,
+									label: "Keep",
+									custom_id: "gw:unlink:keep",
+								},
+							],
 						},
 					])
 				},
@@ -833,9 +867,7 @@ export async function routeInteraction(
 						case "hot":
 							return hot()
 						case "discover": {
-							const args: Parameters<typeof readGuestTool>[3] = {
-								for_you: false,
-							}
+							const args: Parameters<typeof readGuestTool>[3] = {}
 							if (options.type && options.type !== "any")
 								args.type = options.type as "movie" | "show"
 							if (options.mood)
@@ -872,7 +904,9 @@ export async function routeInteraction(
 									args.providers = [provider.id]
 								}
 							}
-							const key = await deps.saveState({ args })
+							const key = await deps.saveState({
+								args: discoverArgs(args, !!memberId),
+							})
 							return discover(key, 0)
 						}
 						default:

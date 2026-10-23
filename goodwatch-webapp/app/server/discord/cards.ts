@@ -286,7 +286,9 @@ export function whereToWatch(
 					.slice(0, 20)
 					.map(
 						(o) =>
-							`${o.stream_link}${o.offer_type ? ` (${o.offer_type})` : ""}`,
+							`${o.stream_link}${
+								o.offer_type ? ` (${escape(o.offer_type)})` : ""
+							}`,
 					)
 					.join("\n")
 			: names.map((n) => `**${n}**`).join("  ·  ")
@@ -370,7 +372,9 @@ export function memberLines(
 				? progress[0].toUpperCase() + progress.slice(1)
 				: "Not seen yet",
 		marks.score != null && marks.score >= 1 && marks.score <= 10
-			? `You rated it **${marks.score} · ${scoreLabels[Math.round(marks.score)]}**`
+			? `You rated it **${marks.score} · ${
+					scoreLabels[Math.round(marks.score)]
+				}**`
 			: null,
 	]
 		.filter(Boolean)
@@ -567,7 +571,10 @@ function rankedLine(t: GuestTitle, rank: number, emojis: EmojiIds) {
 		: null
 	const emoji = score === null ? "" : scoreEmoji(score, emojis)
 	return [
-		`**${rank}**  ${emoji ? `${emoji}  ` : ""}**${escape(t.name).slice(0, 180)}**`,
+		`**${rank}**  ${emoji ? `${emoji}  ` : ""}**${escape(t.name).slice(
+			0,
+			180,
+		)}**`,
 		score === null ? null : String(score),
 		t.year ? String(t.year) : null,
 		isMovie(t) && t.runtime_minutes ? runtime(t.runtime_minutes) : null,
@@ -608,7 +615,9 @@ export function titleListCard(
 		options.subtitle,
 		page === undefined
 			? null
-			: `page ${page + 1}${pages ? ` of ${pages.toLocaleString("en-US")}` : ""}`,
+			: `page ${page + 1}${
+					pages ? ` of ${pages.toLocaleString("en-US")}` : ""
+				}`,
 	]
 		.filter(Boolean)
 		.join(" · ")
@@ -743,7 +752,9 @@ export function linkPromptCard(url: string, reason?: string) {
 		container(
 			[
 				text(
-					`${reason ? `-# ${reason}\n` : ""}## Link GoodWatch\n- Your taste match on every title\n- Picks from your own services\n- Rate, log, and add to your Wishlist without leaving Discord`,
+					`${
+						reason ? `-# ${reason}\n` : ""
+					}## Link GoodWatch\n- Your taste match on every title\n- Picks from your own services\n- Rate, log, and add to your Wishlist without leaving Discord`,
 				),
 				{ type: 1, components: [linkButton("Link GoodWatch", url)] },
 				text("-# Takes about a minute. Unlink any time with /unlink."),
@@ -765,5 +776,31 @@ export function slowDownCard(retryAfterSeconds: number, now = Date.now()) {
 			],
 			QUIET_GREY,
 		),
+	])
+}
+export type LinkedIdentity = string | { name: string }
+export function linkedCard(identity?: LinkedIdentity | null) {
+	return message([
+		{
+			type: 17,
+			components: [
+				{
+					type: 10,
+					content: `## Linked to GoodWatch${
+						identity
+							? `\n${escape(
+									typeof identity === "string" ? `@${identity}` : identity.name,
+								).slice(0, 100)}`
+							: ""
+					}`,
+				},
+				{
+					type: 1,
+					components: [
+						{ type: 2, style: 2, label: "Unlink", custom_id: "gw:unlink:ask" },
+					],
+				},
+			],
+		},
 	])
 }
