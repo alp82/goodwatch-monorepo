@@ -40,6 +40,9 @@ body.phone .variants { grid-template-columns: repeat(auto-fit, minmax(min(100%, 
 .vhead { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
 .vletter { flex: none; width: 30px; height: 30px; border-radius: 8px; background: var(--amber); color: #111; font-weight: 800; display: grid; place-items: center; font-size: 16px; }
 .vtitle { font-weight: 700; font-size: 15px; }
+.picked { display: inline-block; margin-left: 8px; vertical-align: 1px; font-size: 11px; font-weight: 700; letter-spacing: .02em; border-radius: 999px; padding: 1px 8px; background: #14532d; color: #bbf7d0; }
+.picked.pending { background: transparent; color: var(--amber); border: 1px solid var(--amber); }
+.variant.is-picked { border-color: #166534; }
 .vwhy { color: var(--page-muted); font-size: 13px; line-height: 1.45; margin-top: 2px; }
 .vmeta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
 .chip { font-size: 12px; border-radius: 999px; padding: 3px 9px; border: 1px solid var(--page-line); color: var(--page-muted); font-variant-numeric: tabular-nums; }
@@ -60,6 +63,7 @@ details.payload pre { max-height: 320px; overflow: auto; font-size: 11px; backgr
 	--chat: #313338; --ct: #2b2d31; --ct-line: #3a3c42; --text: #dbdee1; --hdr: #f2f3f5; --muted: #949ba4; --link: #00a8fc;
 	--sep: #3f4147; --b-sec: #4e5058; --b-sec-h: #6d6f78; --b-sec-t: #fff; --sel: #1e1f22; --sel-line: #1e1f22; --menu: #2b2d31; --menu-h: #35373c;
 	--mention: rgba(88,101,242,.3); --mention-t: #c9cdfb; --tsp: rgba(255,255,255,.06); --hover: #2e3035;
+	--code: #1e1f22; --code-line: #1a1b1e;
 	font-family: "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 	font-size: 16px; line-height: 1.375; background: var(--chat); color: var(--text);
 	border-radius: 8px; padding: 16px 16px 14px 0; overflow: hidden;
@@ -68,6 +72,7 @@ body.light .dc {
 	--chat: #ffffff; --ct: #f2f3f5; --ct-line: #e3e5e8; --text: #313338; --hdr: #060607; --muted: #5c5e66; --link: #006ce7;
 	--sep: #d4d7dc; --b-sec: #e1e2e4; --b-sec-h: #d4d5d8; --b-sec-t: #313338; --sel: #ebedef; --sel-line: #e3e5e8; --menu: #ffffff; --menu-h: #ebedef;
 	--mention: rgba(88,101,242,.15); --mention-t: #505cdc; --tsp: rgba(6,6,7,.06); --hover: #f7f7f8;
+	--code: #ffffff; --code-line: #e3e5e8;
 }
 body.phone .dc { max-width: 390px; padding-right: 12px; }
 .dc .reply { display: flex; align-items: center; gap: 4px; font-size: 14px; color: var(--muted); margin: 0 0 4px 72px; position: relative; white-space: nowrap; overflow: hidden; }
@@ -110,6 +115,9 @@ body.phone .dc .th { width: 64px; }
 .dc .td a:hover { text-decoration: underline; }
 .dc .td ul { margin: 2px 0; padding-left: 20px; }
 .dc .td .gap { height: .5em; }
+/* Discord code block: monospace, wraps long lines instead of scrolling. */
+.dc .td pre.code { margin: 0; padding: 7px; border-radius: 4px; background: var(--code); border: 1px solid var(--code-line); color: var(--text); font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "DejaVu Sans Mono", "Liberation Mono", monospace; font-size: 14px; line-height: 18px; white-space: pre-wrap; overflow-wrap: anywhere; }
+body.phone .dc .td pre.code { font-size: 11px; line-height: 15px; } /* about 40 monospace characters per line at 390 px, like a typical phone */
 .dc .em { width: 1.375em; height: 1.375em; vertical-align: -.3em; object-fit: contain; display: inline-block; border-radius: 4px; }
 .dc h1 .em, .dc h2 .em, .dc h3 .em { width: 1.2em; height: 1.2em; vertical-align: -.2em; }
 .dc .mn { background: var(--mention); color: var(--mention-t); border-radius: 3px; padding: 0 2px; font-weight: 500; }
@@ -176,7 +184,7 @@ body.phone .dc .th { width: 64px; }
 	<nav id="nav"></nav>
 </div>
 <main>
-	<p class="intro"><strong>Prototype for #738.</strong> Pick one variant per card. Every card is built from a Components V2 tree, so the counter and the payload below each mock are what the bot would send. Payloads use sample values for app emoji IDs, custom_id suffixes, and timestamps (October 23, 2026, 21:04 in Berlin); the bot fills in its own. Data: real GoodWatch titles, scores, and availability in Germany, October 23, 2026. Buttons that change the card work here (Yep, Nope, Undo, Another, Rate, menus); other buttons show what they would do. Score badges and service logos inside text are <strong>app emojis</strong> (Discord custom emojis the app uploads), because Discord text can't be colored.</p>
+	<p class="intro"><strong>Prototype for #738.</strong> Pick one variant per card. Every card is built from a Components V2 tree, so the counter and the payload below each mock are what the bot would send. Payloads use sample values for app emoji IDs, custom_id suffixes, and timestamps (October 23, 2026, 21:04 in Berlin); the bot fills in its own. Data: real GoodWatch titles, scores, and availability in Germany, October 23, 2026. Buttons that change the card work here (Yep, Nope, Undo, Another, Rate, menus); other buttons show what they would do. Score badges and service logos inside text are <strong>app emojis</strong> (Discord custom emojis the app uploads), because Discord text can't be colored. Variants the owner picked carry a <strong>Picked</strong> badge.</p>
 	<div id="cards"></div>
 </main>
 <div class="modal-bg" id="modal"></div>
@@ -187,7 +195,8 @@ body.phone .dc .th { width: 64px; }
 const TM = "https://image.tmdb.org/t/p/";
 const AMBER = "#fbbf24";
 const LABELS = ["What's your score?", "Unwatchable", "Terrible", "Bad", "Weak", "Mediocre", "Decent", "Good", "Great", "Excellent", "Masterpiece"];
-const VIBE = { 0: "#7f1d1d", 10: "#991b1b", 20: "#b91c1c", 30: "#c2410c", 40: "#d97706", 50: "#ca8a04", 60: "#a3a323", 70: "#50a33d", 80: "#25a73d", 90: "#16b34a", 100: "#05b724" };
+// The site's --color-vibe-* tokens (app/tailwind.css), the same as VIBE_COLORS in app/ui/og-image/parts.tsx.
+const VIBE = { 0: "#7f1d1d", 10: "#991b1b", 20: "#b91c1c", 30: "#c2410c", 40: "#d97706", 50: "#ca8a04", 60: "#a3a323", 70: "#65a32d", 80: "#16934a", 90: "#15803d", 100: "#166534" };
 const label = (s) => LABELS[Math.max(1, Math.round(s / 10))]; // ScoreRing.tsx
 const vibe = (s) => VIBE[Math.min(100, Math.floor(s / 10) * 10)]; // goodwatchVibeIndex
 const rt = (m) => (m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}` : `${m}m`);
@@ -199,10 +208,10 @@ const P = {
 const mk = (o) => ({ kind: "Movie", ...o, poster: TM + "w342/" + o.poster + ".jpg", backdrop: o.backdrop && TM + "w780/" + o.backdrop + ".jpg", og: `https://goodwatch.app/og/movie/${o.slug}.jpg?brand=D2`, url: `https://goodwatch.app/movie/${o.slug}` });
 const T = {
 	phm: mk({ name: "Project Hail Mary", year: 2026, score: 85, runtime: 157, match: 70, slug: "687163-project-hail-mary", genres: ["Science Fiction", "Adventure"], providers: ["prime"], poster: "iOb2fjXLbpJgyQXe46n1WtGCnaa", backdrop: "8Tfys3mDZVp4tNoH2ktm06a0Tau", overview: "Science teacher Ryland Grace wakes up on a spaceship light years from home with no recollection of who he is or how he got there. As his memory returns, he begins to uncover his mission: solve the riddle of the mysterious substance causing the sun to die out." }),
-	spirited: mk({ name: "Spirited Away", year: 2001, score: 92, runtime: 125, match: 76, slug: "129-spirited-away", genres: ["Animation", "Family", "Fantasy"], providers: ["netflix"], poster: "jUo8cNmU400WtZiJss45HNXlQ2e", backdrop: "dyJvKsNs2KP8qQnAXbRwDjblViy", overview: "A young girl, Chihiro, becomes trapped in a strange new world of spirits. When her parents undergo a mysterious transformation, she must call upon the courage she never knew she had to free her family." }),
-	howl: mk({ name: "Howl's Moving Castle", year: 2004, score: 85, runtime: 119, match: 88, myScore: 7, slug: "4935-howls-moving-castle", genres: ["Fantasy", "Animation", "Adventure"], providers: ["netflix"], poster: "13kOl2v0nD2OLbVSHnHk8GUFEhO", backdrop: "nv5wwZou159v5OC61i4ElR7OqyY", overview: "Sophie, a young milliner, is turned into an elderly woman by a witch who enters her shop and curses her. She encounters a wizard named Howl and gets caught up in his resistance to fighting for the king." }),
-	coco: mk({ name: "Coco", year: 2017, score: 87, runtime: 105, match: 66, slug: "354912-coco", genres: ["Family", "Animation", "Music", "Adventure"], providers: ["disney"], poster: "6Ryitt95xrO8KXuqRGm1fUuNwqF", backdrop: "g7CHF8gTLGooTbP4GznIGwaqAGL", overview: "Despite his family's baffling generations-old ban on music, Miguel dreams of becoming an accomplished musician like his idol, Ernesto de la Cruz." }),
-	io2: mk({ name: "Inside Out 2", year: 2024, score: 80, runtime: 97, match: 69, slug: "1022789-inside-out-2", genres: ["Animation", "Adventure", "Comedy", "Family"], providers: ["disney"], poster: "vpnVM9B6NMmQpWeZvzLvDESb2QY", backdrop: "p5ozvmdgsmbWe0H8Xk7Rc8SCwAB", overview: "Teenager Riley's mind headquarters is undergoing a sudden demolition to make room for something entirely unexpected: new Emotions." }),
+	spirited: mk({ name: "Spirited Away", year: 2001, score: 92, runtime: 125, match: 76, trailer: "https://www.youtube.com/watch?v=ByXuk9QqQkk", slug: "129-spirited-away", genres: ["Animation", "Family", "Fantasy"], providers: ["netflix"], poster: "jUo8cNmU400WtZiJss45HNXlQ2e", backdrop: "dyJvKsNs2KP8qQnAXbRwDjblViy", overview: "A young girl, Chihiro, becomes trapped in a strange new world of spirits. When her parents undergo a mysterious transformation, she must call upon the courage she never knew she had to free her family." }),
+	howl: mk({ name: "Howl's Moving Castle", year: 2004, score: 85, runtime: 119, match: 88, myScore: 7, trailer: "https://www.youtube.com/watch?v=iwROgK94zcM", slug: "4935-howls-moving-castle", genres: ["Fantasy", "Animation", "Adventure"], providers: ["netflix"], poster: "13kOl2v0nD2OLbVSHnHk8GUFEhO", backdrop: "nv5wwZou159v5OC61i4ElR7OqyY", overview: "Sophie, a young milliner, is turned into an elderly woman by a witch who enters her shop and curses her. She encounters a wizard named Howl and gets caught up in his resistance to fighting for the king." }),
+	coco: mk({ name: "Coco", year: 2017, score: 87, runtime: 105, match: 66, trailer: "https://www.youtube.com/watch?v=xlnPHQ3TLX8", slug: "354912-coco", genres: ["Family", "Animation", "Music", "Adventure"], providers: ["disney"], poster: "6Ryitt95xrO8KXuqRGm1fUuNwqF", backdrop: "g7CHF8gTLGooTbP4GznIGwaqAGL", overview: "Despite his family's baffling generations-old ban on music, Miguel dreams of becoming an accomplished musician like his idol, Ernesto de la Cruz." }),
+	io2: mk({ name: "Inside Out 2", year: 2024, score: 80, runtime: 97, match: 69, trailer: "https://www.youtube.com/watch?v=LEjhY15eCx0", slug: "1022789-inside-out-2", genres: ["Animation", "Adventure", "Comedy", "Family"], providers: ["disney"], poster: "vpnVM9B6NMmQpWeZvzLvDESb2QY", backdrop: "p5ozvmdgsmbWe0H8Xk7Rc8SCwAB", overview: "Teenager Riley's mind headquarters is undergoing a sudden demolition to make room for something entirely unexpected: new Emotions." }),
 };
 const D = (name, year, score, runtime, slug, poster) => mk({ name, year, score, runtime, slug, poster, genres: [], providers: [] });
 const DISCOVER = [
@@ -247,11 +256,20 @@ function scoreEmoji(s) {
 	return (emojiCache[s] = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg));
 }
 
+// A member's rating (1 to 10) as an app emoji in the vibe color of that score.
+function ratingEmoji(r) {
+	const k = "r" + r;
+	if (emojiCache[k]) return emojiCache[k];
+	const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="${vibe(r * 10)}"/><text x="32" y="44" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">${r}</text></svg>`;
+	return (emojiCache[k] = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg));
+}
+
 // ---------- markdown (Discord subset) ----------
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 function inline(s) {
 	s = esc(s);
 	s = s.replace(/\{s:(\d+)\}/g, (_, n) => `<img class="em" alt=":gw_${n}:" title="app emoji :gw_${n}:" src="${scoreEmoji(+n)}">`);
+	s = s.replace(/\{u:(\d+)\}/g, (_, n) => `<img class="em" alt=":gw_r${n}:" title="app emoji :gw_r${n}:" src="${ratingEmoji(+n)}">`);
 	s = s.replace(/\{e:(\w+)\}/g, (_, k) => `<img class="em" alt=":${k}:" title="app emoji :${k}:" src="${P[k].logo}">`);
 	s = s.replace(/\{t:([^}]+)\}/g, (_, x) => `<span class="tsp">${x}</span>`);
 	s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
@@ -261,8 +279,10 @@ function inline(s) {
 	return s;
 }
 function md(src) {
-	const out = []; let list = null;
+	const out = []; let list = null; let code = null;
 	for (const line of src.split("\n")) {
+		if (line.startsWith("```")) { if (code) { out.push(`<pre class="code">${esc(code.join("\n"))}</pre>`); code = null; } else code = []; continue; }
+		if (code) { code.push(line); continue; }
 		if (line.startsWith("- ")) { (list ??= []).push(`<li>${inline(line.slice(2))}</li>`); continue; }
 		if (list) { out.push(`<ul>${list.join("")}</ul>`); list = null; }
 		if (line.startsWith("-# ")) out.push(`<div class="sub">${inline(line.slice(3))}</div>`);
@@ -347,7 +367,7 @@ const hash = (x) => { let h = 2166136261; for (const c of x) h = Math.imul(h ^ c
 const snowflake = (name) => { const h = hash(name); return "1430" + String(h).padStart(10, "0") + String(h % 99991).padStart(5, "0"); };
 const NOW = Date.UTC(2026, 9, 23, 19, 4) / 1000;
 const unix = (x) => { const m = x.match(/in (\d+) (second|minute|hour)/); return NOW + (m ? +m[1] * { second: 1, minute: 60, hour: 3600 }[m[2]] : 0); };
-const content = (m) => m.replace(/\{s:(\d+)\}/g, (_, n) => `<:gw_${n}:${snowflake("gw_" + n)}>`).replace(/\{e:(\w+)\}/g, (_, k) => `<:${k}:${snowflake(k)}>`).replace(/\{t:([^}]+)\}/g, (_, x) => `<t:${unix(x)}:R>`);
+const content = (m) => m.replace(/\{u:(\d+)\}/g, (_, n) => `<:gw_r${n}:${snowflake("gw_r" + n)}>`).replace(/\{s:(\d+)\}/g, (_, n) => `<:gw_${n}:${snowflake("gw_" + n)}>`).replace(/\{e:(\w+)\}/g, (_, k) => `<:${k}:${snowflake(k)}>`).replace(/\{t:([^}]+)\}/g, (_, x) => `<t:${unix(x)}:R>`);
 const emojiObj = (e) => { const m = e && e.match(/\{s:(\d+)\}|\{e:(\w+)\}/); if (!m) return undefined; const name = m[1] ? `gw_${m[1]}` : m[2]; return { id: snowflake(name), name }; };
 const cid = (id, label = "") => `gw:${id || "noop"}:${hash(id + label).toString(36)}`;
 function payload(n) {
@@ -421,10 +441,25 @@ const leftTree = () => [S(["You left the movie night. Your votes are removed."],
 const deckDoneTree = () => [C([X("### You voted on all 120 titles\nThe group has no match. @alp chooses from the three titles with the most Yep votes on the channel message."), R(B("Undo", "secondary", { id: "undo" }), B("Leave", "secondary", { id: "leave" }))], AMBER)];
 const VOTE_STATES = [{ k: "joined", l: "Just joined" }, { k: "voting", l: "Voting", def: true }, { k: "exhausted", l: "Deck exhausted" }];
 
-const WRITE_STATES = [{ k: "rate", l: "/rate 8" }, { k: "seen", l: "/seen" }, { k: "want", l: "/want" }];
-const writeCopy = { rate: `Rated **Project Hail Mary** **8 · Great**`, seen: `Logged a watch of **Project Hail Mary** today`, want: `Added **Project Hail Mary** to Want to see` };
-const undoneCopy = { rate: "Removed your score for **Project Hail Mary**.", seen: "Removed today's watch of **Project Hail Mary**.", want: "Removed **Project Hail Mary** from Want to see." };
+const WRITE_STATES = [{ k: "rate9", l: "/rate 9" }, { k: "rate6", l: "/rate 6" }, { k: "rate3", l: "/rate 3" }, { k: "seen", l: "/seen" }, { k: "want", l: "/want" }];
+const ratedOf = (st) => (st.startsWith("rate") ? +st.slice(4) : null);
+const writeCopy = (st) => { const r = ratedOf(st); return r ? `Rated **Project Hail Mary** **${r} · ${LABELS[r]}**` : { seen: `Logged a watch of **Project Hail Mary** today`, want: `Added **Project Hail Mary** to Want to see` }[st]; };
+const undoneCopy = (st) => (ratedOf(st) ? "Removed your score for **Project Hail Mary**." : { seen: "Removed today's watch of **Project Hail Mary**.", want: "Removed **Project Hail Mary** from Want to see." }[st]);
 const undo = { undo: (vs) => { vs.undone = true; return true; }, redo: (vs) => { vs.undone = false; return true; } };
+
+const discHead = () => X("### Feel-good movies\n-# Popular · every service in Germany · page 1 of 222");
+const discGallery = () => G(DISCOVER.map((t) => ({ url: t.poster, alt: `${t.name} (${t.year})`, shape: "poster" })));
+const discRanked = () => DISCOVER.map((t, i) => `**${i + 1}**  {s:${t.score}}  **${t.name}**  ·  ${t.year}  ·  ${rt(t.runtime)}`).join("\n");
+const discNav = () => [R(Sel("Open a title", DISCOVER.map(titleOpt))), R(B("Previous", "secondary", { id: "prev", disabled: true }), B("Page 1 of 222", "secondary", { disabled: true }), B("Next", "secondary", { id: "next" }))];
+// Monospace table in a code block. Phone-safe: rank, title, year, score. Wide adds runtime.
+const TABLE_STATES = [{ k: "phone", l: "Phone-safe, 36 characters", def: true }, { k: "wide", l: "Wide, 51 characters" }];
+const cell = (x, n, right) => { x = String(x); if (x.length > n) x = x.slice(0, n - 1) + "…"; return right ? x.padStart(n) : x.padEnd(n); };
+function discTable(wide) {
+	const cols = [["#", 2, true, (t, i) => i + 1], ["Title", wide ? 30 : 22, false, (t) => t.name], ["Year", 4, false, (t) => t.year], ["Score", 5, true, (t) => t.score], wide && ["Time", 6, true, (t) => rt(t.runtime)]].filter(Boolean);
+	const line = (f) => cols.map(([h, n, r, get]) => cell(f(h, get), n, r)).join(" ").trimEnd();
+	const rows = [line((h) => h), ...DISCOVER.map((t, i) => line((h, get) => get(t, i)))];
+	return "```\n" + rows.join("\n") + "\n```";
+}
 
 const CARDS = [
 	{
@@ -473,6 +508,10 @@ const CARDS = [
 				build: () => [C([X("### Feel-good movies\n-# Popular · every service in Germany · page 1 of 222"), X(DISCOVER.map((t, i) => `**${i + 1}**  {s:${t.score}}  **${t.name}**  ·  ${t.year}  ·  ${rt(t.runtime)}`).join("\n")), R(Sel("Open a title", DISCOVER.map(titleOpt))), R(B("Previous", "secondary", { id: "prev", disabled: true }), B("Page 1 of 222", "secondary", { disabled: true }), B("Next", "secondary", { id: "next" }))], AMBER)] },
 			{ name: "Ten poster rows", why: "Every title gets an uncropped poster thumbnail; uses 38 of 40 components and is long on phones.",
 				build: () => [C([X("### Feel-good movies\n-# Popular · every service in Germany · page 1 of 222"), ...DISCOVER.map((t) => S([`**${t.name}**\n{s:${t.score}} ${label(t.score)}  ·  ${t.year}  ·  ${rt(t.runtime)}`], Th(t.poster, `${t.name} poster`))), R(Sel("Open a title", DISCOVER.map(titleOpt))), R(B("Previous", "secondary", { id: "prev", disabled: true }), B("Page 1 of 222", "secondary", { disabled: true }), B("Next", "secondary", { id: "next" }))])] },
+			{ name: "A + B stacked", why: "The poster mosaic from A on top, the ranked list from B below: posters catch the eye, the list carries names, scores, and runtimes. Long on phones.",
+				build: () => [C([discHead(), discGallery(), X(discRanked()), ...discNav()], AMBER)] },
+			{ name: "A + B stacked, list as a table", why: "Same as D with the list as aligned columns. Discord has no table component, so this is a monospace code block. Inside it there are no links, bold, or score emojis, so scores lose their color. The bot sends one message to every client and can't tell the width, so only the phone-safe table should ship: it drops runtime to stay under 40 characters. Choose Wide and switch to Phone to see long lines wrap.", states: TABLE_STATES,
+				build: (vs) => [C([discHead(), discGallery(), X(discTable(vs.state === "wide")), ...discNav()], AMBER)] },
 		],
 	},
 	{
@@ -509,20 +548,20 @@ const CARDS = [
 		id: "vote", n: 6, title: "/together private voting card", cmd: "Join", replyKind: "button",
 		note: "Only the voter sees it. Each press replaces the card with the next title. Try Yep, Nope, Undo, and Leave. Just joined is title 1, before the first vote makes the person a participant. The deck grows in steps of 30 up to 120; after title 120 the card says the deck is done.",
 		variants: [
-			{ name: "Poster thumbnail", why: "Compact like the title card; buttons stay in the same place for fast thumb voting on phones.", states: VOTE_STATES, on: deckVote,
-				build: (vs) => { if (vs.left) return leftTree(); if (votePos(vs) > 120) return deckDoneTree(); const t = DECK[votePos(vs) % DECK.length]; return [C([X(`-# Movie night · ${voteEyebrow(vs).replace(/^T/, "t")}`), S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n-# ${genres(t)}`, prov(t)], Th(t.poster, `${t.name} poster`)), voteRow(vs)], vibe(t.score))]; } },
+			{ name: "Poster thumbnail", why: "Compact like the title card; buttons stay in the same place for fast thumb voting on phones. Trailer is a link button on its own row below the votes, so the vote buttons never move, even for a title without a trailer (the row is left out). It opens YouTube outside Discord.", states: VOTE_STATES, on: deckVote,
+				build: (vs) => { if (vs.left) return leftTree(); if (votePos(vs) > 120) return deckDoneTree(); const t = DECK[votePos(vs) % DECK.length]; return [C([X(`-# Movie night · ${voteEyebrow(vs).replace(/^T/, "t")}`), S([`## ${t.name}`, `${scoreText(t)}  ·  ${t.year}  ·  ${rt(t.runtime)}\n-# ${genres(t)}`, prov(t)], Th(t.poster, `${t.name} poster`)), voteRow(vs), t.trailer && R(B("Trailer", "link", { url: t.trailer }))], vibe(t.score))]; } },
 			{ name: "Big poster", why: "The poster is the card, like swiping in YepWatch; bold, but on phones the buttons sit below a tall image.", states: VOTE_STATES, on: deckVote,
 				build: (vs) => { if (vs.left) return leftTree(); if (votePos(vs) > 120) return deckDoneTree(); const t = DECK[votePos(vs) % DECK.length]; return [C([G([{ url: t.poster, alt: `${t.name} poster`, shape: "poster" }]), X(`### ${t.name}\n{s:${t.score}} **${label(t.score)}**  ·  ${t.year}  ·  ${rt(t.runtime)}  ·  ${prov(t)}\n-# ${voteEyebrow(vs)}`), voteRow(vs)], vibe(t.score))]; } },
 		],
 	},
 	{
-		id: "write", n: 7, title: "Write confirmation with Undo", cmd: "/rate title: Project Hail Mary score: 8",
+		id: "write", n: 7, title: "Write confirmation with Undo", cmd: "/rate title: Project Hail Mary score: 9",
 		note: "Answers /rate, /seen, /want, and the member buttons. Undo works until the receipt expires, not just for 15 minutes.",
 		variants: [
 			{ name: "One line", why: "Three components, no container: the action is the news, Undo sits beside it.", states: WRITE_STATES, on: undo,
-				build: (vs) => vs.undone ? [S([undoneCopy[vs.state]], B("Redo", "secondary", { id: "redo" }))] : [S([`${writeCopy[vs.state]}\n-# [Open on GoodWatch](${T.phm.url})`], B("Undo", "secondary", { id: "undo" }))] },
-			{ name: "Mini title card", why: "Poster thumbnail confirms the right title at a glance; accent shows the member's score color for /rate.", states: WRITE_STATES, on: undo,
-				build: (vs) => { const t = T.phm; if (vs.undone) return [S([undoneCopy[vs.state]], B("Redo", "secondary", { id: "redo" }))]; return [C([S([`### ${writeCopy[vs.state]}`, `-# ${t.name} · ${t.year} · ${scoreText(t)} on GoodWatch`], Th(t.poster, `${t.name} poster`)), R(B("Undo", "secondary", { id: "undo" }), B("Open on GoodWatch", "link", { url: t.url }))], vs.state === "rate" ? vibe(80) : AMBER)]; } },
+				build: (vs) => vs.undone ? [S([undoneCopy(vs.state)], B("Redo", "secondary", { id: "redo" }))] : [S([`${writeCopy(vs.state)}\n-# [Open on GoodWatch](${T.phm.url})`], B("Undo", "secondary", { id: "undo" }))] },
+			{ name: "Mini title card", why: "Poster thumbnail confirms the right title at a glance. For /rate, the accent bar and a rating app emoji take the site's vibe color for that score, next to the site's score word; Discord text itself can't be colored. Try 9, 6, and 3. Seen and Want to see stay amber.", states: WRITE_STATES, on: undo,
+				build: (vs) => { const t = T.phm; const r = ratedOf(vs.state); if (vs.undone) return [S([undoneCopy(vs.state)], B("Redo", "secondary", { id: "redo" }))]; return [C([S([`### ${r ? `{u:${r}} ` : ""}${writeCopy(vs.state)}`, `-# ${t.name} · ${t.year} · ${scoreText(t)} on GoodWatch`], Th(t.poster, `${t.name} poster`)), R(B("Undo", "secondary", { id: "undo" }), B("Open on GoodWatch", "link", { url: t.url }))], r ? vibe(r * 10) : AMBER)]; } },
 		],
 	},
 	{
@@ -545,8 +584,11 @@ const CARDS = [
 	},
 ];
 
+// Owner picks, 2026-10-23. Card 4: D or E, still open.
+const PICKS = { title: { 2: 1 }, personal: { 2: 1 }, watch: { 2: 1 }, discover: { 3: 2, 4: 2 }, together: { 1: 1 }, vote: { 0: 1 }, write: { 1: 1 }, link: { 1: 1 }, slow: { 1: 1 } };
+
 // ---------- page ----------
-const LETTERS = "ABC";
+const LETTERS = "ABCDE";
 const vstate = {};
 const $ = (s, el = document) => el.querySelector(s);
 function frame(card, v, vid) {
@@ -565,7 +607,9 @@ function renderVariant(card, vi) {
 	const { tree, html } = frame(card, v, vid);
 	const { total, errs, chars } = validate(tree);
 	const flags = card.public ? 32768 : 32768 | 64;
-	el.innerHTML = `<div class="vhead"><div class="vletter">${LETTERS[vi]}</div><div><div class="vtitle">${card.n}${LETTERS[vi]} · ${esc(v.name)}</div><div class="vwhy">${esc(v.why)}</div></div></div>
+	const pick = PICKS[card.id]?.[vi];
+	el.classList.toggle("is-picked", pick === 1);
+	el.innerHTML = `<div class="vhead"><div class="vletter">${LETTERS[vi]}</div><div><div class="vtitle">${card.n}${LETTERS[vi]} · ${esc(v.name)}${pick === 1 ? '<span class="picked">Picked</span>' : pick === 2 ? '<span class="picked pending">Picked · D or E pending</span>' : ""}</div><div class="vwhy">${esc(v.why)}</div></div></div>
 	<div class="vmeta"><span class="chip ${total <= 40 && !errs.length ? "ok" : "bad"}">components: ${total}/40</span><span class="chip">${card.public ? "public" : "ephemeral"}</span>${v.states ? `<span class="states">${v.states.map((s) => `<button data-state="${s.k}" data-v="${vid}" class="${vstate[vid].state === s.k ? "on" : ""}">${esc(s.l)}</button>`).join("")}</span>` : ""}</div>
 	${errs.length ? `<div class="errs">${errs.map(esc).join("<br>")}</div>` : ""}
 	${html}
