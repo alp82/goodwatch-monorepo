@@ -3,6 +3,7 @@
 import type { User } from "@supabase/auth-js"
 import { Suspense, lazy } from "react"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import { providerPhoto } from "./provider-photo"
 
 const AccountMenu = lazy(
 	reloadOnStaleChunk(() =>
@@ -14,7 +15,7 @@ const AccountMenu = lazy(
 
 // Keep in step with the button in AccountMenu.tsx, so nothing moves when the menu takes over.
 function Placeholder({ user }: { user: User }) {
-	const url = user.user_metadata?.avatar_url as string | undefined
+	const url = providerPhoto(user)
 	return (
 		<div className="relative ml-2 shrink-0">
 			{url ? (

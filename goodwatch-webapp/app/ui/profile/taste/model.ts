@@ -4,6 +4,7 @@
 import { createContext, useContext } from "react"
 import type { ProfileTitle } from "~/domain/profile"
 import type { MemberCompare, TasteStats } from "~/domain/profile-taste"
+import type { TitleKind } from "~/domain/taste-attributes"
 import type {
 	EveryoneGap,
 	EveryoneView,
@@ -19,8 +20,9 @@ import { titlePath } from "~/utils/helpers"
 import { type TitleKey, parseTitleKey } from "~/utils/title-key"
 
 export type { FamilyId, Tier }
-
-export type Kind = "movie" | "show" | "anime"
+export type Kind = TitleKind
+export { CRAFT_KEYS, FAMILY_NAMES } from "~/domain/taste-attributes"
+export { TIER_NAMES } from "~/server/taste-portrait/view"
 
 export interface TasteAttribute
 	extends Omit<FingerprintAttribute, "carriers" | "against" | "exception"> {
@@ -189,27 +191,6 @@ export const FAMILY_ORDER: FamilyId[] = [
 	"craft",
 ]
 
-/** The fingerprint's craft attributes: most loved titles are well made, so they say little about a person. */
-export const CRAFT_KEYS = new Set([
-	"direction",
-	"acting",
-	"cinematography",
-	"editing",
-	"music_composition",
-	"dialogue_quality",
-	"narrative_structure",
-	"rewatchability",
-])
-
-export const TIER_NAMES: Record<Tier, string> = {
-	3: "Defining",
-	2: "You seek it",
-	1: "You lean toward it",
-	0: "Neither here nor there",
-	[-1]: "You lean away",
-	[-2]: "You avoid it",
-	[-3]: "You steer clear",
-}
 export const TIER_NAMES_THEY: Record<Tier, string> = {
 	3: "Defining",
 	2: "They seek it",

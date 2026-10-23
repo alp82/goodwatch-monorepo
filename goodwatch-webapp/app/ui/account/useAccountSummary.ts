@@ -7,6 +7,7 @@ import type { AvatarColor } from "~/domain/profile"
 import { useUserData } from "~/routes/api.user-data"
 import { useUser } from "~/utils/auth"
 import type { AccountCounts } from "./links"
+import { providerPhoto } from "./provider-photo"
 
 export interface AccountSummary {
 	handle: string | null
@@ -21,14 +22,11 @@ export function useAccountSummary() {
 		queryKey: [...queryKeyAccountSummary, user?.id],
 		queryFn: async () => (await fetch("/api/account-summary")).json(),
 		enabled: Boolean(user?.id),
-		staleTime: 5 * 60 * 1000,
 	})
 	const fallbackInitial = (user?.email ?? "?").charAt(0)
 	return {
 		handle: data?.handle ?? null,
-		avatarUrl: data
-			? data.avatar.url
-			: ((user?.user_metadata?.avatar_url as string | undefined) ?? null),
+		avatarUrl: data ? data.avatar.url : providerPhoto(user),
 		color: data?.avatar.color ?? "amber",
 		initial: (data?.handle ?? fallbackInitial).charAt(0).toUpperCase(),
 		email: user?.email ?? null,

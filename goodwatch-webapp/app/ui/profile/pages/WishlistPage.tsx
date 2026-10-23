@@ -1,7 +1,8 @@
+import { useMemo, useState } from "react"
 // The profile's Wishlist tab. The owner sees "Watch now" first (wishlist titles on their services, best match first),
 // the import call to action and the way to the editable page; a signed-in visitor sees the titles they've already
 // seen first, tagged with their own score. Then everything, newest first or by title.
-import { useMemo, useState } from "react"
+import type { LibraryKind } from "~/domain/my-library"
 import type {
 	ProfileShell,
 	ProfileTitle,
@@ -20,7 +21,7 @@ import {
 	shortDate,
 } from "../parts"
 
-type Kind = "all" | "movie" | "show"
+type Kind = LibraryKind
 type Sort = "added" | "title"
 const FIRST = 48
 

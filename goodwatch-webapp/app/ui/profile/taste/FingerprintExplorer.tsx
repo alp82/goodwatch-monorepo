@@ -1,11 +1,12 @@
+import { Link } from "@remix-run/react"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
+import { type ReactNode, useMemo, useState } from "react"
 // The fingerprint section: the whorl, the five families as buttons, the family's attributes as diverging bars (sought
 // right, avoided left), and one detail panel of fixed height that changes in place when an attribute is picked (no
 // popups, no layout shift). A signed-in visitor gets a Vs me switch: the owner's print moves up and aside and the
 // visitor's slides out from under it (transforms only, nothing restarts from the centre), the list turns to the
 // biggest gaps with both bars, and the detail compares the two stances.
-import { Link } from "@remix-run/react"
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
-import { type ReactNode, useMemo, useState } from "react"
+import { FAMILY_NAMES } from "~/domain/taste-attributes"
 import { PosterImg, YouMark } from "../parts"
 import { Whorl } from "./Whorl"
 import {
@@ -257,13 +258,13 @@ export function FingerprintExplorer() {
 								onClick={() => pickFamily(id)}
 								color={FAMILY_COLOR[id]}
 							>
-								{FAMILY_NAMES[id]}
+								{FAMILY_NAMES[id].name}
 							</FamilyButton>
 						))}
 					</div>
 					<p className="-mt-1 text-xs text-gray-500">
 						{family
-							? FAMILY_LINES[family]
+							? FAMILY_NAMES[family].line
 							: vs
 								? view === "common"
 									? "What pulls you both, strongest shared pull first."
@@ -525,21 +526,6 @@ function VsDetail({
 	)
 }
 
-const FAMILY_NAMES: Record<FamilyId, string> = {
-	feel: "Feel",
-	humor: "Humor",
-	world: "World",
-	story: "Story",
-	craft: "Craft",
-}
-const FAMILY_LINES: Record<FamilyId, string> = {
-	feel: "How it makes you feel",
-	humor: "What makes you laugh",
-	world: "What it's about",
-	story: "How it's told",
-	craft: "How it looks and sounds",
-}
-
 function DetailHead({
 	a,
 	children,
@@ -557,7 +543,7 @@ function DetailHead({
 				className="ml-auto text-xs font-semibold"
 				style={{ color: FAMILY_COLOR[a.family] }}
 			>
-				{FAMILY_NAMES[a.family]}
+				{FAMILY_NAMES[a.family].name}
 			</span>
 		</div>
 	)

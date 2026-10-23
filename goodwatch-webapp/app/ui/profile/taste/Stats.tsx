@@ -4,7 +4,7 @@
 import { Link } from "@remix-run/react"
 import { useState } from "react"
 import type { TastePerson as Person, TasteStats } from "~/domain/profile-taste"
-import { PosterImg, count, vibe } from "../parts"
+import { PosterImg, count, posterUrl, vibe } from "../parts"
 import { type Kind, flag, money, pct, signed, useTaste } from "./model"
 import { MiniPoster, PANEL, Pills, SectionHead } from "./parts"
 
@@ -236,7 +236,7 @@ export function People() {
 							<Link to={personHref(p)} className="group block">
 								{p.profile ? (
 									<img
-										src={`https://image.tmdb.org/t/p/w185${p.profile}`}
+										src={posterUrl(p.profile, "w185") ?? ""}
 										alt=""
 										loading="lazy"
 										className="mx-auto size-16 rounded-full object-cover ring-2 ring-white/10 transition-transform group-hover:-translate-y-0.5"

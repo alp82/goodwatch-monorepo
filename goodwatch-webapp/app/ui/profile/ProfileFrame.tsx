@@ -1,7 +1,3 @@
-// The frame of every profile page: the picture, @handle, since, bio, links and actions (in full on Overview, compact on
-// the other tabs), the stat strip, the tabs (only the parts the viewer may see; the owner sees a lock or a members
-// mark on a narrowed part), the owner's one-time "Your profile is public now" banner, and the notice in place of a
-// part the viewer may not see. Nothing here may widen a phone's layout (overflow-x-clip keeps the sticky tabs working).
 import {
 	LockClosedIcon,
 	PencilSquareIcon,
@@ -13,6 +9,11 @@ import { Link, useFetcher } from "@remix-run/react"
 import { type CSSProperties, type ReactNode, useState } from "react"
 import { type ProfilePart, type ProfileShell, canSee } from "~/domain/profile"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
+// The frame of every profile page: the picture, @handle, since, bio, links and actions (in full on Overview, compact on
+// the other tabs), the stat strip, the tabs (only the parts the viewer may see; the owner sees a lock or a members
+// mark on a narrowed part), the owner's one-time "Your profile is public now" banner, and the notice in place of a
+// part the viewer may not see. Nothing here may widen a phone's layout (overflow-x-clip keeps the sticky tabs working).
+import { assetUrl } from "~/utils/asset-url"
 import {
 	EDIT_PROFILE_PATH,
 	LINK_SERVICE_INFO,
@@ -224,7 +225,7 @@ function LinkLogos({ shell }: { shell: ProfileShell }) {
 						>
 							{service.logo ? (
 								<img
-									src={service.logo}
+									src={assetUrl(service.logo)}
 									alt=""
 									className="size-5 object-contain"
 								/>

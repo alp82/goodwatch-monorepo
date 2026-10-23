@@ -2,32 +2,31 @@
 // own logos.
 import { ArrowDownTrayIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import imdbLogo from "~/img/import-sources/imdb.svg?no-inline"
-import letterboxdLogo from "~/img/import-sources/letterboxd.svg?no-inline"
-import myanimelistLogo from "~/img/import-sources/myanimelist.svg?no-inline"
-import traktLogo from "~/img/import-sources/trakt.svg?no-inline"
-import tvtimeLogo from "~/img/import-sources/tvtime.svg?no-inline"
+import { IMPORT_SOURCE_LIST } from "~/ui/imports/ImportSources"
 import { IMPORTS_PATH } from "~/ui/imports/shared"
+import { assetUrl } from "~/utils/asset-url"
 import { AMBER_BUTTON } from "./parts"
 
-const LOGOS = [
-	["Letterboxd", letterboxdLogo],
-	["IMDb", imdbLogo],
-	["Trakt", traktLogo],
-	["MyAnimeList", myanimelistLogo],
-	["TV Time", tvtimeLogo],
-] as const
+const SHOWN = ["letterboxd", "imdb", "trakt", "myanimelist", "tvtime"]
+const LOGOS = SHOWN.flatMap((id) => {
+	const source = IMPORT_SOURCE_LIST.find((s) => s.id === id)
+	return source?.logo ? [{ id, logo: source.logo }] : []
+})
 
 export function ImportCta({ what }: { what: "ratings" | "wishlist" }) {
 	return (
 		<div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl bg-linear-to-r from-amber-400/[0.08] to-transparent p-4 ring-1 ring-amber-400/20">
 			<span className="flex -space-x-1.5" aria-hidden>
-				{LOGOS.map(([name, logo]) => (
+				{LOGOS.map(({ id, logo }) => (
 					<span
-						key={name}
+						key={id}
 						className="flex size-9 items-center justify-center rounded-full bg-gray-900 ring-2 ring-gray-950"
 					>
-						<img src={logo} alt="" className="size-5 object-contain" />
+						<img
+							src={assetUrl(logo)}
+							alt=""
+							className="size-5 object-contain"
+						/>
 					</span>
 				))}
 			</span>

@@ -4,6 +4,7 @@
 // in and fade. Ridge endings and the off-centre core come from a fixed seed, so every visit draws the same print.
 // Animation: each turn fades and grows in (transform/opacity only); reduced motion shows it at once.
 import { memo, useMemo } from "react"
+import { FAMILY_NAMES } from "~/domain/taste-attributes"
 import { FAMILY_COLOR, FAMILY_ORDER, type FamilyId } from "./model"
 
 /** What the print needs of an attribute. */
@@ -13,15 +14,6 @@ export interface WhorlAttribute {
 	family: FamilyId
 	edge: number
 }
-type TasteAttribute = WhorlAttribute
-
-const FAMILY_NAME: Record<FamilyId, string> = {
-	feel: "Feel",
-	humor: "Humor",
-	world: "World",
-	story: "Story",
-	craft: "Craft",
-}
 
 const GAP = 0.05 // radians between family sectors
 const TAU = Math.PI * 2
@@ -29,13 +21,13 @@ const TAU = Math.PI * 2
 const r1 = (n: number) => Math.round(n * 10) / 10
 
 interface Slot {
-	a: TasteAttribute
+	a: WhorlAttribute
 	angle: number
 	from: number
 	to: number
 }
 
-function layout(attributes: TasteAttribute[]) {
+function layout(attributes: WhorlAttribute[]) {
 	const total = attributes.length
 	const free = TAU - GAP * FAMILY_ORDER.length
 	const slots: Slot[] = []
@@ -93,7 +85,7 @@ interface Geometry {
 		paths: { d: string; family: FamilyId; key: string; opacity: number }[]
 	}[]
 	markers: {
-		a: TasteAttribute
+		a: WhorlAttribute
 		x: number
 		y: number
 		r: number
@@ -106,7 +98,7 @@ interface Geometry {
 }
 
 function build(
-	attributes: TasteAttribute[],
+	attributes: WhorlAttribute[],
 	turnsCount: number,
 	rim: boolean,
 ): Geometry {
@@ -218,7 +210,7 @@ export const Whorl = memo(function Whorl({
 	label,
 	animate = true,
 }: {
-	attributes: TasteAttribute[]
+	attributes: WhorlAttribute[]
 	turns?: number
 	rim?: boolean
 	family?: FamilyId | null
@@ -334,7 +326,7 @@ export const Whorl = memo(function Whorl({
 					className="text-[13px] font-bold tracking-wider uppercase"
 					pointerEvents="none"
 				>
-					{FAMILY_NAME[l.id]}
+					{FAMILY_NAMES[l.id].name}
 				</text>
 			))}
 		</svg>

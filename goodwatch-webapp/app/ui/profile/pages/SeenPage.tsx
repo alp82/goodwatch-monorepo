@@ -1,6 +1,7 @@
+import { useMemo, useState } from "react"
 // The profile's Seen tab: a diary, latest first, one group per month; titles without a watch date (older imports,
 // most shows) close the page under "No date". A signed-in visitor sees their own score next to the owner's.
-import { useMemo, useState } from "react"
+import type { LibraryKind } from "~/domain/my-library"
 import type {
 	ProfileSeenPage,
 	ProfileShell,
@@ -9,7 +10,7 @@ import type {
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { OwnerPageLink, Segmented, TILE, TitleRow, count } from "../parts"
 
-type Kind = "all" | "movie" | "show"
+type Kind = LibraryKind
 const FIRST_MONTHS = 6
 const FIRST_UNDATED = 40
 

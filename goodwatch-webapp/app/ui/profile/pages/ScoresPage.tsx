@@ -1,9 +1,10 @@
+import { PencilSquareIcon } from "@heroicons/react/20/solid"
+import { useEffect, useMemo, useState } from "react"
 // The profile's Scores tab: every score grouped by tier. The spread on top is the tier navigator: a bar jumps to its tier
 // (#tier-N, also Overview's link). Movies/Shows/All and a sort apply to every tier; a large tier shows its first 24 until
 // opened. The owner gets the import call to action and the way to the editable scores page; a signed-in visitor sees
 // their own scores as "You" tags and can keep to the titles both rated.
-import { PencilSquareIcon } from "@heroicons/react/20/solid"
-import { useEffect, useMemo, useState } from "react"
+import type { LibraryKind } from "~/domain/my-library"
 import type {
 	ProfileScoresPage,
 	ProfileShell,
@@ -24,7 +25,7 @@ import {
 	count,
 } from "../parts"
 
-type Kind = "all" | "movie" | "show"
+type Kind = LibraryKind
 type Sort = "recent" | "gw" | "title"
 const FIRST = 24
 

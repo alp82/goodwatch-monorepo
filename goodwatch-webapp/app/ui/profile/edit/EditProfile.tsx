@@ -1,7 +1,3 @@
-// Edit profile (/settings/profile): the picture (an uploaded photo cropped in the browser, the sign-in provider's photo,
-// the handle's initial on a colour, or a favorite's poster), the cover, the bio, links to other profiles, and who sees
-// each part. A live preview beside the form; Save checks with the same rules as the server (domain/profile-settings).
-// No display name: profiles and cards are signed with the permanent @handle (#170).
 import {
 	CheckIcon,
 	LockClosedIcon,
@@ -12,8 +8,8 @@ import {
 } from "@heroicons/react/20/solid"
 import { GlobeAltIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
-import { type ReactNode, useId, useMemo, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
+import { type ReactNode, useId, useMemo, useRef, useState } from "react"
 import { toast } from "react-toastify"
 import {
 	AUDIENCES,
@@ -32,6 +28,11 @@ import {
 import { LINK_RULES, normalizeLinkValue } from "~/domain/profile-settings"
 import { queryKeyAccountSummary } from "~/ui/account/useAccountSummary"
 import { DISPLAY } from "~/ui/my-pages/bits"
+// Edit profile (/settings/profile): the picture (an uploaded photo cropped in the browser, the sign-in provider's photo,
+// the handle's initial on a colour, or a favorite's poster), the cover, the bio, links to other profiles, and who sees
+// each part. A live preview beside the form; Save checks with the same rules as the server (domain/profile-settings).
+// No display name: profiles and cards are signed with the permanent @handle (#170).
+import { assetUrl } from "~/utils/asset-url"
 import { ProfileAvatar } from "../ProfileFrame"
 import { LINK_SERVICE_INFO, profileTabPath } from "../links"
 import { AMBER_BUTTON, QUIET_BUTTON, TILE, posterUrl } from "../parts"
@@ -366,7 +367,7 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 											>
 												{s.logo ? (
 													<img
-														src={s.logo}
+														src={assetUrl(s.logo)}
 														alt={s.name}
 														className="size-4 object-contain"
 													/>
@@ -634,7 +635,7 @@ function LinksEditor({
 								<span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] ring-1 ring-white/10">
 									{s.logo ? (
 										<img
-											src={s.logo}
+											src={assetUrl(s.logo)}
 											alt=""
 											className="size-6 object-contain"
 										/>
