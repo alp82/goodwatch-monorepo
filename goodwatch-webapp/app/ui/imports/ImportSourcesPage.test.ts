@@ -33,6 +33,7 @@ test("the logo row shows every live source, most common first, each with its own
 		{ name: "Trakt", logo: "trakt.svg" },
 		{ name: "TMDB", logo: "tmdb.svg" },
 		{ name: "Plex", logo: "plex.png" },
+		{ name: "MDBList", logo: "mdblist.svg" },
 		{ name: "TV Time", logo: "tvtime.svg" },
 		{ name: "MyAnimeList / Kitsu", logo: "myanimelist.svg" },
 		{ name: "Kodi", logo: "kodi.png" },
@@ -247,6 +248,15 @@ test("a return from Plex opens Plex's connection, and no other connect source ta
 	assert.deepEqual(openRows(runs.plexReturnThenTmdb), ["TMDB"])
 	assert.match(runs.plexReturnThenTmdb.text, /Connect TMDB/)
 	assert.doesNotMatch(runs.plexReturnThenTmdb.text, /Return from TMDB/)
+})
+
+test("MDBList opens on its key form, never on another source's connection state, and its imports reopen", () => {
+	assert.deepEqual(openRows(runs.mdblistOpen), ["MDBList"])
+	assert.match(runs.mdblistOpen.text, /Connect MDBList/)
+	assert.match(runs.mdblistOpen.text, /MDBList API key/)
+	assert.doesNotMatch(runs.mdblistOpen.text, /Return from/)
+	assert.deepEqual(openRows(runs.mdblistDone), ["MDBList"])
+	assert.match(runs.mdblistDone.text, /Connect MDBList again/)
 })
 
 test("a Watcharr export in the one box goes to the wishlist import's preview", () => {

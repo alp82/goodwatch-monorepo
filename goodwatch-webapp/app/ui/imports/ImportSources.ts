@@ -14,6 +14,7 @@ import csvLogo from "~/img/import-sources/csv.svg?no-inline"
 import imdbLogo from "~/img/import-sources/imdb.svg?no-inline"
 import kodiLogo from "~/img/import-sources/kodi.png?no-inline"
 import letterboxdLogo from "~/img/import-sources/letterboxd.svg?no-inline"
+import mdblistLogo from "~/img/import-sources/mdblist.svg?no-inline"
 import movielensLogo from "~/img/import-sources/movielens.png?no-inline"
 import myanimelistLogo from "~/img/import-sources/myanimelist.svg?no-inline"
 import plexLogo from "~/img/import-sources/plex.png?no-inline"
@@ -102,6 +103,23 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 		// Each play from the member's own server, and Want to See from the personal watchlist feed.
 		gets: ["Watches with dates", "Rewatches", "Episodes", "Want to See"],
 		wait: "About a minute",
+		connect: true,
+	},
+	{
+		id: "mdblist",
+		// MDBList's own pinned-tab mark (mdblist.com/static/safari-pinned-tab.svg, via Simple Icons 16.0.0) in its brand
+		// blue. MDBList publishes no brand terms.
+		logo: mdblistLogo,
+		tile: "MDB",
+		gets: [
+			"Ratings",
+			"Watches with dates",
+			"Rewatches",
+			"Episodes",
+			"Want to See",
+			"Show statuses",
+		],
+		wait: "Seconds",
 		connect: true,
 	},
 	{

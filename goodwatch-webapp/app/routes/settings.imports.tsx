@@ -13,7 +13,7 @@ export const meta: MetaFunction = () => [
 	{
 		name: "description",
 		content:
-			"Import ratings, watches and lists from IMDb, Letterboxd, Trakt, TV Time, TMDB, Plex, Kodi, MovieLens, MyAnimeList, Kitsu or CSV into GoodWatch.",
+			"Import ratings, watches and lists from IMDb, Letterboxd, Trakt, TV Time, TMDB, Plex, MDBList, Kodi, MovieLens, MyAnimeList, Kitsu or CSV into GoodWatch.",
 	},
 	{ name: "robots", content: "noindex, nofollow" },
 ]

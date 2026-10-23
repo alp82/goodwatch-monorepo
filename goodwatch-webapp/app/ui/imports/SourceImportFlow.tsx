@@ -6,6 +6,7 @@ import {
 	isFileImportSource,
 } from "~/domain/imports"
 import type { ImportHandoff } from "./ImportFileRouting"
+import { MdblistConnectPanel } from "./MdblistConnectPanel"
 import { PlexConnectPanel } from "./PlexConnectPanel"
 import { sourceImportCopy } from "./SourceImportCopy"
 import { SourceImportCurrent } from "./SourceImportCurrent"
@@ -148,6 +149,8 @@ export function SourceImportFlow({
 						(!isFileImportSource(source) ? (
 							source === "plex" ? (
 								<PlexConnectPanel state={connectState} />
+							) : source === "mdblist" ? (
+								<MdblistConnectPanel />
 							) : (
 								<TmdbConnectPanel state={connectState} />
 							)

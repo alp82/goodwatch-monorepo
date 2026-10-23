@@ -14,6 +14,7 @@ export const IMPORT_SOURCES = [
 	"myanimelist",
 	"wishlist",
 	"tvtime",
+	"mdblist",
 ] as const
 export const IMPORT_SOURCE_NAMES = {
 	imdb_list: "IMDb",
@@ -27,6 +28,7 @@ export const IMPORT_SOURCE_NAMES = {
 	myanimelist: "MyAnimeList / Kitsu",
 	wishlist: "Watcharr / wishlist file",
 	tvtime: "TV Time",
+	mdblist: "MDBList",
 } as const
 export type ImportSource = (typeof IMPORT_SOURCES)[number]
 export const IMPORT_MAX_BYTES = 20 * 1024 * 1024
@@ -202,6 +204,7 @@ export const IMPORT_SOURCE_UPLOAD = {
 	},
 	tmdb: null,
 	plex: null,
+	mdblist: null,
 } satisfies Record<ImportSource, ImportUploadDescriptor | null>
 export type FileImportSource = {
 	[Source in ImportSource]: (typeof IMPORT_SOURCE_UPLOAD)[Source] extends ImportUploadDescriptor

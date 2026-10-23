@@ -603,5 +603,22 @@ const movielens = (wishlist: boolean) =>
 	await view.unmount()
 }
 
+{
+	const view = await page({
+		initialSource: "mdblist",
+		connectState: "00000000-0000-4000-8000-0000000000dd",
+	})
+	results.mdblistOpen = { opened: view.opened(), text: view.text() }
+	await view.unmount()
+	const done = summary("mdblist", "done", "2026-10-23T12:00:00.000Z")
+	const opened = await page({
+		sourceImports: [done],
+		initialSource: "mdblist",
+		openImport: done.id,
+	})
+	results.mdblistDone = { opened: opened.opened(), text: opened.text() }
+	await opened.unmount()
+}
+
 process.stdout.write(`__IMPORTS_PAGE__${JSON.stringify(results)}`)
 process.exit(0)
