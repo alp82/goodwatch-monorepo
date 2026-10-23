@@ -137,4 +137,14 @@ test("an imported part score is changed and cleared by its key", async () => {
 		score: 5,
 	})
 	assert.equal(gone.status, 404)
+	// The page drops a score that's gone instead of putting the old one back (#759 review).
+	assert.equal(gone.body.gone, true)
+	const season = await answerEpisodeScoreRequest("member", {
+		id: SHOW,
+		scope: "season",
+		season: 9,
+		score: 5,
+	})
+	assert.equal(season.status, 404)
+	assert.equal(season.body.gone, undefined)
 })

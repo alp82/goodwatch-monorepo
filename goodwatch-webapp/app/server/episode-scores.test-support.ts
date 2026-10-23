@@ -9,7 +9,20 @@ export class EpisodeScoreFakeDb {
 	/** Answers every statement the way Crate does before the migration ran. */
 	missingTable = false
 	statements: string[] = []
+	/** Runs before each write, as another tab changing the score at that moment would. */
+	beforeWrite: ((sql: string) => void) | null = null
 	private version = 1
+
+	/** The member changes or clears a score elsewhere: a new version, as Crate gives it. */
+	changeElsewhere(key: string, score: number | null, at = new Date()) {
+		if (score === null) {
+			this.scores = this.scores.filter((x) => x.score_key !== key)
+			return
+		}
+		const row = this.scores.find((x) => x.score_key === key)
+		if (row)
+			Object.assign(row, { score, updated_at: at, _seq_no: ++this.version })
+	}
 
 	addEpisode(
 		showId: number,
@@ -60,6 +73,23 @@ export class EpisodeScoreFakeDb {
 				.map((x) => ({ ...x })) as T[]
 		if (
 			s ===
+			"SELECT score, updated_at, _seq_no, _primary_term FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ?"
+		)
+			return this.scores
+				.filter(
+					(x) =>
+						x.user_id === params[0] &&
+						x.tmdb_id === params[1] &&
+						x.score_key === params[2],
+				)
+				.map((x) => ({
+					score: x.score,
+					updated_at: x.updated_at,
+					_seq_no: x._seq_no,
+					_primary_term: x._primary_term ?? 1,
+				})) as unknown as T[]
+		if (
+			s ===
 			"SELECT score FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ?"
 		)
 			return this.scores
@@ -92,6 +122,62 @@ export class EpisodeScoreFakeDb {
 	async run(sql: string, params: unknown[]) {
 		const s = sql.replace(/\s+/g, " ").trim()
 		this.guard(s)
+		this.beforeWrite?.(s)
+		const at = (i: number) =>
+			this.scores.find(
+				(x) =>
+					x.user_id === params[i] &&
+					x.tmdb_id === params[i + 1] &&
+					x.score_key === params[i + 2],
+			)
+		if (
+			s ===
+			"INSERT INTO user_episode_score (user_id,tmdb_id,score_key,scope,season_number,episode_number,episode_tmdb_id,ranges,label,score,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (user_id,tmdb_id,score_key) DO NOTHING"
+		) {
+			if (at(0)) return { rowcount: 0 }
+			const [user_id, tmdb_id, score_key] = params
+			this.scores.push({
+				user_id,
+				tmdb_id,
+				score_key,
+				scope: params[3],
+				season_number: params[4],
+				episode_number: params[5],
+				episode_tmdb_id: params[6],
+				ranges: params[7],
+				label: params[8],
+				score: params[9],
+				created_at: params[10],
+				updated_at: params[11],
+				_seq_no: ++this.version,
+				_primary_term: 1,
+			})
+			return { rowcount: 1 }
+		}
+		if (
+			s ===
+			"UPDATE user_episode_score SET score = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND score_key = ? AND _seq_no = ? AND _primary_term = ?"
+		) {
+			const row = at(2)
+			if (!row || row._seq_no !== params[5] || row._primary_term !== params[6])
+				return { rowcount: 0 }
+			Object.assign(row, {
+				score: params[0],
+				updated_at: params[1],
+				_seq_no: ++this.version,
+			})
+			return { rowcount: 1 }
+		}
+		if (
+			s ===
+			"DELETE FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ? AND _seq_no = ? AND _primary_term = ?"
+		) {
+			const row = at(0)
+			if (!row || row._seq_no !== params[3] || row._primary_term !== params[4])
+				return { rowcount: 0 }
+			this.scores = this.scores.filter((x) => x !== row)
+			return { rowcount: 1 }
+		}
 		if (
 			s ===
 			"INSERT INTO user_episode_score (user_id,tmdb_id,score_key,scope,season_number,episode_number,episode_tmdb_id,ranges,label,score,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (user_id,tmdb_id,score_key) DO UPDATE SET score = excluded.score, season_number = excluded.season_number, episode_number = excluded.episode_number, updated_at = excluded.updated_at"

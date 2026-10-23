@@ -16,6 +16,14 @@ export interface EpisodeScoreSendAnswer {
 }
 export type EpisodeScoreSend = (body: object) => Promise<EpisodeScoreSendAnswer>
 
+/** The server found the score gone: removed on another page. The page drops it rather than show it again. */
+export class EpisodeScoreGoneError extends Error {
+	constructor() {
+		super("That score isn't there anymore.")
+		this.name = "EpisodeScoreGoneError"
+	}
+}
+
 /** A target to score: a season, an episode, or a stored part (which carries its key). */
 export type ScoreTarget = EpisodeScoreTarget & {
 	key?: string
@@ -142,7 +150,16 @@ export class EpisodeScoreStore {
 			if (this.pending.get(key)?.write === write) this.pending.delete(key)
 			this.changed()
 			return true
-		} catch {
+		} catch (error) {
+			if (error instanceof EpisodeScoreGoneError) {
+				this.confirmed.delete(key)
+				if (this.pending.get(key)?.write === write) this.pending.delete(key)
+				this.onError(
+					"That score isn't there anymore. It was removed on another page.",
+				)
+				this.changed()
+				return false
+			}
 			if (this.pending.get(key)?.write === write) {
 				this.pending.delete(key)
 				this.onError("Your score wasn't saved. Try again.")

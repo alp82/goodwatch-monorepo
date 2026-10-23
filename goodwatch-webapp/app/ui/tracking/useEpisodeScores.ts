@@ -4,6 +4,7 @@ import { useEffect, useSyncExternalStore } from "react"
 import type { MemberEpisodeScore } from "~/domain/episode-scores"
 import { productAnalyticsFetch } from "~/telemetry/product-analytics"
 import {
+	EpisodeScoreGoneError,
 	EpisodeScoreStore,
 	type EpisodeScoreSendAnswer,
 } from "./episode-score-store"
@@ -21,8 +22,14 @@ function storeOf(show: ShowStore): EpisodeScoreStore {
 					method: "POST",
 					body: JSON.stringify({ id: show.showId, ...body }),
 				})
-				if (!response.ok)
+				if (!response.ok) {
+					const answer = (await response.json().catch(() => null)) as {
+						gone?: boolean
+					} | null
+					if (response.status === 404 && answer?.gone)
+						throw new EpisodeScoreGoneError()
 					throw new Error(`The score was not saved: ${response.status}`)
+				}
 				return response.json()
 			},
 			(message) => show.say(message, [], "error"),

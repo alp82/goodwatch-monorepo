@@ -2,7 +2,9 @@ import type { UserData } from "../../types/user-data"
 import {
 	EpisodeScoreTargetError,
 	EpisodeScoresUnavailable,
+	type WrittenEpisodeScore,
 	getEpisodeScore,
+	restoreEpisodeScore,
 	setEpisodeScore,
 } from "../episode-scores.server"
 import { updateNotInterested } from "../not-interested.server"
@@ -62,12 +64,15 @@ export interface PartDeps {
 	/** One score by its whole key, which sees a write made just before it. */
 	score: typeof getEpisodeScore
 	set: typeof setEpisodeScore
+	/** Puts an earlier score back only while the row is still what a write left (batch Undo). */
+	restore: typeof restoreEpisodeScore
 	now(): number
 }
 const livePartDeps: PartDeps = {
 	episodes: getEpisodeList,
 	score: getEpisodeScore,
 	set: setEpisodeScore,
+	restore: restoreEpisodeScore,
 	now: () => Date.now(),
 }
 
@@ -93,14 +98,17 @@ export async function readPartScore(
 	return (await deps.score(userId, title.tmdb_id, key))?.score ?? null
 }
 
-/** Sets or clears a part score; answers with a refusal, or null once written. */
-export async function writePartScore(
-	userId: string,
+type PartScoreTarget =
+	| { scope: "season"; season: number }
+	| { scope: "episode"; episodeTmdbId: number }
+
+/** The stored part a rate_title call names; a refusal when there is none. A write also needs it to have aired. */
+async function partScoreTarget(
 	title: ShowRef,
 	part: PartTarget,
-	score: number | null,
-	deps: PartDeps = livePartDeps,
-): Promise<{ refused: string } | null> {
+	deps: PartDeps,
+	requireAired: boolean,
+): Promise<PartScoreTarget | { refused: string }> {
 	if (title.media_type !== "show")
 		return {
 			refused:
@@ -110,31 +118,72 @@ export async function writePartScore(
 		(row) => row.season_number === part.season,
 	)
 	const aired = (row: { air_date: number | null }) =>
-		row.air_date !== null && row.air_date <= deps.now()
-	let target:
-		| { scope: "season"; season: number }
-		| { scope: "episode"; episodeTmdbId: number }
+		!requireAired || (row.air_date !== null && row.air_date <= deps.now())
 	if (part.episode === undefined) {
 		if (!inSeason.some(aired))
 			return { refused: "This season has no aired episodes yet." }
-		target = { scope: "season", season: part.season }
-	} else {
-		const episode = inSeason.find((row) => row.episode_number === part.episode)
-		if (!episode)
-			return { refused: "This show's episode list has no such episode." }
-		if (!aired(episode)) return { refused: "This episode hasn't aired yet." }
-		target = { scope: "episode", episodeTmdbId: episode.tmdb_id }
+		return { scope: "season", season: part.season }
 	}
+	const episode = inSeason.find((row) => row.episode_number === part.episode)
+	if (!episode)
+		return { refused: "This show's episode list has no such episode." }
+	if (!aired(episode)) return { refused: "This episode hasn't aired yet." }
+	return { scope: "episode", episodeTmdbId: episode.tmdb_id }
+}
+
+const refusalOf = (error: unknown) => {
+	if (error instanceof EpisodeScoresUnavailable)
+		return { refused: "Season and episode scores aren't available yet." }
+	if (error instanceof EpisodeScoreTargetError)
+		return { refused: error.message }
+	throw error
+}
+
+/**
+ * Sets or clears a part score; answers with a refusal, or with what the write left (its score and the time it
+ * stamped), which a batch keeps so its Undo can tell its own write from a later change.
+ */
+export async function writePartScore(
+	userId: string,
+	title: ShowRef,
+	part: PartTarget,
+	score: number | null,
+	deps: PartDeps = livePartDeps,
+): Promise<{ refused: string } | { written: WrittenEpisodeScore }> {
+	const target = await partScoreTarget(title, part, deps, true)
+	if ("refused" in target) return target
 	try {
-		await deps.set(userId, title.tmdb_id, target, score)
+		const result = await deps.set(userId, title.tmdb_id, target, score)
+		return {
+			written: {
+				score: result.score?.score ?? null,
+				updatedAt: result.score?.updatedAt ?? null,
+			},
+		}
 	} catch (error) {
-		if (error instanceof EpisodeScoresUnavailable)
-			return { refused: "Season and episode scores aren't available yet." }
-		if (error instanceof EpisodeScoreTargetError)
-			return { refused: error.message }
-		throw error
+		return refusalOf(error)
 	}
-	return null
+}
+
+/**
+ * Batch Undo of a part score: puts `score` back only while the part is still exactly what the batch's write left.
+ * "changed" when it was changed since; a refusal when the part can't be found.
+ */
+export async function restorePartScore(
+	userId: string,
+	title: ShowRef,
+	part: PartTarget,
+	expected: WrittenEpisodeScore,
+	score: number | null,
+	deps: PartDeps = livePartDeps,
+): Promise<"restored" | "changed" | { refused: string }> {
+	const target = await partScoreTarget(title, part, deps, false)
+	if ("refused" in target) return target
+	try {
+		return await deps.restore(userId, title.tmdb_id, target, expected, score)
+	} catch (error) {
+		return refusalOf(error)
+	}
 }
 
 /**
@@ -204,7 +253,12 @@ export type Snapshot = Awaited<ReturnType<typeof snapshot>>
 /** What a title write did: nothing and why, or the watch it removed and the show event it applied. */
 export type TitleWrite =
 	| { refused: string | null }
-	| { removedWatchId: string | null; event: ShowAction["event"]["type"] | null }
+	| {
+			removedWatchId: string | null
+			event: ShowAction["event"]["type"] | null
+			/** A part score's write: what it left, for a batch's receipt and Undo. */
+			part_written?: WrittenEpisodeScore
+	  }
 
 /**
  * One title's write through the site's own writers, as a single MCP call and every item of a batch make it.
@@ -222,12 +276,14 @@ export async function applyTitleWrite(
 ): Promise<TitleWrite> {
 	let removedWatchId: string | null = null
 	let appliedEvent: ShowAction["event"]["type"] | null = null
+	let partWritten: WrittenEpisodeScore | undefined
 	const part = partOf(name, args)
 	if (part) {
 		if (args.score === undefined)
 			return { refused: "A rating requires a score or null" }
-		const refused = await writePartScore(userId, title, part, args.score)
-		if (refused) return refused
+		const result = await writePartScore(userId, title, part, args.score)
+		if ("refused" in result) return result
+		partWritten = result.written
 	} else if (name === "rate_title") {
 		if (args.score === undefined)
 			return { refused: "A rating requires a score or null" }
@@ -452,5 +508,9 @@ export async function applyTitleWrite(
 		}
 		if (applied.status !== "applied") return { refused: applied.refused }
 	} else return { refused: "Unsupported write tool" }
-	return { removedWatchId, event: appliedEvent }
+	return {
+		removedWatchId,
+		event: appliedEvent,
+		...(partWritten ? { part_written: partWritten } : {}),
+	}
 }

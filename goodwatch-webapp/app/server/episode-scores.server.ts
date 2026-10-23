@@ -45,6 +45,14 @@ export class EpisodeScoreTargetError extends Error {
 	}
 }
 
+/** The score was removed, on another page or by Undo, before this change reached it. */
+export class EpisodeScoreGone extends EpisodeScoreTargetError {
+	constructor() {
+		super("That score isn't there anymore.")
+		this.name = "EpisodeScoreGone"
+	}
+}
+
 export function isMissingEpisodeScoreTable(error: unknown): boolean {
 	const message = String(
 		(error as { message?: unknown } | null)?.message ?? error,
@@ -284,8 +292,7 @@ export async function setPartScore(
 			[userId, show, key],
 		)
 		const stored = row ? episodeScoreFromRow(row) : null
-		if (!stored || stored.scope !== "part")
-			throw new EpisodeScoreTargetError("That part score isn't there anymore.")
+		if (!stored || stored.scope !== "part") throw new EpisodeScoreGone()
 		if (score === null) {
 			const removed = await db.run(
 				"DELETE FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ?",
@@ -298,15 +305,103 @@ export async function setPartScore(
 			}
 		}
 		const now = new Date()
-		await db.run(
+		const updated = await db.run(
 			"UPDATE user_episode_score SET score = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND score_key = ?",
 			[score, now, userId, show, key],
 		)
+		// Removed between the read and the write: nothing was saved.
+		if (!updated.rowcount) throw new EpisodeScoreGone()
 		return {
 			status: "saved",
 			score: { ...stored, score, updatedAt: now.toISOString() },
 			previous: stored.score,
 		}
+	} catch (error) {
+		if (isMissingEpisodeScoreTable(error)) throw new EpisodeScoresUnavailable()
+		throw error
+	}
+}
+
+/** What one write left in the row: its score and the time it stamped; null and null after a clear. */
+export interface WrittenEpisodeScore {
+	score: number | null
+	updatedAt: string | null
+}
+
+/**
+ * Undo of one write (MCP batches): puts `restore` back, but only while the row is still exactly what that write
+ * left, and through an optimistic write, so a change made elsewhere after it, even one landing during this call,
+ * stays. "changed" when it did; then nothing is written.
+ */
+export async function restoreEpisodeScore(
+	userId: string,
+	showId: number,
+	requested: RequestedEpisodeScoreTarget,
+	expected: WrittenEpisodeScore,
+	restore: number | null,
+): Promise<"restored" | "changed"> {
+	if (restore !== null && !isEpisodeScore(restore))
+		throw new EpisodeScoreTargetError("A score is a whole number from 1 to 10.")
+	const show = canonicalTitleId("show", showId)
+	try {
+		const target = await resolveTarget(show, requested)
+		const key = episodeScoreKey(target)
+		const [row] = await db.select<{
+			score: number
+			updated_at: Date | string | number
+			_seq_no: number
+			_primary_term: number
+		}>(
+			"SELECT score, updated_at, _seq_no, _primary_term FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ?",
+			[userId, show, key],
+		)
+		const asWritten =
+			expected.score === null
+				? !row
+				: !!row &&
+					Number(row.score) === expected.score &&
+					new Date(row.updated_at).toISOString() === expected.updatedAt
+		if (!asWritten) return "changed"
+		const now = new Date()
+		let result: { rowcount?: number }
+		if (!row) {
+			if (restore === null) return "restored"
+			result = await db.run(
+				"INSERT INTO user_episode_score (user_id,tmdb_id,score_key,scope,season_number,episode_number,episode_tmdb_id,ranges,label,score,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (user_id,tmdb_id,score_key) DO NOTHING",
+				[
+					userId,
+					show,
+					key,
+					target.scope,
+					target.season,
+					target.scope === "episode" ? target.episode : null,
+					target.scope === "episode" ? target.episodeTmdbId : null,
+					null,
+					null,
+					restore,
+					now,
+					now,
+				],
+			)
+		} else if (restore === null)
+			result = await db.run(
+				"DELETE FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ? AND _seq_no = ? AND _primary_term = ?",
+				[userId, show, key, Number(row._seq_no), Number(row._primary_term)],
+			)
+		else
+			result = await db.run(
+				"UPDATE user_episode_score SET score = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND score_key = ? AND _seq_no = ? AND _primary_term = ?",
+				[
+					restore,
+					now,
+					userId,
+					show,
+					key,
+					Number(row._seq_no),
+					Number(row._primary_term),
+				],
+			)
+		return result.rowcount ? "restored" : "changed"
 	} catch (error) {
 		if (isMissingEpisodeScoreTable(error)) throw new EpisodeScoresUnavailable()
 		throw error

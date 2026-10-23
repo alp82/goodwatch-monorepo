@@ -13,6 +13,7 @@ const { applyImportedEpisodeScore, undoImportedEpisodeScore } = await import(
 const {
 	getEpisodeScore,
 	getEpisodeScores,
+	restoreEpisodeScore,
 	setEpisodeScore,
 	setEpisodeScoreDbForTest,
 } = await import("../episode-scores.server.ts")
@@ -203,6 +204,36 @@ test("a score is read back by its key right after it's written, before any refre
 		null,
 	)
 	assert.equal(await getEpisodeScore("fresh", SHOW, "e62161"), null)
+})
+
+test("an undo restores the earlier score only while the row is still exactly what its write left", async () => {
+	const episode = { scope: "episode" as const, episodeTmdbId: 62161 }
+	await setEpisodeScore("undo", SHOW, episode, 4)
+	const ours = await setEpisodeScore("undo", SHOW, episode, 8)
+	const left = {
+		score: ours.score?.score ?? null,
+		updatedAt: ours.score?.updatedAt ?? null,
+	}
+	// Crate keeps the stamp to the millisecond, so the write is recognized as its own.
+	assert.equal(
+		await restoreEpisodeScore("undo", SHOW, episode, left, 4),
+		"restored",
+	)
+	assert.equal((await getEpisodeScore("undo", SHOW, "e62161"))?.score, 4)
+	const again = await setEpisodeScore("undo", SHOW, episode, 8)
+	// Another page clears it: the clear stays.
+	await setEpisodeScore("undo", SHOW, episode, null)
+	assert.equal(
+		await restoreEpisodeScore(
+			"undo",
+			SHOW,
+			episode,
+			{ score: 8, updatedAt: again.score?.updatedAt ?? null },
+			4,
+		),
+		"changed",
+	)
+	assert.equal(await getEpisodeScore("undo", SHOW, "e62161"), null)
 })
 
 test("an imported episode score is written once through its journal, resumes without a second write, and Undo takes it back", async () => {

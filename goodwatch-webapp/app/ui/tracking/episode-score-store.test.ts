@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { MemberEpisodeScore } from "../../domain/episode-scores.ts"
 import {
+	EpisodeScoreGoneError,
 	EpisodeScoreStore,
 	type EpisodeScoreSend,
 } from "./episode-score-store.ts"
@@ -189,4 +190,30 @@ test("a part is sent by its stored key and keeps its range and name while it cha
 	assert.deepEqual(calls[0].body, { scope: "part", key: "p:s1e1-12", score: 6 })
 	assert.deepEqual(store.get("p:s1e1-12"), { ...part, score: 6 })
 	assert.deepEqual(store.parts(), [{ ...part, score: 6 }])
+})
+
+test("a part removed elsewhere leaves the page when a change to it finds it gone (#759 review)", async () => {
+	const messages: string[] = []
+	const part: MemberEpisodeScore = {
+		scope: "part",
+		season: 1,
+		ranges: [{ season: 1, firstEpisode: 1, lastEpisode: 12 }],
+		key: "p:s1e1-12",
+		score: 8,
+		label: null,
+		updatedAt: AT,
+	}
+	const store = new EpisodeScoreStore(
+		async () => {
+			throw new EpisodeScoreGoneError()
+		},
+		(message) => messages.push(message),
+	)
+	store.seed([part])
+	assert.equal(await store.set(part, 6), false)
+	assert.equal(store.get("p:s1e1-12"), null)
+	assert.deepEqual(store.parts(), [])
+	assert.deepEqual(messages, [
+		"That score isn't there anymore. It was removed on another page.",
+	])
 })

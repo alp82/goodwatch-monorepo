@@ -39,7 +39,7 @@ import {
 	partLabel,
 	partOf,
 	snapshot,
-	writePartScore,
+	restorePartScore,
 } from "./title-write.server.ts"
 import type { ReadArgs } from "./tools.server"
 import type { WriteToolName } from "./write-names.ts"
@@ -78,14 +78,23 @@ export const liveWritePorts: WritePorts = {
 	readReceipt: readActionResult,
 	updateScores: (input) =>
 		updateScores({ ...input, score: input.score as Score | null }),
-	async setPartScore({ user_id, tmdb_id, season, episode, score }) {
-		const refused = await writePartScore(
+	async restorePartScore({
+		user_id,
+		tmdb_id,
+		season,
+		episode,
+		expected,
+		score,
+	}) {
+		const result = await restorePartScore(
 			user_id,
 			{ media_type: "show", tmdb_id },
 			{ season, ...(episode !== undefined ? { episode } : {}) },
+			expected,
 			score,
 		)
-		if (refused) throw new Error(refused.refused)
+		if (typeof result === "object") throw new Error(result.refused)
+		return result
 	},
 	deleteMovieWatch: (userId, movieId, watchId) =>
 		applyWatchLogAction(userId, movieId, { type: "delete", watchId }),

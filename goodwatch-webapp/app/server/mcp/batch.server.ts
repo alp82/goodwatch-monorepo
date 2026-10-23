@@ -99,14 +99,18 @@ export interface Ports {
 		score: number | null
 		review?: string
 	}): Promise<unknown>
-	/** Puts a season or episode score back (#759); throws when it can't. */
-	setPartScore(input: {
+	/**
+	 * Puts a season or episode score back (#759), only while it is still what the batch's write left (`expected`):
+	 * "changed" when it was changed since, and then nothing is written. Throws when the part can't be found.
+	 */
+	restorePartScore(input: {
 		user_id: string
 		tmdb_id: number
 		season: number
 		episode?: number
+		expected: { score: number | null; updatedAt: string | null }
 		score: number | null
-	}): Promise<unknown>
+	}): Promise<"restored" | "changed">
 	deleteMovieWatch(
 		userId: string,
 		movieId: number,
@@ -495,11 +499,22 @@ export async function runBatch(
 		if (!now) return unconfirmed
 		const watches = watchChanges(name, was, now, row.actionId)
 		const all = changesOf(was, now)
+		// What this item's own part write left. The read-back may already show another page's later change, which
+		// isn't this batch's to report or to undo (#759 review).
+		const written =
+			typeof row.write === "object" && "part_written" in row.write
+				? row.write.part_written
+				: undefined
+		const before = (was as { part_score?: number | null }).part_score ?? null
 		// A part score item owns only its part: another item of the call may score the same show as a whole.
 		const changes = part
-			? all.part_score
-				? { part_score: all.part_score }
-				: {}
+			? written
+				? before !== written.score
+					? { part_score: [before, written.score] as [unknown, unknown] }
+					: {}
+				: all.part_score
+					? { part_score: all.part_score }
+					: {}
 			: all
 		const landed =
 			Object.keys(changes).length > 0 ||
@@ -528,8 +543,14 @@ export async function runBatch(
 					}
 				: {}),
 			changes,
-			// Undo puts this part's score back, and the result names it.
-			...(part ? { part: partText(part), part_target: part } : {}),
+			// Undo puts this part's score back while it is still what `part_written` says, and the result names it.
+			...(part
+				? {
+						part: partText(part),
+						part_target: part,
+						...(written ? { part_written: written } : {}),
+					}
+				: {}),
 			// Undo puts a removed Wishlist entry back in its old place.
 			...(changes.want_to_see && was.want_to_see
 				? { want_to_see_added_at: was.want_to_see_added_at }
@@ -605,6 +626,12 @@ const receiptItem = z.object({
 		.object({
 			season: z.number().int().min(1),
 			episode: z.number().int().min(1).optional(),
+		})
+		.optional(),
+	part_written: z
+		.object({
+			score: z.number().int().min(1).max(10).nullable(),
+			updatedAt: z.string().max(40).nullable(),
 		})
 		.optional(),
 	undo: z
@@ -776,10 +803,11 @@ export async function undoBatch(
 					} else if (state === "changed") result.skipped.push("status")
 				}
 				// 3. A season or episode score (#759), apart from the title's score.
-				const partScore = field("part_score")
+				// Only while the part is still exactly what the batch's write left, checked and written in one optimistic
+				// step: a change made elsewhere since, even the same score set again, stays (#759 review).
 				const oldPart = was("part_score")
 				if (
-					partScore === "revert" &&
+					changes.part_score &&
 					item.part_target &&
 					(oldPart === null ||
 						(typeof oldPart === "number" &&
@@ -787,14 +815,23 @@ export async function undoBatch(
 							oldPart >= 1 &&
 							oldPart <= 10))
 				) {
-					wrote = true
-					await ports.setPartScore({
-						user_id: userId,
-						tmdb_id: title.tmdb_id,
-						...item.part_target,
-						score: oldPart,
-					})
-				} else if (partScore === "changed") result.skipped.push("part_score")
+					// Without a record of the write (it failed part way), nothing proves the score is still its own.
+					const expected = item.part_written ?? {
+						score: changes.part_score[1] as number | null,
+						updatedAt: null,
+					}
+					if (field("part_score") !== "same") {
+						const restored = await ports.restorePartScore({
+							user_id: userId,
+							tmdb_id: title.tmdb_id,
+							...item.part_target,
+							expected,
+							score: oldPart,
+						})
+						if (restored === "restored") wrote = true
+						else result.skipped.push("part_score")
+					}
+				}
 				// 3. The score.
 				const score = field("score")
 				const oldScore = was("score")

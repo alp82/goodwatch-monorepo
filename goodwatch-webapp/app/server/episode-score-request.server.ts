@@ -3,13 +3,15 @@
 //   { id: <show id>, scope: "season", season, score }
 //   { id, scope: "episode", episodeId, score }
 //   { id, scope: "part", key, score }   (a part an import brought; parts aren't created by hand)
-// score is 1 to 10, or null to clear. Answers { status, score, previous }, or { error } with 400, 401, 404 or 503.
+// score is 1 to 10, or null to clear. Answers { status, score, previous }, or { error } with 400, 401, 404 or 503;
+// a 404 for a score removed elsewhere also has { gone: true }.
 import type { MemberEpisodeScore } from "../domain/episode-scores.ts"
 import {
 	isEpisodeScore,
 	parseEpisodeScoreTarget,
 } from "../domain/episode-scores.ts"
 import {
+	EpisodeScoreGone,
 	EpisodeScoreTargetError,
 	EpisodeScoresUnavailable,
 	type SetEpisodeScoreResult,
@@ -22,6 +24,8 @@ export interface EpisodeScoreAnswer {
 	status: number
 	body: Partial<SetEpisodeScoreResult> & {
 		error?: string
+		/** The score was removed elsewhere: the page drops it. */
+		gone?: true
 		score?: MemberEpisodeScore | null
 	}
 }
@@ -63,6 +67,8 @@ export async function answerEpisodeScoreRequest(
 			body: await setEpisodeScore(userId, id, target, score),
 		}
 	} catch (error) {
+		if (error instanceof EpisodeScoreGone)
+			return { status: 404, body: { error: error.message, gone: true } }
 		if (error instanceof EpisodeScoreTargetError)
 			return fail(404, error.message)
 		if (error instanceof EpisodeScoresUnavailable)
