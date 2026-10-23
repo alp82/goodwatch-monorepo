@@ -93,9 +93,9 @@ function PublicNotice({ handle }: { handle: string }) {
 	if (gone) return null
 	const dismiss = () => {
 		setGone(true)
-		fetcher.submit(JSON.stringify({ noticeSeen: true }), {
+		fetcher.submit(JSON.stringify({ seen: true }), {
 			method: "POST",
-			action: "/api/profile/settings",
+			action: "/api/profile/settings?notice=1",
 			encType: "application/json",
 		})
 	}
