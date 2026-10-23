@@ -1,6 +1,10 @@
 import { linkPrompt, rateModal, writeConfirmation } from "./member-cards.ts"
 import { discordWrite } from "./writes.server.ts"
 import { parseUndoId } from "./custom-id.ts"
+import {
+	handleTogether,
+	type TogetherDependencies,
+} from "./together/handler.server.ts"
 import { appOrigin } from "./oauth.server.ts"
 import { commands } from "./commands.ts"
 import { FALLBACK_COUNTRY } from "../cache-identity.server.ts"
@@ -26,6 +30,7 @@ import {
 	isTitleId,
 	parseCustomId,
 	parseListId,
+	parseTogetherId,
 	listCustomId,
 } from "./custom-id.ts"
 import { resolveViewerPlace, type PlaceDependencies } from "./place.server.ts"
@@ -57,6 +62,8 @@ export interface Interaction {
 	locale?: string
 	context?: number
 	guild_id?: string
+	authorizing_integration_owners?: Record<string, string>
+	app_permissions?: string
 	message?: { flags?: number }
 	user?: { id: string }
 	member?: { user?: { id: string }; permissions?: string }
@@ -76,6 +83,7 @@ export interface Dependencies extends PlaceDependencies {
 	write?: typeof discordWrite
 	storeLinkMessage?: (app: string, token: string) => Promise<string>
 	memberHandle?: (userId: string) => Promise<LinkedIdentity | null>
+	together?: Partial<TogetherDependencies>
 	linkedUser: (discordId: string) => Promise<string | null>
 	unlink: (target: { byDiscordUserId: string }) => Promise<void>
 	memberRead: (
@@ -102,6 +110,7 @@ const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
 		(await import("./link-message.server.ts")).storeLinkMessage(app, token),
 	memberHandle: async (id) =>
 		(await import("./link-message.server.ts")).memberHandle(id),
+	together: {},
 	linkedUser: async (id) =>
 		(await import("./link.server.ts")).getLinkedUserId(id),
 	unlink: async (target) => (await import("./link.server.ts")).unlink(target),
@@ -202,7 +211,8 @@ export async function routeInteraction(
 			: ""
 	const parsed = parseCustomId(customId),
 		list = parseListId(customId),
-		undo = parseUndoId(customId)
+		undo = parseUndoId(customId),
+		together = parseTogetherId(customId)
 	const finish = (outcome: string) => {
 		if (logged) return
 		logged = true
@@ -212,7 +222,10 @@ export async function routeInteraction(
 				...(interaction.type === 3
 					? {
 							action:
-								parsed?.action ?? list?.action ?? (undo ? "undo" : "unknown"),
+								parsed?.action ??
+								list?.action ??
+								together?.action ??
+								(undo ? "undo" : "unknown"),
 						}
 					: {
 							command: commands.some((c) => c.name === interaction.data?.name)
@@ -474,6 +487,18 @@ export async function routeInteraction(
 				finish,
 				{ type: interaction.type === 3 ? 6 : 5 },
 			)
+		}
+		if (
+			(interaction.type === 2 && interaction.data?.name === "together") ||
+			(interaction.type === 3 && together)
+		) {
+			return handleTogether(interaction, user, finish, {
+				edit: deps.edit,
+				place: (starter) =>
+					resolveViewerPlace(starter, { getGuild: deps.getGuild }),
+				emojis: deps.emojis,
+				...deps.together,
+			})
 		}
 		if (interaction.type === 4) {
 			usePlace(

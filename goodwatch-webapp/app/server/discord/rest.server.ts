@@ -15,6 +15,7 @@ export function discordRest(
 		path: string,
 		body: unknown,
 		bot = false,
+		readBody = false,
 	) {
 		if (bot && !options.botToken)
 			throw new Error("Discord bot token is missing")
@@ -36,8 +37,11 @@ export function discordRest(
 						const data = (await response.json()) as { retry_after: number }
 						return { retryAfter: data.retry_after }
 					}
-					await drain(response)
-					return { status: response.status, ok: response.ok }
+					const data =
+						response.ok && readBody
+							? await response.json()
+							: await drain(response)
+					return { status: response.status, ok: response.ok, data }
 				},
 			)
 			if ("retryAfter" in outcome && outcome.retryAfter !== undefined) {
@@ -47,15 +51,57 @@ export function discordRest(
 				continue
 			}
 			if (!outcome.ok) throw new Error(`Discord REST status ${outcome.status}`)
-			return
+			return outcome.data
 		}
 	}
 	const webhook = (appId: string, token: string) =>
 		`/webhooks/${encodeURIComponent(appId)}/${encodeURIComponent(token)}`
 	return {
 		request,
-		editOriginal: (app: string, token: string, body: unknown) =>
-			request("PATCH", `${webhook(app, token)}/messages/@original`, body),
+		editOriginal: async (
+			app: string,
+			token: string,
+			body: unknown,
+		): Promise<void> => {
+			await request("PATCH", `${webhook(app, token)}/messages/@original`, body)
+		},
+		getOriginalMessage: async (
+			app: string,
+			token: string,
+		): Promise<{ id: string; channel_id: string }> =>
+			request(
+				"GET",
+				`${webhook(app, token)}/messages/@original`,
+				undefined,
+				false,
+				true,
+			),
+		editOriginalMessage: async (
+			app: string,
+			token: string,
+			body: unknown,
+		): Promise<{ id: string; channel_id: string }> =>
+			request(
+				"PATCH",
+				`${webhook(app, token)}/messages/@original`,
+				body,
+				false,
+				true,
+			),
+		editMessage: async (
+			channel: string,
+			id: string,
+			body: unknown,
+		): Promise<void> => {
+			await request(
+				"PATCH",
+				`/channels/${encodeURIComponent(channel)}/messages/${encodeURIComponent(
+					id,
+				)}`,
+				body,
+				true,
+			)
+		},
 		followup: (app: string, token: string, body: unknown) =>
 			request("POST", webhook(app, token), body),
 	}

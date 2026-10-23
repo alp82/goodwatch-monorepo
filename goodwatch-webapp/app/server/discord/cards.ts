@@ -27,6 +27,7 @@ export interface MemberMarks {
 	watch_count?: number
 }
 export interface GuestTitle {
+	trailer_url?: string | null
 	match?: number | null
 	match_label?: string | null
 	id: string

@@ -10,8 +10,19 @@ export function defineCommands() {
 			value: choice.value.slice(0, 100),
 		})),
 	})
-	const choices = (values: string[]) =>
-		values.map((value) => ({ name: value, value }))
+	const moodChoices = [
+		{ name: "Funny", value: "funny" },
+		{ name: "Feel-good", value: "feelgood" },
+		{ name: "Romance", value: "romance" },
+		{ name: "Action", value: "action" },
+		{ name: "Scary", value: "scary" },
+		{ name: "Crime & mystery", value: "crime" },
+		{ name: "Mind-bending", value: "mind" },
+		{ name: "Heavy", value: "heavy" },
+		{ name: "Other worlds", value: "worlds" },
+		{ name: "History", value: "history" },
+		{ name: "Coming of age", value: "growing" },
+	]
 	const title = {
 		name: "title",
 		description: "Movie or TV show title",
@@ -94,19 +105,7 @@ export function defineCommands() {
 					{ name: "Shows", value: "show" },
 					{ name: "Movies and shows", value: "any" },
 				]),
-				option("mood", "Kind of evening", [
-					{ name: "Funny", value: "funny" },
-					{ name: "Feel-good", value: "feelgood" },
-					{ name: "Romance", value: "romance" },
-					{ name: "Action", value: "action" },
-					{ name: "Scary", value: "scary" },
-					{ name: "Crime & mystery", value: "crime" },
-					{ name: "Mind-bending", value: "mind" },
-					{ name: "Heavy", value: "heavy" },
-					{ name: "Other worlds", value: "worlds" },
-					{ name: "History", value: "history" },
-					{ name: "Coming of age", value: "growing" },
-				]),
+				option("mood", "Kind of evening", moodChoices),
 				{ name: "genre", description: "Genre", type: 3, autocomplete: true },
 				{
 					name: "service",
@@ -124,6 +123,18 @@ export function defineCommands() {
 			],
 		},
 		{
+			name: "together",
+			description: "Choose what to watch together with private votes",
+			options: [
+				option("type", "Movie, show, or any", [
+					{ name: "Movies", value: "movie" },
+					{ name: "Shows", value: "show" },
+					{ name: "Movies and shows", value: "any" },
+				]),
+				option("mood", "Kind of evening", moodChoices),
+			],
+		},
+		{
 			name: "hot",
 			description: "Titles hot on socials right now",
 			options: [],
@@ -137,8 +148,10 @@ export function defineCommands() {
 	].map((command) => ({
 		...command,
 		type: 1,
-		integration_types: command.name === "setup" ? [0] : [0, 1],
-		contexts: command.name === "setup" ? [0] : [0, 1, 2],
+		integration_types: ["setup", "together"].includes(command.name)
+			? [0]
+			: [0, 1],
+		contexts: ["setup", "together"].includes(command.name) ? [0] : [0, 1, 2],
 	}))
 }
 export const commands = defineCommands()
