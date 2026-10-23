@@ -18,6 +18,7 @@ import {
 	SEEN_MAX,
 	type ShowGroup,
 	canSee,
+	owesProfilesStrip,
 	seesPart,
 } from "~/domain/profile"
 import { isOnServices } from "~/server/availability-index.server"
@@ -139,9 +140,11 @@ export async function loadProfileShell(
 			spread: see("scores")
 				? scoreSpread(scores)
 				: Array.from({ length: 10 }, () => 0),
+			// Members whose profile went public with the release stay out of search until they confirm Who sees what.
 			indexable:
 				canSee(visibility, "scores", "guest") &&
-				library.scored.size >= INDEX_MIN_SCORES,
+				library.scored.size >= INDEX_MIN_SCORES &&
+				!owesProfilesStrip(profile.claimedAt ?? null, settings.noticeSeen),
 		},
 	}
 }

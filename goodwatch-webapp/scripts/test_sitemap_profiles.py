@@ -1,9 +1,11 @@
 import unittest
 from datetime import date
 from unittest.mock import Mock
-from sitemap_profiles import MIN_SCORES, scores_public, select_profiles, valid_handle
+from sitemap_profiles import MIN_SCORES, PUBLIC_SINCE_MS, scores_public, select_profiles, valid_handle
 
 DAY = 1792713600000  # 2026-10-21 UTC, as Crate returns timestamps
+NEW = PUBLIC_SINCE_MS  # a profile created with the release or later
+OLD = DAY  # a profile that went public with the release
 
 
 class ProfilesTest(unittest.TestCase):
@@ -14,8 +16,8 @@ class ProfilesTest(unittest.TestCase):
 
     def test_public_profiles_listed_by_handle(self):
         cursor = self.cursor(
-            [("u1", "zed", 40, DAY), ("u2", "amy", 30, DAY), ("u3", "hidden", 50, DAY)],
-            [("u3", '{"scores": "me"}'), ("u2", '{"wishlist": "me"}')],
+            [("u1", "zed", 40, DAY, NEW), ("u2", "amy", 30, DAY, NEW), ("u3", "hidden", 50, DAY, NEW)],
+            [("u3", "profile_visibility", '{"scores": "me"}'), ("u2", "profile_visibility", '{"wishlist": "me"}')],
         )
         self.assertEqual(select_profiles(cursor), [
             ("https://goodwatch.app/u/amy", date.fromtimestamp(DAY / 1000)),
@@ -26,8 +28,15 @@ class ProfilesTest(unittest.TestCase):
         self.assertEqual(sorted(cursor.execute.call_args_list[1].args[1][0]), ["u1", "u2", "u3"])
 
     def test_members_only_scores_are_left_out(self):
-        cursor = self.cursor([("u1", "amy", 30, DAY)], [("u1", '{"scores": "members"}')])
+        cursor = self.cursor([("u1", "amy", 30, DAY, NEW)], [("u1", "profile_visibility", '{"scores": "members"}')])
         self.assertEqual(select_profiles(cursor), [])
+
+    def test_profiles_from_before_the_release_wait_for_confirmation(self):
+        cursor = self.cursor(
+            [("u1", "amy", 30, DAY, OLD), ("u2", "bob", 30, DAY, OLD), ("u3", "cat", 30, DAY, None)],
+            [("u2", "profile_public_notice_seen", "yes"), ("u3", "profile_public_notice_seen", "no")],
+        )
+        self.assertEqual(select_profiles(cursor), [("https://goodwatch.app/u/bob", date.fromtimestamp(DAY / 1000))])
 
     def test_no_member_means_no_settings_read(self):
         cursor = self.cursor([], [])

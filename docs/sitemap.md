@@ -74,7 +74,7 @@ Thirty people are selected from top-five billed cast and directors of the select
 
 ### Member profiles
 
-`sitemap_profiles.py` lists `/u/<handle>` for every member with a handle (account not deleted) whose `profile_visibility` setting leaves scores open to everyone (unset counts as open) and who has at least 25 scores. The profile page itself is indexed from 20 scores the catalog still has (`app/server/profile/page.server.ts`); the margin keeps a profile whose scored titles partly left the catalog from being listed while it answers `noindex`, which would block the run. Each URL's lastmod is the day of the member's latest score change. With no qualifying profile, no file is written and the index leaves it out, since an empty URL set fails the check.
+`sitemap_profiles.py` lists `/u/<handle>` for every member with a handle (account not deleted) whose `profile_visibility` setting leaves scores open to everyone (unset counts as open) and who has at least 25 scores. Members whose profile predates profiles going public (`PROFILE_PUBLIC_SINCE`, October 23, 2026) are left out until they confirm Who sees what on Edit profile (`profile_public_notice_seen`); their page answers `noindex` until then. The profile page itself is indexed from 20 scores the catalog still has (`app/server/profile/page.server.ts`); the margin keeps a profile whose scored titles partly left the catalog from being listed while it answers `noindex`, which would block the run. Each URL's lastmod is the day of the member's latest score change. With no qualifying profile, no file is written and the index leaves it out, since an empty URL set fails the check.
 
 ### Blog posts
 

@@ -175,7 +175,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                 def execute(sql, *args):
                     if 'FROM doc.user_profile' in sql:
                         # One member with a handle and enough public scores (sitemap_profiles.py).
-                        connection.cursor.return_value.fetchall.return_value = [("u1", "amy", 30, 1792713600000)]
+                        connection.cursor.return_value.fetchall.return_value = [("u1", "amy", 30, 1792713600000, 1792895400000)]
                         return
                     if 'FROM doc.user_setting' in sql:
                         connection.cursor.return_value.fetchall.return_value = []

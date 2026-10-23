@@ -12,7 +12,7 @@ only because its fixture holds the owner's ratings).
 | Q2 | One release; the owner reviews it live. |
 | Q3, Q26, Q27 | Photo upload: square crop in the browser, JPEG/PNG/WebP up to 5 MB, re-encoded to a 512 px WebP (metadata stripped) and stored in Crate `doc.user_avatar`, served from `/api/avatar/:handle?v=<version>` with long caching. Other picture choices: the sign-in provider's photo, the handle's initial on a colour, or a favorite's poster. |
 | Q4 | Links to other profiles: 11 services, at most 6, usernames only (Website takes a domain), validated per service, `rel="me nofollow"`. |
-| Q5 | Profiles with 20 or more public scores are indexed, listed in the sitemap, and carry `ProfilePage` structured data; the rest stay `noindex`. |
+| Q5 | Profiles with 20 or more public scores are indexed, listed in the sitemap, and carry `ProfilePage` structured data; the rest stay `noindex`. Profiles that went public with the release also stay `noindex` and out of the sitemap until the member confirms Who sees what (owner, October 23, 2026). |
 | Q6 | Edit profile lives at `/settings/profile` (today the handle page), linked from the profile's Edit profile button. |
 | Q7 | Time watched shows "about N days", real runtimes where known. |
 | Q8 | Wishlist "Watch now": wishlist titles on the owner's services, best match first, owner only. |
