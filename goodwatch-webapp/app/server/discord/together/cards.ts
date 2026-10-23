@@ -15,6 +15,7 @@ import {
 	type GuestTitle,
 } from "../cards.ts"
 import { togetherCustomId } from "../custom-id.ts"
+import { themeChoices } from "../filter-options.ts"
 import { commands } from "../commands.ts"
 import { nextTitle, isExhausted, topThree, summarySignature } from "./rules.ts"
 import { ogImageUrl } from "../../../utils/og-image-url.ts"
@@ -37,7 +38,7 @@ function poster(title: GuestTitle, content: string): Component {
 					media: { url: title.poster_url },
 					description: safe(title.name),
 				},
-		  }
+			}
 		: text(content)
 }
 /** Where to watch as text for the voting card and the decision: the place line, then each service's logo and name. */
@@ -48,13 +49,13 @@ function watch(title: GuestTitle, place: DeckPlace, emojis: EmojiIds) {
 		3,
 	)}`
 }
-/** The decision's services as link buttons like the title card; their names as text when none has a link. */
+/** The decision uses the title card's subscription buttons and country menu. */
 function decisionLinks(title: GuestTitle, place: DeckPlace, emojis: EmojiIds) {
 	const links = streamLinks(title, place.country, {
 		allServices: !place.services.length,
 		emojis,
 	})
-	return links.length > 1 ? links : [text(watch(title, place, emojis))]
+	return links
 }
 /** Text budget below Discord's 4000 characters, with room for the cleanup message() applies. */
 const PUBLIC_TEXT_BUDGET = 3900
@@ -72,7 +73,13 @@ export function publicCard(
 		removable.length && matchCount ? 4 : 5,
 	)
 	// Long names and many logos can pass Discord's limits: drop possible matches first, then matches, from the end.
-	let components = publicComponents(session, titles, emojis, matchCount, possibleCount)
+	let components = publicComponents(
+		session,
+		titles,
+		emojis,
+		matchCount,
+		possibleCount,
+	)
 	while (
 		(textLength(components) > PUBLIC_TEXT_BUDGET ||
 			componentCount(components) > 40) &&
@@ -80,7 +87,13 @@ export function publicCard(
 	) {
 		if (possibleCount) possibleCount--
 		else matchCount--
-		components = publicComponents(session, titles, emojis, matchCount, possibleCount)
+		components = publicComponents(
+			session,
+			titles,
+			emojis,
+			matchCount,
+			possibleCount,
+		)
 	}
 	return message(components, false)
 }
@@ -99,6 +112,7 @@ function publicComponents(
 		moodOption && "choices" in moodOption
 			? moodOption.choices.find((c) => c.value === meta.mood)?.name
 			: undefined
+	const theme = themeChoices.find((choice) => choice.value === meta.theme)?.name
 	const byId = new Map(titles.map((t) => [t.id, t]))
 	const matches = summary.matches.slice(0, matchCount)
 	const removable = Object.keys(session.votes)
@@ -126,9 +140,9 @@ function publicComponents(
 						meta.type === "any"
 							? "Movies and shows"
 							: meta.type === "movie"
-							? "Movies"
-							: "Shows"
-					}${mood ? ` · ${safe(mood)}` : ""}`,
+								? "Movies"
+								: "Shows"
+					}${mood ? ` · ${safe(mood)}` : ""}${theme ? ` · ${safe(theme)}` : ""}`,
 				),
 				text(
 					`${plural(summary.participantCount, "participant")} · ${
@@ -170,14 +184,10 @@ function publicComponents(
 									"more possible matches",
 								)}`,
 							),
-					  ]
+						]
 					: []),
 				...(!summary.matches.length && !summary.possibleMatches.length
-					? [
-							text(
-								"Join and vote privately. Matches appear here as you vote.",
-							),
-					  ]
+					? [text("Join and vote privately. Matches appear here as you vote.")]
 					: []),
 				...(exhausted
 					? [
@@ -201,7 +211,7 @@ function publicComponents(
 									value: t.titleId,
 								})),
 							),
-					  ]
+						]
 					: []),
 				...(summary.matches.length
 					? [
@@ -210,13 +220,14 @@ function publicComponents(
 								"pick",
 								"Pick a match",
 								summary.matches.slice(0, 25).map((id) => ({
-									label: safe(
-										byId.get(id)?.name ?? "Title unavailable",
-									).slice(0, 80),
+									label: safe(byId.get(id)?.name ?? "Title unavailable").slice(
+										0,
+										80,
+									),
 									value: id,
 								})),
 							),
-					  ]
+						]
 					: []),
 				...(removable.length
 					? [
@@ -231,7 +242,7 @@ function publicComponents(
 									value: id,
 								})),
 							),
-					  ]
+						]
 					: []),
 				row([
 					{
@@ -290,7 +301,7 @@ export function votingCard(
 								session.meta.place,
 								emojis,
 							)}`,
-					  )
+						)
 					: text("You've voted on every title for now."),
 				row([
 					...(voting
@@ -308,7 +319,7 @@ export function votingCard(
 							row([
 								{ type: 2, style: 5, label: "Trailer", url: title.trailer_url },
 							]),
-					  ]
+						]
 					: []),
 			],
 			0xf59e0b,
@@ -380,10 +391,10 @@ function closedCard(session: Session, emojis: EmojiIds) {
 								? "Chosen by the starter."
 								: `Everyone picked it. **${
 										session.summary.participantCount
-								  } of ${plural(
+									} of ${plural(
 										session.summary.participantCount,
 										"participant",
-								  )}**.`
+									)}**.`
 						}`,
 					),
 					{
@@ -401,7 +412,7 @@ function closedCard(session: Session, emojis: EmojiIds) {
 								text(
 									"Availability couldn't be checked. Check Where to watch on GoodWatch before starting.",
 								),
-						  ]
+							]
 						: decisionLinks(title, meta.place, emojis)),
 					row([{ type: 2, style: 5, label: "Open on GoodWatch", url }]),
 				],

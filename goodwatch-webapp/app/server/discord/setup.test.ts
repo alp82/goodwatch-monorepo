@@ -299,7 +299,7 @@ test("commands and title buttons share guild country and services, with an all-s
 											value: name === "person" ? "12" : "movie:42",
 										},
 									],
-							  },
+								},
 				},
 				{
 					linkedUser: async () => null,
@@ -338,7 +338,7 @@ test("commands and title buttons share guild country and services, with an all-s
 			// /hot isn't filtered by services, so it never names them.
 			assert.equal(
 				/every service in Germany/i.test(JSON.stringify(edits)),
-				services.length === 0 && name !== "hot",
+				services.length === 0 && !["hot", "button", "search"].includes(name),
 			)
 		}
 	}
@@ -453,7 +453,7 @@ test("title cards: the top block uses the guild place for everyone, members see 
 						: {
 								title: { id: "movie:42", name: "Member title" },
 								member: { score: 9 },
-						  },
+							},
 				getGuild: async () => {
 					guildReads++
 					return { ...guild, service_ids: [] }
@@ -476,20 +476,24 @@ test("title cards: the top block uses the guild place for everyone, members see 
 		await finished
 		// The top block is what Share posts: the guild's place for everyone. The member's place only fills the block below.
 		assert.equal(guildReads, 1)
-		assert.match(JSON.stringify(edits), /Where to watch on every service in Germany/)
+		assert.match(
+			JSON.stringify(edits),
+			/Not on a subscription service in Germany/,
+		)
 		assert.deepEqual(reads, [{ country: "DE", services: [] }])
 		if (linked) {
 			const [top, member] = (
 				edits[0] as { components: { components: unknown[] }[] }
 			).components
 			assert.match(JSON.stringify(top), /Guest title/)
-			assert.doesNotMatch(JSON.stringify(top), /United Kingdom/)
-			assert.match(
-				JSON.stringify(member),
-				/On your services in the United Kingdom/,
+			assert.equal(
+				(top as { components: unknown[] }).components.length > 0,
+				true,
 			)
+			assert.match(JSON.stringify(member), /You rated/)
 			assert.match(logs[0], /"viewer":"member"/)
-		} else assert.equal((edits[0] as { components: unknown[] }).components.length, 1)
+		} else
+			assert.equal((edits[0] as { components: unknown[] }).components.length, 1)
 	}
 })
 

@@ -26,7 +26,11 @@ export const STREAM_RATE_WINDOWS: RateWindow[] = [{ limit: 60, seconds: 60 }]
 export interface StreamRedirectDependencies {
 	read: typeof readGuestTool
 	store: () => Promise<CacheStore | null>
-	take: (name: string, client: string, windows: RateWindow[]) => Promise<RateVerdict>
+	take: (
+		name: string,
+		client: string,
+		windows: RateWindow[],
+	) => Promise<RateVerdict>
 }
 
 const defaults: StreamRedirectDependencies = {
@@ -41,13 +45,18 @@ const defaults: StreamRedirectDependencies = {
  * The hashed network of the visitor, from the header the trusted ingress overwrites (the same key search uses), or null
  * without one: counting every unproxied request as one visitor would block the links for everyone.
  */
-export async function streamClientKey(request: Request): Promise<string | null> {
+export async function streamClientKey(
+	request: Request,
+): Promise<string | null> {
 	const { trustedClientAddress, visitorNetwork } = await import(
 		"../search-runtime/rate-limit.server.ts"
 	)
 	const address = trustedClientAddress(request)
 	return address
-		? createHash("sha256").update(visitorNetwork(address)).digest("hex").slice(0, 32)
+		? createHash("sha256")
+				.update(visitorNetwork(address))
+				.digest("hex")
+				.slice(0, 32)
 		: null
 }
 
@@ -91,14 +100,19 @@ export async function streamRedirect(
 			.take("discord-stream", client, STREAM_RATE_WINDOWS)
 			.catch(() => null)
 		if (verdict && !verdict.allowed)
-			return new Response("Too many streaming links opened. Try again in a minute.", {
-				status: 429,
-				headers: {
-					...headers,
-					"Content-Type": "text/plain; charset=utf-8",
-					"Retry-After": String(Math.max(1, Math.ceil(verdict.retryAfterSeconds))),
+			return new Response(
+				"Too many streaming links opened. Try again in a minute.",
+				{
+					status: 429,
+					headers: {
+						...headers,
+						"Content-Type": "text/plain; charset=utf-8",
+						"Retry-After": String(
+							Math.max(1, Math.ceil(verdict.retryAfterSeconds)),
+						),
+					},
 				},
-			})
+			)
 	}
 	const asked = (url.searchParams.get("country") ?? "").toUpperCase()
 	const country = /^[A-Z]{2}$/.test(asked) ? asked : FALLBACK_COUNTRY
@@ -126,12 +140,16 @@ export async function streamRedirect(
 	const title = result.title as
 		| {
 				name?: string
-				availability?: { offers?: { service_id?: number; url?: unknown }[] }
+				availability?: {
+					offers?: { service_id?: number; url?: unknown; offer_type?: string }[]
+				}
 		  }
 		| undefined
 	if (!title) return notFound()
 	const service = Number(providerId)
-	const offers = title.availability?.offers ?? []
+	const offers = (title.availability?.offers ?? []).filter((o) =>
+		["flatrate", "free", "ads"].includes(o.offer_type ?? ""),
+	)
 	const target =
 		offers
 			.filter((o) => o.service_id === service)
@@ -139,8 +157,7 @@ export async function streamRedirect(
 			.find(Boolean) ??
 		offers
 			.filter(
-				(o) =>
-					o.service_id !== undefined && sameService(o.service_id, service),
+				(o) => o.service_id !== undefined && sameService(o.service_id, service),
 			)
 			.map((o) => httpUrl(o.url))
 			.find(Boolean)

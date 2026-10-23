@@ -34,6 +34,8 @@ export function linkedAvailability(
 	}[],
 	/** TMDB logo paths by service ID, for the poster cards' Watch button. */
 	logos: ReadonlyMap<number, string | null | undefined> = new Map(),
+	/** Site provider order: streaming_service.order_by_country, falling back to order_default. */
+	priorities: ReadonlyMap<number, number> = new Map(),
 ) {
 	const seen = new Set<string>()
 	const offers = availability.offers.flatMap((offer) => {
@@ -70,6 +72,9 @@ export function linkedAvailability(
 		return [
 			{
 				...offer,
+				display_priority: family
+					.map((id) => priorities.get(id))
+					.find((rank) => rank !== undefined),
 				stream_url: direct,
 				...(name ? { name } : {}),
 				...(logo ? { logo_url: tmdbImageUrl(logo, "w92") } : {}),

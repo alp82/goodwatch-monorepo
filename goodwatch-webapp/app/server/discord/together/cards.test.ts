@@ -257,8 +257,8 @@ test("5B decided uses the shared OG image, title facts, fresh offers and availab
 	assert.match(JSON.stringify(card), /\/og\/movie\/1-a_title\.jpg\?brand=/)
 	assert.match(JSON.stringify(card), /95 · Masterpiece/)
 	assert.match(JSON.stringify(card), /Decided: A title/)
-	assert.match(JSON.stringify(card), /Netflix/)
-	assert.equal(flatten(card.components).filter((c) => c.type === 3).length, 0)
+	assert.match(JSON.stringify(card), /Open the title on GoodWatch for links/)
+	assert.equal(flatten(card.components).filter((c) => c.type === 3).length, 1)
 	s.meta.availabilityFailed = true
 	assert.match(
 		JSON.stringify(publicCard(s)),
@@ -382,7 +382,7 @@ test("voting card and match rows show service logos with names as text, a readab
 	const voting = JSON.stringify(votingCard(s, "a", served, logos))
 	assert.match(
 		voting,
-		/Where to watch in the United States\\n<:Netflix:101> Netflix, <:DisneyPlus:102> Disney\+, Apple TV Store and 2 more/,
+		/Where to watch in the United States\\n<:Netflix:101> Netflix, <:DisneyPlus:102> Disney\+, <:MUBI:103> MUBI and 2 more/,
 	)
 	assert.doesNotMatch(voting, /"url":"https:\/\/example\.com/)
 	s.summary = {
@@ -394,15 +394,9 @@ test("voting card and match rows show service logos with names as text, a readab
 	const sent = JSON.stringify(publicCard(s, [served], logos))
 	// Rows show logos only, under one place line in the header.
 	assert.match(sent, /still voting\\n-# Where to watch in the United States"/)
-	assert.match(
-		sent,
-		/<:Netflix:101> <:DisneyPlus:102> \*\*Apple TV Store\*\*  \+2 more/,
-	)
+	assert.match(sent, /<:Netflix:101> <:DisneyPlus:102> <:MUBI:103>  \+2 more/)
 	assert.equal(sent.match(/Where to watch/g)?.length, 1)
-	assert.doesNotMatch(
-		sent,
-		/"url":"https:\/\/example\.com|\bUS\b|all services/,
-	)
+	assert.doesNotMatch(sent, /"url":"https:\/\/example\.com|\bUS\b|all services/)
 })
 
 test("decision card gets the title card's service link buttons with logos, and names as text when no link works", () => {
@@ -416,20 +410,13 @@ test("decision card gets the title card's service link buttons with logos, and n
 	const buttons = flatten(card.components).filter((c) => c.type === 2)
 	assert.deepEqual(
 		buttons.map((b) => b.label),
-		[
-			"Netflix",
-			"Disney+",
-			"Apple TV Store",
-			"MUBI",
-			"Google Play Movies",
-			"Open on GoodWatch",
-		],
+		["Netflix", "Disney+", "MUBI", "Open on GoodWatch"],
 	)
 	assert.deepEqual(buttons[0].emoji, { id: "101", name: "Netflix" })
 	assert.ok(buttons.every((b) => b.style === 5 && !b.custom_id))
 	const sent = JSON.stringify(card)
-	assert.match(sent, /Where to watch on every service in the United Kingdom/)
-	assert.doesNotMatch(sent, /gw1:watch|\bGB\b/)
+	assert.match(sent, /"placeholder":"United Kingdom"/)
+	assert.doesNotMatch(sent, /gw1:watch/)
 	s.meta.decisionTitle = {
 		...served,
 		availability: {
@@ -438,7 +425,10 @@ test("decision card gets the title card's service link buttons with logos, and n
 		},
 	}
 	const unlinked = publicCard(s, [], logos)
-	assert.match(JSON.stringify(unlinked), /<:Netflix:101> Netflix/)
+	assert.match(
+		JSON.stringify(unlinked),
+		/Open the title on GoodWatch for links/,
+	)
 	assert.equal(
 		flatten(unlinked.components).filter((c) => c.type === 2).length,
 		1,
@@ -498,7 +488,10 @@ test("a full public card with long titles and three logos per row stays within D
 	assert.ok(text <= 4000, `text is ${text} characters`)
 	assert.ok(componentCount(card.components) <= 40)
 	const sent = JSON.stringify(card)
-	assert.match(sent, /\\n(<:[A-Za-z]+:\d{19}> ){2}<:[A-Za-z]+:\d{19}>  \+2 more"/)
+	assert.match(
+		sent,
+		/\\n(<:[A-Za-z]+:\d{19}> ){2}<:[A-Za-z]+:\d{19}>  \+2 more"/,
+	)
 	assert.equal(sent.match(/Where to watch/g)?.length, 1)
 	const rows = nodes.filter((c) => c.type === 11).length
 	assert.ok(rows >= 5, `only ${rows} rows fit`)
@@ -506,7 +499,11 @@ test("a full public card with long titles and three logos per row stays within D
 	// Rows that still don't fit are dropped from the end and counted.
 	const crowded = titles.map((t) => ({
 		...t,
-		genres: ["Science Fiction ".repeat(12), "Documentary ".repeat(12), "Adventure ".repeat(12)],
+		genres: [
+			"Science Fiction ".repeat(12),
+			"Documentary ".repeat(12),
+			"Adventure ".repeat(12),
+		],
 	}))
 	const dropped = publicCard(s, crowded, emojis)
 	const droppedText = flatten(dropped.components).reduce(

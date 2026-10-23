@@ -1,4 +1,5 @@
 export type CardAction =
+	| "country"
 	| "watch"
 	| "share"
 	| "similar"
@@ -9,19 +10,32 @@ export type CardAction =
 export const isTitleId = (value: string) =>
 	/^(movie|show):[1-9]\d{0,9}$/.test(value)
 /** Actions whose card or result keeps the list the title was opened from, for Back. */
-const KEEPS_BACK = ["watch", "want", "seen", "rate", "rate-submit"]
+const KEEPS_BACK = [
+	"country",
+	"share",
+	"watch",
+	"want",
+	"seen",
+	"rate",
+	"rate-submit",
+]
 /** The custom ID for a title action. A list reference that would pass Discord's 100 characters is left out. */
 export function formatCustomId(
 	action: CardAction,
 	titleId: string,
 	back?: ListRef,
+	country?: string,
 ): string {
-	const plain = `gw1:${action}:${titleId}`
+	if (country && !/^[A-Z]{2}$/.test(country)) throw new Error("Invalid country")
+	const plain = `gw1:${action}:${titleId}${country ? `:c${country}` : ""}`
 	const withBack =
-		KEEPS_BACK.includes(action) && back ? `${plain}:${formatListRef(back)}` : plain
+		KEEPS_BACK.includes(action) && back
+			? `${plain}:${formatListRef(back)}`
+			: plain
 	const value = withBack.length <= 100 ? withBack : plain
 	if (
 		![
+			"country",
 			"watch",
 			"share",
 			"similar",
@@ -38,18 +52,24 @@ export function formatCustomId(
 }
 export function parseCustomId(
 	value: string,
-): { action: CardAction; titleId: string; back?: ListRef } | null {
+): {
+	action: CardAction
+	titleId: string
+	back?: ListRef
+	country?: string
+} | null {
 	if (value.length > 100) return null
 	const match =
-		/^gw1:(watch|share|similar|want|seen|rate|rate-submit):((?:movie|show):[1-9]\d{0,9})(?::(.+))?$/.exec(
+		/^gw1:(country|watch|share|similar|want|seen|rate|rate-submit):((?:movie|show):[1-9]\d{0,9})(?::c([A-Z]{2}))?(?::(.+))?$/.exec(
 			value,
 		)
 	if (!match) return null
-	const back = match[3] ? parseListRef(match[3]) : null
-	if (match[3] && (!KEEPS_BACK.includes(match[1]) || !back)) return null
+	const back = match[4] ? parseListRef(match[4]) : null
+	if (match[4] && (!KEEPS_BACK.includes(match[1]) || !back)) return null
 	return {
 		action: match[1] as CardAction,
 		titleId: match[2],
+		...(match[3] ? { country: match[3] } : {}),
 		...(back ? { back } : {}),
 	}
 }
@@ -169,7 +189,9 @@ export function parseUndoId(
 ): { batchId: string; titleId: string; back?: ListRef } | null {
 	if (id.length > 100) return null
 	const match =
-		/^gw1:undo:([A-Za-z0-9_-]{1,65}):((?:movie|show):[1-9]\d{0,9})(?::(.+))?$/.exec(id)
+		/^gw1:undo:([A-Za-z0-9_-]{1,65}):((?:movie|show):[1-9]\d{0,9})(?::(.+))?$/.exec(
+			id,
+		)
 	if (!match) return null
 	const back = match[3] ? parseListRef(match[3]) : null
 	if (match[3] && !back) return null

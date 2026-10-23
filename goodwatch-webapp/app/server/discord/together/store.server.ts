@@ -20,6 +20,7 @@ export interface SessionMeta {
 	messageId?: string
 	type: "movie" | "show" | "any"
 	mood?: string
+	theme?: string
 	place: DeckPlace
 	deck: string[]
 	status: "open" | "decided" | "ended" | "expired"

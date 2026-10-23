@@ -14,6 +14,8 @@ export async function deckCandidates(meta: SessionMeta): Promise<string[]> {
 		import("../../../utils/title-key.ts"),
 	])
 	const { MOOD_KEYS } = await import("../../../domain/moods.ts")
+	const { THEME_KEYS } = await import("../../../domain/themes-styles.ts")
+	const theme = THEME_KEYS.find((key) => key === meta.theme)
 	const mood = MOOD_KEYS.find((key) => key === meta.mood)
 	const result = await filterTitles({
 		universe: "catalog",
@@ -32,6 +34,7 @@ export async function deckCandidates(meta: SessionMeta): Promise<string[]> {
 			...defaultFilterState({ onMyServices: false, notSeenYet: false }),
 			type: meta.type === "any" ? "all" : meta.type,
 			moods: mood ? [mood] : [],
+			themes: theme ? [theme] : [],
 			anyService: !meta.place.services.length,
 			services: meta.place.services,
 		},

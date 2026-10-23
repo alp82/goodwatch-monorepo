@@ -115,3 +115,22 @@ test("search snapshots always store ranked IDs in Valkey for one hour", async ()
 	assert.deepEqual(calls.at(-1)?.slice(2), ["EX", 3600])
 	assert.deepEqual(await loadDiscoverState(key), state)
 })
+
+test("new filters round trip through stored state; legacy states still load", async () => {
+	const state = {
+		args: {
+			themes: ["future" as const],
+			styles: ["slow" as const],
+			released: "recent" as const,
+			minimum_score: 80,
+			anime: "only" as const,
+			min_runtime: 120,
+		},
+	}
+	const key = await saveDiscoverState(state)
+	assert.deepEqual(await loadDiscoverState(key), state)
+	assert.deepEqual(
+		await loadDiscoverState(await saveDiscoverState({ args: {} })),
+		{ args: {} },
+	)
+})

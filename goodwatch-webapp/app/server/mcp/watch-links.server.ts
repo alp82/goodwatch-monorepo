@@ -1,3 +1,4 @@
+import { getStreamingProviders } from "../streaming-providers.server"
 import { captureProductEvent } from "~/telemetry/product-analytics.server"
 import {
 	AVAILABILITY_MAX_AGE_MS,
@@ -44,7 +45,7 @@ export async function watchAvailability(
 			evaluated.offers.flatMap((offer) => providerFamily(offer.service_id)),
 		),
 	]
-	const [services, rows] = await Promise.all([
+	const [services, rows, providers] = await Promise.all([
 		getServiceList(ids).catch(() => []),
 		query<{
 			service_id: number
@@ -61,6 +62,7 @@ export async function watchAvailability(
 				Date.now(),
 			],
 		).catch(() => []),
+		getStreamingProviders({ country: ctx.country }).catch(() => []),
 	])
 	return linkedAvailability(
 		evaluated,
@@ -69,5 +71,6 @@ export async function watchAvailability(
 		new Map(services.map((service) => [service.id, service.name])),
 		rows,
 		new Map(services.map((service) => [service.id, service.logo_path])),
+		new Map(providers.map((provider, i) => [provider.id, i])),
 	)
 }

@@ -53,11 +53,13 @@ const title: GuestTitle = {
 				name: "Prime Video",
 				url: "https://p.example",
 				stream_link: "[Prime Video](https://p.example)",
+				offer_type: "flatrate",
 			},
 			{
 				name: "Prime Video",
 				url: "https://p.example/rent",
 				stream_link: "[Prime Video](https://p.example/rent)",
+				offer_type: "rent",
 			},
 		],
 	},
@@ -107,7 +109,7 @@ test("1C guest title card: backdrop hero, poster beside the big title, score emo
 	const [box] = card.components
 	assert.equal(box.type, 17)
 	assert.equal(box.accent_color, 0x16934a)
-	const [hero, section, separator, whereHeading, links, row] = box.components!
+	const [hero, section, separator, links, menu, row] = box.components!
 	const [heading, overview] = section.components!
 	assert.equal(section.type, 9)
 	assert.deepEqual(section.accessory, {
@@ -129,7 +131,7 @@ test("1C guest title card: backdrop hero, poster beside the big title, score emo
 	assert.ok(String(overview.content).endsWith("…"))
 	assert.ok(String(overview.content).length <= 151)
 	assert.equal(separator.type, 14)
-	assert.equal(whereHeading.content, "-# Where to watch in Germany")
+	assert.equal(menu.components![0].placeholder, "Germany")
 	assert.deepEqual(links.components, [
 		{ type: 2, style: 5, label: "Prime Video", url: "https://p.example" },
 	])
@@ -159,6 +161,7 @@ test("where to watch: service logos as app emojis, junk and channel variants fol
 		},
 		{
 			service_id: 8,
+			display_priority: 0,
 			name: "Netflix",
 			url: "https://n.example",
 			stream_link: "[n](https://n.example)",
@@ -166,6 +169,7 @@ test("where to watch: service logos as app emojis, junk and channel variants fol
 		},
 		{
 			service_id: 1899,
+			display_priority: 1,
 			name: "HBO Max",
 			url: "https://h.example",
 			stream_link: "[h](https://h.example)",
@@ -181,6 +185,7 @@ test("where to watch: service logos as app emojis, junk and channel variants fol
 		{
 			service_id: 424242,
 			name: "Tiny Local Service",
+			offer_type: "free",
 			url: "https://t.example",
 			stream_link: "[t](https://t.example)",
 		},
@@ -216,14 +221,19 @@ test("where to watch: service logos as app emojis, junk and channel variants fol
 			url: "https://h.example",
 			emoji: { id: "1002", name: "HBOMax" },
 		},
-		{ type: 2, style: 5, label: "Tiny Local Service", url: "https://t.example" },
+		{
+			type: 2,
+			style: 5,
+			label: "Tiny Local Service",
+			url: "https://t.example",
+		},
 	])
 	const visible = texts(card.components).join("\n")
-	assert.doesNotMatch(visible, /Provider|Amazon Channel|_|flatrate|\(ads\)|https?:/)
-	assert.match(
+	assert.doesNotMatch(
 		visible,
-		/^-# Subscription or with ads: Netflix  ·  Subscription: HBO Max$/m,
+		/Provider|Amazon Channel|_|flatrate|\(ads\)|https?:/,
 	)
+	assert.doesNotMatch(visible, /Where to watch|Subscription:|Rent:|Buy:/)
 	assert.equal(
 		whereToWatch(
 			{ ...title, availability: { state: "watchable", offers } },
@@ -249,10 +259,7 @@ test("1C share copy is public and drops only the Share button", () => {
 	})
 	assert.equal(shared.flags & 64, 0)
 	assert.doesNotMatch(JSON.stringify(shared), /Share to channel/)
-	assert.match(
-		JSON.stringify(shared),
-		/Where to watch on every service in Germany/,
-	)
+	assert.match(JSON.stringify(shared), /"placeholder":"Germany"/)
 })
 
 test("provider IDs fold verified tiers and channels while distinct services keep their links", () => {
@@ -274,6 +281,7 @@ test("provider IDs fold verified tiers and channels while distinct services keep
 	].map(([id, name]) => ({
 		service_id: Number(id),
 		name: String(name),
+		offer_type: "flatrate",
 		url: `https://service.example/${id}`,
 		stream_link: "",
 	}))
@@ -307,7 +315,8 @@ test("provider IDs fold verified tiers and channels while distinct services keep
 		assert.ok(links.includes(`[${name}](https://service.example/${id})`))
 	}
 	// Distinct services never share a logo emoji (the emoji map is generated, so a service may also have none).
-	const emojiOf = (brand: string) => providers.find((p) => p.brand === brand)?.emoji ?? null
+	const emojiOf = (brand: string) =>
+		providers.find((p) => p.brand === brand)?.emoji ?? null
 	for (const [a, b] of [
 		["Amazon Video", "Amazon Prime Video"],
 		["YouTube Premium", "YouTube"],
@@ -349,7 +358,7 @@ test("1C without a backdrop falls back to the poster thumbnail with the vibe acc
 	assert.equal(box.accent_color, 0x16934a)
 	assert.equal(box.components![0].type, 9)
 	assert.equal(box.components![0].accessory?.type, 11)
-	assert.match(JSON.stringify(card), /in the United Kingdom/)
+	assert.match(JSON.stringify(card), /"placeholder":"United Kingdom"/)
 	const bare = titleCard(
 		{ ...title, backdrop_url: null, poster_url: null, goodwatch_score: null },
 		"DE",
@@ -739,27 +748,32 @@ test("service links: long links go through the GoodWatch redirect, more than ten
 		service_id: 900000 + i,
 		name: `Service Name ${String.fromCharCode(65 + i)}`,
 		url: i === 0 ? long : `https://s.example/${i}`,
-		offer_type: i < 6 ? "flatrate" : "rent",
+		offer_type: "flatrate",
 		stream_link: "",
 	}))
 	const many = { ...title, availability: { state: "watchable", offers } }
 	const parts = streamLinks(many, "DE")
-	const rows = parts.filter((c) => c.type === 1)
+	const rows = parts.filter((c) => c.type === 1 && c.components?.[0].type === 2)
 	assert.equal(rows.length, 2)
 	assert.deepEqual(
 		rows.map((r) => r.components!.length),
 		[5, 5],
 	)
 	const buttons = rows.flatMap((r) => r.components!)
-	assert.equal(buttons[0].url, "https://goodwatch.app/go/stream/movie/687163/900000?country=DE")
+	assert.equal(
+		buttons[0].url,
+		"https://goodwatch.app/go/stream/movie/687163/900000?country=DE",
+	)
 	assert.equal(buttons.at(-1)!.label, "More on GoodWatch")
 	assert.equal(
 		buttons.at(-1)!.url,
 		"https://goodwatch.app/movie/687163-project-hail-mary#streaming",
 	)
 	assert.ok(buttons.every((b) => String(b.url).length <= 512))
-	assert.match(String(parts[0].content), /^-# Where to watch in Germany\n-# Subscription: /)
-	assert.match(String(parts[0].content), /Rent: /)
+	assert.doesNotMatch(
+		JSON.stringify(parts),
+		/Where to watch|Subscription:|Rent:/,
+	)
 	const card = titleCard(many, "DE", {
 		member: { want_to_see: true },
 		back: { kind: "hot", page: 1 },
@@ -775,10 +789,81 @@ test("service links: long links go through the GoodWatch redirect, more than ten
 		{ ...title, availability: { state: "no_match", offers: [] } },
 		"DE",
 	)
-	assert.deepEqual(none, [
-		{ type: 10, content: "-# Where to watch in Germany\nNo current offers found." },
-	])
+	assert.equal(none[0].content, "Not on a subscription service in Germany")
+	assert.equal(none[1].components![0].placeholder, "Germany")
 	assert.throws(() =>
-		message([{ type: 1, components: [{ type: 2, style: 5, label: "x", url: long }] }]),
+		message([
+			{ type: 1, components: [{ type: 2, style: 5, label: "x", url: long }] },
+		]),
 	)
+})
+
+test("subscription buttons use country popularity, exclude paid and unknown kinds, and have a country menu", () => {
+	const offers = [
+		{
+			service_id: 2,
+			name: "Apple TV Store",
+			offer_type: "buy",
+			display_priority: 0,
+		},
+		{
+			service_id: 8,
+			name: "Netflix",
+			offer_type: "flatrate",
+			display_priority: 3,
+		},
+		{
+			service_id: 1899,
+			name: "HBO Max",
+			offer_type: "ads",
+			display_priority: 1,
+		},
+		{ service_id: 11, name: "MUBI", offer_type: "free", display_priority: 2 },
+		{
+			service_id: 10,
+			name: "Amazon Video",
+			offer_type: "rent",
+			display_priority: 0,
+		},
+		{ service_id: 9999, name: "Unknown offer" },
+	].map((o) => ({
+		...o,
+		url: `https://service.example/${o.service_id}`,
+		stream_link: "",
+	}))
+	const back = {
+		kind: "discover" as const,
+		key: "k0123456789abcdefab",
+		page: 3,
+	}
+	const card = titleCard({ ...title, availability: { offers } }, "NZ", {
+		back,
+		share: true,
+	})
+	const controls = all(card.components)
+	assert.deepEqual(
+		controls.filter((c) => c.style === 5).map((c) => c.label),
+		["HBO Max", "MUBI", "Netflix", "Open on GoodWatch"],
+	)
+	assert.doesNotMatch(
+		texts(card.components).join("\n"),
+		/Where to watch|Subscription:|Rent|Buy/,
+	)
+	const menu = controls.find((c) => c.type === 3)!
+	assert.equal(menu.placeholder, "New Zealand")
+	const choices = menu.options as {
+		label: string
+		value: string
+		default: boolean
+		emoji: { name: string }
+	}[]
+	assert.equal(choices.length, 21)
+	assert.deepEqual(choices[0], {
+		label: "New Zealand",
+		value: "NZ",
+		default: true,
+		emoji: { name: "🇳🇿" },
+	})
+	assert.equal(new Set(choices.map((o) => o.value)).size, choices.length)
+	assert.ok(String(menu.custom_id).length <= 100)
 })

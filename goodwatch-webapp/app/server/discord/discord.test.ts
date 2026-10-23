@@ -286,7 +286,7 @@ test("a press on a private card answers at once with the card disabled and a loa
 	const controls = JSON.stringify(body.data.components)
 	assert.doesNotMatch(controls, /"disabled":false/)
 	assert.equal(
-		(controls.match(/"type":2,/g) ?? []).length,
+		(controls.match(/"type":[23],/g) ?? []).length,
 		(controls.match(/"disabled":true/g) ?? []).length,
 	)
 	assert.equal(body.data.components.at(-1).content, "-# Loading the title…")
@@ -298,10 +298,7 @@ test("a press on a private card answers at once with the card disabled and a loa
 		IS_COMPONENTS_V2,
 	)
 	assert.match(JSON.stringify(f.edits), /https:\/\/example.com\/watch/)
-	assert.match(
-		JSON.stringify(f.edits),
-		/Where to watch on every service in Germany/,
-	)
+	assert.match(JSON.stringify(f.edits), /"placeholder":"Germany"/)
 	assert.doesNotMatch(JSON.stringify(f.edits), /Where to watch"|flatrate/)
 })
 test("Share defers publicly then patches a guest card without Share", async () => {
@@ -380,7 +377,7 @@ test("cards without a backdrop keep the poster thumbnail, score label, short ove
 	assert.deepEqual(card.allowed_mentions, { parse: [] })
 	assert.match(
 		JSON.stringify(titleCard({ ...title, availability: undefined }, "US")),
-		/Availability unknown/,
+		/Not on a subscription service in the United States/,
 	)
 })
 test("40 component cap counts nested components and accessories", () => {
@@ -725,17 +722,17 @@ test("member search: the top block is exactly the shared card, the member's own 
 	const [top, member] = JSON.parse(personal)[2].components
 	assert.doesNotMatch(
 		JSON.stringify(top),
-		/93%|You rated|Wishlist|France|Member provider/,
+		/93%|You rated|Wishlist|Member provider/,
 	)
-	assert.match(JSON.stringify(top), /Where to watch in the United Kingdom/)
-	assert.match(JSON.stringify(top), /GB provider/)
+	assert.match(JSON.stringify(top), /"placeholder":"United Kingdom"/)
+	assert.match(
+		JSON.stringify(top),
+		/subscription service in the United Kingdom/,
+	)
 	assert.equal(member.type, 17)
 	assert.equal(member.accent_color, 0xfbbf24)
 	assert.match(JSON.stringify(member), /### 93% taste match/)
-	assert.match(
-		JSON.stringify(member),
-		/On your services in France\\n\*\*Member provider\*\*/,
-	)
+	assert.doesNotMatch(JSON.stringify(member), /Where to watch|On your services/)
 	assert.match(f.logs[0], /"viewer":"member"/)
 	assert.deepEqual(memberCalls, [
 		{ id: "member-id", name: "get_settings", args: {} },
@@ -760,7 +757,7 @@ test("member search: the top block is exactly the shared card, the member's own 
 	const shared = JSON.parse(JSON.stringify(f.edits[1]))[2]
 	assert.doesNotMatch(
 		JSON.stringify(shared),
-		/93%|Excellent taste fit|You rated|Wishlist|Seen|member-id|match_label|want_to_see|France/,
+		/93%|Excellent taste fit|You rated|Wishlist|Seen|member-id|match_label|want_to_see/,
 	)
 	assert.equal(shared.components.length, 1)
 	// Everything but the Share to channel button, which a shared copy never carries.
@@ -869,7 +866,9 @@ for (const failure of ["reject", "timeout"])
 			const card = JSON.stringify(f.edits[0])
 			assert.match(
 				card,
-				data.data.name === "link" ? /Link GoodWatch/ : /Where to watch/,
+				data.data.name === "link"
+					? /Link GoodWatch/
+					: /"placeholder":"Germany"/,
 			)
 			assert.doesNotMatch(card, /Something went wrong/)
 			assert.ok(f.logs.some((line) => /"viewer":"guest"/.test(line)))
@@ -900,7 +899,6 @@ test("link storage failure logs only the nonce and still renders the prompt", as
 	)
 	assert.doesNotMatch(f.logs.join("\n"), /test-token|private storage payload/)
 })
-
 
 test("cancelling a progress edit aborts its request and prevents a rate-limit retry", async () => {
 	const abort = new AbortController()

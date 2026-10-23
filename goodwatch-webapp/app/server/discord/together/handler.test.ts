@@ -144,6 +144,7 @@ test(
 				options: [
 					{ name: "type", value: "movie" },
 					{ name: "mood", value: "funny" },
+					{ name: "theme", value: "future" },
 				],
 			}),
 		)
@@ -156,6 +157,7 @@ test(
 		assert.equal(session.meta.messageId, "public-message")
 		assert.equal(session.meta.channelId, "public-channel")
 		assert.equal(session.meta.mood, "funny")
+		assert.equal(session.meta.theme, "future")
 		assert.equal(session.deck.length, 30)
 		assert.equal(f.published[0], publicSignature(session))
 		const join = await f.run(

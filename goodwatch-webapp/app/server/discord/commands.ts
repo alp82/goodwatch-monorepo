@@ -1,3 +1,8 @@
+import {
+	themeChoices,
+	styleChoices,
+	releasedChoices,
+} from "./filter-options.ts"
 type Choice = { name: string; value: string }
 /** Registration is static and can run offline under plain Node. */
 export function defineCommands() {
@@ -31,12 +36,11 @@ export function defineCommands() {
 		autocomplete: true,
 	}
 	const discovery = [
-		...["rate", "seen", "want"].map((name) => ({
+		...["rate", "seen"].map((name) => ({
 			name,
 			description: {
 				rate: "Rate a title",
 				seen: "Log a watch today",
-				want: "Want to See: add a title to your Wishlist",
 			}[name]!,
 			options: [
 				title,
@@ -112,6 +116,27 @@ export function defineCommands() {
 					{ name: "Movies and shows", value: "any" },
 				]),
 				option("mood", "Kind of evening", moodChoices),
+				option("theme", "What the story is about", themeChoices),
+				option("style", "How the story is told", styleChoices),
+				option("released", "Release period", releasedChoices),
+				option(
+					"score",
+					"Minimum GoodWatch score",
+					[60, 70, 80].map((score) => ({
+						name: `${score}+`,
+						value: String(score),
+					})),
+				),
+				option("anime", "Anime preference", [
+					{ name: "Include", value: "any" },
+					{ name: "Only anime", value: "only" },
+					{ name: "No anime", value: "none" },
+				]),
+				option("length", "Movie or usual episode length", [
+					{ name: "Under 100 min", value: "short" },
+					{ name: "Under 2 hours", value: "medium" },
+					{ name: "Long (2 hours or more)", value: "long" },
+				]),
 				{ name: "genre", description: "Genre", type: 3, autocomplete: true },
 				{
 					name: "service",
@@ -138,6 +163,7 @@ export function defineCommands() {
 					{ name: "Movies and shows", value: "any" },
 				]),
 				option("mood", "Kind of evening", moodChoices),
+				option("theme", "What the story is about", themeChoices),
 			],
 		},
 		{

@@ -16,7 +16,7 @@ import { linkPrompt, ratePicker, writeConfirmation } from "./member-cards.ts"
 import { createDiscordWriter } from "./writes.server.ts"
 import { commands } from "./commands.ts"
 import { scoreLabels, getVibeColorValue } from "../../utils/ratings.ts"
-import { parseUndoId } from "./custom-id.ts"
+import { parseUndoId, formatCustomId } from "./custom-id.ts"
 const title: GuestTitle = {
 	id: "movie:42",
 	name: "A title",
@@ -75,15 +75,28 @@ function flatten(components: Component[]): Component[] {
 test("Rate swaps the card for a compact score menu, 10 first, and saves the chosen score", async () => {
 	const picker = await fixture({
 		emojis: async () => ({ GoodWatchScore9: "999", GoodWatchScore10: "1000" }),
-	}).run(3, { custom_id: "gw1:rate:movie:42" }, { message: { flags: EPHEMERAL } })
+	}).run(
+		3,
+		{ custom_id: "gw1:rate:movie:42" },
+		{ message: { flags: EPHEMERAL } },
+	)
 	assert.equal(picker.type, 7, "a private card updates in place")
 	const data = picker.data as { flags: number; components: Component[] }
 	assert.equal(data.flags & EPHEMERAL, 0)
 	const all = flatten(data.components)
-	assert.ok(!all.some((c) => c.type === 18), "no modal label, so no form warning")
+	assert.ok(
+		!all.some((c) => c.type === 18),
+		"no modal label, so no form warning",
+	)
 	const select = all.find((c) => c.type === 3)! as Component & {
 		custom_id: string
-		options: { label: string; value: string; description?: string; default?: boolean; emoji?: { id: string } }[]
+		options: {
+			label: string
+			value: string
+			description?: string
+			default?: boolean
+			emoji?: { id: string }
+		}[]
 	}
 	assert.equal(select.custom_id, "gw1:rate-submit:movie:42")
 	assert.deepEqual(
@@ -91,15 +104,30 @@ test("Rate swaps the card for a compact score menu, 10 first, and saves the chos
 		["10", "9", "8", "7", "6", "5", "4", "3", "2", "1"],
 	)
 	assert.equal(select.options[0].label, `10 · ${scoreLabels[10]}`)
-	assert.ok(select.options.every((o) => o.description === undefined), "one line per score")
+	assert.ok(
+		select.options.every((o) => o.description === undefined),
+		"one line per score",
+	)
 	assert.equal(select.options[1].default, true)
 	assert.equal(select.options[1].emoji?.id, "999")
-	assert.equal(select.options[2].emoji, undefined, "no emoji when it isn't uploaded")
+	assert.equal(
+		select.options[2].emoji,
+		undefined,
+		"no emoji when it isn't uploaded",
+	)
 	assert.ok(all.some((c) => c.type === 2 && c.label === "Cancel"))
 	assert.match(JSON.stringify(data), /Rate A title \(2024\)/)
 
-	const onPublic = await fixture().run(3, { custom_id: "gw1:rate:movie:42" }, { message: { flags: 0 } })
-	assert.equal(onPublic.type, 4, "a public card stays; the menu comes as a private message")
+	const onPublic = await fixture().run(
+		3,
+		{ custom_id: "gw1:rate:movie:42" },
+		{ message: { flags: 0 } },
+	)
+	assert.equal(
+		onPublic.type,
+		4,
+		"a public card stays; the menu comes as a private message",
+	)
 	assert.ok((onPublic.data as { flags: number }).flags & EPHEMERAL)
 
 	const calls: unknown[] = []
@@ -125,11 +153,17 @@ test("Rate swaps the card for a compact score menu, 10 first, and saves the chos
 			{ action_id: "123456789", items: [{ title_id: title.id, score: 8 }] },
 		],
 	])
-	const bad = fixture({ write: async () => assert.fail("no write for a bad score") })
-	await bad.run(3, { custom_id: select.custom_id, values: ["11"] }, { message: { flags: EPHEMERAL } })
+	const bad = fixture({
+		write: async () => assert.fail("no write for a bad score"),
+	})
+	await bad.run(
+		3,
+		{ custom_id: select.custom_id, values: ["11"] },
+		{ message: { flags: EPHEMERAL } },
+	)
 	assert.match(JSON.stringify(await bad.edited), /Choose a score from 1 to 10/)
 })
-for (const name of ["rate", "seen", "want"] as const) {
+for (const name of ["rate", "seen"] as const) {
 	test(`/${name} registers title autocomplete and guests get the benefit link card`, async () => {
 		const command = commands.find((c) => c.name === name)!
 		assert.deepEqual(command.integration_types, [0, 1])
@@ -188,7 +222,12 @@ test("Want button toggles off; public presses stay private; Seen logs today's da
 				{
 					type: 1,
 					components: [
-						{ type: 2, style: 2, label: "Want to see", custom_id: `gw1:want:movie:42` },
+						{
+							type: 2,
+							style: 2,
+							label: "Want to see",
+							custom_id: `gw1:want:movie:42`,
+						},
 					],
 				},
 			]
@@ -515,10 +554,7 @@ test("write UI keeps identifiers and underscores out of visible text", async () 
 			message: "title_id movie:42 action_id 123456789012345678",
 		}),
 	})
-	await f.run(2, {
-		name: "want",
-		options: [{ name: "title", value: title.id }],
-	})
+	await f.run(3, { custom_id: formatCustomId("want", title.id) })
 	const body = (await f.edited) as { components: Component[] }
 	assert.doesNotMatch(
 		String(body.components[0].content),
@@ -555,7 +591,7 @@ test("Undo refresh keeps the guest place and catalog in the top block", async ()
 	)
 	assert.doesNotMatch(
 		JSON.stringify(body.components[1]),
-		/Member catalog|France|You rated/,
+		/Member catalog|You rated/,
 	)
 })
 
@@ -597,7 +633,9 @@ test("Back stays on every result of a member press when the title was opened fro
 		{ custom_id: "gw1:rate:movie:42:d:k0123456789abcdef01:2" },
 		{ message: { flags: EPHEMERAL } },
 	)
-	const menuParts = flatten((menu.data as { components: Component[] }).components)
+	const menuParts = flatten(
+		(menu.data as { components: Component[] }).components,
+	)
 	const modalId = String(menuParts.find((c) => c.type === 3)!.custom_id)
 	assert.equal(modalId, "gw1:rate-submit:movie:42:d:k0123456789abcdef01:2")
 	assert.equal(

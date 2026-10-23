@@ -252,7 +252,7 @@ test("guest watch defers ephemerally, resolves server then locale, and offers Sh
 	const fallback = fixture(false, { getGuild: async () => null })
 	const result = await fallback.run(2, { name: "watch" })
 	assert.deepEqual(fallback.guests[0].place, { country: "FR" })
-	assert.match(text(result.body), /every service.*France/)
+	assert.match(text(result.body), /Not on a subscription service in France/)
 })
 test("member watch uses get_tonight with filters and personal context and reuses member buttons", async () => {
 	const f = fixture(true)

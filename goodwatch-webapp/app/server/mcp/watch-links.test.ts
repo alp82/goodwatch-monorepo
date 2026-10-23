@@ -156,3 +156,32 @@ test("offers carry the provider's TMDB logo for the poster cards when it is know
 	const without = linkedAvailability(availability, title, "DE", names, [])
 	assert.equal("logo_url" in without.offers[0], false)
 })
+
+test("linked offers carry the site's country-specific provider rank", () => {
+	const ranks = new Map([
+		[8, 3],
+		[337, 1],
+	])
+	const linked = linkedAvailability(
+		availability,
+		title,
+		"DE",
+		names,
+		[],
+		new Map(),
+		ranks,
+	)
+	assert.equal(linked.offers[0].display_priority, 3)
+	assert.equal(
+		linkedAvailability(
+			availability,
+			title,
+			"US",
+			names,
+			[],
+			new Map(),
+			new Map([[8, 0]]),
+		).offers[0].display_priority,
+		0,
+	)
+})

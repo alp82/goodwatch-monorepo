@@ -1,3 +1,9 @@
+import {
+	themeChoices,
+	styleChoices,
+	releasedChoices,
+} from "./filter-options.ts"
+import { CARD_COUNTRIES } from "./cards.ts"
 import { readingLine } from "./search-reading.ts"
 import type { ReadingChip } from "../combined-search/reading-retrieval.server.ts"
 import { guestWatchPick } from "./watch-picks.server.ts"
@@ -49,6 +55,7 @@ import {
 	ERROR_TEXT,
 	displayText,
 	titleCard,
+	streamLinks,
 	titleListCard,
 	listHeading,
 	personCard,
@@ -67,6 +74,7 @@ import {
 } from "./cards.ts"
 import {
 	isTitleId,
+	formatCustomId,
 	parseCustomId,
 	parseListId,
 	parseListRef,
@@ -261,23 +269,23 @@ export function hotPost(item: TalkedItem): HotPost {
 			? item.image
 			: `https://goodwatch.app${item.image.startsWith("/") ? "" : "/"}${
 					item.image
-			  }`
+				}`
 		: item.video
-		? `https://i.ytimg.com/vi/${item.video}/hqdefault.jpg`
-		: null
+			? `https://i.ytimg.com/vi/${item.video}/hqdefault.jpg`
+			: null
 	return {
 		url: item.url,
 		author: item.author,
 		platform:
 			item.source === "rss"
 				? item.publisher || "the web"
-				: PLATFORMS[item.source] ?? item.source,
+				: (PLATFORMS[item.source] ?? item.source),
 		kind:
 			item.source === "youtube"
 				? "video"
 				: item.source === "rss"
-				? "article"
-				: "post",
+					? "article"
+					: "post",
 		text: item.text,
 		image,
 		at: item.at,
@@ -326,7 +334,37 @@ export function discoverHeading(args: DiscoverState["args"]) {
 		? (moodNames.get(args.moods[0]) ?? null)
 		: (args.genres?.[0] ?? null)
 	const heading = lead ? `${lead} ${kind}` : kind
-	return heading[0].toUpperCase() + heading.slice(1)
+	const labels = (
+		choices: { value: string; name: string }[],
+		values?: string[],
+	) =>
+		values
+			?.map((value) => choices.find((c) => c.value === value)?.name)
+			.filter(Boolean) ?? []
+	const details = [
+		...labels(themeChoices, args.themes),
+		...labels(styleChoices, args.styles),
+		...(args.released && args.released !== "any"
+			? labels(releasedChoices, [args.released])
+			: []),
+		...(args.minimum_score ? [`GoodWatch ${args.minimum_score}+`] : []),
+		...(args.anime === "only"
+			? ["Only anime"]
+			: args.anime === "none"
+				? ["No anime"]
+				: []),
+		...(args.max_runtime !== undefined
+			? [`Under ${args.max_runtime + 1} min`]
+			: []),
+		...(args.min_runtime !== undefined
+			? [`${args.min_runtime} min or more`]
+			: []),
+	]
+	return (
+		heading[0].toUpperCase() +
+		heading.slice(1) +
+		(details.length ? ` · ${details.join(" · ")}` : "")
+	)
 }
 export async function routeInteraction(
 	interaction: Interaction,
@@ -484,13 +522,20 @@ export async function routeInteraction(
 		a.country === b.country &&
 		[...(a.services ?? [])].sort().join() ===
 			[...(b.services ?? [])].sort().join()
-	const card = async (id: string, share = false, back?: ListRef) => {
+	const card = async (
+		id: string,
+		share = false,
+		back?: ListRef,
+		selectedCountry?: string,
+	) => {
 		// The top block always comes from a fresh guest read for the share place, with no member context or fields;
 		// the member's own read only fills the member block below it.
 		const personal = !share ? memberId : null
-		const guestPlace = personal
-			? await within(sharePlace(), 400, viewer).catch(() => viewer)
-			: viewer
+		const guestPlace = selectedCountry
+			? { country: selectedCountry, services: [] }
+			: personal
+				? await within(sharePlace(), 400, viewer).catch(() => viewer)
+				: viewer
 		const [mine, result] = await Promise.all([
 			personal
 				? deps
@@ -515,10 +560,70 @@ export async function routeInteraction(
 			return textCard("No matching title found. Try /search again.")
 		const memberTitle = mine?.title ? (mine.title as GuestTitle) : undefined
 		const searchState =
-			back?.kind === "search" ? await deps.loadState(back.key).catch(() => null) : null
+			back?.kind === "search"
+				? await deps.loadState(back.key).catch(() => null)
+				: null
 		const reasons = searchState?.search?.titles.find(
 			(t) => t.id === id,
 		)?.reasons
+		// A private country switch changes availability only, preserving the pick's Another button,
+		// episode, member match and list navigation exactly as displayed.
+		if (
+			parsed?.action === "country" &&
+			selectedCountry &&
+			interaction.message?.components &&
+			(interaction.message.flags ?? 0) & EPHEMERAL
+		) {
+			const replacement = streamLinks(
+				result.title as GuestTitle,
+				guestPlace.country,
+				{
+					emojis: await emojis(),
+					back,
+				},
+			)
+			const update = (components: Component[]): Component[] => {
+				const menu = components.findIndex(
+					(c) =>
+						c.type === 1 && c.components?.some((x) => x.custom_id === customId),
+				)
+				let updated = components
+				if (menu >= 0) {
+					let start = menu
+					while (
+						start > 0 &&
+						components[start - 1].type === 1 &&
+						components[start - 1].components?.every(
+							(c) => c.type === 2 && c.style === 5,
+						)
+					)
+						start--
+					if (
+						start > 0 &&
+						/^(Not on a subscription service|Open the title on GoodWatch for links)/.test(
+							String(components[start - 1].content ?? ""),
+						)
+					)
+						start--
+					updated = [
+						...components.slice(0, start),
+						...replacement,
+						...components.slice(menu + 1),
+					]
+				}
+				return updated.map((c) => ({
+					...c,
+					...(c.components ? { components: update(c.components) } : {}),
+					...(c.custom_id ===
+						formatCustomId("share", id, back, parsed.country) ||
+					(typeof c.custom_id === "string" &&
+						c.custom_id.startsWith(`gw1:share:${id}`))
+						? { custom_id: formatCustomId("share", id, back, selectedCountry) }
+						: {}),
+				}))
+			}
+			return message(update(interaction.message.components))
+		}
 		return titleCard(
 			{ ...(result.title as GuestTitle), reasons },
 			guestPlace.country,
@@ -552,9 +657,9 @@ export async function routeInteraction(
 								poster_url: t.poster_url ?? d.poster_url,
 								runtime_minutes: t.runtime_minutes ?? d.runtime_minutes,
 								goodwatch_score: t.goodwatch_score ?? d.goodwatch_score,
-						  }
+							}
 						: t
-			  })
+				})
 			: titles
 	}
 	const watch = async (options: WatchOptions) => {
@@ -700,14 +805,14 @@ export async function routeInteraction(
 		ref.kind === "discover"
 			? discover(ref.key, ref.page)
 			: ref.kind === "search"
-			? searchList(ref.key, ref.page)
-			: ref.kind === "similar"
-			? similar(ref.titleId)
-			: ref.kind === "person"
-			? person(ref.personId)
-			: ref.kind === "next"
-			? next()
-			: hot(ref.page)
+				? searchList(ref.key, ref.page)
+				: ref.kind === "similar"
+					? similar(ref.titleId)
+					: ref.kind === "person"
+						? person(ref.personId)
+						: ref.kind === "next"
+							? next()
+							: hot(ref.page)
 	const discover = async (key: string, page: number, share = false) => {
 		const state = await deps.loadState(key)
 		if (!state)
@@ -729,7 +834,7 @@ export async function routeInteraction(
 						"https://goodwatch.app",
 						"discover_titles",
 						effectiveArgs,
-				  )
+					)
 		const sort = effectiveArgs.order
 			? sortNames[effectiveArgs.order]
 			: undefined
@@ -799,10 +904,7 @@ export async function routeInteraction(
 					).catch(() => undefined)
 				: null
 			if (entry === undefined)
-				return reply(
-					errorCard(ERROR_TEXT, customId),
-					"retry_unavailable",
-				)
+				return reply(errorCard(ERROR_TEXT, customId), "retry_unavailable")
 			if (!entry)
 				return reply(
 					textCard("This can't be retried anymore. Run the command again."),
@@ -920,7 +1022,7 @@ export async function routeInteraction(
 			}
 			const isPerson = interaction.data?.name === "person"
 			if (
-				!["search", "similar", "person", "rate", "seen", "want"].includes(
+				!["search", "similar", "person", "rate", "seen"].includes(
 					interaction.data?.name ?? "",
 				)
 			)
@@ -931,9 +1033,9 @@ export async function routeInteraction(
 						(isPerson
 							? o.name === "name"
 							: interaction.data?.name === "search"
-							? ["query", "title"].includes(o.name)
-							: o.name === "title") && o.focused,
-				)?.value ?? ""
+								? ["query", "title"].includes(o.name)
+								: o.name === "title") && o.focused,
+				)?.value ?? "",
 			)
 				.trim()
 				.slice(0, 120)
@@ -955,8 +1057,8 @@ export async function routeInteraction(
 								isPerson
 									? "Person"
 									: t.id.startsWith("movie:")
-									? "Movie"
-									: "TV show"
+										? "Movie"
+										: "TV show"
 							}`,
 						).slice(0, 100),
 						value: isPerson ? String(t.person_id) : t.id,
@@ -972,11 +1074,10 @@ export async function routeInteraction(
 				: null
 		const writeCommand =
 			interaction.type === 2 &&
-			["rate", "seen", "want"].includes(interaction.data?.name ?? "")
+			["rate", "seen"].includes(interaction.data?.name ?? "")
 		if (
 			writeCommand ||
-			(interaction.type === 3 &&
-				(memberAction || undo)) ||
+			(interaction.type === 3 && (memberAction || undo)) ||
 			(interaction.type === 5 && memberAction?.action === "rate-submit")
 		) {
 			if (!interaction.application_id || !interaction.token)
@@ -1088,8 +1189,7 @@ export async function routeInteraction(
 					const result = await deps.memberRead(memberId, "get_title", {
 						title_id: id,
 					})
-					if (!result.title)
-						return memberNote("No matching title found.", back)
+					if (!result.title) return memberNote("No matching title found.", back)
 					const title = result.title as GuestTitle
 					const marks = result.member as MemberMarks | undefined
 					const selected = interaction.data?.components
@@ -1384,6 +1484,39 @@ export async function routeInteraction(
 								args.moods = [
 									options.mood as NonNullable<typeof args.moods>[number],
 								]
+							for (const name of [
+								"theme",
+								"style",
+								"released",
+								"score",
+								"anime",
+								"length",
+							]) {
+								const value = options[name]
+								if (!value) continue
+								const option = commands
+									.find((c) => c.name === "discover")!
+									.options.find((o) => o.name === name) as {
+									choices: { value: string }[]
+								}
+								if (!option.choices.some((choice) => choice.value === value))
+									return textCard("Choose filters from /discover.")
+							}
+							if (options.theme)
+								args.themes = [
+									options.theme as NonNullable<typeof args.themes>[number],
+								]
+							if (options.style)
+								args.styles = [
+									options.style as NonNullable<typeof args.styles>[number],
+								]
+							if (options.released)
+								args.released = options.released as typeof args.released
+							if (options.score) args.minimum_score = Number(options.score)
+							if (options.anime) args.anime = options.anime as typeof args.anime
+							if (options.length === "short") args.max_runtime = 99
+							if (options.length === "medium") args.max_runtime = 119
+							if (options.length === "long") args.min_runtime = 120
 							if (options.genre) args.genres = [options.genre]
 							if (options.sort) args.order = options.sort as typeof args.order
 							if (options.genre || options.service) {
@@ -1464,8 +1597,26 @@ export async function routeInteraction(
 					if (another) return watch(another)
 					if (parsed) {
 						if (parsed.action === "similar") return similar(parsed.titleId)
+						if (parsed.action === "country") {
+							const selected = interaction.data?.values?.[0] ?? ""
+							const current = interaction.message?.components
+							const offered = (components: Component[]): boolean =>
+								components.some(
+									(c) =>
+										(c.custom_id === customId &&
+											(c.options as { value: string }[] | undefined)?.some(
+												(o) => o.value === selected,
+											)) ||
+										offered(c.components ?? []),
+								)
+							return /^[A-Z]{2}$/.test(selected) &&
+								(CARD_COUNTRIES.some((code) => code === selected) ||
+									offered(current ?? []))
+								? card(parsed.titleId, false, parsed.back, selected)
+								: textCard("Choose a country from the menu.")
+						}
 						// "watch" is the old Where to watch button: its card now shows the links itself.
-						return card(parsed.titleId, !!share, parsed.back)
+						return card(parsed.titleId, !!share, parsed.back, parsed.country)
 					}
 					if (list?.action === "open") {
 						const id = interaction.data?.values?.[0] ?? ""

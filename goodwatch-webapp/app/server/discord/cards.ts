@@ -16,7 +16,7 @@ import {
 	type ListRef,
 } from "./custom-id.ts"
 import { scoreEmojiName } from "./score-emoji.ts"
-import { PROVIDER_EMOJI_BY_ID, PROVIDER_ORDER } from "./provider-emojis.ts"
+import { PROVIDER_EMOJI_BY_ID } from "./provider-emojis.ts"
 export const IS_COMPONENTS_V2 = 1 << 15
 export const EPHEMERAL = 64
 /** GoodWatch amber, the accent of member and list containers. */
@@ -58,6 +58,7 @@ export interface GuestTitle {
 			url?: string
 			stream_link: string
 			offer_type?: string
+			display_priority?: number
 		}[]
 	}
 }
@@ -321,13 +322,72 @@ export function titleHero(
 						media: { url: title.poster_url },
 						description: `${displayText(title.name)} poster`.slice(0, 1024),
 					},
-			  }
+				}
 			: null,
 		...(title.poster_url ? [] : [facts, overview]),
 	].filter((c): c is Component => !!c)
 }
 
 type Offer = NonNullable<GuestTitle["availability"]>["offers"][number]
+
+export const subscriptionOffer = (offer: Offer) =>
+	["flatrate", "free", "ads"].includes(offer.offer_type ?? "")
+
+export const CARD_COUNTRIES = [
+	"US",
+	"GB",
+	"DE",
+	"CA",
+	"AU",
+	"FR",
+	"ES",
+	"IT",
+	"NL",
+	"BR",
+	"MX",
+	"IN",
+	"JP",
+	"SE",
+	"NO",
+	"DK",
+	"FI",
+	"AT",
+	"CH",
+	"IE",
+] as const
+
+export function countryMenu(
+	titleId: string,
+	country: string,
+	back?: ListRef,
+): Component {
+	const codes = [...new Set([country.toUpperCase(), ...CARD_COUNTRIES])].slice(
+		0,
+		25,
+	)
+	return {
+		type: 1,
+		components: [
+			{
+				type: 3,
+				custom_id: formatCustomId("country", titleId, back),
+				placeholder: countryName(country).replace(/^the /, ""),
+				min_values: 1,
+				max_values: 1,
+				options: codes.map((code, i) => ({
+					label: countryName(code).replace(/^the /, ""),
+					value: code,
+					emoji: {
+						name: [...code]
+							.map((c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
+							.join(""),
+					},
+					default: i === 0,
+				})),
+			},
+		],
+	}
+}
 
 /** A service as the card shows it: the site's brand name, its logo emoji name, and its offers. */
 export interface WatchProvider {
@@ -354,10 +414,10 @@ export function watchProviders(offers: Offer[]): WatchProvider[] {
 		const brand = identity.name
 		if (!brand) return
 		const id = identity.id
-		const order =
-			(id === undefined ? undefined : PROVIDER_ORDER[id]) ??
-			Number.POSITIVE_INFINITY
-		const emoji = id === undefined ? null : PROVIDER_EMOJI_BY_ID[id] ?? null
+		// Same country order as streaming-providers.server.ts: streaming_service.order_by_country,
+		// falling back to order_default. watch-links.server.ts supplies the country's provider ranks.
+		const order = offer.display_priority ?? Number.POSITIVE_INFINITY
+		const emoji = id === undefined ? null : (PROVIDER_EMOJI_BY_ID[id] ?? null)
 		const key = id === undefined ? `name:${brand}` : `id:${id}`
 		const entry = brands.get(key)
 		if (!entry)
@@ -378,15 +438,6 @@ export function providerMark(provider: WatchProvider, emojis: EmojiIds = {}) {
 	return provider.emoji && emojis[provider.emoji]
 		? `<:${provider.emoji}:${emojis[provider.emoji]}>`
 		: `**${escape(provider.brand)}**`
-}
-
-/** Offer types in words, in the order a kinds line lists them. */
-const OFFER_WORDS: Record<string, string> = {
-	flatrate: "Subscription",
-	free: "Free",
-	ads: "With ads",
-	rent: "Rent",
-	buy: "Buy",
 }
 
 /** At most this many services in the logo row; the heading counts the rest. */
@@ -506,7 +557,10 @@ export function whereToWatch(
 export const GOODWATCH_ORIGIN = "https://goodwatch.app"
 
 /** The title page's URL. A long name's slug is cut; the page redirects any slug to its own. */
-export function titlePageUrl(title: Pick<GuestTitle, "id" | "name">, hash = "") {
+export function titlePageUrl(
+	title: Pick<GuestTitle, "id" | "name">,
+	hash = "",
+) {
 	const [kind, id] = title.id.split(":")
 	return `${GOODWATCH_ORIGIN}${titlePath(kind, Number(id), title.name.slice(0, 120))}${hash}`
 }
@@ -528,7 +582,11 @@ const httpUrl = (url: string | undefined) => {
  * The URL a service button opens: the offer's own link, or for links over Discord's 512 characters (long JustWatch
  * click URLs), the GoodWatch redirect that looks the same link up again. Null when neither works.
  */
-export function streamButtonUrl(offer: Offer, titleId: string, country: string) {
+export function streamButtonUrl(
+	offer: Offer,
+	titleId: string,
+	country: string,
+) {
 	const url = httpUrl(offer.url)
 	if (!url) return null
 	if (url.length <= BUTTON_URL_LIMIT) return url
@@ -540,39 +598,23 @@ export function streamButtonUrl(offer: Offer, titleId: string, country: string) 
 }
 
 /**
- * The services' offer kinds in one line, "Subscription: Netflix, MUBI  ·  Rent or buy: Apple TV Store", or null when no
- * offer says its kind.
- */
-export function offerKindsLine(providers: WatchProvider[]) {
-	const order = Object.keys(OFFER_WORDS)
-	const groups = new Map<string, string[]>()
-	for (const p of providers) {
-		const kinds = [...new Set(p.offers.map((o) => o.offer_type ?? ""))]
-			.filter((k) => OFFER_WORDS[k])
-			.sort((a, b) => order.indexOf(a) - order.indexOf(b))
-			.map((k, i) => (i ? OFFER_WORDS[k].toLowerCase() : OFFER_WORDS[k]))
-		if (!kinds.length) continue
-		const label = kinds.join(" or ")
-		groups.set(label, [...(groups.get(label) ?? []), escape(p.brand)])
-	}
-	if (!groups.size) return null
-	return [...groups]
-		.map(([label, brands]) => `${label}: ${brands.join(", ")}`)
-		.join("  ·  ")
-		.slice(0, 300)
-}
-
-/**
  * Where to watch as link buttons: each service with its logo emoji and name, in the site's order, up to two rows of
  * five. With more services, the last button opens the title page's where-to-watch section instead.
  */
 export function streamLinks(
 	title: GuestTitle,
 	country: string,
-	options: { allServices?: boolean; heading?: string; emojis?: EmojiIds } = {},
+	options: {
+		allServices?: boolean
+		heading?: string
+		emojis?: EmojiIds
+		back?: ListRef
+	} = {},
 ): Component[] {
 	const emojis = options.emojis ?? {}
-	const providers = watchProviders(title.availability?.offers ?? [])
+	const providers = watchProviders(
+		(title.availability?.offers ?? []).filter(subscriptionOffer),
+	)
 	const buttons = providers.flatMap((p): Component[] => {
 		// The service's own offer first, then its channels and tiers.
 		const url = [
@@ -600,21 +642,21 @@ export function streamLinks(
 					linkButton("More on GoodWatch", titlePageUrl(title, "#streaming")),
 				]
 			: buttons
-	const kinds = offerKindsLine(providers.slice(0, STREAM_BUTTON_LIMIT))
 	return [
-		text(
-			`-# ${watchHeading(country, options)}${
-				shown.length
-					? kinds
-						? `\n-# ${kinds}`
-						: ""
-					: `\n${providers.length ? "Open the title on GoodWatch for links." : noOffers(title)}`
-			}`,
-		),
+		...(!shown.length
+			? [
+					text(
+						providers.length
+							? "Open the title on GoodWatch for links."
+							: `Not on a subscription service in ${countryName(country)}`,
+					),
+				]
+			: []),
 		...[0, 5]
 			.map((at) => shown.slice(at, at + 5))
 			.filter((row) => row.length)
 			.map((row) => ({ type: 1, components: row })),
+		countryMenu(title.id, country, options.back),
 	]
 }
 
@@ -623,6 +665,8 @@ export function titleButtons(
 	title: GuestTitle,
 	share = false,
 	back?: string,
+	country?: string,
+	ref?: ListRef,
 ): Component {
 	const buttons: Component[] = [
 		...(back && !share
@@ -641,7 +685,7 @@ export function titleButtons(
 			type: 2,
 			style: 2,
 			label: "Share to channel",
-			custom_id: formatCustomId("share", title.id),
+			custom_id: formatCustomId("share", title.id, ref, country),
 		})
 	return { type: 1, components: buttons }
 }
@@ -692,7 +736,7 @@ export function memberLines(
 		marks.score != null && marks.score >= 1 && marks.score <= 10
 			? `You rated it **${marks.score} · ${
 					scoreLabels[Math.round(marks.score)]
-			  }**`
+				}**`
 			: null,
 	]
 		.filter(Boolean)
@@ -735,8 +779,7 @@ export interface MemberPlace {
 
 /**
  * 1C guest title card, and 2C for members: the same guest container on top (what Share posts, from the guest read and
- * place) and the member block below it. `memberTitle` is the member's own read of the title: its taste match, and its
- * availability for `memberPlace` when that place is given. Share copies never get member data even when it is passed.
+ * place) and the member block below it. `memberTitle` is the member's own read of the title: its taste match, and its marks. Availability is controlled by the country menu. Share copies never get member data even when it is passed.
  */
 export function titleCard(
 	title: GuestTitle,
@@ -762,6 +805,7 @@ export function titleCard(
 			...streamLinks(title, country, {
 				allServices: options.allServices,
 				emojis: options.emojis,
+				back: options.back,
 			}),
 			titleButtons(
 				title,
@@ -769,12 +813,13 @@ export function titleCard(
 				options.back
 					? listCustomId("back", formatListRef(options.back))
 					: undefined,
+				country,
+				options.back,
 			),
 		],
 		scoreAccent(title.goodwatch_score),
 	)
 	const mine = options.memberTitle ?? title
-	const place = options.memberPlace
 	return message(
 		options.member && !share
 			? [
@@ -784,14 +829,6 @@ export function titleCard(
 						options.member,
 						options.memberButtons ??
 							memberButtons(mine, options.member, options.back),
-						place
-							? whereToWatch(mine, place.country, {
-									emojis: options.emojis,
-									heading: `${
-										place.ownServices ? "On your services" : "On every service"
-									} in ${countryName(place.country)}`,
-								})
-							: undefined,
 					),
 				]
 			: [guest],
@@ -938,7 +975,7 @@ function posterGallery(titles: GuestTitle[]): Component | null {
 						1024,
 					),
 				})),
-		  }
+			}
 		: null
 }
 
@@ -950,7 +987,7 @@ function pageSubtitle(subtitle?: string, page?: number, pages?: number | null) {
 			? null
 			: `page ${page + 1}${
 					pages ? ` of ${pages.toLocaleString("en-US")}` : ""
-			  }`,
+				}`,
 	]
 		.filter(Boolean)
 		.join(" · ")
@@ -1109,7 +1146,7 @@ export function personCard(
 										description: person.name.slice(0, 100),
 									},
 								},
-						  ]
+							]
 						: [heading, note]),
 					posterGallery(titles),
 					text(
@@ -1175,8 +1212,8 @@ const moveWords = (move: HotTitle["move"]) =>
 	move === "new"
 		? "new today"
 		: typeof move === "number" && move !== 0
-		? `${move > 0 ? "up" : "down"} ${Math.abs(move)} since yesterday`
-		: null
+			? `${move > 0 ? "up" : "down"} ${Math.abs(move)} since yesterday`
+			: null
 
 const reasonWords = (reason: HotTitle["reason"]) => {
 	if (!reason) return null
@@ -1186,7 +1223,7 @@ const reasonWords = (reason: HotTitle["reason"]) => {
 				month: "short",
 				day: "numeric",
 				timeZone: "UTC",
-		  })}`
+			})}`
 		: ""
 	switch (reason.kind) {
 		case "trailer":
@@ -1206,8 +1243,8 @@ const postButtonLabel = (post: HotPost) =>
 	post.kind === "video"
 		? `Watch on ${post.platform}`
 		: post.kind === "article"
-		? `Read on ${post.platform}`
-		: `View post on ${post.platform}`
+			? `Read on ${post.platform}`
+			: `View post on ${post.platform}`
 
 /** One hot title: poster beside the rank, title and score, then what people say, their images, and links to the posts. */
 function hotBlock(title: HotTitle, emojis: EmojiIds): Component {
@@ -1246,15 +1283,15 @@ function hotBlock(title: HotTitle, emojis: EmojiIds): Component {
 		? images.map((p) => ({
 				media: { url: p.image },
 				description: `Image from ${p.author} on ${p.platform}`.slice(0, 1024),
-		  }))
+			}))
 		: title.backdrop_url
-		? [
-				{
-					media: { url: title.backdrop_url },
-					description: `${title.name} backdrop`.slice(0, 1024),
-				},
-		  ]
-		: []
+			? [
+					{
+						media: { url: title.backdrop_url },
+						description: `${title.name} backdrop`.slice(0, 1024),
+					},
+				]
+			: []
 	const labels = posts.map(postButtonLabel)
 	const same = labels.length > 1 && labels[0] === labels[1]
 	return container(
@@ -1268,7 +1305,7 @@ function hotBlock(title: HotTitle, emojis: EmojiIds): Component {
 							media: { url: title.poster_url },
 							description: `${title.name} poster`.slice(0, 1024),
 						},
-				  }
+					}
 				: null,
 			...(title.poster_url ? [] : [heading, quotes]),
 			gallery.length ? { type: 12, items: gallery } : null,
@@ -1284,7 +1321,7 @@ function hotBlock(title: HotTitle, emojis: EmojiIds): Component {
 								p.url,
 							),
 						),
-				  }
+					}
 				: null,
 		],
 		scoreAccent(title.goodwatch_score) ?? AMBER,
@@ -1313,7 +1350,7 @@ export function hotCard(
 		...(pages > 1
 			? pageButtons(page, page + 1 < pages, (target) =>
 					listCustomId("hot", String(target)),
-			  )
+				)
 			: []),
 		linkButton("Open on GoodWatch", "https://goodwatch.app/hot-on-socials"),
 		...(!options.share
@@ -1324,7 +1361,7 @@ export function hotCard(
 						label: "Share to channel",
 						custom_id: listCustomId("hot-share", String(page)),
 					},
-			  ]
+				]
 			: []),
 	]
 	const subtitle = pageSubtitle(

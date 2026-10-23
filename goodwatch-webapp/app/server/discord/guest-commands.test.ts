@@ -150,7 +150,7 @@ function assertLimits(components: Component[]) {
 				assert.ok(options.length <= 25)
 				for (const o of options) {
 					assert.ok(o.label.length <= 100)
-					assert.ok(o.description.length <= 100)
+					assert.ok((o.description ?? "").length <= 100)
 				}
 			}
 			visit(c.components ?? [])
@@ -350,10 +350,11 @@ test("title Similar button shows the disabled card with a loading line and reads
 	const f = fixture()
 	const card = titleCard(title, "DE").components
 	const buttons = buttonsIn(card).filter((b) => b.style !== 5 || !b.emoji)
-	assert.deepEqual(
-		buttons.map((b) => b.label).slice(-3),
-		["Similar", "Open on GoodWatch", "Share to channel"],
-	)
+	assert.deepEqual(buttons.map((b) => b.label).slice(-3), [
+		"Similar",
+		"Open on GoodWatch",
+		"Share to channel",
+	])
 	const answer = (await f.run(
 		3,
 		{ custom_id: formatCustomId("similar", title.id) },
@@ -362,9 +363,7 @@ test("title Similar button shows the disabled card with a loading line and reads
 	)) as { type: number; data: { components: Component[] } }
 	assert.equal(answer.type, 7)
 	assert.equal(answer.data.components.at(-1)!.content, "-# Loading Similar…")
-	assert.ok(
-		buttonsIn(answer.data.components).every((b) => b.disabled === true),
-	)
+	assert.ok(buttonsIn(answer.data.components).every((b) => b.disabled === true))
 	// Without the pressed message's components there's nothing to show, so the press updates silently.
 	assert.deepEqual(
 		await f.run(3, { custom_id: formatCustomId("similar", title.id) }),
@@ -656,8 +655,8 @@ test("a linked member opens a discover title with match_label and shares a fresh
 	assert.doesNotMatch(personal, /93%/)
 	assert.match(personal, /You rated it|Wishlist/)
 	// The top block is the share place (locale Germany); the member's France is in the member block.
-	assert.match(personal, /Where to watch on every service in Germany/)
-	assert.match(personal, /On your services in France/)
+	assert.match(personal, /Not on a subscription service in Germany/)
+	assert.match(personal, /Excellent taste fit/)
 	const shareButton = buttonsIn(opened.edits[0].components).find(
 		(c) => c.label === "Share to channel",
 	)!
@@ -678,11 +677,11 @@ test("a linked member opens a discover title with match_label and shares a fresh
 	assert.equal(shared.edits[0].flags, IS_COMPONENTS_V2)
 	assert.doesNotMatch(
 		JSON.stringify(shared.edits[0]),
-		/Excellent taste fit|You rated|Wishlist|93%|France/,
+		/Excellent taste fit|You rated|Wishlist|93%/,
 	)
 	assert.match(
 		JSON.stringify(shared.edits[0]),
-		/Where to watch on every service in Germany/,
+		/Not on a subscription service in Germany/,
 	)
 })
 
@@ -1183,7 +1182,6 @@ test("title card guest reads come from the five-minute cache; the member's own r
 	assert.match([...values.keys()][0], /^discord:title:v1:movie:7:DE:all$/)
 })
 
-
 test("/search shows its reading while ranking, then preserves reading and three reasons through Open and Back", async () => {
 	const f = fixture()
 	const reading = [
@@ -1478,9 +1476,209 @@ test("search cards keep reading and reason copy within Discord limits and hide r
 
 test("opening a search title still works when its optional reason snapshot is unavailable", async () => {
 	const f = fixture()
-	f.deps.loadState = async () => { throw new Error("Storage is unavailable") }
+	f.deps.loadState = async () => {
+		throw new Error("Storage is unavailable")
+	}
 	await f.run(3, { custom_id: `gw1:open:q:${key}:0`, values: [title.id] })
 	await f.finished
 	assert.match(JSON.stringify(f.edits), /A title/)
-	assert.equal(buttonsIn(f.edits[0].components).find((b) => b.label === "Back")?.custom_id, `gw1:back:q:${key}:0`)
+	assert.equal(
+		buttonsIn(f.edits[0].components).find((b) => b.label === "Back")?.custom_id,
+		`gw1:back:q:${key}:0`,
+	)
 })
+
+test("country custom IDs round trip with Back and sharing country; invalid IDs are rejected", async () => {
+	const { parseCustomId } = await import("./custom-id.ts")
+	const back = { kind: "discover" as const, key, page: 999999 }
+	for (const action of ["country", "share"] as const) {
+		const id = formatCustomId(action, "movie:9999999999", back, "DE")
+		assert.ok(id.length <= 100)
+		assert.deepEqual(parseCustomId(id), {
+			action,
+			titleId: "movie:9999999999",
+			back,
+			country: "DE",
+		})
+	}
+	for (const id of [
+		"gw1:country:movie:0",
+		"gw1:country:movie:42:garbage",
+		"gw1:share:movie:42:cZZZ",
+		"x".repeat(101),
+	])
+		assert.equal(parseCustomId(id), null)
+})
+
+for (const publicMessage of [false, true])
+	test(`country switch keeps Back, uses country-wide subscriptions and ${publicMessage ? "answers privately" : "updates in place"}`, async () => {
+		const f = fixture()
+		const back = { kind: "discover" as const, key, page: 2 }
+		const original = titleCard(title, "DE", { back, share: publicMessage })
+		const custom_id = formatCustomId("country", title.id, back)
+		const response = await f.run(
+			3,
+			{ custom_id, values: ["GB"] },
+			publicMessage,
+			original.components,
+		)
+		assert.equal(response.type, publicMessage ? 5 : 7)
+		if (publicMessage)
+			assert.equal((response.data as { flags: number }).flags, EPHEMERAL)
+		await f.finished
+		assert.deepEqual(f.reads.find((r) => r.name === "get_title")?.viewer, {
+			country: "GB",
+			services: [],
+		})
+		const card = f.edits.at(-1)!
+		assertLimits(card.components)
+		assert.match(
+			JSON.stringify(card),
+			/Not on a subscription service in the United Kingdom/,
+		)
+		assert.ok(
+			buttonsIn(card.components).some(
+				(c) => c.custom_id === listCustomId("back", `d:${key}:2`),
+			),
+		)
+		assert.ok(
+			buttonsIn(card.components).some(
+				(c) => c.custom_id === formatCustomId("share", title.id, back, "GB"),
+			),
+		)
+		const share = fixture()
+		await share.run(3, {
+			custom_id: formatCustomId("share", title.id, back, "GB"),
+		})
+		await share.finished
+		assert.deepEqual(share.reads.find((r) => r.name === "get_title")?.viewer, {
+			country: "GB",
+			services: [],
+		})
+	})
+
+test("country switch preserves a member match, marks, and a watch pick's Another button", async () => {
+	const { watchCard } = await import("./watch-cards.ts")
+	const original = watchCard(
+		{ ...title, match: 93, match_label: "Excellent taste fit" },
+		"DE",
+		{
+			another: "gw1:another:any:none:m42",
+			origin: "https://goodwatch.app",
+			member: { score: 9 },
+			episode: { code: "S1 E2", name: "The next chapter" },
+		},
+	)
+	const f = fixture()
+	f.deps.linkedUser = async () => "member"
+	f.deps.memberRead = async (_user, name) =>
+		name === "get_settings"
+			? { country: "DE" }
+			: { title, member: { score: 9 } }
+	await f.run(
+		3,
+		{ custom_id: formatCustomId("country", title.id), values: ["FR"] },
+		false,
+		original.components,
+	)
+	await f.finished
+	assert.match(JSON.stringify(f.edits[0]), /Excellent taste fit/)
+	assert.match(JSON.stringify(f.edits[0]), /You rated it/)
+	assert.match(JSON.stringify(f.edits[0]), /The next chapter/)
+	assert.ok(
+		buttonsIn(f.edits[0].components).some(
+			(c) => c.custom_id === "gw1:another:any:none:m42",
+		),
+	)
+})
+
+test("new Discover options map to read args and survive paging, Back and Share", async () => {
+	const f = fixture()
+	await f.run(2, {
+		name: "discover",
+		options: Object.entries({
+			theme: "future",
+			style: "slow",
+			released: "recent",
+			score: "80",
+			anime: "none",
+			length: "short",
+		}).map(([name, value]) => ({ name, value })),
+	})
+	await f.finished
+	const expected = {
+		themes: ["future"],
+		styles: ["slow"],
+		released: "recent",
+		minimum_score: 80,
+		anime: "none",
+		max_runtime: 99,
+	}
+	const saved = await f.deps.loadState!(key)
+	for (const [name, value] of Object.entries(expected))
+		assert.deepEqual(saved?.args[name as keyof typeof saved.args], value)
+	assert.match(
+		JSON.stringify(f.edits[0]),
+		/Future · Slow burn · Last 3 years · GoodWatch 80\+ · No anime · Under 100 min/,
+	)
+	for (const custom_id of [
+		listCustomId("discover", `${key}:1`),
+		listCustomId("back", `d:${key}:0`),
+		listCustomId("discover-share", `${key}:0`),
+	]) {
+		const g = fixture()
+		g.deps.loadState = f.deps.loadState
+		await g.run(3, { custom_id })
+		await g.finished
+		const args = g.reads.find((r) => r.name === "discover_titles")!.args
+		for (const [name, value] of Object.entries(expected))
+			assert.deepEqual(args[name as keyof typeof args], value)
+	}
+})
+
+test("registered filter choices use site keys and labels; Want to see stays a button", async () => {
+	const { THEMES, STYLES } = await import("../../domain/themes-styles.ts")
+	const { RELEASED_LABELS } = await import("../../ui/filter-bar/labels.ts")
+	const options = commands.find((c) => c.name === "discover")!.options
+	for (const [name, choices] of [
+		["theme", THEMES.map((r) => ({ name: r.name, value: r.id }))],
+		["style", STYLES.map((r) => ({ name: r.name, value: r.id }))],
+		[
+			"released",
+			Object.entries(RELEASED_LABELS).map(([value, name]) => ({ name, value })),
+		],
+	] as const) {
+		assert.deepEqual(
+			(options.find((o) => o.name === name) as { choices: unknown }).choices,
+			choices,
+		)
+	}
+	assert.equal(
+		commands.some((c) => c.name === "want"),
+		false,
+	)
+	assert.ok(commands.some((c) => c.name === "rate"))
+	assert.ok(commands.some((c) => c.name === "seen"))
+	assert.ok(
+		commands
+			.find((c) => c.name === "together")!
+			.options.some((o) => o.name === "theme"),
+	)
+})
+
+for (const [name, value, expected] of [
+	["length", "medium", { max_runtime: 119 }],
+	["length", "long", { min_runtime: 120 }],
+	["anime", "only", { anime: "only" }],
+	["anime", "any", { anime: "any" }],
+	["score", "60", { minimum_score: 60 }],
+	["score", "70", { minimum_score: 70 }],
+] as const)
+	test(`Discover maps ${name} ${value}`, async () => {
+		const f = fixture()
+		await f.run(2, { name: "discover", options: [{ name, value }] })
+		await f.finished
+		const saved = await f.deps.loadState!(key)
+		for (const [field, value] of Object.entries(expected))
+			assert.deepEqual(saved?.args[field as keyof typeof saved.args], value)
+	})

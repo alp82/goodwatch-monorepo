@@ -17,7 +17,12 @@ const read = (offers: unknown[], calls: unknown[] = []) =>
 			title: {
 				id: "movie:687163",
 				name: "Project Hail Mary",
-				availability: { offers },
+				availability: {
+					offers: offers.map((offer) => ({
+						offer_type: "flatrate",
+						...(offer as object),
+					})),
+				},
 			},
 		}
 	}) as never
@@ -140,9 +145,16 @@ test("title reads are cached five minutes per title and place, and only when the
 		title: { id: "movie:1", name: "One" },
 	})
 	await new Promise((resolve) => setImmediate(resolve))
-	assert.deepEqual(sets, [[titleCacheKey("movie:1", place), TITLE_CACHE_SECONDS]])
+	assert.deepEqual(sets, [
+		[titleCacheKey("movie:1", place), TITLE_CACHE_SECONDS],
+	])
 	assert.equal(TITLE_CACHE_SECONDS, 300)
-	await cachedTitleRead("movie:1", { country: "DE", services: [8, 337] }, fresh, store)
+	await cachedTitleRead(
+		"movie:1",
+		{ country: "DE", services: [8, 337] },
+		fresh,
+		store,
+	)
 	assert.equal(reads, 1, "the same title and place is a cache hit")
 	await cachedTitleRead("movie:1", { country: "DE" }, fresh, store)
 	assert.equal(reads, 2, "another service set is another entry")
@@ -190,8 +202,16 @@ test("the stream redirect counts presses per visitor before the catalog read and
 	assert.ok(Number(limited.headers.get("Retry-After")) >= 1)
 	assert.equal(limited.headers.get("Location"), null)
 	assert.equal(calls.length, 60, "a limited press never reads the catalog")
-	assert.equal((await press("b")).status, 302, "another visitor is counted apart")
-	assert.equal((await press(null)).status, 302, "without a trusted address nobody is limited")
+	assert.equal(
+		(await press("b")).status,
+		302,
+		"another visitor is counted apart",
+	)
+	assert.equal(
+		(await press(null)).status,
+		302,
+		"without a trusted address nobody is limited",
+	)
 	const failing = await streamRedirect(
 		{ media: "movie", tmdbId: "687163", providerId: "8" },
 		new URL("https://goodwatch.app/go/stream/movie/687163/8"),
@@ -205,4 +225,20 @@ test("the stream redirect counts presses per visitor before the catalog read and
 		"a",
 	)
 	assert.equal(failing.status, 302)
+})
+
+test("a subscription redirect never selects a rent or buy offer on the same service", async () => {
+	const response = await go("/go/stream/movie/687163/8?country=DE", [
+		{ service_id: 8, offer_type: "rent", url: "https://netflix.example/rent" },
+		{ service_id: 8, offer_type: "buy", url: "https://netflix.example/buy" },
+		{ service_id: 8, offer_type: "ads", url: long },
+	])
+	assert.equal(response.headers.get("Location"), long)
+	const paidOnly = await go("/go/stream/movie/687163/8?country=DE", [
+		{ service_id: 8, offer_type: "buy", url: "https://netflix.example/buy" },
+	])
+	assert.equal(
+		paidOnly.headers.get("Location"),
+		"/movie/687163-project-hail-mary#streaming",
+	)
 })

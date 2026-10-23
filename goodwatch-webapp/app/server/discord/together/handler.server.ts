@@ -77,7 +77,7 @@ async function publicUpdate(id: string) {
 								...session.summary.possibleMatches
 									.slice(0, 5)
 									.map((p) => p.titleId),
-						  ]
+							]
 						: []
 				const titles = await Promise.all(
 					[...new Set(ids)].map(
@@ -141,12 +141,15 @@ async function expireEvicted(interaction: Interaction, id: string) {
 const expiryTimers = new Map<string, ReturnType<typeof setTimeout>>()
 function scheduleExpiry(id: string, createdAt: number) {
 	if (expiryTimers.has(id)) return
-	const timer = setTimeout(() => {
-		expiryTimers.delete(id)
-		void publicUpdate(id).catch(() =>
-			console.error("DISCORD together expiry update failed"),
-		)
-	}, Math.max(0, createdAt + 86400_000 - Date.now()))
+	const timer = setTimeout(
+		() => {
+			expiryTimers.delete(id)
+			void publicUpdate(id).catch(() =>
+				console.error("DISCORD together expiry update failed"),
+			)
+		},
+		Math.max(0, createdAt + 86400_000 - Date.now()),
+	)
 	timer.unref?.()
 	expiryTimers.set(id, timer)
 }
@@ -282,6 +285,8 @@ export async function handleTogether(
 								? options.type
 								: "any",
 						mood: typeof options.mood === "string" ? options.mood : undefined,
+						theme:
+							typeof options.theme === "string" ? options.theme : undefined,
 						place: { ...place, services: place.services ?? [] },
 						deck: [],
 						status: "open",
@@ -342,22 +347,22 @@ export async function handleTogether(
 								user,
 								titleId: action.titleId!,
 								vote: action.action,
-						  }
+							}
 						: action.action === "undo"
-						? { kind: "undo", user, titleId: action.titleId ?? "" }
-						: action.action === "remove"
-						? {
-								kind: "remove",
-								user,
-								target: interaction.data?.values?.[0] ?? "",
-						  }
-						: action.action === "pick" || action.action === "choose"
-						? {
-								kind: action.action,
-								user,
-								titleId: interaction.data?.values?.[0] ?? "",
-						  }
-						: { kind: action.action, user },
+							? { kind: "undo", user, titleId: action.titleId ?? "" }
+							: action.action === "remove"
+								? {
+										kind: "remove",
+										user,
+										target: interaction.data?.values?.[0] ?? "",
+									}
+								: action.action === "pick" || action.action === "choose"
+									? {
+											kind: action.action,
+											user,
+											titleId: interaction.data?.values?.[0] ?? "",
+										}
+									: { kind: action.action, user },
 					displayName(interaction),
 				)
 				if (!session) return textCard(EXPIRED)
@@ -459,9 +464,11 @@ export async function handleTogether(
 			if (createdId) {
 				const message = await deps.post(app, token, body)
 				try {
-					await (
-						await deps.store()
-					).bind(createdId, message.channel_id, message.id)
+					await (await deps.store()).bind(
+						createdId,
+						message.channel_id,
+						message.id,
+					)
 					await deps.published(createdId, initialSignature!)
 					await deps.changed(createdId)
 				} catch {
@@ -485,7 +492,7 @@ export async function handleTogether(
 				: loadingMessage(
 						interaction.message?.components,
 						PRIVATE_LOADING[action?.action ?? ""] ?? "Loading…",
-				  ),
+					),
 			retry: deps.retry,
 		},
 	)
@@ -513,6 +520,6 @@ function closedMessage(session: Session) {
 	return session.meta.status === "expired"
 		? EXPIRED
 		: session.meta.status === "decided"
-		? "Decided. See the title in the channel."
-		: "Ended by the starter."
+			? "Decided. See the title in the channel."
+			: "Ended by the starter."
 }
