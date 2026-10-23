@@ -41,7 +41,9 @@ export const skippedCount = (summary: ImdbImportSummary) =>
 	summary.counts.unmatched + summary.counts.unsupported + summary.counts.invalid
 
 /** One line on how an import ended, for the history. */
-export const describeOutcome = (summary: ImdbImportSummary) => {
+export const describeOutcome = (
+	summary: Pick<ImdbImportSummary, "status" | "applied">,
+) => {
 	if (summary.status === "undone") return "Undone"
 	if (summary.status === "failed") return "Didn't finish"
 	if (summary.status === "running") return "In progress"

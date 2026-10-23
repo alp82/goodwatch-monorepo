@@ -113,7 +113,7 @@ function GeneralImportPreview({
 	)
 	const { kinds, conflictChoice, watchDates, wishlistRewatch = false } = choices
 	const rewatchCount =
-		summary.source === "wishlist"
+		summary.source === "wishlist" || summary.source === "imdb_list"
 			? (summary.wishlistRewatchChoiceCount ?? 0)
 			: 0
 	const choose = (next: SourceImportChoices) => {
@@ -230,8 +230,10 @@ function GeneralImportPreview({
 				<fieldset className="space-y-2" disabled={confirming || locked}>
 					<legend className="mb-1 font-semibold text-gray-100">
 						{formatCount(rewatchCount)}{" "}
-						{rewatchCount === 1 ? "title" : "titles"} marked Seen in GoodWatch
-						or in this file
+						{rewatchCount === 1 ? "title" : "titles"}{" "}
+						{summary.source === "imdb_list"
+							? "already Seen in GoodWatch or rated in this file"
+							: "marked Seen in GoodWatch or in this file"}
 					</legend>
 					<div className="grid gap-2 sm:grid-cols-2">
 						<Radio
@@ -342,7 +344,10 @@ function GeneralImportPreview({
 							kinds,
 							conflictChoice,
 							watchDates: requirements.watchDates,
-							...(summary.source === "wishlist" ? { wishlistRewatch } : {}),
+							...(summary.source === "wishlist" ||
+							summary.source === "imdb_list"
+								? { wishlistRewatch }
+								: {}),
 						})
 					}
 				>

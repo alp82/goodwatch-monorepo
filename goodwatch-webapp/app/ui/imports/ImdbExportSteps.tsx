@@ -47,10 +47,13 @@ export function ImdbExportSteps({ focus = false }: { focus?: boolean }) {
 			<ol className="flex flex-col gap-4">
 				<Step number={1}>
 					<p>
-						Open your ratings on IMDb and choose{" "}
+						Open your ratings or Watchlist on IMDb and choose{" "}
 						<span className="font-semibold text-gray-100">Export</span>.
 					</p>
 					<ImdbLink href={IMDB_RATINGS_URL}>Open your IMDb ratings</ImdbLink>
+					<ImdbLink href="https://www.imdb.com/list/watchlist/">
+						Open your IMDb Watchlist
+					</ImdbLink>
 				</Step>
 				<Step number={2}>
 					<p>

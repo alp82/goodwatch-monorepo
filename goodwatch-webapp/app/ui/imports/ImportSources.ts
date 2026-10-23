@@ -51,7 +51,7 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 		id: "imdb",
 		logo: imdbLogo,
 		tile: "IMDb",
-		gets: ["Ratings"],
+		gets: ["Ratings", "Want to See"],
 		wait: "A few minutes",
 	},
 	{
@@ -202,6 +202,7 @@ export function lastImported(
 	for (const item of imdb)
 		if (item.status === "done") note("imdb", item.finishedAt)
 	for (const item of native)
-		if (item.status === "done") note(item.source, item.finishedAt)
+		if (item.status === "done")
+			note(item.source === "imdb_list" ? "imdb" : item.source, item.finishedAt)
 	return latest
 }

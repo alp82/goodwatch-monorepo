@@ -808,7 +808,7 @@ export async function createParsedPreview(
 		}
 	}
 	// Suppress duplicate effective identities before calculating any per-title library conflicts.
-	if (source === "wishlist") {
+	if (source === "wishlist" || source === "imdb_list") {
 		const representatives = new Map<string, ImportObservation>()
 		for (const [index, row] of parsed.observations.entries()) {
 			const title = matched.get(index)
@@ -898,7 +898,9 @@ export async function createParsedPreview(
 				JSON.stringify(parsed.warnings),
 				JSON.stringify({
 					...kinds,
-					...(source === "wishlist" || source === "tvtime"
+					...(source === "wishlist" ||
+					source === "tvtime" ||
+					source === "imdb_list"
 						? {
 								_wishlistShowChoiceCount: items.filter(
 									(item) =>

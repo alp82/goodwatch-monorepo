@@ -1,4 +1,4 @@
-// The IMDb ratings import on /settings/imports: one page whose steps replace each other in place.
+// The IMDb import on /settings/imports: one page whose steps replace each other in place.
 //   no import yet        the upload, then how to get the file
 //   earlier imports      the latest one's date and outcome, Upload a newer export, and the earlier ones
 //   an import open       its preview, progress or receipt (ImdbImportCurrent)
@@ -6,8 +6,11 @@
 import { useEffect, useState } from "react"
 import type {
 	ImdbImportListResponse,
-	ImdbImportSummary,
+	ImdbFileSummary,
 } from "~/domain/imdb-import"
+import type { ImportSummary } from "~/domain/imports"
+import { SourceImportCurrent } from "./SourceImportCurrent"
+import { useSourceImports } from "./SourceImportHooks"
 import { ImdbExportSteps } from "./ImdbExportSteps"
 import { ImdbImportCurrent } from "./ImdbImportCurrent"
 import { ImdbUpload } from "./ImdbUpload"
@@ -23,10 +26,15 @@ import {
 	textLink,
 } from "./shared"
 
-const importDate = (summary: ImdbImportSummary) =>
+const importDate = (summary: ImdbFileSummary) =>
 	formatDate(summary.finishedAt ?? summary.createdAt)
 
-const importHeading = (summary: ImdbImportSummary) => {
+const outcome = (summary: ImdbFileSummary) =>
+	"source" in summary
+		? `${summary.applied.added} added, ${summary.applied.updated} updated`
+		: describeOutcome(summary)
+
+const importHeading = (summary: ImdbFileSummary) => {
 	const date = importDate(summary)
 	if (summary.status === "undone") return `Import from ${date}, undone`
 	if (summary.status === "failed") return `Import from ${date} didn't finish`
@@ -38,14 +46,21 @@ export function ImdbImportFlow({
 	initial,
 	handoff,
 	initialId,
+	initialLists = [],
 }: {
 	initial?: ImdbImportListResponse
-	/** A file the page recognized as an IMDb ratings export: the upload opens and sends it. */
+	initialLists?: ImportSummary[]
+	/** A recognized IMDb file: the upload opens and asks list intent when needed. */
 	handoff?: ImportHandoff
 	/** An import to open on arrival, chosen in the page's history. */
 	initialId?: string
 }) {
 	const list = useImdbImports(initial)
+	const native = useSourceImports({ imports: initialLists })
+	const [newListId, setNewListId] = useState<string | null>(null)
+	const lists = (native.data?.imports ?? []).filter(
+		(item) => item.source === "imdb_list",
+	)
 	const [openId, setOpenId] = useState<string | null>(initialId ?? null)
 	const [uploadOpen, setUploadOpen] = useState(!!handoff)
 	// Once the person has done something here, a step that appears takes focus. Not on arrival.
@@ -54,9 +69,9 @@ export function ImdbImportFlow({
 	const [pending, setPending] = useState(handoff)
 
 	// A preview is not an import yet, so it has no place in the history.
-	const history = (list.data?.imports ?? []).filter(
-		(item) => item.status !== "preview",
-	)
+	const history: ImdbFileSummary[] = [...(list.data?.imports ?? []), ...lists]
+		.filter((item) => item.status !== "preview")
+		.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 	const latest = history[0]
 	const shownId =
 		openId ?? (!uploadOpen && latest?.status === "running" ? latest.id : null)
@@ -72,6 +87,7 @@ export function ImdbImportFlow({
 		setOpenId(id)
 	}
 	const openUpload = () => {
+		setNewListId(null)
 		setActed(true)
 		setPending(undefined)
 		setOpenId(null)
@@ -87,12 +103,21 @@ export function ImdbImportFlow({
 	return (
 		<div className="flex flex-col gap-8">
 			{shownId ? (
-				<ImdbImportCurrent
-					key={shownId}
-					id={shownId}
-					focus={acted}
-					onUploadAnother={openUpload}
-				/>
+				newListId === shownId || lists.some((item) => item.id === shownId) ? (
+					<SourceImportCurrent
+						key={shownId}
+						id={shownId}
+						focus={acted}
+						onUploadAnother={openUpload}
+					/>
+				) : (
+					<ImdbImportCurrent
+						key={shownId}
+						id={shownId}
+						focus={acted}
+						onUploadAnother={openUpload}
+					/>
+				)
 			) : (
 				<>
 					{latest && (
@@ -105,14 +130,14 @@ export function ImdbImportFlow({
 									{importHeading(latest)}
 								</h3>
 								<p className="text-gray-400">
-									{describeOutcome(latest)}
+									{outcome(latest)}
 									<span className="break-all"> · {latest.fileName}</span>
 								</p>
 							</div>
 							<p>
-								Importing again adds the ratings that are new since then and
-								lets you review the ones that changed. It never removes
-								anything.
+								{"source" in latest
+									? "You review every list file before GoodWatch changes your library."
+									: "Importing again adds the ratings that are new since then and lets you review the ones that changed. It never removes anything."}
 							</p>
 							<div className="flex flex-wrap items-center gap-3">
 								{!uploadOpen && (
@@ -137,7 +162,10 @@ export function ImdbImportFlow({
 					{(!latest || uploadOpen) && (
 						<>
 							<ImdbUpload
-								onPreview={(summary) => open(summary.id)}
+								onPreview={(summary) => {
+									if ("source" in summary) setNewListId(summary.id)
+									open(summary.id)
+								}}
 								handoff={pending}
 							/>
 							<ImdbExportSteps focus={acted && uploadOpen} />
@@ -164,10 +192,7 @@ export function ImdbImportFlow({
 									<span className="font-semibold text-gray-100">
 										{importDate(item)}
 									</span>
-									<span className="text-gray-400">
-										{" "}
-										· {describeOutcome(item)}
-									</span>
+									<span className="text-gray-400"> · {outcome(item)}</span>
 								</span>
 								<button
 									type="button"

@@ -58,7 +58,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				? connectState
 				: undefined,
 			openImport:
-				initialSource && selected?.source === initialSource
+				initialSource &&
+				(selected?.source === initialSource ||
+					(initialSource === "imdb" && selected?.source === "imdb_list"))
 					? openImport
 					: undefined,
 		},

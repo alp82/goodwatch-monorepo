@@ -1,9 +1,16 @@
+import type { ImportSummary } from "./imports"
+import type { ImdbListKind } from "./imdb-file"
 // IMDb ratings import: a member uploads the ratings CSV that IMDb exports, reviews a preview, and confirms.
 // These are the shapes the `/api/imdb-import/*` endpoints return and the Imports settings page draws.
 // Pure and shared by the server and the browser. See docs/research/imdb-ratings-import.md.
 
 /** Where an import is in its life. `preview` has written nothing to the member's ratings yet. */
-export type ImdbImportStatus = "preview" | "running" | "done" | "failed" | "undone"
+export type ImdbImportStatus =
+	| "preview"
+	| "running"
+	| "done"
+	| "failed"
+	| "undone"
 
 /** What to do with titles whose GoodWatch rating differs from the file. */
 export type ImdbConflictChoice = "keep" | "imdb"
@@ -91,7 +98,12 @@ export interface ImdbImportItem {
 }
 
 // POST /api/imdb-import/preview, JSON body. Parses, matches and stores a preview. Writes no ratings.
+export type ImdbFileSummary = ImdbImportSummary | ImportSummary
+export interface ImdbFilePreviewResponse {
+	import: ImdbFileSummary
+}
 export interface ImdbImportPreviewRequest {
+	listKind?: ImdbListKind
 	fileName: string
 	/** The file's text. */
 	csv: string

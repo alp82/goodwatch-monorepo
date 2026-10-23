@@ -4,6 +4,7 @@
 //
 // Reading is bounded: a file larger than any import takes is refused unread, a ZIP's directory is read only when its
 // end record is sound and the directory is small, and a gzip file is unpacked only as far as its first 64 KB.
+import { classifyImdbHeader } from "~/domain/imdb-file"
 import { IMDB_IMPORT_MAX_BYTES } from "~/domain/imdb-import"
 import { type FileImportSource, IMPORT_MAX_BYTES } from "~/domain/imports"
 
@@ -169,7 +170,9 @@ function recognize(peek: Peek, fileName: string): ImportFileRecognition {
 		// Each import finds its columns by name, trimmed and in any case.
 		const header = new Set(peek.header.map((name) => name.trim().toLowerCase()))
 		const has = (...names: string[]) => names.every((name) => header.has(name))
-		if (has("const", "your rating", "title type"))
+		if (classifyImdbHeader(peek.header) === "list")
+			return { source: "imdb", label: "IMDb Watchlist or custom-list export" }
+		if (classifyImdbHeader(peek.header) === "ratings")
 			return { source: "imdb", label: "IMDb ratings export" }
 		// UNCONFIRMED: built from synthetic fixtures; no real MovieLens export seen yet. See
 		// docs/research/imports/criticker-movielens-sofa-exports.md on branch research/criticker-movielens-sofa-exports.

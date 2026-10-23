@@ -4,18 +4,19 @@ import { type ActionFunctionArgs, json } from "@remix-run/node"
 import { z } from "zod"
 import {
 	IMDB_IMPORT_MAX_BYTES,
-	type ImdbImportResponse,
+	type ImdbFilePreviewResponse,
 } from "~/domain/imdb-import"
 import { ImdbImportError } from "~/server/imdb-import/file.server"
 import { parseJson, withMember } from "~/server/imdb-import/http.server"
-import { createPreview } from "~/server/imdb-import/preview.server"
+import { createImdbFilePreview } from "~/server/imdb-import/dispatch.server"
 
 const requestSchema = z.object({
 	fileName: z.string(),
 	csv: z.string(),
+	listKind: z.enum(["watchlist", "custom-list"]).optional(),
 })
 
-const TOO_LARGE = `That file is larger than ${Math.round(IMDB_IMPORT_MAX_BYTES / 1024 / 1024)} MB, which is more than an IMDb ratings file should be.`
+const TOO_LARGE = `That file is larger than ${Math.round(IMDB_IMPORT_MAX_BYTES / 1024 / 1024)} MB, which is more than an IMDb CSV export should be.`
 // JSON escapes quotes and line breaks, so the body is somewhat larger than the file it carries.
 const MAX_BODY_BYTES = IMDB_IMPORT_MAX_BYTES * 2
 
@@ -31,7 +32,7 @@ function productAction({ request }: ActionFunctionArgs) {
 		if (!parsed.success)
 			throw new ImdbImportError(
 				400,
-				"We couldn't read that upload. Choose the ratings file you downloaded from IMDb.",
+				"We couldn't read that upload. Choose the CSV export you downloaded from IMDb.",
 			)
 		const { csv } = parsed.data
 		if (Buffer.byteLength(csv, "utf8") > IMDB_IMPORT_MAX_BYTES)
@@ -39,8 +40,15 @@ function productAction({ request }: ActionFunctionArgs) {
 		const fileName =
 			parsed.data.fileName.replace(/\s+/g, " ").trim().slice(0, 200) ||
 			"ratings.csv"
-		return json<ImdbImportResponse>(
-			{ import: await createPreview(userId, fileName, csv) },
+		return json<ImdbFilePreviewResponse>(
+			{
+				import: await createImdbFilePreview(
+					userId,
+					fileName,
+					csv,
+					parsed.data.listKind,
+				),
+			},
 			{ headers },
 		)
 	})

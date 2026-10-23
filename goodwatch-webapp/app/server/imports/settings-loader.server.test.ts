@@ -79,3 +79,23 @@ test("the page opens any live source named in the address, and ignores other nam
 	assert.equal(await initialSource("netflix"), undefined)
 	assert.equal(await initialSource("constructor"), undefined)
 })
+
+test("an owned IMDb list import reopens under the existing IMDb source", async () => {
+	setImportDbForTest(new ImportDb())
+	const preview = await previewFetchedImport("member", "watchlist.csv", {
+		source: "imdb_list",
+		observations: [],
+		warnings: [],
+	})
+	const response = await loader({
+		request: new Request(
+			`https://goodwatch.test/settings/imports?source=imdb&import=${preview.id}`,
+			{ headers: { Member: "member" } },
+		),
+		params: {},
+		context: {},
+	} as LoaderFunctionArgs)
+	const data = await response.json()
+	assert.equal(data.initialSource, "imdb")
+	assert.equal(data.openImport, preview.id)
+})

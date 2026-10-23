@@ -457,3 +457,18 @@ test("renamed TV Time JSON is recognized whatever the order of its ID fields, sh
 	)
 	assert.equal(tmdbOnly.source, null)
 })
+
+test("IMDb list exports are recognized before Ratings even when they include Your Rating, without guessing Watchlist intent", async () => {
+	for (const rating of ["", ",Your Rating,Date Rated"]) {
+		const result = await recognizeImportFile(
+			file(
+				"renamed.csv",
+				`Position,Const,Created,Modified,Description,Title,Title Type${rating}\n`,
+			),
+		)
+		assert.deepEqual(result, {
+			source: "imdb",
+			label: "IMDb Watchlist or custom-list export",
+		})
+	}
+})

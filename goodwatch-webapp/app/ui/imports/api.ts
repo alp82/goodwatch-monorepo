@@ -5,6 +5,8 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query"
+import { sourceImportKeys } from "./SourceImportHooks"
+import type { ImdbListKind } from "~/domain/imdb-file"
 import { useEffect, useRef } from "react"
 import {
 	IMDB_IMPORT_MAX_BYTES,
@@ -14,6 +16,7 @@ import {
 	type ImdbImportListResponse,
 	type ImdbImportOutcome,
 	type ImdbImportPreviewRequest,
+	type ImdbFilePreviewResponse,
 	type ImdbImportResponse,
 	type ImdbImportStatus,
 	type ImdbImportSummary,
@@ -131,15 +134,22 @@ function useStoreImport() {
 /** Reads the chosen file in the browser and asks for a preview. Nothing is saved to the member's ratings. */
 export function usePreviewImdbImport() {
 	const store = useStoreImport()
-	return useMutation<ImdbImportResponse, Error, File>({
-		mutationFn: async (file) => {
+	const queryClient = useQueryClient()
+	return useMutation<
+		ImdbFilePreviewResponse,
+		Error,
+		File | { file: File; listKind: ImdbListKind }
+	>({
+		mutationFn: async (input) => {
+			const file = "file" in input ? input.file : input
+			const listKind = "file" in input ? input.listKind : undefined
 			if (!/\.csv$/i.test(file.name) && file.type !== "text/csv")
 				throw new Error(
-					"That doesn't look like a CSV file. Choose the ratings file you downloaded from IMDb.",
+					"That doesn't look like a CSV file. Choose the CSV export you downloaded from IMDb.",
 				)
 			if (file.size > IMDB_IMPORT_MAX_BYTES)
 				throw new Error(
-					`That file is larger than ${Math.round(IMDB_IMPORT_MAX_BYTES / 1024 / 1024)} MB, which is more than an IMDb ratings file should be. Choose the ratings file you downloaded from IMDb.`,
+					`That file is larger than ${Math.round(IMDB_IMPORT_MAX_BYTES / 1024 / 1024)} MB, which is more than an IMDb CSV export should be. Choose the CSV export you downloaded from IMDb.`,
 				)
 			let csv: string
 			try {
@@ -148,10 +158,21 @@ export function usePreviewImdbImport() {
 				throw new Error("We couldn't read that file. Please try again.")
 			}
 			if (!csv.trim()) throw new Error("That file is empty.")
-			const body: ImdbImportPreviewRequest = { fileName: file.name, csv }
-			return request<ImdbImportResponse>(`${API}/preview`, post(body))
+			const body: ImdbImportPreviewRequest = {
+				fileName: file.name,
+				csv,
+				...(listKind ? { listKind } : {}),
+			}
+			return request<ImdbFilePreviewResponse>(`${API}/preview`, post(body))
 		},
-		onSuccess: store,
+		onSuccess: (response) => {
+			if ("source" in response.import)
+				queryClient.setQueryData(
+					sourceImportKeys.detail(response.import.id),
+					response,
+				)
+			else store({ import: response.import })
+		},
 	})
 }
 

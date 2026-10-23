@@ -29,7 +29,7 @@ export function sourceImportCopy(source: ImportSource) {
 }
 
 function general(source: ImportSource) {
-	const file = isFileImportSource(source)
+	const file = isFileImportSource(source) || source === "imdb_list"
 	const data = file ? "export" : `${IMPORT_SOURCE_NAMES[source]} data`
 	const connect = `Connect ${IMPORT_SOURCE_NAMES[source]} again`
 	return {

@@ -19,6 +19,7 @@ import {
 	useSourceImport,
 	useUndoSourceImport,
 } from "./SourceImportHooks"
+import { SourceOutcomeRow } from "./SourceImportCounts"
 import { SourceImportPreview } from "./SourceImportPreview"
 import type {
 	PreviewUpdate,
@@ -234,7 +235,7 @@ function Receipt({
 			id={summary.id}
 			status={summary.status}
 			from={
-				isFileImportSource(summary.source)
+				isFileImportSource(summary.source) || summary.source === "imdb_list"
 					? summary.fileName
 					: `your ${IMPORT_SOURCE_NAMES[summary.source]} account`
 			}
@@ -254,6 +255,34 @@ function Receipt({
 					.
 				</p>
 			))}
+			{summary.source === "imdb_list" && (
+				<details className="space-y-3">
+					<summary className="cursor-pointer font-semibold text-gray-100">
+						Original IMDb list entries
+					</summary>
+					<ul className="divide-y divide-slate-800 rounded-lg border border-slate-700">
+						{(
+							[
+								"new",
+								"unchanged",
+								"conflict",
+								"unmatched",
+								"unsupported",
+								"invalid",
+							] as const
+						)
+							.filter((outcome) => summary.counts[outcome] > 0)
+							.map((outcome) => (
+								<SourceOutcomeRow
+									key={outcome}
+									importId={summary.id}
+									outcome={outcome}
+									count={summary.counts[outcome]}
+								/>
+							))}
+					</ul>
+				</details>
+			)}
 			<ImportNotes
 				warnings={summary.warnings}
 				title={

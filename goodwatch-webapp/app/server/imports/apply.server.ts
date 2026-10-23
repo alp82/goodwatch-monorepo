@@ -472,7 +472,9 @@ async function applyRunStored(
 				.map(ref),
 		)
 		const allowRewatch = (item: ImportItem) =>
-			item.wishlistEvidence?.source === "watcharr"
+			["watcharr", "imdb-watchlist"].includes(
+				item.wishlistEvidence?.source ?? "",
+			)
 				? options.wishlistRewatch === true
 				: options.conflictChoice === "source"
 		const rewatchWishes: typeof pending = []

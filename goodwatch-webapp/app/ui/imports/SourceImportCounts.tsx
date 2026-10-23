@@ -201,9 +201,11 @@ export function SourceItem({
 		? IMPORT_SHOW_STATUS_LABELS[item.showStatus]
 		: item.score != null
 			? `Source ${item.score}`
-			: item.watchedAt
-				? `Watched ${item.watchedAt.slice(0, 10)}`
-				: null
+			: item.kind === "want" && item.addedAt
+				? `Added ${item.addedAt.slice(0, 10)}`
+				: item.watchedAt
+					? `Watched ${item.watchedAt.slice(0, 10)}`
+					: null
 	const applied = item.applyState
 		? (
 				{
@@ -245,6 +247,42 @@ export function SourceItem({
 				</span>
 			</div>
 			{item.reason && <p className="text-gray-400">{item.reason}</p>}
+			{item.imdbList && (
+				<details className="mt-1 text-gray-400">
+					<summary className="cursor-pointer">IMDb list details</summary>
+					<dl className="space-y-1">
+						<dt>Position on IMDb</dt>
+						<dd>{item.imdbList.position || "Unknown"}</dd>
+						<dt>Added on IMDb</dt>
+						<dd>{item.imdbList.created || "Unknown"}</dd>
+						{item.imdbList.modified && (
+							<>
+								<dt>Modified on IMDb</dt>
+								<dd>{item.imdbList.modified}</dd>
+							</>
+						)}
+						{item.imdbList.description && (
+							<>
+								<dt>List note</dt>
+								<dd className="whitespace-pre-wrap break-words">
+									{item.imdbList.description}
+								</dd>
+							</>
+						)}
+						{item.imdbList.rawRating && (
+							<>
+								<dt>Your IMDb rating</dt>
+								<dd>
+									{item.imdbList.rawRating}
+									{item.imdbList.dateRated
+										? ` · Rated ${item.imdbList.dateRated}`
+										: ""}
+								</dd>
+							</>
+						)}
+					</dl>
+				</details>
+			)}
 		</li>
 	)
 }

@@ -2,6 +2,7 @@ import type { AnimeEntry, AnimeScorePlacement } from "./anime-mapping.ts"
 
 /** Shared import contract. IMDb keeps its existing API. */
 export const IMPORT_SOURCES = [
+	"imdb_list",
 	"letterboxd",
 	"trakt",
 	"csv",
@@ -14,6 +15,7 @@ export const IMPORT_SOURCES = [
 	"tvtime",
 ] as const
 export const IMPORT_SOURCE_NAMES = {
+	imdb_list: "IMDb",
 	letterboxd: "Letterboxd",
 	trakt: "Trakt",
 	csv: "Generic CSV",
@@ -84,6 +86,7 @@ const csvUpload = {
 }
 /** One source of truth for file controls, validation, instructions and receipt credits. */
 export const IMPORT_SOURCE_UPLOAD = {
+	imdb_list: null,
 	tvtime: {
 		...uploadDefaults,
 		label: "ZIP, CSV or JSON",
@@ -258,6 +261,17 @@ export type ImportStatus = "preview" | "running" | "done" | "failed" | "undone"
 export const IMPORT_MAX_ROWS = 50_000
 
 export interface ImportObservation {
+	/** Original IMDb list data; notes are not reviews and Created/Date Rated are never watch dates. */
+	imdbList?: {
+		kind: "watchlist" | "custom-list"
+		position: string
+		created: string
+		modified: string
+		description: string
+		dateRated: string
+		rawRating: string
+	}
+
 	/** Watcharr completion snapshots fill missing watches; they never add a repeat to activity history. */
 	watcharrSnapshot?: boolean
 	/** Immutable normalized TV Time evidence before any catalog enrichment. */

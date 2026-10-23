@@ -133,6 +133,7 @@ export function ImportSourcesPage({
 									<ImdbImportFlow
 										key={`${handed?.count ?? 0}:${open.importId ?? ""}`}
 										initial={{ imports: imdbImports }}
+										initialLists={sourceImports}
 										handoff={handed}
 										initialId={open.importId}
 									/>
@@ -227,7 +228,7 @@ function History({
 			.filter((item) => item.status !== "preview")
 			.map((item) => ({
 				id: item.id,
-				source: item.source,
+				source: item.source === "imdb_list" ? ("imdb" as const) : item.source,
 				at: item.finishedAt ?? item.createdAt,
 				line: nativeOutcome(item),
 			})),

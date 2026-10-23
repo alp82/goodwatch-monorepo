@@ -1,7 +1,12 @@
 // The first thing on the IMDb import page: choose or drop the CSV file. It is read in the browser and sent for a preview.
 import { ArrowUpTrayIcon } from "@heroicons/react/24/solid"
 import { type DragEvent, useRef, useState } from "react"
-import type { ImdbImportSummary } from "~/domain/imdb-import"
+import { imdbCsvKind } from "~/domain/imdb-file"
+import type { ImdbListKind } from "~/domain/imdb-file"
+import {
+	IMDB_IMPORT_MAX_BYTES,
+	type ImdbFileSummary,
+} from "~/domain/imdb-import"
 import { Spinner } from "~/ui/wait/Spinner"
 import {
 	type ImportHandoff,
@@ -16,19 +21,38 @@ export function ImdbUpload({
 	onPreview,
 	handoff,
 }: {
-	onPreview: (summary: ImdbImportSummary) => void
-	/** A file the page recognized as an IMDb ratings export; it is sent at once. */
+	onPreview: (summary: ImdbFileSummary) => void
+	/** A recognized IMDb file; lists need an explicit Watchlist/custom-list choice. */
 	handoff?: ImportHandoff
 }) {
 	const inputRef = useRef<HTMLInputElement>(null)
+	const readSequence = useRef(0)
 	const [dragging, setDragging] = useState(false)
+	const [listFile, setListFile] = useState<File | null>(null)
+	const [listKind, setListKind] = useState<ImdbListKind | null>(null)
 	const preview = usePreviewImdbImport()
 	const wrongSource = useWrongSourceCatch("imdb")
 
-	const upload = (file: File) =>
+	const upload = async (file: File) => {
+		setListFile(null)
+		setListKind(null)
+		const sequence = ++readSequence.current
+		try {
+			if (
+				file.size <= IMDB_IMPORT_MAX_BYTES &&
+				imdbCsvKind(await file.text()) === "list"
+			) {
+				if (sequence === readSequence.current) setListFile(file)
+				return
+			}
+		} catch {
+			/* The mutation presents the existing file-read error. */
+		}
+		if (sequence !== readSequence.current) return
 		preview.mutate(file, {
 			onSuccess: (response) => onPreview(response.import),
 		})
+	}
 	const send = async (file: File | undefined) => {
 		if (!file || preview.isPending) return
 		if ((await wrongSource.check(file)).send) upload(file)
@@ -95,6 +119,61 @@ export function ImdbUpload({
 					}}
 				/>
 			</div>
+			{listFile && (
+				<fieldset className="space-y-3">
+					<legend className="font-semibold text-gray-100">
+						Which IMDb list did this file come from?
+					</legend>
+					<p className="text-sm text-gray-400">
+						Watchlist and custom lists use the same columns. Choose the list you
+						exported.
+					</p>
+					{(
+						[
+							[
+								"watchlist",
+								"My Watchlist",
+								"Adds movies and shows to Want to See and imports personal ratings when present.",
+							],
+							[
+								"custom-list",
+								"A custom list",
+								"Imports personal ratings. List membership, order and notes are kept in the receipt; they aren't added to Want to See.",
+							],
+						] as const
+					).map(([value, label, detail]) => (
+						<label
+							key={value}
+							className="flex items-start gap-3 rounded-lg border border-slate-700 p-3"
+						>
+							<input
+								type="radio"
+								name="imdb-list-kind"
+								checked={listKind === value}
+								onChange={() => setListKind(value)}
+							/>
+							<span>
+								<span className="block font-semibold">{label}</span>
+								<span className="text-sm text-gray-400">{detail}</span>
+							</span>
+						</label>
+					))}
+					<button
+						type="button"
+						className={primaryButton}
+						disabled={!listKind || preview.isPending}
+						onClick={() =>
+							listKind &&
+							preview.mutate(
+								{ file: listFile, listKind },
+								{ onSuccess: (response) => onPreview(response.import) },
+							)
+						}
+					>
+						Preview import
+					</button>
+				</fieldset>
+			)}
 			{wrongSource.note}
 			<p className="text-sm text-gray-400">
 				You'll see what's in the file before anything is saved.
