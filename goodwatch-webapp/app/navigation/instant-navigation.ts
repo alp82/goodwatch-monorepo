@@ -177,11 +177,18 @@ export function announceAuthChange(userId?: string | null): void {
 	authSync?.announce(userId === undefined ? undefined : memberKey(userId))
 }
 
-/** Another tab changed the session: hold the cache and reload the root, until it names who the cookie holds now. */
-function resyncIdentity() {
+/**
+ * Another tab changed the session, or this page's member differs from the last note: hold the cache and reload the
+ * root until it names who the cookie holds now. `confirm` runs after that.
+ */
+function resyncIdentity(confirm?: () => void) {
 	const router = remix().__remixRouter
 	if (!router) return
-	releaseAfterRootReload(holdLoaderCache())
+	const release = holdLoaderCache()
+	releaseAfterRootReload(() => {
+		release()
+		confirm?.()
+	})
 	router.revalidate()
 }
 

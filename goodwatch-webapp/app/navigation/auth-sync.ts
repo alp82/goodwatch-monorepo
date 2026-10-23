@@ -42,20 +42,23 @@ function parse(text: string | null): AuthNote | null {
 	}
 }
 
+// How many note ids a tab remembers. A note can arrive twice (channel and storage), interleaved with others.
+const SEEN_LIMIT = 16
+
 export class AuthSync {
-	private seen: string | null = null
+	private readonly seen: string[] = []
 	private readonly env: AuthSyncEnv
 	private readonly ownMember: () => string | null
-	private readonly onChange: () => void
+	private readonly onChange: (confirm?: () => void) => void
 
 	/**
 	 * `ownMember` gives the member this tab's root data names, or null when it has none (an error page). `onChange`
-	 * holds the cache and reloads the root.
+	 * holds the cache and reloads the root, and calls `confirm` once the root has the server's new answer.
 	 */
 	constructor(
 		env: AuthSyncEnv,
 		ownMember: () => string | null,
-		onChange: () => void,
+		onChange: (confirm?: () => void) => void,
 	) {
 		this.env = env
 		this.ownMember = ownMember
@@ -70,21 +73,34 @@ export class AuthSync {
 		}
 	}
 
+	private remember(id: string): void {
+		this.seen.push(id)
+		if (this.seen.length > SEEN_LIMIT) this.seen.shift()
+	}
+
 	/**
-	 * Call once the router exists. The page's own data is the server's latest answer: when the last note names
-	 * someone else (a sign-in that ended in a full page load, such as an OAuth callback), the other tabs hear of it.
+	 * Call once the router exists. When the last note names someone else, either side can be the newer one: this page
+	 * may come from a sign-in that ended in a full page load (an OAuth callback), or another tab may have signed in
+	 * while this page loaded. So the tab holds its cache, asks the server, and tells the others only what the server
+	 * confirmed.
 	 */
 	start(): void {
 		const note = this.stored()
-		this.seen = note?.id ?? null
+		if (note) this.remember(note.id)
 		const own = this.ownMember()
-		if (own !== null && note?.member !== own) this.announce(own)
+		if (own === null) return
+		if (!note) return this.announce(own)
+		if (note.member === own) return
+		this.onChange(() => {
+			const confirmed = this.ownMember()
+			if (confirmed !== null) this.memberChanged(confirmed)
+		})
 	}
 
 	/** Tells the other tabs. Without `member`, a sign-in or sign-out was answered and nobody knows who yet. */
 	announce(member?: string): void {
 		const note: AuthNote = { id: this.env.newId(), member }
-		this.seen = note.id
+		this.remember(note.id)
 		try {
 			this.env.write(JSON.stringify(note))
 		} catch {}
@@ -102,8 +118,8 @@ export class AuthSync {
 	receive(value: AuthNote | string | null): void {
 		const note =
 			typeof value === "string" || value === null ? parse(value) : value
-		if (!note || note.id === this.seen) return
-		this.seen = note.id
+		if (!note || this.seen.includes(note.id)) return
+		this.remember(note.id)
 		if (note.member !== undefined && note.member === this.ownMember()) return
 		this.onChange()
 	}
