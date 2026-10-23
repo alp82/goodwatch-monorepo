@@ -21,7 +21,9 @@ import { titleKey } from "~/utils/title-key"
 /** An episode's length when the catalog has none: a common hour-long show's episode without ads. */
 const DEFAULT_EPISODE_MINUTES = 40
 const KEEP_MS = 10 * 60_000
-const MAX_KEPT = 500
+// A library holds the member's whole data map (thousands of entries for a heavy member), so few are kept: the profiles
+// being looked at right now. A member's older library goes as soon as their data changes.
+const MAX_KEPT = 60
 
 export interface ProfileLibrary {
 	data: UserData
@@ -64,6 +66,8 @@ export async function getProfileLibrary(
 	const hit = kept.get(id)
 	if (hit && Date.now() - hit.at < KEEP_MS) return hit.library
 	const library = buildLibrary(userId, data)
+	for (const key of kept.keys())
+		if (key.startsWith(`${userId}:`)) kept.delete(key)
 	kept.set(id, { at: Date.now(), library })
 	library.catch(() => kept.delete(id))
 	for (const key of kept.keys()) {
@@ -129,7 +133,10 @@ async function buildLibrary(
 			genres: t.genres,
 		})
 	}
-	const { hours, episodes } = await watchTime(data, seenKeys)
+	const [{ hours, episodes }, firsts] = await Promise.all([
+		watchTime(data, seenKeys),
+		firstDates(userId),
+	])
 	return {
 		data,
 		scored,
@@ -137,23 +144,60 @@ async function buildLibrary(
 		seenMovies: seenKeys.filter((key) => key.startsWith("movie-")).length,
 		hours,
 		episodes,
-		since: sinceOf(data),
+		since: sinceOf(data, firsts),
 	}
 }
 
-/** The month of the earliest score or dated watch: when the member's own record starts. */
+/** When the member first rated a title and first logged a dated watch, from Crate; nulls when unknown or unreadable. */
+async function firstDates(
+	userId: string,
+): Promise<{ rated: number | null; watched: number | null }> {
+	const first = async (sql: string) => {
+		try {
+			const [row] = await query<{ first: number | string | null }>(sql, [
+				userId,
+			])
+			const t = row?.first == null ? 0 : new Date(row.first).getTime()
+			return t > 0 ? t : null
+		} catch (error) {
+			console.warn("[profile] first date read failed", error)
+			return null
+		}
+	}
+	const [rated, watched] = await Promise.all([
+		first("SELECT MIN(created_at) AS first FROM user_score WHERE user_id = ?"),
+		first(
+			"SELECT MIN(watched_at) AS first FROM user_watch_log WHERE user_id = ? AND watched_at IS NOT NULL AND watched_at_precision <> 'unknown'",
+		),
+	])
+	return { rated, watched }
+}
+
+/**
+ * The month the member's own record starts: the earliest of when they first rated a title, their first dated watch,
+ * and (when those can't be read) the dates the member data map carries — a score's last change, a title's latest watch.
+ */
 export function sinceOf(
 	data: Pick<UserData, "scores" | "watchState">,
+	firsts: { rated: number | null; watched: number | null } = {
+		rated: null,
+		watched: null,
+	},
 ): string | null {
-	let earliest = Number.POSITIVE_INFINITY
-	for (const entry of Object.values(data.scores)) {
-		const t = new Date(entry.updatedAt).getTime()
-		if (t > 0) earliest = Math.min(earliest, t)
-	}
-	for (const entry of Object.values(data.watchState)) {
-		const t = entry.watchedAt ? new Date(entry.watchedAt).getTime() : 0
-		if (t > 0) earliest = Math.min(earliest, t)
-	}
+	let earliest = Math.min(
+		firsts.rated ?? Number.POSITIVE_INFINITY,
+		firsts.watched ?? Number.POSITIVE_INFINITY,
+	)
+	if (firsts.rated == null)
+		for (const entry of Object.values(data.scores)) {
+			const t = new Date(entry.updatedAt).getTime()
+			if (t > 0) earliest = Math.min(earliest, t)
+		}
+	if (firsts.watched == null)
+		for (const entry of Object.values(data.watchState)) {
+			const t = entry.watchedAt ? new Date(entry.watchedAt).getTime() : 0
+			if (t > 0) earliest = Math.min(earliest, t)
+		}
 	return Number.isFinite(earliest)
 		? new Date(earliest).toISOString().slice(0, 7)
 		: null

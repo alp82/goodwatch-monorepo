@@ -82,6 +82,8 @@ export interface ShareListInput {
 export interface Profile {
 	userId: string
 	handle: string
+	/** ISO time the handle was claimed; read with the profile by handle, absent elsewhere. */
+	claimedAt?: string | null
 }
 
 /** A rejected request, with the HTTP status to answer. */

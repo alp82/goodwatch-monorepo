@@ -124,11 +124,24 @@ export async function getProfileByHandle(
 ): Promise<Profile | null> {
 	const normalized = normalizeHandle(handle)
 	if (handleProblem(normalized)) return null
-	const [row] = await select<{ user_id: string; handle: string }>(
-		"SELECT user_id, handle FROM doc.user_profile WHERE handle = ? AND deleted_at IS NULL",
+	const [row] = await select<{
+		user_id: string
+		handle: string
+		created_at: number | string | null
+	}>(
+		"SELECT user_id, handle, created_at FROM doc.user_profile WHERE handle = ? AND deleted_at IS NULL",
 		[normalized],
 	)
-	return row ? { userId: row.user_id, handle: row.handle } : null
+	return row
+		? {
+				userId: row.user_id,
+				handle: row.handle,
+				claimedAt:
+					row.created_at == null
+						? null
+						: new Date(row.created_at).toISOString(),
+			}
+		: null
 }
 
 export async function publicListsByUser(userId: string): Promise<ShareList[]> {

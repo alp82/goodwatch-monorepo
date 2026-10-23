@@ -4,7 +4,16 @@
 
 // ---------- Visibility ----------
 
-export const PROFILE_PARTS = ["scores", "seen", "wishlist", "shows", "lists", "taste", "hours", "activity"] as const
+export const PROFILE_PARTS = [
+	"scores",
+	"seen",
+	"wishlist",
+	"shows",
+	"lists",
+	"taste",
+	"hours",
+	"activity",
+] as const
 export type ProfilePart = (typeof PROFILE_PARTS)[number]
 
 export const AUDIENCES = ["everyone", "members", "me"] as const
@@ -27,11 +36,27 @@ export const DEFAULT_VISIBILITY: ProfileVisibility = {
 /** Who is looking at a profile. */
 export type ProfileViewer = "owner" | "member" | "guest"
 
-export function canSee(visibility: ProfileVisibility, part: ProfilePart, viewer: ProfileViewer) {
+export function canSee(
+	visibility: ProfileVisibility,
+	part: ProfilePart,
+	viewer: ProfileViewer,
+) {
 	if (viewer === "owner") return true
 	const audience = visibility[part]
 	return viewer === "member" ? audience !== "me" : audience === "everyone"
 }
+
+/** Whether the profile's viewer may see a part. */
+export const seesPart = (
+	shell: Pick<ProfileShell, "visibility" | "viewer">,
+	part: ProfilePart,
+) => canSee(shell.visibility, part, shell.viewer)
+
+/**
+ * Profiles went public on this release (owner decision Q1). Members whose handle predates it get the one-time
+ * "Your profile is public now" banner (Q16); members who claim a handle later chose a public profile knowingly.
+ */
+export const PROFILE_PUBLIC_SINCE = "2026-10-24T00:00:00Z"
 
 /** Reads a stored visibility value, keeping only known parts and audiences. */
 export function parseVisibility(value: unknown): ProfileVisibility {
@@ -39,7 +64,8 @@ export function parseVisibility(value: unknown): ProfileVisibility {
 	if (value && typeof value === "object")
 		for (const part of PROFILE_PARTS) {
 			const audience = (value as Record<string, unknown>)[part]
-			if (AUDIENCES.includes(audience as Audience)) out[part] = audience as Audience
+			if (AUDIENCES.includes(audience as Audience))
+				out[part] = audience as Audience
 		}
 	return out
 }
@@ -69,7 +95,14 @@ export interface ProfileLink {
 	value: string
 }
 
-export const AVATAR_COLORS = ["amber", "rose", "violet", "sky", "emerald", "slate"] as const
+export const AVATAR_COLORS = [
+	"amber",
+	"rose",
+	"violet",
+	"sky",
+	"emerald",
+	"slate",
+] as const
 export type AvatarColor = (typeof AVATAR_COLORS)[number]
 
 /** The picture: an uploaded photo, the sign-in provider's photo, the handle's initial on a colour, or a favorite's
@@ -153,7 +186,11 @@ export interface ProfileOverview {
 	/** Every 10, latest watched first. Empty when scores are hidden from the viewer. */
 	favorites: ProfileTitle[]
 	recent: ProfileTitle[]
-	watching: (ProfileTitle & { watchedEpisodes: number; airedEpisodes: number | null; next: string | null })[]
+	watching: (ProfileTitle & {
+		watchedEpisodes: number
+		airedEpisodes: number | null
+		next: string | null
+	})[]
 	newestWishlist: ProfileTitle[]
 	lists: ProfileListCard[]
 	/** Where the owner parts most with the GoodWatch score (points out of 10, positive = owner higher). */
@@ -173,12 +210,18 @@ export interface ProfileListsPage {
 	lists: import("~/ui/share-lists/ShareListTile").ShareListSummary[]
 }
 
+/** At most this many titles per score on the Scores tab; `total` says how many there are. */
+export const SCORES_TIER_MAX = 120
+/** At most this many titles on the Seen tab (the latest watches); `total` says how many there are. */
+export const SEEN_MAX = 400
+
 export interface ProfileScoresPage {
-	tiers: { score: number; titles: ProfileTitle[] }[]
+	/** Each tier's latest titles, at most SCORES_TIER_MAX, with how many the tier holds. */
+	tiers: { score: number; titles: ProfileTitle[]; total: number }[]
 }
 
 export interface ProfileSeenPage {
-	/** Latest watch first; titles without a date at the end. */
+	/** Latest watch first, titles without a date at the end; at most SEEN_MAX. */
 	titles: ProfileTitle[]
 	total: number
 }
@@ -190,10 +233,20 @@ export interface ProfileWishlistPage {
 	total: number
 }
 
-export type ShowGroup = "continue" | "pickUp" | "waiting" | "start" | "onHold" | "dropped"
+export type ShowGroup =
+	| "continue"
+	| "pickUp"
+	| "waiting"
+	| "start"
+	| "onHold"
+	| "dropped"
 export interface ProfileShowsPage {
 	groups: {
 		group: ShowGroup
-		shows: (ProfileTitle & { watchedEpisodes: number; airedEpisodes: number | null; next: string | null })[]
+		shows: (ProfileTitle & {
+			watchedEpisodes: number
+			airedEpisodes: number | null
+			next: string | null
+		})[]
 	}[]
 }

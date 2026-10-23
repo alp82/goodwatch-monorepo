@@ -1,14 +1,18 @@
+import type { MediaKey } from "~/types/user-data"
 // What a member may save as their profile: the bio, links to their other profiles, the picture, the cover and who sees
 // which part. Pure, so Edit profile can check a value in the browser with the same rules the server applies.
 // Spec: docs/implementation/member-profile/README.md
 import {
+	AUDIENCES,
 	AVATAR_COLORS,
+	type Audience,
 	type AvatarChoice,
 	type AvatarColor,
 	BIO_MAX,
 	LINK_SERVICES,
 	type LinkService,
 	MAX_LINKS,
+	PROFILE_PARTS,
 	type ProfileLink,
 	type ProfileSettings,
 	parseVisibility,
@@ -140,6 +144,12 @@ const isAvatarColor = (value: unknown): value is AvatarColor =>
 	AVATAR_COLORS.includes(value as AvatarColor)
 const TITLE_KEY = /^(movie|show)-[1-9]\d{0,9}$/
 
+/** A stored title key ("movie-550") as a MediaKey; null when it isn't one. */
+export const asMediaKey = (
+	value: string | null | undefined,
+): MediaKey | null =>
+	value && TITLE_KEY.test(value) ? (value as MediaKey) : null
+
 /** Reads a stored or submitted picture choice; null when it isn't one. */
 export function parseAvatarChoice(value: unknown): AvatarChoice | null {
 	if (!value || typeof value !== "object") return null
@@ -250,8 +260,17 @@ export function validateProfileSettings(
 		else cover = input.cover
 	}
 
-	if (input.visibility != null && typeof input.visibility !== "object")
-		problems.push({ field: "visibility", message: "Unknown visibility." })
+	// The whole map, every time: a part left out must not quietly fall back to Everyone.
+	const given = input.visibility as Record<string, unknown> | null | undefined
+	if (
+		!given ||
+		typeof given !== "object" ||
+		!PROFILE_PARTS.every((part) => AUDIENCES.includes(given[part] as Audience))
+	)
+		problems.push({
+			field: "visibility",
+			message: "Say who sees each part of your profile.",
+		})
 	const visibility = parseVisibility(input.visibility)
 
 	if (problems.length) return { ok: false, problems }

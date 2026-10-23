@@ -2,7 +2,7 @@
 // public, the favorites' posters when the scores are public, and the numbers of the public parts.
 import sharp from "sharp"
 import { canSee } from "~/domain/profile"
-import { resolveAvatar } from "~/server/account/summary.server"
+import { resolveAvatar } from "~/server/profile/avatar-choice.server"
 import { readAvatar } from "~/server/profile/avatar.server"
 import { getProfileLibrary } from "~/server/profile/library.server"
 import { getProfilePortrait } from "~/server/profile/portrait.server"

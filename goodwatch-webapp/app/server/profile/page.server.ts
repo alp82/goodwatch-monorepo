@@ -4,6 +4,7 @@
 import { redirect } from "@remix-run/node"
 import { scoreSpread } from "~/domain/my-scores"
 import {
+	PROFILE_PUBLIC_SINCE,
 	type ProfileListCard,
 	type ProfileListsPage,
 	type ProfileOverview,
@@ -14,8 +15,11 @@ import {
 	type ProfileTitle,
 	type ProfileViewer,
 	type ProfileWishlistPage,
+	SCORES_TIER_MAX,
+	SEEN_MAX,
 	type ShowGroup,
 	canSee,
+	seesPart,
 } from "~/domain/profile"
 import { isOnServices } from "~/server/availability-index.server"
 import {
@@ -36,19 +40,19 @@ import { getUserIdFromRequest } from "~/utils/auth"
 import { SHARE_LIST_PAGE_CACHE_CONTROL } from "~/utils/auth-cookie"
 import { titlePath } from "~/utils/helpers"
 import { titleKey } from "~/utils/title-key"
-import { avatarPath, avatarVersion } from "./avatar.server"
+import { resolveAvatar } from "./avatar-choice.server"
 import {
 	type ProfileLibrary,
 	getProfileLibrary,
 	titlesOf,
 } from "./library.server"
 import { getProfileSettings } from "./settings.server"
+import { round1 } from "./taste-stats-model"
 
 export { markProfileNoticeSeen } from "./settings.server"
 
 /** A profile with at least this many public scores may be indexed (owner decision Q5). */
 export const INDEX_MIN_SCORES = 20
-const TMDB_POSTER = "https://image.tmdb.org/t/p/w185"
 
 // A profile can come back (a handle claimed later), so never cache a missing one.
 const notFound = () =>
@@ -65,7 +69,6 @@ const iso = (value: Date | string | number | null | undefined) =>
 	value == null ? null : new Date(value).toISOString()
 const byDateDesc = (a: ProfileTitle, b: ProfileTitle) =>
 	(b.date ?? "").localeCompare(a.date ?? "")
-const round1 = (n: number) => Math.round(n * 10) / 10
 
 export async function loadProfileShell(
 	request: Request,
@@ -86,34 +89,25 @@ export async function loadProfileShell(
 	const viewerId = (await getUserIdFromRequest({ request })) ?? null
 	const viewer: ProfileViewer =
 		viewerId === ownerId ? "owner" : viewerId ? "member" : "guest"
-	const [settings, library, photoVersion, ownLists] = await Promise.all([
+	const [settings, library, ownLists] = await Promise.all([
 		getProfileSettings(ownerId),
 		getProfileLibrary(ownerId),
-		avatarVersion(ownerId),
 		viewer === "owner" ? listsByUser(ownerId) : Promise.resolve(page.lists),
 	])
 	const { visibility } = settings
 	const see = (part: Parameters<typeof canSee>[1]) =>
-		canSee(visibility, part, viewer)
+		seesPart({ visibility, viewer }, part)
+	const avatar = await resolveAvatar(
+		ownerId,
+		profile.handle,
+		settings.avatar,
+		settings.providerPhoto,
+	)
 
 	const scores = [...library.scored.values()].map((t) => t.score as number)
 	const average = scores.length
 		? round1(scores.reduce((a, b) => a + b, 0) / scores.length)
 		: null
-
-	// The picture: what the member picked, else the initial on amber.
-	let avatarUrl: string | null = null
-	let color: ProfileShell["avatar"]["color"] = "amber"
-	const choice = settings.avatar
-	if (choice.kind === "initial") color = choice.color
-	else if (choice.kind === "photo" && photoVersion)
-		avatarUrl = avatarPath(profile.handle, photoVersion)
-	else if (choice.kind === "provider" && settings.providerPhoto)
-		avatarUrl = settings.providerPhoto
-	else if (choice.kind === "poster") {
-		const poster = library.scored.get(choice.title as MediaKey)?.poster
-		if (poster) avatarUrl = `${TMDB_POSTER}${poster}`
-	}
 
 	return {
 		ownerId,
@@ -122,7 +116,7 @@ export async function loadProfileShell(
 			handle: profile.handle,
 			viewer,
 			visibility,
-			avatar: { url: avatarUrl, color },
+			avatar,
 			cover: coverOf(
 				library,
 				settings.cover,
@@ -131,7 +125,8 @@ export async function loadProfileShell(
 			),
 			bio: settings.bio,
 			links: settings.links,
-			since: library.since,
+			// When their record starts says something about their library; it goes with it when both are hidden.
+			since: see("scores") || see("seen") ? library.since : null,
 			counts: {
 				seen: see("seen") ? library.seenKeys.length : 0,
 				seenMovies: see("seen") ? library.seenMovies : 0,
@@ -148,9 +143,14 @@ export async function loadProfileShell(
 				? scoreSpread(scores)
 				: Array.from({ length: 10 }, () => 0),
 			indexable:
-				visibility.scores === "everyone" &&
+				canSee(visibility, "scores", "guest") &&
 				library.scored.size >= INDEX_MIN_SCORES,
-			showPublicNotice: viewer === "owner" && !settings.noticeSeen,
+			// Only members whose profile went public with this release, not members who claimed a handle since.
+			showPublicNotice:
+				viewer === "owner" &&
+				!settings.noticeSeen &&
+				profile.claimedAt != null &&
+				profile.claimedAt < PROFILE_PUBLIC_SINCE,
 		},
 	}
 }
@@ -185,8 +185,7 @@ export async function loadProfileOverview(
 	ownerId: string,
 	shell: ProfileShell,
 ): Promise<ProfileOverview> {
-	const see = (part: Parameters<typeof canSee>[1]) =>
-		canSee(shell.visibility, part, shell.viewer)
+	const see = (part: Parameters<typeof canSee>[1]) => seesPart(shell, part)
 	const library = await getProfileLibrary(ownerId)
 	const { data } = library
 	const scored = [...library.scored.values()].map(plainTitle)
@@ -196,16 +195,18 @@ export async function loadProfileOverview(
 		: []
 
 	const activity = see("activity")
-	const recentKeys = activity
-		? library.seenKeys
-				.filter((key) => data.watchState[key]?.watchedAt)
-				.sort(
-					(a, b) =>
-						new Date(data.watchState[b]?.watchedAt ?? 0).getTime() -
-						new Date(data.watchState[a]?.watchedAt ?? 0).getTime(),
-				)
-				.slice(0, 20)
-		: []
+	// Activity shows the latest watches, so it also needs the Seen part.
+	const recentKeys =
+		activity && see("seen")
+			? library.seenKeys
+					.filter((key) => data.watchState[key]?.watchedAt)
+					.sort(
+						(a, b) =>
+							new Date(data.watchState[b]?.watchedAt ?? 0).getTime() -
+							new Date(data.watchState[a]?.watchedAt ?? 0).getTime(),
+					)
+					.slice(0, 20)
+			: []
 	const recent = (
 		await titlesOf(recentKeys, library, (key) =>
 			iso(data.watchState[key]?.watchedAt),
@@ -272,7 +273,7 @@ export async function loadProfileScores(
 	ownerId: string,
 	shell: ProfileShell,
 ): Promise<ProfileScoresPage> {
-	if (!canSee(shell.visibility, "scores", shell.viewer)) return { tiers: [] }
+	if (!seesPart(shell, "scores")) return { tiers: [] }
 	const library = await getProfileLibrary(ownerId)
 	const tiers = new Map<number, ProfileTitle[]>()
 	for (const t of library.scored.values()) {
@@ -282,7 +283,11 @@ export async function loadProfileScores(
 	return {
 		tiers: [...tiers.entries()]
 			.sort((a, b) => b[0] - a[0])
-			.map(([score, titles]) => ({ score, titles: titles.sort(byDateDesc) })),
+			.map(([score, titles]) => ({
+				score,
+				titles: titles.sort(byDateDesc).slice(0, SCORES_TIER_MAX),
+				total: titles.length,
+			})),
 	}
 }
 
@@ -290,15 +295,22 @@ export async function loadProfileSeen(
 	ownerId: string,
 	shell: ProfileShell,
 ): Promise<ProfileSeenPage> {
-	if (!canSee(shell.visibility, "seen", shell.viewer))
-		return { titles: [], total: 0 }
+	if (!seesPart(shell, "seen")) return { titles: [], total: 0 }
 	const library = await getProfileLibrary(ownerId)
 	const { data } = library
-	// Only a logged watch dates a title here: an imported score's date says when it was imported, not watched.
-	const titles = await titlesOf(library.seenKeys, library, (key) =>
+	// Only a logged watch dates a title here: an imported score's date says when it was imported, not watched. The
+	// order comes from the dates in the data map, so only the shown titles need their display fields.
+	const watchedAt = (key: MediaKey) => {
+		const at = data.watchState[key]?.watchedAt
+		return at ? new Date(at).getTime() : 0
+	}
+	const shownKeys = [...library.seenKeys]
+		.sort((a, b) => watchedAt(b) - watchedAt(a))
+		.slice(0, SEEN_MAX)
+	const titles = await titlesOf(shownKeys, library, (key) =>
 		iso(data.watchState[key]?.watchedAt),
 	)
-	const scoresVisible = canSee(shell.visibility, "scores", shell.viewer)
+	const scoresVisible = seesPart(shell, "scores")
 	const dated = titles.filter((t) => t.date).sort(byDateDesc)
 	const undated = titles
 		.filter((t) => !t.date)
@@ -315,7 +327,7 @@ export async function loadProfileWishlist(
 	ownerId: string,
 	shell: ProfileShell,
 ): Promise<ProfileWishlistPage> {
-	if (!canSee(shell.visibility, "wishlist", shell.viewer))
+	if (!seesPart(shell, "wishlist"))
 		return { watchNow: null, titles: [], total: 0 }
 	const library = await getProfileLibrary(ownerId)
 	const { data } = library
@@ -377,7 +389,7 @@ export async function loadProfileShows(
 	ownerId: string,
 	shell: ProfileShell,
 ): Promise<ProfileShowsPage> {
-	if (!canSee(shell.visibility, "shows", shell.viewer)) return { groups: [] }
+	if (!seesPart(shell, "shows")) return { groups: [] }
 	const shows = await ownerShows(ownerId)
 	return {
 		groups: GROUPS.map((group) => ({
@@ -399,7 +411,7 @@ export async function loadProfileLists(
 	ownerId: string,
 	shell: ProfileShell,
 ): Promise<ProfileListsPage> {
-	if (!canSee(shell.visibility, "lists", shell.viewer)) return { lists: [] }
+	if (!seesPart(shell, "lists")) return { lists: [] }
 	return { lists: await listCards(ownerId, shell) }
 }
 

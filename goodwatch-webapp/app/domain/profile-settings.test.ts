@@ -6,8 +6,17 @@ import "../server/title-filter/test-alias.ts"
 const { DEFAULT_VISIBILITY, canSee, parseVisibility } = await import(
 	"./profile.ts"
 )
-const { normalizeLinkValue, profileLinkUrl, validateProfileSettings } =
-	await import("./profile-settings.ts")
+const {
+	normalizeLinkValue,
+	profileLinkUrl,
+	validateProfileSettings: validate,
+} = await import("./profile-settings.ts")
+
+// Every save carries the whole visibility map; the tests below are about the other fields.
+const validateProfileSettings = (
+	input: Parameters<typeof validate>[0],
+	ctx: Parameters<typeof validate>[1],
+) => validate({ visibility: DEFAULT_VISIBILITY, ...input }, ctx)
 
 const context = {
 	scored: (key: string) => key === "movie-550",
@@ -167,4 +176,21 @@ test("a poster or cover must be a title the member scored; a photo must exist", 
 	)
 	const none = validateProfileSettings({ cover: null }, context)
 	assert.equal(none.ok && none.settings.cover, null)
+})
+
+test("a save must say who sees each of the eight parts", () => {
+	assert.equal(validate({}, context).ok, false)
+	assert.equal(validate({ visibility: { scores: "me" } }, context).ok, false)
+	assert.equal(
+		validate(
+			{ visibility: { ...DEFAULT_VISIBILITY, taste: "nobody" } },
+			context,
+		).ok,
+		false,
+	)
+	const ok = validate(
+		{ visibility: { ...DEFAULT_VISIBILITY, wishlist: "members" } },
+		context,
+	)
+	assert.equal(ok.ok && ok.settings.visibility.wishlist, "members")
 })
