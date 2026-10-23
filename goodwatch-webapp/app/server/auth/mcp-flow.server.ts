@@ -1,4 +1,4 @@
-import { YEPWATCH_READ_SCOPE } from "./yepwatch-oauth-policy.ts"
+import { assertYepWatchOAuthRequest, yepwatchOAuthEnvironment, type YepWatchOAuthConfig, YEPWATCH_READ_SCOPE } from "./yepwatch-oauth-policy.ts"
 import type { ConnectState, ConsentApp, ConsentView } from "../../utils/mcp-connect.ts"
 import { isAddressedTo } from "../site-origin.server.ts"
 import type { createGoodwatchAuth } from "./auth.server.ts"
@@ -56,7 +56,7 @@ async function checked(request: Request, auth: AuthService) {
 }
 
 /** The page's data, or the answer for a request that can't show it (a signed-out member goes to sign in). */
-export async function loadMcpConsent(request: Request, auth: AuthService): Promise<ConsentView | Response> {
+export async function loadMcpConsent(request: Request, auth: AuthService, firstParty?: YepWatchOAuthConfig): Promise<ConsentView | Response> {
 	const check = await checked(request, auth)
 	if (check instanceof Response) return check
 	const { params, context, session, canonicalOrigin } = check
@@ -64,11 +64,28 @@ export async function loadMcpConsent(request: Request, auth: AuthService): Promi
 	if (!session) return new Response(null, { status: 302, headers: { Location: `/sign-in?${check.query}` } })
 	const clientId = params.get("client_id")
 	if (!clientId) return new Response("Missing app", { status: 400 })
-	const client = await context.adapter.findOne<{ name?: string; clientDiscoveryId?: string; disabled?: boolean }>({
+	const client = await context.adapter.findOne<{ name?: string; clientDiscoveryId?: string; disabled?: boolean; tokenEndpointAuthMethod?: string; requirePKCE?: boolean; redirectUris?: string[]; scopes?: string[] }>({
 		model: "oauthClient",
 		where: [{ field: "clientId", value: clientId }],
 	})
 	if (!client || client.disabled) return new Response("Unknown app", { status: 400 })
+	// YepWatch is our own product. Continue its signed, session-bound read grant without a third-party permission screen.
+	// Keep the provider's durable grant issuance/revocation path; skipConsent alone would omit that record.
+	if (firstParty && clientId === firstParty.clientId) {
+		try {
+			assertYepWatchOAuthRequest(firstParty, "/oauth2/consent", { oauth_query: check.query })
+			if (["client_id", "resource", "scope", "redirect_uri"].some(key => params.getAll(key).length !== 1) ||
+				params.get("scope") !== YEPWATCH_READ_SCOPE || client.tokenEndpointAuthMethod !== "none" ||
+				client.requirePKCE !== true || !client.redirectUris?.includes(params.get("redirect_uri")!) ||
+				!client.scopes?.includes(YEPWATCH_READ_SCOPE)) throw new Error("Invalid first-party client")
+		} catch { return new Response("Invalid YepWatch sign-in request", { status: 400 }) }
+		const headers = new Headers(request.headers)
+		headers.set("Origin", canonicalOrigin)
+		headers.set("Content-Type", "application/x-www-form-urlencoded")
+		return decideMcpConsent(new Request(request.url, {
+			method: "POST", headers, body: new URLSearchParams({ decision: "allow", access: "read" }),
+		}), auth)
+	}
 	const scopes = (params.get("scope") ?? "").split(" ").filter(Boolean)
 	return {
 		app: describeApp({
@@ -177,7 +194,7 @@ async function service() {
 }
 
 export async function mcpConsentLoader(request: Request) {
-	return loadMcpConsent(request, await service())
+	return loadMcpConsent(request, await service(), yepwatchOAuthEnvironment(process.env))
 }
 export async function mcpConsentAction(request: Request) {
 	return decideMcpConsent(request, await service())
@@ -202,18 +219,25 @@ export async function connectingApp(request: Request): Promise<ConnectState | nu
 		).toString()
 		const context = await (await getBetterAuth()).$context
 		if (!(await verifyQuery(oauthQuery, context.secret))) return null
-		const client = await context.adapter.findOne<{ name?: string; clientDiscoveryId?: string; disabled?: boolean }>({
+		const client = await context.adapter.findOne<{ name?: string; clientDiscoveryId?: string; disabled?: boolean; tokenEndpointAuthMethod?: string; requirePKCE?: boolean; redirectUris?: string[]; scopes?: string[] }>({
 			model: "oauthClient",
 			where: [{ field: "clientId", value: clientId }],
 		})
 		if (!client || client.disabled) return null
+		const firstParty = yepwatchOAuthEnvironment(process.env)
+		let ownProduct = false
+		if (firstParty && clientId === firstParty.clientId) {
+			assertYepWatchOAuthRequest(firstParty, "/oauth2/authorize", { oauth_query: oauthQuery })
+			ownProduct = client.tokenEndpointAuthMethod === "none" && client.requirePKCE === true &&
+				Boolean(client.redirectUris?.includes(params.get("redirect_uri")!)) && params.get("scope") === YEPWATCH_READ_SCOPE
+		}
 		return {
-			app: describeApp({
+			app: { ...describeApp({
 				clientId,
 				name: client.name,
 				verified: client.clientDiscoveryId === "cimd",
 				redirectUri: params.get("redirect_uri"),
-			}),
+			}), firstParty: ownProduct },
 			oauthQuery,
 			continueUrl: `/api/auth/oauth2/authorize?${unsignedQuery(new URLSearchParams(oauthQuery))}`,
 		}

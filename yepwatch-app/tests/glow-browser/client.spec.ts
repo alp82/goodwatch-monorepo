@@ -303,7 +303,7 @@ test('unavailable account start stays an honest guest state inside the room draw
 }) => {
   await fixture(page);
   await page.getByRole('button', { name: 'Open room', exact: true }).click();
-  await page.getByRole('button', { name: 'Connect GoodWatch', exact: true }).click();
+  await page.getByRole('button', { name: 'Sign in with GoodWatch', exact: true }).click();
   await expect(
     page
       .getByText(
@@ -312,7 +312,7 @@ test('unavailable account start stays an honest guest state inside the room draw
       )
       .last()
   ).toBeVisible();
-  await expect(page.getByText('GoodWatch connected', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Signed in with GoodWatch', { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Close panel', exact: true }).last().click();
   await expect(page.getByRole('button', { name: 'Yep', exact: true })).toBeEnabled();
 });
@@ -470,10 +470,10 @@ for (const viewport of [
     await page.screenshot({ path: `artifacts/glow/layout-entry-${viewport.width}.png` });
     if (await page.getByRole('button', { name: 'More options', exact: true }).count()) {
       await page.getByRole('button', { name: 'More options', exact: true }).click();
-      await reachable('Connect GoodWatch');
+      await reachable('Sign in with GoodWatch');
       await page.getByRole('button', { name: 'Join with an invitation', exact: true }).click();
     } else {
-      await reachable('Connect GoodWatch');
+      await reachable('Sign in with GoodWatch');
       await page.getByRole('button', { name: 'Join with an invitation', exact: true }).click();
     }
     await page.getByLabel('Room code or invitation').fill('isolated-code');
@@ -899,3 +899,31 @@ test('shared saved-provider defaults preselect the union, filter unavailable pro
  await expect.poll(()=>f.commands.filter(c=>c.command.type==='configure').length).toBe(2);
  expect(f.commands.at(-1)?.command).toMatchObject({serviceIds:[8,337]});
 });
+
+for (const mode of ['no-share', 'rejected', 'cancelled', 'manual'] as const) {
+  test(`invitation sharing handles browser ${mode}`, async ({ page }) => {
+    await page.addInitScript((mode) => {
+      sessionStorage.setItem('yepwatch.v3.invite.test-room', JSON.stringify({ code: 'ABC234', path: '/r/ABC234' }));
+      Object.defineProperty(navigator, 'share', { configurable: true, value: mode === 'no-share' ? undefined : async () => {
+        throw new DOMException('Test share result', mode === 'cancelled' ? 'AbortError' : 'NotAllowedError');
+      } });
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (value: string) => {
+        if (mode === 'manual') throw new DOMException('Denied', 'NotAllowedError');
+        sessionStorage.setItem('test-copied-invitation', value);
+      } } });
+    }, mode);
+    await fixture(page);
+    await page.getByRole('button', { name: 'Open room', exact: true }).click();
+    await page.getByRole('button', { name: 'Share invitation', exact: true }).click();
+    if (mode === 'no-share' || mode === 'rejected') {
+      await expect(page.getByText('Invitation copied.', { exact: true })).toBeVisible();
+      expect(await page.evaluate(() => sessionStorage.getItem('test-copied-invitation'))).toBe(`${new URL(page.url()).origin}/r/ABC234`);
+    } else if (mode === 'manual') {
+      await expect(page.getByText('Select and copy the invitation link above.', { exact: true })).toBeVisible();
+    } else {
+      await expect(page.getByText('Invitation copied.', { exact: true })).toHaveCount(0);
+      expect(await page.evaluate(() => sessionStorage.getItem('test-copied-invitation'))).toBeNull();
+    }
+    await expect(page.getByText(/Sharing could not open/)).toHaveCount(0);
+  });
+}

@@ -12,7 +12,7 @@ AUTH_YEPWATCH_CLIENT_ID=yepwatch-public
 AUTH_YEPWATCH_REDIRECT_URIS=https://yepwatch.com/api/yepwatch/v1/proposal/member/callback
 ```
 
-Keep its existing Better Auth, mail, Google, Crate and Redis settings. Deploy the GoodWatch source containing the existing account resource route and these changes. No new issuer, account table, cross-domain cookie or app client secret is needed.
+Keep its existing Better Auth, mail, Google, Crate and Redis settings. Deploy the GoodWatch source containing the existing account resource route and these changes. No new issuer, account table, cross-domain cookie or app client secret is needed. The exact configured YepWatch client continues directly after sign-in; third-party clients keep their consent screen. Keep the registration’s `skipConsent: false`: the first-party continuation uses the normal provider grant path, including its durable revocation record.
 
 Register the public client once with the existing issuer's database environment. From `goodwatch-webapp`, `node scripts/yepwatch-auth/build.mjs` creates `build/yepwatch-auth-client.mjs`. Run this beside the GoodWatch runtime's `node_modules` (for example copy it to `/app/yepwatch-auth-client.mjs` inside that container) using that container's existing environment:
 

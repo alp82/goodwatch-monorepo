@@ -1,5 +1,6 @@
+import { shareInvitation } from '../../core/share-invitation';
 import { useEffect, useRef, useState } from 'react';
-import { Linking, Share, View, useWindowDimensions } from 'react-native';
+import { Linking, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useContinuousRoom } from '../../core/continuous/useRoom';
@@ -40,6 +41,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const [active, setActive] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<'room' | 'details' | 'trailer' | null>(null);
   const [notice, setNotice] = useState('');
+  const [shareNotice, setShareNotice] = useState('');
   const [memberBusy, setMemberBusy] = useState(false);
   const [localReaction, setLocalReaction] = useState<{
     at: number;
@@ -785,32 +787,34 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
               <GText size={14} color={glow.muted}>
                 Invite friends to join in their browser.
               </GText>
-              <GText size={14}>{appInviteUrl(invite.path)}</GText>
+              <GText size={14} selectable>{appInviteUrl(invite.path)}</GText>
               <Pill
                 label="Share invitation"
                 icon="people"
                 onPress={() =>
-                  void Share.share({ message: appInviteUrl(invite.path) }).catch(() =>
-                    setNotice('Sharing could not open. Use the displayed invitation link.')
+                  void shareInvitation(appInviteUrl(invite.path)).then((result) =>
+                    setShareNotice(result === 'copied' ? 'Invitation copied.' : result === 'manual'
+                      ? 'Select and copy the invitation link above.' : '')
                   )
                 }
               >
                 Share invitation
               </Pill>
+              {shareNotice ? <GText size={14} color={glow.soft}>{shareNotice}</GText> : null}
             </>
           ) : (
             <GText color={glow.muted}>Reopen the original invitation to share its link.</GText>
           )}
           {!guestOnly &&
             (own.member.state === 'linked' ? (
-              <GText bold>GoodWatch connected</GText>
+              <GText bold>Signed in with GoodWatch</GText>
             ) : (
               <Pill
-                label="Connect GoodWatch"
+                label="Sign in with GoodWatch"
                 disabled={memberBusy || disabled}
                 onPress={() => void signin()}
               >
-                {memberBusy ? 'Connecting GoodWatch…' : 'Connect GoodWatch'}
+                {memberBusy ? 'Signing in with GoodWatch…' : 'Sign in with GoodWatch'}
               </Pill>
             ))}
           {notice && (

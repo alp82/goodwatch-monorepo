@@ -18,7 +18,7 @@ import {
   migrateAuthTables,
 } from "./crate-adapter.server.ts";
 import { ValkeyAuthStorage } from "./secondary-storage.server.ts";
-import { decideMcpConsent } from "./mcp-flow.server.ts";
+import { loadMcpConsent } from "./mcp-flow.server.ts";
 import { pkce } from "../yepwatch/continuous-members.server.ts";
 import { verifyOAuthResourceToken } from "./oauth-access.server.ts";
 const crateOrigin = process.env.YEPWATCH_TEST_AUTH_CRATE_ORIGIN;
@@ -185,18 +185,20 @@ try {
     assert.equal(authorization.status, 302);
     const consentUrl = new URL(authorization.headers.get("location")!, origin);
     assert.equal(consentUrl.pathname, "/auth/mcp/consent");
-    const consent = await decideMcpConsent(
-      new Request(consentUrl, {
-        method: "POST",
-        headers: {
-          cookie,
-          origin,
-          "content-type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({ decision: "allow", access: "read" }),
-      }),
-      auth
-    );
+    const ordinary = await loadMcpConsent(new Request(consentUrl, { headers: { cookie } }), auth);
+    assert.ok(!(ordinary instanceof Response), "Unconfigured apps still need the permission page");
+    const signedOut = await loadMcpConsent(new Request(consentUrl), auth, policy);
+    assert.ok(signedOut instanceof Response);
+    assert.equal(signedOut.status, 302);
+    assert.ok(signedOut.headers.get("location")?.startsWith("/sign-in?"));
+    const tampered = new URL(consentUrl);
+    tampered.searchParams.set("redirect_uri", "https://wrong.example/callback");
+    const rejected = await loadMcpConsent(new Request(tampered, { headers: { cookie } }), auth, policy);
+    assert.ok(rejected instanceof Response);
+    assert.equal(rejected.status, 400);
+    // First-party continuation still issues the durable grant required by the account resource.
+    const consent = await loadMcpConsent(new Request(consentUrl, { headers: { cookie } }), auth, policy);
+    assert.ok(consent instanceof Response);
     assert.equal(consent.status, 302);
     const dest = new URL(consent.headers.get("location")!, origin);
     assert.equal(dest.searchParams.get("state"), started.state);
@@ -242,7 +244,7 @@ try {
     assert.equal(recovered.shared.participants.length, 1);
   }
   console.log(
-    "PASS actual local GoodWatch signup, captured email verification, signed consent, remote resource and browser/native-protocol return to the same proposal guest. Preferences/progress empty fixtures; no production operations."
+    "PASS actual local GoodWatch signup, captured email verification, first-party direct continuation, remote resource and browser/native-protocol return to the same proposal guest. Preferences/progress empty fixtures; no production operations."
   );
 } finally {
   await mail.drain();

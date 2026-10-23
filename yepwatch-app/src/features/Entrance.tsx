@@ -319,16 +319,16 @@ export function Entrance({ invite }: { invite?: string }) {
                   </Pill>
                 )}
                 {!guestOnly && <Pill
-                  label="Connect GoodWatch"
+                  label="Sign in with GoodWatch"
                   disabled={locked || !nickname.trim() || (joining && !code.trim())}
                   onPress={() => void enter(Boolean(invite || joining), true)}
                 >
-                  Connect GoodWatch
+                  Sign in with GoodWatch
                 </Pill>}
               </>
             )}
             <GText size={12} color={glow.muted}>
-              {guestOnly ? 'Choose together. No account needed.' : 'No account needed. Connect GoodWatch to sign in or create an account for saved preferences and show progress.'}
+              {guestOnly ? 'Choose together. No account needed.' : 'No account needed. Use your GoodWatch account for saved preferences and show progress.'}
             </GText>
             {admission && (
               <GText size={12} color={glow.muted}>
@@ -356,11 +356,11 @@ export function Entrance({ invite }: { invite?: string }) {
             </Pill>
           )}
           {!guestOnly && <Pill
-            label="Connect GoodWatch"
+            label="Sign in with GoodWatch"
             disabled={locked || !nickname.trim() || (joining && !code.trim())}
             onPress={() => void enter(Boolean(invite || joining), true)}
           >
-            Connect GoodWatch
+            Sign in with GoodWatch
           </Pill>}
         </Drawer>
       )}

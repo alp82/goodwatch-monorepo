@@ -28,6 +28,7 @@ export function GoodWatchBadge({ size = "md" }: { size?: "md" | "lg" }) {
 }
 
 export function ConnectNote({ app }: { app: ConsentApp }) {
+	if (app.firstParty) return <p className="text-sm text-gray-200">Use your GoodWatch account to continue to YepWatch.</p>
 	return (
 		<div className="flex items-center gap-3 rounded-xl border border-gray-700 bg-gray-800/70 p-3 text-sm text-gray-200">
 			<ConnectAppBadge app={app} size="sm" />
@@ -41,6 +42,10 @@ export function ConnectNote({ app }: { app: ConsentApp }) {
 
 // The picture column while an app waits: what is about to be connected, instead of the slogan.
 export function ConnectAside({ app }: { app: ConsentApp }) {
+	if (app.firstParty) return <div className="max-w-md p-8 text-center text-white">
+		<h2 className="mb-4 text-4xl font-bold">Your GoodWatch. Together.</h2>
+		<p className="text-xl text-gray-200">Your streaming services and show progress, ready in YepWatch.</p>
+	</div>
 	return (
 		<div className="max-w-md p-8 text-center text-white">
 			<div className="mb-8 flex items-center justify-center gap-6">

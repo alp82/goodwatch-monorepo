@@ -28,6 +28,7 @@ export function GText({
   bold = false,
   color = glow.ink,
   lines,
+  selectable = false,
   style,
 }: {
   children: ReactNode;
@@ -35,10 +36,12 @@ export function GText({
   bold?: boolean;
   color?: string;
   lines?: number;
+  selectable?: boolean;
   style?: StyleProp<TextStyle>;
 }) {
   return (
     <Text
+      selectable={selectable}
       numberOfLines={lines}
       style={[
         {
