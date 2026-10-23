@@ -89,9 +89,22 @@ export function MdblistConnectPanel() {
 	const [pending, setPending] = useState(false)
 	const [error, setError] = useState<string>()
 	const [submissions, setSubmissions] = useState(0)
+	// Leaving Imports aborts the post, so the server stops reading MDBList (it watches the request signal) and frees
+	// the key. A late answer after that is ignored instead of bringing the member back here.
+	const reading = useRef<AbortController | null>(null)
+	useEffect(
+		() => () => {
+			reading.current?.abort()
+			reading.current = null
+		},
+		[],
+	)
 	const submit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault()
 		if (pending) return
+		reading.current?.abort()
+		const controller = new AbortController()
+		reading.current = controller
 		const field = event.currentTarget.elements.namedItem(
 			"apiKey",
 		) as HTMLInputElement | null
@@ -105,11 +118,13 @@ export function MdblistConnectPanel() {
 				method: "POST",
 				headers: { Accept: "application/json" },
 				body,
+				signal: controller.signal,
 			})
 			const data = (await response.json().catch(() => ({}))) as {
 				location?: unknown
 				error?: unknown
 			}
+			if (controller.signal.aborted) return
 			if (response.ok && typeof data.location === "string") {
 				navigate(data.location)
 				return
@@ -120,9 +135,13 @@ export function MdblistConnectPanel() {
 					: "The import could not be prepared. Please try again.",
 			)
 		} catch {
+			if (controller.signal.aborted) return
 			setError("GoodWatch couldn't reach its server. Please try again.")
 		} finally {
-			setPending(false)
+			if (reading.current === controller) {
+				reading.current = null
+				setPending(false)
+			}
 		}
 	}
 	return (

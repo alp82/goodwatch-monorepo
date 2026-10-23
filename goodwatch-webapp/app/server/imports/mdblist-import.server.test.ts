@@ -206,3 +206,93 @@ test("a script post gets the preview address as JSON, so the page can open it wi
 	assert.equal(response.headers.get("Cache-Control"), "private, no-store")
 	assert.equal(response.headers.get("Location"), null)
 })
+
+test("through remix-serve's Express adapter, a dropped connection stops the MDBList read and frees the lock", async () => {
+	const { createServer, request } = await import("node:http")
+	// express ships no type declarations in this app; only these two calls are used.
+	const express = (
+		(await import(
+			// @ts-expect-error -- no declaration file for express
+			"express"
+		)) as {
+			default: () => {
+				post: (
+					path: string,
+					handler: (req: unknown, res: unknown) => Promise<void>,
+				) => void
+			} & Parameters<typeof import("node:http").createServer>[1]
+		}
+	).default
+	const { createRemixRequest, sendRemixResponse } = (await import(
+		"@remix-run/express/dist/server.js"
+	)) as unknown as {
+		createRemixRequest: (req: unknown, res: unknown) => Request
+		sendRemixResponse: (res: unknown, response: Response) => Promise<void>
+	}
+	const seen: AbortSignal[] = []
+	const flow = createMdblistImport({
+		client: {
+			readAccount: async (_key, options = {}) => {
+				const signal = options.signal as AbortSignal
+				seen.push(signal)
+				await new Promise((_resolve, reject) =>
+					signal.addEventListener("abort", () =>
+						reject(
+							new MdblistError(
+								"The import was canceled before it finished.",
+								499,
+							),
+						),
+					),
+				)
+				return { source: "mdblist", observations: [], warnings: [] }
+			},
+		},
+		member: async () => ({ userId: "member", headers: new Headers() }),
+		origin: () => "https://goodwatch.test",
+		preview: async () => ({ id: "00000000-0000-4000-8000-000000000001" }),
+	})
+	const app = express()
+	app.post("/api/imports/mdblist", async (req: unknown, res: unknown) => {
+		await sendRemixResponse(
+			res,
+			await flow.handle(createRemixRequest(req, res)),
+		)
+	})
+	const server = createServer(app)
+	await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
+	const { port } = server.address() as { port: number }
+	const post = () => {
+		const outgoing = request({
+			host: "127.0.0.1",
+			port,
+			path: "/api/imports/mdblist",
+			method: "POST",
+			headers: {
+				Origin: "https://goodwatch.test",
+				"Content-Type": "application/x-www-form-urlencoded",
+			},
+		})
+		outgoing.on("error", () => {})
+		outgoing.end(`apiKey=${KEY}`)
+		return outgoing
+	}
+	const waitFor = async (check: () => boolean) => {
+		for (let i = 0; i < 200 && !check(); i++)
+			await new Promise((resolve) => setTimeout(resolve, 5))
+		assert.ok(check())
+	}
+	try {
+		const first = post()
+		await waitFor(() => seen.length === 1)
+		first.destroy()
+		await waitFor(() => seen[0].aborted)
+		// The lock is free: the same member and key start a new read.
+		const second = post()
+		await waitFor(() => seen.length === 2)
+		second.destroy()
+		await waitFor(() => seen[1].aborted)
+	} finally {
+		server.close()
+	}
+})

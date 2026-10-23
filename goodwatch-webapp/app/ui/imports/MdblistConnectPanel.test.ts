@@ -86,3 +86,25 @@ test("after a submission no router, fetcher or page state holds the key, accepte
 	assert.equal(refused.path, "/settings/imports?source=mdblist")
 	assert.equal(refused.alert, "MDBList didn't accept this API key.")
 })
+
+test("leaving Imports mid-read aborts the post, and a late answer doesn't navigate back", () => {
+	const output = execFileSync(
+		"node_modules/.bin/vite-node",
+		[
+			"--config",
+			"app/ui/imports/source-import-test-vite.config.ts",
+			"app/ui/imports/mdblist-panel-interaction.test-support.tsx",
+		],
+		{ encoding: "utf8" },
+	)
+	const { left, late } = JSON.parse(
+		output.split("__MDBLIST_PANEL__").at(-1) ?? "",
+	)
+	for (const run of [left, late]) {
+		assert.equal(run.posts, 1)
+		assert.equal(run.signalPassed, true)
+		assert.equal(run.aborted, true)
+		assert.equal(run.path, "/discover")
+		assert.equal(run.text, "Elsewhere")
+	}
+})
