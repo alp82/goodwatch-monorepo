@@ -1,4 +1,4 @@
-// The profile's Taste tab: the viewer type, the fingerprint, sides, the crowd, then the numbers (genres, people, eras,
+// The profile's Taste tab: the viewer type, the fingerprint, sides, vs everyone, then the numbers (genres, people, eras,
 // world, tags, facts, rating style). A signed-in visitor gets "Where your tastes meet" after the viewer type, their
 // scores on the titles most them, and Vs me on the fingerprint. The owner gets their private taste tools (/taste) and the
 // import call to action; a signed-out visitor, the way to their own viewer type.
@@ -39,7 +39,7 @@ const SECTIONS = [
 	{ id: "viewer-type", label: "Type" },
 	{ id: "fingerprint", label: "Fingerprint" },
 	{ id: "sides", label: "Sides" },
-	{ id: "crowd", label: "Vs the crowd" },
+	{ id: "everyone", label: "Vs everyone" },
 	{ id: "genres", label: "Genres" },
 	{ id: "people", label: "People" },
 	{ id: "eras", label: "Eras" },
@@ -74,7 +74,7 @@ export function TastePage({
 		...(t.sides.list.length ? ["sides"] : []),
 		...(t.crowd.status === "ready" &&
 		t.crowd.higher.length + t.crowd.lower.length
-			? ["crowd"]
+			? ["everyone"]
 			: []),
 		...(stats?.genres.length ? ["genres"] : []),
 		...(stats && (stats.people.directors.length || stats.people.actors.length)

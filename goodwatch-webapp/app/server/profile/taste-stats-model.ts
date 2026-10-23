@@ -268,12 +268,12 @@ export function tasteStats(input: StatsInput): TasteStats {
 				label === "Generous"
 					? "Big heart"
 					: label === "Tough"
-						? "Tough crowd"
+						? "Tough scorer"
 						: "Fair judge",
 			line:
 				Math.abs(offset) < 0.1
-					? "Scores right in line with the crowd"
-					: `${Math.abs(offset).toFixed(1)} points ${offset > 0 ? "above" : "below"} the crowd`,
+					? "Scores right in line with everyone"
+					: `${Math.abs(offset).toFixed(1)} points ${offset > 0 ? "above" : "below"} everyone`,
 		})
 	const anime = kindScores.get("anime") ?? []
 	if (anime.length >= 10)

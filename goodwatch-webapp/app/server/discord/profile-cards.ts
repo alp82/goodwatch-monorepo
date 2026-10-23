@@ -42,7 +42,7 @@ export const PROFILE_CARDS = {
 	crowd: {
 		name: "Different from everyone",
 		image: "taste/everyone",
-		link: "/taste#crowd",
+		link: "/taste#everyone",
 		parts: ["taste", "scores"],
 	},
 	sides: {

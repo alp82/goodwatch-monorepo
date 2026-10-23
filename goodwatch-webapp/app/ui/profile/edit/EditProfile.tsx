@@ -69,7 +69,7 @@ const PARTS: { part: ProfilePart; name: string; line: string }[] = [
 	{
 		part: "taste",
 		name: "Taste",
-		line: "Viewer type, fingerprint, sides, the crowd, stats, and the match",
+		line: "Viewer type, fingerprint, sides, vs everyone, stats, and the match",
 	},
 	{
 		part: "hours",

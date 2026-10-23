@@ -200,12 +200,12 @@ export function Overview({
 			{see("scores") && overview.hotTakes.length > 0 && (
 				<Section
 					title="Hot takes"
-					note={`Where ${owner ? "you part" : "they part"} with the crowd most`}
+					note={`Where ${owner ? "you part" : "they part"} with everyone most`}
 					more={
 						see("taste")
 							? {
-									to: `${profileTabPath(shell.handle, "taste")}#crowd`,
-									label: owner ? "You vs the crowd" : "Them vs the crowd",
+									to: `${profileTabPath(shell.handle, "taste")}#everyone`,
+									label: owner ? "You vs everyone" : "Them vs everyone",
 								}
 							: undefined
 					}
@@ -226,7 +226,7 @@ export function Overview({
 										</span>
 										{title.gw != null && (
 											<span className="block text-xs text-gray-500">
-												Crowd: {(title.gw / 10).toFixed(1)}
+												Everyone: {(title.gw / 10).toFixed(1)}
 											</span>
 										)}
 									</span>

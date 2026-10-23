@@ -655,14 +655,14 @@ export function RatingStyle() {
 						<span className="text-3xl font-black text-white">{s.label}</span>
 						<span className="text-sm text-gray-400">
 							{Math.abs(s.offset) < 0.1
-								? "Right in line with the crowd"
-								: `${signed(s.offset)} points against the crowd`}
+								? "Right in line with everyone"
+								: `${signed(s.offset)} points against everyone`}
 						</span>
 					</div>
 					<div className="relative mt-8 mb-2 h-2 rounded-full bg-linear-to-r from-rose-500/60 via-amber-400/60 to-emerald-400/60">
 						<Marker
 							at={pos(s.crowdAverage)}
-							label={`Crowd ${s.crowdAverage}`}
+							label={`Everyone ${s.crowdAverage}`}
 							below
 						/>
 						<Marker

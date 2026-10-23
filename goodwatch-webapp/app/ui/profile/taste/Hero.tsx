@@ -87,7 +87,7 @@ export function TasteHero({ mostYou = true }: { mostYou?: boolean }) {
 								<HeroStat value={String(taste.usual)} label="usual score" />
 							)}
 							{taste.crowd.status === "ready" && (
-								<HeroStat value={agree} label="agrees with the crowd" />
+								<HeroStat value={agree} label="agrees with everyone" />
 							)}
 						</dl>
 					</div>

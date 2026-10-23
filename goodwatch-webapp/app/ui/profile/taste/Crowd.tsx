@@ -1,6 +1,6 @@
-// "You vs the crowd": the hot takes, extended (the You vs everyone view of /taste). A summary, the titles rated far
+// "You vs everyone": the hot takes, extended (the You vs everyone view of /taste). A summary, the titles rated far
 // above and below the GoodWatch score after the member's usual generosity, and where whole attributes and genres part
-// with the crowd.
+// with everyone.
 import { Link } from "@remix-run/react"
 import { useState } from "react"
 import type { EveryoneGap as Gap } from "~/server/taste-portrait/view"
@@ -21,19 +21,19 @@ function summaryOf(c: ProfileTaste["crowd"]) {
 	const attributes = [...c.attributes].sort((a, b) => b.delta - a.delta)
 	if (genres[0] && genres[0].delta > 0)
 		lines.push(
-			`You rate ${genres[0].name} ${genres[0].delta.toFixed(1)} points higher than the crowd (${genres[0].count} titles).`,
+			`You rate ${genres[0].name} ${genres[0].delta.toFixed(1)} points higher than everyone (${genres[0].count} titles).`,
 		)
 	const low = genres[genres.length - 1]
 	if (low && low.delta < 0)
 		lines.push(
-			`You rate ${low.name} ${Math.abs(low.delta).toFixed(1)} points lower than the crowd (${low.count} titles).`,
+			`You rate ${low.name} ${Math.abs(low.delta).toFixed(1)} points lower than everyone (${low.count} titles).`,
 		)
 	if (attributes[0] && attributes[0].delta > 0) {
 		const down = attributes[attributes.length - 1]
 		lines.push(
 			down && down.delta < 0
-				? `${attributes[0].name} lifts your scores most against the crowd; ${down.name.toLowerCase()} drags them down.`
-				: `${attributes[0].name} lifts your scores most against the crowd.`,
+				? `${attributes[0].name} lifts your scores most against everyone; ${down.name.toLowerCase()} drags them down.`
+				: `${attributes[0].name} lifts your scores most against everyone.`,
 		)
 	}
 	lines.push(
@@ -59,9 +59,9 @@ export function Crowd() {
 	const n = (k: Filter) =>
 		[...c.higher, ...c.lower].filter((r) => k === "all" || r.kind === k).length
 	return (
-		<section aria-labelledby="crowd" className="flex flex-col gap-5">
+		<section aria-labelledby="everyone" className="flex flex-col gap-5">
 			<SectionHead
-				id="crowd"
+				id="everyone"
 				eyebrow="Hot takes"
 				lead={owner ? "You vs the" : `@${handle} vs the`}
 				accent="crowd"
@@ -98,14 +98,14 @@ export function Crowd() {
 			</div>
 			<TakePanel
 				tone="up"
-				title="Rated higher than the crowd"
+				title="Rated higher than everyone"
 				word="Underrated"
 				rows={c.higher.filter(keep)}
 				owner={owner}
 			/>
 			<TakePanel
 				tone="down"
-				title="Rated lower than the crowd"
+				title="Rated lower than everyone"
 				word="Overrated"
 				rows={c.lower.filter(keep)}
 				owner={owner}

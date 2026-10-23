@@ -90,7 +90,7 @@ export function YouVsEveryone({ view }: { view: EveryoneView }) {
 						<>
 							You gave{" "}
 							<span className="font-semibold text-white">{hot.title}</span>{" "}
-							{article(higher[0].mine)} {higher[0].mine} when the crowd
+							{article(higher[0].mine)} {higher[0].mine} when everyone else
 							shrugged.{" "}
 						</>
 					)}
@@ -106,7 +106,7 @@ export function YouVsEveryone({ view }: { view: EveryoneView }) {
 					<p className="mt-3 max-w-3xl text-gray-400">
 						{warm.length > 0 && (
 							<>
-								You're warmer than the crowd on{" "}
+								You're warmer than everyone on{" "}
 								{warm
 									.slice(0, 3)
 									.map((a) => lowerFirst(a.name))
@@ -181,7 +181,7 @@ export function YouVsEveryone({ view }: { view: EveryoneView }) {
 			{gaps.length > 0 && (
 				<section className="mx-auto mt-14 max-w-7xl px-4 md:px-8">
 					<h2 className="text-2xl font-bold md:text-3xl">
-						Where you and the crowd part ways
+						Where you and everyone part ways
 					</h2>
 					<p className="mt-1 text-gray-400">
 						Average gap between your score and the GoodWatch score, after
@@ -282,8 +282,8 @@ function Column({
 							</div>
 							<p className="mt-3 text-sm text-gray-300">
 								{tone === "up"
-									? `${lead.delta} points above the crowd, after your usual generosity.`
-									: `${-lead.delta} points below the crowd, after your usual generosity.`}
+									? `${lead.delta} points above everyone, after your usual generosity.`
+									: `${-lead.delta} points below everyone, after your usual generosity.`}
 							</p>
 						</div>
 					</div>

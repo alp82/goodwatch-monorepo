@@ -234,7 +234,7 @@ const EXPECTED: Record<ProfileCardChoice, { image: string; link: string }> = {
 	taste: { image: "/og/u/film_fan/taste.jpg", link: "/u/film_fan/taste" },
 	crowd: {
 		image: "/og/u/film_fan/taste/everyone.jpg",
-		link: "/u/film_fan/taste#crowd",
+		link: "/u/film_fan/taste#everyone",
 	},
 	sides: {
 		image: "/og/u/film_fan/taste/sides.jpg",
@@ -294,7 +294,7 @@ test("Share to channel posts the public card at once, without a share button", a
 	assert.ok(!buttons(data).some((b) => b.label === "Share to channel"))
 	assert.equal(
 		buttons(data).find((b) => b.label === "Open on GoodWatch")!.url,
-		"https://goodwatch.app/u/film_fan/taste#crowd",
+		"https://goodwatch.app/u/film_fan/taste#everyone",
 	)
 })
 

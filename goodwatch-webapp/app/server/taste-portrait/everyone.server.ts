@@ -83,7 +83,7 @@ export function buildEveryone(person: Person): EveryoneResult {
 			? "You mostly agree with everyone"
 			: agreement > 0.35
 				? "You agree about as often as you don't"
-				: "You don't take the crowd's word for much"
+				: "You don't take everyone's word for much"
 
 	// Gap bars: titles that carry an attribute strongly (z above 1), and genres, each with enough titles.
 	const minTitles = Math.max(MIN_PER_BAR, Math.round(counted.length * 0.04))
