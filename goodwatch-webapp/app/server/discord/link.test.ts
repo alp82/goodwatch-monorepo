@@ -119,6 +119,7 @@ test("unlink works by Discord id and by member id; account deletion invokes it",
 		deleteTrackingData: async (id) => {
 			calls.push(id)
 		},
+		deleteAvatar: async () => true,
 	})
 	assert.equal(await store.getLinkedUserId("1"), null)
 	assert.deepEqual(calls, ["alice", "alice"])
@@ -167,6 +168,7 @@ test("account deletion completes before a failed Discord unlink and logs the fai
 		deleteTrackingData: async () => {
 			calls.push("tracking")
 		},
+		deleteAvatar: async () => true,
 		unlink: async () => {
 			calls.push("unlink")
 			throw error

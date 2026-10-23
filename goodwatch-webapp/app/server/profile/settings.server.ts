@@ -11,6 +11,8 @@ import {
 } from "~/domain/profile"
 import { LINK_RULES, parseAvatarChoice } from "~/domain/profile-settings"
 import type { UserSettingsMap } from "~/routes/api.user-settings.get"
+import { resetPageCache } from "~/server/page-cache.server"
+import { getCachedProfileByUserId, resetProfileViews } from "~/server/share-lists/view.server"
 import { getUserSettings, setUserSettings } from "~/server/user-settings.server"
 
 export const PROFILE_KEYS = {
@@ -115,5 +117,17 @@ export async function dropPhotoChoice(userId: string): Promise<void> {
 	await setUserSettings({
 		user_id: userId,
 		settings: { [PROFILE_KEYS.avatar]: JSON.stringify(DEFAULT_PROFILE_SETTINGS.avatar) },
+	})
+}
+
+/** Drops this process's cached pages of the member's profile and its tabs, after a settings or photo change. */
+export async function resetProfilePages(userId: string): Promise<void> {
+	await resetProfileViews(userId)
+	const profile = await getCachedProfileByUserId(userId)
+	if (!profile) return
+	const base = `/u/${profile.handle}`
+	resetPageCache((path) => {
+		const p = path.toLowerCase()
+		return p === base || p.startsWith(`${base}/`) || p.startsWith(`${base}?`)
 	})
 }

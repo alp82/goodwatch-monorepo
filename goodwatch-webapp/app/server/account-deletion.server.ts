@@ -10,11 +10,13 @@ const defaults = {
 		(await import("./share-lists/store.server.ts")).deleteAccountData(id),
 	deleteTrackingData: async (id: string) =>
 		(await import("./tracking.server.ts")).deleteTrackingData(id),
+	deleteAvatar: async (id: string) =>
+		(await import("./profile/avatar.server.ts")).deleteAvatar(id),
 }
 
 /**
- * Soft-deletes the member's Discord link, share lists, profile and handle, and hard-deletes their watch log, watch states and
- * imports. Each part can be run again after a failure.
+ * Soft-deletes the member's Discord link, share lists, profile and handle, and hard-deletes their watch log, watch states,
+ * imports and profile photo. Each part can be run again after a failure.
  */
 export async function deleteMemberData(
 	userId: string,
@@ -22,6 +24,7 @@ export async function deleteMemberData(
 ): Promise<void> {
 	await deps.deleteAccountData(userId)
 	await deps.deleteTrackingData(userId)
+	await deps.deleteAvatar(userId)
 	try {
 		await deps.unlink({ byUserId: userId })
 	} catch (error) {

@@ -5,38 +5,10 @@
 import { randomBytes } from "node:crypto"
 import { execute, query } from "~/utils/crate"
 
+export { encodeAvatar, sniffImageType } from "./image-type"
+
 /** What the browser may send: already cropped square, at most this many bytes. */
 export const AVATAR_MAX_BYTES = 5 * 1024 * 1024
-export const AVATAR_SIZE = 512
-
-export type ImageType = "jpeg" | "png" | "webp"
-
-/** The image type its first bytes declare; null for anything else (the declared content type is not trusted). */
-export function sniffImageType(bytes: Uint8Array): ImageType | null {
-	if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "jpeg"
-	if (
-		bytes.length >= 8 &&
-		[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((b, i) => bytes[i] === b)
-	)
-		return "png"
-	if (
-		bytes.length >= 12 &&
-		String.fromCharCode(...bytes.subarray(0, 4)) === "RIFF" &&
-		String.fromCharCode(...bytes.subarray(8, 12)) === "WEBP"
-	)
-		return "webp"
-	return null
-}
-
-/** Re-encodes to a 512 px square WebP. sharp drops EXIF, GPS and other metadata unless asked to keep it. */
-export async function encodeAvatar(bytes: Uint8Array): Promise<Buffer> {
-	const { default: sharp } = await import("sharp")
-	return await sharp(bytes, { limitInputPixels: 40_000_000, failOn: "error" })
-		.rotate() // honour the photo's orientation before its metadata goes
-		.resize(AVATAR_SIZE, AVATAR_SIZE, { fit: "cover", position: "attention" })
-		.webp({ quality: 82, effort: 4 })
-		.toBuffer()
-}
 
 export async function saveAvatar(userId: string, webp: Buffer): Promise<string> {
 	const version = randomBytes(6).toString("hex")
