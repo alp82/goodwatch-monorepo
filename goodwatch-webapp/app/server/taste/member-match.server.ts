@@ -10,6 +10,7 @@
 import { MIN_LIKED } from "~/server/taste/formula.server"
 import { loadMemberTaste, readStoredTaste } from "~/server/taste/member.server"
 import { getUserData } from "~/server/userData.server"
+import { withBackendTimeout } from "~/utils/backend-timeout"
 import { query } from "~/utils/crate"
 import {
 	type RankTables,
@@ -31,8 +32,13 @@ const SAMPLE_CANDIDATES = 600
 const SAMPLE_MEMBERS = 300
 const SAMPLE_PAIRS = 5_000
 const SAMPLE_MAX_SCORE_ROWS = 400_000
+/** A slow Valkey must not hold the profile: past this, the tables count as missing. */
+const REDIS_TIMEOUT_MS = 800
 
-export type MemberMatch = { percent: number; shared: number } | { thin: true; liked: number }
+/** `thin`: the side with too few liked titles for a match ("you" the visitor first), and its count. */
+export type MemberMatch =
+	| { percent: number; shared: number }
+	| { thin: true; side: "you" | "them"; liked: number }
 
 interface StoredTables extends RankTables {
 	builtAt: number
@@ -54,25 +60,33 @@ async function redis(): Promise<MatchRedis | null> {
 async function scoresOf(userId: string): Promise<Map<string, number>> {
 	const data = await getUserData({ user_id: userId })
 	const out = new Map<string, number>()
-	for (const [key, entry] of Object.entries(data.scores)) if (entry.score) out.set(key, Number(entry.score))
+	for (const [key, entry] of Object.entries(data.scores))
+		if (entry.score) out.set(key, Number(entry.score))
 	return out
 }
 
-export function sharedScores(a: ReadonlyMap<string, number>, b: ReadonlyMap<string, number>): [number, number][] {
+export function sharedScores(
+	a: ReadonlyMap<string, number>,
+	b: ReadonlyMap<string, number>,
+): [number, number][] {
 	const pairs: [number, number][] = []
 	const [small, large] = a.size <= b.size ? [a, b] : [b, a]
 	for (const [key, score] of small) {
 		const other = large.get(key)
-		if (other !== undefined) pairs.push(small === a ? [score, other] : [other, score])
+		if (other !== undefined)
+			pairs.push(small === a ? [score, other] : [other, score])
 	}
 	return pairs
 }
 
 /**
- * The match between two members, or `thin` with the smaller of the two liked counts when either has fewer than
- * MIN_LIKED liked titles. `shared` is how many titles both scored.
+ * The match between two members, or `thin` when either has fewer than MIN_LIKED liked titles: the visitor's side when
+ * theirs is thin, else the owner's. `shared` is how many titles both scored.
  */
-export async function getMemberMatch(viewerId: string, ownerId: string): Promise<MemberMatch> {
+export async function getMemberMatch(
+	viewerId: string,
+	ownerId: string,
+): Promise<MemberMatch> {
 	const [viewer, owner, viewerScores, ownerScores, tables] = await Promise.all([
 		loadMemberTaste(viewerId),
 		loadMemberTaste(ownerId),
@@ -80,10 +94,15 @@ export async function getMemberMatch(viewerId: string, ownerId: string): Promise
 		scoresOf(ownerId),
 		rankTables(),
 	])
-	if (!viewer.vector || !owner.vector || viewer.liked < MIN_LIKED || owner.liked < MIN_LIKED)
-		return { thin: true, liked: Math.min(viewer.liked, owner.liked) }
+	if (!viewer.vector || viewer.liked < MIN_LIKED)
+		return { thin: true, side: "you", liked: viewer.liked }
+	if (!owner.vector || owner.liked < MIN_LIKED)
+		return { thin: true, side: "them", liked: owner.liked }
 	const shared = sharedScores(viewerScores, ownerScores)
-	return { percent: matchPercent(blend(viewer.vector, owner.vector, shared), tables), shared: shared.length }
+	return {
+		percent: matchPercent(blend(viewer.vector, owner.vector, shared), tables),
+		shared: shared.length,
+	}
 }
 
 // ---------- the sample of member pairs ----------
@@ -97,7 +116,12 @@ export async function rankTables(): Promise<RankTables | null> {
 	if (memo && now - memo.at < MEMO_MS) return memo.tables
 	let tables: StoredTables | null = null
 	try {
-		const raw = await (await redis())?.get(TABLE_KEY)
+		const store = await redis()
+		const raw = store
+			? await withBackendTimeout("valkey", REDIS_TIMEOUT_MS, () =>
+					store.get(TABLE_KEY),
+				)
+			: null
 		tables = raw ? (JSON.parse(raw) as StoredTables) : null
 	} catch (error) {
 		console.error("Member match: reading the ranking tables failed:", error)
@@ -105,7 +129,12 @@ export async function rankTables(): Promise<RankTables | null> {
 	memo = { at: now, tables }
 	if (!tables || now - tables.builtAt > STALE_MS) {
 		building ??= rebuildTables()
-			.catch((error) => console.error("Member match: building the ranking tables failed:", error))
+			.catch((error) =>
+				console.error(
+					"Member match: building the ranking tables failed:",
+					error,
+				),
+			)
 			.finally(() => {
 				building = null
 			})
@@ -116,29 +145,49 @@ export async function rankTables(): Promise<RankTables | null> {
 async function rebuildTables(): Promise<void> {
 	const store = await redis()
 	if (!store) return
-	const locked = await store.set(LOCK_KEY, String(Date.now()), "EX", LOCK_SECONDS, "NX")
+	const locked = await store.set(
+		LOCK_KEY,
+		String(Date.now()),
+		"EX",
+		LOCK_SECONDS,
+		"NX",
+	)
 	if (locked !== "OK") return
 	const startedAt = Date.now()
 	const candidates = await query<{ user_id: string }>(
-		`SELECT user_id FROM user_score GROUP BY user_id HAVING count(*) >= ? LIMIT 20000`,
+		// Random order, so the sample isn't whichever members the scan happens to reach first.
+		"SELECT user_id FROM user_score GROUP BY user_id HAVING count(*) >= ? ORDER BY random() LIMIT 20000",
 		[SAMPLE_MIN_SCORES],
 	)
-	const ids = shuffle(candidates.map((row) => row.user_id)).slice(0, SAMPLE_CANDIDATES)
+	const ids = shuffle(candidates.map((row) => row.user_id)).slice(
+		0,
+		SAMPLE_CANDIDATES,
+	)
 	const tastes: { id: string; vector: Float32Array }[] = []
 	for (let i = 0; i < ids.length && tastes.length < SAMPLE_MEMBERS; i += 50) {
-		const batch = await Promise.all(ids.slice(i, i + 50).map(async (id) => ({ id, taste: await readStoredTaste(id) })))
+		const batch = await Promise.all(
+			ids
+				.slice(i, i + 50)
+				.map(async (id) => ({ id, taste: await readStoredTaste(id) })),
+		)
 		for (const { id, taste } of batch)
-			if (taste && taste.liked >= MIN_LIKED && tastes.length < SAMPLE_MEMBERS) tastes.push({ id, vector: taste.vector })
+			if (taste && taste.liked >= MIN_LIKED && tastes.length < SAMPLE_MEMBERS)
+				tastes.push({ id, vector: taste.vector })
 	}
 	if (tastes.length < 10) return
-	const rows = await query<{ user_id: string; media_type: string; tmdb_id: number; score: number }>(
+	const rows = await query<{
+		user_id: string
+		media_type: string
+		tmdb_id: number
+		score: number
+	}>(
 		`SELECT user_id, media_type, tmdb_id, score FROM user_score WHERE user_id = ANY(?) AND score > 0 LIMIT ${SAMPLE_MAX_SCORE_ROWS}`,
 		[tastes.map((t) => t.id) as never],
 	)
 	const scores = new Map<string, Map<string, number>>()
 	for (const row of rows) {
-		let own = scores.get(row.user_id)
-		if (!own) scores.set(row.user_id, (own = new Map()))
+		const own = scores.get(row.user_id) ?? new Map<string, number>()
+		scores.set(row.user_id, own)
 		own.set(`${row.media_type}-${row.tmdb_id}`, Number(row.score))
 	}
 	const vector: number[] = []
@@ -147,11 +196,15 @@ async function rebuildTables(): Promise<void> {
 	for (const [i, j] of pairs) {
 		const a = tastes[i]
 		const b = tastes[j]
-		const shared = sharedScores(scores.get(a.id) ?? new Map(), scores.get(b.id) ?? new Map())
+		const shared = sharedScores(
+			scores.get(a.id) ?? new Map(),
+			scores.get(b.id) ?? new Map(),
+		)
 		const value = blend(a.vector, b.vector, shared)
 		;(value.kind === "blended" ? blended : vector).push(value.value)
 		// Every blended pair also has a vector likeness: rank vector-only pairs against all pairs' likeness.
-		if (value.kind === "blended") vector.push(blend(a.vector, b.vector, []).value)
+		if (value.kind === "blended")
+			vector.push(blend(a.vector, b.vector, []).value)
 	}
 	const stored: StoredTables = {
 		builtAt: Date.now(),

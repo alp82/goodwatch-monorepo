@@ -10,14 +10,19 @@ import { type ProfileVisibility, canSee } from "~/domain/profile"
 import type { MemberCompare } from "~/domain/profile-taste"
 import { titleDisplays } from "~/server/taste-portrait/display.server"
 import type { FingerprintView } from "~/server/taste-portrait/index.server"
-import { loadMemberTaste } from "~/server/taste/member.server"
 import { getMemberMatch } from "~/server/taste/member-match.server"
+import { loadMemberTaste } from "~/server/taste/member.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { getUserData } from "~/server/userData.server"
 import type { MediaKey } from "~/types/user-data"
 import { titlePath } from "~/utils/helpers"
 import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
-import { bothLove, comparePulls, sharedScores, yourEdgesOnTheirScale } from "./compare-model"
+import {
+	bothLove,
+	comparePulls,
+	sharedScores,
+	yourEdgesOnTheirScale,
+} from "./compare-model"
 import { getProfilePortrait } from "./portrait.server"
 
 /** How many titles each list carries; the counts say how many there are in all. */
@@ -37,13 +42,15 @@ const mediaKey = (key: TitleKey) => {
 
 function scoresOf(data: Awaited<ReturnType<typeof getUserData>>) {
 	const scores = new Map<string, number>()
-	for (const [key, entry] of Object.entries(data.scores)) if (entry.score) scores.set(key, Number(entry.score))
+	for (const [key, entry] of Object.entries(data.scores))
+		if (entry.score) scores.set(key, Number(entry.score))
 	return scores
 }
 
 /**
  * The comparison, or null when there is nothing to compare (no visitor, or the visitor is the owner). `thin` when
- * either taste has fewer than 5 liked titles.
+ * either taste has fewer than 5 liked titles, saying whose. Callers show the match whatever the owner's Taste setting:
+ * without Taste the pulls are empty.
  */
 export async function getMemberCompare(
 	viewerId: string | null,
@@ -52,25 +59,31 @@ export async function getMemberCompare(
 ): Promise<MemberCompare | null> {
 	if (!viewerId || viewerId === ownerId) return null
 	const match = await getMemberMatch(viewerId, ownerId)
-	if ("thin" in match) return { status: "thin", liked: match.liked }
+	if ("thin" in match)
+		return { status: "thin", side: match.side, liked: match.liked }
 
 	const seesTaste = canSee(ownerVisibility, "taste", "member")
 	const seesScores = canSee(ownerVisibility, "scores", "member")
 	const seesWishlist = canSee(ownerVisibility, "wishlist", "member")
-	const [yourData, theirData, yourPrint, theirPrint, yourTaste] = await Promise.all([
-		getUserData({ user_id: viewerId }),
-		getUserData({ user_id: ownerId }),
-		getProfilePortrait(viewerId, "fingerprint", { audience: "owner" }),
-		seesTaste ? getProfilePortrait(ownerId, "fingerprint", { scores: seesScores }) : Promise.resolve(null),
-		loadMemberTaste(viewerId),
-	])
+	const [yourData, theirData, yourPrint, theirPrint, yourTaste] =
+		await Promise.all([
+			getUserData({ user_id: viewerId }),
+			getUserData({ user_id: ownerId }),
+			getProfilePortrait(viewerId, "fingerprint", { audience: "owner" }),
+			seesTaste
+				? getProfilePortrait(ownerId, "fingerprint", { scores: seesScores })
+				: Promise.resolve(null),
+			loadMemberTaste(viewerId),
+		])
 	const yours = scoresOf(yourData)
 	const theirs = seesScores ? scoresOf(theirData) : new Map<string, number>()
 	const shared = sharedScores(yours, theirs)
 	const both = bothLove(shared)
 
 	// Their 9s and 10s you haven't rated, the best fit for your taste first.
-	const candidates = [...theirs.entries()].filter(([key, score]) => score >= 9 && !yours.has(key)).map(([key]) => key)
+	const candidates = [...theirs.entries()]
+		.filter(([key, score]) => score >= 9 && !yours.has(key))
+		.map(([key]) => key)
 	const percentiles = yourTaste.percentile(candidates.map(toTitleKey))
 	const onlyThem = candidates
 		.map((key, i) => ({ key, fit: percentiles[i] ?? -1 }))
@@ -81,7 +94,12 @@ export async function getMemberCompare(
 		? [...yours.entries()]
 				.filter(([key, score]) => score >= 8 && !theirs.has(key))
 				.map(([key, score]) => ({ key, score, wished: wished.has(key) }))
-				.sort((a, b) => Number(b.wished) - Number(a.wished) || b.score - a.score || a.key.localeCompare(b.key))
+				.sort(
+					(a, b) =>
+						Number(b.wished) - Number(a.wished) ||
+						b.score - a.score ||
+						a.key.localeCompare(b.key),
+				)
 		: []
 
 	const shown = [
@@ -91,27 +109,53 @@ export async function getMemberCompare(
 		...onlyYou.slice(0, LIST_MAX).map((s) => s.key),
 	]
 	const titles = await profileTitles(shown, theirs)
-	const labelOf = new Map((yourPrint.status === "ready" ? yourPrint.attributes : []).map((a) => [a.key, a.label]))
+	const labelOf = new Map(
+		(yourPrint.status === "ready" ? yourPrint.attributes : []).map((a) => [
+			a.key,
+			a.label,
+		]),
+	)
 	const edges = (view: FingerprintView | null) =>
-		view?.status === "ready" ? view.attributes.map((a) => ({ key: a.key, label: a.label, edge: a.edge, tier: a.tier })) : []
+		view?.status === "ready"
+			? view.attributes.map((a) => ({
+					key: a.key,
+					label: a.label,
+					edge: a.edge,
+					tier: a.tier,
+				}))
+			: []
 	const theirEdges = edges(theirPrint)
 	const yourEdges = edges(yourPrint)
 
-	const pick = <T extends { key: string }>(list: T[]) => list.flatMap((item) => (titles.has(item.key) ? [item] : []))
+	const pick = <T extends { key: string }>(list: T[]) =>
+		list.flatMap((item) => (titles.has(item.key) ? [item] : []))
 	const yourScores: Record<string, number> = {}
-	for (const [key, score] of [...yours.entries()].slice(0, YOUR_SCORES_MAX)) yourScores[key] = score
+	for (const [key, score] of [...yours.entries()].slice(0, YOUR_SCORES_MAX))
+		yourScores[key] = score
 
 	return {
 		status: "ready",
 		percent: match.percent,
-		pulls: seesTaste && theirEdges.length && yourEdges.length ? comparePulls(theirEdges, yourEdges) : { both: [], onlyThem: [], onlyYou: [] },
-		shared: pick(shared.slice(0, SHARED_MAX)).map((s) => ({ ...(titles.get(s.key) as ProfileTitle), yours: s.yours, theirs: s.theirs })),
+		pulls:
+			seesTaste && theirEdges.length && yourEdges.length
+				? comparePulls(theirEdges, yourEdges)
+				: { both: [], onlyThem: [], onlyYou: [] },
+		shared: pick(shared.slice(0, SHARED_MAX)).map((s) => ({
+			...(titles.get(s.key) as ProfileTitle),
+			yours: s.yours,
+			theirs: s.theirs,
+		})),
 		overlap: {
-			both: pick(both.slice(0, LIST_MAX)).map((s) => titles.get(s.key) as ProfileTitle),
+			both: pick(both.slice(0, LIST_MAX)).map(
+				(s) => titles.get(s.key) as ProfileTitle,
+			),
 			bothCount: both.length,
 			onlyThem: pick(onlyThem.slice(0, LIST_MAX)).map((s) => {
 				const reason = yourTaste.reasons(toTitleKey(s.key), 1)[0]
-				return { ...(titles.get(s.key) as ProfileTitle), why: reason ? (labelOf.get(reason) ?? null) : null }
+				return {
+					...(titles.get(s.key) as ProfileTitle),
+					why: reason ? (labelOf.get(reason) ?? null) : null,
+				}
 			}),
 			onlyThemCount: onlyThem.length,
 			onlyYou: pick(onlyYou.slice(0, LIST_MAX)).map((s) => ({
@@ -121,15 +165,22 @@ export async function getMemberCompare(
 			})),
 			onlyYouCount: onlyYou.length,
 		},
-		yourEdges: theirEdges.length && yourEdges.length ? yourEdgesOnTheirScale(theirEdges, yourEdges) : {},
-		yourIdentity: yourPrint.status === "ready" ? (yourPrint.identity?.name ?? null) : null,
+		yourEdges:
+			theirEdges.length && yourEdges.length
+				? yourEdgesOnTheirScale(theirEdges, yourEdges)
+				: {},
+		yourIdentity:
+			yourPrint.status === "ready" ? (yourPrint.identity?.name ?? null) : null,
 		yourUsual: yourPrint.subject.usual,
 		yourScores,
 	}
 }
 
 /** Profile titles by media key, with the owner's score where they rated it. */
-async function profileTitles(keys: string[], theirs: ReadonlyMap<string, number>): Promise<Map<string, ProfileTitle>> {
+async function profileTitles(
+	keys: string[],
+	theirs: ReadonlyMap<string, number>,
+): Promise<Map<string, ProfileTitle>> {
 	const unique = [...new Set(keys)]
 	const displays = await titleDisplays(unique.map(toTitleKey))
 	const snapshot = getTitleSnapshot()
