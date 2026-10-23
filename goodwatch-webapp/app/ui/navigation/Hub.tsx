@@ -1,5 +1,6 @@
-// The hub: every destination, laid out like the Living room remote's feature well. On phones it's a sheet above the
-// dock (opened by the hub key); on desktop it's the Browse panel under the header. Both are the same labeled modal
+// The hub: every destination, laid out like the Living room remote's feature well. Your own pages come first as big
+// tiles, then the places to explore as small keys, then one link to your profile (Sign up for guests). On phones
+// it's a sheet above the dock (opened by the hub key); on desktop it's the Browse panel under the header. Both are the same labeled modal
 // dialog, with a focus trap, Escape to close, and focus returned to the key or button that opened it. The phone sheet
 // can also be dragged down to close.
 import {
@@ -8,23 +9,25 @@ import {
 	DialogPanel,
 	DialogTitle,
 } from "@headlessui/react"
-import { ArrowRightIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid"
+import {
+	ArrowRightIcon,
+	ChevronRightIcon,
+	MagnifyingGlassIcon,
+} from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import type React from "react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
 import { landedWords, showsWords } from "~/domain/newly-available-words"
-import { PhoneAccountPanel } from "~/ui/account/AccountPanels"
+import { AccountAvatar } from "~/ui/account/AccountAvatar"
+import { useAccountSummary } from "~/ui/account/useAccountSummary"
+import { PROFILE_PATH } from "~/ui/settings/paths"
+import { profilePath } from "~/ui/share-card/links"
 import { TASTE_GROUPS_NAME } from "~/ui/taste/taste-groups-name"
 import { useUser } from "~/utils/auth"
 import { useOpenAfterMount } from "~/utils/first-use"
 import { useNavigation } from "./NavigationContext"
 import { holdKeyboardForSearch } from "./Search"
-import {
-	GoodWatchMark,
-	NewEpisodesMark,
-	tmdbImage,
-	useSignUpHref,
-} from "./bits"
+import { GoodWatchMark, NewEpisodesMark, useSignUpHref } from "./bits"
 import {
 	type Destination,
 	type DestinationKey,
@@ -72,13 +75,11 @@ function Tile({
 	destination,
 	subtitle,
 	here,
-	backdrop,
 	fresh = null,
 }: {
 	destination: Destination
 	subtitle: string
 	here: boolean
-	backdrop?: string | null
 	/** My shows and My movies: what is new behind the tile. It takes the subtitle's place, on one line. */
 	fresh?: SignalWords | null
 }) {
@@ -92,40 +93,6 @@ function Tile({
 			? "shadow-[inset_0_0_0_2px_#fbbf24]"
 			: "shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_0_0_1px_rgba(255,255,255,0.08)]"
 	} hover:brightness-125`
-	const body = (
-		<>
-			{backdrop && (
-				<>
-					<img
-						src={tmdbImage(backdrop, "w300")}
-						alt=""
-						className="absolute inset-0 h-full w-full object-cover opacity-55"
-					/>
-					<span className="absolute inset-0 bg-linear-0 from-gray-950/92 to-gray-950/10" />
-				</>
-			)}
-			<Icon
-				className={`absolute top-3 left-3.5 z-10 h-6 w-6 ${tint.icon}`}
-				aria-hidden
-			/>
-			<NewEpisodesMark words={fresh} className="absolute top-3 right-3 z-10" />
-			<b className="brand-header relative z-10 text-[19px] leading-tight text-gray-100">
-				{destination.label}
-			</b>
-			{fresh ? (
-				<small
-					className="relative z-10 max-w-full truncate text-[12.5px] font-bold text-sky-200"
-					aria-hidden
-				>
-					{fresh.tile}
-				</small>
-			) : (
-				<small className="relative z-10 text-[12.5px] text-slate-300">
-					{subtitle}
-				</small>
-			)}
-		</>
-	)
 	return (
 		<Link
 			to={destination.href}
@@ -133,11 +100,31 @@ function Tile({
 			aria-current={here ? "page" : undefined}
 			className={className}
 		>
-			{body}
+			<Icon
+				className={`absolute top-3 left-3.5 h-6 w-6 ${tint.icon}`}
+				aria-hidden
+			/>
+			<NewEpisodesMark words={fresh} className="absolute top-3 right-3" />
+			<b className="brand-header text-[19px] leading-tight text-gray-100">
+				{destination.label}
+			</b>
+			{fresh ? (
+				<small
+					className="max-w-full truncate text-[12.5px] font-bold text-sky-200"
+					aria-hidden
+				>
+					{fresh.tile}
+				</small>
+			) : (
+				<small className="max-w-full truncate text-[12.5px] text-slate-300">
+					{subtitle}
+				</small>
+			)}
 		</Link>
 	)
 }
 
+/** A small key: the places to explore, Home among them. */
 function SecondaryKey({
 	destination,
 	here,
@@ -148,18 +135,42 @@ function SecondaryKey({
 			to={destination.href}
 			prefetch="intent"
 			aria-current={here ? "page" : undefined}
-			className={`flex h-12 items-center gap-2.5 rounded-2xl bg-white/[0.04] px-3 font-bold text-gray-100 hover:bg-white/[0.08] ${here ? "shadow-[inset_0_0_0_1.5px_#fbbf24]" : ""}`}
+			className={`flex h-12 min-w-0 items-center gap-2.5 rounded-2xl bg-white/[0.04] px-3 font-bold text-gray-100 hover:bg-white/[0.08] ${here ? "shadow-[inset_0_0_0_1.5px_#fbbf24]" : ""}`}
 		>
-			<Icon className="h-5 w-5 text-amber-400" aria-hidden />
-			{destination.label}
+			{destination.key === "home" ? (
+				<GoodWatchMark size={18} />
+			) : (
+				<Icon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden />
+			)}
+			<span className="truncate">{destination.label}</span>
 		</Link>
 	)
 }
 
+/** A labeled group of destinations, two to a row. */
+function Group({
+	id,
+	name,
+	children,
+}: { id: string; name: string; children: React.ReactNode }) {
+	return (
+		<section aria-labelledby={id} className="grid gap-2.5">
+			<h3
+				id={id}
+				className="px-1 pt-1 text-[11px] font-semibold tracking-wide text-gray-500 uppercase"
+			>
+				{name}
+			</h3>
+			<div className="grid grid-cols-2 gap-2.5">{children}</div>
+		</section>
+	)
+}
+
+/** The last row: one link to the member's profile (or to picking a handle), or Sign up for guests. */
 function AccountRow() {
 	const { user } = useUser()
+	const me = useAccountSummary()
 	const signUp = useSignUpHref()
-	const navigation = useNavigation()
 	if (!user)
 		return (
 			<Link
@@ -174,17 +185,35 @@ function AccountRow() {
 				<ArrowRightIcon className="ml-auto h-4 w-4 shrink-0" aria-hidden />
 			</Link>
 		)
-	// The account menu's phone layout: who you are, your places, Settings and Sign out (#member-profile Q24).
 	return (
-		<nav
-			aria-label="Your account"
-			className="overflow-hidden rounded-2xl bg-white/[0.03] ring-1 ring-white/[0.08]"
+		<Link
+			to={me.handle ? profilePath(me.handle) : PROFILE_PATH}
+			prefetch="intent"
+			className="flex h-[58px] min-w-0 items-center gap-3 rounded-2xl bg-white/[0.04] px-2.5 text-gray-100 hover:bg-white/[0.08]"
 		>
-			<PhoneAccountPanel
-				close={() => navigation.setHubOpen(false)}
-				framed={false}
+			<AccountAvatar
+				url={me.avatarUrl}
+				color={me.color}
+				initial={me.initial}
+				size={38}
 			/>
-		</nav>
+			<span className="min-w-0 grow leading-tight">
+				<b className="block truncate">
+					{me.handle ? `@${me.handle}` : "Your profile"}
+				</b>
+				<small className="block truncate text-[12.5px] text-gray-400">
+					{me.handle
+						? "Your profile"
+						: me.loaded
+							? "Pick a handle to get your profile"
+							: (me.email ?? "")}
+				</small>
+			</span>
+			<ChevronRightIcon
+				className="h-4 w-4 shrink-0 text-gray-500"
+				aria-hidden
+			/>
+		</Link>
 	)
 }
 
@@ -226,7 +255,7 @@ function HubContent() {
 				<MagnifyingGlassIcon className="h-5 w-5" aria-hidden />
 				Search titles, people, moods
 			</button>
-			<div className="grid grid-cols-2 gap-2.5">
+			<Group id="hub-yours" name="Yours">
 				{tracked ? (
 					<>
 						<Tile
@@ -237,7 +266,6 @@ function HubContent() {
 									: "Continue, or start one"
 							}
 							here={here === "myShows"}
-							backdrop={pickOn === "myShows" ? pick?.title.backdrop_path : null}
 							fresh={showsWords(episodes, landed?.shows ?? null)}
 						/>
 						<Tile
@@ -248,10 +276,12 @@ function HubContent() {
 									: "Movies you want to see"
 							}
 							here={here === "myMovies"}
-							backdrop={
-								pickOn === "myMovies" ? pick?.title.backdrop_path : null
-							}
 							fresh={landedWords("movie", landed?.movies ?? null)}
+						/>
+						<Tile
+							destination={d.myLibrary}
+							subtitle={`${wishlistCount} to see, and what you have seen`}
+							here={here === "myLibrary"}
 						/>
 					</>
 				) : (
@@ -259,50 +289,25 @@ function HubContent() {
 						destination={d.watchNext}
 						subtitle={watchSubtitle}
 						here={here === "watchNext"}
-						backdrop={pick?.title.backdrop_path}
 					/>
 				)}
-				<Tile
-					destination={d.discover}
-					subtitle="Browse and search"
-					here={here === "discover"}
-				/>
 				<Tile
 					destination={d.taste}
 					subtitle={TASTE_GROUPS_NAME.title}
 					here={here === "taste"}
 				/>
-				<Tile
-					destination={d.explorer}
-					subtitle="Islands map"
-					here={here === "explorer"}
-				/>
-				{tracked && (
-					<Tile
-						destination={d.myLibrary}
-						subtitle={`${wishlistCount} to see, and what you have seen`}
-						here={here === "myLibrary"}
-					/>
+			</Group>
+			<Group id="hub-explore" name="Explore">
+				{[d.discover, d.explorer, d.movies, d.shows, d.hot, d.home].map(
+					(destination) => (
+						<SecondaryKey
+							key={destination.key}
+							destination={destination}
+							here={here === destination.key}
+						/>
+					),
 				)}
-			</div>
-			<div className="grid grid-cols-2 gap-2.5">
-				<SecondaryKey destination={d.movies} here={here === "movies"} />
-				<SecondaryKey destination={d.shows} here={here === "shows"} />
-				<div className="col-span-2">
-					<SecondaryKey destination={d.hot} here={here === "hot"} />
-				</div>
-			</div>
-			<Link
-				to="/"
-				prefetch="intent"
-				aria-current={here === "home" ? "page" : undefined}
-				className={`flex h-[54px] items-center gap-3 rounded-2xl bg-white/[0.04] px-2.5 font-bold text-gray-100 hover:bg-white/[0.08] ${here === "home" ? "shadow-[inset_0_0_0_1.5px_#fbbf24]" : ""}`}
-			>
-				<span className="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_35%_30%,#4b5563,#111827)]">
-					<GoodWatchMark size={18} />
-				</span>
-				{d.home.label}
-			</Link>
+			</Group>
 			<AccountRow />
 		</div>
 	)

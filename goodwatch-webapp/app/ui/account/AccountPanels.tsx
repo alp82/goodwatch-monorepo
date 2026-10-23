@@ -1,5 +1,5 @@
 // The account menu's contents. Desktop: who you are on top (your profile, or picking a handle), then Library, You
-// and App as labeled groups, Sign out last. Phones (the header's panel and the Hub's account row): the same order in
+// and App as labeled groups, Sign out last. Phones (the header's panel): the same order in
 // less height: the six places as a two-column grid, Settings and Sign out side by side, the rest as one line.
 import {
 	ArrowRightStartOnRectangleIcon,
@@ -205,17 +205,13 @@ export function DesktopAccountPanel({ close }: { close: () => void }) {
 const TILE =
 	"flex min-h-11 items-center gap-2.5 rounded-xl bg-white/[0.04] px-3 text-left text-[15px] font-medium text-gray-100 ring-1 ring-white/[0.06] hover:bg-white/[0.08]"
 
-/** Phones: the header's account panel, and the Hub's account row. `framed` draws the dividers of a panel. */
-export function PhoneAccountPanel({
-	close,
-	framed = true,
-}: { close: () => void; framed?: boolean }) {
+/** Phones: the header's account panel. */
+export function PhoneAccountPanel({ close }: { close: () => void }) {
 	const counts = useAccountCounts()
-	const line = framed ? "border-t border-white/10" : ""
 	return (
 		<>
 			<Identity close={close} compact />
-			<div className={`grid grid-cols-2 gap-2 p-3 ${line}`}>
+			<div className="grid grid-cols-2 gap-2 border-t border-white/10 p-3">
 				{[...LIBRARY_PLACES, ...YOU_PLACES].map((place) => {
 					const n = place.count && counts ? counts[place.count] : null
 					return (
@@ -241,9 +237,7 @@ export function PhoneAccountPanel({
 					)
 				})}
 			</div>
-			<div
-				className={`grid grid-cols-2 gap-2 px-3 pb-3 ${framed ? "border-t border-white/10 pt-3" : ""}`}
-			>
+			<div className="grid grid-cols-2 gap-2 border-t border-white/10 px-3 pt-3 pb-3">
 				<Link to={SETTINGS_PLACE.to} onClick={close} className={TILE}>
 					<SETTINGS_PLACE.icon
 						className="h-5 w-5 shrink-0 text-amber-400"
@@ -253,9 +247,7 @@ export function PhoneAccountPanel({
 				</Link>
 				<SignOutButton className={TILE} />
 			</div>
-			<p
-				className={`flex flex-wrap items-center gap-x-1 px-3 pt-1 text-sm text-gray-400 ${framed ? "border-t border-white/10 pb-[max(0.5rem,env(safe-area-inset-bottom))]" : "pb-1"}`}
-			>
+			<p className="flex flex-wrap items-center gap-x-1 border-t border-white/10 px-3 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-sm text-gray-400">
 				{APP_PLACES.map((place) => (
 					<Link
 						key={place.label}
