@@ -947,7 +947,7 @@ test('prompt presets become live Jev picks and grouped providers retain every se
     const prompt = route.request().postDataJSON().prompt;
     previews.push(prompt);
     if(prompt === 'Old mood') await new Promise<void>(r => { oldReading=r; });
-    await route.fulfill({json:{prompt,attributes:[{text:prompt==='Old mood'?'Outdated pick':'Motivational',kind:'want'}]}}).catch(()=>{});
+    await route.fulfill({json:{prompt,attributes:[{text:prompt==='Old mood'?'Outdated pick':'Motivational',kind:'want'},{text:'Not horror',kind:'excluded'}]}}).catch(()=>{});
   });
   await page.reload();
   await page.getByRole('button',{name:'Edit room description and services'}).click();
@@ -958,6 +958,7 @@ test('prompt presets become live Jev picks and grouped providers retain every se
   await input.fill('Sports movies motivational');
   await expect(page.getByRole('button',{name:'Funny & light',exact:true})).toHaveCount(0);
   await expect(page.getByText('Motivational',{exact:true})).toBeVisible();
+  await expect(page.getByText('Not horror',{exact:true})).toBeVisible();
   oldReading!();
   await expect(page.getByText('Outdated pick',{exact:true})).toHaveCount(0);
   expect(f.commands).toHaveLength(0);

@@ -259,7 +259,7 @@ export function Lobby({
                 liveReading.attributes.length ? <Row>
                   {liveReading.attributes.map((a, i) => (
                     <View key={`${a.kind}:${a.key ?? a.text}:${i}`} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 16, backgroundColor: '#fbbf2418' }}>
-                      <GText size={12} color={glow.amber}>{a.kind === 'avoid' || a.kind === 'excluded' ? 'Not ' : ''}{a.text}</GText>
+                      <GText size={12} color={glow.amber}>{a.text}</GText>
                     </View>
                   ))}
                 </Row> : <GText size={12} color={glow.soft}>Using your words as written.</GText>
