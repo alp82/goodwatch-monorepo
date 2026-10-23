@@ -3,14 +3,28 @@
 //
 // Not covered yet, and for the flow to add: `user_score`, `user_wishlist`, `user_favorite`, `user_skipped`,
 // `user_not_interested` and `user_setting` have no deletion (docs/implementation/tracking/data-model.md, section 8).
-import { deleteAccountData } from "~/server/share-lists/store.server"
-import { deleteTrackingData } from "~/server/tracking.server"
+const defaults = {
+	unlink: async (target: { byUserId: string }) =>
+		(await import("./discord/link.server.ts")).unlink(target),
+	deleteAccountData: async (id: string) =>
+		(await import("./share-lists/store.server.ts")).deleteAccountData(id),
+	deleteTrackingData: async (id: string) =>
+		(await import("./tracking.server.ts")).deleteTrackingData(id),
+}
 
 /**
- * Soft-deletes the member's share lists, profile and handle, and hard-deletes their watch log, watch states and
+ * Soft-deletes the member's Discord link, share lists, profile and handle, and hard-deletes their watch log, watch states and
  * imports. Each part can be run again after a failure.
  */
-export async function deleteMemberData(userId: string): Promise<void> {
-	await deleteAccountData(userId)
-	await deleteTrackingData(userId)
+export async function deleteMemberData(
+	userId: string,
+	deps = defaults,
+): Promise<void> {
+	await deps.deleteAccountData(userId)
+	await deps.deleteTrackingData(userId)
+	try {
+		await deps.unlink({ byUserId: userId })
+	} catch (error) {
+		console.error("Account deletion: Discord unlink failed", error)
+	}
 }

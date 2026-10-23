@@ -13,7 +13,15 @@ export interface Component {
 	accessory?: Component
 	[key: string]: unknown
 }
+export interface MemberMarks {
+	score?: number | null
+	want_to_see?: boolean
+	status?: string | null
+	watch_count?: number
+}
 export interface GuestTitle {
+	match?: number | null
+	match_label?: string | null
 	id: string
 	name: string
 	year: number | null
@@ -72,14 +80,14 @@ function overview(text: string) {
 export function titleCard(
 	title: GuestTitle,
 	country: string,
-	options: { share?: boolean; offers?: boolean } = {},
+	options: { share?: boolean; offers?: boolean; member?: MemberMarks } = {},
 ) {
 	const [kind, id] = title.id.split(":")
 	const url = `https://goodwatch.app${titlePath(kind, Number(id), title.name)}`
 	const score = hasGoodwatchScore(title.goodwatch_score)
 		? goodwatchScoreDisplay(title.goodwatch_score)
 		: null
-	const heading = `## ${escape(title.name).slice(0, 250)}${
+	let heading = `## ${escape(title.name).slice(0, 250)}${
 		title.year ? ` (${title.year})` : ""
 	}\nGoodWatch: ${
 		score === null
@@ -92,6 +100,25 @@ export function titleCard(
 	)
 		.map(escape)
 		.join(", ")}`
+	if (options.member && !options.share) {
+		const marks = options.member
+		const personal = [
+			typeof title.match === "number"
+				? escape(title.match_label ?? "Taste match")
+				: null,
+			marks.score != null ? `Rated ${marks.score}/10` : null,
+			marks.status === "seen" ||
+			(kind === "movie" &&
+				((marks.watch_count ?? 0) > 0 || marks.score != null))
+				? "Seen"
+				: null,
+			marks.want_to_see ? "Want to See" : null,
+			marks.status && !["seen", "not_started"].includes(marks.status)
+				? escape(marks.status.replace(/_/g, " "))
+				: null,
+		].filter(Boolean)
+		if (personal.length) heading += `\n${personal.join(" · ")}`
+	}
 	const offers = title.availability?.offers ?? []
 	const availability = offers.length
 		? options.offers
@@ -152,7 +179,7 @@ export function titleCard(
 			{
 				type: 10,
 				content:
-					`**Where to watch · ${country}** (all services)\n${availability}`.slice(
+					`**Where to watch · ${country}**${options.member && !options.share ? "" : " (all services)"}\n${availability}`.slice(
 						0,
 						4000,
 					),

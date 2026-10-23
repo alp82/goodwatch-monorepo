@@ -51,6 +51,11 @@ function fixture() {
 		done = resolve
 	})
 	const deps: Dependencies = {
+		linkedUser: async () => null,
+		unlink: async () => {},
+		memberRead: async () => {
+			throw new Error("Unexpected member read")
+		},
 		read: async (viewer, _origin, name, args) => {
 			reads.push({ viewer, name, args })
 			if (name === "search_people") return { items: [person] }
@@ -442,18 +447,18 @@ for (const action of ["similar", "watch", "open", "previous", "next"]) {
 			action === "open"
 				? { custom_id: listCustomId("open", "public"), values: ["movie:42"] }
 				: action === "previous" || action === "next"
-				? {
-						custom_id: listCustomId(
-							"discover",
-							`${key}:${action === "previous" ? 0 : 2}`,
-						),
-				  }
-				: {
-						custom_id: formatCustomId(
-							action as "similar" | "watch",
-							"movie:42",
-						),
-				  }
+					? {
+							custom_id: listCustomId(
+								"discover",
+								`${key}:${action === "previous" ? 0 : 2}`,
+							),
+						}
+					: {
+							custom_id: formatCustomId(
+								action as "similar" | "watch",
+								"movie:42",
+							),
+						}
 		assert.deepEqual(await f.run(3, data, true), {
 			type: 5,
 			data: { flags: EPHEMERAL },
@@ -547,4 +552,125 @@ for (const name of ["genre", "service"]) {
 			assert.ok(Date.now() - start < 2800)
 		}
 	})
+}
+
+test("a linked member opens a discover title with match_label and shares a fresh guest card", async () => {
+	const memberCalls: string[] = []
+	const configure = (f: ReturnType<typeof fixture>) => {
+		f.deps.linkedUser = async () => "linked-member"
+		f.deps.memberRead = async (user, name, args) => {
+			assert.equal(user, "linked-member")
+			memberCalls.push(name)
+			return name === "get_settings"
+				? { country: "FR" }
+				: {
+						title: {
+							...title,
+							id: String(args.title_id),
+							match: 93,
+							match_label: "Excellent taste fit",
+						},
+						member: { score: 9, want_to_see: true },
+					}
+		}
+		return f
+	}
+	const discovery = configure(fixture())
+	await discovery.run(2, { name: "discover" })
+	await discovery.finished
+	const select = discovery.edits[0].components.find((c) =>
+		c.components?.some((child) => child.type === 3),
+	)!.components![0]
+	const selected = (select.options as { value: string }[])[0].value
+	const opened = configure(fixture())
+	assert.deepEqual(
+		await opened.run(3, {
+			custom_id: String(select.custom_id),
+			values: [selected],
+		}),
+		{ type: 6 },
+	)
+	await opened.finished
+	const personal = JSON.stringify(opened.edits[0])
+	assert.match(personal, /Excellent taste fit/)
+	assert.doesNotMatch(personal, /93%/)
+	assert.match(personal, /Rated 9\/10|Want to See/)
+	assert.match(personal, /Where to watch · FR/)
+	const shareButton = opened.edits[0].components
+		.at(-1)!
+		.components!.find((c) => c.label === "Share to channel")!
+	const shared = configure(fixture())
+	const callsBefore = memberCalls.length
+	assert.deepEqual(
+		await shared.run(3, {
+			custom_id: String(shareButton.custom_id),
+		}),
+		{ type: 5, data: { flags: 0 } },
+	)
+	await shared.finished
+	assert.equal(memberCalls.length, callsBefore)
+	assert.deepEqual(
+		shared.reads.map((r) => [r.name, r.args]),
+		[["get_title", { title_id: selected }]],
+	)
+	assert.equal(shared.edits[0].flags, IS_COMPONENTS_V2)
+	assert.doesNotMatch(
+		JSON.stringify(shared.edits[0]),
+		/Excellent taste fit|Rated 9|Want to See|93%/,
+	)
+	assert.match(JSON.stringify(shared.edits[0]), /Where to watch · DE/)
+})
+
+for (const source of ["similar", "person", "hot", "similar-button"]) {
+	for (const publicMessage of [false, true]) {
+		test(`linked member opens a personal title from ${source}: public=${publicMessage}`, async () => {
+			const f = fixture()
+			f.deps.linkedUser = async () => "linked-member"
+			if (source === "similar-button")
+				await f.run(
+					3,
+					{ custom_id: formatCustomId("similar", title.id) },
+					publicMessage,
+				)
+			else
+				await f.run(2, {
+					name: source,
+					options: [
+						{ name: "title", value: title.id },
+						{ name: "name", value: "12" },
+					],
+				})
+			await f.finished
+			const select = f.edits[0].components.find((c) =>
+				c.components?.some((child) => child.type === 3),
+			)!.components![0]
+			const g = fixture()
+			g.deps.linkedUser = async () => "linked-member"
+			g.deps.memberRead = async (_user, name) =>
+				name === "get_settings"
+					? { country: "FR" }
+					: {
+							title: {
+								...title,
+								match: 93,
+								match_label: "Excellent taste fit",
+							},
+							member: {},
+						}
+			assert.deepEqual(
+				await g.run(
+					3,
+					{
+						custom_id: String(select.custom_id),
+						values: [title.id],
+					},
+					publicMessage,
+				),
+				publicMessage ? { type: 5, data: { flags: EPHEMERAL } } : { type: 6 },
+			)
+			await g.finished
+			assert.match(JSON.stringify(g.edits[0]), /Excellent taste fit/)
+			assert.equal(g.reads.length, 0)
+		})
+	}
 }

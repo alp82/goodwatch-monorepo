@@ -77,6 +77,11 @@ function fixture(overrides: Partial<Dependencies> = {}) {
 		reads: unknown[] = [],
 		edits: unknown[] = []
 	const dependencies: Dependencies = {
+		linkedUser: async () => null,
+		unlink: async () => {},
+		memberRead: async () => {
+			throw new Error("Unexpected member read")
+		},
 		read: async (viewer, origin, name, args) => {
 			reads.push({ viewer, origin, name, args })
 			return name === "search_titles"
@@ -582,3 +587,149 @@ test("endpoint rejects correctly signed stale and future requests", async () => 
 		assert.equal((await handleInteraction(request, { publicKey })).status, 401)
 	}
 })
+
+test("member search shows taste, marks and saved country; shared copies use guest reads from ids only", async () => {
+	const memberCalls: unknown[] = []
+	const f = fixture({
+		linkedUser: async () => "member-id",
+		memberRead: async (id, name, args) => {
+			memberCalls.push({ id, name, args })
+			return name === "get_settings"
+				? { country: "FR", service_ids: [8] }
+				: {
+						title: { ...title, match: 93, match_label: "93% taste match" },
+						member: {
+							score: 9,
+							status: "seen",
+							watch_count: 1,
+							want_to_see: true,
+						},
+				  }
+		},
+	})
+	const response = await f.run(
+		interaction(2, {
+			name: "search",
+			options: [{ name: "title", value: "movie:42" }],
+		}),
+	)
+	assert.equal((await response.json()).data.flags, EPHEMERAL)
+	for (let i = 0; !f.edits.length && i < 100; i++)
+		await new Promise((resolve) => setTimeout(resolve, 5))
+	const personal = JSON.stringify(f.edits[0])
+	assert.match(personal, /93%/)
+	assert.match(personal, /93% taste match/)
+	assert.doesNotMatch(personal, /93% · 93%/)
+	assert.match(personal, /Rated 9\/10/)
+	assert.match(personal, /Seen/)
+	assert.match(personal, /Want to See/)
+	assert.match(personal, /Where to watch · FR/)
+	assert.match(f.logs[0], /"viewer":"member"/)
+	assert.deepEqual(memberCalls, [
+		{ id: "member-id", name: "get_settings", args: {} },
+		{ id: "member-id", name: "get_title", args: { title_id: "movie:42" } },
+	])
+	const callsBefore = memberCalls.length
+	await f.run(
+		interaction(3, { custom_id: formatCustomId("share", "movie:42") }),
+	)
+	for (let i = 0; f.edits.length < 2 && i < 100; i++)
+		await new Promise((resolve) => setTimeout(resolve, 5))
+	assert.equal(memberCalls.length, callsBefore)
+	assert.deepEqual(f.reads, [
+		{
+			viewer: { country: "DE" },
+			origin: "https://goodwatch.app",
+			name: "get_title",
+			args: { title_id: "movie:42" },
+		},
+	])
+	const shared = JSON.stringify(f.edits[1])
+	assert.doesNotMatch(
+		shared,
+		/93%|Excellent taste fit|Rated 9|Want to See|Seen|member-id|match_label|want_to_see/,
+	)
+	assert.match(shared, /Where to watch · DE/)
+})
+
+test("/link gives guests a link and members an unlink button; /unlink requires confirmation", async () => {
+	for (const linked of [false, true]) {
+		const removed: unknown[] = []
+		const f = fixture({
+			linkedUser: async () => (linked ? "member-id" : null),
+			unlink: async (target) => {
+				removed.push(target)
+			},
+		})
+		const run = async (type: number, data: Interaction["data"]) => {
+			const previous = f.edits.length
+			const response = await f.run(interaction(type, data))
+			assert.equal((await response.json()).data.flags, EPHEMERAL)
+			for (let i = 0; f.edits.length === previous && i < 100; i++)
+				await new Promise((resolve) => setTimeout(resolve, 5))
+			return JSON.stringify(f.edits[previous])
+		}
+		const link = await run(2, { name: "link" })
+		assert.match(
+			link,
+			linked ? /Linked to GoodWatch/ : /https:\/\/goodwatch.app\/discord\/link/,
+		)
+		if (!linked) continue
+		assert.match(link, /gw:unlink:ask/)
+		assert.match(
+			await run(2, { name: "unlink" }),
+			/Unlink your GoodWatch account/,
+		)
+		assert.match(await run(3, { custom_id: "gw:unlink:keep" }), /stays linked/)
+		assert.equal(removed.length, 0)
+		assert.match(await run(3, { custom_id: "gw:unlink:ask" }), /gw:unlink:yes/)
+		assert.match(await run(3, { custom_id: "gw:unlink:yes" }), /unlinked/)
+		assert.deepEqual(removed, [{ byDiscordUserId: "test-user" }])
+	}
+})
+
+test("a partly watched show is Watching rather than Seen; sharing strips even supplied personal fields", () => {
+	const result = titleCard(
+		{ ...title, id: "show:42", match: 90, match_label: "Fit" },
+		"DE",
+		{ member: { status: "watching", watch_count: 2 } },
+	)
+	assert.match(JSON.stringify(result), /watching/)
+	assert.doesNotMatch(JSON.stringify(result), /Seen/)
+	const shared = titleCard({ ...title, match: 90, match_label: "Fit" }, "DE", {
+		share: true,
+		member: { score: 8, status: "seen" },
+	})
+	assert.doesNotMatch(JSON.stringify(shared), /90%|Rated|Seen|Fit/)
+})
+
+for (const failure of ["reject", "timeout"])
+	for (const data of [
+		{
+			type: 2,
+			data: { name: "search", options: [{ name: "title", value: "movie:42" }] },
+		},
+		{ type: 3, data: { custom_id: formatCustomId("watch", "movie:42") } },
+		{ type: 2, data: { name: "link" } },
+	])
+		test(`${data.type}:${JSON.stringify(
+			data.data,
+		)} uses guest results when link lookup ${failure}`, async () => {
+			const f = fixture({
+				linkedUser: async () => {
+					if (failure === "reject") throw new Error("storage unavailable")
+					return new Promise(() => {})
+				},
+			})
+			await f.run(interaction(data.type, data.data))
+			for (let i = 0; !f.edits.length && i < 150; i++)
+				await new Promise((resolve) => setTimeout(resolve, 5))
+			assert.equal(f.edits.length, 1)
+			const card = JSON.stringify(f.edits[0])
+			assert.match(
+				card,
+				data.data.name === "link" ? /Link GoodWatch/ : /Where to watch/,
+			)
+			assert.doesNotMatch(card, /Something went wrong/)
+			assert.match(f.logs[0], /"viewer":"guest"/)
+		})

@@ -84,6 +84,12 @@ export function defineCommands() {
 			description: "Titles hot on socials right now",
 			options: [],
 		},
+		{ name: "link", description: "Link your GoodWatch account", options: [] },
+		{
+			name: "unlink",
+			description: "Unlink your GoodWatch account",
+			options: [],
+		},
 	].map((command) => ({
 		...command,
 		type: 1,

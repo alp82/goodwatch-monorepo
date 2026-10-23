@@ -1096,6 +1096,19 @@ SCHEMAS = {
         "timestamps": False,
         "replicas": "0-1",
     },
+    "user_discord_link": {
+        "columns": {
+            "discord_user_id": "TEXT",
+            "user_id": "TEXT NOT NULL",
+            "discord_username": "TEXT",
+            "linked_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "deleted_at": "TIMESTAMP WITH TIME ZONE",
+        },
+        "primary_key": ["discord_user_id"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
     # ============================
     # ===== Webapp: Connect import credentials (goodwatch-webapp/app/server/imports) =====
     # ============================

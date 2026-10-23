@@ -6,13 +6,39 @@ import {
 	EnvelopeIcon,
 	KeyIcon,
 } from "@heroicons/react/24/outline"
-import type { MetaFunction } from "@remix-run/node"
+import {
+	json,
+	redirect,
+	type MetaFunction,
+	type LoaderFunctionArgs,
+	type ActionFunctionArgs,
+} from "@remix-run/node"
+import { Form, Link, useLoaderData } from "@remix-run/react"
+import { getUserLink, unlink } from "~/server/discord/link.server"
+import { getUserIdFromRequest } from "~/utils/auth"
 import React from "react"
+import { requireLinkOrigin } from "~/server/discord/oauth.server"
 import { useSetUserSettings } from "~/routes/api.user-settings.set"
 import { ChangePasswordSection } from "~/ui/settings/ChangePasswordSection"
 import { SettingsPage } from "~/ui/settings/SettingsPage"
 import { useUser } from "~/utils/auth"
 import { useAuthClient } from "~/utils/auth-client"
+
+export async function loader({ request }: LoaderFunctionArgs) {
+	const userId = await getUserIdFromRequest({ request })
+	if (!userId) throw redirect("/sign-in?redirectTo=%2Fsettings%2Faccount")
+	return json(
+		{ discord: await getUserLink(userId) },
+		{ headers: { "Cache-Control": "private, no-store" } },
+	)
+}
+export async function action({ request }: ActionFunctionArgs) {
+	const userId = await getUserIdFromRequest({ request })
+	if (!userId) throw redirect("/sign-in?redirectTo=%2Fsettings%2Faccount")
+	requireLinkOrigin(request)
+	await unlink({ byUserId: userId })
+	return redirect("/settings/account")
+}
 
 const googleLogo = (
 	<svg aria-hidden="true" viewBox="0 0 24 24" className="size-6">
@@ -101,6 +127,7 @@ function PasswordChange() {
 }
 
 export default function SettingsAccount() {
+	const { discord } = useLoaderData<typeof loader>()
 	const auth = useAuthClient()
 	const { user } = useUser()
 	const email = user?.email ?? null
@@ -194,6 +221,25 @@ export default function SettingsAccount() {
 					</section>
 				)}
 
+				<section className={card} aria-label="Discord">
+					<h2 className="text-lg font-bold text-white">Discord</h2>
+					<p className="mt-2 text-gray-400">
+						{discord
+							? `Linked to @${discord.discord_username ?? "Discord member"}`
+							: "Not linked"}
+					</p>
+					{discord ? (
+						<Form method="post" className="mt-4">
+							<button type="submit" className={button}>
+								Unlink
+							</button>
+						</Form>
+					) : (
+						<Link to="/discord/link" className={`${button} mt-4 self-start`}>
+							Link Discord
+						</Link>
+					)}
+				</section>
 				<section className="flex flex-col gap-3">
 					<h2 className="text-lg font-bold text-white">Start over</h2>
 					<div className={`${card} md:flex-row md:items-center md:gap-6`}>

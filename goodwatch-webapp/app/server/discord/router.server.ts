@@ -1,7 +1,10 @@
+import { appOrigin } from "./oauth.server.ts"
 import { commands } from "./commands.ts"
 import {
 	type GuestTitle,
 	type GuestPerson,
+	type MemberMarks,
+	message,
 	EPHEMERAL,
 	textCard,
 	titleCard,
@@ -38,6 +41,14 @@ export interface Interaction {
 	}
 }
 export interface Dependencies {
+	linkedUser: (discordId: string) => Promise<string | null>
+	unlink: (target: { byDiscordUserId: string }) => Promise<void>
+	memberRead: (
+		userId: string,
+		name: "get_title" | "get_settings",
+		args: Parameters<typeof readGuestTool>[3],
+	) => Promise<Record<string, unknown>>
+
 	read: typeof readGuestTool
 	take: (user: string) => Promise<RateVerdict>
 	edit: (app: string, token: string, body: unknown) => Promise<void>
@@ -47,6 +58,24 @@ export interface Dependencies {
 	loadState?: (key: string) => Promise<DiscoverState | null>
 }
 const defaults: Required<Dependencies> = {
+	linkedUser: async (id) =>
+		(await import("./link.server.ts")).getLinkedUserId(id),
+	unlink: async (target) => (await import("./link.server.ts")).unlink(target),
+	memberRead: async (userId, name, args) => {
+		const data = await (await import("../mcp/data.server.ts")).readMemberTool(
+			userId,
+			"https://goodwatch.app",
+			name,
+			args,
+		)
+		return name === "get_title"
+			? (await import("../mcp/title-results.server.ts")).enrichTitleResults(
+					userId,
+					data,
+					{ posters: true },
+				)
+			: data
+	},
 	read: async (...args) =>
 		(await import("../mcp/guest.server.ts")).readGuestTool(...args),
 	take: async (user) =>
@@ -75,6 +104,7 @@ export async function routeInteraction(
 	const deps = { ...defaults, ...overrides }
 	const start = Date.now()
 	let logged = false
+	let memberId: string | null = null
 	const customId =
 		typeof interaction.data?.custom_id === "string"
 			? interaction.data.custom_id
@@ -93,14 +123,14 @@ export async function routeInteraction(
 							command: commands.some((c) => c.name === interaction.data?.name)
 								? interaction.data?.name
 								: "unknown",
-					  }),
+						}),
 				context:
 					interaction.context === 2
 						? "private"
 						: interaction.context === 0 || interaction.guild_id
-						? "guild"
-						: "dm",
-				viewer: "guest",
+							? "guild"
+							: "dm",
+				viewer: memberId ? "member" : "guest",
 				duration_ms: Date.now() - start,
 				outcome,
 			})}`,
@@ -116,9 +146,33 @@ export async function routeInteraction(
 		args: Parameters<typeof readGuestTool>[3],
 	) => deps.read({ country }, "https://goodwatch.app", name, args)
 	const card = async (id: string, share = false, offers = false) => {
-		const result = await read("get_title", { title_id: id })
+		// Shared copies always come from a fresh guest read, with no member context or fields.
+		let personal = !share ? memberId : null
+		let cardCountry = localeCountry(interaction.locale)
+		let result: Awaited<ReturnType<typeof deps.read>> | null = null
+		if (personal) {
+			try {
+				const settings = await deps.memberRead(personal, "get_settings", {})
+				if (typeof settings.country === "string") cardCountry = settings.country
+				result = await deps.memberRead(personal, "get_title", { title_id: id })
+			} catch {
+				// A failed member read falls back to the guest card.
+				personal = null
+				cardCountry = localeCountry(interaction.locale)
+			}
+		}
+		result ??= await deps.read(
+			{ country: cardCountry },
+			"https://goodwatch.app",
+			"get_title",
+			{ title_id: id },
+		)
 		return result.title
-			? titleCard(result.title as GuestTitle, country, { share, offers })
+			? titleCard(result.title as GuestTitle, cardCountry, {
+					share,
+					offers,
+					member: personal ? (result.member as MemberMarks) : undefined,
+				})
 			: textCard("No matching title found. Try /search again.")
 	}
 	const similar = async (id: string, share = false) => {
@@ -215,10 +269,10 @@ export async function routeInteraction(
 						? ((filters.genres ?? []) as string[]).map((id) => ({
 								name: id,
 								value: id,
-						  }))
+							}))
 						: ((filters.providers ?? []) as { id: number; name: string }[]).map(
 								(p) => ({ name: p.name, value: String(p.id) }),
-						  )
+							)
 				return reply(
 					{
 						choices: entries
@@ -245,6 +299,9 @@ export async function routeInteraction(
 				.trim()
 				.slice(0, 120)
 			if (query.length < 2) return reply({ choices: [] }, "ok", 8)
+			const identity = within(deps.linkedUser(user), 300, null).catch(
+				() => null,
+			)
 			const result = await within(
 				read(isPerson ? "search_people" : "search_titles", {
 					query,
@@ -253,6 +310,7 @@ export async function routeInteraction(
 				2000,
 				{ items: [] },
 			).catch(() => ({ items: [] }))
+			memberId = await identity
 			const items = (result.items ?? []) as (GuestTitle & GuestPerson)[]
 			return reply(
 				{
@@ -261,14 +319,93 @@ export async function routeInteraction(
 							isPerson
 								? "Person"
 								: t.id.startsWith("movie:")
-								? "Movie"
-								: "TV show"
+									? "Movie"
+									: "TV show"
 						}`.slice(0, 100),
 						value: isPerson ? String(t.person_id) : t.id,
 					})),
 				},
 				"ok",
 				8,
+			)
+		}
+		if (
+			(interaction.type === 2 &&
+				["link", "unlink"].includes(interaction.data?.name ?? "")) ||
+			(interaction.type === 3 &&
+				["gw:unlink:ask", "gw:unlink:yes", "gw:unlink:keep"].includes(
+					interaction.data?.custom_id ?? "",
+				))
+		) {
+			const { application_id: applicationId, token } = interaction
+			if (!applicationId || !token)
+				return reply(textCard("Invalid interaction."), "invalid")
+			return defer(
+				async () => {
+					memberId = await within(deps.linkedUser(user), 300, null).catch(
+						() => null,
+					)
+					const action = interaction.data?.custom_id
+					if (action === "gw:unlink:yes") {
+						await deps.unlink({ byDiscordUserId: user })
+						return textCard("Your Discord account is unlinked from GoodWatch.")
+					}
+					if (action === "gw:unlink:keep")
+						return textCard("Your GoodWatch account stays linked.")
+					if (!memberId)
+						return message([
+							{ type: 10, content: "Link GoodWatch for personal title cards." },
+							{
+								type: 1,
+								components: [
+									{
+										type: 2,
+										style: 5,
+										label: "Link GoodWatch",
+										url: new URL("/discord/link", appOrigin()).href,
+									},
+								],
+							},
+						])
+					const confirming =
+						interaction.data?.name === "unlink" || action === "gw:unlink:ask"
+					return message([
+						{
+							type: 10,
+							content: confirming
+								? "Unlink your GoodWatch account?"
+								: "Linked to GoodWatch",
+						},
+						{
+							type: 1,
+							components: confirming
+								? [
+										{
+											type: 2,
+											style: 4,
+											label: "Unlink",
+											custom_id: "gw:unlink:yes",
+										},
+										{
+											type: 2,
+											style: 2,
+											label: "Keep",
+											custom_id: "gw:unlink:keep",
+										},
+									]
+								: [
+										{
+											type: 2,
+											style: 2,
+											label: "Unlink",
+											custom_id: "gw:unlink:ask",
+										},
+									],
+						},
+					])
+				},
+				(body) => deps.edit(applicationId, token, body),
+				finish,
 			)
 		}
 		if (
@@ -279,6 +416,9 @@ export async function routeInteraction(
 				return reply(textCard("Invalid interaction."), "invalid")
 			return defer(
 				async () => {
+					memberId = await within(deps.linkedUser(user), 300, null).catch(
+						() => null,
+					)
 					switch (interaction.data?.name) {
 						case "search":
 						case "similar": {
@@ -358,7 +498,7 @@ export async function routeInteraction(
 					}
 				},
 				(body) =>
-					deps.edit(interaction.application_id!, interaction.token!, body),
+					deps.edit(interaction.application_id ?? "", interaction.token ?? "", body),
 				finish,
 			)
 		}
@@ -372,6 +512,9 @@ export async function routeInteraction(
 				!((interaction.message.flags ?? 0) & EPHEMERAL)
 			return defer(
 				async () => {
+					memberId = await within(deps.linkedUser(user), 300, null).catch(
+						() => null,
+					)
 					if (parsed) {
 						if (parsed.action === "similar") return similar(parsed.titleId)
 						return card(parsed.titleId, !!share, parsed.action === "watch")
@@ -396,7 +539,7 @@ export async function routeInteraction(
 					return textCard("Unsupported action.")
 				},
 				(body) =>
-					deps.edit(interaction.application_id!, interaction.token!, body),
+					deps.edit(interaction.application_id ?? "", interaction.token ?? "", body),
 				finish,
 				{
 					type: share || publicMessage ? 5 : 6,
