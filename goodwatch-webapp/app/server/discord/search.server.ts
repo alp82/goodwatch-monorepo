@@ -1,4 +1,5 @@
 // Website search is the free-text engine. The old catalog lookup remains the bounded, no-model fallback.
+import type { ReadingChip } from "../combined-search/reading-retrieval.server.ts"
 import type { GuestTitle } from "./cards.ts"
 import { within } from "./respond.server.ts"
 import { websiteSearch, SEARCH_TIMEOUT_NOTE } from "./search-engine.server.ts"
@@ -6,6 +7,7 @@ import { websiteSearch, SEARCH_TIMEOUT_NOTE } from "./search-engine.server.ts"
 export interface SearchResult {
 	titles: GuestTitle[]
 	note?: string
+	reading?: ReadingChip[]
 }
 
 /** Leave time for the title fallback, state write and message edit inside the 12-second deferral. */
@@ -15,6 +17,7 @@ export async function searchTitles(
 	options: {
 		engine?: typeof websiteSearch
 		fallback?: (query: string) => Promise<GuestTitle[]>
+		onReading?: (reading: ReadingChip[]) => void
 		timeoutMs?: number
 	} = {},
 ): Promise<SearchResult> {
@@ -23,7 +26,15 @@ export async function searchTitles(
 	let note = SEARCH_TIMEOUT_NOTE
 	try {
 		const result = await Promise.race([
-			(options.engine ?? websiteSearch)(query, user, abort.signal),
+			(options.engine ?? websiteSearch)(
+				query,
+				user,
+				abort.signal,
+				undefined,
+				(reading) => {
+					if (!abort.signal.aborted) options.onReading?.(reading)
+				},
+			),
 			new Promise<never>((_, reject) => {
 				timer = setTimeout(() => {
 					abort.abort()
@@ -31,11 +42,17 @@ export async function searchTitles(
 				}, options.timeoutMs ?? 5000)
 			}),
 		])
-		if (result.titles) return { titles: result.titles, note: result.note }
+		if (result.titles)
+			return {
+				titles: result.titles,
+				note: result.note,
+				...(result.reading ? { reading: result.reading } : {}),
+			}
 		note = result.note ?? note
 	} catch {
 		abort.abort()
 	} finally {
+		abort.abort()
 		clearTimeout(timer)
 	}
 	return {
@@ -153,7 +170,7 @@ export async function titleDisplays(
 									d.goodwatch_overall_score_normalized_percent ?? null,
 							},
 						],
-				  ]
+					]
 				: []
 		}),
 	)

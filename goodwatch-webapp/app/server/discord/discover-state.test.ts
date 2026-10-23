@@ -97,9 +97,15 @@ test("search snapshots always store ranked IDs in Valkey for one hour", async ()
 		args: {},
 		query: "dark vibes",
 		search: {
+			reading: [{ text: "Dark", kind: "want" as const, key: "darkness" }],
 			ids: ["movie:42", "show:7"],
 			titles: [
-				{ id: "movie:42", name: "Dark", year: 2024 },
+				{
+					id: "movie:42",
+					name: "Dark",
+					year: 2024,
+					reasons: [{ text: "Dark 8", kind: "dimension" as const }],
+				},
 				{ id: "show:7", name: "Darker", year: 2020 },
 			],
 		},

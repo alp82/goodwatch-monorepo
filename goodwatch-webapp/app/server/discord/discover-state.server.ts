@@ -5,13 +5,19 @@ import {
 	validDiscoverRanges,
 } from "../mcp/discover-filters.ts"
 import type { ReadArgs } from "../mcp/tools.server.ts"
+import type { ReadingChip } from "../combined-search/reading-retrieval.server.ts"
 import type { GuestTitle } from "./cards.ts"
 /** A /discover page's filters, or a /search query (with empty `args`), kept for paging and Back. */
 export interface DiscoverState {
 	args: ReadArgs
 	query?: string
 	/** Ranked IDs and their display snapshot. Paging never calls the search engine. */
-	search?: { ids: string[]; titles: GuestTitle[]; note?: string }
+	search?: {
+		ids: string[]
+		titles: GuestTitle[]
+		note?: string
+		reading?: ReadingChip[]
+	}
 }
 const stateSchema = z
 	.object({
@@ -33,6 +39,14 @@ const stateSchema = z
 							id: z.string().regex(/^(movie|show):[1-9]\d{0,9}$/),
 							name: z.string(),
 							year: z.number().nullable(),
+							reasons: z
+								.array(
+									z.object({
+										text: z.string(),
+										kind: z.enum(["attribute", "dimension", "mismatch"]),
+									}),
+								)
+								.optional(),
 							poster_url: z.string().nullable().optional(),
 							runtime_minutes: z.number().nullable().optional(),
 							goodwatch_score: z.number().nullable().optional(),
@@ -40,6 +54,21 @@ const stateSchema = z
 					)
 					.max(100),
 				note: z.string().max(200).optional(),
+				reading: z
+					.array(
+						z.object({
+							text: z.string(),
+							kind: z.enum([
+								"attribute",
+								"excluded",
+								"want",
+								"avoid",
+								"phrase",
+							]),
+							key: z.string().optional(),
+						}),
+					)
+					.optional(),
 			})
 			.optional(),
 	})
@@ -82,7 +111,7 @@ export async function loadDiscoverState(
 		raw = redis
 			? await withRedisDeadline(
 					redis.get(`discord:discover:v1:${key.slice(1)}`),
-			  )
+				)
 			: null
 	}
 	if (!raw) return null

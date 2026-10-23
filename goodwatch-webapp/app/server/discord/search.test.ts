@@ -4,6 +4,8 @@ import * as nodeModule from "node:module"
 import { test } from "node:test"
 import type { SearchStore } from "../search-runtime/store.server.ts"
 import type { combinedSearch } from "../combined-search/search.server.ts"
+import type { ReadingChip } from "../combined-search/reading-retrieval.server.ts"
+import type { SearchReason } from "./search-reading.ts"
 import { searchTitles } from "./search.server.ts"
 import {
 	discordSearchResponse,
@@ -242,5 +244,297 @@ test("slow or failed website search falls back to title matches before the defer
 			fallback: async () => [title],
 		}),
 		result,
+	)
+})
+
+const reading: ReadingChip[] = [
+	{ text: "Funny", kind: "want", key: "humor" },
+	{ text: "Family", kind: "attribute" },
+	{ text: "Not horror", kind: "excluded" },
+]
+const reasons: SearchReason[] = [
+	{ text: "Funny 9", kind: "dimension" },
+	{ text: "Family", kind: "attribute" },
+]
+const batch: Awaited<ReturnType<typeof combinedSearch>> = {
+	q: "funny family",
+	reading,
+	errors: [],
+	metadata: [],
+	people: [],
+	creditScope: null,
+	mode: "english",
+	elapsedMs: 10,
+	chargedNano: 0,
+	rows: [
+		{
+			key: title.id,
+			title: title.name,
+			type: "movie",
+			year: "2024",
+			poster: null,
+			popularity: 10,
+			lexical: 0,
+			match: "",
+			score: 1,
+			discovery: {
+				tmdb_id: 42,
+				media_type: "movie",
+				title: title.name,
+				release_year: 2024,
+				poster_path: null,
+				genres: [],
+				rank: 1,
+				weightedSum: 1,
+				cosine: 1,
+				combined: 1,
+				tropes: [],
+				scores: [],
+				reasons,
+			},
+		},
+	],
+}
+function signedRequest(q = "funny family") {
+	const body = JSON.stringify({ q })
+	return new Request("https://goodwatch.app/api/combined-search", {
+		method: "POST",
+		headers: searchHeaders("123", body),
+		body,
+	})
+}
+async function withSigningKey(work: () => Promise<void>) {
+	const original = process.env.SEARCH_STORAGE_KEY
+	process.env.SEARCH_STORAGE_KEY = "ab".repeat(32)
+	try {
+		await work()
+	} finally {
+		if (original === undefined) delete process.env.SEARCH_STORAGE_KEY
+		else process.env.SEARCH_STORAGE_KEY = original
+	}
+}
+
+test("signed stream delivers the reading before titles, including the title's reason chips", () =>
+	withSigningKey(async () => {
+		const { websiteSearch } = await import("./search-engine.server.ts")
+		let complete!: () => void
+		const ready = new Promise<void>((resolve) => {
+			complete = resolve
+		})
+		let sawReading!: () => void
+		const read = new Promise<void>((resolve) => {
+			sawReading = resolve
+		})
+		let finished = false
+		const engine: typeof combinedSearch = async (
+			_q,
+			_policy,
+			_visitor,
+			_signal,
+			onReading,
+		) => {
+			onReading?.(reading)
+			await ready
+			return batch
+		}
+		const send: typeof fetch = async (_url, init) => {
+			const response = await discordSearchResponse(
+				new Request("https://goodwatch.app/api/combined-search", init),
+				engine,
+			)
+			assert.match(
+				response.headers.get("Content-Type")!,
+				/application\/x-ndjson/,
+			)
+			assert.match(response.headers.get("Cache-Control")!, /no-transform/)
+			return response
+		}
+		const result = websiteSearch(
+			"funny family",
+			"123",
+			new AbortController().signal,
+			send,
+			(value) => {
+				assert.equal(finished, false)
+				assert.deepEqual(value, reading)
+				sawReading()
+			},
+		).then((value) => {
+			finished = true
+			return value
+		})
+		try {
+			await read
+			assert.equal(
+				finished,
+				false,
+				"reading arrives while ranking is still pending",
+			)
+		} finally {
+			complete()
+		}
+		assert.deepEqual(await result, {
+			titles: [{ ...title, poster_url: null, reasons }],
+			reading,
+		})
+	}))
+
+test("stream parser handles split UTF-8, several lines per chunk, and a final line without a newline", () =>
+	withSigningKey(async () => {
+		const { websiteSearch } = await import("./search-engine.server.ts")
+		const chips = [{ text: "Comédie", kind: "attribute" }]
+		const raw = new TextEncoder().encode(
+			`${JSON.stringify({ kind: "reading", reading: chips })}\n\n${JSON.stringify({ kind: "batch", titles: [title], reading: chips })}`,
+		)
+		const accent = raw.indexOf(0xc3)
+		let observed = 0
+		const send: typeof fetch = async () =>
+			new Response(
+				new ReadableStream({
+					start(controller) {
+						controller.enqueue(raw.slice(0, accent + 1))
+						controller.enqueue(raw.slice(accent + 1))
+						controller.close()
+					},
+				}),
+				{ headers: { "Content-Type": "application/x-ndjson" } },
+			)
+		assert.deepEqual(
+			await websiteSearch(
+				"funny family",
+				"123",
+				new AbortController().signal,
+				send,
+				(value) => {
+					observed++
+					assert.deepEqual(value, chips)
+				},
+			),
+			{ titles: [title], reading: chips },
+		)
+		assert.equal(observed, 1)
+	}))
+
+test("websiteSearch accepts old single-JSON search roles during deployment", () =>
+	withSigningKey(async () => {
+		const { websiteSearch } = await import("./search-engine.server.ts")
+		const send: typeof fetch = async () => Response.json({ titles: [title] })
+		assert.deepEqual(
+			await websiteSearch(
+				"funny family",
+				"123",
+				new AbortController().signal,
+				send,
+				() => {
+					assert.fail("old responses have no early reading")
+				},
+			),
+			{ titles: [title] },
+		)
+	}))
+
+test("failures use HTTP status before streaming and an error line after the reading; the client falls back", () =>
+	withSigningKey(async () => {
+		const { websiteSearch } = await import("./search-engine.server.ts")
+		const fail: typeof combinedSearch = async () => {
+			throw new Error("Unavailable")
+		}
+		assert.equal(
+			(await discordSearchResponse(signedRequest(), fail)).status,
+			503,
+		)
+		const afterReading: typeof combinedSearch = async (
+			_q,
+			_policy,
+			_visitor,
+			_signal,
+			onReading,
+		) => {
+			onReading?.(reading)
+			throw new Error("Ranking failed")
+		}
+		const response = await discordSearchResponse(signedRequest(), afterReading)
+		assert.equal(response.status, 200)
+		assert.deepEqual(
+			(await response.text())
+				.trim()
+				.split("\n")
+				.map((line) => JSON.parse(line).kind),
+			["reading", "error"],
+		)
+		let observed = 0
+		const send: typeof fetch = async () =>
+			discordSearchResponse(signedRequest(), afterReading)
+		const result = await searchTitles("funny family", "123", {
+			engine: (q, u, signal, _send, onReading) =>
+				websiteSearch(q, u, signal, send, onReading),
+			onReading: () => {
+				observed++
+			},
+			fallback: async () => [title],
+		})
+		assert.equal(observed, 1)
+		assert.deepEqual(result, { titles: [title], note: SEARCH_TIMEOUT_NOTE })
+		for (const body of [
+			JSON.stringify({ kind: "reading", reading }) + "\n",
+			JSON.stringify({ kind: "batch", titles: [title] }) +
+				'\n{"kind":"error"}\n',
+			"{broken json}\n",
+		]) {
+			await assert.rejects(
+				websiteSearch(
+					"funny family",
+					"123",
+					new AbortController().signal,
+					async () =>
+						new Response(body, {
+							headers: { "Content-Type": "application/x-ndjson" },
+						}),
+				),
+			)
+		}
+	}))
+
+test("an oversized signed body is rejected before invoking search", () =>
+	withSigningKey(async () => {
+		const run: typeof combinedSearch = async () => {
+			assert.fail("oversized body must not run search")
+		}
+		assert.equal(
+			(await discordSearchResponse(signedRequest("x".repeat(8200)), run))
+				.status,
+			413,
+		)
+	}))
+
+test("reading copy follows the website's chip selection and uses not for excluded and avoided chips", async () => {
+	const { readingLine, reasonsLine } = await import("./search-reading.ts")
+	assert.equal(
+		readingLine([
+			{ kind: "phrase", text: "hidden phrase" },
+			...Array.from({ length: 5 }, (_, i) => ({
+				kind: "want" as const,
+				text: `Want ${i + 1}`,
+			})),
+			{ kind: "excluded", text: "Not horror" },
+			{ kind: "avoid", text: "Low violence" },
+			{ kind: "avoid", text: "Low scare" },
+		]),
+		"Reads as: Want 1 · Want 2 · Want 3 · Want 4 · not horror · not violence",
+	)
+	assert.equal(
+		readingLine([{ kind: "phrase", text: "Forest adventure" }]),
+		"Reads as: Forest adventure",
+	)
+	assert.equal(readingLine([]), "")
+	assert.equal(
+		reasonsLine([
+			{ kind: "mismatch", text: "but funny only 1" },
+			{ kind: "dimension", text: "Funny 9" },
+			{ kind: "dimension", text: "low violence 1" },
+			{ kind: "attribute", text: "genre: Science_fiction" },
+			{ kind: "attribute", text: "Hidden fourth reason" },
+		]),
+		"Matches: Funny · low violence · Science fiction",
 	)
 })

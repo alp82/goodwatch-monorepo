@@ -1,6 +1,7 @@
 // The page role calls the same proxy path as the website. Only a signed server request may supply a Discord identity.
 import { createHmac, timingSafeEqual } from "node:crypto"
 import type { combinedSearch } from "../combined-search/search.server.ts"
+import type { ReadingChip } from "../combined-search/reading-retrieval.server.ts"
 import type { GuestTitle } from "./cards.ts"
 import { drain, fetchWithTimeout } from "./fetch-timeout.ts"
 
@@ -91,49 +92,97 @@ export async function discordSearchResponse(
 		if (request.signal.aborted) stop()
 		request.signal.addEventListener("abort", stop, { once: true })
 		const signal = controller.signal
-		try {
-			const batch = await run(
-				q.trim(),
-				{ includeAdult: false, lesserKnown: false },
-				{
-					accountId: null,
-					networkIdentity: `discord:${user}`,
-					allowTranslation: false,
-					beforeUncachedReading: async () => {
-						if (signal.aborted) throw new Error("Search timed out")
-						const verdict = take
-							? await take(user)
-							: await (
-									await import("../rate-limit.server.ts")
-							  ).rateLimiter.take("discord-search", user, [
-									{ limit: 20, seconds: 86400 },
-							  ])
-						if (!verdict.allowed) {
-							limited = true
-							throw new Error("Search limit reached")
-						}
-					},
-				},
-				signal,
-				undefined,
-				{ rows: 100 },
-			)
-			if (batch.errors.includes("Showing basic search results."))
-				throw new Error("Ranked search is unavailable")
-			const titles: GuestTitle[] = batch.rows.map((row) => ({
-				id: row.key,
-				name: row.title,
-				year: Number(row.year) || null,
-				poster_url: row.poster
-					? `https://image.tmdb.org/t/p/w342${row.poster}`
-					: null,
-			}))
-			return new Response(JSON.stringify({ titles }), { headers })
-		} finally {
-			clearTimeout(timer)
-			request.signal.removeEventListener("abort", stop)
-			release()
+		// Hold the response until the first event, so failures before streaming keep their HTTP status.
+		let started = false,
+			closed = false
+		let deliver!: (response: Response) => void
+		const response = new Promise<Response>((resolve) => {
+			deliver = resolve
+		})
+		const encoder = new TextEncoder()
+		let output!: ReadableStreamDefaultController<Uint8Array>
+		const stream = new ReadableStream<Uint8Array>({
+			start(controller) {
+				output = controller
+			},
+			cancel() {
+				closed = true
+				stop()
+			},
+		})
+		const send = (event: object) => {
+			if (closed) return
+			output.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
+			if (!started) {
+				started = true
+				deliver(
+					new Response(stream, {
+						headers: {
+							...headers,
+							"Content-Type": "application/x-ndjson; charset=utf-8",
+							"Cache-Control": "private, no-store, no-transform",
+						},
+					}),
+				)
+			}
 		}
+		void (async () => {
+			try {
+				const batch = await run(
+					q.trim(),
+					{ includeAdult: false, lesserKnown: false },
+					{
+						accountId: null,
+						networkIdentity: `discord:${user}`,
+						allowTranslation: false,
+						beforeUncachedReading: async () => {
+							if (signal.aborted) throw new Error("Search timed out")
+							const verdict = take
+								? await take(user)
+								: await (
+										await import("../rate-limit.server.ts")
+									).rateLimiter.take("discord-search", user, [
+										{ limit: 20, seconds: 86400 },
+									])
+							if (!verdict.allowed) {
+								limited = true
+								throw new Error("Search limit reached")
+							}
+						},
+					},
+					signal,
+					(reading) => {
+						send({ kind: "reading", reading })
+					},
+					{ rows: 100 },
+				)
+				if (batch.errors.includes("Showing basic search results."))
+					throw new Error("Ranked search is unavailable")
+				const titles: GuestTitle[] = batch.rows.map((row) => ({
+					reasons: row.discovery?.reasons,
+					id: row.key,
+					name: row.title,
+					year: Number(row.year) || null,
+					poster_url: row.poster
+						? `https://image.tmdb.org/t/p/w342${row.poster}`
+						: null,
+				}))
+				send({ kind: "batch", titles, reading: batch.reading })
+			} catch {
+				if (started) send({ kind: "error", error: "Search is unavailable" })
+				else
+					deliver(new Response(null, { status: limited ? 429 : 503, headers }))
+			} finally {
+				clearTimeout(timer)
+				request.signal.removeEventListener("abort", stop)
+				release()
+				if (!closed) {
+					closed = true
+					output.close()
+				}
+			}
+		})()
+		return response
 	} catch {
 		return new Response(null, { status: limited ? 429 : 503, headers })
 	}
@@ -147,7 +196,12 @@ export async function websiteSearch(
 	user: string,
 	signal: AbortSignal,
 	send?: typeof fetch,
-): Promise<{ titles: GuestTitle[] | null; note?: string }> {
+	onReading?: (reading: ReadingChip[]) => void,
+): Promise<{
+	titles: GuestTitle[] | null
+	reading?: ReadingChip[]
+	note?: string
+}> {
 	const { appOrigin } = await import("./oauth.server.ts")
 	const body = JSON.stringify({ q: query })
 	const { nativeFetch } = await import("../native-fetch.server.ts")
@@ -165,9 +219,54 @@ export async function websiteSearch(
 				await drain(response)
 				throw new Error("Search is unavailable")
 			}
-			return (await response.json()) as {
-				titles: GuestTitle[]
-				note?: string
+			// Older search roles still send a single JSON body during a rolling deployment.
+			if (
+				!response.headers.get("Content-Type")?.includes("application/x-ndjson")
+			)
+				return (await response.json()) as {
+					titles: GuestTitle[]
+					note?: string
+				}
+			const reader = response.body?.getReader()
+			if (!reader) throw new Error("Search is unavailable")
+			const decoder = new TextDecoder()
+			let pending = ""
+			let result: { titles: GuestTitle[]; reading?: ReadingChip[] } | undefined
+			const line = (raw: string) => {
+				if (!raw.trim()) return
+				const event = JSON.parse(raw)
+				if (event.kind === "error") throw new Error("Search is unavailable")
+				if (event.kind === "reading" && Array.isArray(event.reading)) {
+					try {
+						onReading?.(event.reading)
+					} catch {
+						/* Progress cannot fail the search. */
+					}
+				}
+				if (event.kind === "batch" && Array.isArray(event.titles))
+					result = event
+			}
+			try {
+				while (true) {
+					const { done, value } = await reader.read()
+					pending += done
+						? decoder.decode()
+						: decoder.decode(value, { stream: true })
+					let end: number
+					while ((end = pending.indexOf("\n")) !== -1) {
+						line(pending.slice(0, end))
+						pending = pending.slice(end + 1)
+					}
+					if (done) break
+				}
+				line(pending)
+				if (!result) throw new Error("Search is unavailable")
+				return { titles: result.titles, reading: result.reading }
+			} catch (error) {
+				await reader.cancel().catch(() => {})
+				throw error
+			} finally {
+				reader.releaseLock()
 			}
 		},
 	)

@@ -16,14 +16,17 @@ export function discordRest(
 		body: unknown,
 		bot = false,
 		readBody = false,
+		signal?: AbortSignal,
 	) {
 		if (bot && !options.botToken)
 			throw new Error("Discord bot token is missing")
 		for (let attempt = 0; ; attempt++) {
+			signal?.throwIfAborted()
 			const outcome = await fetchWithTimeout(
 				send,
 				`https://discord.com/api/v10${path}`,
 				{
+					signal,
 					method,
 					headers: {
 						"Content-Type": "application/json",
@@ -62,8 +65,16 @@ export function discordRest(
 			app: string,
 			token: string,
 			body: unknown,
+			signal?: AbortSignal,
 		): Promise<void> => {
-			await request("PATCH", `${webhook(app, token)}/messages/@original`, body)
+			await request(
+				"PATCH",
+				`${webhook(app, token)}/messages/@original`,
+				body,
+				false,
+				false,
+				signal,
+			)
 		},
 		getOriginalMessage: async (
 			app: string,

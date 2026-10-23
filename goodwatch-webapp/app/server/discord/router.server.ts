@@ -1,3 +1,5 @@
+import { readingLine } from "./search-reading.ts"
+import type { ReadingChip } from "../combined-search/reading-retrieval.server.ts"
 import { guestWatchPick } from "./watch-picks.server.ts"
 import {
 	anotherId,
@@ -148,12 +150,21 @@ export interface Dependencies extends PlaceDependencies {
 	countries?: () => Promise<{ code: string; name: string }[]>
 	read: typeof readGuestTool
 	take: (user: string) => Promise<RateVerdict>
-	edit: (app: string, token: string, body: unknown) => Promise<void>
+	edit: (
+		app: string,
+		token: string,
+		body: unknown,
+		signal?: AbortSignal,
+	) => Promise<void>
 	log: (line: string) => void
 	guestPick?: typeof guestWatchPick
 	hot?: () => Promise<HotTitle[]>
 	/** Free-text /search, using the website engine and the Discord user's uncached allowance. */
-	searchTitles?: (query: string, discordUser: string) => Promise<SearchResult>
+	searchTitles?: (
+		query: string,
+		discordUser: string,
+		onReading?: (reading: ReadingChip[]) => void,
+	) => Promise<SearchResult>
 	/** Posters and scores by title ID, for lists whose read leaves them out. */
 	displays?: (ids: string[]) => Promise<Map<string, Partial<GuestTitle>>>
 	saveState?: (state: DiscoverState, forceStore?: boolean) => Promise<string>
@@ -209,8 +220,10 @@ const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
 				await import("../talked-about-now/start-row.server.ts")
 			).getHotOnSocials(),
 		),
-	searchTitles: async (query, user) =>
-		(await import("./search.server.ts")).searchTitles(query, user),
+	searchTitles: async (query, user, onReading) =>
+		(await import("./search.server.ts")).searchTitles(query, user, {
+			onReading,
+		}),
 	displays: async (ids) =>
 		(await import("./search.server.ts")).titleDisplays(ids),
 	saveState: async (state, forceStore) =>
@@ -500,18 +513,27 @@ export async function routeInteraction(
 		if (!result.title)
 			return textCard("No matching title found. Try /search again.")
 		const memberTitle = mine?.title ? (mine.title as GuestTitle) : undefined
-		return titleCard(result.title as GuestTitle, guestPlace.country, {
-			share,
-			member: memberTitle ? ((mine?.member ?? {}) as MemberMarks) : undefined,
-			memberTitle,
-			memberPlace:
-				memberTitle && !samePlace(viewer, guestPlace)
-					? { country: viewer.country, ownServices: !allServices() }
-					: undefined,
-			emojis: await emojis(),
-			allServices: !guestPlace.services?.length,
-			back,
-		})
+		const searchState =
+			back?.kind === "search" ? await deps.loadState(back.key).catch(() => null) : null
+		const reasons = searchState?.search?.titles.find(
+			(t) => t.id === id,
+		)?.reasons
+		return titleCard(
+			{ ...(result.title as GuestTitle), reasons },
+			guestPlace.country,
+			{
+				share,
+				member: memberTitle ? ((mine?.member ?? {}) as MemberMarks) : undefined,
+				memberTitle,
+				memberPlace:
+					memberTitle && !samePlace(viewer, guestPlace)
+						? { country: viewer.country, ownServices: !allServices() }
+						: undefined,
+				emojis: await emojis(),
+				allServices: !guestPlace.services?.length,
+				back,
+			},
+		)
 	}
 	/** Fills in posters and scores the read left out; the list stays as it is when that read fails. */
 	const withDisplays = async <T extends GuestTitle>(titles: T[]) => {
@@ -649,7 +671,7 @@ export async function routeInteraction(
 		const titles = state.search.ids.flatMap((id) => byId.get(id) ?? [])
 		if (!titles.length)
 			return textCard(
-				`No titles match ${state.query}. Try another search.${
+				`No titles match ${state.query}. Try another search.${readingLine(state.search.reading) ? `\n${readingLine(state.search.reading)}` : ""}${
 					state.search.note ? `\n${state.search.note}` : ""
 				}`,
 			)
@@ -660,7 +682,9 @@ export async function routeInteraction(
 				share,
 				stateKey: key,
 				pageAction: "search",
-				subtitle: state.search.note,
+				subtitle: [readingLine(state.search.reading), state.search.note]
+					.filter(Boolean)
+					.join("\n"),
 				page,
 				next: titles.length > (page + 1) * 10,
 				total: titles.length,
@@ -1248,6 +1272,8 @@ export async function routeInteraction(
 		) {
 			if (!interaction.application_id || !interaction.token)
 				return reply(textCard("Invalid interaction."), "invalid")
+			const progressAbort = new AbortController()
+			let finalBody: unknown
 			return deferred(
 				async () => {
 					usePlace(await place())
@@ -1260,7 +1286,31 @@ export async function routeInteraction(
 							if (!value)
 								return textCard("No matching title found. Try another title.")
 							if (isTitleId(value)) return card(value)
-							const result = await deps.searchTitles(value, user)
+							const result = await deps.searchTitles(value, user, (reading) => {
+								if (progressAbort.signal.aborted) return
+								const body = textCard(
+									`### Results for ${value}\n${readingLine(reading)}\n\nFinding matching movies and shows…`,
+								)
+								// Progress never blocks results. Cancel pending retries and restore results if a late edit lands.
+								void Promise.resolve()
+									.then(() =>
+										deps.edit(
+											interaction.application_id!,
+											interaction.token!,
+											body,
+											progressAbort.signal,
+										),
+									)
+									.then(() => {
+										if (finalBody)
+											return deps.edit(
+												interaction.application_id!,
+												interaction.token!,
+												finalBody,
+											)
+									})
+									.catch(() => {})
+							})
 							const titles = result.titles.slice(0, 100)
 							const state = {
 								args: {},
@@ -1269,6 +1319,7 @@ export async function routeInteraction(
 									ids: titles.map((t) => t.id),
 									titles,
 									note: result.note,
+									reading: result.reading,
 								},
 							}
 							const key = await deps.saveState(state)
@@ -1356,12 +1407,15 @@ export async function routeInteraction(
 							return textCard("Unsupported command.")
 					}
 				},
-				(body) =>
-					deps.edit(
-						interaction.application_id ?? "",
-						interaction.token ?? "",
+				(body) => {
+					progressAbort.abort()
+					finalBody = body
+					return deps.edit(
+						interaction.application_id!,
+						interaction.token!,
 						body,
-					),
+					)
+				},
 				finish,
 			)
 		}

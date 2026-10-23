@@ -900,3 +900,39 @@ test("link storage failure logs only the nonce and still renders the prompt", as
 	)
 	assert.doesNotMatch(f.logs.join("\n"), /test-token|private storage payload/)
 })
+
+
+test("cancelling a progress edit aborts its request and prevents a rate-limit retry", async () => {
+	const abort = new AbortController()
+	let calls = 0
+	const rest = discordRest({
+		fetch: async (_url, init) => {
+			calls++
+			assert.equal(init?.signal?.aborted, false)
+			return Response.json({ retry_after: 0 }, { status: 429 })
+		},
+		sleep: async () => {
+			abort.abort()
+		},
+	})
+	await assert.rejects(rest.editOriginal("app", "token", {}, abort.signal), {
+		name: "AbortError",
+	})
+	assert.equal(calls, 1)
+	let requestSignal: AbortSignal | null | undefined
+	const pending = discordRest({
+		fetch: async (_url, init) => {
+			requestSignal = init?.signal
+			return new Promise((_resolve, reject) => {
+				requestSignal?.addEventListener("abort", () =>
+					reject(new Error("cancelled")),
+				)
+			})
+		},
+	})
+	const cancel = new AbortController()
+	const edit = pending.editOriginal("app", "token", {}, cancel.signal)
+	cancel.abort()
+	await assert.rejects(edit, /cancelled/)
+	assert.equal(requestSignal?.aborted, true)
+})

@@ -1,3 +1,4 @@
+import { reasonsLine, type SearchReason } from "./search-reading.ts"
 import type { Score } from "../scores.server.ts"
 import {
 	getVibeColorValue,
@@ -35,6 +36,7 @@ export interface MemberMarks {
 	watch_count?: number
 }
 export interface GuestTitle {
+	reasons?: SearchReason[]
 	trailer_url?: string | null
 	match?: number | null
 	match_label?: string | null
@@ -755,6 +757,7 @@ export function titleCard(
 	const guest = container(
 		[
 			...titleHero(title, options.emojis),
+			reasonsLine(title.reasons) ? text(reasonsLine(title.reasons)) : null,
 			separator(),
 			...streamLinks(title, country, {
 				allServices: options.allServices,
@@ -899,17 +902,22 @@ function rankedLine(t: GuestTitle, rank: number, emojis: EmojiIds) {
 		? goodwatchScoreDisplay(t.goodwatch_score)
 		: null
 	const emoji = score === null ? "" : scoreEmoji(score, emojis)
-	return [
-		`**${rank}**  ${emoji ? `${emoji}  ` : ""}**${escape(t.name).slice(
-			0,
-			180,
-		)}**`,
-		score === null ? null : String(score),
-		t.year ? String(t.year) : null,
-		isMovie(t) && t.runtime_minutes ? runtime(t.runtime_minutes) : null,
-	]
-		.filter(Boolean)
-		.join("  ·  ")
+	return (
+		[
+			`**${rank}**  ${emoji ? `${emoji}  ` : ""}**${escape(t.name).slice(
+				0,
+				180,
+			)}**`,
+			score === null ? null : String(score),
+			t.year ? String(t.year) : null,
+			isMovie(t) && t.runtime_minutes ? runtime(t.runtime_minutes) : null,
+		]
+			.filter(Boolean)
+			.join("  ·  ") +
+		(reasonsLine(t.reasons)
+			? `\n-# ${escape(reasonsLine(t.reasons)).slice(0, 130)}`
+			: "")
+	)
 }
 
 /** Up to ten posters as one media gallery, or null when none of the titles has a poster. */

@@ -1182,3 +1182,160 @@ test("title card guest reads come from the five-minute cache; the member's own r
 	assert.doesNotMatch([...values.values()][0], /want_to_see|linked-member/)
 	assert.match([...values.keys()][0], /^discord:title:v1:movie:7:DE:all$/)
 })
+
+
+test("/search shows its reading while ranking, then preserves reading and three reasons through Open and Back", async () => {
+	const f = fixture()
+	const reading = [
+		{ text: "Funny", kind: "want" as const },
+		{ text: "Family", kind: "attribute" as const },
+		{ text: "Forest", kind: "attribute" as const },
+		{ text: "Not horror", kind: "excluded" as const },
+	]
+	const reasons = [
+		{ text: "but scare only 1", kind: "mismatch" as const },
+		{ text: "Funny 9", kind: "dimension" as const },
+		{ text: "Family", kind: "attribute" as const },
+		{ text: "Forest", kind: "attribute" as const },
+		{ text: "Fourth chip", kind: "attribute" as const },
+	]
+	let ranked!: () => void
+	const ranking = new Promise<void>((resolve) => {
+		ranked = resolve
+	})
+	let progressed!: () => void
+	const progress = new Promise<void>((resolve) => {
+		progressed = resolve
+	})
+	const edit = f.deps.edit
+	f.deps.edit = async (...args) => {
+		await edit(...args)
+		progressed()
+	}
+	f.deps.searchTitles = async (_query, _user, onReading) => {
+		onReading?.(reading)
+		await ranking
+		return { titles: [{ ...title, reasons }], reading }
+	}
+	const ack = await f.run(2, {
+		name: "search",
+		options: [{ name: "query", value: "funny family forest" }],
+	})
+	assert.equal(ack.type, 5)
+	await progress
+	assert.equal(f.edits.length, 1)
+	assert.match(JSON.stringify(f.edits[0]), /Results for funny family forest/)
+	assert.match(
+		JSON.stringify(f.edits[0]),
+		/Reads as: Funny · Family · Forest · not horror/,
+	)
+	assert.match(JSON.stringify(f.edits[0]), /Finding matching movies and shows…/)
+	await new Promise((resolve) => setTimeout(resolve, 30))
+	assert.equal(f.edits.length, 1, "loading stays visible throughout ranking")
+	ranked()
+	await f.finished
+	const final = f.edits.at(-1)!
+	assertLimits(final.components)
+	assert.match(
+		JSON.stringify(final),
+		/Reads as: Funny · Family · Forest · not horror/,
+	)
+	assert.match(JSON.stringify(final), /Matches: Funny · Family · Forest/)
+	assert.doesNotMatch(
+		JSON.stringify(final),
+		/Finding matching|Fourth chip|but scare/,
+	)
+	const select = selectIn(final.components)
+	const opened = fixture()
+	for (const [k, v] of f.states) opened.states.set(k, v)
+	await opened.run(3, {
+		custom_id: String(select.custom_id),
+		values: [title.id],
+	})
+	await opened.finished
+	assert.match(JSON.stringify(opened.edits), /Matches: Funny · Family · Forest/)
+	assert.doesNotMatch(JSON.stringify(opened.edits), /Fourth chip|but scare/)
+	const back = buttonsIn(opened.edits[0].components).find(
+		(b) => b.label === "Back",
+	)!
+	const returned = fixture()
+	for (const [k, v] of f.states) returned.states.set(k, v)
+	await returned.run(3, { custom_id: String(back.custom_id) })
+	await returned.finished
+	assert.match(
+		JSON.stringify(returned.edits),
+		/Reads as: Funny · Family · Forest · not horror/,
+	)
+	assert.match(
+		JSON.stringify(returned.edits),
+		/Matches: Funny · Family · Forest/,
+	)
+	assert.deepEqual(returned.reads, [])
+})
+
+for (const failure of ["reject", "hang", "late"] as const) {
+	test(`/search progress edit can ${failure} without delaying or failing the final edit`, async () => {
+		const f = fixture()
+		let signal: AbortSignal | undefined
+		let release!: () => void
+		let lateDone!: () => void
+		const late = new Promise<void>((resolve) => {
+			lateDone = resolve
+		})
+		const original = f.deps.edit
+		f.deps.edit = async (app, token, body, abort) => {
+			if (abort) {
+				signal = abort
+				if (failure === "reject") throw new Error("Webhook is unavailable")
+				await new Promise<void>((resolve) => {
+					release = resolve
+				})
+				await original(app, token, body)
+			} else {
+				await original(app, token, body)
+				if (f.edits.length === 3) lateDone()
+			}
+		}
+		f.deps.searchTitles = async (_q, _user, onReading) => {
+			onReading?.([{ text: "Funny", kind: "want" }])
+			return { titles: [title] }
+		}
+		await f.run(2, {
+			name: "search",
+			options: [{ name: "query", value: "funny" }],
+		})
+		await f.finished
+		assert.equal(signal?.aborted, true)
+		assert.match(JSON.stringify(f.edits), /Results for funny/)
+		assert.doesNotMatch(JSON.stringify(f.edits), /Finding matching/)
+		if (failure === "late") {
+			release()
+			await late
+			assert.doesNotMatch(JSON.stringify(f.edits.at(-1)), /Finding matching/)
+		}
+	})
+}
+
+test("search cards keep reading and reason copy within Discord limits and hide raw identifiers", () => {
+	const reasons = Array.from({ length: 5 }, () => ({
+		kind: "attribute" as const,
+		text: "very_long **movie:42** ".repeat(20),
+	}))
+	const list = titleListCard("Results for a long query".repeat(20), titles.map((t) => ({ ...t, reasons })), {
+		subtitle: "Reads as: ".repeat(50), total: 100, page: 0, stateKey: key, pageAction: "search",
+	})
+	assertLimits(list.components)
+	const opened = titleCard({ ...title, reasons }, "DE", { back: { kind: "search", key, page: 0 } })
+	assertLimits(opened.components)
+	const copy = all([...list.components, ...opened.components]).filter((c) => c.type === 10).map((c) => c.content).join("\n")
+	assert.doesNotMatch(copy, /_|movie:42/)
+})
+
+test("opening a search title still works when its optional reason snapshot is unavailable", async () => {
+	const f = fixture()
+	f.deps.loadState = async () => { throw new Error("Storage is unavailable") }
+	await f.run(3, { custom_id: `gw1:open:q:${key}:0`, values: [title.id] })
+	await f.finished
+	assert.match(JSON.stringify(f.edits), /A title/)
+	assert.equal(buttonsIn(f.edits[0].components).find((b) => b.label === "Back")?.custom_id, `gw1:back:q:${key}:0`)
+})
