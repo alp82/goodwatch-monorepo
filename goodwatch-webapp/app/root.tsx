@@ -5,6 +5,7 @@ import { EARLY_TELEMETRY_SCRIPT } from "~/telemetry/early"
 import { GOOGLE_TAG_INLINE_SCRIPT } from "~/telemetry/google-tag"
 import { reportBoundaryError } from "~/telemetry/telemetry"
 import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
+import { InstantRouteScroll } from "~/ui/nav/InstantRouteScroll"
 import { json } from "@remix-run/node"
 import type { User } from "@supabase/auth-js"
 import { resolveMediaContext } from "~/server/media-context.server"
@@ -281,6 +282,7 @@ export function ErrorBoundary() {
 					)}
 					<ToastContainer />
 					<TelemetryBoot />
+					<InstantRouteScroll />
 					<ScrollRestoration />
 					<Scripts />
 				</QueryClientProvider>
@@ -376,6 +378,7 @@ function Root() {
 								{/* <CookieConsent /> */}
 								<ToastContainer />
 								<TelemetryBoot />
+								<InstantRouteScroll />
 								{shouldUseScrollRestoration && <ScrollRestoration />}
 								{/* The start page's scripts start after its first paint (utils/start-after-paint.ts). */}
 								<Scripts startAfterPaint={afterPaint ? startAfterPaintScript : undefined} />
