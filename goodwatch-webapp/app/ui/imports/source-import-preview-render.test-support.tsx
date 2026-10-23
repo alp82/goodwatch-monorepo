@@ -80,7 +80,7 @@ const receipt = () => {
 		warnings: [
 			importInfo("Comments and tags are not imported."),
 			importInfo(
-				"Season scores are kept for later and not applied as show ratings.",
+				"Each entry's score is kept for its own episodes, such as S1 E1–12, and never becomes a rating of the whole show.",
 			),
 		],
 	}

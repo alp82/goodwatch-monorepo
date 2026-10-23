@@ -11,6 +11,10 @@ import type {
 } from "~/domain/imports"
 import { canonicalTitleId } from "~/utils/title-identity"
 import {
+	episodeScoreKey,
+	importedScoreTarget,
+} from "../../domain/episode-scores.ts"
+import {
 	IMPORT_MAX_ROWS,
 	IMPORT_SHOW_STATUS_LABELS,
 	IMPORT_SOURCE_NAMES,
@@ -19,6 +23,7 @@ import {
 	isApplicableStatus,
 } from "../../domain/imports.ts"
 import { PROTECTED_STATES } from "../../domain/tracking/machine.ts"
+import { isMissingEpisodeScoreTable } from "../episode-scores.server.ts"
 import type {
 	ImportStatusItem,
 	ImportTrackingPlan,
@@ -124,16 +129,27 @@ export async function matchCatalog(
 			)
 	// Tracker identities locate the parent; episode placement is validated separately below.
 	for (const row of rows) {
+		// An anime entry's score is a part score: it keeps the entry's episode range, never the whole show (#759).
 		if (
 			row.animeEntry &&
-			row.kind === "unsupported" &&
-			row.score != null &&
-			row.problem?.outcome === "unsupported"
+			row.kind === "episode_rating" &&
+			row.scoreScope === "part" &&
+			!row.problem
 		) {
 			const placement = await resolveEpisode.animeEntryPlacement(row.animeEntry)
 			row.animeScorePlacement = placement
 			row.tmdbId = placement.mapping?.showId ?? null
-			if (placement.reason) row.problem.reason += ` ${placement.reason}`
+			if (placement.ranges?.length) row.scoreRanges = placement.ranges
+			else
+				row.problem = {
+					outcome: placement.mapping ? "unsupported" : "unmatched",
+					reason: [
+						"This score's episode range couldn't be placed in the show's episode list, so it wasn't imported.",
+						placement.reason,
+					]
+						.filter(Boolean)
+						.join(" "),
+				}
 			continue
 		}
 		if (row.animeEntry && (row.kind === "rating" || row.kind === "review")) {
@@ -292,6 +308,24 @@ export async function matchCatalog(
 		await Promise.all(
 			batch.map(async ([index, title]) => {
 				const row = rows[index]
+				// A season score names a season, not an episode: the season must be in the show's TMDB episode list.
+				if (row.kind === "episode_rating" && row.scoreScope === "season") {
+					if (
+						title.mediaType !== "show" ||
+						!(await resolveEpisode.seasonInCatalog(
+							title.tmdbId,
+							row.season ?? -1,
+						))
+					) {
+						found.delete(index)
+						row.problem = {
+							outcome: "unmatched",
+							reason:
+								"This season isn't in the show's episode list in GoodWatch.",
+						}
+					}
+					return
+				}
 				// Wishlist season/episode rows reuse episode-scope fields as source evidence;
 				// their target is the whole show, so they must skip episode resolution.
 				if (
@@ -365,6 +399,7 @@ async function currentValues(userId: string) {
 		),
 	])
 	return {
+		episodeScores: await currentEpisodeScores(userId),
 		scores: new Map(
 			scores.map((x) => [
 				key(x.media_type, Number(x.tmdb_id)),
@@ -382,6 +417,38 @@ async function currentValues(userId: string) {
 			favorites.map((x) => key(x.media_type, Number(x.tmdb_id))),
 		),
 		watched: new Set(watched.map((x) => key(x.media_type, Number(x.tmdb_id)))),
+	}
+}
+
+/** The member's season, episode and part scores by show and key; null before the table exists (#759). */
+async function currentEpisodeScores(userId: string) {
+	try {
+		await run("REFRESH TABLE user_episode_score")
+		const rows = await select<{
+			tmdb_id: number
+			score_key: string
+			score: number
+			updated_at: Date | string
+			_seq_no: number
+			_primary_term: number
+		}>(
+			"SELECT tmdb_id, score_key, score, updated_at, _seq_no, _primary_term FROM user_episode_score WHERE user_id = ? LIMIT 100000",
+			[userId],
+		)
+		return new Map(
+			rows.map((x) => [
+				`${Number(x.tmdb_id)}:${x.score_key}`,
+				{
+					score: Number(x.score),
+					updatedAt: new Date(x.updated_at).toISOString(),
+					seq: Number(x._seq_no),
+					term: Number(x._primary_term),
+				},
+			]),
+		)
+	} catch (error) {
+		if (isMissingEpisodeScoreTable(error)) return null
+		throw error
 	}
 }
 
@@ -435,6 +502,8 @@ function classify(
 	matched: Map<number, { tmdbId: number; mediaType: "movie" | "show" }>,
 	current: Awaited<ReturnType<typeof currentValues>>,
 ): ImportItem[] {
+	// The first row of the file that scores a part wins; a later row for the same part is left out.
+	const scoredParts = new Set<string>()
 	return rows.map((row, index): ImportItem => {
 		const base = {
 			...row,
@@ -468,6 +537,64 @@ function classify(
 			}
 		const ref = key(title.mediaType, title.tmdbId)
 		const known = current.scores.get(ref)
+		if (row.kind === "episode_rating") {
+			const target = importedScoreTarget(row)
+			const score = row.score
+			if (!target)
+				return {
+					...base,
+					...title,
+					outcome: "unmatched",
+					reason:
+						"This season or episode could not be matched uniquely in the show's episode list.",
+				}
+			if (
+				typeof score !== "number" ||
+				!Number.isInteger(score) ||
+				score < 1 ||
+				score > 10
+			)
+				return {
+					...base,
+					...title,
+					outcome: "invalid",
+					reason: "This score isn't a whole number from 1 to 10.",
+				}
+			if (current.episodeScores === null)
+				return {
+					...base,
+					...title,
+					outcome: "unsupported",
+					reason:
+						"GoodWatch can't save season and episode scores yet. Import this file again later to bring them in.",
+				}
+			const part = `${title.tmdbId}:${episodeScoreKey(target)}`
+			if (scoredParts.has(part))
+				return {
+					...base,
+					...title,
+					outcome: "unchanged",
+					reason:
+						"Another row of this file scores the same season or episode. The first one is imported.",
+				}
+			scoredParts.add(part)
+			const stored = current.episodeScores.get(part)
+			return {
+				...base,
+				...title,
+				currentScore: stored?.score ?? null,
+				outcome: !stored
+					? "new"
+					: stored.score === score
+						? "unchanged"
+						: "conflict",
+				reason:
+					stored && stored.score !== score
+						? `You scored this ${stored.score} in GoodWatch.`
+						: null,
+				_preview: stored ?? null,
+			} as ImportItem
+		}
 		if (row.kind === "rating") {
 			if (row.score === null || row.score === undefined)
 				return {

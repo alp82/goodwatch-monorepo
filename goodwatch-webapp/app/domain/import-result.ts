@@ -45,6 +45,13 @@ export interface ImportResultStatusChange {
 export type ImportResultChange =
 	| { type: "rating-added"; score: number }
 	| { type: "rating-replaced"; from: number; to: number }
+	/** A season, episode or part score (#759). `part` names it, such as "S1 E3"; `from` is the score it replaced. */
+	| {
+			type: "episode-rating-added"
+			part: string
+			score: number
+			from: number | null
+	  }
 	| { type: "review-added" }
 	| { type: "review-replaced" }
 	| {
@@ -67,6 +74,13 @@ export type ImportResultChange =
 	| { type: "rating-removed"; score: number }
 	/** `from` is the imported rating, `to` the one Undo put back. */
 	| { type: "rating-restored"; from: number; to: number }
+	/** After Undo: the imported season, episode or part score is gone, or `restored` is back. */
+	| {
+			type: "episode-rating-removed"
+			part: string
+			score: number
+			restored: number | null
+	  }
 	| { type: "review-removed" }
 	| { type: "review-restored" }
 	| {
@@ -97,6 +111,7 @@ export type ImportResultChange =
 /** What a row brought: the import kinds, which IMDb shares through its ratings. */
 export type ImportResultKind =
 	| "rating"
+	| "episode_rating"
 	| "watch"
 	| "want"
 	| "favorite"
@@ -111,6 +126,7 @@ export const IMPORT_RESULT_SECTIONS = {
 	import: [
 		"ratings_added",
 		"ratings_replaced",
+		"episode_ratings_added",
 		"reviews",
 		"watches_added",
 		"statuses_set",
@@ -124,6 +140,7 @@ export const IMPORT_RESULT_SECTIONS = {
 		"not_restored",
 		"ratings_removed",
 		"ratings_restored",
+		"episode_ratings_removed",
 		"reviews_reverted",
 		"watches_removed",
 		"statuses_restored",
@@ -144,6 +161,8 @@ export const IMPORT_RESULT_SECTION_KEYS = [
 const SECTION_OF: Record<ImportResultChangeType, ImportResultSectionKey> = {
 	"rating-added": "ratings_added",
 	"rating-replaced": "ratings_replaced",
+	"episode-rating-added": "episode_ratings_added",
+	"episode-rating-removed": "episode_ratings_removed",
 	"review-added": "reviews",
 	"review-replaced": "reviews",
 	"review-removed": "reviews_reverted",
@@ -271,9 +290,16 @@ export function groupImportResult(
 					0,
 				)
 				const watches = key === "watches_added" || key === "watches_removed"
+				// A show can bring many season and episode scores: the heading counts the scores.
+				const scores =
+					key === "episode_ratings_added" || key === "episode_ratings_removed"
 				return {
 					key,
-					count: watches ? count : rows.length,
+					count: watches
+						? count
+						: scores
+							? rows.reduce((sum, row) => sum + row.changes.length, 0)
+							: rows.length,
 					total: rows.length,
 					rows,
 				}
@@ -324,12 +350,15 @@ export function keptReason(row: {
 	if (row.outcome === "conflict" && row.keepConflicts)
 		return row.kind === "rating" && typeof row.current === "number"
 			? `You chose to keep your GoodWatch rating of ${row.current}.`
-			: "You chose to keep what GoodWatch has."
+			: row.kind === "episode_rating" && typeof row.current === "number"
+				? `You chose to keep your GoodWatch score of ${row.current}.`
+				: "You chose to keep what GoodWatch has."
 	if (row.applyState === "kept") return row.reason ?? KEPT[row.kind]
 	return null
 }
 const KEPT: Record<ImportResultKind, string> = {
 	rating: "You changed it in GoodWatch after the preview.",
+	episode_rating: "You changed it in GoodWatch after the preview.",
 	review: "You changed it in GoodWatch after the preview.",
 	watch: "Already in your watch log.",
 	want: "Already on Want to See, or already watched.",

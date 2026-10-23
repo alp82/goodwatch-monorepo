@@ -419,6 +419,14 @@ export function createEpisodeResolver(data: EpisodeResolverData) {
 		return { ...result, datePolicy: "unknown" }
 	}
 	return Object.assign(withDates, {
+		/** A season score's season: a season of the show's TMDB episode list, specials excluded. */
+		seasonInCatalog: async (showId: number, season: number) =>
+			Number.isSafeInteger(season) &&
+			season > 0 &&
+			(await data.episodes(showId)).some(
+				(e) =>
+					Number(e.show_id) === showId && Number(e.season_number) === season,
+			),
 		animeEntryPlacement: async (
 			entry: AnimeEntry,
 		): Promise<AnimeScorePlacement> => {

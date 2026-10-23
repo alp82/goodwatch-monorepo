@@ -11,17 +11,18 @@ const xml = (rows: string) =>
 		`<myanimelist><myinfo><user_export_type>1</user_export_type></myinfo>${rows}</myanimelist>`,
 	)
 
-test("MAL plain XML and original gzip retain a season score, status and only reported progress with stable entry evidence", async () => {
+test("MAL plain XML and original gzip retain an entry score as a part score, status and only reported progress with stable entry evidence", async () => {
 	const plain = await parseImportFile("myanimelist", xml(entry))
 	assert.deepEqual(
 		await parseImportFile("myanimelist", gzipSync(xml(entry))),
 		plain,
 	)
 	assert.equal(plain.source, "myanimelist")
-	assert.match(
-		plain.observations.find((row) => row.score === 8)?.problem?.reason ?? "",
-		/season score.*kept for later.*not applied/i,
-	)
+	const part = plain.observations.find((row) => row.score === 8)
+	// The entry's score is for the entry's own episodes; the preview places its range (#759).
+	assert.equal(part?.scoreScope, "part")
+	assert.equal(part?.scoreLabel, "Spy x Family Part 2")
+	assert.equal(part?.problem, undefined)
 	assert.deepEqual(
 		plain.observations.map((row) => [
 			row.kind,
@@ -31,7 +32,7 @@ test("MAL plain XML and original gzip retain a season score, status and only rep
 		]),
 		[
 			["show_status", undefined, "on_hold", undefined],
-			["unsupported", 8, undefined, undefined],
+			["episode_rating", 8, undefined, undefined],
 			["watch", undefined, undefined, 1],
 			["watch", undefined, undefined, 2],
 		],

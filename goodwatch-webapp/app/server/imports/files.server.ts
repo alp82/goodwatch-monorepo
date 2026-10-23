@@ -1401,11 +1401,14 @@ function entryObservations(
 		...(status === "completed" ? { completionScope: "part" as const } : {}),
 	})
 	const score = Number(row.my_score || 0)
+	// An entry is a cour or part: its score keeps the entry's episode range (#759), never the whole show's rating.
 	if (score !== 0)
 		observations.push({
 			...base,
 			key: `myanimelist:rating:${id}`,
-			kind: "unsupported",
+			kind: "episode_rating",
+			scoreScope: "part",
+			...(row.series_title ? { scoreLabel: row.series_title } : {}),
 			score: Number.isFinite(score) ? score : null,
 			...(!/^\d+$/.test(row.my_score) ||
 			!Number.isInteger(score) ||
@@ -1418,13 +1421,7 @@ function entryObservations(
 								"The score must be a whole number from 1 to 10 (0 means no score).",
 						},
 					}
-				: {
-						problem: {
-							outcome: "unsupported" as const,
-							reason:
-								"This season score is kept for later and not applied as a show rating.",
-						},
-					}),
+				: {}),
 		})
 	if (progress > IMPORT_MAX_ROWS || observations.length + progress > remaining)
 		fail(`That export has more than ${rowLimitLabel} observations.`)
@@ -1559,7 +1556,7 @@ function myanimelist(bytes: Uint8Array, fileName?: string): ParsedImport {
 				: []),
 			"Comments and tags are not imported. Rewatch counts do not add watches.",
 			"MyAnimeList episode dates are unknown unless a completed entry has matching full start and finish dates, establishing one viewing day. Dates are never spread across episodes.",
-			"Season scores are kept for later and not applied as show ratings. Completed parts never mark the whole show Seen; only reported episode progress is imported.",
+			"Each entry's score is kept for its own episodes, such as S1 E1–12, and never becomes a rating of the whole show. Completed parts never mark the whole show Seen; only reported episode progress is imported.",
 		].map(importInfo),
 	}
 }

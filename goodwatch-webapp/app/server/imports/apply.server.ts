@@ -7,6 +7,10 @@ import type { UndoOutcome } from "~/domain/import-result"
 import type { ImportItem, ImportOptions, ImportSummary } from "~/domain/imports"
 import { canImportWantToSee } from "../../domain/imports.ts"
 import {
+	applyImportedEpisodeScore,
+	undoImportedEpisodeScore,
+} from "./episode-score-apply.server.ts"
+import {
 	HEARTBEAT_MS,
 	NativeImportError,
 	type Param,
@@ -523,7 +527,9 @@ async function applyRunStored(
 							...(ownScores.get(ref(item)) ?? []),
 							journal.after,
 						])
-				} else if (item.kind === "list") {
+				} else if (item.kind === "episode_rating")
+					state = await applyImportedEpisodeScore(userId, id, item)
+				else if (item.kind === "list") {
 					const { applyImportedList } = await import(
 						"./custom-list-apply.server.ts"
 					)
@@ -878,6 +884,8 @@ async function undoImportStored(
 			let outcome: UndoOutcome | null = null
 			if (item.kind === "rating" || item.kind === "review")
 				outcome = await undoScore(userId, id, item)
+			else if (item.kind === "episode_rating")
+				outcome = await undoImportedEpisodeScore(userId, id, item)
 			else if (item.kind === "list") {
 				const { undoImportedList } = await import(
 					"./custom-list-apply.server.ts"

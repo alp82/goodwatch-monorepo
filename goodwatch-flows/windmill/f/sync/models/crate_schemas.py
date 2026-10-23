@@ -812,6 +812,33 @@ SCHEMAS = {
         "primary_key": ["user_id", "tmdb_id", "media_type"],
         "shards": 6,
     },
+    # A member's score for part of a show (#759): a season, an episode, or a part with its episode range, such as an
+    # anime cour (S1 E1-12). Apart from user_score, which holds whole movies and shows and feeds taste, fingerprints
+    # and recommendations; nothing reads these for those. tmdb_id is the show. score_key names the part in TMDB's
+    # numbering when it was scored: "s<season>" for a season, "e<episode id>" for an episode (the TMDB episode id, so a
+    # renumbered episode keeps its score), "p:s<season>e<first>-<last>[,...]" for a part. season_number and
+    # episode_number are what the member saw; ranges is a part's JSON list of {season, firstEpisode, lastEpisode}.
+    # label is the source's own name of a part, such as a MyAnimeList entry's title; NULL for the rest.
+    "user_episode_score": {
+        "columns": {
+            "user_id": "TEXT",
+            "tmdb_id": "INTEGER",
+            "score_key": "TEXT",
+            "scope": "TEXT NOT NULL CHECK (scope IN ('season','episode','part'))",
+            "season_number": "INTEGER",
+            "episode_number": "INTEGER",
+            "episode_tmdb_id": "INTEGER",
+            "ranges": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "label": "TEXT",
+            "score": "INTEGER NOT NULL CHECK (score >= 1 AND score <= 10)",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "updated_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+        },
+        "primary_key": ["user_id", "tmdb_id", "score_key"],
+        "clustered_by": "user_id",
+        "shards": 6,
+        "timestamps": False,
+    },
     "user_favorite": {
         "columns": {
             "user_id": "TEXT",

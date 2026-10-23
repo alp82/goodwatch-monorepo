@@ -1,8 +1,9 @@
 // What deleting an account removes from the webapp's own storage. There is no account-deletion flow yet and nothing
 // calls this: it is the one place such a flow calls, so that a table added later is added here.
 //
-// Not covered yet, and for the flow to add: `user_score`, `user_wishlist`, `user_favorite`, `user_skipped`,
-// `user_not_interested` and `user_setting` have no deletion (docs/implementation/tracking/data-model.md, section 8).
+// Not covered yet, and for the flow to add: `user_score`, `user_episode_score`, `user_wishlist`, `user_favorite`,
+// `user_skipped`, `user_not_interested` and `user_setting` have no deletion
+// (docs/implementation/tracking/data-model.md, section 8).
 const defaults = {
 	unlink: async (target: { byUserId: string }) =>
 		(await import("./discord/link.server.ts")).unlink(target),

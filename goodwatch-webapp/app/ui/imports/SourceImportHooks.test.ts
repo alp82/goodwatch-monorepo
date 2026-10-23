@@ -84,7 +84,7 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 	assert.match(rendered.malReceipt, /Comments and tags are not imported/)
 	assert.match(
 		rendered.malReceipt,
-		/Season scores are kept for later and not applied/,
+		/score is kept for its own episodes, such as S1 E1–12/,
 	)
 	assert.match(rendered.statusOnly, /Show statuses/)
 	assert.doesNotMatch(rendered.statusOnly, /How should watch dates be handled/)

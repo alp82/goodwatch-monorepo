@@ -23,6 +23,10 @@ import type {
 	ImportOptions,
 	ImportSource,
 } from "~/domain/imports"
+import {
+	episodeScoreLabel,
+	importedScoreTarget,
+} from "../../domain/episode-scores.ts"
 import { resultApi } from "./result-catalog.server.ts"
 import { getImportRow, select, summarize } from "./store.server.ts"
 import { type ImportTrackingPlan, importWatchId } from "./tracking.server.ts"
@@ -377,6 +381,44 @@ function entriesOf(
 					journal.after.score,
 					row.undo_outcome,
 				),
+			)
+			continue
+		}
+		if (
+			row.kind === "episode_rating" &&
+			journal &&
+			typeof journal.after.score === "number"
+		) {
+			const target = importedScoreTarget(payload)
+			const part = target
+				? `${episodeScoreLabel(target)}${payload.scoreLabel ? ` (${payload.scoreLabel})` : ""}`
+				: (payload.scoreLabel ?? "")
+			const before =
+				journal.before.exists && typeof journal.before.score === "number"
+					? journal.before.score
+					: null
+			entries.push(
+				operation === "import"
+					? {
+							key,
+							title,
+							change: {
+								type: "episode-rating-added",
+								part,
+								score: journal.after.score,
+								from: before,
+							},
+						}
+					: (undoneEntry(key, title, "episode_rating", row.undo_outcome) ?? {
+							key,
+							title,
+							change: {
+								type: "episode-rating-removed",
+								part,
+								score: journal.after.score,
+								restored: before,
+							},
+						}),
 			)
 			continue
 		}

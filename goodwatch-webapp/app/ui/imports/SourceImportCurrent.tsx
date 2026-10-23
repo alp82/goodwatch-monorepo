@@ -80,7 +80,15 @@ export function SourceImportCurrent({
 			return
 		}
 		const options: ImportOptions = summary.options ?? {
-			kinds: ["rating", "watch", "want", "favorite", "review", "show_status"],
+			kinds: [
+				"rating",
+				"episode_rating",
+				"watch",
+				"want",
+				"favorite",
+				"review",
+				"show_status",
+			],
 			conflictChoice: "keep",
 			watchDates: "preserve",
 		}

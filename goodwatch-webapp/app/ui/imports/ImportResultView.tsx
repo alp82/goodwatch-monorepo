@@ -37,6 +37,7 @@ export const LIST_LABEL: Record<ImportResultList, string> = {
 const HEADINGS: Record<ImportResultSectionKey, string> = {
 	ratings_added: "Ratings added",
 	ratings_replaced: "Ratings replaced",
+	episode_ratings_added: "Season and episode scores",
 	reviews: "Reviews",
 	watches_added: "Watches added",
 	statuses_set: "Show statuses set",
@@ -48,6 +49,7 @@ const HEADINGS: Record<ImportResultSectionKey, string> = {
 	not_restored: "Not put back",
 	ratings_removed: "Ratings removed",
 	ratings_restored: "Ratings put back",
+	episode_ratings_removed: "Season and episode scores taken back",
 	reviews_reverted: "Reviews taken back",
 	watches_removed: "Watches removed",
 	statuses_restored: "Show statuses put back",
@@ -60,6 +62,7 @@ const ATTENTION: ImportResultSectionKey[] = ["lists_cleared", "not_restored"]
 
 const KINDS: Record<ImportResultKind, string> = {
 	rating: "Rating",
+	episode_rating: "Season or episode score",
 	review: "Review",
 	watch: "Watch",
 	want: "Want to See",
@@ -69,6 +72,7 @@ const KINDS: Record<ImportResultKind, string> = {
 }
 const LEFT: Record<ImportResultKind, string> = {
 	rating: "Your rating",
+	episode_rating: "Your season or episode score",
 	review: "Your review",
 	watch: "Your watch",
 	want: "Want to See",
@@ -159,6 +163,28 @@ function changeLine(change: ImportResultChange): ReactNode {
 			return (
 				<>
 					Your <Score n={change.from} muted /> is now <Score n={change.to} />
+				</>
+			)
+		case "episode-rating-added":
+			return change.from === null ? (
+				<>
+					{change.part}: scored <Score n={change.score} />
+				</>
+			) : (
+				<>
+					{change.part}: your <Score n={change.from} muted /> is now{" "}
+					<Score n={change.score} />
+				</>
+			)
+		case "episode-rating-removed":
+			return change.restored === null ? (
+				<>
+					{change.part}: your <Score n={change.score} muted /> is gone
+				</>
+			) : (
+				<>
+					{change.part}: back to <Score n={change.restored} /> (the import set{" "}
+					<Score n={change.score} muted />)
 				</>
 			)
 		case "review-added":
@@ -340,6 +366,8 @@ const SUMMARY: Record<ImportResultSectionKey, ((n: number) => string) | null> =
 	{
 		ratings_added: (n) => `${plural(n, "rating")} added`,
 		ratings_replaced: (n) => `${plural(n, "rating")} replaced`,
+		episode_ratings_added: (n) =>
+			`${plural(n, "season or episode score")} added`,
 		reviews: (n) => `${plural(n, "review")} added or replaced`,
 		watches_added: (n) => `${plural(n, "watch", "watches")} added`,
 		statuses_set: (n) => `${plural(n, "show status", "show statuses")} set`,
@@ -351,6 +379,8 @@ const SUMMARY: Record<ImportResultSectionKey, ((n: number) => string) | null> =
 		not_restored: null,
 		ratings_removed: (n) => `${plural(n, "rating")} removed`,
 		ratings_restored: (n) => `${plural(n, "rating")} put back`,
+		episode_ratings_removed: (n) =>
+			`${plural(n, "season or episode score")} taken back`,
 		reviews_reverted: (n) => `${plural(n, "review")} taken back`,
 		watches_removed: (n) => `${plural(n, "watch", "watches")} removed`,
 		statuses_restored: (n) =>

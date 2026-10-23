@@ -33,7 +33,9 @@ test("Trakt preview keeps canonical TMDB identities and reports specials without
 				result = imports.filter((r) => r.id === params[0])
 			else if (sql.includes("FROM doc.user_import_item"))
 				result = items.filter((r) => r.import_id === params[0])
-			else if (/FROM user_(score|wishlist|favorite|watch_log)/.test(sql))
+			else if (
+				/FROM user_(score|wishlist|favorite|watch_log|episode_score)/.test(sql)
+			)
 				result = []
 			else throw new Error(`Unexpected SELECT: ${sql}`)
 			return result as T[]

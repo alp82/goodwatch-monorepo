@@ -2756,7 +2756,7 @@ it("TMDB's six fetched lists share kind selection, skipped receipts, repeat prev
 	assert.equal(afterUndo.counts.new, 6)
 })
 
-it("MAL file preview retains season scores and applies On hold with only mapped cour watches, supports repeat receipts and undo", async () => {
+it("MAL file preview offers the entry score as a part score and applies On hold with only mapped cour watches, supports repeat receipts and undo", async () => {
 	const db = new ImportDb()
 	db.catalog = [
 		{
@@ -2806,7 +2806,8 @@ it("MAL file preview retains season scores and applies On hold with only mapped 
 		"animelist.xml",
 		file,
 	)
-	assert.equal(preview.counts.new, 3)
+	// Two watches, the status, and the entry's part score; the member leaves the score out below.
+	assert.equal(preview.counts.new, 4)
 	assert.equal((await getShowTracking("member", 120089)).log.length, 0)
 	const rows = (await getImportItems("member", preview.id, undefined, 0, 50))
 		.items
@@ -2835,7 +2836,8 @@ it("MAL file preview retains season scores and applies On hold with only mapped 
 		"kitsu-member-anime.xml",
 		file,
 	)
-	assert.equal(repeated.counts.new, 0)
+	// Only the part score is new again: the member left it out of the first import.
+	assert.equal(repeated.counts.new, 1)
 	const repeatedRows = (
 		await getImportItems("member", repeated.id, undefined, 0, 50)
 	).items
@@ -2851,7 +2853,7 @@ it("MAL file preview retains season scores and applies On hold with only mapped 
 		"animelist.xml",
 		file,
 	)
-	assert.equal(restored.counts.new, 3)
+	assert.equal(restored.counts.new, 4)
 })
 
 it("completed MAL cours date watches only when both complete dates establish one viewing day, and never fill the rest of a show", async () => {
@@ -2978,7 +2980,11 @@ it("different anime entry scores and statuses for one show stay unapplied instea
 	assert.ok(
 		items
 			.filter((x) => x.score != null)
-			.every((x) => /season score.*kept for later/i.test(x.reason || "")),
+			.every(
+				(x) =>
+					x.kind === "episode_rating" &&
+					/episode range couldn't be placed/i.test(x.reason || ""),
+			),
 	)
 	await confirmImport("member", preview.id, {
 		...options,
@@ -3114,7 +3120,7 @@ it("different cour statuses name every conflicting status, including Completed, 
 	}
 })
 
-it("cour scores retain each entry's full pinned placement through apply and undo without rating or marking the show Seen", async () => {
+function setupCourParts() {
 	const db = setupCourStatuses()
 	db.episodes = Array.from({ length: 25 }, (_, i) => ({
 		show_id: 120089,
@@ -3147,17 +3153,33 @@ it("cour scores retain each entry's full pinned placement through apply and undo
 			},
 		],
 	}
-	const file = Buffer.from(
-		`<myanimelist><myinfo><user_export_type>1</user_export_type></myinfo>${[50265, 50602].map((id, i) => `<anime><series_animedb_id>${id}</series_animedb_id><series_episodes>${i ? 13 : 12}</series_episodes><my_status>Plan to Watch</my_status><my_score>${i ? 9 : 8}</my_score></anime>`).join("")}</myanimelist>`,
-	)
+	return db
+}
+/** One section of an import result; fails the test when it's missing. */
+function partSection(
+	result: Awaited<ReturnType<typeof getImportResult>>,
+	key: string,
+) {
+	const found = result.sections.find((each) => each.key === key)
+	assert.ok(found, `no ${key} section`)
+	return found
+}
+const courParts = Buffer.from(
+	`<myanimelist><myinfo><user_export_type>1</user_export_type></myinfo>${[50265, 50602].map((id, i) => `<anime><series_animedb_id>${id}</series_animedb_id><series_title>Spy x Family${i ? " Part 2" : ""}</series_title><series_episodes>${i ? 13 : 12}</series_episodes><my_status>Plan to Watch</my_status><my_score>${i ? 9 : 8}</my_score></anime>`).join("")}</myanimelist>`,
+)
+
+it("cour scores become part scores with each entry's full episode range, through apply and undo, without rating or marking the show Seen", async () => {
+	const db = setupCourParts()
 	const preview = await previewImport(
 		"member",
 		"myanimelist",
 		"animelist.xml",
-		file,
+		courParts,
 	)
-	assert.equal(preview.counts.new, 1)
-	assert.equal(preview.counts.unsupported, 2)
+	// One Plan to watch status (the other is its duplicate) and two part scores.
+	assert.equal(preview.counts.new, 3)
+	assert.equal(preview.counts.unsupported, 0)
+	assert.equal(preview.kinds.episode_rating, 2)
 	const scoreRows = async () =>
 		(await getImportItems("member", preview.id, undefined, 0, 50)).items.filter(
 			(row) => row.score != null,
@@ -3165,47 +3187,101 @@ it("cour scores retain each entry's full pinned placement through apply and undo
 	const scores = await scoreRows()
 	assert.deepEqual(
 		scores.map((row) => [
+			row.kind,
+			row.outcome,
 			row.score,
 			row.animeEntry?.id,
 			row.tmdbId,
-			row.animeScorePlacement?.ranges,
+			row.scoreRanges,
 		]),
 		[
-			[8, 50265, 120089, [{ season: 1, firstEpisode: 1, lastEpisode: 12 }]],
-			[9, 50602, 120089, [{ season: 1, firstEpisode: 13, lastEpisode: 25 }]],
+			[
+				"episode_rating",
+				"new",
+				8,
+				50265,
+				120089,
+				[{ season: 1, firstEpisode: 1, lastEpisode: 12 }],
+			],
+			[
+				"episode_rating",
+				"new",
+				9,
+				50602,
+				120089,
+				[{ season: 1, firstEpisode: 13, lastEpisode: 25 }],
+			],
 		],
 	)
 	assert.deepEqual(
 		scores.map((row) => row.animeScorePlacement?.mapping?.offset),
 		[0, 12],
 	)
-	assert.ok(
-		scores.every(
-			(row) =>
-				row.kind === "unsupported" &&
-				/season score.*kept for later.*not applied/i.test(row.reason ?? ""),
-		),
-	)
 	// Changing the live snapshot must not rewrite receipt evidence.
 	db.animeSnapshot = null
 	await confirmImport("member", preview.id, {
 		...options,
-		kinds: ["rating", "show_status"],
+		kinds: ["episode_rating", "show_status"],
 	})
 	await waitFor(db, "done")
-	const receipt = await getImport("member", preview.id)
-	assert.equal(receipt.applied.added, 1)
-	assert.match(
-		receipt.warnings.map((w) => w.message).join(" "),
-		/season scores.*kept for later.*not applied/i,
-	)
+	assert.equal((await getImport("member", preview.id)).applied.added, 3)
 	assert.deepEqual(
-		(await scoreRows()).map(({ applyState, ...row }) => row),
-		scores.map(({ applyState, ...row }) => row),
+		db.episodeScores.map((row) => [
+			row.tmdb_id,
+			row.score_key,
+			row.scope,
+			row.season_number,
+			JSON.parse(String(row.ranges)),
+			row.label,
+			row.score,
+		]),
+		[
+			[
+				120089,
+				"p:s1e1-12",
+				"part",
+				1,
+				[{ season: 1, firstEpisode: 1, lastEpisode: 12 }],
+				"Spy x Family",
+				8,
+			],
+			[
+				120089,
+				"p:s1e13-25",
+				"part",
+				1,
+				[{ season: 1, firstEpisode: 13, lastEpisode: 25 }],
+				"Spy x Family Part 2",
+				9,
+			],
+		],
 	)
+	// Never a whole-show rating, a watch, or Seen.
+	assert.equal(db.scores.length, 0)
 	const tracking = await getShowTracking("member", 120089)
-	assert.equal(tracking.state, null)
 	assert.equal(tracking.log.length, 0)
+	assert.notEqual(tracking.state?.state, "seen")
+	const result = await getImportResult("member", preview.id)
+	assert.deepEqual(
+		partSection(result, "episode_ratings_added").rows.map((row) => row.changes),
+		[
+			[
+				{
+					type: "episode-rating-added",
+					part: "S1 E1–12 (Spy x Family)",
+					score: 8,
+					from: null,
+				},
+				{
+					type: "episode-rating-added",
+					part: "S1 E13–25 (Spy x Family Part 2)",
+					score: 9,
+					from: null,
+				},
+			],
+		],
+	)
+	assert.equal(partSection(result, "episode_ratings_added").count, 2)
 	// A subsequent show-rating preview must still see no existing score.
 	const check = await previewParsedImport("member", "score.csv", {
 		source: "csv",
@@ -3230,11 +3306,138 @@ it("cour scores retain each entry's full pinned placement through apply and undo
 		null,
 	)
 	await undoImport("member", preview.id)
-	assert.deepEqual(
-		(await scoreRows()).map(({ applyState, ...row }) => row),
-		scores.map(({ applyState, ...row }) => row),
-	)
+	assert.equal(db.episodeScores.length, 0)
 	assert.equal((await getImport("member", preview.id)).status, "undone")
+	const undone = await getImportResult("member", preview.id)
+	assert.deepEqual(
+		partSection(undone, "episode_ratings_removed").rows[0].changes.map(
+			(change) => change.type,
+		),
+		["episode-rating-removed", "episode-rating-removed"],
+	)
+})
+
+it("an imported part score that differs from the member's follows the conflict choice, and Undo puts the member's back", async () => {
+	for (const conflictChoice of ["keep", "source"] as const) {
+		const db = setupCourParts()
+		const earlier = new Date("2026-01-02T03:04:05.000Z")
+		db.episodeScores.push({
+			user_id: "member",
+			tmdb_id: 120089,
+			score_key: "p:s1e1-12",
+			scope: "part",
+			season_number: 1,
+			episode_number: null,
+			episode_tmdb_id: null,
+			ranges: JSON.stringify([{ season: 1, firstEpisode: 1, lastEpisode: 12 }]),
+			label: null,
+			score: 6,
+			created_at: earlier,
+			updated_at: earlier,
+			_seq_no: 3,
+			_primary_term: 1,
+		})
+		const preview = await previewImport(
+			"member",
+			"myanimelist",
+			"animelist.xml",
+			courParts,
+		)
+		const rows = (await getImportItems("member", preview.id, undefined, 0, 50))
+			.items
+		const first = rows.find((row) => row.score === 8)
+		assert.equal(first?.outcome, "conflict")
+		assert.equal(first?.currentScore, 6)
+		assert.match(first?.reason ?? "", /You scored this 6 in GoodWatch/)
+		await confirmImport("member", preview.id, {
+			...options,
+			conflictChoice,
+			kinds: ["episode_rating"],
+		})
+		await waitFor(db, "done")
+		const stored = () =>
+			db.episodeScores.find((row) => row.score_key === "p:s1e1-12")
+		assert.equal(stored()?.score, conflictChoice === "keep" ? 6 : 8)
+		if (conflictChoice === "source") {
+			const result = await getImportResult("member", preview.id)
+			assert.deepEqual(
+				partSection(result, "episode_ratings_added").rows[0].changes[0],
+				{
+					type: "episode-rating-added",
+					part: "S1 E1–12 (Spy x Family)",
+					score: 8,
+					from: 6,
+				},
+			)
+		}
+		await undoImport("member", preview.id)
+		assert.equal(stored()?.score, 6)
+		assert.equal(
+			new Date(String(stored()?.created_at)).toISOString(),
+			earlier.toISOString(),
+		)
+		assert.equal(db.episodeScores.length, 1)
+	}
+})
+
+it("Undo leaves an imported part score the member changed after the import", async () => {
+	const db = setupCourParts()
+	const preview = await previewImport(
+		"member",
+		"myanimelist",
+		"animelist.xml",
+		courParts,
+	)
+	await confirmImport("member", preview.id, {
+		...options,
+		kinds: ["episode_rating"],
+	})
+	await waitFor(db, "done")
+	const changed = db.episodeScores.find((row) => row.score_key === "p:s1e1-12")
+	assert.ok(changed)
+	Object.assign(changed, {
+		score: 3,
+		updated_at: new Date("2030-01-01T00:00:00Z"),
+		_seq_no: 999,
+	})
+	await undoImport("member", preview.id)
+	assert.deepEqual(
+		db.episodeScores.map((row) => [row.score_key, row.score]),
+		[["p:s1e1-12", 3]],
+	)
+	const result = await getImportResult("member", preview.id)
+	assert.deepEqual(partSection(result, "left").rows[0].changes, [
+		{ type: "left", kind: "episode_rating" },
+	])
+})
+
+it("before the season and episode score table exists, previews keep those scores as not imported yet", async () => {
+	const db = setupCourParts()
+	db.episodeScoreTableMissing = true
+	const preview = await previewImport(
+		"member",
+		"myanimelist",
+		"animelist.xml",
+		courParts,
+	)
+	const scores = (
+		await getImportItems("member", preview.id, undefined, 0, 50)
+	).items.filter((row) => row.kind === "episode_rating")
+	assert.equal(scores.length, 2)
+	assert.ok(
+		scores.every(
+			(row) =>
+				row.outcome === "unsupported" &&
+				/can't save season and episode scores yet/.test(row.reason ?? ""),
+		),
+	)
+	// The rest of the file still imports.
+	await confirmImport("member", preview.id, {
+		...options,
+		kinds: ["episode_rating", "show_status"],
+	})
+	await waitFor(db, "done")
+	assert.equal((await getImport("member", preview.id)).applied.added, 1)
 })
 
 it("unresolved cour scores keep their facts and a reason without inventing episode ranges", async () => {
@@ -3259,15 +3462,20 @@ it("unresolved cour scores keep their facts and a reason without inventing episo
 		).items.find((row) => row.score === 8)
 		assert.ok(score)
 		assert.equal(score.animeEntry?.id, 50265)
-		assert.equal(score.outcome, "unsupported")
+		assert.equal(
+			score.outcome,
+			situation === "missing-snapshot" ? "unmatched" : "unsupported",
+		)
 		assert.equal(score.animeScorePlacement?.ranges, null)
+		assert.equal(score.scoreRanges, undefined)
 		assert.ok(score.animeScorePlacement?.reason)
 		assert.equal(score.tmdbId, situation === "missing-snapshot" ? null : 120089)
 		assert.equal(
 			score.animeScorePlacement?.mapping?.showId,
 			situation === "missing-snapshot" ? undefined : 120089,
 		)
-		assert.match(score.reason ?? "", /kept for later.*not applied/)
+		assert.match(score.reason ?? "", /episode range couldn't be placed/)
+		assert.equal(db.episodeScores.length, 0)
 	}
 })
 

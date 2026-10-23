@@ -45,6 +45,13 @@ const supportedImportSql = new Set([
 	"REFRESH TABLE user_score, user_wishlist, user_favorite, user_watch_log, user_watch_state",
 	"REFRESH TABLE user_wishlist",
 	"REFRESH TABLE user_wishlist, user_watch_log",
+	"REFRESH TABLE user_episode_score",
+	"SELECT tmdb_id, score_key, score, updated_at, _seq_no, _primary_term FROM user_episode_score WHERE user_id = ? LIMIT 100000",
+	"SELECT score, created_at, updated_at, _seq_no, _primary_term FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ?",
+	"INSERT INTO user_episode_score (user_id,tmdb_id,score_key,scope,season_number,episode_number,episode_tmdb_id,ranges,label,score,created_at,updated_at) VALUES (?) ON CONFLICT (user_id,tmdb_id,score_key) DO NOTHING",
+	"UPDATE user_episode_score SET score = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND score_key = ? AND _seq_no = ? AND _primary_term = ?",
+	"UPDATE user_episode_score SET score = ?, created_at = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND score_key = ? AND _seq_no = ? AND _primary_term = ?",
+	"DELETE FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ? AND _seq_no = ? AND _primary_term = ?",
 	"SELECT DISTINCT tmdb_id, media_type FROM user_watch_log WHERE user_id = ? LIMIT 100000",
 	"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"DELETE FROM user_not_interested WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
@@ -123,6 +130,10 @@ export class ImportDb {
 	episodes: Row[] = []
 	catalogQueries: { sql: string; params: Param[] }[] = []
 	scores: Row[] = []
+	/** user_episode_score (#759). */
+	episodeScores: Row[] = []
+	/** Answers like Crate before the user_episode_score migration ran. */
+	episodeScoreTableMissing = false
 	failWishlistDeleteOnce = false
 	failFavoriteOnce = false
 	failScoreOnce = false
@@ -197,9 +208,24 @@ export class ImportDb {
 		})
 	}
 
+	private episodeScoreTable(s: string) {
+		if (this.episodeScoreTableMissing && s.includes("user_episode_score"))
+			throw new Error("RelationUnknown[Relation 'user_episode_score' unknown]")
+	}
+
 	async select<T extends {}>(sql: string, params: Param[]): Promise<T[]> {
 		const s = sql.replace(/\s+/g, " ").trim()
 		assertSupportedImportSql(s)
+		this.episodeScoreTable(s)
+		if (s.includes("FROM user_episode_score")) {
+			const rows = this.episodeScores.filter(
+				(x) =>
+					x.user_id === params[0] &&
+					(params.length === 1 ||
+						(x.tmdb_id === params[1] && x.score_key === params[2])),
+			)
+			return rows.map((x) => ({ ...x })) as T[]
+		}
 		if (s === "SELECT status, user_id FROM doc.user_import WHERE id = ?")
 			return this.imports
 				.filter((x) => x.id === params[0])
@@ -575,7 +601,72 @@ export class ImportDb {
 			for (const row of rows) row.tvdb_id = null
 			return { rowcount: rows.length }
 		}
+		this.episodeScoreTable(s)
 		if (s.startsWith("REFRESH TABLE")) return { rowcount: 1 }
+		if (s.startsWith("INSERT INTO user_episode_score")) {
+			const [user_id, tmdb_id, score_key] = params
+			if (
+				this.episodeScores.some(
+					(x) =>
+						x.user_id === user_id &&
+						x.tmdb_id === tmdb_id &&
+						x.score_key === score_key,
+				)
+			)
+				return { rowcount: 0 }
+			this.episodeScores.push({
+				user_id,
+				tmdb_id,
+				score_key,
+				scope: params[3],
+				season_number: params[4],
+				episode_number: params[5],
+				episode_tmdb_id: params[6],
+				ranges: params[7],
+				label: params[8],
+				score: params[9],
+				created_at: params[10],
+				updated_at: params[11],
+				_seq_no: ++this.version,
+				_primary_term: 1,
+			})
+			return { rowcount: 1 }
+		}
+		if (s.startsWith("UPDATE user_episode_score SET score")) {
+			const restore = s.includes("created_at = ?")
+			const at = restore ? 3 : 2
+			const row = this.episodeScores.find(
+				(x) =>
+					x.user_id === params[at] &&
+					x.tmdb_id === params[at + 1] &&
+					x.score_key === params[at + 2] &&
+					x._seq_no === params[at + 3] &&
+					x._primary_term === params[at + 4],
+			)
+			if (!row) return { rowcount: 0 }
+			Object.assign(row, {
+				score: params[0],
+				...(restore
+					? { created_at: params[1], updated_at: params[2] }
+					: { updated_at: params[1] }),
+				_seq_no: ++this.version,
+			})
+			return { rowcount: 1 }
+		}
+		if (s.startsWith("DELETE FROM user_episode_score")) {
+			const before = this.episodeScores.length
+			this.episodeScores = this.episodeScores.filter(
+				(x) =>
+					!(
+						x.user_id === params[0] &&
+						x.tmdb_id === params[1] &&
+						x.score_key === params[2] &&
+						x._seq_no === params[3] &&
+						x._primary_term === params[4]
+					),
+			)
+			return { rowcount: before - this.episodeScores.length }
+		}
 		if (s.startsWith("UPDATE doc.user_import SET")) {
 			if (s.includes("_seq_no = ?")) {
 				const seq = Number(params.at(-2))

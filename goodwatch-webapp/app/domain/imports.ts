@@ -1,4 +1,5 @@
 import type { AnimeEntry, AnimeScorePlacement } from "./anime-mapping.ts"
+import type { EpisodeScoreRange } from "./episode-scores.ts"
 
 /** Shared import contract. IMDb keeps its existing API. */
 export const IMPORT_SOURCES = [
@@ -165,7 +166,7 @@ export const IMPORT_SOURCE_UPLOAD = {
 		exportUrl: "https://myanimelist.net/panel.php?go=export",
 		exportLabel: "MyAnimeList",
 		notes:
-			"GoodWatch imports show statuses and episode progress. Season scores are kept for later and not applied as show ratings. Comments, tags and rewatch counts are not imported. MyAnimeList episode dates stay unknown unless a completed entry starts and finishes on the same day. Kitsu watches are always undated.",
+			"GoodWatch imports show statuses, episode progress, and each entry's score for its own episodes, such as S1 E1–12. An entry's score never becomes a rating of the whole show. Comments, tags and rewatch counts are not imported. MyAnimeList episode dates stay unknown unless a completed entry starts and finishes on the same day. Kitsu watches are always undated.",
 		credits: [
 			{
 				name: "Anime-Lists",
@@ -212,6 +213,8 @@ export const isFileImportSource = (
 ): source is FileImportSource => IMPORT_SOURCE_UPLOAD[source] !== null
 export const IMPORT_KINDS = [
 	"rating",
+	/** A score for a season, an episode, or a part with its episode range; never a whole-show rating (#759). */
+	"episode_rating",
 	"watch",
 	"want",
 	"favorite",
@@ -220,8 +223,13 @@ export const IMPORT_KINDS = [
 	"list",
 ] as const
 export type ImportKind = (typeof IMPORT_KINDS)[number]
-export type ImportKindCounts = Record<Exclude<ImportKind, "list">, number> & {
+export type ImportKindCounts = Record<
+	Exclude<ImportKind, "list" | "episode_rating">,
+	number
+> & {
 	list?: number
+	/** Absent on previews made before season and episode scores were imported. */
+	episode_rating?: number
 }
 export const IMPORT_SHOW_STATUS_LABELS = {
 	watching: "Watching",
@@ -322,6 +330,14 @@ export interface ImportObservation {
 	completionScope?: "show" | "part"
 	/** Entry score placement retained in the receipt, not applied to user_score. */
 	animeScorePlacement?: AnimeScorePlacement
+	/**
+	 * episode_rating rows: what the score is for. A season uses `season`; an episode uses the episode fields and is
+	 * resolved like a watch; a part keeps its episode range in `scoreRanges` (an anime cour), filled by the preview.
+	 */
+	scoreScope?: "season" | "episode" | "part"
+	scoreRanges?: EpisodeScoreRange[]
+	/** A part's own name at its source, such as a MyAnimeList entry's title. */
+	scoreLabel?: string
 	score?: number | null
 	review?: string | null
 	watchedAt?: string | null

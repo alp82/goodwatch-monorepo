@@ -28,6 +28,7 @@ import { errorBox, formatCount, primaryButton, secondaryButton } from "./shared"
 
 const KIND_LABELS: Record<ImportKind, string> = {
 	rating: "Ratings",
+	episode_rating: "Season and episode scores",
 	watch: "Watches",
 	want: "Want to See",
 	favorite: "Favorites",
