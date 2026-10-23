@@ -43,6 +43,8 @@ The reader writes two files, both mode 600:
 - `~/goodwatch-private/711/mdblist-watchlist.json`: the wishlist file. It holds titles and IDs, so it stays private. Uploading it to the Imports page for a preview is optional; capture validation doesn't need it.
 - `~/goodwatch-private/711/mdblist-shape-report.json`: field names, types, counts, cursor placement, request counts, and rate-limit headers. It holds no key, titles, IDs, or cursor values; any field name or text containing the key is replaced with `[redacted]`. It's safe to share.
 
+Before writing, the reader checks both files for the key. An unknown list named after the key is written as `unsupported:[redacted]`. If the key would still appear, for example inside a title, the reader writes neither file and exits with code `2`.
+
 Exit code `0` means both files were written; the summary line says the coverage (`complete`, `partial`, or `unknown`). Exit code `2` means no wishlist file was written and the previous one stays as it was.
 
 Options: `--key-file`, `--out`, `--report`, `--limit 1..1000`, `--cross-check`. The `MDBLIST_API_KEY` environment variable overrides the key file. The reader refuses to write inside a Git work tree (a `.git` folder with `HEAD`, or a `.git` file starting with `gitdir:`), also through symlinks. Requests send `User-Agent: goodwatch-mdblist-reader/0.2`. The wishlist file, the report, and the key file must be three different files. The reader stages both outputs first and replaces the wishlist last, so a failed write leaves the previous wishlist in place.

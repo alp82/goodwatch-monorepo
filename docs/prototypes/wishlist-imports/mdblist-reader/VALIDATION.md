@@ -88,3 +88,7 @@ Synthetic tests only; MDBList wasn't called. 45 of 45 tests pass; each fix had a
 - **P1:** a page without `X-Total-Items` or `X-Matched-Items`, in the combined read or a cross-check read, makes the coverage `unknown`. Tested with both headers missing, each one missing, one page missing, and one filtered read missing.
 - **P2:** the mapped `watchlist_at` date is part of a row's identity. The same native IDs with and without a valid date are two rows and one identity conflict, not a repeat. Identical dated rows are still one repeat.
 - **P3:** the report redacts any field name or text equal to or containing the API key, on success and on failure.
+
+## Review round 2 fix, October 23, 2026
+
+- **Key in the wishlist file:** an unknown list named after the key now gives `mediaType: "unsupported:[redacted]"`. Before writing, the reader checks both files; if the key would still appear (for example in a title), it fails with `key-in-output`, writes neither file, and doesn't print the key. The CLI repeats the check right before writing. The P3 test now checks both files through the library and the CLI. 45 of 45 tests pass, synthetic only.

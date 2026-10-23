@@ -456,6 +456,8 @@ export async function readWatchlist({
 		seen.add(identity)
 		identities.set(identity, bucket)
 		const item = mapRow(bucket, row, counters)
+		// An unknown list's name becomes part of the row's media type; never let the key through.
+		if (item.mediaType.includes(apiKey)) item.mediaType = "unsupported:[redacted]"
 		if (item.mediaType === "movie" || item.mediaType === "show") report.rows.wishes++
 		else report.rows.unsupported++
 		items.push(item)
@@ -538,6 +540,10 @@ export async function readWatchlist({
 		completeness,
 		items,
 	}
+	// A key echoed inside a title or ID can't be redacted without changing the wish, so nothing is
+	// written. The report is scrubbed in fail().
+	if (JSON.stringify(file).includes(apiKey))
+		fail("key-in-output", "MDBList's answer contains your API key in a title or ID. To keep the key private, nothing was written.")
 	return { file, report }
 }
 
@@ -576,7 +582,10 @@ function insideGitWorkTree(path) {
  * Writes all files or none of the wishlist: every file is staged next to its target first, and
  * the wishlist is renamed last, so a failure leaves the previous wishlist in place.
  */
-function writePrivate(entries) {
+function writePrivate(entries, apiKey) {
+	// Last check before anything touches the disk: no file may contain the key.
+	if (entries.some(([, data]) => JSON.stringify(data).includes(apiKey)))
+		throw new Error("Refusing to write: the output would contain your API key. Nothing was written.")
 	const staged = []
 	try {
 		for (const [path, data] of entries) {
@@ -641,10 +650,13 @@ async function main() {
 			// Tests only: point the reader at a local stand-in.
 			base: process.env.MDBLIST_TEST_BASE || API_BASE,
 		})
-		writePrivate([
-			[options.report, report],
-			[options.out, file],
-		])
+		writePrivate(
+			[
+				[options.report, report],
+				[options.out, file],
+			],
+			apiKey,
+		)
 		console.log(
 			`Wrote ${file.items.length} entries (${report.rows.wishes} movies and shows, ${report.rows.unsupported} unsupported, ${report.rows.repeats} repeats skipped). Coverage: ${file.completeness}. Requests: ${report.requests}, retries: ${report.retries}, ${report.elapsedMs} ms.`,
 		)
@@ -654,7 +666,8 @@ async function main() {
 		if (error instanceof ReaderError) {
 			let where = `Shape report: ${options.report}`
 			try {
-				if (error.report) writePrivate([[options.report, error.report]])
+				if (error.report && error.code !== "key-in-output") writePrivate([[options.report, error.report]], apiKey)
+				else if (error.code === "key-in-output") where = "No shape report was written either."
 			} catch {
 				where = "The shape report couldn't be written either."
 			}

@@ -455,9 +455,46 @@ test("P3: response field names that contain the key are redacted in the report",
 		pagination: { [`total_${key}`]: 1, has_more: false },
 		has_more: false,
 	}
-	const { report } = await read(one(body))
+	const { file, report } = await read(one(body))
 	assert.ok(!JSON.stringify(report).includes(key))
 	assert.ok(JSON.stringify(report).includes("[redacted]"))
+	// The wishlist file too: an unknown list named after the key keeps its row, with the name redacted.
+	assert.ok(!JSON.stringify(file).includes(key))
+	assert.deepEqual(file.items.map((item) => item.mediaType), ["movie", "unsupported:[redacted]"])
+	assert.notEqual(file.completeness, "complete", "an unknown list and a disagreeing count both rule out complete")
+
+	// A key inside a value the file needs (here a title) can't be redacted safely: nothing is written.
+	const echoed = { movies: [{ ...movie, title: `Toy ${key}` }], shows: [], has_more: false }
+	await assert.rejects(read(one(echoed)), (error) => {
+		assert.equal(error.code, "key-in-output")
+		assert.ok(!error.message.includes(key))
+		assert.ok(!JSON.stringify(error.report).includes(key))
+		return true
+	})
+
+	// Through the CLI: both written files are free of the key, and an echoed key writes neither file.
+	const dir = scratch()
+	const clean = await serve(fakeMdblist([{ bucket: `list_${key}`, row: { title: "z" } }, ...rows.slice(0, 2)]))
+	try {
+		const result = await cli(["--out", join(dir, "w.json"), "--report", join(dir, "r.json")], { MDBLIST_TEST_BASE: clean.base })
+		assert.equal(result.status, 0, result.stderr)
+		for (const name of ["w.json", "r.json"]) assert.ok(!readFileSync(join(dir, name), "utf8").includes(key), name)
+	} finally {
+		clean.close()
+	}
+	const leaky = await serve(fakeMdblist([{ bucket: "movies", row: { ...movie, title: `Toy ${key}` } }]))
+	try {
+		const out = join(dir, "w2.json")
+		writeFileSync(out, "previous")
+		const result = await cli(["--out", out, "--report", join(dir, "r2.json")], { MDBLIST_TEST_BASE: leaky.base })
+		assert.equal(result.status, 2)
+		assert.match(result.stderr, /API key/)
+		assert.ok(!(result.stderr + result.stdout).includes(key))
+		assert.equal(readFileSync(out, "utf8"), "previous")
+		assert.ok(!existsSync(join(dir, "r2.json")))
+	} finally {
+		leaky.close()
+	}
 	await read(fakeMdblist(rows, { faults: { 1: { json: { movies: [{ ...movie, [key]: 1 }], shows: {} } } } })).catch((error) => {
 		assert.equal(error.code, "malformed-bucket")
 		assert.ok(!JSON.stringify(error.report).includes(key))
