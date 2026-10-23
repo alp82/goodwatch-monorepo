@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -euo pipefail
+exec node "$(dirname "$(realpath "$0")")/run.mjs" "$@"
