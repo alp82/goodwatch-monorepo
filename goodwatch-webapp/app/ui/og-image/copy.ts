@@ -10,7 +10,7 @@
 
 // Relative with the extension, because copy.test.ts runs this file in plain Node.
 import { type ListKind, listName, listNoun } from "../../domain/best-lists.ts"
-import { USE_WITH_AI_ASKS } from "../connector/example-prompts.ts"
+import { TONIGHT_ASK } from "../connector/example-prompts.ts"
 
 export const BRAND_NAME = "GoodWatch"
 
@@ -214,9 +214,7 @@ export const AI_CHAT_COPY = {
 	tag: "Use with AI",
 	lines: ["Ask your AI", "what to watch"],
 	subtitle: "In Claude, ChatGPT and more.",
-	prompt:
-		USE_WITH_AI_ASKS.find(({ key }) => key === "tonight")?.ask ??
-		"anything good on netflix tonight",
+	prompt: TONIGHT_ASK,
 	// TMDB watch provider id of the service the prompt names: Netflix.
 	providerId: "8",
 	toolLine: "Used GoodWatch",

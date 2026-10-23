@@ -12,42 +12,112 @@ export const CHAT_DEMO_QUESTIONS = {
 	log: "just watched dark s3e7",
 } as const
 
-// Things to ask on /use-with-ai, each with what GoodWatch does with it.
-export const USE_WITH_AI_ASKS = [
+// The first use case, also the prompt on the page's sharing image (og-image/copy.ts).
+export const TONIGHT_ASK = "anything good on netflix tonight"
+
+// The use cases on /use-with-ai: three groups of things to ask, each with what GoodWatch does with it. Every ask maps to
+// one of the MCP tools (app/server/mcp), so the page promises only what the server does.
+export const USE_WITH_AI_GROUPS = [
 	{
-		key: "tonight",
-		ask: "anything good on netflix tonight",
-		does: "Picks that stream on your services, for your taste",
+		key: "find",
+		title: "Find something to watch",
+		hint: "Fits your taste and your services",
+		asks: [
+			{
+				key: "tonight",
+				ask: TONIGHT_ASK,
+				does: "Picks that stream on your services, for your taste",
+			},
+			{
+				key: "like",
+				ask: "something like arrival but lighter",
+				does: "Titles ranked by how well they fit you",
+			},
+			{
+				key: "discover",
+				ask: "feel-good movies from the 90s",
+				does: "Browses like Discover, with the same filters",
+			},
+			{
+				key: "stream",
+				ask: "where can i stream past lives",
+				does: "Where it streams in your country",
+			},
+			{
+				key: "person",
+				ask: "what else did the past lives director make",
+				does: "Their films, with your match for each",
+			},
+		],
 	},
 	{
-		key: "like",
-		ask: "something like arrival but lighter",
-		does: "Titles ranked by how well they fit you",
+		key: "library",
+		title: "Keep your library up to date",
+		hint: "Tell it what you watched",
+		asks: [
+			{
+				key: "log",
+				ask: "watched severance s2e4",
+				does: "Logs the episode and moves your progress",
+			},
+			{
+				key: "many",
+				ask: "i've seen all the lord of the rings movies",
+				does: "Logs up to 50 titles in one go",
+			},
+			{
+				key: "score",
+				ask: "score dune 2 with 9",
+				does: "Saves your score and sharpens your taste",
+			},
+			{
+				key: "add",
+				ask: "add severance to my list",
+				does: "Puts it on your Wishlist",
+			},
+			{
+				key: "next",
+				ask: "what's next in my shows",
+				does: "The next episode of each show you're watching",
+			},
+			{
+				key: "hold",
+				ask: "put the bear on hold",
+				does: "Sets the show to On hold",
+			},
+		],
 	},
 	{
-		key: "add",
-		ask: "add severance to my list",
-		does: "Puts it on your Wishlist",
-	},
-	{
-		key: "log",
-		ask: "watched severance s2e4",
-		does: "Logs the episode and moves your progress",
-	},
-	{
-		key: "score",
-		ask: "score dune 2 with 9",
-		does: "Saves your score and sharpens your taste",
-	},
-	{
-		key: "person",
-		ask: "what else did the past lives director make",
-		does: "Their films, with your match for each",
+		key: "taste",
+		title: "Taste, lists, and settings",
+		hint: "Your profile, in plain words",
+		asks: [
+			{
+				key: "taste",
+				ask: "what does my taste say about me",
+				does: "Reads your taste profile back to you",
+			},
+			{
+				key: "list",
+				ask: "make a list of my top 10 comedies",
+				does: "Creates a share list you can post",
+			},
+			{
+				key: "services",
+				ask: "i cancelled disney+, update my services",
+				does: "Changes your streaming services",
+			},
+			{
+				key: "country",
+				ask: "i'm in spain this month",
+				does: "Switches your streaming country to Spain",
+			},
+		],
 	},
 ] as const
 
 export const ALL_EXAMPLE_PROMPTS: readonly string[] = [
 	DESCRIPTION_SEARCH_EXAMPLE,
 	...Object.values(CHAT_DEMO_QUESTIONS),
-	...USE_WITH_AI_ASKS.map(({ ask }) => ask),
+	...USE_WITH_AI_GROUPS.flatMap(({ asks }) => asks.map(({ ask }) => ask)),
 ]

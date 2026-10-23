@@ -4,12 +4,11 @@
 // This is discord._index, not discord.tsx: a discord.tsx would become the layout of /discord/link.
 import {
 	ArrowRightIcon,
-	ChevronDownIcon,
 	LinkIcon,
 	ServerStackIcon,
 	SparklesIcon,
-	UserIcon,
 	UserGroupIcon,
+	UserIcon,
 } from "@heroicons/react/24/outline"
 import type { MetaFunction } from "@remix-run/node"
 import { Link } from "@remix-run/react"
@@ -33,7 +32,7 @@ import {
 	DISCORD_BOT_PATH,
 } from "~/ui/discord-bot/links"
 import { DISCORD_URL, DiscordMark } from "~/ui/footer/links"
-import { Kicker } from "~/ui/info-page"
+import { Kicker, Question, SectionHeading } from "~/ui/info-page"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -193,26 +192,6 @@ function HeroFact({
 			<Icon className="h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
 			{children}
 		</li>
-	)
-}
-
-function SectionHeading({
-	id,
-	title,
-	children,
-}: { id?: string; title: string; children?: ReactNode }) {
-	return (
-		<div className="flex max-w-2xl flex-col gap-3">
-			<h2
-				id={id}
-				className="scroll-mt-24 text-3xl font-bold tracking-tight text-white sm:text-4xl"
-			>
-				{title}
-			</h2>
-			{children && (
-				<p className="text-lg leading-relaxed text-gray-300">{children}</p>
-			)}
-		</div>
 	)
 }
 
@@ -661,20 +640,5 @@ function Faq() {
 				<AddButton />
 			</div>
 		</section>
-	)
-}
-
-function Question({ q, children }: { q: string; children: ReactNode }) {
-	return (
-		<details className="group px-5 py-4">
-			<summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-white [&::-webkit-details-marker]:hidden">
-				{q}
-				<ChevronDownIcon
-					className="h-5 w-5 shrink-0 text-gray-400 transition-transform group-open:rotate-180"
-					aria-hidden="true"
-				/>
-			</summary>
-			<p className="pt-3 leading-relaxed text-gray-300">{children}</p>
-		</details>
 	)
 }

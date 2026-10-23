@@ -1,5 +1,7 @@
 // Small pieces the About and How it works pages share, in the site's existing look: the amber kicker, the amber
-// "→" link and the call-to-action buttons /use-with-ai and /support use.
+// "→" link and the call-to-action buttons /use-with-ai and /support use. /discord and /use-with-ai share the section
+// heading and the FAQ question.
+import { ChevronDownIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
 
@@ -50,5 +52,42 @@ export function ActionLink({
 		>
 			{children}
 		</Link>
+	)
+}
+
+/** A page section's h2 with an optional lead paragraph. */
+export function SectionHeading({
+	id,
+	title,
+	children,
+}: { id?: string; title: string; children?: ReactNode }) {
+	return (
+		<div className="flex max-w-2xl flex-col gap-3">
+			<h2
+				id={id}
+				className="scroll-mt-24 text-3xl font-bold tracking-tight text-white sm:text-4xl"
+			>
+				{title}
+			</h2>
+			{children && (
+				<p className="text-lg leading-relaxed text-gray-300">{children}</p>
+			)}
+		</div>
+	)
+}
+
+/** One FAQ entry: the question opens its answer. */
+export function Question({ q, children }: { q: string; children: ReactNode }) {
+	return (
+		<details className="group px-5 py-4">
+			<summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-white [&::-webkit-details-marker]:hidden">
+				{q}
+				<ChevronDownIcon
+					className="h-5 w-5 shrink-0 text-gray-400 transition-transform group-open:rotate-180"
+					aria-hidden="true"
+				/>
+			</summary>
+			<p className="pt-3 leading-relaxed text-gray-300">{children}</p>
+		</details>
 	)
 }
