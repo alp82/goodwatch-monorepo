@@ -5,6 +5,7 @@ import type { ImportItem, ImportOutcome } from "~/domain/imports"
 import { searchHref } from "~/ui/navigation/destinations"
 import { Spinner } from "~/ui/wait/Spinner"
 import { useSourceImportItems } from "./SourceImportHooks"
+import { sourceItemLocation } from "./SourceImportPreviewModel"
 import { formatCount, textLink } from "./shared"
 
 export const SOURCE_OUTCOME_LABELS: Record<ImportOutcome, string> = {
@@ -243,17 +244,7 @@ export function SourceItem({
 		return (
 			<MatchedItem item={item} onChange={onChangeMatch} locked={matchLocked} />
 		)
-	const location =
-		(wishlist && item.wishlistEvidence?.mediaType === "season") ||
-		(item.season != null && item.episode == null)
-			? `S${item.season ?? "?"}`
-			: item.episode != null
-				? `S${item.season ?? "?"} E${item.episode}`
-				: wishlist && item.wishlistEvidence?.mediaType === "unknown"
-					? "Type unknown"
-					: item.mediaType === "show"
-						? "Show"
-						: "Movie"
+	const location = sourceItemLocation(item, wishlist)
 	const search = wishlist && item.outcome === "unmatched" && item.title.trim()
 	const value = item.showStatus
 		? IMPORT_SHOW_STATUS_LABELS[item.showStatus]
