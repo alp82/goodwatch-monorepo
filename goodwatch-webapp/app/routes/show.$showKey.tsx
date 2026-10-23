@@ -1,3 +1,4 @@
+import { timeRequestWork, withRequestTiming } from "~/utils/request-work"
 import { overlayAlignedGrid } from "~/server/episode-text-overlay.server"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { normalizeCountry } from "~/utils/media-language"
@@ -88,12 +89,15 @@ type LoaderData = {
 	genreRow?: GenreRow
 }
 
-export const loader: LoaderFunction = async ({
+const titleLoader = async ({
 	params,
 	request,
 }: LoaderFunctionArgs) => {
 	const showId = (params.showKey || "").split("-")[0]
 
+	// The canonical episode grid is independent of member and media preferences.
+	const gridWork = getEpisodeGrid({ showId })
+	gridWork.catch(() => {})
 	const userId = await getUserIdFromRequest({ request })
 	// Taste groups for a signed-in member, alongside the reads below; the page waits for it within its budget only.
 	const sidesStart = Date.now()
@@ -107,10 +111,10 @@ export const loader: LoaderFunction = async ({
 	const language = canonicalContent ? "en" : effectiveContext.language
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
 	const details = titleDetailsWithin(
-		getDetailsForShow(
+		timeRequestWork(request, "data", () => getDetailsForShow(
 			{ showId, country, language },
 			{ canonical: canonicalContent },
-		),
+		)),
 	)
 	let episodeGridFailed = false
 	const relatedWork = relatedMapLookup({
@@ -126,7 +130,7 @@ export const loader: LoaderFunction = async ({
 		optionalTitlePart(
 			"episode grid",
 			async () => {
-				const grid = await getEpisodeGrid({ showId })
+				const grid = await gridWork
 				if (!grid) return null
 				const first = windowEpisodeGrid(grid)
 				const part =
@@ -255,6 +259,8 @@ export const loader: LoaderFunction = async ({
 		titleExtrasEmbedded(extrasState, { genres: media.details.genres })
 	return complete ? data : json(data, { headers: INCOMPLETE_PAGE_HEADERS })
 }
+
+export const loader: LoaderFunction = withRequestTiming(titleLoader)
 
 export default function DetailsTV() {
 	const {

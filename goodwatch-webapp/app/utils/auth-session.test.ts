@@ -336,3 +336,30 @@ test("account observer receives verified sessions including memo hits and cannot
 		registerSessionUserObserver(undefined)
 	}
 })
+
+test("Better Auth shares concurrent request callers and sees revocation on the next request", async () => {
+	const previous = process.env.BETTER_AUTH_ENABLED
+	const { registerBetterAuthResolver, resolveRequestSession } = await import("./auth-session.ts")
+	let calls = 0
+	let signedIn = true
+	process.env.BETTER_AUTH_ENABLED = "true"
+	registerBetterAuthResolver(async () => {
+		calls++
+		return { user: signedIn ? user("member") : null, setCookies: ["refresh=shared"], source: "server" }
+	})
+	try {
+		const request = new Request("http://localhost/", { headers: { Cookie: "gw.session_token=test" } })
+		const results = await Promise.all([getAuthFromRequest({ request }), getAuthFromRequest({ request, fresh: true })])
+		assert.equal(calls, 1)
+		assert.equal(results[0].user?.id, "member")
+		assert.equal(results[1].headers.get("Set-Cookie"), "refresh=shared")
+		assert.notEqual(results[0].headers, results[1].headers)
+		signedIn = false
+		assert.equal((await getAuthFromRequest({ request: new Request(request) })).user, null)
+		assert.equal(calls, 2)
+	} finally {
+		registerBetterAuthResolver(undefined)
+		if (previous === undefined) Reflect.deleteProperty(process.env, "BETTER_AUTH_ENABLED")
+		else process.env.BETTER_AUTH_ENABLED = previous
+	}
+})

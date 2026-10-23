@@ -260,6 +260,17 @@ describe("server resolution and atomic storage", () => {
 		assert.equal(root, title)
 		assert.equal(db.writes.length, 0)
 	})
+	it("keeps context results within a request and member identity", async () => {
+		const req = request(saved())
+		const first = resolveMediaContext(req, "member")
+		assert.equal(first, resolveMediaContext(req, "member"))
+		const otherRequest = resolveMediaContext(request(saved()), "member")
+		const otherMember = resolveMediaContext(req, "other")
+		assert.notEqual(first, otherRequest)
+		assert.notEqual(first, otherMember)
+		assert.notEqual(await first, await otherRequest)
+		await otherMember
+	})
 	it("two concurrent saves from one revision cannot both publish", async () => {
 		db.rows.set(MEDIA_PREFERENCES_KEY, JSON.stringify(saved()))
 		const outcomes = await Promise.allSettled([

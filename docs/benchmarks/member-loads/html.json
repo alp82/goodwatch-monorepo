@@ -1,0 +1,282 @@
+[
+  {
+    "path": "/movie/603-the-matrix",
+    "member": false,
+    "bot": false,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/movie/603-the-matrix",
+    "member": false,
+    "bot": true,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/movie/603-the-matrix",
+    "member": true,
+    "bot": false,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/movie/603-the-matrix",
+    "member": true,
+    "bot": true,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/show/1399-game-of-thrones",
+    "member": false,
+    "bot": false,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/show/1399-game-of-thrones",
+    "member": false,
+    "bot": true,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/show/1399-game-of-thrones",
+    "member": true,
+    "bot": false,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/show/1399-game-of-thrones",
+    "member": true,
+    "bot": true,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/movies/best",
+    "member": false,
+    "bot": false,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/movies/best",
+    "member": false,
+    "bot": true,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/movies/best",
+    "member": true,
+    "bot": false,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/movies/best",
+    "member": true,
+    "bot": true,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/movies/genres",
+    "member": false,
+    "bot": false,
+    "statuses": [
+      500,
+      500
+    ],
+    "equal": true
+  },
+  {
+    "path": "/movies/genres",
+    "member": false,
+    "bot": true,
+    "statuses": [
+      500,
+      500
+    ],
+    "equal": true
+  },
+  {
+    "path": "/movies/genres",
+    "member": true,
+    "bot": false,
+    "statuses": [
+      500,
+      500
+    ],
+    "equal": true
+  },
+  {
+    "path": "/movies/genres",
+    "member": true,
+    "bot": true,
+    "statuses": [
+      500,
+      500
+    ],
+    "equal": true
+  },
+  {
+    "path": "/discover",
+    "member": false,
+    "bot": false,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/discover",
+    "member": false,
+    "bot": true,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/discover",
+    "member": true,
+    "bot": false,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/discover",
+    "member": true,
+    "bot": true,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/my-library/want",
+    "member": false,
+    "bot": false,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/my-library/want",
+    "member": false,
+    "bot": true,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/my-library/want",
+    "member": true,
+    "bot": false,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/my-library/want",
+    "member": true,
+    "bot": true,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/taste",
+    "member": false,
+    "bot": false,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/taste",
+    "member": false,
+    "bot": true,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/taste",
+    "member": true,
+    "bot": false,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  },
+  {
+    "path": "/taste",
+    "member": true,
+    "bot": true,
+    "statuses": [
+      200,
+      200
+    ],
+    "equal": true
+  }
+]

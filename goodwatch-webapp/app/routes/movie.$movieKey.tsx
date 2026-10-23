@@ -1,3 +1,4 @@
+import { timeRequestWork, withRequestTiming } from "~/utils/request-work"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { normalizeCountry } from "~/utils/media-language"
 import { mayAdoptLegacyCountry } from "~/utils/legacy-country"
@@ -71,7 +72,7 @@ export type LoaderData = {
 	genreRow?: GenreRow
 }
 
-export const loader: LoaderFunction = async ({
+const titleLoader = async ({
 	params,
 	request,
 }: LoaderFunctionArgs) => {
@@ -97,7 +98,8 @@ export const loader: LoaderFunction = async ({
 	const language = canonicalContent ? "en" : effectiveContext.language
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
 	const details = titleDetailsWithin(
-		getDetailsForMovie({ movieId, country, language }, { canonical: canonicalContent }),
+		timeRequestWork(request, "data", () =>
+			getDetailsForMovie({ movieId, country, language }, { canonical: canonicalContent })),
 	)
 	const relatedWork = relatedMapLookup({ type: "movie", id: Number(movieId), budgetMs, language: canonicalContent ? undefined : language })
 	const parts = Promise.all([
@@ -194,6 +196,8 @@ export const loader: LoaderFunction = async ({
 		? data
 		: json(data, { headers: INCOMPLETE_PAGE_HEADERS })
 }
+
+export const loader: LoaderFunction = withRequestTiming(titleLoader)
 
 export default function DetailsMovie() {
 	const { media, params, countryIsFallback, talkedAboutNow, sides, breadcrumb, genreRow } = useLoaderData<LoaderData>()

@@ -3,6 +3,7 @@ import { createServerClient, parse, serialize } from "@supabase/ssr"
 import { createRemoteJWKSet, decodeProtectedHeader, jwtVerify } from "jose"
 import { authCookieName, hasAuthCookie } from "./auth-cookie.ts"
 import { fetchWithBackendTimeout, timeoutSetting, withBackendTimeout } from "./backend-timeout.ts"
+import { requestWork, timeRequestWork } from "./request-work.ts"
 
 export const SUPABASE_TIMEOUT_DEFAULT_MS = 5000
 
@@ -59,6 +60,24 @@ let userObserver: ((user: User) => void) | undefined
 export function registerSessionUserObserver(observer: typeof userObserver) {
 	userObserver = observer
 }
+const requestSession = requestWork((request) =>
+	timeRequestWork(request, "session", () =>
+		resolveSession(request.headers.get("Cookie")),
+	),
+)
+const freshRequestSession = requestWork((request) =>
+	timeRequestWork(request, "session", () =>
+		resolveSession(request.headers.get("Cookie"), { fresh: true }),
+	),
+)
+
+export function resolveRequestSession(request: Request, fresh = false) {
+	// Legacy callers can explicitly require a server check. Better Auth always checks the server.
+	return fresh && process.env.BETTER_AUTH_ENABLED !== "true"
+		? freshRequestSession(request)
+		: requestSession(request)
+}
+
 export function resolveSession(
 	cookieHeader: string | null,
 	options?: { fresh?: boolean },
@@ -82,7 +101,7 @@ function resolveSessionValue(
 			authCheckCounts.none++
 			return Promise.resolve({ user: null, setCookies: [], source: "none" })
 		}
-		// No memo or cookie cache: signing out takes effect on the next request.
+		// No cross-request memo or cookie cache: signing out takes effect on the next request.
 		return Promise.resolve().then(() => {
 			if (!betterAuthResolver) throw new Error("Better Auth session resolver unavailable")
 			return betterAuthResolver(cookieHeader)

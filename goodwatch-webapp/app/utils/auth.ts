@@ -7,7 +7,7 @@ import {
 	hasAuthCookie,
 } from "./auth-cookie.ts"
 
-import { resolveSession } from "./auth-session.ts"
+import { resolveRequestSession } from "./auth-session.ts"
 
 // server
 
@@ -15,7 +15,7 @@ type AuthRequest = { request: Request; fresh?: boolean }
 
 export const getAuthFromRequest = async ({ request, fresh }: AuthRequest) => {
 	const cookieHeader = request.headers.get("Cookie")
-	const { user, setCookies } = await resolveSession(cookieHeader, { fresh })
+	const { user, setCookies } = await resolveRequestSession(request, fresh)
 	const headers = new Headers()
 	headers.set(
 		"Cache-Control",

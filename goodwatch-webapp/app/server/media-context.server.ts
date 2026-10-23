@@ -1,30 +1,31 @@
-import {
-	orderedMediaSave,
-	currentMediaSaveRecord,
-} from "./media-save-order.server.ts"
-import { MediaPreferencesConflict } from "./media-preferences-store.server.ts"
 import { randomUUID } from "node:crypto"
+import {
+	type LocalizationRecord,
+	type SaveLocalizationRequest,
+	type SaveLocalizationResponse,
+	parseLocalizationCookie,
+	resolveEffectiveMediaContext,
+	serializeLocalizationCookie,
+	signInAdoption,
+} from "../utils/media-language.ts"
+import { timeRequestWork } from "../utils/request-work.ts"
 import {
 	cacheContextState,
 	cacheIdentity,
 	requestLocale,
 } from "./cache-identity.server.ts"
-import { getUserSettings, resetUserSettingsCache } from "./user-settings.server"
+import { MediaPreferencesConflict } from "./media-preferences-store.server.ts"
 import {
-	readMediaPreferences,
-	readEffectiveMediaPreferences,
 	invalidateMediaPreferencesRead,
+	readEffectiveMediaPreferences,
+	readMediaPreferences,
 	writeMediaPreferences,
 } from "./media-preferences-store.server.ts"
 import {
-	parseLocalizationCookie,
-	resolveEffectiveMediaContext,
-	serializeLocalizationCookie,
-	signInAdoption,
-	type LocalizationRecord,
-	type SaveLocalizationRequest,
-	type SaveLocalizationResponse,
-} from "../utils/media-language.ts"
+	currentMediaSaveRecord,
+	orderedMediaSave,
+} from "./media-save-order.server.ts"
+import { getUserSettings, resetUserSettingsCache } from "./user-settings.server"
 
 /** Members bypass shared page caches; guests use the same pure cookie/header rule before cache lookup. */
 const contexts = new WeakMap<
@@ -40,7 +41,9 @@ export function resolveMediaContext(request: Request, userId?: string | null) {
 	const key = userId ?? ""
 	const remembered = byUser.get(key)
 	if (remembered) return remembered
-	const result = resolveOnce(request, userId)
+	const result = timeRequestWork(request, "context", () =>
+		resolveOnce(request, userId),
+	)
 	byUser.set(key, result)
 	return result
 }
@@ -53,9 +56,15 @@ async function resolveOnce(request: Request, userId?: string | null) {
 		rawCookie?.sourceUserId === userId
 			? rawCookie
 			: null
-	let account: LocalizationRecord | null = userId
-		? (await readEffectiveMediaPreferences(userId)).record
-		: null
+	const settingsWork = userId
+		? getUserSettings({ userId })
+		: Promise.resolve(null)
+	// Both reads depend only on the authenticated member. Observe failures together.
+	const [preferences, settings] = await Promise.all([
+		userId ? readEffectiveMediaPreferences(userId) : Promise.resolve(null),
+		settingsWork,
+	])
+	let account: LocalizationRecord | null = preferences?.record ?? null
 	if (
 		userId &&
 		cookie?.sourceUserId === userId &&
@@ -64,7 +73,6 @@ async function resolveOnce(request: Request, userId?: string | null) {
 		invalidateMediaPreferencesRead(userId)
 		account = (await readEffectiveMediaPreferences(userId)).record
 	}
-	const settings = userId ? await getUserSettings({ userId }) : null
 	const fallback = requestLocale(
 		userId && rawCookie && !cookie
 			? new Request(request.url, {
