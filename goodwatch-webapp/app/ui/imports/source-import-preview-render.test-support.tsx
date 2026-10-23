@@ -111,12 +111,12 @@ const listPreview = () =>
 			onBack: () => {},
 		}),
 	)
-const listDetails = () =>
+const listDetails = (kept = false) =>
 	renderToStaticMarkup(
 		createElement(SourceItem, {
 			item: {
 				key: "list:source",
-				applyState: "added",
+				applyState: kept ? "undone" : "added",
 				kind: "list",
 				index: 0,
 				title: "Source list",
@@ -131,6 +131,9 @@ const listDetails = () =>
 					name: "Source list",
 					description: "A list description",
 					createdId: "AbCd012345",
+					...(kept
+						? { undoReason: "This list changed after import. Undo kept it." }
+						: {}),
 					entries: [
 						{
 							position: 2,
@@ -150,14 +153,16 @@ const listDetails = () =>
 			},
 		}),
 	)
-const listReceipt = () =>
+const listReceipt = (kept = false) =>
 	renderToStaticMarkup(
 		createElement(ImportResultView, {
 			result: {
-				operation: "import",
+				operation: kept ? "undo" : "import",
 				titles: 0,
 				sections: [],
-				customLists: { created: 1, deleted: 0 },
+				customLists: kept
+					? { created: 0, deleted: 0, notRestored: 1 }
+					: { created: 1, deleted: 0 },
 			},
 			from: "source.zip",
 			focus: false,
@@ -168,6 +173,8 @@ const listReceipt = () =>
 process.stdout.write(
 	`__SOURCE_IMPORT_RENDER__${JSON.stringify({
 		listReceipt: listReceipt(),
+		keptListReceipt: listReceipt(true),
+		keptListDetails: listDetails(true),
 		listPreview: listPreview(),
 		listDetails: listDetails(),
 		letterboxdUpload: upload("letterboxd"),

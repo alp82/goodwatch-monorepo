@@ -189,7 +189,7 @@ CREATE TABLE IF NOT EXISTS doc.user_list (
   signature TEXT,                  -- unused since issue #170; cards print the owner's @handle
   items ARRAY(OBJECT(STRICT) AS (media_type TEXT, tmdb_id BIGINT)),  -- rank/source order
   visibility TEXT NOT NULL,        -- 'public', 'unlisted' or 'private'
-  collection_metadata TEXT,        -- imported-list description, notes and receipt identity; NULL for five-title cards
+  collection_metadata TEXT INDEX OFF STORAGE WITH (columnstore = false),        -- imported-list description, notes and receipt identity; NULL for five-title cards
   remixed_from TEXT,               -- source list id for a remix
   content_hash TEXT NOT NULL,      -- hash of what the card shows; versions the image URL
   created_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -362,7 +362,13 @@ them via the existing visibility API and handle picker. Their pages always answe
 `private, no-store`; private lists and imported collections have no public card
 image. Reimport creates a new ID; an interrupted attempt resumes its original ID.
 
-Apply [the migration](imported-lists-migration.sql) before deploying. The Windmill
+Apply [the migration](imported-lists-migration.sql) before importing collections.
+Existing list reads retry without the optional column when it is not yet present;
+five-title card writes do not name that column. List overviews use a SQL projection
+of five items, the exact total and a collection flag, without transferring notes.
+Private lists and collections cannot prefill another member's remix; an owner can
+remix their own first five entries. Undo deletes only an unchanged private list,
+using a version-checked delete; edited or shared lists are kept with an explanation. The Windmill
 Crate schema also includes the column for new installations. No migration has
 been run against a live database in this implementation session. See the
 [import mapping and validation](../imports/custom-lists.md).

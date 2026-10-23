@@ -12,7 +12,9 @@ This extends the existing `doc.user_list` store and its `createList`, `deleteLis
 and `setListVisibility` functions, also used by MCP. There is no parallel list
 table. Five-title share cards retain their editor and validation. Imported lists
 use the same ordered `items` array with `collection_metadata` for description,
-notes and the creating import's identity. Notes are retained per position, so
+notes and the creating import's identity. Its TEXT column has both indexing and
+column storage disabled, so ordinary notes can exceed 32,766 bytes. Each new
+metadata payload stores notes once, as the ordered `entryNotes` array. Notes are retained per position, so
 two source entries resolving to the same canonical title do not lose a note.
 
 Private creation does not require a public handle. `/lists/mine` shows the lists,
@@ -23,11 +25,14 @@ uses `private, no-store`. Share list explicitly changes visibility to Unlisted
 through the existing list API, using the existing handle picker when necessary.
 The owner can make it private again or delete it. Profile list tiles and MCP reads
 point to the full list page. The five-title editor cannot replace an imported
-collection with five selected titles.
+collection with five selected titles. Remix refuses another member's private list
+or collection, while an owner may create a new card from their first five entries.
 
 **Deployment:** apply
 [`imported-lists-migration.sql`](../share-lists/imported-lists-migration.sql)
-before deploying the webapp. The Windmill Crate schema includes the same column
+before importing collections. Existing list reads tolerate a missing column,
+and ordinary five-title card writes omit it, so deploying the code first does not
+break existing lists. The Windmill Crate schema includes the same column
 for initialization. The migration has not been run against a live database.
 
 ## Source mapping
@@ -43,7 +48,7 @@ for initialization. The migration has not been run against a live database.
 | Missing/ambiguous catalog match | Entry, source position and note remain visible in preview/receipt. The created list contains matched entries in source order. |
 | Episode, season, person or other unsupported list entry | Visible in the source list details with its reason. No whole-show or movie membership is invented. |
 | Reimport of the same source list | A new private list; no merge, overwrite or synchronization. |
-| Undo | Deletes only list IDs created by that import, through the existing soft-delete function. Other lists remain intact. |
+| Undo | Deletes only unchanged, still-private lists created by that import. Edited or shared lists remain intact, with a not-restored count and a reason in the receipt. A version-checked delete also protects an intervening edit. |
 
 The source adapters remain file-only and use synthetic fixtures. No new API calls,
 credentials, scraping or account authorization is added. Source list membership
@@ -55,7 +60,9 @@ The normalized `list` observation holds the full ordered source entries alongsid
 catalog-match results. Its creation ID is written ahead to the import receipt.
 `collection_metadata.importedBy` distinguishes this attempt from an existing list
 with identical contents. A lost creation response can be retried without an orphan;
-a lost deletion response can be undone again. List-created/deleted counts are
+a lost deletion response can be undone again. A creation fingerprint is journaled
+before writing; Undo compares it and private visibility, then deletes with the
+primary-key version so an intervening edit is not removed. List-created/deleted counts are
 reported separately from changes to title tracking, and receipts link to the list.
 
 ## Evidence
@@ -69,10 +76,10 @@ reported separately from changes to title tracking, and receipts link to the lis
 Test-first cases cover parsers, normalized catalog matching, the Lists selector,
 source names/order/notes, repeated imports, Confirm/Undo, lost create/delete
 responses, private access, members without handles, and receipt counts/links.
-A profile card reads only the first five imported-list titles while reporting the
-full list size; opening the list reads its full contents in bounded catalog batches.
+Profile/MCP list overviews select only five items, a total and a collection flag
+in SQL and never transfer the description/notes payload; opening the list reads its full contents in bounded catalog batches.
 
-- Imports, IMDb, Imports UI and share-list suites: **647 passed, zero failures**.
+- Imports, IMDb, Imports UI and share-list suites: **655 passed, zero failures**.
 - Webapp typecheck: **210 diagnostics**, identical to the starting baseline; none added.
 - Broader MCP/profile run: **739 passed, seven failed** because this workspace lacks `@posthog/mcp` and `sharp`. All seven failures were reproduced against an untouched `origin/main` archive with the same installed dependencies.
 - Crate schema Python syntax parsed successfully. No live database migration/import was performed.
@@ -88,3 +95,8 @@ TMDB and MDBList acquisition remain follow-up work, as scoped in #758. The share
 integration points for the parallel #755 thread are `domain/imports.ts`,
 `imports/preview.server.ts`, `imports/apply.server.ts` and `Imports` UI kind labels.
 No blocking owner decisions remain.
+
+The round-one regressions cover a >32,766-byte note stored once, both schema
+declarations, pre-migration reads and ordinary card writes, bounded overview
+queries, remix ownership, edited/shared-list Undo and a concurrent edit during
+delete. The column configuration follows [CrateDB storage documentation](https://cratedb.com/docs/crate/reference/en/latest/general/ddl/storage.html); overview slicing/counting uses the documented [array functions](https://cratedb.com/docs/crate/reference/en/latest/general/builtins/scalar-functions.html).

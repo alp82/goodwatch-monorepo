@@ -449,8 +449,13 @@ const api = resultApi(select, async (userId, id) => {
 				entriesOf(operation, importRow.source, summary.options, rows),
 			)
 			const lists = rows.filter((row) => row.kind === "list")
+			const notRestored =
+				operation === "undo"
+					? lists.filter((row) => row.undo_outcome === "not_restored").length
+					: 0
 			if (lists.length)
 				result.customLists = {
+					...(notRestored ? { notRestored } : {}),
 					created:
 						operation === "import"
 							? lists.filter((row) => written(row.apply_state)).length

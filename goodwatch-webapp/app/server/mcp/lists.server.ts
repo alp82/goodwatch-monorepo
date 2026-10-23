@@ -1,3 +1,4 @@
+import type { ListOverview } from "../share-lists/view.server"
 import { DEFAULT_DESIGN } from "../../ui/share-card/designs"
 import { myListsPath, shareListPath } from "../../ui/share-card/links"
 import { canonicalTitleId } from "../../utils/title-identity"
@@ -19,10 +20,15 @@ import { editListKeys } from "./lists"
 import type { ReadArgs } from "./tools.server"
 import type { WriteArgs } from "./write-tools.server"
 
-async function listSummary(userId: string, origin: string, list: ShareList) {
+async function listSummary(
+	userId: string,
+	origin: string,
+	list: ShareList | ListOverview,
+) {
 	const owner = await getProfileByUserId(userId)
 	const url =
-		list.collection || list.visibility === "private"
+		("isCollection" in list ? list.isCollection : !!list.collection) ||
+		list.visibility === "private"
 			? new URL(`/lists/${list.id}`, origin).href
 			: owner
 				? new URL(shareListPath(owner.handle, list.id), origin).href
@@ -31,7 +37,7 @@ async function listSummary(userId: string, origin: string, list: ShareList) {
 		list_id: list.id,
 		name: list.title,
 		visibility: list.visibility,
-		title_count: list.items.length,
+		title_count: "itemCount" in list ? list.itemCount : list.items.length,
 		created_at: list.createdAt,
 		updated_at: list.updatedAt,
 		share_url: list.visibility === "private" ? null : url,

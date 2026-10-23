@@ -132,7 +132,7 @@ export function createProfilePageLoader(deps: ProfileDependencies) {
 		const titles = isOwner
 			? await deps.resolveCardTitles(
 					lists.flatMap((list) =>
-						list.collection ? list.items.slice(0, 5) : list.items,
+						list.isCollection ? list.items.slice(0, 5) : list.items,
 					),
 				)
 			: page.titles
@@ -140,12 +140,12 @@ export function createProfilePageLoader(deps: ProfileDependencies) {
 		const summaries: ShareListSummary[] = lists.map((list) => ({
 			id: list.id,
 			title: list.title,
-			...(list.collection
-				? { collection: true, itemCount: list.items.length }
+			...(list.isCollection
+				? { collection: true, itemCount: list.itemCount ?? list.items.length }
 				: {}),
 			design: list.design,
 			theme: list.theme,
-			items: (list.collection ? list.items.slice(0, 5) : list.items)
+			items: (list.isCollection ? list.items.slice(0, 5) : list.items)
 				.map((e) => byKey.get(entryKey(e)))
 				.filter((t): t is CardTitle => t !== undefined),
 			date: cardDate(new Date(list.createdAt)),

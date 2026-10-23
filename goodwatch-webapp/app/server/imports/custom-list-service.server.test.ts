@@ -69,6 +69,7 @@ class ListCrate {
 	lists = new Map<string, Record<string, unknown>>()
 	failAfterInsert = false
 	failAfterDelete = false
+	beforeDelete?: () => void
 	async execute(sql: string, params: unknown[] = []) {
 		const s = sql.trim().replace(/\s+/g, " ")
 		if (s.startsWith("REFRESH ")) return { json: [], rowcount: 0 }
@@ -82,7 +83,15 @@ class ListCrate {
 			return {
 				json:
 					row && (!s.includes("deleted_at IS NULL") || row.deleted_at == null)
-						? [row]
+						? [
+								s.includes("_seq_no AS seq")
+									? {
+											...row,
+											seq: row._seq_no ?? 1,
+											term: row._primary_term ?? 1,
+										}
+									: row,
+							]
 						: [],
 			}
 		}
@@ -108,6 +117,8 @@ class ListCrate {
 				columns.map((key, at) => [key, params[at]]),
 			)
 			if (this.lists.has(String(row.id))) throw new Error("duplicate key")
+			row._seq_no = 1
+			row._primary_term = 1
 			this.lists.set(String(row.id), row)
 			if (this.failAfterInsert) {
 				this.failAfterInsert = false
@@ -116,8 +127,16 @@ class ListCrate {
 			return { json: [], rowcount: 1 }
 		}
 		if (s.startsWith("UPDATE doc.user_list SET deleted_at = ?")) {
+			this.beforeDelete?.()
+			this.beforeDelete = undefined
 			const row = this.lists.get(String(params[2]))
-			if (!row || row.user_id !== params[3] || row.deleted_at != null)
+			if (
+				!row ||
+				(s.includes("_seq_no = ?")
+					? row._seq_no !== params[3] || row._primary_term !== params[4]
+					: row.user_id !== params[3]) ||
+				row.deleted_at != null
+			)
 				return { json: [], rowcount: 0 }
 			row.deleted_at = params[0]
 			if (this.failAfterDelete) {
@@ -245,10 +264,7 @@ it("previews source lists, creates private ordered lists in the existing store, 
 			],
 		)
 		assert.equal(list?.collection?.description, "A source description")
-		assert.equal(
-			list?.collection?.notes["movie:862"],
-			"First note\nSecond line",
-		)
+		assert.equal(list?.collection?.entryNotes?.[0], "First note\nSecond line")
 		await confirmImport("member", preview.id, {
 			kinds: ["list"],
 			conflictChoice: "keep",
@@ -349,9 +365,7 @@ it("declining Lists creates none; a Letterboxd list imports without changing lib
 		await getImportItems("member", imdb.id, undefined, 0, 200)
 	).items.find((row) => row.kind === "list")!
 	assert.equal(
-		(await getList(stored.customList!.createdId!))?.collection?.notes[
-			"movie:862"
-		],
+		(await getList(stored.customList!.createdId!))?.collection?.entryNotes?.[0],
 		"IMDb note",
 	)
 	await undoImport("member", imdb.id)
@@ -462,4 +476,148 @@ it("keeps separate ranked source notes when two entries resolve to the same cano
 		"First source note",
 		"Second source note",
 	])
+})
+
+it("keeps a large imported note once in collection metadata", async () => {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 862,
+			imdb_id: "tt0114709",
+			title: "Synthetic movie",
+			release_year: 1995,
+		},
+	]
+	const lists = new ListCrate()
+	setCrateClientForTest(lists)
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const note = "A synthetic long list note. ".repeat(2000)
+	const data = zipFixture({
+		"lists-lists.json": JSON.stringify([
+			{
+				name: "Long source list",
+				ids: { trakt: 95 },
+				items: [
+					{
+						rank: 1,
+						type: "movie",
+						movie: { title: "Synthetic movie", ids: { tmdb: 862 } },
+						notes: note,
+					},
+				],
+			},
+		]),
+	})
+	const preview = await previewImport("member", "trakt", "synthetic.zip", data)
+	await confirmImport("member", preview.id, {
+		kinds: ["list"],
+		conflictChoice: "keep",
+		watchDates: "preserve",
+	})
+	assert.equal((await finish(preview.id)).status, "done")
+	const row = [...lists.lists.values()][0]
+	const metadata = JSON.parse(String(row.collection_metadata))
+	assert.ok(Buffer.byteLength(String(row.collection_metadata)) > 32766)
+	assert.deepEqual(metadata.entryNotes, [note])
+	assert.equal("notes" in metadata, false)
+})
+
+it("Undo keeps imported lists that were edited or shared and records why they were not restored", async () => {
+	for (const change of ["content", "visibility"]) {
+		const db = new ImportDb()
+		db.catalog = [
+			{
+				tmdb_id: 862,
+				imdb_id: "tt0114709",
+				title: "Synthetic movie",
+				release_year: 1995,
+			},
+			{ tmdb_id: 43, title: "Synthetic show", release_year: 2020 },
+		]
+		const lists = new ListCrate()
+		setCrateClientForTest(lists)
+		setImportDbForTest(db)
+		setImportEffectsForTest(
+			async () => {},
+			async () => {},
+		)
+		const preview = await previewImport(
+			"member",
+			"trakt",
+			"synthetic.zip",
+			archive(),
+		)
+		await confirmImport("member", preview.id, {
+			kinds: ["list"],
+			conflictChoice: "keep",
+			watchDates: "preserve",
+		})
+		assert.equal((await finish(preview.id)).status, "done")
+		const item = (await getImportItems("member", preview.id, undefined, 0, 200))
+			.items[0]
+		const id = item.customList!.createdId!,
+			row = lists.lists.get(id)!
+		if (change === "content") row.content_hash = "member-edit"
+		else row.visibility = "unlisted"
+		await undoImport("member", preview.id)
+		assert.ok(await getList(id))
+		const kept = (await getImportItems("member", preview.id, undefined, 0, 200))
+			.items[0]
+		assert.match(kept.customList?.undoReason ?? "", /changed|shared/i)
+		assert.equal(
+			(await getImportResult("member", preview.id)).customLists?.notRestored,
+			1,
+		)
+	}
+})
+
+it("Undo preserves a member edit arriving between its read and delete", async () => {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 862,
+			imdb_id: "tt0114709",
+			title: "Synthetic movie",
+			release_year: 1995,
+		},
+		{ tmdb_id: 43, title: "Synthetic show", release_year: 2020 },
+	]
+	const lists = new ListCrate()
+	setCrateClientForTest(lists)
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const preview = await previewImport(
+		"member",
+		"trakt",
+		"synthetic.zip",
+		archive(),
+	)
+	await confirmImport("member", preview.id, {
+		kinds: ["list"],
+		conflictChoice: "keep",
+		watchDates: "preserve",
+	})
+	assert.equal((await finish(preview.id)).status, "done")
+	const item = (await getImportItems("member", preview.id, undefined, 0, 200))
+		.items[0]
+	const id = item.customList!.createdId!,
+		row = lists.lists.get(id)!
+	lists.beforeDelete = () => {
+		row.content_hash = "concurrent edit"
+		row._seq_no = Number(row._seq_no ?? 1) + 1
+	}
+	await undoImport("member", preview.id)
+	assert.ok(await getList(id))
+	assert.match(
+		(await getImportItems("member", preview.id, undefined, 0, 200)).items[0]
+			.customList?.undoReason ?? "",
+		/changed/i,
+	)
 })

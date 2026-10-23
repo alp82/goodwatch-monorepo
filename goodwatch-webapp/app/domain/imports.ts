@@ -271,6 +271,8 @@ export interface ImportCustomList {
 	entries: { position: number; note: string; entry: ImportObservation }[]
 	/** Allocated before creation; stable across retry/resume of this import only. */
 	createdId?: string
+	createdContentHash?: string
+	undoReason?: string
 }
 export interface ImportObservation {
 	customList?: ImportCustomList

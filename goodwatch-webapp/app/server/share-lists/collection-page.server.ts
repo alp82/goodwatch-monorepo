@@ -51,7 +51,7 @@ export function createMyListsPageLoader(deps: {
 				lists: lists.map((list) => ({
 					id: list.id,
 					title: list.title,
-					count: list.items.length,
+					count: list.itemCount,
 					visibility: list.visibility,
 				})),
 			},

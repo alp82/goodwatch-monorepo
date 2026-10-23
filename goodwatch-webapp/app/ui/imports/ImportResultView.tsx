@@ -393,6 +393,7 @@ export function ImportResultView({
 	const line = summary(result)
 	const customCount =
 		(undo ? result.customLists?.deleted : result.customLists?.created) ?? 0
+	const keptLists = undo ? (result.customLists?.notRestored ?? 0) : 0
 	const notRestored = result.sections.find(
 		(section) => section.key === "not_restored",
 	)
@@ -414,9 +415,11 @@ export function ImportResultView({
 						{result.titles === 0
 							? customCount > 0
 								? `${plural(customCount, "list")} ${undo ? "deleted" : "created"}`
-								: undo
-									? "Nothing needed changing back"
-									: "Nothing in your GoodWatch library changed"
+								: keptLists > 0
+									? `${plural(keptLists, "list")} could not be deleted`
+									: undo
+										? "Nothing needed changing back"
+										: "Nothing in your GoodWatch library changed"
 							: undo
 								? `GoodWatch changed back ${plural(result.titles, "title")}`
 								: `${plural(result.titles, "title")} changed in your GoodWatch library`}
@@ -426,6 +429,9 @@ export function ImportResultView({
 						{result.titles > 0 &&
 							customCount > 0 &&
 							`${plural(customCount, "list")} ${undo ? "deleted" : "created"}. `}
+						{keptLists > 0 &&
+							(customCount > 0 || result.titles > 0) &&
+							`${plural(keptLists, "list")} could not be deleted. `}
 						{!undo && (
 							<>
 								From <span className="break-all">{from}</span>.

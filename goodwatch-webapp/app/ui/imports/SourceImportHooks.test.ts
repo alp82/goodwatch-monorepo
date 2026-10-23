@@ -332,6 +332,13 @@ test("custom list previews offer Lists with private and duplicate rules, and exp
 	const rendered = JSON.parse(
 		output.split("__SOURCE_IMPORT_RENDER__").at(-1) ?? "",
 	)
+	assert.match(rendered.keptListReceipt, /1 list could not be deleted/)
+	assert.match(
+		rendered.keptListDetails,
+		/This list changed after import. Undo kept it./,
+	)
+	assert.doesNotMatch(rendered.keptListDetails, /List deleted by Undo/)
+	assert.match(rendered.keptListDetails, /href="\/lists\/AbCd012345"/)
 	assert.match(rendered.listReceipt, /1 list created/)
 	assert.doesNotMatch(
 		rendered.listReceipt,

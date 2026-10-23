@@ -30,6 +30,11 @@ import {
 
 import {
 	LIST_COLUMNS,
+	LIST_BASE_COLUMNS,
+	LIST_OVERVIEW_COLUMNS,
+	type ListOverview,
+	listOverviewFromRow,
+	readListRows,
 	type ListRow,
 	fromRow,
 	getList,
@@ -57,7 +62,7 @@ export interface ListCollection {
 	entryNotes?: string[]
 	importedBy?: { importId: string; item: number }
 	description: string
-	notes: Record<string, string>
+	notes?: Record<string, string>
 }
 
 export interface ShareList {
@@ -212,15 +217,21 @@ export async function validateList(input: ShareListInput) {
 	if (
 		input.collection &&
 		(typeof input.collection.description !== "string" ||
-			!input.collection.notes ||
-			typeof input.collection.notes !== "object" ||
-			Object.values(input.collection.notes).some(
-				(value) => typeof value !== "string",
-			))
+			(input.collection.notes !== undefined &&
+				(typeof input.collection.notes !== "object" ||
+					input.collection.notes === null ||
+					Object.values(input.collection.notes).some(
+						(value) => typeof value !== "string",
+					))))
 	)
 		throw new ShareListError(400, "Invalid list notes.")
+	let collection = input.collection
+	if (collection?.entryNotes) {
+		const { notes: legacyNotes, ...lean } = collection
+		collection = lean
+	}
 	return {
-		...(input.collection ? { collection: input.collection } : {}),
+		...(collection ? { collection } : {}),
 		title,
 		design: input.design,
 		theme: input.theme,
@@ -240,12 +251,14 @@ async function ownedList(userId: string, id: string) {
 	return list
 }
 
-export async function listsByUser(userId: string): Promise<ShareList[]> {
-	const rows = await select<ListRow>(
-		`SELECT ${LIST_COLUMNS} FROM doc.user_list WHERE user_id = ? AND deleted_at IS NULL ORDER BY updated_at DESC LIMIT 200`,
+export async function listsByUser(userId: string): Promise<ListOverview[]> {
+	const rows = await readListRows<
+		ListRow & { item_count: number; is_collection: boolean }
+	>(
+		`SELECT ${LIST_OVERVIEW_COLUMNS} FROM doc.user_list WHERE user_id = ? AND deleted_at IS NULL ORDER BY updated_at DESC LIMIT 200`,
 		[userId],
 	)
-	return rows.map(fromRow)
+	return rows.map(listOverviewFromRow)
 }
 
 export { publicListsByUser, getProfileByHandle } from "./view.server"
@@ -275,7 +288,7 @@ export async function createList(
 	}
 	try {
 		await run(
-			`INSERT INTO doc.user_list (${LIST_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			`INSERT INTO doc.user_list (${valid.collection ? LIST_COLUMNS : LIST_BASE_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?${valid.collection ? ", ?" : ""})`,
 			[
 				id,
 				userId,
@@ -289,7 +302,7 @@ export async function createList(
 				hash,
 				now,
 				now,
-				valid.collection ? JSON.stringify(valid.collection) : null,
+				...(valid.collection ? [JSON.stringify(valid.collection)] : []),
 			],
 		)
 		await refreshLists()
@@ -362,7 +375,7 @@ export async function updateList(
 	try {
 		const result = await run(
 			`UPDATE doc.user_list SET title = ?, prompt_id = ?, design = ?, theme = ?, items = ?, visibility = ?,
-			 content_hash = ?, updated_at = ?, collection_metadata = ? WHERE id = ? AND ${version ? "_seq_no = ? AND _primary_term = ?" : "user_id = ? AND deleted_at IS NULL"}`,
+			 content_hash = ?, updated_at = ?${valid.collection ? ", collection_metadata = ?" : ""} WHERE id = ? AND ${version ? "_seq_no = ? AND _primary_term = ?" : "user_id = ? AND deleted_at IS NULL"}`,
 			[
 				valid.title,
 				valid.promptId,
@@ -372,7 +385,7 @@ export async function updateList(
 				valid.visibility,
 				contentHash(valid),
 				new Date(),
-				valid.collection ? JSON.stringify(valid.collection) : null,
+				...(valid.collection ? [JSON.stringify(valid.collection)] : []),
 				id,
 				...(version ? [version.seq, version.term] : [userId]),
 			],
@@ -429,14 +442,49 @@ export async function setListVisibility(
 }
 
 /** Soft-deletes a list: it keeps its row with deleted_at set, and every read treats it as gone. */
-export async function deleteList(userId: string, id: string): Promise<void> {
+export async function deleteList(
+	userId: string,
+	id: string,
+	guard?: { contentHash: string; visibility: "private" },
+): Promise<void> {
 	await ownedList(userId, id)
+	let version: { seq: number; term: number } | undefined
+	if (guard) {
+		const [row] = await select<{
+			user_id: string
+			content_hash: string
+			visibility: string
+			deleted_at: unknown
+			seq: number
+			term: number
+		}>(
+			"SELECT user_id, content_hash, visibility, deleted_at, _seq_no AS seq, _primary_term AS term FROM doc.user_list WHERE id = ?",
+			[id],
+		)
+		if (
+			!row ||
+			row.user_id !== userId ||
+			row.deleted_at != null ||
+			row.content_hash !== guard.contentHash ||
+			row.visibility !== guard.visibility
+		)
+			throw new ShareListError(
+				409,
+				"This list changed after import. Undo kept it.",
+			)
+		version = row
+	}
 	const now = new Date()
 	try {
 		const deleted = await run(
-			"UPDATE doc.user_list SET deleted_at = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL",
-			[now, now, id, userId],
+			`UPDATE doc.user_list SET deleted_at = ?, updated_at = ? WHERE id = ? AND ${version ? "_seq_no = ? AND _primary_term = ?" : "user_id = ? AND deleted_at IS NULL"}`,
+			[now, now, id, ...(version ? [version.seq, version.term] : [userId])],
 		)
+		if (guard && deleted.rowcount !== 1)
+			throw new ShareListError(
+				409,
+				"This list changed after import. Undo kept it.",
+			)
 		if (deleted.rowcount)
 			captureProductEvent(userId, "list deleted", { list_id: id })
 		await refreshLists()

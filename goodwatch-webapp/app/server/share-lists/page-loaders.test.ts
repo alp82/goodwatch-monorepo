@@ -173,6 +173,15 @@ for (const [viewerId, unlisted, isOwner] of [
 		if (viewerId) assert.ok(data.owned.includes(8))
 	})
 
+const overview = (list: ListView["list"]) => {
+	const { collection, ...rest } = list
+	return {
+		...rest,
+		items: list.items.slice(0, 5),
+		itemCount: list.items.length,
+		isCollection: !!collection,
+	}
+}
 const hidden = {
 	...view.list,
 	id: "Hidden1234",
@@ -181,14 +190,14 @@ const hidden = {
 const profileDeps = (viewerId: string | null = null) => ({
 	getProfilePage: async () => ({
 		profile: view.owner,
-		lists: [view.list],
+		lists: [overview(view.list)],
 		titles: view.titles,
 	}),
 	getUserIdFromRequest: async () => viewerId ?? undefined,
 	listsByUser: async (userId: string) => {
 		assert.equal(viewerId, "owner")
 		assert.equal(userId, "owner")
-		return [view.list, hidden]
+		return [overview(view.list), overview(hidden)]
 	},
 	resolveCardTitles: async () => {
 		assert.equal(viewerId, "owner")
@@ -287,7 +296,7 @@ test("an imported list is owner-only until shared, shows all ordered titles and 
 	assertPolicy(response, "private, no-store")
 	const data = await response.json()
 	assert.ok(data.list.collection)
-	assert.equal(data.list.collection.notes["movie:1"], "Source note")
+	assert.equal(data.list.collection.notes?.["movie:1"], "Source note")
 	list.visibility = "unlisted"
 	viewer = undefined
 	assert.equal((await load(args())).status, 200)
@@ -305,10 +314,10 @@ test("My lists shows a members imported private lists without forcing a handle o
 			return [
 				{
 					...view.list,
-					visibility: "private",
+					visibility: "private" as const,
 					collection: { description: "", notes: {} },
 				},
-			]
+			].map(overview)
 		},
 	})
 	const response = await load(args())
@@ -331,11 +340,11 @@ test("profile cards keep imported-list previews small while reporting the full l
 	const load = createProfilePageLoader({
 		getProfilePage: async () => ({
 			profile: view.owner,
-			lists: [list],
+			lists: [overview(list)],
 			titles: view.titles,
 		}),
 		getUserIdFromRequest: async () => "owner",
-		listsByUser: async () => [list],
+		listsByUser: async () => [overview(list)],
 		resolveCardTitles: async (entries) => {
 			assert.equal(entries.length, 5)
 			return view.titles

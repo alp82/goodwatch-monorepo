@@ -1046,7 +1046,7 @@ SCHEMAS = {
     # Ranked share cards and imported collections. items is in source/rank order.
     "user_list": {
         "columns": {
-            "collection_metadata": "TEXT",
+            "collection_metadata": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
             "id": "TEXT",
             "user_id": "TEXT NOT NULL",
             "title": "TEXT NOT NULL",

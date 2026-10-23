@@ -882,7 +882,7 @@ async function undoImportStored(
 				const { undoImportedList } = await import(
 					"./custom-list-apply.server.ts"
 				)
-				outcome = await undoImportedList(userId, item)
+				outcome = await undoImportedList(userId, id, item)
 			} else if (isWant(item) || item.kind === "favorite")
 				outcome = await undoSet(
 					userId,

@@ -134,7 +134,8 @@ export default function CollectionList() {
 					const key = `${entry.media_type}:${entry.tmdb_id}`,
 						title = catalog.get(key)
 					const note =
-						list.collection?.entryNotes?.[index] ?? list.collection?.notes[key]
+						list.collection?.entryNotes?.[index] ??
+						list.collection?.notes?.[key]
 					return (
 						<li
 							key={`${key}:${index}`}

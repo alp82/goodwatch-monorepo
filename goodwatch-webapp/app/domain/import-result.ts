@@ -197,7 +197,7 @@ export type ImportResultOperation = "import" | "undo"
 
 export interface ImportResult {
 	/** Named custom lists are counted separately from changes to movie/show tracking. */
-	customLists?: { created: number; deleted: number }
+	customLists?: { created: number; deleted: number; notRestored?: number }
 	operation: ImportResultOperation
 	/** Titles the import changed, or that its Undo changed back. */
 	titles: number

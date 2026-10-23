@@ -15,7 +15,7 @@ import {
 	prefillTitles,
 	topRatedEntries,
 } from "~/server/share-lists/prefill.server"
-import { getList } from "~/server/share-lists/store.server"
+import { getRemixSource } from "~/server/share-lists/remix.server"
 import {
 	type ListEntry,
 	getQuickPicks,
@@ -71,7 +71,7 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = await getUserIdFromRequest({ request })
 	const [quickPicks, source, profile, rated] = await Promise.all([
 		getQuickPicks(),
-		remixId ? getList(remixId) : null,
+		remixId ? getRemixSource(remixId, userId) : null,
 		userId ? getCachedProfileByUserId(userId) : null,
 		fromRatings ? ratedEntries(params, userId).then(prefillTitles) : [],
 	])
@@ -82,7 +82,7 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 				promptId: source.promptId,
 				design: source.design,
 				theme: source.theme,
-				items: await resolveCardTitles(source.items),
+				items: await resolveCardTitles(source.items.slice(0, 5)),
 				remixedFrom: source.id,
 			}
 		: rated.length
@@ -110,7 +110,8 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
 		title: "Make your top 5 · GoodWatch",
-		description: "Rank your five favorite movies or shows and share them as a card.",
+		description:
+			"Rank your five favorite movies or shows and share them as a card.",
 		url: "https://goodwatch.app/lists/new",
 		image: "https://goodwatch.app/og/lists/new.jpg",
 		alt: "Rank your top 5 movies or shows on GoodWatch and share them",

@@ -186,7 +186,7 @@ export function SourceItem({
 			item.applyState === "added" || item.applyState === "updated"
 				? "List created."
 				: item.applyState === "undone"
-					? "List deleted by Undo."
+					? (item.customList.undoReason ?? "List deleted by Undo.")
 					: item.applyState === "kept"
 						? "This list was not imported."
 						: item.applyState === "failed"
@@ -202,7 +202,9 @@ export function SourceItem({
 				)}
 				{message && <p className="text-gray-400">{message}</p>}
 				{item.customList.createdId &&
-					(item.applyState === "added" || item.applyState === "updated") && (
+					(item.applyState === "added" ||
+						item.applyState === "updated" ||
+						!!item.customList.undoReason) && (
 						<a
 							className={textLink}
 							href={`/lists/${item.customList.createdId}`}

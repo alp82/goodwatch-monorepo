@@ -120,6 +120,7 @@ function listRow(listId = id): Row {
 }
 
 class FakeCrate {
+	hasCollectionColumn = true
 	lists = new Map<string, Row>([[id, listRow()]])
 	profiles = new Map<string, Row>([
 		[user, { user_id: user, handle: "filmfan", deleted_at: null }],
@@ -139,6 +140,11 @@ class FakeCrate {
 	): Promise<{ json: unknown[]; rowcount: number }> {
 		this.statements.push(sql)
 		const statement = sql.replace(/\s+/g, " ")
+		if (!this.hasCollectionColumn && statement.includes("collection_metadata"))
+			throw Object.assign(
+				new Error("ColumnUnknownException: Column collection_metadata unknown"),
+				{ code: 4043 },
+			)
 		const result = (json: unknown[] = []) => ({ json, rowcount: json.length })
 		if (statement.startsWith("REFRESH")) {
 			if (this.failRefresh) throw new Error("refresh timeout")
@@ -203,7 +209,18 @@ class FakeCrate {
 				selected = selected.filter((row) => row.deleted_at == null)
 			if (statement.includes("visibility = 'public'"))
 				selected = selected.filter((row) => row.visibility === "public")
-			const snapshot = structuredClone(selected)
+			const snapshot = structuredClone(selected).map((row) => {
+				if (!statement.includes("array_slice(items, 1, 5) AS items")) return row
+				const { collection_metadata, items, ...rest } = row
+				return {
+					...rest,
+					items: (items as unknown[]).slice(0, 5),
+					item_count: (items as unknown[]).length,
+					is_collection: statement.includes("NULL IS NOT NULL")
+						? false
+						: collection_metadata != null,
+				}
+			})
 			if (table === "doc.user_list" && field === "id" && this.pauseRead) {
 				const pause = this.pauseRead
 				this.pauseRead = undefined
@@ -782,7 +799,7 @@ test("a member without a handle saves an ordered private imported list of any le
 		[6, 1, 5, 3, 2, 4],
 	)
 	assert.equal(
-		(await store.getList(created.id))?.collection?.notes["movie:6"],
+		(await store.getList(created.id))?.collection?.notes?.["movie:6"],
 		"First note\nSecond line",
 	)
 	await store.deleteList(user, created.id)
@@ -822,4 +839,77 @@ test("an imported list retry cannot adopt an existing list with the same title a
 			error instanceof store.ShareListError && error.status === 409,
 	)
 	assert.equal((await store.getList(id))?.visibility, "public")
+})
+
+test("existing list reads work before the collection migration and pick up metadata after it runs", async () => {
+	db.hasCollectionColumn = false
+	assert.equal((await store.getList(id))?.title, input.title)
+	assert.equal((await store.listsByUser(user)).length, 1)
+	assert.equal((await store.publicListsByUser(user)).length, 1)
+	assert.equal((await getListView(id))?.list.title, input.title)
+	db.hasCollectionColumn = true
+	db.lists.get(id)!.collection_metadata = JSON.stringify({
+		description: "After migration",
+		entryNotes: [],
+	})
+	assert.equal(
+		(await store.getList(id))?.collection?.description,
+		"After migration",
+	)
+})
+
+test("existing five-title cards can be created and updated before the collection migration", async () => {
+	db.hasCollectionColumn = false
+	const created = await store.createList(user, input)
+	assert.equal(created.title, input.title)
+	const updated = await store.updateList(user, id, {
+		...input,
+		title: "An updated card",
+	})
+	assert.equal(updated.title, "An updated card")
+})
+
+test("list overviews return five entries and an exact total without transferring collection notes", async () => {
+	const all = Array.from({ length: 1000 }, (_, at) => ({
+		media_type: "movie",
+		tmdb_id: at + 1,
+	}))
+	db.lists.get(id)!.items = all
+	db.lists.get(id)!.collection_metadata = JSON.stringify({
+		description: "Source description",
+		entryNotes: all.map(() => "A long source note"),
+	})
+	const [overview] = await store.listsByUser(user)
+	assert.equal(overview.items.length, 5)
+	assert.equal(overview.itemCount, 1000)
+	assert.equal(overview.isCollection, true)
+	assert.equal("collection" in overview, false)
+	const [visible] = await store.publicListsByUser(user)
+	assert.equal(visible.items.length, 5)
+	assert.equal(visible.itemCount, 1000)
+	assert.equal(visible.isCollection, true)
+})
+
+test("remix refuses another members private lists and collections, but allows an owners bounded source", async () => {
+	const { getRemixSource } = await import("./remix.server.ts")
+	db.lists.get(id)!.visibility = "private"
+	assert.equal(await getRemixSource(id, undefined), null)
+	assert.equal(await getRemixSource(id, "other-member"), null)
+	assert.equal((await getRemixSource(id, user))?.items.length, 5)
+	db.lists.get(id)!.visibility = "public"
+	assert.equal((await getRemixSource(id, undefined))?.id, id)
+	db.lists.get(id)!.collection_metadata = JSON.stringify({
+		description: "Private source notes",
+		entryNotes: ["secret"],
+	})
+	db.lists.get(id)!.items = Array.from({ length: 1000 }, (_, at) => ({
+		media_type: "movie",
+		tmdb_id: at + 1,
+	}))
+	assert.equal(await getRemixSource(id, undefined), null)
+	assert.equal(await getRemixSource(id, "other-member"), null)
+	const own = await getRemixSource(id, user)
+	assert.equal(own?.items.length, 5)
+	assert.equal(own?.itemCount, 1000)
+	assert.equal("collection" in own!, false)
 })

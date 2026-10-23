@@ -36,8 +36,60 @@ export type ListRow = {
 	created_at: number
 	updated_at: number
 }
+/** Retry only an unmigrated collection column; unrelated database failures still surface. */
+export async function readListRows<T extends {}>(
+	sql: string,
+	params: unknown[],
+): Promise<T[]> {
+	try {
+		return await select<T>(sql, params)
+	} catch (error) {
+		if (
+			!(error instanceof Error) ||
+			(error as Error & { code?: number }).code !== 4043 ||
+			!error.message.includes("collection_metadata")
+		)
+			throw error
+		return select<T>(sql.replace(/\bcollection_metadata\b/g, "NULL"), params)
+	}
+}
+export const LIST_BASE_COLUMNS =
+	"id, user_id, title, prompt_id, design, theme, items, visibility, remixed_from, content_hash, created_at, updated_at"
 export const LIST_COLUMNS =
 	"id, user_id, title, prompt_id, design, theme, items, visibility, remixed_from, content_hash, created_at, updated_at, collection_metadata"
+
+/** A bounded list index row; full contents/notes are read only by ID. */
+export interface ListOverview extends Omit<ShareList, "collection"> {
+	itemCount: number
+	isCollection: boolean
+}
+type OverviewRow = ListRow & { item_count: number; is_collection: boolean }
+export const LIST_OVERVIEW_COLUMNS =
+	LIST_BASE_COLUMNS.replace(
+		"items,",
+		"array_slice(items, 1, 5) AS items, coalesce(array_length(items, 1), 0) AS item_count,",
+	) + ", collection_metadata IS NOT NULL AS is_collection"
+export function listOverviewFromRow(row: OverviewRow): ListOverview {
+	const { collection, ...list } = fromRow({
+		...row,
+		collection_metadata: undefined,
+	})
+	return {
+		...list,
+		itemCount: Number(row.item_count ?? row.items?.length ?? 0),
+		isCollection: !!row.is_collection,
+	}
+}
+export async function getListOverview(
+	id: string,
+): Promise<ListOverview | null> {
+	if (!/^[0-9A-Za-z]{10}$/.test(id)) return null
+	const [row] = await readListRows<OverviewRow>(
+		`SELECT ${LIST_OVERVIEW_COLUMNS} FROM doc.user_list WHERE id = ? AND deleted_at IS NULL`,
+		[id],
+	)
+	return row ? listOverviewFromRow(row) : null
+}
 
 export const fromRow = (r: ListRow): ShareList => ({
 	...(r.collection_metadata
@@ -62,7 +114,7 @@ export const fromRow = (r: ListRow): ShareList => ({
 
 export async function getList(id: string): Promise<ShareList | null> {
 	if (!/^[0-9A-Za-z]{10}$/.test(id)) return null
-	const [row] = await select<ListRow>(
+	const [row] = await readListRows<ListRow>(
 		`SELECT ${LIST_COLUMNS} FROM doc.user_list WHERE id = ? AND deleted_at IS NULL`,
 		[id],
 	)
@@ -108,7 +160,11 @@ declareResettableCache(PROFILE_CACHE)
 declareResettableCache(PROFILE_PAGE_CACHE)
 
 type ProfileResult = { found: true; profile: Profile } | { found: false }
-type ProfilePage = { profile: Profile; lists: ShareList[]; titles: CardTitle[] }
+type ProfilePage = {
+	profile: Profile
+	lists: ListOverview[]
+	titles: CardTitle[]
+}
 type ProfilePageResult = ({ found: true } & ProfilePage) | { found: false }
 
 export async function getCachedProfileByUserId(
@@ -150,12 +206,14 @@ export async function getProfileByHandle(
 		: null
 }
 
-export async function publicListsByUser(userId: string): Promise<ShareList[]> {
-	const rows = await select<ListRow>(
-		`SELECT ${LIST_COLUMNS} FROM doc.user_list WHERE user_id = ? AND visibility = 'public' AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 200`,
+export async function publicListsByUser(
+	userId: string,
+): Promise<ListOverview[]> {
+	const rows = await readListRows<OverviewRow>(
+		`SELECT ${LIST_OVERVIEW_COLUMNS} FROM doc.user_list WHERE user_id = ? AND visibility = 'public' AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 200`,
 		[userId],
 	)
-	return rows.map(fromRow)
+	return rows.map(listOverviewFromRow)
 }
 
 export async function getProfilePage(
@@ -171,9 +229,7 @@ export async function getProfilePage(
 			if (!profile) return { found: false }
 			const lists = await publicListsByUser(profile.userId)
 			const titles = await resolveCardTitles(
-				lists.flatMap((list) =>
-					list.collection ? list.items.slice(0, 5) : list.items,
-				),
+				lists.flatMap((list) => list.items),
 			)
 			return { found: true, profile, lists, titles }
 		},
