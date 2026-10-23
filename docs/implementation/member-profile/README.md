@@ -54,6 +54,28 @@ Member compare (signed-in visitor with 5+ liked titles): Overview match card; on
 with the visitor's score tags; the fingerprint's Vs me switch; "You" tags on Scores, Seen and Wishlist; Rating style
 shows the visitor's usual score.
 
+## Link-preview cards
+
+Every card draws the profile as a signed-out visitor sees it: the same shell, tab loaders and public portrait views as
+the pages (`app/server/og-image/profile-content.server.ts`). Cards show no counts and no viewer type. A card whose part
+is hidden from guests, or whose view is empty (too few ratings), falls back to the main card.
+
+| Card | Path | Needs public | Shows |
+|---|---|---|---|
+| Main | `/og/u/<handle>.jpg` | nothing | The fingerprint with up to four pulls, or favorites' posters without a public taste. |
+| Tab | `/og/u/<handle>/<tab>.jpg` | the tab's part | The tab's visual and one line. `/u/<handle>/taste` keeps the Taste card. |
+| Vs everyone | `/og/u/<handle>/taste/everyone.jpg` | Taste and Scores | Two titles on a 1 to 10 line: their score (star) and everyone's (ring), in points out of 10. The strongest title above everyone and the strongest below; with one side empty, the two strongest of the other. |
+| Taste groups | `/og/u/<handle>/taste/sides.jpg` | Taste | "Loves X, and just as much Y": the two taste groups least alike, three posters each, no numbers. |
+
+The two Taste tab section cards sit under `/taste/`, so they can't collide with a profile tab. Their rules are in
+`app/ui/og-image/profile-card-model.ts` (`everyoneTakes`, `sidesPair`), their layout in
+`app/ui/og-image/ProfileTasteCards.tsx`, and their text in `PROFILE_CARD_COPY` (`app/ui/og-image/copy.ts`). The
+everyone view keeps everyone's score on the 0 to 100 GoodWatch scale; the card divides it by 10.
+
+Cards are cached under `og-card:v5:<path>`. A settings or photo change forgets every card path of the profile
+(`profileCardPaths`); a list change forgets `/u/<handle>/lists`. Other cards are redrawn in the background a day after
+they were drawn. Discord's `/profile` uses these cards (`docs/implementation/discord-bot/README.md`).
+
 ## Data contract
 
 `goodwatch-webapp/app/domain/profile.ts` (profile, visibility, pages) and `goodwatch-webapp/app/domain/profile-taste.ts`

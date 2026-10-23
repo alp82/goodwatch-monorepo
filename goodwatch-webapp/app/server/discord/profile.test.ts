@@ -11,7 +11,10 @@ import {
 	type ProfileCardChoice,
 } from "./profile-cards.ts"
 import { DEFAULT_VISIBILITY } from "../../domain/profile.ts"
-import { PROFILE_CARD_TABS } from "../../ui/og-image/profile-card-model.ts"
+import {
+	PROFILE_CARD_TABS,
+	PROFILE_CARD_VIEWS,
+} from "../../ui/og-image/profile-card-model.ts"
 
 type Body = { flags: number; components: Component[] }
 const flatten = (cs: Component[]): Component[] =>
@@ -113,7 +116,7 @@ test("/profile registers a card option with readable choices for both installs",
 		[
 			"Profile",
 			"Taste",
-			"Different from the crowd",
+			"Different from everyone",
 			"Sides",
 			"Top scores",
 			"Seen",
@@ -122,12 +125,19 @@ test("/profile registers a card option with readable choices for both installs",
 			"Lists",
 		],
 	)
-	for (const c of option.choices) assert.doesNotMatch(c.name, /_/)
+	for (const c of option.choices) {
+		assert.doesNotMatch(c.name, /_/)
+		assert.doesNotMatch(c.name, /crowd/i)
+	}
 })
 
-test("every card choice uses a real profile card tab", () => {
+test("every card choice uses a real profile card", () => {
+	const cards = new Set<string>([
+		...PROFILE_CARD_TABS,
+		...PROFILE_CARD_VIEWS.map((view) => `taste/${view}`),
+	])
 	for (const card of Object.values(PROFILE_CARDS))
-		if (card.image) assert.ok(PROFILE_CARD_TABS.includes(card.image))
+		if (card.image) assert.ok(cards.has(card.image), card.image)
 })
 
 test("an unlinked Discord user gets the link prompt and no profile lookup", async () => {
@@ -198,11 +208,38 @@ test("a part hidden from everyone is refused privately with no image", async () 
 	assert.match(text((await scores.command("scores")).body), /your Scores/)
 })
 
+test("Different from everyone needs public scores too; Sides doesn't", async () => {
+	const visibility = { ...DEFAULT_VISIBILITY, scores: "me" as const }
+	const f = fixture("member", { handle: "film_fan", visibility })
+	const { body } = await f.command("crowd")
+	assert.ok(body.flags & EPHEMERAL)
+	assert.equal(image(body), undefined)
+	assert.equal(
+		text(body),
+		"### This part of your profile isn't public\nOnly you can see your Scores, so its card can't be shared. To share it, set Scores to Everyone in Who sees what.",
+	)
+	const refused = await f.share("gw1:profile-share:crowd")
+	assert.ok(refused.data.flags & EPHEMERAL)
+	assert.equal(image(refused.data), undefined)
+	// The taste groups card has no numbers, so it needs only the taste.
+	const sides = await fixture("member", {
+		handle: "film_fan",
+		visibility,
+	}).command("sides")
+	assert.match(image(sides.body)!, /\/og\/u\/film_fan\/taste\/sides\.jpg\?/)
+})
+
 const EXPECTED: Record<ProfileCardChoice, { image: string; link: string }> = {
 	profile: { image: "/og/u/film_fan.jpg", link: "/u/film_fan" },
 	taste: { image: "/og/u/film_fan/taste.jpg", link: "/u/film_fan/taste" },
-	crowd: { image: "/og/u/film_fan/taste.jpg", link: "/u/film_fan/taste#crowd" },
-	sides: { image: "/og/u/film_fan/taste.jpg", link: "/u/film_fan/taste#sides" },
+	crowd: {
+		image: "/og/u/film_fan/taste/everyone.jpg",
+		link: "/u/film_fan/taste#crowd",
+	},
+	sides: {
+		image: "/og/u/film_fan/taste/sides.jpg",
+		link: "/u/film_fan/taste#sides",
+	},
 	scores: { image: "/og/u/film_fan/scores.jpg", link: "/u/film_fan/scores" },
 	seen: { image: "/og/u/film_fan/seen.jpg", link: "/u/film_fan/seen" },
 	wishlist: {
@@ -253,7 +290,7 @@ test("Share to channel posts the public card at once, without a share button", a
 	const { type, data } = await f.share("gw1:profile-share:crowd")
 	assert.equal(type, 4)
 	assert.equal(data.flags & EPHEMERAL, 0)
-	assert.match(image(data)!, /\/og\/u\/film_fan\/taste\.jpg\?/)
+	assert.match(image(data)!, /\/og\/u\/film_fan\/taste\/everyone\.jpg\?/)
 	assert.ok(!buttons(data).some((b) => b.label === "Share to channel"))
 	assert.equal(
 		buttons(data).find((b) => b.label === "Open on GoodWatch")!.url,

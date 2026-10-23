@@ -51,6 +51,31 @@ async function inlineImages(content: OgContent): Promise<OgContent> {
 				avatar: await inlineAvatar(content.avatar),
 				posters: await inlineAll(content.posters),
 			}
+		case "profile-everyone":
+			return {
+				...content,
+				avatar: await inlineAvatar(content.avatar),
+				takes: await Promise.all(
+					content.takes.map(async (t) => ({
+						...t,
+						poster: (await toDataUri(t.poster)) ?? "",
+					})),
+				),
+			}
+		case "profile-sides": {
+			const inline = async (side: typeof content.first) => ({
+				...side,
+				posters: (await inlineAll(side.posters)).filter((p): p is string =>
+					Boolean(p),
+				),
+			})
+			return {
+				...content,
+				avatar: await inlineAvatar(content.avatar),
+				first: await inline(content.first),
+				second: await inline(content.second),
+			}
+		}
 		case "profile-tab": {
 			const visual = content.visual
 			return {

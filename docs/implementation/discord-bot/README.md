@@ -73,7 +73,7 @@ two-line overview, and where to watch in the viewer's country. Buttons: **Where 
 | Command | Options | Answer |
 |---|---|---|
 | `/next` | none | Next episodes of the shows the member is watching, from Watch next. |
-| `/profile` | `card` (Profile, Taste, Different from the crowd, Sides, Top scores, Seen, Wishlist, Shows, Lists) | The member's own profile card. See [`/profile`](#profile). |
+| `/profile` | `card` (Profile, Taste, Different from everyone, Sides, Top scores, Seen, Wishlist, Shows, Lists) | The member's own profile card. See [`/profile`](#profile). |
 | `/rate` | `title`, `score` (1-10) | Saves the score. Confirms with **Undo**. |
 | `/seen` | `title` | Logs a watch today. Confirms with **Undo**. |
 | `/unlink` | none | Removes the link after a confirmation. |
@@ -85,15 +85,18 @@ two-line overview, and where to watch in the viewer's country. Buttons: **Where 
 Discord user is which GoodWatch member.
 
 - **Image.** The profile's link-preview card, which draws the profile as a signed-out visitor sees it:
-  `/og/u/<handle>.jpg` for Profile (the fingerprint card) and `/og/u/<handle>/<tab>.jpg` for the tab cards. The
-  address carries `v=`, which changes every minute, because Discord's media proxy keeps an image by its address. The
+  `/og/u/<handle>.jpg` for Profile (the fingerprint card), `/og/u/<handle>/<tab>.jpg` for the tab cards,
+  `/og/u/<handle>/taste/everyone.jpg` for Different from everyone, and `/og/u/<handle>/taste/sides.jpg` for Sides.
+  The address carries `v=`, which changes every minute, because Discord's media proxy keeps an image by its address. The
   card route ignores the query, so the `og-card` cache still serves it.
-- **Link.** The profile or the tab. Different from the crowd and Sides link to their section of the Taste tab
-  (`/u/<handle>/taste#crowd`, `#sides`) and show the Taste card until their own cards exist. The table is
-  `PROFILE_CARDS` in `app/server/discord/profile-cards.ts`.
-- **Hidden parts.** A tab card needs its part visible to everyone (`canSee` for a guest). Otherwise the answer says so
-  privately and links to Who sees what in Edit profile; the bot never posts a card that would fall back to another.
-  The main card needs no part.
+- **Link.** The profile or the tab. Different from everyone and Sides link to their section of the Taste tab
+  (`/u/<handle>/taste#crowd`, `#sides`). The table is `PROFILE_CARDS` in `app/server/discord/profile-cards.ts`. The
+  choice value `crowd` is kept because Share to channel buttons carry it; Discord never shows it.
+- **Hidden parts.** A card needs its parts visible to everyone (`canSee` for a guest): its tab's part, Taste for Sides,
+  and Taste and Scores for Different from everyone (the card shows scores). Otherwise the answer names the first hidden
+  part privately and links to Who sees what in Edit profile; the bot never posts a card that would fall back to
+  another. The main card needs no part. A card whose view is empty (too few ratings) still falls back to the main
+  card.
 - **No handle.** A linked member without a handle gets a private answer with a **Pick a handle** button to
   `/settings/profile`.
 - **Share to channel** loads the presser's own link and profile again and posts the public copy at once, without the

@@ -20,7 +20,7 @@ import {
 	resetProfileViews,
 } from "~/server/share-lists/view.server"
 import { getUserSettings, setUserSettings } from "~/server/user-settings.server"
-import { PROFILE_CARD_TABS } from "~/ui/og-image/profile-card-model"
+import { profileCardPaths } from "~/ui/og-image/profile-card-model"
 
 export const PROFILE_KEYS = {
 	bio: "profile_bio",
@@ -154,11 +154,7 @@ export async function resetProfilePages(
 	if (!handle) return
 	const base = `/u/${handle}`
 	// The link-preview cards show only public parts; draw them again from the new settings.
-	await Promise.all(
-		[base, ...PROFILE_CARD_TABS.map((tab) => `${base}/${tab}`)].map(
-			forgetOgCard,
-		),
-	)
+	await Promise.all(profileCardPaths(handle).map(forgetOgCard))
 	resetPageCache((path) => {
 		const p = path.toLowerCase()
 		return p === base || p.startsWith(`${base}/`) || p.startsWith(`${base}?`)

@@ -1,6 +1,7 @@
 // /profile: the member's own profile card, as a signed-out visitor sees the profile. The image is the profile's
-// link-preview card (/og/u/<handle>[/<tab>].jpg), which draws only parts visible to everyone; the bot also refuses a
-// part that isn't public instead of posting a card that silently falls back to the main one.
+// link-preview card (/og/u/<handle>[/<tab>].jpg, /og/u/<handle>/taste/<view>.jpg), which draws only parts visible to
+// everyone; the bot also refuses a part that isn't public instead of posting a card that silently falls back to the
+// main one.
 // Spec: docs/implementation/discord-bot/README.md
 import {
 	PROFILE_PARTS,
@@ -18,46 +19,60 @@ import {
 } from "./cards.ts"
 import { listCustomId } from "./custom-id.ts"
 
-/** A profile card tab, as in PROFILE_CARD_TABS (app/ui/og-image/profile-card-model.ts). */
-type CardTab = "seen" | "scores" | "wishlist" | "shows" | "lists" | "taste"
+/** A profile card tab or Taste tab section, as in PROFILE_CARD_TABS and PROFILE_CARD_VIEWS
+ * (app/ui/og-image/profile-card-model.ts). */
+type CardPath =
+	| "seen"
+	| "scores"
+	| "wishlist"
+	| "shows"
+	| "lists"
+	| "taste"
+	| "taste/everyone"
+	| "taste/sides"
 
 /**
  * Each /profile choice: its name in Discord, the card it shows (null is the main fingerprint card), where it links on
- * the profile, and the part that must be visible to everyone. The crowd and sides cards don't exist yet, so those two
- * show the Taste card and link to their section of the Taste tab; set `image` when their cards ship.
+ * the profile, and the parts that must be visible to everyone, in the order the refusal names them. The value is kept
+ * in Share to channel buttons, so "crowd" stays the id of Different from everyone.
  */
 export const PROFILE_CARDS = {
-	profile: { name: "Profile", image: null, link: "", part: null },
-	taste: { name: "Taste", image: "taste", link: "/taste", part: "taste" },
+	profile: { name: "Profile", image: null, link: "", parts: [] },
+	taste: { name: "Taste", image: "taste", link: "/taste", parts: ["taste"] },
 	crowd: {
-		name: "Different from the crowd",
-		image: "taste",
+		name: "Different from everyone",
+		image: "taste/everyone",
 		link: "/taste#crowd",
-		part: "taste",
+		parts: ["taste", "scores"],
 	},
-	sides: { name: "Sides", image: "taste", link: "/taste#sides", part: "taste" },
+	sides: {
+		name: "Sides",
+		image: "taste/sides",
+		link: "/taste#sides",
+		parts: ["taste"],
+	},
 	scores: {
 		name: "Top scores",
 		image: "scores",
 		link: "/scores",
-		part: "scores",
+		parts: ["scores"],
 	},
-	seen: { name: "Seen", image: "seen", link: "/seen", part: "seen" },
+	seen: { name: "Seen", image: "seen", link: "/seen", parts: ["seen"] },
 	wishlist: {
 		name: "Wishlist",
 		image: "wishlist",
 		link: "/wishlist",
-		part: "wishlist",
+		parts: ["wishlist"],
 	},
-	shows: { name: "Shows", image: "shows", link: "/shows", part: "shows" },
-	lists: { name: "Lists", image: "lists", link: "/lists", part: "lists" },
+	shows: { name: "Shows", image: "shows", link: "/shows", parts: ["shows"] },
+	lists: { name: "Lists", image: "lists", link: "/lists", parts: ["lists"] },
 } as const satisfies Record<
 	string,
 	{
 		name: string
-		image: CardTab | null
+		image: CardPath | null
 		link: string
-		part: ProfilePart | null
+		parts: readonly ProfilePart[]
 	}
 >
 export type ProfileCardChoice = keyof typeof PROFILE_CARDS
@@ -128,13 +143,13 @@ export interface MemberProfile {
 	visibility: ProfileVisibility
 }
 
-/** The part a choice needs that isn't visible to everyone, or null. */
+/** The first part a choice needs that isn't visible to everyone, or null. */
 export function hiddenPart(
 	visibility: ProfileVisibility,
 	choice: ProfileCardChoice,
 ): ProfilePart | null {
-	const part = PROFILE_CARDS[choice].part
-	return part && !canSee(visibility, part, "guest") ? part : null
+	const parts: readonly ProfilePart[] = PROFILE_CARDS[choice].parts
+	return parts.find((part) => !canSee(visibility, part, "guest")) ?? null
 }
 
 /** The preview (with Share to channel) or the shared copy. */

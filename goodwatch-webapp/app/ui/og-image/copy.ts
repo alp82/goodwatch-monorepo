@@ -235,6 +235,17 @@ export const PROFILE_CARD_COPY = {
 		lists: "Lists",
 		taste: "Taste",
 	},
+	/** Header names of the Taste tab sections with a card of their own (/u/<handle>/taste/<view>). */
+	views: {
+		everyone: "Vs everyone",
+		sides: "Taste groups",
+	},
+	/** The everyone card's legend. */
+	theirScore: "Their score",
+	everyoneScore: "Everyone",
+	/** The taste groups card: "Loves X", "And just as much Y". */
+	loves: "Loves",
+	justAsMuch: "And just as much",
 	topScores: "Top scores",
 	latestAdditions: "Latest additions",
 	wishlistLine: "Next on their list",

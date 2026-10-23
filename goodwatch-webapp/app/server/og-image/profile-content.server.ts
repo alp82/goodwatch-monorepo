@@ -1,6 +1,7 @@
-// What the profile cards (/u/<handle> and /u/<handle>/<tab>) show, as a signed-out visitor sees the profile: the same
-// shell and tab loaders the pages use, so a hidden part never reaches a card. A tab whose part is hidden or empty gets
-// the main card. No counts and no viewer type (owner decision, 2026-10-23).
+// What the profile cards (/u/<handle>, /u/<handle>/<tab> and /u/<handle>/taste/<view>) show, as a signed-out visitor
+// sees the profile: the same shell, tab loaders and portrait views the pages use, so a hidden part never reaches a
+// card. A tab or view whose part is hidden or empty gets the main card. No counts and no viewer type (owner decision,
+// 2026-10-23).
 import sharp from "sharp"
 import { type ProfileShell, seesPart } from "~/domain/profile"
 import { readAvatar } from "~/server/profile/avatar.server"
@@ -15,20 +16,28 @@ import {
 import { getProfilePortrait } from "~/server/profile/portrait.server"
 import { getProfileSettings } from "~/server/profile/settings.server"
 import { getTasteStats } from "~/server/profile/taste-stats.server"
+import { familyOf } from "~/server/taste-portrait/families.server"
+import type { PortraitTitle } from "~/server/taste-portrait/view"
 import { AVATAR_GRADIENTS } from "~/ui/account/AccountAvatar"
 import { PROFILE_CARD_COPY } from "~/ui/og-image/copy"
 import {
 	type CardAttribute,
 	type CardPerson,
 	type OgProfileContent,
+	type OgProfileEveryoneContent,
+	type OgProfileSidesContent,
 	type OgProfileTabContent,
 	PROFILE_CARD_TABS,
+	PROFILE_CARD_VIEWS,
 	type ProfileCardTab,
+	type ProfileCardView,
+	everyoneTakes,
 	mediumWord,
 	peakDecade,
 	pickAttributes,
 	pullWords,
 	scoresLine,
+	sidesPair,
 } from "~/ui/og-image/profile-card-model"
 
 const poster = (path: string | null | undefined) =>
@@ -248,13 +257,92 @@ async function tabCard(
 	}
 }
 
-/** The card's content for a handle (and a tab); null when no member has the handle. */
+/** A Taste tab section's card (the Taste tab's own rules: taste public, and scores for you vs everyone), or null. */
+async function viewCard(
+	view: Loaded,
+	section: ProfileCardView,
+): Promise<OgProfileEveryoneContent | OgProfileSidesContent | null> {
+	const { ownerId, shell } = view
+	if (!seesPart(shell, "taste")) return null
+	const scores = seesPart(shell, "scores")
+	const titleOf = (titles: Record<string, PortraitTitle>, key: number) =>
+		titles[String(key)]
+	if (section === "everyone") {
+		// Without public scores the portrait has no rows, so there is no card; checked first to skip the load.
+		if (!scores) return null
+		const everyone = await getProfilePortrait(ownerId, "everyone", {
+			scores,
+		}).catch(() => null)
+		if (!everyone) return null
+		const rows = (list: typeof everyone.higher) =>
+			list.map((r) => {
+				const t = titleOf(everyone.titles, r.key)
+				return {
+					title: t?.title ?? "",
+					poster: poster(t?.poster),
+					mine: r.mine,
+					everyone: r.everyone,
+				}
+			})
+		const takes = everyoneTakes(
+			{
+				status: everyone.status,
+				higher: rows(everyone.higher),
+				lower: rows(everyone.lower),
+			},
+			scores,
+		)
+		return takes && { kind: "profile-everyone", ...view.person, takes }
+	}
+	const sides = await getProfilePortrait(ownerId, "sides", { scores }).catch(
+		() => null,
+	)
+	if (!sides) return null
+	const pair = sidesPair({
+		status: sides.status,
+		headline: sides.headline,
+		sides: sides.sides.map((s) => ({
+			id: s.id,
+			name: s.name,
+			// The group's colour is its first attribute's family, as on the Taste tab.
+			family: familyOf(s.attributes[0]?.key ?? "") ?? "story",
+			posters: s.here.map((key) => poster(titleOf(sides.titles, key)?.poster)),
+		})),
+	})
+	return (
+		pair && {
+			kind: "profile-sides",
+			...view.person,
+			first: pair[0],
+			second: pair[1],
+		}
+	)
+}
+
+/**
+ * The card's content for a handle, a tab, and a Taste tab section (/u/<handle>/taste/<view>); null when no member has
+ * the handle.
+ */
 export async function profileCardContent(
 	handle: string,
 	tab?: string,
-): Promise<OgProfileContent | OgProfileTabContent | null> {
+	section?: string,
+): Promise<
+	| OgProfileContent
+	| OgProfileTabContent
+	| OgProfileEveryoneContent
+	| OgProfileSidesContent
+	| null
+> {
 	const view = await loadGuestView(handle)
 	if (!view) return null
+	if (section) {
+		const known = PROFILE_CARD_VIEWS.find((v) => v === section)
+		return (
+			(tab === "taste" && known && (await viewCard(view, known))) ||
+			mainCard(view)
+		)
+	}
 	const known = PROFILE_CARD_TABS.find((t) => t === tab)
 	return (known && (await tabCard(view, known))) || mainCard(view)
 }

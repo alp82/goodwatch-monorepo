@@ -26,16 +26,16 @@ import { FAMILY_COLOR } from "~/ui/profile/taste/model"
 
 export type { OgProfileContent, OgProfileTabContent }
 
-const HEADER_H = 128
+export const HEADER_H = 128
 // One line that never leaves its box: text is clipped by characters first (clip), the box hides the rest.
-const ONE_LINE = {
+export const ONE_LINE = {
 	display: "flex",
 	overflow: "hidden",
 	whiteSpace: "nowrap",
 } as const
-const clip = (text: string, max: number) =>
+export const clip = (text: string, max: number) =>
 	text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`
-const MUTED = "#a1a1aa"
+export const MUTED = "#a1a1aa"
 
 function Avatar({ person, size }: { person: CardPerson; size: number }) {
 	const [from, to, ink] = person.avatarColors
@@ -88,7 +88,25 @@ const antonWidth = (text: string) =>
 const handleSize = (handle: string, room: number) =>
 	Math.min(64, Math.floor(room / antonWidth(`@${handle}`)))
 
-function Header({ person, tab }: { person: CardPerson; tab?: string }) {
+// The band's room for the handle beside a tab's name: what the picture, the slash, the name and the logo (about 250 px)
+// leave, at most 420. A long name such as "Vs everyone" takes room from the handle, never from the logo.
+const TAB_SIZE = 58
+const handleRoom = (tab?: string) =>
+	tab
+		? Math.min(
+				420,
+				1200 -
+					88 -
+					250 -
+					86 -
+					36 -
+					60 -
+					antonWidth(tab.toUpperCase()) * TAB_SIZE,
+			)
+		: 680
+
+export function Header({ person, tab }: { person: CardPerson; tab?: string }) {
+	const room = handleRoom(tab)
 	return (
 		<div
 			style={row({
@@ -108,11 +126,11 @@ function Header({ person, tab }: { person: CardPerson; tab?: string }) {
 				<div
 					style={{
 						display: "flex",
-						maxWidth: tab ? 420 : 680,
+						maxWidth: room,
 						overflow: "hidden",
 						whiteSpace: "nowrap",
 						fontFamily: "Anton",
-						fontSize: handleSize(person.handle, tab ? 420 : 680),
+						fontSize: handleSize(person.handle, room),
 						lineHeight: 1.1,
 						color: INK,
 					}}
@@ -136,7 +154,7 @@ function Header({ person, tab }: { person: CardPerson; tab?: string }) {
 							style={{
 								display: "flex",
 								fontFamily: "Anton",
-								fontSize: 58,
+								fontSize: TAB_SIZE,
 								lineHeight: 1,
 								color: INK,
 							}}
@@ -256,7 +274,11 @@ const Kicker = ({ text }: { text: string }) => (
 	</div>
 )
 
-function Poster({ src, w, h }: { src: string | null; w: number; h: number }) {
+export function Poster({
+	src,
+	w,
+	h,
+}: { src: string | null; w: number; h: number }) {
 	return (
 		<div
 			style={{

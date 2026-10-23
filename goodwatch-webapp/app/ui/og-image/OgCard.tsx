@@ -4,7 +4,8 @@
 // - Discover and Explorer: amber panel with the pitch, top-scored posters on a dark panel.
 // - Use with AI: amber panel with the pitch, a chat answered with scored posters on a dark panel.
 // - Member profiles: amber band with the picture and @handle; the taste fingerprint with its strongest pulls, or for a
-//   tab, that tab's visual (ProfileCard.tsx).
+//   tab, that tab's visual (ProfileCard.tsx); two Taste tab sections, you vs everyone and taste groups, have their own
+//   (ProfileTasteCards.tsx).
 // - Every other page: backdrop across the top, amber band with the headline below.
 // Image fields hold data URIs, so satori never fetches anything itself.
 import { ChatCard } from "~/ui/og-image/ChatCard"
@@ -19,6 +20,10 @@ import {
 	ProfileTabCard,
 } from "~/ui/og-image/ProfileCard"
 import {
+	ProfileEveryoneCard,
+	ProfileSidesCard,
+} from "~/ui/og-image/ProfileTasteCards"
+import {
 	Brand,
 	Frame,
 	Headline,
@@ -32,6 +37,10 @@ import {
 	fitFontSize,
 	headlineText,
 } from "~/ui/og-image/parts"
+import type {
+	OgProfileEveryoneContent,
+	OgProfileSidesContent,
+} from "~/ui/og-image/profile-card-model"
 import { hasGoodwatchScore } from "~/utils/ratings"
 
 export interface OgTitleContent {
@@ -85,11 +94,18 @@ export interface OgChatContent {
 	posters: OgPoster[]
 }
 
-export type { OgProfileContent, OgProfileTabContent }
+export type {
+	OgProfileContent,
+	OgProfileTabContent,
+	OgProfileEveryoneContent,
+	OgProfileSidesContent,
+}
 
 export type OgContent =
 	| OgProfileContent
 	| OgProfileTabContent
+	| OgProfileEveryoneContent
+	| OgProfileSidesContent
 	| OgChatContent
 	| OgDiscoveryContent
 	| OgTitleContent
@@ -266,6 +282,10 @@ export function OgCard({ content }: { content: OgContent }) {
 	if (content.kind === "profile") return <ProfileCard content={content} />
 	if (content.kind === "profile-tab")
 		return <ProfileTabCard content={content} />
+	if (content.kind === "profile-everyone")
+		return <ProfileEveryoneCard content={content} />
+	if (content.kind === "profile-sides")
+		return <ProfileSidesCard content={content} />
 	if (content.kind === "title") return <TitleCard content={content} />
 	if (content.kind === "page") return <BandCard content={content} />
 	return <SplitCard content={content} />
