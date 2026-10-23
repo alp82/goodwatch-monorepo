@@ -216,6 +216,7 @@ export interface ApiError {
 export interface CatalogMetadata {
   countries: { code: string; name: string }[]
   services: { id: number; name: string; logoUrl: string | null }[]
+  providerGroups?: { id: number; name: string; logoUrl: string | null; selectionIds: number[] }[]
   moods: { id: string; label: string }[]
 }
 export interface ShowSearchResponse { shows: { tmdbId: number; title: string; year: number | null }[] }

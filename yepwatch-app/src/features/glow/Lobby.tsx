@@ -1,21 +1,15 @@
 import { guestOnly } from '../../core/config';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Image, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import type { RoomCommand, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
+import type { RoomCommand, RoomSnapshot, RoomPromptPreview } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousApi } from '../../core/continuous/api';
 import { countryHint } from '../../core/lobby';
 import { Field, Notice, Row } from '../../components/ui';
 import { Drawer } from './Drawer';
 import { GText, Pill, glow } from './theme';
 
-const presets = [
-  'Something funny and light',
-  'A twisty thriller under two hours',
-  'A film for the whole family',
-  'Beautiful sci-fi, nothing violent',
-  'A hidden gem from the 90s',
-];
+const presets = ['Funny & light', 'A twisty thriller', 'Family night'];
 const flag = (code: string) =>
   /^[A-Z]{2}$/.test(code)
     ? String.fromCodePoint(...[...code].map((c) => 127397 + c.charCodeAt(0)))
@@ -26,11 +20,13 @@ export function Lobby({
   disabled,
   send,
   invite,
+  preview,
 }: {
   snapshot: RoomSnapshot;
   disabled: boolean;
   send: (c: RoomCommand) => Promise<boolean>;
   invite: () => void;
+  preview: (input: { prompt: string; country: string; serviceIds: number[] }, signal: AbortSignal) => Promise<RoomPromptPreview>;
 }) {
   const { shared, own } = snapshot;
   const { width, height } = useWindowDimensions();
@@ -52,12 +48,32 @@ export function Lobby({
   const metadata = useQuery({
     queryKey: ['continuous-metadata', country],
     queryFn: () => continuousApi.metadata(country || undefined),
-    enabled: editing,
+    enabled: editing || Boolean(current?.confirmed),
   });
+  const providerGroups = metadata.data?.providerGroups ?? metadata.data?.services.map(s => ({ ...s, selectionIds: [s.id] })) ?? [];
   const availableProviders = new Set(metadata.data?.services.map((s) => s.id) ?? []);
-  const services = useSavedProviders
-    ? [...new Set(savedServiceIds)].filter((id) => availableProviders.has(id)).sort((a, b) => a - b)
+  const selected = useSavedProviders
+    ? [...new Set(savedServiceIds)].filter(id => availableProviders.has(id))
     : customServices;
+  // One visual choice selects its catalog aliases together, including saved legacy IDs.
+  const services = [...new Set(providerGroups.filter(p => p.selectionIds.some(id => selected.includes(id))).flatMap(p => p.selectionIds))].sort((a,b) => a-b);
+  const providerCount = providerGroups.filter(p => p.selectionIds.some(id => current?.serviceIds.includes(id))).length;
+  const inputKey = JSON.stringify({ prompt: prompt.trim(), country, serviceIds: services });
+  const [settledInput, setSettledInput] = useState('');
+  useEffect(() => {
+    if (!editing) return;
+    const timer = setTimeout(() => setSettledInput(inputKey), 650);
+    return () => clearTimeout(timer);
+  }, [editing, inputKey]);
+  const reading = useQuery({
+    queryKey: ['room-prompt-preview', shared.roomId, settledInput],
+    queryFn: ({ signal }) => preview(JSON.parse(settledInput), signal),
+    enabled: editing && Boolean(metadata.data) && !metadata.isFetching && prompt.trim().length >= 2 && /^[A-Z]{2}$/.test(country) && settledInput === inputKey,
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 60_000,
+  });
+  const liveReading = settledInput === inputKey ? reading.data : undefined;
   const canContinue =
     !guestOnly &&
     own.member.state === 'linked' &&
@@ -103,12 +119,12 @@ export function Lobby({
       );
   }
   const providers =
-    metadata.data?.services.filter(
+    providerGroups.filter(
       (s) => !serviceSearch || s.name.toLowerCase().includes(serviceSearch.toLowerCase())
     ) ?? [];
   providers.sort(
     (a, b) =>
-      Number(services.includes(b.id)) - Number(services.includes(a.id)) ||
+      Number(b.selectionIds.some(id => services.includes(id))) - Number(a.selectionIds.some(id => services.includes(id))) ||
       ([8, 9, 337, 350].includes(b.id) ? 1 : 0) - ([8, 9, 337, 350].includes(a.id) ? 1 : 0)
   );
   return (
@@ -161,8 +177,8 @@ export function Lobby({
         <View style={{ flex: landscape ? 1 : undefined, gap: compact ? 8 : 16 }}>
           {setup && (
             <GText size={14} color={glow.muted}>
-              {flag(current!.country!)} {current!.country} · {current!.serviceIds.length} streaming{' '}
-              {current!.serviceIds.length === 1 ? 'service' : 'services'}
+              {flag(current!.country!)} {current!.country} · {providerCount || current!.serviceIds.length} streaming{' '}
+              {(providerCount || current!.serviceIds.length) === 1 ? 'service' : 'services'}
             </GText>
           )}
           {own.canHost ? (
@@ -224,27 +240,34 @@ export function Lobby({
             }}
           />
           <GText size={12} color={glow.muted}>
-            Type, or dictate with your keyboard’s microphone. GoodWatch turns your prompt into
-            attributes for this room’s suggestions.
+            Type or use your keyboard’s microphone. Jev reads what you’re in the mood for.
           </GText>
-          <Row>
-            {presets.map((p) => (
-              <Pressable
-                key={p}
-                accessibilityRole="button"
-                accessibilityLabel={p}
-                onPress={() => setPrompt(p)}
-                style={({ pressed }) => ({
-                  paddingHorizontal: 10,
-                  paddingVertical: 7,
-                  borderRadius: 20,
-                  backgroundColor: pressed || prompt === p ? '#fbbf2430' : '#ffffff09',
-                })}
-              >
-                <GText size={12}>{p}</GText>
-              </Pressable>
-            ))}
-          </Row>
+          {!prompt.trim() ? (
+            <Row>
+              {presets.map(p => (
+                <Pressable key={p} accessibilityRole="button" accessibilityLabel={p}
+                  onPress={() => setPrompt(p)}
+                  style={({ pressed }) => ({ minHeight: 44, justifyContent: 'center', opacity: pressed ? 0.65 : 1 })}>
+                  <GText size={12} color={glow.amber} style={{ textDecorationLine: 'underline' }}>{p}</GText>
+                </Pressable>
+              ))}
+            </Row>
+          ) : (
+            <View accessibilityLiveRegion="polite" style={{ gap: 8 }}>
+              <GText size={12} color={glow.muted}>Jev’s read</GText>
+              {liveReading ? (
+                liveReading.attributes.length ? <Row>
+                  {liveReading.attributes.map((a, i) => (
+                    <View key={`${a.kind}:${a.key ?? a.text}:${i}`} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 16, backgroundColor: '#fbbf2418' }}>
+                      <GText size={12} color={glow.amber}>{a.kind === 'avoid' || a.kind === 'excluded' ? 'Not ' : ''}{a.text}</GText>
+                    </View>
+                  ))}
+                </Row> : <GText size={12} color={glow.soft}>Using your words as written.</GText>
+              ) : <GText size={12} color={glow.muted}>
+                {prompt.trim().length < 2 ? 'Add a little more detail.' : !country ? 'Choose a country below to preview your picks.' : settledInput === inputKey && reading.error ? 'Jev couldn’t read this yet. Save to try again.' : 'Reading your prompt…'}
+              </GText>}
+            </View>
+          )}
           <Row>
             {(
               ['movie', 'show_start', ...(canContinue ? (['show_continue'] as const) : [])] as const
@@ -355,14 +378,14 @@ export function Lobby({
                 key={s.id}
                 accessibilityRole="checkbox"
                 accessibilityLabel={s.name}
-                accessibilityState={{ checked: services.includes(s.id) }}
-                aria-checked={services.includes(s.id)}
+                accessibilityState={{ checked: s.selectionIds.some(id => services.includes(id)) }}
+                aria-checked={s.selectionIds.some(id => services.includes(id))}
                 onPress={() => {
                   setUseSavedProviders(false);
                   setServices(
-                    services.includes(s.id)
-                      ? services.filter((id) => id !== s.id)
-                      : [...services, s.id]
+                    s.selectionIds.some(id => services.includes(id))
+                      ? services.filter((id) => !s.selectionIds.includes(id))
+                      : [...new Set([...services, ...s.selectionIds])]
                   );
                 }}
                 style={({ pressed }) => ({
@@ -373,7 +396,7 @@ export function Lobby({
                   alignItems: 'center',
                   gap: 7,
                   borderWidth: 2,
-                  borderColor: services.includes(s.id) ? glow.amber : 'transparent',
+                  borderColor: s.selectionIds.some(id => services.includes(id)) ? glow.amber : 'transparent',
                   backgroundColor: pressed ? '#fbbf2420' : '#ffffff08',
                 })}
               >
@@ -432,7 +455,7 @@ export function Lobby({
             disabled={disabled || !valid || metadata.isFetching}
             onPress={() => void save()}
           >
-            {disabled ? 'Reading your prompt…' : prompt.trim() ? 'Interpret & save' : 'Save room'}
+            {disabled ? 'Saving…' : 'Save'}
           </Pill>
         </Drawer>
       )}

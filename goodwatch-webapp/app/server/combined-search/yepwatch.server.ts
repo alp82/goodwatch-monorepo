@@ -44,7 +44,7 @@ export async function searchYepWatchRoom(request: Request) {
 			.object({
 				prompt: z.string().trim().min(2).max(1000),
 				country: z.string().regex(/^[A-Z]{2}$/),
-				serviceIds: z.array(z.number().int().positive()).min(1).max(100),
+				serviceIds: z.array(z.number().int().positive()).max(100),
 			})
 			.strict()
 			.parse(JSON.parse(Buffer.concat(chunks).toString("utf8")))
@@ -55,7 +55,7 @@ export async function searchYepWatchRoom(request: Request) {
 				includeAdult: false,
 				lesserKnown: false,
 				filters: {
-					streaming: { country: input.country, providerIds: input.serviceIds },
+					...(input.serviceIds.length ? { streaming: { country: input.country, providerIds: input.serviceIds } } : {}),
 				},
 			},
 			{ accountId: null, networkIdentity: "yepwatch-room-prompts" },

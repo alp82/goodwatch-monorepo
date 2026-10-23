@@ -159,3 +159,31 @@ test("Published prompt ranking changes actual cards, keeps availability checks, 
 	assert.equal(again.candidates.length, 0)
 	assert.equal(again.exhausted, true)
 })
+
+test("draft Jev preview is host-only, budgeted and never publishes or changes room state", async () => {
+  const { createProposalHandler } = await import('./proposal-http.server.ts')
+  const { paths } = await import('../../../packages/yepwatch-contracts/proposal.ts')
+  const repo = new ProposalMemoryRepository()
+  let calls=0, grants=0
+  const service = new ProposalService(repo, proposalFixtureCatalog, 'preview-tests-secret-at-least-thirty-two', undefined, Date.now, {
+    async active(){}, async create(){return Date.now()+21600000}, async join(){}, async command(){grants++},
+  }, async (prompt,country,services) => {
+    calls++; assert.equal(country,'DE'); assert.deepEqual(services,[])
+    return {...intent,prompt}
+  })
+  const host=await service.create({contractVersion:3,commandId:'host',admissionSecret:'h'.repeat(43),nickname:'Host'})
+  const id=host.credential.roomId
+  const guest=await service.join(id,{contractVersion:3,commandId:'guest',admissionSecret:'g'.repeat(43),nickname:'Guest',inviteCode:host.invite.code})
+  const before=await repo.read(id)
+  const handler=createProposalHandler(service,{serviceSecret:'s'.repeat(32),allowedOrigins:['https://yepwatch.test']})
+  const request=(who:typeof host,input:unknown)=>handler(new Request('https://yepwatch.test'+paths.preview(id),{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${who.credential.token}`,'x-yepwatch-participant':who.credential.participantId},body:JSON.stringify(input)}))
+  const input={prompt:'Sports movies',country:'DE',serviceIds:[]}
+  const response=await request(host,input)
+  assert.equal(response.status,200)
+  assert.deepEqual(await response.json(),{prompt:input.prompt,attributes:intent.attributes})
+  assert.deepEqual(await repo.read(id),before)
+  assert.equal((await request(guest,input)).status,403)
+  assert.equal((await request(host,{...input,prompt:''})).status,400)
+  assert.equal((await request(host,{...input,serviceIds:[987654321]})).status,400)
+  assert.equal(calls,1);assert.equal(grants,1)
+})

@@ -347,6 +347,7 @@ export interface MemberStatusResponse {
 	prefill: MemberPrefill | null
 }
 const room = (id: string) => `${API_PREFIX}/rooms/${encodeURIComponent(id)}`
+export interface RoomPromptPreview { prompt: string; attributes: RoomDescription["attributes"] }
 export const paths = {
 	rooms: `${API_PREFIX}/rooms`,
 	metadata: `${API_PREFIX}/catalog/metadata`,
@@ -359,6 +360,7 @@ export const paths = {
 	realtimeView: `${API_PREFIX}/realtime/internal/view`,
 	snapshot: (id: string) => room(id),
 	join: (id: string) => `${room(id)}/join`,
+	preview: (id: string) => `${room(id)}/preview`,
 	commands: (id: string) => `${room(id)}/commands`,
 	realtimeTicket: (id: string) => `${room(id)}/realtime-ticket`,
 	memberStatus: (id: string) => `${room(id)}/member`,

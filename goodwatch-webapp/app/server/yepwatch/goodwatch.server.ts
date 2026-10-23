@@ -1,3 +1,4 @@
+import { groupProviderChoices } from "../../utils/streaming-links.ts"
 import { createAvailabilityAdapter } from './availability-adapter.ts'
 import type { ViewerContext } from '../viewer.server'
 import { createDeckAdapter, type CatalogReads } from './catalog-adapter.ts'
@@ -55,7 +56,7 @@ export const goodwatchCatalog: CatalogPort = {
   async metadata() {
     const [{ getCountries }, { MOODS }] = await Promise.all([import('../countries.server'), import('../../domain/moods')])
     const [countries, services] = await Promise.all([getCountries({}), serviceCatalog()])
-    return { countries, services, moods: MOODS.map(m => ({ id: m.key, label: m.name })) }
+    return { countries, services, providerGroups: groupProviderChoices(services), moods: MOODS.map(m => ({ id: m.key, label: m.name })) }
   },
   async searchShows(query) {
     const { searchQuery } = await import('../combined-search/catalog.server')

@@ -35,6 +35,7 @@ async function fixture(page: Page, setupGuest = false) {
           moods: [{ id: 'relaxed', label: 'Relaxed' }],
         },
       });
+    if (url.pathname.endsWith('/preview')) return route.fulfill({ json: { prompt: route.request().postDataJSON().prompt, attributes: [{ text: 'Funny', kind: 'want' }] } });
     if (url.pathname.endsWith('/member/start'))
       return route.fulfill({
         status: 501,
@@ -824,9 +825,9 @@ test('room prompt and mobile service selection publish attributes without screen
   await expect(
     page.getByRole('button', { name: /More settings|Add remote screen|Watch on/ })
   ).toHaveCount(0);
-  await page.getByRole('button', { name: 'Something funny and light', exact: true }).click();
+  await page.getByRole('button', { name: 'Funny & light', exact: true }).click();
   await expect(page.getByRole('textbox', { name: 'Describe what to watch' })).toHaveValue(
-    'Something funny and light'
+    'Funny & light'
   );
   await expect(page.getByRole('checkbox', { name: 'Netflix', exact: true })).toBeChecked();
   await page.getByRole('button', { name: 'Choose country', exact: true }).click();
@@ -837,12 +838,12 @@ test('room prompt and mobile service selection publish attributes without screen
   await expect(page.getByText('Funny', { exact: true })).toBeVisible();
   expect(f.commands.at(-1)?.command).toMatchObject({
     type: 'configure',
-    prompt: 'Something funny and light',
+    prompt: 'Funny & light',
     country: 'DE',
     serviceIds: [8],
   });
   await page.reload();
-  await expect(page.getByText('Something funny and light', { exact: true })).toBeVisible();
+  await expect(page.getByText('Funny & light', { exact: true })).toBeVisible();
   await expect(page.getByText('Funny', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Edit room description and services' }).click();
   await page.getByRole('textbox', { name: 'Describe what to watch' }).waitFor();
@@ -927,3 +928,48 @@ for (const mode of ['no-share', 'rejected', 'cancelled', 'manual'] as const) {
     await expect(page.getByText(/Sharing could not open/)).toHaveCount(0);
   });
 }
+
+
+test('prompt presets become live Jev picks and grouped providers retain every selected alias', async ({ page }) => {
+  const f = await fixture(page);
+  f.room.shared.phase = 'setup';
+  f.room.shared.screens[0].serviceIds = [8,119];
+  const raw = [
+    { id: 8, name: 'Netflix', logoUrl: null },
+    { id: 9, name: 'Amazon Prime Video', logoUrl: null },
+    { id: 10, name: 'Amazon Video', logoUrl: null },
+    { id: 119, name: 'Amazon Prime Video', logoUrl: null },
+  ];
+  await page.route('**/catalog/metadata*', route => route.fulfill({json:{countries:[{code:'DE',name:'Germany'}],services:raw,providerGroups:[{...raw[0],selectionIds:[8]},{...raw[1],selectionIds:[9,10,119]}],moods:[]}}));
+  let oldReading: (() => void) | undefined;
+  const previews: string[] = [];
+  await page.route('**/preview', async route => {
+    const prompt = route.request().postDataJSON().prompt;
+    previews.push(prompt);
+    if(prompt === 'Old mood') await new Promise<void>(r => { oldReading=r; });
+    await route.fulfill({json:{prompt,attributes:[{text:prompt==='Old mood'?'Outdated pick':'Motivational',kind:'want'}]}}).catch(()=>{});
+  });
+  await page.reload();
+  await page.getByRole('button',{name:'Edit room description and services'}).click();
+  for(const name of ['Funny & light','A twisty thriller','Family night']) await expect(page.getByRole('button',{name,exact:true})).toBeVisible();
+  const input=page.getByRole('textbox',{name:'Describe what to watch'});
+  await input.fill('Old mood');
+  await expect.poll(()=>previews).toContain('Old mood');
+  await input.fill('Sports movies motivational');
+  await expect(page.getByRole('button',{name:'Funny & light',exact:true})).toHaveCount(0);
+  await expect(page.getByText('Motivational',{exact:true})).toBeVisible();
+  oldReading!();
+  await expect(page.getByText('Outdated pick',{exact:true})).toHaveCount(0);
+  expect(f.commands).toHaveLength(0);
+  const prime=page.getByRole('checkbox',{name:'Amazon Prime Video',exact:true});
+  await expect(prime).toHaveCount(1);await expect(prime).toBeChecked();
+  await expect(page.getByRole('checkbox',{name:'Amazon Video',exact:true})).toHaveCount(0);
+  await prime.click();await expect(prime).not.toBeChecked();await prime.click();
+  const save=page.getByRole('button',{name:'Save room description'});
+  await expect(save).toHaveText('Save');await save.click();
+  expect(f.commands.at(-1)?.command).toMatchObject({type:'configure',prompt:'Sports movies motivational',serviceIds:[8,9,10,119]});
+  await page.getByRole('button',{name:'Edit room description and services'}).click();
+  await input.fill('');
+  await expect(page.getByRole('button',{name:'Family night',exact:true})).toBeVisible();
+  await expect(page.getByText('Jev’s read',{exact:true})).toHaveCount(0);
+});

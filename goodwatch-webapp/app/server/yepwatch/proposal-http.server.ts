@@ -13,6 +13,7 @@ import {
 	proposalAdmissionSchema as admissionSchema,
 	proposalJoinSchema as joinSchema,
 	proposalCommandSchema as commandSchema,
+	proposalPreviewSchema,
 } from "./proposal-validation.ts"
 export interface HttpOptions {
 	serviceSecret: string
@@ -259,7 +260,7 @@ export function createProposalHandler(
 				return reply(await service.resolveInvite(value.code))
 			}
 			const match = url.pathname.match(
-				/^\/api\/yepwatch\/v1\/proposal\/rooms\/([A-Za-z0-9_-]{32})(?:\/(join|commands|realtime-ticket|member(?:\/progress)?))?$/
+				/^\/api\/yepwatch\/v1\/proposal\/rooms\/([A-Za-z0-9_-]{32})(?:\/(join|commands|preview|realtime-ticket|member(?:\/progress)?))?$/
 			)
 			if (
 				request.method === "POST" &&
@@ -302,6 +303,8 @@ export function createProposalHandler(
 			if (match) {
 				const [, id, operation] = match
 				const actor = credential(id)
+				if (request.method === "POST" && operation === "preview")
+					return reply(await service.preview(id, actor, parse(proposalPreviewSchema, await body(request))))
 				if (request.method === "GET" && !operation) {
 					const snapshot = await service.read(id, actor)
 					if (options.members)

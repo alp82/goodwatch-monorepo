@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { loadInvite, type StoredInvite } from '../../core/continuous/invite-store';
 import { appInviteUrl } from '../../core/invites';
 import { developmentNotice, guestOnly } from '../../core/config';
-import { RoomFailure } from '../../core/continuous/api';
+import { continuousApi, RoomFailure } from '../../core/continuous/api';
 import { beginMember } from '../../core/continuous/member';
 import { titlePresentation } from './adapter';
 import { boundedMatch, presentationSize, type GlowView } from './model';
@@ -514,6 +514,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
         !shared.participants.find((p) => p.participantId === own.participantId)?.screenId) ? (
         <Lobby
           snapshot={snapshot}
+          preview={(input, signal) => continuousApi.preview(state.access!, input, signal)}
           disabled={disabled}
           send={send}
           invite={() => setDrawer('room')}

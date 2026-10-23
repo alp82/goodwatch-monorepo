@@ -111,6 +111,19 @@ export class ProposalService {
 		)
 		return p
 	}
+	/** Private draft interpretation; never mutates the room or consumes its command sequence. */
+	async preview(id: string, credential: ActorCredential, input: { prompt: string; country: string; serviceIds: number[] }) {
+		const { room } = await this.get(id)
+		const p = this.auth(room, credential)
+		requireRoom(room.hostId === p.id, "forbidden", "Only the host can edit the room description", 403)
+		requireRoom(room.phase === "setup", "conflict", "Return to setup to edit the room")
+		const metadata = await this.catalog.metadata(input.country)
+		requireRoom(metadata.countries.some(c => c.code === input.country) && input.serviceIds.every(id => metadata.services.some(s => s.id === id)), "invalid_request", "Choose a valid country and services", 400)
+		requireRoom(this.interpret, "busy", "Room prompts are temporarily unavailable", 503)
+		await this.guard?.command(id, p.id, hash(`preview:${random()}`))
+		const result = await this.interpret!(input.prompt, input.country, input.serviceIds)
+		return { prompt: result.prompt, attributes: result.attributes }
+	}
 	private identity(id: string, request: GuestAdmissionRequest) {
 		const key = JSON.stringify([id, request.commandId, request.admissionSecret])
 		return {

@@ -49,3 +49,19 @@ test("without a country the order stays as it came", () => {
 		[8, 9, 337],
 	)
 })
+
+test("selectable brands keep all underlying IDs, including aliases and same-ID snapshots", async () => {
+  const { groupProviderChoices } = await import('./streaming-links.ts')
+  const choices = groupProviderChoices([
+    { id: 119, name: 'Amazon Prime Video' },
+    { id: 9, name: 'Amazon Prime Video' },
+    { id: 10, name: 'Amazon Video' },
+    { id: 2100, name: 'Amazon Prime Video with Ads' },
+    { id: 8, name: 'Netflix' },
+    { id: 1796, name: 'Netflix basic with Ads' },
+    { id: 8, name: 'Netflix' },
+    { id: 337, name: 'Disney Plus' },
+  ])
+  assert.deepEqual(choices.map(c => [c.id, c.selectionIds]), [[9,[9,10,119,2100]],[8,[8,1796]],[337,[337]]])
+  assert.deepEqual(groupProviderChoices([{id:119,name:'Amazon Prime Video'}])[0].selectionIds,[119])
+})

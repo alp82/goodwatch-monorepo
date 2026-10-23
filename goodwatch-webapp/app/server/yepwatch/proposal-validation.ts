@@ -137,3 +137,9 @@ export const proposalCommandSchema = z
 		]),
 	})
 	.strict()
+
+export const proposalPreviewSchema = z.object({
+	prompt: z.string().trim().min(2).max(1000),
+	country: z.string().regex(/^[A-Z]{2}$/),
+	serviceIds: z.array(z.number().int().positive()).max(100),
+}).strict()

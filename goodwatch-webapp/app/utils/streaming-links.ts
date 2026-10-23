@@ -243,3 +243,18 @@ export function servicesByCountry<
 	}
 	return result
 }
+
+/** One selectable service per GoodWatch brand, retaining every catalog id for availability checks. */
+export function groupProviderChoices<T extends { id: number; name: string }>(providers: T[]): (T & { selectionIds: number[] })[] {
+	const byId = new Map(providers.map(p => [p.id, p]))
+	const primary = new Map(Object.entries(duplicateProviderMapping).flatMap(([id, aliases]) => aliases.map(alias => [alias, Number(id)] as const)))
+	const groups = new Map<string, T & { selectionIds: number[] }>()
+	for (const provider of byId.values()) {
+		const representative = byId.get(primary.get(provider.id) ?? provider.id) ?? provider
+		const key = brandName(getShorterProviderLabel(representative.name)).toLowerCase()
+		const group = groups.get(key)
+		if (group) group.selectionIds.push(provider.id)
+		else groups.set(key, { ...representative, selectionIds: [provider.id] })
+	}
+	return [...groups.values()].map(group => ({ ...group, selectionIds: [...new Set(group.selectionIds)].sort((a,b) => a-b) }))
+}

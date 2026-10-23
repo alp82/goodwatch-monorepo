@@ -1,6 +1,7 @@
 import {
   paths,
   type ApiError,
+  type RoomPromptPreview,
   type CommandEnvelope,
   type CommandResult,
   type GuestAdmission,
@@ -108,6 +109,8 @@ export class ContinuousApi {
     this.request<CatalogMetadata>(
       `${paths.metadata}${country ? `?country=${encodeURIComponent(country)}` : ''}`
     );
+  preview = (a: RoomAccess, input: { prompt: string; country: string; serviceIds: number[] }, signal?: AbortSignal) =>
+    this.request<RoomPromptPreview>(paths.preview(a.roomId), input, a, signal);
   member = (a: RoomAccess) =>
     this.request<MemberStatusResponse>(paths.memberStatus(a.roomId), undefined, a);
   memberProgress = (a: RoomAccess) =>
