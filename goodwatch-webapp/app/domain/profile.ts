@@ -164,7 +164,13 @@ export interface ProfileListCard {
 	id: string
 	title: string
 	href: string
+	/** Full poster URLs (w500), as share-list cards carry them. */
 	posters: (string | null)[]
+}
+
+/** The Lists tab: the owner sees every list with its visibility; everyone else sees public lists. */
+export interface ProfileListsPage {
+	lists: import("~/ui/share-lists/ShareListTile").ShareListSummary[]
 }
 
 export interface ProfileScoresPage {

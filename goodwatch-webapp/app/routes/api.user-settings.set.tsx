@@ -121,6 +121,18 @@ export const action: ActionFunction = analyticsAction(
 		}
 		}
 
+		// Profile settings go through /api/profile/settings, which checks them (a poster must be one the member scored,
+		// links must be usernames).
+		const settings = (params as { settings?: unknown }).settings
+		if (
+			settings &&
+			typeof settings === "object" &&
+			Object.keys(settings).some((key) => key.startsWith("profile_"))
+		)
+			return json(
+				{ error: "Use /api/profile/settings" },
+				{ status: 400, headers: { "Cache-Control": "no-store" } },
+			)
 		return await setUserSettings({
 			...params,
 			user_id,

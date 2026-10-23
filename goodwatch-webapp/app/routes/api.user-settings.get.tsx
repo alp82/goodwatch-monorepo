@@ -16,6 +16,15 @@ export type UserSettingsMap = {
 	onboarding_streaming_completed: "yes" | "no"
 	onboarding_ratings_completed: "yes" | "no"
 	streaming_providers_default: string
+	// The member profile (server/profile/settings.server.ts). JSON values are stored as text.
+	profile_bio: string
+	profile_links: string
+	profile_avatar: string
+	profile_cover: string
+	profile_visibility: string
+	profile_public_notice_seen: "yes" | "no"
+	/** The sign-in provider's photo URL, saved when the member picks it, so others can see it. */
+	profile_provider_photo: string
 }
 
 type StringSetting = { type: "string" }
@@ -30,6 +39,13 @@ export const UserSettingsSchema: Record<keyof UserSettingsMap, SettingType> = {
 	onboarding_streaming_completed: { type: "enum", options: ["yes", "no"] },
 	onboarding_ratings_completed: { type: "enum", options: ["yes", "no"] },
 	streaming_providers_default: { type: "string" },
+	profile_bio: { type: "string" },
+	profile_links: { type: "string" },
+	profile_avatar: { type: "string" },
+	profile_cover: { type: "string" },
+	profile_visibility: { type: "string" },
+	profile_public_notice_seen: { type: "enum", options: ["yes", "no"] },
+	profile_provider_photo: { type: "string" },
 } as const
 
 export type UserSettingsSchema = {
