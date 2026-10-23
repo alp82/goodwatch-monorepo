@@ -10,6 +10,7 @@ import type {
 } from "./proposal-types.ts"
 import {
 	tables,
+	invitationTable,
 	columns,
 	parseRow,
 	tableDdl,
@@ -59,11 +60,11 @@ async function parallel<T, R>(
 	return result
 }
 export async function provisionRelationalRooms(sql: Sql, replicas: 0 | 2) {
-	for (const table of Object.values(tables))
+	for (const table of [...Object.values(tables), invitationTable])
 		await sql(tableDdl(table, replicas))
 }
 export async function checkRelationalRooms(sql: Sql) {
-	for (const table of Object.values(tables))
+	for (const table of [...Object.values(tables), invitationTable])
 		await sql(
 			`SELECT ${columns(table).join(",")} FROM ${table.name} WHERE ${
 				table.primary
@@ -83,6 +84,41 @@ export class RelationalProposalRepository implements ProposalRepository {
 		this.sql = sql
 		this.secret = secret
 		this.crypto = codec(secret)
+	}
+	async findInvite(hash: string) {
+		const row = (
+			await this.sql(
+				`SELECT room_id FROM ${invitationTable.name} WHERE code_hash=?`,
+				[hash]
+			)
+		).rows[0]
+		return row ? z.string().parse(row[0]) : null
+	}
+	async rememberInvite(hash: string, roomId: string, expiresAt: number) {
+		try {
+			await this.sql(
+				`INSERT INTO ${invitationTable.name} (code_hash,room_id,expires_at) VALUES (?,?,?) ON CONFLICT DO NOTHING`,
+				[hash, roomId, expiresAt]
+			)
+		} catch (e) {
+			if (!(e instanceof IndeterminateWrite)) throw e
+		}
+		// Prove the immutable mapping by primary key, including a lost INSERT response.
+		const row = (
+			await this.sql(
+				`SELECT room_id,expires_at FROM ${invitationTable.name} WHERE code_hash=?`,
+				[hash]
+			)
+		).rows[0]
+		if (!row)
+			throw new RoomError(
+				"outcome_unknown",
+				"Retain and retry same admission",
+				503,
+				true
+			)
+		if (row[0] !== roomId || Number(row[1]) !== expiresAt)
+			throw new RoomError("busy", "Invitation unavailable", 503, true)
 	}
 	private remember(key: string, row: Row) {
 		this.cache.set(key, structuredClone(row))

@@ -383,3 +383,63 @@ test("Active exposure bounds and missing data remain honest; no direction or ind
 	})
 	assert.equal(measured.snapshot.shared.matches[0].averageYepMs, 600000)
 })
+
+test("short invitations: typed keys, normalized input, exact replay, legacy recovery and room binding", async () => {
+	const repo = new ProposalMemoryRepository()
+	const service = new ProposalService(repo, proposalFixtureCatalog, secret)
+	const req = admission("Short host")
+	const a = await service.create(req)
+	assert.match(a.invite.code, /^[0-9A-HJKMNP-TV-Z]{16}$/)
+	assert.equal(a.invite.path, `/r/${a.invite.code}`)
+	assert.equal((await service.create(req)).invite.code, a.invite.code)
+	assert.equal(
+		(await service.recoverAdmission(a.credential.roomId, credential(a))).invite
+			.code,
+		a.invite.code
+	)
+	const grouped = a.invite.code.match(/.{4}/g)!.join("-").toLowerCase()
+	assert.equal(
+		(await service.resolveInvite(grouped)).roomId,
+		a.credential.roomId
+	)
+	const joined = await service.join(a.credential.roomId, {
+		...admission("Guest"),
+		inviteCode: grouped,
+	})
+	assert.equal(joined.invite.code, a.invite.code)
+	const other = await service.create(admission("Other"))
+	await assert.rejects(
+		service.join(other.credential.roomId, {
+			...admission(),
+			inviteCode: a.invite.code,
+		}),
+		(e: any) => e.code === "not_found"
+	)
+	await assert.rejects(
+		service.resolveInvite("0000000000000000"),
+		(e: any) => e.code === "not_found"
+	)
+	const { hash, keyed } = await import("./crypto.server.ts")
+	const row = repo.rows.get(a.credential.roomId)!
+	const legacy = `${row.room.id}.${keyed(
+		secret,
+		"proposal-invite",
+		row.room.id
+	)}`
+	row.room.inviteHash = hash(legacy)
+	assert.equal((await service.create(req)).invite.code, legacy)
+	assert.equal(
+		(await service.recoverAdmission(row.room.id, credential(a))).invite.code,
+		legacy
+	)
+	assert.equal((await service.resolveInvite(legacy)).roomId, row.room.id)
+	await assert.rejects(
+		service.resolveInvite(a.invite.code),
+		(e: any) => e.code === "not_found"
+	)
+	row.room.expiresAt = 0
+	await assert.rejects(
+		service.resolveInvite(legacy),
+		(e: any) => e.code === "expired"
+	)
+})

@@ -29,7 +29,7 @@ The API standalone URL setting remains available for disposable tests, mutually 
 
 ## Database
 
-See [all 14 typed schemas and current-state SQL examples](../../goodwatch-webapp/app/server/yepwatch/SCHEMA.md). Votes, proposals, agreements, decisions and related entities have dedicated tables; no generic payload columns remain in the release. Provision through the updated operator on a new/empty production store. Historical R4 commands/images and the previous three-table schema are not compatible with this source.
+See [all 15 typed schemas and current-state SQL examples](../../goodwatch-webapp/app/server/yepwatch/SCHEMA.md). Votes, proposals, agreements, decisions and related entities have dedicated tables; no generic payload columns remain in the release. Provision through the updated operator on a new/empty production store. Historical R4 commands/images and the previous three-table schema are not compatible with this source.
 
 ## Signup / sign-in
 

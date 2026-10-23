@@ -31,9 +31,11 @@ Reusing a broad user means the gateway receives that user's broader Redis access
 
 ## One-time database preparation
 
-The application does **not** create production tables at startup. Before the first deploy, create the two Crate roles, then provision all 14 typed tables with the new image's operator and grant the exact table access. The concrete operator command and grants are in [DEPLOY.md, section 2](DEPLOY.md#2-prepare-existing-shared-services-once). Use the same room key, key ID (`yepwatch-first-release-01`) and budget values (20/20/600/60) as this Compose file. You can use the already built typed-storage API archive for this one-time command, or build target `api` from this repository.
+The application does **not** create production tables at startup. Before the first deploy, create the two Crate roles, then provision all 15 typed tables with the new image's operator and grant the exact table access. The concrete operator command and grants are in [DEPLOY.md, section 2](DEPLOY.md#2-prepare-existing-shared-services-once). Use the same room key, key ID (`yepwatch-first-release-01`) and budget values (20/20/600/60) as this Compose file. You can use the already built typed-storage API archive for this one-time command, or build target `api` from this repository.
 
 Skip that older guide's separate Redis-user requirement if reusing the existing user, and skip its private-file/Coolify/registry steps: this page replaces those steps. Never point the operator at retained demo tables or erase incompatible data to force startup.
+
+Existing typed stores deployed before short room keys need the small [invitation-table upgrade](../../goodwatch-webapp/app/server/yepwatch/migrations/20261023-short-invitations.sql) before updating. No room reset or key change is needed.
 
 ## Enable GoodWatch signup/sign-in
 

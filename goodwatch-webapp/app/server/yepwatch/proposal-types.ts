@@ -31,7 +31,15 @@ export interface ProposalRoom extends ContinuousRoom {
 		baseParticipantIds: string[]
 	} | null
 }
-export type ProposalRepository = RoomRepository<ProposalRoom>
+export type ProposalRepository = RoomRepository<ProposalRoom> & {
+	/** Optional for historical encrypted demo repositories; production uses typed PK lookup. */
+	rememberInvite?(
+		hash: string,
+		roomId: string,
+		expiresAt: number
+	): Promise<void>
+	findInvite?(hash: string): Promise<string | null>
+}
 export type ProposalStored = StoredRoom<ProposalRoom>
 export interface ProposalCatalog {
 	metadata: import("./continuous-types.ts").ContinuousCatalog["metadata"]

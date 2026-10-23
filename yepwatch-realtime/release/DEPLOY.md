@@ -68,7 +68,7 @@ GRANT DQL,DML ON TABLE
  doc.yepwatch_agreement,doc.yepwatch_proposal,doc.yepwatch_decision,
  doc.yepwatch_screen,doc.yepwatch_candidate,doc.yepwatch_command_receipt,
  doc.yepwatch_ticket,doc.yepwatch_member_grant,doc.yepwatch_member_intent,
- doc.yepwatch_control TO yepwatch_runtime;
+ doc.yepwatch_control,doc.yepwatch_invitation TO yepwatch_runtime;
 GRANT DQL ON TABLE doc.yepwatch_runtime TO yepwatch_runtime;
 GRANT DQL ON TABLE
  doc.movie,doc.show,doc.episode,doc.imdb_episode,doc.country,

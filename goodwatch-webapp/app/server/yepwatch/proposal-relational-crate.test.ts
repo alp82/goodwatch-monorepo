@@ -73,6 +73,7 @@ test(
 		const statements: string[] = []
 		let failHead = false,
 			loseHead = false,
+			loseInvite = false,
 			loseChild = false
 		const recording: Sql = async (stmt, args) => {
 			statements.push(stmt)
@@ -81,6 +82,13 @@ test(
 				throw new Error("Injected crash before publish")
 			}
 			const result = await sql(stmt, args)
+			if (
+				stmt.startsWith("INSERT INTO doc.yepwatch_invitation ") &&
+				loseInvite
+			) {
+				loseInvite = false
+				throw new IndeterminateWrite("Lost invite mapping ack")
+			}
 			if (stmt.startsWith("UPDATE doc.yepwatch_room SET") && loseHead) {
 				loseHead = false
 				throw new IndeterminateWrite("Lost publish ack")
@@ -95,7 +103,30 @@ test(
 		const otherRepo = new RelationalProposalRepository(sql, secret)
 		const a = new ProposalService(repo, proposalFixtureCatalog, secret)
 		const b = new ProposalService(otherRepo, proposalFixtureCatalog, secret)
-		const admission = await a.create(request("Host"))
+		const admissionRequest = request("Host")
+		loseInvite = true
+		const admission = await a.create(admissionRequest)
+		assert.match(admission.invite.code, /^[0-9A-HJKMNP-TV-Z]{16}$/)
+		assert.equal(
+			(await b.resolveInvite(admission.invite.code.toLowerCase())).roomId,
+			admission.credential.roomId
+		)
+		assert.equal(
+			(await b.create(admissionRequest)).invite.code,
+			admission.invite.code
+		)
+		const { hash } = await import("./crypto.server.ts")
+		await assert.rejects(
+			otherRepo.rememberInvite(
+				hash(admission.invite.code),
+				"another-room",
+				admission.credential.expiresAt
+			),
+			(e: any) => e.code === "busy"
+		)
+		t.diagnostic(
+			"Short invite immediately resolves across instances; lost mapping ack, replay and collision checks pass"
+		)
 		const id = admission.credential.roomId,
 			host = credential(admission)
 		const guestAdmission = await b.join(id, {
@@ -295,7 +326,7 @@ test(
 				"SELECT table_name FROM information_schema.tables WHERE table_schema='doc' AND table_name LIKE 'yepwatch_%' ORDER BY table_name"
 			)
 		).rows
-		assert.equal(counts.length, 14)
+		assert.equal(counts.length, 15)
 		const badColumns = (
 			await sql(
 				"SELECT table_name,column_name FROM information_schema.columns WHERE table_schema='doc' AND table_name LIKE 'yepwatch_%' AND column_name='payload'"

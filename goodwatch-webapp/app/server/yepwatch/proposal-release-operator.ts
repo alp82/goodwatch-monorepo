@@ -3,6 +3,7 @@ import {
 	controlTable,
 	columns,
 	runtimeTable,
+	invitationTable,
 } from "./proposal-storage-schema.ts"
 import {
 	provisionControl,
@@ -79,6 +80,7 @@ if (command === "provision") {
 	// Credentials are included; runtime marker and capacity bookkeeping are not reset.
 	for (const table of [
 		...Object.values(tables).filter((t) => t.name !== RELEASE_TABLE),
+		invitationTable,
 		tables.room,
 	]) {
 		await sql(`REFRESH TABLE ${table.name}`)
@@ -122,6 +124,11 @@ if (command === "provision") {
 			...Object.values(tables)
 				.filter((t) => t.name !== RELEASE_TABLE)
 				.map((t) => ({ name: t.name, primary: t.primary, names: columns(t) })),
+			{
+				name: invitationTable.name,
+				primary: invitationTable.primary,
+				names: columns(invitationTable),
+			},
 			{ name: runtimeTable.name, primary: "id", names: columns(runtimeTable) },
 			{ name: controlTable.name, primary: "id", names: columns(controlTable) },
 			{ name: tables.room.name, primary: "id", names: columns(tables.room) },

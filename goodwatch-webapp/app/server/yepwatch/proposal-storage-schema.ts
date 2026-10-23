@@ -330,7 +330,9 @@ export function tableDdl(table: Table, replicas: 0 | 2) {
 		fields.push(`CONSTRAINT check_${i} CHECK (${c})`)
 	return `CREATE TABLE IF NOT EXISTS ${table.name} (\n  ${fields.join(
 		",\n  "
-	)}\n) CLUSTERED INTO ${table.name === 'doc.yepwatch_room' ? 4 : 1} SHARDS WITH (column_policy='strict',number_of_replicas=${replicas},"write.wait_for_active_shards"='${
+	)}\n) CLUSTERED INTO ${
+		table.name === "doc.yepwatch_room" ? 4 : 1
+	} SHARDS WITH (column_policy='strict',number_of_replicas=${replicas},"write.wait_for_active_shards"='${
 		replicas + 1
 	}',refresh_interval=1000)`
 }
@@ -369,7 +371,14 @@ export const runtimeTable: Table = {
 		room_ttl_ms: integer(1),
 	},
 }
+/** Durable invite lookup. No plaintext key or room state is stored here. */
+export const invitationTable: Table = {
+	name: "doc.yepwatch_invitation",
+	primary: "code_hash",
+	fields: { code_hash: text(64), room_id: text(128), expires_at: integer() },
+}
 export const storageTables: Table[] = [
+	invitationTable,
 	...Object.values(tables),
 	runtimeTable,
 	controlTable,

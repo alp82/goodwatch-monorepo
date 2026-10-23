@@ -1,6 +1,6 @@
 # YepWatch first-release database schema
 
-The release stores interactions in **14 explicit typed tables**, not three opaque containers. There are no `payload`, dynamic-object or arbitrary JSON columns. [schema.sql](schema.sql) contains the complete generated DDL. [proposal-storage-schema.ts](proposal-storage-schema.ts) is the shared SQL/runtime-validation definition; regenerate with `node app/server/yepwatch/write-storage-schema.mjs` from `goodwatch-webapp`.
+The release stores interactions in **15 explicit typed tables**, not three opaque containers. There are no `payload`, dynamic-object or arbitrary JSON columns. [schema.sql](schema.sql) contains the complete generated DDL. [proposal-storage-schema.ts](proposal-storage-schema.ts) is the shared SQL/runtime-validation definition; regenerate with `node app/server/yepwatch/write-storage-schema.mjs` from `goodwatch-webapp`.
 
 ## Tables
 
@@ -8,6 +8,7 @@ All names below are in the `doc` schema. Every immutable domain record has `reco
 
 | Table | Main fields / purpose |
 |---|---|
+| `yepwatch_invitation` | `code_hash` primary key, `room_id`, `expires_at`; short invitation lookup with no plaintext key |
 | `yepwatch_room` | `id`, `revision`, `phase`, `expires_at`, `host_id`, roster/context/generation counters; typed constraints, stream and final-check state; exact references to current domain records; pending notification/check markers |
 | `yepwatch_participant` | Participant ID, nickname, credential hashes/epoch/sequence, screen/readiness, member status; references to this participant's votes, agreement, receipts and grant |
 | `yepwatch_vote` | Participant ID, candidate ID, `choice` (`watch`, `pass`, NULL), vote revision, active exposure milliseconds and timing source |
@@ -57,3 +58,11 @@ The API role needs DQL/DML on room/domain/control tables and DQL on runtime meta
 Room access expires after six hours. Each domain record carries the same room lifetime, including unreferenced preparations. `purge-expired --apply --writers-stopped` deletes expired records and heads using the database clock; it does not reset capacity or change active rooms. Stop writers and back up first. This operator command is implemented and tested locally; no automatic cleanup schedule or production purge is configured. Never reclaim unreferenced versions of a live room without a separate safe reclamation protocol.
 
 `backup FILE --writers-stopped` exports all typed records, runtime metadata and controls into a new mode-0600 file. It contains private interaction data; credential fields remain encrypted. Keep the file and matching secret private. Restore only to an empty compatible store with writers stopped, inserting domain rows before room heads.
+
+## Short invitation upgrade
+
+New rooms use 16-character, 80-bit opaque room keys derived from the room secret. Keys omit ambiguous I/L/O/U letters; lookup accepts lowercase, spaces and dashes. Existing signed invitations remain valid and retain their format. Room IDs and participant credentials are unchanged.
+
+The invitation table stores only the key hash and a room reference with the same six-hour expiry. Full-primary-key reads avoid search-refresh delays. The mapping is published/proven before returning an admission; exact retries repair a missing mapping after an interrupted response. Resolution still checks the live room and its stored invitation hash. A mapping collision fails closed. Backup and expired-record cleanup include the table.
+
+For an already provisioned typed store, apply only [migrations/20261023-short-invitations.sql](migrations/20261023-short-invitations.sql) using the established trusted operator connection before deploying this source. It adds the table and its runtime grant without modifying existing room rows, keys, quotas or metadata. New empty-store provisioning includes it automatically.

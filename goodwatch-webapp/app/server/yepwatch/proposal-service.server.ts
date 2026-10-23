@@ -10,6 +10,7 @@ import type {
 	RealtimeViewResponse,
 	RoomInvalidation,
 } from "../../../packages/yepwatch-contracts/proposal.ts"
+import { shortInvite, normalizeShortInvite } from "./proposal-invites.ts"
 import { hash, equal, keyed, random, sign, verify } from "./crypto.server.ts"
 import { IndeterminateWrite, RoomError, requireRoom } from "./errors.ts"
 import {
@@ -99,12 +100,37 @@ export class ProposalService {
 		}
 	}
 	private invite(id: string) {
+		return this.repository.rememberInvite && this.repository.findInvite
+			? shortInvite(this.secret, id)
+			: this.legacyInvite(id)
+	}
+	private legacyInvite(id: string) {
 		return `${id}.${keyed(this.secret, "proposal-invite", id)}`
 	}
-	private admission(
+	private async roomInvite(room: ProposalRoom) {
+		const code = this.invite(room.id)
+		if (equal(hash(code), room.inviteHash)) {
+			if (normalizeShortInvite(code))
+				await this.repository.rememberInvite!(
+					hash(code),
+					room.id,
+					room.expiresAt
+				)
+			return code
+		}
+		const legacy = this.legacyInvite(room.id)
+		requireRoom(
+			equal(hash(legacy), room.inviteHash),
+			"not_found",
+			"Invite unavailable",
+			404
+		)
+		return legacy
+	}
+	private async admission(
 		room: ProposalRoom,
 		request: GuestAdmissionRequest
-	): GuestAdmission {
+	): Promise<GuestAdmission> {
 		const p = this.identity(room.id, request)
 		// Admission replay is capability recovery, not an authorization bypass.
 		// The original bootstrap must still derive the active original credential;
@@ -121,6 +147,7 @@ export class ProposalService {
 			"conflict",
 			"Admission retry changed"
 		)
+		const code = await this.roomInvite(room)
 		return {
 			credential: {
 				roomId: room.id,
@@ -129,8 +156,8 @@ export class ProposalService {
 				expiresAt: room.expiresAt,
 			},
 			invite: {
-				code: this.invite(room.id),
-				path: `/r/${this.invite(room.id)}`,
+				code,
+				path: `/r/${code}`,
 			},
 			snapshot: proposalSnapshot(room, p.id),
 		}
@@ -217,9 +244,14 @@ export class ProposalService {
 		)
 	}
 	async resolveInvite(code: string) {
-		const [id, proof, extra] = code.split(".")
+		const short = normalizeShortInvite(code)
+		const [legacyId, proof, extra] = code.split(".")
+		const id = short
+			? await this.repository.findInvite?.(hash(short))
+			: legacyId
+		if (short) code = short
 		requireRoom(
-			id && proof && !extra && /^[A-Za-z0-9_-]{32}$/.test(id),
+			id && (short || (proof && !extra && /^[A-Za-z0-9_-]{32}$/.test(id))),
 			"not_found",
 			"Invite unavailable",
 			404
@@ -234,7 +266,8 @@ export class ProposalService {
 		return { roomId: id }
 	}
 	async join(id: string, request: JoinRoomRequest) {
-		await this.resolveInvite(request.inviteCode)
+		const resolved = await this.resolveInvite(request.inviteCode)
+		requireRoom(resolved.roomId === id, "not_found", "Invite unavailable", 404)
 		const { inviteCode: _invite, screenId, ...base } = request
 		for (let i = 0; i < 6; i++) {
 			const old = await this.get(id)
@@ -292,6 +325,7 @@ export class ProposalService {
 	): Promise<GuestAdmission> {
 		const { room } = await this.get(id)
 		const p = this.auth(room, credential)
+		const code = await this.roomInvite(room)
 		return {
 			recovered: true,
 			credential: {
@@ -300,7 +334,7 @@ export class ProposalService {
 				token: credential.token,
 				expiresAt: room.expiresAt,
 			},
-			invite: { code: this.invite(id), path: `/r/${this.invite(id)}` },
+			invite: { code, path: `/r/${code}` },
 			snapshot: proposalSnapshot(room, p.id),
 		}
 	}
