@@ -34,6 +34,7 @@ import {
 	seasonsLabel,
 	typeIndexCopy,
 } from "~/ui/og-image/copy"
+import { PROFILE_CARD_TABS } from "~/ui/og-image/profile-card-model"
 import { hasGoodwatchScore } from "~/utils/ratings"
 import { canonicalTitleId } from "~/utils/title-identity"
 
@@ -57,14 +58,7 @@ const clip = (text: string) =>
 		? text
 		: `${text.slice(0, TITLE_MAX_LENGTH - 1).trim()}…`
 
-const PROFILE_TABS = new Set([
-	"seen",
-	"scores",
-	"wishlist",
-	"shows",
-	"lists",
-	"taste",
-])
+const PROFILE_TABS = new Set<string>(PROFILE_CARD_TABS)
 
 const positiveId = (segment: string | undefined) => {
 	const id = Number(segment?.split("-")[0])
@@ -100,11 +94,11 @@ export function canonicalOgPath(path: string): string | null {
 		return `/${segments.join("/")}`
 	}
 	if (first === "u") {
-		// A member's profile and its tabs share one card; list pages have their own (og.lists).
+		// A member's profile and each of its tabs have their own card; list pages have theirs too (og.lists).
 		const handle = second?.toLowerCase() ?? ""
 		if (!/^[a-z][a-z0-9_]{2,29}$/.test(handle)) return null
 		if (segments.length > 3 || (third && !PROFILE_TABS.has(third))) return null
-		return `/u/${handle}`
+		return third ? `/u/${handle}/${third}` : `/u/${handle}`
 	}
 	if (first === "discover") return "/discover"
 	if (first === "explorer" && segments.length === 1) return "/explorer"
@@ -435,11 +429,11 @@ async function staticPageContent(path: string): Promise<OgContent> {
 export async function resolveOgContent(
 	path: string,
 ): Promise<OgContent | null> {
-	const [first, second] = path.split("/").filter(Boolean)
+	const [first, second, third] = path.split("/").filter(Boolean)
 	if (first === "movie" || first === "show")
 		return titleContent(first, Number(second))
 	if (first === "person") return personContent(Number(second))
-	if (first === "u") return profileCardContent(second)
+	if (first === "u") return profileCardContent(second, third)
 	if (first === "movies" || first === "shows") return browseContent(path)
 	return staticPageContent(path)
 }

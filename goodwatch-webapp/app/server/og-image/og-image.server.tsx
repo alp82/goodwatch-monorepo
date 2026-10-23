@@ -11,6 +11,11 @@ import { OgCard, type OgContent } from "~/ui/og-image/OgCard"
 import { HOME_COPY } from "~/ui/og-image/copy"
 import { getRedisCluster } from "~/utils/cache"
 export { OG_WAIT_MS } from "~/server/og-image/store.server"
+const inlineAll = (sources: (string | null)[]) =>
+	Promise.all(sources.map((src) => toDataUri(src)))
+// A photo comes as a data URI already.
+const inlineAvatar = async (src: string | null) =>
+	src?.startsWith("data:") ? src : toDataUri(src)
 async function inlineImages(content: OgContent): Promise<OgContent> {
 	switch (content.kind) {
 		case "discovery":
@@ -43,14 +48,40 @@ async function inlineImages(content: OgContent): Promise<OgContent> {
 		case "profile":
 			return {
 				...content,
-				// A photo comes as a data URI already.
-				avatar: content.avatar?.startsWith("data:")
-					? content.avatar
-					: await toDataUri(content.avatar),
-				posters: await Promise.all(
-					content.posters.map((src) => toDataUri(src)),
-				),
+				avatar: await inlineAvatar(content.avatar),
+				posters: await inlineAll(content.posters),
 			}
+		case "profile-tab": {
+			const visual = content.visual
+			return {
+				...content,
+				avatar: await inlineAvatar(content.avatar),
+				visual:
+					visual.type === "scores" || visual.type === "posters"
+						? { ...visual, posters: await inlineAll(visual.posters) }
+						: visual.type === "shows"
+							? {
+									...visual,
+									shows: await Promise.all(
+										visual.shows.map(async (s) => ({
+											...s,
+											poster: await toDataUri(s.poster),
+										})),
+									),
+								}
+							: visual.type === "lists"
+								? {
+										...visual,
+										lists: await Promise.all(
+											visual.lists.map(async (l) => ({
+												...l,
+												posters: await inlineAll(l.posters),
+											})),
+										),
+									}
+								: visual,
+			}
+		}
 		case "person":
 			return { ...content, photo: await toDataUri(content.photo) }
 		default:

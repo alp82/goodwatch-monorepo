@@ -217,3 +217,28 @@ export const AI_CHAT_COPY = {
 	toolLine: "Used GoodWatch",
 	reply: "Top picks on Netflix for your taste.",
 } as const
+
+// The member profile cards (/u/<handle> and its tabs). No counts and no viewer type: lines use shares and words.
+export const PROFILE_CARD_COPY = {
+	/** Under the picks on the main card: the question a visitor answers by opening the profile. */
+	teaser: "How well does your taste match?",
+	tabs: {
+		seen: "Seen",
+		scores: "Scores",
+		wishlist: "Wishlist",
+		shows: "Shows",
+		lists: "Lists",
+		taste: "Taste",
+	},
+	topScores: "Top scores",
+	latestAdditions: "Latest additions",
+	wishlistLine: "Next on their list",
+	watchingLine: "What they're watching now",
+	followingLine: "The shows they follow",
+	tasteGroups: "Their taste groups",
+	seenLine: (medium: string, decade: string | null) =>
+		decade ? `${medium} · leans ${decade}` : medium,
+	tasteLine: (pulls: string) => `Drawn to ${pulls}`,
+	movies: "Movies",
+	shows: "Shows",
+} as const

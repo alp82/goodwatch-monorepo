@@ -97,7 +97,8 @@ interface Geometry {
 	box: number
 }
 
-function build(
+/** The print's geometry, also drawn by the profile link-preview cards (og-image/ProfileCard.tsx). */
+export function build(
 	attributes: WhorlAttribute[],
 	turnsCount: number,
 	rim: boolean,

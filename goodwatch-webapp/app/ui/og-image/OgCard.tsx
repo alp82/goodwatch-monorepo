@@ -3,7 +3,8 @@
 // - People and collections: picture on the left, amber panel on the right.
 // - Discover and Explorer: amber panel with the pitch, top-scored posters on a dark panel.
 // - Use with AI: amber panel with the pitch, a chat answered with scored posters on a dark panel.
-// - Member profiles: amber panel with the picture, @handle, viewer type and numbers, favorites on a dark panel.
+// - Member profiles: amber band with the picture and @handle; the taste fingerprint with its strongest pulls, or for a
+//   tab, that tab's visual (ProfileCard.tsx).
 // - Every other page: backdrop across the top, amber band with the headline below.
 // Image fields hold data URIs, so satori never fetches anything itself.
 import { ChatCard } from "~/ui/og-image/ChatCard"
@@ -11,7 +12,12 @@ import {
 	DiscoveryCard,
 	type DiscoveryFeature,
 } from "~/ui/og-image/DiscoveryCard"
-import { type OgProfileContent, ProfileCard } from "~/ui/og-image/ProfileCard"
+import {
+	type OgProfileContent,
+	type OgProfileTabContent,
+	ProfileCard,
+	ProfileTabCard,
+} from "~/ui/og-image/ProfileCard"
 import {
 	Brand,
 	Frame,
@@ -79,10 +85,11 @@ export interface OgChatContent {
 	posters: OgPoster[]
 }
 
-export type { OgProfileContent }
+export type { OgProfileContent, OgProfileTabContent }
 
 export type OgContent =
 	| OgProfileContent
+	| OgProfileTabContent
 	| OgChatContent
 	| OgDiscoveryContent
 	| OgTitleContent
@@ -257,6 +264,8 @@ export function OgCard({ content }: { content: OgContent }) {
 	if (content.kind === "discovery") return <DiscoveryCard content={content} />
 	if (content.kind === "chat") return <ChatCard posters={content.posters} />
 	if (content.kind === "profile") return <ProfileCard content={content} />
+	if (content.kind === "profile-tab")
+		return <ProfileTabCard content={content} />
 	if (content.kind === "title") return <TitleCard content={content} />
 	if (content.kind === "page") return <BandCard content={content} />
 	return <SplitCard content={content} />

@@ -1,22 +1,42 @@
-// What the /u/<handle> card shows, as a signed-out visitor may see it: the picture, the viewer type when the taste is
-// public, the favorites' posters when the scores are public, and the numbers of the public parts.
+// What the profile cards (/u/<handle> and /u/<handle>/<tab>) show, as a signed-out visitor sees the profile: the same
+// shell and tab loaders the pages use, so a hidden part never reaches a card. A tab whose part is hidden or empty gets
+// the main card. No counts and no viewer type (owner decision, 2026-10-23).
 import sharp from "sharp"
-import { canSee } from "~/domain/profile"
-import { resolveAvatar } from "~/server/profile/avatar-choice.server"
+import { type ProfileShell, seesPart } from "~/domain/profile"
 import { readAvatar } from "~/server/profile/avatar.server"
-import { getProfileLibrary } from "~/server/profile/library.server"
+import {
+	loadProfileLists,
+	loadProfileScores,
+	loadProfileSeen,
+	loadProfileShell,
+	loadProfileShows,
+	loadProfileWishlist,
+} from "~/server/profile/page.server"
 import { getProfilePortrait } from "~/server/profile/portrait.server"
 import { getProfileSettings } from "~/server/profile/settings.server"
-import {
-	getProfileByHandle,
-	publicListsByUser,
-} from "~/server/share-lists/view.server"
+import { getTasteStats } from "~/server/profile/taste-stats.server"
 import { AVATAR_GRADIENTS } from "~/ui/account/AccountAvatar"
-import type { OgProfileContent } from "~/ui/og-image/ProfileCard"
+import { PROFILE_CARD_COPY } from "~/ui/og-image/copy"
+import {
+	type CardAttribute,
+	type CardPerson,
+	type OgProfileContent,
+	type OgProfileTabContent,
+	PROFILE_CARD_TABS,
+	type ProfileCardTab,
+	mediumWord,
+	peakDecade,
+	pickAttributes,
+	pullWords,
+	scoresLine,
+} from "~/ui/og-image/profile-card-model"
 
-const poster = (path: string | null) =>
-	path ? `https://image.tmdb.org/t/p/w342${path}` : null
-const count = (n: number) => n.toLocaleString("en-US")
+const poster = (path: string | null | undefined) =>
+	path
+		? path.startsWith("http")
+			? path
+			: `https://image.tmdb.org/t/p/w342${path}`
+		: null
 
 /** The photo as a JPEG data URI: satori can't decode the WebP it's stored as. */
 async function photoDataUri(userId: string): Promise<string | null> {
@@ -26,69 +46,215 @@ async function photoDataUri(userId: string): Promise<string | null> {
 	return `data:image/jpeg;base64,${jpeg.toString("base64")}`
 }
 
-/** The card's content for a handle; null when no member has it. */
-export async function profileCardContent(
-	handle: string,
-): Promise<OgProfileContent | null> {
-	const profile = await getProfileByHandle(handle)
-	if (!profile) return null
-	const { userId } = profile
-	const settings = await getProfileSettings(userId)
-	const sees = (part: Parameters<typeof canSee>[1]) =>
-		canSee(settings.visibility, part, "guest")
-	const [library, lists, persona, avatar] = await Promise.all([
-		getProfileLibrary(userId),
-		sees("lists") ? publicListsByUser(userId) : Promise.resolve([]),
-		sees("taste")
-			? getProfilePortrait(userId, "fingerprint")
-					.then((view) => view.identity?.name ?? null)
-					.catch(() => null)
-			: Promise.resolve(null),
-		resolveAvatar(
-			userId,
-			profile.handle,
-			settings.avatar,
-			settings.providerPhoto,
-		),
-	])
+interface Loaded {
+	ownerId: string
+	shell: ProfileShell
+	person: CardPerson
+}
 
-	// Favorites: every 10, latest watched first, then 9s when there are fewer than six.
-	const favorites = sees("scores")
-		? [...library.scored.values()]
-				.filter((t) => (t.score ?? 0) >= 9 && t.poster)
-				.sort(
-					(a, b) =>
-						(b.score ?? 0) - (a.score ?? 0) ||
-						(b.date ?? "").localeCompare(a.date ?? ""),
-				)
+async function loadGuestView(handle: string): Promise<Loaded | null> {
+	// No cookie: the profile as a signed-out visitor sees it.
+	const loaded = await loadProfileShell(
+		new Request(`https://goodwatch.app/u/${handle}`),
+		handle,
+	).catch((error) => {
+		if (error instanceof Response) return null // 404
+		throw error
+	})
+	if (!loaded || loaded instanceof Response) return null
+	const { ownerId, shell } = loaded
+	const settings = await getProfileSettings(ownerId)
+	const gradient =
+		AVATAR_GRADIENTS[shell.avatar.color] ?? AVATAR_GRADIENTS.amber
+	const avatar =
+		settings.avatar.kind === "photo" && shell.avatar.url
+			? await photoDataUri(ownerId).catch(() => null)
+			: shell.avatar.url
+	return {
+		ownerId,
+		shell,
+		person: {
+			handle: shell.handle,
+			avatar,
+			avatarColors: [gradient.from, gradient.to, gradient.ink],
+		},
+	}
+}
+
+/** The fingerprint as the print draws it, or null when the taste is hidden or not formed. */
+async function printOf({
+	ownerId,
+	shell,
+}: Loaded): Promise<CardAttribute[] | null> {
+	if (!seesPart(shell, "taste")) return null
+	const view = await getProfilePortrait(ownerId, "fingerprint", {
+		scores: seesPart(shell, "scores"),
+	}).catch(() => null)
+	if (!view || view.status !== "ready" || !view.attributes.length) return null
+	return view.attributes.map((a) => ({
+		key: a.key,
+		label: a.label,
+		family: a.family,
+		edge: a.edge,
+	}))
+}
+
+async function mainCard(view: Loaded): Promise<OgProfileContent> {
+	const print = await printOf(view)
+	const favorites = print
+		? []
+		: (await loadProfileScores(view.ownerId, view.shell)).tiers
+				.filter((t) => t.score >= 9)
+				.flatMap((t) => t.titles)
+				.map((t) => poster(t.poster))
+				.filter(Boolean)
 				.slice(0, 6)
-		: []
-	const stats: OgProfileContent["stats"] = []
-	if (sees("seen"))
-		stats.push({ value: count(library.seenKeys.length), label: "seen" })
-	if (sees("scores"))
-		stats.push({
-			value: count(library.scored.size),
-			label: "scores",
-		})
-	if (sees("lists"))
-		stats.push({
-			value: count(lists.length),
-			label: lists.length === 1 ? "list" : "lists",
-		})
-
-	const gradient = AVATAR_GRADIENTS[avatar.color] ?? AVATAR_GRADIENTS.amber
-	const picture =
-		settings.avatar.kind === "photo" && avatar.url
-			? await photoDataUri(userId).catch(() => null)
-			: avatar.url
 	return {
 		kind: "profile",
-		handle: profile.handle,
-		persona,
-		avatar: picture,
-		avatarColors: [gradient.from, gradient.to, gradient.ink],
-		posters: favorites.map((t) => poster(t.poster)),
-		stats,
+		...view.person,
+		print,
+		picks: print ? pickAttributes(print) : [],
+		posters: favorites,
 	}
+}
+
+async function tabCard(
+	view: Loaded,
+	tab: ProfileCardTab,
+): Promise<OgProfileTabContent | null> {
+	const { ownerId, shell } = view
+	const base = {
+		kind: "profile-tab" as const,
+		...view.person,
+		title: PROFILE_CARD_COPY.tabs[tab],
+	}
+	switch (tab) {
+		case "scores": {
+			const line = scoresLine(shell.spread)
+			if (!seesPart(shell, "scores") || !line) return null
+			const { tiers } = await loadProfileScores(ownerId, shell)
+			const best = tiers.filter((t) => t.score >= 9).flatMap((t) => t.titles)
+			return {
+				...base,
+				line,
+				visual: {
+					type: "scores",
+					spread: shell.spread,
+					posters: best.slice(0, 6).map((t) => poster(t.poster)),
+				},
+			}
+		}
+		case "seen": {
+			const { titles } = await loadProfileSeen(ownerId, shell)
+			if (!titles.length || !shell.counts.seen) return null
+			const movies = shell.counts.seenMovies / shell.counts.seen
+			// The decade comes from the Taste tab's numbers (their rated titles), so it goes with the scores.
+			const stats = seesPart(shell, "scores")
+				? await getTasteStats(ownerId).catch(() => null)
+				: null
+			return {
+				...base,
+				line: PROFILE_CARD_COPY.seenLine(
+					mediumWord(movies),
+					peakDecade(stats?.eras.decades ?? []),
+				),
+				visual: {
+					type: "posters",
+					kicker: null,
+					posters: titles.slice(0, 12).map((t) => poster(t.poster)),
+					split: [
+						{ name: PROFILE_CARD_COPY.movies, share: movies, color: "#fbbf24" },
+						{
+							name: PROFILE_CARD_COPY.shows,
+							share: 1 - movies,
+							color: "#38bdf8",
+						},
+					],
+				},
+			}
+		}
+		case "wishlist": {
+			const { titles } = await loadProfileWishlist(ownerId, shell)
+			if (!titles.length) return null
+			return {
+				...base,
+				line: PROFILE_CARD_COPY.wishlistLine,
+				visual: {
+					type: "posters",
+					kicker: PROFILE_CARD_COPY.latestAdditions,
+					posters: titles.slice(0, 12).map((t) => poster(t.poster)),
+					split: null,
+				},
+			}
+		}
+		case "shows": {
+			const { groups } = await loadProfileShows(ownerId, shell)
+			const group = groups.find((g) => g.group === "continue") ?? groups[0]
+			if (!group?.shows.length) return null
+			return {
+				...base,
+				line:
+					group.group === "continue"
+						? PROFILE_CARD_COPY.watchingLine
+						: PROFILE_CARD_COPY.followingLine,
+				visual: {
+					type: "shows",
+					shows: group.shows.slice(0, 6).map((s) => ({
+						poster: poster(s.poster),
+						progress: s.airedEpisodes
+							? Math.min(1, s.watchedEpisodes / s.airedEpisodes)
+							: 0,
+					})),
+				},
+			}
+		}
+		case "lists": {
+			const { lists } = await loadProfileLists(ownerId, shell)
+			const shown = lists.filter((l) => l.items.length).slice(0, 2)
+			if (!shown.length) return null
+			return {
+				...base,
+				line: shown.map((l) => l.title).join(" · "),
+				visual: {
+					type: "lists",
+					lists: shown.map((l) => ({
+						title: l.title,
+						posters: l.items.map((i) => poster(i.poster)),
+					})),
+				},
+			}
+		}
+		case "taste": {
+			const print = await printOf(view)
+			if (!print) return null
+			const sides = await getProfilePortrait(ownerId, "sides", {
+				scores: seesPart(shell, "scores"),
+			}).catch(() => null)
+			const groups =
+				sides?.status === "ready"
+					? sides.sides.map((s) => ({
+							name: s.name,
+							size: s.count,
+							average: seesPart(shell, "scores") ? s.average : null,
+						}))
+					: []
+			const picks = pickAttributes(print)
+			return {
+				...base,
+				line: PROFILE_CARD_COPY.tasteLine(pullWords(picks)),
+				visual: { type: "taste", print, groups },
+			}
+		}
+	}
+}
+
+/** The card's content for a handle (and a tab); null when no member has the handle. */
+export async function profileCardContent(
+	handle: string,
+	tab?: string,
+): Promise<OgProfileContent | OgProfileTabContent | null> {
+	const view = await loadGuestView(handle)
+	if (!view) return null
+	const known = PROFILE_CARD_TABS.find((t) => t === tab)
+	return (known && (await tabCard(view, known))) || mainCard(view)
 }
