@@ -89,7 +89,7 @@ export function WishlistPage({
 				)}
 			</div>
 
-			{owner && <ImportCta what="wishlist" />}
+			<ImportCta shell={shell} what="wishlist" />
 
 			{owner && page.watchNow && page.watchNow.length > 0 && (
 				<section>

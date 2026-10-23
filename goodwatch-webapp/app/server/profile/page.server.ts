@@ -145,6 +145,7 @@ export async function loadProfileShell(
 				canSee(visibility, "scores", "guest") &&
 				library.scored.size >= INDEX_MIN_SCORES &&
 				!owesProfilesStrip(profile.claimedAt ?? null, settings.noticeSeen),
+			dismissedImports: viewer === "owner" ? settings.dismissedImports : [],
 		},
 	}
 }

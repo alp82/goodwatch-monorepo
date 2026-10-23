@@ -116,25 +116,8 @@ export function TastePage({
 		<TasteContext.Provider value={value}>
 			<SectionNav compare={comparing} shown={shown} />
 			<div className={`${WRAP} flex flex-col gap-6 pt-5 pb-32 text-white`}>
-				{owner && (
-					<div className="flex flex-wrap items-center gap-2 rounded-2xl border border-dashed border-amber-400/30 bg-amber-400/[0.03] p-3 text-sm">
-						<span className="mr-1 inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-amber-300/90 uppercase">
-							<LockClosedIcon className="size-3.5" aria-hidden />
-							Only you
-						</span>
-						<Link to="/taste/quiz" className={AMBER_BUTTON}>
-							<SparklesIcon className="size-4" aria-hidden />
-							Sharpen your taste
-						</Link>
-						<Link to="/taste" className={QUIET_BUTTON}>
-							Groups with suggestions
-						</Link>
-						<span className="text-xs text-gray-500 max-sm:basis-full">
-							You choose who sees this page in Edit profile.
-						</span>
-					</div>
-				)}
-				{owner && <ImportCta what="ratings" />}
+				{owner && <OwnerBar />}
+				<ImportCta shell={shell} what="ratings" />
 				{shell.viewer === "guest" && (
 					<div className="flex flex-wrap items-center gap-3">
 						<Link to="/sign-up" rel="nofollow" className={AMBER_BUTTON}>
@@ -225,5 +208,44 @@ function SectionNav({
 				))}
 			</ul>
 		</nav>
+	)
+}
+
+/**
+ * The owner's own tools for their taste, in one row at every width: shorter labels on phones, and the lock leads to Edit
+ * profile, where the owner chooses who sees this page.
+ */
+function OwnerBar() {
+	const hint = "Only you see this. Choose who sees this page in Edit profile."
+	return (
+		<div className="flex items-center gap-2 rounded-2xl border border-dashed border-amber-400/30 bg-amber-400/[0.03] p-2 text-sm sm:p-3">
+			<Link
+				to="/settings/profile"
+				aria-label={hint}
+				title={hint}
+				className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full px-1.5 text-xs font-semibold tracking-wide whitespace-nowrap text-amber-300/90 uppercase hover:text-amber-200"
+			>
+				<LockClosedIcon className="size-3.5" aria-hidden />
+				<span className="max-[399px]:hidden">Only you</span>
+			</Link>
+			<Link
+				to="/taste/quiz"
+				className={`${AMBER_BUTTON} shrink-0 whitespace-nowrap max-sm:px-3`}
+			>
+				<SparklesIcon className="size-4" aria-hidden />
+				<span className="sm:hidden">Sharpen taste</span>
+				<span className="max-sm:hidden">Sharpen your taste</span>
+			</Link>
+			<Link
+				to="/taste"
+				className={`${QUIET_BUTTON} min-w-0 whitespace-nowrap max-sm:px-3`}
+			>
+				<span className="sm:hidden">Taste groups</span>
+				<span className="max-sm:hidden">Groups with suggestions</span>
+			</Link>
+			<span className="ml-auto hidden text-xs text-gray-500 lg:inline">
+				You choose who sees this page in Edit profile.
+			</span>
+		</div>
 	)
 }

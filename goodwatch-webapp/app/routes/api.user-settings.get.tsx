@@ -25,6 +25,9 @@ export type UserSettingsMap = {
 	profile_public_notice_seen: "yes" | "no"
 	/** The sign-in provider's photo URL, saved when the member picks it, so others can see it. */
 	profile_provider_photo: string
+	/** The owner dismissed the import card on their profile (ui/profile/ImportCta.tsx). */
+	import_cta_ratings_dismissed: "yes" | "no"
+	import_cta_wishlist_dismissed: "yes" | "no"
 }
 
 type StringSetting = { type: "string" }
@@ -46,6 +49,8 @@ export const UserSettingsSchema: Record<keyof UserSettingsMap, SettingType> = {
 	profile_visibility: { type: "string" },
 	profile_public_notice_seen: { type: "enum", options: ["yes", "no"] },
 	profile_provider_photo: { type: "string" },
+	import_cta_ratings_dismissed: { type: "enum", options: ["yes", "no"] },
+	import_cta_wishlist_dismissed: { type: "enum", options: ["yes", "no"] },
 } as const
 
 export type UserSettingsSchema = {

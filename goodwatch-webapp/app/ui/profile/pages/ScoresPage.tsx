@@ -103,7 +103,7 @@ export function ScoresPage({
 	if (!all.length)
 		return (
 			<>
-				{owner && <ImportCta what="ratings" />}
+				<ImportCta shell={shell} what="ratings" />
 				<p className={`${TILE} px-6 py-14 text-center text-gray-400`}>
 					{owner
 						? "No scores yet."
@@ -135,7 +135,7 @@ export function ScoresPage({
 					</OwnerPageLink>
 				)}
 			</div>
-			{owner && <ImportCta what="ratings" />}
+			<ImportCta shell={shell} what="ratings" />
 			{you && sharedCount > 0 && (
 				<div className="flex flex-wrap items-center gap-2 rounded-xl bg-sky-400/[0.07] px-4 py-3 text-sm text-sky-100 ring-1 ring-sky-400/25">
 					<span className="min-w-0 flex-1">

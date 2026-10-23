@@ -1,5 +1,7 @@
 import {
 	DEFAULT_PROFILE_SETTINGS,
+	IMPORT_CTA_KEYS,
+	type ImportCtaKind,
 	LINK_SERVICES,
 	type LinkService,
 	type ProfileLink,
@@ -58,6 +60,7 @@ export interface StoredProfileSettings extends ProfileSettings {
 	providerPhoto: string | null
 	/** Whether the member chose a cover (or none); until then the profile uses their latest favorite's backdrop. */
 	coverChosen: boolean
+	dismissedImports: ImportCtaKind[]
 }
 
 /** The member's profile settings, with the defaults for anything not saved. */
@@ -79,6 +82,9 @@ export async function getProfileSettings(
 			? (stored.profile_provider_photo as string)
 			: null,
 		coverChosen: stored.profile_cover !== undefined,
+		dismissedImports: (["ratings", "wishlist"] as const).filter(
+			(kind) => stored[IMPORT_CTA_KEYS[kind]] === "yes",
+		),
 	}
 }
 

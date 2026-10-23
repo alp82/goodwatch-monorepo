@@ -190,7 +190,17 @@ export interface ProfileShell {
 	spread: number[]
 	/** Whether the page may be indexed (20+ public scores). */
 	indexable: boolean
+	/** Import cards the owner dismissed; empty for everyone else. */
+	dismissedImports: ImportCtaKind[]
 }
+
+export type ImportCtaKind = "ratings" | "wishlist"
+
+/** The user setting that records each dismissed import card. */
+export const IMPORT_CTA_KEYS = {
+	ratings: "import_cta_ratings_dismissed",
+	wishlist: "import_cta_wishlist_dismissed",
+} as const satisfies Record<ImportCtaKind, string>
 
 export interface ProfileOverview {
 	/** Every 10, latest watched first. Empty when scores are hidden from the viewer. */
