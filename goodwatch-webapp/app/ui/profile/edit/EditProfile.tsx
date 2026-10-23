@@ -7,9 +7,16 @@ import {
 	XMarkIcon,
 } from "@heroicons/react/20/solid"
 import { GlobeAltIcon } from "@heroicons/react/24/outline"
-import { Link } from "@remix-run/react"
+import { Link, useLocation } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
-import { type ReactNode, useId, useMemo, useRef, useState } from "react"
+import {
+	type ReactNode,
+	useEffect,
+	useId,
+	useMemo,
+	useRef,
+	useState,
+} from "react"
 import { toast } from "react-toastify"
 import {
 	AUDIENCES,
@@ -26,7 +33,10 @@ import {
 	type ProfileTitle,
 } from "~/domain/profile"
 import { LINK_RULES, normalizeLinkValue } from "~/domain/profile-settings"
-import { queryKeyAccountSummary } from "~/ui/account/useAccountSummary"
+import {
+	queryKeyAccountSummary,
+	useAccountSummary,
+} from "~/ui/account/useAccountSummary"
 import { DISPLAY } from "~/ui/my-pages/bits"
 // Edit profile (/settings/profile): the picture (an uploaded photo cropped in the browser, the sign-in provider's photo,
 // the handle's initial on a colour, or a favorite's poster), the cover, the bio, links to other profiles, and who sees
@@ -111,6 +121,21 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 	})
 	const valid = draft.bio.length <= BIO_MAX && linkProblems.every((p) => !p)
 
+	// The "GoodWatch has profiles now" strip leads here (?confirm=1): scroll to Who sees what and highlight it, each
+	// time the strip is followed. Confirm (or any save) retires the strip.
+	const { profilesStrip } = useAccountSummary()
+	const location = useLocation()
+	const whoRef = useRef<HTMLElement>(null)
+	const [glow, setGlow] = useState(0)
+	useEffect(() => {
+		if (!new URLSearchParams(location.search).has("confirm")) return
+		const timer = setTimeout(() => {
+			whoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+			setGlow((g) => g + 1)
+		}, 250)
+		return () => clearTimeout(timer)
+	}, [location.key, location.search])
+
 	const save = async () => {
 		setSaving(true)
 		setError(null)
@@ -136,7 +161,7 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 			const next = out.settings ?? body
 			setSaved(next)
 			setDraft(next)
-			toast.success("Profile saved.")
+			toast.success(profilesStrip ? "All set." : "Profile saved.")
 			// The account menu shows the chosen picture.
 			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary })
 		} catch (e) {
@@ -294,42 +319,74 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 						<LinksEditor draft={draft} set={set} problems={linkProblems} />
 					</Group>
 
-					<Group
-						title="Who sees what"
-						line="Everything starts open to everyone. Narrow any part to members, or keep it to yourself."
+					<section
+						id="who-sees-what"
+						ref={whoRef}
+						className="relative scroll-mt-36 md:scroll-mt-40"
 					>
-						<ul className={`${TILE} divide-y divide-white/5`}>
-							{PARTS.map(({ part, name, line }) => (
-								<li
-									key={part}
-									className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3"
-								>
-									<span className="min-w-0 flex-1 basis-48">
-										<span className="block font-semibold text-gray-100">
-											{name}
-										</span>
-										<span className="block text-xs text-gray-500">{line}</span>
-									</span>
-									<AudiencePicker
-										name={name}
-										value={draft.visibility[part]}
-										onChange={(audience) =>
-											set({
-												visibility: { ...draft.visibility, [part]: audience },
-											})
-										}
-									/>
-								</li>
-							))}
-						</ul>
-						<button
-							type="button"
-							onClick={() => set({ visibility: DEFAULT_VISIBILITY })}
-							className="self-start text-sm font-semibold text-gray-400 hover:text-white"
+						{glow > 0 && (
+							<span
+								key={glow}
+								aria-hidden
+								className="section-glow pointer-events-none absolute -inset-3 rounded-3xl bg-amber-400/[0.06] ring-2 ring-amber-400/80 sm:-inset-4"
+							/>
+						)}
+						<Group
+							title="Who sees what"
+							line="Everything starts open to everyone. Narrow any part to members, or keep it to yourself."
 						>
-							Open everything again
-						</button>
-					</Group>
+							<ul className={`${TILE} divide-y divide-white/5`}>
+								{PARTS.map(({ part, name, line }) => (
+									<li
+										key={part}
+										className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3"
+									>
+										<span className="min-w-0 flex-1 basis-48">
+											<span className="block font-semibold text-gray-100">
+												{name}
+											</span>
+											<span className="block text-xs text-gray-500">
+												{line}
+											</span>
+										</span>
+										<AudiencePicker
+											name={name}
+											value={draft.visibility[part]}
+											onChange={(audience) =>
+												set({
+													visibility: { ...draft.visibility, [part]: audience },
+												})
+											}
+										/>
+									</li>
+								))}
+							</ul>
+							{profilesStrip && (
+								<div className="sticky bottom-24 z-10 flex flex-wrap items-center gap-3 rounded-2xl bg-[#2a2414] px-4 py-3 shadow-[0_-8px_30px_rgba(0,0,0,.5)] ring-1 ring-amber-300/40 md:bottom-4">
+									<span className="min-w-0 flex-1 basis-56 text-sm text-amber-50">
+										<b>Happy with who sees what?</b> Confirm and you're all set.
+										You can change it here any time.
+									</span>
+									<button
+										type="button"
+										onClick={save}
+										disabled={!valid || saving}
+										className={`${AMBER_BUTTON} disabled:opacity-40`}
+									>
+										<CheckIcon className="size-4" aria-hidden />
+										{saving ? "Saving…" : "Confirm"}
+									</button>
+								</div>
+							)}
+							<button
+								type="button"
+								onClick={() => set({ visibility: DEFAULT_VISIBILITY })}
+								className="self-start text-sm font-semibold text-gray-400 hover:text-white"
+							>
+								Open everything again
+							</button>
+						</Group>
+					</section>
 				</div>
 
 				<aside className="lg:sticky lg:top-36 lg:self-start">

@@ -3,16 +3,14 @@ import {
 	PencilSquareIcon,
 	SparklesIcon,
 	UserGroupIcon,
-	XMarkIcon,
 } from "@heroicons/react/20/solid"
-import { Link, useFetcher } from "@remix-run/react"
-import { type CSSProperties, type ReactNode, useState } from "react"
+import { Link } from "@remix-run/react"
+import type { CSSProperties, ReactNode } from "react"
 import { type ProfilePart, type ProfileShell, seesPart } from "~/domain/profile"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 // The frame of every profile page: the picture, @handle, since, bio, links and actions (in full on Overview, compact on
 // the other tabs), the stat strip, the tabs (only the parts the viewer may see; the owner sees a lock or a members
-// mark on a narrowed part), the owner's one-time "Your profile is public now" banner, and the notice in place of a
-// part the viewer may not see. Nothing here may widen a phone's layout (overflow-x-clip keeps the sticky tabs working).
+// mark on a narrowed part), and the notice in place of a part the viewer may not see. Nothing here may widen a phone's layout (overflow-x-clip keeps the sticky tabs working).
 import { assetUrl } from "~/utils/asset-url"
 import {
 	EDIT_PROFILE_PATH,
@@ -165,42 +163,6 @@ export function ProfileTabs({
 				})}
 			</div>
 		</nav>
-	)
-}
-
-/** The owner's one-time note that their profile is public now (members before this release). */
-function PublicNotice({ handle }: { handle: string }) {
-	const fetcher = useFetcher()
-	const [gone, setGone] = useState(false)
-	if (gone) return null
-	const dismiss = () => {
-		setGone(true)
-		fetcher.submit(JSON.stringify({ seen: true }), {
-			method: "POST",
-			action: "/api/profile/settings?notice=1",
-			encType: "application/json",
-		})
-	}
-	return (
-		<div className={`${WRAP} pt-4`}>
-			<div className="flex flex-wrap items-center gap-3 rounded-2xl bg-amber-400/10 px-4 py-3 text-sm text-amber-50 ring-1 ring-amber-400/30">
-				<span className="min-w-0 flex-1">
-					<b>Your profile is public now.</b> Your scores, Seen, Wishlist, shows
-					and taste show at goodwatch.app/u/{handle}. Choose what's shown.
-				</span>
-				<Link to={EDIT_PROFILE_PATH} onClick={dismiss} className={AMBER_BUTTON}>
-					Choose what's shown
-				</Link>
-				<button
-					type="button"
-					onClick={dismiss}
-					aria-label="Dismiss"
-					className="rounded-full p-2 text-amber-200 hover:bg-white/10"
-				>
-					<XMarkIcon className="size-5" aria-hidden />
-				</button>
-			</div>
-		</div>
 	)
 }
 
@@ -559,9 +521,6 @@ export function ProfileFrame({
 	const allowed = !part || seesPart(shell, part)
 	return (
 		<main className="min-h-screen overflow-x-clip text-white">
-			{shell.viewer === "owner" && shell.showPublicNotice && (
-				<PublicNotice handle={shell.handle} />
-			)}
 			{tab === "overview" ? (
 				<FullHead shell={shell} posters={posters} />
 			) : (

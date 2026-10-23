@@ -105,20 +105,13 @@ export async function saveProfileSettings(
 		[PROFILE_KEYS.avatar]: JSON.stringify(settings.avatar),
 		[PROFILE_KEYS.cover]: settings.cover ?? "",
 		[PROFILE_KEYS.visibility]: JSON.stringify(settings.visibility),
-		// Saving Edit profile is choosing what's shown: the "your profile is public now" notice has done its job.
+		// Saving Edit profile is choosing what's shown: the "GoodWatch has profiles now" strip has done its job.
 		[PROFILE_KEYS.noticeSeen]: "yes",
 	}
 	if (settings.avatar.kind === "provider" && providerPhoto)
 		values[PROFILE_KEYS.providerPhoto] = providerPhoto
 	const result = await setUserSettings({ user_id: userId, settings: values })
 	return result !== null
-}
-
-export async function markProfileNoticeSeen(userId: string): Promise<void> {
-	await setUserSettings({
-		user_id: userId,
-		settings: { [PROFILE_KEYS.noticeSeen]: "yes" },
-	})
 }
 
 /** Clears the bio (the admin script's removal). */

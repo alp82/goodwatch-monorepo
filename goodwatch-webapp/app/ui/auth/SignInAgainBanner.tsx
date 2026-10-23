@@ -7,6 +7,7 @@ import { Link, useLocation, useRouteLoaderData } from "@remix-run/react"
 import { useState } from "react"
 import { useUser } from "~/utils/auth"
 import { forgetSupabaseSignIn } from "~/utils/auth-cookie"
+import { STRIP_BUTTON, STRIP_QUIET, SiteStrip } from "~/ui/site-strip/SiteStrip"
 
 /** The sign-in page's `reason` when the member comes from this banner: it then says why. */
 export const SIGN_IN_AGAIN_REASON = "new-sign-in"
@@ -14,14 +15,23 @@ export const SIGN_IN_AGAIN_REASON = "new-sign-in"
 // The root loader's answer stays the same until it runs again, which a navigation doesn't do: remember the dismissal.
 let dismissed = false
 
-const ACCOUNT_PAGES = /^\/(sign-in|sign-up|forgot-password|reset-password|verify-email)(\/|$)/
+const ACCOUNT_PAGES =
+	/^\/(sign-in|sign-up|forgot-password|reset-password|verify-email)(\/|$)/
 
 export function SignInAgainBanner() {
-	const root = useRouteLoaderData("root") as { signInAgain?: boolean } | undefined
+	const root = useRouteLoaderData("root") as
+		| { signInAgain?: boolean }
+		| undefined
 	const { user } = useUser()
 	const location = useLocation()
 	const [hidden, setHidden] = useState(dismissed)
-	if (!root?.signInAgain || user || hidden || ACCOUNT_PAGES.test(location.pathname)) return null
+	if (
+		!root?.signInAgain ||
+		user ||
+		hidden ||
+		ACCOUNT_PAGES.test(location.pathname)
+	)
+		return null
 	const close = () => {
 		dismissed = true
 		forgetSupabaseSignIn()
@@ -29,26 +39,37 @@ export function SignInAgainBanner() {
 	}
 	const returnTo = location.pathname + location.search
 	return (
-		<div className="border-b border-amber-700/60 bg-amber-950/80">
-			<div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 sm:px-6 lg:px-8">
-				<ArrowPathIcon className="hidden h-6 w-6 shrink-0 text-amber-400 sm:block" aria-hidden="true" />
-				<p className="min-w-0 flex-1 basis-64 text-sm text-amber-50">
-					<strong className="font-semibold">GoodWatch has a new sign-in, so you were signed out once.</strong> Everything you saved is still here.
-				</p>
-				<div className="flex items-center gap-2">
+		<SiteStrip
+			label="Sign in again"
+			lead={
+				<ArrowPathIcon
+					className="hidden h-6 w-6 shrink-0 text-amber-300 sm:block"
+					aria-hidden="true"
+				/>
+			}
+			title="GoodWatch has a new sign-in, so you were signed out once."
+			actions={
+				<>
 					<Link
 						to={`/sign-in?reason=${SIGN_IN_AGAIN_REASON}&redirectTo=${encodeURIComponent(returnTo)}`}
 						rel="nofollow"
 						onClick={close}
-						className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-500"
+						className={STRIP_BUTTON}
 					>
 						Sign in
 					</Link>
-					<button type="button" onClick={close} className="cursor-pointer rounded-lg p-2 text-amber-200 hover:bg-amber-900" aria-label="Dismiss">
+					<button
+						type="button"
+						onClick={close}
+						className={`${STRIP_QUIET} px-2`}
+						aria-label="Dismiss"
+					>
 						<XMarkIcon className="h-5 w-5" />
 					</button>
-				</div>
-			</div>
-		</div>
+				</>
+			}
+		>
+			Everything you saved is still here.
+		</SiteStrip>
 	)
 }

@@ -16,6 +16,8 @@ import {
 import { useStreamingProviders } from "~/routes/api.streaming-providers";
 import { getCountryName } from "~/server/resources/country-names";
 import type { UserData } from "~/types/user-data";
+import { ProfilesStrip } from "~/ui/site-strip/ProfilesStrip";
+import { STRIP_BUTTON, SiteStrip } from "~/ui/site-strip/SiteStrip";
 import { SmartOnboardingBanner } from "./SmartOnboardingBanner";
 
 type Review = {
@@ -265,11 +267,17 @@ export function AccountTransfer() {
 				{error}
 			</div>
 		) : finished ? (
-			<div role="status" className="mt-16 -mb-16 bg-slate-800 p-4 text-white">
-				{finished}
-			</div>
+			<SiteStrip
+				label="Your progress"
+				role="status"
+				title={finished}
+				className="mt-16 -mb-16"
+			/>
 		) : onListEditor ? null : (
-			<SmartOnboardingBanner />
+			// One strip at a time: onboarding first, then the profiles announcement.
+			<SmartOnboardingBanner
+				fallback={<ProfilesStrip className="mt-16 -mb-16" />}
+			/>
 		);
 	// Do not open an empty dialog while differences load, or after a no-op comparison.
 	// Failed/in-progress confirmed transfers retain their recovery controls.
@@ -317,25 +325,24 @@ export function AccountTransfer() {
 	const loadError = review.error || titles.error;
 	return (
 		<>
-			<div className="mt-16 -mb-16 bg-slate-800 text-white border-b border-slate-600">
-				<div className="max-w-5xl mx-auto p-4 flex flex-wrap items-center justify-between gap-3">
-					<div>
-						<p className="font-semibold">You have progress in this browser</p>
-						<p className="text-sm text-slate-300">
-							{locked
-								? "Your selected transfer is pending. Reopen to finish."
-								: "Review what to add to your account. Nothing changes until you confirm."}
-						</p>
-					</div>
+			<SiteStrip
+				label="Progress in this browser"
+				className="mt-16 -mb-16"
+				title="You have progress in this browser."
+				actions={
 					<button
 						type="button"
 						onClick={() => setOpen(true)}
-						className="rounded-lg bg-emerald-700 hover:bg-emerald-600 px-4 py-2 font-semibold"
+						className={STRIP_BUTTON}
 					>
 						Review progress
 					</button>
-				</div>
-			</div>
+				}
+			>
+				{locked
+					? "Your selected transfer is pending. Reopen to finish."
+					: "Review what to add to your account. Nothing changes until you confirm."}
+			</SiteStrip>
 			<Dialog open={open} onClose={close} className="relative z-[600]">
 				<div className="fixed inset-0 bg-black/65" aria-hidden="true" />
 				<div className="fixed inset-0 flex items-end justify-center md:items-center md:p-6">

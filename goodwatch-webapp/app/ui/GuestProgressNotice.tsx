@@ -5,7 +5,9 @@ import {
 	guestLimitEvent,
 	reminderKey,
 } from "~/utils/guest-progress"
-import { SignInButton } from "~/ui/auth/SignInButton"
+import { Link } from "@remix-run/react"
+import { STRIP_BUTTON, STRIP_QUIET, SiteStrip } from "~/ui/site-strip/SiteStrip"
+import { useAuthHref } from "~/utils/auth-href"
 import { useOpenedOnce } from "~/utils/first-use"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
@@ -30,6 +32,7 @@ export function GuestProgressNotice() {
 		return () => window.removeEventListener(guestLimitEvent, show)
 	}, [user?.id])
 	const limitShown = useOpenedOnce(limit)
+	const authHref = useAuthHref()
 	if (user) return null
 	const message =
 		"Your ratings, Wishlist and skips are saved in this browser. Clearing browser data can erase them. Create an account to keep your progress and country/services across visits and devices."
@@ -37,25 +40,36 @@ export function GuestProgressNotice() {
 		<>
 			{!dismissed &&
 				interactions.filter((i) => i.type === "score").length >= 10 && (
-					<aside
-						className="mx-auto max-w-7xl px-4 py-3 text-sm text-gray-300 flex flex-wrap items-center gap-3"
-						aria-label="Keep your progress"
+					<SiteStrip
+						label="Keep your progress"
+						title="Your ratings, Wishlist and skips are saved in this browser."
+						actions={
+							<>
+								<Link
+									rel="nofollow"
+									to={authHref("sign-up")}
+									className={STRIP_BUTTON}
+								>
+									Create account
+								</Link>
+								<button
+									type="button"
+									onClick={() => {
+										setDismissed(true)
+										try {
+											localStorage.setItem(reminderKey, "yes")
+										} catch {}
+									}}
+									className={STRIP_QUIET}
+								>
+									Dismiss
+								</button>
+							</>
+						}
 					>
-						<p className="flex-1 min-w-48">{message}</p>
-						<SignInButton />
-						<button
-							type="button"
-							onClick={() => {
-								setDismissed(true)
-								try {
-									localStorage.setItem(reminderKey, "yes")
-								} catch {}
-							}}
-							className="underline"
-						>
-							Dismiss
-						</button>
-					</aside>
+						Clearing browser data can erase them. Create an account to keep your
+						progress and country/services across visits and devices.
+					</SiteStrip>
 				)}
 			{limitShown && (
 				<Suspense fallback={null}>

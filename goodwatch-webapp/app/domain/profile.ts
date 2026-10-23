@@ -53,10 +53,22 @@ export const seesPart = (
 ) => canSee(shell.visibility, part, shell.viewer)
 
 /**
- * Profiles went public on this release (owner decision Q1). Members whose handle predates it get the one-time
- * "Your profile is public now" banner (Q16); members who claim a handle later chose a public profile knowingly.
+ * Profiles went public on this release (owner decision Q1). Members whose handle predates it get the
+ * "GoodWatch has profiles now" strip (Q16); members who claim a handle later chose a public profile knowingly.
  */
 export const PROFILE_PUBLIC_SINCE = "2026-10-24T00:00:00Z"
+
+/**
+ * Whether a member still gets the "GoodWatch has profiles now" strip: their handle predates the release and they
+ * haven't confirmed Who sees what (any save of Edit profile counts).
+ */
+export const owesProfilesStrip = (
+	claimedAt: string | null,
+	noticeSeen: boolean,
+) => claimedAt != null && claimedAt < PROFILE_PUBLIC_SINCE && !noticeSeen
+
+/** Where the strip leads: Edit profile, scrolled to Who sees what, with its Confirm button. */
+export const CONFIRM_VISIBILITY_PATH = "/settings/profile?confirm=1"
 
 /** Reads a stored visibility value, keeping only known parts and audiences. */
 export function parseVisibility(value: unknown): ProfileVisibility {
@@ -178,8 +190,6 @@ export interface ProfileShell {
 	spread: number[]
 	/** Whether the page may be indexed (20+ public scores). */
 	indexable: boolean
-	/** Owner only: show the one-time "Your profile is public now" banner. */
-	showPublicNotice: boolean
 }
 
 export interface ProfileOverview {

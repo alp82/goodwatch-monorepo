@@ -388,3 +388,14 @@ html[data-tv-transition="out"] .tv-back {
 		animation: none;
 	}
 }
+
+/* Edit profile: the short highlight on Who sees what when the profiles strip leads there (opacity only). */
+@keyframes section-glow {
+	0% { opacity: 0 }
+	15% { opacity: 1 }
+	60% { opacity: 1 }
+	100% { opacity: 0 }
+}
+.section-glow {
+	animation: section-glow 1.8s ease-out both;
+}

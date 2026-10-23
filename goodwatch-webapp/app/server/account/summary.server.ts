@@ -1,5 +1,6 @@
-// The signed-in member's handle and resolved profile picture, for the account menu.
-import type { AvatarChoice } from "~/domain/profile"
+// The signed-in member's handle and resolved profile picture, for the account menu, and whether they still get the
+// "GoodWatch has profiles now" strip.
+import { type AvatarChoice, owesProfilesStrip } from "~/domain/profile"
 import {
 	type ResolvedAvatar,
 	resolveAvatar,
@@ -11,6 +12,8 @@ import { getUserSettings } from "~/server/user-settings.server"
 export interface AccountSummary {
 	handle: string | null
 	avatar: ResolvedAvatar
+	/** Show the "GoodWatch has profiles now" strip (domain/profile.ts owesProfilesStrip). */
+	profilesStrip: boolean
 }
 
 /** `sessionPhoto` is the sign-in provider's photo from the session, used when none was stored with the settings. */
@@ -31,5 +34,9 @@ export async function getAccountSummary(
 	const choice: AvatarChoice =
 		chosen || !providerPhoto ? settings.avatar : { kind: "provider" }
 	const avatar = await resolveAvatar(userId, handle, choice, providerPhoto)
-	return { handle, avatar }
+	const profilesStrip = owesProfilesStrip(
+		profile?.claimedAt ?? null,
+		settings.noticeSeen,
+	)
+	return { handle, avatar, profilesStrip }
 }

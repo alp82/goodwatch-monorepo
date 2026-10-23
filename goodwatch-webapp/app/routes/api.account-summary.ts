@@ -1,4 +1,4 @@
-// The signed-in member's handle and profile picture for the account menu. Private, never cached by the browser
+// The signed-in member's handle and profile picture for the account menu, and the profiles strip flag. Private, never cached by the browser
 // beyond the menu's own query (5 minutes).
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { getAccountSummary } from "~/server/account/summary.server"
@@ -9,7 +9,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	headers.set("Cache-Control", "private, no-store")
 	if (!user)
 		return json(
-			{ handle: null, avatar: { url: null, color: "amber" } },
+			{
+				handle: null,
+				avatar: { url: null, color: "amber" },
+				profilesStrip: false,
+			},
 			{ status: 401, headers },
 		)
 	const photo = user.user_metadata?.avatar_url

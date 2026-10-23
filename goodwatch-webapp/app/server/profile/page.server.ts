@@ -4,7 +4,6 @@
 import { redirect } from "@remix-run/node"
 import { scoreSpread } from "~/domain/my-scores"
 import {
-	PROFILE_PUBLIC_SINCE,
 	type ProfileListCard,
 	type ProfileListsPage,
 	type ProfileOverview,
@@ -48,8 +47,6 @@ import {
 } from "./library.server"
 import { getProfileSettings } from "./settings.server"
 import { round1 } from "./taste-stats-model"
-
-export { markProfileNoticeSeen } from "./settings.server"
 
 /** A profile with at least this many public scores may be indexed (owner decision Q5). */
 export const INDEX_MIN_SCORES = 20
@@ -145,12 +142,6 @@ export async function loadProfileShell(
 			indexable:
 				canSee(visibility, "scores", "guest") &&
 				library.scored.size >= INDEX_MIN_SCORES,
-			// Only members whose profile went public with this release, not members who claimed a handle since.
-			showPublicNotice:
-				viewer === "owner" &&
-				!settings.noticeSeen &&
-				profile.claimedAt != null &&
-				profile.claimedAt < PROFILE_PUBLIC_SINCE,
 		},
 	}
 }

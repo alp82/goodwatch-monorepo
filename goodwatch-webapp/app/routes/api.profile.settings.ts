@@ -1,13 +1,11 @@
 // Edit profile's save: POST the whole ProfileSettings (bio, links, picture, cover, visibility), checked by
-// domain/profile-settings.ts. POST { seen: true } to /api/profile/settings?notice=1 hides the one-time "Your profile is
-// public now" banner. Spec: docs/implementation/member-profile/README.md
+// domain/profile-settings.ts. Any save also retires the "GoodWatch has profiles now" strip. Spec: docs/implementation/member-profile/README.md
 import { type ActionFunctionArgs, json } from "@remix-run/node"
 import { validateProfileSettings } from "~/domain/profile-settings"
 import { avatarVersion } from "~/server/profile/avatar.server"
 import { fromThisSite, readJsonLimited } from "~/server/profile/request.server"
 import {
 	isHttpsUrl,
-	markProfileNoticeSeen,
 	resetProfilePages,
 	saveProfileSettings,
 } from "~/server/profile/settings.server"
@@ -37,11 +35,6 @@ export async function action({ request }: ActionFunctionArgs) {
 	const body = read.value
 	if (!body || typeof body !== "object" || Array.isArray(body))
 		return json({ error: "Invalid request" }, { status: 400, headers })
-
-	if (new URL(request.url).searchParams.get("notice") === "1") {
-		await markProfileNoticeSeen(user.id)
-		return json({ ok: true }, { headers })
-	}
 
 	// The sign-in provider's photo is read from the member's own session, never from the request.
 	const providerPhoto = isHttpsUrl(user.user_metadata?.avatar_url)

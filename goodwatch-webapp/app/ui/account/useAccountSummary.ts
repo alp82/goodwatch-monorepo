@@ -12,6 +12,8 @@ import { providerPhoto } from "./provider-photo"
 export interface AccountSummary {
 	handle: string | null
 	avatar: { url: string | null; color: AvatarColor }
+	/** Show the "GoodWatch has profiles now" strip. */
+	profilesStrip: boolean
 }
 
 export const queryKeyAccountSummary = ["account-summary"] as const
@@ -31,6 +33,7 @@ export function useAccountSummary() {
 		initial: (data?.handle ?? fallbackInitial).charAt(0).toUpperCase(),
 		email: user?.email ?? null,
 		loaded: Boolean(data),
+		profilesStrip: data?.profilesStrip === true,
 	}
 }
 
