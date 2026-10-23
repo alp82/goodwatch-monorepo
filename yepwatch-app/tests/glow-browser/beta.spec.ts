@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('beta page keeps unavailable native installs honest and feedback contains only explicit build details', async ({ page }) => {
+test('beta page offers the Android download and keeps the pending iPhone invitation honest and feedback contains only explicit build details', async ({ page }) => {
   const requests: string[] = [];
   await page.route('**/api/yepwatch/**', route => { requests.push(route.request().url()); return route.abort(); });
   await page.addInitScript(() => {
@@ -9,7 +9,13 @@ test('beta page keeps unavailable native installs honest and feedback contains o
   });
   await page.goto('/beta');
   await expect(page.getByText('Test YepWatch', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Android invitations coming soon' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Install on Android' })).toBeEnabled();
+  await expect(page.getByText('Download Android beta', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Install on Android' }).click();
+  expect(await page.evaluate(() => (window as any).__opened)).toEqual([
+    'https://expo.dev/accounts/alperortac/projects/yepwatch/builds/27939ebc-29f6-4fd8-9de4-b01be72e5866',
+  ]);
+  await page.evaluate(() => { (window as any).__opened = []; });
   await expect(page.getByRole('button', { name: 'iPhone invitations coming soon' })).toBeDisabled();
   await page.getByRole('button', { name: 'Send feedback' }).click();
   const opened = await page.evaluate(() => (window as any).__opened as string[]);

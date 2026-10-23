@@ -30,16 +30,19 @@ export default function Beta() {
             <GText color={glow.muted}>Bring a friend. Find something you both want to watch.</GText>
           </View>
           {(['android', 'ios'] as const).map(platform => {
-            const url: string | null = distribution[platform];
+            const isApk = platform === 'android' && !distribution.android && Boolean(distribution.androidApk);
+            const url: string | null = distribution[platform] ?? (isApk ? distribution.androidApk : null);
             const title = platform === 'android' ? 'Android' : 'iPhone';
             return <View key={platform} style={{ backgroundColor: glow.panel, borderColor: glow.line, borderWidth: 1, borderRadius: 20, padding: 20, gap: 12 }}>
               <GText size={22} bold>{title}</GText>
               <GText size={14} color={glow.muted}>{url
-                ? platform === 'android' ? 'Join the test, then install from Google Play.' : 'Install Apple’s TestFlight app, then accept the invitation.'
+                ? isApk ? 'Open the download page on your Android phone, tap Install, then open the downloaded APK. If prompted, allow your browser to install this app.'
+                  : platform === 'android' ? 'Join the test, then install from Google Play.' : 'Install Apple’s TestFlight app, then accept the invitation.'
                 : 'App invitations are coming soon. You can try the browser version today.'}</GText>
               <Pill label={url ? `Install on ${title}` : `${title} invitations coming soon`} gold={Boolean(url)} disabled={!url} onPress={() => { if (url) void open(url); }}>
-                {url ? platform === 'android' ? 'Get it on Google Play' : 'Join on TestFlight' : 'Coming soon'}
+                {url ? isApk ? 'Download Android beta' : platform === 'android' ? 'Get it on Google Play' : 'Join on TestFlight' : 'Coming soon'}
               </Pill>
+              {isApk && <GText size={13} color={glow.muted}>Installs as YepWatch Beta. No Expo account, USB or developer setup needed. Google Play testing will follow once account verification finishes.</GText>}
             </View>;
           })}
           {error && <GText color="#fca5a5" size={14}>{error}</GText>}

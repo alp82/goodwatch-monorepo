@@ -25,7 +25,8 @@
         "APP_VARIANT": "preview"
       },
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "credentialsSource": "local"
       },
       "ios": {
         "simulator": true
