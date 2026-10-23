@@ -9,7 +9,7 @@ import { watchCard, nextCard, type NextEpisode } from "./watch-cards.ts"
 import {
 	linkPrompt,
 	memberNote,
-	rateModal,
+	ratePicker,
 	writeConfirmation,
 } from "./member-cards.ts"
 import { discordWrite } from "./writes.server.ts"
@@ -951,12 +951,12 @@ export async function routeInteraction(
 		if (
 			writeCommand ||
 			(interaction.type === 3 &&
-				((memberAction && memberAction.action !== "rate-submit") || undo)) ||
+				(memberAction || undo)) ||
 			(interaction.type === 5 && memberAction?.action === "rate-submit")
 		) {
 			if (!interaction.application_id || !interaction.token)
 				return reply(textCard("Invalid interaction."), "invalid")
-			// A modal must be the initial response; Discord cannot open it after a defer.
+			// Rate answers at once with the score menu: in place on a private card, as a new private message on a public one.
 			if (interaction.type === 3 && memberAction?.action === "rate") {
 				const linked = await within<string | null | undefined>(
 					deps.linkedUser(user),
@@ -976,16 +976,21 @@ export async function routeInteraction(
 						1500,
 						null,
 					)
-					if (result?.title)
-						return reply(
-							rateModal(
-								result.title as GuestTitle,
-								(result.member as MemberMarks)?.score,
-								memberAction.back,
-							).data,
-							"ok",
-							9,
+					if (result?.title) {
+						const onPublic =
+							interaction.message != null &&
+							!((interaction.message.flags ?? 0) & EPHEMERAL)
+						const picker = ratePicker(
+							result.title as GuestTitle,
+							(result.member as MemberMarks)?.score,
+							memberAction.back,
+							await emojis(),
 						)
+						// An update keeps the message private already; Discord rejects the private flag on it.
+						return onPublic
+							? reply(picker)
+							: reply({ ...picker, flags: picker.flags & ~EPHEMERAL }, "ok", 7)
+					}
 					return reply(
 						errorCard(
 							"Could not load this title. Please try again.",
@@ -1067,9 +1072,11 @@ export async function routeInteraction(
 							c.component ? [c.component] : (c.components ?? []),
 						)
 						.find((c) => c.custom_id === "score")?.values
+					const picked =
+						interaction.type === 3 ? interaction.data?.values : selected
 					const score =
-						interaction.type === 5
-							? Number(selected?.length === 1 ? selected[0] : NaN)
+						memberAction?.action === "rate-submit"
+							? Number(picked?.length === 1 ? picked[0] : NaN)
 							: Number(options.score)
 					if (
 						action === "rate" &&

@@ -9,7 +9,9 @@ import {
 	scoreLine,
 	scoreAccent,
 	titlePageUrl,
+	type EmojiIds,
 } from "./cards.ts"
+import { scoreEmojiName } from "./score-emoji.ts"
 import {
 	formatCustomId,
 	formatListRef,
@@ -53,46 +55,64 @@ export function linkPrompt(origin: string) {
 		},
 	])
 }
-/** `back` is the list the title was opened from, kept for the confirmation's Back button. */
-export function rateModal(
+/**
+ * The score menu that replaces the title card when Rate is pressed: 10 at the top, one compact row per score with
+ * its color emoji. A menu message, not a modal, so Discord shows no form warning. `back` is the list the title was
+ * opened from; Cancel returns to the title card with it.
+ */
+export function ratePicker(
 	title: GuestTitle,
 	current?: number | null,
 	back?: ListRef,
+	emojis: EmojiIds = {},
 ) {
-	return {
-		type: 9,
-		data: {
-			custom_id: formatCustomId("rate-submit", title.id, back),
-			title: `Rate ${displayText(title.name)}`.slice(0, 45),
-			components: [
+	return message([
+		container(
+			[
 				{
 					type: 10,
-					content: `**${nameOf(title)}**${
+					content: `### Rate ${nameOf(title)}${
 						title.year ? ` (${title.year})` : ""
 					}`,
 				},
 				{
-					type: 18,
-					label: "Your score",
-					description: "1 is Unwatchable, 10 is Masterpiece.",
-					component: {
-						type: 3,
-						custom_id: "score",
-						placeholder: "Choose a score",
-						required: true,
-						min_values: 1,
-						max_values: 1,
-						options: Array.from({ length: 10 }, (_, i) => ({
-							label: String(i + 1),
-							value: String(i + 1),
-							description: scoreLabels[i + 1],
-							...(current === i + 1 ? { default: true } : {}),
-						})),
-					},
+					type: 1,
+					components: [
+						{
+							type: 3,
+							custom_id: formatCustomId("rate-submit", title.id, back),
+							placeholder:
+								current != null ? `Your score: ${current}` : "Choose a score",
+							min_values: 1,
+							max_values: 1,
+							options: Array.from({ length: 10 }, (_, i) => {
+								const score = 10 - i
+								const name = scoreEmojiName(score * 10)
+								return {
+									label: `${score} · ${scoreLabels[score]}`,
+									value: String(score),
+									...(emojis[name] ? { emoji: { id: emojis[name], name } } : {}),
+									...(current === score ? { default: true } : {}),
+								}
+							}),
+						},
+					],
+				},
+				{
+					type: 1,
+					components: [
+						{
+							type: 2,
+							style: 2,
+							label: "Cancel",
+							custom_id: formatCustomId("watch", title.id, back),
+						},
+					],
 				},
 			],
-		},
-	}
+			current != null ? scoreAccent(current, "member") : AMBER,
+		),
+	])
 }
 export function writeConfirmation(
 	title: GuestTitle,
