@@ -1,6 +1,7 @@
 // A member's profile settings (bio, links, picture, cover, who sees what), kept as user_setting keys: no table of their
 // own, and the settings cache (5 minutes, reset on write) serves every profile view.
 // Spec: docs/implementation/member-profile/README.md
+import { forgetOgCard } from "~/server/og-image/og-image.server"
 import {
 	DEFAULT_PROFILE_SETTINGS,
 	LINK_SERVICES,
@@ -146,6 +147,8 @@ export async function resetProfilePages(userId: string): Promise<void> {
 	const profile = await getCachedProfileByUserId(userId)
 	if (!profile) return
 	const base = `/u/${profile.handle}`
+	// The link-preview card shows only public parts; draw it again from the new settings.
+	await forgetOgCard(base)
 	resetPageCache((path) => {
 		const p = path.toLowerCase()
 		return p === base || p.startsWith(`${base}/`) || p.startsWith(`${base}?`)

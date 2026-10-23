@@ -6,6 +6,9 @@
 // It talks to Crate's HTTP endpoint with the webapp's CRATE_* variables. The webapp's caches (settings 5 minutes,
 // photo version 1 minute, pages seconds) let the change show within 5 minutes; nothing else needs a restart.
 
+// A module, so top-level await is allowed.
+export {}
+
 const args = process.argv.slice(2)
 const flag = (name: string) => args.includes(`--${name}`)
 const value = (name: string) => {

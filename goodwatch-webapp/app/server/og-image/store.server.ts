@@ -41,6 +41,8 @@ export type OgResult =
 	| { status: "missing" | "busy" | "failed" }
 type Redis = {
 	getBuffer(key: string): Promise<Buffer | null>
+	get?(key: string): Promise<string | null>
+	del?(key: string): Promise<number>
 	expire(key: string, seconds: number): Promise<number>
 	setex(key: string, seconds: number, value: Buffer): Promise<unknown>
 }
@@ -53,7 +55,13 @@ type Dependencies = {
 	redisTimeoutMs?: number
 	firstSeconds?: number
 	keptSeconds?: number
+	/** Paths whose cards can be forgotten (forget below). A memory hit for one of them checks the reset mark first, so
+	 * a card forgotten on one instance isn't served from the other's memory. */
+	resettable?: (path: string) => boolean
 }
+
+// When a resettable card was last forgotten: the time, kept as long as a card could be.
+export const RESET_PREFIX = "og-card-reset:v1:"
 /** A strong ETag for an image: computed once per stored image and kept with it. */
 export function imageEtag(image: Buffer) {
 	return `"${createHash("sha1").update(image).digest("hex").slice(0, 16)}"`
@@ -97,8 +105,25 @@ export function createOgStore(deps: Dependencies) {
 		}
 	}
 	// In Valkey, the render time is stored in front of the image as 8 bytes. A failed or slow read is a miss.
+	async function resetAt(path: string) {
+		try {
+			const value = await bounded(
+				Promise.resolve(deps.redis()?.get?.(RESET_PREFIX + path)),
+				deps.redisTimeoutMs ?? 1000,
+				undefined,
+			)
+			return Number(value) || 0
+		} catch {
+			return 0
+		}
+	}
 	async function read(path: string) {
-		const hit = memory.get(path)
+		let hit = memory.get(path)
+		if (hit && deps.resettable?.(path) && (await resetAt(path)) > hit.renderedAt) {
+			bytes -= hit.image.length
+			memory.delete(path)
+			hit = undefined
+		}
 		if (hit) {
 			remember(path, hit)
 			return { card: hit, source: "memory" as const }
@@ -206,6 +231,31 @@ export function createOgStore(deps: Dependencies) {
 		}
 		return work
 	}
+	/** Drops a resettable card everywhere: this process's memory, Valkey, and (through the reset mark) the other
+	 * instances' memory. The next request draws it again. */
+	async function forget(pagePath: string) {
+		const path = deps.canonical(pagePath)
+		if (!path) return
+		const old = memory.get(path)
+		if (old) {
+			bytes -= old.image.length
+			memory.delete(path)
+		}
+		const redis = deps.redis()
+		if (!redis) return
+		try {
+			await bounded(
+				Promise.all([
+					redis.del?.(CACHE_PREFIX + path),
+					redis.setex(RESET_PREFIX + path, deps.keptSeconds ?? STORE_SECONDS, Buffer.from(String(now()))),
+				]),
+				deps.redisTimeoutMs ?? 1000,
+				undefined,
+			)
+		} catch (error) {
+			console.warn("[og-image] cache forget failed", error)
+		}
+	}
 	/**
 	 * The card for a page path. "ok" with a stored or freshly rendered card, "missing" when the path has no card or
 	 * its page has no data, "busy" when the card isn't stored and the renderer's queue is full or the render outlasts
@@ -254,5 +304,5 @@ export function createOgStore(deps: Dependencies) {
 			return finish("failed", { status: "failed" })
 		}
 	}
-	return { getOgImage }
+	return { getOgImage, forget }
 }

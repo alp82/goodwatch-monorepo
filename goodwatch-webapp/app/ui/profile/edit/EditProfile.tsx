@@ -13,6 +13,7 @@ import {
 import { GlobeAltIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
 import { type ReactNode, useId, useMemo, useRef, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "react-toastify"
 import {
 	AUDIENCES,
@@ -29,6 +30,7 @@ import {
 	type ProfileTitle,
 } from "~/domain/profile"
 import { LINK_RULES, normalizeLinkValue } from "~/domain/profile-settings"
+import { queryKeyAccountSummary } from "~/ui/account/useAccountSummary"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { ProfileAvatar } from "../ProfileFrame"
 import { LINK_SERVICE_INFO, profileTabPath } from "../links"
@@ -90,6 +92,7 @@ export interface EditProfileData {
 }
 
 export function EditProfile({ data }: { data: EditProfileData }) {
+	const queryClient = useQueryClient()
 	const [saved, setSaved] = useState(data.settings)
 	const [draft, setDraft] = useState(data.settings)
 	const [photo, setPhoto] = useState(data.photo)
@@ -133,6 +136,8 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 			setSaved(next)
 			setDraft(next)
 			toast.success("Profile saved.")
+			// The account menu shows the chosen picture.
+			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary })
 		} catch (e) {
 			setError(e instanceof Error ? e.message : "Saving failed. Try again.")
 		} finally {
@@ -416,6 +421,7 @@ function PictureChooser({
 	photo: string | null
 	setPhoto: (url: string | null) => void
 }) {
+	const queryClient = useQueryClient()
 	const [file, setFile] = useState<File | null>(null)
 	const [busy, setBusy] = useState(false)
 	const [error, setError] = useState<string | null>(null)
@@ -446,6 +452,7 @@ function PictureChooser({
 				throw new Error(out.error ?? "Uploading failed. Try again.")
 			setPhoto(out.url)
 			set({ avatar: { kind: "photo" } })
+			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary })
 			setFile(null)
 		} catch (e) {
 			setError(e instanceof Error ? e.message : "Uploading failed. Try again.")
@@ -458,6 +465,7 @@ function PictureChooser({
 		try {
 			await fetch("/api/profile/avatar", { method: "DELETE" })
 			setPhoto(null)
+			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary })
 			if (draft.avatar.kind === "photo")
 				set({ avatar: { kind: "initial", color: "amber" } })
 		} finally {

@@ -102,7 +102,14 @@ const store = createOgStore({
 	render,
 	canonical: canonicalOgPath,
 	count: countOgCard,
+	// A member's profile card shows only what they make public, so it must go when they change that.
+	resettable: (path) => path.startsWith("/u/"),
 })
+
+/** Drops a page's stored card on every instance, e.g. after a member changes what their profile shows. */
+export function forgetOgCard(pagePath: string) {
+	return store.forget(pagePath)
+}
 // The generic card: the home page's headline without a picture. It is drawn once per process, on the first card
 // request, and kept for the life of the process, so that it exists when the renderer is busy.
 let fallback: Buffer | null = null
