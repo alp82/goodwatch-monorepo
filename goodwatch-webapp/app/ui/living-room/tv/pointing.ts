@@ -2,8 +2,8 @@
 // - the Remote in the hand aims at the cursor while it is over the TV's picture, and rests elsewhere (pointing-aim.ts says how);
 // - while the cursor is over the TV's picture, the TV draws its own pointer there, the ring, in place of the
 //   system cursor (TvPointer.tsx, living-room.css).
-// Both ease toward the cursor with a short lag, as a hand does. Over the Remote itself the Remote settles at rest,
-// so its keys are where they were and can be hit.
+// The Remote eases toward the cursor with a short lag, as a hand does; the ring is drawn right where the cursor is,
+// with no lag. Over the Remote itself the Remote settles at rest, so its keys are where they were and can be hit.
 //
 // A finger points too. A press on the picture shows the ring where it landed, the Remote aims there, and the item
 // under it takes the focus; letting go is OK on it, however long the press was held, and both go back to rest.
@@ -14,10 +14,9 @@
 //
 // This file is a chunk of its own, asked for at the first interaction (TvPointer.tsx): it costs the first view
 // nothing. Rendering budget (#190): one pointermove listener writes the cursor into a variable, one
-// requestAnimationFrame loop eases two transforms and stops when both have arrived. Nothing here sets React state
+// requestAnimationFrame loop eases the Remote's transform, places the ring, and stops when the Remote has arrived. Nothing here sets React state
 // on a move; the ring's few states (shown, over an item, over the Expand key, pressed) are attributes written
-// when they change. Only `transform` and `opacity` animate. With reduced motion the Remote does not move and the
-// ring has no lag.
+// when they change. Only `transform` and `opacity` animate. With reduced motion the Remote does not move.
 import { TV_SCREEN_ATTR } from "../tv-transition"
 import {
 	type Aim,
@@ -39,9 +38,8 @@ import { TV_ITEM_ATTR } from "./tv-dom"
 const IDLE_MS = 3200
 /** How long the ring and the Remote stay out after a finger let go: on an item, after a drag over none, after a tap on none. */
 const AFTER = { chosen: 620, dragged: 160, tapped: 520 }
-/** The lag, as time constants in milliseconds: the hand's and the ring's. */
+/** The hand's lag, as a time constant in milliseconds. The ring has none: members felt it drag. */
 const HAND_MS = 96
-const RING_MS = 40
 
 /** The scene as pointing reads it, on every event: it may change with every render. */
 export type PointingScene = AimScene & {
@@ -82,7 +80,6 @@ export function startPointing(
 	const cursor: Spot = { x: 0, y: 0, here: false, tap: false }
 	const aim: Aim = { ...(scene()?.rig ? FLAT : REST) }
 	let rigged = Boolean(scene()?.rig)
-	const at = { x: 0, y: 0, placed: false }
 	let item: HTMLElement | null = null
 	let shown = false
 	let raf = 0
@@ -153,7 +150,6 @@ export function startPointing(
 		const dt = Math.min(64, drawn ? now - drawn : 16.7)
 		drawn = now
 		const hand = 1 - Math.exp(-dt / HAND_MS)
-		const glide = 1 - Math.exp(-dt / RING_MS)
 		let moving = false
 		// The ring is still stepping out from under a finger that began to drag: it is placed again each frame,
 		// until it has been placed all the way up. Not by the clock: a frame that comes late still finishes the step.
@@ -177,25 +173,9 @@ export function startPointing(
 		const flat = g.rig && !aim.rz && !aim.rx && !aim.ry && !aim.tx && !aim.ty
 		if (remote) remote.style.transform = flat ? "none" : aimTransform(aim)
 		const pointer = els.pointer.current
-		if (pointer && shown) {
-			// Over an item the ring leans a little toward its middle: it feels held, and stays where the click lands.
-			let { x, y } = cursor
-			if (item?.isConnected) {
-				const b = item.getBoundingClientRect()
-				const r = origin()
-				x += (b.left + b.width / 2 - r.left - x) * 0.14
-				y += (b.top + b.height / 2 - r.top - y) * 0.14
-			}
-			const [gx, gy] = [x - at.x, y - at.y]
-			if (still() || !at.placed || Math.hypot(gx, gy) < 0.3)
-				Object.assign(at, { x, y, placed: true })
-			else {
-				at.x += gx * glide
-				at.y += gy * glide
-				moving = true
-			}
-			pointer.style.transform = `translate3d(${at.x.toFixed(1)}px, ${at.y.toFixed(1)}px, 0)`
-		}
+		// The ring is exactly where the cursor is, at once.
+		if (pointer && shown)
+			pointer.style.transform = `translate3d(${cursor.x.toFixed(1)}px, ${cursor.y.toFixed(1)}px, 0)`
 		if (moving) raf = requestAnimationFrame(frame)
 		else drawn = 0
 	}
@@ -255,7 +235,6 @@ export function startPointing(
 			Boolean(target && els.root.current?.contains(target))
 		// The item under the cursor takes the focus by itself (`Item`, kit.tsx): the ring only shows it.
 		over(onTv ? (target?.closest<HTMLElement>(ITEM) ?? null) : null, false)
-		if (onTv && !shown) at.placed = false
 		show(onTv)
 		clearTimeout(idle)
 		if (onTv) idle = setTimeout(() => show(false), IDLE_MS)
@@ -311,7 +290,6 @@ export function startPointing(
 			lift: 0,
 		}
 		Object.assign(cursor, { x, y, here: true, tap: true })
-		at.placed = false
 		clearTimeout(after)
 		clearTimeout(idle)
 		clearTimeout(pressed)
