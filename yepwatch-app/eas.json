@@ -8,7 +8,7 @@
       "node": "24.15.0",
       "env": {
         "APP_VARIANT": "production",
-        "APP_BUILD_NUMBER": "4",
+        "APP_BUILD_NUMBER": "8",
         "EXPO_PUBLIC_API_ORIGIN": "https://yepwatch.com",
         "EXPO_PUBLIC_APP_ORIGIN": "https://yepwatch.com",
         "EXPO_PUBLIC_WS_ORIGIN": "wss://yepwatch.com",
@@ -38,6 +38,21 @@
       "android": {
         "buildType": "app-bundle"
       }
+    },
+    "beta": {
+      "extends": "production",
+      "ios": {
+        "simulator": false
+      }
+    }
+  },
+  "submit": {
+    "beta": {
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      },
+      "ios": {}
     }
   }
 }

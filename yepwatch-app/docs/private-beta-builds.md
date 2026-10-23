@@ -1,4 +1,6 @@
-# Guest-only private beta builds
+# Historical guest preview packaging
+
+For the current member-enabled app and store beta, use [Friend beta](friend-beta.md). The builds and verification below are historical; they are not current download instructions.
 
 The public target is `https://yepwatch.com`, with WSS on the same host and proposal contract3. These values do not mean a backend is deployed. Create/join needs the coordinated full-catalog backend, gateway and hosting readiness checks. Guests use movies/new shows; GoodWatch sign-in and continuation are hidden in beta builds. Development builds retain the existing member integration.
 

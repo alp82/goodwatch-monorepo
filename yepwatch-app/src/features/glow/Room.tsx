@@ -20,6 +20,7 @@ import { Backdrop } from './Backdrop';
 import { PointerSurface } from './PointerSurface';
 import { Poster } from './Poster';
 import { Drawer } from './Drawer';
+import { Feedback } from '../beta/Feedback';
 import { Trailer } from './Trailer';
 import { Done } from './Done';
 import { DecisionRoom } from './DecisionRoom';
@@ -847,6 +848,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
               Start over with this group
             </Pill>
           )}
+          <Feedback />
         </Drawer>
       )}
       {drawer === 'details' && title && (
