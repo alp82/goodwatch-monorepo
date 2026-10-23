@@ -471,6 +471,7 @@ async function applyRunStored(
 				)
 				.map(ref),
 		)
+		const rewatchWishes: typeof pending = []
 		const tally = { added: 0, updated: 0, kept: 0, failed: 0 }
 		for (const item of pending) {
 			let state: keyof typeof tally = "kept"
@@ -490,7 +491,17 @@ async function applyRunStored(
 							options.conflictChoice === "keep"))
 				)
 					state = "kept"
-				else if (isWant(item) && watchRefs.has(ref(item))) state = "kept"
+				else if (
+					isWant(item) &&
+					item.wishlistRewatchChoice &&
+					watchRefs.has(ref(item)) &&
+					options.conflictChoice === "source"
+				) {
+					// A source can contain both past watches and a current rewatch intention.
+					// Add the intention after the watch writer has cleared earlier wishes.
+					rewatchWishes.push(item)
+					continue
+				} else if (isWant(item) && watchRefs.has(ref(item))) state = "kept"
 				else if (item.kind === "rating" || item.kind === "review") {
 					state = await applyScoreLike(
 						userId,
@@ -534,7 +545,9 @@ async function applyRunStored(
 						? "want to see added"
 						: item.kind === "favorite"
 							? "favorite added"
-							: item.kind === "review" ? "review saved" : "rating saved",
+							: item.kind === "review"
+								? "review saved"
+								: "rating saved",
 					{
 						tmdb_id: item.tmdbId ?? undefined,
 						media_type: item.mediaType,
@@ -555,6 +568,27 @@ async function applyRunStored(
 		if (watchPending.length) {
 			const tracking = await import("./watch-items.server.ts")
 			await tracking.applyPendingImportWatches(userId, id, options)
+		}
+		for (const item of rewatchWishes) {
+			let state: "added" | "kept" | "failed"
+			try {
+				state = await applySet(userId, id, item, "user_wishlist", true)
+			} catch {
+				state = "failed"
+			}
+			await markItem(id, item, state)
+			if (state === "added")
+				captureProductEvent(
+					userId,
+					"want to see added",
+					{
+						tmdb_id: item.tmdbId ?? undefined,
+						media_type: item.mediaType,
+						origin: "import",
+						import_id: id,
+					},
+					{ uuid: eventUuid(`import-item:${userId}:${id}:${item.index}`) },
+				)
 		}
 		await refreshItems()
 		const appliedRatings = (await itemRows(userId, id)).filter(
@@ -696,7 +730,11 @@ async function undoScore(
 	if (result.rowcount)
 		captureProductEvent(
 			userId,
-			item.kind === "review" ? "review saved" : journal.before.score == null ? "rating cleared" : "rating saved",
+			item.kind === "review"
+				? "review saved"
+				: journal.before.score == null
+					? "rating cleared"
+					: "rating saved",
 			{
 				tmdb_id: item.tmdbId ?? undefined,
 				media_type: item.mediaType,

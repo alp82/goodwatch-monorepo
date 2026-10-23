@@ -1,0 +1,346 @@
+[
+  {
+    "id": 1,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "deletedAt": null,
+    "status": "PLANNED",
+    "rating": 0,
+    "thoughts": "",
+    "pinned": false,
+    "content": {
+      "id": 1,
+      "tmdbId": 9001,
+      "title": "Synthetic planned movie",
+      "type": "movie",
+      "imdb_id": ""
+    },
+    "activity": []
+  },
+  {
+    "id": 2,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "deletedAt": null,
+    "status": "FINISHED",
+    "rating": 8.5,
+    "thoughts": "A synthetic review.\nWith another paragraph.",
+    "pinned": true,
+    "content": {
+      "id": 2,
+      "tmdbId": 9002,
+      "title": "Synthetic finished movie",
+      "type": "movie",
+      "imdb_id": ""
+    },
+    "activity": [
+      {
+        "id": 10,
+        "createdAt": "2024-06-01T18:00:00Z",
+        "updatedAt": "2025-01-01T00:00:00Z",
+        "deletedAt": null,
+        "watchedId": 2,
+        "type": "ADDED_WATCHED",
+        "data": "{\"status\":\"FINISHED\",\"rating\":0}",
+        "countAsPlay": true,
+        "customDate": "2020-05-04T20:30:00+02:00"
+      },
+      {
+        "id": 10,
+        "createdAt": "2024-06-01T18:00:00Z",
+        "updatedAt": "2025-01-01T00:00:00Z",
+        "deletedAt": null,
+        "watchedId": 2,
+        "type": "ADDED_WATCHED",
+        "data": "{\"status\":\"FINISHED\",\"rating\":0}",
+        "countAsPlay": true,
+        "customDate": "2020-05-04T20:30:00+02:00"
+      },
+      {
+        "id": 11,
+        "createdAt": "2024-06-01T18:00:00Z",
+        "updatedAt": "2025-01-01T00:00:00Z",
+        "deletedAt": null,
+        "watchedId": 2,
+        "type": "IMPORTED_ADDED_WATCHED",
+        "data": "",
+        "countAsPlay": true,
+        "customDate": "2020-05-04T20:30:00+02:00"
+      },
+      {
+        "id": 12,
+        "createdAt": "2024-06-01T18:00:00Z",
+        "updatedAt": "2025-01-01T00:00:00Z",
+        "deletedAt": null,
+        "watchedId": 2,
+        "type": "RATING_CHANGED",
+        "data": "9",
+        "countAsPlay": false
+      }
+    ],
+    "tags": [
+      {
+        "id": 1,
+        "name": "Synthetic tag"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "deletedAt": null,
+    "status": "FINISHED",
+    "rating": 0,
+    "thoughts": "",
+    "pinned": false,
+    "content": {
+      "id": 3,
+      "tmdbId": 9003,
+      "title": "Synthetic finished movie",
+      "type": "movie",
+      "imdb_id": ""
+    },
+    "activity": []
+  },
+  {
+    "id": 4,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "deletedAt": null,
+    "status": "PLANNED",
+    "rating": 0,
+    "thoughts": "",
+    "pinned": false,
+    "content": {
+      "id": 4,
+      "tmdbId": 9004,
+      "title": "Synthetic planned show",
+      "type": "tv",
+      "imdb_id": ""
+    },
+    "activity": []
+  },
+  {
+    "id": 5,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "deletedAt": null,
+    "status": "WATCHING",
+    "rating": 0.5,
+    "thoughts": "",
+    "pinned": false,
+    "content": {
+      "id": 5,
+      "tmdbId": 9005,
+      "title": "Synthetic watching show",
+      "type": "tv",
+      "imdb_id": ""
+    },
+    "activity": [
+      {
+        "id": 20,
+        "createdAt": "2024-06-01T18:00:00Z",
+        "updatedAt": "2025-01-01T00:00:00Z",
+        "deletedAt": null,
+        "watchedId": 5,
+        "type": "EPISODE_ADDED",
+        "data": "{\"season\":1,\"episode\":1,\"status\":\"FINISHED\",\"rating\":0}",
+        "countAsPlay": false,
+        "customDate": "2021-03-04T09:00:00Z"
+      },
+      {
+        "id": 21,
+        "createdAt": "2024-06-01T18:00:00Z",
+        "updatedAt": "2025-01-01T00:00:00Z",
+        "deletedAt": null,
+        "watchedId": 5,
+        "type": "EPISODE_STATUS_CHANGED",
+        "data": "{\"season\":1,\"episode\":1,\"status\":\"FINISHED\"}",
+        "countAsPlay": false,
+        "customDate": "2022-03-04T09:00:00Z"
+      },
+      {
+        "id": 22,
+        "createdAt": "2024-06-01T18:00:00Z",
+        "updatedAt": "2025-01-01T00:00:00Z",
+        "deletedAt": null,
+        "watchedId": 5,
+        "type": "SEASON_ADDED",
+        "data": "{\"season\":2,\"status\":\"FINISHED\",\"rating\":0}",
+        "countAsPlay": false,
+        "customDate": "2023-03-04T09:00:00Z"
+      },
+      {
+        "id": 23,
+        "createdAt": "2024-06-01T18:00:00Z",
+        "updatedAt": "2025-01-01T00:00:00Z",
+        "deletedAt": null,
+        "watchedId": 5,
+        "type": "EPISODE_RATING_CHANGED",
+        "data": "{\"season\":1,\"episode\":2,\"rating\":9}",
+        "countAsPlay": false
+      }
+    ],
+    "watchedSeasons": [
+      {
+        "id": 30,
+        "seasonNumber": 0,
+        "status": "PLANNED",
+        "rating": 0,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "id": 31,
+        "seasonNumber": 1,
+        "status": "WATCHING",
+        "rating": 0,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "id": 32,
+        "seasonNumber": 2,
+        "status": "FINISHED",
+        "rating": 7,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "id": 33,
+        "seasonNumber": 3,
+        "status": "HOLD",
+        "rating": 0,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "id": 34,
+        "seasonNumber": 4,
+        "status": "DROPPED",
+        "rating": 0,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      }
+    ],
+    "watchedEpisodes": [
+      {
+        "id": 40,
+        "seasonNumber": 1,
+        "episodeNumber": 1,
+        "status": "FINISHED",
+        "rating": 0,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "id": 41,
+        "seasonNumber": 1,
+        "episodeNumber": 2,
+        "status": "FINISHED",
+        "rating": 9,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "id": 42,
+        "seasonNumber": 1,
+        "episodeNumber": 3,
+        "status": "PLANNED",
+        "rating": 0,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "id": 43,
+        "seasonNumber": 1,
+        "episodeNumber": 4,
+        "status": "WATCHING",
+        "rating": 0,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "id": 44,
+        "seasonNumber": 1,
+        "episodeNumber": 5,
+        "status": "HOLD",
+        "rating": 0,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "id": 45,
+        "seasonNumber": 1,
+        "episodeNumber": 6,
+        "status": "DROPPED",
+        "rating": 0,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "deletedAt": null,
+    "status": "HOLD",
+    "rating": 0,
+    "thoughts": "",
+    "pinned": false,
+    "content": {
+      "id": 6,
+      "tmdbId": 9006,
+      "title": "Synthetic hold show",
+      "type": "tv",
+      "imdb_id": ""
+    },
+    "activity": []
+  },
+  {
+    "id": 7,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "deletedAt": null,
+    "status": "DROPPED",
+    "rating": 0,
+    "thoughts": "",
+    "pinned": false,
+    "content": {
+      "id": 7,
+      "tmdbId": 9007,
+      "title": "Synthetic dropped show",
+      "type": "tv",
+      "imdb_id": ""
+    },
+    "activity": []
+  },
+  {
+    "id": 8,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "deletedAt": null,
+    "status": "FINISHED",
+    "rating": 0,
+    "thoughts": "",
+    "pinned": false,
+    "content": {
+      "id": 8,
+      "tmdbId": 9008,
+      "title": "Synthetic finished show",
+      "type": "tv",
+      "imdb_id": ""
+    },
+    "activity": []
+  },
+  {
+    "id": 9,
+    "status": "FINISHED",
+    "game": {
+      "name": "Synthetic game",
+      "igdbId": 1
+    }
+  }
+]

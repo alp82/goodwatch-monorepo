@@ -115,6 +115,17 @@ const receipt = () => {
 
 process.stdout.write(
 	`__WISHLIST_RENDER__${JSON.stringify({
+		watcharrLibrary: preview({
+			...summary({ new: 12 }),
+			kinds: {
+				rating: 2,
+				watch: 5,
+				want: 1,
+				favorite: 0,
+				review: 1,
+				show_status: 3,
+			},
+		}),
 		mixed: preview(
 			summary(
 				{ new: 3, unchanged: 1, conflict: 2, unmatched: 1, unsupported: 4 },

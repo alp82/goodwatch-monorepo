@@ -159,68 +159,49 @@ describe("Wishlist JSON imports", () => {
 		assert.equal(unknown.observations[0].problem?.outcome, "unmatched")
 	})
 
-	it("imports only native Watcharr PLANNED movie and show entries, preserving other statuses as unsupported", async () => {
+	it("imports Watcharr statuses, scores out of ten and multiline thoughts as independent kinds", async () => {
 		const parsed = await parseImportFile(
 			"wishlist",
 			bytes([
 				{
 					id: 1,
 					status: "PLANNED",
-					rating: 8,
-					createdAt: "2026-10-01T12:00:00Z",
-					content: {
-						title: "Movie",
-						type: "movie",
-						tmdbId: 42,
-						release_date: "2024-02-29T00:00:00Z",
-						imdb_id: "tt1234567",
-					},
+					content: { title: "Movie", type: "movie", tmdbId: 42 },
 				},
-				{
-					id: 2,
-					status: "PLANNED",
-					content: { title: "Show", type: "tv", tmdbId: 43 },
-				},
-				...["FINISHED", "WATCHING", "HOLD", "DROPPED"].map((status) => ({
+				...["FINISHED", "WATCHING", "HOLD", "DROPPED"].map((status, i) => ({
+					id: i + 2,
 					status,
-					content: { title: status, type: "movie", tmdbId: 44 },
+					content: { title: status, type: "tv", tmdbId: i + 43 },
 				})),
-				{ status: "PLANNED", game: { name: "Game", igdbId: 2 } },
 				{
-					status: "PLANNED",
-					content: { title: "Episode", type: "tv_episode", tmdbId: 45 },
+					id: 6,
+					status: "FINISHED",
+					rating: 8.5,
+					thoughts: "First line.\nSecond line.",
+					createdAt: "2024-01-01T00:00:00Z",
+					updatedAt: "2025-01-01T00:00:00Z",
+					content: { title: "Seen movie", type: "movie", tmdbId: 50 },
 				},
 			]),
 		)
 		assert.deepEqual(
-			parsed.observations.map((item) => [
-				item.kind,
-				item.mediaType,
-				item.problem?.outcome,
-			]),
+			parsed.observations.map((i) => [i.kind, i.showStatus ?? i.score ?? null]),
 			[
-				["want", "movie", undefined],
-				["want", "show", undefined],
-				...Array.from({ length: 6 }, () => [
-					"unsupported",
-					"movie",
-					"unsupported",
-				]),
+				["want", null],
+				["show_status", "completed"],
+				["show_status", "watching"],
+				["show_status", "on_hold"],
+				["show_status", "dropped"],
+				["watch", null],
+				["rating", 9],
+				["review", null],
 			],
 		)
-		assert.equal(parsed.observations[0].year, 2024)
-		assert.equal(parsed.observations[0].addedAt, null)
-		assert.equal(parsed.observations[0].wishlistEvidence?.source, "watcharr")
-		assert.equal(parsed.observations[0].wishlistEvidence?.sourceId, "1")
-		assert.equal(
-			parsed.observations.some(
-				(item) =>
-					item.kind === "watch" ||
-					item.kind === "rating" ||
-					item.kind === "show_status",
-			),
-			false,
-		)
+		assert.equal(parsed.observations[1].completionScope, "show")
+		assert.equal(parsed.observations[5].watchedAt, null)
+		assert.equal(parsed.observations[5].precision, "unknown")
+		assert.equal(parsed.observations[7].review, "First line.\nSecond line.")
+		assert.ok(parsed.warnings.some((w) => /rounded/i.test(w.message)))
 	})
 
 	it("bounds upload bytes and item counts, including ignored native entries", async () => {
@@ -401,13 +382,13 @@ it("reads original bytes of an actual Watcharr backend export from a synthetic a
 				outcome: undefined,
 			},
 			{
-				kind: "unsupported",
+				kind: "watch",
 				mediaType: "movie",
 				title: "Synthetic finished movie",
 				tmdbId: 13,
 				imdbId: null,
 				year: null,
-				outcome: "unsupported",
+				outcome: undefined,
 			},
 		],
 	)
@@ -415,7 +396,7 @@ it("reads original bytes of an actual Watcharr backend export from a synthetic a
 		parsed.observations.every(
 			(item) =>
 				item.addedAt === null &&
-				item.watchedAt === undefined &&
+				(item.watchedAt === undefined || item.watchedAt === null) &&
 				item.score === undefined,
 		),
 	)
@@ -666,5 +647,118 @@ it("explains that a string version must be a number instead of calling it a newe
 	await assert.rejects(
 		parseImportFile("wishlist", bytes(envelope([], { version: 2 }))),
 		/newer layout/,
+	)
+})
+
+it("preserves Watcharr play identities and custom dates without adding a second snapshot watch", async () => {
+	const fixture = readFileSync(
+		new URL("./fixtures/watcharr-library-synthetic.json", import.meta.url),
+	)
+	const parsed = await parseImportFile("wishlist", fixture)
+	const watches = parsed.observations.filter(
+		(i) => i.kind === "watch" && i.tmdbId === 9002,
+	)
+	assert.equal(watches.length, 2)
+	assert.notEqual(watches[0].key, watches[1].key)
+	assert.deepEqual(
+		watches.map((i) => [i.watchedAt, i.precision]),
+		[
+			["2020-05-04T20:30:00+02:00", "moment"],
+			["2020-05-04T20:30:00+02:00", "moment"],
+		],
+	)
+	const reordered = JSON.parse(fixture.toString()).reverse()
+	for (const row of reordered) row.activity?.reverse()
+	const again = await parseImportFile("wishlist", bytes(reordered))
+	assert.deepEqual(
+		again.observations
+			.filter((i) => i.kind === "watch" && i.tmdbId === 9002)
+			.map((i) => i.key)
+			.sort(),
+		watches.map((i) => i.key).sort(),
+	)
+})
+
+it("reads finished Watcharr episodes and seasons, retaining scoped scores without rating the whole show", async () => {
+	const parsed = await parseImportFile(
+		"wishlist",
+		readFileSync(
+			new URL("./fixtures/watcharr-library-synthetic.json", import.meta.url),
+		),
+	)
+	const watches = parsed.observations.filter(
+		(i) => i.kind === "watch" && i.tmdbId === 9005,
+	)
+	assert.deepEqual(
+		watches.map((i) => [i.season, i.episode ?? null, i.watchedAt]),
+		[
+			[1, 1, "2021-03-04T09:00:00Z"],
+			[1, 1, "2022-03-04T09:00:00Z"],
+			[2, null, "2023-03-04T09:00:00Z"],
+			[2, null, null],
+			[1, 1, null],
+			[1, 2, null],
+		],
+	)
+	assert.ok(watches.every((i) => i.episodeNumbering === "tmdb"))
+	const scores = parsed.observations.filter(
+		(i) => i.tmdbId === 9005 && i.kind === "unsupported" && i.score,
+	)
+	assert.deepEqual(
+		scores.map((i) => [i.season, i.episode ?? null, i.score]),
+		[
+			[2, null, 7],
+			[1, 2, 9],
+		],
+	)
+	assert.equal(
+		parsed.observations.find((i) => i.tmdbId === 9005 && i.kind === "rating")
+			?.score,
+		1,
+	)
+})
+
+it("retains malformed Watcharr history as invalid without dropping independent scores and reviews", async () => {
+	const parsed = await parseImportFile(
+		"wishlist",
+		bytes([
+			{
+				id: 1,
+				status: "WATCHING",
+				rating: 7,
+				thoughts: "Keep this review.",
+				content: { type: "tv", tmdbId: 123, title: "Show" },
+				activity: [
+					{
+						id: 1,
+						type: "EPISODE_ADDED",
+						data: "{broken",
+						createdAt: "2024-01-01T00:00:00Z",
+					},
+					{
+						id: 2,
+						type: "EPISODE_ADDED",
+						data: '{"status":"FINISHED","season":1,"episode":0}',
+						customDate: "2024-02-30",
+					},
+				],
+				watchedEpisodes: [
+					{ seasonNumber: 1, episodeNumber: 1, status: "FINISHED", rating: 8 },
+				],
+			},
+		]),
+	)
+	assert.equal(
+		parsed.observations.filter((i) => i.problem?.outcome === "invalid").length,
+		2,
+	)
+	assert.equal(parsed.observations.find((i) => i.kind === "rating")?.score, 7)
+	assert.equal(
+		parsed.observations.find((i) => i.kind === "review")?.review,
+		"Keep this review.",
+	)
+	assert.equal(
+		parsed.observations.find((i) => i.watcharrSnapshot)?.watchedAt,
+		null,
 	)
 })

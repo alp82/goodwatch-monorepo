@@ -285,7 +285,7 @@ function sharedWishlist(input: unknown, fail: Fail): ParsedImport {
 	}
 }
 
-/** Watcharr exports its full library; status is the only wishlist intent evidence. */
+/** Watcharr exports the full library through GET /watched. */
 function watcharr(rows: unknown[], fail: Fail): ParsedImport {
 	if (rows.length > IMPORT_MAX_ROWS)
 		fail(
@@ -326,11 +326,13 @@ function watcharr(rows: unknown[], fail: Fail): ParsedImport {
 			format: "goodwatch-wishlist",
 			version: 1,
 			source: "watcharr",
-			completeness: "unknown",
+			completeness: "complete",
 			items,
 		},
 		fail,
 	)
+	const observations: ImportObservation[] = []
+	let rounded = false
 	for (let index = 0; index < rows.length; index++) {
 		const candidate = rows[index]
 		const row = object(candidate) ? candidate : {}
@@ -346,23 +348,15 @@ function watcharr(rows: unknown[], fail: Fail): ParsedImport {
 				outcome: "invalid",
 				reason: "GoodWatch couldn't read this Watcharr entry.",
 			}
-		} else if (row.status !== "PLANNED") {
-			item.kind = "unsupported"
-			item.problem = {
-				outcome: "unsupported",
-				reason:
-					"Only titles marked Planned in Watcharr are added to Want to See.",
-			}
 		} else if (
 			object(row.game) ||
 			(object(row.content) &&
-				(typeof row.content.type !== "string" ||
-					!["movie", "tv"].includes(row.content.type)))
+				!["movie", "tv"].includes(String(row.content.type)))
 		) {
 			item.kind = "unsupported"
 			item.problem = {
 				outcome: "unsupported",
-				reason: "Only movies and shows can go on your Wishlist.",
+				reason: "Only movies and shows can be imported into GoodWatch.",
 			}
 		} else if (!item.tmdbId) {
 			item.problem = {
@@ -370,12 +364,324 @@ function watcharr(rows: unknown[], fail: Fail): ParsedImport {
 				reason: "GoodWatch couldn't read this Watcharr entry.",
 			}
 		}
-		if (
-			item.kind !== "want" ||
-			item.problem?.outcome === "invalid" ||
-			item.problem?.outcome === "unsupported"
-		)
+		if (item.problem) {
 			item.wishlistOriginal = undefined
+			observations.push(item)
+			continue
+		}
+		const rowStart = observations.length
+		const base = { ...item, wishlistOriginal: undefined }
+		const add = (suffix: string, fields: Partial<ImportObservation>) => {
+			if (observations.length >= IMPORT_MAX_ROWS)
+				fail("That file produces more than 50,000 import items.")
+			observations.push({
+				...base,
+				key: `watcharr:${item.key}:${suffix}`,
+				...fields,
+			})
+		}
+		const activities = Array.isArray(row.activity)
+			? row.activity.filter(object)
+			: []
+		const plays = activities.filter(
+			(activity) =>
+				activity.deletedAt == null &&
+				activity.countAsPlay === true &&
+				!String(activity.type).startsWith("EPISODE_") &&
+				!String(activity.type).startsWith("SEASON_"),
+		)
+		const seenActivities = new Set<string>()
+		const ordinals = new Map<string, number>()
+		for (const activity of plays) {
+			const id =
+				typeof activity.id === "number" &&
+				Number.isSafeInteger(activity.id) &&
+				activity.id > 0
+					? activity.id
+					: null
+			// Old exports can lack IDs. Equal ID-less rows keep their multiplicity, independently of array order.
+			const signature = createHash("sha256")
+				.update(
+					JSON.stringify([
+						activity.type,
+						activity.data,
+						activity.customDate ?? activity.createdAt,
+					]),
+				)
+				.digest("hex")
+			const ordinal = (ordinals.get(signature) ?? 0) + 1
+			ordinals.set(signature, ordinal)
+			const identity = id === null ? `${signature}:${ordinal}` : String(id)
+			if (seenActivities.has(identity)) continue
+			seenActivities.add(identity)
+			const supplied = activity.customDate ?? activity.createdAt
+			const validDate = date(supplied) && !supplied.startsWith("0001-")
+			add(`play:${identity}`, {
+				kind: "watch",
+				watchedAt: validDate ? supplied : null,
+				precision: validDate
+					? supplied.includes("T")
+						? "moment"
+						: "day"
+					: "unknown",
+			})
+			if (supplied != null && !validDate)
+				parsed.warnings.push(
+					importInfo(
+						"A Watcharr play has an invalid date. Its watch is kept without a date.",
+					),
+				)
+		}
+		if (item.mediaType === "show") {
+			const coordinate = (value: unknown, minimum: number): value is number =>
+				typeof value === "number" &&
+				Number.isSafeInteger(value) &&
+				value >= minimum &&
+				value <= 10_000
+			const scope = (
+				season: unknown,
+				episode?: unknown,
+			): Partial<ImportObservation> => ({
+				season: coordinate(season, 0) ? season : null,
+				...(episode !== undefined
+					? { episode: coordinate(episode, 1) ? episode : null }
+					: {}),
+				episodeNumbering: "tmdb",
+				...(!coordinate(season, 0) ||
+				(episode !== undefined && !coordinate(episode, 1))
+					? {
+							problem: {
+								outcome: "invalid",
+								reason:
+									"This Watcharr record has invalid season or episode numbers.",
+							},
+						}
+					: {}),
+			})
+			const scopedIds = new Set<string>()
+			for (const activity of activities) {
+				if (
+					activity.deletedAt != null ||
+					activity.createdBy === 1 ||
+					![
+						"EPISODE_ADDED",
+						"EPISODE_STATUS_CHANGED",
+						"SEASON_ADDED",
+						"SEASON_STATUS_CHANGED",
+					].includes(String(activity.type))
+				)
+					continue
+				let data: unknown
+				try {
+					data = JSON.parse(String(activity.data))
+				} catch {
+					data = null
+				}
+				if (!object(data)) {
+					add(`invalid-activity:${activity.id ?? scopedIds.size}`, {
+						kind: "unsupported",
+						problem: {
+							outcome: "invalid",
+							reason:
+								"GoodWatch couldn't read this Watcharr season or episode activity.",
+						},
+					})
+					continue
+				}
+				if (data.status !== "FINISHED") continue
+				const episode = String(activity.type).startsWith("EPISODE_")
+				const coordinates = scope(
+					data.season,
+					episode ? (data.episode ?? null) : undefined,
+				)
+				const identity =
+					typeof activity.id === "number"
+						? String(activity.id)
+						: createHash("sha256")
+								.update(
+									JSON.stringify([
+										activity.type,
+										activity.data,
+										activity.customDate ?? activity.createdAt,
+									]),
+								)
+								.digest("hex")
+				if (scopedIds.has(identity)) continue
+				scopedIds.add(identity)
+				const supplied = activity.customDate ?? activity.createdAt
+				const validDate = date(supplied) && !supplied.startsWith("0001-")
+				add(`scope-play:${identity}`, {
+					kind: "watch",
+					...coordinates,
+					watchedAt: validDate ? supplied : null,
+					precision: validDate
+						? supplied.includes("T")
+							? "moment"
+							: "day"
+						: "unknown",
+				})
+				if (supplied != null && !validDate)
+					parsed.warnings.push(
+						importInfo(
+							"A Watcharr play has an invalid date. Its watch is kept without a date.",
+						),
+					)
+			}
+			for (const [field, episode] of [
+				["watchedSeasons", false],
+				["watchedEpisodes", true],
+			] as const) {
+				const records = Array.isArray(row[field])
+					? (row[field] as unknown[])
+					: []
+				for (const [index, value] of records.entries()) {
+					const record = object(value) ? value : {}
+					const coordinates = scope(
+						record.seasonNumber,
+						episode ? (record.episodeNumber ?? null) : undefined,
+					)
+					const suffix = `${field}:${record.seasonNumber ?? index}:${episode ? record.episodeNumber : "season"}`
+					if (record.status === "FINISHED")
+						add(`${suffix}:snapshot`, {
+							kind: "watch",
+							...coordinates,
+							watchedAt: null,
+							precision: "unknown",
+							watcharrSnapshot: true,
+						})
+					else
+						add(`${suffix}:status`, {
+							kind: "unsupported",
+							...coordinates,
+							problem: coordinates.problem ?? {
+								outcome: "unsupported",
+								reason:
+									"Season and episode statuses are not applied separately. Finished creates episode watches; the show status is imported separately.",
+							},
+						})
+					if (record.rating !== undefined && record.rating !== 0)
+						add(`${suffix}:rating`, {
+							kind: "unsupported",
+							...coordinates,
+							score: typeof record.rating === "number" ? record.rating : null,
+							problem: coordinates.problem ?? {
+								outcome: "unsupported",
+								reason:
+									"Season and episode scores are kept here, not applied as whole-show ratings.",
+							},
+						})
+				}
+			}
+		}
+
+		if (row.status === "PLANNED") {
+			if (
+				(plays.length ||
+					observations
+						.slice(rowStart)
+						.some(
+							(observation) =>
+								observation.tmdbId === item.tmdbId &&
+								observation.kind === "watch" &&
+								!observation.problem,
+						)) &&
+				item.wishlistEvidence
+			) {
+				item.wishlistEvidence.sourceSeen = true
+				if (item.wishlistOriginal)
+					item.wishlistOriginal.wishlistEvidence.sourceSeen = true
+			}
+			observations.push(item)
+		} else if (item.mediaType === "show") {
+			const statuses = {
+				FINISHED: "completed",
+				WATCHING: "watching",
+				HOLD: "on_hold",
+				DROPPED: "dropped",
+			} as const
+			add("status", {
+				kind: "show_status",
+				showStatus: statuses[row.status as keyof typeof statuses],
+				...(row.status === "FINISHED" ? { completionScope: "show" } : {}),
+			})
+		} else if (row.status === "FINISHED" && !plays.length) {
+			add("seen", { kind: "watch", watchedAt: null, precision: "unknown" })
+		} else if (row.status !== "FINISHED")
+			add("status", {
+				kind: "unsupported",
+				problem: {
+					outcome: "unsupported",
+					reason:
+						"Movies have no Watching, On hold or Dropped status in GoodWatch.",
+				},
+			})
+		if (row.pinned === true)
+			add("pinned", {
+				kind: "unsupported",
+				problem: {
+					outcome: "unsupported",
+					reason:
+						"Pinned in Watcharr is a list position, not a Favorite. It isn't applied.",
+				},
+			})
+		if (Array.isArray(row.tags) && row.tags.length)
+			add("tags", {
+				kind: "unsupported",
+				problem: {
+					outcome: "unsupported",
+					reason: "Watcharr tags aren't imported as lists.",
+				},
+			})
+		if (observations.length > IMPORT_MAX_ROWS)
+			fail("That file produces more than 50,000 import items.")
+		if (row.rating !== undefined && row.rating !== 0) {
+			const valid =
+				typeof row.rating === "number" &&
+				Number.isFinite(row.rating) &&
+				row.rating > 0 &&
+				row.rating <= 10
+			const score = valid ? Math.max(1, Math.round(row.rating as number)) : null
+			rounded ||= valid && score !== row.rating
+			add("rating", {
+				kind: "rating",
+				score,
+				...(!valid
+					? {
+							problem: {
+								outcome: "invalid",
+								reason:
+									"Watcharr scores must be numbers greater than 0 and at most 10; 0 means no score.",
+							},
+						}
+					: {}),
+			})
+		}
+		if (row.thoughts !== undefined && row.thoughts !== "") {
+			const valid =
+				typeof row.thoughts === "string" &&
+				row.thoughts.trim().length > 0 &&
+				row.thoughts.length <= 100_000
+			add("review", {
+				kind: "review",
+				review: valid ? (row.thoughts as string) : null,
+				...(!valid
+					? {
+							problem: {
+								outcome: "invalid",
+								reason: "GoodWatch couldn't read these Watcharr thoughts.",
+							},
+						}
+					: {}),
+			})
+		}
 	}
-	return parsed
+	if (observations.length > IMPORT_MAX_ROWS)
+		fail("That file produces more than 50,000 import items.")
+	if (rounded)
+		parsed.warnings.push(
+			importInfo(
+				"Watcharr scores are out of 10. Decimal scores are rounded to the nearest whole number, with a minimum of 1.",
+			),
+		)
+	return { ...parsed, observations }
 }

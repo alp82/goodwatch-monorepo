@@ -194,7 +194,7 @@ export const IMPORT_SOURCE_UPLOAD = {
 			"Maximum size: 20 MB.",
 		],
 		notes:
-			"GoodWatch adds titles to Want to See and never removes titles that aren't in the file. From Watcharr, only movies and shows marked Planned are added. Ratings, other statuses, tags, and games aren't imported.",
+			"GoodWatch reads Watcharr movie and show ratings, thoughts as reviews, watches, episode progress, and show statuses. Planned becomes Want to See; Finished becomes Seen. Decimal scores are rounded to whole numbers out of 10. Season and episode scores, tags, pinned items, and games aren't applied. Wishlist files add Want to See. Titles absent from the file stay as they are.",
 	},
 	tmdb: null,
 	plex: null,
@@ -258,6 +258,8 @@ export type ImportStatus = "preview" | "running" | "done" | "failed" | "undone"
 export const IMPORT_MAX_ROWS = 50_000
 
 export interface ImportObservation {
+	/** Watcharr completion snapshots fill missing watches; they never add a repeat to activity history. */
+	watcharrSnapshot?: boolean
 	/** Immutable normalized TV Time evidence before any catalog enrichment. */
 	resolutionOriginal?: Omit<ImportObservation, "resolutionOriginal">
 

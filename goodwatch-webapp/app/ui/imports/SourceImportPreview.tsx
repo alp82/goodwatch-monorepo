@@ -58,7 +58,12 @@ type PreviewProps = {
 }
 
 export function SourceImportPreview(props: PreviewProps) {
-	return props.summary.source === "wishlist" ? (
+	const wishlistOnly =
+		props.summary.source === "wishlist" &&
+		!["rating", "watch", "review", "show_status"].some(
+			(kind) => props.summary.kinds[kind as ImportKind] > 0,
+		)
+	return wishlistOnly ? (
 		<WishlistImportPreview {...props} />
 	) : props.summary.source === "tvtime" ? (
 		<TvTimeImportPreview {...props} />

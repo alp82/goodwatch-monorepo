@@ -123,7 +123,11 @@ test("one upload takes Watcharr's own export and a wishlist file another tool sa
 		page,
 		/From another tool: if a tool saved your list as a wishlist file for GoodWatch/,
 	)
-	assert.match(page, /only movies and shows marked Planned are added/)
+	assert.match(
+		page,
+		/ratings, thoughts as reviews, watches, episode progress, and show statuses/,
+	)
+	assert.match(page, /Planned becomes Want to See; Finished becomes Seen/)
 	assert.match(rendered.upload, /accept="\.json,application\/json"/)
 	assert.match(page, /Choose JSON file/)
 	assert.doesNotMatch(page, /format|version|schema|envelope/i)
@@ -780,4 +784,20 @@ test("confirming a whole-show choice does not also opt into rewatch", () => {
 		watchDates: "preserve",
 		wishlistShows: true,
 	})
+})
+
+test("a Watcharr library preview offers every imported kind and the shared watch-date and conflict choices", () => {
+	const page = text(rendered.watcharrLibrary)
+	assert.match(page, /What should GoodWatch import/)
+	for (const label of [
+		"Ratings",
+		"Watches",
+		"Reviews",
+		"Show statuses",
+		"Want to See",
+	])
+		assert.ok(page.includes(label), label)
+	assert.match(page, /Uses each exported watch date with its stated precision/)
+	assert.match(page, /Use the export instead/)
+	assert.doesNotMatch(page, /Importing only adds titles to Want to See/)
 })

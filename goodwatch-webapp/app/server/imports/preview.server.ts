@@ -31,6 +31,7 @@ import {
 	createTvdbParentLookup,
 } from "./episode-resolver-data.server.ts"
 import { ImportFileError, parseImportFile } from "./files.server.ts"
+import { expandWatcharrWatches } from "./watcharr-preview.server.ts"
 import {
 	type Param,
 	chunks,
@@ -656,6 +657,7 @@ export async function createParsedPreview(
 	},
 ): Promise<ImportSummary> {
 	const parsed = input
+	await expandWatcharrWatches(parsed)
 	if (parsed.observations.length > IMPORT_MAX_ROWS)
 		throw new ImportFileError(
 			"That source produces more than 50,000 import items.",

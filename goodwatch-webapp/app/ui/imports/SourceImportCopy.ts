@@ -10,9 +10,10 @@ export function sourceImportCopy(source: ImportSource) {
 		return {
 			data: "file",
 			details: "About this file",
-			conflict: "",
-			conflictDetail: "",
-			watchDates: "",
+			conflict: "Use the export instead",
+			conflictDetail:
+				"Replaces conflicting ratings and reviews with the source export, and adds Planned titles you have already seen as Want to rewatch.",
+			watchDates: "Uses each exported watch date with its stated precision.",
 			restart: "Choose another file",
 			another: "Import another file",
 			newer: "Upload a newer file",
