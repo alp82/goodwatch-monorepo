@@ -3,7 +3,7 @@ import { Linking, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Feedback } from '../features/beta/Feedback';
-import distribution from '../features/beta/distribution.json';
+import distribution from '../features/beta/invitations.json';
 import { GText, Pill, Wordmark, glow } from '../features/glow/theme';
 
 const checks = [

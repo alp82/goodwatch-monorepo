@@ -46,7 +46,7 @@ npx eas-cli@latest submit --profile beta --platform android
 npx eas-cli@latest submit --profile beta --platform ios
 ```
 
-Set the verified invitation URLs in `src/features/beta/distribution.json` and redeploy the web app. Test each link from an ordinary tester account before sharing it. A build uploaded to TestFlight is not automatically available to external testers. TestFlight builds expire after 90 days.
+Set the verified invitation URLs in `src/features/beta/invitations.json` and redeploy the web app. Test each link from an ordinary tester account before sharing it. A build uploaded to TestFlight is not automatically available to external testers. TestFlight builds expire after 90 days.
 
 ## First session (3–5 friends)
 
