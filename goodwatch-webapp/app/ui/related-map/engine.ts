@@ -180,7 +180,8 @@ export function relatedMapEngine(
 		again: {},
 		none: {},
 		used: false,
-		busy: false,
+		// An engine that arrives during a page change starts busy: RelatedMap.tsx tells it only when the state changes.
+		busy: Boolean(win?.__gwAppLoading),
 		ctl: {},
 		navigating: () => {},
 	}

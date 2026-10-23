@@ -359,3 +359,19 @@ test("packs ahead wait while the app loads another page, and stop when one start
 	assert.ok(first.every((signal) => signal?.aborted))
 	assert.equal(page.signals[0], undefined, "the page title's own pack is never stopped")
 })
+
+test("an engine that starts during a page change waits for it to end", async () => {
+	const hand = handWindow()
+	const page = browser(served(), () => new Promise(() => {}), undefined, {
+		...hand.win,
+		__gwAppLoading: true,
+	})
+	await settled()
+	hand.fire("pointerdown", plainSpot)
+	hand.tick()
+	hand.tick()
+	assert.deepEqual(ahead(page.asked), [])
+	engineOf(page.win).navigating(false)
+	hand.tick()
+	assert.equal(ahead(page.asked).length, 8)
+})

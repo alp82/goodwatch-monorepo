@@ -25,6 +25,8 @@ import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 const loadClient = reloadOnStaleChunk(() => import("~/ui/related-map/client"))
 
 interface MapWindow {
+	/** True while the app loads another page. An engine that loads later reads it when it starts (engine.ts). */
+	__gwAppLoading?: boolean
 	__gwRelatedMap?: {
 		boot: () => void
 		nav: ((href: string) => void) | null
@@ -130,10 +132,16 @@ function whenEngine(
 function NavigationWatch() {
 	const loading = useNavigation().state !== "idle"
 	useEffect(() => {
-		;(window as MapWindow).__gwRelatedMap?.navigating?.(loading)
+		const w = window as MapWindow
+		w.__gwAppLoading = loading
+		w.__gwRelatedMap?.navigating?.(loading)
 	}, [loading])
 	useEffect(
-		() => () => (window as MapWindow).__gwRelatedMap?.navigating?.(false),
+		() => () => {
+			const w = window as MapWindow
+			w.__gwAppLoading = false
+			w.__gwRelatedMap?.navigating?.(false)
+		},
 		[],
 	)
 	return null

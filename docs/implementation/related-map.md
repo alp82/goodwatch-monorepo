@@ -95,7 +95,7 @@ memory.
 - A press, touch, or Enter on a link outside the map that leaves the page is not use: it starts a page change, and on
   a phone the 8 packs (about 72 KB) would share the connection with the next page's data. After the first use the
   packs wait 400 ms and then an idle moment, so a press that turns into a click on a link counts as nothing.
-- While the app loads another page (`useNavigation()` is not idle, told to the engine by `RelatedMap.tsx`), no pack is
+- While the app loads another page (`useNavigation()` is not idle, told to the engine by `RelatedMap.tsx`, and kept in `window.__gwAppLoading` for an engine that loads during the page change), no pack is
   asked for ahead, and packs asked for ahead that are still on their way are aborted. They are asked for again when
   the page change ends and the map is still there. The page title's pack and the pack of a pressed poster are never
   aborted.
