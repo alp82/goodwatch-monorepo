@@ -1,7 +1,7 @@
 // What GoodWatch looks like inside an AI app, for /use-with-ai: a plain chat window (marked as an illustration, with
 // no app's look), the poster cards the connector shows (titles from docs/implementation/mcp-poster-grid/fixtures.json)
 // and the links every answer carries. Three questions switch the conversation.
-import { CheckCircleIcon } from "@heroicons/react/24/solid"
+import { ArrowRightIcon, CheckCircleIcon } from "@heroicons/react/24/solid"
 import { type ReactNode, useState } from "react"
 import { CHAT_DEMO_QUESTIONS } from "~/ui/connector/example-prompts"
 
@@ -341,11 +341,10 @@ const SCENES = [
 type SceneKey = (typeof SCENES)[number]["key"]
 
 /** One question and its answer in a neutral chat window. */
-function ChatScene({ scene }: { scene: SceneKey }) {
-	const found = SCENES.find(({ key }) => key === scene) ?? SCENES[0]
+function ChatScene({ scene }: { scene: (typeof SCENES)[number] }) {
 	return (
-		<div className="flex flex-col gap-3 p-4 sm:p-5" aria-live="polite">
-			<UserBubble>{found.ask}</UserBubble>
+		<div className="flex flex-col gap-3 p-4 sm:p-5">
+			<UserBubble>{scene.ask}</UserBubble>
 			<div className="flex gap-3">
 				<span
 					aria-hidden="true"
@@ -354,7 +353,7 @@ function ChatScene({ scene }: { scene: SceneKey }) {
 					AI
 				</span>
 				<div className="flex min-w-0 flex-1 flex-col gap-2 text-sm leading-relaxed text-gray-200 sm:text-base">
-					{found.answer}
+					{scene.answer}
 				</div>
 			</div>
 		</div>
@@ -367,12 +366,23 @@ export function ChatDemo({ className = "" }: { className?: string }) {
 	return (
 		<div className={`flex flex-col gap-3 ${className}`}>
 			<MockWindow title="Your AI app">
-				<ChatScene scene={scene} />
+				{/* Every scene sits in the same grid cell, so the window keeps the tallest one's height and switching
+				    doesn't move the page. Hidden scenes are invisible, which also hides them from screen readers. */}
+				<div className="grid grid-cols-[minmax(0,1fr)]" aria-live="polite">
+					{SCENES.map((one) => (
+						<div
+							key={one.key}
+							className={`[grid-area:1/1] ${one.key === scene ? "" : "invisible"}`}
+						>
+							<ChatScene scene={one} />
+						</div>
+					))}
+				</div>
 				<div className="mx-4 mb-4 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-gray-500 sm:mx-5">
 					Ask anything
 				</div>
 			</MockWindow>
-			<fieldset className="flex flex-wrap justify-center gap-2">
+			<fieldset className="flex flex-col gap-2">
 				<legend className="sr-only">Pick a question</legend>
 				{SCENES.map(({ key, ask }) => (
 					<button
@@ -380,9 +390,13 @@ export function ChatDemo({ className = "" }: { className?: string }) {
 						type="button"
 						aria-pressed={scene === key}
 						onClick={() => setScene(key)}
-						className={`cursor-pointer rounded-full px-3 py-1.5 text-xs font-semibold transition sm:text-sm ${scene === key ? "bg-amber-600 text-white" : "bg-white/[0.06] text-gray-300 ring-1 ring-white/10 hover:bg-white/10"}`}
+						className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left text-sm font-semibold transition ${scene === key ? "bg-amber-600 text-white" : "bg-white/[0.06] text-gray-300 ring-1 ring-white/10 hover:bg-white/10"}`}
 					>
 						{ask}
+						<ArrowRightIcon
+							className={`h-4 w-4 shrink-0 ${scene === key ? "opacity-100" : "opacity-40"}`}
+							aria-hidden="true"
+						/>
 					</button>
 				))}
 			</fieldset>
