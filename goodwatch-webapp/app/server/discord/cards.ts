@@ -145,7 +145,9 @@ export const TIMEOUT_TEXT = "The search took too long. Please try again."
  * which stay as they are. Discord doesn't italicize underscores inside a word, so handles need no escaping. */
 export const discordText = (value: string) =>
 	value
-		.split(/(https?:\/\/[^\s)>]+|<a?:[A-Za-z0-9_]+:\d+>|@[a-z][a-z0-9_]*)/g)
+		.split(
+			/(https?:\/\/[^\s)>]+|<a?:[A-Za-z0-9_]+:\d+>|(?<![\w@.])@[a-z][a-z0-9_]{2,29}(?![\w:@-]|\.\w))/g,
+		)
 		.map((part, i) => (i % 2 ? part : displayText(part)))
 		.join("")
 const escape = (text: string) =>

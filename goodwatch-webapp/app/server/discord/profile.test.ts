@@ -2,10 +2,11 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { routeInteraction, type Dependencies } from "./router.server.ts"
 import { commands } from "./commands.ts"
-import { EPHEMERAL, type Component } from "./cards.ts"
+import { EPHEMERAL, discordText, type Component } from "./cards.ts"
 import { parseListId } from "./custom-id.ts"
 import {
 	PROFILE_CARDS,
+	profileCardImage,
 	type MemberProfile,
 	type ProfileCardChoice,
 } from "./profile-cards.ts"
@@ -227,7 +228,7 @@ test("each card choice shows its card image and links to its place on the profil
 			`https://goodwatch.app${expected.image}`,
 		)
 		assert.ok(url.searchParams.get("brand"))
-		assert.match(url.searchParams.get("v") ?? "", /^[0-9a-z]+$/)
+		assert.match(url.searchParams.get("v") ?? "", /^[0-9a-z]+(-[0-9a-z]+)?$/)
 		const open = buttons(body).find((b) => b.label === "Open on GoodWatch")!
 		assert.equal(open.url, `https://goodwatch.app${expected.link}`)
 		const shareButton = buttons(body).find(
@@ -292,4 +293,25 @@ test("an unknown card value is refused", async () => {
 	assert.equal(text(data), "Choose a card from /profile.")
 	const { body } = await fixture("member").command("other")
 	assert.equal(text(body), "Choose a card from /profile.")
+})
+
+test("the card image address changes when a part is hidden", () => {
+	const now = Date.UTC(2026, 9, 23, 12)
+	const open = profileCardImage("film_fan", "profile", now, DEFAULT_VISIBILITY)
+	const hidden = profileCardImage("film_fan", "profile", now, {
+		...DEFAULT_VISIBILITY,
+		taste: "me",
+	})
+	assert.notEqual(open, hidden)
+})
+
+test("bot text keeps handles but not ids or other underscores", () => {
+	assert.equal(discordText("@film_fan on GoodWatch"), "@film_fan on GoodWatch")
+	assert.equal(discordText("Thanks, @film_fan."), "Thanks, @film_fan.")
+	assert.doesNotMatch(discordText("@movie:123"), /123/)
+	assert.doesNotMatch(
+		discordText("@abcdef12-1234-1234-1234-123456789abc"),
+		/abcdef12/,
+	)
+	assert.doesNotMatch(discordText("contact@some_domain.com"), /_/)
 })

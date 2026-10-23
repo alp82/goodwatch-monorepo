@@ -3,6 +3,7 @@
 // part that isn't public instead of posting a card that silently falls back to the main one.
 // Spec: docs/implementation/discord-bot/README.md
 import {
+	PROFILE_PARTS,
 	canSee,
 	type ProfilePart,
 	type ProfileVisibility,
@@ -109,10 +110,17 @@ export function profileCardImage(
 	handle: string,
 	choice: ProfileCardChoice,
 	now = Date.now(),
+	visibility?: ProfileVisibility,
 ) {
 	const tab = PROFILE_CARDS[choice].image
 	const url = ogImageUrl(`${ORIGIN}/u/${handle}${tab ? `/${tab}` : ""}`)
-	return `${url}&v=${Math.floor(now / 60_000).toString(36)}`
+	// Visibility is part of the address too: a part hidden after the preview must never reach Discord from its cache.
+	const seen = visibility
+		? PROFILE_PARTS.map((part) =>
+				canSee(visibility, part, "guest") ? 1 : 0,
+			).join("")
+		: ""
+	return `${url}&v=${Math.floor(now / 60_000).toString(36)}${seen && `-${parseInt(seen, 2).toString(36)}`}`
 }
 
 export interface MemberProfile {
@@ -133,7 +141,11 @@ export function hiddenPart(
 export function profileCard(
 	handle: string,
 	choice: ProfileCardChoice,
-	options: { share?: boolean; now?: number } = {},
+	options: {
+		share?: boolean
+		now?: number
+		visibility?: ProfileVisibility
+	} = {},
 ) {
 	const card = PROFILE_CARDS[choice]
 	const heading = `## @${handle} on GoodWatch${
@@ -158,7 +170,14 @@ export function profileCard(
 						type: 12,
 						items: [
 							{
-								media: { url: profileCardImage(handle, choice, options.now) },
+								media: {
+									url: profileCardImage(
+										handle,
+										choice,
+										options.now,
+										options.visibility,
+									),
+								},
 								description: `@${handle} on GoodWatch: ${card.name}`,
 							},
 						],
@@ -244,5 +263,8 @@ export function profileReply(
 			profile.visibility[hidden] === "members" ? "members" : "me",
 			options.origin,
 		)
-	return profileCard(profile.handle, choice, options)
+	return profileCard(profile.handle, choice, {
+		...options,
+		visibility: profile.visibility,
+	})
 }
