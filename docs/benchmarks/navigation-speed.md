@@ -126,3 +126,23 @@ Not worth it as a speed lever: Speculation Rules (they don't apply to client nav
 - **Member page changes aren't measured.** The benchmark accepts a cookie file (`nav.mjs ... <cookieFile>`), but it needs a production session. A local stack wouldn't show production's session store latency.
 - **Field data:** PostHog has Web Vitals by route pattern, but no figure for client navigations was read for this page.
 - **Which links people tap most** wasn't checked. The ranking above assumes title cards and Back.
+
+## Changes
+
+### Ticket 2: client cache of loader data and our own prefetch
+
+Catalog pages now keep their loader data in the browser, and the site prefetches it on hover, focus, press, and (on phones) for visible cards. The rules, what clears the cache, and the guarantee that documents stay server rendered are in [navigation-cache.md](../navigation-cache.md).
+
+Measured on October 23, 2026, with `nav.mjs` against two local production builds on the bench data stack (134 movies, no people, an empty `/shows`): the base commit `955a6a12` and the candidate. The flow was adapted to that data: person and `/shows` steps became title steps. The timing method is unchanged. Three runs per profile and mode, paint time in ms from the press.
+
+| Profile, mode | Base: median, p90 | Candidate: median, p90 |
+| --- | --- | --- |
+| Desktop, hover | 58, 76 | 23, 70 |
+| Desktop, tap | 56, 83 | 55, 77 |
+| Phone (slow 4G, 4× CPU), tap | 209, 1,053 | 145, 211 |
+
+- **Phone taps:** list → title went from 1,054 to 93 ms (the code warm-up loaded the route before the tap), title → title from 209 to 40 ms, and Discover → title from 213 to 44 ms (prefetch on touch and on scroll stop).
+- **Desktop hover:** forward steps went from 38 to 73 ms to 20 to 26 ms. The local server answers in a few ms, so on production, with 30 to 500 ms of server time, the gain is larger.
+- **Desktop tap without hover:** no change. The press prefetch starts only a few ms before the click.
+- **Back and Forward didn't change on the bench (about 50 ms desktop, 205 ms phone).** Every history step in this flow lands on a title page, and every bench title page is incomplete (the related map has no data source locally), so the cache doesn't keep it. A step back to a complete page (`/movies/best`) committed 2 to 4 ms after the press. On production most title pages are complete.
+- **HTML:** 15 URLs fetched as a browser and as Googlebot were identical between the builds after normalizing asset hashes.
