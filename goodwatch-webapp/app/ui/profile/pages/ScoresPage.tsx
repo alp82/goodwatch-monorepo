@@ -77,14 +77,17 @@ export function ScoresPage({
 				.filter((tier) => tier.titles.length),
 		[page.tiers, kind, sort, both, you],
 	)
+	// Unfiltered, a tier counts all its titles, also those past the page's limit (tier.total).
+	const whole = kind === "all" && !both
+	const sizeOf = (tier: (typeof tiers)[number]) =>
+		whole ? Math.max(tier.total ?? 0, tier.titles.length) : tier.titles.length
 	const spread = useMemo(
 		() =>
-			Array.from(
-				{ length: 10 },
-				(_, i) =>
-					tiers.find((tier) => tier.score === i + 1)?.titles.length ?? 0,
-			),
-		[tiers],
+			Array.from({ length: 10 }, (_, i) => {
+				const tier = tiers.find((t) => t.score === i + 1)
+				return tier ? sizeOf(tier) : 0
+			}),
+		[tiers, whole],
 	)
 	const jump = (score: number) =>
 		document
@@ -197,7 +200,7 @@ export function ScoresPage({
 								{scoreLabels[tier.score]}
 							</span>
 							<span className="text-sm font-bold tabular-nums text-gray-500">
-								{count(tier.titles.length)}
+								{count(sizeOf(tier))}
 							</span>
 						</h2>
 						<ul className="grid grid-cols-4 gap-2.5 sm:grid-cols-6 md:grid-cols-8 xl:grid-cols-10">
@@ -208,6 +211,11 @@ export function ScoresPage({
 								</li>
 							))}
 						</ul>
+						{opened && whole && sizeOf(tier) > tier.titles.length && (
+							<p className="mt-2 text-sm text-gray-500">
+								and {count(sizeOf(tier) - tier.titles.length)} more
+							</p>
+						)}
 						{tier.titles.length > FIRST && (
 							<button
 								type="button"

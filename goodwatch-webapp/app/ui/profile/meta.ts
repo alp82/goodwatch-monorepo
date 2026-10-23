@@ -2,7 +2,7 @@
 // address, the link-preview card (/og/u/<handle>…), noindex unless the profile has enough public scores, and ProfilePage
 // structured data on an indexable Overview.
 import type { MetaDescriptor } from "@remix-run/node"
-import type { ProfileShell } from "~/domain/profile"
+import { type ProfilePart, type ProfileShell, seesPart } from "~/domain/profile"
 import { buildMeta } from "~/utils/meta"
 import { type ProfileTab, linkUrl, profileTabPath } from "./links"
 
@@ -32,10 +32,7 @@ export function profileMeta(
 	const title = name
 		? `${name} · @${handle} · GoodWatch`
 		: `@${handle} · GoodWatch`
-	const description =
-		line ||
-		shell.bio ||
-		`@${handle} on GoodWatch: ${shell.counts.rated.toLocaleString("en-US")} scores, favorites, taste and lists.`
+	const description = line || shell.bio || fallbackDescription(shell)
 	const indexable = shell.indexable
 	const profilePage =
 		indexable && tab === "overview"
@@ -74,4 +71,22 @@ export function profileMeta(
 		robots: indexable ? "index, follow" : "noindex, nofollow",
 		structuredData: profilePage,
 	}) as MetaDescriptor[]
+}
+
+/** "@handle on GoodWatch: 1,008 scores, taste and lists.", naming only what this visitor may see. */
+function fallbackDescription(shell: ProfileShell) {
+	const parts: [ProfilePart, string][] = [
+		["scores", `${shell.counts.rated.toLocaleString("en-US")} scores`],
+		["taste", "taste"],
+		["lists", "lists"],
+	]
+	const shown = parts
+		.filter(([part]) => seesPart(shell, part))
+		.map(([, words]) => words)
+	if (!shown.length) return `@${shell.handle} on GoodWatch.`
+	const list =
+		shown.length > 1
+			? `${shown.slice(0, -1).join(", ")} and ${shown.at(-1)}`
+			: shown[0]
+	return `@${shell.handle} on GoodWatch: ${list}.`
 }

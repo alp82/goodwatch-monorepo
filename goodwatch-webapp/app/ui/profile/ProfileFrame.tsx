@@ -7,7 +7,7 @@ import {
 } from "@heroicons/react/20/solid"
 import { Link, useFetcher } from "@remix-run/react"
 import { type CSSProperties, type ReactNode, useState } from "react"
-import { type ProfilePart, type ProfileShell, canSee } from "~/domain/profile"
+import { type ProfilePart, type ProfileShell, seesPart } from "~/domain/profile"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 // The frame of every profile page: the picture, @handle, since, bio, links and actions (in full on Overview, compact on
 // the other tabs), the stat strip, the tabs (only the parts the viewer may see; the owner sees a lock or a members
@@ -126,9 +126,7 @@ export function ProfileTabs({
 			<div
 				className={`${WRAP} flex gap-1 overflow-x-auto [scrollbar-width:none]`}
 			>
-				{TABS.filter(
-					(t) => !t.part || canSee(shell.visibility, t.part, shell.viewer),
-				).map((t) => {
+				{TABS.filter((t) => !t.part || seesPart(shell, t.part)).map((t) => {
 					const here = t.tab === active
 					const audience = t.part ? shell.visibility[t.part] : "everyone"
 					const n = t.count?.(shell)
@@ -257,7 +255,7 @@ function Actions({ shell }: { shell: ProfileShell }) {
 				</Link>
 			</>
 		)
-	if (shell.viewer === "member" && canSee(shell.visibility, "taste", "member"))
+	if (shell.viewer === "member" && seesPart(shell, "taste"))
 		return (
 			<>
 				<Link
@@ -314,8 +312,7 @@ export function StatStrip({
 	posters,
 }: { shell: ProfileShell; posters?: StripPosters }) {
 	const c = shell.counts
-	const see = (part: ProfilePart) =>
-		canSee(shell.visibility, part, shell.viewer)
+	const see = (part: ProfilePart) => seesPart(shell, part)
 	const most = Math.max(1, ...shell.spread)
 	const movieShare = c.seen ? c.seenMovies / c.seen : 0
 	const cells: {
@@ -559,7 +556,7 @@ export function ProfileFrame({
 	posters?: StripPosters
 	children: ReactNode
 }) {
-	const allowed = !part || canSee(shell.visibility, part, shell.viewer)
+	const allowed = !part || seesPart(shell, part)
 	return (
 		<main className="min-h-screen overflow-x-clip text-white">
 			{shell.viewer === "owner" && shell.showPublicNotice && (

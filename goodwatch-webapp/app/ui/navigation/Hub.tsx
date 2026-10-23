@@ -1,3 +1,7 @@
+// The hub: every destination, laid out like the Living room remote's feature well. On phones it's a sheet above the
+// dock (opened by the hub key); on desktop it's the Browse panel under the header. Both are the same labeled modal
+// dialog, with a focus trap, Escape to close, and focus returned to the key or button that opened it. The phone sheet
+// can also be dragged down to close.
 import {
 	Dialog,
 	DialogBackdrop,
@@ -9,10 +13,6 @@ import { Link, useLocation } from "@remix-run/react"
 import type React from "react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
 import { landedWords, showsWords } from "~/domain/newly-available-words"
-// The hub: every destination, laid out like the Living room remote's feature well. On phones it's a sheet above the
-// dock (opened by the hub key); on desktop it's the Browse panel under the header. Both are the same labeled modal
-// dialog, with a focus trap, Escape to close, and focus returned to the key or button that opened it. The phone sheet
-// can also be dragged down to close.
 import { PhoneAccountPanel } from "~/ui/account/AccountPanels"
 import { TASTE_GROUPS_NAME } from "~/ui/taste/taste-groups-name"
 import { useUser } from "~/utils/auth"

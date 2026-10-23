@@ -66,6 +66,28 @@ export function TastePage({
 		[taste, stats, compare, shell.handle, owner],
 	)
 	const comparing = !!value.compare
+	// The chips list only the sections this viewer gets: the owner may hide the parts some of them are built from.
+	const t = value.taste
+	const shown = new Set<string>([
+		"viewer-type",
+		"fingerprint",
+		...(t.sides.list.length ? ["sides"] : []),
+		...(t.crowd.status === "ready" &&
+		t.crowd.higher.length + t.crowd.lower.length
+			? ["crowd"]
+			: []),
+		...(stats?.genres.length ? ["genres"] : []),
+		...(stats && (stats.people.directors.length || stats.people.actors.length)
+			? ["people"]
+			: []),
+		...(stats?.eras.decades.length ? ["eras"] : []),
+		...(stats?.world.countries.length ? ["world"] : []),
+		...(stats && (stats.tags.essence.length || stats.tags.tropes.length)
+			? ["tags"]
+			: []),
+		...(stats?.facts ? ["facts"] : []),
+		...(stats?.style ? ["style"] : []),
+	])
 
 	if (taste.status !== "ready")
 		return (
@@ -92,7 +114,7 @@ export function TastePage({
 
 	return (
 		<TasteContext.Provider value={value}>
-			<SectionNav compare={comparing} />
+			<SectionNav compare={comparing} shown={shown} />
 			<div className={`${WRAP} flex flex-col gap-6 pt-5 pb-32 text-white`}>
 				{owner && (
 					<div className="flex flex-wrap items-center gap-2 rounded-2xl border border-dashed border-amber-400/30 bg-amber-400/[0.03] p-3 text-sm">
@@ -142,18 +164,17 @@ export function TastePage({
 }
 
 /** Chips that jump to each section, sticky under the profile tabs; the one in view is marked. */
-function SectionNav({ compare }: { compare: boolean }) {
-	const sections = useMemo(
-		() =>
-			compare
-				? [
-						SECTIONS[0],
-						{ id: "compare", label: "You vs them" },
-						...SECTIONS.slice(1),
-					]
-				: SECTIONS,
-		[compare],
-	)
+function SectionNav({
+	compare,
+	shown,
+}: { compare: boolean; shown: Set<string> }) {
+	const key = [...shown].join(",")
+	const sections = useMemo(() => {
+		const list = SECTIONS.filter((s) => shown.has(s.id))
+		return compare
+			? [list[0], { id: "compare", label: "You vs them" }, ...list.slice(1)]
+			: list
+	}, [compare, key])
 	const [here, setHere] = useState(sections[0].id)
 	useEffect(() => {
 		const seen = new Map<string, number>()

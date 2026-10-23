@@ -53,12 +53,17 @@ const relColor = (v: number, min: number, max: number) => {
 export function Genres() {
 	const { stats, owner } = useStats()
 	const [kind, setKind] = useState<"all" | Kind>("all")
-	const [by, setBy] = useState<"titles" | "score">("titles")
+	const [byChoice, setBy] = useState<"titles" | "score">("titles")
 	if (!stats?.genres.length) return null
+	// Averages are there only when the owner's scores are visible.
+	const scored = stats.genres.some((g) => g.average != null)
+	const by = scored ? byChoice : "titles"
 	const rows = stats.genres
 		.map((g) => ({ ...g, n: kind === "all" ? g.count : (g.kinds[kind] ?? 0) }))
 		.filter((g) => g.n > 0)
-		.sort((a, b) => (by === "titles" ? b.n - a.n : b.average - a.average))
+		.sort((a, b) =>
+			by === "titles" ? b.n - a.n : (b.average ?? 0) - (a.average ?? 0),
+		)
 		.slice(0, 10)
 	const total = rows.reduce((s, g) => s + g.n, 0)
 	const top = [...rows].sort((a, b) => b.n - a.n)
@@ -82,15 +87,17 @@ export function Genres() {
 								{ value: "anime", label: "Anime" },
 							]}
 						/>
-						<Pills
-							label="Order"
-							value={by}
-							onChange={setBy}
-							options={[
-								{ value: "titles", label: "By titles" },
-								{ value: "score", label: "By score" },
-							]}
-						/>
+						{scored && (
+							<Pills
+								label="Order"
+								value={by}
+								onChange={setBy}
+								options={[
+									{ value: "titles", label: "By titles" },
+									{ value: "score", label: "By score" },
+								]}
+							/>
+						)}
 					</div>
 				}
 			/>
@@ -127,13 +134,15 @@ export function Genres() {
 								{g.name}
 							</span>
 							<span className="text-xs text-gray-500 tabular-nums">{g.n}</span>
-							<span
-								className="rounded px-1 text-[11px] font-black text-gray-950 tabular-nums"
-								style={{ background: vibe(g.average) }}
-								title={`Average score ${g.average}`}
-							>
-								{g.average.toFixed(1)}
-							</span>
+							{g.average != null && (
+								<span
+									className="rounded px-1 text-[11px] font-black text-gray-950 tabular-nums"
+									style={{ background: vibe(g.average) }}
+									title={`Average score ${g.average}`}
+								>
+									{g.average.toFixed(1)}
+								</span>
+							)}
 						</li>
 					))}
 				</ul>
@@ -186,8 +195,8 @@ export function People() {
 								</Link>
 							</p>
 							<p className="mt-0.5 mb-3 text-xs text-gray-500">
-								{p.count} films{p.hours ? ` · ${p.hours} h` : ""} · average{" "}
-								{p.average}
+								{p.count} films{p.hours ? ` · ${p.hours} h` : ""}
+								{p.average != null && ` · average ${p.average}`}
 							</p>
 							<ul className="grid grid-cols-5 gap-2">
 								{p.titles.slice(0, 5).map((t) => (
@@ -295,8 +304,10 @@ export function Eras() {
 	if (!stats?.eras.decades.length) return null
 	const d = stats.eras.decades
 	const most = Math.max(...d.map((x) => x.count))
-	const lo = Math.min(...d.map((x) => x.average))
-	const hi = Math.max(...d.map((x) => x.average))
+	// Without the owner's scores there are no averages: the bars share one colour.
+	const averages = d.flatMap((x) => (x.average == null ? [] : [x.average]))
+	const lo = Math.min(...averages)
+	const hi = Math.max(...averages)
 	const year = new Date().getFullYear()
 	return (
 		<section aria-labelledby="eras" className="flex flex-col gap-5">
@@ -321,9 +332,12 @@ export function Eras() {
 									className="block w-full rounded-t-md"
 									style={{
 										height: `${Math.max(3, (x.count / most) * 100)}%`,
-										background: relColor(x.average, lo, hi),
+										background:
+											x.average == null
+												? "#f59e0b"
+												: relColor(x.average, lo, hi),
 									}}
-									title={`${x.decade}s: ${x.count} titles, average ${x.average}`}
+									title={`${x.decade}s: ${x.count} titles${x.average == null ? "" : `, average ${x.average}`}`}
 								/>
 							</div>
 						))}
@@ -341,8 +355,8 @@ export function Eras() {
 					<p className="mt-3 text-xs text-gray-500">
 						Kindest decade: {(() => {
 							const best = [...d]
-								.filter((x) => x.count >= 10)
-								.sort((a, b) => b.average - a.average)[0]
+								.filter((x) => x.count >= 10 && x.average != null)
+								.sort((a, b) => (b.average ?? 0) - (a.average ?? 0))[0]
 							return best ? (
 								<b className="text-gray-300">
 									the {best.decade}s ({best.average})
@@ -431,7 +445,8 @@ export function World() {
 							{c.name} <b className="text-white tabular-nums">{pct(c.share)}</b>
 							<span className="text-xs text-gray-500">
 								{" "}
-								· {c.count} · avg {c.average}
+								· {c.count}
+								{c.average != null && ` · avg ${c.average}`}
 							</span>
 						</li>
 					))}
@@ -513,7 +528,7 @@ export function Tags() {
 
 export function Facts() {
 	const { stats, owner } = useStats()
-	if (!stats) return null
+	if (!stats?.facts) return null
 	const f = stats.facts
 	const hm = (minutes: number) =>
 		minutes >= 60
@@ -614,6 +629,7 @@ export function RatingStyle() {
 		? shared.reduce((sum, r) => sum + r.yours - r.theirs, 0) / shared.length
 		: 0
 	const s = stats.style
+	if (!s) return null
 	const pos = (v: number) => `${((v - 1) / 9) * 100}%`
 	const kinds = (["movie", "show", "anime"] as Kind[]).filter(
 		(k) => s.byKind[k] != null,

@@ -16,7 +16,7 @@ import {
 	type ProfilePart,
 	type ProfileShell,
 	type ProfileTitle,
-	canSee,
+	seesPart,
 } from "~/domain/profile"
 import { type MemberCompare, matchTier } from "~/domain/profile-taste"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
@@ -63,18 +63,16 @@ export function Overview({
 	compare: MemberCompare | null
 }) {
 	const navigate = useNavigate()
-	const see = (part: ProfilePart) =>
-		canSee(shell.visibility, part, shell.viewer)
+	const see = (part: ProfilePart) => seesPart(shell, part)
 	const owner = shell.viewer === "owner"
 	const tier = (score: number) =>
 		`${profileTabPath(shell.handle, "scores")}#tier-${score}`
 	const mostOften = shell.spread.indexOf(Math.max(...shell.spread)) + 1
 	return (
 		<div className={`${WRAP} flex flex-col gap-12 pt-8 pb-32 text-white`}>
-			{shell.viewer === "guest" && see("taste") && (
-				<GuestMatch handle={shell.handle} />
-			)}
-			{shell.viewer === "member" && see("taste") && compare && (
+			{/* The match and the way to it show whatever the owner shares: they compare whole tastes, not one part. */}
+			{shell.viewer === "guest" && <GuestMatch handle={shell.handle} />}
+			{shell.viewer === "member" && compare && (
 				<MatchCard shell={shell} compare={compare} taste={taste} />
 			)}
 
@@ -405,6 +403,38 @@ function CountUp({ to, still }: { to: number; still: boolean }) {
 	return <>{n}</>
 }
 
+/** Too few liked titles on one side to compare: the visitor's (rate more) or the owner's (nothing to do). */
+function ThinMatch({
+	compare,
+	handle,
+}: { compare: Extract<MemberCompare, { status: "thin" }>; handle: string }) {
+	// `side` says whose taste is too thin; without it, it's the visitor's.
+	const side = (compare as { side?: "you" | "them" }).side ?? "you"
+	if (side === "them")
+		return (
+			<div className={`${TILE} flex flex-wrap items-center gap-4 p-4 sm:p-5`}>
+				<SparklesIcon className="size-7 shrink-0 text-gray-500" aria-hidden />
+				<p className="min-w-[12rem] flex-1 text-gray-300">
+					<b className="text-white">
+						@{handle} hasn't rated enough yet to compare.
+					</b>
+				</p>
+			</div>
+		)
+	return (
+		<div className={`${TILE} flex flex-wrap items-center gap-4 p-4 sm:p-5`}>
+			<SparklesIcon className="size-7 shrink-0 text-amber-400" aria-hidden />
+			<p className="min-w-[12rem] flex-1 text-gray-300">
+				<b className="text-white">Rate 5 titles you love to see your match.</b>{" "}
+				You have {compare.liked} so far.
+			</p>
+			<Link to="/taste" className={AMBER_BUTTON}>
+				Rate titles
+			</Link>
+		</div>
+	)
+}
+
 /** The signed-in visitor's match with the owner: the ring, the tier word, what pulls you both, the titles you both love,
  * the two prints, and the way to the comparison. */
 function MatchCard({
@@ -419,20 +449,7 @@ function MatchCard({
 	const still = useReducedMotion() ?? false
 	const compareHref = `${profileTabPath(shell.handle, "taste")}#compare`
 	if (compare.status === "thin")
-		return (
-			<div className={`${TILE} flex flex-wrap items-center gap-4 p-4 sm:p-5`}>
-				<SparklesIcon className="size-7 shrink-0 text-amber-400" aria-hidden />
-				<p className="min-w-[12rem] flex-1 text-gray-300">
-					<b className="text-white">
-						Rate 5 titles you love to see your match with @{shell.handle}.
-					</b>{" "}
-					You have {compare.liked} so far.
-				</p>
-				<Link to="/taste" className={AMBER_BUTTON}>
-					Rate titles
-				</Link>
-			</div>
-		)
+		return <ThinMatch compare={compare} handle={shell.handle} />
 	const p = compare.percent
 	const s = matchStrength(p)
 	const color = matchColor(p)
@@ -555,20 +572,23 @@ function MatchCard({
 								)}
 							</span>
 						</h2>
-						<p className="mt-1 text-sm text-gray-300">
-							{pulls.both.length > 0 && (
-								<>
-									You both go for{" "}
-									{pulls.both.slice(0, 2).join(" and ").toLowerCase()}.{" "}
-								</>
-							)}
-							{pulls.onlyThem[0] && pulls.onlyYou[0] && (
-								<>
-									They chase {pulls.onlyThem[0].toLowerCase()}; you chase{" "}
-									{pulls.onlyYou[0].toLowerCase()}.
-								</>
-							)}
-						</p>
+						{(pulls.both.length > 0 ||
+							(pulls.onlyThem[0] && pulls.onlyYou[0])) && (
+							<p className="mt-1 text-sm text-gray-300">
+								{pulls.both.length > 0 && (
+									<>
+										You both go for{" "}
+										{pulls.both.slice(0, 2).join(" and ").toLowerCase()}.{" "}
+									</>
+								)}
+								{pulls.onlyThem[0] && pulls.onlyYou[0] && (
+									<>
+										They chase {pulls.onlyThem[0].toLowerCase()}; you chase{" "}
+										{pulls.onlyYou[0].toLowerCase()}.
+									</>
+								)}
+							</p>
+						)}
 					</div>
 					<div className="flex flex-wrap items-center gap-x-5 gap-y-3">
 						{loved.length > 0 && (
@@ -642,13 +662,16 @@ function MatchCard({
 							</span>
 						</div>
 					)}
-					<Link
-						to={compareHref}
-						className={`${AMBER_BUTTON} max-sm:w-full max-sm:justify-center`}
-					>
-						Compare tastes
-						<ArrowRightIcon className="size-4" aria-hidden />
-					</Link>
+					{/* The full comparison lives on the Taste tab, so it needs Taste to be shared with members. */}
+					{seesPart(shell, "taste") && (
+						<Link
+							to={compareHref}
+							className={`${AMBER_BUTTON} max-sm:w-full max-sm:justify-center`}
+						>
+							Compare tastes
+							<ArrowRightIcon className="size-4" aria-hidden />
+						</Link>
+					)}
 				</div>
 			</div>
 		</section>
@@ -722,8 +745,7 @@ function ActivityRow({
 	shell,
 	overview,
 }: { shell: ProfileShell; overview: ProfileOverview }) {
-	const see = (part: ProfilePart) =>
-		canSee(shell.visibility, part, shell.viewer)
+	const see = (part: ProfilePart) => seesPart(shell, part)
 	const tabs: {
 		id: ActivityTab
 		label: string
