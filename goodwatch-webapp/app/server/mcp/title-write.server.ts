@@ -1,4 +1,10 @@
 import type { UserData } from "../../types/user-data"
+import {
+	EpisodeScoreTargetError,
+	EpisodeScoresUnavailable,
+	getEpisodeScores,
+	setEpisodeScore,
+} from "../episode-scores.server"
 import { updateNotInterested } from "../not-interested.server"
 import { type Score, updateScores } from "../scores.server"
 import {
@@ -17,17 +23,141 @@ import { type CatalogTitle, readMemberTool } from "./data.server.ts"
 import type { WriteToolName } from "./write-names.ts"
 import type { WriteArgs } from "./write-tools.server.ts"
 
-/** The member's marks and watch log for one title. `preloaded` reuses member data a batch read once for many titles. */
+/**
+ * A season, or an episode of it, that rate_title scores instead of the whole show (#759): numbers in TMDB's
+ * numbering, as log_watch takes them. These scores live apart from the title's score and never change its taste,
+ * status or watches.
+ */
+export interface PartTarget {
+	season: number
+	episode?: number
+}
+/** The part a rate_title call names; null for every other call, and for a rating of the whole title. */
+export const partOf = (
+	name: WriteToolName,
+	args: Pick<WriteArgs, "season" | "episode">,
+): PartTarget | null =>
+	name === "rate_title" && args.season !== undefined
+		? {
+				season: args.season,
+				...(args.episode !== undefined ? { episode: args.episode } : {}),
+			}
+		: null
+/** "Season 2", or "S2 E5". */
+export const partLabel = (part: PartTarget) =>
+	part.episode === undefined
+		? `Season ${part.season}`
+		: `S${part.season} E${part.episode}`
+
+/** What a part score reads and writes; tests pass their own. */
+export interface PartDeps {
+	episodes(showId: number): Promise<
+		{
+			tmdb_id: number
+			season_number: number
+			episode_number: number
+			air_date: number | null
+		}[]
+	>
+	scores: typeof getEpisodeScores
+	set: typeof setEpisodeScore
+	now(): number
+}
+const livePartDeps: PartDeps = {
+	episodes: getEpisodeList,
+	scores: getEpisodeScores,
+	set: setEpisodeScore,
+	now: () => Date.now(),
+}
+
+type ShowRef = Pick<CatalogTitle, "media_type" | "tmdb_id">
+
+/** The member's score for one part of a show; null when there is none or the episode isn't in the list. */
+export async function readPartScore(
+	userId: string,
+	title: ShowRef,
+	part: PartTarget,
+	deps: PartDeps = livePartDeps,
+): Promise<number | null> {
+	let key = `s${part.season}`
+	if (part.episode !== undefined) {
+		const episode = (await deps.episodes(title.tmdb_id)).find(
+			(row) =>
+				row.season_number === part.season &&
+				row.episode_number === part.episode,
+		)
+		if (!episode) return null
+		key = `e${episode.tmdb_id}`
+	}
+	return (
+		(await deps.scores(userId, title.tmdb_id)).find(
+			(score) => score.key === key,
+		)?.score ?? null
+	)
+}
+
+/** Sets or clears a part score; answers with a refusal, or null once written. */
+export async function writePartScore(
+	userId: string,
+	title: ShowRef,
+	part: PartTarget,
+	score: number | null,
+	deps: PartDeps = livePartDeps,
+): Promise<{ refused: string } | null> {
+	if (title.media_type !== "show")
+		return {
+			refused:
+				"A movie has no seasons or episodes. Leave out season and episode to rate the movie.",
+		}
+	const inSeason = (await deps.episodes(title.tmdb_id)).filter(
+		(row) => row.season_number === part.season,
+	)
+	const aired = (row: { air_date: number | null }) =>
+		row.air_date !== null && row.air_date <= deps.now()
+	let target:
+		| { scope: "season"; season: number }
+		| { scope: "episode"; episodeTmdbId: number }
+	if (part.episode === undefined) {
+		if (!inSeason.some(aired))
+			return { refused: "This season has no aired episodes yet." }
+		target = { scope: "season", season: part.season }
+	} else {
+		const episode = inSeason.find((row) => row.episode_number === part.episode)
+		if (!episode)
+			return { refused: "This show's episode list has no such episode." }
+		if (!aired(episode)) return { refused: "This episode hasn't aired yet." }
+		target = { scope: "episode", episodeTmdbId: episode.tmdb_id }
+	}
+	try {
+		await deps.set(userId, title.tmdb_id, target, score)
+	} catch (error) {
+		if (error instanceof EpisodeScoresUnavailable)
+			return { refused: "Season and episode scores aren't available yet." }
+		if (error instanceof EpisodeScoreTargetError)
+			return { refused: error.message }
+		throw error
+	}
+	return null
+}
+
+/**
+ * The member's marks and watch log for one title. `preloaded` reuses member data a batch read once for many titles.
+ * With a part, it also reads that part's score as `part_score`.
+ */
 export async function snapshot(
 	userId: string,
 	title: CatalogTitle,
 	preloaded?: UserData,
+	part?: PartTarget | null,
 ) {
-	const [tracking, user] = await Promise.all([
+	const [tracking, user, partScore] = await Promise.all([
 		title.media_type === "movie"
 			? getMovieTracking(userId, title.tmdb_id)
 			: getShowTracking(userId, title.tmdb_id),
 		preloaded ?? getUserData({ user_id: userId }),
+		part && title.media_type === "show"
+			? readPartScore(userId, title, part)
+			: undefined,
 	])
 	const key = `${title.media_type}-${title.tmdb_id}` as const
 	const watches = [...tracking.log]
@@ -58,6 +188,7 @@ export async function snapshot(
 			origin: watch.origin,
 		}))
 	return {
+		...(partScore !== undefined ? { part_score: partScore } : {}),
 		status:
 			tracking.state?.state ??
 			(title.media_type === "show" ? "not_started" : null),
@@ -94,7 +225,13 @@ export async function applyTitleWrite(
 ): Promise<TitleWrite> {
 	let removedWatchId: string | null = null
 	let appliedEvent: ShowAction["event"]["type"] | null = null
-	if (name === "rate_title") {
+	const part = partOf(name, args)
+	if (part) {
+		if (args.score === undefined)
+			return { refused: "A rating requires a score or null" }
+		const refused = await writePartScore(userId, title, part, args.score)
+		if (refused) return refused
+	} else if (name === "rate_title") {
 		if (args.score === undefined)
 			return { refused: "A rating requires a score or null" }
 		const updated = await updateScores({

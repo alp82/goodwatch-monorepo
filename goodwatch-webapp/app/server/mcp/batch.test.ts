@@ -137,7 +137,15 @@ function fakeLibrary() {
 		updateScores: [] as { key: string; score: number | null }[],
 		showEvents: [] as string[],
 		movieDeletes: [] as string[],
+		partScores: [] as { key: string; score: number | null }[],
 	}
+	/** Season and episode scores, apart from the title's own score: `user|show:id|season|episode`. */
+	const parts = new Map<string, number>()
+	const partKey = (
+		userId: string,
+		showId: number,
+		part: { season: number; episode?: number },
+	) => `${userId}|show:${showId}|${part.season}|${part.episode ?? ""}`
 	let deferring = false
 	const keyOf = (
 		userId: string,
@@ -243,9 +251,15 @@ function fakeLibrary() {
 			calls.userData++
 			return {} as UserData
 		},
-		async snapshot(userId, title) {
+		async snapshot(userId, title, _user, part) {
 			const marks = marksOf(userId, title)
 			return {
+				...(part
+					? {
+							part_score:
+								parts.get(partKey(userId, title.tmdb_id, part)) ?? null,
+						}
+					: {}),
 				status: marks.status,
 				pass: title.media_type === "show" ? 1 : null,
 				score: marks.score,
@@ -282,7 +296,16 @@ function fakeLibrary() {
 			calls.applyTitleWrite.push(`${name}:${title.media_type}:${title.tmdb_id}`)
 			const marks = marksOf(userId, title)
 			if (args.title_name === "Explodes") throw new Error("Crate went away")
-			if (name === "rate_title") {
+			if (name === "rate_title" && args.season !== undefined) {
+				if (title.media_type !== "show")
+					return { refused: "A movie has no seasons or episodes." }
+				const key = partKey(userId, title.tmdb_id, {
+					season: args.season,
+					episode: args.episode,
+				})
+				if (args.score == null) parts.delete(key)
+				else parts.set(key, args.score)
+			} else if (name === "rate_title") {
 				marks.score = args.score ?? null
 				marks.not_interested = false
 				if (title.media_type === "movie") settleMovie(marks, title.tmdb_id)
@@ -382,6 +405,12 @@ function fakeLibrary() {
 			marks.score = score
 			if (media_type === "movie") settleMovie(marks, tmdb_id)
 		},
+		async setPartScore({ user_id, tmdb_id, season, episode, score }) {
+			const key = partKey(user_id, tmdb_id, { season, episode })
+			calls.partScores.push({ key, score })
+			if (score === null) parts.delete(key)
+			else parts.set(key, score)
+		},
 		async deleteMovieWatch(userId, movieId, watchId) {
 			calls.movieDeletes.push(watchId)
 			const marks = marksOf(userId, { media_type: "movie", tmdb_id: movieId })
@@ -408,7 +437,20 @@ function fakeLibrary() {
 		const [media_type, raw] = id.split(":")
 		return marksOf(userId, { media_type, tmdb_id: Number(raw) })
 	}
-	return { ports, calls, set, get, receipts }
+	const part = (
+		userId: string,
+		showId: number,
+		season: number,
+		episode?: number,
+	) => parts.get(partKey(userId, showId, { season, episode })) ?? null
+	const setPart = (
+		userId: string,
+		showId: number,
+		season: number,
+		episode: number | undefined,
+		score: number,
+	) => parts.set(partKey(userId, showId, { season, episode }), score)
+	return { ports, calls, set, get, receipts, part, setPart }
 }
 
 const write = (
@@ -1070,3 +1112,237 @@ for (const [name, fields] of [
 		assert.deepEqual(lib.get(ME, titleId), before)
 	})
 }
+
+test("rate_title with a season, or a season and episode, scores only that part of a show (#759)", async () => {
+	const rate = schemaOf("rate_title")
+	assert.ok(
+		rate.safeParse({
+			action_id: "p",
+			title_id: "show:3001",
+			season: 1,
+			episode: 2,
+			score: 9,
+		}).success,
+	)
+	for (const bad of [
+		{ episode: 2 },
+		{ season: 0 },
+		{ season: 1, episode: 0 },
+		{ season: 1.5 },
+	])
+		assert.equal(
+			rate.safeParse({
+				action_id: "p",
+				title_id: "show:3001",
+				score: 9,
+				...bad,
+			}).success,
+			false,
+			JSON.stringify(bad),
+		)
+	const lib = fakeLibrary()
+	lib.set(ME, "show:3001", { score: 6 })
+	const input = {
+		action_id: "part-1",
+		title_id: "show:3001",
+		season: 1,
+		episode: 2,
+		score: 9,
+	}
+	const result = await write(lib, "rate_title", input)
+	assert.equal(result.outcome, "applied")
+	assert.equal(result.part, "S1 E2")
+	assert.equal((result.before as { part_score: unknown }).part_score, null)
+	assert.equal((result.after as { part_score: unknown }).part_score, 9)
+	// The show's own score, status and watches stay; taste is not marked changed.
+	assert.equal(lib.get(ME, "show:3001").score, 6)
+	assert.equal((result.after as Marks).score, 6)
+	assert.equal(lib.get(ME, "show:3001").watches.length, 0)
+	assert.equal(lib.part(ME, 3001, 1, 2), 9)
+	assert.equal(lib.calls.taste, 0)
+	const replay = await write(lib, "rate_title", input)
+	assert.equal(replay.replayed, true)
+	assert.equal(lib.calls.applyTitleWrite.length, 1)
+	const season = await write(lib, "rate_title", {
+		action_id: "part-2",
+		title_id: "show:3001",
+		season: 1,
+		score: 7,
+	})
+	assert.equal(season.part, "Season 1")
+	assert.equal(lib.part(ME, 3001, 1), 7)
+	assert.equal(lib.part(ME, 3001, 1, 2), 9)
+	const cleared = await write(lib, "rate_title", {
+		action_id: "part-3",
+		title_id: "show:3001",
+		season: 1,
+		score: null,
+	})
+	assert.equal(cleared.outcome, "applied")
+	assert.equal(lib.part(ME, 3001, 1), null)
+	// Without a season the call rates the whole show, as before.
+	await write(lib, "rate_title", {
+		action_id: "whole",
+		title_id: "show:3001",
+		score: 8,
+	})
+	assert.equal(lib.get(ME, "show:3001").score, 8)
+	assert.equal(lib.part(ME, 3001, 1, 2), 9)
+})
+
+test("A rate_title batch scores several episodes of one show, refuses the same part twice, and undoes only what it changed", async () => {
+	const lib = fakeLibrary()
+	lib.setPart(ME, 3001, 1, 3, 4)
+	const result = await write(lib, "rate_title", {
+		action_id: "parts-batch",
+		items: [
+			{ title_id: "show:3001", season: 1, episode: 1, score: 8 },
+			{ title_id: "show:3001", season: 1, episode: 2, score: 9 },
+			{ title_id: "show:3001", season: 1, episode: 2, score: 5 },
+			{ title_id: "show:3001", season: 1, episode: 3, score: 4 },
+			{ title_id: "show:3001", score: 7 },
+			{ title_id: "show:3002", season: 2, score: 6 },
+		],
+	})
+	assert.deepEqual(
+		itemsOf(result).map((item) => item.status),
+		["done", "done", "error", "already_set", "done", "done"],
+	)
+	assert.deepEqual(
+		(itemsOf(result)[1] as unknown as { changes: unknown }).changes,
+		{ part_score: [null, 9] },
+	)
+	assert.equal(
+		(itemsOf(result)[1] as unknown as { part: unknown }).part,
+		"S1 E2",
+	)
+	assert.equal(lib.get(ME, "show:3001").score, 7)
+	assert.equal(lib.part(ME, 3001, 1, 2), 9)
+	assert.equal(lib.part(ME, 3002, 2), 6)
+	// The whole-show score marks taste changed; the part scores alone would not.
+	assert.equal(lib.calls.taste, 1)
+	// The member changes one part again after the batch: undo keeps it.
+	lib.setPart(ME, 3001, 1, 1, 2)
+	const undone = await write(lib, "undo_watch", {
+		action_id: "undo-parts",
+		batch_id: "parts-batch",
+	})
+	assert.deepEqual(
+		(undone.items as { index: number; status: string; kept?: string[] }[]).map(
+			(item) => [item.index, item.status, item.kept],
+		),
+		[
+			[0, "changed_since", ["part_score"]],
+			[1, "undone", undefined],
+			[4, "undone", undefined],
+			[5, "undone", undefined],
+		],
+	)
+	assert.equal(lib.part(ME, 3001, 1, 1), 2)
+	assert.equal(lib.part(ME, 3001, 1, 2), null)
+	assert.equal(lib.part(ME, 3001, 1, 3), 4)
+	assert.equal(lib.part(ME, 3002, 2), null)
+	assert.equal(lib.get(ME, "show:3001").score, null)
+	assert.deepEqual(lib.calls.partScores, [
+		{ key: `${ME}|show:3001|1|2`, score: null },
+		{ key: `${ME}|show:3002|2|`, score: null },
+	])
+})
+
+test("A part score names an aired season or episode of a show in TMDB's numbering, and says why it can't", async () => {
+	const { writePartScore, readPartScore } = await import(
+		"./title-write.server.ts"
+	)
+	const { EpisodeScoresUnavailable } = await import(
+		"../episode-scores.server.ts"
+	)
+	const day = Date.UTC(2026, 9, 1)
+	const sets: unknown[] = []
+	let unavailable = false
+	const deps = {
+		episodes: async () => [
+			{ tmdb_id: 501, season_number: 1, episode_number: 1, air_date: day },
+			{ tmdb_id: 502, season_number: 1, episode_number: 2, air_date: day },
+			{
+				tmdb_id: 601,
+				season_number: 2,
+				episode_number: 1,
+				air_date: Date.UTC(2027, 0, 1),
+			},
+		],
+		scores: async () => [
+			{
+				scope: "episode" as const,
+				key: "e502",
+				season: 1,
+				episode: 2,
+				episodeTmdbId: 502,
+				score: 6,
+				label: null,
+				updatedAt: "",
+			},
+		],
+		set: (async (
+			_user: string,
+			_show: number,
+			target: unknown,
+			score: unknown,
+		) => {
+			if (unavailable) throw new EpisodeScoresUnavailable()
+			sets.push([target, score])
+			return { status: "saved", score: null, previous: null }
+		}) as never,
+		now: () => Date.UTC(2026, 9, 24),
+	}
+	const show = { media_type: "show" as const, tmdb_id: 3001 }
+	assert.equal(
+		await writePartScore("m", show, { season: 1, episode: 2 }, 9, deps),
+		null,
+	)
+	assert.equal(await writePartScore("m", show, { season: 1 }, 8, deps), null)
+	assert.deepEqual(sets, [
+		[{ scope: "episode", episodeTmdbId: 502 }, 9],
+		[{ scope: "season", season: 1 }, 8],
+	])
+	assert.match(
+		(await writePartScore("m", show, { season: 1, episode: 9 }, 5, deps))
+			?.refused ?? "",
+		/no such episode/,
+	)
+	assert.match(
+		(await writePartScore("m", show, { season: 2, episode: 1 }, 5, deps))
+			?.refused ?? "",
+		/hasn't aired/,
+	)
+	assert.match(
+		(await writePartScore("m", show, { season: 2 }, 5, deps))?.refused ?? "",
+		/no aired episodes/,
+	)
+	assert.match(
+		(
+			await writePartScore(
+				"m",
+				{ media_type: "movie", tmdb_id: 1000 },
+				{ season: 1 },
+				5,
+				deps,
+			)
+		)?.refused ?? "",
+		/movie has no seasons/,
+	)
+	unavailable = true
+	assert.match(
+		(await writePartScore("m", show, { season: 1 }, 5, deps))?.refused ?? "",
+		/aren't available yet/,
+	)
+	assert.equal(sets.length, 2)
+	assert.equal(
+		await readPartScore("m", show, { season: 1, episode: 2 }, deps),
+		6,
+	)
+	assert.equal(await readPartScore("m", show, { season: 1 }, deps), null)
+	assert.equal(
+		await readPartScore("m", show, { season: 1, episode: 9 }, deps),
+		null,
+	)
+})

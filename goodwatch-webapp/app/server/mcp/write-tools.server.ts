@@ -58,7 +58,25 @@ const logWatchFields = {
 	whole_season: z.boolean().optional(),
 	date: z.iso.date().optional(),
 }
-const rateFields = { score: z.number().int().min(1).max(10).nullable() }
+const rateFields = {
+	score: z.number().int().min(1).max(10).nullable(),
+	season: z
+		.number()
+		.int()
+		.min(1)
+		.max(1000)
+		.optional()
+		.describe(
+			"For a show: score this season, in TMDB's numbering, instead of the whole show.",
+		),
+	episode: z
+		.number()
+		.int()
+		.min(1)
+		.max(100000)
+		.optional()
+		.describe("With season: score this episode instead of the whole show."),
+}
 const wantFields = { want_to_see: z.boolean() }
 const hiddenFields = { not_interested: z.boolean() }
 const statusFields = {
@@ -88,7 +106,12 @@ export const itemSchemas = {
 					value.episode_end === undefined),
 			"A whole season needs a regular season and no episode numbers",
 		),
-	rate_title: writeSelected.safeExtend({ ...action, ...rateFields }),
+	rate_title: writeSelected
+		.safeExtend({ ...action, ...rateFields })
+		.refine(
+			(value) => value.episode === undefined || value.season !== undefined,
+			"An episode score needs its season",
+		),
 	set_want_to_see: writeSelected.safeExtend({ ...action, ...wantFields }),
 	set_not_interested: writeSelected.safeExtend({ ...action, ...hiddenFields }),
 	set_show_status: writeSelected.safeExtend({ ...action, ...statusFields }),
@@ -190,7 +213,7 @@ export const writeToolDefinitions: {
 		name: "rate_title",
 		title: "Rate a title",
 		description:
-			"Set a score from 1 to 10, or clear it with null. Clearing a score is destructive. A movie rating can own one undated watch; show ratings never log episodes or change show status. The result reports the previous score and exact watch changes.",
+			"Set a score from 1 to 10, or clear it with null. Clearing a score is destructive. A movie rating can own one undated watch; show ratings never log episodes or change show status. For a show, season (and episode) score that aired season or episode instead of the whole show: kept apart from the show's score, they never change its score, status, watches, taste or recommendations. The result reports the previous score and exact watch changes.",
 		destructive: true,
 		schema: batchable(itemSchemas.rate_title, rateFields),
 	},

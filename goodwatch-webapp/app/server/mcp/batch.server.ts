@@ -13,7 +13,7 @@ import * as z from "zod4"
 import type { UserData } from "../../types/user-data"
 import { canonicalTitleId } from "../../utils/title-identity.ts"
 import type { CatalogTitle } from "./data.server.ts"
-import type { Snapshot, TitleWrite } from "./title-write.server.ts"
+import type { PartTarget, Snapshot, TitleWrite } from "./title-write.server.ts"
 import type { ReadArgs } from "./tools.server.ts"
 import type { WriteToolName } from "./write-names.ts"
 import type { WriteArgs } from "./write-tools.server.ts"
@@ -50,10 +50,12 @@ export interface Ports {
 		keys: { media_type: "movie" | "show"; tmdb_id: number }[],
 	): Promise<Map<string, CatalogTitle>>
 	userData(userId: string): Promise<UserData>
+	/** With a part, the snapshot also has that part's score as `part_score`. */
 	snapshot(
 		userId: string,
 		title: CatalogTitle,
 		user?: UserData,
+		part?: PartTarget | null,
 	): Promise<Snapshot>
 	applyTitleWrite(
 		userId: string,
@@ -97,6 +99,14 @@ export interface Ports {
 		score: number | null
 		review?: string
 	}): Promise<unknown>
+	/** Puts a season or episode score back (#759); throws when it can't. */
+	setPartScore(input: {
+		user_id: string
+		tmdb_id: number
+		season: number
+		episode?: number
+		score: number | null
+	}): Promise<unknown>
 	deleteMovieWatch(
 		userId: string,
 		movieId: number,
@@ -137,6 +147,7 @@ async function mapPool<T, R>(
 
 const MARKS = [
 	"score",
+	"part_score",
 	"want_to_see",
 	"not_interested",
 	"status",
@@ -145,7 +156,23 @@ const MARKS = [
 ] as const
 type Mark = (typeof MARKS)[number]
 const markOf = (s: Snapshot, key: Mark) =>
-	key === "watch_count" ? s.watches.length : s[key]
+	key === "watch_count"
+		? s.watches.length
+		: key === "part_score"
+			? (s as { part_score?: number | null }).part_score
+			: s[key]
+/** The part a rate_title item scores, from its arguments. */
+const partArgs = (name: BatchToolName, args: WriteArgs): PartTarget | null =>
+	name === "rate_title" && args.season !== undefined
+		? {
+				season: args.season,
+				...(args.episode !== undefined ? { episode: args.episode } : {}),
+			}
+		: null
+const partText = (part: PartTarget) =>
+	part.episode === undefined
+		? `Season ${part.season}`
+		: `S${part.season} E${part.episode}`
 /** What differs between two reads of a title, as [before, after] per mark: all a result needs, and all undo uses. */
 function changesOf(before: Snapshot, after: Snapshot) {
 	const changes: Partial<Record<Mark, [unknown, unknown]>> = {}
@@ -181,7 +208,10 @@ interface Row {
 
 /** Whether the item asks for what the title already has, so it is reported without a write. */
 function alreadySet(name: BatchToolName, args: WriteArgs, before: Snapshot) {
-	if (name === "rate_title") return before.score === args.score
+	if (name === "rate_title")
+		return partArgs(name, args)
+			? (before as { part_score?: number | null }).part_score === args.score
+			: before.score === args.score
 	if (name === "set_want_to_see") return before.want_to_see === args.want_to_see
 	if (name === "set_not_interested")
 		return before.not_interested === args.not_interested
@@ -191,9 +221,12 @@ function alreadySet(name: BatchToolName, args: WriteArgs, before: Snapshot) {
 /** Two items of one call may not change the same thing: a title once, or for log_watch one episode range once. */
 function dedupeKey(name: BatchToolName, args: WriteArgs, title: CatalogTitle) {
 	const key = titleKey(title)
+	const part = partArgs(name, args)
 	return name === "log_watch"
 		? `${key}|${args.season ?? ""}|${args.episode ?? ""}|${args.episode_end ?? ""}|${args.whole_season ? "season" : ""}|${args.date ?? ""}`
-		: key
+		: part
+			? `${key}|part|${part.season}|${part.episode ?? ""}`
+			: key
 }
 
 function watchChanges(
@@ -325,7 +358,12 @@ export async function runBatch(
 	)
 	const before = await ports.userData(userId)
 	await mapPool(live, 5, async (row) => {
-		row.before = await ports.snapshot(userId, row.title, before)
+		row.before = await ports.snapshot(
+			userId,
+			row.title,
+			before,
+			partArgs(name, row.args),
+		)
 	})
 
 	for (const row of live) {
@@ -410,7 +448,9 @@ export async function runBatch(
 		// The deferred scope turns this into the one real reset at its end, before the read-back below.
 		if (pending.length) await ports.resetUserData(userId)
 	})
-	if (pending.length) await ports.markTasteChanged(userId)
+	// Season and episode scores change nothing taste reads.
+	if (pending.some((row) => !partArgs(name, row.args)))
+		await ports.markTasteChanged(userId)
 
 	// Without the shared read, each title reads the member data itself: the items still report what landed.
 	const after = pending.length
@@ -442,7 +482,10 @@ export async function runBatch(
 				message:
 					row.write.refused ?? "This change was refused. Nothing was written.",
 			}
-		const now = await ports.snapshot(userId, title, after).catch(() => null)
+		const part = row.args ? partArgs(name, row.args) : null
+		const now = await ports
+			.snapshot(userId, title, after, part)
+			.catch(() => null)
 		const unconfirmed = {
 			...base,
 			status: "error",
@@ -451,7 +494,13 @@ export async function runBatch(
 		}
 		if (!now) return unconfirmed
 		const watches = watchChanges(name, was, now, row.actionId)
-		const changes = changesOf(was, now)
+		const all = changesOf(was, now)
+		// A part score item owns only its part: another item of the call may score the same show as a whole.
+		const changes = part
+			? all.part_score
+				? { part_score: all.part_score }
+				: {}
+			: all
 		const landed =
 			Object.keys(changes).length > 0 ||
 			watches.added.length > 0 ||
@@ -479,6 +528,8 @@ export async function runBatch(
 					}
 				: {}),
 			changes,
+			// Undo puts this part's score back, and the result names it.
+			...(part ? { part: partText(part), part_target: part } : {}),
 			// Undo puts a removed Wishlist entry back in its old place.
 			...(changes.want_to_see && was.want_to_see
 				? { want_to_see_added_at: was.want_to_see_added_at }
@@ -550,6 +601,12 @@ const receiptItem = z.object({
 		.partialRecord(z.enum(MARKS), z.tuple([markValue, markValue]))
 		.optional(),
 	want_to_see_added_at: z.unknown().optional(),
+	part_target: z
+		.object({
+			season: z.number().int().min(1),
+			episode: z.number().int().min(1).optional(),
+		})
+		.optional(),
 	undo: z
 		.object({
 			group: z.string().max(100).optional(),
@@ -619,13 +676,18 @@ export async function undoBatch(
 	const user = await ports.userData(userId)
 	const rows = await mapPool(done, 5, async (item) => {
 		const title = titleOf(item.title.id, item.title.name, item.title.year)
-		return { item, title, current: await ports.snapshot(userId, title, user) }
+		return {
+			item,
+			title,
+			current: await ports.snapshot(userId, title, user, item.part_target),
+		}
 	})
 	const outcomes = new Map<
 		number,
 		{ skipped: string[]; failed: boolean; notes: string[] }
 	>()
 	let wrote = false
+	let tasteWrite = false
 	await ports.deferResets(async () => {
 		for (const { item, title, current } of rows) {
 			const changes = item.changes ?? {}
@@ -638,7 +700,12 @@ export async function undoBatch(
 			outcomes.set(item.index, result)
 			// What to do with one mark the batch changed: nothing, put it back, or keep the member's newer value.
 			const field = (
-				key: "score" | "want_to_see" | "not_interested" | "status",
+				key:
+					| "score"
+					| "part_score"
+					| "want_to_see"
+					| "not_interested"
+					| "status",
 			) => {
 				const change = changes[key]
 				if (!change) return "same"
@@ -657,7 +724,7 @@ export async function undoBatch(
 					undo?.group &&
 					current.watches.some((w) => w.group_id === undo.group)
 				) {
-					wrote = true
+					wrote = tasteWrite = true
 					const answer = await ports.showEvent(userId, title.tmdb_id, {
 						type: "undoGroup",
 						group: undo.group,
@@ -670,7 +737,7 @@ export async function undoBatch(
 				}
 				for (const watchId of undo?.watch_ids ?? []) {
 					if (!current.watches.some((w) => w.id === watchId)) continue
-					wrote = true
+					wrote = tasteWrite = true
 					const answer =
 						title.media_type === "movie"
 							? await ports.deleteMovieWatch(userId, title.tmdb_id, watchId)
@@ -693,7 +760,7 @@ export async function undoBatch(
 							"Watching again can't be taken back here; set the show status yourself.",
 						)
 					else if (state === "revert") {
-						wrote = true
+						wrote = tasteWrite = true
 						const answer = await ports.showEvent(userId, title.tmdb_id, {
 							type:
 								undo.event === "resume"
@@ -708,6 +775,26 @@ export async function undoBatch(
 							)
 					} else if (state === "changed") result.skipped.push("status")
 				}
+				// 3. A season or episode score (#759), apart from the title's score.
+				const partScore = field("part_score")
+				const oldPart = was("part_score")
+				if (
+					partScore === "revert" &&
+					item.part_target &&
+					(oldPart === null ||
+						(typeof oldPart === "number" &&
+							Number.isInteger(oldPart) &&
+							oldPart >= 1 &&
+							oldPart <= 10))
+				) {
+					wrote = true
+					await ports.setPartScore({
+						user_id: userId,
+						tmdb_id: title.tmdb_id,
+						...item.part_target,
+						score: oldPart,
+					})
+				} else if (partScore === "changed") result.skipped.push("part_score")
 				// 3. The score.
 				const score = field("score")
 				const oldScore = was("score")
@@ -719,7 +806,7 @@ export async function undoBatch(
 							oldScore >= 1 &&
 							oldScore <= 10))
 				) {
-					wrote = true
+					wrote = tasteWrite = true
 					await ports.updateScores({
 						user_id: userId,
 						tmdb_id: title.tmdb_id,
@@ -746,7 +833,7 @@ export async function undoBatch(
 						"Not interested isn't put back on a title you have rated, watched or started.",
 					)
 				else if (hidden === "revert") {
-					wrote = true
+					wrote = tasteWrite = true
 					await ports.notInterestedMany({
 						user_id: userId,
 						titles: [{ tmdb_id: title.tmdb_id, media_type: title.media_type }],
@@ -760,7 +847,7 @@ export async function undoBatch(
 						typeof item.want_to_see_added_at === "string"
 							? new Date(item.want_to_see_added_at)
 							: null
-					wrote = true
+					wrote = tasteWrite = true
 					await ports.wishlistMany({
 						user_id: userId,
 						titles: [
@@ -781,19 +868,28 @@ export async function undoBatch(
 		}
 		if (wrote) await ports.resetUserData(userId)
 	})
-	if (wrote) await ports.markTasteChanged(userId)
+	// A season or episode score alone changes nothing taste reads.
+	if (tasteWrite) await ports.markTasteChanged(userId)
 	const fresh = wrote
 		? await ports.userData(userId).catch(() => undefined)
 		: user
 	const items = await mapPool(rows, 5, async ({ item, title, current }) => {
-		const now = await ports.snapshot(userId, title, fresh).catch(() => null)
+		const now = await ports
+			.snapshot(userId, title, fresh, item.part_target)
+			.catch(() => null)
 		const outcome = outcomes.get(item.index) ?? {
 			skipped: [],
 			failed: true,
 			notes: [],
 		}
 		const changes = item.changes ?? {}
-		const undone = now ? changesOf(current, now) : {}
+		const all = now ? changesOf(current, now) : {}
+		// A part score item reports only its part, as the batch did.
+		const undone = item.part_target
+			? all.part_score
+				? { part_score: all.part_score }
+				: {}
+			: all
 		const base = {
 			index: item.index,
 			title: ports.summary(title, origin),
@@ -813,7 +909,13 @@ export async function undoBatch(
 		)
 		// Only what the batch changed counts: the member may have changed other marks of the title since.
 		const mismatched = (
-			["score", "want_to_see", "not_interested", "status"] as const
+			[
+				"score",
+				"part_score",
+				"want_to_see",
+				"not_interested",
+				"status",
+			] as const
 		).filter(
 			(key) =>
 				changes[key] !== undefined &&

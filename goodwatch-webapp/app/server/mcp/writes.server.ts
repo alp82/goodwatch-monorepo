@@ -34,7 +34,13 @@ import {
 	savedServices,
 	writeServices,
 } from "./services.server"
-import { applyTitleWrite, snapshot } from "./title-write.server.ts"
+import {
+	applyTitleWrite,
+	partLabel,
+	partOf,
+	snapshot,
+	writePartScore,
+} from "./title-write.server.ts"
 import type { ReadArgs } from "./tools.server"
 import type { WriteToolName } from "./write-names.ts"
 import { type WriteArgs, itemSchemas } from "./write-tools.server.ts"
@@ -72,6 +78,15 @@ export const liveWritePorts: WritePorts = {
 	readReceipt: readActionResult,
 	updateScores: (input) =>
 		updateScores({ ...input, score: input.score as Score | null }),
+	async setPartScore({ user_id, tmdb_id, season, episode, score }) {
+		const refused = await writePartScore(
+			user_id,
+			{ media_type: "show", tmdb_id },
+			{ season, ...(episode !== undefined ? { episode } : {}) },
+			score,
+		)
+		if (refused) throw new Error(refused.refused)
+	},
 	deleteMovieWatch: (userId, movieId, watchId) =>
 		applyWatchLogAction(userId, movieId, { type: "delete", watchId }),
 	showEvent: (userId, showId, event) =>
@@ -215,7 +230,8 @@ export async function writeMemberTool(
 		args.action_id,
 		hash,
 		async () => {
-			const before = await ports.snapshot(userId, title)
+			const part = partOf(name, args)
+			const before = await ports.snapshot(userId, title, undefined, part)
 			const actionId = writeActionId(userId, args.action_id)
 			const write = await ports.applyTitleWrite(
 				userId,
@@ -230,8 +246,9 @@ export async function writeMemberTool(
 				return { outcome: "refused", message: write.refused }
 			const removedWatchId = write.removedWatchId
 			await ports.resetUserData(userId)
-			await ports.markTasteChanged(userId)
-			const after = await ports.snapshot(userId, title)
+			// A season or episode score changes nothing taste reads.
+			if (!part) await ports.markTasteChanged(userId)
+			const after = await ports.snapshot(userId, title, undefined, part)
 			return {
 				outcome:
 					JSON.stringify(before) === JSON.stringify(after)
@@ -239,6 +256,7 @@ export async function writeMemberTool(
 						: "applied",
 				action_id: args.action_id,
 				title: ports.summary(title, origin),
+				...(part ? { part: partLabel(part) } : {}),
 				before: {
 					...before,
 					watch_count: before.watches.length,
