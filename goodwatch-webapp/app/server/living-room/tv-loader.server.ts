@@ -14,6 +14,7 @@
 // Members lead with their existing Next pick and get a secondary popular row. Taste groups load only on Taste.
 import { json } from "@remix-run/node"
 import { presentCatalogLoader } from "~/server/media-payload.server"
+import { getTalkedAboutNow } from "~/server/talked-about-now/start-row.server"
 import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
 import { getTonightParts } from "~/server/home-doors.server"
 import type { Taste } from "~/server/taste/index.server"
@@ -89,12 +90,12 @@ export async function loadTvHome(request: Request) {
 			headers.set("Cache-Control", INCOMPLETE_PAGE_HEADERS["Cache-Control"])
 		return start
 	})
-	// "Talked about now" below the room (#557): only whether it is there. The row asks for its data itself once the
-	// visitor goes below, so with it on a guest's HTML stays the same for every guest, and grows by one field.
+	// Read the shared ranking alongside the start titles, so it is ready in the server HTML.
 	const talked = talkedAboutNowEnabled("row", user?.id)
-		? { talked: true as const }
-		: {}
-	if (!user) return { data: { ...guestHome(await start), ...talked }, headers }
+		? getTalkedAboutNow()
+		: Promise.resolve(null)
+	if (!user)
+		return { data: { ...guestHome(await start), talked: await talked }, headers }
 
 	// A member's home works without Tonight and My shows: the tiles are there and Tonight falls back to the pool's
 	// best, as for a guest. So a failed read leaves that, not an error page.
@@ -128,7 +129,7 @@ export async function loadTvHome(request: Request) {
 		...guestHome(await start, await services),
 		member: true,
 		...(await own),
-		...talked,
+		talked: await talked,
 		popular: await popular,
 	}
 	return { data, headers }

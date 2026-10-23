@@ -33,7 +33,13 @@ const rendered = JSON.parse(
 	)
 		.split("__BELOW_ROOM_RENDER__")
 		.at(-1) ?? "",
-) as { full: string; again: string; empty: string }
+) as {
+	full: string
+	again: string
+	empty: string
+	social: string
+	noRanking: string
+}
 
 /** Every `<a>` of the HTML: its attributes and its text. */
 const links = (html: string) =>
@@ -168,4 +174,25 @@ test("the page is held still until it is open, and a script is not needed to ope
 	const open = rule('html[data-lr="open"]')
 	assert.match(open, /overflow:\s*visible auto/)
 	assert.equal(rule("html:not([data-lr]):has(#browse:target)"), open)
+})
+
+test("the social ranking, post preview and links are present before JavaScript or scrolling", () => {
+	assert.ok(rendered.social.includes("Hot on socials"))
+	assert.ok(
+		links(rendered.social).some(
+			(link) =>
+				link.href === "/movie/603-the-matrix" &&
+				link.text.includes("The Matrix"),
+		),
+	)
+	assert.ok(rendered.social.includes("The Matrix returns to cinemas"))
+	assert.ok(
+		links(rendered.social).some(
+			(link) =>
+				link.href === "/hot-on-socials#movie-603" &&
+				link.text.includes("The Matrix"),
+		),
+	)
+	assert.doesNotMatch(rendered.social, /tn-wait|<iframe/)
+	assert.doesNotMatch(rendered.noRanking, /id="tn-title"|tn-wait/)
 })

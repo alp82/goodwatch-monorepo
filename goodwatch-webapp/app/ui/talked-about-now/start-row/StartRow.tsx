@@ -4,10 +4,8 @@
 // there is no panel: each row goes to that title on the Hot on socials page (routes/hot-on-socials.tsx), which
 // has every post. The heading's link goes there too.
 //
-// Loaded on its own (StartRowSlot.tsx), with its own stylesheet: nothing of it is in the start page's first
-// view. The same for every visitor; the data is the row's request (/api/talked-about-now).
+// Rendered with the start page and its loader data, before the visitor scrolls.
 import { Link } from "@remix-run/react"
-import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import {
 	type TalkedRow,
@@ -19,7 +17,6 @@ import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { Move, ReasonIcon, backupSources, buzzLabel, hrefOf, isBackup, isMultiple, tmdb, why } from "../parts"
 import { Platform, SourceMark } from "./Items"
 import { Spark } from "./Spark"
-import type { TalkedQuery } from "./StartRowSlot"
 import "./start-row.css"
 
 /** The Hot on socials page, opened at a title when one is given. */
@@ -158,10 +155,7 @@ function Board({ row }: { row: TalkedRow }) {
 	)
 }
 
-export default function StartRow({ query }: { query: TalkedQuery }) {
-	const { data, isPending } = useQuery(query)
-	// While it loads, the row holds about its place, so the titles below don't jump when it comes.
-	if (isPending) return <div className="tn-wait" aria-hidden />
-	if (!data?.titles.length) return null
-	return <Board row={data} />
+export default function StartRow({ row }: { row: TalkedRow }) {
+	if (!row.titles.length) return null
+	return <Board row={row} />
 }

@@ -1,5 +1,5 @@
-// The "Talked about now" row's data (#557), asked for by the start page once the visitor goes below the room
-// (ui/talked-about-now/start-row). The same for every visitor: with the feature on, any cache may keep it for a few
+// The "Talked about now" row's data API (#557). The homepage also reads this shared ranking in its loader.
+// The same for every visitor: with the feature on, any cache may keep it for a few
 // minutes; in preview it answers only the members in TALKED_ABOUT_NOW_PREVIEW_USERS, and nothing keeps it.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import type { TalkedRow } from "~/domain/talked-about-now"

@@ -12,18 +12,19 @@
   "surfaces": {
     "home": {
       "path": "/",
+      "note": "The social ranking now renders in the initial HTML. Reserve 32 KiB for markup and loader data, 16 KiB for the board, and two shared script chunks. Live Lighthouse calibration is pending.",
       "lcp_element": { "tag": "img", "contains": ["/assets/room-phone-", "/assets/hand-"] },
       "budget": {
-        "html_bytes": { "max": 20480 },
+        "html_bytes": { "max": 53248 },
         "host_requests": { "max": 44 },
-        "script_count": { "max": 24 },
-        "script_bytes": { "max": 284672 },
+        "script_count": { "max": 26 },
+        "script_bytes": { "max": 301056 },
         "image_count": { "max": 28 },
         "image_bytes": { "max": 378880 },
         "font_requests": { "max": 1 },
         "blocking_requests": { "max": 2 },
         "third_party_origins": { "max": 1 },
-        "total_bytes": { "max": 768000 },
+        "total_bytes": { "max": 817152 },
         "lcp_ms": { "max": 5200 },
         "tbt_ms": { "max": 150 },
         "cls": { "max": 0.01 },

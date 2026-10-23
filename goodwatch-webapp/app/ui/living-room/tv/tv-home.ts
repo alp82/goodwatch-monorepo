@@ -1,3 +1,4 @@
+import type { TalkedRow } from "~/domain/talked-about-now"
 import type { PresentedMedia } from "../../../utils/media-presentation.ts"
 import { copyMediaPresentation } from "../../../utils/media-presentation.ts"
 // What the new TV's home shows, and how the page's data becomes the machine's `TvContext`. Pure, shared by the
@@ -108,7 +109,7 @@ export type TvHomeData = {
 	/** A failed personal read is not an empty Wishlist. */
 	homeFailed?: boolean
 	/** "Talked about now" below the room (#557), for this viewer. Absent while the feature is off for them. */
-	talked?: true
+	talked?: TalkedRow | null
 	/**
 	 * A member's Sides of you, as home's list shows them (#673): the side holding the best pick in personal order
 	 * first. Absent for a guest; empty for a member without sides, whose home stays the row of tiles.

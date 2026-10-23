@@ -1,3 +1,4 @@
+import type { TalkedRow } from "~/domain/talked-about-now"
 import { useNavigationType } from "@remix-run/react"
 // The new TV's room (docs/implementation/tv-screen-revamp, slice 2): the softened room photo, the TV as large as
 // the window allows, and the Remote in the hand centred under it, at every size. A scene narrower than
@@ -80,7 +81,7 @@ export type TvRoomProps = {
 	/** The titles the section below the room links to. */
 	startTitles: StartTitle[]
 	/** "Talked about now" below the room (#557). */
-	talked?: boolean
+	talked?: TalkedRow | null
 	/** The person's own two streaming services: the Remotes' two keys, in their order. */
 	services: readonly RemoteService[]
 	/** Forces the Remote's place or the phone Remote's form, whatever the window would choose: for checks. */

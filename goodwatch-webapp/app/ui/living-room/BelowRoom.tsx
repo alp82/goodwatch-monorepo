@@ -1,3 +1,4 @@
+import type { TalkedRow } from "~/domain/talked-about-now"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 // The section below the living room (#352): the start titles and the ways to browse GoodWatch, as plain
@@ -79,8 +80,8 @@ export const CATEGORY_HUBS = [
 export type BelowRoomProps = {
 	/** Most popular first; empty while the title snapshot loads. */
 	titles: StartTitle[]
-	/** "Talked about now" at the top of the section (#557); it loads once the visitor goes below. */
-	talked?: boolean
+	/** "Talked about now" at the top of the section (#557); ready in the server HTML. */
+	talked?: TalkedRow | null
 	onDown?: (e: MouseEvent) => void
 	onBack?: (e: MouseEvent) => void
 	/** Content at the top of the section, before the titles: "How GoodWatch works" for a guest. */
@@ -89,7 +90,7 @@ export type BelowRoomProps = {
 
 export function BelowRoom({
 	titles,
-	talked = false,
+	talked = null,
 	onDown,
 	onBack,
 	intro,
@@ -120,7 +121,7 @@ export function BelowRoom({
 			</a>
 			<div className="lrb-in">
 				{intro}
-				{talked && <StartRowSlot />}
+				{talked && <StartRowSlot row={talked} />}
 				<header className="lrb-head">
 					<div>
 						<p className="lrb-eye">On GoodWatch now</p>
