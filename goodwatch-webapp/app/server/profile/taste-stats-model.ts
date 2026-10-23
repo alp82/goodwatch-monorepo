@@ -241,8 +241,8 @@ export function tasteStats(input: StatsInput): TasteStats {
 		facts: {
 			budget: budgets.reduce((s, t) => s + (t.budget ?? 0), 0),
 			revenue: movies.reduce((s, t) => s + (t.revenue ?? 0), 0),
-			longest: longest?.title ?? null,
-			shortest: shortest?.title ?? null,
+			longest: longest ? { ...longest.title, minutes: longest.runtime ?? undefined } : null,
+			shortest: shortest ? { ...shortest.title, minutes: shortest.runtime ?? undefined } : null,
 			oldest: oldest?.title ?? null,
 			newest: newest?.title ?? null,
 			mostEpisodes: episodic ? { ...episodic.title, episodes: episodic.episodesWatched } : null,
