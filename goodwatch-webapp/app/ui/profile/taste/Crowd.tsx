@@ -63,8 +63,8 @@ export function Crowd() {
 			<SectionHead
 				id="everyone"
 				eyebrow="Hot takes"
-				lead={owner ? "You vs the" : `@${handle} vs the`}
-				accent="crowd"
+				lead={owner ? "You vs" : `@${handle} vs`}
+				accent="everyone"
 				sub={`Where ${owner ? "your" : "their"} scores stand apart from the GoodWatch score, after ${owner ? "your" : "their"} usual generosity. ${c.headline}.`}
 				right={
 					<Pills
