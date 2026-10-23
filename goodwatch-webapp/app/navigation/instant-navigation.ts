@@ -7,6 +7,11 @@ import { type ClientLoaderFunctionArgs, matchRoutes } from "@remix-run/react"
 import { preloadHeroBackdrop } from "~/ui/details/hero/hero-backdrop"
 import { keptLoaderData } from "~/utils/loader-request-retry"
 import {
+	requestRootRevalidation,
+	rootRevalidated,
+} from "~/utils/root-revalidation"
+import { AUTH_SYNC_KEY, type AuthNote, AuthSync } from "./auth-sync"
+import {
 	type CachedRouteId,
 	TITLE_ROUTE_IDS,
 	isCachedRoute,
@@ -20,8 +25,11 @@ import {
 	invalidation,
 	isAuthRequest,
 	isWriteRequest,
+	memberKey,
+	memberOf,
 	navigationKind,
 	readLoaderResponse,
+	releaseOnFreshRoot,
 } from "./loader-cache"
 import { PrefetchQueue, type Priority } from "./prefetch-queue"
 
@@ -47,6 +55,7 @@ interface RemixRouter {
 		fetchers: Map<string, { state: string; formMethod?: string }>
 	}
 	subscribe(listener: (state: RemixRouter["state"]) => void): () => void
+	revalidate(): void
 }
 interface ManifestRoute {
 	module: string
@@ -109,44 +118,104 @@ export function holdLoaderCache(): () => void {
 	return cache.hold()
 }
 
-// How long a sign-in request holds the cache after its answer when no revalidation follows (a sign-up, a
-// confirmation email). A sign-in or sign-out reruns the root, and the auth provider holds the cache until it's done.
-const AUTH_HOLD_GRACE_MS = 3000
+// How long after a sign-in request's answer a revalidation may start by itself (the auth provider's after a sign-in or
+// sign-out). Without one (a sign-up, a confirmation email) the cache reloads the root itself.
+const AUTH_ANSWER_GRACE_MS = 3000
 
 /**
- * Calls `release` once the router has finished its next revalidation, also one that is under way, or after
- * `graceMs` when none has started by then.
+ * Releases a hold once the root has new data from the server (`releaseOnFreshRoot`), and makes sure the root
+ * reruns: on the next revalidation or navigation, or now with `revalidateAfterMs` when none started by then.
  */
-function releaseAfterRevalidation(release: () => void, graceMs: number) {
+function releaseAfterRootReload(
+	release: () => void,
+	revalidateAfterMs?: number,
+) {
 	const router = remix().__remixRouter
 	if (!router) return release()
-	let seen = router.state.revalidation !== "idle"
+	requestRootRevalidation()
 	const done = () => {
-		window.clearTimeout(timer)
-		stop()
+		// The auth provider ends the request only when the member changed: a visitor's root would rerun on every page.
+		rootRevalidated()
 		release()
 	}
-	const stop = router.subscribe((state) => {
-		if (state.revalidation !== "idle") seen = true
-		else if (seen && state.navigation.state === "idle") done()
+	releaseOnFreshRoot(router, done, {
+		kept: () => keptLoaderData("root"),
+		rerunRoot: requestRootRevalidation,
 	})
-	const timer = window.setTimeout(() => {
-		if (!seen) done()
-	}, graceMs)
+	if (revalidateAfterMs === undefined) return
+	let started = router.state.revalidation !== "idle"
+	const stop = router.subscribe((state) => {
+		if (state.revalidation !== "idle") started = true
+	})
+	window.setTimeout(() => {
+		stop()
+		if (!started && cache.held) router.revalidate()
+	}, revalidateAfterMs)
 }
 
 /**
- * Reruns the root's loader (and the page's) with the cache held until the new data is there, so no page kept for
- * the previous identity, and nothing loaded under it, shows meanwhile. Takes over `release` of a hold the caller
+ * Reruns the root's loader (and the page's) with the cache held until the root's new data is there, so no page kept
+ * for the previous identity, and nothing loaded under it, shows meanwhile. Takes over `release` of a hold the caller
  * already started.
  */
 export function revalidateWithCacheHeld(
 	revalidate: () => void,
 	release: () => void = holdLoaderCache(),
 ): void {
-	// `revalidate()` marks the router's state at once, so a grace of 0 only ends the hold if it didn't.
-	releaseAfterRevalidation(release, 0)
+	releaseAfterRootReload(release)
 	revalidate()
+}
+
+// Cross-tab notes about sign-ins (auth-sync.ts). Created once the router exists.
+let authSync: AuthSync | null = null
+
+/**
+ * Tells the other tabs that the signed-in person may have changed. `userId` names who the session holds now when
+ * that is known (the Supabase client's change event), so tabs that already show them do nothing.
+ */
+export function announceAuthChange(userId?: string | null): void {
+	authSync?.announce(userId === undefined ? undefined : memberKey(userId))
+}
+
+/** Another tab changed the session: hold the cache and reload the root, until it names who the cookie holds now. */
+function resyncIdentity() {
+	const router = remix().__remixRouter
+	if (!router) return
+	releaseAfterRootReload(holdLoaderCache())
+	router.revalidate()
+}
+
+function startAuthSync(router: RemixRouter) {
+	let channel: BroadcastChannel | null = null
+	try {
+		channel = new BroadcastChannel(AUTH_SYNC_KEY)
+	} catch {}
+	const sync = new AuthSync(
+		{
+			read: () => window.localStorage.getItem(AUTH_SYNC_KEY),
+			write: (value) => window.localStorage.setItem(AUTH_SYNC_KEY, value),
+			post: channel ? (note) => channel.postMessage(note) : null,
+			newId: () =>
+				`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
+		},
+		() => memberOf(router.state.loaderData.root),
+		resyncIdentity,
+	)
+	authSync = sync
+	if (channel)
+		channel.onmessage = (event: MessageEvent<AuthNote>) =>
+			sync.receive(event.data)
+	window.addEventListener("storage", (event) => {
+		if (event.key === AUTH_SYNC_KEY) sync.receive(event.newValue)
+	})
+	// A hidden tab may be throttled, and a page in the back/forward cache hears nothing.
+	document.addEventListener("visibilitychange", () => {
+		if (document.visibilityState === "visible") sync.check()
+	})
+	window.addEventListener("pageshow", (event) => {
+		if (event.persisted) sync.check()
+	})
+	sync.start()
 }
 
 async function fetchRouteData(
@@ -398,11 +467,19 @@ export function startLoaderCache(): void {
 	remix().__gwNavCache = stats
 	seed(router.state)
 	let identity = identityOf(router.state.loaderData.root)
+	let member = memberOf(router.state.loaderData.root)
 	router.subscribe((state) => {
 		const next = invalidation(identity, state)
 		identity = next.identity
 		if (next.clear) clearLoaderCache()
+		// The server named another member to this tab: the other tabs may still show the previous one.
+		const now = memberOf(state.loaderData.root)
+		if (now !== null && now !== member && !keptLoaderData("root")) {
+			member = now
+			authSync?.memberChanged(now)
+		}
 	})
+	startAuthSync(router)
 	// A waiting prefetch would start in a hidden tab, for a page the person may never come back to.
 	document.addEventListener("visibilitychange", () => {
 		if (document.visibilityState === "hidden") queue.clear()
@@ -451,7 +528,11 @@ export function installWriteWatch(): void {
 			url && isAuthRequest(method, url, origin) ? holdLoaderCache() : null
 		const pending = browserFetch(input, init)
 		if (release) {
-			const settle = () => releaseAfterRevalidation(release, AUTH_HOLD_GRACE_MS)
+			// The cookie may name someone else now, also for the other tabs.
+			const settle = () => {
+				announceAuthChange()
+				releaseAfterRootReload(release, AUTH_ANSWER_GRACE_MS)
+			}
 			pending.then(settle, settle)
 		} else if (url && isWriteRequest(method, url, origin)) {
 			pending.then(clearLoaderCache, clearLoaderCache)

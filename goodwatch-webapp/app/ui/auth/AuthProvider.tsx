@@ -1,9 +1,6 @@
-import { clearMediaSession, establishMediaSession } from "~/utils/media-session"
-import { AuthCallbackError } from "~/ui/auth/AuthCallbackError"
-import { cleanupCompletedTransferOnLogout } from "~/utils/account-transfer"
+import { useRevalidator } from "@remix-run/react"
 import type { User } from "@supabase/auth-js"
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { useRevalidator } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
 import {
 	type ReactNode,
@@ -14,20 +11,24 @@ import {
 	useRef,
 	useState,
 } from "react"
-import { AuthContext } from "~/utils/auth"
-import { createAuthCookieMatcher } from "~/utils/auth-cookie"
-import { keptLoaderData } from "~/utils/loader-request-retry"
 import {
+	announceAuthChange,
 	clearLoaderCache,
 	holdLoaderCache,
 	revalidateWithCacheHeld,
 } from "~/navigation/instant-navigation"
+import { AuthCallbackError } from "~/ui/auth/AuthCallbackError"
+import { cleanupCompletedTransferOnLogout } from "~/utils/account-transfer"
+import { AuthContext } from "~/utils/auth"
+import { createAuthCookieMatcher } from "~/utils/auth-cookie"
+import { keptLoaderData } from "~/utils/loader-request-retry"
+import { clearMediaSession, establishMediaSession } from "~/utils/media-session"
 import { whenInteractive } from "~/utils/page-interactive"
-import { isAuthCallbackUrl, loadSupabaseClient } from "~/utils/supabase-browser"
 import {
 	requestRootRevalidation,
 	rootRevalidated,
 } from "~/utils/root-revalidation"
+import { isAuthCallbackUrl, loadSupabaseClient } from "~/utils/supabase-browser"
 
 export function AuthProvider({
 	supabaseUrl,
@@ -80,13 +81,20 @@ export function AuthProvider({
 	const mounted = useRef(true)
 	const getSupabase = useCallback(async () => {
 		if (betterAuth) throw new Error("Supabase sign-in is off")
-		const client = await loadSupabaseClient(supabaseUrl, supabaseAnonKey, maintenance)
+		const client = await loadSupabaseClient(
+			supabaseUrl,
+			supabaseAnonKey,
+			maintenance,
+		)
 		if (mounted.current && !subscription.current) {
 			subscription.current = client.auth.onAuthStateChange((event, session) => {
 				// The session cookie names the new person now: pages kept for the previous one must not show until the
 				// effect below holds the cache. The transition renders later.
-				if ((session?.user.id ?? undefined) !== currentUserId.current)
+				if ((session?.user.id ?? undefined) !== currentUserId.current) {
 					clearLoaderCache()
+					// Other tabs that show someone else hold their cache and reload their root.
+					announceAuthChange(session?.user.id ?? null)
+				}
 				startTransition(() => {
 					setUser(session?.user ?? null)
 					if (

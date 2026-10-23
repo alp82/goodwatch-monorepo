@@ -47,11 +47,21 @@ Everything is dropped, and so are prefetches that wait for their turn. A load un
 
 ### Sign-in, sign-out, and account switches
 
-The cookie names the new person before the root's data does, so in between the cache would answer under the old identity. The cache is therefore held: cleared, and off (every navigation asks the server, no prefetch starts) until the root has reloaded.
+The cookie names the new person before the root's data does, so in between the cache would answer under the old identity. The cache is therefore held: cleared, and off (every navigation asks the server, no prefetch starts) until the root has new data from the server.
 
-- Better Auth: from the moment a non-GET request to `/api/auth/` starts, until a revalidation that follows it has finished, or 3 seconds after its answer when none starts (a sign-up, a confirmation email). `refreshUser` (after sign-in, sign-out, a password change) holds it until its rerun of the root is done.
+- The hold ends only with a fresh root answer (`releaseOnFreshRoot` in `loader-cache.ts`). An idle router is not enough: when the root's request fails twice, the retry wrapper keeps the old member's data, and a root that threw keeps its old data too. The hold then stays, and the next navigation asks for the root again. The cache comes back once the server has answered.
+- Better Auth: from the moment a non-GET request to `/api/auth/` starts. After its answer, `refreshUser` (after sign-in, sign-out, a password change) reruns the root. When no revalidation starts within 3 seconds (a sign-up, a confirmation email), the cache reruns the root itself.
 - Supabase: the auth client's change event clears the cache at once. The auth provider then holds it from the moment the member changed, through the media session check (up to 5 seconds), until its rerun of the root is done.
-- Another tab: Supabase hears the change and goes the same way. Better Auth doesn't tell other tabs; such a tab clears when it comes back after 5 seconds hidden, and on its next root rerun.
+
+### Other tabs
+
+All tabs share the session cookie, but each keeps its own cache. Better Auth doesn't tell other tabs, so the site does (`auth-sync.ts`). A note goes out on the BroadcastChannel `gw-auth-sync`, and is written to `localStorage` under the same key:
+
+- when a non-GET request to `/api/auth/` is answered (the member is unknown then);
+- when the Supabase client reports another member;
+- when a tab's root names another member than before, and when a page loads as another member than the last note names (a sign-in that ended in a full page load, such as an OAuth callback).
+
+A tab that hears a note holds its cache and reruns its root, unless the note names the member it already shows. The hold ends with the root's fresh answer, as above. Where BroadcastChannel is missing, the `localStorage` write reaches other tabs as a `storage` event. A tab that couldn't hear (hidden and throttled, or in the back/forward cache) compares the stored note with the last one it handled when it becomes visible again and on `pageshow` from the back/forward cache: one `localStorage` read. Storage that is blocked is skipped, and the channel still works.
 
 ## Prefetch
 
@@ -77,3 +87,5 @@ After `load`, at least 2 seconds later and in an idle moment, the code of the ma
 See the report of ticket 2 in [navigation-speed.md](benchmarks/navigation-speed.md#changes).
 
 After the review fixes (holds, obsolete loads, press limits, the `/api/` default), the functional checks were run again on a local production build on the bench data: hover then click commits with no request after the click, a phone tap starts its prefetch on touch, Back to the listing commits from the cache, a POST to `/api/update-scores` makes the next Back load again, and during a POST to `/api/auth/sign-out` a hover starts no prefetch. Title pages on the bench data are incomplete (no TMDB key), so Back to them loads from the server, as the rules say. Sign-in itself isn't possible locally; the hold rules are covered by `loader-cache.test.ts`.
+
+Other tabs (two tabs of one browser context, same build and data): after a note on the channel from tab 1, tab 2 requested its root and page data at once, and its next Back and Forward each loaded from the server (before the note: 0 requests). A real `POST /api/auth/sign-out` from tab 1 did the same, also with BroadcastChannel removed (storage event). A note naming the member tab 2 already showed changed nothing. A note written while tab 2 couldn't hear was handled on `visibilitychange`, and a `pageshow` with nothing new sent no request. The cross-tab rules are covered by `auth-sync.test.ts`.

@@ -429,3 +429,55 @@ export function isAuthRequest(
 		isWriteRequest(method, url, origin) && url.pathname.startsWith("/api/auth/")
 	)
 }
+
+/** The member part of a root identity: "member:<id>" or "visitor". Null when the root has no data. */
+export function memberOf(root: unknown): string | null {
+	const identity = identityOf(root)
+	return identity === null ? null : identity.slice(0, identity.indexOf("|"))
+}
+
+/** The member part of an identity for a user id, as `memberOf` gives it. */
+export function memberKey(userId: string | null | undefined): string {
+	return userId ? `member:${userId}` : "visitor"
+}
+
+/** What the root reload watcher reads from the router. */
+export interface RootWatchState {
+	loaderData: Record<string, unknown>
+	errors: Record<string, unknown> | null
+	navigation: { state: string }
+	revalidation: string
+}
+
+export interface RootWatchRouter {
+	state: RootWatchState
+	subscribe(listener: (state: RootWatchState) => void): () => void
+}
+
+/**
+ * Calls `release` once the root has new data from the server, whatever reruns it (the revalidation the caller
+ * starts, or a later navigation). A router that went idle is not proof: when the root's request failed twice, the
+ * retry wrapper keeps the old member's data (`kept`), and a failed root is an error. Then the hold stays, and
+ * `rerunRoot` makes the next navigation ask for the root again. Returns a function that stops waiting without
+ * releasing.
+ */
+export function releaseOnFreshRoot(
+	router: RootWatchRouter,
+	release: () => void,
+	{ kept, rerunRoot }: { kept: () => boolean; rerunRoot: () => void },
+): () => void {
+	let before = router.state.loaderData.root
+	const stop = router.subscribe((state) => {
+		if (state.revalidation !== "idle" || state.navigation.state !== "idle")
+			return
+		// A root that threw keeps its old data: no answer about the person.
+		if (state.errors?.root !== undefined) return rerunRoot()
+		const root = state.loaderData.root
+		if (root === before) return
+		before = root
+		if (kept()) return rerunRoot()
+		stop()
+		release()
+	})
+	return stop
+}

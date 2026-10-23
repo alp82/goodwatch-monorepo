@@ -6,12 +6,16 @@ import {
 	INCOMPLETE_DATA_HEADER,
 	type Loaded,
 	LoaderCache,
+	type RootWatchState,
 	cacheKey,
 	identityOf,
 	invalidation,
 	isWriteRequest,
+	memberKey,
+	memberOf,
 	navigationKind,
 	readLoaderResponse,
+	releaseOnFreshRoot,
 } from "./loader-cache.ts"
 
 const ORIGIN = "https://goodwatch.test"
@@ -608,4 +612,86 @@ test("any POST to the site's /api/ clears the cache, except the known reads", ()
 	])
 		assert.equal(isWriteRequest("POST", url(path), ORIGIN), false, path)
 	assert.equal(isWriteRequest("POST", url("/movie/1-a"), ORIGIN), false)
+})
+
+function fakeRouter(root: unknown) {
+	const listeners = new Set<(state: RootWatchState) => void>()
+	const router = {
+		state: {
+			loaderData: { root },
+			errors: null,
+			navigation: { state: "idle" },
+			revalidation: "idle",
+		} as RootWatchState,
+		subscribe(listener: (state: RootWatchState) => void) {
+			listeners.add(listener)
+			return () => listeners.delete(listener)
+		},
+		set(patch: Partial<RootWatchState>) {
+			router.state = { ...router.state, ...patch }
+			for (const listener of [...listeners]) listener(router.state)
+		},
+	}
+	return router
+}
+
+test("the hold ends with a fresh root, not with an idle router", () => {
+	const router = fakeRouter({ user: { id: "a" } })
+	let released = 0
+	let kept = false
+	let reruns = 0
+	releaseOnFreshRoot(router, () => released++, {
+		kept: () => kept,
+		rerunRoot: () => reruns++,
+	})
+	// The root's request failed twice: the retry wrapper answers with A's data again.
+	router.set({ revalidation: "loading" })
+	kept = true
+	router.set({
+		revalidation: "idle",
+		loaderData: { root: { user: { id: "a" } } },
+	})
+	assert.equal(released, 0)
+	assert.equal(reruns, 1)
+	// A navigation that doesn't rerun the root.
+	router.set({ navigation: { state: "loading" } })
+	router.set({ navigation: { state: "idle" } })
+	assert.equal(released, 0)
+	// A root that threw.
+	router.set({ errors: { root: new Error("down") } })
+	assert.equal(released, 0)
+	assert.equal(reruns, 2)
+	// The next navigation reruns the root, and the server answers.
+	kept = false
+	router.set({ navigation: { state: "loading" }, errors: null })
+	router.set({
+		navigation: { state: "idle" },
+		loaderData: { root: { user: { id: "b" } } },
+	})
+	assert.equal(released, 1)
+	router.set({ loaderData: { root: { user: null } } })
+	assert.equal(released, 1)
+})
+
+test("the hold waits while the router is busy", () => {
+	const router = fakeRouter({ user: null })
+	let released = 0
+	releaseOnFreshRoot(router, () => released++, {
+		kept: () => false,
+		rerunRoot: () => {},
+	})
+	router.set({
+		revalidation: "loading",
+		loaderData: { root: { user: { id: "b" } } },
+	})
+	assert.equal(released, 0)
+	router.set({ revalidation: "idle" })
+	assert.equal(released, 1)
+})
+
+test("the member part of the identity matches the auth provider's", () => {
+	const root = { user: { id: "u1" }, locale: { country: "DE", language: "de" } }
+	assert.equal(memberOf(root), memberKey("u1"))
+	assert.equal(memberOf({ user: null, locale: {} }), memberKey(null))
+	assert.equal(memberOf(undefined), null)
 })
