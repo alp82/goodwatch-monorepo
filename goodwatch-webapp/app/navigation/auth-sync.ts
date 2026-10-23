@@ -89,7 +89,10 @@ export class AuthSync {
 		if (note) this.remember(note.id)
 		const own = this.ownMember()
 		if (own === null) return
-		if (!note) return this.announce(own)
+		if (!note) {
+			this.announce(own)
+			return
+		}
 		if (note.member === own) return
 		this.onChange(() => {
 			const confirmed = this.ownMember()
