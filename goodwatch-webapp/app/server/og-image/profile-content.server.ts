@@ -68,7 +68,7 @@ export async function profileCardContent(
 		stats.push({ value: count(library.seenKeys.length), label: "seen" })
 	if (sees("scores"))
 		stats.push({
-			value: count(Object.keys(library.data.scores).length),
+			value: count(library.scored.size),
 			label: "scores",
 		})
 	if (sees("lists"))
