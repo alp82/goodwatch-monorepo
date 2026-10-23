@@ -930,7 +930,7 @@ for (const mode of ['no-share', 'rejected', 'cancelled', 'manual'] as const) {
 }
 
 
-test('prompt presets become live Jev picks and grouped providers retain every selected alias', async ({ page }) => {
+test('prompt presets become live search picks and grouped providers retain every selected alias', async ({ page }) => {
   const f = await fixture(page);
   f.room.shared.phase = 'setup';
   f.room.shared.screens[0].serviceIds = [8,119];
@@ -947,7 +947,7 @@ test('prompt presets become live Jev picks and grouped providers retain every se
     const prompt = route.request().postDataJSON().prompt;
     previews.push(prompt);
     if(prompt === 'Old mood') await new Promise<void>(r => { oldReading=r; });
-    await route.fulfill({json:{prompt,attributes:[{text:prompt==='Old mood'?'Outdated pick':'Motivational',kind:'want'},{text:'Not horror',kind:'excluded'}]}}).catch(()=>{});
+    await route.fulfill({json:{prompt,attributes:[{text:prompt==='Old mood'?'Outdated pick':'Motivational',kind:'want'},{text:'Not horror',kind:'excluded'},{text:'Wholesome',kind:'want',key:'wholesome'},{text:'Low bleakness',kind:'avoid',key:'bleakness'}]}}).catch(()=>{});
   });
   await page.reload();
   await page.getByRole('button',{name:'Edit room description and services'}).click();
@@ -958,7 +958,11 @@ test('prompt presets become live Jev picks and grouped providers retain every se
   await input.fill('Sports movies motivational');
   await expect(page.getByRole('button',{name:'Funny & light',exact:true})).toHaveCount(0);
   await expect(page.getByText('Motivational',{exact:true})).toBeVisible();
-  await expect(page.getByText('Not horror',{exact:true})).toBeVisible();
+  await expect(page.getByText('Horror',{exact:true})).toHaveCSS('text-decoration-line', 'line-through');
+  await expect(page.getByText('Bleakness',{exact:true})).toHaveCSS('text-decoration-line', 'line-through');
+  await expect(page.getByText('Wholesome',{exact:true}).locator('..')).toHaveCSS('background-color', 'rgba(129, 199, 132, 0.6)');
+  await expect(page.getByTestId('reading-fingerprint')).toBeVisible();
+  await expect(page.getByText(/Jev|keyboard’s microphone/)).toHaveCount(0);
   oldReading!();
   await expect(page.getByText('Outdated pick',{exact:true})).toHaveCount(0);
   expect(f.commands).toHaveLength(0);

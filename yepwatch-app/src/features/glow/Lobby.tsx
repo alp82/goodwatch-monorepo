@@ -1,12 +1,13 @@
 import { guestOnly } from '../../core/config';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Image, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import type { RoomCommand, RoomSnapshot, RoomPromptPreview } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousApi } from '../../core/continuous/api';
 import { countryHint } from '../../core/lobby';
 import { Field, Notice, Row } from '../../components/ui';
 import { Drawer } from './Drawer';
+import { ReadAs } from './ReadAs';
 import { GText, Pill, glow } from './theme';
 
 const presets = ['Funny & light', 'A twisty thriller', 'Family night'];
@@ -154,25 +155,7 @@ export function Lobby({
           <GText size={compact ? 13 : 16} color={glow.muted}>
             {shared.description?.prompt || 'A little inspiration. A choice for everyone.'}
           </GText>
-          {shared.description?.attributes.length ? (
-            <Row>
-              {shared.description.attributes.slice(0, compact ? 4 : 8).map((a, i) => (
-                <View
-                  key={i}
-                  style={{
-                    borderRadius: 20,
-                    paddingHorizontal: 10,
-                    paddingVertical: 5,
-                    backgroundColor: '#fbbf2418',
-                  }}
-                >
-                  <GText size={12} color={glow.amber}>
-                    {a.text}
-                  </GText>
-                </View>
-              ))}
-            </Row>
-          ) : null}
+          {shared.description?.attributes.length ? <ReadAs attributes={shared.description.attributes} /> : null}
         </View>
         <View style={{ flex: landscape ? 1 : undefined, gap: compact ? 8 : 16 }}>
           {setup && (
@@ -239,9 +222,6 @@ export function Lobby({
               textAlignVertical: 'top',
             }}
           />
-          <GText size={12} color={glow.muted}>
-            Type or use your keyboard’s microphone. Jev reads what you’re in the mood for.
-          </GText>
           {!prompt.trim() ? (
             <Row>
               {presets.map(p => (
@@ -253,19 +233,12 @@ export function Lobby({
               ))}
             </Row>
           ) : (
-            <View accessibilityLiveRegion="polite" style={{ gap: 8 }}>
-              <GText size={12} color={glow.muted}>Jev’s read</GText>
-              {liveReading ? (
-                liveReading.attributes.length ? <Row>
-                  {liveReading.attributes.map((a, i) => (
-                    <View key={`${a.kind}:${a.key ?? a.text}:${i}`} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 16, backgroundColor: '#fbbf2418' }}>
-                      <GText size={12} color={glow.amber}>{a.text}</GText>
-                    </View>
-                  ))}
-                </Row> : <GText size={12} color={glow.soft}>Using your words as written.</GText>
-              ) : <GText size={12} color={glow.muted}>
-                {prompt.trim().length < 2 ? 'Add a little more detail.' : !country ? 'Choose a country below to preview your picks.' : settledInput === inputKey && reading.error ? 'Jev couldn’t read this yet. Save to try again.' : 'Reading your prompt…'}
-              </GText>}
+            <View accessibilityLiveRegion="polite" style={{ minHeight: 26 }}>
+              {liveReading ? <ReadAs attributes={liveReading.attributes} />
+                : prompt.trim().length >= 2 && country ? settledInput === inputKey && reading.error
+                  ? <GText size={12} color={glow.muted}>Couldn’t update picks. Try saving again.</GText>
+                  : <ActivityIndicator size="small" color={glow.amber} accessibilityLabel="Updating picks" style={{ alignSelf: 'flex-start' }} />
+                : null}
             </View>
           )}
           <Row>

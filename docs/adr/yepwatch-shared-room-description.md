@@ -17,3 +17,5 @@ The typed storage format becomes 2. This is an internal compatibility check, not
 Draft prompts are interpreted after a short typing pause. The private preview uses the same Jev search path and budget as the saved description, without changing the room, its command sequence or its shared picks. Only Save applies it. Older preview responses are never shown for newer text. Empty prompts show three small preset links.
 
 Provider choices use GoodWatch's shared alias and brand rules. One tile retains all underlying catalog IDs, so saved aliases stay selected and country-specific availability is still checked against the correct provider. The display group is not a new subscription or a claim that rentals are included.
+
+The interpretation uses GoodWatch search’s fingerprint icon, shared attribute palette and compact concept selection. Excluded or avoided concepts are struck through, with their meaning retained in accessibility labels. Internal interpreter names and explanatory prose are not shown in the room UI.
