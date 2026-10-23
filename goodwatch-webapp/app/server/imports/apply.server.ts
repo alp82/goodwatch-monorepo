@@ -471,6 +471,10 @@ async function applyRunStored(
 				)
 				.map(ref),
 		)
+		const allowRewatch = (item: ImportItem) =>
+			item.wishlistEvidence?.source === "watcharr"
+				? options.wishlistRewatch === true
+				: options.conflictChoice === "source"
 		const rewatchWishes: typeof pending = []
 		const tally = { added: 0, updated: 0, kept: 0, failed: 0 }
 		for (const item of pending) {
@@ -487,15 +491,17 @@ async function applyRunStored(
 				else if (
 					item.outcome === "conflict" &&
 					((item.wishlistShowChoice && options.wishlistShows !== true) ||
-						(item.wishlistRewatchChoice !== false &&
-							options.conflictChoice === "keep"))
+						(item.wishlistRewatchChoice
+							? !allowRewatch(item)
+							: item.wishlistRewatchChoice !== false &&
+								options.conflictChoice === "keep"))
 				)
 					state = "kept"
 				else if (
 					isWant(item) &&
 					item.wishlistRewatchChoice &&
 					watchRefs.has(ref(item)) &&
-					options.conflictChoice === "source"
+					allowRewatch(item)
 				) {
 					// A source can contain both past watches and a current rewatch intention.
 					// Add the intention after the watch writer has cleared earlier wishes.
@@ -521,7 +527,7 @@ async function applyRunStored(
 						id,
 						item,
 						"user_wishlist",
-						options.conflictChoice === "source",
+						allowRewatch(item),
 					)
 				else if (item.kind === "favorite")
 					state = await applySet(userId, id, item, "user_favorite")
@@ -654,6 +660,7 @@ export async function confirmImport(
 				conflictChoice: stored.conflictChoice,
 				watchDates: stored.watchDates,
 				wishlistShows: stored.wishlistShows,
+				wishlistRewatch: stored.wishlistRewatch,
 			}
 		: options
 	if (row.status === "done" || row.status === "undone") return summarize(row)
@@ -881,6 +888,15 @@ async function undoImportStored(
 			userId,
 			movieRatings.flatMap((x) => (x.tmdbId === null ? [] : [x.tmdbId])),
 		)
+		if (
+			row.source === "wishlist" &&
+			items.some((item) => item.kind === "watch" || item.kind === "show_status")
+		) {
+			const { restoreWatcharrImportIntentions } = await import(
+				"./watch-items.server.ts"
+			)
+			await restoreWatcharrImportIntentions(userId, id)
+		}
 		await run(
 			"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND apply_state IN ('added','updated')",
 			[id],

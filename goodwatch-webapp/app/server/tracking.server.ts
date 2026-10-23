@@ -1692,6 +1692,9 @@ const sameVersion = (a: Version, b: Version) =>
 	a?._seq_no === b?._seq_no && a?._primary_term === b?._primary_term
 
 export interface ImportTrackingPlan {
+	/** Watcharr Undo restores intentions only where no newer watches or choices remain. */
+	restoreIntentions?: boolean
+	priorWatchIds?: string[]
 	userId: string
 	importId: string
 	title: TrackedTitle
@@ -1708,6 +1711,8 @@ export interface ImportTrackingPlan {
 		term: number
 		createdAt?: number | null
 		updatedAt?: number | null
+		removed?: boolean
+		restored?: boolean
 	}[]
 }
 
@@ -1787,7 +1792,16 @@ export async function prepareImportTrackingPlan(input: {
 		readState(input.userId, title),
 		readImportLog(input.userId, title),
 	])
+	const restoreIntentions =
+		input.source === "wishlist" &&
+		input.items.some((item) => item.wishlistEvidence?.source === "watcharr")
 	const plan: ImportTrackingPlan = {
+		...(restoreIntentions
+			? {
+					restoreIntentions: true,
+					priorWatchIds: existing.map((row) => row.watch_id),
+				}
+			: {}),
 		userId: input.userId,
 		importId: input.importId,
 		title,
@@ -1810,6 +1824,9 @@ export async function prepareImportTrackingPlan(input: {
 	for (const item of input.items.filter((item) => item.kind === "watch")) {
 		const watchId = importWatchId(input.source, item.key)
 		if (
+			(item.watcharrSnapshot &&
+				item.episodeTmdbId != null &&
+				existing.some((row) => row.episode_tmdb_id === item.episodeTmdbId)) ||
 			existing.some((row) => row.watch_id === watchId) ||
 			plan.watches.some((row) => row.watch_id === watchId)
 		) {
@@ -2114,11 +2131,16 @@ export async function applyImportTrackingPlan(
 			if (attempt === STATE_RETRIES - 1) throw new TrackingConflictError()
 		}
 	}
-	for (const clear of statusApplied || ours.length ? plan.clear : [])
-		await run(
+	for (const clear of statusApplied || ours.length ? plan.clear : []) {
+		const deleted = await run(
 			`DELETE FROM ${clear.table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?`,
 			[userId, plan.title.tmdbId, plan.title.mediaType, clear.seq, clear.term],
 		)
+		if (plan.restoreIntentions && deleted.rowcount) {
+			clear.removed = true
+			await checkpoint?.(plan)
+		}
+	}
 	await finish(userId)
 	if (plan.clear.some((row) => row.table === "user_wishlist"))
 		await markTasteChanged(userId)
@@ -2223,7 +2245,7 @@ export async function undoImportTrackingPlan(
 			}
 			// Restore before releasing state ownership, so an interrupted undo can retry the inserts.
 			// DO NOTHING preserves any intention the member has since added.
-			if (plan.statusItem && !plan.watches.length)
+			if (plan.statusItem && !plan.watches.length && !plan.restoreIntentions)
 				for (const clear of plan.clear) {
 					if (clear.updatedAt == null) continue // Older journals did not retain intentions.
 					await run(
@@ -2255,4 +2277,75 @@ export async function undoImportTrackingPlan(
 	}
 	await finish(userId)
 	return outcome
+}
+
+/** Runs after score Undo has settled its implicit movie watch. Never overwrites a newer intention. */
+export async function restoreImportTrackingIntentions(
+	userId: string,
+	plan: ImportTrackingPlan,
+	checkpoint: (plan: ImportTrackingPlan) => Promise<void>,
+) {
+	if (userId !== plan.userId)
+		throw new Error("This import belongs to another member.")
+	if (!plan.restoreIntentions) return
+	await run("REFRESH TABLE user_watch_log")
+	const remaining = await readImportLog(userId, plan.title)
+	const priorIds = new Set(plan.priorWatchIds ?? [])
+	if (remaining.some((row) => !priorIds.has(row.watch_id))) return
+	if (plan.title.mediaType === "show") {
+		const current = await readState(userId, plan.title)
+		if (
+			(current?.state ?? "not_started") !==
+				(plan.beforeState?.state ?? "not_started") ||
+			(current?.pass ?? 1) !== (plan.beforeState?.pass ?? 1)
+		)
+			return
+	}
+	for (const clear of plan.clear) {
+		if (!clear.removed || clear.updatedAt == null) continue
+		if (clear.table === "user_not_interested" && remaining.length) continue
+		const opposite =
+			clear.table === "user_wishlist" ? "user_not_interested" : "user_wishlist"
+		const params = [userId, plan.title.tmdbId, plan.title.mediaType]
+		try {
+			if (
+				(
+					await read(
+						`SELECT created_at, updated_at, _seq_no, _primary_term FROM ${opposite} WHERE user_id = ? AND tmdb_id = ? AND media_type = ?`,
+						params,
+					)
+				).length
+			)
+				continue
+		} catch (error) {
+			if (
+				opposite !== "user_not_interested" ||
+				!isMissingNotInterestedTable(error)
+			)
+				throw error
+		}
+		await run(
+			`INSERT INTO ${clear.table} (user_id, tmdb_id, media_type, created_at, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (user_id, tmdb_id, media_type) DO NOTHING`,
+			[
+				...params,
+				clear.createdAt == null ? null : new Date(clear.createdAt),
+				new Date(clear.updatedAt),
+			],
+		)
+		const [current] = await read<{
+			created_at: number | null
+			updated_at: number | null
+		}>(
+			`SELECT created_at, updated_at, _seq_no, _primary_term FROM ${clear.table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ?`,
+			params,
+		)
+		clear.restored =
+			!!current &&
+			ms(current.created_at) === (clear.createdAt ?? null) &&
+			ms(current.updated_at) === clear.updatedAt
+		await checkpoint(plan)
+		if (clear.restored && clear.table === "user_wishlist")
+			await markTasteChanged(userId)
+	}
+	await finish(userId)
 }

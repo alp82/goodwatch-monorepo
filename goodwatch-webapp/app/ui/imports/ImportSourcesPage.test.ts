@@ -266,7 +266,14 @@ test("a wishlist preview adds seen titles only when the member chooses Want to r
 	)
 	assert.deepEqual(
 		confirms.map((call) => call.body),
-		[{ kinds: ["want"], conflictChoice: "source", watchDates: "preserve" }],
+		[
+			{
+				kinds: ["want"],
+				conflictChoice: "source",
+				watchDates: "preserve",
+				wishlistRewatch: true,
+			},
+		],
 	)
 })
 

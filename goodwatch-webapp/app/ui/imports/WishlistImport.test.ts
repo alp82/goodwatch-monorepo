@@ -801,3 +801,43 @@ test("a Watcharr library preview offers every imported kind and the shared watch
 	assert.match(page, /Use the export instead/)
 	assert.doesNotMatch(page, /Importing only adds titles to Want to See/)
 })
+
+test("the full Watcharr preview offers Leave off Wishlist and Add as Want to rewatch independently of conflict policy", () => {
+	const page = text(rendered.watcharrLibrary)
+	assert.match(page, /Leave off Wishlist/)
+	assert.match(page, /Add it as Want to rewatch/)
+	assert.match(
+		rendered.watcharrLibrary,
+		/name="wishlist-rewatch"[^>]*checked=""/,
+	)
+	assert.doesNotMatch(page, /source export, and adds Planned titles/)
+})
+
+test("full Watcharr Confirm sends the independent rewatch opt-in under either conflict policy", () => {
+	const output = execFileSync(
+		"node_modules/.bin/vite-node",
+		[
+			"--config",
+			"app/ui/imports/source-import-test-vite.config.ts",
+			"app/ui/imports/watcharr-import-interaction.test-support.tsx",
+		],
+		{ encoding: "utf8" },
+	)
+	const runs = JSON.parse(
+		output.split("__WATCHARR_CHOICES__").at(-1) ?? "",
+	) as {
+		conflictChoice: string
+		rewatch: boolean
+		sent: {
+			wishlistRewatch?: boolean
+			conflictChoice: string
+			watchDates: string
+		}
+	}[]
+	assert.equal(runs.length, 4)
+	for (const run of runs) {
+		assert.equal(run.sent.wishlistRewatch, run.rewatch)
+		assert.equal(run.sent.conflictChoice, run.conflictChoice)
+		assert.equal(run.sent.watchDates, "preserve")
+	}
+})

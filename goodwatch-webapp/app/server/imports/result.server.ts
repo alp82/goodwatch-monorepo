@@ -130,8 +130,9 @@ function planEntries(
 	const to = plan.afterState?.state ?? null
 	const status = title.mediaType === "show" && from !== to ? { from, to } : null
 	const entries: ImportResultEntry[] = []
-	// Undo puts back what a status without watches cleared (tracking model section 7), and nothing else.
-	const undoRestores = !!plan.statusItem && !plan.watches.length
+	// Watcharr journals restore cleared intentions after watches/scores; older sources retain status-only restoration.
+	const undoRestores =
+		plan.restoreIntentions || (!!plan.statusItem && !plan.watches.length)
 	if (operation === "undo") {
 		const left = planRow.undo_outcome === "left"
 		const back = status && !left ? { from: status.to, to: status.from } : null
@@ -151,14 +152,19 @@ function planEntries(
 				title,
 				change: { type: "status-restored", status: back },
 			})
-		for (const clear of plan.clear)
+		for (const clear of plan.restoreIntentions
+			? plan.clear.filter((clear) => clear.removed)
+			: plan.clear)
 			entries.push({
 				key,
 				title,
-				change:
-					undoRestores && !left && clear.updatedAt != null
-						? { type: "list-restored", list: list(clear.table) }
-						: { type: "not-restored", list: list(clear.table) },
+				change: (
+					plan.restoreIntentions
+						? clear.restored
+						: undoRestores && !left && clear.updatedAt != null
+				)
+					? { type: "list-restored", list: list(clear.table) }
+					: { type: "not-restored", list: list(clear.table) },
 			})
 		if (left)
 			entries.push({
@@ -176,7 +182,9 @@ function planEntries(
 		})
 	else if (status)
 		entries.push({ key, title, change: { type: "status-set", status } })
-	for (const clear of plan.clear)
+	for (const clear of plan.restoreIntentions
+		? plan.clear.filter((clear) => clear.removed)
+		: plan.clear)
 		entries.push({
 			key,
 			title,

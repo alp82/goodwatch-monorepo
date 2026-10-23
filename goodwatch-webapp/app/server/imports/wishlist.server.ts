@@ -383,13 +383,49 @@ function watcharr(rows: unknown[], fail: Fail): ParsedImport {
 		const activities = Array.isArray(row.activity)
 			? row.activity.filter(object)
 			: []
+		const legacyImported = activities.some(
+			(activity) =>
+				activity.deletedAt == null &&
+				activity.type === "IMPORTED_ADDED_WATCHED" &&
+				activity.countAsPlay === undefined,
+		)
+		const legacyPlay = (activity: ObjectValue) => {
+			if (activity.countAsPlay !== undefined || activity.createdBy === 1)
+				return false
+			if (activity.type === "IMPORTED_ADDED_WATCHED") return true
+			if (activity.type === "ADDED_WATCHED" && legacyImported) return false
+			if (!["ADDED_WATCHED", "STATUS_CHANGED"].includes(String(activity.type)))
+				return false
+			if (activity.data === "FINISHED") return true
+			try {
+				const data: unknown = JSON.parse(String(activity.data))
+				return object(data) && data.status === "FINISHED"
+			} catch {
+				return false
+			}
+		}
 		const plays = activities.filter(
 			(activity) =>
 				activity.deletedAt == null &&
-				activity.countAsPlay === true &&
+				(activity.countAsPlay === true || legacyPlay(activity)) &&
 				!String(activity.type).startsWith("EPISODE_") &&
 				!String(activity.type).startsWith("SEASON_"),
 		)
+
+		// Watcharr counts ADDED_WATCHED but keeps the first original viewing date
+		// on a separate, deliberately non-counted import activity.
+		const importedDate = activities.find(
+			(activity) =>
+				activity.deletedAt == null &&
+				activity.type === "IMPORTED_ADDED_WATCHED" &&
+				activity.countAsPlay === false &&
+				activity.customDate != null,
+		)?.customDate
+		const playDate = (activity: ObjectValue) =>
+			activity.customDate ??
+			(activity.type === "ADDED_WATCHED"
+				? (importedDate ?? row.createdAt)
+				: activity.createdAt)
 		const seenActivities = new Set<string>()
 		const ordinals = new Map<string, number>()
 		for (const activity of plays) {
@@ -402,11 +438,7 @@ function watcharr(rows: unknown[], fail: Fail): ParsedImport {
 			// Old exports can lack IDs. Equal ID-less rows keep their multiplicity, independently of array order.
 			const signature = createHash("sha256")
 				.update(
-					JSON.stringify([
-						activity.type,
-						activity.data,
-						activity.customDate ?? activity.createdAt,
-					]),
+					JSON.stringify([activity.type, activity.data, playDate(activity)]),
 				)
 				.digest("hex")
 			const ordinal = (ordinals.get(signature) ?? 0) + 1
@@ -414,7 +446,7 @@ function watcharr(rows: unknown[], fail: Fail): ParsedImport {
 			const identity = id === null ? `${signature}:${ordinal}` : String(id)
 			if (seenActivities.has(identity)) continue
 			seenActivities.add(identity)
-			const supplied = activity.customDate ?? activity.createdAt
+			const supplied = playDate(activity)
 			const validDate = date(supplied) && !supplied.startsWith("0001-")
 			add(`play:${identity}`, {
 				kind: "watch",

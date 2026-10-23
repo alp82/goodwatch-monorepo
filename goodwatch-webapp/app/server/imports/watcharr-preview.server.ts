@@ -12,6 +12,7 @@ export async function expandWatcharrWatches(
 ): Promise<void> {
 	if (parsed.source !== "wishlist") return
 	const expanded: ImportObservation[] = []
+	const completions = new Set<ImportObservation>()
 	const catalogs = new Map<number, Promise<EpisodeListRow[]>>()
 	for (const row of parsed.observations) {
 		if (
@@ -54,15 +55,20 @@ export async function expandWatcharrWatches(
 			throw new ImportFileError(
 				"That file produces more than 50,000 import items.",
 			)
-		for (const episode of episodes)
-			expanded.push({
+		for (const episode of episodes) {
+			const observation: ImportObservation = {
 				...row,
+				// Whole-show finishes complete missing episodes; they are not episode rewatches.
+				watcharrSnapshot: row.watcharrSnapshot || row.season == null,
 				key: `${row.key}:episode:${episode.tmdb_id}`,
 				episodeTmdbId: episode.tmdb_id,
 				season: episode.season_number,
 				episode: episode.episode_number,
 				episodeNumbering: "tmdb",
-			})
+			}
+			if (row.season == null) completions.add(observation)
+			expanded.push(observation)
+		}
 	}
 	const identity = (row: ImportObservation) =>
 		`${row.tmdbId}:${row.season}:${row.episode}`
@@ -77,14 +83,27 @@ export async function expandWatcharrWatches(
 			)
 			.map(identity),
 	)
-	const snapshots = new Set<string>()
-	parsed.observations = expanded.filter((row) => {
-		if (!row.watcharrSnapshot || row.problem) return true
+	// Source episode/season evidence takes priority over whole-show completion.
+	// Multiple whole-show finishes fill once at the earliest recorded date, regardless of file order.
+	const fillers = expanded
+		.filter((row) => row.watcharrSnapshot && !row.problem)
+		.sort(
+			(a, b) =>
+				Number(completions.has(a)) - Number(completions.has(b)) ||
+				(a.watchedAt ? Date.parse(a.watchedAt) : Infinity) -
+					(b.watchedAt ? Date.parse(b.watchedAt) : Infinity) ||
+				a.key.localeCompare(b.key),
+		)
+	const selected = new Set<ImportObservation>()
+	for (const row of fillers) {
 		const key = identity(row)
-		if (history.has(key) || snapshots.has(key)) return false
-		snapshots.add(key)
-		return true
-	})
+		if (history.has(key)) continue
+		history.add(key)
+		selected.add(row)
+	}
+	parsed.observations = expanded.filter(
+		(row) => !row.watcharrSnapshot || row.problem || selected.has(row),
+	)
 	if (parsed.observations.length > IMPORT_MAX_ROWS)
 		throw new ImportFileError(
 			"That file produces more than 50,000 import items.",

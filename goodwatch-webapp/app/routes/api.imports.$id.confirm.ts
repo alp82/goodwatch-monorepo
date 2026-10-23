@@ -11,22 +11,23 @@ const schema = z
 		conflictChoice: z.enum(["keep", "source"]),
 		watchDates: z.enum(["preserve", "unknown"]),
 		wishlistShows: z.boolean().optional(),
+		wishlistRewatch: z.boolean().optional(),
 	})
 	.strict()
 export const action = analyticsAction(
 	({ request, params }: ActionFunctionArgs) =>
-	withMember(request, async (userId, headers) => {
-		if (request.method !== "POST")
-			return json({ error: "Method not allowed" }, { status: 405, headers })
-		const parsed = schema.safeParse(await request.json().catch(() => null))
-		if (!parsed.success)
-			throw new NativeImportError(
-				400,
-				"Choose what to import and how conflicts and watch dates should be handled.",
+		withMember(request, async (userId, headers) => {
+			if (request.method !== "POST")
+				return json({ error: "Method not allowed" }, { status: 405, headers })
+			const parsed = schema.safeParse(await request.json().catch(() => null))
+			if (!parsed.success)
+				throw new NativeImportError(
+					400,
+					"Choose what to import and how conflicts and watch dates should be handled.",
+				)
+			return json(
+				{ import: await confirmImport(userId, importId(params), parsed.data) },
+				{ headers },
 			)
-		return json(
-			{ import: await confirmImport(userId, importId(params), parsed.data) },
-			{ headers },
-		)
-	}),
+		}),
 )

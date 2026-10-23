@@ -530,6 +530,8 @@ export interface WishlistMatchGroup {
 }
 
 export interface ImportOptions {
+	/** Independent, explicit Watcharr Want to rewatch consent; never implied by rating conflicts. */
+	wishlistRewatch?: boolean
 	/** Explicit conversion of source season/episode wishes to whole-show wishes. */
 	wishlistShows?: boolean
 	kinds: ImportKind[]

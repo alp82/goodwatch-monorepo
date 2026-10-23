@@ -429,6 +429,7 @@ export function WishlistImportPreview({
 						onConfirm({
 							kinds: ["want"],
 							conflictChoice: seenChoice,
+							...(seenChoice === "source" ? { wishlistRewatch: true } : {}),
 							watchDates: "preserve",
 							...(showChoices > 0 ? { wishlistShows } : {}),
 						})

@@ -138,6 +138,9 @@ export function summarize(row: ImportRow): ImportSummary {
 					kinds: storedOptions.kinds,
 					conflictChoice: storedOptions.conflictChoice,
 					watchDates: storedOptions.watchDates,
+					...(storedOptions.wishlistRewatch !== undefined
+						? { wishlistRewatch: storedOptions.wishlistRewatch }
+						: {}),
 					...(storedOptions.wishlistShows !== undefined
 						? { wishlistShows: storedOptions.wishlistShows }
 						: {}),

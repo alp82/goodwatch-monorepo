@@ -762,3 +762,139 @@ it("retains malformed Watcharr history as invalid without dropping independent s
 		null,
 	)
 })
+
+it("uses Watcharr's non-counted original import date, then the entry date, for counted Added activities", async () => {
+	const rows = JSON.parse(
+		readFileSync(
+			new URL("./fixtures/watcharr-library-synthetic.json", import.meta.url),
+			"utf8",
+		),
+	)
+	const imported = rows.find((row: { id: number }) => row.id === 10)
+	for (const [activity, expected] of [
+		[imported.activity, "2017-06-05T22:30:00Z"],
+		[[imported.activity[0]], "2018-07-08T12:00:00Z"],
+	] as const) {
+		const parsed = await parseImportFile(
+			"wishlist",
+			bytes([{ ...imported, activity }]),
+		)
+		const watches = parsed.observations.filter((i) => i.kind === "watch")
+		assert.equal(watches.length, 1)
+		assert.equal(watches[0].watchedAt, expected)
+		assert.equal(watches[0].precision, "moment")
+	}
+})
+
+it("reads legacy Watcharr plays without countAsPlay while avoiding Added/imported-date overlap", async () => {
+	const row = {
+		id: 1,
+		status: "FINISHED",
+		createdAt: "2018-01-01T00:00:00Z",
+		content: { title: "Legacy movie", type: "movie", tmdbId: 42 },
+		activity: [
+			{
+				id: 1,
+				type: "ADDED_WATCHED",
+				data: '{"status":"FINISHED","rating":0}',
+				createdAt: "2026-01-01T00:00:00Z",
+			},
+			{
+				id: 2,
+				type: "IMPORTED_ADDED_WATCHED",
+				customDate: "2017-01-01T00:00:00Z",
+			},
+			{
+				id: 3,
+				type: "IMPORTED_ADDED_WATCHED",
+				customDate: "2019-01-01T00:00:00Z",
+			},
+			{
+				id: 4,
+				type: "STATUS_CHANGED",
+				data: "FINISHED",
+				createdAt: "2020-01-01T00:00:00Z",
+			},
+			{
+				id: 5,
+				type: "RATING_CHANGED",
+				data: "9",
+				createdAt: "2025-01-01T00:00:00Z",
+			},
+			{
+				id: 6,
+				type: "STATUS_CHANGED",
+				data: "FINISHED",
+				countAsPlay: false,
+				createdAt: "2025-01-01T00:00:00Z",
+			},
+		],
+	}
+	const parsed = await parseImportFile("wishlist", bytes([row]))
+	assert.deepEqual(
+		parsed.observations
+			.filter((i) => i.kind === "watch")
+			.map((i) => i.watchedAt),
+		["2017-01-01T00:00:00Z", "2019-01-01T00:00:00Z", "2020-01-01T00:00:00Z"],
+	)
+	const onlyAdded = await parseImportFile(
+		"wishlist",
+		bytes([{ ...row, activity: [row.activity[0]] }]),
+	)
+	assert.deepEqual(
+		onlyAdded.observations
+			.filter((i) => i.kind === "watch")
+			.map((i) => i.watchedAt),
+		["2018-01-01T00:00:00Z"],
+	)
+})
+
+it("keeps Jellyfin import, Jellyfin webhook and Plex-created movie and episode history", async () => {
+	for (const createdBy of [3, 4, 5]) {
+		const parsed = await parseImportFile(
+			"wishlist",
+			bytes([
+				{
+					id: 1,
+					status: "FINISHED",
+					createdAt: "2018-01-01T00:00:00Z",
+					content: { title: "Movie", type: "movie", tmdbId: 42 },
+					activity: [
+						{
+							id: 1,
+							type: "ADDED_WATCHED",
+							data: '{"status":"FINISHED"}',
+							countAsPlay: true,
+							createdBy,
+							createdAt: "2026-01-01T00:00:00Z",
+						},
+					],
+				},
+				{
+					id: 2,
+					status: "WATCHING",
+					content: { title: "Show", type: "tv", tmdbId: 43 },
+					activity: [
+						{
+							id: 2,
+							type: "EPISODE_ADDED",
+							data: '{"season":1,"episode":2,"status":"FINISHED"}',
+							countAsPlay: false,
+							createdBy,
+							customDate: "2019-01-01T00:00:00Z",
+						},
+					],
+				},
+			]),
+		)
+		assert.deepEqual(
+			parsed.observations
+				.filter((i) => i.kind === "watch")
+				.map((i) => [i.tmdbId, i.episode ?? null, i.watchedAt]),
+			[
+				[42, null, "2018-01-01T00:00:00Z"],
+				[43, 2, "2019-01-01T00:00:00Z"],
+			],
+		)
+	}
+})

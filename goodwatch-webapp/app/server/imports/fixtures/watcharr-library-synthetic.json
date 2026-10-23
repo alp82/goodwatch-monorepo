@@ -43,7 +43,7 @@
         "type": "ADDED_WATCHED",
         "data": "{\"status\":\"FINISHED\",\"rating\":0}",
         "countAsPlay": true,
-        "customDate": "2020-05-04T20:30:00+02:00"
+        "createdBy": 2
       },
       {
         "id": 10,
@@ -54,7 +54,7 @@
         "type": "ADDED_WATCHED",
         "data": "{\"status\":\"FINISHED\",\"rating\":0}",
         "countAsPlay": true,
-        "customDate": "2020-05-04T20:30:00+02:00"
+        "createdBy": 2
       },
       {
         "id": 11,
@@ -76,6 +76,18 @@
         "type": "RATING_CHANGED",
         "data": "9",
         "countAsPlay": false
+      },
+      {
+        "id": 13,
+        "createdAt": "2024-06-01T18:00:00Z",
+        "updatedAt": "2024-06-01T18:00:00Z",
+        "deletedAt": null,
+        "watchedId": 2,
+        "type": "IMPORTED_ADDED_WATCHED",
+        "data": "",
+        "countAsPlay": false,
+        "createdBy": 2,
+        "customDate": "2020-05-04T20:30:00+02:00"
       }
     ],
     "tags": [
@@ -342,5 +354,57 @@
       "name": "Synthetic game",
       "igdbId": 1
     }
+  },
+  {
+    "id": 10,
+    "createdAt": "2018-07-08T12:00:00Z",
+    "updatedAt": "2026-01-02T00:00:00Z",
+    "deletedAt": null,
+    "status": "PLANNED",
+    "rating": 0,
+    "thoughts": "",
+    "pinned": false,
+    "content": {
+      "id": 10,
+      "tmdbId": 9010,
+      "title": "Synthetic Watcharr Trakt import",
+      "type": "movie",
+      "imdb_id": ""
+    },
+    "activity": [
+      {
+        "id": 100,
+        "createdAt": "2026-01-01T00:00:00Z",
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "deletedAt": null,
+        "watchedId": 10,
+        "type": "ADDED_WATCHED",
+        "data": "{\"status\":\"FINISHED\",\"rating\":0}",
+        "countAsPlay": true,
+        "createdBy": 2
+      },
+      {
+        "id": 101,
+        "createdAt": "2026-01-01T00:00:00Z",
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "deletedAt": null,
+        "watchedId": 10,
+        "type": "IMPORTED_ADDED_WATCHED",
+        "data": "",
+        "countAsPlay": false,
+        "createdBy": 2,
+        "customDate": "2017-06-05T22:30:00Z"
+      },
+      {
+        "id": 102,
+        "createdAt": "2026-01-02T00:00:00Z",
+        "updatedAt": "2026-01-02T00:00:00Z",
+        "deletedAt": null,
+        "watchedId": 10,
+        "type": "STATUS_CHANGED",
+        "data": "PLANNED",
+        "countAsPlay": false
+      }
+    ]
   }
 ]

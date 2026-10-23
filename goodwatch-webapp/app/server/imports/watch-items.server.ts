@@ -161,3 +161,21 @@ export async function undoAppliedImportWatches(
 		[importId, userId],
 	)
 }
+
+export async function restoreWatcharrImportIntentions(
+	userId: string,
+	importId: string,
+) {
+	const { restoreImportTrackingIntentions } = await import(
+		"./tracking.server.ts"
+	)
+	for (const row of (await plans(importId, userId)).values()) {
+		if (!row.plan.restoreIntentions || row.undo_outcome !== "reverted") continue
+		await restoreImportTrackingIntentions(userId, row.plan, async (plan) => {
+			await run(
+				"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ?",
+				[JSON.stringify(plan), importId, row.row_index],
+			)
+		})
+	}
+}

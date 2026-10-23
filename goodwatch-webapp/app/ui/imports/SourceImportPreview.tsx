@@ -111,7 +111,11 @@ function GeneralImportPreview({
 				watchDates: null,
 			},
 	)
-	const { kinds, conflictChoice, watchDates } = choices
+	const { kinds, conflictChoice, watchDates, wishlistRewatch = false } = choices
+	const rewatchCount =
+		summary.source === "wishlist"
+			? (summary.wishlistRewatchChoiceCount ?? 0)
+			: 0
 	const choose = (next: SourceImportChoices) => {
 		setChoices(next)
 		onChoicesChange?.(next)
@@ -222,6 +226,43 @@ function GeneralImportPreview({
 					detail={copy.conflictDetail}
 				/>
 			</fieldset>
+			{rewatchCount > 0 && kinds.includes("want") && (
+				<fieldset className="space-y-2" disabled={confirming || locked}>
+					<legend className="mb-1 font-semibold text-gray-100">
+						{formatCount(rewatchCount)}{" "}
+						{rewatchCount === 1 ? "title" : "titles"} marked Seen in GoodWatch
+						or in this file
+					</legend>
+					<div className="grid gap-2 sm:grid-cols-2">
+						<Radio
+							name="wishlist-rewatch"
+							checked={!wishlistRewatch}
+							onChange={() => choose({ ...choices, wishlistRewatch: false })}
+							label="Leave off Wishlist"
+							detail={
+								rewatchCount === 1
+									? "It stays off your Wishlist."
+									: "They stay off your Wishlist."
+							}
+						/>
+						<Radio
+							name="wishlist-rewatch"
+							checked={wishlistRewatch}
+							onChange={() => choose({ ...choices, wishlistRewatch: true })}
+							label={
+								rewatchCount === 1
+									? "Add it as Want to rewatch"
+									: "Add them as Want to rewatch"
+							}
+							detail={
+								rewatchCount === 1
+									? "It goes on your Wishlist to watch again."
+									: "They go on your Wishlist to watch again."
+							}
+						/>
+					</div>
+				</fieldset>
+			)}
 			{importsWatches && (
 				<fieldset className="space-y-2">
 					<legend className="mb-1 font-semibold text-gray-100">
@@ -249,10 +290,9 @@ function GeneralImportPreview({
 			)}
 			{(importsWatches || kinds.includes("show_status")) && (
 				<p className="text-sm text-gray-400">
-					Importing watches or show statuses can remove titles from Want to See
-					or Not interested. Without added watches, Undo restores those choices
-					when it restores the earlier status. Undo of added watches does not
-					restore those choices.
+					{summary.source === "wishlist"
+						? "Importing watches or show statuses can remove titles from Want to See or Not interested. Undo restores the earlier choices when no newer watch or choice remains."
+						: "Importing watches or show statuses can remove titles from Want to See or Not interested. Without added watches, Undo restores those choices when it restores the earlier status. Undo of added watches does not restore those choices."}
 				</p>
 			)}
 			{kinds.includes("show_status") && (
@@ -301,6 +341,7 @@ function GeneralImportPreview({
 							kinds,
 							conflictChoice,
 							watchDates: requirements.watchDates,
+							...(summary.source === "wishlist" ? { wishlistRewatch } : {}),
 						})
 					}
 				>

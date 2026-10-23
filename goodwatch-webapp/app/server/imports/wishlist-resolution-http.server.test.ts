@@ -212,3 +212,51 @@ it("accepts an explicit whole-show choice at confirmation and rejects non-boolea
 	}
 	assert.equal((await getImport("member", preview.id)).status, "done")
 })
+
+it("validates and persists explicit Watcharr rewatch consent independently of the conflict policy", async () => {
+	setImportDbForTest(new ImportDb())
+	for (const wishlistRewatch of [true, false]) {
+		const preview = await previewImport(
+			"member",
+			"wishlist",
+			"empty.json",
+			new TextEncoder().encode("[]"),
+		)
+		const { action: confirm } = await import(
+			"../../routes/api.imports.$id.confirm.ts"
+		)
+		const send = (value: unknown) =>
+			confirm({
+				request: new Request("https://example.test/confirm", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"x-fixture-member": "member",
+					},
+					body: JSON.stringify({
+						kinds: ["want"],
+						conflictChoice: "keep",
+						watchDates: "preserve",
+						wishlistRewatch: value,
+					}),
+				}),
+				params: { id: preview.id },
+				context: {},
+			})
+		assert.equal((await send("true")).status, 400)
+		const response = await send(wishlistRewatch)
+		assert.equal(response.status, 200)
+		assert.equal(
+			(await response.json()).import.options.wishlistRewatch,
+			wishlistRewatch,
+		)
+		for (let i = 0; i < 100; i++) {
+			if ((await getImport("member", preview.id)).status === "done") break
+			await new Promise((resolve) => setTimeout(resolve, 5))
+		}
+		assert.equal(
+			(await getImport("member", preview.id)).options?.wishlistRewatch,
+			wishlistRewatch,
+		)
+	}
+})

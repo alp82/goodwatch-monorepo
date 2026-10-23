@@ -3,6 +3,7 @@ export {
 	prepareImportTrackingPlan,
 	applyImportTrackingPlan,
 	undoImportTrackingPlan,
+	restoreImportTrackingIntentions,
 	importWatchId,
 	type ImportTrackingPlan,
 } from "../tracking.server.ts"
