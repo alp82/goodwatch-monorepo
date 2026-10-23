@@ -108,3 +108,23 @@ test("leaving Imports mid-read aborts the post, and a late answer doesn't naviga
 		assert.equal(run.text, "Elsewhere")
 	}
 })
+
+test("clicking away while the next page loads aborts the read at once and doesn't cancel the destination", () => {
+	const output = execFileSync(
+		"node_modules/.bin/vite-node",
+		[
+			"--config",
+			"app/ui/imports/source-import-test-vite.config.ts",
+			"app/ui/imports/mdblist-panel-interaction.test-support.tsx",
+		],
+		{ encoding: "utf8" },
+	)
+	const { away } = JSON.parse(output.split("__MDBLIST_PANEL__").at(-1) ?? "")
+	assert.equal(away.posts, 1)
+	// Remix keeps Imports mounted during the destination's loader, so unmounting alone would be too late.
+	assert.equal(away.stillMounted, true)
+	assert.equal(away.abortedWhileLoading, true)
+	assert.equal(away.arrived, true)
+	assert.equal(away.path, "/discover")
+	assert.equal(away.text, "Elsewhere")
+})

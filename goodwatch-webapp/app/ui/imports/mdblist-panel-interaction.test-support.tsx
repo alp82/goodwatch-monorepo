@@ -161,6 +161,87 @@ async function leave(response: (signal?: AbortSignal) => Promise<Response>) {
 	return result
 }
 
+/** Clicks away to a page whose loader is slow, so Imports stays mounted while the read finishes. */
+async function leaveSlowly() {
+	posts.length = 0
+	signals.length = 0
+	let finishRead: () => void = () => {}
+	answer = (signal) =>
+		new Promise<Response>((resolve, reject) => {
+			// Like the browser, an aborted post rejects; otherwise it finishes when the test says so.
+			signal?.addEventListener("abort", () => reject(signal.reason), {
+				once: true,
+			})
+			finishRead = () =>
+				resolve(
+					json({
+						location:
+							"/settings/imports?source=mdblist&import=00000000-0000-4000-8000-000000000003",
+					}),
+				)
+		})
+	let finishLoader: () => void = () => {}
+	const router = createMemoryRouter(
+		[
+			{ path: "/settings/imports", element: h(MdblistConnectPanel) },
+			{
+				path: "/discover",
+				loader: () =>
+					new Promise((resolve) => {
+						finishLoader = () => resolve(null)
+					}),
+				element: h("p", null, "Elsewhere"),
+			},
+		],
+		{ initialEntries: ["/settings/imports?source=mdblist"] },
+	)
+	const container = document.createElement("div")
+	document.body.appendChild(container)
+	const root = createRoot(container as unknown as Element)
+	await act(async () => root.render(h(RouterProvider, { router })))
+	const form = container.querySelector("form") as unknown as HTMLFormElement
+	;(
+		container.querySelector(
+			'input[name="apiKey"]',
+		) as unknown as HTMLInputElement
+	).value = KEY
+	const SubmitEvent = (window as unknown as { SubmitEvent: typeof Event })
+		.SubmitEvent
+	await act(async () => {
+		form.dispatchEvent(
+			new SubmitEvent("submit", {
+				bubbles: true,
+				cancelable: true,
+				submitter: container.querySelector('button[type="submit"]'),
+			} as EventInit) as unknown as Event,
+		)
+	})
+	await settle()
+	// The member clicks away; the destination's loader is still running, so Imports is still on screen.
+	let arrived = false
+	void router.navigate("/discover").then(() => {
+		arrived = true
+	})
+	await settle()
+	const stillMounted = !!container.querySelector("form")
+	const abortedWhileLoading = signals[0]?.aborted ?? false
+	// The read would finish now; the destination's loader finishes after it.
+	finishRead()
+	await settle()
+	await act(async () => finishLoader())
+	for (let i = 0; i < 4; i++) await settle()
+	const result = {
+		posts: posts.length,
+		stillMounted,
+		abortedWhileLoading,
+		arrived,
+		path: router.state.location.pathname,
+		text: container.textContent,
+	}
+	await act(async () => root.unmount())
+	return result
+}
+
 const json = (body: unknown, status = 200) =>
 	new Response(JSON.stringify(body), {
 		status,
@@ -185,6 +266,8 @@ const results = {
 				}),
 			),
 	),
+	// Clicking away while the next page loads stops the read at once and lets the member arrive.
+	away: await leaveSlowly(),
 	// An answer that still arrives after the member left must not bring them back to Imports.
 	late: await leave(
 		() =>

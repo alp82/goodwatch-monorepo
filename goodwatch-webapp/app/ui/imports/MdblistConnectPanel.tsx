@@ -1,4 +1,4 @@
-import { useNavigate } from "@remix-run/react"
+import { useLocation, useNavigate, useNavigation } from "@remix-run/react"
 import { type FormEvent, useEffect, useRef, useState } from "react"
 import { errorBox, primaryButton, stepHeading, textLink } from "./shared"
 
@@ -99,6 +99,18 @@ export function MdblistConnectPanel() {
 		},
 		[],
 	)
+	// Remix keeps Imports mounted while the next page loads, so leaving starts with the navigation, not the unmount.
+	// Navigation within Imports, such as opening this read's own preview, keeps the read.
+	const { pathname } = useLocation()
+	const navigation = useNavigation()
+	const leaving =
+		navigation.state !== "idle" && navigation.location.pathname !== pathname
+	useEffect(() => {
+		if (!leaving || !reading.current) return
+		reading.current.abort()
+		reading.current = null
+		setPending(false)
+	}, [leaving])
 	const submit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault()
 		if (pending) return
