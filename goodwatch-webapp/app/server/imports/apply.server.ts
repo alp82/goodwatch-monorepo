@@ -476,7 +476,8 @@ async function applyRunStored(
 				.map(ref),
 		)
 		const allowRewatch = (item: ImportItem) =>
-			["watcharr", "imdb-watchlist"].includes(
+			// Sources whose preview asks Want to rewatch on its own, independent of the conflict choice.
+			["watcharr", "imdb-watchlist", "mdblist"].includes(
 				item.wishlistEvidence?.source ?? "",
 			)
 				? options.wishlistRewatch === true

@@ -40,7 +40,7 @@ const settle = async (id: string) => {
 	return getImport("member", id)
 }
 
-test("MDBList preview, Confirm and Undo cover Want to See, every watch, scores and Dropped", async () => {
+function setup() {
 	const db = new ImportDb()
 	db.catalog = [
 		{
@@ -125,6 +125,17 @@ test("MDBList preview, Confirm and Undo cover Want to See, every watch, scores a
 		async () => {},
 		async () => {},
 	)
+	return { db, tracking }
+}
+
+const readSynthetic = () =>
+	createMdblistClient({
+		fetch: fakeMdblist({ key: KEY }).fetch,
+		sleep: async () => {},
+	}).readAccount(KEY)
+
+test("MDBList preview, Confirm and Undo cover Want to See, every watch, scores and Dropped", async () => {
+	const { db } = setup()
 	const fake = fakeMdblist({ key: KEY })
 	const parsed = await createMdblistClient({
 		fetch: fake.fetch,
@@ -213,3 +224,45 @@ test("MDBList has no file-upload way around the pasted key", async () => {
 		/Use Connect/,
 	)
 })
+
+for (const [choice, rewatch, added] of [
+	["keep", true, true],
+	["source", false, false],
+] as const)
+	test(`a Watchlist season of a Seen show follows Want to rewatch (${rewatch}), not the conflict choice (${choice})`, async () => {
+		const { db, tracking } = setup()
+		tracking.seed("user_watch_state", [
+			{
+				user_id: "member",
+				media_type: "show",
+				tmdb_id: 1438,
+				state: "seen",
+				pass: 1,
+				state_changed_at: 1,
+				seen_press_group: null,
+				seen_press_from: null,
+				rate_prompt_dismissed_at: null,
+				seen_question: "answered",
+				created_at: 1,
+				updated_at: 1,
+			},
+		])
+		const preview = await previewFetchedImport(
+			"member",
+			"MDBList account",
+			await readSynthetic(),
+		)
+		assert.equal(preview.wishlistRewatchChoiceCount, 1)
+		await confirmImport("member", preview.id, {
+			kinds: ["want"],
+			conflictChoice: choice,
+			watchDates: "preserve",
+			wishlistShows: true,
+			wishlistRewatch: rewatch,
+		})
+		assert.equal((await settle(preview.id)).status, "done")
+		assert.equal(
+			db.wishlist.some((row) => row.tmdb_id === 1438),
+			added,
+		)
+	})

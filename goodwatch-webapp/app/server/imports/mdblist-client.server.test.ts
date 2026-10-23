@@ -457,3 +457,75 @@ test("a list's season or episode entries stay visible in the list, not stored as
 	)
 	assert.match(entries[2].entry.problem?.reason ?? "", /MDBList season entries/)
 })
+
+test("list reads check MDBList's counts: a missing or different total is reported", async () => {
+	for (const [value, message] of [
+		[null, /couldn't confirm that GoodWatch read all your MDBList lists/],
+		["9", /count of your MDBList lists didn't match what GoodWatch read/],
+	] as const) {
+		const { read } = client({
+			header: (route, name, current) =>
+				route === "listItems" && name === "X-Total-Items" ? value : current,
+		})
+		assert.match(actionable(await read()).join(" "), message)
+	}
+})
+
+test("an unranked list keeps MDBList's order across movies, shows and pages", async () => {
+	const account = syntheticMdblistAccount()
+	const entry = (title: string, tmdb: number, mediatype: string) => ({
+		id: tmdb,
+		title,
+		release_year: 2000,
+		mediatype,
+		ids: { tmdb },
+	})
+	account.lists[0].ordered = [
+		{ bucket: "movies", row: entry("First movie", 11, "movie") },
+		{ bucket: "shows", row: entry("Second show", 12, "show") },
+		{ bucket: "movies", row: entry("Third movie", 13, "movie") },
+	]
+	const { read } = client({ account, pageSize: 1 })
+	const parsed = await read()
+	assert.deepEqual(actionable(parsed), [])
+	assert.deepEqual(
+		byKind(parsed, "list")[0].customList?.entries.map(({ position, entry }) => [
+			position,
+			entry.title,
+		]),
+		[
+			[1, "First movie"],
+			[2, "Second show"],
+			[3, "Third movie"],
+		],
+	)
+})
+
+test("a ranked list follows MDBList's ranks", async () => {
+	const account = syntheticMdblistAccount()
+	const entry = (
+		title: string,
+		tmdb: number,
+		mediatype: string,
+		rank: number,
+	) => ({
+		id: tmdb,
+		rank,
+		title,
+		release_year: 2000,
+		mediatype,
+		ids: { tmdb },
+	})
+	account.lists[0].ordered = [
+		{ bucket: "movies", row: entry("Ranked third", 21, "movie", 3) },
+		{ bucket: "shows", row: entry("Ranked first", 22, "show", 1) },
+		{ bucket: "movies", row: entry("Ranked second", 23, "movie", 2) },
+	]
+	const { read } = client({ account })
+	assert.deepEqual(
+		byKind(await read(), "list")[0].customList?.entries.map(
+			({ entry }) => entry.title,
+		),
+		["Ranked first", "Ranked second", "Ranked third"],
+	)
+})

@@ -87,6 +87,8 @@ const integerHeader = (headers: Headers, name: string) => {
 
 interface RouteRead {
 	rows: Record<Bucket, JsonRecord[]>
+	/** Every row in the order MDBList sent it, across lists and pages. */
+	sequence: { bucket: Bucket; row: JsonRecord }[]
 	coverage: Coverage
 }
 interface RouteSpec {
@@ -243,6 +245,7 @@ export function createMdblistClient(options: {
 		filter?: string,
 	): Promise<RouteRead> {
 		const rows = emptyRows()
+		const sequence: RouteRead["sequence"] = []
 		let coverage: Coverage = "complete"
 		const totals: number[] = []
 		const cursors = new Set<string>()
@@ -280,8 +283,10 @@ export function createMdblistClient(options: {
 					for (const row of value) {
 						pageRows++
 						const item = record(row)
-						if (item) rows[name as Bucket].push(item)
-						else coverage = worse(coverage, "unknown")
+						if (item) {
+							rows[name as Bucket].push(item)
+							sequence.push({ bucket: name as Bucket, row: item })
+						} else coverage = worse(coverage, "unknown")
 					}
 				} else if (name !== "pagination") coverage = worse(coverage, "unknown")
 			}
@@ -345,7 +350,7 @@ export function createMdblistClient(options: {
 		}
 		if (totals.some((total) => total !== count))
 			coverage = worse(coverage, "partial")
-		return { rows, coverage }
+		return { rows, sequence, coverage }
 	}
 
 	async function read(call: Call, spec: RouteSpec): Promise<RouteRead> {
@@ -363,7 +368,7 @@ export function createMdblistClient(options: {
 				if (other !== bucket && filtered.rows[other].length)
 					coverage = worse(coverage, "partial")
 		}
-		return { rows: combined.rows, coverage }
+		return { rows: combined.rows, sequence: combined.sequence, coverage }
 	}
 
 	return {
@@ -676,6 +681,8 @@ export function createMdblistClient(options: {
 				const entries = await readOnce(call, {
 					path: `/lists/${id}/items`,
 					buckets: BUCKETS,
+					// The list index, the entries read and MDBList's own totals must all agree.
+					counts: true,
 					noun: "your MDBList lists",
 				})
 				listCoverage = worse(listCoverage, entries.coverage)
@@ -684,16 +691,19 @@ export function createMdblistClient(options: {
 					listCoverage = worse(listCoverage, "unknown")
 				else if (list.items !== count)
 					listCoverage = worse(listCoverage, "partial")
-				// MDBList ranks entries across movies and shows; without a rank, they keep the order read.
-				const ranked = BUCKETS.flatMap((bucket) =>
-					entries.rows[bucket].map((row) => ({ bucket, row })),
+				// MDBList ranks list entries across movies and shows. Without a rank on every entry, the list keeps the
+				// order MDBList sent, across types and pages.
+				const ranked = entries.sequence.every(
+					({ row }) => positiveId(row.rank) !== null,
 				)
-					.map((item, at) => ({
-						...item,
-						order: positiveId(item.row.rank) ?? Number.MAX_SAFE_INTEGER,
-						at,
-					}))
-					.sort((a, b) => a.order - b.order || a.at - b.at)
+					? entries.sequence
+							.map((item, at) => ({ ...item, at }))
+							.sort(
+								(a, b) =>
+									(positiveId(a.row.rank) ?? 0) -
+										(positiveId(b.row.rank) ?? 0) || a.at - b.at,
+							)
+					: entries.sequence
 				const listed: ImportCustomList["entries"] = ranked.map(
 					({ bucket, row }, at) => {
 						const position = at + 1
@@ -726,7 +736,10 @@ export function createMdblistClient(options: {
 					}),
 				)
 			}
-			check({ rows: emptyRows(), coverage: listCoverage }, "your MDBList lists")
+			check(
+				{ rows: emptyRows(), sequence: [], coverage: listCoverage },
+				"your MDBList lists",
+			)
 			warnings.push(
 				importInfo(
 					"MDBList collection, liked lists, and favorite people aren't part of this import.",

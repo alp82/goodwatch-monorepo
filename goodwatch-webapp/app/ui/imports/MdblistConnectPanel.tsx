@@ -1,9 +1,10 @@
-import { useFetcher } from "@remix-run/react"
-import { useEffect, useRef, useState } from "react"
+import { useNavigate } from "@remix-run/react"
+import { type FormEvent, useEffect, useRef, useState } from "react"
 import { errorBox, primaryButton, stepHeading, textLink } from "./shared"
 
 // MDBList has no sign-in for other apps that limits access, so the member pastes their personal API key. The key
-// goes to GoodWatch's server in this one form post and is used for this import only.
+// goes to GoodWatch's server in this one post and is used for this import only.
+const MDBLIST_IMPORT_PATH = "/api/imports/mdblist"
 export function MdblistConnectControls({
 	pending,
 	error,
@@ -66,12 +67,7 @@ export function MdblistConnectControls({
 				large library uses a few dozen.
 			</p>
 			<div className="flex flex-wrap gap-3">
-				<button
-					type="submit"
-					formAction="/api/imports/mdblist"
-					className={primaryButton}
-					disabled={pending}
-				>
+				<button type="submit" className={primaryButton} disabled={pending}>
 					{pending ? "Reading MDBList…" : "Preview MDBList import"}
 				</button>
 			</div>
@@ -84,20 +80,63 @@ export function MdblistConnectControls({
 	)
 }
 
+/**
+ * Posts with fetch, not a Remix fetcher: a fetcher keeps its form data, and so the key, in router state while the
+ * page revalidates. Here the key lives only in this function until the post is sent, and the field is emptied first.
+ */
 export function MdblistConnectPanel() {
-	const fetcher = useFetcher<{ error?: string }>()
-	// The form data is taken before the fetcher reports "submitting", so the field can be emptied then.
+	const navigate = useNavigate()
+	const [pending, setPending] = useState(false)
+	const [error, setError] = useState<string>()
 	const [submissions, setSubmissions] = useState(0)
-	useEffect(() => {
-		if (fetcher.state === "submitting") setSubmissions((count) => count + 1)
-	}, [fetcher.state])
+	const submit = async (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault()
+		if (pending) return
+		const field = event.currentTarget.elements.namedItem(
+			"apiKey",
+		) as HTMLInputElement | null
+		const body = new URLSearchParams({ apiKey: field?.value ?? "" })
+		if (field) field.value = ""
+		setSubmissions((count) => count + 1)
+		setPending(true)
+		setError(undefined)
+		try {
+			const response = await fetch(MDBLIST_IMPORT_PATH, {
+				method: "POST",
+				headers: { Accept: "application/json" },
+				body,
+			})
+			const data = (await response.json().catch(() => ({}))) as {
+				location?: unknown
+				error?: unknown
+			}
+			if (response.ok && typeof data.location === "string") {
+				navigate(data.location)
+				return
+			}
+			setError(
+				typeof data.error === "string"
+					? data.error
+					: "The import could not be prepared. Please try again.",
+			)
+		} catch {
+			setError("GoodWatch couldn't reach its server. Please try again.")
+		} finally {
+			setPending(false)
+		}
+	}
 	return (
-		<fetcher.Form method="post" className="flex flex-col gap-4">
+		<form
+			method="post"
+			action={MDBLIST_IMPORT_PATH}
+			onSubmit={submit}
+			className="flex flex-col gap-4"
+		>
 			<MdblistConnectControls
-				pending={fetcher.state !== "idle"}
-				error={fetcher.data?.error}
+				pending={pending}
+				error={error}
 				submissions={submissions}
 			/>
-		</fetcher.Form>
+		</form>
 	)
 }

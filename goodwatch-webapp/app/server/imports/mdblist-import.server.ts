@@ -73,10 +73,12 @@ export function createMdblistImport(deps: {
 				})
 				apiKey = ""
 				const summary = await preview(userId, "MDBList account", parsed)
-				headers.set(
-					"Location",
-					`/settings/imports?source=mdblist&import=${summary.id}`,
-				)
+				const location = `/settings/imports?source=mdblist&import=${summary.id}`
+				// The Imports page posts with fetch and opens the preview itself, so the key never enters router state.
+				// A plain form post (no script) still gets a redirect.
+				if (request.headers.get("Accept")?.includes("application/json"))
+					return json({ location }, { headers })
+				headers.set("Location", location)
 				return new Response(null, { status: 303, headers })
 			} catch (error) {
 				// Only fixed messages: anything else could carry the key.

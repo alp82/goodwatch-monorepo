@@ -194,3 +194,15 @@ test("a member who leaves the page cancels the MDBList read and frees the lock",
 	retry.abort()
 	assert.equal((await second).status, 499)
 })
+
+test("a script post gets the preview address as JSON, so the page can open it without router state", async () => {
+	const f = fixture()
+	const response = await f.post(undefined, { Accept: "application/json" })
+	assert.equal(response.status, 200)
+	assert.deepEqual(await response.json(), {
+		location:
+			"/settings/imports?source=mdblist&import=00000000-0000-4000-8000-000000000001",
+	})
+	assert.equal(response.headers.get("Cache-Control"), "private, no-store")
+	assert.equal(response.headers.get("Location"), null)
+})

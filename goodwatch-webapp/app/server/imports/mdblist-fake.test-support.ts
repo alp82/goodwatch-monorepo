@@ -18,7 +18,14 @@ export interface FakeMdblistAccount {
 	dropped: Buckets
 	droppedSeasons: Buckets
 	/** The member's own lists, each with its entries in the Watchlist's envelope. */
-	lists: { id: number; name: string; slug: string; entries: Buckets }[]
+	lists: {
+		id: number
+		name: string
+		slug: string
+		entries: Buckets
+		/** The list's own order across types, when it differs from movies first. */
+		ordered?: { bucket: Bucket; row: Row }[]
+	}[]
 }
 
 export type FakeRoute =
@@ -352,7 +359,8 @@ export function fakeMdblist(options: FakeMdblistOptions = {}): FakeMdblist {
 		if (route === "lists")
 			return json(
 				account.lists.map((list) => {
-					const count = Object.values(list.entries).flat().length
+					const count = (list.ordered ?? Object.values(list.entries).flat())
+						.length
 					return {
 						id: list.id,
 						name: list.name,
@@ -375,9 +383,19 @@ export function fakeMdblist(options: FakeMdblistOptions = {}): FakeMdblist {
 						(list) => url.pathname === `/lists/${list.id}/items`,
 					)?.entries ?? {})
 				: account[route as Exclude<FakeRoute, "lists" | "listItems">]
-		const rows = buckets.flatMap((bucket) =>
-			(source[bucket] ?? []).map((row, index) => ({ bucket, row, index })),
-		)
+		const ordered =
+			route === "listItems"
+				? account.lists.find(
+						(list) => url.pathname === `/lists/${list.id}/items`,
+					)?.ordered
+				: undefined
+		const rows = ordered
+			? ordered
+					.filter((entry) => buckets.includes(entry.bucket))
+					.map((entry, index) => ({ ...entry, index }))
+			: buckets.flatMap((bucket) =>
+					(source[bucket] ?? []).map((row, index) => ({ bucket, row, index })),
+				)
 		const visible = rows.filter(
 			(entry) =>
 				!(
@@ -409,7 +427,9 @@ export function fakeMdblist(options: FakeMdblistOptions = {}): FakeMdblist {
 			has_more: more,
 			limit: size,
 			offset,
-			...(route === "watchlist" ? { total: visible.length } : {}),
+			...(route === "watchlist" || route === "listItems"
+				? { total: visible.length }
+				: {}),
 			...(more
 				? { next_cursor: Buffer.from(String(offset + size)).toString("base64") }
 				: {}),
@@ -424,7 +444,12 @@ export function fakeMdblist(options: FakeMdblistOptions = {}): FakeMdblist {
 		}
 		add("X-Has-More", String(more))
 		add("X-Matched-Items", String(page.length))
-		add("X-Total-Items", route === "watchlist" ? String(visible.length) : null)
+		add(
+			"X-Total-Items",
+			route === "watchlist" || route === "listItems"
+				? String(visible.length)
+				: null,
+		)
 		return json(body, 200, headers)
 	}
 	const fakeFetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
