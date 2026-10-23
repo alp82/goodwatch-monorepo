@@ -1273,8 +1273,123 @@ test("/search shows its reading while ranking, then preserves reading and three 
 	assert.deepEqual(returned.reads, [])
 })
 
+test("/search waits for an in-flight progress PATCH before applying results", async () => {
+	const f = fixture()
+	let release!: () => void
+	const pending = new Promise<void>((resolve) => {
+		release = resolve
+	})
+	let built!: () => void
+	const resultsBuilt = new Promise<void>((resolve) => {
+		built = resolve
+	})
+	let signal: AbortSignal | undefined
+	const edit = f.deps.edit
+	f.deps.edit = async (app, token, body, abort) => {
+		if (abort) {
+			signal = abort
+			await pending
+		}
+		await edit(app, token, body)
+	}
+	const save = f.deps.saveState!
+	f.deps.saveState = async (...args) => {
+		const result = await save(...args)
+		built()
+		return result
+	}
+	f.deps.searchTitles = async (_q, _u, onReading) => {
+		onReading?.([{ text: "Funny", kind: "want" }])
+		return { titles: [title] }
+	}
+	await f.run(2, {
+		name: "search",
+		options: [{ name: "query", value: "funny" }],
+	})
+	await resultsBuilt
+	await new Promise((resolve) => setTimeout(resolve, 30))
+	assert.ok(signal)
+	assert.equal(
+		signal.aborted,
+		false,
+		"final results wait before aborting progress",
+	)
+	assert.equal(f.edits.length, 0, "results must not overtake progress")
+	release()
+	await f.finished
+	assert.equal(f.edits.length, 2)
+	assert.match(JSON.stringify(f.edits[0]), /Finding matching/)
+	assert.match(JSON.stringify(f.edits.at(-1)), /A title/)
+	assert.doesNotMatch(JSON.stringify(f.edits.at(-1)), /Finding matching/)
+})
+
+test("/search progress and results escape the same query heading", async () => {
+	const f = fixture()
+	f.deps.searchTitles = async (_q, _u, onReading) => {
+		onReading?.([{ text: "Funny", kind: "want" }])
+		return { titles: [title] }
+	}
+	await f.run(2, {
+		name: "search",
+		options: [{ name: "query", value: "* # | @everyone" }],
+	})
+	await f.finished
+	const heading = (body: ReturnType<typeof textCard>) =>
+		String(all(body.components).find((c) => c.type === 10)?.content).split(
+			"\n",
+		)[0]
+	assert.equal(heading(f.edits[0]), "### Results for \\* \\# \\| ＠everyone")
+	assert.equal(heading(f.edits[0]), heading(f.edits.at(-1)!))
+})
+
+test("a type 7 search retry lets the loading answer arrive before the reading PATCH", async () => {
+	const f = fixture()
+	let ranked!: () => void
+	const ranking = new Promise<void>((resolve) => {
+		ranked = resolve
+	})
+	const applied: unknown[] = []
+	const edit = f.deps.edit
+	f.deps.edit = async (...args) => {
+		applied.push(args[2])
+		await edit(...args)
+		if (args[3]) ranked()
+	}
+	f.deps.searchTitles = async (_q, _u, onReading) => {
+		onReading?.([{ text: "Funny", kind: "want" }])
+		await ranking
+		return { titles: [title] }
+	}
+	const ack = await routeInteraction(
+		{
+			type: 2,
+			application_id: "app",
+			token: "token",
+			user: { id: "user" },
+			data: { name: "search", options: [{ name: "query", value: "funny" }] },
+			message: {
+				flags: EPHEMERAL,
+				components: textCard("Please try again.").components,
+			},
+		},
+		f.deps,
+		{ retrying: true },
+	)
+	assert.equal(ack.type, 7)
+	await new Promise<void>((resolve) =>
+		setTimeout(() => {
+			applied.push(ack.data)
+			resolve()
+		}, 50),
+	)
+	await f.finished
+	assert.equal(applied[0], ack.data)
+	assert.match(JSON.stringify(applied[1]), /Reads as: Funny/)
+	assert.match(JSON.stringify(applied.at(-1)), /A title/)
+})
+
 for (const failure of ["reject", "hang", "late"] as const) {
-	test(`/search progress edit can ${failure} without delaying or failing the final edit`, async () => {
+	test(`/search progress edit can ${failure} without blocking or failing the final edit indefinitely`, async () => {
 		const f = fixture()
 		let signal: AbortSignal | undefined
 		let release!: () => void
@@ -1321,13 +1436,43 @@ test("search cards keep reading and reason copy within Discord limits and hide r
 		kind: "attribute" as const,
 		text: "very_long **movie:42** ".repeat(20),
 	}))
-	const list = titleListCard("Results for a long query".repeat(20), titles.map((t) => ({ ...t, reasons })), {
-		subtitle: "Reads as: ".repeat(50), total: 100, page: 0, stateKey: key, pageAction: "search",
-	})
+	const list = titleListCard(
+		"Results for a long query".repeat(20),
+		titles.map((t) => ({
+			...t,
+			name: "x".repeat(180),
+			goodwatch_score: 99,
+			year: 2026,
+			runtime_minutes: 180,
+			reasons,
+		})),
+		{
+			emojis: { GoodWatchScore10: "12345678901234567890" },
+			subtitle: "Reads as: ".repeat(50),
+			total: 100,
+			page: 0,
+			stateKey: key,
+			pageAction: "search",
+		},
+	)
 	assertLimits(list.components)
-	const opened = titleCard({ ...title, reasons }, "DE", { back: { kind: "search", key, page: 0 } })
+	const ranked = all(list.components)
+		.filter((c) => c.type === 10)
+		.map((c) => String(c.content))
+		.join("\n")
+	assert.equal((ranked.match(/Matches:/g) ?? []).length, 10)
+	for (const line of ranked
+		.split("\n")
+		.filter((line) => line.startsWith("-# Matches:")))
+		assert.ok(line.length <= 83)
+	const opened = titleCard({ ...title, reasons }, "DE", {
+		back: { kind: "search", key, page: 0 },
+	})
 	assertLimits(opened.components)
-	const copy = all([...list.components, ...opened.components]).filter((c) => c.type === 10).map((c) => c.content).join("\n")
+	const copy = all([...list.components, ...opened.components])
+		.filter((c) => c.type === 10)
+		.map((c) => c.content)
+		.join("\n")
 	assert.doesNotMatch(copy, /_|movie:42/)
 })
 

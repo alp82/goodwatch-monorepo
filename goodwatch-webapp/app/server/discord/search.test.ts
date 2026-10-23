@@ -474,7 +474,11 @@ test("failures use HTTP status before streaming and an error line after the read
 			fallback: async () => [title],
 		})
 		assert.equal(observed, 1)
-		assert.deepEqual(result, { titles: [title], note: SEARCH_TIMEOUT_NOTE })
+		assert.deepEqual(result, {
+			titles: [title],
+			note: SEARCH_TIMEOUT_NOTE,
+			reading,
+		})
 		for (const body of [
 			JSON.stringify({ kind: "reading", reading }) + "\n",
 			JSON.stringify({ kind: "batch", titles: [title] }) +
@@ -538,3 +542,31 @@ test("reading copy follows the website's chip selection and uses not for exclude
 		"Matches: Funny · low violence · Science fiction",
 	)
 })
+
+for (const failure of ["reject", "timeout", "unavailable"] as const) {
+	test(`search fallback retains the last streamed reading after ${failure}`, async () => {
+		const first: ReadingChip[] = [{ kind: "want", text: "Funny" }]
+		const last: ReadingChip[] = [{ kind: "attribute", text: "Family" }]
+		const observed: ReadingChip[][] = []
+		const result = await searchTitles("funny family", "123", {
+			timeoutMs: 15,
+			engine: async (_q, _u, _signal, _send, onReading) => {
+				onReading?.(first)
+				onReading?.(last)
+				if (failure === "reject") throw new Error("Ranking failed")
+				if (failure === "unavailable") return { titles: null }
+				return new Promise(() => {})
+			},
+			onReading: (value) => {
+				observed.push(value)
+			},
+			fallback: async () => [title],
+		})
+		assert.deepEqual(observed, [first, last])
+		assert.deepEqual(result, {
+			titles: [title],
+			note: SEARCH_TIMEOUT_NOTE,
+			reading: last,
+		})
+	})
+}

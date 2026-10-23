@@ -24,6 +24,7 @@ export async function searchTitles(
 	const abort = new AbortController()
 	let timer: ReturnType<typeof setTimeout> | undefined
 	let note = SEARCH_TIMEOUT_NOTE
+	let lastReading: ReadingChip[] | undefined
 	try {
 		const result = await Promise.race([
 			(options.engine ?? websiteSearch)(
@@ -32,7 +33,10 @@ export async function searchTitles(
 				abort.signal,
 				undefined,
 				(reading) => {
-					if (!abort.signal.aborted) options.onReading?.(reading)
+					if (!abort.signal.aborted) {
+						lastReading = reading
+						options.onReading?.(reading)
+					}
 				},
 			),
 			new Promise<never>((_, reject) => {
@@ -46,7 +50,9 @@ export async function searchTitles(
 			return {
 				titles: result.titles,
 				note: result.note,
-				...(result.reading ? { reading: result.reading } : {}),
+				...(result.reading ?? lastReading
+					? { reading: result.reading ?? lastReading }
+					: {}),
 			}
 		note = result.note ?? note
 	} catch {
@@ -62,6 +68,7 @@ export async function searchTitles(
 			[],
 		).catch(() => []),
 		note,
+		...(lastReading ? { reading: lastReading } : {}),
 	}
 }
 

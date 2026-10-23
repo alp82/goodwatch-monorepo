@@ -897,7 +897,12 @@ export function titleSelect(
 }
 
 /** One ranked line: rank, score emoji, name, score, year, runtime. */
-function rankedLine(t: GuestTitle, rank: number, emojis: EmojiIds) {
+function rankedLine(
+	t: GuestTitle,
+	rank: number,
+	emojis: EmojiIds,
+	nameLimit = 180,
+) {
 	const score = hasGoodwatchScore(t.goodwatch_score)
 		? goodwatchScoreDisplay(t.goodwatch_score)
 		: null
@@ -906,7 +911,7 @@ function rankedLine(t: GuestTitle, rank: number, emojis: EmojiIds) {
 		[
 			`**${rank}**  ${emoji ? `${emoji}  ` : ""}**${escape(t.name).slice(
 				0,
-				180,
+				nameLimit,
 			)}**`,
 			score === null ? null : String(score),
 			t.year ? String(t.year) : null,
@@ -915,7 +920,7 @@ function rankedLine(t: GuestTitle, rank: number, emojis: EmojiIds) {
 			.filter(Boolean)
 			.join("  ·  ") +
 		(reasonsLine(t.reasons)
-			? `\n-# ${escape(reasonsLine(t.reasons)).slice(0, 130)}`
+			? `\n-# ${escape(reasonsLine(t.reasons)).slice(0, 80)}`
 			: "")
 	)
 }
@@ -970,6 +975,9 @@ const pageButtons = (
 		custom_id: id(target),
 	}))
 
+export const listHeading = (heading: string) =>
+	`### ${escape(heading).slice(0, 200)}`
+
 /**
  * 4D list card for /discover, /search, /similar, and /person lists: up to ten posters as one media gallery, the ranked
  * list below, then the title menu and paging. Lists without posters skip the gallery.
@@ -1003,6 +1011,23 @@ export function titleListCard(
 			? Math.ceil(options.total / 10)
 			: null
 	const subtitle = pageSubtitle(options.subtitle, page, pages)
+	const headingText = `${listHeading(heading)}${
+		subtitle ? `\n-# ${subtitle.slice(0, 300)}` : ""
+	}`
+	// Reserve the heading and separators before dividing the remaining text budget among all ten rows.
+	const rowBudget = Math.floor(
+		(4000 - headingText.length - Math.max(0, shown.length - 1)) /
+			Math.max(1, shown.length),
+	)
+	const rows = shown.map((t, i) => {
+		const line = rankedLine(t, i + 1, emojis)
+		return rankedLine(
+			t,
+			i + 1,
+			emojis,
+			Math.max(0, 180 - Math.max(0, line.length - rowBudget)),
+		).slice(0, rowBudget)
+	})
 	const buttons: Component[] = []
 	if (options.stateKey) {
 		const action = options.pageAction ?? "discover"
@@ -1024,17 +1049,9 @@ export function titleListCard(
 		[
 			container(
 				[
-					text(
-						`### ${escape(heading).slice(0, 200)}${
-							subtitle ? `\n-# ${subtitle.slice(0, 300)}` : ""
-						}`,
-					),
+					text(headingText),
 					posterGallery(shown),
-					text(
-						shown.length
-							? shown.map((t, i) => rankedLine(t, i + 1, emojis)).join("\n")
-							: "No titles found.",
-					),
+					text(shown.length ? rows.join("\n") : "No titles found."),
 					...titleSelect(shown, options.share, emojis, options.ref),
 					buttons.length ? { type: 1, components: buttons } : null,
 				],

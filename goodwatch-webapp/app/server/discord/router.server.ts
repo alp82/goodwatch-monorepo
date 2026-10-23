@@ -50,6 +50,7 @@ import {
 	displayText,
 	titleCard,
 	titleListCard,
+	listHeading,
 	personCard,
 	hotCard,
 	HOT_PAGE_SIZE,
@@ -76,7 +77,7 @@ import {
 import { resolveViewerPlace, type PlaceDependencies } from "./place.server.ts"
 import { guildSettingsAvailable, type GuildSettings } from "./guild.server.ts"
 import { setup, setupAutocomplete, canManageGuild } from "./setup.server.ts"
-import { defer, within } from "./respond.server.ts"
+import { defer, within, LOADING_MIN_MS } from "./respond.server.ts"
 import { loadingLine, loadingMessage, pressedName } from "./loading.ts"
 import { discordRest } from "./rest.server.ts"
 import type { DiscoverState } from "./discover-state.server.ts"
@@ -1274,6 +1275,9 @@ export async function routeInteraction(
 				return reply(textCard("Invalid interaction."), "invalid")
 			const progressAbort = new AbortController()
 			let finalBody: unknown
+			let finalRequested = false
+			let pendingProgress = Promise.resolve()
+			const progressStarted = Date.now()
 			return deferred(
 				async () => {
 					usePlace(await place())
@@ -1287,21 +1291,33 @@ export async function routeInteraction(
 								return textCard("No matching title found. Try another title.")
 							if (isTitleId(value)) return card(value)
 							const result = await deps.searchTitles(value, user, (reading) => {
-								if (progressAbort.signal.aborted) return
+								if (finalRequested) return
 								const body = textCard(
-									`### Results for ${value}\n${readingLine(reading)}\n\nFinding matching movies and shows…`,
+									`${listHeading(`Results for ${value}`)}\n${readingLine(
+										reading,
+									)}\n\nFinding matching movies and shows…`,
 								)
-								// Progress never blocks results. Cancel pending retries and restore results if a late edit lands.
-								void Promise.resolve()
-									.then(() =>
-										deps.edit(
+								// Serialize progress, then let the final edit drain it before sending results.
+								pendingProgress = pendingProgress
+									.then(async () => {
+										if (internal.retrying) {
+											const wait =
+												LOADING_MIN_MS - (Date.now() - progressStarted)
+											if (wait > 0)
+												await new Promise((resolve) =>
+													setTimeout(resolve, wait),
+												)
+										}
+										if (progressAbort.signal.aborted) return
+										return deps.edit(
 											interaction.application_id!,
 											interaction.token!,
 											body,
 											progressAbort.signal,
-										),
-									)
+										)
+									})
 									.then(() => {
+										// Restore results if progress outlives the bounded wait and ignores abort.
 										if (finalBody)
 											return deps.edit(
 												interaction.application_id!,
@@ -1407,7 +1423,9 @@ export async function routeInteraction(
 							return textCard("Unsupported command.")
 					}
 				},
-				(body) => {
+				async (body) => {
+					finalRequested = true
+					await within(pendingProgress, 1500, undefined).catch(() => {})
 					progressAbort.abort()
 					finalBody = body
 					return deps.edit(
