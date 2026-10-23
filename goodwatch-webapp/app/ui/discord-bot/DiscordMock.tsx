@@ -215,11 +215,15 @@ function ScoreEmoji({ score }: { score: number }) {
 	)
 }
 
-function ServiceEmoji({ service }: { service: MockService }) {
+/** `named`: the logo stands alone, so its alt text names the service. */
+function ServiceEmoji({
+	service,
+	named = false,
+}: { service: MockService; named?: boolean }) {
 	return (
 		<img
 			src={tmdbImageUrl(service.logo, "w92")}
-			alt=""
+			alt={named ? service.name : ""}
 			loading="lazy"
 			decoding="async"
 			width={20}
@@ -452,7 +456,7 @@ export function TogetherMessage({
 					<Facts title={title} />
 					<p className={`font-bold ${HEADING}`}>{label}</p>
 					<p className="flex items-center gap-1.5">
-						<ServiceEmoji service={title.service} />
+						<ServiceEmoji service={title.service} named />
 					</p>
 				</Section>
 			))}
