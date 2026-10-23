@@ -852,7 +852,7 @@ function CollaboratorCards({ data }: { data: Data }) {
 					<Link
 						to={personPath(c.tmdb_id, c.name)}
 						prefetch="intent"
-						className="flex h-full gap-3 rounded-xl border border-gray-800 bg-gray-900 p-3 transition-[scale,opacity] duration-100 hover:border-amber-400/60 active:scale-[0.98] active:opacity-90"
+						className="flex h-full gap-3 rounded-xl border border-gray-800 bg-gray-900 p-3 transition-[scale,opacity] duration-100 hover:border-amber-400/60 motion-safe:active:scale-[0.98] active:opacity-90"
 					>
 						<Portrait
 							path={c.profile_path}

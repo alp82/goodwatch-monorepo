@@ -6,6 +6,7 @@ const FINISH_MS = 300
 
 // The bar shows in the first frame of a page change: its animation starts at a quarter of the width and creeps on from
 // there, so a press is answered before any data comes back. Transform and opacity only, so it never lays out the page.
+// With reduced motion it stays still (see `bar`).
 function GlobalLoading() {
 	const navigation = useNavigation()
 	const active = navigation.state !== "idle"
@@ -24,8 +25,9 @@ function GlobalLoading() {
 		return () => clearTimeout(timer)
 	}, [finishing])
 
+	// With reduced motion the bar stands still at half width while the page loads, then fades as usual.
 	const bar = active
-		? "animate-nav-progress"
+		? "animate-nav-progress motion-reduce:animate-none motion-reduce:scale-x-50"
 		: finishing
 			? "scale-x-100 opacity-0 transition-opacity duration-300 ease-out"
 			: "scale-x-0 opacity-0"
@@ -38,7 +40,7 @@ function GlobalLoading() {
 			aria-valuemax={100}
 			aria-valuenow={active ? undefined : 0}
 			aria-valuetext={active ? "Loading" : undefined}
-			className={`pointer-events-none fixed inset-x-0 top-0 left-0 z-50 h-1 ${active ? "animate-pulse" : ""}`}
+			className={`pointer-events-none fixed inset-x-0 top-0 left-0 z-50 h-1 ${active ? "animate-pulse motion-reduce:animate-none" : ""}`}
 		>
 			<div
 				className={`h-full origin-left bg-linear-to-r from-blue-500 to-indigo-500 ${bar}`}
