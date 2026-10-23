@@ -1636,3 +1636,31 @@ test("Undo puts a part score back on the episode the batch scored, also after TM
 		part_score: [8, 4],
 	})
 })
+
+test("A batch says which of its changes Undo can't take back, and only when it has some", async () => {
+	const lib = fakeLibrary()
+	lib.setPart(ME, 3001, 1, 2, 4)
+	const cleared = await write(lib, "rate_title", {
+		action_id: "clear-note",
+		items: [
+			{ title_id: "show:3001", season: 1, episode: 2, score: null },
+			{ title_id: "show:3001", season: 1, episode: 3, score: 7 },
+		],
+	})
+	assert.match(String(cleared.message), /undo_watch with batch_id "clear-note"/)
+	assert.match(
+		String(cleared.message),
+		/A cleared season or episode score, or a write that wasn't confirmed, can't be taken back; those items say so\./,
+	)
+	const plain = await write(lib, "rate_title", {
+		action_id: "plain-note",
+		items: [{ title_id: "show:3001", season: 1, episode: 4, score: 6 }],
+	})
+	assert.doesNotMatch(String(plain.message), /can't be taken back/)
+	const undo = writeToolDefinitions.find((tool) => tool.name === "undo_watch")
+	assert.doesNotMatch(String(undo?.description), /every change/)
+	assert.match(
+		String(undo?.description),
+		/except a cleared season or episode score, or a write that wasn't confirmed, which it reports as not_undoable/,
+	)
+})

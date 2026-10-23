@@ -607,7 +607,10 @@ export async function runBatch(
 				? "Retry ambiguous items with one of their candidates' title_id, in a call with a new action_id."
 				: "",
 			summary.done
-				? `To take back every change of this call, use undo_watch with batch_id "${action_id}".`
+				? `To take back this call's changes, use undo_watch with batch_id "${action_id}".`
+				: "",
+			results.some((item) => "undo_note" in item)
+				? "A cleared season or episode score, or a write that wasn't confirmed, can't be taken back; those items say so."
 				: "",
 		]
 			.filter(Boolean)

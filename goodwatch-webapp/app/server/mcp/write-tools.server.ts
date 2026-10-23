@@ -245,7 +245,7 @@ export const writeToolDefinitions: {
 		name: "undo_watch",
 		title: "Remove a watch",
 		description:
-			"Remove one watch record. Choose a watch_id, or omit it for the most recently logged individual watch of this title. Destructive: results identify the exact removed watch, date, pass and resulting marks; retrying the same action never removes a different watch. Or pass only batch_id (from a batch result) to take back every change that batch call made, title by title, through the same undo the site uses; a title changed again since keeps its newer value, and each title reports undone, partly_undone, already_undone, changed_since, not_undoable or error. A batch is undone once: undoing it again returns the first undo's result.",
+			"Remove one watch record. Choose a watch_id, or omit it for the most recently logged individual watch of this title. Destructive: results identify the exact removed watch, date, pass and resulting marks; retrying the same action never removes a different watch. Or pass only batch_id (from a batch result) to take back the changes that batch call made, title by title, through the same undo the site uses, except a cleared season or episode score, or a write that wasn't confirmed, which it reports as not_undoable; a title changed again since keeps its newer value, and each title reports undone, partly_undone, already_undone, changed_since, not_undoable or error. A batch is undone once: undoing it again returns the first undo's result.",
 		destructive: true,
 		schema: z
 			.object({
