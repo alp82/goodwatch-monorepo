@@ -6,8 +6,14 @@ import { getUserData } from "~/server/userData.server"
 import type { MediaKey } from "~/types/user-data"
 
 /** The visitor's score per title key ("movie-550") among `keys`; null when the visitor can't compare yet. */
-export async function yourScores(viewerId: string, keys: Iterable<string>): Promise<Record<string, number> | null> {
-	const [taste, data] = await Promise.all([loadMemberTaste(viewerId), getUserData({ user_id: viewerId })])
+export async function yourScores(
+	viewerId: string,
+	keys: Iterable<string>,
+): Promise<Record<string, number> | null> {
+	const [taste, data] = await Promise.all([
+		loadMemberTaste(viewerId),
+		getUserData({ user_id: viewerId }),
+	])
 	if (taste.liked < MIN_LIKED) return null
 	const out: Record<string, number> = {}
 	for (const key of keys) {

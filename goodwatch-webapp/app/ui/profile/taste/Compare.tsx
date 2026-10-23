@@ -17,9 +17,15 @@ export function CompareBanner() {
 	if (!compare) return null
 	const matchPercent = compare.percent
 	const color = matchColor(matchPercent)
-	const pulls = { both: compare.pulls.both.slice(0, 2), onlyThem: compare.pulls.onlyThem.slice(0, 2), onlyYou: compare.pulls.onlyYou.slice(0, 2) }
+	const pulls = {
+		both: compare.pulls.both.slice(0, 2),
+		onlyThem: compare.pulls.onlyThem.slice(0, 2),
+		onlyYou: compare.pulls.onlyYou.slice(0, 2),
+	}
 	const sentence = [
-		pulls.both.length ? `You both go for ${pulls.both.join(" and ").toLowerCase()}.` : "",
+		pulls.both.length
+			? `You both go for ${pulls.both.join(" and ").toLowerCase()}.`
+			: "",
 		pulls.onlyThem[0] && pulls.onlyYou[0]
 			? `@${handle} chases ${pulls.onlyThem[0].toLowerCase()}; you chase ${pulls.onlyYou[0].toLowerCase()}.`
 			: "",
@@ -36,11 +42,17 @@ export function CompareBanner() {
 				sub={sentence}
 				right={
 					<span className="flex items-center gap-3">
-						<span className="text-5xl leading-none font-black tabular-nums" style={{ color }}>
+						<span
+							className="text-5xl leading-none font-black tabular-nums"
+							style={{ color }}
+						>
 							{matchPercent}%
 						</span>
 						<span className="flex flex-col items-start gap-1">
-							<span className="rounded-full px-2.5 py-0.5 text-sm font-black text-gray-950" style={{ background: color }}>
+							<span
+								className="rounded-full px-2.5 py-0.5 text-sm font-black text-gray-950"
+								style={{ background: color }}
+							>
 								{matchTier(matchPercent)}
 							</span>
 							<span className="text-xs text-gray-400">taste match</span>
@@ -59,7 +71,11 @@ export function CompareBanner() {
 
 // ---------- The overlap ----------
 
-function Fan({ titles, size, label }: { titles: ProfileTitle[]; size: "sm" | "lg"; label: string }) {
+function Fan({
+	titles,
+	size,
+	label,
+}: { titles: ProfileTitle[]; size: "sm" | "lg"; label: string }) {
 	const n = titles.length
 	const w = size === "lg" ? "w-[4.6rem] sm:w-24" : "w-14 sm:w-[4.5rem]"
 	return (
@@ -72,11 +88,19 @@ function Fan({ titles, size, label }: { titles: ProfileTitle[]; size: "sm" | "lg
 					<li
 						key={t.key}
 						className={`${w} shrink-0 ${i ? (size === "lg" ? "-ml-6 sm:-ml-8" : "-ml-5 sm:-ml-6") : ""}`}
-						style={{ transform: `translateY(${lift}px) rotate(${turn}deg)`, zIndex: 10 - Math.round(Math.abs(i - mid)) }}
+						style={{
+							transform: `translateY(${lift}px) rotate(${turn}deg)`,
+							zIndex: 10 - Math.round(Math.abs(i - mid)),
+						}}
 					>
 						<Link to={t.href} title={t.title} className="block">
 							{t.poster ? (
-								<img src={posterUrl(t.poster) ?? ""} alt={t.title} loading="lazy" className="aspect-[2/3] w-full rounded-lg object-cover shadow-xl ring-2 ring-gray-950" />
+								<img
+									src={posterUrl(t.poster) ?? ""}
+									alt={t.title}
+									loading="lazy"
+									className="aspect-[2/3] w-full rounded-lg object-cover shadow-xl ring-2 ring-gray-950"
+								/>
 							) : (
 								<span className="block aspect-[2/3] w-full rounded-lg bg-white/10" />
 							)}
@@ -88,11 +112,20 @@ function Fan({ titles, size, label }: { titles: ProfileTitle[]; size: "sm" | "lg
 	)
 }
 
-function Region({ title, count, children, tone }: { title: string; count: string; children: React.ReactNode; tone: string }) {
+function Region({
+	title,
+	count,
+	children,
+	tone,
+}: { title: string; count: string; children: React.ReactNode; tone: string }) {
 	return (
 		<div className="flex flex-col items-center gap-3">
 			<p className="text-center">
-				<span className={`block text-[11px] font-bold tracking-wide uppercase ${tone}`}>{title}</span>
+				<span
+					className={`block text-[11px] font-bold tracking-wide uppercase ${tone}`}
+				>
+					{title}
+				</span>
 				<span className="block text-xs text-gray-500">{count}</span>
 			</p>
 			{children}
@@ -108,7 +141,13 @@ function Overlap({ handle, c }: { handle: string; c: Ready }) {
 	return (
 		<div className={`${PANEL} relative overflow-hidden p-4 sm:p-6`}>
 			{/* Two circles that overlap: theirs amber, yours white. Drawn behind three poster fans on wide screens. */}
-			<svg viewBox="0 0 1000 420" preserveAspectRatio="xMidYMid meet" className="pointer-events-none absolute inset-0 hidden h-full w-full md:block" aria-hidden>
+			{/* biome-ignore lint/a11y/noSvgWithoutTitle: decorative, aria-hidden; the numbers beside it carry the meaning */}
+			<svg
+				viewBox="0 0 1000 420"
+				preserveAspectRatio="xMidYMid meet"
+				className="pointer-events-none absolute inset-0 hidden h-full w-full md:block"
+				aria-hidden
+			>
 				<defs>
 					<radialGradient id="ov-them" cx="35%" cy="50%" r="40%">
 						<stop offset="0" stopColor="#fbbf24" stopOpacity=".12" />
@@ -119,17 +158,45 @@ function Overlap({ handle, c }: { handle: string; c: Ready }) {
 						<stop offset="1" stopColor="#ffffff" stopOpacity=".02" />
 					</radialGradient>
 				</defs>
-				<circle cx="355" cy="210" r="195" fill="url(#ov-them)" stroke="#fbbf24" strokeOpacity=".45" strokeWidth="1.5" />
-				<circle cx="645" cy="210" r="195" fill="url(#ov-you)" stroke="#ffffff" strokeOpacity=".4" strokeWidth="1.5" />
+				<circle
+					cx="355"
+					cy="210"
+					r="195"
+					fill="url(#ov-them)"
+					stroke="#fbbf24"
+					strokeOpacity=".45"
+					strokeWidth="1.5"
+				/>
+				<circle
+					cx="645"
+					cy="210"
+					r="195"
+					fill="url(#ov-you)"
+					stroke="#ffffff"
+					strokeOpacity=".4"
+					strokeWidth="1.5"
+				/>
 			</svg>
 			<div className="relative grid gap-8 md:min-h-[22rem] md:grid-cols-[1fr_0.9fr_1fr] md:items-center md:gap-2 md:px-[4%]">
-				<Region title={`Only @${handle} loves`} count={`${overlap.onlyThemCount} of their 9s and 10s you haven't rated`} tone="text-amber-300">
+				<Region
+					title={`Only @${handle} loves`}
+					count={`${overlap.onlyThemCount} of their 9s and 10s you haven't rated`}
+					tone="text-amber-300"
+				>
 					<Fan titles={them} size="sm" label={`Loved by @${handle}`} />
 				</Region>
-				<Region title="You both love" count={`${overlap.bothCount} titles you both scored 8 or more`} tone="text-white">
+				<Region
+					title="You both love"
+					count={`${overlap.bothCount} titles you both scored 8 or more`}
+					tone="text-white"
+				>
 					<Fan titles={both} size="lg" label="Loved by you both" />
 				</Region>
-				<Region title="Only you love" count={`${overlap.onlyYouCount} of your 8s and up they haven't rated`} tone="text-gray-200">
+				<Region
+					title="Only you love"
+					count={`${overlap.onlyYouCount} of your 8s and up they haven't rated`}
+					tone="text-gray-200"
+				>
 					<Fan titles={you} size="sm" label="Loved by you" />
 				</Region>
 			</div>
@@ -151,7 +218,8 @@ function Splits({ handle, c }: { handle: string; c: Ready }) {
 				<p className="text-xs text-gray-400">
 					{shared.length} titles you both rated, widest gap first ·{" "}
 					<span className="inline-flex items-center gap-1">
-						<span className="size-2 rounded-full bg-amber-400" aria-hidden />@{handle}
+						<span className="size-2 rounded-full bg-amber-400" aria-hidden />@
+						{handle}
 					</span>{" "}
 					<span className="inline-flex items-center gap-1">
 						<span className="size-2 rounded-full bg-white" aria-hidden />
@@ -165,12 +233,30 @@ function Splits({ handle, c }: { handle: string; c: Ready }) {
 					const hi = Math.max(r.yours, r.theirs)
 					const wide = hi - lo >= 3
 					return (
-						<li key={r.key} className="grid grid-cols-[2rem_minmax(0,7rem)_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[2rem_minmax(0,10rem)_minmax(0,1fr)]">
-							<span className="block w-8">{r.poster && <img src={posterUrl(r.poster, "w92") ?? ""} alt="" loading="lazy" className="aspect-[2/3] w-full rounded object-cover" />}</span>
-							<Link to={r.href} className="truncate text-sm font-semibold text-gray-200 hover:text-white">
+						<li
+							key={r.key}
+							className="grid grid-cols-[2rem_minmax(0,7rem)_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[2rem_minmax(0,10rem)_minmax(0,1fr)]"
+						>
+							<span className="block w-8">
+								{r.poster && (
+									<img
+										src={posterUrl(r.poster, "w92") ?? ""}
+										alt=""
+										loading="lazy"
+										className="aspect-[2/3] w-full rounded object-cover"
+									/>
+								)}
+							</span>
+							<Link
+								to={r.href}
+								className="truncate text-sm font-semibold text-gray-200 hover:text-white"
+							>
 								{r.title}
 							</Link>
-							<span className="relative mx-3 h-8" aria-label={`@${handle} ${r.theirs}, you ${r.yours}`}>
+							<span
+								className="relative mx-3 h-8"
+								aria-label={`@${handle} ${r.theirs}, you ${r.yours}`}
+							>
 								<span className="absolute inset-x-0 top-1/2 h-px bg-white/10" />
 								<span
 									className={`absolute top-1/2 h-1 -translate-y-1/2 rounded-full ${wide ? "bg-rose-400/70" : "bg-white/30"}`}
@@ -184,7 +270,11 @@ function Splits({ handle, c }: { handle: string; c: Ready }) {
 				})}
 			</ul>
 			{shared.length > 6 && (
-				<button type="button" onClick={() => setAll(!all)} className="self-start text-sm font-semibold text-amber-500 hover:text-amber-400">
+				<button
+					type="button"
+					onClick={() => setAll(!all)}
+					className="self-start text-sm font-semibold text-amber-500 hover:text-amber-400"
+				>
 					{all ? "Show fewer" : `Show all ${shared.length}`}
 				</button>
 			)}
@@ -213,11 +303,19 @@ function Picks({ handle, c }: { handle: string; c: Ready }) {
 		<div className={`${PANEL} flex flex-col gap-4 p-4 sm:p-5`}>
 			<div>
 				<p className="font-bold text-white">Picks for each other</p>
-				<p className="text-xs text-gray-400">Their favorites that carry what you seek, and yours already on their wishlist.</p>
+				<p className="text-xs text-gray-400">
+					Their favorites that carry what you seek, and yours already on their
+					wishlist.
+				</p>
 			</div>
 			<PickRow
 				title={`From @${handle}'s favorites, for you`}
-				items={forYou.map((t) => ({ t, note: t.why ? `For your ${t.why.toLowerCase()}` : `They scored it ${t.score}` }))}
+				items={forYou.map((t) => ({
+					t,
+					note: t.why
+						? `For your ${t.why.toLowerCase()}`
+						: `They scored it ${t.score}`,
+				}))}
 			/>
 			<PickRow
 				title={`You loved these; @${handle} wants to see them`}
@@ -227,7 +325,10 @@ function Picks({ handle, c }: { handle: string; c: Ready }) {
 	)
 }
 
-function PickRow({ title, items }: { title: string; items: { t: ProfileTitle; note: string }[] }) {
+function PickRow({
+	title,
+	items,
+}: { title: string; items: { t: ProfileTitle; note: string }[] }) {
 	if (!items.length) return null
 	return (
 		<div>
@@ -237,12 +338,21 @@ function PickRow({ title, items }: { title: string; items: { t: ProfileTitle; no
 					<li key={t.key} className="min-w-0">
 						<Link to={t.href} className="group block">
 							{t.poster ? (
-								<img src={posterUrl(t.poster) ?? ""} alt="" loading="lazy" className="aspect-[2/3] w-full rounded-lg object-cover ring-1 ring-white/10 group-hover:ring-white/30" />
+								<img
+									src={posterUrl(t.poster) ?? ""}
+									alt=""
+									loading="lazy"
+									className="aspect-[2/3] w-full rounded-lg object-cover ring-1 ring-white/10 group-hover:ring-white/30"
+								/>
 							) : (
 								<span className="block aspect-[2/3] w-full rounded-lg bg-white/10" />
 							)}
-							<span className="mt-1 block truncate text-xs font-semibold text-gray-200">{t.title}</span>
-							<span className="block truncate text-[11px] text-gray-500">{note}</span>
+							<span className="mt-1 block truncate text-xs font-semibold text-gray-200">
+								{t.title}
+							</span>
+							<span className="block truncate text-[11px] text-gray-500">
+								{note}
+							</span>
 						</Link>
 					</li>
 				))}

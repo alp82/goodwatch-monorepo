@@ -7,6 +7,7 @@ import { Link } from "@remix-run/react"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { type ReactNode, useMemo, useState } from "react"
 import { PosterImg, YouMark } from "../parts"
+import { Whorl } from "./Whorl"
 import {
 	CRAFT_KEYS,
 	FAMILY_COLOR,
@@ -22,7 +23,6 @@ import {
 	useTaste,
 } from "./model"
 import { MiniPoster, PANEL, SectionHead } from "./parts"
-import { Whorl } from "./Whorl"
 
 const tierTone = (tier: Tier) =>
 	tier >= 3
@@ -45,7 +45,11 @@ export function FingerprintExplorer() {
 	const gap = (a: TasteAttribute) => Math.abs(a.edge - yours(a.key))
 	// The visitor's print, drawn from the same attributes with their edges.
 	const memberAttributes = useMemo(
-		() => taste.attributes.map((a) => ({ ...a, edge: you?.yourEdges[a.key]?.edge ?? 0 })),
+		() =>
+			taste.attributes.map((a) => ({
+				...a,
+				edge: you?.yourEdges[a.key]?.edge ?? 0,
+			})),
 		[taste.attributes, you],
 	)
 	const [family, setFamily] = useState<FamilyId | null>(null)
@@ -53,17 +57,27 @@ export function FingerprintExplorer() {
 	const [vsOn, setVs] = useState(false)
 	const vs = compare && vsOn
 	const still = useReducedMotion() ?? false
-	const [key, setKey] = useState<string>(taste.identity?.persona ?? taste.seek[0] ?? taste.attributes[0].key)
+	const [key, setKey] = useState<string>(
+		taste.identity?.persona ?? taste.seek[0] ?? taste.attributes[0].key,
+	)
 	const picked = attributeByKey.get(key) as TasteAttribute
-	const max = Math.max(...taste.attributes.map((a) => Math.abs(a.edge)), ...(compare ? memberAttributes.map((a) => Math.abs(a.edge)) : []))
+	const max = Math.max(
+		...taste.attributes.map((a) => Math.abs(a.edge)),
+		...(compare ? memberAttributes.map((a) => Math.abs(a.edge)) : []),
+	)
 	const worded = taste.attributes.filter((a) => !CRAFT_KEYS.has(a.key))
 	const rows = family
-		? taste.attributes.filter((a) => a.family === family).sort((a, b) => (vs ? gap(b) - gap(a) : b.edge - a.edge))
+		? taste.attributes
+				.filter((a) => a.family === family)
+				.sort((a, b) => (vs ? gap(b) - gap(a) : b.edge - a.edge))
 		: vs
 			? view === "common"
 				? worded
 						.filter((a) => a.edge > 0 && yours(a.key) > 0)
-						.sort((a, b) => Math.min(b.edge, yours(b.key)) - Math.min(a.edge, yours(a.key)))
+						.sort(
+							(a, b) =>
+								Math.min(b.edge, yours(b.key)) - Math.min(a.edge, yours(a.key)),
+						)
 						.slice(0, 10)
 				: [...worded].sort((a, b) => gap(b) - gap(a)).slice(0, 12)
 			: [
@@ -82,7 +96,9 @@ export function FingerprintExplorer() {
 		setFamily(id)
 		setView(nextView)
 		const pool = id ? taste.attributes.filter((a) => a.family === id) : worded
-		const top = [...pool].sort((a, b) => (vs ? gap(b) - gap(a) : b.edge - a.edge))[0]
+		const top = [...pool].sort((a, b) =>
+			vs ? gap(b) - gap(a) : b.edge - a.edge,
+		)[0]
 		if (top) setKey(top.key)
 	}
 	const pickAttribute = (k: string) => {
@@ -117,7 +133,10 @@ export function FingerprintExplorer() {
 							onClick={toggleVs}
 							className={`inline-flex min-h-11 items-center gap-3 rounded-full py-1 pr-4 pl-1.5 text-sm font-bold ring-1 transition-colors ${vsOn ? "bg-white text-gray-950 ring-white" : "bg-white/[0.04] text-gray-200 ring-white/20 hover:ring-white/40"}`}
 						>
-							<span className={`relative h-6 w-11 rounded-full transition-colors ${vsOn ? "bg-gray-950" : "bg-white/15"}`} aria-hidden>
+							<span
+								className={`relative h-6 w-11 rounded-full transition-colors ${vsOn ? "bg-gray-950" : "bg-white/15"}`}
+								aria-hidden
+							>
 								<span
 									className={`absolute top-1 left-1 size-4 rounded-full transition-transform duration-300 ${vsOn ? "translate-x-5 bg-white" : "bg-gray-300"}`}
 								/>
@@ -127,13 +146,19 @@ export function FingerprintExplorer() {
 					) : undefined
 				}
 			/>
-			<div className={`${PANEL} grid gap-6 overflow-hidden p-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]`}>
+			<div
+				className={`${PANEL} grid gap-6 overflow-hidden p-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]`}
+			>
 				{/* One square stage either way, so the switch never moves the layout. */}
 				<div className="relative mx-auto aspect-square w-full max-w-[30rem]">
 					<motion.div
 						className="absolute inset-0"
 						initial={false}
-						animate={vs ? { scale: 0.62, x: "-20%", y: "-19%" } : { scale: 1, x: "0%", y: "0%" }}
+						animate={
+							vs
+								? { scale: 0.62, x: "-20%", y: "-19%" }
+								: { scale: 1, x: "0%", y: "0%" }
+						}
 						transition={transition}
 					>
 						<Whorl
@@ -178,32 +203,60 @@ export function FingerprintExplorer() {
 								initial={{ opacity: 0 }}
 								animate={{ opacity: 1 }}
 								exit={{ opacity: 0 }}
-								transition={still ? { duration: 0 } : { duration: 0.3, delay: 0.25 }}
+								transition={
+									still ? { duration: 0 } : { duration: 0.3, delay: 0.25 }
+								}
 							>
 								<span className="absolute top-[2%] right-[6%] text-right">
-									<span className="block text-[11px] font-bold tracking-wide text-amber-300 uppercase">@{handle}</span>
-									<span className="block text-sm font-bold text-white">{taste.identity?.name}</span>
+									<span className="block text-[11px] font-bold tracking-wide text-amber-300 uppercase">
+										@{handle}
+									</span>
+									<span className="block text-sm font-bold text-white">
+										{taste.identity?.name}
+									</span>
 								</span>
 								<span className="absolute bottom-[2%] left-[6%]">
-									<span className="block text-[11px] font-bold tracking-wide text-gray-300 uppercase">You</span>
-									<span className="block text-sm font-bold text-white">{you?.yourIdentity ?? "Your taste"}</span>
+									<span className="block text-[11px] font-bold tracking-wide text-gray-300 uppercase">
+										You
+									</span>
+									<span className="block text-sm font-bold text-white">
+										{you?.yourIdentity ?? "Your taste"}
+									</span>
 								</span>
 							</motion.div>
 						)}
 					</AnimatePresence>
 				</div>
 				<div className="flex min-w-0 flex-col gap-4">
-					<div className="flex flex-wrap gap-1.5" role="group" aria-label="Families">
-						<FamilyButton on={!family && view === "top"} onClick={() => pickFamily(null)} color={vs ? "#ffffff" : "#f59e0b"}>
+					<div
+						className="flex flex-wrap gap-1.5"
+						// biome-ignore lint/a11y/useSemanticElements: a labelled group of toggle buttons
+						role="group"
+						aria-label="Families"
+					>
+						<FamilyButton
+							on={!family && view === "top"}
+							onClick={() => pickFamily(null)}
+							color={vs ? "#ffffff" : "#f59e0b"}
+						>
 							{vs ? "Biggest gaps" : "Strongest"}
 						</FamilyButton>
 						{vs && (
-							<FamilyButton on={!family && view === "common"} onClick={() => pickFamily(null, "common")} color="#ffffff">
+							<FamilyButton
+								on={!family && view === "common"}
+								onClick={() => pickFamily(null, "common")}
+								color="#ffffff"
+							>
 								In common
 							</FamilyButton>
 						)}
 						{FAMILY_ORDER.map((id) => (
-							<FamilyButton key={id} on={family === id} onClick={() => pickFamily(id)} color={FAMILY_COLOR[id]}>
+							<FamilyButton
+								key={id}
+								on={family === id}
+								onClick={() => pickFamily(id)}
+								color={FAMILY_COLOR[id]}
+							>
 								{FAMILY_NAMES[id]}
 							</FamilyButton>
 						))}
@@ -233,20 +286,37 @@ export function FingerprintExplorer() {
 										{a.label}
 									</span>
 									<span className="flex flex-col gap-1" aria-hidden>
-										<Bar edge={a.edge} max={max} color={FAMILY_COLOR[a.family]} />
+										<Bar
+											edge={a.edge}
+											max={max}
+											color={FAMILY_COLOR[a.family]}
+										/>
 										{/* Always drawn, so turning Vs me on grows it instead of shifting the rows. */}
-										<span className={`transition-opacity duration-300 ${vs ? "opacity-100" : "opacity-0"}`}>
-											<Bar edge={vs ? yours(a.key) : 0} max={max} color="#ffffff" thin />
+										<span
+											className={`transition-opacity duration-300 ${vs ? "opacity-100" : "opacity-0"}`}
+										>
+											<Bar
+												edge={vs ? yours(a.key) : 0}
+												max={max}
+												color="#ffffff"
+												thin
+											/>
 										</span>
 									</span>
-									<span className={`text-right text-xs font-bold tabular-nums ${a.edge > 0 ? "text-gray-200" : "text-gray-500"}`}>
+									<span
+										className={`text-right text-xs font-bold tabular-nums ${a.edge > 0 ? "text-gray-200" : "text-gray-500"}`}
+									>
 										{vs ? `${Math.round(gap(a) * 10) / 10}` : signed(a.edge)}
 									</span>
 								</button>
 							</li>
 						))}
 					</ul>
-					{vs ? <VsDetail a={picked} mine={you?.yourEdges[picked.key] ?? null} /> : <Detail a={picked} />}
+					{vs ? (
+						<VsDetail a={picked} mine={you?.yourEdges[picked.key] ?? null} />
+					) : (
+						<Detail a={picked} />
+					)}
 				</div>
 			</div>
 		</section>
@@ -254,20 +324,36 @@ export function FingerprintExplorer() {
 }
 
 /** A bar from the centre line, right when sought and left when avoided; it grows with transform only. */
-function Bar({ edge, max, color, thin = false }: { edge: number; max: number; color: string; thin?: boolean }) {
+function Bar({
+	edge,
+	max,
+	color,
+	thin = false,
+}: { edge: number; max: number; color: string; thin?: boolean }) {
 	const size = Math.min(1, Math.abs(edge) / max)
 	return (
-		<span className={`relative block overflow-hidden rounded-full bg-white/[0.06] ${thin ? "h-1.5" : "h-2.5"}`}>
+		<span
+			className={`relative block overflow-hidden rounded-full bg-white/[0.06] ${thin ? "h-1.5" : "h-2.5"}`}
+		>
 			<span className="absolute inset-y-0 left-1/2 z-10 w-px bg-white/25" />
 			<span
 				className={`absolute inset-y-0 w-1/2 rounded-full transition-transform duration-500 ease-out ${edge >= 0 ? "left-1/2 origin-left" : "right-1/2 origin-right"}`}
-				style={{ background: color, opacity: edge > 0 ? 1 : 0.55, transform: `scaleX(${size})` }}
+				style={{
+					background: color,
+					opacity: edge > 0 ? 1 : 0.55,
+					transform: `scaleX(${size})`,
+				}}
 			/>
 		</span>
 	)
 }
 
-function FamilyButton({ on, onClick, color, children }: { on: boolean; onClick: () => void; color: string; children: string }) {
+function FamilyButton({
+	on,
+	onClick,
+	color,
+	children,
+}: { on: boolean; onClick: () => void; color: string; children: string }) {
 	return (
 		<button
 			type="button"
@@ -275,7 +361,11 @@ function FamilyButton({ on, onClick, color, children }: { on: boolean; onClick: 
 			onClick={onClick}
 			className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold ring-1 transition-colors ${on ? "bg-white/10 text-white ring-white/40" : "text-gray-400 ring-white/10 hover:text-white"}`}
 		>
-			<span aria-hidden className="size-2.5 rounded-full" style={{ background: color }} />
+			<span
+				aria-hidden
+				className="size-2.5 rounded-full"
+				style={{ background: color }}
+			/>
 			{children}
 		</button>
 	)
@@ -284,22 +374,41 @@ function FamilyButton({ on, onClick, color, children }: { on: boolean; onClick: 
 /** One attribute, always the same height. */
 function Detail({ a }: { a: TasteAttribute }) {
 	const { owner, title: tt } = useTaste()
-	const titles = (a.edge >= 0 ? a.carriers : a.against.length ? a.against : a.carriers).slice(0, 6).map(tt)
+	const titles = (
+		a.edge >= 0 ? a.carriers : a.against.length ? a.against : a.carriers
+	)
+		.slice(0, 6)
+		.map(tt)
 	const exception = a.exception ? tt(a.exception) : null
 	const your = owner ? "your" : "their"
 	return (
-		<div className="flex h-[19rem] flex-col gap-3 overflow-hidden rounded-xl bg-gray-950/60 p-4 ring-1 ring-white/10 [&>*]:shrink-0" aria-live="polite">
+		<div
+			className="flex h-[19rem] flex-col gap-3 overflow-hidden rounded-xl bg-gray-950/60 p-4 ring-1 ring-white/10 [&>*]:shrink-0"
+			aria-live="polite"
+		>
 			<DetailHead a={a}>
-				<span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${tierTone(a.tier)}`}>{(owner ? TIER_NAMES : TIER_NAMES_THEY)[a.tier]}</span>
+				<span
+					className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${tierTone(a.tier)}`}
+				>
+					{(owner ? TIER_NAMES : TIER_NAMES_THEY)[a.tier]}
+				</span>
 			</DetailHead>
 			<p className="truncate text-sm text-gray-400">{a.meaning}</p>
 			<dl className="grid grid-cols-3 gap-2 text-center">
 				<Stat label={`of ${your} titles`} value={pct(a.share)} />
 				<Stat label="of everyone's" value={pct(a.everyoneShare)} />
-				<Stat label={`vs ${your} usual`} value={a.lift == null ? "–" : signed(a.lift)} tone={a.lift == null ? 0 : a.lift} />
+				<Stat
+					label={`vs ${your} usual`}
+					value={a.lift == null ? "–" : signed(a.lift)}
+					tone={a.lift == null ? 0 : a.lift}
+				/>
 			</dl>
 			<div className="min-h-0">
-				<p className="mb-1.5 text-xs text-gray-500">{a.edge >= 0 ? `Carry it for ${owner ? "you" : "them"}` : "Strong in it, scored lowest"}</p>
+				<p className="mb-1.5 text-xs text-gray-500">
+					{a.edge >= 0
+						? `Carry it for ${owner ? "you" : "them"}`
+						: "Strong in it, scored lowest"}
+				</p>
 				<ul className="flex gap-2">
 					{titles.map((t) => (
 						<li key={t.key} className="w-11 sm:w-12">
@@ -315,14 +424,19 @@ function Detail({ a }: { a: TasteAttribute }) {
 					</span>
 					<span className="truncate">
 						The exception:{" "}
-						<Link to={exception.href} className="font-semibold text-gray-200 hover:text-white">
+						<Link
+							to={exception.href}
+							className="font-semibold text-gray-200 hover:text-white"
+						>
 							{exception.title}
 						</Link>
 						, scored {exception.score}
 					</span>
 				</p>
 			) : (
-				<p className="mt-auto text-xs text-gray-600">No exception to {your} usual stance.</p>
+				<p className="mt-auto text-xs text-gray-600">
+					No exception to {your} usual stance.
+				</p>
 			)}
 		</div>
 	)
@@ -339,35 +453,64 @@ function verdict(t: number, y: number, handle: string) {
 }
 
 /** The same attribute, both stances side by side; same height as Detail. */
-function VsDetail({ a, mine }: { a: TasteAttribute; mine: { edge: number; tier: number } | null }) {
+function VsDetail({
+	a,
+	mine,
+}: { a: TasteAttribute; mine: { edge: number; tier: number } | null }) {
 	const { handle, title: tt, compare } = useTaste()
 	const myTier = (mine?.tier ?? 0) as Tier
-	const titles = (a.edge >= 0 ? a.carriers : a.against.length ? a.against : a.carriers).slice(0, 6).map(tt)
+	const titles = (
+		a.edge >= 0 ? a.carriers : a.against.length ? a.against : a.carriers
+	)
+		.slice(0, 6)
+		.map(tt)
 	return (
-		<div className="flex h-[19rem] flex-col gap-3 overflow-hidden rounded-xl bg-gray-950/60 p-4 ring-1 ring-white/10 [&>*]:shrink-0" aria-live="polite">
+		<div
+			className="flex h-[19rem] flex-col gap-3 overflow-hidden rounded-xl bg-gray-950/60 p-4 ring-1 ring-white/10 [&>*]:shrink-0"
+			aria-live="polite"
+		>
 			<DetailHead a={a} />
-			<p className="text-base font-bold text-white">{verdict(a.tier, myTier, handle)}</p>
+			<p className="text-base font-bold text-white">
+				{verdict(a.tier, myTier, handle)}
+			</p>
 			<dl className="grid grid-cols-2 gap-2">
 				<div className="rounded-lg bg-white/[0.04] px-3 py-2">
-					<dt className="text-[11px] font-bold tracking-wide text-amber-300 uppercase">@{handle}</dt>
+					<dt className="text-[11px] font-bold tracking-wide text-amber-300 uppercase">
+						@{handle}
+					</dt>
 					<dd className="mt-1 flex items-center justify-between gap-2">
-						<span className={`truncate rounded-full px-2 py-0.5 text-xs font-bold ${tierTone(a.tier)}`}>{TIER_NAMES_THEY[a.tier]}</span>
-						<span className="text-sm font-black tabular-nums text-white">{signed(a.edge)}</span>
+						<span
+							className={`truncate rounded-full px-2 py-0.5 text-xs font-bold ${tierTone(a.tier)}`}
+						>
+							{TIER_NAMES_THEY[a.tier]}
+						</span>
+						<span className="text-sm font-black tabular-nums text-white">
+							{signed(a.edge)}
+						</span>
 					</dd>
 				</div>
 				<div className="rounded-lg bg-white/[0.04] px-3 py-2">
-					<dt className="text-[11px] font-bold tracking-wide text-gray-300 uppercase">You</dt>
+					<dt className="text-[11px] font-bold tracking-wide text-gray-300 uppercase">
+						You
+					</dt>
 					<dd className="mt-1 flex items-center justify-between gap-2">
-						<span className={`truncate rounded-full px-2 py-0.5 text-xs font-bold ${tierTone(myTier)}`}>
+						<span
+							className={`truncate rounded-full px-2 py-0.5 text-xs font-bold ${tierTone(myTier)}`}
+						>
 							{myTier === 3 ? "Defining" : TIER_NAMES[myTier]}
 						</span>
-						<span className="text-sm font-black tabular-nums text-white">{signed(mine?.edge ?? 0)}</span>
+						<span className="text-sm font-black tabular-nums text-white">
+							{signed(mine?.edge ?? 0)}
+						</span>
 					</dd>
 				</div>
 			</dl>
 			<div className="min-h-0">
 				<p className="mb-1.5 text-xs text-gray-500">
-					{a.edge >= 0 ? `Carry it for @${handle}` : `Strong in it, @${handle} scored lowest`} · your score where you rated it
+					{a.edge >= 0
+						? `Carry it for @${handle}`
+						: `Strong in it, @${handle} scored lowest`}{" "}
+					· your score where you rated it
 				</p>
 				<ul className="flex gap-2">
 					{titles.map((t) => (
@@ -382,7 +525,13 @@ function VsDetail({ a, mine }: { a: TasteAttribute; mine: { edge: number; tier: 
 	)
 }
 
-const FAMILY_NAMES: Record<FamilyId, string> = { feel: "Feel", humor: "Humor", world: "World", story: "Story", craft: "Craft" }
+const FAMILY_NAMES: Record<FamilyId, string> = {
+	feel: "Feel",
+	humor: "Humor",
+	world: "World",
+	story: "Story",
+	craft: "Craft",
+}
 const FAMILY_LINES: Record<FamilyId, string> = {
 	feel: "How it makes you feel",
 	humor: "What makes you laugh",
@@ -391,7 +540,10 @@ const FAMILY_LINES: Record<FamilyId, string> = {
 	craft: "How it looks and sounds",
 }
 
-function DetailHead({ a, children }: { a: TasteAttribute; children?: ReactNode }) {
+function DetailHead({
+	a,
+	children,
+}: { a: TasteAttribute; children?: ReactNode }) {
 	return (
 		<div className="flex flex-wrap items-center gap-2">
 			<span className="text-lg font-black text-white">
@@ -401,17 +553,28 @@ function DetailHead({ a, children }: { a: TasteAttribute; children?: ReactNode }
 				{a.label}
 			</span>
 			{children}
-			<span className="ml-auto text-xs font-semibold" style={{ color: FAMILY_COLOR[a.family] }}>
+			<span
+				className="ml-auto text-xs font-semibold"
+				style={{ color: FAMILY_COLOR[a.family] }}
+			>
 				{FAMILY_NAMES[a.family]}
 			</span>
 		</div>
 	)
 }
 
-function Stat({ label, value, tone = 0 }: { label: string; value: string; tone?: number }) {
+function Stat({
+	label,
+	value,
+	tone = 0,
+}: { label: string; value: string; tone?: number }) {
 	return (
 		<div className="rounded-lg bg-white/[0.04] px-2 py-1.5">
-			<dd className={`text-lg font-black tabular-nums ${tone > 0 ? "text-green-400" : tone < 0 ? "text-rose-400" : "text-white"}`}>{value}</dd>
+			<dd
+				className={`text-lg font-black tabular-nums ${tone > 0 ? "text-green-400" : tone < 0 ? "text-rose-400" : "text-white"}`}
+			>
+				{value}
+			</dd>
 			<dt className="text-[11px] leading-tight text-gray-500">{label}</dt>
 		</div>
 	)

@@ -9,10 +9,16 @@ import { useShareListOwnerAction } from "~/routes/api.share-lists"
 import { CardFonts } from "~/ui/share-card/ScaledCard"
 import { newListPath } from "~/ui/share-card/links"
 import { OwnerListControls } from "~/ui/share-lists/OwnerListControls"
-import { type ShareListSummary, ShareListTile } from "~/ui/share-lists/ShareListTile"
+import {
+	type ShareListSummary,
+	ShareListTile,
+} from "~/ui/share-lists/ShareListTile"
 import { AMBER_BUTTON } from "../parts"
 
-export function ListsPage({ shell, lists: loaded }: { shell: ProfileShell; lists: ShareListSummary[] }) {
+export function ListsPage({
+	shell,
+	lists: loaded,
+}: { shell: ProfileShell; lists: ShareListSummary[] }) {
 	const owner = shell.viewer === "owner"
 	const { lists, patch, removed } = useOwnerLists(loaded)
 	return (
@@ -44,16 +50,24 @@ export function ListsPage({ shell, lists: loaded }: { shell: ProfileShell; lists
 			) : (
 				<div className="rounded-2xl border border-dashed border-white/15 px-6 py-16 text-center">
 					<p className="text-lg font-bold text-gray-100">
-						{owner ? "You haven't shared a list yet." : `@${shell.handle} hasn't shared a list yet.`}
+						{owner
+							? "You haven't shared a list yet."
+							: `@${shell.handle} hasn't shared a list yet.`}
 					</p>
 					{owner ? (
-						<Link to={newListPath()} className="mt-4 inline-block rounded-full bg-white px-5 py-2.5 font-black text-black hover:bg-gray-200">
+						<Link
+							to={newListPath()}
+							className="mt-4 inline-block rounded-full bg-white px-5 py-2.5 font-black text-black hover:bg-gray-200"
+						>
 							Make your first list
 						</Link>
 					) : (
 						<p className="mt-2 text-gray-400">
 							Rank your own favorite movies and shows.{" "}
-							<Link to={newListPath()} className="font-semibold text-gray-100 underline underline-offset-4 hover:text-white">
+							<Link
+								to={newListPath()}
+								className="font-semibold text-gray-100 underline underline-offset-4 hover:text-white"
+							>
 								Make a list
 							</Link>
 						</p>
@@ -89,7 +103,9 @@ function useOwnerLists(loaded: ShareListSummary[]) {
 				})
 				revalidator.revalidate()
 			} catch (error) {
-				toast.error(error instanceof Error ? error.message : "Restoring the list failed.")
+				toast.error(
+					error instanceof Error ? error.message : "Restoring the list failed.",
+				)
 			}
 		}
 		toast(

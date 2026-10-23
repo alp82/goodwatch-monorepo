@@ -22,7 +22,8 @@ export type { FamilyId, Tier }
 
 export type Kind = "movie" | "show" | "anime"
 
-export interface TasteAttribute extends Omit<FingerprintAttribute, "carriers" | "against" | "exception"> {
+export interface TasteAttribute
+	extends Omit<FingerprintAttribute, "carriers" | "against" | "exception"> {
 	emoji: string
 	carriers: string[]
 	against: string[]
@@ -102,10 +103,15 @@ function toTitle(t: PortraitTitle): TasteTitle {
 }
 
 /** The three portrait views as the Taste tab's one shape. Runs in the loader. */
-export function buildProfileTaste(fingerprint: FingerprintView, sides: SidesView, everyone: EveryoneView): ProfileTaste {
+export function buildProfileTaste(
+	fingerprint: FingerprintView,
+	sides: SidesView,
+	everyone: EveryoneView,
+): ProfileTaste {
 	const titles: Record<string, TasteTitle> = {}
 	for (const view of [fingerprint, sides, everyone])
-		for (const t of Object.values(view.titles ?? {})) titles[`${t.mediaType}-${t.tmdbId}`] = toTitle(t)
+		for (const t of Object.values(view.titles ?? {}))
+			titles[`${t.mediaType}-${t.tmdbId}`] = toTitle(t)
 	const kindOf = (key: TitleKey): Kind => {
 		const t = titles[keyOf(key)]
 		return t?.anime ? "anime" : (t?.mediaType ?? parseTitleKey(key).mediaType)
@@ -125,7 +131,12 @@ export function buildProfileTaste(fingerprint: FingerprintView, sides: SidesView
 		line: fingerprint.line,
 		seek: fingerprint.seek,
 		avoid: fingerprint.avoid,
-		families: fingerprint.families.map((f) => ({ id: f.id, name: f.name, line: f.line, keys: f.keys })),
+		families: fingerprint.families.map((f) => ({
+			id: f.id,
+			name: f.name,
+			line: f.line,
+			keys: f.keys,
+		})),
 		attributes: fingerprint.attributes.map((a) => ({
 			...a,
 			emoji: FINGERPRINT_META[a.key]?.emoji ?? "",
@@ -170,7 +181,13 @@ export const FAMILY_COLOR: Record<FamilyId, string> = {
 	story: "#a78bfa",
 	craft: "#34d399",
 }
-export const FAMILY_ORDER: FamilyId[] = ["feel", "humor", "world", "story", "craft"]
+export const FAMILY_ORDER: FamilyId[] = [
+	"feel",
+	"humor",
+	"world",
+	"story",
+	"craft",
+]
 
 /** The fingerprint's craft attributes: most loved titles are well made, so they say little about a person. */
 export const CRAFT_KEYS = new Set([
@@ -203,12 +220,21 @@ export const TIER_NAMES_THEY: Record<Tier, string> = {
 	[-3]: "They steer clear",
 }
 
-export const signed = (n: number, digits = 1) => `${n > 0 ? "+" : n < 0 ? "−" : "±"}${Math.abs(n).toFixed(digits)}`
+export const signed = (n: number, digits = 1) =>
+	`${n > 0 ? "+" : n < 0 ? "−" : "±"}${Math.abs(n).toFixed(digits)}`
 export const pct = (n: number) => `${Math.round(n * 100)}%`
 export const money = (n: number) =>
-	n >= 1e9 ? `$${(n / 1e9).toFixed(1)} billion` : n >= 1e6 ? `$${Math.round(n / 1e6)} million` : `$${n.toLocaleString("en-US")}`
+	n >= 1e9
+		? `$${(n / 1e9).toFixed(1)} billion`
+		: n >= 1e6
+			? `$${Math.round(n / 1e6)} million`
+			: `$${n.toLocaleString("en-US")}`
 export const flag = (code: string) =>
-	code.length === 2 ? String.fromCodePoint(...[...code.toUpperCase()].map((c) => 0x1f1a5 + c.charCodeAt(0))) : ""
+	code.length === 2
+		? String.fromCodePoint(
+				...[...code.toUpperCase()].map((c) => 0x1f1a5 + c.charCodeAt(0)),
+			)
+		: ""
 
 /** "Show you X, and you're in." in the third person. */
 export const theirLine = (line: string) =>
@@ -264,5 +290,13 @@ export function tasteContextValue(
 			anime: false,
 		}
 	}
-	return { taste, stats, compare: compare?.status === "ready" ? compare : null, handle, owner, attributeByKey, title }
+	return {
+		taste,
+		stats,
+		compare: compare?.status === "ready" ? compare : null,
+		handle,
+		owner,
+		attributeByKey,
+		title,
+	}
 }

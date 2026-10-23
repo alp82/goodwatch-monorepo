@@ -5,7 +5,13 @@ import { Link } from "@remix-run/react"
 import { useState } from "react"
 import type { EveryoneGap as Gap } from "~/server/taste-portrait/view"
 import { PosterImg, count } from "../parts"
-import { type CrowdRow, type Kind, type ProfileTaste, signed, useTaste } from "./model"
+import {
+	type CrowdRow,
+	type Kind,
+	type ProfileTaste,
+	signed,
+	useTaste,
+} from "./model"
 import { PANEL, Pills, SectionHead } from "./parts"
 
 /** The summary's lines, written to "you". */
@@ -14,9 +20,14 @@ function summaryOf(c: ProfileTaste["crowd"]) {
 	const genres = [...c.genres].sort((a, b) => b.delta - a.delta)
 	const attributes = [...c.attributes].sort((a, b) => b.delta - a.delta)
 	if (genres[0] && genres[0].delta > 0)
-		lines.push(`You rate ${genres[0].name} ${genres[0].delta.toFixed(1)} points higher than the crowd (${genres[0].count} titles).`)
+		lines.push(
+			`You rate ${genres[0].name} ${genres[0].delta.toFixed(1)} points higher than the crowd (${genres[0].count} titles).`,
+		)
 	const low = genres[genres.length - 1]
-	if (low && low.delta < 0) lines.push(`You rate ${low.name} ${Math.abs(low.delta).toFixed(1)} points lower than the crowd (${low.count} titles).`)
+	if (low && low.delta < 0)
+		lines.push(
+			`You rate ${low.name} ${Math.abs(low.delta).toFixed(1)} points lower than the crowd (${low.count} titles).`,
+		)
 	if (attributes[0] && attributes[0].delta > 0) {
 		const down = attributes[attributes.length - 1]
 		lines.push(
@@ -32,15 +43,21 @@ function summaryOf(c: ProfileTaste["crowd"]) {
 }
 
 type Filter = "all" | Kind
-const KIND_LABEL: Record<Kind, string> = { movie: "Movie", show: "Show", anime: "Anime" }
+const KIND_LABEL: Record<Kind, string> = {
+	movie: "Movie",
+	show: "Show",
+	anime: "Anime",
+}
 
 export function Crowd() {
 	const { taste, owner, handle } = useTaste()
 	const [filter, setFilter] = useState<Filter>("all")
 	const c = taste.crowd
-	if (c.status !== "ready" || c.higher.length + c.lower.length === 0) return null
+	if (c.status !== "ready" || c.higher.length + c.lower.length === 0)
+		return null
 	const keep = (r: CrowdRow) => filter === "all" || r.kind === filter
-	const n = (k: Filter) => [...c.higher, ...c.lower].filter((r) => k === "all" || r.kind === k).length
+	const n = (k: Filter) =>
+		[...c.higher, ...c.lower].filter((r) => k === "all" || r.kind === k).length
 	return (
 		<section aria-labelledby="crowd" className="flex flex-col gap-5">
 			<SectionHead
@@ -64,11 +81,16 @@ export function Crowd() {
 				}
 			/>
 			<div className={`${PANEL} p-4 sm:p-5`}>
-				<p className="mb-2 text-xs font-bold tracking-[0.16em] text-gray-500 uppercase">Taste summary</p>
+				<p className="mb-2 text-xs font-bold tracking-[0.16em] text-gray-500 uppercase">
+					Taste summary
+				</p>
 				<ul className="flex flex-col gap-1.5 text-sm text-gray-300">
 					{summaryOf(c).map((line) => (
 						<li key={line} className="flex gap-2">
-							<span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-amber-400" />
+							<span
+								aria-hidden
+								className="mt-2 size-1.5 shrink-0 rounded-full bg-amber-400"
+							/>
 							{owner ? line : theirs(line)}
 						</li>
 					))}
@@ -81,11 +103,29 @@ export function Crowd() {
 				rows={c.higher.filter(keep)}
 				owner={owner}
 			/>
-			<TakePanel tone="down" title="Rated lower than the crowd" word="Overrated" rows={c.lower.filter(keep)} owner={owner} />
+			<TakePanel
+				tone="down"
+				title="Rated lower than the crowd"
+				word="Overrated"
+				rows={c.lower.filter(keep)}
+				owner={owner}
+			/>
 			{(c.attributes.length > 0 || c.genres.length > 0) && (
 				<div className="grid gap-4 lg:grid-cols-2">
-					{c.attributes.length > 0 && <GapBars title="Attributes" note="Average gap on titles strong in it" gaps={c.attributes} />}
-					{c.genres.length > 0 && <GapBars title="Genres" note="Average gap per genre" gaps={c.genres} />}
+					{c.attributes.length > 0 && (
+						<GapBars
+							title="Attributes"
+							note="Average gap on titles strong in it"
+							gaps={c.attributes}
+						/>
+					)}
+					{c.genres.length > 0 && (
+						<GapBars
+							title="Genres"
+							note="Average gap per genre"
+							gaps={c.genres}
+						/>
+					)}
 				</div>
 			)}
 		</section>
@@ -105,7 +145,13 @@ function TakePanel({
 	word,
 	rows,
 	owner,
-}: { tone: "up" | "down"; title: string; word: string; rows: CrowdRow[]; owner: boolean }) {
+}: {
+	tone: "up" | "down"
+	title: string
+	word: string
+	rows: CrowdRow[]
+	owner: boolean
+}) {
 	const { title: tt } = useTaste()
 	const [shown, setShown] = useState(8)
 	const up = tone === "up"
@@ -124,13 +170,18 @@ function TakePanel({
 				<span
 					className={`flex shrink-0 flex-col items-center rounded-lg px-3 py-1.5 ring-1 ${up ? "text-emerald-300 ring-emerald-400/50" : "text-rose-300 ring-rose-400/50"}`}
 				>
-					<span className="text-2xl font-black tabular-nums">{signed(biggest)}</span>
-					<span className="text-[10px] font-bold tracking-wider uppercase opacity-70">biggest gap</span>
+					<span className="text-2xl font-black tabular-nums">
+						{signed(biggest)}
+					</span>
+					<span className="text-[10px] font-bold tracking-wider uppercase opacity-70">
+						biggest gap
+					</span>
 				</span>
 				<span>
 					<span className="block text-lg font-bold text-white">{title}</span>
 					<span className="block text-xs text-gray-400">
-						{owner ? "Your" : "Their"} score against the GoodWatch score, in points out of 10
+						{owner ? "Your" : "Their"} score against the GoodWatch score, in
+						points out of 10
 					</span>
 				</span>
 			</div>
@@ -140,7 +191,10 @@ function TakePanel({
 						const t = tt(r.key)
 						return (
 							// Phones start with 4; the first Show more reveals the rest of the 8.
-							<li key={r.key} className={`min-w-0 ${shown === 8 && i >= 4 ? "max-sm:hidden" : ""}`}>
+							<li
+								key={r.key}
+								className={`min-w-0 ${shown === 8 && i >= 4 ? "max-sm:hidden" : ""}`}
+							>
 								<Link
 									to={t.href}
 									className="flex items-center gap-3 rounded-xl bg-gray-950/50 p-2 ring-1 ring-white/10 hover:bg-gray-950/80"
@@ -149,15 +203,20 @@ function TakePanel({
 										<PosterImg title={t} className="rounded" />
 									</span>
 									<span className="min-w-0 flex-1">
-										<span className="block truncate text-sm font-semibold text-gray-100">{t.title}</span>
+										<span className="block truncate text-sm font-semibold text-gray-100">
+											{t.title}
+										</span>
 										<span className="block text-[11px] text-gray-500">
 											{t.year} · {KIND_LABEL[r.kind]}
 										</span>
 										<span className="block text-xs text-gray-400">
-											<b className="text-amber-300">★ {r.mine}</b> vs {(r.everyone / 10).toFixed(1)}
+											<b className="text-amber-300">★ {r.mine}</b> vs{" "}
+											{(r.everyone / 10).toFixed(1)}
 										</span>
 									</span>
-									<span className={`shrink-0 text-sm font-black tabular-nums ${up ? "text-emerald-400" : "text-rose-400"}`}>
+									<span
+										className={`shrink-0 text-sm font-black tabular-nums ${up ? "text-emerald-400" : "text-rose-400"}`}
+									>
 										{signed(r.delta)}
 									</span>
 								</Link>
@@ -181,7 +240,11 @@ function TakePanel({
 	)
 }
 
-function GapBars({ title, note, gaps }: { title: string; note: string; gaps: Gap[] }) {
+function GapBars({
+	title,
+	note,
+	gaps,
+}: { title: string; note: string; gaps: Gap[] }) {
 	const max = Math.max(0.5, ...gaps.map((g) => Math.abs(g.delta)))
 	const sorted = [...gaps].sort((a, b) => b.delta - a.delta)
 	return (
@@ -190,21 +253,32 @@ function GapBars({ title, note, gaps }: { title: string; note: string; gaps: Gap
 			<p className="mb-3 text-xs text-gray-500">{note}</p>
 			<ul className="flex flex-col gap-1.5">
 				{sorted.map((g) => (
-					<li key={g.id} className="grid grid-cols-[8rem_minmax(0,1fr)_2.5rem] items-center gap-2 text-sm sm:grid-cols-[10rem_1fr_3rem]">
+					<li
+						key={g.id}
+						className="grid grid-cols-[8rem_minmax(0,1fr)_2.5rem] items-center gap-2 text-sm sm:grid-cols-[10rem_1fr_3rem]"
+					>
 						<span className="truncate text-gray-300">
 							{g.name} <span className="text-xs text-gray-600">{g.count}</span>
 						</span>
-						<span className="relative h-2.5 rounded-full bg-white/[0.06]" aria-hidden>
+						<span
+							className="relative h-2.5 rounded-full bg-white/[0.06]"
+							aria-hidden
+						>
 							<span className="absolute inset-y-0 left-1/2 w-px bg-white/25" />
 							<span
 								className={`absolute inset-y-0 rounded-full ${g.delta >= 0 ? "bg-emerald-400" : "bg-rose-400"}`}
 								style={{
-									left: g.delta >= 0 ? "50%" : `${50 - (Math.abs(g.delta) / max) * 50}%`,
+									left:
+										g.delta >= 0
+											? "50%"
+											: `${50 - (Math.abs(g.delta) / max) * 50}%`,
 									width: `${(Math.abs(g.delta) / max) * 50}%`,
 								}}
 							/>
 						</span>
-						<span className={`text-right text-xs font-bold tabular-nums ${g.delta >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+						<span
+							className={`text-right text-xs font-bold tabular-nums ${g.delta >= 0 ? "text-emerald-400" : "text-rose-400"}`}
+						>
 							{signed(g.delta)}
 						</span>
 					</li>

@@ -15,7 +15,13 @@ export interface WhorlAttribute {
 }
 type TasteAttribute = WhorlAttribute
 
-const FAMILY_NAME: Record<FamilyId, string> = { feel: "Feel", humor: "Humor", world: "World", story: "Story", craft: "Craft" }
+const FAMILY_NAME: Record<FamilyId, string> = {
+	feel: "Feel",
+	humor: "Humor",
+	world: "World",
+	story: "Story",
+	craft: "Craft",
+}
 
 const GAP = 0.05 // radians between family sectors
 const TAU = Math.PI * 2
@@ -83,14 +89,27 @@ const hash = (n: number) => {
 }
 
 interface Geometry {
-	turns: { paths: { d: string; family: FamilyId; key: string; opacity: number }[] }[]
-	markers: { a: TasteAttribute; x: number; y: number; r: number; lx: number; ly: number }[]
+	turns: {
+		paths: { d: string; family: FamilyId; key: string; opacity: number }[]
+	}[]
+	markers: {
+		a: TasteAttribute
+		x: number
+		y: number
+		r: number
+		lx: number
+		ly: number
+	}[]
 	labels: { id: FamilyId; x: number; y: number }[]
 	sectors: { id: FamilyId; d: string }[]
 	box: number
 }
 
-function build(attributes: TasteAttribute[], turnsCount: number, rim: boolean): Geometry {
+function build(
+	attributes: TasteAttribute[],
+	turnsCount: number,
+	rim: boolean,
+): Geometry {
 	const { slots, sectors, max } = layout(attributes)
 	const E = field(slots, max)
 	const r0 = 8
@@ -101,7 +120,10 @@ function build(attributes: TasteAttribute[], turnsCount: number, rim: boolean): 
 		const swell = 1 + 0.2 * E(theta)
 		const rr = r * swell * (1 + 0.05 * Math.cos(2 * theta + 0.6))
 		const coreShift = -18 * (1 - r / rMax) ** 2
-		return [rr * Math.cos(theta) * 0.86, rr * Math.sin(theta) + coreShift] as const
+		return [
+			rr * Math.cos(theta) * 0.86,
+			rr * Math.sin(theta) + coreShift,
+		] as const
 	}
 	const turns: Geometry["turns"] = []
 	for (let turn = 0; turn < turnsCount; turn++) {
@@ -118,12 +140,20 @@ function build(attributes: TasteAttribute[], turnsCount: number, rim: boolean): 
 				const theta = from + ((to - from) * k) / steps
 				// One continuous spiral: radius grows with the total angle.
 				const phi = turn * TAU + (theta + Math.PI / 2)
-				const r = r0 + (spacing * phi) / TAU + 0.35 * Math.sin(phi * 1.3 + turn * 0.7)
+				const r =
+					r0 + (spacing * phi) / TAU + 0.35 * Math.sin(phi * 1.3 + turn * 0.7)
 				const [x, y] = pos(r, theta)
 				d += `${k ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`
 			}
 			const local = s.a.edge / max
-			paths.push({ d, family: s.a.family, key: s.a.key, opacity: r1(0.22 + 0.78 * Math.max(0, Math.min(1, (local + 0.6) / 1.6))) })
+			paths.push({
+				d,
+				family: s.a.family,
+				key: s.a.key,
+				opacity: r1(
+					0.22 + 0.78 * Math.max(0, Math.min(1, (local + 0.6) / 1.6)),
+				),
+			})
 		}
 		turns.push({ paths })
 	}
@@ -131,7 +161,14 @@ function build(attributes: TasteAttribute[], turnsCount: number, rim: boolean): 
 	const markers = slots.map((s) => {
 		const [x, y] = pos(outer + 8, s.angle)
 		const [lx, ly] = pos(outer + 8, s.angle)
-		return { a: s.a, x: r1(x), y: r1(y), r: r1(1.6 + 3.4 * Math.min(1, Math.abs(s.a.edge) / max)), lx: r1(lx), ly: r1(ly) }
+		return {
+			a: s.a,
+			x: r1(x),
+			y: r1(y),
+			r: r1(1.6 + 3.4 * Math.min(1, Math.abs(s.a.edge) / max)),
+			lx: r1(lx),
+			ly: r1(ly),
+		}
 	})
 	const labels = sectors.map((sec) => {
 		const mid = (sec.from + sec.to) / 2
@@ -149,7 +186,13 @@ function build(attributes: TasteAttribute[], turnsCount: number, rim: boolean): 
 		}
 		return { id: sec.id, d: `${d}Z` }
 	})
-	return { turns, markers: rim ? markers : [], labels: rim ? labels : [], sectors: wedges, box: rim ? 236 : 186 }
+	return {
+		turns,
+		markers: rim ? markers : [],
+		labels: rim ? labels : [],
+		sectors: wedges,
+		box: rim ? 236 : 186,
+	}
 }
 
 const STYLE = `
@@ -186,7 +229,10 @@ export const Whorl = memo(function Whorl({
 	label: string
 	animate?: boolean
 }) {
-	const g = useMemo(() => build(attributes, turns, rim), [attributes, turns, rim])
+	const g = useMemo(
+		() => build(attributes, turns, rim),
+		[attributes, turns, rim],
+	)
 	const b = g.box
 	return (
 		<svg
@@ -200,7 +246,13 @@ export const Whorl = memo(function Whorl({
 			{onFamily &&
 				g.sectors.map((s) => (
 					// biome-ignore lint/a11y/useKeyWithClickEvents: the family buttons beside the print are the keyboard way
-					<path key={s.id} d={s.d} fill="transparent" className="cursor-pointer" onClick={() => onFamily(s.id)} />
+					<path
+						key={s.id}
+						d={s.d}
+						fill="transparent"
+						className="cursor-pointer"
+						onClick={() => onFamily(s.id)}
+					/>
 				))}
 			{g.turns.map((turn, i) => (
 				<g
@@ -219,7 +271,9 @@ export const Whorl = memo(function Whorl({
 							fill="none"
 							stroke={FAMILY_COLOR[p.family]}
 							strokeOpacity={selected && p.key === selected ? 1 : p.opacity}
-							strokeWidth={selected && p.key === selected ? 3.6 : rim ? 2.5 : 3.4}
+							strokeWidth={
+								selected && p.key === selected ? 3.6 : rim ? 2.5 : 3.4
+							}
 							strokeLinecap="round"
 						/>
 					))}
@@ -239,10 +293,26 @@ export const Whorl = memo(function Whorl({
 							strokeWidth={sought ? 0 : 1.2}
 							opacity={family && family !== m.a.family ? 0.25 : 1}
 						/>
-						{on && <circle cx={m.x} cy={m.y} r={m.r + 6} fill="none" stroke="white" strokeWidth={1.5} />}
+						{on && (
+							<circle
+								cx={m.x}
+								cy={m.y}
+								r={m.r + 6}
+								fill="none"
+								stroke="white"
+								strokeWidth={1.5}
+							/>
+						)}
 						{onAttribute && (
 							// biome-ignore lint/a11y/useKeyWithClickEvents: the attribute rows beside the print are the keyboard way
-							<circle cx={m.x} cy={m.y} r={9} fill="transparent" className="cursor-pointer" onClick={() => onAttribute(m.a.key)}>
+							<circle
+								cx={m.x}
+								cy={m.y}
+								r={9}
+								fill="transparent"
+								className="cursor-pointer"
+								onClick={() => onAttribute(m.a.key)}
+							>
 								<title>{m.a.label}</title>
 							</circle>
 						)}
@@ -256,7 +326,11 @@ export const Whorl = memo(function Whorl({
 					y={l.y}
 					textAnchor="middle"
 					dominantBaseline="middle"
-					fill={family && family !== l.id ? "rgba(255,255,255,.35)" : FAMILY_COLOR[l.id]}
+					fill={
+						family && family !== l.id
+							? "rgba(255,255,255,.35)"
+							: FAMILY_COLOR[l.id]
+					}
 					className="text-[13px] font-bold tracking-wider uppercase"
 					pointerEvents="none"
 				>

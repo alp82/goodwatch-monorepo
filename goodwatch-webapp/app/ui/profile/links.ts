@@ -1,3 +1,5 @@
+import { LINK_SERVICES, type LinkService } from "~/domain/profile"
+import { LINK_RULES, profileLinkUrl } from "~/domain/profile-settings"
 // The profile's addresses and the other profiles a member can link: each service's name, official logo where the app
 // has one (the import sources' marks, used unchanged), the part of the address before the username, and the address.
 import imdbLogo from "~/img/import-sources/imdb.svg?no-inline"
@@ -6,10 +8,15 @@ import myanimelistLogo from "~/img/import-sources/myanimelist.svg?no-inline"
 import tmdbLogo from "~/img/import-sources/tmdb.svg?no-inline"
 import traktLogo from "~/img/import-sources/trakt.svg?no-inline"
 import tvtimeLogo from "~/img/import-sources/tvtime.svg?no-inline"
-import { LINK_SERVICES, type LinkService } from "~/domain/profile"
-import { LINK_RULES, profileLinkUrl } from "~/domain/profile-settings"
 
-export type ProfileTab = "overview" | "seen" | "scores" | "wishlist" | "shows" | "lists" | "taste"
+export type ProfileTab =
+	| "overview"
+	| "seen"
+	| "scores"
+	| "wishlist"
+	| "shows"
+	| "lists"
+	| "taste"
 
 export const profileTabPath = (handle: string, tab: ProfileTab = "overview") =>
 	tab === "overview" ? `/u/${handle}` : `/u/${handle}/${tab}`
@@ -41,7 +48,14 @@ export const LINK_SERVICE_INFO = Object.fromEntries(
 		const rule = LINK_RULES[service]
 		return [
 			service,
-			{ name: rule.name, logo: LOGOS[service] ?? null, letter: rule.name.charAt(0), prefix: rule.prefix, placeholder: rule.placeholder, url: rule.url },
+			{
+				name: rule.name,
+				logo: LOGOS[service] ?? null,
+				letter: rule.name.charAt(0),
+				prefix: rule.prefix,
+				placeholder: rule.placeholder,
+				url: rule.url,
+			},
 		]
 	}),
 ) as Record<LinkService, ServiceInfo>

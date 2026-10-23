@@ -1,7 +1,12 @@
 // Pieces every profile page shares: buttons, the member's score chip, posters from TMDB paths, the score spread, the
 // owner's links to the private pages, the notice for a hidden part, and the "You" tag a signed-in visitor sees on
 // titles they rated too.
-import { ArrowTopRightOnSquareIcon, CheckIcon, LockClosedIcon, ShareIcon } from "@heroicons/react/20/solid"
+import {
+	ArrowTopRightOnSquareIcon,
+	CheckIcon,
+	LockClosedIcon,
+	ShareIcon,
+} from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { type ReactNode, useState } from "react"
 import type { ProfileTitle } from "~/domain/profile"
@@ -16,18 +21,31 @@ export const QUIET_BUTTON =
 	"inline-flex min-h-10 items-center gap-1.5 rounded-full bg-white/[0.06] px-4 text-sm font-bold text-gray-100 ring-1 ring-white/15 hover:bg-white/[0.1]"
 
 export const count = (n: number) => n.toLocaleString("en-US")
-export const vibe = (score: number) => getVibeColorValue(Math.max(1, Math.min(10, Math.round(score))) as Score)
+export const vibe = (score: number) =>
+	getVibeColorValue(Math.max(1, Math.min(10, Math.round(score))) as Score)
 
 /** A TMDB poster or backdrop path at a size; a full URL (share-list cards carry those) stays as it is; null stays null. */
-export const posterUrl = (path: string | null, size = "w342") => (!path ? null : /^https?:/.test(path) ? path : tmdbImage(path, size))
-export const backdropUrl = (path: string | null, size = "w1280") => posterUrl(path, size)
+export const posterUrl = (path: string | null, size = "w342") =>
+	!path ? null : /^https?:/.test(path) ? path : tmdbImage(path, size)
+export const backdropUrl = (path: string | null, size = "w1280") =>
+	posterUrl(path, size)
 
 /** "Mar 4, 2025", in UTC so server and browser agree. */
 export const shortDate = (iso: string | null) =>
-	iso ? new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "No date"
+	iso
+		? new Date(iso).toLocaleDateString("en-US", {
+				month: "short",
+				day: "numeric",
+				year: "numeric",
+				timeZone: "UTC",
+			})
+		: "No date"
 
 /** The member's own score in its strip colour, as on Your scores. */
-export function ScoreChip({ score, size = "md" }: { score: number | null; size?: "sm" | "md" }) {
+export function ScoreChip({
+	score,
+	size = "md",
+}: { score: number | null; size?: "sm" | "md" }) {
 	if (!score) return null
 	return (
 		<span
@@ -41,19 +59,35 @@ export function ScoreChip({ score, size = "md" }: { score: number | null; size?:
 }
 
 /** A poster sized by its box. */
-export function PosterImg({ title, className = "" }: { title: Pick<ProfileTitle, "poster">; className?: string }) {
+export function PosterImg({
+	title,
+	className = "",
+}: { title: Pick<ProfileTitle, "poster">; className?: string }) {
 	const src = posterUrl(title.poster)
 	return src ? (
-		<img src={src} alt="" loading="lazy" decoding="async" className={`aspect-[2/3] w-full bg-white/5 object-cover ${className}`} />
+		<img
+			src={src}
+			alt=""
+			loading="lazy"
+			decoding="async"
+			className={`aspect-[2/3] w-full bg-white/5 object-cover ${className}`}
+		/>
 	) : (
 		<span className={`block aspect-[2/3] w-full bg-white/10 ${className}`} />
 	)
 }
 
 /** A poster that links to its title, with the owner's score in the corner. */
-export function ScoredPoster({ title, showScore = true }: { title: ProfileTitle; showScore?: boolean }) {
+export function ScoredPoster({
+	title,
+	showScore = true,
+}: { title: ProfileTitle; showScore?: boolean }) {
 	return (
-		<Link to={title.href} className="group relative block" title={`${title.title}${title.year ? ` (${title.year})` : ""}`}>
+		<Link
+			to={title.href}
+			className="group relative block"
+			title={`${title.title}${title.year ? ` (${title.year})` : ""}`}
+		>
 			<PosterImg
 				title={title}
 				className="rounded-lg shadow-lg ring-1 ring-white/10 transition-transform duration-150 group-hover:-translate-y-0.5 motion-reduce:transition-none"
@@ -68,7 +102,10 @@ export function ScoredPoster({ title, showScore = true }: { title: ProfileTitle;
 }
 
 /** Copies the profile address (or opens the share sheet on touch devices); says "Link copied" for a moment. */
-export function ShareButton({ handle, className = AMBER_BUTTON }: { handle: string; className?: string }) {
+export function ShareButton({
+	handle,
+	className = AMBER_BUTTON,
+}: { handle: string; className?: string }) {
 	const [copied, setCopied] = useState(false)
 	const onClick = async () => {
 		const url = `https://goodwatch.app/u/${handle}`
@@ -86,7 +123,11 @@ export function ShareButton({ handle, className = AMBER_BUTTON }: { handle: stri
 	}
 	return (
 		<button type="button" onClick={onClick} className={className}>
-			{copied ? <CheckIcon className="size-4" aria-hidden /> : <ShareIcon className="size-4" aria-hidden />}
+			{copied ? (
+				<CheckIcon className="size-4" aria-hidden />
+			) : (
+				<ShareIcon className="size-4" aria-hidden />
+			)}
 			{copied ? "Link copied" : "Share profile"}
 		</button>
 	)
@@ -111,8 +152,12 @@ export function SpreadBars({
 				{spread.map((n, i) => {
 					const bar = (
 						<span
+							key="bar"
 							className="block w-full rounded-sm opacity-90 transition-opacity group-hover:opacity-100"
-							style={{ height: `${Math.max(4, (n / most) * 100)}%`, background: vibe(i + 1) }}
+							style={{
+								height: `${Math.max(4, (n / most) * 100)}%`,
+								background: vibe(i + 1),
+							}}
 						/>
 					)
 					return onPick ? (
@@ -146,7 +191,10 @@ export function SpreadBars({
 					</span>
 				)}
 			</div>
-			<div className="flex gap-1 text-[10px] font-bold tabular-nums text-gray-500" aria-hidden>
+			<div
+				className="flex gap-1 text-[10px] font-bold tabular-nums text-gray-500"
+				aria-hidden
+			>
 				{spread.map((_, i) => (
 					// biome-ignore lint/suspicious/noArrayIndexKey: always the ten scores
 					<span key={i} className="flex-1 text-center">
@@ -160,7 +208,11 @@ export function SpreadBars({
 
 /** A page's body under the compact head. */
 export function Body({ children }: { children: ReactNode }) {
-	return <div className={`${WRAP} flex flex-col gap-6 pt-5 pb-32 text-white`}>{children}</div>
+	return (
+		<div className={`${WRAP} flex flex-col gap-6 pt-5 pb-32 text-white`}>
+			{children}
+		</div>
+	)
 }
 
 export function Segmented<T extends string>({
@@ -168,7 +220,12 @@ export function Segmented<T extends string>({
 	onChange,
 	options,
 	label,
-}: { value: T; onChange: (v: T) => void; options: [T, string][]; label: string }) {
+}: {
+	value: T
+	onChange: (v: T) => void
+	options: [T, string][]
+	label: string
+}) {
 	return (
 		<div
 			className="flex max-w-full overflow-x-auto rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10 [scrollbar-width:none]"
@@ -179,6 +236,7 @@ export function Segmented<T extends string>({
 				<button
 					key={key}
 					type="button"
+					// biome-ignore lint/a11y/useSemanticElements: the ARIA radio pattern on styled buttons, with aria-checked
 					role="radio"
 					aria-checked={key === value}
 					onClick={() => onChange(key)}
@@ -191,7 +249,11 @@ export function Segmented<T extends string>({
 	)
 }
 
-export function SortSelect<T extends string>({ value, onChange, options }: { value: T; onChange: (v: T) => void; options: [T, string][] }) {
+export function SortSelect<T extends string>({
+	value,
+	onChange,
+	options,
+}: { value: T; onChange: (v: T) => void; options: [T, string][] }) {
 	return (
 		<label className="flex items-center gap-2 text-sm text-gray-400">
 			Sort
@@ -211,7 +273,10 @@ export function SortSelect<T extends string>({ value, onChange, options }: { val
 }
 
 /** The owner's way to the private page that changes what this page shows. */
-export function OwnerPageLink({ to, children }: { to: string; children: ReactNode }) {
+export function OwnerPageLink({
+	to,
+	children,
+}: { to: string; children: ReactNode }) {
 	return (
 		<Link to={to} className={`${QUIET_BUTTON} min-h-9`}>
 			{children}
@@ -221,12 +286,20 @@ export function OwnerPageLink({ to, children }: { to: string; children: ReactNod
 }
 
 /** What a viewer sees in place of a part the owner keeps to themselves or to members. */
-export function HiddenPart({ handle, part, members }: { handle: string; part: string; members: boolean }) {
+export function HiddenPart({
+	handle,
+	part,
+	members,
+}: { handle: string; part: string; members: boolean }) {
 	return (
-		<div className={`${TILE} flex flex-col items-center gap-3 px-6 py-14 text-center`}>
+		<div
+			className={`${TILE} flex flex-col items-center gap-3 px-6 py-14 text-center`}
+		>
 			<LockClosedIcon className="size-6 text-gray-500" aria-hidden />
 			<p className="text-lg font-bold text-gray-100">
-				{members ? `@${handle} shares ${part} with members` : `@${handle} keeps ${part} to themselves`}
+				{members
+					? `@${handle} shares ${part} with members`
+					: `@${handle} keeps ${part} to themselves`}
 			</p>
 			<p className="max-w-md text-sm text-gray-400">
 				{members
@@ -243,7 +316,11 @@ export function HiddenPart({ handle, part, members }: { handle: string; part: st
 }
 
 /** One row of a title list: poster, title and year, kind, the owner's score, and the visitor's when they rated it. */
-export function TitleRow({ title, lead, you }: { title: ProfileTitle; lead?: ReactNode; you?: number | null }) {
+export function TitleRow({
+	title,
+	lead,
+	you,
+}: { title: ProfileTitle; lead?: ReactNode; you?: number | null }) {
 	return (
 		<li className="flex items-center gap-3 py-2">
 			{lead}
@@ -251,7 +328,10 @@ export function TitleRow({ title, lead, you }: { title: ProfileTitle; lead?: Rea
 				<PosterImg title={title} className="rounded" />
 			</span>
 			<span className="min-w-0 flex-1">
-				<Link to={title.href} className="block truncate font-semibold text-gray-100 hover:text-white">
+				<Link
+					to={title.href}
+					className="block truncate font-semibold text-gray-100 hover:text-white"
+				>
 					{title.title}
 				</Link>
 				<span className="block truncate text-xs text-gray-500">
@@ -259,7 +339,10 @@ export function TitleRow({ title, lead, you }: { title: ProfileTitle; lead?: Rea
 				</span>
 			</span>
 			{you != null && (
-				<span className="flex items-center gap-1 text-[11px] font-bold text-sky-200" title={`You scored it ${you}`}>
+				<span
+					className="flex items-center gap-1 text-[11px] font-bold text-sky-200"
+					title={`You scored it ${you}`}
+				>
 					You <ScoreChip score={you} size="sm" />
 				</span>
 			)}
@@ -269,16 +352,29 @@ export function TitleRow({ title, lead, you }: { title: ProfileTitle; lead?: Rea
 }
 
 /** A poster in a grid with its name under it, and an optional mark over the poster. */
-export function GridPoster({ title, caption, mark }: { title: ProfileTitle; caption?: ReactNode; mark?: ReactNode }) {
+export function GridPoster({
+	title,
+	caption,
+	mark,
+}: { title: ProfileTitle; caption?: ReactNode; mark?: ReactNode }) {
 	return (
 		<li className="relative min-w-0">
 			<Link to={title.href} className="group block">
 				<span className="relative block">
-					<PosterImg title={title} className="rounded-lg ring-1 ring-white/10 transition group-hover:ring-white/30" />
+					<PosterImg
+						title={title}
+						className="rounded-lg ring-1 ring-white/10 transition group-hover:ring-white/30"
+					/>
 					{mark}
 				</span>
-				<span className="mt-1.5 block truncate text-xs font-semibold text-gray-200">{title.title}</span>
-				{caption && <span className="block truncate text-[11px] text-gray-500">{caption}</span>}
+				<span className="mt-1.5 block truncate text-xs font-semibold text-gray-200">
+					{title.title}
+				</span>
+				{caption && (
+					<span className="block truncate text-[11px] text-gray-500">
+						{caption}
+					</span>
+				)}
 			</Link>
 		</li>
 	)

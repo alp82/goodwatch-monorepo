@@ -9,9 +9,12 @@ import { getUserIdFromRequest } from "~/utils/auth"
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await getUserIdFromRequest({ request })
 	const profile = userId ? await getCachedProfileByUserId(userId) : null
-	return redirect(profile ? `${profilePath(profile.handle)}/lists` : newListPath(), {
-		headers: { "Cache-Control": "private, no-store" },
-	})
+	return redirect(
+		profile ? `${profilePath(profile.handle)}/lists` : newListPath(),
+		{
+			headers: { "Cache-Control": "private, no-store" },
+		},
+	)
 }
 
 // The loader always redirects, so this never renders; it keeps the path a page route for <Link>.

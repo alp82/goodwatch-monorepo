@@ -16,13 +16,22 @@ const TAB_NAMES: Record<ProfileTab, string> = {
 	taste: "Taste",
 }
 
-export function profileMeta(shell: ProfileShell | undefined, tab: ProfileTab, line?: string): MetaDescriptor[] {
+export function profileMeta(
+	shell: ProfileShell | undefined,
+	tab: ProfileTab,
+	line?: string,
+): MetaDescriptor[] {
 	if (!shell)
-		return [{ title: "Profile not found · GoodWatch" }, { name: "robots", content: "noindex, nofollow" }]
+		return [
+			{ title: "Profile not found · GoodWatch" },
+			{ name: "robots", content: "noindex, nofollow" },
+		]
 	const handle = shell.handle
 	const url = `https://goodwatch.app${profileTabPath(handle, tab)}`
 	const name = TAB_NAMES[tab]
-	const title = name ? `${name} · @${handle} · GoodWatch` : `@${handle} · GoodWatch`
+	const title = name
+		? `${name} · @${handle} · GoodWatch`
+		: `@${handle} · GoodWatch`
 	const description =
 		line ||
 		shell.bio ||
@@ -40,15 +49,28 @@ export function profileMeta(shell: ProfileShell | undefined, tab: ProfileTab, li
 							name: `@${handle}`,
 							alternateName: handle,
 							url,
-							...(shell.avatar.url ? { image: new URL(shell.avatar.url, "https://goodwatch.app").href } : {}),
+							...(shell.avatar.url
+								? {
+										image: new URL(shell.avatar.url, "https://goodwatch.app")
+											.href,
+									}
+								: {}),
 							...(shell.bio ? { description: shell.bio } : {}),
-							...(shell.links.length ? { sameAs: shell.links.map(linkUrl) } : {}),
+							...(shell.links.length
+								? { sameAs: shell.links.map(linkUrl) }
+								: {}),
 						},
 					},
 				]
 			: []
 	return buildMeta({
-		pageMeta: { title, description, url, image: "", alt: `@${handle}'s profile on GoodWatch` },
+		pageMeta: {
+			title,
+			description,
+			url,
+			image: "",
+			alt: `@${handle}'s profile on GoodWatch`,
+		},
 		robots: indexable ? "index, follow" : "noindex, nofollow",
 		structuredData: profilePage,
 	}) as MetaDescriptor[]

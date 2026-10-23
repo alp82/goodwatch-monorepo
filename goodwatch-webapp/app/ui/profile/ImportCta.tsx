@@ -23,7 +23,10 @@ export function ImportCta({ what }: { what: "ratings" | "wishlist" }) {
 		<div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl bg-linear-to-r from-amber-400/[0.08] to-transparent p-4 ring-1 ring-amber-400/20">
 			<span className="flex -space-x-1.5" aria-hidden>
 				{LOGOS.map(([name, logo]) => (
-					<span key={name} className="flex size-9 items-center justify-center rounded-full bg-gray-900 ring-2 ring-gray-950">
+					<span
+						key={name}
+						className="flex size-9 items-center justify-center rounded-full bg-gray-900 ring-2 ring-gray-950"
+					>
 						<img src={logo} alt="" className="size-5 object-contain" />
 					</span>
 				))}
@@ -31,12 +34,14 @@ export function ImportCta({ what }: { what: "ratings" | "wishlist" }) {
 			<p className="min-w-[14rem] flex-1 text-sm text-gray-300">
 				{what === "ratings" ? (
 					<>
-						<b className="text-white">Rated titles somewhere else?</b> Bring your scores from Letterboxd, IMDb, Trakt and more. Every
-						import sharpens your taste.
+						<b className="text-white">Rated titles somewhere else?</b> Bring
+						your scores from Letterboxd, IMDb, Trakt and more. Every import
+						sharpens your taste.
 					</>
 				) : (
 					<>
-						<b className="text-white">Keeping a watchlist elsewhere?</b> Bring it in from Letterboxd, IMDb, Trakt, Netflix and more.
+						<b className="text-white">Keeping a watchlist elsewhere?</b> Bring
+						it in from Letterboxd, IMDb, Trakt, Netflix and more.
 					</>
 				)}
 			</p>

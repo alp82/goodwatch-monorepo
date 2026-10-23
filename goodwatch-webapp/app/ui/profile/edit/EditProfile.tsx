@@ -2,7 +2,14 @@
 // the handle's initial on a colour, or a favorite's poster), the cover, the bio, links to other profiles, and who sees
 // each part. A live preview beside the form; Save checks with the same rules as the server (domain/profile-settings).
 // No display name: profiles and cards are signed with the permanent @handle (#170).
-import { CheckIcon, LockClosedIcon, PlusIcon, TrashIcon, UserGroupIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import {
+	CheckIcon,
+	LockClosedIcon,
+	PlusIcon,
+	TrashIcon,
+	UserGroupIcon,
+	XMarkIcon,
+} from "@heroicons/react/20/solid"
 import { GlobeAltIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
 import { type ReactNode, useId, useMemo, useRef, useState } from "react"
@@ -29,17 +36,45 @@ import { AMBER_BUTTON, QUIET_BUTTON, TILE, posterUrl } from "../parts"
 import { PhotoCropper } from "./PhotoCropper"
 
 const PARTS: { part: ProfilePart; name: string; line: string }[] = [
-	{ part: "scores", name: "Scores", line: "Every score by tier, favorites and hot takes" },
+	{
+		part: "scores",
+		name: "Scores",
+		line: "Every score by tier, favorites and hot takes",
+	},
 	{ part: "seen", name: "Seen", line: "The diary of what you watched" },
 	{ part: "wishlist", name: "Wishlist", line: "What you want to see" },
-	{ part: "shows", name: "Shows", line: "Shows in progress, waiting and on hold" },
-	{ part: "lists", name: "Lists", line: "The Lists tab (each list keeps its own Public or Unlisted)" },
-	{ part: "taste", name: "Taste", line: "Viewer type, fingerprint, sides, the crowd, stats, and the match" },
-	{ part: "hours", name: "Time watched", line: "Days, hours and episodes in the stat strip" },
-	{ part: "activity", name: "Recent activity", line: "Latest ratings, watching now, newest on the Wishlist" },
+	{
+		part: "shows",
+		name: "Shows",
+		line: "Shows in progress, waiting and on hold",
+	},
+	{
+		part: "lists",
+		name: "Lists",
+		line: "The Lists tab (each list keeps its own Public or Unlisted)",
+	},
+	{
+		part: "taste",
+		name: "Taste",
+		line: "Viewer type, fingerprint, sides, the crowd, stats, and the match",
+	},
+	{
+		part: "hours",
+		name: "Time watched",
+		line: "Days, hours and episodes in the stat strip",
+	},
+	{
+		part: "activity",
+		name: "Recent activity",
+		line: "Latest ratings, watching now, newest on the Wishlist",
+	},
 ]
 
-const AUDIENCE_LABEL: Record<Audience, string> = { everyone: "Everyone", members: "Members", me: "Only me" }
+const AUDIENCE_LABEL: Record<Audience, string> = {
+	everyone: "Everyone",
+	members: "Members",
+	me: "Only me",
+}
 
 export interface EditProfileData {
 	handle: string
@@ -60,12 +95,15 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 	const [photo, setPhoto] = useState(data.photo)
 	const [saving, setSaving] = useState(false)
 	const [error, setError] = useState<string | null>(null)
-	const set = (patch: Partial<ProfileSettings>) => setDraft((d) => ({ ...d, ...patch }))
+	const set = (patch: Partial<ProfileSettings>) =>
+		setDraft((d) => ({ ...d, ...patch }))
 	const dirty = JSON.stringify(draft) !== JSON.stringify(saved)
 
 	const linkProblems = draft.links.map((l) => {
 		const value = normalizeLinkValue(l.service, l.value)
-		return value && !LINK_RULES[l.service].pattern.test(value) ? `That doesn't look like a ${LINK_RULES[l.service].name} ${LINK_RULES[l.service].placeholder}.` : null
+		return value && !LINK_RULES[l.service].pattern.test(value)
+			? `That doesn't look like a ${LINK_RULES[l.service].name} ${LINK_RULES[l.service].placeholder}.`
+			: null
 	})
 	const valid = draft.bio.length <= BIO_MAX && linkProblems.every((p) => !p)
 
@@ -75,15 +113,22 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 		try {
 			const body: ProfileSettings = {
 				...draft,
-				links: draft.links.map((l) => ({ ...l, value: normalizeLinkValue(l.service, l.value) })).filter((l) => l.value),
+				links: draft.links
+					.map((l) => ({ ...l, value: normalizeLinkValue(l.service, l.value) }))
+					.filter((l) => l.value),
 			}
 			const res = await fetch("/api/profile/settings", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(body),
 			})
-			const out = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; settings?: ProfileSettings }
-			if (!res.ok || !out.ok) throw new Error(out.error ?? "Saving failed. Try again.")
+			const out = (await res.json().catch(() => ({}))) as {
+				ok?: boolean
+				error?: string
+				settings?: ProfileSettings
+			}
+			if (!res.ok || !out.ok)
+				throw new Error(out.error ?? "Saving failed. Try again.")
 			const next = out.settings ?? body
 			setSaved(next)
 			setDraft(next)
@@ -101,7 +146,11 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 			: draft.avatar.kind === "provider"
 				? data.providerPhoto
 				: draft.avatar.kind === "poster"
-					? posterUrl(data.favorites.find((t) => t.key === (draft.avatar as { title: string }).title)?.poster ?? null)
+					? posterUrl(
+							data.favorites.find(
+								(t) => t.key === (draft.avatar as { title: string }).title,
+							)?.poster ?? null,
+						)
 					: null
 	const previewAvatar: ProfileShell["avatar"] = {
 		url: avatarUrl,
@@ -112,15 +161,28 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 	return (
 		<div className="flex flex-col gap-6">
 			<div className="sticky top-14 z-30 -mx-4 flex flex-wrap items-center gap-3 border-b border-white/10 bg-gray-950/95 px-4 py-3 md:top-16 md:-mx-8 md:px-8">
-				<Link to={profileTabPath(data.handle)} className="text-sm font-semibold text-amber-500 hover:text-amber-400">
+				<Link
+					to={profileTabPath(data.handle)}
+					className="text-sm font-semibold text-amber-500 hover:text-amber-400"
+				>
 					View your profile
 				</Link>
 				<span className="grow" />
 				{error && <span className="text-sm text-rose-300">{error}</span>}
-				<button type="button" onClick={() => setDraft(saved)} disabled={!dirty || saving} className={`${QUIET_BUTTON} disabled:opacity-40`}>
+				<button
+					type="button"
+					onClick={() => setDraft(saved)}
+					disabled={!dirty || saving}
+					className={`${QUIET_BUTTON} disabled:opacity-40`}
+				>
 					Undo changes
 				</button>
-				<button type="button" onClick={save} disabled={!dirty || !valid || saving} className={`${AMBER_BUTTON} disabled:opacity-40`}>
+				<button
+					type="button"
+					onClick={save}
+					disabled={!dirty || !valid || saving}
+					className={`${AMBER_BUTTON} disabled:opacity-40`}
+				>
 					<CheckIcon className="size-4" aria-hidden />
 					{saving ? "Saving…" : "Save"}
 				</button>
@@ -128,15 +190,32 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 
 			<div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
 				<div className="flex min-w-0 flex-col gap-10">
-					<Group title="Picture" line="A photo, your sign-in photo, your initial on a colour, or a poster from your favorites.">
-						<PictureChooser data={data} draft={draft} set={set} photo={photo} setPhoto={setPhoto} />
+					<Group
+						title="Picture"
+						line="A photo, your sign-in photo, your initial on a colour, or a poster from your favorites."
+					>
+						<PictureChooser
+							data={data}
+							draft={draft}
+							set={set}
+							photo={photo}
+							setPhoto={setPhoto}
+						/>
 					</Group>
 
 					{data.covers.length > 0 && (
-						<Group title="Cover" line="A backdrop behind your header, from the titles you scored 9 or 10.">
-							<div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="radiogroup" aria-label="Cover">
+						<Group
+							title="Cover"
+							line="A backdrop behind your header, from the titles you scored 9 or 10."
+						>
+							<div
+								className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+								role="radiogroup"
+								aria-label="Cover"
+							>
 								<button
 									type="button"
+									// biome-ignore lint/a11y/useSemanticElements: the ARIA radio pattern on styled buttons, with aria-checked
 									role="radio"
 									aria-checked={draft.cover === null}
 									onClick={() => set({ cover: null })}
@@ -148,13 +227,19 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 									<button
 										key={t.key}
 										type="button"
+										// biome-ignore lint/a11y/useSemanticElements: the ARIA radio pattern on styled buttons, with aria-checked
 										role="radio"
 										aria-checked={draft.cover === t.key}
 										aria-label={t.title}
 										onClick={() => set({ cover: t.key })}
 										className={`relative aspect-video overflow-hidden rounded-lg ${draft.cover === t.key ? "ring-2 ring-white" : "ring-1 ring-white/10"}`}
 									>
-										<img src={posterUrl(t.backdrop, "w500") ?? ""} alt="" loading="lazy" className="size-full object-cover" />
+										<img
+											src={posterUrl(t.backdrop, "w500") ?? ""}
+											alt=""
+											loading="lazy"
+											className="size-full object-cover"
+										/>
 										<span className="absolute inset-x-0 bottom-0 truncate bg-linear-to-t from-black/90 px-2 pt-4 pb-1 text-left text-xs font-semibold text-white">
 											{t.title}
 										</span>
@@ -165,12 +250,23 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 					)}
 
 					<Group title="About you">
-						<Field label="Handle" hint={`Your profile lives at goodwatch.app/u/${data.handle}. Handles are permanent.`}>
+						<Field
+							label="Handle"
+							hint={`Your profile lives at goodwatch.app/u/${data.handle}. Handles are permanent.`}
+						>
 							{(id) => (
-								<input id={id} className={`${INPUT} text-gray-500`} value={`@${data.handle}`} readOnly />
+								<input
+									id={id}
+									className={`${INPUT} text-gray-500`}
+									value={`@${data.handle}`}
+									readOnly
+								/>
 							)}
 						</Field>
-						<Field label="Bio" hint={`${draft.bio.length} of ${BIO_MAX} characters. Shown under your handle and in link previews.`}>
+						<Field
+							label="Bio"
+							hint={`${draft.bio.length} of ${BIO_MAX} characters. Shown under your handle and in link previews.`}
+						>
 							{(id) => (
 								<textarea
 									id={id}
@@ -185,51 +281,93 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 						</Field>
 					</Group>
 
-					<Group title="Your other profiles" line={`Up to ${MAX_LINKS}, shown as logos in your header. They open in a new tab.`}>
+					<Group
+						title="Your other profiles"
+						line={`Up to ${MAX_LINKS}, shown as logos in your header. They open in a new tab.`}
+					>
 						<LinksEditor draft={draft} set={set} problems={linkProblems} />
 					</Group>
 
-					<Group title="Who sees what" line="Everything starts open to everyone. Narrow any part to members, or keep it to yourself.">
+					<Group
+						title="Who sees what"
+						line="Everything starts open to everyone. Narrow any part to members, or keep it to yourself."
+					>
 						<ul className={`${TILE} divide-y divide-white/5`}>
 							{PARTS.map(({ part, name, line }) => (
-								<li key={part} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+								<li
+									key={part}
+									className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3"
+								>
 									<span className="min-w-0 flex-1 basis-48">
-										<span className="block font-semibold text-gray-100">{name}</span>
+										<span className="block font-semibold text-gray-100">
+											{name}
+										</span>
 										<span className="block text-xs text-gray-500">{line}</span>
 									</span>
 									<AudiencePicker
 										name={name}
 										value={draft.visibility[part]}
-										onChange={(audience) => set({ visibility: { ...draft.visibility, [part]: audience } })}
+										onChange={(audience) =>
+											set({
+												visibility: { ...draft.visibility, [part]: audience },
+											})
+										}
 									/>
 								</li>
 							))}
 						</ul>
-						<button type="button" onClick={() => set({ visibility: DEFAULT_VISIBILITY })} className="self-start text-sm font-semibold text-gray-400 hover:text-white">
+						<button
+							type="button"
+							onClick={() => set({ visibility: DEFAULT_VISIBILITY })}
+							className="self-start text-sm font-semibold text-gray-400 hover:text-white"
+						>
 							Open everything again
 						</button>
 					</Group>
 				</div>
 
 				<aside className="lg:sticky lg:top-36 lg:self-start">
-					<p className="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">Preview</p>
+					<p className="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+						Preview
+					</p>
 					<div className={`${TILE} relative isolate overflow-hidden`}>
 						{cover?.backdrop && (
-							<img src={posterUrl(cover.backdrop, "w780") ?? ""} alt="" className="absolute inset-0 -z-10 size-full object-cover opacity-30" />
+							<img
+								src={posterUrl(cover.backdrop, "w780") ?? ""}
+								alt=""
+								className="absolute inset-0 -z-10 size-full object-cover opacity-30"
+							/>
 						)}
 						<div className="absolute inset-0 -z-10 bg-linear-to-t from-gray-950 via-gray-950/80 to-gray-950/30" />
 						<div className="flex flex-col gap-3 p-5">
-							<ProfileAvatar handle={data.handle} avatar={previewAvatar} size="md" />
+							<ProfileAvatar
+								handle={data.handle}
+								avatar={previewAvatar}
+								size="md"
+							/>
 							<p className={`${DISPLAY} text-2xl text-white`}>@{data.handle}</p>
-							{draft.bio && <p className="text-sm text-gray-200">{draft.bio}</p>}
+							{draft.bio && (
+								<p className="text-sm text-gray-200">{draft.bio}</p>
+							)}
 							<div className="flex gap-1.5">
 								{draft.links
 									.filter((l) => l.value.trim())
 									.map((l) => {
 										const s = LINK_SERVICE_INFO[l.service]
 										return (
-											<span key={l.service} className="flex size-8 items-center justify-center rounded-full bg-white/[0.06] ring-1 ring-white/15">
-												{s.logo ? <img src={s.logo} alt={s.name} className="size-4 object-contain" /> : <b className="text-xs text-gray-200">{s.letter}</b>}
+											<span
+												key={l.service}
+												className="flex size-8 items-center justify-center rounded-full bg-white/[0.06] ring-1 ring-white/15"
+											>
+												{s.logo ? (
+													<img
+														src={s.logo}
+														alt={s.name}
+														className="size-4 object-contain"
+													/>
+												) : (
+													<b className="text-xs text-gray-200">{s.letter}</b>
+												)}
 											</span>
 										)
 									})}
@@ -239,7 +377,10 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 					<div className={`${TILE} mt-4 flex flex-col gap-2 p-4 text-sm`}>
 						<p className="font-semibold text-gray-100">Who sees what</p>
 						<Audiences visibility={draft.visibility} />
-						<Link to={profileTabPath(data.handle)} className="mt-1 inline-flex items-center gap-1 font-semibold text-amber-500 hover:text-amber-400">
+						<Link
+							to={profileTabPath(data.handle)}
+							className="mt-1 inline-flex items-center gap-1 font-semibold text-amber-500 hover:text-amber-400"
+						>
 							<GlobeAltIcon className="size-4" aria-hidden />
 							View your profile
 						</Link>
@@ -279,17 +420,30 @@ function PictureChooser({
 	const [busy, setBusy] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const input = useRef<HTMLInputElement>(null)
-	const ring = (on: boolean) => `ring-offset-2 ring-offset-gray-950 ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"}`
+	const ring = (on: boolean) =>
+		`ring-offset-2 ring-offset-gray-950 ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"}`
 
 	const upload = async (blob: Blob) => {
 		setBusy(true)
 		setError(null)
 		try {
 			const form = new FormData()
-			form.append("photo", blob, blob.type === "image/webp" ? "photo.webp" : "photo.jpg")
-			const res = await fetch("/api/profile/avatar", { method: "POST", body: form })
-			const out = (await res.json().catch(() => ({}))) as { ok?: boolean; url?: string; error?: string }
-			if (!res.ok || !out.ok || !out.url) throw new Error(out.error ?? "Uploading failed. Try again.")
+			form.append(
+				"photo",
+				blob,
+				blob.type === "image/webp" ? "photo.webp" : "photo.jpg",
+			)
+			const res = await fetch("/api/profile/avatar", {
+				method: "POST",
+				body: form,
+			})
+			const out = (await res.json().catch(() => ({}))) as {
+				ok?: boolean
+				url?: string
+				error?: string
+			}
+			if (!res.ok || !out.ok || !out.url)
+				throw new Error(out.error ?? "Uploading failed. Try again.")
 			setPhoto(out.url)
 			set({ avatar: { kind: "photo" } })
 			setFile(null)
@@ -304,7 +458,8 @@ function PictureChooser({
 		try {
 			await fetch("/api/profile/avatar", { method: "DELETE" })
 			setPhoto(null)
-			if (draft.avatar.kind === "photo") set({ avatar: { kind: "initial", color: "amber" } })
+			if (draft.avatar.kind === "photo")
+				set({ avatar: { kind: "initial", color: "amber" } })
 		} finally {
 			setBusy(false)
 		}
@@ -312,10 +467,15 @@ function PictureChooser({
 
 	return (
 		<>
-			<div className="flex flex-wrap gap-3" role="radiogroup" aria-label="Picture">
+			<div
+				className="flex flex-wrap gap-3"
+				role="radiogroup"
+				aria-label="Picture"
+			>
 				{photo && (
 					<button
 						type="button"
+						// biome-ignore lint/a11y/useSemanticElements: the ARIA radio pattern on styled buttons, with aria-checked
 						role="radio"
 						aria-checked={draft.avatar.kind === "photo"}
 						aria-label="Your photo"
@@ -328,13 +488,19 @@ function PictureChooser({
 				{data.providerPhoto && (
 					<button
 						type="button"
+						// biome-ignore lint/a11y/useSemanticElements: the ARIA radio pattern on styled buttons, with aria-checked
 						role="radio"
 						aria-checked={draft.avatar.kind === "provider"}
 						aria-label="Your sign-in photo"
 						onClick={() => set({ avatar: { kind: "provider" } })}
 						className={`size-14 overflow-hidden rounded-full ${ring(draft.avatar.kind === "provider")}`}
 					>
-						<img src={data.providerPhoto} alt="" referrerPolicy="no-referrer" className="size-full object-cover" />
+						<img
+							src={data.providerPhoto}
+							alt=""
+							referrerPolicy="no-referrer"
+							className="size-full object-cover"
+						/>
 					</button>
 				)}
 				{AVATAR_COLORS.map((c) => {
@@ -344,30 +510,43 @@ function PictureChooser({
 						<button
 							key={c}
 							type="button"
+							// biome-ignore lint/a11y/useSemanticElements: the ARIA radio pattern on styled buttons, with aria-checked
 							role="radio"
 							aria-checked={on}
 							aria-label={`Initial on ${c}`}
 							onClick={() => set({ avatar: { kind: "initial", color: c } })}
 							className={`flex size-14 items-center justify-center rounded-full text-2xl font-extrabold ${ring(on)}`}
-							style={{ background: `linear-gradient(135deg, ${from}, ${to})`, color: ink }}
+							style={{
+								background: `linear-gradient(135deg, ${from}, ${to})`,
+								color: ink,
+							}}
 						>
 							{data.handle.charAt(0).toUpperCase()}
 						</button>
 					)
 				})}
 				{data.favorites.map((t) => {
-					const on = draft.avatar.kind === "poster" && draft.avatar.title === t.key
+					const on =
+						draft.avatar.kind === "poster" && draft.avatar.title === t.key
 					return (
 						<button
 							key={t.key}
 							type="button"
+							// biome-ignore lint/a11y/useSemanticElements: the ARIA radio pattern on styled buttons, with aria-checked
 							role="radio"
 							aria-checked={on}
 							aria-label={`${t.title} poster`}
 							onClick={() => set({ avatar: { kind: "poster", title: t.key } })}
 							className={`size-14 overflow-hidden rounded-full ${ring(on)}`}
 						>
-							{t.poster && <img src={posterUrl(t.poster, "w185") ?? ""} alt="" loading="lazy" className="size-full object-cover object-top" />}
+							{t.poster && (
+								<img
+									src={posterUrl(t.poster, "w185") ?? ""}
+									alt=""
+									loading="lazy"
+									className="size-full object-cover object-top"
+								/>
+							)}
 						</button>
 					)
 				})}
@@ -382,24 +561,42 @@ function PictureChooser({
 						const f = e.target.files?.[0]
 						e.target.value = ""
 						if (!f) return
-						if (f.size > 20 * 1024 * 1024) return setError("That photo is too large. Pick one under 20 MB.")
+						if (f.size > 20 * 1024 * 1024)
+							return setError("That photo is too large. Pick one under 20 MB.")
 						setError(null)
 						setFile(f)
 					}}
 				/>
-				<button type="button" onClick={() => input.current?.click()} className={QUIET_BUTTON} disabled={busy}>
+				<button
+					type="button"
+					onClick={() => input.current?.click()}
+					className={QUIET_BUTTON}
+					disabled={busy}
+				>
 					<PlusIcon className="size-4" aria-hidden />
 					{photo ? "Upload a new photo" : "Upload a photo"}
 				</button>
 				{photo && (
-					<button type="button" onClick={remove} className={QUIET_BUTTON} disabled={busy}>
+					<button
+						type="button"
+						onClick={remove}
+						className={QUIET_BUTTON}
+						disabled={busy}
+					>
 						<TrashIcon className="size-4" aria-hidden />
 						Remove photo
 					</button>
 				)}
 				{error && <span className="text-sm text-rose-300">{error}</span>}
 			</div>
-			{file && <PhotoCropper file={file} busy={busy} onCancel={() => setFile(null)} onCropped={upload} />}
+			{file && (
+				<PhotoCropper
+					file={file}
+					busy={busy}
+					onCancel={() => setFile(null)}
+					onCropped={upload}
+				/>
+			)}
 		</>
 	)
 }
@@ -408,8 +605,16 @@ function LinksEditor({
 	draft,
 	set,
 	problems,
-}: { draft: ProfileSettings; set: (patch: Partial<ProfileSettings>) => void; problems: (string | null)[] }) {
-	const unused = useMemo(() => LINK_SERVICES.filter((s) => !draft.links.some((l) => l.service === s)), [draft.links])
+}: {
+	draft: ProfileSettings
+	set: (patch: Partial<ProfileSettings>) => void
+	problems: (string | null)[]
+}) {
+	const unused = useMemo(
+		() =>
+			LINK_SERVICES.filter((s) => !draft.links.some((l) => l.service === s)),
+		[draft.links],
+	)
 	return (
 		<>
 			<ul className="flex flex-col gap-2">
@@ -419,29 +624,49 @@ function LinksEditor({
 						<li key={l.service} className="flex flex-col gap-1">
 							<div className="flex items-center gap-2">
 								<span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] ring-1 ring-white/10">
-									{s.logo ? <img src={s.logo} alt="" className="size-6 object-contain" /> : <b className="text-gray-300">{s.letter}</b>}
+									{s.logo ? (
+										<img
+											src={s.logo}
+											alt=""
+											className="size-6 object-contain"
+										/>
+									) : (
+										<b className="text-gray-300">{s.letter}</b>
+									)}
 								</span>
 								<label className="flex min-h-11 min-w-0 flex-1 items-center rounded-lg bg-gray-900 ring-1 ring-white/15 focus-within:ring-2 focus-within:ring-amber-400">
-									<span className="shrink-0 pl-3 text-sm text-gray-500 max-sm:hidden">{s.prefix}</span>
+									<span className="shrink-0 pl-3 text-sm text-gray-500 max-sm:hidden">
+										{s.prefix}
+									</span>
 									<span className="sr-only">{s.name}</span>
 									<input
 										className="min-w-0 flex-1 bg-transparent px-3 text-gray-100 placeholder:text-gray-600 focus:outline-none sm:pl-0.5"
 										value={l.value}
 										placeholder={`${s.name} ${s.placeholder}`}
 										aria-invalid={!!problems[i]}
-										onChange={(e) => set({ links: draft.links.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)) })}
+										onChange={(e) =>
+											set({
+												links: draft.links.map((x, j) =>
+													j === i ? { ...x, value: e.target.value } : x,
+												),
+											})
+										}
 									/>
 								</label>
 								<button
 									type="button"
-									onClick={() => set({ links: draft.links.filter((_, j) => j !== i) })}
+									onClick={() =>
+										set({ links: draft.links.filter((_, j) => j !== i) })
+									}
 									aria-label={`Remove ${s.name}`}
 									className="flex size-11 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-white/[0.06] hover:text-white"
 								>
 									<XMarkIcon className="size-5" aria-hidden />
 								</button>
 							</div>
-							{problems[i] && <p className="pl-14 text-xs text-rose-300">{problems[i]}</p>}
+							{problems[i] && (
+								<p className="pl-14 text-xs text-rose-300">{problems[i]}</p>
+							)}
 						</li>
 					)
 				})}
@@ -452,7 +677,9 @@ function LinksEditor({
 						<button
 							key={service}
 							type="button"
-							onClick={() => set({ links: [...draft.links, { service, value: "" }] })}
+							onClick={() =>
+								set({ links: [...draft.links, { service, value: "" }] })
+							}
 							className="inline-flex min-h-9 items-center gap-1 rounded-full bg-white/[0.04] px-3 text-xs font-semibold text-gray-300 ring-1 ring-white/10 hover:text-white"
 						>
 							<PlusIcon className="size-3.5" aria-hidden />
@@ -465,12 +692,27 @@ function LinksEditor({
 	)
 }
 
-function Audiences({ visibility }: { visibility: ProfileSettings["visibility"] }) {
-	const by = (a: Audience) => PARTS.filter((p) => visibility[p.part] === a).map((p) => p.name)
+function Audiences({
+	visibility,
+}: { visibility: ProfileSettings["visibility"] }) {
+	const by = (a: Audience) =>
+		PARTS.filter((p) => visibility[p.part] === a).map((p) => p.name)
 	const rows: [string, string[], ReactNode][] = [
-		["Everyone", by("everyone"), <GlobeAltIcon key="e" className="size-4 text-emerald-400" aria-hidden />],
-		["Members", by("members"), <UserGroupIcon key="m" className="size-4 text-sky-300" aria-hidden />],
-		["Only you", by("me"), <LockClosedIcon key="o" className="size-4 text-amber-300" aria-hidden />],
+		[
+			"Everyone",
+			by("everyone"),
+			<GlobeAltIcon key="e" className="size-4 text-emerald-400" aria-hidden />,
+		],
+		[
+			"Members",
+			by("members"),
+			<UserGroupIcon key="m" className="size-4 text-sky-300" aria-hidden />,
+		],
+		[
+			"Only you",
+			by("me"),
+			<LockClosedIcon key="o" className="size-4 text-amber-300" aria-hidden />,
+		],
 	]
 	return (
 		<ul className="flex flex-col gap-1.5">
@@ -488,13 +730,22 @@ function Audiences({ visibility }: { visibility: ProfileSettings["visibility"] }
 	)
 }
 
-function AudiencePicker({ name, value, onChange }: { name: string; value: Audience; onChange: (a: Audience) => void }) {
+function AudiencePicker({
+	name,
+	value,
+	onChange,
+}: { name: string; value: Audience; onChange: (a: Audience) => void }) {
 	return (
-		<div role="radiogroup" aria-label={`Who sees ${name}`} className="flex shrink-0 rounded-full bg-gray-900 p-0.5 ring-1 ring-white/10">
+		<div
+			role="radiogroup"
+			aria-label={`Who sees ${name}`}
+			className="flex shrink-0 rounded-full bg-gray-900 p-0.5 ring-1 ring-white/10"
+		>
 			{AUDIENCES.map((a) => (
 				<button
 					key={a}
 					type="button"
+					// biome-ignore lint/a11y/useSemanticElements: the ARIA radio pattern on styled buttons, with aria-checked
 					role="radio"
 					aria-checked={value === a}
 					onClick={() => onChange(a)}
@@ -515,7 +766,11 @@ function AudiencePicker({ name, value, onChange }: { name: string; value: Audien
 	)
 }
 
-function Group({ title, line, children }: { title: string; line?: string; children: ReactNode }) {
+function Group({
+	title,
+	line,
+	children,
+}: { title: string; line?: string; children: ReactNode }) {
 	return (
 		<section className="flex flex-col gap-4">
 			<div>
@@ -527,7 +782,11 @@ function Group({ title, line, children }: { title: string; line?: string; childr
 	)
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: (id: string) => ReactNode }) {
+function Field({
+	label,
+	hint,
+	children,
+}: { label: string; hint?: string; children: (id: string) => ReactNode }) {
 	const id = useId()
 	return (
 		<div className="flex flex-col gap-1.5">
