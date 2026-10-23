@@ -185,6 +185,25 @@ export async function loadMemberTaste(userId: string): Promise<Taste> {
 }
 
 /**
+ * The member's stored taste as it is, never rebuilt: for reading many members at once (the member match's sample of
+ * pairs), where rebuilding each would read Crate once per member. Null without a stored vector.
+ */
+export async function readStoredTaste(
+	userId: string,
+): Promise<{ vector: Float32Array; liked: number } | null> {
+	const redis = await tasteRedis()
+	if (!redis) return null
+	try {
+		const value = await redis.getBuffer(tasteKey(userId))
+		const stored = value ? decodeTaste(value) : null
+		return stored?.vector ? { vector: stored.vector, liked: stored.liked } : null
+	} catch (error) {
+		console.error("Taste: reading a stored taste failed:", error)
+		return null
+	}
+}
+
+/**
  * Call after every committed write to the person's ratings or Want to See. Records the write time for readers, clears
  * the person's cached Taste page views, and schedules a rebuild off the request path.
  * Never throws.
