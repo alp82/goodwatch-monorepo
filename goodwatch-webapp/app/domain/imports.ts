@@ -146,7 +146,7 @@ export const IMPORT_SOURCE_UPLOAD = {
 			"Choose videodb.xml or a ZIP from Kodi’s Single file export, not separate .nfo files.",
 		oversizeHint: "Upload videodb.xml by itself.",
 		instructions: [
-			"In Kodi, switch the settings level to Advanced, then open Settings → Media → Library → Export library → Single file. Upload videodb.xml from the kodi_videodb_YYYY-MM-DD folder, alone or zipped. Artwork folders are not needed; separate .nfo files are not supported. GoodWatch imports movie and show ratings and one watch per played movie or episode. Maximum size: 20 MB.",
+			"In Kodi, switch the settings level to Advanced, then open Settings → Media → Library → Export library → Single file. Upload videodb.xml from the kodi_videodb_YYYY-MM-DD folder, alone or zipped. Artwork folders are not needed; separate .nfo files are not supported. GoodWatch imports movie, show and episode ratings and one watch per played movie or episode. Maximum size: 20 MB.",
 		],
 	},
 	myanimelist: {
@@ -198,7 +198,7 @@ export const IMPORT_SOURCE_UPLOAD = {
 			"Maximum size: 20 MB.",
 		],
 		notes:
-			"GoodWatch reads Watcharr movie and show ratings, thoughts as reviews, watches, episode progress, and show statuses. Planned becomes Want to See; Finished becomes Seen. Decimal scores are rounded to whole numbers out of 10. Season and episode scores, tags, pinned items, and games aren't applied. Wishlist files add Want to See. Titles absent from the file stay as they are.",
+			"GoodWatch reads Watcharr movie and show ratings, season and episode scores, thoughts as reviews, watches, episode progress, and show statuses. Planned becomes Want to See; Finished becomes Seen. Decimal scores are rounded to whole numbers out of 10. Season and episode scores stay with their season or episode and never rate the whole show. Tags, pinned items, and games aren't applied. Wishlist files add Want to See. Titles absent from the file stay as they are.",
 	},
 	tmdb: null,
 	plex: null,

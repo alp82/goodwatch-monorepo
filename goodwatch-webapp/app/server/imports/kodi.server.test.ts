@@ -71,11 +71,57 @@ test("Kodi passes nested episode evidence with unknown numbering and ignores the
 		[1668, 1001, 2001, 0, 2, "unknown", null, "unknown"],
 	)
 	assert.equal(parsed.observations.find((x) => x.kind === "rating")?.score, 8)
+	// The episode's userrating is an episode score with the same evidence as its watch (#759); only the music
+	// video stays unsupported.
+	const score = parsed.observations.find((x) => x.kind === "episode_rating")
+	assert.deepEqual(
+		[
+			score?.key,
+			score?.scoreScope,
+			score?.mediaType,
+			score?.tmdbId,
+			score?.episodeTmdbId,
+			score?.episodeTvdbId,
+			score?.episodeName,
+			score?.season,
+			score?.episode,
+			score?.episodeNumbering,
+			score?.score,
+			score?.problem,
+		],
+		[
+			"kodi:episode_rating:show:tmdb:1668:episode:tmdb:1001",
+			"episode",
+			"show",
+			1668,
+			1001,
+			2001,
+			"Pilot",
+			0,
+			2,
+			"unknown",
+			7,
+			undefined,
+		],
+	)
 	assert.equal(
 		parsed.observations.filter((x) => x.problem?.outcome === "unsupported")
 			.length,
-		2,
+		1,
 	)
+})
+
+test("a Kodi episode userrating outside 1 to 10 stays visible as an invalid episode score", async () => {
+	const parsed = await parseImportFile(
+		"kodi",
+		Buffer.from(
+			`<videodb><tvshow><title>Friends</title><uniqueid type="tmdb">1668</uniqueid><episodedetails><title>Pilot</title><uniqueid type="tmdb">1001</uniqueid><season>1</season><episode>1</episode><userrating>12</userrating></episodedetails></tvshow></videodb>`,
+		),
+	)
+	const score = parsed.observations.find((x) => x.kind === "episode_rating")
+	assert.equal(score?.problem?.outcome, "invalid")
+	assert.equal(score?.score, null)
+	assert.equal(score?.episodeTmdbId, 1001)
 })
 
 test("Kodi accepts a zipped library without artwork and collapses video versions to the latest watch with stable identities", async () => {

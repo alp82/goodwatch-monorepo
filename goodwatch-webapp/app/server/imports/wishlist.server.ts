@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto"
 import { importInfo } from "../../domain/imports.ts"
 import {
+	episodeScoreObservation,
+	seasonScoreObservation,
+} from "./episode-rating-observations.server.ts"
+import {
 	IMPORT_MAX_BYTES,
 	IMPORT_MAX_ROWS,
 	type ImportObservation,
@@ -286,6 +290,17 @@ function sharedWishlist(input: unknown, fail: Fail): ParsedImport {
 }
 
 /** Watcharr exports the full library through GET /watched. */
+const WATCHARR_SCORE_INVALID =
+	"Watcharr scores must be numbers greater than 0 and at most 10; 0 means no score."
+/** Watcharr scores are out of 10, with decimals: rounded to a whole number, at least 1. Null when off the scale. */
+const watcharrScore = (value: unknown) =>
+	typeof value === "number" &&
+	Number.isFinite(value) &&
+	value > 0 &&
+	value <= 10
+		? Math.max(1, Math.round(value))
+		: null
+
 function watcharr(rows: unknown[], fail: Fail): ParsedImport {
 	if (rows.length > IMPORT_MAX_ROWS)
 		fail(
@@ -591,17 +606,36 @@ function watcharr(rows: unknown[], fail: Fail): ParsedImport {
 									"Season and episode statuses are not applied separately. Finished creates episode watches; the show status is imported separately.",
 							},
 						})
-					if (record.rating !== undefined && record.rating !== 0)
-						add(`${suffix}:rating`, {
-							kind: "unsupported",
-							...coordinates,
-							score: typeof record.rating === "number" ? record.rating : null,
-							problem: coordinates.problem ?? {
-								outcome: "unsupported",
-								reason:
-									"Season and episode scores are kept here, not applied as whole-show ratings.",
-							},
-						})
+					// A season or episode score (#759), rounded like Watcharr's title scores; never the whole show's.
+					if (record.rating !== undefined && record.rating !== 0) {
+						const score = watcharrScore(record.rating)
+						rounded ||= score !== null && score !== record.rating
+						const fields = {
+							key: `watcharr:${item.key}:${suffix}:rating`,
+							score,
+							invalidReason: WATCHARR_SCORE_INVALID,
+							problem: coordinates.problem,
+						}
+						if (observations.length >= IMPORT_MAX_ROWS)
+							fail("That file produces more than 50,000 import items.")
+						observations.push(
+							episode
+								? episodeScoreObservation(
+										base,
+										{
+											episodeNumbering: "tmdb",
+											season: coordinates.season,
+											episode: coordinates.episode,
+										},
+										fields,
+									)
+								: seasonScoreObservation(
+										base,
+										coordinates.season ?? null,
+										fields,
+									),
+						)
+					}
 				}
 			}
 		}
@@ -667,22 +701,16 @@ function watcharr(rows: unknown[], fail: Fail): ParsedImport {
 		if (observations.length > IMPORT_MAX_ROWS)
 			fail("That file produces more than 50,000 import items.")
 		if (row.rating !== undefined && row.rating !== 0) {
-			const valid =
-				typeof row.rating === "number" &&
-				Number.isFinite(row.rating) &&
-				row.rating > 0 &&
-				row.rating <= 10
-			const score = valid ? Math.max(1, Math.round(row.rating as number)) : null
-			rounded ||= valid && score !== row.rating
+			const score = watcharrScore(row.rating)
+			rounded ||= score !== null && score !== row.rating
 			add("rating", {
 				kind: "rating",
 				score,
-				...(!valid
+				...(score === null
 					? {
 							problem: {
 								outcome: "invalid",
-								reason:
-									"Watcharr scores must be numbers greater than 0 and at most 10; 0 means no score.",
+								reason: WATCHARR_SCORE_INVALID,
 							},
 						}
 					: {}),

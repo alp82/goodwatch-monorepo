@@ -15,6 +15,10 @@ import {
 	importInfo,
 	isFileImportSource,
 } from "../../domain/imports.ts"
+import {
+	episodeScoreObservation,
+	seasonScoreObservation,
+} from "./episode-rating-observations.server.ts"
 import { isTvTimeFile, parseTvTime } from "./tvtime.server.ts"
 import { parseWishlistFile } from "./wishlist.server.ts"
 
@@ -504,6 +508,15 @@ function jsonArray(entry: ArchiveEntry): unknown[] {
 	return value
 }
 
+/** A Trakt rating: a whole number from 1 to 10, or null. */
+const traktScore = (value: unknown) =>
+	typeof value === "number" &&
+	Number.isInteger(value) &&
+	value >= 1 &&
+	value <= 10
+		? value
+		: null
+
 function trakt(entries: ArchiveEntry[]): ParsedImport {
 	const observations: ImportObservation[] = traktLists(
 		entries
@@ -521,7 +534,6 @@ function trakt(entries: ArchiveEntry[]): ParsedImport {
 	let rows = 0
 	const timestampCounts = new Map<string, number>()
 	const usedHistoryIds = new Set<string>()
-	const unsupportedFiles: string[] = []
 	for (const entry of entries) {
 		const name = entry.name.toLowerCase()
 		if (!name.endsWith(".json")) continue
@@ -623,23 +635,36 @@ function trakt(entries: ArchiveEntry[]): ParsedImport {
 				isRating &&
 				(name.includes("seasons") || name.includes("episodes"))
 			) {
-				observations.push({
-					key: `trakt:unsupported-rating:${sourceId}`,
-					kind: "unsupported",
-					...base,
-					problem: {
-						outcome: "unsupported",
-						reason: "GoodWatch doesn't import season or episode ratings yet.",
-					},
-				})
+				// A season or episode score (#759): Trakt numbers like TMDB and names the episode's TMDB id, as its
+				// history rows do. The preview checks the season against the episode list and resolves the episode.
+				const fields = {
+					score: traktScore(item.rating),
+					addedAt: moment(item.rated_at),
+					invalidReason: "The Trakt rating isn't a whole number from 1 to 10.",
+				}
+				observations.push(
+					name.includes("seasons")
+						? seasonScoreObservation(
+								base,
+								validId(seasonObject?.number) ??
+									(seasonObject?.number === 0 ? 0 : null),
+								{ ...fields, key: `trakt:episode_rating:season:${sourceId}` },
+							)
+						: episodeScoreObservation(
+								base,
+								{
+									episodeTmdbId: validId(episodeIds?.tmdb),
+									episodeNumbering: "tmdb",
+									season:
+										validId(episodeObject?.season) ??
+										(episodeObject?.season === 0 ? 0 : null),
+									episode: validId(episodeObject?.number),
+								},
+								{ ...fields, key: `trakt:episode_rating:episode:${sourceId}` },
+							),
+				)
 			} else if (isRating) {
-				const score =
-					typeof item.rating === "number" &&
-					Number.isInteger(item.rating) &&
-					item.rating >= 1 &&
-					item.rating <= 10
-						? item.rating
-						: null
+				const score = traktScore(item.rating)
 				observations.push({
 					key: `trakt:rating:${mediaType}:${sourceId}`,
 					kind: "rating",
@@ -665,19 +690,12 @@ function trakt(entries: ArchiveEntry[]): ParsedImport {
 				})
 			}
 		}
-		if (
-			(name.includes("seasons") || name.includes("episodes")) &&
-			values.length
-		)
-			unsupportedFiles.push(entry.name)
 	}
 	const largestCluster = Math.max(0, ...timestampCounts.values())
 	if (largestCluster >= 100)
 		warnings.push(
 			`${largestCluster.toLocaleString("en-US")} watches share one Trakt timestamp. Their original dates were preserved.`,
 		)
-	if (unsupportedFiles.length)
-		warnings.push("Season and episode ratings were kept as unsupported items.")
 	if (
 		entries.some((entry) => /^watched-(movies|shows)\.json$/i.test(entry.name))
 	)
@@ -1167,37 +1185,46 @@ function kodi(bytes: Uint8Array): ParsedImport {
 	) => {
 		const score = Number(value(node, "userrating"))
 		const validScore = Number.isInteger(score) && score >= 1 && score <= 10
+		const season = value(node, "season")
+		// An episode's score and its watch carry the same evidence; Kodi's numbering isn't TMDB's.
+		const evidence = {
+			episodeTmdbId: validId(Number(id(node, "tmdb"))),
+			episodeTvdbId: validId(Number(id(node, "tvdb"))),
+			episodeName: clipped(value(node, "title")),
+			episodeNumbering: "unknown" as const,
+			season: season === "0" ? 0 : validId(Number(season)),
+			episode: validId(Number(value(node, "episode"))),
+		}
+		const invalidReason = "The Kodi rating must be a whole number from 1 to 10."
 		if (value(node, "userrating") && score !== 0)
-			observations.push({
-				...base,
-				key: `kodi:rating:${base.mediaType}:${ref}`,
-				kind: episode ? "unsupported" : "rating",
-				...(episode
-					? {
-							problem: {
-								outcome: "unsupported" as const,
-								reason:
-									"GoodWatch doesn't import season or episode ratings yet.",
-							},
-						}
-					: validScore
-						? { score }
-						: {
-								score: null,
-								problem: {
-									outcome: "invalid" as const,
-									reason:
-										"The Kodi rating must be a whole number from 1 to 10.",
-								},
-							}),
-			})
+			observations.push(
+				episode
+					? episodeScoreObservation(base, evidence, {
+							key: `kodi:episode_rating:${base.mediaType}:${ref}`,
+							score: validScore ? score : null,
+							invalidReason,
+						})
+					: {
+							...base,
+							key: `kodi:rating:${base.mediaType}:${ref}`,
+							kind: "rating",
+							...(validScore
+								? { score }
+								: {
+										score: null,
+										problem: {
+											outcome: "invalid" as const,
+											reason: invalidReason,
+										},
+									}),
+						},
+			)
 		if (node.name !== "tvshow" && Number(value(node, "playcount")) > 0) {
 			const watchedAt = day(value(node, "lastplayed"))
 			if (!watchedAt && value(node, "lastplayed"))
 				warnings.push(
 					"An invalid Kodi last-played date was imported without a date.",
 				)
-			const season = value(node, "season")
 			observations.push({
 				...base,
 				key: `kodi:watch:${base.mediaType}:${ref}`,
@@ -1205,16 +1232,7 @@ function kodi(bytes: Uint8Array): ParsedImport {
 				watchedAt,
 				precision: watchedAt ? "day" : "unknown",
 				pass: 1,
-				...(episode
-					? {
-							episodeTmdbId: validId(Number(id(node, "tmdb"))),
-							episodeTvdbId: validId(Number(id(node, "tvdb"))),
-							episodeName: clipped(value(node, "title")),
-							episodeNumbering: "unknown" as const,
-							season: season === "0" ? 0 : validId(Number(season)),
-							episode: validId(Number(value(node, "episode"))),
-						}
-					: {}),
+				...(episode ? evidence : {}),
 			})
 		}
 	}

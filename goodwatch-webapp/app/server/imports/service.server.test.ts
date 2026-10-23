@@ -2698,17 +2698,20 @@ it("TMDB's six fetched lists share kind selection, skipped receipts, repeat prev
 				: path.includes("/watchlist/")
 					? 2
 					: 3
-			const results = [
-				{
-					id,
-					title: "Synthetic title",
-					name: "Synthetic show",
-					rating: 8.5,
-				},
-				...(path.endsWith("rated/movies")
-					? [{ id: 99, title: "Missing title" }]
-					: []),
-			]
+			// The seventh list, rated episodes, is empty here; its own tests are below (#759).
+			const results = path.endsWith("rated/tv/episodes")
+				? []
+				: [
+						{
+							id,
+							title: "Synthetic title",
+							name: "Synthetic show",
+							rating: 8.5,
+						},
+						...(path.endsWith("rated/movies")
+							? [{ id: 99, title: "Missing title" }]
+							: []),
+					]
 			return Response.json({
 				page: 1,
 				total_pages: 1,
@@ -3884,4 +3887,178 @@ it("stored warnings retain their kind and legacy string warnings stay actionable
 		{ kind: "actionable", message: "Reconnect Plex" },
 		{ kind: "info", message: "RSS coverage note" },
 	])
+})
+
+// Season and episode scores from Trakt, Kodi, Watcharr and TMDB (#759).
+const scoreShowEpisodes = (showId: number, rows: [number, number, number][]) =>
+	rows.map(([tmdbId, season, episode]) => ({
+		show_id: showId,
+		tmdb_id: tmdbId,
+		season_number: season,
+		episode_number: episode,
+		name: null,
+		tvdb_id: null,
+		removed_at: null,
+		air_date: Date.UTC(2023, 0, 1),
+	}))
+function setupScoreShow() {
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			tmdb_id: 66,
+			imdb_id: null,
+			title: "A Show",
+			release_year: 2023,
+			media_type: "show",
+		},
+	]
+	db.episodes = scoreShowEpisodes(66, [
+		[771, 1, 1],
+		[772, 1, 2],
+		[881, 2, 1],
+	])
+	setImportDbForTest(db)
+	setCrateClientForTest(new FakeTrackingCrate())
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	return db
+}
+
+it("Trakt season and episode ratings import as season and episode scores, never as show ratings, and Undo takes them back", async () => {
+	const db = setupScoreShow()
+	const { zipFixture } = await import("./zip-fixture.test-support.ts")
+	const show = { title: "A Show", year: 2023, ids: { trakt: 6, tmdb: 66 } }
+	const archive = zipFixture({
+		"ratings-seasons.json": JSON.stringify([
+			{
+				type: "season",
+				rating: 7,
+				show,
+				season: { number: 2, ids: { trakt: 62 } },
+			},
+			{
+				type: "season",
+				rating: 5,
+				show,
+				season: { number: 9, ids: { trakt: 69 } },
+			},
+		]),
+		"ratings-episodes.json": JSON.stringify([
+			{
+				type: "episode",
+				rating: 8,
+				show,
+				episode: { season: 1, number: 1, ids: { trakt: 71, tmdb: 771 } },
+			},
+			{
+				type: "episode",
+				rating: 9,
+				show,
+				episode: { season: 1, number: 2, ids: { trakt: 72, tmdb: 772 } },
+			},
+		]),
+	})
+	const preview = await previewImport("member", "trakt", "export.zip", archive)
+	assert.equal(preview.kinds.episode_rating, 4)
+	assert.equal(preview.kinds.rating, 0)
+	assert.equal(preview.counts.new, 3)
+	assert.equal(preview.counts.unmatched, 1)
+	const missing = (
+		await getImportItems("member", preview.id, "unmatched", 0, 50)
+	).items[0]
+	assert.equal(missing.season, 9)
+	assert.match(missing.reason ?? "", /isn't in the show's episode list/)
+	await confirmImport("member", preview.id, {
+		...options,
+		conflictChoice: "keep",
+		kinds: ["episode_rating"],
+	})
+	await waitFor(db, "done")
+	assert.equal((await getImport("member", preview.id)).applied.added, 3)
+	assert.deepEqual(
+		db.episodeScores
+			.map((row) => [
+				row.tmdb_id,
+				row.score_key,
+				row.scope,
+				row.season_number,
+				row.episode_number,
+				row.episode_tmdb_id,
+				row.score,
+			])
+			.sort((a, b) => String(a[1]).localeCompare(String(b[1]))),
+		[
+			[66, "e771", "episode", 1, 1, 771, 8],
+			[66, "e772", "episode", 1, 2, 772, 9],
+			[66, "s2", "season", 2, null, null, 7],
+		],
+	)
+	// Never a whole-show rating.
+	assert.equal(db.scores.length, 0)
+	const result = await getImportResult("member", preview.id)
+	const added = partSection(result, "episode_ratings_added")
+	assert.equal(added.count, 3)
+	assert.deepEqual(
+		added.rows
+			.flatMap((row) => row.changes)
+			.map((change) => ("part" in change ? change.part : ""))
+			.sort(),
+		["S1 E1", "S1 E2", "Season 2"],
+	)
+	const repeated = await previewImport("member", "trakt", "export.zip", archive)
+	assert.equal(repeated.counts.unchanged, 3)
+	await undoImport("member", preview.id)
+	assert.equal(db.episodeScores.length, 0)
+	assert.equal((await getImport("member", preview.id)).status, "undone")
+})
+
+it("TMDB rated episodes import through the shared journal as episode scores of their show", async () => {
+	const db = setupScoreShow()
+	const { createTmdbClient } = await import("./tmdb-client.server.ts")
+	const client = createTmdbClient({
+		apiKey: "app",
+		sleep: async () => {},
+		fetch: async (url) => {
+			const episodes = String(url).includes("/rated/tv/episodes")
+			const results = episodes
+				? [
+						{
+							id: 772,
+							show_id: 66,
+							season_number: 1,
+							episode_number: 2,
+							name: "Second",
+							rating: 6.5,
+						},
+					]
+				: []
+			return Response.json({
+				page: 1,
+				total_pages: 1,
+				total_results: results.length,
+				results,
+			})
+		},
+	})
+	const preview = await previewParsedImport(
+		"member",
+		"TMDB account",
+		await client.readAccount("account", "secret"),
+	)
+	assert.equal(preview.kinds.episode_rating, 1)
+	assert.equal(preview.counts.new, 1)
+	await confirmImport("member", preview.id, {
+		...options,
+		kinds: ["episode_rating"],
+	})
+	await waitFor(db, "done")
+	assert.deepEqual(
+		db.episodeScores.map((row) => [row.tmdb_id, row.score_key, row.score]),
+		[[66, "e772", 7]],
+	)
+	assert.equal(db.scores.length, 0)
+	await undoImport("member", preview.id)
+	assert.equal(db.episodeScores.length, 0)
 })

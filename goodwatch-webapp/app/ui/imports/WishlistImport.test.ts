@@ -125,7 +125,7 @@ test("one upload takes Watcharr's own export and a wishlist file another tool sa
 	)
 	assert.match(
 		page,
-		/ratings, thoughts as reviews, watches, episode progress, and show statuses/,
+		/ratings, season and episode scores, thoughts as reviews, watches, episode progress, and show statuses/,
 	)
 	assert.match(page, /Planned becomes Want to See; Finished becomes Seen/)
 	assert.match(rendered.upload, /accept="\.json,application\/json"/)

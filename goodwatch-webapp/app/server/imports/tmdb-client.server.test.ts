@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { createTmdbClient } from "./tmdb-client.server.ts"
 
-test("TMDB reads all six paginated lists, rounds half steps up and leaves v3 ratings undated", async () => {
+test("TMDB reads all seven paginated lists, rounds half steps up and leaves v3 ratings undated", async () => {
 	const requests: string[] = []
 	const client = createTmdbClient({
 		apiKey: "application-secret",
@@ -15,7 +15,7 @@ test("TMDB reads all six paginated lists, rounds half steps up and leaves v3 rat
 			assert.equal(path.searchParams.get("session_id"), "member-secret")
 			assert.match(
 				path.pathname,
-				/^\/3\/account\/account\/(rated|watchlist|favorite)\/(movies|tv)$/,
+				/^\/3\/account\/account\/((rated|watchlist|favorite)\/(movies|tv)|rated\/tv\/episodes)$/,
 			)
 			const page = Number(path.searchParams.get("page"))
 			const rating = path.pathname.includes("/rated/")
@@ -30,6 +30,9 @@ test("TMDB reads all six paginated lists, rounds half steps up and leaves v3 rat
 						name: "Show",
 						release_date: "1995-01-01",
 						first_air_date: "2001-01-01",
+						show_id: 1396,
+						season_number: 1,
+						episode_number: page,
 						rating: page === 1 ? 7.5 : 0.5,
 					},
 				],
@@ -37,7 +40,7 @@ test("TMDB reads all six paginated lists, rounds half steps up and leaves v3 rat
 		},
 	})
 	const parsed = await client.readAccount("account", "member-secret")
-	assert.equal(requests.length, 8)
+	assert.equal(requests.length, 10)
 	assert.equal(parsed.source, "tmdb")
 	assert.deepEqual(
 		parsed.observations.map((x) => [x.key, x.score ?? null, x.addedAt]),
@@ -50,6 +53,26 @@ test("TMDB reads all six paginated lists, rounds half steps up and leaves v3 rat
 			["tmdb:rating:show:2", 1, null],
 			["tmdb:want:show:1", null, null],
 			["tmdb:favorite:show:1", null, null],
+			["tmdb:episode_rating:episode:1", 8, null],
+			["tmdb:episode_rating:episode:2", 1, null],
+		],
+	)
+	// A rated episode is an episode score of its show, in TMDB's own numbering (#759).
+	assert.deepEqual(
+		parsed.observations
+			.filter((x) => x.kind === "episode_rating")
+			.map((x) => [
+				x.scoreScope,
+				x.mediaType,
+				x.tmdbId,
+				x.episodeTmdbId,
+				x.season,
+				x.episode,
+				x.episodeNumbering,
+			]),
+		[
+			["episode", "show", 1396, 1, 1, 1, "tmdb"],
+			["episode", "show", 1396, 2, 1, 2, "tmdb"],
 		],
 	)
 	assert.ok(
@@ -58,9 +81,67 @@ test("TMDB reads all six paginated lists, rounds half steps up and leaves v3 rat
 		),
 	)
 	assert.match(parsed.warnings.map((w) => w.message).join(" "), /7.5 becomes 8/)
-	assert.match(
+	assert.doesNotMatch(
 		parsed.warnings.map((w) => w.message).join(" "),
-		/Episode ratings.*not read/,
+		/not read/,
+	)
+})
+
+test("rated TMDB episodes keep invalid scores visible, warn on partial reads, and refuse duplicates or unreadable rows", async () => {
+	const build = (results: unknown[], total = results.length) =>
+		createTmdbClient({
+			apiKey: "app",
+			sleep: async () => {},
+			fetch: async (url) => {
+				const episodes = String(url).includes("/rated/tv/episodes")
+				return Response.json({
+					page: 1,
+					total_pages: 1,
+					total_results: episodes ? total : 0,
+					results: episodes ? results : [],
+				})
+			},
+		})
+	const rows = [
+		{
+			id: 62085,
+			show_id: 1396,
+			season_number: 1,
+			episode_number: 1,
+			rating: 9.5,
+		},
+		{
+			id: 62086,
+			show_id: 1396,
+			season_number: 1,
+			episode_number: 2,
+			rating: 0,
+		},
+	]
+	const parsed = await build(rows).readAccount("account", "secret")
+	assert.deepEqual(
+		parsed.observations.map((x) => [
+			x.key,
+			x.score,
+			x.problem?.outcome ?? null,
+		]),
+		[
+			["tmdb:episode_rating:episode:62085", 10, null],
+			["tmdb:episode_rating:episode:62086", null, "invalid"],
+		],
+	)
+	const partial = await build(rows, 3).readAccount("account", "secret")
+	assert.match(
+		partial.warnings.map((w) => w.message).join(" "),
+		/2 of 3.*episode rated/,
+	)
+	await assert.rejects(
+		build([rows[0], rows[0]]).readAccount("account", "secret"),
+		/duplicate/,
+	)
+	await assert.rejects(
+		build([{ id: 1, rating: 8 }]).readAccount("account", "secret"),
+		/unreadable/,
 	)
 })
 
@@ -282,14 +363,22 @@ test("page counts are bounded in items, and changing counts warn while keeping t
 				page,
 				total_pages: huge ? 2501 : page === 1 ? 2 : 1,
 				total_results: page === 1 ? 2 : 1,
-				results: [{ id: page, title: "Title" }],
+				results: [
+					{
+						id: page,
+						title: "Title",
+						show_id: 1,
+						season_number: 1,
+						episode_number: page,
+					},
+				],
 			})
 		},
 	})
 	await assert.rejects(client.readAccount("account", "secret"), /50,000/)
 	huge = false
 	const parsed = await client.readAccount("account", "secret")
-	assert.equal(parsed.observations.length, 12)
+	assert.equal(parsed.observations.length, 14)
 	assert.match(parsed.warnings.map((w) => w.message).join(" "), /changed/)
 })
 

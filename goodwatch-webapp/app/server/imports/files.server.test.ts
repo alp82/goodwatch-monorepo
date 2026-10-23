@@ -182,19 +182,40 @@ describe("native import files", () => {
 		])
 	})
 
-	it("keeps season and episode ratings as distinct unsupported observations", async () => {
+	it("reads Trakt season and episode ratings as season and episode scores, never as show ratings", async () => {
+		const show = {
+			title: "A Show",
+			year: 2023,
+			ids: { trakt: 6, tmdb: 66, imdb: "tt2345678" },
+		}
 		const archive = zipFixture({
+			"ratings-seasons.json": JSON.stringify([
+				{
+					rated_at: "2026-10-01T10:00:00.000Z",
+					type: "season",
+					rating: 7,
+					show,
+					season: { number: 2, ids: { trakt: 62, tmdb: 662 } },
+				},
+				{
+					type: "season",
+					rating: 11,
+					show,
+					season: { number: 3, ids: { trakt: 63 } },
+				},
+			]),
 			"ratings-episodes.json": JSON.stringify([
 				{
+					rated_at: "2026-10-02T10:00:00.000Z",
 					type: "episode",
 					rating: 8,
-					show: { title: "A Show", year: 2023, ids: { trakt: 6, tmdb: 66 } },
+					show,
 					episode: { season: 1, number: 1, ids: { trakt: 71, tmdb: 771 } },
 				},
 				{
 					type: "episode",
 					rating: 9,
-					show: { title: "A Show", year: 2023, ids: { trakt: 6, tmdb: 66 } },
+					show,
 					episode: { season: 1, number: 2, ids: { trakt: 72, tmdb: 772 } },
 				},
 			]),
@@ -202,14 +223,94 @@ describe("native import files", () => {
 
 		const parsed = await parseImportFile("trakt", archive)
 
-		assert.equal(new Set(parsed.observations.map(({ key }) => key)).size, 2)
 		assert.deepEqual(
-			parsed.observations.map(({ kind }) => kind),
-			["unsupported", "unsupported"],
+			[...parsed.observations]
+				.sort(
+					(a, b) =>
+						Number(a.scoreScope === "episode") -
+							Number(b.scoreScope === "episode") || a.key.localeCompare(b.key),
+				)
+				.map((x) => [
+					x.key,
+					x.kind,
+					x.scoreScope,
+					x.mediaType,
+					x.tmdbId,
+					x.imdbId,
+					x.season,
+					x.episode ?? null,
+					x.episodeTmdbId ?? null,
+					x.episodeNumbering ?? null,
+					x.score,
+					x.addedAt ?? null,
+					x.problem?.outcome ?? null,
+				]),
+			[
+				[
+					"trakt:episode_rating:season:62",
+					"episode_rating",
+					"season",
+					"show",
+					66,
+					"tt2345678",
+					2,
+					null,
+					null,
+					null,
+					7,
+					"2026-10-01T10:00:00.000Z",
+					null,
+				],
+				[
+					"trakt:episode_rating:season:63",
+					"episode_rating",
+					"season",
+					"show",
+					66,
+					"tt2345678",
+					3,
+					null,
+					null,
+					null,
+					null,
+					null,
+					"invalid",
+				],
+				[
+					"trakt:episode_rating:episode:71",
+					"episode_rating",
+					"episode",
+					"show",
+					66,
+					"tt2345678",
+					1,
+					1,
+					771,
+					"tmdb",
+					8,
+					"2026-10-02T10:00:00.000Z",
+					null,
+				],
+				[
+					"trakt:episode_rating:episode:72",
+					"episode_rating",
+					"episode",
+					"show",
+					66,
+					"tt2345678",
+					1,
+					2,
+					772,
+					"tmdb",
+					9,
+					null,
+					null,
+				],
+			],
 		)
-		assert.match(
-			parsed.observations[0].problem?.reason ?? "",
-			/episode ratings/,
+		assert.doesNotMatch(
+			parsed.warnings.map((w) => w.message).join(" "),
+			/unsupported/,
 		)
 	})
 

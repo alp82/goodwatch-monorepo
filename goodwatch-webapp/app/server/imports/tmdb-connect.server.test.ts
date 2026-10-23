@@ -697,7 +697,17 @@ test("the v3 client and connection flow delete sessions after success, list fail
 						page: 1,
 						total_pages: 1,
 						total_results: 1,
-						results: [{ id: 862, title: "Toy Story", rating: 7.5 }],
+						results: [
+							url.pathname.endsWith("/rated/tv/episodes")
+								? {
+										id: 62085,
+										show_id: 1396,
+										season_number: 1,
+										episode_number: 1,
+										rating: 9,
+									}
+								: { id: 862, title: "Toy Story", rating: 7.5 },
+						],
 					}),
 				)
 			},

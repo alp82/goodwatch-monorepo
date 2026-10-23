@@ -12,6 +12,7 @@ import {
 	timeoutSetting,
 	withBackendTimeout,
 } from "../../utils/backend-timeout.ts"
+import { episodeScoreObservation } from "./episode-rating-observations.server.ts"
 
 /** Only fixed messages cross this boundary: fetch errors and TMDB bodies can contain credentials. */
 export class TmdbError extends Error {
@@ -45,6 +46,55 @@ const pageSchema = z.object({
 		}),
 	),
 })
+
+/** A rated episode names its show and its place in TMDB's own numbering. */
+const ratedEpisode = z.object({
+	id: z.number().int().positive(),
+	show_id: z.number().int().positive(),
+	season_number: z.number().int().nonnegative(),
+	episode_number: z.number().int().positive(),
+	name: z.string().optional(),
+	rating: z.unknown().optional(),
+})
+type AccountList = {
+	/** The account path after `account/<id>/`. */
+	path: string
+	/** How warnings name the list: "movie rated", "show watchlist", "episode rated". */
+	label: string
+	kind: "rating" | "want" | "favorite" | "episode_rating"
+	mediaType: "movie" | "show"
+}
+const ACCOUNT_LISTS: AccountList[] = [
+	...(["movie", "show"] as const).flatMap((mediaType) =>
+		(
+			[
+				["rated", "rating"],
+				["watchlist", "want"],
+				["favorite", "favorite"],
+			] as const
+		).map(([list, kind]) => ({
+			path: `${list}/${mediaType === "show" ? "tv" : "movies"}`,
+			label: `${mediaType} ${list}`,
+			kind,
+			mediaType,
+		})),
+	),
+	{
+		path: "rated/tv/episodes",
+		label: "episode rated",
+		kind: "episode_rating",
+		mediaType: "show",
+	},
+]
+/** TMDB ratings are half steps from 0.5 to 10, rounded up to a whole score; null for anything else. */
+const tmdbScore = (value: unknown) =>
+	typeof value === "number" &&
+	value >= 0.5 &&
+	value <= 10 &&
+	Number.isInteger(value * 2)
+		? Math.round(value)
+		: null
+const INVALID_TMDB_RATING = "The TMDB rating is not a half step from 0.5 to 10."
 
 export function createTmdbClient(options: {
 	apiKey: string
@@ -214,73 +264,93 @@ export function createTmdbClient(options: {
 			const deadline = Date.now() + 5 * 60_000
 			const warnings = [
 				"TMDB half-step ratings round up to whole numbers: 7.5 becomes 8; 0.5 becomes 1.",
-				"Episode ratings on TMDB were not read. TMDB v3 provides no rating dates or watch history; imported ratings are undated.",
+				"TMDB v3 provides no rating dates or watch history; imported ratings, including episode ratings, are undated.",
 			].map(importInfo)
-			for (const mediaType of ["movie", "show"] as const) {
-				for (const [list, kind] of [
-					["rated", "rating"],
-					["watchlist", "want"],
-					["favorite", "favorite"],
-				] as const) {
-					let pages = 1
-					let expected = 0
-					const ids = new Set<number>()
-					for (let page = 1; page <= pages; page++) {
-						if (Date.now() > deadline)
-							throw new TmdbError(
-								"This TMDB account took too long to read. Please try again.",
-							)
-						await sleep(30)
-						const result = pageSchema.safeParse(
-							await request(
-								`account/${encodeURIComponent(accountId)}/${list}/${mediaType === "show" ? "tv" : "movies"}?page=${page}&sort_by=created_at.asc`,
-								sessionId,
+			for (const list of ACCOUNT_LISTS) {
+				const { kind, mediaType } = list
+				let pages = 1
+				let expected = 0
+				const ids = new Set<number>()
+				for (let page = 1; page <= pages; page++) {
+					if (Date.now() > deadline)
+						throw new TmdbError(
+							"This TMDB account took too long to read. Please try again.",
+						)
+					await sleep(30)
+					const raw = await request(
+						`account/${encodeURIComponent(accountId)}/${list.path}?page=${page}&sort_by=created_at.asc`,
+						sessionId,
+					)
+					const result = pageSchema.safeParse(raw)
+					const episodes =
+						kind === "episode_rating"
+							? z.object({ results: z.array(ratedEpisode) }).safeParse(raw)
+							: null
+					if (!result.success || (episodes && !episodes.success))
+						throw new TmdbError(
+							"TMDB returned an unreadable account list. Please try again.",
+						)
+					const data = result.data
+					if (data.page !== page)
+						throw new TmdbError(
+							"TMDB returned an unexpected page. Please try again.",
+						)
+					if (
+						data.total_pages * 20 > IMPORT_MAX_ROWS ||
+						data.total_results > IMPORT_MAX_ROWS
+					)
+						throw new TmdbError(
+							"That account produces more than 50,000 import items.",
+							400,
+						)
+					if (page === 1) {
+						pages = data.total_pages
+						expected = data.total_results
+					} else if (
+						data.total_pages !== pages ||
+						data.total_results !== expected
+					) {
+						warnings.push(
+							importActionable(
+								`The TMDB ${list.label} count changed while reading. Review this partial import or connect again.`,
 							),
 						)
-						if (!result.success)
+					}
+					for (const item of data.results) {
+						if (ids.has(item.id))
 							throw new TmdbError(
-								"TMDB returned an unreadable account list. Please try again.",
+								"TMDB returned duplicate account items. Please try again.",
 							)
-						const data = result.data
-						if (data.page !== page)
-							throw new TmdbError(
-								"TMDB returned an unexpected page. Please try again.",
-							)
-						if (
-							data.total_pages * 20 > IMPORT_MAX_ROWS ||
-							data.total_results > IMPORT_MAX_ROWS
+						ids.add(item.id)
+						const score = tmdbScore(item.rating)
+						const episode = episodes?.data?.results.find(
+							(row) => row.id === item.id,
 						)
-							throw new TmdbError(
-								"That account produces more than 50,000 import items.",
-								400,
-							)
-						if (page === 1) {
-							pages = data.total_pages
-							expected = data.total_results
-						} else if (
-							data.total_pages !== pages ||
-							data.total_results !== expected
-						) {
-							warnings.push(
-								importActionable(
-									`The TMDB ${mediaType} ${list} count changed while reading. Review this partial import or connect again.`,
+						if (episode) {
+							// An episode score of its show (#759); TMDB numbers its own episodes, and names the episode.
+							observations.push(
+								episodeScoreObservation(
+									{
+										title: (episode.name ?? "").slice(0, 500),
+										year: null,
+										tmdbId: episode.show_id,
+										imdbId: null,
+										addedAt: null,
+									},
+									{
+										episodeTmdbId: episode.id,
+										episodeNumbering: "tmdb",
+										season: episode.season_number,
+										episode: episode.episode_number,
+									},
+									{
+										key: `tmdb:episode_rating:episode:${episode.id}`,
+										score,
+										invalidReason: INVALID_TMDB_RATING,
+									},
 								),
 							)
-						}
-						for (const item of data.results) {
-							if (ids.has(item.id))
-								throw new TmdbError(
-									"TMDB returned duplicate account items. Please try again.",
-								)
-							ids.add(item.id)
-							const value = item.rating
-							const score =
-								typeof value === "number" &&
-								value >= 0.5 &&
-								value <= 10 &&
-								Number.isInteger(value * 2)
-									? Math.round(value)
-									: null
+						} else {
 							const release =
 								mediaType === "movie" ? item.release_date : item.first_air_date
 							observations.push({
@@ -302,28 +372,27 @@ export function createTmdbClient(options: {
 												? {
 														problem: {
 															outcome: "invalid" as const,
-															reason:
-																"The TMDB rating is not a half step from 0.5 to 10.",
+															reason: INVALID_TMDB_RATING,
 														},
 													}
 												: {}),
 										}
 									: {}),
 							})
-							if (observations.length > IMPORT_MAX_ROWS)
-								throw new TmdbError(
-									"That account produces more than 50,000 import items.",
-									400,
-								)
 						}
+						if (observations.length > IMPORT_MAX_ROWS)
+							throw new TmdbError(
+								"That account produces more than 50,000 import items.",
+								400,
+							)
 					}
-					if (ids.size !== expected)
-						warnings.push(
-							importActionable(
-								`Read ${ids.size} of ${expected} TMDB ${mediaType} ${list} items. The list may have changed; review this partial import or connect again.`,
-							),
-						)
 				}
+				if (ids.size !== expected)
+					warnings.push(
+						importActionable(
+							`Read ${ids.size} of ${expected} TMDB ${list.label} items. The list may have changed; review this partial import or connect again.`,
+						),
+					)
 			}
 			return { source: "tmdb", observations, warnings }
 		},

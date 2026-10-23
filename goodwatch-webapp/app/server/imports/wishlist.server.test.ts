@@ -679,7 +679,7 @@ it("preserves Watcharr play identities and custom dates without adding a second 
 	)
 })
 
-it("reads finished Watcharr episodes and seasons, retaining scoped scores without rating the whole show", async () => {
+it("reads finished Watcharr episodes and seasons, and their scores as season and episode scores without rating the whole show", async () => {
 	const parsed = await parseImportFile(
 		"wishlist",
 		readFileSync(
@@ -702,13 +702,21 @@ it("reads finished Watcharr episodes and seasons, retaining scoped scores withou
 	)
 	assert.ok(watches.every((i) => i.episodeNumbering === "tmdb"))
 	const scores = parsed.observations.filter(
-		(i) => i.tmdbId === 9005 && i.kind === "unsupported" && i.score,
+		(i) => i.tmdbId === 9005 && i.kind === "episode_rating",
 	)
 	assert.deepEqual(
-		scores.map((i) => [i.season, i.episode ?? null, i.score]),
+		scores.map((i) => [
+			i.scoreScope,
+			i.mediaType,
+			i.season,
+			i.episode ?? null,
+			i.episodeNumbering,
+			i.score,
+			i.problem,
+		]),
 		[
-			[2, null, 7],
-			[1, 2, 9],
+			["season", "show", 2, null, undefined, 7, undefined],
+			["episode", "show", 1, 2, "tmdb", 9, undefined],
 		],
 	)
 	assert.equal(
@@ -897,4 +905,44 @@ it("keeps Jellyfin import, Jellyfin webhook and Plex-created movie and episode h
 			],
 		)
 	}
+})
+
+it("rounds decimal Watcharr season and episode scores like its title scores, and keeps off-scale ones invalid", async () => {
+	const parsed = await parseImportFile(
+		"wishlist",
+		bytes([
+			{
+				id: 1,
+				status: "WATCHING",
+				content: { type: "tv", tmdbId: 123, title: "Show" },
+				watchedSeasons: [
+					{ seasonNumber: 1, status: "FINISHED", rating: 7.4 },
+					{ seasonNumber: 2, status: "WATCHING", rating: 0.3 },
+				],
+				watchedEpisodes: [
+					{ seasonNumber: 1, episodeNumber: 1, status: "FINISHED", rating: 11 },
+				],
+			},
+		]),
+	)
+	assert.deepEqual(
+		parsed.observations
+			.filter((i) => i.kind === "episode_rating")
+			.map((i) => [
+				i.scoreScope,
+				i.season,
+				i.episode ?? null,
+				i.score,
+				i.problem?.outcome ?? null,
+			]),
+		[
+			["season", 1, null, 7, null],
+			["season", 2, null, 1, null],
+			["episode", 1, 1, null, "invalid"],
+		],
+	)
+	assert.match(
+		parsed.warnings.map((w) => w.message).join(" "),
+		/Decimal scores are rounded/,
+	)
 })
