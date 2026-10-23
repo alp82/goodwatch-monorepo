@@ -234,7 +234,7 @@ test("each card choice shows its card image and links to its place on the profil
 			(b) => b.label === "Share to channel",
 		)!
 		assert.equal(shareButton.custom_id, `gw1:profile-share:${choice}`)
-		assert.match(text(body), /^## @film fan on GoodWatch/)
+		assert.match(text(body), /^## @film_fan on GoodWatch/)
 		if (choice !== "profile")
 			assert.match(
 				text(body),

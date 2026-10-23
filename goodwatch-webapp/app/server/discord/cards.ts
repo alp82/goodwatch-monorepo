@@ -141,10 +141,11 @@ export const errorCard = (text: string, retryId?: string | null) =>
 		: textCard(text)
 export const ERROR_TEXT = "Something went wrong. Please try again."
 export const TIMEOUT_TEXT = "The search took too long. Please try again."
-/** Human-facing copy: displayText outside link destinations and Discord emoji syntax, which stay as they are. */
+/** Human-facing copy: displayText outside link destinations, Discord emoji syntax, and member handles (@film_fan),
+ * which stay as they are. Discord doesn't italicize underscores inside a word, so handles need no escaping. */
 export const discordText = (value: string) =>
 	value
-		.split(/(https?:\/\/[^\s)>]+|<a?:[A-Za-z0-9_]+:\d+>)/g)
+		.split(/(https?:\/\/[^\s)>]+|<a?:[A-Za-z0-9_]+:\d+>|@[a-z][a-z0-9_]*)/g)
 		.map((part, i) => (i % 2 ? part : displayText(part)))
 		.join("")
 const escape = (text: string) =>
