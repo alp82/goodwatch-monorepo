@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/server"
 import { instrument, type MCPAnalyticsOptions } from "@posthog/mcp"
 import { PostHog } from "posthog-node"
+import { INTERNAL_USER_IDS } from "../../telemetry/product-events.ts"
 import { onShutdown } from "../lifecycle.server.ts"
 
 let client: PostHog | undefined
@@ -25,7 +26,13 @@ export function mcpAnalyticsOptions(userId: string): MCPAnalyticsOptions {
 	return {
 		// The endpoint verified this identity before constructing the server.
 		identify: () => ({ distinctId: userId }),
-		eventProperties: () => ({ source: "mcp" }),
+		eventProperties: () => ({
+			source: "mcp",
+			user_id: userId,
+			$user_id: userId,
+			is_guest: false,
+			is_internal: INTERNAL_USER_IDS.has(userId),
+		}),
 		// Keep intent and operational metadata, without copying a member's library,
 		// tool arguments, or returned personal data into analytics.
 		beforeSend: (event) => {

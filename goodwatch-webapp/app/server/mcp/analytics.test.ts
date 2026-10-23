@@ -24,64 +24,73 @@ async function result(response: Response) {
 	)
 }
 
-test("stateless SDK v2 captures identity, intent and failures without tool payloads", async () => {
-	const captured: Parameters<PostHog["capture"]>[0][] = []
-	const posthog = new PostHog("test", { disabled: true })
-	posthog.capture = (event) => {
-		captured.push(event)
-	}
-	const handler = createMcpHandler(
-		() => {
-			const server = new McpServer({ name: "test", version: "1" })
-			instrument(server, posthog, mcpAnalyticsOptions("verified-member"))
-			server.registerTool(
-				"echo",
-				{ inputSchema: z.object({ text: z.string() }) },
-				async ({ text }) => ({ content: [{ type: "text", text }] }),
-			)
-			server.registerTool("fail", { inputSchema: z.object({}) }, async () => {
-				throw new Error("test failure")
-			})
-			return server
-		},
-		{ legacy: "stateless" },
-	)
-	try {
-		// No tools/list or initialize on this instance: analytics arguments must
-		// still be removed before the original strict schema runs.
-		const response = await handler.fetch(
-			rpc("tools/call", {
-				name: "echo",
-				arguments: {
-					text: "private library",
-					context: "Find something to watch",
-					llm_model: "test-model",
-				},
-			}),
-		)
-		assert.equal(response.status, 200)
-		const answer = await result(response)
-		assert.equal(answer.result.isError, undefined)
-		assert.equal(answer.result.content[0].text, "private library")
-		await result(
-			await handler.fetch(rpc("tools/call", { name: "fail", arguments: {} })),
-		)
-		const calls = captured.filter((event) => event.event === "$mcp_tool_call")
-		assert.equal(calls.length, 2)
-		assert.equal(calls[0].distinctId, "verified-member")
-		assert.equal(calls[0].properties?.source, "mcp")
-		assert.ok(JSON.stringify(calls[0]).includes("Find something to watch"))
-		assert.ok(captured.some((event) => event.event === "$exception"))
-		for (const event of captured) {
-			assert.equal(event.properties?.$mcp_parameters, undefined)
-			assert.equal(event.properties?.$mcp_response, undefined)
+for (const [userId, internal] of [
+	["verified-member", false],
+	["3a8e67d6-627b-47c3-a54f-9b873079e4a4", true],
+] as const) {
+	test(`stateless SDK v2 tags ${internal ? "internal" : "external"} members and captures intent and failures without tool payloads`, async () => {
+		const captured: Parameters<PostHog["capture"]>[0][] = []
+		const posthog = new PostHog("test", { disabled: true })
+		posthog.capture = (event) => {
+			captured.push(event)
 		}
-		assert.ok(!JSON.stringify(captured).includes("private library"))
-	} finally {
-		await handler.close()
-		await posthog.shutdown()
-	}
-})
+		const handler = createMcpHandler(
+			() => {
+				const server = new McpServer({ name: "test", version: "1" })
+				instrument(server, posthog, mcpAnalyticsOptions(userId))
+				server.registerTool(
+					"echo",
+					{ inputSchema: z.object({ text: z.string() }) },
+					async ({ text }) => ({ content: [{ type: "text", text }] }),
+				)
+				server.registerTool("fail", { inputSchema: z.object({}) }, async () => {
+					throw new Error("test failure")
+				})
+				return server
+			},
+			{ legacy: "stateless" },
+		)
+		try {
+			// No tools/list or initialize on this instance: analytics arguments must
+			// still be removed before the original strict schema runs.
+			const response = await handler.fetch(
+				rpc("tools/call", {
+					name: "echo",
+					arguments: {
+						text: "private library",
+						context: "Find something to watch",
+						llm_model: "test-model",
+					},
+				}),
+			)
+			assert.equal(response.status, 200)
+			const answer = await result(response)
+			assert.equal(answer.result.isError, undefined)
+			assert.equal(answer.result.content[0].text, "private library")
+			await result(
+				await handler.fetch(rpc("tools/call", { name: "fail", arguments: {} })),
+			)
+			const calls = captured.filter((event) => event.event === "$mcp_tool_call")
+			assert.equal(calls.length, 2)
+			assert.equal(calls[0].distinctId, userId)
+			assert.equal(calls[0].properties?.source, "mcp")
+			assert.ok(JSON.stringify(calls[0]).includes("Find something to watch"))
+			assert.ok(captured.some((event) => event.event === "$exception"))
+			for (const event of captured) {
+				assert.equal(event.properties?.user_id, userId)
+				assert.equal(event.properties?.$user_id, userId)
+				assert.equal(event.properties?.is_internal, internal)
+				assert.equal(event.properties?.is_guest, false)
+				assert.equal(event.properties?.$mcp_parameters, undefined)
+				assert.equal(event.properties?.$mcp_response, undefined)
+			}
+			assert.ok(!JSON.stringify(captured).includes("private library"))
+		} finally {
+			await handler.close()
+			await posthog.shutdown()
+		}
+	})
+}
 
 test("disabled analytics leaves advertised tool schemas unchanged", async () => {
 	const previous = { ...process.env }

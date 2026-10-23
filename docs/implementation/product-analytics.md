@@ -88,6 +88,15 @@ browser events retain their PostHog identity, with `is_guest: true`. The two exi
 internal member IDs are tagged and the project's test-user exclusions include
 both their old email IDs and their immutable IDs.
 
+MCP instrumentation uses the same `INTERNAL_USER_IDS` list and emits `user_id`,
+`$user_id`, `is_guest: false` and `is_internal` on every captured event. Internal
+traffic filtering must use member identity rather than the event sender's IP:
+PostHog can assign the server's egress IP to all members' backend events.
+The project excludes the two internal IDs through the person `user_id` property,
+including historical MCP events that lack event-level identity properties.
+On October 23, 2026, `157.90.157.44` was removed from the excluded-IP list; the
+localhost, remaining IP and legacy event `$user_id` exclusions were preserved.
+
 The browser links a persisted legacy email identity before switching to the
 account ID. The migration CLI links existing analytics identities before a
 historical import creates new member profiles. Never use an arbitrary form email
