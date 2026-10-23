@@ -1043,9 +1043,10 @@ SCHEMAS = {
     # ===== Webapp: share lists and public profiles (docs/implementation/share-lists/README.md) =====
     # ============================
     # Deletes are soft: rows get deleted_at (and released_at for renamed handles), and every read filters them out.
-    # A person's ranking of exactly five titles. items is in rank order.
+    # Ranked share cards and imported collections. items is in source/rank order.
     "user_list": {
         "columns": {
+            "collection_metadata": "TEXT",
             "id": "TEXT",
             "user_id": "TEXT NOT NULL",
             "title": "TEXT NOT NULL",

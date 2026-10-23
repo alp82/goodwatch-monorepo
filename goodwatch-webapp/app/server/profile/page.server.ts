@@ -235,7 +235,9 @@ export async function loadProfileOverview(
 		? (await listCards(ownerId, shell)).map((list) => ({
 				id: list.id,
 				title: list.title,
-				href: `${profilePath(shell.handle)}/lists/${list.id}`,
+				href: list.collection
+					? `/lists/${list.id}`
+					: `${profilePath(shell.handle)}/lists/${list.id}`,
 				posters: list.items.map((item) => item.poster),
 			}))
 		: []
@@ -421,15 +423,20 @@ async function listCards(
 		(a, b) => b.createdAt.localeCompare(a.createdAt),
 	)
 	const titles: CardTitle[] = owner
-		? await resolveCardTitles(lists.flatMap((l) => l.items))
+		? await resolveCardTitles(
+				lists.flatMap((l) => (l.collection ? l.items.slice(0, 5) : l.items)),
+			)
 		: (page?.titles ?? [])
 	const byKey = new Map(titles.map((t) => [t.key, t]))
 	return lists.map((list) => ({
 		id: list.id,
 		title: list.title,
+		...(list.collection
+			? { collection: true, itemCount: list.items.length }
+			: {}),
 		design: list.design,
 		theme: list.theme,
-		items: list.items
+		items: (list.collection ? list.items.slice(0, 5) : list.items)
 			.map((e) => byKey.get(entryKey(e)))
 			.filter((t): t is CardTitle => t !== undefined),
 		date: cardDate(new Date(list.createdAt)),

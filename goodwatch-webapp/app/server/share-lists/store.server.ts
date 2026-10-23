@@ -52,9 +52,16 @@ export {
 	normalizeHandle,
 } from "~/utils/handles"
 
-export type Visibility = "public" | "unlisted"
+export type Visibility = "public" | "unlisted" | "private"
+export interface ListCollection {
+	entryNotes?: string[]
+	importedBy?: { importId: string; item: number }
+	description: string
+	notes: Record<string, string>
+}
 
 export interface ShareList {
+	collection?: ListCollection
 	id: string
 	userId: string
 	title: string
@@ -70,6 +77,7 @@ export interface ShareList {
 }
 
 export interface ShareListInput {
+	collection?: ListCollection
 	title: string
 	promptId: string | null
 	design: string
@@ -128,13 +136,14 @@ export function newListId(length = 10) {
 
 /** Identifies what a list's card shows. The card image URL carries it. */
 export function contentHash(
-	list: Pick<ShareList, "design" | "theme" | "title" | "items">,
+	list: Pick<ShareList, "design" | "theme" | "title" | "items" | "collection">,
 ) {
 	const content = JSON.stringify([
 		list.design,
 		list.theme,
 		list.title,
 		list.items.map(entryKey),
+		...(list.collection ? [list.collection] : []),
 	])
 	return createHash("sha256").update(content).digest("base64url").slice(0, 12)
 }
@@ -144,12 +153,15 @@ const clean = (text: unknown) =>
 
 /** Checks and normalizes a list, including that every title exists in the catalog. */
 export async function validateList(input: ShareListInput) {
-	const title = clean(input.title)
+	const title =
+		input.collection && typeof input.title === "string"
+			? input.title.trim()
+			: clean(input.title)
 	if (!title) throw new ShareListError(400, "Give the list a title.")
-	if (title.length > TITLE_MAX_LENGTH)
+	if (title.length > (input.collection ? 1000 : TITLE_MAX_LENGTH))
 		throw new ShareListError(
 			400,
-			`Titles can be up to ${TITLE_MAX_LENGTH} characters.`,
+			`Titles can be up to ${input.collection ? 1000 : TITLE_MAX_LENGTH} characters.`,
 		)
 	if (!isDesignKey(input.design))
 		throw new ShareListError(400, "Unknown card design.")
@@ -158,22 +170,57 @@ export async function validateList(input: ShareListInput) {
 	const promptId =
 		input.promptId && isPromptId(input.promptId) ? input.promptId : null
 	const visibility = input.visibility ?? "public"
-	if (visibility !== "public" && visibility !== "unlisted")
+	if (
+		visibility !== "public" &&
+		visibility !== "unlisted" &&
+		visibility !== "private"
+	)
 		throw new ShareListError(400, "Unknown visibility.")
 
-	if (!Array.isArray(input.items) || input.items.length !== LIST_SIZE)
-		throw new ShareListError(400, `A list has exactly ${LIST_SIZE} titles.`)
+	if (
+		!Array.isArray(input.items) ||
+		(input.collection
+			? input.items.length > 50_000
+			: input.items.length !== LIST_SIZE)
+	)
+		throw new ShareListError(
+			400,
+			input.collection
+				? "A list can contain up to 50,000 titles."
+				: `A list has exactly ${LIST_SIZE} titles.`,
+		)
 	const items = input.items.map((key) => parseTitleKey(String(key)))
 	if (items.some((item) => !item))
 		throw new ShareListError(400, "Unknown title.")
 	const entries = items as ListEntry[]
-	if (new Set(entries.map(entryKey)).size !== entries.length)
+	if (
+		!input.collection &&
+		new Set(entries.map(entryKey)).size !== entries.length
+	)
 		throw new ShareListError(400, "Each title can appear once.")
 	const found = await resolveCardTitles(entries)
 	if (found.length !== entries.length)
 		throw new ShareListError(400, "Some titles aren't in the catalog.")
 
+	if (
+		input.collection?.entryNotes &&
+		(!Array.isArray(input.collection.entryNotes) ||
+			input.collection.entryNotes.length !== entries.length ||
+			input.collection.entryNotes.some((note) => typeof note !== "string"))
+	)
+		throw new ShareListError(400, "Invalid per-entry list notes.")
+	if (
+		input.collection &&
+		(typeof input.collection.description !== "string" ||
+			!input.collection.notes ||
+			typeof input.collection.notes !== "object" ||
+			Object.values(input.collection.notes).some(
+				(value) => typeof value !== "string",
+			))
+	)
+		throw new ShareListError(400, "Invalid list notes.")
 	return {
+		...(input.collection ? { collection: input.collection } : {}),
 		title,
 		design: input.design,
 		theme: input.theme,
@@ -206,18 +253,29 @@ export { publicListsByUser, getProfileByHandle } from "./view.server"
 export async function createList(
 	userId: string,
 	input: ShareListInput,
+	options: { id?: string } = {},
 ): Promise<ShareList> {
-	await requireHandle(userId)
+	if (input.visibility !== "private") await requireHandle(userId)
 	const valid = await validateList(input)
 	const remixedFrom = input.remixedFrom
 		? ((await getList(input.remixedFrom))?.id ?? null)
 		: null
 	const now = new Date()
-	const id = newListId()
+	const id = options.id ?? newListId()
+	if (!/^[0-9A-Za-z]{10}$/.test(id))
+		throw new ShareListError(400, "Invalid list ID.")
 	const hash = contentHash(valid)
+	if (options.id) {
+		const existing = await getList(id)
+		if (existing) {
+			if (existing.userId !== userId || existing.contentHash !== hash)
+				throw new ShareListError(409, "That list ID is already used.")
+			return existing
+		}
+	}
 	try {
 		await run(
-			`INSERT INTO doc.user_list (${LIST_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			`INSERT INTO doc.user_list (${LIST_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			[
 				id,
 				userId,
@@ -231,6 +289,7 @@ export async function createList(
 				hash,
 				now,
 				now,
+				valid.collection ? JSON.stringify(valid.collection) : null,
 			],
 		)
 		await refreshLists()
@@ -238,11 +297,12 @@ export async function createList(
 		await resetListView(id)
 	}
 	const saved = (await getList(id)) as ShareList
-	if (saved) captureProductEvent(userId, "list saved", {
-		list_id: id,
-		item_count: saved.items.length,
-		visibility: saved.visibility,
-	})
+	if (saved)
+		captureProductEvent(userId, "list saved", {
+			list_id: id,
+			item_count: saved.items.length,
+			visibility: saved.visibility,
+		})
 	return saved
 }
 
@@ -252,8 +312,9 @@ export async function updateList(
 	input: ShareListInput,
 	options: { expectedContentHash?: string; expectedUpdatedAt?: string } = {},
 ): Promise<ShareList> {
-	await requireHandle(userId)
 	const current = await ownedList(userId, id)
+	if ((input.visibility ?? current.visibility) !== "private")
+		await requireHandle(userId)
 	if (
 		options.expectedContentHash !== undefined &&
 		current.contentHash !== options.expectedContentHash
@@ -264,6 +325,9 @@ export async function updateList(
 		)
 	const valid = await validateList({
 		...input,
+		...(current.collection
+			? { collection: input.collection ?? current.collection }
+			: {}),
 		visibility: input.visibility ?? current.visibility,
 	})
 	// MCP edits keep the five-title invariant without overwriting an intervening site or MCP edit.
@@ -298,7 +362,7 @@ export async function updateList(
 	try {
 		const result = await run(
 			`UPDATE doc.user_list SET title = ?, prompt_id = ?, design = ?, theme = ?, items = ?, visibility = ?,
-			 content_hash = ?, updated_at = ? WHERE id = ? AND ${version ? "_seq_no = ? AND _primary_term = ?" : "user_id = ? AND deleted_at IS NULL"}`,
+			 content_hash = ?, updated_at = ?, collection_metadata = ? WHERE id = ? AND ${version ? "_seq_no = ? AND _primary_term = ?" : "user_id = ? AND deleted_at IS NULL"}`,
 			[
 				valid.title,
 				valid.promptId,
@@ -308,6 +372,7 @@ export async function updateList(
 				valid.visibility,
 				contentHash(valid),
 				new Date(),
+				valid.collection ? JSON.stringify(valid.collection) : null,
 				id,
 				...(version ? [version.seq, version.term] : [userId]),
 			],
@@ -322,11 +387,12 @@ export async function updateList(
 		await resetListView(id)
 	}
 	const saved = (await getList(id)) as ShareList
-	if (saved) captureProductEvent(userId, "list saved", {
-		list_id: id,
-		item_count: saved.items.length,
-		visibility: saved.visibility,
-	})
+	if (saved)
+		captureProductEvent(userId, "list saved", {
+			list_id: id,
+			item_count: saved.items.length,
+			visibility: saved.visibility,
+		})
 	return saved
 }
 
@@ -335,9 +401,13 @@ export async function setListVisibility(
 	id: string,
 	visibility: Visibility,
 ): Promise<ShareList> {
-	if (visibility !== "public" && visibility !== "unlisted")
+	if (
+		visibility !== "public" &&
+		visibility !== "unlisted" &&
+		visibility !== "private"
+	)
 		throw new ShareListError(400, "Unknown visibility.")
-	await requireHandle(userId)
+	if (visibility !== "private") await requireHandle(userId)
 	await ownedList(userId, id)
 	try {
 		await run(
@@ -349,11 +419,12 @@ export async function setListVisibility(
 		await resetListView(id)
 	}
 	const saved = (await getList(id)) as ShareList
-	if (saved) captureProductEvent(userId, "list saved", {
-		list_id: id,
-		item_count: saved.items.length,
-		visibility: saved.visibility,
-	})
+	if (saved)
+		captureProductEvent(userId, "list saved", {
+			list_id: id,
+			item_count: saved.items.length,
+			visibility: saved.visibility,
+		})
 	return saved
 }
 

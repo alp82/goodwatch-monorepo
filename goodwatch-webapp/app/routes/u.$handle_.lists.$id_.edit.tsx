@@ -27,7 +27,11 @@ import { ShareListEditor } from "~/ui/share-list-editor/ShareListEditor"
 import { getUserIdFromRequest } from "~/utils/auth"
 
 // A list or profile can come back (Undo, a restored account), so "not found" must never be cached.
-const notFound = () => new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } })
+const notFound = () =>
+	new Response("Not found", {
+		status: 404,
+		headers: { "Cache-Control": "private, no-store" },
+	})
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -40,6 +44,10 @@ async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 	const userId = await getUserIdFromRequest({ request })
 	if (userId !== list.userId)
 		return redirect(shareListPath(owner.handle, list.id), {
+			headers: { "Cache-Control": "private, no-store" },
+		})
+	if (list.collection)
+		return redirect(`/lists/${list.id}`, {
 			headers: { "Cache-Control": "private, no-store" },
 		})
 	if (params.handle !== owner.handle)

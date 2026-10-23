@@ -21,7 +21,11 @@ import { SHARE_LIST_PAGE_CACHE_CONTROL } from "~/utils/auth-cookie"
 import { duplicateProviderMapping } from "~/utils/streaming-links"
 
 // A list or profile can come back, so never cache a missing page.
-const notFound = () => new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } })
+const notFound = () =>
+	new Response("Not found", {
+		status: 404,
+		headers: { "Cache-Control": "private, no-store" },
+	})
 
 type ShareListDependencies = {
 	getListView: typeof getListView
@@ -122,21 +126,26 @@ export function createProfilePageLoader(deps: ProfileDependencies) {
 		const isOwner = viewerId === profile.userId
 		// Newest first for everyone, so the grid doesn't reorder when the owner changes a list.
 		const lists = (
-			isOwner
-				? await deps.listsByUser(profile.userId)
-				: page.lists
+			isOwner ? await deps.listsByUser(profile.userId) : page.lists
 		).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 		// One catalog lookup for every card on the page.
 		const titles = isOwner
-			? await deps.resolveCardTitles(lists.flatMap((list) => list.items))
+			? await deps.resolveCardTitles(
+					lists.flatMap((list) =>
+						list.collection ? list.items.slice(0, 5) : list.items,
+					),
+				)
 			: page.titles
 		const byKey = new Map(titles.map((t) => [t.key, t]))
 		const summaries: ShareListSummary[] = lists.map((list) => ({
 			id: list.id,
 			title: list.title,
+			...(list.collection
+				? { collection: true, itemCount: list.items.length }
+				: {}),
 			design: list.design,
 			theme: list.theme,
-			items: list.items
+			items: (list.collection ? list.items.slice(0, 5) : list.items)
 				.map((e) => byKey.get(entryKey(e)))
 				.filter((t): t is CardTitle => t !== undefined),
 			date: cardDate(new Date(list.createdAt)),
@@ -151,9 +160,10 @@ export function createProfilePageLoader(deps: ProfileDependencies) {
 			// Anonymous views share the short lifetime (see docs/page-cache.md). Member views stay private.
 			{
 				headers: {
-					"Cache-Control": viewerId == null
-						? SHARE_LIST_PAGE_CACHE_CONTROL
-						: "private, no-store",
+					"Cache-Control":
+						viewerId == null
+							? SHARE_LIST_PAGE_CACHE_CONTROL
+							: "private, no-store",
 				},
 			},
 		)

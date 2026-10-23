@@ -523,6 +523,11 @@ async function applyRunStored(
 							...(ownScores.get(ref(item)) ?? []),
 							journal.after,
 						])
+				} else if (item.kind === "list") {
+					const { applyImportedList } = await import(
+						"./custom-list-apply.server.ts"
+					)
+					state = await applyImportedList(userId, id, item)
 				} else if (isWant(item))
 					state = await applySet(
 						userId,
@@ -873,7 +878,12 @@ async function undoImportStored(
 			let outcome: UndoOutcome | null = null
 			if (item.kind === "rating" || item.kind === "review")
 				outcome = await undoScore(userId, id, item)
-			else if (isWant(item) || item.kind === "favorite")
+			else if (item.kind === "list") {
+				const { undoImportedList } = await import(
+					"./custom-list-apply.server.ts"
+				)
+				outcome = await undoImportedList(userId, item)
+			} else if (isWant(item) || item.kind === "favorite")
 				outcome = await undoSet(
 					userId,
 					id,

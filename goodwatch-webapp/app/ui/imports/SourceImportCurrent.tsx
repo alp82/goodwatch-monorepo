@@ -255,10 +255,12 @@ function Receipt({
 					.
 				</p>
 			))}
-			{summary.source === "imdb_list" && (
+			{(summary.source === "imdb_list" || (summary.kinds.list ?? 0) > 0) && (
 				<details className="space-y-3">
 					<summary className="cursor-pointer font-semibold text-gray-100">
-						Original IMDb list entries
+						{summary.source === "imdb_list"
+							? "Original IMDb list entries"
+							: "Lists and original export entries"}
 					</summary>
 					<ul className="divide-y divide-slate-800 rounded-lg border border-slate-700">
 						{(

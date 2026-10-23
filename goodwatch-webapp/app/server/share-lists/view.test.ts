@@ -697,10 +697,16 @@ test("profile page lifetime is 10 seconds fresh and 20 seconds physical", async 
 	assert.equal(redis.writes.find((write) => write.key === pageKey())?.ttl, 20)
 	t.mock.timers.tick(9999)
 	await getProfilePage("filmfan")
-	assert.match(renderMetrics(), /cache="share-profile-page-v1",result="hit"\} 1/)
+	assert.match(
+		renderMetrics(),
+		/cache="share-profile-page-v1",result="hit"\} 1/,
+	)
 	t.mock.timers.tick(2)
 	await getProfilePage("filmfan")
-	assert.match(renderMetrics(), /cache="share-profile-page-v1",result="stale"\} 1/)
+	assert.match(
+		renderMetrics(),
+		/cache="share-profile-page-v1",result="stale"\} 1/,
+	)
 	await tick()
 	await resetProfileViews(user)
 	assert.equal(
@@ -714,11 +720,21 @@ test("profile page lifetime is 10 seconds fresh and 20 seconds physical", async 
 for (const confirmed of [false, true])
 	test(`profile reset drops a page stored during the data reset: confirmed=${confirmed}`, async (t) => {
 		const variant = { body: Buffer.from("old"), etag: "old", headers: {} }
-		const storePage = (key: string, path: string) => pageCache.entries.set(key, {
-			key, path, route: "profile", storedAt: 0, freshUntil: 10_000,
-			staleUntil: 20_000, br: variant, gzip: variant, identityLength: 3,
-			identityEtag: "old", headers: {}, bytes: 0,
-		})
+		const storePage = (key: string, path: string) =>
+			pageCache.entries.set(key, {
+				key,
+				path,
+				route: "profile",
+				storedAt: 0,
+				freshUntil: 10_000,
+				staleUntil: 20_000,
+				br: variant,
+				gzip: variant,
+				identityLength: 3,
+				identityEtag: "old",
+				headers: {},
+				bytes: 0,
+			})
 		storePage("before-reset", "/u/filmfan")
 		storePage("trailing-slash", "/u/FilmFan/")
 		storePage("list-page", `/u/filmfan/lists/${id}`)
@@ -746,3 +762,64 @@ for (const confirmed of [false, true])
 			resetPageCache()
 		}
 	})
+
+test("a member without a handle saves an ordered private imported list of any length with source notes in the existing list store", async () => {
+	db.profiles.clear()
+	const created = await store.createList(user, {
+		...input,
+		title: "A source list with six titles",
+		items: ["movie:6", "movie:1", "movie:5", "movie:3", "movie:2", "movie:4"],
+		visibility: "private",
+		collection: {
+			description: "Source description",
+			notes: { "movie:6": "First note\nSecond line" },
+		},
+	})
+	assert.equal(created.visibility, "private")
+	assert.equal(created.title, "A source list with six titles")
+	assert.deepEqual(
+		created.items.map((entry) => entry.tmdb_id),
+		[6, 1, 5, 3, 2, 4],
+	)
+	assert.equal(
+		(await store.getList(created.id))?.collection?.notes["movie:6"],
+		"First note\nSecond line",
+	)
+	await store.deleteList(user, created.id)
+	assert.equal(await store.getList(created.id), null)
+})
+
+test("private imported lists never enter the public list/card view, even for an owner with a handle", async () => {
+	const created = await store.createList(user, {
+		...input,
+		visibility: "private",
+		collection: { description: "Private notes", notes: {} },
+	})
+	assert.equal(await getListView(created.id), null)
+	assert.equal(
+		(await store.listsByUser(user)).some((list) => list.id === created.id),
+		true,
+	)
+})
+
+test("an imported list retry cannot adopt an existing list with the same title and titles", async () => {
+	db.lists.get(id)!.content_hash = store.contentHash({
+		...input,
+		theme: "ember",
+		items: entries,
+	})
+	await assert.rejects(
+		store.createList(
+			user,
+			{
+				...input,
+				visibility: "private",
+				collection: { description: "Imported copy", notes: {} },
+			},
+			{ id },
+		),
+		(error: unknown) =>
+			error instanceof store.ShareListError && error.status === 409,
+	)
+	assert.equal((await store.getList(id))?.visibility, "public")
+})

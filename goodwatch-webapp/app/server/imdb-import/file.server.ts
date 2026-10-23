@@ -3,6 +3,7 @@ import {
 	type ImdbListKind,
 } from "../../domain/imdb-file.ts"
 import {
+	type ImportCustomList,
 	type ImportObservation,
 	type ParsedImport,
 	importInfo,
@@ -238,6 +239,7 @@ export function readRatingsFile(text: string): FileRow[] {
 export function readImdbListFile(
 	csv: string,
 	kind: ImdbListKind,
+	listName = "IMDb list",
 ): ParsedImport {
 	const table = parseCsv(csv)
 	if (!table.length) throw new ImdbImportError(400, "That file is empty.")
@@ -253,9 +255,17 @@ export function readImdbListFile(
 		)
 	const header = table[0].map((value) => value.trim().toLowerCase())
 	const observations: ImportObservation[] = []
+	const customList: ImportCustomList = {
+		sourceId: "imdb:custom-list",
+		name: listName,
+		description: "",
+		entries: [],
+	}
 	const warnings = [
 		importInfo(
-			"IMDb Created is the date a title was added to the list. It is not a viewing date. List order, notes and modification dates are kept in this receipt; they aren't applied as ratings, reviews or watch history.",
+			kind === "custom-list"
+				? "Custom lists keep their name, order and notes. They start private. Importing this list again creates another list; no watch history or Want to See is inferred."
+				: "IMDb Created is the date a title was added to the list. It is not a viewing date. List order, notes and modification dates are kept in this receipt; they aren't applied as ratings, reviews or watch history.",
 		),
 	]
 	const validDay = (value: string) =>
@@ -323,16 +333,25 @@ export function readImdbListFile(
 			observations.push({ ...base, key: `${base.key}:${suffix}`, ...values })
 		}
 		if (kind === "watchlist" && !base.problem) add("want", { kind: "want" })
-		else
+		else if (kind === "watchlist")
 			add("membership", {
 				kind: "unsupported",
 				problem: base.problem ?? {
 					outcome: "unsupported",
-					reason:
-						"Custom-list membership and order aren't stored yet. No Want to See is inferred.",
+					reason: "This Watchlist entry cannot be imported.",
 				},
 			})
-		if (created && !validDay(created))
+		if (kind === "custom-list")
+			customList.entries.push({
+				position:
+					Number.isSafeInteger(Number(get("position"))) &&
+					Number(get("position")) > 0
+						? Number(get("position"))
+						: index + 1,
+				note: base.imdbList!.description,
+				entry: base,
+			})
+		if (kind === "watchlist" && created && !validDay(created))
 			warnings.push(
 				importActionable(
 					`Row ${index + 1}: the list-added date cannot be read unambiguously. GoodWatch uses the import date for the new wish; the original is kept in its list details.`,
@@ -364,6 +383,19 @@ export function readImdbListFile(
 						"This IMDb list note is kept here. It is not imported as a review.",
 				},
 			})
+	}
+	if (kind === "custom-list") {
+		customList.entries.sort((a, b) => a.position - b.position)
+		observations.push({
+			key: "imdb:custom-list",
+			kind: "list",
+			title: listName,
+			year: null,
+			mediaType: "movie",
+			tmdbId: null,
+			imdbId: null,
+			customList,
+		})
 	}
 	if (!observations.length)
 		throw new ImdbImportError(400, "That file has no list entries in it.")

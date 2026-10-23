@@ -187,8 +187,9 @@ CREATE TABLE IF NOT EXISTS doc.user_list (
   design TEXT NOT NULL,            -- card design key
   theme TEXT NOT NULL,             -- color theme key
   signature TEXT,                  -- unused since issue #170; cards print the owner's @handle
-  items ARRAY(OBJECT(STRICT) AS (media_type TEXT, tmdb_id BIGINT)),  -- exactly 5, in rank order
-  visibility TEXT NOT NULL,        -- 'public' or 'unlisted'
+  items ARRAY(OBJECT(STRICT) AS (media_type TEXT, tmdb_id BIGINT)),  -- rank/source order
+  visibility TEXT NOT NULL,        -- 'public', 'unlisted' or 'private'
+  collection_metadata TEXT,        -- imported-list description, notes and receipt identity; NULL for five-title cards
   remixed_from TEXT,               -- source list id for a remix
   content_hash TEXT NOT NULL,      -- hash of what the card shows; versions the image URL
   created_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -348,3 +349,20 @@ One tracking issue links these slices. Each slice is sized for one agent.
    into onboarding.
 8. **My lists:** the owner's view of `/u/:handle` with edit, share, delete, and visibility, linked from Taste.
 9. **Taste entry point:** "Share your top 5", prefilled from the person's highest-rated titles.
+
+## Imported lists (#758)
+
+Imported lists extend this same `doc.user_list` store and its create/delete/visibility
+functions. The five-title card editor stays scoped to share cards. Imported lists
+retain source names, arbitrary-length ordered movie/show contents and source notes,
+using `collection_metadata` for their description, notes and import identity.
+They start **private**, including for members without a handle. `/lists/mine` shows
+them; `/lists/:id` checks ownership before reading private contents and can share
+them via the existing visibility API and handle picker. Their pages always answer
+`private, no-store`; private lists and imported collections have no public card
+image. Reimport creates a new ID; an interrupted attempt resumes its original ID.
+
+Apply [the migration](imported-lists-migration.sql) before deploying. The Windmill
+Crate schema also includes the column for new installations. No migration has
+been run against a live database in this implementation session. See the
+[import mapping and validation](../imports/custom-lists.md).

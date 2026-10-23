@@ -22,6 +22,7 @@ const select = <T extends {}>(sql: string, params: unknown[]) =>
 	query<T>(sql, params as (string | number | Date)[])
 
 export type ListRow = {
+	collection_metadata?: string | null
 	id: string
 	user_id: string
 	title: string
@@ -36,9 +37,12 @@ export type ListRow = {
 	updated_at: number
 }
 export const LIST_COLUMNS =
-	"id, user_id, title, prompt_id, design, theme, items, visibility, remixed_from, content_hash, created_at, updated_at"
+	"id, user_id, title, prompt_id, design, theme, items, visibility, remixed_from, content_hash, created_at, updated_at, collection_metadata"
 
 export const fromRow = (r: ListRow): ShareList => ({
+	...(r.collection_metadata
+		? { collection: JSON.parse(r.collection_metadata) }
+		: {}),
 	id: r.id,
 	userId: r.user_id,
 	title: r.title,
@@ -167,7 +171,9 @@ export async function getProfilePage(
 			if (!profile) return { found: false }
 			const lists = await publicListsByUser(profile.userId)
 			const titles = await resolveCardTitles(
-				lists.flatMap((list) => list.items),
+				lists.flatMap((list) =>
+					list.collection ? list.items.slice(0, 5) : list.items,
+				),
 			)
 			return { found: true, profile, lists, titles }
 		},
@@ -205,7 +211,8 @@ export async function resetProfileViews(userId: string): Promise<void> {
 
 async function readListView(id: string): Promise<ViewResult> {
 	const list = await getList(id)
-	if (!list) return { found: false }
+	if (!list || list.visibility === "private" || list.collection)
+		return { found: false }
 	const [owner, titles] = await Promise.all([
 		getProfileByUserId(list.userId),
 		resolveCardTitles(list.items),

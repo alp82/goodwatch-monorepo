@@ -330,6 +330,7 @@ function entriesOf(
 	// Rows before plans: a title is named by its first row in the export.
 	for (const row of rows) if (row.kind !== "state" && matched(row)) titleOf(row)
 	for (const row of rows) {
+		if (row.kind === "list") continue // Lists have their own receipt entries and links, rather than a synthetic movie.
 		if (!matched(row)) {
 			const skipped = unchangedEntry(row, options, () => titleOf(row))
 			if (skipped && operation === "import") {
@@ -443,10 +444,23 @@ const api = resultApi(select, async (userId, id) => {
 				"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, apply_state, watch_id, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'resolution' ORDER BY row_index LIMIT 100001",
 				[id, userId],
 			)
-			return groupImportResult(
+			const result = groupImportResult(
 				operation,
 				entriesOf(operation, importRow.source, summary.options, rows),
 			)
+			const lists = rows.filter((row) => row.kind === "list")
+			if (lists.length)
+				result.customLists = {
+					created:
+						operation === "import"
+							? lists.filter((row) => written(row.apply_state)).length
+							: 0,
+					deleted:
+						operation === "undo"
+							? lists.filter((row) => row.undo_outcome === "reverted").length
+							: 0,
+				}
+			return result
 		},
 	}
 })

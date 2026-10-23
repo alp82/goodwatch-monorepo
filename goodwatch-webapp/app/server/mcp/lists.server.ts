@@ -21,9 +21,12 @@ import type { WriteArgs } from "./write-tools.server"
 
 async function listSummary(userId: string, origin: string, list: ShareList) {
 	const owner = await getProfileByUserId(userId)
-	const url = owner
-		? new URL(shareListPath(owner.handle, list.id), origin).href
-		: null
+	const url =
+		list.collection || list.visibility === "private"
+			? new URL(`/lists/${list.id}`, origin).href
+			: owner
+				? new URL(shareListPath(owner.handle, list.id), origin).href
+				: null
 	return {
 		list_id: list.id,
 		name: list.title,
@@ -31,7 +34,7 @@ async function listSummary(userId: string, origin: string, list: ShareList) {
 		title_count: list.items.length,
 		created_at: list.createdAt,
 		updated_at: list.updatedAt,
-		share_url: url,
+		share_url: list.visibility === "private" ? null : url,
 		page_url: url,
 	}
 }
@@ -108,6 +111,13 @@ export async function changeList(
 					const type = kind === "show" ? "show" : "movie"
 					return `${type}:${canonicalTitleId(type, Number(raw))}`
 				})
+				if (existing?.collection)
+					return {
+						outcome: "refused",
+						message:
+							"Imported lists keep their full contents. The five-title card editor cannot replace them.",
+						page_url: new URL(`/lists/${existing.id}`, origin).href,
+					}
 				const before = existing
 					? await listResult(userId, origin, existing)
 					: null

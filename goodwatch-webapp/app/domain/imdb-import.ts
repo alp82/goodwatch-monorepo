@@ -103,6 +103,7 @@ export interface ImdbFilePreviewResponse {
 	import: ImdbFileSummary
 }
 export interface ImdbImportPreviewRequest {
+	listName?: string
 	listKind?: ImdbFileChoice
 	fileName: string
 	/** The file's text. */

@@ -217,8 +217,12 @@ export const IMPORT_KINDS = [
 	"favorite",
 	"review",
 	"show_status",
+	"list",
 ] as const
 export type ImportKind = (typeof IMPORT_KINDS)[number]
+export type ImportKindCounts = Record<Exclude<ImportKind, "list">, number> & {
+	list?: number
+}
 export const IMPORT_SHOW_STATUS_LABELS = {
 	watching: "Watching",
 	on_hold: "On hold",
@@ -260,7 +264,17 @@ export type ImportOutcome =
 export type ImportStatus = "preview" | "running" | "done" | "failed" | "undone"
 export const IMPORT_MAX_ROWS = 50_000
 
+export interface ImportCustomList {
+	sourceId: string
+	name: string
+	description: string
+	entries: { position: number; note: string; entry: ImportObservation }[]
+	/** Allocated before creation; stable across retry/resume of this import only. */
+	createdId?: string
+}
 export interface ImportObservation {
+	customList?: ImportCustomList
+
 	/** Original IMDb list data; notes are not reviews and Created/Date Rated are never watch dates. */
 	imdbList?: {
 		kind: "watchlist" | "custom-list"
@@ -580,7 +594,7 @@ export interface ImportSummary {
 	createdAt: string
 	finishedAt: string | null
 	counts: Record<ImportOutcome, number> & { rows: number }
-	kinds: Record<ImportKind, number>
+	kinds: ImportKindCounts
 	warnings: ImportWarning[]
 	options: ImportOptions | null
 	processed: number

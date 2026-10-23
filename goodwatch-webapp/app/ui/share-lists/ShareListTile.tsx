@@ -6,7 +6,11 @@ import type { ReactNode } from "react"
 import { ScaledCard } from "~/ui/share-card/ScaledCard"
 import { designByKey } from "~/ui/share-card/designs"
 import { shareListPath } from "~/ui/share-card/links"
-import { type CardTitle, type ThemeKey, listByline } from "~/ui/share-card/model"
+import {
+	type CardTitle,
+	type ThemeKey,
+	listByline,
+} from "~/ui/share-card/model"
 
 export interface ShareListSummary {
 	id: string
@@ -16,7 +20,9 @@ export interface ShareListSummary {
 	items: CardTitle[]
 	date: string
 	// Only sent to the owner; everyone else only ever sees public lists.
-	visibility?: "public" | "unlisted"
+	visibility?: "public" | "unlisted" | "private"
+	collection?: boolean
+	itemCount?: number
 }
 
 export function ShareListTile({
@@ -24,6 +30,22 @@ export function ShareListTile({
 	handle,
 	children,
 }: { list: ShareListSummary; handle: string; children?: ReactNode }) {
+	if (list.collection)
+		return (
+			<li className="rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
+				<Link
+					className="block break-words text-lg font-bold text-gray-100"
+					to={`/lists/${list.id}`}
+				>
+					{list.title}
+				</Link>
+				<p className="mt-2 text-sm text-gray-400">
+					{list.itemCount ?? list.items.length} titles ·{" "}
+					{list.visibility ?? "public"}
+				</p>
+				{children}
+			</li>
+		)
 	const design = designByKey(list.design)
 	return (
 		<li className="flex min-w-0 flex-col gap-3">

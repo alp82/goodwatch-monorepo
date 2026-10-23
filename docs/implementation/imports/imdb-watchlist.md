@@ -51,7 +51,7 @@ exception to automatic detection required to avoid turning an arbitrary list
 | Description | Original list note in preview/receipt, visibly unsupported as a review. |
 | Position / Modified | Original list metadata in preview/receipt; no manual Wishlist order or viewing date is inferred. |
 | Date Rated | Original rating provenance in preview/receipt, never a watch date. Rating application follows the existing shared writer. |
-| Custom-list membership | Visible unsupported observation; never automatically becomes Want to See. Its personal movie/show scores can still be imported. |
+| Custom-list membership | As of [#758](custom-lists.md), creates a named private GoodWatch list with its order and notes; never automatically becomes Want to See. Personal movie/show scores remain independent. |
 | Episode/short/game/unknown types | Visible unsupported observations retaining their list fields and supplied score. No parent-show intent is invented. |
 | Malformed personal score | Invalid score observation; an otherwise valid wish remains available. |
 | Invalid or ambiguous Created format | Original string retained and an actionable note displayed. The new GoodWatch wish uses import time rather than guessing a source date. |
@@ -60,7 +60,7 @@ The adapter preserves original list notes, positions, Created/Modified strings,
 and personal rating/date fields in stored observations. The preview's row details
 and the receipt's Original IMDb list entries disclosure expose them. An original
 CSV cannot supply a general list name/description that it does not contain; the
-uploaded filename remains on the receipt. General list storage and scoped scores
+uploaded filename remains on the receipt. General list storage is implemented in [#758](custom-lists.md); scoped scores
 remain separate destination-model work.
 
 ## Verification

@@ -28,6 +28,7 @@ export function ImdbUpload({
 	const inputRef = useRef<HTMLInputElement>(null)
 	const readSequence = useRef(0)
 	const [dragging, setDragging] = useState(false)
+	const [listName, setListName] = useState("")
 	const [listFile, setListFile] = useState<File | null>(null)
 	const [legacyAmbiguous, setLegacyAmbiguous] = useState(false)
 	const [listKind, setListKind] = useState<ImdbFileChoice | null>(null)
@@ -45,6 +46,7 @@ export function ImdbUpload({
 				if (kind === "list" || kind === "legacy-ambiguous") {
 					if (sequence === readSequence.current) {
 						setListFile(file)
+						setListName(file.name.replace(/\.csv$/i, ""))
 						setListKind(/watchlist/i.test(file.name) ? "watchlist" : null)
 						setLegacyAmbiguous(kind === "legacy-ambiguous")
 					}
@@ -159,7 +161,7 @@ export function ImdbUpload({
 								[
 									"custom-list",
 									"A custom list",
-									"Imports personal ratings. List membership, order and notes are kept in the receipt; they aren't added to Want to See.",
+									"Creates a private GoodWatch list with its original order and notes, and imports personal ratings when present.",
 								],
 							] as const)
 					).map(([value, label, detail]) => (
@@ -179,14 +181,42 @@ export function ImdbUpload({
 							</span>
 						</label>
 					))}
+					{listKind === "custom-list" && (
+						<label className="block space-y-2">
+							<span className="font-semibold text-gray-100">
+								List name on IMDb
+							</span>
+							<input
+								name="imdb-list-name"
+								className="block w-full rounded border border-slate-600 bg-slate-900 p-2 text-gray-100"
+								value={listName}
+								maxLength={1000}
+								onChange={(event) => setListName(event.target.value)}
+							/>
+							<span className="block text-sm text-gray-400">
+								The filename is filled in as a starting point. Check that it
+								matches the original list name on IMDb.
+							</span>
+						</label>
+					)}
 					<button
 						type="button"
 						className={primaryButton}
-						disabled={!listKind || preview.isPending}
+						disabled={
+							!listKind ||
+							(listKind === "custom-list" && !listName.trim()) ||
+							preview.isPending
+						}
 						onClick={() =>
 							listKind &&
 							preview.mutate(
-								{ file: listFile, listKind },
+								{
+									file: listFile,
+									listKind,
+									...(listKind === "custom-list"
+										? { listName: listName.trim() }
+										: {}),
+								},
 								{ onSuccess: (response) => onPreview(response.import) },
 							)
 						}

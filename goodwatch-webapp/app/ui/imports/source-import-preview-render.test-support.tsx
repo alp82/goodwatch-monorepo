@@ -5,6 +5,8 @@ import { importInfo } from "~/domain/imports"
 import type { FileImportSource, ImportSummary } from "~/domain/imports"
 import { SourceImportCurrent } from "./SourceImportCurrent"
 import { sourceImportKeys } from "./SourceImportHooks"
+import { ImportResultView } from "./ImportResultView"
+import { SourceItem } from "./SourceImportCounts"
 import { SourceImportPreview } from "./SourceImportPreview"
 import { SourceImportUploadPanel } from "./SourceImportUploadPanel"
 
@@ -95,8 +97,79 @@ const receipt = () => {
 	)
 }
 
+const listPreview = () =>
+	renderToStaticMarkup(
+		createElement(SourceImportPreview, {
+			summary: {
+				...summary(0),
+				kinds: { ...summary(0).kinds, rating: 0, list: 1 },
+			},
+			focus: false,
+			confirming: false,
+			error: null,
+			onConfirm: () => {},
+			onBack: () => {},
+		}),
+	)
+const listDetails = () =>
+	renderToStaticMarkup(
+		createElement(SourceItem, {
+			item: {
+				key: "list:source",
+				applyState: "added",
+				kind: "list",
+				index: 0,
+				title: "Source list",
+				mediaType: "movie",
+				year: null,
+				tmdbId: null,
+				imdbId: null,
+				outcome: "new",
+				reason: null,
+				customList: {
+					sourceId: "source",
+					name: "Source list",
+					description: "A list description",
+					createdId: "AbCd012345",
+					entries: [
+						{
+							position: 2,
+							note: "A list note, not a review.",
+							entry: {
+								key: "entry",
+								kind: "want",
+								title: "Synthetic title",
+								year: 2000,
+								mediaType: "movie",
+								tmdbId: 862,
+								imdbId: null,
+							},
+						},
+					],
+				},
+			},
+		}),
+	)
+const listReceipt = () =>
+	renderToStaticMarkup(
+		createElement(ImportResultView, {
+			result: {
+				operation: "import",
+				titles: 0,
+				sections: [],
+				customLists: { created: 1, deleted: 0 },
+			},
+			from: "source.zip",
+			focus: false,
+			putBack: () => null,
+			more: () => null,
+		}),
+	)
 process.stdout.write(
 	`__SOURCE_IMPORT_RENDER__${JSON.stringify({
+		listReceipt: listReceipt(),
+		listPreview: listPreview(),
+		listDetails: listDetails(),
 		letterboxdUpload: upload("letterboxd"),
 		traktUpload: upload("trakt"),
 		csvUpload: upload("csv"),

@@ -318,3 +318,34 @@ test("background resolution keeps the existing preview poll active until it sett
 	)
 	assert.equal(sourceImportNeedsPolling({ status: "running" }), true)
 })
+
+test("custom list previews offer Lists with private and duplicate rules, and expose source order, notes and the created-list link", () => {
+	const output = execFileSync(
+		"node_modules/.bin/vite-node",
+		[
+			"--config",
+			"app/ui/imports/source-import-test-vite.config.ts",
+			"app/ui/imports/source-import-preview-render.test-support.tsx",
+		],
+		{ encoding: "utf8" },
+	)
+	const rendered = JSON.parse(
+		output.split("__SOURCE_IMPORT_RENDER__").at(-1) ?? "",
+	)
+	assert.match(rendered.listReceipt, /1 list created/)
+	assert.doesNotMatch(
+		rendered.listReceipt,
+		/Nothing in your GoodWatch library changed/,
+	)
+	assert.match(rendered.listPreview, /Lists/)
+	assert.doesNotMatch(
+		rendered.listPreview,
+		/When GoodWatch already has different data/,
+	)
+	assert.match(rendered.listPreview, /private until you share/)
+	assert.match(rendered.listPreview, /creates a second list/)
+	assert.match(rendered.listDetails, /Source list/)
+	assert.match(rendered.listDetails, /A list note, not a review\./)
+	assert.match(rendered.listDetails, /value="2"/)
+	assert.match(rendered.listDetails, /href="\/lists\/AbCd012345"/)
+})

@@ -133,6 +133,9 @@ const radio = Array.from(
 )
 if (!radio) throw new Error("Missing explicit IMDb list choice")
 await act(async () => radio.click())
+const customListName = host.querySelector<HTMLInputElement>(
+	'input[name="imdb-list-name"]',
+)?.value
 const preview = Array.from(host.querySelectorAll("button")).find(
 	(b) => b.textContent === "Preview import",
 )!
@@ -140,7 +143,10 @@ await act(async () => {
 	preview.click()
 	await new Promise((r) => setTimeout(r, 50))
 })
-if (process.env.IMDB_UI_CHOICE !== "Ratings") {
+if (
+	!process.env.IMDB_UI_CHOICE ||
+	process.env.IMDB_UI_CHOICE === "My Watchlist"
+) {
 	const rewatch = Array.from(
 		host.querySelectorAll<HTMLInputElement>('input[name="wishlist-rewatch"]'),
 	)[1]
@@ -155,7 +161,7 @@ if (process.env.IMDB_UI_CHOICE !== "Ratings") {
 	})
 }
 process.stdout.write(
-	`__IMDB_LIST_UI__${JSON.stringify({ before, sent, initiallySelected, chooserText, text: host.textContent })}`,
+	`__IMDB_LIST_UI__${JSON.stringify({ before, sent, initiallySelected, customListName, chooserText, text: host.textContent })}`,
 )
 await act(async () => root.unmount())
 client.clear()

@@ -1,3 +1,8 @@
+import {
+	letterboxdLists,
+	traktLists,
+	isTraktCustomListFile,
+} from "./custom-list-files.server.ts"
 import { gunzipSync, inflateRawSync } from "node:zlib"
 import { SaxesParser, type SaxesTagPlain } from "saxes"
 import {
@@ -309,7 +314,7 @@ const clipped = (value: unknown, max = 300) =>
 function letterboxd(entries: ArchiveEntry[]): ParsedImport {
 	const byName = new Map(entries.map((entry) => [entry.name, entry]))
 	const warnings: string[] = []
-	const observations: ImportObservation[] = []
+	const observations: ImportObservation[] = letterboxdLists(entries)
 	let rows = 0
 	const tables = new Map<string, Array<Record<string, string>>>()
 	for (const [name, entry] of byName) {
@@ -500,7 +505,18 @@ function jsonArray(entry: ArchiveEntry): unknown[] {
 }
 
 function trakt(entries: ArchiveEntry[]): ParsedImport {
-	const observations: ImportObservation[] = []
+	const observations: ImportObservation[] = traktLists(
+		entries
+			.filter((entry) => isTraktCustomListFile(entry.name))
+			.map((entry) => ({ name: entry.name, values: jsonArray(entry) })),
+	)
+	if (
+		observations.reduce(
+			(count, row) => count + (row.customList?.entries.length ?? 0) + 1,
+			0,
+		) > IMPORT_MAX_ROWS
+	)
+		fail("That export has more than 50,000 list entries.")
 	const warnings: string[] = []
 	let rows = 0
 	const timestampCounts = new Map<string, number>()
@@ -515,11 +531,8 @@ function trakt(entries: ArchiveEntry[]): ParsedImport {
 		)
 		const isList =
 			name === "lists-watchlist.json" || name === "lists-favorites.json"
-		const isCustomList =
-			name === "lists-lists.json" ||
-			/^lists-(?!watchlist\.json$|favorites\.json$|collaborations\.json$).+\.json$/.test(
-				name,
-			)
+		const isCustomList = isTraktCustomListFile(name)
+		if (isCustomList) continue
 		if (!isHistory && !isRating && !isList && !isCustomList) continue
 		const values = jsonArray(entry)
 		rows += values.length
@@ -641,17 +654,6 @@ function trakt(entries: ArchiveEntry[]): ParsedImport {
 								},
 							}
 						: {}),
-				})
-			} else if (isCustomList) {
-				observations.push({
-					key: `trakt:unsupported-list:${name}:${sourceId}`,
-					kind: "unsupported",
-					...base,
-					title: clipped(item.name) || base.title,
-					problem: {
-						outcome: "unsupported",
-						reason: "GoodWatch doesn't import custom Trakt lists yet.",
-					},
 				})
 			} else {
 				const favorite = name === "lists-favorites.json"

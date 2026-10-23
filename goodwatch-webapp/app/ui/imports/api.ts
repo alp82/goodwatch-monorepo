@@ -138,7 +138,7 @@ export function usePreviewImdbImport() {
 	return useMutation<
 		ImdbFilePreviewResponse,
 		Error,
-		File | { file: File; listKind: ImdbFileChoice }
+		File | { file: File; listKind: ImdbFileChoice; listName?: string }
 	>({
 		mutationFn: async (input) => {
 			const file = "file" in input ? input.file : input
@@ -162,6 +162,9 @@ export function usePreviewImdbImport() {
 				fileName: file.name,
 				csv,
 				...(listKind ? { listKind } : {}),
+				...("file" in input && input.listName
+					? { listName: input.listName }
+					: {}),
 			}
 			return request<ImdbFilePreviewResponse>(`${API}/preview`, post(body))
 		},

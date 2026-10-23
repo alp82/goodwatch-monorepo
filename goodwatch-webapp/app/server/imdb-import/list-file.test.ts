@@ -110,3 +110,52 @@ it("recognizes legacy Position/Created/You rated files as ambiguous and can read
 		"2010-02-01",
 	)
 })
+
+it("turns an IMDb custom list into one named ordered list with notes while keeping its personal ratings independent", () => {
+	const parsed = readImdbListFile(
+		fixture("custom-list"),
+		"custom-list",
+		"Original IMDb list name",
+	)
+	const list = parsed.observations.find(
+		(row) => row.kind === "list",
+	)?.customList
+	assert.equal(list?.name, "Original IMDb list name")
+	assert.deepEqual(
+		list?.entries.map((item) => item.position),
+		[1, 2, 3],
+	)
+	assert.equal(
+		list?.entries[0].note,
+		"A list note, not a review.\nSecond line.",
+	)
+	assert.equal(list?.entries[2].entry.problem?.outcome, "unsupported")
+	assert.equal(
+		parsed.observations.filter((row) => row.kind === "rating").length,
+		1,
+	)
+	assert.ok(
+		parsed.observations.every(
+			(row) => row.kind !== "want" && row.kind !== "review",
+		),
+	)
+})
+
+it("retains an ambiguous custom-list Created date without claiming a new wish will be added", () => {
+	const parsed = readImdbListFile(
+		"Position,Const,Created,Description,Title,Title Type\n1,tt0114709,02/03/24,Note,Synthetic movie,Movie\n",
+		"custom-list",
+		"Original name",
+	)
+	assert.ok(
+		parsed.warnings.every(
+			(warning) =>
+				!warning.message.includes("uses the import date for the new wish"),
+		),
+	)
+	assert.equal(
+		parsed.observations.find((row) => row.kind === "list")?.customList
+			?.entries[0].entry.imdbList?.created,
+		"02/03/24",
+	)
+})

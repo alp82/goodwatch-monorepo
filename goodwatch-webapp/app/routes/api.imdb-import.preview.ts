@@ -13,6 +13,7 @@ import { createImdbFilePreview } from "~/server/imdb-import/dispatch.server"
 const requestSchema = z.object({
 	fileName: z.string(),
 	csv: z.string(),
+	listName: z.string().trim().min(1).max(1000).optional(),
 	listKind: z.enum(["watchlist", "custom-list", "ratings"]).optional(),
 })
 
@@ -47,6 +48,7 @@ function productAction({ request }: ActionFunctionArgs) {
 					fileName,
 					csv,
 					parsed.data.listKind,
+					parsed.data.listName,
 				),
 			},
 			{ headers },

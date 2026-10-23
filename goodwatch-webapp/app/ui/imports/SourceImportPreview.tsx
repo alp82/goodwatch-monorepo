@@ -33,6 +33,7 @@ const KIND_LABELS: Record<ImportKind, string> = {
 	favorite: "Favorites",
 	review: "Reviews",
 	show_status: "Show statuses",
+	list: "Lists",
 }
 const OUTCOMES: ImportOutcome[] = [
 	"new",
@@ -61,7 +62,7 @@ export function SourceImportPreview(props: PreviewProps) {
 	const wishlistOnly =
 		props.summary.source === "wishlist" &&
 		!["rating", "watch", "review", "show_status"].some(
-			(kind) => props.summary.kinds[kind as ImportKind] > 0,
+			(kind) => (props.summary.kinds[kind as ImportKind] ?? 0) > 0,
 		)
 	return wishlistOnly ? (
 		<WishlistImportPreview {...props} />
@@ -102,7 +103,9 @@ function GeneralImportPreview({
 		!!summary.resolution &&
 		tvtimeProgress(summary.resolution).active
 	const back = matching ? () => matching.discardPreview(onBack) : onBack
-	const available = IMPORT_KINDS.filter((kind) => summary.kinds[kind] > 0)
+	const available = IMPORT_KINDS.filter(
+		(kind) => (summary.kinds[kind] ?? 0) > 0,
+	)
 	const [choices, setChoices] = useState<SourceImportChoices>(
 		() =>
 			initialChoices ?? {
@@ -150,6 +153,13 @@ function GeneralImportPreview({
 			{matching && (
 				<TvTimeLookupNotices summary={summary} matching={matching} />
 			)}
+			{(summary.kinds.list ?? 0) > 0 && (
+				<p className="rounded-lg border border-slate-700 bg-slate-900/60 p-3 text-gray-300">
+					Lists keep their source name, order and notes. They stay private until
+					you share them. Importing the same list again creates a second list.
+					Entries without a catalog match stay in this receipt.
+				</p>
+			)}
 			<ImportNotes warnings={summary.warnings} title={copy.details} />
 			<fieldset>
 				<legend className="mb-2 font-semibold text-gray-100">
@@ -166,7 +176,7 @@ function GeneralImportPreview({
 									{KIND_LABELS[kind]}
 								</span>
 								<span className="ml-2 text-sm text-gray-400">
-									{formatCount(summary.kinds[kind])}
+									{formatCount(summary.kinds[kind] ?? 0)}
 								</span>
 							</span>
 							<input
@@ -207,25 +217,27 @@ function GeneralImportPreview({
 					</li>
 				</ul>
 			</div>
-			<fieldset className="space-y-2">
-				<legend className="mb-1 font-semibold text-gray-100">
-					When GoodWatch already has different data
-				</legend>
-				<Radio
-					name="source-conflict"
-					checked={conflictChoice === "keep"}
-					onChange={() => choose({ ...choices, conflictChoice: "keep" })}
-					label="Keep my GoodWatch changes"
-					detail="Keeps ratings and reviews you already changed in GoodWatch."
-				/>
-				<Radio
-					name="source-conflict"
-					checked={conflictChoice === "source"}
-					onChange={() => choose({ ...choices, conflictChoice: "source" })}
-					label={copy.conflict}
-					detail={copy.conflictDetail}
-				/>
-			</fieldset>
+			{available.some((kind) => kind !== "list") && (
+				<fieldset className="space-y-2">
+					<legend className="mb-1 font-semibold text-gray-100">
+						When GoodWatch already has different data
+					</legend>
+					<Radio
+						name="source-conflict"
+						checked={conflictChoice === "keep"}
+						onChange={() => choose({ ...choices, conflictChoice: "keep" })}
+						label="Keep my GoodWatch changes"
+						detail="Keeps ratings and reviews you already changed in GoodWatch."
+					/>
+					<Radio
+						name="source-conflict"
+						checked={conflictChoice === "source"}
+						onChange={() => choose({ ...choices, conflictChoice: "source" })}
+						label={copy.conflict}
+						detail={copy.conflictDetail}
+					/>
+				</fieldset>
+			)}
 			{rewatchCount > 0 && kinds.includes("want") && (
 				<fieldset className="space-y-2" disabled={confirming || locked}>
 					<legend className="mb-1 font-semibold text-gray-100">

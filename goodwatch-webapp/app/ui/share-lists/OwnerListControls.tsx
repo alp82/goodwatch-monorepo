@@ -13,7 +13,7 @@ import {
 import { DialogShell } from "~/ui/share-list-editor/ShareFlow"
 import type { ShareListSummary } from "~/ui/share-lists/ShareListTile"
 
-type Visibility = "public" | "unlisted"
+type Visibility = "public" | "unlisted" | "private"
 
 export function OwnerListControls({
 	list,
@@ -30,9 +30,24 @@ export function OwnerListControls({
 	const [copied, setCopied] = useState(false)
 	const [confirming, setConfirming] = useState(false)
 	const visibility = list.visibility ?? "public"
-	const path = shareListPath(handle, list.id)
+	const path = list.collection
+		? `/lists/${list.id}`
+		: shareListPath(handle, list.id)
 
 	const share = async () => {
+		if (visibility === "private") {
+			try {
+				await action.mutateAsync({
+					intent: "visibility",
+					id: list.id,
+					visibility: "unlisted",
+				})
+				onVisibility("unlisted")
+			} catch (error) {
+				toast.error(error instanceof Error ? error.message : "Sharing failed.")
+				return
+			}
+		}
 		// Make sure the card image is current before the link gets pasted somewhere.
 		navigator.sendBeacon?.(
 			"/api/og-image-warm",
@@ -84,9 +99,16 @@ export function OwnerListControls({
 	return (
 		<div className="mt-3 flex flex-col gap-3">
 			<div className="flex flex-wrap items-center gap-2">
-				<Link to={shareListEditPath(handle, list.id)} className={button}>
+				<Link
+					to={
+						list.collection
+							? `/lists/${list.id}`
+							: shareListEditPath(handle, list.id)
+					}
+					className={button}
+				>
 					<PencilSquareIcon className="size-4" aria-hidden />
-					Edit
+					{list.collection ? "Open list" : "Edit"}
 				</Link>
 				<button
 					type="button"
@@ -121,7 +143,9 @@ export function OwnerListControls({
 				<span id={`visibility-${list.id}`} className="text-gray-300">
 					{visibility === "public"
 						? "Public: shown on your profile"
-						: "Unlisted: only people with the link"}
+						: visibility === "private"
+							? "Private: only you can see this list"
+							: "Unlisted: only people with the link"}
 				</span>
 			</div>
 

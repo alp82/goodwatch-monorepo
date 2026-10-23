@@ -312,3 +312,100 @@ it("preserves main's Letterboxd behavior for an unclosed quoted field", async ()
 	assert.equal(parsed.observations[0].title, "Example")
 	assert.equal(parsed.observations[0].score, 8)
 })
+
+it("imports named Letterboxd lists with their metadata, rank order and per-film notes, without inventing watches or wishes", async () => {
+	const archive = zipFixture({
+		"lists/source-list.csv":
+			'Letterboxd list export v7\nDate,Name,Tags,URL,Description\n2020-01-01,"Source list: six someday films",,https://letterboxd.com/example/list/source-list/,A list description\nPosition,Name,Year,URL,Description\n2,Second film,2002,https://letterboxd.com/film/second/,Second note\n1,First film,2001,https://letterboxd.com/film/first/,"First note\nSecond line"\n',
+	})
+	const parsed = await parseImportFile("letterboxd", archive)
+	const list = parsed.observations.find((row) => row.kind === "list")
+	assert.ok(list)
+	assert.equal(list.customList?.name, "Source list: six someday films")
+	assert.equal(list.customList?.description, "A list description")
+	assert.deepEqual(
+		list.customList?.entries.map((item) => [
+			item.position,
+			item.entry.title,
+			item.note,
+		]),
+		[
+			[1, "First film", "First note\nSecond line"],
+			[2, "Second film", "Second note"],
+		],
+	)
+	assert.ok(
+		parsed.observations.every(
+			(row) => row.kind !== "watch" && row.kind !== "want",
+		),
+	)
+})
+
+it("imports Trakt archive lists separately with original names, ranked movie/show entries and notes, including explicit empty lists", async () => {
+	const archive = zipFixture({
+		"lists-lists.json": JSON.stringify([
+			{
+				name: "Mixed discoveries",
+				description: "Source description",
+				ids: { trakt: 91, slug: "mixed" },
+				items: [
+					{
+						rank: 2,
+						type: "show",
+						show: { title: "A Show", year: 2020, ids: { tmdb: 43 } },
+						notes: "Show note",
+					},
+					{
+						rank: 1,
+						type: "movie",
+						movie: { title: "A Movie", year: 1995, ids: { imdb: "tt0114709" } },
+						notes: "Movie note",
+					},
+					{
+						rank: 3,
+						type: "person",
+						person: { name: "A person", ids: { tmdb: 12 } },
+					},
+				],
+			},
+			{ name: "An empty source list", ids: { trakt: 92 }, items: [] },
+			{ name: "Split contents", ids: { trakt: 93, slug: "split" } },
+		]),
+		"lists-split.json": JSON.stringify([
+			{
+				rank: 1,
+				type: "movie",
+				movie: { title: "Third", year: 2001, ids: { tmdb: 3 } },
+				notes: "Split note",
+			},
+		]),
+	})
+	const parsed = await parseImportFile("trakt", archive)
+	const lists = parsed.observations
+		.filter((row) => row.kind === "list")
+		.map((row) => row.customList!)
+	assert.deepEqual(
+		lists.map((list) => list.name),
+		["Mixed discoveries", "An empty source list", "Split contents"],
+	)
+	assert.deepEqual(
+		lists[0].entries.map((item) => [
+			item.position,
+			item.entry.title,
+			item.note,
+		]),
+		[
+			[1, "A Movie", "Movie note"],
+			[2, "A Show", "Show note"],
+			[3, "A person", ""],
+		],
+	)
+	assert.equal(lists[0].entries[2].entry.problem?.outcome, "unsupported")
+	assert.equal(lists[1].entries.length, 0)
+	assert.equal(lists[2].entries[0].note, "Split note")
+	assert.ok(
+		parsed.observations.every(
+			(row) => row.kind !== "want" && row.kind !== "watch",
+		),
+	)
+})

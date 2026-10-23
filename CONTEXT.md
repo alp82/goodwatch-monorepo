@@ -293,6 +293,10 @@ A reviewer's assessment of how faithfully a fingerprint describes a title, suppo
 A person's ranking of exactly five movies or shows under a title, published at its own link under its owner's handle and shown as a share card. A share list is separate from ratings, Want to See, and the taste profile.
 _Avoid_: Top list, Collection
 
+**Imported list**:
+
+A named, ordered collection of movies and shows brought from a source list, with its original notes. It uses the same list store as share lists, can have any number of titles, and starts private without requiring a handle. Sharing makes its link available to others. Importing it again creates a separate list; Undo deletes the list that import created.
+
 **Best-of list**:
 GoodWatch's ranking of the movies, or of the shows, that the sitemap lists: best GoodWatch score first, 250 to a page, the same for everyone. It holds exactly the sitemap's titles and changes when the sitemap changes. A share list is a person's ranking; a best-of list is GoodWatch's.
 _Avoid_: Top list, Top 250

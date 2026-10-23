@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto"
 import type {
 	ImportItem,
 	ImportKind,
+	ImportKindCounts,
 	ImportObservation,
 	ImportOutcome,
 	ImportSource,
@@ -450,6 +451,12 @@ function classify(
 				...(row.problem.outcome === "unmatched" ? { tmdbId: null } : {}),
 				reason: row.problem.reason,
 			}
+		if (row.kind === "list" && row.customList)
+			return {
+				...base,
+				outcome: "new",
+				reason: `Creates a private list. Matched titles: ${row.customList.entries.filter((item) => !item.entry.problem && item.entry.tmdbId != null).length}. Entries kept only in the receipt: ${row.customList.entries.filter((item) => !!item.entry.problem).length}.`,
+			}
 		const title = matched.get(index)
 		if (!title)
 			return {
@@ -692,6 +699,29 @@ export async function createParsedPreview(
 			}
 	}
 	const source = parsed.source
+	const listEntries = parsed.observations.flatMap(
+		(row) => row.customList?.entries ?? [],
+	)
+	if (listEntries.length + parsed.observations.length > IMPORT_MAX_ROWS)
+		throw new ImportFileError(
+			"That export has more than 50,000 list entries and import items.",
+		)
+	if (listEntries.length) {
+		const matches = await matchCatalog(
+			source,
+			listEntries.map((item) => item.entry),
+		)
+		listEntries.forEach((item, index) => {
+			const match = matches.get(index)
+			if (match) Object.assign(item.entry, match)
+			else if (!item.entry.problem)
+				item.entry.problem = {
+					outcome: "unmatched",
+					reason:
+						"This list entry could not be matched uniquely in the GoodWatch catalog.",
+				}
+		})
+	}
 	const [matched, current] = await Promise.all([
 		matchCatalog(
 			source,
@@ -855,7 +885,7 @@ export async function createParsedPreview(
 		invalid: 0,
 	}
 	for (const item of items) countRecord[item.outcome]++
-	const kinds: Record<ImportKind, number> = {
+	const kinds: ImportKindCounts = {
 		rating: 0,
 		watch: 0,
 		want: 0,
@@ -863,7 +893,9 @@ export async function createParsedPreview(
 		review: 0,
 		show_status: 0,
 	}
-	for (const item of items) if (item.kind !== "unsupported") kinds[item.kind]++
+	for (const item of items)
+		if (item.kind !== "unsupported")
+			kinds[item.kind] = (kinds[item.kind] ?? 0) + 1
 	const now = new Date()
 	// Manually matchable source groups, and those that already carry a member's match.
 	const matchGroups = { all: new Set<string>(), resolved: new Set<string>() }

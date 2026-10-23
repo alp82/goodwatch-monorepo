@@ -1,6 +1,11 @@
 import { hasGoodwatchScore } from "~/utils/ratings"
 // Catalog lookups for share lists: the titles a card shows, quick picks per list prompt, and title search.
-import { type CardTitle, LIST_PROMPTS, type MediaType, titleKey } from "~/ui/share-card/model"
+import {
+	type CardTitle,
+	LIST_PROMPTS,
+	type MediaType,
+	titleKey,
+} from "~/ui/share-card/model"
 import { query } from "~/utils/crate"
 import { canonicalTitleId } from "~/utils/title-identity"
 
@@ -49,27 +54,48 @@ export function parseTitleKey(key: string): ListEntry | null {
 }
 
 /** Card data for the entries, in their order. Entries missing from the catalog are left out. */
-export async function resolveCardTitles(entries: ListEntry[]): Promise<CardTitle[]> {
+export async function resolveCardTitles(
+	entries: ListEntry[],
+): Promise<CardTitle[]> {
 	if (!entries.length) return []
 	const found = new Map<string, CardTitle>()
 	await Promise.all(
 		(["movie", "show"] as const).map(async (type) => {
-			const ids = [...new Set(entries.filter((e) => e.media_type === type).map((e) => e.tmdb_id))]
+			const ids = [
+				...new Set(
+					entries.filter((e) => e.media_type === type).map((e) => e.tmdb_id),
+				),
+			]
 			if (!ids.length) return
-			const rows = await query<Row>(`SELECT ${COLUMNS} FROM ${type} WHERE tmdb_id IN (${ids.map(() => "?").join(",")}) AND title IS NOT NULL`, ids)
-			for (const r of rows) found.set(titleKey(type, r.tmdb_id), toCardTitle(type, r))
+			for (let offset = 0; offset < ids.length; offset += 800) {
+				const batch = ids.slice(offset, offset + 800)
+				const rows = await query<Row>(
+					`SELECT ${COLUMNS} FROM ${type} WHERE tmdb_id IN (${batch.map(() => "?").join(",")}) AND title IS NOT NULL`,
+					batch,
+				)
+				for (const r of rows)
+					found.set(titleKey(type, r.tmdb_id), toCardTitle(type, r))
+			}
 		}),
 	)
-	return entries.map((e) => found.get(entryKey(e))).filter((t): t is CardTitle => !!t)
+	return entries
+		.map((e) => found.get(entryKey(e)))
+		.filter((t): t is CardTitle => !!t)
 }
 
 // Popular titles per list prompt, so nobody starts from an empty search box.
-let quickPicks: { at: number; picks: Promise<Record<string, CardTitle[]>> } | null = null
+let quickPicks: {
+	at: number
+	picks: Promise<Record<string, CardTitle[]>>
+} | null = null
 
 async function loadQuickPicks(): Promise<Record<string, CardTitle[]>> {
 	const perPrompt = await Promise.all(
 		LIST_PROMPTS.map(async (prompt) => {
-			const types = prompt.type === "all" ? (["movie", "show"] as const) : ([prompt.type] as const)
+			const types =
+				prompt.type === "all"
+					? (["movie", "show"] as const)
+					: ([prompt.type] as const)
 			const lists = await Promise.all(
 				types.map(async (type) => {
 					const genre = type === "movie" ? prompt.movieGenre : prompt.showGenre
@@ -85,7 +111,10 @@ async function loadQuickPicks(): Promise<Record<string, CardTitle[]>> {
 				}),
 			)
 			// Mixed prompts alternate movies and shows.
-			const merged = lists.length === 1 ? lists[0] : lists[0].flatMap((movie, i) => [movie, lists[1][i]]).filter(Boolean)
+			const merged =
+				lists.length === 1
+					? lists[0]
+					: lists[0].flatMap((movie, i) => [movie, lists[1][i]]).filter(Boolean)
 			return [prompt.id, merged.slice(0, QUICK_PICKS)] as const
 		}),
 	)
@@ -115,7 +144,10 @@ type SearchResult = {
 }
 
 /** Movies and shows matching the text, from several TMDB search pages, most relevant first. */
-export async function searchTitles(text: string, signal?: AbortSignal): Promise<CardTitle[]> {
+export async function searchTitles(
+	text: string,
+	signal?: AbortSignal,
+): Promise<CardTitle[]> {
 	const q = text.trim().slice(0, 100)
 	if (q.length < 2) return []
 	const pages = await Promise.all(
@@ -128,10 +160,20 @@ export async function searchTitles(text: string, signal?: AbortSignal): Promise<
 				page: String(i + 1),
 			})
 			try {
-				const response = await fetch(`https://api.themoviedb.org/3/search/multi?${params}`, {
-					signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(SEARCH_TIMEOUT_MS)]) : AbortSignal.timeout(SEARCH_TIMEOUT_MS),
-				})
-				return response.ok ? (((await response.json()).results ?? []) as SearchResult[]) : []
+				const response = await fetch(
+					`https://api.themoviedb.org/3/search/multi?${params}`,
+					{
+						signal: signal
+							? AbortSignal.any([
+									signal,
+									AbortSignal.timeout(SEARCH_TIMEOUT_MS),
+								])
+							: AbortSignal.timeout(SEARCH_TIMEOUT_MS),
+					},
+				)
+				return response.ok
+					? (((await response.json()).results ?? []) as SearchResult[])
+					: []
 			} catch {
 				return []
 			}
@@ -140,7 +182,8 @@ export async function searchTitles(text: string, signal?: AbortSignal): Promise<
 	const seen = new Set<string>()
 	const titles: CardTitle[] = []
 	for (const r of pages.flat()) {
-		if ((r.media_type !== "movie" && r.media_type !== "tv") || !r.poster_path) continue
+		if ((r.media_type !== "movie" && r.media_type !== "tv") || !r.poster_path)
+			continue
 		const type: MediaType = r.media_type === "tv" ? "show" : "movie"
 		const id = canonicalTitleId(type, r.id)
 		const key = titleKey(type, id)
@@ -150,9 +193,12 @@ export async function searchTitles(text: string, signal?: AbortSignal): Promise<
 			key,
 			type,
 			title: r.title ?? r.name ?? "",
-			year: Number((r.release_date ?? r.first_air_date ?? "").slice(0, 4)) || null,
+			year:
+				Number((r.release_date ?? r.first_air_date ?? "").slice(0, 4)) || null,
 			poster: `${TMDB_IMAGES}/w500${r.poster_path}`,
-			backdrop: r.backdrop_path ? `${TMDB_IMAGES}/w1280${r.backdrop_path}` : null,
+			backdrop: r.backdrop_path
+				? `${TMDB_IMAGES}/w1280${r.backdrop_path}`
+				: null,
 			genre: null,
 			score: null,
 		})

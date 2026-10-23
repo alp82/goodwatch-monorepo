@@ -9,6 +9,7 @@ export async function createImdbFilePreview(
 	fileName: string,
 	csv: string,
 	listKind?: ImdbFileChoice,
+	listName?: string,
 ): Promise<ImdbImportSummary | ImportSummary> {
 	const kind = imdbCsvKind(csv)
 	if (
@@ -33,7 +34,15 @@ export async function createImdbFilePreview(
 			400,
 			"IMDb uses the same columns for Watchlist and custom lists. Choose which list this file came from.",
 		)
-	const parsed = readImdbListFile(csv, listKind)
+	const parsed = readImdbListFile(
+		csv,
+		listKind,
+		listName?.trim() ||
+			fileName
+				.split(/[\\/]/)
+				.at(-1)!
+				.replace(/\.csv$/i, ""),
+	)
 	const { createParsedPreview } = await import("../imports/preview.server.ts")
 	return createParsedPreview(userId, fileName, parsed)
 }

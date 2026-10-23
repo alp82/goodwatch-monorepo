@@ -181,6 +181,61 @@ export function SourceItem({
 	onChangeMatch?: (index: number) => void
 	matchLocked?: boolean
 }) {
+	if (item.customList) {
+		const message =
+			item.applyState === "added" || item.applyState === "updated"
+				? "List created."
+				: item.applyState === "undone"
+					? "List deleted by Undo."
+					: item.applyState === "kept"
+						? "This list was not imported."
+						: item.applyState === "failed"
+							? "The list could not be created. Try again to finish the import."
+							: item.reason
+		return (
+			<li className="space-y-2 px-4 py-3">
+				<p className="font-semibold text-gray-100">{item.customList.name}</p>
+				{item.customList.description && (
+					<p className="whitespace-pre-wrap break-words text-gray-300">
+						{item.customList.description}
+					</p>
+				)}
+				{message && <p className="text-gray-400">{message}</p>}
+				{item.customList.createdId &&
+					(item.applyState === "added" || item.applyState === "updated") && (
+						<a
+							className={textLink}
+							href={`/lists/${item.customList.createdId}`}
+						>
+							Open list
+						</a>
+					)}
+				<details>
+					<summary className="cursor-pointer text-gray-300">
+						Source list entries ({item.customList.entries.length})
+					</summary>
+					<ol className="ml-6 list-decimal space-y-2">
+						{item.customList.entries.map(({ position, note, entry }, at) => (
+							<li key={at} value={position} className="text-gray-300">
+								<span>
+									{entry.title}
+									{entry.year ? ` (${entry.year})` : ""}
+								</span>
+								{entry.problem && (
+									<p className="text-gray-400">
+										Not imported: {entry.problem.reason}
+									</p>
+								)}
+								{note && (
+									<p className="whitespace-pre-wrap break-words">{note}</p>
+								)}
+							</li>
+						))}
+					</ol>
+				</details>
+			</li>
+		)
+	}
 	const matched = wishlist ? item.wishlistResolution : undefined
 	if (matched)
 		return (

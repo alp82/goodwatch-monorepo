@@ -70,3 +70,26 @@ it("preselects My Watchlist for filenames containing watchlist in any case, incl
 		assert.equal(result.sent[0].body.listKind, "watchlist")
 	}
 })
+
+it("custom-list uploads keep the source list title from the filename in an editable name field and send it to preview", () => {
+	const output = execFileSync(
+		"node_modules/.bin/vite-node",
+		[
+			"--config",
+			"app/ui/imports/source-import-test-vite.config.ts",
+			"app/ui/imports/imdb-list-interaction.test-support.tsx",
+		],
+		{
+			encoding: "utf8",
+			env: {
+				...process.env,
+				IMDB_UI_FILENAME: "My source discoveries.csv",
+				IMDB_UI_CHOICE: "A custom list",
+			},
+		},
+	)
+	const result = JSON.parse(output.split("__IMDB_LIST_UI__").at(-1) ?? "")
+	assert.equal(result.customListName, "My source discoveries")
+	assert.equal(result.sent[0].body.listName, "My source discoveries")
+	assert.equal(result.sent[0].body.listKind, "custom-list")
+})
