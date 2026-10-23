@@ -13,9 +13,10 @@ export function PlexConnectControls({
 			</h3>
 			<p className="text-gray-400">
 				Bring movie and episode watches, library watched state and personal
-				ratings from your own Plex Media Server, plus Want to See from your
-				personal watchlist feed. Season and episode scores stay visible but are
-				not applied. Review everything before changing your library.
+				ratings from your own Plex Media Server, including episode scores, plus
+				Want to See from your personal watchlist feed. Season scores stay
+				visible but are not applied. Review everything before changing your
+				library.
 			</p>
 			<p className="text-sm text-gray-400">
 				GoodWatch must reach your server through public HTTPS Remote Access. A

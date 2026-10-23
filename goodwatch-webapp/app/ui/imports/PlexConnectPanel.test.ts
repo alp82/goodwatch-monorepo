@@ -16,7 +16,7 @@ test("Plex controls offer sign-in, optional personal RSS, preview and cancel wit
 	assert.match(rendered.start, /\/api\/imports\/plex\/start/)
 	assert.match(rendered.start, /public HTTPS/)
 	assert.match(rendered.start, /library watched state and personal ratings/)
-	assert.match(rendered.start, /Season and episode scores.*not applied/)
+	assert.match(rendered.start, /including episode scores.*Season scores stay visible but are not applied/)
 	assert.match(rendered.returned, /name="feed"/)
 	assert.match(rendered.returned, /Plex Pass/)
 	assert.match(rendered.returned, /personal/)

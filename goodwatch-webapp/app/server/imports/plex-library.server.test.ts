@@ -74,7 +74,7 @@ test("Plex library fills watched movies missing history, preserves lastViewedAt 
 	)
 })
 
-test("Plex show scores stay at show scope; watched episodes resolve by GUID and scoped scores remain visible unsupported", async (t) => {
+test("Plex show scores stay at show scope; episodes and their scores resolve by GUID, and season scores stay visible unsupported", async (t) => {
 	const f = await plexLibraryFixture()
 	t.after(f.close)
 	f.history.splice(0)
@@ -137,7 +137,7 @@ test("Plex show scores stay at show scope; watched episodes resolve by GUID and 
 		[
 			["rating", "show", 1668, 10, null, null],
 			["unsupported", "show", 1668, 8.5, 4, null],
-			["unsupported", "show", 1668, 7.5, 4, 24],
+			["episode_rating", "show", 1668, 8, 4, 24],
 			["watch", "show", 1668, null, 4, 24],
 			["watch", "show", 1668, null, 1, 1],
 		].sort(),
@@ -146,6 +146,10 @@ test("Plex show scores stay at show scope; watched episodes resolve by GUID and 
 		(row) => row.kind === "watch" && row.episodeTmdbId === 101,
 	)
 	assert.equal(finale?.episodeTvdbId, 900)
+	const finaleScore = rows.find((row) => row.kind === "episode_rating")
+	assert.equal(finaleScore?.scoreScope, "episode")
+	assert.equal(finaleScore?.episodeTmdbId, 101)
+	assert.equal(finaleScore?.episodeTvdbId, 900)
 	assert.equal(finale?.episodeNumbering, "unknown")
 	assert.equal(finale?.watchedAt, "2000-01-01T00:00:00.000Z")
 	assert.equal(
@@ -156,7 +160,7 @@ test("Plex show scores stay at show scope; watched episodes resolve by GUID and 
 	assert.match(
 		rows.find((row) => row.kind === "unsupported" && row.episode == null)
 			?.problem?.reason ?? "",
-		/season and episode scores/i,
+		/season score can't be matched/i,
 	)
 	assert.ok(
 		!rows.some((row) => row.kind === "show_status"),

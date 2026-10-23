@@ -222,12 +222,18 @@ async function readPartition(
 					Number.isFinite(value) &&
 					value > 0 &&
 					value <= 10
+				// An episode's score is resolved like its watch, by its GUIDs (#759). A season's isn't: Plex numbers seasons
+				// in its library's own order, which a season number alone can't place in TMDB's.
+				const season = item.type === "season"
 				observations.push({
 					...base,
 					key: `plex:rating:${options.serverId}:${item.ratingKey}`,
-					kind: scoped ? "unsupported" : "rating",
+					kind: season ? "unsupported" : scoped ? "episode_rating" : "rating",
+					...(item.type === "episode"
+						? { scoreScope: "episode" as const }
+						: {}),
 					score: valid
-						? scoped
+						? season
 							? value
 							: Math.max(1, Math.round(value))
 						: null,
@@ -239,12 +245,12 @@ async function readPartition(
 										"Plex personal ratings must be numbers greater than 0 and at most 10; 0 means unrated.",
 								},
 							}
-						: scoped
+						: season
 							? {
 									problem: {
 										outcome: "unsupported" as const,
 										reason:
-											"Season and episode scores are kept here, not applied as whole-show ratings.",
+											"Plex numbers seasons in its own order, so this season score can't be matched to a GoodWatch season. Episode scores are imported.",
 									},
 								}
 							: {}),

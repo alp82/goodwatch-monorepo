@@ -177,8 +177,9 @@ test("Plex library preview, Confirm, receipt, repeat import and Undo preserve sc
 			preview.kinds.rating,
 			preview.counts.unsupported,
 			preview.counts.conflict,
+			preview.kinds.episode_rating,
 		],
-		[4, 2, 2, 1],
+		[4, 2, 1, 1, 1],
 	)
 	assert.equal(
 		rows.items.find((row) => row.kind === "watch" && row.mediaType === "show")
@@ -193,7 +194,7 @@ test("Plex library preview, Confirm, receipt, repeat import and Undo preserve sc
 			JSON.stringify({ summary: preview, items: rows.items }),
 		)
 	await confirmImport("member", preview.id, {
-		kinds: ["watch", "rating"],
+		kinds: ["watch", "rating", "episode_rating"],
 		conflictChoice: "source",
 		watchDates: "preserve",
 	})
@@ -233,11 +234,17 @@ test("Plex library preview, Confirm, receipt, repeat import and Undo preserve sc
 	assert.equal(tracking.table("user_wishlist").length, 0)
 	assert.equal(tracking.table("user_not_interested").length, 0)
 	const result = await getImportResult("member", preview.id)
-	assert.match(JSON.stringify(result), /Season and episode scores/)
+	assert.match(JSON.stringify(result), /season score can't be matched/)
+	// The episode's score is its own, never the show's (#759).
+	assert.deepEqual(
+		db.episodeScores.map((row) => [row.tmdb_id, row.score_key, row.score]),
+		[[1668, "e101", 8]],
+	)
 	const again = await previewFetchedImport("member", "Plex", parsed)
 	assert.equal(again.counts.new, 0)
 	await undoImport("member", preview.id)
 	assert.equal((await getImport("member", preview.id)).status, "undone")
+	assert.equal(db.episodeScores.length, 0)
 	assert.equal(tracking.table("user_watch_log").length, 0)
 	assert.equal(db.scores.length, 1)
 	assert.equal(db.scores[0].score, 4)
