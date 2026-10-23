@@ -118,11 +118,13 @@ export function buildProfileTaste(
 		const t = titles[keyOf(key)]
 		return t?.anime ? "anime" : (t?.mediaType ?? parseTitleKey(key).mediaType)
 	}
+	// The everyone view measures gaps on the 0 to 100 GoodWatch scale; the profile shows points out of 10.
+	const inPoints = (g: EveryoneGap): EveryoneGap => ({ ...g, delta: g.delta / 10 })
 	const crowdRow = (r: EveryoneView["higher"][number]): CrowdRow => ({
 		key: keyOf(r.key),
 		mine: r.mine,
 		everyone: r.everyone,
-		delta: r.delta,
+		delta: r.delta / 10,
 		kind: kindOf(r.key),
 	})
 	return {
@@ -163,12 +165,12 @@ export function buildProfileTaste(
 			status: everyone.status,
 			headline: everyone.headline ?? "",
 			agreement: everyone.agreement ?? 0,
-			offset: everyone.offset ?? 0,
+			offset: (everyone.offset ?? 0) / 10,
 			counted: everyone.counted ?? 0,
 			higher: (everyone.higher ?? []).map(crowdRow),
 			lower: (everyone.lower ?? []).map(crowdRow),
-			attributes: everyone.attributes ?? [],
-			genres: everyone.genres ?? [],
+			attributes: (everyone.attributes ?? []).map(inPoints),
+			genres: (everyone.genres ?? []).map(inPoints),
 		},
 		titles,
 	}
