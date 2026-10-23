@@ -3,10 +3,10 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { importInfo } from "~/domain/imports"
 import type { FileImportSource, ImportSummary } from "~/domain/imports"
-import { SourceImportCurrent } from "./SourceImportCurrent"
-import { sourceImportKeys } from "./SourceImportHooks"
 import { ImportResultView } from "./ImportResultView"
 import { SourceItem } from "./SourceImportCounts"
+import { SourceImportCurrent } from "./SourceImportCurrent"
+import { sourceImportKeys } from "./SourceImportHooks"
 import { SourceImportPreview } from "./SourceImportPreview"
 import { SourceImportUploadPanel } from "./SourceImportUploadPanel"
 
@@ -49,11 +49,11 @@ const render = (
 	confirming: boolean,
 	error: string | null,
 	showStatuses = 0,
-	source: ImportSummary["source"] = "letterboxd",
+	patch: Partial<ImportSummary> = {},
 ) =>
 	renderToStaticMarkup(
 		createElement(SourceImportPreview, {
-			summary: { ...summary(watch, showStatuses), source },
+			summary: { ...summary(watch, showStatuses), ...patch },
 			focus: false,
 			confirming,
 			error,
@@ -188,7 +188,7 @@ process.stdout.write(
 		ratingOnly: render(0, false, "Preview could not start."),
 		statusOnly: render(0, false, null, 3),
 		withWatches: render(2, true, null),
-		plexWatches: render(2, false, null, 0, "plex"),
+		plexWatches: render(2, false, null, 0, { source: "plex" }),
 		plexSeasonScore: renderToStaticMarkup(
 			createElement(SourceItem, {
 				item: {
@@ -208,5 +208,19 @@ process.stdout.write(
 				},
 			}),
 		),
+		freshWatches: render(2, false, null),
+		mdblistShowChoice: render(2, false, null, 0, {
+			source: "mdblist",
+			fileName: "MDBList account",
+			kinds: {
+				rating: 1,
+				watch: 2,
+				want: 2,
+				favorite: 0,
+				review: 0,
+				show_status: 0,
+			},
+			wishlistShowChoiceCount: 1,
+		}),
 	})}`,
 )

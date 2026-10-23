@@ -8,6 +8,7 @@ import type { WishlistPreviewUpdate } from "./WishlistImportPreview"
 /** In-memory member choices shared only by replacements of the same TV Time preview. */
 export type SourceImportChoices = {
 	wishlistRewatch?: boolean
+	wishlistShows?: boolean
 	kinds: ImportKind[]
 	conflictChoice: ImportOptions["conflictChoice"]
 	watchDates: ImportOptions["watchDates"] | null

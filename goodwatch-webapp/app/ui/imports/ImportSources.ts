@@ -118,6 +118,7 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 			"Episodes",
 			"Want to See",
 			"Show statuses",
+			"Lists",
 		],
 		wait: "Seconds",
 		connect: true,

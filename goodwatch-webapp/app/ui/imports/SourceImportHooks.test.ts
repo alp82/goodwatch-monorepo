@@ -63,6 +63,8 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 		withWatches: string
 		plexWatches: string
 		plexSeasonScore: string
+		freshWatches: string
+		mdblistShowChoice: string
 	}
 
 	assert.match(rendered.malUpload, /Export my: Anime List/)
@@ -138,6 +140,30 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 	)
 	assert.match(rendered.withWatches, /Starting import/)
 	assert.match(rendered.withWatches, /disabled=""/)
+	// Fewest steps (owner rule): source dates are chosen already, so Start import works right away.
+	assert.match(
+		rendered.freshWatches,
+		/type="radio"[^>]*checked=""[^>]*\/><span><span[^>]*>Preserve dates from the export/,
+	)
+	assert.doesNotMatch(rendered.freshWatches, /Choose how to handle watch dates/)
+	assert.match(rendered.freshWatches, /Start import/)
+	assert.doesNotMatch(
+		rendered.freshWatches.match(/<button[^>]*>Start import/)?.[0] ?? "",
+		/disabled=""/,
+	)
+	// A season or episode on the MDBList Watchlist waits for an unselected Want to See the show choice.
+	assert.match(rendered.mdblistShowChoice, /Want to See the show/)
+	assert.match(
+		rendered.mdblistShowChoice,
+		/Your MDBList Watchlist lists seasons or episodes of 1 show/,
+	)
+	assert.doesNotMatch(
+		rendered.mdblistShowChoice.match(
+			/<input type="checkbox"[^>]*name="wishlist-shows"[^>]*>/,
+		)?.[0] ?? "missing",
+		/checked=""/,
+	)
+	assert.match(rendered.mdblistShowChoice, /name="wishlist-shows"/)
 })
 
 test("buildSourceImportUpload rejects non-ZIP and oversized uploads before the request", () => {

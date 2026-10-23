@@ -587,7 +587,7 @@ export interface ImportOptions {
 	wishlistShows?: boolean
 	kinds: ImportKind[]
 	conflictChoice: "keep" | "source"
-	/** Explicit choice; never inferred from clusters of equal timestamps. */
+	/** Preselected as "preserve" (owner rule, fewest steps); never inferred from clusters of equal timestamps. */
 	watchDates: "preserve" | "unknown"
 }
 

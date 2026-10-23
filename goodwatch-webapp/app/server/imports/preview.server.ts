@@ -37,7 +37,6 @@ import {
 	createTvdbParentLookup,
 } from "./episode-resolver-data.server.ts"
 import { ImportFileError, parseImportFile } from "./files.server.ts"
-import { expandWatcharrWatches } from "./watcharr-preview.server.ts"
 import {
 	type Param,
 	chunks,
@@ -56,6 +55,7 @@ import {
 	TvdbLookupPending,
 } from "./tvdb-lookup.server.ts"
 import { createTvtimeCatalogLookup } from "./tvtime-catalog.server.ts"
+import { expandWatcharrWatches } from "./watcharr-preview.server.ts"
 import {
 	isManuallyMatchableWishlistSource,
 	wishlistSourceGroup,
@@ -326,10 +326,11 @@ export async function matchCatalog(
 					}
 					return
 				}
-				// Wishlist season/episode rows reuse episode-scope fields as source evidence;
+				// Wishlist and MDBList Watchlist season/episode rows reuse episode-scope fields as source evidence;
 				// their target is the whole show, so they must skip episode resolution.
 				if (
-					(source === "wishlist" && row.kind === "want") ||
+					(row.kind === "want" &&
+						(source === "wishlist" || !!row.wishlistEvidence)) ||
 					title.mediaType !== "show" ||
 					(row.episodeTmdbId == null &&
 						!(row.animeEntry && row.kind === "watch") &&
@@ -965,7 +966,7 @@ export async function createParsedPreview(
 		}
 	}
 	// Suppress duplicate effective identities before calculating any per-title library conflicts.
-	if (source === "wishlist" || source === "imdb_list") {
+	if (source === "wishlist" || source === "imdb_list" || source === "mdblist") {
 		const representatives = new Map<string, ImportObservation>()
 		for (const [index, row] of parsed.observations.entries()) {
 			const title = matched.get(index)
@@ -1089,7 +1090,8 @@ export async function createParsedPreview(
 					...kinds,
 					...(source === "wishlist" ||
 					source === "tvtime" ||
-					source === "imdb_list"
+					source === "imdb_list" ||
+					source === "mdblist"
 						? {
 								_wishlistShowChoiceCount: items.filter(
 									(item) =>

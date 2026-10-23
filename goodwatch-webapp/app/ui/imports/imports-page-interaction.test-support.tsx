@@ -29,6 +29,7 @@ import type { ImportSource, ImportSummary } from "~/domain/imports"
 import { zipFixture } from "../../server/imports/zip-fixture.test-support"
 
 const PREVIEW_ID = "00000000-0000-4000-8000-0000000000aa"
+const MDBLIST_PREVIEW_ID = "00000000-0000-4000-8000-0000000000ab"
 const summary = (
 	source: ImportSource,
 	status: ImportSummary["status"],
@@ -220,6 +221,15 @@ async function page(props: Partial<PageProps> = {}) {
 			)
 			if (!go) throw new Error(`No pop-out button for "${name}"`)
 			await act(async () => go.click())
+			await settle()
+		},
+		/** Ticks the checkbox with this name. */
+		tick: async (name: string) => {
+			const input = container.querySelector(
+				`input[name="${name}"]`,
+			) as unknown as HTMLInputElement | null
+			if (!input) throw new Error(`No checkbox "${name}"`)
+			await act(async () => input.click())
 			await settle()
 		},
 		/** Chooses the radio button whose label holds `label`. */
@@ -618,6 +628,36 @@ const movielens = (wishlist: boolean) =>
 	})
 	results.mdblistDone = { opened: opened.opened(), text: opened.text() }
 	await opened.unmount()
+}
+
+{
+	const preview: ImportSummary = {
+		...summary("mdblist", "preview", null, MDBLIST_PREVIEW_ID),
+		kinds: {
+			rating: 0,
+			watch: 2,
+			want: 2,
+			favorite: 0,
+			review: 0,
+			show_status: 0,
+		},
+		wishlistShowChoiceCount: 1,
+	}
+	const view = await page({
+		sourceImports: [preview],
+		initialSource: "mdblist",
+		openImport: MDBLIST_PREVIEW_ID,
+	})
+	for (let i = 0; i < 3; i++) await settle()
+	await view.tick("wishlist-shows")
+	await view.click("Start import")
+	results.mdblistShows = {
+		text: view.text(),
+		confirms: sent
+			.filter((call) => call.url.endsWith("/confirm"))
+			.map((call) => call.body),
+	}
+	await view.unmount()
 }
 
 process.stdout.write(`__IMPORTS_PAGE__${JSON.stringify(results)}`)

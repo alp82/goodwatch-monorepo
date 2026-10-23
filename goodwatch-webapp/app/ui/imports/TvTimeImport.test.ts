@@ -384,11 +384,13 @@ test("bulk replacement preserves unknown dates and excluded kinds, while a new f
 			label.startsWith("Keep my GoodWatch changes"),
 		),
 	)
+	// Fewest steps (owner rule): a fresh preview keeps the source's dates unless the member changes it.
 	assert.ok(
-		!runs.freshFile.checked.some(
-			(label) =>
-				label.startsWith("Import watches with unknown dates") ||
-				label.startsWith("Preserve dates"),
+		runs.freshFile.checked.some((label) => label.startsWith("Preserve dates")),
+	)
+	assert.ok(
+		!runs.freshFile.checked.some((label) =>
+			label.startsWith("Import watches with unknown dates"),
 		),
 	)
 })

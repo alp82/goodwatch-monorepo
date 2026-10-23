@@ -7,7 +7,12 @@ import { fakeMdblist } from "./mdblist-fake.test-support.ts"
 import { createMdblistImport } from "./mdblist-import.server.ts"
 
 const KEY = "synthetic-key-0001"
-function fixture(read?: (key: string) => Promise<ParsedImport>) {
+function fixture(
+	read?: (
+		key: string,
+		options: { signal?: AbortSignal },
+	) => Promise<ParsedImport>,
+) {
 	const fake = fakeMdblist({ key: KEY })
 	const client = createMdblistClient({
 		fetch: fake.fetch,
@@ -17,9 +22,9 @@ function fixture(read?: (key: string) => Promise<ParsedImport>) {
 	const previews: ParsedImport[] = []
 	const flow = createMdblistImport({
 		client: {
-			readAccount: async (key) => {
+			readAccount: async (key, options = {}) => {
 				reads.push(key)
-				return read ? read(key) : client.readAccount(key)
+				return read ? read(key, options) : client.readAccount(key, options)
 			},
 		},
 		member: async (request) => ({
@@ -36,10 +41,12 @@ function fixture(read?: (key: string) => Promise<ParsedImport>) {
 		body: Record<string, string> = { apiKey: KEY },
 		headers: Record<string, string> = {},
 		method = "POST",
+		signal?: AbortSignal,
 	) =>
 		flow.handle(
 			new Request("https://goodwatch.test/api/imports/mdblist", {
 				method,
+				signal,
 				headers: {
 					Origin: "https://goodwatch.test",
 					Member: "member",
@@ -156,4 +163,34 @@ test("an oversized body is refused before the form is read", async () => {
 	const response = await f.post({ apiKey: KEY }, { "Content-Length": "5000" })
 	assert.equal(response.status, 413)
 	assert.deepEqual(f.reads, [])
+})
+
+test("a member who leaves the page cancels the MDBList read and frees the lock", async () => {
+	const seen: AbortSignal[] = []
+	const f = fixture(async (_key, options) => {
+		const signal = options.signal as AbortSignal
+		seen.push(signal)
+		await new Promise((_resolve, reject) =>
+			signal.addEventListener("abort", () =>
+				reject(
+					new MdblistError("The import was canceled before it finished.", 499),
+				),
+			),
+		)
+		return { source: "mdblist", observations: [], warnings: [] }
+	})
+	const controller = new AbortController()
+	const first = f.post(undefined, {}, "POST", controller.signal)
+	await new Promise((resolve) => setTimeout(resolve, 10))
+	assert.equal(seen.length, 1)
+	controller.abort()
+	assert.equal((await first).status, 499)
+	assert.ok(seen[0].aborted)
+	// The lock is gone: the same member and key start a new read right away.
+	const retry = new AbortController()
+	const second = f.post(undefined, {}, "POST", retry.signal)
+	await new Promise((resolve) => setTimeout(resolve, 10))
+	assert.equal(seen.length, 2)
+	retry.abort()
+	assert.equal((await second).status, 499)
 })

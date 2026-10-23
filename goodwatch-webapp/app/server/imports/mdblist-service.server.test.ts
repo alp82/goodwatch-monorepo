@@ -89,6 +89,13 @@ test("MDBList preview, Confirm and Undo cover Want to See, every watch, scores a
 			media_type: "show",
 		},
 		{
+			tmdb_id: 1438,
+			title: "The Wire",
+			imdb_id: "tt0306414",
+			release_year: 2002,
+			media_type: "show",
+		},
+		{
 			tmdb_id: 4607,
 			title: "Lost",
 			imdb_id: "tt0411008",
@@ -137,9 +144,21 @@ test("MDBList preview, Confirm and Undo cover Want to See, every watch, scores a
 			rating: preview.kinds.rating,
 			show_status: preview.kinds.show_status,
 		},
-		{ want: 3, watch: 7, rating: 2, show_status: 1 },
+		{ want: 4, watch: 8, rating: 2, show_status: 1 },
 	)
+	// Watchlist episode of a wanted show, episode rating, dropped season.
 	assert.equal(preview.counts.unsupported, 3)
+	// One MDBList list, offered as one private GoodWatch list (#758).
+	assert.equal(preview.kinds.list, 1)
+	// The movie without catalog IDs stays visible as unmatched.
+	assert.equal(preview.counts.unmatched, 1)
+	// The Watchlist season of The Wire waits for the member's Want to See the show choice (#715).
+	assert.equal(preview.wishlistShowChoiceCount, 1)
+	const wire = (
+		await getImportItems("member", preview.id, undefined, 0, 50)
+	).items.find((item) => item.tmdbId === 1438)
+	assert.equal(wire?.outcome, "conflict")
+	assert.match(wire?.reason ?? "", /Want to See the show/)
 	assert.equal((await getMovieTracking("member", 862)).log.length, 0)
 	const items = await getImportItems("member", preview.id, undefined, 0, 50)
 	assert.doesNotMatch(
@@ -151,6 +170,7 @@ test("MDBList preview, Confirm and Undo cover Want to See, every watch, scores a
 		kinds: ["rating", "watch", "want", "show_status"],
 		conflictChoice: "keep",
 		watchDates: "preserve",
+		wishlistShows: true,
 	})
 	const done = await settle(preview.id)
 	assert.equal(done.status, "done", done.error ?? "")
@@ -168,12 +188,13 @@ test("MDBList preview, Confirm and Undo cover Want to See, every watch, scores a
 	assert.equal((await getShowTracking("member", 4607)).state?.state, "dropped")
 	assert.deepEqual(
 		db.wishlist.map((x) => x.tmdb_id).sort(),
-		[438631, 655, 95396].sort(),
+		[438631, 655, 95396, 1438].sort(),
 	)
 
-	// A second preview finds nothing new; Undo restores the library.
+	// A second preview finds nothing new but the list, which every import creates anew (#758); Undo restores the library.
 	const again = await previewFetchedImport("member", "MDBList account", parsed)
-	assert.equal(again.counts.new, 0)
+	assert.equal(again.counts.new, 1)
+	assert.equal(again.kinds.list, 1)
 	await undoImport("member", preview.id)
 	assert.equal((await settle(preview.id)).status, "undone")
 	assert.equal((await getMovieTracking("member", 862)).log.length, 0)

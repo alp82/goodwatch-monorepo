@@ -1,6 +1,7 @@
 import { setTimeout as delay } from "node:timers/promises"
 import {
 	IMPORT_MAX_ROWS,
+	type ImportCustomList,
 	type ImportObservation,
 	type ImportWarning,
 	type ParsedImport,
@@ -11,6 +12,7 @@ import {
 	timeoutSetting,
 	withBackendTimeout,
 } from "../../utils/backend-timeout.ts"
+import { customListObservation } from "./custom-list-files.server.ts"
 
 // Reads a member's MDBList account with their personal API key, read-only, for one import preview. The rules come
 // from the #711 reader and its real-account runs (docs/prototypes/wishlist-imports/mdblist-reader):
@@ -46,6 +48,11 @@ const COVERAGE_ORDER: Coverage[] = ["complete", "unknown", "partial"]
 const worse = (a: Coverage, b: Coverage) =>
 	COVERAGE_ORDER.indexOf(a) >= COVERAGE_ORDER.indexOf(b) ? a : b
 
+const emptyRows = () =>
+	Object.fromEntries(BUCKETS.map((b) => [b, []])) as unknown as Record<
+		Bucket,
+		JsonRecord[]
+	>
 const record = (value: unknown): JsonRecord | null =>
 	typeof value === "object" && value !== null && !Array.isArray(value)
 		? (value as JsonRecord)
@@ -96,17 +103,33 @@ interface RouteSpec {
 
 export function createMdblistClient(options: {
 	fetch?: typeof fetch
-	sleep?: (ms: number) => Promise<unknown>
+	sleep?: (ms: number, signal?: AbortSignal) => Promise<unknown>
 	base?: string
 	pageSize?: number
 }) {
 	const send = options.fetch ?? fetch
-	const sleep = options.sleep ?? delay
+	const sleep =
+		options.sleep ??
+		((ms: number, signal?: AbortSignal) => delay(ms, undefined, { signal }))
 	const base = options.base || BASE
 	const pageSize = options.pageSize ?? PAGE_SIZE
 
+	/** One read: the member's key and the member's request, whose cancellation stops it. */
+	interface Call {
+		apiKey: string
+		signal?: AbortSignal
+	}
+	const canceled = () =>
+		new MdblistError("The import was canceled before it finished.", 499)
+	async function pause(call: Call, ms: number) {
+		try {
+			await sleep(ms, call.signal)
+		} catch {}
+		if (call.signal?.aborted) throw canceled()
+	}
+
 	async function request(
-		apiKey: string,
+		call: Call,
 		path: string,
 		params: Record<string, string>,
 	): Promise<{ body: unknown; headers: Headers }> {
@@ -114,25 +137,54 @@ export function createMdblistClient(options: {
 		for (const [name, value] of Object.entries(params))
 			url.searchParams.set(name, value)
 		// MDBList documents only the apikey query parameter for personal keys.
-		url.searchParams.set("apikey", apiKey)
+		url.searchParams.set("apikey", call.apiKey)
 		let busy = 0
 		for (let attempt = 0; ; attempt++) {
-			let response: Response
+			if (call.signal?.aborted) throw canceled()
+			let answer: {
+				status: number
+				headers: Headers
+				body?: unknown
+				unreadable?: true
+			}
 			try {
-				response = await withBackendTimeout(
+				// The timeout covers the body too, so a stalled answer can't hold the key or the member's lock.
+				answer = await withBackendTimeout(
 					"MDBList",
 					timeoutSetting("MDBLIST_TIMEOUT_MS", 15_000),
-					(signal) =>
-						send(url.toString(), {
+					async (signal) => {
+						const response = await send(url.toString(), {
 							method: "GET",
 							signal,
 							redirect: "error",
 							headers: { Accept: "application/json", "User-Agent": USER_AGENT },
-						}),
+						})
+						if (!response.ok) {
+							// Provider text is never read: it can repeat the key.
+							await response.body?.cancel().catch(() => {})
+							return { status: response.status, headers: response.headers }
+						}
+						try {
+							return {
+								status: response.status,
+								headers: response.headers,
+								body: await response.json(),
+							}
+						} catch (error) {
+							if (signal.aborted) throw error
+							return {
+								status: response.status,
+								headers: response.headers,
+								unreadable: true as const,
+							}
+						}
+					},
+					{ signal: call.signal },
 				)
 			} catch {
+				if (call.signal?.aborted) throw canceled()
 				if (attempt < 2) {
-					await sleep(1000 * 2 ** attempt)
+					await pause(call, 1000 * 2 ** attempt)
 					continue
 				}
 				throw new MdblistError(
@@ -140,62 +192,57 @@ export function createMdblistClient(options: {
 					503,
 				)
 			}
-			if (response.ok) {
-				try {
-					return { body: await response.json(), headers: response.headers }
-				} catch {
+			const { status, headers } = answer
+			if (status >= 200 && status < 300) {
+				if (answer.unreadable)
 					throw new MdblistError(
 						"MDBList sent an unreadable answer. Please try again.",
 					)
-				}
+				return { body: answer.body, headers }
 			}
-			// Provider text is never read: it can repeat the key.
-			await response.body?.cancel().catch(() => {})
-			if (response.status === 401)
+			if (status === 401)
 				throw new MdblistError(
 					"MDBList didn't accept this API key. Copy it again from your MDBList preferences.",
 					400,
 				)
-			if (response.status === 403)
+			if (status === 403)
 				throw new MdblistError(
 					"MDBList refused the request. Please try again later.",
 				)
-			if (response.status === 429) {
-				if (response.headers.get("X-RateLimit-Remaining") === "0")
+			if (status === 429) {
+				if (headers.get("X-RateLimit-Remaining") === "0")
 					throw new MdblistError(
 						"Your MDBList daily request limit is used up. Try again after midnight UTC.",
 						429,
 					)
-				const retry = response.headers.get("Retry-After")
+				const retry = headers.get("Retry-After")
 				const wait =
 					retry !== null && /^\d+$/.test(retry.trim())
 						? Number(retry) * 1000
 						: 2000
 				if (busy++ === 0 && wait <= MAX_RETRY_AFTER_MS) {
-					await sleep(wait)
+					await pause(call, wait)
 					continue
 				}
 				throw new MdblistError("MDBList is busy. Please try again later.", 429)
 			}
-			if (response.status >= 500 && attempt < 2) {
-				await sleep(1000 * 2 ** attempt)
+			if (status >= 500 && attempt < 2) {
+				await pause(call, 1000 * 2 ** attempt)
 				continue
 			}
 			throw new MdblistError(
 				"MDBList isn't responding. Please try again later.",
-				response.status >= 500 ? 503 : 502,
+				status >= 500 ? 503 : 502,
 			)
 		}
 	}
 
 	async function readOnce(
-		apiKey: string,
+		call: Call,
 		spec: RouteSpec,
 		filter?: string,
 	): Promise<RouteRead> {
-		const rows = Object.fromEntries(
-			BUCKETS.map((b) => [b, []]),
-		) as unknown as Record<Bucket, JsonRecord[]>
+		const rows = emptyRows()
 		let coverage: Coverage = "complete"
 		const totals: number[] = []
 		const cursors = new Set<string>()
@@ -207,7 +254,7 @@ export function createMdblistClient(options: {
 					"This MDBList account has more pages than GoodWatch reads in one import.",
 					400,
 				)
-			const { body, headers } = await request(apiKey, spec.path, {
+			const { body, headers } = await request(call, spec.path, {
 				...spec.params,
 				...(filter ? { mediatype: filter } : {}),
 				limit: String(pageSize),
@@ -301,12 +348,12 @@ export function createMdblistClient(options: {
 		return { rows, coverage }
 	}
 
-	async function read(apiKey: string, spec: RouteSpec): Promise<RouteRead> {
-		const combined = await readOnce(apiKey, spec)
+	async function read(call: Call, spec: RouteSpec): Promise<RouteRead> {
+		const combined = await readOnce(call, spec)
 		let coverage = combined.coverage
 		for (const type of spec.crossCheck ?? []) {
 			const bucket = `${type}s` as Bucket
-			const filtered = await readOnce(apiKey, spec, type)
+			const filtered = await readOnce(call, spec, type)
 			coverage = worse(coverage, filtered.coverage)
 			const a = combined.rows[bucket].map(identity).sort()
 			const b = filtered.rows[bucket].map(identity).sort()
@@ -320,7 +367,11 @@ export function createMdblistClient(options: {
 	}
 
 	return {
-		async readAccount(apiKey: string): Promise<ParsedImport> {
+		async readAccount(
+			apiKey: string,
+			options: { signal?: AbortSignal } = {},
+		): Promise<ParsedImport> {
+			const call: Call = { apiKey, signal: options.signal }
 			const observations: ImportObservation[] = []
 			const warnings: ImportWarning[] = [
 				importInfo(
@@ -342,7 +393,7 @@ export function createMdblistClient(options: {
 					)
 			}
 
-			const watchlist = await read(apiKey, {
+			const watchlist = await read(call, {
 				path: "/watchlist/items",
 				buckets: BUCKETS,
 				counts: true,
@@ -360,21 +411,65 @@ export function createMdblistClient(options: {
 						addedAt: moment(row.watchlist_at),
 					})
 				}
+			// A season or episode on the Watchlist is offered as Want to See for the whole show, unselected until the
+			// member chooses it, as wishlist files do (#715).
+			const wantedShows = new Set(
+				watchlist.rows.shows.map((row) =>
+					sourceKey(topLevel(row, "show"), row),
+				),
+			)
 			for (const bucket of ["seasons", "episodes"] as const)
 				for (const row of watchlist.rows[bucket]) {
-					const show = parent(row, bucket === "seasons" ? "season" : "episode")
+					const scope = bucket === "seasons" ? "season" : "episode"
+					const show = parent(row, scope)
+					const at = coordinates(row)
+					const showKey = sourceKey(show, row)
+					const key = `mdblist:want:${scope}:${showKey}:${at.season ?? ""}:${at.episode ?? ""}`
+					if ((show.tmdbId || show.imdbId) && wantedShows.has(showKey)) {
+						observations.push({
+							key,
+							kind: "unsupported",
+							...show,
+							problem: {
+								outcome: "unsupported",
+								reason: "The whole show is also on your MDBList Watchlist.",
+							},
+						})
+						continue
+					}
+					const sourceId = record(
+						record(record(row[scope])?.show ?? row.show)?.ids,
+					)?.mdblist
+					const valid =
+						at.season !== null && (scope === "season" || at.episode !== null)
 					observations.push({
-						key: `mdblist:want:${bucket}:${sourceKey(show, row)}:${JSON.stringify(coordinates(row))}`,
-						kind: "unsupported",
+						key,
+						kind: "want",
 						...show,
-						problem: {
-							outcome: "unsupported",
-							reason: `GoodWatch adds whole shows to Want to See. This MDBList ${bucket === "seasons" ? "season" : "episode"} wasn't added.`,
+						season: at.season,
+						...(scope === "episode" ? { episode: at.episode } : {}),
+						addedAt: moment(row.watchlist_at),
+						wishlistEvidence: {
+							source: "mdblist",
+							profileLabel: "MDBList Watchlist",
+							completeness: watchlist.coverage,
+							mediaType: scope,
+							...(typeof sourceId === "string" && sourceId
+								? { sourceId: sourceId.slice(0, 100) }
+								: {}),
 						},
+						...(valid
+							? {}
+							: {
+									problem: {
+										outcome: "invalid" as const,
+										reason: `This MDBList ${scope} has no ${scope === "season" ? "season" : "season or episode"} number.`,
+									},
+								}),
 					})
 				}
 
-			const plays = await read(apiKey, {
+			const plays = await read(call, {
 				path: "/sync/watched",
 				params: { plays: "all" },
 				buckets: ["movies", "episodes"],
@@ -382,30 +477,16 @@ export function createMdblistClient(options: {
 				noun: "your watch history",
 			})
 			check(plays, "your watch history")
-			// The latest watch date per item. MDBList keeps a later one on the item than in its plays when a watch was
-			// added without a play (owner decision Q43, October 23, 2026: that is a real extra watch).
-			const items = {
-				movies: await readOnce(
-					apiKey,
-					{
-						path: "/sync/watched",
-						buckets: ["movies"],
-						noun: "your watched movies",
-					},
-					"movie",
-				),
-				episodes: await readOnce(
-					apiKey,
-					{
-						path: "/sync/watched",
-						buckets: ["episodes"],
-						noun: "your watched episodes",
-					},
-					"episode",
-				),
-			}
-			check(items.movies, "your watched movies")
-			check(items.episodes, "your watched episodes")
+			// A movie's latest watch date. MDBList keeps a later one on the movie than in its plays when a watch was added
+			// without a play (owner Q43, October 23, 2026: a real extra watch). An episode's date can move without a viewing
+			// (owner Q48), so episodes get one watch per play only.
+			const movieDates = await read(call, {
+				path: "/sync/watched",
+				buckets: BUCKETS,
+				crossCheck: ["movie"],
+				noun: "your watched movies",
+			})
+			check(movieDates, "your watched movies")
 
 			const latestPlay = new Map<string, number>()
 			const timestamps = new Map<string, number>()
@@ -458,7 +539,7 @@ export function createMdblistClient(options: {
 						)
 					usedPlays.add(playId)
 					const watchedAt = moment(row.watched_at)
-					const item = itemKey(row, bucket)
+					const item = bucket === "movies" ? movieKey(row) : null
 					if (watchedAt && item)
 						latestPlay.set(
 							item,
@@ -469,17 +550,16 @@ export function createMdblistClient(options: {
 					)
 				}
 			let latestOnly = 0
-			for (const bucket of ["movies", "episodes"] as const)
-				for (const row of items[bucket].rows[bucket]) {
-					const item = itemKey(row, bucket)
-					const last = moment(row.last_watched_at)
-					if (!item || !last || Date.parse(last) <= (latestPlay.get(item) ?? 0))
-						continue
-					latestOnly++
-					observations.push(
-						watch(row, bucket, `mdblist:watch:latest:${item}:${last}`, last),
-					)
-				}
+			for (const row of movieDates.rows.movies) {
+				const item = movieKey(row)
+				const last = moment(row.last_watched_at)
+				if (!last || Date.parse(last) <= (latestPlay.get(item) ?? 0)) continue
+				latestOnly++
+				// A movie without catalog IDs is kept: it shows as unmatched with its title, and its key holds the native ID.
+				observations.push(
+					watch(row, "movies", `mdblist:watch:latest:${item}:${last}`, last),
+				)
+			}
 			if (latestOnly)
 				warnings.push(
 					importInfo(
@@ -494,7 +574,7 @@ export function createMdblistClient(options: {
 					),
 				)
 
-			const ratings = await read(apiKey, {
+			const ratings = await read(call, {
 				path: "/sync/ratings",
 				buckets: BUCKETS,
 				noun: "your ratings",
@@ -544,7 +624,7 @@ export function createMdblistClient(options: {
 					),
 				)
 
-			const dropped = await read(apiKey, {
+			const dropped = await read(call, {
 				path: "/sync/dropped",
 				buckets: ["shows"],
 				noun: "your dropped shows",
@@ -559,7 +639,7 @@ export function createMdblistClient(options: {
 					showStatus: "dropped",
 				})
 			}
-			const droppedSeasons = await read(apiKey, {
+			const droppedSeasons = await read(call, {
 				path: "/sync/seasons/dropped",
 				buckets: ["seasons"],
 				noun: "your dropped seasons",
@@ -579,9 +659,77 @@ export function createMdblistClient(options: {
 				})
 			}
 
+			// Each list becomes one private GoodWatch list through the shared list import (#758), in MDBList's order.
+			const index = await request(call, "/lists/user", {})
+			if (!Array.isArray(index.body))
+				throw new MdblistError(
+					"MDBList sent an unreadable list. Please try again.",
+				)
+			let listCoverage: Coverage = "complete"
+			const lists = index.body.map(record)
+			for (const list of lists) {
+				const id = positiveId(list?.id)
+				if (!list || !id) {
+					listCoverage = worse(listCoverage, "unknown")
+					continue
+				}
+				const entries = await readOnce(call, {
+					path: `/lists/${id}/items`,
+					buckets: BUCKETS,
+					noun: "your MDBList lists",
+				})
+				listCoverage = worse(listCoverage, entries.coverage)
+				const count = BUCKETS.reduce((n, b) => n + entries.rows[b].length, 0)
+				if (typeof list.items !== "number")
+					listCoverage = worse(listCoverage, "unknown")
+				else if (list.items !== count)
+					listCoverage = worse(listCoverage, "partial")
+				// MDBList ranks entries across movies and shows; without a rank, they keep the order read.
+				const ranked = BUCKETS.flatMap((bucket) =>
+					entries.rows[bucket].map((row) => ({ bucket, row })),
+				)
+					.map((item, at) => ({
+						...item,
+						order: positiveId(item.row.rank) ?? Number.MAX_SAFE_INTEGER,
+						at,
+					}))
+					.sort((a, b) => a.order - b.order || a.at - b.at)
+				const listed: ImportCustomList["entries"] = ranked.map(
+					({ bucket, row }, at) => {
+						const position = at + 1
+						const title = bucket === "movies" || bucket === "shows"
+						const entry: ImportObservation = {
+							key: `mdblist:list:${id}:${position}`,
+							kind: "want",
+							...(title
+								? topLevel(row, bucket === "movies" ? "movie" : "show")
+								: parent(row, bucket === "seasons" ? "season" : "episode")),
+						}
+						if (!title)
+							entry.problem = {
+								outcome: "unsupported",
+								reason: `MDBList ${bucket === "seasons" ? "season" : "episode"} entries can't be stored as movie or show list items.`,
+							}
+						return { position, note: "", entry }
+					},
+				)
+				observations.push(
+					customListObservation({
+						sourceId: `mdblist:${id}`,
+						name:
+							typeof list.name === "string" && list.name.trim()
+								? list.name.slice(0, 500)
+								: `MDBList list ${id}`,
+						description:
+							typeof list.description === "string" ? list.description : "",
+						entries: listed,
+					}),
+				)
+			}
+			check({ rows: emptyRows(), coverage: listCoverage }, "your MDBList lists")
 			warnings.push(
 				importInfo(
-					"MDBList custom lists, collection, liked lists, and favorite people aren't part of this import.",
+					"MDBList collection, liked lists, and favorite people aren't part of this import.",
 				),
 			)
 			const parsed: ParsedImport = { source: "mdblist", observations, warnings }
@@ -651,19 +799,9 @@ function sourceKey(base: Base, row: JsonRecord) {
 		: `title:${base.title}:${base.year ?? ""}`
 }
 
-/** One movie, or one episode of one show, across the plays and the per-item rows. */
-function itemKey(row: JsonRecord, bucket: "movies" | "episodes") {
-	if (bucket === "movies") {
-		const base = nested(row.movie, "movie")
-		return base.tmdbId || base.imdbId ? `movie:${sourceKey(base, row)}` : null
-	}
-	const episode = record(row.episode)
-	const show = nested(episode?.show, "show")
-	const season = seasonNumber(episode?.season)
-	const number = positiveId(episode?.number)
-	if ((!show.tmdbId && !show.imdbId) || season === null || number === null)
-		return null
-	return `episode:${sourceKey(show, row)}:${season}:${number}`
+/** One movie across its plays and its latest watch date, by catalog ID or else MDBList's own ID. */
+function movieKey(row: JsonRecord) {
+	return `movie:${sourceKey(nested(row.movie, "movie"), row)}`
 }
 
 /** For the per-type comparison: the same row reads the same in both reads. */

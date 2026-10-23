@@ -259,6 +259,26 @@ test("MDBList opens on its key form, never on another source's connection state,
 	assert.match(runs.mdblistDone.text, /Connect MDBList again/)
 })
 
+test("an MDBList Watchlist season is added as the whole show only when the member ticks Want to See the show", () => {
+	const run = runs.mdblistShows as unknown as {
+		text: string
+		confirms: unknown[]
+	}
+	assert.match(
+		run.text,
+		/Your MDBList Watchlist lists seasons or episodes of 1 show/,
+	)
+	assert.deepEqual(run.confirms, [
+		{
+			kinds: ["watch", "want"],
+			conflictChoice: "keep",
+			watchDates: "preserve",
+			wishlistRewatch: false,
+			wishlistShows: true,
+		},
+	])
+})
+
 test("a Watcharr export in the one box goes to the wishlist import's preview", () => {
 	const run = runs.oneBoxWatcharr
 	assert.deepEqual(previews(run), [

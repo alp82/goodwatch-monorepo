@@ -17,6 +17,8 @@ export interface FakeMdblistAccount {
 	ratings: Buckets
 	dropped: Buckets
 	droppedSeasons: Buckets
+	/** The member's own lists, each with its entries in the Watchlist's envelope. */
+	lists: { id: number; name: string; slug: string; entries: Buckets }[]
 }
 
 export type FakeRoute =
@@ -26,6 +28,8 @@ export type FakeRoute =
 	| "ratings"
 	| "dropped"
 	| "droppedSeasons"
+	| "lists"
+	| "listItems"
 
 export interface FakeMdblistOptions {
 	key?: string
@@ -48,6 +52,8 @@ export interface FakeMdblistOptions {
 	/** Fail the first n requests with this status. */
 	flaky?: { status: number; times: number; retryAfter?: string }
 	rateLimitRemaining?: number
+	/** Replace a list's item count in /lists/user. */
+	listCount?: (id: number, count: number) => number
 }
 
 const ids = (tmdb: number, imdb: string | null, extra: Row = {}) => ({
@@ -70,6 +76,12 @@ const chernobyl = {
 	ids: ids(87108, "tt7366338"),
 }
 const lost = { title: "Lost", year: 2004, ids: ids(4607, "tt0411008") }
+const theWire = { title: "The Wire", year: 2002, ids: ids(1438, "tt0306414") }
+const severance = {
+	title: "Severance",
+	year: 2022,
+	ids: ids(95396, "tt11280740"),
+}
 const pilot = {
 	season: 1,
 	number: 1,
@@ -119,26 +131,41 @@ export function syntheticMdblistAccount(): FakeMdblistAccount {
 					"2026-09-02T10:00:00.000Z",
 				),
 			],
-			shows: [
-				want(
-					{ title: "Severance", year: 2022, ids: ids(95396, "tt11280740") },
-					"show",
-					"2026-09-03T10:00:00.000Z",
-				),
-			],
+			shows: [want(severance, "show", "2026-09-03T10:00:00.000Z")],
 			seasons: [
 				{
-					season: { number: 2, ids: { tmdb: 3625 }, show: lost },
+					season: { number: 2, ids: { tmdb: 3625 }, show: theWire },
 					watchlist_at: "2026-09-04T10:00:00.000Z",
 				},
 			],
-			episodes: [],
+			episodes: [
+				// Its show is on the Watchlist too, so the whole show is already wanted.
+				{
+					episode: {
+						season: 1,
+						number: 1,
+						name: "Good News About Hell",
+						ids: { tmdb: 1981411 },
+						show: severance,
+					},
+					watchlist_at: "2026-09-05T10:00:00.000Z",
+				},
+			],
 		},
 		watched: {
 			movies: [
 				// Watched three times: two plays in history, and a later latest watch only on the item.
 				{ last_watched_at: "2026-10-20T20:00:00.000Z", movie: toyStory },
 				{ last_watched_at: "2026-05-01T20:00:00.000Z", movie: matrix },
+				// No catalog ID and no play: its one watch exists only as the latest watched date.
+				{
+					last_watched_at: "2026-04-04T19:00:00.000Z",
+					movie: {
+						title: "Synthetic Home Movie",
+						year: 2020,
+						ids: { mdblist: "mdbl-home-1" },
+					},
+				},
 			],
 			shows: [
 				{ last_watched_at: "2026-10-01T21:00:00.000Z", show: breakingBad },
@@ -152,8 +179,9 @@ export function syntheticMdblistAccount(): FakeMdblistAccount {
 			episodes: [
 				{ last_watched_at: "2026-10-01T21:00:00.000Z", episode: pilot },
 				{ last_watched_at: "2026-10-01T21:00:00.000Z", episode: catsInTheBag },
+				// Moved after its only play without a new viewing (owner Q48): not an extra watch.
 				{
-					last_watched_at: "2026-08-15T21:00:00.000Z",
+					last_watched_at: "2026-08-15T21:46:17.000Z",
 					episode: oneTwentyThree,
 				},
 			],
@@ -232,6 +260,17 @@ export function syntheticMdblistAccount(): FakeMdblistAccount {
 				},
 			],
 		},
+		lists: [
+			{
+				id: 501,
+				name: "Synthetic picks",
+				slug: "synthetic-picks",
+				entries: {
+					movies: [want(matrix, "movie", "2026-09-06T10:00:00.000Z")],
+					shows: [want(chernobyl, "show", "2026-09-06T10:01:00.000Z")],
+				},
+			},
+		],
 	}
 }
 
@@ -242,6 +281,8 @@ const routeOf = (url: URL): FakeRoute | null => {
 	if (url.pathname === "/sync/ratings") return "ratings"
 	if (url.pathname === "/sync/dropped") return "dropped"
 	if (url.pathname === "/sync/seasons/dropped") return "droppedSeasons"
+	if (url.pathname === "/lists/user") return "lists"
+	if (/^\/lists\/\d+\/items$/.test(url.pathname)) return "listItems"
 	return null
 }
 const ROUTE_BUCKETS: Record<FakeRoute, Bucket[]> = {
@@ -251,6 +292,8 @@ const ROUTE_BUCKETS: Record<FakeRoute, Bucket[]> = {
 	ratings: ["movies", "shows", "seasons", "episodes"],
 	dropped: ["shows"],
 	droppedSeasons: ["seasons"],
+	lists: [],
+	listItems: ["movies", "shows", "seasons", "episodes"],
 }
 const FILTER_BUCKET: Record<string, Bucket> = {
 	movie: "movies",
@@ -306,11 +349,32 @@ export function fakeMdblist(options: FakeMdblistOptions = {}): FakeMdblist {
 				? options.status
 				: options.status?.[route]
 		if (status) return json({ error: `failure for ${key}` }, status)
+		if (route === "lists")
+			return json(
+				account.lists.map((list) => {
+					const count = Object.values(list.entries).flat().length
+					return {
+						id: list.id,
+						name: list.name,
+						slug: list.slug,
+						items: options.listCount
+							? options.listCount(list.id, count)
+							: count,
+						likes: 0,
+						ranked: 0,
+					}
+				}),
+			)
 		const filter = url.searchParams.get("mediatype")
 		const buckets = ROUTE_BUCKETS[route].filter(
 			(bucket) => !filter || FILTER_BUCKET[filter] === bucket,
 		)
-		const source = account[route]
+		const source =
+			route === "listItems"
+				? (account.lists.find(
+						(list) => url.pathname === `/lists/${list.id}/items`,
+					)?.entries ?? {})
+				: account[route as Exclude<FakeRoute, "lists" | "listItems">]
 		const rows = buckets.flatMap((bucket) =>
 			(source[bucket] ?? []).map((row, index) => ({ bucket, row, index })),
 		)

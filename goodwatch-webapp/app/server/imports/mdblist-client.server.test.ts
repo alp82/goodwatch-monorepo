@@ -25,7 +25,7 @@ const byKind = (parsed: ParsedImport, kind: ImportObservation["kind"]) =>
 const actionable = (parsed: ParsedImport) =>
 	parsed.warnings.filter((w) => w.kind === "actionable").map((w) => w.message)
 
-test("a full account becomes Want to See, one watch per play, the later latest watch, scores and Dropped", async () => {
+test("a full account becomes Want to See, one watch per play, a movie's later latest watch, scores and Dropped", async () => {
 	const { fake, read } = client()
 	const parsed = await read()
 	assert.equal(parsed.source, "mdblist")
@@ -38,7 +38,22 @@ test("a full account becomes Want to See, one watch per play, the later latest w
 			["movie", 438631, "tt1160419", "2026-09-01T10:00:00.000Z"],
 			["movie", 655, "tt0087884", "2026-09-02T10:00:00.000Z"],
 			["show", 95396, "tt11280740", "2026-09-03T10:00:00.000Z"],
+			["show", 1438, "tt0306414", "2026-09-04T10:00:00.000Z"],
 		],
+	)
+	// A Watchlist season is offered as Want to See for the whole show, unselected until the member chooses (#715).
+	const season = wants.find((row) => row.tmdbId === 1438)
+	assert.equal(season?.title, "The Wire")
+	assert.deepEqual(season?.wishlistEvidence, {
+		source: "mdblist",
+		profileLabel: "MDBList Watchlist",
+		completeness: "complete",
+		mediaType: "season",
+		sourceId: "mdbl-1438",
+	})
+	assert.equal(season?.season, 2)
+	assert.ok(
+		wants.filter((row) => row !== season).every((row) => !row.wishlistEvidence),
 	)
 
 	const watches = byKind(parsed, "watch")
@@ -53,6 +68,19 @@ test("a full account becomes Want to See, one watch per play, the later latest w
 	assert.equal(new Set(toyStory.map((row) => row.key)).size, 3)
 	// A latest watch equal to the last play is the same watch.
 	assert.equal(watches.filter((row) => row.tmdbId === 603).length, 1)
+	// A movie without catalog IDs keeps its latest watch as an unmatched row with its title and native ID.
+	const home = watches.filter((row) => row.title === "Synthetic Home Movie")
+	assert.deepEqual(
+		home.map((row) => [
+			row.mediaType,
+			row.tmdbId,
+			row.imdbId,
+			row.year,
+			row.watchedAt,
+		]),
+		[["movie", null, null, 2020, "2026-04-04T19:00:00.000Z"]],
+	)
+	assert.match(home[0].key, /mdblist:mdbl-home-1/)
 	const episodes = watches.filter((row) => row.mediaType === "show")
 	assert.deepEqual(
 		episodes.map((row) => [
@@ -68,6 +96,8 @@ test("a full account becomes Want to See, one watch per play, the later latest w
 		],
 	)
 	assert.ok(episodes.every((row) => row.episodeNumbering === "tmdb"))
+	// An episode's latest date can move without a viewing (owner Q48): episodes get one watch per play only.
+	assert.ok(episodes.every((row) => !row.key.includes(":latest:")))
 
 	const ratings = byKind(parsed, "rating")
 	assert.deepEqual(
@@ -88,17 +118,31 @@ test("a full account becomes Want to See, one watch per play, the later latest w
 		row.problem?.reason,
 	])
 	assert.deepEqual(unsupported, [
-		[
-			4607,
-			"GoodWatch adds whole shows to Want to See. This MDBList season wasn't added.",
-		],
+		[95396, "The whole show is also on your MDBList Watchlist."],
 		[87108, "GoodWatch doesn't import season or episode ratings yet."],
 		[
 			4607,
 			"GoodWatch doesn't track dropped seasons, so this season was left as it is.",
 		],
 	])
-
+	// Each MDBList list becomes one private GoodWatch list through the shared list import (#758).
+	const lists = byKind(parsed, "list")
+	assert.equal(lists.length, 1)
+	assert.equal(lists[0].customList?.name, "Synthetic picks")
+	assert.equal(lists[0].customList?.sourceId, "mdblist:501")
+	assert.deepEqual(
+		lists[0].customList?.entries.map(({ position, entry }) => [
+			position,
+			entry.mediaType,
+			entry.tmdbId,
+			entry.title,
+			entry.problem?.outcome ?? null,
+		]),
+		[
+			[1, "movie", 603, "The Matrix", null],
+			[2, "show", 87108, "Chernobyl", null],
+		],
+	)
 	// Read-only and identified: every request is a GET with GoodWatch's User-Agent, and the key only in apikey.
 	assert.ok(fake.requests.every((r) => r.method === "GET"))
 	assert.ok(fake.requests.every((r) => /^GoodWatch\//.test(r.userAgent ?? "")))
@@ -110,8 +154,9 @@ test("a full account becomes Want to See, one watch per play, the later latest w
 			(r) => !r.url.pathname.includes(KEY) && !r.url.hash.includes(KEY),
 		),
 	)
-	// Watchlist 1 + 4 type reads, plays 1 + 2, item dates 2, ratings, dropped shows, dropped seasons.
-	assert.equal(fake.requests.length, 13)
+	// Watchlist 1 + 4 type reads, plays 1 + 2, movie dates 1 + 1, ratings, dropped shows, dropped seasons,
+	// the list index and one list.
+	assert.equal(fake.requests.length, 15)
 	assert.doesNotMatch(JSON.stringify(parsed), new RegExp(KEY))
 })
 
@@ -119,7 +164,7 @@ test("pages follow the cursor to the end and stay complete", async () => {
 	const { fake, read } = client({ pageSize: 2 })
 	const parsed = await read()
 	assert.deepEqual(actionable(parsed), [])
-	assert.equal(byKind(parsed, "watch").length, 7)
+	assert.equal(byKind(parsed, "watch").length, 8)
 	assert.ok(fake.requests.some((r) => r.url.searchParams.has("cursor")))
 })
 
@@ -306,4 +351,109 @@ test("an invalid half step is kept visible as invalid; the whole number is used 
 			[3, null, "invalid"],
 		],
 	)
+})
+
+test("the latest-watch dates are checked like any read: a missing movie or no end signal is reported", async () => {
+	const missing = client({
+		skipInFilteredRead: { route: "watched", mediatype: "movie" },
+	})
+	assert.match(
+		actionable(await missing.read()).join(" "),
+		/count of your watched movies didn't match what GoodWatch read/,
+	)
+	const unended = client({
+		header: (route, name, value) =>
+			route === "watched" && name === "X-Has-More" ? null : value,
+		body: (route, body) =>
+			route === "watched"
+				? { ...body, pagination: { limit: 1000, offset: 0 } }
+				: body,
+	})
+	assert.match(
+		actionable(await unended.read()).join(" "),
+		/couldn't confirm that GoodWatch read all your watched movies/,
+	)
+})
+
+test("a list whose entries don't match its count is reported as partial", async () => {
+	const { read } = client({ listCount: (_id, count) => count + 1 })
+	assert.match(
+		actionable(await read()).join(" "),
+		/count of your MDBList lists didn't match what GoodWatch read/,
+	)
+})
+
+test("a stalled answer body times out instead of holding the key", async () => {
+	const previous = process.env.MDBLIST_TIMEOUT_MS
+	process.env.MDBLIST_TIMEOUT_MS = "40"
+	try {
+		const mdblist = createMdblistClient({
+			fetch: async () =>
+				new Response(new ReadableStream({ start() {} }), {
+					status: 200,
+					headers: { "Content-Type": "application/json" },
+				}),
+			sleep: async () => {},
+		})
+		const started = Date.now()
+		const error = await mdblist.readAccount(KEY).catch((e: unknown) => e)
+		assert.ok(error instanceof MdblistError, String(error))
+		assert.match(error.message, /couldn't reach MDBList/)
+		assert.ok(Date.now() - started < 2000)
+	} finally {
+		if (previous === undefined)
+			Reflect.deleteProperty(process.env, "MDBLIST_TIMEOUT_MS")
+		else process.env.MDBLIST_TIMEOUT_MS = previous
+	}
+})
+
+test("canceling the member's request aborts the MDBList read and stops retrying", async () => {
+	const signals: AbortSignal[] = []
+	let calls = 0
+	const mdblist = createMdblistClient({
+		fetch: async (_input, init) => {
+			calls++
+			const signal = init?.signal as AbortSignal
+			signals.push(signal)
+			return new Promise<Response>((_resolve, reject) => {
+				signal.addEventListener("abort", () => reject(signal.reason), {
+					once: true,
+				})
+			})
+		},
+		sleep: async () => {},
+	})
+	const controller = new AbortController()
+	const reading = mdblist
+		.readAccount(KEY, { signal: controller.signal })
+		.catch((e: unknown) => e)
+	await new Promise((resolve) => setTimeout(resolve, 10))
+	controller.abort()
+	const error = await reading
+	assert.ok(error instanceof MdblistError, String(error))
+	assert.match(error.message, /canceled/)
+	assert.equal(calls, 1)
+	assert.ok(signals[0].aborted)
+})
+
+test("a list's season or episode entries stay visible in the list, not stored as titles", async () => {
+	const account = syntheticMdblistAccount()
+	account.lists[0].entries.seasons = [
+		{
+			season: {
+				number: 1,
+				show: { title: "Lost", year: 2004, ids: { tmdb: 4607 } },
+			},
+		},
+	]
+	const { read } = client({ account })
+	const parsed = await read()
+	assert.deepEqual(actionable(parsed), [])
+	const entries = byKind(parsed, "list")[0].customList?.entries ?? []
+	assert.equal(entries.length, 3)
+	assert.deepEqual(
+		entries.map(({ entry }) => entry.problem?.outcome ?? null),
+		[null, null, "unsupported"],
+	)
+	assert.match(entries[2].entry.problem?.reason ?? "", /MDBList season entries/)
 })

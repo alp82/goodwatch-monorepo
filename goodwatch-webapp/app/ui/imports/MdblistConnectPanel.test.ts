@@ -21,10 +21,31 @@ test("MDBList controls take a hidden, unsaved key field, post it to GoodWatch on
 	)
 	assert.match(rendered.start, /https:\/\/mdblist.com\/preferences\//)
 	assert.match(rendered.start, /full access/)
+	assert.match(rendered.start, /dropped shows, and your lists/)
 	assert.match(rendered.start, /doesn’t\s+save the key/)
 	assert.match(rendered.start, /Preview MDBList import/)
 	assert.doesNotMatch(rendered.start, /type="file"|method="get"/i)
 	assert.match(rendered.busy, /disabled=""/)
 	assert.match(rendered.busy, /Reading MDBList/)
 	assert.match(rendered.failed, /role="alert"/)
+})
+
+test("the key field is empty after every submission, accepted or refused, and keeps typing between them", () => {
+	const output = execFileSync(
+		"node_modules/.bin/vite-node",
+		[
+			"--config",
+			"app/ui/imports/source-import-test-vite.config.ts",
+			"app/ui/imports/mdblist-connect-interaction.test-support.tsx",
+		],
+		{ encoding: "utf8" },
+	)
+	const values = JSON.parse(output.split("__MDBLIST_FORM__").at(-1) ?? "")
+	assert.deepEqual(values, {
+		typed: "synthetic-key-0001",
+		whileReading: "",
+		afterRefusal: "",
+		afterSecond: "",
+		typingKept: "synthetic-key-0003",
+	})
 })

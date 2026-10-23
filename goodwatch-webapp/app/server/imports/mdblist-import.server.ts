@@ -67,7 +67,10 @@ export function createMdblistImport(deps: {
 			running.add(keyLock)
 			running.add(memberLock)
 			try {
-				const parsed = await deps.client.readAccount(apiKey)
+				// The member's request signal: leaving the page stops the read and frees the lock.
+				const parsed = await deps.client.readAccount(apiKey, {
+					signal: request.signal,
+				})
 				apiKey = ""
 				const summary = await preview(userId, "MDBList account", parsed)
 				headers.set(

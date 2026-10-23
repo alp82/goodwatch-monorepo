@@ -112,14 +112,27 @@ function GeneralImportPreview({
 			initialChoices ?? {
 				kinds: available,
 				conflictChoice: "keep",
-				watchDates: null,
+				// Fewest steps (owner rule): the source's own dates, which the member can still change.
+				watchDates: "preserve",
 			},
 	)
-	const { kinds, conflictChoice, watchDates, wishlistRewatch = false } = choices
-	const rewatchCount =
-		summary.source === "wishlist" || summary.source === "imdb_list"
-			? (summary.wishlistRewatchChoiceCount ?? 0)
-			: 0
+	const {
+		kinds,
+		conflictChoice,
+		watchDates,
+		wishlistRewatch = false,
+		wishlistShows = false,
+	} = choices
+	const wishlistChoices =
+		summary.source === "wishlist" ||
+		summary.source === "imdb_list" ||
+		summary.source === "mdblist"
+	const rewatchCount = wishlistChoices
+		? (summary.wishlistRewatchChoiceCount ?? 0)
+		: 0
+	const showChoiceCount = wishlistChoices
+		? (summary.wishlistShowChoiceCount ?? 0)
+		: 0
 	const choose = (next: SourceImportChoices) => {
 		setChoices(next)
 		onChoicesChange?.(next)
@@ -278,14 +291,41 @@ function GeneralImportPreview({
 					</div>
 				</fieldset>
 			)}
+			{showChoiceCount > 0 && kinds.includes("want") && (
+				<label className="flex items-start gap-3 rounded-lg border border-slate-700 p-3">
+					<input
+						type="checkbox"
+						name="wishlist-shows"
+						checked={wishlistShows}
+						onChange={(event) =>
+							choose({ ...choices, wishlistShows: event.target.checked })
+						}
+						disabled={confirming || locked}
+						className="mt-1 size-4 accent-indigo-500"
+					/>
+					<span>
+						<span className="block font-semibold text-gray-100">
+							Want to See the show
+						</span>
+						<span className="block text-sm text-gray-400">
+							{summary.source === "mdblist"
+								? "Your MDBList Watchlist lists"
+								: "This file lists"}{" "}
+							seasons or episodes of {formatCount(showChoiceCount)}{" "}
+							{showChoiceCount === 1 ? "show" : "shows"}. Add the whole show to
+							Want to See. No episode progress is imported.
+						</span>
+					</span>
+				</label>
+			)}
 			{importsWatches && (
 				<fieldset className="space-y-2">
 					<legend className="mb-1 font-semibold text-gray-100">
 						How should watch dates be handled?
 					</legend>
 					<p className="text-sm text-gray-400">
-						Choose explicitly. GoodWatch never silently changes or invents watch
-						dates.
+						GoodWatch keeps the source's dates unless you choose otherwise. It
+						never invents watch dates.
 					</p>
 					<Radio
 						name="watch-dates"
@@ -357,10 +397,8 @@ function GeneralImportPreview({
 							kinds,
 							conflictChoice,
 							watchDates: requirements.watchDates,
-							...(summary.source === "wishlist" ||
-							summary.source === "imdb_list"
-								? { wishlistRewatch }
-								: {}),
+							...(wishlistChoices ? { wishlistRewatch } : {}),
+							...(showChoiceCount > 0 ? { wishlistShows } : {}),
 						})
 					}
 				>

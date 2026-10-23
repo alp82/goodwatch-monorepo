@@ -1,4 +1,5 @@
 import { useFetcher } from "@remix-run/react"
+import { useEffect, useRef, useState } from "react"
 import { errorBox, primaryButton, stepHeading, textLink } from "./shared"
 
 // MDBList has no sign-in for other apps that limits access, so the member pastes their personal API key. The key
@@ -6,14 +7,24 @@ import { errorBox, primaryButton, stepHeading, textLink } from "./shared"
 export function MdblistConnectControls({
 	pending,
 	error,
-}: { pending: boolean; error?: string }) {
+	submissions = 0,
+}: {
+	pending: boolean
+	error?: string
+	/** Counts the form's submissions. Each one empties the key field, whatever MDBList answers. */
+	submissions?: number
+}) {
+	const keyField = useRef<HTMLInputElement>(null)
+	useEffect(() => {
+		if (submissions > 0 && keyField.current) keyField.current.value = ""
+	}, [submissions])
 	return (
 		<>
 			<h3 className={stepHeading}>Connect MDBList</h3>
 			<p className="text-gray-400">
 				Bring your MDBList Watchlist, each watch with its date, episodes, movie
-				and show ratings, and dropped shows into GoodWatch. You will review
-				everything before changing your library.
+				and show ratings, dropped shows, and your lists into GoodWatch. You will
+				review everything before changing your library.
 			</p>
 			<ol className="list-decimal space-y-1 pl-5 text-gray-300">
 				<li>
@@ -34,6 +45,7 @@ export function MdblistConnectControls({
 			<label className="flex flex-col gap-2">
 				MDBList API key
 				<input
+					ref={keyField}
 					type="password"
 					name="apiKey"
 					required
@@ -74,11 +86,17 @@ export function MdblistConnectControls({
 
 export function MdblistConnectPanel() {
 	const fetcher = useFetcher<{ error?: string }>()
+	// The form data is taken before the fetcher reports "submitting", so the field can be emptied then.
+	const [submissions, setSubmissions] = useState(0)
+	useEffect(() => {
+		if (fetcher.state === "submitting") setSubmissions((count) => count + 1)
+	}, [fetcher.state])
 	return (
 		<fetcher.Form method="post" className="flex flex-col gap-4">
 			<MdblistConnectControls
 				pending={fetcher.state !== "idle"}
 				error={fetcher.data?.error}
+				submissions={submissions}
 			/>
 		</fetcher.Form>
 	)
