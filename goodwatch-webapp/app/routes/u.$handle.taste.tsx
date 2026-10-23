@@ -4,18 +4,23 @@
 // Spec: docs/implementation/member-profile/README.md
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
-import { type ProfileShell, canSee } from "~/domain/profile"
+import { type ProfileShell, seesPart } from "~/domain/profile"
 import type { MemberCompare } from "~/domain/profile-taste"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { getMemberCompare } from "~/server/profile/compare.server"
 import { getProfilePortrait } from "~/server/profile/portrait.server"
 import { profileLoader } from "~/server/profile/route.server"
+import { statsForViewer } from "~/server/profile/taste-stats-view"
 import { getTasteStats } from "~/server/profile/taste-stats.server"
 import { ProfileFrame } from "~/ui/profile/ProfileFrame"
 import { profileMeta } from "~/ui/profile/meta"
 import { TastePage } from "~/ui/profile/pages/TastePage"
-import { type ProfileTaste, buildProfileTaste, theirLine } from "~/ui/profile/taste/model"
 import type { NamedTasteStats } from "~/ui/profile/taste/Stats"
+import {
+	type ProfileTaste,
+	buildProfileTaste,
+	theirLine,
+} from "~/ui/profile/taste/model"
 import { languageName, regionName } from "~/utils/display-names"
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -28,27 +33,64 @@ interface Data {
 }
 
 const load = (args: LoaderFunctionArgs) =>
-	profileLoader(args, async ({ ownerId, viewerId, shell }): Promise<Omit<Data, "shell">> => {
-		if (!canSee(shell.visibility, "taste", shell.viewer)) return { taste: null, stats: null, compare: null }
-		const scores = canSee(shell.visibility, "scores", shell.viewer)
-		const [fingerprint, sides, everyone, stats, compare] = await Promise.all([
-			getProfilePortrait(ownerId, "fingerprint", { scores }),
-			getProfilePortrait(ownerId, "sides", { scores }),
-			getProfilePortrait(ownerId, "everyone", { scores }),
-			getTasteStats(ownerId).catch(() => null),
-			shell.viewer === "member" ? getMemberCompare(viewerId, ownerId, shell.visibility) : Promise.resolve(null),
-		])
-		// Names for the codes here, so the server's and the browser's name tables can't disagree on hydration.
-		const named: NamedTasteStats | null = stats && {
-			...stats,
-			world: {
-				...stats.world,
-				countries: stats.world.countries.map((c) => ({ ...c, name: regionName(c.code) })),
-				languages: stats.world.languages.map((l) => ({ ...l, name: languageName(l.code) })),
-			},
-		}
-		return { taste: buildProfileTaste(fingerprint, sides, everyone), stats: named, compare }
-	})
+	profileLoader(
+		args,
+		async ({ ownerId, viewerId, shell }): Promise<Omit<Data, "shell">> => {
+			if (!seesPart(shell, "taste"))
+				return { taste: null, stats: null, compare: null }
+			const scores = seesPart(shell, "scores")
+			// A part that fails to load is left out; the page still renders.
+			const orNull = <T,>(work: Promise<T>, what: string) =>
+				work.catch((error) => {
+					console.error(`[profile] taste tab: ${what} failed`, error)
+					return null
+				})
+			const [fingerprint, sides, everyone, raw, compare] = await Promise.all([
+				orNull(
+					getProfilePortrait(ownerId, "fingerprint", { scores }),
+					"fingerprint",
+				),
+				orNull(getProfilePortrait(ownerId, "sides", { scores }), "sides"),
+				orNull(getProfilePortrait(ownerId, "everyone", { scores }), "crowd"),
+				orNull(getTasteStats(ownerId), "stats"),
+				shell.viewer === "member"
+					? orNull(
+							getMemberCompare(viewerId, ownerId, shell.visibility),
+							"compare",
+						)
+					: null,
+			])
+			// The numbers are the owner's in full; cut them to the parts this viewer may see.
+			const stats =
+				raw &&
+				statsForViewer(raw, {
+					scores,
+					seen: seesPart(shell, "seen"),
+					shows: seesPart(shell, "shows"),
+					hours: seesPart(shell, "hours"),
+				})
+			// Names for the codes here, so the server's and the browser's name tables can't disagree on hydration.
+			const named: NamedTasteStats | null = stats && {
+				...stats,
+				world: {
+					...stats.world,
+					countries: stats.world.countries.map((c) => ({
+						...c,
+						name: regionName(c.code),
+					})),
+					languages: stats.world.languages.map((l) => ({
+						...l,
+						name: languageName(l.code),
+					})),
+				},
+			}
+			const taste =
+				fingerprint && sides && everyone
+					? buildProfileTaste(fingerprint, sides, everyone)
+					: null
+			return { taste, stats: named, compare }
+		},
+	)
 
 export const loader = presentCatalogLoader(load, { live: true })
 
@@ -58,7 +100,9 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	return profileMeta(
 		d?.shell,
 		"taste",
-		t?.identity ? `@${d?.shell?.handle}'s viewer type: ${t.identity.name}. ${theirLine(t.line)}` : undefined,
+		t?.identity
+			? `@${d?.shell?.handle}'s viewer type: ${t.identity.name}. ${theirLine(t.line)}`
+			: undefined,
 	)
 }
 
@@ -70,9 +114,20 @@ export default function ProfileTasteTab() {
 			tab="taste"
 			part="taste"
 			title="Taste"
-			line={taste?.identity ? `${taste.identity.name} · read from ${taste.counted.toLocaleString("en-US")} scores` : undefined}
+			line={
+				taste?.identity
+					? `${taste.identity.name} · read from ${taste.counted.toLocaleString("en-US")} scores`
+					: undefined
+			}
 		>
-			{taste && <TastePage shell={shell} taste={taste} stats={stats} compare={compare} />}
+			{taste && (
+				<TastePage
+					shell={shell}
+					taste={taste}
+					stats={stats}
+					compare={compare}
+				/>
+			)}
 		</ProfileFrame>
 	)
 }

@@ -5,14 +5,26 @@
 // of BATCH per media type; their credits (top-billed cast, directors, writers, composers) in batches of BATCH titles;
 // the names of the people that make a list. Tropes are read only for titles scored 8 or more, the only ones the tags
 // count. At most MAX_TITLES titles, the latest first. Cached 10 minutes (taste-stats-cache.server.ts).
+//
+// Cost guards: concurrent requests for one member share one computation, and the catalog reads of every computation in
+// this process go through one queue of QUERY_CONCURRENCY, so crawlers walking many profiles can't flood Crate.
 import type { ProfileTitle } from "~/domain/profile"
 import type { TasteStats } from "~/domain/profile-taste"
 import { getUserData } from "~/server/userData.server"
 import type { MediaKey } from "~/types/user-data"
 import { query } from "~/utils/crate"
 import { titlePath } from "~/utils/helpers"
-import { readCachedTasteStats, writeCachedTasteStats } from "./taste-stats-cache.server"
-import { type Kind, type StatsCredit, type StatsPerson, type StatsTitle, tasteStats } from "./taste-stats-model"
+import {
+	readCachedTasteStats,
+	writeCachedTasteStats,
+} from "./taste-stats-cache.server"
+import {
+	type Kind,
+	type StatsCredit,
+	type StatsPerson,
+	type StatsTitle,
+	tasteStats,
+} from "./taste-stats-model"
 
 const BATCH = 400
 const MAX_TITLES = 4_000
@@ -22,13 +34,47 @@ const CAST_ORDER = 8
 const WRITER_JOBS = ["Screenplay", "Writer"]
 const COMPOSER_JOBS = ["Original Music Composer"]
 
+const QUERY_CONCURRENCY = 4
+
+/** Runs tasks with at most `n` at a time, in the order they came. */
+function queueOf(n: number) {
+	let active = 0
+	const waiting: (() => void)[] = []
+	return <T>(task: () => Promise<T>) =>
+		new Promise<T>((resolve, reject) => {
+			const run = () => {
+				active++
+				task()
+					.then(resolve, reject)
+					.finally(() => {
+						active--
+						waiting.shift()?.()
+					})
+			}
+			if (active < n) run()
+			else waiting.push(run)
+		})
+}
+const queued = queueOf(QUERY_CONCURRENCY)
+const read = <T extends {}>(sql: string, params: (string | number | Date)[]) =>
+	queued(() => query<T>(sql, params))
+
+const computing = new Map<string, Promise<TasteStats>>()
+
+/** The owner's numbers, all of them: cut them with statsForViewer (taste-stats-view.ts) before they reach a page. */
 export async function getTasteStats(ownerId: string): Promise<TasteStats> {
 	const cached = await readCachedTasteStats(ownerId)
 	if (cached) return cached
-	const readFrom = Date.now()
-	const stats = await computeTasteStats(ownerId)
-	await writeCachedTasteStats(ownerId, stats, readFrom)
-	return stats
+	const pending = computing.get(ownerId)
+	if (pending) return pending
+	const work = (async () => {
+		const readFrom = Date.now()
+		const stats = await computeTasteStats(ownerId)
+		await writeCachedTasteStats(ownerId, stats, readFrom)
+		return stats
+	})().finally(() => computing.delete(ownerId))
+	computing.set(ownerId, work)
+	return work
 }
 
 interface Own {
@@ -46,13 +92,30 @@ async function computeTasteStats(ownerId: string): Promise<TasteStats> {
 	const own = new Map<MediaKey, Own>()
 	const add = (key: MediaKey, patch: Partial<Own>) => {
 		const [mediaType, id] = key.split("-")
-		const entry = own.get(key) ?? { key, mediaType: mediaType as Own["mediaType"], tmdbId: Number(id), score: null, date: null, episodesWatched: 0 }
+		const entry = own.get(key) ?? {
+			key,
+			mediaType: mediaType as Own["mediaType"],
+			tmdbId: Number(id),
+			score: null,
+			date: null,
+			episodesWatched: 0,
+		}
 		own.set(key, { ...entry, ...patch })
 	}
-	for (const [key, entry] of Object.entries(data.scores) as [MediaKey, (typeof data.scores)[MediaKey]][])
-		if (entry.score) add(key, { score: Number(entry.score), date: entry.updatedAt ? new Date(entry.updatedAt) : null })
+	for (const [key, entry] of Object.entries(data.scores) as [
+		MediaKey,
+		(typeof data.scores)[MediaKey],
+	][])
+		if (entry.score)
+			add(key, {
+				score: Number(entry.score),
+				date: entry.updatedAt ? new Date(entry.updatedAt) : null,
+			})
 	let watching = 0
-	for (const [key, entry] of Object.entries(data.watchState) as [MediaKey, (typeof data.watchState)[MediaKey]][]) {
+	for (const [key, entry] of Object.entries(data.watchState) as [
+		MediaKey,
+		(typeof data.watchState)[MediaKey],
+	][]) {
 		if (entry.state === "watching" && key.startsWith("show-")) watching++
 		const known = own.get(key)
 		add(key, {
@@ -67,7 +130,9 @@ async function computeTasteStats(ownerId: string): Promise<TasteStats> {
 		movie: titles.filter((t) => t.mediaType === "movie").map((t) => t.tmdbId),
 		show: titles.filter((t) => t.mediaType === "show").map((t) => t.tmdbId),
 	}
-	const loved = new Set(titles.filter((t) => (t.score ?? 0) >= 8).map((t) => t.key))
+	const loved = new Set(
+		titles.filter((t) => (t.score ?? 0) >= 8).map((t) => t.key),
+	)
 	const [movieRows, showRows, credits] = await Promise.all([
 		readDetails("movie", ids.movie, loved),
 		readDetails("show", ids.show, loved),
@@ -108,7 +173,13 @@ async function computeTasteStats(ownerId: string): Promise<TasteStats> {
 		})
 	}
 	const people = await readPeople(credits, stats)
-	const result = tasteStats({ titles: stats, credits, people, watching, year: new Date().getFullYear() })
+	const result = tasteStats({
+		titles: stats,
+		credits,
+		people,
+		watching,
+		year: new Date().getFullYear(),
+	})
 	console.info(
 		`Taste stats for ${ownerId.slice(0, 8)}: ${stats.length} titles, ${credits.length} credits, in ${Date.now() - startedAt} ms`,
 	)
@@ -138,34 +209,48 @@ const batches = (ids: number[]) => {
 	for (let i = 0; i < ids.length; i += BATCH) out.push(ids.slice(i, i + BATCH))
 	return out
 }
-const placeholders = (n: number) => Array.from({ length: n }, () => "?").join(",")
+const placeholders = (n: number) =>
+	Array.from({ length: n }, () => "?").join(",")
 
-async function readDetails(mediaType: "movie" | "show", ids: number[], loved: ReadonlySet<MediaKey>) {
+async function readDetails(
+	mediaType: "movie" | "show",
+	ids: number[],
+	loved: ReadonlySet<MediaKey>,
+) {
 	const found = new Map<MediaKey, DetailRow>()
 	// A show's runtime is its usual episode runtime: the first of episode_runtime.
-	const runtime = mediaType === "movie" ? "runtime" : "episode_runtime[1] AS runtime"
-	const money = mediaType === "movie" ? "budget, revenue" : "NULL AS budget, NULL AS revenue"
+	const runtime =
+		mediaType === "movie" ? "runtime" : "episode_runtime[1] AS runtime"
+	const money =
+		mediaType === "movie"
+			? "budget, revenue"
+			: "NULL AS budget, NULL AS revenue"
 	await Promise.all(
 		batches(ids).map(async (batch) => {
-			const rows = await query<DetailRow>(
+			const rows = await read<DetailRow>(
 				`SELECT tmdb_id, title, release_year, poster_path, backdrop_path, genres, is_anime, ${runtime}, ${money},
 				  production_country_codes, original_language_code, essence_tags,
 				  goodwatch_overall_score_normalized_percent AS gw
 				 FROM ${mediaType} WHERE tmdb_id IN (${placeholders(batch.length)}) LIMIT ${batch.length}`,
 				batch,
 			)
-			for (const row of rows) found.set(`${mediaType}-${Number(row.tmdb_id)}` as MediaKey, row)
+			for (const row of rows)
+				found.set(`${mediaType}-${Number(row.tmdb_id)}` as MediaKey, row)
 		}),
 	)
-	const lovedIds = ids.filter((id) => loved.has(`${mediaType}-${id}` as MediaKey))
+	const lovedIds = ids.filter((id) =>
+		loved.has(`${mediaType}-${id}` as MediaKey),
+	)
 	await Promise.all(
 		batches(lovedIds).map(async (batch) => {
-			const rows = await query<{ tmdb_id: number; tropes: string[] | null }>(
+			const rows = await read<{ tmdb_id: number; tropes: string[] | null }>(
 				`SELECT tmdb_id, tropes FROM ${mediaType} WHERE tmdb_id IN (${placeholders(batch.length)}) LIMIT ${batch.length}`,
 				batch,
 			)
 			for (const row of rows) {
-				const entry = found.get(`${mediaType}-${Number(row.tmdb_id)}` as MediaKey)
+				const entry = found.get(
+					`${mediaType}-${Number(row.tmdb_id)}` as MediaKey,
+				)
 				if (entry) entry.tropes = row.tropes
 			}
 		}),
@@ -173,25 +258,32 @@ async function readDetails(mediaType: "movie" | "show", ids: number[], loved: Re
 	return found
 }
 
-async function readCredits(ids: { movie: number[]; show: number[] }): Promise<StatsCredit[]> {
+async function readCredits(ids: { movie: number[]; show: number[] }): Promise<
+	StatsCredit[]
+> {
 	const credits: StatsCredit[] = []
 	const work: Promise<void>[] = []
 	for (const mediaType of ["movie", "show"] as const)
 		for (const batch of batches(ids[mediaType]))
 			work.push(
-				query<{ pid: number; mid: number }>(
+				read<{ pid: number; mid: number }>(
 					`SELECT person_tmdb_id AS pid, media_tmdb_id AS mid FROM person_appeared_in
 					 WHERE media_type = ? AND media_tmdb_id IN (${placeholders(batch.length)}) AND order_default >= 0 AND order_default < ${CAST_ORDER}
 					 LIMIT ${CREDIT_ROWS}`,
 					[mediaType, ...batch],
 				).then((rows) => {
-					for (const row of rows) credits.push({ personId: Number(row.pid), key: `${mediaType}-${Number(row.mid)}`, role: "actor" })
+					for (const row of rows)
+						credits.push({
+							personId: Number(row.pid),
+							key: `${mediaType}-${Number(row.mid)}`,
+							role: "actor",
+						})
 				}),
 			)
 	// Crew from movies only: a show's directors and writers are per episode.
 	for (const batch of batches(ids.movie))
 		work.push(
-			query<{ pid: number; mid: number; job: string }>(
+			read<{ pid: number; mid: number; job: string }>(
 				`SELECT person_tmdb_id AS pid, media_tmdb_id AS mid, job FROM person_worked_on
 				 WHERE media_type = 'movie' AND media_tmdb_id IN (${placeholders(batch.length)}) AND job IN ('Director', ${[...WRITER_JOBS, ...COMPOSER_JOBS].map(() => "?").join(", ")})
 				 LIMIT ${CREDIT_ROWS}`,
@@ -201,7 +293,12 @@ async function readCredits(ids: { movie: number[]; show: number[] }): Promise<St
 					credits.push({
 						personId: Number(row.pid),
 						key: `movie-${Number(row.mid)}`,
-						role: row.job === "Director" ? "director" : WRITER_JOBS.includes(row.job) ? "writer" : "composer",
+						role:
+							row.job === "Director"
+								? "director"
+								: WRITER_JOBS.includes(row.job)
+									? "writer"
+									: "composer",
 					})
 			}),
 		)
@@ -210,18 +307,43 @@ async function readCredits(ids: { movie: number[]; show: number[] }): Promise<St
 }
 
 /** Names and photos of the people with at least two rated titles in a role: the only ones a list can show. */
-async function readPeople(credits: StatsCredit[], titles: StatsTitle[]): Promise<Map<number, StatsPerson>> {
-	const rated = new Set(titles.filter((t) => t.score !== null).map((t) => t.title.key))
+async function readPeople(
+	credits: StatsCredit[],
+	titles: StatsTitle[],
+): Promise<Map<number, StatsPerson>> {
+	const rated = new Set(
+		titles.filter((t) => t.score !== null).map((t) => t.title.key),
+	)
 	const counts = new Map<string, number>()
-	for (const c of credits) if (rated.has(c.key)) counts.set(`${c.role}:${c.personId}`, (counts.get(`${c.role}:${c.personId}`) ?? 0) + 1)
-	const ids = [...new Set([...counts.entries()].filter(([, n]) => n >= 2).map(([id]) => Number(id.split(":")[1])))]
+	for (const c of credits)
+		if (rated.has(c.key))
+			counts.set(
+				`${c.role}:${c.personId}`,
+				(counts.get(`${c.role}:${c.personId}`) ?? 0) + 1,
+			)
+	const ids = [
+		...new Set(
+			[...counts.entries()]
+				.filter(([, n]) => n >= 2)
+				.map(([id]) => Number(id.split(":")[1])),
+		),
+	]
 	const people = new Map<number, StatsPerson>()
 	for (const batch of batches(ids)) {
-		const rows = await query<{ tmdb_id: number; name: string; profile_path: string | null }>(
+		const rows = await read<{
+			tmdb_id: number
+			name: string
+			profile_path: string | null
+		}>(
 			`SELECT tmdb_id, name, profile_path FROM person WHERE tmdb_id IN (${placeholders(batch.length)}) LIMIT ${batch.length}`,
 			batch,
 		)
-		for (const row of rows) people.set(Number(row.tmdb_id), { id: Number(row.tmdb_id), name: row.name, profile: row.profile_path ?? null })
+		for (const row of rows)
+			people.set(Number(row.tmdb_id), {
+				id: Number(row.tmdb_id),
+				name: row.name,
+				profile: row.profile_path ?? null,
+			})
 	}
 	return people
 }

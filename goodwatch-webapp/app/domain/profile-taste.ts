@@ -11,13 +11,25 @@ export interface TastePerson {
 	/** TMDB profile path. */
 	profile: string | null
 	count: number
-	average: number
-	hours: number
+	/** Null when the viewer may not see the owner's scores. */
+	average: number | null
+	/** Null when the viewer may not see the owner's time watched. */
+	hours: number | null
 	titles: ProfileTitle[]
 }
 
+/**
+ * The Taste tab's numbers as the viewer may see them (server/profile/taste-stats-view.ts): without the owner's scores
+ * every average is null, `style` is null and titles carry no score; without Seen, `facts` is null; without Shows or
+ * time watched, `facts.mostEpisodes` is null.
+ */
 export interface TasteStats {
-	genres: { name: string; count: number; average: number; kinds: Partial<Record<"movie" | "show" | "anime", number>> }[]
+	genres: {
+		name: string
+		count: number
+		average: number | null
+		kinds: Partial<Record<"movie" | "show" | "anime", number>>
+	}[]
 	people: {
 		directors: TastePerson[]
 		bestDirectors: TastePerson[]
@@ -25,14 +37,26 @@ export interface TasteStats {
 		composers: TastePerson[]
 		writers: TastePerson[]
 	}
-	eras: { decades: { decade: number; count: number; average: number }[]; averageYear: number | null; classics: ProfileTitle[] }
+	eras: {
+		decades: { decade: number; count: number; average: number | null }[]
+		averageYear: number | null
+		classics: ProfileTitle[]
+	}
 	world: {
-		countries: { code: string; count: number; share: number; average: number }[]
+		countries: {
+			code: string
+			count: number
+			share: number
+			average: number | null
+		}[]
 		totalCountries: number
 		languages: { code: string; count: number }[]
 		totalLanguages: number
 	}
-	tags: { essence: { name: string; count: number; average: number }[]; tropes: { name: string; count: number }[] }
+	tags: {
+		essence: { name: string; count: number; average: number | null }[]
+		tropes: { name: string; count: number }[]
+	}
 	facts: {
 		budget: number
 		revenue: number
@@ -43,7 +67,7 @@ export interface TasteStats {
 		newest: ProfileTitle | null
 		mostEpisodes: (ProfileTitle & { episodes: number }) | null
 		averageRuntime: number | null
-	}
+	} | null
 	style: {
 		average: number
 		crowdAverage: number
@@ -54,13 +78,18 @@ export interface TasteStats {
 		byKind: Partial<Record<"movie" | "show" | "anime", number>>
 		kindest: { genre: string; average: number } | null
 		harshest: { genre: string; average: number } | null
-	}
+	} | null
 	badges: { id: string; name: string; line: string }[]
 }
 
 // ---------- Member match ----------
 
-export type MatchTier = "Taste twins" | "Like-minded" | "Common ground" | "Some overlap" | "Different worlds"
+export type MatchTier =
+	| "Taste twins"
+	| "Like-minded"
+	| "Common ground"
+	| "Some overlap"
+	| "Different worlds"
 
 export function matchTier(percent: number): MatchTier {
 	if (percent >= 90) return "Taste twins"
@@ -72,7 +101,8 @@ export function matchTier(percent: number): MatchTier {
 
 /** The comparison between the signed-in visitor ("you") and the profile owner ("them"). */
 export type MemberCompare =
-	| { status: "thin"; liked: number } // the visitor has fewer than 5 liked titles
+	/** One side has fewer than 5 liked titles: "you" the visitor (checked first) or "them" the owner, with its count. */
+	| { status: "thin"; side: "you" | "them"; liked: number }
 	| {
 			status: "ready"
 			/** 1 to 99, ranked against a sample of member pairs. */

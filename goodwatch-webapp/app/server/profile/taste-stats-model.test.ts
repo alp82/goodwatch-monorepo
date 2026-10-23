@@ -1,10 +1,21 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { ProfileTitle } from "../../domain/profile.ts"
-import { type StatsInput, type StatsTitle, rankPeople, tasteStats } from "./taste-stats-model.ts"
+import {
+	type StatsInput,
+	type StatsTitle,
+	rankPeople,
+	tasteStats,
+} from "./taste-stats-model.ts"
 
 let next = 1
-function t(over: Partial<StatsTitle> & { score: number | null; year?: number; mediaType?: "movie" | "show" }): StatsTitle {
+function t(
+	over: Partial<StatsTitle> & {
+		score: number | null
+		year?: number
+		mediaType?: "movie" | "show"
+	},
+): StatsTitle {
 	const id = next++
 	const mediaType = over.mediaType ?? "movie"
 	const title: ProfileTitle = {
@@ -59,42 +70,86 @@ test("people need two rated titles and rank by count, then by average", () => {
 		year: 2026,
 	}
 	const directors = rankPeople(input, "director", 5)
-	assert.deepEqual(directors.map((p) => [p.name, p.count, p.average]), [["Ana", 2, 8.5]])
-	assert.deepEqual(directors[0].titles.map((x) => x.score), [9, 8])
+	assert.deepEqual(
+		directors.map((p) => [p.name, p.count, p.average]),
+		[["Ana", 2, 8.5]],
+	)
+	assert.deepEqual(
+		directors[0].titles.map((x) => x.score),
+		[9, 8],
+	)
 	assert.equal(directors[0].hours, 3.3)
 })
 
 test("genres, decades, classics, world, tags and style", () => {
 	const titles = [
-		t({ score: 10, year: 1975, genres: ["Drama", "Crime"], countries: ["US", "IT"], essence: ["Mob saga"], tropes: ["Family Business"] }),
+		t({
+			score: 10,
+			year: 1975,
+			genres: ["Drama", "Crime"],
+			countries: ["US", "IT"],
+			essence: ["Mob saga"],
+			tropes: ["Family Business"],
+		}),
 		t({ score: 9, year: 1999, genres: ["Drama"], essence: ["Mob saga"] }),
-		t({ score: 4, year: 2021, genres: ["Comedy"], countries: ["GB"], language: "en" }),
+		t({
+			score: 4,
+			year: 2021,
+			genres: ["Comedy"],
+			countries: ["GB"],
+			language: "en",
+		}),
 		t({ score: null, year: 2023, mediaType: "show", episodesWatched: 30 }),
 	]
-	const stats = tasteStats({ titles, credits: [], people, watching: 5, year: 2026 })
-	assert.deepEqual(stats.genres.map((g) => [g.name, g.count, g.average]), [
-		["Drama", 2, 9.5],
-		["Comedy", 1, 4],
-		["Crime", 1, 10],
-	])
-	assert.deepEqual(stats.eras.decades.map((d) => d.decade), [1970, 1990, 2020])
-	assert.deepEqual(stats.eras.classics.map((c) => c.year), [1975, 1999])
+	const stats = tasteStats({
+		titles,
+		credits: [],
+		people,
+		watching: 5,
+		year: 2026,
+	})
+	assert.deepEqual(
+		stats.genres.map((g) => [g.name, g.count, g.average]),
+		[
+			["Drama", 2, 9.5],
+			["Comedy", 1, 4],
+			["Crime", 1, 10],
+		],
+	)
+	assert.deepEqual(
+		stats.eras.decades.map((d) => d.decade),
+		[1970, 1990, 2020],
+	)
+	assert.deepEqual(
+		stats.eras.classics.map((c) => c.year),
+		[1975, 1999],
+	)
 	assert.equal(stats.world.countries[0].code, "US")
 	assert.equal(stats.world.totalCountries, 3)
-	assert.deepEqual(stats.tags.essence[0], { name: "Mob saga", count: 2, average: 9.5 })
+	assert.deepEqual(stats.tags.essence[0], {
+		name: "Mob saga",
+		count: 2,
+		average: 9.5,
+	})
 	assert.deepEqual(stats.tags.tropes, [{ name: "Family Business", count: 1 }])
-	assert.equal(stats.facts.mostEpisodes?.episodes, 30)
-	assert.equal(stats.facts.oldest?.year, 1975)
-	assert.equal(stats.style.average, 7.7)
-	assert.equal(stats.style.share8, 0.67)
+	assert.equal(stats.facts?.mostEpisodes?.episodes, 30)
+	assert.equal(stats.facts?.oldest?.year, 1975)
+	assert.equal(stats.style?.average, 7.7)
+	assert.equal(stats.style?.share8, 0.67)
 	assert.ok(stats.badges.some((b) => b.id === "plates"))
 	assert.ok(stats.badges.some((b) => b.name === "Movie person"))
 })
 
 test("an empty library gives empty stats without failing", () => {
-	const stats = tasteStats({ titles: [], credits: [], people, watching: 0, year: 2026 })
+	const stats = tasteStats({
+		titles: [],
+		credits: [],
+		people,
+		watching: 0,
+		year: 2026,
+	})
 	assert.deepEqual(stats.genres, [])
 	assert.equal(stats.eras.averageYear, null)
 	assert.deepEqual(stats.badges, [])
-	assert.equal(stats.facts.longest, null)
+	assert.equal(stats.facts?.longest, null)
 })
