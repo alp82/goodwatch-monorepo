@@ -2,6 +2,7 @@
 import type { MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import { peopleCopy } from "~/domain/best-lists"
+import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { getListPeople } from "~/server/best-lists.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { ListHead } from "~/ui/best-lists/ListHead"
@@ -41,3 +42,6 @@ export default function People() {
 		</div>
 	)
 }
+
+// Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
+export const clientLoader = cachedClientLoader("routes/people")

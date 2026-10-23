@@ -39,6 +39,7 @@ import {
 	type DehydratedState,
 	dehydrate,
 	HydrationBoundary,
+	MutationCache,
 	QueryClient,
 	QueryClientProvider,
 } from "@tanstack/react-query"
@@ -57,6 +58,7 @@ import {
 	SiteHeader,
 } from "~/ui/navigation"
 import { LocaleContext } from "~/utils/locale"
+import { clearLoaderCache } from "~/navigation/instant-navigation"
 import { assetBase, assetUrl } from "~/utils/asset-url"
 import { START_AFTER_PAINT, startAfterPaintScript } from "~/utils/start-after-paint"
 
@@ -222,6 +224,8 @@ export function ErrorBoundary() {
 	const [queryClient] = React.useState(
 		() =>
 			new QueryClient({
+				// Every write through a mutation hook (scores, lists, settings) may change a kept page's data.
+				mutationCache: new MutationCache({ onSettled: () => clearLoaderCache() }),
 				defaultOptions: {
 					queries: {
 						// With SSR, we usually want to set some default staleTime
@@ -331,6 +335,8 @@ function Root() {
 	const [queryClient] = React.useState(
 		() =>
 			new QueryClient({
+				// Every write through a mutation hook (scores, lists, settings) may change a kept page's data.
+				mutationCache: new MutationCache({ onSettled: () => clearLoaderCache() }),
 				defaultOptions: {
 					queries: {
 						// With SSR, we usually want to set some default staleTime

@@ -8,6 +8,7 @@ import {
 } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import type { ComponentType } from "react"
+import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { blogDataset } from "~/server/blog/datasets.server"
 import { findBlogPost } from "~/server/blog/posts.server"
 import { postComponents } from "~/ui/blog/mdx-components"
@@ -136,3 +137,6 @@ export default function BlogPostPage() {
 		</>
 	)
 }
+
+// Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
+export const clientLoader = cachedClientLoader("routes/blog.$slug")

@@ -1,4 +1,3 @@
-import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
@@ -18,6 +17,7 @@ import {
 	rewriteLegacyDiscoverParams,
 	sortFromParams,
 } from "~/domain/filter-state"
+import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { legacyDiscoverRedirect } from "~/server/discover-legacy-params.server"
 import {
 	type DiscoverResults as BrowseResults,
@@ -27,10 +27,11 @@ import {
 	getDiscoverResults as getBrowseResults,
 } from "~/server/discover-results.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import { getPersonName } from "~/server/person.server"
 import { getViewerContext } from "~/server/viewer.server"
-import { ErrorPage, errorPageProps } from "~/ui/ErrorPage"
 import { reportBoundaryError } from "~/telemetry/telemetry"
+import { ErrorPage, errorPageProps } from "~/ui/ErrorPage"
 import { DiscoverPage } from "~/ui/discover/DiscoverPage"
 import {
 	type InitialBrowse,
@@ -253,3 +254,6 @@ export default function DiscoverRoute() {
 }
 
 export const loader = presentCatalogLoader(canonicalLoader, { live: true })
+
+// Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
+export const clientLoader = cachedClientLoader("routes/discover.($type)")

@@ -17,6 +17,7 @@ import {
 	buildMeta,
 	plainPageMeta,
 } from "~/utils/meta"
+import { cachedClientLoader } from "~/navigation/instant-navigation"
 
 export const meta: MetaFunction = ({ params }) => {
 	const type = params.type || ""
@@ -146,3 +147,6 @@ export default function Movies() {
 }
 
 export const loader = presentCatalogLoader(canonicalLoader, { live: true })
+
+// Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
+export const clientLoader = cachedClientLoader("routes/$type._index")

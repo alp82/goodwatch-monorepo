@@ -13,6 +13,7 @@ import {
 	requestedPage,
 	titleKindOf,
 } from "~/domain/best-lists"
+import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { getRankedList } from "~/server/best-lists.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { ListHead } from "~/ui/best-lists/ListHead"
@@ -90,3 +91,6 @@ export default function BestList() {
 		</div>
 	)
 }
+
+// Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
+export const clientLoader = cachedClientLoader("routes/$type.best")

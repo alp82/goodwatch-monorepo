@@ -68,6 +68,7 @@ import { useHydrated } from "~/utils/hydrated"
 import { buildMeta } from "~/utils/meta"
 import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
 import type { SizeRule } from "~/utils/tmdb-image"
+import { cachedClientLoader } from "~/navigation/instant-navigation"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -1180,3 +1181,6 @@ function Titles({ data }: { data: Data }) {
 }
 
 export const loader = presentCatalogLoader(canonicalLoader, { live: true })
+
+// Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
+export const clientLoader = cachedClientLoader("routes/person.$personKey")

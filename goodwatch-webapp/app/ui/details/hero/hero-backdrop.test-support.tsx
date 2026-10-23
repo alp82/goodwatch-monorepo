@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { HeroBackdropImage, TrailerButton, heroBackdropFiles } from "./Trailer"
+import { heroBackdropSource } from "./hero-backdrop"
 
 const media = {
 	details: { title: "Interstellar", backdrop_path: "/backdrop.jpg" },
@@ -9,6 +10,7 @@ const media = {
 console.log(
 	`__HERO_BACKDROP__${JSON.stringify({
 		files: heroBackdropFiles("/backdrop.jpg"),
+		preload: heroBackdropSource("/backdrop.jpg"),
 		trailer: renderToStaticMarkup(<TrailerButton media={media} />),
 		hero: renderToStaticMarkup(
 			<HeroBackdropImage media={media} className="hero" />,

@@ -4,6 +4,7 @@ import { RemixBrowser } from "@remix-run/react"
 import { StrictMode, startTransition } from "react"
 import { hydrateRoot } from "react-dom/client"
 import { loadShellCode } from "~/app"
+import { installWriteWatch } from "~/navigation/instant-navigation"
 import { assetBase, manifestAt } from "~/utils/asset-url"
 import { setBrowserCookie } from "~/utils/browser-cookie"
 import { installLoaderRetry } from "~/utils/loader-request-retry"
@@ -19,6 +20,8 @@ if (files) Object.assign(files, manifestAt(files, assetBase()))
 setBrowserCookie()
 // Before hydration, so the first loader request of the page already goes through it.
 installLoaderRetry()
+// A member's write clears the kept loader data (navigation/instant-navigation.ts).
+installWriteWatch()
 
 // The root loader's data as the server embedded it: which shell parts the page shows.
 type RootData = { user?: unknown }

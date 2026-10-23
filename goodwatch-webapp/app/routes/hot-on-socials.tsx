@@ -10,6 +10,7 @@ import {
 } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import type { TalkedRow } from "~/domain/talked-about-now"
+import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { talkedAboutNowEnabled, talkedAboutNowMode } from "~/server/talked-about-now/flags.server"
 import { HotPage } from "~/ui/talked-about-now/hot-page/HotPage"
@@ -63,3 +64,6 @@ export default function HotOnSocials() {
 	const { row } = useLoaderData<typeof loader>() as { row: TalkedRow | null }
 	return <HotPage row={row} />
 }
+
+// Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
+export const clientLoader = cachedClientLoader("routes/hot-on-socials")

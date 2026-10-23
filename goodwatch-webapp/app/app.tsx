@@ -1,7 +1,7 @@
 import { GuestProgressNotice } from "~/ui/GuestProgressNotice"
 import { SignInAgainBanner } from "~/ui/auth/SignInAgainBanner"
 import { Outlet, useLocation, useMatches } from "@remix-run/react"
-import { Suspense, lazy } from "react"
+import { Suspense, lazy, useEffect } from "react"
 
 import Footer from "~/ui/footer/Footer"
 import {
@@ -17,6 +17,8 @@ import { useUser } from "~/utils/auth"
 import { STANDALONE } from "~/utils/standalone"
 import { useInvalidateOnVisibility } from "~/hooks/useInvalidateOnVisibility"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import { startLoaderCache } from "~/navigation/instant-navigation"
+import { installLinkIntent } from "~/navigation/link-intent"
 
 // Only members see the onboarding banner, so its code loads for them alone.
 const loadAccountTransfer = reloadOnStaleChunk(() =>
@@ -58,6 +60,11 @@ export default function App() {
 	)
 
 	useInvalidateOnVisibility()
+	// After hydration: the router exists, and the first page's data seeds the cache (docs/navigation-cache.md).
+	useEffect(() => {
+		startLoaderCache()
+		installLinkIntent()
+	}, [])
 
 	if (standalone) return <Outlet />
 

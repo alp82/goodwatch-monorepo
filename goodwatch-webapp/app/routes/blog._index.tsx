@@ -7,6 +7,7 @@ import {
 	json,
 } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
+import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { blogPosts, listedBlogPosts } from "~/server/blog/posts.server"
 import { Kicker } from "~/ui/info-page"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
@@ -146,3 +147,6 @@ export default function Blog() {
 		</>
 	)
 }
+
+// Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
+export const clientLoader = cachedClientLoader("routes/blog._index")

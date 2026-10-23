@@ -37,6 +37,7 @@ import {
 import { useNav } from "~/utils/navigation"
 import { convertHyphensToWords } from "~/utils/string"
 import { jsonToUrlString } from "~/utils/url"
+import { cachedClientLoader } from "~/navigation/instant-navigation"
 
 export const meta: MetaFunction = ({ params, location }) => {
 	const type = params.type || ""
@@ -216,3 +217,6 @@ export default function MoviesCategoryPage() {
 }
 
 export const loader = presentCatalogLoader(canonicalLoader, { live: true })
+
+// Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
+export const clientLoader = cachedClientLoader("routes/$type.$category.$page")

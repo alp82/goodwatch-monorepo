@@ -20,6 +20,7 @@ import {
 	manifestForBase,
 	renderWithAssetBase,
 } from "~/server/asset-address.server"
+import { INCOMPLETE_DATA_HEADER } from "~/navigation/loader-cache"
 import { applyCachePolicy } from "~/server/cache-identity.server"
 import { startEarlyHints } from "~/server/early-hints.server"
 import { HtmlStream } from "~/server/html-stream.server"
@@ -193,6 +194,10 @@ export function handleDataRequest(
 	{ request }: { request: Request },
 ) {
 	protectMediaResponse(response.headers)
+	// An incomplete page says no-store before the cache policy below makes every private answer say it. The
+	// browser's loader cache shows such data once but doesn't keep it (navigation/loader-cache.ts).
+	if (/no-store/i.test(response.headers.get("Cache-Control") ?? ""))
+		response.headers.set(INCOMPLETE_DATA_HEADER, "1")
 	applyCachePolicy(request, response.status, response.headers)
 	return response
 }

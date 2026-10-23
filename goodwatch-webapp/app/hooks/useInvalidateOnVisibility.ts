@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { queryKeyUserData } from "~/routes/api.user-data"
 import { queryKeyUserSettings } from "~/routes/api.user-settings.get"
+import { clearLoaderCache } from "~/navigation/instant-navigation"
 
 export const useInvalidateOnVisibility = () => {
 	const queryClient = useQueryClient()
@@ -27,6 +28,8 @@ export const useInvalidateOnVisibility = () => {
 					timeoutRef.current = setTimeout(() => {
 						// Only invalidate queries if component is still mounted
 						if (mountedRef.current) {
+							// The member may have changed something in another tab: kept pages could be stale.
+							clearLoaderCache()
 							queryClient.invalidateQueries({ queryKey: queryKeyUserData })
 							queryClient.invalidateQueries({ queryKey: queryKeyUserSettings })
 						}

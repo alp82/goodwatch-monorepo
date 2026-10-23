@@ -17,6 +17,7 @@ import {
 import { AuthContext } from "~/utils/auth"
 import { createAuthCookieMatcher } from "~/utils/auth-cookie"
 import { keptLoaderData } from "~/utils/loader-request-retry"
+import { clearLoaderCache } from "~/navigation/instant-navigation"
 import { whenInteractive } from "~/utils/page-interactive"
 import { isAuthCallbackUrl, loadSupabaseClient } from "~/utils/supabase-browser"
 import {
@@ -163,6 +164,8 @@ export function AuthProvider({
 						queryKey: ["media-preferences", targetUserId],
 						exact: true,
 					})
+				// Pages kept for the person who just left mustn't show in the moment before the root's new data.
+				clearLoaderCache()
 				requestRootRevalidation()
 				revalidate()
 			}
@@ -171,6 +174,7 @@ export function AuthProvider({
 	}, [user?.id, sessionUserId, queryClient, revalidate, betterAuth])
 
 	const refreshUser = useCallback(() => {
+		clearLoaderCache()
 		requestRootRevalidation()
 		revalidate()
 	}, [revalidate])

@@ -39,3 +39,14 @@ test("the hero asks without credentials, and the 103's files are what its srcset
 test("a tap on the trailer button from before the app was there is kept for it (utils/replay-tap.ts)", () => {
 	assert.match(rendered.trailer, /data-replay-tap="trailer"/)
 })
+
+test("a prefetch's early hero load asks for what the hero's srcset and sizes give, so the hero reuses it", () => {
+	const { preload, hero } = rendered
+	assert.ok(hero.includes(`src="${preload.src}"`), preload.src)
+	assert.ok(
+		hero.includes(`srcSet="${preload.srcSet}"`) ||
+			hero.includes(`srcset="${preload.srcSet}"`),
+		preload.srcSet,
+	)
+	assert.ok(hero.includes(`sizes="${preload.sizes}"`), preload.sizes)
+})

@@ -45,6 +45,7 @@ import { titleKey } from "~/utils/title-key"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 import { heroHints } from "~/server/hero-hints.server"
 import { heroBackdropFiles } from "~/ui/details/hero/Trailer"
+import { cachedClientLoader } from "~/navigation/instant-navigation"
 
 export { pageHeaders as headers } from "~/utils/headers"
 // The page paints from the server's HTML alone; its scripts start after that (utils/start-after-paint.ts). A tap
@@ -236,3 +237,6 @@ export default function DetailsMovie() {
 
 	return <Details media={media} country={country} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} genreRow={genreRow} />
 }
+
+// Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
+export const clientLoader = cachedClientLoader("routes/movie.$movieKey")

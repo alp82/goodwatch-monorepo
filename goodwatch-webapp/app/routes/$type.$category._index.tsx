@@ -27,6 +27,7 @@ import { categoryCrumbs } from "~/ui/nav/breadcrumb-trail"
 import { buildDiscoverParams } from "~/utils/discover"
 import { type PageMeta, buildMeta, plainPageMeta } from "~/utils/meta"
 import { convertHyphensToWords } from "~/utils/string"
+import { cachedClientLoader } from "~/navigation/instant-navigation"
 
 export const meta: MetaFunction = ({ data, params }) => {
 	const type = params.type || ""
@@ -153,3 +154,6 @@ export default function MoviesCategory_index() {
 }
 
 export const loader = presentCatalogLoader(canonicalLoader, { live: true })
+
+// Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
+export const clientLoader = cachedClientLoader("routes/$type.$category._index")
