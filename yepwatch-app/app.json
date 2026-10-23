@@ -2,6 +2,12 @@
   "expo": {
     "name": "YepWatch",
     "slug": "yepwatch",
+    "owner": "alperortac",
+    "extra": {
+      "eas": {
+        "projectId": "0772c2db-91d8-4862-80eb-1d816f243072"
+      }
+    },
     "version": "0.1.0",
     "scheme": "yepwatch",
     "userInterfaceStyle": "dark",

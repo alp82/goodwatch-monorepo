@@ -1,0 +1,34 @@
+# EAS archives from the Git root. Include only YepWatch and its local contract.
+/*
+!/.easignore
+!/yepwatch-app
+!/goodwatch-webapp
+/goodwatch-webapp/*
+!/goodwatch-webapp/packages
+/goodwatch-webapp/packages/*
+!/goodwatch-webapp/packages/yepwatch-contracts
+
+# Root .easignore replaces nested .gitignore rules.
+**/node_modules
+**/.expo
+**/.git
+**/.env*
+**/credentials.json
+**/*.jks
+**/*.keystore
+**/*.p8
+**/*.p12
+**/*.pem
+**/*.key
+**/*.mobileprovision
+**/*.log
+**/*.tsbuildinfo
+**/.DS_Store
+/yepwatch-app/android
+/yepwatch-app/ios
+/yepwatch-app/artifacts
+/yepwatch-app/test-results
+/yepwatch-app/dist*
+/yepwatch-app/web-build
+/yepwatch-app/.kotlin
+/yepwatch-app/.metro-health-check*

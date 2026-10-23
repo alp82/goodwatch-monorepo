@@ -4,6 +4,8 @@ Send testers **https://yepwatch.com/beta**. The page offers the browser today; n
 
 ## Owner setup — start here
 
+The owner has created the Expo project [@alperortac/yepwatch](https://expo.dev/accounts/alperortac/projects/yepwatch), ID `0772c2db-91d8-4862-80eb-1d816f243072`, and reports Play and Apple developer accounts ready. `app.json` records the public Expo owner/project for all build variants. Account creation does not sign this machine into EAS or configure store signing credentials.
+
 1. Create a free [Expo account](https://expo.dev/signup). Choose the account/organization that should own YepWatch.
 2. Open [Google Play Console](https://play.google.com/console). **Google Cloud Console is a different product.** If needed, register a Play developer account, pay its one-time US$25 fee and complete Google's identity/device verification. Create the YepWatch app for `com.yepwatch.app`.
 3. Enroll in the [Apple Developer Program](https://developer.apple.com/programs/enroll/) (US$99/year or local pricing). Once approved, create the App Store Connect app for `com.yepwatch.app`. EAS can build and upload from Linux; owning a Mac is not required.
@@ -12,10 +14,12 @@ Send testers **https://yepwatch.com/beta**. The page offers the browser today; n
    ```sh
    cd yepwatch-app
    npx eas-cli@latest login
-   npx eas-cli@latest project:init
+   npx eas-cli@latest project:info
    ```
 
-   This app has dynamic configuration. Link the real project via `EXPO_ACCOUNT_OWNER` and `EAS_PROJECT_ID`, or record the returned **public** owner/project ID in app configuration when prompted. Do not invent IDs. Store those values in the EAS environment used by the build too. Do not upload the repository's private `.env` files.
+   This app has dynamic configuration, which preserves the checked-in public owner/project values. `EXPO_ACCOUNT_OWNER` and `EAS_PROJECT_ID` can override them for an explicitly separate project; leave them unset for the linked YepWatch project. Do not upload the repository's private `.env` files.
+
+5. For the first iOS build, configure signing in your own terminal: `npx eas-cli@latest credentials:configure-build --platform ios --profile beta`. Sign in to Apple, select your developer team and let EAS create the distribution certificate/provisioning profile. Keep passwords and verification codes in that terminal. Android can generate its upload keystore in EAS during the first build; it is separate from the old preview key.
 
 ## Prepare the first build
 
@@ -23,6 +27,7 @@ Send testers **https://yepwatch.com/beta**. The page offers the browser today; n
 - Profile **preview** remains a separate APK / iOS **Simulator** build. It is not the iPhone/TestFlight profile. Existing preview APKs do not include the latest UI; do not distribute them as current.
 - Use owner-controlled store credentials. Keep `com.yepwatch.preview` and its local preview signing key separate. Store beta installs coexist with that preview.
 - Before uploading, inspect the EAS archive: `npx eas-cli@latest build:inspect --platform android --profile beta --stage archive --output .expo/beta-archive`. Verify it includes the sibling `goodwatch-webapp/packages/yepwatch-contracts`, excludes credentials/local environment files/build artifacts, and installs with `npm ci --install-links`.
+- EAS reads `.easignore` at the Git repository root. That file limits uploads to this app and its sibling contract; the app-local ignore file alone does not protect a monorepo upload.
 - Finish the app icon, store privacy/support metadata and review contact information. Register the actual Play signing certificate in Android asset links and actual Apple team/app ID in the AASA file. Confirm the existing account issuer accepts the production app's callback. These require real account details, not placeholders.
 
 ```sh
