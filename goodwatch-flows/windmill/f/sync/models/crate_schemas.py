@@ -1131,6 +1131,21 @@ SCHEMAS = {
         "timestamps": False,
         "replicas": "0-1",
     },
+    # A member's uploaded profile photo (docs/implementation/member-profile/README.md): one 512 px WebP, base64, as
+    # doc.social_image stores its images. `version` changes with every upload and is part of the photo's URL.
+    "user_avatar": {
+        "columns": {
+            "user_id": "TEXT",
+            "data": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "bytes": "INTEGER",
+            "version": "TEXT NOT NULL",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+        },
+        "primary_key": ["user_id"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
     "user_discord_link": {
         "columns": {
             "discord_user_id": "TEXT",
