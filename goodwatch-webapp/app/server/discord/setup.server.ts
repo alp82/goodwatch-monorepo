@@ -31,7 +31,9 @@ export async function setupAutocomplete(
 ) {
 	if (!canManageGuild(interaction)) return []
 	const focused = interaction.data?.options?.find((o) => o.focused)
-	const query = (focused?.value ?? "").toLowerCase().slice(0, 120)
+	const query = String(focused?.value ?? "")
+		.toLowerCase()
+		.slice(0, 120)
 	const countries = await deps.countries()
 	if (focused?.name === "country")
 		return countries
@@ -43,8 +45,9 @@ export async function setupAutocomplete(
 		(o) => o.name === "country",
 	)?.value
 	const guild = await deps.getGuild(interaction.guild_id!)
-	const country =
-		selected ?? guild?.country ?? localeCountry(interaction.locale)
+	const country = String(
+		selected ?? guild?.country ?? localeCountry(interaction.locale),
+	)
 	if (!countries.some((c) => c.code === country)) return []
 	const filters = await deps.read(
 		{ country },
@@ -64,7 +67,10 @@ export async function setup(interaction: Interaction, deps: SetupDeps) {
 	const existing = await deps.getGuild(guildId)
 	if (!deps.guildAvailable()) return setupUnavailable()
 	const options = Object.fromEntries(
-		(interaction.data?.options ?? []).map((o) => [o.name, o.value]),
+		(interaction.data?.options ?? []).map((o) => [
+			o.name,
+			o.value === undefined ? undefined : String(o.value),
+		]),
 	)
 	const country =
 		options.country ?? existing?.country ?? localeCountry(interaction.locale)

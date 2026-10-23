@@ -1,3 +1,6 @@
+import { linkPrompt, rateModal, writeConfirmation } from "./member-cards.ts"
+import { discordWrite } from "./writes.server.ts"
+import { parseUndoId } from "./custom-id.ts"
 import { appOrigin } from "./oauth.server.ts"
 import { commands } from "./commands.ts"
 import { FALLBACK_COUNTRY } from "../cache-identity.server.ts"
@@ -8,6 +11,7 @@ import {
 	message,
 	EPHEMERAL,
 	textCard,
+	displayText,
 	titleCard,
 	titleListCard,
 	personCard,
@@ -33,6 +37,7 @@ import type { RateVerdict } from "../rate-limit.server.ts"
 import type { TalkedRow } from "../../domain/talked-about-now.ts"
 export interface Interaction {
 	type: number
+	id?: string
 	application_id?: string
 	token?: string
 	locale?: string
@@ -44,11 +49,17 @@ export interface Interaction {
 	data?: {
 		name?: string
 		custom_id?: string
+		components?: {
+			type: number
+			component?: { custom_id?: string; values?: string[] }
+			components?: { custom_id?: string; values?: string[] }[]
+		}[]
 		values?: string[]
-		options?: { name: string; value?: string; focused?: boolean }[]
+		options?: { name: string; value?: string | number; focused?: boolean }[]
 	}
 }
 export interface Dependencies extends PlaceDependencies {
+	write?: typeof discordWrite
 	linkedUser: (discordId: string) => Promise<string | null>
 	unlink: (target: { byDiscordUserId: string }) => Promise<void>
 	memberRead: (
@@ -70,19 +81,23 @@ export interface Dependencies extends PlaceDependencies {
 	emojis?: () => Promise<EmojiIds>
 }
 const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
+	write: discordWrite,
 	linkedUser: async (id) =>
 		(await import("./link.server.ts")).getLinkedUserId(id),
 	unlink: async (target) => (await import("./link.server.ts")).unlink(target),
 	memberRead: async (userId, name, args) => {
-		const data = await (
-			await import("../mcp/data.server.ts")
-		).readMemberTool(userId, "https://goodwatch.app", name, args)
+		const data = await (await import("../mcp/data.server.ts")).readMemberTool(
+			userId,
+			"https://goodwatch.app",
+			name,
+			args,
+		)
 		return name === "get_title"
 			? (await import("../mcp/title-results.server.ts")).enrichTitleResults(
 					userId,
 					data,
 					{ posters: true },
-			  )
+				)
 			: data
 	},
 	getGuild: async (id) =>
@@ -108,8 +123,7 @@ const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
 		(await import("./discover-state.server.ts")).saveDiscoverState(state),
 	loadState: async (key) =>
 		(await import("./discover-state.server.ts")).loadDiscoverState(key),
-	emojis: async () =>
-		(await import("./emoji.server.ts")).applicationEmojiIds(),
+	emojis: async () => (await import("./emoji.server.ts")).applicationEmojiIds(),
 }
 /** The Hot on socials row as list-card titles: the first ten, with the row's poster path as a poster URL. */
 export function hotTitles(row: Pick<TalkedRow, "titles"> | null): GuestTitle[] {
@@ -146,11 +160,11 @@ export function discoverHeading(args: DiscoverState["args"]) {
 		args.type === "movie"
 			? "movies"
 			: args.type === "show"
-			? "shows"
-			: "movies and shows"
+				? "shows"
+				: "movies and shows"
 	const lead = args.moods?.[0]
-		? moodNames.get(args.moods[0]) ?? null
-		: args.genres?.[0] ?? null
+		? (moodNames.get(args.moods[0]) ?? null)
+		: (args.genres?.[0] ?? null)
 	const heading = lead ? `${lead} ${kind}` : kind
 	return heading[0].toUpperCase() + heading.slice(1)
 }
@@ -167,7 +181,8 @@ export async function routeInteraction(
 			? interaction.data.custom_id
 			: ""
 	const parsed = parseCustomId(customId),
-		list = parseListId(customId)
+		list = parseListId(customId),
+		undo = parseUndoId(customId)
 	const finish = (outcome: string) => {
 		if (logged) return
 		logged = true
@@ -175,18 +190,21 @@ export async function routeInteraction(
 			`DISCORD interaction: ${JSON.stringify({
 				kind: interaction.type,
 				...(interaction.type === 3
-					? { action: parsed?.action ?? list?.action ?? "unknown" }
+					? {
+							action:
+								parsed?.action ?? list?.action ?? (undo ? "undo" : "unknown"),
+						}
 					: {
 							command: commands.some((c) => c.name === interaction.data?.name)
 								? interaction.data?.name
 								: "unknown",
-					  }),
+						}),
 				context:
 					interaction.context === 2
 						? "private"
 						: interaction.context === 0 || interaction.guild_id
-						? "guild"
-						: "dm",
+							? "guild"
+							: "dm",
 				viewer: memberId ? "member" : "guest",
 				duration_ms: Date.now() - start,
 				outcome,
@@ -216,7 +234,7 @@ export async function routeInteraction(
 							? {
 									country: settings.country,
 									services: settings.service_ids as number[] | undefined,
-							  }
+								}
 							: null,
 				}
 			})(),
@@ -312,7 +330,7 @@ export async function routeInteraction(
 					note: allServices()
 						? `Using every service in ${countryName(country)}.`
 						: undefined,
-			  })
+				})
 			: textCard("No matching person found.")
 	}
 	const hot = async (share = false) =>
@@ -364,7 +382,10 @@ export async function routeInteraction(
 		)
 	}
 	const options = Object.fromEntries(
-		(interaction.data?.options ?? []).map((o) => [o.name, o.value ?? ""]),
+		(interaction.data?.options ?? []).map((o) => [
+			o.name,
+			String(o.value ?? ""),
+		]),
 	)
 	const resolveTitle = async (input?: string) => {
 		const value = (input ?? "").trim().slice(0, 120)
@@ -404,7 +425,7 @@ export async function routeInteraction(
 								"You need Manage Server permission to change server setup.",
 							),
 							"forbidden",
-					  )
+						)
 			if (interaction.type === 4)
 				return reply(
 					{
@@ -438,7 +459,10 @@ export async function routeInteraction(
 				const focused = interaction.data.options?.find((o) => o.focused)
 				if (!focused || !["genre", "service"].includes(focused.name))
 					return reply({ choices: [] }, "unsupported", 8)
-				const query = (focused.value ?? "").trim().slice(0, 120).toLowerCase()
+				const query = String(focused.value ?? "")
+					.trim()
+					.slice(0, 120)
+					.toLowerCase()
 				const filters = await within<Record<string, unknown>>(
 					read("get_discover_filters", {}),
 					1800,
@@ -449,10 +473,10 @@ export async function routeInteraction(
 						? ((filters.genres ?? []) as string[]).map((id) => ({
 								name: id,
 								value: id,
-						  }))
+							}))
 						: ((filters.providers ?? []) as { id: number; name: string }[]).map(
 								(p) => ({ name: p.name, value: String(p.id) }),
-						  )
+							)
 				return reply(
 					{
 						choices: entries
@@ -460,7 +484,7 @@ export async function routeInteraction(
 								(c) => query.length < 2 || c.name.toLowerCase().includes(query),
 							)
 							.slice(0, 25)
-							.map((c) => ({ ...c, name: c.name.slice(0, 100) })),
+							.map((c) => ({ ...c, name: displayText(c.name).slice(0, 100) })),
 					},
 					"ok",
 					8,
@@ -468,13 +492,15 @@ export async function routeInteraction(
 			}
 			const isPerson = interaction.data?.name === "person"
 			if (
-				!["search", "similar", "person"].includes(interaction.data?.name ?? "")
+				!["search", "similar", "person", "rate", "seen", "want"].includes(
+					interaction.data?.name ?? "",
+				)
 			)
 				return reply({ choices: [] }, "unsupported", 8)
-			const query = (
+			const query = String(
 				interaction.data?.options?.find(
 					(o) => o.name === (isPerson ? "name" : "title") && o.focused,
-				)?.value ?? ""
+				)?.value ?? "",
 			)
 				.trim()
 				.slice(0, 120)
@@ -491,12 +517,12 @@ export async function routeInteraction(
 			return reply(
 				{
 					choices: items.slice(0, 25).map((t) => ({
-						name: `${t.name}${t.year ? ` (${t.year})` : ""} · ${
+						name: `${displayText(t.name)}${t.year ? ` (${t.year})` : ""} · ${
 							isPerson
 								? "Person"
 								: t.id.startsWith("movie:")
-								? "Movie"
-								: "TV show"
+									? "Movie"
+									: "TV show"
 						}`.slice(0, 100),
 						value: isPerson ? String(t.person_id) : t.id,
 					})),
@@ -505,6 +531,193 @@ export async function routeInteraction(
 				8,
 			)
 		}
+		const memberAction =
+			parsed && ["want", "seen", "rate", "rate-submit"].includes(parsed.action)
+				? parsed
+				: null
+		const writeCommand =
+			interaction.type === 2 &&
+			["rate", "seen", "want"].includes(interaction.data?.name ?? "")
+		if (
+			writeCommand ||
+			(interaction.type === 3 &&
+				((memberAction && memberAction.action !== "rate-submit") || undo)) ||
+			(interaction.type === 5 && memberAction?.action === "rate-submit")
+		) {
+			if (!interaction.application_id || !interaction.token)
+				return reply(textCard("Invalid interaction."), "invalid")
+			// A modal must be the initial response; Discord cannot open it after a defer.
+			if (interaction.type === 3 && memberAction?.action === "rate") {
+				const linked = await within<string | null | undefined>(
+					deps.linkedUser(user),
+					400,
+					undefined,
+				)
+				if (linked === undefined)
+					return reply(
+						textCard("Could not load your account. Please press Rate again."),
+					)
+				memberId = linked
+				if (linked) {
+					const result = await within(
+						deps.memberRead(linked, "get_title", {
+							title_id: memberAction.titleId,
+						}),
+						1500,
+						null,
+					)
+					if (result?.title)
+						return reply(
+							rateModal(
+								result.title as GuestTitle,
+								(result.member as MemberMarks)?.score,
+							).data,
+							"ok",
+							9,
+						)
+					return reply(textCard("Could not load this title. Please try again."))
+				}
+			}
+			const publicMessage =
+				interaction.message != null &&
+				!((interaction.message.flags ?? 0) & EPHEMERAL)
+			return defer(
+				async () => {
+					// Do not treat a slow link lookup as a guest for writes or undo.
+					memberId = await deps.linkedUser(user)
+					if (!memberId)
+						return undo
+							? textCard("Only the person who made this change can undo it.")
+							: linkPrompt(appOrigin())
+					if (
+						!interaction.id ||
+						interaction.id.length > 65 ||
+						!/^[A-Za-z0-9_-]+$/.test(interaction.id)
+					)
+						return textCard("Invalid interaction ID.")
+					if (undo) {
+						const result = await deps.write(
+							memberId,
+							appOrigin(),
+							"undo_watch",
+							{ action_id: interaction.id, batch_id: undo.batchId },
+						)
+						const summary = result.summary as Record<string, number> | undefined
+						if (
+							!["applied", "unchanged"].includes(String(result.outcome)) ||
+							(summary &&
+								(summary.partly_undone ||
+									summary.changed_since ||
+									summary.not_undoable ||
+									summary.error))
+						)
+							return textCard(
+								String(result.message ?? "Could not undo this change."),
+							)
+						// Refresh state when the catalog read is available, retaining the undo acknowledgement.
+						try {
+							usePlace(await place())
+							const refreshed = await card(undo.titleId)
+							return message([
+								{ type: 10, content: "Undone." },
+								...refreshed.components,
+							])
+						} catch {
+							/* The receipt remains undone if the refresh fails. */
+						}
+						return textCard("Undone.")
+					}
+					const action = (
+						memberAction?.action === "rate-submit"
+							? "rate"
+							: (memberAction?.action ?? interaction.data?.name)
+					) as "rate" | "seen" | "want"
+					const id =
+						memberAction?.titleId ?? (await resolveTitle(options.title))
+					if (!id)
+						return textCard("No matching title found. Try another title.")
+					const result = await deps.memberRead(memberId, "get_title", {
+						title_id: id,
+					})
+					if (!result.title) return textCard("No matching title found.")
+					const title = result.title as GuestTitle
+					const marks = result.member as MemberMarks | undefined
+					const selected = interaction.data?.components
+						?.flatMap((c) =>
+							c.component ? [c.component] : (c.components ?? []),
+						)
+						.find((c) => c.custom_id === "score")?.values
+					const score =
+						interaction.type === 5
+							? Number(selected?.length === 1 ? selected[0] : NaN)
+							: Number(options.score)
+					if (
+						action === "rate" &&
+						(!Number.isInteger(score) || score < 1 || score > 10)
+					)
+						return textCard("Choose a score from 1 to 10.")
+					if (
+						action === "seen" &&
+						!writeCommand &&
+						id.startsWith("movie:") &&
+						(marks?.status === "seen" ||
+							(marks?.watch_count ?? 0) > 0 ||
+							marks?.score != null)
+					)
+						return textCard(
+							"Already seen. Use Undo on the earlier confirmation, or /seen to log a rewatch.",
+						)
+					const wanted = writeCommand || !marks?.want_to_see
+					// Discord gives no timezone, so "today" is the UTC date.
+					const item = {
+						title_id: id,
+						...(action === "rate"
+							? { score }
+							: action === "seen"
+								? { date: new Date().toISOString().slice(0, 10) }
+								: { want_to_see: wanted }),
+					}
+					const written = await deps.write(
+						memberId,
+						appOrigin(),
+						action === "rate"
+							? "rate_title"
+							: action === "seen"
+								? "log_watch"
+								: "set_want_to_see",
+						{ action_id: interaction.id, items: [item] },
+					)
+					const items = written.items as
+						| {
+								status?: string
+								message?: string
+								changes?: {
+									score?: [unknown, number]
+									want_to_see?: [unknown, boolean]
+								}
+						  }[]
+						| undefined
+					if (written.outcome !== "applied")
+						return textCard(
+							String(
+								items?.[0]?.message ?? written.message ?? "No change was made.",
+							),
+						)
+					return writeConfirmation(
+						title,
+						String(written.batch_id),
+						action,
+						items?.[0]?.changes?.score?.[1] ?? score,
+						items?.[0]?.changes?.want_to_see?.[1] ?? wanted,
+					)
+				},
+				(body) =>
+					deps.edit(interaction.application_id!, interaction.token!, body),
+				finish,
+				{ type: interaction.type === 3 && !publicMessage ? 6 : 5 },
+			)
+		}
+
 		if (
 			(interaction.type === 2 &&
 				["link", "unlink"].includes(interaction.data?.name ?? "")) ||
@@ -529,9 +742,7 @@ export async function routeInteraction(
 					if (action === "gw:unlink:keep")
 						return textCard("Your GoodWatch account stays linked.")
 					if (!memberId)
-						return linkPromptCard(
-							new URL("/discord/link", appOrigin()).href,
-						)
+						return linkPromptCard(new URL("/discord/link", appOrigin()).href)
 					const confirming =
 						interaction.data?.name === "unlink" || action === "gw:unlink:ask"
 					return message([
@@ -557,7 +768,7 @@ export async function routeInteraction(
 											label: "Keep",
 											custom_id: "gw:unlink:keep",
 										},
-								  ]
+									]
 								: [
 										{
 											type: 2,
@@ -565,12 +776,20 @@ export async function routeInteraction(
 											label: "Unlink",
 											custom_id: "gw:unlink:ask",
 										},
-								  ],
+									],
 						},
 					])
 				},
 				(body) => deps.edit(applicationId, token, body),
 				finish,
+				{
+					type:
+						interaction.type === 3 &&
+						(!interaction.message ||
+							(interaction.message.flags ?? 0) & EPHEMERAL)
+							? 6
+							: 5,
+				},
 			)
 		}
 		if (

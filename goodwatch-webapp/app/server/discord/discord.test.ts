@@ -255,7 +255,10 @@ test("Where to watch defers the update then patches country offers", async () =>
 		IS_COMPONENTS_V2,
 	)
 	assert.match(JSON.stringify(f.edits), /https:\/\/example.com\/watch/)
-	assert.match(JSON.stringify(f.edits), /Where to watch on every service in Germany/)
+	assert.match(
+		JSON.stringify(f.edits),
+		/Where to watch on every service in Germany/,
+	)
 })
 test("Share defers publicly then patches a guest card without Share", async () => {
 	let done!: () => void
@@ -618,7 +621,10 @@ test("member search: the top block is exactly the shared card, the member's own 
 					availability: {
 						state: "watchable",
 						offers: [
-							{ name: `${country} provider`, stream_link: `[${country}](https://example.com/${country})` },
+							{
+								name: `${country} provider`,
+								stream_link: `[${country}](https://example.com/${country})`,
+							},
 						],
 					},
 				},
@@ -635,7 +641,12 @@ test("member search: the top block is exactly the shared card, the member's own 
 							match_label: "93% taste match",
 							availability: {
 								state: "watchable",
-								offers: [{ name: "Member provider", stream_link: "[M](https://example.com/m)" }],
+								offers: [
+									{
+										name: "Member provider",
+										stream_link: "[M](https://example.com/m)",
+									},
+								],
 							},
 						},
 						member: {
@@ -644,7 +655,7 @@ test("member search: the top block is exactly the shared card, the member's own 
 							watch_count: 1,
 							want_to_see: true,
 						},
-				  }
+					}
 		},
 	})
 	const guildInteraction = (type: number, data: Interaction["data"]) => ({
@@ -666,13 +677,19 @@ test("member search: the top block is exactly the shared card, the member's own 
 	assert.match(personal, /You rated it \*\*9 · Excellent\*\*/)
 	assert.match(personal, /In your Wishlist/)
 	const [top, member] = JSON.parse(personal)[2].components
-	assert.doesNotMatch(JSON.stringify(top), /93%|You rated|Wishlist|France|Member provider/)
+	assert.doesNotMatch(
+		JSON.stringify(top),
+		/93%|You rated|Wishlist|France|Member provider/,
+	)
 	assert.match(JSON.stringify(top), /Where to watch in the United Kingdom/)
 	assert.match(JSON.stringify(top), /GB provider/)
 	assert.equal(member.type, 17)
 	assert.equal(member.accent_color, 0xfbbf24)
 	assert.match(JSON.stringify(member), /### 93% taste match/)
-	assert.match(JSON.stringify(member), /On your services in France\\n\*\*Member provider\*\*/)
+	assert.match(
+		JSON.stringify(member),
+		/On your services in France\\n\*\*Member provider\*\*/,
+	)
 	assert.match(f.logs[0], /"viewer":"member"/)
 	assert.deepEqual(memberCalls, [
 		{ id: "member-id", name: "get_settings", args: {} },
@@ -725,7 +742,9 @@ test("/link gives guests a link and members an unlink button; /unlink requires c
 		const run = async (type: number, data: Interaction["data"]) => {
 			const previous = f.edits.length
 			const response = await f.run(interaction(type, data))
-			assert.equal((await response.json()).data.flags, EPHEMERAL)
+			const acknowledgement = await response.json()
+			if (type === 3) assert.deepEqual(acknowledgement, { type: 6 })
+			else assert.equal(acknowledgement.data.flags, EPHEMERAL)
 			for (let i = 0; f.edits.length === previous && i < 100; i++)
 				await new Promise((resolve) => setTimeout(resolve, 5))
 			return JSON.stringify(f.edits[previous])
@@ -756,7 +775,12 @@ test("a partly watched show is Watching rather than Seen; sharing strips even su
 		{ member: { status: "watching", watch_count: 2 } },
 	)
 	assert.match(JSON.stringify(result), /Watching/)
-	assert.doesNotMatch(JSON.stringify(result), /Seen/)
+	const member = result.components.at(-1)!
+	assert.doesNotMatch(String(member.components?.[0].content), /\bSeen\b/)
+	assert.equal(
+		member.components?.[1].components?.find((c) => c.label === "Seen")?.style,
+		2,
+	)
 	const shared = titleCard({ ...title, match: 90, match_label: "Fit" }, "DE", {
 		share: true,
 		member: { score: 8, status: "seen" },

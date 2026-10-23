@@ -461,18 +461,18 @@ for (const action of ["similar", "watch", "open", "previous", "next"]) {
 			action === "open"
 				? { custom_id: listCustomId("open", "public"), values: ["movie:42"] }
 				: action === "previous" || action === "next"
-				? {
-						custom_id: listCustomId(
-							"discover",
-							`${key}:${action === "previous" ? 0 : 2}`,
-						),
-				  }
-				: {
-						custom_id: formatCustomId(
-							action as "similar" | "watch",
-							"movie:42",
-						),
-				  }
+					? {
+							custom_id: listCustomId(
+								"discover",
+								`${key}:${action === "previous" ? 0 : 2}`,
+							),
+						}
+					: {
+							custom_id: formatCustomId(
+								action as "similar" | "watch",
+								"movie:42",
+							),
+						}
 		assert.deepEqual(await f.run(3, data, true), {
 			type: 5,
 			data: { flags: EPHEMERAL },
@@ -585,7 +585,7 @@ test("a linked member opens a discover title with match_label and shares a fresh
 							match_label: "Excellent taste fit",
 						},
 						member: { score: 9, want_to_see: true },
-				  }
+					}
 		}
 		return f
 	}
@@ -671,7 +671,7 @@ for (const source of ["similar", "person", "hot", "similar-button"]) {
 								match_label: "Excellent taste fit",
 							},
 							member: {},
-					  }
+						}
 			assert.deepEqual(
 				await g.run(
 					3,
@@ -727,8 +727,9 @@ test("hot adapter maps the Hot on socials row, poster paths included, into 4D li
 		{ id: "show:101", name: "Buzz 1", year: 2026, poster_url: null },
 	])
 	assert.deepEqual(hotTitles(null), [])
-	const gallery = titleListCard("Hot on socials", titles).components[0]
-		.components!.find((c) => c.type === 12)!
+	const gallery = titleListCard(
+		"Hot on socials",
+		titles,
+	).components[0].components!.find((c) => c.type === 12)!
 	assert.equal((gallery.items as unknown[]).length, 9)
 })
-

@@ -1004,3 +1004,69 @@ test("An undo with nothing to take back makes no reset and no taste rebuild", as
 	assert.equal(lib.calls.resets, resets)
 	assert.equal(lib.calls.taste, taste)
 })
+
+// Discord's adapter uses the real writeMemberTool/runBatch/undoBatch pipeline.
+for (const [name, fields] of [
+	["rate_title", { score: 9 }],
+	["set_want_to_see", { want_to_see: true }],
+	["log_watch", { date: "2026-10-23" }],
+] as const) {
+	test(`Discord ${name}: batch of one, receipt replay, owner-only undo and restored state`, async () => {
+		const { createDiscordWriter } = await import("../discord/writes.server.ts")
+		const lib = fakeLibrary()
+		const titleId = "movie:1001"
+		const before = structuredClone(lib.get(ME, titleId))
+		let budgetCost = 0
+		const discord = createDiscordWriter({
+			receipt: lib.ports.readReceipt,
+			take: async (_user, windows, cost) => {
+				assert.deepEqual(windows, [
+					{ limit: 300, seconds: 60 },
+					{ limit: 2000, seconds: 3600 },
+				])
+				budgetCost += cost
+				return { allowed: true, store: "memory" }
+			},
+			write: (userId, origin, tool, args) =>
+				writeMemberTool(userId, origin, tool, args, lib.ports),
+		})
+		const args = {
+			action_id: "123456789",
+			items: [{ title_id: titleId, ...fields }],
+		}
+		const result = await discord(ME, origin, name, args)
+		assert.equal(result.outcome, "applied")
+		assert.equal(result.batch_id, args.action_id)
+		assert.equal(result.batch, true)
+		const after = structuredClone(lib.get(ME, titleId))
+		assert.notDeepEqual(after, before)
+		// A Want toggle computed from current state must still replay on an interaction retry.
+		const replay = await discord(
+			ME,
+			origin,
+			name,
+			name === "set_want_to_see"
+				? { ...args, items: [{ title_id: titleId, want_to_see: false }] }
+				: args,
+		)
+		assert.deepEqual(replay, result)
+		assert.deepEqual(lib.get(ME, titleId), after)
+		assert.equal(budgetCost, 1)
+		const undoArgs = { action_id: "987654321", batch_id: args.action_id }
+		const foreign = await discord(OTHER, origin, "undo_watch", undoArgs)
+		assert.equal(
+			foreign.message,
+			"Only the person who made this change can undo it.",
+		)
+		assert.deepEqual(lib.get(ME, titleId), after)
+		const undone = await discord(ME, origin, "undo_watch", undoArgs)
+		assert.equal(undone.outcome, "applied")
+		assert.deepEqual(lib.get(ME, titleId), before)
+		assert.equal(budgetCost, 2) // one write plus an undo charged at the receipt's one item
+		await discord(ME, origin, "undo_watch", {
+			...undoArgs,
+			action_id: "another-undo",
+		})
+		assert.deepEqual(lib.get(ME, titleId), before)
+	})
+}

@@ -1,10 +1,25 @@
-export type CardAction = "watch" | "share" | "similar"
+export type CardAction =
+	| "watch"
+	| "share"
+	| "similar"
+	| "want"
+	| "seen"
+	| "rate"
+	| "rate-submit"
 export const isTitleId = (value: string) =>
 	/^(movie|show):[1-9]\d{0,9}$/.test(value)
 export function formatCustomId(action: CardAction, titleId: string): string {
 	const value = `gw1:${action}:${titleId}`
 	if (
-		!["watch", "share", "similar"].includes(action) ||
+		![
+			"watch",
+			"share",
+			"similar",
+			"want",
+			"seen",
+			"rate",
+			"rate-submit",
+		].includes(action) ||
 		!isTitleId(titleId) ||
 		value.length > 100
 	)
@@ -16,7 +31,9 @@ export function parseCustomId(
 ): { action: CardAction; titleId: string } | null {
 	if (value.length > 100) return null
 	const match =
-		/^gw1:(watch|share|similar):((?:movie|show):[1-9]\d{0,9})$/.exec(value)
+		/^gw1:(watch|share|similar|want|seen|rate|rate-submit):((?:movie|show):[1-9]\d{0,9})$/.exec(
+			value,
+		)
 	return match ? { action: match[1] as CardAction, titleId: match[2] } : null
 }
 
@@ -53,4 +70,20 @@ export function parseListId(id: string) {
 	)
 		return null
 	return { action, value }
+}
+
+export function undoCustomId(batchId: string, titleId: string) {
+	const id = `gw1:undo:${batchId}:${titleId}`
+	if (
+		!/^gw1:undo:[A-Za-z0-9_-]{1,65}:(movie|show):[1-9]\d{0,9}$/.test(id) ||
+		id.length > 100
+	)
+		throw new Error("Invalid undo ID")
+	return id
+}
+export function parseUndoId(id: string) {
+	if (id.length > 100) return null
+	const match =
+		/^gw1:undo:([A-Za-z0-9_-]{1,65}):((?:movie|show):[1-9]\d{0,9})$/.exec(id)
+	return match ? { batchId: match[1], titleId: match[2] } : null
 }

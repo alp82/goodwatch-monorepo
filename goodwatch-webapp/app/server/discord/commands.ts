@@ -20,6 +20,29 @@ export function defineCommands() {
 		autocomplete: true,
 	}
 	return [
+		...["rate", "seen", "want"].map((name) => ({
+			name,
+			description: {
+				rate: "Rate a title",
+				seen: "Log a watch today",
+				want: "Want to See: add a title to your Wishlist",
+			}[name]!,
+			options: [
+				title,
+				...(name === "rate"
+					? [
+							{
+								name: "score",
+								description: "Your score from 1 to 10",
+								type: 4,
+								required: true,
+								min_value: 1,
+								max_value: 10,
+							},
+						]
+					: []),
+			],
+		})),
 		{
 			name: "setup",
 			description: "Set this server's country and streaming services",
@@ -66,15 +89,11 @@ export function defineCommands() {
 			name: "discover",
 			description: "Discover movies and TV shows",
 			options: [
-				option(
-					"type",
-					"Movie, show, or any",
-					[
-						{ name: "Movies", value: "movie" },
-						{ name: "Shows", value: "show" },
-						{ name: "Movies and shows", value: "any" },
-					],
-				),
+				option("type", "Movie, show, or any", [
+					{ name: "Movies", value: "movie" },
+					{ name: "Shows", value: "show" },
+					{ name: "Movies and shows", value: "any" },
+				]),
 				option("mood", "Kind of evening", [
 					{ name: "Funny", value: "funny" },
 					{ name: "Feel-good", value: "feelgood" },
@@ -95,17 +114,13 @@ export function defineCommands() {
 					type: 3,
 					autocomplete: true,
 				},
-				option(
-					"sort",
-					"Result order",
-					[
-						{ name: "For you", value: "for_you" },
-						{ name: "Popular", value: "popularity" },
-						{ name: "Newest", value: "newest" },
-						{ name: "Best score", value: "score" },
-						{ name: "Best match", value: "match" },
-					],
-				),
+				option("sort", "Result order", [
+					{ name: "For you", value: "for_you" },
+					{ name: "Popular", value: "popularity" },
+					{ name: "Newest", value: "newest" },
+					{ name: "Best score", value: "score" },
+					{ name: "Best match", value: "match" },
+				]),
 			],
 		},
 		{

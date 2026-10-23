@@ -1,4 +1,6 @@
+import type { Score } from "../scores.server.ts"
 import {
+	getVibeColorValue,
 	goodwatchScoreDisplay,
 	hasGoodwatchScore,
 	scoreLabels,
@@ -75,10 +77,23 @@ export function message(components: Component[], ephemeral = true) {
 		allowed_mentions: { parse: [] },
 	}
 }
+/** Human-facing names and tool messages never expose internal identifiers or field separators. */
+export function displayText(value: string) {
+	return value
+		.replace(/\b(?:movie|show):\d+\b/g, "this title")
+		.replace(
+			/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi,
+			"this change",
+		)
+		.replace(/\b\d{15,20}\b/g, "this change")
+		.replace(/_/g, " ")
+}
 export const textCard = (text: string) =>
-	message([{ type: 10, content: text.slice(0, 4000) }])
+	message([{ type: 10, content: displayText(text).slice(0, 4000) }])
 const escape = (text: string) =>
-	text.replace(/[\\*_~`|>#[\]]/g, "\\$&").replace(/@/g, "＠")
+	displayText(text)
+		.replace(/[\\*_~`|>#[\]]/g, "\\$&")
+		.replace(/@/g, "＠")
 
 // ---------- shared pieces (title, /watch, /together and write cards reuse these) ----------
 
@@ -112,8 +127,9 @@ export function countryName(code: string) {
 	let name = code
 	try {
 		name =
-			new Intl.DisplayNames(["en"], { type: "region" }).of(code.toUpperCase()) ??
-			code
+			new Intl.DisplayNames(["en"], { type: "region" }).of(
+				code.toUpperCase(),
+			) ?? code
 	} catch {
 		/* Keep the code. */
 	}
@@ -125,7 +141,12 @@ export function countryName(code: string) {
 }
 
 /** The vibe color of a GoodWatch score as an accent number, like the site's score ring. */
-export function scoreAccent(score: number | null | undefined) {
+export function scoreAccent(
+	score: number | null | undefined,
+	scale: "catalog" | "member" = "catalog",
+) {
+	if (scale === "member" && score != null)
+		return Number.parseInt(getVibeColorValue(score as Score).slice(1), 16)
 	if (!hasGoodwatchScore(score)) return undefined
 	const colors = [
 		0x7f1d1d, 0x991b1b, 0xb91c1c, 0xc2410c, 0xd97706, 0xca8a04, 0xa3a323,
@@ -148,11 +169,13 @@ export function scoreEmoji(score: number, emojis: EmojiIds = {}) {
 export function scoreLine(
 	score: number | null | undefined,
 	emojis: EmojiIds = {},
+	scale: "catalog" | "member" = "catalog",
 ) {
 	if (!hasGoodwatchScore(score)) return "Not rated yet"
 	const shown = goodwatchScoreDisplay(score)
-	const emoji = scoreEmoji(shown, emojis)
-	return `${emoji ? `${emoji} ` : ""}**${shown} · ${scoreWord(shown)}**`
+	const percent = scale === "member" ? shown * 10 : shown
+	const emoji = scoreEmoji(percent, emojis)
+	return `${emoji ? `${emoji} ` : ""}**${shown} · ${scoreWord(percent)}**`
 }
 
 /** Runtime as "2h 37m". */
@@ -202,10 +225,10 @@ export function backdropHero(
 				items: [
 					{
 						media: { url: title.backdrop_url },
-						description: `${title.name} backdrop`.slice(0, 1024),
+						description: `${displayText(title.name)} backdrop`.slice(0, 1024),
 					},
 				],
-		  }
+			}
 		: null
 }
 
@@ -237,10 +260,10 @@ export function titleHero(
 					accessory: {
 						type: 11,
 						media: { url: title.poster_url },
-						description: `${title.name} poster`.slice(0, 1024),
+						description: `${displayText(title.name)} poster`.slice(0, 1024),
 					},
 				},
-		  ]
+			]
 		: [facts, overview]
 }
 
@@ -268,8 +291,8 @@ export function whereToWatch(
 					.join("\n")
 			: names.map((n) => `**${n}**`).join("  ·  ")
 		: title.availability?.state === "no_match"
-		? "No current offers found."
-		: "Availability unknown."
+			? "No current offers found."
+			: "Availability unknown."
 	const heading =
 		options.heading ??
 		`Where to watch ${
@@ -308,6 +331,25 @@ export function titleButtons(title: GuestTitle, share = false): Component {
 	return { type: 1, components: buttons }
 }
 
+function memberButtons(title: GuestTitle, marks: MemberMarks): Component[] {
+	const seen =
+		marks.status === "seen" ||
+		(title.id.startsWith("movie:") &&
+			((marks.watch_count ?? 0) > 0 || marks.score != null))
+	return (
+		[
+			["want", "Want to see", marks.want_to_see],
+			["seen", "Seen", seen],
+			["rate", "Rate", marks.score != null],
+		] as const
+	).map(([action, label, active]) => ({
+		type: 2,
+		style: active ? 3 : 2,
+		label,
+		custom_id: formatCustomId(action, title.id),
+	}))
+}
+
 /** The member's state in words: taste match heading and Want to See, seen, watching, and rating. */
 export function memberLines(
 	title: Pick<GuestTitle, "id" | "match" | "match_label">,
@@ -325,8 +367,8 @@ export function memberLines(
 		seen
 			? "Seen"
 			: progress
-			? progress[0].toUpperCase() + progress.slice(1)
-			: "Not seen yet",
+				? progress[0].toUpperCase() + progress.slice(1)
+				: "Not seen yet",
 		marks.score != null && marks.score >= 1 && marks.score <= 10
 			? `You rated it **${marks.score} · ${scoreLabels[Math.round(marks.score)]}**`
 			: null,
@@ -412,17 +454,17 @@ export function titleCard(
 					memberBlock(
 						mine,
 						options.member,
-						options.memberButtons,
+						options.memberButtons ?? memberButtons(mine, options.member),
 						place
 							? whereToWatch(mine, place.country, {
 									offers: options.offers,
 									heading: `${
 										place.ownServices ? "On your services" : "On every service"
 									} in ${countryName(place.country)}`,
-							  })
+								})
 							: undefined,
 					),
-			  ]
+				]
 			: [guest],
 		!share,
 	)
@@ -497,7 +539,7 @@ export function titleSelect(
 									: null
 								const name = score === null ? null : scoreEmojiName(score)
 								return {
-									label: t.name.slice(0, 100) || "Untitled",
+									label: displayText(t.name).slice(0, 100) || "Untitled",
 									value: t.id,
 									description: [
 										t.year ?? "Year unknown",
@@ -514,7 +556,7 @@ export function titleSelect(
 						},
 					],
 				},
-		  ]
+			]
 		: []
 }
 
@@ -613,7 +655,7 @@ export function titleListCard(
 										1024,
 									),
 								})),
-						  }
+							}
 						: null,
 					text(
 						shown.length
@@ -670,7 +712,7 @@ export function personCard(
 							media: { url: person.profile_url },
 							description: person.name.slice(0, 100),
 						},
-				  }
+					}
 				: heading,
 			...(options.note ? [text(`-# ${options.note}`)] : []),
 			{

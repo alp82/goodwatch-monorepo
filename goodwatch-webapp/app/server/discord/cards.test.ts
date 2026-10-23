@@ -171,7 +171,11 @@ test("2C personal card: guest container on top, amber member block below with a 
 		member.components![0].content,
 		"### 70% taste match\n-# In your Wishlist  ·  Seen  ·  You rated it **9 · Excellent**",
 	)
-	assert.equal(member.components!.length, 1)
+	assert.equal(member.components!.length, 2)
+	assert.deepEqual(
+		member.components![1].components!.map((c) => c.label),
+		["Want to see", "Seen", "Rate"],
+	)
 	const buttons: Component[] = ["Want to see", "Seen", "Rate"].map(
 		(label, i) => ({
 			type: 2,
@@ -471,7 +475,13 @@ test("emoji IDs: a partial Valkey hit keeps only its remaining few minutes in pr
 			}),
 		)
 	}) as typeof globalThis.fetch
-	const options = { appId: "app", botToken: "token", fetch, store, now: () => now }
+	const options = {
+		appId: "app",
+		botToken: "token",
+		fetch,
+		store,
+		now: () => now,
+	}
 	now = 100_000
 	assert.deepEqual(await applicationEmojiIds(options), one)
 	now = 299_000

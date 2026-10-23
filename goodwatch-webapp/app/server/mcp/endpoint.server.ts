@@ -34,10 +34,8 @@ interface Limiter {
  * Title writes per member, on top of the request limit: a batch counts once per item, so 60 batch calls a minute
  * can't make 3,000 writes. Whole histories belong in the file import.
  */
-export const WRITE_ITEM_WINDOWS: RateWindow[] = [
-	{ limit: 300, seconds: 60 },
-	{ limit: 2000, seconds: 3600 },
-]
+export { WRITE_ITEM_WINDOWS } from "./write-budget.ts"
+import { WRITE_ITEM_WINDOWS } from "./write-budget.ts"
 
 const tooMany = (retryAfterSeconds: number, body: Record<string, unknown>) =>
 	// Not Response.json: remix-serve's polyfilled Response has no static json().
