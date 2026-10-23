@@ -15,7 +15,9 @@ export function fakeMdblist(rows, options = {}) {
 		repeatCursor = false,
 		skipInFilteredRead = null, // a mediatype whose filtered read loses one row
 		extraPagination = null, // (pageIndex, rowCount) -> extra pagination fields
-		countHeaders = false, // false | true | (filter, total, pageRows) -> { total, matched } overrides
+		// The real Watchlist sends both count headers on every page. A function can override a value,
+		// or return null for a header to leave it out.
+		countHeaders = true, // false | true | (filter, total, pageRows) -> { total, matched } overrides
 	} = options
 	const log = []
 	let requestNumber = 0
@@ -37,7 +39,14 @@ export function fakeMdblist(rows, options = {}) {
 			})
 		}
 		if (fault?.json) {
-			return new Response(JSON.stringify(fault.json), { status: 200, headers: { "x-has-more": "false" } })
+			const headers = { "x-has-more": "false" }
+			if (fault.countHeaders !== false) {
+				// A one-page body: its total and its page count are both the rows it holds.
+				const count = Object.values(fault.json).filter(Array.isArray).reduce((sum, list) => sum + list.length, 0)
+				headers["x-total-items"] = String(count)
+				headers["x-matched-items"] = String(count)
+			}
+			return new Response(JSON.stringify(fault.json), { status: 200, headers })
 		}
 		if (fault === "html") return new Response("<html>maintenance</html>", { status: 200 })
 		if (fault === "envelope") return new Response(JSON.stringify({ items: [] }), { status: 200 })
@@ -71,8 +80,8 @@ export function fakeMdblist(rows, options = {}) {
 		if (countHeaders) {
 			// The real API sends the whole read's total and the current page's row count.
 			const counts = { total: selected.length, matched: page.length, ...(typeof countHeaders === "function" ? countHeaders(filter, selected.length, page.length) : {}) }
-			headers["x-total-items"] = String(counts.total)
-			headers["x-matched-items"] = String(counts.matched)
+			if (counts.total !== null) headers["x-total-items"] = String(counts.total)
+			if (counts.matched !== null) headers["x-matched-items"] = String(counts.matched)
 		}
 		return new Response(JSON.stringify(body), { status: 200, headers })
 	}

@@ -408,3 +408,58 @@ test("an empty .git folder isn't a Git work tree, a real marker is", async () =>
 	const refused = await cli(["--out", join(dir, "worktree", "w.json"), "--report", join(dir, "worktree", "r.json")])
 	assert.match(refused.stderr, /Git work tree/)
 })
+
+// ---------- review of a84c8971 ----------
+
+test("P1: a missing count header means unknown coverage, never complete", async () => {
+	const none = await read(fakeMdblist(rows, { countHeaders: false }))
+	assert.equal(none.file.completeness, "unknown")
+	assert.match(none.report.warnings.join(" "), /X-Total-Items/)
+	const noMatched = await read(fakeMdblist(rows, { countHeaders: () => ({ matched: null }) }))
+	assert.equal(noMatched.file.completeness, "unknown")
+	const noTotal = await read(fakeMdblist(rows, { countHeaders: () => ({ total: null }) }))
+	assert.equal(noTotal.file.completeness, "unknown")
+	// One page without the header is enough.
+	const onePage = await read(fakeMdblist(rows, { countHeaders: (filter, count, pageRows) => (pageRows === 1 ? { matched: null } : {}) }))
+	assert.equal(onePage.file.completeness, "unknown")
+	const singleBody = await read(fakeMdblist(rows, { faults: { 1: { json: { movies: [movie], shows: [], has_more: false }, countHeaders: false } } }))
+	assert.equal(singleBody.file.completeness, "unknown")
+})
+
+test("P1: a filtered cross-check read without count headers means unknown", async () => {
+	const filtered = await read(fakeMdblist(rows, { countHeaders: (filter) => (filter === "season" ? { total: null, matched: null } : {}) }), { crossCheck: true })
+	assert.equal(filtered.file.completeness, "unknown")
+	assert.match(filtered.report.warnings.join(" "), /season cross-check/)
+	const matchedOnly = await read(fakeMdblist(rows, { countHeaders: (filter) => (filter === "movie" ? { matched: null } : {}) }), { crossCheck: true })
+	assert.equal(matchedOnly.file.completeness, "unknown")
+})
+
+test("P2: the same row with and without a valid watchlist_at is two rows, not a repeat", async () => {
+	const undated = { ...movie, watchlist_at: null }
+	const dated = { ...movie, watchlist_at: "2026-10-20T08:15:30.123Z" }
+	const { file, report } = await read(one({ movies: [undated, dated], shows: [], has_more: false }))
+	assert.equal(report.rows.repeats, 0)
+	assert.equal(report.rows.identityConflicts, 1)
+	assert.deepEqual(file.items.map((item) => item.addedAt ?? null), [null, "2026-10-20T08:15:30.123Z"])
+	const twice = await read(one({ movies: [dated, { ...dated }], shows: [], has_more: false }))
+	assert.equal(twice.report.rows.repeats, 1, "identical dated rows are still one repeat")
+})
+
+test("P3: response field names that contain the key are redacted in the report", async () => {
+	const key = "test-key"
+	const body = {
+		movies: [{ ...movie, [key]: 1, [`x_${key}_y`]: { [key]: true } }],
+		shows: [],
+		[`${key}`]: "top",
+		[`list_${key}`]: [{ title: "z" }],
+		pagination: { [`total_${key}`]: 1, has_more: false },
+		has_more: false,
+	}
+	const { report } = await read(one(body))
+	assert.ok(!JSON.stringify(report).includes(key))
+	assert.ok(JSON.stringify(report).includes("[redacted]"))
+	await read(fakeMdblist(rows, { faults: { 1: { json: { movies: [{ ...movie, [key]: 1 }], shows: {} } } } })).catch((error) => {
+		assert.equal(error.code, "malformed-bucket")
+		assert.ok(!JSON.stringify(error.report).includes(key))
+	})
+})

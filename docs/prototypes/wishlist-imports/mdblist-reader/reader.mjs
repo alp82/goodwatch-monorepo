@@ -95,7 +95,7 @@ function reportedTotals(body) {
  * Checks every count a read reported (body fields and X-Total-Items) against the rows it sent,
  * and every page's X-Matched-Items against that page.
  */
-function reconcile({ totals, pageCounts }, received) {
+function reconcile({ totals, pageCounts, missingCounts }, received) {
 	const summary = {}
 	const mismatched = new Set()
 	let unreadable = pageCounts.includes("unreadable")
@@ -112,7 +112,28 @@ function reconcile({ totals, pageCounts }, received) {
 	}
 	if (pageCounts.length) summary["header:X-Matched-Items (per page)"] = new Set(pageCounts)
 	for (const key of Object.keys(summary)) summary[key] = [...summary[key]]
-	return { summary, mismatched: [...mismatched], unreadable, pageDiffers: pageCounts.includes("differs") }
+	return { summary, mismatched: [...mismatched], unreadable, missing: missingCounts, pageDiffers: pageCounts.includes("differs") }
+}
+
+/**
+ * The report copies field names from MDBList's answer. Any name or text equal to or containing the
+ * key becomes "[redacted]", so a key echoed back by the API never reaches the report.
+ */
+function scrub(value, apiKey) {
+	const clean = (text) => (text.includes(apiKey) ? "[redacted]" : text)
+	if (Array.isArray(value)) {
+		for (let index = 0; index < value.length; index++) value[index] = scrub(value[index], apiKey)
+		return value
+	}
+	if (isObject(value)) {
+		for (const key of Object.keys(value)) {
+			const child = scrub(value[key], apiKey)
+			delete value[key]
+			value[clean(key)] = child
+		}
+		return value
+	}
+	return typeof value === "string" ? clean(value) : value
 }
 
 /** The source row's native key, or null when the row carries no native ID at all. */
@@ -134,6 +155,8 @@ function rowIdentity(bucket, row) {
 		ids.tmdb ?? null,
 		ids.imdb ?? null,
 		row.imdb_id ?? null,
+		// The mapped added date: rows that differ only here are two observations, not a repeat.
+		timestamp(row.watchlist_at) ?? row.watchlist_at ?? null,
 	])
 }
 
@@ -269,7 +292,7 @@ export async function readWatchlist({
 	const fail = (code, message) => {
 		report.elapsedMs = Date.now() - started
 		report.failure = code
-		throw new ReaderError(code, message.replaceAll(apiKey, "[key]"), report)
+		throw new ReaderError(code, message.replaceAll(apiKey, "[key]"), scrub(report, apiKey))
 	}
 
 	async function request(params) {
@@ -346,6 +369,7 @@ export async function readWatchlist({
 		const seenCursors = new Set()
 		const unexplained = []
 		const pageCounts = []
+		let missingCounts = false
 		let cursor
 		const totals = []
 		for (let page = 0; ; page++) {
@@ -377,6 +401,8 @@ export async function readWatchlist({
 			const totalHeader = headers.get("x-total-items")
 			if (totalHeader !== null) totals.push(["header:X-Total-Items", totalHeader])
 			const matchedHeader = headers.get("x-matched-items")
+			// The Watchlist sends both count headers on every page; a page without them can't be checked.
+			if (totalHeader === null || matchedHeader === null) missingCounts = true
 			if (matchedHeader !== null) {
 				// X-Matched-Items is the row count of this page, not of the whole read.
 				const pageRows = Object.values(pageSummary.buckets).reduce((sum, count) => sum + count, 0)
@@ -394,7 +420,7 @@ export async function readWatchlist({
 				continue
 			}
 			if (more.hasMore === true) fail("missing-cursor", "MDBList said more items exist but sent no cursor. Nothing was written.")
-			return { rows, proven: more.hasMore === false, totals, unexplained, pageCounts }
+			return { rows, proven: more.hasMore === false, totals, unexplained, pageCounts, missingCounts }
 		}
 	}
 
@@ -466,6 +492,10 @@ export async function readWatchlist({
 		completeness = "unknown"
 		report.warnings.push("MDBList sent a count the reader can't read, so the file says its coverage is unknown.")
 	}
+	if (combinedCounts.missing && completeness === "complete") {
+		completeness = "unknown"
+		report.warnings.push("A page came without X-Total-Items or X-Matched-Items, so the file says its coverage is unknown.")
+	}
 
 	if (crossCheck) {
 		const union = new Map()
@@ -478,7 +508,10 @@ export async function readWatchlist({
 			if (counts.mismatched.length || counts.pageDiffers) {
 				completeness = "partial"
 				report.warnings.push(`The ${filter} cross-check counted ${counts.mismatched.join(" and ") || "a different number of"} items but sent ${rows.length}.`)
-			} else if (counts.unreadable && completeness === "complete") completeness = "unknown"
+			} else if ((counts.unreadable || counts.missing) && completeness === "complete") {
+				completeness = "unknown"
+				report.warnings.push(`The ${filter} cross-check had a page without readable X-Total-Items and X-Matched-Items.`)
+			}
 			for (const [bucket, row] of rows) {
 				crossRows++
 				union.set(rowIdentity(bucket, row), bucket)
@@ -495,6 +528,7 @@ export async function readWatchlist({
 
 	report.completeness = completeness
 	report.elapsedMs = Date.now() - started
+	scrub(report, apiKey)
 	const file = {
 		format: "goodwatch-wishlist",
 		version: 1.1,

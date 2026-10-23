@@ -80,3 +80,11 @@ Owner decisions: map `watchlist_at` to `addedAt`; build fixes 1 to 4 test-first.
 Also: the Git work tree check now needs a real marker. An empty `.git` folder had appeared in `/tmp` on this machine and made the reader refuse to write there.
 
 **Rerun on the real account:** 8 of 8, `complete`, 11 requests, 952 ms. `pagination.total`, `X-Total-Items` and `X-Matched-Items` all match. 8 of 8 rows have `addedAt`; the shipped parser reports 0 problems.
+
+## Review fixes for a84c8971, October 23, 2026
+
+Synthetic tests only; MDBList wasn't called. 45 of 45 tests pass; each fix had a failing test first. The fake server now sends both count headers by default, as the real Watchlist does.
+
+- **P1:** a page without `X-Total-Items` or `X-Matched-Items`, in the combined read or a cross-check read, makes the coverage `unknown`. Tested with both headers missing, each one missing, one page missing, and one filtered read missing.
+- **P2:** the mapped `watchlist_at` date is part of a row's identity. The same native IDs with and without a valid date are two rows and one identity conflict, not a repeat. Identical dated rows are still one repeat.
+- **P3:** the report redacts any field name or text equal to or containing the API key, on success and on failure.
