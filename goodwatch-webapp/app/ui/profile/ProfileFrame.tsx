@@ -23,6 +23,7 @@ import {
 	AMBER_BUTTON,
 	HiddenPart,
 	QUIET_BUTTON,
+	ICON_ON_PHONE,
 	ShareButton,
 	count,
 	posterUrl,
@@ -206,10 +207,10 @@ function Actions({ shell }: { shell: ProfileShell }) {
 	if (shell.viewer === "owner")
 		return (
 			<>
-				<ShareButton handle={shell.handle} />
+				<ShareButton handle={shell.handle} compact />
 				<Link
 					to={EDIT_PROFILE_PATH}
-					className={`${QUIET_BUTTON} max-sm:w-10 max-sm:justify-center max-sm:px-0`}
+					className={`${QUIET_BUTTON} ${ICON_ON_PHONE}`}
 					aria-label="Edit profile"
 				>
 					<PencilSquareIcon className="size-4" aria-hidden />
@@ -222,15 +223,16 @@ function Actions({ shell }: { shell: ProfileShell }) {
 			<>
 				<Link
 					to={`${profileTabPath(shell.handle, "taste")}#compare`}
-					className={AMBER_BUTTON}
+					aria-label="Compare tastes"
+					className={`${AMBER_BUTTON} ${ICON_ON_PHONE}`}
 				>
 					<SparklesIcon className="size-4" aria-hidden />
-					Compare tastes
+					<span className="max-sm:hidden">Compare tastes</span>
 				</Link>
-				<ShareButton handle={shell.handle} className={QUIET_BUTTON} />
+				<ShareButton handle={shell.handle} className={QUIET_BUTTON} compact />
 			</>
 		)
-	return <ShareButton handle={shell.handle} className={QUIET_BUTTON} />
+	return <ShareButton handle={shell.handle} className={QUIET_BUTTON} compact />
 }
 
 /** Posters for the stat strip's Wishlist and Lists cells, from the Overview. */
@@ -259,15 +261,6 @@ function MiniPosters({ paths }: { paths: (string | null)[] }) {
 	)
 }
 
-const SPAN: Record<number, string> = {
-	2: "col-span-2",
-	3: "col-span-3",
-	6: "col-span-6",
-}
-// Phones: three on the first row, the rest share the second, so no cell is left empty.
-const spanOf = (i: number, n: number) =>
-	n === 5 ? (i < 3 ? 2 : 3) : n === 4 ? 3 : n === 3 ? 2 : n === 2 ? 3 : 6
-
 /** One connected strip: Seen, Scores, Wishlist, Lists, Watched, each linked to its page with a small picture of it. */
 export function StatStrip({
 	shell,
@@ -281,6 +274,8 @@ export function StatStrip({
 		key: string
 		value: string
 		unit?: string
+		/** The unit on phones, where the strip is one row. */
+		unitShort?: string
 		label: string
 		to: string
 		visual: ReactNode
@@ -359,6 +354,7 @@ export function StatStrip({
 			key: "watched",
 			value: count(Math.round(c.hours / 24)),
 			unit: "days",
+			unitShort: "d",
 			label: "Watched",
 			to: profileTabPath(shell.handle, "taste"),
 			show: see("hours"),
@@ -373,29 +369,29 @@ export function StatStrip({
 	if (!shown.length) return null
 	return (
 		<ul
-			className="grid grid-cols-6 gap-px overflow-hidden rounded-2xl bg-white/10 ring-1 ring-white/10 sm:grid-cols-[repeat(var(--n),minmax(0,1fr))]"
+			className="grid grid-cols-[repeat(var(--n),minmax(0,1fr))] gap-px overflow-hidden rounded-2xl bg-white/10 ring-1 ring-white/10"
 			style={{ "--n": shown.length } as CSSProperties}
 		>
-			{shown.map((cell, i) => (
-				<li
-					key={cell.key}
-					className={`min-w-0 sm:col-span-1 ${SPAN[spanOf(i, shown.length)]}`}
-				>
+			{shown.map((cell) => (
+				<li key={cell.key} className="min-w-0">
 					<Link
 						to={cell.to}
 						prefetch="intent"
-						className="group flex h-full flex-col gap-1.5 bg-gray-950/85 px-3 py-2.5 transition-colors hover:bg-gray-900/90 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white sm:px-4 sm:py-3"
+						className="group flex h-full flex-col gap-1 bg-gray-950/85 px-1.5 py-2 transition-colors min-[400px]:px-2 sm:gap-1.5 hover:bg-gray-900/90 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white sm:px-4 sm:py-3"
 					>
-						<span className="text-[11px] font-semibold tracking-wide text-gray-400 uppercase group-hover:text-amber-300">
+						<span className="truncate text-[10px] font-semibold text-gray-400 uppercase group-hover:text-amber-300 min-[400px]:tracking-wide sm:text-[11px]">
 							{cell.label}
 						</span>
 						<span
-							className={`${DISPLAY} text-xl leading-none text-white tabular-nums sm:text-3xl`}
+							className={`${DISPLAY} text-base leading-none whitespace-nowrap text-white tabular-nums min-[400px]:text-lg sm:text-3xl`}
 						>
 							{cell.value}
 							{cell.unit && (
-								<span className="ml-1 font-sans text-xs font-bold text-gray-400">
-									{cell.unit}
+								<span className="ml-0.5 font-sans text-xs font-bold text-gray-400 sm:ml-1">
+									<span className="sm:hidden">
+										{cell.unitShort ?? cell.unit}
+									</span>
+									<span className="max-sm:hidden">{cell.unit}</span>
 								</span>
 							)}
 						</span>
@@ -425,7 +421,7 @@ function FullHead({
 			)}
 			<div className="absolute inset-0 -z-10 bg-linear-to-t from-gray-950 via-gray-950/85 to-gray-950/40" />
 			<div className={`${WRAP} flex flex-col gap-4 pt-6 pb-5 sm:pt-10`}>
-				<div className="flex flex-wrap items-center gap-x-4 gap-y-3 sm:gap-x-5">
+				<div className="flex items-start gap-x-4 sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-3">
 					<ProfileAvatar handle={shell.handle} avatar={shell.avatar} />
 					<div className="min-w-0 flex-1">
 						<h1
@@ -445,9 +441,15 @@ function FullHead({
 								{shell.bio}
 							</p>
 						)}
+						{/* Phones: the link logos under the bio; the actions stay beside the name. */}
+						<div className="mt-2 empty:hidden sm:hidden">
+							<LinkLogos shell={shell} />
+						</div>
 					</div>
-					<div className="flex flex-wrap items-center gap-2 max-sm:w-full">
-						<LinkLogos shell={shell} />
+					<div className="flex shrink-0 items-center gap-2">
+						<div className="max-sm:hidden">
+							<LinkLogos shell={shell} />
+						</div>
 						<Actions shell={shell} />
 					</div>
 				</div>

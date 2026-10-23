@@ -101,11 +101,18 @@ export function ScoredPoster({
 	)
 }
 
-/** Copies the profile address (or opens the share sheet on touch devices); says "Link copied" for a moment. */
+/** Round icon-only buttons on phones (the profile header's actions). */
+export const ICON_ON_PHONE = "max-sm:size-10 max-sm:justify-center max-sm:px-0"
+
+/**
+ * Copies the profile address (or opens the share sheet on touch devices); says "Link copied" for a moment. `compact`:
+ * the icon alone on phones.
+ */
 export function ShareButton({
 	handle,
 	className = AMBER_BUTTON,
-}: { handle: string; className?: string }) {
+	compact = false,
+}: { handle: string; className?: string; compact?: boolean }) {
 	const [copied, setCopied] = useState(false)
 	const onClick = async () => {
 		const url = `https://goodwatch.app/u/${handle}`
@@ -122,13 +129,22 @@ export function ShareButton({
 		setTimeout(() => setCopied(false), 1600)
 	}
 	return (
-		<button type="button" onClick={onClick} className={className}>
+		<button
+			type="button"
+			onClick={onClick}
+			aria-label={
+				compact ? (copied ? "Link copied" : "Share profile") : undefined
+			}
+			className={`${className} ${compact ? ICON_ON_PHONE : ""}`}
+		>
 			{copied ? (
 				<CheckIcon className="size-4" aria-hidden />
 			) : (
 				<ShareIcon className="size-4" aria-hidden />
 			)}
-			{copied ? "Link copied" : "Share profile"}
+			<span className={compact ? "max-sm:hidden" : ""}>
+				{copied ? "Link copied" : "Share profile"}
+			</span>
 		</button>
 	)
 }
