@@ -428,3 +428,184 @@ test("member writes clear the cache, reads over POST and other sites don't", () 
 		false,
 	)
 })
+
+test("a load the cache was cleared under is obsolete: nobody gets its answer", async () => {
+	const cache = new LoaderCache()
+	let finish: (value: Loaded) => void = () => {}
+	const running = cache.load(
+		key("/movie/1-a"),
+		"press",
+		() =>
+			new Promise((resolve) => {
+				finish = resolve
+			}),
+	)
+	cache.clear()
+	finish(loaded({ beforeWrite: true }))
+	assert.deepEqual(await running, { ok: false, obsolete: true })
+})
+
+test("a navigation waiting for a prefetch that a clear made obsolete loads again with the identity now", async () => {
+	const cache = new LoaderCache()
+	const member =
+		identityOf({
+			user: { id: "u2" },
+			locale: { country: "DE", language: "de" },
+		}) ?? ""
+	let identity = VISITOR
+	let finish: (value: Loaded) => void = () => {}
+	cache.load(
+		key("/movie/1-a"),
+		"press",
+		() =>
+			new Promise((resolve) => {
+				finish = resolve
+			}),
+	)
+	const answering = cache.answer(
+		"forward",
+		() => key("/movie/1-a", identity),
+		async () => loaded({ who: identity }),
+	)
+	await Promise.resolve()
+	identity = member
+	cache.clear()
+	finish(loaded({ who: VISITOR }))
+	const answer = await answering
+	assert.deepEqual(answer, { data: { who: member }, source: "navigation" })
+	assert.equal(cache.lookup(key("/movie/1-a", member), "forward").kind, "hit")
+})
+
+test("only the newest load of a key stores its answer", async () => {
+	const cache = new LoaderCache()
+	let finishRefresh: (value: Loaded) => void = () => {}
+	const refresh = cache.load(
+		key("/movie/1-a"),
+		"refresh",
+		() =>
+			new Promise((resolve) => {
+				finishRefresh = resolve
+			}),
+	)
+	await cache.load(key("/movie/1-a"), "navigation", async () =>
+		loaded({ version: "new" }),
+	)
+	finishRefresh(loaded({ version: "old" }))
+	await refresh
+	const found = cache.lookup(key("/movie/1-a"), "forward")
+	assert.deepEqual(found.kind === "hit" && found.data, { version: "new" })
+})
+
+test("a forward navigation that joined an incomplete prefetch uses it up; Back never joins it", async () => {
+	const cache = new LoaderCache()
+	let finish: (value: Loaded) => void = () => {}
+	cache.load(
+		key("/movie/1-a"),
+		"hover",
+		() =>
+			new Promise((resolve) => {
+				finish = resolve
+			}),
+	)
+	const forward = cache.answer(
+		"forward",
+		() => key("/movie/1-a"),
+		async () => loaded({ own: true }),
+	)
+	finish(loaded({ partial: true }, false))
+	assert.deepEqual(await forward, { data: { partial: true }, source: "hover" })
+	assert.equal(cache.lookup(key("/movie/1-a"), "forward").kind, "miss")
+
+	cache.load(
+		key("/movie/2-b"),
+		"hover",
+		() =>
+			new Promise((resolve) => {
+				finish = resolve
+			}),
+	)
+	const back = cache.answer(
+		"history",
+		() => key("/movie/2-b"),
+		async () => loaded({ own: true }),
+	)
+	finish(loaded({ partial: true }, false))
+	assert.deepEqual(await back, { data: { own: true }, source: "navigation" })
+})
+
+test("the first page's data serves Back for a minute only", () => {
+	const time = clock()
+	const cache = new LoaderCache(time.now)
+	cache.set(key("/movie/1-a"), { id: 1 }, "seed")
+	time.advance(FORWARD_MAX_AGE_MS)
+	assert.equal(cache.lookup(key("/movie/1-a"), "history").kind, "hit")
+	time.advance(1)
+	assert.equal(cache.lookup(key("/movie/1-a"), "history").kind, "miss")
+})
+
+test("while held, the cache answers nothing and keeps nothing; releasing clears it", async () => {
+	const cache = new LoaderCache()
+	cache.set(key("/movie/1-a"), { who: "before" }, "navigation")
+	const release = cache.hold()
+	assert.equal(cache.held, true)
+	assert.equal(cache.lookup(key("/movie/1-a"), "history").kind, "miss")
+	assert.equal(
+		await cache.answer(
+			"forward",
+			() => key("/movie/1-a"),
+			async () => loaded({ who: "during" }),
+		),
+		null,
+	)
+	const during = cache.load(key("/movie/2-b"), "hover", async () =>
+		loaded({ who: "during" }),
+	)
+	release()
+	await during
+	assert.equal(cache.held, false)
+	assert.equal(cache.size, 0)
+	release()
+	assert.equal(cache.held, false)
+})
+
+test("a revalidation that starts while a navigation waits never reads the cache", () => {
+	const target = url("/movie/1-a")
+	assert.equal(
+		navigationKind(
+			{ ...loading("/movie/1-a", "", "n"), revalidation: "loading" },
+			target,
+			"o",
+		),
+		"revalidation",
+	)
+	assert.equal(
+		navigationKind(
+			{ ...loading("/movie/1-a", "", "n"), revalidation: "idle" },
+			target,
+			"o",
+		),
+		"forward",
+	)
+})
+
+test("any POST to the site's /api/ clears the cache, except the known reads", () => {
+	for (const path of [
+		"/api/something-new",
+		"/api/new-episodes",
+		"/api/social/wrong-title",
+	])
+		assert.equal(isWriteRequest("POST", url(path), ORIGIN), true, path)
+	for (const path of [
+		"/api/e",
+		"/api/combined-search",
+		"/api/explorer/map",
+		"/api/title-cards",
+		"/api/watch-next",
+		"/api/watch-next/cards",
+		"/api/taste/match",
+		"/api/tonight",
+		"/api/watchability",
+	])
+		assert.equal(isWriteRequest("POST", url(path), ORIGIN), false, path)
+	assert.equal(isWriteRequest("POST", url("/movie/1-a"), ORIGIN), false)
+})

@@ -1,7 +1,8 @@
 // Keeps our prefetches from loading the server: at most MAX_IN_FLIGHT at a time and BUDGET_PER_MINUTE a minute.
-// A press (pointer or touch down on a link) skips both limits: the click that follows would ask for the same data
-// anyway, so it adds no work. Hover and focus wait in front of viewport prefetches. This file has no browser
-// imports, so `node --test` runs its tests directly.
+// Every prefetch is a guess, also a press: a swipe on a phone that starts on a poster presses the link without
+// opening it. So a press goes first, in front of hover and focus, which go in front of viewport prefetches, but
+// within the same limits. Only the navigation itself loads outside them, and it doesn't go through this queue.
+// This file has no browser imports, so `node --test` runs its tests directly.
 
 export const MAX_IN_FLIGHT = 2
 export const BUDGET_PER_MINUTE = 40
@@ -14,6 +15,9 @@ export interface PrefetchJob {
 	priority: Priority
 	run: () => Promise<unknown>
 }
+
+// Lower goes first.
+const RANK: Record<Priority, number> = { press: 0, intent: 1, viewport: 2 }
 
 export class PrefetchQueue {
 	private inFlight = 0
@@ -28,21 +32,26 @@ export class PrefetchQueue {
 
 	/** Starts the job, queues it, or drops it. Returns false when it was dropped. */
 	request(job: PrefetchJob): boolean {
-		if (job.priority === "press") {
-			this.cancel(job.key)
-			this.start(job)
-			return true
-		}
-		if (this.waiting.some((waiting) => waiting.key === job.key)) return true
+		const waiting = this.waiting.find((other) => other.key === job.key)
+		if (waiting && RANK[waiting.priority] <= RANK[job.priority]) return true
+		this.cancel(job.key)
 		if (!this.withinBudget()) return false
 		if (this.inFlight < MAX_IN_FLIGHT) {
 			this.start(job)
 			return true
 		}
-		if (job.priority === "intent") this.waiting.unshift(job)
-		else this.waiting.push(job)
+		const at = this.waiting.findIndex(
+			(other) => RANK[other.priority] > RANK[job.priority],
+		)
+		if (at === -1) this.waiting.push(job)
+		else this.waiting.splice(at, 0, job)
 		if (this.waiting.length > MAX_WAITING) this.waiting.pop()
 		return this.waiting.includes(job)
+	}
+
+	/** Drops every job that hasn't started, as when the cache was cleared or the tab was hidden. */
+	clear(): void {
+		this.waiting = []
 	}
 
 	/** Takes a job that hasn't started out of the queue, as when the pointer leaves the link. */

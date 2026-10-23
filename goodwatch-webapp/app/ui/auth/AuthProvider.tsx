@@ -17,7 +17,11 @@ import {
 import { AuthContext } from "~/utils/auth"
 import { createAuthCookieMatcher } from "~/utils/auth-cookie"
 import { keptLoaderData } from "~/utils/loader-request-retry"
-import { clearLoaderCache } from "~/navigation/instant-navigation"
+import {
+	clearLoaderCache,
+	holdLoaderCache,
+	revalidateWithCacheHeld,
+} from "~/navigation/instant-navigation"
 import { whenInteractive } from "~/utils/page-interactive"
 import { isAuthCallbackUrl, loadSupabaseClient } from "~/utils/supabase-browser"
 import {
@@ -78,7 +82,11 @@ export function AuthProvider({
 		if (betterAuth) throw new Error("Supabase sign-in is off")
 		const client = await loadSupabaseClient(supabaseUrl, supabaseAnonKey, maintenance)
 		if (mounted.current && !subscription.current) {
-			subscription.current = client.auth.onAuthStateChange((event, session) =>
+			subscription.current = client.auth.onAuthStateChange((event, session) => {
+				// The session cookie names the new person now: pages kept for the previous one must not show until the
+				// effect below holds the cache. The transition renders later.
+				if ((session?.user.id ?? undefined) !== currentUserId.current)
+					clearLoaderCache()
 				startTransition(() => {
 					setUser(session?.user ?? null)
 					if (
@@ -89,8 +97,8 @@ export function AuthProvider({
 						setSessionUserId(session?.user.id ?? null)
 						if (!session) clearMediaSession()
 					}
-				}),
-			).data.subscription
+				})
+			}).data.subscription
 			startTransition(() => setSupabase(client))
 		}
 		return client
@@ -130,6 +138,9 @@ export function AuthProvider({
 		const oldUserId = previousUserId.current
 		previousUserId.current = targetUserId
 		establishedUserId.current = targetUserId
+		// From the moment the person changed until the root names them, the cache would answer under the root's old
+		// identity: it stays off until the reconciliation below is done.
+		let release = userChanged ? holdLoaderCache() : undefined
 		// Reconcile server-rendered pages on login/logout, including other tabs.
 		if (userChanged && oldUserId) {
 			try {
@@ -144,39 +155,43 @@ export function AuthProvider({
 		// The per-tab marker skips repeated hard-load adoption; only actual preference/auth changes reload pages.
 		const reconcile = async () => {
 			let changed = false
-			if (targetUserId) {
-				try {
-					changed = await establishMediaSession(targetUserId, userChanged, {
-						isCurrent: () =>
-							mounted.current && currentUserId.current === targetUserId,
-					})
-				} catch {
-					/* A failed check cannot prevent sign-in or a later explicit Keep. */
+			try {
+				if (targetUserId) {
+					try {
+						changed = await establishMediaSession(targetUserId, userChanged, {
+							isCurrent: () =>
+								mounted.current && currentUserId.current === targetUserId,
+						})
+					} catch {
+						/* A failed check cannot prevent sign-in or a later explicit Keep. */
+					}
+				} else clearMediaSession()
+				if (
+					(changed || (userChanged && !betterAuth)) &&
+					mounted.current &&
+					currentUserId.current === targetUserId
+				) {
+					if (changed)
+						void queryClient.invalidateQueries({
+							queryKey: ["media-preferences", targetUserId],
+							exact: true,
+						})
+					requestRootRevalidation()
+					// The hold, also a new one when only the media session changed, ends when the root's new data is there.
+					revalidateWithCacheHeld(revalidate, release)
+					release = undefined
 				}
-			} else clearMediaSession()
-			if (
-				(changed || (userChanged && !betterAuth)) &&
-				mounted.current &&
-				currentUserId.current === targetUserId
-			) {
-				if (changed)
-					void queryClient.invalidateQueries({
-						queryKey: ["media-preferences", targetUserId],
-						exact: true,
-					})
-				// Pages kept for the person who just left mustn't show in the moment before the root's new data.
-				clearLoaderCache()
-				requestRootRevalidation()
-				revalidate()
+			} finally {
+				// Nothing reran, or a newer change took over with its own hold.
+				release?.()
 			}
 		}
 		void reconcile()
 	}, [user?.id, sessionUserId, queryClient, revalidate, betterAuth])
 
 	const refreshUser = useCallback(() => {
-		clearLoaderCache()
 		requestRootRevalidation()
-		revalidate()
+		revalidateWithCacheHeld(revalidate)
 	}, [revalidate])
 
 	const value = useMemo(

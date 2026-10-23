@@ -18,6 +18,7 @@ import {
 	cacheKey,
 	identityOf,
 	invalidation,
+	isAuthRequest,
 	isWriteRequest,
 	navigationKind,
 	readLoaderResponse,
@@ -42,6 +43,7 @@ interface RemixRouter {
 			formMethod?: string
 			location?: { pathname: string; search: string; key: string }
 		}
+		revalidation: string
 		fetchers: Map<string, { state: string; formMethod?: string }>
 	}
 	subscribe(listener: (state: RemixRouter["state"]) => void): () => void
@@ -89,9 +91,62 @@ function currentIdentity(): string | null {
 	return identityOf(remix().__remixRouter?.state.loaderData.root)
 }
 
-/** Drops every kept page and every load under way. Call it after anything that may change what a page shows. */
+/**
+ * Drops every kept page, every load under way, and every prefetch that waits. Call it after anything that may change
+ * what a page shows.
+ */
 export function clearLoaderCache(): void {
 	cache.clear()
+	queue.clear()
+}
+
+/**
+ * Clears the cache and turns it off until the returned function is called. For the time the server may answer for
+ * another person than the root's data names: a sign-in, sign-out, or account switch until the root has reloaded.
+ */
+export function holdLoaderCache(): () => void {
+	queue.clear()
+	return cache.hold()
+}
+
+// How long a sign-in request holds the cache after its answer when no revalidation follows (a sign-up, a
+// confirmation email). A sign-in or sign-out reruns the root, and the auth provider holds the cache until it's done.
+const AUTH_HOLD_GRACE_MS = 3000
+
+/**
+ * Calls `release` once the router has finished its next revalidation, also one that is under way, or after
+ * `graceMs` when none has started by then.
+ */
+function releaseAfterRevalidation(release: () => void, graceMs: number) {
+	const router = remix().__remixRouter
+	if (!router) return release()
+	let seen = router.state.revalidation !== "idle"
+	const done = () => {
+		window.clearTimeout(timer)
+		stop()
+		release()
+	}
+	const stop = router.subscribe((state) => {
+		if (state.revalidation !== "idle") seen = true
+		else if (seen && state.navigation.state === "idle") done()
+	})
+	const timer = window.setTimeout(() => {
+		if (!seen) done()
+	}, graceMs)
+}
+
+/**
+ * Reruns the root's loader (and the page's) with the cache held until the new data is there, so no page kept for
+ * the previous identity, and nothing loaded under it, shows meanwhile. Takes over `release` of a hold the caller
+ * already started.
+ */
+export function revalidateWithCacheHeld(
+	revalidate: () => void,
+	release: () => void = holdLoaderCache(),
+): void {
+	// `revalidate()` marks the router's state at once, so a grace of 0 only ends the hold if it didn't.
+	releaseAfterRevalidation(release, 0)
+	revalidate()
 }
 
 async function fetchRouteData(
@@ -121,52 +176,60 @@ async function fetchRouteData(
  */
 export function cachedClientLoader(routeId: CachedRouteId) {
 	return async ({ request, serverLoader }: ClientLoaderFunctionArgs) => {
-		const identity = currentIdentity()
-		if (!identity) return serverLoader()
 		const url = new URL(request.url)
-		const key = cacheKey(identity, routeId, url)
 		const kind = navigationKind(
 			remix().__remixRouter?.state,
 			url,
 			(window.history.state as { key?: string } | null)?.key,
 		)
-		const found = cache.lookup(key, kind)
-		if (found.kind === "hit") {
-			noteUse(found.source)
-			if (found.refresh) refresh(url, routeId, key)
-			return found.data
-		}
-		if (found.kind === "pending") {
-			const loaded = await found.promise.catch(() => null)
-			if (loaded?.ok) {
-				noteUse(found.source)
-				return loaded.data
-			}
-		}
-		stats.misses++
-		request.signal.throwIfAborted()
-		const loaded = await cache
-			.load(key, "navigation", () =>
-				fetchRouteData(url, routeId, { signal: request.signal }),
+		const answer = await cache
+			.answer(
+				kind,
+				() => {
+					const identity = currentIdentity()
+					return identity ? cacheKey(identity, routeId, url) : null
+				},
+				() => {
+					request.signal.throwIfAborted()
+					return fetchRouteData(url, routeId, { signal: request.signal })
+				},
+				(key) => refresh(url, routeId, key),
 			)
 			.catch((error: unknown) => {
 				if (request.signal.aborted) throw error
 				return null
 			})
-		if (loaded?.ok) return loaded.data
+		if (answer) {
+			if (answer.source === "navigation") stats.misses++
+			else noteUse(answer.source)
+			return answer.data
+		}
 		return serverLoader()
 	}
 }
 
 function refresh(url: URL, routeId: string, key: string) {
+	const identity = currentIdentity()
 	queue.request({
 		key,
 		priority: "viewport",
-		run: () =>
-			cache.load(key, "refresh", () =>
+		run: () => {
+			if (!stillWanted(identity)) return Promise.resolve()
+			return cache.load(key, "refresh", () =>
 				fetchRouteData(url, routeId, { priority: "low" }),
-			),
+			)
+		},
 	})
+}
+
+/** Whether a prefetch queued for `identity` should still start: the tab is visible and the identity is the same. */
+function stillWanted(identity: string | null): boolean {
+	return (
+		document.visibilityState !== "hidden" &&
+		!cache.held &&
+		identity !== null &&
+		currentIdentity() === identity
+	)
 }
 
 function saveData(): boolean {
@@ -270,8 +333,8 @@ export function prefetchableUrl(href: string): URL | null {
 /** Prefetches the data and code of the page at `url`, within the limits of the queue. */
 export function prefetchPage(url: URL, trigger: PrefetchTrigger): void {
 	const router = remix().__remixRouter
-	if (!router || document.visibilityState === "hidden") return
-	if (trigger !== "press" && saveData()) return
+	if (!router || document.visibilityState === "hidden" || cache.held) return
+	if (saveData()) return
 	const identity = currentIdentity()
 	if (!identity) return
 	const routes = routesToLoad(router, url)
@@ -289,7 +352,8 @@ export function prefetchPage(url: URL, trigger: PrefetchTrigger): void {
 			key,
 			priority: PRIORITY[trigger],
 			run: () => {
-				if (cache.covered(key)) return Promise.resolve()
+				if (!stillWanted(identity) || cache.covered(key))
+					return Promise.resolve()
 				stats.prefetches++
 				return cache
 					.load(key, trigger, () =>
@@ -337,7 +401,11 @@ export function startLoaderCache(): void {
 	router.subscribe((state) => {
 		const next = invalidation(identity, state)
 		identity = next.identity
-		if (next.clear) cache.clear()
+		if (next.clear) clearLoaderCache()
+	})
+	// A waiting prefetch would start in a hidden tab, for a page the person may never come back to.
+	document.addEventListener("visibilitychange", () => {
+		if (document.visibilityState === "hidden") queue.clear()
 	})
 }
 
@@ -354,6 +422,7 @@ function seed(state: RemixRouter["state"]) {
 	for (const match of state.matches) {
 		const id = match.route.id
 		const data = state.loaderData[id]
+		// Nothing tells whether this data was complete, so a seed serves Back and Forward for a minute only.
 		if (isCachedRoute(id) && data !== undefined)
 			cache.set(cacheKey(identity, id, url), data, "seed")
 	}
@@ -376,10 +445,16 @@ export function installWriteWatch(): void {
 				origin,
 			)
 		} catch {}
+		// A sign-in or sign-out changes the session cookie with its answer, before the root's data names the new
+		// person: the cache stays off from the request until the root has reloaded.
+		const release =
+			url && isAuthRequest(method, url, origin) ? holdLoaderCache() : null
 		const pending = browserFetch(input, init)
-		if (url && isWriteRequest(method, url, origin)) {
-			const clear = () => cache.clear()
-			pending.then(clear, clear)
+		if (release) {
+			const settle = () => releaseAfterRevalidation(release, AUTH_HOLD_GRACE_MS)
+			pending.then(settle, settle)
+		} else if (url && isWriteRequest(method, url, origin)) {
+			pending.then(clearLoaderCache, clearLoaderCache)
 		}
 		return pending
 	}

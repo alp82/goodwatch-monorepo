@@ -27,22 +27,31 @@ An entry is the loader data of one route at one URL (path and query, without `_d
 | Navigation | Uses |
 | --- | --- |
 | Forward (a link, `navigate()`) | An entry up to 60 seconds old, or a prefetch of the same URL that is still loading. Otherwise it loads from the server and keeps the answer. |
-| History (Back, Forward) | An entry up to 10 minutes old, at once. An entry older than 60 seconds is refreshed in the background, so the next visit gets newer data. The page on screen doesn't change. |
-| Revalidation (after an action or fetcher submission, `useRevalidator`, the root's rerun after sign-in or sign-out) | Never the cache. The answer is kept. |
+| History (Back, Forward) | An entry up to 10 minutes old, at once. An entry older than 60 seconds is refreshed in the background, so the next visit gets newer data. The page on screen doesn't change. The first page's own data serves Back for 60 seconds only, because nothing tells whether it was complete. |
+| Revalidation (after an action or fetcher submission, `useRevalidator`, the root's rerun after sign-in or sign-out, also one started while a navigation waits) | Never the cache. The answer is kept. |
+
+- Only the newest load of a URL stores its answer. A background refresh that ends after a revalidation of the same URL doesn't overwrite it.
 
 - Only plain `200` JSON from the Remix server is kept. A redirect, an error, a thrown response, deferred data, or an answer from something in between (a proxy error page) goes to Remix's own `serverLoader`, as without the cache.
-- An incomplete page (a loader answered with `no-store` because a data source ran out of time or failed) carries `X-Incomplete-Page: 1` on its data response (`handleDataRequest` in `entry.server.tsx`). A navigation shows it, but the cache doesn't keep it. A prefetch's incomplete answer waits only for the one forward navigation it was loaded for, and Back and Forward never use it.
+- An incomplete page (a loader answered with `no-store` because a data source ran out of time or failed) carries `X-Incomplete-Page: 1` on its data response (`handleDataRequest` in `entry.server.tsx`). A navigation shows it, but the cache doesn't keep it. A prefetch's incomplete answer waits only for the one forward navigation it was loaded for, also when that navigation joined the prefetch while it was loading, and Back and Forward never use it.
 
 ## Clearing
 
-Everything is dropped, and loads under way don't store their answers, when:
+Everything is dropped, and so are prefetches that wait for their turn. A load under way when the cache is cleared is obsolete: it doesn't store its answer, and a navigation that waited for it loads again with the identity of that moment, so it never shows data from before a write or of another person. This happens when:
 
 - the identity changes: sign-in, sign-out, another country or language in the root's data;
 - a form or fetcher submission that isn't a GET runs;
 - a TanStack Query mutation settles (scores, wishlist, Seen, lists, settings, the watch log; `MutationCache` in `root.tsx`);
-- a non-GET request to a member write path settles (`WRITE_PATHS` in `loader-cache.ts`: `/api/update-*`, imports, media preferences, settings, tracking, the watch log, auth, profile). This covers writes that call `fetch` directly;
-- the auth provider is about to rerun the root after a sign-in or sign-out;
+- a non-GET request to the site's `/api/` settles, unless it is a known read (`READ_ONLY_POSTS` in `loader-cache.ts`: searches, listings, the explorer, poster impressions, error reports). This covers writes that call `fetch` directly, and new write endpoints count without a change here;
 - the tab comes back after more than 5 seconds hidden (`useInvalidateOnVisibility`).
+
+### Sign-in, sign-out, and account switches
+
+The cookie names the new person before the root's data does, so in between the cache would answer under the old identity. The cache is therefore held: cleared, and off (every navigation asks the server, no prefetch starts) until the root has reloaded.
+
+- Better Auth: from the moment a non-GET request to `/api/auth/` starts, until a revalidation that follows it has finished, or 3 seconds after its answer when none starts (a sign-up, a confirmation email). `refreshUser` (after sign-in, sign-out, a password change) holds it until its rerun of the root is done.
+- Supabase: the auth client's change event clears the cache at once. The auth provider then holds it from the moment the member changed, through the media session check (up to 5 seconds), until its rerun of the root is done.
+- Another tab: Supabase hears the change and goes the same way. Better Auth doesn't tell other tabs; such a tab clears when it comes back after 5 seconds hidden, and on its next root rerun.
 
 ## Prefetch
 
@@ -55,7 +64,7 @@ Remix doesn't prefetch data for routes with a `clientLoader`, so the site does i
 
 The prefetch resolves the URL with the router's routes, and fetches `?_data=<route id>` for each cached route the navigation would load, as Remix decides it (a route that stays loads again only when the query changes and its `shouldRevalidate` agrees). Press, hover, and focus also add `modulepreload` links for the route's code.
 
-Limits (`prefetch-queue.ts`): at most 2 prefetches at a time and 40 a minute. Hover and focus wait in front of viewport prefetches. A press skips both limits, because its click asks for the same data anyway. Nothing is prefetched while the tab is hidden, and only presses are prefetched with Data Saver or on a 2G connection.
+Limits (`prefetch-queue.ts`): at most 2 prefetches at a time and 40 a minute, presses included: a swipe on a phone that starts on a poster presses the link without opening it. A press goes first, hover and focus wait in front of viewport prefetches. Only the navigation itself loads outside these limits. Nothing is prefetched while the tab is hidden, with Data Saver, or on a 2G connection. Waiting prefetches are dropped when the tab is hidden or the cache is cleared, and each checks again when its turn comes that the tab is visible and the identity is the same.
 
 When a title page's data arrives through a press, hover, or focus prefetch, its hero backdrop starts loading with the hero's own `srcset` and `sizes` (`hero-backdrop.ts`), so the browser picks the same file the hero will.
 
@@ -66,3 +75,5 @@ After `load`, at least 2 seconds later and in an idle moment, the code of the ma
 ## Verification
 
 See the report of ticket 2 in [navigation-speed.md](benchmarks/navigation-speed.md#changes).
+
+After the review fixes (holds, obsolete loads, press limits, the `/api/` default), the functional checks were run again on a local production build on the bench data: hover then click commits with no request after the click, a phone tap starts its prefetch on touch, Back to the listing commits from the cache, a POST to `/api/update-scores` makes the next Back load again, and during a POST to `/api/auth/sign-out` a hover starts no prefetch. Title pages on the bench data are incomplete (no TMDB key), so Back to them loads from the server, as the rules say. Sign-in itself isn't possible locally; the hold rules are covered by `loader-cache.test.ts`.

@@ -6,14 +6,23 @@
 // - A history navigation (Back, Forward) takes an entry up to HISTORY_MAX_AGE_MS old at once. When it is older than
 //   the forward limit, the caller refreshes it in the background for the next visit.
 // - A revalidation (after a write, `useRevalidator`, the sign-in rerun) never reads the cache. Its answer is stored.
+// - The first page's own data (a seed) serves Back and Forward for SEED_MAX_AGE_MS only: nothing tells whether it
+//   was complete.
 // - Incomplete data (INCOMPLETE_DATA_HEADER) is kept only when a prefetch loaded it, and only for the one forward
-//   navigation it was loaded for. It's dropped once used, and Back and Forward never take it.
-// - `clear()` drops every entry and every load under way. A load that started before it doesn't store its answer.
+//   navigation it was loaded for. It's dropped once used, also when that navigation joined the prefetch while it
+//   was loading, and Back and Forward never take it.
+// - `clear()` drops every entry and every load under way. A load that started before it is obsolete: nobody gets
+//   its answer, and a navigation that waited for it loads again with the identity of now.
+// - Only the newest load of a key stores its answer, so an older one that ends later can't overwrite it.
+// - `hold()` turns the cache off until released, while the signed-in person may differ from the root's data.
 // This file has no browser or Remix imports, so `node --test` runs its tests directly.
 
 export const FORWARD_MAX_AGE_MS = 60_000
 export const HISTORY_MAX_AGE_MS = 10 * 60_000
+export const SEED_MAX_AGE_MS = 60_000
 export const MAX_ENTRIES = 100
+// A navigation that keeps meeting clears gives up on the cache after this many loads and asks the server itself.
+const MAX_ATTEMPTS = 3
 
 /**
  * The header a loader data answer carries when the page is incomplete (a data source ran out of time or failed).
@@ -35,7 +44,16 @@ export type LoadSource =
 	| "refresh"
 
 /** A loader answer. `store` is false for data the navigation may show but the cache must not keep for later. */
-export type Loaded = { ok: true; data: unknown; store: boolean } | { ok: false }
+/** `obsolete` marks a load that a clear overtook: its answer may predate a write or belong to another person. */
+export type Loaded =
+	| { ok: true; data: unknown; store: boolean }
+	| { ok: false; obsolete?: true }
+
+/** What answered a navigation, and which load or prefetch trigger brought the data. */
+export interface Answer {
+	data: unknown
+	source: LoadSource
+}
 
 interface Entry {
 	data: unknown
@@ -83,6 +101,7 @@ export class LoaderCache {
 	private readonly entries = new Map<string, Entry>()
 	private readonly pending = new Map<string, Pending>()
 	private generation = 0
+	private holds = 0
 
 	private readonly now: () => number
 	private readonly maxEntries: number
@@ -96,13 +115,40 @@ export class LoaderCache {
 		return this.entries.size
 	}
 
+	/** True while a `hold()` hasn't been released. */
+	get held(): boolean {
+		return this.holds > 0
+	}
+
+	/**
+	 * Clears the cache and turns it off until the returned function is called, as while a sign-in or sign-out is
+	 * settling: the server may already answer for another person than the root's data names. Releasing clears again,
+	 * so nothing loaded during the hold is kept.
+	 */
+	hold(): () => void {
+		this.holds++
+		this.clear()
+		let released = false
+		return () => {
+			if (released) return
+			released = true
+			this.holds--
+			this.clear()
+		}
+	}
+
 	/** What a navigation of this kind may use for the key. */
 	lookup(key: string, kind: NavigationKind): Lookup {
-		if (kind === "revalidation") return { kind: "miss" }
+		if (kind === "revalidation" || this.held) return { kind: "miss" }
 		const entry = this.entries.get(key)
 		if (entry && !(entry.once && kind === "history")) {
 			const age = this.now() - entry.fetchedAt
-			const limit = kind === "history" ? HISTORY_MAX_AGE_MS : FORWARD_MAX_AGE_MS
+			const limit =
+				kind === "forward"
+					? FORWARD_MAX_AGE_MS
+					: entry.source === "seed"
+						? SEED_MAX_AGE_MS
+						: HISTORY_MAX_AGE_MS
 			if (age <= limit) {
 				// Map order is the LRU order: a read moves the entry to the end.
 				this.entries.delete(key)
@@ -135,8 +181,9 @@ export class LoaderCache {
 	}
 
 	/**
-	 * Runs a load for the key and stores its answer, unless the cache was cleared meanwhile or the answer says not to.
-	 * Navigations of the forward kind can join it while it runs.
+	 * Runs a load for the key and stores its answer, if it is still the key's newest load and the answer allows it.
+	 * When the cache was cleared meanwhile, the answer is obsolete and nobody gets it. Navigations can join the load
+	 * while it runs.
 	 */
 	load(
 		key: string,
@@ -144,13 +191,15 @@ export class LoaderCache {
 		run: () => Promise<Loaded>,
 	): Promise<Loaded> {
 		const generation = this.generation
-		const promise = run().then((loaded) => {
-			if (!loaded.ok || generation !== this.generation) return loaded
+		const promise = run().then((loaded): Loaded => {
+			if (generation !== this.generation) return { ok: false, obsolete: true }
+			if (!loaded.ok || this.pending.get(key) !== pending || this.held)
+				return loaded
 			if (loaded.store) this.set(key, loaded.data, source)
 			else if (PREFETCHES.has(source)) this.set(key, loaded.data, source, true)
 			return loaded
 		})
-		const pending = { promise, source }
+		const pending: Pending = { promise, source }
 		this.pending.set(key, pending)
 		const done = () => {
 			if (this.pending.get(key) === pending) this.pending.delete(key)
@@ -167,6 +216,55 @@ export class LoaderCache {
 			if (oldest === undefined) break
 			this.entries.delete(oldest)
 		}
+	}
+
+	/**
+	 * Waits for a load under way. Incomplete data goes to one forward navigation, which uses up the entry the load
+	 * left. Back and Forward don't take it.
+	 */
+	private async join(
+		key: string,
+		kind: NavigationKind,
+		pending: Promise<Loaded>,
+	): Promise<Loaded> {
+		const loaded = await pending.catch((): Loaded => ({ ok: false }))
+		if (!loaded.ok || loaded.store) return loaded
+		if (kind !== "forward") return { ok: false }
+		const entry = this.entries.get(key)
+		if (entry?.once && entry.data === loaded.data) this.entries.delete(key)
+		return loaded
+	}
+
+	/**
+	 * Answers a navigation: from an entry, from a load under way, or from a load of its own that it keeps. `keyNow`
+	 * gives the key for the identity of the moment, or null when the cache can't be used (it's held, or the root has
+	 * no identity). A load a clear made obsolete is tried again with the key of then. Null means the server must
+	 * answer the usual way. `refresh` is called for a history entry that should be loaded again in the background.
+	 */
+	async answer(
+		kind: NavigationKind,
+		keyNow: () => string | null,
+		fetch: () => Promise<Loaded>,
+		refresh: (key: string) => void = () => {},
+	): Promise<Answer | null> {
+		for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+			const key = this.held ? null : keyNow()
+			if (key === null) return null
+			const found = this.lookup(key, kind)
+			if (found.kind === "hit") {
+				if (found.refresh) refresh(key)
+				return { data: found.data, source: found.source }
+			}
+			if (found.kind === "pending") {
+				const joined = await this.join(key, kind, found.promise)
+				if (joined.ok) return { data: joined.data, source: found.source }
+				if (joined.obsolete) continue
+			}
+			const loaded = await this.load(key, "navigation", fetch)
+			if (loaded.ok) return { data: loaded.data, source: "navigation" }
+			if (!loaded.obsolete) return null
+		}
+		return null
 	}
 
 	/** The data of the key's entry or of its load under way, for work that follows a prefetch. */
@@ -226,13 +324,15 @@ export interface NavigationState {
 		formMethod?: string
 		location?: { pathname: string; search: string; key: string }
 	}
+	/** "loading" while a `revalidate()` runs, also when it rides on a navigation that is under way. */
+	revalidation?: string
 }
 
 /**
  * Which kind of navigation a loader call for `url` belongs to. A pending navigation to the same URL without a form
  * is forward or history: history when the browser's current entry already is the target (a Back or Forward
- * changes the entry before the loaders run, a push changes it after). Anything else (a revalidation, a fetcher,
- * a form submission) counts as a revalidation.
+ * changes the entry before the loaders run, a push changes it after). Anything else (a revalidation, also one
+ * started while a navigation waits, a fetcher, a form submission) counts as a revalidation.
  */
 export function navigationKind(
 	state: NavigationState | undefined,
@@ -243,6 +343,7 @@ export function navigationKind(
 	const target = navigation?.location
 	if (
 		!navigation ||
+		(state.revalidation && state.revalidation !== "idle") ||
 		navigation.state !== "loading" ||
 		navigation.formMethod ||
 		!target ||
@@ -283,32 +384,48 @@ export function invalidation(
 	return { identity, clear }
 }
 
-// Paths whose non-GET requests change what a member's pages show. Reads that use POST (Discover's results, the
-// explorer, poster impressions) aren't writes and don't clear the cache.
-export const WRITE_PATHS = [
-	"/api/update-",
-	"/api/imports",
-	"/api/imdb-import",
-	"/api/import-guest-interactions",
-	"/api/media-preferences",
-	"/api/user-settings/",
-	"/api/tracking/",
-	"/api/watch-log",
-	"/api/watch-next/watched",
-	"/api/share-lists",
-	"/api/auth/",
-	"/api/profile/",
-	"/api/handle",
+// The site's own POST endpoints that only read: searches, listings, the explorer, poster impressions, and error
+// reports (`/api/e`). Every other request to /api/ that isn't a GET counts as a write. A path that ends in "/" covers
+// everything below it.
+export const READ_ONLY_POSTS = [
+	"/api/combined-search",
+	"/api/discover/results",
+	"/api/e",
+	"/api/explorer/",
+	"/api/living-room/picks",
+	"/api/og-image-warm",
+	"/api/poster-impressions",
+	"/api/taste/match",
+	"/api/taste/portrait",
+	"/api/title-cards",
+	"/api/tonight",
+	"/api/watch-next",
+	"/api/watch-next/cards",
+	"/api/watchability",
 ]
 
-/** Whether a request writes member data, by the list above. */
+/** Whether a request may change what a page shows: a non-GET to the site's /api/ that isn't a known read. */
 export function isWriteRequest(
 	method: string,
 	url: URL,
 	origin: string,
 ): boolean {
 	const verb = method.toUpperCase()
-	if (verb === "GET" || verb === "HEAD") return false
-	if (url.origin !== origin) return false
-	return WRITE_PATHS.some((path) => url.pathname.startsWith(path))
+	if (verb === "GET" || verb === "HEAD" || verb === "OPTIONS") return false
+	if (url.origin !== origin || !url.pathname.startsWith("/api/")) return false
+	const path = url.pathname.replace(/\/+$/, "")
+	return !READ_ONLY_POSTS.some((read) =>
+		read.endsWith("/") ? path.startsWith(read) : path === read,
+	)
+}
+
+/** Whether a request may sign someone in or out. */
+export function isAuthRequest(
+	method: string,
+	url: URL,
+	origin: string,
+): boolean {
+	return (
+		isWriteRequest(method, url, origin) && url.pathname.startsWith("/api/auth/")
+	)
 }

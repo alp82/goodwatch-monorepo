@@ -51,14 +51,16 @@ test("at most two prefetches run at once; hover waits in front of viewport ones"
 	assert.deepEqual(started, ["v1", "v2", "h1", "v3"])
 })
 
-test("a press starts at once, past the limit, and takes its key out of the queue", () => {
-	const { queue, started, job } = harness()
+test("a press of a link that waits moves it to the front", async () => {
+	const { queue, started, job, finish } = harness()
 	queue.request(job("a", "intent"))
 	queue.request(job("b", "intent"))
-	queue.request(job("c", "intent"))
+	queue.request(job("h", "intent"))
+	queue.request(job("c", "viewport"))
 	queue.request(job("c", "press"))
+	assert.equal(queue.queued, 2)
+	await finish("a")
 	assert.deepEqual(started, ["a", "b", "c"])
-	assert.equal(queue.queued, 0)
 })
 
 test("leaving a link takes its waiting prefetch back", async () => {
@@ -71,15 +73,47 @@ test("leaving a link takes its waiting prefetch back", async () => {
 	assert.deepEqual(started, ["a", "b"])
 })
 
-test("the budget stops prefetches after 40 a minute, except presses", async () => {
+test("the budget stops prefetches after 40 a minute", async () => {
 	const { queue, started, job, finish, advance } = harness()
 	for (let i = 0; i < BUDGET_PER_MINUTE; i++) {
 		queue.request(job(`k${i}`, "intent"))
 		await finish(`k${i}`)
 	}
 	assert.equal(queue.request(job("over", "intent")), false)
-	assert.equal(queue.request(job("tap", "press")), true)
+	assert.equal(queue.request(job("tap", "press")), false)
 	advance(60_001)
 	assert.equal(queue.request(job("later", "viewport")), true)
 	assert.ok(started.includes("later"))
+})
+
+test("a press goes first but within the limits", async () => {
+	const { queue, started, job, finish } = harness()
+	queue.request(job("a", "intent"))
+	queue.request(job("b", "intent"))
+	queue.request(job("v", "viewport"))
+	queue.request(job("h", "intent"))
+	assert.equal(queue.request(job("tap", "press")), true)
+	assert.deepEqual(started, ["a", "b"])
+	await finish("a")
+	assert.deepEqual(started, ["a", "b", "tap"])
+})
+
+test("presses count toward the budget", async () => {
+	const { queue, job, finish } = harness()
+	for (let i = 0; i < BUDGET_PER_MINUTE; i++) {
+		queue.request(job(`k${i}`, "press"))
+		await finish(`k${i}`)
+	}
+	assert.equal(queue.request(job("tap", "press")), false)
+})
+
+test("clear drops the waiting jobs", async () => {
+	const { queue, started, job, finish } = harness()
+	queue.request(job("a", "intent"))
+	queue.request(job("b", "intent"))
+	queue.request(job("c", "intent"))
+	queue.clear()
+	assert.equal(queue.queued, 0)
+	await finish("a")
+	assert.deepEqual(started, ["a", "b"])
 })
