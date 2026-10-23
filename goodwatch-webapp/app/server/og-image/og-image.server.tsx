@@ -40,6 +40,17 @@ async function inlineImages(content: OgContent): Promise<OgContent> {
 			}
 		case "title":
 			return { ...content, poster: await toDataUri(content.poster) }
+		case "profile":
+			return {
+				...content,
+				// A photo comes as a data URI already.
+				avatar: content.avatar?.startsWith("data:")
+					? content.avatar
+					: await toDataUri(content.avatar),
+				posters: await Promise.all(
+					content.posters.map((src) => toDataUri(src)),
+				),
+			}
 		case "person":
 			return { ...content, photo: await toDataUri(content.photo) }
 		default:

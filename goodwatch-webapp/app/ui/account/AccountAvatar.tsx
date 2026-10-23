@@ -1,7 +1,7 @@
 // The member's picture in the account menu: their profile picture, else the handle's initial on their colour.
 import type { AvatarColor } from "~/domain/profile"
 
-const GRADIENTS: Record<
+export const AVATAR_GRADIENTS: Record<
 	AvatarColor,
 	{ from: string; to: string; ink: string }
 > = {
@@ -38,7 +38,7 @@ export function AccountAvatar({
 				style={{ width: size, height: size }}
 			/>
 		)
-	const g = GRADIENTS[color] ?? GRADIENTS.amber
+	const g = AVATAR_GRADIENTS[color] ?? AVATAR_GRADIENTS.amber
 	return (
 		<span
 			aria-hidden

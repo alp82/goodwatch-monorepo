@@ -1,4 +1,3 @@
-import { hasGoodwatchScore } from "~/utils/ratings"
 // Maps a page path to what its Open Graph card shows. Image fields hold remote URLs here;
 // the renderer inlines them.
 import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
@@ -9,6 +8,7 @@ import {
 	type WatchedType,
 	getDiscoverResults,
 } from "~/server/discover.server"
+import { profileCardContent } from "~/server/og-image/profile-content.server"
 import { getPersonProfile } from "~/server/person.server"
 import { moods } from "~/ui/explore/category/moods"
 import {
@@ -34,6 +34,7 @@ import {
 	seasonsLabel,
 	typeIndexCopy,
 } from "~/ui/og-image/copy"
+import { hasGoodwatchScore } from "~/utils/ratings"
 import { canonicalTitleId } from "~/utils/title-identity"
 
 type Category = keyof typeof mainHierarchy
@@ -55,6 +56,15 @@ const clip = (text: string) =>
 	text.length <= TITLE_MAX_LENGTH
 		? text
 		: `${text.slice(0, TITLE_MAX_LENGTH - 1).trim()}…`
+
+const PROFILE_TABS = new Set([
+	"seen",
+	"scores",
+	"wishlist",
+	"shows",
+	"lists",
+	"taste",
+])
 
 const positiveId = (segment: string | undefined) => {
 	const id = Number(segment?.split("-")[0])
@@ -88,6 +98,13 @@ export function canonicalOgPath(path: string): string | null {
 		if (!hasKey(mainHierarchy, second) || segments.length > 3) return null
 		if (third && !hasKey(mainHierarchy[second as Category], third)) return null
 		return `/${segments.join("/")}`
+	}
+	if (first === "u") {
+		// A member's profile and its tabs share one card; list pages have their own (og.lists).
+		const handle = second?.toLowerCase() ?? ""
+		if (!/^[a-z][a-z0-9_]{2,29}$/.test(handle)) return null
+		if (segments.length > 3 || (third && !PROFILE_TABS.has(third))) return null
+		return `/u/${handle}`
 	}
 	if (first === "discover") return "/discover"
 	if (first === "explorer" && segments.length === 1) return "/explorer"
@@ -201,8 +218,7 @@ async function titleContent(
 			.filter(Boolean)
 			.join(" · "),
 		title: clip(d.title),
-		score:
-			hasGoodwatchScore(score) && score <= 100 ? score : null,
+		score: hasGoodwatchScore(score) && score <= 100 ? score : null,
 		poster: tmdbImage("w500", d.poster_path),
 	}
 }
@@ -423,6 +439,7 @@ export async function resolveOgContent(
 	if (first === "movie" || first === "show")
 		return titleContent(first, Number(second))
 	if (first === "person") return personContent(Number(second))
+	if (first === "u") return profileCardContent(second)
 	if (first === "movies" || first === "shows") return browseContent(path)
 	return staticPageContent(path)
 }
