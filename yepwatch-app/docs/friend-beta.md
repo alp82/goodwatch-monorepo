@@ -6,6 +6,8 @@ Send testers **https://yepwatch.com/beta**. The page offers the browser today; n
 
 The owner has created the Expo project [@alperortac/yepwatch](https://expo.dev/accounts/alperortac/projects/yepwatch), ID `0772c2db-91d8-4862-80eb-1d816f243072`, and reports Play and Apple developer accounts ready. `app.json` records the public Expo owner/project for all build variants. Account creation does not sign this machine into EAS or configure store signing credentials.
 
+Build 8 completed for both platforms on October 23, 2026. The iPhone build was uploaded to [App Store Connect](https://appstoreconnect.apple.com/apps/6826403019/testflight), processed successfully and submitted for external beta review in **Friends beta**. Internal testing uses **Team (Expo)**. External invitations remain disabled until approval. Android submission still needs the Play app record and an EAS Submit service-account key (or a manual AAB upload in Play Console).
+
 1. Create a free [Expo account](https://expo.dev/signup). Choose the account/organization that should own YepWatch.
 2. Open [Google Play Console](https://play.google.com/console). **Google Cloud Console is a different product.** If needed, register a Play developer account, pay its one-time US$25 fee and complete Google's identity/device verification. Create the YepWatch app for `com.yepwatch.app`.
 3. Enroll in the [Apple Developer Program](https://developer.apple.com/programs/enroll/) (US$99/year or local pricing). Once approved, create the App Store Connect app for `com.yepwatch.app`. EAS can build and upload from Linux; owning a Mac is not required.
@@ -29,6 +31,7 @@ The owner has created the Expo project [@alperortac/yepwatch](https://expo.dev/a
 - Before uploading, inspect the EAS archive: `npx eas-cli@latest build:inspect --platform android --profile beta --stage archive --output .expo/beta-archive`. Verify it includes the sibling `goodwatch-webapp/packages/yepwatch-contracts`, excludes credentials/local environment files/build artifacts, and installs with `npm ci --install-links`.
 - EAS reads `.easignore` at the Git repository root. That file limits uploads to this app and its sibling contract; the app-local ignore file alone does not protect a monorepo upload.
 - Finish the app icon, store privacy/support metadata and review contact information. Register the actual Play signing certificate in Android asset links and actual Apple team/app ID in the AASA file. Confirm the existing account issuer accepts the production app's callback. These require real account details, not placeholders.
+- The Apple association now uses the verified team `QKFZC8CC8J` and `com.yepwatch.app`, scoped to `/r/*`, in `public/.well-known/apple-app-site-association`. Verify the deployed JSON and a physical iPhone link before claiming Universal Links work. Android needs the **Play app-signing** certificate; the EAS upload key is not a substitute.
 
 ```sh
 npx eas-cli@latest build --profile beta --platform android
@@ -44,6 +47,8 @@ No account creation, cloud builds, purchase, upload, review or store invitation 
 ```sh
 npx eas-cli@latest submit --profile beta --platform android
 ```
+
+For automated uploads, [configure a Google service-account key](https://docs.expo.dev/submit/android/) with access to this Play app and assign it under the Expo project's Android credentials for `com.yepwatch.app`. Keep the JSON private; never commit it. Both submit profiles explicitly name `com.yepwatch.app` because EAS Submit does not inherit the build profile's `APP_VARIANT` environment. The iOS profile also records the verified team and App Store Connect app ID.
 
 **iPhone:** upload to App Store Connect, create an internal group and an external TestFlight group, provide beta review details, submit the first external build for review, then copy its public invitation link. Do not add friends as App Store Connect administrators.
 

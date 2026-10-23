@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "QKFZC8CC8J.com.yepwatch.app",
+        "paths": ["/r/*"]
+      }
+    ]
+  }
+}

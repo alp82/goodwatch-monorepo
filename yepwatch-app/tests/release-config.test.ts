@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import releaseConfig from '../app.config';
 import base from '../app.json';
+import eas from '../eas.json';
 
 function configured(variant: string, overrides: Record<string, string> = {}) {
   const previous = { ...process.env };
@@ -35,4 +36,12 @@ test('release config fails closed on local endpoints, fixtures, or unsupported v
   assert.equal(configured('production', { EXPO_PUBLIC_GUEST_ONLY: 'false' }).scheme, 'yepwatch');
   assert.throws(() => configured('production', { EXPO_PUBLIC_GUEST_ONLY: 'maybe' }), /explicit guest mode/);
   assert.throws(() => configured('production', { APP_BUILD_NUMBER: '0' }), /positive integer/);
+});
+
+test('standalone submit profiles select the store app without build-profile environment variables', () => {
+  const production = configured('production');
+  assert.equal(eas.submit.beta.android.applicationId, production.android?.package);
+  assert.equal(eas.submit.beta.ios.bundleIdentifier, production.ios?.bundleIdentifier);
+  assert.equal(eas.submit.beta.android.track, 'internal');
+  assert.equal(eas.submit.beta.android.releaseStatus, 'draft');
 });

@@ -49,10 +49,15 @@
   "submit": {
     "beta": {
       "android": {
+        "applicationId": "com.yepwatch.app",
         "track": "internal",
         "releaseStatus": "draft"
       },
-      "ios": {}
+      "ios": {
+        "bundleIdentifier": "com.yepwatch.app",
+        "ascAppId": "6826403019",
+        "appleTeamId": "QKFZC8CC8J"
+      }
     }
   }
 }
