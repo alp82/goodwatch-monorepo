@@ -49,11 +49,13 @@ copies of one ID, season snapshots, and episode snapshots do not multiply histor
 The existing explicit unknown-date import choice remains available.
 
 A manual whole-show `STATUS_CHANGED` to Finished is completion evidence, not an
-extra watch of every episode. Dated episode history and undated season/episode
-snapshots take priority. Completion fills only episodes with no source or existing
-GoodWatch watch. Multiple whole-show finishes fill once at the earliest recorded
-completion date, independently of activity ordering. This follows the #756 review
-decision and preserves existing per-episode dates.
+extra watch of every episode. Explicit dated episode history and existing GoodWatch
+watches are preserved. Among completion/snapshot fillers, a recorded date takes
+priority over an unknown date, then the earliest date wins, then a snapshot wins
+an equal-date tie with a whole-show completion. Multiple whole-show finishes fill
+an episode once, independently of activity ordering. Thus a show finished on
+2020-02-01 plus an undated S1E1 snapshot gives both S1E1 and S1E2 the recorded
+2020-02-01 finish date. This follows the second #756 review decision.
 
 Watcharr’s [import service](https://github.com/sbondCo/Watcharr/blob/c268fd22c8f248f3cf6ed6c778a9ceca0f91cabf/server/feature/imprt/import.go)
 sets `countAsPlay: false` on the first `IMPORTED_ADDED_WATCHED` because the initial
@@ -104,12 +106,12 @@ and Undo. Rendered UI tests cover the general Watcharr preview and unchanged
 wishlist-only preview. Service tests also cover preserving a whole-show bulk date
 and deliberately importing it with unknown dates. Review regressions cover the real
 Watcharr importer date pair and entry-date fallback, legacy exports without play
-flags, provider-created activity, whole-show completion overlap (including unknown
+flags, provider-created activity, whole-show completion overlap (including date precedence over unknown
 snapshot dates), all four rating-conflict/rewatch combinations, HTTP validation and
 option persistence, and Confirm/Undo of pre-existing Want to See and Not interested
 for movies and shows. Undo tests also protect newer list choices and watches.
 
-The complete imports run passed **577 tests**, with no failures:
+The complete imports run passed **579 tests**, with no failures:
 
 ```sh
 node --test --test-concurrency=4 app/server/imports/*.test.ts app/server/imdb-import/*.test.ts app/ui/imports/*.test.ts
@@ -120,9 +122,15 @@ The tracking writer suite also passed **127 tests**, with one existing movie fir
 Typecheck baseline on the untouched `origin/main` base (`49d846b2`) was **206**
 diagnostics in this environment, including missing auth-conformance dependencies;
 the requested approximate 188–189 was not the observed baseline. After the change:
-**206**, with identical diagnostic lines and none added.
+**206**, with identical diagnostic lines and none added before rebasing.
 
-The Fable review findings on `73dc6b34` are addressed in the follow-up commit.
+The second review fixes are rebased onto `origin/main` at `c1a2b3014`. Its webapp
+tree is identical to the separately checked `284a5579` main snapshot. The current
+baseline and this branch both report **210** identical diagnostic lines. Main added
+three missing `@faststats/web` module diagnostics and one missing `TalkedItem.image`
+in a homepage test fixture; the Watcharr commits add none.
+
+The Fable review findings on `73dc6b34` and `145460d8` are addressed by the follow-up commits. The shared show-status footnote now describes recorded source dates and the unknown-date fallback.
 Live Watcharr/CrateDB integration and re-review remain with the delivery workflow. No push, merge, deployment, or real-member import was performed.
 
 ## Follow-up decisions

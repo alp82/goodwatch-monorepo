@@ -299,8 +299,9 @@ function GeneralImportPreview({
 				<p className="text-sm text-gray-400">
 					Your On hold, Dropped and Seen decisions are kept. Plan to watch
 					becomes Want to See. Whole-show completion marks aired regular
-					episodes with unknown dates and stays Watching while a season is still
-					airing. Completion of a part does not mark the whole show Seen.
+					episodes with the recorded date when the source has one, otherwise
+					with unknown dates. It stays Watching while a season is still airing.
+					Completion of a part does not mark the whole show Seen.
 				</p>
 			)}
 			{unapplied && (

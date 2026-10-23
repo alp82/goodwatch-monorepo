@@ -472,7 +472,7 @@ it("Watcharr Undo preserves newer list choices and does not restore intentions o
 	}
 })
 
-it("keeps undated episode evidence ahead of whole-show finishes and chooses the earliest completion independently of activity order", async () => {
+it("prefers dated fillers and chooses the earliest completion independently of activity order", async () => {
 	for (const reverse of [false, true]) {
 		const { tracking } = setup()
 		const source = JSON.parse(fixture.toString()).find(
@@ -511,7 +511,7 @@ it("keeps undated episode evidence ahead of whole-show finishes and chooses the 
 		assert.equal(watches.length, 4)
 		assert.equal(
 			watches.find((w) => w.episode_tmdb_id === 900811)?.watched_at,
-			null,
+			Date.parse("2021-01-01T00:00:00Z"),
 		)
 		assert.ok(
 			watches
@@ -550,4 +550,61 @@ it("Watcharr status-only Undo also preserves a newer opposite list choice", asyn
 	await undoImport("member", preview.id)
 	assert.equal(tracking.table("user_not_interested").length, 0)
 	assert.equal(tracking.table("user_wishlist")[0].updated_at, 2)
+})
+
+it("preserves the recorded whole-show finish date for both episodes when S1E1 has an undated snapshot", async () => {
+	const { db, tracking } = setup()
+	db.episodes = db.episodes.filter(
+		(episode) => episode.show_id !== 9008 || episode.season_number === 1,
+	)
+	tracking.table("episode").splice(0)
+	tracking.seed("episode", db.episodes)
+	const source = JSON.parse(fixture.toString()).find(
+		(row: { id: number }) => row.id === 8,
+	)
+	source.activity = [
+		{
+			id: 800,
+			type: "STATUS_CHANGED",
+			data: "FINISHED",
+			countAsPlay: true,
+			customDate: "2020-02-01T00:00:00Z",
+		},
+	]
+	source.watchedEpisodes = [
+		{ id: 1, seasonNumber: 1, episodeNumber: 1, status: "FINISHED", rating: 0 },
+	]
+	const preview = await previewImport(
+		"member",
+		"wishlist",
+		"watcharr-export.json",
+		new TextEncoder().encode(JSON.stringify([source])),
+	)
+	const rows = await getImportItems("member", preview.id, undefined, 0, 200)
+	assert.deepEqual(
+		rows.items
+			.filter((row) => row.kind === "watch")
+			.map((row) => [row.episodeTmdbId, row.watchedAt])
+			.sort(),
+		[
+			[900811, "2020-02-01T00:00:00Z"],
+			[900812, "2020-02-01T00:00:00Z"],
+		],
+	)
+	await confirmImport("member", preview.id, {
+		kinds: ["watch"],
+		conflictChoice: "keep",
+		watchDates: "preserve",
+	})
+	assert.equal((await finished(preview.id)).status, "done")
+	assert.deepEqual(
+		tracking
+			.table("user_watch_log")
+			.map((watch) => [watch.episode_tmdb_id, watch.watched_at])
+			.sort(),
+		[
+			[900811, Date.parse("2020-02-01T00:00:00Z")],
+			[900812, Date.parse("2020-02-01T00:00:00Z")],
+		],
+	)
 })

@@ -83,15 +83,16 @@ export async function expandWatcharrWatches(
 			)
 			.map(identity),
 	)
-	// Source episode/season evidence takes priority over whole-show completion.
+	// Dated fillers take priority, then the earliest recorded date; scope only breaks date ties.
 	// Multiple whole-show finishes fill once at the earliest recorded date, regardless of file order.
 	const fillers = expanded
 		.filter((row) => row.watcharrSnapshot && !row.problem)
 		.sort(
 			(a, b) =>
-				Number(completions.has(a)) - Number(completions.has(b)) ||
+				Number(!a.watchedAt) - Number(!b.watchedAt) ||
 				(a.watchedAt ? Date.parse(a.watchedAt) : Infinity) -
 					(b.watchedAt ? Date.parse(b.watchedAt) : Infinity) ||
+				Number(completions.has(a)) - Number(completions.has(b)) ||
 				a.key.localeCompare(b.key),
 		)
 	const selected = new Set<ImportObservation>()

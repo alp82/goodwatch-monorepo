@@ -841,3 +841,15 @@ test("full Watcharr Confirm sends the independent rewatch opt-in under either co
 		assert.equal(run.sent.watchDates, "preserve")
 	}
 })
+
+test("the Watcharr show-status footnote explains recorded completion dates and the unknown-date fallback", () => {
+	const page = text(rendered.watcharrLibrary)
+	assert.match(
+		page,
+		/Whole-show completion marks aired regular episodes with the recorded date when the source has one, otherwise with unknown dates/,
+	)
+	assert.doesNotMatch(
+		page,
+		/Whole-show completion marks aired regular episodes with unknown dates/,
+	)
+})
