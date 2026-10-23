@@ -57,6 +57,10 @@ export async function plexLibraryFixture() {
 		empty: false,
 		oversized: false,
 		grow: false,
+		watchTotal: undefined as number | undefined,
+		ratingTotal: undefined as number | undefined,
+		faultTypes: "both" as "both" | "watch" | "ratings",
+		fakeTotalHeader: false,
 	}
 	const server = createServer((req, res) => {
 		const url = new URL(req.url ?? "/", "http://fixture")
@@ -95,21 +99,49 @@ export async function plexLibraryFixture() {
 				},
 			}
 		else if (url.pathname === "/library/all" && !state.libraryFailure) {
+			const types = url.searchParams.get("type")?.split(",") ?? []
+			const watch = types.includes("1") || types.includes("4")
+			const ratings = types.includes("2") || types.includes("3")
+			const fault =
+				state.faultTypes === "both" ||
+				(state.faultTypes === "watch" ? watch : ratings)
+			const selected = library.filter((row) =>
+				types.includes(
+					(
+						{ movie: "1", show: "2", season: "3", episode: "4" } as Record<
+							string,
+							string
+						>
+					)[String(row.type)] ?? "1",
+				),
+			)
+			const reportedTotal =
+				watch && ratings
+					? (state.watchTotal ??
+						(state.ratingTotal == null
+							? selected.length
+							: selected.length + state.ratingTotal))
+					: watch
+						? (state.watchTotal ?? selected.length)
+						: (state.ratingTotal ?? selected.length)
+			if (state.fakeTotalHeader)
+				res.setHeader("x-plex-container-total-size", "999999")
 			const rows =
-				state.empty && start
+				fault && state.empty && start
 					? []
-					: library.slice(
-							state.duplicate && start ? 0 : start,
-							(state.duplicate && start ? 0 : start) + state.pageSize,
+					: selected.slice(
+							fault && state.duplicate && start ? 0 : start,
+							(fault && state.duplicate && start ? 0 : start) + state.pageSize,
 						)
 			data = {
 				MediaContainer: {
 					offset: start,
-					totalSize: state.oversized
-						? 50001
-						: state.shrink && start
-							? 1
-							: library.length + (state.grow && start ? 1 : 0),
+					totalSize:
+						fault && state.oversized
+							? 50001
+							: fault && state.shrink && start
+								? 1
+								: reportedTotal + (fault && state.grow && start ? 1 : 0),
 					size: rows.length,
 					Metadata: rows,
 				},

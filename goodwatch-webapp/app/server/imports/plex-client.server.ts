@@ -145,6 +145,7 @@ export function createPlexClient(
 	async function readServerImport(
 		server: z.infer<typeof serverResource>,
 		context: ReadContext,
+		maxItems: number,
 	): Promise<ParsedImport> {
 		const { clientId, read, checkTime } = context
 		const observations: ImportObservation[] = []
@@ -353,6 +354,7 @@ export function createPlexClient(
 				)
 		}
 		const library = await readPlexLibrary({
+			maxObservations: Math.max(0, maxItems - observations.length),
 			serverId: server.clientIdentifier,
 			historyItems,
 			getMetadata,
@@ -459,7 +461,11 @@ export function createPlexClient(
 					),
 				)
 			for (const server of servers) {
-				const result = await readServerImport(server, context)
+				const result = await readServerImport(
+					server,
+					context,
+					IMPORT_MAX_ROWS - observations.length,
+				)
 				observations.push(...result.observations)
 				warnings.push(...result.warnings)
 				if (observations.length > IMPORT_MAX_ROWS)

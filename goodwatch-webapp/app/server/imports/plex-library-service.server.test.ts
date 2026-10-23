@@ -38,10 +38,54 @@ async function finished(id: string) {
 	assert.fail("Import did not finish")
 }
 
+test("partial Plex library failure still previews, confirms and undoes retained history with its warning", async (t) => {
+	const f = await plexLibraryFixture()
+	t.after(f.close)
+	f.state.oversized = true
+	const parsed = await f.client.readImport("token", "client")
+	const db = new ImportDb()
+	db.catalog = [
+		{ tmdb_id: 862, title: "Toy Story", release_year: 1995, imdb_id: null },
+	]
+	const tracking = new FakeTrackingCrate()
+	setCrateClientForTest(tracking)
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const preview = await previewFetchedImport("member", "Plex", parsed)
+	assert.equal(preview.kinds.watch, 1)
+	assert.equal(preview.kinds.rating, 0)
+	assert.match(
+		preview.warnings.map((w) => w.message).join(" "),
+		/partial: the movie and episode library/,
+	)
+	await confirmImport("member", preview.id, {
+		kinds: ["watch"],
+		conflictChoice: "keep",
+		watchDates: "preserve",
+	})
+	const done = await finished(preview.id)
+	assert.equal(done.status, "done", done.error ?? "")
+	assert.equal(tracking.table("user_watch_log").length, 1)
+	assert.equal(tracking.table("user_watch_log")[0].watched_at, 1600000000000)
+	assert.match(done.warnings.map((w) => w.message).join(" "), /partial:/)
+	await undoImport("member", preview.id)
+	assert.equal(tracking.table("user_watch_log").length, 0)
+})
+
 test("Plex library preview, Confirm, receipt, repeat import and Undo preserve scopes, dates and prior member data", async (t) => {
 	const f = await plexLibraryFixture()
 	t.after(f.close)
 	f.library.push(
+		{
+			ratingKey: "30",
+			type: "movie",
+			title: "Unrated movie",
+			Guid: [{ id: "tmdb://603" }],
+			userRating: 0,
+		},
 		{
 			ratingKey: "20",
 			type: "show",
@@ -78,6 +122,7 @@ test("Plex library preview, Confirm, receipt, repeat import and Undo preserve sc
 		[655, "Paris, Texas", 1984],
 		[129, "Spirited Away", 2001],
 		[1668, "Friends", 1994],
+		[603, "Unrated movie", 1999],
 	].map(([tmdb_id, title, release_year]) => ({
 		tmdb_id,
 		title,
@@ -165,6 +210,12 @@ test("Plex library preview, Confirm, receipt, repeat import and Undo preserve sc
 	assert.equal(db.scores[0].review, "My existing review")
 	const watches = tracking.table("user_watch_log")
 	assert.equal(watches.length, 4)
+	assert.ok(!db.scores.some((row) => row.tmdb_id === 603))
+	assert.ok(
+		!tracking
+			.table("user_watch_state")
+			.some((row) => row.tmdb_id === 603 && row.state === "seen"),
+	)
 	assert.equal(watches.find((row) => row.tmdb_id === 655)?.watched_at, null)
 	assert.equal(
 		watches.find((row) => row.tmdb_id === 129)?.watched_at,

@@ -103,28 +103,40 @@ test("Plex show scores stay at show scope; watched episodes resolve by GUID and 
 	)
 	const rows = (await f.client.readImport("token", "client")).observations
 	assert.deepEqual(
-		rows.map((row) => [
-			row.kind,
-			row.mediaType,
-			row.tmdbId,
-			row.score ?? null,
-			row.season ?? null,
-			row.episode ?? null,
-		]),
+		rows
+			.map((row) => [
+				row.kind,
+				row.mediaType,
+				row.tmdbId,
+				row.score ?? null,
+				row.season ?? null,
+				row.episode ?? null,
+			])
+			.sort(),
 		[
 			["rating", "show", 1668, 10, null, null],
 			["unsupported", "show", 1668, 8.5, 4, null],
 			["unsupported", "show", 1668, 7.5, 4, 24],
 			["watch", "show", 1668, null, 4, 24],
 			["watch", "show", 1668, null, 1, 1],
-		],
+		].sort(),
 	)
-	assert.equal(rows[3].episodeTmdbId, 101)
-	assert.equal(rows[3].episodeTvdbId, 900)
-	assert.equal(rows[3].episodeNumbering, "unknown")
-	assert.equal(rows[3].watchedAt, "2000-01-01T00:00:00.000Z")
-	assert.equal(rows[4].precision, "unknown")
-	assert.match(rows[1].problem?.reason ?? "", /season and episode scores/i)
+	const finale = rows.find(
+		(row) => row.kind === "watch" && row.episodeTmdbId === 101,
+	)
+	assert.equal(finale?.episodeTvdbId, 900)
+	assert.equal(finale?.episodeNumbering, "unknown")
+	assert.equal(finale?.watchedAt, "2000-01-01T00:00:00.000Z")
+	assert.equal(
+		rows.find((row) => row.kind === "watch" && row.episodeTmdbId === 102)
+			?.precision,
+		"unknown",
+	)
+	assert.match(
+		rows.find((row) => row.kind === "unsupported" && row.episode == null)
+			?.problem?.reason ?? "",
+		/season and episode scores/i,
+	)
 	assert.ok(
 		!rows.some((row) => row.kind === "show_status"),
 		"local library coverage does not establish whole-catalog completion",
@@ -196,7 +208,6 @@ test("Plex personal scores use only userRating, round halves up and retain malfo
 			[1, null],
 			[1, null],
 			[1, null],
-			[1, null],
 			[2, null],
 			[7, null],
 			[8, null],
@@ -213,7 +224,32 @@ test("Plex personal scores use only userRating, round halves up and retain malfo
 	)
 })
 
-test("Plex library paging is complete and bounded, rejecting duplicate, shrinking, oversized or incomplete snapshots", async (t) => {
+test("zero Plex userRating is unrated for movies, shows, seasons and episodes", async (t) => {
+	const f = await plexLibraryFixture()
+	t.after(f.close)
+	f.history.splice(0)
+	f.library.splice(
+		0,
+		f.library.length,
+		...["movie", "show", "season", "episode"].map((type, i) => ({
+			ratingKey: String(100 + i),
+			type,
+			title: `Unrated ${type}`,
+			Guid: [{ id: `tmdb://${100 + i}` }],
+			userRating: 0,
+			parentRatingKey: "101",
+			grandparentRatingKey: "101",
+			parentIndex: 1,
+			index: 1,
+		})),
+	)
+	assert.deepEqual(
+		(await f.client.readImport("token", "client")).observations,
+		[],
+	)
+})
+
+test("Plex library paging preserves retained history with a partial warning for duplicate, shrinking, oversized or incomplete snapshots", async (t) => {
 	for (const mode of [
 		"normal",
 		"duplicate",
@@ -232,14 +268,99 @@ test("Plex library paging is complete and bounded, rejecting duplicate, shrinkin
 				f.calls
 					.filter((call) => call.path.startsWith("/library/all"))
 					.map((call) => call.start),
-				[0, 2],
+				[0, 2, 0],
 			)
-		} else
-			await assert.rejects(
-				f.client.readImport("token", "client"),
-				/library|page/,
+		} else {
+			const parsed = await f.client.readImport("token", "client")
+			assert.deepEqual(
+				parsed.observations.map((row) => row.key),
+				["plex:watch:fixture-server:/status/sessions/history/1"],
 			)
+			assert.match(
+				parsed.warnings.map((w) => w.message).join(" "),
+				/library.*not.*imported/i,
+			)
+		}
 	}
+})
+
+test("show and season library overflow cannot consume the movie and episode watch scan or discard history", async (t) => {
+	const f = await plexLibraryFixture()
+	t.after(f.close)
+	f.state.ratingTotal = 50_001
+	const parsed = await f.client.readImport("token", "client")
+	assert.equal(
+		parsed.observations.filter((row) => row.kind === "watch").length,
+		3,
+	)
+	assert.ok(
+		parsed.observations.some(
+			(row) =>
+				row.key === "plex:watch:fixture-server:/status/sessions/history/1",
+		),
+	)
+	assert.match(
+		parsed.warnings.map((w) => w.message).join(" "),
+		/show and season.*not.*imported/i,
+	)
+})
+
+test("failed movie and episode library scans preserve retained history and separately read show ratings", async (t) => {
+	const f = await plexLibraryFixture()
+	t.after(f.close)
+	f.state.faultTypes = "watch"
+	f.state.oversized = true
+	f.library.push({
+		ratingKey: "20",
+		type: "show",
+		title: "Friends",
+		Guid: [{ id: "tmdb://1668" }],
+		userRating: 9.5,
+	})
+	const parsed = await f.client.readImport("token", "client")
+	assert.deepEqual(
+		parsed.observations.map((row) => [row.kind, row.tmdbId, row.score ?? null]),
+		[
+			["watch", 862, null],
+			["rating", 1668, 10],
+		],
+	)
+	assert.match(
+		parsed.warnings.map((w) => w.message).join(" "),
+		/partial: the movie and episode library/,
+	)
+})
+
+test("Plex library pagination uses body totalSize, ignoring a nonexistent total-size header", async (t) => {
+	const f = await plexLibraryFixture()
+	t.after(f.close)
+	f.state.fakeTotalHeader = true
+	const parsed = await f.client.readImport("token", "client")
+	assert.equal(parsed.observations.length, 4)
+	assert.ok(!parsed.warnings.some((w) => /partial:/.test(w.message)))
+})
+
+test("library observations exceeding the remaining import space do not discard 50,000 retained plays", async (t) => {
+	const f = await plexLibraryFixture()
+	t.after(f.close)
+	f.history.splice(
+		0,
+		1,
+		...Array.from({ length: 50_000 }, (_, i) => ({
+			...f.history[0],
+			historyKey: `/status/sessions/history/${i + 1}`,
+		})),
+	)
+	f.state.historyPageSize = 200
+	const parsed = await f.client.readImport("token", "client")
+	assert.equal(parsed.observations.length, 50_000)
+	assert.ok(
+		parsed.observations.every((row) => row.key.startsWith("plex:watch:")),
+	)
+	assert.match(
+		parsed.warnings.map((w) => w.message).join(" "),
+		/partial:.*remaining space/,
+	)
 })
 
 test("library and retained-history failures are independent and never silently import a partial library", async (t) => {
