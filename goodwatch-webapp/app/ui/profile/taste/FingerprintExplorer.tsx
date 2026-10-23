@@ -1,13 +1,14 @@
 import { Link } from "@remix-run/react"
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
-import { type ReactNode, useMemo, useState } from "react"
+import { useReducedMotion } from "framer-motion"
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 // The fingerprint section: the whorl, the five families as buttons, the family's attributes as diverging bars (sought
 // right, avoided left), and one detail panel of fixed height that changes in place when an attribute is picked (no
-// popups, no layout shift). A signed-in visitor gets a Vs me switch: the owner's print moves up and aside and the
-// visitor's slides out from under it (transforms only, nothing restarts from the centre), the list turns to the
-// biggest gaps with both bars, and the detail compares the two stances.
+// popups, no layout shift). A signed-in visitor gets a Vs me switch: the print keeps its size and its rim dots become
+// tracks with both stances (RimTracks), the list turns to the biggest gaps with both bars, and the detail compares the
+// two stances. Pointing at a row lights its track and ridges; pointing at a track lights its row.
 import { FAMILY_NAMES } from "~/domain/taste-attributes"
-import { PosterImg, YouMark } from "../parts"
+import { PosterImg, ScorePair } from "../parts"
+import { RimTracks } from "./RimTracks"
 import { Whorl } from "./Whorl"
 import {
 	CRAFT_KEYS,
@@ -37,34 +38,46 @@ const tierTone = (tier: Tier) =>
 					: "bg-rose-500/10 text-rose-300 ring-1 ring-rose-400/30"
 
 type View = "top" | "common"
-const EASE = [0.2, 0.7, 0.2, 1] as const
 
 export function FingerprintExplorer() {
 	const { taste, owner, handle, attributeByKey, compare: you } = useTaste()
 	const compare = !!you
-	const yours = (key: string) => you?.yourEdges[key]?.edge ?? 0
-	const gap = (a: TasteAttribute) => Math.abs(a.edge - yours(a.key))
-	// The visitor's print, drawn from the same attributes with their edges.
-	const memberAttributes = useMemo(
-		() =>
-			taste.attributes.map((a) => ({
-				...a,
-				edge: you?.yourEdges[a.key]?.edge ?? 0,
-			})),
-		[taste.attributes, you],
+	const yours = useCallback(
+		(key: string) => you?.yourEdges[key]?.edge ?? 0,
+		[you],
 	)
+	const gap = (a: TasteAttribute) => Math.abs(a.edge - yours(a.key))
 	const [family, setFamily] = useState<FamilyId | null>(null)
 	const [view, setView] = useState<View>("top")
 	const [vsOn, setVs] = useState(false)
 	const vs = compare && vsOn
 	const still = useReducedMotion() ?? false
+	const [hover, setHover] = useState<string | null>(null)
+	const listRef = useRef<HTMLUListElement>(null)
+	// Pointing at a track brings its row into view inside the list; the page itself never scrolls.
+	useEffect(() => {
+		const ul = listRef.current
+		const row = hover
+			? ul?.querySelector<HTMLElement>(`[data-key="${hover}"]`)
+			: null
+		if (!ul || !row || ul.matches(":hover")) return
+		const top = row.offsetTop
+		if (
+			top < ul.scrollTop ||
+			top + row.offsetHeight > ul.scrollTop + ul.clientHeight
+		)
+			ul.scrollTo({
+				top: top - ul.clientHeight / 2 + row.offsetHeight / 2,
+				behavior: still ? "auto" : "smooth",
+			})
+	}, [hover, still])
 	const [key, setKey] = useState<string>(
 		taste.identity?.persona ?? taste.seek[0] ?? taste.attributes[0].key,
 	)
 	const picked = attributeByKey.get(key) as TasteAttribute
 	const max = Math.max(
 		...taste.attributes.map((a) => Math.abs(a.edge)),
-		...(compare ? memberAttributes.map((a) => Math.abs(a.edge)) : []),
+		...(compare ? taste.attributes.map((a) => Math.abs(yours(a.key))) : []),
 	)
 	const worded = taste.attributes.filter((a) => !CRAFT_KEYS.has(a.key))
 	const rows = family
@@ -116,7 +129,6 @@ export function FingerprintExplorer() {
 		}
 	}
 	const they = owner ? "you" : "they"
-	const transition = still ? { duration: 0 } : { duration: 0.6, ease: EASE }
 	return (
 		<section aria-labelledby="fingerprint" className="flex flex-col gap-5">
 			<SectionHead
@@ -152,81 +164,30 @@ export function FingerprintExplorer() {
 			>
 				{/* One square stage either way, so the switch never moves the layout. */}
 				<div className="relative mx-auto aspect-square w-full max-w-[30rem]">
-					<motion.div
-						className="absolute inset-0"
-						initial={false}
-						animate={
-							vs
-								? { scale: 0.62, x: "-20%", y: "-19%" }
-								: { scale: 1, x: "0%", y: "0%" }
-						}
-						transition={transition}
-					>
-						<Whorl
+					<Whorl
+						attributes={taste.attributes}
+						family={family}
+						selected={vs ? (hover ?? key) : key}
+						onFamily={(id) => pickFamily(family === id ? null : id)}
+						onAttribute={pickAttribute}
+						markers={!vs}
+						className="w-full"
+						label={`Fingerprint of @${handle}: ${owner ? taste.line : theirLine(taste.line)}`}
+					/>
+					{compare && (
+						<RimTracks
+							vs={vs}
 							attributes={taste.attributes}
+							yours={yours}
 							family={family}
 							selected={key}
-							onFamily={(id) => pickFamily(family === id ? null : id)}
-							onAttribute={pickAttribute}
-							className="w-full"
-							label={`Fingerprint of @${handle}: ${owner ? taste.line : theirLine(taste.line)}`}
+							hover={hover}
+							onHover={setHover}
+							onPick={pickAttribute}
+							handle={handle}
+							still={still}
 						/>
-					</motion.div>
-					<AnimatePresence>
-						{vs && (
-							<motion.div
-								key="yours"
-								className="absolute inset-0"
-								// The member's print slides out from under theirs, and back under it on the way out.
-								initial={{ opacity: 0, scale: 0.62, x: "-20%", y: "-19%" }}
-								animate={{ opacity: 1, scale: 0.62, x: "20%", y: "19%" }}
-								exit={{ opacity: 0, scale: 0.62, x: "-20%", y: "-19%" }}
-								transition={transition}
-							>
-								<Whorl
-									attributes={memberAttributes}
-									family={family}
-									selected={key}
-									onFamily={(id) => pickFamily(family === id ? null : id)}
-									onAttribute={pickAttribute}
-									className="w-full"
-									label="Your fingerprint"
-									animate={false}
-								/>
-							</motion.div>
-						)}
-					</AnimatePresence>
-					<AnimatePresence>
-						{vs && (
-							<motion.div
-								key="labels"
-								className="pointer-events-none absolute inset-0"
-								initial={{ opacity: 0 }}
-								animate={{ opacity: 1 }}
-								exit={{ opacity: 0 }}
-								transition={
-									still ? { duration: 0 } : { duration: 0.3, delay: 0.25 }
-								}
-							>
-								<span className="absolute top-[2%] right-[6%] text-right">
-									<span className="block text-[11px] font-bold tracking-wide text-amber-300 uppercase">
-										@{handle}
-									</span>
-									<span className="block text-sm font-bold text-white">
-										{taste.identity?.name}
-									</span>
-								</span>
-								<span className="absolute bottom-[2%] left-[6%]">
-									<span className="block text-[11px] font-bold tracking-wide text-gray-300 uppercase">
-										You
-									</span>
-									<span className="block text-sm font-bold text-white">
-										{you?.yourIdentity ?? "Your taste"}
-									</span>
-								</span>
-							</motion.div>
-						)}
-					</AnimatePresence>
+					)}
 				</div>
 				<div className="flex min-w-0 flex-col gap-4">
 					<div
@@ -271,14 +232,22 @@ export function FingerprintExplorer() {
 									: `Where your print and @${handle}'s part most. Colour is theirs, white is yours.`
 								: `The worded attributes that set @${handle} apart most, either way.`}
 					</p>
-					<ul className="h-56 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">
+					<ul
+						ref={listRef}
+						className="relative h-56 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]"
+					>
 						{rows.map((a) => (
 							<li key={a.key}>
 								<button
 									type="button"
 									onClick={() => setKey(a.key)}
 									aria-pressed={a.key === key}
-									className={`grid w-full grid-cols-[7.5rem_1fr_2.5rem] items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm sm:grid-cols-[10rem_1fr_2.75rem] ${a.key === key ? "bg-white/10" : "hover:bg-white/5"}`}
+									data-key={a.key}
+									onMouseEnter={() => setHover(a.key)}
+									onMouseLeave={() => setHover(null)}
+									onFocus={() => setHover(a.key)}
+									onBlur={() => setHover(null)}
+									className={`grid w-full grid-cols-[7.5rem_1fr_2.5rem] items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm sm:grid-cols-[10rem_1fr_2.75rem] ${a.key === key ? "bg-white/10" : a.key === hover ? "bg-white/[0.07] ring-1 ring-white/25" : "hover:bg-white/5"}`}
 								>
 									<span className="truncate text-gray-200">
 										<span aria-hidden className="mr-1">
@@ -511,13 +480,17 @@ function VsDetail({
 					{a.edge >= 0
 						? `Carry it for @${handle}`
 						: `Strong in it, @${handle} scored lowest`}{" "}
-					· your score where you rated it
+					· scores under each: @{handle} left, you right
 				</p>
-				<ul className="flex gap-2">
+				<ul className="flex gap-1.5 sm:gap-2">
 					{titles.map((t) => (
-						<li key={t.key} className="relative w-11 sm:w-12">
-							<MiniPoster title={t} />
-							<YouMark score={compare?.yourScores[t.key]} />
+						<li key={t.key} className="w-[2.6rem] shrink-0 sm:w-12">
+							<MiniPoster title={t} score={false} />
+							<ScorePair
+								theirs={t.score}
+								yours={compare?.yourScores[t.key]}
+								handle={handle}
+							/>
 						</li>
 					))}
 				</ul>

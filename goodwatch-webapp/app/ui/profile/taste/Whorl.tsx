@@ -210,6 +210,7 @@ export const Whorl = memo(function Whorl({
 	className = "",
 	label,
 	animate = true,
+	markers = true,
 }: {
 	attributes: WhorlAttribute[]
 	turns?: number
@@ -221,6 +222,8 @@ export const Whorl = memo(function Whorl({
 	className?: string
 	label: string
 	animate?: boolean
+	/** The rim dots; Vs me hides them while its tracks take their place. */
+	markers?: boolean
 }) {
 	const g = useMemo(
 		() => build(attributes, turns, rim),
@@ -272,7 +275,7 @@ export const Whorl = memo(function Whorl({
 					))}
 				</g>
 			))}
-			{g.markers.map((m) => {
+			{(markers ? g.markers : []).map((m) => {
 				const on = m.a.key === selected
 				const sought = m.a.edge > 0
 				return (

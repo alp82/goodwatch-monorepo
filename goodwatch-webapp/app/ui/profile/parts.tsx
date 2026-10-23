@@ -396,6 +396,41 @@ export function GridPoster({
 	)
 }
 
+/**
+ * Both scores in one strip under a poster, the profile owner's left and the visitor's right, a dash where one of them
+ * hasn't rated it. It replaces a score chip and a "You" tag on the poster, which covered each other on small posters.
+ */
+export function ScorePair({
+	theirs,
+	yours,
+	handle,
+}: {
+	theirs: number | null
+	yours: number | null | undefined
+	handle: string
+}) {
+	const cell = (n: number | null | undefined, edge: string) => (
+		<span
+			className={`flex flex-1 items-center justify-center border-t-2 ${edge} ${n ? "text-gray-950" : "text-gray-500"}`}
+			style={n ? { background: vibe(n) } : undefined}
+		>
+			{n ?? "–"}
+		</span>
+	)
+	return (
+		<span
+			className="mt-1 flex h-5 overflow-hidden rounded-md bg-white/[0.06] text-[11px] font-black tabular-nums ring-1 ring-white/10"
+			title={`@${handle} ${theirs ?? "not rated"} · you ${yours ?? "not rated"}`}
+		>
+			<span className="sr-only">{`@${handle} ${theirs ?? "not rated"}, you ${yours ?? "not rated"}`}</span>
+			<span className="contents" aria-hidden>
+				{cell(theirs, "border-amber-400")}
+				{cell(yours, "border-white")}
+			</span>
+		</span>
+	)
+}
+
 /** A signed-in visitor's own score on a poster they rated too: a "You 9" tag in the bottom-left corner. */
 export function YouMark({ score }: { score: number | null | undefined }) {
 	if (!score) return null
