@@ -14,8 +14,9 @@ export function readingLine(reading: ReadingChip[] = []) {
 			: reading.filter((c) => c.kind === "phrase").slice(0, 4)
 	const labels = chips.map((c) => {
 		const label = c.text.replace(/_/g, " ").slice(0, 40)
-		return c.kind === "avoid" || c.kind === "excluded"
-			? `not ${label.replace(/^(not|low)\s+/i, "")}`
+		// An avoid chip already says what it avoids ("Low adrenaline"); only a ruled-out flag needs "not".
+		return c.kind === "excluded"
+			? `not ${label.replace(/^not\s+/i, "")}`
 			: label
 	})
 	return labels.length ? `Reads as: ${labels.join(" · ")}` : ""
@@ -35,10 +36,11 @@ export function reasonsLine(reasons: SearchReason[] = []) {
 				r.kind === "dimension"
 					? r.text.replace(/\s+\d+(?:\.\d+)?$/, "")
 					: r.text
-			return label
+			const clean = label
 				.replace(/^genre:\s*/i, "")
 				.replace(/_/g, " ")
 				.slice(0, 40)
+			return clean.charAt(0).toUpperCase() + clean.slice(1)
 		})
 	return labels.length ? `Matches: ${labels.join(" · ")}` : ""
 }

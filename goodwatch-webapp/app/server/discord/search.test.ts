@@ -511,7 +511,7 @@ test("an oversized signed body is rejected before invoking search", () =>
 		)
 	}))
 
-test("reading copy follows the website's chip selection and uses not for excluded and avoided chips", async () => {
+test("reading copy follows the website's chip selection and uses not only for excluded chips", async () => {
 	const { readingLine, reasonsLine } = await import("./search-reading.ts")
 	assert.equal(
 		readingLine([
@@ -524,7 +524,7 @@ test("reading copy follows the website's chip selection and uses not for exclude
 			{ kind: "avoid", text: "Low violence" },
 			{ kind: "avoid", text: "Low scare" },
 		]),
-		"Reads as: Want 1 · Want 2 · Want 3 · Want 4 · not horror · not violence",
+		"Reads as: Want 1 · Want 2 · Want 3 · Want 4 · not horror · Low violence",
 	)
 	assert.equal(
 		readingLine([{ kind: "phrase", text: "Forest adventure" }]),
@@ -539,7 +539,7 @@ test("reading copy follows the website's chip selection and uses not for exclude
 			{ kind: "attribute", text: "genre: Science_fiction" },
 			{ kind: "attribute", text: "Hidden fourth reason" },
 		]),
-		"Matches: Funny · low violence · Science fiction",
+		"Matches: Funny · Low violence · Science fiction",
 	)
 })
 
