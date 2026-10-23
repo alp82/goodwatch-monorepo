@@ -142,7 +142,7 @@ export default function Actors({ cast, total, mediaType, tmdbId }: CastProps) {
 									to={personPath(actor.id, actor.name)}
 									prefetch="intent"
 									data-cast-index={index}
-									className="flex flex-col items-center group px-2"
+									className="flex flex-col items-center group px-2 transition-[scale,opacity] duration-100 active:scale-95 active:opacity-90"
 								>
 									<div className="w-36 h-36 mb-2 rounded-full overflow-hidden border-2 border-stone-400 shadow-lg group-hover:border-slate-200 transition-all">
 										<TmdbImage

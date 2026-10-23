@@ -55,9 +55,10 @@ interface MovieTvCardProps {
 }
 
 // The card rests at 95% and grows to full size under the pointer. With title actions the frame around the link
-// carries that, so the actions scale with the card; without them a plain box does.
+// carries that, so the actions scale with the card; without them a plain box does. A press on the link (not on an
+// action) sinks the card a little, so the tap is answered before the next page is there.
 const SCALE =
-	"transition-transform duration-100 transform scale-95 hover:scale-100"
+	"transition-[transform,scale,opacity] duration-100 transform scale-95 hover:scale-100 has-[>a:active]:scale-[0.93] has-[>a:active]:opacity-90"
 
 export function MovieTvCard({
 	details,

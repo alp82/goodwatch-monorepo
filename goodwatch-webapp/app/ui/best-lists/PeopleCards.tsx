@@ -16,7 +16,7 @@ export function PeopleCards({ people }: { people: ListPerson[] }) {
 			{people.map((p, i) => (
 				<li
 					key={p.tmdb_id}
-					className="flex h-full gap-3 rounded-xl border border-gray-800 bg-gray-900 p-3 hover:border-amber-400/60"
+					className="flex h-full gap-3 rounded-xl border border-gray-800 bg-gray-900 p-3 transition-[scale,opacity] duration-100 hover:border-amber-400/60 has-[a:active]:scale-[0.98] has-[a:active]:opacity-90"
 				>
 					<Link
 						to={p.path}
