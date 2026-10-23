@@ -5,10 +5,10 @@ import {
 	TrashIcon,
 	UserGroupIcon,
 	XMarkIcon,
-} from "@heroicons/react/20/solid"
-import { GlobeAltIcon } from "@heroicons/react/24/outline"
-import { Link, useLocation } from "@remix-run/react"
-import { useQueryClient } from "@tanstack/react-query"
+} from "@heroicons/react/20/solid";
+import { GlobeAltIcon } from "@heroicons/react/24/outline";
+import { Link, useLocation } from "@remix-run/react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
 	type ReactNode,
 	useEffect,
@@ -16,8 +16,8 @@ import {
 	useMemo,
 	useRef,
 	useState,
-} from "react"
-import { toast } from "react-toastify"
+} from "react";
+import { toast } from "react-toastify";
 import {
 	AUDIENCES,
 	AVATAR_COLORS,
@@ -31,22 +31,22 @@ import {
 	type ProfileSettings,
 	type ProfileShell,
 	type ProfileTitle,
-} from "~/domain/profile"
-import { LINK_RULES, normalizeLinkValue } from "~/domain/profile-settings"
+} from "~/domain/profile";
+import { LINK_RULES, normalizeLinkValue } from "~/domain/profile-settings";
 import {
 	queryKeyAccountSummary,
 	useAccountSummary,
-} from "~/ui/account/useAccountSummary"
-import { DISPLAY } from "~/ui/my-pages/bits"
+} from "~/ui/account/useAccountSummary";
+import { DISPLAY } from "~/ui/my-pages/bits";
 // Edit profile (/settings/profile): the picture (an uploaded photo cropped in the browser, the sign-in provider's photo,
 // the handle's initial on a colour, or a favorite's poster), the cover, the bio, links to other profiles, and who sees
 // each part. A live preview beside the form; Save checks with the same rules as the server (domain/profile-settings).
 // No display name: profiles and cards are signed with the permanent @handle (#170).
-import { assetUrl } from "~/utils/asset-url"
-import { ProfileAvatar } from "../ProfileFrame"
-import { LINK_SERVICE_INFO, profileTabPath } from "../links"
-import { AMBER_BUTTON, QUIET_BUTTON, TILE, posterUrl } from "../parts"
-import { PhotoCropper } from "./PhotoCropper"
+import { assetUrl } from "~/utils/asset-url";
+import { ProfileAvatar } from "../ProfileFrame";
+import { LINK_SERVICE_INFO, profileTabPath } from "../links";
+import { AMBER_BUTTON, QUIET_BUTTON, TILE, posterUrl } from "../parts";
+import { PhotoCropper } from "./PhotoCropper";
 
 const PARTS: { part: ProfilePart; name: string; line: string }[] = [
 	{
@@ -81,95 +81,95 @@ const PARTS: { part: ProfilePart; name: string; line: string }[] = [
 		name: "Recent activity",
 		line: "Latest ratings, watching now, newest on the Wishlist",
 	},
-]
+];
 
 const AUDIENCE_LABEL: Record<Audience, string> = {
 	everyone: "Everyone",
 	members: "Members",
 	me: "Only me",
-}
+};
 
 export interface EditProfileData {
-	handle: string
-	settings: ProfileSettings
+	handle: string;
+	settings: ProfileSettings;
 	/** The uploaded photo's address, or null. */
-	photo: string | null
+	photo: string | null;
 	/** The sign-in provider's photo, or null. */
-	providerPhoto: string | null
+	providerPhoto: string | null;
 	/** Their 10s (then 9s) with posters, for the picture. */
-	favorites: ProfileTitle[]
+	favorites: ProfileTitle[];
 	/** Their 9s and 10s with backdrops, for the cover. */
-	covers: ProfileTitle[]
+	covers: ProfileTitle[];
 }
 
 export function EditProfile({ data }: { data: EditProfileData }) {
-	const queryClient = useQueryClient()
-	const [saved, setSaved] = useState(data.settings)
-	const [draft, setDraft] = useState(data.settings)
-	const [photo, setPhoto] = useState(data.photo)
-	const [saving, setSaving] = useState(false)
-	const [error, setError] = useState<string | null>(null)
+	const queryClient = useQueryClient();
+	const [saved, setSaved] = useState(data.settings);
+	const [draft, setDraft] = useState(data.settings);
+	const [photo, setPhoto] = useState(data.photo);
+	const [saving, setSaving] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 	const set = (patch: Partial<ProfileSettings>) =>
-		setDraft((d) => ({ ...d, ...patch }))
-	const dirty = JSON.stringify(draft) !== JSON.stringify(saved)
+		setDraft((d) => ({ ...d, ...patch }));
+	const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
 
 	const linkProblems = draft.links.map((l) => {
-		const value = normalizeLinkValue(l.service, l.value)
+		const value = normalizeLinkValue(l.service, l.value);
 		return value && !LINK_RULES[l.service].pattern.test(value)
 			? `That doesn't look like a ${LINK_RULES[l.service].name} ${LINK_RULES[l.service].placeholder}.`
-			: null
-	})
-	const valid = draft.bio.length <= BIO_MAX && linkProblems.every((p) => !p)
+			: null;
+	});
+	const valid = draft.bio.length <= BIO_MAX && linkProblems.every((p) => !p);
 
 	// The "GoodWatch has profiles now" strip leads here (?confirm=1): scroll to Who sees what and highlight it, each
 	// time the strip is followed. Confirm (or any save) retires the strip.
-	const { profilesStrip } = useAccountSummary()
-	const location = useLocation()
-	const whoRef = useRef<HTMLElement>(null)
-	const [glow, setGlow] = useState(0)
+	const { profilesStrip } = useAccountSummary();
+	const location = useLocation();
+	const whoRef = useRef<HTMLElement>(null);
+	const [glow, setGlow] = useState(0);
 	useEffect(() => {
-		if (!new URLSearchParams(location.search).has("confirm")) return
+		if (!new URLSearchParams(location.search).has("confirm")) return;
 		const timer = setTimeout(() => {
-			whoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-			setGlow((g) => g + 1)
-		}, 250)
-		return () => clearTimeout(timer)
-	}, [location.key, location.search])
+			whoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+			setGlow((g) => g + 1);
+		}, 250);
+		return () => clearTimeout(timer);
+	}, [location.key, location.search]);
 
 	const save = async () => {
-		setSaving(true)
-		setError(null)
+		setSaving(true);
+		setError(null);
 		try {
 			const body: ProfileSettings = {
 				...draft,
 				links: draft.links
 					.map((l) => ({ ...l, value: normalizeLinkValue(l.service, l.value) }))
 					.filter((l) => l.value),
-			}
+			};
 			const res = await fetch("/api/profile/settings", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(body),
-			})
+			});
 			const out = (await res.json().catch(() => ({}))) as {
-				ok?: boolean
-				error?: string
-				settings?: ProfileSettings
-			}
+				ok?: boolean;
+				error?: string;
+				settings?: ProfileSettings;
+			};
 			if (!res.ok || !out.ok)
-				throw new Error(out.error ?? "Saving failed. Try again.")
-			const next = out.settings ?? body
-			setSaved(next)
-			setDraft(next)
-			toast.success(profilesStrip ? "All set." : "Profile saved.")
+				throw new Error(out.error ?? "Saving failed. Try again.");
+			const next = out.settings ?? body;
+			setSaved(next);
+			setDraft(next);
+			toast.success(profilesStrip ? "All set." : "Profile saved.");
 			// The account menu shows the chosen picture.
-			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary })
+			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary });
 		} catch (e) {
-			setError(e instanceof Error ? e.message : "Saving failed. Try again.")
+			setError(e instanceof Error ? e.message : "Saving failed. Try again.");
 		} finally {
-			setSaving(false)
+			setSaving(false);
 		}
-	}
+	};
 
 	const avatarUrl =
 		draft.avatar.kind === "photo"
@@ -182,12 +182,12 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 								(t) => t.key === (draft.avatar as { title: string }).title,
 							)?.poster ?? null,
 						)
-					: null
+					: null;
 	const previewAvatar: ProfileShell["avatar"] = {
 		url: avatarUrl,
 		color: draft.avatar.kind === "initial" ? draft.avatar.color : "amber",
-	}
-	const cover = data.covers.find((t) => t.key === draft.cover) ?? null
+	};
+	const cover = data.covers.find((t) => t.key === draft.cover) ?? null;
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -362,7 +362,7 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 								))}
 							</ul>
 							{profilesStrip && (
-								<div className="sticky bottom-24 z-10 flex flex-wrap items-center gap-3 rounded-2xl bg-[#2a2414] px-4 py-3 shadow-[0_-8px_30px_rgba(0,0,0,.5)] ring-1 ring-amber-300/40 md:bottom-4">
+								<div className="sticky bottom-[calc(88px+env(safe-area-inset-bottom))] z-10 flex flex-wrap items-center gap-3 rounded-2xl bg-[#2a2414] px-4 py-3 shadow-[0_-8px_30px_rgba(0,0,0,.5)] ring-1 ring-amber-300/40 lg:bottom-4">
 									<span className="min-w-0 flex-1 basis-56 text-sm text-amber-50">
 										<b>Happy with who sees what?</b> Confirm and you're all set.
 										You can change it here any time.
@@ -416,7 +416,7 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 								{draft.links
 									.filter((l) => l.value.trim())
 									.map((l) => {
-										const s = LINK_SERVICE_INFO[l.service]
+										const s = LINK_SERVICE_INFO[l.service];
 										return (
 											<span
 												key={l.service}
@@ -432,7 +432,7 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 													<b className="text-xs text-gray-200">{s.letter}</b>
 												)}
 											</span>
-										)
+										);
 									})}
 							</div>
 						</div>
@@ -451,11 +451,11 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 				</aside>
 			</div>
 		</div>
-	)
+	);
 }
 
 const INPUT =
-	"min-h-11 w-full rounded-lg bg-gray-900 px-3 text-gray-100 ring-1 ring-white/15 placeholder:text-gray-600 focus:ring-2 focus:ring-amber-400 focus:outline-none"
+	"min-h-11 w-full rounded-lg bg-gray-900 px-3 text-gray-100 ring-1 ring-white/15 placeholder:text-gray-600 focus:ring-2 focus:ring-amber-400 focus:outline-none";
 
 const COLORS: Record<string, [string, string, string]> = {
 	amber: ["#fbbf24", "#b45309", "#451a03"],
@@ -464,7 +464,7 @@ const COLORS: Record<string, [string, string, string]> = {
 	sky: ["#38bdf8", "#0369a1", "#082f49"],
 	emerald: ["#34d399", "#047857", "#022c22"],
 	slate: ["#e2e8f0", "#64748b", "#0f172a"],
-}
+};
 
 function PictureChooser({
 	data,
@@ -473,63 +473,63 @@ function PictureChooser({
 	photo,
 	setPhoto,
 }: {
-	data: EditProfileData
-	draft: ProfileSettings
-	set: (patch: Partial<ProfileSettings>) => void
-	photo: string | null
-	setPhoto: (url: string | null) => void
+	data: EditProfileData;
+	draft: ProfileSettings;
+	set: (patch: Partial<ProfileSettings>) => void;
+	photo: string | null;
+	setPhoto: (url: string | null) => void;
 }) {
-	const queryClient = useQueryClient()
-	const [file, setFile] = useState<File | null>(null)
-	const [busy, setBusy] = useState(false)
-	const [error, setError] = useState<string | null>(null)
-	const input = useRef<HTMLInputElement>(null)
+	const queryClient = useQueryClient();
+	const [file, setFile] = useState<File | null>(null);
+	const [busy, setBusy] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const input = useRef<HTMLInputElement>(null);
 	const ring = (on: boolean) =>
-		`ring-offset-2 ring-offset-gray-950 ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"}`
+		`ring-offset-2 ring-offset-gray-950 ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"}`;
 
 	const upload = async (blob: Blob) => {
-		setBusy(true)
-		setError(null)
+		setBusy(true);
+		setError(null);
 		try {
-			const form = new FormData()
+			const form = new FormData();
 			form.append(
 				"photo",
 				blob,
 				blob.type === "image/webp" ? "photo.webp" : "photo.jpg",
-			)
+			);
 			const res = await fetch("/api/profile/avatar", {
 				method: "POST",
 				body: form,
-			})
+			});
 			const out = (await res.json().catch(() => ({}))) as {
-				ok?: boolean
-				url?: string
-				error?: string
-			}
+				ok?: boolean;
+				url?: string;
+				error?: string;
+			};
 			if (!res.ok || !out.ok || !out.url)
-				throw new Error(out.error ?? "Uploading failed. Try again.")
-			setPhoto(out.url)
-			set({ avatar: { kind: "photo" } })
-			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary })
-			setFile(null)
+				throw new Error(out.error ?? "Uploading failed. Try again.");
+			setPhoto(out.url);
+			set({ avatar: { kind: "photo" } });
+			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary });
+			setFile(null);
 		} catch (e) {
-			setError(e instanceof Error ? e.message : "Uploading failed. Try again.")
+			setError(e instanceof Error ? e.message : "Uploading failed. Try again.");
 		} finally {
-			setBusy(false)
+			setBusy(false);
 		}
-	}
+	};
 	const remove = async () => {
-		setBusy(true)
+		setBusy(true);
 		try {
-			await fetch("/api/profile/avatar", { method: "DELETE" })
-			setPhoto(null)
-			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary })
+			await fetch("/api/profile/avatar", { method: "DELETE" });
+			setPhoto(null);
+			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary });
 			if (draft.avatar.kind === "photo")
-				set({ avatar: { kind: "initial", color: "amber" } })
+				set({ avatar: { kind: "initial", color: "amber" } });
 		} finally {
-			setBusy(false)
+			setBusy(false);
 		}
-	}
+	};
 
 	return (
 		<>
@@ -570,8 +570,9 @@ function PictureChooser({
 					</button>
 				)}
 				{AVATAR_COLORS.map((c) => {
-					const on = draft.avatar.kind === "initial" && draft.avatar.color === c
-					const [from, to, ink] = COLORS[c]
+					const on =
+						draft.avatar.kind === "initial" && draft.avatar.color === c;
+					const [from, to, ink] = COLORS[c];
 					return (
 						<button
 							key={c}
@@ -589,11 +590,11 @@ function PictureChooser({
 						>
 							{data.handle.charAt(0).toUpperCase()}
 						</button>
-					)
+					);
 				})}
 				{data.favorites.map((t) => {
 					const on =
-						draft.avatar.kind === "poster" && draft.avatar.title === t.key
+						draft.avatar.kind === "poster" && draft.avatar.title === t.key;
 					return (
 						<button
 							key={t.key}
@@ -614,7 +615,7 @@ function PictureChooser({
 								/>
 							)}
 						</button>
-					)
+					);
 				})}
 			</div>
 			<div className="flex flex-wrap items-center gap-2">
@@ -624,13 +625,13 @@ function PictureChooser({
 					accept="image/jpeg,image/png,image/webp"
 					className="sr-only"
 					onChange={(e) => {
-						const f = e.target.files?.[0]
-						e.target.value = ""
-						if (!f) return
+						const f = e.target.files?.[0];
+						e.target.value = "";
+						if (!f) return;
 						if (f.size > 20 * 1024 * 1024)
-							return setError("That photo is too large. Pick one under 20 MB.")
-						setError(null)
-						setFile(f)
+							return setError("That photo is too large. Pick one under 20 MB.");
+						setError(null);
+						setFile(f);
 					}}
 				/>
 				<button
@@ -664,7 +665,7 @@ function PictureChooser({
 				/>
 			)}
 		</>
-	)
+	);
 }
 
 function LinksEditor({
@@ -672,20 +673,20 @@ function LinksEditor({
 	set,
 	problems,
 }: {
-	draft: ProfileSettings
-	set: (patch: Partial<ProfileSettings>) => void
-	problems: (string | null)[]
+	draft: ProfileSettings;
+	set: (patch: Partial<ProfileSettings>) => void;
+	problems: (string | null)[];
 }) {
 	const unused = useMemo(
 		() =>
 			LINK_SERVICES.filter((s) => !draft.links.some((l) => l.service === s)),
 		[draft.links],
-	)
+	);
 	return (
 		<>
 			<ul className="flex flex-col gap-2">
 				{draft.links.map((l, i) => {
-					const s = LINK_SERVICE_INFO[l.service]
+					const s = LINK_SERVICE_INFO[l.service];
 					return (
 						<li key={l.service} className="flex flex-col gap-1">
 							<div className="flex items-center gap-2">
@@ -734,7 +735,7 @@ function LinksEditor({
 								<p className="pl-14 text-xs text-rose-300">{problems[i]}</p>
 							)}
 						</li>
-					)
+					);
 				})}
 			</ul>
 			{unused.length > 0 && draft.links.length < MAX_LINKS && (
@@ -755,14 +756,14 @@ function LinksEditor({
 				</div>
 			)}
 		</>
-	)
+	);
 }
 
 function Audiences({
 	visibility,
 }: { visibility: ProfileSettings["visibility"] }) {
 	const by = (a: Audience) =>
-		PARTS.filter((p) => visibility[p.part] === a).map((p) => p.name)
+		PARTS.filter((p) => visibility[p.part] === a).map((p) => p.name);
 	const rows: [string, string[], ReactNode][] = [
 		[
 			"Everyone",
@@ -779,7 +780,7 @@ function Audiences({
 			by("me"),
 			<LockClosedIcon key="o" className="size-4 text-amber-300" aria-hidden />,
 		],
-	]
+	];
 	return (
 		<ul className="flex flex-col gap-1.5">
 			{rows
@@ -793,7 +794,7 @@ function Audiences({
 					</li>
 				))}
 		</ul>
-	)
+	);
 }
 
 function AudiencePicker({
@@ -829,7 +830,7 @@ function AudiencePicker({
 				</button>
 			))}
 		</div>
-	)
+	);
 }
 
 function Group({
@@ -845,7 +846,7 @@ function Group({
 			</div>
 			{children}
 		</section>
-	)
+	);
 }
 
 function Field({
@@ -853,7 +854,7 @@ function Field({
 	hint,
 	children,
 }: { label: string; hint?: string; children: (id: string) => ReactNode }) {
-	const id = useId()
+	const id = useId();
 	return (
 		<div className="flex flex-col gap-1.5">
 			<label htmlFor={id} className="text-sm font-semibold text-gray-200">
@@ -862,5 +863,5 @@ function Field({
 			{children(id)}
 			{hint && <p className="text-xs text-gray-500">{hint}</p>}
 		</div>
-	)
+	);
 }

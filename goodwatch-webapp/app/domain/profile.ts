@@ -53,10 +53,10 @@ export const seesPart = (
 ) => canSee(shell.visibility, part, shell.viewer)
 
 /**
- * Profiles went public on this release (owner decision Q1). Members whose handle predates it get the
+ * Profiles went public with the release deployed on October 23, 2026 (owner decision Q1). Members whose handle predates it get the
  * "GoodWatch has profiles now" strip (Q16); members who claim a handle later chose a public profile knowingly.
  */
-export const PROFILE_PUBLIC_SINCE = "2026-10-24T00:00:00Z"
+export const PROFILE_PUBLIC_SINCE = "2026-10-23T02:30:00Z"
 
 /**
  * Whether a member still gets the "GoodWatch has profiles now" strip: their handle predates the release and they

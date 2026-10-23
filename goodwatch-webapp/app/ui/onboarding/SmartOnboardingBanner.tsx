@@ -3,62 +3,70 @@ import {
 	SparklesIcon,
 	XMarkIcon,
 	ExclamationCircleIcon,
-} from "@heroicons/react/24/outline"
-import { motion } from "framer-motion"
-import { useState, useEffect } from "react"
-import { useOnboardingRequired } from "~/routes/api.user-settings.get"
-import { CountryFlag } from "~/ui/country/CountryFlag"
-import { getCountryName } from "~/server/resources/country-names"
-import CountrySelector from "~/ui/onboarding/CountrySelector"
-import StreamingSelector from "~/ui/onboarding/StreamingSelector"
-import { HandlePicker } from "~/ui/share-lists/HandlePicker"
-import { useOnboardingStep } from "~/ui/onboarding/hooks/useOnboardingStep"
-import { useOnboardingActions } from "~/ui/onboarding/hooks/useOnboardingActions"
+} from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { useOnboardingRequired } from "~/routes/api.user-settings.get";
+import { CountryFlag } from "~/ui/country/CountryFlag";
+import { getCountryName } from "~/server/resources/country-names";
+import CountrySelector from "~/ui/onboarding/CountrySelector";
+import StreamingSelector from "~/ui/onboarding/StreamingSelector";
+import { HandlePicker } from "~/ui/share-lists/HandlePicker";
+import { useOnboardingStep } from "~/ui/onboarding/hooks/useOnboardingStep";
+import { useOnboardingActions } from "~/ui/onboarding/hooks/useOnboardingActions";
 import {
 	STRIP_BUTTON,
 	STRIP_QUIET,
 	STRIP_SURFACE,
-} from "~/ui/site-strip/SiteStrip"
+} from "~/ui/site-strip/SiteStrip";
 
 /** `fallback`: the strip to show when onboarding has nothing to ask (ui/site-strip: one strip at a time). */
 export const SmartOnboardingBanner = ({
 	fallback = null,
 }: { fallback?: React.ReactNode }) => {
-	useOnboardingRequired()
-	const { isResolved, currentStep, setCurrentStep, guessedCountry } =
-		useOnboardingStep()
-	const actions = useOnboardingActions(setCurrentStep, guessedCountry)
+	useOnboardingRequired();
+	const {
+		isResolved,
+		nothingToAsk,
+		currentStep,
+		setCurrentStep,
+		guessedCountry,
+	} = useOnboardingStep();
+	const actions = useOnboardingActions(setCurrentStep, guessedCountry);
 
-	const [showCountrySelection, setShowCountrySelection] = useState(false)
+	const [showCountrySelection, setShowCountrySelection] = useState(false);
 
 	// Reset country selection when step changes away from country
 	useEffect(() => {
 		if (currentStep?.type !== "country") {
-			setShowCountrySelection(false)
+			setShowCountrySelection(false);
 		}
-	}, [currentStep?.type])
+	}, [currentStep?.type]);
 
 	const handleConfirmCountry = (countryCode: string) => {
-		actions.confirmCountry(countryCode)
-	}
+		actions.confirmCountry(countryCode);
+	};
 
 	const handleChangeCountry = () => {
-		setShowCountrySelection(true)
-	}
+		setShowCountrySelection(true);
+	};
 
 	const handleStreamingComplete = (streamingProviderIds: string[]) => {
-		actions.completeStreaming(streamingProviderIds)
-	}
+		actions.completeStreaming(streamingProviderIds);
+	};
 
-	if (!isResolved) return null
-	if (!currentStep || actions.isDismissed) return <>{fallback}</>
+	if (!isResolved) return null;
+	// The fallback waits until onboarding is known to be done (or put off), so it never flashes before a step.
+	if (actions.isDismissed || (!currentStep && nothingToAsk))
+		return <>{fallback}</>;
+	if (!currentStep) return null;
 
 	// The phone drawer keeps its dark gradient; desktop uses the site strip.
-	const bgColor = "from-slate-900 via-slate-800 to-slate-900"
-	let content: React.ReactNode = null
+	const bgColor = "from-slate-900 via-slate-800 to-slate-900";
+	let content: React.ReactNode = null;
 
 	if (currentStep.type === "country") {
-		const countryName = getCountryName(currentStep.countryCode)
+		const countryName = getCountryName(currentStep.countryCode);
 		content = showCountrySelection ? (
 			<div className="w-full">
 				<p className="text-white font-bold text-sm md:text-base mb-3">
@@ -102,7 +110,7 @@ export const SmartOnboardingBanner = ({
 					</button>
 				</div>
 			</>
-		)
+		);
 	} else if (currentStep.type === "streaming") {
 		content = (
 			<div className="w-full">
@@ -111,7 +119,7 @@ export const SmartOnboardingBanner = ({
 				</p>
 				<StreamingSelector onSelect={handleStreamingComplete} />
 			</div>
-		)
+		);
 	} else if (currentStep.type === "handle") {
 		content = (
 			<div className="flex w-full flex-col gap-3 md:flex-row md:items-start md:gap-8">
@@ -139,7 +147,7 @@ export const SmartOnboardingBanner = ({
 					/>
 				</div>
 			</div>
-		)
+		);
 	} else if (currentStep.type === "complete") {
 		content = (
 			<>
@@ -172,7 +180,7 @@ export const SmartOnboardingBanner = ({
 					</button>
 				</div>
 			</>
-		)
+		);
 	}
 
 	return (
@@ -217,5 +225,5 @@ export const SmartOnboardingBanner = ({
 				</motion.div>
 			</div>
 		</>
-	)
-}
+	);
+};

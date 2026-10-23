@@ -88,6 +88,8 @@ export const useOnboardingStep = () => {
 
 	return {
 		isResolved: settingsFetched,
+		// Known at once, unlike `currentStep` (set by the effect): nothing left to ask, so another strip may show.
+		nothingToAsk: settingsFetched && onboardingCompleted && needsHandle === false,
 		currentStep,
 		setCurrentStep,
 		guessedCountry,
