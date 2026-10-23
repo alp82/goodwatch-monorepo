@@ -20,7 +20,7 @@ export const OUTCOME_LABELS: Record<
 	unmatched: { label: "Not in the GoodWatch catalog" },
 	unsupported: {
 		label: "Not supported",
-		hint: "Episodes, shorts, games and other types GoodWatch doesn't rate.",
+		hint: "Shorts, games and other types GoodWatch doesn't rate.",
 	},
 	invalid: { label: "Rows we couldn't read" },
 }
@@ -169,7 +169,13 @@ function Items({
 }
 
 function Item({ item }: { item: ImdbImportItem }) {
-	const details = [item.year, item.titleType].filter(Boolean).join(" · ")
+	const details = [
+		item.episode ? `S${item.episode.season} E${item.episode.number}` : null,
+		item.year,
+		item.titleType,
+	]
+		.filter(Boolean)
+		.join(" · ")
 	return (
 		<li className="flex flex-col gap-0.5 text-sm">
 			<div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">

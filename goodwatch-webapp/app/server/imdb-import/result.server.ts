@@ -13,6 +13,7 @@ import {
 	ratingEntry,
 	resultTitleKey,
 	skippedEntry,
+	undoneEntry,
 } from "~/domain/import-result"
 import { resultApi } from "../imports/result-catalog.server.ts"
 import { MAX_ROWS } from "./file.server"
@@ -32,6 +33,10 @@ interface ResultRow {
 	prior_score: number | null
 	applied_score: number | null
 	undo_outcome: StoredUndoOutcome | null
+	/** 'episode_rating' for an episode row (#759); NULL for a title rating. */
+	kind: string | null
+	season_number: number | null
+	episode_number: number | null
 }
 
 const SKIPPED: ImdbImportOutcome[] = ["unmatched", "unsupported", "invalid"]
@@ -43,11 +48,13 @@ function entryOf(
 	row: ResultRow,
 ): ImportResultEntry | null {
 	const label = exportLabel(row.title ?? row.imdb_id ?? "", row.year)
+	const episode = row.kind === "episode_rating"
+	const kind = episode ? "episode_rating" : "rating"
 	if (SKIPPED.includes(row.outcome) || row.apply_state === "failed")
 		return operation === "import"
 			? skippedEntry(
 					Number(row.row_index),
-					"rating",
+					kind,
 					label,
 					row.apply_state === "failed"
 						? FAILED_REASON
@@ -68,6 +75,33 @@ function entryOf(
 		row.apply_state === "added" ||
 		row.apply_state === "updated" ||
 		row.apply_state === "undone"
+	if (written && applied !== null && episode) {
+		const part = `S${number(row.season_number)} E${number(row.episode_number)}`
+		const prior = number(row.prior_score)
+		if (operation === "import")
+			return {
+				key,
+				title,
+				change: {
+					type: "episode-rating-added",
+					part,
+					score: applied,
+					from: prior,
+				},
+			}
+		return (
+			undoneEntry(key, title, "episode_rating", row.undo_outcome) ?? {
+				key,
+				title,
+				change: {
+					type: "episode-rating-removed",
+					part,
+					score: applied,
+					restored: prior,
+				},
+			}
+		)
+	}
 	if (written && applied !== null)
 		return ratingEntry(
 			operation,
@@ -82,12 +116,10 @@ function entryOf(
 		outcome: row.outcome,
 		applyState: row.apply_state,
 		keepConflicts,
-		kind: "rating",
+		kind,
 		current: number(row.current_score),
 	})
-	return reason
-		? { key, title, change: { type: "kept", kind: "rating", reason } }
-		: null
+	return reason ? { key, title, change: { type: "kept", kind, reason } } : null
 }
 
 const api = resultApi(select, async (userId, id) => {
@@ -99,7 +131,7 @@ const api = resultApi(select, async (userId, id) => {
 			: null,
 		build: async (): Promise<ImportResult> => {
 			const rows = await select<ResultRow>(
-				`SELECT row_index, imdb_id, title, year, outcome, reason, tmdb_id, media_type, current_score, apply_state, prior_score, applied_score, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? ORDER BY row_index LIMIT ${MAX_ROWS}`,
+				`SELECT row_index, imdb_id, title, year, outcome, reason, tmdb_id, media_type, current_score, apply_state, prior_score, applied_score, undo_outcome, kind, season_number, episode_number FROM doc.user_import_item WHERE import_id = ? AND user_id = ? ORDER BY row_index LIMIT ${MAX_ROWS}`,
 				[id, userId],
 			)
 			return groupImportResult(

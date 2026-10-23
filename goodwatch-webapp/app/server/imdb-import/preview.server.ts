@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto"
 import type { ImdbImportSummary } from "~/domain/imdb-import"
 import { canonicalTitleId } from "~/utils/title-identity"
 import { catalogRef, type ClassifiedRow, classifyRows, countOutcomes, titleRef } from "./classify.server"
+import { readEpisodeScores, readLastAppliedEpisodes, resolveImdbEpisodes } from "./episodes.server"
 import { type FileRow, type ImportMediaType, readRatingsFile } from "./file.server"
 import {
 	chunks,
@@ -63,7 +64,7 @@ async function readScores(userId: string): Promise<Map<string, number>> {
 async function readLastApplied(userId: string): Promise<Map<string, number>> {
 	const rows = await select<{ tmdb_id: number; media_type: ImportMediaType; applied_score: number }>(
 		`SELECT tmdb_id, media_type, applied_score FROM doc.user_import_item
-		 WHERE user_id = ? AND apply_state IN ('added', 'updated')
+		 WHERE user_id = ? AND apply_state IN ('added', 'updated') AND (kind IS NULL OR kind <> 'episode_rating')
 		 ORDER BY applied_at ASC LIMIT ${MAX_APPLIED}`,
 		[userId],
 	)
@@ -88,6 +89,12 @@ const ITEM_COLUMNS = [
 	"tmdb_id",
 	"media_type",
 	"current_score",
+	// Episode rows (#759): what the score is for, and the stored score the preview saw.
+	"kind",
+	"season_number",
+	"episode_number",
+	"episode_tmdb_id",
+	"payload",
 ]
 
 async function insertItems(importId: string, userId: string, rows: ClassifiedRow[]) {
@@ -111,6 +118,19 @@ async function insertItems(importId: string, userId: string, rows: ClassifiedRow
 				row.tmdbId,
 				row.tmdbId === null ? null : row.mediaType,
 				row.currentScore,
+				row.episode ? "episode_rating" : null,
+				row.matchedEpisode?.season ?? null,
+				row.matchedEpisode?.number ?? null,
+				row.matchedEpisode?.episodeTmdbId ?? null,
+				row.matchedEpisode
+					? JSON.stringify({
+							scoreScope: "episode",
+							season: row.matchedEpisode.season,
+							episode: row.matchedEpisode.number,
+							episodeTmdbId: row.matchedEpisode.episodeTmdbId,
+							_preview: row.preview ?? null,
+						})
+					: null,
 			]),
 		)
 	let next = 0
@@ -139,8 +159,18 @@ export async function createPreview(userId: string, fileName: string, csv: strin
 	const rows = readRatingsFile(csv)
 	// First, so missing import tables are reported before any other work.
 	const lastApplied = await readLastApplied(userId)
-	const [catalog, scores] = await Promise.all([lookupCatalog(rows), readScores(userId)])
-	const classified = classifyRows(rows, { catalog, scores, lastApplied })
+	// A file without episode rows reads no episode scores, so it sends exactly what it did before #759.
+	const hasEpisodes = rows.some((row) => row.episode)
+	const [catalog, scores, episodeScores, lastAppliedEpisodes] = await Promise.all([
+		lookupCatalog(rows),
+		readScores(userId),
+		hasEpisodes ? readEpisodeScores(userId) : Promise.resolve(new Map()),
+		hasEpisodes ? readLastAppliedEpisodes(userId) : Promise.resolve(new Map<string, number>()),
+	])
+	// Episode rows are matched only once their scores can be saved.
+	const episodeIds = rows.filter((row) => row.episode && !row.problem).map((row) => row.imdbId)
+	const episodes = episodeScores && episodeIds.length ? await resolveImdbEpisodes(episodeIds) : new Map()
+	const classified = classifyRows(rows, { catalog, scores, lastApplied, episodes, episodeScores, lastAppliedEpisodes })
 	const counts = countOutcomes(classified)
 
 	await discardPreviews(userId)

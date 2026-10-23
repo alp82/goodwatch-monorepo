@@ -93,3 +93,29 @@ it("custom-list uploads keep the source list title from the filename in an edita
 	assert.equal(result.sent[0].body.listName, "My source discoveries")
 	assert.equal(result.sent[0].body.listKind, "custom-list")
 })
+
+it("an IMDb ratings preview says how many rows are episode scores and that they stay with their episodes", () => {
+	const output = execFileSync(
+		"node_modules/.bin/vite-node",
+		[
+			"--config",
+			"app/ui/imports/source-import-test-vite.config.ts",
+			"app/ui/imports/imdb-episode-preview-render.test-support.tsx",
+		],
+		{ encoding: "utf8" },
+	)
+	const html = JSON.parse(output.split("__IMDB_EPISODES__").at(-1) ?? "")
+	assert.match(
+		html.two,
+		/Movies, shows and episodes are imported\. Shorts and games are not\./,
+	)
+	assert.match(
+		html.two,
+		/2 rows are episode scores\. Each stays with its episode, never becomes a rating of the show, and doesn&#x27;t mark the episode watched\./,
+	)
+	assert.match(
+		html.one,
+		/1 row is an episode score\. It stays with its episode,/,
+	)
+	assert.doesNotMatch(html.none, /data-episode-scores/)
+})

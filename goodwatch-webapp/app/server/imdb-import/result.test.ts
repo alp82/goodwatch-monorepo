@@ -32,6 +32,13 @@ class FakeCrate {
 				this.row.id === params[0] ? [{ ...this.row, read_at: Date.now() }] : [],
 			)
 		const tail = (from: number) => params.slice(from).map(Number)
+		// Episode rows (#759) have their own tests (episodes.test.ts); this import has none.
+		if (
+			s.startsWith(
+				"SELECT row_index, tmdb_id, payload, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND kind = 'episode_rating'",
+			)
+		)
+			return done([])
 		if (
 			s.startsWith(
 				"SELECT row_index, tmdb_id, media_type, prior_score, applied_score, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND apply_state IN ('added', 'updated')",
@@ -46,7 +53,7 @@ class FakeCrate {
 			)
 		if (
 			s.startsWith(
-				"SELECT row_index, imdb_id, title, year, outcome, reason, tmdb_id, media_type, current_score, apply_state, prior_score, applied_score, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? ORDER BY row_index",
+				"SELECT row_index, imdb_id, title, year, outcome, reason, tmdb_id, media_type, current_score, apply_state, prior_score, applied_score, undo_outcome, kind, season_number, episode_number FROM doc.user_import_item WHERE import_id = ? AND user_id = ? ORDER BY row_index",
 			)
 		)
 			return done(

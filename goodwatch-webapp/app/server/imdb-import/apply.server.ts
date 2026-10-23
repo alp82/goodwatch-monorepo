@@ -21,7 +21,11 @@ import {
 //   the score's watch is written where a movie now has a score and no watch, and removed where the score went.
 //   A watch the member logged is never touched. Settling again writes nothing, so it runs before the items are
 //   marked and a run that broke off settles them again.
+// - Episode rows (#759) write the member's episode score to user_episode_score, one row at a time through the
+//   shared import journal (imports/episode-score-apply.server.ts), after the titles. They never touch user_score, the
+//   movie rule, Taste or the fingerprint count.
 import type { StoredUndoOutcome } from "~/domain/import-result"
+import type { ImportItem } from "~/domain/imports"
 import type {
 	ImdbConflictChoice,
 	ImdbImportCounts,
@@ -34,6 +38,10 @@ import { settleMovies } from "~/server/tracking.server"
 import { resetUserDataCache } from "~/server/userData.server"
 import { CrateTimeoutError } from "~/utils/crate"
 import { titleKey } from "~/utils/title-key"
+import {
+	applyImportedEpisodeScore,
+	undoImportedEpisodeScore,
+} from "../imports/episode-score-apply.server.ts"
 import { titleRef } from "./classify.server"
 import { ImdbImportError, type ImportMediaType, MAX_ROWS } from "./file.server"
 import {
@@ -92,7 +100,53 @@ interface Pending {
 	/** The member's rating when the preview was made: null means insert, a score means update from it. */
 	current_score: number | null
 }
+/** An episode row the import still has to write. Its payload holds the target and the score the preview saw. */
+interface PendingEpisode {
+	row_index: number
+	tmdb_id: number
+	imdb_score: number
+	payload: string | null
+}
 type ApplyState = "added" | "updated" | "kept" | "failed"
+
+/** The journal item the shared episode score writer reads, from an episode row of this import. */
+const episodeItem = (row: {
+	row_index: number
+	tmdb_id: number
+	imdb_score?: number
+	payload: string | null
+}) => {
+	const payload = JSON.parse(row.payload ?? "{}") as Record<string, unknown>
+	return {
+		...(payload as Partial<ImportItem>),
+		key: `imdb:episode:${row.row_index}`,
+		kind: "episode_rating" as const,
+		mediaType: "show" as const,
+		title: "",
+		year: null,
+		imdbId: null,
+		outcome: "new" as const,
+		reason: null,
+		index: Number(row.row_index),
+		tmdbId: Number(row.tmdb_id),
+		...(row.imdb_score === undefined ? {} : { score: Number(row.imdb_score) }),
+		payload,
+	}
+}
+
+/** Writes one episode score; a row that throws is tried again on resume. */
+async function applyEpisode(
+	userId: string,
+	importId: string,
+	row: PendingEpisode,
+): Promise<ApplyState> {
+	try {
+		return await applyImportedEpisodeScore(userId, importId, episodeItem(row))
+	} catch (error) {
+		console.error(`IMDb import ${importId}: an episode score failed:`, error)
+		return "failed"
+	}
+}
 type Tally = Record<ApplyState, number>
 
 function groupBy<T>(list: T[], key: (item: T) => string): T[][] {
@@ -255,7 +309,7 @@ async function countWithoutFingerprint(
 	if (!snapshot) return null
 	const rows = await select<{ tmdb_id: number; media_type: ImportMediaType }>(
 		`SELECT tmdb_id, media_type FROM doc.user_import_item
-		 WHERE import_id = ? AND apply_state IN ('added', 'updated') LIMIT ${MAX_ROWS}`,
+		 WHERE import_id = ? AND apply_state IN ('added', 'updated') AND kind IS NULL LIMIT ${MAX_ROWS}`,
 		[importId],
 	)
 	return rows.filter(
@@ -297,6 +351,8 @@ function startHeartbeat(importId: string) {
 /** The background task. Picks up whatever the import hasn't settled yet, so starting and resuming are the same. */
 async function applyStored(userId: string, importId: string) {
 	let wrote = false
+	// Only title ratings change Taste and the caches that follow it; episode scores don't.
+	let wroteTitles = false
 	const stopHeartbeat = startHeartbeat(importId)
 	try {
 		const row = await getImportRow(userId, importId)
@@ -316,6 +372,13 @@ async function applyStored(userId: string, importId: string) {
 		const pending = await select<Pending>(
 			`SELECT row_index, tmdb_id, media_type, imdb_score, current_score FROM doc.user_import_item
 			 WHERE import_id = ? AND outcome IN ('new', 'update'${useImdb ? ", 'conflict'" : ""})
+			   AND (apply_state IS NULL OR apply_state = 'failed') AND kind IS NULL
+			 ORDER BY row_index LIMIT ${MAX_ROWS}`,
+			[importId],
+		)
+		const episodes = await select<PendingEpisode>(
+			`SELECT row_index, tmdb_id, imdb_score, payload FROM doc.user_import_item
+			 WHERE import_id = ? AND kind = 'episode_rating' AND outcome IN ('new', 'update'${useImdb ? ", 'conflict'" : ""})
 			   AND (apply_state IS NULL OR apply_state = 'failed')
 			 ORDER BY row_index LIMIT ${MAX_ROWS}`,
 			[importId],
@@ -323,7 +386,7 @@ async function applyStored(userId: string, importId: string) {
 		// Rows that failed last time are tried again, so they start uncounted.
 		const tally = { ...(await readTally(importId)), failed: 0 }
 		const total = Number(row.total)
-		let processed = Math.max(0, total - pending.length)
+		let processed = Math.max(0, total - pending.length - episodes.length)
 		const report = () =>
 			run(
 				"UPDATE doc.user_import SET processed = ?, added = ?, updated = ?, kept = ?, failed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
@@ -340,8 +403,22 @@ async function applyStored(userId: string, importId: string) {
 
 		for (const batch of chunks(pending, APPLY_BATCH)) {
 			wrote = true
+			wroteTitles = true
 			const states = await applyBatch(userId, stamp, batch)
 			await settleImportedMovies(userId, batch)
+			await recordStates(importId, states)
+			for (const state of states.values()) tally[state]++
+			processed += batch.length
+			await report()
+		}
+		for (const batch of chunks(episodes, APPLY_BATCH)) {
+			wrote = true
+			const states = new Map<number, ApplyState>()
+			for (const episode of batch)
+				states.set(
+					Number(episode.row_index),
+					await applyEpisode(userId, importId, episode),
+				)
 			await recordStates(importId, states)
 			for (const state of states.values()) tally[state]++
 			processed += batch.length
@@ -400,7 +477,7 @@ async function applyStored(userId: string, importId: string) {
 		)
 	} finally {
 		await refreshImports().catch(() => null)
-		if (wrote) await ratingsChanged(userId)
+		if (wrote && wroteTitles) await ratingsChanged(userId)
 	}
 }
 
@@ -515,6 +592,34 @@ async function recordUndoOutcomes(
 const undoing = new Set<string>()
 
 /**
+ * Takes back the import's episode scores, one at a time through the shared journal: a score the member changed or
+ * removed after the import is left as it is, and an earlier score comes back with its dates. Rows an interrupted Undo
+ * already settled keep their outcome.
+ */
+async function undoEpisodes(userId: string, importId: string) {
+	const rows = await select<{
+		row_index: number
+		tmdb_id: number
+		payload: string | null
+		undo_outcome: StoredUndoOutcome | null
+	}>(
+		`SELECT row_index, tmdb_id, payload, undo_outcome FROM doc.user_import_item
+		 WHERE import_id = ? AND kind = 'episode_rating' AND apply_state IN ('added', 'updated') LIMIT ${MAX_ROWS}`,
+		[importId],
+	)
+	const outcomes: [number, StoredUndoOutcome][] = []
+	for (const row of rows) {
+		if (row.undo_outcome && row.undo_outcome !== "reverting") continue
+		const outcome = await undoImportedEpisodeScore(userId, importId, {
+			...episodeItem(row),
+			undoOutcome: row.undo_outcome ?? null,
+		})
+		outcomes.push([Number(row.row_index), outcome])
+	}
+	await recordUndoOutcomes(importId, outcomes)
+}
+
+/**
  * Takes back what a finished import wrote, where the member hasn't changed it since: a rating that still holds the
  * imported score goes back to what it was, or is removed if there was none and no review has been written for it.
  */
@@ -529,13 +634,17 @@ async function undoImportStored(
 	if (undoing.has(importId))
 		throw new ImdbImportError(409, "This import is already being undone.")
 	undoing.add(importId)
+	// Only title ratings change Taste and the caches that follow it; until known, assume they do.
+	let titles = true
 	try {
 		await Promise.all([refreshItems(), refreshScores()])
 		const written = await select<Written>(
 			`SELECT row_index, tmdb_id, media_type, prior_score, applied_score, undo_outcome FROM doc.user_import_item
-			 WHERE import_id = ? AND apply_state IN ('added', 'updated') LIMIT ${MAX_ROWS}`,
+			 WHERE import_id = ? AND apply_state IN ('added', 'updated') AND kind IS NULL LIMIT ${MAX_ROWS}`,
 			[importId],
 		)
+		titles = written.length > 0
+		await undoEpisodes(userId, importId)
 		// Rows an earlier, interrupted Undo already settled keep their outcome. Before writing, a rating that isn't the
 		// imported one any more was changed or removed by the member; one already as before is this Undo's own work
 		// only where an earlier run marked it.
@@ -639,7 +748,7 @@ async function undoImportStored(
 		await Promise.all([refreshItems(), refreshImports()])
 	} finally {
 		undoing.delete(importId)
-		await ratingsChanged(userId)
+		if (titles) await ratingsChanged(userId)
 	}
 	return summarize(await getImportRow(userId, importId))
 }

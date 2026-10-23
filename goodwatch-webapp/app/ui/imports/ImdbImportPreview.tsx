@@ -77,9 +77,18 @@ export function ImdbImportPreview({
 
 			<div className="flex flex-col gap-1 text-sm text-gray-400">
 				<p>
-					Movies and shows are imported. Episodes, shorts and games are not.
+					Movies, shows and episodes are imported. Shorts and games are not.
 				</p>
 				<p>Rated titles count as Seen. No watch date is added.</p>
+				{(counts.episodes ?? 0) > 0 && (
+					<p data-episode-scores>
+						{counts.episodes === 1
+							? "1 row is an episode score. It stays with its episode"
+							: `${formatCount(counts.episodes ?? 0)} rows are episode scores. Each stays with its episode`}
+						, never becomes a rating of the show, and doesn't mark the episode
+						watched.
+					</p>
+				)}
 			</div>
 
 			{counts.conflict > 0 && (

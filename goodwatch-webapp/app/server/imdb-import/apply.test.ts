@@ -62,6 +62,12 @@ class FakeCrate {
 		if (statement.startsWith("UPDATE doc.user_import SET "))
 			return this.updateImport(statement, [...params])
 
+		// The file has no episode rows (#759).
+		if (
+			statement.startsWith("SELECT row_index") &&
+			statement.includes("kind = 'episode_rating'")
+		)
+			return { json: [] }
 		if (statement.startsWith("SELECT row_index")) {
 			const pending = this.itemState === null || this.itemState === "failed"
 			return {

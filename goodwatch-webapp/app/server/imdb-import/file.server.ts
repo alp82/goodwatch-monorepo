@@ -43,8 +43,10 @@ export interface FileRow {
 	/** The member's rating, 1 to 10, or null when the row has none. */
 	score: number | null
 	dateRated: string | null
-	/** Where to look the title up, or null when the row can't be imported. */
+	/** Where to look the title up, or null when the row can't be imported or is an episode. */
 	mediaType: ImportMediaType | null
+	/** A "TV Episode" row: the member's score for one episode, matched by its IMDb ID (#759). */
+	episode?: true
 	/** Why the row can't be imported. Null for a row that goes on to matching. */
 	problem: { outcome: "invalid" | "unsupported"; reason: string } | null
 }
@@ -120,8 +122,8 @@ export function parseCsv(text: string): string[][] {
 
 const MOVIE_TYPES = new Set(["movie", "tvmovie", "video", "tvspecial"])
 const SHOW_TYPES = new Set(["tvseries", "tvminiseries"])
+const EPISODE_TYPE = "tvepisode"
 const UNSUPPORTED_TYPES = new Set([
-	"tvepisode",
 	"short",
 	"tvshort",
 	"videogame",
@@ -194,6 +196,7 @@ export function readRatingsFile(text: string): FileRow[] {
 			: SHOW_TYPES.has(type)
 				? "show"
 				: null
+		const episode = type === EPISODE_TYPE
 
 		let problem: FileRow["problem"] = null
 		if (!imdbId)
@@ -203,13 +206,13 @@ export function readRatingsFile(text: string): FileRow[] {
 				outcome: "invalid",
 				reason: "The IMDb ID isn't a title ID like tt0133093.",
 			}
-		else if (!mediaType)
+		else if (!mediaType && !episode)
 			problem = {
 				outcome: "unsupported",
 				reason: !titleType
 					? "The row has no title type."
 					: UNSUPPORTED_TYPES.has(type)
-						? `GoodWatch rates movies and shows, not titles of the type "${titleType}".`
+						? `GoodWatch rates movies, shows and episodes, not titles of the type "${titleType}".`
 						: `GoodWatch doesn't know the title type "${titleType}".`,
 			}
 		else if (score === null)
@@ -230,6 +233,7 @@ export function readRatingsFile(text: string): FileRow[] {
 			score,
 			dateRated: /^\d{4}-\d{2}-\d{2}$/.test(dateRated) ? dateRated : null,
 			mediaType: problem ? null : mediaType,
+			...(episode && !problem ? { episode: true as const } : {}),
 			problem,
 		}
 	})

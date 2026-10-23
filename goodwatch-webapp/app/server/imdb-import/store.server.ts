@@ -160,8 +160,12 @@ interface ItemRow {
 	tmdb_id: number | null
 	media_type: ImportMediaType | null
 	current_score: number | null
+	kind?: string | null
+	season_number?: number | null
+	episode_number?: number | null
 }
-const ITEM_COLUMNS = "imdb_id, title, year, title_type, raw_rating, imdb_score, date_rated, outcome, reason, tmdb_id, media_type, current_score"
+const ITEM_COLUMNS =
+	"imdb_id, title, year, title_type, raw_rating, imdb_score, date_rated, outcome, reason, tmdb_id, media_type, current_score, kind, season_number, episode_number"
 
 /** One page of an import's rows in file order, all of them or those with one outcome. */
 export async function listItems(
@@ -193,6 +197,10 @@ export async function listItems(
 			tmdbId: item.tmdb_id === null ? null : Number(item.tmdb_id),
 			mediaType: item.media_type,
 			currentScore: item.current_score === null ? null : Number(item.current_score),
+			episode:
+				item.kind === "episode_rating" && item.season_number != null && item.episode_number != null
+					? { season: Number(item.season_number), number: Number(item.episode_number) }
+					: null,
 		})),
 	}
 }

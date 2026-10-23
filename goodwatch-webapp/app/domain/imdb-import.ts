@@ -17,7 +17,8 @@ export type ImdbConflictChoice = "keep" | "imdb"
 
 /**
  * What the import does with one row of the file. Every row has exactly one outcome,
- * so the counts always add up to the number of rows in the file.
+ * so the counts always add up to the number of rows in the file. A "TV Episode" row is the member's score of one
+ * episode (#759): it follows the same outcomes against their episode score, never against the show's rating.
  */
 export const IMDB_IMPORT_OUTCOMES = [
 	// No GoodWatch rating yet: the IMDb rating is added.
@@ -28,9 +29,10 @@ export const IMDB_IMPORT_OUTCOMES = [
 	"unchanged",
 	// GoodWatch has a different rating the member set or removed themselves. Follows the conflict choice.
 	"conflict",
-	// The IMDb ID isn't in the GoodWatch catalog.
+	// The IMDb ID isn't in the GoodWatch catalog, or names an episode GoodWatch can't place in its episode list.
 	"unmatched",
-	// A title type GoodWatch doesn't rate, such as an episode, a short or a game.
+	// A title type GoodWatch doesn't rate, such as a short or a game. Also an episode while GoodWatch can't save
+	// season and episode scores yet.
 	"unsupported",
 	// The row can't be read: no IMDb ID, no rating from 1 to 10, or the same title twice with different ratings.
 	"invalid",
@@ -41,6 +43,8 @@ export type ImdbImportOutcome = (typeof IMDB_IMPORT_OUTCOMES)[number]
 export type ImdbImportCounts = Record<ImdbImportOutcome, number> & {
 	/** Data rows in the file. Equals the sum of the outcomes. */
 	rows: number
+	/** Of the rows, episodes matched to a GoodWatch episode (#759). Absent on previews made before episode scores. */
+	episodes?: number
 }
 
 /** What a finished or running import has written so far. */
@@ -93,8 +97,13 @@ export interface ImdbImportItem {
 	reason: string | null
 	tmdbId: number | null
 	mediaType: "movie" | "show" | null
-	/** The member's GoodWatch rating when the preview was made. */
+	/** The member's GoodWatch rating when the preview was made; for an episode, their score of that episode. */
 	currentScore: number | null
+	/**
+	 * A "TV Episode" row matched to a GoodWatch episode (#759): its season and number in GoodWatch's episode list.
+	 * tmdbId and mediaType are then the show's. The score is the member's episode score, never the show's rating.
+	 */
+	episode?: { season: number; number: number } | null
 }
 
 // POST /api/imdb-import/preview, JSON body. Parses, matches and stores a preview. Writes no ratings.

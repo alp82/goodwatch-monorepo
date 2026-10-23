@@ -159,3 +159,29 @@ it("retains an ambiguous custom-list Created date without claiming a new wish wi
 		"02/03/24",
 	)
 })
+
+it("keeps TV Episode ratings as episode rows with their IMDb ID and score, and still leaves shorts out", () => {
+	const rows = readRatingsFile(
+		[
+			"Const,Your Rating,Date Rated,Title,Title Type,Year",
+			"tt9000001,9,2021-01-02,Winter Is Coming,TV Episode,2011",
+			"tt9000002,,2021-01-02,No rating,TV Episode,2011",
+			"tt9000003,8,2021-01-02,A short,Short,2011",
+		].join("\n"),
+	)
+	assert.deepEqual(
+		rows.map((row) => [
+			row.imdbId,
+			row.episode,
+			row.mediaType,
+			row.score,
+			row.problem?.outcome,
+		]),
+		[
+			["tt9000001", true, null, 9, undefined],
+			["tt9000002", undefined, null, null, "invalid"],
+			["tt9000003", undefined, null, 8, "unsupported"],
+		],
+	)
+	assert.match(rows[2].problem?.reason ?? "", /movies, shows and episodes/)
+})
