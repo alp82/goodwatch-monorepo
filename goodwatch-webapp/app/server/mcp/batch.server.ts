@@ -106,11 +106,11 @@ export interface Ports {
 	restorePartScore(input: {
 		user_id: string
 		tmdb_id: number
-		season: number
-		episode?: number
-		expected: { score: number | null; updatedAt: string | null }
+		/** The part's key in user_episode_score: the same episode even after TMDB renumbers it. */
+		key: string
+		expected: { score: number; updatedAt: string }
 		score: number | null
-	}): Promise<"restored" | "changed">
+	}): Promise<"restored" | "changed" | "already">
 	deleteMovieWatch(
 		userId: string,
 		movieId: number,
@@ -543,12 +543,21 @@ export async function runBatch(
 					}
 				: {}),
 			changes,
-			// Undo puts this part's score back while it is still what `part_written` says, and the result names it.
+			// Undo puts this part's score back, by its key, while it is still what `part_written` says. A clear, or a
+			// write that wasn't confirmed, leaves nothing to recognize it by: Undo isn't offered, and the result says so.
 			...(part
 				? {
 						part: partText(part),
 						part_target: part,
-						...(written ? { part_written: written } : {}),
+						...(written?.score != null && written.updatedAt
+							? { part_written: written }
+							: changes.part_score
+								? {
+										undo_note: written
+											? "Undo can't put back a cleared season or episode score."
+											: "This score's write wasn't confirmed, so Undo can't put back the earlier score.",
+									}
+								: {}),
 					}
 				: {}),
 			// Undo puts a removed Wishlist entry back in its old place.
@@ -630,8 +639,9 @@ const receiptItem = z.object({
 		.optional(),
 	part_written: z
 		.object({
-			score: z.number().int().min(1).max(10).nullable(),
-			updatedAt: z.string().max(40).nullable(),
+			key: z.string().regex(/^(s|e)\d{1,10}$/),
+			score: z.number().int().min(1).max(10),
+			updatedAt: z.string().max(40),
 		})
 		.optional(),
 	undo: z
@@ -711,7 +721,13 @@ export async function undoBatch(
 	})
 	const outcomes = new Map<
 		number,
-		{ skipped: string[]; failed: boolean; notes: string[] }
+		{
+			skipped: string[]
+			failed: boolean
+			notes: string[]
+			/** A part score Undo put back: [what the batch left, what it is now]. */
+			part?: [unknown, unknown]
+		}
 	>()
 	let wrote = false
 	let tasteWrite = false
@@ -719,11 +735,12 @@ export async function undoBatch(
 		for (const { item, title, current } of rows) {
 			const changes = item.changes ?? {}
 			const removed = new Set<string>()
-			const result = {
-				skipped: [] as string[],
-				failed: false,
-				notes: [] as string[],
-			}
+			const result: {
+				skipped: string[]
+				failed: boolean
+				notes: string[]
+				part?: [unknown, unknown]
+			} = { skipped: [], failed: false, notes: [] }
 			outcomes.set(item.index, result)
 			// What to do with one mark the batch changed: nothing, put it back, or keep the member's newer value.
 			const field = (
@@ -803,33 +820,35 @@ export async function undoBatch(
 					} else if (state === "changed") result.skipped.push("status")
 				}
 				// 3. A season or episode score (#759), apart from the title's score.
-				// Only while the part is still exactly what the batch's write left, checked and written in one optimistic
-				// step: a change made elsewhere since, even the same score set again, stays (#759 review).
-				const oldPart = was("part_score")
-				if (
-					changes.part_score &&
-					item.part_target &&
-					(oldPart === null ||
+				// Only while the part is still exactly what the batch's write left, by its key, checked and written in one
+				// optimistic step: a change made elsewhere since, even the same score set again, stays (#759 review).
+				const partChange = changes.part_score
+				if (partChange && item.part_target) {
+					const oldPart = partChange[0]
+					if (!item.part_written)
+						result.notes.push(
+							partChange[1] === null
+								? "Undo can't put back a cleared season or episode score. Set it again with rate_title."
+								: "This score's write wasn't confirmed, so Undo can't tell it from a later change. Set it again with rate_title.",
+						)
+					else if (
+						oldPart === null ||
 						(typeof oldPart === "number" &&
 							Number.isInteger(oldPart) &&
 							oldPart >= 1 &&
-							oldPart <= 10))
-				) {
-					// Without a record of the write (it failed part way), nothing proves the score is still its own.
-					const expected = item.part_written ?? {
-						score: changes.part_score[1] as number | null,
-						updatedAt: null,
-					}
-					if (field("part_score") !== "same") {
+							oldPart <= 10)
+					) {
 						const restored = await ports.restorePartScore({
 							user_id: userId,
 							tmdb_id: title.tmdb_id,
-							...item.part_target,
-							expected,
+							key: item.part_written.key,
+							expected: item.part_written,
 							score: oldPart,
 						})
-						if (restored === "restored") wrote = true
-						else result.skipped.push("part_score")
+						if (restored === "restored") {
+							wrote = true
+							result.part = [item.part_written.score, oldPart]
+						} else if (restored === "changed") result.skipped.push("part_score")
 					}
 				}
 				// 3. The score.
@@ -921,10 +940,11 @@ export async function undoBatch(
 		}
 		const changes = item.changes ?? {}
 		const all = now ? changesOf(current, now) : {}
-		// A part score item reports only its part, as the batch did.
-		const undone = item.part_target
-			? all.part_score
-				? { part_score: all.part_score }
+		// A part score item reports only its part, from what Undo did by the part's key: the title's read names the
+		// part by season and episode, which a renumbering may have moved.
+		const undone: Partial<Record<Mark, [unknown, unknown]>> = item.part_target
+			? outcome.part
+				? { part_score: outcome.part }
 				: {}
 			: all
 		const base = {
@@ -957,6 +977,8 @@ export async function undoBatch(
 			(key) =>
 				changes[key] !== undefined &&
 				!outcome.skipped.includes(key) &&
+				// A part's undo is judged by its key above, not by the title's read.
+				!(key === "part_score" && item.part_target) &&
 				markOf(now, key) !== changes[key]?.[0],
 		)
 		const nothingDone = !Object.keys(undone).length

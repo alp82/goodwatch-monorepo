@@ -139,22 +139,36 @@ function fakeLibrary() {
 		movieDeletes: [] as string[],
 		partScores: [] as { key: string; score: number | null }[],
 	}
-	/** Season and episode scores, apart from the title's own score: `user|show:id|season|episode`. */
+	/** Season and episode scores, apart from the title's own score: `user|show:id|<store key>`. */
 	const parts = new Map<string, number>()
+	/** TMDB episode ids by `show|season|episode`; renumbering moves an id to new coordinates. */
+	const episodeIds = new Map<string, number>()
+	const idOf = (showId: number, season: number, episode: number) =>
+		episodeIds.get(`${showId}|${season}|${episode}`) ?? season * 100 + episode
+	/** The part's key as user_episode_score has it: "s<season>", or "e<TMDB episode id>". */
+	const storeKey = (
+		showId: number,
+		part: { season: number; episode?: number },
+	) =>
+		part.episode === undefined
+			? `s${part.season}`
+			: `e${idOf(showId, part.season, part.episode)}`
 	/** Each part score's version: the time its last write stamped, as user_episode_score keeps it. */
 	const stamps = new Map<string, string>()
 	let clock = 0
 	const stamp = () =>
 		new Date(Date.UTC(2026, 9, 24, 0, 0, 0, ++clock)).toISOString()
 	/** Runs right after a batch writes a part score, as another tab changing it at that moment would. */
-	const hooks: { afterPartWrite: (() => void) | null } = {
-		afterPartWrite: null,
-	}
+	const hooks: {
+		afterPartWrite: (() => void) | null
+		/** The part write lands, then the call fails, so no record of the write comes back. */
+		failAfterPartWrite: boolean
+	} = { afterPartWrite: null, failAfterPartWrite: false }
 	const partKey = (
 		userId: string,
 		showId: number,
 		part: { season: number; episode?: number },
-	) => `${userId}|show:${showId}|${part.season}|${part.episode ?? ""}`
+	) => `${userId}|show:${showId}|${storeKey(showId, part)}`
 	let deferring = false
 	const keyOf = (
 		userId: string,
@@ -322,10 +336,18 @@ function fakeLibrary() {
 					stamps.set(key, updatedAt)
 				}
 				hooks.afterPartWrite?.()
+				if (hooks.failAfterPartWrite) throw new Error("Read-back failed")
 				return {
 					removedWatchId: null,
 					event: null,
-					part_written: { score: args.score ?? null, updatedAt },
+					part_written: {
+						key: storeKey(title.tmdb_id, {
+							season: args.season,
+							episode: args.episode,
+						}),
+						score: args.score ?? null,
+						updatedAt,
+					},
 				}
 			} else if (name === "rate_title") {
 				marks.score = args.score ?? null
@@ -427,21 +449,12 @@ function fakeLibrary() {
 			marks.score = score
 			if (media_type === "movie") settleMovie(marks, tmdb_id)
 		},
-		async restorePartScore({
-			user_id,
-			tmdb_id,
-			season,
-			episode,
-			expected,
-			score,
-		}) {
-			const key = partKey(user_id, tmdb_id, { season, episode })
+		async restorePartScore({ user_id, tmdb_id, key: part, expected, score }) {
+			const key = `${user_id}|show:${tmdb_id}|${part}`
 			const now = parts.get(key)
-			const asWritten =
-				expected.score === null
-					? now === undefined
-					: now === expected.score && stamps.get(key) === expected.updatedAt
-			if (!asWritten) return "changed"
+			if (score === null ? now === undefined : now === score) return "already"
+			if (now !== expected.score || stamps.get(key) !== expected.updatedAt)
+				return "changed"
 			calls.partScores.push({ key, score })
 			if (score === null) {
 				parts.delete(key)
@@ -500,7 +513,18 @@ function fakeLibrary() {
 			stamps.set(key, stamp())
 		}
 	}
-	return { ports, calls, set, get, receipts, part, setPart, hooks }
+	/** TMDB renumbers an episode: its id moves to new coordinates, and a new episode takes the old place. */
+	const renumber = (
+		showId: number,
+		season: number,
+		from: number,
+		to: number,
+	) => {
+		const id = idOf(showId, season, from)
+		episodeIds.set(`${showId}|${season}|${to}`, id)
+		episodeIds.set(`${showId}|${season}|${from}`, 9000 + from)
+	}
+	return { ports, calls, set, get, receipts, part, setPart, hooks, renumber }
 }
 
 const write = (
@@ -1294,8 +1318,8 @@ test("A rate_title batch scores several episodes of one show, refuses the same p
 	assert.equal(lib.part(ME, 3002, 2), null)
 	assert.equal(lib.get(ME, "show:3001").score, null)
 	assert.deepEqual(lib.calls.partScores, [
-		{ key: `${ME}|show:3001|1|2`, score: null },
-		{ key: `${ME}|show:3002|2|`, score: null },
+		{ key: `${ME}|show:3001|e102`, score: null },
+		{ key: `${ME}|show:3002|s2`, score: null },
 	])
 })
 
@@ -1370,10 +1394,12 @@ test("A part score names an aired season or episode of a show in TMDB's numberin
 	// The write answers with what it left: its score and the time it stamped.
 	assert.deepEqual(
 		await writePartScore("m", show, { season: 1, episode: 2 }, 9, deps),
-		{ written: { score: 9, updatedAt: "2026-10-24T00:00:00.000Z" } },
+		{
+			written: { key: "e502", score: 9, updatedAt: "2026-10-24T00:00:00.000Z" },
+		},
 	)
 	assert.deepEqual(await writePartScore("m", show, { season: 1 }, 8, deps), {
-		written: { score: 8, updatedAt: "2026-10-24T00:00:00.000Z" },
+		written: { key: "s1", score: 8, updatedAt: "2026-10-24T00:00:00.000Z" },
 	})
 	assert.deepEqual(sets, [
 		[{ scope: "episode", episodeTmdbId: 502 }, 9],
@@ -1423,28 +1449,26 @@ test("A part score names an aired season or episode of a show in TMDB's numberin
 		null,
 	)
 	assert.deepEqual(asked, ["e502", "s1"])
-	// Undo resolves the same part, aired or not by now, and hands the store what the write left.
+	// Undo goes by the part's key, never by season and episode again, and hands the store what the write left.
 	const left = { score: 9, updatedAt: "2026-10-24T00:00:00.000Z" }
 	unavailable = false
 	assert.equal(
-		await restorePartScore("m", show, { season: 2, episode: 1 }, left, 4, deps),
+		await restorePartScore("m", show, "e601", left, 4, deps),
 		"restored",
 	)
-	assert.deepEqual(restores, [
-		[{ scope: "episode", episodeTmdbId: 601 }, left, 4],
-	])
+	assert.deepEqual(restores, [["e601", left, 4]])
 	assert.match(
 		(
 			(await restorePartScore(
 				"m",
-				show,
-				{ season: 1, episode: 9 },
+				{ media_type: "movie", tmdb_id: 1000 },
+				"s1",
 				left,
 				4,
 				deps,
 			)) as { refused: string }
 		).refused,
-		/no such episode/,
+		/movie has no seasons/,
 	)
 })
 
@@ -1510,4 +1534,105 @@ test("Undo of a batch part score leaves the same score set again elsewhere, and 
 	)
 	assert.equal(lib.part(ME, 3001, 1, 1), 8)
 	assert.equal(lib.part(ME, 3001, 1, 2), null)
+})
+
+const undoItems = (undone: Record<string, unknown>) =>
+	(
+		undone.items as {
+			status: string
+			kept?: string[]
+			notes?: string[]
+		}[]
+	).map((each) => [each.status, each.kept ?? null, each.notes ?? null])
+
+test("Undo doesn't offer to put back a part score the batch cleared, and the receipt says so (#759 review)", async () => {
+	const lib = fakeLibrary()
+	lib.setPart(ME, 3001, 1, 2, 4)
+	const result = await write(lib, "rate_title", {
+		action_id: "part-clear",
+		items: [{ title_id: "show:3001", season: 1, episode: 2, score: null }],
+	})
+	const [item] = itemsOf(result) as unknown as {
+		status: string
+		changes: unknown
+		part_written?: unknown
+		undo_note?: string
+	}[]
+	assert.equal(item.status, "done")
+	assert.deepEqual(item.changes, { part_score: [4, null] })
+	assert.equal(item.part_written, undefined)
+	assert.match(item.undo_note ?? "", /can't put back a cleared/)
+	// Another tab sets 9, then clears it: Undo must not bring back 4.
+	lib.setPart(ME, 3001, 1, 2, 9)
+	lib.setPart(ME, 3001, 1, 2, null)
+	const undone = await write(lib, "undo_watch", {
+		action_id: "undo-part-clear",
+		batch_id: "part-clear",
+	})
+	assert.deepEqual(undoItems(undone), [
+		[
+			"not_undoable",
+			null,
+			[
+				"Undo can't put back a cleared season or episode score. Set it again with rate_title.",
+			],
+		],
+	])
+	assert.equal(lib.part(ME, 3001, 1, 2), null)
+	assert.deepEqual(lib.calls.partScores, [])
+})
+
+test("Undo doesn't offer to put back a part score whose write wasn't confirmed (#759 review)", async () => {
+	const lib = fakeLibrary()
+	lib.setPart(ME, 3001, 1, 2, 4)
+	lib.hooks.failAfterPartWrite = true
+	const result = await write(lib, "rate_title", {
+		action_id: "part-unconfirmed",
+		items: [{ title_id: "show:3001", season: 1, episode: 2, score: 8 }],
+	})
+	lib.hooks.failAfterPartWrite = false
+	const [item] = itemsOf(result) as unknown as {
+		status: string
+		part_written?: unknown
+		undo_note?: string
+	}[]
+	assert.equal(item.status, "done")
+	assert.equal(item.part_written, undefined)
+	assert.match(item.undo_note ?? "", /wasn't confirmed/)
+	const undone = await write(lib, "undo_watch", {
+		action_id: "undo-part-unconfirmed",
+		batch_id: "part-unconfirmed",
+	})
+	assert.deepEqual(undoItems(undone), [
+		[
+			"not_undoable",
+			null,
+			[
+				"This score's write wasn't confirmed, so Undo can't tell it from a later change. Set it again with rate_title.",
+			],
+		],
+	])
+	assert.equal(lib.part(ME, 3001, 1, 2), 8)
+})
+
+test("Undo puts a part score back on the episode the batch scored, also after TMDB renumbers it (#759 review)", async () => {
+	const lib = fakeLibrary()
+	lib.setPart(ME, 3001, 1, 2, 4)
+	await write(lib, "rate_title", {
+		action_id: "part-renumbered",
+		items: [{ title_id: "show:3001", season: 1, episode: 2, score: 8 }],
+	})
+	// The scored episode becomes S1 E5; a new episode takes S1 E2 and gets its own score.
+	lib.renumber(3001, 1, 2, 5)
+	lib.setPart(ME, 3001, 1, 2, 7)
+	const undone = await write(lib, "undo_watch", {
+		action_id: "undo-part-renumbered",
+		batch_id: "part-renumbered",
+	})
+	assert.deepEqual(undoItems(undone), [["undone", null, null]])
+	assert.equal(lib.part(ME, 3001, 1, 5), 4)
+	assert.equal(lib.part(ME, 3001, 1, 2), 7)
+	assert.deepEqual((undone.items as { changes?: unknown }[])[0].changes, {
+		part_score: [8, 4],
+	})
 })

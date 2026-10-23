@@ -322,30 +322,30 @@ export async function setPartScore(
 	}
 }
 
-/** What one write left in the row: its score and the time it stamped; null and null after a clear. */
+/** What one write left in the row: its score and the time it stamped. A clear leaves nothing to recognize. */
 export interface WrittenEpisodeScore {
-	score: number | null
-	updatedAt: string | null
+	score: number
+	updatedAt: string
 }
 
 /**
- * Undo of one write (MCP batches): puts `restore` back, but only while the row is still exactly what that write
- * left, and through an optimistic write, so a change made elsewhere after it, even one landing during this call,
- * stays. "changed" when it did; then nothing is written.
+ * Undo of one write (MCP batches), by the part's key, so a renumbered episode is still the one it scored: puts
+ * `restore` back (null removes the score the write added), but only while the row is still exactly what that
+ * write left, and through an optimistic write, so a change made elsewhere since, even one landing during this
+ * call, stays. "changed" when it did; "already" when the row is already as `restore`. A clear can't be undone
+ * here: an absent row doesn't say whose clear it is (#759 review).
  */
 export async function restoreEpisodeScore(
 	userId: string,
 	showId: number,
-	requested: RequestedEpisodeScoreTarget,
+	key: string,
 	expected: WrittenEpisodeScore,
 	restore: number | null,
-): Promise<"restored" | "changed"> {
+): Promise<"restored" | "changed" | "already"> {
 	if (restore !== null && !isEpisodeScore(restore))
 		throw new EpisodeScoreTargetError("A score is a whole number from 1 to 10.")
 	const show = canonicalTitleId("show", showId)
 	try {
-		const target = await resolveTarget(show, requested)
-		const key = episodeScoreKey(target)
 		const [row] = await db.select<{
 			score: number
 			updated_at: Date | string | number
@@ -355,52 +355,25 @@ export async function restoreEpisodeScore(
 			"SELECT score, updated_at, _seq_no, _primary_term FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ?",
 			[userId, show, key],
 		)
-		const asWritten =
-			expected.score === null
-				? !row
-				: !!row &&
-					Number(row.score) === expected.score &&
-					new Date(row.updated_at).toISOString() === expected.updatedAt
-		if (!asWritten) return "changed"
-		const now = new Date()
-		let result: { rowcount?: number }
-		if (!row) {
-			if (restore === null) return "restored"
-			result = await db.run(
-				"INSERT INTO user_episode_score (user_id,tmdb_id,score_key,scope,season_number,episode_number,episode_tmdb_id,ranges,label,score,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (user_id,tmdb_id,score_key) DO NOTHING",
-				[
-					userId,
-					show,
-					key,
-					target.scope,
-					target.season,
-					target.scope === "episode" ? target.episode : null,
-					target.scope === "episode" ? target.episodeTmdbId : null,
-					null,
-					null,
-					restore,
-					now,
-					now,
-				],
-			)
-		} else if (restore === null)
-			result = await db.run(
-				"DELETE FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ? AND _seq_no = ? AND _primary_term = ?",
-				[userId, show, key, Number(row._seq_no), Number(row._primary_term)],
-			)
-		else
-			result = await db.run(
-				"UPDATE user_episode_score SET score = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND score_key = ? AND _seq_no = ? AND _primary_term = ?",
-				[
-					restore,
-					now,
-					userId,
-					show,
-					key,
-					Number(row._seq_no),
-					Number(row._primary_term),
-				],
-			)
+		if (restore === null ? !row : row && Number(row.score) === restore)
+			return "already"
+		if (
+			!row ||
+			Number(row.score) !== expected.score ||
+			new Date(row.updated_at).toISOString() !== expected.updatedAt
+		)
+			return "changed"
+		const version = [Number(row._seq_no), Number(row._primary_term)]
+		const result =
+			restore === null
+				? await db.run(
+						"DELETE FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ? AND _seq_no = ? AND _primary_term = ?",
+						[userId, show, key, ...version],
+					)
+				: await db.run(
+						"UPDATE user_episode_score SET score = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND score_key = ? AND _seq_no = ? AND _primary_term = ?",
+						[restore, new Date(), userId, show, key, ...version],
+					)
 		return result.rowcount ? "restored" : "changed"
 	} catch (error) {
 		if (isMissingEpisodeScoreTable(error)) throw new EpisodeScoresUnavailable()

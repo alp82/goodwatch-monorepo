@@ -205,18 +205,18 @@ test("one score is read by its whole key, and none before the migration", async 
 })
 
 const EPISODE = { scope: "episode" as const, episodeTmdbId: 62086 }
-/** What one write set, as an undo records it. */
-const written = (result: Awaited<ReturnType<typeof setEpisodeScore>>) => ({
-	score: result.score?.score ?? null,
-	updatedAt: result.score?.updatedAt ?? null,
-})
+/** What one write left, as a batch receipt keeps it: the part's key, its score and the time it stamped. */
+const written = (result: Awaited<ReturnType<typeof setEpisodeScore>>) => {
+	assert.ok(result.score, "the write left a score")
+	return { score: result.score.score, updatedAt: result.score.updatedAt }
+}
 
 test("an undo puts the earlier score back only while the row is still what its write set (#759 review)", async () => {
 	const db = fake()
 	await setEpisodeScore("member", SHOW, EPISODE, 4)
 	const ours = written(await setEpisodeScore("member", SHOW, EPISODE, 8))
 	assert.equal(
-		await restoreEpisodeScore("member", SHOW, EPISODE, ours, 4),
+		await restoreEpisodeScore("member", SHOW, "e62086", ours, 4),
 		"restored",
 	)
 	assert.equal((await getEpisodeScore("member", SHOW, "e62086"))?.score, 4)
@@ -225,7 +225,7 @@ test("an undo puts the earlier score back only while the row is still what its w
 	const cleared = written(await setEpisodeScore("member", SHOW, EPISODE, 8))
 	db.changeElsewhere("e62086", null)
 	assert.equal(
-		await restoreEpisodeScore("member", SHOW, EPISODE, cleared, 4),
+		await restoreEpisodeScore("member", SHOW, "e62086", cleared, 4),
 		"changed",
 	)
 	assert.equal(await getEpisodeScore("member", SHOW, "e62086"), null)
@@ -235,7 +235,7 @@ test("an undo puts the earlier score back only while the row is still what its w
 	const same = written(await setEpisodeScore("member", SHOW, EPISODE, 8))
 	db.changeElsewhere("e62086", 8, new Date(Date.now() + 1000))
 	assert.equal(
-		await restoreEpisodeScore("member", SHOW, EPISODE, same, 4),
+		await restoreEpisodeScore("member", SHOW, "e62086", same, 4),
 		"changed",
 	)
 	assert.equal((await getEpisodeScore("member", SHOW, "e62086"))?.score, 8)
@@ -246,31 +246,49 @@ test("an undo puts the earlier score back only while the row is still what its w
 		if (sql.startsWith("UPDATE")) db.changeElsewhere("e62086", 2)
 	}
 	assert.equal(
-		await restoreEpisodeScore("member", SHOW, EPISODE, raced, 4),
+		await restoreEpisodeScore("member", SHOW, "e62086", raced, 4),
 		"changed",
 	)
 	db.beforeWrite = null
 	assert.equal((await getEpisodeScore("member", SHOW, "e62086"))?.score, 2)
 })
 
-test("an undo of a clear puts the score back only while it's still gone", async () => {
+test("an undo works on the part's key: a renumbered episode keeps its score, and the episode now at its old place is untouched (#759 review)", async () => {
 	const db = fake()
-	await setEpisodeScore("member", SHOW, EPISODE, 6)
-	const ours = written(await setEpisodeScore("member", SHOW, EPISODE, null))
-	assert.deepEqual(ours, { score: null, updatedAt: null })
+	const ours = written(await setEpisodeScore("member", SHOW, EPISODE, 8))
+	// TMDB renumbers: 62086 becomes S1 E3, and a new episode takes S1 E2 and gets its own score.
+	Object.assign(db.episodes.find((x) => x.tmdb_id === 62086) ?? {}, {
+		episode_number: 3,
+	})
+	db.addEpisode(SHOW, 62099, 1, 2)
+	await setEpisodeScore(
+		"member",
+		SHOW,
+		{ scope: "episode", episodeTmdbId: 62099 },
+		5,
+	)
 	assert.equal(
-		await restoreEpisodeScore("member", SHOW, EPISODE, ours, 6),
+		await restoreEpisodeScore("member", SHOW, "e62086", ours, null),
 		"restored",
 	)
-	assert.equal((await getEpisodeScore("member", SHOW, "e62086"))?.score, 6)
-	await setEpisodeScore("member", SHOW, EPISODE, null)
-	await setEpisodeScore("member", SHOW, EPISODE, 3)
+	assert.equal(await getEpisodeScore("member", SHOW, "e62086"), null)
+	assert.equal((await getEpisodeScore("member", SHOW, "e62099"))?.score, 5)
+})
+
+test("an undo finds a score already as before and changes nothing", async () => {
+	const db = fake()
+	const ours = written(await setEpisodeScore("member", SHOW, EPISODE, 8))
+	db.changeElsewhere("e62086", null)
 	assert.equal(
-		await restoreEpisodeScore("member", SHOW, EPISODE, ours, 6),
-		"changed",
+		await restoreEpisodeScore("member", SHOW, "e62086", ours, null),
+		"already",
 	)
-	assert.equal((await getEpisodeScore("member", SHOW, "e62086"))?.score, 3)
-	assert.equal(db.scores.length, 1)
+	await setEpisodeScore("member", SHOW, EPISODE, 4)
+	assert.equal(
+		await restoreEpisodeScore("member", SHOW, "e62086", ours, 4),
+		"already",
+	)
+	assert.equal((await getEpisodeScore("member", SHOW, "e62086"))?.score, 4)
 })
 
 test("editing a part that was removed meanwhile says it's gone instead of saved (#759 review)", async () => {

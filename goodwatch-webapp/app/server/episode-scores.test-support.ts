@@ -132,30 +132,6 @@ export class EpisodeScoreFakeDb {
 			)
 		if (
 			s ===
-			"INSERT INTO user_episode_score (user_id,tmdb_id,score_key,scope,season_number,episode_number,episode_tmdb_id,ranges,label,score,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (user_id,tmdb_id,score_key) DO NOTHING"
-		) {
-			if (at(0)) return { rowcount: 0 }
-			const [user_id, tmdb_id, score_key] = params
-			this.scores.push({
-				user_id,
-				tmdb_id,
-				score_key,
-				scope: params[3],
-				season_number: params[4],
-				episode_number: params[5],
-				episode_tmdb_id: params[6],
-				ranges: params[7],
-				label: params[8],
-				score: params[9],
-				created_at: params[10],
-				updated_at: params[11],
-				_seq_no: ++this.version,
-				_primary_term: 1,
-			})
-			return { rowcount: 1 }
-		}
-		if (
-			s ===
 			"UPDATE user_episode_score SET score = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND score_key = ? AND _seq_no = ? AND _primary_term = ?"
 		) {
 			const row = at(2)

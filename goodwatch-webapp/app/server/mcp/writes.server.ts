@@ -78,18 +78,11 @@ export const liveWritePorts: WritePorts = {
 	readReceipt: readActionResult,
 	updateScores: (input) =>
 		updateScores({ ...input, score: input.score as Score | null }),
-	async restorePartScore({
-		user_id,
-		tmdb_id,
-		season,
-		episode,
-		expected,
-		score,
-	}) {
+	async restorePartScore({ user_id, tmdb_id, key, expected, score }) {
 		const result = await restorePartScore(
 			user_id,
 			{ media_type: "show", tmdb_id },
-			{ season, ...(episode !== undefined ? { episode } : {}) },
+			key,
 			expected,
 			score,
 		)

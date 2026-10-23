@@ -102,12 +102,11 @@ type PartScoreTarget =
 	| { scope: "season"; season: number }
 	| { scope: "episode"; episodeTmdbId: number }
 
-/** The stored part a rate_title call names; a refusal when there is none. A write also needs it to have aired. */
+/** The aired part a rate_title call names; a refusal when there is none. */
 async function partScoreTarget(
 	title: ShowRef,
 	part: PartTarget,
 	deps: PartDeps,
-	requireAired: boolean,
 ): Promise<PartScoreTarget | { refused: string }> {
 	if (title.media_type !== "show")
 		return {
@@ -118,7 +117,7 @@ async function partScoreTarget(
 		(row) => row.season_number === part.season,
 	)
 	const aired = (row: { air_date: number | null }) =>
-		!requireAired || (row.air_date !== null && row.air_date <= deps.now())
+		row.air_date !== null && row.air_date <= deps.now()
 	if (part.episode === undefined) {
 		if (!inSeason.some(aired))
 			return { refused: "This season has no aired episodes yet." }
@@ -140,8 +139,18 @@ const refusalOf = (error: unknown) => {
 }
 
 /**
- * Sets or clears a part score; answers with a refusal, or with what the write left (its score and the time it
- * stamped), which a batch keeps so its Undo can tell its own write from a later change.
+ * What a part score write left: the part's key in user_episode_score ("s<season>", or "e<TMDB episode id>", which
+ * stays the same episode when TMDB renumbers it), its score, and the time it stamped. A clear has score and time null.
+ */
+export interface PartWrite {
+	key: string
+	score: number | null
+	updatedAt: string | null
+}
+
+/**
+ * Sets or clears a part score; answers with a refusal, or with what the write left, which a batch keeps so its Undo
+ * can tell its own write from a later change.
  */
 export async function writePartScore(
 	userId: string,
@@ -149,13 +158,17 @@ export async function writePartScore(
 	part: PartTarget,
 	score: number | null,
 	deps: PartDeps = livePartDeps,
-): Promise<{ refused: string } | { written: WrittenEpisodeScore }> {
-	const target = await partScoreTarget(title, part, deps, true)
+): Promise<{ refused: string } | { written: PartWrite }> {
+	const target = await partScoreTarget(title, part, deps)
 	if ("refused" in target) return target
 	try {
 		const result = await deps.set(userId, title.tmdb_id, target, score)
 		return {
 			written: {
+				key:
+					target.scope === "season"
+						? `s${target.season}`
+						: `e${target.episodeTmdbId}`,
 				score: result.score?.score ?? null,
 				updatedAt: result.score?.updatedAt ?? null,
 			},
@@ -166,21 +179,21 @@ export async function writePartScore(
 }
 
 /**
- * Batch Undo of a part score: puts `score` back only while the part is still exactly what the batch's write left.
- * "changed" when it was changed since; a refusal when the part can't be found.
+ * Batch Undo of a part score, by the part's key: puts `score` back only while the part is still exactly what the
+ * batch's write left. "changed" when it was changed since, "already" when it's already as `score`.
  */
 export async function restorePartScore(
 	userId: string,
 	title: ShowRef,
-	part: PartTarget,
+	key: string,
 	expected: WrittenEpisodeScore,
 	score: number | null,
 	deps: PartDeps = livePartDeps,
-): Promise<"restored" | "changed" | { refused: string }> {
-	const target = await partScoreTarget(title, part, deps, false)
-	if ("refused" in target) return target
+): Promise<"restored" | "changed" | "already" | { refused: string }> {
+	if (title.media_type !== "show")
+		return { refused: "A movie has no seasons or episodes." }
 	try {
-		return await deps.restore(userId, title.tmdb_id, target, expected, score)
+		return await deps.restore(userId, title.tmdb_id, key, expected, score)
 	} catch (error) {
 		return refusalOf(error)
 	}
@@ -257,7 +270,7 @@ export type TitleWrite =
 			removedWatchId: string | null
 			event: ShowAction["event"]["type"] | null
 			/** A part score's write: what it left, for a batch's receipt and Undo. */
-			part_written?: WrittenEpisodeScore
+			part_written?: PartWrite
 	  }
 
 /**
@@ -276,7 +289,7 @@ export async function applyTitleWrite(
 ): Promise<TitleWrite> {
 	let removedWatchId: string | null = null
 	let appliedEvent: ShowAction["event"]["type"] | null = null
-	let partWritten: WrittenEpisodeScore | undefined
+	let partWritten: PartWrite | undefined
 	const part = partOf(name, args)
 	if (part) {
 		if (args.score === undefined)

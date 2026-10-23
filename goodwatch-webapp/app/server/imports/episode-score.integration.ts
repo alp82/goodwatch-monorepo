@@ -206,29 +206,28 @@ test("a score is read back by its key right after it's written, before any refre
 	assert.equal(await getEpisodeScore("fresh", SHOW, "e62161"), null)
 })
 
-test("an undo restores the earlier score only while the row is still exactly what its write left", async () => {
+test("an undo restores the earlier score by its key only while the row is still exactly what its write left", async () => {
 	const episode = { scope: "episode" as const, episodeTmdbId: 62161 }
 	await setEpisodeScore("undo", SHOW, episode, 4)
 	const ours = await setEpisodeScore("undo", SHOW, episode, 8)
-	const left = {
-		score: ours.score?.score ?? null,
-		updatedAt: ours.score?.updatedAt ?? null,
-	}
+	assert.ok(ours.score)
+	const left = { score: ours.score.score, updatedAt: ours.score.updatedAt }
 	// Crate keeps the stamp to the millisecond, so the write is recognized as its own.
 	assert.equal(
-		await restoreEpisodeScore("undo", SHOW, episode, left, 4),
+		await restoreEpisodeScore("undo", SHOW, "e62161", left, 4),
 		"restored",
 	)
 	assert.equal((await getEpisodeScore("undo", SHOW, "e62161"))?.score, 4)
 	const again = await setEpisodeScore("undo", SHOW, episode, 8)
+	assert.ok(again.score)
 	// Another page clears it: the clear stays.
 	await setEpisodeScore("undo", SHOW, episode, null)
 	assert.equal(
 		await restoreEpisodeScore(
 			"undo",
 			SHOW,
-			episode,
-			{ score: 8, updatedAt: again.score?.updatedAt ?? null },
+			"e62161",
+			{ score: 8, updatedAt: again.score.updatedAt },
 			4,
 		),
 		"changed",
