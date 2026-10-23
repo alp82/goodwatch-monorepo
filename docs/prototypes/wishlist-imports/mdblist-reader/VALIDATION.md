@@ -1,6 +1,6 @@
 # MDBList Watchlist reader: validation (#711)
 
-Status on October 19, 2026: **synthetic fixture only.** The real-account run waits on a personal API key from the owner. Gates are in [GATES.md](GATES.md), committed in `1d25a29b` before the reader existed.
+Status on October 23, 2026: **synthetic fixture and one real account.** See [Real-account run](#real-account-run-october-23-2026). Gates are in [GATES.md](GATES.md), committed in `1d25a29b` before the reader existed.
 
 ## What was tested
 
@@ -39,3 +39,31 @@ Not measured: real cursor placement, whether real show rows carry `ids`, whether
 - **The key is a full-access key.** MDBList personal keys aren't read-only. The reader only sends GET to one route, but nothing on MDBList's side enforces that.
 - **The key travels in the URL** (`?apikey=`), the only documented key method. The reader never prints or stores the URL.
 - **Quota is shared** with the member's other MDBList clients, so a member near the daily limit gets a clear "daily limit" failure, not a partial file.
+
+## Real-account run, October 23, 2026
+
+One consenting owner account, one free-tier key, reader at `adabe897`, run as `reader.mjs --limit 2 --cross-check`. Only aggregate counts and field names are recorded here; the wishlist file stays in `~/goodwatch-private/711/`.
+
+**Reference:** the MDBList Watchlist page shows "Items: 8". The owner listed 8 titles from a screenshot.
+
+| Measure | Result |
+| --- | --- |
+| Rows captured | 8 of 8 (3 movies, 5 shows). All 8 owner-listed titles, no others. The owner read the split as 4 and 4; MDBList files one of the titles as a show. |
+| Coverage | `complete`. Last page had no cursor, `X-Has-More: false` and `pagination.has_more: false`. |
+| Pages | 4 combined pages (2, 2, 2, 2 rows), 3 cursors followed. |
+| Requests | 11 (4 combined + 2 movie + 3 show + 1 season + 1 episode cross-check reads), 0 retries, 851 ms. |
+| Cross-check | 8 identities in both reads, 0 missing either way. Season and episode filters returned 0 rows. |
+| Counts | `pagination.total` = 8 on every page (reader checked). `X-Total-Items` = 8, 3 and 5 for the combined, movie and show reads (checked by hand, not by the reader). `X-Matched-Items` is the row count of the current page. |
+| Identity | Every movie **and** show row has an `ids` object with `ids.tmdb`; the schema's show example is out of date. `id` = `ids.tmdb` on 8 of 8. 7 rows have an IMDb ID; 1 show has only TMDB. |
+| Shipped parser (v1.1, main) | 8 candidates, 0 problems, no coverage warning: 3 movies (TMDB+IMDb), 4 shows (TMDB+IMDb), 1 show (TMDB only). |
+| Rate limit | `X-RateLimit-Limit: 1000`, 989 left after the run, reset at 00:00 UTC. |
+
+**Response envelope:** top level `movies`, `shows`, `pagination`. `pagination` has `has_more`, `limit`, `offset`, `total` and, when more rows exist, `next_cursor`. Headers: `X-Has-More`, `X-Total-Items`, `X-Matched-Items`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`.
+
+**Per-row fields beyond the schema:** `release_date` (day), `status`, `runtime`, `added_at` (null on 8 of 8), `watchlist_at` (millisecond UTC timestamp, present on 8 of 8, 8 distinct values, all in the past), `rating`, `rating_precise`, `last_watched_at` (null on 8 of 8), `total_aired_episodes` (null on 8 of 8).
+
+**Gates on the real run:** G1, G2, G3, G5, G7 and G9 pass. G8 passes by rule (no `addedAt` written), but `watchlist_at` is a strong candidate for a source-added date. G6 was not observed: no season or episode on this Watchlist. G4 was observed live only for 401 (invalid key, October 19). G10: the owner saved the key; the run took one command.
+
+**Watched title outside the Watchlist:** the owner's Breaking Bad season 1 is marked watched in MDBList and sits in Up Next, not on the Watchlist. The reader reads only `/watchlist/items`, so it doesn't see it, as intended: watch history isn't Want to See. `last_watched_at` is null on all 8 Watchlist rows, so no Watchlist row carries watched evidence in this sample.
+
+**Other observation:** a request from Python's default HTTP client got HTTP 403 with a valid key; the same request with an explicit `User-Agent` returned 200. The reader (Node `fetch`) wasn't affected, but it reports any 403 as a refused key.
