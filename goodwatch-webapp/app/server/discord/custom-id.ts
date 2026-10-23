@@ -50,9 +50,7 @@ export function formatCustomId(
 		throw new Error("Invalid custom ID")
 	return value
 }
-export function parseCustomId(
-	value: string,
-): {
+export function parseCustomId(value: string): {
 	action: CardAction
 	titleId: string
 	back?: ListRef
@@ -134,6 +132,7 @@ export type ListAction =
 	| "discover-share"
 	| "search"
 	| "search-share"
+	| "profile-share"
 
 export function listCustomId(action: ListAction, value: string) {
 	const id = `gw1:${action}:${value}`
@@ -144,7 +143,7 @@ export function listCustomId(action: ListAction, value: string) {
 export function parseListId(id: string) {
 	if (id.length > 100) return null
 	const match =
-		/^gw1:(open|back|person-share|similar-share|hot|hot-share|discover|discover-share|search|search-share):([A-Za-z0-9_:.-]+)$/.exec(
+		/^gw1:(open|back|person-share|similar-share|hot|hot-share|discover|discover-share|search|search-share|profile-share):([A-Za-z0-9_:.-]+)$/.exec(
 			id,
 		)
 	if (!match) return null
@@ -158,6 +157,7 @@ export function parseListId(id: string) {
 	if (action === "back" && !parseListRef(value)) return null
 	if (action === "person-share" && !/^[1-9]\d{0,9}$/.test(value)) return null
 	if (action === "similar-share" && !isTitleId(value)) return null
+	if (action === "profile-share" && !/^[a-z]{1,20}$/.test(value)) return null
 	if (action === "hot" && !new RegExp(`^${PAGE}$`).test(value)) return null
 	if (
 		action === "hot-share" &&

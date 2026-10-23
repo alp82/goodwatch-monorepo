@@ -3,6 +3,7 @@ import {
 	styleChoices,
 	releasedChoices,
 } from "./filter-options.ts"
+import { profileCardChoices } from "./profile-cards.ts"
 type Choice = { name: string; value: string }
 /** Registration is static and can run offline under plain Node. */
 export function defineCommands() {
@@ -187,6 +188,13 @@ export function defineCommands() {
 			options: discover.options.slice(0, 2),
 		},
 		{ name: "next", description: "Next episodes from Watch next", options: [] },
+		{
+			name: "profile",
+			description: "Share your GoodWatch profile",
+			options: [
+				option("card", "Which part of your profile", profileCardChoices()),
+			],
+		},
 	].map((command) => ({
 		...command,
 		type: 1,

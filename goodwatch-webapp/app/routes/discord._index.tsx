@@ -393,6 +393,10 @@ const MEMBER: CommandInfo[] = [
 		name: "/next",
 		does: "See the next episodes of the shows you're watching.",
 	},
+	{
+		name: "/profile",
+		does: "Share your profile card: your fingerprint, taste, scores, and more.",
+	},
 	{ name: "/rate", does: "Rate a title from 1 to 10." },
 	{ name: "/seen", does: "Log that you watched a title today." },
 	{ name: "/unlink", does: "Unlink your GoodWatch account." },
@@ -562,7 +566,9 @@ function Linking() {
 					</p>
 					<p>
 						Only you see your personal answers. When you press Share to channel,
-						the bot posts the card without your personal part. Run{" "}
+						the bot posts the card without your personal part.{" "}
+						<CommandName>/profile</CommandName> shares only the parts of your
+						profile that everyone can see. Run{" "}
 						<CommandName>/unlink</CommandName> any time.
 					</p>
 				</div>

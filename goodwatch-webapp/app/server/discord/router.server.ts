@@ -21,6 +21,11 @@ import {
 	writeConfirmation,
 } from "./member-cards.ts"
 import { discordWrite } from "./writes.server.ts"
+import {
+	isProfileCardChoice,
+	profileReply,
+	type MemberProfile,
+} from "./profile-cards.ts"
 import { parseUndoId } from "./custom-id.ts"
 import {
 	handleTogether,
@@ -139,6 +144,8 @@ export interface Dependencies extends PlaceDependencies {
 	write?: typeof discordWrite
 	storeLinkMessage?: (app: string, token: string) => Promise<string>
 	memberHandle?: (userId: string) => Promise<LinkedIdentity | null>
+	/** The member's profile handle (null without one) and who sees which part, for /profile. */
+	memberProfile?: (userId: string) => Promise<MemberProfile>
 	together?: Partial<TogetherDependencies>
 	linkedUser: (discordId: string) => Promise<string | null>
 	unlink: (target: { byDiscordUserId: string }) => Promise<void>
@@ -191,6 +198,29 @@ const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
 		(await import("./link-message.server.ts")).storeLinkMessage(app, token),
 	memberHandle: async (id) =>
 		(await import("./link-message.server.ts")).memberHandle(id),
+	memberProfile: async (id) => {
+		const [{ getProfileByUserId }, { getUserSettings }, { parseVisibility }] =
+			await Promise.all([
+				import("../share-lists/view.server.ts"),
+				import("../user-settings.server.ts"),
+				import("../../domain/profile.ts"),
+			])
+		// Uncached, so a handle claimed a moment ago counts.
+		const [profile, settings] = await Promise.all([
+			getProfileByUserId(id),
+			getUserSettings({ userId: id }),
+		])
+		let visibility: unknown
+		try {
+			visibility = JSON.parse(settings.profile_visibility ?? "")
+		} catch {
+			visibility = undefined
+		}
+		return {
+			handle: profile?.handle ?? null,
+			visibility: parseVisibility(visibility),
+		}
+	},
 	together: {},
 	linkedUser: async (id) =>
 		(await import("./link.server.ts")).getLinkedUserId(id),
@@ -1267,6 +1297,63 @@ export async function routeInteraction(
 			)
 		}
 
+		// /profile and its Share to channel: always the presser's own profile, never another Discord user's, so the bot
+		// never tells a channel which Discord user is which GoodWatch member.
+		const profileShare = list?.action === "profile-share" ? list.value : null
+		if (
+			(interaction.type === 2 && interaction.data?.name === "profile") ||
+			(interaction.type === 3 && profileShare)
+		) {
+			if (!interaction.application_id || !interaction.token)
+				return reply(textCard("Invalid interaction."), "invalid")
+			const choice = profileShare ?? (options.card || "profile")
+			if (!isProfileCardChoice(choice))
+				return reply(textCard("Choose a card from /profile."), "invalid")
+			const linkReason =
+				"Link your account to share your profile with /profile."
+			const linkUrl = new URL("/discord/link", appOrigin()).href
+			if (profileShare) {
+				// The shared copy is a new public message, so it answers at once; the visibility check runs again because
+				// the member may have hidden the part since the preview. A refusal stays private.
+				const loaded = await within(
+					(async () => {
+						const id = await deps.linkedUser(user)
+						return { id, profile: id ? await deps.memberProfile(id) : null }
+					})(),
+					2000,
+					null,
+				).catch(() => null)
+				if (!loaded)
+					return reply(
+						textCard(
+							"Could not load your profile. Please press Share to channel again.",
+						),
+						"timeout",
+					)
+				memberId = loaded.id
+				if (!loaded.id || !loaded.profile)
+					return reply(linkPromptCard(linkUrl, linkReason), "unlinked")
+				const body = profileReply(loaded.profile, choice, {
+					share: true,
+					origin: appOrigin(),
+				})
+				return reply(body, body.flags & EPHEMERAL ? "refused" : "ok")
+			}
+			return deferred(
+				async () => {
+					// Do not treat a slow link lookup as a guest: a member would get the link prompt.
+					memberId = await deps.linkedUser(user)
+					if (!memberId) return linkPromptCard(linkUrl, linkReason)
+					return profileReply(await deps.memberProfile(memberId), choice, {
+						origin: appOrigin(),
+					})
+				},
+				(body) =>
+					deps.edit(interaction.application_id!, interaction.token!, body),
+				finish,
+				{ type: 5 },
+			)
+		}
 		if (
 			(interaction.type === 2 &&
 				["link", "unlink"].includes(interaction.data?.name ?? "")) ||

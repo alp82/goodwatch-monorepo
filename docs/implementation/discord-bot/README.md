@@ -73,9 +73,31 @@ two-line overview, and where to watch in the viewer's country. Buttons: **Where 
 | Command | Options | Answer |
 |---|---|---|
 | `/next` | none | Next episodes of the shows the member is watching, from Watch next. |
+| `/profile` | `card` (Profile, Taste, Different from the crowd, Sides, Top scores, Seen, Wishlist, Shows, Lists) | The member's own profile card. See [`/profile`](#profile). |
 | `/rate` | `title`, `score` (1-10) | Saves the score. Confirms with **Undo**. |
 | `/seen` | `title` | Logs a watch today. Confirms with **Undo**. |
 | `/unlink` | none | Removes the link after a confirmation. |
+
+### `/profile`
+
+`/profile` shows the member's own profile card: "@handle on GoodWatch", the card image, **Open on GoodWatch**, and
+**Share to channel**. There is no option for another Discord user, because the answer would tell a channel which
+Discord user is which GoodWatch member.
+
+- **Image.** The profile's link-preview card, which draws the profile as a signed-out visitor sees it:
+  `/og/u/<handle>.jpg` for Profile (the fingerprint card) and `/og/u/<handle>/<tab>.jpg` for the tab cards. The
+  address carries `v=`, which changes every minute, because Discord's media proxy keeps an image by its address. The
+  card route ignores the query, so the `og-card` cache still serves it.
+- **Link.** The profile or the tab. Different from the crowd and Sides link to their section of the Taste tab
+  (`/u/<handle>/taste#crowd`, `#sides`) and show the Taste card until their own cards exist. The table is
+  `PROFILE_CARDS` in `app/server/discord/profile-cards.ts`.
+- **Hidden parts.** A tab card needs its part visible to everyone (`canSee` for a guest). Otherwise the answer says so
+  privately and links to Who sees what in Edit profile; the bot never posts a card that would fall back to another.
+  The main card needs no part.
+- **No handle.** A linked member without a handle gets a private answer with a **Pick a handle** button to
+  `/settings/profile`.
+- **Share to channel** loads the presser's own link and profile again and posts the public copy at once, without the
+  share button. A part hidden since the preview is refused privately.
 
 **Personal title cards.** For a linked member, every title card also shows the taste match (50-99 percent and its
 label), whether the member has seen or rated the title, and buttons **Want to see**, **Seen**, and **Rate**. **Rate**
