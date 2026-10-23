@@ -146,9 +146,20 @@ class SitemapRegenerationTests(unittest.TestCase):
 
     def test_real_generator_and_checker_fail_closed(self):
         # Exercise the actual repository logic with a fake DB and HTTP responses.
+        self.run_real_generator(lambda url: 200, 200)
+        self.run_real_generator(lambda url: 404, 404)
+
+    def test_a_failing_profile_is_left_out_not_fatal(self):
+        # A member who hides their scores after the list was read answers noindex: the rest still publishes.
+        files = self.run_real_generator(lambda url: 404 if "/u/" in url else 200, 200, profiles=0)
+        self.assertNotIn(worker.OUTPUT + "sitemap_profiles.xml", files)
+        self.assertNotIn(b"sitemap_profiles.xml", files[worker.OUTPUT + "sitemap.xml"])
+
+    def run_real_generator(self, status_of, status, profiles=1):
         import shutil
         repo = Path(__file__).resolve().parents[2]
-        for status in (200, 404):
+        files = None
+        for status in (status,):
             with self.subTest(status=status), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 for name in worker.SOURCE_FILES:
@@ -162,6 +173,13 @@ class SitemapRegenerationTests(unittest.TestCase):
                 ]))
                 connection = Mock()
                 def execute(sql, *args):
+                    if 'FROM doc.user_profile' in sql:
+                        # One member with a handle and enough public scores (sitemap_profiles.py).
+                        connection.cursor.return_value.fetchall.return_value = [("u1", "amy", 30, 1792713600000)]
+                        return
+                    if 'FROM doc.user_setting' in sql:
+                        connection.cursor.return_value.fetchall.return_value = []
+                        return
                     if 'FROM person_appeared_in' in sql or 'FROM person_worked_on' in sql:
                         connection.cursor.return_value.fetchall.return_value = [
                             (i, j) for i in range(1, 31) for j in (1, 2, 3)]
@@ -182,7 +200,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                         history_class = module.SitemapHistory
                         module.SitemapHistory = lambda directory: history_class(directory, today=generation_day[0])
                     if name == "sitemap_checker":
-                        module.fetch = lambda url: (status, f'<link rel="canonical" href="{url}">', None)
+                        module.fetch = lambda url: (status_of(url), f'<link rel="canonical" href="{url}">', None)
                         module.fetch_robots = lambda: (module.RobotsRules("User-agent: *\nDisallow: /api/\n"), None)
                         module.MIN_DELAY_SECONDS = 0
                     return module
@@ -193,7 +211,8 @@ class SitemapRegenerationTests(unittest.TestCase):
                       patch("builtins.print")):
                     if status == 200:
                         count, files = worker.generate_and_check(root)
-                        self.assertEqual(count, 1134)  # Titles, people, categories, static pages (with the best-of lists) and blog pages.
+                        # Titles, people, categories, static pages (with the best-of lists), blog pages and profiles.
+                        self.assertEqual(count, 1134 + profiles)
                         static = files[worker.OUTPUT + "sitemap_static.xml"].decode()
                         self.assertIn("<loc>https://goodwatch.app/blog</loc>\n    <lastmod>2026-10-12</lastmod>", static)
                         self.assertIn("<loc>https://goodwatch.app/blog/a-post</loc>\n    <lastmod>2026-10-02</lastmod>", static)
@@ -201,7 +220,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                         self.assertEqual(static.count("<lastmod>"), 3)
                         self.assertLess(static.index("/use-with-ai<"), static.index("/blog<"))
                         self.assertLess(static.index("/blog/a-post<"), static.index("/blog/b-post<"))
-                        self.assertEqual(len(files), 8)
+                        self.assertEqual(len(files), 8 + profiles)
                         # Replay from the exact generated artifacts: history and cohort
                         # state must preserve every byte on an unchanged rerun.
                         previous = root / "previous-sitemaps"
@@ -221,6 +240,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                             worker.generate_and_check(root)
                 self.assertEqual(connection.close.call_count, 2 if status == 200 else 1)
                 self.assertEqual(connection.cursor.return_value.close.call_count, 2 if status == 200 else 1)
+        return files
 
 
 if __name__ == "__main__":

@@ -2,15 +2,15 @@
 enough of them that the profile page is indexed (docs/implementation/member-profile/README.md, Q5).
 
 The page decides `indexable` from scores the catalog still has (at least 20, app/server/profile/page.server.ts). A
-score whose title left the catalog still has a row here, so this list asks for a margin above that: a listed URL that
-answers noindex fails the live check and nothing is published."""
+score whose title left the catalog still has a row here, so a listed profile can answer noindex; the Windmill flow
+(f/seo/regenerate_sitemaps.py) leaves profiles that fail the live check out instead of failing the whole publish."""
 import json
 from datetime import date
 from typing import List, Optional, Tuple
 
 BASE_URL = "https://goodwatch.app"
-# INDEX_MIN_SCORES (20) plus a margin for scores whose titles the catalog no longer has.
-MIN_SCORES = 25
+# INDEX_MIN_SCORES in app/server/profile/page.server.ts (owner decision Q5).
+MIN_SCORES = 20
 HANDLE_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_")
 
 

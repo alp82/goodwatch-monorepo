@@ -198,11 +198,22 @@ def create_person_sitemap(crate_cursor, title_ids):
 
 def create_profile_sitemap(crate_cursor):
     """Members' public profiles that are indexed (sitemap_profiles.py)."""
+    return write_profile_sitemap(select_profiles(crate_cursor))
+
+
+def write_profile_sitemap(profiles, skip=frozenset()):
+    """Writes sitemap_profiles.xml from (URL, lastmod) pairs, leaving out the URLs in `skip` (profiles that failed the
+    live check: a member changed their settings or scores since the list was read). An empty URL set fails the live
+    check, so no profiles means no file (and no entry in the index)."""
     filename = "sitemap_profiles.xml"
-    profiles = select_profiles(crate_cursor)
-    # An empty URL set fails the live check, so no profiles means no file (and no entry in the index).
-    lastmod = write_urlset(filename, [url_entry(loc, day) for loc, day in profiles]) if profiles else None
-    return {"total_url_count": len(profiles), "lastmod": lastmod}
+    kept = [(loc, day) for loc, day in profiles if loc not in skip]
+    path = os.path.join(SITEMAP_DIR, filename)
+    if not kept:
+        if os.path.exists(path):
+            os.remove(path)
+        return {"total_url_count": 0, "lastmod": None, "profiles": kept}
+    lastmod = write_urlset(filename, [url_entry(loc, day) for loc, day in kept])
+    return {"total_url_count": len(kept), "lastmod": lastmod, "profiles": kept}
 
 
 def create_master_sitemap_index(file_lastmods: dict):

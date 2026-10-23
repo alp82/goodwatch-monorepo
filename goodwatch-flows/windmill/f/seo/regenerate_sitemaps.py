@@ -13,6 +13,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 import wmill
@@ -99,6 +100,8 @@ def generate_and_check(root):
         generator.prepare_sitemaps(root / "previous-sitemaps")
         # Same workspace variables and connection format as f/db/cratedb.
         connection = None
+        profiles = {"profiles": []}
+        lastmods = {}
         try:
             connection = client.connect(
                 wmill.get_variable("u/Alp/CRATE_HOSTS").split(","),
@@ -116,11 +119,12 @@ def generate_and_check(root):
                     "movie": movies["title_ids"], "show": shows["title_ids"],
                 })
                 profiles = generator.create_profile_sitemap(cursor)
-                generator.create_master_sitemap_index({
+                lastmods = {
                     "movie": movies["lastmod"], "show": shows["lastmod"],
                     "static": static["lastmod"], "categories": categories["lastmod"], "people": people["lastmod"],
                     "profiles": profiles["lastmod"],
-                })
+                }
+                generator.create_master_sitemap_index(lastmods)
             finally:
                 cursor.close()
         except Exception:
@@ -142,6 +146,17 @@ def generate_and_check(root):
             lambda line: print(line, flush=True), robots, warnings,
         )
         print(checker.summary(len(urls), failures, problems, warnings), flush=True)
+        # A member profile that fails (its owner hid their scores or lost some since the list was read) is left out;
+        # it doesn't hold up the rest of the sitemaps.
+        profile_failures = [(url, reason) for url, reason in failures if urlparse(url).path.startswith("/u/")]
+        if profile_failures:
+            for url, reason in profile_failures:
+                print(f"Leaving out profile {url}: {reason}", flush=True)
+            skip = {url for url, _ in profile_failures}
+            lastmods["profiles"] = generator.write_profile_sitemap(profiles["profiles"], skip)["lastmod"]
+            generator.create_master_sitemap_index(lastmods)
+            failures = [failure for failure in failures if failure not in profile_failures]
+            urls = [url for url in urls if url not in skip]
         if failures or problems or not urls:
             raise RuntimeError(f"Sitemap check failed: {len(failures)} URLs, {len(problems)} file problems; nothing committed")
         return len(urls), {OUTPUT + p.name: p.read_bytes() for p in sorted(output.glob("sitemap*.xml"))}
