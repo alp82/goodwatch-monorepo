@@ -4,6 +4,7 @@ import {
 	type Context,
 	emptyContext,
 	isDiscovery,
+	offsetOf,
 	remember,
 	restoredEntry,
 } from "~/ui/discovery-continuity"
@@ -115,22 +116,21 @@ export function DiscoveryContinuity() {
 		}
 		frame = requestAnimationFrame(restore)
 		let pending = 0
+		// Every save reads the offset through this, the last one in the cleanup after a page change too.
+		const offset = offsetOf(url, window)
 		const save = () => {
 			window.clearTimeout(pending)
 			pending = 0
+			const y = offset()
 			if (restoring) return
-			const next = remember(
-				read(),
-				location.pathname,
-				url,
-				ownPlace ? 0 : window.scrollY,
-			)
+			const next = remember(read(), location.pathname, url, ownPlace ? 0 : y)
 			try {
 				localStorage.setItem(key, JSON.stringify(next))
 			} catch {}
 		}
 		// Reading and writing the whole history on every scroll event costs a frame on a slow phone.
 		const scrolled = () => {
+			offset()
 			if (!pending) pending = window.setTimeout(save, SAVE_EVERY)
 		}
 		const cancelRestore = () => {

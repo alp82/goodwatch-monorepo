@@ -57,3 +57,22 @@ export function remember(
 		positions: newest({ ...context.positions }, url, y),
 	}
 }
+
+/** The parts of the browser's window that `offsetOf` reads. */
+export type ScrollWindow = {
+	location: { pathname: string; search: string }
+	scrollY: number
+}
+
+/**
+ * Reads the scroll offset of the page at `url` while that page is the one in the address bar, and otherwise returns
+ * the last offset it read. When the page's effect cleans up after a page change, the router already changed the
+ * address and scrolled the window for the next page, so the live offset belongs to the next page.
+ */
+export function offsetOf(url: string, win: ScrollWindow): () => number {
+	let y = 0
+	return () => {
+		if (win.location.pathname + win.location.search === url) y = win.scrollY
+		return y
+	}
+}

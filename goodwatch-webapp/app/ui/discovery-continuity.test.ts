@@ -3,6 +3,7 @@ import { test } from "node:test"
 import {
 	KEEP,
 	emptyContext,
+	offsetOf,
 	remember,
 	restoredEntry,
 } from "./discovery-continuity.ts"
@@ -53,4 +54,20 @@ test("the stored paths and URLs stay bounded, and a revisited one counts as new"
 	context = remember(context, "/movie/new-x", "/movie/new-x", 0)
 	assert.equal(restoredEntry("/discover", "", context), "/discover?genres=18")
 	assert.equal(context.positions["/discover?genres=18"], 40)
+})
+
+test("leaving a page keeps the offset it had, not the next page's", () => {
+	const win = {
+		location: { pathname: "/discover", search: "?type=movies" },
+		scrollY: 0,
+	}
+	const offset = offsetOf("/discover?type=movies", win)
+	win.scrollY = 1000
+	assert.equal(offset(), 1000)
+	// The router changed the address and scrolled to the top of the next page before the cleanup runs.
+	win.location = { pathname: "/movie/1-a", search: "" }
+	win.scrollY = 0
+	assert.equal(offset(), 1000)
+	win.location = { pathname: "/discover", search: "?type=shows" }
+	assert.equal(offset(), 1000, "another query is another page")
 })
