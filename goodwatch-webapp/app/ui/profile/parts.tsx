@@ -431,21 +431,64 @@ export function ScorePair({
 	)
 }
 
-/** A signed-in visitor's own score on a poster they rated too: a "You 9" tag in the bottom-left corner. */
-export function YouMark({ score }: { score: number | null | undefined }) {
-	if (!score) return null
+/** A visitor's own score: a dark tag ringed in the score colour (ringed = you, filled = the profile owner). */
+export function YouChip({ score }: { score: number }) {
 	return (
 		<span
-			className="pointer-events-none absolute bottom-1 left-1 inline-flex items-center gap-1 rounded-md bg-gray-950/90 py-0.5 pr-0.5 pl-1.5 text-[10px] font-bold text-sky-200 ring-1 ring-sky-400/60"
-			title={`You scored it ${score}`}
+			className="inline-flex h-5 items-center gap-1 rounded bg-gray-950 px-1 text-[11px] font-black tabular-nums ring-[1.5px]"
+			style={{ color: vibe(score), ["--tw-ring-color" as string]: vibe(score) }}
 		>
-			You
-			<span
-				className="inline-flex h-4 min-w-4 items-center justify-center rounded px-0.5 text-[10px] font-black text-gray-950"
-				style={{ background: vibe(score) }}
-			>
-				{score}
-			</span>
+			<span className="text-[9px] font-bold text-gray-300">you</span>
+			{score}
+		</span>
+	)
+}
+
+/**
+ * Both scores in a band across a poster's foot, inside the poster so its size never changes: the profile owner's
+ * filled score on the left, the visitor's ringed "you" score on the right. Either may be missing; with neither there's
+ * no band. Sits in a `relative` box around the poster.
+ */
+export function PosterScores({
+	theirs,
+	yours,
+	handle,
+	round = "lg",
+}: {
+	theirs: number | null | undefined
+	yours: number | null | undefined
+	handle: string
+	round?: "md" | "lg"
+}) {
+	if (!theirs && !yours) return null
+	const said = [
+		theirs ? `@${handle} ${theirs}` : null,
+		yours ? `you ${yours}` : null,
+	]
+		.filter(Boolean)
+		.join(", ")
+	return (
+		<span
+			className={`pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-1 bg-gradient-to-t from-gray-950 via-gray-950/80 to-transparent px-1 pt-5 pb-1 ${round === "md" ? "rounded-b-md" : "rounded-b-lg"}`}
+			title={said}
+		>
+			<span className="sr-only">{said}</span>
+			{theirs ? (
+				<span
+					className="inline-flex h-5 min-w-5 items-center justify-center rounded px-1 text-[11px] font-black tabular-nums text-gray-950"
+					style={{ background: vibe(theirs) }}
+					aria-hidden
+				>
+					{theirs}
+				</span>
+			) : (
+				<span />
+			)}
+			{yours ? (
+				<span aria-hidden>
+					<YouChip score={yours} />
+				</span>
+			) : null}
 		</span>
 	)
 }

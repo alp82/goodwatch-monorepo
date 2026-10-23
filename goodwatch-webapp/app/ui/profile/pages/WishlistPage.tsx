@@ -13,10 +13,11 @@ import { ImportCta } from "../ImportCta"
 import {
 	GridPoster,
 	OwnerPageLink,
+	PosterScores,
 	Segmented,
 	SortSelect,
 	TILE,
-	YouMark,
+	YouChip,
 	count,
 	shortDate,
 } from "../parts"
@@ -58,7 +59,9 @@ export function WishlistPage({
 		? page.titles.filter((t) => you[t.key] != null).length
 		: 0
 	const movies = page.titles.filter((t) => t.mediaType === "movie").length
-	const mark = (t: ProfileTitle) => <YouMark score={you?.[t.key]} />
+	const mark = (t: ProfileTitle) => (
+		<PosterScores theirs={null} yours={you?.[t.key]} handle={shell.handle} />
+	)
 
 	return (
 		<>
@@ -112,11 +115,8 @@ export function WishlistPage({
 			{seenByYou > 0 && (
 				<p className="rounded-xl bg-sky-400/[0.07] px-4 py-3 text-sm text-sky-100 ring-1 ring-sky-400/25">
 					You've already seen <b>{count(seenByYou)}</b> of the titles @
-					{shell.handle} wants to see. Your scores show as{" "}
-					<span className="rounded bg-gray-950 px-1 text-[11px] font-bold text-sky-200 ring-1 ring-sky-400/60">
-						You
-					</span>{" "}
-					tags, first in the list.
+					{shell.handle} wants to see. Your scores show as <YouChip score={8} />{" "}
+					on those posters, first in the list.
 				</p>
 			)}
 

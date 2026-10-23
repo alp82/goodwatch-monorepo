@@ -15,13 +15,14 @@ import { scoreLabels } from "~/utils/ratings"
 import { ImportCta } from "../ImportCta"
 import {
 	OwnerPageLink,
+	PosterScores,
 	ScoreChip,
 	ScoredPoster,
 	Segmented,
 	SortSelect,
 	SpreadBars,
 	TILE,
-	YouMark,
+	YouChip,
 	count,
 } from "../parts"
 
@@ -141,11 +142,8 @@ export function ScoresPage({
 					<span className="min-w-0 flex-1">
 						You rated <b>{count(sharedCount)}</b> of these too, and score within
 						a point of @{shell.handle} on <b>{count(agree)}</b>. Your scores
-						show as{" "}
-						<span className="rounded bg-gray-950 px-1 text-[11px] font-bold text-sky-200 ring-1 ring-sky-400/60">
-							You
-						</span>{" "}
-						tags.
+						show as <YouChip score={8} /> at the foot of each poster, @
+						{shell.handle}'s on the left.
 					</span>
 					<button
 						type="button"
@@ -207,7 +205,13 @@ export function ScoresPage({
 							{shown.map((title) => (
 								<li key={title.key} className="relative min-w-0">
 									<ScoredPoster title={title} showScore={false} />
-									<YouMark score={you?.[title.key]} />
+									{you && (
+										<PosterScores
+											theirs={title.score}
+											yours={you[title.key]}
+											handle={shell.handle}
+										/>
+									)}
 								</li>
 							))}
 						</ul>

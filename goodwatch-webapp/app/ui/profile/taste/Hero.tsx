@@ -9,7 +9,7 @@ import {
 } from "@heroicons/react/20/solid"
 import type { ComponentType, SVGProps } from "react"
 import { DISPLAY } from "~/ui/my-pages/bits"
-import { YouMark, backdropUrl, count } from "../parts"
+import { PosterScores, backdropUrl, count } from "../parts"
 import { Whorl } from "./Whorl"
 import { theirLine, useTaste } from "./model"
 import { MiniPoster, PANEL } from "./parts"
@@ -146,8 +146,15 @@ export function MostYou() {
 			<ul className="grid grid-cols-4 gap-2.5 sm:grid-cols-8">
 				{taste.mostYou.slice(0, 16).map((key, i) => (
 					<li key={key} className={`relative ${i >= 8 ? "max-sm:hidden" : ""}`}>
-						<MiniPoster title={title(key)} />
-						{compare && <YouMark score={compare.yourScores[key]} />}
+						<MiniPoster title={title(key)} score={!compare} />
+						{compare && (
+							<PosterScores
+								theirs={title(key).score}
+								yours={compare.yourScores[key]}
+								handle={handle}
+								round="md"
+							/>
+						)}
 					</li>
 				))}
 			</ul>
