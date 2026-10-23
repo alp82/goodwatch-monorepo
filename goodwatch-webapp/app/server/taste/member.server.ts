@@ -15,6 +15,7 @@
 // Redis cluster. Without a Redis connection, a member's taste is built on every read and not stored.
 import Redis from "ioredis"
 import { markPersonalOrderChanged } from "../personal-order/rebuild.server.ts"
+import { clearTasteStats } from "~/server/profile/taste-stats-cache.server"
 import { clearTastePortrait } from "~/server/taste-portrait/cache.server"
 import {
 	type TitleSnapshot,
@@ -219,8 +220,8 @@ export async function markTasteChanged(
 	} catch (error) {
 		console.error("Taste: recording the write failed:", error)
 	}
-	// The Taste page's cached views describe the old ratings.
-	await clearTastePortrait(userId)
+	// The Taste page's cached views and the profile's taste numbers describe the old ratings.
+	await Promise.all([clearTastePortrait(userId), clearTasteStats(userId)])
 	if (rebuildsHeld || scheduled.has(userId)) return
 	const timer = setTimeout(async () => {
 		scheduled.delete(userId)
