@@ -9,6 +9,7 @@ import {
 	personLink,
 	titleSeasons,
 } from "./title-details.ts"
+import { optionalTitlePart } from "../title-page-budget.ts"
 import type { ReadArgs } from "./tools.server.ts"
 
 export async function richerTitleDetails(
@@ -17,37 +18,68 @@ export async function richerTitleDetails(
 	args: ReadArgs,
 ) {
 	const include = args.include ?? [...DEFAULT_TITLE_INCLUDE]
+	const partBudgetMs = 1000
 	const [analysis, creators, grid] = await Promise.all([
 		include.includes("analysis")
-			? searchQuery<{ essence_text: string | null }>(
-					`SELECT essence_text FROM ${media.mediaType === "movie" ? "movie" : "show"} WHERE tmdb_id = ?`,
-					[media.details.tmdb_id],
-				)
-			: [],
+			? optionalTitlePart(
+					"analysis",
+					(signal) =>
+						searchQuery<{ essence_text: string | null }>(
+							`SELECT essence_text FROM ${
+								media.mediaType === "movie" ? "movie" : "show"
+							} WHERE tmdb_id = ?`,
+							[media.details.tmdb_id],
+							signal,
+						),
+					partBudgetMs,
+			  )
+			: null,
 		include.includes("cast") && media.mediaType === "show"
-			? searchQuery<{ id: number; name: string }>(
-					`SELECT DISTINCT p.tmdb_id AS id, p.name FROM person_worked_on c JOIN person p ON c.person_tmdb_id = p.tmdb_id
-			WHERE c.media_type = 'show' AND c.media_tmdb_id = ? AND c.job = 'Creator' ORDER BY p.tmdb_id LIMIT 10`,
-					[media.details.tmdb_id],
-				)
-			: [],
+			? optionalTitlePart(
+					"creators",
+					async (signal) => {
+						const credits = await searchQuery<{ id: number }>(
+							`SELECT DISTINCT person_tmdb_id AS id FROM person_worked_on
+					WHERE media_type = 'show' AND media_tmdb_id = ? AND job = 'Creator'`,
+							[media.details.tmdb_id],
+							signal,
+						)
+						const ids = [...new Set(credits.map(({ id }) => id))]
+						if (!ids.length) return []
+						signal.throwIfAborted()
+						// Keep the limit after resolving people: orphan credits must not displace existing creators.
+						return searchQuery<{ id: number; name: string }>(
+							`SELECT DISTINCT tmdb_id AS id, name FROM person WHERE tmdb_id IN (${ids
+								.map(() => "?")
+								.join(", ")}) ORDER BY tmdb_id LIMIT 10`,
+							ids,
+							signal,
+						)
+					},
+					partBudgetMs,
+			  )
+			: null,
 		media.mediaType === "show" &&
 		(include.includes("seasons") || include.includes("episodes"))
-			? getEpisodeGrid({ showId: String(media.details.tmdb_id) })
+			? optionalTitlePart(
+					"episode grid",
+					() => getEpisodeGrid({ showId: String(media.details.tmdb_id) }),
+					partBudgetMs,
+			  )
 			: null,
 	])
 	const fp = media.fingerprint
 	const themeMask = themeMaskOf(fp?.scores, media.details.genres)
 	return {
 		...compactTitleDetails(media, origin, args),
-		...(include.includes("cast") && media.mediaType === "show"
-			? { creators: creators.map((person) => personLink(person, origin)) }
+		...(creators?.complete
+			? { creators: creators.value.map((person) => personLink(person, origin)) }
 			: {}),
-		...(include.includes("analysis")
+		...(analysis?.complete
 			? {
 					title_analysis: {
 						available: !!fp,
-						summary: analysis[0]?.essence_text ?? null,
+						summary: analysis.value[0]?.essence_text ?? null,
 						tags: fp?.essenceTags ?? [],
 						moods: moodsOf(fp?.scores, media.details.genres).map(
 							(key) => MOOD_BY_KEY[key].name,
@@ -58,11 +90,10 @@ export async function richerTitleDetails(
 						tropes: media.details.tropes ?? [],
 						trope_count: media.details.tropes_count ?? 0,
 					},
-				}
+			  }
 			: {}),
-		...(media.mediaType === "show" &&
-		(include.includes("seasons") || include.includes("episodes"))
-			? titleSeasons(media, grid, { ...args, include })
+		...(media.mediaType === "show" && grid?.complete
+			? titleSeasons(media, grid.value, { ...args, include })
 			: {}),
 	}
 }

@@ -29,7 +29,7 @@ export async function titleDetailsWithin<T>(
 
 export async function optionalTitlePart<T>(
 	part: string,
-	read: () => Promise<T>,
+	read: (signal: AbortSignal) => Promise<T>,
 	budgetMs: number,
 ): Promise<{ complete: true; value: T } | { complete: false; value: null }> {
 	try {

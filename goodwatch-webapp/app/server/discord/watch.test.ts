@@ -446,3 +446,48 @@ test("next uses the canonical episode label for the display-season sentinel and 
 	assert.match(text(body), /\*\*First service\*\*\s*$/)
 	assert(!text(body).includes("_"))
 })
+
+for (const failure of ["reject", "unavailable"] as const) {
+	test(`member watch falls back to the same show's guest card when get_title ${
+		failure === "reject" ? "rejects" : "is unavailable"
+	}`, async () => {
+		const guestReads: unknown[] = []
+		const f = fixture(true, {
+			memberRead: async (_user, name) => {
+				if (name === "get_settings") return { country: "GB", service_ids: [9] }
+				if (name === "get_tonight")
+					return {
+						pick: {
+							title: { id: "show:42" },
+							episode: { code: "S01E02", name: "The next episode" },
+						},
+					}
+				assert.equal(name, "get_title")
+				if (failure === "reject") throw new Error("private backend failure")
+				return { status: "data_unavailable" }
+			},
+			read: async (place, _origin, name, args) => {
+				guestReads.push({ place, name, args })
+				return { title: { ...title, id: "show:42", match: undefined } }
+			},
+		})
+		const { body } = await f.run(2, {
+			name: "watch",
+			options: [{ name: "type", value: "show" }],
+		})
+		assert.match(text(body), /A title/)
+		assert.match(text(body), /S01E02/)
+		assert.doesNotMatch(
+			text(body),
+			/private backend failure|Could not load|Try again|Wishlist|taste fit/,
+		)
+		assert.deepEqual(guestReads, [
+			{
+				place: { country: "GB", services: [9] },
+				name: "get_title",
+				args: { title_id: "show:42" },
+			},
+		])
+		assert.ok(buttons(body).some((button) => button.label === "Another"))
+	})
+}

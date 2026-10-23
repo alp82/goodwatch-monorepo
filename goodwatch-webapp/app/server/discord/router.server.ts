@@ -382,8 +382,13 @@ export async function routeInteraction(
 			return textCard(
 				"No more picks with these filters. Try /watch with another mood or type.",
 			)
-		const result = memberId
-			? await deps.memberRead(memberId, "get_title", { title_id: id })
+		const mine = memberId
+			? await deps
+					.memberRead(memberId, "get_title", { title_id: id })
+					.catch(() => null)
+			: null
+		const result = mine?.title
+			? mine
 			: await read("get_title", { title_id: id })
 		if (!result.title)
 			return textCard("Could not load this pick. Try /watch again.")
@@ -393,7 +398,7 @@ export async function routeInteraction(
 			allServices: allServices(),
 			emojis: await emojis(),
 			episode,
-			...(memberId ? { member: (result.member ?? {}) as MemberMarks } : {}),
+			...(mine?.title ? { member: (mine.member ?? {}) as MemberMarks } : {}),
 		})
 	}
 	const next = async () => {

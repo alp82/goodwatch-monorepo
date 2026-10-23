@@ -781,3 +781,38 @@ test("8B link prompt and linked cards obey component limits and use only the Goo
 		"## Linked to GoodWatch",
 	)
 })
+
+for (const failure of ["reject", "unavailable"] as const) {
+	test(`member title card keeps the guest title when get_title ${
+		failure === "reject" ? "rejects" : "is unavailable"
+	}`, async () => {
+		const f = fixture()
+		f.deps.linkedUser = async () => "linked-member"
+		f.deps.memberRead = async (_user, name) => {
+			if (name === "get_settings") return { country: "FR", service_ids: [8] }
+			assert.equal(name, "get_title")
+			if (failure === "reject") throw new Error("private backend failure")
+			return { status: "data_unavailable" }
+		}
+		await f.run(3, {
+			custom_id: listCustomId("open", "private"),
+			values: ["show:42"],
+		})
+		await f.finished
+		assert.match(JSON.stringify(f.edits), /A title/)
+		assert.doesNotMatch(
+			JSON.stringify(f.edits),
+			/private backend failure|You rated|Wishlist|taste fit/,
+		)
+		assert.deepEqual(
+			f.reads.map(({ viewer, name, args }) => ({ viewer, name, args })),
+			[
+				{
+					viewer: { country: "DE" },
+					name: "get_title",
+					args: { title_id: "show:42" },
+				},
+			],
+		)
+	})
+}
