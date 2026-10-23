@@ -275,12 +275,28 @@ export function titleHero(
 export function whereToWatch(
 	title: GuestTitle,
 	country: string,
-	options: { offers?: boolean; allServices?: boolean; heading?: string } = {},
+	options: {
+		offers?: boolean
+		allServices?: boolean
+		heading?: string
+		/** Keep whole provider names and their markdown within a compact card's budget. */
+		providerTextLimit?: number
+	} = {},
 ) {
 	const offers = title.availability?.offers ?? []
 	const names = [
 		...new Set(offers.map((o) => escape(o.name ?? "Provider"))),
 	].slice(0, 10)
+	const providers: string[] = []
+	for (const name of names) {
+		const provider = `**${name}**`
+		if (
+			options.providerTextLimit !== undefined &&
+			[...providers, provider].join("  ·  ").length > options.providerTextLimit
+		)
+			break
+		providers.push(provider)
+	}
 	const body = offers.length
 		? options.offers
 			? offers
@@ -292,7 +308,7 @@ export function whereToWatch(
 							}`,
 					)
 					.join("\n")
-			: names.map((n) => `**${n}**`).join("  ·  ")
+			: providers.join("  ·  ") || "See Where to watch for services."
 		: title.availability?.state === "no_match"
 			? "No current offers found."
 			: "Availability unknown."
@@ -334,7 +350,10 @@ export function titleButtons(title: GuestTitle, share = false): Component {
 	return { type: 1, components: buttons }
 }
 
-function memberButtons(title: GuestTitle, marks: MemberMarks): Component[] {
+export function memberButtons(
+	title: GuestTitle,
+	marks: MemberMarks,
+): Component[] {
 	const seen =
 		marks.status === "seen" ||
 		(title.id.startsWith("movie:") &&

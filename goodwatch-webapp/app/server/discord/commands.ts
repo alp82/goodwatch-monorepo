@@ -30,7 +30,7 @@ export function defineCommands() {
 		required: true,
 		autocomplete: true,
 	}
-	return [
+	const discovery = [
 		...["rate", "seen", "want"].map((name) => ({
 			name,
 			description: {
@@ -145,6 +145,16 @@ export function defineCommands() {
 			description: "Unlink your GoodWatch account",
 			options: [],
 		},
+	]
+	const discover = discovery.find((command) => command.name === "discover")!
+	return [
+		...discovery,
+		{
+			name: "watch",
+			description: "Get a pick to watch",
+			options: discover.options.slice(0, 2),
+		},
+		{ name: "next", description: "Next episodes from Watch next", options: [] },
 	].map((command) => ({
 		...command,
 		type: 1,

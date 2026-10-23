@@ -7,8 +7,9 @@ import {
 	parseMediaKey,
 } from "../../types/user-data"
 import { titlePath } from "../../utils/helpers"
+import { tmdbImageUrl } from "../../utils/tmdb-image.ts"
 import { canonicalTitleId, retiredMovieIds } from "../../utils/title-identity"
-import { titleKey } from "../../utils/title-key"
+import { parseTitleKey, titleKey } from "../../utils/title-key"
 import { getAvailabilityEvidence } from "../availability.server"
 import { searchQuery } from "../combined-search/catalog.server"
 import { getDetailsForMovie, getDetailsForShow } from "../details.server"
@@ -429,7 +430,19 @@ export async function readMemberTool(
 	}
 	if (name === "get_tonight") {
 		const ctx = await getMemberViewerContext(userId, "US")
-		const pick = await getTonightsPick(ctx)
+		const pick = await getTonightsPick(ctx, undefined, {
+			moods: args.moods,
+			fits:
+				args.type || args.exclude_title_ids?.length
+					? (key) => {
+							const { mediaType, tmdbId } = parseTitleKey(key)
+							return (
+								(!args.type || args.type === mediaType) &&
+								!args.exclude_title_ids?.includes(`${mediaType}:${tmdbId}`)
+							)
+						}
+					: undefined,
+		})
 		return {
 			pick: pick
 				? {
@@ -491,18 +504,21 @@ export async function readMemberTool(
 			...result,
 			items: result.items.map((row) => {
 				const id = Number(row.id.split(":")[1])
+				const display = displays.get(titleKey("show", id))
 				return {
 					...row,
 					...summary(
 						{
 							media_type: "show",
 							tmdb_id: id,
-							title: row.name,
-							release_year:
-								displays.get(titleKey("show", id))?.release_year ?? null,
+							title: display?.title ?? row.name,
+							release_year: display?.release_year ?? null,
 						},
 						origin,
 					),
+					poster_url: display?.poster_path
+						? tmdbImageUrl(display.poster_path, "w342")
+						: null,
 				}
 			}),
 		}

@@ -1,3 +1,11 @@
+import { guestWatchPick } from "./watch-picks.server.ts"
+import {
+	anotherId,
+	parseAnotherId,
+	watchOptions,
+	type WatchOptions,
+} from "./watch-id.ts"
+import { watchCard, nextCard, type NextEpisode } from "./watch-cards.ts"
 import { linkPrompt, rateModal, writeConfirmation } from "./member-cards.ts"
 import { discordWrite } from "./writes.server.ts"
 import { parseUndoId } from "./custom-id.ts"
@@ -88,7 +96,13 @@ export interface Dependencies extends PlaceDependencies {
 	unlink: (target: { byDiscordUserId: string }) => Promise<void>
 	memberRead: (
 		userId: string,
-		name: "get_title" | "get_settings" | "discover_titles",
+		name:
+			| "get_title"
+			| "get_settings"
+			| "discover_titles"
+			| "get_tonight"
+			| "get_my_shows"
+			| "get_show_progress",
 		args: Parameters<typeof readGuestTool>[3],
 	) => Promise<Record<string, unknown>>
 
@@ -99,12 +113,14 @@ export interface Dependencies extends PlaceDependencies {
 	take: (user: string) => Promise<RateVerdict>
 	edit: (app: string, token: string, body: unknown) => Promise<void>
 	log: (line: string) => void
+	guestPick?: typeof guestWatchPick
 	hot?: () => Promise<GuestTitle[]>
 	saveState?: (state: DiscoverState) => Promise<string>
 	loadState?: (key: string) => Promise<DiscoverState | null>
 	emojis?: () => Promise<EmojiIds>
 }
 const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
+	guestPick: guestWatchPick,
 	write: discordWrite,
 	storeLinkMessage: async (app, token) =>
 		(await import("./link-message.server.ts")).storeLinkMessage(app, token),
@@ -117,7 +133,7 @@ const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
 	memberRead: async (userId, name, args) => {
 		const data = await (await import("../mcp/data.server.ts")).readMemberTool(
 			userId,
-			"https://goodwatch.app",
+			appOrigin(),
 			name,
 			args,
 		)
@@ -209,6 +225,7 @@ export async function routeInteraction(
 		typeof interaction.data?.custom_id === "string"
 			? interaction.data.custom_id
 			: ""
+	const another = parseAnotherId(customId)
 	const parsed = parseCustomId(customId),
 		list = parseListId(customId),
 		undo = parseUndoId(customId),
@@ -225,7 +242,7 @@ export async function routeInteraction(
 								parsed?.action ??
 								list?.action ??
 								together?.action ??
-								(undo ? "undo" : "unknown"),
+								(another ? "another" : undo ? "undo" : "unknown"),
 						}
 					: {
 							command: commands.some((c) => c.name === interaction.data?.name)
@@ -340,6 +357,66 @@ export async function routeInteraction(
 			allServices: !guestPlace.services?.length,
 		})
 	}
+	const watch = async (options: WatchOptions) => {
+		let id: string | null
+		let episode: { code: string; name: string | null } | null = null
+		if (memberId) {
+			const result = await deps.memberRead(memberId, "get_tonight", {
+				...(options.type !== "any" ? { type: options.type } : {}),
+				moods: options.mood ? [options.mood] : [],
+				exclude_title_ids: options.recent,
+			})
+			const pick = result.pick as {
+				title: GuestTitle
+				episode?: { code: string; name: string | null } | null
+			} | null
+			id = pick?.title?.id ?? null
+			episode = pick?.episode ?? null
+		} else id = await deps.guestPick(viewer, options)
+		if (!id || !isTitleId(id) || options.recent.includes(id))
+			return textCard(
+				"No more picks with these filters. Try /watch with another mood or type.",
+			)
+		const result = memberId
+			? await deps.memberRead(memberId, "get_title", { title_id: id })
+			: await read("get_title", { title_id: id })
+		if (!result.title)
+			return textCard("Could not load this pick. Try /watch again.")
+		return watchCard(result.title as GuestTitle, country, {
+			another: anotherId(options, id),
+			origin: appOrigin(),
+			allServices: allServices(),
+			emojis: await emojis(),
+			episode,
+			...(memberId ? { member: (result.member ?? {}) as MemberMarks } : {}),
+		})
+	}
+	const next = async () => {
+		if (!memberId)
+			return linkPromptCard(
+				new URL("/discord/link", appOrigin()).href,
+				"Link your account to see your next episodes with /next.",
+			)
+		const result = await deps.memberRead(memberId, "get_my_shows", {
+			limit: 8,
+		})
+		const rows = (result.items ?? []) as (GuestTitle & {
+			group?: string
+			next_episode?: NextEpisode | null
+		})[]
+		const episodes = rows
+			.filter(
+				(row) =>
+					["continue", "pick_up"].includes(row.group ?? "") && row.next_episode,
+			)
+			.slice(0, 8)
+		const cards = episodes.map((row) => ({
+			title: row,
+			episode: row.next_episode!,
+		}))
+		return nextCard(cards, country, allServices())
+	}
+
 	const similar = async (id: string, share = false) => {
 		const result = await read("get_similar_titles", {
 			title_id: id,
@@ -395,7 +472,7 @@ export async function routeInteraction(
 						"https://goodwatch.app",
 						"discover_titles",
 						effectiveArgs,
-					)
+				  )
 		const sort = effectiveArgs.order
 			? sortNames[effectiveArgs.order]
 			: undefined
@@ -861,6 +938,14 @@ export async function routeInteraction(
 				async () => {
 					usePlace(await place())
 					switch (interaction.data?.name) {
+						case "watch": {
+							const filters = watchOptions(options.type, options.mood)
+							return filters
+								? watch(filters)
+								: textCard("Choose a type and mood from /watch.")
+						}
+						case "next":
+							return next()
 						case "search":
 						case "similar": {
 							const id = await resolveTitle(options.title ?? "")
@@ -947,7 +1032,7 @@ export async function routeInteraction(
 				finish,
 			)
 		}
-		if (interaction.type === 3 && (parsed || list)) {
+		if (interaction.type === 3 && (parsed || list || another)) {
 			if (!interaction.application_id || !interaction.token)
 				return reply(textCard("Invalid interaction."), "invalid")
 			const share =
@@ -958,6 +1043,7 @@ export async function routeInteraction(
 			return defer(
 				async () => {
 					usePlace(await place())
+					if (another) return watch(another)
 					if (parsed) {
 						if (parsed.action === "similar") return similar(parsed.titleId)
 						return card(parsed.titleId, !!share, parsed.action === "watch")

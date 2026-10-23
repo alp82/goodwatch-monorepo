@@ -56,6 +56,8 @@ export type ReadToolName =
 	| "get_list"
 	| "get_settings"
 export interface ReadArgs extends DiscoverFilterArgs {
+	/** Internal callers can avoid recent picks; not exposed by the MCP schema. */
+	exclude_title_ids?: string[]
 	cursor?: string
 	limit?: number
 	query?: string
