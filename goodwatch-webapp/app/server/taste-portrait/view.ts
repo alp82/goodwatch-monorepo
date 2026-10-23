@@ -239,8 +239,8 @@ export interface FingerprintAttribute {
 
 export interface FingerprintView extends ViewBase {
 	tab: "fingerprint"
-	/** A viewing preference, with the two attribute keys supporting the identity. */
-	identity: { name: string; persona: string; adjective: string } | null
+	/** The viewer type, "Slapstick, big payoffs, deep characters", and the attribute keys it names, strongest first. */
+	identity: { name: string; keys: string[] } | null
 	/** "Show you the unexpected, the surreal or absurd humor, and you're in. Grounded dramas rarely get a look." */
 	line: string
 	/** The attributes the line names: up to three sought, up to two avoided, strongest first. */

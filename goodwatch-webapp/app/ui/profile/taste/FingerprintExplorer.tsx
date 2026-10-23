@@ -72,7 +72,7 @@ export function FingerprintExplorer() {
 			})
 	}, [hover, still])
 	const [key, setKey] = useState<string>(
-		taste.identity?.persona ?? taste.seek[0] ?? taste.attributes[0].key,
+		taste.identity?.keys?.[0] ?? taste.seek[0] ?? taste.attributes[0].key,
 	)
 	const picked = attributeByKey.get(key) as TasteAttribute
 	const max = Math.max(

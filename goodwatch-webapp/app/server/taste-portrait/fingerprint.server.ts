@@ -1,5 +1,5 @@
 // Fingerprint: the person's 74 attributes against everyone, in the five fingerprint families, with the titles that
-// carry each attribute for them, the exception to their usual stance, and an identity named from the family results.
+// carry each attribute for them, the exception to their usual stance, and a viewer type named from three leanings.
 import type { TitleKey } from "~/server/title-snapshot/index.server"
 import { FAMILIES, familyOf } from "./families.server"
 import {
@@ -19,8 +19,8 @@ import {
 	label,
 	meaning,
 	noun,
-	persona,
 	phrase,
+	short,
 } from "./words.server"
 
 type FingerprintResult = Omit<FingerprintView, "titles" | "subject">
@@ -43,6 +43,32 @@ function tierOf(normalized: number): Tier {
 	const size = Math.abs(normalized)
 	const step = size > 1.6 ? 3 : size > 0.8 ? 2 : size > 0.35 ? 1 : 0
 	return (normalized < 0 ? -step : step) as Tier
+}
+
+type Leaning = Pick<FingerprintAttribute, "key" | "family" | "edge" | "tier">
+
+/**
+ * The viewer type: the three strongest leanings from different families, in a word or two each ("Slapstick, big
+ * payoffs, deep characters"). One per family keeps near-synonyms (originality, oddballs, the surreal) from filling the
+ * name; with fewer than three families leaning, the next strongest leanings fill it. Two at least, or none.
+ */
+export function viewerType(attributes: Leaning[]) {
+	const leaning = attributes
+		.filter((a) => isWorded(a.key) && a.tier >= 1)
+		.sort((a, b) => b.edge - a.edge || a.key.localeCompare(b.key))
+	const named: Leaning[] = []
+	for (const a of leaning)
+		if (named.length < 3 && !named.some((n) => n.family === a.family))
+			named.push(a)
+	for (const a of leaning)
+		if (named.length < 3 && !named.includes(a)) named.push(a)
+	if (named.length < 2) return null
+	named.sort((a, b) => b.edge - a.edge || a.key.localeCompare(b.key))
+	const words = named.map((a) => short(a.key))
+	return {
+		name: capitalize(words.length === 3 ? words.join(", ") : joinWords(words)),
+		keys: named.map((a) => a.key),
+	}
 }
 
 export function buildFingerprint(person: Person): FingerprintResult {
@@ -174,7 +200,7 @@ export function buildFingerprint(person: Person): FingerprintResult {
 		}
 	}
 
-	// The line names what they seek and avoid most; the identity is named from the same family results.
+	// The line names what they seek and avoid most.
 	const worded = attributes.filter((a) => isWorded(a.key))
 	const byEdge = [...worded].sort(
 		(a, b) => b.edge - a.edge || a.key.localeCompare(b.key),
@@ -194,19 +220,7 @@ export function buildFingerprint(person: Person): FingerprintResult {
 			: first
 		: ""
 
-	// Describe the strongest viewing preference, supported by a positive edge in another family.
-	// Keep both evidence keys, but do not apply a title adjective to the person.
-	const leaning = byEdge.filter((a) => a.tier >= 1)
-	const top = leaning[0]
-	const second = leaning.find((a) => top && a.family !== top.family)
-	const identity =
-		top && second
-			? {
-					name: `The ${persona(top.key)}`,
-					persona: top.key,
-					adjective: second.key,
-				}
-			: null
+	const identity = viewerType(byEdge)
 
 	// The titles that are most them: two rows of eight, in turns over the sought attributes' carriers.
 	const sought = [

@@ -49,7 +49,7 @@ export interface ProfileTaste {
 	status: "ready" | "empty" | "unavailable"
 	usual: number | null
 	counted: number
-	identity: { name: string; persona: string; adjective: string } | null
+	identity: { name: string; keys: string[] } | null
 	line: string
 	seek: string[]
 	avoid: string[]

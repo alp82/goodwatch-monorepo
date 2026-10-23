@@ -34,7 +34,6 @@ export function TasteHero({ mostYou = true }: { mostYou?: boolean }) {
 			: taste.crowd.agreement >= 0.25
 				? "Half the time"
 				: "Rarely"
-	const streak = id ? attributeByKey.get(id.adjective)?.label : null
 	return (
 		<section aria-labelledby="viewer-type" className="flex flex-col gap-4">
 			<div className={`${PANEL} relative isolate overflow-hidden`}>
@@ -61,15 +60,10 @@ export function TasteHero({ mostYou = true }: { mostYou?: boolean }) {
 						</p>
 						<h2
 							id="viewer-type"
-							className={`${DISPLAY} mt-1 scroll-mt-44 text-4xl leading-none text-white sm:text-6xl`}
+							className={`${DISPLAY} mt-1 scroll-mt-44 text-3xl leading-[1.05] text-balance text-white sm:text-5xl`}
 						>
 							{id ? id.name : "Still forming"}
 						</h2>
-						{streak && (
-							<p className="mt-2 text-sm text-gray-400">
-								With a streak of {streak.toLowerCase()}.
-							</p>
-						)}
 						{taste.line && (
 							<p className="mt-4 max-w-2xl text-lg text-gray-100 sm:text-xl">
 								{owner ? taste.line : theirLine(taste.line)}

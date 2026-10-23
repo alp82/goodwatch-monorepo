@@ -15,7 +15,10 @@ type CraftKey =
 type WordedKey = Exclude<FingerprintKey, CraftKey>
 
 // Describe titles and viewing preferences without inferring genres or personality.
-const WORDS: Record<FingerprintKey, [adjective: string, noun: string, persona: string]> = {
+const WORDS: Record<
+	FingerprintKey,
+	[adjective: string, noun: string, persona: string]
+> = {
 	adrenaline: ["exciting", "adrenaline rushes", "excitement seeker"],
 	tension: ["tense", "suspenseful stories", "suspense fan"],
 	scare: ["scary", "stories full of scares", "scare seeker"],
@@ -288,6 +291,76 @@ const WORDS: Record<FingerprintKey, [adjective: string, noun: string, persona: s
 	],
 }
 
+// One or two words per attribute for the viewer type, which names three of them: "Slapstick, big payoffs, deep characters".
+const SHORT: Record<WordedKey, string> = {
+	adrenaline: "adrenaline",
+	tension: "suspense",
+	scare: "scares",
+	violence: "hard edges",
+	romance: "romance",
+	eroticism: "sensuality",
+	wholesome: "warmth",
+	wonder: "wonder",
+	pathos: "big feelings",
+	melancholy: "melancholy",
+	uncanny: "the uncanny",
+	catharsis: "big payoffs",
+	nostalgia: "nostalgia",
+	situational_comedy: "comic mix-ups",
+	wit_wordplay: "wit",
+	physical_comedy: "slapstick",
+	cringe_humor: "cringe",
+	absurdist_humor: "absurdity",
+	satire_parody: "satire",
+	dark_humor: "dark laughs",
+	fantasy: "magic",
+	futuristic: "sci-fi",
+	historical: "history",
+	contemporary_realism: "real life",
+	crime: "crime",
+	mystery: "mysteries",
+	warfare: "war",
+	political: "politics",
+	sports: "sports",
+	biographical: "true lives",
+	coming_of_age: "growing up",
+	family_dynamics: "family",
+	psychological: "inner worlds",
+	showbiz: "showbiz",
+	gaming: "games",
+	pop_culture: "pop culture",
+	social_commentary: "social bite",
+	class_and_capitalism: "class and money",
+	technology_and_humanity: "tech and us",
+	spiritual: "faith",
+	character_depth: "deep characters",
+	slow_burn: "slow burns",
+	fast_pace: "speed",
+	intrigue: "intrigue",
+	complexity: "complexity",
+	hopefulness: "hope",
+	bleakness: "bleakness",
+	ambiguity: "open endings",
+	novelty: "originality",
+	homage_and_reference: "homages",
+	non_linear_narrative: "time jumps",
+	meta_narrative: "meta",
+	surrealism: "the surreal",
+	eccentricity: "oddballs",
+	philosophical: "big questions",
+	educational: "learning",
+	world_immersion: "other worlds",
+	spectacle: "spectacle",
+	visual_stylization: "bold visuals",
+	pastiche: "pastiche",
+	psychedelic: "trips",
+	grotesque: "the grotesque",
+	camp_and_irony: "camp",
+	dialogue_centrality: "talk",
+	music_centrality: "soundtracks",
+	sound_centrality: "sound",
+}
+
 // How each attribute reads in a sentence about someone's taste: "Show you {phrase}, and you're in."
 const PHRASES: Record<FingerprintKey, string> = {
 	adrenaline: "adrenaline",
@@ -377,6 +450,8 @@ const plain = (key: string) =>
 export const adjective = (key: string) => words(key)?.[0] ?? plain(key)
 export const noun = (key: string) => words(key)?.[1] ?? plain(key)
 export const persona = (key: string) => words(key)?.[2] ?? plain(key)
+/** The attribute in one or two words, for the viewer type. */
+export const short = (key: string) => (isWorded(key) ? SHORT[key] : plain(key))
 export const phrase = (key: string) =>
 	PHRASES[key as FingerprintKey] ?? plain(key)
 export const label = (key: string) =>

@@ -82,7 +82,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 		"overview",
 		d?.shell?.bio ||
 			(viewerType
-				? `@${d?.shell?.handle}, ${viewerType}, on GoodWatch.`
+				? `@${d?.shell?.handle} on GoodWatch. Viewer type: ${viewerType}.`
 				: undefined),
 	)
 }

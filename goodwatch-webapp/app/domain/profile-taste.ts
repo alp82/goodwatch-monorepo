@@ -124,7 +124,7 @@ export type MemberCompare =
 			}
 			/** Your edge per fingerprint key, on the owner's portrait scale, for Vs me. */
 			yourEdges: Record<string, { edge: number; tier: number }>
-			/** Your viewer type name ("The slow-burn fan"), or null. */
+			/** Your viewer type ("Slow burns, wit, history"), or null. */
 			yourIdentity: string | null
 			yourUsual: number | null
 			/** Your scores by title key, for the "You" tags. */

@@ -94,9 +94,9 @@ export function Fingerprint({ view }: { view: FingerprintView }) {
 				<div>
 					{view.identity ? (
 						<>
-							<p className="text-sm text-gray-400">You are</p>
+							<p className="text-sm text-gray-400">Your viewer type</p>
 							<h1 className="mt-1 text-4xl font-extrabold leading-[1.05] tracking-tight md:text-6xl">
-								{capitalize(view.identity.name)}
+								{view.identity.name}
 							</h1>
 							{view.line && (
 								<p className="mt-5 max-w-xl text-xl leading-snug text-gray-100 md:text-2xl">
