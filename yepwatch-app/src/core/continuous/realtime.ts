@@ -1,6 +1,7 @@
 import {
   paths,
   type ActivityView,
+  type ActivityPointer,
   type ActivityGesture,
   type MatchInspection,
   type RealtimeTicket,
@@ -91,7 +92,21 @@ export class ContinuousRealtime {
       this.sendActivity(view);
     }
   }
-  sendActivity(view = this.view, gesture?: ActivityGesture, beat?: 'answer', inspection?: MatchInspection) {
+  private lastPointerAt = 0;
+  sendPointer(pointer: ActivityPointer | null) {
+    if (this.view !== 'voting') return;
+    const now = Date.now();
+    if (pointer && now - this.lastPointerAt < 280) return;
+    this.lastPointerAt = now;
+    this.sendActivity(undefined, undefined, undefined, undefined, pointer);
+  }
+  sendActivity(
+    view = this.view,
+    gesture?: ActivityGesture,
+    beat?: 'answer',
+    inspection?: MatchInspection,
+    pointer?: ActivityPointer | null
+  ) {
     if (!this.active || !this.live || !this.session || !this.socket) return;
     this.socket.send(
       JSON.stringify({
@@ -99,6 +114,7 @@ export class ContinuousRealtime {
         sessionId: this.session,
         sequence: ++this.sequence,
         view,
+        ...(view === 'voting' && pointer !== undefined ? { pointer } : {}),
         ...(gesture ? { gesture } : {}),
         ...(view === 'voting' && beat ? { beat } : {}),
         ...(view === 'matches' && inspection ? { inspection } : {}),
@@ -176,6 +192,7 @@ export class ContinuousRealtime {
             ticket: ticket.ticket,
             roomId: this.o.roomId,
             lastRevision: this.o.revision(),
+            pointers: true,
           })
         );
       socket.onmessage = (event) => {

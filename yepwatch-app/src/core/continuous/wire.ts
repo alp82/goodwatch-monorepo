@@ -226,6 +226,7 @@ const frame = z.discriminatedUnion('type', [
       view: z.enum(['voting', 'matches', 'trailer', 'away']),
       gesture: z.enum(['reach', 'handle', 'release']).optional(),
       beat: z.literal('answer').optional(),
+      pointer: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), pressed: z.boolean(), kind: z.enum(['mouse','touch']) }).strict().nullable().optional(),
       inspection: z
         .discriminatedUnion('kind', [
           z.object({ kind: z.literal('poster'), candidateId: id }).strict(),
@@ -253,7 +254,8 @@ export function parseFrame(raw: unknown): ServerRealtimeFrame | null {
     return result.success &&
       !(
         result.data.type === 'activity' &&
-        ((result.data.inspection && result.data.view !== 'matches') ||
+        ((result.data.pointer !== undefined && result.data.view !== 'voting') ||
+          (result.data.inspection && result.data.view !== 'matches') ||
           (result.data.beat && result.data.view !== 'voting'))
       )
       ? result.data

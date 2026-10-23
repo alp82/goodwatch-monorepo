@@ -30,14 +30,17 @@ class MemoryActivity extends EventEmitter implements ActivityBus {
   state(ready: boolean) { this.ready = ready; this.emit('state', ready) }
   close() {}
 }
-async function setup(t: test.TestContext) {
+async function setup(t: test.TestContext, pointers = false) {
   const api = await fixture('proposal'); api.state.shared = choosing(); api.state.leaseMs = 60_000
   const hub = new ActivityHub(), buses = [new FakeBus(), new FakeBus()], activities = [hub.bus(), hub.bus()]
   const gateways = buses.map((b, n) => createGateway(api.authority, b, { port: 0, auditMs: 1000 }, { activityBus: activities[n], proposal: true }))
   const addresses = await Promise.all(gateways.map(g => g.listen()))
   t.after(async () => { await Promise.all(gateways.map(g => g.close())); await api.close() })
   const clients = await Promise.all(addresses.map((a, n) => {
-    assert(a && typeof a !== 'string'); return connect<ServerRealtimeFrame>(`ws://127.0.0.1:${a.port}${paths.realtime}`, api.ticket(`person-${n + 1}`))
+    assert(a && typeof a !== 'string');
+    return connect<ServerRealtimeFrame>(`ws://127.0.0.1:${a.port}${paths.realtime}`).then(client => {
+      client.ws.send(JSON.stringify({type:'authenticate',ticket:api.ticket(`person-${n+1}`),roomId:'room-1',lastRevision:null,...(pointers && n === 1 ? {pointers:true}: {})}));return client;
+    })
   }))
   await until(() => clients.every(c => c.frames.some(f => f.type === 'activity.session')))
   return { api, hub, buses, activities, clients }
@@ -107,3 +110,24 @@ test('Proposal delivery outage clears queued inspection and repairs only through
   send(a, 1, { inspection: { kind: 'lens' } }); await until(() => events(b.frames).some(f => f.inspection?.kind === 'lens'))
   assert(!events(b.frames).some(f => f.inspection?.kind === 'dice'))
 })
+
+
+test('two gateways relay bounded live pointers only to opted-in clients, never answers', async t => {
+ const {hub,clients:[old,modern]}=await setup(t,true);
+ const pointer={x:.25,y:.75,pressed:true,kind:'touch'};
+ send(old,0,{view:'voting',pointer});
+ await until(()=>events(modern.frames).some(f=>f.pointer));
+ assert.deepEqual(events(modern.frames).at(-1)!.pointer,pointer);
+ send(modern,0,{view:'voting',pointer});
+ await until(()=>events(old.frames).length>0);
+ assert.equal(events(old.frames).at(-1)!.pointer,undefined);
+ const received=events(modern.frames).at(-1)!;
+ hub.emit({...received,sequence:5,serverTime:Date.now()-1600,expiresAt:Date.now()+3000});
+ await until(()=>events(modern.frames).some(f=>f.sequence===5));
+ assert.equal(events(modern.frames).at(-1)!.pointer,undefined);
+ const base={type:'activity',sessionId:'session',sequence:1,view:'voting'};
+ for(const extra of [{pointer:{...pointer,x:1.1}},{pointer:{...pointer,y:-.1}},{pointer:{...pointer,choice:'watch'}},{pointer,view:'away'},{pointer,view:'matches'}])
+  assert(!proposalClientActivitySchema.safeParse({...base,...extra}).success);
+ send(old,6,{view:'voting',pointer:null});
+ await until(()=>events(modern.frames).some(f=>f.pointer===null));
+});

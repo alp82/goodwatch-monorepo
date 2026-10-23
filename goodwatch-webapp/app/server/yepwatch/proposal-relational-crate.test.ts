@@ -106,7 +106,7 @@ test(
 		const admissionRequest = request("Host")
 		loseInvite = true
 		const admission = await a.create(admissionRequest)
-		assert.match(admission.invite.code, /^[0-9A-HJKMNP-TV-Z]{16}$/)
+		assert.match(admission.invite.code, /^[2-9A-HJKMNP-Z]{6}$/)
 		assert.equal(
 			(await b.resolveInvite(admission.invite.code.toLowerCase())).roomId,
 			admission.credential.roomId
@@ -116,13 +116,13 @@ test(
 			admission.invite.code
 		)
 		const { hash } = await import("./crypto.server.ts")
-		await assert.rejects(
-			otherRepo.rememberInvite(
+		assert.equal(
+			await otherRepo.rememberInvite(
 				hash(admission.invite.code),
 				"another-room",
 				admission.credential.expiresAt
 			),
-			(e: any) => e.code === "busy"
+			null
 		)
 		t.diagnostic(
 			"Short invite immediately resolves across instances; lost mapping ack, replay and collision checks pass"

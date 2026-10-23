@@ -33,7 +33,7 @@ const stable = (value: unknown): string =>
 					Object.keys(v)
 						.sort()
 						.map((k) => [k, v[k]])
-			  )
+				)
 			: v
 	)
 const secretField: Partial<Record<Entity, string>> = {
@@ -117,8 +117,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 				503,
 				true
 			)
-		if (row[0] !== roomId || Number(row[1]) !== expiresAt)
-			throw new RoomError("busy", "Invitation unavailable", 503, true)
+		if (row[0] !== roomId) return null
+		return Number(row[1])
 	}
 	private remember(key: string, row: Row) {
 		this.cache.set(key, structuredClone(row))
@@ -227,7 +227,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 						participant_id: p.id,
 						access_token_ciphertext: p.memberGrant.accessToken,
 						grant_expires_at: p.memberGrant.expiresAt,
-				  })
+					})
 				: null
 			return put("participant", {
 				participant_id: p.id,
@@ -308,7 +308,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 					previous_candidate_id: p.previousCandidateId,
 					proposer_id: p.proposerId,
 					base_participant_ids: p.baseParticipantIds,
-			  })
+				})
 			: null
 		const decision = d
 			? put("decision", {
@@ -316,7 +316,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 					agreement_version: d.agreementVersion,
 					decided_at: d.decidedAt,
 					availability: d.availability,
-			  })
+				})
 			: null
 		const head = parseRow(tables.room, {
 			id: room.id,
@@ -555,7 +555,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 										accessToken: grant.access_token_ciphertext,
 										expiresAt: grant.grant_expires_at,
 									},
-							  }
+								}
 							: {}),
 						receipts: receipts.map((r) => ({
 							commandId: r.command_id,
@@ -633,7 +633,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 							agreementVersion: decision.agreement_version,
 							decidedAt: decision.decided_at,
 							availability: decision.availability,
-					  }
+						}
 					: null,
 				proposalVersion: h.proposal_version,
 				proposal: proposal
@@ -643,7 +643,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 							previousCandidateId: proposal.previous_candidate_id,
 							proposerId: proposal.proposer_id,
 							baseParticipantIds: proposal.base_participant_ids,
-					  }
+						}
 					: null,
 				tickets: tickets.map((t) => ({
 					hash: t.ticket_hash,

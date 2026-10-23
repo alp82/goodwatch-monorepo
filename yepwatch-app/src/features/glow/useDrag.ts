@@ -66,7 +66,12 @@ export function useDrag({
     sequence.current++;
     if (reduced) x.setValue(0);
     else
-      Animated.spring(x, { toValue: 0, friction: 7, tension: 85, useNativeDriver: native }).start();
+      Animated.spring(x, {
+        toValue: 0,
+        friction: 7,
+        tension: 85,
+        useNativeDriver: native,
+      }).start();
   }
   function transition(direction: number, width: number, apply: () => void) {
     const seq = ++sequence.current;
@@ -82,8 +87,8 @@ export function useDrag({
     }).start(({ finished }) => {
       if (!finished || seq !== sequence.current) return;
       apply();
-      x.setValue(-direction * width * 0.18);
-      Animated.spring(x, { toValue: 0, friction: 8, tension: 75, useNativeDriver: native }).start();
+      // Keep the outgoing card offscreen. Only a new title may reset this surface.
+      // Re-entering here reuses the old artwork and activates the opposite vote stamp.
     });
   }
   function reset() {

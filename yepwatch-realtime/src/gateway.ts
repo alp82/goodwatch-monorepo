@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { createServer } from 'node:http'
 import type { Socket } from 'node:net'
 import { WebSocket, WebSocketServer } from 'ws'
@@ -29,6 +30,7 @@ interface Client {
   frames: number; unauthControlFrames: number; windowAt: number; authTimer: NodeJS.Timeout; expiryTimer?: NodeJS.Timeout; closeTimer?: NodeJS.Timeout
   room?: Room
   activity?: ActivitySender; participantIds?: Set<string>
+  pointers?: boolean
   inspectionMatches?: { matches: { candidateId: string }[] }
 }
 interface Room { id: string; clients: Set<Client>; target: number; epoch: number; running: boolean }
@@ -192,7 +194,8 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
       if (!a || client.initial || client.degraded || client.lastRevision < room.target || a.participantId === frame.participantId ||
           a.leaseExpiresAt <= Date.now() || a.roomExpiresAt <= Date.now() || !client.participantIds?.has(frame.participantId)) continue
       if (continuous?.proposal && !inspectionAllowed(frame, client.inspectionMatches)) continue
-      send(client, frame)
+      const { pointer, ...legacy } = frame
+      send(client, client.pointers ? frame : legacy)
     }
   }, () => onState(false), 2048, continuous.proposal ? { client: proposalClientActivitySchema, server: proposalServerActivitySchema } : undefined) : undefined
   continuous?.activityBus.on('state', onState)
@@ -243,8 +246,9 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
         // Exactly one application frame is allowed before authentication completes.
         if (client.authenticating) { fail(client, 'unauthorized'); return }
         client.authenticating = true
-        const parsed = authenticateSchema.safeParse(input)
+        const parsed = (continuous?.proposal ? authenticateSchema.extend({ pointers: z.literal(true).optional() }) : authenticateSchema).safeParse(input)
         if (!parsed.success) { fail(client, 'invalid_request'); return }
+        client.pointers = 'pointers' in parsed.data && parsed.data.pointers === true
         void (async () => {
           try {
             const request = { roomId: parsed.data.roomId, ticket: parsed.data.ticket }

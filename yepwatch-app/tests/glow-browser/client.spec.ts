@@ -481,3 +481,87 @@ test('measured Yep exposure pauses for details and match inspection; missing rel
   if (afterReload?.type !== 'vote') throw new Error('No explicit reloaded vote');
   expect(afterReload.activeExposureMs).toBeNull();
 });
+
+for (const direction of [-1, 1]) test(`animated swipe ${direction} never re-enters with the opposite stamp`, async ({ page }) => {
+ await page.emulateMedia({reducedMotion:'no-preference'});
+ const f=await fixture(page);
+ await page.route('**/commands',async route=>{await new Promise(resolve=>setTimeout(resolve,450));await route.fallback();});
+ const box=(await page.getByTestId('poster').boundingBox())!;
+ await page.evaluate(()=>{
+  const samples: {title:string;x:number;yep:number;nope:number}[]=[];
+  (window as any).__swipeSamples=samples;
+  let until=performance.now()+1700;
+  function sample(){
+   const poster=document.querySelector('[data-testid="poster"]')!;
+   if(poster) samples.push({title:poster.textContent!,x:poster.getBoundingClientRect().x,
+    yep:Number(getComputedStyle(document.querySelector('[data-testid="stamp-yep"]')!).opacity),
+    nope:Number(getComputedStyle(document.querySelector('[data-testid="stamp-nope"]')!).opacity)});
+   if(performance.now()<until)requestAnimationFrame(sample);
+  } requestAnimationFrame(sample);
+ });
+ const x=box.x+box.width/2,y=box.y+box.height*.45;
+ await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+direction*110,y,{steps:12});await page.mouse.up();
+ await expect.poll(()=>f.commands.length).toBe(1);
+ await expect(page.getByRole('button',{name:'Yep',exact:true})).toBeEnabled();
+ await page.waitForTimeout(250);
+ const samples=await page.evaluate(()=>(window as any).__swipeSamples as {title:string;x:number;yep:number;nope:number}[]);
+ expect(samples.length).toBeGreaterThan(10);
+ expect(samples.some(s=>direction<0?s.yep>.01:s.nope>.01)).toBe(false);
+ const centered=(await page.getByTestId('poster').boundingBox())!;
+ expect(Math.abs(centered.x-box.x)).toBeLessThan(2);
+});
+
+test('agreement and take back keep wall and button geometry fixed', async ({page})=>{
+ const f=await fixture(page);
+ await page.getByRole('button',{name:'Inspect 2 matches',exact:true}).click();
+ await page.getByRole('button',{name:/Inspect Hidden shared title/}).click();
+ await page.getByRole('button',{name:'Propose Hidden shared title (2020)',exact:true}).click();
+ const agreed=page.getByRole('button',{name:/You agree to/});
+ const before=await agreed.boundingBox();
+ await page.screenshot({path:'artifacts/interaction-take-back.png'});
+ const poster=page.getByRole('button',{name:/Inspect Hidden shared title/});const wall=await poster.boundingBox();
+ await page.getByRole('button',{name:'Take back your agreement',exact:true}).click();
+ const after=await page.getByRole('button',{name:/^Agree to/}).boundingBox();
+ expect(after).toEqual(before);expect(await poster.boundingBox()).toEqual(wall);
+ expect(f.commands.at(-1)!.command).toMatchObject({type:'agree',agreed:false});
+});
+
+test('live hover positions cross the poster, pressed swipes stay private, release removes touch', async ({page})=>{
+ const f=await fixture(page);
+ f.room.shared.participants.push({participantId:'peer',nickname:'Friend',screenId:'tv',ready:true});
+ const sent: any[]=[];let peerSend: (message:string)=>void=()=>{};
+ await page.route('**/realtime-ticket',route=>route.fulfill({json:{ticket:'fixture-ticket',expiresAt:Date.now()+10000,websocketPath:'/api/yepwatch/v1/proposal/realtime'}}));
+ await page.routeWebSocket('**/realtime', ws=>{
+  peerSend=message=>ws.send(message);
+  ws.onMessage(raw=>{
+   const message=JSON.parse(String(raw));sent.push(message);
+   if(message.type==='authenticate'){
+    ws.send(JSON.stringify({type:'room.snapshot',snapshot:f.room.shared}));
+    ws.send(JSON.stringify({type:'activity.session',roomId:'test-room',sessionId:'own-session',serverTime:Date.now()}));
+   }
+  });
+ });
+ await page.reload();await page.getByRole('button',{name:'Yep',exact:true}).waitFor();
+ await expect.poll(()=>sent.some(f=>f.type==='authenticate'&&f.pointers)).toBe(true);
+ const box=(await page.getByTestId('pointer-surface').boundingBox())!;
+ await page.mouse.move(box.x+box.width*.25,box.y+box.height*.4);
+ await expect.poll(()=>sent.filter(f=>f.pointer).length).toBeGreaterThan(0);
+ await page.waitForTimeout(300);
+ await page.mouse.move(box.x+box.width*.7,box.y+box.height*.6);
+ await expect.poll(()=>sent.filter(f=>f.pointer).at(-1)?.pointer.x).toBeCloseTo(.7,1);
+ await page.waitForTimeout(300);await page.mouse.down();
+ await page.waitForTimeout(300);await page.mouse.move(box.x+box.width*.25,box.y+box.height*.55,{steps:6});
+ const pressed=sent.filter(f=>f.pointer?.pressed);
+ expect(pressed.length).toBeGreaterThan(0);
+ expect(pressed.every(f=>Math.abs(f.pointer.x-.7)<.02)).toBe(true);
+ await page.mouse.up();
+ const activity=(sequence:number,pointer:any)=>JSON.stringify({type:'activity',roomId:'test-room',participantId:'peer',sessionId:'peer-session',sequence,view:'voting',pointer,serverTime:Date.now(),expiresAt:Date.now()+6000});
+ peerSend(activity(1,{x:.25,y:.3,pressed:true,kind:'touch'}));
+ const cursor=page.getByTestId('peer-live-pointer');await expect(cursor).toBeVisible();
+ const first=await cursor.boundingBox();
+ await page.screenshot({path:'artifacts/interaction-live-pointer.png'});
+ peerSend(activity(2,{x:.75,y:.6,pressed:false,kind:'mouse'}));
+ await expect.poll(async()=>(await cursor.boundingBox())!.x).toBeGreaterThan(first!.x+box.width*.4);
+ await expect(cursor).toHaveCSS('pointer-events','none');
+ peerSend(activity(3,null));await expect(cursor).toHaveCount(0);
+});

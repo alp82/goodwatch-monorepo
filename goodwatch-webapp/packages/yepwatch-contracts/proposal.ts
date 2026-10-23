@@ -250,6 +250,12 @@ export type MatchInspection =
 	| { kind: "poster"; candidateId: string }
 	| { kind: "lens" }
 	| { kind: "dice" }
+export interface ActivityPointer {
+	x: number
+	y: number
+	pressed: boolean
+	kind: "mouse" | "touch"
+}
 export interface ClientActivity {
 	type: "activity"
 	sessionId: string
@@ -259,6 +265,8 @@ export interface ClientActivity {
 	beat?: "answer"
 	/** Matches view only; poster must name an actual current shared match. Inspection never changes proposal/agreement. */
 	inspection?: MatchInspection
+	/** Normalized poster surface, no card/title/answer. Null removes the pointer. Never heartbeat-replayed. */
+	pointer?: ActivityPointer | null
 }
 export interface ServerActivity extends ClientActivity {
 	roomId: string
@@ -280,6 +288,7 @@ export type ClientRealtimeFrame =
 			ticket: string
 			roomId: string
 			lastRevision: number | null
+			pointers?: true
 	  }
 	| { type: "ping" }
 	| ClientActivity

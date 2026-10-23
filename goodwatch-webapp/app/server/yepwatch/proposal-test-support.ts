@@ -9,14 +9,16 @@ import { IndeterminateWrite } from "./errors.ts"
 
 export class ProposalMemoryRepository implements ProposalRepository {
 	rows = new Map<string, ProposalStored>()
-	private invitations = new Map<string, string>()
+	private invitations = new Map<string, { roomId: string; expiresAt: number }>()
 	async rememberInvite(hash: string, roomId: string, _expiresAt: number) {
 		const old = this.invitations.get(hash)
-		if (old && old !== roomId) throw new Error("Invitation collision")
-		this.invitations.set(hash, roomId)
+		if (old && old.roomId !== roomId) return null
+		if (old) return old.expiresAt
+		this.invitations.set(hash, { roomId, expiresAt: _expiresAt })
+		return _expiresAt
 	}
 	async findInvite(hash: string) {
-		return this.invitations.get(hash) ?? null
+		return this.invitations.get(hash)?.roomId ?? null
 	}
 	ambiguousNext = false
 	async read(id: string) {

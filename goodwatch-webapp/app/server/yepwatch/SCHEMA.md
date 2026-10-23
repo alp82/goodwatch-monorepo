@@ -61,7 +61,7 @@ Room access expires after six hours. Each domain record carries the same room li
 
 ## Short invitation upgrade
 
-New rooms use 16-character, 80-bit opaque room keys derived from the room secret. Keys omit ambiguous I/L/O/U letters; lookup accepts lowercase, spaces and dashes. Existing signed invitations remain valid and retain their format. Room IDs and participant credentials are unchanged.
+New rooms use six-character opaque room keys derived from the room secret and an attempt counter. Keys omit ambiguous 0/O/1/I/L characters; lookup accepts lowercase, spaces and dashes. Existing 16-character and signed invitations remain valid and retain their format. New keys are atomically reserved by hash before room creation; collisions try another candidate without overwriting the prior mapping. Reservation expiry is preserved through retries. Room IDs and participant credentials are unchanged.
 
 The invitation table stores only the key hash and a room reference with the same six-hour expiry. Full-primary-key reads avoid search-refresh delays. The mapping is published/proven before returning an admission; exact retries repair a missing mapping after an interrupted response. Resolution still checks the live room and its stored invitation hash. A mapping collision fails closed. Backup and expired-record cleanup include the table.
 

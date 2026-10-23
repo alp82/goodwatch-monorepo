@@ -2,6 +2,7 @@ import { ACTIVITY_LIMITS, type ServerActivity } from '@goodwatch/yepwatch-contra
 export interface PeerActivity {
   frame: ServerActivity;
   pulse: ServerActivity | null;
+  pointer?: ServerActivity | null;
 }
 /** Sessions stay independent: closing one device must not erase another device's live view. */
 export function applyActivity(
@@ -30,12 +31,21 @@ export function applyActivity(
     return next;
   }
   const pulse =
-    (incoming.gesture || incoming.beat || incoming.inspection) && incoming.serverTime + ACTIVITY_LIMITS.pulseTtlMs > now
+    (incoming.gesture || incoming.beat || incoming.inspection) &&
+    incoming.serverTime + ACTIVITY_LIMITS.pulseTtlMs > now
       ? incoming
       : old?.pulse && old.pulse.serverTime + ACTIVITY_LIMITS.pulseTtlMs > now
       ? old.pulse
       : null;
-  next.set(incoming.sessionId, { frame: incoming, pulse });
+  const pointer =
+    incoming.view !== 'voting' || incoming.pointer === null
+      ? null
+      : incoming.pointer
+      ? incoming
+      : old?.pointer && old.pointer.serverTime + ACTIVITY_LIMITS.pulseTtlMs > now
+      ? old.pointer
+      : null;
+  next.set(incoming.sessionId, { frame: incoming, pulse, pointer });
   return next;
 }
 export function pruneActivity(current: Map<string, PeerActivity>, now: number) {
@@ -46,6 +56,8 @@ export function pruneActivity(current: Map<string, PeerActivity>, now: number) {
         id,
         {
           frame: a.frame,
+          pointer:
+            a.pointer && a.pointer.serverTime + ACTIVITY_LIMITS.pulseTtlMs > now ? a.pointer : null,
           pulse: a.pulse && a.pulse.serverTime + ACTIVITY_LIMITS.pulseTtlMs > now ? a.pulse : null,
         },
       ])

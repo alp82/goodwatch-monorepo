@@ -3,12 +3,13 @@ import { randomUUID } from 'node:crypto'
 import { Redis, Cluster } from 'ioredis'
 import { ACTIVITY_CHANNEL, ACTIVITY_LIMITS, type ClientActivity, type ServerActivity } from '@goodwatch/yepwatch-contracts/continuous'
 import type { z } from 'zod'
+import type { ActivityPointer } from '@goodwatch/yepwatch-contracts/proposal'
 import type { Inspection } from './proposal-activity.js'
 import { ValkeyBus, type BusConfig } from './bus.js'
 import { clientActivitySchema, serverActivitySchema } from './activity-protocol.js'
 
-export type ActivityInput = ClientActivity & { inspection?: Inspection }
-export type ActivityFrame = ServerActivity & { inspection?: Inspection }
+export type ActivityInput = ClientActivity & { inspection?: Inspection; pointer?: ActivityPointer | null }
+export type ActivityFrame = ServerActivity & { inspection?: Inspection; pointer?: ActivityPointer | null }
 export interface ActivityProtocol { client: z.ZodType<ActivityInput>; server: z.ZodType<ActivityFrame> }
 const continuousProtocol: ActivityProtocol = { client: clientActivitySchema, server: serverActivitySchema }
 
@@ -103,7 +104,7 @@ export class ActivityRelay {
         (!previous && this.seen.size >= this.maxSessions)) return
     this.seen.set(key, { participantId: frame.participantId, sequence: frame.sequence, expiresAt: frame.expiresAt })
     // Pulse semantics expire sooner than the foreground view; never replay a stale beat.
-    if (frame.serverTime + ACTIVITY_LIMITS.pulseTtlMs <= now) { delete frame.gesture; delete frame.beat; delete frame.inspection }
+    if (frame.serverTime + ACTIVITY_LIMITS.pulseTtlMs <= now) { delete frame.gesture; delete frame.beat; delete frame.inspection; delete frame.pointer }
     this.deliver(frame)
   }
   open(roomId: string, participantId: string, eligible: () => boolean, leaseExpiry: () => number,

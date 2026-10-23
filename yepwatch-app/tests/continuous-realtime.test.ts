@@ -86,6 +86,7 @@ test('activity requires authenticated live snapshot and a fresh session; backgro
     ticket: 'ticket-1',
     roomId: 'test-room',
     lastRevision: 1,
+    pointers: true,
   });
   h.client.sendActivity('matches', 'handle');
   assert.equal(s.sent.length, 1);

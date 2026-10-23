@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { Animated, Image, Pressable, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GText, Icon, Press, Score, glow, s, native } from './theme';
@@ -57,7 +57,7 @@ export function Poster({
   });
   const reset = drag.reset;
   // A server card replacement must cancel the prior external animation.
-  useEffect(() => {
+  useLayoutEffect(() => {
     latch.current = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAnimating(false);
@@ -123,7 +123,13 @@ export function Poster({
         {showText && (
           <View
             pointerEvents="none"
-            style={{ position: 'absolute', left: 18, right: 18, bottom: 16, gap: 5 }}
+            style={{
+              position: 'absolute',
+              left: 18,
+              right: 18,
+              bottom: 16,
+              gap: 5,
+            }}
           >
             <GText bold size={Math.min(30, width * 0.105)} lines={2}>
               {title.title}
@@ -161,6 +167,7 @@ export function Poster({
         {mode === 'voting' && (
           <>
             <Animated.View
+              testID="stamp-yep"
               pointerEvents="none"
               accessibilityElementsHidden
               importantForAccessibility="no-hide-descendants"
@@ -185,6 +192,7 @@ export function Poster({
               </GText>
             </Animated.View>
             <Animated.View
+              testID="stamp-nope"
               pointerEvents="none"
               accessibilityElementsHidden
               importantForAccessibility="no-hide-descendants"

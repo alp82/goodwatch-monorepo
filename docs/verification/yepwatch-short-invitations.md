@@ -13,3 +13,7 @@ Validation:
 - YepWatch has zero TypeScript diagnostics. The broader imported graph still reports unrelated existing catalog/UI/cache diagnostics; a whole-repository typecheck pass is not claimed.
 
 Applied only the additive invitation-table DDL and runtime grant on the existing cluster before publishing this source. Table health and runtime-role read check passed. No existing rooms, keys, quotas or decisions changed; no application restart or Coolify action performed. New links require deployment of this source. Existing installed clients accept the new strings without rebuilding.
+
+## Six-character follow-up
+
+New rooms now use six uppercase letters/digits excluding 0/O/1/I/L. Atomic primary-key reservations try up to 32 reproducible candidates on collision; existing mappings are never reassigned. Retries preserve the reservation’s original expiry. Sixteen-character and original signed links stay valid. No further schema migration is required.

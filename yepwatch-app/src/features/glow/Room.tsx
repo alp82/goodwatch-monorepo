@@ -16,6 +16,7 @@ import { boundedMatch, presentationSize, type GlowView } from './model';
 import { GText, Icon, Pill, Press, VoteButton, Wordmark, Score, glow, s } from './theme';
 import { Faces, PeerStage } from './Peers';
 import { Backdrop } from './Backdrop';
+import { PointerSurface } from './PointerSurface';
 import { Poster } from './Poster';
 import { Drawer } from './Drawer';
 import { Trailer } from './Trailer';
@@ -40,6 +41,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const [drawer, setDrawer] = useState<'room' | 'details' | 'trailer' | null>(null);
   const [notice, setNotice] = useState('');
   const [memberBusy, setMemberBusy] = useState(false);
+  const [localReaction, setLocalReaction] = useState<{ at: number; gesture?: 'reach'|'handle'|'release'; answer?: boolean }>({at:0});
+  const pointerAt = useRef(0);
   const [optimistic, setOptimistic] = useState<string>();
   const [stage, setStage] = useState({
     width: Math.min(width, 560),
@@ -233,6 +236,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
     if (!card || disabled) return;
     const current = own.votes.find((v) => v.candidateId === card.id);
     setOptimistic(card.id);
+    setLocalReaction({at: Date.now(), answer: yes});
     state.activity(undefined, 'answer');
     await send({
       type: 'vote',
@@ -423,7 +427,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
         <Press label="Open room" onPress={() => setDrawer('room')}>
           <Wordmark size={24} />
         </Press>
-        <Faces people={people} activity={activity} open={() => setDrawer('room')} />
+        <Faces localReaction={localReaction} people={people} activity={activity} open={() => setDrawer('room')} />
       </View>
       {developmentNotice && (
         <GText size={11} color={glow.muted} style={{ textAlign: 'center', paddingHorizontal: 12 }}>
@@ -632,6 +636,13 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                     height={dimensions.height}
                     desktop={wide}
                   />
+                  <PointerSurface width={dimensions.width} height={dimensions.height} onPointer={(pointer) => {
+                    state.pointer(pointer);
+                    if (pointer && Date.now() - pointerAt.current > 280) {
+                      pointerAt.current = Date.now();
+                      setLocalReaction({at: Date.now(), gesture: pointer.pressed ? 'reach' : 'handle'});
+                    }
+                  }}>
                   <Poster
                     showText={!wide}
                     title={title}
@@ -643,8 +654,9 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                     onBrowse={() => undefined}
                     onDetails={() => setDrawer('details')}
                     onTrailer={() => setDrawer('trailer')}
-                    onGesture={state.activity}
+                    onGesture={(gesture) => { setLocalReaction({at:Date.now(),gesture}); state.activity(gesture); }}
                   />
+                  </PointerSurface>
                   <PeerStage
                     layer="front"
                     activity={activity}

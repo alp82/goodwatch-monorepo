@@ -10,7 +10,12 @@ import type {
 	RealtimeViewResponse,
 	RoomInvalidation,
 } from "../../../packages/yepwatch-contracts/proposal.ts"
-import { shortInvite, normalizeShortInvite } from "./proposal-invites.ts"
+import {
+	shortInvite,
+	previousInvite,
+	INVITE_ATTEMPTS,
+	normalizeShortInvite,
+} from "./proposal-invites.ts"
 import { hash, equal, keyed, random, sign, verify } from "./crypto.server.ts"
 import { IndeterminateWrite, RoomError, requireRoom } from "./errors.ts"
 import {
@@ -99,33 +104,48 @@ export class ProposalService {
 			digest: hash(JSON.stringify(request)),
 		}
 	}
-	private invite(id: string) {
-		return this.repository.rememberInvite && this.repository.findInvite
-			? shortInvite(this.secret, id)
-			: this.legacyInvite(id)
-	}
 	private legacyInvite(id: string) {
 		return `${id}.${keyed(this.secret, "proposal-invite", id)}`
 	}
-	private async roomInvite(room: ProposalRoom) {
-		const code = this.invite(room.id)
-		if (equal(hash(code), room.inviteHash)) {
-			if (normalizeShortInvite(code))
-				await this.repository.rememberInvite!(
-					hash(code),
-					room.id,
-					room.expiresAt
-				)
-			return code
+	private async reserveInvite(id: string, expiresAt: number) {
+		if (!this.repository.rememberInvite || !this.repository.findInvite)
+			return { code: this.legacyInvite(id), expiresAt }
+		for (let attempt = 0; attempt < INVITE_ATTEMPTS; attempt++) {
+			const code = shortInvite(this.secret, id, attempt)
+			const reserved = await this.repository.rememberInvite(
+				hash(code),
+				id,
+				expiresAt
+			)
+			if (reserved !== null) return { code, expiresAt: reserved }
 		}
-		const legacy = this.legacyInvite(room.id)
-		requireRoom(
-			equal(hash(legacy), room.inviteHash),
-			"not_found",
-			"Invite unavailable",
-			404
+		throw new RoomError(
+			"busy",
+			"Room codes are busy. Retry the same request.",
+			503,
+			true
 		)
-		return legacy
+	}
+	private async roomInvite(room: ProposalRoom) {
+		const codes = [
+			this.legacyInvite(room.id),
+			previousInvite(this.secret, room.id),
+			...Array.from({ length: INVITE_ATTEMPTS }, (_, i) =>
+				shortInvite(this.secret, room.id, i)
+			),
+		]
+		const code = codes.find((code) => equal(hash(code), room.inviteHash))
+		requireRoom(code, "not_found", "Invite unavailable", 404)
+		if (normalizeShortInvite(code)) {
+			const reserved = await this.repository.rememberInvite!(
+				hash(code),
+				room.id,
+				room.expiresAt
+			)
+			if (reserved !== room.expiresAt)
+				throw new RoomError("busy", "Invitation unavailable", 503, true)
+		}
+		return code
 	}
 	private async admission(
 		room: ProposalRoom,
@@ -201,6 +221,7 @@ export class ProposalService {
 			const expiresAt =
 				(await this.guard?.create(id, hash(JSON.stringify(request)))) ??
 				this.now() + L.roomMs
+			const invitation = await this.reserveInvite(id, expiresAt)
 			const p = this.member(id, request)
 			const room: ProposalRoom = {
 				format: 2,
@@ -210,8 +231,8 @@ export class ProposalService {
 				id,
 				hostId: p.id,
 				revision: 1,
-				expiresAt,
-				inviteHash: hash(this.invite(id)),
+				expiresAt: invitation.expiresAt,
+				inviteHash: hash(invitation.code),
 				phase: "setup",
 				rosterVersion: 1,
 				contextVersion: 1,

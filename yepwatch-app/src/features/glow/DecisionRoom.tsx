@@ -219,6 +219,7 @@ export function DecisionRoom({
             minHeight: 48,
             borderRadius: 16,
             paddingHorizontal: 12,
+            paddingRight: 64,
             flexDirection: 'row',
             gap: 8,
             backgroundColor: proposal.ownAgreed || checking ? '#fbbf2414' : glow.amber,
@@ -277,11 +278,9 @@ export function DecisionRoom({
             label="Take back your agreement"
             onPress={withdraw}
             disabled={disabled}
-            style={{ minHeight: 24 }}
+            style={{ position: 'absolute', top: 0, right: 0, width: 54, height: 48, borderLeftWidth: 1, borderLeftColor: glow.amber, borderRadius: 12 }}
           >
-            <GText size={12} color={glow.muted}>
-              Take back
-            </GText>
+            <Icon name="undo" size={20} color={glow.amber} />
           </Press>
         )}
         {countSeen.bump > 0 && (

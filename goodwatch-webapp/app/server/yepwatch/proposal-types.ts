@@ -37,7 +37,7 @@ export type ProposalRepository = RoomRepository<ProposalRoom> & {
 		hash: string,
 		roomId: string,
 		expiresAt: number
-	): Promise<void>
+	): Promise<number | null>
 	findInvite?(hash: string): Promise<string | null>
 }
 export type ProposalStored = StoredRoom<ProposalRoom>

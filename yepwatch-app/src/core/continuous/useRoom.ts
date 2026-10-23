@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
 import type {
   ActivityGesture,
+  ActivityPointer,
   MatchInspection,
   ActivityView,
   CommandEnvelope,
@@ -294,6 +295,7 @@ export function useContinuousRoom(roomId: string) {
     setView: (view: ActivityView) => channel.current?.setView(view),
     inspect: (inspection: MatchInspection) =>
       channel.current?.sendActivity('matches', undefined, undefined, inspection),
+    pointer: (pointer: ActivityPointer | null) => channel.current?.sendPointer(pointer),
     activity: (gesture?: ActivityGesture, beat?: 'answer') =>
       channel.current?.sendActivity(undefined, gesture, beat),
   };

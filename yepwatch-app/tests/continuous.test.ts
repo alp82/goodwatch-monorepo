@@ -334,3 +334,18 @@ test('inspection is matches-only, action scoped, exact and expires without heart
   assert.equal(pruneActivity(sessions, 2500).get('session')?.pulse, null);
   assert.equal(pruneActivity(sessions, 2500).get('session')?.frame.view, 'matches');
 });
+
+
+test('bounded poster pointers expire without heartbeat replay and release clears immediately', () => {
+ const incoming=activityFixture({pointer:{x:.25,y:.75,pressed:true,kind:'touch'}});
+ assert.ok(parseFrame(JSON.stringify(incoming)));
+ for(const pointer of [{x:-1,y:0,pressed:true,kind:'touch'},{x:0,y:2,pressed:true,kind:'mouse'},{x:.5,y:.5,pressed:true,kind:'touch',choice:'watch'}])
+  assert.equal(parseFrame(JSON.stringify({...incoming,pointer})),null);
+ assert.equal(parseFrame(JSON.stringify({...incoming,view:'matches'})),null);
+ const first=applyActivity(new Map(),incoming,'host',1000);
+ assert.equal([...first.values()][0].pointer?.pointer?.x,.25);
+ const heartbeat=applyActivity(first,activityFixture({sequence:2,serverTime:2000,expiresAt:8000}),'host',2000);
+ assert.equal([...pruneActivity(heartbeat,2501).values()][0].pointer,null);
+ const released=applyActivity(first,activityFixture({sequence:2,serverTime:1100,pointer:null}),'host',1100);
+ assert.equal([...released.values()][0].pointer,null);
+});

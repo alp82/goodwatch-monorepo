@@ -9,8 +9,10 @@ export const inspectionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('dice') }),
 ])
 export type Inspection = MatchInspection
-const inspection = { inspection: inspectionSchema.optional() }
-function scope(frame: { view: string; inspection?: Inspection; beat?: 'answer' }, context: z.RefinementCtx) {
+export const pointerSchema = z.strictObject({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), pressed: z.boolean(), kind: z.enum(['mouse', 'touch']) })
+const inspection = { inspection: inspectionSchema.optional(), pointer: pointerSchema.nullable().optional() }
+function scope(frame: { view: string; inspection?: Inspection; beat?: 'answer'; pointer?: unknown }, context: z.RefinementCtx) {
+  if (frame.pointer !== undefined && frame.view !== 'voting') context.addIssue({ code: 'custom', message: 'Pointer requires voting view' })
   if (frame.inspection && frame.view !== 'matches') context.addIssue({ code: 'custom', message: 'Inspection requires matches view' })
   if (frame.beat && frame.view !== 'voting') context.addIssue({ code: 'custom', message: 'Answer pulse requires private voting view' })
 }

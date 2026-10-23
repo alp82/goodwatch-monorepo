@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Svg, { Path } from 'react-native-svg';
-import { Animated, View } from 'react-native';
+import { Animated, View, useWindowDimensions } from 'react-native';
 import type { PeerActivity } from '../../core/continuous/activity';
 import type { GlowPerson } from './model';
 import { peerColor } from './model';
@@ -10,11 +10,14 @@ export function Faces({
   people,
   activity,
   open,
+  localReaction,
 }: {
   people: GlowPerson[];
   activity: Map<string, PeerActivity>;
   open: () => void;
+  localReaction: { at: number; gesture?: string; answer?: boolean };
 }) {
+  const limit = useWindowDimensions().width < 480 ? 3 : 5;
   return (
     <Press
       label={`Room, ${people.length} ${people.length === 1 ? 'person' : 'people'}`}
@@ -29,57 +32,222 @@ export function Faces({
         gap: 8,
       }}
     >
-      {people.slice(0, 5).map((p) => (
+      {people.slice(0, limit).map((p) => (
         <Avatar
           key={p.id}
           person={p}
-          pulse={activity.get(p.id)?.pulse?.serverTime ?? 0}
+          pulse={
+            p.self
+              ? localReaction.at
+              : activity.get(p.id)?.pointer?.serverTime ??
+                activity.get(p.id)?.pulse?.serverTime ??
+                0
+          }
+          action={
+            p.self
+              ? localReaction.answer !== undefined
+                ? localReaction.answer
+                  ? 'yep'
+                  : 'nope'
+                : localReaction.gesture
+              : activity.get(p.id)?.pointer?.pointer
+              ? activity.get(p.id)?.pointer?.pointer?.pressed
+                ? 'reach'
+                : 'handle'
+              : activity.get(p.id)?.pulse?.beat
+              ? 'answer'
+              : activity.get(p.id)?.pulse?.gesture
+          }
+          moving={!!activity.get(p.id)?.pointer?.pointer}
           active={activity.has(p.id)}
         />
       ))}
-      {people.length > 5 && <GText size={12}>+{people.length - 5}</GText>}
+      {people.length > limit && <GText size={12}>+{people.length - limit}</GText>}
     </Press>
   );
 }
-function Avatar({ person, pulse, active }: { person: GlowPerson; pulse: number; active: boolean }) {
-  const [y] = useState(() => new Animated.Value(0));
+function Avatar({
+  person,
+  pulse,
+  active,
+  action,
+  moving,
+}: {
+  person: GlowPerson;
+  pulse: number;
+  active: boolean;
+  action?: string;
+  moving: boolean;
+}) {
+  const [y] = useState(() => new Animated.Value(0)),
+    [squash] = useState(() => new Animated.Value(1));
+  const [spark] = useState(() => new Animated.Value(0)),
+    [wiggle] = useState(() => new Animated.Value(0));
   const reduced = useReducedMotion();
   useEffect(() => {
-    if (!pulse || reduced || person.self) return;
-    const animation = Animated.sequence([
-      Animated.timing(y, { toValue: -7, duration: 130, useNativeDriver: native }),
-      Animated.spring(y, { toValue: 0, friction: 4, useNativeDriver: native }),
-    ]);
-    animation.start();
-    return () => animation.stop();
-  }, [pulse, reduced, y, person.self]);
+    y.stopAnimation();
+    squash.stopAnimation();
+    spark.stopAnimation();
+    wiggle.stopAnimation();
+    y.setValue(0);
+    squash.setValue(1);
+    spark.setValue(0);
+    wiggle.setValue(0);
+    if (reduced) return;
+    if (action === 'reach') {
+      Animated.spring(squash, {
+        toValue: 0.72,
+        useNativeDriver: native,
+        friction: 6,
+      }).start();
+    } else if (action === 'answer' || action === 'yep') {
+      Animated.sequence([
+        Animated.timing(squash, {
+          toValue: 0.8,
+          duration: 75,
+          useNativeDriver: native,
+        }),
+        Animated.parallel([
+          Animated.spring(squash, {
+            toValue: 1,
+            useNativeDriver: native,
+            friction: 4,
+          }),
+          Animated.sequence([
+            Animated.timing(y, {
+              toValue: -16,
+              duration: 160,
+              useNativeDriver: native,
+            }),
+            Animated.spring(y, {
+              toValue: 0,
+              useNativeDriver: native,
+              friction: 4,
+            }),
+          ]),
+          Animated.timing(spark, {
+            toValue: 1,
+            duration: 700,
+            useNativeDriver: native,
+          }),
+        ]),
+      ]).start();
+    } else if (action === 'nope') {
+      Animated.sequence([
+        Animated.timing(wiggle, {
+          toValue: -1,
+          duration: 100,
+          useNativeDriver: native,
+        }),
+        Animated.timing(wiggle, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: native,
+        }),
+        Animated.spring(wiggle, {
+          toValue: 0,
+          useNativeDriver: native,
+          friction: 5,
+        }),
+      ]).start();
+    } else if (moving || action === 'handle') {
+      Animated.sequence([
+        Animated.timing(wiggle, {
+          toValue: 0.4,
+          duration: 120,
+          useNativeDriver: native,
+        }),
+        Animated.spring(wiggle, {
+          toValue: 0,
+          useNativeDriver: native,
+          friction: 4,
+        }),
+      ]).start();
+    }
+    return () => {
+      y.stopAnimation();
+      squash.stopAnimation();
+      spark.stopAnimation();
+      wiggle.stopAnimation();
+    };
+  }, [pulse, action, moving, reduced, y, squash, spark, wiggle]);
+  const color = peerColor(person.id);
   return (
-    <Animated.View
-      accessibilityLabel={`${person.nickname}${person.self ? ', you' : ''}`}
-      style={{
-        transform: [{ translateY: y }],
-        width: 34,
-        height: 34,
-        borderRadius: 17,
-        borderColor: person.self || active ? peerColor(person.id) : '#ffffff26',
-        shadowColor: peerColor(person.id),
-        shadowOpacity: active ? 0.6 : 0,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 0 },
-        borderWidth: 2,
-        backgroundColor: '#292929',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginLeft: -2,
-      }}
-    >
-      <GText size={13} bold color={peerColor(person.id)}>
-        {person.nickname.slice(0, 1).toUpperCase()}
-      </GText>
-    </Animated.View>
+    <View style={{ width: 44, height: 44 }}>
+      <Animated.View
+        accessibilityLabel={`${person.nickname}${person.self ? ', you' : ''}`}
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: 20,
+          borderWidth: 2,
+          borderColor: person.self || active ? color : '#ffffff26',
+          backgroundColor: '#292929',
+          alignItems: 'center',
+          justifyContent: 'center',
+          shadowColor: color,
+          shadowOpacity: active ? 0.6 : 0,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 0 },
+          transform: [
+            { translateY: y },
+            { scaleY: squash },
+            {
+              scaleX: squash.interpolate({
+                inputRange: [0.7, 1],
+                outputRange: [1.18, 1],
+              }),
+            },
+            {
+              rotate: wiggle.interpolate({
+                inputRange: [-1, 1],
+                outputRange: ['-12deg', '12deg'],
+              }),
+            },
+          ],
+        }}
+      >
+        <GText size={17} bold color={color}>
+          {person.nickname.slice(0, 1).toUpperCase()}
+        </GText>
+      </Animated.View>
+      {[-1, 1].map((side) => (
+        <Animated.View
+          key={side}
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: side < 0 ? 0 : 37,
+            top: 0,
+            opacity: spark.interpolate({
+              inputRange: [0, 0.2, 1],
+              outputRange: [0, 1, 0],
+            }),
+            transform: [
+              {
+                translateY: spark.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-4, -22],
+                }),
+              },
+              {
+                translateX: spark.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, side * 12],
+                }),
+              },
+            ],
+          }}
+        >
+          <GText size={13} color={color}>
+            ✦
+          </GText>
+        </Animated.View>
+      ))}
+    </View>
   );
 }
-/** Purely decorative neutral motion. No received coordinates, answer direction or card identity. */
+/** Ephemeral surface positions and neutral actions; never card identity or another person’s answer. */
 export function PeerStage({
   activity,
   width,
@@ -211,7 +379,10 @@ function Ghost({
           <Icon name="play" color={color} size={25} />
         </View>
       )}
-      {layer === 'front' && pulse > 0 && !reduced && (
+      {layer === 'front' && peer.pointer?.pointer && (
+        <LivePointer peer={peer} width={width} height={height} />
+      )}
+      {layer === 'front' && !peer.pointer?.pointer && pulse > 0 && !reduced && (
         <Animated.View
           testID={desktop ? 'peer-cursor' : 'peer-touch'}
           style={{
@@ -271,5 +442,67 @@ function Ghost({
         </Animated.View>
       )}
     </>
+  );
+}
+
+function LivePointer({
+  peer,
+  width,
+  height,
+}: {
+  peer: PeerActivity;
+  width: number;
+  height: number;
+}) {
+  const position = peer.pointer!.pointer!;
+  const [x] = useState(() => new Animated.Value(position.x * width));
+  const [y] = useState(() => new Animated.Value(position.y * height));
+  const reduced = useReducedMotion();
+  useEffect(() => {
+    const animation = Animated.parallel([
+      Animated.timing(x, {
+        toValue: position.x * width,
+        duration: reduced ? 0 : 260,
+        useNativeDriver: native,
+      }),
+      Animated.timing(y, {
+        toValue: position.y * height,
+        duration: reduced ? 0 : 260,
+        useNativeDriver: native,
+      }),
+    ]);
+    animation.start();
+    return () => animation.stop();
+  }, [position.x, position.y, width, height, x, y, reduced]);
+  const color = peerColor(peer.frame.participantId);
+  return (
+    <Animated.View
+      testID="peer-live-pointer"
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        opacity: 0.55,
+        transform: [{ translateX: x }, { translateY: y }, { scale: position.pressed ? 0.8 : 1 }],
+      }}
+    >
+      {position.kind === 'mouse' ? (
+        <Icon name="cursor" size={32} color={color} />
+      ) : (
+        <View
+          style={{
+            width: 26,
+            height: 26,
+            marginLeft: -13,
+            marginTop: -13,
+            borderRadius: 13,
+            borderWidth: 3,
+            borderColor: color,
+            backgroundColor: `${color}55`,
+          }}
+        />
+      )}
+    </Animated.View>
   );
 }

@@ -389,7 +389,7 @@ test("short invitations: typed keys, normalized input, exact replay, legacy reco
 	const service = new ProposalService(repo, proposalFixtureCatalog, secret)
 	const req = admission("Short host")
 	const a = await service.create(req)
-	assert.match(a.invite.code, /^[0-9A-HJKMNP-TV-Z]{16}$/)
+	assert.match(a.invite.code, /^[2-9A-HJKMNP-Z]{6}$/)
 	assert.equal(a.invite.path, `/r/${a.invite.code}`)
 	assert.equal((await service.create(req)).invite.code, a.invite.code)
 	assert.equal(
@@ -397,7 +397,7 @@ test("short invitations: typed keys, normalized input, exact replay, legacy reco
 			.code,
 		a.invite.code
 	)
-	const grouped = a.invite.code.match(/.{4}/g)!.join("-").toLowerCase()
+	const grouped = a.invite.code.match(/.{3}/g)!.join("-").toLowerCase()
 	assert.equal(
 		(await service.resolveInvite(grouped)).roomId,
 		a.credential.roomId
@@ -442,4 +442,34 @@ test("short invitations: typed keys, normalized input, exact replay, legacy reco
 		service.resolveInvite(legacy),
 		(e: any) => e.code === "expired"
 	)
+})
+
+test("six-character reservation retries collisions without stealing another room; preserves sixteen-character rooms", async () => {
+	const { hash, keyed } = await import("./crypto.server.ts")
+	const { shortInvite, previousInvite } = await import("./proposal-invites.ts")
+	const repo = new ProposalMemoryRepository(),
+		service = new ProposalService(repo, proposalFixtureCatalog, secret)
+	const req = admission("Collision host")
+	const id = keyed(
+		secret,
+		"proposal-room",
+		JSON.stringify([req.commandId, req.admissionSecret])
+	).slice(0, 32)
+	const occupied = shortInvite(secret, id)
+	await repo.rememberInvite(hash(occupied), "existing-other-room", 1234)
+	const [a, replay] = await Promise.all([
+		service.create(req),
+		service.create(req),
+	])
+	assert.equal(a.invite.code, shortInvite(secret, id, 1))
+	assert.equal(replay.invite.code, a.invite.code)
+	assert.equal(await repo.findInvite(hash(occupied)), "existing-other-room")
+	assert.equal((await service.resolveInvite(a.invite.code)).roomId, id)
+	const old = previousInvite(secret, id)
+	repo.rows.get(id)!.room.inviteHash = hash(old)
+	assert.equal(
+		(await service.recoverAdmission(id, credential(a))).invite.code,
+		old
+	)
+	assert.equal((await service.resolveInvite(old)).roomId, id)
 })
