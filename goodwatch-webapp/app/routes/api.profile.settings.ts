@@ -4,7 +4,7 @@
 import { type ActionFunctionArgs, json } from "@remix-run/node"
 import { validateProfileSettings } from "~/domain/profile-settings"
 import { avatarVersion } from "~/server/profile/avatar.server"
-import { sameOrigin } from "~/server/profile/request.server"
+import { fromThisSite, readJsonLimited } from "~/server/profile/request.server"
 import {
 	isHttpsUrl,
 	markProfileNoticeSeen,
@@ -15,11 +15,13 @@ import { getUserData } from "~/server/userData.server"
 import { getUserFromRequest } from "~/utils/auth"
 
 const headers = { "Cache-Control": "no-store" }
+/** A full settings object is well under 4 KB (a 160-character bio, six links). */
+const MAX_BODY_BYTES = 16 * 1024
 
 export async function action({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST")
 		return json({ error: "Use POST" }, { status: 405, headers })
-	if (!sameOrigin(request))
+	if (!fromThisSite(request))
 		return json({ error: "Origin mismatch" }, { status: 403, headers })
 	const user = await getUserFromRequest({ request })
 	if (!user?.id)
@@ -27,12 +29,12 @@ export async function action({ request }: ActionFunctionArgs) {
 			{ error: "Sign in to edit your profile." },
 			{ status: 401, headers },
 		)
-	let body: unknown
-	try {
-		body = await request.json()
-	} catch {
-		return json({ error: "Invalid JSON" }, { status: 400, headers })
-	}
+	const read = await readJsonLimited(request, MAX_BODY_BYTES)
+	if (!read.ok)
+		return read.problem === "too-large"
+			? json({ error: "Request too large" }, { status: 413, headers })
+			: json({ error: "Invalid JSON" }, { status: 400, headers })
+	const body = read.value
 	if (!body || typeof body !== "object" || Array.isArray(body))
 		return json({ error: "Invalid request" }, { status: 400, headers })
 

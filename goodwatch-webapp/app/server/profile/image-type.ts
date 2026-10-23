@@ -30,10 +30,25 @@ export function sniffImageType(bytes: Uint8Array): ImageType | null {
 
 export const AVATAR_SIZE = 512
 
+/** About a 4000 x 4000 photo: enough for any phone picture, small enough that decoding can't take much memory. */
+export const AVATAR_MAX_PIXELS = 16_000_000
+
+// One encode at a time in this process: each holds the decoded picture (up to AVATAR_MAX_PIXELS) in memory.
+let encoding: Promise<unknown> = Promise.resolve()
+
 /** Re-encodes to a 512 px square WebP. sharp drops EXIF, GPS and other metadata unless asked to keep it. */
-export async function encodeAvatar(bytes: Uint8Array): Promise<Buffer> {
+export function encodeAvatar(bytes: Uint8Array): Promise<Buffer> {
+	const run = encoding.then(() => encode(bytes))
+	encoding = run.catch(() => {})
+	return run
+}
+
+async function encode(bytes: Uint8Array): Promise<Buffer> {
 	const { default: sharp } = await import("sharp")
-	return await sharp(bytes, { limitInputPixels: 40_000_000, failOn: "error" })
+	return await sharp(bytes, {
+		limitInputPixels: AVATAR_MAX_PIXELS,
+		failOn: "error",
+	})
 		.rotate() // honour the photo's orientation before its metadata goes
 		.resize(AVATAR_SIZE, AVATAR_SIZE, { fit: "cover", position: "attention" })
 		.webp({ quality: 82, effort: 4 })

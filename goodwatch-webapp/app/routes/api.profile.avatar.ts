@@ -3,13 +3,14 @@
 import { type ActionFunctionArgs, json } from "@remix-run/node"
 import {
 	AVATAR_MAX_BYTES,
+	allowUpload,
 	avatarPath,
 	deleteAvatar,
 	encodeAvatar,
 	saveAvatar,
 	sniffImageType,
 } from "~/server/profile/avatar.server"
-import { readLimited, sameOrigin } from "~/server/profile/request.server"
+import { fromThisSite, readLimited } from "~/server/profile/request.server"
 import {
 	dropPhotoChoice,
 	resetProfilePages,
@@ -24,7 +25,7 @@ const MAX_REQUEST_BYTES = AVATAR_MAX_BYTES + 64 * 1024
 export async function action({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST" && request.method !== "DELETE")
 		return json({ error: "Use POST or DELETE" }, { status: 405, headers })
-	if (!sameOrigin(request))
+	if (!fromThisSite(request))
 		return json({ error: "Origin mismatch" }, { status: 403, headers })
 	const userId = await getUserIdFromRequest({ request })
 	if (!userId)
@@ -43,6 +44,11 @@ export async function action({ request }: ActionFunctionArgs) {
 	const profile = await getCachedProfileByUserId(userId)
 	if (!profile)
 		return json({ error: "Pick a handle first." }, { status: 409, headers })
+	if (!(await allowUpload(userId)))
+		return json(
+			{ error: "That's a lot of new photos. Try again in an hour." },
+			{ status: 429, headers },
+		)
 	const body = await readLimited(request, MAX_REQUEST_BYTES)
 	if (!body)
 		return json(

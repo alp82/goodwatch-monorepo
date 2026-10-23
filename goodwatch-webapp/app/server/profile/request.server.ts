@@ -14,6 +14,15 @@ export function sameOrigin(request: Request): boolean {
 	return origin === expected
 }
 
+/** Whether the browser says the request comes from another site (Sec-Fetch-Site). Older browsers don't send it. */
+export function crossSite(request: Request): boolean {
+	return request.headers.get("Sec-Fetch-Site") === "cross-site"
+}
+
+/** The profile's write endpoints take requests from the site itself only: same Origin, not marked cross-site. */
+export const fromThisSite = (request: Request) =>
+	sameOrigin(request) && !crossSite(request)
+
 /** Reads at most `max` bytes of a request body; null when it is larger. */
 export async function readLimited(
 	request: Request,
@@ -42,4 +51,20 @@ export async function readLimited(
 		at += chunk.byteLength
 	}
 	return out
+}
+
+/** Parses a JSON body of at most `max` bytes; "too-large" or "invalid" otherwise. */
+export async function readJsonLimited(
+	request: Request,
+	max: number,
+): Promise<
+	{ ok: true; value: unknown } | { ok: false; problem: "too-large" | "invalid" }
+> {
+	const bytes = await readLimited(request, max)
+	if (!bytes) return { ok: false, problem: "too-large" }
+	try {
+		return { ok: true, value: JSON.parse(new TextDecoder().decode(bytes)) }
+	} catch {
+		return { ok: false, problem: "invalid" }
+	}
 }

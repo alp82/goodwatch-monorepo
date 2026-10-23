@@ -120,9 +120,13 @@ test("unlink works by Discord id and by member id; account deletion invokes it",
 			calls.push(id)
 		},
 		deleteAvatar: async () => true,
+		handleOf: async () => "alice",
+		forgetProfile: async (id, handle) => {
+			calls.push(`forget ${id} ${handle}`)
+		},
 	})
 	assert.equal(await store.getLinkedUserId("1"), null)
-	assert.deepEqual(calls, ["alice", "alice"])
+	assert.deepEqual(calls, ["alice", "alice", "forget alice alice"])
 })
 test("missing table reads as unlinked; writes produce the rollout message", async () => {
 	const missing = async (): Promise<never> => {
@@ -169,6 +173,10 @@ test("account deletion completes before a failed Discord unlink and logs the fai
 			calls.push("tracking")
 		},
 		deleteAvatar: async () => true,
+		handleOf: async () => null,
+		forgetProfile: async () => {
+			calls.push("forget")
+		},
 		unlink: async () => {
 			calls.push("unlink")
 			throw error

@@ -3,12 +3,35 @@
 // upload gets a new version, which is part of the photo's URL, so the photo can be cached for a year.
 // Spec: docs/implementation/member-profile/README.md
 import { randomBytes } from "node:crypto"
+import { withBackendTimeout } from "~/utils/backend-timeout"
 import { execute, query } from "~/utils/crate"
 
 export { encodeAvatar, sniffImageType } from "./image-type"
 
 /** What the browser may send: already cropped square, at most this many bytes. */
 export const AVATAR_MAX_BYTES = 5 * 1024 * 1024
+
+/** Uploads a member may make in an hour. */
+const UPLOADS_PER_HOUR = 10
+
+/** Counts an upload against the member's hourly allowance; false when it's used up. When Valkey can't answer, allows. */
+export async function allowUpload(userId: string): Promise<boolean> {
+	try {
+		const { getRedisCluster } = await import("~/utils/cache")
+		const redis = getRedisCluster()
+		if (!redis) return true
+		const key = `profile-photo-uploads:v1:${userId}`
+		const count = await withBackendTimeout("valkey", 800, async () => {
+			const n = await redis.incr(key)
+			if (n === 1) await redis.expire(key, 60 * 60)
+			return n
+		})
+		return count <= UPLOADS_PER_HOUR
+	} catch (error) {
+		console.warn("[profile] upload allowance check failed", error)
+		return true
+	}
+}
 
 export async function saveAvatar(
 	userId: string,

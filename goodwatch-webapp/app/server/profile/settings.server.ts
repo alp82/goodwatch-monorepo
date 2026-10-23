@@ -1,7 +1,3 @@
-// A member's profile settings (bio, links, picture, cover, who sees what), kept as user_setting keys: no table of their
-// own, and the settings cache (5 minutes, reset on write) serves every profile view.
-// Spec: docs/implementation/member-profile/README.md
-import { forgetOgCard } from "~/server/og-image/og-image.server"
 import {
 	DEFAULT_PROFILE_SETTINGS,
 	LINK_SERVICES,
@@ -12,6 +8,10 @@ import {
 } from "~/domain/profile"
 import { LINK_RULES, parseAvatarChoice } from "~/domain/profile-settings"
 import type { UserSettingsMap } from "~/routes/api.user-settings.get"
+// A member's profile settings (bio, links, picture, cover, who sees what), kept as user_setting keys: no table of their
+// own, and the settings cache (5 minutes, reset on write) serves every profile view.
+// Spec: docs/implementation/member-profile/README.md
+import { forgetOgCard } from "~/server/og-image/og-image.server"
 import { resetPageCache } from "~/server/page-cache.server"
 import {
 	getCachedProfileByUserId,
@@ -141,12 +141,18 @@ export async function dropPhotoChoice(userId: string): Promise<void> {
 	})
 }
 
-/** Drops this process's cached pages of the member's profile and its tabs, after a settings or photo change. */
-export async function resetProfilePages(userId: string): Promise<void> {
+/**
+ * Drops this process's cached pages of the member's profile and its tabs, and its link-preview card everywhere, after a
+ * settings or photo change. `knownHandle` for a profile that may already be deleted (account deletion).
+ */
+export async function resetProfilePages(
+	userId: string,
+	knownHandle?: string,
+): Promise<void> {
 	await resetProfileViews(userId)
-	const profile = await getCachedProfileByUserId(userId)
-	if (!profile) return
-	const base = `/u/${profile.handle}`
+	const handle = knownHandle ?? (await getCachedProfileByUserId(userId))?.handle
+	if (!handle) return
+	const base = `/u/${handle}`
 	// The link-preview card shows only public parts; draw it again from the new settings.
 	await forgetOgCard(base)
 	resetPageCache((path) => {
