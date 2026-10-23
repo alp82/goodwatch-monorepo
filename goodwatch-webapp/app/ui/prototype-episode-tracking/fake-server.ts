@@ -23,6 +23,10 @@ import {
 	watchStateEntryOf,
 } from "~/domain/tracking/show-page"
 import { applyShowEvent } from "~/domain/tracking/storage"
+import {
+	type MemberEpisodeScore,
+	episodeScoreKey,
+} from "~/domain/episode-scores"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import type { Show } from "~/ui/prototype-episode-list/model"
 
@@ -54,6 +58,11 @@ export interface HarnessOptions {
 	overviews: boolean
 	/** How long an answer takes, in milliseconds. */
 	latency: number
+	/**
+	 * The member's own season and episode scores (#759) to start with: none, "some" (the first season and its
+	 * second episode), or "parts" (also a part score an import brought, as an anime cour would).
+	 */
+	scores?: "none" | "some" | "parts"
 }
 
 export interface RequestRecord {
@@ -80,6 +89,8 @@ export class FakeServer {
 	private score: { score: number; updatedAt: string } | null = null
 	private wishlistAt: number | null = null
 	private notInterested = false
+	/** The member's season, episode and part scores, by key. */
+	private episodeScores = new Map<string, MemberEpisodeScore>()
 	private made = 0
 	/** While seeding: the time of an action that happened long before the harness's day. */
 	private seedAt: number | null = null
@@ -135,6 +146,100 @@ export class FakeServer {
 				})
 		this.listed = this.episodes
 		this.seed(options.scenario)
+		this.seedScores(options.scores ?? "none")
+	}
+
+	private seedScores(scores: "none" | "some" | "parts") {
+		if (scores === "none" || !this.episodes.length) return
+		const at = new Date(this.now()).toISOString()
+		const first = this.episodes.find((e) => e.season === 1)
+		const second = this.episodes.find((e) => e.season === 1 && e.number === 2)
+		const put = (score: MemberEpisodeScore) =>
+			this.episodeScores.set(score.key, score)
+		if (first)
+			put({
+				scope: "season",
+				season: 1,
+				key: "s1",
+				score: 8,
+				label: null,
+				updatedAt: at,
+			})
+		if (second)
+			put({
+				scope: "episode",
+				season: 1,
+				episode: 2,
+				episodeTmdbId: second.id,
+				key: `e${second.id}`,
+				score: 9,
+				label: null,
+				updatedAt: at,
+			})
+		if (scores === "parts") {
+			const ranges = [{ season: 1, firstEpisode: 1, lastEpisode: 3 }]
+			put({
+				scope: "part",
+				season: 1,
+				ranges,
+				key: episodeScoreKey({ scope: "part", season: 1, ranges }),
+				score: 7,
+				label: "Part 1",
+				updatedAt: at,
+			})
+		}
+	}
+
+	/** POST /api/episode-scores, as the server answers it. */
+	private scoreEpisode(data: Record<string, unknown>) {
+		const score = data.score as number | null
+		const at = new Date(this.now()).toISOString()
+		let target: MemberEpisodeScore | null = null
+		if (data.scope === "season")
+			target = {
+				scope: "season",
+				season: Number(data.season),
+				key: `s${data.season}`,
+				score: score ?? 0,
+				label: null,
+				updatedAt: at,
+			}
+		else if (data.scope === "episode") {
+			const episode = this.episodes.find((e) => e.id === data.episodeId)
+			if (!episode)
+				return json(
+					{ error: "That episode isn't in this show's episode list." },
+					404,
+				)
+			target = {
+				scope: "episode",
+				season: episode.season,
+				episode: episode.number,
+				episodeTmdbId: episode.id,
+				key: `e${episode.id}`,
+				score: score ?? 0,
+				label: null,
+				updatedAt: at,
+			}
+		} else if (data.scope === "part") {
+			const stored = this.episodeScores.get(String(data.key))
+			if (!stored)
+				return json({ error: "That part score isn't there anymore." }, 404)
+			target = { ...stored, updatedAt: at }
+		}
+		if (!target) return json({ error: "Send { id, scope, score }" }, 400)
+		const previous = this.episodeScores.get(target.key)?.score ?? null
+		if (score === null) {
+			this.episodeScores.delete(target.key)
+			return json({
+				status: previous === null ? "unchanged" : "cleared",
+				score: null,
+				previous,
+			})
+		}
+		const saved = { ...target, score }
+		this.episodeScores.set(saved.key, saved)
+		return json({ status: "saved", score: saved, previous })
 	}
 
 	/** Noon of the harness's day, so that the device's date and the UTC date agree. */
@@ -302,6 +407,7 @@ export class FakeServer {
 				: {}),
 			state: this.copy.state,
 			log: this.copy.log,
+			episodeScores: [...this.episodeScores.values()],
 			episodes: this.episodes,
 			running: !["Ended", "Canceled"].includes(show.status),
 			seasonScores: this.episodes.length
@@ -440,6 +546,7 @@ export class FakeServer {
 			)
 		}
 		if (path === "/api/user-data") return json(this.userData())
+		if (path === "/api/episode-scores") return this.scoreEpisode(data)
 		if (path === "/api/update-scores") {
 			const score = data.score as number | null
 			this.score =
@@ -499,6 +606,7 @@ export class FakeServer {
 				"/api/update-wishlist",
 				"/api/update-not-interested",
 				"/api/update-watch-history",
+				"/api/episode-scores",
 			]
 			if (
 				url.origin !== window.location.origin ||

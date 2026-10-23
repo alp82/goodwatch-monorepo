@@ -1,8 +1,10 @@
 // An opened season of the episode list (#699), under its row of the ratings grid. The head is one pressable line
 // that closes the season: its name and when it aired, Mark season and Unmark season, and the season score, which
 // opens every site's season score as the hero's rating chips. On a phone the two season actions take a line of
-// their own, half the width each. Then the season's rows.
+// their own, half the width each. Beside the season score, the member's own score for the season (#759); under the
+// head, a line for each part score an import brought whose episodes are in this season. Then the season's rows.
 import { CheckIcon, ChevronDownIcon } from "@heroicons/react/24/solid"
+import { episodeScoreLabel } from "~/domain/episode-scores"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { ScoreTile } from "~/ui/details/episode-grid/ScoreTile"
 import { formatScore } from "~/ui/details/episode-grid/scale"
@@ -10,6 +12,7 @@ import { FloatLayer, useFloat } from "~/ui/details/episode-grid/shared"
 import { stickyHeadersBottom } from "~/ui/details/header-height"
 import { RatingChipRow } from "~/ui/details/hero/RatingChips"
 import { type Model, type Nav, Rows, useIsDesktop } from "./EpisodeList"
+import { PartScoreLine, SeasonScoreButton } from "./EpisodeScore"
 import { FOCUS, SURFACE, type Season, seasonTitle } from "./store"
 
 // The site bar above the sticky title header.
@@ -73,6 +76,25 @@ export default function OpenSeason({
 	// The head closes the season; its buttons do only their own thing.
 	const own = (event: { stopPropagation: () => void }) =>
 		event.stopPropagation()
+	// A season score names a TMDB season: offered where the shown season is one, with an aired episode.
+	const scorable =
+		!special &&
+		count.aired > 0 &&
+		season.episodes.every((episode) => episode.season === season.number)
+	const parts = model.scores
+		.parts()
+		.filter(
+			(part) =>
+				part.scope === "part" &&
+				part.ranges.some((range) =>
+					season.episodes.some(
+						(episode) =>
+							episode.season === range.season &&
+							episode.number >= range.firstEpisode &&
+							episode.number <= range.lastEpisode,
+					),
+				),
+		)
 	const mark = (
 		<button
 			type="button"
@@ -139,6 +161,16 @@ export default function OpenSeason({
 							<ScoreTile score={score} className="h-6 min-w-9 text-[12.5px]" />
 						</button>
 					)}
+					{scorable && (
+						<SeasonScoreButton
+							store={model.scores}
+							target={{ scope: "season", season: season.number }}
+							scoreKey={`s${season.number}`}
+							name={title}
+							title={`${title} · ${model.showTitle}`}
+							onPress={own}
+						/>
+					)}
 					<button
 						type="button"
 						aria-label={`Close ${title}`}
@@ -160,6 +192,17 @@ export default function OpenSeason({
 					</div>
 				)}
 			</div>
+			{parts.map((part) => (
+				<PartScoreLine
+					key={part.key}
+					store={model.scores}
+					target={part}
+					scoreKey={part.key}
+					part={part}
+					name={episodeScoreLabel(part)}
+					title={`${episodeScoreLabel(part)} · ${part.label ?? model.showTitle}`}
+				/>
+			))}
 			<Rows
 				key={season.number}
 				season={season}

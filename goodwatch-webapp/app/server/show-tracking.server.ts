@@ -21,6 +21,7 @@ import type {
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { getEpisodeGrid } from "~/server/episode-grid.server"
 import { getEpisodePresentation } from "~/server/episode-presentation.server"
+import { getEpisodeScores } from "~/server/episode-scores.server"
 import { updateNotInterested } from "~/server/not-interested.server"
 import {
 	type TrackedTitle,
@@ -66,10 +67,15 @@ export async function getShowTrackingPage(
 	language?: string,
 ): Promise<ShowTrackingPage> {
 	const id = canonicalTitleId("show", showId)
-	const [tracking, presentation, running] = await Promise.all([
+	const [tracking, presentation, running, episodeScores] = await Promise.all([
 		getShowTracking(userId, id),
 		getEpisodePresentation(id),
 		isRunning(id),
+		// The member's season and episode scores (#759) never fail the read.
+		getEpisodeScores(userId, id).catch((error) => {
+			console.error("episode scores failed", { showId: id, error })
+			return []
+		}),
 	])
 	// A selected presentation carries its entire catalog snapshot, including the page's descriptions.
 	const [list, ratings] = await Promise.all([
@@ -117,6 +123,7 @@ export async function getShowTrackingPage(
 			: {}),
 		state: tracking.state,
 		log: tracking.log,
+		episodeScores,
 		episodes: list.map((row) => {
 			const rated = matched.byEpisode.get(row.tmdb_id)
 			const aligned = presented.get(row.tmdb_id)

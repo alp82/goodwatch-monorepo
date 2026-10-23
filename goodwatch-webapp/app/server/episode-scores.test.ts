@@ -6,6 +6,7 @@ import {
 	getEpisodeScores,
 	setEpisodeScore,
 	setEpisodeScoreDbForTest,
+	setPartScore,
 } from "./episode-scores.server.ts"
 import { EpisodeScoreFakeDb } from "./episode-scores.test-support.ts"
 
@@ -148,4 +149,44 @@ test("an imported part keeps its whole range and its source name", async () => {
 		label: "Show Part 1",
 		updatedAt: "2026-10-01T00:00:00.000Z",
 	})
+})
+
+test("a member changes or clears an imported part score, keeping its range and name; parts aren't created by hand", async () => {
+	const db = fake()
+	db.scores.push({
+		user_id: "member",
+		tmdb_id: SHOW,
+		score_key: "p:s1e1-2",
+		scope: "part",
+		season_number: 1,
+		episode_number: null,
+		episode_tmdb_id: null,
+		ranges: JSON.stringify([{ season: 1, firstEpisode: 1, lastEpisode: 2 }]),
+		label: "Show Part 1",
+		score: 8,
+		created_at: new Date("2026-10-01T00:00:00Z"),
+		updated_at: new Date("2026-10-01T00:00:00Z"),
+	})
+	const changed = await setPartScore("member", SHOW, "p:s1e1-2", 6)
+	assert.equal(changed.status, "saved")
+	assert.equal(changed.previous, 8)
+	assert.equal(changed.score?.score, 6)
+	assert.equal(changed.score?.label, "Show Part 1")
+	assert.equal(db.scores[0].score, 6)
+	assert.equal(
+		db.scores[0].ranges,
+		JSON.stringify([{ season: 1, firstEpisode: 1, lastEpisode: 2 }]),
+	)
+	await assert.rejects(
+		setPartScore("member", SHOW, "p:s1e3-4", 6),
+		EpisodeScoreTargetError,
+	)
+	await assert.rejects(
+		setPartScore("member", SHOW, "s1", 6),
+		EpisodeScoreTargetError,
+	)
+	assert.equal(db.scores.length, 1)
+	const cleared = await setPartScore("member", SHOW, "p:s1e1-2", null)
+	assert.equal(cleared.status, "cleared")
+	assert.equal(db.scores.length, 0)
 })

@@ -1,0 +1,133 @@
+// The member's season, episode and part scores of one show on its page (#759), outside React: seeded from the
+// show's tracking read, changed at once on the page and sent in the background. A change the server refuses goes
+// back to what the server last confirmed. Separate from the tracking session: a score never records a watch or
+// changes the show's status, so it needs none of the session's ordering.
+import {
+	type EpisodeScoreTarget,
+	type MemberEpisodeScore,
+	episodeScoreKey,
+} from "../../domain/episode-scores.ts"
+
+/** What POST /api/episode-scores answers. */
+export interface EpisodeScoreSendAnswer {
+	status: "saved" | "cleared" | "unchanged"
+	score: MemberEpisodeScore | null
+	previous: number | null
+}
+export type EpisodeScoreSend = (body: object) => Promise<EpisodeScoreSendAnswer>
+
+/** A target to score: a season, an episode, or a stored part (which carries its key). */
+export type ScoreTarget = EpisodeScoreTarget & {
+	key?: string
+	label?: string | null
+}
+
+const requestOf = (target: ScoreTarget, key: string) =>
+	target.scope === "season"
+		? { scope: "season", season: target.season }
+		: target.scope === "episode"
+			? { scope: "episode", episodeId: target.episodeTmdbId }
+			: { scope: "part", key }
+
+export class EpisodeScoreStore {
+	/** What the server last confirmed, by key. */
+	private confirmed = new Map<string, MemberEpisodeScore>()
+	/** Changes on their way, by key: what shows, and which write is the latest. */
+	private pending = new Map<
+		string,
+		{ shown: MemberEpisodeScore | null; write: number }
+	>()
+	private writes = 0
+	private listeners = new Set<() => void>()
+	/** Changes with every change, for useSyncExternalStore. */
+	version = 0
+
+	private send: EpisodeScoreSend
+	private onError: (message: string) => void
+
+	constructor(
+		send: EpisodeScoreSend,
+		onError: (message: string) => void = () => {},
+	) {
+		this.send = send
+		this.onError = onError
+	}
+
+	subscribe = (listener: () => void) => {
+		this.listeners.add(listener)
+		return () => {
+			this.listeners.delete(listener)
+		}
+	}
+	getVersion = () => this.version
+	private changed() {
+		this.version += 1
+		for (const listener of this.listeners) listener()
+	}
+
+	/** Takes what the server read. Changes still on their way keep showing. */
+	seed(scores: MemberEpisodeScore[] | undefined) {
+		this.confirmed = new Map((scores ?? []).map((score) => [score.key, score]))
+		this.changed()
+	}
+
+	get(key: string): MemberEpisodeScore | null {
+		const pending = this.pending.get(key)
+		return pending ? pending.shown : (this.confirmed.get(key) ?? null)
+	}
+	isSaving(key: string) {
+		return this.pending.has(key)
+	}
+	/** Every part score, as shown. */
+	parts(): MemberEpisodeScore[] {
+		const keys = new Set([...this.confirmed.keys(), ...this.pending.keys()])
+		return [...keys]
+			.filter((key) => key.startsWith("p:"))
+			.flatMap((key) => {
+				const score = this.get(key)
+				return score ? [score] : []
+			})
+	}
+
+	/** Sets, changes or clears a score. Resolves false when the server refused it and the page went back. */
+	async set(target: ScoreTarget, score: number | null): Promise<boolean> {
+		const key = target.key ?? episodeScoreKey(target)
+		const before = this.get(key)
+		const write = ++this.writes
+		const {
+			key: _key,
+			label,
+			...rest
+		} = target as ScoreTarget & Partial<MemberEpisodeScore>
+		this.pending.set(key, {
+			write,
+			shown:
+				score === null
+					? null
+					: ({
+							...(before ?? {}),
+							...rest,
+							key,
+							score,
+							label: before?.label ?? label ?? null,
+							updatedAt: before?.updatedAt ?? new Date().toISOString(),
+						} as MemberEpisodeScore),
+		})
+		this.changed()
+		try {
+			const answer = await this.send({ ...requestOf(target, key), score })
+			if (answer.score) this.confirmed.set(key, answer.score)
+			else this.confirmed.delete(key)
+			if (this.pending.get(key)?.write === write) this.pending.delete(key)
+			this.changed()
+			return true
+		} catch {
+			if (this.pending.get(key)?.write === write) {
+				this.pending.delete(key)
+				this.onError("Your score wasn't saved. Try again.")
+				this.changed()
+			}
+			return false
+		}
+	}
+}

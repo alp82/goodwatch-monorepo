@@ -1,3 +1,4 @@
+import type { MemberEpisodeScore } from "../episode-scores.ts"
 import type { EpisodeTextPresentation } from "~/server/episode-text-overlay.server"
 // What the show page holds for episode tracking, and how the browser works on it
 // (docs/implementation/tracking/data-model.md, "The browser").
@@ -70,6 +71,8 @@ export interface ShowTrackingPage {
 	ratingCoverage?: Record<string, { rated: number; total: number }>
 	/** Seasons that IMDb numbers differently, and what their ratings lose by it. */
 	notes: Record<string, { byTitle: number; missing: number }>
+	/** The member's own season, episode and part scores (#759); absent or empty when there are none. */
+	episodeScores?: MemberEpisodeScore[]
 }
 
 /** A date set in the watch log. It is a day or unknown, never a time. */

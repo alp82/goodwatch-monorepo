@@ -43,7 +43,10 @@ import { HEADER_HEIGHT } from "~/ui/details/header-height"
 import MediaText from "~/ui/media-text/MediaText"
 import { episodeText } from "~/ui/media-text/media-text"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
+import { EpisodeScoreFrame, OwnScoreChip } from "./EpisodeScore"
 import OpenSeason from "./OpenSeason"
+import type { EpisodeScoreStore } from "./episode-score-store"
+import { useEpisodeScores } from "./useEpisodeScores"
 import {
 	ConfirmPanel,
 	TAKE_BACK_LOOK,
@@ -86,6 +89,7 @@ export default function EpisodeList({
 			view={tracking.view}
 			actions={actions}
 			grid={grid}
+			showTitle={media.details.title}
 		/>
 	)
 }
@@ -120,6 +124,9 @@ export function useIsDesktop() {
 export interface Model {
 	view: ShowView
 	actions: TrackingActions
+	/** The member's own season, episode and part scores (#759). */
+	scores: EpisodeScoreStore
+	showTitle: string
 	today: string
 	seasons: Season[]
 	/** The member has a state for the show or a watch of it: marks are drawn. */
@@ -257,14 +264,21 @@ function useModel(
 	tracking: ShowTracking,
 	view: ShowView,
 	actions: TrackingActions,
+	showTitle: string,
 ): Model {
 	const { page, seasons, today } = tracking
+	const { store: scores, version } = useEpisodeScores(
+		tracking.store,
+		page?.episodeScores,
+	)
 	const model = useMemo<Model>(() => {
 		const aired = (episode: PageEpisode) =>
 			episode.airDate !== null && episode.airDate <= today
 		return {
 			view,
 			actions,
+			scores,
+			showTitle,
 			today,
 			seasons,
 			tracked: view.tracked,
@@ -285,7 +299,8 @@ function useModel(
 				}
 			},
 		}
-	}, [view, actions, today, seasons, page])
+		// The scores' version: a changed score draws the list again.
+	}, [view, actions, today, seasons, page, scores, showTitle, version])
 	return model
 }
 
@@ -298,16 +313,18 @@ function List({
 	view,
 	actions,
 	grid,
+	showTitle,
 }: {
 	tracking: ShowTracking
 	view: ShowView
 	actions: TrackingActions
 	grid: EpisodeGrid | null
+	showTitle: string
 }) {
 	const { seasons } = tracking
 	const { layOutAll } = useBelowFold()
 	const section = useRef<HTMLElement>(null)
-	const model = useModel(tracking, view, actions)
+	const model = useModel(tracking, view, actions, showTitle)
 	const nav = useNav(model)
 	const desktop = useIsDesktop()
 	const [shown, setShown] = useState<View>("grid")
@@ -697,6 +714,23 @@ function RowDetail({
 						))}
 				</div>
 			</div>
+			{aired && (
+				<div className="mt-3">
+					<EpisodeScoreFrame
+						store={model.scores}
+						target={{
+							scope: "episode",
+							season: episode.season,
+							episode: episode.number,
+							episodeTmdbId: episode.id,
+						}}
+						scoreKey={`e${episode.id}`}
+						name={episodeLabel(episode)}
+						title={`${episodeLabel(episode)}${episode.name ? ` · ${episode.name}` : ""}`}
+						ask="Rate this episode"
+					/>
+				</div>
+			)}
 			{aired ? (
 				// A label line, then when (Now, a day, or unknown) as one even row, then the bigger actions on a row of their own.
 				<div className="mt-3.5 flex flex-col gap-2.5 text-xs text-gray-400">
@@ -913,6 +947,11 @@ function Row({
 						</span>
 					)}
 					<span className="flex-1" />
+					{aired && (
+						<OwnScoreChip
+							score={model.scores.get(`e${episode.id}`)?.score ?? null}
+						/>
+					)}
 					{!special && aired && (
 						<RatingChip episode={episode} missing={missing} />
 					)}

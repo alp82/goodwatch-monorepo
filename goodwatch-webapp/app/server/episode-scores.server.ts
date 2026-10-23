@@ -235,3 +235,59 @@ export async function setEpisodeScore(
 		throw error
 	}
 }
+
+/** A part's key as the store writes it: "p:s1e1-12", ranges joined by commas. */
+export const isPartScoreKey = (value: unknown): value is string =>
+	typeof value === "string" &&
+	value.length <= 400 &&
+	/^p:s\d+e\d+-\d+(,s\d+e\d+-\d+)*$/.test(value)
+
+/**
+ * Changes or clears a part score an import brought, such as an anime cour's (S1 E1–12). Only imports create parts:
+ * a key that names no stored part throws EpisodeScoreTargetError. The range and the source's name stay as they are.
+ */
+export async function setPartScore(
+	userId: string,
+	showId: number,
+	key: string,
+	score: number | null,
+): Promise<SetEpisodeScoreResult> {
+	if (score !== null && !isEpisodeScore(score))
+		throw new EpisodeScoreTargetError("A score is a whole number from 1 to 10.")
+	if (!isPartScoreKey(key))
+		throw new EpisodeScoreTargetError("That part score isn't there anymore.")
+	const show = canonicalTitleId("show", showId)
+	try {
+		const [row] = await db.select<EpisodeScoreRow>(
+			"SELECT score_key, scope, season_number, episode_number, episode_tmdb_id, ranges, label, score, updated_at FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ?",
+			[userId, show, key],
+		)
+		const stored = row ? episodeScoreFromRow(row) : null
+		if (!stored || stored.scope !== "part")
+			throw new EpisodeScoreTargetError("That part score isn't there anymore.")
+		if (score === null) {
+			const removed = await db.run(
+				"DELETE FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ?",
+				[userId, show, key],
+			)
+			return {
+				status: removed.rowcount ? "cleared" : "unchanged",
+				score: null,
+				previous: stored.score,
+			}
+		}
+		const now = new Date()
+		await db.run(
+			"UPDATE user_episode_score SET score = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND score_key = ?",
+			[score, now, userId, show, key],
+		)
+		return {
+			status: "saved",
+			score: { ...stored, score, updatedAt: now.toISOString() },
+			previous: stored.score,
+		}
+	} catch (error) {
+		if (isMissingEpisodeScoreTable(error)) throw new EpisodeScoresUnavailable()
+		throw error
+	}
+}

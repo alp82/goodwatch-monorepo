@@ -48,6 +48,18 @@ export class EpisodeScoreFakeDb {
 				.map((x) => ({ ...x })) as T[]
 		if (
 			s ===
+			"SELECT score_key, scope, season_number, episode_number, episode_tmdb_id, ranges, label, score, updated_at FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ?"
+		)
+			return this.scores
+				.filter(
+					(x) =>
+						x.user_id === params[0] &&
+						x.tmdb_id === params[1] &&
+						x.score_key === params[2],
+				)
+				.map((x) => ({ ...x })) as T[]
+		if (
+			s ===
 			"SELECT score FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ?"
 		)
 			return this.scores
@@ -116,6 +128,24 @@ export class EpisodeScoreFakeDb {
 					_seq_no: ++this.version,
 					_primary_term: 1,
 				})
+			return { rowcount: 1 }
+		}
+		if (
+			s ===
+			"UPDATE user_episode_score SET score = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND score_key = ?"
+		) {
+			const row = this.scores.find(
+				(x) =>
+					x.user_id === params[2] &&
+					x.tmdb_id === params[3] &&
+					x.score_key === params[4],
+			)
+			if (!row) return { rowcount: 0 }
+			Object.assign(row, {
+				score: params[0],
+				updated_at: params[1],
+				_seq_no: ++this.version,
+			})
 			return { rowcount: 1 }
 		}
 		if (

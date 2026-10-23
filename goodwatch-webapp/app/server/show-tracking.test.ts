@@ -253,6 +253,7 @@ test("the read of a show the member never touched has no row and no watch, and a
 	assert.deepEqual(page, {
 		state: null,
 		log: [],
+		episodeScores: [],
 		episodes: [],
 		running: false,
 		seasonScores: {},
@@ -262,6 +263,55 @@ test("the read of a show the member never touched has no row and no watch, and a
 		(await getShowTrackingPage(user, UNLISTED, noGrid)).running,
 		false,
 	)
+})
+
+test("the read carries the member's own season and episode scores, and still answers when they can't be read", async () => {
+	const { setEpisodeScoreDbForTest } = await import(
+		"./episode-scores.server.ts"
+	)
+	const { EpisodeScoreFakeDb } = await import("./episode-scores.test-support.ts")
+	const scores = new EpisodeScoreFakeDb()
+	scores.scores.push({
+		user_id: user,
+		tmdb_id: SHOW,
+		score_key: "s1",
+		scope: "season",
+		season_number: 1,
+		episode_number: null,
+		episode_tmdb_id: null,
+		ranges: null,
+		label: null,
+		score: 8,
+		created_at: new Date("2026-10-01T00:00:00Z"),
+		updated_at: new Date("2026-10-01T00:00:00Z"),
+	})
+	setEpisodeScoreDbForTest(scores)
+	try {
+		const page = await getShowTrackingPage(user, SHOW, grid)
+		assert.deepEqual(
+			page.episodeScores?.map((x) => [x.key, x.score]),
+			[["s1", 8]],
+		)
+		const errors: unknown[][] = []
+		const original = console.error
+		console.error = (...args: unknown[]) => errors.push(args)
+		setEpisodeScoreDbForTest({
+			run: async () => ({ rowcount: 0 }),
+			select: async () => {
+				throw new Error("Crate is down")
+			},
+		})
+		try {
+			const failed = await getShowTrackingPage(user, SHOW, grid)
+			assert.deepEqual(failed.episodeScores, [])
+			assert.equal(failed.episodes.length, 6)
+			assert.equal(errors[0]?.[0], "episode scores failed")
+		} finally {
+			console.error = original
+		}
+	} finally {
+		setEpisodeScoreDbForTest()
+	}
 })
 
 test("the read still answers when the ratings can't be read: the episodes have none", async () => {

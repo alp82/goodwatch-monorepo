@@ -7,6 +7,7 @@
 //             &list=none (the show has no episode list yet)  &overviews=1 (send the fixtures' descriptions)
 //             &latency=150 (milliseconds an answer takes)  &guest=1 (no member: the page as a visitor gets it)
 //             &providers=one|many|none|only|nowhere|stale (how many services stream it, for the hero's where-to-watch block)
+//             &scores=some|parts (the member's own season and episode scores; parts adds an imported part score, #759)
 // The stand-in server (ui/prototype-episode-tracking/fake-server.ts) runs the real state machine and the real
 // mapping to rows. Episodes are the prototypes' TMDB snapshots; TMDB's votes stand in for IMDb's ratings. Nothing is
 // stored and nothing leaves the page. The route is not in a production build.
@@ -192,6 +193,9 @@ function Harness({
 				noList,
 				overviews: params.get("overviews") === "1",
 				latency: Number(params.get("latency") ?? 120) || 0,
+				scores: (["some", "parts"].includes(params.get("scores") ?? "")
+					? params.get("scores")
+					: "none") as "none" | "some" | "parts",
 			}),
 		// One server per setup; the component is keyed by the setup.
 		[],
