@@ -10,7 +10,10 @@ export { encodeAvatar, sniffImageType } from "./image-type"
 /** What the browser may send: already cropped square, at most this many bytes. */
 export const AVATAR_MAX_BYTES = 5 * 1024 * 1024
 
-export async function saveAvatar(userId: string, webp: Buffer): Promise<string> {
+export async function saveAvatar(
+	userId: string,
+	webp: Buffer,
+): Promise<string> {
 	const version = randomBytes(6).toString("hex")
 	await execute(
 		`INSERT INTO doc.user_avatar (user_id, data, bytes, version, created_at)
@@ -25,7 +28,10 @@ export async function saveAvatar(userId: string, webp: Buffer): Promise<string> 
 }
 
 export async function deleteAvatar(userId: string): Promise<boolean> {
-	const result = await execute("DELETE FROM doc.user_avatar WHERE user_id = ?", [userId])
+	const result = await execute(
+		"DELETE FROM doc.user_avatar WHERE user_id = ?",
+		[userId],
+	)
 	await execute("REFRESH TABLE doc.user_avatar")
 	versions.delete(userId)
 	return Number((result as { rowcount?: number })?.rowcount ?? 0) > 0
@@ -41,7 +47,10 @@ export async function avatarVersion(userId: string): Promise<string | null> {
 	if (hit && Date.now() - hit.at < VERSION_MS) return hit.version
 	let version: string | null = null
 	try {
-		const [row] = await query<{ version: string }>("SELECT version FROM doc.user_avatar WHERE user_id = ?", [userId])
+		const [row] = await query<{ version: string }>(
+			"SELECT version FROM doc.user_avatar WHERE user_id = ?",
+			[userId],
+		)
 		version = row?.version ?? null
 	} catch (error) {
 		console.error("[profile] reading the photo version failed:", error)
@@ -51,12 +60,17 @@ export async function avatarVersion(userId: string): Promise<string | null> {
 	return version
 }
 
-export async function readAvatar(userId: string): Promise<{ data: Buffer; version: string } | null> {
+export async function readAvatar(
+	userId: string,
+): Promise<{ data: Buffer; version: string } | null> {
 	const [row] = await query<{ data: string; version: string }>(
 		"SELECT data, version FROM doc.user_avatar WHERE user_id = ?",
 		[userId],
 	)
-	return row?.data ? { data: Buffer.from(row.data, "base64"), version: row.version } : null
+	return row?.data
+		? { data: Buffer.from(row.data, "base64"), version: row.version }
+		: null
 }
 
-export const avatarPath = (handle: string, version: string) => `/api/avatar/${handle}?v=${version}`
+export const avatarPath = (handle: string, version: string) =>
+	`/api/avatar/${handle}?v=${version}`

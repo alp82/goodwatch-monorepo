@@ -4,7 +4,8 @@ import type { LoaderFunctionArgs } from "@remix-run/node"
 import { avatarPath, readAvatar } from "~/server/profile/avatar.server"
 import { getProfileByHandle } from "~/server/share-lists/view.server"
 
-const missing = () => new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } })
+const missing = () =>
+	new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } })
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const profile = await getProfileByHandle(params.handle ?? "")
@@ -15,7 +16,10 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	if (asked !== photo.version)
 		return new Response(null, {
 			status: 302,
-			headers: { Location: avatarPath(profile.handle, photo.version), "Cache-Control": "no-store" },
+			headers: {
+				Location: avatarPath(profile.handle, photo.version),
+				"Cache-Control": "no-store",
+			},
 		})
 	return new Response(photo.data, {
 		headers: {

@@ -8,12 +8,17 @@ export function sameOrigin(request: Request): boolean {
 	// Coolify terminates TLS, so compare with the public origin rather than the internal HTTP URL.
 	const expected =
 		process.env.APP_ORIGIN ||
-		(process.env.NODE_ENV === "production" ? "https://goodwatch.app" : new URL(request.url).origin)
+		(process.env.NODE_ENV === "production"
+			? "https://goodwatch.app"
+			: new URL(request.url).origin)
 	return origin === expected
 }
 
 /** Reads at most `max` bytes of a request body; null when it is larger. */
-export async function readLimited(request: Request, max: number): Promise<Uint8Array | null> {
+export async function readLimited(
+	request: Request,
+	max: number,
+): Promise<Uint8Array | null> {
 	const length = Number(request.headers.get("Content-Length"))
 	if (Number.isFinite(length) && length > max) return null
 	const reader = request.body?.getReader()

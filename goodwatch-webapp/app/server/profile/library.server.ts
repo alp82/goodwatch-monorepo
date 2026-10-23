@@ -1,14 +1,19 @@
+import { libraryKeys } from "~/domain/my-library"
 // What a profile shows of a member's library: their scored titles with the catalog's fields, the titles they've seen,
 // their wishlist, and how long they've watched. Built from the member data map (getUserData) and catalog reads that
 // are already cached elsewhere; the built library is kept in process memory under a signature of the member data, so a
 // new score, watch or wishlist title shows on the next view.
 import type { ProfileTitle } from "~/domain/profile"
-import { libraryKeys } from "~/domain/my-library"
-import { getMyScores } from "~/server/my-scores.server"
 import { movieRuntimes } from "~/server/movie-runtimes.server"
+import { getMyScores } from "~/server/my-scores.server"
 import { titleDisplays } from "~/server/taste-portrait/display.server"
 import { getUserData } from "~/server/userData.server"
-import { type MediaKey, type UserData, parseMediaKey, watchStateSignature } from "~/types/user-data"
+import {
+	type MediaKey,
+	type UserData,
+	parseMediaKey,
+	watchStateSignature,
+} from "~/types/user-data"
 import { query } from "~/utils/crate"
 import { titlePath } from "~/utils/helpers"
 import { titleKey } from "~/utils/title-key"
@@ -39,8 +44,10 @@ const iso = (value: Date | string | number | null | undefined) =>
 /** Changes whenever a score, a watch or a wishlist title changes. */
 export function librarySignature(data: UserData): string {
 	let latest = 0
-	for (const entry of Object.values(data.scores)) latest = Math.max(latest, new Date(entry.updatedAt).getTime())
-	for (const entry of Object.values(data.wishlist)) latest = Math.max(latest, new Date(entry.updatedAt).getTime())
+	for (const entry of Object.values(data.scores))
+		latest = Math.max(latest, new Date(entry.updatedAt).getTime())
+	for (const entry of Object.values(data.wishlist))
+		latest = Math.max(latest, new Date(entry.updatedAt).getTime())
 	return [
 		Object.keys(data.scores).length,
 		Object.keys(data.wishlist).length,
@@ -49,7 +56,9 @@ export function librarySignature(data: UserData): string {
 	].join("/")
 }
 
-export async function getProfileLibrary(userId: string): Promise<ProfileLibrary> {
+export async function getProfileLibrary(
+	userId: string,
+): Promise<ProfileLibrary> {
 	const data = await getUserData({ user_id: userId })
 	const id = `${userId}:${librarySignature(data)}`
 	const hit = kept.get(id)
@@ -66,7 +75,13 @@ export async function getProfileLibrary(userId: string): Promise<ProfileLibrary>
 
 export function profileTitleOf(
 	key: MediaKey,
-	fields: { title: string; year: number | null; poster: string | null; backdrop?: string | null; gw?: number | null },
+	fields: {
+		title: string
+		year: number | null
+		poster: string | null
+		backdrop?: string | null
+		gw?: number | null
+	},
 	extra: { score?: number | null; date?: string | null } = {},
 ): ProfileTitle {
 	const { mediaType, tmdbId } = parseMediaKey(key)
@@ -85,16 +100,30 @@ export function profileTitleOf(
 	}
 }
 
-async function buildLibrary(userId: string, data: UserData): Promise<ProfileLibrary> {
-	const [scoredTitles, seenKeys] = [await getMyScores(userId), libraryKeys(data, "seen")]
-	const backdrops = await titleDisplays(scoredTitles.map((t) => titleKey(t.mediaType, t.tmdbId)))
+async function buildLibrary(
+	userId: string,
+	data: UserData,
+): Promise<ProfileLibrary> {
+	const [scoredTitles, seenKeys] = [
+		await getMyScores(userId),
+		libraryKeys(data, "seen"),
+	]
+	const backdrops = await titleDisplays(
+		scoredTitles.map((t) => titleKey(t.mediaType, t.tmdbId)),
+	)
 	const scored = new Map<MediaKey, ProfileTitle & { genres: string[] }>()
 	for (const t of scoredTitles) {
 		const display = backdrops.get(titleKey(t.mediaType, t.tmdbId))
 		scored.set(t.key, {
 			...profileTitleOf(
 				t.key,
-				{ title: t.title, year: t.release_year, poster: t.poster_path, backdrop: display?.backdrop, gw: t.gw },
+				{
+					title: t.title,
+					year: t.release_year,
+					poster: t.poster_path,
+					backdrop: display?.backdrop,
+					gw: t.gw,
+				},
 				{ score: t.score, date: t.watchedAt ?? t.ratedAt },
 			),
 			genres: t.genres,
@@ -113,7 +142,9 @@ async function buildLibrary(userId: string, data: UserData): Promise<ProfileLibr
 }
 
 /** The month of the earliest score or dated watch: when the member's own record starts. */
-export function sinceOf(data: Pick<UserData, "scores" | "watchState">): string | null {
+export function sinceOf(
+	data: Pick<UserData, "scores" | "watchState">,
+): string | null {
 	let earliest = Number.POSITIVE_INFINITY
 	for (const entry of Object.values(data.scores)) {
 		const t = new Date(entry.updatedAt).getTime()
@@ -123,14 +154,21 @@ export function sinceOf(data: Pick<UserData, "scores" | "watchState">): string |
 		const t = entry.watchedAt ? new Date(entry.watchedAt).getTime() : 0
 		if (t > 0) earliest = Math.min(earliest, t)
 	}
-	return Number.isFinite(earliest) ? new Date(earliest).toISOString().slice(0, 7) : null
+	return Number.isFinite(earliest)
+		? new Date(earliest).toISOString().slice(0, 7)
+		: null
 }
 
 // Shows' usual episode length, kept 6 hours: public, rarely changes.
 const EPISODE_KEEP_MS = 6 * 60 * 60_000
-const episodeMinutesKept = new Map<number, { at: number; minutes: number | null }>()
+const episodeMinutesKept = new Map<
+	number,
+	{ at: number; minutes: number | null }
+>()
 
-async function episodeMinutes(ids: number[]): Promise<Map<number, number | null>> {
+async function episodeMinutes(
+	ids: number[],
+): Promise<Map<number, number | null>> {
 	const now = Date.now()
 	const found = new Map<number, number | null>()
 	const toRead: number[] = []
@@ -141,14 +179,21 @@ async function episodeMinutes(ids: number[]): Promise<Map<number, number | null>
 	}
 	for (let i = 0; i < toRead.length; i += 500) {
 		const batch = toRead.slice(i, i + 500)
-		const rows = await query<{ tmdb_id: number; episode_runtime: number[] | null }>(
+		const rows = await query<{
+			tmdb_id: number
+			episode_runtime: number[] | null
+		}>(
 			`SELECT tmdb_id, episode_runtime FROM show WHERE tmdb_id IN (${batch.map(() => "?").join(", ")})`,
 			batch,
 		)
-		const byId = new Map(rows.map((r) => [Number(r.tmdb_id), r.episode_runtime]))
+		const byId = new Map(
+			rows.map((r) => [Number(r.tmdb_id), r.episode_runtime]),
+		)
 		for (const id of batch) {
 			const runtimes = (byId.get(id) ?? []).filter((m) => m > 0)
-			const minutes = runtimes.length ? runtimes.reduce((a, b) => a + b, 0) / runtimes.length : null
+			const minutes = runtimes.length
+				? runtimes.reduce((a, b) => a + b, 0) / runtimes.length
+				: null
 			episodeMinutesKept.set(id, { at: now, minutes })
 			found.set(id, minutes)
 		}
@@ -161,24 +206,32 @@ async function episodeMinutes(ids: number[]): Promise<Map<number, number | null>
  * Hours watched: every seen movie's runtime once per logged watch, and every show's watched episodes times its usual
  * episode length (40 minutes when the catalog has none). Episodes: the shows' watched episodes in their current pass.
  */
-async function watchTime(data: UserData, seenKeys: MediaKey[]): Promise<{ hours: number; episodes: number }> {
+async function watchTime(
+	data: UserData,
+	seenKeys: MediaKey[],
+): Promise<{ hours: number; episodes: number }> {
 	const movieKeys = seenKeys.filter((key) => key.startsWith("movie-"))
 	const showEntries = Object.entries(data.watchState).filter(
 		([key, entry]) => key.startsWith("show-") && entry.episodesWatched > 0,
 	) as [MediaKey, UserData["watchState"][MediaKey]][]
 	const [runtimes, perEpisode] = await Promise.all([
-		movieRuntimes(movieKeys.map((key) => titleKey("movie", parseMediaKey(key).tmdbId))),
+		movieRuntimes(
+			movieKeys.map((key) => titleKey("movie", parseMediaKey(key).tmdbId)),
+		),
 		episodeMinutes(showEntries.map(([key]) => parseMediaKey(key).tmdbId)),
 	])
 	let minutes = 0
 	for (const key of movieKeys) {
 		const runtime = runtimes.get(titleKey("movie", parseMediaKey(key).tmdbId))
-		if (runtime) minutes += runtime * Math.max(1, data.watchState[key]?.count ?? 1)
+		if (runtime)
+			minutes += runtime * Math.max(1, data.watchState[key]?.count ?? 1)
 	}
 	let episodes = 0
 	for (const [key, entry] of showEntries) {
 		episodes += entry.episodesWatched
-		minutes += entry.episodesWatched * (perEpisode.get(parseMediaKey(key).tmdbId) ?? DEFAULT_EPISODE_MINUTES)
+		minutes +=
+			entry.episodesWatched *
+			(perEpisode.get(parseMediaKey(key).tmdbId) ?? DEFAULT_EPISODE_MINUTES)
 	}
 	return { hours: Math.round(minutes / 60), episodes }
 }
@@ -190,7 +243,11 @@ export async function titlesOf(
 	dateOf: (key: MediaKey) => string | null,
 ): Promise<ProfileTitle[]> {
 	const missing = keys.filter((key) => !library.scored.has(key))
-	const displays = await titleDisplays(missing.map((key) => titleKey(parseMediaKey(key).mediaType, parseMediaKey(key).tmdbId)))
+	const displays = await titleDisplays(
+		missing.map((key) =>
+			titleKey(parseMediaKey(key).mediaType, parseMediaKey(key).tmdbId),
+		),
+	)
 	return keys.flatMap((key): ProfileTitle[] => {
 		const card = library.scored.get(key)
 		if (card) {
@@ -200,7 +257,16 @@ export async function titlesOf(
 		const { mediaType, tmdbId } = parseMediaKey(key)
 		const display = displays.get(titleKey(mediaType, tmdbId))
 		return display
-			? [profileTitleOf(key, { ...display, gw: null }, { score: library.data.scores[key]?.score ?? null, date: dateOf(key) })]
+			? [
+					profileTitleOf(
+						key,
+						{ ...display, gw: null },
+						{
+							score: library.data.scores[key]?.score ?? null,
+							date: dateOf(key),
+						},
+					),
+				]
 			: []
 	})
 }

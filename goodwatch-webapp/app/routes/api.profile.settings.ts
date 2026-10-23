@@ -17,10 +17,16 @@ import { getUserFromRequest } from "~/utils/auth"
 const headers = { "Cache-Control": "no-store" }
 
 export async function action({ request }: ActionFunctionArgs) {
-	if (request.method !== "POST") return json({ error: "Use POST" }, { status: 405, headers })
-	if (!sameOrigin(request)) return json({ error: "Origin mismatch" }, { status: 403, headers })
+	if (request.method !== "POST")
+		return json({ error: "Use POST" }, { status: 405, headers })
+	if (!sameOrigin(request))
+		return json({ error: "Origin mismatch" }, { status: 403, headers })
 	const user = await getUserFromRequest({ request })
-	if (!user?.id) return json({ error: "Sign in to edit your profile." }, { status: 401, headers })
+	if (!user?.id)
+		return json(
+			{ error: "Sign in to edit your profile." },
+			{ status: 401, headers },
+		)
 	let body: unknown
 	try {
 		body = await request.json()
@@ -36,16 +42,33 @@ export async function action({ request }: ActionFunctionArgs) {
 	}
 
 	// The sign-in provider's photo is read from the member's own session, never from the request.
-	const providerPhoto = isHttpsUrl(user.user_metadata?.avatar_url) ? (user.user_metadata.avatar_url as string) : null
-	const [data, photo] = await Promise.all([getUserData({ user_id: user.id }), avatarVersion(user.id)])
+	const providerPhoto = isHttpsUrl(user.user_metadata?.avatar_url)
+		? (user.user_metadata.avatar_url as string)
+		: null
+	const [data, photo] = await Promise.all([
+		getUserData({ user_id: user.id }),
+		avatarVersion(user.id),
+	])
 	const checked = validateProfileSettings(body as Record<string, unknown>, {
 		scored: (key) => key in data.scores,
 		hasPhoto: photo !== null,
 		hasProviderPhoto: providerPhoto !== null,
 	})
-	if (!checked.ok) return json({ error: checked.problems[0].message, problems: checked.problems }, { status: 400, headers })
-	const saved = await saveProfileSettings(user.id, checked.settings, providerPhoto)
-	if (!saved) return json({ error: "Saving failed. Try again." }, { status: 500, headers })
+	if (!checked.ok)
+		return json(
+			{ error: checked.problems[0].message, problems: checked.problems },
+			{ status: 400, headers },
+		)
+	const saved = await saveProfileSettings(
+		user.id,
+		checked.settings,
+		providerPhoto,
+	)
+	if (!saved)
+		return json(
+			{ error: "Saving failed. Try again." },
+			{ status: 500, headers },
+		)
 	await resetProfilePages(user.id)
 	return json({ ok: true, settings: checked.settings }, { headers })
 }

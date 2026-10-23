@@ -12,7 +12,10 @@ import {
 import { LINK_RULES, parseAvatarChoice } from "~/domain/profile-settings"
 import type { UserSettingsMap } from "~/routes/api.user-settings.get"
 import { resetPageCache } from "~/server/page-cache.server"
-import { getCachedProfileByUserId, resetProfileViews } from "~/server/share-lists/view.server"
+import {
+	getCachedProfileByUserId,
+	resetProfileViews,
+} from "~/server/share-lists/view.server"
 import { getUserSettings, setUserSettings } from "~/server/user-settings.server"
 
 export const PROFILE_KEYS = {
@@ -40,7 +43,9 @@ function parseLinks(raw: unknown): ProfileLink[] {
 	return raw.flatMap((link): ProfileLink[] => {
 		const service = link?.service as LinkService
 		const value = link?.value
-		return LINK_SERVICES.includes(service) && typeof value === "string" && LINK_RULES[service].pattern.test(value)
+		return LINK_SERVICES.includes(service) &&
+			typeof value === "string" &&
+			LINK_RULES[service].pattern.test(value)
 			? [{ service, value }]
 			: []
 	})
@@ -54,17 +59,23 @@ export interface StoredProfileSettings extends ProfileSettings {
 }
 
 /** The member's profile settings, with the defaults for anything not saved. */
-export async function getProfileSettings(userId: string): Promise<StoredProfileSettings> {
+export async function getProfileSettings(
+	userId: string,
+): Promise<StoredProfileSettings> {
 	const stored = await getUserSettings({ userId })
 	const cover = stored.profile_cover ?? ""
 	return {
 		bio: stored.profile_bio ?? DEFAULT_PROFILE_SETTINGS.bio,
 		links: parseLinks(parseJson(stored.profile_links)),
-		avatar: parseAvatarChoice(parseJson(stored.profile_avatar)) ?? DEFAULT_PROFILE_SETTINGS.avatar,
+		avatar:
+			parseAvatarChoice(parseJson(stored.profile_avatar)) ??
+			DEFAULT_PROFILE_SETTINGS.avatar,
 		cover: /^(movie|show)-\d+$/.test(cover) ? cover : null,
 		visibility: parseVisibility(parseJson(stored.profile_visibility)),
 		noticeSeen: stored.profile_public_notice_seen === "yes",
-		providerPhoto: isHttpsUrl(stored.profile_provider_photo) ? (stored.profile_provider_photo as string) : null,
+		providerPhoto: isHttpsUrl(stored.profile_provider_photo)
+			? (stored.profile_provider_photo as string)
+			: null,
 		coverChosen: stored.profile_cover !== undefined,
 	}
 }
@@ -96,18 +107,25 @@ export async function saveProfileSettings(
 		// Saving Edit profile is choosing what's shown: the "your profile is public now" notice has done its job.
 		[PROFILE_KEYS.noticeSeen]: "yes",
 	}
-	if (settings.avatar.kind === "provider" && providerPhoto) values[PROFILE_KEYS.providerPhoto] = providerPhoto
+	if (settings.avatar.kind === "provider" && providerPhoto)
+		values[PROFILE_KEYS.providerPhoto] = providerPhoto
 	const result = await setUserSettings({ user_id: userId, settings: values })
 	return result !== null
 }
 
 export async function markProfileNoticeSeen(userId: string): Promise<void> {
-	await setUserSettings({ user_id: userId, settings: { [PROFILE_KEYS.noticeSeen]: "yes" } })
+	await setUserSettings({
+		user_id: userId,
+		settings: { [PROFILE_KEYS.noticeSeen]: "yes" },
+	})
 }
 
 /** Clears the bio (the admin script's removal). */
 export async function clearProfileBio(userId: string): Promise<void> {
-	await setUserSettings({ user_id: userId, settings: { [PROFILE_KEYS.bio]: "" } })
+	await setUserSettings({
+		user_id: userId,
+		settings: { [PROFILE_KEYS.bio]: "" },
+	})
 }
 
 /** After the photo is removed, a picture choice of "photo" falls back to the initial. */
@@ -116,7 +134,9 @@ export async function dropPhotoChoice(userId: string): Promise<void> {
 	if (current.avatar.kind !== "photo") return
 	await setUserSettings({
 		user_id: userId,
-		settings: { [PROFILE_KEYS.avatar]: JSON.stringify(DEFAULT_PROFILE_SETTINGS.avatar) },
+		settings: {
+			[PROFILE_KEYS.avatar]: JSON.stringify(DEFAULT_PROFILE_SETTINGS.avatar),
+		},
 	})
 }
 

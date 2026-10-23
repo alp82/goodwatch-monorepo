@@ -101,7 +101,8 @@ export const LINK_RULES: Record<LinkService, LinkRule> = {
 		prefix: "https://",
 		placeholder: "example.com",
 		// A domain with at least one dot, then an optional path; no spaces, quotes or angle brackets.
-		pattern: /^(?=.{4,100}$)(?!-)[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(\/[A-Za-z0-9\-._~%/]*)?$/,
+		pattern:
+			/^(?=.{4,100}$)(?!-)[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(\/[A-Za-z0-9\-._~%/]*)?$/,
 		url: (v) => `https://${v}`,
 	},
 }
@@ -116,20 +117,27 @@ export function normalizeLinkValue(service: LinkService, raw: string): string {
 		.replace(/^[^/]+/, (host) => host.toLowerCase())
 }
 
-export const profileLinkUrl = (link: ProfileLink) => LINK_RULES[link.service].url(link.value)
+export const profileLinkUrl = (link: ProfileLink) =>
+	LINK_RULES[link.service].url(link.value)
 
-export type SettingsProblem = { field: "bio" | "links" | "avatar" | "cover" | "visibility"; message: string }
+export type SettingsProblem = {
+	field: "bio" | "links" | "avatar" | "cover" | "visibility"
+	message: string
+}
 
 /** Removes control characters and keeps at most two line breaks in a row. */
 export function cleanBio(raw: string): string {
-	return raw
-		// biome-ignore lint/suspicious/noControlCharactersInRegex: removing them is the point
-		.replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g, "")
-		.replace(/\n{3,}/g, "\n\n")
-		.trim()
+	return (
+		raw
+			// biome-ignore lint/suspicious/noControlCharactersInRegex: removing them is the point
+			.replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g, "")
+			.replace(/\n{3,}/g, "\n\n")
+			.trim()
+	)
 }
 
-const isAvatarColor = (value: unknown): value is AvatarColor => AVATAR_COLORS.includes(value as AvatarColor)
+const isAvatarColor = (value: unknown): value is AvatarColor =>
+	AVATAR_COLORS.includes(value as AvatarColor)
 const TITLE_KEY = /^(movie|show)-[1-9]\d{0,9}$/
 
 /** Reads a stored or submitted picture choice; null when it isn't one. */
@@ -137,8 +145,13 @@ export function parseAvatarChoice(value: unknown): AvatarChoice | null {
 	if (!value || typeof value !== "object") return null
 	const v = value as Record<string, unknown>
 	if (v.kind === "photo" || v.kind === "provider") return { kind: v.kind }
-	if (v.kind === "initial" && isAvatarColor(v.color)) return { kind: "initial", color: v.color }
-	if (v.kind === "poster" && typeof v.title === "string" && TITLE_KEY.test(v.title))
+	if (v.kind === "initial" && isAvatarColor(v.color))
+		return { kind: "initial", color: v.color }
+	if (
+		v.kind === "poster" &&
+		typeof v.title === "string" &&
+		TITLE_KEY.test(v.title)
+	)
 		return { kind: "poster", title: v.title }
 	return null
 }
@@ -155,13 +168,24 @@ export function validateProfileSettings(
 		cover?: unknown
 		visibility?: unknown
 	},
-	context: { scored: (key: string) => boolean; hasPhoto: boolean; hasProviderPhoto: boolean },
-): { ok: true; settings: ProfileSettings } | { ok: false; problems: SettingsProblem[] } {
+	context: {
+		scored: (key: string) => boolean
+		hasPhoto: boolean
+		hasProviderPhoto: boolean
+	},
+):
+	| { ok: true; settings: ProfileSettings }
+	| { ok: false; problems: SettingsProblem[] } {
 	const problems: SettingsProblem[] = []
 
 	const bio = typeof input.bio === "string" ? cleanBio(input.bio) : ""
-	if (input.bio != null && typeof input.bio !== "string") problems.push({ field: "bio", message: "The bio must be text." })
-	if (bio.length > BIO_MAX) problems.push({ field: "bio", message: `The bio can be at most ${BIO_MAX} characters.` })
+	if (input.bio != null && typeof input.bio !== "string")
+		problems.push({ field: "bio", message: "The bio must be text." })
+	if (bio.length > BIO_MAX)
+		problems.push({
+			field: "bio",
+			message: `The bio can be at most ${BIO_MAX} characters.`,
+		})
 
 	const links: ProfileLink[] = []
 	if (input.links != null && !Array.isArray(input.links))
@@ -169,7 +193,10 @@ export function validateProfileSettings(
 	for (const raw of Array.isArray(input.links) ? input.links : []) {
 		const service = (raw as { service?: unknown })?.service
 		const value = (raw as { value?: unknown })?.value
-		if (!LINK_SERVICES.includes(service as LinkService) || typeof value !== "string") {
+		if (
+			!LINK_SERVICES.includes(service as LinkService) ||
+			typeof value !== "string"
+		) {
 			problems.push({ field: "links", message: "Unknown link." })
 			continue
 		}
@@ -177,30 +204,49 @@ export function validateProfileSettings(
 		const clean = normalizeLinkValue(s, value)
 		if (!clean) continue
 		if (!LINK_RULES[s].pattern.test(clean)) {
-			problems.push({ field: "links", message: `That isn't a ${LINK_RULES[s].name} ${LINK_RULES[s].placeholder}.` })
+			problems.push({
+				field: "links",
+				message: `That isn't a ${LINK_RULES[s].name} ${LINK_RULES[s].placeholder}.`,
+			})
 			continue
 		}
 		if (links.some((l) => l.service === s)) {
-			problems.push({ field: "links", message: `${LINK_RULES[s].name} is in the list twice.` })
+			problems.push({
+				field: "links",
+				message: `${LINK_RULES[s].name} is in the list twice.`,
+			})
 			continue
 		}
 		links.push({ service: s, value: clean })
 	}
-	if (links.length > MAX_LINKS) problems.push({ field: "links", message: `At most ${MAX_LINKS} links.` })
+	if (links.length > MAX_LINKS)
+		problems.push({ field: "links", message: `At most ${MAX_LINKS} links.` })
 
-	const avatar = parseAvatarChoice(input.avatar ?? { kind: "initial", color: "amber" })
+	const avatar = parseAvatarChoice(
+		input.avatar ?? { kind: "initial", color: "amber" },
+	)
 	if (!avatar) problems.push({ field: "avatar", message: "Unknown picture." })
 	else if (avatar.kind === "photo" && !context.hasPhoto)
 		problems.push({ field: "avatar", message: "Upload a photo first." })
 	else if (avatar.kind === "provider" && !context.hasProviderPhoto)
 		problems.push({ field: "avatar", message: "Your sign-in has no photo." })
 	else if (avatar.kind === "poster" && !context.scored(avatar.title))
-		problems.push({ field: "avatar", message: "Pick a poster of a title you scored." })
+		problems.push({
+			field: "avatar",
+			message: "Pick a poster of a title you scored.",
+		})
 
 	let cover: string | null = null
 	if (input.cover != null && input.cover !== "") {
-		if (typeof input.cover !== "string" || !TITLE_KEY.test(input.cover) || !context.scored(input.cover))
-			problems.push({ field: "cover", message: "Pick a cover from a title you scored." })
+		if (
+			typeof input.cover !== "string" ||
+			!TITLE_KEY.test(input.cover) ||
+			!context.scored(input.cover)
+		)
+			problems.push({
+				field: "cover",
+				message: "Pick a cover from a title you scored.",
+			})
 		else cover = input.cover
 	}
 
@@ -209,5 +255,8 @@ export function validateProfileSettings(
 	const visibility = parseVisibility(input.visibility)
 
 	if (problems.length) return { ok: false, problems }
-	return { ok: true, settings: { bio, links, avatar: avatar as AvatarChoice, cover, visibility } }
+	return {
+		ok: true,
+		settings: { bio, links, avatar: avatar as AvatarChoice, cover, visibility },
+	}
 }
