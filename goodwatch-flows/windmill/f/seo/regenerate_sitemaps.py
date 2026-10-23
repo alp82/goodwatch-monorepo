@@ -27,7 +27,8 @@ BLOG_POSTS = "goodwatch-webapp/app/content/blog/posts.json"
 TOKEN_VARIABLE = "u/Alp/GITHUB_SITEMAP_TOKEN"
 SOURCE_FILES = [SCRIPTS + name for name in (
     "create_sitemaps.py", "check_sitemap_urls.py", "sitemap_query.py",
-    "sitemap_lastmod.py", "sitemap_selection.py", "sitemap_people.py", "sitemap_crate.py", "sitemap_blog.py",
+    "sitemap_lastmod.py", "sitemap_selection.py", "sitemap_people.py", "sitemap_profiles.py", "sitemap_crate.py",
+    "sitemap_blog.py",
     "utils.py",
 )] + [CATEGORIES + name + ".ts" for name in ("moods", "streaming", "genres")] + [BLOG_POSTS]
 
@@ -114,9 +115,11 @@ def generate_and_check(root):
                 people = generator.create_person_sitemap(cursor, {
                     "movie": movies["title_ids"], "show": shows["title_ids"],
                 })
+                profiles = generator.create_profile_sitemap(cursor)
                 generator.create_master_sitemap_index({
                     "movie": movies["lastmod"], "show": shows["lastmod"],
                     "static": static["lastmod"], "categories": categories["lastmod"], "people": people["lastmod"],
+                    "profiles": profiles["lastmod"],
                 })
             finally:
                 cursor.close()
@@ -144,8 +147,8 @@ def generate_and_check(root):
         return len(urls), {OUTPUT + p.name: p.read_bytes() for p in sorted(output.glob("sitemap*.xml"))}
     finally:
         sys.path.remove(str(scripts))
-        for name in ("sitemap_lastmod", "sitemap_selection", "sitemap_people", "sitemap_query", "sitemap_crate",
-                     "sitemap_blog", "utils"):
+        for name in ("sitemap_lastmod", "sitemap_selection", "sitemap_people", "sitemap_profiles", "sitemap_query",
+                     "sitemap_crate", "sitemap_blog", "utils"):
             sys.modules.pop(name, None)
 
 

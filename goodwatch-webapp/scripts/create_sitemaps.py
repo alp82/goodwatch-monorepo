@@ -16,6 +16,7 @@ from sitemap_lastmod import SitemapHistory, title_lastmod
 from sitemap_query import detail_query
 from sitemap_selection import select_titles, state_comment
 from sitemap_people import select_people
+from sitemap_profiles import select_profiles
 from utils import title_to_dashed
 
 load_dotenv()
@@ -195,6 +196,15 @@ def create_person_sitemap(crate_cursor, title_ids):
     return {"total_url_count": len(people), "lastmod": lastmod, "people": people}
 
 
+def create_profile_sitemap(crate_cursor):
+    """Members' public profiles that are indexed (sitemap_profiles.py)."""
+    filename = "sitemap_profiles.xml"
+    profiles = select_profiles(crate_cursor)
+    # An empty URL set fails the live check, so no profiles means no file (and no entry in the index).
+    lastmod = write_urlset(filename, [url_entry(loc, day) for loc, day in profiles]) if profiles else None
+    return {"total_url_count": len(profiles), "lastmod": lastmod}
+
+
 def create_master_sitemap_index(file_lastmods: dict):
     """Create a master sitemap index that links to all other sitemap files."""
     # Link to URL sets directly: Google does not support nested sitemap indexes.
@@ -206,6 +216,9 @@ def create_master_sitemap_index(file_lastmods: dict):
         ("sitemap_show_detail_0.xml", file_lastmods["show"]),
         ("sitemap_people.xml", file_lastmods["people"]),
     ]
+    # Listed only when this run wrote it: no profiles qualify, or a caller that doesn't make them yet.
+    if file_lastmods.get("profiles"):
+        sitemap_files.append(("sitemap_profiles.xml", file_lastmods["profiles"]))
     write_sitemap_index("sitemap.xml", sitemap_files)
     return {
         "master_index_created": True,
@@ -266,6 +279,9 @@ if __name__ == "__main__":
     })
     print(f"People Sitemap Result: {people_result}")
 
+    profiles_result = create_profile_sitemap(crate_cursor)
+    print(f"Profiles Sitemap Result: {profiles_result}")
+
     # Create master sitemap index
     master_result = create_master_sitemap_index({
         "movie": movies_result["lastmod"],
@@ -273,6 +289,7 @@ if __name__ == "__main__":
         "static": static_result["lastmod"],
         "categories": category_result["lastmod"],
         "people": people_result["lastmod"],
+        "profiles": profiles_result["lastmod"],
     })
     print(f"Master Sitemap Index Result: {master_result}")
 

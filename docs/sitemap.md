@@ -47,12 +47,13 @@ For the manual fallback:
 
 | File | Content |
 | --- | --- |
-| `sitemap.xml` | The index that Search Console has. It lists the five URL sets below. |
+| `sitemap.xml` | The index that Search Console has. It lists the URL sets below (profiles only when one qualifies). |
 | `sitemap_static.xml` | The landing pages, then `/blog` and every blog post. |
 | `sitemap_categories.xml` | The category pages of movies and shows. |
 | `sitemap_movie_detail_0.xml` | 700 movie pages. |
 | `sitemap_show_detail_0.xml` | 300 show pages. |
 | `sitemap_people.xml` | 30 stable cast/director pages linked from the selected title cohort. |
+| `sitemap_profiles.xml` | Member profiles that are indexed: a handle, public scores, and at least 25 scores. Left out when none qualifies. |
 | `sitemap_index_movie_detail.xml`, `sitemap_index_show_detail.xml` | Legacy indexes, kept for their earlier Search Console submissions. |
 
 ### Title selection and stability
@@ -70,6 +71,10 @@ The 30-day freshness filter stays in effect as requested. Investigate/refresh an
 ### Person pages
 
 Thirty people are selected from top-five billed cast and directors of the selected title cohort. A person needs distinct credits on at least three cohort titles, a nonempty name, a portrait, positive popularity and adult not true. That provides substantive filmography pages and links from the selected titles. The initial list ranks by person popularity descending, then TMDB ID ascending; duplicate people and duplicate credits do not consume slots. Existing eligible members from `sitemap_people.xml` remain indefinitely; only vacancies are filled. Person URL entries omit lastmod. Every URL passes the same live status/canonical gate before publication; a failed person URL blocks the entire run.
+
+### Member profiles
+
+`sitemap_profiles.py` lists `/u/<handle>` for every member with a handle (account not deleted) whose `profile_visibility` setting leaves scores open to everyone (unset counts as open) and who has at least 25 scores. The profile page itself is indexed from 20 scores the catalog still has (`app/server/profile/page.server.ts`); the margin keeps a profile whose scored titles partly left the catalog from being listed while it answers `noindex`, which would block the run. Each URL's lastmod is the day of the member's latest score change. With no qualifying profile, no file is written and the index leaves it out, since an empty URL set fails the check.
 
 ### Blog posts
 
