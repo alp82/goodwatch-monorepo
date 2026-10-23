@@ -65,10 +65,13 @@ export function withRequestTiming<A extends { request: Request }, R>(
 				: new Response(JSON.stringify(result), {
 						headers: { "Content-Type": "application/json; charset=utf-8" },
 					})
-		response.headers.append(
-			"Server-Timing",
-			requestServerTiming(args.request) ?? "",
-		)
+		const value = requestServerTiming(args.request)
+		// A Response from fetch() has immutable headers; timings are optional, the response isn't.
+		if (value) {
+			try {
+				response.headers.append("Server-Timing", value)
+			} catch {}
+		}
 		return response as R
 	}
 }

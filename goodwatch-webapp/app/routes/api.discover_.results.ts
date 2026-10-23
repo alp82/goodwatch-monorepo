@@ -101,7 +101,7 @@ async function respond(request: Request, guest?: GuestProgress) {
 	return json(response, {
 		headers: {
 			...headers,
-			"Server-Timing": `viewer;dur=${contextMs.toFixed(1)}, results;dur=${(totalMs - contextMs).toFixed(1)}, total;dur=${totalMs.toFixed(1)}`,
+			"Server-Timing": `viewer;dur=${contextMs.toFixed(1)}, results;dur=${(totalMs - contextMs).toFixed(1)}, endpoint;dur=${totalMs.toFixed(1)}`,
 		},
 	})
 }
