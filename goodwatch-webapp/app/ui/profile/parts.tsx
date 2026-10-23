@@ -18,9 +18,9 @@ export const QUIET_BUTTON =
 export const count = (n: number) => n.toLocaleString("en-US")
 export const vibe = (score: number) => getVibeColorValue(Math.max(1, Math.min(10, Math.round(score))) as Score)
 
-/** A TMDB poster or backdrop path at a size; null stays null. */
-export const posterUrl = (path: string | null, size = "w342") => (path ? tmdbImage(path, size) : null)
-export const backdropUrl = (path: string | null, size = "w1280") => (path ? tmdbImage(path, size) : null)
+/** A TMDB poster or backdrop path at a size; a full URL (share-list cards carry those) stays as it is; null stays null. */
+export const posterUrl = (path: string | null, size = "w342") => (!path ? null : /^https?:/.test(path) ? path : tmdbImage(path, size))
+export const backdropUrl = (path: string | null, size = "w1280") => posterUrl(path, size)
 
 /** "Mar 4, 2025", in UTC so server and browser agree. */
 export const shortDate = (iso: string | null) =>

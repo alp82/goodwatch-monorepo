@@ -36,8 +36,9 @@ export interface TasteStats {
 	facts: {
 		budget: number
 		revenue: number
-		longest: ProfileTitle | null
-		shortest: ProfileTitle | null
+		/** `minutes`: the runtime (optional, asked for by the Taste tab). */
+		longest: (ProfileTitle & { minutes?: number }) | null
+		shortest: (ProfileTitle & { minutes?: number }) | null
 		oldest: ProfileTitle | null
 		newest: ProfileTitle | null
 		mostEpisodes: (ProfileTitle & { episodes: number }) | null
