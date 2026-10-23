@@ -75,11 +75,14 @@ export async function richerTitleDetails(
 		...(creators?.complete
 			? { creators: creators.value.map((person) => personLink(person, origin)) }
 			: {}),
-		...(analysis?.complete
+		...(include.includes("analysis")
 			? {
 					title_analysis: {
 						available: !!fp,
-						summary: analysis.value[0]?.essence_text ?? null,
+						// The summary needs a query and can be late; moods, tags, and tropes come from memory.
+						summary: analysis?.complete
+							? (analysis.value[0]?.essence_text ?? null)
+							: null,
 						tags: fp?.essenceTags ?? [],
 						moods: moodsOf(fp?.scores, media.details.genres).map(
 							(key) => MOOD_BY_KEY[key].name,

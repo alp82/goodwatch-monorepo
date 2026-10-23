@@ -141,7 +141,9 @@ for (const part of ["analysis", "creators", "people", "grid"]) {
 				await pending
 				assert.equal(result.cast?.[0].name, "Actor")
 				assert.ok(result.scores)
-				assert.equal("title_analysis" in result, part !== "analysis")
+				// A late summary keeps the in-memory analysis and leaves only the summary empty.
+				assert.ok(result.title_analysis)
+				if (part === "analysis") assert.equal(result.title_analysis.summary, null)
 				assert.equal(
 					"creators" in result,
 					part !== "creators" && part !== "people",
