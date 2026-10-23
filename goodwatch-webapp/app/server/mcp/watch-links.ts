@@ -72,9 +72,6 @@ export function linkedAvailability(
 		return [
 			{
 				...offer,
-				display_priority: family
-					.map((id) => priorities.get(id))
-					.find((rank) => rank !== undefined),
 				stream_url: direct,
 				...(name ? { name } : {}),
 				...(logo ? { logo_url: tmdbImageUrl(logo, "w92") } : {}),
@@ -84,5 +81,11 @@ export function linkedAvailability(
 			},
 		]
 	})
+	const rank = (id: number) =>
+		providerFamily(id)
+			.map((member) => priorities.get(member))
+			.find((priority) => priority !== undefined) ?? Number.POSITIVE_INFINITY
+	// Stable sorting preserves evidence order for equally ranked or unknown providers.
+	offers.sort((a, b) => rank(a.service_id) - rank(b.service_id))
 	return { ...availability, country, offers }
 }

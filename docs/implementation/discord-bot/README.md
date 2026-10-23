@@ -75,12 +75,11 @@ two-line overview, and where to watch in the viewer's country. Buttons: **Where 
 | `/next` | none | Next episodes of the shows the member is watching, from Watch next. |
 | `/rate` | `title`, `score` (1-10) | Saves the score. Confirms with **Undo**. |
 | `/seen` | `title` | Logs a watch today. Confirms with **Undo**. |
-| `/want` | `title` | Adds the title to Want to See. Confirms with **Undo**. |
 | `/unlink` | none | Removes the link after a confirmation. |
 
 **Personal title cards.** For a linked member, every title card also shows the taste match (50-99 percent and its
 label), whether the member has seen or rated the title, and buttons **Want to see**, **Seen**, and **Rate**. **Rate**
-opens a modal with a 1-10 choice.
+opens a compact score menu, 10 first. The **Want to See** button adds the title and confirms with **Undo**; it replaces the `/want` command, removed on 2026-10-23.
 
 **Share to channel always posts the guest card.** The shared copy never shows a member's match, seen or rated state, or
 member buttons.
@@ -214,7 +213,7 @@ Windmill ─▶ Discord REST (bot token): weekly posts, later DMs
   through the MCP transport or OAuth tokens, and the `REC_MCP_*` switches don't apply to it.
 - **Writes:** the interaction ID is the `action_id` (a Discord ID fits the 100-character limit), so a double press
   never writes twice. Discord doesn't retry interactions. Single writes from
-  buttons and `/rate`, `/seen`, `/want` run as a batch of one (`runBatch`), so **Undo** uses `undoBatch` with the
+  buttons (including **Want to See**) and `/rate`, `/seen` run as a batch of one (`runBatch`), so **Undo** uses `undoBatch` with the
   `batch_id`, which the **Undo** button carries in its `custom_id`. The receipt lives in Crate, so **Undo** keeps
   working after the interaction token expires.
 - **Guests:** the MCP read functions require a user today. A new `readGuestTool(viewer, origin, name, args)` serves
@@ -325,7 +324,7 @@ Each ticket is a thin slice that works end to end. HITL marks tickets that need 
 6. **Linking.** `user_discord_link`, `/discord/link` with Discord OAuth2, `/link`, `/unlink`, the Settings tile, account
    deletion, and personal title cards (match and status, no buttons yet). Share keeps posting the guest card.
    Blocked by 3.
-7. **Member writes.** **Want to see**, **Seen**, and **Rate** buttons, `/rate`, `/seen`, `/want`, and **Undo**.
+7. **Member writes.** **Want to See**, **Seen**, and **Rate** buttons, `/rate`, `/seen`, and **Undo**. The **Want to See** button replaces the command removed on 2026-10-23.
    Blocked by 6.
 8. **`/watch` and `/next`.** Guest `/watch` through `worthwhileSuggestions`, member `/watch`, **Another**, and `/next`.
    Blocked by 5 and 6.

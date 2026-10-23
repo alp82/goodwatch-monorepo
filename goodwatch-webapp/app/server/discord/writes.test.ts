@@ -562,7 +562,7 @@ test("write UI keeps identifiers and underscores out of visible text", async () 
 	)
 })
 
-test("Undo refresh keeps the guest place and catalog in the top block", async () => {
+test("Undo refresh keeps the member country and guest catalog in the top block", async () => {
 	const guest = {
 		...title,
 		name: "Guest catalog",
@@ -581,10 +581,7 @@ test("Undo refresh keeps the guest place and catalog in the top block", async ()
 	await f.run(3, { custom_id: "gw1:undo:123456789:movie:42" }, { locale: "de" })
 	const body = (await f.edited) as { components: Component[] }
 	assert.equal(body.components[0].content, "Undone.")
-	assert.deepEqual(
-		body.components[1],
-		titleCard(guest, "DE", { allServices: true }).components[0],
-	)
+	assert.deepEqual(body.components[1], titleCard(guest, "FR").components[0])
 	assert.match(
 		JSON.stringify(body.components[2]),
 		/95% taste match|On every service in France/,
@@ -676,4 +673,76 @@ test("Back stays on every result of a member press when the title was opened fro
 	assert.match(refreshed, /Undone\./)
 	assert.ok(refreshed.includes(backId))
 	assert.ok(refreshed.includes("gw1:want:movie:42:d:k0123456789abcdef01:2"))
+})
+
+test("personal cards default to the saved country in a US guild and Share keeps that country", async () => {
+	const reads: { country: string }[] = []
+	const overrides: Partial<Dependencies> = {
+		getGuild: async (id) => ({
+			guild_id: id,
+			country: "US",
+			service_ids: [],
+			digest_channel_id: null,
+			updated_by: "admin",
+			updated_at: 0,
+		}),
+		memberRead: async (_id, name) =>
+			name === "get_settings"
+				? { country: "DE", service_ids: [] }
+				: { title, member: { score: 9 } },
+		read: async (viewer) => {
+			reads.push(viewer)
+			return {
+				title: {
+					...title,
+					availability: {
+						offers: [
+							{
+								service_id: 8,
+								name: "Netflix",
+								offer_type: "flatrate",
+								url: `https://netflix.example/${viewer.country}`,
+								stream_link: "",
+							},
+						],
+					},
+				},
+			}
+		},
+	}
+	const personal = fixture(overrides)
+	await personal.run(
+		3,
+		{ custom_id: formatCustomId("watch", title.id) },
+		{ guild_id: "guild", locale: "en-US" },
+	)
+	const body = (await personal.edited) as { components: Component[] }
+	const controls = flatten(body.components)
+	assert.equal(reads.at(-1)?.country, "DE")
+	assert.equal(controls.find((c) => c.type === 3)?.placeholder, "Germany")
+	assert.ok(controls.some((c) => c.url === "https://netflix.example/DE"))
+	const shareId = controls.find((c) => c.label === "Share to channel")!
+		.custom_id as string
+	assert.equal(shareId, formatCustomId("share", title.id, undefined, "DE"))
+	const shared = fixture(overrides)
+	await shared.run(
+		3,
+		{ custom_id: shareId },
+		{ guild_id: "guild", locale: "en-US" },
+	)
+	const publicBody = (await shared.edited) as {
+		flags: number
+		components: Component[]
+	}
+	assert.equal(publicBody.flags & EPHEMERAL, 0)
+	assert.equal(reads.at(-1)?.country, "DE")
+	assert.equal(
+		flatten(publicBody.components).find((c) => c.type === 3)?.placeholder,
+		"Germany",
+	)
+	assert.ok(
+		flatten(publicBody.components).some(
+			(c) => c.url === "https://netflix.example/DE",
+		),
+	)
 })

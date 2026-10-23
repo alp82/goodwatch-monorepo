@@ -512,30 +512,17 @@ export async function routeInteraction(
 		name: Parameters<typeof readGuestTool>[2],
 		args: Parameters<typeof readGuestTool>[3],
 	) => deps.read(viewer, "https://goodwatch.app", name, args)
-	// The place Share uses: never the member's settings, so the 2C top block is exactly what Share posts.
-	const sharePlace = () =>
-		resolveViewerPlace(interaction, {
-			...deps,
-			resolveMemberPlace: deps.resolveMemberPlace ?? (async () => null),
-		})
-	const samePlace = (a: typeof viewer, b: typeof viewer) =>
-		a.country === b.country &&
-		[...(a.services ?? [])].sort().join() ===
-			[...(b.services ?? [])].sort().join()
 	const card = async (
 		id: string,
 		share = false,
 		back?: ListRef,
 		selectedCountry?: string,
 	) => {
-		// The top block always comes from a fresh guest read for the share place, with no member context or fields;
-		// the member's own read only fills the member block below it.
+		// Read the displayed country without member fields; the member read fills the private block.
 		const personal = !share ? memberId : null
 		const guestPlace = selectedCountry
 			? { country: selectedCountry, services: [] }
-			: personal
-				? await within(sharePlace(), 400, viewer).catch(() => viewer)
-				: viewer
+			: viewer
 		const [mine, result] = await Promise.all([
 			personal
 				? deps
@@ -631,12 +618,7 @@ export async function routeInteraction(
 				share,
 				member: memberTitle ? ((mine?.member ?? {}) as MemberMarks) : undefined,
 				memberTitle,
-				memberPlace:
-					memberTitle && !samePlace(viewer, guestPlace)
-						? { country: viewer.country, ownServices: !allServices() }
-						: undefined,
 				emojis: await emojis(),
-				allServices: !guestPlace.services?.length,
 				back,
 			},
 		)
@@ -695,7 +677,6 @@ export async function routeInteraction(
 		return watchCard(result.title as GuestTitle, country, {
 			another: anotherId(options, id),
 			origin: appOrigin(),
-			allServices: allServices(),
 			emojis: await emojis(),
 			episode,
 			...(mine?.title ? { member: (mine.member ?? {}) as MemberMarks } : {}),

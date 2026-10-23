@@ -52,7 +52,6 @@ function watch(title: GuestTitle, place: DeckPlace, emojis: EmojiIds) {
 /** The decision uses the title card's subscription buttons and country menu. */
 function decisionLinks(title: GuestTitle, place: DeckPlace, emojis: EmojiIds) {
 	const links = streamLinks(title, place.country, {
-		allServices: !place.services.length,
 		emojis,
 	})
 	return links

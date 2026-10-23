@@ -154,14 +154,7 @@ test("where to watch: service logos as app emojis, junk and channel variants fol
 			stream_link: "[Provider](https://x.example)",
 		},
 		{
-			service_id: 1825,
-			name: "HBO Max Amazon Channel",
-			url: "https://a.example",
-			stream_link: "[a](https://a.example)",
-		},
-		{
 			service_id: 8,
-			display_priority: 0,
 			name: "Netflix",
 			url: "https://n.example",
 			stream_link: "[n](https://n.example)",
@@ -169,11 +162,16 @@ test("where to watch: service logos as app emojis, junk and channel variants fol
 		},
 		{
 			service_id: 1899,
-			display_priority: 1,
 			name: "HBO Max",
 			url: "https://h.example",
 			stream_link: "[h](https://h.example)",
 			offer_type: "flatrate",
+		},
+		{
+			service_id: 1825,
+			name: "HBO Max Amazon Channel",
+			url: "https://a.example",
+			stream_link: "[a](https://a.example)",
 		},
 		{
 			service_id: 1796,
@@ -255,7 +253,6 @@ test("1C share copy is public and drops only the Share button", () => {
 	const shared = titleCard(title, "DE", {
 		share: true,
 		emojis,
-		allServices: true,
 	})
 	assert.equal(shared.flags & 64, 0)
 	assert.doesNotMatch(JSON.stringify(shared), /Share to channel/)
@@ -798,32 +795,28 @@ test("service links: long links go through the GoodWatch redirect, more than ten
 	)
 })
 
-test("subscription buttons use country popularity, exclude paid and unknown kinds, and have a country menu", () => {
+test("subscription buttons preserve incoming country popularity, exclude paid and unknown kinds, and have a country menu", () => {
 	const offers = [
 		{
 			service_id: 2,
 			name: "Apple TV Store",
 			offer_type: "buy",
-			display_priority: 0,
-		},
-		{
-			service_id: 8,
-			name: "Netflix",
-			offer_type: "flatrate",
-			display_priority: 3,
 		},
 		{
 			service_id: 1899,
 			name: "HBO Max",
 			offer_type: "ads",
-			display_priority: 1,
 		},
-		{ service_id: 11, name: "MUBI", offer_type: "free", display_priority: 2 },
+		{ service_id: 11, name: "MUBI", offer_type: "free" },
+		{
+			service_id: 8,
+			name: "Netflix",
+			offer_type: "flatrate",
+		},
 		{
 			service_id: 10,
 			name: "Amazon Video",
 			offer_type: "rent",
-			display_priority: 0,
 		},
 		{ service_id: 9999, name: "Unknown offer" },
 	].map((o) => ({

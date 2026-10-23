@@ -654,8 +654,8 @@ test("a linked member opens a discover title with match_label and shares a fresh
 	assert.match(personal, /Excellent taste fit/)
 	assert.doesNotMatch(personal, /93%/)
 	assert.match(personal, /You rated it|Wishlist/)
-	// The top block is the share place (locale Germany); the member's France is in the member block.
-	assert.match(personal, /Not on a subscription service in Germany/)
+	// Availability defaults to the member's saved country and Share preserves it.
+	assert.match(personal, /Not on a subscription service in France/)
 	assert.match(personal, /Excellent taste fit/)
 	const shareButton = buttonsIn(opened.edits[0].components).find(
 		(c) => c.label === "Share to channel",
@@ -681,7 +681,7 @@ test("a linked member opens a discover title with match_label and shares a fresh
 	)
 	assert.match(
 		JSON.stringify(shared.edits[0]),
-		/Not on a subscription service in Germany/,
+		/Not on a subscription service in France/,
 	)
 })
 
@@ -732,10 +732,10 @@ for (const source of ["similar", "person", "hot", "similar-button"]) {
 			)
 			await g.finished
 			assert.match(JSON.stringify(g.edits[0]), /Excellent taste fit/)
-			// The top block is a guest read for the share place, as Share would post it.
+			// The top block uses the member's saved country without member fields.
 			assert.deepEqual(
 				g.reads.map((r) => [r.viewer, r.name]),
-				[[{ country: "DE" }, "get_title"]],
+				[[{ country: "FR", services: undefined }, "get_title"]],
 			)
 		})
 	}
@@ -1137,7 +1137,7 @@ for (const failure of ["reject", "unavailable"] as const) {
 			f.reads.map(({ viewer, name, args }) => ({ viewer, name, args })),
 			[
 				{
-					viewer: { country: "DE" },
+					viewer: { country: "FR", services: [8] },
 					name: "get_title",
 					args: { title_id: "show:42" },
 				},

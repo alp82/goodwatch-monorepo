@@ -427,7 +427,7 @@ test("guild save succeeds after a committed write when cache reset fails or time
 	}
 })
 
-test("title cards: the top block uses the guild place for everyone, members see their own place below", async () => {
+test("title cards: members use saved country and guests use guild country", async () => {
 	for (const linked of [false, true]) {
 		let done!: () => void
 		const finished = new Promise<void>((resolve) => {
@@ -474,13 +474,19 @@ test("title cards: the top block uses the guild place for everyone, members see 
 		)
 		assert.equal(response.type, 5)
 		await finished
-		// The top block is what Share posts: the guild's place for everyone. The member's place only fills the block below.
-		assert.equal(guildReads, 1)
+		// Personal cards use saved settings; guests fall back to guild settings.
+		assert.equal(guildReads, linked ? 0 : 1)
 		assert.match(
 			JSON.stringify(edits),
-			/Not on a subscription service in Germany/,
+			linked
+				? /Not on a subscription service in the United Kingdom/
+				: /Not on a subscription service in Germany/,
 		)
-		assert.deepEqual(reads, [{ country: "DE", services: [] }])
+		assert.deepEqual(reads, [
+			linked
+				? { country: "GB", services: [10] }
+				: { country: "DE", services: [] },
+		])
 		if (linked) {
 			const [top, member] = (
 				edits[0] as { components: { components: unknown[] }[] }

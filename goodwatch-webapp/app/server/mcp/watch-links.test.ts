@@ -157,31 +157,38 @@ test("offers carry the provider's TMDB logo for the poster cards when it is know
 	assert.equal("logo_url" in without.offers[0], false)
 })
 
-test("linked offers carry the site's country-specific provider rank", () => {
-	const ranks = new Map([
-		[8, 3],
-		[337, 1],
-	])
-	const linked = linkedAvailability(
-		availability,
-		title,
-		"DE",
-		names,
-		[],
-		new Map(),
-		ranks,
+test("linked offers use country popularity without changing the offer shape", () => {
+	const evidence: Watchability = {
+		...availability,
+		offers: [
+			{ ...offer, service_id: 9 },
+			{ ...offer, service_id: 9999 },
+			{ ...offer, service_id: 337 },
+			{ ...offer, service_id: 11 },
+			{ ...offer, service_id: 119, offer_type: "ads" },
+			{ ...offer, service_id: 9998 },
+		],
+	}
+	const linked = (ranks: ReadonlyMap<number, number>) =>
+		linkedAvailability(evidence, title, "DE", names, [], new Map(), ranks)
+	assert.deepEqual(
+		linked(
+			new Map([
+				[9, 3],
+				[337, 1],
+				[11, 1],
+			]),
+		).offers.map((o) => o.service_id),
+		[337, 11, 9, 119, 9999, 9998],
 	)
-	assert.equal(linked.offers[0].display_priority, 3)
-	assert.equal(
-		linkedAvailability(
-			availability,
-			title,
-			"US",
-			names,
-			[],
-			new Map(),
-			new Map([[8, 0]]),
-		).offers[0].display_priority,
-		0,
+	assert.deepEqual(
+		linked(new Map([[9, 0]])).offers.map((o) => o.service_id),
+		[9, 119, 9999, 337, 11, 9998],
 	)
+	assert.deepEqual(
+		linked(new Map()).offers.map((o) => o.service_id),
+		evidence.offers.map((o) => o.service_id),
+	)
+	for (const item of linked(new Map([[9, 0]])).offers)
+		assert.equal("display_priority" in item, false)
 })

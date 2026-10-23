@@ -640,7 +640,7 @@ test("endpoint rejects correctly signed stale and future requests", async () => 
 	}
 })
 
-test("member search: the top block is exactly the shared card, the member's own place sits in the member block", async () => {
+test("member search: the saved country fills the top block and Share preserves it", async () => {
 	const memberCalls: unknown[] = []
 	// Member settings (France, service 8), server settings (UK, service 337) and locale (Germany) all differ.
 	const f = fixture({
@@ -724,11 +724,8 @@ test("member search: the top block is exactly the shared card, the member's own 
 		JSON.stringify(top),
 		/93%|You rated|Wishlist|Member provider/,
 	)
-	assert.match(JSON.stringify(top), /"placeholder":"United Kingdom"/)
-	assert.match(
-		JSON.stringify(top),
-		/subscription service in the United Kingdom/,
-	)
+	assert.match(JSON.stringify(top), /"placeholder":"France"/)
+	assert.match(JSON.stringify(top), /subscription service in France/)
 	assert.equal(member.type, 17)
 	assert.equal(member.accent_color, 0xfbbf24)
 	assert.match(JSON.stringify(member), /### 93% taste match/)
@@ -741,14 +738,16 @@ test("member search: the top block is exactly the shared card, the member's own 
 	const callsBefore = memberCalls.length
 	f.reads.length = 0
 	await f.run(
-		guildInteraction(3, { custom_id: formatCustomId("share", "movie:42") }),
+		guildInteraction(3, {
+			custom_id: formatCustomId("share", "movie:42", undefined, "FR"),
+		}),
 	)
 	for (let i = 0; f.edits.length < 2 && i < 100; i++)
 		await new Promise((resolve) => setTimeout(resolve, 5))
 	assert.equal(memberCalls.length, callsBefore)
 	assert.deepEqual(f.reads, [
 		{
-			viewer: { country: "GB", services: [337] },
+			viewer: { country: "FR", services: [] },
 			origin: "https://goodwatch.app",
 			name: "get_title",
 			args: { title_id: "movie:42" },

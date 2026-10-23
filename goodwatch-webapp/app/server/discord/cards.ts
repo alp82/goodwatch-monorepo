@@ -58,7 +58,6 @@ export interface GuestTitle {
 			url?: string
 			stream_link: string
 			offer_type?: string
-			display_priority?: number
 		}[]
 	}
 }
@@ -399,14 +398,11 @@ export interface WatchProvider {
 }
 
 /**
- * Group only known channel and tier IDs. Distinct services keep separate names and links, in the site's provider order.
+ * Group only known channel and tier IDs. Keep the incoming per-country popularity order from linkedAvailability.
  */
 export function watchProviders(offers: Offer[]): WatchProvider[] {
-	const brands = new Map<
-		string,
-		WatchProvider & { order: number; at: number }
-	>()
-	offers.forEach((offer, at) => {
+	const brands = new Map<string, WatchProvider>()
+	offers.forEach((offer) => {
 		const name = offer.name?.trim()
 		// Placeholders from offers without a known service ("Provider", "Service 123") say nothing.
 		if (!name || /^(provider|service \d+)$/i.test(name)) return
@@ -414,23 +410,16 @@ export function watchProviders(offers: Offer[]): WatchProvider[] {
 		const brand = identity.name
 		if (!brand) return
 		const id = identity.id
-		// Same country order as streaming-providers.server.ts: streaming_service.order_by_country,
-		// falling back to order_default. watch-links.server.ts supplies the country's provider ranks.
-		const order = offer.display_priority ?? Number.POSITIVE_INFINITY
 		const emoji = id === undefined ? null : (PROVIDER_EMOJI_BY_ID[id] ?? null)
 		const key = id === undefined ? `name:${brand}` : `id:${id}`
 		const entry = brands.get(key)
-		if (!entry)
-			brands.set(key, { id, brand, emoji, offers: [offer], order, at })
+		if (!entry) brands.set(key, { id, brand, emoji, offers: [offer] })
 		else {
 			entry.offers.push(offer)
 			entry.emoji ??= emoji
-			entry.order = Math.min(entry.order, order)
 		}
 	})
 	return [...brands.values()]
-		.sort((a, b) => a.order - b.order || a.at - b.at)
-		.map(({ id, brand, emoji, offers }) => ({ id, brand, emoji, offers }))
 }
 
 /** The service's logo as inline emoji, or its name in bold while the logo isn't uploaded. */
@@ -605,8 +594,6 @@ export function streamLinks(
 	title: GuestTitle,
 	country: string,
 	options: {
-		allServices?: boolean
-		heading?: string
 		emojis?: EmojiIds
 		back?: ListRef
 	} = {},
@@ -771,15 +758,9 @@ export function memberBlock(
 
 // ---------- cards ----------
 
-/** The member's own place for the 2C member block: their country, and whether they chose services. */
-export interface MemberPlace {
-	country: string
-	ownServices: boolean
-}
-
 /**
- * 1C guest title card, and 2C for members: the same guest container on top (what Share posts, from the guest read and
- * place) and the member block below it. `memberTitle` is the member's own read of the title: its taste match, and its marks. Availability is controlled by the country menu. Share copies never get member data even when it is passed.
+ * Guest title card with a private member block when linked. Availability uses the displayed country, defaulting
+ * to the member's saved country for personal cards. Share keeps that country and omits all member data.
  */
 export function titleCard(
 	title: GuestTitle,
@@ -788,10 +769,8 @@ export function titleCard(
 		share?: boolean
 		member?: MemberMarks
 		memberTitle?: GuestTitle
-		memberPlace?: MemberPlace
 		memberButtons?: Component[]
 		emojis?: EmojiIds
-		allServices?: boolean
 		/** The list the title was opened from, for the Back button. */
 		back?: ListRef
 	} = {},
@@ -803,7 +782,6 @@ export function titleCard(
 			reasonsLine(title.reasons) ? text(reasonsLine(title.reasons)) : null,
 			separator(),
 			...streamLinks(title, country, {
-				allServices: options.allServices,
 				emojis: options.emojis,
 				back: options.back,
 			}),

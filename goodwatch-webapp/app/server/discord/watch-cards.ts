@@ -25,7 +25,6 @@ export function watchCard(
 	options: {
 		another: string
 		origin: string
-		allServices?: boolean
 		member?: MemberMarks
 		emojis?: EmojiIds
 		episode?: { code: string; name: string | null } | null
@@ -57,7 +56,6 @@ export function watchCard(
 						}
 					: null,
 				...streamLinks(title, country, {
-					allServices: options.allServices,
 					emojis: options.emojis,
 				}),
 				{ type: 1, components: buttons },
