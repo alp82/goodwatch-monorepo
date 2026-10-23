@@ -14,7 +14,19 @@ import net from "node:net"
 import os from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { clients, failures, headers, normalize, structure } from "./core.mjs"
+import {
+	classAllowlist,
+	clients,
+	emptyLoaderLists,
+	failures,
+	filterClasses,
+	headers,
+	manifestDiff,
+	manifestPaths,
+	manifestRoutes,
+	normalize,
+	structure,
+} from "./core.mjs"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const cache = path.join(os.homedir(), ".cache/gw753-html-check")
@@ -558,7 +570,7 @@ function diff(a, b, output) {
 			.join("\n"),
 	)
 }
-function compare(aDir, bDir, prod = false) {
+function compare(aDir, bDir, prod = false, allow = [], reportDir = bDir) {
 	const a = readSnapshot(aDir)
 	const b = readSnapshot(bDir)
 	if (
@@ -566,6 +578,54 @@ function compare(aDir, bDir, prod = false) {
 		JSON.stringify(b.map((e) => [e.path, e.client]))
 	)
 		throw new Error("Snapshot URL/client sets differ")
+	const patterns = classAllowlist(allow)
+	const review = {
+		allowClass: allow,
+		removed: { base: 0, candidate: 0 },
+		documents: [],
+		emptyOnBothSides: [],
+	}
+	for (let i = 0; i < a.length; i++) {
+		const counts = {}
+		for (const [side, entry] of [
+			["base", a[i]],
+			["candidate", b[i]],
+		]) {
+			const filtered = filterClasses(entry.body, patterns)
+			entry.body = filtered.html
+			counts[side] = filtered.removed
+			review.removed[side] += filtered.removed
+		}
+		review.documents.push({
+			path: a[i].path,
+			client: a[i].client,
+			removed: counts,
+		})
+		const right = emptyLoaderLists(b[i].body)
+		const lists = emptyLoaderLists(a[i].body).filter((key) =>
+			right.includes(key),
+		)
+		if (lists.length)
+			review.emptyOnBothSides.push({
+				path: a[i].path,
+				client: a[i].client,
+				lists,
+			})
+	}
+	writeFileSync(
+		path.join(reportDir, "comparison-review.json"),
+		JSON.stringify(review, null, 2),
+	)
+	console.log(
+		`Class allowlist: ${JSON.stringify(allow)}; removed tokens: base ${review.removed.base}, candidate ${review.removed.candidate}`,
+	)
+	console.log(
+		`Empty on both sides: ${review.emptyOnBothSides.length} documents (informational)`,
+	)
+	for (const entry of review.emptyOnBothSides)
+		console.log(
+			`  ${entry.client} ${entry.path}: empty on both sides: ${entry.lists.join(", ")}`,
+		)
 	let changed = 0
 	for (let i = 0; i < a.length; i++) {
 		const issues = failures(a[i], b[i])
@@ -594,6 +654,69 @@ function compare(aDir, bDir, prod = false) {
 		`${prod ? "Production report" : "Gate"}: ${a.length} documents, ${changed} differences`,
 	)
 	return changed
+}
+
+async function reportManifests(baseOrigin, candidateOrigin, runDir) {
+	const report = {
+		informational: true,
+		base: [],
+		candidate: [],
+		differences: [],
+		errors: [],
+	}
+	for (const [side, origin] of [
+		["base", baseOrigin],
+		["candidate", candidateOrigin],
+	]) {
+		const directory = path.join(runDir, `${side}-2`)
+		const snapshot = JSON.parse(
+			readFileSync(path.join(directory, "snapshot.json"), "utf8"),
+		)
+		const paths = new Set()
+		for (const entry of snapshot.entries) {
+			const raw = readFileSync(
+				path.join(directory, entry.file.replace(/\.html$/, ".raw.html")),
+				"utf8",
+			)
+			for (const asset of manifestPaths(raw)) paths.add(asset)
+		}
+		if (!paths.size) report.errors.push(`${side}: no referenced manifest found`)
+		for (const asset of [...paths].sort()) {
+			try {
+				const response = await fetch(new URL(asset, origin), {
+					headers: { Host: "goodwatch.app" },
+					redirect: "manual",
+					signal: AbortSignal.timeout(30000),
+				})
+				if (response.status !== 200) throw new Error(`HTTP ${response.status}`)
+				const source = await response.text()
+				writeFileSync(
+					path.join(runDir, `${side}-${path.basename(asset)}`),
+					source,
+				)
+				report[side].push({ asset, routes: manifestRoutes(source) })
+			} catch (error) {
+				report.errors.push(`${side} ${asset}: ${error.message}`)
+			}
+		}
+	}
+	for (const base of report.base)
+		for (const candidate of report.candidate)
+			report.differences.push({
+				base: base.asset,
+				candidate: candidate.asset,
+				routes: manifestDiff(base.routes, candidate.routes),
+			})
+	writeFileSync(
+		path.join(runDir, "manifest-diff.json"),
+		JSON.stringify(report, null, 2),
+	)
+	console.log(
+		`Manifest report (informational): ${report.differences.reduce((sum, diff) => sum + diff.routes.length, 0)} route differences; ${report.errors.length} report errors`,
+	)
+	for (const diff of report.differences)
+		console.log(JSON.stringify(diff, null, 2))
+	for (const error of report.errors) console.log(`  ${error}`)
 }
 
 function locations(xml) {
@@ -641,7 +764,19 @@ async function prodPaths() {
 
 async function main() {
 	mkdirSync(cache, { recursive: true })
-	const [mode, action, target] = process.argv.slice(2)
+	const args = []
+	const allow = []
+	for (let i = 2; i < process.argv.length; i++) {
+		if (process.argv[i] === "--allow-class") {
+			if (process.argv[++i] === undefined)
+				throw new Error("--allow-class needs a regex")
+			allow.push(process.argv[i])
+		} else if (process.argv[i].startsWith("--"))
+			throw new Error(`Unknown option: ${process.argv[i]}`)
+		else args.push(process.argv[i])
+	}
+	classAllowlist(allow)
+	const [mode, action, target, other] = args
 	if (mode === "local" && action && target) {
 		if (!existsSync(preload)) throw new Error(`Missing preload: ${preload}`)
 		const runDir = path.join(cache, `run-${Date.now()}-${process.pid}`)
@@ -676,13 +811,24 @@ async function main() {
 				compare(
 					path.join(runDir, `${label}-1`),
 					path.join(runDir, `${label}-2`),
+					false,
+					allow,
 				)
 			)
 				throw new Error(
 					`${label} self-check has noise; no candidate verdict is valid`,
 				)
 		}
-		if (compare(path.join(runDir, "base-2"), path.join(runDir, "candidate-2")))
+		await reportManifests(base, candidate, runDir)
+		if (
+			compare(
+				path.join(runDir, "base-2"),
+				path.join(runDir, "candidate-2"),
+				false,
+				allow,
+				runDir,
+			)
+		)
 			process.exitCode = 1
 	} else if (mode === "prod" && action === "snapshot" && target) {
 		const directory = path.resolve(target)
@@ -695,17 +841,12 @@ async function main() {
 			["googlebot", "browser"],
 			true,
 		)
-	} else if (
-		mode === "prod" &&
-		action === "compare" &&
-		target &&
-		process.argv[5]
-	) {
-		if (compare(path.resolve(target), path.resolve(process.argv[5]), true))
+	} else if (mode === "prod" && action === "compare" && target && other) {
+		if (compare(path.resolve(target), path.resolve(other), true, allow))
 			process.exitCode = 1
 	} else
 		throw new Error(
-			"Usage: ./run.sh local <base-ref> <candidate-ref|worktree> | prod snapshot <dir> | prod compare <dirA> <dirB>",
+			"Usage: ./run.sh local <base-ref> <candidate-ref|worktree> [--allow-class <regex>]... | prod snapshot <dir> | prod compare <dirA> <dirB>",
 		)
 }
 if (

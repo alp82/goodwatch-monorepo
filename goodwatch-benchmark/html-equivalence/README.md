@@ -77,6 +77,49 @@ status/redirect chain, `no-store` on only one side, or changed normalized body
 exits nonzero. Both sides returning `no-store` is allowed, as requested by the
 ticket. This proves equivalence to the base, not that the base's data is complete.
 
+## Review reports
+
+Local runs fetch every distinct `/assets/manifest-<hash>.js` referenced by the
+measured documents on each build. `manifest-diff.json` records the referenced
+assets, parsed route summaries, and a structured diff by route ID. It reports
+added and removed routes and changes to `hasLoader`, `hasClientLoader`,
+`hasAction`, `hasErrorBoundary`, and the module path with build hashes removed.
+The console prints the same route changes and a count. This report is
+informational: route changes and manifest fetch or parse errors never fail
+the HTML gate by themselves. Errors are recorded explicitly, so a missing
+report cannot be mistaken for unchanged routes. Fetched manifest sources stay
+in the run directory. No fetched JavaScript is executed.
+
+For a reviewed class-only change, supply one or more regexes:
+
+```sh
+./run.sh local origin/main my-candidate-commit --allow-class 'scroll-smooth' \
+  --allow-class 'duration-[0-9]+'
+./run.sh prod compare /path/to/base /path/to/candidate --allow-class 'scroll-smooth'
+```
+
+Each regex must match a whole class token. Matching tokens are removed from
+both sides only inside double-quoted `class="..."` attributes before comparison.
+Text, other attributes, comments, and script/style contents stay intact.
+Removing tokens collapses whitespace within that class value; an empty
+attribute stays present. Unmatched tokens such as `hidden`, `sr-only`, and
+`invisible` still fail unless explicitly allowed. Without this option, class
+attributes retain the existing byte-for-byte comparison. Invalid regexes fail
+before builds or reads start. Quote regexes to prevent shell expansion.
+
+`comparison-review.json` records the regex strings, total tokens removed per
+side, counts for each URL/client, and empty loader lists shared by both sides.
+The console prints the allowlist and per-side totals even when they are zero.
+Local cross-build results live in the run directory; each self-check has its
+own report in `base-2/` or `candidate-2/`. Production comparisons save the
+report in the candidate snapshot directory.
+
+Pages with an empty array as route loader data or an empty array immediately
+inside a route's loader data are reported as "empty on both sides" when the
+same route/field is empty in both documents. These informational entries name
+the URL, client, and route/field. Nested arrays are not included. Matching
+empty lists do not prove the bench covers populated production data.
+
 ## Normalization contract
 
 HTML stays byte-for-byte comparable apart from these fields:
@@ -196,7 +239,7 @@ npx biome check ../goodwatch-benchmark/html-equivalence/*.mjs
 npm run typecheck
 ```
 
-All 12 normalizer and structural-report tests pass. They cover lost sections, links, metadata,
+All 17 normalizer, review-report, and CLI tests pass. They cover lost sections, links, metadata,
 JSON-LD, loader keys, query clocks, direct and encoded context JSON, generated
 imports, statuses, and unsafe environment values. Typecheck has 188 existing
 errors; running it on `origin/main` produced byte-identical output. No webapp
@@ -209,3 +252,15 @@ coverage is absent because the bench has no people. Qdrant is unavailable in
 this bench, so related-map data can be absent on both sides; unchanged missing
 data is not evidence that production content is complete. The production
 baseline includes eight person pages and the normal live related sections.
+
+## Follow-up verification on October 23, 2026
+
+The manifest/class review follow-up ran `./run.sh local origin/main origin/main`
+once against the same `01e079bcdb9be23a235a8762c9ea2275576f09e3` base.
+Both self-checks and the cross-build comparison passed: 342 documents each,
+zero HTML differences. The manifest report found zero route differences and
+zero report errors. No class allowlist was supplied; zero tokens were removed
+on either side. Twelve URL/client entries were empty on both sides: `/`,
+the two mood pages, and `/people`, for all three clients. All 17 tests and
+Biome checks pass. Typecheck reports the same 188 errors, byte-identical to
+the saved origin/main check. Production was not read again for this follow-up.

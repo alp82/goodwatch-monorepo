@@ -211,3 +211,115 @@ export function failures(a, b) {
 	if (a.body !== b.body) issues.push("document HTML changed")
 	return issues
 }
+
+export function classAllowlist(patterns) {
+	return patterns.map((pattern) => new RegExp(`^(?:${pattern})$`))
+}
+
+export function filterClasses(html, patterns = []) {
+	let removed = 0
+	if (!patterns.length) return { html, removed }
+	// Keep raw-text elements and comments opaque. Preserve all bytes outside class values.
+	const result = html.replace(
+		/<!--[\s\S]*?-->|<(script|style|textarea|title|xmp|iframe|noembed|noframes|noscript)(?=[\t\n\f\r />])(?:[^>"']|"[^"]*"|'[^']*')*>[\s\S]*?(?:<\/\1\s*>|$)|<[a-z][a-z0-9:-]*(?:[^>"']|"[^"]*"|'[^']*')*>/gi,
+		(fragment) => {
+			if (fragment.startsWith("<!--")) return fragment
+			const end = /^<(?:[^>"']|"[^"]*"|'[^']*')*>/.exec(fragment)?.[0]
+			if (!end) return fragment
+			const tag = end.replace(
+				/(\s+)([^\s=/>]+)(\s*=\s*)("[^"]*"|'[^']*'|[^\s>]+)/g,
+				(attribute, space, name, equals, value) => {
+					if (name.toLowerCase() !== "class" || value[0] !== '"')
+						return attribute
+					const tokens = value
+						.slice(1, -1)
+						.split(/[\t\n\f\r ]+/)
+						.filter(Boolean)
+					const kept = tokens.filter(
+						(token) => !patterns.some((regex) => regex.test(token)),
+					)
+					const count = tokens.length - kept.length
+					removed += count
+					return count
+						? `${space}${name}${equals}"${kept.join(" ")}"`
+						: attribute
+				},
+			)
+			return tag + fragment.slice(end.length)
+		},
+	)
+	return { html: result, removed }
+}
+
+export function emptyLoaderLists(html) {
+	const paths = []
+	for (const context of contexts(html)) {
+		for (const [route, data] of Object.entries(
+			context.state?.loaderData || {},
+		)) {
+			if (Array.isArray(data)) {
+				if (!data.length) paths.push(`${route}`)
+			} else if (data && typeof data === "object") {
+				for (const [key, value] of Object.entries(data))
+					if (Array.isArray(value) && !value.length)
+						paths.push(`${route}.${key}`)
+			}
+		}
+	}
+	return [...new Set(paths)].sort()
+}
+
+export function manifestPaths(html) {
+	return [
+		...new Set(html.match(/\/assets\/manifest-[A-Za-z0-9_-]+\.js\b/g) || []),
+	].sort()
+}
+
+export function manifestRoutes(source) {
+	// Remix emits a JSON assignment. Never evaluate fetched JavaScript.
+	const match = /^\s*window\.__remixManifest\s*=\s*([\s\S]*?)\s*;?\s*$/.exec(
+		source,
+	)
+	if (!match) throw new Error("Unsupported Remix manifest serialization")
+	const { routes } = JSON.parse(match[1])
+	if (!routes || typeof routes !== "object" || Array.isArray(routes))
+		throw new Error("Manifest has no routes object")
+	return Object.fromEntries(
+		Object.entries(routes)
+			.sort(([a], [b]) => a.localeCompare(b))
+			.map(([id, route]) => [
+				id,
+				{
+					hasLoader: Boolean(route.hasLoader),
+					hasClientLoader: Boolean(route.hasClientLoader),
+					hasAction: Boolean(route.hasAction),
+					hasErrorBoundary: Boolean(route.hasErrorBoundary),
+					module:
+						route.module?.replace(/-[A-Za-z0-9_-]{8}(\.js)\b/g, "-[hash]$1") ??
+						null,
+				},
+			]),
+	)
+}
+
+export function manifestDiff(base, candidate) {
+	return [...new Set([...Object.keys(base), ...Object.keys(candidate)])]
+		.sort()
+		.flatMap((route) => {
+			if (!(route in base))
+				return [{ route, kind: "added", candidate: candidate[route] }]
+			if (!(route in candidate))
+				return [{ route, kind: "removed", base: base[route] }]
+			const fields = Object.fromEntries(
+				Object.keys(base[route])
+					.filter((key) => base[route][key] !== candidate[route][key])
+					.map((key) => [
+						key,
+						{ base: base[route][key], candidate: candidate[route][key] },
+					]),
+			)
+			return Object.keys(fields).length
+				? [{ route, kind: "changed", fields }]
+				: []
+		})
+}

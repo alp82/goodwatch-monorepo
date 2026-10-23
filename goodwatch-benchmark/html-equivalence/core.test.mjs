@@ -11,7 +11,18 @@ import os from "node:os"
 import path from "node:path"
 import test from "node:test"
 import { fileURLToPath } from "node:url"
-import { contexts, failures, normalize, structure } from "./core.mjs"
+import {
+	classAllowlist,
+	contexts,
+	emptyLoaderLists,
+	failures,
+	filterClasses,
+	manifestDiff,
+	manifestPaths,
+	manifestRoutes,
+	normalize,
+	structure,
+} from "./core.mjs"
 import { validate } from "./run.mjs"
 
 function document(data = { title: "Complete title", score: 80 }) {
@@ -274,6 +285,216 @@ test("production CLI saves separate structure and text reports", () => {
 			readFileSync(path.join(candidate, "diff-0/difference.diff"), "utf8"),
 			/section id="details"/,
 		)
+	} finally {
+		rmSync(directory, { recursive: true, force: true })
+	}
+})
+
+test("class allowlist removes only whole tokens in double-quoted class attributes", () => {
+	const patterns = classAllowlist(["scroll-.*", "reviewed"])
+	const html = `<html><body class="scroll-smooth reviewed keep"><p class="reviewed">reviewed scroll-smooth</p><i class="unreviewed"></i></body></html>`
+	const filtered = filterClasses(html, patterns)
+	assert.equal(filtered.removed, 3)
+	assert.equal(
+		filtered.html,
+		`<html><body class="keep"><p class="">reviewed scroll-smooth</p><i class="unreviewed"></i></body></html>`,
+	)
+	assert.deepEqual(filterClasses(html), { html, removed: 0 })
+	const opaque = `<p data-class="reviewed" title='class="reviewed"' class='reviewed'>reviewed</p><!-- class="reviewed" --><script>const x = '<p class="reviewed">';</script><style>/* class="reviewed" */</style><textarea><p class="reviewed"></textarea>`
+	assert.deepEqual(filterClasses(opaque, patterns), {
+		html: opaque,
+		removed: 0,
+	})
+	for (const tag of ["script", "style", "textarea", "title", "xmp", "iframe"]) {
+		const text = `<${tag}><p class="reviewed">`
+		assert.deepEqual(filterClasses(text, patterns), { html: text, removed: 0 })
+	}
+	assert.throws(() => classAllowlist(["["]), SyntaxError)
+})
+
+test("class allowlist keeps unreviewed visibility tokens and text differences failing", () => {
+	const patterns = classAllowlist(["scroll-.*"])
+	const base = '<html><body class="keep">scroll-smooth</body></html>'
+	const allowed = base.replace('class="keep"', 'class="scroll-smooth keep"')
+	assert.deepEqual(
+		failures(
+			response(filterClasses(base, patterns).html),
+			response(filterClasses(allowed, patterns).html),
+		),
+		[],
+	)
+	assert.ok(failures(response(base), response(allowed)).length)
+	for (const token of ["hidden", "sr-only", "invisible"])
+		assert.ok(
+			failures(
+				response(filterClasses(base, patterns).html),
+				response(
+					filterClasses(allowed.replace("keep", `keep ${token}`), patterns)
+						.html,
+				),
+			).length,
+		)
+	assert.ok(
+		failures(
+			response(filterClasses(base, patterns).html),
+			response(
+				filterClasses(
+					base.replace(">scroll-smooth<", ">scroll-auto<"),
+					patterns,
+				).html,
+			),
+		).length,
+	)
+})
+
+test("manifest report shows flags, module paths and added or removed routes, ignoring hashes", () => {
+	const route = {
+		module: "/assets/movies-abcdefgh.js",
+		hasLoader: true,
+		hasClientLoader: false,
+		hasAction: false,
+		hasErrorBoundary: false,
+	}
+	const parse = (routes) =>
+		manifestRoutes(`window.__remixManifest = ${JSON.stringify({ routes })};`)
+	const base = parse({ movies: route, removed: route })
+	const candidate = parse({
+		movies: {
+			...route,
+			module: "/assets/movies-12345678.js",
+			hasClientLoader: true,
+		},
+		added: route,
+	})
+	const changes = manifestDiff(base, candidate)
+	assert.deepEqual(
+		changes.map(({ route, kind }) => [route, kind]),
+		[
+			["added", "added"],
+			["movies", "changed"],
+			["removed", "removed"],
+		],
+	)
+	assert.deepEqual(changes[1].fields, {
+		hasClientLoader: { base: false, candidate: true },
+	})
+	assert.deepEqual(
+		manifestDiff(
+			parse({ movies: route }),
+			parse({ movies: { ...route, module: "/assets/movies-12345678.js" } }),
+		),
+		[],
+	)
+	for (const key of ["hasLoader", "hasAction", "hasErrorBoundary", "module"]) {
+		assert.ok(
+			manifestDiff(
+				parse({ movies: route }),
+				parse({
+					movies: {
+						...route,
+						[key]: key === "module" ? "/assets/other-12345678.js" : !route[key],
+					},
+				}),
+			)[0].fields[key],
+		)
+	}
+	assert.deepEqual(
+		manifestPaths(
+			'<script src="/assets/manifest-1234abcd.js"></script> import "/assets/manifest-1234abcd.js"',
+		),
+		["/assets/manifest-1234abcd.js"],
+	)
+	assert.throws(() => manifestRoutes("window.__remixManifest = malicious();"))
+	assert.throws(() => manifestRoutes("window.__remixManifest = {};"), /routes/)
+})
+
+test("empty loader lists report only route data and its immediate fields", () => {
+	assert.deepEqual(
+		emptyLoaderLists(
+			document({
+				results: [],
+				nested: { results: [] },
+				nonempty: [1],
+				emptyObject: {},
+			}),
+		),
+		["movie.results"],
+	)
+	assert.deepEqual(emptyLoaderLists(document([])), ["movie"])
+	assert.deepEqual(emptyLoaderLists(document({ results: [1] })), [])
+})
+
+test("CLI records repeated allowlist rules, per-side counts and empty data without hiding failures", () => {
+	const cache = path.join(os.homedir(), ".cache/gw753-html-check")
+	mkdirSync(cache, { recursive: true })
+	const directory = mkdtempSync(path.join(cache, "allowlist-test-"))
+	try {
+		const base = path.join(directory, "base")
+		const candidate = path.join(directory, "candidate")
+		for (const dir of [base, candidate]) {
+			mkdirSync(dir)
+			writeFileSync(
+				path.join(dir, "snapshot.json"),
+				JSON.stringify({
+					entries: [
+						{
+							...response(undefined),
+							path: "/movies",
+							client: "googlebot",
+							file: "000.html",
+						},
+					],
+				}),
+			)
+		}
+		const html = document({ results: [] }).replace(
+			"<main>",
+			'<main class="keep">',
+		)
+		writeFileSync(
+			path.join(base, "000.raw.html"),
+			html.replace('class="keep"', 'class="reviewed keep"'),
+		)
+		const cli = (...options) =>
+			spawnSync(
+				process.execPath,
+				[
+					fileURLToPath(new URL("./run.mjs", import.meta.url)),
+					"prod",
+					"compare",
+					base,
+					candidate,
+					...options,
+				],
+				{ encoding: "utf8" },
+			)
+		const allowed = html.replace(
+			'class="keep"',
+			'class="scroll-smooth reviewed keep"',
+		)
+		writeFileSync(path.join(candidate, "000.raw.html"), allowed)
+		assert.equal(cli().status, 1)
+		const options = ["--allow-class", "scroll-.*", "--allow-class", "reviewed"]
+		const result = cli(...options)
+		assert.equal(result.status, 0, result.stderr)
+		assert.match(result.stdout, /removed tokens: base 1, candidate 2/)
+		assert.match(result.stdout, /empty on both sides: movie.results/)
+		const report = JSON.parse(
+			readFileSync(path.join(candidate, "comparison-review.json"), "utf8"),
+		)
+		assert.deepEqual(report.allowClass, ["scroll-.*", "reviewed"])
+		assert.deepEqual(report.removed, { base: 1, candidate: 2 })
+		assert.deepEqual(report.documents[0].removed, report.removed)
+		assert.deepEqual(report.emptyOnBothSides, [
+			{ path: "/movies", client: "googlebot", lists: ["movie.results"] },
+		])
+		for (const broken of [
+			allowed.replace('keep"', 'keep hidden"'),
+			allowed.replace("Complete title</section>", "scroll-smooth</section>"),
+		]) {
+			writeFileSync(path.join(candidate, "000.raw.html"), broken)
+			assert.equal(cli(...options).status, 1)
+		}
 	} finally {
 		rmSync(directory, { recursive: true, force: true })
 	}
