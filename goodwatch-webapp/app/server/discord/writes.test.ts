@@ -174,14 +174,35 @@ test("Want button toggles off; public presses stay private; Seen logs today's da
 					return { outcome: "applied", batch_id: "123456789" }
 				},
 			})
+			const pressed: Component[] = [
+				{ type: 10, content: "A title" },
+				{
+					type: 1,
+					components: [
+						{ type: 2, style: 2, label: "Want to see", custom_id: `gw1:want:movie:42` },
+					],
+				},
+			]
 			const response = await f.run(
 				3,
 				{ custom_id: `gw1:${action}:movie:42` },
-				{ message: { flags: publicMessage ? 0 : EPHEMERAL } },
+				{
+					message: {
+						flags: publicMessage ? 0 : EPHEMERAL,
+						components: pressed,
+					},
+				},
 			)
-			assert.equal(response.type, publicMessage ? 5 : 6)
+			assert.equal(response.type, publicMessage ? 5 : 7)
 			if (publicMessage)
 				assert.equal((response.data as { flags: number }).flags, EPHEMERAL)
+			else
+				assert.match(
+					JSON.stringify(response.data),
+					action === "want"
+						? /"disabled":true.*-# Updating your Wishlist…/
+						: /"disabled":true.*-# Logging your watch…/,
+				)
 			assert.match(JSON.stringify(await f.edited), /Undo/)
 			assert.deepEqual(written, [
 				"member",
@@ -529,4 +550,77 @@ test("Undo refresh keeps the guest place and catalog in the top block", async ()
 		JSON.stringify(body.components[1]),
 		/Member catalog|France|You rated/,
 	)
+})
+
+test("Back stays on every result of a member press when the title was opened from a list", async () => {
+	const ref = { kind: "discover", key: "k0123456789abcdef01", page: 2 } as const
+	const backId = "gw1:back:d:k0123456789abcdef01:2"
+	const card = titleCard(title, "DE", {
+		member: { score: 9, want_to_see: true },
+		back: ref,
+	})
+	const ids = flatten(card.components).map((c) => c.custom_id)
+	assert.ok(ids.includes(backId))
+	assert.ok(ids.includes("gw1:want:movie:42:d:k0123456789abcdef01:2"))
+	assert.ok(ids.includes("gw1:seen:movie:42:d:k0123456789abcdef01:2"))
+	assert.ok(ids.includes("gw1:rate:movie:42:d:k0123456789abcdef01:2"))
+	const message = { id: "m", flags: EPHEMERAL, components: card.components }
+	// Want to see: the confirmation offers Back, and its Undo keeps the list.
+	const want = fixture({
+		write: async () => ({ outcome: "applied", batch_id: "123456789" }),
+	})
+	const pressed = await want.run(
+		3,
+		{ custom_id: "gw1:want:movie:42:d:k0123456789abcdef01:2" },
+		{ message },
+	)
+	assert.equal(pressed.type, 7)
+	const confirmation = flatten(
+		((await want.edited) as { components: Component[] }).components,
+	)
+	assert.deepEqual(
+		confirmation.filter((c) => c.type === 2).map((c) => c.label),
+		["Back", "Undo", "Open on GoodWatch"],
+	)
+	const undoId = String(confirmation.find((c) => c.label === "Undo")!.custom_id)
+	assert.deepEqual(parseUndoId(undoId)?.back, ref)
+	// Rate: the modal and its submit keep the list.
+	const modal = await fixture().run(3, {
+		custom_id: "gw1:rate:movie:42:d:k0123456789abcdef01:2",
+	})
+	const modalId = (modal.data as { custom_id: string }).custom_id
+	assert.equal(modalId, "gw1:rate-submit:movie:42:d:k0123456789abcdef01:2")
+	const rate = fixture({
+		write: async () => ({ outcome: "applied", batch_id: "123456789" }),
+	})
+	await rate.run(5, {
+		custom_id: modalId,
+		components: [{ type: 18, component: { custom_id: "score", values: ["8"] } }],
+	})
+	assert.ok(JSON.stringify(await rate.edited).includes(backId))
+	// Seen on a title already seen: the note replacing the card keeps Back.
+	const seen = fixture({
+		memberRead: async () => ({
+			title,
+			member: { status: "seen", watch_count: 1 },
+			country: "DE",
+		}),
+	})
+	await seen.run(
+		3,
+		{ custom_id: "gw1:seen:movie:42:d:k0123456789abcdef01:2" },
+		{ message },
+	)
+	const note = JSON.stringify(await seen.edited)
+	assert.match(note, /Already seen/)
+	assert.ok(note.includes(backId))
+	// Undo: the refreshed card still has Back.
+	const undo = fixture({
+		write: async () => ({ outcome: "applied", summary: {} }),
+	})
+	await undo.run(3, { custom_id: undoId }, { message })
+	const refreshed = JSON.stringify(await undo.edited)
+	assert.match(refreshed, /Undone\./)
+	assert.ok(refreshed.includes(backId))
+	assert.ok(refreshed.includes("gw1:want:movie:42:d:k0123456789abcdef01:2"))
 })

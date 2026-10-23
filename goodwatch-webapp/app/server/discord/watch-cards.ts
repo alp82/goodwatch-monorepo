@@ -7,6 +7,7 @@ import {
 	container,
 	titleHero,
 	whereToWatch,
+	streamLinks,
 	titleButtons,
 	memberBlock,
 	memberButtons,
@@ -55,12 +56,10 @@ export function watchCard(
 								.slice(0, 300),
 						}
 					: null,
-				{
-					type: 10,
-					content: whereToWatch(title, country, {
-						allServices: options.allServices,
-					}),
-				},
+				...streamLinks(title, country, {
+					allServices: options.allServices,
+					emojis: options.emojis,
+				}),
 				{ type: 1, components: buttons },
 				options.member === undefined
 					? {
@@ -135,7 +134,13 @@ export function nextCard(
 							}
 						: text
 				}),
-				...titleSelect(shown.map((r) => r.title)),
+				// A title opened from here offers Back to this list.
+				...titleSelect(
+					shown.map((r) => r.title),
+					false,
+					{},
+					{ kind: "next" },
+				),
 				!shown.length
 					? {
 							type: 10,

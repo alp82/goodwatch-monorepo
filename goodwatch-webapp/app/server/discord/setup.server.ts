@@ -1,4 +1,4 @@
-import { message, textCard, type Component } from "./cards.ts"
+import { message, textCard, discordText, type Component } from "./cards.ts"
 import { localeCountry } from "./country.ts"
 import type { GuildSettings } from "./guild.server.ts"
 import type { Dependencies, Interaction } from "./router.server.ts"
@@ -39,7 +39,7 @@ export async function setupAutocomplete(
 		return countries
 			.filter((c) => `${c.name} ${c.code}`.toLowerCase().includes(query))
 			.slice(0, 25)
-			.map((c) => ({ name: c.name.slice(0, 100), value: c.code }))
+			.map((c) => ({ name: discordText(c.name).slice(0, 100), value: c.code }))
 	if (focused?.name !== "service") return []
 	const selected = interaction.data?.options?.find(
 		(o) => o.name === "country",
@@ -58,7 +58,10 @@ export async function setupAutocomplete(
 	return ((filters.providers ?? []) as { id: number; name: string }[])
 		.filter((p) => p.name.toLowerCase().includes(query))
 		.slice(0, 25)
-		.map((p) => ({ name: p.name.slice(0, 100), value: String(p.id) }))
+		.map((p) => ({
+			name: discordText(p.name).slice(0, 100),
+			value: String(p.id),
+		}))
 }
 export async function setup(interaction: Interaction, deps: SetupDeps) {
 	if (!canManageGuild(interaction))
@@ -136,7 +139,8 @@ export async function setup(interaction: Interaction, deps: SetupDeps) {
 		},
 	]
 	for (const id of services.slice(start, start + 15)) {
-		const name = providers.find((p) => p.id === id)?.name ?? String(id)
+		const name =
+			providers.find((p) => p.id === id)?.name ?? "unavailable service"
 		components.push({
 			type: 1,
 			components: [

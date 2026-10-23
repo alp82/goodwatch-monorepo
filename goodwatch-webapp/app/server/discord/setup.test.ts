@@ -322,6 +322,7 @@ test("commands and title buttons share guild country and services, with an all-s
 						}
 					},
 					hot: async () => [],
+					displays: async () => new Map(),
 					saveState: async (value) => {
 						state = value
 						return "iabc"
@@ -334,9 +335,10 @@ test("commands and title buttons share guild country and services, with an all-s
 			assert.equal(edits.length, 1)
 			for (const reader of readers)
 				assert.deepEqual(reader.viewer, { country: "DE", services })
+			// /hot isn't filtered by services, so it never names them.
 			assert.equal(
 				/every service in Germany/i.test(JSON.stringify(edits)),
-				services.length === 0,
+				services.length === 0 && name !== "hot",
 			)
 		}
 	}

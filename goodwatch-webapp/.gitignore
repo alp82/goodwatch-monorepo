@@ -11,3 +11,7 @@ node_modules
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Discord emoji upload payloads and previews (scripts/discord-emojis.ts, scripts/discord-provider-emojis.ts)
+scripts/discord-emojis/*.payload.json
+scripts/discord-emojis/providers/

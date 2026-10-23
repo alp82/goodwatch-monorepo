@@ -11,9 +11,12 @@ import {
 	titleListCard,
 	titleSelect,
 	personCard,
+	hotCard,
 	linkPromptCard,
 	linkedCard,
 	titleCard,
+	type HotPost,
+	type HotTitle,
 	textCard,
 	message,
 	componentCount,
@@ -23,6 +26,7 @@ import {
 	type GuestTitle,
 } from "./cards.ts"
 import { listCustomId, parseListId, formatCustomId } from "./custom-id.ts"
+import { rankSearchResults } from "./search.server.ts"
 const { saveDiscoverState, loadDiscoverState } = await import(
 	"./discover-state.server.ts"
 )
@@ -77,6 +81,11 @@ function fixture() {
 			}
 		},
 		hot: async () => titles,
+		searchTitles: async (query) => {
+			reads.push({ viewer: null, name: "searchTitles", args: { query } })
+			return { titles }
+		},
+		displays: async () => new Map(),
 		take: async () => ({ allowed: true, store: "memory" }),
 		saveState: async (state) => {
 			states.set(key, state)
@@ -92,6 +101,7 @@ function fixture() {
 		type: number,
 		data: Interaction["data"],
 		publicMessage = false,
+		components?: Component[],
 	) =>
 		routeInteraction(
 			{
@@ -105,6 +115,7 @@ function fixture() {
 					flags: publicMessage
 						? IS_COMPONENTS_V2
 						: IS_COMPONENTS_V2 | EPHEMERAL,
+					...(components ? { components } : {}),
 				},
 			},
 			deps,
@@ -251,7 +262,8 @@ for (const name of ["similar", "person"]) {
 			name,
 			options: [
 				{
-					name: name === "person" ? "name" : "title",
+					name:
+						name === "person" ? "name" : name === "search" ? "query" : "title",
 					value: " query ",
 					focused: true,
 				},
@@ -334,13 +346,26 @@ for (const publicMessage of [false, true])
 		assert.match(JSON.stringify(f.edits), /A title/)
 		assert.equal(JSON.stringify(f.edits).includes("Share to channel"), true)
 	})
-test("title Similar button defers update and reads similar titles", async () => {
+test("title Similar button shows the disabled card with a loading line and reads similar titles", async () => {
 	const f = fixture()
-	const buttons = buttonsIn(titleCard(title, "DE").components)
+	const card = titleCard(title, "DE").components
+	const buttons = buttonsIn(card).filter((b) => b.style !== 5 || !b.emoji)
 	assert.deepEqual(
-		buttons.map((b) => b.label),
-		["Where to watch", "Similar", "Open on GoodWatch", "Share to channel"],
+		buttons.map((b) => b.label).slice(-3),
+		["Similar", "Open on GoodWatch", "Share to channel"],
 	)
+	const answer = (await f.run(
+		3,
+		{ custom_id: formatCustomId("similar", title.id) },
+		false,
+		card,
+	)) as { type: number; data: { components: Component[] } }
+	assert.equal(answer.type, 7)
+	assert.equal(answer.data.components.at(-1)!.content, "-# Loading Similar…")
+	assert.ok(
+		buttonsIn(answer.data.components).every((b) => b.disabled === true),
+	)
+	// Without the pressed message's components there's nothing to show, so the press updates silently.
 	assert.deepEqual(
 		await f.run(3, { custom_id: formatCustomId("similar", title.id) }),
 		{ type: 6 },
@@ -717,11 +742,24 @@ for (const source of ["similar", "person", "hot", "similar-button"]) {
 	}
 }
 
-test("hot adapter maps the Hot on socials row, poster paths included, into 4D list titles", () => {
+test("hot adapter maps the Hot on socials row into /hot titles with their posts", () => {
 	// The shape getHotOnSocials returns: catalog poster paths, social items, curves.
+	const item = (i: number, source: "bluesky" | "youtube" | "rss") => ({
+		id: `post-${i}`,
+		image: source === "bluesky" ? `/api/social/image/post-${i}` : null,
+		source,
+		url: `https://example.com/post/${i}`,
+		author: `author${i}`,
+		publisher: source === "rss" ? "Deadline" : `author${i}`,
+		at: "2026-10-22T10:00:00.000Z",
+		text: `What people say ${i}`,
+		sourceId: null,
+		...(source === "youtube" ? { video: "dQw4w9WgXcQ" } : {}),
+		english: true,
+	})
 	const row = {
 		day: "2026-10-22",
-		titles: Array.from({ length: 12 }, (_, i) => ({
+		titles: Array.from({ length: 14 }, (_, i) => ({
 			mediaType: i % 2 ? ("show" as const) : ("movie" as const),
 			tmdbId: 100 + i,
 			title: `Buzz ${i}`,
@@ -734,27 +772,319 @@ test("hot adapter maps the Hot on socials row, poster paths included, into 4D li
 			usual: 9_000,
 			curve: [1, 2, 3],
 			reason: null,
-			move: "new" as const,
-			items: [],
+			move: i === 0 ? ("new" as const) : i,
+			items:
+				i === 0 ? [item(1, "bluesky"), item(2, "youtube"), item(3, "rss")] : [],
 		})),
 	}
 	const titles = hotTitles(row)
-	assert.equal(titles.length, 10)
-	assert.deepEqual(titles.slice(0, 2), [
-		{
-			id: "movie:100",
-			name: "Buzz 0",
-			year: 2026,
-			poster_url: "https://image.tmdb.org/t/p/w342/p0.jpg",
-		},
-		{ id: "show:101", name: "Buzz 1", year: 2026, poster_url: null },
-	])
+	assert.equal(titles.length, 12)
+	assert.deepEqual(titles[0], {
+		id: "movie:100",
+		name: "Buzz 0",
+		year: 2026,
+		poster_url: "https://image.tmdb.org/t/p/w342/p0.jpg",
+		backdrop_url: "https://image.tmdb.org/t/p/w780/b0.jpg",
+		rank: 1,
+		move: "new",
+		reason: null,
+		posts: [
+			{
+				url: "https://example.com/post/1",
+				author: "author1",
+				platform: "Bluesky",
+				kind: "post",
+				text: "What people say 1",
+				image: "https://goodwatch.app/api/social/image/post-1",
+				at: "2026-10-22T10:00:00.000Z",
+			},
+			{
+				url: "https://example.com/post/2",
+				author: "author2",
+				platform: "YouTube",
+				kind: "video",
+				text: "What people say 2",
+				image: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+				at: "2026-10-22T10:00:00.000Z",
+			},
+			{
+				url: "https://example.com/post/3",
+				author: "author3",
+				platform: "Deadline",
+				kind: "article",
+				text: "What people say 3",
+				image: null,
+				at: "2026-10-22T10:00:00.000Z",
+			},
+		],
+	})
+	assert.equal(titles[1].poster_url, null)
 	assert.deepEqual(hotTitles(null), [])
-	const gallery = titleListCard(
-		"Hot on socials",
-		titles,
-	).components[0].components!.find((c) => c.type === 12)!
-	assert.equal((gallery.items as unknown[]).length, 9)
+})
+
+test("/hot puts what people say first: three titles a page with quotes, post images, and links to the posts", () => {
+	const post = (i: number, platform = "Bluesky"): HotPost => ({
+		url: `https://bsky.app/profile/a/post/${i}`,
+		author: `critic${i}.bsky.social`,
+		platform,
+		kind: "post",
+		text: `Just watched it https://t.co/x and wow, ${"the third act is something else ".repeat(
+			8,
+		)}`,
+		image: `https://goodwatch.app/api/social/image/p${i}`,
+		at: "2026-10-22T10:00:00.000Z",
+	})
+	const hot: HotTitle[] = Array.from({ length: 12 }, (_, i) => ({
+		id: `movie:${i + 1}`,
+		name: `Hot ${i + 1}`,
+		year: 2026,
+		poster_url: `https://image.tmdb.org/t/p/w342/p${i}.jpg`,
+		goodwatch_score: 81,
+		rank: i + 1,
+		move: i === 0 ? "new" : -2,
+		posts: [post(i * 2), post(i * 2 + 1)],
+	}))
+	for (const page of [0, 1, 3]) {
+		const card = hotCard(hot, { page })
+		assertLimits(card.components)
+		const sent = JSON.stringify(card)
+		assert.match(sent, new RegExp(`page ${page + 1} of 4`))
+		const blocks = card.components.filter((c) => c.type === 17)
+		assert.equal(blocks.length, 3)
+		const [first] = blocks
+		assert.equal(first.components![0].accessory?.type, 11)
+		const gallery = first.components!.find((c) => c.type === 12)!
+		assert.equal((gallery.items as unknown[]).length, 2)
+		const links = buttonsIn([first]).filter((b) => b.style === 5)
+		assert.deepEqual(
+			links.map((b) => b.label),
+			[
+				`critic${page * 6}.bsky.social on Bluesky`,
+				`critic${page * 6 + 1}.bsky.social on Bluesky`,
+			],
+		)
+		assert.equal(selectIn(card.components).custom_id, `gw1:open:h:${page}`)
+		assert.doesNotMatch(sent, /t\.co|—|!/)
+		assert.match(sent, /<t:\d+:R>/)
+	}
+	const first = JSON.stringify(hotCard(hot))
+	assert.match(first, /No\. 1 on socials, new today/)
+	assert.match(
+		JSON.stringify(
+			hotCard([{ ...hot[0], reason: { kind: "trailer", day: "2026-10-20" } }]),
+		),
+		/No\. 1 on socials, new today, trailer Oct 20/,
+	)
+	const quiet = hotCard([
+		{
+			...hot[0],
+			posts: [],
+			backdrop_url: "https://image.tmdb.org/t/p/w780/b.jpg",
+		},
+	])
+	assert.match(JSON.stringify(quiet), /No posts picked for it yet/)
+	assert.match(JSON.stringify(quiet), /w780\/b\.jpg/)
+	assert.match(first, /No\. 2 on socials, down 2 since yesterday/)
+	assert.match(first, /gw1:hot:1/)
+	assert.match(first, /gw1:hot-share:0/)
+	const single = hotCard([{ ...hot[0], posts: [post(1, "Mastodon")] }], {
+		share: true,
+	})
+	assert.doesNotMatch(JSON.stringify(single), /Share to channel|Previous/)
+	assert.match(JSON.stringify(single), /View post on Mastodon/)
+	assertLimits(hotCard([{ ...hot[0], posts: [], poster_url: null }]).components)
+})
+
+test("/hot pages and shares by page, and old hot-share buttons still open the first page", async () => {
+	for (const [id, page, flags] of [
+		["gw1:hot:2", 2, null],
+		["gw1:hot-share:1", 1, 0],
+		["gw1:hot-share:now", 0, 0],
+	] as const) {
+		const f = fixture()
+		f.deps.hot = async () =>
+			Array.from({ length: 12 }, (_, i) => ({
+				id: `movie:${i + 1}`,
+				name: `Hot ${i + 1}`,
+				year: 2026,
+			}))
+		const response = await f.run(3, { custom_id: id })
+		assert.deepEqual(
+			response,
+			flags === null ? { type: 6 } : { type: 5, data: { flags } },
+		)
+		await f.finished
+		assert.match(JSON.stringify(f.edits), new RegExp(`Hot ${page * 3 + 1}\\b`))
+	}
+})
+
+test("a title opened from a list goes Back to the same list page", async () => {
+	const f = fixture()
+	f.states.set(key, { args: { type: "movie" } })
+	for (const [ref, read] of [
+		[`d:${key}:2`, "discover_titles"],
+		["s:movie:42", "get_similar_titles"],
+		["p:12", "get_person"],
+		["h:1", null],
+	] as const) {
+		const g = fixture()
+		g.states.set(key, { args: { type: "movie" } })
+		await g.run(3, { custom_id: `gw1:open:${ref}`, values: ["movie:7"] })
+		await g.finished
+		const back = buttonsIn(g.edits[0].components).find(
+			(b) => b.label === "Back",
+		)
+		assert.equal(back?.custom_id, `gw1:back:${ref}`)
+		assert.equal(buttonsIn(g.edits[0].components)[0].label, "Back")
+		const h = fixture()
+		h.states.set(key, { args: { type: "movie" } })
+		assert.deepEqual(await h.run(3, { custom_id: String(back!.custom_id) }), {
+			type: 6,
+		})
+		await h.finished
+		if (read) assert.equal(h.reads[0].name, read)
+		if (ref.startsWith("d:")) {
+			assert.equal(h.reads[0].args.cursor, "offset:20")
+			assert.match(JSON.stringify(h.edits), /gw1:open:d:k0123456789abcdefab:2/)
+		}
+		if (ref === "h:1") assert.match(JSON.stringify(h.edits), /page 2 of/)
+	}
+	// Old menus without a list keep opening titles, without Back.
+	await f.run(3, { custom_id: "gw1:open:private", values: ["movie:7"] })
+	await f.finished
+	assert.equal(
+		buttonsIn(f.edits[0].components).some((b) => b.label === "Back"),
+		false,
+	)
+})
+
+test("/search with free text answers with a ranked results list that pages and opens titles with Back", async () => {
+	const f = fixture()
+	await f.run(2, {
+		name: "search",
+		options: [{ name: "query", value: "dune" }],
+	})
+	await f.finished
+	assert.deepEqual(
+		f.reads.map((r) => r.name),
+		["searchTitles"],
+	)
+	assertLimits(f.edits[0].components)
+	const sent = JSON.stringify(f.edits[0])
+	assert.match(sent, /Results for dune/)
+	assert.match(sent, /Page 1 of 3/)
+	const select = selectIn(f.edits[0].components)
+	assert.match(String(select.custom_id), /^gw1:open:q:k0123456789abcdefab:0$/)
+	const next = buttonsIn(f.edits[0].components).find((b) => b.label === "Next")!
+	const g = fixture()
+	for (const [k, v] of f.states) g.states.set(k, v)
+	// The fixture keeps one key for every state, like a Valkey key.
+	await g.run(3, { custom_id: String(next.custom_id) })
+	await g.finished
+	assert.match(JSON.stringify(g.edits), /Page 2 of 3/)
+	assert.deepEqual(
+		g.reads,
+		[],
+		"paging uses the stored ranked IDs without a second search",
+	)
+	const opened = fixture()
+	for (const [k, v] of f.states) opened.states.set(k, v)
+	await opened.run(3, {
+		custom_id: String(select.custom_id),
+		values: ["movie:7"],
+	})
+	await opened.finished
+	assert.equal(
+		buttonsIn(opened.edits[0].components).some(
+			(b) => b.label === "Where to watch",
+		),
+		false,
+	)
+	// An old Where to watch button still opens the card, with its links and Back.
+	const watched = fixture()
+	for (const [k, v] of f.states) watched.states.set(k, v)
+	await watched.run(3, { custom_id: `gw1:watch:movie:7:q:${key}:0` })
+	await watched.finished
+	const back = buttonsIn(watched.edits[0].components).find(
+		(b) => b.label === "Back",
+	)!
+	assert.equal(back.custom_id, `gw1:back:q:${key}:0`)
+	assert.equal(
+		buttonsIn(opened.edits[0].components).find((b) => b.label === "Back")
+			?.custom_id,
+		back.custom_id,
+	)
+	const returned = fixture()
+	for (const [k, v] of f.states) returned.states.set(k, v)
+	await returned.run(3, { custom_id: String(back.custom_id) })
+	await returned.finished
+	assert.match(JSON.stringify(returned.edits), /Results for dune/)
+	assert.deepEqual(returned.reads, [])
+	const empty = fixture()
+	empty.deps.searchTitles = async () => ({ titles: [] })
+	await empty.run(2, {
+		name: "search",
+		options: [{ name: "title", value: "zzzz" }],
+	})
+	await empty.finished
+	assert.match(
+		JSON.stringify(empty.edits),
+		/No titles match zzzz. Try another search./,
+	)
+})
+
+test("search ranking: better known titles first, led by how closely the name matches", () => {
+	const t = (
+		name: string,
+		votes: number,
+		year = 2000,
+	): GuestTitle & { votes: number } => ({
+		id: `movie:${votes}`,
+		name,
+		year,
+		votes,
+	})
+	assert.deepEqual(
+		rankSearchResults("Dune", [
+			t("A Dune Story", 5),
+			t("Dune: Part Two", 900, 2024),
+			t("Dunes of Mars", 2000),
+			t("Dune", 1000, 2021),
+			t("Dune", 300, 1984),
+		]).map((r) => [r.name, r.year]),
+		[
+			["Dune", 2021],
+			["Dune", 1984],
+			["Dunes of Mars", 2000],
+			["Dune: Part Two", 2024],
+			["A Dune Story", 2000],
+		],
+	)
+})
+
+test("members and guests pass the Discord identity to free-text search and show the cap note", async () => {
+	for (const member of [false, true]) {
+		const f = fixture()
+		f.deps.linkedUser = async () => (member ? "goodwatch-member" : null)
+		f.deps.memberRead = async () => ({ country: "DE" })
+		f.deps.searchTitles = async (query, user) => {
+			assert.equal(query, "dark vibes")
+			assert.equal(user, "user")
+			return {
+				titles: [title],
+				note: "Showing title matches. Mood searches reset tomorrow.",
+			}
+		}
+		await f.run(2, {
+			name: "search",
+			options: [{ name: "query", value: "dark vibes" }],
+		})
+		await f.finished
+		assert.match(
+			JSON.stringify(f.edits),
+			/Showing title matches\. Mood searches reset tomorrow\./,
+		)
+	}
 })
 
 test("8B link prompt and linked cards obey component limits and use only the GoodWatch handle", () => {
@@ -816,3 +1146,39 @@ for (const failure of ["reject", "unavailable"] as const) {
 		)
 	})
 }
+
+test("title card guest reads come from the five-minute cache; the member's own read never does", async () => {
+	const values = new Map<string, string>()
+	const store = {
+		get: async (k: string) => values.get(k) ?? null,
+		set: async (k: string, v: string) => {
+			values.set(k, v)
+		},
+	}
+	let memberReads = 0
+	let guestReads = 0
+	for (const member of [false, false, true, true]) {
+		const f = fixture()
+		f.deps.titleStore = async () => store
+		if (member) {
+			f.deps.linkedUser = async () => "linked-member"
+			f.deps.memberRead = async (_user, name) => {
+				if (name === "get_title") memberReads++
+				return name === "get_settings"
+					? { country: "DE" }
+					: { title, member: { want_to_see: true } }
+			}
+		}
+		await f.run(3, { custom_id: "gw1:open:private", values: ["movie:7"] })
+		await f.finished
+		await new Promise((resolve) => setImmediate(resolve))
+		guestReads += f.reads.filter((r) => r.name === "get_title").length
+		assert.match(JSON.stringify(f.edits), /Open on GoodWatch/)
+		if (member) assert.match(JSON.stringify(f.edits), /In your Wishlist/)
+	}
+	assert.equal(guestReads, 1, "only the first view reads the catalog")
+	assert.equal(memberReads, 2, "every member view reads the member's own state")
+	assert.equal(values.size, 1)
+	assert.doesNotMatch([...values.values()][0], /want_to_see|linked-member/)
+	assert.match([...values.keys()][0], /^discord:title:v1:movie:7:DE:all$/)
+})

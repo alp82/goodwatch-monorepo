@@ -1,5 +1,4 @@
 import { scoreLabels } from "../../utils/ratings.ts"
-import { titlePath } from "../../utils/helpers.ts"
 import {
 	type GuestTitle,
 	message,
@@ -9,8 +8,15 @@ import {
 	titleHero,
 	scoreLine,
 	scoreAccent,
+	titlePageUrl,
 } from "./cards.ts"
-import { formatCustomId, undoCustomId } from "./custom-id.ts"
+import {
+	formatCustomId,
+	formatListRef,
+	listCustomId,
+	undoCustomId,
+	type ListRef,
+} from "./custom-id.ts"
 
 const escape = (text: string) =>
 	displayText(text)
@@ -47,11 +53,16 @@ export function linkPrompt(origin: string) {
 		},
 	])
 }
-export function rateModal(title: GuestTitle, current?: number | null) {
+/** `back` is the list the title was opened from, kept for the confirmation's Back button. */
+export function rateModal(
+	title: GuestTitle,
+	current?: number | null,
+	back?: ListRef,
+) {
 	return {
 		type: 9,
 		data: {
-			custom_id: formatCustomId("rate-submit", title.id),
+			custom_id: formatCustomId("rate-submit", title.id, back),
 			title: `Rate ${displayText(title.name)}`.slice(0, 45),
 			components: [
 				{
@@ -89,6 +100,7 @@ export function writeConfirmation(
 	action: "rate" | "seen" | "want",
 	score?: number,
 	wanted = true,
+	back?: ListRef,
 ) {
 	const confirmation =
 		action === "rate"
@@ -98,7 +110,6 @@ export function writeConfirmation(
 				: wanted
 					? "Added to your Wishlist"
 					: "Removed from your Wishlist"
-	const [kind, id] = title.id.split(":")
 	return message([
 		container(
 			[
@@ -106,22 +117,39 @@ export function writeConfirmation(
 				{
 					type: 1,
 					components: [
+						...(back ? [backButton(back)] : []),
 						{
 							type: 2,
 							style: 2,
 							label: "Undo",
-							custom_id: undoCustomId(batchId, title.id),
+							custom_id: undoCustomId(batchId, title.id, back),
 						},
 						{
 							type: 2,
 							style: 5,
 							label: "Open on GoodWatch",
-							url: `https://goodwatch.app${titlePath(kind, Number(id), title.name)}`,
+							url: titlePageUrl(title),
 						},
 					],
 				},
 			],
 			action === "rate" ? scoreAccent(score, "member") : AMBER,
 		),
+	])
+}
+
+/** Back to the list the title was opened from. */
+export const backButton = (back: ListRef) => ({
+	type: 2,
+	style: 2,
+	label: "Back",
+	custom_id: listCustomId("back", formatListRef(back)),
+})
+
+/** A short answer to a member press that replaced the title card, with Back when it came from a list. */
+export function memberNote(content: string, back?: ListRef) {
+	return message([
+		{ type: 10, content: content.slice(0, 4000) },
+		...(back ? [{ type: 1, components: [backButton(back)] }] : []),
 	])
 }

@@ -24,6 +24,10 @@ export async function action({ request }: ActionFunctionArgs) {
 	});
 	if (request.method !== "POST")
 		return json({ error: "Method not allowed" }, { status: 405, headers });
+	if (request.headers.has("X-Goodwatch-Discord")) {
+		if (!runsSearch()) return searchBusyResponse();
+		return (await import("~/server/discord/search-engine.server")).discordSearchResponse(request, combinedSearch);
+	}
 	// A search costs money and writes a history row: only the site's own pages may start one (site-origin.server.ts).
 	if (!isSiteRequest(request))
 		return json({ error: "Invalid origin" }, { status: 403, headers });

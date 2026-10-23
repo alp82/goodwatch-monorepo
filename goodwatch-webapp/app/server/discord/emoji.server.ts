@@ -1,9 +1,17 @@
 import { nativeFetch } from "../native-fetch.server.ts"
 import { drain, fetchWithTimeout } from "./fetch-timeout.ts"
-// The bot's application emoji IDs (gw_score_1 to gw_score_10), read once with the bot token and cached for 24 hours in
+// The bot's application emoji IDs (GoodWatchScore1 to GoodWatchScore10 and the streaming service logos of
+// provider-emojis.ts), read once with the bot token and cached for 24 hours in
 // Valkey and in process. Cards fall back to plain text for any name missing here, so a failed read never breaks a card.
 import type { EmojiIds } from "./cards.ts"
 import { SCORE_EMOJI_NAMES } from "./score-emoji.ts"
+import { PROVIDER_EMOJIS } from "./provider-emojis.ts"
+
+/** The application emojis the cards use; any other emoji of the application is left out. */
+const KNOWN_NAMES = new Set([
+	...SCORE_EMOJI_NAMES,
+	...PROVIDER_EMOJIS.map((e) => e.name),
+])
 
 export const EMOJI_TTL_SECONDS = 24 * 3600
 /** After a failed read, or while emojis are still missing, wait this long before asking Discord again. */
@@ -81,7 +89,7 @@ export async function applicationEmojiIds(
 	if (memo && memo.appId === appId && memo.until > now()) return memo.ids
 	inflight ??= (async () => {
 		// The entry carries its own expiry, so a process that reads it keeps it no longer than Valkey does.
-		const key = `discord:emojis:v2:${appId}`
+		const key = `discord:emojis:v3:${appId}`
 		const store =
 			options.store === undefined
 				? await valkey().catch(() => null)
@@ -121,7 +129,7 @@ export async function applicationEmojiIds(
 		try {
 			const ids = Object.fromEntries(
 				(await listApplicationEmojis(appId, botToken, options.fetch))
-					.filter((e) => e.name.startsWith("gw_"))
+					.filter((e) => KNOWN_NAMES.has(e.name))
 					.map((e) => [e.name, e.id]),
 			)
 			const ttl = ttlFor(ids)

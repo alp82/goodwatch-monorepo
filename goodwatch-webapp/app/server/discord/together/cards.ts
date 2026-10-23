@@ -3,6 +3,13 @@ import {
 	container,
 	titleFacts,
 	displayText,
+	plural,
+	serviceNames,
+	serviceLogos,
+	textLength,
+	componentCount,
+	streamLinks,
+	whereToWatchLine,
 	type EmojiIds,
 	type Component,
 	type GuestTitle,
@@ -13,11 +20,6 @@ import { nextTitle, isExhausted, topThree, summarySignature } from "./rules.ts"
 import { ogImageUrl } from "../../../utils/og-image-url.ts"
 import { titlePath } from "../../../utils/helpers.ts"
 import type { Session, DeckPlace } from "./store.server.ts"
-function plural(n: number, noun: string) {
-	return `${n} ${noun}${
-		n === 1 ? "" : /(?:s|x|z|ch|sh)$/.test(noun) ? "es" : "s"
-	}`
-}
 const safe = (s: string) =>
 	displayText(s)
 		.replace(/[\\*_~`|>#[\]]/g, "\\$&")
@@ -38,26 +40,24 @@ function poster(title: GuestTitle, content: string): Component {
 		  }
 		: text(content)
 }
-function watch(title: GuestTitle, place: DeckPlace) {
-	const names = [
-		...new Set(
-			(title.availability?.offers ?? [])
-				.filter(
-					(o) =>
-						!o.offer_type || ["flatrate", "free", "ads"].includes(o.offer_type),
-				)
-				.map((o) => safe(o.name ?? "Provider").slice(0, 30)),
-		),
-	].slice(0, 3)
-	return `Where to watch · ${place.country}${
-		place.services.length ? "" : " (all services)"
-	}: ${
-		names.join(", ") ||
-		(title.availability?.state === "no_match"
-			? "No current offers found."
-			: "Availability unknown.")
-	}`
+/** Where to watch as text for the voting card and the decision: the place line, then each service's logo and name. */
+function watch(title: GuestTitle, place: DeckPlace, emojis: EmojiIds) {
+	return `${whereToWatchLine(place.country, !place.services.length)}\n${serviceNames(
+		title,
+		emojis,
+		3,
+	)}`
 }
+/** The decision's services as link buttons like the title card; their names as text when none has a link. */
+function decisionLinks(title: GuestTitle, place: DeckPlace, emojis: EmojiIds) {
+	const links = streamLinks(title, place.country, {
+		allServices: !place.services.length,
+		emojis,
+	})
+	return links.length > 1 ? links : [text(watch(title, place, emojis))]
+}
+/** Text budget below Discord's 4000 characters, with room for the cleanup message() applies. */
+const PUBLIC_TEXT_BUDGET = 3900
 export function publicCard(
 	session: Session,
 	titles: GuestTitle[] = [],
@@ -65,6 +65,33 @@ export function publicCard(
 ) {
 	const { meta, summary } = session
 	if (meta.status !== "open") return closedCard(session, emojis)
+	const removable = Object.keys(session.votes)
+	let matchCount = Math.min(summary.matches.length, 5)
+	let possibleCount = Math.min(
+		summary.possibleMatches.length,
+		removable.length && matchCount ? 4 : 5,
+	)
+	// Long names and many logos can pass Discord's limits: drop possible matches first, then matches, from the end.
+	let components = publicComponents(session, titles, emojis, matchCount, possibleCount)
+	while (
+		(textLength(components) > PUBLIC_TEXT_BUDGET ||
+			componentCount(components) > 40) &&
+		matchCount + possibleCount > 0
+	) {
+		if (possibleCount) possibleCount--
+		else matchCount--
+		components = publicComponents(session, titles, emojis, matchCount, possibleCount)
+	}
+	return message(components, false)
+}
+function publicComponents(
+	session: Session,
+	titles: GuestTitle[],
+	emojis: EmojiIds,
+	matchCount: number,
+	possibleCount: number,
+): Component[] {
+	const { meta, summary } = session
 	const moodOption = commands
 		.find((c) => c.name === "together")
 		?.options.find((o) => o.name === "mood")
@@ -73,148 +100,157 @@ export function publicCard(
 			? moodOption.choices.find((c) => c.value === meta.mood)?.name
 			: undefined
 	const byId = new Map(titles.map((t) => [t.id, t]))
-	const matches = summary.matches.slice(0, 5)
+	const matches = summary.matches.slice(0, matchCount)
 	const removable = Object.keys(session.votes)
-	const possible = summary.possibleMatches.slice(
-		0,
-		removable.length && matches.length ? 4 : 5,
-	)
+	const possible = summary.possibleMatches.slice(0, possibleCount)
 	const titleRow = (id: string, label: string) => {
 		const t = byId.get(id) ?? { id, name: "Title unavailable", year: null }
 		return poster(
 			t,
-			`### ${safe(t.name)}\n${titleFacts(t, emojis)}\n**${label}**\n${watch(
+			`### ${safe(t.name)}\n${titleFacts(t, emojis)}\n**${label}**\n${serviceLogos(
 				t,
-				meta.place,
+				emojis,
+				3,
 			)}`,
 		)
 	}
-	return message(
-		[
-			container(
-				[
-					text(
-						`## Let's watch together\nStarted by ${safe(
-							meta.starterName ?? "the starter",
-						)} · ${
-							meta.type === "any"
-								? "Movies and shows"
-								: meta.type === "movie"
-								? "Movies"
-								: "Shows"
-						}${mood ? ` · ${safe(mood)}` : ""}`,
+	const exhausted = isExhausted(session, meta.deckDone)
+	const anyRows = matches.length || possible.length || exhausted
+	return [
+		container(
+			[
+				text(
+					`## Let's watch together\nStarted by ${safe(
+						meta.starterName ?? "the starter",
+					)} · ${
+						meta.type === "any"
+							? "Movies and shows"
+							: meta.type === "movie"
+							? "Movies"
+							: "Shows"
+					}${mood ? ` · ${safe(mood)}` : ""}`,
+				),
+				text(
+					`${plural(summary.participantCount, "participant")} · ${
+						summary.stillVoting
+					} still voting${
+						anyRows
+							? `\n${whereToWatchLine(meta.place.country, !meta.place.services.length)}`
+							: ""
+					}`,
+				),
+				...matches.map((id) =>
+					titleRow(
+						id,
+						`Match · picked by ${
+							Object.values(session.picks ?? {}).filter((pick) => pick === id)
+								.length
+						} of ${summary.participantCount}`,
 					),
-					text(
-						`${plural(summary.participantCount, "participant")} · ${
-							summary.stillVoting
-						} still voting`,
+				),
+				...(summary.matches.length > matches.length
+					? [
+							text(
+								`and ${plural(summary.matches.length - matches.length, "more match", "more matches")}`,
+							),
+						]
+					: []),
+				...possible.map((p) =>
+					titleRow(
+						p.titleId,
+						`Possible match · waiting for ${plural(p.waitingFor, "person", "people")}`,
 					),
-					...matches.map((id) =>
-						titleRow(
-							id,
-							`Match · picked by ${
-								Object.values(session.picks ?? {}).filter((pick) => pick === id)
-									.length
-							} of ${summary.participantCount}`,
-						),
-					),
-					...(summary.matches.length > 5
-						? [text(`and ${plural(summary.matches.length - 5, "more match")}`)]
-						: []),
-					...possible.map((p) =>
-						titleRow(p.titleId, `Possible match · waiting for ${p.waitingFor}`),
-					),
-					...(summary.possibleMatches.length > possible.length
-						? [
-								text(
-									`and ${plural(
-										summary.possibleMatches.length - possible.length,
-										"more possible match",
-									)}`,
+				),
+				...(summary.possibleMatches.length > possible.length
+					? [
+							text(
+								`and ${plural(
+									summary.possibleMatches.length - possible.length,
+									"more possible match",
+									"more possible matches",
+								)}`,
+							),
+					  ]
+					: []),
+				...(!summary.matches.length && !summary.possibleMatches.length
+					? [
+							text(
+								"Join and vote privately. Matches appear here as you vote.",
+							),
+					  ]
+					: []),
+				...(exhausted
+					? [
+							text(
+								"Deck exhausted. The starter can choose from the three titles with the most Yep votes.",
+							),
+							...topThree(session).map((t) =>
+								titleRow(
+									t.titleId,
+									`${t.yep} of ${summary.participantCount} voted Yep`,
 								),
-						  ]
-						: []),
-					...(!matches.length && !possible.length
-						? [
-								text(
-									"Join and vote privately. Matches appear here as you vote.",
-								),
-						  ]
-						: []),
-					...(isExhausted(session, meta.deckDone)
-						? [
-								text(
-									"Deck exhausted. The starter can choose from the three titles with the most Yep votes.",
-								),
-								...topThree(session).map((t) =>
-									titleRow(
-										t.titleId,
-										`${t.yep} of ${summary.participantCount} voted Yep`,
-									),
-								),
-								select(
-									session,
-									"choose",
-									"Starter: choose a title",
-									topThree(session).map((t) => ({
-										label: safe(
-											byId.get(t.titleId)?.name ?? "Title unavailable",
-										).slice(0, 80),
-										value: t.titleId,
-									})),
-								),
-						  ]
-						: []),
-					...(summary.matches.length
-						? [
-								select(
-									session,
-									"pick",
-									"Pick a match",
-									summary.matches.slice(0, 25).map((id) => ({
-										label: safe(
-											byId.get(id)?.name ?? "Title unavailable",
-										).slice(0, 80),
-										value: id,
-									})),
-								),
-						  ]
-						: []),
-					...(removable.length
-						? [
-								select(
-									session,
-									"remove",
-									"Starter: remove a participant",
-									removable.slice(0, 12).map((id, i) => ({
-										label: safe(
-											session.names?.[id] ?? `Participant ${i + 1}`,
-										).slice(0, 80),
-										value: id,
-									})),
-								),
-						  ]
-						: []),
-					row([
-						{
-							type: 2,
-							style: 1,
-							label: "Join",
-							custom_id: togetherCustomId("join", meta.id),
-						},
-						{
-							type: 2,
-							style: 2,
-							label: "End",
-							custom_id: togetherCustomId("end", meta.id),
-						},
-					]),
-				],
-				0xf59e0b,
-			),
-		],
-		false,
-	)
+							),
+							select(
+								session,
+								"choose",
+								"Starter: choose a title",
+								topThree(session).map((t) => ({
+									label: safe(
+										byId.get(t.titleId)?.name ?? "Title unavailable",
+									).slice(0, 80),
+									value: t.titleId,
+								})),
+							),
+					  ]
+					: []),
+				...(summary.matches.length
+					? [
+							select(
+								session,
+								"pick",
+								"Pick a match",
+								summary.matches.slice(0, 25).map((id) => ({
+									label: safe(
+										byId.get(id)?.name ?? "Title unavailable",
+									).slice(0, 80),
+									value: id,
+								})),
+							),
+					  ]
+					: []),
+				...(removable.length
+					? [
+							select(
+								session,
+								"remove",
+								"Starter: remove a participant",
+								removable.slice(0, 12).map((id, i) => ({
+									label: safe(
+										session.names?.[id] ?? `Participant ${i + 1}`,
+									).slice(0, 80),
+									value: id,
+								})),
+							),
+					  ]
+					: []),
+				row([
+					{
+						type: 2,
+						style: 1,
+						label: "Join",
+						custom_id: togetherCustomId("join", meta.id),
+					},
+					{
+						type: 2,
+						style: 2,
+						label: "End",
+						custom_id: togetherCustomId("end", meta.id),
+					},
+				]),
+			],
+			0xf59e0b,
+		),
+	]
 }
 export function votingCard(
 	session: Session,
@@ -252,6 +288,7 @@ export function votingCard(
 							`## ${safe(title.name)}\n${titleFacts(title, emojis)}\n${watch(
 								title,
 								session.meta.place,
+								emojis,
 							)}`,
 					  )
 					: text("You've voted on every title for now."),
@@ -359,20 +396,14 @@ function closedCard(session: Session, emojis: EmojiIds) {
 						],
 					},
 					text(titleFacts(title, emojis)),
-					text(
-						meta.availabilityFailed
-							? "Availability couldn't be checked. Check Where to watch before starting."
-							: watch(title, meta.place),
-					),
-					row([
-						{ type: 2, style: 5, label: "Open on GoodWatch", url },
-						{
-							type: 2,
-							style: 2,
-							label: "Where to watch",
-							custom_id: `gw1:watch:${title.id}`,
-						},
-					]),
+					...(meta.availabilityFailed
+						? [
+								text(
+									"Availability couldn't be checked. Check Where to watch on GoodWatch before starting.",
+								),
+						  ]
+						: decisionLinks(title, meta.place, emojis)),
+					row([{ type: 2, style: 5, label: "Open on GoodWatch", url }]),
 				],
 				0xf59e0b,
 			),

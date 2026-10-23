@@ -91,3 +91,21 @@ test("forged inline filters fail strict MCP validation", async () => {
 		assert.equal(await loadDiscoverState(key), null)
 	}
 })
+
+test("search snapshots always store ranked IDs in Valkey for one hour", async () => {
+	const state = {
+		args: {},
+		query: "dark vibes",
+		search: {
+			ids: ["movie:42", "show:7"],
+			titles: [
+				{ id: "movie:42", name: "Dark", year: 2024 },
+				{ id: "show:7", name: "Darker", year: 2020 },
+			],
+		},
+	}
+	const key = await saveDiscoverState(state)
+	assert.match(key, /^k[a-f0-9]{18}$/)
+	assert.deepEqual(calls.at(-1)?.slice(2), ["EX", 3600])
+	assert.deepEqual(await loadDiscoverState(key), state)
+})

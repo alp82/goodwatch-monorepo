@@ -101,7 +101,11 @@ export async function prepareLanguage(
 		admissionAttemptId: undefined as string | undefined,
 	};
 	// Must precede credential checks, cache claims and every paid translation operation.
-	if (!translationEnabled() || native.mode === "english") return fallback;
+	if (
+		visitor.allowTranslation === false ||
+		!translationEnabled() ||
+		native.mode === "english"
+	) return fallback;
 	let store: ReturnType<typeof getSearchStore>;
 	try {
 		store = getSearchStore();

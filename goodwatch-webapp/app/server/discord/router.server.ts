@@ -6,7 +6,12 @@ import {
 	type WatchOptions,
 } from "./watch-id.ts"
 import { watchCard, nextCard, type NextEpisode } from "./watch-cards.ts"
-import { linkPrompt, rateModal, writeConfirmation } from "./member-cards.ts"
+import {
+	linkPrompt,
+	memberNote,
+	rateModal,
+	writeConfirmation,
+} from "./member-cards.ts"
 import { discordWrite } from "./writes.server.ts"
 import { parseUndoId } from "./custom-id.ts"
 import {
@@ -14,7 +19,22 @@ import {
 	type TogetherDependencies,
 } from "./together/handler.server.ts"
 import { appOrigin } from "./oauth.server.ts"
+import {
+	cachedTitleRead,
+	valkeyTitleStore,
+	type CacheStore,
+} from "./title-cache.server.ts"
 import { commands } from "./commands.ts"
+import {
+	retryEntry,
+	saveRetry,
+	loadRetry,
+	retryCustomId,
+	isRetryId,
+	parseRetryId,
+	valkeyRetryStore,
+	type RetryStore,
+} from "./retry.server.ts"
 import { FALLBACK_COUNTRY } from "../cache-identity.server.ts"
 import {
 	type GuestTitle,
@@ -23,14 +43,22 @@ import {
 	message,
 	EPHEMERAL,
 	textCard,
+	errorCard,
+	ERROR_TEXT,
 	displayText,
 	titleCard,
 	titleListCard,
 	personCard,
+	hotCard,
+	HOT_PAGE_SIZE,
+	type HotTitle,
+	type HotPost,
 	linkPromptCard,
 	slowDownCard,
 	countryName,
+	discordText,
 	type EmojiIds,
+	type Component,
 	type LinkedIdentity,
 	linkedCard,
 } from "./cards.ts"
@@ -38,18 +66,22 @@ import {
 	isTitleId,
 	parseCustomId,
 	parseListId,
+	parseListRef,
 	parseTogetherId,
 	listCustomId,
+	type ListRef,
 } from "./custom-id.ts"
 import { resolveViewerPlace, type PlaceDependencies } from "./place.server.ts"
 import { guildSettingsAvailable, type GuildSettings } from "./guild.server.ts"
 import { setup, setupAutocomplete, canManageGuild } from "./setup.server.ts"
 import { defer, within } from "./respond.server.ts"
+import { loadingLine, loadingMessage, pressedName } from "./loading.ts"
 import { discordRest } from "./rest.server.ts"
 import type { DiscoverState } from "./discover-state.server.ts"
+import type { SearchResult } from "./search.server.ts"
 import type { readGuestTool } from "../mcp/guest.server.ts"
 import type { RateVerdict } from "../rate-limit.server.ts"
-import type { TalkedRow } from "../../domain/talked-about-now.ts"
+import type { TalkedItem, TalkedRow } from "../../domain/talked-about-now.ts"
 function discoverArgs(
 	args: Parameters<typeof readGuestTool>[3],
 	member: boolean,
@@ -73,7 +105,7 @@ export interface Interaction {
 	authorizing_integration_owners?: Record<string, string>
 	app_permissions?: string
 	channel_id?: string
-	message?: { flags?: number; id?: string }
+	message?: { flags?: number; id?: string; components?: Component[] }
 	user?: { id: string; username?: string; global_name?: string }
 	member?: {
 		nick?: string
@@ -119,10 +151,18 @@ export interface Dependencies extends PlaceDependencies {
 	edit: (app: string, token: string, body: unknown) => Promise<void>
 	log: (line: string) => void
 	guestPick?: typeof guestWatchPick
-	hot?: () => Promise<GuestTitle[]>
-	saveState?: (state: DiscoverState) => Promise<string>
+	hot?: () => Promise<HotTitle[]>
+	/** Free-text /search, using the website engine and the Discord user's uncached allowance. */
+	searchTitles?: (query: string, discordUser: string) => Promise<SearchResult>
+	/** Posters and scores by title ID, for lists whose read leaves them out. */
+	displays?: (ids: string[]) => Promise<Map<string, Partial<GuestTitle>>>
+	saveState?: (state: DiscoverState, forceStore?: boolean) => Promise<string>
 	loadState?: (key: string) => Promise<DiscoverState | null>
 	emojis?: () => Promise<EmojiIds>
+	/** Where built title card reads are kept for a few minutes; null without Valkey. */
+	titleStore?: () => Promise<CacheStore | null>
+	/** Where Try again keeps the original interaction for 15 minutes. */
+	retryStore?: () => Promise<RetryStore>
 }
 const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
 	guestPick: guestWatchPick,
@@ -169,23 +209,79 @@ const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
 				await import("../talked-about-now/start-row.server.ts")
 			).getHotOnSocials(),
 		),
-	saveState: async (state) =>
-		(await import("./discover-state.server.ts")).saveDiscoverState(state),
+	searchTitles: async (query, user) =>
+		(await import("./search.server.ts")).searchTitles(query, user),
+	displays: async (ids) =>
+		(await import("./search.server.ts")).titleDisplays(ids),
+	saveState: async (state, forceStore) =>
+		(await import("./discover-state.server.ts")).saveDiscoverState(
+			state,
+			forceStore,
+		),
 	loadState: async (key) =>
 		(await import("./discover-state.server.ts")).loadDiscoverState(key),
 	emojis: async () => (await import("./emoji.server.ts")).applicationEmojiIds(),
+	titleStore: valkeyTitleStore,
+	retryStore: valkeyRetryStore,
 }
-/** The Hot on socials row as list-card titles: the first ten, with the row's poster path as a poster URL. */
-export function hotTitles(row: Pick<TalkedRow, "titles"> | null): GuestTitle[] {
-	return (row?.titles ?? []).slice(0, 10).map((t) => ({
+/** Titles on /hot: four pages of three. */
+export const HOT_TITLES = 12
+
+const tmdbImage = (path: string | null | undefined, size: string) =>
+	path
+		? /^https?:\/\//.test(path)
+			? path
+			: `https://image.tmdb.org/t/p/${size}${path}`
+		: null
+
+const PLATFORMS: Record<string, string> = {
+	youtube: "YouTube",
+	bluesky: "Bluesky",
+	mastodon: "Mastodon",
+}
+
+/** A social item as a /hot post: the platform's name (an article's publication), and an absolute image URL. */
+export function hotPost(item: TalkedItem): HotPost {
+	const image = item.image
+		? /^https?:\/\//.test(item.image)
+			? item.image
+			: `https://goodwatch.app${item.image.startsWith("/") ? "" : "/"}${
+					item.image
+			  }`
+		: item.video
+		? `https://i.ytimg.com/vi/${item.video}/hqdefault.jpg`
+		: null
+	return {
+		url: item.url,
+		author: item.author,
+		platform:
+			item.source === "rss"
+				? item.publisher || "the web"
+				: PLATFORMS[item.source] ?? item.source,
+		kind:
+			item.source === "youtube"
+				? "video"
+				: item.source === "rss"
+				? "article"
+				: "post",
+		text: item.text,
+		image,
+		at: item.at,
+	}
+}
+
+/** The Hot on socials row as /hot titles: the first twelve, with posters, backdrops, rank, move, and their posts. */
+export function hotTitles(row: Pick<TalkedRow, "titles"> | null): HotTitle[] {
+	return (row?.titles ?? []).slice(0, HOT_TITLES).map((t) => ({
 		id: `${t.mediaType}:${t.tmdbId}`,
 		name: t.title,
 		year: t.year,
-		poster_url: t.poster
-			? /^https?:\/\//.test(t.poster)
-				? t.poster
-				: `https://image.tmdb.org/t/p/w342${t.poster}`
-			: null,
+		poster_url: tmdbImage(t.poster, "w342"),
+		backdrop_url: tmdbImage(t.backdrop, "w780"),
+		rank: t.rank,
+		move: t.move,
+		reason: t.reason,
+		posts: (t.items ?? []).map(hotPost),
 	}))
 }
 const moodNames = new Map(
@@ -221,7 +317,10 @@ export function discoverHeading(args: DiscoverState["args"]) {
 export async function routeInteraction(
 	interaction: Interaction,
 	overrides: Partial<Dependencies> = {},
-) {
+	/** Set when a Try again press re-runs the original interaction: no second rate-limit take, and the answer
+	 * replaces the error card in place. */
+	internal: { retrying?: boolean } = {},
+): Promise<{ type: number; data?: unknown }> {
 	const deps = { ...defaults, ...overrides }
 	const start = Date.now()
 	let logged = false
@@ -266,10 +365,52 @@ export async function routeInteraction(
 			})}`,
 		)
 	}
+	/** The type 7 answer for a press that updates its own message, or null when the message carries nothing to show. */
+	const loading = (line: string) =>
+		loadingMessage(interaction.message?.components, line)
+	const pressed = (fallback = "") =>
+		pressedName(
+			interaction.message?.components ?? [],
+			customId,
+			interaction.data?.values,
+			fallback,
+		)
 	const reply = (data: unknown, outcome = "ok", type = 4) => {
 		finish(outcome)
 		return { type, data }
 	}
+	/** Keeps this interaction for Try again; the button's custom ID, or null when it can't be kept in time. */
+	const keepRetry = async () => {
+		const entry = retryEntry(interaction)
+		if (!entry) return null
+		return within(
+			deps
+				.retryStore()
+				.then((store) => saveRetry(entry, store))
+				.then(retryCustomId),
+			500,
+			null,
+		).catch(() => null)
+	}
+	/** defer with Try again on its error cards; a retry answers on the error card itself. */
+	const deferred = (
+		work: Parameters<typeof defer>[0],
+		edit: Parameters<typeof defer>[1],
+		done: Parameters<typeof defer>[2],
+		options: NonNullable<Parameters<typeof defer>[3]> = {},
+	) =>
+		defer(
+			work,
+			edit,
+			done,
+			internal.retrying
+				? {
+						type: 7,
+						loading: loading("Trying again…") ?? undefined,
+						retry: keepRetry,
+					}
+				: { ...options, retry: keepRetry },
+		)
 	let viewer: Awaited<ReturnType<typeof resolveViewerPlace>> = {
 		country: FALLBACK_COUNTRY,
 	}
@@ -329,7 +470,7 @@ export async function routeInteraction(
 		a.country === b.country &&
 		[...(a.services ?? [])].sort().join() ===
 			[...(b.services ?? [])].sort().join()
-	const card = async (id: string, share = false, offers = false) => {
+	const card = async (id: string, share = false, back?: ListRef) => {
 		// The top block always comes from a fresh guest read for the share place, with no member context or fields;
 		// the member's own read only fills the member block below it.
 		const personal = !share ? memberId : null
@@ -342,16 +483,25 @@ export async function routeInteraction(
 						.memberRead(personal, "get_title", { title_id: id })
 						.catch(() => null)
 				: null,
-			deps.read(guestPlace, "https://goodwatch.app", "get_title", {
-				title_id: id,
-			}),
+			within(deps.titleStore(), 200, null)
+				.catch(() => null)
+				.then((store) =>
+					cachedTitleRead(
+						id,
+						guestPlace,
+						() =>
+							deps.read(guestPlace, "https://goodwatch.app", "get_title", {
+								title_id: id,
+							}),
+						store,
+					),
+				),
 		])
 		if (!result.title)
 			return textCard("No matching title found. Try /search again.")
 		const memberTitle = mine?.title ? (mine.title as GuestTitle) : undefined
 		return titleCard(result.title as GuestTitle, guestPlace.country, {
 			share,
-			offers,
 			member: memberTitle ? ((mine?.member ?? {}) as MemberMarks) : undefined,
 			memberTitle,
 			memberPlace:
@@ -360,7 +510,29 @@ export async function routeInteraction(
 					: undefined,
 			emojis: await emojis(),
 			allServices: !guestPlace.services?.length,
+			back,
 		})
+	}
+	/** Fills in posters and scores the read left out; the list stays as it is when that read fails. */
+	const withDisplays = async <T extends GuestTitle>(titles: T[]) => {
+		const found = await within(
+			deps.displays(titles.map((t) => t.id)),
+			1500,
+			null,
+		).catch(() => null)
+		return found
+			? titles.map((t) => {
+					const d = found.get(t.id)
+					return d
+						? {
+								...t,
+								poster_url: t.poster_url ?? d.poster_url,
+								runtime_minutes: t.runtime_minutes ?? d.runtime_minutes,
+								goodwatch_score: t.goodwatch_score ?? d.goodwatch_score,
+						  }
+						: t
+			  })
+			: titles
 	}
 	const watch = async (options: WatchOptions) => {
 		let id: string | null
@@ -432,35 +604,85 @@ export async function routeInteraction(
 			title_id: id,
 			limit: 10,
 		})
+		const source = (result.source as { name?: string } | undefined)?.name
 		return titleListCard(
-			"Similar titles",
+			source ? `Similar to ${source}` : "Similar titles",
 			(result.items ?? []) as GuestTitle[],
 			{
 				share,
 				shareId: listCustomId("similar-share", id),
 				subtitle: servicesNote(),
 				emojis: await emojis(),
+				ref: { kind: "similar", titleId: id },
 			},
 		)
 	}
 	const person = async (id: number, share = false) => {
 		const result = await read("get_person", { person_id: id, limit: 10 })
-		return result.person
-			? personCard(result.person as GuestPerson, share, {
-					note: allServices()
-						? `Using every service in ${countryName(country)}.`
-						: undefined,
-				})
-			: textCard("No matching person found.")
-	}
-	const hot = async (share = false) =>
-		titleListCard("Hot on socials", await deps.hot(), {
-			share,
-			shareId: listCustomId("hot-share", "now"),
-			url: "https://goodwatch.app/hot-on-socials",
-			subtitle: servicesNote(),
-			emojis: await emojis(),
+		if (!result.person) return textCard("No matching person found.")
+		const found = result.person as GuestPerson
+		const [knownFor, ids] = await Promise.all([
+			withDisplays(found.known_for ?? []),
+			emojis(),
+		])
+		return personCard({ ...found, known_for: knownFor }, share, {
+			note: allServices()
+				? `Using every service in ${countryName(country)}`
+				: undefined,
+			emojis: ids,
 		})
+	}
+	const hot = async (page = 0, share = false) => {
+		const [titles, ids] = await Promise.all([deps.hot(), emojis()])
+		return hotCard(await withDisplays(titles), { page, share, emojis: ids })
+	}
+	const searchList = async (
+		key: string,
+		page: number,
+		share = false,
+		initial?: DiscoverState,
+	) => {
+		const state = initial ?? (await deps.loadState(key))
+		if (!state?.query || !state.search)
+			return textCard("This search expired. Search again with /search.")
+		const byId = new Map(state.search.titles.map((t) => [t.id, t]))
+		const titles = state.search.ids.flatMap((id) => byId.get(id) ?? [])
+		if (!titles.length)
+			return textCard(
+				`No titles match ${state.query}. Try another search.${
+					state.search.note ? `\n${state.search.note}` : ""
+				}`,
+			)
+		return titleListCard(
+			`Results for ${state.query}`,
+			await withDisplays(titles.slice(page * 10, page * 10 + 10)),
+			{
+				share,
+				stateKey: key,
+				pageAction: "search",
+				subtitle: state.search.note,
+				page,
+				next: titles.length > (page + 1) * 10,
+				total: titles.length,
+				shareId: listCustomId("search-share", `${key}:${page}`),
+				emojis: await emojis(),
+				ref: { kind: "search", key, page },
+			},
+		)
+	}
+	/** The list a Back button returns to. */
+	const backTo = (ref: ListRef) =>
+		ref.kind === "discover"
+			? discover(ref.key, ref.page)
+			: ref.kind === "search"
+			? searchList(ref.key, ref.page)
+			: ref.kind === "similar"
+			? similar(ref.titleId)
+			: ref.kind === "person"
+			? person(ref.personId)
+			: ref.kind === "next"
+			? next()
+			: hot(ref.page)
 	const discover = async (key: string, page: number, share = false) => {
 		const state = await deps.loadState(key)
 		if (!state)
@@ -505,6 +727,7 @@ export async function routeInteraction(
 					.filter(Boolean)
 					.join(" · "),
 				emojis: await emojis(),
+				ref: { kind: "discover", key, page },
 			},
 		)
 	}
@@ -533,11 +756,49 @@ export async function routeInteraction(
 		const user = interaction.member?.user?.id ?? interaction.user?.id
 		if (!user)
 			return reply(textCard("This interaction has no user."), "invalid")
-		const verdict = await within<RateVerdict | null>(deps.take(user), 300, null)
-		if (verdict === null) finish("limit_timeout")
+		const verdict = internal.retrying
+			? null
+			: await within<RateVerdict | null>(deps.take(user), 300, null)
+		if (verdict === null && !internal.retrying) finish("limit_timeout")
 		if (verdict && !verdict.allowed) {
 			if (interaction.type === 4) return reply({ choices: [] }, "limited", 8)
 			return reply(slowDownCard(verdict.retryAfterSeconds), "limited")
+		}
+		if (interaction.type === 3 && isRetryId(customId)) {
+			const key = parseRetryId(customId)
+			const entry = key
+				? await within(
+						deps.retryStore().then((store) => loadRetry(key, store)),
+						800,
+						undefined,
+					).catch(() => undefined)
+				: null
+			if (entry === undefined)
+				return reply(
+					errorCard(ERROR_TEXT, customId),
+					"retry_unavailable",
+				)
+			if (!entry)
+				return reply(
+					textCard("This can't be retried anymore. Run the command again."),
+					"retry_expired",
+				)
+			if (entry.user !== user)
+				return reply(
+					textCard("Only the person who ran this can try again."),
+					"forbidden",
+				)
+			// The original command or press, as if it arrived now from the presser: their place, their token.
+			return routeInteraction(
+				{
+					...interaction,
+					type: entry.type,
+					...(entry.id ? { id: entry.id } : {}),
+					data: entry.data,
+				},
+				overrides,
+				{ retrying: true },
+			)
 		}
 		if (
 			interaction.data?.name === "setup" ||
@@ -567,12 +828,14 @@ export async function routeInteraction(
 				)
 			if (!interaction.application_id || !interaction.token)
 				return reply(textCard("Invalid interaction."), "invalid")
-			return defer(
+			return deferred(
 				() => setup(interaction, deps),
 				(body) =>
 					deps.edit(interaction.application_id!, interaction.token!, body),
 				finish,
-				{ type: interaction.type === 3 ? 6 : 5 },
+				interaction.type === 3
+					? { type: 7, loading: loading("Updating server setup…") }
+					: { type: 5 },
 			)
 		}
 		if (
@@ -584,6 +847,7 @@ export async function routeInteraction(
 				place: (starter) =>
 					resolveViewerPlace(starter, { getGuild: deps.getGuild }),
 				emojis: deps.emojis,
+				retry: keepRetry,
 				...deps.together,
 			})
 		}
@@ -623,7 +887,7 @@ export async function routeInteraction(
 								(c) => query.length < 2 || c.name.toLowerCase().includes(query),
 							)
 							.slice(0, 25)
-							.map((c) => ({ ...c, name: displayText(c.name).slice(0, 100) })),
+							.map((c) => ({ ...c, name: discordText(c.name).slice(0, 100) })),
 					},
 					"ok",
 					8,
@@ -638,8 +902,13 @@ export async function routeInteraction(
 				return reply({ choices: [] }, "unsupported", 8)
 			const query = String(
 				interaction.data?.options?.find(
-					(o) => o.name === (isPerson ? "name" : "title") && o.focused,
-				)?.value ?? "",
+					(o) =>
+						(isPerson
+							? o.name === "name"
+							: interaction.data?.name === "search"
+							? ["query", "title"].includes(o.name)
+							: o.name === "title") && o.focused,
+				)?.value ?? ""
 			)
 				.trim()
 				.slice(0, 120)
@@ -656,13 +925,15 @@ export async function routeInteraction(
 			return reply(
 				{
 					choices: items.slice(0, 25).map((t) => ({
-						name: `${displayText(t.name)}${t.year ? ` (${t.year})` : ""} · ${
-							isPerson
-								? "Person"
-								: t.id.startsWith("movie:")
+						name: discordText(
+							`${t.name}${t.year ? ` (${t.year})` : ""} · ${
+								isPerson
+									? "Person"
+									: t.id.startsWith("movie:")
 									? "Movie"
 									: "TV show"
-						}`.slice(0, 100),
+							}`,
+						).slice(0, 100),
 						value: isPerson ? String(t.person_id) : t.id,
 					})),
 				},
@@ -710,17 +981,25 @@ export async function routeInteraction(
 							rateModal(
 								result.title as GuestTitle,
 								(result.member as MemberMarks)?.score,
+								memberAction.back,
 							).data,
 							"ok",
 							9,
 						)
-					return reply(textCard("Could not load this title. Please try again."))
+					return reply(
+						errorCard(
+							"Could not load this title. Please try again.",
+							await keepRetry(),
+						),
+					)
 				}
 			}
 			const publicMessage =
 				interaction.message != null &&
 				!((interaction.message.flags ?? 0) & EPHEMERAL)
-			return defer(
+			// The list the title was opened from: every result of a press on its card keeps Back to it.
+			const back = memberAction?.back ?? undo?.back
+			return deferred(
 				async () => {
 					// Do not treat a slow link lookup as a guest for writes or undo.
 					memberId = await deps.linkedUser(user)
@@ -750,13 +1029,14 @@ export async function routeInteraction(
 									summary.not_undoable ||
 									summary.error))
 						)
-							return textCard(
+							return memberNote(
 								String(result.message ?? "Could not undo this change."),
+								back,
 							)
 						// Refresh state when the catalog read is available, retaining the undo acknowledgement.
 						try {
 							usePlace(await place())
-							const refreshed = await card(undo.titleId)
+							const refreshed = await card(undo.titleId, false, back)
 							return message([
 								{ type: 10, content: "Undone." },
 								...refreshed.components,
@@ -764,7 +1044,7 @@ export async function routeInteraction(
 						} catch {
 							/* The receipt remains undone if the refresh fails. */
 						}
-						return textCard("Undone.")
+						return memberNote("Undone.", back)
 					}
 					const action = (
 						memberAction?.action === "rate-submit"
@@ -778,7 +1058,8 @@ export async function routeInteraction(
 					const result = await deps.memberRead(memberId, "get_title", {
 						title_id: id,
 					})
-					if (!result.title) return textCard("No matching title found.")
+					if (!result.title)
+						return memberNote("No matching title found.", back)
 					const title = result.title as GuestTitle
 					const marks = result.member as MemberMarks | undefined
 					const selected = interaction.data?.components
@@ -794,7 +1075,7 @@ export async function routeInteraction(
 						action === "rate" &&
 						(!Number.isInteger(score) || score < 1 || score > 10)
 					)
-						return textCard("Choose a score from 1 to 10.")
+						return memberNote("Choose a score from 1 to 10.", back)
 					if (
 						action === "seen" &&
 						!writeCommand &&
@@ -803,8 +1084,9 @@ export async function routeInteraction(
 							(marks?.watch_count ?? 0) > 0 ||
 							marks?.score != null)
 					)
-						return textCard(
+						return memberNote(
 							"Already seen. Use Undo on the earlier confirmation, or /seen to log a rewatch.",
+							back,
 						)
 					const wanted = writeCommand || !marks?.want_to_see
 					// Discord gives no timezone, so "today" is the UTC date.
@@ -837,10 +1119,11 @@ export async function routeInteraction(
 						  }[]
 						| undefined
 					if (written.outcome !== "applied")
-						return textCard(
+						return memberNote(
 							String(
 								items?.[0]?.message ?? written.message ?? "No change was made.",
 							),
+							back,
 						)
 					return writeConfirmation(
 						title,
@@ -848,12 +1131,26 @@ export async function routeInteraction(
 						action,
 						items?.[0]?.changes?.score?.[1] ?? score,
 						items?.[0]?.changes?.want_to_see?.[1] ?? wanted,
+						back,
 					)
 				},
 				(body) =>
 					deps.edit(interaction.application_id!, interaction.token!, body),
 				finish,
-				{ type: interaction.type === 3 && !publicMessage ? 6 : 5 },
+				interaction.type === 3 && !publicMessage
+					? {
+							type: 7,
+							loading: loading(
+								undo
+									? "Undoing…"
+									: memberAction?.action === "want"
+										? "Updating your Wishlist…"
+										: memberAction?.action === "seen"
+											? "Logging your watch…"
+											: "Saving…",
+							),
+						}
+					: { type: 5 },
 			)
 		}
 
@@ -868,7 +1165,7 @@ export async function routeInteraction(
 			const { application_id: applicationId, token } = interaction
 			if (!applicationId || !token)
 				return reply(textCard("Invalid interaction."), "invalid")
-			return defer(
+			return deferred(
 				async () => {
 					memberId = await within(deps.linkedUser(user), 300, null).catch(
 						() => null,
@@ -944,10 +1241,32 @@ export async function routeInteraction(
 		) {
 			if (!interaction.application_id || !interaction.token)
 				return reply(textCard("Invalid interaction."), "invalid")
-			return defer(
+			return deferred(
 				async () => {
 					usePlace(await place())
 					switch (interaction.data?.name) {
+						case "search": {
+							// A chosen suggestion is a title ID and opens its card; free text answers with the results.
+							const value = (options.query ?? options.title ?? "")
+								.trim()
+								.slice(0, 120)
+							if (!value)
+								return textCard("No matching title found. Try another title.")
+							if (isTitleId(value)) return card(value)
+							const result = await deps.searchTitles(value, user)
+							const titles = result.titles.slice(0, 100)
+							const state = {
+								args: {},
+								query: value,
+								search: {
+									ids: titles.map((t) => t.id),
+									titles,
+									note: result.note,
+								},
+							}
+							const key = await deps.saveState(state)
+							return searchList(key, 0, false, state)
+						}
 						case "watch": {
 							const filters = watchOptions(options.type, options.mood)
 							return filters
@@ -956,13 +1275,10 @@ export async function routeInteraction(
 						}
 						case "next":
 							return next()
-						case "search":
 						case "similar": {
 							const id = await resolveTitle(options.title ?? "")
 							return id
-								? interaction.data.name === "similar"
-									? similar(id)
-									: card(id)
+								? similar(id)
 								: textCard("No matching title found. Try another title.")
 						}
 						case "person": {
@@ -985,7 +1301,7 @@ export async function routeInteraction(
 							return id ? person(id) : textCard("No matching person found.")
 						}
 						case "hot":
-							return hot()
+							return hot(0)
 						case "discover": {
 							const args: Parameters<typeof readGuestTool>[3] = {}
 							if (options.type && options.type !== "any")
@@ -1045,29 +1361,55 @@ export async function routeInteraction(
 		if (interaction.type === 3 && (parsed || list || another)) {
 			if (!interaction.application_id || !interaction.token)
 				return reply(textCard("Invalid interaction."), "invalid")
+			/** What this press loads, for the loading line: "Similar", the chosen title, "the next page". */
+			const pressLoads = () =>
+				another
+					? "another pick"
+					: parsed?.action === "similar"
+						? "Similar"
+						: parsed
+							? "the title"
+							: list?.action === "open"
+								? pressed("the title")
+								: list?.action === "back"
+									? "the list"
+									: pressed("the page")
 			const share =
 				parsed?.action === "share" || list?.action.endsWith("-share")
 			const publicMessage =
 				interaction.message != null &&
 				!((interaction.message.flags ?? 0) & EPHEMERAL)
-			return defer(
+			return deferred(
 				async () => {
 					usePlace(await place())
 					if (another) return watch(another)
 					if (parsed) {
 						if (parsed.action === "similar") return similar(parsed.titleId)
-						return card(parsed.titleId, !!share, parsed.action === "watch")
+						// "watch" is the old Where to watch button: its card now shows the links itself.
+						return card(parsed.titleId, !!share, parsed.back)
 					}
 					if (list?.action === "open") {
 						const id = interaction.data?.values?.[0] ?? ""
 						return isTitleId(id)
-							? card(id)
+							? card(id, false, parseListRef(list.value) ?? undefined)
 							: textCard("Invalid title selection.")
+					}
+					if (list?.action === "back") {
+						const ref = parseListRef(list.value)
+						return ref ? backTo(ref) : textCard("Unsupported action.")
 					}
 					if (list?.action === "similar-share") return similar(list.value, true)
 					if (list?.action === "person-share")
 						return person(Number(list.value), true)
-					if (list?.action === "hot-share") return hot(true)
+					if (list?.action === "hot" || list?.action === "hot-share")
+						return hot(
+							list.value === "now" ? 0 : Number(list.value),
+							list.action === "hot-share",
+						)
+					if (list?.action === "search" || list?.action === "search-share") {
+						const [key, page] = list.value.split(":")
+						return searchList(key, Number(page), !!share)
+					}
 					if (
 						list?.action === "discover" ||
 						list?.action === "discover-share"
@@ -1084,10 +1426,9 @@ export async function routeInteraction(
 						body,
 					),
 				finish,
-				{
-					type: share || publicMessage ? 5 : 6,
-					ephemeral: !share && publicMessage,
-				},
+				share || publicMessage
+					? { type: 5, ephemeral: !share && publicMessage }
+					: { type: 7, loading: loading(loadingLine(pressLoads())) },
 			)
 		}
 		return reply(
@@ -1100,6 +1441,6 @@ export async function routeInteraction(
 		)
 	} catch {
 		if (interaction.type === 4) return reply({ choices: [] }, "error", 8)
-		return reply(textCard("Something went wrong. Please try again."), "error")
+		return reply(errorCard(ERROR_TEXT, await keepRetry()), "error")
 	}
 }

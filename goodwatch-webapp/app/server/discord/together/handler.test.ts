@@ -698,3 +698,41 @@ test(
 		)
 	},
 )
+test(
+	"private voting presses show the loading card in place; the same press on a public message answers privately",
+	{ skip: !hasLua },
+	async () => {
+		const f = fixture()
+		const start = await f.run(interaction({ name: "together" }))
+		await start.finished
+		const id = f.changes[0]
+		const join = await f.run(
+			interaction({ custom_id: togetherCustomId("join", id) }, 3),
+		)
+		await join.finished
+		const card = f.edits.at(-1) as { components: unknown[] }
+		const press = (
+			action: "yep" | "undo" | "leave",
+			flags: number,
+			titleId?: string,
+		) =>
+			f.run({
+				...interaction({ custom_id: togetherCustomId(action, id, titleId) }, 3),
+				message: { id: "m", flags, components: card.components as never },
+			})
+		const voted = await press("yep", EPHEMERAL | IS_COMPONENTS_V2, "movie:1")
+		assert.equal(voted.response.type, 7)
+		const loading = JSON.stringify(voted.response)
+		assert.match(loading, /Saving your vote…/)
+		assert.doesNotMatch(loading, /"disabled":false/)
+		await voted.finished
+		assert.match(JSON.stringify(f.edits.at(-1)), /Title 2/)
+		const undo = await press("undo", EPHEMERAL | IS_COMPONENTS_V2, "movie:1")
+		assert.match(JSON.stringify(undo.response), /Undoing your last vote…/)
+		await undo.finished
+		const leave = await press("leave", IS_COMPONENTS_V2)
+		assert.deepEqual(leave.response, { type: 5, data: { flags: EPHEMERAL } })
+		await leave.finished
+		assert.match(JSON.stringify(f.edits.at(-1)), /You left this session/)
+	},
+)

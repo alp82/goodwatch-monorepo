@@ -129,6 +129,10 @@ export interface JevStageInput {
 	visitor: {
 		accountId: string | null | Promise<string | null>;
 		networkIdentity: string;
+		/** Trusted integrations may meter fresh readings. Cache hits never call this. */
+		beforeUncachedReading?: () => Promise<void>;
+		/** Discord permits only the website's Jev reading, with no translation model call. */
+		allowTranslation?: boolean;
 	};
 	signal?: AbortSignal;
 	admissionAttemptId?: string;
@@ -256,6 +260,16 @@ export async function executeJevStage(
 		}
 	}
 	const id = claim.id;
+	if (input.signal?.aborted) {
+		await store.finish(id, 0).catch(() => {});
+		return basic("cancelled");
+	}
+	try {
+		await input.visitor.beforeUncachedReading?.();
+	} catch (error) {
+		await store.finish(id, 0).catch(() => {});
+		throw error;
+	}
 	if (input.signal?.aborted) {
 		await store.finish(id, 0).catch(() => {});
 		return basic("cancelled");

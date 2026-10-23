@@ -33,8 +33,9 @@ const title: GuestTitle = {
 		state: "watchable",
 		offers: [
 			{
-				name: "Provider",
-				stream_link: "[Provider](https://example.com/watch)",
+				name: "Example TV",
+				url: "https://example.com/watch",
+				stream_link: "[Example TV](https://example.com/watch)",
 				offer_type: "flatrate",
 			},
 		],
@@ -75,7 +76,8 @@ const interaction = (
 function fixture(overrides: Partial<Dependencies> = {}) {
 	const logs: string[] = [],
 		reads: unknown[] = [],
-		edits: unknown[] = []
+		edits: unknown[] = [],
+		states = new Map<string, Parameters<Dependencies["saveState"] & {}>[0]>()
 	const dependencies: Dependencies = {
 		linkedUser: async () => null,
 		storeLinkMessage: async () => "a".repeat(24),
@@ -89,6 +91,22 @@ function fixture(overrides: Partial<Dependencies> = {}) {
 			return name === "search_titles"
 				? { items: Array.from({ length: 30 }, () => title) }
 				: { title }
+		},
+		saveState: async (state) => {
+			const key = "k0123456789abcdefab"
+			states.set(key, state)
+			return key
+		},
+		loadState: async (key) => states.get(key) ?? null,
+		displays: async () => new Map(),
+		searchTitles: async (query) => {
+			reads.push({ name: "searchTitles", args: { query } })
+			return {
+				titles: Array.from({ length: 30 }, (_, i) => ({
+					...title,
+					id: `movie:${i + 1}`,
+				})),
+			}
 		},
 		take: async () => ({ allowed: true, store: "memory" }),
 		edit: async (...args) => {
@@ -215,7 +233,19 @@ for (const value of ["movie:42", "A title"])
 			(f.edits[0] as [string, string, { flags: number }])[2].flags,
 			IS_COMPONENTS_V2 | EPHEMERAL,
 		)
-		assert.equal(f.reads.length, value === "movie:42" ? 1 : 2)
+		// A title ID (a chosen suggestion) opens its card; free text answers with a results list.
+		assert.deepEqual(
+			f.reads.map((r) => (r as { name: string }).name),
+			[value === "movie:42" ? "get_title" : "searchTitles"],
+		)
+		const sent = JSON.stringify(f.edits)
+		if (value === "movie:42") assert.doesNotMatch(sent, /Results for/)
+		else {
+			assert.match(sent, /Results for A title/)
+			assert.match(sent, /Page 1 of 3/)
+			assert.match(sent, /gw1:search:k[a-f0-9]+:1/)
+			assert.match(sent, /gw1:open:q:k[a-f0-9]+:0/)
+		}
 	})
 test("failed deferred work replaces thinking with an error card", async () => {
 	let done!: () => void
@@ -238,19 +268,31 @@ test("failed deferred work replaces thinking with an error card", async () => {
 	assert.match(JSON.stringify(f.edits), /Something went wrong/)
 	assert.doesNotMatch(JSON.stringify(f.edits), /private data/)
 })
-test("Where to watch defers the update then patches country offers", async () => {
+test("a press on a private card answers at once with the card disabled and a loading line, then patches", async () => {
 	let done!: () => void
 	const finished = new Promise<void>((resolve) => {
 		done = resolve
 	})
 	const f = fixture({ log: () => done() })
+	const pressedCard = titleCard(title, "DE").components
+	const started = Date.now()
 	const body = await (
-		await f.run(
-			interaction(3, { custom_id: formatCustomId("watch", "movie:42") }),
-		)
+		await f.run({
+			...interaction(3, { custom_id: formatCustomId("watch", "movie:42") }),
+			message: { flags: IS_COMPONENTS_V2 | EPHEMERAL, components: pressedCard },
+		})
 	).json()
-	assert.deepEqual(body, { type: 6 })
+	assert.equal(body.type, 7)
+	const controls = JSON.stringify(body.data.components)
+	assert.doesNotMatch(controls, /"disabled":false/)
+	assert.equal(
+		(controls.match(/"type":2,/g) ?? []).length,
+		(controls.match(/"disabled":true/g) ?? []).length,
+	)
+	assert.equal(body.data.components.at(-1).content, "-# Loading the title…")
 	await finished
+	// The result waits for the loading card, so it can't be replaced by it.
+	assert.ok(Date.now() - started >= 380)
 	assert.equal(
 		(f.edits[0] as [string, string, { flags: number }])[2].flags,
 		IS_COMPONENTS_V2,
@@ -260,6 +302,7 @@ test("Where to watch defers the update then patches country offers", async () =>
 		JSON.stringify(f.edits),
 		/Where to watch on every service in Germany/,
 	)
+	assert.doesNotMatch(JSON.stringify(f.edits), /Where to watch"|flatrate/)
 })
 test("Share defers publicly then patches a guest card without Share", async () => {
 	let done!: () => void
@@ -321,7 +364,7 @@ test("cards without a backdrop keep the poster thumbnail, score label, short ove
 	const card = titleCard(title, "DE")
 	assert.equal(card.flags, IS_COMPONENTS_V2 | EPHEMERAL)
 	assert.equal(card.components.length, 1)
-	const [section, , , row] = card.components[0].components!
+	const [section, , , , row] = card.components[0].components!
 	assert.equal(card.components[0].type, 17)
 	assert.equal(card.components[0].accent_color, 0x15803d)
 	assert.equal(section.type, 9)
@@ -624,6 +667,7 @@ test("member search: the top block is exactly the shared card, the member's own 
 						offers: [
 							{
 								name: `${country} provider`,
+								url: `https://example.com/${country}`,
 								stream_link: `[${country}](https://example.com/${country})`,
 							},
 						],
@@ -645,6 +689,7 @@ test("member search: the top block is exactly the shared card, the member's own 
 								offers: [
 									{
 										name: "Member provider",
+										url: "https://example.com/m",
 										stream_link: "[M](https://example.com/m)",
 									},
 								],

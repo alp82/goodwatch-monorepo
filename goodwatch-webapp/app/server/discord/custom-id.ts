@@ -8,8 +8,18 @@ export type CardAction =
 	| "rate-submit"
 export const isTitleId = (value: string) =>
 	/^(movie|show):[1-9]\d{0,9}$/.test(value)
-export function formatCustomId(action: CardAction, titleId: string): string {
-	const value = `gw1:${action}:${titleId}`
+/** Actions whose card or result keeps the list the title was opened from, for Back. */
+const KEEPS_BACK = ["watch", "want", "seen", "rate", "rate-submit"]
+/** The custom ID for a title action. A list reference that would pass Discord's 100 characters is left out. */
+export function formatCustomId(
+	action: CardAction,
+	titleId: string,
+	back?: ListRef,
+): string {
+	const plain = `gw1:${action}:${titleId}`
+	const withBack =
+		KEEPS_BACK.includes(action) && back ? `${plain}:${formatListRef(back)}` : plain
+	const value = withBack.length <= 100 ? withBack : plain
 	if (
 		![
 			"watch",
@@ -28,25 +38,84 @@ export function formatCustomId(action: CardAction, titleId: string): string {
 }
 export function parseCustomId(
 	value: string,
-): { action: CardAction; titleId: string } | null {
+): { action: CardAction; titleId: string; back?: ListRef } | null {
 	if (value.length > 100) return null
 	const match =
-		/^gw1:(watch|share|similar|want|seen|rate|rate-submit):((?:movie|show):[1-9]\d{0,9})$/.exec(
+		/^gw1:(watch|share|similar|want|seen|rate|rate-submit):((?:movie|show):[1-9]\d{0,9})(?::(.+))?$/.exec(
 			value,
 		)
-	return match ? { action: match[1] as CardAction, titleId: match[2] } : null
+	if (!match) return null
+	const back = match[3] ? parseListRef(match[3]) : null
+	if (match[3] && (!KEEPS_BACK.includes(match[1]) || !back)) return null
+	return {
+		action: match[1] as CardAction,
+		titleId: match[2],
+		...(back ? { back } : {}),
+	}
 }
 
-export function listCustomId(
-	action:
-		| "open"
-		| "person-share"
-		| "similar-share"
-		| "hot-share"
-		| "discover"
-		| "discover-share",
-	value: string,
-) {
+const STATE = "(?:i[A-Za-z0-9_-]{1,65}|k[a-f0-9]{18})"
+const PAGE = "\\d{1,6}"
+
+/**
+ * Where a title came from, so its card can offer Back: `d:<state>:<page>` (/discover), `q:<state>:<page>` (/search),
+ * `s:<title ID>` (/similar), `p:<person ID>` (/person), `h:<page>` (/hot), `n` (/next).
+ */
+export type ListRef =
+	| { kind: "discover" | "search"; key: string; page: number }
+	| { kind: "similar"; titleId: string }
+	| { kind: "person"; personId: number }
+	| { kind: "hot"; page: number }
+	| { kind: "next" }
+
+const REF = new RegExp(
+	`^(?:([dq]):(${STATE}):(${PAGE})|s:((?:movie|show):[1-9]\\d{0,9})|p:([1-9]\\d{0,9})|h:(${PAGE})|(n))$`,
+)
+
+export function formatListRef(ref: ListRef) {
+	switch (ref.kind) {
+		case "discover":
+		case "search":
+			return `${ref.kind === "discover" ? "d" : "q"}:${ref.key}:${ref.page}`
+		case "similar":
+			return `s:${ref.titleId}`
+		case "person":
+			return `p:${ref.personId}`
+		case "hot":
+			return `h:${ref.page}`
+		case "next":
+			return "n"
+	}
+}
+
+export function parseListRef(value: string): ListRef | null {
+	const m = REF.exec(value)
+	if (!m) return null
+	if (m[1])
+		return {
+			kind: m[1] === "d" ? "discover" : "search",
+			key: m[2],
+			page: Number(m[3]),
+		}
+	if (m[4]) return { kind: "similar", titleId: m[4] }
+	if (m[5]) return { kind: "person", personId: Number(m[5]) }
+	if (m[7]) return { kind: "next" }
+	return { kind: "hot", page: Number(m[6]) }
+}
+
+export type ListAction =
+	| "open"
+	| "back"
+	| "person-share"
+	| "similar-share"
+	| "hot"
+	| "hot-share"
+	| "discover"
+	| "discover-share"
+	| "search"
+	| "search-share"
+
+export function listCustomId(action: ListAction, value: string) {
 	const id = `gw1:${action}:${value}`
 	if (id.length > 100 || !/^[A-Za-z0-9_:.-]+$/.test(id))
 		throw new Error("Invalid custom ID")
@@ -55,37 +124,56 @@ export function listCustomId(
 export function parseListId(id: string) {
 	if (id.length > 100) return null
 	const match =
-		/^gw1:(open|person-share|similar-share|hot-share|discover|discover-share):([A-Za-z0-9_:.-]+)$/.exec(
+		/^gw1:(open|back|person-share|similar-share|hot|hot-share|discover|discover-share|search|search-share):([A-Za-z0-9_:.-]+)$/.exec(
 			id,
 		)
 	if (!match) return null
-	const [, action, value] = match
-	if (action === "open" && !["private", "public"].includes(value)) return null
+	const [, action, value] = match as unknown as [string, ListAction, string]
+	if (
+		action === "open" &&
+		!["private", "public"].includes(value) &&
+		!parseListRef(value)
+	)
+		return null
+	if (action === "back" && !parseListRef(value)) return null
 	if (action === "person-share" && !/^[1-9]\d{0,9}$/.test(value)) return null
 	if (action === "similar-share" && !isTitleId(value)) return null
-	if (action === "hot-share" && value !== "now") return null
+	if (action === "hot" && !new RegExp(`^${PAGE}$`).test(value)) return null
 	if (
-		action.startsWith("discover") &&
-		!/^(?:i[A-Za-z0-9_-]{1,65}|k[a-f0-9]{18}):\d{1,6}$/.test(value)
+		action === "hot-share" &&
+		value !== "now" &&
+		!new RegExp(`^${PAGE}$`).test(value)
+	)
+		return null
+	if (
+		(action.startsWith("discover") || action.startsWith("search")) &&
+		!new RegExp(`^${STATE}:${PAGE}$`).test(value)
 	)
 		return null
 	return { action, value }
 }
 
-export function undoCustomId(batchId: string, titleId: string) {
+/** Undo for one write; `back` keeps the list the title was opened from when it fits in 100 characters. */
+export function undoCustomId(batchId: string, titleId: string, back?: ListRef) {
 	const id = `gw1:undo:${batchId}:${titleId}`
 	if (
 		!/^gw1:undo:[A-Za-z0-9_-]{1,65}:(movie|show):[1-9]\d{0,9}$/.test(id) ||
 		id.length > 100
 	)
 		throw new Error("Invalid undo ID")
-	return id
+	const withBack = back ? `${id}:${formatListRef(back)}` : id
+	return withBack.length <= 100 ? withBack : id
 }
-export function parseUndoId(id: string) {
+export function parseUndoId(
+	id: string,
+): { batchId: string; titleId: string; back?: ListRef } | null {
 	if (id.length > 100) return null
 	const match =
-		/^gw1:undo:([A-Za-z0-9_-]{1,65}):((?:movie|show):[1-9]\d{0,9})$/.exec(id)
-	return match ? { batchId: match[1], titleId: match[2] } : null
+		/^gw1:undo:([A-Za-z0-9_-]{1,65}):((?:movie|show):[1-9]\d{0,9})(?::(.+))?$/.exec(id)
+	if (!match) return null
+	const back = match[3] ? parseListRef(match[3]) : null
+	if (match[3] && !back) return null
+	return { batchId: match[1], titleId: match[2], ...(back ? { back } : {}) }
 }
 
 export type TogetherAction =

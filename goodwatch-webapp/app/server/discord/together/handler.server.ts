@@ -1,7 +1,8 @@
 import { randomBytes } from "node:crypto"
 import type { Interaction } from "../router.server.ts"
 import { defer, within } from "../respond.server.ts"
-import { textCard, type EmojiIds } from "../cards.ts"
+import { textCard, errorCard, EPHEMERAL, type EmojiIds } from "../cards.ts"
+import { loadingMessage } from "../loading.ts"
 import { discordRest } from "../rest.server.ts"
 import { parseTogetherId } from "../custom-id.ts"
 import {
@@ -49,6 +50,8 @@ export interface TogetherDependencies {
 	edit: (app: string, token: string, body: unknown) => Promise<void>
 	published: (id: string, signature: string) => Promise<void>
 	changed: (id: string) => Promise<void>
+	/** Keeps the interaction for Try again on error cards; the button's custom ID, or null. */
+	retry?: () => Promise<string | null>
 }
 async function publicUpdate(id: string) {
 	const state = await publicEditState()
@@ -224,11 +227,13 @@ export async function handleTogether(
 			finish(reserved === 0 ? "session_limit" : "storage_timeout")
 			return {
 				type: 4,
-				data: textCard(
+				data:
 					reserved === 0
-						? GUILD_LIMIT
-						: "Together storage is unavailable. Try again shortly.",
-				),
+						? textCard(GUILD_LIMIT)
+						: errorCard(
+								"Together storage is unavailable. Try again shortly.",
+								await deps.retry?.().catch(() => null),
+							),
 			}
 		}
 	}
@@ -252,6 +257,9 @@ export async function handleTogether(
 		}
 		return session
 	}
+	// Presses on the private voting card update it in place; a press on a public message answers privately instead.
+	const pressedOnPublic =
+		!!interaction.message && !((interaction.message.flags ?? 0) & EPHEMERAL)
 	return defer(
 		async () => {
 			try {
@@ -465,14 +473,30 @@ export async function handleTogether(
 		{
 			type:
 				starting ||
+				pressedOnPublic ||
 				["join", "pick", "end", "remove", "choose"].includes(
 					action?.action ?? "",
 				)
 					? 5
-					: 6,
+					: 7,
 			ephemeral: !starting,
+			loading: pressedOnPublic
+				? undefined
+				: loadingMessage(
+						interaction.message?.components,
+						PRIVATE_LOADING[action?.action ?? ""] ?? "Loading…",
+				  ),
+			retry: deps.retry,
 		},
 	)
+}
+
+/** What a press on the private voting card shows while it saves. */
+const PRIVATE_LOADING: Record<string, string> = {
+	yep: "Saving your vote…",
+	nope: "Saving your vote…",
+	undo: "Undoing your last vote…",
+	leave: "Leaving the session…",
 }
 
 function displayName(interaction: Interaction) {

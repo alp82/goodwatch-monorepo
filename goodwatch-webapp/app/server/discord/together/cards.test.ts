@@ -59,7 +59,11 @@ test("6A has a thumbnail, rounded score word, runtime, services, stable vote row
 	assert.ok(nodes.some((c) => c.type === 11))
 	assert.match(JSON.stringify(card), /95 · Masterpiece/)
 	assert.match(JSON.stringify(card), /2h 1m/)
-	assert.match(JSON.stringify(card), /all services.*Netflix/)
+	assert.match(
+		JSON.stringify(card),
+		/Where to watch on every service in Germany\\nNetflix/,
+	)
+	assert.doesNotMatch(JSON.stringify(card), /all services|· DE\b/)
 	const rows = nodes.filter((c) => c.type === 1)
 	assert.deepEqual(
 		rows[0].components!.map((b) => b.label),
@@ -103,7 +107,7 @@ test("5B caps match and possible poster rows, mentions overflow, and respects co
 	assert.equal(card.flags & EPHEMERAL, 0)
 	assert.equal(nodes.filter((c) => c.type === 11).length, 10)
 	assert.match(JSON.stringify(card), /55 more matches/)
-	assert.match(JSON.stringify(card), /waiting for 2/)
+	assert.match(JSON.stringify(card), /waiting for 2 people/)
 	assert.match(JSON.stringify(card), /12 participants · 11 still voting/)
 	assert.ok(componentCount(card.components) <= 40)
 	assert.ok(
@@ -161,7 +165,7 @@ test("5B and 6A share score badges and title facts and clean human-facing text",
 		genres: ["Science_fiction"],
 	}
 	s.summary.matches = [title.id]
-	const emojis = { gw_score_9: "badge" }
+	const emojis = { GoodWatchScore9: "badge" }
 	for (const card of [
 		publicCard(s, [t], emojis),
 		votingCard(s, "a", t, emojis),
@@ -169,11 +173,33 @@ test("5B and 6A share score badges and title facts and clean human-facing text",
 		const content = flatten(card.components)
 			.map((c) => c.content ?? "")
 			.join("\n")
-		assert.match(content, /<:gw_score_9:badge> \*\*95 · Masterpiece\*\*/)
+		assert.match(content, /<:GoodWatchScore9:badge> \*\*95 · Masterpiece\*\*/)
 		assert.match(content, /Science fiction/)
 		assert.match(content, /A title this title/)
 		assert.doesNotMatch(content.replace(/<:[^>]+>/g, ""), /_|movie:123/)
 	}
+})
+
+test("5B counts read as one participant, one more match, and waiting for 1 person", () => {
+	const s = session()
+	const titles = Array.from({ length: 12 }, (_, i) => ({
+		...title,
+		id: `movie:${i + 1}`,
+	}))
+	s.summary = {
+		participantCount: 1,
+		stillVoting: 1,
+		matches: titles.slice(0, 6).map((t) => t.id),
+		possibleMatches: titles
+			.slice(6)
+			.map((t) => ({ titleId: t.id, waitingFor: 1 })),
+	}
+	const sent = JSON.stringify(publicCard(s, titles))
+	assert.match(sent, /1 participant · 1 still voting/)
+	assert.match(sent, /and 1 more match"/)
+	assert.match(sent, /and 1 more possible match"/)
+	assert.match(sent, /waiting for 1 person/)
+	assert.doesNotMatch(sent, /1 participants|1 more matches/)
 })
 
 test("public menus cap picks at 25, name participants, show pick counts, and fit with all poster rows", () => {
@@ -326,4 +352,175 @@ test("public counts use singular and plural nouns, including overflow and decisi
 			),
 		)
 	}
+})
+
+const offer = (service_id: number, name: string, offer_type = "flatrate") => ({
+	service_id,
+	name,
+	offer_type,
+	stream_link: "",
+	url: `https://example.com/${service_id}`,
+})
+const served: GuestTitle = {
+	...title,
+	availability: {
+		state: "watchable",
+		offers: [
+			offer(8, "Netflix"),
+			offer(337, "Disney Plus"),
+			offer(11, "MUBI"),
+			offer(2, "Apple TV Store", "rent"),
+			offer(3, "Google Play Movies", "buy"),
+		],
+	},
+}
+const logos = { Netflix: "101", DisneyPlus: "102", MUBI: "103" }
+
+test("voting card and match rows show service logos with names as text, a readable country, and no buttons", () => {
+	const s = session()
+	s.meta.place = { country: "US", services: [8, 337] }
+	const voting = JSON.stringify(votingCard(s, "a", served, logos))
+	assert.match(
+		voting,
+		/Where to watch in the United States\\n<:Netflix:101> Netflix, <:DisneyPlus:102> Disney\+, Apple TV Store and 2 more/,
+	)
+	assert.doesNotMatch(voting, /"url":"https:\/\/example\.com/)
+	s.summary = {
+		participantCount: 2,
+		stillVoting: 0,
+		matches: [served.id],
+		possibleMatches: [],
+	}
+	const sent = JSON.stringify(publicCard(s, [served], logos))
+	// Rows show logos only, under one place line in the header.
+	assert.match(sent, /still voting\\n-# Where to watch in the United States"/)
+	assert.match(
+		sent,
+		/<:Netflix:101> <:DisneyPlus:102> \*\*Apple TV Store\*\*  \+2 more/,
+	)
+	assert.equal(sent.match(/Where to watch/g)?.length, 1)
+	assert.doesNotMatch(
+		sent,
+		/"url":"https:\/\/example\.com|\bUS\b|all services/,
+	)
+})
+
+test("decision card gets the title card's service link buttons with logos, and names as text when no link works", () => {
+	const s = session()
+	s.meta.status = "decided"
+	s.meta.decidedTitleId = served.id
+	s.meta.decisionTitle = served
+	s.meta.place = { country: "GB", services: [] }
+	s.summary.participantCount = 2
+	const card = publicCard(s, [], logos)
+	const buttons = flatten(card.components).filter((c) => c.type === 2)
+	assert.deepEqual(
+		buttons.map((b) => b.label),
+		[
+			"Netflix",
+			"Disney+",
+			"Apple TV Store",
+			"MUBI",
+			"Google Play Movies",
+			"Open on GoodWatch",
+		],
+	)
+	assert.deepEqual(buttons[0].emoji, { id: "101", name: "Netflix" })
+	assert.ok(buttons.every((b) => b.style === 5 && !b.custom_id))
+	const sent = JSON.stringify(card)
+	assert.match(sent, /Where to watch on every service in the United Kingdom/)
+	assert.doesNotMatch(sent, /gw1:watch|\bGB\b/)
+	s.meta.decisionTitle = {
+		...served,
+		availability: {
+			state: "watchable",
+			offers: [{ ...offer(8, "Netflix"), url: undefined }],
+		},
+	}
+	const unlinked = publicCard(s, [], logos)
+	assert.match(JSON.stringify(unlinked), /<:Netflix:101> Netflix/)
+	assert.equal(
+		flatten(unlinked.components).filter((c) => c.type === 2).length,
+		1,
+	)
+})
+
+test("a full public card with long titles and three logos per row stays within Discord's text limit", () => {
+	// Real emoji markup: long CamelCase names and 19-digit IDs.
+	const services: [number, string][] = [
+		[1747, "Studiocanal Presents Amazon Channel"],
+		[2266, "Qello Concerts by Stingray Amazon Channel"],
+		[2445, "MovieSphere+ Amazon Channel"],
+		[1737, "INA Madelen Amazon Channel"],
+		[2430, "PBS Documentaries Amazon Channel"],
+	]
+	const emojis = Object.fromEntries(
+		[
+			"StudiocanalPresentsAmazonChannel",
+			"QelloConcertsByStingrayAmazonCha",
+			"MovieSpherePlusAmazonChannel",
+			"INAMadelenAmazonChannel",
+			"PBSDocumentariesAmazonChannel",
+		].map((name, i) => [name, `14290871234567890${10 + i}`]),
+	)
+	const titles: GuestTitle[] = Array.from({ length: 9 }, (_, i) => ({
+		...title,
+		id: `movie:${i + 1}`,
+		name: `The Extraordinary and Unlikely Adventures of the Midnight Cartographers Society, Part ${i + 1}: The Long Road Home`,
+		genres: ["Science Fiction", "Documentary", "Adventure"],
+		availability: {
+			state: "watchable",
+			offers: services.map(([id, name]) => offer(id, name)),
+		},
+	}))
+	const s = session()
+	s.meta.place = { country: "US", services: [] }
+	s.votes = Object.fromEntries(
+		Array.from({ length: 12 }, (_, i) => [`user${i}`, []]),
+	)
+	s.names = Object.fromEntries(
+		Array.from({ length: 12 }, (_, i) => [`user${i}`, `Participant name ${i}`]),
+	)
+	s.summary = {
+		participantCount: 12,
+		stillVoting: 12,
+		matches: titles.slice(0, 5).map((t) => t.id),
+		possibleMatches: titles
+			.slice(5)
+			.map((t) => ({ titleId: t.id, waitingFor: 11 })),
+	}
+	const card = publicCard(s, titles, emojis)
+	const nodes = flatten(card.components)
+	const text = nodes.reduce(
+		(n, c) => n + (typeof c.content === "string" ? c.content.length : 0),
+		0,
+	)
+	assert.ok(text <= 4000, `text is ${text} characters`)
+	assert.ok(componentCount(card.components) <= 40)
+	const sent = JSON.stringify(card)
+	assert.match(sent, /\\n(<:[A-Za-z]+:\d{19}> ){2}<:[A-Za-z]+:\d{19}>  \+2 more"/)
+	assert.equal(sent.match(/Where to watch/g)?.length, 1)
+	const rows = nodes.filter((c) => c.type === 11).length
+	assert.ok(rows >= 5, `only ${rows} rows fit`)
+	if (rows < 9) assert.match(sent, /and \d more possible match/)
+	// Rows that still don't fit are dropped from the end and counted.
+	const crowded = titles.map((t) => ({
+		...t,
+		genres: ["Science Fiction ".repeat(12), "Documentary ".repeat(12), "Adventure ".repeat(12)],
+	}))
+	const dropped = publicCard(s, crowded, emojis)
+	const droppedText = flatten(dropped.components).reduce(
+		(n, c) => n + (typeof c.content === "string" ? c.content.length : 0),
+		0,
+	)
+	assert.ok(droppedText <= 4000)
+	assert.match(JSON.stringify(dropped), /and \d more possible match/)
+	// Without logos the names stand in, and the card still fits.
+	const plain = flatten(publicCard(s, titles).components)
+	assert.ok(
+		plain.reduce(
+			(n, c) => n + (typeof c.content === "string" ? c.content.length : 0),
+			0,
+		) <= 4000,
+	)
 })

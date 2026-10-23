@@ -75,8 +75,14 @@ export function defineCommands() {
 		},
 		{
 			name: "search",
-			description: "Find a movie or TV show on GoodWatch",
-			options: [title],
+			description: "Search movies and TV shows on GoodWatch",
+			options: [
+				{
+					...title,
+					name: "query",
+					description: "A title, a person, or a mood like dark vibes",
+				},
+			],
 		},
 		{
 			name: "similar",

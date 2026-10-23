@@ -1,7 +1,8 @@
-// Renders the score emojis (gw_score_1 to gw_score_10) to scripts/discord-emojis/*.png and, with --upload, adds the
-// missing ones to the bot's application emojis.
+// Renders the score emojis (GoodWatchScore1 to GoodWatchScore10) to scripts/discord-emojis/*.png and the upload payload
+// scripts/discord-emojis/score-emojis.payload.json ([{ name, image: "data:image/png;base64,…" }], one "Create
+// Application Emoji" body each), and, with --upload, adds the missing ones to the bot's application emojis.
 //
-//   node scripts/discord-emojis.ts              render the PNGs
+//   node scripts/discord-emojis.ts              render the PNGs and the payload
 //   node scripts/discord-emojis.ts --dry-run    render and list what an upload would add; no network
 //   DISCORD_APP_ID=… DISCORD_BOT_TOKEN=… node scripts/discord-emojis.ts --upload
 //
@@ -13,6 +14,7 @@ import { fileURLToPath } from "node:url"
 import { Resvg } from "@resvg/resvg-js"
 import {
 	SCORE_EMOJI_COLORS,
+	scoreEmojiName,
 	scoreEmojiSvg,
 } from "../app/server/discord/score-emoji.ts"
 import { listApplicationEmojis } from "../app/server/discord/emoji.server.ts"
@@ -22,7 +24,7 @@ const folder = join(dirname(fileURLToPath(import.meta.url)), "discord-emojis")
 function render() {
 	mkdirSync(folder, { recursive: true })
 	return Object.keys(SCORE_EMOJI_COLORS).map((band) => {
-		const name = `gw_score_${band}`
+		const name = scoreEmojiName(Number(band) * 10)
 		const png = new Resvg(scoreEmojiSvg(Number(band)), {
 			fitTo: { mode: "width", value: 128 },
 		})
@@ -39,6 +41,17 @@ async function main() {
 	const dryRun = process.argv.includes("--dry-run")
 	const emojis = render()
 	for (const e of emojis) console.log(`Rendered ${e.name} (${e.bytes} bytes)`)
+	const payload = join(folder, "score-emojis.payload.json")
+	writeFileSync(
+		payload,
+		JSON.stringify(
+			emojis.map((e) => ({
+				name: e.name,
+				image: `data:image/png;base64,${readFileSync(e.path).toString("base64")}`,
+			})),
+		),
+	)
+	console.log(`Wrote the upload payload to ${payload}`)
 	if (dryRun) {
 		console.log(
 			`Dry run: --upload would add any of ${emojis.length} emojis that the application doesn't have yet.`,

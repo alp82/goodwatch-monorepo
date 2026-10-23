@@ -23,10 +23,10 @@ export const SCORE_EMOJI_COLORS: Record<number, string> = {
 export const scoreBand = (score: number) =>
 	Math.min(10, Math.max(1, Math.floor(score / 10)))
 
-export const scoreEmojiName = (score: number) => `gw_score_${scoreBand(score)}`
+export const scoreEmojiName = (score: number) => `GoodWatchScore${scoreBand(score)}`
 
 export const SCORE_EMOJI_NAMES = Object.keys(SCORE_EMOJI_COLORS).map(
-	(band) => `gw_score_${band}`,
+	(band) => `GoodWatchScore${band}`,
 )
 
 /** A filled rounded badge, 128 by 128, with a soft top light and a thin darker rim so it holds on light and dark. */

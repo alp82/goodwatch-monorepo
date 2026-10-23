@@ -13,6 +13,10 @@ import {
 	slowDownCard,
 	titleCard,
 	titleListCard,
+	watchProviders,
+	whereToWatch,
+	streamButtonUrl,
+	streamLinks,
 	type Component,
 	type GuestTitle,
 } from "./cards.ts"
@@ -45,9 +49,14 @@ const title: GuestTitle = {
 	availability: {
 		state: "watchable",
 		offers: [
-			{ name: "Prime Video", stream_link: "[Prime Video](https://p.example)" },
 			{
 				name: "Prime Video",
+				url: "https://p.example",
+				stream_link: "[Prime Video](https://p.example)",
+			},
+			{
+				name: "Prime Video",
+				url: "https://p.example/rent",
 				stream_link: "[Prime Video](https://p.example/rent)",
 			},
 		],
@@ -68,14 +77,14 @@ const texts = (components: Component[]) =>
 test("score emojis: ten bands in the site's vibe colors, floor like the score ring", () => {
 	assert.deepEqual(
 		SCORE_EMOJI_NAMES,
-		Array.from({ length: 10 }, (_, i) => `gw_score_${i + 1}`),
+		Array.from({ length: 10 }, (_, i) => `GoodWatchScore${i + 1}`),
 	)
 	assert.equal(scoreBand(0), 1)
 	assert.equal(scoreBand(19.9), 1)
 	assert.equal(scoreBand(85), 8)
 	assert.equal(scoreBand(99), 9)
 	assert.equal(scoreBand(100), 10)
-	assert.equal(scoreEmojiName(92), "gw_score_9")
+	assert.equal(scoreEmojiName(92), "GoodWatchScore9")
 	assert.match(scoreEmojiSvg(8), /fill="#16934a"/)
 	assert.match(scoreEmojiSvg(8), /width="128" height="128"/)
 	assert.throws(() => scoreEmojiSvg(11))
@@ -84,21 +93,28 @@ test("score emojis: ten bands in the site's vibe colors, floor like the score ri
 test("score line uses the title page word and falls back to text without emojis", () => {
 	assert.equal(
 		scoreLine(85.4, emojis),
-		`<:gw_score_8:${emojis.gw_score_8}> **85 · Excellent**`,
+		`<:GoodWatchScore8:${emojis.GoodWatchScore8}> **85 · Excellent**`,
 	)
 	assert.equal(scoreLine(85.4), "**85 · Excellent**")
-	assert.equal(scoreLine(84.9, { gw_score_9: "1" }), "**84 · Great**")
+	assert.equal(scoreLine(84.9, { GoodWatchScore9: "1" }), "**84 · Great**")
 	assert.equal(scoreLine(0, emojis), "Not rated yet")
 	assert.equal(scoreLine(null), "Not rated yet")
 })
 
-test("1C guest title card: backdrop hero, big title, score emoji, providers, unchanged buttons", () => {
+test("1C guest title card: backdrop hero, poster beside the big title, score emoji, service links, actions", () => {
 	const card = titleCard(title, "DE", { emojis })
 	assert.equal(card.components.length, 1)
 	const [box] = card.components
 	assert.equal(box.type, 17)
-	assert.equal("accent_color" in box, false)
-	const [hero, heading, overview, separator, where, row] = box.components!
+	assert.equal(box.accent_color, 0x16934a)
+	const [hero, section, separator, whereHeading, links, row] = box.components!
+	const [heading, overview] = section.components!
+	assert.equal(section.type, 9)
+	assert.deepEqual(section.accessory, {
+		type: 11,
+		media: { url: title.poster_url },
+		description: "Project Hail Mary poster",
+	})
 	assert.equal(hero.type, 12)
 	assert.deepEqual(hero.items, [
 		{
@@ -108,20 +124,121 @@ test("1C guest title card: backdrop hero, big title, score emoji, providers, unc
 	])
 	assert.equal(
 		heading.content,
-		`# Project Hail Mary\n<:gw_score_8:${emojis.gw_score_8}> **85 · Excellent**  ·  2026  ·  2h 37m  ·  Science Fiction, Adventure`,
+		`# Project Hail Mary\n<:GoodWatchScore8:${emojis.GoodWatchScore8}> **85 · Excellent**  ·  2026  ·  2h 37m  ·  Science Fiction, Adventure`,
 	)
 	assert.ok(String(overview.content).endsWith("…"))
 	assert.ok(String(overview.content).length <= 151)
 	assert.equal(separator.type, 14)
-	assert.equal(where.content, "-# Where to watch in Germany\n**Prime Video**")
+	assert.equal(whereHeading.content, "-# Where to watch in Germany")
+	assert.deepEqual(links.components, [
+		{ type: 2, style: 5, label: "Prime Video", url: "https://p.example" },
+	])
 	assert.deepEqual(
 		row.components!.map((b) => b.label),
-		["Where to watch", "Similar", "Open on GoodWatch", "Share to channel"],
+		["Similar", "Open on GoodWatch", "Share to channel"],
 	)
 	assert.ok(componentCount(card.components) <= 40)
 	for (const content of texts(card.components)) {
 		assert.doesNotMatch(content, /!|—/)
 	}
+})
+
+test("where to watch: service logos as app emojis, junk and channel variants folded, the site's order", () => {
+	const offers = [
+		{
+			service_id: 9999,
+			name: "",
+			url: "https://x.example",
+			stream_link: "[Provider](https://x.example)",
+		},
+		{
+			service_id: 1825,
+			name: "HBO Max Amazon Channel",
+			url: "https://a.example",
+			stream_link: "[a](https://a.example)",
+		},
+		{
+			service_id: 8,
+			name: "Netflix",
+			url: "https://n.example",
+			stream_link: "[n](https://n.example)",
+			offer_type: "flatrate",
+		},
+		{
+			service_id: 1899,
+			name: "HBO Max",
+			url: "https://h.example",
+			stream_link: "[h](https://h.example)",
+			offer_type: "flatrate",
+		},
+		{
+			service_id: 1796,
+			name: "Netflix basic with Ads",
+			url: "https://n.example/ads",
+			stream_link: "[n](https://n.example/ads)",
+			offer_type: "ads",
+		},
+		{
+			service_id: 424242,
+			name: "Tiny Local Service",
+			url: "https://t.example",
+			stream_link: "[t](https://t.example)",
+		},
+	]
+	const providers = watchProviders(offers)
+	assert.deepEqual(
+		providers.map((p) => [p.brand, p.emoji]),
+		[
+			["Netflix", "Netflix"],
+			["HBO Max", "HBOMax"],
+			["Tiny Local Service", null],
+		],
+	)
+	const ids = { ...emojis, Netflix: "1001", HBOMax: "1002" }
+	const card = titleCard(
+		{ ...title, availability: { state: "watchable", offers } },
+		"US",
+		{ emojis: ids },
+	)
+	const buttons = all(card.components).filter((c) => c.style === 5)
+	assert.deepEqual(buttons.slice(0, 3), [
+		{
+			type: 2,
+			style: 5,
+			label: "Netflix",
+			url: "https://n.example",
+			emoji: { id: "1001", name: "Netflix" },
+		},
+		{
+			type: 2,
+			style: 5,
+			label: "HBO Max",
+			url: "https://h.example",
+			emoji: { id: "1002", name: "HBOMax" },
+		},
+		{ type: 2, style: 5, label: "Tiny Local Service", url: "https://t.example" },
+	])
+	const visible = texts(card.components).join("\n")
+	assert.doesNotMatch(visible, /Provider|Amazon Channel|_|flatrate|\(ads\)|https?:/)
+	assert.match(
+		visible,
+		/^-# Subscription or with ads: Netflix  ·  Subscription: HBO Max$/m,
+	)
+	assert.equal(
+		whereToWatch(
+			{ ...title, availability: { state: "watchable", offers } },
+			"US",
+			{ emojis: ids },
+		).split("\n")[1],
+		"<:Netflix:1001> <:HBOMax:1002> **Tiny Local Service**",
+	)
+	assert.equal(
+		whereToWatch(
+			{ ...title, availability: { state: "watchable", offers } },
+			"US",
+		).split("\n")[1],
+		"**Netflix** **HBO Max** **Tiny Local Service**",
+	)
 })
 
 test("1C share copy is public and drops only the Share button", () => {
@@ -135,6 +252,94 @@ test("1C share copy is public and drops only the Share button", () => {
 	assert.match(
 		JSON.stringify(shared),
 		/Where to watch on every service in Germany/,
+	)
+})
+
+test("provider IDs fold verified tiers and channels while distinct services keep their links", () => {
+	const offers = [
+		[9, "Amazon Prime Video"],
+		[10, "Amazon Video"],
+		[2100, "Amazon Prime Video with Ads"],
+		[192, "YouTube"],
+		[188, "YouTube Premium"],
+		[386, "Peacock Premium"],
+		[387, "Peacock Premium Plus"],
+		[2553, "Peacock Premium Plus"],
+		[1899, "HBO Max"],
+		[1825, "HBO Max Amazon Channel"],
+		[2472, "HBO Max Apple TV Channel"],
+		[99991, "HBO Max Amazon Channel"],
+		[2, "Apple TV Store"],
+		[350, "Apple TV Plus"],
+	].map(([id, name]) => ({
+		service_id: Number(id),
+		name: String(name),
+		url: `https://service.example/${id}`,
+		stream_link: "",
+	}))
+	const providers = watchProviders(offers)
+	assert.equal(providers.length, 9)
+	assert.equal(
+		providers.find((p) => p.brand === "Amazon Prime Video")?.offers.length,
+		2,
+	)
+	assert.equal(providers.find((p) => p.brand === "Peacock")?.offers.length, 3)
+	assert.equal(providers.find((p) => p.brand === "HBO Max")?.offers.length, 3)
+	assert.equal(
+		providers.find((p) => p.brand === "HBO Max Amazon Channel")?.offers.length,
+		1,
+	)
+	const links = all(
+		titleCard({ ...title, availability: { state: "watchable", offers } }, "US")
+			.components,
+	)
+		.filter((c) => c.style === 5)
+		.map((c) => `[${c.label}](${c.url})`)
+		.join("\n")
+	for (const [id, name] of [
+		[9, "Amazon Prime Video"],
+		[10, "Amazon Video"],
+		[192, "YouTube"],
+		[188, "YouTube Premium"],
+		[2, "Apple TV Store"],
+		[350, "Apple TV+"],
+	]) {
+		assert.ok(links.includes(`[${name}](https://service.example/${id})`))
+	}
+	// Distinct services never share a logo emoji (the emoji map is generated, so a service may also have none).
+	const emojiOf = (brand: string) => providers.find((p) => p.brand === brand)?.emoji ?? null
+	for (const [a, b] of [
+		["Amazon Video", "Amazon Prime Video"],
+		["YouTube Premium", "YouTube"],
+	]) {
+		if (emojiOf(a) !== null) assert.notEqual(emojiOf(a), emojiOf(b))
+	}
+})
+
+test("visible copy has no enum underscores or raw title IDs; link destinations stay intact", () => {
+	const card = titleCard(
+		{
+			...title,
+			name: "a_title",
+			genres: ["science_fiction"],
+			synopsis: "Try movie:42 and show:7.",
+		},
+		"US",
+		{
+			member: { status: "on_hold" },
+		},
+	)
+	const visible = all(card.components).flatMap((c) =>
+		[c.content, c.label, c.description].filter((v) => typeof v === "string"),
+	)
+	assert.doesNotMatch(visible.join("\n"), /_|(?:movie|show):\d+/)
+	assert.match(visible.join("\n"), /a title|science fiction/)
+	const linked = message([
+		{ type: 10, content: "A_label [Watch](https://example.com/a_b)" },
+	])
+	assert.equal(
+		linked.components[0].content,
+		"A label [Watch](https://example.com/a_b)",
 	)
 })
 
@@ -241,7 +446,7 @@ test("4D list card: poster gallery above the ranked list, then the menu and pagi
 	assert.equal(lines.length, 10)
 	assert.equal(
 		lines[0],
-		`**1**  <:gw_score_9:${emojis.gw_score_9}>  **Title 1**  ·  90  ·  2000  ·  1h 35m`,
+		`**1**  <:GoodWatchScore9:${emojis.GoodWatchScore9}>  **Title 1**  ·  90  ·  2000  ·  1h 35m`,
 	)
 	const select = selectRow.components![0]
 	assert.equal(select.type, 3)
@@ -252,8 +457,8 @@ test("4D list card: poster gallery above the ranked list, then the menu and pagi
 	assert.equal(options.length, 10)
 	assert.equal(options[0].description, "2000 · Movie · 90 · Excellent")
 	assert.deepEqual(options[0].emoji, {
-		id: emojis.gw_score_9,
-		name: "gw_score_9",
+		id: emojis.GoodWatchScore9,
+		name: "GoodWatchScore9",
 	})
 	assert.deepEqual(
 		nav.components!.map((b) => [b.label, b.disabled]),
@@ -329,7 +534,9 @@ test("9B slow down is a quiet grey card with a Discord timestamp", () => {
 	assert.equal(card.components[0].accent_color, QUIET_GREY)
 	assert.equal(
 		card.components[0].components![0].content,
-		`### Slow down\nYou can send 30 commands a minute and 500 an hour. Try again <t:${Date.UTC(2026, 9, 23, 19, 4) / 1000 + 42}:R>.`,
+		`### Slow down\nYou can send 30 commands a minute and 500 an hour. Try again <t:${
+			Date.UTC(2026, 9, 23, 19, 4) / 1000 + 42
+		}:R>.`,
 	)
 })
 
@@ -406,6 +613,7 @@ test("emoji IDs: read once, cached 24 hours when complete, briefly while missing
 				items: [
 					...uploaded.map((name) => ({ id: emojis[name], name })),
 					{ id: "12", name: "other" },
+					{ id: "13", name: "gw_score_1" },
 				],
 			}),
 		)
@@ -417,17 +625,17 @@ test("emoji IDs: read once, cached 24 hours when complete, briefly while missing
 		store,
 		now: () => now,
 	}
-	const one = { gw_score_1: emojis.gw_score_1 }
+	const one = { GoodWatchScore1: emojis.GoodWatchScore1 }
 	assert.deepEqual(await applicationEmojiIds(options), one)
 	assert.deepEqual(await applicationEmojiIds(options), one)
 	assert.equal(calls, 1)
-	assert.equal(stored.get("discord:emojis:v2:app")?.ttl, 300)
+	assert.equal(stored.get("discord:emojis:v3:app")?.ttl, 300)
 	uploaded = SCORE_EMOJI_NAMES
 	stored.clear()
 	now = 301_000
 	assert.deepEqual(await applicationEmojiIds(options), emojis)
 	assert.equal(calls, 2)
-	assert.equal(stored.get("discord:emojis:v2:app")?.ttl, 86400)
+	assert.equal(stored.get("discord:emojis:v3:app")?.ttl, 86400)
 	now = 3_600_000
 	assert.deepEqual(await applicationEmojiIds(options), emojis)
 	assert.equal(calls, 2, "cached in process")
@@ -435,7 +643,7 @@ test("emoji IDs: read once, cached 24 hours when complete, briefly while missing
 	assert.deepEqual(await applicationEmojiIds(options), emojis)
 	assert.equal(calls, 2, "a second process reads Valkey, not Discord")
 	assert.deepEqual(
-		JSON.parse(stored.get("discord:emojis:v2:app")!.value).expires_at,
+		JSON.parse(stored.get("discord:emojis:v3:app")!.value).expires_at,
 		301_000 + 86_400_000,
 		"the entry carries its own expiry",
 	)
@@ -453,11 +661,11 @@ test("emoji IDs: a partial Valkey hit keeps only its remaining few minutes in pr
 	resetEmojiCache()
 	let calls = 0
 	let now = 0
-	const one = { gw_score_1: emojis.gw_score_1 }
+	const one = { GoodWatchScore1: emojis.GoodWatchScore1 }
 	// Another process wrote a partial map at 0, which Valkey keeps for 300 s.
 	const stored = new Map([
 		[
-			"discord:emojis:v2:app",
+			"discord:emojis:v3:app",
 			JSON.stringify({ ids: one, expires_at: 300_000 }),
 		],
 	])
@@ -499,4 +707,78 @@ test("emoji IDs: a partial Valkey hit keeps only its remaining few minutes in pr
 	await applicationEmojiIds(options)
 	assert.equal(calls, 2)
 	resetEmojiCache()
+})
+
+test("service links: long links go through the GoodWatch redirect, more than ten services end with More on GoodWatch", () => {
+	const long = `https://click.justwatch.com/a?r=${"x".repeat(600)}`
+	assert.equal(
+		streamButtonUrl(
+			{ service_id: 8, name: "Netflix", url: long, stream_link: "" },
+			"movie:687163",
+			"de",
+		),
+		"https://goodwatch.app/go/stream/movie/687163/8?country=DE",
+	)
+	assert.equal(
+		streamButtonUrl(
+			{ name: "Netflix", url: long, stream_link: "" },
+			"movie:687163",
+			"DE",
+		),
+		null,
+	)
+	assert.equal(
+		streamButtonUrl(
+			{ service_id: 8, url: "javascript:alert(1)", stream_link: "" },
+			"movie:687163",
+			"DE",
+		),
+		null,
+	)
+	const offers = Array.from({ length: 12 }, (_, i) => ({
+		service_id: 900000 + i,
+		name: `Service Name ${String.fromCharCode(65 + i)}`,
+		url: i === 0 ? long : `https://s.example/${i}`,
+		offer_type: i < 6 ? "flatrate" : "rent",
+		stream_link: "",
+	}))
+	const many = { ...title, availability: { state: "watchable", offers } }
+	const parts = streamLinks(many, "DE")
+	const rows = parts.filter((c) => c.type === 1)
+	assert.equal(rows.length, 2)
+	assert.deepEqual(
+		rows.map((r) => r.components!.length),
+		[5, 5],
+	)
+	const buttons = rows.flatMap((r) => r.components!)
+	assert.equal(buttons[0].url, "https://goodwatch.app/go/stream/movie/687163/900000?country=DE")
+	assert.equal(buttons.at(-1)!.label, "More on GoodWatch")
+	assert.equal(
+		buttons.at(-1)!.url,
+		"https://goodwatch.app/movie/687163-project-hail-mary#streaming",
+	)
+	assert.ok(buttons.every((b) => String(b.url).length <= 512))
+	assert.match(String(parts[0].content), /^-# Where to watch in Germany\n-# Subscription: /)
+	assert.match(String(parts[0].content), /Rent: /)
+	const card = titleCard(many, "DE", {
+		member: { want_to_see: true },
+		back: { kind: "hot", page: 1 },
+	})
+	assert.ok(componentCount(card.components) <= 40)
+	assert.deepEqual(
+		all(card.components)
+			.filter((c) => c.type === 2 && c.style !== 5)
+			.map((c) => c.label),
+		["Back", "Similar", "Share to channel", "Want to see", "Seen", "Rate"],
+	)
+	const none = streamLinks(
+		{ ...title, availability: { state: "no_match", offers: [] } },
+		"DE",
+	)
+	assert.deepEqual(none, [
+		{ type: 10, content: "-# Where to watch in Germany\nNo current offers found." },
+	])
+	assert.throws(() =>
+		message([{ type: 1, components: [{ type: 2, style: 5, label: "x", url: long }] }]),
+	)
 })

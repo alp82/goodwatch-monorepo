@@ -54,13 +54,15 @@ All option names are lowercase, as Discord requires. `title` options use autocom
 | Command | Options | Answer |
 |---|---|---|
 | `/watch` | `type` (movie, show, any), `mood` | One pick for tonight. Guests get a popular title on the server's services. Members get their personal pick. Buttons: **Another**, **Where to watch**, and for guests **Link GoodWatch for picks that fit your taste**. |
-| `/search` | `title` | A title card. |
+| `/search` | `title` | A chosen suggestion opens its title card. Free text answers with up to 30 results, best match first, ten per page, with posters and a menu to open one. |
 | `/similar` | `title` | Up to 10 similar titles as a poster row, with a menu to open one as a title card. |
 | `/discover` | `type`, `mood`, `genre`, `service`, `sort` | Ten titles per page, with **Previous** and **Next** and a menu to open one as a title card. |
-| `/person` | `name` | A person card with known-for titles. |
-| `/hot` | none | Titles that are hot on socials right now. |
+| `/person` | `name` | A person card with a portrait, known-for posters, and a menu to open one. |
+| `/hot` | none | What people say about the titles hot on socials right now: three titles a page, each with its poster, rank, score, up to two quoted posts with their images, and a link to each post. |
 | `/together` | `type`, `mood` | Starts a group decision in the channel. See [`/together`](#together). Needs the server install. |
 | `/link` | none | A button that opens goodwatch.app to link accounts. See [Linking](#linking). |
+
+A title opened from a list's menu has a **Back** button that returns to the same list page.
 
 **Title card.** Poster, title and year, GoodWatch score with its label (for example "Masterpiece"), runtime, genres, a
 two-line overview, and where to watch in the viewer's country. Buttons: **Where to watch**, **Similar**,
@@ -230,6 +232,11 @@ Windmill ─▶ Discord REST (bot token): weekly posts, later DMs
   `discord`). Member writes also count toward the member's MCP write windows.
 - Per server: 3 open `/together` sessions, 12 participants each.
 - Over a limit, the bot answers with an ephemeral "Slow down" card that says when to try again.
+- Mood search: 20 per Discord user per day (limiter `discord-search`). The search role takes one from the allowance
+  just before a reading that isn't cached, so a reading that then times out still counts. Over the allowance,
+  `/search` shows title matches and says mood searches reset tomorrow.
+- Service link short links (`/go/stream/...`): 60 per minute per visitor network (limiter `discord-stream`, keyed
+  like website search by `SEARCH_TRUSTED_IP_HEADER`), counted before the catalog read. `robots.txt` disallows `/go/`.
 
 ### Storage
 
@@ -255,6 +262,10 @@ session is read often, so eviction is unlikely, but if it happens the bot ends t
 | `DISCORD_PUBLIC_KEY` | Signature check |
 | `DISCORD_BOT_TOKEN` | Editing `/together` messages, registration, Windmill posts |
 | `DISCORD_CLIENT_SECRET` | OAuth2 for linking |
+| `SEARCH_STORAGE_KEY` | Signs the page role's mood search requests to the search role. Without it on the page role, `/search` shows only title matches. |
+
+Discord searches run on the search role like website searches but skip the website's search telemetry, so they
+don't appear in its search counts.
 
 A small Discord REST client (`app/server/discord/rest.server.ts`) sends bot-token requests, follows `429` answers with
 `retry_after`, and stays under the 50 requests per second global limit.
@@ -263,10 +274,22 @@ A small Discord REST client (`app/server/discord/rest.server.ts`) sends bot-toke
 change, not on every deploy.
 
 **Score emojis.** Discord text can't be colored, so cards show the GoodWatch score's color as an application emoji,
-`gw_score_1` to `gw_score_10`, one per vibe band. `node scripts/discord-emojis.ts` renders the PNGs into
-`scripts/discord-emojis/`, `--dry-run` stops there, and `--upload` adds the missing ones with `DISCORD_APP_ID` and
-`DISCORD_BOT_TOKEN`. The bot reads the IDs with the bot token (`emoji.server.ts`), caches them for 24 hours once all ten
-exist, and shows plain text until then.
+`GoodWatchScore1` to `GoodWatchScore10`, one per vibe band. `node scripts/discord-emojis.ts` renders the PNGs into
+`scripts/discord-emojis/` and writes the upload payload `scripts/discord-emojis/score-emojis.payload.json`
+(`[{name, image}]`, one "Create Application Emoji" body each); `--dry-run` stops there, and `--upload` adds the missing
+ones with `DISCORD_APP_ID` and `DISCORD_BOT_TOKEN`. The bot reads the IDs with the bot token (`emoji.server.ts`), caches
+them for 24 hours once all ten exist, and shows plain text until then. Emoji names show on hover, so they have no
+underscores.
+
+**Service logos.** "Where to watch" shows streaming services as their TMDB logos, uploaded as application emojis named
+after the service in CamelCase (`Netflix`, `HBOMax`, `AmazonPrimeVideo`); a service without an emoji shows its name.
+Offers are grouped like the site's where-to-watch block (`brandName`): channel variants ("HBO Max Amazon Channel") and
+plan tiers fold into the service, offers without a service name are dropped, and services follow the site's order.
+`node scripts/discord-provider-emojis.ts --select` picks the 300 brands offered most in the 30 countries with the most
+availability (SELECT reads of Crate) and rewrites the committed map `app/server/discord/provider-emojis.ts`.
+`node scripts/discord-provider-emojis.ts` downloads the logos and writes
+`scripts/discord-emojis/provider-emojis.payload.json` (128 by 128 PNGs with rounded corners; `--png` also writes
+previews). The payload files are ignored by git. The bot keeps only the emoji names it knows from these two sets.
 
 ## Privacy
 

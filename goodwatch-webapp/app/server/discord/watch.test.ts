@@ -32,7 +32,13 @@ const title: GuestTitle = {
 	goodwatch_score: 85,
 	synopsis: "An adventure.",
 	availability: {
-		offers: [{ name: "A service", stream_link: "https://example.test/watch" }],
+		offers: [
+			{
+				name: "A service",
+				url: "https://example.test/watch",
+				stream_link: "https://example.test/watch",
+			},
+		],
 	},
 }
 const taste: Taste = {
@@ -366,6 +372,13 @@ test("next shows guests a link prompt and members next episodes with images, ser
 		values: ["show:12"],
 	})
 	assert.match(text(opened.body), /93% taste match/)
+	// A title opened from /next offers Back to the /next list, and its member buttons keep it.
+	assert.equal(menu.custom_id, "gw1:open:n")
+	const back = buttons(opened.body).find((b) => b.label === "Back")!
+	assert.equal(back.custom_id, "gw1:back:n")
+	assert(buttons(opened.body).some((b) => b.custom_id === "gw1:want:show:12:n"))
+	const returned = await f.run(3, { custom_id: String(back.custom_id) })
+	assert.match(text(returned.body), /Watch next/)
 	assert(
 		f.reads.some(
 			(r) => r.name === "get_title" && r.args.title_id === "show:12",

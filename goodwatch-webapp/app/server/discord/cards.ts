@@ -6,8 +6,16 @@ import {
 	scoreLabels,
 } from "../../utils/ratings.ts"
 import { titlePath } from "../../utils/helpers.ts"
-import { formatCustomId, listCustomId, isTitleId } from "./custom-id.ts"
+import { providerIdentity } from "./provider-aliases.ts"
+import {
+	formatCustomId,
+	formatListRef,
+	listCustomId,
+	isTitleId,
+	type ListRef,
+} from "./custom-id.ts"
 import { scoreEmojiName } from "./score-emoji.ts"
+import { PROVIDER_EMOJI_BY_ID, PROVIDER_ORDER } from "./provider-emojis.ts"
 export const IS_COMPONENTS_V2 = 1 << 15
 export const EPHEMERAL = 64
 /** GoodWatch amber, the accent of member and list containers. */
@@ -42,10 +50,19 @@ export interface GuestTitle {
 	availability?: {
 		state?: string
 		country?: string
-		offers: { name?: string; stream_link: string; offer_type?: string }[]
+		offers: {
+			service_id?: number
+			name?: string
+			url?: string
+			stream_link: string
+			offer_type?: string
+		}[]
 	}
 }
-/** Application emoji IDs by name (`gw_score_1` to `gw_score_10`). Missing names render as plain text. */
+/**
+ * Application emoji IDs by name: `GoodWatchScore1` to `GoodWatchScore10` and the service logos of provider-emojis.ts.
+ * Missing names render as plain text.
+ */
 export type EmojiIds = Readonly<Record<string, string>>
 export function componentCount(components: Component[]): number {
 	return components.reduce(
@@ -57,7 +74,8 @@ export function componentCount(components: Component[]): number {
 		0,
 	)
 }
-function textLength(components: Component[]): number {
+/** The characters of every text display, which Discord limits to 4000 per message. */
+export function textLength(components: Component[]): number {
 	return components.reduce(
 		(n, c) =>
 			n +
@@ -67,6 +85,20 @@ function textLength(components: Component[]): number {
 	)
 }
 export function message(components: Component[], ephemeral = true) {
+	const clean = (value: unknown): unknown => {
+		if (Array.isArray(value)) return value.map(clean)
+		if (!value || typeof value !== "object") return value
+		return Object.fromEntries(
+			Object.entries(value).map(([key, item]) => [
+				key,
+				["content", "label", "description", "placeholder"].includes(key) &&
+				typeof item === "string"
+					? discordText(item)
+					: clean(item),
+			]),
+		)
+	}
+	components = clean(components) as Component[]
 	if (componentCount(components) > 40)
 		throw new Error("Discord component limit exceeded")
 	if (textLength(components) > 4000)
@@ -82,18 +114,40 @@ export function message(components: Component[], ephemeral = true) {
 export function displayText(value: string) {
 	return value
 		.replace(/\b(?:movie|show):\d+\b/g, "this title")
+		.replace(/\bperson:\d+\b/g, "this person")
 		.replace(
 			/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi,
 			"this change",
 		)
 		.replace(/\b\d{15,20}\b/g, "this change")
-		.replace(/_/g, " ")
+		.replace(/\\?_/g, " ")
 }
 export const textCard = (text: string) =>
-	message([{ type: 10, content: displayText(text).slice(0, 4000) }])
+	message([{ type: 10, content: text.slice(0, 4000) }])
+/** An error card, with a Try again button when the interaction could be kept for a retry. */
+export const errorCard = (text: string, retryId?: string | null) =>
+	retryId
+		? message([
+				{ type: 10, content: text.slice(0, 4000) },
+				{
+					type: 1,
+					components: [
+						{ type: 2, style: 2, label: "Try again", custom_id: retryId },
+					],
+				},
+			])
+		: textCard(text)
+export const ERROR_TEXT = "Something went wrong. Please try again."
+export const TIMEOUT_TEXT = "The search took too long. Please try again."
+/** Human-facing copy: displayText outside link destinations and Discord emoji syntax, which stay as they are. */
+export const discordText = (value: string) =>
+	value
+		.split(/(https?:\/\/[^\s)>]+|<a?:[A-Za-z0-9_]+:\d+>)/g)
+		.map((part, i) => (i % 2 ? part : displayText(part)))
+		.join("")
 const escape = (text: string) =>
-	displayText(text)
-		.replace(/[\\*_~`|>#[\]]/g, "\\$&")
+	discordText(text)
+		.replace(/[\\*~`|>#[\]]/g, "\\$&")
 		.replace(/@/g, "＠")
 
 // ---------- shared pieces (title, /watch, /together and write cards reuse these) ----------
@@ -179,6 +233,10 @@ export function scoreLine(
 	return `${emoji ? `${emoji} ` : ""}**${shown} · ${scoreWord(percent)}**`
 }
 
+/** A count with its noun: "1 participant", "3 participants", "1 person", "2 people". */
+export const plural = (count: number, one: string, many = `${one}s`) =>
+	`${count.toLocaleString("en-US")} ${count === 1 ? one : many}`
+
 /** Runtime as "2h 37m". */
 export const runtime = (minutes: number) =>
 	minutes >= 60
@@ -245,17 +303,15 @@ export function titleHero(
 	const name = escape(title.name).slice(0, 250)
 	const eyebrow = options.eyebrow ? `-# ${options.eyebrow}\n` : ""
 	const hero = backdropHero(title)
-	if (hero)
-		return [
-			hero,
-			text(`${eyebrow}# ${name}\n${titleFacts(title, emojis)}`),
-			text(shortOverview(title.synopsis, 150)),
-		]
-	const facts = text(`${eyebrow}## ${name}\n${titleFacts(title, emojis)}`)
-	const overview = text(shortOverview(title.synopsis, 160))
-	return title.poster_url
-		? [
-				{
+	// With a backdrop the title is large and the poster sits beside it; without one the poster carries the card.
+	const facts = text(
+		`${eyebrow}${hero ? "#" : "##"} ${name}\n${titleFacts(title, emojis)}`,
+	)
+	const overview = text(shortOverview(title.synopsis, hero ? 150 : 160))
+	return [
+		hero,
+		title.poster_url
+			? {
 					type: 9,
 					components: [facts, overview],
 					accessory: {
@@ -263,82 +319,320 @@ export function titleHero(
 						media: { url: title.poster_url },
 						description: `${displayText(title.name)} poster`.slice(0, 1024),
 					},
-				},
-			]
-		: [facts, overview]
+			  }
+			: null,
+		...(title.poster_url ? [] : [facts, overview]),
+	].filter((c): c is Component => !!c)
+}
+
+type Offer = NonNullable<GuestTitle["availability"]>["offers"][number]
+
+/** A service as the card shows it: the site's brand name, its logo emoji name, and its offers. */
+export interface WatchProvider {
+	/** The service's own ID, which its channels and tiers fold into. */
+	id?: number
+	brand: string
+	emoji: string | null
+	offers: Offer[]
 }
 
 /**
- * Where to watch: provider names, or each offer's link after Where to watch. `heading` replaces the small line, for
- * example the member's "On your services in France".
+ * Group only known channel and tier IDs. Distinct services keep separate names and links, in the site's provider order.
  */
-export function whereToWatch(
+export function watchProviders(offers: Offer[]): WatchProvider[] {
+	const brands = new Map<
+		string,
+		WatchProvider & { order: number; at: number }
+	>()
+	offers.forEach((offer, at) => {
+		const name = offer.name?.trim()
+		// Placeholders from offers without a known service ("Provider", "Service 123") say nothing.
+		if (!name || /^(provider|service \d+)$/i.test(name)) return
+		const identity = providerIdentity(offer.service_id, name)
+		const brand = identity.name
+		if (!brand) return
+		const id = identity.id
+		const order =
+			(id === undefined ? undefined : PROVIDER_ORDER[id]) ??
+			Number.POSITIVE_INFINITY
+		const emoji = id === undefined ? null : PROVIDER_EMOJI_BY_ID[id] ?? null
+		const key = id === undefined ? `name:${brand}` : `id:${id}`
+		const entry = brands.get(key)
+		if (!entry)
+			brands.set(key, { id, brand, emoji, offers: [offer], order, at })
+		else {
+			entry.offers.push(offer)
+			entry.emoji ??= emoji
+			entry.order = Math.min(entry.order, order)
+		}
+	})
+	return [...brands.values()]
+		.sort((a, b) => a.order - b.order || a.at - b.at)
+		.map(({ id, brand, emoji, offers }) => ({ id, brand, emoji, offers }))
+}
+
+/** The service's logo as inline emoji, or its name in bold while the logo isn't uploaded. */
+export function providerMark(provider: WatchProvider, emojis: EmojiIds = {}) {
+	return provider.emoji && emojis[provider.emoji]
+		? `<:${provider.emoji}:${emojis[provider.emoji]}>`
+		: `**${escape(provider.brand)}**`
+}
+
+/** Offer types in words, in the order a kinds line lists them. */
+const OFFER_WORDS: Record<string, string> = {
+	flatrate: "Subscription",
+	free: "Free",
+	ads: "With ads",
+	rent: "Rent",
+	buy: "Buy",
+}
+
+/** At most this many services in the logo row; the heading counts the rest. */
+const LOGO_LIMIT = 14
+
+/**
+ * Where to watch as a heading and a body: a row of service logos, with names where a logo is missing. Never links, so
+ * no streaming URL reaches markdown. `heading` replaces the small line, for example the member's "On your services in
+ * France".
+ */
+export function whereToWatchParts(
 	title: GuestTitle,
 	country: string,
 	options: {
-		offers?: boolean
 		allServices?: boolean
 		heading?: string
-		/** Keep whole provider names and their markdown within a compact card's budget. */
+		emojis?: EmojiIds
+		/** Keep whole service marks within a compact card's text budget. */
 		providerTextLimit?: number
 	} = {},
 ) {
-	const offers = title.availability?.offers ?? []
-	const names = [
-		...new Set(offers.map((o) => escape(o.name ?? "Provider"))),
-	].slice(0, 10)
-	const providers: string[] = []
-	for (const name of names) {
-		const provider = `**${name}**`
-		if (
-			options.providerTextLimit !== undefined &&
-			[...providers, provider].join("  ·  ").length > options.providerTextLimit
-		)
-			break
-		providers.push(provider)
+	const emojis = options.emojis ?? {}
+	const providers = watchProviders(title.availability?.offers ?? [])
+	const more = providers.length - LOGO_LIMIT
+	const body = providers.length
+		? providers
+				.slice(0, LOGO_LIMIT)
+				.map((p) => providerMark(p, emojis))
+				.filter(
+					(_, i, marks) =>
+						options.providerTextLimit === undefined ||
+						marks.slice(0, i + 1).join(" ").length <= options.providerTextLimit,
+				)
+				.join(" ")
+		: noOffers(title)
+	return {
+		heading: `-# ${watchHeading(country, options)}${
+			more > 0 ? `  ·  ${more} more` : ""
+		}`,
+		body: body.slice(0, 2800),
 	}
-	const body = offers.length
-		? options.offers
-			? offers
-					.slice(0, 20)
-					.map(
-						(o) =>
-							`${o.stream_link}${
-								o.offer_type ? ` (${escape(o.offer_type)})` : ""
-							}`,
-					)
-					.join("\n")
-			: providers.join("  ·  ") || "See Where to watch for services."
-		: title.availability?.state === "no_match"
-			? "No current offers found."
-			: "Availability unknown."
-	const heading =
-		options.heading ??
-		`Where to watch ${
-			options.allServices ? "on every service " : ""
-		}in ${countryName(country)}`
-	return `-# ${heading}\n${body}`.slice(0, 3000)
 }
 
-export function titleButtons(title: GuestTitle, share = false): Component {
+const noOffers = (title: GuestTitle) =>
+	title.availability?.state === "no_match"
+		? "No current offers found."
+		: "Availability unknown."
+
+const watchHeading = (
+	country: string,
+	options: { allServices?: boolean; heading?: string },
+) =>
+	options.heading ??
+	`Where to watch ${
+		options.allServices ? "on every service " : ""
+	}in ${countryName(country)}`
+
+/**
+ * Services for compact rows, as text: each logo with its name ("<logo> Netflix, <logo> MUBI and 2 more"), the name
+ * alone while a logo isn't uploaded. Never links.
+ */
+export function serviceNames(
+	title: GuestTitle,
+	emojis: EmojiIds = {},
+	limit = 4,
+) {
+	const providers = watchProviders(title.availability?.offers ?? [])
+	if (!providers.length) return noOffers(title)
+	const names = providers
+		.slice(0, limit)
+		.map(
+			(p) =>
+				`${
+					p.emoji && emojis[p.emoji] ? `<:${p.emoji}:${emojis[p.emoji]}> ` : ""
+				}${escape(p.brand).slice(0, 40)}`,
+		)
+	const more = providers.length - limit
+	return `${names.join(", ")}${more > 0 ? ` and ${more} more` : ""}`
+}
+
+/**
+ * Services for rows where the place is said once above: each logo (the name while a logo isn't uploaded), then
+ * "+2 more". Never links.
+ */
+export function serviceLogos(
+	title: GuestTitle,
+	emojis: EmojiIds = {},
+	limit = 3,
+) {
+	const providers = watchProviders(title.availability?.offers ?? [])
+	if (!providers.length) return noOffers(title)
+	const more = providers.length - limit
+	return `${providers
+		.slice(0, limit)
+		.map((p) =>
+			p.emoji && emojis[p.emoji]
+				? `<:${p.emoji}:${emojis[p.emoji]}>`
+				: `**${escape(p.brand).slice(0, 40)}**`,
+		)
+		.join(" ")}${more > 0 ? `  +${more} more` : ""}`
+}
+
+/** The small "Where to watch on every service in the United States" line. */
+export const whereToWatchLine = (country: string, allServices = false) =>
+	`-# ${watchHeading(country, { allServices })}`
+
+/** Where to watch as one text: the small heading line, then the logos. */
+export function whereToWatch(
+	title: GuestTitle,
+	country: string,
+	options: Parameters<typeof whereToWatchParts>[2] = {},
+) {
+	const { heading, body } = whereToWatchParts(title, country, options)
+	return `${heading}\n${body}`.slice(0, 3000)
+}
+
+export const GOODWATCH_ORIGIN = "https://goodwatch.app"
+
+/** The title page's URL. A long name's slug is cut; the page redirects any slug to its own. */
+export function titlePageUrl(title: Pick<GuestTitle, "id" | "name">, hash = "") {
 	const [kind, id] = title.id.split(":")
+	return `${GOODWATCH_ORIGIN}${titlePath(kind, Number(id), title.name.slice(0, 120))}${hash}`
+}
+/** Discord's limit for a link button's URL. */
+export const BUTTON_URL_LIMIT = 512
+/** Two rows of five service buttons. */
+export const STREAM_BUTTON_LIMIT = 10
+
+const httpUrl = (url: string | undefined) => {
+	if (!url) return null
+	try {
+		return ["http:", "https:"].includes(new URL(url).protocol) ? url : null
+	} catch {
+		return null
+	}
+}
+
+/**
+ * The URL a service button opens: the offer's own link, or for links over Discord's 512 characters (long JustWatch
+ * click URLs), the GoodWatch redirect that looks the same link up again. Null when neither works.
+ */
+export function streamButtonUrl(offer: Offer, titleId: string, country: string) {
+	const url = httpUrl(offer.url)
+	if (!url) return null
+	if (url.length <= BUTTON_URL_LIMIT) return url
+	if (!offer.service_id || !isTitleId(titleId)) return null
+	const [media, tmdbId] = titleId.split(":")
+	return `${GOODWATCH_ORIGIN}/go/stream/${media}/${tmdbId}/${
+		offer.service_id
+	}?country=${encodeURIComponent(country.toUpperCase())}`
+}
+
+/**
+ * The services' offer kinds in one line, "Subscription: Netflix, MUBI  ·  Rent or buy: Apple TV Store", or null when no
+ * offer says its kind.
+ */
+export function offerKindsLine(providers: WatchProvider[]) {
+	const order = Object.keys(OFFER_WORDS)
+	const groups = new Map<string, string[]>()
+	for (const p of providers) {
+		const kinds = [...new Set(p.offers.map((o) => o.offer_type ?? ""))]
+			.filter((k) => OFFER_WORDS[k])
+			.sort((a, b) => order.indexOf(a) - order.indexOf(b))
+			.map((k, i) => (i ? OFFER_WORDS[k].toLowerCase() : OFFER_WORDS[k]))
+		if (!kinds.length) continue
+		const label = kinds.join(" or ")
+		groups.set(label, [...(groups.get(label) ?? []), escape(p.brand)])
+	}
+	if (!groups.size) return null
+	return [...groups]
+		.map(([label, brands]) => `${label}: ${brands.join(", ")}`)
+		.join("  ·  ")
+		.slice(0, 300)
+}
+
+/**
+ * Where to watch as link buttons: each service with its logo emoji and name, in the site's order, up to two rows of
+ * five. With more services, the last button opens the title page's where-to-watch section instead.
+ */
+export function streamLinks(
+	title: GuestTitle,
+	country: string,
+	options: { allServices?: boolean; heading?: string; emojis?: EmojiIds } = {},
+): Component[] {
+	const emojis = options.emojis ?? {}
+	const providers = watchProviders(title.availability?.offers ?? [])
+	const buttons = providers.flatMap((p): Component[] => {
+		// The service's own offer first, then its channels and tiers.
+		const url = [
+			...p.offers.filter((o) => o.service_id === p.id),
+			...p.offers.filter((o) => o.service_id !== p.id),
+		]
+			.map((o) => streamButtonUrl(o, title.id, country))
+			.find(Boolean)
+		if (!url) return []
+		const emoji = p.emoji && emojis[p.emoji] ? emojis[p.emoji] : null
+		return [
+			{
+				type: 2,
+				style: 5,
+				label: discordText(p.brand).slice(0, 80),
+				url,
+				...(emoji ? { emoji: { id: emoji, name: p.emoji } } : {}),
+			},
+		]
+	})
+	const shown =
+		buttons.length > STREAM_BUTTON_LIMIT
+			? [
+					...buttons.slice(0, STREAM_BUTTON_LIMIT - 1),
+					linkButton("More on GoodWatch", titlePageUrl(title, "#streaming")),
+				]
+			: buttons
+	const kinds = offerKindsLine(providers.slice(0, STREAM_BUTTON_LIMIT))
+	return [
+		text(
+			`-# ${watchHeading(country, options)}${
+				shown.length
+					? kinds
+						? `\n-# ${kinds}`
+						: ""
+					: `\n${providers.length ? "Open the title on GoodWatch for links." : noOffers(title)}`
+			}`,
+		),
+		...[0, 5]
+			.map((at) => shown.slice(at, at + 5))
+			.filter((row) => row.length)
+			.map((row) => ({ type: 1, components: row })),
+	]
+}
+
+/** `back` is the custom ID of the list the title was opened from; it puts Back first. */
+export function titleButtons(
+	title: GuestTitle,
+	share = false,
+	back?: string,
+): Component {
 	const buttons: Component[] = [
-		{
-			type: 2,
-			style: 2,
-			label: "Where to watch",
-			custom_id: formatCustomId("watch", title.id),
-		},
+		...(back && !share
+			? [{ type: 2, style: 2, label: "Back", custom_id: back }]
+			: []),
 		{
 			type: 2,
 			style: 2,
 			label: "Similar",
 			custom_id: formatCustomId("similar", title.id),
 		},
-		linkButton(
-			"Open on GoodWatch",
-			`https://goodwatch.app${titlePath(kind, Number(id), title.name)}`,
-		),
+		linkButton("Open on GoodWatch", titlePageUrl(title)),
 	]
 	if (!share)
 		buttons.push({
@@ -350,9 +644,11 @@ export function titleButtons(title: GuestTitle, share = false): Component {
 	return { type: 1, components: buttons }
 }
 
+/** `back` is the list the title was opened from: each press keeps it, so its result can offer Back. */
 export function memberButtons(
 	title: GuestTitle,
 	marks: MemberMarks,
+	back?: ListRef,
 ): Component[] {
 	const seen =
 		marks.status === "seen" ||
@@ -368,7 +664,7 @@ export function memberButtons(
 		type: 2,
 		style: active ? 3 : 2,
 		label,
-		custom_id: formatCustomId(action, title.id),
+		custom_id: formatCustomId(action, title.id, back),
 	}))
 }
 
@@ -394,7 +690,7 @@ export function memberLines(
 		marks.score != null && marks.score >= 1 && marks.score <= 10
 			? `You rated it **${marks.score} · ${
 					scoreLabels[Math.round(marks.score)]
-				}**`
+			  }**`
 			: null,
 	]
 		.filter(Boolean)
@@ -445,13 +741,14 @@ export function titleCard(
 	country: string,
 	options: {
 		share?: boolean
-		offers?: boolean
 		member?: MemberMarks
 		memberTitle?: GuestTitle
 		memberPlace?: MemberPlace
 		memberButtons?: Component[]
 		emojis?: EmojiIds
 		allServices?: boolean
+		/** The list the title was opened from, for the Back button. */
+		back?: ListRef
 	} = {},
 ) {
 	const share = !!options.share
@@ -459,15 +756,19 @@ export function titleCard(
 		[
 			...titleHero(title, options.emojis),
 			separator(),
-			text(
-				whereToWatch(title, country, {
-					offers: options.offers,
-					allServices: options.allServices,
-				}),
+			...streamLinks(title, country, {
+				allServices: options.allServices,
+				emojis: options.emojis,
+			}),
+			titleButtons(
+				title,
+				share,
+				options.back
+					? listCustomId("back", formatListRef(options.back))
+					: undefined,
 			),
-			titleButtons(title, share),
 		],
-		title.backdrop_url ? undefined : scoreAccent(title.goodwatch_score),
+		scoreAccent(title.goodwatch_score),
 	)
 	const mine = options.memberTitle ?? title
 	const place = options.memberPlace
@@ -478,10 +779,11 @@ export function titleCard(
 					memberBlock(
 						mine,
 						options.member,
-						options.memberButtons ?? memberButtons(mine, options.member),
+						options.memberButtons ??
+							memberButtons(mine, options.member, options.back),
 						place
 							? whereToWatch(mine, place.country, {
-									offers: options.offers,
+									emojis: options.emojis,
 									heading: `${
 										place.ownServices ? "On your services" : "On every service"
 									} in ${countryName(place.country)}`,
@@ -500,6 +802,8 @@ function validateComponents(components: Component[], depth = 0) {
 			throw new Error("Discord label limit exceeded")
 		if (typeof c.custom_id === "string" && c.custom_id.length > 100)
 			throw new Error("Discord custom ID limit exceeded")
+		if (typeof c.url === "string" && c.url.length > BUTTON_URL_LIMIT)
+			throw new Error("Discord button URL limit exceeded")
 		if (c.type === 17 && depth > 0)
 			throw new Error("Discord container limit exceeded")
 		if (c.type === 12) {
@@ -538,10 +842,12 @@ function validateComponents(components: Component[], depth = 0) {
 		if (c.accessory) validateComponents([c.accessory], depth + 1)
 	}
 }
+/** The "Open a title" menu. `ref` is the list it sits on, so the opened card can go Back to it. */
 export function titleSelect(
 	titles: GuestTitle[],
 	share = false,
 	emojis: EmojiIds = {},
+	ref?: ListRef,
 ): Component[] {
 	const unique = [
 		...new Map(
@@ -555,7 +861,10 @@ export function titleSelect(
 					components: [
 						{
 							type: 3,
-							custom_id: listCustomId("open", share ? "public" : "private"),
+							custom_id: listCustomId(
+								"open",
+								ref ? formatListRef(ref) : share ? "public" : "private",
+							),
 							placeholder: "Open a title",
 							options: unique.map((t) => {
 								const score = hasGoodwatchScore(t.goodwatch_score)
@@ -603,9 +912,59 @@ function rankedLine(t: GuestTitle, rank: number, emojis: EmojiIds) {
 		.join("  ·  ")
 }
 
+/** Up to ten posters as one media gallery, or null when none of the titles has a poster. */
+function posterGallery(titles: GuestTitle[]): Component | null {
+	const posters = titles.filter((t) => t.poster_url).slice(0, 10)
+	return posters.length
+		? {
+				type: 12,
+				items: posters.map((t) => ({
+					media: { url: t.poster_url },
+					description: `${t.name}${t.year ? ` (${t.year})` : ""}`.slice(
+						0,
+						1024,
+					),
+				})),
+		  }
+		: null
+}
+
+/** "Page 2 of 22" after the subtitle, capitalized. */
+function pageSubtitle(subtitle?: string, page?: number, pages?: number | null) {
+	return [
+		subtitle,
+		page === undefined
+			? null
+			: `page ${page + 1}${
+					pages ? ` of ${pages.toLocaleString("en-US")}` : ""
+			  }`,
+	]
+		.filter(Boolean)
+		.join(" · ")
+		.replace(/^./, (c) => c.toUpperCase())
+}
+
+const pageButtons = (
+	page: number,
+	hasNext: boolean,
+	id: (page: number) => string,
+): Component[] =>
+	(
+		[
+			["Previous", Math.max(0, page - 1), page === 0],
+			["Next", page + 1, !hasNext],
+		] as const
+	).map(([label, target, disabled]) => ({
+		type: 2,
+		style: 2,
+		label,
+		disabled,
+		custom_id: id(target),
+	}))
+
 /**
- * 4D list card for /discover, /similar, and /hot: up to ten posters as one media gallery, the ranked list below, then
- * the title menu and paging. Lists without posters skip the gallery.
+ * 4D list card for /discover, /search, /similar, and /person lists: up to ten posters as one media gallery, the ranked
+ * list below, then the title menu and paging. Lists without posters skip the gallery.
  */
 export function titleListCard(
 	heading: string,
@@ -615,6 +974,8 @@ export function titleListCard(
 		shareId?: string
 		page?: number
 		stateKey?: string
+		/** The paging action for `stateKey`: /discover's by default, or /search's. */
+		pageAction?: "discover" | "search"
 		next?: boolean
 		url?: string
 		/** Small line under the heading, for example "Popular · every service in Germany". */
@@ -622,6 +983,8 @@ export function titleListCard(
 		/** Total results, for "page 1 of 22". */
 		total?: number
 		emojis?: EmojiIds
+		/** This list, for the Back button of the titles opened from it. */
+		ref?: ListRef
 	} = {},
 ) {
 	const emojis = options.emojis ?? {}
@@ -631,31 +994,15 @@ export function titleListCard(
 		typeof options.total === "number" && options.total > 0
 			? Math.ceil(options.total / 10)
 			: null
-	const subtitle = [
-		options.subtitle,
-		page === undefined
-			? null
-			: `page ${page + 1}${
-					pages ? ` of ${pages.toLocaleString("en-US")}` : ""
-				}`,
-	]
-		.filter(Boolean)
-		.join(" · ")
-		.replace(/^./, (c) => c.toUpperCase())
-	const posters = shown.filter((t) => t.poster_url)
+	const subtitle = pageSubtitle(options.subtitle, page, pages)
 	const buttons: Component[] = []
 	if (options.stateKey) {
-		for (const [label, target, disabled] of [
-			["Previous", Math.max(0, (page ?? 0) - 1), (page ?? 0) === 0],
-			["Next", (page ?? 0) + 1, !options.next],
-		] as const)
-			buttons.push({
-				type: 2,
-				style: 2,
-				label,
-				disabled,
-				custom_id: listCustomId("discover", `${options.stateKey}:${target}`),
-			})
+		const action = options.pageAction ?? "discover"
+		buttons.push(
+			...pageButtons(page ?? 0, !!options.next, (target) =>
+				listCustomId(action, `${options.stateKey}:${target}`),
+			),
+		)
 	}
 	if (options.url) buttons.push(linkButton("Open on GoodWatch", options.url))
 	if (!options.share && options.shareId)
@@ -674,24 +1021,13 @@ export function titleListCard(
 							subtitle ? `\n-# ${subtitle.slice(0, 300)}` : ""
 						}`,
 					),
-					posters.length
-						? {
-								type: 12,
-								items: posters.map((t) => ({
-									media: { url: t.poster_url },
-									description: `${t.name}${t.year ? ` (${t.year})` : ""}`.slice(
-										0,
-										1024,
-									),
-								})),
-							}
-						: null,
+					posterGallery(shown),
 					text(
 						shown.length
 							? shown.map((t, i) => rankedLine(t, i + 1, emojis)).join("\n")
 							: "No titles found.",
 					),
-					...titleSelect(shown, options.share, emojis),
+					...titleSelect(shown, options.share, emojis, options.ref),
 					buttons.length ? { type: 1, components: buttons } : null,
 				],
 				AMBER,
@@ -708,21 +1044,24 @@ export interface GuestPerson {
 	known_for_department?: string | null
 	known_for?: GuestTitle[]
 }
+
+/** The person's portrait beside their name and department, their known-for posters, the ranked titles, and the menu. */
 export function personCard(
 	person: GuestPerson,
 	share = false,
-	options: { note?: string } = {},
+	options: { note?: string; emojis?: EmojiIds } = {},
 ) {
+	const emojis = options.emojis ?? {}
 	const titles = (person.known_for ?? []).slice(0, 10)
-	const heading: Component = {
-		type: 10,
-		content: `## ${escape(person.name).slice(0, 200)}\n${escape(
-			person.known_for_department ?? "",
-		)}`,
-	}
-	const buttons: Component[] = [
-		{ type: 2, style: 5, label: "Open on GoodWatch", url: person.url },
-	]
+	const heading = text(
+		`## ${escape(person.name).slice(0, 200)}${
+			person.known_for_department
+				? `\n-# ${escape(person.known_for_department)}`
+				: ""
+		}`,
+	)
+	const note = options.note ? text(`-# ${options.note}`) : null
+	const buttons: Component[] = [linkButton("Open on GoodWatch", person.url)]
 	if (!share)
 		buttons.push({
 			type: 2,
@@ -732,37 +1071,252 @@ export function personCard(
 		})
 	return message(
 		[
-			person.profile_url
-				? {
-						type: 9,
-						components: [heading],
-						accessory: {
-							type: 11,
-							media: { url: person.profile_url },
-							description: person.name.slice(0, 100),
-						},
-					}
-				: heading,
-			...(options.note ? [text(`-# ${options.note}`)] : []),
-			{
-				type: 10,
-				content: `**Known for**\n${
-					titles.length
-						? titles
-								.map(
-									(t) =>
-										`${escape(t.name).slice(0, 180)}${
-											t.year ? ` (${t.year})` : ""
-										}`,
-								)
-								.join("\n")
-						: "No known-for titles available."
-				}`,
-			},
-			...titleSelect(titles, share),
-			{ type: 1, components: buttons },
+			container(
+				[
+					...(person.profile_url
+						? [
+								{
+									type: 9,
+									components: [heading, ...(note ? [note] : [])],
+									accessory: {
+										type: 11,
+										media: { url: person.profile_url },
+										description: person.name.slice(0, 100),
+									},
+								},
+						  ]
+						: [heading, note]),
+					posterGallery(titles),
+					text(
+						`-# Known for\n${
+							titles.length
+								? titles.map((t, i) => rankedLine(t, i + 1, emojis)).join("\n")
+								: "No known-for titles available."
+						}`,
+					),
+					...titleSelect(titles, share, emojis, {
+						kind: "person",
+						personId: person.person_id,
+					}),
+					{ type: 1, components: buttons },
+				],
+				AMBER,
+			),
 		],
 		!share,
+	)
+}
+
+/** One post about a hot title: who said it, where, a short text, and its image when it has one. */
+export interface HotPost {
+	url: string
+	author: string
+	/** "Bluesky", "YouTube", "Mastodon", or an article's publication. */
+	platform: string
+	kind: "post" | "video" | "article"
+	text: string
+	image?: string | null
+	/** ISO time it was published. */
+	at?: string | null
+}
+export interface HotTitle extends GuestTitle {
+	rank?: number
+	/** Places up since the day before (down is negative), "new" for a newcomer. */
+	move?: number | "new" | null
+	/** A dated hint of why people read about it, such as a trailer. Context, not a claimed cause. */
+	reason?: { kind: string; day: string; season?: number } | null
+	posts?: HotPost[]
+}
+
+/** Hot titles per /hot page: three posts-forward blocks fit Discord's 40 components with the menu and paging. */
+export const HOT_PAGE_SIZE = 3
+
+/** A post's text as a short one-line quote, links left out. */
+export function shortQuote(value: string, max = 180) {
+	const clean = value
+		.replace(/https?:\/\/\S+/g, "")
+		.replace(/\s+/g, " ")
+		.trim()
+	if (clean.length <= max) return escape(clean)
+	const cut = clean.slice(0, max)
+	const space = cut.lastIndexOf(" ")
+	return `${escape(space > max / 2 ? cut.slice(0, space) : cut).replace(
+		/[,.;:\\]+$/,
+		"",
+	)}…`
+}
+
+const moveWords = (move: HotTitle["move"]) =>
+	move === "new"
+		? "new today"
+		: typeof move === "number" && move !== 0
+		? `${move > 0 ? "up" : "down"} ${Math.abs(move)} since yesterday`
+		: null
+
+const reasonWords = (reason: HotTitle["reason"]) => {
+	if (!reason) return null
+	const day = new Date(`${reason.day}T12:00:00Z`)
+	const on = Number.isFinite(day.getTime())
+		? ` ${day.toLocaleDateString("en-US", {
+				month: "short",
+				day: "numeric",
+				timeZone: "UTC",
+		  })}`
+		: ""
+	switch (reason.kind) {
+		case "trailer":
+			return `trailer${on}`
+		case "new_season":
+			return `${reason.season ? `season ${reason.season}` : "new season"}${on}`
+		case "new_release":
+			return `released${on}`
+		case "netflix_top10":
+			return "in the Netflix top 10"
+		default:
+			return null
+	}
+}
+
+const postButtonLabel = (post: HotPost) =>
+	post.kind === "video"
+		? `Watch on ${post.platform}`
+		: post.kind === "article"
+		? `Read on ${post.platform}`
+		: `View post on ${post.platform}`
+
+/** One hot title: poster beside the rank, title and score, then what people say, their images, and links to the posts. */
+function hotBlock(title: HotTitle, emojis: EmojiIds): Component {
+	const posts = (title.posts ?? []).slice(0, 2)
+	const lead = [
+		title.rank ? `No. ${title.rank} on socials` : null,
+		moveWords(title.move),
+		reasonWords(title.reason),
+	]
+		.filter(Boolean)
+		.join(", ")
+	const heading = text(
+		`${lead ? `-# ${lead}\n` : ""}### ${escape(title.name).slice(0, 150)}${
+			title.year ? ` (${title.year})` : ""
+		}\n${scoreLine(title.goodwatch_score, emojis)}`,
+	)
+	const quotes = text(
+		posts.length
+			? posts
+					.map((p) => {
+						const at = p.at ? Date.parse(p.at) : Number.NaN
+						// An article without a byline has its site's address as author; the publication says enough.
+						const who = /^[\w-]+(\.[\w-]+)+$/.test(p.author)
+							? escape(p.platform)
+							: `${escape(p.author).slice(0, 60)} on ${escape(p.platform)}`
+						return `> ${shortQuote(p.text)}\n-# ${who}${
+							Number.isFinite(at) ? `  ·  <t:${Math.floor(at / 1000)}:R>` : ""
+						}`
+					})
+					.join("\n")
+			: "-# No posts picked for it yet.",
+	)
+	const images = posts.filter((p) => p.image)
+	// Without post images the backdrop keeps the block cinematic.
+	const gallery = images.length
+		? images.map((p) => ({
+				media: { url: p.image },
+				description: `Image from ${p.author} on ${p.platform}`.slice(0, 1024),
+		  }))
+		: title.backdrop_url
+		? [
+				{
+					media: { url: title.backdrop_url },
+					description: `${title.name} backdrop`.slice(0, 1024),
+				},
+		  ]
+		: []
+	const labels = posts.map(postButtonLabel)
+	const same = labels.length > 1 && labels[0] === labels[1]
+	return container(
+		[
+			title.poster_url
+				? {
+						type: 9,
+						components: [heading, quotes],
+						accessory: {
+							type: 11,
+							media: { url: title.poster_url },
+							description: `${title.name} poster`.slice(0, 1024),
+						},
+				  }
+				: null,
+			...(title.poster_url ? [] : [heading, quotes]),
+			gallery.length ? { type: 12, items: gallery } : null,
+			posts.length
+				? {
+						type: 1,
+						components: posts.map((p, i) =>
+							linkButton(
+								(same ? `${p.author} on ${p.platform}` : labels[i]).slice(
+									0,
+									80,
+								),
+								p.url,
+							),
+						),
+				  }
+				: null,
+		],
+		scoreAccent(title.goodwatch_score) ?? AMBER,
+	)
+}
+
+/**
+ * /hot: what people say about each hot title, three titles a page. Each title is its own block with its poster, rank,
+ * score, up to two quoted posts with their images, and a link to each post; the menu opens a title, paging walks the
+ * board.
+ */
+export function hotCard(
+	titles: HotTitle[],
+	options: {
+		page?: number
+		share?: boolean
+		subtitle?: string
+		emojis?: EmojiIds
+	} = {},
+) {
+	const emojis = options.emojis ?? {}
+	const pages = Math.max(1, Math.ceil(titles.length / HOT_PAGE_SIZE))
+	const page = Math.min(Math.max(0, options.page ?? 0), pages - 1)
+	const shown = titles.slice(page * HOT_PAGE_SIZE, (page + 1) * HOT_PAGE_SIZE)
+	const buttons: Component[] = [
+		...(pages > 1
+			? pageButtons(page, page + 1 < pages, (target) =>
+					listCustomId("hot", String(target)),
+			  )
+			: []),
+		linkButton("Open on GoodWatch", "https://goodwatch.app/hot-on-socials"),
+		...(!options.share
+			? [
+					{
+						type: 2,
+						style: 2,
+						label: "Share to channel",
+						custom_id: listCustomId("hot-share", String(page)),
+					},
+			  ]
+			: []),
+	]
+	const subtitle = pageSubtitle(
+		options.subtitle ?? "What people are saying right now",
+		pages > 1 ? page : undefined,
+		pages,
+	)
+	return message(
+		[
+			text(`## Hot on socials\n-# ${subtitle}`),
+			...(shown.length
+				? shown.map((t) => hotBlock(t, emojis))
+				: [text("Nothing is hot right now. Try again later.")]),
+			...titleSelect(shown, options.share, emojis, { kind: "hot", page }),
+			{ type: 1, components: buttons },
+		],
+		!options.share,
 	)
 }
 
