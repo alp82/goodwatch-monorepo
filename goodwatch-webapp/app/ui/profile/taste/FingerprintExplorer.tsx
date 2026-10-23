@@ -482,9 +482,9 @@ function VsDetail({
 						: `Strong in it, @${handle} scored lowest`}{" "}
 					· scores under each: @{handle} left, you right
 				</p>
-				<ul className="flex gap-1.5 sm:gap-2">
+				<ul className="grid grid-cols-6 gap-1.5 sm:flex sm:gap-2">
 					{titles.map((t) => (
-						<li key={t.key} className="w-[2.6rem] shrink-0 sm:w-12">
+						<li key={t.key} className="min-w-0 sm:w-12 sm:shrink-0">
 							<MiniPoster title={t} score={false} />
 							<ScorePair
 								theirs={t.score}
