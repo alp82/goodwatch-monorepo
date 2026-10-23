@@ -15,14 +15,19 @@ export function fakeMdblist(rows, options = {}) {
 		repeatCursor = false,
 		skipInFilteredRead = null, // a mediatype whose filtered read loses one row
 		extraPagination = null, // (pageIndex, rowCount) -> extra pagination fields
+		countHeaders = false, // false | true | (filter, total, pageRows) -> { total, matched } overrides
 	} = options
 	const log = []
 	let requestNumber = 0
 
-	const fetchImpl = async (input) => {
+	const fetchImpl = async (input, init = {}) => {
 		requestNumber++
 		const url = new URL(input)
-		log.push({ path: url.pathname, params: Object.fromEntries([...url.searchParams].filter(([name]) => name !== "apikey")) })
+		log.push({
+			path: url.pathname,
+			params: Object.fromEntries([...url.searchParams].filter(([name]) => name !== "apikey")),
+			headers: Object.fromEntries(Object.entries(init.headers ?? {}).map(([name, value]) => [name.toLowerCase(), value])),
+		})
 		const fault = faults[requestNumber]
 		if (fault === "network") throw new TypeError("fetch failed")
 		if (fault?.status) {
@@ -63,6 +68,12 @@ export function fakeMdblist(rows, options = {}) {
 
 		const headers = { "content-type": "application/json", "x-ratelimit-limit": "1000", "x-ratelimit-remaining": String(1000 - requestNumber), "x-ratelimit-reset": "1792368000" }
 		if (hasMoreHeader) headers["x-has-more"] = more ? "true" : "false"
+		if (countHeaders) {
+			// The real API sends the whole read's total and the current page's row count.
+			const counts = { total: selected.length, matched: page.length, ...(typeof countHeaders === "function" ? countHeaders(filter, selected.length, page.length) : {}) }
+			headers["x-total-items"] = String(counts.total)
+			headers["x-matched-items"] = String(counts.matched)
+		}
 		return new Response(JSON.stringify(body), { status: 200, headers })
 	}
 	return { fetchImpl, log }

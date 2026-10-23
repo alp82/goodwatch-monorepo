@@ -148,7 +148,7 @@ test("G3: the cross-check agrees on the fixture and catches a lost row", async (
 test("G4: failures never become an export", async (t) => {
 	const cases = [
 		["401 on the first page", { faults: { 1: { status: 401, error: "Invalid API key!" } } }, "unauthorized"],
-		["403 mid-way", { faults: { 3: { status: 403 } } }, "unauthorized"],
+		["403 mid-way", { faults: { 3: { status: 403 } } }, "forbidden"],
 		["daily limit", { faults: { 2: { status: 429, error: "Daily API limit exceeded!", retryAfter: 3600 } } }, "daily-limit"],
 		["429 twice", { faults: { 2: { status: 429, error: "API rate limit exceeded!", retryAfter: 1 }, 3: { status: 429, error: "API rate limit exceeded!", retryAfter: 1 } } }, "rate-limited"],
 		["429 with a long wait", { faults: { 2: { status: 429, error: "API rate limit exceeded!", retryAfter: 600 } } }, "rate-limited"],
@@ -343,3 +343,68 @@ test("review 5: if the report can't be written, the wishlist stays as it was", a
 	}
 })
 import { readdirSync } from "node:fs"
+
+// ---------- real-run fixes (October 23, 2026) ----------
+
+test("fix 1: watchlist_at becomes addedAt only when it is a valid timestamp", async () => {
+	const at = (row, value) => ({ ...row, ids: { ...row.ids, mdblist: `${row.ids.mdblist}-${String(value)}` }, watchlist_at: value })
+	const body = {
+		movies: [at(rows[0].row, "2026-10-20T08:15:30.123Z"), at(rows[2].row, null), at(rows[3].row, "yesterday"), at(rows[4].row, "2026-02-30T10:00:00Z")],
+		shows: [{ ...rows[7].row, watchlist_at: "2026-10-21T09:00:00Z" }],
+		has_more: false,
+	}
+	const { file, report } = await read(one(body))
+	assert.deepEqual(file.items.map((item) => item.addedAt ?? null), ["2026-10-20T08:15:30.123Z", null, null, null, "2026-10-21T09:00:00Z"])
+	assert.equal(report.identity.addedAtFromWatchlistAt, 2)
+	assert.equal(report.identity.watchlistAtUnreadable, 2)
+	const parsed = parse(file)
+	assert.equal(parsed.observations[0].addedAt, "2026-10-20T08:15:30.123Z")
+	assert.equal(parsed.observations[4].addedAt, "2026-10-21T09:00:00Z")
+	assert.ok(parsed.observations.every((observation) => !observation.problem))
+})
+
+test("fix 2: X-Total-Items and X-Matched-Items must agree before complete", async () => {
+	assert.equal((await read(fakeMdblist(rows, { countHeaders: true }), { crossCheck: true })).file.completeness, "complete")
+	const total = await read(fakeMdblist(rows, { countHeaders: (filter, count) => ({ total: count + 1 }) }))
+	assert.equal(total.file.completeness, "partial")
+	const matched = await read(fakeMdblist(rows, { countHeaders: (filter, count, pageRows) => ({ matched: pageRows + 1 }) }))
+	assert.equal(matched.file.completeness, "partial")
+	const unreadable = await read(fakeMdblist(rows, { countHeaders: () => ({ total: "lots" }) }))
+	assert.equal(unreadable.file.completeness, "unknown")
+	// A filtered read checks its own total.
+	const filtered = await read(fakeMdblist(rows, { countHeaders: (filter, count) => ({ total: filter === "show" ? count + 3 : count }) }), { crossCheck: true })
+	assert.equal(filtered.file.completeness, "partial")
+	assert.match(filtered.report.warnings.join(" "), /show cross-check/)
+})
+
+test("fix 3: requests carry a User-Agent, and a 403 isn't reported as a bad key", async () => {
+	const fake = fakeMdblist(rows)
+	await read(fake)
+	assert.ok(fake.log.every((entry) => /^goodwatch-mdblist-reader\//.test(entry.headers["user-agent"] ?? "")))
+	await assert.rejects(read(fakeMdblist(rows, { faults: { 1: { status: 403 } } })), (error) => {
+		assert.equal(error.code, "forbidden")
+		assert.doesNotMatch(error.message, /API key/)
+		return true
+	})
+	await assert.rejects(read(fakeMdblist(rows, { faults: { 1: { status: 401 } } })), (error) => {
+		assert.match(error.message, /API key/)
+		return true
+	})
+})
+
+test("fix 4: field names ending in _at are reported as date-like", async () => {
+	const row = { ...movie, added_at: null, watchlist_at: "2026-10-20T08:15:30.123Z", last_watched_at: null, release_date: "1995-11-22" }
+	const { report } = await read(one({ movies: [row], shows: [], has_more: false }))
+	assert.deepEqual([...report.addedLikeKeys].sort(), ["added_at", "last_watched_at", "release_date", "watchlist_at"])
+})
+
+test("an empty .git folder isn't a Git work tree, a real marker is", async () => {
+	const dir = scratch()
+	mkdirSync(join(dir, "empty", ".git"), { recursive: true })
+	const ok = await cli(["--out", join(dir, "empty", "w.json"), "--report", join(dir, "empty", "r.json")], { MDBLIST_TEST_BASE: "http://127.0.0.1:9" })
+	assert.doesNotMatch(ok.stderr, /Git work tree/)
+	mkdirSync(join(dir, "worktree"))
+	writeFileSync(join(dir, "worktree", ".git"), "gitdir: /somewhere/.git/worktrees/x\n")
+	const refused = await cli(["--out", join(dir, "worktree", "w.json"), "--report", join(dir, "worktree", "r.json")])
+	assert.match(refused.stderr, /Git work tree/)
+})

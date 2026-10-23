@@ -12,6 +12,14 @@ const ROUTE = "/watchlist/items"
 const KNOWN_BUCKETS = { movies: "movie", shows: "show", seasons: "season", episodes: "episode" }
 const MEDIA_FILTERS = ["movie", "show", "season", "episode"]
 const MAX_ITEMS = 50_000
+const USER_AGENT = "goodwatch-mdblist-reader/0.2 (+https://goodwatch.app)"
+const ISO_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/
+/** A timestamp the shared format accepts, with a real calendar day. */
+function timestamp(value) {
+	if (typeof value !== "string" || !ISO_TIMESTAMP.test(value) || !Number.isFinite(Date.parse(value))) return null
+	const day = value.slice(0, 10)
+	return new Date(`${day}T00:00:00Z`).toISOString().slice(0, 10) === day ? value : null
+}
 
 export class ReaderError extends Error {
 	constructor(code, message, report) {
@@ -81,6 +89,30 @@ function findHasMore(body, headers) {
 function reportedTotals(body) {
 	if (!isObject(body.pagination)) return []
 	return Object.entries(body.pagination).filter(([key]) => /total|count/i.test(key))
+}
+
+/**
+ * Checks every count a read reported (body fields and X-Total-Items) against the rows it sent,
+ * and every page's X-Matched-Items against that page.
+ */
+function reconcile({ totals, pageCounts }, received) {
+	const summary = {}
+	const mismatched = new Set()
+	let unreadable = pageCounts.includes("unreadable")
+	for (const [key, value] of totals) {
+		summary[key] ??= new Set()
+		const number = typeof value === "string" && /^\d+$/.test(value.trim()) ? Number(value) : value
+		if (typeof number !== "number" || !Number.isFinite(number)) {
+			unreadable = true
+			summary[key].add("unreadable")
+		} else {
+			summary[key].add(number === received ? "matches" : "differs")
+			if (number !== received) mismatched.add(number)
+		}
+	}
+	if (pageCounts.length) summary["header:X-Matched-Items (per page)"] = new Set(pageCounts)
+	for (const key of Object.keys(summary)) summary[key] = [...summary[key]]
+	return { summary, mismatched: [...mismatched], unreadable, pageDiffers: pageCounts.includes("differs") }
 }
 
 /** The source row's native key, or null when the row carries no native ID at all. */
@@ -158,6 +190,16 @@ export function mapRow(bucket, row, counters) {
 		}
 	}
 
+	// The real Watchlist sends `watchlist_at` on every row, one value per row: the time the title
+	// was added. `added_at` was null on every real row, so it isn't used.
+	if (row.watchlist_at !== undefined && row.watchlist_at !== null) {
+		const addedAt = timestamp(row.watchlist_at)
+		if (addedAt) {
+			item.addedAt = addedAt
+			counters.addedAtFromWatchlistAt++
+		} else counters.watchlistAtUnreadable++
+	}
+
 	// Native IDs stay source-scoped. The generic `id` is never treated as a TMDB ID.
 	if (ids && typeof ids.mdblist === "string" && ids.mdblist) item.sourceId = ids.mdblist
 	else if (row.id !== undefined && row.id !== null) item.sourceId = `mdblist-${bucket}-${row.id}`
@@ -215,6 +257,8 @@ export async function readWatchlist({
 			rowsWhereIdEqualsIdsTmdb: 0,
 			parentShowIdsProven: 0,
 			parentShowIdsMissing: 0,
+			addedAtFromWatchlistAt: 0,
+			watchlistAtUnreadable: 0,
 		},
 		addedLikeKeys: [],
 		exhaustion: null,
@@ -238,7 +282,7 @@ export async function readWatchlist({
 			report.requests++
 			let response
 			try {
-				response = await fetchImpl(url, { method: "GET", headers: { accept: "application/json" } })
+				response = await fetchImpl(url, { method: "GET", headers: { accept: "application/json", "user-agent": USER_AGENT } })
 			} catch {
 				if (serverRetries < 2) {
 					serverRetries++
@@ -256,8 +300,8 @@ export async function readWatchlist({
 					resetsAt: Number(response.headers.get("x-ratelimit-reset")) || null,
 				}
 			}
-			if (response.status === 401 || response.status === 403)
-				fail("unauthorized", `MDBList refused the API key (HTTP ${response.status}). Nothing was written.`)
+			if (response.status === 401) fail("unauthorized", "MDBList refused the API key (HTTP 401). Nothing was written.")
+			if (response.status === 403) fail("forbidden", "MDBList refused the request (HTTP 403). Nothing was written.")
 			if (response.status === 429) {
 				const text = await response.text().catch(() => "")
 				if (/daily/i.test(text)) fail("daily-limit", "The MDBList daily request limit is used up. Try again after 00:00 UTC. Nothing was written.")
@@ -301,6 +345,7 @@ export async function readWatchlist({
 		const rows = []
 		const seenCursors = new Set()
 		const unexplained = []
+		const pageCounts = []
 		let cursor
 		const totals = []
 		for (let page = 0; ; page++) {
@@ -329,6 +374,14 @@ export async function readWatchlist({
 			if (more.conflict) fail("has-more-conflict", "MDBList said both that more items exist and that none do. Nothing was written.")
 			for (const where of more.locations) report.hasMoreLocations[where] = (report.hasMoreLocations[where] ?? 0) + 1
 			totals.push(...reportedTotals(body))
+			const totalHeader = headers.get("x-total-items")
+			if (totalHeader !== null) totals.push(["header:X-Total-Items", totalHeader])
+			const matchedHeader = headers.get("x-matched-items")
+			if (matchedHeader !== null) {
+				// X-Matched-Items is the row count of this page, not of the whole read.
+				const pageRows = Object.values(pageSummary.buckets).reduce((sum, count) => sum + count, 0)
+				pageCounts.push(/^\d+$/.test(matchedHeader.trim()) ? (Number(matchedHeader) === pageRows ? "matches" : "differs") : "unreadable")
+			}
 			pageSummary.cursor = found.cursor ? "present" : "absent"
 			pageSummary.hasMore = more.hasMore ?? "not stated"
 			if (filter === undefined) report.pages.push(pageSummary)
@@ -341,7 +394,7 @@ export async function readWatchlist({
 				continue
 			}
 			if (more.hasMore === true) fail("missing-cursor", "MDBList said more items exist but sent no cursor. Nothing was written.")
-			return { rows, proven: more.hasMore === false, totals, unexplained }
+			return { rows, proven: more.hasMore === false, totals, unexplained, pageCounts }
 		}
 	}
 
@@ -383,7 +436,7 @@ export async function readWatchlist({
 	}
 	report.addedLikeKeys = Object.values(report.shape)
 		.flatMap((shape) => Object.keys(shape))
-		.filter((key, index, all) => /added|listed|created|date/i.test(key) && all.indexOf(key) === index)
+		.filter((key, index, all) => (/added|listed|created|date/i.test(key) || /_at$/i.test(key)) && all.indexOf(key) === index)
 
 	let completeness = combined.proven ? "complete" : "unknown"
 	if (!combined.proven) report.warnings.push("The last page didn't say that no more items exist, so the file says its coverage is unknown.")
@@ -401,35 +454,31 @@ export async function readWatchlist({
 
 	// Every count field on every page must equal the rows received. A mismatch is partial; a value
 	// that isn't a number is unknown.
-	if (combined.totals.length) {
-		report.reportedTotals = {}
-		let unreadable = false
-		const mismatched = new Set()
-		for (const [key, value] of combined.totals) {
-			report.reportedTotals[key] ??= new Set()
-			const number = typeof value === "string" && /^\d+$/.test(value.trim()) ? Number(value) : value
-			if (typeof number !== "number" || !Number.isFinite(number)) unreadable = true
-			else {
-				report.reportedTotals[key].add(number === report.rows.received ? "matches" : "differs")
-				if (number !== report.rows.received) mismatched.add(number)
-			}
-		}
-		for (const key of Object.keys(report.reportedTotals)) report.reportedTotals[key] = [...report.reportedTotals[key]]
-		if (mismatched.size) {
-			completeness = "partial"
-			report.warnings.push(`MDBList reported ${[...mismatched].join(" and ")} items but sent ${report.rows.received}.`)
-		} else if (unreadable && completeness === "complete") {
-			completeness = "unknown"
-			report.warnings.push("MDBList sent a count the reader can't read, so the file says its coverage is unknown.")
-		}
+	const combinedCounts = reconcile(combined, report.rows.received)
+	report.reportedTotals = combinedCounts.summary
+	if (combinedCounts.mismatched.length) {
+		completeness = "partial"
+		report.warnings.push(`MDBList reported ${combinedCounts.mismatched.join(" and ")} items but sent ${report.rows.received}.`)
+	} else if (combinedCounts.pageDiffers) {
+		completeness = "partial"
+		report.warnings.push("A page's X-Matched-Items differs from the rows it sent.")
+	} else if (combinedCounts.unreadable && completeness === "complete") {
+		completeness = "unknown"
+		report.warnings.push("MDBList sent a count the reader can't read, so the file says its coverage is unknown.")
 	}
 
 	if (crossCheck) {
 		const union = new Map()
 		let crossRows = 0
 		for (const filter of MEDIA_FILTERS) {
-			const { rows, proven } = await readAll(filter)
+			const filtered = await readAll(filter)
+			const { rows, proven } = filtered
 			if (!proven) report.warnings.push(`The ${filter} cross-check didn't prove its last page.`)
+			const counts = reconcile(filtered, rows.length)
+			if (counts.mismatched.length || counts.pageDiffers) {
+				completeness = "partial"
+				report.warnings.push(`The ${filter} cross-check counted ${counts.mismatched.join(" and ") || "a different number of"} items but sent ${rows.length}.`)
+			} else if (counts.unreadable && completeness === "complete") completeness = "unknown"
 			for (const [bucket, row] of rows) {
 				crossRows++
 				union.set(rowIdentity(bucket, row), bucket)
@@ -474,9 +523,17 @@ function realTarget(path) {
 	return join(realpathSync(existing), ...rest)
 }
 
+/** A real Git marker: a .git folder with HEAD, or a .git file pointing at one. */
+function gitMarker(dir) {
+	const marker = join(dir, ".git")
+	if (!existsSync(marker)) return false
+	if (statSync(marker).isDirectory()) return existsSync(join(marker, "HEAD"))
+	return readFileSync(marker, "utf8").startsWith("gitdir:")
+}
+
 function insideGitWorkTree(path) {
 	for (let dir = dirname(realTarget(path)); ; dir = dirname(dir)) {
-		if (existsSync(join(dir, ".git"))) return true
+		if (gitMarker(dir)) return true
 		if (dirname(dir) === dir) return false
 	}
 }

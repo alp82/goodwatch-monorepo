@@ -67,3 +67,16 @@ One consenting owner account, one free-tier key, reader at `adabe897`, run as `r
 **Watched title outside the Watchlist:** the owner's Breaking Bad season 1 is marked watched in MDBList and sits in Up Next, not on the Watchlist. The reader reads only `/watchlist/items`, so it doesn't see it, as intended: watch history isn't Want to See. `last_watched_at` is null on all 8 Watchlist rows, so no Watchlist row carries watched evidence in this sample.
 
 **Other observation:** a request from Python's default HTTP client got HTTP 403 with a valid key; the same request with an explicit `User-Agent` returned 200. The reader (Node `fetch`) wasn't affected, but it reports any 403 as a refused key.
+
+## Fixes from the real run, October 23, 2026
+
+Owner decisions: map `watchlist_at` to `addedAt`; build fixes 1 to 4 test-first. 41 of 41 tests pass; each fix had a failing test first.
+
+1. `watchlist_at` becomes `addedAt` when it's a valid timestamp; other values are left out and counted.
+2. `X-Total-Items` is checked like `pagination.total` on every page, and each page's `X-Matched-Items` against that page's rows. Each cross-check read checks its own counts.
+3. Requests send an explicit `User-Agent`. A 403 says "MDBList refused the request" with code `forbidden`; only 401 blames the key.
+4. `addedLikeKeys` also lists names ending in `_at`.
+
+Also: the Git work tree check now needs a real marker. An empty `.git` folder had appeared in `/tmp` on this machine and made the reader refuse to write there.
+
+**Rerun on the real account:** 8 of 8, `complete`, 11 requests, 952 ms. `pagination.total`, `X-Total-Items` and `X-Matched-Items` all match. 8 of 8 rows have `addedAt`; the shipped parser reports 0 problems.

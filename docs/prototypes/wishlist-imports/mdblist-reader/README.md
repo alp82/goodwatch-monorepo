@@ -45,7 +45,7 @@ The reader writes two files, both mode 600:
 
 Exit code `0` means both files were written; the summary line says the coverage (`complete`, `partial`, or `unknown`). Exit code `2` means no wishlist file was written and the previous one stays as it was.
 
-Options: `--key-file`, `--out`, `--report`, `--limit 1..1000`, `--cross-check`. The `MDBLIST_API_KEY` environment variable overrides the key file. The reader refuses to write inside a Git work tree, also through symlinks. The wishlist file, the report, and the key file must be three different files. The reader stages both outputs first and replaces the wishlist last, so a failed write leaves the previous wishlist in place.
+Options: `--key-file`, `--out`, `--report`, `--limit 1..1000`, `--cross-check`. The `MDBLIST_API_KEY` environment variable overrides the key file. The reader refuses to write inside a Git work tree (a `.git` folder with `HEAD`, or a `.git` file starting with `gitdir:`), also through symlinks. Requests send `User-Agent: goodwatch-mdblist-reader/0.2`. The wishlist file, the report, and the key file must be three different files. The reader stages both outputs first and replaces the wishlist last, so a failed write leaves the previous wishlist in place.
 
 ## What the reader does with each row
 
@@ -59,11 +59,11 @@ Options: `--key-file`, `--out`, `--report`, `--limit 1..1000`, `--cross-check`. 
 | Same native ID, different fields | Both kept; counted as an identity conflict. |
 | A row with no native ID | Always kept, even when another row has the same title and year. |
 
-The reader never writes `addedAt`, `sourceSeen` or `sourceSeenAt`: the Watchlist route proves no added date or watched flag. It reports field names that look like dates (`addedLikeKeys`) so a real sample can show whether MDBList sends one.
+`addedAt` comes from `watchlist_at`, the per-row time the title was added (owner decision, October 23, 2026, after the real run). A value that isn't a valid timestamp is left out and counted as `watchlistAtUnreadable`. `added_at` is null on real rows and isn't used. The reader never writes `sourceSeen` or `sourceSeenAt`: the Watchlist route proves no watched flag. The report lists date-like field names (`addedLikeKeys`, including any name ending in `_at`).
 
 ## Completeness rules
 
 - `complete`: the last page has no next cursor **and** says there are no more items (`X-Has-More: false` or a `has_more` field), any reported total matches, and the cross-check (when on) agrees.
 - `unknown`: the last page has no cursor but says nothing about more items, MDBList sent a list or top-level field the reader doesn't know, a row isn't an object, `pagination` isn't an object, or a count field isn't a number.
-- `partial`: any count field (any name containing "total" or "count") on any page differs from the rows received, or the cross-check disagrees.
-- No file: a `movies`, `shows`, `seasons`, or `episodes` entry that isn't a list, 401 or 403, a daily-limit 429, a second 429 or a wait over 60 seconds, 5xx three times, network failure three times, a body that isn't JSON or has no movies or shows list, two different cursors, a repeated cursor, "more" without a cursor, or more than 1,000 pages.
+- `partial`: any count field (any name containing "total" or "count") or `X-Total-Items` header on any page differs from the rows received, a page's `X-Matched-Items` differs from that page's rows, or the cross-check disagrees. Each cross-check read checks its own counts.
+- No file: a `movies`, `shows`, `seasons`, or `episodes` entry that isn't a list, 401 (refused key), 403 (refused request), a daily-limit 429, a second 429 or a wait over 60 seconds, 5xx three times, network failure three times, a body that isn't JSON or has no movies or shows list, two different cursors, a repeated cursor, "more" without a cursor, or more than 1,000 pages.
