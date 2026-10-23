@@ -1,10 +1,10 @@
-export type CardAction = "watch" | "share"
+export type CardAction = "watch" | "share" | "similar"
 export const isTitleId = (value: string) =>
 	/^(movie|show):[1-9]\d{0,9}$/.test(value)
 export function formatCustomId(action: CardAction, titleId: string): string {
 	const value = `gw1:${action}:${titleId}`
 	if (
-		!["watch", "share"].includes(action) ||
+		!["watch", "share", "similar"].includes(action) ||
 		!isTitleId(titleId) ||
 		value.length > 100
 	)
@@ -15,6 +15,42 @@ export function parseCustomId(
 	value: string,
 ): { action: CardAction; titleId: string } | null {
 	if (value.length > 100) return null
-	const match = /^gw1:(watch|share):((?:movie|show):[1-9]\d{0,9})$/.exec(value)
+	const match =
+		/^gw1:(watch|share|similar):((?:movie|show):[1-9]\d{0,9})$/.exec(value)
 	return match ? { action: match[1] as CardAction, titleId: match[2] } : null
+}
+
+export function listCustomId(
+	action:
+		| "open"
+		| "person-share"
+		| "similar-share"
+		| "hot-share"
+		| "discover"
+		| "discover-share",
+	value: string,
+) {
+	const id = `gw1:${action}:${value}`
+	if (id.length > 100 || !/^[A-Za-z0-9_:.-]+$/.test(id))
+		throw new Error("Invalid custom ID")
+	return id
+}
+export function parseListId(id: string) {
+	if (id.length > 100) return null
+	const match =
+		/^gw1:(open|person-share|similar-share|hot-share|discover|discover-share):([A-Za-z0-9_:.-]+)$/.exec(
+			id,
+		)
+	if (!match) return null
+	const [, action, value] = match
+	if (action === "open" && !["private", "public"].includes(value)) return null
+	if (action === "person-share" && !/^[1-9]\d{0,9}$/.test(value)) return null
+	if (action === "similar-share" && !isTitleId(value)) return null
+	if (action === "hot-share" && value !== "now") return null
+	if (
+		action.startsWith("discover") &&
+		!/^(?:i[A-Za-z0-9_-]{1,65}|k[a-f0-9]{18}):\d{1,6}$/.test(value)
+	)
+		return null
+	return { action, value }
 }

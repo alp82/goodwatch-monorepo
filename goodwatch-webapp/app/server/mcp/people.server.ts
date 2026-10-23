@@ -5,7 +5,7 @@ import { searchQuery } from "../combined-search/catalog.server"
 import { getPersonCredits } from "../person.server"
 import { knownForOf } from "../search-people/people.server"
 import { loadTaste } from "../taste/index.server"
-import { getMemberViewerContext } from "../viewer.server"
+import { type ViewerContext, getMemberViewerContext } from "../viewer.server"
 import { page, summary } from "./data.server"
 import { titlePath } from "../../utils/helpers"
 import { tmdbImageUrl } from "../../utils/tmdb-image"
@@ -62,6 +62,7 @@ export async function readPeople(
 	userId: string,
 	origin: string,
 	args: ReadArgs,
+	guest?: ViewerContext,
 ) {
 	if (args.person_id === undefined) {
 		const offset = Number(args.cursor?.slice(7) ?? 0)
@@ -92,7 +93,26 @@ export async function readPeople(
 		[args.person_id],
 	)
 	if (!person)
-		return { status: "person_not_found", message: "No matching catalog person" }
+		return {
+			status: "person_not_found",
+			message: "No matching catalog person",
+		}
+	if (guest) {
+		const known = await knownFor([person.tmdb_id])
+		return {
+			person: {
+				...personSummary(person, origin),
+				...personCardFields(person, known.get(person.tmdb_id) ?? [], origin),
+				known_for: (known.get(person.tmdb_id) ?? []).slice(0, 10).map((t) => ({
+					id: `${t.type}:${canonicalTitleId(t.type, t.id)}`,
+					name: t.title,
+					year: Number(t.year) || null,
+				})),
+			},
+			items: [],
+			page_url: new URL(personPath(person.tmdb_id, person.name), origin).href,
+		}
+	}
 	const [credits, taste, ctx, known] = await Promise.all([
 		getPersonCredits(args.person_id),
 		loadTaste({ kind: "member", userId }).catch(() => null),
@@ -108,10 +128,13 @@ export async function readPeople(
 		taste?.signal === "some"
 			? new Map(
 					credits.map((credit, i) => [
-						`${credit.media_type}:${canonicalTitleId(credit.media_type, credit.tmdb_id)}`,
+						`${credit.media_type}:${canonicalTitleId(
+							credit.media_type,
+							credit.tmdb_id,
+						)}`,
 						percentiles?.[i] ?? null,
 					]),
-				)
+			  )
 			: new Map<string, number | null>()
 	const items = filmographyView(
 		credits,

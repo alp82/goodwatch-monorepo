@@ -6,16 +6,60 @@ import { lookup, resolve, summary } from "./data.server.ts"
 import { watchAvailability } from "./watch-links.server.ts"
 import type { ReadArgs } from "./tools.server.ts"
 
+export type GuestToolName =
+	| "search_titles"
+	| "get_title"
+	| "get_similar_titles"
+	| "discover_titles"
+	| "get_discover_filters"
+	| "search_people"
+	| "get_person"
+
 export async function readGuestTool(
-	viewer: Pick<ViewerContext, "country">,
+	viewer: Pick<ViewerContext, "country"> &
+		Partial<Pick<ViewerContext, "services">>,
 	origin: string,
-	name: "search_titles" | "get_title",
+	name: GuestToolName,
 	args: ReadArgs,
 ): Promise<Record<string, unknown>> {
 	const ctx = guestContext(
-		{ interactions: [], country: viewer.country, services: [] },
+		{
+			interactions: [],
+			country: viewer.country,
+			services: viewer.services ?? [],
+		},
 		viewer.country,
 	)
+	if (name === "get_similar_titles")
+		return (await import("./similar-titles.server.ts")).similarTitles(
+			"",
+			origin,
+			{ ...args, for_you: false },
+			ctx,
+		)
+	if (name === "discover_titles" || name === "get_discover_filters")
+		return (await import("./discover.server.ts")).readDiscover(
+			"",
+			origin,
+			name,
+			{ ...args, for_you: false },
+			ctx,
+		)
+	if (name === "search_people" || name === "get_person") {
+		if (name === "search_people" && !args.query?.trim())
+			throw new Error("search_people requires a nonblank query")
+		if (
+			name === "get_person" &&
+			(!Number.isSafeInteger(args.person_id) || Number(args.person_id) <= 0)
+		)
+			throw new Error("get_person requires person_id")
+		return (await import("./people.server.ts")).readPeople(
+			"",
+			origin,
+			name === "search_people" ? { ...args, person_id: undefined } : args,
+			ctx,
+		)
+	}
 	if (name === "search_titles") {
 		const query = args.query?.trim()
 		if (!query) throw new Error("search_titles requires a nonblank query")

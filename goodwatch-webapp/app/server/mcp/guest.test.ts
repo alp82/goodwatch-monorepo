@@ -37,6 +37,14 @@ registerHooks({
 		if (specifier === "./watch-links.server.ts")
 			body =
 				'export const watchAvailability=async(...args)=>{globalThis.__discordGuestCalls.push({kind:"availability",args});return {state:"unknown",offers:[]}}'
+		for (const [path, name] of [
+			["./similar-titles.server.ts", "similarTitles"],
+			["./discover.server.ts", "readDiscover"],
+			["./people.server.ts", "readPeople"],
+		]) {
+			if (specifier === path)
+				body = `export const ${name}=async(...args)=>{globalThis.__discordGuestCalls.push({kind:"${name}",args});return {status:"ok"}}`
+		}
 		return body
 			? {
 					url: `data:text/javascript,${encodeURIComponent(body)}`,
@@ -90,7 +98,9 @@ test("guest title reads have no member fields and use all services", async () =>
 })
 
 for (const query of [undefined, "", " ", "\t\n"])
-	test(`guest search rejects blank query without lookup: ${JSON.stringify(query)}`, async () => {
+	test(`guest search rejects blank query without lookup: ${JSON.stringify(
+		query,
+	)}`, async () => {
 		calls.length = 0
 		await assert.rejects(
 			readGuestTool(
@@ -106,3 +116,55 @@ for (const query of [undefined, "", " ", "\t\n"])
 			false,
 		)
 	})
+
+const guestCases: [
+	Parameters<typeof readGuestTool>[2],
+	Parameters<typeof readGuestTool>[3],
+	string,
+][] = [
+	[
+		"get_similar_titles",
+		{ title_id: "movie:42", for_you: true },
+		"similarTitles",
+	],
+	[
+		"discover_titles",
+		{ type: "show", providers: [119], for_you: true },
+		"readDiscover",
+	],
+	["get_discover_filters", {}, "readDiscover"],
+	["search_people", { query: "A person", person_id: 12 }, "readPeople"],
+	["get_person", { person_id: 12 }, "readPeople"],
+]
+for (const [name, args, reader] of guestCases)
+	test(`guest ${name} reuses ${reader} with a guest context`, async () => {
+		calls.length = 0
+		await readGuestTool({ country: "DE" }, "https://goodwatch.app", name, args)
+		const call = calls.find((c) => c.kind === reader)!
+		assert.equal(call.args[0], "")
+		assert.equal(call.args[1], "https://goodwatch.app")
+		assert.deepEqual(call.args.at(-1), {
+			viewer: { kind: "guest" },
+			country: "DE",
+			services: [],
+		})
+		if (reader !== "readPeople")
+			assert.equal((call.args.at(-2) as { for_you: boolean }).for_you, false)
+		if (name === "search_people")
+			assert.equal(
+				(call.args[2] as { person_id?: number }).person_id,
+				undefined,
+			)
+	})
+test("guest person tools reject blank searches and missing person IDs", async () => {
+	await assert.rejects(
+		readGuestTool({ country: "DE" }, "https://goodwatch.app", "search_people", {
+			query: " ",
+		}),
+		/nonblank/,
+	)
+	await assert.rejects(
+		readGuestTool({ country: "DE" }, "https://goodwatch.app", "get_person", {}),
+		/person_id/,
+	)
+})

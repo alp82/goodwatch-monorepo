@@ -1,6 +1,6 @@
 import { relatedMapNeighbors } from "../related-map.server"
 import { loadTaste } from "../taste/index.server"
-import { getMemberViewerContext } from "../viewer.server"
+import { type ViewerContext, getMemberViewerContext } from "../viewer.server"
 import { resolve, summary } from "./data.server.ts"
 import { similarTitleView } from "./similar-titles.ts"
 import type { ReadArgs } from "./tools.server.ts"
@@ -9,14 +9,15 @@ export async function similarTitles(
 	userId: string,
 	origin: string,
 	args: ReadArgs,
+	guest?: ViewerContext,
 ) {
 	const resolved = await resolve(args, origin)
 	if ("result" in resolved) return resolved.result
 	const source = resolved.title
 	const [pack, ctx, taste] = await Promise.all([
 		relatedMapNeighbors(source.media_type, source.tmdb_id),
-		getMemberViewerContext(userId, "US"),
-		args.for_you !== false
+		guest ?? getMemberViewerContext(userId, "US"),
+		!guest && args.for_you !== false
 			? loadTaste({ kind: "member", userId }).catch(() => null)
 			: null,
 	])

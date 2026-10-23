@@ -7,7 +7,7 @@ import { loadTaste } from "../taste/index.server"
 import { getDisplayFields } from "../title-cards.server"
 import { filterTitles } from "../title-filter/index.server"
 import { getTitleSnapshot } from "../title-snapshot/index.server"
-import { getMemberViewerContext } from "../viewer.server"
+import { type ViewerContext, getMemberViewerContext } from "../viewer.server"
 import { summary } from "./data.server.ts"
 import { discoverView, filterArgs } from "./discover-filters.ts"
 import type { ReadArgs } from "./tools.server.ts"
@@ -17,8 +17,9 @@ export async function readDiscover(
 	origin: string,
 	name: "discover_titles" | "get_discover_filters",
 	args: ReadArgs,
+	guest?: ViewerContext,
 ) {
-	const ctx = await getMemberViewerContext(userId, "US")
+	const ctx = guest ?? (await getMemberViewerContext(userId, "US"))
 	if (name === "get_discover_filters") {
 		const snapshot = getTitleSnapshot()
 		if (!snapshot)
@@ -52,15 +53,16 @@ export async function readDiscover(
 	const limit = args.limit ?? 40
 	const keys = result.keys.slice(offset, offset + limit)
 	const displays = await getDisplayFields(keys)
-	captureProductEvent(userId, "discovery results shown", {
-		source: "mcp",
-		result_count: keys.length,
-		country: ctx.country,
-		for_you: view.forYou,
-		sort: result.sortUsed,
-		on_my_services: view.state.onMyServices,
-		moods: view.state.moods,
-	})
+	if (!guest)
+		captureProductEvent(userId, "discovery results shown", {
+			source: "mcp",
+			result_count: keys.length,
+			country: ctx.country,
+			for_you: view.forYou,
+			sort: result.sortUsed,
+			on_my_services: view.state.onMyServices,
+			moods: view.state.moods,
+		})
 	return {
 		items: keys.flatMap((key) => {
 			const title = displays.get(key)

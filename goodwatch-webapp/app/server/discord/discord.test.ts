@@ -315,7 +315,8 @@ test("cards have thumbnail, score label, two overview lines, rows and safe menti
 	assert.equal(String(card.components[1].content).split("\n").length, 2)
 	assert.equal(card.components.at(-1)?.type, 1)
 	assert.ok(componentCount(card.components) <= 40)
-	assert.doesNotMatch(JSON.stringify(card), /"embeds"|"Similar"/)
+	assert.doesNotMatch(JSON.stringify(card), /"embeds"/)
+	assert.match(JSON.stringify(card), /"Similar"/)
 	assert.deepEqual(card.allowed_mentions, { parse: [] })
 	assert.match(
 		JSON.stringify(titleCard({ ...title, availability: undefined }, "US")),
@@ -414,7 +415,7 @@ test("REST stops after two retries and surfaces errors", async () => {
 	assert.equal(count, 3)
 })
 
-test("Where to watch on a shared card keeps its public flags and omits Share", async () => {
+test("Where to watch on a shared card creates a private response", async () => {
 	let done!: () => void
 	const finished = new Promise<void>((resolve) => {
 		done = resolve
@@ -425,13 +426,13 @@ test("Where to watch on a shared card keeps its public flags and omits Share", a
 		message: { flags: IS_COMPONENTS_V2 },
 	}
 	const body = await (await f.run(value)).json()
-	assert.deepEqual(body, { type: 6 })
+	assert.deepEqual(body, { type: 5, data: { flags: EPHEMERAL } })
 	await finished
 	assert.equal(
 		(f.edits[0] as [string, string, { flags: number }])[2].flags,
-		IS_COMPONENTS_V2,
+		IS_COMPONENTS_V2 | EPHEMERAL,
 	)
-	assert.doesNotMatch(JSON.stringify(f.edits), /Share to channel/)
+	assert.match(JSON.stringify(f.edits), /Share to channel/)
 })
 test("interaction responses work with Remix's Response without static json", async () => {
 	const json = Response.json
@@ -454,7 +455,9 @@ test("interaction responses work with Remix's Response without static json", asy
 })
 
 for (const query of ["", " ", "a", " a "])
-	test(`short autocomplete skips catalog reads: ${JSON.stringify(query)}`, async () => {
+	test(`short autocomplete skips catalog reads: ${JSON.stringify(
+		query,
+	)}`, async () => {
 		const f = fixture()
 		const body = await (
 			await f.run(
