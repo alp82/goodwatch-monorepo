@@ -63,6 +63,9 @@ A source wishlist entry for a season or episode, offered for the member to confi
 **Want to See the show**:
 The choice confirming that a season or episode wish on an import should add the whole show to Wishlist.
 
+**Season score, episode score, part score**:
+A member's own score from 1 to 10 for a season, an episode, or a part of a show that keeps its episode range, such as an anime cour (S1 E1–12). It is separate from the show's score: it changes no taste, fingerprint or recommendation, records no watch, and changes no show status. The Episodes section of a show page sets season and episode scores; imports bring all three over. A part score is never converted to a whole-show score.
+
 **Want to rewatch**:
 Want to See on a title the person has Seen: it places the title in Wishlist to be watched again and changes nothing else. It lasts while the title stays Seen and ends with the next watch of a movie or Watch again on a show.
 _Avoid_: Rewatch list, Want to See again

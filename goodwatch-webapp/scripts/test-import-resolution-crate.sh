@@ -31,4 +31,4 @@ while (true) {
   await new Promise(resolve => setTimeout(resolve, 250))
 }
 JS
-node --test app/server/imports/resolution-store.integration.ts
+node --test app/server/imports/resolution-store.integration.ts app/server/imports/episode-score.integration.ts
