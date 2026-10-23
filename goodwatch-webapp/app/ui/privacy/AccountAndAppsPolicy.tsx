@@ -158,89 +158,97 @@ export function AccountAndAppsPolicy() {
 				</p>
 			</Section>
 
-			<Section id="discord" title="The GoodWatch Discord bot">
-				<p>
-					You can use the GoodWatch bot in Discord without a GoodWatch account.
-					When you use a command or press a button, Discord sends GoodWatch what
-					it needs to answer: your Discord user ID, the server and channel IDs,
-					your Discord language setting, and the command with its options.
-				</p>
-				<p>
-					For each command we log only the command, where it ran (a server or a
-					direct message), whether you have a linked account, how long it took
-					and whether it worked. We don't log message content, names or what you
-					searched for. To stop abuse, we count commands per Discord user ID.
-				</p>
-				<p>
-					Searches by description from <code className="text-gray-100">/search</code>{" "}
-					run on GoodWatch's search service, the same way as searches on the
-					website. You can make 20 such searches a day, counted per Discord user
-					ID.
-				</p>
-				<h3 className="mt-3 font-semibold text-gray-100">
-					Linking your GoodWatch account
-				</h3>
-				<p>
-					When you link your Discord account to your GoodWatch account, you sign
-					in with Discord, and Discord shares only your user ID and username. We
-					use the sign-in key Discord gives us once to read them, then cancel it.
-					We store with your GoodWatch account:
-				</p>
-				<Bullets>
-					<li>Your Discord user ID and username</li>
-					<li>When you linked them</li>
-				</Bullets>
-				<p>
-					With a linked account, the bot's answers can show your matches, ratings
-					and lists. Only you see these answers. When you press Share to channel,
-					the bot posts a card to the channel without your personal part.
-				</p>
-				<p>
-					To unlink, use <code className="text-gray-100">/unlink</code> in
-					Discord, or the Discord section in Settings, Account and sign-in on
-					GoodWatch. Deleting your GoodWatch account also unlinks it. When you
-					unlink, we mark the link as removed and no longer use it.
-				</p>
-				<h3 className="mt-3 font-semibold text-gray-100">Server settings</h3>
-				<p>
-					A server admin can use <code className="text-gray-100">/setup</code>{" "}
-					to choose a country and streaming services for the server. We store
-					these with the server's ID, the Discord user ID of the admin who last
-					changed them, and when.
-				</p>
-				<h3 className="mt-3 font-semibold text-gray-100">
-					Choosing together
-				</h3>
-				<p>
-					During a <code className="text-gray-100">/together</code> session,
-					votes and picks are kept in GoodWatch's cache for up to 24 hours.
-					Nobody else sees your votes. After a session closes, its live data
-					expires within 48 hours.
-				</p>
-				<p>We keep only the outcome of each session:</p>
-				<Bullets>
-					<li>The server, channel and message IDs</li>
-					<li>The Discord user ID of the person who started it</li>
-					<li>What was being chosen, such as movies or a mood</li>
-					<li>How it ended, and the chosen title</li>
-					<li>How many people took part</li>
-					<li>When it started and ended</li>
-				</Bullets>
-				<p>We never keep individual votes or picks.</p>
-				<p>
-					Discord's own handling of your data is covered by the{" "}
-					<a
-						href="https://discord.com/privacy"
-						target="_blank"
-						rel="noreferrer"
-						className="font-semibold text-amber-500 hover:text-amber-400"
-					>
-						Discord Privacy Policy
-					</a>
-					.
-				</p>
-			</Section>
+			<DiscordBotPolicy />
 		</div>
+	)
+}
+
+// The Discord bot section (#748). It shows in both policy versions, because the bot is live whether or not
+// REC_CONNECTOR is on.
+export function DiscordBotPolicy() {
+	return (
+		<Section id="discord" title="The GoodWatch Discord bot">
+			<p>
+				You can use the GoodWatch bot in Discord without a GoodWatch account.
+				When you use a command or press a button, Discord sends GoodWatch what
+				it needs to answer: your Discord user ID, the server and channel IDs,
+				your Discord language setting, and the command with its options.
+			</p>
+			<p>
+				For each command we log only the command, where it ran (a server or a
+				direct message), whether you have a linked account, how long it took
+				and whether it worked. We don't log message content, names or what you
+				searched for. To stop abuse, we count commands per Discord user ID.
+			</p>
+			<p>
+				Searches by description from <code className="text-gray-100">/search</code>{" "}
+				run on GoodWatch's search service, the same way as searches on the
+				website. Each Discord user ID can run up to 20 new searches by
+				description a day. A search GoodWatch answered recently doesn't count.
+			</p>
+			<h3 className="mt-3 font-semibold text-gray-100">
+				Linking your GoodWatch account
+			</h3>
+			<p>
+				When you link your Discord account to your GoodWatch account, you sign
+				in with Discord, and Discord shares only your user ID and username. We
+				use the sign-in key Discord gives us once to read them, then cancel it.
+				We store with your GoodWatch account:
+			</p>
+			<Bullets>
+				<li>Your Discord user ID and username</li>
+				<li>When you linked them</li>
+			</Bullets>
+			<p>
+				With a linked account, the bot's answers can show your matches, ratings
+				and lists. Only you see these answers. When you press Share to channel,
+				the bot posts a card to the channel without your personal part.
+			</p>
+			<p>
+				To unlink, use <code className="text-gray-100">/unlink</code> in
+				Discord, or the Discord section in Settings, Account and sign-in on
+				GoodWatch. When you unlink, we mark the link as removed and no longer
+				use it.
+			</p>
+			<h3 className="mt-3 font-semibold text-gray-100">Server settings</h3>
+			<p>
+				A server admin can use <code className="text-gray-100">/setup</code>{" "}
+				to choose a country and streaming services for the server. We store
+				these with the server's ID, the Discord user ID of the admin who last
+				changed them, and when.
+			</p>
+			<h3 className="mt-3 font-semibold text-gray-100">
+				Choosing together
+			</h3>
+			<p>
+				During a <code className="text-gray-100">/together</code> session,
+				votes and picks are kept in GoodWatch's cache for up to 24 hours.
+				Nobody else sees your votes. After a session closes, its live data
+				expires within 48 hours.
+			</p>
+			<p>We keep only the outcome of each session:</p>
+			<Bullets>
+				<li>The server, channel and message IDs</li>
+				<li>The Discord user ID of the person who started it</li>
+				<li>What was being chosen, such as movies or a mood</li>
+				<li>How it ended, and the chosen title</li>
+				<li>How many people took part</li>
+				<li>When it started and ended</li>
+			</Bullets>
+			<p>We never keep individual votes or picks.</p>
+			<p>
+				Discord's own handling of your data is covered by the{" "}
+				<a
+					href="https://discord.com/privacy"
+					target="_blank"
+					rel="noreferrer"
+					className="font-semibold text-amber-500 hover:text-amber-400"
+				>
+					Discord Privacy Policy
+				</a>
+				.
+			</p>
+		</Section>
 	)
 }
 

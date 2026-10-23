@@ -1,13 +1,16 @@
 import type { MetaFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { isEnabled } from "~/server/features.server";
-import { AccountAndAppsPolicy } from "~/ui/privacy/AccountAndAppsPolicy";
+import {
+	AccountAndAppsPolicy,
+	DiscordBotPolicy,
+} from "~/ui/privacy/AccountAndAppsPolicy";
 import { type PageMeta, buildMeta } from "~/utils/meta";
 
 export { pageHeaders as headers } from "~/utils/headers"
 
 // With REC_CONNECTOR on, the policy covers self-hosted sign-in, account email, the move from Supabase and connected
-// apps (#571). Off, the policy of June 2024 serves unchanged.
+// apps (#571). Off, the policy of June 2024 serves with only the Discord bot section added (#748).
 export function loader() {
 	return { updated: isEnabled("connector") };
 }
@@ -39,7 +42,7 @@ export default function Privacy() {
 			{updated ? (
 				<p>Last updated: October 23, 2026</p>
 			) : (
-				<p>Last updated: June 15, 2024</p>
+				<p>Last updated: October 23, 2026</p>
 			)}
 			<p>
 				This Privacy Policy describes Our policies and procedures on the
@@ -67,6 +70,11 @@ export default function Privacy() {
 					<p className="mt-12 text-gray-400">
 						The rest of this policy covers the website in general.
 					</p>
+				</div>
+			)}
+			{!updated && (
+				<div className="mt-10 [&_p]:my-3">
+					<DiscordBotPolicy />
 				</div>
 			)}
 			<h2 className="mt-12 mb-4 text-2xl font-bold">
