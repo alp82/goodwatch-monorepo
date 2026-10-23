@@ -30,12 +30,12 @@ import {
 	reconcile,
 	retire,
 } from "./proposal-machine.ts"
-import {
-	type ProposalCatalog,
-	type ProposalParticipant,
-	type ProposalRepository,
-	type ProposalRoom,
-	type ProposalStored,
+import type {
+	ProposalCatalog,
+	ProposalParticipant,
+	ProposalRepository,
+	ProposalRoom,
+	ProposalStored
 } from "./proposal-types.ts"
 import type { ActorCredential } from "./service.server.ts"
 interface Lease {
@@ -61,6 +61,7 @@ export class ProposalService {
 	private guard?: ProposalOperationGuard
 	private now: () => number
 	private interpret?: InterpretRoom
+	private writes = new Map<string, { tail: Promise<void>; count: number }>()
 	constructor(
 		repository: ProposalRepository,
 		catalog: ProposalCatalog,
@@ -78,6 +79,32 @@ export class ProposalService {
 		this.now = now
 		this.guard = guard
 		this.interpret = interpret
+	}
+	/** Avoid retry storms between this process's joins, votes and socket handshakes.
+	 * Database CAS remains the authority across processes and background repair.
+	 */
+	private async write<T>(id: string, work: () => Promise<T>): Promise<T> {
+		const lane = this.writes.get(id) ?? { tail: Promise.resolve(), count: 0 }
+		if (lane.count >= 32)
+			throw new RoomError("busy", "Room busy; retry shortly", 503, true)
+		const queuedAt = Date.now()
+		const previous = lane.tail
+		let release!: () => void
+		lane.tail = new Promise<void>((resolve) => {
+			release = resolve
+		})
+		lane.count++
+		this.writes.set(id, lane)
+		try {
+			await previous
+			if (Date.now() - queuedAt >= 10000)
+				throw new RoomError("busy", "Room busy; retry shortly", 503, true)
+			return await work()
+		} finally {
+			lane.count--
+			release()
+			if (!lane.count) this.writes.delete(id)
+		}
 	}
 	private async get(id: string): Promise<ProposalStored> {
 		const stored = await this.repository.read(id)
@@ -315,6 +342,9 @@ export class ProposalService {
 		return { roomId: id }
 	}
 	async join(id: string, request: JoinRoomRequest) {
+		return this.write(id, () => this.joinRoom(id, request))
+	}
+	private async joinRoom(id: string, request: JoinRoomRequest) {
 		const resolved = await this.resolveInvite(request.inviteCode)
 		requireRoom(resolved.roomId === id, "not_found", "Invite unavailable", 404)
 		const { inviteCode: _invite, screenId, ...base } = request
@@ -436,6 +466,23 @@ export class ProposalService {
 		credential: ActorCredential,
 		envelope: CommandEnvelope
 	): Promise<CommandResult> {
+		const receipt = await this.write(id, () =>
+			this.applyCommand(id, credential, envelope)
+		)
+		// Fresh availability checks must not block joins or withdrawals that invalidate them.
+		await this.notify(id)
+		await this.settle(id)
+		const committed = await this.get(id)
+		return {
+			receipt,
+			snapshot: proposalSnapshot(committed.room, credential.participantId)
+		}
+	}
+	private async applyCommand(
+		id: string,
+		credential: ActorCredential,
+		envelope: CommandEnvelope
+	): Promise<CommandResult["receipt"]> {
 		const digest = hash(JSON.stringify(envelope))
 		let uncertain = false
 		for (let i = 0; i < 6; i++) {
@@ -455,17 +502,11 @@ export class ProposalService {
 					"conflict",
 					"Command ID/sequence reused"
 				)
-				await this.settle(id)
-				const committed = await this.get(id)
-				await this.notify(id)
 				return {
-					receipt: {
-						commandId: receipt.commandId,
-						sequence: receipt.sequence,
-						appliedRevision: receipt.revision,
-						replayed: true,
-					},
-					snapshot: proposalSnapshot(committed.room, p.id),
+					commandId: receipt.commandId,
+					sequence: receipt.sequence,
+					appliedRevision: receipt.revision,
+					replayed: true
 				}
 			}
 			requireRoom(
@@ -529,7 +570,7 @@ export class ProposalService {
 					)
 				}
 			}
-			let page
+			let page: Awaited<ReturnType<ProposalCatalog["page"]>> | undefined
 			if (
 				envelope.command.type === "start" ||
 				envelope.command.type === "refill"
@@ -571,25 +612,11 @@ export class ProposalService {
 				uncertain = true
 				continue
 			}
-			// Durable checking state is committed before network evidence. Crashes repair from persisted state.
-			await this.notify(id)
-			await this.settle(id)
-			const committed = await this.get(id)
-			const committedReceipt = actor(committed.room, p.id).receipts.find(
-				(r) => r.digest === digest
-			)
-			if (!committedReceipt) {
-				uncertain = true
-				continue
-			}
 			return {
-				receipt: {
-					commandId: committedReceipt.commandId,
-					sequence: committedReceipt.sequence,
-					appliedRevision: committedReceipt.revision,
-					replayed: false,
-				},
-				snapshot: proposalSnapshot(committed.room, p.id),
+				commandId: envelope.commandId,
+				sequence: envelope.sequence,
+				appliedRevision: room.revision,
+				replayed: false
 			}
 		}
 		throw new RoomError(
@@ -664,6 +691,12 @@ export class ProposalService {
 		id: string,
 		credential: ActorCredential
 	): Promise<RealtimeTicket> {
+		return this.write(id, () => this.issueTicket(id, credential))
+	}
+	private async issueTicket(
+		id: string,
+		credential: ActorCredential
+	): Promise<RealtimeTicket> {
 		for (let i = 0; i < 6; i++) {
 			const old = await this.get(id)
 			const p = this.auth(old.room, credential)
@@ -724,6 +757,9 @@ export class ProposalService {
 		}
 	}
 	async attach(id: string, ticket: string) {
+		return this.write(id, () => this.consumeTicket(id, ticket))
+	}
+	private async consumeTicket(id: string, ticket: string) {
 		for (let i = 0; i < 6; i++) {
 			const old = await this.get(id)
 			const room = structuredClone(old.room)
@@ -805,6 +841,9 @@ export class ProposalService {
 	}
 	/** Server/operator-only revocation, never a gateway/public command. Required roster is retained. */
 	async revokeParticipant(id: string, participantId: string) {
+		return this.write(id, () => this.revoke(id, participantId))
+	}
+	private async revoke(id: string, participantId: string) {
 		for (let i = 0; i < 6; i++) {
 			const old = await this.get(id)
 			const room = structuredClone(old.room)

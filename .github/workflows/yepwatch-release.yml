@@ -52,6 +52,7 @@ jobs:
           node app/server/yepwatch/build-release.mjs
           node --experimental-strip-types --test \
             app/server/yepwatch/proposal.test.ts \
+            app/server/yepwatch/proposal-concurrency.test.ts \
             app/server/yepwatch/proposal-release.test.ts \
             app/server/yepwatch/proposal-release-members.test.ts \
             app/server/yepwatch/proposal-release-control.test.ts \
