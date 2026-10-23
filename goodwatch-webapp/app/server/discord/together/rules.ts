@@ -6,6 +6,7 @@ export interface Ballot {
 export interface VotingState {
 	deck: string[]
 	votes: Record<string, Ballot[]>
+	picks?: Record<string, string>
 }
 export interface Summary {
 	participantCount: number
@@ -58,6 +59,7 @@ export type Action =
 	| { kind: "join" | "leave"; user: string }
 	| { kind: "vote"; user: string; titleId: string; vote: Vote }
 	| { kind: "undo"; user: string; titleId: string }
+	| { kind: "pick"; user: string; titleId: string }
 /** Stale cards cannot skip a title, change a recorded vote, or undo twice. */
 export function applyAction(state: VotingState, action: Action): VotingState {
 	const votes = { ...state.votes }
@@ -85,7 +87,20 @@ export function applyAction(state: VotingState, action: Action): VotingState {
 		if (ballot.length) votes[action.user] = ballot
 		else delete votes[action.user]
 	}
-	return { deck: state.deck, votes }
+	const next = { deck: state.deck, votes }
+	const matches = summarize(next).matches
+	const picks = Object.fromEntries(
+		Object.entries(state.picks ?? {}).filter(
+			([u, id]) => votes[u]?.length && matches.includes(id),
+		),
+	)
+	if (action.kind === "pick") {
+		if (!votes[action.user]?.length) throw new Error("Join to pick")
+		if (!matches.includes(action.titleId))
+			throw new Error("Choose a current match")
+		picks[action.user] = action.titleId
+	}
+	return { ...next, picks }
 }
 /** Append only; existing titles never move when the popularity catalog changes. */
 export function growDeck(deck: string[], candidates: string[]) {
@@ -102,3 +117,37 @@ export const summarySignature = (s: Summary) =>
 		s.matches,
 		s.possibleMatches.map((p) => [p.titleId, p.waitingFor]),
 	])
+
+/** No vacuous agreement: everyone participating must pick the same current match. */
+export function unanimousPick(state: VotingState) {
+	const users = Object.keys(state.votes).filter((u) => state.votes[u].length)
+	const id = state.picks?.[users[0]]
+	return id &&
+		users.length &&
+		summarize(state).matches.includes(id) &&
+		users.every((u) => state.picks?.[u] === id)
+		? id
+		: undefined
+}
+export function isExhausted(state: VotingState, deckDone = false) {
+	const s = summarize(state)
+	return (
+		(state.deck.length >= MAX_DECK || deckDone) &&
+		s.participantCount > 0 &&
+		s.stillVoting === 0 &&
+		s.matches.length === 0
+	)
+}
+/** Ties keep deck order, so the public choices and the atomic check agree. */
+export function topThree(state: VotingState) {
+	return state.deck
+		.map((titleId, order) => ({
+			titleId,
+			order,
+			yep: Object.values(state.votes).filter((b) =>
+				b.some((v) => v.titleId === titleId && v.vote === "yep"),
+			).length,
+		}))
+		.sort((a, b) => b.yep - a.yep || a.order - b.order)
+		.slice(0, 3)
+}

@@ -72,9 +72,14 @@ export interface Interaction {
 	guild_id?: string
 	authorizing_integration_owners?: Record<string, string>
 	app_permissions?: string
-	message?: { flags?: number }
-	user?: { id: string }
-	member?: { user?: { id: string }; permissions?: string }
+	channel_id?: string
+	message?: { flags?: number; id?: string }
+	user?: { id: string; username?: string; global_name?: string }
+	member?: {
+		nick?: string
+		user?: { id: string; username?: string; global_name?: string }
+		permissions?: string
+	}
 	data?: {
 		name?: string
 		custom_id?: string

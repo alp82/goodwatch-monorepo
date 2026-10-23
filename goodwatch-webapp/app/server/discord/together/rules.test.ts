@@ -22,7 +22,7 @@ export const meta = (): SessionMeta => ({
 	id: "a".repeat(24),
 	guildId: "guild",
 	starterId: "starter",
-	createdAt: 0,
+	createdAt: Date.now(),
 	type: "movie",
 	place: { country: "DE", services: [] },
 	deck: ["movie:1", "movie:2", "movie:3"],
@@ -284,7 +284,9 @@ test("all 225 reachable two-person, three-title states obey unanimity, waiting, 
 
 test("every store operation is deadline-bound and unavailable Valkey propagates", async () => {
 	let deadlines = 0
-	const client = { eval: async () => null }
+	const client = {
+		eval: async (_script: string, keys: number) => (keys === 1 ? 1 : null),
+	}
 	const store = createSessionStore(client, async (p) => {
 		deadlines++
 		return p
@@ -294,7 +296,7 @@ test("every store operation is deadline-bound and unavailable Valkey propagates"
 	await store.act(meta().id, vote("a", 1))
 	await store.grow(meta().id, 3, [], true)
 	await store.bind(meta().id, "c", "m")
-	assert.equal(deadlines, 5)
+	assert.equal(deadlines, 6)
 	const unavailable = createSessionStore(client, async () => {
 		throw new Error("Redis command timed out")
 	})

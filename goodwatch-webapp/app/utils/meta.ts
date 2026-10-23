@@ -1,6 +1,5 @@
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
-import { WORDMARK_VERSION } from "~/ui/brand/version"
 import { OG_IMAGE } from "~/ui/og-image/format"
 import { type Crumb, breadcrumbJsonLd } from "~/ui/nav/breadcrumb-trail"
 import { personPath } from "~/utils/helpers"
@@ -18,12 +17,8 @@ export interface PageMeta {
 
 export type PageItem = MovieDetails | TVDetails
 
-// The Open Graph image for a page URL, served by the og.$ route.
-export const ogImageUrl = (pageUrl: string) => {
-	const { pathname } = new URL(pageUrl, "https://goodwatch.app")
-	const path = pathname.replace(/\/+$/, "")
-	return `https://goodwatch.app/og${path || "/index"}${OG_IMAGE.extension}?brand=${WORDMARK_VERSION}`
-}
+export { ogImageUrl } from "./og-image-url.ts"
+import { ogImageUrl } from "./og-image-url.ts"
 
 /**
  * The address of a page of a paged list: the first page is the list's own address, a later page carries `?page=N`.

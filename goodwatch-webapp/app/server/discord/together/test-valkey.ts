@@ -23,6 +23,7 @@ export class LuaValkey implements EvalClient {
 	async eval(script: string, n: number, ...args: (string | number)[]) {
 		const json: Record<string, unknown> = {}
 		for (const v of [
+			"{}",
 			...Object.values(this.hashes).flatMap(Object.values),
 			String(args[n + 2]),
 		]) {
@@ -50,8 +51,12 @@ local function encode(v)
  for k, x in pairs(v) do table.insert(parts, encode(k) .. ':' .. encode(x)) end
  return '{' .. table.concat(parts, ',') .. '}'
 end
+local function copy(v)
+ if type(v) ~= 'table' then return v end
+ local t = {}; for k, x in pairs(v) do t[k] = copy(x) end; return t
+end
 cjson = {
- decode = function(s) assert(decoded[s], 'Missing decoded JSON'); return decoded[s] end,
+ decode = function(s) assert(decoded[s], 'Missing decoded JSON'); return copy(decoded[s]) end,
  encode = function(v) local s = encode(v); decoded[s] = v; return s end
 }
 redis = { call = function(op, key, field, value)

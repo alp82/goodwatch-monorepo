@@ -1080,6 +1080,27 @@ SCHEMAS = {
         "timestamps": False,
         "replicas": "0-1",
     },
+    "discord_together": {
+        "columns": {
+            "session_id": "TEXT",
+            "guild_id": "TEXT",
+            "channel_id": "TEXT",
+            "message_id": "TEXT",
+            "starter_id": "TEXT",
+            "type": "TEXT",
+            "mood": "TEXT",
+            "status": "TEXT",
+            "decided_tmdb_id": "INTEGER",
+            "decided_media_type": "TEXT",
+            "participant_count": "INTEGER",
+            "created_at": "TIMESTAMP WITH TIME ZONE",
+            "ended_at": "TIMESTAMP WITH TIME ZONE",
+        },
+        "primary_key": ["session_id"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
     "discord_guild": {
         "columns": {
             "guild_id": "TEXT",

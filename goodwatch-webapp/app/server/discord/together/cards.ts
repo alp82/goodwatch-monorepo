@@ -9,8 +9,15 @@ import {
 } from "../cards.ts"
 import { togetherCustomId } from "../custom-id.ts"
 import { commands } from "../commands.ts"
-import { nextTitle } from "./rules.ts"
+import { nextTitle, isExhausted, topThree, summarySignature } from "./rules.ts"
+import { ogImageUrl } from "../../../utils/og-image-url.ts"
+import { titlePath } from "../../../utils/helpers.ts"
 import type { Session, DeckPlace } from "./store.server.ts"
+function plural(n: number, noun: string) {
+	return `${n} ${noun}${
+		n === 1 ? "" : /(?:s|x|z|ch|sh)$/.test(noun) ? "es" : "s"
+	}`
+}
 const safe = (s: string) =>
 	displayText(s)
 		.replace(/[\\*_~`|>#[\]]/g, "\\$&")
@@ -28,7 +35,7 @@ function poster(title: GuestTitle, content: string): Component {
 					media: { url: title.poster_url },
 					description: safe(title.name),
 				},
-			}
+		  }
 		: text(content)
 }
 function watch(title: GuestTitle, place: DeckPlace) {
@@ -57,6 +64,7 @@ export function publicCard(
 	emojis: EmojiIds = {},
 ) {
 	const { meta, summary } = session
+	if (meta.status !== "open") return closedCard(session, emojis)
 	const moodOption = commands
 		.find((c) => c.name === "together")
 		?.options.find((o) => o.name === "mood")
@@ -66,12 +74,19 @@ export function publicCard(
 			: undefined
 	const byId = new Map(titles.map((t) => [t.id, t]))
 	const matches = summary.matches.slice(0, 5)
-	const possible = summary.possibleMatches.slice(0, 5)
+	const removable = Object.keys(session.votes)
+	const possible = summary.possibleMatches.slice(
+		0,
+		removable.length && matches.length ? 4 : 5,
+	)
 	const titleRow = (id: string, label: string) => {
 		const t = byId.get(id) ?? { id, name: "Title unavailable", year: null }
 		return poster(
 			t,
-			`### ${safe(t.name)}\n${titleFacts(t, emojis)}\n**${label}**\n${watch(t, meta.place)}`,
+			`### ${safe(t.name)}\n${titleFacts(t, emojis)}\n**${label}**\n${watch(
+				t,
+				meta.place,
+			)}`,
 		)
 	}
 	return message(
@@ -79,39 +94,106 @@ export function publicCard(
 			container(
 				[
 					text(
-						`## Let's watch together\nStarted by <@${meta.starterId}> · ${
+						`## Let's watch together\nStarted by ${safe(
+							meta.starterName ?? "the starter",
+						)} · ${
 							meta.type === "any"
 								? "Movies and shows"
 								: meta.type === "movie"
-									? "Movies"
-									: "Shows"
+								? "Movies"
+								: "Shows"
 						}${mood ? ` · ${safe(mood)}` : ""}`,
 					),
 					text(
-						`${summary.participantCount} participants · ${summary.stillVoting} still voting`,
+						`${plural(summary.participantCount, "participant")} · ${
+							summary.stillVoting
+						} still voting`,
 					),
-					...matches.map((id) => titleRow(id, "Match")),
+					...matches.map((id) =>
+						titleRow(
+							id,
+							`Match · picked by ${
+								Object.values(session.picks ?? {}).filter((pick) => pick === id)
+									.length
+							} of ${summary.participantCount}`,
+						),
+					),
 					...(summary.matches.length > 5
-						? [text(`and ${summary.matches.length - 5} more matches`)]
+						? [text(`and ${plural(summary.matches.length - 5, "more match")}`)]
 						: []),
 					...possible.map((p) =>
 						titleRow(p.titleId, `Possible match · waiting for ${p.waitingFor}`),
 					),
-					...(summary.possibleMatches.length > 5
+					...(summary.possibleMatches.length > possible.length
 						? [
 								text(
-									`and ${
-										summary.possibleMatches.length - 5
-									} more possible matches`,
+									`and ${plural(
+										summary.possibleMatches.length - possible.length,
+										"more possible match",
+									)}`,
 								),
-							]
+						  ]
 						: []),
 					...(!matches.length && !possible.length
 						? [
 								text(
 									"Join and vote privately. Matches appear here as you vote.",
 								),
-							]
+						  ]
+						: []),
+					...(isExhausted(session, meta.deckDone)
+						? [
+								text(
+									"Deck exhausted. The starter can choose from the three titles with the most Yep votes.",
+								),
+								...topThree(session).map((t) =>
+									titleRow(
+										t.titleId,
+										`${t.yep} of ${summary.participantCount} voted Yep`,
+									),
+								),
+								select(
+									session,
+									"choose",
+									"Starter: choose a title",
+									topThree(session).map((t) => ({
+										label: safe(
+											byId.get(t.titleId)?.name ?? "Title unavailable",
+										).slice(0, 80),
+										value: t.titleId,
+									})),
+								),
+						  ]
+						: []),
+					...(summary.matches.length
+						? [
+								select(
+									session,
+									"pick",
+									"Pick a match",
+									summary.matches.slice(0, 25).map((id) => ({
+										label: safe(
+											byId.get(id)?.name ?? "Title unavailable",
+										).slice(0, 80),
+										value: id,
+									})),
+								),
+						  ]
+						: []),
+					...(removable.length
+						? [
+								select(
+									session,
+									"remove",
+									"Starter: remove a participant",
+									removable.slice(0, 12).map((id, i) => ({
+										label: safe(
+											session.names?.[id] ?? `Participant ${i + 1}`,
+										).slice(0, 80),
+										value: id,
+									})),
+								),
+						  ]
 						: []),
 					row([
 						{
@@ -119,6 +201,12 @@ export function publicCard(
 							style: 1,
 							label: "Join",
 							custom_id: togetherCustomId("join", meta.id),
+						},
+						{
+							type: 2,
+							style: 2,
+							label: "End",
+							custom_id: togetherCustomId("end", meta.id),
 						},
 					]),
 				],
@@ -165,7 +253,7 @@ export function votingCard(
 								title,
 								session.meta.place,
 							)}`,
-						)
+					  )
 					: text("You've voted on every title for now."),
 				row([
 					...(voting
@@ -183,7 +271,7 @@ export function votingCard(
 							row([
 								{ type: 2, style: 5, label: "Trailer", url: title.trailer_url },
 							]),
-						]
+					  ]
 					: []),
 			],
 			0xf59e0b,
@@ -200,4 +288,129 @@ export function installCard(appId: string) {
 		text("Add GoodWatch to this server to start a /together session."),
 		row([{ type: 2, style: 5, label: "Add GoodWatch to this server", url }]),
 	])
+}
+
+function select(
+	session: Session,
+	action: "pick" | "remove" | "choose",
+	placeholder: string,
+	options: { label: string; value: string }[],
+) {
+	return row([
+		{
+			type: 3,
+			custom_id: togetherCustomId(action, session.meta.id),
+			placeholder,
+			min_values: 1,
+			max_values: 1,
+			options,
+		},
+	])
+}
+function closedCard(session: Session, emojis: EmojiIds) {
+	const { meta } = session
+	if (meta.status !== "decided")
+		return message(
+			[
+				container(
+					[
+						text(
+							meta.status === "ended"
+								? "## Ended by the starter"
+								: "## This session expired",
+						),
+						text("Start a new one with /together."),
+					],
+					0x4e5058,
+				),
+			],
+			false,
+		)
+	const title = meta.decisionTitle ?? {
+		id: meta.decidedTitleId!,
+		name: "Title unavailable",
+		year: null,
+	}
+	const [kind, id] = title.id.split(":")
+	const url = `https://goodwatch.app${titlePath(kind, Number(id), title.name)}`
+	return message(
+		[
+			container(
+				[
+					text(
+						`## Decided: ${safe(title.name)}\n${
+							meta.decisionBy === "starter"
+								? "Chosen by the starter."
+								: `Everyone picked it. **${
+										session.summary.participantCount
+								  } of ${plural(
+										session.summary.participantCount,
+										"participant",
+								  )}**.`
+						}`,
+					),
+					{
+						type: 12,
+						items: [
+							{
+								media: { url: ogImageUrl(url) },
+								description: safe(title.name),
+							},
+						],
+					},
+					text(titleFacts(title, emojis)),
+					text(
+						meta.availabilityFailed
+							? "Availability couldn't be checked. Check Where to watch before starting."
+							: watch(title, meta.place),
+					),
+					row([
+						{ type: 2, style: 5, label: "Open on GoodWatch", url },
+						{
+							type: 2,
+							style: 2,
+							label: "Where to watch",
+							custom_id: `gw1:watch:${title.id}`,
+						},
+					]),
+				],
+				0xf59e0b,
+			),
+		],
+		false,
+	)
+}
+/** Includes every visible state, including name changes, so the throttle never drops a pick or closure. */
+export function publicSignature(session: Session) {
+	if (session.meta.status !== "open")
+		return JSON.stringify([
+			session.meta.status,
+			session.summary.participantCount,
+			session.meta.decidedTitleId,
+			session.meta.decisionBy,
+			ordered(session.meta.decisionTitle),
+			session.meta.availabilityFailed,
+		])
+	return JSON.stringify([
+		summarySignature(session.summary),
+		session.meta.status,
+		session.meta.decidedTitleId,
+		ordered(session.meta.decisionTitle),
+		session.meta.availabilityFailed,
+		session.meta.deckDone,
+		Object.entries(session.picks ?? {}).sort(),
+		Object.entries(session.names ?? {}).sort(),
+		isExhausted(session, session.meta.deckDone) ? topThree(session) : [],
+	])
+}
+
+function ordered(value: unknown): unknown {
+	if (Array.isArray(value)) return value.map(ordered)
+	if (value && typeof value === "object")
+		return Object.fromEntries(
+			Object.entries(value)
+				.sort(([a], [b]) => a.localeCompare(b))
+				.map(([key, entry]) => [key, ordered(entry)]),
+		)
+	return value
 }

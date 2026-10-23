@@ -88,7 +88,16 @@ export function parseUndoId(id: string) {
 	return match ? { batchId: match[1], titleId: match[2] } : null
 }
 
-export type TogetherAction = "join" | "yep" | "nope" | "undo" | "leave"
+export type TogetherAction =
+	| "join"
+	| "yep"
+	| "nope"
+	| "undo"
+	| "leave"
+	| "pick"
+	| "end"
+	| "remove"
+	| "choose"
 export function togetherCustomId(
 	action: TogetherAction,
 	session: string,
@@ -103,13 +112,13 @@ export function parseTogetherId(
 ): { action: TogetherAction; session: string; titleId?: string } | null {
 	if (id.length > 100) return null
 	const match =
-		/^gw1:together:(join|yep|nope|undo|leave):([a-f0-9]{24})(?::((?:movie|show):[1-9]\d{0,9}))?$/.exec(
+		/^gw1:together:(join|yep|nope|undo|leave|pick|end|remove|choose):([a-f0-9]{24})(?::((?:movie|show):[1-9]\d{0,9}))?$/.exec(
 			id,
 		)
 	if (!match) return null
 	const action = match[1] as TogetherAction
 	if ((action === "yep" || action === "nope") && !match[3]) return null
-	if ((action === "join" || action === "leave") && match[3]) return null
+	if (!["yep", "nope", "undo"].includes(action) && match[3]) return null
 	return {
 		action,
 		session: match[2],

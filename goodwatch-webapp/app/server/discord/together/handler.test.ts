@@ -11,7 +11,7 @@ import { togetherCustomId } from "../custom-id.ts"
 import { createSessionStore, EXPIRED } from "./store.server.ts"
 import { LuaValkey, hasLua } from "./test-valkey.ts"
 import { commands } from "../commands.ts"
-import { summarySignature } from "./rules.ts"
+import { publicSignature } from "./cards.ts"
 import { resolveViewerPlace } from "../place.server.ts"
 const interaction = (data: Interaction["data"], type = 2): Interaction => ({
 	type,
@@ -46,6 +46,7 @@ function fixture(
 		getGuild: async () => null,
 		together: {
 			emojis: async () => ({}),
+			expireAt: () => {},
 			store: async () => store,
 			candidates: async (meta) => {
 				candidateCalls++
@@ -156,7 +157,7 @@ test(
 		assert.equal(session.meta.channelId, "public-channel")
 		assert.equal(session.meta.mood, "funny")
 		assert.equal(session.deck.length, 30)
-		assert.equal(f.published[0], summarySignature(session.summary))
+		assert.equal(f.published[0], publicSignature(session))
 		const join = await f.run(
 			interaction({ custom_id: togetherCustomId("join", id) }, 3),
 		)
@@ -391,5 +392,309 @@ test(
 		const started = await f.run(interaction({ name: "together" }))
 		await started.finished
 		assert.equal(f.posts.length, 1)
+	},
+)
+
+test(
+	"public picks reply privately; a fresh availability failure keeps the decision and known title",
+	{ skip: !hasLua },
+	async () => {
+		let freshCalls = 0
+		const f = fixture({
+			title: async (id, place) => {
+				freshCalls++
+				assert.deepEqual(place, { country: "DE", services: [] })
+				throw new Error("Availability down")
+			},
+		})
+		const start = await f.run(interaction({ name: "together" }))
+		await start.finished
+		const id = f.changes[0]
+		const outsider = await f.run({
+			...interaction(
+				{ custom_id: togetherCustomId("pick", id), values: ["movie:1"] },
+				3,
+			),
+			user: { id: "outsider" },
+		})
+		assert.deepEqual(outsider.response, {
+			type: 5,
+			data: { flags: EPHEMERAL },
+		})
+		await outsider.finished
+		assert.match(JSON.stringify(f.edits.at(-1)), /Join to pick/)
+		await f.store.act(id, {
+			kind: "vote",
+			user: "a",
+			titleId: "movie:1",
+			vote: "yep",
+		})
+		await f.store.remember(id, [
+			{ id: "movie:1", name: "Known title", year: 2001, goodwatch_score: 92 },
+		])
+		const picked = await f.run(
+			interaction(
+				{ custom_id: togetherCustomId("pick", id), values: ["movie:1"] },
+				3,
+			),
+		)
+		await picked.finished
+		const decided = (await f.store.load(id))!
+		assert.equal(decided.meta.status, "decided")
+		assert.equal(decided.meta.decisionTitle?.name, "Known title")
+		assert.equal(decided.meta.availabilityFailed, true)
+		assert.equal(freshCalls, 1)
+		assert.match(JSON.stringify(f.edits.at(-1)), /Decided/)
+		for (const action of ["join", "pick", "yep"] as const) {
+			const press = await f.run(
+				interaction(
+					{
+						custom_id: togetherCustomId(
+							action,
+							id,
+							action === "yep" ? "movie:2" : undefined,
+						),
+						values: ["movie:1"],
+					},
+					3,
+				),
+			)
+			await press.finished
+			assert.match(
+				JSON.stringify(f.edits.at(-1)),
+				/Decided\. See the title in the channel\./,
+			)
+		}
+		assert.equal(freshCalls, 1)
+	},
+)
+
+test(
+	"decision checks the deck place again and stores new offers",
+	{ skip: !hasLua },
+	async () => {
+		let reads = 0
+		const f = fixture({
+			title: async (id, place) => {
+				reads++
+				assert.deepEqual(place, { country: "DE", services: [] })
+				return {
+					id,
+					name: "Fresh title",
+					year: 2026,
+					availability: {
+						state: "available",
+						offers: [
+							{
+								name: "New provider",
+								stream_link: "https://example.com/",
+								offer_type: "flatrate",
+							},
+						],
+					},
+				}
+			},
+		})
+		const started = await f.run(interaction({ name: "together" }))
+		await started.finished
+		const id = f.changes[0]
+		await f.store.act(id, {
+			kind: "vote",
+			user: "a",
+			titleId: "movie:1",
+			vote: "yep",
+		})
+		const picked = await f.run(
+			interaction(
+				{ custom_id: togetherCustomId("pick", id), values: ["movie:1"] },
+				3,
+			),
+		)
+		await picked.finished
+		assert.equal(reads, 1)
+		const m = (await f.store.load(id))!.meta
+		assert.equal(m.availabilityFailed, false)
+		assert.equal(m.decisionTitle?.availability?.offers[0].name, "New provider")
+	},
+)
+
+test(
+	"End, remove, and exhausted choice require both the session guild and starter",
+	{ skip: !hasLua },
+	async () => {
+		const f = fixture()
+		const start = await f.run(interaction({ name: "together" }))
+		await start.finished
+		const id = f.changes[0]
+		await f.store.act(
+			id,
+			{ kind: "vote", user: "b", titleId: "movie:1", vote: "yep" },
+			"Bee",
+		)
+		for (const action of ["end", "remove", "choose"] as const) {
+			for (const patch of [{ guild_id: "other" }, { user: { id: "b" } }]) {
+				const press = await f.run({
+					...interaction(
+						{ custom_id: togetherCustomId(action, id), values: ["b"] },
+						3,
+					),
+					...patch,
+				})
+				assert.deepEqual(press.response, {
+					type: 5,
+					data: { flags: EPHEMERAL },
+				})
+				await press.finished
+				assert.match(
+					JSON.stringify(f.edits.at(-1)),
+					patch.guild_id ? /another server/ : /Only the starter/,
+				)
+				assert.equal((await f.store.load(id))!.meta.status, "open")
+				assert.equal((await f.store.load(id))!.summary.participantCount, 1)
+			}
+		}
+		const removed = await f.run(
+			interaction(
+				{ custom_id: togetherCustomId("remove", id), values: ["b"] },
+				3,
+			),
+		)
+		await removed.finished
+		assert.equal((await f.store.load(id))!.summary.participantCount, 0)
+		const ended = await f.run(
+			interaction({ custom_id: togetherCustomId("end", id) }, 3),
+		)
+		await ended.finished
+		assert.equal((await f.store.load(id))!.meta.status, "ended")
+		assert.match(JSON.stringify(f.edits.at(-1)), /Ended by the starter/)
+	},
+)
+
+test(
+	"expired presses answer the fixed expiry copy and request a public update",
+	{ skip: !hasLua },
+	async () => {
+		const f = fixture()
+		const id = "e".repeat(24)
+		await f.store.create({
+			id,
+			createdAt: Date.now() - 86400_000,
+			guildId: "guild",
+			starterId: "a",
+			type: "any",
+			deck: [],
+			status: "open",
+			place: { country: "DE", services: [] },
+		})
+		const press = await f.run(
+			interaction(
+				{ custom_id: togetherCustomId("pick", id), values: ["movie:1"] },
+				3,
+			),
+		)
+		await press.finished
+		assert.match(
+			JSON.stringify(f.edits.at(-1)),
+			/This session expired\. Start a new one with \/together\./,
+		)
+		assert.ok(f.changes.includes(id))
+	},
+)
+
+test(
+	"the fourth guild session gets an ephemeral limit reply before public deferral",
+	{ skip: !hasLua },
+	async () => {
+		const f = fixture()
+		for (let n = 0; n < 3; n++) {
+			const start = await f.run(interaction({ name: "together" }))
+			await start.finished
+		}
+		const fourth = await f.run(interaction({ name: "together" }))
+		await fourth.finished
+		assert.equal(fourth.response.type, 4)
+		assert.equal(
+			(fourth.response.data as { flags: number }).flags & EPHEMERAL,
+			EPHEMERAL,
+		)
+		assert.match(JSON.stringify(fourth.response), /3 open sessions/)
+		assert.equal(f.posts.length, 3)
+		assert.equal(f.candidateCalls(), 3)
+	},
+)
+
+test(
+	"decision detail failures still publish the committed decision",
+	{ skip: !hasLua },
+	async () => {
+		for (const failure of ["reject", "null"] as const) {
+			const f = fixture({
+				title: async () => {
+					throw new Error("Catalog down")
+				},
+			})
+			const start = await f.run(interaction({ name: "together" }))
+			await start.finished
+			const id = f.changes[0]
+			await f.store.act(id, {
+				kind: "vote",
+				user: "a",
+				titleId: "movie:1",
+				vote: "yep",
+			})
+			f.store.details = async () => {
+				if (failure === "reject") throw new Error("Storage down")
+				return null
+			}
+			const changes = f.changes.length
+			const press = await f.run(
+				interaction(
+					{ custom_id: togetherCustomId("pick", id), values: ["movie:1"] },
+					3,
+				),
+			)
+			await press.finished
+			assert.equal((await f.store.load(id))!.meta.status, "decided")
+			assert.deepEqual(f.changes.slice(changes), [id])
+			assert.match(
+				JSON.stringify(f.edits.at(-1)),
+				/Decided\. See the title in the channel\./,
+			)
+		}
+	},
+)
+
+test(
+	"a concurrent decision reloads the status and publishes it",
+	{ skip: !hasLua },
+	async () => {
+		const f = fixture()
+		const start = await f.run(interaction({ name: "together" }))
+		await start.finished
+		const id = f.changes[0]
+		await f.store.act(id, {
+			kind: "vote",
+			user: "a",
+			titleId: "movie:1",
+			vote: "yep",
+		})
+		const act = f.store.act
+		f.store.act = async () => {
+			await act(id, { kind: "pick", user: "a", titleId: "movie:1" })
+			throw new Error("ERR This session is closed")
+		}
+		const changes = f.changes.length
+		const press = await f.run(
+			interaction(
+				{ custom_id: togetherCustomId("pick", id), values: ["movie:1"] },
+				3,
+			),
+		)
+		await press.finished
+		assert.deepEqual(f.changes.slice(changes), [id])
+		assert.match(
+			JSON.stringify(f.edits.at(-1)),
+			/Decided\. See the title in the channel\./,
+		)
 	},
 )
