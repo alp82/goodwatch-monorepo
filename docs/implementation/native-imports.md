@@ -251,6 +251,8 @@ remain untested. No schema or landing-surface changes are required.
 
 ## Connect Plex (#643)
 
+Extended by [Plex library watches and personal ratings (#760)](imports/plex-library.md): the same connection now reads the documented library endpoint for watched items missing retained history and personal scores. The linked contract describes mapping, dates, RSS completeness and guarded Undo restoration; it supersedes the original history-only coverage and cleared-intention limitation for Plex below.
+
 Choose **Plex** on Imports, sign in with Plex, then return to preview. Optionally paste the **personal** Watchlist RSS URL generated in Plex Settings → Watchlist (Plex Pass required). GoodWatch discovers owned servers; it does not ask for a password, API key, or server database. The existing fetched-source service handles preview, kind/date selection, apply, receipts, repeat imports and undo.
 
 Only documented routes are used:

@@ -188,8 +188,83 @@ await act(async () => button("Show all 26")?.click())
 await settle()
 const afterMore = text()
 
+const { SourceImportCurrent } = await import("./SourceImportCurrent")
+const { sourceImportKeys } = await import("./SourceImportHooks")
+const plexPrompts: string[] = []
+for (const watches of [1, 0]) {
+	client.setQueryData(sourceImportKeys.detail("plex-id"), {
+		import: {
+			id: "plex-id",
+			source: "plex",
+			fileName: "Plex",
+			status: "done",
+			createdAt: "2026-10-24T00:00:00Z",
+			finishedAt: "2026-10-24T00:00:00Z",
+			counts: {
+				new: 1,
+				unchanged: 0,
+				conflict: 0,
+				unmatched: 0,
+				unsupported: 0,
+				invalid: 0,
+				rows: 1,
+			},
+			kinds: {
+				rating: 0,
+				watch: watches,
+				want: 1,
+				favorite: 0,
+				review: 0,
+				show_status: 0,
+			},
+			warnings: [],
+			options: null,
+			processed: 1,
+			total: 1,
+			applied: { added: 1, updated: 0, kept: 0, failed: 0 },
+			stalled: false,
+			canUndo: true,
+			error: null,
+		},
+	})
+	client.setQueryData(
+		["import-result", "/api/imports", "plex-id", "done"],
+		groupImportResult("import", []),
+	)
+	await act(async () =>
+		root.render(
+			h(
+				AuthContext.Provider,
+				{
+					value: {
+						user,
+						loading: false,
+						getSupabase: () => Promise.reject(new Error("none")),
+					} as never,
+				},
+				h(
+					QueryClientProvider,
+					{ client },
+					h(
+						MemoryRouter,
+						null,
+						h(SourceImportCurrent, {
+							key: `plex-${watches}`,
+							id: "plex-id",
+							focus: false,
+							onUploadAnother: () => {},
+						}),
+					),
+				),
+			),
+		),
+	)
+	await act(async () => button("Undo import")?.click())
+	plexPrompts.push(text())
+}
+
 await act(async () => root.unmount())
 process.stdout.write(
-	`__IMPORT_RESULT_INTERACTION__${JSON.stringify({ sent, buttons, afterPutBack, afterMore })}`,
+	`__IMPORT_RESULT_INTERACTION__${JSON.stringify({ sent, buttons, afterPutBack, afterMore, plexPrompts })}`,
 )
 process.exit(0)

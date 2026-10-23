@@ -314,11 +314,13 @@ function Receipt({
 				(askUndo ? (
 					<div className="rounded-lg border border-red-900 bg-red-950/40 p-4">
 						<p className="text-gray-100">
-							{watcharrWatches
-								? "Undo this import? GoodWatch removes watches this import added and restores earlier show statuses. Undo restores the earlier Want to See and Not interested choices when no newer watch or choice remains. Later ratings and reviews stay protected."
-								: summary.source === "wishlist"
-									? "Undo this import? GoodWatch takes the titles this import added off Want to See. Titles you changed since then stay as you left them. Titles the import took off Not interested aren't marked Not interested again. The result lists them so you can put them back."
-									: "Undo this import? GoodWatch removes watches this import added, even if you edited their dates later, and restores earlier show statuses. Later status, rating and list changes stay protected. Without added watches, restoring a status also restores its cleared Want to See or Not interested choices. Undo of added watches and Want to See does not restore those choices; the result lists them so you can put them back."}
+							{summary.source === "plex" && summary.kinds.watch > 0
+								? "Undo this import? GoodWatch removes watches this import added and restores earlier scores and show statuses. Choices cleared by watches are restored when no newer watch or choice remains. Later ratings, statuses and list choices stay protected. Undo of Want to See does not restore earlier Not interested choices."
+								: watcharrWatches
+									? "Undo this import? GoodWatch removes watches this import added and restores earlier show statuses. Undo restores the earlier Want to See and Not interested choices when no newer watch or choice remains. Later ratings and reviews stay protected."
+									: summary.source === "wishlist"
+										? "Undo this import? GoodWatch takes the titles this import added off Want to See. Titles you changed since then stay as you left them. Titles the import took off Not interested aren't marked Not interested again. The result lists them so you can put them back."
+										: "Undo this import? GoodWatch removes watches this import added, even if you edited their dates later, and restores earlier show statuses. Later status, rating and list changes stay protected. Without added watches, restoring a status also restores its cleared Want to See or Not interested choices. Undo of added watches and Want to See does not restore those choices; the result lists them so you can put them back."}
 						</p>
 						<div className="mt-3 flex flex-wrap gap-3">
 							<button

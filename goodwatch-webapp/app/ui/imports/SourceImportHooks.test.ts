@@ -61,6 +61,8 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 		statusOnly: string
 		ratingOnly: string
 		withWatches: string
+		plexWatches: string
+		plexSeasonScore: string
 	}
 
 	assert.match(rendered.malUpload, /Export my: Anime List/)
@@ -120,6 +122,16 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 	)
 	assert.match(rendered.ratingOnly, /Preview could not start/)
 	assert.match(rendered.withWatches, /How should watch dates be handled/)
+	assert.match(
+		rendered.plexWatches,
+		/Undo restores the earlier choices when no newer watch or choice remains/,
+	)
+	assert.doesNotMatch(
+		rendered.plexWatches,
+		/Undo of added watches does not restore/,
+	)
+	assert.match(rendered.plexSeasonScore, /S4/)
+	assert.match(rendered.plexSeasonScore, /Source 8.5/)
 	assert.match(
 		rendered.withWatches,
 		/Undo of added watches does not restore those choices/,

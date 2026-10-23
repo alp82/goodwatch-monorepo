@@ -1692,7 +1692,7 @@ const sameVersion = (a: Version, b: Version) =>
 	a?._seq_no === b?._seq_no && a?._primary_term === b?._primary_term
 
 export interface ImportTrackingPlan {
-	/** Watcharr Undo restores intentions only where no newer watches or choices remain. */
+	/** Watcharr and Plex Undo restore intentions only where no newer watches or choices remain. */
 	restoreIntentions?: boolean
 	priorWatchIds?: string[]
 	userId: string
@@ -1793,8 +1793,9 @@ export async function prepareImportTrackingPlan(input: {
 		readImportLog(input.userId, title),
 	])
 	const restoreIntentions =
-		input.source === "wishlist" &&
-		input.items.some((item) => item.wishlistEvidence?.source === "watcharr")
+		input.source === "plex" ||
+		(input.source === "wishlist" &&
+			input.items.some((item) => item.wishlistEvidence?.source === "watcharr"))
 	const plan: ImportTrackingPlan = {
 		...(restoreIntentions
 			? {

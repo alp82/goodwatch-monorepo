@@ -626,3 +626,26 @@ test("three unreachable servers keep actionable warnings separate from working-f
 		["actionable", "actionable", "actionable", "info"],
 	)
 })
+
+test("GoodWatch reads every delivered RSS entry beyond 50 without claiming it is the complete Plex Watchlist", async () => {
+	const client = createPlexClient({
+		http: async (input) =>
+			input.startsWith("https://rss.plex.tv/")
+				? {
+						text: `<rss><channel>${Array.from({ length: 120 }, (_, i) => `<item><title>Synthetic ${i}</title><category>movie</category><guid>tmdb://${i + 1}</guid></item>`).join("")}</channel></rss>`,
+						headers: {},
+					}
+				: reply([]),
+	})
+	const parsed = await client.readImport(
+		"token",
+		"client",
+		"https://rss.plex.tv/watchlist/synthetic",
+	)
+	assert.equal(parsed.observations.length, 120)
+	assert.equal(parsed.observations.at(-1)?.tmdbId, 120)
+	assert.match(
+		parsed.warnings.map((w) => w.message).join(" "),
+		/may not include your complete watchlist/,
+	)
+})

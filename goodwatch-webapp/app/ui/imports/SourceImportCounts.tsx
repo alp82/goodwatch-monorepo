@@ -244,7 +244,8 @@ export function SourceItem({
 			<MatchedItem item={item} onChange={onChangeMatch} locked={matchLocked} />
 		)
 	const location =
-		wishlist && item.wishlistEvidence?.mediaType === "season"
+		(wishlist && item.wishlistEvidence?.mediaType === "season") ||
+		(item.season != null && item.episode == null)
 			? `S${item.season ?? "?"}`
 			: item.episode != null
 				? `S${item.season ?? "?"} E${item.episode}`

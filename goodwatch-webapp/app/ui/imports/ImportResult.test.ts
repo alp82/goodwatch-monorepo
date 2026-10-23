@@ -141,6 +141,7 @@ test("put-back buttons write to the list and say so; a title back on its list ha
 		buttons: string[]
 		afterPutBack: string
 		afterMore: string
+		plexPrompts: string[]
 	}
 	assert.deepEqual(run.buttons, ["Add back to Want to See"])
 	assert.deepEqual(
@@ -157,4 +158,10 @@ test("put-back buttons write to the list and say so; a title back on its list ha
 	)
 	assert.match(run.afterMore, /Interstellar/)
 	assert.doesNotMatch(run.afterMore, /Show all/)
+	assert.match(run.plexPrompts[0], /Choices cleared by watches are restored/)
+	assert.match(run.plexPrompts[0], /Undo of Want to See does not restore/)
+	assert.doesNotMatch(
+		run.plexPrompts[1],
+		/Choices cleared by watches are restored/,
+	)
 })

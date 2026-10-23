@@ -162,7 +162,7 @@ export async function undoAppliedImportWatches(
 	)
 }
 
-export async function restoreWatcharrImportIntentions(
+export async function restoreAppliedImportIntentions(
 	userId: string,
 	importId: string,
 ) {

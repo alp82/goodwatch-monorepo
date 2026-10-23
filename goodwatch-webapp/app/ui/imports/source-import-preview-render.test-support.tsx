@@ -49,10 +49,11 @@ const render = (
 	confirming: boolean,
 	error: string | null,
 	showStatuses = 0,
+	source: ImportSummary["source"] = "letterboxd",
 ) =>
 	renderToStaticMarkup(
 		createElement(SourceImportPreview, {
-			summary: summary(watch, showStatuses),
+			summary: { ...summary(watch, showStatuses), source },
 			focus: false,
 			confirming,
 			error,
@@ -187,5 +188,25 @@ process.stdout.write(
 		ratingOnly: render(0, false, "Preview could not start."),
 		statusOnly: render(0, false, null, 3),
 		withWatches: render(2, true, null),
+		plexWatches: render(2, false, null, 0, "plex"),
+		plexSeasonScore: renderToStaticMarkup(
+			createElement(SourceItem, {
+				item: {
+					index: 0,
+					key: "plex:rating:synthetic:1",
+					kind: "unsupported",
+					title: "Synthetic show",
+					mediaType: "show",
+					year: null,
+					tmdbId: 1,
+					imdbId: null,
+					season: 4,
+					score: 8.5,
+					outcome: "unsupported",
+					reason:
+						"Season and episode scores are kept here, not applied as whole-show ratings.",
+				},
+			}),
+		),
 	})}`,
 )

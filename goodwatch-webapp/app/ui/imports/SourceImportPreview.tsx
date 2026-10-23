@@ -304,7 +304,7 @@ function GeneralImportPreview({
 			)}
 			{(importsWatches || kinds.includes("show_status")) && (
 				<p className="text-sm text-gray-400">
-					{summary.source === "wishlist"
+					{summary.source === "wishlist" || summary.source === "plex"
 						? "Importing watches or show statuses can remove titles from Want to See or Not interested. Undo restores the earlier choices when no newer watch or choice remains."
 						: "Importing watches or show statuses can remove titles from Want to See or Not interested. Without added watches, Undo restores those choices when it restores the earlier status. Undo of added watches does not restore those choices."}
 				</p>

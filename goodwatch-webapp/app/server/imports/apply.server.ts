@@ -901,13 +901,13 @@ async function undoImportStored(
 			movieRatings.flatMap((x) => (x.tmdbId === null ? [] : [x.tmdbId])),
 		)
 		if (
-			row.source === "wishlist" &&
+			(row.source === "wishlist" || row.source === "plex") &&
 			items.some((item) => item.kind === "watch" || item.kind === "show_status")
 		) {
-			const { restoreWatcharrImportIntentions } = await import(
+			const { restoreAppliedImportIntentions } = await import(
 				"./watch-items.server.ts"
 			)
-			await restoreWatcharrImportIntentions(userId, id)
+			await restoreAppliedImportIntentions(userId, id)
 		}
 		await run(
 			"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND apply_state IN ('added','updated')",

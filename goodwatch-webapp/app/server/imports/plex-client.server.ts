@@ -10,20 +10,14 @@ import {
 } from "../../domain/imports.ts"
 import { PlexError, type PlexHttp, createPlexHttp } from "./plex-http.server.ts"
 
+import {
+	plexMetadata as metadata,
+	plexIds as ids,
+} from "./plex-metadata.server.ts"
+import { readPlexLibrary } from "./plex-library.server.ts"
 import { plexFeedUrl, readPlexRss } from "./plex-rss.server.ts"
 
 const id = z.number().int().positive()
-const guid = z.object({ id: z.string().max(500) })
-const metadata = z.object({
-	type: z.string(),
-	title: z.string().max(500),
-	year: z.number().int().optional(),
-	Guid: z.array(guid).default([]),
-	guid: z.string().max(500).optional(),
-	grandparentRatingKey: z.string().optional(),
-	parentIndex: z.number().int().nonnegative().optional(),
-	index: z.number().int().nonnegative().optional(),
-})
 const historyRow = z.object({
 	historyKey: z.string().regex(/^\/status\/sessions\/history\/\d+$/),
 	ratingKey: z.string().optional(),
@@ -57,24 +51,6 @@ const serverResource = z.object({
 const resources = z
 	.array(z.object({ owned: z.boolean(), provides: z.string() }).passthrough())
 	.max(100)
-const ids = (item: z.infer<typeof metadata>) => {
-	const guids = item.Guid.map((g) => g.id)
-	// Older agents store a single GUID, optionally with a language query.
-	const legacy = item.guid?.match(
-		/^com\.plexapp\.agents\.(imdb|themoviedb):\/\/(tt\d+|[1-9]\d*)(?:\?[^#]*)?$/,
-	)
-	if (legacy)
-		guids.push(`${legacy[1] === "themoviedb" ? "tmdb" : "imdb"}://${legacy[2]}`)
-	return {
-		tmdbId:
-			Number(guids.find((g) => /^tmdb:\/\/[1-9]\d*$/.test(g))?.slice(7)) ||
-			null,
-		imdbId: guids.find((g) => /^imdb:\/\/tt\d+$/.test(g))?.slice(7) ?? null,
-		tvdbId:
-			Number(guids.find((g) => /^tvdb:\/\/[1-9]\d*$/.test(g))?.slice(7)) ||
-			null,
-	}
-}
 export const PLEX_UNREACHABLE =
 	"GoodWatch could not reach your Plex Media Server. No history from that server was imported. Enable Plex Remote Access with a public HTTPS connection, then connect again; local network addresses cannot be reached from GoodWatch."
 
@@ -166,7 +142,7 @@ export function createPlexClient(
 		}
 		return base
 	}
-	async function readServerHistory(
+	async function readServerImport(
 		server: z.infer<typeof serverResource>,
 		context: ReadContext,
 	): Promise<ParsedImport> {
@@ -179,7 +155,11 @@ export function createPlexClient(
 			return {
 				source: "plex",
 				observations,
-				warnings: [importActionable(PLEX_UNREACHABLE)],
+				warnings: [
+					importActionable(
+						`${PLEX_UNREACHABLE} No library watched state or personal ratings from that server were imported.`,
+					),
+				],
 			}
 
 		const cache = new Map<string, z.infer<typeof metadata>>()
@@ -205,6 +185,7 @@ export function createPlexClient(
 			cache.set(key, result)
 			return result
 		}
+		const historyItems = new Set<string>()
 		const seen = new Set<string>()
 		let offset = 0
 		let total: number | undefined
@@ -225,6 +206,7 @@ export function createPlexClient(
 			} catch {
 				checkTime()
 				observations.splice(0)
+				historyItems.clear()
 				warnings.push(
 					`${PLEX_UNREACHABLE} Also check that this Plex account can read server history.`,
 				)
@@ -350,6 +332,8 @@ export function createPlexClient(
 					}
 				}
 				checkTime()
+				if (!observation.problem && row.ratingKey)
+					historyItems.add(row.ratingKey)
 				observations.push(observation)
 				if (observations.length > IMPORT_MAX_ROWS)
 					throw new PlexError("This Plex import exceeds 50,000 items.", 400)
@@ -368,10 +352,19 @@ export function createPlexClient(
 					"Plex returned incomplete history. Please connect again.",
 				)
 		}
+		const library = await readPlexLibrary({
+			serverId: server.clientIdentifier,
+			historyItems,
+			getMetadata,
+			checkTime,
+			read: (path, extra) =>
+				read(`${base}${path}`, clientId, server.accessToken, extra),
+		})
+		observations.push(...library.observations)
 		return {
 			source: "plex",
 			observations,
-			warnings: warnings.map(importActionable),
+			warnings: [...warnings.map(importActionable), ...library.warnings],
 		}
 	}
 	async function readFeed(feedUrl?: string): Promise<ParsedImport> {
@@ -462,11 +455,11 @@ export function createPlexClient(
 			if (!servers.length)
 				warnings.push(
 					importActionable(
-						"Plex reported no servers owned by this account. No server history was imported. Sign in with the account that owns your Plex Media Server and connect again. A watchlist RSS feed can still import Want to See without a server.",
+						"Plex reported no servers owned by this account. No server watches or personal ratings were imported. Sign in with the account that owns your Plex Media Server and connect again. A watchlist RSS feed can still import Want to See without a server.",
 					),
 				)
 			for (const server of servers) {
-				const result = await readServerHistory(server, context)
+				const result = await readServerImport(server, context)
 				observations.push(...result.observations)
 				warnings.push(...result.warnings)
 				if (observations.length > IMPORT_MAX_ROWS)
