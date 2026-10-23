@@ -13,6 +13,10 @@ import {
 	withBackendTimeout,
 } from "../../utils/backend-timeout.ts"
 import { customListObservation } from "./custom-list-files.server.ts"
+import {
+	episodeScoreObservation,
+	seasonScoreObservation,
+} from "./episode-rating-observations.server.ts"
 
 // Reads a member's MDBList account with their personal API key, read-only, for one import preview. The rules come
 // from the #711 reader and its real-account runs (docs/prototypes/wishlist-imports/mdblist-reader):
@@ -607,27 +611,43 @@ export function createMdblistClient(options: {
 							: {}),
 					})
 				}
-			let seasonRatings = 0
+			// Season and episode scores (#759). MDBList answers in Trakt's shape and numbers like TMDB, so these rows are
+			// built the way the Trakt reader builds them; the preview checks the season and resolves the episode.
 			for (const bucket of ["seasons", "episodes"] as const)
 				for (const row of ratings.rows[bucket]) {
-					seasonRatings++
-					const show = parent(row, bucket === "seasons" ? "season" : "episode")
-					observations.push({
-						key: `mdblist:unsupported-rating:${bucket}:${sourceKey(show, row)}:${JSON.stringify(coordinates(row))}`,
-						kind: "unsupported",
-						...show,
-						problem: {
-							outcome: "unsupported",
-							reason: "GoodWatch doesn't import season or episode ratings yet.",
-						},
-					})
+					const scope = bucket === "seasons" ? "season" : "episode"
+					const show = parent(row, scope)
+					const at = coordinates(row)
+					const fields = {
+						key: `mdblist:episode_rating:${scope}:${sourceKey(show, row)}:${at.season ?? ""}:${at.episode ?? ""}`,
+						score: halfStepScore(row),
+						addedAt: moment(row.rated_at),
+						invalidReason: "The MDBList rating isn't a half step from 1 to 10.",
+					}
+					if (scope === "season") {
+						observations.push(seasonScoreObservation(show, at.season, fields))
+						continue
+					}
+					const episode = record(row.episode) ?? {}
+					const ids = record(episode.ids)
+					observations.push(
+						episodeScoreObservation(
+							show,
+							{
+								episodeTmdbId: positiveId(ids?.tmdb),
+								episodeTvdbId: positiveId(ids?.tvdb),
+								episodeName:
+									typeof episode.name === "string"
+										? episode.name.slice(0, 500)
+										: null,
+								episodeNumbering: "tmdb",
+								season: at.season,
+								episode: at.episode,
+							},
+							fields,
+						),
+					)
 				}
-			if (seasonRatings)
-				warnings.push(
-					importInfo(
-						"Season and episode ratings were kept as unsupported items.",
-					),
-				)
 
 			const dropped = await read(call, {
 				path: "/sync/dropped",

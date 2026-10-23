@@ -157,8 +157,10 @@ test("MDBList preview, Confirm and Undo cover Want to See, every watch, scores a
 		},
 		{ want: 4, watch: 8, rating: 2, show_status: 1 },
 	)
-	// Watchlist episode of a wanted show, episode rating, dropped season.
-	assert.equal(preview.counts.unsupported, 3)
+	// Watchlist episode of a wanted show, dropped season.
+	assert.equal(preview.counts.unsupported, 2)
+	// The season and episode scores (#759).
+	assert.equal(preview.kinds.episode_rating, 2)
 	// One MDBList list, offered as one private GoodWatch list (#758).
 	assert.equal(preview.kinds.list, 1)
 	// The movie without catalog IDs stays visible as unmatched.
@@ -178,7 +180,7 @@ test("MDBList preview, Confirm and Undo cover Want to See, every watch, scores a
 	)
 
 	await confirmImport("member", preview.id, {
-		kinds: ["rating", "watch", "want", "show_status"],
+		kinds: ["rating", "watch", "want", "show_status", "episode_rating"],
 		conflictChoice: "keep",
 		watchDates: "preserve",
 		wishlistShows: true,
@@ -197,6 +199,14 @@ test("MDBList preview, Confirm and Undo cover Want to See, every watch, scores a
 		],
 	)
 	assert.equal((await getShowTracking("member", 4607)).state?.state, "dropped")
+	// Each score is its own: the season's and the episode's, never the show's.
+	assert.deepEqual(
+		db.episodeScores.map((row) => [row.tmdb_id, row.scope, row.score]).sort(),
+		[
+			[1396, "season", 8],
+			[87108, "episode", 5],
+		],
+	)
 	assert.deepEqual(
 		db.wishlist.map((x) => x.tmdb_id).sort(),
 		[438631, 655, 95396, 1438].sort(),
@@ -211,6 +221,7 @@ test("MDBList preview, Confirm and Undo cover Want to See, every watch, scores a
 	assert.equal((await getMovieTracking("member", 862)).log.length, 0)
 	assert.equal((await getShowTracking("member", 1396)).log.length, 0)
 	assert.equal(db.scores.length, 0)
+	assert.equal(db.episodeScores.length, 0)
 	assert.equal(db.wishlist.length, 0)
 	assert.notEqual(
 		(await getShowTracking("member", 4607)).state?.state,

@@ -108,6 +108,27 @@ test("a full account becomes Want to See, one watch per play, a movie's later la
 		],
 	)
 
+	// Season and episode scores (#759), built like Trakt's: TMDB numbering, the episode's own TMDB ID, half steps up.
+	assert.deepEqual(
+		byKind(parsed, "episode_rating").map((row) => [
+			row.scoreScope,
+			row.tmdbId,
+			row.season,
+			row.episode ?? null,
+			row.episodeTmdbId ?? null,
+			row.episodeNumbering ?? null,
+			row.score,
+			row.addedAt,
+		]),
+		[
+			["season", 1396, 1, null, null, null, 8, "2026-10-21T08:03:00.000Z"],
+			["episode", 87108, 1, 1, 1771497, "tmdb", 5, "2026-10-21T08:02:00.000Z"],
+		],
+	)
+	assert.doesNotMatch(
+		parsed.warnings.map((w) => w.message).join(" "),
+		/Season and episode ratings were kept/,
+	)
 	assert.deepEqual(
 		byKind(parsed, "show_status").map((row) => [row.tmdbId, row.showStatus]),
 		[[4607, "dropped"]],
@@ -119,7 +140,6 @@ test("a full account becomes Want to See, one watch per play, a movie's later la
 	])
 	assert.deepEqual(unsupported, [
 		[95396, "The whole show is also on your MDBList Watchlist."],
-		[87108, "GoodWatch doesn't import season or episode ratings yet."],
 		[
 			4607,
 			"GoodWatch doesn't track dropped seasons, so this season was left as it is.",
@@ -527,5 +547,37 @@ test("a ranked list follows MDBList's ranks", async () => {
 			({ entry }) => entry.title,
 		),
 		["Ranked first", "Ranked second", "Ranked third"],
+	)
+})
+
+test("an invalid season or episode score stays visible as invalid", async () => {
+	const account = syntheticMdblistAccount()
+	account.ratings.episodes = [
+		{
+			rated_at: "2026-10-21T08:02:00.000Z",
+			rating_precise: 4.3,
+			episode: {
+				season: 1,
+				number: 2,
+				ids: { tmdb: 62086 },
+				show: { title: "Breaking Bad", year: 2008, ids: { tmdb: 1396 } },
+			},
+		},
+	]
+	account.ratings.seasons = [
+		{
+			rated_at: "2026-10-21T08:03:00.000Z",
+			rating_precise: 8,
+			season: { show: { title: "Lost", year: 2004, ids: { tmdb: 4607 } } },
+		},
+	]
+	const { read } = client({ account })
+	const rows = byKind(await read(), "episode_rating")
+	assert.deepEqual(
+		rows.map((row) => [row.scoreScope, row.score, row.problem?.reason]),
+		[
+			["season", 8, "This season score has no season number."],
+			["episode", null, "The MDBList rating isn't a half step from 1 to 10."],
+		],
 	)
 })

@@ -23,9 +23,10 @@ export function MdblistConnectControls({
 		<>
 			<h3 className={stepHeading}>Connect MDBList</h3>
 			<p className="text-gray-400">
-				Bring your MDBList Watchlist, each watch with its date, episodes, movie
-				and show ratings, dropped shows, and your lists into GoodWatch. You will
-				review everything before changing your library.
+				Bring your MDBList Watchlist, each watch with its date, episodes,
+				ratings for movies, shows, seasons, and episodes, dropped shows, and
+				your lists into GoodWatch. You will review everything before changing
+				your library.
 			</p>
 			<ol className="list-decimal space-y-1 pl-5 text-gray-300">
 				<li>

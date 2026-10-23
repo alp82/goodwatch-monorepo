@@ -2,9 +2,10 @@
 // season against the show's episode list and resolves an episode exactly like a watch of it, so a source passes the
 // same episode evidence its watch rows carry. Each source still turns its own value into a whole score from 1 to 10.
 //
-// Sources: Trakt and Kodi (files.server.ts), Watcharr (wishlist.server.ts) and TMDB (tmdb-client.server.ts).
+// Sources: Trakt and Kodi (files.server.ts), Watcharr (wishlist.server.ts), TMDB (tmdb-client.server.ts) and MDBList
+// (mdblist-client.server.ts).
 // MyAnimeList and Kitsu entries are parts with an episode range instead (files.server.ts, `scoreScope: "part"`).
-// MDBList (#755, branch feat/mdblist-import): its /sync/ratings answers in Trakt's shape (`type` season or episode,
+// MDBList (#755): its /sync/ratings answers in Trakt's shape (`type` season or episode,
 // `show.ids.tmdb`, `season.number`, `episode.ids.tmdb` with season and number), so its importer calls
 // seasonScoreObservation and episodeScoreObservation the way the Trakt reader does, with numbering "tmdb".
 import type { ImportObservation } from "../../domain/imports.ts"

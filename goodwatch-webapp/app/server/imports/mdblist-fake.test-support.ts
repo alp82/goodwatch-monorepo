@@ -246,7 +246,14 @@ export function syntheticMdblistAccount(): FakeMdblistAccount {
 					show: breakingBad,
 				},
 			],
-			seasons: [],
+			seasons: [
+				{
+					rated_at: "2026-10-21T08:03:00.000Z",
+					rating: 8,
+					rating_precise: 7.5,
+					season: { number: 1, ids: { tmdb: 3572 }, show: breakingBad },
+				},
+			],
 			episodes: [
 				{
 					rated_at: "2026-10-21T08:02:00.000Z",
