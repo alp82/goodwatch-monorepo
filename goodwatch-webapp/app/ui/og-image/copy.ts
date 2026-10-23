@@ -164,6 +164,11 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 		title: "Ask your AI what to watch",
 		subtitle: "GoodWatch in Claude, ChatGPT and more. It knows your taste.",
 	},
+	"/discord": {
+		tag: "Discord bot",
+		title: "GoodWatch in Discord",
+		subtitle: "Pick what to watch, right in the chat.",
+	},
 	"/support": {
 		tag: "Support",
 		title: "How can we help?",

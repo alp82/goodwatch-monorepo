@@ -178,6 +178,12 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 				icon: CpuChipIcon,
 			},
 			{
+				name: "Discord bot",
+				href: "/discord",
+				blurb: "GoodWatch in your server",
+				icon: DiscordMark,
+			},
+			{
 				name: "Support",
 				href: "/support",
 				blurb: "Something broken? Write us",
