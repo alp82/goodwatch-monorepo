@@ -2,6 +2,27 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { plexLibraryFixture } from "./plex-library-fixture.test-support.ts"
 
+test("Plex schema-failure partial warnings explain the unexpected response without exposing its contents", async (t) => {
+	const f = await plexLibraryFixture()
+	t.after(f.close)
+	f.state.schemaFailure = true
+	const parsed = await f.client.readImport("token", "client")
+	assert.deepEqual(
+		parsed.observations.map((row) => row.key),
+		["plex:watch:fixture-server:/status/sessions/history/1"],
+	)
+	const warnings = parsed.warnings.filter(
+		(w) => w.kind === "actionable" && /partial:/.test(w.message),
+	)
+	assert.equal(warnings.length, 2)
+	assert.ok(
+		warnings.every((w) =>
+			w.message.includes("Plex sent an unexpected response."),
+		),
+	)
+	assert.doesNotMatch(JSON.stringify(warnings), /synthetic-private-value/)
+})
+
 test("a failed later history page does not suppress the library fallback for discarded history", async (t) => {
 	const f = await plexLibraryFixture()
 	t.after(f.close)
@@ -359,7 +380,11 @@ test("library observations exceeding the remaining import space do not discard 5
 	)
 	assert.match(
 		parsed.warnings.map((w) => w.message).join(" "),
-		/partial:.*remaining space/,
+		/partial:.*Your library has more watched or rated items than one import can hold/,
+	)
+	assert.doesNotMatch(
+		parsed.warnings.map((w) => w.message).join(" "),
+		/Try a smaller import/,
 	)
 })
 

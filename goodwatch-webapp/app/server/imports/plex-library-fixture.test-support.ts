@@ -61,6 +61,7 @@ export async function plexLibraryFixture() {
 		ratingTotal: undefined as number | undefined,
 		faultTypes: "both" as "both" | "watch" | "ratings",
 		fakeTotalHeader: false,
+		schemaFailure: false,
 	}
 	const server = createServer((req, res) => {
 		const url = new URL(req.url ?? "/", "http://fixture")
@@ -133,19 +134,21 @@ export async function plexLibraryFixture() {
 							fault && state.duplicate && start ? 0 : start,
 							(fault && state.duplicate && start ? 0 : start) + state.pageSize,
 						)
-			data = {
-				MediaContainer: {
-					offset: start,
-					totalSize:
-						fault && state.oversized
-							? 50001
-							: fault && state.shrink && start
-								? 1
-								: reportedTotal + (fault && state.grow && start ? 1 : 0),
-					size: rows.length,
-					Metadata: rows,
-				},
-			}
+			data = state.schemaFailure
+				? { MediaContainer: { size: "synthetic-private-value" } }
+				: {
+						MediaContainer: {
+							offset: start,
+							totalSize:
+								fault && state.oversized
+									? 50001
+									: fault && state.shrink && start
+										? 1
+										: reportedTotal + (fault && state.grow && start ? 1 : 0),
+							size: rows.length,
+							Metadata: rows,
+						},
+					}
 		} else if (url.pathname.startsWith("/library/metadata/")) {
 			const item = library.find(
 				(row) => row.ratingKey === url.pathname.split("/").at(-1),

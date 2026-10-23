@@ -67,7 +67,12 @@ export async function readPlexLibrary(
 			result.warnings.push(...partition.warnings)
 		} catch (error) {
 			options.checkTime()
-			const reason = error instanceof PlexError ? `${error.message} ` : ""
+			const reason =
+				error instanceof PlexError
+					? `${error.message} `
+					: error instanceof z.ZodError
+						? "Plex sent an unexpected response. "
+						: ""
 			result.warnings.push(
 				importActionable(
 					`This Plex import is partial: the ${label} library could not be read completely. No library ${label} watched state or personal ratings from that scan were imported. ${reason}Retained history and other library results are kept when available. Check Remote Access and the server owner's access, then connect again.`,
@@ -269,7 +274,7 @@ async function readPartition(
 		offset += data.size
 		if (observations.length > (options.maxObservations ?? IMPORT_MAX_ROWS))
 			throw new PlexError(
-				"The library scan exceeds the remaining space in this 50,000-item import. Try a smaller import.",
+				"Your library has more watched or rated items than one import can hold (50,000 items).",
 			)
 		const paginated =
 			response.headers["x-plex-container-start"] !== undefined ||
