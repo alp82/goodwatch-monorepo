@@ -8,9 +8,9 @@ import { countryHint } from '../../core/lobby';
 import { Field, Notice, Row } from '../../components/ui';
 import { Drawer } from './Drawer';
 import { ReadAs } from './ReadAs';
-import { GText, Pill, glow } from './theme';
+import { GText, Icon, Pill, glow } from './theme';
 
-const presets = ['Funny & light', 'A twisty thriller', 'Family night'];
+const presets = ['funny comfort watch', 'A twisty thriller', 'Family night'];
 const flag = (code: string) =>
   /^[A-Z]{2}$/.test(code)
     ? String.fromCodePoint(...[...code].map((c) => 127397 + c.charCodeAt(0)))
@@ -202,79 +202,91 @@ export function Lobby({
       {editing && (
         <Drawer title="Our room" close={() => setEditing(false)}>
           <GText bold size={20}>
-            What sounds good?
+            What mood?
           </GText>
-          <TextInput
-            accessibilityLabel="Describe what to watch"
-            placeholder="A cosy mystery, something like…"
-            placeholderTextColor={glow.muted}
-            value={prompt}
-            onChangeText={setPrompt}
-            maxLength={1000}
-            multiline
-            style={{
-              color: glow.ink,
-              backgroundColor: '#ffffff09',
-              borderRadius: 16,
-              padding: 16,
-              fontSize: 17,
-              minHeight: 86,
-              textAlignVertical: 'top',
-            }}
-          />
-          {!prompt.trim() ? (
-            <Row>
-              {presets.map(p => (
-                <Pressable key={p} accessibilityRole="button" accessibilityLabel={p}
-                  onPress={() => setPrompt(p)}
-                  style={({ pressed }) => ({ minHeight: 44, justifyContent: 'center', opacity: pressed ? 0.65 : 1 })}>
-                  <GText size={12} color={glow.amber} style={{ textDecorationLine: 'underline' }}>{p}</GText>
+          <View style={{ gap: prompt.trim() ? 10 : 0 }}>
+            <TextInput
+              accessibilityLabel="Describe what to watch"
+              placeholder="A cosy mystery, something like…"
+              placeholderTextColor={glow.muted}
+              value={prompt}
+              onChangeText={setPrompt}
+              maxLength={1000}
+              multiline
+              style={{
+                color: glow.ink,
+                backgroundColor: '#ffffff09',
+                borderRadius: 16,
+                padding: 16,
+                fontSize: 17,
+                minHeight: 86,
+                textAlignVertical: 'top',
+              }}
+            />
+            {!prompt.trim() ? (
+              <Row>
+                {presets.map(p => (
+                  <Pressable key={p} accessibilityRole="button" accessibilityLabel={p}
+                    onPress={() => setPrompt(p)}
+                    style={({ pressed }) => ({ minHeight: 44, justifyContent: 'center', opacity: pressed ? 0.65 : 1 })}>
+                    <GText size={12} color={glow.amber} style={{ textDecorationLine: 'underline' }}>{p}</GText>
+                  </Pressable>
+                ))}
+              </Row>
+            ) : (
+              <View accessibilityLiveRegion="polite" style={{ minHeight: 26 }}>
+                {liveReading ? <ReadAs attributes={liveReading.attributes} />
+                  : prompt.trim().length >= 2 && country ? settledInput === inputKey && reading.error
+                    ? <GText size={12} color={glow.muted}>Couldn’t update picks. Try saving again.</GText>
+                    : <ActivityIndicator size="small" color={glow.amber} accessibilityLabel="Updating picks" style={{ alignSelf: 'flex-start' }} />
+                  : null}
+              </View>
+            )}
+          </View>
+          <View style={{ gap: 12, paddingVertical: 8 }}>
+            <GText bold size={20}>What are we watching?</GText>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              {(['movie', 'show_start'] as const).map((kind) => (
+                <Pressable
+                  key={kind}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: constraints.kinds.includes(kind) }}
+                  aria-checked={constraints.kinds.includes(kind)}
+                  onPress={() =>
+                    setConstraints((c) => ({
+                      ...c,
+                      kinds: c.kinds.includes(kind)
+                        ? c.kinds.filter((k) => k !== kind)
+                        : [...c.kinds, kind],
+                    }))
+                  }
+                  style={{
+                    flex: 1,
+                    minHeight: 68,
+                    paddingHorizontal: 12,
+                    paddingVertical: 22,
+                    borderRadius: 16,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderWidth: 1,
+                    borderColor: constraints.kinds.includes(kind) ? glow.amber : glow.line,
+                    backgroundColor: constraints.kinds.includes(kind) ? '#fbbf2430' : '#ffffff09',
+                  }}
+                >
+                  <GText bold size={16}>{kind === 'movie' ? 'Movies' : 'Shows'}</GText>
                 </Pressable>
               ))}
-            </Row>
-          ) : (
-            <View accessibilityLiveRegion="polite" style={{ minHeight: 26 }}>
-              {liveReading ? <ReadAs attributes={liveReading.attributes} />
-                : prompt.trim().length >= 2 && country ? settledInput === inputKey && reading.error
-                  ? <GText size={12} color={glow.muted}>Couldn’t update picks. Try saving again.</GText>
-                  : <ActivityIndicator size="small" color={glow.amber} accessibilityLabel="Updating picks" style={{ alignSelf: 'flex-start' }} />
-                : null}
             </View>
-          )}
-          <Row>
-            {(
-              ['movie', 'show_start', ...(canContinue ? (['show_continue'] as const) : [])] as const
-            ).map((kind) => (
-              <Pressable
-                key={kind}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: constraints.kinds.includes(kind) }}
-                aria-checked={constraints.kinds.includes(kind)}
-                onPress={() =>
-                  setConstraints((c) => ({
-                    ...c,
-                    kinds: c.kinds.includes(kind)
-                      ? c.kinds.filter((k) => k !== kind)
-                      : [...c.kinds, kind],
-                  }))
-                }
-                style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  borderRadius: 20,
-                  backgroundColor: constraints.kinds.includes(kind) ? '#fbbf2430' : '#ffffff09',
-                }}
-              >
-                <GText size={13}>
-                  {kind === 'movie'
-                    ? 'Movies'
-                    : kind === 'show_start'
-                    ? 'New shows'
-                    : 'Continue my shows'}
-                </GText>
+            {canContinue && (
+              <Pressable accessibilityRole="checkbox" accessibilityLabel="Continue my shows"
+                accessibilityState={{ checked: constraints.kinds.includes('show_continue') }}
+                aria-checked={constraints.kinds.includes('show_continue')}
+                onPress={() => setConstraints(c => ({ ...c, kinds: c.kinds.includes('show_continue') ? c.kinds.filter(k => k !== 'show_continue') : [...c.kinds, 'show_continue'] }))}
+                style={{ paddingVertical: 14, paddingHorizontal: 16, borderRadius: 16, borderWidth: 1, borderColor: constraints.kinds.includes('show_continue') ? glow.amber : glow.line, backgroundColor: constraints.kinds.includes('show_continue') ? '#fbbf2430' : '#ffffff09' }}>
+                <GText size={14} style={{ textAlign: 'center' }}>Continue my shows</GText>
               </Pressable>
-            ))}
-          </Row>
+            )}
+          </View>
           {constraints.maxMinutes !== null && (
             <Pill
               label="Remove previous runtime limit"
@@ -339,12 +351,28 @@ export function Lobby({
                 ))}
             </>
           )}
-          <Field
-            label="Find streaming services"
-            value={serviceSearch}
-            onChange={setServiceSearch}
-            placeholder="Netflix, Prime Video…"
-          />
+          <View style={{ gap: 8 }}>
+            <GText>Find streaming services</GText>
+            <View style={{ flexDirection: 'row', minHeight: 52, borderWidth: 1, borderColor: '#595959', borderRadius: 12, overflow: 'hidden', backgroundColor: '#0f0f0f' }}>
+              <TextInput accessibilityLabel="Find streaming services" value={serviceSearch}
+                onChangeText={setServiceSearch} placeholder="Netflix, Prime Video…" placeholderTextColor="#999"
+                autoCapitalize="none" autoCorrect={false}
+                style={{ flex: 1, minWidth: 0, padding: 12, color: glow.ink, fontFamily: 'Gabarito', fontSize: 17 }} />
+              {savedServiceIds.length ? (
+                <Pressable accessibilityRole="button" accessibilityLabel="Use everyone’s saved services"
+                  accessibilityState={{ selected: useSavedProviders }}
+                  onPress={() => {
+                    setUseSavedProviders(true);
+                    const available = new Set(metadata.data?.services.map(s => s.id) ?? []);
+                    setServices(savedServiceIds.filter(id => available.has(id)));
+                  }}
+                  style={({ pressed }) => ({ minWidth: 96, minHeight: 48, paddingHorizontal: 12, gap: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderLeftWidth: 1, borderLeftColor: '#595959', backgroundColor: pressed || useSavedProviders ? '#fbbf2426' : '#ffffff08' })}>
+                  <Icon name="people" size={16} color={glow.amber} />
+                  <GText size={12} color={glow.amber}>Everyone’s</GText>
+                </Pressable>
+              ) : null}
+            </View>
+          </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
             {providers.slice(0, serviceSearch ? 40 : 12).map((s) => (
               <Pressable
@@ -400,18 +428,7 @@ export function Lobby({
             Defaults combine everyone’s saved GoodWatch services available in this country. You can
             change them for this room. Paid rentals aren’t included.
           </GText>
-          {savedServiceIds.length ? (
-            <Pill
-              label="Use everyone’s saved services"
-              onPress={() => {
-                setUseSavedProviders(true);
-                const available = new Set(metadata.data?.services.map((s) => s.id) ?? []);
-                setServices(savedServiceIds.filter((id) => available.has(id)));
-              }}
-            >
-              Use everyone’s saved services
-            </Pill>
-          ) : null}
+
           {metadata.isPending && <GText>Loading services…</GText>}
           {metadata.error && (
             <>

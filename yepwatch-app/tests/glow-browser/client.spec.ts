@@ -528,7 +528,7 @@ test('retained continuing-only setup has an explicit guest fallback without sile
     0
   );
   await page.getByRole('checkbox', { name: 'Movies', exact: true }).click();
-  await page.getByRole('checkbox', { name: 'New shows', exact: true }).click();
+  await page.getByRole('checkbox', { name: 'Shows', exact: true }).click();
   // Neither opening settings nor selecting guest modes silently removes the retained kind.
   expect(f.commands).toHaveLength(0);
   await expect(
@@ -825,9 +825,9 @@ test('room prompt and mobile service selection publish attributes without screen
   await expect(
     page.getByRole('button', { name: /More settings|Add remote screen|Watch on/ })
   ).toHaveCount(0);
-  await page.getByRole('button', { name: 'Funny & light', exact: true }).click();
+  await page.getByRole('button', { name: 'funny comfort watch', exact: true }).click();
   await expect(page.getByRole('textbox', { name: 'Describe what to watch' })).toHaveValue(
-    'Funny & light'
+    'funny comfort watch'
   );
   await expect(page.getByRole('checkbox', { name: 'Netflix', exact: true })).toBeChecked();
   await page.getByRole('button', { name: 'Choose country', exact: true }).click();
@@ -838,12 +838,12 @@ test('room prompt and mobile service selection publish attributes without screen
   await expect(page.getByText('Funny', { exact: true })).toBeVisible();
   expect(f.commands.at(-1)?.command).toMatchObject({
     type: 'configure',
-    prompt: 'Funny & light',
+    prompt: 'funny comfort watch',
     country: 'DE',
     serviceIds: [8],
   });
   await page.reload();
-  await expect(page.getByText('Funny & light', { exact: true })).toBeVisible();
+  await expect(page.getByText('funny comfort watch', { exact: true })).toBeVisible();
   await expect(page.getByText('Funny', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Edit room description and services' }).click();
   await page.getByRole('textbox', { name: 'Describe what to watch' }).waitFor();
@@ -951,12 +951,12 @@ test('prompt presets become live search picks and grouped providers retain every
   });
   await page.reload();
   await page.getByRole('button',{name:'Edit room description and services'}).click();
-  for(const name of ['Funny & light','A twisty thriller','Family night']) await expect(page.getByRole('button',{name,exact:true})).toBeVisible();
+  for(const name of ['funny comfort watch','A twisty thriller','Family night']) await expect(page.getByRole('button',{name,exact:true})).toBeVisible();
   const input=page.getByRole('textbox',{name:'Describe what to watch'});
   await input.fill('Old mood');
   await expect.poll(()=>previews).toContain('Old mood');
   await input.fill('Sports movies motivational');
-  await expect(page.getByRole('button',{name:'Funny & light',exact:true})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'funny comfort watch',exact:true})).toHaveCount(0);
   await expect(page.getByText('Motivational',{exact:true})).toBeVisible();
   await expect(page.getByText('Horror',{exact:true})).toHaveCSS('text-decoration-line', 'line-through');
   await expect(page.getByText('Bleakness',{exact:true})).toHaveCSS('text-decoration-line', 'line-through');
