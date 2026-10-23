@@ -47,7 +47,7 @@
   }
   @commands {
     method POST
-    path_regexp command ^/api/yepwatch/v1/proposal/rooms/[A-Za-z0-9_-]{1,256}/(join|commands|realtime-ticket)$
+    path_regexp command ^/api/yepwatch/v1/proposal/rooms/[A-Za-z0-9_-]{1,256}/(join|commands|preview|realtime-ticket)$
   }
   handle @commands {
     reverse_proxy api:3000
