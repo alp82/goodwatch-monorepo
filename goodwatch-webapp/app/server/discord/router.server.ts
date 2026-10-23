@@ -11,6 +11,10 @@ import {
 	titleCard,
 	titleListCard,
 	personCard,
+	linkPromptCard,
+	slowDownCard,
+	countryName,
+	type EmojiIds,
 } from "./cards.ts"
 import {
 	isTitleId,
@@ -26,6 +30,7 @@ import { discordRest } from "./rest.server.ts"
 import type { DiscoverState } from "./discover-state.server.ts"
 import type { readGuestTool } from "../mcp/guest.server.ts"
 import type { RateVerdict } from "../rate-limit.server.ts"
+import type { TalkedRow } from "../../domain/talked-about-now.ts"
 export interface Interaction {
 	type: number
 	application_id?: string
@@ -62,6 +67,7 @@ export interface Dependencies extends PlaceDependencies {
 	hot?: () => Promise<GuestTitle[]>
 	saveState?: (state: DiscoverState) => Promise<string>
 	loadState?: (key: string) => Promise<DiscoverState | null>
+	emojis?: () => Promise<EmojiIds>
 }
 const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
 	linkedUser: async (id) =>
@@ -92,20 +98,61 @@ const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
 		(await import("./limits.server.ts")).takeDiscordLimit(user),
 	edit: (...args) => discordRest().editOriginal(...args),
 	log: (line) => console.info(line),
-	hot: async () => {
-		const row = await (
-			await import("../talked-about-now/start-row.server.ts")
-		).getHotOnSocials()
-		return (row?.titles ?? []).slice(0, 10).map((t) => ({
-			id: `${t.mediaType}:${t.tmdbId}`,
-			name: t.title,
-			year: t.year,
-		}))
-	},
+	hot: async () =>
+		hotTitles(
+			await (
+				await import("../talked-about-now/start-row.server.ts")
+			).getHotOnSocials(),
+		),
 	saveState: async (state) =>
 		(await import("./discover-state.server.ts")).saveDiscoverState(state),
 	loadState: async (key) =>
 		(await import("./discover-state.server.ts")).loadDiscoverState(key),
+	emojis: async () =>
+		(await import("./emoji.server.ts")).applicationEmojiIds(),
+}
+/** The Hot on socials row as list-card titles: the first ten, with the row's poster path as a poster URL. */
+export function hotTitles(row: Pick<TalkedRow, "titles"> | null): GuestTitle[] {
+	return (row?.titles ?? []).slice(0, 10).map((t) => ({
+		id: `${t.mediaType}:${t.tmdbId}`,
+		name: t.title,
+		year: t.year,
+		poster_url: t.poster
+			? /^https?:\/\//.test(t.poster)
+				? t.poster
+				: `https://image.tmdb.org/t/p/w342${t.poster}`
+			: null,
+	}))
+}
+const moodNames = new Map(
+	(
+		commands
+			.find((c) => c.name === "discover")
+			?.options.find((o) => o.name === "mood") as
+			| { choices?: { name: string; value: string }[] }
+			| undefined
+	)?.choices?.map((c) => [c.value, c.name]) ?? [],
+)
+const sortNames: Record<string, string> = {
+	for_you: "For you",
+	popularity: "Popular",
+	newest: "Newest",
+	score: "Top scored",
+	match: "Best match",
+}
+/** "Feel-good movies", "Comedy shows", "Movies and shows". */
+export function discoverHeading(args: DiscoverState["args"]) {
+	const kind =
+		args.type === "movie"
+			? "movies"
+			: args.type === "show"
+			? "shows"
+			: "movies and shows"
+	const lead = args.moods?.[0]
+		? moodNames.get(args.moods[0]) ?? null
+		: args.genres?.[0] ?? null
+	const heading = lead ? `${lead} ${kind}` : kind
+	return heading[0].toUpperCase() + heading.slice(1)
 }
 export async function routeInteraction(
 	interaction: Interaction,
@@ -190,68 +237,92 @@ export async function routeInteraction(
 		country = viewer.country
 		memberId = resolved.memberId
 	}
-	const annotate = (
-		body: ReturnType<typeof textCard>,
-		allServices = !viewer.services?.length,
-	) => {
-		if (allServices)
-			body.components.splice(1, 0, {
-				type: 10,
-				content: `-# Using every service in ${country}.`,
-			})
-		return body
-	}
+	const allServices = () => !viewer.services?.length
+	const servicesNote = () =>
+		allServices() ? `Using every service in ${countryName(country)}` : undefined
+	const emojis = () =>
+		within(deps.emojis(), 300, {}).catch((): EmojiIds => ({}))
 	const read = (
 		name: Parameters<typeof readGuestTool>[2],
 		args: Parameters<typeof readGuestTool>[3],
 	) => deps.read(viewer, "https://goodwatch.app", name, args)
+	// The place Share uses: never the member's settings, so the 2C top block is exactly what Share posts.
+	const sharePlace = () =>
+		resolveViewerPlace(interaction, {
+			...deps,
+			resolveMemberPlace: deps.resolveMemberPlace ?? (async () => null),
+		})
+	const samePlace = (a: typeof viewer, b: typeof viewer) =>
+		a.country === b.country &&
+		[...(a.services ?? [])].sort().join() ===
+			[...(b.services ?? [])].sort().join()
 	const card = async (id: string, share = false, offers = false) => {
-		// Shared copies always come from a fresh guest read, with no member context or fields.
-		let personal = !share ? memberId : null
-		let result: Awaited<ReturnType<typeof deps.read>> | null = null
-		if (personal) {
-			try {
-				result = await deps.memberRead(personal, "get_title", { title_id: id })
-			} catch {
-				personal = null
-			}
-		}
-		result ??= await read("get_title", { title_id: id })
+		// The top block always comes from a fresh guest read for the share place, with no member context or fields;
+		// the member's own read only fills the member block below it.
+		const personal = !share ? memberId : null
+		const guestPlace = personal
+			? await within(sharePlace(), 400, viewer).catch(() => viewer)
+			: viewer
+		const [mine, result] = await Promise.all([
+			personal
+				? deps
+						.memberRead(personal, "get_title", { title_id: id })
+						.catch(() => null)
+				: null,
+			deps.read(guestPlace, "https://goodwatch.app", "get_title", {
+				title_id: id,
+			}),
+		])
 		if (!result.title)
 			return textCard("No matching title found. Try /search again.")
-		const body = titleCard(result.title as GuestTitle, country, {
+		const memberTitle = mine?.title ? (mine.title as GuestTitle) : undefined
+		return titleCard(result.title as GuestTitle, guestPlace.country, {
 			share,
 			offers,
-			member: personal ? (result.member as MemberMarks) : undefined,
+			member: memberTitle ? ((mine?.member ?? {}) as MemberMarks) : undefined,
+			memberTitle,
+			memberPlace:
+				memberTitle && !samePlace(viewer, guestPlace)
+					? { country: viewer.country, ownServices: !allServices() }
+					: undefined,
+			emojis: await emojis(),
+			allServices: !guestPlace.services?.length,
 		})
-		return personal ? body : annotate(body)
 	}
 	const similar = async (id: string, share = false) => {
 		const result = await read("get_similar_titles", {
 			title_id: id,
 			limit: 10,
 		})
-		return annotate(
-			titleListCard("Similar titles", (result.items ?? []) as GuestTitle[], {
+		return titleListCard(
+			"Similar titles",
+			(result.items ?? []) as GuestTitle[],
+			{
 				share,
 				shareId: listCustomId("similar-share", id),
-			}),
+				subtitle: servicesNote(),
+				emojis: await emojis(),
+			},
 		)
 	}
 	const person = async (id: number, share = false) => {
 		const result = await read("get_person", { person_id: id, limit: 10 })
 		return result.person
-			? annotate(personCard(result.person as GuestPerson, share))
+			? personCard(result.person as GuestPerson, share, {
+					note: allServices()
+						? `Using every service in ${countryName(country)}.`
+						: undefined,
+			  })
 			: textCard("No matching person found.")
 	}
 	const hot = async (share = false) =>
-		annotate(
-			titleListCard("Hot on socials", await deps.hot(), {
-				share,
-				shareId: listCustomId("hot-share", "now"),
-				url: "https://goodwatch.app/hot-on-socials",
-			}),
-		)
+		titleListCard("Hot on socials", await deps.hot(), {
+			share,
+			shareId: listCustomId("hot-share", "now"),
+			url: "https://goodwatch.app/hot-on-socials",
+			subtitle: servicesNote(),
+			emojis: await emojis(),
+		})
 	const discover = async (key: string, page: number, share = false) => {
 		const state = await deps.loadState(key)
 		if (!state)
@@ -269,19 +340,27 @@ export async function routeInteraction(
 				limit: 10,
 			},
 		)
-		return annotate(
-			titleListCard(
-				`Discover · ${country}`,
-				(result.items ?? []) as GuestTitle[],
-				{
-					share,
-					stateKey: key,
-					page,
-					next: !!result.next_cursor,
-					shareId: listCustomId("discover-share", `${key}:${page}`),
-				},
-			),
-			!state.args.providers?.length && !viewer.services?.length,
+		const sort = state.args.order ? sortNames[state.args.order] : undefined
+		return titleListCard(
+			discoverHeading(state.args),
+			(result.items ?? []) as GuestTitle[],
+			{
+				share,
+				stateKey: key,
+				page,
+				next: !!result.next_cursor,
+				total: typeof result.total === "number" ? result.total : undefined,
+				shareId: listCustomId("discover-share", `${key}:${page}`),
+				subtitle: [
+					sort,
+					!state.args.providers?.length && allServices()
+						? `every service in ${countryName(country)}`
+						: `streaming in ${countryName(country)}`,
+				]
+					.filter(Boolean)
+					.join(" · "),
+				emojis: await emojis(),
+			},
 		)
 	}
 	const options = Object.fromEntries(
@@ -310,12 +389,7 @@ export async function routeInteraction(
 		if (verdict === null) finish("limit_timeout")
 		if (verdict && !verdict.allowed) {
 			if (interaction.type === 4) return reply({ choices: [] }, "limited", 8)
-			return reply(
-				textCard(
-					`**Slow down**\nTry again in ${verdict.retryAfterSeconds} seconds.`,
-				),
-				"limited",
-			)
+			return reply(slowDownCard(verdict.retryAfterSeconds), "limited")
 		}
 		if (
 			interaction.data?.name === "setup" ||
@@ -455,20 +529,9 @@ export async function routeInteraction(
 					if (action === "gw:unlink:keep")
 						return textCard("Your GoodWatch account stays linked.")
 					if (!memberId)
-						return message([
-							{ type: 10, content: "Link GoodWatch for personal title cards." },
-							{
-								type: 1,
-								components: [
-									{
-										type: 2,
-										style: 5,
-										label: "Link GoodWatch",
-										url: new URL("/discord/link", appOrigin()).href,
-									},
-								],
-							},
-						])
+						return linkPromptCard(
+							new URL("/discord/link", appOrigin()).href,
+						)
 					const confirming =
 						interaction.data?.name === "unlink" || action === "gw:unlink:ask"
 					return message([

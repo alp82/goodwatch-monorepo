@@ -28,7 +28,7 @@ registerHooks({
 				'export const guestContext=(progress,country)=>{globalThis.__discordGuestCalls.push({kind:"context",args:[progress,country]});return {viewer:{kind:"guest"},country,services:progress.services??[]}}'
 		if (specifier === "../title-cards.server")
 			body =
-				'export const getDisplayFields=async()=>new Map([[42,{runtime:120,poster_path:"/poster.jpg",goodwatch_overall_score_normalized_percent:80}]])'
+				'export const getDisplayFields=async()=>new Map([[42,{runtime:120,poster_path:"/poster.jpg",backdrop_path:"/backdrop.jpg",goodwatch_overall_score_normalized_percent:80}]])'
 		if (specifier === "../../utils/title-key")
 			body = "export const titleKey=()=>42"
 		if (specifier === "./data.server.ts")
@@ -88,6 +88,9 @@ test("guest title reads have no member fields and use all services", async () =>
 		{ title_id: "movie:42" },
 	)
 	assert.equal("member" in result, false)
+	const read = result.title as Record<string, unknown>
+	assert.equal(read.poster_url, "https://image.tmdb.org/t/p/w342/poster.jpg")
+	assert.equal(read.backdrop_url, "https://image.tmdb.org/t/p/w780/backdrop.jpg")
 	const availability = calls.find((c) => c.kind === "availability")!
 	assert.deepEqual(availability.args[1], {
 		viewer: { kind: "guest" },

@@ -71,6 +71,15 @@ export async function readDiscover(
 						{
 							...summary(title, origin),
 							goodwatch_score: getTitleSnapshot()?.facts(key)?.score ?? null,
+							// Guest reads serve the Discord list card, which shows posters and runtimes.
+							...(guest
+								? {
+										poster_url: title.poster_path
+											? `https://image.tmdb.org/t/p/w342${title.poster_path}`
+											: null,
+										runtime_minutes: title.runtime ?? null,
+									}
+								: {}),
 						},
 					]
 				: []

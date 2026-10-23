@@ -100,6 +100,9 @@ export async function readGuestTool(
 				poster_url: display?.poster_path
 					? `https://image.tmdb.org/t/p/w342${display.poster_path}`
 					: null,
+				backdrop_url: display?.backdrop_path
+					? `https://image.tmdb.org/t/p/w780${display.backdrop_path}`
+					: null,
 				goodwatch_score:
 					display?.goodwatch_overall_score_normalized_percent ?? null,
 				availability,

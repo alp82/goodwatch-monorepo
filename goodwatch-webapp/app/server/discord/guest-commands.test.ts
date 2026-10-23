@@ -2,6 +2,7 @@ import "../title-filter/test-alias.ts"
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
+	hotTitles,
 	routeInteraction,
 	type Dependencies,
 	type Interaction,
@@ -61,7 +62,8 @@ function fixture() {
 			reads.push({ viewer, name, args })
 			if (name === "search_people") return { items: [person] }
 			if (name === "get_person") return { person }
-			if (name === "get_title") return { title }
+			if (name === "get_title")
+				return { title: { ...title, id: String(args.title_id ?? title.id) } }
 			if (name === "get_discover_filters")
 				return {
 					genres: ["Comedy"],
@@ -107,6 +109,18 @@ function fixture() {
 		)
 	return { deps, reads, edits, states, run, finished }
 }
+/** Every component in a tree, depth first, so tests don't depend on container nesting. */
+function all(components: Component[]): Component[] {
+	return components.flatMap((c) => [
+		c,
+		...all(c.components ?? []),
+		...(c.accessory ? all([c.accessory]) : []),
+	])
+}
+const selectIn = (components: Component[]) =>
+	all(components).find((c) => c.type === 3)!
+const buttonsIn = (components: Component[]) =>
+	all(components).filter((c) => c.type === 2)
 function assertLimits(components: Component[]) {
 	assert.ok(componentCount(components) <= 40)
 	function visit(items: Component[]) {
@@ -320,10 +334,10 @@ for (const publicMessage of [false, true])
 	})
 test("title Similar button defers update and reads similar titles", async () => {
 	const f = fixture()
-	const buttons = titleCard(title, "DE").components.at(-1)!.components!
+	const buttons = buttonsIn(titleCard(title, "DE").components)
 	assert.deepEqual(
-		buttons.slice(0, 3).map((b) => b.label),
-		["Where to watch", "Similar", "Open on GoodWatch"],
+		buttons.map((b) => b.label),
+		["Where to watch", "Similar", "Open on GoodWatch", "Share to channel"],
 	)
 	assert.deepEqual(
 		await f.run(3, { custom_id: formatCustomId("similar", title.id) }),
@@ -371,7 +385,7 @@ test("discover applies local service IDs, filters and ten-title pagination", asy
 	await g.finished
 	assert.equal(g.reads[0].args.cursor, "offset:20")
 	assert.equal(g.reads[0].args.limit, 10)
-	const buttons = g.edits[0].components.at(-1)!.components!
+	const buttons = buttonsIn(g.edits[0].components)
 	assert.equal(buttons.find((b) => b.label === "Next")!.disabled, true)
 	assert.equal(buttons.find((b) => b.label === "Previous")!.disabled, false)
 	assert.ok(buttons.every((b) => String(b.custom_id).length <= 100))
@@ -578,9 +592,7 @@ test("a linked member opens a discover title with match_label and shares a fresh
 	const discovery = configure(fixture())
 	await discovery.run(2, { name: "discover" })
 	await discovery.finished
-	const select = discovery.edits[0].components.find((c) =>
-		c.components?.some((child) => child.type === 3),
-	)!.components![0]
+	const select = selectIn(discovery.edits[0].components)
 	const selected = (select.options as { value: string }[])[0].value
 	const opened = configure(fixture())
 	assert.deepEqual(
@@ -594,11 +606,13 @@ test("a linked member opens a discover title with match_label and shares a fresh
 	const personal = JSON.stringify(opened.edits[0])
 	assert.match(personal, /Excellent taste fit/)
 	assert.doesNotMatch(personal, /93%/)
-	assert.match(personal, /Rated 9\/10|Want to See/)
-	assert.match(personal, /Where to watch · FR/)
-	const shareButton = opened.edits[0].components
-		.at(-1)!
-		.components!.find((c) => c.label === "Share to channel")!
+	assert.match(personal, /You rated it|Wishlist/)
+	// The top block is the share place (locale Germany); the member's France is in the member block.
+	assert.match(personal, /Where to watch on every service in Germany/)
+	assert.match(personal, /On every service in France/)
+	const shareButton = buttonsIn(opened.edits[0].components).find(
+		(c) => c.label === "Share to channel",
+	)!
 	const shared = configure(fixture())
 	const callsBefore = memberCalls.length
 	assert.deepEqual(
@@ -616,9 +630,12 @@ test("a linked member opens a discover title with match_label and shares a fresh
 	assert.equal(shared.edits[0].flags, IS_COMPONENTS_V2)
 	assert.doesNotMatch(
 		JSON.stringify(shared.edits[0]),
-		/Excellent taste fit|Rated 9|Want to See|93%/,
+		/Excellent taste fit|You rated|Wishlist|93%|France/,
 	)
-	assert.match(JSON.stringify(shared.edits[0]), /Where to watch · DE/)
+	assert.match(
+		JSON.stringify(shared.edits[0]),
+		/Where to watch on every service in Germany/,
+	)
 })
 
 for (const source of ["similar", "person", "hot", "similar-button"]) {
@@ -641,9 +658,7 @@ for (const source of ["similar", "person", "hot", "similar-button"]) {
 					],
 				})
 			await f.finished
-			const select = f.edits[0].components.find((c) =>
-				c.components?.some((child) => child.type === 3),
-			)!.components![0]
+			const select = selectIn(f.edits[0].components)
 			const g = fixture()
 			g.deps.linkedUser = async () => "linked-member"
 			g.deps.memberRead = async (_user, name) =>
@@ -670,7 +685,50 @@ for (const source of ["similar", "person", "hot", "similar-button"]) {
 			)
 			await g.finished
 			assert.match(JSON.stringify(g.edits[0]), /Excellent taste fit/)
-			assert.equal(g.reads.length, 0)
+			// The top block is a guest read for the share place, as Share would post it.
+			assert.deepEqual(
+				g.reads.map((r) => [r.viewer, r.name]),
+				[[{ country: "DE" }, "get_title"]],
+			)
 		})
 	}
 }
+
+test("hot adapter maps the Hot on socials row, poster paths included, into 4D list titles", () => {
+	// The shape getHotOnSocials returns: catalog poster paths, social items, curves.
+	const row = {
+		day: "2026-10-22",
+		titles: Array.from({ length: 12 }, (_, i) => ({
+			mediaType: i % 2 ? ("show" as const) : ("movie" as const),
+			tmdbId: 100 + i,
+			title: `Buzz ${i}`,
+			year: 2026,
+			poster: i === 1 ? null : `/p${i}.jpg`,
+			backdrop: `/b${i}.jpg`,
+			rank: i + 1,
+			lift: 3.2,
+			views: 50_000,
+			usual: 9_000,
+			curve: [1, 2, 3],
+			reason: null,
+			move: "new" as const,
+			items: [],
+		})),
+	}
+	const titles = hotTitles(row)
+	assert.equal(titles.length, 10)
+	assert.deepEqual(titles.slice(0, 2), [
+		{
+			id: "movie:100",
+			name: "Buzz 0",
+			year: 2026,
+			poster_url: "https://image.tmdb.org/t/p/w342/p0.jpg",
+		},
+		{ id: "show:101", name: "Buzz 1", year: 2026, poster_url: null },
+	])
+	assert.deepEqual(hotTitles(null), [])
+	const gallery = titleListCard("Hot on socials", titles).components[0]
+		.components!.find((c) => c.type === 12)!
+	assert.equal((gallery.items as unknown[]).length, 9)
+})
+

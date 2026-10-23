@@ -262,6 +262,12 @@ A small Discord REST client (`app/server/discord/rest.server.ts`) sends bot-toke
 `npm run discord:register` overwrites the global commands with `PUT /applications/{id}/commands`. Run it when commands
 change, not on every deploy.
 
+**Score emojis.** Discord text can't be colored, so cards show the GoodWatch score's color as an application emoji,
+`gw_score_1` to `gw_score_10`, one per vibe band. `node scripts/discord-emojis.ts` renders the PNGs into
+`scripts/discord-emojis/`, `--dry-run` stops there, and `--upload` adds the missing ones with `DISCORD_APP_ID` and
+`DISCORD_BOT_TOKEN`. The bot reads the IDs with the bot token (`emoji.server.ts`), caches them for 24 hours once all ten
+exist, and shows plain text until then.
+
 ## Privacy
 
 - The privacy page gains a Discord section: what is stored (Discord user ID and name for linked accounts, server

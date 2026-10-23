@@ -69,7 +69,11 @@ export function defineCommands() {
 				option(
 					"type",
 					"Movie, show, or any",
-					choices(["movie", "show", "any"]),
+					[
+						{ name: "Movies", value: "movie" },
+						{ name: "Shows", value: "show" },
+						{ name: "Movies and shows", value: "any" },
+					],
 				),
 				option("mood", "Kind of evening", [
 					{ name: "Funny", value: "funny" },
@@ -94,7 +98,13 @@ export function defineCommands() {
 				option(
 					"sort",
 					"Result order",
-					choices(["for_you", "popularity", "newest", "score", "match"]),
+					[
+						{ name: "For you", value: "for_you" },
+						{ name: "Popular", value: "popularity" },
+						{ name: "Newest", value: "newest" },
+						{ name: "Best score", value: "score" },
+						{ name: "Best match", value: "match" },
+					],
 				),
 			],
 		},

@@ -255,7 +255,7 @@ test("Where to watch defers the update then patches country offers", async () =>
 		IS_COMPONENTS_V2,
 	)
 	assert.match(JSON.stringify(f.edits), /https:\/\/example.com\/watch/)
-	assert.match(JSON.stringify(f.edits), /DE/)
+	assert.match(JSON.stringify(f.edits), /Where to watch on every service in Germany/)
 })
 test("Share defers publicly then patches a guest card without Share", async () => {
 	let done!: () => void
@@ -294,7 +294,7 @@ test("rate limits produce a retry card; autocomplete stays type 8", async () => 
 	})
 	assert.match(
 		JSON.stringify(await (await f.run(interaction(2))).json()),
-		/Slow down.*60/,
+		/### Slow down.*30 commands a minute.*Try again <t:\d+:R>/,
 	)
 	assert.deepEqual(await (await f.run(interaction(4))).json(), {
 		type: 8,
@@ -313,13 +313,20 @@ test("unsupported modal and malformed component return ephemeral errors", async 
 		assert.equal(body.data.flags, IS_COMPONENTS_V2 | EPHEMERAL)
 	}
 })
-test("cards have thumbnail, score label, two overview lines, rows and safe mentions", () => {
+test("cards without a backdrop keep the poster thumbnail, score label, short overview, rows and safe mentions", () => {
 	const card = titleCard(title, "DE")
 	assert.equal(card.flags, IS_COMPONENTS_V2 | EPHEMERAL)
-	assert.equal(card.components[0].type, 9)
-	assert.match(JSON.stringify(card), /95\/100 · Masterpiece/)
-	assert.equal(String(card.components[1].content).split("\n").length, 2)
-	assert.equal(card.components.at(-1)?.type, 1)
+	assert.equal(card.components.length, 1)
+	const [section, , , row] = card.components[0].components!
+	assert.equal(card.components[0].type, 17)
+	assert.equal(card.components[0].accent_color, 0x15803d)
+	assert.equal(section.type, 9)
+	assert.equal(section.accessory?.type, 11)
+	assert.match(JSON.stringify(card), /\*\*95 · Masterpiece\*\*/)
+	const overview = String(section.components![1].content)
+	assert.equal(overview.split("\n").length, 1)
+	assert.ok(overview.length <= 161 && overview.endsWith("…"))
+	assert.equal(row.type, 1)
 	assert.ok(componentCount(card.components) <= 40)
 	assert.doesNotMatch(JSON.stringify(card), /"embeds"/)
 	assert.match(JSON.stringify(card), /"Similar"/)
@@ -589,16 +596,48 @@ test("endpoint rejects correctly signed stale and future requests", async () => 
 	}
 })
 
-test("member search shows taste, marks and saved country; shared copies use guest reads from ids only", async () => {
+test("member search: the top block is exactly the shared card, the member's own place sits in the member block", async () => {
 	const memberCalls: unknown[] = []
+	// Member settings (France, service 8), server settings (UK, service 337) and locale (Germany) all differ.
 	const f = fixture({
 		linkedUser: async () => "member-id",
+		getGuild: async (id) => ({
+			guild_id: id,
+			country: "GB",
+			service_ids: [337],
+			digest_channel_id: null,
+			updated_by: "admin",
+			updated_at: 0,
+		}),
+		read: async (viewer, origin, name, args) => {
+			f.reads.push({ viewer, origin, name, args })
+			const { country } = viewer as { country: string }
+			return {
+				title: {
+					...title,
+					availability: {
+						state: "watchable",
+						offers: [
+							{ name: `${country} provider`, stream_link: `[${country}](https://example.com/${country})` },
+						],
+					},
+				},
+			}
+		},
 		memberRead: async (id, name, args) => {
 			memberCalls.push({ id, name, args })
 			return name === "get_settings"
 				? { country: "FR", service_ids: [8] }
 				: {
-						title: { ...title, match: 93, match_label: "93% taste match" },
+						title: {
+							...title,
+							match: 93,
+							match_label: "93% taste match",
+							availability: {
+								state: "watchable",
+								offers: [{ name: "Member provider", stream_link: "[M](https://example.com/m)" }],
+							},
+						},
 						member: {
 							score: 9,
 							status: "seen",
@@ -608,8 +647,12 @@ test("member search shows taste, marks and saved country; shared copies use gues
 				  }
 		},
 	})
+	const guildInteraction = (type: number, data: Interaction["data"]) => ({
+		...interaction(type, data),
+		guild_id: "guild-1",
+	})
 	const response = await f.run(
-		interaction(2, {
+		guildInteraction(2, {
 			name: "search",
 			options: [{ name: "title", value: "movie:42" }],
 		}),
@@ -618,39 +661,56 @@ test("member search shows taste, marks and saved country; shared copies use gues
 	for (let i = 0; !f.edits.length && i < 100; i++)
 		await new Promise((resolve) => setTimeout(resolve, 5))
 	const personal = JSON.stringify(f.edits[0])
-	assert.match(personal, /93%/)
 	assert.match(personal, /93% taste match/)
 	assert.doesNotMatch(personal, /93% · 93%/)
-	assert.match(personal, /Rated 9\/10/)
-	assert.match(personal, /Seen/)
-	assert.match(personal, /Want to See/)
-	assert.match(personal, /Where to watch · FR/)
+	assert.match(personal, /You rated it \*\*9 · Excellent\*\*/)
+	assert.match(personal, /In your Wishlist/)
+	const [top, member] = JSON.parse(personal)[2].components
+	assert.doesNotMatch(JSON.stringify(top), /93%|You rated|Wishlist|France|Member provider/)
+	assert.match(JSON.stringify(top), /Where to watch in the United Kingdom/)
+	assert.match(JSON.stringify(top), /GB provider/)
+	assert.equal(member.type, 17)
+	assert.equal(member.accent_color, 0xfbbf24)
+	assert.match(JSON.stringify(member), /### 93% taste match/)
+	assert.match(JSON.stringify(member), /On your services in France\\n\*\*Member provider\*\*/)
 	assert.match(f.logs[0], /"viewer":"member"/)
 	assert.deepEqual(memberCalls, [
 		{ id: "member-id", name: "get_settings", args: {} },
 		{ id: "member-id", name: "get_title", args: { title_id: "movie:42" } },
 	])
 	const callsBefore = memberCalls.length
+	f.reads.length = 0
 	await f.run(
-		interaction(3, { custom_id: formatCustomId("share", "movie:42") }),
+		guildInteraction(3, { custom_id: formatCustomId("share", "movie:42") }),
 	)
 	for (let i = 0; f.edits.length < 2 && i < 100; i++)
 		await new Promise((resolve) => setTimeout(resolve, 5))
 	assert.equal(memberCalls.length, callsBefore)
 	assert.deepEqual(f.reads, [
 		{
-			viewer: { country: "DE" },
+			viewer: { country: "GB", services: [337] },
 			origin: "https://goodwatch.app",
 			name: "get_title",
 			args: { title_id: "movie:42" },
 		},
 	])
-	const shared = JSON.stringify(f.edits[1])
+	const shared = JSON.parse(JSON.stringify(f.edits[1]))[2]
 	assert.doesNotMatch(
-		shared,
-		/93%|Excellent taste fit|Rated 9|Want to See|Seen|member-id|match_label|want_to_see/,
+		JSON.stringify(shared),
+		/93%|Excellent taste fit|You rated|Wishlist|Seen|member-id|match_label|want_to_see|France/,
 	)
-	assert.match(shared, /Where to watch · DE/)
+	assert.equal(shared.components.length, 1)
+	// Everything but the Share to channel button, which a shared copy never carries.
+	const withoutShare = JSON.parse(JSON.stringify(top))
+	const row = withoutShare.components.at(-1)
+	row.components = row.components.filter(
+		(c: { label?: string }) => c.label !== "Share to channel",
+	)
+	assert.deepEqual(
+		shared.components[0],
+		withoutShare,
+		"the shared card is the personal card's complete top block",
+	)
 })
 
 test("/link gives guests a link and members an unlink button; /unlink requires confirmation", async () => {
@@ -695,7 +755,7 @@ test("a partly watched show is Watching rather than Seen; sharing strips even su
 		"DE",
 		{ member: { status: "watching", watch_count: 2 } },
 	)
-	assert.match(JSON.stringify(result), /watching/)
+	assert.match(JSON.stringify(result), /Watching/)
 	assert.doesNotMatch(JSON.stringify(result), /Seen/)
 	const shared = titleCard({ ...title, match: 90, match_label: "Fit" }, "DE", {
 		share: true,

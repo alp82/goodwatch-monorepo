@@ -11,6 +11,17 @@ const title = {
 	title: "A title",
 	release_year: 2024,
 }
+/** A getDisplayFields row as the catalog returns it. */
+const display = {
+	...title,
+	key: 42,
+	poster_path: "/poster.jpg",
+	backdrop_path: "/backdrop.jpg",
+	runtime: 118,
+	tagline: null,
+	goodwatch_overall_score_normalized_percent: 81.6,
+	goodwatch_overall_score_voting_count: 1200,
+}
 const ctx: ViewerContext = {
 	viewer: { kind: "guest", progress: { interactions: [] } },
 	country: "DE",
@@ -62,9 +73,9 @@ registerHooks({
 		if (specifier.includes("title-filter/index.server"))
 			body = `${log}export const filterTitles=async(...args)=>{log("filter",...args);return {keys:[42],total:1,sortUsed:"popular"}}`
 		if (specifier.includes("title-cards.server"))
-			body = `export const getDisplayFields=async()=>new Map([[42,${JSON.stringify(
-				title,
-			)}]])`
+			body = `export const getDisplayFields=async(keys)=>{globalThis.__guestReaderCalls.push({kind:"displays",args:[keys]});return new Map(keys.map(k=>[k,${JSON.stringify(
+				display,
+			)}]))}`
 		if (specifier.includes("title-snapshot/index.server"))
 			body =
 				'export const getTitleSnapshot=()=>({columns:{genreNames:["Drama"]},facts:()=>({score:80})})'
@@ -106,6 +117,30 @@ test("guest similar uses supplied exclusions and never reads a member or taste",
 		false,
 	)
 	assert.equal(calls.find((c) => c.kind === "similar")!.args[3], ctx.hidden)
+	assert.deepEqual(result.items, [
+		{
+			id: "movie:42",
+			name: "A title",
+			year: 2024,
+			similarity: 0.8,
+			poster_url: "https://image.tmdb.org/t/p/w342/poster.jpg",
+			runtime_minutes: 118,
+			goodwatch_score: 81.6,
+		},
+	])
+})
+test("member similar output keeps its fields and reads no display rows", async () => {
+	calls.length = 0
+	const result = await similarTitles("member-id", "https://goodwatch.app", {
+		title_id: "movie:42",
+	})
+	assert.deepEqual(result.items, [
+		{ id: "movie:42", name: "A title", year: 2024, similarity: 0.8 },
+	])
+	assert.equal(
+		calls.some((c) => c.kind === "displays"),
+		false,
+	)
 })
 test("guest discovery uses local viewer and guest taste, without member telemetry", async () => {
 	calls.length = 0
