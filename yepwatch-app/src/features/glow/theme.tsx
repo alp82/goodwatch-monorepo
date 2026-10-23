@@ -250,6 +250,8 @@ export function VoteButton({
   );
 }
 export const s = StyleSheet.create({
+  statusPage: { flex: 1, backgroundColor: glow.bg, justifyContent: 'center', padding: 24 },
+  statusContent: { width: '100%', maxWidth: 520, alignSelf: 'center', gap: 22 },
   press: { alignItems: 'center', justifyContent: 'center', minWidth: 44, minHeight: 44 },
   pill: {
     borderRadius: 999,

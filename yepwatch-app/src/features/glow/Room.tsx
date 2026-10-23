@@ -137,47 +137,35 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
     state.terminal === 'expired' ? 'This room has expired' : 'Your room access ended';
   if (state.terminal || state.access === null)
     return (
-      <SafeAreaView
-        style={{
-          flex: 1,
-          backgroundColor: glow.bg,
-          justifyContent: 'center',
-          padding: 28,
-          gap: 22,
-        }}
-      >
-        <Wordmark />
-        <GText size={34} bold>
-          {state.access === null ? 'Reopen your invitation' : terminalText}
-        </GText>
-        <GText color={glow.muted}>
-          Use your invitation to restore your place, or create a new room.
-        </GText>
-        <Pill label="Go to entrance" gold onPress={() => router.replace('/')}>
-          Back to YepWatch
-        </Pill>
+      <SafeAreaView style={s.statusPage}>
+        <View style={s.statusContent}>
+          <Wordmark />
+          <GText size={34} bold>
+            {state.access === null ? 'Reopen your invitation' : terminalText}
+          </GText>
+          <GText color={glow.muted}>
+            Use your invitation to restore your place, or create a new room.
+          </GText>
+          <Pill label="Go to entrance" gold onPress={() => router.replace('/')}>
+            Back to YepWatch
+          </Pill>
+        </View>
       </SafeAreaView>
     );
   if (!snapshot)
     return (
-      <SafeAreaView
-        style={{
-          flex: 1,
-          backgroundColor: glow.bg,
-          justifyContent: 'center',
-          padding: 28,
-          gap: 20,
-        }}
-      >
-        <Wordmark />
-        <GText size={28} bold>
-          {state.room.error ? 'Couldn’t load the room' : 'Getting the room ready…'}
-        </GText>
-        {state.room.error && (
-          <Pill label="Retry room" onPress={() => void state.refetch().catch(() => undefined)}>
-            Retry
-          </Pill>
-        )}
+      <SafeAreaView style={s.statusPage}>
+        <View style={s.statusContent}>
+          <Wordmark />
+          <GText size={28} bold>
+            {state.room.error ? 'Couldn’t load the room' : 'Getting the room ready…'}
+          </GText>
+          {state.room.error && (
+            <Pill label="Retry room" onPress={() => void state.refetch().catch(() => undefined)}>
+              Retry
+            </Pill>
+          )}
+        </View>
       </SafeAreaView>
     );
   const { shared, own } = snapshot;
