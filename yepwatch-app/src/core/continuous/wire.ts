@@ -133,6 +133,23 @@ const details = z.union([
 export const sharedSchema = z
   .object({
     contractVersion: z.literal(3),
+    savedServiceIds: z.array(z.number().int().positive()).max(1200).optional(),
+    description: z
+      .object({
+        prompt: z.string(),
+        attributes: z.array(
+          z
+            .object({
+              text: z.string(),
+              kind: z.enum(['attribute', 'excluded', 'want', 'avoid', 'phrase']),
+              key: z.string().optional(),
+            })
+            .strict()
+        ),
+      })
+      .strict()
+      .nullable()
+      .optional(),
     roomId: id,
     revision: n,
     phase: z.enum(['setup', 'choosing', 'decided', 'expired']),
@@ -148,6 +165,7 @@ export const sharedSchema = z
           nickname: z.string(),
           screenId: id.nullable(),
           ready: z.boolean(),
+          dropped: z.boolean().optional(),
         })
         .strict()
     ),
@@ -226,7 +244,16 @@ const frame = z.discriminatedUnion('type', [
       view: z.enum(['voting', 'matches', 'trailer', 'away']),
       gesture: z.enum(['reach', 'handle', 'release']).optional(),
       beat: z.literal('answer').optional(),
-      pointer: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), pressed: z.boolean(), kind: z.enum(['mouse','touch']) }).strict().nullable().optional(),
+      pointer: z
+        .object({
+          x: z.number().min(0).max(1),
+          y: z.number().min(0).max(1),
+          pressed: z.boolean(),
+          kind: z.enum(['mouse', 'touch']),
+        })
+        .strict()
+        .nullable()
+        .optional(),
       inspection: z
         .discriminatedUnion('kind', [
           z.object({ kind: z.literal('poster'), candidateId: id }).strict(),

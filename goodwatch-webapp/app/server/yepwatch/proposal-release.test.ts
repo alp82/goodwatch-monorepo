@@ -48,7 +48,13 @@ test("Source snapshot configuration is captured and all general cache-writer con
 	assert.equal(source.nodes.length, 2)
 	assert.equal(source.password, "reader-value")
 	assert.equal(source.username, "existing_reader")
-	for (const key of ["REDIS_HOST", "REDIS_HOST2", "REDIS_HOST3", "REDIS_USER", "REDIS_PASS"])
+	for (const key of [
+		"REDIS_HOST",
+		"REDIS_HOST2",
+		"REDIS_HOST3",
+		"REDIS_USER",
+		"REDIS_PASS",
+	])
 		assert.equal((input as Env)[key], undefined)
 	assert.equal(input.CRATE_HOSTS, "catalog.invalid")
 	assert.equal(
@@ -131,7 +137,7 @@ test("Readiness stays red indefinitely without loaded snapshot; probes recover a
 						],
 				  ]
 				: stmt.includes("format_version")
-				? [[1, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
+				? [[2, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
 				: [],
 			rowcount: 0,
 		}
@@ -211,7 +217,7 @@ test("Operator provisioning is explicit and idempotent; ordinary startup only re
 				: []
 			: stmt.includes("SELECT format_version")
 			? installed
-				? [[1, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
+				? [[2, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
 				: []
 			: []
 		return { rows, rowcount: 1 }
@@ -222,7 +228,7 @@ test("Operator provisioning is explicit and idempotent; ordinary startup only re
 	await checkReleaseStore(sql, "test-key", secret)
 	assert.equal(writes, before)
 	await provisionReleaseStore(sql, 0, "test-key", secret)
-	assert.equal(writes, before + 14)
+	assert.equal(writes, before + 13)
 })
 test("Container listener uses configured bind/port and preserves Secure HttpOnly cookie headers", async () => {
 	const server = await releaseHttp(

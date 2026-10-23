@@ -14,6 +14,7 @@ export interface GlowTitle {
   genres: string[];
 }
 export interface GlowPerson {
+  dropped?: boolean;
   id: string;
   nickname: string;
   self: boolean;

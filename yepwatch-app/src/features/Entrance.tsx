@@ -162,7 +162,7 @@ export function Entrance({ invite }: { invite?: string }) {
               throw e;
           }
         }
-        result = await api.join(roomId, { ...saved.request, inviteCode: saved.code });
+        result = await api.join(roomId, { ...saved.request, inviteCode: saved.code }, stored ?? undefined);
       } else result = await api.create(saved.request);
       await saveAccess(result.credential);
       queryClient.setQueryData(

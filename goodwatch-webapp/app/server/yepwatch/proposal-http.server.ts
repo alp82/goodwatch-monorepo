@@ -281,7 +281,7 @@ export function createProposalHandler(
 							.some((c) => c.trim().startsWith(`yepwatch3_${roomId}=`))
 					// A reopened invite in the same browser is resume, never a new required voter or silent host replacement.
 					admission = hasCredential
-						? await service.recoverAdmission(roomId, credential(roomId))
+						? await service.resumeOrJoin(roomId, credential(roomId), join)
 						: await service.join(roomId, join)
 				}
 				if (!native) {

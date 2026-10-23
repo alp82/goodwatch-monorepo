@@ -31,6 +31,7 @@ interface Client {
   room?: Room
   activity?: ActivitySender; participantIds?: Set<string>
   pointers?: boolean
+  roomDetails?: boolean
   inspectionMatches?: { matches: { candidateId: string }[] }
 }
 interface Room { id: string; clients: Set<Client>; target: number; epoch: number; running: boolean }
@@ -148,7 +149,7 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
           if (!deliveryReady() || room.epoch !== epoch || result.snapshot.revision < room.target ||
               result.snapshot.revision < client.lastRevision) { degrade(client); continue }
           if (client.initial || client.degraded || result.snapshot.revision > client.lastRevision) {
-            if (send(client, { type: client.initial || client.degraded ? 'room.snapshot' : 'room.updated', snapshot: result.snapshot })) {
+            if (send(client, { type: client.initial || client.degraded ? 'room.snapshot' : 'room.updated', snapshot: client.roomDetails ? result.snapshot : { ...Object.fromEntries(Object.entries(result.snapshot).filter(([key]) => key !== 'description' && key !== 'savedServiceIds')), participants: result.snapshot.participants.filter(p => !('dropped' in p && p.dropped)).map(p => Object.fromEntries(Object.entries(p).filter(([key]) => key !== 'dropped'))) } as typeof result.snapshot })) {
               client.lastRevision = result.snapshot.revision; client.initial = false; client.degraded = false
               client.participantIds = new Set(result.snapshot.participants.map(p => p.participantId))
               if ('matches' in result.snapshot) client.inspectionMatches = { matches: result.snapshot.matches.map(m => ({ candidateId: m.candidateId })) }
@@ -246,9 +247,10 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
         // Exactly one application frame is allowed before authentication completes.
         if (client.authenticating) { fail(client, 'unauthorized'); return }
         client.authenticating = true
-        const parsed = (continuous?.proposal ? authenticateSchema.extend({ pointers: z.literal(true).optional() }) : authenticateSchema).safeParse(input)
+        const parsed = (continuous?.proposal ? authenticateSchema.extend({ pointers: z.literal(true).optional(), roomDetails: z.literal(true).optional() }) : authenticateSchema).safeParse(input)
         if (!parsed.success) { fail(client, 'invalid_request'); return }
         client.pointers = 'pointers' in parsed.data && parsed.data.pointers === true
+        client.roomDetails = 'roomDetails' in parsed.data && parsed.data.roomDetails === true
         void (async () => {
           try {
             const request = { roomId: parsed.data.roomId, ticket: parsed.data.ticket }

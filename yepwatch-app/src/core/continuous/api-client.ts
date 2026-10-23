@@ -98,7 +98,8 @@ export class ContinuousApi {
   }
   create = (body: GuestAdmissionRequest) => this.request<GuestAdmission>(paths.rooms, body);
   resolve = (code: string) => this.request<{ roomId: string }>(paths.resolveInvite, { code });
-  join = (id: string, body: JoinRoomRequest) => this.request<GuestAdmission>(paths.join(id), body);
+  join = (id: string, body: JoinRoomRequest, access?: RoomAccess) =>
+    this.request<GuestAdmission>(paths.join(id), body, access);
   snapshot = (a: RoomAccess) => this.request<RoomSnapshot>(paths.snapshot(a.roomId), undefined, a);
   command = (a: RoomAccess, c: CommandEnvelope) =>
     this.request<CommandResult>(paths.commands(a.roomId), c, a);

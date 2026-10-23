@@ -1,3 +1,4 @@
+import { searchYepWatchRoom } from "~/server/combined-search/yepwatch.server"
 import { localizeApiTitlePayload } from "~/server/media-payload.server"
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { getAuthFromRequest } from "~/utils/auth";
@@ -18,6 +19,7 @@ import {
 } from "~/server/combined-search/taste-rows.server";
 
 export async function action({ request }: ActionFunctionArgs) {
+	if (request.headers.get("x-goodwatch-consumer") === "yepwatch") return searchYepWatchRoom(request)
 	let headers = new Headers({
 		"Cache-Control": "private, no-store",
 		"Referrer-Policy": "no-referrer",

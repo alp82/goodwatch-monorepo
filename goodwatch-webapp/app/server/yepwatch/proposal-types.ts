@@ -2,10 +2,14 @@ import type {
 	ContinuousRoom,
 	ContinuousParticipant,
 } from "./continuous-types.ts"
-import type { Candidate } from "../../../packages/yepwatch-contracts/proposal.ts"
+import type {
+	Candidate,
+	RoomDescription,
+} from "../../../packages/yepwatch-contracts/proposal.ts"
 import type { RoomRepository, StoredRoom } from "./types.ts"
 /** Storage envelope2 is reused for existing member-read compatibility; flowVersion/table/routes distinguish protocol3. */
 export interface ProposalParticipant extends ContinuousParticipant {
+	leftAt?: number | null
 	votes: Record<
 		string,
 		{
@@ -19,6 +23,9 @@ export interface ProposalParticipant extends ContinuousParticipant {
 	agreementRevision: number
 }
 export interface ProposalRoom extends ContinuousRoom {
+	intent?:
+		| (RoomDescription & { rankedKeys: number[]; interpretedAt: number })
+		| null
 	flowVersion: 3
 	participants: ProposalParticipant[]
 	candidates: Candidate[]

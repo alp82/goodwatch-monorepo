@@ -59,7 +59,14 @@ export interface StreamState {
 		| "awaiting_answers"
 		| null
 }
+export interface RoomDescription {
+  prompt: string
+  attributes: { text: string; kind: "attribute" | "excluded" | "want" | "avoid" | "phrase"; key?: string }[]
+}
 export interface SharedRoomSnapshot {
+  /** Union of active linked members’ saved providers; no per-person attribution. */
+  savedServiceIds?: number[]
+  description?: RoomDescription | null
 	contractVersion: 3
 	roomId: string
 	revision: number
@@ -74,6 +81,7 @@ export interface SharedRoomSnapshot {
 		nickname: string
 		screenId: string | null
 		ready: boolean
+		dropped?: boolean
 	}[]
 	screens: ScreenContext[]
 	constraints: RoomConstraints
@@ -99,6 +107,7 @@ export interface SharedRoomSnapshot {
 	decision: Decision | null
 }
 export interface OwnPrivateSnapshot {
+  left?: boolean
 	participantId: string
 	nextSequence: number
 	canHost: boolean
@@ -158,6 +167,8 @@ export interface CommandEnvelope<T extends RoomCommand = RoomCommand> {
 	command: T
 }
 export type RoomCommand =
+  | { type: "leave" }
+  | { type: "configure"; expectedContextVersion: number; country: string; serviceIds: number[]; constraints: RoomConstraints; prompt: string }
 	| {
 			type: "setup"
 			expectedContextVersion: number

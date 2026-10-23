@@ -112,32 +112,24 @@ async function guest(
   await page.goto('/room/test-room');
   return { room, commands };
 }
-test('remote selection stays explicit; automatic readiness follows only that confirmed screen without assignment loops', async ({
+test('guests see one room selection without a screen picker or setup controls', async ({
   page,
 }) => {
-  const f = await guest(page, { multi: true });
-  await page.getByRole('button', { name: 'Choose your viewing screen', exact: true }).waitFor();
-  await expect(page.getByRole('button', { name: 'Ready to watch', exact: true })).toHaveCount(0);
-  expect(f.commands).toHaveLength(0);
-  await page.getByRole('button', { name: 'Choose your viewing screen', exact: true }).click();
-  await page.getByRole('button', { name: 'Watch on Remote screen', exact: true }).click();
+  const f = await guest(page);
   await page.getByText('Waiting for the host to start.', { exact: true }).waitFor();
-  expect(f.commands.map((e) => e.command.type)).toEqual(['assign_screen', 'ready']);
-  expect(f.room.shared.participants[0].screenId).toBe('remote');
-  await page.getByRole('button', { name: 'Refresh room', exact: true }).click();
-  await page.waitForTimeout(200);
-  expect(f.commands).toHaveLength(2);
-  await page.getByRole('button', { name: 'Choose another screen', exact: true }).click();
-  await page.getByRole('button', { name: 'Watch on Remote screen', exact: true }).click();
-  expect(f.commands).toHaveLength(2);
-  expect(f.room.shared.screens.map((s) => s.serviceIds)).toEqual([[8], [9]]);
+  await expect(
+    page.getByRole('button', { name: /Choose.*screen|Watch on|Ready to watch/ })
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Edit room description and services' })
+  ).toHaveCount(0);
   expect(f.room.own.agreement.agreed).toBe(false);
 });
 test('missing actual services never produces assignment/readiness or another confirmation action', async ({
   page,
 }) => {
   const f = await guest(page, { missing: true });
-  await page.getByText('The host is choosing the country and services.', { exact: true }).waitFor();
+  await page.getByText('The host is setting up the room.', { exact: true }).waitFor();
   expect(f.commands).toHaveLength(0);
   await expect(page.getByRole('button', { name: 'Ready to watch', exact: true })).toHaveCount(0);
 });
@@ -150,6 +142,7 @@ test('uncertain automatic assignment retries the exact envelope after reload, th
   await page.reload();
   await page.getByRole('button', { name: 'Retry pending action', exact: true }).click();
   await page.getByText('Waiting for the host to start.', { exact: true }).waitFor();
+  await expect.poll(() => f.commands.length).toBe(3);
   expect(f.commands[1]).toEqual(first);
   expect(f.commands.map((e) => e.command.type)).toEqual([
     'assign_screen',
@@ -167,6 +160,7 @@ test('failed entry refresh has bounded recovery through Retry connection without
   expect(f.commands).toHaveLength(0);
   await page.getByRole('button', { name: 'Retry connection', exact: true }).click();
   await page.getByText('Waiting for the host to start.', { exact: true }).waitFor();
+  await expect.poll(() => f.commands.length).toBe(2);
   expect(f.commands.map((e) => e.command.type)).toEqual(['assign_screen', 'ready']);
   await expect(page.getByRole('button', { name: 'Ready to watch', exact: true })).toHaveCount(0);
 });
@@ -175,6 +169,7 @@ test('fresh context is used for automatic entry; later roster/context resets re-
 }) => {
   const f = await guest(page, { changeContext: true });
   await page.getByText('Waiting for the host to start.', { exact: true }).waitFor();
+  await expect.poll(() => f.commands.length).toBe(2);
   expect(f.commands[0].command).toEqual({
     type: 'assign_screen',
     expectedContextVersion: 2,
@@ -201,6 +196,7 @@ test('lost ready response retries its exact envelope without another confirmatio
   const ready = structuredClone(f.commands[1]);
   await page.getByRole('button', { name: 'Retry pending action', exact: true }).click();
   await page.getByText('Waiting for the host to start.', { exact: true }).waitFor();
+  await expect.poll(() => f.commands.length).toBe(3);
   expect(f.commands[2]).toEqual(ready);
   await expect(page.getByRole('button', { name: 'Retry connection', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Ready to watch', exact: true })).toHaveCount(0);
@@ -215,6 +211,7 @@ test('definitive failed ready write stops without loops and generic connection r
   expect(f.commands).toHaveLength(2);
   await page.getByRole('button', { name: 'Retry connection', exact: true }).click();
   await page.getByText('Waiting for the host to start.', { exact: true }).waitFor();
+  await expect.poll(() => f.commands.length).toBe(3);
   expect(f.commands[2].sequence).toBe(failed.sequence);
   expect(f.commands[2].command).toEqual(failed.command);
   expect(f.room.own.agreement.agreed).toBe(false);

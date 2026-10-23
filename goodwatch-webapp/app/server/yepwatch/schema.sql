@@ -20,11 +20,14 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_room (
   "generation" BIGINT NOT NULL,
   "constraints" OBJECT(STRICT) AS ("kinds" ARRAY(TEXT),"maxMinutes" BIGINT,"moods" ARRAY(TEXT)) NOT NULL,
   "stream" OBJECT(STRICT) AS ("version" BIGINT,"state" TEXT,"reason" TEXT) NOT NULL,
-  "agreement_check" OBJECT(STRICT) AS ("version" BIGINT,"state" TEXT,"error" OBJECT(STRICT) AS ("code" TEXT,"details" OBJECT(STRICT) AS ("type" TEXT,"reason" TEXT,"actions" ARRAY(TEXT),"reasons" ARRAY(TEXT),"scannedTitles" BIGINT,"poolSize" BIGINT,"scanComplete" BOOLEAN,"uncertainTitles" BIGINT,"noMatchTitles" BIGINT,"missingMetadataTitles" BIGINT,"missingEpisodeTitles" BIGINT,"screens" ARRAY(OBJECT(STRICT) AS ("screenId" TEXT,"country" TEXT,"serviceIds" ARRAY(BIGINT),"watchable" BIGINT,"noMatch" BIGINT,"unknown" BIGINT))))) NOT NULL,
+  "agreement_check" OBJECT(STRICT) AS ("version" BIGINT,"state" TEXT,"error" OBJECT(STRICT) AS ("code" TEXT,"details" OBJECT(STRICT) AS ("type" TEXT,"reason" TEXT,"actions" ARRAY(TEXT),"reasons" ARRAY(TEXT),"scannedTitles" BIGINT,"poolSize" BIGINT,"scanComplete" BOOLEAN,"uncertainTitles" BIGINT,"noMatchTitles" BIGINT,"missingMetadataTitles" BIGINT,"missingEpisodeTitles" BIGINT,"screens" ARRAY(OBJECT(STRICT) AS ("country" TEXT,"serviceIds" ARRAY(BIGINT),"watchable" BIGINT,"noMatch" BIGINT,"unknown" BIGINT))))) NOT NULL,
   "seen_keys" ARRAY(TEXT) NOT NULL,
   "proposal_version" BIGINT NOT NULL,
   "participant_records" ARRAY(TEXT) NOT NULL,
-  "screen_records" ARRAY(TEXT) NOT NULL,
+  "country" TEXT,
+  "service_ids" ARRAY(BIGINT) NOT NULL,
+  "services_confirmed" BOOLEAN NOT NULL,
+  "intent" OBJECT(STRICT) AS ("prompt" TEXT,"attributes" ARRAY(OBJECT(STRICT) AS ("text" TEXT,"kind" TEXT,"key" TEXT)),"rankedKeys" ARRAY(BIGINT),"interpretedAt" BIGINT),
   "candidate_records" ARRAY(TEXT) NOT NULL,
   "ticket_records" ARRAY(TEXT) NOT NULL,
   "member_intent_records" ARRAY(TEXT) NOT NULL,
@@ -33,7 +36,7 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_room (
   "pending_revision" BIGINT NOT NULL,
   "pending_agreement" BOOLEAN NOT NULL,
   CONSTRAINT check_0 CHECK (phase IN ('setup','choosing','decided')),
-  CONSTRAINT check_1 CHECK (storage_format=1),
+  CONSTRAINT check_1 CHECK (storage_format=2),
   CONSTRAINT check_2 CHECK (revision>=0)
 ) CLUSTERED INTO 4 SHARDS WITH (column_policy='strict',number_of_replicas=2,"write.wait_for_active_shards"='3',refresh_interval=1000);
 
@@ -48,7 +51,7 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_participant (
   "admission_hash" TEXT NOT NULL,
   "epoch" BIGINT NOT NULL,
   "next_sequence" BIGINT NOT NULL,
-  "screen_id" TEXT,
+  "left_at" BIGINT,
   "ready" BOOLEAN NOT NULL,
   "revoked" BOOLEAN NOT NULL,
   "last_voted_id" TEXT,
@@ -109,19 +112,7 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_decision (
   "candidate_id" TEXT NOT NULL,
   "agreement_version" BIGINT NOT NULL,
   "decided_at" BIGINT NOT NULL,
-  "availability" ARRAY(OBJECT(STRICT) AS ("screenId" TEXT,"state" TEXT,"scope" TEXT,"checkedAt" BIGINT,"offers" ARRAY(OBJECT(STRICT) AS ("serviceId" BIGINT,"name" TEXT,"url" TEXT,"kind" TEXT,"offerType" TEXT)))) NOT NULL
-) CLUSTERED INTO 1 SHARDS WITH (column_policy='strict',number_of_replicas=2,"write.wait_for_active_shards"='3',refresh_interval=1000);
-
-CREATE TABLE IF NOT EXISTS doc.yepwatch_screen (
-  "record_id" TEXT PRIMARY KEY,
-  "room_id" TEXT NOT NULL,
-  "generation" BIGINT NOT NULL,
-  "expires_at" BIGINT NOT NULL,
-  "screen_id" TEXT NOT NULL,
-  "label" TEXT NOT NULL,
-  "country" TEXT,
-  "service_ids" ARRAY(BIGINT) NOT NULL,
-  "confirmed" BOOLEAN NOT NULL
+  "availability" ARRAY(OBJECT(STRICT) AS ("state" TEXT,"scope" TEXT,"checkedAt" BIGINT,"offers" ARRAY(OBJECT(STRICT) AS ("serviceId" BIGINT,"name" TEXT,"url" TEXT,"kind" TEXT,"offerType" TEXT)))) NOT NULL
 ) CLUSTERED INTO 1 SHARDS WITH (column_policy='strict',number_of_replicas=2,"write.wait_for_active_shards"='3',refresh_interval=1000);
 
 CREATE TABLE IF NOT EXISTS doc.yepwatch_candidate (
@@ -136,7 +127,7 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_candidate (
   "overview" TEXT,
   "poster_url" TEXT,
   "runtime_minutes" DOUBLE PRECISION,
-  "availability" ARRAY(OBJECT(STRICT) AS ("screenId" TEXT,"state" TEXT,"scope" TEXT,"checkedAt" BIGINT,"offers" ARRAY(OBJECT(STRICT) AS ("serviceId" BIGINT,"name" TEXT,"url" TEXT,"kind" TEXT,"offerType" TEXT)))) NOT NULL,
+  "availability" ARRAY(OBJECT(STRICT) AS ("state" TEXT,"scope" TEXT,"checkedAt" BIGINT,"offers" ARRAY(OBJECT(STRICT) AS ("serviceId" BIGINT,"name" TEXT,"url" TEXT,"kind" TEXT,"offerType" TEXT)))) NOT NULL,
   "viewing_duration" OBJECT(STRICT) AS ("minutes" DOUBLE PRECISION,"scope" TEXT),
   "backdrop_url" TEXT,
   "trailer_url" TEXT,

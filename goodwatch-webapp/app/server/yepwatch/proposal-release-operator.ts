@@ -1,4 +1,8 @@
 import {
+	prepareSettingsMigration,
+	applySettingsMigration,
+} from "./proposal-settings-migration.ts"
+import {
 	tables,
 	controlTable,
 	columns,
@@ -28,7 +32,27 @@ const config = releaseStoreConfig(process.env)
 const sql = crateSql(config.origin, config.username, config.password)
 const control = new ReleaseControl(sql, releaseControlConfig(process.env))
 const [command = "check", ...args] = process.argv.slice(2)
-if (command === "provision") {
+if (command === "prepare-room-settings" || command === "apply-room-settings") {
+	if (
+		!args[0] ||
+		args[0].startsWith("--") ||
+		!args.includes("--writers-stopped") ||
+		(command === "apply-room-settings" && !args.includes("--apply"))
+	)
+		throw new Error(
+			"Room settings migration needs a private backup path, --writers-stopped, and --apply for applying"
+		)
+	const operation =
+		command === "prepare-room-settings"
+			? prepareSettingsMigration
+			: applySettingsMigration
+	console.log(
+		JSON.stringify({
+			operation: command,
+			...(await operation(sql, config.secret, config.keyId, args[0])),
+		})
+	)
+} else if (command === "provision") {
 	if (!args.includes("--apply"))
 		throw new Error(
 			"Provisioning requires --apply and explicit operator credentials; never run from API startup"

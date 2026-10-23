@@ -9,7 +9,7 @@ import {
 export const RELEASE_TABLE = "doc.yepwatch_room"
 export const RELEASE_CONFIG_TABLE = "doc.yepwatch_runtime"
 export function storeMarker(secret: string) {
-	return keyed(secret, "typed-store-key", "relational-v1")
+	return keyed(secret, "typed-store-key", "relational-v2")
 }
 /** Read-only on every process start/probe. Provisioning belongs to an explicit operator command. */
 export async function checkReleaseStore(
@@ -25,7 +25,7 @@ export async function checkReleaseStore(
 	).rows[0]
 	if (
 		!row ||
-		row[0] !== 1 ||
+		row[0] !== 2 ||
 		row[1] !== keyId ||
 		!equal(String(row[2]), storeMarker(secret)) ||
 		Number(row[3]) !== CONTINUOUS_LIMITS.roomMs
@@ -51,7 +51,7 @@ export async function provisionReleaseStore(
 	if (!existing)
 		await sql(
 			`INSERT INTO ${RELEASE_CONFIG_TABLE} (id,format_version,key_id,key_check,room_ttl_ms) VALUES (?,?,?,?,?)`,
-			["proposal3", 1, keyId, storeMarker(secret), CONTINUOUS_LIMITS.roomMs]
+			["proposal3", 2, keyId, storeMarker(secret), CONTINUOUS_LIMITS.roomMs]
 		)
 	await checkReleaseStore(sql, keyId, secret)
 }

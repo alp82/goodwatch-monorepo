@@ -1,3 +1,8 @@
+import {
+	activeRoom,
+	normalizeRoomContext,
+	ROOM_CONTEXT,
+} from "./proposal-context.ts"
 import type {
 	Candidate,
 	CommandEnvelope,
@@ -20,9 +25,12 @@ export { continuousLive }
 export const actor = (room: ProposalRoom, id: string) =>
 	baseActor(room, id) as ProposalParticipant
 export function matches(room: ProposalRoom): Candidate[] {
-	return baseMatches(room) as Candidate[]
+	return activeRoom(room).participants.length
+		? (baseMatches(activeRoom(room)) as Candidate[])
+		: []
 }
 function readyScreens(room: ProposalRoom) {
+	room = activeRoom(room)
 	return room.participants.every(
 		(p) =>
 			p.screenId &&
@@ -33,12 +41,14 @@ function readyScreens(room: ProposalRoom) {
 	)
 }
 function allYep(room: ProposalRoom, id: string) {
+	room = activeRoom(room)
 	return (
 		room.participants.length > 0 &&
 		room.participants.every((p) => p.votes[id]?.value === "watch")
 	)
 }
 export function averageYepMs(room: ProposalRoom, id: string): number | null {
+	room = activeRoom(room)
 	if (!matches(room).some((c) => c.id === id)) return null
 	const times = room.participants.map((p) => p.votes[id])
 	if (
@@ -55,6 +65,7 @@ export function averageYepMs(room: ProposalRoom, id: string): number | null {
 	return times.reduce((sum, v) => sum + v.activeExposureMs!, 0) / times.length
 }
 function signature(room: ProposalRoom) {
+	room = activeRoom(room)
 	return JSON.stringify([
 		room.generation,
 		room.rosterVersion,
@@ -70,6 +81,7 @@ function signature(room: ProposalRoom) {
 	])
 }
 export function agreementCandidate(room: ProposalRoom): Candidate | null {
+	room = activeRoom(room)
 	const proposal = room.proposal
 	if (
 		!proposal ||
@@ -104,7 +116,7 @@ export function reconcile(room: ProposalRoom, previous: ProposalRoom) {
 	if (proposal) {
 		const broken =
 			!room.candidates.some((c) => c.id === proposal.candidateId) ||
-			room.participants.some(
+			activeRoom(room).participants.some(
 				(p) =>
 					p.votes[proposal.candidateId]?.value === "pass" ||
 					(proposal.baseParticipantIds.includes(p.id) &&
@@ -121,8 +133,9 @@ export function reconcile(room: ProposalRoom, previous: ProposalRoom) {
 		return
 	}
 	const allApproved =
+		activeRoom(room).participants.length > 0 &&
 		room.proposal &&
-		room.participants.every(
+		activeRoom(room).participants.every(
 			(p) => p.approvedProposalVersion === room.proposal!.version
 		)
 	room.agreement = {
@@ -163,11 +176,29 @@ export function proposalSnapshot(
 	participantId: string
 ): RoomSnapshot {
 	const legacy = continuousSnapshot(room, participantId)
+	const active = activeRoom(room)
 	const p = actor(room, participantId)
 	const proposal = room.proposal
 	const shared: SharedRoomSnapshot = {
 		...legacy.shared,
 		contractVersion: 3,
+		savedServiceIds: [
+			...new Set(
+				active.participants
+					.filter((p) => !p.revoked && p.member.state === "linked")
+					.flatMap((p) => p.member.prefill?.serviceIds ?? [])
+			),
+		].sort((a, b) => a - b),
+		participants: legacy.shared.participants.map((person) => ({
+			...person,
+			dropped: actor(room, person.participantId).leftAt != null,
+		})),
+		description: room.intent
+			? {
+					prompt: room.intent.prompt,
+					attributes: structuredClone(room.intent.attributes),
+			  }
+			: null,
 		candidates: room.candidates.map(projectedCandidate),
 		matches: matches(room).map((c) => ({
 			candidateId: c.id,
@@ -179,10 +210,10 @@ export function proposalSnapshot(
 					candidateId: proposal.candidateId,
 					version: proposal.version,
 					previousCandidateId: proposal.previousCandidateId,
-					agreeCount: room.participants.filter(
+					agreeCount: active.participants.filter(
 						(p) => p.approvedProposalVersion === proposal.version
 					).length,
-					requiredCount: room.participants.length,
+					requiredCount: active.participants.length,
 					averageYepMs: averageYepMs(room, proposal.candidateId),
 			  }
 			: null,
@@ -200,11 +231,33 @@ export function proposalSnapshot(
 			  }
 			: null,
 	}
+	// A recovered departure is an acknowledgement, not continuing room access.
+	if (p.leftAt != null) {
+		shared.phase = "setup"
+		shared.hostParticipantId = p.id
+		shared.participants = []
+		shared.screens = []
+		shared.description = null
+		shared.savedServiceIds = []
+		shared.constraints = {
+			kinds: ["movie", "show_start"],
+			moods: [],
+			maxMinutes: null,
+		}
+		shared.candidates = []
+		shared.matches = []
+		shared.proposal = null
+		shared.decision = null
+		shared.agreement = { version: 0, state: "none", error: null }
+		shared.stream = { version: 0, state: "exhausted", reason: "catalog_end" }
+	}
 	const { pick: _, ...own } = legacy.own
 	return {
 		shared,
 		own: {
 			...own,
+			left: p.leftAt != null,
+			canHost: p.leftAt == null && room.hostId === p.id,
 			votes: Object.entries(p.votes).map(([candidateId, v]) => ({
 				candidateId,
 				value: v.value,
@@ -229,7 +282,7 @@ export function preflight(
 ) {
 	if (envelope.command.type === "start" || envelope.command.type === "refill")
 		basePreflight(
-			room,
+			activeRoom(room),
 			actorId,
 			{ ...envelope, command: envelope.command },
 			now
@@ -242,8 +295,68 @@ export function proposalTransition(
 	now: number,
 	page?: { candidates: Candidate[]; exhausted: boolean }
 ): ProposalRoom {
-	const c = envelope.command
+	const c =
+		envelope.command.type === "assign_screen" && original.screens.length === 1
+			? { ...envelope.command, screenId: ROOM_CONTEXT }
+			: envelope.command
 	continuousLive(original, now)
+	const me = actor(original, actorId)
+	requireRoom(
+		me.leftAt == null || c.type === "leave",
+		"forbidden",
+		"You have left this room",
+		403
+	)
+	if (c.type === "leave") {
+		const next = structuredClone(original)
+		const leaving = actor(next, actorId)
+		if (leaving.leftAt != null) {
+			next.revision++
+			return next
+		}
+		leaving.leftAt = now
+		leaving.epoch++
+		next.rosterVersion++
+		next.revision++
+		next.tickets = next.tickets.filter((t) => t.participantId !== actorId)
+		next.memberIntents = next.memberIntents?.filter(
+			(t) => t.participantId !== actorId
+		)
+		const remaining = activeRoom(next).participants
+		if (next.hostId === actorId && remaining.length)
+			next.hostId = remaining[0].id
+		// Keep the room, cards and answers even if everyone drops out.
+		// A completed decision is historical and cannot be reopened by a departure.
+		if (next.phase !== "decided") reconcile(next, original)
+		return next
+	}
+	if (c.type === "configure") {
+		const next = proposalTransition(
+			original,
+			actorId,
+			{
+				...envelope,
+				command: {
+					type: "setup",
+					expectedContextVersion: c.expectedContextVersion,
+					screens: [
+						{
+							id: ROOM_CONTEXT,
+							label: "Our room",
+							country: c.country,
+							serviceIds: c.serviceIds,
+							confirmed: true,
+						},
+					],
+					screenId: ROOM_CONTEXT,
+					constraints: c.constraints,
+				},
+			},
+			now
+		)
+		normalizeRoomContext(next)
+		return next
+	}
 	let room: ProposalRoom
 	if (
 		c.type === "propose" ||
@@ -301,7 +414,7 @@ export function proposalTransition(
 				version: room.proposalVersion,
 				previousCandidateId,
 				proposerId: p.id,
-				baseParticipantIds: room.participants.map((p) => p.id),
+				baseParticipantIds: activeRoom(room).participants.map((p) => p.id),
 			}
 			p.approvedProposalVersion = room.proposalVersion
 		} else {
@@ -319,7 +432,7 @@ export function proposalTransition(
 				if (
 					room.candidates.find((v) => v.id === c.candidateId)?.identity.kind ===
 						"show_continue" &&
-					!room.participants.every(
+					!activeRoom(room).participants.every(
 						(m) =>
 							m.member.state === "linked" &&
 							m.memberGrant &&
@@ -374,13 +487,15 @@ export function proposalTransition(
 			room.revision++
 		} else
 			room = continuousTransition(
-				original,
+				activeRoom(original),
 				actorId,
 				{ ...envelope, command: c },
 				now,
 				page
 			) as ProposalRoom
 		if (c.type === "setup" || c.type === "restart") {
+			if (c.type === "setup") room.intent = null
+			normalizeRoomContext(room)
 			room.proposalVersion++
 			room.proposal = null
 			clearApprovals(room)
@@ -407,6 +522,9 @@ export function proposalTransition(
 				room.proposal.baseParticipantIds.push(actorId)
 		}
 	}
+	for (const departed of original.participants.filter((p) => p.leftAt != null))
+		if (!room.participants.some((p) => p.id === departed.id))
+			room.participants.push(structuredClone(departed))
 	reconcile(room, original)
 	return room
 }
@@ -423,7 +541,9 @@ export function retire(room: ProposalRoom) {
 			.filter(
 				(c) =>
 					!pinned.has(c.id) &&
-					room.participants.every((p) => p.votes[c.id]?.value != null)
+					activeRoom(room).participants.every(
+						(p) => p.votes[c.id]?.value != null
+					)
 			)
 			.map((c) => c.id)
 	)

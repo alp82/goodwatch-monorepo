@@ -1,3 +1,5 @@
+import type { InterpretRoom } from "./proposal-intent.ts"
+import { activeRoom, normalizeRoomContext } from "./proposal-context.ts"
 import { CONTINUOUS_LIMITS as L } from "./continuous-types.ts"
 import type {
 	CommandEnvelope,
@@ -58,13 +60,15 @@ export class ProposalService {
 	private publish: (event: RoomInvalidation) => Promise<void>
 	private guard?: ProposalOperationGuard
 	private now: () => number
+	private interpret?: InterpretRoom
 	constructor(
 		repository: ProposalRepository,
 		catalog: ProposalCatalog,
 		secret: string,
 		publish: (event: RoomInvalidation) => Promise<void> = async () => {},
 		now: () => number = Date.now,
-		guard?: ProposalOperationGuard
+		guard?: ProposalOperationGuard,
+		interpret?: InterpretRoom
 	) {
 		if (secret.length < 32) throw new Error("Room secret too short")
 		this.repository = repository
@@ -73,6 +77,7 @@ export class ProposalService {
 		this.publish = publish
 		this.now = now
 		this.guard = guard
+		this.interpret = interpret
 	}
 	private async get(id: string): Promise<ProposalStored> {
 		const stored = await this.repository.read(id)
@@ -86,8 +91,18 @@ export class ProposalService {
 		await this.guard?.active(stored.room)
 		return stored
 	}
-	private auth(room: ProposalRoom, credential: ActorCredential) {
+	private auth(
+		room: ProposalRoom,
+		credential: ActorCredential,
+		allowLeft = false
+	) {
 		const p = actor(room, credential.participantId)
+		requireRoom(
+			allowLeft || p.leftAt == null,
+			"forbidden",
+			"You have left this room",
+			403
+		)
 		requireRoom(
 			!p.revoked && equal(p.tokenHash, hash(credential.token)),
 			"unauthorized",
@@ -308,7 +323,7 @@ export class ProposalService {
 			)
 			if (screenId) {
 				requireRoom(
-					room.screens.some((s) => s.id === screenId),
+					room.screens.length === 1,
 					"invalid_request",
 					"Unknown screen",
 					400
@@ -316,13 +331,13 @@ export class ProposalService {
 				p.screenId = screenId
 			}
 			await this.guard?.join(id, p.id, p.admissionHash)
+			if (!activeRoom(room).participants.length) room.hostId = p.id
 			room.participants.push(p)
+			normalizeRoomContext(room)
 			room.rosterVersion++
 			room.revision++
-			if (room.phase === "setup")
-				for (const m of room.participants) m.ready = false
 			if (room.phase === "choosing" && this.catalog.refresh)
-				room.candidates = await this.catalog.refresh(room)
+				room.candidates = await this.catalog.refresh(activeRoom(room))
 			reconcile(room, old.room)
 			try {
 				if (!(await this.repository.compareAndSwap(old, room, true))) continue
@@ -340,6 +355,45 @@ export class ProposalService {
 			true
 		)
 	}
+	async resumeOrJoin(
+		id: string,
+		credential: ActorCredential,
+		request: JoinRoomRequest
+	) {
+		const resolved = await this.resolveInvite(request.inviteCode)
+		requireRoom(resolved.roomId === id, "not_found", "Invite unavailable", 404)
+		for (let i = 0; i < 6; i++) {
+			const old = await this.get(id)
+			const p = this.auth(old.room, credential, true)
+			if (p.leftAt == null) return this.recoverAdmission(id, credential)
+			const room = structuredClone(old.room)
+			if (!activeRoom(room).participants.length) room.hostId = p.id
+			const returning = actor(room, p.id)
+			returning.leftAt = null
+			returning.epoch++
+			normalizeRoomContext(room)
+			room.rosterVersion++
+			room.revision++
+			if (room.phase === "choosing" && this.catalog.refresh)
+				room.candidates = await this.catalog.refresh(activeRoom(room))
+			if (room.phase !== "decided") reconcile(room, old.room)
+			try {
+				if (!(await this.repository.compareAndSwap(old, room, true))) continue
+			} catch (e) {
+				if (!(e instanceof IndeterminateWrite)) throw e
+				continue
+			}
+			await this.notify(id)
+			return this.recoverAdmission(id, credential)
+		}
+		throw new RoomError(
+			"outcome_unknown",
+			"Retry returning to your saved place",
+			503,
+			true
+		)
+	}
+
 	async recoverAdmission(
 		id: string,
 		credential: ActorCredential
@@ -373,7 +427,11 @@ export class ProposalService {
 		let uncertain = false
 		for (let i = 0; i < 6; i++) {
 			const old = await this.get(id)
-			const p = this.auth(old.room, credential)
+			const p = this.auth(
+				old.room,
+				credential,
+				envelope.command.type === "leave"
+			)
 			const receipt = p.receipts.find(
 				(r) =>
 					r.commandId === envelope.commandId || r.sequence === envelope.sequence
@@ -408,14 +466,62 @@ export class ProposalService {
 				"conflict",
 				"Commands must be sent in order"
 			)
+			requireRoom(
+				p.leftAt == null || envelope.command.type === "leave",
+				"forbidden",
+				"You have left this room",
+				403
+			)
 			preflight(old.room, p.id, envelope, this.now())
+			if (envelope.command.type === "configure") {
+				requireRoom(
+					old.room.hostId === p.id,
+					"forbidden",
+					"Only the host can change the room description",
+					403
+				)
+				requireRoom(
+					old.room.contextVersion === envelope.command.expectedContextVersion &&
+						old.room.phase !== "decided",
+					"conflict",
+					"Room setup changed"
+				)
+				proposalTransition(old.room, p.id, envelope, this.now()) // Validate settings before paid interpretation.
+			}
 			await this.guard?.command(id, p.id, digest)
+			let intent: ProposalRoom["intent"] = null
+			if (envelope.command.type === "configure") {
+				const c = envelope.command
+				const metadata = await this.catalog.metadata(c.country)
+				requireRoom(
+					metadata.countries.some((v) => v.code === c.country) &&
+						c.serviceIds.every((v) =>
+							metadata.services.some((s) => s.id === v)
+						),
+					"invalid_request",
+					"Choose a valid country and services",
+					400
+				)
+				if (c.prompt.trim()) {
+					requireRoom(
+						this.interpret,
+						"busy",
+						"Room prompts are not configured yet",
+						503
+					)
+					intent = await this.interpret!(
+						c.prompt.trim(),
+						c.country,
+						c.serviceIds
+					)
+				}
+			}
 			let page
 			if (
 				envelope.command.type === "start" ||
 				envelope.command.type === "refill"
 			) {
-				const room = structuredClone(old.room)
+				const room = structuredClone(activeRoom(old.room))
 				if (envelope.command.type === "refill") retire(room)
 				if (room.candidates.length < L.active && room.seenKeys.length < L.seen)
 					page = await this.catalog.page(room)
@@ -427,12 +533,13 @@ export class ProposalService {
 				this.now(),
 				page
 			)
+			if (envelope.command.type === "configure") room.intent = intent
 			if (
 				envelope.command.type === "assign_screen" &&
 				room.phase === "choosing" &&
 				this.catalog.refresh
 			) {
-				room.candidates = await this.catalog.refresh(room)
+				room.candidates = await this.catalog.refresh(activeRoom(room))
 				reconcile(room, old.room)
 			}
 			const changed = actor(room, p.id)
@@ -492,13 +599,18 @@ export class ProposalService {
 			if (!candidate) return
 			const room = structuredClone(old.room)
 			try {
-				const evidence = await this.catalog.recheck(old.room, candidate)
+				const evidence = await this.catalog.recheck(
+					activeRoom(old.room),
+					candidate
+				)
 				requireRoom(
 					evidence.length > 0 && evidence.every((e) => e.state === "watchable"),
 					"no_intersection",
 					"Current offers do not cover every screen"
 				)
-				const screens = new Set(room.participants.map((p) => p.screenId))
+				const screens = new Set(
+					activeRoom(room).participants.map((p) => p.screenId)
+				)
 				requireRoom(
 					!screens.has(null) &&
 						evidence.length === screens.size &&
@@ -578,6 +690,7 @@ export class ProposalService {
 	}
 	private attachment(room: ProposalRoom, id: string): RealtimeAttachment {
 		const p = actor(room, id)
+		requireRoom(p.leftAt == null, "forbidden", "You have left this room", 403)
 		const expiresAt = Math.min(this.now() + 60_000, room.expiresAt)
 		const lease: Lease = {
 			format: 3,

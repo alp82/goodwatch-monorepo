@@ -77,7 +77,6 @@ const offer = object({
 })
 export const availability = array(
 	object({
-		screenId: text(),
 		state: enumeration(["watchable", "no_match", "unknown"]),
 		scope: enumeration(["title", "episode"]),
 		checkedAt: nullable(integer()),
@@ -100,7 +99,6 @@ const failure = object({
 	screens: optional(
 		array(
 			object({
-				screenId: text(),
 				country: text(),
 				serviceIds: array(integer(1), 100),
 				watchable: integer(),
@@ -162,7 +160,7 @@ export const tables = {
 		primary: "id",
 		fields: {
 			id: text(128),
-			storage_format: integer(1),
+			storage_format: integer(2),
 			revision: integer(),
 			expires_at: integer(),
 			host_id: text(128),
@@ -177,7 +175,30 @@ export const tables = {
 			seen_keys: array(text(), 2000),
 			proposal_version: integer(),
 			participant_records: array(text(128), 12),
-			screen_records: array(text(128), 12),
+			country: nullable(text(2)),
+			service_ids: array(integer(1), 100),
+			services_confirmed: bool,
+			intent: nullable(
+				object({
+					prompt: text(1000),
+					attributes: array(
+						object({
+							text: text(200),
+							kind: enumeration([
+								"attribute",
+								"excluded",
+								"want",
+								"avoid",
+								"phrase",
+							]),
+							key: optional(text(100)),
+						}),
+						100
+					),
+					rankedKeys: array(integer(1), 2000),
+					interpretedAt: integer(),
+				})
+			),
 			candidate_records: array(text(128), 120),
 			ticket_records: array(text(128), 48),
 			member_intent_records: array(text(128), 48),
@@ -188,7 +209,7 @@ export const tables = {
 		},
 		checks: [
 			"phase IN ('setup','choosing','decided')",
-			"storage_format=1",
+			"storage_format=2",
 			"revision>=0",
 		],
 	} as Table,
@@ -199,7 +220,7 @@ export const tables = {
 		admission_hash: text(),
 		epoch: integer(),
 		next_sequence: integer(),
-		screen_id: nullable(text(128)),
+		left_at: nullable(integer()),
 		ready: bool,
 		revoked: bool,
 		last_voted_id: nullable(text(128)),
@@ -249,13 +270,6 @@ export const tables = {
 		agreement_version: integer(),
 		decided_at: integer(),
 		availability,
-	}),
-	screen: entity("screen", {
-		screen_id: text(128),
-		label: text(200),
-		country: nullable(text(2)),
-		service_ids: array(integer(1), 100),
-		confirmed: bool,
 	}),
 	candidate: entity("candidate", {
 		candidate_id: text(128),

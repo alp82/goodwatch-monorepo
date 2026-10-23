@@ -41,7 +41,11 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const [drawer, setDrawer] = useState<'room' | 'details' | 'trailer' | null>(null);
   const [notice, setNotice] = useState('');
   const [memberBusy, setMemberBusy] = useState(false);
-  const [localReaction, setLocalReaction] = useState<{ at: number; gesture?: 'reach'|'handle'|'release'; answer?: boolean }>({at:0});
+  const [localReaction, setLocalReaction] = useState<{
+    at: number;
+    gesture?: 'reach' | 'handle' | 'release';
+    answer?: boolean;
+  }>({ at: 0 });
   const pointerAt = useRef(0);
   const [optimistic, setOptimistic] = useState<string>();
   const [stage, setStage] = useState({
@@ -51,6 +55,9 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const refilled = useRef(new Set<string>());
   const signinStarted = useRef(false);
   const send = state.send;
+  useEffect(() => {
+    if (snapshot?.own.left) router.replace('/');
+  }, [snapshot?.own.left]);
   useEffect(() => {
     if (!guestOnly && initialSignin && state.access && state.room.data && !signinStarted.current) {
       signinStarted.current = true;
@@ -185,8 +192,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const card = decided
     ? shared.candidates.find((c) => c.id === shared.decision?.candidateId)
     : view === 'matches'
-      ? shared.candidates.find((c) => c.id === activeId)
-      : ownCard(snapshot, optimistic);
+    ? shared.candidates.find((c) => c.id === activeId)
+    : ownCard(snapshot, optimistic);
   const title = card ? titlePresentation(card) : null;
   const dimensions = presentationSize(stage.width, stage.height, wide);
   const disabled =
@@ -194,10 +201,22 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const people = shared.participants.map((p) => ({
     id: p.participantId,
     nickname: p.nickname,
+    dropped: p.dropped,
     self: p.participantId === own.participantId,
   }));
   const activity =
-    state.connection === 'live' ? groupActivity(state.activities, state.activityNow()) : new Map();
+    state.connection === 'live'
+      ? groupActivity(
+          new Map(
+            [...state.activities].filter(([, a]) =>
+              shared.participants.some(
+                (p) => p.participantId === a.frame.participantId && !p.dropped
+              )
+            )
+          ),
+          state.activityNow()
+        )
+      : new Map();
   const invite = invitation.data;
   const undoTarget = latestRetainedVote(snapshot);
   const decisionItems = shared.candidates
@@ -236,7 +255,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
     if (!card || disabled) return;
     const current = own.votes.find((v) => v.candidateId === card.id);
     setOptimistic(card.id);
-    setLocalReaction({at: Date.now(), answer: yes});
+    setLocalReaction({ at: Date.now(), answer: yes });
     state.activity(undefined, 'answer');
     await send({
       type: 'vote',
@@ -291,8 +310,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
         e instanceof RoomFailure && e.code === 'not_implemented'
           ? 'GoodWatch sign-in is not connected yet. Your guest place is saved; account services and progress have not been imported.'
           : e instanceof Error
-            ? e.message
-            : 'Sign-in could not start.'
+          ? e.message
+          : 'Sign-in could not start.'
       );
     } finally {
       setMemberBusy(false);
@@ -318,8 +337,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
               matches.length
                 ? `Inspect ${matches.length} matches`
                 : shared.proposal
-                  ? 'Inspect proposal'
-                  : 'Matches will appear here'
+                ? 'Inspect proposal'
+                : 'Matches will appear here'
             }
             onPress={() => {
               if (matches.length || shared.proposal) {
@@ -349,8 +368,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                 {shared.proposal
                   ? 'A proposal is waiting. Inspect together.'
                   : matches.length
-                    ? 'Tap to reveal together'
-                    : 'Keep choosing. Matches appear here.'}
+                  ? 'Tap to reveal together'
+                  : 'Keep choosing. Matches appear here.'}
               </GText>
             </View>
             <View style={{ flexDirection: 'row', gap: 4 }}>
@@ -427,7 +446,12 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
         <Press label="Open room" onPress={() => setDrawer('room')}>
           <Wordmark size={24} />
         </Press>
-        <Faces localReaction={localReaction} people={people} activity={activity} open={() => setDrawer('room')} />
+        <Faces
+          localReaction={localReaction}
+          people={people}
+          activity={activity}
+          open={() => setDrawer('room')}
+        />
       </View>
       {developmentNotice && (
         <GText size={11} color={glow.muted} style={{ textAlign: 'center', paddingHorizontal: 12 }}>
@@ -454,10 +478,10 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
             {state.retrySeconds > 0
               ? `Try again in ${state.retrySeconds}s. Your action is saved.`
               : notice ||
-              entry.error ||
-              (state.privateError
-                ? 'Private state needs a refresh before choosing.'
-                : state.pending
+                entry.error ||
+                (state.privateError
+                  ? 'Private state needs a refresh before choosing.'
+                  : state.pending
                   ? 'Your choice is awaiting confirmation.'
                   : state.error ||
                     (state.connection === 'background'
@@ -469,8 +493,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
               state.pending
                 ? 'Retry pending action'
                 : entry.error
-                  ? 'Retry connection'
-                  : 'Refresh room'
+                ? 'Retry connection'
+                : 'Refresh room'
             }
             onPress={() => {
               setNotice('');
@@ -484,7 +508,13 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
             disabled={state.busy || state.retrySeconds > 0}
           >
             <GText size={12} bold>
-              {state.retrySeconds > 0 ? `Retry in ${state.retrySeconds}s` : state.pending ? 'Retry' : entry.error ? 'Retry connection' : 'Refresh'}
+              {state.retrySeconds > 0
+                ? `Retry in ${state.retrySeconds}s`
+                : state.pending
+                ? 'Retry'
+                : entry.error
+                ? 'Retry connection'
+                : 'Refresh'}
             </GText>
           </Press>
         </View>
@@ -529,7 +559,9 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                 }
               : null
           }
-          total={shared.proposal?.requiredCount ?? shared.participants.length}
+          total={
+            shared.proposal?.requiredCount ?? shared.participants.filter((p) => !p.dropped).length
+          }
           matchCount={shared.matches.length}
           checking={shared.agreement.state === 'checking'}
           unavailable={shared.agreement.state === 'unavailable'}
@@ -573,7 +605,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           {wide && (
             <View style={{ flex: 1, justifyContent: 'center', paddingRight: 44, gap: 22 }}>
               <GText size={14} bold color={glow.amber}>
-                {decided ? 'IT’S A YEP' : (title?.genres.join(' · ').toUpperCase() ?? '')}
+                {decided ? 'IT’S A YEP' : title?.genres.join(' · ').toUpperCase() ?? ''}
               </GText>
               <GText size={58} bold lines={3} style={{ letterSpacing: -2 }}>
                 {title?.title ?? 'Something good is out there.'}
@@ -636,26 +668,36 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                     height={dimensions.height}
                     desktop={wide}
                   />
-                  <PointerSurface width={dimensions.width} height={dimensions.height} onPointer={(pointer) => {
-                    state.pointer(pointer);
-                    if (pointer && Date.now() - pointerAt.current > 280) {
-                      pointerAt.current = Date.now();
-                      setLocalReaction({at: Date.now(), gesture: pointer.pressed ? 'reach' : 'handle'});
-                    }
-                  }}>
-                  <Poster
-                    showText={!wide}
-                    title={title}
+                  <PointerSurface
                     width={dimensions.width}
                     height={dimensions.height}
-                    mode="voting"
-                    disabled={disabled}
-                    onVote={(yes) => void vote(yes)}
-                    onBrowse={() => undefined}
-                    onDetails={() => setDrawer('details')}
-                    onTrailer={() => setDrawer('trailer')}
-                    onGesture={(gesture) => { setLocalReaction({at:Date.now(),gesture}); state.activity(gesture); }}
-                  />
+                    onPointer={(pointer) => {
+                      state.pointer(pointer);
+                      if (pointer && Date.now() - pointerAt.current > 280) {
+                        pointerAt.current = Date.now();
+                        setLocalReaction({
+                          at: Date.now(),
+                          gesture: pointer.pressed ? 'reach' : 'handle',
+                        });
+                      }
+                    }}
+                  >
+                    <Poster
+                      showText={!wide}
+                      title={title}
+                      width={dimensions.width}
+                      height={dimensions.height}
+                      mode="voting"
+                      disabled={disabled}
+                      onVote={(yes) => void vote(yes)}
+                      onBrowse={() => undefined}
+                      onDetails={() => setDrawer('details')}
+                      onTrailer={() => setDrawer('trailer')}
+                      onGesture={(gesture) => {
+                        setLocalReaction({ at: Date.now(), gesture });
+                        state.activity(gesture);
+                      }}
+                    />
                   </PointerSurface>
                   <PeerStage
                     layer="front"
@@ -672,10 +714,10 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                     {shared.stream.reason === 'awaiting_answers'
                       ? 'You’re caught up'
                       : shared.stream.state === 'unavailable'
-                        ? 'Suggestions couldn’t load'
-                        : shared.stream.state === 'capacity'
-                          ? 'This room reached its suggestion limit'
-                          : 'No more suggestions right now'}
+                      ? 'Suggestions couldn’t load'
+                      : shared.stream.state === 'capacity'
+                      ? 'This room reached its suggestion limit'
+                      : 'No more suggestions right now'}
                   </GText>
                   <GText size={14} color={glow.muted} style={{ textAlign: 'center' }}>
                     {shared.stream.reason === 'awaiting_answers'
@@ -706,10 +748,36 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
       )}
       {drawer === 'room' && (
         <Drawer title="Our room" close={() => setDrawer(null)}>
+          {shared.description && (
+            <View style={{ gap: 10 }}>
+              <GText bold size={20}>
+                What we’re looking for
+              </GText>
+              <GText>{shared.description.prompt}</GText>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                {shared.description.attributes.map((a, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      borderRadius: 18,
+                      paddingHorizontal: 10,
+                      paddingVertical: 6,
+                      backgroundColor: '#fbbf2418',
+                    }}
+                  >
+                    <GText color={glow.amber} size={12}>
+                      {a.text}
+                    </GText>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
           {people.map((p) => (
             <GText key={p.id}>
               {p.nickname}
               {p.self ? ' · You' : ''}
+              {p.dropped ? ' · Dropped' : ''}
             </GText>
           ))}
           {invite ? (
@@ -733,42 +801,18 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           ) : (
             <GText color={glow.muted}>Reopen the original invitation to share its link.</GText>
           )}
-          {shared.screens.length > 1 && (
-            <>
-              <GText bold>Your viewing screen</GText>
-              {shared.screens.map((screen) => (
-                <Pill
-                  key={screen.id}
-                  label={`Watch on ${screen.label}`}
-                  gold={
-                    shared.participants.find((p) => p.participantId === own.participantId)
-                      ?.screenId === screen.id
-                  }
-                  disabled={disabled || decided}
-                  onPress={() =>
-                    void send({
-                      type: 'assign_screen',
-                      expectedContextVersion: shared.contextVersion,
-                      screenId: screen.id,
-                    })
-                  }
-                >
-                  {screen.label} · {screen.country}
-                </Pill>
-              ))}
-            </>
-          )}
-          {!guestOnly && (own.member.state === 'linked' ? (
-            <GText bold>GoodWatch connected</GText>
-          ) : (
-            <Pill
-              label="Connect GoodWatch"
-              disabled={memberBusy || disabled}
-              onPress={() => void signin()}
-            >
-              {memberBusy ? 'Connecting GoodWatch…' : 'Connect GoodWatch'}
-            </Pill>
-          ))}
+          {!guestOnly &&
+            (own.member.state === 'linked' ? (
+              <GText bold>GoodWatch connected</GText>
+            ) : (
+              <Pill
+                label="Connect GoodWatch"
+                disabled={memberBusy || disabled}
+                onPress={() => void signin()}
+              >
+                {memberBusy ? 'Connecting GoodWatch…' : 'Connect GoodWatch'}
+              </Pill>
+            ))}
           {notice && (
             <GText size={14} color="#fca5a5">
               {notice}
@@ -777,6 +821,22 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           <GText color={glow.muted} size={13}>
             Individual answers are private. Shared results can still reveal preferences in small
             groups.
+          </GText>
+          <Pill
+            label="Leave room"
+            disabled={disabled}
+            onPress={() => {
+              void send({ type: 'leave' }).then((ok) => {
+                if (ok) router.replace('/');
+              });
+            }}
+          >
+            Leave room
+          </Pill>
+          <GText size={12} color={glow.muted}>
+            Your place and answers stay saved. You’ll be marked Dropped and won’t be needed for
+            matches or agreement. Reopen this invitation on this device to return. If you host,
+            someone still here takes over.
           </GText>
           <Pill label="Refresh room" onPress={() => void state.refetch().catch(() => undefined)}>
             Refresh room
@@ -804,9 +864,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           <GText>{title.overview ?? 'No synopsis is available.'}</GText>
           {(decided ? shared.decision?.availability : card?.availability)?.map((a) => (
             <View key={a.screenId} style={{ gap: 12 }}>
-              <GText bold>
-                {shared.screens.find((s) => s.id === a.screenId)?.label ?? 'Viewing screen'}
-              </GText>
+              <GText bold>{'Available for our room'}</GText>
               <GText size={13} color={glow.muted}>
                 {a.state === 'watchable'
                   ? a.scope === 'title'
@@ -823,8 +881,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                     o.kind === 'search'
                       ? 'Search'
                       : o.kind === 'where_to_watch'
-                        ? 'Where to watch on'
-                        : 'Open'
+                      ? 'Where to watch on'
+                      : 'Open'
                   } ${o.name}`}
                   icon="external"
                   disabled={!o.url}
@@ -838,8 +896,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
                   {o.kind === 'search'
                     ? `Search ${o.name}`
                     : o.kind === 'where_to_watch'
-                      ? `Where to watch · ${o.name}`
-                      : o.name}
+                    ? `Where to watch · ${o.name}`
+                    : o.name}
                 </Pill>
               ))}
             </View>

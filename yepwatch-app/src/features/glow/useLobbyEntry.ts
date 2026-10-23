@@ -48,11 +48,10 @@ export function useLobbyEntry(state: ReturnType<typeof useContinuousRoom>) {
         if (!next || (next.key !== initialKey && attempted.current.has(next.key))) return;
         attempted.current.add(next.key);
         if (!(await send(next.command)) && mounted.current) {
-          setError('Couldn’t connect you to your viewing screen. Retry the connection.');
+          setError('Couldn’t connect you to the room. Retry the connection.');
         }
       } catch {
-        if (mounted.current)
-          setError('Couldn’t refresh your viewing screen. Retry the connection.');
+        if (mounted.current) setError('Couldn’t refresh the room. Retry the connection.');
       } finally {
         task.current = false;
         if (mounted.current) setWorking(false);
@@ -67,7 +66,7 @@ export function useLobbyEntry(state: ReturnType<typeof useContinuousRoom>) {
       setError('');
       setRetryVersion((v) => v + 1);
     } catch {
-      if (mounted.current) setError('Couldn’t refresh your viewing screen. Retry the connection.');
+      if (mounted.current) setError('Couldn’t refresh the room. Retry the connection.');
     }
   }
   return { working, error: plan ? error : '', retry, required: Boolean(plan) };

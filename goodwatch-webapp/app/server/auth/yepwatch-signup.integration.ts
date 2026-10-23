@@ -1,3 +1,4 @@
+import { ensureYepWatchClient } from "./yepwatch-client.server.ts";
 import { releaseMembers } from "../yepwatch/proposal-release-members.ts";
 import { createMemberResource } from "../yepwatch/member-resource.server.ts";
 import {
@@ -105,30 +106,11 @@ try {
   console.log(
     "Actual session verified; creating dedicated local public client"
   );
-  const registration = await post("/oauth2/register", {
-    client_name: "YepWatch local integration",
-    redirect_uris: policy.redirectUris,
-    token_endpoint_auth_method: "none",
-    application_type: "native",
-    scope: "yepwatch:read",
-  });
-  assert.equal(registration.status, 201);
-  const registered = (await registration.json()) as { client_id: string };
-  policy.clientId = registered.client_id;
-  const context = await auth.$context;
-  const protectedResource = await context.adapter.findOne<{ id: string }>({
-    model: "oauthResource",
-    where: [{ field: "identifier", value: resource }],
-  });
-  assert.ok(protectedResource);
-  await context.adapter.create({
-    model: "oauthClientResource",
-    data: {
-      clientId: policy.clientId,
-      resourceId: protectedResource.id,
-      createdAt: new Date(),
-    },
-  });
+  policy.clientId = `yepwatch-local-${randomBytes(10).toString('hex')}`;
+  assert.equal((await ensureYepWatchClient(auth, policy)).ready, false);
+  assert.equal((await ensureYepWatchClient(auth, policy, true)).ready, true);
+  assert.equal((await ensureYepWatchClient(auth, policy, true)).ready, true);
+  assert.equal((await ensureYepWatchClient(auth, policy)).ready, true);
 
   const resourceHandler = createMemberResource({
     async verify(token) {

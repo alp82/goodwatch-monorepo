@@ -74,7 +74,7 @@ export function createContinuousCatalog(
 						const continued = saved
 							? [...saved.keys()]
 									.map((id) => 2_000_000_000_000 + id)
-									.filter((key) => base.includes(key))
+									.filter((key) => ranked.includes(key))
 							: [];
 						return [...new Set([...continued, ...ranked])].filter(
 							(key) =>

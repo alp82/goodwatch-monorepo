@@ -1,3 +1,4 @@
+import { ROOM_CONTEXT } from "./proposal-context.ts"
 import { z } from "zod"
 import { codec, keyed } from "./crypto.server.ts"
 import { IndeterminateWrite, RoomError } from "./errors.ts"
@@ -33,7 +34,7 @@ const stable = (value: unknown): string =>
 					Object.keys(v)
 						.sort()
 						.map((k) => [k, v[k]])
-				)
+			  )
 			: v
 	)
 const secretField: Partial<Record<Entity, string>> = {
@@ -179,6 +180,11 @@ export class RelationalProposalRepository implements ProposalRepository {
 		return decoded
 	}
 	private plan(room: ProposalRoom, pending: number): Plan {
+		if (
+			room.screens.length > 1 ||
+			room.screens.some((s) => s.id !== ROOM_CONTEXT)
+		)
+			throw fail()
 		if (room.format !== 2 || room.flowVersion !== 3) throw fail()
 		if (Buffer.byteLength(JSON.stringify(room)) > LIMITS.aggregateBytes)
 			throw new RoomError("limit_reached", "Room state limit reached", 409)
@@ -227,7 +233,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 						participant_id: p.id,
 						access_token_ciphertext: p.memberGrant.accessToken,
 						grant_expires_at: p.memberGrant.expiresAt,
-					})
+				  })
 				: null
 			return put("participant", {
 				participant_id: p.id,
@@ -236,7 +242,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 				admission_hash: p.admissionHash,
 				epoch: p.epoch,
 				next_sequence: p.nextSequence,
-				screen_id: p.screenId,
+				left_at: p.leftAt ?? null,
 				ready: p.ready,
 				revoked: p.revoked ?? false,
 				last_voted_id: p.lastVotedId ?? null,
@@ -251,15 +257,6 @@ export class RelationalProposalRepository implements ProposalRepository {
 				legacy_pick_revision: p.pick.revision,
 			})
 		})
-		const screens = room.screens.map((s) =>
-			put("screen", {
-				screen_id: s.id,
-				label: s.label,
-				country: s.country,
-				service_ids: s.serviceIds,
-				confirmed: s.confirmed,
-			})
-		)
 		const candidates = room.candidates.map((c) =>
 			put("candidate", {
 				candidate_id: c.id,
@@ -269,7 +266,9 @@ export class RelationalProposalRepository implements ProposalRepository {
 				overview: c.overview,
 				poster_url: c.posterUrl,
 				runtime_minutes: c.runtimeMinutes,
-				availability: c.availability,
+				availability: c.availability.map(
+					({ screenId: _, ...evidence }) => evidence
+				),
 				viewing_duration: c.viewingDuration,
 				backdrop_url: c.backdropUrl ?? null,
 				trailer_url: c.trailerUrl ?? null,
@@ -308,19 +307,21 @@ export class RelationalProposalRepository implements ProposalRepository {
 					previous_candidate_id: p.previousCandidateId,
 					proposer_id: p.proposerId,
 					base_participant_ids: p.baseParticipantIds,
-				})
+			  })
 			: null
 		const decision = d
 			? put("decision", {
 					candidate_id: d.candidateId,
 					agreement_version: d.agreementVersion,
 					decided_at: d.decidedAt,
-					availability: d.availability,
-				})
+					availability: d.availability.map(
+						({ screenId: _, ...evidence }) => evidence
+					),
+			  })
 			: null
 		const head = parseRow(tables.room, {
 			id: room.id,
-			storage_format: 1,
+			storage_format: 2,
 			revision: room.revision,
 			expires_at: room.expiresAt,
 			host_id: room.hostId,
@@ -335,7 +336,10 @@ export class RelationalProposalRepository implements ProposalRepository {
 			seen_keys: room.seenKeys,
 			proposal_version: room.proposalVersion,
 			participant_records: participants,
-			screen_records: screens,
+			country: room.screens[0]?.country ?? null,
+			service_ids: room.screens[0]?.serviceIds ?? [],
+			services_confirmed: room.screens[0]?.confirmed ?? false,
+			intent: room.intent ?? null,
 			candidate_records: candidates,
 			ticket_records: tickets,
 			member_intent_records: intents,
@@ -468,6 +472,27 @@ export class RelationalProposalRepository implements ProposalRepository {
 			).rowcount === 1
 		)
 	}
+	/** Operator only: publish every converted record after a stopped-writer schema migration. */
+	async publishMigration(
+		room: ProposalRoom,
+		seq: number,
+		term: number,
+		pendingRevision: number
+	) {
+		const plan = this.plan(room, pendingRevision)
+		await this.ensure([...plan.records.values()])
+		const names = columns(tables.room).filter((k) => k !== "id")
+		return (
+			(
+				await this.sql(
+					`UPDATE ${tables.room.name} SET ${names
+						.map((k) => `${k}=?`)
+						.join(",")} WHERE id=? AND _seq_no=? AND _primary_term=?`,
+					[...names.map((k) => plan.head[k]), room.id, seq, term]
+				)
+			).rowcount === 1
+		)
+	}
 	async read(id: string): Promise<ProposalStored | null> {
 		const names = columns(tables.room),
 			raw = (
@@ -486,7 +511,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 			)
 			if (
 				h.id !== id ||
-				h.storage_format !== 1 ||
+				h.storage_format !== 2 ||
 				h.pending_revision > h.revision ||
 				h.pending_agreement !== (h.agreement_check.state === "checking")
 			)
@@ -524,7 +549,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 						admissionHash: p.admission_hash,
 						epoch: p.epoch,
 						nextSequence: p.next_sequence,
-						screenId: p.screen_id,
+						screenId: h.services_confirmed ? ROOM_CONTEXT : null,
+						leftAt: p.left_at,
 						ready: p.ready,
 						revoked: p.revoked,
 						lastVotedId: p.last_voted_id,
@@ -555,7 +581,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 										accessToken: grant.access_token_ciphertext,
 										expiresAt: grant.grant_expires_at,
 									},
-								}
+							  }
 							: {}),
 						receipts: receipts.map((r) => ({
 							commandId: r.command_id,
@@ -566,9 +592,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 					}
 				}
 			)
-			const [screens, candidates, tickets, intents, proposal, decision] =
+			const [candidates, tickets, intents, proposal, decision] =
 				await Promise.all([
-					many("screen", h.screen_records),
 					many("candidate", h.candidate_records),
 					many("ticket", h.ticket_records),
 					many("intent", h.member_intent_records),
@@ -577,7 +602,6 @@ export class RelationalProposalRepository implements ProposalRepository {
 				])
 			if (
 				[
-					...screens,
 					...candidates,
 					...tickets,
 					...intents,
@@ -601,13 +625,18 @@ export class RelationalProposalRepository implements ProposalRepository {
 				contextVersion: h.context_version,
 				generation: h.generation,
 				participants,
-				screens: screens.map((s) => ({
-					id: s.screen_id,
-					label: s.label,
-					country: s.country,
-					serviceIds: s.service_ids,
-					confirmed: s.confirmed,
-				})),
+				screens: h.services_confirmed
+					? [
+							{
+								id: ROOM_CONTEXT,
+								label: "Our room",
+								country: h.country,
+								serviceIds: h.service_ids,
+								confirmed: true,
+							},
+					  ]
+					: [],
+				intent: h.intent,
 				constraints: h.constraints,
 				candidates: candidates.map((c) => ({
 					id: c.candidate_id,
@@ -617,7 +646,10 @@ export class RelationalProposalRepository implements ProposalRepository {
 					overview: c.overview,
 					posterUrl: c.poster_url,
 					runtimeMinutes: c.runtime_minutes,
-					availability: c.availability,
+					availability: c.availability.map((a: Row) => ({
+						...a,
+						screenId: ROOM_CONTEXT,
+					})),
 					viewingDuration: c.viewing_duration,
 					backdropUrl: c.backdrop_url,
 					trailerUrl: c.trailer_url,
@@ -632,8 +664,11 @@ export class RelationalProposalRepository implements ProposalRepository {
 							candidateId: decision.candidate_id,
 							agreementVersion: decision.agreement_version,
 							decidedAt: decision.decided_at,
-							availability: decision.availability,
-						}
+							availability: decision.availability.map((a: Row) => ({
+								...a,
+								screenId: ROOM_CONTEXT,
+							})),
+					  }
 					: null,
 				proposalVersion: h.proposal_version,
 				proposal: proposal
@@ -643,7 +678,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 							previousCandidateId: proposal.previous_candidate_id,
 							proposerId: proposal.proposer_id,
 							baseParticipantIds: proposal.base_participant_ids,
-						}
+					  }
 					: null,
 				tickets: tickets.map((t) => ({
 					hash: t.ticket_hash,

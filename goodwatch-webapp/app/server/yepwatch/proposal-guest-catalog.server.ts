@@ -1,3 +1,4 @@
+import { roomIntentKeys } from "./proposal-intent.ts"
 import { createContinuousCatalog } from "./continuous-catalog.ts"
 import { goodwatchCatalog, goodwatchReads } from "./goodwatch.server.ts"
 import { enrichContinuousCandidates } from "./continuous-presentation.server.ts"
@@ -9,7 +10,24 @@ export function guestProposalCatalog(members?: ContinuousMembers) {
 	const base = createContinuousCatalog(
 		goodwatchReads,
 		goodwatchCatalog.metadata,
-		members ? { savedContinuations: async room => sharedSavedContinuations(await Promise.all(room.participants.map(p => members.progress(room, p.id)))) } : undefined
+		{
+			rank: async (room, base) => {
+				return roomIntentKeys(
+					room as import("./proposal-types.ts").ProposalRoom,
+					base
+				)
+			},
+			...(members
+				? {
+						savedContinuations: async (room) =>
+							sharedSavedContinuations(
+								await Promise.all(
+									room.participants.map((p) => members.progress(room, p.id))
+								)
+							),
+				  }
+				: {}),
+		}
 	)
 	return proposalCatalog({
 		...base,

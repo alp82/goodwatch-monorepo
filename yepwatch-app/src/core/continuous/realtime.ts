@@ -193,6 +193,7 @@ export class ContinuousRealtime {
             roomId: this.o.roomId,
             lastRevision: this.o.revision(),
             pointers: true,
+            roomDetails: true,
           })
         );
       socket.onmessage = (event) => {

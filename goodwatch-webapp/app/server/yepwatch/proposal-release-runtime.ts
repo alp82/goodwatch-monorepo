@@ -1,3 +1,4 @@
+import { roomSearch } from "./proposal-intent.ts"
 import { releaseMembers } from "./proposal-release-members.ts"
 import type { ContinuousMembers } from "./continuous-members.server.ts"
 import { ReleaseControl } from "./proposal-release-control.ts"
@@ -49,7 +50,8 @@ export function createReleaseRuntime(
 			await deps.bus.publish(REVISION_CHANNEL, JSON.stringify(event))
 		},
 		Date.now,
-		control
+		control,
+		roomSearch(process.env)
 	)
 	const handle = createProposalHandler(service, {
 		serviceSecret: config.gatewaySecret,

@@ -20,7 +20,9 @@ export function Faces({
   const limit = useWindowDimensions().width < 480 ? 3 : 5;
   return (
     <Press
-      label={`Room, ${people.length} ${people.length === 1 ? 'person' : 'people'}`}
+      label={`Room, ${people.filter((p) => !p.dropped).length} ${
+        people.filter((p) => !p.dropped).length === 1 ? 'person' : 'people'
+      }`}
       onPress={open}
       style={{
         flexDirection: 'row',
@@ -173,9 +175,11 @@ function Avatar({
   }, [pulse, action, moving, reduced, y, squash, spark, wiggle]);
   const color = peerColor(person.id);
   return (
-    <View style={{ width: 44, height: 44 }}>
+    <View style={{ width: 44, height: 44, opacity: person.dropped ? 0.45 : 1 }}>
       <Animated.View
-        accessibilityLabel={`${person.nickname}${person.self ? ', you' : ''}`}
+        accessibilityLabel={`${person.nickname}${person.self ? ', you' : ''}${
+          person.dropped ? ', dropped' : ''
+        }`}
         style={{
           width: 44,
           height: 44,
@@ -211,6 +215,20 @@ function Avatar({
           {person.nickname.slice(0, 1).toUpperCase()}
         </GText>
       </Animated.View>
+      {person.dropped && (
+        <View
+          style={{
+            position: 'absolute',
+            right: -2,
+            bottom: -2,
+            backgroundColor: '#292929',
+            borderRadius: 8,
+            paddingHorizontal: 4,
+          }}
+        >
+          <GText size={12}>−</GText>
+        </View>
+      )}
       {[-1, 1].map((side) => (
         <Animated.View
           key={side}

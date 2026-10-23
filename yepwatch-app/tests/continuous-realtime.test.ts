@@ -87,6 +87,7 @@ test('activity requires authenticated live snapshot and a fresh session; backgro
     roomId: 'test-room',
     lastRevision: 1,
     pointers: true,
+    roomDetails: true,
   });
   h.client.sendActivity('matches', 'handle');
   assert.equal(s.sent.length, 1);
@@ -120,12 +121,12 @@ test('activity requires authenticated live snapshot and a fresh session; backgro
     view: 'matches',
     gesture: 'release',
   });
-  h.client.sendActivity('matches', undefined, undefined, {kind: 'lens'});
-  assert.deepEqual(JSON.parse(s.sent[3]).inspection, {kind: 'lens'});
+  h.client.sendActivity('matches', undefined, undefined, { kind: 'lens' });
+  assert.deepEqual(JSON.parse(s.sent[3]).inspection, { kind: 'lens' });
   h.run(3000);
   assert.equal(JSON.parse(s.sent.at(-1)!).inspection, undefined);
   h.client.setView('voting');
-  h.client.sendActivity('voting', undefined, 'answer', {kind: 'dice'});
+  h.client.sendActivity('voting', undefined, 'answer', { kind: 'dice' });
   assert.equal(JSON.parse(s.sent.at(-1)!).beat, 'answer');
   assert.equal(JSON.parse(s.sent.at(-1)!).inspection, undefined);
   assert.equal(JSON.parse(s.sent.at(-1)!).gesture, undefined);

@@ -40,6 +40,17 @@ export const proposalCommandSchema = z
 		commandId: id,
 		sequence: n.min(1),
 		command: z.discriminatedUnion("type", [
+			z.object({ type: z.literal("leave") }).strict(),
+			z
+				.object({
+					type: z.literal("configure"),
+					expectedContextVersion: n,
+					country: z.string().regex(/^[A-Z]{2}$/),
+					serviceIds: z.array(z.number().int().positive()).min(1).max(100),
+					constraints,
+					prompt: z.string().trim().max(1000),
+				})
+				.strict(),
 			z
 				.object({
 					type: z.literal("setup"),

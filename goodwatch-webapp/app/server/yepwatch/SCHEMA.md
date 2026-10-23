@@ -1,6 +1,6 @@
 # YepWatch first-release database schema
 
-The release stores interactions in **15 explicit typed tables**, not three opaque containers. There are no `payload`, dynamic-object or arbitrary JSON columns. [schema.sql](schema.sql) contains the complete generated DDL. [proposal-storage-schema.ts](proposal-storage-schema.ts) is the shared SQL/runtime-validation definition; regenerate with `node app/server/yepwatch/write-storage-schema.mjs` from `goodwatch-webapp`.
+The release stores interactions in **14 explicit typed tables**, not three opaque containers. There are no `payload`, dynamic-object or arbitrary JSON columns. [schema.sql](schema.sql) contains the complete generated DDL. [proposal-storage-schema.ts](proposal-storage-schema.ts) is the shared SQL/runtime-validation definition; regenerate with `node app/server/yepwatch/write-storage-schema.mjs` from `goodwatch-webapp`.
 
 ## Tables
 
@@ -9,13 +9,12 @@ All names below are in the `doc` schema. Every immutable domain record has `reco
 | Table | Main fields / purpose |
 |---|---|
 | `yepwatch_invitation` | `code_hash` primary key, `room_id`, `expires_at`; short invitation lookup with no plaintext key |
-| `yepwatch_room` | `id`, `revision`, `phase`, `expires_at`, `host_id`, roster/context/generation counters; typed constraints, stream and final-check state; exact references to current domain records; pending notification/check markers |
-| `yepwatch_participant` | Participant ID, nickname, credential hashes/epoch/sequence, screen/readiness, member status; references to this participant's votes, agreement, receipts and grant |
+| `yepwatch_room` | `id`, `revision`, `phase`, `expires_at`, `host_id`, roster/context/generation counters; shared country/service IDs/confirmation, typed prompt interpretation, constraints, stream and final-check state; exact references to current domain records; pending notification/check markers |
+| `yepwatch_participant` | Participant ID, nickname, credential hashes/epoch/sequence, `left_at`, protocol readiness, member status; references to this participant's votes, agreement, receipts and grant |
 | `yepwatch_vote` | Participant ID, candidate ID, `choice` (`watch`, `pass`, NULL), vote revision, active exposure milliseconds and timing source |
 | `yepwatch_proposal` | Candidate ID, proposal version, proposer ID, previous candidate ID, participant IDs present when proposed |
 | `yepwatch_agreement` | Participant ID, approved proposal version (nullable), agreement revision |
 | `yepwatch_decision` | Candidate ID, agreement-check version, decision time, strictly typed availability evidence |
-| `yepwatch_screen` | Screen ID/label, country, service IDs, explicit context confirmation |
 | `yepwatch_candidate` | Candidate ID, typed movie/show/episode identity, title/year, summary, poster/backdrop/trailer URLs, score/genres/runtime, typed availability and viewing duration |
 | `yepwatch_command_receipt` | Participant ID, command ID, sequence, request digest and accepted room revision |
 | `yepwatch_ticket` | Ticket hash, participant ID, credential epoch and ticket expiry |
@@ -49,7 +48,7 @@ Likewise, join `r.proposal_record` to `yepwatch_proposal.record_id`, `r.decision
 
 ## Installation, privacy and lifecycle
 
-This is an explicit empty-store install, not an automatic migration of legacy `doc.yepwatch_room`. Startup checks every table and refuses incompatible schemas/metadata. Internal storage format 1 and wire contract 3 have different purposes; table names have no version suffix. The operator uses four room shards, one shard per related table and two replicas on the three-node cluster; tests use zero on disposable local Crate only.
+New installations use the generated DDL. Existing typed-format-1 rooms require the explicit [room settings migration](../../../../yepwatch-app/docs/room-settings-deployment.md); startup never migrates. Startup checks every table and refuses incompatible schemas/metadata. Internal storage format 2 and wire contract 3 have different purposes; table names have no version suffix. The operator uses four room shards, one shard per related table and two replicas on the three-node cluster; tests use zero on disposable local Crate only.
 
 Only access tokens and pending PKCE verifiers are encrypted fields. Guest credentials remain hashed. No passwords or duplicated GoodWatch accounts are stored. Votes and private relationships are now queryable application data: restrict database roles, SQL logs and backups accordingly. Never expose catalog readers to room tables.
 
@@ -66,3 +65,7 @@ New rooms use six-character opaque room keys derived from the room secret and an
 The invitation table stores only the key hash and a room reference with the same six-hour expiry. Full-primary-key reads avoid search-refresh delays. The mapping is published/proven before returning an admission; exact retries repair a missing mapping after an interrupted response. Resolution still checks the live room and its stored invitation hash. A mapping collision fails closed. Backup and expired-record cleanup include the table.
 
 For an already provisioned typed store, apply only [migrations/20261023-short-invitations.sql](migrations/20261023-short-invitations.sql) using the established trusted operator connection before deploying this source. It adds the table and its runtime grant without modifying existing room rows, keys, quotas or metadata. New empty-store provisioning includes it automatically.
+
+## Room descriptions and departures
+
+`yepwatch_room.intent` declares prompt text, interpretation chips (text/kind/key), ranked numeric catalog keys and interpretation time as a strict typed object. Country and providers are direct room columns. The old screen table and selection/evidence screen-ID columns are removed by the explicit migration. A singleton context is derived for old wire/catalog adapters only. `yepwatch_participant.left_at` records departure; departed people are excluded from the active group but their credentials/receipts remain bounded records for retry recovery.

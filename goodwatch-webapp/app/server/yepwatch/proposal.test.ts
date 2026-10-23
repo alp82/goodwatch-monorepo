@@ -473,3 +473,319 @@ test("six-character reservation retries collisions without stealing another room
 	)
 	assert.equal((await service.resolveInvite(old)).roomId, id)
 })
+
+test("Leave removes a required voter, transfers host, and exact retry recovers the departure", async () => {
+	const f = await fixture()
+	const card = (await f.service.read(f.id, credential(f.a))).shared
+		.candidates[0]
+	await f.vote(f.b, card.id, "watch")
+	assert.equal(
+		(await f.service.read(f.id, credential(f.b))).shared.matches.length,
+		0
+	)
+	const before = await f.service.read(f.id, credential(f.a))
+	const leave: CommandEnvelope = {
+		commandId: "leave-host",
+		sequence: before.own.nextSequence,
+		command: { type: "leave" },
+	}
+	const first = await f.service.command(f.id, credential(f.a), leave)
+	assert.equal(first.snapshot.own.left, true)
+	assert.equal(
+		(await f.service.read(f.id, credential(f.b))).shared.hostParticipantId,
+		f.b.credential.participantId
+	)
+	assert.equal(first.snapshot.shared.participants.length, 0)
+	assert.equal(
+		(await f.service.read(f.id, credential(f.b))).shared.matches[0].candidateId,
+		card.id
+	)
+	const retry = await f.service.command(f.id, credential(f.a), leave)
+	assert.equal(retry.receipt.replayed, true)
+	assert.equal(
+		retry.snapshot.shared.rosterVersion,
+		first.snapshot.shared.rosterVersion
+	)
+	await assert.rejects(f.service.read(f.id, credential(f.a)), /left this room/)
+	await assert.rejects(
+		f.service.ticket(f.id, credential(f.a)),
+		/left this room/
+	)
+	await f.propose(f.b, card.id)
+	assert.equal(
+		(await f.service.read(f.id, credential(f.b))).shared.phase,
+		"decided"
+	)
+	const recovered = await f.service.command(f.id, credential(f.a), leave)
+	assert.equal(recovered.snapshot.own.left, true)
+	assert.deepEqual(recovered.snapshot.shared.participants, [])
+	assert.deepEqual(recovered.snapshot.shared.candidates, [])
+	assert.equal(recovered.snapshot.shared.decision, null)
+	assert.equal(recovered.snapshot.shared.description, null)
+})
+
+test("Room prompt is interpreted before publication and retained across start, refill and restart", async () => {
+	const repo = new ProposalMemoryRepository()
+	let interpreted = 0
+	const service = new ProposalService(
+		repo,
+		proposalFixtureCatalog,
+		secret,
+		undefined,
+		Date.now,
+		undefined,
+		async (prompt) => {
+			interpreted++
+			return {
+				prompt,
+				attributes: [{ text: "Funny", kind: "want", key: "humor" }],
+				rankedKeys: [1000000000001],
+				interpretedAt: 123,
+			}
+		}
+	)
+	const a = await service.create(admission())
+	const id = a.credential.roomId
+	const configured = await service.command(id, credential(a), {
+		commandId: "describe",
+		sequence: 1,
+		command: {
+			type: "configure",
+			expectedContextVersion: 1,
+			country: "DE",
+			serviceIds: [1],
+			constraints: { kinds: ["movie"], moods: [], maxMinutes: null },
+			prompt: "Something funny",
+		},
+	})
+	assert.equal(interpreted, 1)
+	assert.equal(
+		configured.snapshot.shared.description?.prompt,
+		"Something funny"
+	)
+	assert.equal(configured.snapshot.shared.screens.length, 1)
+	assert.equal(configured.snapshot.shared.participants[0].ready, true)
+	await service.command(id, credential(a), {
+		commandId: "describe",
+		sequence: 1,
+		command: {
+			type: "configure",
+			expectedContextVersion: 1,
+			country: "DE",
+			serviceIds: [1],
+			constraints: { kinds: ["movie"], moods: [], maxMinutes: null },
+			prompt: "Something funny",
+		},
+	})
+	assert.equal(interpreted, 1, "committed retry never calls search again")
+	async function send(command: RoomCommand) {
+		const current = await service.read(id, credential(a))
+		return service.command(id, credential(a), {
+			commandId: randomBytes(12).toString("hex"),
+			sequence: current.own.nextSequence,
+			command,
+		})
+	}
+	const ready = configured.snapshot.shared
+	await send({
+		type: "start",
+		expectedContextVersion: ready.contextVersion,
+		expectedRosterVersion: ready.rosterVersion,
+		hostReady: true,
+	})
+	let current = await service.read(id, credential(a))
+	await send({
+		type: "refill",
+		generation: current.shared.generation,
+		expectedStreamVersion: current.shared.stream.version,
+	})
+	current = await service.read(id, credential(a))
+	await send({ type: "restart", expectedRevision: current.shared.revision })
+	assert.deepEqual(
+		(await service.read(id, credential(a))).shared.description,
+		configured.snapshot.shared.description
+	)
+	assert.equal(interpreted, 1)
+})
+
+test("Dropping out preserves cards and answers; repeated return restores the same identity and host if empty", async () => {
+	const f = await fixture()
+	const initial = await f.service.read(f.id, credential(f.a))
+	const card = initial.shared.candidates[0]
+	await f.vote(f.a, card.id, "pass")
+	for (const who of [f.a, f.b]) {
+		const current = await f.service.read(f.id, credential(who))
+		await f.service.command(f.id, credential(who), {
+			commandId: randomBytes(12).toString("hex"),
+			sequence: current.own.nextSequence,
+			command: { type: "leave" },
+		})
+	}
+	const empty = (await f.repo.read(f.id))!.room
+	assert.equal(empty.phase, "choosing")
+	assert.equal(empty.proposal, null)
+	assert.deepEqual(empty.candidates, initial.shared.candidates)
+	const back = await f.service.resumeOrJoin(f.id, credential(f.a), {
+		...admission("Returning"),
+		inviteCode: f.a.invite.code,
+	})
+	assert.equal(back.credential.participantId, f.a.credential.participantId)
+	assert.equal(back.credential.token, f.a.credential.token)
+	assert.equal(
+		back.snapshot.own.votes.find((v) => v.candidateId === card.id)?.value,
+		"pass"
+	)
+	assert.equal(
+		back.snapshot.shared.participants.find(
+			(p) => p.participantId === f.b.credential.participantId
+		)?.dropped,
+		true
+	)
+	assert.equal(back.snapshot.shared.participants.length, 2)
+	assert.equal(back.snapshot.own.canHost, true)
+	const replay = await f.service.resumeOrJoin(f.id, credential(f.a), {
+		...admission("Ignored"),
+		inviteCode: f.a.invite.code,
+	})
+	assert.equal(replay.snapshot.shared.revision, back.snapshot.shared.revision)
+	assert.equal(replay.snapshot.shared.participants.length, 2)
+})
+
+test("Dropped participants do not veto matches or block decisions; returning restores the place without reopening Done", async () => {
+	const f = await fixture()
+	const card = (await f.service.read(f.id, credential(f.a))).shared
+		.candidates[0]
+	await f.vote(f.a, card.id, "pass")
+	await f.vote(f.b, card.id, "watch")
+	const before = await f.service.read(f.id, credential(f.a))
+	await f.service.command(f.id, credential(f.a), {
+		commandId: "drop",
+		sequence: before.own.nextSequence,
+		command: { type: "leave" },
+	})
+	const active = await f.service.read(f.id, credential(f.b))
+	assert.equal(active.shared.participants.length, 2)
+	assert.equal(
+		active.shared.participants.find(
+			(p) => p.participantId === f.a.credential.participantId
+		)?.dropped,
+		true
+	)
+	assert.equal(active.shared.matches[0].candidateId, card.id)
+	await f.propose(f.b, card.id)
+	const decided = await f.service.read(f.id, credential(f.b))
+	assert.equal(decided.shared.phase, "decided")
+	const back = await f.service.resumeOrJoin(f.id, credential(f.a), {
+		...admission(),
+		inviteCode: f.a.invite.code,
+	})
+	assert.equal(back.credential.participantId, f.a.credential.participantId)
+	assert.equal(
+		back.snapshot.shared.participants.find(
+			(p) => p.participantId === f.a.credential.participantId
+		)?.dropped,
+		false
+	)
+	assert.deepEqual(back.snapshot.shared.decision, decided.shared.decision)
+	assert.equal(back.snapshot.shared.phase, "decided")
+	assert.equal(
+		back.snapshot.own.votes.find((v) => v.candidateId === card.id)?.value,
+		"pass"
+	)
+})
+test("Returning before decision counts again, keeps answers and does not allocate another place", async () => {
+	const f = await fixture()
+	const card = (await f.service.read(f.id, credential(f.a))).shared
+		.candidates[0]
+	await f.vote(f.a, card.id, "pass")
+	await f.vote(f.b, card.id, "watch")
+	const before = await f.service.read(f.id, credential(f.a))
+	await f.service.command(f.id, credential(f.a), {
+		commandId: "drop",
+		sequence: before.own.nextSequence,
+		command: { type: "leave" },
+	})
+	assert.equal(
+		(await f.service.read(f.id, credential(f.b))).shared.matches.length,
+		1
+	)
+	const back = await f.service.resumeOrJoin(f.id, credential(f.a), {
+		...admission(),
+		inviteCode: f.a.invite.code,
+	})
+	assert.equal(back.snapshot.shared.matches.length, 0)
+	assert.equal(back.snapshot.shared.participants.length, 2)
+	assert.equal(back.snapshot.own.left, false)
+})
+
+test("Native authenticated rejoin restores the retained place through the HTTP route", async () => {
+	const f = await fixture()
+	const before = await f.service.read(f.id, credential(f.a))
+	await f.service.command(f.id, credential(f.a), {
+		commandId: "drop",
+		sequence: before.own.nextSequence,
+		command: { type: "leave" },
+	})
+	const handler = createProposalHandler(f.service, {
+		serviceSecret: secret,
+		allowedOrigins: ["http://127.0.0.1:8133"],
+		secureCookies: false,
+	})
+	const response = await handler(
+		new Request(`http://127.0.0.1:15992${paths.join(f.id)}`, {
+			method: "POST",
+			headers: {
+				"content-type": "application/json",
+				"x-yepwatch-client": "native",
+				authorization: `Bearer ${f.a.credential.token}`,
+				"x-yepwatch-participant": f.a.credential.participantId,
+			},
+			body: JSON.stringify({
+				...admission("Ignored"),
+				inviteCode: f.a.invite.code,
+			}),
+		})
+	)
+	assert.equal(response.status, 200)
+	const back = await response.json()
+	assert.equal(back.credential.participantId, f.a.credential.participantId)
+	assert.equal(back.credential.token, f.a.credential.token)
+	assert.equal(back.snapshot.own.left, false)
+	assert.equal(back.snapshot.shared.participants.length, 2)
+})
+
+test("Shared provider defaults union active linked accounts without changing the chosen room services", async () => {
+	const f = await fixture()
+	const old = (await f.repo.read(f.id))!
+	const room = structuredClone(old.room)
+	room.participants[0].member = {
+		state: "linked",
+		prefill: {
+			country: "DE",
+			serviceIds: [8, 337],
+			savedProgressAvailable: false,
+		},
+	}
+	room.participants[1].member = {
+		state: "linked",
+		prefill: {
+			country: "US",
+			serviceIds: [8, 9],
+			savedProgressAvailable: false,
+		},
+	}
+	room.revision++
+	assert.equal(await f.repo.compareAndSwap(old, room, true), true)
+	const shared = (await f.service.read(f.id, credential(f.a))).shared
+	assert.deepEqual(shared.savedServiceIds, [8, 9, 337])
+	assert.deepEqual(shared.screens[0].serviceIds, [1])
+	const b = await f.service.read(f.id, credential(f.b))
+	await f.service.command(f.id, credential(f.b), {
+		commandId: "drop-saved-provider",
+		sequence: b.own.nextSequence,
+		command: { type: "leave" },
+	})
+	const after = await f.service.read(f.id, credential(f.a))
+	assert.deepEqual(after.shared.savedServiceIds, [8, 337])
+	assert.deepEqual(after.shared.screens[0].serviceIds, [1])
+})

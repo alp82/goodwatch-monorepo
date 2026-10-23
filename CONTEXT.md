@@ -346,3 +346,7 @@ The vote-weighted mean of the IMDb ratings of a season's rated episodes. A seaso
 
 **Season critic score**:
 A season's Tomatometer or Metascore as Rotten Tomatoes or Metacritic publish it, in that site's season numbering. It is distinct from the season score, which GoodWatch computes from IMDb episode ratings.
+
+## YepWatch rooms
+
+A YepWatch room shares one country/provider selection and one host-authored description. Jev interprets the prompt using GoodWatch search; its attributes are visible to the group and its ranked titles constrain suggestions. There is no selectable playback screen. Explicit Leave removes someone from the active group and transfers hosting if necessary; a disconnected participant still counts. See [the room-description decision](docs/adr/yepwatch-shared-room-description.md).

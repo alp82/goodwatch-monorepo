@@ -1,18 +1,26 @@
 import { guestOnly } from '../../core/config';
 import { useState } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { Image, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import * as Crypto from 'expo-crypto';
-import type {
-  RoomCommand,
-  RoomSnapshot,
-  ScreenContext,
-} from '@goodwatch/yepwatch-contracts/proposal';
+import type { RoomCommand, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousApi } from '../../core/continuous/api';
 import { countryHint } from '../../core/lobby';
-import { Button, Field, Notice, Row, Words } from '../../components/ui';
+import { Field, Notice, Row } from '../../components/ui';
 import { Drawer } from './Drawer';
 import { GText, Pill, glow } from './theme';
+
+const presets = [
+  'Something funny and light',
+  'A twisty thriller under two hours',
+  'A film for the whole family',
+  'Beautiful sci-fi, nothing violent',
+  'A hidden gem from the 90s',
+];
+const flag = (code: string) =>
+  /^[A-Z]{2}$/.test(code)
+    ? String.fromCodePoint(...[...code].map((c) => 127397 + c.charCodeAt(0)))
+    : '🌐';
+
 export function Lobby({
   snapshot,
   disabled,
@@ -28,97 +36,81 @@ export function Lobby({
   const { width, height } = useWindowDimensions();
   const compact = height < 600;
   const landscape = compact && width > height;
-  const me = shared.participants.find((p) => p.participantId === own.participantId);
-  const [screenPicker, setScreenPicker] = useState(false);
+  const current = shared.screens[0]; // Compatibility projection; there is one room selection.
   const [editing, setEditing] = useState(false);
-  const [advanced, setAdvanced] = useState(false);
-  const [screens, setScreens] = useState<ScreenContext[]>([]);
-  const [selectedId, setSelectedId] = useState('');
+  const [saveError, setSaveError] = useState('');
+  const [country, setCountry] = useState(current?.country ?? '');
+  const [customServices, setServices] = useState<number[]>(current?.serviceIds ?? []);
+  const [useSavedProviders, setUseSavedProviders] = useState(!current?.confirmed);
+  const savedServiceIds = shared.savedServiceIds ?? own.member.prefill?.serviceIds ?? [];
+
+  const [countryPicker, setCountryPicker] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
   const [serviceSearch, setServiceSearch] = useState('');
-  const [changeCountry, setChangeCountry] = useState(false);
   const [constraints, setConstraints] = useState(shared.constraints);
-  const [minutes, setMinutes] = useState('');
-  const canContinue =
-    !guestOnly && own.member.state === 'linked' && Boolean(own.member.prefill?.savedProgressAvailable);
-  const unsupportedContinuation = constraints.kinds.includes('show_continue') && !canContinue;
-  const selected = screens.find((s) => s.id === selectedId);
+  const [prompt, setPrompt] = useState(shared.description?.prompt ?? '');
   const metadata = useQuery({
-    queryKey: ['continuous-metadata', selected?.country],
-    queryFn: () => continuousApi.metadata(selected?.country ?? undefined),
+    queryKey: ['continuous-metadata', country],
+    queryFn: () => continuousApi.metadata(country || undefined),
     enabled: editing,
   });
+  const availableProviders = new Set(metadata.data?.services.map((s) => s.id) ?? []);
+  const services = useSavedProviders
+    ? [...new Set(savedServiceIds)].filter((id) => availableProviders.has(id)).sort((a, b) => a - b)
+    : customServices;
+  const canContinue =
+    !guestOnly &&
+    own.member.state === 'linked' &&
+    Boolean(own.member.prefill?.savedProgressAvailable);
+  const unsupported = constraints.kinds.includes('show_continue') && !canContinue;
+  const setup = Boolean(current?.confirmed && current.country && current.serviceIds.length);
+  const valid =
+    metadata.data?.countries.some((c) => c.code === country) &&
+    services.length > 0 &&
+    constraints.kinds.length > 0 &&
+    !unsupported &&
+    (!prompt.trim() || prompt.trim().length >= 2);
   function edit() {
-    const draft = shared.screens.length
-      ? shared.screens
-      : [
-          {
-            id: 'shared-screen',
-            label: 'Our screen',
-            country:
-              own.member.prefill?.country ??
-              countryHint(Intl.DateTimeFormat().resolvedOptions().locale),
-            serviceIds: [],
-            confirmed: false,
-          },
-        ];
-    setScreens(draft);
-    setSelectedId(me?.screenId ?? draft[0].id);
+    setCountry(
+      current?.country ??
+        own.member.prefill?.country ??
+        countryHint(Intl.DateTimeFormat().resolvedOptions().locale) ??
+        ''
+    );
+    setServices(current?.serviceIds ?? []);
+    setUseSavedProviders(!current?.confirmed);
     setConstraints(shared.constraints);
-    setMinutes(shared.constraints.maxMinutes?.toString() ?? '');
+    setPrompt(shared.description?.prompt ?? '');
+    setSaveError('');
     setEditing(true);
   }
-  function patch(change: Partial<ScreenContext>) {
-    setScreens((old) =>
-      old.map((s) => (s.id === selectedId ? { ...s, ...change, confirmed: false } : s))
-    );
-  }
   async function save() {
+    setSaveError('');
     if (
       await send({
-        type: 'setup',
+        type: 'configure',
         expectedContextVersion: shared.contextVersion,
-        screens: screens.map((s) => ({ ...s, confirmed: true })),
-        constraints: { ...constraints, maxMinutes: minutes ? Number(minutes) : null },
-        screenId: screens.some((s) => s.id === me?.screenId)
-          ? me!.screenId
-          : (screens[0]?.id ?? null),
+        country,
+        serviceIds: services,
+        constraints: { ...constraints, moods: [] },
+        prompt: prompt.trim(),
       })
     )
       setEditing(false);
+    else
+      setSaveError(
+        'Couldn’t save the room description. Check the connection and try again. If an action is pending, close this panel and retry it.'
+      );
   }
-  const popular = [8, 9, 337, 350];
-  const quick = metadata.data?.services.some((s) => popular.includes(s.id))
-    ? popular
-    : (metadata.data?.services.slice(0, 4).map((s) => s.id) ?? []);
-  const valid = Boolean(
-    metadata.data &&
-      screens.length &&
-      screens.every(
-        (s) =>
-          s.label.trim() &&
-          s.country &&
-          metadata.data!.countries.some((c) => c.code === s.country) &&
-          s.serviceIds.length
-      ) &&
-      constraints.kinds.length &&
-      !unsupportedContinuation &&
-      (!minutes || (Number.isInteger(Number(minutes)) && Number(minutes) > 0))
+  const providers =
+    metadata.data?.services.filter(
+      (s) => !serviceSearch || s.name.toLowerCase().includes(serviceSearch.toLowerCase())
+    ) ?? [];
+  providers.sort(
+    (a, b) =>
+      Number(services.includes(b.id)) - Number(services.includes(a.id)) ||
+      ([8, 9, 337, 350].includes(b.id) ? 1 : 0) - ([8, 9, 337, 350].includes(a.id) ? 1 : 0)
   );
-  const setup =
-    shared.screens.length > 0 &&
-    shared.screens.every((s) => s.confirmed && s.country && s.serviceIds.length);
-  const ready =
-    setup && shared.participants.every((p) => p.participantId === own.participantId || p.ready);
-  async function joinScreen(id: string) {
-    if (me?.screenId === id) return true;
-    return send({
-      type: 'assign_screen',
-      expectedContextVersion: shared.contextVersion,
-      screenId: id,
-    });
-  }
-
   return (
     <View
       style={{
@@ -127,60 +119,58 @@ export function Lobby({
         overflow: 'hidden',
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 24,
-        paddingVertical: compact ? 12 : 24,
+        padding: compact ? 16 : 24,
       }}
     >
       <View
         style={{
           width: '100%',
-          maxWidth: landscape ? 960 : 500,
-          gap: compact ? 12 : 20,
+          maxWidth: landscape ? 960 : 540,
+          gap: compact ? 12 : 22,
           flexDirection: landscape ? 'row' : 'column',
           alignItems: landscape ? 'center' : undefined,
         }}
       >
-        <View style={{ flex: landscape ? 1 : undefined, gap: compact ? 8 : 20 }}>
-          <GText size={compact ? 32 : 44} bold style={{ letterSpacing: -1.5 }}>
-            Something good.{'\n'}Together.
+        <View style={{ flex: landscape ? 1 : undefined, gap: 10 }}>
+          <GText size={compact ? 30 : 42} bold>
+            What are we watching?
           </GText>
-          {!compact && (
-            <GText color={glow.muted}>Find your matches, then pick what to watch together.</GText>
-          )}
-        </View>
-        <View style={{ flex: landscape ? 1 : undefined, gap: compact ? 8 : 20 }}>
-          {setup && (
-            <View
-              style={{
-                padding: compact ? 10 : 18,
-                borderRadius: 20,
-                backgroundColor: '#ffffff09',
-                gap: 8,
-              }}
-            >
-              {shared.screens
-                .filter(
-                  (s) =>
-                    s.id ===
-                    (me?.screenId ?? (shared.screens.length === 1 ? shared.screens[0]?.id : null))
-                )
-                .map((s) => (
-                  <GText key={s.id} size={15} lines={2}>
-                    {s.label} · {s.country} · {s.serviceIds.length} selected services
+          <GText size={compact ? 13 : 16} color={glow.muted}>
+            {shared.description?.prompt || 'A little inspiration. A choice for everyone.'}
+          </GText>
+          {shared.description?.attributes.length ? (
+            <Row>
+              {shared.description.attributes.slice(0, compact ? 4 : 8).map((a, i) => (
+                <View
+                  key={i}
+                  style={{
+                    borderRadius: 20,
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    backgroundColor: '#fbbf2418',
+                  }}
+                >
+                  <GText size={12} color={glow.amber}>
+                    {a.text}
                   </GText>
-                ))}
-              {shared.screens.length > 1 && (
-                <GText size={12} color={glow.muted}>
-                  {shared.screens.length} viewing screens · Details in room
-                </GText>
-              )}
-            </View>
+                </View>
+              ))}
+            </Row>
+          ) : null}
+        </View>
+        <View style={{ flex: landscape ? 1 : undefined, gap: compact ? 8 : 16 }}>
+          {setup && (
+            <GText size={14} color={glow.muted}>
+              {flag(current!.country!)} {current!.country} · {current!.serviceIds.length} streaming{' '}
+              {current!.serviceIds.length === 1 ? 'service' : 'services'}
+            </GText>
           )}
           {own.canHost ? (
             <>
               <Pill
-                label={setup ? 'Start choosing' : 'Choose our services'}
+                label={setup ? 'Start choosing' : 'Set up our room'}
                 gold
+                disabled={disabled}
                 onPress={() =>
                   setup
                     ? void send({
@@ -191,83 +181,136 @@ export function Lobby({
                       })
                     : edit()
                 }
-                disabled={disabled || (setup && !ready)}
               >
-                {setup ? 'Start choosing' : 'Choose our services'}
+                {setup ? 'Start choosing' : 'Set up our room'}
               </Pill>
-              {setup && !ready && (
-                <GText color={glow.muted} size={14}>
-                  Connecting friends to their viewing screens.
-                </GText>
-              )}
               {setup && (
-                <Pill
-                  label="Edit services and settings"
-                  icon="settings"
-                  onPress={edit}
-                  disabled={disabled}
-                >
-                  Services & settings
+                <Pill label="Edit room description and services" onPress={edit} disabled={disabled}>
+                  Description & services
                 </Pill>
               )}
             </>
           ) : (
-            <>
-              <GText color={glow.muted}>
-                {setup
-                  ? me?.ready
-                    ? 'Waiting for the host to start.'
-                    : me?.screenId || shared.screens.length === 1
-                      ? 'Connecting to your viewing screen…'
-                      : 'Choose the screen you’ll watch on.'
-                  : 'The host is choosing the country and services.'}
-              </GText>
-              {shared.screens.length > 1 && (
-                <Pill
-                  label={me?.screenId ? 'Choose another screen' : 'Choose your viewing screen'}
-                  onPress={() => setScreenPicker(true)}
-                  disabled={disabled}
-                >
-                  {me?.screenId ? 'Watching elsewhere?' : 'Choose your screen'}
-                </Pill>
-              )}
-            </>
+            <GText color={glow.muted}>
+              {setup ? 'Waiting for the host to start.' : 'The host is setting up the room.'}
+            </GText>
           )}
           <Pill label="Invite friends" icon="people" onPress={invite}>
             Invite friends
           </Pill>
         </View>
       </View>
-      {screenPicker && (
-        <Drawer title="Your viewing screen" close={() => setScreenPicker(false)}>
-          {shared.screens.map((screen) => (
-            <Pill
-              key={screen.id}
-              label={`Watch on ${screen.label}`}
-              gold={me?.screenId === screen.id}
-              disabled={disabled}
-              onPress={() => {
-                void joinScreen(screen.id).then((ok) => {
-                  if (ok) setScreenPicker(false);
-                });
-              }}
-            >
-              {screen.label} · {screen.country}
-            </Pill>
-          ))}
-        </Drawer>
-      )}
       {editing && (
-        <Drawer title="Where are we watching?" close={() => setEditing(false)}>
-          <GText bold>
-            {selected?.label} ·{' '}
-            {metadata.data?.countries.find((c) => c.code === selected?.country)?.name ??
-              'Choose country'}
+        <Drawer title="Our room" close={() => setEditing(false)}>
+          <GText bold size={20}>
+            What sounds good?
           </GText>
-          <Pill label="Change country" onPress={() => setChangeCountry((v) => !v)}>
-            Change country
+          <TextInput
+            accessibilityLabel="Describe what to watch"
+            placeholder="A cosy mystery, something like…"
+            placeholderTextColor={glow.muted}
+            value={prompt}
+            onChangeText={setPrompt}
+            maxLength={1000}
+            multiline
+            style={{
+              color: glow.ink,
+              backgroundColor: '#ffffff09',
+              borderRadius: 16,
+              padding: 16,
+              fontSize: 17,
+              minHeight: 86,
+              textAlignVertical: 'top',
+            }}
+          />
+          <GText size={12} color={glow.muted}>
+            Type, or dictate with your keyboard’s microphone. GoodWatch turns your prompt into
+            attributes for this room’s suggestions.
+          </GText>
+          <Row>
+            {presets.map((p) => (
+              <Pressable
+                key={p}
+                accessibilityRole="button"
+                accessibilityLabel={p}
+                onPress={() => setPrompt(p)}
+                style={({ pressed }) => ({
+                  paddingHorizontal: 10,
+                  paddingVertical: 7,
+                  borderRadius: 20,
+                  backgroundColor: pressed || prompt === p ? '#fbbf2430' : '#ffffff09',
+                })}
+              >
+                <GText size={12}>{p}</GText>
+              </Pressable>
+            ))}
+          </Row>
+          <Row>
+            {(
+              ['movie', 'show_start', ...(canContinue ? (['show_continue'] as const) : [])] as const
+            ).map((kind) => (
+              <Pressable
+                key={kind}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: constraints.kinds.includes(kind) }}
+                aria-checked={constraints.kinds.includes(kind)}
+                onPress={() =>
+                  setConstraints((c) => ({
+                    ...c,
+                    kinds: c.kinds.includes(kind)
+                      ? c.kinds.filter((k) => k !== kind)
+                      : [...c.kinds, kind],
+                  }))
+                }
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                  backgroundColor: constraints.kinds.includes(kind) ? '#fbbf2430' : '#ffffff09',
+                }}
+              >
+                <GText size={13}>
+                  {kind === 'movie'
+                    ? 'Movies'
+                    : kind === 'show_start'
+                    ? 'New shows'
+                    : 'Continue my shows'}
+                </GText>
+              </Pressable>
+            ))}
+          </Row>
+          {constraints.maxMinutes !== null && (
+            <Pill
+              label="Remove previous runtime limit"
+              onPress={() => setConstraints((c) => ({ ...c, maxMinutes: null }))}
+            >
+              Up to {constraints.maxMinutes} min · Remove limit
+            </Pill>
+          )}
+          {unsupported && (
+            <>
+              <GText size={13} color={glow.muted}>
+                Continuing shows requires GoodWatch saved progress.
+              </GText>
+              <Pill
+                label="Use movies and new shows"
+                onPress={() => setConstraints((c) => ({ ...c, kinds: ['movie', 'show_start'] }))}
+              >
+                Use movies and new shows
+              </Pill>
+            </>
+          )}
+          <GText bold size={20}>
+            Where are we watching?
+          </GText>
+          <Pill label="Choose country" onPress={() => setCountryPicker((v) => !v)}>
+            {country
+              ? `${flag(country)} ${
+                  metadata.data?.countries.find((c) => c.code === country)?.name ?? country
+                }`
+              : 'Choose country'}
           </Pill>
-          {(changeCountry || !selected?.country) && (
+          {countryPicker && (
             <>
               <Field
                 label="Find country"
@@ -275,216 +318,121 @@ export function Lobby({
                 onChange={setCountrySearch}
                 placeholder="Search countries"
               />
-              <Row>
-                {metadata.data?.countries
-                  .filter((c) =>
-                    countrySearch
-                      ? c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
-                        c.code.toLowerCase() === countrySearch.toLowerCase()
-                      : c.code === selected?.country
-                  )
-                  .map((c) => (
-                    <Button
-                      key={c.code}
-                      secondary
-                      selected={c.code === selected?.country}
-                      onPress={() => {
-                        patch({ country: c.code, serviceIds: [] });
-                        setChangeCountry(false);
-                        setCountrySearch('');
-                      }}
-                    >
-                      {c.name}
-                    </Button>
-                  ))}
-              </Row>
+              {metadata.data?.countries
+                .filter(
+                  (c) =>
+                    !countrySearch ||
+                    `${c.name} ${c.code}`.toLowerCase().includes(countrySearch.toLowerCase())
+                )
+                .slice(0, 30)
+                .map((c) => (
+                  <Pill
+                    key={c.code}
+                    label={c.name}
+                    gold={country === c.code}
+                    onPress={() => {
+                      setCountry(c.code);
+                      setServices([]);
+                      setUseSavedProviders(true);
+                      setCountryPicker(false);
+                      setCountrySearch('');
+                    }}
+                  >
+                    {flag(c.code)} {c.name}
+                  </Pill>
+                ))}
             </>
           )}
           <Field
-            label="Find usable services"
+            label="Find streaming services"
             value={serviceSearch}
             onChange={setServiceSearch}
-            placeholder="Netflix, Prime Video, or any service…"
+            placeholder="Netflix, Prime Video…"
           />
-          <Row>
-            {metadata.data?.services
-              .filter(
-                (s) =>
-                  selected?.serviceIds.includes(s.id) ||
-                  (serviceSearch
-                    ? s.name.toLowerCase().includes(serviceSearch.toLowerCase())
-                    : quick.includes(s.id))
-              )
-              .map((s) => (
-                <Button
-                  key={s.id}
-                  label={`${s.name} (service ${s.id})`}
-                  secondary
-                  selected={selected?.serviceIds.includes(s.id)}
-                  disabled={!selected?.country}
-                  onPress={() =>
-                    patch({
-                      serviceIds: selected!.serviceIds.includes(s.id)
-                        ? selected!.serviceIds.filter((id) => id !== s.id)
-                        : [...selected!.serviceIds, s.id],
-                    })
-                  }
-                >
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            {providers.slice(0, serviceSearch ? 40 : 12).map((s) => (
+              <Pressable
+                key={s.id}
+                accessibilityRole="checkbox"
+                accessibilityLabel={s.name}
+                accessibilityState={{ checked: services.includes(s.id) }}
+                aria-checked={services.includes(s.id)}
+                onPress={() => {
+                  setUseSavedProviders(false);
+                  setServices(
+                    services.includes(s.id)
+                      ? services.filter((id) => id !== s.id)
+                      : [...services, s.id]
+                  );
+                }}
+                style={({ pressed }) => ({
+                  width: 78,
+                  minHeight: 94,
+                  padding: 8,
+                  borderRadius: 14,
+                  alignItems: 'center',
+                  gap: 7,
+                  borderWidth: 2,
+                  borderColor: services.includes(s.id) ? glow.amber : 'transparent',
+                  backgroundColor: pressed ? '#fbbf2420' : '#ffffff08',
+                })}
+              >
+                {s.logoUrl ? (
+                  <Image
+                    source={{ uri: s.logoUrl }}
+                    style={{ width: 44, height: 44, borderRadius: 9 }}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 44,
+                      height: 44,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <GText bold>{s.name.slice(0, 2)}</GText>
+                  </View>
+                )}
+                <GText size={10} lines={2} style={{ textAlign: 'center' }}>
                   {s.name}
-                </Button>
-              ))}
-          </Row>
-          <GText color={glow.muted} size={14}>
-            Confirm the country and services you can actually use. Subscriptions aren’t assumed.
+                </GText>
+              </Pressable>
+            ))}
+          </View>
+          <GText size={12} color={glow.muted}>
+            Defaults combine everyone’s saved GoodWatch services available in this country. You can
+            change them for this room. Paid rentals aren’t included.
           </GText>
-          {own.member.prefill?.serviceIds.length ? (
+          {savedServiceIds.length ? (
             <Pill
-              label="Review GoodWatch services"
-              onPress={() => patch({ serviceIds: own.member.prefill!.serviceIds })}
+              label="Use everyone’s saved services"
+              onPress={() => {
+                setUseSavedProviders(true);
+                const available = new Set(metadata.data?.services.map((s) => s.id) ?? []);
+                setServices(savedServiceIds.filter((id) => available.has(id)));
+              }}
             >
-              Use my saved services
+              Use everyone’s saved services
             </Pill>
           ) : null}
-          {unsupportedContinuation && (
+          {metadata.isPending && <GText>Loading services…</GText>}
+          {metadata.error && (
             <>
-              <GText color={glow.muted} size={14}>
-                This room includes continuing shows, which needs linked GoodWatch saved progress.
-                You can switch to movies and new shows.
-              </GText>
-              <Pill
-                label="Use movies and new shows"
-                onPress={() =>
-                  setConstraints((current) => ({ ...current, kinds: ['movie', 'show_start'] }))
-                }
-              >
-                Use movies and new shows
+              <Notice error>Services couldn’t load.</Notice>
+              <Pill label="Retry catalog" onPress={() => void metadata.refetch()}>
+                Retry
               </Pill>
             </>
           )}
+          {saveError && <Notice error>{saveError}</Notice>}
           <Pill
-            label="Optional screens and filters"
-            icon="settings"
-            onPress={() => setAdvanced((v) => !v)}
-          >
-            More settings
-          </Pill>
-          {advanced && (
-            <>
-              <Row>
-                {screens.map((s) => (
-                  <Button
-                    key={s.id}
-                    secondary
-                    selected={s.id === selectedId}
-                    onPress={() => setSelectedId(s.id)}
-                  >
-                    {s.label}
-                  </Button>
-                ))}
-                <Button
-                  secondary
-                  onPress={() => {
-                    const id = Crypto.randomUUID();
-                    setScreens((old) => [
-                      ...old,
-                      {
-                        id,
-                        label: 'Remote screen',
-                        country: null,
-                        serviceIds: [],
-                        confirmed: false,
-                      },
-                    ]);
-                    setSelectedId(id);
-                    setChangeCountry(true);
-                  }}
-                >
-                  Add remote screen
-                </Button>
-              </Row>
-              <Field
-                label="Screen name"
-                value={selected?.label ?? ''}
-                onChange={(label) => patch({ label })}
-              />
-              <GText color={glow.muted} size={14}>
-                One screen per playback location. People on the same couch share a screen.
-              </GText>
-              <Row>
-                {(
-                  [
-                    'movie',
-                    'show_start',
-                    ...(canContinue ? (['show_continue'] as const) : []),
-                  ] as const
-                ).map((kind) => (
-                  <Button
-                    key={kind}
-                    secondary
-                    selected={constraints.kinds.includes(kind)}
-                    onPress={() =>
-                      setConstraints((c) => ({
-                        ...c,
-                        kinds: c.kinds.includes(kind)
-                          ? c.kinds.filter((k) => k !== kind)
-                          : [...c.kinds, kind],
-                      }))
-                    }
-                  >
-                    {kind === 'movie'
-                      ? 'Movies'
-                      : kind === 'show_start'
-                        ? 'New shows'
-                        : 'Continue my shows'}
-                  </Button>
-                ))}
-              </Row>
-              <Field
-                label="Time available (optional minutes)"
-                value={minutes}
-                onChange={setMinutes}
-                numeric
-              />
-              <Row>
-                {metadata.data?.moods.map((m) => (
-                  <Button
-                    key={m.id}
-                    secondary
-                    selected={constraints.moods.includes(m.id)}
-                    onPress={() =>
-                      setConstraints((c) => ({
-                        ...c,
-                        moods: c.moods.includes(m.id)
-                          ? c.moods.filter((id) => id !== m.id)
-                          : [...c.moods, m.id].slice(-3),
-                      }))
-                    }
-                  >
-                    {m.label}
-                  </Button>
-                ))}
-              </Row>
-              <GText color={glow.muted} size={14}>
-                {guestOnly ? 'Continuing shows is not included in this guest beta.' : 'Continuing shows uses saved GoodWatch progress after sign-in. No history is entered manually.'}
-              </GText>
-            </>
-          )}
-          {metadata.isPending && <Words>Loading catalog choices…</Words>}
-          {metadata.error && (
-            <>
-              <Notice error>Catalog choices could not load.</Notice>
-              <Button secondary onPress={() => void metadata.refetch()}>
-                Retry catalog
-              </Button>
-            </>
-          )}
-          <Pill
-            label="Use these services"
+            label="Save room description"
             gold
             disabled={disabled || !valid || metadata.isFetching}
             onPress={() => void save()}
           >
-            Use these services
+            {disabled ? 'Reading your prompt…' : prompt.trim() ? 'Interpret & save' : 'Save room'}
           </Pill>
         </Drawer>
       )}

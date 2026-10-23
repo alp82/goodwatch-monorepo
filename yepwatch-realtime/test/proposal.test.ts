@@ -30,8 +30,8 @@ class MemoryActivity extends EventEmitter implements ActivityBus {
   state(ready: boolean) { this.ready = ready; this.emit('state', ready) }
   close() {}
 }
-async function setup(t: test.TestContext, pointers = false) {
-  const api = await fixture('proposal'); api.state.shared = choosing(); api.state.leaseMs = 60_000
+async function setup(t: test.TestContext, pointers = false, roomDetails = false) {
+  const api = await fixture('proposal'); api.state.shared = choosing(); if (roomDetails) { api.state.shared.savedServiceIds = [8,337]; api.state.shared.description = {prompt:'A cosy mystery',attributes:[{text:'Mystery',kind:'want'}]}; api.state.shared.participants.push({participantId:'person-3',nickname:'Dropped',screenId:'screen-1',ready:true,dropped:true}) }; api.state.leaseMs = 60_000
   const hub = new ActivityHub(), buses = [new FakeBus(), new FakeBus()], activities = [hub.bus(), hub.bus()]
   const gateways = buses.map((b, n) => createGateway(api.authority, b, { port: 0, auditMs: 1000 }, { activityBus: activities[n], proposal: true }))
   const addresses = await Promise.all(gateways.map(g => g.listen()))
@@ -39,7 +39,7 @@ async function setup(t: test.TestContext, pointers = false) {
   const clients = await Promise.all(addresses.map((a, n) => {
     assert(a && typeof a !== 'string');
     return connect<ServerRealtimeFrame>(`ws://127.0.0.1:${a.port}${paths.realtime}`).then(client => {
-      client.ws.send(JSON.stringify({type:'authenticate',ticket:api.ticket(`person-${n+1}`),roomId:'room-1',lastRevision:null,...(pointers && n === 1 ? {pointers:true}: {})}));return client;
+      client.ws.send(JSON.stringify({type:'authenticate',ticket:api.ticket(`person-${n+1}`),roomId:'room-1',lastRevision:null,...(pointers && n === 1 ? {pointers:true}: {}),...(roomDetails && n === 1 ? {roomDetails:true}: {})}));return client;
     })
   }))
   await until(() => clients.every(c => c.frames.some(f => f.type === 'activity.session')))
@@ -131,3 +131,35 @@ test('two gateways relay bounded live pointers only to opted-in clients, never a
  send(old,6,{view:'voting',pointer:null});
  await until(()=>events(modern.frames).some(f=>f.pointer===null));
 });
+
+test('Room descriptions reach capable clients without breaking older strict projections', async (t) => {
+  const {
+    clients: [old, current],
+  } = await setup(t, false, true)
+  const before = old.frames.find((f) => f.type === 'room.snapshot')!
+  const after = current.frames.find((f) => f.type === 'room.snapshot')!
+  if (before.type !== 'room.snapshot' || after.type !== 'room.snapshot') throw new Error('Missing snapshots')
+  assert.equal(Object.hasOwn(before.snapshot, 'description'), false)
+  assert.equal(Object.hasOwn(before.snapshot, 'savedServiceIds'), false)
+  assert.deepEqual(after.snapshot.savedServiceIds, [8,337])
+  assert.equal(after.snapshot.description?.prompt, 'A cosy mystery')
+  assert.equal(before.snapshot.participants.length, 2)
+  assert.equal(after.snapshot.participants.length, 3)
+  assert.equal(after.snapshot.participants[2].dropped, true)
+  assert.deepEqual(after.snapshot.description?.attributes, [
+    { text: 'Mystery', kind: 'want' },
+  ])
+})
+
+test('Dropped places remain visible but are excluded from required agreement; completed decisions survive return', () => {
+ const s = choosing()
+ s.participants[1].dropped = true
+ s.proposal!.requiredCount = 1
+ assert.equal(proposalProjection(s, s.roomId).participants[1].dropped, true)
+ s.phase = 'decided'
+ s.decision = {candidateId:s.candidates[0].id,proposalVersion:1,decidedAt:Date.now(),availability:[]}
+ s.participants[1].dropped = false
+ s.proposal!.requiredCount = 2
+ s.matches = []
+ assert.equal(proposalProjection(s,s.roomId).phase,'decided')
+})
