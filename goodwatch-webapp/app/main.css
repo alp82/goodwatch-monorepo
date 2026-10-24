@@ -399,3 +399,21 @@ html[data-tv-transition="out"] .tv-back {
 .section-glow {
 	animation: section-glow 1.8s ease-out both;
 }
+
+/* The page scrollbar blends with the page: the track is the page color, the thumb a quiet gray that passes 3:1
+   contrast (gray-500, 3.67:1). Near the right edge or while dragging it turns gray-400 (ui/nav/PageScrollbar.tsx).
+   The browser keeps its own width and decides when the bar shows. See docs/research/scrollbar-ux.md. */
+html {
+	scrollbar-color: var(--color-gray-500) var(--color-gray-900);
+	transition: scrollbar-color 0.2s;
+}
+
+html[data-scrollbar-near] {
+	scrollbar-color: var(--color-gray-400) var(--color-gray-900);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		transition: none;
+	}
+}
