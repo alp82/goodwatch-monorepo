@@ -551,7 +551,15 @@ test("HTTP decide, strict confirm ask, and waiting filter validate and enforce o
 		{ ...options, answers: { conflict: "source" } },
 	])
 		assert.equal((await send(confirm, body)).status, 400)
-	assert.equal((await send(confirm, options)).status, 200)
+	assert.equal(
+		(
+			await send(confirm, {
+				...options,
+				ask: ["conflict", "rewatch", "wholeShow", "undated"],
+			})
+		).status,
+		200,
+	)
 	await settled(db)
 	const load = (query: string, member = "member") =>
 		items({
@@ -634,7 +642,23 @@ test("question and completed analytics retain deterministic UUIDs across restart
 		await settled(db)
 		await decideImport("member", id, "conflict", "source")
 		await new Promise((resolve) => setTimeout(resolve, 5))
+		const undated = setupUndated(2)
+		undated.db.items[1].kind = "want"
+		undated.db.items[1].payload = JSON.stringify({ kind: "want", title: "One" })
+		await confirmImport("member", undated.id, undatedOptions)
+		await settled(undated.db)
+		const result = await decideImport("member", undated.id, "undated", "leave")
+		assert.equal(result.decided, 1)
+		await settled(undated.db)
 		await flushProductEvents()
+		assert.equal(
+			events.find(
+				(event) =>
+					event.event === "import question answered" &&
+					event.properties.question === "undated",
+			)?.properties.decided,
+			1,
+		)
 		const legacy = setup()
 		const legacyOptions = {
 			...options,
@@ -657,7 +681,9 @@ test("question and completed analytics retain deterministic UUIDs across restart
 		assert.ok(completed.length >= 2)
 		assert.equal(new Set(completed.map((event) => event.uuid)).size, 1)
 		const answered = events.filter(
-			(event) => event.event === "import question answered",
+			(event) =>
+				event.event === "import question answered" &&
+				event.properties.question === "conflict",
 		)
 		assert.equal(answered.length, 2)
 		assert.equal(answered[0].uuid, answered[1].uuid)
@@ -1281,7 +1307,43 @@ test("dependent wants wait on undated before wholeShow/rewatch, including per-ro
 	})
 	await settled(db)
 	assert.equal(db.items[2].apply_state, "waiting:undated")
-	await decideImport("member", id, "undated", "leave", [0])
+	assert.equal(
+		(await getImport("member", id)).questions?.find((q) => q.kind === "undated")
+			?.waiting,
+		2,
+	)
+	const held = await getImportItems(
+		"member",
+		id,
+		undefined,
+		1,
+		1,
+		false,
+		"undated",
+	)
+	assert.equal(held.total, 2)
+	assert.deepEqual(
+		held.items.map((item) => item.index),
+		[1],
+	)
+	const allHeld = await getImportItems(
+		"member",
+		id,
+		undefined,
+		0,
+		50,
+		false,
+		"undated",
+	)
+	assert.deepEqual(
+		allHeld.items.map((item) => item.kind),
+		["watch", "watch"],
+	)
+	assert.equal((await recount(id)).processed, 3)
+	assert.equal(
+		(await decideImport("member", id, "undated", "leave", [0])).decided,
+		1,
+	)
 	assert.equal(db.items[2].apply_state, "waiting:undated")
 	await decideImport("member", id, "undated", "leave", [1])
 	assert.equal(db.items[2].apply_state, "waiting:wholeShow")
@@ -1573,5 +1635,149 @@ test("resume finishes an applied plan's observations before journaling newly app
 	assert.deepEqual(
 		db.items.filter((row) => row.kind === "state").map((row) => row.source_key),
 		["state:show:9500", "state:show:9500#2"],
+	)
+})
+
+for (const mode of ["duplicate first", "leave all", "episode score"] as const) {
+	test(`deferred completion follows prior plans with no state write: ${mode}`, async () => {
+		const { db, id, tracking } = setupUndated(4)
+		db.imports[0].source = "tvtime"
+		showFixture(db, tracking, 9600)
+		const status = 3
+		db.items[status].kind = "show_status"
+		db.items[status].payload = JSON.stringify({
+			kind: "show_status",
+			title: "TV Time show",
+			showStatus: "completed",
+			completionScope: "show",
+			_previewStatus: null,
+		})
+		if (mode === "duplicate first") {
+			const duplicate = JSON.parse(String(db.items[1].payload))
+			db.items[1].payload = JSON.stringify({
+				...duplicate,
+				episodeTmdbId: 9601,
+				episode: 1,
+			})
+			const second = JSON.parse(String(db.items[2].payload))
+			db.items[2].payload = JSON.stringify({
+				...second,
+				episodeTmdbId: 9602,
+				episode: 2,
+			})
+		}
+		if (mode === "episode score") {
+			db.items[2].kind = "episode_rating"
+			db.items[2].payload = JSON.stringify({
+				kind: "episode_rating",
+				title: "TV Time show",
+				scoreScope: "episode",
+				score: 8,
+				season: 1,
+				episode: 1,
+				episodeTmdbId: 9601,
+			})
+		}
+		await confirmImport("member", id, {
+			...undatedOptions,
+			kinds: [...undatedOptions.kinds, "episode_rating"],
+		})
+		await settled(db)
+		if (mode === "duplicate first") {
+			await decideImport("member", id, "undated", "add", [1])
+			await settled(db)
+			assert.equal(db.items[1].apply_state, "kept")
+			const noWrite = JSON.parse(
+				String(
+					db.items.find((r) => r.source_key === "state:show:9600#2")?.payload,
+				),
+			)
+			assert.equal(noWrite.watches.length, 0)
+			assert.equal(
+				tracking.state("member", "show", 9600)?.updated_at,
+				noWrite.beforeState.updated_at,
+			)
+			await decideImport("member", id, "undated", "add", [2])
+		} else {
+			if (mode === "episode score") {
+				// A resumed episode-score journal can have no remaining writes after deduplication.
+				const writer = await import("./tracking.server.ts")
+				const dated = (await itemRows("member", id))[0]
+				const plan = await writer.prepareImportTrackingPlan({
+					userId: "member",
+					importId: id,
+					source: "tvtime",
+					tmdbId: 9600,
+					mediaType: "show",
+					items: [
+						{
+							...dated,
+							key: "episode-score:9600:9601",
+							precision: "unknown",
+							watchedAt: null,
+						},
+					],
+					watchDates: "unknown",
+					onlyUnwatched: true,
+					now: Number(tracking.state("member", "show", 9600)?.updated_at) + 1,
+				})
+				await writer.applyImportTrackingPlan("member", plan)
+				const journal = { plan, applied: true }
+				db.items[2].payload = JSON.stringify({
+					...JSON.parse(String(db.items[2].payload)),
+					scoreWatch: journal,
+				})
+				assert.equal(plan.watches.length, 0)
+				assert.ok(journal?.applied)
+				assert.deepEqual(
+					journal.plan.afterState,
+					Object.fromEntries(
+						Object.keys(journal.plan.afterState).map((key) => [
+							key,
+							journal.plan.beforeState[key],
+						]),
+					),
+				)
+				assert.equal(
+					journal.plan.beforeState.updated_at,
+					tracking.state("member", "show", 9600)?.updated_at,
+				)
+			}
+			const decision = await decideImport(
+				"member",
+				id,
+				"undated",
+				mode === "leave all" ? "leave" : "add",
+			)
+			assert.equal(decision.decided, mode === "leave all" ? 2 : 1)
+		}
+		await settled(db)
+		assert.equal(db.imports[0].status, "done")
+		assert.equal(db.items[status].apply_state, "added")
+		assert.equal(tracking.state("member", "show", 9600)?.state, "seen")
+		assert.equal(tracking.log("member").length, 3)
+		if (mode === "leave all") {
+			assert.ok(db.items.find((r) => r.source_key === "state:show:9600#2"))
+			assert.equal(db.items[1].apply_state, "kept")
+		}
+	})
+}
+
+test("an approved dependent that still hits a hold gate is kept and the run finishes", async () => {
+	const { db, id } = setupUndated(2)
+	db.items[1].kind = "want"
+	db.items[1].payload = JSON.stringify({ kind: "want", title: "One" })
+	await confirmImport("member", id, undatedOptions)
+	await settled(db)
+	// Simulate an inconsistent approval while its sibling is unanswered.
+	db.items[1].apply_state = "approved:undated"
+	await decideImport("member", id, "undated", "add", [1])
+	await settled(db)
+	assert.equal(db.imports[0].status, "done")
+	assert.equal(db.items[0].apply_state, "waiting:undated")
+	assert.equal(db.items[1].apply_state, "kept")
+	assert.match(
+		String(db.items[1].reason),
+		/another import question is still waiting/,
 	)
 })

@@ -67,6 +67,10 @@ export const getImport = async (userId: string, id: string) => {
 		row.status !== "preview" && summary.options?.ask
 			? await questionStates(id)
 			: null
+	const watchTally =
+		tally && summary.options?.ask?.includes("undated")
+			? await questionStates(id, true)
+			: null
 	return {
 		...summary,
 		...(tally
@@ -74,12 +78,14 @@ export const getImport = async (userId: string, id: string) => {
 					questions: (summary.options?.ask ?? []).map((kind) => ({
 						kind,
 						waiting: Number(
-							tally.find((state) => state.apply_state === `waiting:${kind}`)
-								?.n ?? 0,
+							(kind === "undated" ? (watchTally ?? []) : tally).find(
+								(state) => state.apply_state === `waiting:${kind}`,
+							)?.n ?? 0,
 						),
 						applying: Number(
-							tally.find((state) => state.apply_state === `approved:${kind}`)
-								?.n ?? 0,
+							(kind === "undated" ? (watchTally ?? []) : tally).find(
+								(state) => state.apply_state === `approved:${kind}`,
+							)?.n ?? 0,
 						),
 						answer: summary.options?.answers?.[kind] ?? null,
 					})),

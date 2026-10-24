@@ -148,6 +148,12 @@ supportedImportSql.add(
 supportedImportSql.add(
 	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND apply_state = ? ORDER BY row_index LIMIT ? OFFSET ?",
 )
+supportedImportSql.add(
+	"SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND kind = 'watch' GROUP BY apply_state",
+)
+supportedImportSql.add(
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND apply_state = ? AND kind = 'watch' ORDER BY row_index LIMIT ? OFFSET ?",
+)
 function assertSupportedImportSql(sql: string) {
 	// Crate rejects non-key predicates on an OCC write, even with the full PK.
 	// The real database regression is resolution-store.integration.ts.
@@ -442,6 +448,8 @@ export class ImportDb {
 				rows = rows.filter((x) => x.outcome === params[2])
 			if (s.includes("AND apply_state = ?"))
 				rows = rows.filter((row) => row.apply_state === params[2])
+			if (s.includes("kind = 'watch'"))
+				rows = rows.filter((x) => x.kind === "watch")
 			if (s.includes("ORDER BY row_index"))
 				rows.sort((a, b) => Number(a.row_index) - Number(b.row_index))
 			if (s.includes("LIMIT ? OFFSET ?"))

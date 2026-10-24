@@ -1969,7 +1969,11 @@ function followsImportPlans(
 	plans: ImportTrackingPlan[],
 ): boolean {
 	let state = current
+	if (sameVersion(preview, state)) return true
 	for (const plan of [...plans].reverse()) {
+		// Duplicate watches and episode scores can journal a plan without writing state.
+		if (isDeepStrictEqual(plan.afterState, stateOnly(plan.beforeState)))
+			continue
 		if (
 			!isDeepStrictEqual(stateOnly(state), plan.afterState) ||
 			(state && state.updated_at !== plan.now)

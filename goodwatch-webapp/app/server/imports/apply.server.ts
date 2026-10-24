@@ -439,9 +439,9 @@ async function markItem(
 	)
 }
 
-export const questionStates = (importId: string) =>
+export const questionStates = (importId: string, watchesOnly = false) =>
 	select<{ apply_state: string | null; n: number }>(
-		"SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND kind <> 'state' AND kind <> 'resolution' GROUP BY apply_state",
+		`SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND ${watchesOnly ? "kind = 'watch'" : "kind <> 'state' AND kind <> 'resolution'"} GROUP BY apply_state`,
 		[importId],
 	)
 export async function recount(importId: string) {
@@ -826,8 +826,11 @@ async function applyRunStored(
 					const gate = importGate(item, options, {
 						titleWaitsUndated: undatedTitles.has(ref(item)),
 					})
-					if ("hold" in gate) continue
-					if ("kept" in gate) {
+					if ("hold" in gate) {
+						if (item.applyState == null) continue
+						reason =
+							"Left unchanged because another import question is still waiting for an answer."
+					} else if ("kept" in gate) {
 						state = "kept"
 						if (gate.question) reason = QUESTION_KEPT_REASON[gate.question]
 					} else if (

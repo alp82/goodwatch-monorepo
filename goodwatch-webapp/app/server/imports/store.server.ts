@@ -333,11 +333,11 @@ export async function listItems(
 	const summary = summarize(await getImportRow(userId, id))
 	if (waiting) {
 		const rows = await select<ItemRow>(
-			"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND apply_state = ? ORDER BY row_index LIMIT ? OFFSET ?",
+			`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND apply_state = ?${waiting === "undated" ? " AND kind = 'watch'" : ""} ORDER BY row_index LIMIT ? OFFSET ?`,
 			[id, userId, `waiting:${waiting}`, limit, offset],
 		)
 		const counts = await select<{ apply_state: string | null; n: number }>(
-			"SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND kind <> 'state' AND kind <> 'resolution' GROUP BY apply_state",
+			`SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND ${waiting === "undated" ? "kind = 'watch'" : "kind <> 'state' AND kind <> 'resolution'"} GROUP BY apply_state`,
 			[id],
 		)
 		return {
