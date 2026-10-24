@@ -221,6 +221,19 @@ export const AI_CHAT_COPY = {
 	reply: "Top picks on Netflix for your taste.",
 } as const
 
+// The /for-you card. The family words match the pills on the page.
+export const FOR_YOU_CARD_COPY = {
+	title: ["For", "you"],
+	line: "Recommendations for your taste",
+	families: {
+		feel: "Feel",
+		humor: "Humor",
+		world: "World",
+		story: "Story",
+		craft: "Craft",
+	},
+} as const
+
 // The member profile cards (/u/<handle> and its tabs). No counts and no viewer type: lines use shares and words.
 export const PROFILE_CARD_COPY = {
 	/** Under the picks on the main card: the question a visitor answers by opening the profile. */

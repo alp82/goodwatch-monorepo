@@ -33,6 +33,8 @@ async function inlineImages(content: OgContent): Promise<OgContent> {
 					})),
 				),
 			}
+		case "for-you":
+			return { ...content, posters: await inlineAll(content.posters) }
 		case "chat":
 			return {
 				...content,

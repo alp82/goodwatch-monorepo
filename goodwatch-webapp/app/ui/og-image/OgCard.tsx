@@ -6,6 +6,7 @@
 // - Member profiles: amber band with the picture and @handle; the taste fingerprint with its strongest pulls, or for a
 //   tab, that tab's visual (ProfileCard.tsx); two Taste tab sections, you vs everyone and taste groups, have their own
 //   (ProfileTasteCards.tsx).
+// - For you: amber bar with the logo, the example taste print over a wall of top-scored posters (ForYouCard.tsx).
 // - Every other page: backdrop across the top, amber band with the headline below.
 // Image fields hold data URIs, so satori never fetches anything itself.
 import { ChatCard } from "~/ui/og-image/ChatCard"
@@ -13,6 +14,7 @@ import {
 	DiscoveryCard,
 	type DiscoveryFeature,
 } from "~/ui/og-image/DiscoveryCard"
+import { ForYouCard, type OgForYouContent } from "~/ui/og-image/ForYouCard"
 import {
 	type OgProfileContent,
 	type OgProfileTabContent,
@@ -102,6 +104,7 @@ export type {
 }
 
 export type OgContent =
+	| OgForYouContent
 	| OgProfileContent
 	| OgProfileTabContent
 	| OgProfileEveryoneContent
@@ -279,6 +282,7 @@ function BandCard({ content }: { content: OgPageContent }) {
 export function OgCard({ content }: { content: OgContent }) {
 	if (content.kind === "discovery") return <DiscoveryCard content={content} />
 	if (content.kind === "chat") return <ChatCard posters={content.posters} />
+	if (content.kind === "for-you") return <ForYouCard content={content} />
 	if (content.kind === "profile") return <ProfileCard content={content} />
 	if (content.kind === "profile-tab")
 		return <ProfileTabCard content={content} />

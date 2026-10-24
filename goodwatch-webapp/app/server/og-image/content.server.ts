@@ -112,6 +112,7 @@ export function canonicalOgPath(path: string): string | null {
 		return third ? `/u/${handle}/${third}` : `/u/${handle}`
 	}
 	if (first === "discover") return "/discover"
+	if (first === "for-you" && segments.length === 1) return "/for-you"
 	if (first === "explorer" && segments.length === 1) return "/explorer"
 
 	const clean = `/${segments.join("/")}`
@@ -420,8 +421,39 @@ async function chatCardContent(): Promise<OgContent> {
 	return { kind: "chat", posters: posters.slice(0, 3).map(toPoster) }
 }
 
+// The example taste that visitors see on the page, over a wall of top-scored posters. A shared link has no viewer, so
+// the card never shows a member's own taste.
+async function forYouCardContent(): Promise<OgContent> {
+	const { getTastePortrait, portraitViewer } = await import(
+		"~/server/taste-portrait/index.server"
+	)
+	const who = await portraitViewer(
+		new Request("https://goodwatch.app/for-you"),
+		undefined,
+		null,
+	)
+	const [fingerprint, posters] = await Promise.all([
+		getTastePortrait(who, "fingerprint"),
+		scoredPosters(),
+	])
+	// Right after a start the title snapshot isn't loaded; throwing keeps the generic card from being stored.
+	if (fingerprint.status !== "ready")
+		throw new Error(`For you card: taste is ${fingerprint.status}`)
+	return {
+		kind: "for-you",
+		attributes: fingerprint.attributes.map(({ key, label, family, edge }) => ({
+			key,
+			label,
+			family,
+			edge,
+		})),
+		posters: posters.slice(0, 12).map((p) => p.src),
+	}
+}
+
 async function staticPageContent(path: string): Promise<OgContent> {
 	if (path === "/discover") return discoverCardContent()
+	if (path === "/for-you") return forYouCardContent()
 	if (path === "/use-with-ai") return chatCardContent()
 	if (path === "/explorer") return explorerCardContent()
 	const page = STATIC_PAGE_COPY[path] ?? HOME_COPY
