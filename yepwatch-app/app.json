@@ -16,7 +16,7 @@
       "bundleIdentifier": "dev.yepwatch.foundation"
     },
     "android": {
-      "predictiveBackGestureEnabled": true,
+      "predictiveBackGestureEnabled": false,
       "package": "dev.yepwatch.foundation"
     },
     "web": {

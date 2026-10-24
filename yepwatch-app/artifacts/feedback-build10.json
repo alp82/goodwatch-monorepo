@@ -1,0 +1,111 @@
+{
+  "sourceCommit": "5cae7155167b22b2c47de967dd9d96efa9dacba5",
+  "webDeployment": "8exmjwyjcp88o0jajcrzdeji",
+  "publicHome": {
+    "at": "2026-10-24T10:12:05.069Z",
+    "results": [
+      {
+        "width": 320,
+        "height": 568,
+        "bounds": {
+          "height": 568,
+          "scroll": 568,
+          "width": 320,
+          "scrollWidth": 320
+        },
+        "errors": [],
+        "writes": []
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "bounds": {
+          "height": 844,
+          "scroll": 844,
+          "width": 390,
+          "scrollWidth": 390
+        },
+        "errors": [],
+        "writes": []
+      },
+      {
+        "width": 844,
+        "height": 390,
+        "bounds": {
+          "height": 390,
+          "scroll": 390,
+          "width": 844,
+          "scrollWidth": 844
+        },
+        "errors": [],
+        "writes": []
+      },
+      {
+        "width": 1440,
+        "height": 900,
+        "bounds": {
+          "height": 900,
+          "scroll": 900,
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        "errors": [],
+        "writes": []
+      }
+    ]
+  },
+  "android": {
+    "buildId": "6f2ea7ef-f2af-4b40-b907-a22fc6c92286",
+    "versionCode": 10,
+    "package": "com.yepwatch.preview",
+    "sha256": "e645e5993037e13797b43a991087a187e5d14cc1cd09b1baabed1f8783302e2b",
+    "signerSha256": "7a4b9faa194c068222940ebe1661ab6f8fd3d714785a15bf76d23352a9752d1d",
+    "anonymousDownload": {
+      "time": "2026-10-24T10:24:31.938Z",
+      "anonymousBrowser": true,
+      "downloaded": true,
+      "bytes": 98758199,
+      "sha256": "e645e5993037e13797b43a991087a187e5d14cc1cd09b1baabed1f8783302e2b"
+    },
+    "emulatorInstallAndColdLaunch": true,
+    "physicalDeviceTested": false,
+    "published": false,
+    "supersededReason": "Native system Back bypassed contextual handler; hold Android 10 pending build 11."
+  },
+  "ios": {
+    "easBuildId": "d8cd2c3b-e28d-44ac-9d20-ebda7e68ce57",
+    "testflight": {
+      "checkedAt": "2026-10-24T10:22:24.082Z",
+      "appId": "6826403019",
+      "buildId": "0fab60a3-ff46-4f43-856f-a319cd8e1f3a",
+      "buildNumber": "10",
+      "processingState": "VALID",
+      "reviewState": "APPROVED",
+      "details": [
+        {
+          "autoNotifyEnabled": true,
+          "internalBuildState": "IN_BETA_TESTING",
+          "externalBuildState": "BETA_APPROVED"
+        }
+      ],
+      "groups": [
+        {
+          "name": "Friends beta",
+          "assigned": true,
+          "publicLinkEnabled": true,
+          "publicLink": "https://testflight.apple.com/join/V2gzwSFA"
+        }
+      ]
+    },
+    "physicalDeviceTested": false
+  },
+  "checks": {
+    "unitTests": 60,
+    "focusedBrowserChecks": 16,
+    "mouseAndTouchEdgeChecks": 2,
+    "typecheck": "passed",
+    "lint": "passed with existing legacy warning",
+    "androidIosHermesExports": "passed",
+    "webkit": "not run: host lacks libicu74 and libflite1"
+  }
+}

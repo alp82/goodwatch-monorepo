@@ -154,20 +154,37 @@ test('Tonight Back reviews matches without changing the decision; edge Back retu
   expect(f.writes).toEqual([]);expect(f.room.shared.decision?.candidateId).toBe('c1');
 });
 
-test('edge swipe closes matches and drawers, while a card swipe remains a vote', async ({page})=>{
-  const f=await fixture(page);
-  await page.getByRole('button',{name:'Inspect 1 matches'}).click();
-  await page.mouse.move(4,350);await page.mouse.down();await page.mouse.move(110,353,{steps:12});await page.mouse.up();
-  await expect(page.getByTestId('poster')).toBeVisible();
-  expect(f.writes).toEqual([]);
-  await page.getByRole('button',{name:'Open room',exact:true}).click();
-  const edge=page.getByRole('dialog').getByTestId('back-gesture-edge');await expect(edge).toBeVisible();const box=await edge.boundingBox();
-  await page.mouse.move(box!.x+5,box!.y+70);await page.mouse.down();await page.mouse.move(box!.x+115,box!.y+73,{steps:12});await page.mouse.up();
-  await expect(page.getByRole('button',{name:'Leave room',exact:true})).toHaveCount(0);
-  const poster=await page.getByTestId('poster').boundingBox();
-  await page.mouse.move(poster!.x+poster!.width/2,poster!.y+poster!.height*.35);await page.mouse.down();await page.mouse.move(poster!.x+poster!.width*.95,poster!.y+poster!.height*.35,{steps:12});await page.mouse.up();
-  await expect.poll(()=>f.writes.some(c=>c.type==='vote')).toBe(true);
-});
+for (const input of ['mouse', 'touch'] as const) {
+  test(`${input} edge swipe closes matches and drawers, while a card swipe remains a vote`, async ({ page, browserName }) => {
+    test.skip(input === 'touch' && browserName !== 'chromium', 'Touch injection uses the Chromium protocol.');
+    const f = await fixture(page);
+    const cdp = input === 'touch' ? await page.context().newCDPSession(page) : null;
+    async function swipe(x: number, y: number, endX: number, endY: number) {
+      if (cdp) {
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+        for (let step = 1; step <= 12; step++) {
+          await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + (endX-x)*step/12, y: y + (endY-y)*step/12 }] });
+        }
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      } else {
+        await page.mouse.move(x,y); await page.mouse.down();
+        await page.mouse.move(endX,endY,{steps:12}); await page.mouse.up();
+      }
+    }
+    await page.getByRole('button', { name: 'Inspect 1 matches' }).click();
+    await swipe(4,350,110,353);
+    await expect(page.getByTestId('poster')).toBeVisible();
+    expect(f.writes).toEqual([]);
+    await page.getByRole('button', { name: 'Open room', exact: true }).click();
+    const edge = page.getByRole('dialog').getByTestId('back-gesture-edge');
+    await expect(edge).toBeVisible(); const box = await edge.boundingBox();
+    await swipe(box!.x+5,box!.y+70,box!.x+115,box!.y+73);
+    await expect(page.getByRole('button', { name: 'Leave room', exact: true })).toHaveCount(0);
+    const poster = await page.getByTestId('poster').boundingBox();
+    await swipe(poster!.x+poster!.width/2,poster!.y+poster!.height*.35,poster!.x+poster!.width*.95,poster!.y+poster!.height*.35);
+    await expect.poll(() => f.writes.some(c => c.type === 'vote')).toBe(true);
+  });
+}
 
 test('late poster load cannot flash the old title after choosing the next one',async({page})=>{
   await page.emulateMedia({reducedMotion:'no-preference'});

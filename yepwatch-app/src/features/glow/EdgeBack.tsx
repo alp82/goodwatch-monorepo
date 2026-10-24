@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { PanResponder, View } from "react-native";
+import { PanResponder, Platform, View } from "react-native";
 import { BACK_EDGE, edgeBackComplete, edgeBackIntent } from "./edge-back";
 /** Narrow edge target; card gestures, controls and vertical scrolling outside it remain untouched. */
 export function EdgeBack({ back }: { back: () => void }) {
+  // Android owns its system edge gesture. BackHandler / Modal.onRequestClose
+  // route that event through the same contextual Back action exactly once.
+  return Platform.OS === "android" ? null : <EdgeBackGesture back={back} />;
+}
+function EdgeBackGesture({ back }: { back: () => void }) {
   const latest = useRef(back);
   useEffect(() => {
     latest.current = back;
