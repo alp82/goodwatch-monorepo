@@ -56,6 +56,61 @@ export async function withCatalog(read: Read, rows: ImportResultRow[]) {
 	return rows
 }
 
+/** A title an import holds, as a preview or a result row names it. */
+export interface ImportTitleRef {
+	mediaType: "movie" | "show"
+	tmdbId: number
+	title: string
+}
+/** A title's poster for the import screens' poster rows. */
+export interface ImportPoster {
+	key: string
+	title: string
+	posterPath: string
+}
+
+/**
+ * Posters for up to `limit` of the titles, in their order, each title once. Titles the catalog has no poster for are
+ * left out. Reads the catalog once per media type.
+ */
+export async function importPosters(
+	read: Read,
+	refs: readonly ImportTitleRef[],
+	limit: number,
+): Promise<ImportPoster[]> {
+	const seen = new Set<string>()
+	const titles: ImportTitleRef[] = []
+	for (const ref of refs) {
+		const key = `${ref.mediaType}:${ref.tmdbId}`
+		if (seen.has(key)) continue
+		seen.add(key)
+		titles.push(ref)
+		// Some titles have no poster; look up a few more than asked for.
+		if (titles.length >= limit * 2) break
+	}
+	const rows = await withCatalog(
+		read,
+		titles.map((ref) => ({
+			key: `${ref.mediaType}:${ref.tmdbId}`,
+			title: { ...ref, year: null, posterPath: null },
+			changes: [],
+		})),
+	)
+	return rows
+		.flatMap((row) =>
+			row.title?.posterPath
+				? [
+						{
+							key: row.key,
+							title: row.title.title,
+							posterPath: row.title.posterPath,
+						},
+					]
+				: [],
+		)
+		.slice(0, limit)
+}
+
 /** The result with the first titles of each section. */
 export async function firstRows(
 	read: Read,

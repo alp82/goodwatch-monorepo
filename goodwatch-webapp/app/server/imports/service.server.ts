@@ -7,10 +7,12 @@ import type {
 	ParsedImport,
 } from "~/domain/imports"
 import { confirmImport, undoImport } from "./apply.server.ts"
+import type { ImportTitleRef } from "./result-catalog.server.ts"
 import {
 	getImportRow,
 	listImportRows,
 	listItems,
+	select,
 	skippedCsv,
 	summarize,
 } from "./store.server.ts"
@@ -78,6 +80,36 @@ export const getImportItems = (
 	offset: number,
 	limit: number,
 ) => listItems(userId, id, outcome, offset, limit)
+/** The outcomes whose titles the poster rows show, in the order they are filled. */
+const POSTER_OUTCOMES: ImportOutcome[] = ["new", "conflict", "unchanged"]
+/** Rows read per outcome to find the titles for a poster row; a title can have many rows. */
+const POSTER_ROWS = 200
+/** Posters of the titles an import brings: new ones first, then those that differ, then those already the same. */
+export const getImportPosters = async (
+	userId: string,
+	id: string,
+	outcome: ImportOutcome | undefined,
+	limit: number,
+) => {
+	const { importPosters } = await import("./result-catalog.server.ts")
+	const refs: ImportTitleRef[] = []
+	for (const each of outcome ? [outcome] : POSTER_OUTCOMES) {
+		if (
+			new Set(refs.map((ref) => `${ref.mediaType}:${ref.tmdbId}`)).size >=
+			limit * 2
+		)
+			break
+		const { items } = await listItems(userId, id, each, 0, POSTER_ROWS)
+		for (const item of items)
+			if (item.tmdbId !== null)
+				refs.push({
+					mediaType: item.mediaType,
+					tmdbId: item.tmdbId,
+					title: item.wishlistResolution?.title ?? item.title,
+				})
+	}
+	return { posters: await importPosters(select, refs, limit) }
+}
 /** What the import changed, or what its Undo changed back, grouped by title. */
 export const getImportResult = async (userId: string, id: string) =>
 	(await import("./result.server.ts")).importResult(userId, id)

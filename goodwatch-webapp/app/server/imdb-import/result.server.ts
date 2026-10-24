@@ -15,9 +15,13 @@ import {
 	skippedEntry,
 	undoneEntry,
 } from "~/domain/import-result"
-import { resultApi } from "../imports/result-catalog.server.ts"
+import {
+	type ImportTitleRef,
+	importPosters,
+	resultApi,
+} from "../imports/result-catalog.server.ts"
 import { MAX_ROWS } from "./file.server"
-import { getImportRow, select } from "./store.server"
+import { getImportRow, listItems, select } from "./store.server"
 
 interface ResultRow {
 	row_index: number
@@ -153,3 +157,39 @@ const api = resultApi(select, async (userId, id) => {
 export const imdbImportResult = api.first
 /** More titles of one section. */
 export const imdbImportResultPage = api.page
+
+/** The outcomes whose titles the poster rows show, in the order they are filled. */
+const POSTER_OUTCOMES: ImdbImportOutcome[] = [
+	"new",
+	"update",
+	"conflict",
+	"unchanged",
+]
+/** Rows read per outcome to find the titles for a poster row. */
+const POSTER_ROWS = 200
+
+/** Posters of the titles an IMDb import brings: new ones first, then changed, differing, and the same. */
+export async function imdbImportPosters(
+	userId: string,
+	id: string,
+	outcome: ImdbImportOutcome | undefined,
+	limit: number,
+) {
+	const refs: ImportTitleRef[] = []
+	for (const each of outcome ? [outcome] : POSTER_OUTCOMES) {
+		if (
+			new Set(refs.map((ref) => `${ref.mediaType}:${ref.tmdbId}`)).size >=
+			limit * 2
+		)
+			break
+		const { items } = await listItems(userId, id, each, 0, POSTER_ROWS)
+		for (const item of items)
+			if (item.tmdbId !== null && item.mediaType)
+				refs.push({
+					mediaType: item.mediaType,
+					tmdbId: item.tmdbId,
+					title: item.title,
+				})
+	}
+	return { posters: await importPosters(select, refs, limit) }
+}

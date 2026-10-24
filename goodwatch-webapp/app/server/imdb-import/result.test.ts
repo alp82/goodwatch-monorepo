@@ -5,9 +5,8 @@ import { afterEach, beforeEach, test } from "node:test"
 import { setCrateClientForTest } from "../../utils/crate.ts"
 
 const { undoImport } = await import("./apply.server.ts")
-const { imdbImportResult, imdbImportResultPage } = await import(
-	"./result.server.ts"
-)
+const { imdbImportResult, imdbImportResultPage, imdbImportPosters } =
+	await import("./result.server.ts")
 const { clearResultCacheForTest } = await import(
 	"../imports/result-catalog.server.ts"
 )
@@ -73,6 +72,22 @@ class FakeCrate {
 						x.media_type === params[1] &&
 						tail(2).includes(Number(x.tmdb_id)),
 				),
+			)
+		// One page of rows with one outcome (listItems), for the poster row.
+		if (
+			/^SELECT imdb_id, .* FROM doc\.user_import_item WHERE import_id = \? AND user_id = \? AND outcome = \? ORDER BY row_index LIMIT \? OFFSET \?$/.test(
+				s,
+			)
+		)
+			return done(
+				this.items
+					.filter(
+						(item) =>
+							item.import_id === params[0] &&
+							item.user_id === params[1] &&
+							item.outcome === params[2],
+					)
+					.slice(Number(params[4]), Number(params[4]) + Number(params[3])),
 			)
 		const catalog = s.match(
 			/^SELECT tmdb_id, title, release_year, poster_path FROM (movie|show) WHERE tmdb_id IN/,
@@ -494,5 +509,42 @@ test("an IMDb rating that couldn't be saved is listed with how to retry it", asy
 				},
 			],
 		],
+	)
+})
+
+test("an IMDb import's poster row shows new titles first, then changed, differing and unchanged ones with a poster", async () => {
+	await assert.rejects(() =>
+		imdbImportPosters("someone-else", IMPORT, undefined, 24),
+	)
+	crate.catalog.push(
+		{
+			media_type: "movie",
+			tmdb_id: 949,
+			title: "Heat",
+			release_year: 1995,
+			poster_path: "/heat.jpg",
+		},
+		{
+			media_type: "movie",
+			tmdb_id: 496243,
+			title: "Parasite",
+			release_year: 2019,
+			poster_path: "/parasite.jpg",
+		},
+	)
+	assert.deepEqual(
+		(await imdbImportPosters(USER, IMPORT, undefined, 24)).posters,
+		[
+			{ key: "movie:693134", title: "Dune: Part Two", posterPath: "/dune.jpg" },
+			{ key: "show:126308", title: "Shōgun", posterPath: "/shogun.jpg" },
+			{ key: "movie:949", title: "Heat", posterPath: "/heat.jpg" },
+			{ key: "movie:496243", title: "Parasite", posterPath: "/parasite.jpg" },
+		],
+	)
+	assert.deepEqual(
+		(await imdbImportPosters(USER, IMPORT, "conflict", 24)).posters.map(
+			(poster) => poster.title,
+		),
+		["Heat"],
 	)
 })

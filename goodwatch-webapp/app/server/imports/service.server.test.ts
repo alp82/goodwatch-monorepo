@@ -23,6 +23,7 @@ const {
 	undoImport,
 	getImportResult,
 	getImportResultPage,
+	getImportPosters,
 } = await import("./service.server.ts")
 const { setImportDbForTest, itemRows } = await import("./store.server.ts")
 const { setImportEffectsForTest } = await import("./apply.server.ts")
@@ -2620,11 +2621,17 @@ describe("imported episode scores mark their episodes watched (#759 follow-up)",
 			// Watched already: the member's tick only.
 			[103, "single", "unknown", null],
 		])
-		assert.equal((await getShowTracking("member", 1668)).state?.state, "watching")
+		assert.equal(
+			(await getShowTracking("member", 1668)).state?.state,
+			"watching",
+		)
 		await undoImport("member", preview.id)
 		assert.equal((await getImport("member", preview.id)).status, "undone")
 		assert.deepEqual(await logOf(), [[103, "single", "unknown", null]])
-		assert.equal((await getShowTracking("member", 1668)).state?.state, "watching")
+		assert.equal(
+			(await getShowTracking("member", 1668)).state?.state,
+			"watching",
+		)
 		assert.equal(db.episodeScores.length, 0)
 	})
 
@@ -2740,7 +2747,10 @@ describe("imported episode scores mark their episodes watched (#759 follow-up)",
 		})
 		await waitFor(again.db, "done")
 		assert.deepEqual(await logOf(), [[101, "import", "unknown", "this import"]])
-		assert.equal((await getShowTracking("member", 1668)).state?.state, "on_hold")
+		assert.equal(
+			(await getShowTracking("member", 1668)).state?.state,
+			"on_hold",
+		)
 	})
 })
 
@@ -4328,4 +4338,71 @@ it("TMDB rated episodes import through the shared journal as episode scores of t
 	assert.equal(db.scores.length, 0)
 	await undoImport("member", preview.id)
 	assert.equal(db.episodeScores.length, 0)
+})
+
+describe("import posters", () => {
+	it("reads posters of the member's own import, new titles first, each title once, none without a poster", async () => {
+		const db = new ImportDb()
+		db.seed()
+		const id = String(db.imports[0].id)
+		const row = (index: number, tmdbId: number, outcome: string) => ({
+			...db.items[0],
+			row_index: index,
+			source_key: `letterboxd:rating:${index}`,
+			kind: "rating",
+			payload: JSON.stringify({
+				key: `letterboxd:rating:${index}`,
+				kind: "rating",
+				mediaType: "movie",
+				title: `Film ${tmdbId}`,
+				year: 2024,
+				tmdbId,
+				imdbId: null,
+				index,
+				outcome,
+				reason: null,
+			}),
+			outcome,
+			tmdb_id: tmdbId,
+		})
+		db.items = [
+			row(0, 7, "unchanged"),
+			row(1, 8, "new"),
+			row(2, 8, "new"),
+			row(3, 9, "conflict"),
+			row(4, 10, "new"),
+		]
+		db.catalog = [7, 8, 9, 10].map((tmdbId) => ({
+			tmdb_id: tmdbId,
+			imdb_id: null,
+			title: `Catalog ${tmdbId}`,
+			release_year: 2024,
+			poster_path: tmdbId === 10 ? null : `/${tmdbId}.jpg`,
+		}))
+		setImportDbForTest(db)
+		await assert.rejects(
+			() => getImportPosters("someone-else", id, undefined, 24),
+			/couldn't find/,
+		)
+		assert.deepEqual(
+			(await getImportPosters("member", id, undefined, 24)).posters,
+			[
+				{ key: "movie:8", title: "Catalog 8", posterPath: "/8.jpg" },
+				{ key: "movie:9", title: "Catalog 9", posterPath: "/9.jpg" },
+				{ key: "movie:7", title: "Catalog 7", posterPath: "/7.jpg" },
+			],
+		)
+		assert.deepEqual(
+			(await getImportPosters("member", id, "conflict", 24)).posters.map(
+				(poster) => poster.key,
+			),
+			["movie:9"],
+		)
+		assert.deepEqual(
+			(await getImportPosters("member", id, undefined, 1)).posters.map(
+				(poster) => poster.key,
+			),
+			["movie:8"],
+		)
+	})
 })
