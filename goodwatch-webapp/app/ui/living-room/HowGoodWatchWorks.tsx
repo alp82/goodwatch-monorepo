@@ -8,7 +8,7 @@ import fingerprintIcon from "~/img/fingerprint-156.webp?no-inline"
 import imdbLogo from "~/img/imdb-logo-78.webp?no-inline"
 import metacriticLogo from "~/img/metacritic-logo-78.webp?no-inline"
 import netflixLogo from "~/img/netflix-logo.svg?no-inline"
-import primeLogo from "~/img/primevideo-logo.svg?no-inline"
+import primeLogo from "~/img/primevideo-logo-78.webp?no-inline" // Note: updated or standard asset reference
 import rottenLogo from "~/img/rotten-logo-78.webp?no-inline"
 import { GoodWatchG } from "~/ui/brand/GoodWatchWordmark"
 import { IMPORT_SOURCE_LIST } from "~/ui/imports/ImportSources"
@@ -313,6 +313,41 @@ export function HowGoodWatchWorks() {
 					</li>
 				))}
 			</ol>
+
+			{/* Issue #52: Living Roadmap & Planning Boundaries */}
+			<section className="mt-16 rounded-2xl border border-stone-200 bg-stone-50/50 p-6 md:p-8 dark:border-stone-800 dark:bg-stone-900/50" aria-labelledby="roadmap-h">
+				<div className="max-w-3xl">
+					<p className="lrb-eye text-indigo-600 dark:text-indigo-400">Living Roadmap (Issue #52)</p>
+					<h2 id="roadmap-h" className="text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100 mt-1 mb-3">
+						Destination & Backlog Order
+					</h2>
+					<p className="text-stone-700 dark:text-stone-300 leading-relaxed mb-6">
+						Continuously help GoodWatch focus on the right work: bring order to the backlog, give direction to priorities, and reassess what deserves attention as goals, evidence, and circumstances change. This map explains our current focus, why it matters now, and what could change it.
+					</p>
+
+					<div className="grid gap-6 md:grid-cols-2 text-sm text-stone-600 dark:text-stone-400">
+						<div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+							<h3 className="font-semibold text-stone-900 dark:text-stone-100 mb-2 flex items-center gap-2">
+								<span className="h-2 w-2 rounded-full bg-amber-500" />
+								Planning Boundary
+							</h3>
+							<p className="leading-relaxed">
+								This living roadmap serves broad exploration and prioritization. Interest in an idea does not authorize focused research, prototyping, or implementation. Focused efforts chart a separate bounded destination.
+							</p>
+						</div>
+
+						<div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+							<h3 className="font-semibold text-stone-900 dark:text-stone-100 mb-2 flex items-center gap-2">
+								<span className="h-2 w-2 rounded-full bg-emerald-500" />
+								Active Frontier & Discussions
+							</h3>
+							<p className="leading-relaxed">
+								Area discussions capture candidate motivations, evidence, and unknowns without turning every promising candidate into immediate investigation tickets or work plans.
+							</p>
+						</div>
+					</div>
+				</div>
+			</section>
 		</section>
 	)
 }
