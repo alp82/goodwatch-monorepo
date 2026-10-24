@@ -1,0 +1,46 @@
+{
+  "sourceCommit": "6b5ace7730290603e33bda57bd744c87042fb78e",
+  "android": {
+    "buildId": "3ec61b6d-e0dc-4edf-8a11-ec948febc8bc",
+    "versionCode": 11,
+    "package": "com.yepwatch.preview",
+    "signerSha256": "7a4b9faa194c068222940ebe1661ab6f8fd3d714785a15bf76d23352a9752d1d",
+    "predictiveBackManifest": false,
+    "anonymousDownload": {
+      "time": "2026-10-24T10:53:40.981Z",
+      "anonymousBrowser": true,
+      "downloaded": true,
+      "bytes": 98757455,
+      "sha256": "b179ba57ad7f4275f6f1de9568424d4d9154c37b98906bf0e00053f5e073f569"
+    },
+    "nativeChecks": {
+      "apkBuild": 11,
+      "device": "owned Pixel 8 API 35 emulator",
+      "systemBackKeyReviewAndReturn": true,
+      "systemEdgeReviewAndReturn": true,
+      "headerReviewAndReturn": true,
+      "drawerSystemBackAndEdge": true,
+      "decisionRetained": true,
+      "noDecisionActionsInReview": true,
+      "existingUserRoomsTouched": false
+    },
+    "physicalDeviceTested": false
+  },
+  "ios": {
+    "buildNumber": 10,
+    "testflight": "https://testflight.apple.com/join/V2gzwSFA",
+    "approvedEvidence": "feedback-build10.json"
+  },
+  "checks": {
+    "unit": 60,
+    "fullBrowser": {
+      "passed": 68,
+      "asyncAssertionFailures": 2,
+      "correctedTargetedRetestPassed": 2
+    },
+    "mouseAndTouchEdgeChecks": 2,
+    "typecheck": "passed",
+    "lint": "passed with existing legacy warning",
+    "webkit": "unavailable: host dependencies missing"
+  }
+}

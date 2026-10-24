@@ -247,11 +247,7 @@ test('left swipe after reversal sends exactly the same pass as Nope and recenter
   expect(first.command).toMatchObject({ value: 'pass', candidateId: 'c1' });
   await expect(page.getByRole('button', { name: 'Nope', exact: true })).toBeEnabled();
   await page.getByRole('button', { name: 'Nope', exact: true }).click();
-  expect(
-    f.commands
-      .filter((c) => c.command.type === 'vote')
-      .map((c) => c.command.type === 'vote' && c.command.value)
-  ).toEqual(['pass', 'pass']);
+  await expect.poll(() => f.commands.filter(c => c.command.type === 'vote').map(c => c.command.type === 'vote' && c.command.value)).toEqual(['pass', 'pass']);
   const centered = await page.getByTestId('poster').boundingBox();
   expect(Math.abs(centered!.x - box.x)).toBeLessThan(2);
 });
@@ -384,7 +380,7 @@ test('authoritative Undo survives an accepted vote followed by a full reload', a
   await page.reload();
   await expect(page.getByRole('button', { name: 'Undo last choice', exact: true })).toBeEnabled();
   await page.getByRole('button', { name: 'Undo last choice', exact: true }).click();
-  expect(f.commands.at(-1)?.command).toMatchObject({
+  await expect.poll(() => f.commands.at(-1)?.command).toMatchObject({
     type: 'vote',
     candidateId: 'c1',
     expectedVoteRevision: 1,
@@ -403,7 +399,7 @@ test('exact-envelope replay restores Undo from the confirmed receipt snapshot', 
   await expect(page.getByRole('button', { name: 'Undo last choice', exact: true })).toBeEnabled();
   expect(f.commands[1]).toEqual(f.commands[0]);
   await page.getByRole('button', { name: 'Undo last choice', exact: true }).click();
-  expect(f.commands.at(-1)?.command).toMatchObject({
+  await expect.poll(() => f.commands.at(-1)?.command).toMatchObject({
     type: 'vote',
     candidateId: 'c1',
     value: null,
@@ -832,7 +828,7 @@ test('room prompt and mobile service selection publish attributes without screen
   await page.getByRole('checkbox', { name: 'Netflix', exact: true }).click();
   await page.getByRole('button', { name: 'Save room description' }).click();
   await expect(page.getByText('Funny', { exact: true })).toBeVisible();
-  expect(f.commands.at(-1)?.command).toMatchObject({
+  await expect.poll(() => f.commands.at(-1)?.command).toMatchObject({
     type: 'configure',
     prompt: 'funny comfort watch',
     country: 'DE',
