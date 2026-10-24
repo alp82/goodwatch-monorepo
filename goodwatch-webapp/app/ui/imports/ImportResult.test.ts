@@ -128,6 +128,13 @@ const run = JSON.parse(
 	afterPutBack: string
 	afterMore: string
 	plexPrompts: string[]
+	clearedPages: Record<
+		"first" | "second",
+		{
+			failed: { calls: number; text: string; live: boolean; disabled: boolean }
+			after: { calls: number; text: string; disabled: boolean }
+		}
+	>
 	done: {
 		heading: string
 		tiles: {
@@ -245,4 +252,29 @@ test("Undo asks first, in the words of the source", () => {
 		run.plexPrompts[1],
 		/Choices cleared by watches are restored/,
 	)
+})
+
+test("Done: a page of titles that came off failing to load stops the loading, says so, and Try again picks it up", () => {
+	// The first extra page fails (nothing loaded yet), or a later one does (some loaded): one request each, no loop.
+	for (const [name, calls] of [
+		["first", 1],
+		["second", 2],
+	] as const) {
+		const { failed, after } = run.clearedPages[name]
+		assert.equal(
+			failed.calls,
+			calls,
+			`${name}: no request loop after a failure`,
+		)
+		assert.match(
+			failed.text,
+			/GoodWatch couldn't load every title that came off\. The server is busy\.Try again/,
+		)
+		assert.ok(failed.live, "the message is announced")
+		assert.ok(failed.disabled, "the answers wait for every title")
+		assert.equal(after.calls, 3)
+		assert.doesNotMatch(after.text, /couldn't load every title/)
+		assert.ok(!after.disabled, "the answers open once every title is in")
+		assert.match(after.text, /−175 taken off/)
+	}
 })

@@ -23,9 +23,48 @@ for (const key of [
 ).IS_REACT_ACT_ENVIRONMENT = true
 
 const sent: { url: string; body: unknown }[] = []
+/** Titles a long lists_cleared section took off Want to See, and the page offsets the stand-in server fails. */
+const CLEARED_TOTAL = 175
+const clearedRow = (i: number) => ({
+	key: `movie:${5000 + i}`,
+	title: {
+		tmdbId: 5000 + i,
+		mediaType: "movie",
+		title: `Cleared ${i}`,
+		year: 2020,
+		posterPath: null,
+	},
+	changes: [
+		{
+			type: "list-cleared",
+			list: "want_to_see",
+			because: "watched",
+			undoRestores: false,
+		},
+	],
+})
+const failing = new Set<number>()
 globalThis.fetch = (async (input: string, init?: RequestInit) => {
 	const url = String(input)
 	sent.push({ url, body: init?.body ? JSON.parse(String(init.body)) : null })
+	if (url.includes("section=lists_cleared")) {
+		const params = new URL(url, "https://goodwatch.app").searchParams
+		const offset = Number(params.get("offset"))
+		const limit = Number(params.get("limit"))
+		if (failing.has(offset))
+			return new Response(JSON.stringify({ error: "The server is busy." }), {
+				status: 503,
+				headers: { "Content-Type": "application/json" },
+			})
+		const rows = Array.from(
+			{ length: Math.max(0, Math.min(limit, CLEARED_TOTAL - offset)) },
+			(_, i) => clearedRow(offset + i),
+		)
+		return new Response(JSON.stringify({ rows, total: CLEARED_TOTAL }), {
+			status: 200,
+			headers: { "Content-Type": "application/json" },
+		})
+	}
 	const page = url.includes("section=kept")
 		? {
 				rows: [
@@ -315,6 +354,60 @@ await act(async () => button("Show all 26")?.click())
 await settle()
 const afterMore = text()
 
+// A long lists_cleared section whose extra pages fail: loading stops, the question says so, and Try again resumes.
+const clearedPages: Record<string, unknown> = {}
+for (const [name, failAt] of [
+	["first", 25],
+	["second", 125],
+] as const) {
+	failing.clear()
+	failing.add(failAt)
+	const id = `cleared-${name}`
+	client.setQueryData(["import-result", "/api/imports", id, "done"], {
+		operation: "import",
+		titles: CLEARED_TOTAL,
+		sections: [
+			{
+				key: "lists_cleared",
+				count: CLEARED_TOTAL,
+				total: CLEARED_TOTAL,
+				rows: Array.from({ length: IMPORT_RESULT_FIRST_ROWS }, (_, i) =>
+					clearedRow(i),
+				),
+			},
+		],
+	})
+	const pageCalls = () =>
+		sent.filter(
+			(call) =>
+				call.url.includes(`/${id}/`) &&
+				call.url.includes("section=lists_cleared"),
+		).length
+	await render(id, "done")
+	for (let i = 0; i < 5; i++) await settle(30)
+	const failed = {
+		calls: pageCalls(),
+		text: text(),
+		live: !!container.querySelector("[data-cleared-load][aria-live]"),
+		disabled: !!container.querySelector(
+			"[data-cleared-question] fieldset[disabled]",
+		),
+	}
+	failing.clear()
+	await act(async () => button("Try again")?.click())
+	for (let i = 0; i < 5; i++) await settle(30)
+	clearedPages[name] = {
+		failed,
+		after: {
+			calls: pageCalls(),
+			text: text(),
+			disabled: !!container.querySelector(
+				"[data-cleared-question] fieldset[disabled]",
+			),
+		},
+	}
+}
+
 const { SourceImportCurrent } = await import("./SourceImportCurrent")
 const { sourceImportKeys } = await import("./SourceImportHooks")
 const plexPrompts: string[] = []
@@ -393,6 +486,6 @@ for (const watches of [1, 0]) {
 
 await act(async () => root.unmount())
 process.stdout.write(
-	`__IMPORT_RESULT_INTERACTION__${JSON.stringify({ sent, undone: undoneText, buttons, afterPutBack, afterMore, plexPrompts, done })}`,
+	`__IMPORT_RESULT_INTERACTION__${JSON.stringify({ sent, undone: undoneText, buttons, afterPutBack, afterMore, plexPrompts, done, clearedPages })}`,
 )
 process.exit(0)

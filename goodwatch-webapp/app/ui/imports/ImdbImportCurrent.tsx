@@ -36,6 +36,7 @@ import {
 	formatCount,
 	imdbPreviewContent,
 	imdbToWrite,
+	leftOutCount,
 	oneOrMany,
 	plural,
 } from "./import-flow-model"
@@ -227,6 +228,14 @@ export function ImdbChoose({
 				posters={posters}
 				focus={focus}
 				onBack={onBack}
+				skipped={
+					leftOutCount(summary) > 0
+						? {
+								count: leftOutCount(summary),
+								url: skippedDownloadUrl(summary.id),
+							}
+						: undefined
+				}
 			/>
 		)
 	if (content === "nothing")

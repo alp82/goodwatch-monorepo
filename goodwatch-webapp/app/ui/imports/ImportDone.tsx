@@ -39,6 +39,7 @@ import { ProgressStrip } from "./ImportRun"
 import {
 	type CountTile,
 	clearedByList,
+	doneReplaced,
 	doneSection,
 	doneTiles,
 	formatCount,
@@ -223,12 +224,8 @@ function Done({
 }) {
 	const { data } = useUserData()
 	const clearedSection = section(result, "lists_cleared")
-	const clearedRows = useWholeSection(
-		api,
-		summary.id,
-		summary.status,
-		clearedSection,
-	)
+	const whole = useWholeSection(api, summary.id, summary.status, clearedSection)
+	const clearedRows = whole.rows
 	const [putBack, setPutBack] = useState<"back" | "leave" | null>(null)
 	const putAll = usePutAllBack()
 	const cleared = clearedByList(clearedRows ?? clearedSection?.rows ?? [])
@@ -264,7 +261,8 @@ function Done({
 				? what
 				: `Done. ${what}`
 	const kept = section(result, "kept")
-	const replaced = section(result, "ratings_replaced")
+	const replaced = doneReplaced(result)
+	const anyReplaced = Object.values(replaced).some((n) => n > 0)
 	const skipped = section(result, "skipped")
 	const [skippedOpen, setSkippedOpen] = useState(false)
 	const [allOpen, setAllOpen] = useState(false)
@@ -287,6 +285,8 @@ function Done({
 					rows={clearedRows ?? clearedSection.rows}
 					count={clearedSection.total}
 					loading={!clearedRows}
+					loadError={whole.error}
+					onLoadRetry={whole.retry}
 					answer={putBack}
 					state={putAll.state}
 					onAnswer={(answer) => {
@@ -305,12 +305,35 @@ function Done({
 					) : (
 						<p className="text-gray-300">Nothing in your library changed.</p>
 					)}
-					{(kept || replaced) && (
+					{(kept || anyReplaced) && (
 						<div className="flex flex-col gap-1 text-sm text-gray-400">
-							{replaced && (
+							{replaced.scores > 0 && (
 								<p>
-									{plural(replaced.count, "score")} now{" "}
-									{oneOrMany(replaced.count, "matches", "match")} {source}'s.
+									{plural(replaced.scores, "score")} now{" "}
+									{oneOrMany(replaced.scores, "matches", "match")} {source}'s.
+								</p>
+							)}
+							{replaced.episodeScores > 0 && (
+								<p>
+									{plural(
+										replaced.episodeScores,
+										"season or episode score",
+										"season and episode scores",
+									)}{" "}
+									now {oneOrMany(replaced.episodeScores, "matches", "match")}{" "}
+									{source}'s.
+								</p>
+							)}
+							{replaced.reviews > 0 && (
+								<p>
+									{plural(replaced.reviews, "review")} now{" "}
+									{oneOrMany(replaced.reviews, "matches", "match")} {source}'s.
+								</p>
+							)}
+							{replaced.statuses > 0 && (
+								<p>
+									{plural(replaced.statuses, "show status", "show statuses")}{" "}
+									changed to {source}'s.
 								</p>
 							)}
 							{kept && (
@@ -501,6 +524,8 @@ function ClearedQuestion({
 	rows,
 	count,
 	loading,
+	loadError,
+	onLoadRetry,
 	answer,
 	state,
 	onAnswer,
@@ -509,6 +534,9 @@ function ClearedQuestion({
 	rows: readonly ImportResultRow[]
 	count: number
 	loading: boolean
+	/** The titles couldn't all load, so the answers wait for Try again. */
+	loadError: string | null
+	onLoadRetry: () => void
 	answer: "back" | "leave" | null
 	state: ReturnType<typeof usePutAllBack>["state"]
 	onAnswer: (answer: "back" | "leave") => void
@@ -574,24 +602,43 @@ function ClearedQuestion({
 				</h3>
 				<PosterRow posters={posters} />
 				{answer === null || lock.locking ? (
-					<fieldset
-						disabled={!!lock.locking || loading}
-						data-locked={lock.locking ? true : undefined}
-						className="group/answers flex flex-col gap-3"
-					>
-						<legend className="sr-only">Your answer</legend>
-						<Answer
-							selected={picked === "back"}
-							title={`Yes, put ${it} back`}
-							onClick={() => pick("back")}
-						/>
-						<Answer
-							selected={picked === "leave"}
-							recommended
-							title={`No, leave ${it} off`}
-							onClick={() => pick("leave")}
-						/>
-					</fieldset>
+					<>
+						<fieldset
+							disabled={!!lock.locking || loading}
+							data-locked={lock.locking ? true : undefined}
+							className="group/answers flex flex-col gap-3"
+						>
+							<legend className="sr-only">Your answer</legend>
+							<Answer
+								selected={picked === "back"}
+								title={`Yes, put ${it} back`}
+								onClick={() => pick("back")}
+							/>
+							<Answer
+								selected={picked === "leave"}
+								recommended
+								title={`No, leave ${it} off`}
+								onClick={() => pick("leave")}
+							/>
+						</fieldset>
+						<div aria-live="polite" data-cleared-load>
+							{loadError && (
+								<div className="flex flex-col items-start gap-2">
+									<p className="text-red-200">
+										GoodWatch couldn't load every title that came off.{" "}
+										{loadError}
+									</p>
+									<button
+										type="button"
+										className={secondaryButton}
+										onClick={onLoadRetry}
+									>
+										Try again
+									</button>
+								</div>
+							)}
+						</div>
+					</>
 				) : (
 					<div aria-live="polite" className="flex flex-col items-start gap-2">
 						{answer === "leave" ? (

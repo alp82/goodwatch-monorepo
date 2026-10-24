@@ -485,6 +485,7 @@ test("a file with nothing new is a success: all caught up, and the stepper ticks
 		run.text,
 		/Everything in this Letterboxd file is already in GoodWatch\./,
 	)
+	assert.doesNotMatch(run.text, /couldn't come in/)
 	assert.match(run.text, /See your scores/)
 	assert.match(run.text, /Pick another file/)
 	assert.equal(step(run.steps), "Done")
@@ -492,6 +493,76 @@ test("a file with nothing new is a success: all caught up, and the stepper ticks
 	assert.ok(done?.done)
 	assert.equal(done?.note, "Up to date")
 	assert.doesNotMatch(run.text, /What should come in/)
+})
+
+test("Import waits while the file is checked, then a differing score is asked about even beside many Seen season wishes", () => {
+	const run = runs.manyWishes as unknown as {
+		checking: { busy: boolean; disabled: boolean; label: string | null }
+		ready: boolean
+		first: { counter: string; heading: string }
+		confirms: unknown[]
+	}
+	assert.deepEqual(run.checking, {
+		busy: true,
+		disabled: true,
+		label: "Checking your account…",
+	})
+	assert.equal(run.ready, false, "the button says Import once the check is in")
+	assert.equal(run.first.counter, "Question 1 of 3")
+	assert.equal(
+		run.first.heading,
+		"1 score in your MDBList account differs from yours in GoodWatch. Keep yours?",
+	)
+	assert.deepEqual(run.confirms, [
+		{
+			kinds: ["rating", "want"],
+			conflictChoice: "source",
+			watchDates: "preserve",
+			wishlistRewatch: false,
+			wishlistShows: false,
+		},
+	])
+})
+
+test("when the differing rows can't be counted, the score question is still asked, without a number", () => {
+	const run = runs.conflictCountFailed as unknown as {
+		counter: string
+		heading: string
+	}
+	assert.equal(run.counter, "Question 1 of 3")
+	assert.equal(
+		run.heading,
+		"If anything in your MDBList account differs from what you have in GoodWatch, keep yours?",
+	)
+})
+
+test("a caught-up file still says which entries couldn't come in, with the list to download", () => {
+	const run = runs.caughtUpSkipped as unknown as { text: string; csv: string }
+	assert.match(run.text, /You're all caught up/)
+	assert.match(
+		run.text,
+		/3 entries from your Letterboxd file couldn't come in\./,
+	)
+	assert.match(run.text, /Not matched to a GoodWatch title ?2/)
+	assert.match(run.text, /Download the list with reasons \(CSV file\)/)
+	assert.equal(
+		run.csv,
+		"/api/imports/00000000-0000-4000-8000-0000000000aa/skipped",
+	)
+	const imdb = runs.imdbCaughtUpSkipped as unknown as {
+		text: string
+		csv: string
+	}
+	assert.match(imdb.text, /You're all caught up/)
+	assert.match(
+		imdb.text,
+		/4 titles from this IMDb file are already in GoodWatch\./,
+	)
+	assert.match(imdb.text, /2 entries from your IMDb file couldn't come in\./)
+	assert.equal(
+		imdb.csv,
+		"/api/imdb-import/00000000-0000-4000-8000-0000000000aa/skipped",
+	)
 })
 
 test("an import that stopped partway turns the strip red, says why first, and Continue picks it up with its options", () => {

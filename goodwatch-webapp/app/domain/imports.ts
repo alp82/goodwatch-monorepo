@@ -560,6 +560,28 @@ export interface ImportItem extends ImportObservation {
 	applyState?: "added" | "updated" | "kept" | "failed" | "undone" | null
 }
 
+/** Wishlist evidence whose Seen titles get their own Want to rewatch answer; others ride on the conflict choice. */
+export const REWATCH_QUESTION_EVIDENCE = [
+	"watcharr",
+	"imdb-watchlist",
+	"mdblist",
+]
+
+/**
+ * Whether confirm decides a row by the conflict choice (keep GoodWatch's, or use the source's) rather than by a
+ * wishlist answer. A row held only for the whole-show answer carries `wishlistRewatchChoice: false` and never does.
+ */
+export const followsConflictChoice = (
+	item: Pick<
+		ImportItem,
+		"outcome" | "wishlistRewatchChoice" | "wishlistEvidence"
+	>,
+) =>
+	item.outcome === "conflict" &&
+	(item.wishlistRewatchChoice
+		? !REWATCH_QUESTION_EVIDENCE.includes(item.wishlistEvidence?.source ?? "")
+		: item.wishlistRewatchChoice !== false)
+
 export interface WishlistMatchEvidenceVariant {
 	title: string
 	year: number | null

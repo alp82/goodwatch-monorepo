@@ -277,3 +277,55 @@ for (const [choice, rewatch, added] of [
 			added,
 		)
 	})
+
+test("the conflict question counts only rows the conflict choice decides, not those waiting on the wishlist answers", async () => {
+	const { db, tracking } = setup()
+	// The Wire is Seen, so its Watchlist season waits on Want to rewatch and the whole-show answer.
+	tracking.seed("user_watch_state", [
+		{
+			user_id: "member",
+			media_type: "show",
+			tmdb_id: 1438,
+			state: "seen",
+			pass: 1,
+			state_changed_at: 1,
+			seen_press_group: null,
+			seen_press_from: null,
+			rate_prompt_dismissed_at: null,
+			seen_question: "answered",
+			created_at: 1,
+			updated_at: 1,
+		},
+	])
+	// Toy Story's score differs from MDBList's 8.
+	db.scores.push({
+		user_id: "member",
+		tmdb_id: 862,
+		media_type: "movie",
+		score: 5,
+		updated_at: "2026-01-01",
+		_seq_no: 1,
+		_primary_term: 1,
+	})
+	const preview = await previewFetchedImport(
+		"member",
+		"MDBList account",
+		await readSynthetic(),
+	)
+	assert.equal(preview.wishlistRewatchChoiceCount, 1)
+	assert.equal(preview.wishlistShowChoiceCount, 1)
+	assert.ok(preview.counts.conflict >= 2)
+	const follows = await getImportItems(
+		"member",
+		preview.id,
+		"conflict",
+		0,
+		200,
+		true,
+	)
+	assert.equal(follows.total, 1)
+	assert.deepEqual(
+		follows.items.map((item) => [item.kind, item.tmdbId]),
+		[["rating", 862]],
+	)
+})

@@ -184,6 +184,19 @@ const SECTION_OF: Record<ImportResultChangeType, ImportResultSectionKey> = {
 	left: "left",
 }
 
+/** In sections that mix additions with replacements: the changes that add to the member's totals. */
+const ADDS: Partial<
+	Record<ImportResultSectionKey, (change: ImportResultChange) => boolean>
+> = {
+	reviews: (change) => change.type === "review-added",
+	statuses_set: (change) =>
+		change.type === "status-set" &&
+		change.status.from === null &&
+		change.status.to !== null,
+	episode_ratings_added: (change) =>
+		change.type === "episode-rating-added" && change.from === null,
+}
+
 /** Changes that leave the member's library as it was. */
 const UNCHANGED: ImportResultChangeType[] = [
 	"kept",
@@ -209,6 +222,12 @@ export interface ImportResultSection {
 	count: number
 	/** Rows in the section; `rows` holds the first of them. */
 	total: number
+	/**
+	 * What the section adds to the member's totals, where it also holds changes that add nothing: a review that
+	 * replaced one, a show status that replaced one, a season or episode score that replaced one. Absent elsewhere,
+	 * where `count` is all additions.
+	 */
+	added?: number
 	rows: ImportResultRow[]
 }
 
@@ -293,6 +312,7 @@ export function groupImportResult(
 				// A show can bring many season and episode scores: the heading counts the scores.
 				const scores =
 					key === "episode_ratings_added" || key === "episode_ratings_removed"
+				const added = ADDS[key]
 				return {
 					key,
 					count: watches
@@ -301,6 +321,14 @@ export function groupImportResult(
 							? rows.reduce((sum, row) => sum + row.changes.length, 0)
 							: rows.length,
 					total: rows.length,
+					...(added
+						? {
+								added: rows.reduce(
+									(sum, row) => sum + row.changes.filter(added).length,
+									0,
+								),
+							}
+						: {}),
 					rows,
 				}
 			}),

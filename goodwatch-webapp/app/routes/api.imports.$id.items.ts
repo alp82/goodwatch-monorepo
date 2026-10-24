@@ -24,9 +24,11 @@ const schema = z.object({
 	limit: z.coerce.number().int().safe().min(1).max(200).default(50),
 	by: z.enum(["title"]).optional(),
 	section: z.enum(IMPORT_RESULT_SECTION_KEYS).optional(),
+	follows: z.enum(["conflict-choice"]).optional(),
 })
 // ?by=title: what the import changed, or what its Undo changed back, grouped by title (ImportResult).
 // ?by=title&section=…&offset=…&limit=…: more titles of one section (ImportResultPage).
+// ?follows=conflict-choice: only the conflict rows confirm decides by the conflict choice, with their exact total.
 export const loader = ({ request, params }: LoaderFunctionArgs) =>
 	withMember(request, async (userId, headers) => {
 		const q = new URL(request.url).searchParams
@@ -36,11 +38,12 @@ export const loader = ({ request, params }: LoaderFunctionArgs) =>
 			limit: q.get("limit") ?? undefined,
 			by: q.get("by") || undefined,
 			section: q.get("section") || undefined,
+			follows: q.get("follows") || undefined,
 		})
 		if (!parsed.success)
 			throw new NativeImportError(400, "We couldn't load those import rows.")
 		const id = importId(params)
-		const { by, section, outcome, offset, limit } = parsed.data
+		const { by, section, outcome, offset, limit, follows } = parsed.data
 		if (by === "title")
 			return json(
 				section
@@ -48,7 +51,15 @@ export const loader = ({ request, params }: LoaderFunctionArgs) =>
 					: await getImportResult(userId, id),
 				{ headers },
 			)
-		return json(await getImportItems(userId, id, outcome, offset, limit), {
-			headers,
-		})
+		return json(
+			await getImportItems(
+				userId,
+				id,
+				outcome,
+				offset,
+				limit,
+				follows === "conflict-choice",
+			),
+			{ headers },
+		)
 	})

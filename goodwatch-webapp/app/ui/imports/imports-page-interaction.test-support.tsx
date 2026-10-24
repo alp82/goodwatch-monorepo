@@ -143,6 +143,11 @@ const conflictItems = [
 		reason: "This file lists a season.",
 	},
 ]
+/** How the stand-in server answers the conflict-choice rows: held until `gate` settles, failing, or with a total. */
+const conflictCheck: { gate: Promise<void>; fail: boolean; total?: number } = {
+	gate: Promise.resolve(),
+	fail: false,
+}
 const json = (body: unknown) =>
 	new Response(JSON.stringify(body), {
 		status: 200,
@@ -170,8 +175,22 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 		return json({ import: imdbSummary("preview", null, PREVIEW_ID) })
 	if (url.includes("/items?by=title"))
 		return json({ operation: "import", titles: 0, sections: [] })
-	if (url.includes("/items?outcome=conflict"))
-		return json({ items: conflictItems, total: conflictItems.length })
+	if (url.includes("/items?outcome=conflict")) {
+		if (!url.includes("follows=conflict-choice"))
+			return json({ items: conflictItems, total: conflictItems.length })
+		// Only the rows the conflict choice decides: the Seen and whole-show wishes wait on their own answers.
+		await conflictCheck.gate
+		if (conflictCheck.fail)
+			return new Response(JSON.stringify({ error: "Couldn't check." }), {
+				status: 500,
+				headers: { "Content-Type": "application/json" },
+			})
+		const follows = conflictItems.filter((item) => item.kind === "rating")
+		return json({
+			items: follows,
+			total: conflictCheck.total ?? follows.length,
+		})
+	}
 	if (url.includes("/items")) return json({ items: [], total: 0 })
 	if (url.includes("/posters"))
 		return json({
@@ -871,6 +890,117 @@ const movielens = (wishlist: boolean) =>
 }
 
 {
+	// 200 Seen season wishes wait on both wishlist answers and 1 score differs: the score question still comes, and
+	// Import waits until the server has counted the rows the conflict choice decides.
+	const preview: ImportSummary = {
+		...summary("mdblist", "preview", null, MDBLIST_PREVIEW_ID),
+		counts: {
+			new: 4,
+			unchanged: 1,
+			conflict: 201,
+			unmatched: 0,
+			unsupported: 0,
+			invalid: 0,
+			rows: 206,
+		},
+		kinds: {
+			rating: 2,
+			watch: 0,
+			want: 203,
+			favorite: 0,
+			review: 0,
+			show_status: 0,
+		},
+		wishlistRewatchChoiceCount: 200,
+		wishlistShowChoiceCount: 200,
+	}
+	served.set(preview.id, preview)
+	let release = () => {}
+	conflictCheck.gate = new Promise((resolve) => {
+		release = resolve
+	})
+	conflictCheck.total = 1
+	const view = await page({
+		sourceImports: [preview],
+		initialSource: "mdblist",
+		openImport: MDBLIST_PREVIEW_ID,
+	})
+	for (let i = 0; i < 3; i++) await settle()
+	const busy = view
+		.html()
+		.match(/<button[^>]*data-checking[^>]*>(.*?)<\/button>/)
+	const checking = {
+		busy: busy?.[0].includes('aria-busy="true"') ?? false,
+		disabled: busy?.[0].includes("disabled") ?? false,
+		label: busy?.[1] ?? null,
+	}
+	await act(async () => release())
+	for (let i = 0; i < 3; i++) await settle()
+	const ready = view.text().includes("Checking your")
+	await view.click("Import")
+	const first = { counter: view.counter(), heading: view.heading() }
+	await view.click("No, use MDBList's")
+	await view.wait(800)
+	await view.click("No, leave them as Seen")
+	await view.wait(800)
+	await view.click("No, leave them out")
+	await view.wait(800)
+	for (let i = 0; i < 3; i++) await settle()
+	results.manyWishes = {
+		checking,
+		ready,
+		first,
+		confirms: sent
+			.filter((call) => call.url.endsWith("/confirm"))
+			.map((call) => call.body),
+	}
+	conflictCheck.gate = Promise.resolve()
+	conflictCheck.total = undefined
+	await view.unmount()
+}
+
+{
+	// The count of differing rows can't load: the question is asked anyway, without a number.
+	const preview: ImportSummary = {
+		...summary("mdblist", "preview", null, MDBLIST_PREVIEW_ID),
+		counts: {
+			new: 4,
+			unchanged: 1,
+			conflict: 3,
+			unmatched: 0,
+			unsupported: 0,
+			invalid: 0,
+			rows: 8,
+		},
+		kinds: {
+			rating: 2,
+			watch: 0,
+			want: 5,
+			favorite: 0,
+			review: 0,
+			show_status: 0,
+		},
+		wishlistRewatchChoiceCount: 1,
+		wishlistShowChoiceCount: 1,
+	}
+	served.set(preview.id, preview)
+	conflictCheck.fail = true
+	const view = await page({
+		sourceImports: [preview],
+		initialSource: "mdblist",
+		openImport: MDBLIST_PREVIEW_ID,
+	})
+	for (let i = 0; i < 3; i++) await settle()
+	await view.click("Import")
+	results.conflictCountFailed = {
+		counter: view.counter(),
+		heading: view.heading(),
+	}
+	conflictCheck.fail = false
+	await view.unmount()
+}
+
+{
 	// A file whose titles are all in GoodWatch already.
 	const preview: ImportSummary = {
 		...summary("letterboxd", "preview", null, PREVIEW_ID),
@@ -892,6 +1022,64 @@ const movielens = (wishlist: boolean) =>
 	})
 	for (let i = 0; i < 3; i++) await settle()
 	results.caughtUp = { text: view.text(), steps: view.steps() }
+	await view.unmount()
+}
+
+{
+	// Nothing new, but some rows couldn't come in: still a success, and it says so with the list to download.
+	const preview: ImportSummary = {
+		...summary("letterboxd", "preview", null, PREVIEW_ID),
+		counts: {
+			new: 0,
+			unchanged: 5,
+			conflict: 0,
+			unmatched: 2,
+			unsupported: 0,
+			invalid: 1,
+			rows: 8,
+		},
+	}
+	served.set(preview.id, preview)
+	const view = await page({
+		sourceImports: [preview],
+		initialSource: "letterboxd",
+		openImport: preview.id,
+	})
+	for (let i = 0; i < 3; i++) await settle()
+	const html = view.html()
+	await view.unfold("Why they couldn't come in")
+	results.caughtUpSkipped = {
+		text: view.text(),
+		csv: html.match(/href="([^"]*skipped)"/)?.[1] ?? null,
+	}
+	await view.unmount()
+}
+
+{
+	// The same for an IMDb ratings file.
+	const imdb: ImdbImportSummary = {
+		...imdbSummary("preview", null, PREVIEW_ID),
+		counts: {
+			rows: 6,
+			new: 0,
+			update: 0,
+			unchanged: 4,
+			conflict: 0,
+			unmatched: 1,
+			unsupported: 0,
+			invalid: 1,
+		},
+	}
+	const view = await page({
+		imdbImports: [imdb],
+		initialSource: "imdb",
+		openImport: imdb.id,
+	})
+	for (let i = 0; i < 3; i++) await settle()
+	results.imdbCaughtUpSkipped = {
+		text: view.text(),
+		csv: view.html().match(/href="([^"]*skipped)"/)?.[1] ?? null,
+	}
 	await view.unmount()
 }
 

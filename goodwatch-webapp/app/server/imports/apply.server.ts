@@ -1,8 +1,3 @@
-import {
-	captureProductEvent,
-	withProductContext,
-	eventUuid,
-} from "~/telemetry/product-analytics.server"
 import type { UndoOutcome } from "~/domain/import-result"
 import type {
 	ImportItem,
@@ -10,7 +5,15 @@ import type {
 	ImportSource,
 	ImportSummary,
 } from "~/domain/imports"
-import { canImportWantToSee } from "../../domain/imports.ts"
+import {
+	captureProductEvent,
+	eventUuid,
+	withProductContext,
+} from "~/telemetry/product-analytics.server"
+import {
+	REWATCH_QUESTION_EVIDENCE,
+	canImportWantToSee,
+} from "../../domain/imports.ts"
 import {
 	applyImportedEpisodeScore,
 	undoImportedEpisodeScore,
@@ -482,9 +485,7 @@ async function applyRunStored(
 		)
 		const allowRewatch = (item: ImportItem) =>
 			// Sources whose preview asks Want to rewatch on its own, independent of the conflict choice.
-			["watcharr", "imdb-watchlist", "mdblist"].includes(
-				item.wishlistEvidence?.source ?? "",
-			)
+			REWATCH_QUESTION_EVIDENCE.includes(item.wishlistEvidence?.source ?? "")
 				? options.wishlistRewatch === true
 				: options.conflictChoice === "source"
 		const rewatchWishes: typeof pending = []
@@ -608,8 +609,7 @@ async function applyRunStored(
 				(await getImportRow(userId, id)).source as ImportSource,
 				scoredEpisodes.map((item) => ({
 					...item,
-					applied:
-						item.applyState === "added" || item.applyState === "updated",
+					applied: item.applyState === "added" || item.applyState === "updated",
 				})),
 			)
 		}

@@ -44,24 +44,37 @@ export interface ConflictRow {
 	theirs: number | null
 }
 
-/** The first rows that differ from GoodWatch, and whether those are all of them. Null while loading. */
+/** The first rows that differ from GoodWatch, how many there are, and whether the rows are all of them. */
+export interface ConflictRows {
+	rows: ConflictRow[]
+	all: boolean
+	/** Every such row, counted by the server; null when the rows couldn't load. */
+	total: number | null
+}
+
+/**
+ * The first rows that differ from GoodWatch. `followsChoice` asks only for the rows confirm decides by the conflict
+ * choice, with their exact total (general imports). Null while loading.
+ */
 export function useConflictRows(
 	api: ImportResultApi,
 	id: string,
 	enabled: boolean,
-): { rows: ConflictRow[]; all: boolean } | null {
+	followsChoice = false,
+): ConflictRows | null {
 	const query = useQuery({
-		queryKey: ["import-conflicts", api, id],
+		queryKey: ["import-conflicts", api, id, followsChoice],
 		enabled,
 		refetchOnWindowFocus: false,
 		refetchOnReconnect: false,
 		retry: false,
-		queryFn: async () => {
-			const url = `${api}/${encodeURIComponent(id)}/items?outcome=conflict&offset=0&limit=${CONFLICT_ROWS}`
+		queryFn: async (): Promise<ConflictRows> => {
+			const url = `${api}/${encodeURIComponent(id)}/items?outcome=conflict&offset=0&limit=${CONFLICT_ROWS}${followsChoice ? "&follows=conflict-choice" : ""}`
 			if (api === "/api/imdb-import") {
 				const page = await request<ImdbImportItemsResponse>(url)
 				return {
 					all: page.items.length >= page.total,
+					total: page.total,
 					rows: page.items.map(
 						(item): ConflictRow => ({
 							key: `${item.mediaType ?? "movie"}:${item.tmdbId}`,
@@ -76,6 +89,7 @@ export function useConflictRows(
 			const page = await request<{ items: ImportItem[]; total: number }>(url)
 			return {
 				all: page.items.length >= page.total,
+				total: page.total,
 				rows: page.items.map(
 					(item): ConflictRow => ({
 						key: `${item.mediaType}:${item.tmdbId}`,
@@ -88,7 +102,7 @@ export function useConflictRows(
 			}
 		},
 	})
-	if (!enabled) return { rows: [], all: true }
-	if (query.isError) return { rows: [], all: false }
+	if (!enabled) return { rows: [], all: true, total: 0 }
+	if (query.isError) return { rows: [], all: false, total: null }
 	return query.data ?? null
 }

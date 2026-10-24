@@ -10,7 +10,11 @@ const {
 	sourcePreviewContent,
 	imdbPreviewContent,
 	scoreConflictCount,
+	conflictCountNeedsRows,
+	firstUnanswered,
 	doneTiles,
+	doneReplaced,
+	libraryTotals,
 	clearedByList,
 	stopReason,
 } = await import("./import-flow-model.ts")
@@ -104,20 +108,76 @@ test("a wishlist's conflicts are its Seen and whole-show titles, not differing s
 		counts: { ...summary().counts, conflict: 3 },
 		wishlistRewatchChoiceCount: 3,
 	})
-	assert.equal(scoreConflictCount(wishlist, null, false), 0)
-	// A library with rewatch choices counts only the score rows it loaded.
+	assert.equal(scoreConflictCount(wishlist, null), 0)
+	assert.equal(conflictCountNeedsRows(wishlist), false)
+	// A library with wishlist choices counts the rows the server says follow the conflict choice.
 	const library = summary({
 		source: "mdblist",
 		counts: { ...summary().counts, conflict: 4 },
 		wishlistRewatchChoiceCount: 2,
 	})
-	assert.equal(
-		scoreConflictCount(library, ["rating", "want", "want", "review"], true),
-		2,
-	)
-	assert.equal(scoreConflictCount(library, null, false), 2)
+	assert.equal(conflictCountNeedsRows(library), true)
+	assert.equal(scoreConflictCount(library, 2), 2)
+	// Unknown until the count loads, or when it can't: never guessed by subtracting.
+	assert.equal(scoreConflictCount(library, null), null)
 	// Without wishlist choices, every conflict is a score or a review.
-	assert.equal(scoreConflictCount(summary(), null, false), 2)
+	assert.equal(conflictCountNeedsRows(summary()), false)
+	assert.equal(scoreConflictCount(summary(), null), 2)
+})
+
+test("a Seen season wish counted by both wishlist answers never hides a differing score", () => {
+	// 200 Seen season wishes wait on both Want to rewatch and the whole-show answer, and 1 score differs: 201 conflicts.
+	const mdblist = summary({
+		source: "mdblist",
+		counts: { ...summary().counts, conflict: 201 },
+		wishlistRewatchChoiceCount: 200,
+		wishlistShowChoiceCount: 200,
+	})
+	const scoreConflicts = scoreConflictCount(mdblist, 1)
+	assert.equal(scoreConflicts, 1)
+	assert.deepEqual(
+		sourceQuestions({
+			summary: mdblist,
+			kinds: ["rating", "want"],
+			scoreConflicts,
+		}),
+		["conflicts", "rewatch", "whole-show"],
+	)
+	// An unknown count still asks.
+	assert.deepEqual(
+		sourceQuestions({
+			summary: mdblist,
+			kinds: ["rating"],
+			scoreConflicts: null,
+		}),
+		["conflicts"],
+	)
+	assert.deepEqual(
+		sourceQuestions({ summary: mdblist, kinds: ["rating"], scoreConflicts: 0 }),
+		[],
+	)
+})
+
+test("every question that applies needs an explicit answer; checking matches still waits", () => {
+	const questions = ["conflicts", "rewatch", "matching"] as const
+	assert.equal(firstUnanswered(questions, {}), "conflicts")
+	assert.equal(firstUnanswered(questions, { conflicts: "keep" }), "rewatch")
+	assert.equal(
+		firstUnanswered(questions, {
+			conflicts: "keep",
+			rewatch: "leave",
+			matching: "check",
+		}),
+		"matching",
+	)
+	assert.equal(
+		firstUnanswered(questions, {
+			conflicts: "keep",
+			rewatch: "leave",
+			matching: "leave",
+		}),
+		null,
+	)
 })
 
 test("the options always keep the source's watch dates and send what the answers chose", () => {
@@ -317,6 +377,77 @@ test("Done tiles show the member's total now, with what came in and what came of
 	)
 	// While the member's data loads, a tile shows what came in.
 	assert.equal(doneTiles(result, cleared, undefined)[0].total, null)
+})
+
+test("Done tiles count only what was added: a review-only entry isn't a score, a replacement adds nothing", () => {
+	const show = (tmdbId: number) => ({
+		...title(tmdbId),
+		mediaType: "tv" as const,
+	})
+	const result = groupImportResult("import", [
+		{ key: "movie:1", title: title(1), change: { type: "review-added" } },
+		{ key: "movie:2", title: title(2), change: { type: "review-replaced" } },
+		{ key: "movie:3", title: title(3), change: { type: "review-replaced" } },
+		{
+			key: "tv:10",
+			title: show(10),
+			change: { type: "status-set", status: { from: null, to: "watching" } },
+		},
+		{
+			key: "tv:11",
+			title: show(11),
+			change: {
+				type: "status-set",
+				status: { from: "watching", to: "dropped" },
+			},
+		},
+		{
+			key: "tv:12",
+			title: show(12),
+			change: {
+				type: "episode-rating-added",
+				part: "S1",
+				score: 8,
+				from: null,
+			},
+		},
+		{
+			key: "tv:12",
+			title: show(12),
+			change: { type: "episode-rating-added", part: "S2", score: 7, from: 5 },
+		},
+	] as never)
+	const data = {
+		scores: {
+			"movie-1": { score: null, review: "Loved it", updatedAt: new Date() },
+			"movie-2": { score: 7, review: "Fine", updatedAt: new Date() },
+			"movie-3": { score: 6, review: "Okay", updatedAt: new Date() },
+		},
+		wishlist: {},
+		watchState: {
+			"show-10": { state: "watching", count: 0 },
+			"show-11": { state: "dropped", count: 0 },
+		},
+		favorites: {},
+		notInterested: {},
+	} as never
+	assert.deepEqual(
+		doneTiles(result, { want_to_see: 0, not_interested: 0 }, data).map(
+			(tile) => [tile.key, tile.total, tile.added],
+		),
+		[
+			["reviews", 3, 1],
+			["episode-scores", null, 1],
+			["statuses", 2, 1],
+		],
+	)
+	assert.equal(libraryTotals(data).scores, 2)
+	assert.deepEqual(doneReplaced(result), {
+		scores: 0,
+		reviews: 2,
+		episodeScores: 1,
+		statuses: 1,
+	})
 })
 
 test("a stopped run gives the server's reason first", () => {

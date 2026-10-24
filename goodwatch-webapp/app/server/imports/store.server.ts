@@ -1,11 +1,13 @@
 import type { StoredUndoOutcome } from "~/domain/import-result"
 import {
+	IMPORT_MAX_ROWS,
 	IMPORT_SOURCES,
 	type ImportItem,
 	type ImportKind,
 	type ImportOutcome,
 	type ImportSource,
 	type ImportSummary,
+	followsConflictChoice,
 	normalizeImportWarnings,
 } from "~/domain/imports"
 import { execute, query } from "~/utils/crate"
@@ -297,8 +299,18 @@ export async function listItems(
 	outcome: ImportOutcome | undefined,
 	offset: number,
 	limit: number,
+	/** Only the conflict rows confirm decides by the conflict choice, counted exactly; for the conflict question. */
+	followsChoice = false,
 ) {
 	const summary = summarize(await getImportRow(userId, id))
+	if (followsChoice) {
+		const conflicts = await select<ItemRow>(
+			"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND outcome = ? ORDER BY row_index LIMIT ? OFFSET ?",
+			[id, userId, "conflict", IMPORT_MAX_ROWS, 0],
+		)
+		const items = conflicts.map(publicItemRow).filter(followsConflictChoice)
+		return { items: items.slice(offset, offset + limit), total: items.length }
+	}
 	const rows = await select<ItemRow>(
 		`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' ${outcome ? "AND outcome = ?" : ""} ORDER BY row_index LIMIT ? OFFSET ?`,
 		[id, userId, ...(outcome ? [outcome] : []), limit, offset],

@@ -79,7 +79,8 @@ export const getImportItems = (
 	outcome: ImportOutcome | undefined,
 	offset: number,
 	limit: number,
-) => listItems(userId, id, outcome, offset, limit)
+	followsChoice = false,
+) => listItems(userId, id, outcome, offset, limit, followsChoice)
 /** The outcomes whose titles the poster rows show, in the order they are filled. */
 const POSTER_OUTCOMES: ImportOutcome[] = ["new", "conflict", "unchanged"]
 /** Rows read per outcome to find the titles for a poster row; a title can have many rows. */

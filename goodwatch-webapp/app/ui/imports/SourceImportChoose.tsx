@@ -4,7 +4,7 @@ import { ArrowDownTrayIcon } from "@heroicons/react/20/solid"
 // its count, all in, one Import button; then one question per screen (a plain fact, then yes or no) for what only the
 // member can decide. The server takes every answer when the import starts, so the questions come first.
 import { Link } from "@remix-run/react"
-import { useState } from "react"
+import { type ReactNode, useRef, useState } from "react"
 import type { ImportOptions, ImportSummary } from "~/domain/imports"
 import { useOpenedOnce } from "~/utils/first-use"
 import {
@@ -15,6 +15,7 @@ import {
 import {
 	Answer,
 	BackArrow,
+	Disclosure,
 	type FlowPoster,
 	ListName,
 	PosterRow,
@@ -29,6 +30,7 @@ import {
 } from "./ImportFlowParts"
 import { ImportNotes } from "./ImportNotes"
 import { sourceImportCopy } from "./SourceImportCopy"
+import { SourceOutcomeRow } from "./SourceImportCounts"
 import { sourceSkippedDownloadUrl } from "./SourceImportHooks"
 import type {
 	PreviewUpdate,
@@ -54,9 +56,12 @@ import {
 	KIND_NAME,
 	type Question,
 	availableKinds,
+	conflictCountNeedsRows,
 	conflictsAreScores,
+	firstUnanswered,
 	formatCount,
 	isWishlistOnly,
+	leftOutCount,
 	matchableCount,
 	oneOrMany,
 	plural,
@@ -68,6 +73,7 @@ import {
 	sourceQuestions,
 	sourceThing,
 	sourceWouldWrite,
+	waitsForAnswer,
 	wholeShowCount,
 } from "./import-flow-model"
 import {
@@ -149,7 +155,8 @@ function WishlistChoose(props: InnerProps) {
 
 type Screen =
 	| { at: "choose" }
-	| { at: "ask"; index: number }
+	/** A question screen, by its question: the set of questions can change while the member answers. */
+	| { at: "ask"; question: Question }
 	/** The answers keep everything as it is: nothing to import. */
 	| { at: "nothing" }
 
@@ -177,17 +184,16 @@ function ChooseAndAsk({
 		!!summary.resolution &&
 		tvtimeProgress(summary.resolution).active
 	const content = sourcePreviewContent(summary, stillMatching)
+	const countNeedsRows = conflictCountNeedsRows(summary)
 	const conflicts = useConflictRows(
 		"/api/imports",
 		summary.id,
 		summary.counts.conflict > 0 && !isWishlistOnly(summary),
+		countNeedsRows,
 	)
-	const conflictKinds = conflicts ? conflicts.rows.map((row) => row.kind) : null
-	const scoreConflicts = scoreConflictCount(
-		summary,
-		conflictKinds,
-		conflicts?.all ?? false,
-	)
+	const scoreConflicts = scoreConflictCount(summary, conflicts?.total ?? null)
+	// The questions are settled once the conflict count is known, or known to be unknown; until then Import waits.
+	const settled = !countNeedsRows || conflicts !== null
 	const questions = sourceQuestions({ summary, kinds, scoreConflicts })
 	const [screen, setScreen] = useState<Screen>({ at: "choose" })
 	const [dir, setDir] = useState<1 | -1>(1)
@@ -197,51 +203,62 @@ function ChooseAndAsk({
 	const locked = confirming || !!tvtime?.locked || !!wishlist?.locked
 	const unapplied = !!tvtime?.unapplied || !!wishlist?.unapplied
 	const back = tvtime ? () => tvtime.discardPreview(onBack) : onBack
+	// What a lock-in callback reads when it fires: the questions and answers as they are then, not when it was set.
+	const latest = useRef({ questions, answers, settled, kinds })
+	latest.current = { questions, answers, settled, kinds }
 
-	// A question still waits while it has no answer. Checking matches waits too: the member moves on from its screen.
-	const waiting = (given: Answers, q: Question) =>
-		given[q] === undefined ||
-		(q === "matching" && given[q] === ANSWER.matching.check)
 	const go = (next: Screen, d: 1 | -1) => {
 		lock.cancel()
 		setActed(true)
 		setDir(d)
 		setScreen(next)
 	}
+	/** Confirms only when every question that applies now has an explicit answer; otherwise goes to the first open one. */
 	const finish = (final: Answers) => {
-		if (!sourceWouldWrite(summary, kinds, final))
+		const now = latest.current
+		if (!now.settled) return go({ at: "choose" }, -1)
+		const open = firstUnanswered(now.questions, final)
+		if (open) return go({ at: "ask", question: open }, 1)
+		if (!sourceWouldWrite(summary, now.kinds, final))
 			return go({ at: "nothing" }, 1)
-		onConfirm(sourceOptions(summary, kinds, final))
+		onConfirm(sourceOptions(summary, now.kinds, final))
 	}
 	const start = () => {
+		if (!settled) return
 		setActed(true)
-		const first = questions.findIndex((q) => waiting(answers, q))
-		if (first >= 0) go({ at: "ask", index: first }, 1)
+		const first = firstUnanswered(questions, answers)
+		if (first) go({ at: "ask", question: first }, 1)
 		else finish(answers)
 	}
-	const answer = (index: number, value: string) => {
-		const q = questions[index]
+	const answer = (q: Question, value: string) => {
 		const next = { ...answers, [q]: value }
 		setChoices({ kinds, answers: next })
 		// Checking matches opens the panel on this screen; the member moves on from there.
 		if (q === "matching" && value === ANSWER.matching.check) return
 		lock.lock(q, () => {
-			const open = questions
-				.map((_, i) => i)
-				.filter((i) => waiting(next, questions[i]))
-			const to = open.find((i) => i > index) ?? open[0]
-			if (to === undefined) finish(next)
-			else go({ at: "ask", index: to }, 1)
+			const now = latest.current
+			const given = { ...now.answers, [q]: value }
+			const at = now.questions.indexOf(q)
+			const open = now.questions.filter((item) => waitsForAnswer(given, item))
+			const to =
+				open.find((item) => now.questions.indexOf(item) > at) ?? open[0]
+			if (to === undefined || !now.settled) finish(given)
+			else go({ at: "ask", question: to }, 1)
 		})
 	}
 
-	const asking = screen.at === "ask" && content === "some" ? screen.index : null
+	const asking =
+		screen.at === "ask" &&
+		content === "some" &&
+		settled &&
+		questions.includes(screen.question)
+			? screen.question
+			: null
 	// The match panel mounts once the member says they'll check, and stays while they go back and forth between
 	// questions, so their place in it and the suggestions it loaded stay too.
 	const checking = answers.matching === ANSWER.matching.check
 	const panelOpened = useOpenedOnce(checking)
-	const onMatching =
-		checking && asking !== null && questions[asking] === "matching"
+	const onMatching = checking && asking === "matching"
 	const panel =
 		panelOpened && (tvtime || wishlist) ? (
 			<div
@@ -267,7 +284,7 @@ function ChooseAndAsk({
 				) : null}
 			</div>
 		) : null
-	const unanswered = questions.filter((q) => waiting(answers, q)).length
+	const unanswered = questions.filter((q) => waitsForAnswer(answers, q)).length
 	useReportStep(
 		content === "caught-up"
 			? { step: 4, notes: [src, "", "", "Up to date"], allDone: true }
@@ -294,6 +311,20 @@ function ChooseAndAsk({
 				posters={posters}
 				focus={focus}
 				onBack={onBack}
+				skipped={
+					leftOutCount(summary) > 0
+						? {
+								count: leftOutCount(summary),
+								url: sourceSkippedDownloadUrl(summary.id),
+								reasons: (
+									<SkippedReasons
+										summary={summary}
+										wishlist={summary.source === "wishlist"}
+									/>
+								),
+							}
+						: undefined
+				}
 			/>
 		)
 	if (content === "nothing")
@@ -323,14 +354,10 @@ function ChooseAndAsk({
 						<button
 							type="button"
 							className={primaryButton}
-							onClick={() =>
-								go(
-									questions.length
-										? { at: "ask", index: questions.length - 1 }
-										: { at: "choose" },
-									-1,
-								)
-							}
+							onClick={() => {
+								const last = questions.at(-1)
+								go(last ? { at: "ask", question: last } : { at: "choose" }, -1)
+							}}
 						>
 							Change my answers
 						</button>
@@ -342,14 +369,16 @@ function ChooseAndAsk({
 			</Slide>
 		)
 
-	if (asking !== null && questions[asking]) {
-		const q = questions[asking]
+	if (asking !== null) {
+		const q = asking
+		const index = questions.indexOf(q)
+		const previous = index > 0 ? questions[index - 1] : null
 		return (
 			<>
-				<Slide key={`q${asking}:${q}`} dir={dir}>
+				<Slide key={`ask:${q}`} dir={dir}>
 					<Ask
 						question={q}
-						index={asking}
+						index={index}
 						of={questions.length}
 						focus={acted}
 						summary={summary}
@@ -362,12 +391,10 @@ function ChooseAndAsk({
 						confirming={confirming}
 						unapplied={unapplied}
 						error={error}
-						onAnswer={(value) => answer(asking, value)}
+						onAnswer={(value) => answer(q, value)}
 						onBack={() =>
 							go(
-								asking > 0
-									? { at: "ask", index: asking - 1 }
-									: { at: "choose" },
+								previous ? { at: "ask", question: previous } : { at: "choose" },
 								-1,
 							)
 						}
@@ -446,7 +473,9 @@ function ChooseAndAsk({
 					<button
 						type="button"
 						className={`${primaryButton} w-full sm:w-auto sm:min-w-56 sm:self-start`}
-						disabled={kinds.length === 0 || locked || unapplied}
+						disabled={kinds.length === 0 || locked || unapplied || !settled}
+						aria-busy={!settled || undefined}
+						data-checking={!settled || undefined}
 						aria-describedby={
 							kinds.length === 0
 								? "source-import-required"
@@ -458,9 +487,11 @@ function ChooseAndAsk({
 					>
 						{confirming
 							? "Starting import"
-							: stillMatching
-								? "Import what's matched so far"
-								: "Import"}
+							: !settled
+								? `Checking your ${thing}…`
+								: stillMatching
+									? "Import what's matched so far"
+									: "Import"}
 					</button>
 					{kinds.length === 0 && (
 						<p
@@ -522,7 +553,8 @@ function Ask({
 	summary: ImportSummary
 	source: string
 	thing: string
-	scoreConflicts: number
+	/** Null when the count couldn't load: the question asks without a number. */
+	scoreConflicts: number | null
 	conflictRows: ConflictRow[] | null
 	picked: string | undefined
 	locked: boolean
@@ -543,9 +575,12 @@ function Ask({
 			const scores = conflictsAreScores(
 				conflictRows?.map((row) => row.kind) ?? null,
 			)
-			title = scores
-				? `${plural(n, "score")} in your ${source} ${thing} ${oneOrMany(n, "differs", "differ")} from yours in GoodWatch. Keep yours?`
-				: `${plural(n, "entry", "entries")} in your ${source} ${thing} ${oneOrMany(n, "differs", "differ")} from what you have in GoodWatch. Keep yours?`
+			title =
+				n === null
+					? `If anything in your ${source} ${thing} differs from what you have in GoodWatch, keep yours?`
+					: scores
+						? `${plural(n, "score")} in your ${source} ${thing} ${oneOrMany(n, "differs", "differ")} from yours in GoodWatch. Keep yours?`
+						: `${plural(n, "entry", "entries")} in your ${source} ${thing} ${oneOrMany(n, "differs", "differ")} from what you have in GoodWatch. Keep yours?`
 			body = (
 				<ConflictExamples
 					importId={summary.id}
@@ -757,6 +792,7 @@ export function CaughtUp({
 	posters,
 	focus,
 	onBack,
+	skipped,
 }: {
 	source: string
 	thing: string
@@ -765,6 +801,8 @@ export function CaughtUp({
 	posters: FlowPoster[]
 	focus: boolean
 	onBack: () => void
+	/** Entries that couldn't come in: how many, the CSV with reasons, and a fold that lists them when cheap. */
+	skipped?: { count: number; url: string; reasons?: ReactNode }
 }) {
 	return (
 		<section className="flex flex-col gap-6" data-caught-up>
@@ -776,12 +814,31 @@ export function CaughtUp({
 					<StepHeading focus={focus}>You're all caught up</StepHeading>
 					<p className="text-lg text-gray-200">
 						{count
-							? `All ${plural(count, "title")} from this ${source} ${thing} ${oneOrMany(count, "is", "are")} already in GoodWatch.`
-							: `Everything in this ${source} ${thing} is already in GoodWatch.`}
+							? `${skipped?.count ? "" : "All "}${plural(count, "title")} from this ${source} ${thing} ${oneOrMany(count, "is", "are")} already in GoodWatch.`
+							: skipped?.count
+								? `Everything GoodWatch can bring in from this ${source} ${thing} is already there.`
+								: `Everything in this ${source} ${thing} is already in GoodWatch.`}
 					</p>
 				</div>
 				<PosterStack posters={posters} max={10} />
 			</div>
+			{skipped && skipped.count > 0 && (
+				<div className="flex flex-col gap-2" data-caught-up-skipped>
+					<p className="text-gray-200">
+						{plural(skipped.count, "entry", "entries")} from your {source}{" "}
+						{thing} couldn't come in.
+					</p>
+					{skipped.reasons}
+					<a
+						href={skipped.url}
+						download
+						className={`${textLink} inline-flex min-h-11 items-center gap-2 self-start`}
+					>
+						<ArrowDownTrayIcon className="size-4 shrink-0" aria-hidden />
+						Download the list with reasons (CSV file)
+					</a>
+				</div>
+			)}
 			<div className="flex flex-col gap-3">
 				<p className="text-gray-400">
 					{thing === "file"
@@ -798,6 +855,41 @@ export function CaughtUp({
 				</div>
 			</div>
 		</section>
+	)
+}
+
+const LEFT_OUT = ["unmatched", "unsupported", "invalid"] as const
+
+/** The entries that couldn't come in, by reason, each opening to its titles. */
+function SkippedReasons({
+	summary,
+	wishlist,
+}: {
+	summary: ImportSummary
+	wishlist: boolean
+}) {
+	const [open, setOpen] = useState(false)
+	return (
+		<Disclosure
+			label="Why they couldn't come in"
+			open={open}
+			onToggle={setOpen}
+			bordered={false}
+		>
+			<ul className="divide-y divide-slate-800 rounded-lg border border-slate-700">
+				{LEFT_OUT.filter((outcome) => summary.counts[outcome] > 0).map(
+					(outcome) => (
+						<SourceOutcomeRow
+							key={outcome}
+							importId={summary.id}
+							outcome={outcome}
+							count={summary.counts[outcome]}
+							wishlist={wishlist}
+						/>
+					),
+				)}
+			</ul>
+		</Disclosure>
 	)
 }
 

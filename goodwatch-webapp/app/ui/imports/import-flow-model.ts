@@ -106,25 +106,29 @@ export const matchableCount = (summary: ImportSummary) =>
 const SCORE_LIKE: ImportKind[] = ["rating", "review", "episode_rating"]
 
 /**
- * Rows whose score or review differs from the member's in GoodWatch. A preview's conflict count also holds the
- * wishlist titles that wait on the rewatch and whole-show choices; `conflictKinds` are the kinds of the conflict rows
- * the flow loaded, and `loadedAll` says whether those were all of them.
+ * Whether the conflict count needs the rows that confirm decides by the conflict choice, counted by the items API
+ * (`follows=conflict-choice`). A preview's conflict count also holds wishlist titles that wait on the rewatch and
+ * whole-show answers, and one title can wait on both, so the count can't come from subtracting them.
+ */
+export const conflictCountNeedsRows = (summary: ImportSummary) =>
+	!isWishlistOnly(summary) &&
+	summary.counts.conflict > 0 &&
+	// TV Time's conflict choice also decides For later titles already Seen, so all its conflicts are one question.
+	summary.source !== "tvtime" &&
+	rewatchCount(summary) + wholeShowCount(summary) > 0
+
+/**
+ * Rows whose score or review differs from the member's in GoodWatch, which the conflict question decides.
+ * `followers` is the exact count of rows that follow the conflict choice, when `conflictCountNeedsRows`; null while it
+ * loads or when it couldn't load, and then the count is unknown (null).
  */
 export function scoreConflictCount(
 	summary: ImportSummary,
-	conflictKinds: readonly string[] | null,
-	loadedAll: boolean,
-) {
-	if (isWishlistOnly(summary)) return 0
-	const held = rewatchCount(summary) + wholeShowCount(summary)
-	if (summary.counts.conflict === 0) return 0
-	// TV Time's conflict choice also decides For later titles already Seen, so all its conflicts are one question.
-	if (held === 0 || summary.source === "tvtime") return summary.counts.conflict
-	const loaded = (conflictKinds ?? []).filter((kind) =>
-		SCORE_LIKE.includes(kind as ImportKind),
-	).length
-	if (conflictKinds && loadedAll) return loaded
-	return Math.max(loaded, summary.counts.conflict - held)
+	followers: number | null,
+): number | null {
+	if (isWishlistOnly(summary) || summary.counts.conflict === 0) return 0
+	if (!conflictCountNeedsRows(summary)) return summary.counts.conflict
+	return followers
 }
 
 /**
@@ -153,18 +157,21 @@ export const ANSWER = {
 	matching: { check: "check", leave: "leave" },
 } as const
 
-/** The questions that apply to this preview and the kinds the member left in, in the order they are asked. */
+/**
+ * The questions that apply to this preview and the kinds the member left in, in the order they are asked. An unknown
+ * conflict count (null) still asks: an unasked conflict question would silently keep the member's entries.
+ */
 export function sourceQuestions(input: {
 	summary: ImportSummary
 	kinds: readonly ImportKind[]
-	scoreConflicts: number
+	scoreConflicts: number | null
 }): Question[] {
 	const { summary, kinds, scoreConflicts } = input
 	const wishlistOnly = isWishlistOnly(summary)
 	const want = wishlistOnly || kinds.includes("want")
 	const out: Question[] = []
 	if (
-		scoreConflicts > 0 &&
+		scoreConflicts !== 0 &&
 		(summary.source === "tvtime" ||
 			kinds.some((kind) => SCORE_LIKE.includes(kind)))
 	)
@@ -174,6 +181,18 @@ export function sourceQuestions(input: {
 	if (matchableCount(summary) > 0) out.push("matching")
 	return out
 }
+
+/** Whether an answer still waits on the member. Checking matches waits too: the member moves on from its screen. */
+export const waitsForAnswer = (answers: Answers, question: Question) =>
+	answers[question] === undefined ||
+	(question === "matching" && answers[question] === ANSWER.matching.check)
+
+/** The first question that still waits on the member, or null when every one that applies has an explicit answer. */
+export const firstUnanswered = (
+	questions: readonly Question[],
+	answers: Answers,
+): Question | null =>
+	questions.find((question) => waitsForAnswer(answers, question)) ?? null
 
 /** What the server takes at confirm. Watch dates always keep the source's own dates (owner rule). */
 export function sourceOptions(
@@ -319,6 +338,11 @@ const sectionOf = (result: ImportResult, key: ImportResultSectionKey) =>
 	result.sections.find((section) => section.key === key)
 const countOf = (result: ImportResult, key: ImportResultSectionKey) =>
 	sectionOf(result, key)?.count ?? 0
+/** What a section adds to the member's totals: a replaced review, status or score adds nothing. */
+const addedOf = (result: ImportResult, key: ImportResultSectionKey) => {
+	const section = sectionOf(result, key)
+	return section?.added ?? section?.count ?? 0
+}
 
 /** Titles a list lost to this import, from the rows of its lists_cleared section, by list. */
 export function clearedByList(rows: readonly ImportResultRow[]) {
@@ -350,7 +374,8 @@ export function libraryTotals(
 	const scores = Object.values(data.scores ?? {})
 	const states = Object.entries(data.watchState ?? {})
 	return {
-		scores: scores.length,
+		// A review on its own keeps a score row without a score: it isn't a score.
+		scores: scores.filter((entry) => typeof entry.score === "number").length,
 		reviews: scores.filter((entry) => !!entry.review?.trim()).length,
 		watches: states.reduce((sum, [, entry]) => sum + (entry.count ?? 0), 0),
 		statuses: states.filter(([key]) => key.startsWith("show-")).length,
@@ -385,16 +410,16 @@ export function doneTiles(
 	const lists = result.customLists?.created ?? 0
 	const all: CountTile[] = [
 		tile("scores", "Scores", countOf(result, "ratings_added")),
-		tile("reviews", "Reviews", countOf(result, "reviews")),
+		tile("reviews", "Reviews", addedOf(result, "reviews")),
 		{
 			key: "episode-scores",
 			name: "Season and episode scores added",
 			total: null,
-			added: countOf(result, "episode_ratings_added"),
+			added: addedOf(result, "episode_ratings_added"),
 			removed: 0,
 		},
 		tile("watches", "Watches", countOf(result, "watches_added")),
-		tile("statuses", "Show statuses", countOf(result, "statuses_set")),
+		tile("statuses", "Show statuses", addedOf(result, "statuses_set")),
 		tile(
 			"want",
 			"Want to See",
@@ -412,6 +437,21 @@ export function doneTiles(
 		},
 	]
 	return all.filter((item) => item.added > 0 || item.removed > 0)
+}
+
+/**
+ * What the import changed without adding to a total, for the Done step's lines under its tiles: scores, reviews,
+ * season and episode scores that replaced the member's, and show statuses that replaced theirs.
+ */
+export function doneReplaced(result: ImportResult) {
+	const rest = (key: ImportResultSectionKey) =>
+		Math.max(0, countOf(result, key) - addedOf(result, key))
+	return {
+		scores: countOf(result, "ratings_replaced"),
+		reviews: rest("reviews"),
+		episodeScores: rest("episode_ratings_added"),
+		statuses: rest("statuses_set"),
+	}
 }
 
 /** The sections the Done step sums up in its own lines, apart from its tiles. */

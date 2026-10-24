@@ -70,8 +70,10 @@ Object.defineProperty(globalThis, "fetch", {
 	value: async (url: string, init?: RequestInit) => {
 		if (init?.method === "POST")
 			sent.push({ url: String(url), body: JSON.parse(String(init.body)) })
-		const body =
-			String(url).endsWith("/preview") || String(url).includes(summary.id)
+		// The one conflict is the Seen title, which waits on Want to rewatch: no row follows the conflict choice.
+		const body = String(url).includes("/items?")
+			? { items: [], total: 0 }
+			: String(url).endsWith("/preview") || String(url).includes(summary.id)
 				? { import: summary }
 				: { imports: [] }
 		return new Response(JSON.stringify(body), {

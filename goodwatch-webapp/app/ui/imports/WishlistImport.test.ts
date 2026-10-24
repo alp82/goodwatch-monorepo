@@ -104,10 +104,14 @@ test("the file's coverage note stays on Choose", () => {
 test("with nothing new, Done says so as a success; with only Seen titles left as Seen, nothing starts", () => {
 	const nothing = text(rendered.nothing)
 	assert.match(nothing, /You're all caught up/)
+	// One entry couldn't come in, so the line doesn't say All, and the entry is named with its list to download.
 	assert.match(
 		nothing,
-		/All 2 titles from this Watcharr file are already in GoodWatch\./,
+		/2 titles from this Watcharr file are already in GoodWatch\./,
 	)
+	assert.doesNotMatch(nothing, /All 2 titles/)
+	assert.match(nothing, /1 entry from your Watcharr file couldn't come in\./)
+	assert.match(nothing, /Download the list with reasons \(CSV file\)/)
 	assert.doesNotMatch(nothing, /What should come in/)
 	assert.match(
 		watcharr.questions.oneSeen.after,

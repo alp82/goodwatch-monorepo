@@ -58,20 +58,30 @@ const sectionPage = (
 		`${itemsUrl(api, id)}&section=${section.key}&offset=${offset}&limit=${PAGE}`,
 	)
 
+/** Every row of one section, or why they couldn't all load. */
+export interface WholeSection {
+	/** Null while pages are still loading, or after a page failed. */
+	rows: ImportResultRow[] | null
+	/** A page failed: loading stops until the member tries again. */
+	error: string | null
+	retry: () => void
+}
+
 /**
  * Every row of one section, for what the Done step counts and puts back: the rows the result brought, then the rest a
- * page at a time until none are left. Null while pages are still loading.
+ * page at a time until none are left. A failed page stops the loading; `retry` picks it up again.
  */
 export function useWholeSection(
 	api: ImportResultApi,
 	id: string,
 	status: string,
 	section: ImportResultSection | undefined,
-): ImportResultRow[] | null {
+): WholeSection {
 	const more = !!section && section.total > section.rows.length
 	const query = useInfiniteQuery({
 		queryKey: [...resultKey(api, id, status), section?.key, "all"],
 		enabled: more,
+		retry: false,
 		initialPageParam: section?.rows.length ?? 0,
 		queryFn: ({ pageParam }) =>
 			section
@@ -84,14 +94,28 @@ export function useWholeSection(
 			return last.rows.length > 0 && loaded < last.total ? loaded : undefined
 		},
 	})
-	const { hasNextPage, isFetchingNextPage, fetchNextPage } = query
+	const { hasNextPage, isFetchingNextPage, isError, fetchNextPage, refetch } =
+		query
 	useEffect(() => {
-		if (more && hasNextPage && !isFetchingNextPage) void fetchNextPage()
-	}, [more, hasNextPage, isFetchingNextPage, fetchNextPage])
-	if (!section) return []
-	if (!more) return section.rows
-	if (!query.data || query.hasNextPage || query.isError) return null
-	return [...section.rows, ...query.data.pages.flatMap((page) => page.rows)]
+		// After a failed page, wait for the member: fetching again on every render would loop.
+		if (more && hasNextPage && !isFetchingNextPage && !isError)
+			void fetchNextPage()
+	}, [more, hasNextPage, isFetchingNextPage, isError, fetchNextPage])
+	const retry = () => {
+		if (query.data) void fetchNextPage()
+		else void refetch()
+	}
+	if (!section) return { rows: [], error: null, retry }
+	if (!more) return { rows: section.rows, error: null, retry }
+	if (isError && !query.isFetching)
+		return { rows: null, error: query.error.message, retry }
+	if (!query.data || hasNextPage || isError)
+		return { rows: null, error: null, retry }
+	return {
+		rows: [...section.rows, ...query.data.pages.flatMap((page) => page.rows)],
+		error: null,
+		retry,
+	}
 }
 
 /** The rest of a section that shows only its first rows, loaded when the member asks. */
