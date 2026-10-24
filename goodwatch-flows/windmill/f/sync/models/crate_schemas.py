@@ -856,8 +856,9 @@ SCHEMAS = {
     # read; 'unknown' is NULL. origin: 'single' is one watch marked on its own, of an episode or
     # a movie; 'upto', 'season' and 'seen' are group actions (Watched up to here, Mark season, the
     # Seen button) and carry group_id; 'score' is the undated watch that rating a movie records
-    # while the movie has no other watch; 'import' carries import_id. A movie watch has no
-    # episode columns and pass 1.
+    # while the movie has no other watch, or that scoring an episode by hand records while no pass
+    # has a watch of it (watch_id 'score-e<episode id>'); 'import' carries import_id. A movie
+    # watch has no episode columns and pass 1.
     "user_watch_log": {
         "columns": {
             "user_id": "TEXT",

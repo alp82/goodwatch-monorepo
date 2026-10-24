@@ -51,7 +51,7 @@ Decided by the owner on October 7, 2026. The label in the first column is the on
 | Names | `user_watch_log` and `user_watch_state`; the column `watched_at_precision`; the member data entry `watchState` | `user_watch`, `user_tracking`, `date_precision`, `tracking`: the two tables did not read as a pair, and "date" did not say which date |
 | O1 | No overlap. `user_watch_state` stores only what can't be computed from the log. Counts and dates are computed from `user_watch_log` when read, by one grouped query per member, cached with the member data | Summary columns in the state row (`watch_count`, `episodes_watched`, the furthest episode, the dates) that the writer recomputes on every write: Crate has no transactions, so every copy is something a crash can leave wrong |
 | C1 | The new state table replaces `user_watch_history`, which stayed untouched as the backup until it was dropped on 2026-10-11 (planned: 30 days after the switch; the owner decided to drop it earlier) | Adding columns to the old table, where every reader takes a row to mean Seen; or keeping it for good |
-| C2 | Rating a movie that has no watch records one: no date, origin `score`. Clearing the score deletes it; a watch the member logs replaces it. Rating a show records nothing and never changes its state | A scored title with no row at all, Seen only where the score is read (the proposal's recommendation); or today's rule, a watch dated "now" for movies and shows alike |
+| C2 | Rating a movie that has no watch records one: no date, origin `score`. Clearing the score deletes it; a watch the member logs replaces it. Rating a show records nothing and never changes its state. Scoring an episode is not rating the show: since October 24, 2026 it records one undated watch of the episode when no pass has one (see "An episode score's watch") | A scored title with no row at all, Seen only where the score is read (the proposal's recommendation); or today's rule, a watch dated "now" for movies and shows alike |
 | C3 | "Active in the last 90 days" is the later of two times. The last watch: the latest of the dated watches' dates and, for undated watches not from an import, the time they were recorded. And the member's own move of the show to Watching, by Resume or Watch again: the time the state changed to Watching. An import and the migration never count, and neither does taking watches or a Seen press away. (30 days and watches only until 2026-10-12, when the owner decided both; section 10, "Activity") | Dated watches only (a "Watched up to here" tonight would not count); or the time anything was recorded (an import of a 2019 history would fill Continue); or watches only (a show whose last season was unmarked today went to the shows not watched for 30 days) |
 | C4 | UTC in the database and the API, the member's time zone only in the interface. The browser decides "aired for you" by the date on the device; the server accepts a watch for an episode that airs up to one day after the UTC date | Aired by UTC everywhere (a device ahead of UTC could not tick tonight's episode); or aired by the member's date on the server (a count per time zone can't be stored) |
 | C5 | A show marked Seen while it had no episode list gets the press's group filled once the list exists: undated watches for the regular episodes that had aired by the day of the press | Leaving it Seen with every episode reading as new, as the machine alone would |
@@ -80,7 +80,8 @@ In the form of `goodwatch-flows/windmill/f/sync/models/crate_schemas.py`, ready 
     # watched_at and watched_at_precision: 'moment' is the instant; 'day' is 00:00:00 UTC of the calendar day and
     # only its date is read; 'unknown' is NULL. origin: 'single' is one watch marked on its own, of an episode or a
     # movie; 'upto', 'season' and 'seen' are group actions (Watched up to here, Mark season, the Seen button) and
-    # carry group_id; 'score' is the undated watch that rating a movie records while the movie has no other watch;
+    # carry group_id; 'score' is the undated watch that rating a movie records while the movie has no other watch,
+    # or that scoring an episode by hand records while no pass has a watch of it (watch_id 'score-e<episode id>');
     # 'import' carries import_id. A movie watch has no episode columns and pass 1.
     "user_watch_log": {
         "columns": {
@@ -124,6 +125,10 @@ inserts are `ON CONFLICT (user_id, watch_id) DO NOTHING`:
 - **A group action:** `g-<group id>-<episode id>`, where the group id comes from the browser the same way. Sending
   the same press again inserts nothing new.
 - **The score's watch:** `score-<movie id>`. A member has at most one per movie, so rating twice inserts once.
+- **An episode score's watch:** `score-e<episode id>`, made by the writer when a member scores an episode by hand
+  and no pass has a watch of it (owner decision, October 24, 2026, #759 follow-up). Unlike a movie's, no rule
+  keeps it: it goes through the state machine like a tick, unticking it removes it, and clearing the score removes
+  it while no date has been set on it. An imported episode score records an imported watch (`i-`) instead.
 - **An import:** `i-` and the first 32 hex characters of the SHA-1 of the source, the title, the season and episode
   number, the date and its precision, the pass, and a counter for rows of one file that agree in all of these. It
   does not contain the import's id, so the same file uploaded again writes nothing, and a date the member corrected

@@ -228,3 +228,28 @@ export class EpisodeScoreFakeDb {
 		throw new Error(`Unexpected episode score statement: ${s}`)
 	}
 }
+
+/**
+ * The tracking writer's side, as calls: which episodes a score marked watched and which it took back. `watched`
+ * holds the episodes some pass has a watch of, and the score's own watches by id.
+ */
+export class FakeEpisodeScoreWatches {
+	calls: string[] = []
+	watched = new Map<number, string>()
+	failing = false
+	async mark(userId: string, showId: number, episodeTmdbId: number) {
+		this.calls.push(`mark ${userId} ${showId} ${episodeTmdbId}`)
+		if (this.failing) throw new Error("Crate is down")
+		if (this.watched.has(episodeTmdbId)) return null
+		const id = `score-e${episodeTmdbId}`
+		this.watched.set(episodeTmdbId, id)
+		return id
+	}
+	async remove(userId: string, showId: number, episodeTmdbId: number) {
+		this.calls.push(`remove ${userId} ${showId} ${episodeTmdbId}`)
+		const id = this.watched.get(episodeTmdbId)
+		if (id !== `score-e${episodeTmdbId}`) return null
+		this.watched.delete(episodeTmdbId)
+		return id
+	}
+}

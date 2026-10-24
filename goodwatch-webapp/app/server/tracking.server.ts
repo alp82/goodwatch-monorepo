@@ -55,6 +55,7 @@ import {
 	recordFromRows,
 	stateRowOf,
 	scoreWatchId,
+	episodeScoreWatchId,
 	settleMovieRows,
 	titleTotals,
 	watchStateOf,
@@ -993,12 +994,19 @@ async function ownsImports(
 	return owned.length === imports.length
 }
 
+/** The id of the watch an episode's score records: made here, never by the browser. */
+const EPISODE_SCORE_WATCH_ID = /^score-e[1-9][0-9]{0,15}$/
+
 function invalid(
 	event: TrackingEvent,
 	showId: number,
 	actionId?: string,
+	origin?: "score",
 ): string | null {
-	if (NEEDS_ID.includes(event.type) && !validId(actionId)) return BAD_ID
+	if (origin === "score") {
+		if (event.type !== "watch" || !EPISODE_SCORE_WATCH_ID.test(actionId ?? ""))
+			return BAD_ID
+	} else if (NEEDS_ID.includes(event.type) && !validId(actionId)) return BAD_ID
 	if ("season" in event && !whole(event.season)) return "No such season."
 	if ("number" in event && !whole(event.number)) return "No such episode."
 	if (event.type === "watch" && !validWhen(event.when)) return "No such day."
@@ -1020,8 +1028,10 @@ async function applyShowEventStored(
 	title: TrackedTitle,
 	event: TrackingEvent,
 	actionId?: string,
+	/** "score": the watch an episode's score records (`markScoredEpisodeWatched`). */
+	origin?: "score",
 ): Promise<TrackingResult> {
-	const bad = invalid(event, title.tmdbId, actionId)
+	const bad = invalid(event, title.tmdbId, actionId, origin)
 	if (bad) return refusal(bad)
 	// An imported watch names its import, and that import is this member's.
 	if (
@@ -1067,6 +1077,7 @@ async function applyShowEventStored(
 			actionId,
 			now,
 			resend: true,
+			origin,
 		})
 		if (applied.refused) {
 			if (round > 0) await finish(userId)
@@ -1097,6 +1108,94 @@ async function applyShowEventStored(
 	}
 	await finish(userId)
 	throw new TrackingConflictError()
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// The watch an episode's score records (#759 follow-up)
+// ---------------------------------------------------------------------------------------------------------
+
+/** Any pass has a watch of this episode: by its TMDB id, or by its numbers for a watch stored without one. */
+const watchedInAnyPass = (log: readonly LogRow[], episode: EpisodeListRow) =>
+	log.some(
+		(row) =>
+			row.episode_tmdb_id === episode.tmdb_id ||
+			(row.episode_tmdb_id == null &&
+				row.season_number === episode.season_number &&
+				row.episode_number === episode.episode_number),
+	)
+
+/**
+ * Scoring an episode by hand (the episode page's control, rate_title) also marks it watched: one undated watch with
+ * origin `score` and the id `score-e<episode id>`, through the state machine like a tick, so the show's state follows.
+ * Nothing is recorded when any pass already has a watch of the episode, when it isn't in the show's list, or when it
+ * hasn't aired. Season and part scores don't call this. Answers the id of the watch it added, or null.
+ *
+ * An import records its own watch instead (imports/episode-score-watches.server.ts): an imported one, which keeps
+ * the show's status as imports do and which the import's Undo takes back.
+ */
+export async function markScoredEpisodeWatched(
+	userId: string,
+	showId: number,
+	episodeTmdbId: number,
+): Promise<string | null> {
+	const title: TrackedTitle = {
+		mediaType: "show",
+		tmdbId: canonicalTitleId("show", showId),
+	}
+	if (!userId || !whole(title.tmdbId) || !whole(episodeTmdbId)) return null
+	await run("REFRESH TABLE user_watch_log")
+	const [log, episodes] = await Promise.all([
+		readLog(userId, title),
+		getEpisodeList(title.tmdbId),
+	])
+	const episode = episodes.find((row) => row.tmdb_id === episodeTmdbId)
+	if (!episode || watchedInAnyPass(log, episode)) return null
+	const watchId = episodeScoreWatchId(episodeTmdbId)
+	const result = await applyShowEventStored(
+		userId,
+		title,
+		{
+			type: "watch",
+			season: episode.season_number,
+			number: episode.episode_number,
+			when: { precision: "unknown" },
+		},
+		watchId,
+		"score",
+	)
+	return result.status === "applied" && result.inserted.includes(watchId)
+		? watchId
+		: null
+}
+
+/**
+ * Takes back the watch `markScoredEpisodeWatched` recorded for this episode, while it is still the score's: not
+ * dated by the member since (a date makes it theirs, as for a movie's score watch). Through the state machine, so
+ * a show the watch had started goes back to Not started. Answers the id of the watch it removed, or null.
+ */
+export async function removeScoredEpisodeWatch(
+	userId: string,
+	showId: number,
+	episodeTmdbId: number,
+): Promise<string | null> {
+	const title: TrackedTitle = {
+		mediaType: "show",
+		tmdbId: canonicalTitleId("show", showId),
+	}
+	if (!userId || !whole(title.tmdbId) || !whole(episodeTmdbId)) return null
+	const watchId = episodeScoreWatchId(episodeTmdbId)
+	const [owned] = await read<{ origin: string }>(
+		"SELECT origin FROM user_watch_log WHERE user_id = ? AND watch_id = ? AND media_type = 'show' AND tmdb_id = ?",
+		[userId, watchId, title.tmdbId],
+	)
+	if (owned?.origin !== "score") return null
+	const result = await applyShowEventStored(userId, title, {
+		type: "deleteWatch",
+		watchId,
+	})
+	return result.status === "applied" && result.deleted.includes(watchId)
+		? watchId
+		: null
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -1490,7 +1589,12 @@ async function editWatchDate(
 	if ((result.rowcount || 0) < 1)
 		return refusal("That watch is not in the log.")
 	// A date the member sets makes the score's watch their own record: clearing the score later leaves it.
-	if (date.watched_at !== null && event.watchId === scoreWatchId(title.tmdbId))
+	if (
+		date.watched_at !== null &&
+		(title.mediaType === "movie"
+			? event.watchId === scoreWatchId(title.tmdbId)
+			: EPISODE_SCORE_WATCH_ID.test(event.watchId))
+	)
 		await run(
 			`UPDATE user_watch_log SET origin = 'single', updated_at = ?
 			 WHERE user_id = ? AND watch_id = ? AND origin = 'score'`,
@@ -1644,7 +1748,10 @@ export async function getMovieTracking(
 // Native exports: a durable, per-title plan, journaled by the importer before the first write.
 // ---------------------------------------------------------------------------------------------------------
 
-export const importWatchId = (source: ImportSource, key: string) =>
+/** The sources an imported watch can come from: the native imports, and the IMDb ratings import's episode scores. */
+type WatchSource = ImportSource | "imdb"
+
+export const importWatchId = (source: WatchSource, key: string) =>
 	`i-${createHash("sha1").update(`${source}:${key}`).digest("hex").slice(0, 32)}`
 
 export type ImportStatusItem = ImportItem & {
@@ -1776,12 +1883,19 @@ function sameImportedViewing(a: LogRow, b: LogRow): boolean {
 export async function prepareImportTrackingPlan(input: {
 	userId: string
 	importId: string
-	source: ImportSource
+	source: WatchSource
 	tmdbId: number
 	mediaType: MediaType
 	items: ImportItem[]
 	watchDates: "preserve" | "unknown"
 	now: number
+	/**
+	 * Keep a watch item whose episode has a watch in any pass, not only a duplicate of the same viewing: an episode
+	 * score's watch is recorded only for an episode the member hasn't watched (#759 follow-up).
+	 */
+	onlyUnwatched?: boolean
+	/** Undo puts back the Want to See and Not interested the plan cleared, whatever the source. */
+	restoreIntentions?: boolean
 }): Promise<ImportTrackingPlan> {
 	const title = {
 		mediaType: input.mediaType,
@@ -1793,6 +1907,7 @@ export async function prepareImportTrackingPlan(input: {
 		readImportLog(input.userId, title),
 	])
 	const restoreIntentions =
+		input.restoreIntentions === true ||
 		input.source === "plex" ||
 		(input.source === "wishlist" &&
 			input.items.some((item) => item.wishlistEvidence?.source === "watcharr"))
@@ -1825,6 +1940,15 @@ export async function prepareImportTrackingPlan(input: {
 	for (const item of input.items.filter((item) => item.kind === "watch")) {
 		const watchId = importWatchId(input.source, item.key)
 		if (
+			(input.onlyUnwatched &&
+				existing.some(
+					(row) =>
+						(item.episodeTmdbId != null &&
+							row.episode_tmdb_id === item.episodeTmdbId) ||
+						(row.episode_tmdb_id == null &&
+							row.season_number === (item.season ?? null) &&
+							row.episode_number === (item.episode ?? null)),
+				)) ||
 			(item.watcharrSnapshot &&
 				item.episodeTmdbId != null &&
 				existing.some((row) => row.episode_tmdb_id === item.episodeTmdbId)) ||

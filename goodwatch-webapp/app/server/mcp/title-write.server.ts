@@ -150,7 +150,8 @@ export interface PartWrite {
 
 /**
  * Sets or clears a part score; answers with a refusal, or with what the write left, which a batch keeps so its Undo
- * can tell its own write from a later change.
+ * can tell its own write from a later change. Scoring an episode that no pass has a watch of marks it watched
+ * (#759 follow-up): `watchAdded` is that watch's id, which a batch's Undo removes with the score.
  */
 export async function writePartScore(
 	userId: string,
@@ -158,7 +159,9 @@ export async function writePartScore(
 	part: PartTarget,
 	score: number | null,
 	deps: PartDeps = livePartDeps,
-): Promise<{ refused: string } | { written: PartWrite }> {
+): Promise<
+	{ refused: string } | { written: PartWrite; watchAdded?: string }
+> {
 	const target = await partScoreTarget(title, part, deps)
 	if ("refused" in target) return target
 	try {
@@ -172,6 +175,7 @@ export async function writePartScore(
 				score: result.score?.score ?? null,
 				updatedAt: result.score?.updatedAt ?? null,
 			},
+			...(result.watchAdded ? { watchAdded: result.watchAdded } : {}),
 		}
 	} catch (error) {
 		return refusalOf(error)
@@ -271,6 +275,8 @@ export type TitleWrite =
 			event: ShowAction["event"]["type"] | null
 			/** A part score's write: what it left, for a batch's receipt and Undo. */
 			part_written?: PartWrite
+			/** The undated watch an episode's score recorded, which a batch's Undo removes with the score. */
+			watch_added?: string
 	  }
 
 /**
@@ -290,6 +296,7 @@ export async function applyTitleWrite(
 	let removedWatchId: string | null = null
 	let appliedEvent: ShowAction["event"]["type"] | null = null
 	let partWritten: PartWrite | undefined
+	let watchAdded: string | undefined
 	const part = partOf(name, args)
 	if (part) {
 		if (args.score === undefined)
@@ -297,6 +304,7 @@ export async function applyTitleWrite(
 		const result = await writePartScore(userId, title, part, args.score)
 		if ("refused" in result) return result
 		partWritten = result.written
+		watchAdded = result.watchAdded
 	} else if (name === "rate_title") {
 		if (args.score === undefined)
 			return { refused: "A rating requires a score or null" }
@@ -525,5 +533,6 @@ export async function applyTitleWrite(
 		removedWatchId,
 		event: appliedEvent,
 		...(partWritten ? { part_written: partWritten } : {}),
+		...(watchAdded ? { watch_added: watchAdded } : {}),
 	}
 }

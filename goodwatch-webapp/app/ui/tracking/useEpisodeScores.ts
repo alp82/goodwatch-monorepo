@@ -30,7 +30,11 @@ function storeOf(show: ShowStore): EpisodeScoreStore {
 						throw new EpisodeScoreGoneError()
 					throw new Error(`The score was not saved: ${response.status}`)
 				}
-				return response.json()
+				const answer = (await response.json()) as EpisodeScoreSendAnswer
+				// Scoring an episode marks it watched, and clearing the score can take that watch back: the episode
+				// list and the show's status read the show's tracking again.
+				if (answer.watchAdded || answer.watchRemoved) show.refetch()
+				return answer
 			},
 			(message) => show.say(message, [], "error"),
 		)

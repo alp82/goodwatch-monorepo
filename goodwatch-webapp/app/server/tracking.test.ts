@@ -26,6 +26,8 @@ const {
 	getShowTracking,
 	getWatchState,
 	getWatchTotals,
+	markScoredEpisodeWatched,
+	removeScoredEpisodeWatch,
 	settleMovie,
 } = await import("./tracking.server.ts")
 type TrackingAction = import("./tracking.server.ts").TrackingAction
@@ -1552,6 +1554,69 @@ test("Delete a watch in the log: an unwatch when it was the episode's only watch
 	assert.deepEqual(
 		[stateOf()?.state, stateOf()?.seen_press_group],
 		["watching", null],
+	)
+})
+
+test("Scoring an episode records one undated watch through the machine, none when any pass has one, and clearing takes back only the score's", async () => {
+	wantAndNotInterested()
+	assert.equal(await markScoredEpisodeWatched(user, SHOW, 102), "score-e102")
+	assert.deepEqual(
+		logOf().map((r) => [
+			r.watch_id,
+			r.origin,
+			r.watched_at,
+			r.watched_at_precision,
+			r.season_number,
+			r.episode_number,
+			r.pass,
+		]),
+		[["score-e102", "score", null, "unknown", 1, 2, 1]],
+	)
+	// Like a tick: Watching (row 3), and off Want to See and Not interested.
+	assert.equal(stateOf()?.state, "watching")
+	assert.deepEqual([onWishlist(), notInterested()], [false, false])
+	// Watched already, by the score or by a tick: nothing more.
+	assert.equal(await markScoredEpisodeWatched(user, SHOW, 102), null)
+	await tick(1, 1, "tick-s1e1")
+	assert.equal(await markScoredEpisodeWatched(user, SHOW, 101), null)
+	// Not in the list, or not aired yet.
+	assert.equal(await markScoredEpisodeWatched(user, SHOW, 999), null)
+	assert.equal(await markScoredEpisodeWatched(user, SHOW, 204), null)
+	assert.deepEqual(ticks(), ["1.1", "1.2"])
+
+	// Clearing the score takes its watch back, and only that one.
+	assert.equal(await removeScoredEpisodeWatch(user, SHOW, 102), "score-e102")
+	assert.equal(await removeScoredEpisodeWatch(user, SHOW, 102), null)
+	assert.equal(await removeScoredEpisodeWatch(user, SHOW, 101), null)
+	assert.deepEqual(
+		[ticks(), stateOf()?.state],
+		[["1.1"], "watching"],
+	)
+
+	// A date the member sets makes the score's watch theirs: clearing the score leaves it.
+	assert.equal(await markScoredEpisodeWatched(user, SHOW, 103), "score-e103")
+	await act({
+		type: "editWatchDate",
+		watchId: "score-e103",
+		when: { precision: "day", day: iso(midnight(-3)) },
+	})
+	assert.equal(await removeScoredEpisodeWatch(user, SHOW, 103), null)
+	assert.deepEqual(
+		logOf()
+			.filter((r) => r.watch_id === "score-e103")
+			.map((r) => r.origin),
+		["single"],
+	)
+
+	// The show's only watch: taking it back leaves the show Not started (row 8).
+	assert.equal(await markScoredEpisodeWatched(user, SHORT, 301), "score-e301")
+	assert.equal(stateOf(short)?.state, "watching")
+	assert.equal(await removeScoredEpisodeWatch(user, SHORT, 301), "score-e301")
+	assert.deepEqual([stateOf(short), logOf(short)], [null, []])
+	// The browser can't name a watch with the score's id.
+	assert.equal(
+		(await act({ type: "watch", season: 1, number: 2 }, "score-e102")).status,
+		"refused",
 	)
 })
 

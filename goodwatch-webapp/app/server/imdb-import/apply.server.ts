@@ -23,7 +23,9 @@ import {
 //   marked and a run that broke off settles them again.
 // - Episode rows (#759) write the member's episode score to user_episode_score, one row at a time through the
 //   shared import journal (imports/episode-score-apply.server.ts), after the titles. They never touch user_score, the
-//   movie rule, Taste or the fingerprint count.
+//   movie rule, Taste or the fingerprint count. An episode whose score the import wrote is then marked watched, with
+//   one imported, undated watch, when no pass has a watch of it; Undo takes back only those watches
+//   (imports/episode-score-watches.server.ts).
 import type { StoredUndoOutcome } from "~/domain/import-result"
 import type { ImportItem } from "~/domain/imports"
 import type {
@@ -42,6 +44,10 @@ import {
 	applyImportedEpisodeScore,
 	undoImportedEpisodeScore,
 } from "../imports/episode-score-apply.server.ts"
+import {
+	markImportedEpisodesWatched,
+	undoImportedEpisodeWatches,
+} from "../imports/episode-score-watches.server.ts"
 import { titleRef } from "./classify.server"
 import { ImdbImportError, type ImportMediaType, MAX_ROWS } from "./file.server"
 import {
@@ -132,6 +138,28 @@ const episodeItem = (row: {
 		...(row.imdb_score === undefined ? {} : { score: Number(row.imdb_score) }),
 		payload,
 	}
+}
+
+/**
+ * Every episode row of the import with its payload, and whether the import wrote its score. None without a read for
+ * a file the preview matched no episode in, so such a file sends what it did before #759.
+ */
+async function scoredEpisodeRows(importId: string, counts: string) {
+	if (!((JSON.parse(counts) as ImdbImportCounts).episodes ?? 0)) return []
+	const rows = await select<{
+		row_index: number
+		tmdb_id: number
+		payload: string | null
+		apply_state: string | null
+	}>(
+		`SELECT row_index, tmdb_id, payload, apply_state FROM doc.user_import_item
+		 WHERE import_id = ? AND kind = 'episode_rating' AND tmdb_id IS NOT NULL LIMIT ${MAX_ROWS}`,
+		[importId],
+	)
+	return rows.map((row) => ({
+		...episodeItem(row),
+		applied: row.apply_state === "added" || row.apply_state === "updated",
+	}))
 }
 
 /** Writes one episode score; a row that throws is tried again on resume. */
@@ -424,6 +452,11 @@ async function applyStored(userId: string, importId: string) {
 			processed += batch.length
 			await report()
 		}
+		// An episode the import scored is marked watched when no pass has a watch of it (#759 follow-up).
+		await refreshItems()
+		const scored = await scoredEpisodeRows(importId, row.counts)
+		if (scored.length)
+			await markImportedEpisodesWatched(userId, importId, "imdb", scored)
 
 		await refreshItems()
 		const final = await readTally(importId)
@@ -644,6 +677,9 @@ async function undoImportStored(
 			[importId],
 		)
 		titles = written.length > 0
+		const scored = await scoredEpisodeRows(importId, row.counts)
+		if (scored.length)
+			await undoImportedEpisodeWatches(userId, importId, scored)
 		await undoEpisodes(userId, importId)
 		// Rows an earlier, interrupted Undo already settled keep their outcome. Before writing, a rating that isn't the
 		// imported one any more was changed or removed by the member; one already as before is this Undo's own work

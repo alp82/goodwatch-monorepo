@@ -213,7 +213,7 @@ export const writeToolDefinitions: {
 		name: "rate_title",
 		title: "Rate a title",
 		description:
-			"Set a score from 1 to 10, or clear it with null. Clearing a score is destructive. A movie rating can own one undated watch; show ratings never log episodes or change show status. For a show, season (and episode) score that aired season or episode instead of the whole show: kept apart from the show's score, they never change its score, status, watches, taste or recommendations. The result reports the previous score and exact watch changes.",
+			"Set a score from 1 to 10, or clear it with null. Clearing a score is destructive. A movie rating can own one undated watch; show ratings never log episodes or change show status. For a show, season (and episode) score that aired season or episode instead of the whole show: kept apart from the show's score, they never change its score, taste or recommendations. Scoring an episode with no watch in any pass also logs one undated watch of it, which moves the show's status as logging it would; clearing that score removes that watch. A season score logs nothing. The result reports the previous score and exact watch changes.",
 		destructive: true,
 		schema: batchable(itemSchemas.rate_title, rateFields),
 	},

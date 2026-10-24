@@ -1177,6 +1177,11 @@ export interface StepOptions {
 	 * Not started.
 	 */
 	resend?: boolean
+	/**
+	 * How a `watch` event's watch was made, when not by a tick: "score" for the undated watch that scoring an episode
+	 * records while no pass has a watch of it (#759 follow-up). The machine treats it as any other watch.
+	 */
+	origin?: "score"
 }
 
 function findRow(
@@ -1541,7 +1546,15 @@ export function step(
 					)
 				base = without((w) => ids.has(w.id))
 			}
-			const result = single(base, event, actionId, resend)
+			const result = single(
+				base,
+				event,
+				actionId,
+				resend,
+				event.type === "watch" && options.origin
+					? { origin: options.origin, group: null }
+					: undefined,
+			)
 			if ("refused" in result) return nothing(result.refused)
 			return done(result.record, [result.row])
 		}

@@ -1,6 +1,10 @@
 // A member's season and episode scores (#759), from the Episodes section of a show page, and the parts imports keep
 // (domain/episode-scores.ts). They live in `user_episode_score`, never in `user_score`: nothing here marks taste
-// changed, changes a fingerprint or a recommendation, records a watch, or changes a show's status.
+// changed, changes a fingerprint or a recommendation.
+//
+// Scoring an episode also marks it watched, with one undated watch, when no pass has a watch of it yet; clearing
+// the score takes that watch back while it is still the score's (tracking.server.ts, markScoredEpisodeWatched).
+// Season and part scores mark nothing. Imports write through imports/episode-score-apply.server.ts instead.
 //
 // Until the migration (docs/implementation/imports/episode-scores-migration.sql) has run, reads find no scores and
 // writes throw EpisodeScoresUnavailable.
@@ -28,6 +32,46 @@ let db: EpisodeScoreDb = liveDb
 /** Test-only database boundary. Passing no value restores the live Crate adapter. */
 export const setEpisodeScoreDbForTest = (replacement?: EpisodeScoreDb) => {
 	db = replacement ?? liveDb
+}
+
+/** The watch an episode's score records and takes back (tracking.server.ts). */
+interface EpisodeScoreWatches {
+	mark(userId: string, showId: number, episodeTmdbId: number): Promise<string | null>
+	remove(userId: string, showId: number, episodeTmdbId: number): Promise<string | null>
+}
+const liveWatches: EpisodeScoreWatches = {
+	mark: async (...args) =>
+		(await import("./tracking.server.ts")).markScoredEpisodeWatched(...args),
+	remove: async (...args) =>
+		(await import("./tracking.server.ts")).removeScoredEpisodeWatch(...args),
+}
+let watches: EpisodeScoreWatches = liveWatches
+/** Test-only tracking boundary. Passing no value restores the live writer. */
+export const setEpisodeScoreWatchesForTest = (
+	replacement?: EpisodeScoreWatches,
+) => {
+	watches = replacement ?? liveWatches
+}
+
+/**
+ * The score is saved whatever happens to its watch: a failed watch is logged, and the member can tick the episode.
+ * Answers the id of the watch added or removed, or null.
+ */
+async function followWatch(
+	change: "mark" | "remove",
+	userId: string,
+	showId: number,
+	episodeTmdbId: number,
+): Promise<string | null> {
+	try {
+		return await watches[change](userId, showId, episodeTmdbId)
+	} catch (error) {
+		console.error(
+			`Episode score: the watch of episode ${episodeTmdbId} wasn't ${change === "mark" ? "recorded" : "removed"}`,
+			error,
+		)
+		return null
+	}
 }
 
 /** The table doesn't exist yet: the migration hasn't run. */
@@ -195,6 +239,10 @@ export interface SetEpisodeScoreResult {
 	score: MemberEpisodeScore | null
 	/** The score before this change; null when there was none. */
 	previous: number | null
+	/** The id of the undated watch this score recorded for its episode, when it recorded one. */
+	watchAdded?: string
+	/** The id of the score's watch that clearing the score took back, when there was one. */
+	watchRemoved?: string
 }
 
 /**
@@ -224,10 +272,15 @@ export async function setEpisodeScore(
 				"DELETE FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ?",
 				[userId, show, key],
 			)
+			const watchRemoved =
+				target.scope === "episode"
+					? await followWatch("remove", userId, show, target.episodeTmdbId)
+					: null
 			return {
 				status: removed.rowcount ? "cleared" : "unchanged",
 				score: null,
 				previous,
+				...(watchRemoved ? { watchRemoved } : {}),
 			}
 		}
 		const now = new Date()
@@ -248,6 +301,10 @@ export async function setEpisodeScore(
 				now,
 			],
 		)
+		const watchAdded =
+			target.scope === "episode"
+				? await followWatch("mark", userId, show, target.episodeTmdbId)
+				: null
 		return {
 			status: "saved",
 			score: {
@@ -258,6 +315,7 @@ export async function setEpisodeScore(
 				updatedAt: now.toISOString(),
 			},
 			previous,
+			...(watchAdded ? { watchAdded } : {}),
 		}
 	} catch (error) {
 		if (isMissingEpisodeScoreTable(error)) throw new EpisodeScoresUnavailable()

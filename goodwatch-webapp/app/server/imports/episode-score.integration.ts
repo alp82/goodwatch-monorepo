@@ -16,6 +16,7 @@ const {
 	restoreEpisodeScore,
 	setEpisodeScore,
 	setEpisodeScoreDbForTest,
+	setEpisodeScoreWatchesForTest,
 } = await import("../episode-scores.server.ts")
 
 // The member's season and episode scores (#759) on a real Crate: the migration, the constraints, the missing-table
@@ -88,10 +89,16 @@ before(async () => {
 	await sql("REFRESH TABLE episode")
 	setImportDbForTest(db)
 	setEpisodeScoreDbForTest(db)
+	// The watch an episode score records is the tracking writer's, tested with tracking.server.ts.
+	setEpisodeScoreWatchesForTest({
+		mark: async () => null,
+		remove: async () => null,
+	})
 })
 after(async () => {
 	setImportDbForTest()
 	setEpisodeScoreDbForTest()
+	setEpisodeScoreWatchesForTest()
 	await sql(`DROP TABLE IF EXISTS doc.user_import_item`)
 	await sql("DROP TABLE IF EXISTS episode")
 	await sql("DROP TABLE IF EXISTS user_episode_score")

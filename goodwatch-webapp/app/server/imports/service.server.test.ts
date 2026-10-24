@@ -2477,6 +2477,273 @@ it("a status is kept when its imported watches finish an already Watching show",
 	assert.deepEqual((await getShowTracking("member", 1668)).log, [])
 })
 
+describe("imported episode scores mark their episodes watched (#759 follow-up)", () => {
+	const base = {
+		mediaType: "show" as const,
+		title: "Friends",
+		year: 1994,
+		tmdbId: 1668,
+		imdbId: null,
+	}
+	const score = (episodeTmdbId: number, episode: number, value: number) => ({
+		...base,
+		key: `score:${episodeTmdbId}`,
+		kind: "episode_rating" as const,
+		scoreScope: "episode" as const,
+		episodeTmdbId,
+		season: 1,
+		episode,
+		score: value,
+	})
+	function setup() {
+		const db = new ImportDb()
+		db.catalog = [
+			{ tmdb_id: 1668, imdb_id: null, title: "Friends", release_year: 1994 },
+		]
+		db.episodes = [1, 2, 3, 4].map((number) => ({
+			show_id: 1668,
+			tmdb_id: 100 + number,
+			season_number: 1,
+			episode_number: number,
+			name: `Episode ${number}`,
+			air_date: Date.UTC(1994, 0, number),
+			removed_at: null,
+		}))
+		const trackingDb = new FakeTrackingCrate()
+		trackingDb.seed("episode", db.episodes)
+		setImportDbForTest(db)
+		setCrateClientForTest(trackingDb)
+		setImportEffectsForTest(
+			async () => {},
+			async () => {},
+		)
+		return { db, trackingDb }
+	}
+	const logOf = async () =>
+		(await getShowTracking("member", 1668)).log
+			.map((row) => [
+				row.episode_tmdb_id,
+				row.origin,
+				row.watched_at_precision,
+				row.import_id === null ? null : "this import",
+			])
+			.sort((a, b) => Number(a[0]) - Number(b[0]))
+
+	it("only where no pass has a watch, never twice with the file's own watch, and Undo takes back only its own", async () => {
+		const { previewParsedImport } = await import("./service.server.ts")
+		const { db, trackingDb } = setup()
+		// The member ticked episode 3 before the import.
+		trackingDb.seed("user_watch_log", [
+			{
+				user_id: "member",
+				watch_id: "tick-0000003",
+				media_type: "show",
+				tmdb_id: 1668,
+				episode_tmdb_id: 103,
+				season_number: 1,
+				episode_number: 3,
+				watched_at: null,
+				watched_at_precision: "unknown",
+				origin: "single",
+				group_id: null,
+				import_id: null,
+				pass: 1,
+				created_at: 1000,
+				updated_at: 1000,
+			},
+		])
+		trackingDb.seed("user_watch_state", [
+			{
+				user_id: "member",
+				tmdb_id: 1668,
+				media_type: "show",
+				state: "watching",
+				pass: 1,
+				state_changed_at: 1000,
+				updated_at: 1000,
+				created_at: 1000,
+				seen_press_group: null,
+				seen_press_from: null,
+				seen_question: null,
+				rate_prompt_dismissed_at: null,
+			},
+		])
+		const preview = await previewParsedImport(
+			"member",
+			"history.json",
+			{
+				source: "trakt",
+				warnings: [],
+				observations: [
+					// The file also lists episode 2 as watched, on a day.
+					{
+						...base,
+						key: "watch:102",
+						kind: "watch",
+						episodeTmdbId: 102,
+						season: 1,
+						episode: 2,
+						watchedAt: "2026-10-01T00:00:00.000Z",
+						precision: "day",
+					},
+					score(101, 1, 8),
+					score(102, 2, 7),
+					score(103, 3, 6),
+					{
+						...base,
+						key: "score:s1",
+						kind: "episode_rating",
+						scoreScope: "season",
+						season: 1,
+						score: 9,
+					},
+				],
+			},
+			"synthetic",
+		)
+		await confirmImport("member", preview.id, {
+			...options,
+			kinds: ["watch", "episode_rating"],
+		})
+		await waitFor(db, "done")
+		assert.deepEqual(db.episodeScores.map((row) => row.score_key).sort(), [
+			"e101",
+			"e102",
+			"e103",
+			"s1",
+		])
+		assert.deepEqual(await logOf(), [
+			// Scored and not watched: one imported watch with no date.
+			[101, "import", "unknown", "this import"],
+			// Watched in the file: that watch only.
+			[102, "import", "day", "this import"],
+			// Watched already: the member's tick only.
+			[103, "single", "unknown", null],
+		])
+		assert.equal((await getShowTracking("member", 1668)).state?.state, "watching")
+		await undoImport("member", preview.id)
+		assert.equal((await getImport("member", preview.id)).status, "undone")
+		assert.deepEqual(await logOf(), [[103, "single", "unknown", null]])
+		assert.equal((await getShowTracking("member", 1668)).state?.state, "watching")
+		assert.equal(db.episodeScores.length, 0)
+	})
+
+	it("Undo takes back the score's watch before the file's own, so neither reads as changed since", async () => {
+		const { previewParsedImport } = await import("./service.server.ts")
+		const { db } = setup()
+		const preview = await previewParsedImport(
+			"member",
+			"history.json",
+			{
+				source: "trakt",
+				warnings: [],
+				observations: [
+					{
+						...base,
+						key: "watch:102",
+						kind: "watch",
+						episodeTmdbId: 102,
+						season: 1,
+						episode: 2,
+						watchedAt: "2026-10-01T00:00:00.000Z",
+						precision: "day",
+					},
+					score(101, 1, 8),
+				],
+			},
+			"synthetic",
+		)
+		await confirmImport("member", preview.id, {
+			...options,
+			kinds: ["watch", "episode_rating"],
+		})
+		await waitFor(db, "done")
+		assert.deepEqual(await logOf(), [
+			[101, "import", "unknown", "this import"],
+			[102, "import", "day", "this import"],
+		])
+		await undoImport("member", preview.id)
+		assert.deepEqual(await logOf(), [])
+		assert.equal(
+			(await getShowTracking("member", 1668)).state?.state ?? "not_started",
+			"not_started",
+		)
+		const undone = await getImportResult("member", preview.id)
+		assert.ok(
+			!undone.sections.some((section) => section.key === "left"),
+			JSON.stringify(undone.sections.map((section) => section.key)),
+		)
+	})
+
+	it("sets a status only as an import may, and Undo puts back the Want to See its watch cleared", async () => {
+		const { previewParsedImport } = await import("./service.server.ts")
+		const { db, trackingDb } = setup()
+		trackingDb.seed("user_wishlist", [
+			{
+				user_id: "member",
+				tmdb_id: 1668,
+				media_type: "show",
+				created_at: 1000,
+				updated_at: 2000,
+			},
+		])
+		const preview = await previewParsedImport(
+			"member",
+			"scores.json",
+			{ source: "trakt", warnings: [], observations: [score(101, 1, 8)] },
+			"synthetic",
+		)
+		await confirmImport("member", preview.id, {
+			...options,
+			kinds: ["episode_rating"],
+		})
+		await waitFor(db, "done")
+		assert.deepEqual(await logOf(), [[101, "import", "unknown", "this import"]])
+		const started = await getShowTracking("member", 1668)
+		assert.equal(started.state?.state, "watching")
+		assert.equal(trackingDb.table("user_wishlist").length, 0)
+		await undoImport("member", preview.id)
+		assert.deepEqual(await logOf(), [])
+		assert.equal(
+			(await getShowTracking("member", 1668)).state?.state ?? "not_started",
+			"not_started",
+		)
+		assert.equal(trackingDb.table("user_wishlist").length, 1)
+
+		// On hold stays On hold: an import never changes it.
+		const again = setup()
+		again.trackingDb.seed("user_watch_state", [
+			{
+				user_id: "member",
+				tmdb_id: 1668,
+				media_type: "show",
+				state: "on_hold",
+				pass: 1,
+				state_changed_at: 1000,
+				updated_at: 1000,
+				created_at: 1000,
+				seen_press_group: null,
+				seen_press_from: null,
+				seen_question: null,
+				rate_prompt_dismissed_at: null,
+			},
+		])
+		const held = await previewParsedImport(
+			"member",
+			"scores.json",
+			{ source: "trakt", warnings: [], observations: [score(101, 1, 8)] },
+			"synthetic",
+		)
+		await confirmImport("member", held.id, {
+			...options,
+			kinds: ["episode_rating"],
+		})
+		await waitFor(again.db, "done")
+		assert.deepEqual(await logOf(), [[101, "import", "unknown", "this import"]])
+		assert.equal((await getShowTracking("member", 1668)).state?.state, "on_hold")
+	})
+})
+
 it("previews a thousand show statuses with bounded tracking reads and no episode reads", async () => {
 	const { previewParsedImport } = await import("./service.server.ts")
 	const db = new ImportDb()

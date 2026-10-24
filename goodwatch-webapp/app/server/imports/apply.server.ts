@@ -4,7 +4,12 @@ import {
 	eventUuid,
 } from "~/telemetry/product-analytics.server"
 import type { UndoOutcome } from "~/domain/import-result"
-import type { ImportItem, ImportOptions, ImportSummary } from "~/domain/imports"
+import type {
+	ImportItem,
+	ImportOptions,
+	ImportSource,
+	ImportSummary,
+} from "~/domain/imports"
 import { canImportWantToSee } from "../../domain/imports.ts"
 import {
 	applyImportedEpisodeScore,
@@ -589,6 +594,25 @@ async function applyRunStored(
 			const tracking = await import("./watch-items.server.ts")
 			await tracking.applyPendingImportWatches(userId, id, options)
 		}
+		// After the file's own watches: an episode this import scored is marked watched when no pass has a watch of it.
+		const scoredEpisodes = (await itemRows(userId, id)).filter(
+			(item) => item.kind === "episode_rating",
+		)
+		if (scoredEpisodes.length) {
+			const { markImportedEpisodesWatched } = await import(
+				"./episode-score-watches.server.ts"
+			)
+			await markImportedEpisodesWatched(
+				userId,
+				id,
+				(await getImportRow(userId, id)).source as ImportSource,
+				scoredEpisodes.map((item) => ({
+					...item,
+					applied:
+						item.applyState === "added" || item.applyState === "updated",
+				})),
+			)
+		}
 		for (const item of rewatchWishes) {
 			let state: "added" | "kept" | "failed"
 			try {
@@ -856,6 +880,20 @@ async function undoImportStored(
 	beat.unref()
 	try {
 		const items = await itemRows(userId, id)
+		// Newest first: the episode scores' watches were recorded after the file's own watches.
+		const scoredEpisodes = items.filter(
+			(item) => item.kind === "episode_rating",
+		)
+		if (scoredEpisodes.length) {
+			const { undoImportedEpisodeWatches } = await import(
+				"./episode-score-watches.server.ts"
+			)
+			await undoImportedEpisodeWatches(
+				userId,
+				id,
+				scoredEpisodes.map((item) => ({ ...item, applied: true })),
+			)
+		}
 		if (
 			items.some(
 				(item) =>

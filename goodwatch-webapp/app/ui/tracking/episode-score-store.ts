@@ -13,6 +13,9 @@ export interface EpisodeScoreSendAnswer {
 	status: "saved" | "cleared" | "unchanged"
 	score: MemberEpisodeScore | null
 	previous: number | null
+	/** The undated watch the score recorded for its episode, or the one clearing it took back (#759 follow-up). */
+	watchAdded?: string
+	watchRemoved?: string
 }
 export type EpisodeScoreSend = (body: object) => Promise<EpisodeScoreSendAnswer>
 

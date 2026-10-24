@@ -261,6 +261,8 @@ export interface ShowEventInput {
 	now: number
 	/** See `StepOptions.resend`. The server always sets it. */
 	resend?: boolean
+	/** See `StepOptions.origin`: the watch a score records. */
+	origin?: "score"
 }
 
 /** Runs the machine on the stored rows of one show and says which rows change. */
@@ -269,6 +271,7 @@ export function applyShowEvent(input: ShowEventInput): AppliedEvent {
 	const before = recordFromRows(state, log, flags)
 	const done = step({ show, record: before }, event, input.actionId ?? "", {
 		resend: input.resend,
+		origin: input.origin,
 	})
 	const after = done.world.record
 	if (done.refused)
@@ -378,6 +381,14 @@ export function applyShowEvent(input: ShowEventInput): AppliedEvent {
 
 /** The id of the watch that a movie's score owns. A member has at most one per movie. */
 export const scoreWatchId = (movieId: number) => `score-${movieId}`
+
+/**
+ * The id of the undated watch that scoring an episode records while no pass has a watch of it (#759 follow-up).
+ * Unlike a movie's, it isn't kept by a rule: it stays when the member unticks it, and clearing the score removes it
+ * while it is still the score's (no date set on it).
+ */
+export const episodeScoreWatchId = (episodeTmdbId: number) =>
+	`score-e${episodeTmdbId}`
 
 export function movieLogRow(
 	movieId: number,

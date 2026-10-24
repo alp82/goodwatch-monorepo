@@ -529,8 +529,18 @@ export async function runBatch(
 				? row.write.event
 				: null
 		const group = watches.added.some((w) => w.group_id === row.actionId)
+		// A movie's score watch goes with its score, but an episode's (#759 follow-up) is removed by id, and only the
+		// one this item's own write says it recorded.
+		const scoreWatch =
+			typeof row.write === "object" && "watch_added" in row.write
+				? row.write.watch_added
+				: undefined
 		const watchIds = watches.added
-			.filter((w) => w.group_id !== row.actionId && w.origin !== "score")
+			.filter(
+				(w) =>
+					w.group_id !== row.actionId &&
+					(w.origin !== "score" || w.id === scoreWatch),
+			)
 			.map((w) => w.id)
 		return {
 			...base,
@@ -783,7 +793,13 @@ export async function undoBatch(
 							if (w.group_id === undo.group) removed.add(w.id)
 				}
 				for (const watchId of undo?.watch_ids ?? []) {
-					if (!current.watches.some((w) => w.id === watchId)) continue
+					const watch = current.watches.find((w) => w.id === watchId)
+					if (!watch) continue
+					// An episode score's watch that the member dated since is theirs now, as on the site.
+					if (watchId.startsWith("score-") && watch.origin !== "score") {
+						result.skipped.push("watch")
+						continue
+					}
 					wrote = tasteWrite = true
 					const answer =
 						title.media_type === "movie"

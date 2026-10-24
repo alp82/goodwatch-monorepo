@@ -13,6 +13,70 @@ const { imdbImportResult } = await import("./result.server.ts")
 const { clearResultCacheForTest } = await import(
 	"../imports/result-catalog.server.ts"
 )
+const { setScoreWatchTrackingForTest } = await import(
+	"../imports/episode-score-watches.server.ts"
+)
+type Plan = import("../imports/tracking.server.ts").ImportTrackingPlan
+type PlanInput = Parameters<
+	(typeof import("../imports/tracking.server.ts"))["prepareImportTrackingPlan"]
+>[0]
+
+/**
+ * The tracking writer's side of an import's episode score watches, in memory: the member's watched episodes, and
+ * what each plan asked for. The writer itself is tested with tracking.server.ts.
+ */
+class FakeTracking {
+	watched = new Set<number>()
+	asked: Omit<PlanInput, "items" | "now">[] = []
+	undone: string[] = []
+	restored = 0
+	async prepareImportTrackingPlan(input: PlanInput): Promise<Plan> {
+		const { items, now, ...rest } = input
+		this.asked.push(rest)
+		const fresh = items.filter((item) => !this.watched.has(Number(item.episodeTmdbId)))
+		return {
+			userId: input.userId,
+			importId: input.importId,
+			title: { mediaType: "show", tmdbId: input.tmdbId },
+			now,
+			beforeState: null,
+			afterState: null,
+			watches: fresh.map((item) => ({
+				watch_id: `i-${item.key}`,
+				media_type: "show",
+				tmdb_id: input.tmdbId,
+				episode_tmdb_id: item.episodeTmdbId ?? null,
+				season_number: item.season ?? null,
+				episode_number: item.episode ?? null,
+				watched_at: null,
+				watched_at_precision: item.precision ?? "unknown",
+				origin: "import",
+				group_id: null,
+				import_id: input.importId,
+				pass: 1,
+				created_at: now,
+			})),
+			addedKeys: fresh.map((item) => item.key),
+			keptKeys: items.filter((item) => !fresh.includes(item)).map((item) => item.key),
+			clear: [],
+		}
+	}
+	async applyImportTrackingPlan(_userId: string, plan: Plan) {
+		for (const watch of plan.watches) this.watched.add(Number(watch.episode_tmdb_id))
+		return { added: plan.watches.length, kept: 0, watchIds: [], statusKeys: [] }
+	}
+	async undoImportTrackingPlan(_userId: string, plan: Plan) {
+		for (const watch of plan.watches) {
+			this.watched.delete(Number(watch.episode_tmdb_id))
+			this.undone.push(watch.watch_id)
+		}
+		return "reverted" as const
+	}
+	async restoreImportTrackingIntentions() {
+		this.restored++
+	}
+}
+let tracking: FakeTracking
 
 const USER = "member-1"
 const SHOW = 1399
@@ -308,6 +372,15 @@ class FakeCrate {
 			)
 		}
 		if (
+			s ===
+			"SELECT row_index, tmdb_id, payload, apply_state FROM doc.user_import_item WHERE import_id = ? AND kind = 'episode_rating' AND tmdb_id IS NOT NULL LIMIT 50000"
+		)
+			return done(
+				own(params[0]).filter(
+					(x) => x.kind === "episode_rating" && x.tmdb_id != null,
+				),
+			)
+		if (
 			s.startsWith(
 				"SELECT row_index, tmdb_id, payload, undo_outcome FROM doc.user_import_item",
 			)
@@ -326,7 +399,13 @@ class FakeCrate {
 			)
 			const filtered = s.includes("AND outcome = ?")
 				? rows.filter((x) => x.outcome === params[2])
-				: rows
+				: s.includes("AND outcome IN ('unmatched', 'unsupported', 'invalid')")
+					? rows.filter((x) =>
+							["unmatched", "unsupported", "invalid"].includes(
+								String(x.outcome),
+							),
+						)
+					: rows
 			return done(filtered)
 		}
 		if (
@@ -494,6 +573,8 @@ const earlier = new Date("2026-01-02T03:04:05.000Z")
 beforeEach(() => {
 	crate = new FakeCrate()
 	setCrateClientForTest(crate)
+	tracking = new FakeTracking()
+	setScoreWatchTrackingForTest(tracking)
 	crate.episodes = [
 		episode(5001, 1, 1, "Winter Is Coming", "tt9000001"),
 		episode(5002, 1, 2, "The Kingsroad"),
@@ -516,13 +597,21 @@ beforeEach(() => {
 			episode_number: 2,
 			name: "The Kingsroad",
 		},
-		// Only the same number: IMDb's name is a placeholder, which proves nothing.
+		// Only the same number: IMDb's name is a placeholder, which proves nothing, and IMDb lists more episodes
+		// in this season than TMDB, so numbers can't stand in for it.
 		{
 			show_id: SHOW,
 			imdb_episode_id: "tt9000003",
 			season_number: 1,
 			episode_number: 3,
 			name: "Episode #1.3",
+		},
+		{
+			show_id: SHOW,
+			imdb_episode_id: "tt9000007",
+			season_number: 1,
+			episode_number: 4,
+			name: "Episode #1.4",
 		},
 		// Listed under two shows.
 		{
@@ -572,6 +661,7 @@ beforeEach(() => {
 afterEach(() => {
 	clearResultCacheForTest()
 	setCrateClientForTest(null)
+	setScoreWatchTrackingForTest()
 })
 
 const csv = (rows: string[]) =>
@@ -594,7 +684,7 @@ async function finished(id: string) {
 	assert.fail("The import didn't finish.")
 }
 
-test("an IMDb ratings preview matches episodes by stored ID or same-season title, never by number alone", async () => {
+test("an IMDb ratings preview matches episodes by stored ID or same-season title, and not by number when the seasons differ in size", async () => {
 	const preview = await createPreview(USER, "ratings.csv", file)
 	assert.equal(preview.counts.rows, 6)
 	assert.equal(preview.counts.episodes, 2)
@@ -624,6 +714,89 @@ test("an IMDb ratings preview matches episodes by stored ID or same-season title
 	// The episodes went nowhere near the member's title ratings.
 	assert.equal(crate.userScores.length, 0)
 	assert.equal(crate.episodeScores.length, 1)
+})
+
+test("an IMDb ratings preview falls back to episode numbers when IMDb and TMDB list the same episodes for the season", async () => {
+	const imdb = (
+		imdb_episode_id: string,
+		season_number: number,
+		episode_number: number | null,
+		name: string,
+	) => ({ show_id: SHOW, imdb_episode_id, season_number, episode_number, name })
+	crate.episodes.push(
+		// Season 3: three episodes on both sides, numbered 1 to 3.
+		episode(5301, 3, 1, "Arrival"),
+		episode(5302, 3, 2, "Monster"),
+		episode(5303, 3, 3, "Departure", "tt8888888"),
+		// Season 4: two on both sides, but IMDb numbers them from 0.
+		episode(5401, 4, 1, "Start"),
+		episode(5402, 4, 2, "End"),
+		// Season 5: a title match says IMDb's first episode is TMDB's second.
+		episode(5501, 5, 1, "Alpha"),
+		episode(5502, 5, 2, "Beta"),
+		// Specials: the same count, but specials are never matched by number.
+		episode(5090, 0, 1, "Behind the scenes"),
+	)
+	crate.imdbEpisodes.push(
+		imdb("tt9000031", 3, 1, "Episode #3.1"),
+		imdb("tt9000032", 3, 2, "Kaiju"),
+		// TMDB stores another IMDb ID for its third episode: not this one.
+		imdb("tt9000033", 3, 3, "Episode #3.3"),
+		imdb("tt9000040", 4, 0, "Episode #4.0"),
+		imdb("tt9000041", 4, 1, "Episode #4.1"),
+		imdb("tt9000051", 5, 1, "Beta"),
+		imdb("tt9000052", 5, 2, "Episode #5.2"),
+		imdb("tt9000090", 0, 1, "Episode #0.1"),
+	)
+	const preview = await createPreview(
+		USER,
+		"ratings.csv",
+		csv([
+			"tt9000031,7,2021-01-02,Arrival,TV Episode,2013",
+			"tt9000032,8,2021-01-02,Kaiju,TV Episode,2013",
+			"tt9000033,6,2021-01-02,Departure,TV Episode,2013",
+			"tt9000041,5,2021-01-02,Start,TV Episode,2014",
+			"tt9000051,9,2021-01-02,Beta,TV Episode,2015",
+			"tt9000052,4,2021-01-02,Alpha,TV Episode,2015",
+			"tt9000090,3,2021-01-02,Behind the scenes,TV Episode,2015",
+		]),
+	)
+	const items = (await listItems(USER, preview.id, undefined, 0, 50)).items
+	assert.deepEqual(
+		items.map((x) => [x.imdbId, x.outcome, x.episode]),
+		[
+			["tt9000031", "new", { season: 3, number: 1 }],
+			["tt9000032", "new", { season: 3, number: 2 }],
+			["tt9000033", "unmatched", null],
+			["tt9000041", "unmatched", null],
+			// Matched by its title, not by its number.
+			["tt9000051", "new", { season: 5, number: 2 }],
+			["tt9000052", "unmatched", null],
+			["tt9000090", "unmatched", null],
+		],
+	)
+	for (const row of items.filter((x) => x.outcome === "unmatched"))
+		assert.match(row.reason ?? "", /IMDb numbers or names it differently/)
+})
+
+test("IMDb episode rows that still can't be matched are listed in the skipped rows file", async () => {
+	const { skippedCsv } = await import("./store.server.ts")
+	const preview = await createPreview(USER, "ratings.csv", file)
+	await confirmImport(USER, preview.id, "imdb")
+	await finished(preview.id)
+	const lines = (await skippedCsv(USER, preview.id)).trim().split("\r\n")
+	assert.deepEqual(
+		lines.map((line) => line.split(",").slice(0, 5).join(",")),
+		[
+			"Const,Title,Year,Title Type,Your Rating",
+			"tt9000003,Lord Snow,2011,TV Episode,7",
+			"tt9000004,Nowhere,2011,TV Episode,6",
+			"tt9000005,Twice,2012,TV Episode,5",
+			"tt0114709,Synthetic movie,1995,Movie,7",
+		],
+	)
+	assert.match(lines[1], /IMDb numbers or names it differently/)
+	assert.match(lines[2], /isn't in GoodWatch's episode lists/)
 })
 
 test("Confirm writes episode scores, never title ratings, and Undo puts back the member's score and leaves one they changed", async () => {
@@ -740,6 +913,53 @@ test("Confirm writes episode scores, never title ratings, and Undo puts back the
 			["left", [{ type: "left", kind: "episode_rating" }]],
 		],
 	)
+})
+
+test("Confirm marks the episodes it scored watched where no pass has a watch, and Undo takes back only those watches", async () => {
+	// The member had watched The Kingsroad.
+	tracking.watched.add(5002)
+	const preview = await createPreview(USER, "ratings.csv", file)
+	await confirmImport(USER, preview.id, "imdb")
+	assert.equal((await finished(preview.id)).status, "done")
+	// One plan for the show: imported, undated, only for unwatched episodes, and Undo puts back what it cleared.
+	assert.deepEqual(tracking.asked, [
+		{
+			userId: USER,
+			importId: preview.id,
+			source: "imdb",
+			tmdbId: SHOW,
+			mediaType: "show",
+			watchDates: "unknown",
+			onlyUnwatched: true,
+			restoreIntentions: true,
+		},
+	])
+	assert.deepEqual([...tracking.watched].sort(), [5001, 5002])
+	// Run again, as a resumed import would: the journaled plan isn't made or applied twice.
+	const { markImportedEpisodesWatched } = await import(
+		"../imports/episode-score-watches.server.ts"
+	)
+	const rows = crate.items
+		.filter((x) => x.kind === "episode_rating" && x.tmdb_id != null)
+		.map((x) => ({
+			...(JSON.parse(String(x.payload)) as object),
+			kind: "episode_rating" as const,
+			index: Number(x.row_index),
+			key: `imdb:episode:${x.row_index}`,
+			tmdbId: Number(x.tmdb_id),
+			payload: JSON.parse(String(x.payload)) as Record<string, unknown>,
+			applied: ["added", "updated"].includes(String(x.apply_state)),
+		}))
+	await markImportedEpisodesWatched(USER, preview.id, "imdb", rows as never)
+	assert.equal(tracking.asked.length, 1)
+
+	await undoImport(USER, preview.id)
+	assert.deepEqual(tracking.undone, [`i-episode-score:${SHOW}:5001`])
+	assert.deepEqual([...tracking.watched], [5002])
+	assert.equal(tracking.restored, 1)
+	// Undone once: a second Undo takes nothing more.
+	await undoImport(USER, preview.id).catch(() => null)
+	assert.deepEqual(tracking.undone, [`i-episode-score:${SHOW}:5001`])
 })
 
 test("keeping GoodWatch's ratings keeps the member's episode score, and a re-import updates only what the last import wrote", async () => {

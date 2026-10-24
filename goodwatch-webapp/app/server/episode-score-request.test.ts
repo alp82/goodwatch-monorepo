@@ -1,8 +1,14 @@
 import assert from "node:assert/strict"
 import { afterEach, test } from "node:test"
 import { answerEpisodeScoreRequest } from "./episode-score-request.server.ts"
-import { setEpisodeScoreDbForTest } from "./episode-scores.server.ts"
-import { EpisodeScoreFakeDb } from "./episode-scores.test-support.ts"
+import {
+	setEpisodeScoreDbForTest,
+	setEpisodeScoreWatchesForTest,
+} from "./episode-scores.server.ts"
+import {
+	EpisodeScoreFakeDb,
+	FakeEpisodeScoreWatches,
+} from "./episode-scores.test-support.ts"
 
 const SHOW = 1396
 function fake() {
@@ -10,9 +16,13 @@ function fake() {
 	db.addEpisode(SHOW, 62085, 1, 1)
 	db.addEpisode(SHOW, 62161, 2, 1)
 	setEpisodeScoreDbForTest(db)
+	setEpisodeScoreWatchesForTest(new FakeEpisodeScoreWatches())
 	return db
 }
-afterEach(() => setEpisodeScoreDbForTest())
+afterEach(() => {
+	setEpisodeScoreDbForTest()
+	setEpisodeScoreWatchesForTest()
+})
 
 test("a member sets and clears a season and an episode score", async () => {
 	const db = fake()
@@ -38,6 +48,9 @@ test("a member sets and clears a season and an episode score", async () => {
 		score: 9,
 	})
 	assert.equal(episode.body.score?.key, "e62085")
+	// The page reads the show's tracking again when a score marked its episode watched.
+	assert.equal(episode.body.watchAdded, "score-e62085")
+	assert.equal(season.body.watchAdded, undefined)
 	assert.equal(db.scores.length, 2)
 	const cleared = await answerEpisodeScoreRequest("member", {
 		id: SHOW,
@@ -49,6 +62,7 @@ test("a member sets and clears a season and an episode score", async () => {
 		{ status: cleared.body.status, previous: cleared.body.previous },
 		{ status: "cleared", previous: 9 },
 	)
+	assert.equal(cleared.body.watchRemoved, "score-e62085")
 	assert.equal(db.scores.length, 1)
 })
 

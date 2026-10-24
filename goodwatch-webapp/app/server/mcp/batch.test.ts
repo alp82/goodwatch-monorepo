@@ -335,11 +335,31 @@ function fakeLibrary() {
 					updatedAt = stamp()
 					stamps.set(key, updatedAt)
 				}
+				// Scoring an episode no pass has a watch of marks it watched (#759 follow-up).
+				let watchAdded: string | undefined
+				if (
+					args.episode !== undefined &&
+					args.score != null &&
+					!marks.watches.some(
+						(w) => w.season === args.season && w.episode === args.episode,
+					)
+				) {
+					watchAdded = `score-e${idOf(title.tmdb_id, args.season, args.episode)}`
+					marks.watches.push({
+						id: watchAdded,
+						group_id: null,
+						origin: "score",
+						season: args.season,
+						episode: args.episode,
+					})
+					marks.status = "watching"
+				}
 				hooks.afterPartWrite?.()
 				if (hooks.failAfterPartWrite) throw new Error("Read-back failed")
 				return {
 					removedWatchId: null,
 					event: null,
+					...(watchAdded ? { watch_added: watchAdded } : {}),
 					part_written: {
 						key: storeKey(title.tmdb_id, {
 							season: args.season,
@@ -477,7 +497,13 @@ function fakeLibrary() {
 			const marks = marksOf(userId, { media_type: "show", tmdb_id: showId })
 			if (event.type === "undoGroup")
 				marks.watches = marks.watches.filter((w) => w.group_id !== event.group)
-			if (event.type === "undoGroup" || event.type === "resume")
+			if (event.type === "deleteWatch")
+				marks.watches = marks.watches.filter((w) => w.id !== event.watchId)
+			if (
+				event.type === "undoGroup" ||
+				event.type === "resume" ||
+				event.type === "deleteWatch"
+			)
 				marks.status = marks.watches.length ? "watching" : "not_started"
 			if (event.type === "hold") marks.status = "on_hold"
 			return { status: "applied", refused: null }
@@ -1228,10 +1254,20 @@ test("rate_title with a season, or a season and episode, scores only that part o
 	assert.equal(result.part, "S1 E2")
 	assert.equal((result.before as { part_score: unknown }).part_score, null)
 	assert.equal((result.after as { part_score: unknown }).part_score, 9)
-	// The show's own score, status and watches stay; taste is not marked changed.
+	// The show's own score stays and taste is not marked changed. The episode is marked watched, with the score's
+	// undated watch (#759 follow-up), and the result says so.
 	assert.equal(lib.get(ME, "show:3001").score, 6)
 	assert.equal((result.after as Marks).score, 6)
-	assert.equal(lib.get(ME, "show:3001").watches.length, 0)
+	assert.deepEqual(
+		lib.get(ME, "show:3001").watches.map((w) => [w.id, w.origin]),
+		[["score-e102", "score"]],
+	)
+	assert.deepEqual(
+		(
+			result.changes as { watches_added: { id: string }[] }
+		).watches_added.map((w) => w.id),
+		["score-e102"],
+	)
 	assert.equal(lib.part(ME, 3001, 1, 2), 9)
 	assert.equal(lib.calls.taste, 0)
 	const replay = await write(lib, "rate_title", input)
@@ -1321,6 +1357,65 @@ test("A rate_title batch scores several episodes of one show, refuses the same p
 		{ key: `${ME}|show:3001|e102`, score: null },
 		{ key: `${ME}|show:3002|s2`, score: null },
 	])
+})
+
+test("A batch's Undo of episode scores removes the watches those scores recorded, and no other (#759 follow-up)", async () => {
+	const lib = fakeLibrary()
+	// The member ticked S1 E1 before the batch.
+	lib.set(ME, "show:3001", {
+		status: "watching",
+		watches: [
+			{ id: "tick-1", group_id: null, origin: "single", season: 1, episode: 1 },
+		],
+	})
+	const result = await write(lib, "rate_title", {
+		action_id: "score-watches",
+		items: [
+			{ title_id: "show:3001", season: 1, episode: 1, score: 8 },
+			{ title_id: "show:3001", season: 1, episode: 2, score: 9 },
+			{ title_id: "show:3001", season: 1, episode: 3, score: 7 },
+			{ title_id: "show:3001", season: 2, score: 6 },
+		],
+	})
+	assert.deepEqual(
+		itemsOf(result).map((item) => [item.status, item.undo?.watch_ids]),
+		[
+			["done", undefined],
+			["done", ["score-e102"]],
+			["done", ["score-e103"]],
+			["done", undefined],
+		],
+	)
+	// The member dates S1 E3's watch: it's theirs now, as on the site.
+	const dated = lib
+		.get(ME, "show:3001")
+		.watches.find((w) => w.id === "score-e103")
+	assert.ok(dated)
+	dated.origin = "single"
+	const undone = await write(lib, "undo_watch", {
+		action_id: "undo-score-watches",
+		batch_id: "score-watches",
+	})
+	assert.deepEqual(
+		(undone.items as { index: number; status: string; kept?: string[] }[]).map(
+			(item) => [item.index, item.status, item.kept],
+		),
+		[
+			[0, "undone", undefined],
+			[1, "undone", undefined],
+			[2, "partly_undone", ["watch"]],
+			[3, "undone", undefined],
+		],
+	)
+	assert.deepEqual(lib.calls.showEvents, ["deleteWatch"])
+	assert.deepEqual(
+		lib.get(ME, "show:3001").watches.map((w) => w.id),
+		["tick-1", "score-e103"],
+	)
+	assert.deepEqual(
+		[1, 2, 3].map((episode) => lib.part(ME, 3001, 1, episode)),
+		[null, null, null],
+	)
 })
 
 test("A part score names an aired season or episode of a show in TMDB's numbering, and says why it can't", async () => {

@@ -9,20 +9,78 @@ import {
 	restoreEpisodeScore,
 	setEpisodeScore,
 	setEpisodeScoreDbForTest,
+	setEpisodeScoreWatchesForTest,
 	setPartScore,
 } from "./episode-scores.server.ts"
-import { EpisodeScoreFakeDb } from "./episode-scores.test-support.ts"
+import {
+	EpisodeScoreFakeDb,
+	FakeEpisodeScoreWatches as FakeWatches,
+} from "./episode-scores.test-support.ts"
 
 const SHOW = 1396
+let watches = new FakeWatches()
 function fake() {
 	const db = new EpisodeScoreFakeDb()
 	db.addEpisode(SHOW, 62085, 1, 1)
 	db.addEpisode(SHOW, 62086, 1, 2)
 	db.addEpisode(SHOW, 62161, 2, 1)
 	setEpisodeScoreDbForTest(db)
+	watches = new FakeWatches()
+	setEpisodeScoreWatchesForTest(watches)
 	return db
 }
-afterEach(() => setEpisodeScoreDbForTest())
+afterEach(() => {
+	setEpisodeScoreDbForTest()
+	setEpisodeScoreWatchesForTest()
+})
+
+test("scoring an episode marks it watched once, a season marks nothing, and clearing takes back only the score's own watch", async () => {
+	fake()
+	const episode = { scope: "episode", episodeTmdbId: 62086 } as const
+	const first = await setEpisodeScore("member", SHOW, episode, 9)
+	assert.equal(first.watchAdded, "score-e62086")
+	// Changed: the episode is watched already, so nothing more is recorded.
+	const changed = await setEpisodeScore("member", SHOW, episode, 7)
+	assert.equal(changed.watchAdded, undefined)
+	await setEpisodeScore("member", SHOW, { scope: "season", season: 2 }, 6)
+	await setEpisodeScore("member", SHOW, { scope: "season", season: 2 }, null)
+	const cleared = await setEpisodeScore("member", SHOW, episode, null)
+	assert.equal(cleared.watchRemoved, "score-e62086")
+	// An episode the member had watched: the score adds nothing, and clearing it leaves their watch.
+	watches.watched.set(62085, "their-own-tick")
+	assert.equal(
+		(await setEpisodeScore("member", SHOW, { scope: "episode", episodeTmdbId: 62085 }, 8))
+			.watchAdded,
+		undefined,
+	)
+	assert.equal(
+		(await setEpisodeScore("member", SHOW, { scope: "episode", episodeTmdbId: 62085 }, null))
+			.watchRemoved,
+		undefined,
+	)
+	assert.equal(watches.watched.get(62085), "their-own-tick")
+	assert.deepEqual(watches.calls, [
+		`mark member ${SHOW} 62086`,
+		`mark member ${SHOW} 62086`,
+		`remove member ${SHOW} 62086`,
+		`mark member ${SHOW} 62085`,
+		`remove member ${SHOW} 62085`,
+	])
+})
+
+test("an episode score is saved even when its watch can't be recorded", async () => {
+	const db = fake()
+	watches.failing = true
+	const saved = await setEpisodeScore(
+		"member",
+		SHOW,
+		{ scope: "episode", episodeTmdbId: 62161 },
+		5,
+	)
+	assert.equal(saved.status, "saved")
+	assert.equal(saved.watchAdded, undefined)
+	assert.equal(db.scores[0].score, 5)
+})
 
 test("a member scores an episode by its TMDB id and a season by its number, and reads both back", async () => {
 	const db = fake()
