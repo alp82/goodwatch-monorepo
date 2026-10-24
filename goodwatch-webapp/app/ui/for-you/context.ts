@@ -1,0 +1,153 @@
+// What every part of the For you page reads: the decoded pool, the taste, the pool statistics, the current ranking,
+// and the title details that load on demand.
+import { createContext, useContext } from "react"
+import type {
+	DecodedPool,
+	ForYouDetail,
+	ForYouTaste,
+} from "~/domain/for-you-page/contract"
+import type { PoolStats, Ranked } from "~/domain/for-you-page/rank"
+import type { TitleCard } from "~/server/title-cards.server"
+import { titlePath } from "~/utils/helpers"
+import { titleKey } from "~/utils/title-key"
+
+export type TasteAttribute = ForYouTaste["attributes"][number]
+
+/** Loads the details of up to 12 titles by pool key ("movie-550"). */
+export type DetailsLoader = (
+	keys: string[],
+) => Promise<Record<string, ForYouDetail>>
+
+export interface ForYouContextValue {
+	pool: DecodedPool
+	taste: ForYouTaste
+	stats: PoolStats
+	ranked: Ranked[]
+	attr: (key: string) => TasteAttribute | undefined
+	/** Asks for these titles' details in one batch (cached; already loaded ones are skipped). */
+	prefetch: (keys: string[]) => void
+	/** The cached detail of a title, without loading it. */
+	detail: (key: string) => ForYouDetail | null | undefined
+	/** Loads one title's detail (batched with the other requests of the same tick). */
+	loadDetail: (key: string) => Promise<ForYouDetail | null>
+}
+
+export const ForYouContext = createContext<ForYouContextValue | null>(null)
+
+export function useForYou(): ForYouContextValue {
+	const ctx = useContext(ForYouContext)
+	if (!ctx) throw new Error("useForYou outside ForYouPage")
+	return ctx
+}
+
+export interface PoolTitle {
+	key: string
+	kind: "movie" | "show"
+	tmdbId: number
+	name: string
+	year: number | null
+	poster: string | null
+	/** GoodWatch score 0-100, null when unknown. */
+	score: number | null
+	href: string
+}
+
+/** The pool's title at row `i`. */
+export function titleAt(pool: DecodedPool, i: number): PoolTitle {
+	const key = pool.keys[i]
+	const dash = key.indexOf("-")
+	const kind = key.slice(0, dash) === "show" ? "show" : "movie"
+	const tmdbId = Number(key.slice(dash + 1))
+	const name = pool.names[i]
+	const score = pool.scores[i]
+	return {
+		key,
+		kind,
+		tmdbId,
+		name,
+		year: pool.years[i],
+		poster: pool.posters[i] || null,
+		score: score >= 0 ? score : null,
+		href: titlePath(kind, tmdbId, name),
+	}
+}
+
+/** A ranked pick as the site's poster card data (TitlePosterCard). */
+export function toCard(pool: DecodedPool, r: Ranked): TitleCard {
+	const t = titleAt(pool, r.index)
+	return {
+		key: titleKey(t.kind, t.tmdbId),
+		tmdb_id: t.tmdbId,
+		media_type: t.kind,
+		title: t.name,
+		poster_path: t.poster,
+		backdrop_path: null,
+		release_year: t.year,
+		runtime: null,
+		tagline: null,
+		goodwatch_overall_score_normalized_percent: t.score,
+		goodwatch_overall_score_voting_count: 1000,
+		match: pool.steps[r.index] || null,
+		reasons: r.reasons.map((x) => x.key) as TitleCard["reasons"],
+		services: null,
+		seen: false,
+		wantToSee: false,
+		notInterested: false,
+		rating: null,
+	}
+}
+
+/** The TanStack Query key of one title's detail. */
+export const detailQueryKey = (key: string) => ["for-you-detail", key] as const
+
+/** At most this many titles per details request. */
+export const DETAILS_BATCH = 12
+
+/** Collects the detail requests made in one tick into requests of up to 12 titles. */
+export function detailBatcher(load: DetailsLoader) {
+	type Waiter = {
+		resolve: (d: ForYouDetail | null) => void
+		reject: (e: unknown) => void
+	}
+	let queue = new Map<string, Waiter[]>()
+	let timer: ReturnType<typeof setTimeout> | null = null
+	const flush = () => {
+		timer = null
+		const batch = [...queue]
+		queue = new Map()
+		for (let at = 0; at < batch.length; at += DETAILS_BATCH) {
+			const part = batch.slice(at, at + DETAILS_BATCH)
+			load(part.map(([key]) => key)).then(
+				(found) => {
+					for (const [key, waiters] of part)
+						for (const w of waiters) w.resolve(found[key] ?? null)
+				},
+				(error) => {
+					for (const [, waiters] of part)
+						for (const w of waiters) w.reject(error)
+				},
+			)
+		}
+	}
+	return (key: string) =>
+		new Promise<ForYouDetail | null>((resolve, reject) => {
+			const waiters = queue.get(key) ?? []
+			waiters.push({ resolve, reject })
+			queue.set(key, waiters)
+			timer ??= setTimeout(flush, 0)
+		})
+}
+
+/** The details endpoint: GET /api/for-you/details?keys=a,b,c. */
+export const fetchDetails: DetailsLoader = async (keys) => {
+	const res = await fetch(
+		`/api/for-you/details?keys=${keys.map(encodeURIComponent).join(",")}`,
+	)
+	if (!res.ok) throw new Error(`Details failed: ${res.status}`)
+	return res.json()
+}
+
+export const posterSrc = (path: string | null, size = "w342") =>
+	path ? `https://image.tmdb.org/t/p/${size}${path}` : undefined
+export const backdropSrc = (path: string | null, size = "w1280") =>
+	path ? `https://image.tmdb.org/t/p/${size}${path}` : undefined
