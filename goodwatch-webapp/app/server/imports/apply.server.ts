@@ -581,7 +581,6 @@ export async function decideImport(
 	)
 		throw new NativeImportError(400, "Choose a valid answer and import rows.")
 	let row = await getImportRow(userId, id)
-	const wasStalled = summarize(row).stalled
 	const check = () => {
 		const summary = summarize(row)
 		if (
@@ -596,6 +595,15 @@ export async function decideImport(
 			)
 	}
 	check()
+	// Claim the entry version before any answer, touch, or recount changes it.
+	// A later version may belong to another pod that already restarted this run.
+	const ownsStalledRun =
+		summarize(row).stalled &&
+		(await claim(
+			row,
+			"status = 'running', options = ?, updated_at = CURRENT_TIMESTAMP, error = NULL",
+			[row.options],
+		))
 	if (!rows) {
 		let saved = false
 		for (let attempt = 0; attempt < 3; attempt++) {
@@ -643,11 +651,11 @@ export async function decideImport(
 	)
 	await recount(id)
 	row = await getImportRow(userId, id)
-	if (
-		row.status === "done" ||
-		row.status === "failed" ||
-		(wasStalled && row.status === "running" && !activeRuns.has(id))
-	) {
+	if (ownsStalledRun) {
+		const options = JSON.parse(row.options ?? "null") as ImportOptions
+		await holdQuestions(userId, id, options)
+		void applyRun(userId, id, options)
+	} else if (row.status === "done" || row.status === "failed") {
 		const pending = await itemRows(userId, id, true)
 		if (
 			pending.some(

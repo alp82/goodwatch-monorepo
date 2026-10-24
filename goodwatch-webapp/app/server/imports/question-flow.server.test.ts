@@ -385,6 +385,119 @@ test("answer CAS retries and competing restart claims have a single winner", asy
 	assert.equal(db.items[0].apply_state, "updated")
 })
 
+test("two pods deciding from the same stalled version start exactly one runner", async (t) => {
+	const { db, id } = setup(2)
+	db.imports[0].status = "running"
+	db.imports[0].options = JSON.stringify({ ...options, direction: "apply" })
+	db.imports[0].updated_at = new Date(0)
+	for (const item of db.items) item.apply_state = "waiting:conflict"
+	db.items[1].tmdb_id = 43
+	db.scores.push({ ...db.scores[0], tmdb_id: 43 })
+	// Separate module instances give each simulated pod its own localRuns queue.
+	const podC = await import(
+		new URL("./apply.server.ts?stalled-pod=c", import.meta.url).href
+	)
+	const bothRead = Promise.withResolvers<void>()
+	const winnerStarted = Promise.withResolvers<void>()
+	const finish = Promise.withResolvers<void>()
+	let starts = 0
+	const add = activeRuns.add.bind(activeRuns)
+	// Neither pod can see the other pod's in-process activeRuns membership.
+	t.mock.method(activeRuns, "has", () => false)
+	t.mock.method(activeRuns, "add", (value: string) => {
+		starts++
+		return add(value)
+	})
+	const ratings = async () => {
+		winnerStarted.resolve()
+		await finish.promise
+	}
+	setImportEffectsForTest(async () => {}, ratings)
+	podC.setImportEffectsForTest(async () => {}, ratings)
+	const select = db.select.bind(db)
+	let entries = 0
+	db.select = async (sql, params) => {
+		const result = await select(sql, params)
+		if (sql.includes("FROM doc.user_import WHERE id = ?") && entries < 2) {
+			const entry = ++entries
+			if (entry === 2) bothRead.resolve()
+			await bothRead.promise
+			if (entry === 2) await winnerStarted.promise
+		}
+		return result
+	}
+	try {
+		await Promise.all([
+			decideImport("member", id, "conflict", "source", [0]),
+			podC.decideImport("member", id, "conflict", "source", [1]),
+		])
+	} finally {
+		finish.resolve()
+		t.mock.restoreAll()
+	}
+	await settled(db)
+	assert.equal(entries, 2)
+	assert.equal(starts, 1)
+	assert.deepEqual(
+		db.items.map((item) => item.apply_state),
+		["updated", "updated"],
+	)
+	assert.deepEqual(
+		db.scores.map((score) => score.score),
+		[9, 9],
+	)
+})
+
+test("a stalled decide claims before writes and retries whole-answer options against a fresh version", async () => {
+	const { db, id } = setup()
+	db.imports[0].status = "running"
+	db.imports[0].options = JSON.stringify({ ...options, direction: "apply" })
+	db.imports[0].updated_at = new Date(0)
+	db.imports[0].error = "Previous runner died"
+	db.items[0].apply_state = "waiting:conflict"
+	const run = db.run.bind(db)
+	let writes = 0
+	let attempts = 0
+	db.run = async (sql, params) => {
+		if (sql.startsWith("UPDATE")) {
+			if (++writes === 1) {
+				assert.ok(sql.includes("status = 'running'"))
+				assert.ok(sql.includes("_seq_no = ? AND _primary_term = ?"))
+			}
+			if (
+				sql.startsWith("UPDATE doc.user_import SET options =") &&
+				++attempts === 1
+			)
+				return { rowcount: 0 }
+		}
+		return run(sql, params)
+	}
+	await decideImport("member", id, "conflict", "source")
+	await settled(db)
+	assert.equal(attempts, 2)
+	assert.equal(db.items[0].apply_state, "updated")
+	assert.equal(db.scores[0].score, 9)
+	assert.equal(db.imports[0].error, null)
+	assert.equal(
+		JSON.parse(String(db.imports[0].options)).answers.conflict,
+		"source",
+	)
+})
+
+test("decide on a running non-stalled import never starts a runner", async (t) => {
+	const { db, id } = setup()
+	db.imports[0].status = "running"
+	db.imports[0].options = JSON.stringify({ ...options, direction: "apply" })
+	db.imports[0].updated_at = new Date()
+	db.items[0].apply_state = "waiting:conflict"
+	const add = t.mock.method(activeRuns, "add")
+	await decideImport("member", id, "conflict", "source")
+	assert.equal(add.mock.callCount(), 0)
+	assert.equal(db.imports[0].status, "running")
+	assert.equal(db.items[0].apply_state, "approved:conflict")
+	assert.equal(db.scores[0].score, 4)
+})
+
 test("HTTP decide, strict confirm ask, and waiting filter validate and enforce ownership", async () => {
 	const { db, id } = setup(2)
 	const { action: decide } = await import(
