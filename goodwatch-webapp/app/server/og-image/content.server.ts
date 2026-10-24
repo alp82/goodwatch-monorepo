@@ -447,7 +447,7 @@ async function forYouCardContent(): Promise<OgContent> {
 			family,
 			edge,
 		})),
-		posters: posters.slice(0, 12).map((p) => p.src),
+		posters: posters.slice(0, 16).map((p) => p.src),
 	}
 }
 

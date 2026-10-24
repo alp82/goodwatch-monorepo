@@ -11,7 +11,7 @@ export interface OgForYouContent {
 	kind: "for-you"
 	/** The example taste's attributes, as the page shows them to visitors. */
 	attributes: WhorlAttribute[]
-	/** Top-scored posters for the wall. */
+	/** Top-scored posters for the wall, best first, up to 16. */
 	posters: (string | null)[]
 }
 
@@ -20,6 +20,8 @@ const BAR_H = 90
 const WALL_POSTER_W = 146
 const WALL_TOP = BAR_H - 40
 const DISC = { left: 30, top: 15, size: 600 }
+// Wall slots (row-major, eight per row) in fill order: right half, left edge, then the ones under the disc.
+const WALL_SLOTS = [4, 5, 6, 7, 12, 13, 14, 15, 0, 8, 1, 9, 2, 10, 3, 11]
 
 /** The print at `size` px with its family pills round the rim. */
 function Print({
@@ -102,7 +104,7 @@ function Print({
 	)
 }
 
-function Poster({ src, w }: { src: string; w: number }) {
+function Poster({ src, w }: { src: string | null; w: number }) {
 	const h = Math.round(w * 1.5)
 	return (
 		<div
@@ -117,20 +119,22 @@ function Poster({ src, w }: { src: string; w: number }) {
 				border: "2px solid rgba(255,255,255,0.12)",
 			}}
 		>
-			<img
-				alt=""
-				src={src}
-				width={w}
-				height={h}
-				style={{
-					position: "absolute",
-					top: 0,
-					left: 0,
-					width: w,
-					height: h,
-					objectFit: "cover",
-				}}
-			/>
+			{src && (
+				<img
+					alt=""
+					src={src}
+					width={w}
+					height={h}
+					style={{
+						position: "absolute",
+						top: 0,
+						left: 0,
+						width: w,
+						height: h,
+						objectFit: "cover",
+					}}
+				/>
+			)}
 		</div>
 	)
 }
@@ -139,11 +143,13 @@ const at = (left: number, top: number) =>
 	({ display: "flex", position: "absolute", left, top }) as const
 
 export function ForYouCard({ content }: { content: OgForYouContent }) {
+	// Two rows of eight, each poster once. The best go where the disc doesn't cover them: the right half first, then the
+	// left edge; with fewer posters the covered slots stay empty.
 	const shown = content.posters.filter((p): p is string => Boolean(p))
-	// Two rows of eight; with fewer posters they repeat.
-	const wall = shown.length
-		? Array.from({ length: 16 }, (_, i) => shown[i % shown.length])
-		: []
+	const wall: (string | null)[] = Array(WALL_SLOTS.length).fill(null)
+	WALL_SLOTS.forEach((slot, i) => {
+		wall[slot] = shown[i] ?? null
+	})
 	const [first, second] = FOR_YOU_CARD_COPY.title
 	return (
 		<div

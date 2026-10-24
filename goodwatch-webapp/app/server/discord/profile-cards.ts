@@ -119,7 +119,7 @@ export function profileCardPage(handle: string, choice: ProfileCardChoice) {
 /**
  * The card image. The query changes every minute: Discord's media proxy keeps an image by its address, so a fixed
  * address would keep showing an old card after the member's taste or settings change. The card route ignores the
- * query, so the server's own card cache (og-card:v5) still serves it.
+ * query, so the server's own card cache (og-card:v6) still serves it.
  */
 export function profileCardImage(
 	handle: string,
