@@ -17,7 +17,7 @@ import {
 } from "../../domain/episode-scores.ts"
 import {
 	IMPORT_MAX_ROWS,
-	type IMPORT_QUESTIONS,
+	IMPORT_QUESTION_GATE_ORDER,
 	IMPORT_SHOW_STATUS_LABELS,
 	IMPORT_SOURCE_NAMES,
 	canImportWantToSee,
@@ -662,15 +662,12 @@ function classify(
 				outcome: current.wants.has(ref)
 					? "unchanged"
 					: current.watched.has(ref) || row.wishlistRewatchChoice
-						? row.wishlistEvidence
-							? "conflict"
-							: "unchanged"
+						? "conflict"
 						: row.wishlistShowChoice
 							? "conflict"
 							: "new",
 				wishlistRewatchChoice:
-					!!row.wishlistEvidence &&
-					(current.watched.has(ref) || !!row.wishlistRewatchChoice),
+					current.watched.has(ref) || !!row.wishlistRewatchChoice,
 				reason:
 					!current.wants.has(ref) &&
 					(current.watched.has(ref) || row.wishlistRewatchChoice)
@@ -678,7 +675,7 @@ function classify(
 							? current.watched.has(ref)
 								? "Seen in GoodWatch. Choose whether to add this title as Want to rewatch."
 								: "Seen at the source. Choose whether to add this title as Want to rewatch."
-							: "This title is already in your watch log."
+							: "Seen in GoodWatch. Choose whether to add it as Want to rewatch."
 						: row.wishlistShowChoice && !current.wants.has(ref)
 							? "This file lists a season or episode. Choose Want to See the show to add the whole show."
 							: null,
@@ -781,14 +778,6 @@ export async function createPreview(
 }
 
 /** Trusted server adapters can preview normalized observations without inventing an upload format. */
-/** The order in which a row's questions hold it: the first that applies is the one the member answers first. */
-const QUESTION_GATE_ORDER = [
-	"undated",
-	"wholeShow",
-	"rewatch",
-	"conflict",
-] as const satisfies readonly (typeof IMPORT_QUESTIONS)[number][]
-
 export async function createParsedPreview(
 	userId: string,
 	fileName: string,
@@ -1090,7 +1079,9 @@ export async function createParsedPreview(
 				(!item.precision || item.precision === "unknown") &&
 				!item.watcharrSnapshot,
 		}
-		const first = QUESTION_GATE_ORDER.find((question) => applies[question])
+		const first = IMPORT_QUESTION_GATE_ORDER.find(
+			(question) => applies[question],
+		)
 		if (first)
 			questions[first][item.kind] = (questions[first][item.kind] ?? 0) + 1
 	}
@@ -1129,6 +1120,9 @@ export async function createParsedPreview(
 				JSON.stringify({
 					...kinds,
 					_questions: questions,
+					_wishlistRewatchChoiceCount: items.filter(
+						(item) => item.outcome === "conflict" && item.wishlistRewatchChoice,
+					).length,
 					...(source === "wishlist" ||
 					source === "tvtime" ||
 					source === "imdb_list" ||
@@ -1138,10 +1132,7 @@ export async function createParsedPreview(
 									(item) =>
 										item.outcome === "conflict" && item.wishlistShowChoice,
 								).length,
-								_wishlistRewatchChoiceCount: items.filter(
-									(item) =>
-										item.outcome === "conflict" && item.wishlistRewatchChoice,
-								).length,
+
 								_wishlistMatchCount: matchGroups.all.size,
 								// Groups the member hasn't matched yet, so the page can say "2 of 3 matched".
 								_wishlistUnresolvedMatchCount: [...matchGroups.all].filter(

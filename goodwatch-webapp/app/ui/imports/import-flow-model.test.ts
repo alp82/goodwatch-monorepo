@@ -227,6 +227,7 @@ test("the options always keep the source's watch dates and send what the answers
 	assert.deepEqual(sourceOptions(wishlist, ["want"], { rewatch: "leave" }), {
 		kinds: ["want"],
 		conflictChoice: "keep",
+		wishlistRewatch: false,
 		watchDates: "preserve",
 	})
 })
@@ -459,4 +460,20 @@ test("a stopped run gives the server's reason first", () => {
 		stopReason({ error: null, stalled: true, operation: "undo" }),
 		"Your undo stopped making progress.",
 	)
+})
+
+test("every source asks rewatch and sends an explicit answer when its preview counts Seen wishes", () => {
+	for (const source of ["letterboxd", "trakt", "tvtime", "csv"] as const) {
+		const preview = summary({ source, wishlistRewatchChoiceCount: 1 })
+		assert.equal(conflictCountNeedsRows(preview), true)
+		assert.deepEqual(
+			sourceQuestions({ summary: preview, kinds: ["want"], scoreConflicts: 0 }),
+			["rewatch"],
+		)
+		for (const answer of ["add", "leave"])
+			assert.equal(
+				sourceOptions(preview, ["want"], { rewatch: answer }).wishlistRewatch,
+				answer === "add",
+			)
+	}
 })

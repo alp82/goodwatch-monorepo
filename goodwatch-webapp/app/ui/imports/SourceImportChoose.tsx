@@ -600,7 +600,8 @@ function Ask({
 						selected={picked === ANSWER.conflicts.source}
 						title={`No, use ${source}'s`}
 						note={
-							summary.source === "tvtime"
+							summary.source === "tvtime" &&
+							summary.wishlistRewatchChoiceCount === undefined
 								? "For later titles you've already seen also come in as Want to rewatch."
 								: undefined
 						}

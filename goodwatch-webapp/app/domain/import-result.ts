@@ -362,6 +362,11 @@ export const skippedEntry = (
 	change: { type: "skipped", kind, label, row: rowIndex + 1, reason },
 })
 
+export const QUESTION_KEPT_REASON = {
+	rewatch: "Left as Seen, as you chose.",
+	wholeShow: "Left off Want to See for the whole show, as you chose.",
+} as const
+
 /**
  * Why a row the member chose to import left GoodWatch as it was, or null when the row changed something.
  * `current` is the member's rating when the preview was made, for a rating conflict.
@@ -374,6 +379,11 @@ export function keptReason(row: {
 	current?: number | null
 	reason?: string | null
 }) {
+	if (
+		row.applyState === "kept" &&
+		Object.values(QUESTION_KEPT_REASON).some((reason) => reason === row.reason)
+	)
+		return row.reason
 	if (row.outcome === "unchanged") return "Already the same in GoodWatch."
 	if (row.outcome === "conflict" && row.keepConflicts)
 		return row.kind === "rating" && typeof row.current === "number"

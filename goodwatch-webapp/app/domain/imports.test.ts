@@ -25,7 +25,7 @@ const row: ImportItem = {
 	reason: null,
 }
 
-test("gate matches the original predicate and conflict choices across every source and legacy option combination", () => {
+test("gate preserves legacy coupling and honors explicit rewatch consent across every source and option combination", () => {
 	const outcomes: ImportOutcome[] = [
 		"new",
 		"conflict",
@@ -68,15 +68,18 @@ test("gate matches the original predicate and conflict choices across every sour
 											wishlistRewatch,
 											wishlistShows,
 										}
-										// Pre-extraction predicates are the regression oracle.
+										// The legacy predicates remain the oracle when independent consent is absent.
 										const independent = [
 											"watcharr",
 											"imdb-watchlist",
 											"mdblist",
 										].includes(source ?? "")
-										const allowRewatch = independent
-											? wishlistRewatch === true
-											: conflictChoice === "source"
+										const allowRewatch =
+											wishlistRewatch !== undefined
+												? wishlistRewatch === true
+												: independent
+													? wishlistRewatch === true
+													: !!source && conflictChoice === "source"
 										const kept =
 											kind === "unsupported" ||
 											!input.kinds.includes(kind) ||

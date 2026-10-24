@@ -7,6 +7,7 @@ function requiredRow(row: Row | undefined): Row {
 // The fake implements only these statement shapes. Reject changed predicates or columns
 // instead of silently returning empty rows/success. Placeholder lists may vary in length.
 const supportedImportSql = new Set([
+	"SELECT created_at, updated_at FROM user_wishlist WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"SELECT i.id FROM doc.user_import i INNER JOIN doc.user_import_item j ON i.id = j.import_id WHERE i.user_id = ? AND i.source = 'tvtime' AND j.kind = 'resolution' AND j.row_index = -1 ORDER BY i.created_at DESC, i.id DESC LIMIT 1",
 	"SELECT source_key, payload FROM doc.user_import_item WHERE import_id LIKE ? AND source_key > ? AND kind = 'resolution' ORDER BY source_key LIMIT 4",
 	"SELECT status, user_id FROM doc.user_import WHERE id = ?",
@@ -121,6 +122,16 @@ supportedImportSql.add(
 )
 supportedImportSql.add(
 	"UPDATE doc.user_import SET status = ?, finished_at = COALESCE(finished_at, CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP, error = ? WHERE id = ? AND _seq_no = ? AND _primary_term = ?",
+)
+for (const question of ["rewatch", "wholeShow"])
+	supportedImportSql.add(
+		`UPDATE doc.user_import_item SET apply_state = 'waiting:${question}' WHERE import_id = ? AND apply_state IS NULL AND row_index IN (?)`,
+	)
+supportedImportSql.add(
+	"UPDATE doc.user_import_item SET apply_state = ?, payload = ?, reason = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND apply_state = ?",
+)
+supportedImportSql.add(
+	"UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP, reason = ? WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed' OR apply_state LIKE 'approved:%')",
 )
 for (const sql of [...supportedImportSql]) {
 	if (sql.includes("AND apply_state = 'waiting:conflict'"))
@@ -794,12 +805,31 @@ export class ImportDb {
 			return { rowcount: 1 }
 		}
 		if (
+			s.startsWith(
+				"UPDATE doc.user_import_item SET apply_state = ?, payload = ?",
+			)
+		) {
+			const row = this.items.find(
+				(row) =>
+					row.import_id === params[3] &&
+					row.row_index === params[4] &&
+					row.apply_state === params[5],
+			)
+			if (!row) return { rowcount: 0 }
+			row.apply_state = params[0]
+			row.payload = params[1]
+			row.reason = params[2]
+			row.applied_at = new Date()
+			return { rowcount: 1 }
+		}
+		if (
 			s.startsWith("UPDATE doc.user_import_item SET apply_state") &&
 			(s.includes("row_index IN (") ||
 				s.includes("apply_state = 'waiting:conflict'") ||
 				s.includes("LIKE 'waiting:%'"))
 		) {
-			const holding = s.includes("SET apply_state = 'waiting:conflict'")
+			const heldState = s.match(/SET apply_state = '(waiting:[a-zA-Z]+)'/)?.[1]
+			const holding = !!heldState
 			const undo = s.includes("LIKE 'waiting:%'")
 			const id = params[holding || undo ? 0 : 1]
 			const indexes = params.slice(holding ? 1 : 2)
@@ -819,11 +849,7 @@ export class ImportDb {
 							: row.apply_state !== "waiting:conflict"
 				)
 					continue
-				row.apply_state = holding
-					? "waiting:conflict"
-					: undo
-						? "kept"
-						: params[0]
+				row.apply_state = holding ? heldState : undo ? "kept" : params[0]
 				if (!holding && !undo) row.applied_at = new Date()
 				if (s.includes("reason = 'You chose"))
 					row.reason = "You chose to keep what GoodWatch has."
@@ -861,9 +887,12 @@ export class ImportDb {
 			return { rowcount: 1 }
 		}
 		if (s.startsWith("UPDATE doc.user_import_item SET apply_state = ?")) {
+			const offset = s.includes("reason = ?") ? 1 : 0
 			const row = requiredRow(
 				this.items.find(
-					(x) => x.import_id === params[1] && x.row_index === params[2],
+					(x) =>
+						x.import_id === params[1 + offset] &&
+						x.row_index === params[2 + offset],
 				),
 			)
 			if (
@@ -873,6 +902,7 @@ export class ImportDb {
 				!String(row.apply_state).startsWith("approved:")
 			)
 				return { rowcount: 0 }
+			if (offset) row.reason = params[1]
 			row.apply_state = params[0]
 			row.applied_at = new Date()
 			return { rowcount: 1 }

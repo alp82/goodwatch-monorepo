@@ -183,6 +183,11 @@ export function summarize(row: ImportRow): ImportSummary {
 			failed: Number(row.failed),
 		},
 		stalled: isStalled(row),
+		...(_wishlistRewatchChoiceCount !== undefined
+			? {
+					wishlistRewatchChoiceCount: Number(_wishlistRewatchChoiceCount),
+				}
+			: {}),
 		...(row.source === "wishlist" ||
 		row.source === "tvtime" ||
 		row.source === "imdb_list" ||
@@ -197,11 +202,6 @@ export function summarize(row: ImportRow): ImportSummary {
 							}
 						: {}),
 					wishlistShowChoiceCount: Number(_wishlistShowChoiceCount ?? 0),
-					...(_wishlistRewatchChoiceCount !== undefined
-						? {
-								wishlistRewatchChoiceCount: Number(_wishlistRewatchChoiceCount),
-							}
-						: {}),
 				}
 			: {}),
 		...(row.source === "tvtime"
@@ -328,7 +328,7 @@ export async function listItems(
 	limit: number,
 	/** Only the conflict rows confirm decides by the conflict choice, counted exactly; for the conflict question. */
 	followsChoice = false,
-	waiting?: "conflict",
+	waiting?: "conflict" | "rewatch" | "wholeShow",
 ) {
 	const summary = summarize(await getImportRow(userId, id))
 	if (waiting) {
@@ -352,7 +352,17 @@ export async function listItems(
 			"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND outcome = ? ORDER BY row_index LIMIT ? OFFSET ?",
 			[id, userId, "conflict", IMPORT_MAX_ROWS, 0],
 		)
-		const items = conflicts.map(publicItemRow).filter(followsConflictChoice)
+		const items = conflicts
+			.map(publicItemRow)
+			.filter((item) =>
+				followsConflictChoice(
+					item,
+					summary.options ??
+						(summary.wishlistRewatchChoiceCount !== undefined
+							? { wishlistRewatch: false }
+							: undefined),
+				),
+			)
 		return { items: items.slice(offset, offset + limit), total: items.length }
 	}
 	const rows = await select<ItemRow>(

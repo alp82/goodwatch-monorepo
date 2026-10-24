@@ -10,7 +10,10 @@ const schema = z
 		kinds: z.array(z.enum(IMPORT_KINDS)).min(1).max(IMPORT_KINDS.length),
 		conflictChoice: z.enum(["keep", "source"]),
 		watchDates: z.enum(["preserve", "unknown"]),
-		ask: z.array(z.literal("conflict")).max(1).optional(),
+		ask: z
+			.array(z.enum(["conflict", "rewatch", "wholeShow"]))
+			.max(3)
+			.optional(),
 		wishlistShows: z.boolean().optional(),
 		wishlistRewatch: z.boolean().optional(),
 	})

@@ -68,7 +68,7 @@ export const sourceThing = (source: ImportSource | "imdb") =>
 export const availableKinds = (summary: Pick<ImportSummary, "kinds">) =>
 	IMPORT_KINDS.filter((kind) => (summary.kinds[kind] ?? 0) > 0)
 
-/** A wishlist file that only brings Want to See. Its rewatch choice rides on the conflict choice at the server. */
+/** A wishlist file that only brings Want to See. */
 export const isWishlistOnly = (
 	summary: Pick<ImportSummary, "source" | "kinds">,
 ) =>
@@ -86,10 +86,8 @@ const WISHLIST_CHOICE_SOURCES: ImportSource[] = [
 
 /** Titles on the wishlist already Seen, which can come in as Want to rewatch. */
 export const rewatchCount = (summary: ImportSummary) =>
-	WISHLIST_CHOICE_SOURCES.includes(summary.source)
-		? (summary.wishlistRewatchChoiceCount ??
-			(isWishlistOnly(summary) ? summary.counts.conflict : 0))
-		: 0
+	summary.wishlistRewatchChoiceCount ??
+	(isWishlistOnly(summary) ? summary.counts.conflict : 0)
 
 /** Shows the file lists by season or episode, which can come in as the whole show on Want to See. */
 export const wholeShowCount = (summary: ImportSummary) =>
@@ -113,8 +111,6 @@ const SCORE_LIKE: ImportKind[] = ["rating", "review", "episode_rating"]
 export const conflictCountNeedsRows = (summary: ImportSummary) =>
 	!isWishlistOnly(summary) &&
 	summary.counts.conflict > 0 &&
-	// TV Time's conflict choice also decides For later titles already Seen, so all its conflicts are one question.
-	summary.source !== "tvtime" &&
 	rewatchCount(summary) + wholeShowCount(summary) > 0
 
 /**
@@ -206,7 +202,7 @@ export function sourceOptions(
 		return {
 			kinds: ["want"],
 			conflictChoice: rewatch ? "source" : "keep",
-			...(rewatch ? { wishlistRewatch: true } : {}),
+			...(rewatchCount(summary) > 0 ? { wishlistRewatch: rewatch } : {}),
 			watchDates: "preserve",
 			...(shows
 				? { wishlistShows: answers["whole-show"] === ANSWER["whole-show"].add }
@@ -217,9 +213,7 @@ export function sourceOptions(
 		conflictChoice:
 			answers.conflicts === ANSWER.conflicts.source ? "source" : "keep",
 		watchDates: "preserve",
-		...(WISHLIST_CHOICE_SOURCES.includes(summary.source)
-			? { wishlistRewatch: rewatch }
-			: {}),
+		...(rewatchCount(summary) > 0 ? { wishlistRewatch: rewatch } : {}),
 		...(shows
 			? { wishlistShows: answers["whole-show"] === ANSWER["whole-show"].add }
 			: {}),

@@ -434,7 +434,7 @@ test("HTTP decide, strict confirm ask, and waiting filter validate and enforce o
 	])
 		assert.equal((await send(decide, body)).status, 400)
 	for (const body of [
-		{ ...options, ask: ["rewatch"] },
+		{ ...options, ask: ["undated"] },
 		{ ...options, answers: { conflict: "source" } },
 	])
 		assert.equal((await send(confirm, body)).status, 400)
@@ -763,4 +763,255 @@ test("undo cancels an approval racing its first cancellation", async () => {
 		() => decideImport("member", id, "conflict", "source", []),
 		{ status: 400 },
 	)
+})
+
+function setupRewatch(n = 1, evidence?: string) {
+	const { db, id } = setup(n)
+	db.scores = []
+	for (const item of db.items) {
+		item.kind = "want"
+		item.payload = JSON.stringify({
+			kind: "want",
+			title: "Seen title",
+			wishlistRewatchChoice: true,
+			...(evidence
+				? {
+						wishlistEvidence: {
+							source: evidence,
+							completeness: "complete",
+							mediaType: "movie",
+						},
+					}
+				: {}),
+		})
+	}
+	db.watches.push({
+		user_id: "member",
+		tmdb_id: 42,
+		media_type: "movie",
+		watch_id: "existing",
+	})
+	return { db, id }
+}
+const rewatchOptions: ImportOptions = {
+	kinds: ["want"],
+	conflictChoice: "keep",
+	watchDates: "preserve",
+	ask: ["rewatch"],
+}
+
+test("rewatch add and leave work for all rows and per row, independently of conflict choice", async () => {
+	for (const answer of ["add", "leave"] as const)
+		for (const perRow of [false, true]) {
+			const { db, id } = setupRewatch(2)
+			await confirmImport("member", id, rewatchOptions)
+			await settled(db)
+			assert.deepEqual(
+				db.items.map((row) => row.apply_state),
+				["waiting:rewatch", "waiting:rewatch"],
+			)
+			const result = await decideImport(
+				"member",
+				id,
+				"rewatch",
+				answer,
+				perRow ? [0] : undefined,
+			)
+			assert.equal(result.decided, perRow ? 1 : 2)
+			await settled(db)
+			assert.equal(db.items[0].apply_state, answer === "add" ? "added" : "kept")
+			assert.equal(db.wishlist.length, answer === "add" ? 1 : 0)
+			if (perRow) assert.equal(db.items[1].apply_state, "waiting:rewatch")
+			assert.equal(db.imports[0].conflict_choice, "keep")
+			assert.equal(
+				JSON.parse(String(db.items[0].payload))._answer.rewatch,
+				answer,
+			)
+			if (answer === "leave") {
+				const result = await getImportResult("member", id)
+				assert.ok(
+					JSON.stringify(result).includes("Left as Seen, as you chose."),
+				)
+			}
+		}
+})
+
+test("whole-show add re-gates the row to rewatch atomically, and both per-row consents survive failure", async () => {
+	const { db, id } = setupRewatch()
+	const payload = JSON.parse(String(db.items[0].payload))
+	db.items[0].payload = JSON.stringify({ ...payload, wishlistShowChoice: true })
+	const opts: ImportOptions = {
+		...rewatchOptions,
+		ask: ["rewatch", "wholeShow"],
+	}
+	await confirmImport("member", id, opts)
+	await settled(db)
+	assert.equal(db.items[0].apply_state, "waiting:wholeShow")
+	assert.equal(
+		(await decideImport("member", id, "wholeShow", "add", [0])).decided,
+		1,
+	)
+	assert.equal(db.items[0].apply_state, "waiting:rewatch")
+	assert.equal(db.wishlist.length, 0)
+	const original = db.run.bind(db)
+	let fail = true
+	db.run = async (sql, params) => {
+		if (fail && sql.startsWith("INSERT INTO user_wishlist")) {
+			fail = false
+			throw new Error("injected")
+		}
+		return original(sql, params)
+	}
+	await decideImport("member", id, "rewatch", "add", [0])
+	await settled(db)
+	assert.equal(db.items[0].apply_state, "failed")
+	assert.deepEqual(JSON.parse(String(db.items[0].payload))._answer, {
+		wholeShow: "add",
+		rewatch: "add",
+	})
+	await confirmImport("member", id, opts)
+	await settled(db)
+	assert.equal(db.items[0].apply_state, "added")
+})
+
+test("whole-show leave keeps an honest reason for all rows and per row", async () => {
+	for (const perRow of [false, true]) {
+		const { db, id } = setupRewatch(2)
+		for (const row of db.items)
+			row.payload = JSON.stringify({
+				...JSON.parse(String(row.payload)),
+				wishlistShowChoice: true,
+			})
+		await confirmImport("member", id, {
+			...rewatchOptions,
+			ask: ["wholeShow", "rewatch"],
+		})
+		await settled(db)
+		await decideImport(
+			"member",
+			id,
+			"wholeShow",
+			"leave",
+			perRow ? [0] : undefined,
+		)
+		assert.equal(db.items[0].apply_state, "kept")
+		assert.equal(
+			db.items[0].reason,
+			"Left off Want to See for the whole show, as you chose.",
+		)
+		assert.equal(db.wishlist.length, 0)
+		if (perRow) assert.equal(db.items[1].apply_state, "waiting:wholeShow")
+	}
+})
+
+test("legacy confirm preserves serialized options and coupling with and without evidence", async () => {
+	for (const evidence of [undefined, "tvtime", "watcharr"])
+		for (const conflictChoice of ["source", "keep"] as const) {
+			const { db, id } = setupRewatch(1, evidence)
+			db.imports[0].source = evidence === "tvtime" ? "tvtime" : "trakt"
+			const legacy: ImportOptions = {
+				kinds: ["want"],
+				conflictChoice,
+				watchDates: "preserve",
+			}
+			await confirmImport("member", id, legacy)
+			await settled(db)
+			assert.equal(
+				db.imports[0].options,
+				JSON.stringify({ ...legacy, direction: "apply" }),
+			)
+			assert.equal(
+				db.items[0].apply_state,
+				evidence === "tvtime" && conflictChoice === "source" ? "added" : "kept",
+			)
+			assert.equal(JSON.parse(String(db.items[0].payload))._answer, undefined)
+		}
+})
+
+test("explicit rewatch answer controls every source even when conflict choice disagrees", async () => {
+	for (const evidence of [undefined, "tvtime", "watcharr"])
+		for (const add of [true, false]) {
+			const { db, id } = setupRewatch(1, evidence)
+			await confirmImport("member", id, {
+				kinds: ["want"],
+				watchDates: "preserve",
+				conflictChoice: add ? "keep" : "source",
+				wishlistRewatch: add,
+			})
+			await settled(db)
+			assert.equal(db.items[0].apply_state, add ? "added" : "kept")
+		}
+})
+
+test("an all-row rewatch leave answered before whole-show add keeps the correct reason", async () => {
+	const { db, id } = setupRewatch()
+	db.items[0].payload = JSON.stringify({
+		...JSON.parse(String(db.items[0].payload)),
+		wishlistShowChoice: true,
+	})
+	await confirmImport("member", id, {
+		...rewatchOptions,
+		ask: ["wholeShow", "rewatch"],
+	})
+	await settled(db)
+	await decideImport("member", id, "rewatch", "leave")
+	await decideImport("member", id, "wholeShow", "add", [0])
+	assert.equal(db.items[0].apply_state, "kept")
+	assert.equal(db.items[0].reason, "Left as Seen, as you chose.")
+	assert.equal(db.wishlist.length, 0)
+})
+
+test("all-row answers repair interrupted transitions and NULL holds", async () => {
+	for (const answer of ["add", "leave"] as const)
+		for (const state of [null, "waiting:rewatch", "approved:rewatch"]) {
+			const { db, id } = setupRewatch()
+			await confirmImport("member", id, rewatchOptions)
+			await settled(db)
+			db.imports[0].options = JSON.stringify({
+				...rewatchOptions,
+				answers: { rewatch: answer },
+				direction: "apply",
+			})
+			// A no-write transition cannot have produced an approval.
+			if (answer === "leave" && state === "approved:rewatch") continue
+			db.items[0].apply_state = state
+			await decideImport("member", id, "rewatch", answer)
+			await settled(db)
+			assert.equal(db.items[0].apply_state, answer === "add" ? "added" : "kept")
+			if (answer === "leave")
+				assert.equal(db.items[0].reason, "Left as Seen, as you chose.")
+		}
+})
+
+test("new no-evidence show rewatch consent still checks the member's show status", async () => {
+	for (const state of ["seen", "watching", "on_hold", "dropped"]) {
+		const { db, id } = setupRewatch()
+		db.items[0].media_type = "show"
+		const tracking = new FakeTrackingCrate()
+		tracking.seed("user_watch_state", [
+			{ user_id: "member", tmdb_id: 42, media_type: "show", state, pass: 1 },
+		])
+		setCrateClientForTest(tracking)
+		await confirmImport("member", id, {
+			kinds: ["want"],
+			conflictChoice: "keep",
+			watchDates: "preserve",
+			wishlistRewatch: true,
+		})
+		await settled(db)
+		assert.equal(db.items[0].apply_state, state === "seen" ? "added" : "kept")
+	}
+})
+
+test("pre-deploy unchanged Seen wants stay unchanged even with new consent", async () => {
+	const { db, id } = setupRewatch()
+	db.items[0].outcome = "unchanged"
+	await confirmImport("member", id, {
+		...rewatchOptions,
+		wishlistRewatch: true,
+	})
+	await settled(db)
+	assert.equal(db.items[0].outcome, "unchanged")
+	assert.equal(db.items[0].apply_state, "kept")
+	assert.equal(db.wishlist.length, 0)
 })

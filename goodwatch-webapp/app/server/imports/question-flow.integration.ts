@@ -5,7 +5,9 @@ import { after, before, test } from "node:test"
 import type { Param } from "./store.server.ts"
 const { setImportDbForTest, getImportRow, itemRows, claim, run, refreshItems } =
 	await import("./store.server.ts")
-const { holdQuestions, recount } = await import("./apply.server.ts")
+const { holdQuestions, recount, transitionWishlistQuestion } = await import(
+	"./apply.server.ts"
+)
 const url = new URL(process.env.IMPORTS_TEST_CRATE_URL ?? "http://invalid")
 if (
 	url.protocol !== "http:" ||
@@ -139,4 +141,79 @@ test("real Crate holds NULL rows, releases approvals, counts them, and fences fi
 		true,
 	)
 	assert.equal((await getImportRow("member", "questions")).finished_at, null)
+})
+
+test("real Crate whole-show transitions atomically save consent and re-gate to rewatch", async () => {
+	const options = {
+		kinds: ["want"] as ["want"],
+		conflictChoice: "keep" as const,
+		watchDates: "preserve" as const,
+		ask: ["wholeShow", "rewatch"] as ["wholeShow", "rewatch"],
+	}
+	await sql(
+		"INSERT INTO doc.user_import (id,user_id,source,status,options,created_at,updated_at) VALUES ('wishlist-questions','member','letterboxd','running',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)",
+		[JSON.stringify({ ...options, direction: "apply" })],
+	)
+	await sql(
+		"INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,payload,outcome,tmdb_id,media_type) VALUES ('wishlist-questions',0,'member','want',?,'conflict',42,'movie')",
+		[
+			JSON.stringify({
+				kind: "want",
+				title: "Seen",
+				wishlistShowChoice: true,
+				wishlistRewatchChoice: true,
+			}),
+		],
+	)
+	await refreshItems()
+	await holdQuestions("member", "wishlist-questions", options)
+	assert.equal(
+		(await itemRows("member", "wishlist-questions"))[0].applyState,
+		"waiting:wholeShow",
+	)
+	assert.equal(
+		await transitionWishlistQuestion(
+			"member",
+			"wishlist-questions",
+			"wholeShow",
+			"add",
+			[0],
+			options,
+		),
+		1,
+	)
+	await refreshItems()
+	let item = (await itemRows("member", "wishlist-questions"))[0]
+	assert.equal(item.applyState, "waiting:rewatch")
+	assert.deepEqual(item.payload._answer, { wholeShow: "add" })
+	assert.equal(
+		await transitionWishlistQuestion(
+			"member",
+			"wishlist-questions",
+			"rewatch",
+			"add",
+			[0],
+			options,
+		),
+		1,
+	)
+	await refreshItems()
+	item = (await itemRows("member", "wishlist-questions"))[0]
+	assert.equal(item.applyState, "approved:rewatch")
+	assert.deepEqual(item.payload._answer, { wholeShow: "add", rewatch: "add" })
+})
+
+test("real Crate can keep an answered NULL row with its honest reason", async () => {
+	await sql(
+		"UPDATE doc.user_import_item SET apply_state = NULL WHERE import_id = 'wishlist-questions' AND row_index = 0",
+	)
+	const result = await run(
+		"UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP, reason = ? WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed' OR apply_state LIKE 'approved:%')",
+		["kept", "Left as Seen, as you chose.", "wishlist-questions", 0],
+	)
+	assert.equal(result.rowcount, 1)
+	await refreshItems()
+	const item = (await itemRows("member", "wishlist-questions"))[0]
+	assert.equal(item.applyState, "kept")
+	assert.equal(item.reason, "Left as Seen, as you chose.")
 })

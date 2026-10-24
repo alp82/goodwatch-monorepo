@@ -296,3 +296,23 @@ test("old previews omit questions and confirmed imports do not expose preview co
 	row.status = "done"
 	assert.equal("questions" in summarize(row), false)
 })
+
+test("Letterboxd watchlist already Seen is a rewatch conflict without wishlist evidence", async () => {
+	const { db } = setup()
+	db.watches.push({ user_id: "member", tmdb_id: 1, media_type: "movie" })
+	const summary = await createParsedPreview("member", "watchlist.zip", {
+		source: "letterboxd",
+		warnings: [],
+		observations: [observation("want")],
+	})
+	assert.equal(summary.counts.conflict, 1)
+	assert.equal(summary.wishlistRewatchChoiceCount, 1)
+	assert.equal(question(summary, "rewatch").waiting, 1)
+	const payload = JSON.parse(String(db.items[0].payload))
+	assert.equal(payload.wishlistRewatchChoice, true)
+	assert.equal(
+		db.items[0].reason,
+		"Seen in GoodWatch. Choose whether to add it as Want to rewatch.",
+	)
+	assert.equal(payload.wishlistEvidence, undefined)
+})

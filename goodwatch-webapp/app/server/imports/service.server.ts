@@ -101,7 +101,7 @@ export const getImportItems = (
 	offset: number,
 	limit: number,
 	followsChoice = false,
-	waiting?: "conflict",
+	waiting?: "conflict" | "rewatch" | "wholeShow",
 ) => listItems(userId, id, outcome, offset, limit, followsChoice, waiting)
 /** The outcomes whose titles the poster rows show, in the order they are filled. */
 const POSTER_OUTCOMES: ImportOutcome[] = ["new", "conflict", "unchanged"]

@@ -12,6 +12,7 @@ import {
 	eventUuid,
 	withProductContext,
 } from "~/telemetry/product-analytics.server"
+import { QUESTION_KEPT_REASON } from "../../domain/import-result.ts"
 import { canImportWantToSee, importGate } from "../../domain/imports.ts"
 import {
 	applyImportedEpisodeScore,
@@ -298,7 +299,7 @@ async function canApplyWishlistShow(
 	allowRewatch: boolean,
 ) {
 	if (
-		!item.wishlistEvidence ||
+		(!item.wishlistEvidence && !(item.wishlistRewatchChoice && allowRewatch)) ||
 		item.mediaType !== "show" ||
 		item.tmdbId === null
 	)
@@ -334,7 +335,10 @@ async function applySet(
 			!(await canApplyWishlistShow(userId, item, allowRewatch))
 		)
 			return "kept" as const
-		if (table === "user_wishlist" && !(item.wishlistEvidence && allowRewatch)) {
+		if (
+			table === "user_wishlist" &&
+			!(item.wishlistRewatchChoice && allowRewatch)
+		) {
 			const watched = await select<{ watch_id: string }>(
 				"SELECT watch_id FROM user_watch_log WHERE user_id = ? AND tmdb_id = ? AND media_type = ? LIMIT 1",
 				[userId, item.tmdbId, item.mediaType],
@@ -410,18 +414,23 @@ async function markItem(
 	importId: string,
 	item: ImportItem & { payload: Record<string, unknown> },
 	state: "added" | "updated" | "kept" | "failed",
+	reason?: string,
 ) {
-	if (state === "failed" && item.applyState === "approved:conflict") {
+	if (state === "failed" && item.applyState?.startsWith("approved:")) {
 		// Save the row's consent before replacing its approval with the retryable failure.
-		item.payload._answer = { conflict: "source" }
+		const question = item.applyState.slice(9) as ImportQuestion
+		item.payload._answer = {
+			...(item.payload._answer as object),
+			[question]: question === "conflict" ? "source" : "add",
+		}
 		await run(
 			"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ?",
 			[JSON.stringify(item.payload), importId, item.index],
 		)
 	}
 	await run(
-		"UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed' OR apply_state LIKE 'approved:%')",
-		[state, importId, item.index],
+		`UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP${reason ? ", reason = ?" : ""} WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed' OR apply_state LIKE 'approved:%')`,
+		[state, ...(reason ? [reason] : []), importId, item.index],
 	)
 }
 
@@ -464,14 +473,20 @@ export async function holdQuestions(
 	options: ImportOptions,
 ) {
 	if (!options.ask?.length) return
-	const held = (await itemRows(userId, id, false, true)).filter(
-		(item) => "hold" in importGate(item, options),
-	)
-	for (const batch of chunks(held, 800))
-		await run(
-			`UPDATE doc.user_import_item SET apply_state = 'waiting:conflict' WHERE import_id = ? AND apply_state IS NULL AND row_index IN (${marks(batch.length)})`,
-			[id, ...batch.map((item) => item.index)],
-		)
+	const held = new Map<ImportQuestion, number[]>()
+	for (const item of await itemRows(userId, id, false, true)) {
+		const gate = importGate(item, options)
+		if ("hold" in gate) {
+			if (!held.has(gate.hold)) held.set(gate.hold, [])
+			held.get(gate.hold)?.push(item.index)
+		}
+	}
+	for (const [question, indexes] of held)
+		for (const batch of chunks(indexes, 800))
+			await run(
+				`UPDATE doc.user_import_item SET apply_state = 'waiting:${question}' WHERE import_id = ? AND apply_state IS NULL AND row_index IN (${marks(batch.length)})`,
+				[id, ...batch],
+			)
 	await refreshItems()
 	await recount(id)
 }
@@ -492,6 +507,55 @@ async function transitionConflict(
 	return decided
 }
 
+/** Persist every row's consent atomically with its next gate, including on per-title answers. */
+export async function transitionWishlistQuestion(
+	userId: string,
+	id: string,
+	question: "rewatch" | "wholeShow",
+	answer: ImportAnswer,
+	indexes: number[] | null,
+	options: ImportOptions,
+) {
+	let decided = 0
+	for (const item of await itemRows(userId, id)) {
+		if (
+			item.applyState !== `waiting:${question}` ||
+			(indexes && !indexes.includes(item.index))
+		)
+			continue
+		item.payload._answer = {
+			...(item.payload._answer as object),
+			[question]: answer,
+		}
+		item.applyState = `approved:${question}`
+		const gate = importGate(item, options)
+		const keptQuestion = "kept" in gate ? gate.question : undefined
+		const state =
+			answer === "leave" || keptQuestion
+				? "kept"
+				: "hold" in gate
+					? `waiting:${gate.hold}`
+					: `approved:${question}`
+		const result = await run(
+			"UPDATE doc.user_import_item SET apply_state = ?, payload = ?, reason = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND apply_state = ?",
+			[
+				state,
+				JSON.stringify(item.payload),
+				answer === "leave"
+					? QUESTION_KEPT_REASON[question]
+					: keptQuestion
+						? QUESTION_KEPT_REASON[keptQuestion]
+						: item.reason,
+				id,
+				item.index,
+				`waiting:${question}`,
+			],
+		)
+		decided += result.rowcount ?? 0
+	}
+	return decided
+}
+
 /** Whole-question answers are durable before rows move, so repeating a decision repairs an interrupted request. */
 export async function decideImport(
 	userId: string,
@@ -501,8 +565,12 @@ export async function decideImport(
 	rows?: number[],
 ) {
 	if (
-		question !== "conflict" ||
-		!["keep", "source"].includes(answer) ||
+		(question !== "conflict" &&
+			question !== "rewatch" &&
+			question !== "wholeShow") ||
+		!(question === "conflict" ? ["keep", "source"] : ["add", "leave"]).includes(
+			answer,
+		) ||
 		(rows &&
 			(rows.length === 0 ||
 				rows.length > 500 ||
@@ -532,7 +600,8 @@ export async function decideImport(
 			check()
 			const options = JSON.parse(row.options ?? "null") as ImportOptions
 			options.answers = { ...options.answers, [question]: answer }
-			options.conflictChoice = answer === "source" ? "source" : "keep"
+			if (question === "conflict")
+				options.conflictChoice = answer === "source" ? "source" : "keep"
 			if (
 				await claim(
 					row,
@@ -551,7 +620,17 @@ export async function decideImport(
 			)
 	}
 	const indexes = rows ? [...new Set(rows)] : null
-	const decided = await transitionConflict(id, answer, indexes)
+	const decided =
+		question === "conflict"
+			? await transitionConflict(id, answer, indexes)
+			: await transitionWishlistQuestion(
+					userId,
+					id,
+					question,
+					answer,
+					indexes,
+					JSON.parse(row.options ?? "null") as ImportOptions,
+				)
 	// Publish row changes before touching the import version: a finisher that reads
 	// this version must also see the approvals, including across different pods.
 	await refreshItems()
@@ -631,6 +710,19 @@ async function applyRunStored(
 			}, HEARTBEAT_MS)
 			beat.unref()
 			await holdQuestions(userId, id, options)
+			for (const question of ["wholeShow", "rewatch"] as const) {
+				const answer = options.answers?.[question]
+				if (options.ask?.includes(question) && answer)
+					await transitionWishlistQuestion(
+						userId,
+						id,
+						question,
+						answer,
+						null,
+						options,
+					)
+			}
+			await refreshItems()
 			const pending = await itemRows(userId, id, true)
 			const allItems = await itemRows(userId, id)
 			const ownScores = new Map<string, Snapshot[]>()
@@ -657,11 +749,14 @@ async function applyRunStored(
 			const tally = { added: 0, updated: 0, kept: 0, failed: 0 }
 			for (const item of pending) {
 				let state: keyof typeof tally = "kept"
+				let reason: string | undefined
 				try {
 					const gate = importGate(item, options)
 					if ("hold" in gate) continue
-					if ("kept" in gate) state = "kept"
-					else if (
+					if ("kept" in gate) {
+						state = "kept"
+						if (gate.question) reason = QUESTION_KEPT_REASON[gate.question]
+					} else if (
 						isWant(item) &&
 						item.wishlistRewatchChoice &&
 						watchRefs.has(ref(item)) &&
@@ -709,7 +804,7 @@ async function applyRunStored(
 					state = "failed"
 				}
 				tally[state]++
-				await markItem(id, item, state)
+				await markItem(id, item, state, reason)
 				if (
 					(state === "added" || state === "updated") &&
 					(item.kind === "rating" ||

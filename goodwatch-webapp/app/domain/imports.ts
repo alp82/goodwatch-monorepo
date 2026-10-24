@@ -568,7 +568,7 @@ export interface ImportItem extends ImportObservation {
 		| null
 }
 
-/** Wishlist evidence whose Seen titles get their own Want to rewatch answer; others ride on the conflict choice. */
+/** Legacy evidence sources with independent rewatch consent before every source gained the question. */
 export const REWATCH_QUESTION_EVIDENCE = [
 	"watcharr",
 	"imdb-watchlist",
@@ -584,26 +584,40 @@ export const followsConflictChoice = (
 		ImportItem,
 		"outcome" | "wishlistRewatchChoice" | "wishlistEvidence"
 	>,
+	options?: Pick<ImportOptions, "wishlistRewatch" | "ask">,
 ) =>
 	item.outcome === "conflict" &&
 	(item.wishlistRewatchChoice
-		? !REWATCH_QUESTION_EVIDENCE.includes(item.wishlistEvidence?.source ?? "")
+		? options?.wishlistRewatch === undefined &&
+			!options?.ask?.includes("rewatch") &&
+			!REWATCH_QUESTION_EVIDENCE.includes(item.wishlistEvidence?.source ?? "")
 		: item.wishlistRewatchChoice !== false)
 
-/** Resolve today's source-specific consent without changing the stored options. */
+/** Explicit rewatch consent takes priority; absent consent preserves the legacy source rules. */
 export function effectiveImportOptions(
 	item: Pick<ImportItem, "wishlistEvidence">,
 	options: ImportOptions,
 ): ImportOptions {
 	return {
 		...options,
-		wishlistRewatch: REWATCH_QUESTION_EVIDENCE.includes(
-			item.wishlistEvidence?.source ?? "",
-		)
-			? options.wishlistRewatch === true
-			: options.conflictChoice === "source",
+		wishlistRewatch:
+			options.wishlistRewatch !== undefined || options.ask?.includes("rewatch")
+				? options.wishlistRewatch === true
+				: REWATCH_QUESTION_EVIDENCE.includes(
+							item.wishlistEvidence?.source ?? "",
+						)
+					? options.wishlistRewatch === true
+					: !!item.wishlistEvidence && options.conflictChoice === "source",
 	}
 }
+
+/** Shared gate order. T5 will enable undated holding, including wants with held watches for the same title. */
+export const IMPORT_QUESTION_GATE_ORDER = [
+	"undated",
+	"wholeShow",
+	"rewatch",
+	"conflict",
+] as const
 
 /**
  * Pure eligibility boundary before any writes. Open questions hold their rows;
@@ -612,36 +626,56 @@ export function effectiveImportOptions(
 export function importGate(
 	item: ImportItem & { payload?: Record<string, unknown> },
 	options: ImportOptions,
-): { kept: true } | { hold: ImportQuestion } | { effective: ImportOptions } {
-	const answered =
-		item.applyState === "approved:conflict"
-			? "source"
-			: ((
-					item.payload?._answer as
-						| Partial<Record<ImportQuestion, ImportAnswer>>
-						| undefined
-				)?.conflict ?? options.answers?.conflict)
-	const effective = effectiveImportOptions(
-		item,
-		answered
+):
+	| { kept: true; question?: "wholeShow" | "rewatch" }
+	| { hold: ImportQuestion }
+	| { effective: ImportOptions } {
+	const answers = {
+		...options.answers,
+		...(item.payload?._answer as
+			| Partial<Record<ImportQuestion, ImportAnswer>>
+			| undefined),
+	}
+	if (item.applyState?.startsWith("approved:")) {
+		const question = item.applyState.slice(9) as ImportQuestion
+		answers[question] = question === "conflict" ? "source" : "add"
+	}
+	const effective = effectiveImportOptions(item, {
+		...options,
+		...(answers.conflict
 			? {
-					...options,
-					conflictChoice: answered === "source" ? "source" : "keep",
+					conflictChoice:
+						answers.conflict === "source"
+							? ("source" as const)
+							: ("keep" as const),
 				}
-			: options,
-	)
+			: {}),
+		...(answers.wholeShow
+			? { wishlistShows: answers.wholeShow === "add" }
+			: {}),
+		...(answers.rewatch ? { wishlistRewatch: answers.rewatch === "add" } : {}),
+	})
 	if (
 		item.kind === "unsupported" ||
 		!effective.kinds.includes(item.kind) ||
 		["unmatched", "unsupported", "invalid", "unchanged"].includes(item.outcome)
 	)
 		return { kept: true }
-	if (
-		options.ask?.includes("conflict") &&
-		!answered &&
-		followsConflictChoice(item)
-	)
-		return { hold: "conflict" }
+	// Keep this order independent of the order of questions in ask.
+	for (const question of IMPORT_QUESTION_GATE_ORDER) {
+		// Reserved for T5: both undated watches and wants whose title has waiting:undated watches.
+		if (question === "undated") continue
+		const applies =
+			question === "wholeShow"
+				? item.wishlistShowChoice
+				: question === "rewatch"
+					? item.wishlistRewatchChoice
+					: followsConflictChoice(item, options)
+		if (applies && options.ask?.includes(question) && !answers[question])
+			return { hold: question }
+		if (applies && question !== "conflict" && answers[question] === "leave")
+			return { kept: true, question }
+	}
 	if (
 		item.outcome === "conflict" &&
 		((item.wishlistShowChoice && effective.wishlistShows !== true) ||
@@ -688,7 +722,7 @@ export interface ImportOptions {
 	ask?: ImportQuestion[]
 	/** Server-written whole-question answers; per-row choices live in applyState and the retry payload. */
 	answers?: Partial<Record<ImportQuestion, ImportAnswer>>
-	/** Independent, explicit Watcharr Want to rewatch consent; never implied by rating conflicts. */
+	/** Independent, explicit Want to rewatch consent; never implied by rating conflicts. */
 	wishlistRewatch?: boolean
 	/** Explicit conversion of source season/episode wishes to whole-show wishes. */
 	wishlistShows?: boolean
