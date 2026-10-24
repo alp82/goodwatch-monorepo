@@ -672,7 +672,20 @@ export interface ImportOptions {
 	watchDates: "preserve" | "unknown"
 }
 
+export type ImportQuestionCounts = Record<
+	ImportQuestion,
+	Partial<Record<ImportKind, number>>
+>
+
 export interface ImportSummary {
+	questions?: {
+		kind: ImportQuestion
+		waiting: number
+		applying: number
+		answer: ImportAnswer | null
+		byKind?: Partial<Record<ImportKind, number>>
+	}[]
+
 	resolution?: {
 		jobId: string
 		state: string

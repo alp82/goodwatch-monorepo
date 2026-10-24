@@ -5,6 +5,7 @@ import type {
 	ImportKindCounts,
 	ImportObservation,
 	ImportOutcome,
+	ImportQuestionCounts,
 	ImportSource,
 	ImportSummary,
 	ParsedImport,
@@ -16,9 +17,11 @@ import {
 } from "../../domain/episode-scores.ts"
 import {
 	IMPORT_MAX_ROWS,
+	IMPORT_QUESTIONS,
 	IMPORT_SHOW_STATUS_LABELS,
 	IMPORT_SOURCE_NAMES,
 	canImportWantToSee,
+	followsConflictChoice,
 	importInfo,
 	isApplicableStatus,
 } from "../../domain/imports.ts"
@@ -1054,6 +1057,33 @@ export async function createParsedPreview(
 	for (const item of items)
 		if (item.kind !== "unsupported")
 			kinds[item.kind] = (kinds[item.kind] ?? 0) + 1
+	// Count after watch deduplication: watches already in the log need no date decision.
+	const questions: ImportQuestionCounts = {
+		conflict: {},
+		rewatch: {},
+		wholeShow: {},
+		undated: {},
+	}
+	for (const item of items) {
+		if (item.kind === "unsupported") continue
+		const applies = {
+			conflict: followsConflictChoice(item),
+			rewatch:
+				(item.kind === "want" || item.kind === "show_status") &&
+				item.outcome === "conflict" &&
+				item.wishlistRewatchChoice === true,
+			wholeShow: item.wishlistShowChoice === true,
+			undated:
+				item.kind === "watch" &&
+				item.outcome === "new" &&
+				(!item.precision || item.precision === "unknown") &&
+				!item.watcharrSnapshot,
+		}
+		for (const question of IMPORT_QUESTIONS)
+			if (applies[question])
+				questions[question][item.kind] =
+					(questions[question][item.kind] ?? 0) + 1
+	}
 	const now = new Date()
 	// Manually matchable source groups, and those that already carry a member's match.
 	const matchGroups = { all: new Set<string>(), resolved: new Set<string>() }
@@ -1088,6 +1118,7 @@ export async function createParsedPreview(
 				JSON.stringify(parsed.warnings),
 				JSON.stringify({
 					...kinds,
+					_questions: questions,
 					...(source === "wishlist" ||
 					source === "tvtime" ||
 					source === "imdb_list" ||

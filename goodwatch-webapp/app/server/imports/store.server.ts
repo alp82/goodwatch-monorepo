@@ -1,10 +1,12 @@
 import type { StoredUndoOutcome } from "~/domain/import-result"
 import {
 	IMPORT_MAX_ROWS,
+	IMPORT_QUESTIONS,
 	IMPORT_SOURCES,
 	type ImportItem,
 	type ImportKind,
 	type ImportOutcome,
+	type ImportQuestionCounts,
 	type ImportSource,
 	type ImportSummary,
 	followsConflictChoice,
@@ -108,6 +110,7 @@ export function summarize(row: ImportRow): ImportSummary {
 		| null
 	>(row.options, null)
 	const {
+		_questions,
 		_wishlistMatchCount,
 		_wishlistUnresolvedMatchCount,
 		_wishlistShowChoiceCount,
@@ -115,7 +118,10 @@ export function summarize(row: ImportRow): ImportSummary {
 		_tvtimeLookupLimitCount,
 		_tvtimeLookupUnavailableCount,
 		...kindCounts
-	} = parse<Record<string, number>>(row.kinds, {})
+	} = parse<Record<string, number> & { _questions?: ImportQuestionCounts }>(
+		row.kinds,
+		{},
+	)
 	return {
 		id: row.id,
 		source: row.source,
@@ -134,6 +140,20 @@ export function summarize(row: ImportRow): ImportSummary {
 			invalid: 0,
 		}),
 		kinds: { ...emptyKinds, ...kindCounts },
+		...(row.status === "preview" && _questions !== undefined
+			? {
+					questions: IMPORT_QUESTIONS.map((kind) => ({
+						kind,
+						waiting: Object.values(_questions[kind] ?? {}).reduce(
+							(sum, n) => sum + n,
+							0,
+						),
+						applying: 0,
+						answer: null,
+						byKind: _questions[kind] ?? {},
+					})),
+				}
+			: {}),
 		warnings: normalizeImportWarnings(parse(row.warnings, [])),
 		options: storedOptions
 			? {
