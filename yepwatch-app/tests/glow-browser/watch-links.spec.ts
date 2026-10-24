@@ -31,6 +31,15 @@ for (const [width,height] of [[320,568],[375,667],[390,844],[844,390],[1440,900]
   await page.getByRole('button',{name:'Choose again',exact:true}).click({trial:true});
   expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight)).toBe(true);
   await netflix.scrollIntoViewIfNeeded();await page.screenshot({path:`.expo/tonight-links-${width}.png`});
+  if (width === 390) {
+   await page.context().route('https://www.netflix.com/**', route => route.fulfill({body:'Provider destination'}));
+   await page.context().route('https://goodwatch.app/show/1411', route => route.fulfill({body:'GoodWatch title details'}));
+   const providerOpened=page.waitForEvent('popup');await netflix.click();const provider=await providerOpened;
+   await expect(provider).toHaveURL('https://www.netflix.com/title/70197057');await provider.close();
+   const detailsOpened=page.waitForEvent('popup');await details.focus();await page.keyboard.press('Enter');const full=await detailsOpened;
+   await expect(full).toHaveURL('https://goodwatch.app/show/1411');await full.close();
+   await expect(page.getByText('TONIGHT',{exact:true})).toBeVisible();
+  }
   expect(writes).toEqual([]);
  });
 }
