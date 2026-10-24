@@ -15,3 +15,7 @@ Android uses the system edge gesture and `BackHandler`/`Modal.onRequestClose`, w
 The Android workaround follows the [Expo predictive Back configuration](https://docs.expo.dev/versions/v58.0.0/config/app/#predictivebackgestureenabled) and the [React Native API 33–35 callback issue](https://github.com/react/react-native/issues/58407). Re-enable predictive navigation only after verifying both hardware Back and system-edge Back against the contextual room handler on affected Android versions.
 
 Signed Android build 11 was upgraded over build 10 on an owned Pixel 8/API 35 emulator. System Back, system edge, header Back and drawer dismissal passed; Tonight and its read-only review retained the same final choice. The public APK download was verified without an Expo login. Physical iPhone gestures and physical-device audio remain unverified in this round.
+
+## Tonight streaming links
+
+Tonight shows the final decision's checked provider offers directly, filtered to the room's selected services. Branding reuses country-specific catalog metadata and GoodWatch's logo-card treatment; metadata never creates availability. Duplicate provider families prefer their direct link. Search and availability-page fallbacks are labelled separately. All services remain reachable in a bounded scrolling list, and a distinct GoodWatch link opens the full movie/show page. The details drawer reuses the same links. No provider URL or episode entitlement is invented.

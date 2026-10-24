@@ -493,7 +493,9 @@ for (const viewport of [
       availability: [],
     };
     await page.reload();
-    await reachable('Where to watch');
+    const details = page.getByRole('link', { name: 'Full details on GoodWatch' });
+    await expect(details).toBeVisible();
+    await details.click({ trial: true });
     await reachable('Choose again');
     await reachable('Refresh room');
     await noPageScroll();

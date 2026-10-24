@@ -3,7 +3,9 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { titleYear } from './decision-model';
 import type { GlowTitle } from './model';
-import { GText, Icon, Pill, Press, glow } from './theme';
+import { WatchLinks } from './WatchLinks';
+import type { ComponentProps } from 'react';
+import { GText, Icon, Press, glow } from './theme';
 /** Only rendered for a confirmed server decision after its fresh availability check. */
 export function Done({
   title,
@@ -11,7 +13,7 @@ export function Done({
   height,
   canRestart,
   disabled,
-  where,
+  watch,
   restart,
 }: {
   title: GlowTitle;
@@ -19,7 +21,7 @@ export function Done({
   height: number;
   canRestart: boolean;
   disabled: boolean;
-  where: () => void;
+  watch: Omit<ComponentProps<typeof WatchLinks>, 'compact'>;
   restart: () => void;
 }) {
   const wide = width >= 900;
@@ -30,7 +32,7 @@ export function Done({
     72,
     Math.min(
       wide ? 420 : 360,
-      landscape ? available - 24 : available - (compact ? 300 : 350),
+      landscape ? available - 24 : available - (compact ? 390 : 430),
       width * (wide ? 0.3 : 0.56) * 1.5
     )
   );
@@ -107,13 +109,8 @@ export function Done({
             {title.episodeLabel}
           </GText>
         )}
-        <GText size={14} color={glow.muted}>
-          Everyone agrees. Enjoy your watch.
-        </GText>
         <View style={{ width: '100%', maxWidth: 440, gap: 4, marginTop: compact ? 0 : 6 }}>
-          <Pill label="Where to watch" icon="external" gold onPress={where}>
-            Where to watch
-          </Pill>
+          <WatchLinks {...watch} compact={compact} />
           {canRestart && (
             <Press label="Choose again" disabled={disabled} onPress={restart}>
               <GText bold color={glow.muted} size={14}>

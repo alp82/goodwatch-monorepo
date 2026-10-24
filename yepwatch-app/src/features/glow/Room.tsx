@@ -1,7 +1,7 @@
 import { EdgeBack } from './EdgeBack';
 import { shareInvitation } from '../../core/share-invitation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BackHandler, Linking, Platform, View, useWindowDimensions } from 'react-native';
+import { BackHandler, Platform, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { rememberRoom } from '../../core/continuous/recent-room';
@@ -25,6 +25,7 @@ import { Drawer } from './Drawer';
 import { Feedback } from '../beta/Feedback';
 import { Trailer } from './Trailer';
 import { Done } from './Done';
+import { WatchLinks } from './WatchLinks';
 import { DecisionRoom } from './DecisionRoom';
 import { titleYear } from './decision-model';
 import { useActiveTime } from './useActiveTime';
@@ -546,14 +547,14 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           send={send}
           invite={() => setDrawer('room')}
         />
-      ) : decided && title && !reviewingDecision ? (
+      ) : decided && title && card && !reviewingDecision ? (
         <Done
           title={title}
           width={width}
           height={height}
           canRestart={own.canHost}
           disabled={disabled}
-          where={() => setDrawer('details')}
+          watch={{ identity: card.identity, availability: shared.decision?.availability ?? [], screens: shared.screens }}
           restart={() => void send({ type: 'restart', expectedRevision: shared.revision })}
         />
       ) : view === 'matches' ? (
@@ -885,46 +886,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
             {[title.year, title.episodeLabel, title.genres.join(' · ')].filter(Boolean).join(' · ')}
           </GText>
           <GText>{title.overview ?? 'No synopsis is available.'}</GText>
-          {(decided ? shared.decision?.availability : card?.availability)?.map((a) => (
-            <View key={a.screenId} style={{ gap: 12 }}>
-              <GText bold>{'Available for our room'}</GText>
-              <GText size={13} color={glow.muted}>
-                {a.state === 'watchable'
-                  ? a.scope === 'title'
-                    ? title.kind === 'movie'
-                      ? 'Availability checked for this title.'
-                      : 'Series availability checked. The specific episode has not been verified.'
-                    : 'Episode availability checked.'
-                  : 'Availability is not confirmed for this screen.'}
-              </GText>
-              {a.offers.map((o, index) => (
-                <Pill
-                  key={`${o.serviceId}:${index}`}
-                  label={`${
-                    o.kind === 'search'
-                      ? 'Search'
-                      : o.kind === 'where_to_watch'
-                      ? 'Where to watch on'
-                      : 'Open'
-                  } ${o.name}`}
-                  icon="external"
-                  disabled={!o.url}
-                  onPress={() => {
-                    if (o.url && /^https:\/\//.test(o.url))
-                      void Linking.openURL(o.url).catch(() =>
-                        setNotice('The provider could not open.')
-                      );
-                  }}
-                >
-                  {o.kind === 'search'
-                    ? `Search ${o.name}`
-                    : o.kind === 'where_to_watch'
-                    ? `Where to watch · ${o.name}`
-                    : o.name}
-                </Pill>
-              ))}
-            </View>
-          ))}
+          {card && <WatchLinks identity={card.identity} availability={decided && shared.decision?.candidateId === card.id ? shared.decision.availability : card.availability} screens={shared.screens} />}
         </Drawer>
       )}
       {drawer === 'trailer' && title?.trailerUrl && (
