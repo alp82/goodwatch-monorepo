@@ -612,7 +612,7 @@ test("per-row source survives failScoreOnce and resumes without answering other 
 	await settled(db)
 	assert.equal(db.imports[0].status, "failed")
 	assert.equal(db.items[0].apply_state, "failed")
-	assert.deepEqual(JSON.parse(String(db.items[0].payload)).answer, {
+	assert.deepEqual(JSON.parse(String(db.items[0].payload))._answer, {
 		conflict: "source",
 	})
 	await confirmImport("member", id, options)

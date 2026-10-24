@@ -413,7 +413,7 @@ async function markItem(
 ) {
 	if (state === "failed" && item.applyState === "approved:conflict") {
 		// Save the row's consent before replacing its approval with the retryable failure.
-		item.payload.answer = { conflict: "source" }
+		item.payload._answer = { conflict: "source" }
 		await run(
 			"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ?",
 			[JSON.stringify(item.payload), importId, item.index],

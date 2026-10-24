@@ -617,7 +617,7 @@ export function importGate(
 		item.applyState === "approved:conflict"
 			? "source"
 			: ((
-					item.payload?.answer as
+					item.payload?._answer as
 						| Partial<Record<ImportQuestion, ImportAnswer>>
 						| undefined
 				)?.conflict ?? options.answers?.conflict)
