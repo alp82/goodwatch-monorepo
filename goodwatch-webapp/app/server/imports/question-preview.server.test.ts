@@ -202,10 +202,10 @@ test("preview exposes conflicts by kind for sources without independent rewatch 
 			},
 		],
 	})
+	// The already-Seen wish counts once, under rewatch, which holds it before the conflict question.
 	assert.deepEqual(question(summary, "conflict").byKind, {
 		rating: 1,
 		review: 1,
-		want: 1,
 	})
 	assert.deepEqual(question(summary, "rewatch").byKind, { want: 1 })
 	assert.deepEqual(question(summary, "wholeShow").byKind, {})
@@ -249,7 +249,29 @@ test("whole-show wishes and plan-to-watch rewatch statuses retain their question
 		],
 	})
 	assert.deepEqual(question(statuses, "rewatch").byKind, { show_status: 1 })
-	assert.deepEqual(question(statuses, "conflict").byKind, { show_status: 1 })
+	assert.deepEqual(question(statuses, "conflict").byKind, {})
+})
+
+test("a season wish for a show already on Want to See has no whole-show question", async () => {
+	const { db } = setup()
+	db.wishlist = [{ user_id: "member", tmdb_id: 2, media_type: "show" }]
+	const summary = await createParsedPreview("member", "wishlist.json", {
+		source: "wishlist",
+		warnings: [],
+		observations: [
+			{
+				...observation("want", 2),
+				mediaType: "show",
+				wishlistEvidence: {
+					source: "capture",
+					mediaType: "season",
+					completeness: "partial",
+				},
+			},
+		],
+	})
+	assert.equal(summary.counts.unchanged, 1)
+	assert.equal(question(summary, "wholeShow").waiting, 0)
 })
 
 test("old previews omit questions and confirmed imports do not expose preview counts", async () => {

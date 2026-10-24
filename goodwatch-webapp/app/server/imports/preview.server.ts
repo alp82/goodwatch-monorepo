@@ -17,7 +17,7 @@ import {
 } from "../../domain/episode-scores.ts"
 import {
 	IMPORT_MAX_ROWS,
-	IMPORT_QUESTIONS,
+	type IMPORT_QUESTIONS,
 	IMPORT_SHOW_STATUS_LABELS,
 	IMPORT_SOURCE_NAMES,
 	canImportWantToSee,
@@ -781,6 +781,14 @@ export async function createPreview(
 }
 
 /** Trusted server adapters can preview normalized observations without inventing an upload format. */
+/** The order in which a row's questions hold it: the first that applies is the one the member answers first. */
+const QUESTION_GATE_ORDER = [
+	"undated",
+	"wholeShow",
+	"rewatch",
+	"conflict",
+] as const satisfies readonly (typeof IMPORT_QUESTIONS)[number][]
+
 export async function createParsedPreview(
 	userId: string,
 	fileName: string,
@@ -1057,7 +1065,9 @@ export async function createParsedPreview(
 	for (const item of items)
 		if (item.kind !== "unsupported")
 			kinds[item.kind] = (kinds[item.kind] ?? 0) + 1
-	// Count after watch deduplication: watches already in the log need no date decision.
+	// Count after watch deduplication: watches already in the log need no date decision. Each row counts under one
+	// question only, the first that would hold it in gate order (undated, whole show, rewatch, conflict), so preview
+	// counts add up the same way the held rows will after confirm.
 	const questions: ImportQuestionCounts = {
 		conflict: {},
 		rewatch: {},
@@ -1072,17 +1082,17 @@ export async function createParsedPreview(
 				(item.kind === "want" || item.kind === "show_status") &&
 				item.outcome === "conflict" &&
 				item.wishlistRewatchChoice === true,
-			wholeShow: item.wishlistShowChoice === true,
+			wholeShow:
+				item.outcome === "conflict" && item.wishlistShowChoice === true,
 			undated:
 				item.kind === "watch" &&
 				item.outcome === "new" &&
 				(!item.precision || item.precision === "unknown") &&
 				!item.watcharrSnapshot,
 		}
-		for (const question of IMPORT_QUESTIONS)
-			if (applies[question])
-				questions[question][item.kind] =
-					(questions[question][item.kind] ?? 0) + 1
+		const first = QUESTION_GATE_ORDER.find((question) => applies[question])
+		if (first)
+			questions[first][item.kind] = (questions[first][item.kind] ?? 0) + 1
 	}
 	const now = new Date()
 	// Manually matchable source groups, and those that already carry a member's match.
