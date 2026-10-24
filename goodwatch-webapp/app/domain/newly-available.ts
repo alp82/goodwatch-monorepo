@@ -30,6 +30,8 @@ export interface ServiceLanding {
 	learnedAt: number
 	/** Other base services whose stays ended no earlier than the day before this landing. */
 	previousServices: readonly number[]
+	/** Whether the landing day is proved (appeared_precision 'exact'); only readers that pass it get it (#489 C). */
+	exact?: boolean
 }
 
 export type FirstSeen = ReadonlyMap<number, ServiceLanding>
@@ -40,12 +42,14 @@ export type ServiceStay = readonly [
 	at: number,
 	droppedOn: number | null,
 	learnedAt: number,
+	exact?: boolean,
 ]
 
 interface Stay {
 	at: number
 	learnedAt: number
 	droppedOn: number | null
+	exact?: boolean
 }
 
 /**
@@ -60,7 +64,7 @@ export function firstSeenOf(
 	since: number,
 ): Map<TitleKey, Map<number, ServiceLanding>> {
 	const stays = new Map<TitleKey, Map<number, Stay[]>>()
-	for (const [key, serviceId, at, droppedOn, learnedAt] of rows) {
+	for (const [key, serviceId, at, droppedOn, learnedAt, exact] of rows) {
 		const service = baseService(serviceId)
 		let services = stays.get(key)
 		if (!services) {
@@ -68,7 +72,7 @@ export function firstSeenOf(
 			stays.set(key, services)
 		}
 		const history = services.get(service) ?? []
-		history.push({ at, learnedAt, droppedOn })
+		history.push({ at, learnedAt, droppedOn, exact })
 		services.set(service, history)
 	}
 	const earliest = new Map<TitleKey, Map<number, ServiceLanding>>()
@@ -79,6 +83,8 @@ export function firstSeenOf(
 			if (!open.length) continue
 			let at = Math.min(...open.map((stay) => stay.at))
 			let learnedAt = Math.min(...open.map((stay) => stay.learnedAt))
+			// Of offers that start the same day, one with a proved day proves it.
+			let exact = open.some((stay) => stay.at === at && stay.exact === true)
 			// Descending starts join consecutive stays back to the oldest connected stay.
 			for (const closed of [...history].sort((a, b) => b.at - a.at)) {
 				if (
@@ -86,6 +92,10 @@ export function firstSeenOf(
 					closed.at <= at &&
 					closed.droppedOn >= at - DAY_MS
 				) {
+					exact =
+						closed.at === at
+							? exact || closed.exact === true
+							: closed.exact === true
 					at = closed.at
 					learnedAt = Math.min(learnedAt, closed.learnedAt)
 				}
@@ -102,7 +112,14 @@ export function firstSeenOf(
 						),
 				)
 				.map(([id]) => id)
-			times.set(service, { at, learnedAt, previousServices })
+			// Readers that don't pass precision (the Newly available signal) get the landing without it.
+			const told = history.some((stay) => stay.exact !== undefined)
+			times.set(
+				service,
+				told
+					? { at, learnedAt, previousServices, exact }
+					: { at, learnedAt, previousServices },
+			)
 		}
 		earliest.set(key, times)
 	}

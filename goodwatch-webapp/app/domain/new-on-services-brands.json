@@ -1,0 +1,12 @@
+[
+	{ "slug": "netflix", "name": "Netflix", "ids": [8, 1796], "logo": 8 },
+	{ "slug": "prime-video", "name": "Prime Video", "ids": [9, 119, 2100, 10], "logo": 9 },
+	{ "slug": "disney-plus", "name": "Disney Plus", "ids": [337], "logo": 337 },
+	{ "slug": "hbo-max", "name": "HBO Max", "ids": [1899], "logo": 1899 },
+	{ "slug": "apple-tv", "name": "Apple TV", "ids": [2, 350], "logo": 350 },
+	{ "slug": "hulu", "name": "Hulu", "ids": [15], "logo": 15 },
+	{ "slug": "peacock", "name": "Peacock", "ids": [386, 387], "logo": 386 },
+	{ "slug": "paramount-plus", "name": "Paramount Plus", "ids": [531, 2303], "logo": 531 },
+	{ "slug": "crunchyroll", "name": "Crunchyroll", "ids": [283], "logo": 283 },
+	{ "slug": "mubi", "name": "MUBI", "ids": [11], "logo": 11 }
+]

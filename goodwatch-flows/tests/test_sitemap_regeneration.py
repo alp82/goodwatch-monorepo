@@ -155,7 +155,20 @@ class SitemapRegenerationTests(unittest.TestCase):
         self.assertNotIn(worker.OUTPUT + "sitemap_profiles.xml", files)
         self.assertNotIn(b"sitemap_profiles.xml", files[worker.OUTPUT + "sitemap.xml"])
 
-    def run_real_generator(self, status_of, status, profiles=1):
+    def test_a_failing_new_on_services_page_is_left_out_not_fatal(self):
+        # A /new page whose titles aged out of its window answers noindex: the rest still publishes (#489 C).
+        files = self.run_real_generator(lambda url: 404 if "/new/" in url else 200, 200, new_pages=0, new_rows=True)
+        self.assertNotIn(worker.OUTPUT + "sitemap_new.xml", files)
+        self.assertNotIn(b"sitemap_new.xml", files[worker.OUTPUT + "sitemap.xml"])
+
+    def test_new_on_services_pages_with_titles_are_listed(self):
+        files = self.run_real_generator(lambda url: 200, 200, new_pages=2, new_rows=True)
+        new = files[worker.OUTPUT + "sitemap_new.xml"].decode()
+        self.assertIn("<loc>https://goodwatch.app/new/us</loc>", new)
+        self.assertIn("<loc>https://goodwatch.app/new/us/netflix</loc>", new)
+        self.assertIn(b"sitemap_new.xml", files[worker.OUTPUT + "sitemap.xml"])
+
+    def run_real_generator(self, status_of, status, profiles=1, new_pages=0, new_rows=False):
         import shutil
         repo = Path(__file__).resolve().parents[2]
         files = None
@@ -176,6 +189,14 @@ class SitemapRegenerationTests(unittest.TestCase):
                     if 'FROM doc.user_profile' in sql:
                         # One member with a handle and enough public scores (sitemap_profiles.py).
                         connection.cursor.return_value.fetchall.return_value = [("u1", "amy", 30, 1792713600000, 1792895400000)]
+                        return
+                    if 'FROM doc.country' in sql:
+                        connection.cursor.return_value.fetchall.return_value = [("US",)]
+                        return
+                    if 'FROM doc.availability_history' in sql:
+                        # Netflix in the United States has titles first seen in the window (sitemap_new.py).
+                        connection.cursor.return_value.fetchall.return_value = (
+                            [("US", "netflix", 12, 1792713600000)] if new_rows else [])
                         return
                     if 'FROM doc.user_setting' in sql:
                         connection.cursor.return_value.fetchall.return_value = []
@@ -212,7 +233,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                     if status == 200:
                         count, files = worker.generate_and_check(root)
                         # Titles, people, categories, static pages (with the best-of lists), blog pages and profiles.
-                        self.assertEqual(count, 1134 + profiles)
+                        self.assertEqual(count, 1134 + profiles + new_pages)
                         static = files[worker.OUTPUT + "sitemap_static.xml"].decode()
                         self.assertIn("<loc>https://goodwatch.app/blog</loc>\n    <lastmod>2026-10-12</lastmod>", static)
                         self.assertIn("<loc>https://goodwatch.app/blog/a-post</loc>\n    <lastmod>2026-10-02</lastmod>", static)
@@ -220,7 +241,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                         self.assertEqual(static.count("<lastmod>"), 3)
                         self.assertLess(static.index("/use-with-ai<"), static.index("/blog<"))
                         self.assertLess(static.index("/blog/a-post<"), static.index("/blog/b-post<"))
-                        self.assertEqual(len(files), 8 + profiles)
+                        self.assertEqual(len(files), 8 + profiles + (1 if new_pages else 0))
                         # Replay from the exact generated artifacts: history and cohort
                         # state must preserve every byte on an unchanged rerun.
                         previous = root / "previous-sitemaps"

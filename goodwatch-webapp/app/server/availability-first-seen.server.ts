@@ -38,7 +38,7 @@ export const keptSince = (now = Date.now()) =>
 const BATCH = 1_000
 
 // Exact stays carry a proved landing day; unknown stays use the UTC day of their opening observation.
-const LANDED_DAY =
+export const LANDED_DAY =
 	"CASE WHEN appeared_precision = 'exact' THEN appeared_on ELSE date_trunc('day', observed_at) END"
 
 /**

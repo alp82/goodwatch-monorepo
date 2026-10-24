@@ -25,13 +25,15 @@ OUTPUT = "goodwatch-webapp/public/sitemaps/"
 SCRIPTS = "goodwatch-webapp/scripts/"
 CATEGORIES = "goodwatch-webapp/app/ui/explore/category/"
 BLOG_POSTS = "goodwatch-webapp/app/content/blog/posts.json"
+# The brands of the "New on your services" pages, read by sitemap_new.py.
+NEW_BRANDS = "goodwatch-webapp/app/domain/new-on-services-brands.json"
 TOKEN_VARIABLE = "u/Alp/GITHUB_SITEMAP_TOKEN"
 SOURCE_FILES = [SCRIPTS + name for name in (
     "create_sitemaps.py", "check_sitemap_urls.py", "sitemap_query.py",
     "sitemap_lastmod.py", "sitemap_selection.py", "sitemap_people.py", "sitemap_profiles.py", "sitemap_crate.py",
-    "sitemap_blog.py",
+    "sitemap_blog.py", "sitemap_new.py",
     "utils.py",
-)] + [CATEGORIES + name + ".ts" for name in ("moods", "streaming", "genres")] + [BLOG_POSTS]
+)] + [CATEGORIES + name + ".ts" for name in ("moods", "streaming", "genres")] + [BLOG_POSTS, NEW_BRANDS]
 
 
 def request(url, method="GET", data=None, token=None, raw=False):
@@ -101,6 +103,7 @@ def generate_and_check(root):
         # Same workspace variables and connection format as f/db/cratedb.
         connection = None
         profiles = {"profiles": []}
+        new_pages = {"pages": []}
         lastmods = {}
         try:
             connection = client.connect(
@@ -119,10 +122,12 @@ def generate_and_check(root):
                     "movie": movies["title_ids"], "show": shows["title_ids"],
                 })
                 profiles = generator.create_profile_sitemap(cursor)
+                new_pages = generator.create_new_sitemap(cursor)
                 lastmods = {
                     "movie": movies["lastmod"], "show": shows["lastmod"],
                     "static": static["lastmod"], "categories": categories["lastmod"], "people": people["lastmod"],
                     "profiles": profiles["lastmod"],
+                    "new": new_pages["lastmod"],
                 }
                 generator.create_master_sitemap_index(lastmods)
             finally:
@@ -157,13 +162,23 @@ def generate_and_check(root):
             generator.create_master_sitemap_index(lastmods)
             failures = [failure for failure in failures if failure not in profile_failures]
             urls = [url for url in urls if url not in skip]
+        # A /new page whose titles aged out of its window since the list was read answers noindex: left out too.
+        new_failures = [(url, reason) for url, reason in failures if urlparse(url).path.startswith("/new/")]
+        if new_failures:
+            for url, reason in new_failures:
+                print(f"Leaving out new-on-services page {url}: {reason}", flush=True)
+            skip = {url for url, _ in new_failures}
+            lastmods["new"] = generator.write_new_sitemap(new_pages["pages"], skip)["lastmod"]
+            generator.create_master_sitemap_index(lastmods)
+            failures = [failure for failure in failures if failure not in new_failures]
+            urls = [url for url in urls if url not in skip]
         if failures or problems or not urls:
             raise RuntimeError(f"Sitemap check failed: {len(failures)} URLs, {len(problems)} file problems; nothing committed")
         return len(urls), {OUTPUT + p.name: p.read_bytes() for p in sorted(output.glob("sitemap*.xml"))}
     finally:
         sys.path.remove(str(scripts))
         for name in ("sitemap_lastmod", "sitemap_selection", "sitemap_people", "sitemap_profiles", "sitemap_query",
-                     "sitemap_crate", "sitemap_blog", "utils"):
+                     "sitemap_crate", "sitemap_blog", "sitemap_new", "utils"):
             sys.modules.pop(name, None)
 
 

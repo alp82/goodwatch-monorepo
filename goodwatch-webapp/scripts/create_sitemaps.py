@@ -17,6 +17,7 @@ from sitemap_query import detail_query
 from sitemap_selection import select_titles, state_comment
 from sitemap_people import select_people
 from sitemap_profiles import select_profiles
+from sitemap_new import select_new_pages
 from utils import title_to_dashed
 
 load_dotenv()
@@ -217,6 +218,25 @@ def write_profile_sitemap(profiles, skip=frozenset()):
     return {"total_url_count": len(kept), "lastmod": lastmod, "profiles": kept}
 
 
+def create_new_sitemap(crate_cursor):
+    """The "New on your services" pages that have titles (sitemap_new.py)."""
+    return write_new_sitemap(select_new_pages(crate_cursor))
+
+
+def write_new_sitemap(pages, skip=frozenset()):
+    """Writes sitemap_new.xml from (URL, lastmod) pairs, leaving out the URLs in `skip` (pages that failed the live
+    check: their titles aged out of the window since the list was read). No page means no file, as for profiles."""
+    filename = "sitemap_new.xml"
+    kept = [(loc, day) for loc, day in pages if loc not in skip]
+    path = os.path.join(SITEMAP_DIR, filename)
+    if not kept:
+        if os.path.exists(path):
+            os.remove(path)
+        return {"total_url_count": 0, "lastmod": None, "pages": kept}
+    lastmod = write_urlset(filename, [url_entry(loc, day) for loc, day in kept])
+    return {"total_url_count": len(kept), "lastmod": lastmod, "pages": kept}
+
+
 def create_master_sitemap_index(file_lastmods: dict):
     """Create a master sitemap index that links to all other sitemap files."""
     # Link to URL sets directly: Google does not support nested sitemap indexes.
@@ -231,6 +251,8 @@ def create_master_sitemap_index(file_lastmods: dict):
     # Listed only when this run wrote it: no profiles qualify, or a caller that doesn't make them yet.
     if file_lastmods.get("profiles"):
         sitemap_files.append(("sitemap_profiles.xml", file_lastmods["profiles"]))
+    if file_lastmods.get("new"):
+        sitemap_files.append(("sitemap_new.xml", file_lastmods["new"]))
     write_sitemap_index("sitemap.xml", sitemap_files)
     return {
         "master_index_created": True,
@@ -294,6 +316,9 @@ if __name__ == "__main__":
     profiles_result = create_profile_sitemap(crate_cursor)
     print(f"Profiles Sitemap Result: {profiles_result}")
 
+    new_result = create_new_sitemap(crate_cursor)
+    print(f"New on services Sitemap Result: {new_result['total_url_count']} URLs")
+
     # Create master sitemap index
     master_result = create_master_sitemap_index({
         "movie": movies_result["lastmod"],
@@ -302,6 +327,7 @@ if __name__ == "__main__":
         "categories": category_result["lastmod"],
         "people": people_result["lastmod"],
         "profiles": profiles_result["lastmod"],
+        "new": new_result["lastmod"],
     })
     print(f"Master Sitemap Index Result: {master_result}")
 

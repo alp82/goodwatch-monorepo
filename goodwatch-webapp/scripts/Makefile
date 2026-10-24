@@ -25,7 +25,7 @@ sitemaps-checked:
 	echo "Replaced $(SITEMAP_DIR). Review with git diff, then commit and push to main."
 
 sitemaps-test:
-	python3 -m unittest test_sitemap_query test_sitemap_selection test_sitemap_people test_sitemap_lastmod test_sitemap_blog test_check_sitemap_urls test_sitemap_crate
+	python3 -m unittest test_sitemap_query test_sitemap_selection test_sitemap_people test_sitemap_lastmod test_sitemap_blog test_check_sitemap_urls test_sitemap_crate test_sitemap_new test_sitemap_profiles
 
 # The data of /blog/streaming-by-country-2026 from a fresh, read-only TMDB snapshot (about 5 minutes). Needs the
 # Crate variables in .env and TMDB_API_KEY in ../.env. See docs/launch/streaming-study.md.
