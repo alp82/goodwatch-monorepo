@@ -324,6 +324,11 @@ test("background recovery keeps canonical episode identities and restores a reti
 	assert.equal(rows[1].episode, 3)
 	assert.equal(rows[1].resolutionOriginal?.episodeTvdbId, 200)
 	assert.equal(db.episodes[0].tvdb_id, 9999)
+	assert.ok(
+		!db.items.some((row) =>
+			String(row.import_id).startsWith(`resolution:alias/${p.id}/`),
+		),
+	)
 })
 test("an episode without IMDb needs a unique exact title and original air date under its verified show", async () => {
 	for (const ambiguous of [false, true]) {
@@ -346,7 +351,7 @@ test("an episode without IMDb needs a unique exact title and original air date u
 				tvdb_id: 999,
 				season_number: 2,
 				episode_number: 3,
-				name: "Recovered",
+				name: "Episode 18 - The Insider / Drawing a Line",
 				air_date: Date.parse("2001-02-03"),
 			},
 		]
@@ -355,7 +360,11 @@ test("an episode without IMDb needs a unique exact title and original air date u
 		setImportDbForTest(db)
 		runtime.setResolutionNetworkForTest(async (_ctx, path) =>
 			path === "/tvdb/episode/200"
-				? { imdbId: null, name: "Recovered", airDate: "2001-02-03" }
+				? {
+						imdbId: null,
+						name: "The Insider; Drawing a Line",
+						airDate: "2001-02-03",
+					}
 				: { tv_results: [], tv_episode_results: [] },
 		)
 		const p = await service.previewImport(
@@ -1330,6 +1339,11 @@ test("discard removes the preview family and all source-bearing resolution metad
 	await runtime.resolutionJobs.run(p.id)
 	const child = (await runtime.resolutionJobs.read(p.id))?.replacementId
 	assert.ok(child)
+	const { resolutionStore } = await import("./resolution-store.server.ts")
+	await resolutionStore.cas(`alias/${p.id}/show/100`, null, {
+		showId: 10,
+		title: "Synthetic show",
+	})
 	legacyUnaccepted(db, child)
 	const suggestions = await service.getWishlistSuggestions("member", child)
 	const accepted = await service.acceptSuggestedImport("member", child, {

@@ -40,7 +40,13 @@ type Movie = {
 	}
 }
 export const normalizeTvtimeTitle = (value: string) =>
-	value.normalize("NFC").trim().toLowerCase().replace(/\s+/gu, " ")
+	value
+		.normalize("NFC")
+		.replace(/[‘’]/gu, "'")
+		.replace(/[“”]/gu, '"')
+		.trim()
+		.toLowerCase()
+		.replace(/\s+/gu, " ")
 export function tvtimeEvidenceFingerprint(e: TvtimeMovieEvidence) {
 	return createHash("sha256")
 		.update(

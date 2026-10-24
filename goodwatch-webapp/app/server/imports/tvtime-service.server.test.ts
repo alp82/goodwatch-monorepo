@@ -80,6 +80,39 @@ function setup() {
 	)
 	return { db, tracking }
 }
+test("conflicting TV Time rating generations are held instead of choosing a score by file order", async (t) => {
+	setup()
+	t.mock.method(globalThis, "fetch", async (url: string | URL | Request) =>
+		Response.json(
+			String(url).includes("/find/100?")
+				? { tv_results: [{ id: 1668 }] }
+				: { tv_episode_results: [{ id: 101, show_id: 1668 }] },
+		),
+	)
+	const p = await previewImport(
+		"member",
+		"tvtime",
+		"tvtime.zip",
+		zipFixture({
+			"tracking-prod-records-v2.csv":
+				"key,s_id,ep_id,s_no,ep_no,series_name,created_at\nwatch-episode-one,100,200,4,24,Synthetic show,2024-01-01\n",
+			"ratings-3-prod-episode_votes.csv":
+				"vote_key,episode_id,series_name\n200-person-29,200,Synthetic show\n",
+			"ratings-live-votes.csv":
+				"vote_key,episode_id,series_name\n200-person-3,200,Synthetic show\n",
+		}),
+	)
+	const scores = (
+		await getImportItems("member", p.id, undefined, 0, 50)
+	).items.filter((r) => r.kind === "episode_rating")
+	assert.equal(scores.length, 2)
+	assert.ok(
+		scores.every(
+			(r) =>
+				r.outcome === "invalid" && r.problem?.code === "tvtime_rating_conflict",
+		),
+	)
+})
 test("TV Time previews resolve TVDB parents and episodes, hold title-only movies and round-trip watches", async (t) => {
 	setup()
 	t.mock.method(globalThis, "fetch", async (url: string | URL | Request) => {

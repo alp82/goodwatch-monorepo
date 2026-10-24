@@ -5,6 +5,14 @@ export interface TvdbEpisodeIdentity {
 	name: string | null
 	airDate: string | null
 }
+/** Ignore presentation punctuation and catalog-added episode labels, not story words or order. */
+export const normalizeTvtimeEpisodeTitle = (title: string) =>
+	title
+		.normalize("NFKC")
+		.toLowerCase()
+		.replace(/^episode\s+\d+\s*[-:]\s*/u, "")
+		.replace(/[^\p{L}\p{N}]+/gu, " ")
+		.trim()
 const decode = (text: string) =>
 	text.replace(/&(?:amp|quot|apos|lt|gt|#\d+|#x[0-9a-f]+);/gi, (value) => {
 		const named: Record<string, string> = {

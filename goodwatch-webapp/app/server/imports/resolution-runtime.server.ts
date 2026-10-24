@@ -30,17 +30,20 @@ import {
 } from "./resolution-store.server.ts"
 import { resolutionTmdb } from "./resolution-tmdb.server.ts"
 import {
+	normalizeTvtimeEpisodeTitle,
 	recoverTvtimeEpisode,
 	type TvdbEpisodeIdentity,
 } from "./tvtime-identity.server.ts"
 import {
 	NativeImportError,
+	chunks,
 	getImportRow,
 	run,
 	select,
 	summarize,
 } from "./store.server.ts"
 import {
+	TVDB_LOOKUP_LIMITS,
 	type TvdbLookup,
 	TvdbLookupBudgetExceeded,
 } from "./tvdb-lookup.server.ts"
@@ -122,10 +125,29 @@ const restore = (row: ImportItem): ImportObservation => {
 }
 async function resolve(ctx: ResolutionContext, rows: ImportObservation[]) {
 	const aliasKey = (id: number) => `alias/${ctx.job.root}/show/${id}`
+	const aliases = new Map<
+		number,
+		{ showId: number; title: string } | undefined
+	>()
+	const ids = [
+		...new Set(
+			rows
+				.filter((row) => !row.tmdbId && row.showTvdbId && !row.problem)
+				.map((row) => row.showTvdbId!),
+		),
+	]
+	for (const batch of chunks(ids, TVDB_LOOKUP_LIMITS.concurrency))
+		await Promise.all(
+			batch.map(async (id) => {
+				const key = aliasKey(id)
+				const value =
+					ctx.lookupCache?.get(key) ?? (await resolutionStore.read(key))?.value
+				aliases.set(id, value as { showId: number; title: string } | undefined)
+			}),
+		)
 	for (const row of rows) {
 		if (!row.tmdbId && row.showTvdbId && !row.problem) {
-			const alias = (await resolutionStore.read(aliasKey(row.showTvdbId)))
-				?.value as { showId: number; title: string } | undefined
+			const alias = aliases.get(row.showTvdbId)
 			if (alias?.title === normalizeTvtimeTitle(row.title))
 				row.tmdbId = alias.showId
 		}
@@ -148,6 +170,16 @@ async function resolve(ctx: ResolutionContext, rows: ImportObservation[]) {
 	}
 	await matchCatalog("tvtime", rows, lookup)
 	const recovered: ImportObservation[] = []
+	const episodeCatalogs = new Map<
+		number,
+		Promise<
+			{
+				tmdb_id: number
+				name: string
+				air_date: string | number | Date | null
+			}[]
+		>
+	>()
 	for (let i = 0; i < rows.length; i += 4)
 		await Promise.all(
 			rows.slice(i, i + 4).map(async (row) => {
@@ -172,21 +204,31 @@ async function resolve(ctx: ResolutionContext, rows: ImportObservation[]) {
 						const identity = (await get(
 							`/tvdb/episode/${row.episodeTvdbId}`,
 						)) as TvdbEpisodeIdentity | null
-						if (identity?.name && identity.airDate && !identity.imdbId) {
-							const episodes = await select<{
-								tmdb_id: number
-								name: string
-								air_date: string | number | Date | null
-							}>(
-								"SELECT tmdb_id, name, air_date FROM episode WHERE show_id = ? AND removed_at IS NULL LIMIT 50001",
-								[row.tmdbId],
-							)
+						let conflictingIdentity = false
+						if (identity?.imdbId) {
+							const found = (await get(`/find/${identity.imdbId}`, {
+								external_source: "imdb_id",
+							})) as { tv_episode_results?: unknown[] }
+							conflictingIdentity =
+								!Array.isArray(found.tv_episode_results) ||
+								found.tv_episode_results.length > 0
+						}
+						if (identity?.name && identity.airDate && !conflictingIdentity) {
+							let pending = episodeCatalogs.get(row.tmdbId)
+							if (!pending) {
+								pending = select(
+									"SELECT tmdb_id, name, air_date FROM episode WHERE show_id = ? AND removed_at IS NULL LIMIT 50001",
+									[row.tmdbId],
+								)
+								episodeCatalogs.set(row.tmdbId, pending)
+							}
+							const episodes = await pending
 							if (episodes.length <= 50000) {
 								const hits = episodes.filter(
 									(e) =>
 										e.name &&
-										normalizeTvtimeTitle(e.name) ===
-											normalizeTvtimeTitle(identity.name!) &&
+										normalizeTvtimeEpisodeTitle(e.name) ===
+											normalizeTvtimeEpisodeTitle(identity.name!) &&
 										e.air_date != null &&
 										Number.isFinite(new Date(e.air_date).getTime()) &&
 										new Date(e.air_date).toISOString().slice(0, 10) ===
@@ -210,11 +252,14 @@ async function resolve(ctx: ResolutionContext, rows: ImportObservation[]) {
 							Number(shows[0].tmdb_id) !== target.show_id
 						)
 							return
-						if (row.showTvdbId)
-							await ctx.commit(aliasKey(row.showTvdbId), {
+						if (row.showTvdbId) {
+							const alias = {
 								showId: target.show_id,
 								title: normalizeTvtimeTitle(row.title),
-							})
+							}
+							await ctx.commit(aliasKey(row.showTvdbId), alias)
+							ctx.lookupCache?.set(aliasKey(row.showTvdbId), alias)
+						}
 					}
 					row.tmdbId = target.show_id
 					row.episodeTmdbId = target.id
@@ -778,6 +823,7 @@ async function finishDiscard({
 		])
 	}
 	for (const prefix of [
+		"alias",
 		"cache",
 		"parent",
 		"enrich",
@@ -1225,7 +1271,7 @@ export async function acceptResolutionSuggestions(
 }
 
 async function cleanupResolution(job: ResolutionJob) {
-	for (const prefix of ["cache", "parent", "enrich"])
+	for (const prefix of ["cache", "parent", "enrich", "alias"])
 		await run("DELETE FROM doc.user_import_item WHERE import_id LIKE ?", [
 			`resolution:${prefix}/${job.root}/%`,
 		])

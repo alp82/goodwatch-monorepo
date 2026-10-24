@@ -6,6 +6,8 @@ The upload API accepts `source=tvtime` through the existing multipart preview en
 
 ## Background resolution and movie suggestions
 
+**October 24 update:** [Full reimport recovery](../../verification/tvtime-reimport-recovery.md) supersedes this document's earlier manual-only movie matching and unsupported official/episode rating descriptions. A normal full archive reimport now applies uniquely verified matches automatically in the preview, then uses the ordinary Confirm and Undo writers.
+
 The current upload path now returns a cached-only preview and starts an in-process, durable resolution run. See [the as-built job, API and verification contract](tvtime-background.md). It supersedes the earlier per-preview remote lookup workflow described in the historical convergence measurements below. It also adds owner-approved Q28 movie suggestions; suggestions require explicit acceptance, followed by Confirm. The only additional UI change is a polling compatibility guard; the frontend still needs to display progress, follow replacement previews, and expose individual/bulk decisions.
 
 ## Supported files

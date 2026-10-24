@@ -1,6 +1,31 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { suggestTvtimeMovie } from "./tvtime-suggestions.server.ts"
+test("typographic apostrophes do not prevent an otherwise exact movie identity", async () => {
+	const result = await suggestTvtimeMovie(
+		{ titles: ["A Director’s Story"], dates: ["2001-02-03"], countries: [] },
+		{
+			get: async (path) =>
+				path === "/search/movie"
+					? { results: [{ id: 42 }], total_pages: 1 }
+					: {
+							id: 42,
+							title: "A Director's Story",
+							original_title: "A Director's Story",
+							release_date: "2001-02-03",
+							alternative_titles: { titles: [] },
+							translations: { translations: [] },
+							release_dates: { results: [] },
+						},
+			catalog: async () => ({
+				title: "A Director's Story",
+				year: 2001,
+				posterPath: null,
+			}),
+		},
+	)
+	assert.equal(result.proposal?.tmdbId, 42)
+})
 const evidence = {
 	titles: ["Localized movie"],
 	dates: ["2001-02-03"],

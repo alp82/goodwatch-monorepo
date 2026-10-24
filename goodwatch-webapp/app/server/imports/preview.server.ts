@@ -990,6 +990,36 @@ export async function createParsedPreview(
 			} else representatives.set(identity, row)
 		}
 	}
+	if (source === "tvtime") {
+		// Official exports can contain several generations of vote files without a
+		// reliable updated-at field. Neither ZIP order nor filename establishes recency.
+		const ratings = new Map<string, ImportObservation[]>()
+		for (const [index, row] of parsed.observations.entries()) {
+			const title = matched.get(index)
+			if (
+				!title ||
+				row.problem ||
+				!["rating", "episode_rating"].includes(row.kind)
+			)
+				continue
+			const target =
+				row.kind === "episode_rating" ? importedScoreTarget(row) : null
+			if (row.kind === "episode_rating" && !target) continue
+			const identity = `${key(title.mediaType, title.tmdbId)}:${target ? episodeScoreKey(target) : "title"}`
+			const group = ratings.get(identity) ?? []
+			group.push(row)
+			ratings.set(identity, group)
+		}
+		for (const group of ratings.values())
+			if (new Set(group.map((row) => row.score)).size > 1)
+				for (const row of group)
+					row.problem = {
+						outcome: "invalid",
+						code: "tvtime_rating_conflict",
+						reason:
+							"This TV Time export has conflicting ratings for the same title or episode. No score was chosen.",
+					}
+	}
 	const items = classify(parsed.observations, matched, current)
 	await classifyWishlistShows(userId, items)
 	const specials = items.filter((item) => item.episodeSpecial).length
