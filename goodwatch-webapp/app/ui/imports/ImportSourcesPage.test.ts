@@ -88,20 +88,6 @@ test("a history row opens its source on that import", () => {
 	)
 })
 
-test("TV Time members learn which saved files the TV Time import reads, and that a Trakt move also works", () => {
-	assert.match(
-		runs.tvTime.text,
-		/Coming from TV Time\? TV Time closed on July 15, 2026\. Upload the export you saved: TV Time's own gdpr-data\.zip, or a file from the TV Time Liberator or TV Time Out extension\. If you already moved your history to Trakt, import your Trakt export instead\./,
-	)
-	assert.doesNotMatch(runs.tvTime.text, /import it on Trakt/)
-	assert.equal(runs.tvTimeOpened.opened, "TV Time")
-	assert.match(runs.tvTimeOpened.text, /Upload your TV Time export/)
-	assert.match(runs.tvTimeOpened.text, /gdpr-data\.zip/)
-	assert.match(runs.tvTimeOpened.text, /password/)
-	assert.equal(runs.tvTimeTrakt.opened, "Trakt")
-	assert.match(runs.tvTimeTrakt.text, /Upload your Trakt export/)
-})
-
 test("TV Time's official export dropped in the one box goes to the TV Time preview", () => {
 	const run = runs.oneBoxTvTime
 	assert.deepEqual(previews(run), [
@@ -111,13 +97,6 @@ test("TV Time's official export dropped in the one box goes to the TV Time previ
 		},
 	])
 	assert.deepEqual(openRows(run), ["TV Time"])
-})
-
-test("streaming services are named as not importable yet, with where to import from instead", () => {
-	assert.match(
-		runs.list.text,
-		/Netflix, Prime Video, Disney\+ and other streaming services don't give you a file of your list yet\. If you also keep a watchlist on Trakt, TMDB, Plex, or MDBList, or your anime on MyAnimeList or Kitsu, import it from there\./,
-	)
 })
 
 const previews = (run: Run) =>
@@ -244,21 +223,6 @@ test("a Kitsu library caught in another source's box is offered as Kitsu", () =>
 	)
 })
 
-test("the notices cover the logos that ask for one: IMDb, Kodi and TMDB", () => {
-	assert.match(
-		runs.list.text,
-		/trademarks of IMDb\.com, Inc\. or its affiliates\./,
-	)
-	assert.match(
-		runs.list.text,
-		/Kodi® is a registered trademark of the Kodi Foundation\./,
-	)
-	assert.match(
-		runs.list.text,
-		/This product uses the TMDB API but is not endorsed or certified by TMDB\./,
-	)
-})
-
 test("the drop zone says the file is read on the device before anything changes", () => {
 	assert.match(
 		runs.list.text,
@@ -354,20 +318,6 @@ test("Undo of a wishlist import says what it takes back and that Not interested 
 		/Undo this import\? GoodWatch takes the titles this import added off Want to See\. Titles you changed since then stay as you left them\. Titles the import took off Not interested aren't marked Not interested again\. The result lists them so you can put them back\./,
 	)
 	assert.match(runs.wishlistUndo.text, /Import another file/)
-})
-
-test("the TV Time logo is credited to its creator with its source, license, and the one change made", () => {
-	assert.match(
-		runs.list.text,
-		/TV Time logo: "Logo TV Time" by Vegetapple \(opens in a new tab\), from Wikimedia Commons \(opens in a new tab\), licensed under CC BY-SA 4\.0 \(opens in a new tab\)\. Its styles were moved into its shapes; it looks the same\./,
-	)
-	const markup = runs.serverMarkup as unknown as string
-	for (const href of [
-		"https://commons.wikimedia.org/wiki/User:Vegetapple",
-		"https://commons.wikimedia.org/wiki/File:Logo_TV_Time.svg",
-		"https://creativecommons.org/licenses/by-sa/4.0/",
-	])
-		assert.ok(markup.includes(`href="${href}"`), href)
 })
 
 type Questions = {
@@ -587,4 +537,10 @@ test("an import that stopped partway turns the strip red, says why first, and Co
 	])
 	assert.equal(run.strip, "running")
 	assert.match(run.after, /Your Letterboxd titles are moving in/)
+})
+
+test("the source list ends with the sources, without notes or notices", () => {
+	assert.doesNotMatch(runs.list.text, /Coming from TV Time\?/)
+	assert.doesNotMatch(runs.list.text, /streaming services/)
+	assert.doesNotMatch(runs.list.text, /trademark|endorse|CC BY-SA/)
 })

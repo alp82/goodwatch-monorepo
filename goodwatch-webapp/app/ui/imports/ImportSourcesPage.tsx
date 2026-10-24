@@ -225,12 +225,6 @@ export function ImportSourcesPage({
 									}}
 								/>
 							)}
-							{atBring && (
-								<Notes
-									onTvTime={() => pick("tvtime")}
-									onTrakt={() => pick("trakt")}
-								/>
-							)}
 						</div>
 					</div>
 				</ImportStepReport.Provider>
@@ -423,83 +417,5 @@ function History({
 				</ul>
 			</Disclosure>
 		</section>
-	)
-}
-
-/** A credit link that opens in a new tab, and says so. */
-function NewTab({ href, children }: { href: string; children: string }) {
-	return (
-		<a
-			href={href}
-			target="_blank"
-			rel="noopener noreferrer"
-			className="underline underline-offset-2 hover:text-gray-300"
-		>
-			{children}
-			<span className="sr-only"> (opens in a new tab)</span>
-		</a>
-	)
-}
-
-/** TV Time, streaming services, and the logos' notices. */
-function Notes({
-	onTvTime,
-	onTrakt,
-}: { onTvTime: () => void; onTrakt: () => void }) {
-	return (
-		<div className="flex max-w-3xl flex-col gap-4 text-sm text-gray-400">
-			<div className="flex flex-col items-start">
-				<p>
-					Coming from TV Time? TV Time closed on July 15, 2026. Upload the
-					export you saved: TV Time's own gdpr-data.zip, or a file from the TV
-					Time Liberator or TV Time Out extension. If you already moved your
-					history to Trakt, import your Trakt export instead.
-				</p>
-				<div className="flex flex-wrap gap-x-5">
-					<button
-						type="button"
-						className={`${textLink} min-h-11`}
-						onClick={onTvTime}
-					>
-						Open the TV Time import
-					</button>
-					<button
-						type="button"
-						className={`${textLink} min-h-11`}
-						onClick={onTrakt}
-					>
-						Open the Trakt import
-					</button>
-				</div>
-			</div>
-			<p>
-				Netflix, Prime Video, Disney+ and other streaming services don't give
-				you a file of your list yet. If you also keep a watchlist on Trakt,
-				TMDB, Plex, or MDBList, or your anime on MyAnimeList or Kitsu, import it
-				from there.
-			</p>
-			<p className="text-xs text-gray-500">
-				The logos show where a file comes from; no source endorses GoodWatch.
-				IMDb, IMDbPro, STARmeter, and all related logos are trademarks of
-				IMDb.com, Inc. or its affiliates. Kodi® is a registered trademark of the
-				Kodi Foundation. This product uses the TMDB API but is not endorsed or
-				certified by TMDB.
-			</p>
-			<p className="text-xs text-gray-500">
-				TV Time logo: "Logo TV Time" by{" "}
-				<NewTab href="https://commons.wikimedia.org/wiki/User:Vegetapple">
-					Vegetapple
-				</NewTab>
-				, from{" "}
-				<NewTab href="https://commons.wikimedia.org/wiki/File:Logo_TV_Time.svg">
-					Wikimedia Commons
-				</NewTab>
-				, licensed under{" "}
-				<NewTab href="https://creativecommons.org/licenses/by-sa/4.0/">
-					CC BY-SA 4.0
-				</NewTab>
-				. Its styles were moved into its shapes; it looks the same.
-			</p>
-		</div>
 	)
 }
