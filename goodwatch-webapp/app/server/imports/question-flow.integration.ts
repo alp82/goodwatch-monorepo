@@ -71,12 +71,18 @@ test("real Crate holds NULL rows, releases approvals, counts them, and fences fi
 		"INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,payload,outcome,tmdb_id,media_type) VALUES ('questions',0,'member','rating',?,'conflict',42,'movie')",
 		[JSON.stringify({ kind: "rating", title: "Fixture", score: 9 })],
 	)
+	await sql(
+		"INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,payload,outcome,tmdb_id,media_type) VALUES ('questions',1,'member','rating',?,'unchanged',43,'movie')",
+		[JSON.stringify({ kind: "rating", title: "Unchanged", score: 9 })],
+	)
 	await refreshItems()
+	await holdQuestions("member", "questions", options)
 	await holdQuestions("member", "questions", options)
 	assert.equal(
 		(await itemRows("member", "questions"))[0].applyState,
 		"waiting:conflict",
 	)
+	assert.equal((await itemRows("member", "questions"))[1].applyState, null)
 	assert.equal((await recount("questions")).processed, 1)
 	const stale = await getImportRow("member", "questions")
 	assert.equal(
@@ -88,6 +94,7 @@ test("real Crate holds NULL rows, releases approvals, counts them, and fences fi
 		).rowcount,
 		1,
 	)
+	await refreshItems()
 	await run(
 		"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
 		["questions"],
@@ -123,4 +130,13 @@ test("real Crate holds NULL rows, releases approvals, counts them, and fences fi
 		(await getImportRow("member", "questions")).finished_at,
 		finished,
 	)
+	assert.equal(
+		await claim(
+			await getImportRow("member", "questions"),
+			"status = 'running', options = ?, conflict_choice = ?, confirmed_at = COALESCE(confirmed_at,CURRENT_TIMESTAMP), finished_at = NULL, updated_at = CURRENT_TIMESTAMP, error = NULL",
+			[JSON.stringify({ ...options, direction: "apply" }), "keep"],
+		),
+		true,
+	)
+	assert.equal((await getImportRow("member", "questions")).finished_at, null)
 })

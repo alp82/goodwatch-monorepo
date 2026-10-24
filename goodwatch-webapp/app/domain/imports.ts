@@ -610,13 +610,17 @@ export function effectiveImportOptions(
  * approved rows carry a row-level answer without changing the other rows' options.
  */
 export function importGate(
-	item: ImportItem,
+	item: ImportItem & { payload?: Record<string, unknown> },
 	options: ImportOptions,
 ): { kept: true } | { hold: ImportQuestion } | { effective: ImportOptions } {
 	const answered =
 		item.applyState === "approved:conflict"
 			? "source"
-			: options.answers?.conflict
+			: ((
+					item.payload?.answer as
+						| Partial<Record<ImportQuestion, ImportAnswer>>
+						| undefined
+				)?.conflict ?? options.answers?.conflict)
 	const effective = effectiveImportOptions(
 		item,
 		answered
@@ -682,7 +686,7 @@ export interface WishlistMatchGroup {
 export interface ImportOptions {
 	/** Questions deferred until the run; omitted by legacy clients. */
 	ask?: ImportQuestion[]
-	/** Server-written whole-question answers; per-row choices live in applyState. */
+	/** Server-written whole-question answers; per-row choices live in applyState and the retry payload. */
 	answers?: Partial<Record<ImportQuestion, ImportAnswer>>
 	/** Independent, explicit Watcharr Want to rewatch consent; never implied by rating conflicts. */
 	wishlistRewatch?: boolean

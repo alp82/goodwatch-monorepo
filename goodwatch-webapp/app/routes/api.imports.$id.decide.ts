@@ -8,7 +8,7 @@ const schema = z
 	.object({
 		question: z.literal("conflict"),
 		answer: z.enum(["keep", "source"]),
-		rows: z.array(z.number().int().safe().min(0)).max(500).optional(),
+		rows: z.array(z.number().int().safe().min(0)).min(1).max(500).optional(),
 	})
 	.strict()
 export const action = analyticsAction(

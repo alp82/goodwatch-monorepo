@@ -291,6 +291,7 @@ export async function itemRows(
 	userId: string,
 	id: string,
 	pendingOnly = false,
+	holdableOnly = false,
 ): Promise<
 	(ImportItem & {
 		payload: Record<string, unknown>
@@ -301,7 +302,7 @@ export async function itemRows(
 	const rows = await select<
 		ItemRow & { undo_outcome: StoredUndoOutcome | null }
 	>(
-		`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' ${pendingOnly ? "AND (apply_state IS NULL OR apply_state = 'failed' OR apply_state LIKE 'approved:%')" : ""} ORDER BY row_index LIMIT 100001`,
+		`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' ${holdableOnly ? "AND outcome = 'conflict' AND apply_state IS NULL" : ""} ${pendingOnly ? "AND (apply_state IS NULL OR apply_state = 'failed' OR apply_state LIKE 'approved:%')" : ""} ORDER BY row_index LIMIT 100001`,
 		[id, userId],
 	)
 	return rows.map((row) => ({

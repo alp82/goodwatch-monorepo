@@ -408,9 +408,17 @@ async function applySet(
 
 async function markItem(
 	importId: string,
-	item: ImportItem,
+	item: ImportItem & { payload: Record<string, unknown> },
 	state: "added" | "updated" | "kept" | "failed",
 ) {
+	if (state === "failed" && item.applyState === "approved:conflict") {
+		// Save the row's consent before replacing its approval with the retryable failure.
+		item.payload.answer = { conflict: "source" }
+		await run(
+			"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ?",
+			[JSON.stringify(item.payload), importId, item.index],
+		)
+	}
 	await run(
 		"UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed' OR apply_state LIKE 'approved:%')",
 		[state, importId, item.index],
@@ -456,8 +464,8 @@ export async function holdQuestions(
 	options: ImportOptions,
 ) {
 	if (!options.ask?.length) return
-	const held = (await itemRows(userId, id)).filter(
-		(item) => item.applyState == null && "hold" in importGate(item, options),
+	const held = (await itemRows(userId, id, false, true)).filter(
+		(item) => "hold" in importGate(item, options),
 	)
 	for (const batch of chunks(held, 800))
 		await run(
@@ -496,7 +504,8 @@ export async function decideImport(
 		question !== "conflict" ||
 		!["keep", "source"].includes(answer) ||
 		(rows &&
-			(rows.length > 500 ||
+			(rows.length === 0 ||
+				rows.length > 500 ||
 				rows.some((index) => !Number.isSafeInteger(index) || index < 0)))
 	)
 		throw new NativeImportError(400, "Choose a valid answer and import rows.")
@@ -543,6 +552,9 @@ export async function decideImport(
 	}
 	const indexes = rows ? [...new Set(rows)] : null
 	const decided = await transitionConflict(id, answer, indexes)
+	// Publish row changes before touching the import version: a finisher that reads
+	// this version must also see the approvals, including across different pods.
+	await refreshItems()
 	await run(
 		"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
 		[id],
@@ -597,6 +609,7 @@ async function applyRunStored(
 	if (activeRuns.has(id)) return
 	activeRuns.add(id)
 	let beat: NodeJS.Timeout | undefined
+	let heartbeat: Promise<unknown> = Promise.resolve()
 	try {
 		while (true) {
 			const options = JSON.parse(
@@ -608,15 +621,16 @@ async function applyRunStored(
 				await transitionConflict(id, options.answers.conflict, null)
 				await refreshItems()
 			}
-			beat = setInterval(
-				() =>
-					void run(
+			beat = setInterval(() => {
+				heartbeat = heartbeat.then(() =>
+					run(
 						"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
 						[id],
 					).catch(() => null),
-				HEARTBEAT_MS,
-			)
+				)
+			}, HEARTBEAT_MS)
 			beat.unref()
+			await holdQuestions(userId, id, options)
 			const pending = await itemRows(userId, id, true)
 			const allItems = await itemRows(userId, id)
 			const ownScores = new Map<string, Snapshot[]>()
@@ -645,10 +659,7 @@ async function applyRunStored(
 				let state: keyof typeof tally = "kept"
 				try {
 					const gate = importGate(item, options)
-					if ("hold" in gate) {
-						await holdQuestions(userId, id, options)
-						continue
-					}
+					if ("hold" in gate) continue
 					if ("kept" in gate) state = "kept"
 					else if (
 						isWant(item) &&
@@ -790,8 +801,11 @@ async function applyRunStored(
 			)
 			await recount(id)
 			clearInterval(beat)
+			// Drain already-started heartbeat writes before reading the finishing version.
+			await heartbeat
 			// Read the version before checking pending: every decision touches this version.
 			const finishing = await getImportRow(userId, id)
+			await refreshItems()
 			const left = await itemRows(userId, id, true)
 			if (left.some((item) => item.applyState !== "failed")) continue
 			const failed = left.length
@@ -820,6 +834,7 @@ async function applyRunStored(
 		).catch(() => null)
 	} finally {
 		if (beat) clearInterval(beat)
+		await heartbeat
 		activeRuns.delete(id)
 	}
 }
@@ -865,7 +880,7 @@ export async function confirmImport(
 	if (!["preview", "failed", "running"].includes(row.status)) return response()
 	const started = await claim(
 		row,
-		"status = 'running', options = ?, conflict_choice = ?, confirmed_at = COALESCE(confirmed_at,CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP, error = NULL",
+		"status = 'running', options = ?, conflict_choice = ?, confirmed_at = COALESCE(confirmed_at,CURRENT_TIMESTAMP), finished_at = NULL, updated_at = CURRENT_TIMESTAMP, error = NULL",
 		[
 			JSON.stringify({ ...effectiveOptions, direction: "apply" }),
 			effectiveOptions.conflictChoice,
@@ -1126,6 +1141,11 @@ async function undoImportStored(
 		}
 		await run(
 			"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND apply_state IN ('added','updated')",
+			[id],
+		)
+		// A per-row decision may have passed its status check before Undo claimed.
+		await run(
+			"UPDATE doc.user_import_item SET apply_state = 'kept' WHERE import_id = ? AND (apply_state LIKE 'waiting:%' OR apply_state LIKE 'approved:%')",
 			[id],
 		)
 		await run(

@@ -5,6 +5,7 @@ import { afterEach, test } from "node:test"
 import type { ImportOptions } from "../../domain/imports.ts"
 import { FakeTrackingCrate } from "../tracking-fake-crate.ts"
 import { ImportDb } from "./import-db.test-support.ts"
+import type { Param } from "./store.server.ts"
 
 const { registerHooks } = nodeModule as unknown as {
 	registerHooks(hooks: {
@@ -427,6 +428,7 @@ test("HTTP decide, strict confirm ask, and waiting filter validate and enforce o
 	for (const body of [
 		{ question: "undated", answer: "keep" },
 		{ question: "conflict", answer: "add" },
+		{ question: "conflict", answer: "source", rows: [] },
 		{ question: "conflict", answer: "source", rows: Array(501).fill(0) },
 		{ question: "conflict", answer: "keep", extra: true },
 	])
@@ -520,6 +522,22 @@ test("question and completed analytics retain deterministic UUIDs across restart
 		await decideImport("member", id, "conflict", "source")
 		await new Promise((resolve) => setTimeout(resolve, 5))
 		await flushProductEvents()
+		const legacy = setup()
+		const legacyOptions = {
+			...options,
+			ask: undefined,
+			conflictChoice: "source" as const,
+		}
+		for (let attempt = 0; attempt < 2; attempt++) {
+			legacy.db.failScoreOnce = true
+			await confirmImport("member", legacy.id, legacyOptions)
+			await settled(legacy.db)
+			await new Promise((resolve) => setTimeout(resolve, 1100))
+		}
+		await flushProductEvents()
+		const failures = events.filter((event) => event.event === "import failed")
+		assert.equal(failures.length, 2)
+		assert.notEqual(failures[0].uuid, failures[1].uuid)
 		const completed = events.filter(
 			(event) => event.event === "import completed",
 		)
@@ -563,5 +581,186 @@ test("a whole answer racing confirm's bulk hold is repaired before applying", as
 	assert.equal(
 		(await confirmImport("member", id, options)).questions?.[0].answer,
 		"source",
+	)
+})
+
+test("legacy resume clears the previous finish and moves finished_at on success", async () => {
+	const { db, id } = setup()
+	const legacy = {
+		...options,
+		ask: undefined,
+		conflictChoice: "source" as const,
+	}
+	db.failScoreOnce = true
+	await confirmImport("member", id, legacy)
+	await settled(db)
+	assert.equal(db.imports[0].status, "failed")
+	const firstFinish = db.imports[0].finished_at
+	await new Promise((resolve) => setTimeout(resolve, 5))
+	await confirmImport("member", id, legacy)
+	await settled(db)
+	assert.equal(db.imports[0].status, "done")
+	assert.ok(Number(db.imports[0].finished_at) > Number(firstFinish))
+})
+
+test("per-row source survives failScoreOnce and resumes without answering other rows", async () => {
+	const { db, id } = setup(2)
+	await confirmImport("member", id, options)
+	await settled(db)
+	db.failScoreOnce = true
+	await decideImport("member", id, "conflict", "source", [0])
+	await settled(db)
+	assert.equal(db.imports[0].status, "failed")
+	assert.equal(db.items[0].apply_state, "failed")
+	assert.deepEqual(JSON.parse(String(db.items[0].payload)).answer, {
+		conflict: "source",
+	})
+	await confirmImport("member", id, options)
+	await settled(db)
+	assert.equal(db.items[0].apply_state, "updated")
+	assert.equal(db.items[1].apply_state, "waiting:conflict")
+	assert.equal(db.scores[0].score, 9)
+	assert.equal(JSON.parse(String(db.imports[0].options)).answers, undefined)
+})
+
+test("a pass holds missed rows once, using only untouched conflict candidates", async () => {
+	const { db, id } = setup(20)
+	db.items[19].outcome = "unchanged"
+	const originalRun = db.run.bind(db)
+	const originalSelect = db.select.bind(db)
+	let holds = 0
+	let reads = 0
+	db.run = async (sql, params) => {
+		if (sql.includes("SET apply_state = 'waiting:conflict'") && ++holds === 1)
+			return { rowcount: 0 } // Simulate a hold missed during confirm.
+		return originalRun(sql, params)
+	}
+	db.select = async <T extends {}>(sql: string, params: Param[]) => {
+		const result = await originalSelect<T>(sql, params)
+		if (sql.includes("AND outcome = 'conflict' AND apply_state IS NULL")) {
+			reads++
+			assert.deepEqual(params, [id, "member"])
+			assert.equal(result.length, 19)
+		}
+		return result
+	}
+	await confirmImport("member", id, options)
+	await settled(db)
+	assert.equal(holds, 2)
+	assert.equal(reads, 2)
+	assert.equal(db.items[19].apply_state, "kept")
+})
+
+test("decide publishes rows before touching the finishing version; finishing refreshes after its version read", async () => {
+	const { db, id } = setup()
+	await confirmImport("member", id, options)
+	await settled(db)
+	const original = db.run.bind(db)
+	let transitioned = false
+	let refreshed = false
+	let touched = false
+	db.run = async (sql, params) => {
+		if (sql.includes("AND apply_state = 'waiting:conflict'"))
+			transitioned = true
+		if (transitioned && sql === "REFRESH TABLE doc.user_import_item")
+			refreshed = true
+		if (
+			transitioned &&
+			sql ===
+				"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+		) {
+			assert.ok(refreshed)
+			touched = true
+		}
+		return original(sql, params)
+	}
+	await decideImport("member", id, "conflict", "source", [0])
+	await settled(db)
+	assert.ok(touched)
+	const calls: string[] = []
+	const select = db.select.bind(db)
+	db.select = async (sql, params) => {
+		calls.push(sql)
+		return select(sql, params)
+	}
+	db.run = async (sql, params) => {
+		calls.push(sql)
+		return original(sql, params)
+	}
+	// A legacy retry gives us a full finishing pass without another decider.
+	db.imports[0].status = "failed"
+	await confirmImport("member", id, options)
+	await settled(db)
+	const finish = calls.findIndex((sql) =>
+		sql.includes("finished_at = COALESCE"),
+	)
+	const pending = calls
+		.slice(0, finish)
+		.reduce(
+			(last, sql, index) =>
+				sql.includes("SELECT row_index") &&
+				sql.includes("OR apply_state = 'failed'")
+					? index
+					: last,
+			-1,
+		)
+	assert.equal(calls[pending - 2], "REFRESH TABLE doc.user_import_item")
+})
+
+test("finishing drains an in-flight heartbeat without another pass", async (t) => {
+	const { db, id } = setup()
+	t.mock.timers.enable({ apis: ["setInterval"] })
+	const original = db.run.bind(db)
+	let release!: () => void
+	const heartbeat = new Promise<void>((resolve) => {
+		release = resolve
+	})
+	let started = false
+	let passes = 0
+	db.run = async (sql, params) => {
+		if (
+			sql ===
+			"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+		) {
+			started = true
+			await heartbeat
+		}
+		return original(sql, params)
+	}
+	setImportEffectsForTest(
+		async () => {},
+		async () => {
+			passes++
+			t.mock.timers.tick(10_000)
+		},
+	)
+	await confirmImport("member", id, options)
+	await new Promise((resolve) => setTimeout(resolve, 10))
+	assert.ok(started)
+	assert.equal(db.imports[0].status, "running")
+	release()
+	await settled(db)
+	assert.equal(passes, 1)
+})
+
+test("undo cancels an approval racing its first cancellation", async () => {
+	const { db, id } = setup()
+	await confirmImport("member", id, options)
+	await settled(db)
+	const original = db.run.bind(db)
+	let cancels = 0
+	db.run = async (sql, params) => {
+		const result = await original(sql, params)
+		if (sql.includes("SET apply_state = 'kept'") && ++cancels === 1)
+			db.items[0].apply_state = "approved:conflict"
+		return result
+	}
+	await undoImport("member", id)
+	assert.equal(cancels, 2)
+	assert.equal(db.items[0].apply_state, "kept")
+	assert.equal(db.imports[0].status, "undone")
+	await assert.rejects(
+		() => decideImport("member", id, "conflict", "source", []),
+		{ status: 400 },
 	)
 })

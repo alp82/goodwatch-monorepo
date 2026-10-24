@@ -85,7 +85,7 @@ const supportedImportSql = new Set([
 	"SELECT tmdb_id, show_id, season_number, episode_number, name, tvdb_id FROM episode WHERE show_id = ? AND removed_at IS NULL LIMIT 50001",
 	"SELECT watch_id FROM user_watch_log WHERE user_id = ? AND tmdb_id = ? AND media_type = ? LIMIT 1",
 	"UPDATE doc.user_import SET processed = ?, added = ?, updated = ?, kept = ?, failed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-	"UPDATE doc.user_import SET status = 'running', options = ?, conflict_choice = ?, confirmed_at = COALESCE(confirmed_at,CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP, error = NULL WHERE id = ? AND _seq_no = ? AND _primary_term = ?",
+	"UPDATE doc.user_import SET status = 'running', options = ?, conflict_choice = ?, confirmed_at = COALESCE(confirmed_at,CURRENT_TIMESTAMP), finished_at = NULL, updated_at = CURRENT_TIMESTAMP, error = NULL WHERE id = ? AND _seq_no = ? AND _primary_term = ?",
 	"UPDATE doc.user_import SET status = 'running', options = ?, updated_at = CURRENT_TIMESTAMP, error = NULL WHERE id = ? AND _seq_no = ? AND _primary_term = ?",
 	"UPDATE doc.user_import SET status = 'undone', updated_at = CURRENT_TIMESTAMP, finished_at = CURRENT_TIMESTAMP WHERE id = ?",
 	"UPDATE doc.user_import SET status = ?, finished_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP, error = ? WHERE id = ?",
@@ -101,6 +101,9 @@ const supportedImportSql = new Set([
 	"UPDATE user_score SET score = ?, review = ?, created_at = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
 	"UPDATE user_score SET score = ?, review = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
 ])
+supportedImportSql.add(
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND outcome = 'conflict' AND apply_state IS NULL ORDER BY row_index LIMIT 100001",
+)
 supportedImportSql.add(
 	"UPDATE doc.user_import_item SET apply_state = 'waiting:conflict' WHERE import_id = ? AND apply_state IS NULL AND row_index IN (?)",
 )
@@ -420,6 +423,10 @@ export class ImportDb {
 			)
 			if (s.includes("AND row_index = ?"))
 				rows = rows.filter((x) => x.row_index === params[2])
+			if (s.includes("AND outcome = 'conflict' AND apply_state IS NULL"))
+				rows = rows.filter(
+					(row) => row.outcome === "conflict" && row.apply_state == null,
+				)
 			if (s.includes("AND outcome = ?"))
 				rows = rows.filter((x) => x.outcome === params[2])
 			if (s.includes("AND apply_state = ?"))
@@ -722,6 +729,7 @@ export class ImportDb {
 				if (s.includes("options = ?")) claim.options = params[0]
 				if (s.includes("conflict_choice = ?")) claim.conflict_choice = params[1]
 				if (s.includes("status = 'running'")) claim.status = "running"
+				if (s.includes("finished_at = NULL")) claim.finished_at = null
 				if (s.includes("confirmed_at =")) claim.confirmed_at ??= new Date()
 				if (s.includes("status = ?")) {
 					claim.status = params[0]
@@ -954,11 +962,15 @@ export class ImportDb {
 			)
 			return { rowcount: before - this.notInterested.length }
 		}
+		if (
+			this.failScoreOnce &&
+			(s.startsWith("INSERT INTO user_score") ||
+				s.startsWith("UPDATE user_score"))
+		) {
+			this.failScoreOnce = false
+			throw new Error("injected score interruption")
+		}
 		if (s.startsWith("INSERT INTO user_score")) {
-			if (this.failScoreOnce) {
-				this.failScoreOnce = false
-				throw new Error("injected score interruption")
-			}
 			if (
 				!this.scores.some(
 					(x) =>
