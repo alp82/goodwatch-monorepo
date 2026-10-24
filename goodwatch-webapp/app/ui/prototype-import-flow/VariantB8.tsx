@@ -10,6 +10,8 @@ import {
 import {
 	type CSSProperties,
 	type ReactNode,
+	createContext,
+	useContext,
 	useEffect,
 	useMemo,
 	useRef,
@@ -104,9 +106,16 @@ const KIND_NAME: Record<keyof Kinds, string> = {
 	statuses: "Show statuses",
 }
 
+/** Set apart only inside a question. The Done screen turns it off, so a summary reads as plain text. */
+const Highlight = createContext(true)
+
 /** A GoodWatch state or list name, set apart so it reads at a glance. */
 function St({ children }: { children: ReactNode }) {
-	return <span className="font-semibold text-amber-200">{children}</span>
+	return useContext(Highlight) ? (
+		<span className="font-semibold text-amber-200">{children}</span>
+	) : (
+		<>{children}</>
+	)
 }
 
 const kindLine = (k: keyof Kinds, n: number): ReactNode =>
@@ -915,7 +924,13 @@ function Answer({
 /* ------------------------------------------------------------------------------------------------------------------ */
 /* The variant                                                                                                        */
 
-export function VariantB8({ sim }: { sim: Sim }) {
+/** The prototype's open question: how the Done screen sums up what changed. */
+export type Summary = "tiles" | "table" | "sentence" | "fold"
+
+export function VariantB8({
+	sim,
+	summary = "table",
+}: { sim: Sim; summary?: Summary }) {
 	const s = sim.scenario
 	const { phase } = sim
 	const m = s.matching
@@ -1168,6 +1183,7 @@ export function VariantB8({ sim }: { sim: Sim }) {
 						openIn={openIn}
 						heading={heading}
 						onDecide={decide}
+						summary={summary}
 					/>
 				)}
 			</div>
@@ -1952,7 +1968,9 @@ function Done({
 	openIn,
 	heading,
 	onDecide,
+	summary,
 }: {
+	summary: Summary
 	sim: Sim
 	started: boolean
 	local: Local
@@ -2031,151 +2049,294 @@ function Done({
 		)
 	}
 
-	const lines: { key: string; line: ReactNode }[] = [
-		...kindsIn.map((k) => ({ key: k, line: kindLine(k, s.kinds[k]) })),
-		...applied,
-		...(!past && s.unchanged > 0
-			? [
-					{
-						key: "unchanged",
-						line: `${plural(s.unchanged, "title")} you already had stayed the same`,
-					},
-				]
-			: []),
-	]
+	const answered = Object.keys(picked).length
+	const unchanged =
+		!past && s.unchanged > 0
+			? `${plural(s.unchanged, "title")} you already had stayed the same.`
+			: ""
 
 	return (
-		<section className="flex flex-col gap-6">
-			<div className="flex flex-col gap-3">
-				<h2 ref={heading} tabIndex={-1} className={headingClass}>
-					{past
-						? `${src} import from ${day(s.previous?.at ?? "")}`
-						: leftTopics.length
-							? `${plural(count, "title")} are in GoodWatch`
-							: `Done. ${plural(count, "title")} are in GoodWatch`}
-				</h2>
-				{past && (
-					<p className="break-all text-sm text-gray-400">{s.fileName}</p>
-				)}
-				<PosterStack titles={s.sample} max={10} />
-			</div>
-
-			{leftTopics.length > 0 && (
-				<div className="rounded-2xl bg-amber-400/5 p-5 ring-1 ring-amber-400/30">
-					<h3 className="text-lg font-bold text-white">
-						{fmt(leftTopics.length)} left to decide
-					</h3>
-					<p className="mt-1 text-sm text-gray-400">
-						Nothing from {v(leftTopics.length, "this", "these")} changed yet.
-					</p>
-					<ul className="mt-2 divide-y divide-white/10">
-						{leftTopics.map((g) => (
-							<li key={g} className="flex items-center gap-3 py-3">
-								<span className="min-w-0 flex-1 text-gray-200">
-									{leftLine(g, s, openIn(g))}
-								</span>
-								<button
-									type="button"
-									className={textLink}
-									aria-label={`Decide: ${topicLabel(g, s, openIn(g))}`}
-									onClick={() => onDecide(g)}
-								>
-									Decide
-								</button>
-							</li>
-						))}
-					</ul>
+		<Highlight.Provider value={false}>
+			<section className="flex flex-col gap-6">
+				<div className="flex flex-col gap-3">
+					<h2 ref={heading} tabIndex={-1} className={headingClass}>
+						{past
+							? `${src} import from ${day(s.previous?.at ?? "")}`
+							: leftTopics.length
+								? `${plural(count, "title")} are in GoodWatch`
+								: `Done. ${plural(count, "title")} are in GoodWatch`}
+					</h2>
+					{past && (
+						<p className="break-all text-sm text-gray-400">{s.fileName}</p>
+					)}
+					<PosterStack titles={s.sample} max={10} />
 				</div>
-			)}
 
-			<div className="rounded-2xl bg-gray-900/70 p-5 ring-1 ring-white/10">
-				<p className="font-semibold text-white">
-					{past ? `It added ${plural(count, "title")}` : "What changed"}
-				</p>
-				<ul className="mt-2 flex flex-col gap-1 text-gray-300">
-					{lines.map(({ key, line }) => (
-						<li key={key} className="flex items-center gap-2">
-							<CheckIcon
-								className="size-4 shrink-0 text-amber-300"
-								aria-hidden
-							/>
-							<span>{line}</span>
+				{leftTopics.length > 0 && (
+					<div className="rounded-2xl bg-amber-400/5 p-5 ring-1 ring-amber-400/30">
+						<h3 className="text-lg font-bold text-white">
+							{fmt(leftTopics.length)} left to decide
+						</h3>
+						<p className="mt-1 text-sm text-gray-400">
+							Nothing from {v(leftTopics.length, "this", "these")} changed yet.
+						</p>
+						<ul className="mt-2 divide-y divide-white/10">
+							{leftTopics.map((g) => (
+								<li key={g} className="flex items-center gap-3 py-3">
+									<span className="min-w-0 flex-1 text-gray-200">
+										{leftLine(g, s, openIn(g))}
+									</span>
+									<button
+										type="button"
+										className={textLink}
+										aria-label={`Decide: ${topicLabel(g, s, openIn(g))}`}
+										onClick={() => onDecide(g)}
+									>
+										Decide
+									</button>
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
+
+				<div className="rounded-2xl bg-gray-900/70 p-5 ring-1 ring-white/10">
+					<WhatChanged
+						summary={summary}
+						s={s}
+						kindsIn={kindsIn}
+						applied={applied}
+						answered={answered}
+						unchanged={unchanged}
+						title={past ? `It added ${plural(count, "title")}` : "What changed"}
+					/>
+					{outCount > 0 && (
+						<div className="mt-3">
+							<Disclosure
+								label={`${fmt(outCount)} from your file couldn't come in`}
+								open={outOpen}
+								onToggle={setOutOpen}
+							>
+								<div className="flex flex-col gap-2 text-sm text-gray-400">
+									{noSuggestion.length > 0 && (
+										<>
+											<p>GoodWatch couldn't find these titles:</p>
+											<ul className="list-disc pl-5 text-gray-300">
+												{noSuggestion.map((u) => (
+													<li key={u.raw}>{u.raw}</li>
+												))}
+											</ul>
+										</>
+									)}
+									{s.unsupported > 0 && (
+										<p>
+											{fmt(s.unsupported)}{" "}
+											{v(
+												s.unsupported,
+												"isn't a movie or show",
+												"aren't movies or shows",
+											)}
+											, like podcasts or games.
+										</p>
+									)}
+								</div>
+							</Disclosure>
+						</div>
+					)}
+					<div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+						<a href="/scores" className={textLink}>
+							See your scores
+						</a>
+						<a href="/taste" className={textLink}>
+							See your taste
+						</a>
+					</div>
+				</div>
+
+				<div className="flex flex-col gap-3 border-t border-white/10 pt-5">
+					<h3 className="font-semibold text-white">Changed your mind?</h3>
+					<p className="text-gray-400">
+						Undo takes out what this import added
+						{applied.length > 0 ? ", including your answers," : ""} and puts
+						back what it changed.
+					</p>
+					{leaves.length > 0 && (
+						<div className="flex items-center gap-3">
+							<PosterStack titles={leaves} size="w-10" />
+							<p className="text-sm text-gray-300">
+								{names(leaves)} stay as they are. You changed them after this
+								import.
+							</p>
+						</div>
+					)}
+					<div className="flex flex-wrap gap-3">
+						<button
+							type="button"
+							className={past ? dangerButton : secondaryButton}
+							onClick={sim.undo}
+						>
+							<ArrowUturnLeftIcon className="size-5" aria-hidden />
+							Undo this import
+						</button>
+						<button
+							type="button"
+							className={secondaryButton}
+							onClick={sim.reset}
+						>
+							{past ? "Back to imports" : "Import something else"}
+						</button>
+					</div>
+				</div>
+			</section>
+		</Highlight.Provider>
+	)
+}
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+/* What changed: the four summary options. Plain text throughout; nothing is highlighted.                             */
+
+function WhatChanged({
+	summary,
+	s,
+	kindsIn,
+	applied,
+	answered,
+	unchanged,
+	title,
+}: {
+	summary: Summary
+	s: Scenario
+	kindsIn: (keyof Kinds)[]
+	applied: { key: string; line: ReactNode }[]
+	answered: number
+	unchanged: string
+	title: string
+}) {
+	const [open, setOpen] = useState(false)
+	const answers =
+		applied.length > 0 ? (
+			<Disclosure
+				label={`What your ${plural(answered, "answer")} changed`}
+				open={open}
+				onToggle={setOpen}
+			>
+				<ul className="flex flex-col gap-1 text-sm text-gray-300">
+					{applied.map(({ key, line }) => (
+						<li key={key}>{line}</li>
+					))}
+				</ul>
+			</Disclosure>
+		) : null
+	const foot = unchanged ? (
+		<p className="text-sm text-gray-400">{unchanged}</p>
+	) : null
+
+	if (summary === "tiles")
+		return (
+			<div className="flex flex-col gap-4">
+				<p className="font-semibold text-white">{title}</p>
+				<ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+					{kindsIn.map((k) => (
+						<li
+							key={k}
+							className="flex flex-col rounded-xl bg-white/5 px-4 py-3"
+						>
+							<span className="text-2xl font-bold tabular-nums text-white">
+								{fmt(s.kinds[k])}
+							</span>
+							<span className="text-sm text-gray-400">{KIND_NAME[k]}</span>
 						</li>
 					))}
 				</ul>
-				{outCount > 0 && (
-					<div className="mt-3">
-						<Disclosure
-							label={`${fmt(outCount)} from your file couldn't come in`}
-							open={outOpen}
-							onToggle={setOutOpen}
-						>
-							<div className="flex flex-col gap-2 text-sm text-gray-400">
-								{noSuggestion.length > 0 && (
-									<>
-										<p>GoodWatch couldn't find these titles:</p>
-										<ul className="list-disc pl-5 text-gray-300">
-											{noSuggestion.map((u) => (
-												<li key={u.raw}>{u.raw}</li>
-											))}
-										</ul>
-									</>
-								)}
-								{s.unsupported > 0 && (
-									<p>
-										{fmt(s.unsupported)}{" "}
-										{v(
-											s.unsupported,
-											"isn't a movie or show",
-											"aren't movies or shows",
-										)}
-										, like podcasts or games.
-									</p>
-								)}
-							</div>
-						</Disclosure>
-					</div>
-				)}
-				<div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-					<a href="/scores" className={textLink}>
-						See your scores
-					</a>
-					<a href="/taste" className={textLink}>
-						See your taste
-					</a>
-				</div>
+				{foot}
+				{answers}
 			</div>
+		)
 
-			<div className="flex flex-col gap-3 border-t border-white/10 pt-5">
-				<h3 className="font-semibold text-white">Changed your mind?</h3>
-				<p className="text-gray-400">
-					Undo takes out what this import added
-					{applied.length > 0 ? ", including your answers," : ""} and puts back
-					what it changed.
+	if (summary === "sentence") {
+		const parts = kindsIn.map((k) =>
+			k === "want"
+				? `${fmt(s.kinds[k])} Want to See`
+				: plural(s.kinds[k], KIND_LABEL[k][0], KIND_LABEL[k][1]),
+		)
+		const said =
+			parts.length <= 2
+				? parts.join(" and ")
+				: `${parts.slice(0, -1).join(", ")}, and ${parts.at(-1)}`
+		return (
+			<div className="flex flex-col gap-3">
+				<p className="text-lg text-gray-200">
+					{said} came in.
+					{applied.length > 0 &&
+						` Your ${plural(answered, "answer")} ${v(answered, "is", "are")} applied.`}
 				</p>
-				{leaves.length > 0 && (
-					<div className="flex items-center gap-3">
-						<PosterStack titles={leaves} size="w-10" />
-						<p className="text-sm text-gray-300">
-							{names(leaves)} stay as they are. You changed them after this
-							import.
-						</p>
-					</div>
-				)}
-				<div className="flex flex-wrap gap-3">
-					<button
-						type="button"
-						className={past ? dangerButton : secondaryButton}
-						onClick={sim.undo}
-					>
-						<ArrowUturnLeftIcon className="size-5" aria-hidden />
-						Undo this import
-					</button>
-					<button type="button" className={secondaryButton} onClick={sim.reset}>
-						{past ? "Back to imports" : "Import something else"}
-					</button>
-				</div>
+				{foot}
+				{answers}
 			</div>
-		</section>
+		)
+	}
+
+	const table = (
+		<ul className="divide-y divide-white/10">
+			{kindsIn.map((k) => (
+				<li
+					key={k}
+					className="flex min-h-11 items-center justify-between gap-4 py-2"
+				>
+					<span className="text-gray-200">{KIND_NAME[k]}</span>
+					<span className="font-semibold tabular-nums text-white">
+						{fmt(s.kinds[k])}
+					</span>
+				</li>
+			))}
+		</ul>
+	)
+
+	if (summary === "fold") {
+		const top = kindsIn.slice(0, 2)
+		const rest = kindsIn.length - top.length
+		const said = top
+			.map((k) =>
+				k === "want"
+					? `${fmt(s.kinds[k])} Want to See`
+					: plural(s.kinds[k], KIND_LABEL[k][0], KIND_LABEL[k][1]),
+			)
+			.join(rest ? ", " : " and ")
+		return (
+			<div className="flex flex-col gap-3">
+				<p className="text-lg text-gray-200">
+					{said}
+					{rest > 0 && `, and ${plural(rest, "more kind")}`} came in.
+				</p>
+				<Disclosure label="See everything" open={open} onToggle={setOpen}>
+					<div className="flex flex-col gap-3">
+						{table}
+						{applied.length > 0 && (
+							<>
+								<p className="pt-2 text-sm font-semibold text-white">
+									From your answers
+								</p>
+								<ul className="flex flex-col gap-1 text-sm text-gray-300">
+									{applied.map(({ key, line }) => (
+										<li key={key}>{line}</li>
+									))}
+								</ul>
+							</>
+						)}
+						{foot}
+					</div>
+				</Disclosure>
+			</div>
+		)
+	}
+
+	// "table": the Choose step's rows again, now with what came in.
+	return (
+		<div className="flex flex-col gap-3">
+			<p className="font-semibold text-white">{title}</p>
+			{table}
+			{foot}
+			{answers}
+		</div>
 	)
 }

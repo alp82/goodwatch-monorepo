@@ -33,7 +33,21 @@ export const meta = () => [
 
 // Round 2 (2026-10-24): the owner picked B ("the best UX so far") and asked for iterations on it. The switcher
 // cycles B and its iterations; round 1's A, C, and D still open with ?variant=A|C|D.
+/** Round 5: the switcher only cycles how B8's Done screen sums up what changed. */
 const VARIANTS = {
+	S1: "Rows like the Choose step",
+	S2: "Count tiles",
+	S3: "One sentence",
+	S4: "One line, details folded",
+} as const
+const SUMMARY = {
+	S1: "table",
+	S2: "tiles",
+	S3: "sentence",
+	S4: "fold",
+} as const
+/** Earlier rounds, still open by URL. */
+const EARLIER = {
 	B: "Round 1 B, one question at a time",
 	B2: "One screen per topic",
 	B3: "Summary first, questions optional",
@@ -51,8 +65,9 @@ const ROUND_1 = {
 
 export default function PrototypeImportFlow() {
 	const [params] = useSearchParams()
-	const variant = (params.get("variant") ?? "B8") as
+	const variant = (params.get("variant") ?? "S1") as
 		| keyof typeof VARIANTS
+		| keyof typeof EARLIER
 		| keyof typeof ROUND_1
 	const scenario = scenarioByKey(params.get("scenario"))
 	const sim = useImportSim(scenario)
@@ -73,6 +88,13 @@ export default function PrototypeImportFlow() {
 			{variant === "B6" && <VariantB6 key={key} sim={sim} />}
 			{variant === "B7" && <VariantB7 key={key} sim={sim} />}
 			{variant === "B8" && <VariantB8 key={key} sim={sim} />}
+			{variant in SUMMARY && (
+				<VariantB8
+					key={key}
+					sim={sim}
+					summary={SUMMARY[variant as keyof typeof SUMMARY]}
+				/>
+			)}
 			<ScenarioPanel sim={sim} />
 			<PrototypeSwitcher variants={VARIANTS} />
 		</SettingsPage>
