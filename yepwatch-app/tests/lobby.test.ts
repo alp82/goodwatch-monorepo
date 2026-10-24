@@ -38,3 +38,13 @@ test('legacy recovery follows actual active continuation deck, including complet
   room.shared.phase = 'voting'; room.shared.candidates = room.shared.candidates.filter(c => c.identity.kind !== 'show_continue');
   assert.equal(room.shared.constraints.kinds.includes('show_continue'), true); assert.equal(needsSavedProgressRestart(room), false);
 });
+
+test('country order keeps the current choice and locale suggestion ahead of popular countries without truncating', async () => {
+  const { rankedCountries } = await import('../src/core/lobby');
+  const countries = [{code:'ZZ',name:'Zed'}, {code:'ME',name:'Montenegro'}, {code:'DE',name:'Germany'}, {code:'US',name:'United States'}, {code:'AA',name:'Alpha'}];
+  assert.deepEqual(rankedCountries(countries).map(c => c.code), ['US','DE','AA','ME','ZZ']);
+  assert.deepEqual(rankedCountries(countries, 'DE', 'ME').map(c => c.code), ['DE','ME','US','AA','ZZ']);
+  assert.equal(countries[0].code, 'ZZ');
+  assert.equal(countryHint('sr-ME'), 'ME');
+  assert.equal(countryHint('en'), null);
+});

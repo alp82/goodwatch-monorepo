@@ -1,3 +1,4 @@
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import codes from "./codes.json";
 import { Wordmark } from "../glow/theme";
 import { Explainer } from "./Explainer.web";
@@ -53,14 +54,25 @@ export function HomeLanding({
   returnToRoom,
   disabled,
 }: HomeLandingProps) {
+  const header = useRef<HTMLElement>(null);
+  const root = useRef<HTMLDivElement>(null);
+  const [started, setStarted] = useState(false);
+  useLayoutEffect(() => {
+    const box = header.current?.getBoundingClientRect();
+    if (box) root.current?.style.setProperty('--header-center', `${box.y + box.height / 2}px`);
+  }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => setStarted(true), window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 320);
+    return () => clearTimeout(timer);
+  }, []);
   return (
-    <div className="home-landing">
+    <div className="home-landing home-arrival" ref={root}>
       <style>{homeCss}</style>
       <main>
-        <header>
+        <header ref={header}>
           <Wordmark size={36} />
         </header>
-        <Explainer obscured={false} />
+        <Explainer obscured={!started} />
         <section className="apps" aria-label="Get the app">
           <AppCode platform="ios" />
           <AppCode platform="android" />

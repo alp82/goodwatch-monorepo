@@ -4,7 +4,7 @@ import { ActivityIndicator, Image, Pressable, TextInput, View, useWindowDimensio
 import { useQuery } from '@tanstack/react-query';
 import type { RoomCommand, RoomSnapshot, RoomPromptPreview } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousApi } from '../../core/continuous/api';
-import { countryHint } from '../../core/lobby';
+import { deviceCountryHint, rankedCountries } from '../../core/lobby';
 import { Field, Notice, Row } from '../../components/ui';
 import { Drawer } from './Drawer';
 import { ReadAs } from './ReadAs';
@@ -36,6 +36,7 @@ export function Lobby({
   const current = shared.screens[0]; // Compatibility projection; there is one room selection.
   const [editing, setEditing] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [suggestedCountry] = useState(deviceCountryHint);
   const [country, setCountry] = useState(current?.country ?? '');
   const [customServices, setServices] = useState<number[]>(current?.serviceIds ?? []);
   const [useSavedProviders, setUseSavedProviders] = useState(!current?.confirmed);
@@ -89,9 +90,9 @@ export function Lobby({
     (!prompt.trim() || prompt.trim().length >= 2);
   function edit() {
     setCountry(
-      current?.country ??
-        own.member.prefill?.country ??
-        countryHint(Intl.DateTimeFormat().resolvedOptions().locale) ??
+      current?.country ||
+        own.member.prefill?.country ||
+        suggestedCountry ||
         ''
     );
     setServices(current?.serviceIds ?? []);
@@ -195,7 +196,16 @@ export function Lobby({
         </View>
       </View>
       {editing && (
-        <Drawer title={countryPicker ? "Choose country" : "Our room"} close={() => countryPicker ? setCountryPicker(false) : setEditing(false)}>
+        <Drawer title={countryPicker ? "Choose country" : "Our room"} close={() => countryPicker ? setCountryPicker(false) : setEditing(false)} footer={!countryPicker ? <View style={{ gap: 8 }}>
+          {saveError && <Notice error>{saveError}</Notice>}
+          <Pill
+            label="Save room description"
+            gold
+            disabled={disabled || !valid || metadata.isFetching}
+            onPress={() => void save()}
+          >
+            {disabled ? 'Saving…' : 'Save'}
+          </Pill></View> : undefined}>
           {countryPicker && (
             <>
               <Field
@@ -204,7 +214,7 @@ export function Lobby({
                 onChange={setCountrySearch}
                 placeholder="Search countries"
               />
-              {metadata.data?.countries
+              {rankedCountries(metadata.data?.countries ?? [], country, suggestedCountry)
                 .filter(
                   (c) =>
                     !countrySearch ||
@@ -439,15 +449,7 @@ export function Lobby({
               </Pill>
             </>
           )}
-          {saveError && <Notice error>{saveError}</Notice>}
-          <Pill
-            label="Save room description"
-            gold
-            disabled={disabled || !valid || metadata.isFetching}
-            onPress={() => void save()}
-          >
-            {disabled ? 'Saving…' : 'Save'}
-          </Pill>
+
           </>}
         </Drawer>
       )}

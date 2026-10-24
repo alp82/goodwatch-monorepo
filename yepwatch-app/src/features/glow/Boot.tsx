@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Image, Text, View, useWindowDimensions } from 'react-native';
-import { useReducedMotion } from '../../components/ui';
+import { useMotionPreference } from '../../components/ui';
 import { glow, s } from './theme';
 
 /** GoodWatch TV's boot rhythm: initial pops in, remaining letters reveal outward.
@@ -8,25 +8,25 @@ import { glow, s } from './theme';
  */
 export function Boot({ ready, done, onLayout }: { ready: boolean; done: () => void; onLayout: () => void }) {
   const size = useWindowDimensions().width < 360 ? 52 : 64;
-  const reduced = useReducedMotion();
+  const reduced = useMotionPreference();
   const [lettersWidth, setLettersWidth] = useState(0);
   const [pop] = useState(() => new Animated.Value(0));
   const [reveal] = useState(() => new Animated.Value(0));
   const [opacity] = useState(() => new Animated.Value(1));
   useEffect(() => {
-    if (!ready || !lettersWidth) return;
+    if (!ready || !lettersWidth || reduced === null) return;
     pop.setValue(reduced ? 1 : 0);
     reveal.setValue(reduced ? 1 : 0);
     opacity.setValue(reduced ? 0 : 1);
     const easing = Easing.bezier(0.16, 1, 0.3, 1);
     const animation = reduced
-      ? Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: false })
+      ? Animated.timing(opacity, { toValue: 1, duration: 120, useNativeDriver: false })
       : Animated.parallel([
-          Animated.sequence([Animated.delay(200), Animated.timing(pop, { toValue: 1, duration: 700, easing, useNativeDriver: false })]),
-          Animated.sequence([Animated.delay(600), Animated.timing(reveal, { toValue: 1, duration: 600, easing, useNativeDriver: false })]),
+          Animated.sequence([Animated.delay(40), Animated.timing(pop, { toValue: 1, duration: 300, easing, useNativeDriver: false })]),
+          Animated.sequence([Animated.delay(170), Animated.timing(reveal, { toValue: 1, duration: 280, easing, useNativeDriver: false })]),
         ]);
     let timer: ReturnType<typeof setTimeout> | undefined;
-    animation.start(({ finished }) => { if (finished) timer = setTimeout(done, reduced ? 0 : 300); });
+    animation.start(({ finished }) => { if (finished) timer = setTimeout(done, reduced ? 0 : 30); });
     return () => { animation.stop(); if (timer) clearTimeout(timer); };
   }, [ready, lettersWidth, reduced, done, pop, reveal, opacity]);
   const type = { fontFamily: 'GabaritoBold', fontSize: size, lineHeight: size * 1.2, color: glow.ink, letterSpacing: -0.8 };

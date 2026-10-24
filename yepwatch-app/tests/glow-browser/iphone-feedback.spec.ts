@@ -131,7 +131,7 @@ test('room activity and exposure do not begin behind the boot overlay', async ({
   });
   await page.goto('/room/test-room');
   await expect(page.getByTestId('yepwatch-boot')).toBeVisible();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(180);
   expect(roomReads).toBe(0);
   await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Yep', exact: true })).toBeVisible();
@@ -232,4 +232,60 @@ test('cached next poster fades in without a full-opacity flash', async ({ page }
   expect(frames.length).toBeGreaterThan(5);
   expect(frames.some(opacity => opacity > 0 && opacity < 0.9)).toBe(true);
   for (let i = 1; i < frames.length; i++) expect(frames[i]).toBeGreaterThanOrEqual(frames[i - 1]);
+});
+
+for (const [width, height] of [[320, 568], [390, 844], [844, 390]]) {
+  test(`Save stays visible while scrolling all providers at ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    const f = await fixture(page, true);
+    await page.getByRole('button', { name: 'Edit room description and services' }).click();
+    const save = page.getByRole('button', { name: 'Save room description', exact: true });
+    await expect(save).toBeInViewport({ ratio: 1 });
+    const before = await save.boundingBox();
+    const last = page.getByRole('checkbox', { name: 'Service 65', exact: true });
+    await last.scrollIntoViewIfNeeded();
+    await last.click();
+    await expect(save).toBeInViewport({ ratio: 1 });
+    expect(await save.boundingBox()).toEqual(before);
+    await save.click();
+    await expect.poll(() => f.writes.some(c => c.type === 'configure')).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
+  });
+}
+
+test('device region suggests country only for an unconfigured room; a saved country wins', async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(navigator, 'languages', { value: ['sr-ME', 'en-US'] }));
+  const f = await fixture(page, true);
+  f.room.shared.screens[0].country = null;
+  f.room.shared.screens[0].confirmed = false;
+  await page.reload();
+  await page.getByRole('button', { name: 'Set up our room' }).click();
+  await expect(page.getByRole('button', { name: 'Choose country' })).toContainText('Montenegro');
+  await page.getByRole('button', { name: 'Choose country' }).click();
+  await page.getByRole('button', { name: 'Germany', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Choose country' })).toContainText('Germany');
+  f.room.shared.screens[0].country = 'DE';
+  f.room.shared.screens[0].confirmed = true;
+  await page.reload();
+  await page.getByRole('button', { name: 'Edit room description and services' }).click();
+  await expect(page.getByRole('button', { name: 'Choose country' })).toContainText('Germany');
+});
+
+test('GoodWatch sign-in is enabled without a guest nickname and includes its G mark', async ({ page }) => {
+  const f = await fixture(page, true);
+  const requests: any[] = [];
+  await page.route('**/proposal/rooms', async route => {
+    requests.push(route.request().postDataJSON());
+    await route.fulfill({ status: 503, json: { error: {code:'busy', message:'Fixture stops before actual sign-in', retryable:true} } });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Create a room', exact: true }).click();
+  const signin = page.getByRole('button', { name: 'Sign in with GoodWatch', exact: true });
+  await expect(page.getByLabel('Your nickname')).toHaveValue('');
+  await expect(signin).toBeEnabled();
+  await expect(signin.locator('img')).toHaveCount(1);
+  await signin.click();
+  await expect.poll(() => requests.length).toBe(1);
+  expect(requests[0].nickname).toBe('Guest');
+  expect(f.writes).toEqual([]);
 });

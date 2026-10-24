@@ -1,3 +1,4 @@
+import { GoodWatchSignIn } from './glow/GoodWatchSignIn';
 import { EdgeBack } from './glow/EdgeBack';
 import { HomeLanding } from './home/HomeLanding';
 import { guestOnly } from '../core/config';
@@ -126,7 +127,7 @@ export function Entrance({ invite }: { invite?: string }) {
             contractVersion: 3,
             commandId: Crypto.randomUUID(),
             admissionSecret: Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(''),
-            nickname: (returning?.nickname ?? nickname).trim(),
+            nickname: (returning?.nickname ?? nickname).trim() || (member ? 'Guest' : ''),
           },
           code: cleanCode,
           intent,
@@ -223,8 +224,8 @@ export function Entrance({ invite }: { invite?: string }) {
       else router.push({ pathname: '/room/[id]', params: { id: recent.roomId } });
     }).catch(() => { setWebCreating(true); setError('Could not restore your invitation. Try again.'); });
   }
-  if (Platform.OS === 'web' && !invite && !joining && !webCreating && !admission && !restoreFailed && !error) {
-    return <HomeLanding create={() => setWebCreating(true)} join={() => setJoining(true)} returnToRoom={recent ? returnToRoom : undefined} disabled={locked} />;
+  if (!invite && !joining && !webCreating && !admission && !restoreFailed && !error) {
+    return <HomeLanding create={() => setWebCreating(true)} join={() => setJoining(true)} returnToRoom={recent ? returnToRoom : undefined} disabled={locked} signIn={guestOnly ? undefined : () => void enter(false, true)} />;
   }
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: glow.bg, overflow: 'hidden' }}>
@@ -357,13 +358,7 @@ export function Entrance({ invite }: { invite?: string }) {
                     {joining ? 'Create a room instead' : 'Join with an invitation'}
                   </Pill>
                 )}
-                {!guestOnly && <Pill
-                  label="Sign in with GoodWatch"
-                  disabled={locked || !nickname.trim() || (joining && !code.trim())}
-                  onPress={() => void enter(Boolean(invite || joining), true)}
-                >
-                  Sign in with GoodWatch
-                </Pill>}
+                {!guestOnly && <GoodWatchSignIn disabled={locked || (joining && !code.trim())} onPress={() => void enter(Boolean(invite || joining), true)} />}
               </>
             )}
             <GText size={12} color={glow.muted}>
@@ -394,13 +389,7 @@ export function Entrance({ invite }: { invite?: string }) {
               {joining ? 'Create a room instead' : 'Join with an invitation'}
             </Pill>
           )}
-          {!guestOnly && <Pill
-            label="Sign in with GoodWatch"
-            disabled={locked || !nickname.trim() || (joining && !code.trim())}
-            onPress={() => void enter(Boolean(invite || joining), true)}
-          >
-            Sign in with GoodWatch
-          </Pill>}
+          {!guestOnly && <GoodWatchSignIn disabled={locked || (joining && !code.trim())} onPress={() => void enter(Boolean(invite || joining), true)} />}
         </Drawer>
       )}
       {(joining || invite || webCreating) && <EdgeBack back={back} />}

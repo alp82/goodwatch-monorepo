@@ -1,0 +1,21 @@
+import {expect,test} from '@playwright/test';
+import {nativeIntroHtml} from '../../src/features/home/native-intro-html';
+test('bundled native intro loops locally, pauses on touch and suspends in background',async({page})=>{
+  const requests:string[]=[];page.on('request',req=>requests.push(req.url()));
+  await page.setContent(nativeIntroHtml);
+  const film=page.locator('.mini-film');
+  await expect(film).toHaveClass(/mini-paused/);
+  await page.evaluate(()=>(window as any).yepIntroState({blocked:false,quiet:false}));
+  await expect(film).toHaveCSS('animation-iteration-count','infinite');
+  await expect(film).toHaveCSS('animation-play-state','running');
+  await page.locator('.mini-intro').dispatchEvent('pointerdown',{pointerType:'touch'});
+  await page.getByRole('button',{name:'Pause intro'}).click();
+  await expect(film).toHaveCSS('animation-play-state','paused');
+  await page.getByRole('button',{name:'Play intro'}).click();
+  await page.evaluate(()=>(window as any).yepIntroState({blocked:true,quiet:false}));
+  await expect(film).toHaveCSS('animation-play-state','paused');
+  await page.evaluate(()=>(window as any).yepIntroState({blocked:false,quiet:true}));
+  await expect(page.getByRole('button',{name:'Pause intro'})).toBeHidden();
+  await expect(page.locator('.mini-tv')).toHaveCSS('opacity','1');
+  expect(requests).toEqual([]);
+});

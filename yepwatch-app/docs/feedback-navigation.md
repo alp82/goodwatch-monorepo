@@ -19,3 +19,15 @@ Signed Android build 11 was upgraded over build 10 on an owned Pixel 8/API 35 em
 ## Tonight streaming links
 
 Tonight shows the final decision's checked provider offers directly, filtered to the room's selected services. Branding reuses country-specific catalog metadata and GoodWatch's logo-card treatment; metadata never creates availability. Duplicate provider families prefer their direct link. Search and availability-page fallbacks are labelled separately. All services remain reachable in a bounded scrolling list, and a distinct GoodWatch link opens the full movie/show page. The details drawer reuses the same links. No provider URL or episode entitlement is invented.
+
+## Build 13: entry, configuration and poster transitions
+
+The home logo moves into its header, then the intro begins, the two installation cards arrive, and browser actions follow. Installed apps use the same local intro artwork with Create, Join, GoodWatch sign-in and the existing room shortcut. Native intro playback pauses in the background; reduced motion shows the settled TV image.
+
+GoodWatch sign-in no longer requires a guest nickname. An unnamed admission starts as Guest and keeps that actor through the existing account-linking flow; no profile name is guessed. All sign-in buttons carry the GoodWatch mark.
+
+Room configuration keeps Save outside the scrolling fields and providers. Country choices prioritize the current selection, an explicit region from the configured device/browser locale, and GoodWatch's curated common-country order, followed by the complete alphabetical remainder. This is a locale suggestion, not geolocation or live popularity analytics. Saved and manually chosen countries take precedence.
+
+A cached poster now waits for the asynchronous motion preference before revealing itself. The same opacity animation owns the fade on Android (the image's built-in fade is disabled). Reduced-motion voting keeps the outgoing card offscreen until the next title resets its position.
+
+Validation: 63 unit tests, 89 browser checks, typecheck/lint (one pre-existing warning), and both native exports passed. The regression reproduces a cached image arriving before the native motion-setting response, then verifies monotonic fading, reduced motion and failed preference reads. Native release validation is recorded with the build evidence when complete.

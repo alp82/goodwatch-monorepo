@@ -1,5 +1,6 @@
+import { filmMarkup } from './film-markup';
 /** A tiny film, inspired by GoodWatch TV's timed card choreography and amber word landings. */
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import { introCss } from "./intro-styles";
 export function Explainer({ obscured }: { obscured: boolean }) {
   const [touchControls, setTouchControls] = useState(false);
@@ -44,84 +45,8 @@ export function Explainer({ obscured }: { obscured: boolean }) {
           paused || hidden || obscured ? "mini-paused" : ""
         }`}
         aria-hidden="true"
-      >
-        <div className="mini-stage">
-          <div className="mini-halo" />
-          {["left", "middle", "right"].map((side, i) => (
-            <div
-              key={side}
-              className={`mini-person mini-${side}`}
-              style={
-                {
-                  "--person": ["#a78bfa", "#67d9d0", "#f9a8d4"][i],
-                } as CSSProperties
-              }
-            >
-              <div className="mini-deck">
-                <div className="mini-card-under" />
-                <div className="mini-card">
-                  <span className="mini-moon" />
-                  <span className="mini-hills" />
-                  <span className="mini-film-lines" />
-                </div>
-                <div className="mini-flick">
-                  <span className="mini-orbit" />
-                </div>
-                <span className="mini-tap" />
-              </div>
-              <span className="mini-face">
-                <i />
-                <i />
-                <b />
-              </span>
-            </div>
-          ))}
-          <div className="mini-tv">
-            <div className="mini-tv-screen">
-              <div className="mini-movie">
-                <span className="movie-stars" />
-                <span className="movie-moon" />
-                <span className="movie-range far" />
-                <span className="movie-range near" />
-                <span className="movie-comet" />
-              </div>
-              <div className="mini-stream-intro">
-                <b>CINEMA</b>
-                <span className="stream-play">▶</span>
-              </div>
-              <div className="mini-player">
-                <svg viewBox="0 0 12 12" width="7" height="7" fill="currentColor"><rect x="2" y="2" width="3" height="8" /><rect x="7" y="2" width="3" height="8" /></svg>
-                <i>
-                  <b />
-                </i>
-                <span>⌁</span>
-              </div>
-            </div>
-            <span className="tv-stand" />
-            <span className="tv-light" />
-          </div>
-          <span className="mini-spark spark-one">✦</span>
-          <span className="mini-spark spark-two">✧</span>
-          <span className="mini-spark spark-three">✦</span>
-          <div className="mini-agree">
-            <i />
-            <i />
-            <i />
-            <span>Agreed</span>
-          </div>
-        </div>
-        <div className="mini-captions">
-          <span className="mini-caption first">
-            Swipe <strong>your picks.</strong>
-          </span>
-          <span className="mini-caption second">
-            Find <strong>your match.</strong>
-          </span>
-          <span className="mini-caption third">
-            Watch <strong>together.</strong>
-          </span>
-        </div>
-      </div>
+        dangerouslySetInnerHTML={{ __html: filmMarkup }}
+      />
       {!quiet && (
         <button
           className="mini-control"

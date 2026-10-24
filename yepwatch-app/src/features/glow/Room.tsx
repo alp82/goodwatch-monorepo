@@ -1,3 +1,4 @@
+import { GoodWatchSignIn } from './GoodWatchSignIn';
 import { EdgeBack } from './EdgeBack';
 import { shareInvitation } from '../../core/share-invitation';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -828,13 +829,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
             (own.member.state === 'linked' ? (
               <GText bold>Signed in with GoodWatch</GText>
             ) : (
-              <Pill
-                label="Sign in with GoodWatch"
-                disabled={memberBusy || disabled}
-                onPress={() => void signin()}
-              >
-                {memberBusy ? 'Signing in with GoodWatch…' : 'Sign in with GoodWatch'}
-              </Pill>
+              <GoodWatchSignIn disabled={memberBusy || disabled} busy={memberBusy} onPress={() => void signin()} />
             ))}
           {notice && (
             <GText size={14} color="#fca5a5">

@@ -1,20 +1,23 @@
 import { EdgeBack } from './EdgeBack';
 import type { ReactNode } from 'react';
-import { Modal, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GText, Icon, Press, glow } from './theme';
 export function Drawer({
   title,
   children,
   close,
+  footer,
 }: {
   title: string;
   children: ReactNode;
   close: () => void;
+  footer?: ReactNode;
 }) {
   return (
     <Modal transparent animationType="fade" onRequestClose={close} statusBarTranslucent>
-      <View
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{
           flex: 1,
           justifyContent: 'flex-end',
@@ -59,6 +62,7 @@ export function Drawer({
             </Press>
           </View>
           <ScrollView
+            style={{ flexShrink: 1, minHeight: 0 }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator
             persistentScrollbar
@@ -66,9 +70,10 @@ export function Drawer({
           >
             {children}
           </ScrollView>
+          {footer && <View style={{ flexShrink: 0, paddingHorizontal: 24, paddingVertical: 12, borderTopWidth: 1, borderTopColor: glow.line, backgroundColor: glow.panel }}>{footer}</View>}
           <EdgeBack back={close} />
         </SafeAreaView>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
