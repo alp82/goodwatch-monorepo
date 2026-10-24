@@ -363,6 +363,11 @@ test("custom lists come in as Lists, Done counts the lists made, and their entri
 	assert.match(rendered.listReceipt, /Done\. 1 list is in GoodWatch/)
 	assert.match(rendered.listReceipt, /1<\/span><span[^>]*>Lists added/)
 	assert.doesNotMatch(rendered.listReceipt, /Nothing in your library changed/)
+	assert.match(rendered.replacedReceipt, /1 review now matches Letterboxd/)
+	assert.doesNotMatch(
+		rendered.replacedReceipt,
+		/Nothing in your library changed/,
+	)
 	assert.match(rendered.listPreview, /Lists<\/span><span[^>]*>1</)
 	assert.doesNotMatch(rendered.listPreview, /Keep yours\?/)
 	assert.match(rendered.listDetails, /Source list/)

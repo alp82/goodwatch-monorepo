@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { type ReactNode, createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { MemoryRouter } from "react-router-dom"
-import type { ImportResult } from "~/domain/import-result"
+import { type ImportResult, groupImportResult } from "~/domain/import-result"
 import { importInfo } from "~/domain/imports"
 import type { FileImportSource, ImportSummary } from "~/domain/imports"
 import { ImportDone } from "./ImportDone"
@@ -204,8 +204,47 @@ const listReceipt = (kept = false) => {
 		),
 	)
 }
+/** Done after an import that only replaced a review: something changed, though no tile shows. */
+const replacedReceipt = () => {
+	const client = new QueryClient()
+	client.setQueryData(
+		["import-result", "/api/imports", "replaced-id", "done"],
+		groupImportResult("import", [
+			{
+				key: "movie:1",
+				title: {
+					tmdbId: 1,
+					mediaType: "movie",
+					title: "Film 1",
+					year: 2024,
+					posterPath: null,
+				},
+				change: { type: "review-replaced" },
+			},
+		] as never),
+	)
+	return renderToStaticMarkup(
+		inApp(
+			createElement(ImportDone, {
+				api: "/api/imports",
+				summary: { id: "replaced-id", status: "done", canUndo: true },
+				source: "Letterboxd",
+				posters: [],
+				focus: false,
+				openedHere: true,
+				undo: { pending: false, error: null, run: () => {} },
+				undoQuestion: "Undo this import?",
+				onUploadAnother: () => {},
+				skippedUrl: "/skipped",
+				notes: ["Letterboxd", ""],
+			}),
+			client,
+		),
+	)
+}
 process.stdout.write(
 	`__SOURCE_IMPORT_RENDER__${JSON.stringify({
+		replacedReceipt: replacedReceipt(),
 		listReceipt: listReceipt(),
 		keptListReceipt: listReceipt(true),
 		keptListDetails: listDetails(true),

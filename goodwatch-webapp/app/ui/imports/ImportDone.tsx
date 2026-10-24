@@ -302,7 +302,7 @@ function Done({
 					<p className="font-semibold text-white">What changed</p>
 					{tiles.length > 0 ? (
 						<CountTiles tiles={tiles} />
-					) : (
+					) : anyReplaced ? null : (
 						<p className="text-gray-300">Nothing in your library changed.</p>
 					)}
 					{(kept || anyReplaced) && (
