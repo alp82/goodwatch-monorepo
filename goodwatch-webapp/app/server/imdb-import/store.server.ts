@@ -123,7 +123,8 @@ export function summarize(row: ImportRow): ImdbImportSummary {
 			row.without_fingerprint === null ? null : Number(row.without_fingerprint),
 		stalled: isStalled(row),
 		canUndo:
-			row.status === "done" && Number(row.added) + Number(row.updated) > 0,
+			(row.status === "done" && Number(row.added) + Number(row.updated) > 0) ||
+			(row.status === "failed" && questionOptions(row).direction === "undo"),
 		error:
 			row.status === "failed"
 				? (row.error ??

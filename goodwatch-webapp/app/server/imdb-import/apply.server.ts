@@ -452,18 +452,17 @@ async function applyStored(userId: string, importId: string) {
 			await report()
 
 			for (const batch of chunks(pending, APPLY_BATCH)) {
-				await saveConsent(importId, batch)
 				wrote = true
 				wroteTitles = true
 				const states = await applyBatch(userId, stamp, batch)
 				await settleImportedMovies(userId, batch)
+				await saveConsent(importId, batch, states)
 				await recordStates(importId, states)
 				for (const state of states.values()) tally[state]++
 				processed += batch.length
 				await report()
 			}
 			for (const batch of chunks(episodes, APPLY_BATCH)) {
-				await saveConsent(importId, batch)
 				wrote = true
 				const states = new Map<number, ApplyState>()
 				for (const episode of batch)
@@ -471,6 +470,7 @@ async function applyStored(userId: string, importId: string) {
 						Number(episode.row_index),
 						await applyEpisode(userId, importId, episode),
 					)
+				await saveConsent(importId, batch, states)
 				await recordStates(importId, states)
 				for (const state of states.values()) tally[state]++
 				processed += batch.length
@@ -577,7 +577,7 @@ function eligible(
 	)
 }
 
-/** Persist consent before writing: even a batch failure before recordStates can then be resumed. */
+/** Preserve row consent only when a failed write replaces its approval, as in general imports. */
 async function saveConsent(
 	id: string,
 	rows: {
@@ -585,19 +585,28 @@ async function saveConsent(
 		apply_state?: string | null
 		payload?: string | null
 	}[],
+	states: Map<number, ApplyState>,
 ) {
-	for (const row of rows)
-		if (row.apply_state === "approved:conflict") {
-			const payload = {
-				...JSON.parse(row.payload ?? "{}"),
-				_answer: { conflict: "imdb" },
-			}
-			row.payload = JSON.stringify(payload)
-			await run(
-				"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ?",
-				[JSON.stringify(payload), id, row.row_index],
-			)
-		}
+	const failed = rows.filter(
+		(row) =>
+			row.apply_state === "approved:conflict" &&
+			states.get(row.row_index) === "failed",
+	)
+	if (!failed.length) return
+	await run(
+		`UPDATE doc.user_import_item SET payload = CASE row_index ${failed.map(() => "WHEN ? THEN ?").join(" ")} ELSE payload END WHERE import_id = ? AND row_index IN (${marks(failed.length)})`,
+		[
+			...failed.flatMap((row) => [
+				row.row_index,
+				JSON.stringify({
+					...JSON.parse(row.payload ?? "{}"),
+					_answer: { conflict: "imdb" },
+				}),
+			]),
+			id,
+			...failed.map((row) => row.row_index),
+		],
+	)
 }
 
 async function transitionConflict(
@@ -649,11 +658,11 @@ async function questionProcessed(id: string) {
 	)
 }
 
-/** Conflict rows enter the write total only once they have consent; kept answers do not. */
+/** Every held or settled conflict counts in both progress measures. */
 async function questionTotal(id: string, counts: string) {
 	const rows = await select<{ n: number }>(
-		"SELECT count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND outcome = 'conflict' AND (apply_state IN ('approved:conflict', 'added', 'updated', 'failed') OR (apply_state = 'kept' AND COALESCE(reason, '') <> ?))",
-		[id, KEEP_REASON],
+		"SELECT count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND outcome = 'conflict' AND apply_state IN ('waiting:conflict', 'approved:conflict', 'added', 'updated', 'kept', 'failed')",
+		[id],
 	)
 	const parsed = JSON.parse(counts) as ImdbImportCounts
 	return parsed.new + parsed.update + Number(rows[0]?.n ?? 0)
@@ -713,7 +722,6 @@ export async function decideImport(
 	)
 		throw new ImdbImportError(400, "Choose a valid answer and import rows.")
 	let row = await getImportRow(userId, id)
-	const wasStalled = isStalled(row)
 	const check = () => {
 		if (
 			!["running", "done", "failed"].includes(row.status) ||
@@ -728,6 +736,7 @@ export async function decideImport(
 			)
 	}
 	check()
+	await checkRunningLock(userId, id)
 	if (!rows) {
 		let saved = false
 		for (let attempt = 0; attempt < 3; attempt++) {
@@ -735,8 +744,8 @@ export async function decideImport(
 			check()
 			if (
 				await claimImport(
-					row,
-					"options = ?, conflict_choice = ?, updated_at = CURRENT_TIMESTAMP",
+					row, // Keep the heartbeat timestamp until the fresh restart check below.
+					"options = ?, conflict_choice = ?",
 					[JSON.stringify({ ...questionOptions(row), answer }), answer],
 				)
 			) {
@@ -754,28 +763,22 @@ export async function decideImport(
 	await refreshItems()
 	const decided = await transitionConflict(id, answer, indexes)
 	await refreshItems()
-	await run(
-		"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-		[id],
-	)
-	await recountQuestions(id, row.counts)
 	row = await getImportRow(userId, id)
 	check()
 	if (
 		row.status === "done" ||
 		row.status === "failed" ||
-		(wasStalled && row.status === "running" && !activeRuns.has(id))
+		(isStalled(row) && !activeRuns.has(id))
 	) {
 		const approved = (await questionStates(id)).some(
 			(s) => s.apply_state === "approved:conflict" && Number(s.n) > 0,
 		)
 		if (approved) {
-			await checkRunningLock(userId, id)
-			// The lock read can race a heartbeat or another decision; only this version may restart.
+			// Re-read before claiming: another pod may already have restarted this import.
 			row = await getImportRow(userId, id)
 			check()
 			if (
-				(row.status !== "running" || (wasStalled && !activeRuns.has(id))) &&
+				(row.status !== "running" || (isStalled(row) && !activeRuns.has(id))) &&
 				(await claimImport(
 					row,
 					"status = 'running', total = ?, error = NULL, updated_at = CURRENT_TIMESTAMP",
@@ -785,6 +788,7 @@ export async function decideImport(
 				startApply(userId, id)
 		}
 	}
+	await recountQuestions(id, row.counts)
 	captureProductEvent(
 		userId,
 		"import question answered",

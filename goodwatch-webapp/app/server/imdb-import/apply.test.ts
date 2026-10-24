@@ -399,14 +399,20 @@ class QuestionCrate extends FakeCrate {
 						{
 							n: this.items.filter(
 								(i) =>
-									["approved:conflict", "added", "updated", "failed"].includes(
-										String(i.apply_state),
-									) ||
-									(i.apply_state === "kept" && i.reason !== params[1]),
+									i.outcome === "conflict" &&
+									[
+										"waiting:conflict",
+										"approved:conflict",
+										"added",
+										"updated",
+										"kept",
+										"failed",
+									].includes(String(i.apply_state)),
 							).length,
 						},
 					],
 				}
+
 			if (s.startsWith("SELECT row_index, imdb_id"))
 				return {
 					json: this.items
@@ -419,7 +425,9 @@ class QuestionCrate extends FakeCrate {
 					json: this.items
 						.filter(
 							(i) =>
-								i.apply_state === "approved:conflict" || i.apply_state === null,
+								["new", "update", "conflict"].includes(String(i.outcome)) &&
+								(i.apply_state === "approved:conflict" ||
+									i.apply_state === null),
 						)
 						.slice(0, 1),
 				}
@@ -431,8 +439,10 @@ class QuestionCrate extends FakeCrate {
 			if (s.startsWith("SELECT row_index")) {
 				if (s.includes("prior_score"))
 					return {
-						json: this.items.filter((i) =>
-							["added", "updated"].includes(String(i.apply_state)),
+						json: this.items.filter(
+							(i) =>
+								i.kind == null &&
+								["added", "updated"].includes(String(i.apply_state)),
 						),
 					}
 				const conflict = s.includes("'conflict'")
@@ -440,7 +450,9 @@ class QuestionCrate extends FakeCrate {
 					json: this.items
 						.filter(
 							(i) =>
-								(i.outcome !== "conflict" || conflict) &&
+								i.kind == null &&
+								(["new", "update"].includes(String(i.outcome)) ||
+									(i.outcome === "conflict" && conflict)) &&
 								(i.apply_state === null ||
 									i.apply_state === "failed" ||
 									(s.includes("approved:conflict") &&
@@ -450,10 +462,14 @@ class QuestionCrate extends FakeCrate {
 				}
 			}
 			if (s.startsWith("UPDATE doc.user_import_item SET payload")) {
-				for (const i of this.items)
-					if (i.row_index === params[2]) i.payload = params[0]
-				return { json: [], rowcount: 1 }
+				const cases = (s.match(/WHEN \? THEN \?/g) ?? []).length
+				for (let index = 0; index < cases; index++) {
+					const item = this.items.find((i) => i.row_index === params[index * 2])
+					if (item) item.payload = params[index * 2 + 1]
+				}
+				return { json: [], rowcount: cases }
 			}
+
 			if (s.startsWith("UPDATE doc.user_import_item SET apply_state")) {
 				const transition = s.includes("AND apply_state = 'waiting:conflict'")
 				const hold = s.includes("outcome = 'conflict'")
@@ -569,7 +585,7 @@ test("legacy keep/imdb preserve ratings, totals, and omit questions and question
 	}
 })
 
-test("ask holds before confirm returns; waiting counts as processed but not applied or total", async () => {
+test("ask holds before confirm returns; waiting counts in processed and total but not applied", async () => {
 	const db = conflicts(3)
 	const summary = await a.confirmImport(USER, IMPORT, "ask")
 	assert.ok(db.items.every((i) => i.apply_state === "waiting:conflict"))
@@ -577,7 +593,7 @@ test("ask holds before confirm returns; waiting counts as processed but not appl
 	assert.equal(summary.processed, 3)
 	await settled()
 	assert.equal(db.scoreWrites, 0)
-	assert.equal(db.row.total, 0)
+	assert.equal(db.row.total, 3)
 	assert.equal(db.row.processed, 3)
 	assert.equal(db.row.kept, 0)
 })
@@ -634,17 +650,18 @@ test("a decision racing finishing invalidates the CAS and is applied on the next
 	assert.equal(db.row.total, 1)
 })
 
-test("restart honors the other-running-import lock; repeating the answer repairs an approval", async () => {
+test("decide honors the other-running-import lock before changing anything", async () => {
 	const db = conflicts()
 	await a.confirmImport(USER, IMPORT, "ask")
 	await settled()
 	db.otherRunning = true
+	const before = structuredClone({ row: db.row, items: db.items })
 	await assert.rejects(() => b.decideImport(USER, IMPORT, "imdb"), {
 		status: 409,
 		message:
 			"Another import is still running. Wait for it to finish, then try again.",
 	})
-	assert.equal(db.items[0].apply_state, "approved:conflict")
+	assert.deepEqual({ row: db.row, items: db.items }, before)
 	assert.equal(db.score?.score, 4)
 	db.otherRunning = false
 	await b.decideImport(USER, IMPORT, "imdb")
@@ -939,4 +956,167 @@ test("question answers and completion have deterministic analytics UUIDs across 
 			else process.env[key] = value
 		}
 	}
+})
+
+for (const answer of [undefined, "keep", "imdb"] as const)
+	test(`mixed new/conflict progress stays bounded and completes with ${answer ?? "waiting rows"}`, async () => {
+		const db = conflicts(2)
+		db.items.push({
+			...db.items[0],
+			row_index: 2,
+			outcome: "new",
+			current_score: null,
+			imdb_score: 4,
+		})
+		db.row.counts = JSON.stringify({
+			...JSON.parse(String(db.row.counts)),
+			rows: 3,
+			new: 1,
+		})
+		const execute = db.execute.bind(db)
+		let reports = 0
+		db.execute = async (sql, params) => {
+			const result = await execute(sql, params)
+			if (
+				sql.startsWith("UPDATE doc.user_import SET") &&
+				sql.includes("processed =")
+			) {
+				reports++
+				assert.ok(
+					Number(db.row.processed) <= Number(db.row.total),
+					`${db.row.processed}/${db.row.total}`,
+				)
+				if (db.row.status === "done")
+					assert.equal(db.row.processed, db.row.total)
+			}
+			return result
+		}
+		setCrateClientForTest(db)
+		await a.confirmImport(USER, IMPORT, "ask")
+		await settled()
+		assert.equal(db.row.total, 3)
+		assert.equal(db.row.processed, 3)
+		if (answer) {
+			await b.decideImport(USER, IMPORT, answer)
+			await settled()
+		}
+		assert.ok(reports >= 3)
+		assert.equal(db.row.status, "done")
+		assert.equal(db.row.processed, db.row.total)
+		assert.equal(
+			db.items.filter((i) => i.apply_state === "waiting:conflict").length,
+			answer ? 0 : 2,
+		)
+	})
+
+test("two decisions read a stalled import; the late decision cannot reclaim the fresh runner", async () => {
+	const db = conflicts(2)
+	await a.confirmImport(USER, IMPORT, "ask")
+	await settled()
+	db.row.status = "running"
+	db.row.updated_at = new Date(0)
+	const execute = db.execute.bind(db)
+	let releaseRead!: () => void
+	let readStalled = false
+	const heldRead = new Promise<void>((resolve) => {
+		releaseRead = resolve
+	})
+	db.execute = async (sql, params) => {
+		const result = await execute(sql, params)
+		if (!readStalled && sql.includes("FROM doc.user_import WHERE id = ?")) {
+			readStalled = true
+			await heldRead
+		}
+		return result
+	}
+	setCrateClientForTest(db)
+	let releaseWrite!: () => void
+	db.slowWrite = new Promise<void>((resolve) => {
+		releaseWrite = resolve
+	})
+	const late = b.decideImport(USER, IMPORT, "imdb", [1])
+	await until(() => readStalled)
+	await a.decideImport(USER, IMPORT, "imdb", [0])
+	await until(() => db.scoreWrites > 0)
+	releaseRead()
+	await late
+	assert.equal(db.starts, 2) // Confirm and exactly one stalled restart.
+	releaseWrite()
+	await settled()
+	assert.ok(db.items.every((i) => i.apply_state === "updated"))
+})
+
+test("failed ask undo exposes retry while a failed apply does not", async () => {
+	const db = conflicts()
+	await a.confirmImport(USER, IMPORT, "ask")
+	await settled()
+	const execute = db.execute.bind(db)
+	let failUndo = true
+	db.execute = async (sql, params) => {
+		if (failUndo && sql.includes("SET apply_state = 'kept' WHERE"))
+			throw new Error("undo fixture failure")
+		return execute(sql, params)
+	}
+	setCrateClientForTest(db)
+	await assert.rejects(() => a.undoImport(USER, IMPORT), /undo fixture failure/)
+	const summary = a.summarize(await a.getImportRow(USER, IMPORT))
+	assert.equal(summary.status, "failed")
+	assert.equal(summary.canUndo, true)
+	await assert.rejects(() => a.confirmImport(USER, IMPORT, "keep"), {
+		status: 409,
+	})
+	failUndo = false
+	assert.equal((await b.undoImport(USER, IMPORT)).status, "undone")
+	db.row.status = "failed"
+	db.row.options = JSON.stringify({ ask: true })
+	assert.equal(a.summarize(await a.getImportRow(USER, IMPORT)).canUndo, false)
+})
+
+test("consent uses one bulk update only for failed approved rows and preserves payloads", async () => {
+	const db = conflicts(3)
+	db.items[0].payload = JSON.stringify({ fixture: "first" })
+	db.items[1].payload = JSON.stringify({ fixture: "second" })
+	await a.confirmImport(USER, IMPORT, "ask")
+	await settled()
+	const execute = db.execute.bind(db)
+	let consentWrites = 0
+	db.execute = async (sql, params) => {
+		if (sql.startsWith("UPDATE doc.user_import_item SET payload")) {
+			consentWrites++
+			assert.ok(sql.includes("row_index IN (?,?)"))
+		}
+		return execute(sql, params)
+	}
+	setCrateClientForTest(db)
+	db.failWrites = true
+	await b.decideImport(USER, IMPORT, "imdb", [0, 1])
+	await settled()
+	assert.equal(consentWrites, 1)
+	assert.deepEqual(
+		db.items.slice(0, 2).map((i) => JSON.parse(String(i.payload))),
+		[
+			{ fixture: "first", _answer: { conflict: "imdb" } },
+			{ fixture: "second", _answer: { conflict: "imdb" } },
+		],
+	)
+	db.failWrites = false
+	await a.confirmImport(USER, IMPORT, "keep")
+	await settled()
+	assert.equal(consentWrites, 1)
+	assert.equal(db.items[2].payload, null)
+})
+
+test("per-row keep survives a later whole IMDb answer without persisting consent on success", async () => {
+	const db = conflicts(2)
+	await a.confirmImport(USER, IMPORT, "ask")
+	await settled()
+	await b.decideImport(USER, IMPORT, "keep", [0])
+	await b.decideImport(USER, IMPORT, "imdb")
+	await settled()
+	assert.deepEqual(
+		db.items.map((i) => i.apply_state),
+		["kept", "updated"],
+	)
+	assert.ok(db.items.every((i) => i.payload === null))
+	assert.equal(db.row.processed, db.row.total)
 })
