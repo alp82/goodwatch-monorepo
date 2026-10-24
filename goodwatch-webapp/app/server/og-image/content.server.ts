@@ -447,7 +447,11 @@ async function forYouCardContent(): Promise<OgContent> {
 			family,
 			edge,
 		})),
-		posters: posters.slice(0, 16).map((p) => p.src),
+		// Discover can list a title twice; each shows once (the card also drops repeated pictures).
+		posters: [...new Map(posters.map((p) => [p.id, p.src])).values()].slice(
+			0,
+			20,
+		),
 	}
 }
 

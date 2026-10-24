@@ -18,7 +18,8 @@ import { CardRendererBusyError } from "~/server/card-renderer/pool.server"
 // v4: the /use-with-ai chat card. v3 was skipped: a local test render of that card was stored under it.
 // v5: member profile cards (the fingerprint card, one card per profile tab).
 // v6: the /for-you card (a v5 render repeated posters).
-export const CACHE_PREFIX = "og-card:v6:"
+// v7: the /for-you card shows each poster picture once.
+export const CACHE_PREFIX = "og-card:v7:"
 // First renders expire soon so cards fetched only once do not fill Valkey.
 export const FIRST_SECONDS = 30 * 60
 // How long Valkey keeps a requested-again card. The cluster's LFU policy may evict it sooner.

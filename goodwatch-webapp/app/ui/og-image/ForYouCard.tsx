@@ -145,7 +145,10 @@ const at = (left: number, top: number) =>
 export function ForYouCard({ content }: { content: OgForYouContent }) {
 	// Two rows of eight, each poster once. The best go where the disc doesn't cover them: the right half first, then the
 	// left edge; with fewer posters the covered slots stay empty.
-	const shown = content.posters.filter((p): p is string => Boolean(p))
+	// The same title can come back twice under different names; a picture shows once.
+	const shown = [
+		...new Set(content.posters.filter((p): p is string => Boolean(p))),
+	]
 	const wall: (string | null)[] = Array(WALL_SLOTS.length).fill(null)
 	WALL_SLOTS.forEach((slot, i) => {
 		wall[slot] = shown[i] ?? null
