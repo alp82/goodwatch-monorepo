@@ -6,7 +6,7 @@ Send testers **https://yepwatch.com**. The home page has both install QR codes a
 
 The owner has created the Expo project [@alperortac/yepwatch](https://expo.dev/accounts/alperortac/projects/yepwatch), ID `0772c2db-91d8-4862-80eb-1d816f243072`, and reports Play and Apple developer accounts ready. `app.json` records the public Expo owner/project for all build variants. Account creation does not sign this machine into EAS or configure store signing credentials.
 
-iPhone build 10 is approved for external TestFlight. Android preview build 11 is the current direct download; it includes the native system-Back correction. Apple approved external testing in **Friends beta**, and its public link is enabled. Internal testing uses **Team (Expo)**. Google Play developer verification is pending; Android friends use the direct preview APK. Later Play submission needs the app record and an EAS Submit service-account key (or a manual AAB upload in Play Console).
+Build 12 adds branded streaming links directly on Tonight and a separate GoodWatch details link. It retains the native system-Back correction. Apple approved external testing in **Friends beta**, and its public link is enabled. Internal testing uses **Team (Expo)**. Google Play developer verification is pending; Android friends use the direct preview APK. Later Play submission needs the app record and an EAS Submit service-account key (or a manual AAB upload in Play Console).
 
 1. Create a free [Expo account](https://expo.dev/signup). Choose the account/organization that should own YepWatch.
 2. Open [Google Play Console](https://play.google.com/console). **Google Cloud Console is a different product.** If needed, register a Play developer account, pay its one-time US$25 fee and complete Google's identity/device verification. Create the YepWatch app for `com.yepwatch.app`.
@@ -26,7 +26,7 @@ iPhone build 10 is approved for external TestFlight. Android preview build 11 is
 ## Prepare the first build
 
 - `eas.json` profile **beta** produces store-signed Android AAB / physical-device iOS builds, both `com.yepwatch.app`, using `https://yepwatch.com` and `wss://yepwatch.com`. Increment the checked-in build number for every later upload. Check the store's highest existing build first.
-- Profile **preview** remains a separate APK / iOS **Simulator** build. It is not the iPhone/TestFlight profile. Preview build 11 uses the corrected Android navigation source and the original preview signing key; older preview APKs should not be distributed as current.
+- Profile **preview** remains a separate APK / iOS **Simulator** build. It is not the iPhone/TestFlight profile. Preview build 12 uses the corrected Android navigation source and the original preview signing key; older preview APKs should not be distributed as current.
 - Use owner-controlled store credentials. Keep `com.yepwatch.preview` and its local preview signing key separate. Store beta installs coexist with that preview.
 - Before uploading, inspect the EAS archive: `npx eas-cli@latest build:inspect --platform android --profile beta --stage archive --output .expo/beta-archive`. Verify it includes the sibling `goodwatch-webapp/packages/yepwatch-contracts`, excludes credentials/local environment files/build artifacts, and installs with `npm ci --install-links`.
 - EAS reads `.easignore` at the Git repository root. That file limits uploads to this app and its sibling contract; the app-local ignore file alone does not protect a monorepo upload.
@@ -42,7 +42,7 @@ No account creation, cloud builds, purchase, upload, review or store invitation 
 
 ## Android while Play verification is pending
 
-The home page links to the [Expo download page for preview build 11](https://expo.dev/accounts/alperortac/projects/yepwatch/builds/3ec61b6d-e0dc-4edf-8a11-ec948febc8bc). Open it on Android, tap Install, open the downloaded APK and allow installation from that browser if Android asks. It installs as **YepWatch Beta** without USB, Metro or an Expo account. The eventual Play app is a separate install; its local room credentials do not transfer automatically.
+The home page links to the [Expo download page for preview build 12](https://expo.dev/accounts/alperortac/projects/yepwatch/builds/b2c45558-bf54-49c2-aef4-a950a69a38d8). Open it on Android, tap Install, open the downloaded APK and allow installation from that browser if Android asks. It installs as **YepWatch Beta** without USB, Metro or an Expo account. The eventual Play app is a separate install; its local room credentials do not transfer automatically.
 
 The preview profile uses EAS **local credentials** to preserve the existing `com.yepwatch.preview` signing identity. A private, git-ignored `credentials.json` points to the original preview keystore. Keep that keystore and its passwords backed up privately; never generate a replacement for an upgrade. Then build with:
 

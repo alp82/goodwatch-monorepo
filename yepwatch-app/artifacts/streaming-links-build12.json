@@ -1,0 +1,40 @@
+{
+  "source": "dd6205cf30e80303362ef01a80216007372c71ec",
+  "webExternalLinkCorrection": "172f30d7a",
+  "ios": {
+    "easBuildId": "f13d4583-7dc2-426a-a3c8-c0003b30c6e0",
+    "buildNumber": "12",
+    "testflight": "BETA_APPROVED",
+    "invite": "https://testflight.apple.com/join/V2gzwSFA"
+  },
+  "android": {
+    "easBuildId": "b2c45558-bf54-49c2-aef4-a950a69a38d8",
+    "buildNumber": 12,
+    "sha256": "3e2db1e4e0243b2c1d2e822c3b43e3fd3005880c245c585098b391e1d5fccb19",
+    "anonymousDownloadVerified": true,
+    "nativeSmoke": {
+      "build": 12,
+      "emulator": "Pixel8 API35",
+      "providerLinkVisible": true,
+      "goodwatchLinkVisible": true,
+      "externalBrowserOpened": true,
+      "returnedToTonight": true,
+      "scope": "Fresh owned solo room; no provider playback or hardware audio assertion"
+    }
+  },
+  "verification": {
+    "unitTests": 62,
+    "providerLayouts": [
+      320,
+      375,
+      390,
+      844,
+      1440
+    ],
+    "webClickAndKeyboardNewTab": "passed on corrected source"
+  },
+  "limits": [
+    "No physical provider playback or hardware audio assertion",
+    "No claim that every selected provider offers every title"
+  ]
+}
