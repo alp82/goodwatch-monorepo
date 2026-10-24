@@ -27,7 +27,7 @@ export default function AuthCallback() {
     <Page>
       <Heading>Signing in with GoodWatch</Heading>
       <Notice error={Boolean(error)}>{error || 'Verifying the sign-in for your room…'}</Notice>
-      {error && <Button onPress={() => router.replace('/')}>Return to YepWatch</Button>}
+      <Button onPress={() => router.replace('/')}>Back to start</Button>
     </Page>
   );
 }

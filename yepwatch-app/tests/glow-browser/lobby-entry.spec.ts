@@ -34,6 +34,7 @@ async function guest(
     writeFailed = false;
   await page.route('**/api/yepwatch/v1/proposal/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (path.endsWith('/catalog/metadata')) return route.fulfill({ json: { countries: [{ code: 'DE', name: 'Germany' }], services: [{ id: 8, name: 'Netflix', logoUrl: null }, { id: 337, name: 'Disney+', logoUrl: null }], moods: [] } });
     if (path.endsWith('/realtime-ticket'))
       return route.fulfill({
         status: 501,

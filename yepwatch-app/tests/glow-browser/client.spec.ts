@@ -847,9 +847,9 @@ test('room prompt and mobile service selection publish attributes without screen
   await expect(page.getByText('Funny', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Edit room description and services' }).click();
   await page.getByRole('textbox', { name: 'Describe what to watch' }).waitFor();
-  await page.screenshot({ path: '/tmp/yepwatch-settings-mobile.png', animations: 'disabled' });
+  await page.screenshot({ path: test.info().outputPath('settings-mobile.png'), animations: 'disabled' });
   await page.getByRole('checkbox', {name: 'Netflix', exact: true}).scrollIntoViewIfNeeded();
-  await page.screenshot({path: '/tmp/yepwatch-services-mobile.png', animations: 'disabled'});
+  await page.screenshot({path: test.info().outputPath('services-mobile.png'), animations: 'disabled'});
 });
 
 test('leaving the room sends one explicit command and returns to the entrance', async ({
@@ -871,7 +871,7 @@ test('leaving the room sends one explicit command and returns to the entrance', 
  await expect(page.getByRole('button', {name:'Room, 1 person'})).toBeVisible();
  await page.getByRole('button',{name:'Open room'}).click();
  await expect(page.getByText('Sam · Dropped',{exact:true})).toBeVisible();
- await page.screenshot({path:'/tmp/yepwatch-dropped-mobile.png',animations:'disabled'});
+ await page.screenshot({path:test.info().outputPath('dropped-mobile.png'),animations:'disabled'});
  });
 
 test('shared saved-provider defaults preselect the union, filter unavailable providers and preserve room edits', async ({page}) => {
