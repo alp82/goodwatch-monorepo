@@ -88,7 +88,7 @@ export const TasteBar = forwardRef<
 				<button
 					type="button"
 					onClick={() => onOpen("recipes")}
-					aria-label={`${tile?.name ?? "Just your taste"}. ${sheet === "recipes" ? "Close" : "Change"}`}
+					aria-label={`Mood: ${tile?.name ?? "just your taste"}. ${sheet === "recipes" ? "Close moods" : "Change mood"}`}
 					aria-pressed={sheet === "recipes"}
 					className="relative flex min-h-[4.25rem] min-w-0 flex-1 items-center gap-2.5 rounded-2xl bg-white/[0.05] py-1.5 pr-2.5 pl-2 text-left ring-1 ring-white/12 active:bg-white/[0.09]"
 					data-recipe-button=""
@@ -281,7 +281,7 @@ export function Dice({
 			type="button"
 			onClick={onRoll}
 			whileTap={{ scale: 0.9 }}
-			aria-label="Roll the dice"
+			aria-label="Roll the dice: a random mood and shape"
 			title="Roll the dice"
 			className={`grid shrink-0 touch-manipulation place-items-center bg-amber-400 text-gray-950 shadow-[0_6px_18px_-6px_rgba(251,191,36,.6)] hover:bg-amber-300 ${small ? "size-11 rounded-xl" : "size-12 rounded-2xl"}`}
 			data-dice={face}

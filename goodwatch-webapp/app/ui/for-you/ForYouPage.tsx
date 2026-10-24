@@ -42,8 +42,9 @@ import { DISPLAY } from "~/ui/my-pages/bits"
 import { useQuietDock } from "~/ui/navigation"
 import { useNavigation } from "~/ui/navigation/NavigationContext"
 import { DragHint } from "./DragHint"
-import { GuestLock } from "./GuestLock"
+import { type GuestLoader, GuestLock } from "./GuestLock"
 import { HandlePrint } from "./HandlePrint"
+import { Heading } from "./Heading"
 import { PopOutCard } from "./PopOutCard"
 import { Results } from "./Results"
 import {
@@ -65,7 +66,7 @@ import {
 	posterSrc,
 } from "./context"
 import { DIM, DIM_IN, DIM_OUT } from "./crossfade"
-import { type Surface, useSteering } from "./useSteering"
+import { DESK_NARROW, type Surface, useSteering } from "./useSteering"
 
 const SWAP = { type: "spring", stiffness: 420, damping: 40 } as const
 
@@ -138,12 +139,15 @@ function measureCut(): number {
 export function ForYouPage({
 	data,
 	loadDetails,
+	loadGuest,
 }: {
 	data: ForYouPageData
 	/** Where title details come from; the details endpoint by default. */
 	loadDetails?: DetailsLoader
+	/** Where a guest's preview comes from; the pool endpoint by default. */
+	loadGuest?: GuestLoader
 }) {
-	if (data.kind === "guest") return <GuestLock />
+	if (data.kind === "guest") return <GuestLock load={loadGuest} />
 	if (data.status === "ready")
 		return (
 			<Steering
@@ -153,20 +157,6 @@ export function ForYouPage({
 			/>
 		)
 	return <Unready status={data.status} />
-}
-
-function Heading({ className = "" }: { className?: string }) {
-	return (
-		<header className={className}>
-			<p className="text-[11px] font-bold tracking-[0.18em] text-amber-400/80 uppercase">
-				For you
-			</p>
-			<h1 className={`${DISPLAY} text-3xl leading-tight text-white`}>
-				<span className="font-light text-gray-300">What are you </span>
-				<span className="text-amber-400">in the mood for?</span>
-			</h1>
-		</header>
-	)
 }
 
 function Unready({ status }: { status: "empty" | "unavailable" }) {
@@ -540,8 +530,8 @@ function Steering({
 		: tweak
 			? `with ${tweak}`
 			: sheet === "recipes"
-				? "Pick one"
-				: "Tap to change"
+				? "Pick a mood"
+				: "Change mood"
 	const heading = (
 		<>
 			{tile?.name ?? "For you"}
@@ -610,7 +600,7 @@ function Steering({
 									top={previews[id]}
 									posters={pool.posters}
 									onPick={() => steering.pickOnDesk(id)}
-									className={`lg:h-[9.75rem] ${i >= 8 ? "lg:hidden xl:flex" : ""}`}
+									className={`lg:h-[9.75rem] ${i >= DESK_NARROW ? "lg:hidden xl:flex" : ""}`}
 								/>
 							)
 						})}
@@ -696,7 +686,9 @@ function Steering({
 							key="sheet"
 							// biome-ignore lint/a11y/useSemanticElements: a sliding drawer, not a modal <dialog>
 							role="dialog"
-							aria-label={sheet === "print" ? "Your taste print" : "Pick one"}
+							aria-label={
+								sheet === "print" ? "Your taste print" : "Pick a mood"
+							}
 							initial={{ y: "100%" }}
 							animate={{ y: 0, transition: SHEET_IN }}
 							exit={{ y: "100%", transition: SHEET_OUT }}
@@ -723,7 +715,7 @@ function Steering({
 										{sheet === "recipes" ? (
 											<Panel key="recipes" side={-1}>
 												<PanelHead
-													title="In the mood for"
+													title="Pick a mood"
 													onDone={closeSheet}
 													grab={grab}
 												>

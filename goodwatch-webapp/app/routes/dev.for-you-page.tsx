@@ -1,11 +1,21 @@
 // Development only: the For you page on a synthetic sample (app/ui/for-you/sample-pool.ts), with gray posters and
 // details answered from the same sample, so the page works without a member, Crate or Redis. ?as=guest|empty|
-// unavailable shows the other states; ?recipe= preselects a recipe as on the real page. Returns 404 in production.
+// unavailable shows the other states; ?recipe= preselects a recipe as on the real page. As a guest, ?ratings=N sets
+// how many guest scores the preview reports (else the scores this browser holds). Returns 404 in production.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
-import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
+import {
+	type ShouldRevalidateFunction,
+	useLoaderData,
+	useSearchParams,
+} from "@remix-run/react"
 import type { ForYouPage as ForYouPageData } from "~/domain/for-you-page/contract"
 import { ForYouPage } from "~/ui/for-you/ForYouPage"
-import { sampleDetails, samplePage } from "~/ui/for-you/sample-pool"
+import type { GuestLoader } from "~/ui/for-you/GuestLock"
+import {
+	sampleDetails,
+	sampleGuest,
+	samplePage,
+} from "~/ui/for-you/sample-pool"
 
 const STATES = ["ready", "guest", "empty", "unavailable"] as const
 type State = (typeof STATES)[number]
@@ -47,5 +57,14 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 export default function DevForYouPage() {
 	const data = useLoaderData<typeof loader>() as unknown as ForYouPageData
-	return <ForYouPage data={data} loadDetails={sampleDetails} />
+	const ratings = useSearchParams()[0].get("ratings")
+	const loadGuest: GuestLoader = ({ interactions }) =>
+		sampleGuest(
+			ratings !== null
+				? Math.max(0, Number(ratings) || 0)
+				: interactions.filter((i) => i.type === "score").length,
+		)
+	return (
+		<ForYouPage data={data} loadDetails={sampleDetails} loadGuest={loadGuest} />
+	)
 }

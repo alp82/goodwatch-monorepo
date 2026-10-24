@@ -1,18 +1,19 @@
-import { mediaFieldLanguage } from "~/utils/media-presentation"
-import { canonicalMediaTitle } from "~/utils/media-presentation"
 // /taste/quiz: the taste quiz as a web page, on the title's backdrop. The flow lives in quiz-flow.ts and
 // useTasteQuiz; this file only renders it.
 import { Link } from "@remix-run/react"
 import { type ReactNode, useEffect } from "react"
 import type { Score } from "~/server/scores.server"
+import { ForYouLink } from "~/ui/for-you/ForYouLink"
 import { DockStrip } from "~/ui/navigation"
 import type { ScoringMedia } from "~/ui/scoring/types"
-import { useAuthHref } from "~/utils/auth-href"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
+import { useContinueWithGoogle } from "~/utils/auth-client"
+import { useAuthHref } from "~/utils/auth-href"
 import { titleToDashed } from "~/utils/helpers"
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { getVibeColorValue } from "~/utils/ratings"
 import { GoogleMark } from "./GoogleMark"
-import { useContinueWithGoogle } from "~/utils/auth-client"
 import { QUIZ_GOAL, readQuizPress } from "./quiz-flow"
 import type { QuizPick } from "./use-quiz-picks"
 import { type TasteQuiz, useTasteQuiz } from "./use-taste-quiz"
@@ -457,6 +458,9 @@ function Picks({ q }: { q: TasteQuiz }) {
 						className={`h-1.5 rounded-full ${i === q.page ? "w-5 bg-amber-400" : "w-1.5 bg-white/25"}`}
 					/>
 				))}
+			</div>
+			<div className="mt-4 flex justify-center">
+				<ForYouLink>See your recommendations</ForYouLink>
 			</div>
 			<div className="mt-10 hidden flex-wrap items-center gap-2 lg:flex">
 				{actions}

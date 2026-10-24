@@ -10,6 +10,7 @@ import {
 	type FingerprintView,
 	TIER_NAMES,
 } from "~/server/taste-portrait/view"
+import { ForYouLink } from "~/ui/for-you/ForYouLink"
 import {
 	RatedPoster,
 	type Titles,
@@ -115,6 +116,7 @@ export function Fingerprint({ view }: { view: FingerprintView }) {
 						by how you rated them. {numberWord(view.families.length)} families,{" "}
 						{view.attributes.length} attributes. Open one.
 					</p>
+					<ForYouLink className="mt-2">Recommend me</ForYouLink>
 				</div>
 				<div className="relative mx-auto hidden h-60 w-72 md:block" aria-hidden>
 					{cover.map((t, i) => (

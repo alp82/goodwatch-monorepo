@@ -3,6 +3,7 @@
 import {
 	FP_KEYS,
 	type ForYouDetail,
+	type ForYouGuest,
 	type ForYouPage,
 	type ForYouPool,
 	type ForYouTaste,
@@ -224,4 +225,18 @@ export async function sampleDetails(
 		}
 	}
 	return out
+}
+
+/**
+ * A guest's preview on the sample: the sample taste (an example below the quiz goal, the guest's own from it on),
+ * gray posters, and `ratings` guest scores. No network.
+ */
+export async function sampleGuest(ratings: number): Promise<ForYouGuest> {
+	await new Promise((r) => setTimeout(r, 250))
+	const { taste } = sampleData()
+	return {
+		taste: { ...taste, subject: ratings >= 5 ? "guest" : "sample" },
+		posters: Array.from({ length: 12 }, () => ""),
+		guestRatings: ratings,
+	}
 }

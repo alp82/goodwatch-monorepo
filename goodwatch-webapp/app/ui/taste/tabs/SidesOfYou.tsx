@@ -13,6 +13,7 @@ import type {
 	SidesView,
 } from "~/server/taste-portrait/view"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
+import { ForYouLink } from "~/ui/for-you/ForYouLink"
 import { TASTE_GROUPS_NAME } from "../taste-groups-name"
 import {
 	RatedPoster,
@@ -239,6 +240,9 @@ function Here({ side, titles }: { side: Side; titles: Titles }) {
 				<h2 className="mt-1 text-3xl font-bold leading-tight md:text-4xl">
 					{side.name}
 				</h2>
+				<ForYouLink recipe={side.id} className="mt-1">
+					Recommend me from this
+				</ForYouLink>
 			</div>
 			<div className="mt-6 grid grid-cols-4 gap-2">
 				{titlesOf(titles, side.here)

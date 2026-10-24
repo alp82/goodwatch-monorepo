@@ -14,7 +14,12 @@ import {
 	type FamilyId,
 	type ForYouTaste,
 } from "~/domain/for-you-page/contract"
-import { DESK_SIZE, DRAWER_SIZE, drawerOrder } from "~/domain/for-you-page/rail"
+import {
+	DESK_SIZE,
+	DRAWER_SIZE,
+	drawerOrder,
+	pinned,
+} from "~/domain/for-you-page/rail"
 import {
 	type PoolStats,
 	type Ranked,
@@ -44,6 +49,8 @@ const N = FP_KEYS.length
 const FIT = 0.7
 /** A recipe is picked by itself when the handles come within this drift of its shape. */
 const AUTO = 1
+/** Desktop tiles shown at 1024-1279 px; wider screens show all DESK_SIZE. */
+export const DESK_NARROW = 8
 
 /** Where the steering happens right now: the recipe tiles a drag or the dice may land on depend on it. */
 export type Surface = "desk" | "drawer" | "bar"
@@ -182,9 +189,18 @@ export function useSteering({
 	const [drawerIds, setDrawerIds] = useState(() =>
 		orderFor(start?.id ?? null, start?.shape ?? FLAT, DRAWER_SIZE),
 	)
-	const [deskIds, setDeskIds] = useState(() =>
-		orderFor(start?.id ?? null, FLAT, DESK_SIZE),
+	// 1024-1279 px shows only the first DESK_NARROW tiles: the picked recipe moves up into them so it always shows.
+	const deskOrder = useCallback(
+		(m: string | null) => {
+			const ids = orderFor(m, FLAT, DESK_SIZE)
+			const at = m ? ids.indexOf(m) : -1
+			return at < DESK_NARROW
+				? ids
+				: pinned(ids, { id: m as string, index: DESK_NARROW - 1 })
+		},
+		[orderFor],
 	)
+	const [deskIds, setDeskIds] = useState(() => deskOrder(start?.id ?? null))
 	const firstOrder = useRef(true)
 	useEffect(() => {
 		if (firstOrder.current) {
@@ -193,8 +209,8 @@ export function useSteering({
 		}
 		const s = live.current
 		setDrawerIds(orderFor(s.recipe, s.levels, DRAWER_SIZE))
-		setDeskIds(orderFor(s.recipe, FLAT, DESK_SIZE))
-	}, [orderFor])
+		setDeskIds(deskOrder(s.recipe))
+	}, [orderFor, deskOrder])
 	const sortDrawer = useCallback(() => {
 		const s = live.current
 		setDrawerIds(orderFor(s.recipe, s.levels, DRAWER_SIZE))
@@ -243,7 +259,7 @@ export function useSteering({
 			where === "desk"
 				? window.matchMedia("(min-width: 1280px)").matches
 					? deskIds
-					: deskIds.slice(0, 8)
+					: deskIds.slice(0, DESK_NARROW)
 				: where === "drawer"
 					? drawerIds
 					: null

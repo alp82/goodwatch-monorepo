@@ -16,6 +16,7 @@ import type {
 	WatchNextTier,
 	WatchNextTitle,
 } from "~/server/watch-next.server"
+import { FIND_NEW_BELOW, ForYouLink } from "~/ui/for-you/ForYouLink"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import type { TitleKey } from "~/utils/title-key"
 import { NewOnContext, titleHref, useMoviesPage } from "./WatchNextHero"
@@ -265,7 +266,10 @@ export function SteppedGrid({
 	)
 }
 
-/** While the Wishlist is short: suggestions worth adding, each with Want to See. */
+/**
+ * While the Wishlist is short: suggestions worth adding, each with Want to See. Below FIND_NEW_BELOW titles it also
+ * points to For you, on its own when there are no suggestions.
+ */
 export function WorthAdding({
 	data,
 	onWant,
@@ -276,24 +280,31 @@ export function WorthAdding({
 	isWanted: (card: TitleCard) => boolean
 }) {
 	const movies = useMoviesPage()
-	if (!data.worthAdding.length) return null
+	const findNew = data.total < FIND_NEW_BELOW
+	if (!data.worthAdding.length)
+		return findNew ? (
+			<ForYouLink className="mt-4">Find something new</ForYouLink>
+		) : null
 	return (
 		<section aria-label="Suggestions to add" className="mt-4">
-			<div className="mb-3">
-				<h2 className="text-lg font-bold text-white md:text-xl">
-					{data.total > 0
-						? "Worth adding"
-						: movies
-							? "Movies to start with"
-							: "Start your Wishlist"}
-				</h2>
-				<p className="text-sm text-gray-400">
-					{data.onMyServices
-						? "Your best matches on your services. "
-						: "Your best matches. "}
-					Tap Want to See and it joins {movies ? "My movies" : "Watch next"}{" "}
-					under your sort.
-				</p>
+			<div className="mb-3 flex flex-wrap items-end justify-between gap-x-6">
+				<div className="min-w-0">
+					<h2 className="text-lg font-bold text-white md:text-xl">
+						{data.total > 0
+							? "Worth adding"
+							: movies
+								? "Movies to start with"
+								: "Start your Wishlist"}
+					</h2>
+					<p className="text-sm text-gray-400">
+						{data.onMyServices
+							? "Your best matches on your services. "
+							: "Your best matches. "}
+						Tap Want to See and it joins {movies ? "My movies" : "Watch next"}{" "}
+						under your sort.
+					</p>
+				</div>
+				{findNew && <ForYouLink>Find something new</ForYouLink>}
 			</div>
 			<div className="-mx-4 flex snap-x gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
 				{data.worthAdding.map((card) => (

@@ -8,6 +8,7 @@ import {
 	UsersIcon,
 } from "@heroicons/react/20/solid"
 import type { ComponentType, SVGProps } from "react"
+import { ForYouLink } from "~/ui/for-you/ForYouLink"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { PosterScores, backdropUrl, count } from "../parts"
 import { Whorl } from "./Whorl"
@@ -84,6 +85,7 @@ export function TasteHero({ mostYou = true }: { mostYou?: boolean }) {
 								<HeroStat value={agree} label="agrees with everyone" />
 							)}
 						</dl>
+						{owner && <ForYouLink className="mt-4">Recommend me</ForYouLink>}
 					</div>
 				</div>
 			</div>

@@ -1,5 +1,3 @@
-import { mediaFieldLanguage } from "~/utils/media-presentation"
-import { canonicalMediaTitle } from "~/utils/media-presentation"
 // My shows (#385): one list for tonight. Continue is ordered by the air date of each next unwatched episode; then Pick up, the Watching shows without activity for 90 days; then Start,
 // the Want to See shows not started, best taste match first. Each group has a label, and
 // each row shows the one fact that places it. The whole row opens the show's page: there is no Watched button and no
@@ -32,6 +30,8 @@ import type {
 	MyShowsRow,
 	MyShowsStart,
 } from "~/server/my-shows.server"
+import { FIND_NEW_BELOW, ForYouLink } from "~/ui/for-you/ForYouLink"
+import { LandedRow, NewOnSticker, NewOnWords } from "~/ui/my-pages/LandedRow"
 import {
 	DISPLAY,
 	Empty,
@@ -43,14 +43,11 @@ import {
 	plural,
 	tmdbImage,
 } from "~/ui/my-pages/bits"
-import {
-	LandedRow,
-	NewOnSticker,
-	NewOnWords,
-} from "~/ui/my-pages/LandedRow"
-import { EpisodeAnnouncements } from "./EpisodeAnnouncements"
 import { useMyShowsVisit } from "~/ui/navigation/useNewEpisodes"
 import { titleToDashed } from "~/utils/helpers"
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
+import { EpisodeAnnouncements } from "./EpisodeAnnouncements"
 
 /** How many shows to start are drawn before "Show more". */
 const START_STEP = 30
@@ -464,7 +461,15 @@ function WaitingRow({ rows, today }: { rows: MyShowsRow[]; today: string }) {
 													{row.upcoming.name && (
 														<span className="hidden sm:inline">
 															{" "}
-															· <span lang={row.upcoming.textPresentation?.name.language ?? "en"}>{row.upcoming.name}</span>
+															·{" "}
+															<span
+																lang={
+																	row.upcoming.textPresentation?.name
+																		.language ?? "en"
+																}
+															>
+																{row.upcoming.name}
+															</span>
 														</span>
 													)}
 													{" · "}
@@ -480,7 +485,9 @@ function WaitingRow({ rows, today }: { rows: MyShowsRow[]; today: string }) {
 										data-waiting-day
 									>
 										{when && <b className="block text-sm text-white">{when}</b>}
-										<span className="block text-xs text-gray-500">{detail}</span>
+										<span className="block text-xs text-gray-500">
+											{detail}
+										</span>
 									</span>
 									<ChevronRightIcon
 										className="h-4 w-4 shrink-0 text-gray-600 group-hover:text-amber-300"
@@ -677,6 +684,9 @@ export function MyShowsPage({
 								· {data.start.length - shown} left
 							</span>
 						</button>
+					)}
+					{data.start.length < FIND_NEW_BELOW && (
+						<ForYouLink className="mt-4">Find something new</ForYouLink>
 					)}
 				</section>
 				{quiet > 0 && (
