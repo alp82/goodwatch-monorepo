@@ -86,6 +86,26 @@ test("a score cleared while its watch was being recorded leaves no watch behind 
 	])
 })
 
+test("a clear that takes the watch back after a new score landed gives the new score its watch again (#759 review 2)", async () => {
+	const db = fake()
+	const episode = { scope: "episode", episodeTmdbId: 62086 } as const
+	await setEpisodeScore("member", SHOW, episode, 9)
+	const row = { ...db.scores[0] }
+	// The member scores again on another page after this clear removed the score, and that score found the episode
+	// still watched, so it recorded nothing.
+	watches.onRemove = () => {
+		watches.onRemove = null
+		db.scores.push({ ...row, score: 6 })
+	}
+	const cleared = await setEpisodeScore("member", SHOW, episode, null)
+	assert.equal(cleared.status, "cleared")
+	assert.equal(watches.watched.get(62086), "score-e62086")
+	assert.deepEqual(watches.calls.slice(1), [
+		`remove member ${SHOW} 62086`,
+		`mark member ${SHOW} 62086`,
+	])
+})
+
 test("an episode score is saved even when its watch can't be recorded", async () => {
 	const db = fake()
 	watches.failing = true

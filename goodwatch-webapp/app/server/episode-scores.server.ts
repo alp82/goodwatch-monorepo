@@ -310,11 +310,30 @@ export async function setEpisodeScore(
 							watches.remove(userId, show, target.episodeTmdbId),
 						)
 					: null
+			// A new score that landed before the watch went found the episode watched and recorded nothing: it gets
+			// its watch now.
+			const [scoredAgain] =
+				watchRemoved && target.scope === "episode"
+					? await db.select<{ score: number }>(
+							"SELECT score FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ?",
+							[userId, show, key],
+						)
+					: []
+			const watchAdded =
+				scoredAgain && target.scope === "episode"
+					? await recordScoreWatch(userId, show, key, target.episodeTmdbId)
+					: null
 			return {
 				status: removed.rowcount ? "cleared" : "unchanged",
 				score: null,
 				previous,
 				...(watchRemoved ? { watchRemoved } : {}),
+				...(watchAdded
+					? {
+							watchAdded: watchAdded.watchId,
+							watchAddedAt: watchAdded.createdAt,
+						}
+					: {}),
 			}
 		}
 		const now = new Date()

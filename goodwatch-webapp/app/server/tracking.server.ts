@@ -156,6 +156,14 @@ export interface TrackingResult {
 	cleared: { wantToSeeAddedAt: string | null; notInterested: boolean }
 }
 
+/**
+ * The writer's own answer for a show event, inside this module: also when its rows were recorded (their
+ * `created_at`) and how many of them this call wrote; a row whose id was stored already isn't counted.
+ */
+type StoredShowResult = TrackingResult & {
+	recorded?: { at: number; written: number }
+}
+
 /** Another action on the same show kept getting in between. The log rows are written; the same request repairs. */
 export class TrackingConflictError extends Error {
 	constructor() {
@@ -840,12 +848,13 @@ async function applyTrackingEventStored(
 		return refusal("A watch of a show names an episode.")
 	if (event.type === "removeWatches" || event.type === "restoreWatches")
 		return refusal("A show's watches are changed in its episode list.")
-	return applyShowEventStored(
+	const { recorded: _recorded, ...result } = await applyShowEventStored(
 		userId,
 		canonical,
 		event as TrackingEvent,
 		actionId,
 	)
+	return result
 }
 
 const NEEDS_ID = [
@@ -956,8 +965,10 @@ function restorableSeason(
 				return false
 			if (episodeId !== null && !whole(episodeId)) return false
 		} else if (origin === "single") {
-			if (!validId(id) || group !== null || importId !== null) return false
+			if (group !== null || importId !== null) return false
 			if (!whole(episodeId)) return false
+			// A tick, or an episode score's watch the member dated, which keeps its id.
+			if (!validId(id) && id !== episodeScoreWatchId(episodeId)) return false
 		} else if (origin === "score") {
 			// The watch an episode's score recorded: its id names its episode.
 			if (!whole(episodeId) || group !== null || importId !== null) return false
@@ -1039,7 +1050,7 @@ async function applyShowEventStored(
 	 * since, such as a date set on it, keeps it. The action is refused when it changed.
 	 */
 	guard?: { watchId: string; seq: number; term: number },
-): Promise<TrackingResult> {
+): Promise<StoredShowResult> {
 	const bad = invalid(event, title.tmdbId, actionId, origin)
 	if (bad) return refusal(bad)
 	// An imported watch names its import, and that import is this member's.
@@ -1094,7 +1105,7 @@ async function applyShowEventStored(
 		}
 		const { insert, deleteIds, state, stateWrite, clear } = applied.changes
 		// 4. The log rows: one insert, or one delete naming the rows the machine removed.
-		await insertLog(userId, insert, now)
+		const { rowcount: written } = await insertLog(userId, insert, now)
 		if (guard && deleteIds.includes(guard.watchId)) {
 			const { rowcount } = await run(
 				"DELETE FROM user_watch_log WHERE user_id = ? AND watch_id = ? AND _seq_no = ? AND _primary_term = ?",
@@ -1126,6 +1137,7 @@ async function applyShowEventStored(
 			inserted: insert.map((r) => r.watch_id),
 			deleted: deleteIds,
 			cleared,
+			recorded: { at: now, written: written ?? 0 },
 		}
 	}
 	await finish(userId)
@@ -1185,11 +1197,15 @@ export async function markScoredEpisodeWatched(
 		watchId,
 		"score",
 	)
-	if (result.status !== "applied" || !result.inserted.includes(watchId))
+	// The time this call's own insert recorded tells this watch from one a later score records under the same id.
+	// Not read back: by then the row can already be that later watch.
+	if (
+		result.status !== "applied" ||
+		!result.inserted.includes(watchId) ||
+		result.recorded?.written !== 1
+	)
 		return null
-	// When it was recorded tells this watch from one a later score records under the same id.
-	const row = await scoreWatchRow(userId, title.tmdbId, watchId)
-	return row ? { watchId, createdAt: row.createdAt } : null
+	return { watchId, createdAt: result.recorded.at }
 }
 
 /** The score's watch of an episode as it is now (a read by the whole key), while it is still the score's. */
@@ -2210,6 +2226,43 @@ export async function prepareImportTrackingPlan(input: {
 	return plan
 }
 
+/** A row this plan wrote: one of its watch ids, under its import. */
+const ownRow = (plan: ImportTrackingPlan, row: LogRow) =>
+	row.import_id === plan.importId &&
+	plan.watches.some((watch) => watch.watch_id === row.watch_id)
+
+/** Another row than this plan's own watches the same episode. */
+const watchedElsewhere = (
+	plan: ImportTrackingPlan,
+	log: readonly LogRow[],
+	watch: LogRow,
+) =>
+	log.some(
+		(row) =>
+			!ownRow(plan, row) &&
+			((watch.episode_tmdb_id != null &&
+				row.episode_tmdb_id === watch.episode_tmdb_id) ||
+				(row.episode_tmdb_id == null &&
+					row.season_number === watch.season_number &&
+					row.episode_number === watch.episode_number)),
+	)
+
+/** Moves these planned watches to kept, and journals the plan. */
+async function keepInstead(
+	plan: ImportTrackingPlan,
+	watches: readonly LogRow[],
+	checkpoint?: (plan: ImportTrackingPlan) => Promise<void>,
+) {
+	if (!watches.length || !plan.onlyUnwatched) return
+	const keys = plan.onlyUnwatched.keysByWatch
+	const ids = new Set(watches.map((row) => row.watch_id))
+	const kept = watches.map((row) => keys[row.watch_id])
+	plan.watches = plan.watches.filter((row) => !ids.has(row.watch_id))
+	plan.addedKeys = plan.addedKeys.filter((key) => !kept.includes(key))
+	plan.keptKeys = [...plan.keptKeys, ...kept]
+	await checkpoint?.(plan)
+}
+
 export async function applyImportTrackingPlan(
 	userId: string,
 	plan: ImportTrackingPlan,
@@ -2218,30 +2271,16 @@ export async function applyImportTrackingPlan(
 	if (userId !== plan.userId)
 		throw new Error("This import belongs to another member.")
 	if (plan.onlyUnwatched && plan.watches.length) {
-		// Watched since the plan was made, by the member or another writer: that watch is kept, not added twice.
+		// Watched since the plan was made, by the member or another writer: that watch is kept, not added twice. A
+		// watch this plan inserted before a stop stays its own here; the check after the insert settles it.
 		await run("REFRESH TABLE user_watch_log")
 		const log = await readImportLog(userId, plan.title)
-		const planned = new Set(plan.watches.map((row) => row.watch_id))
-		const others = log.filter((row) => !planned.has(row.watch_id))
-		const late = plan.watches.filter((watch) =>
-			others.some(
-				(row) =>
-					(watch.episode_tmdb_id != null &&
-						row.episode_tmdb_id === watch.episode_tmdb_id) ||
-					(row.episode_tmdb_id == null &&
-						row.season_number === watch.season_number &&
-						row.episode_number === watch.episode_number),
-			),
+		const late = plan.watches.filter(
+			(watch) =>
+				!log.some((row) => ownRow(plan, row) && row.watch_id === watch.watch_id) &&
+				watchedElsewhere(plan, log, watch),
 		)
-		if (late.length) {
-			const keys = plan.onlyUnwatched.keysByWatch
-			const lateIds = new Set(late.map((row) => row.watch_id))
-			const lateKeys = late.map((row) => keys[row.watch_id])
-			plan.watches = plan.watches.filter((row) => !lateIds.has(row.watch_id))
-			plan.addedKeys = plan.addedKeys.filter((key) => !lateKeys.includes(key))
-			plan.keptKeys = [...plan.keptKeys, ...lateKeys]
-			await checkpoint?.(plan)
-		}
+		await keepInstead(plan, late, checkpoint)
 	}
 	if (!plan.watches.length && !plan.statusItem)
 		return {
@@ -2252,7 +2291,25 @@ export async function applyImportTrackingPlan(
 		}
 	await insertLog(userId, plan.watches, plan.now)
 	await run("REFRESH TABLE user_watch_log")
-	const log = await readImportLog(userId, plan.title)
+	let log = await readImportLog(userId, plan.title)
+	if (plan.onlyUnwatched) {
+		// Another watch of the episode landed between the check and the insert, or before a resume: this plan's own
+		// row is the extra one. It is deleted first and then left out of the plan, so Undo never misses a row.
+		const overtaken = plan.watches.filter(
+			(watch) =>
+				log.some((row) => ownRow(plan, row) && row.watch_id === watch.watch_id) &&
+				watchedElsewhere(plan, log, watch),
+		)
+		if (overtaken.length) {
+			await deleteLog(
+				userId,
+				overtaken.map((row) => row.watch_id),
+			)
+			await keepInstead(plan, overtaken, checkpoint)
+			const gone = new Set(overtaken.map((row) => row.watch_id))
+			log = log.filter((row) => !(ownRow(plan, row) && gone.has(row.watch_id)))
+		}
+	}
 	const plannedIds = new Set(plan.watches.map((watch) => watch.watch_id))
 	const ours = log.filter(
 		(row) => row.import_id === plan.importId && plannedIds.has(row.watch_id),

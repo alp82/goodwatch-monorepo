@@ -242,6 +242,8 @@ export class FakeEpisodeScoreWatches {
 	private clock = 1000
 	/** Runs as the watch is recorded, as a clear landing at that moment would. */
 	onMark: (() => void) | null = null
+	/** Runs as the watch is taken back, as a new score landing at that moment would. */
+	onRemove: (() => void) | null = null
 	async mark(userId: string, showId: number, episodeTmdbId: number) {
 		this.calls.push(`mark ${userId} ${showId} ${episodeTmdbId}`)
 		if (this.failing) throw new Error("Crate is down")
@@ -267,6 +269,7 @@ export class FakeEpisodeScoreWatches {
 		if (createdAt !== undefined && this.recorded.get(episodeTmdbId) !== createdAt)
 			return null
 		this.watched.delete(episodeTmdbId)
+		this.onRemove?.()
 		return id
 	}
 }

@@ -30,6 +30,7 @@ const {
 	markScoredEpisodeWatched,
 	prepareImportTrackingPlan,
 	removeScoredEpisodeWatch,
+	undoImportTrackingPlan,
 	settleMovie,
 } = await import("./tracking.server.ts")
 type TrackingAction = import("./tracking.server.ts").TrackingAction
@@ -1727,6 +1728,151 @@ test("Unmark season takes a score's watch with the season, and Undo puts it back
 	const put = await act(restore, undefined)
 	assert.equal(put.status, "applied", put.refused ?? "")
 	assert.deepEqual(storedExactly(), before)
+})
+
+test("A score's watch is known by the time its own insert recorded, never by a later read: a replacement landing right after keeps its watch (#759 review 2)", async () => {
+	// The member clears and scores again while the first write is finishing: a replacement under the same id.
+	let replaced = 0
+	db.before = async (statement) => {
+		if (
+			!replaced &&
+			/^(INSERT INTO|UPDATE) user_watch_state/.test(statement.sql)
+		) {
+			const row = db
+				.table("user_watch_log")
+				.find((r) => r.watch_id === "score-e102")
+			if (!row) return
+			replaced = Number(row.created_at) + 5_000
+			Object.assign(row, { created_at: replaced })
+			db.before = undefined
+		}
+	}
+	const first = await markScoredEpisodeWatched(user, SHOW, 102)
+	assert.ok(first && replaced && first.createdAt !== replaced)
+	assert.equal(
+		await removeScoredEpisodeWatch(user, SHOW, 102, first.createdAt),
+		null,
+	)
+	assert.deepEqual(ticks(), ["1.2"])
+})
+
+test("Undo of Unmark season puts back a score's watch the member dated, which is theirs now (#759 review 2)", async () => {
+	await markScoredEpisodeWatched(user, SHOW, 102)
+	await act({
+		type: "editWatchDate",
+		watchId: "score-e102",
+		when: { precision: "day", day: iso(midnight(-2)) },
+	})
+	const before = storedExactly()
+	const { restore } = await unmark(1)
+	const put = await act(restore, undefined)
+	assert.equal(put.status, "applied", put.refused ?? "")
+	assert.deepEqual(storedExactly(), before)
+})
+
+const scorePlan = (episodes: number[]) =>
+	prepareImportTrackingPlan({
+		userId: user,
+		importId: "imp-2",
+		source: "trakt",
+		tmdbId: SHOW,
+		mediaType: "show",
+		items: episodes.map((id) => ({
+			key: `episode-score:${SHOW}:${id}`,
+			kind: "watch",
+			mediaType: "show",
+			title: "Show",
+			year: null,
+			tmdbId: SHOW,
+			imdbId: null,
+			index: id,
+			outcome: "new",
+			reason: null,
+			episodeTmdbId: id,
+			season: 1,
+			episode: id - 100,
+			precision: "unknown",
+		})) as never,
+		watchDates: "unknown",
+		now: Date.now(),
+		onlyUnwatched: true,
+	})
+
+test("An import's score watch that a tick overtook between the check and the insert is taken out again (#759 review 2)", async () => {
+	const plan = await scorePlan([101])
+	db.before = async (statement) => {
+		if (
+			statement.sql.startsWith("INSERT INTO user_watch_log") &&
+			statement.params.includes("imp-2")
+		) {
+			db.before = undefined
+			await tick(1, 1, "tick-s1e1")
+		}
+	}
+	const result = await applyImportTrackingPlan(user, plan, async () => {})
+	assert.equal(result.added, 0)
+	assert.deepEqual(
+		logOf().map((r) => [r.watch_id, r.origin]),
+		[["tick-s1e1", "single"]],
+	)
+	assert.deepEqual(
+		[plan.watches, plan.keptKeys],
+		[[], [`episode-score:${SHOW}:101`]],
+	)
+})
+
+test("A resumed import still owns the score watch it inserted before it stopped (#759 review 2)", async () => {
+	const plan = await scorePlan([101, 102])
+	let inserted = false
+	db.before = async (statement) => {
+		if (
+			statement.sql.startsWith("INSERT INTO user_watch_log") &&
+			statement.params.includes("imp-2")
+		)
+			inserted = true
+		else if (inserted && statement.sql.startsWith("REFRESH TABLE user_watch_log")) {
+			db.before = undefined
+			throw new Error("The import stopped")
+		}
+	}
+	await assert.rejects(() => applyImportTrackingPlan(user, plan, async () => {}))
+	assert.deepEqual(ticks(), ["1.1", "1.2"])
+	// Another viewing of episode 1 is logged before the import resumes, by another writer.
+	db.seed("user_watch_log", [
+		{
+			user_id: user,
+			watch_id: "tick-s1e1",
+			media_type: "show",
+			tmdb_id: SHOW,
+			episode_tmdb_id: 101,
+			season_number: 1,
+			episode_number: 1,
+			watched_at: null,
+			watched_at_precision: "unknown",
+			origin: "single",
+			group_id: null,
+			import_id: null,
+			pass: 1,
+			created_at: Date.now(),
+			updated_at: Date.now(),
+		},
+	])
+	await applyImportTrackingPlan(user, plan, async () => {})
+	// Not two watches of episode 1, and Undo takes back what the import still holds.
+	assert.deepEqual(
+		logOf()
+			.map((r) => [r.episode_number, r.origin])
+			.sort(),
+		[
+			[1, "single"],
+			[2, "import"],
+		],
+	)
+	await undoImportTrackingPlan(user, plan)
+	assert.deepEqual(
+		logOf().map((r) => [r.watch_id, r.origin]),
+		[["tick-s1e1", "single"]],
+	)
 })
 
 // ---- movies ------------------------------------------------------------------------------------------------

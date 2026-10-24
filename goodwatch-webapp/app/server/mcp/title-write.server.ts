@@ -177,7 +177,10 @@ export async function writePartScore(
 				score: result.score?.score ?? null,
 				updatedAt: result.score?.updatedAt ?? null,
 			},
-			...(result.watchAdded && result.watchAddedAt !== undefined
+			// Only a score's own watch: a clear can record one for a score given elsewhere meanwhile, which isn't its.
+			...(score !== null &&
+			result.watchAdded &&
+			result.watchAddedAt !== undefined
 				? {
 						watchAdded: {
 							id: result.watchAdded,
