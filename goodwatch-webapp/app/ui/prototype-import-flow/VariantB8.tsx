@@ -1994,6 +1994,9 @@ function Done({
 		? []
 		: appliedLines(s, sim.choices, local, screens, picked)
 	const noSuggestion = s.unmatched.filter((u) => !u.suggestions.length)
+	const tiles = past
+		? []
+		: tileCounts(s, sim.choices, local, screens, picked, kindsIn)
 	const outCount = past ? 0 : noSuggestion.length + s.unsupported
 	const [outOpen, setOutOpen] = useState(false)
 
@@ -2108,6 +2111,7 @@ function Done({
 						applied={applied}
 						answered={answered}
 						unchanged={unchanged}
+						tiles={tiles}
 						title={past ? `It added ${plural(count, "title")}` : "What changed"}
 					/>
 					{outCount > 0 && (
@@ -2195,6 +2199,68 @@ function Done({
 /* ------------------------------------------------------------------------------------------------------------------ */
 /* What changed: the four summary options. Plain text throughout; nothing is highlighted.                             */
 
+/** Stub: what the member already had in GoodWatch before this import. */
+const BEFORE: Record<keyof Kinds | "notInterested" | "rewatch", number> = {
+	ratings: 1180,
+	watches: 2140,
+	episodes: 5124,
+	want: 96,
+	favorites: 31,
+	reviews: 4,
+	lists: 5,
+	statuses: 40,
+	notInterested: 22,
+	rewatch: 7,
+}
+
+interface Tile {
+	key: string
+	name: string
+	/** In GoodWatch now, after the import. */
+	total: number
+	added: number
+	removed: number
+}
+
+/** One tile per list that changed: the new total, what came in, and what answers took off. */
+function tileCounts(
+	s: Scenario,
+	c: Choices,
+	local: Local,
+	screens: Screen[],
+	picked: Record<number, string>,
+	kindsIn: (keyof Kinds)[],
+): Tile[] {
+	const did = (q: Topic) =>
+		screens.some((x, i) => x.q === q && picked[i] !== undefined)
+	const offs =
+		did("side-effects") && local.sideEffects === "apply" ? s.sideEffects : null
+	const offWant = offs?.offWantToSee.length ?? 0
+	const offNI = offs?.offNotInterested.length ?? 0
+	const rewatch =
+		did("rewatch") && c.rewatch === "rewatch" ? s.alreadySeenWants.length : 0
+	const tile = (
+		key: keyof typeof BEFORE,
+		name: string,
+		added: number,
+		removed: number,
+	): Tile => ({
+		key,
+		name,
+		total: BEFORE[key] + added - removed,
+		added,
+		removed,
+	})
+	const out = kindsIn.map((k) =>
+		tile(k, KIND_NAME[k], s.kinds[k], k === "want" ? offWant : 0),
+	)
+	if (offWant && !kindsIn.includes("want"))
+		out.push(tile("want", KIND_NAME.want, 0, offWant))
+	if (offNI) out.push(tile("notInterested", "Not interested", 0, offNI))
+	if (rewatch) out.push(tile("rewatch", "Want to rewatch", rewatch, 0))
+	return out
+}
+
 function WhatChanged({
 	summary,
 	s,
@@ -2202,8 +2268,10 @@ function WhatChanged({
 	applied,
 	answered,
 	unchanged,
+	tiles,
 	title,
 }: {
+	tiles: Tile[]
 	summary: Summary
 	s: Scenario
 	kindsIn: (keyof Kinds)[]
@@ -2236,15 +2304,40 @@ function WhatChanged({
 			<div className="flex flex-col gap-4">
 				<p className="font-semibold text-white">{title}</p>
 				<ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-					{kindsIn.map((k) => (
+					{(tiles.length
+						? tiles
+						: kindsIn.map((k) => ({
+								key: k,
+								name: KIND_NAME[k],
+								total: s.kinds[k],
+								added: 0,
+								removed: 0,
+							}))
+					).map((t) => (
 						<li
-							key={k}
+							key={t.key}
 							className="flex flex-col rounded-xl bg-white/5 px-4 py-3"
 						>
 							<span className="text-2xl font-bold tabular-nums text-white">
-								{fmt(s.kinds[k])}
+								{fmt(t.total)}
 							</span>
-							<span className="text-sm text-gray-400">{KIND_NAME[k]}</span>
+							<span className="text-sm text-gray-400">{t.name}</span>
+							{(t.added > 0 || t.removed > 0) && (
+								<span className="mt-1 flex flex-wrap gap-x-2 text-sm font-semibold tabular-nums">
+									{t.added > 0 && (
+										<span className="text-emerald-400">
+											+{fmt(t.added)}
+											<span className="sr-only"> added</span>
+										</span>
+									)}
+									{t.removed > 0 && (
+										<span className="text-red-400">
+											−{fmt(t.removed)}
+											<span className="sr-only"> taken off</span>
+										</span>
+									)}
+								</span>
+							)}
 						</li>
 					))}
 				</ul>
