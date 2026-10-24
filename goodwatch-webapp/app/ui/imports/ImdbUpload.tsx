@@ -1,5 +1,6 @@
-// The first thing on the IMDb import page: choose or drop the CSV file. It is read in the browser and sent for a preview.
-import { ArrowUpTrayIcon } from "@heroicons/react/24/solid"
+// The IMDb Bring step: choose or drop the CSV file. It is read in the browser and sent for a preview. A Watchlist or
+// custom list export looks like the other, so the member says which it is, one answer, before the preview.
+import { ArrowUpTrayIcon } from "@heroicons/react/24/outline"
 import { type DragEvent, useRef, useState } from "react"
 import { imdbCsvKind } from "~/domain/imdb-file"
 import type { ImdbFileChoice } from "~/domain/imdb-file"
@@ -14,8 +15,20 @@ import {
 	useHandoffUpload,
 	useWrongSourceCatch,
 } from "./ImportFileRouting"
+import {
+	Answer,
+	BackArrow,
+	ProblemCard,
+	QuestionCopy,
+	StepHeading,
+	backClass,
+	dropZoneClass,
+	fileProblemTitle,
+	headingClass,
+	useLockIn,
+} from "./ImportFlowParts"
 import { usePreviewImdbImport } from "./api"
-import { errorBox, primaryButton, stepHeading } from "./shared"
+import { primaryButton } from "./shared"
 
 export function ImdbUpload({
 	onPreview,
@@ -34,6 +47,9 @@ export function ImdbUpload({
 	const [listKind, setListKind] = useState<ImdbFileChoice | null>(null)
 	const preview = usePreviewImdbImport()
 	const wrongSource = useWrongSourceCatch("imdb")
+	const lock = useLockIn()
+	// A file named like a Watchlist suggests that answer; it is never picked for the member.
+	const watchlistName = !!listFile && /watchlist/i.test(listFile.name)
 
 	const upload = async (file: File) => {
 		setListFile(null)
@@ -47,7 +63,7 @@ export function ImdbUpload({
 					if (sequence === readSequence.current) {
 						setListFile(file)
 						setListName(file.name.replace(/\.csv$/i, ""))
-						setListKind(/watchlist/i.test(file.name) ? "watchlist" : null)
+						setListKind(null)
 						setLegacyAmbiguous(kind === "legacy-ambiguous")
 					}
 					return
@@ -72,16 +88,157 @@ export function ImdbUpload({
 		setDragging(false)
 		send(event.dataTransfer.files[0])
 	}
+	const options = legacyAmbiguous
+		? ([
+				[
+					"ratings",
+					"Ratings",
+					"Imports personal ratings without adding titles to Want to See.",
+				],
+				[
+					"watchlist",
+					"My Watchlist",
+					"Adds movies and shows to Want to See and imports personal ratings when present.",
+				],
+			] as const)
+		: ([
+				[
+					"watchlist",
+					"My Watchlist",
+					"Adds movies and shows to Want to See and imports personal ratings when present.",
+				],
+				[
+					"custom-list",
+					"A custom list",
+					"Creates a private GoodWatch list with its original order and notes, and imports personal ratings when present.",
+				],
+			] as const)
+	const previewList = (kind: ImdbFileChoice) => {
+		if (!listFile) return
+		preview.mutate(
+			{
+				file: listFile,
+				listKind: kind,
+				...(kind === "custom-list" ? { listName: listName.trim() } : {}),
+			},
+			{ onSuccess: (response) => onPreview(response.import) },
+		)
+	}
+	const pick = (kind: ImdbFileChoice) => {
+		setListKind(kind)
+		if (kind === "custom-list") return
+		lock.lock(kind, () => previewList(kind))
+	}
+
+	if (listFile)
+		return (
+			<section
+				aria-labelledby="imdb-upload-heading"
+				className="flex flex-col gap-6"
+			>
+				<button
+					type="button"
+					className={backClass}
+					disabled={preview.isPending}
+					onClick={() => {
+						lock.cancel()
+						setListFile(null)
+						setListKind(null)
+					}}
+				>
+					<BackArrow />
+					Back
+				</button>
+				<QuestionCopy value>
+					<StepHeading focus id="imdb-upload-heading">
+						{legacyAmbiguous
+							? "This may be an old ratings or Watchlist export. Which IMDb export is it?"
+							: "Watchlist and custom lists look the same. Which IMDb list did this file come from?"}
+					</StepHeading>
+					<p className="break-all text-sm text-gray-400">{listFile.name}</p>
+					<fieldset
+						disabled={!!lock.locking || preview.isPending}
+						data-locked={lock.locking ? true : undefined}
+						className="group/answers flex flex-col gap-3"
+					>
+						<legend className="sr-only">Your answer</legend>
+						{options.map(([value, label, detail]) => (
+							<Answer
+								key={value}
+								selected={listKind === value}
+								recommended={value === "watchlist" && watchlistName}
+								title={label}
+								note={detail}
+								onClick={() => pick(value)}
+							/>
+						))}
+					</fieldset>
+				</QuestionCopy>
+				{listKind === "custom-list" && (
+					<div className="flex flex-col gap-3">
+						<label className="flex flex-col gap-2">
+							<span className="font-semibold text-gray-100">
+								List name on IMDb
+							</span>
+							<input
+								name="imdb-list-name"
+								className="block min-h-11 w-full rounded-lg border border-slate-600 bg-slate-900 p-2 text-gray-100"
+								value={listName}
+								maxLength={1000}
+								onChange={(event) => setListName(event.target.value)}
+							/>
+							<span className="text-sm text-gray-400">
+								The filename is filled in as a starting point. Check that it
+								matches the original list name on IMDb.
+							</span>
+						</label>
+						<button
+							type="button"
+							className={`${primaryButton} self-start`}
+							disabled={!listName.trim() || preview.isPending}
+							onClick={() => previewList("custom-list")}
+						>
+							{preview.isPending ? "Finding your titles" : "Continue"}
+						</button>
+					</div>
+				)}
+				<div aria-live="polite">
+					{preview.isPending && listKind !== "custom-list" && (
+						<p className="text-gray-300">Finding your titles</p>
+					)}
+				</div>
+				<div aria-live="assertive">
+					{preview.isError && (
+						<ProblemCard
+							title={fileProblemTitle(preview.error.message)}
+							fileName={listFile.name}
+							focus
+						>
+							<p>{preview.error.message}</p>
+						</ProblemCard>
+					)}
+				</div>
+			</section>
+		)
 
 	return (
 		<section
 			aria-labelledby="imdb-upload-heading"
-			className="flex flex-col gap-4"
+			className="flex flex-col gap-6"
 		>
-			<h3 id="imdb-upload-heading" className={stepHeading}>
-				Upload your file
-			</h3>
-			{handoff && <RecognizedLine handoff={handoff} />}
+			{preview.isError && (
+				<ProblemCard
+					title={fileProblemTitle(preview.error.message)}
+					fileName={
+						preview.variables && "file" in preview.variables
+							? preview.variables.file.name
+							: preview.variables?.name
+					}
+					focus
+				>
+					<p>{preview.error.message}</p>
+				</ProblemCard>
+			)}
 			<div
 				onDragOver={(event) => {
 					event.preventDefault()
@@ -89,17 +246,32 @@ export function ImdbUpload({
 				}}
 				onDragLeave={() => setDragging(false)}
 				onDrop={onDrop}
-				className={`flex flex-col items-center gap-3 rounded-lg border-2 border-dashed px-4 py-8 text-center ${dragging ? "border-indigo-400 bg-indigo-950/60" : "border-slate-600 bg-slate-900/60"}`}
+				className={dropZoneClass(dragging)}
 			>
 				{preview.isPending ? (
 					<Spinner size="medium" />
 				) : (
-					<ArrowUpTrayIcon className="h-8 w-8 text-gray-500" aria-hidden />
+					<ArrowUpTrayIcon
+						className={`size-12 transition-transform duration-300 ${dragging ? "-translate-y-1 text-amber-300" : "text-gray-400"}`}
+						aria-hidden
+					/>
 				)}
-				<p id="imdb-upload-hint" aria-live="polite">
+				<h2 id="imdb-upload-heading" className={headingClass}>
 					{preview.isPending
-						? "Reading your file. This can take a moment."
-						: "Drop the CSV file from IMDb here, or choose it from your device."}
+						? "Finding your titles"
+						: preview.isError
+							? "Try another file"
+							: "Upload your file"}
+				</h2>
+				{handoff && <RecognizedLine handoff={handoff} />}
+				<p
+					id="imdb-upload-hint"
+					aria-live="polite"
+					className="max-w-md text-sm text-gray-400"
+				>
+					{preview.isPending
+						? "Reading your file. This can take a moment. Nothing changes yet."
+						: "Drop the CSV file from IMDb here, or choose it from your device. You'll see what's in it before anything is saved."}
 				</p>
 				{/* Stays focusable while the file is read, so keyboard focus isn't lost. */}
 				<button
@@ -127,111 +299,7 @@ export function ImdbUpload({
 					}}
 				/>
 			</div>
-			{listFile && (
-				<fieldset className="space-y-3">
-					<legend className="font-semibold text-gray-100">
-						{legacyAmbiguous
-							? "Which IMDb export is this?"
-							: "Which IMDb list did this file come from?"}
-					</legend>
-					<p className="text-sm text-gray-400">
-						{legacyAmbiguous
-							? "This may be an old ratings or Watchlist export. Choose the export you downloaded."
-							: "Watchlist and custom lists use the same columns. Choose the list you exported."}
-					</p>
-					{(legacyAmbiguous
-						? ([
-								[
-									"ratings",
-									"Ratings",
-									"Imports personal ratings without adding titles to Want to See.",
-								],
-								[
-									"watchlist",
-									"My Watchlist",
-									"Adds movies and shows to Want to See and imports personal ratings when present.",
-								],
-							] as const)
-						: ([
-								[
-									"watchlist",
-									"My Watchlist",
-									"Adds movies and shows to Want to See and imports personal ratings when present.",
-								],
-								[
-									"custom-list",
-									"A custom list",
-									"Creates a private GoodWatch list with its original order and notes, and imports personal ratings when present.",
-								],
-							] as const)
-					).map(([value, label, detail]) => (
-						<label
-							key={value}
-							className="flex items-start gap-3 rounded-lg border border-slate-700 p-3"
-						>
-							<input
-								type="radio"
-								name="imdb-list-kind"
-								checked={listKind === value}
-								onChange={() => setListKind(value)}
-							/>
-							<span>
-								<span className="block font-semibold">{label}</span>
-								<span className="text-sm text-gray-400">{detail}</span>
-							</span>
-						</label>
-					))}
-					{listKind === "custom-list" && (
-						<label className="block space-y-2">
-							<span className="font-semibold text-gray-100">
-								List name on IMDb
-							</span>
-							<input
-								name="imdb-list-name"
-								className="block w-full rounded border border-slate-600 bg-slate-900 p-2 text-gray-100"
-								value={listName}
-								maxLength={1000}
-								onChange={(event) => setListName(event.target.value)}
-							/>
-							<span className="block text-sm text-gray-400">
-								The filename is filled in as a starting point. Check that it
-								matches the original list name on IMDb.
-							</span>
-						</label>
-					)}
-					<button
-						type="button"
-						className={primaryButton}
-						disabled={
-							!listKind ||
-							(listKind === "custom-list" && !listName.trim()) ||
-							preview.isPending
-						}
-						onClick={() =>
-							listKind &&
-							preview.mutate(
-								{
-									file: listFile,
-									listKind,
-									...(listKind === "custom-list"
-										? { listName: listName.trim() }
-										: {}),
-								},
-								{ onSuccess: (response) => onPreview(response.import) },
-							)
-						}
-					>
-						Preview import
-					</button>
-				</fieldset>
-			)}
 			{wrongSource.note}
-			<p className="text-sm text-gray-400">
-				You'll see what's in the file before anything is saved.
-			</p>
-			<div aria-live="assertive">
-				{preview.isError && <p className={errorBox}>{preview.error.message}</p>}
-			</div>
 		</section>
 	)
 }

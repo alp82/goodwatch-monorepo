@@ -1,5 +1,5 @@
-// The result container in happy-dom: a signed-in member, the real query and mutation hooks, and a stand-in network
-// that answers the item API's pages and the list writers. Prints what was sent and what the screen said.
+// The Done step in happy-dom: a signed-in member, the real query and mutation hooks, and a stand-in network that
+// answers the item API's pages and the list writers. Prints what was sent and what the screen said.
 import { Window } from "happy-dom"
 
 const window = new Window({ url: "https://goodwatch.app/settings/imports" })
@@ -67,7 +67,8 @@ const { getQueryKeyUserData } = await import("~/routes/api.user-data")
 const { groupImportResult, IMPORT_RESULT_FIRST_ROWS } = await import(
 	"~/domain/import-result"
 )
-const { ImportResult } = await import("./ImportResult")
+const { ImportDone } = await import("./ImportDone")
+const { ANSWER_LOCK_MS } = await import("./ImportFlowParts")
 
 const title = (tmdbId: number, name: string) => ({
 	tmdbId,
@@ -124,10 +125,90 @@ client.setQueryData(
 	["import-result", "/api/imports", "kept-id", "done"],
 	firstRows(kept),
 )
+const doneResult = groupImportResult("import", [
+	{
+		key: "movie:1",
+		title: title(1, "One"),
+		change: { type: "rating-added", score: 8 },
+	},
+	{
+		key: "movie:3",
+		title: title(3, "Three"),
+		change: { type: "rating-replaced", from: 5, to: 7 },
+	},
+	{
+		key: "movie:4",
+		title: title(4, "Four"),
+		change: { type: "list-added", list: "want_to_see" },
+	},
+	{
+		key: "movie:5",
+		title: title(5, "Five"),
+		change: {
+			type: "list-cleared",
+			list: "want_to_see",
+			because: "watched",
+			undoRestores: false,
+		},
+	},
+	{
+		key: "movie:6",
+		title: title(6, "Six"),
+		change: {
+			type: "list-cleared",
+			list: "not_interested",
+			because: "want",
+			undoRestores: false,
+		},
+	},
+	{
+		key: "movie:7",
+		title: title(7, "Seven"),
+		change: {
+			type: "kept",
+			kind: "rating",
+			reason: "Already the same in GoodWatch.",
+		},
+	},
+	{
+		key: "row:20",
+		title: null,
+		change: {
+			type: "skipped",
+			kind: "rating",
+			label: "Lost (1999)",
+			row: 21,
+			reason: "Not found.",
+		},
+	},
+	{
+		key: "row:21",
+		title: null,
+		change: {
+			type: "skipped",
+			kind: "rating",
+			label: "Gone (2001)",
+			row: 22,
+			reason: "Not found.",
+		},
+	},
+])
+client.setQueryData(
+	["import-result", "/api/imports", "done-id", "done"],
+	doneResult,
+)
+client.setQueryData(
+	["import-result", "/api/imports", "plain-id", "done"],
+	doneResult,
+)
 // The member already marked Anora Not interested again, in another tab.
 client.setQueryData(getQueryKeyUserData(user.id), {
-	scores: {},
-	wishlist: {},
+	scores: {
+		"movie-1": { score: 8, review: null, updatedAt: new Date() },
+		"movie-3": { score: 7, review: null, updatedAt: new Date() },
+		"movie-9": { score: 6, review: null, updatedAt: new Date() },
+	},
+	wishlist: { "movie-4": { createdAt: new Date(), updatedAt: new Date() } },
 	watchState: {},
 	favorites: {},
 	skipped: {},
@@ -137,33 +218,36 @@ client.setQueryData(getQueryKeyUserData(user.id), {
 const container = document.createElement("div")
 document.body.appendChild(container)
 const root = createRoot(container as unknown as Element)
-const render = (id: string, status: string) =>
+const wrap = (child: unknown) =>
+	h(
+		AuthContext.Provider,
+		{
+			value: {
+				user,
+				loading: false,
+				getSupabase: () => Promise.reject(new Error("none")),
+			} as never,
+		},
+		h(QueryClientProvider, { client }, h(MemoryRouter, null, child as never)),
+	)
+const render = (id: string, status: string, canUndo = true) =>
 	act(async () =>
 		root.render(
-			h(
-				AuthContext.Provider,
-				{
-					value: {
-						user,
-						loading: false,
-						getSupabase: () => Promise.reject(new Error("none")),
-					} as never,
-				},
-				h(
-					QueryClientProvider,
-					{ client },
-					h(
-						MemoryRouter,
-						null,
-						h(ImportResult, {
-							api: "/api/imports",
-							id,
-							status,
-							from: "ratings.csv",
-							focus: false,
-						}),
-					),
-				),
+			wrap(
+				h(ImportDone, {
+					key: `${id}:${status}:${canUndo}`,
+					api: "/api/imports",
+					summary: { id, status, canUndo },
+					source: "Trakt",
+					posters: [],
+					focus: false,
+					openedHere: true,
+					undo: { pending: false, error: null, run: () => {} },
+					undoQuestion: "Undo this import?",
+					onUploadAnother: () => {},
+					skippedUrl: `/api/imports/${id}/skipped`,
+					notes: ["Trakt", ""],
+				}),
 			),
 		),
 	)
@@ -172,18 +256,61 @@ const button = (label: string) =>
 	[...container.querySelectorAll("button")].find((b) =>
 		b.textContent?.includes(label),
 	) as unknown as HTMLButtonElement | undefined
-const settle = () =>
-	act(async () => new Promise((resolve) => setTimeout(resolve, 20)))
+const settle = (ms = 20) =>
+	act(async () => new Promise((resolve) => setTimeout(resolve, ms)))
 
-await render("undo-id", "undone")
+await render("done-id", "done")
+await settle()
+const answers = () =>
+	[...container.querySelectorAll("[data-cleared-question] [data-answer]")].map(
+		(b) => ({
+			text: (b.textContent ?? "").trim(),
+			pressed: b.getAttribute("aria-pressed"),
+			suggested: b.hasAttribute("data-suggested"),
+		}),
+	)
+const done = {
+	heading: container.querySelector("h2")?.textContent ?? "",
+	tiles: [...container.querySelectorAll("[data-tile]")].map((li) => ({
+		tile: li.getAttribute("data-tile") ?? "",
+		text: (li.textContent ?? "").trim(),
+		added: li.querySelector("[data-marker=added]")?.textContent ?? null,
+		removed: li.querySelector("[data-marker=removed]")?.textContent ?? null,
+	})),
+	text: text(),
+	answers: answers(),
+	undo: !!button("Undo this import"),
+	lockedPressed: [] as string[],
+	afterPutAll: "",
+	putAllSent: [] as { url: string; body: unknown }[],
+	noUndo: false,
+}
+const before = sent.length
+await act(async () => button("Yes, put them back")?.click())
+done.lockedPressed = answers().map((answer) => answer.pressed ?? "")
+await settle(ANSWER_LOCK_MS + 100)
+await settle()
+done.putAllSent = sent
+	.slice(before)
+	.filter((call) => call.url.startsWith("/api/update-"))
+done.afterPutAll = text()
+await render("plain-id", "done", false)
+await settle()
+done.noUndo = !button("Undo this import")
+
+await render("undo-id", "undone", false)
+await settle()
+const undoneText = text()
 const buttons = [...container.querySelectorAll("button")].map(
-	(b) => b.textContent,
+	(b) => b.textContent ?? "",
 )
 await act(async () => button("Add back to Want to See")?.click())
 await settle()
 const afterPutBack = text()
 
 await render("kept-id", "done")
+await settle()
+await act(async () => button("Every change, title by title")?.click())
 await act(async () => button("Show all 26")?.click())
 await settle()
 const afterMore = text()
@@ -259,12 +386,13 @@ for (const watches of [1, 0]) {
 			),
 		),
 	)
-	await act(async () => button("Undo import")?.click())
+	await settle()
+	await act(async () => button("Undo this import")?.click())
 	plexPrompts.push(text())
 }
 
 await act(async () => root.unmount())
 process.stdout.write(
-	`__IMPORT_RESULT_INTERACTION__${JSON.stringify({ sent, buttons, afterPutBack, afterMore, plexPrompts })}`,
+	`__IMPORT_RESULT_INTERACTION__${JSON.stringify({ sent, undone: undoneText, buttons, afterPutBack, afterMore, plexPrompts, done })}`,
 )
 process.exit(0)

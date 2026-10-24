@@ -1,11 +1,8 @@
-// What an import changed, or what its Undo changed back: a success message with a one-line summary, then one list
-// per kind of change, each title linked to its page. Every source draws its result with this.
-import { ExclamationTriangleIcon } from "@heroicons/react/20/solid"
-import { CheckCircleIcon } from "@heroicons/react/24/solid"
+// What an import changed, or what its Undo changed back, title by title: one list per kind of change, each title
+// linked to its page. The Done step shows these lists in its folds; every source draws them with this.
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
 import type {
-	ImportResult,
 	ImportResultChange,
 	ImportResultKind,
 	ImportResultList,
@@ -19,7 +16,6 @@ import type {
 import { STATE_LABEL, type State } from "~/domain/tracking/machine"
 import { titlePath } from "~/utils/helpers"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
-import { FocusHeading } from "./FocusHeading"
 import { formatCount } from "./shared"
 
 /** A list choice the import took away and Undo could not put back, for a put-back button. */
@@ -330,18 +326,18 @@ export function ResultRows({
 	})
 }
 
-function Section({
+export function ResultSection({
 	section,
 	putBack,
 	more,
 }: {
 	section: ImportResultSection
-	putBack: (put: PutBack) => ReactNode
+	putBack?: (put: PutBack) => ReactNode
 	more: (section: ImportResultSection) => ReactNode
 }) {
 	const attention = ATTENTION.includes(section.key)
 	return (
-		<div>
+		<div data-result-section={section.key}>
 			<h4 className="mb-2 flex items-baseline justify-between gap-3 font-semibold text-gray-100">
 				<span>{HEADINGS[section.key]}</span>
 				<span className="tabular-nums text-gray-400">
@@ -358,141 +354,5 @@ function Section({
 			</ul>
 			{section.total > section.rows.length && more(section)}
 		</div>
-	)
-}
-
-/** How the one-line summary names a section's count; null for the sections it leaves to their lists. */
-const SUMMARY: Record<ImportResultSectionKey, ((n: number) => string) | null> =
-	{
-		ratings_added: (n) => `${plural(n, "rating")} added`,
-		ratings_replaced: (n) => `${plural(n, "rating")} replaced`,
-		episode_ratings_added: (n) =>
-			`${plural(n, "season or episode score")} added`,
-		reviews: (n) => `${plural(n, "review")} added or replaced`,
-		watches_added: (n) => `${plural(n, "watch", "watches")} added`,
-		statuses_set: (n) => `${plural(n, "show status", "show statuses")} set`,
-		want_added: (n) => `${formatCount(n)} added to Want to See`,
-		favorites_added: (n) => `${formatCount(n)} added to favorites`,
-		lists_cleared: (n) => `${plural(n, "title")} taken off a list`,
-		kept: null,
-		skipped: null,
-		not_restored: null,
-		ratings_removed: (n) => `${plural(n, "rating")} removed`,
-		ratings_restored: (n) => `${plural(n, "rating")} put back`,
-		episode_ratings_removed: (n) =>
-			`${plural(n, "season or episode score")} taken back`,
-		reviews_reverted: (n) => `${plural(n, "review")} taken back`,
-		watches_removed: (n) => `${plural(n, "watch", "watches")} removed`,
-		statuses_restored: (n) =>
-			`${plural(n, "show status", "show statuses")} put back`,
-		want_removed: (n) => `${formatCount(n)} removed from Want to See`,
-		favorites_removed: (n) => `${formatCount(n)} removed from favorites`,
-		lists_restored: (n) => `${plural(n, "title")} back on a list`,
-		left: (n) => `${plural(n, "title")} left as you changed it`,
-	}
-
-/** "2 ratings added, 1 rating replaced, 5 watches added", in the order of the sections. */
-const summary = (result: ImportResult) =>
-	result.sections
-		.flatMap((section) => {
-			const phrase = SUMMARY[section.key]
-			return phrase ? [phrase(section.count)] : []
-		})
-		.join(", ")
-
-export function ImportResultView({
-	result,
-	from,
-	focus,
-	putBack,
-	more,
-	children,
-}: {
-	result: ImportResult
-	/** Where the import came from: the file's name, or "your TMDB account". */
-	from: string
-	focus: boolean
-	/** The button that puts back a list choice Undo could not. */
-	putBack: (put: PutBack) => ReactNode
-	/** What loads the rest of a section that shows only its first rows. */
-	more: (section: ImportResultSection) => ReactNode
-	/** Export notes and the actions, after the lists. */
-	children?: ReactNode
-}) {
-	const undo = result.operation === "undo"
-	const line = summary(result)
-	const customCount =
-		(undo ? result.customLists?.deleted : result.customLists?.created) ?? 0
-	const keptLists = undo ? (result.customLists?.notRestored ?? 0) : 0
-	const notRestored = result.sections.find(
-		(section) => section.key === "not_restored",
-	)
-	const listsOnly = notRestored?.rows.every((row) =>
-		row.changes.every((change) => change.type === "not-restored"),
-	)
-	return (
-		<section className="flex flex-col gap-5">
-			<FocusHeading focus={focus}>
-				{undo ? "Import undone" : "Import complete"}
-			</FocusHeading>
-			<output className="flex gap-3 border-l-8 border-emerald-600 bg-emerald-950 px-4 py-3 text-base text-emerald-50">
-				<CheckCircleIcon
-					className="mt-0.5 size-6 shrink-0 text-emerald-400"
-					aria-hidden
-				/>
-				<div>
-					<p className="font-semibold">
-						{result.titles === 0
-							? customCount > 0
-								? `${plural(customCount, "list")} ${undo ? "deleted" : "created"}`
-								: keptLists > 0
-									? `${plural(keptLists, "list")} could not be deleted`
-									: undo
-										? "Nothing needed changing back"
-										: "Nothing in your GoodWatch library changed"
-							: undo
-								? `GoodWatch changed back ${plural(result.titles, "title")}`
-								: `${plural(result.titles, "title")} changed in your GoodWatch library`}
-					</p>
-					<p className="mt-1 break-words text-emerald-100/90">
-						{line && `${line}. `}
-						{result.titles > 0 &&
-							customCount > 0 &&
-							`${plural(customCount, "list")} ${undo ? "deleted" : "created"}. `}
-						{keptLists > 0 &&
-							(customCount > 0 || result.titles > 0) &&
-							`${plural(keptLists, "list")} could not be deleted. `}
-						{!undo && (
-							<>
-								From <span className="break-all">{from}</span>.
-							</>
-						)}
-					</p>
-				</div>
-			</output>
-			{notRestored && (
-				<div className="rounded-lg border border-amber-700 bg-amber-950/50 p-4 text-amber-100">
-					<p className="flex items-center gap-2 font-semibold">
-						<ExclamationTriangleIcon className="size-5 shrink-0" aria-hidden />
-						{plural(notRestored.count, listsOnly ? "list choice" : "change")}{" "}
-						could not be put back
-					</p>
-					<p className="mt-1 text-sm">
-						{listsOnly
-							? "The import took these titles off a list. Put them back here, or leave them."
-							: "Undo couldn't take these back. Put list choices back here, or leave them."}
-					</p>
-				</div>
-			)}
-			{result.sections.map((section) => (
-				<Section
-					key={section.key}
-					section={section}
-					putBack={putBack}
-					more={more}
-				/>
-			))}
-			{children}
-		</section>
 	)
 }

@@ -2,12 +2,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
+import { MemoryRouter } from "react-router-dom"
 import { importInfo } from "~/domain/imports"
 import type { ImportItem, ImportSummary } from "~/domain/imports"
+import { SourceImportChoose } from "./SourceImportChoose"
 import { SourceItem } from "./SourceImportCounts"
 import { SourceImportCurrent } from "./SourceImportCurrent"
 import { sourceImportKeys } from "./SourceImportHooks"
-import { SourceImportPreview } from "./SourceImportPreview"
 import { SourceImportUploadPanel } from "./SourceImportUploadPanel"
 
 const summary = (
@@ -55,14 +56,19 @@ const preview = (item: ImportSummary, confirming = false) =>
 		createElement(
 			QueryClientProvider,
 			{ client: new QueryClient() },
-			createElement(SourceImportPreview, {
-				summary: item,
-				focus: false,
-				confirming,
-				error: null,
-				onConfirm: () => {},
-				onBack: () => {},
-			}),
+			createElement(
+				MemoryRouter,
+				null,
+				createElement(SourceImportChoose, {
+					summary: item,
+					focus: false,
+					confirming,
+					error: null,
+					onConfirm: () => {},
+					onBack: () => {},
+					posters: [],
+				}),
+			),
 		),
 	)
 
@@ -100,15 +106,24 @@ const receipt = () => {
 		},
 	}
 	client.setQueryData(sourceImportKeys.detail(done.id), { import: done })
+	client.setQueryData(["import-result", "/api/imports", done.id, "done"], {
+		operation: "import",
+		titles: 2,
+		sections: [],
+	})
 	return renderToStaticMarkup(
 		createElement(
 			QueryClientProvider,
 			{ client },
-			createElement(SourceImportCurrent, {
-				id: done.id,
-				focus: false,
-				onUploadAnother: () => {},
-			}),
+			createElement(
+				MemoryRouter,
+				null,
+				createElement(SourceImportCurrent, {
+					id: done.id,
+					focus: false,
+					onUploadAnother: () => {},
+				}),
+			),
 		),
 	)
 }

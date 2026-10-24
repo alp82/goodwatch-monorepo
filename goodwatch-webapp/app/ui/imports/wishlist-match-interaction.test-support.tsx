@@ -534,6 +534,61 @@ async function flow(start: ImportSummary, setup: Net) {
 			})
 			await settle()
 		},
+		/**
+		 * Goes to the matching question and opens its panel: Import on Choose, then each question before it answered
+		 * with the given answer or its suggested one, waiting for each answer to lock in.
+		 */
+		review: async (given: Record<string, string> = {}) => {
+			const answerButtons = () =>
+				all<HTMLButtonElement>("[data-answer]").filter(
+					(item) => !item.closest("[hidden]"),
+				)
+			const heading = () =>
+				(container.querySelector("h2")?.textContent ?? "").replace(/\s+/g, " ")
+			if (heading() === "What should come in?") {
+				await act(async () => button("Import").click())
+				await settle()
+			}
+			for (let step = 0; step < 5; step++) {
+				const answers = answerButtons()
+				if (!answers.length) return
+				const check = answers.find((item) =>
+					/^Yes, check (it|them)/.test(item.textContent ?? ""),
+				)
+				if (check) {
+					if (check.getAttribute("aria-pressed") !== "true")
+						await act(async () => check.click())
+					await settle(5)
+					return
+				}
+				const wanted = Object.entries(given).find(([question]) =>
+					heading().includes(question),
+				)?.[1]
+				const pick =
+					answers.find(
+						(item) => wanted && item.textContent?.startsWith(wanted),
+					) ?? answers.find((item) => item.hasAttribute("data-suggested"))
+				if (!pick) throw new Error(`No answer on "${heading()}"`)
+				const on = heading()
+				await act(async () => pick.click())
+				await act(
+					async () => new Promise((resolve) => setTimeout(resolve, 800)),
+				)
+				await settle()
+				// The last answer starts the import; the screen stays while it starts.
+				if (heading() === on) return
+			}
+		},
+		/** Leaves the matching question: Back to the question or step before it. */
+		hide: async () => {
+			await act(async () => button("Back").click())
+			await settle()
+		},
+		/** The question's answer that moves on without checking. */
+		leave: () =>
+			all<HTMLButtonElement>("[data-answer]").find((item) =>
+				/^No, leave (it|them) out/.test(item.textContent ?? ""),
+			) ?? null,
 		/** The member comes back to the tab, then the connection drops and returns. */
 		refocusAndReconnect: async () => {
 			await act(async () => {
@@ -578,8 +633,10 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 		],
 	})
 	results.closed = snap(view)
-	await view.click("Review matches")
-	await settle(5)
+	await view.click("Import")
+	// The Seen title's question comes first; the member adds it as Want to rewatch.
+	results.rewatchAsked = snap(view)
+	await view.review({ "already Seen": "Yes, add to Want to rewatch" })
 	results.opened = snap(view)
 	await view.click("Find a match for The Office")
 	results.entry = snap(view, {
@@ -592,29 +649,27 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 	await view.pick("2005 · Show")
 	results.picked = snap(view, {
 		useDisabled: view.disabled("Use this match"),
-		confirmDisabled: view.disabled("Add to Want to See"),
+		confirmDisabled: view.leave()?.disabled ?? null,
 	})
 	await view.click("Use this match")
 	results.used = snap(view, {
-		confirmDisabled: view.disabled("Add to Want to See"),
-		confirmReason: view.describedBy("Add to Want to See"),
+		confirmDisabled: view.leave()?.disabled ?? null,
+		confirmReason: view.leave()?.getAttribute("aria-describedby") ?? null,
 	})
 	await view.click("Clear the match for GoT")
 	results.cleared = snap(view)
-	await view.click("Hide matching")
-	await view.click("Review matches")
+	await view.hide()
+	await view.review({ "already Seen": "Yes, add to Want to rewatch" })
 	results.reshown = snap(view)
-	await view.pick("Add it as Want to rewatch")
 	await view.click("Update preview")
 	results.failed = snap(view, {
-		confirmDisabled: view.disabled("Add to Want to See"),
+		confirmDisabled: view.leave()?.disabled ?? null,
 		updateDisabled: view.disabled("Update preview"),
 	})
 	await view.click("Update preview")
 	await settle(3)
 	results.updated = snap(view, {
-		leaveChecked: view.checked("Leave them as Seen"),
-		confirmDisabled: view.disabled("Add to Want to See"),
+		confirmDisabled: view.disabled("Import"),
 	})
 	await view.unmount()
 }
@@ -633,7 +688,7 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 			},
 		],
 	})
-	await view.click("Review matches")
+	await view.review()
 	await settle(5)
 	await view.click("Find a match for Dark")
 	await view.pick("2017 · Show")
@@ -653,42 +708,11 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 		groups: [groups.got],
 		resolve: [],
 	})
+	await view.review()
 	results.allResolved = snap(view)
-	await view.click("New to your Wishlist")
-	results.matchedRow = snap(view)
 	await view.click("Change the match for GoT")
 	await settle(5)
 	results.changeFromRow = snap(view)
-	await view.unmount()
-}
-
-// Change, Hide matching, then Change again: on another row, and on the same row after Cancel.
-{
-	const narcos = groupOf(
-		matchedRow(20, "Narcos", "80025172", {
-			mediaType: "show",
-			tmdbId: 63351,
-			title: "Narcos",
-			year: 2015,
-		}),
-	)
-	const view = await flow(summary(PARENT, { new: 2 }, 2), {
-		groups: [groups.got, narcos],
-		resolve: [],
-		items: [resolvedRow, narcos.item],
-	})
-	await view.click("New to your Wishlist")
-	await view.click("Change the match for GoT")
-	await settle(5)
-	await view.click("Hide matching")
-	await view.click("Change the match for Narcos")
-	await settle(5)
-	results.changeAfterHide = snap(view)
-	await view.click("Cancel")
-	await view.click("Hide matching")
-	await view.click("Change the match for Narcos")
-	await settle(5)
-	results.changeSameAfterHide = snap(view)
 	await view.unmount()
 }
 
@@ -698,7 +722,7 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 		groups: [groups.dark],
 		resolve: [],
 	})
-	await view.click("Review matches")
+	await view.review()
 	await settle(5)
 	await view.click("Find a match for Dark")
 	const before = view.sent().length
@@ -727,7 +751,7 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 		},
 		resolve: [],
 	})
-	await view.click("Review matches")
+	await view.review()
 	await settle(5)
 	results.oldPreview = snap(view, {
 		chooseAgain: view.has("Choose the file again"),
@@ -735,76 +759,24 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 	await view.unmount()
 }
 
-// Change from the outcome list on a row that repeats an entry, and on an entry whose page isn't loaded.
-{
-	const narcos = {
-		mediaType: "show" as const,
-		tmdbId: 63351,
-		title: "Narcos",
-		year: 2015,
-	}
-	const dup = groupOf(matchedRow(20, "Narcos", "80025172", narcos), 2)
-	const leaf = matchedRow(21, "Narcos: Season 1", "80025172", narcos)
-	const late = groupOf(
-		matchedRow(300, "Mindhunter", "80114855", {
-			mediaType: "show",
-			tmdbId: 67744,
-			title: "Mindhunter",
-			year: 2017,
-		}),
-	)
-	const fillers = Array.from({ length: 48 }, (_, at) =>
-		groupOf(unknownRow(100 + at, `Filler ${at}`, `9000${at}`)),
-	)
-	const view = await flow(summary(PARENT, { new: 2, unmatched: 49 }, 51), {
-		groups: [groups.dark, dup, ...fillers, late],
-		resolve: [],
-		leaves: { 21: 20 },
-		items: [leaf, late.item],
-	})
-	await view.click("Review matches")
-	await settle(5)
-	await view.click("Find a match for Dark")
-	await view.pick("2017 · Show")
-	await view.click("Use this match")
-	await view.click("New to your Wishlist")
-	await view.click("Change the match for Narcos: Season 1")
-	await settle(5)
-	results.focusLeaf = snap(view)
-	await view.click("Cancel")
-	net.entry = ["offline"]
-	await view.click("Change the match for Mindhunter")
-	await settle(5)
-	results.focusFailed = snap(view)
-	await view.click("Try again")
-	await settle(5)
-	results.focusLater = snap(view)
-	await view.click("Cancel")
-	await view.click("Show more")
-	await settle(5)
-	results.focusMerged = snap(view)
-	await view.unmount()
-}
-
-// While Add to Want to See runs, no match can change, in the panel or from the outcome list.
+// Leaving the rest out starts the import: the panel goes, so no match can change while it starts.
 {
 	const view = await flow(summary(PARENT, { new: 1, unmatched: 1 }, 2), {
 		groups: [groups.dark, groups.got],
 		resolve: [],
 		holdConfirm: true,
 	})
-	await view.click("New to your Wishlist")
-	await view.click("Review matches")
-	await settle(5)
+	await view.review()
 	await view.click("Find a match for Dark")
 	await view.pick("2017 · Show")
-	await view.click("Add to Want to See")
-	await view.click("Clear the match for GoT")
+	const leave = view.leave()
+	if (!leave) throw new Error("No leave answer")
+	await act(async () => leave.click())
+	await act(async () => new Promise((resolve) => setTimeout(resolve, 800)))
+	await settle()
 	results.locked = snap(view, {
-		use: view.disabled("Use this match"),
-		search: view.searchDisabled(),
-		clear: view.disabled("Clear the match for GoT"),
-		change: view.allDisabled("Change the match for GoT"),
+		use: view.has("Use this match"),
+		clear: view.has("Clear the match for GoT"),
 	})
 	await view.unmount()
 }
@@ -843,7 +815,7 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 			},
 		],
 	})
-	await view.click("Review matches")
+	await view.review()
 	await settle(5)
 	await view.click("Show more")
 	await view.click("Show more")
@@ -910,22 +882,22 @@ const snap = (view: View, extra: Record<string, unknown> = {}) => ({
 			},
 		],
 	})
-	await view.click("Review matches")
+	await view.review()
 	await settle(5)
 	results.suggested = snap(view, {
 		posters: view.posters(),
-		confirmDisabled: view.disabled("Add to Want to See"),
+		confirmDisabled: view.leave()?.disabled ?? null,
 	})
 	await view.click("Match Dark yourself")
 	results.exceptionOpened = snap(view)
 	await view.click("Cancel")
 	await view.click("Accept the suggestion for The Office")
 	results.accepted = snap(view, {
-		confirmDisabled: view.disabled("Add to Want to See"),
+		confirmDisabled: view.leave()?.disabled ?? null,
 	})
 	await view.click("Undo accept for The Office")
 	results.acceptUndone = snap(view, {
-		confirmDisabled: view.disabled("Add to Want to See"),
+		confirmDisabled: view.leave()?.disabled ?? null,
 	})
 	await view.click("Accept the suggestion for The Office")
 	await view.click("Update preview")
@@ -971,7 +943,7 @@ const filmSuggestions = Object.fromEntries(
 			},
 		],
 	})
-	await view.click("Review matches")
+	await view.review()
 	await settle(8)
 	await view.click("Change the match for Dark")
 	await view.pick("2005 · Movie")
@@ -979,7 +951,7 @@ const filmSuggestions = Object.fromEntries(
 	results.bulkBefore = snap(view)
 	const keptOnAccept = await view.press("Accept the 11 suggestions shown")
 	results.bulkAccepted = snap(view, {
-		confirmDisabled: view.disabled("Add to Want to See"),
+		confirmDisabled: view.leave()?.disabled ?? null,
 		keptFocus: keptOnAccept,
 	})
 	await view.click("Change the match for Filler 0")
@@ -1010,7 +982,7 @@ const filmSuggestions = Object.fromEntries(
 		suggest: filmSuggestions,
 		resolve: [],
 	})
-	await view.click("Review matches")
+	await view.review()
 	await settle(5)
 	await view.click("Show more")
 	await view.click("Show more")
@@ -1044,7 +1016,7 @@ const filmSuggestions = Object.fromEntries(
 		},
 		resolve: [],
 	})
-	await view.click("Review matches")
+	await view.review()
 	await settle(8)
 	results.suggestFailed = snap(view)
 	await view.click("Find a match for Dark")
@@ -1078,11 +1050,11 @@ const filmSuggestions = Object.fromEntries(
 			},
 		],
 	})
-	await view.click("Review matches")
+	await view.review()
 	await settle(5)
 	results.suggestLoading = snap(view)
-	await view.click("Hide matching")
-	await view.click("Review matches")
+	await view.hide()
+	await view.review()
 	await view.click("Find a match for Dark")
 	await view.pick("2017 · Show")
 	await view.click("Use this match")
@@ -1104,7 +1076,7 @@ const filmSuggestions = Object.fromEntries(
 		},
 		resolve: ["hold"],
 	})
-	await view.click("Review matches")
+	await view.review()
 	await settle(5)
 	await view.click("Accept the suggestion for The Office")
 	await view.click("Update preview")
@@ -1135,11 +1107,11 @@ const filmSuggestions = Object.fromEntries(
 		),
 		resolve: [],
 	})
-	await view.click("Review matches")
+	await view.review()
 	await settle(10)
 	const before = view.sent().length
 	await view.refocusAndReconnect()
-	await view.click("Hide matching")
+	await view.hide()
 	await view.refocusAndReconnect()
 	results.warmCache = snap(view, { before })
 	await view.unmount()
@@ -1156,7 +1128,7 @@ const thirty = Array.from({ length: 30 }, (_, at) =>
 		omit: [700, 720],
 		resolve: [],
 	})
-	await view.click("Review matches")
+	await view.review()
 	await settle(8)
 	results.gapsChecked = snap(view)
 	net.omit = []
@@ -1174,11 +1146,11 @@ const thirty = Array.from({ length: 30 }, (_, at) =>
 		suggestions: ["offline", "default", "offline"],
 		resolve: [],
 	})
-	await view.click("Review matches")
+	await view.review()
 	await settle(8)
 	results.cachedFailed = snap(view)
 	await view.remount()
-	await view.click("Review matches")
+	await view.review()
 	await settle(8)
 	results.cachedRemounted = snap(view)
 	net.suggestions = ["hold", "hold"]
@@ -1203,7 +1175,7 @@ for (const mediaType of ["movie", "show"] as const) {
 		groups: [groupOf(item)],
 		resolve: [],
 	})
-	await view.click("Review matches")
+	await view.review()
 	await settle(5)
 	results[`knownType_${mediaType}`] = snap(view)
 	await view.unmount()
@@ -1217,9 +1189,12 @@ for (const mediaType of ["movie", "show"] as const) {
 		wishlistRewatchChoiceCount: 1,
 	}
 	const view = await flow(parent, { groups: [], resolve: [] })
+	await view.click("Import")
 	results.showChoiceBefore = snap(view)
-	await view.toggleShowChoice()
-	await view.click("Add to Want to See")
+	await view.review({
+		"already Seen": "No, leave it as Seen",
+		"whole show": "Yes, add the whole show",
+	})
 	results.showChoiceConfirmed = snap(view)
 	await view.unmount()
 }

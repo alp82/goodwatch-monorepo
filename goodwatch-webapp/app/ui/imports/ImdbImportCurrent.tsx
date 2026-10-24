@@ -1,15 +1,30 @@
-// One import, drawn by where it is in its life: the preview, the progress, the receipt, undone, or failed.
-import { ArrowDownTrayIcon } from "@heroicons/react/20/solid"
-import { Link } from "@remix-run/react"
-import { type ReactNode, useState } from "react"
+// One IMDb ratings import, drawn by where it is in its life: Choose and its one question while it's a preview, the
+// progress strip while it runs or after it stopped, and the Done step once it finished or was undone.
+import { useRef, useState } from "react"
 import type {
 	ImdbConflictChoice,
 	ImdbImportSummary,
 } from "~/domain/imdb-import"
 import { Spinner } from "~/ui/wait/Spinner"
-import { FocusHeading } from "./FocusHeading"
-import { ImdbImportPreview } from "./ImdbImportPreview"
-import { ImportResult } from "./ImportResult"
+import { ImportDone } from "./ImportDone"
+import { useConflictRows, useImportPosters } from "./ImportFlowData"
+import {
+	Answer,
+	BackArrow,
+	type FlowPoster,
+	QuestionScreen,
+	Slide,
+	StepHeading,
+	backClass,
+	useLockIn,
+	useReportStep,
+} from "./ImportFlowParts"
+import { ImportRun } from "./ImportRun"
+import {
+	CaughtUp,
+	ConflictExamples,
+	NothingToBring,
+} from "./SourceImportChoose"
 import {
 	skippedDownloadUrl,
 	useConfirmImdbImport,
@@ -18,18 +33,15 @@ import {
 	useUndoImdbImport,
 } from "./api"
 import {
-	dangerButton,
-	errorBox,
 	formatCount,
-	formatDate,
-	infoBox,
-	primaryButton,
-	ratings,
-	secondaryButton,
-	skippedCount,
-	textLink,
-	titles,
-} from "./shared"
+	imdbPreviewContent,
+	imdbToWrite,
+	oneOrMany,
+	plural,
+} from "./import-flow-model"
+import { errorBox, infoBox, primaryButton, secondaryButton } from "./shared"
+
+const NOTES: [string, string] = ["IMDb", ""]
 
 export function ImdbImportCurrent({
 	id,
@@ -37,7 +49,7 @@ export function ImdbImportCurrent({
 	onUploadAnother,
 }: {
 	id: string
-	/** Whether this view replaced another after something the person did, so its heading takes focus. */
+	/** Whether this view replaced another after something the member did, so its heading takes focus. */
 	focus: boolean
 	onUploadAnother: () => void
 }) {
@@ -45,7 +57,13 @@ export function ImdbImportCurrent({
 	const confirm = useConfirmImdbImport(id)
 	const undo = useUndoImdbImport(id)
 	const summary = query.data?.import
+	const posters = useImportPosters("/api/imdb-import", id, {
+		enabled: !!summary,
+	})
 	useRefreshAfterImport(summary)
+	const watched = useRef(false)
+	if (summary?.status === "running" || summary?.status === "preview")
+		watched.current = true
 
 	if (!summary)
 		return query.isError ? (
@@ -63,311 +81,316 @@ export function ImdbImportCurrent({
 			<Spinner size="medium" />
 		)
 
-	const confirmAgain = () => confirm.mutate(summary.conflictChoice ?? "keep")
 	const confirmError = confirm.isError ? confirm.error.message : null
+	const acted = focus || confirm.isSuccess || undo.isSuccess
 
 	if (summary.status === "preview")
 		return (
-			<ImdbImportPreview
+			<ImdbChoose
 				summary={summary}
 				focus={focus}
+				posters={posters}
 				confirming={confirm.isPending}
 				error={confirmError}
-				onConfirm={(choice: ImdbConflictChoice) => confirm.mutate(choice)}
+				onConfirm={(choice) => confirm.mutate(choice)}
 				onBack={onUploadAnother}
 			/>
 		)
 
-	if (summary.status === "running")
+	if (summary.status === "running" || summary.status === "failed")
 		return (
-			<Progress
+			<ImportRun
 				summary={summary}
-				// After confirming, the preview and its Import button are gone.
-				focus={confirm.isSuccess}
+				source="IMDb"
+				posters={posters}
+				count={summary.total || null}
+				focus={acted}
+				pending={confirm.isPending}
+				actionError={confirmError}
 				checkFailed={query.isError}
-				resuming={confirm.isPending}
-				error={confirmError}
-				onResume={confirmAgain}
+				onResume={() => confirm.mutate(summary.conflictChoice ?? "keep")}
+				onRestart={onUploadAnother}
+				notes={NOTES}
 			/>
 		)
 
-	if (summary.status === "failed")
-		return (
-			<section className="flex flex-col gap-4">
-				<FocusHeading focus={focus || confirm.isSuccess}>
-					The import didn't finish
-				</FocusHeading>
-				<p className={errorBox} role="alert">
-					{summary.error ?? "Something went wrong while saving your ratings."}
-				</p>
-				{summary.applied.added + summary.applied.updated > 0 && (
-					<p>
-						{ratings(summary.applied.added + summary.applied.updated)}{" "}
-						{summary.applied.added + summary.applied.updated === 1
-							? "was"
-							: "were"}{" "}
-						saved before it stopped. Try again to save the rest.
-					</p>
-				)}
-				<div className="flex flex-wrap gap-3">
-					<button
-						type="button"
-						className={primaryButton}
-						disabled={confirm.isPending}
-						onClick={confirmAgain}
-					>
-						{confirm.isPending ? "Trying again" : "Try again"}
-					</button>
-					<button
-						type="button"
-						className={secondaryButton}
-						disabled={confirm.isPending}
-						onClick={onUploadAnother}
-					>
-						Choose another file
-					</button>
-				</div>
-				<div aria-live="assertive">
-					{confirmError && <p className={errorBox}>{confirmError}</p>}
-				</div>
-			</section>
-		)
-
-	if (summary.status === "undone")
-		return (
-			<ImportResult
-				api="/api/imdb-import"
-				id={summary.id}
-				status={summary.status}
-				from={summary.fileName}
-				focus={focus || undo.isSuccess}
-			>
-				<Actions>
-					<button
-						type="button"
-						className={primaryButton}
-						onClick={onUploadAnother}
-					>
-						Upload a newer export
-					</button>
-					<Link to="/taste" className={secondaryButton}>
-						Back to Taste
-					</Link>
-				</Actions>
-			</ImportResult>
-		)
-
-	return (
-		<Receipt
-			summary={summary}
-			focus={focus || confirm.isSuccess}
-			undoing={undo.isPending}
-			undoError={undo.isError ? undo.error.message : null}
-			onUndo={() => undo.mutate()}
-			onUploadAnother={onUploadAnother}
-		/>
-	)
-}
-
-function Actions({ children }: { children: ReactNode }) {
-	return <div className="flex flex-wrap items-center gap-3">{children}</div>
-}
-
-// ------------------------------------------------------------- progress
-
-function Progress({
-	summary,
-	focus,
-	checkFailed,
-	resuming,
-	error,
-	onResume,
-}: {
-	summary: ImdbImportSummary
-	focus: boolean
-	checkFailed: boolean
-	resuming: boolean
-	error: string | null
-	onResume: () => void
-}) {
-	const { processed, total, stalled } = summary
-	const percent =
-		total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : 0
-	return (
-		<section className="flex flex-col gap-4">
-			<FocusHeading focus={focus}>
-				{stalled ? "Your import paused" : "Importing your ratings"}
-			</FocusHeading>
-			<progress
-				className="sr-only"
-				aria-label="Import progress"
-				max={Math.max(total, 1)}
-				value={Math.min(processed, total)}
-			/>
-			<div
-				aria-hidden
-				className="h-3 overflow-hidden rounded-full bg-slate-800"
-			>
-				<div
-					className={`h-full rounded-full transition-[width] duration-500 ${stalled ? "bg-amber-500" : "bg-indigo-500"}`}
-					style={{ width: `${percent}%` }}
-				/>
-			</div>
-			<p aria-live="polite" className="tabular-nums text-gray-100">
-				{formatCount(processed)} of {ratings(total)} saved ({percent}%)
-			</p>
-			{stalled ? (
-				<div className="flex flex-col items-start gap-3">
-					<p>
-						The import stopped before it was done. The ratings saved so far are
-						kept. Resume to save the rest.
-					</p>
-					<button
-						type="button"
-						className={primaryButton}
-						disabled={resuming}
-						onClick={onResume}
-					>
-						{resuming ? "Resuming" : "Resume import"}
-					</button>
-				</div>
-			) : (
-				<p className="text-gray-400">
-					You can close this page. The import keeps going, and you'll find the
-					result here when you come back.
-				</p>
-			)}
-			<div aria-live="polite">
-				{error && <p className={errorBox}>{error}</p>}
-				{!error && checkFailed && (
-					<p className="text-sm text-amber-200">
-						We can't check the progress right now. We'll keep trying.
-					</p>
-				)}
-			</div>
-		</section>
-	)
-}
-
-// ------------------------------------------------------------- receipt
-
-function Receipt({
-	summary,
-	focus,
-	undoing,
-	undoError,
-	onUndo,
-	onUploadAnother,
-}: {
-	summary: ImdbImportSummary
-	focus: boolean
-	undoing: boolean
-	undoError: string | null
-	onUndo: () => void
-	onUploadAnother: () => void
-}) {
 	const { applied, withoutFingerprint } = summary
-	const [askUndo, setAskUndo] = useState(false)
-	const skipped = skippedCount(summary)
-
 	return (
-		<ImportResult
+		<ImportDone
 			api="/api/imdb-import"
-			id={summary.id}
-			status={summary.status}
-			from={summary.fileName}
-			focus={focus}
+			summary={summary}
+			source="IMDb"
+			posters={posters}
+			focus={acted}
+			openedHere={watched.current || confirm.isSuccess}
+			undo={{
+				pending: undo.isPending,
+				error: undo.isError ? undo.error.message : null,
+				run: () => undo.mutate(),
+			}}
+			undoQuestion="Undo this import? Every rating it added or changed goes back to what it was before. Ratings you changed yourself since then stay as they are."
+			onUploadAnother={onUploadAnother}
+			anotherLabel="Upload a newer export"
+			skippedUrl={skippedDownloadUrl(summary.id)}
+			notes={NOTES}
 		>
-			{applied.added + applied.updated > 0 && (
-				<p>Titles with a rating count as Seen.</p>
-			)}
-
-			{applied.failed > 0 && (
+			{summary.status === "done" && applied.failed > 0 && (
 				<p className={infoBox}>
-					{ratings(applied.failed)} couldn't be saved. Your other ratings are
-					in. Upload the same file again and{" "}
-					{applied.failed === 1 ? "it shows" : "they show"} up as ratings to
+					{plural(applied.failed, "rating")} couldn't be saved. Your other
+					ratings are in. Upload the same file again and{" "}
+					{oneOrMany(applied.failed, "it shows", "they show")} up as ratings to
 					add.
 				</p>
 			)}
+			{summary.status === "done" &&
+				typeof withoutFingerprint === "number" &&
+				withoutFingerprint > 0 && (
+					<p className={infoBox}>
+						{plural(withoutFingerprint, "title")} from this import{" "}
+						{oneOrMany(withoutFingerprint, "doesn't", "don't")} count toward
+						your Taste yet, because{" "}
+						{oneOrMany(withoutFingerprint, "it has", "they have")} no
+						fingerprint in GoodWatch so far.
+					</p>
+				)}
+		</ImportDone>
+	)
+}
 
-			{typeof withoutFingerprint === "number" && withoutFingerprint > 0 && (
-				<p className={infoBox}>
-					{titles(withoutFingerprint)} from this import{" "}
-					{withoutFingerprint === 1 ? "doesn't" : "don't"} count toward your
-					Taste yet, because {withoutFingerprint === 1 ? "it has" : "they have"}{" "}
-					no fingerprint in GoodWatch so far.
-				</p>
-			)}
+type Screen = { at: "choose" } | { at: "ask" } | { at: "nothing" }
 
-			<Actions>
-				<Link to="/taste" className={primaryButton}>
-					Back to Taste
-				</Link>
+/** What an IMDb ratings file brings, then its one question: scores that differ from the member's. */
+export function ImdbChoose({
+	summary,
+	focus,
+	posters,
+	confirming,
+	error,
+	onConfirm,
+	onBack,
+}: {
+	summary: ImdbImportSummary
+	focus: boolean
+	posters: FlowPoster[]
+	confirming: boolean
+	error: string | null
+	onConfirm: (choice: ImdbConflictChoice) => void
+	onBack: () => void
+}) {
+	const { counts } = summary
+	const content = imdbPreviewContent(summary)
+	const conflicts = useConflictRows(
+		"/api/imdb-import",
+		summary.id,
+		counts.conflict > 0,
+	)
+	const [screen, setScreen] = useState<Screen>({ at: "choose" })
+	const [dir, setDir] = useState<1 | -1>(1)
+	const [acted, setActed] = useState(focus)
+	const [picked, setPicked] = useState<ImdbConflictChoice | null>(null)
+	const lock = useLockIn()
+	const go = (next: Screen, d: 1 | -1) => {
+		lock.cancel()
+		setActed(true)
+		setDir(d)
+		setScreen(next)
+	}
+	const finish = (choice: ImdbConflictChoice) => {
+		if (imdbToWrite(summary, choice === "imdb") === 0)
+			return go({ at: "nothing" }, 1)
+		onConfirm(choice)
+	}
+	const sure = counts.new + counts.update
+	useReportStep(
+		content === "caught-up"
+			? { step: 4, notes: ["IMDb", "", "", "Up to date"], allDone: true }
+			: screen.at === "choose" || content === "nothing"
+				? { step: 2, notes: ["IMDb", "", "", ""], allDone: false, back: onBack }
+				: {
+						step: 3,
+						notes: [
+							"IMDb",
+							counts.conflict ? "" : plural(sure, "title"),
+							picked ? "" : "1 to answer",
+							"",
+						],
+						allDone: false,
+					},
+	)
+
+	if (content === "caught-up")
+		return (
+			<CaughtUp
+				source="IMDb"
+				thing="file"
+				count={counts.unchanged}
+				posters={posters}
+				focus={focus}
+				onBack={onBack}
+			/>
+		)
+	if (content === "nothing")
+		return (
+			<NothingToBring
+				source="IMDb"
+				thing="file"
+				rows={counts.rows}
+				skippedUrl={skippedDownloadUrl(summary.id)}
+				focus={focus}
+				onBack={onBack}
+			/>
+		)
+	if (screen.at === "nothing")
+		return (
+			<Slide key="nothing" dir={1}>
+				<section className="flex flex-col gap-4">
+					<StepHeading focus={acted}>
+						Nothing changes with this answer
+					</StepHeading>
+					<p className="text-gray-300">
+						Every other title in this file is already in GoodWatch with the same
+						score, so there's nothing to import.
+					</p>
+					<div className="flex flex-wrap gap-3">
+						<button
+							type="button"
+							className={primaryButton}
+							onClick={() => go({ at: "ask" }, -1)}
+						>
+							Change my answer
+						</button>
+						<button type="button" className={secondaryButton} onClick={onBack}>
+							Pick another file
+						</button>
+					</div>
+				</section>
+			</Slide>
+		)
+	if (screen.at === "ask") {
+		const n = counts.conflict
+		const pick = (choice: ImdbConflictChoice) => {
+			setPicked(choice)
+			lock.lock(choice, () => finish(choice))
+		}
+		return (
+			<Slide key="ask" dir={dir}>
+				<QuestionScreen
+					number={1}
+					of={1}
+					focus={acted}
+					onBack={confirming ? undefined : () => go({ at: "choose" }, -1)}
+					title={`${plural(n, "score")} in your IMDb file ${oneOrMany(n, "differs", "differ")} from yours in GoodWatch. Keep yours?`}
+					body={
+						<ConflictExamples
+							api="/api/imdb-import"
+							importId={summary.id}
+							rows={conflicts?.rows ?? null}
+							source="IMDb"
+						/>
+					}
+					locked={lock.locking !== null || confirming}
+					answers={
+						<>
+							<Answer
+								selected={picked === "keep"}
+								recommended
+								title="Yes, keep my scores"
+								onClick={() => pick("keep")}
+							/>
+							<Answer
+								selected={picked === "imdb"}
+								title="No, use IMDb's"
+								onClick={() => pick("imdb")}
+							/>
+						</>
+					}
+					after={
+						<>
+							<div aria-live="polite">
+								{confirming && (
+									<p className="text-gray-300">Starting your import</p>
+								)}
+							</div>
+							<div aria-live="assertive">
+								{error && <p className={errorBox}>{error}</p>}
+							</div>
+						</>
+					}
+				/>
+			</Slide>
+		)
+	}
+
+	const episodes = counts.episodes ?? 0
+	const scores = Math.max(
+		0,
+		counts.rows -
+			counts.unmatched -
+			counts.unsupported -
+			counts.invalid -
+			episodes,
+	)
+	const rows = [
+		{ key: "scores", name: "Scores", count: scores },
+		{ key: "episodes", name: "Episode scores", count: episodes },
+	].filter((row) => row.count > 0)
+	const start = () => {
+		setActed(true)
+		if (counts.conflict > 0) go({ at: "ask" }, 1)
+		else finish("keep")
+	}
+	return (
+		<Slide key="choose" dir={dir}>
+			<section className="flex flex-col gap-6" data-choose>
+				<button type="button" onClick={onBack} className={backClass}>
+					<BackArrow />
+					Back
+				</button>
+				<StepHeading focus={acted}>What should come in?</StepHeading>
+				<ul className="divide-y divide-white/10 overflow-hidden rounded-2xl bg-gray-900/70 ring-1 ring-white/10">
+					{rows.map((row) => (
+						<li
+							key={row.key}
+							className="flex min-h-14 items-center gap-4 px-4 py-3 sm:px-5"
+						>
+							<span className="flex-1 font-semibold text-white">
+								{row.name}
+							</span>
+							<span className="tabular-nums text-gray-200">
+								{formatCount(row.count)}
+							</span>
+						</li>
+					))}
+				</ul>
+				{episodes > 0 && (
+					<p data-episode-scores className="-mt-3 text-sm text-gray-400">
+						Episode scores stay with their episodes: they never rate the whole
+						show or mark an episode watched.
+					</p>
+				)}
+				{counts.unchanged > 0 && (
+					<p className="-mt-3 text-sm text-gray-400">
+						{plural(counts.unchanged, "title")}{" "}
+						{oneOrMany(counts.unchanged, "is", "are")} already the same in
+						GoodWatch.
+					</p>
+				)}
 				<button
 					type="button"
-					className={secondaryButton}
-					onClick={onUploadAnother}
+					className={`${primaryButton} w-full sm:w-auto sm:min-w-56 sm:self-start`}
+					disabled={confirming}
+					onClick={start}
 				>
-					Upload a newer export
+					{confirming
+						? "Starting import"
+						: counts.conflict > 0
+							? "Import"
+							: `Import ${plural(sure, "title")}`}
 				</button>
-			</Actions>
-
-			{(skipped > 0 || summary.canUndo) && (
-				<div className="flex flex-col items-start gap-3 border-t border-slate-800 pt-4">
-					{skipped > 0 && (
-						<a
-							href={skippedDownloadUrl(summary.id)}
-							download
-							className={`${textLink} inline-flex min-h-11 items-center gap-2`}
-						>
-							<ArrowDownTrayIcon className="h-4 w-4 shrink-0" aria-hidden />
-							Download skipped titles ({formatCount(skipped)}, CSV file)
-						</a>
-					)}
-					{summary.canUndo &&
-						(askUndo ? (
-							<div className="flex flex-col items-start gap-3 rounded-lg border border-red-900 bg-red-950/40 p-4">
-								<p className="text-gray-100">
-									Undo this import? Every rating it added or changed goes back
-									to what it was before. Ratings you changed yourself since then
-									stay as they are.
-								</p>
-								<Actions>
-									<button
-										type="button"
-										className={dangerButton}
-										disabled={undoing}
-										onClick={onUndo}
-									>
-										{undoing ? "Undoing" : "Yes, undo import"}
-									</button>
-									<button
-										type="button"
-										className={secondaryButton}
-										disabled={undoing}
-										// biome-ignore lint/a11y/noAutofocus: the question replaced the button that had focus
-										autoFocus
-										onClick={() => setAskUndo(false)}
-									>
-										Keep the import
-									</button>
-								</Actions>
-							</div>
-						) : (
-							<button
-								type="button"
-								className={`${textLink} min-h-11`}
-								onClick={() => setAskUndo(true)}
-							>
-								Undo import
-							</button>
-						))}
-					<div aria-live="assertive">
-						{undoError && <p className={errorBox}>{undoError}</p>}
-					</div>
+				<div aria-live="assertive">
+					{error && <p className={errorBox}>{error}</p>}
 				</div>
-			)}
-		</ImportResult>
+			</section>
+		</Slide>
 	)
 }

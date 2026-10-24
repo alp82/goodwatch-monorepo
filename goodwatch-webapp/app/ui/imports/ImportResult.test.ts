@@ -27,16 +27,8 @@ const text = (html: string) =>
 const headings = (html: string) =>
 	[...html.matchAll(/<h4[^>]*>(.*?)<\/h4>/g)].map((match) => text(match[1]))
 
-test("after an import: a success message with a one-line summary, then one list per kind of change", () => {
+test("title by title, an import's changes are one list per kind of change", () => {
 	const page = text(rendered.imported)
-	assert.match(
-		page,
-		/^Import complete 5 titles changed in your GoodWatch library/,
-	)
-	assert.match(
-		page,
-		/1 rating added, 1 rating replaced, 5 watches added, 1 added to Want to See, 2 titles taken off a list\. From my-movies\.csv\./,
-	)
 	assert.deepEqual(headings(rendered.imported), [
 		"Ratings added 1",
 		"Ratings replaced 1",
@@ -81,14 +73,8 @@ test("after an import: a success message with a one-line summary, then one list 
 	)
 })
 
-test("after Undo: what could not be put back comes first with its put-back buttons, then what Undo did", () => {
+test("title by title after Undo: what could not be put back comes first with its put-back buttons, then what Undo did", () => {
 	const page = text(rendered.undone)
-	assert.match(page, /^Import undone GoodWatch changed back 4 titles/)
-	assert.match(
-		page,
-		/1 rating removed, 1 rating put back, 3 watches removed, 1 removed from Want to See, 1 title left as you changed it\./,
-	)
-	assert.match(page, /3 changes could not be put back/)
 	assert.deepEqual(headings(rendered.undone), [
 		"Not put back 3",
 		"Ratings removed 1",
@@ -123,32 +109,124 @@ test("after Undo: what could not be put back comes first with its put-back butto
 	assert.ok(page.indexOf("Not put back") < page.indexOf("Ratings removed"))
 })
 
-test("put-back buttons write to the list and say so; a title back on its list has none; Show all loads the rest", () => {
-	const run = JSON.parse(
-		execFileSync(
-			"node_modules/.bin/vite-node",
-			[
-				"--config",
-				"app/ui/imports/source-import-test-vite.config.ts",
-				"app/ui/imports/import-result-interaction.test-support.tsx",
-			],
-			{ encoding: "utf8" },
-		)
-			.split("__IMPORT_RESULT_INTERACTION__")
-			.at(-1) ?? "",
-	) as {
-		sent: { url: string; body: unknown }[]
-		buttons: string[]
-		afterPutBack: string
-		afterMore: string
-		plexPrompts: string[]
+const run = JSON.parse(
+	execFileSync(
+		"node_modules/.bin/vite-node",
+		[
+			"--config",
+			"app/ui/imports/source-import-test-vite.config.ts",
+			"app/ui/imports/import-result-interaction.test-support.tsx",
+		],
+		{ encoding: "utf8" },
+	)
+		.split("__IMPORT_RESULT_INTERACTION__")
+		.at(-1) ?? "",
+) as {
+	sent: { url: string; body: unknown }[]
+	undone: string
+	buttons: string[]
+	afterPutBack: string
+	afterMore: string
+	plexPrompts: string[]
+	done: {
+		heading: string
+		tiles: {
+			tile: string
+			text: string
+			added: string | null
+			removed: string | null
+		}[]
+		text: string
+		answers: { text: string; pressed: string | null; suggested: boolean }[]
+		undo: boolean
+		lockedPressed: string[]
+		afterPutAll: string
+		putAllSent: { url: string; body: unknown }[]
+		noUndo: boolean
 	}
-	assert.deepEqual(run.buttons, ["Add back to Want to See"])
+}
+
+test("Done: tiles show the new total per kind with what came in and what came off, then what stayed and what couldn't come in", () => {
+	const { done } = run
+	assert.equal(done.heading, "5 titles are in GoodWatch")
+	assert.deepEqual(done.tiles, [
+		{
+			tile: "scores",
+			text: "3Scores+1 added",
+			added: "+1 added",
+			removed: null,
+		},
+		{
+			tile: "want",
+			text: "1Want to See+1 added−1 taken off",
+			added: "+1 added",
+			removed: "−1 taken off",
+		},
+		{
+			tile: "notInterested",
+			text: "1Not interested−1 taken off",
+			added: null,
+			removed: "−1 taken off",
+		},
+	])
+	assert.match(done.text, /1 score now matches Trakt's\./)
+	assert.match(done.text, /1 title you already had stayed the same\./)
+	assert.match(done.text, /2 from your file couldn't come in/)
+	assert.match(done.text, /See your scores/)
+	assert.match(done.text, /See your taste/)
+	assert.match(done.text, /Changed your mind\?/)
+	assert.ok(done.undo, "a done import the server can undo offers Undo")
+	assert.ok(done.noUndo, "without canUndo there is no Undo")
+})
+
+test("Done asks once about titles the import took off a list: nothing preselected, No suggested, and Yes puts them back", () => {
+	const { done } = run
+	assert.match(
+		done.text,
+		/2 titles came off Want to See and Not interested because of this import\. Put them back\?/,
+	)
+	assert.deepEqual(done.answers, [
+		{ text: "Yes, put them back", pressed: "false", suggested: false },
+		{ text: "No, leave them offSuggested", pressed: "false", suggested: true },
+	])
+	assert.match(
+		done.heading,
+		/^5 titles are in GoodWatch$/,
+		"no Done. while it waits",
+	)
+	assert.deepEqual(done.lockedPressed, ["true", "false"])
+	assert.deepEqual(done.putAllSent, [
+		{
+			url: "/api/update-wishlist",
+			body: { tmdb_id: 5, media_type: "movie", action: "add" },
+		},
+		{
+			url: "/api/update-not-interested",
+			body: { tmdb_id: 6, media_type: "movie", action: "add" },
+		},
+	])
+	assert.match(done.afterPutAll, /Back on Want to See and Not interested/)
+	assert.match(done.afterPutAll, /Done\. 5 titles are in GoodWatch/)
+})
+
+test("Undone: the page says so, and put-back buttons write to the list and say so; a title back on its list has none", () => {
+	assert.match(
+		run.undone,
+		/Undone ?GoodWatch is back to how it was before this Trakt import\./,
+	)
+	assert.match(run.undone, /2 list choices could not be put back/)
 	assert.deepEqual(
-		run.sent.find((call) => call.url === "/api/update-wishlist")?.body,
+		run.buttons.filter((label) => /back|Again|again/.test(label)),
+		["Add back to Want to See"],
+	)
+	assert.deepEqual(
+		run.sent.filter((call) => call.url === "/api/update-wishlist").at(-1)?.body,
 		{ tmdb_id: 693134, media_type: "movie", action: "add" },
 	)
 	assert.match(run.afterPutBack, /Back on Want to See/)
+})
+
+test("every change, title by title: Show all loads the rest of a long section", () => {
 	assert.ok(
 		run.sent.some(
 			(call) =>
@@ -158,6 +236,9 @@ test("put-back buttons write to the list and say so; a title back on its list ha
 	)
 	assert.match(run.afterMore, /Interstellar/)
 	assert.doesNotMatch(run.afterMore, /Show all/)
+})
+
+test("Undo asks first, in the words of the source", () => {
 	assert.match(run.plexPrompts[0], /Choices cleared by watches are restored/)
 	assert.match(run.plexPrompts[0], /Undo of Want to See does not restore/)
 	assert.doesNotMatch(

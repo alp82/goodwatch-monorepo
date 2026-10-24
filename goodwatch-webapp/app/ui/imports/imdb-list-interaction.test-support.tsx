@@ -118,50 +118,57 @@ await act(async () => {
 	await new Promise((r) => setTimeout(r, 50))
 })
 const before = sent.length
-const initiallySelected = Array.from(
-	host.querySelectorAll<HTMLInputElement>('input[name="imdb-list-kind"]'),
-)
-	.filter((input) => input.checked)
-	.map((input) => input.closest("label")?.textContent)
+const answers = () =>
+	Array.from(host.querySelectorAll<HTMLButtonElement>("[data-answer]"))
+const initiallySelected = answers()
+	.filter((answer) => answer.getAttribute("aria-pressed") === "true")
+	.map((answer) => answer.textContent)
+const suggested = answers()
+	.filter((answer) => answer.hasAttribute("data-suggested"))
+	.map((answer) => answer.textContent)
 const chooserText = host.textContent
-const radio = Array.from(
-	host.querySelectorAll<HTMLInputElement>('input[name="imdb-list-kind"]'),
-).find((input) =>
-	input
-		.closest("label")
-		?.textContent?.includes(process.env.IMDB_UI_CHOICE ?? "My Watchlist"),
+const wait = (ms: number) =>
+	act(async () => {
+		await new Promise((r) => setTimeout(r, ms))
+	})
+const choice = answers().find((answer) =>
+	answer.textContent?.includes(process.env.IMDB_UI_CHOICE ?? "My Watchlist"),
 )
-if (!radio) throw new Error("Missing explicit IMDb list choice")
-await act(async () => radio.click())
+if (!choice) throw new Error("Missing explicit IMDb list choice")
+await act(async () => choice.click())
 const customListName = host.querySelector<HTMLInputElement>(
 	'input[name="imdb-list-name"]',
 )?.value
-const preview = Array.from(host.querySelectorAll("button")).find(
-	(b) => b.textContent === "Preview import",
-)!
-await act(async () => {
-	preview.click()
-	await new Promise((r) => setTimeout(r, 50))
-})
+if (process.env.IMDB_UI_CHOICE === "A custom list") {
+	const go = Array.from(host.querySelectorAll("button")).find(
+		(b) => b.textContent === "Continue",
+	)
+	if (!go) throw new Error("Missing Continue")
+	await act(async () => go.click())
+}
+// An answer locks in before the preview is asked for.
+await wait(800)
+await wait(50)
 if (
 	!process.env.IMDB_UI_CHOICE ||
 	process.env.IMDB_UI_CHOICE === "My Watchlist"
 ) {
-	const rewatch = Array.from(
-		host.querySelectorAll<HTMLInputElement>('input[name="wishlist-rewatch"]'),
-	)[1]
-	if (!rewatch) throw new Error("Missing independent rewatch choice")
+	const start = Array.from(host.querySelectorAll("button")).find(
+		(b) => b.textContent === "Import",
+	)
+	if (!start) throw new Error("Missing Import")
+	await act(async () => start.click())
+	await wait(30)
+	const rewatch = answers().find((answer) =>
+		answer.textContent?.startsWith("Yes, add to Want to rewatch"),
+	)
+	if (!rewatch) throw new Error("Missing the rewatch question")
 	await act(async () => rewatch.click())
-	const confirm = Array.from(host.querySelectorAll("button")).find(
-		(b) => b.textContent === "Start import",
-	)!
-	await act(async () => {
-		confirm.click()
-		await new Promise((r) => setTimeout(r, 25))
-	})
+	await wait(800)
+	await wait(30)
 }
 process.stdout.write(
-	`__IMDB_LIST_UI__${JSON.stringify({ before, sent, initiallySelected, customListName, chooserText, text: host.textContent })}`,
+	`__IMDB_LIST_UI__${JSON.stringify({ before, sent, initiallySelected, suggested, customListName, chooserText, text: host.textContent })}`,
 )
 await act(async () => root.unmount())
 client.clear()

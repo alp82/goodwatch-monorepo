@@ -1,14 +1,24 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { createElement } from "react"
+import { type ReactNode, createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
+import { MemoryRouter } from "react-router-dom"
+import type { ImportResult } from "~/domain/import-result"
 import { importInfo } from "~/domain/imports"
 import type { FileImportSource, ImportSummary } from "~/domain/imports"
-import { ImportResultView } from "./ImportResultView"
+import { ImportDone } from "./ImportDone"
+import { SourceImportChoose } from "./SourceImportChoose"
 import { SourceItem } from "./SourceImportCounts"
 import { SourceImportCurrent } from "./SourceImportCurrent"
 import { sourceImportKeys } from "./SourceImportHooks"
-import { SourceImportPreview } from "./SourceImportPreview"
 import { SourceImportUploadPanel } from "./SourceImportUploadPanel"
+
+/** The app's query cache and router around a part of the flow. */
+const inApp = (child: ReactNode, client = new QueryClient()) =>
+	createElement(
+		QueryClientProvider,
+		{ client },
+		createElement(MemoryRouter, null, child),
+	)
 
 const summary = (watch: number, showStatuses = 0): ImportSummary => ({
 	id: "00000000-0000-4000-8000-000000000001",
@@ -52,14 +62,17 @@ const render = (
 	patch: Partial<ImportSummary> = {},
 ) =>
 	renderToStaticMarkup(
-		createElement(SourceImportPreview, {
-			summary: { ...summary(watch, showStatuses), ...patch },
-			focus: false,
-			confirming,
-			error,
-			onConfirm: () => {},
-			onBack: () => {},
-		}),
+		inApp(
+			createElement(SourceImportChoose, {
+				summary: { ...summary(watch, showStatuses), ...patch },
+				focus: false,
+				confirming,
+				error,
+				onConfirm: () => {},
+				onBack: () => {},
+				posters: [],
+			}),
+		),
 	)
 
 const upload = (source: FileImportSource) =>
@@ -85,32 +98,39 @@ const receipt = () => {
 		],
 	}
 	client.setQueryData(sourceImportKeys.detail(item.id), { import: item })
+	client.setQueryData(["import-result", "/api/imports", item.id, "done"], {
+		operation: "import",
+		titles: 0,
+		sections: [],
+	} satisfies ImportResult)
 	return renderToStaticMarkup(
-		createElement(
-			QueryClientProvider,
-			{ client },
+		inApp(
 			createElement(SourceImportCurrent, {
 				id: item.id,
 				focus: false,
 				onUploadAnother: () => {},
 			}),
+			client,
 		),
 	)
 }
 
 const listPreview = () =>
 	renderToStaticMarkup(
-		createElement(SourceImportPreview, {
-			summary: {
-				...summary(0),
-				kinds: { ...summary(0).kinds, rating: 0, list: 1 },
-			},
-			focus: false,
-			confirming: false,
-			error: null,
-			onConfirm: () => {},
-			onBack: () => {},
-		}),
+		inApp(
+			createElement(SourceImportChoose, {
+				summary: {
+					...summary(0),
+					kinds: { ...summary(0).kinds, rating: 0, list: 1 },
+				},
+				focus: false,
+				confirming: false,
+				error: null,
+				onConfirm: () => {},
+				onBack: () => {},
+				posters: [],
+			}),
+		),
 	)
 const listDetails = (kept = false) =>
 	renderToStaticMarkup(
@@ -154,23 +174,36 @@ const listDetails = (kept = false) =>
 			},
 		}),
 	)
-const listReceipt = (kept = false) =>
-	renderToStaticMarkup(
-		createElement(ImportResultView, {
-			result: {
-				operation: kept ? "undo" : "import",
-				titles: 0,
-				sections: [],
-				customLists: kept
-					? { created: 0, deleted: 0, notRestored: 1 }
-					: { created: 1, deleted: 0 },
-			},
-			from: "source.zip",
-			focus: false,
-			putBack: () => null,
-			more: () => null,
-		}),
+const listReceipt = (kept = false) => {
+	const client = new QueryClient()
+	const status = kept ? "undone" : "done"
+	client.setQueryData(["import-result", "/api/imports", "list-id", status], {
+		operation: kept ? "undo" : "import",
+		titles: 0,
+		sections: [],
+		customLists: kept
+			? { created: 0, deleted: 0, notRestored: 1 }
+			: { created: 1, deleted: 0 },
+	} satisfies ImportResult)
+	return renderToStaticMarkup(
+		inApp(
+			createElement(ImportDone, {
+				api: "/api/imports",
+				summary: { id: "list-id", status, canUndo: !kept },
+				source: "Letterboxd",
+				posters: [],
+				focus: false,
+				openedHere: true,
+				undo: { pending: false, error: null, run: () => {} },
+				undoQuestion: "Undo this import?",
+				onUploadAnother: () => {},
+				skippedUrl: "/skipped",
+				notes: ["Letterboxd", ""],
+			}),
+			client,
+		),
 	)
+}
 process.stdout.write(
 	`__SOURCE_IMPORT_RENDER__${JSON.stringify({
 		listReceipt: listReceipt(),

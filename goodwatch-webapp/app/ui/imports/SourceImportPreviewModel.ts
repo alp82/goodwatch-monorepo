@@ -1,36 +1,21 @@
-import type { ImportItem, ImportKind, ImportOptions } from "~/domain/imports"
+import type { ImportItem, ImportKind } from "~/domain/imports"
 import {
 	episodeScoreLabel,
 	importedScoreTarget,
 } from "../../domain/episode-scores.ts"
-import type { WishlistPreviewUpdate } from "./WishlistImportPreview"
+import type { WishlistPreviewUpdate } from "./WishlistMatching"
+import type { Answers } from "./import-flow-model"
 
-/** In-memory member choices shared only by replacements of the same TV Time preview. */
+/** In-memory member choices kept when a new preview replaces the one on screen: the kinds left in and the answers. */
 export type SourceImportChoices = {
-	wishlistRewatch?: boolean
-	wishlistShows?: boolean
 	kinds: ImportKind[]
-	conflictChoice: ImportOptions["conflictChoice"]
-	watchDates: ImportOptions["watchDates"] | null
+	answers: Answers
 }
 
 /** Why a new preview replaced the one on screen: the member's matches, accepted suggestions, or background matching. */
 export type PreviewUpdate = WishlistPreviewUpdate & {
 	background?: boolean
 	acceptedCount?: number
-}
-
-export function sourceImportRequirements(
-	availableWatches: number,
-	kinds: ImportKind[],
-	watchDates: ImportOptions["watchDates"] | null,
-) {
-	const importsWatches = availableWatches > 0 && kinds.includes("watch")
-	return {
-		importsWatches,
-		canImport: kinds.length > 0 && (!importsWatches || watchDates !== null),
-		watchDates: watchDates ?? "preserve",
-	}
 }
 
 export const sourceImportNeedsPolling = (

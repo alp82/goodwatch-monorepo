@@ -12,14 +12,14 @@ import { parseImportFile } from "../../server/imports/files.server"
 import { threeUnreachableServersWithFeed } from "../../server/imports/plex-unreachable-fixture.test-support"
 import { officialAncillaryFiles } from "../../server/imports/tvtime-official-archive.test-support"
 import { zipFixture } from "../../server/imports/zip-fixture.test-support"
-import { SourceImportPreview } from "./SourceImportPreview"
+import { SourceImportChoose } from "./SourceImportChoose"
 
 const render = (source: ImportSource, warnings: ImportWarning[]) =>
 	renderToStaticMarkup(
 		createElement(
 			QueryClientProvider,
 			{ client: new QueryClient() },
-			createElement(SourceImportPreview, {
+			createElement(SourceImportChoose, {
 				summary: {
 					id: "notes",
 					source,
@@ -58,6 +58,7 @@ const render = (source: ImportSource, warnings: ImportWarning[]) =>
 				error: null,
 				onBack() {},
 				onConfirm() {},
+				posters: [],
 			}),
 		),
 	)

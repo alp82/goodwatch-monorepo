@@ -116,11 +116,11 @@ const summary = (
 	counts: {
 		new: 4,
 		unchanged: 0,
-		conflict: 0,
+		conflict: 1,
 		unmatched: 3,
 		unsupported: 0,
 		invalid: 0,
-		rows: 7,
+		rows: 8,
 	},
 	kinds: {
 		rating: 0,
@@ -485,6 +485,52 @@ async function flow(
 			await act(async () => target.click())
 			await settle()
 		},
+		/** Picks the answer that starts with `start` and waits for it to lock in. */
+		answer: async (start: string) => {
+			const target = all<HTMLButtonElement>("[data-answer]").find((item) =>
+				(item.textContent ?? "").startsWith(start),
+			)
+			if (!target) throw new Error(`No answer "${start}"`)
+			await act(async () => target.click())
+			await act(async () => new Promise((resolve) => setTimeout(resolve, 800)))
+			await settle()
+		},
+		/** The answers on screen, and whether each is pressed. */
+		answers: () =>
+			all<HTMLButtonElement>("[data-answer]").map((item) => ({
+				text: (item.textContent ?? "").replace("Suggested", "").trim(),
+				pressed: item.getAttribute("aria-pressed"),
+				disabled: item.disabled,
+			})),
+		heading: () => container.querySelector("h2")?.textContent ?? "",
+		/** From Choose: Import, the score question, then Yes to checking the movies. */
+		matchMovies: async (conflict = "Yes, keep mine") => {
+			const start = visible().find(({ text }) => text.startsWith("Import"))
+			if (!start) throw new Error("No Import")
+			await act(async () => start.item.click())
+			await settle()
+			if (
+				all<HTMLButtonElement>("[data-answer]").some((item) =>
+					(item.textContent ?? "").startsWith("Yes, keep mine"),
+				)
+			) {
+				const target = all<HTMLButtonElement>("[data-answer]").find((item) =>
+					(item.textContent ?? "").startsWith(conflict),
+				)
+				if (!target) throw new Error(`No answer "${conflict}"`)
+				await act(async () => target.click())
+				await act(
+					async () => new Promise((resolve) => setTimeout(resolve, 800)),
+				)
+				await settle()
+			}
+			const check = all<HTMLButtonElement>("[data-answer]").find((item) =>
+				(item.textContent ?? "").startsWith("Yes, check"),
+			)
+			if (!check) throw new Error("No matching question")
+			await act(async () => check.click())
+			await settle(6)
+		},
 		unmount: () => act(async () => root.unmount()),
 	}
 }
@@ -495,9 +541,20 @@ const results: Record<string, unknown> = {}
 	const view = await flow({ start: summary(PARENT) })
 	results.closed = { text: view.text(), sent: view.sent() }
 	await view.toggle("Want to See")
-	await view.pick("Use the export instead")
-	await view.pick("Preserve dates")
-	await view.click("Match movies")
+	await view.click("Import")
+	results.conflictAsked = {
+		heading: view.heading(),
+		answers: view.answers(),
+		text: view.text(),
+	}
+	await view.answer("No, use TV Time's")
+	results.matchAsked = {
+		heading: view.heading(),
+		answers: view.answers(),
+		sent: view.sent(),
+	}
+	await view.click("Yes, check it")
+	await settle(6)
 	results.opened = { text: view.text(), sent: view.sent() }
 	await view.click("Find a match")
 	results.editor = {
@@ -509,7 +566,7 @@ const results: Record<string, unknown> = {}
 	await view.click("Use this match")
 	results.chosen = {
 		text: view.text(),
-		startDisabled: view.disabled("Start import"),
+		startDisabled: view.disabled("No, leave it out"),
 	}
 	await view.click("Update preview")
 	results.child = {
@@ -518,8 +575,7 @@ const results: Record<string, unknown> = {}
 		sent: view.sent(),
 		buttons: view.buttons(),
 	}
-	await view.pick("Preserve dates")
-	await view.click("Start import")
+	await view.click("Import")
 	results.confirmed = { sent: view.sent() }
 	await view.unmount()
 }
@@ -561,16 +617,19 @@ const results: Record<string, unknown> = {}
 	)
 	results.progress = { text: view.text(), buttons: view.buttons() }
 	await view.toggle("Want to See")
-	await view.pick("Use the export instead")
-	await view.pick("Preserve dates")
+	await view.click("Import what's matched so far")
+	await view.answer("No, use TV Time's")
 	await poll()
 	await poll()
 	results.replaced = {
 		text: view.text(),
 		sent: view.sent(),
 		checked: view.checked(),
+		heading: view.heading(),
 	}
-	await view.click("Start import")
+	await view.click("Import")
+	results.replacedAsked = { heading: view.heading() }
+	await view.answer("No, leave it out")
 	results.replacedConfirmed = { sent: view.sent() }
 	await view.unmount()
 }
@@ -582,9 +641,10 @@ const results: Record<string, unknown> = {}
 		{ start: running },
 		{ summaries: { [PARENT]: [running] } },
 	)
-	await view.pick("Preserve dates")
 	results.early = { text: view.text(), buttons: view.buttons() }
 	await view.click("Import what's matched so far")
+	await view.answer("Yes, keep mine")
+	await view.answer("No, leave it out")
 	results.earlyConfirmed = { sent: view.sent() }
 	await view.unmount()
 }
@@ -605,7 +665,7 @@ const results: Record<string, unknown> = {}
 			},
 		},
 	)
-	await view.click("Discard and choose another file")
+	await view.click("Back")
 	await poll()
 	results.discarded = { text: view.text(), sent: view.sent() }
 	await view.unmount()
@@ -627,7 +687,7 @@ const results: Record<string, unknown> = {}
 			},
 		},
 	)
-	await view.click("Match movies")
+	await view.matchMovies()
 	await view.click("Find a match")
 	await view.pick("Toy Story")
 	await view.click("Use this match")
@@ -657,9 +717,7 @@ const results: Record<string, unknown> = {}
 		},
 	)
 	await view.toggle("Want to See")
-	await view.pick("Use the export instead")
-	await view.pick("Import watches with unknown dates")
-	await view.click("Match movies")
+	await view.matchMovies("No, use TV Time's")
 	results.suggested = {
 		text: view.text(),
 		buttons: view.buttons(),
@@ -671,9 +729,11 @@ const results: Record<string, unknown> = {}
 		sent: view.sent(),
 		checked: view.checked(),
 	}
-	await view.click("Discard and choose another file")
+	await view.click("Back")
 	await view.uploadFile()
 	results.freshFile = { text: view.text(), checked: view.checked() }
+	await view.click("Import")
+	results.freshAsked = { heading: view.heading(), answers: view.answers() }
 	await view.unmount()
 }
 
@@ -685,7 +745,7 @@ const results: Record<string, unknown> = {}
 		{ start: done },
 		{ summaries: { [PARENT]: [done] }, suggestions: suggested },
 	)
-	await view.click("Match movies")
+	await view.matchMovies()
 	await view.click("Reject")
 	results.rejected = { text: view.text() }
 	await view.click("Update preview")
@@ -701,11 +761,11 @@ const results: Record<string, unknown> = {}
 		{ start: done },
 		{ summaries: { [PARENT]: [done] }, suggestions: suggested },
 	)
-	await view.click("Match movies")
+	await view.matchMovies()
 	await view.click("Accept the suggestion")
 	results.individualAccepted = {
 		text: view.text(),
-		startDisabled: view.disabled("Start import"),
+		startDisabled: view.disabled("No, leave it out"),
 		bulkDisabled: view.disabled("Accept all 2 suggestions"),
 	}
 	await view.click("Update preview")
@@ -731,7 +791,7 @@ const results: Record<string, unknown> = {}
 			},
 		},
 	)
-	await view.click("Match movies")
+	await view.matchMovies()
 	await view.click("Accept all 2 suggestions")
 	results.stale = { text: view.text(), buttons: view.buttons() }
 	await view.click("Refresh suggestions")
@@ -751,7 +811,7 @@ const results: Record<string, unknown> = {}
 			},
 		},
 	)
-	await view.click("Discard and choose another file")
+	await view.click("Back")
 	results.discardFailed = { text: view.text(), buttons: view.buttons() }
 	await view.unmount()
 }
@@ -775,7 +835,7 @@ for (const mode of ["manual", "reject"] as const) {
 			},
 		},
 	)
-	await view.click("Match movies")
+	await view.matchMovies()
 	if (mode === "manual") {
 		await view.click("Find a match")
 		await view.pick("Toy Story")

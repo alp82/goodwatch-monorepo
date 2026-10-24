@@ -1,8 +1,9 @@
-// Renders the IMDb ratings preview of a file with episode rows (#759), for ImdbList.test.ts.
+// Renders the IMDb ratings Choose step of a file with episode rows (#759), for ImdbList.test.ts.
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import type { ImdbImportSummary } from "~/domain/imdb-import"
-import { ImdbImportPreview } from "./ImdbImportPreview"
+import { ImdbChoose } from "./ImdbImportCurrent"
 
 const summary = (episodes?: number): ImdbImportSummary => ({
 	id: "5b0c8f0e-7d0a-4c53-9f6b-0d1f1f6a2a10",
@@ -32,14 +33,19 @@ const summary = (episodes?: number): ImdbImportSummary => ({
 })
 const render = (episodes?: number) =>
 	renderToStaticMarkup(
-		createElement(ImdbImportPreview, {
-			summary: summary(episodes),
-			focus: false,
-			confirming: false,
-			error: null,
-			onConfirm: () => {},
-			onBack: () => {},
-		}),
+		createElement(
+			QueryClientProvider,
+			{ client: new QueryClient() },
+			createElement(ImdbChoose, {
+				summary: summary(episodes),
+				focus: false,
+				posters: [],
+				confirming: false,
+				error: null,
+				onConfirm: () => {},
+				onBack: () => {},
+			}),
+		),
 	)
 console.log(
 	`__IMDB_EPISODES__${JSON.stringify({ two: render(2), one: render(1), none: render() })}`,

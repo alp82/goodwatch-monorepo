@@ -1,3 +1,4 @@
+// The rows of an import by outcome, a page at a time: for lists, their name, notes and the list the import created.
 import { ChevronDownIcon } from "@heroicons/react/20/solid"
 import { useId, useState } from "react"
 import { IMPORT_SHOW_STATUS_LABELS } from "~/domain/imports"
@@ -34,18 +35,12 @@ export function SourceOutcomeRow({
 	count,
 	labelOverride,
 	wishlist = false,
-	onChangeMatch,
-	matchLocked = false,
 }: {
 	importId: string
 	outcome: ImportOutcome
 	count: number
 	labelOverride?: string
 	wishlist?: boolean
-	/** Opens the matching panel at a row the member matched, in a wishlist preview. */
-	onChangeMatch?: (index: number) => void
-	/** Turns Change off while the preview is being imported or updated. */
-	matchLocked?: boolean
 }) {
 	const [open, setOpen] = useState(false)
 	const panelId = useId()
@@ -78,8 +73,6 @@ export function SourceOutcomeRow({
 						outcome={outcome}
 						label={label}
 						wishlist={wishlist}
-						onChangeMatch={onChangeMatch}
-						matchLocked={matchLocked}
 					/>
 				)}
 			</div>
@@ -92,15 +85,11 @@ function SourceItems({
 	outcome,
 	label,
 	wishlist,
-	onChangeMatch,
-	matchLocked,
 }: {
 	importId: string
 	outcome: ImportOutcome
 	label: string
 	wishlist: boolean
-	onChangeMatch?: (index: number) => void
-	matchLocked: boolean
 }) {
 	const query = useSourceImportItems(importId, outcome, true)
 	const items = query.data?.pages.flatMap((page) => page.items) ?? []
@@ -119,8 +108,6 @@ function SourceItems({
 							key={`${item.index}-${item.key}`}
 							item={item}
 							wishlist={wishlist}
-							onChangeMatch={onChangeMatch}
-							matchLocked={matchLocked}
 						/>
 					))}
 				</ul>
@@ -169,18 +156,15 @@ function SourceItems({
 /**
  * One row of an outcome list. A wishlist row says Type unknown when its source didn't say (the row is stored as a
  * movie), and an unmatched one links to a search for its title. A row the member matched shows the GoodWatch title
- * first and the file's own title, year, and ID after it.
+ * first and the file's own title, year, and ID after it. A list shows its name, its notes, and a link to the list
+ * the import created.
  */
 export function SourceItem({
 	item,
 	wishlist = false,
-	onChangeMatch,
-	matchLocked = false,
 }: {
 	item: ImportItem
 	wishlist?: boolean
-	onChangeMatch?: (index: number) => void
-	matchLocked?: boolean
 }) {
 	if (item.customList) {
 		const message =
@@ -240,10 +224,7 @@ export function SourceItem({
 		)
 	}
 	const matched = wishlist ? item.wishlistResolution : undefined
-	if (matched)
-		return (
-			<MatchedItem item={item} onChange={onChangeMatch} locked={matchLocked} />
-		)
+	if (matched) return <MatchedItem item={item} />
 	const location = sourceItemLocation(item, wishlist)
 	const search = wishlist && item.outcome === "unmatched" && item.title.trim()
 	const value = item.showStatus
@@ -344,15 +325,7 @@ const APPLY_LABELS = {
 	undone: "Undone",
 } as const
 
-function MatchedItem({
-	item,
-	onChange,
-	locked,
-}: {
-	item: ImportItem
-	onChange?: (index: number) => void
-	locked: boolean
-}) {
+function MatchedItem({ item }: { item: ImportItem }) {
 	const matched = item.wishlistResolution
 	if (!matched) return null
 	const original = item.wishlistOriginal
@@ -385,20 +358,6 @@ function MatchedItem({
 					<span className="font-semibold text-gray-200"> · Matched by you</span>
 				</span>
 				<span className="flex gap-3 tabular-nums text-gray-300">
-					{onChange && (
-						<button
-							type="button"
-							className={`${textLink} min-h-11 disabled:cursor-not-allowed disabled:opacity-60`}
-							disabled={locked}
-							onClick={() => onChange(item.index)}
-						>
-							Change
-							<span className="sr-only">
-								{" "}
-								the match for {fileTitle || "this entry"}
-							</span>
-						</button>
-					)}
 					{item.applyState && (
 						<span className="font-semibold text-gray-100">
 							{APPLY_LABELS[item.applyState]}

@@ -16,12 +16,19 @@ import {
 	useWrongSourceCatch,
 } from "./ImportFileRouting"
 import {
+	ProblemCard,
+	dropZoneClass,
+	fileProblemTitle,
+	headingClass,
+} from "./ImportFlowParts"
+import {
 	ImportRequestError,
 	usePreviewSourceImport,
 	useSourceImports,
 } from "./SourceImportHooks"
 import { tvtimeBusyHint } from "./TvTimeMatchCopy"
-import { errorBox, infoBox, primaryButton, stepHeading } from "./shared"
+import { sourceName as flowSourceName } from "./import-flow-model"
+import { infoBox, primaryButton } from "./shared"
 
 const sourceName = (source: FileImportSource) => IMPORT_SOURCE_NAMES[source]
 
@@ -81,12 +88,39 @@ function SingleFileUploadPanel({
 		send(event.dataTransfer.files[0])
 	}
 	return (
-		<section aria-labelledby={`${id}-heading`} className="flex flex-col gap-4">
-			<h3 id={`${id}-heading`} className={stepHeading}>
-				{descriptor.heading ?? `Upload your ${sourceName(source)} export`}
-			</h3>
-			<UploadInstructions source={source} />
-			{handoff && <RecognizedLine handoff={handoff} />}
+		<section aria-labelledby={`${id}-heading`} className="flex flex-col gap-6">
+			{preview.isError && (
+				<ProblemCard
+					title={
+						busyHint
+							? "Matching can't start right now"
+							: fileProblemTitle(
+									preview.error.message,
+									preview.error instanceof ImportRequestError
+										? preview.error.status
+										: undefined,
+								)
+					}
+					fileName={preview.variables?.file.name}
+					focus
+				>
+					<p>
+						{preview.error.message}
+						{busyHint && ` ${busyHint}`}
+					</p>
+					{existing && onOpenMatching && (
+						<div>
+							<button
+								type="button"
+								className={primaryButton}
+								onClick={() => onOpenMatching(existing.id)}
+							>
+								Open the import that's matching
+							</button>
+						</div>
+					)}
+				</ProblemCard>
+			)}
 			<div
 				onDragOver={(event) => {
 					event.preventDefault()
@@ -94,16 +128,32 @@ function SingleFileUploadPanel({
 				}}
 				onDragLeave={() => setDragging(false)}
 				onDrop={drop}
-				className={`flex flex-col items-center gap-3 rounded-lg border-2 border-dashed px-4 py-8 text-center ${dragging ? "border-indigo-400 bg-indigo-950/60" : "border-slate-600 bg-slate-900/60"}`}
+				className={dropZoneClass(dragging)}
 			>
 				{preview.isPending ? (
 					<Spinner size="medium" />
 				) : (
-					<ArrowUpTrayIcon className="size-8 text-gray-500" aria-hidden />
+					<ArrowUpTrayIcon
+						className={`size-12 transition-transform duration-300 ${dragging ? "-translate-y-1 text-amber-300" : "text-gray-400"}`}
+						aria-hidden
+					/>
 				)}
-				<p id={`${id}-hint`} aria-live="polite">
+				<h2 id={`${id}-heading`} className={headingClass}>
 					{preview.isPending
-						? "Uploading and checking your export. This can take a moment."
+						? "Finding your titles"
+						: preview.isError
+							? "Try another file"
+							: (descriptor.heading ??
+								`Upload your ${sourceName(source)} export`)}
+				</h2>
+				{handoff && <RecognizedLine handoff={handoff} />}
+				<p
+					id={`${id}-hint`}
+					aria-live="polite"
+					className="max-w-md text-sm text-gray-400"
+				>
+					{preview.isPending
+						? "Looking up your titles in GoodWatch. Nothing changes yet."
 						: descriptor.hint}
 				</p>
 				<button
@@ -121,6 +171,7 @@ function SingleFileUploadPanel({
 					aria-label={`Choose ${sourceName(source)} export ${fileLabel} file`}
 					accept={descriptor.accept}
 					className="sr-only"
+					tabIndex={-1}
 					onChange={(event) => {
 						send(event.target.files?.[0])
 						event.target.value = ""
@@ -128,29 +179,20 @@ function SingleFileUploadPanel({
 				/>
 			</div>
 			{wrongSource.note}
-			<p className="text-sm text-gray-400">
-				You will review everything before GoodWatch changes your library.
-			</p>
-			<div aria-live="assertive">
-				{preview.isError && (
-					<div className="space-y-3">
-						<p className={errorBox}>
-							{preview.error.message}
-							{busyHint && ` ${busyHint}`}
-						</p>
-						{existing && onOpenMatching && (
-							<button
-								type="button"
-								className={primaryButton}
-								onClick={() => onOpenMatching(existing.id)}
-							>
-								Open the import that's matching
-							</button>
-						)}
-					</div>
-				)}
-			</div>
+			<HowToGet source={source} />
 		</section>
+	)
+}
+
+/** How to get the source's file, under its drop zone. */
+function HowToGet({ source }: { source: FileImportSource }) {
+	return (
+		<div className="flex flex-col gap-3 rounded-2xl bg-gray-900/70 p-5 ring-1 ring-white/10">
+			<h3 className="font-semibold text-white">
+				How to get your {flowSourceName(source)} file
+			</h3>
+			<UploadInstructions source={source} />
+		</div>
 	)
 }
 
@@ -239,9 +281,9 @@ function MovieLensUploadPanel({ onPreview, handoff }: PanelProps) {
 	}
 	const next = files.ratings
 		? files.wishlist
-			? "Both files are ready. Preview the import."
-			: "Add your wishlist file if you have one, then preview."
-		: "Choose your ratings file too, then preview."
+			? "Both files are ready. Continue."
+			: "Add your wishlist file if you have one, then continue."
+		: "Choose your ratings file too, then continue."
 	const box = (slot: Slot, label: string) => (
 		<>
 			<label className="flex flex-col gap-2">
@@ -265,9 +307,23 @@ function MovieLensUploadPanel({ onPreview, handoff }: PanelProps) {
 	)
 	return (
 		<section aria-labelledby={`${id}-heading`} className="flex flex-col gap-4">
-			<h3 id={`${id}-heading`} className={stepHeading}>
+			{preview.isError && (
+				<ProblemCard
+					title={fileProblemTitle(
+						preview.error.message,
+						preview.error instanceof ImportRequestError
+							? preview.error.status
+							: undefined,
+					)}
+					fileName={preview.variables?.file.name}
+					focus
+				>
+					<p>{preview.error.message}</p>
+				</ProblemCard>
+			)}
+			<h2 id={`${id}-heading`} className={headingClass}>
 				Upload your MovieLens export
-			</h3>
+			</h2>
 			<UploadInstructions source="movielens" />
 			{handoff && <RecognizedLine handoff={handoff} next={next} />}
 			{box("ratings", "MovieLens ratings CSV")}
@@ -316,11 +372,8 @@ function MovieLensUploadPanel({ onPreview, handoff }: PanelProps) {
 						)
 				}}
 			>
-				{preview.isPending ? "Checking your export…" : "Preview import"}
+				{preview.isPending ? "Finding your titles…" : "Continue"}
 			</button>
-			<div aria-live="assertive">
-				{preview.isError && <p className={errorBox}>{preview.error.message}</p>}
-			</div>
 		</section>
 	)
 }

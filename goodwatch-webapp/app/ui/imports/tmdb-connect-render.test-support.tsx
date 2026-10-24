@@ -1,9 +1,10 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { importInfo } from "~/domain/imports"
 import type { ImportSource, ImportSummary } from "~/domain/imports"
 import { setServerAssetBase } from "~/utils/asset-url"
-import { SourceImportPreview } from "./SourceImportPreview"
+import { SourceImportChoose } from "./SourceImportChoose"
 setServerAssetBase(() => "https://static.goodwatch.test")
 import { TmdbConnectControls } from "./TmdbConnectPanel"
 const render = (
@@ -50,14 +51,19 @@ const preview = (source: ImportSource) => {
 		error: null,
 	}
 	return renderToStaticMarkup(
-		createElement(SourceImportPreview, {
-			summary,
-			focus: false,
-			confirming: false,
-			error: null,
-			onConfirm: () => {},
-			onBack: () => {},
-		}),
+		createElement(
+			QueryClientProvider,
+			{ client: new QueryClient() },
+			createElement(SourceImportChoose, {
+				summary,
+				focus: false,
+				confirming: false,
+				error: null,
+				onConfirm: () => {},
+				onBack: () => {},
+				posters: [],
+			}),
+		),
 	)
 }
 process.stdout.write(

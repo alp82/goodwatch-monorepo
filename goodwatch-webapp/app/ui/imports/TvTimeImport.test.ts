@@ -31,17 +31,45 @@ const PARENT = "00000000-0000-4000-8000-0000000000a1"
 const CHILD = "00000000-0000-4000-8000-0000000000b2"
 const urls = (run: Run) => run.sent.map((item) => `${item.method} ${item.url}`)
 
-test("a TV Time preview keeps its data-type and watch-date choices and adds a movie match section", () => {
+type Answer = { text: string; pressed: string | null; disabled: boolean }
+type Asked = {
+	heading: string
+	answers: Answer[]
+	text?: string
+	sent?: Sent[]
+}
+
+test("a TV Time preview chooses kinds, then asks about differing entries and the movies to match, one at a time", () => {
 	const { text, sent } = runs.closed
-	assert.match(text, /What should GoodWatch import\?/)
-	assert.match(text, /Movies to match/)
+	assert.match(text, /What should come in\?/)
+	assert.match(text, /Watches4Want to See2Show statuses1/)
+	assert.doesNotMatch(text, /watch dates/i)
+	const conflict = runs.conflictAsked as unknown as Asked
+	assert.equal(
+		conflict.heading,
+		"1 entry in your TV Time file differs from what you have in GoodWatch. Keep yours?",
+	)
 	assert.match(
-		text,
+		conflict.answers[1].text,
+		/No, use TV Time'sFor later titles you've already seen also come in as Want to rewatch\./,
+	)
+	assert.match(conflict.text ?? "", /Question 1 of 2/)
+	const match = runs.matchAsked as unknown as Asked
+	assert.equal(
+		match.heading,
+		"GoodWatch isn't sure about 1 movie in your TV Time file. Check it now?",
+	)
+	assert.deepEqual(
+		match.answers.map((answer) => answer.pressed),
+		["false", "false"],
+	)
+	// Nothing loads until the member says yes, and the wishlist-only preview isn't used.
+	assert.ok(!sent.some((item) => item.url.includes("/matches")))
+	assert.ok(!(match.sent ?? []).some((item) => item.url.includes("/matches")))
+	assert.match(
+		runs.opened.text,
 		/TV Time's export names this movie but has no catalog ID for it, so GoodWatch didn't add it on its own\./,
 	)
-	// Nothing loads until the member opens the section, and the wishlist-only preview isn't used.
-	assert.ok(!sent.some((item) => item.url.includes("/matches")))
-	assert.doesNotMatch(text, /Add to Want to See/)
 })
 
 test("the match panel lists TV Time movies with what TV Time has and what a match adds, with manual matching when no suggestion is available", () => {
@@ -76,7 +104,7 @@ test("the search for a TV Time movie looks for movies only and offers no type ch
 	assert.match(text, /Which GoodWatch movie is "Die Spielzeuggeschichte"\?/)
 })
 
-test("a match not yet in the preview holds back Start import", () => {
+test("a match not yet in the preview holds back leaving the rest out", () => {
 	assert.equal(runs.chosen.startDisabled, true)
 	assert.match(runs.chosen.text, /Your matches aren't in this preview yet\./)
 })
@@ -94,15 +122,7 @@ test("the child preview replaces the parent, so only the child can be imported",
 		runs.child.text,
 		/Updated with your matches\. This preview replaces the earlier one, and the counts include your matches\./,
 	)
-	assert.match(runs.child.text, /Movies to match 1 of 1 matched/)
-	assert.match(
-		runs.child.text,
-		/You matched the movie\. Change the match if it's wrong\./,
-	)
-	assert.equal(
-		runs.child.buttons.filter((name) => name === "Start import").length,
-		1,
-	)
+	assert.equal(runs.child.buttons.filter((name) => name === "Import").length, 1)
 	const confirms = runs.confirmed.sent.filter((item) =>
 		item.url.endsWith("/confirm"),
 	)
@@ -117,8 +137,7 @@ const BULK = "00000000-0000-4000-8000-0000000000d4"
 
 test("while matching runs, the preview shows a calm progress line and that the member can leave", () => {
 	const { text, buttons } = runs.progress
-	assert.match(text, /Matching shows and episodes…/)
-	assert.match(text, /Checked 2,400 of 8,088 rows\. 1,900 matched so far\./)
+	assert.match(text, /Matching shows and episodes… ?2,400 of 8,088 matched/)
 	assert.match(
 		text,
 		/You can leave this page\. Matching keeps going, and your preview is here when you open TV Time again\./,
@@ -134,7 +153,7 @@ test("when the run publishes a replacement, the page moves to it with the replac
 		runs.replaced.text,
 		/GoodWatch finished matching\. This preview replaces the earlier one\. Check your choices before you import\./,
 	)
-	assert.doesNotMatch(runs.replaced.text, /Checked 2,400/)
+	assert.doesNotMatch(runs.replaced.text, /2,400 of 8,088/)
 })
 
 test("an early Confirm says it imports only what's matched so far and stops matching", () => {
@@ -223,7 +242,7 @@ test("a busy refusal shows the server's words and when to try again", () => {
 })
 
 test("opening TV Time again brings back an unconfirmed preview", () => {
-	assert.match(runs.resumed.text, /Checked 2,400 of 8,088 rows/)
+	assert.match(runs.resumed.text, /2,400 of 8,088 matched/)
 })
 
 test("a limited run says so without a rerun button; choosing the file again starts a new run", () => {
@@ -281,10 +300,8 @@ test("an expired or changed bulk snapshot can be refreshed without losing the pr
 
 test("a failed discard keeps the preview open and offers the discard again", () => {
 	assert.match(runs.discardFailed.text, /Discard could not finish. Try again./)
-	assert.match(runs.discardFailed.text, /Checked 2,400 of 8,088 rows/)
-	assert.ok(
-		runs.discardFailed.buttons.includes("Discard and choose another file"),
-	)
+	assert.match(runs.discardFailed.text, /2,400 of 8,088 matched/)
+	assert.ok(runs.discardFailed.buttons.includes("Back"))
 })
 
 test("Update preview rebases pending movie choices onto the published preview instead of submitting the old ID", () => {
@@ -307,23 +324,29 @@ test("Update preview rebases pending movie choices onto the published preview in
 	)
 })
 
-test("background and manual replacements keep excluded kinds, conflict choice and the explicit watch-date choice", () => {
-	for (const run of [runs.replaced, runs.child]) {
+test("background and manual replacements keep excluded kinds and the conflict answer, and ask about matching again", () => {
+	for (const run of [runs.replaced, runs.child])
 		assert.ok(
 			!run.checked.some((label) => label.startsWith("Want to See")),
 			"Excluded Want to See must stay excluded",
 		)
-		assert.ok(
-			run.checked.some((label) => label.startsWith("Use the export instead")),
-			"Keep the conflict choice",
-		)
-		assert.ok(
-			run.checked.some((label) =>
-				label.startsWith("Preserve dates from the export"),
-			),
-			"Keep the explicit date choice",
-		)
-	}
+	assert.equal(
+		(runs.replacedAsked as unknown as Asked).heading,
+		"GoodWatch isn't sure about 1 movie in your TV Time file. Check it now?",
+		"the conflict answer is kept, so Import goes to the next open question",
+	)
+	assert.deepEqual(
+		runs.confirmed.sent
+			.filter((item) => item.url.endsWith("/confirm"))
+			.map((item) => item.body),
+		[
+			{
+				kinds: ["watch", "show_status"],
+				conflictChoice: "source",
+				watchDates: "preserve",
+			},
+		],
+	)
 	const confirms = runs.replacedConfirmed.sent.filter((item) =>
 		item.url.endsWith("/confirm"),
 	)
@@ -363,34 +386,16 @@ test("a publication race retries the same manual or rejection choices against th
 	}
 })
 
-test("bulk replacement preserves unknown dates and excluded kinds, while a new file starts with fresh choices", () => {
+test("bulk replacement keeps excluded kinds, while a new file starts with fresh choices and no answers", () => {
 	assert.ok(!runs.bulk.checked.some((label) => label.startsWith("Want to See")))
-	assert.ok(
-		runs.bulk.checked.some((label) =>
-			label.startsWith("Use the export instead"),
-		),
-	)
-	assert.ok(
-		runs.bulk.checked.some((label) =>
-			label.startsWith("Import watches with unknown dates"),
-		),
-	)
-	assert.match(runs.freshFile.text, /Check before you import/)
+	assert.match(runs.freshFile.text, /What should come in\?/)
 	assert.ok(
 		runs.freshFile.checked.some((label) => label.startsWith("Want to See")),
 	)
-	assert.ok(
-		runs.freshFile.checked.some((label) =>
-			label.startsWith("Keep my GoodWatch changes"),
-		),
-	)
-	// Fewest steps (owner rule): a fresh preview keeps the source's dates unless the member changes it.
-	assert.ok(
-		runs.freshFile.checked.some((label) => label.startsWith("Preserve dates")),
-	)
-	assert.ok(
-		!runs.freshFile.checked.some((label) =>
-			label.startsWith("Import watches with unknown dates"),
-		),
+	const fresh = runs.freshAsked as unknown as Asked
+	assert.match(fresh.heading, /Keep yours\?$/)
+	assert.deepEqual(
+		fresh.answers.map((answer) => answer.pressed),
+		["false", "false"],
 	)
 })

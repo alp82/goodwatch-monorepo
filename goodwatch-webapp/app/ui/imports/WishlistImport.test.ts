@@ -23,75 +23,98 @@ const text = (html: string) =>
 		.replace(/&amp;/g, "&")
 		.replace(/\s+/g, " ")
 
-test("a wishlist preview names the action and hides the general import's choices", () => {
-	const page = text(rendered.mixed)
-	assert.match(page, /Check before you import/)
-	assert.doesNotMatch(page, /What should GoodWatch import\?/)
-	assert.doesNotMatch(page, /When GoodWatch already has different data/)
-	assert.doesNotMatch(page, /watch dates/)
-	assert.match(rendered.mixed, /<button[^>]*>Add to Want to See<\/button>/)
-	assert.doesNotMatch(page, /Start import/)
-})
+type Screen = {
+	counter: string | null
+	heading: string
+	highlighted: string[]
+	answers: { text: string; pressed: string | null; suggested: boolean }[]
+}
+type Answered = {
+	choose: string
+	screens: Screen[]
+	sent: Record<string, unknown> | null
+	after: string
+}
+const watcharr = JSON.parse(
+	execFileSync(
+		"node_modules/.bin/vite-node",
+		[
+			"--config",
+			"app/ui/imports/source-import-test-vite.config.ts",
+			"app/ui/imports/watcharr-import-interaction.test-support.tsx",
+		],
+		{ encoding: "utf8" },
+	)
+		.split("__WATCHARR_CHOICES__")
+		.at(-1) ?? "",
+) as {
+	runs: {
+		conflictChoice: string
+		rewatch: boolean
+		sent: {
+			wishlistRewatch?: boolean
+			conflictChoice: string
+			watchDates: string
+		}
+	}[]
+	questions: Record<string, Answered>
+}
 
-test("a wishlist preview says it only adds, and that Want to See takes titles off Not interested for good", () => {
+test("a wishlist's Choose step lists Want to See with one Import button, without the general import's choices", () => {
 	const page = text(rendered.mixed)
-	assert.match(
-		page,
-		/Importing only adds titles to Want to See\. It never removes anything from your Wishlist\./,
-	)
-	assert.match(
-		page,
-		/Adding a title to Want to See takes it off Not interested\. Undo takes the title off Want to See but doesn't mark it Not interested again\./,
-	)
-	assert.match(text(rendered.nothing), /takes it off Not interested/)
-})
-
-test("titles already seen stay Seen unless the member chooses Want to rewatch", () => {
-	const page = text(rendered.mixed)
-	assert.match(page, /2 titles you've already seen/)
-	assert.match(
-		rendered.mixed,
-		/<input type="radio"[^>]*checked=""[^>]*>.{0,200}Leave them as Seen/,
-	)
-	assert.match(page, /Add them as Want to rewatch/)
+	assert.match(page, /What should come in\?/)
+	assert.match(page, /Want to See 7/)
 	assert.doesNotMatch(
-		rendered.mixed,
-		/<input type="radio"[^>]*checked=""[^>]*>.{0,200}Add them as Want to rewatch/,
+		page,
+		/watch dates|When GoodWatch already has different data/i,
 	)
-	assert.match(text(rendered.oneSeen), /1 title you've already seen/)
-	assert.match(text(rendered.oneSeen), /Leave it as Seen/)
-	assert.match(text(rendered.oneSeen), /Add it as Want to rewatch/)
-	assert.doesNotMatch(text(rendered.nothing), /already seen/)
+	assert.match(rendered.mixed, /<button[^>]*>Import<\/button>/)
+	assert.doesNotMatch(page, /Start import|Add to Want to See/)
 })
 
-test("a wishlist preview counts rows in the Wishlist's words, and keeps the file's coverage note", () => {
-	const page = text(rendered.mixed)
-	for (const label of [
-		"New to your Wishlist 3",
-		"Nothing to change 1",
-		"Seen in GoodWatch 2",
-		"Not matched to a GoodWatch title 1",
-		"Not added to Want to See 4",
-		"Entries in your file 11",
+test("titles already seen stay Seen unless the member answers yes to Want to rewatch", () => {
+	const [mixed] = watcharr.questions.mixed.screens
+	assert.equal(mixed.counter, "Question 1 of 1")
+	assert.equal(
+		mixed.heading,
+		"2 titles in your Watcharr file are already Seen. Add them to Want to rewatch?",
+	)
+	assert.deepEqual(mixed.highlighted, ["Seen", "Want to rewatch"])
+	assert.deepEqual(mixed.answers, [
+		{ text: "Yes, add to Want to rewatch", pressed: "false", suggested: false },
+		{ text: "No, leave them as Seen", pressed: "false", suggested: true },
 	])
-		assert.match(page, new RegExp(label))
-	assert.match(page, /This file may hold only part of your list\./)
+	const [one] = watcharr.questions.oneSeen.screens
+	assert.equal(
+		one.heading,
+		"1 title in your Watcharr file is already Seen. Add it to Want to rewatch?",
+	)
+	assert.equal(one.answers[1].text, "No, leave it as Seen")
+	assert.equal(watcharr.questions.sourceSeen.sent?.wishlistRewatch, true)
+	assert.equal(watcharr.questions.sourceSeen.sent?.conflictChoice, "source")
 })
 
-test("with nothing to add, the button is off and says why; a seen title can still be added as a rewatch", () => {
+test("the file's coverage note stays on Choose", () => {
 	assert.match(
-		rendered.nothing,
-		/<button type="button"[^>]*disabled=""[^>]*>Add to Want to See/,
+		text(rendered.mixed),
+		/This file may hold only part of your list\./,
 	)
+})
+
+test("with nothing new, Done says so as a success; with only Seen titles left as Seen, nothing starts", () => {
+	const nothing = text(rendered.nothing)
+	assert.match(nothing, /You're all caught up/)
 	assert.match(
-		text(rendered.nothing),
-		/Nothing to add\. GoodWatch already has the titles in this file, or can't add them\./,
+		nothing,
+		/All 2 titles from this Watcharr file are already in GoodWatch\./,
 	)
+	assert.doesNotMatch(nothing, /What should come in/)
 	assert.match(
-		text(rendered.oneSeen),
-		/Nothing new to add\. To add the title you've already seen, choose Add it as Want to rewatch\./,
+		watcharr.questions.oneSeen.after,
+		/Nothing changes with these answers/,
 	)
-	assert.match(text(rendered.confirming), /Adding to Want to See/)
+	assert.equal(watcharr.questions.oneSeen.sent, null)
+	assert.match(text(rendered.confirming), /Starting import/)
 })
 
 test("a wishlist row whose source gave no type says Type unknown, and an unmatched row offers a search in a new tab", () => {
@@ -106,10 +129,10 @@ test("a wishlist row whose source gave no type says Type unknown, and an unmatch
 	assert.doesNotMatch(rendered.generalUnmatched, /Search|Type unknown/)
 })
 
-test("the wishlist receipt offers another file, not another export, and Undo", () => {
+test("the wishlist Done step offers another file, not another export, and Undo", () => {
 	assert.match(text(rendered.receipt), /Import another file/)
 	assert.doesNotMatch(text(rendered.receipt), /another export/)
-	assert.match(rendered.receipt, /Undo import/)
+	assert.match(rendered.receipt, /Undo this import/)
 })
 
 test("one upload takes Watcharr's own export and a wishlist file another tool saved", () => {
@@ -157,16 +180,19 @@ const urls = (run: MatchRun) => run.sent.map((item) => item.url)
 const resolves = (run: MatchRun) =>
 	run.sent.filter((item) => item.url.endsWith("/resolve"))
 
-test("the match block shows only when the server counts entries to match, and loads nothing until opened", () => {
-	assert.doesNotMatch(
-		text(rendered.mixed),
-		/Titles to check before you add them/,
-	)
+test("entries to match are the last question, asked only when the server counts some, and nothing loads until the member says yes", () => {
+	assert.doesNotMatch(text(rendered.mixed), /Check them now/)
 	const closed = matching.closed
-	assert.match(closed.text, /Titles to check before you add them/)
-	assert.match(closed.text, /these 3 entries are movies or shows/)
-	assert.ok(!urls(closed).some((url) => url.includes("/matches")))
+	assert.match(closed.text, /What should come in\?/)
+	assert.match(matching.rewatchAsked.text, /Question 1 of 2/)
+	assert.ok(
+		!urls(matching.rewatchAsked).some((url) => url.includes("/matches")),
+	)
 	const opened = matching.opened
+	assert.match(
+		opened.text,
+		/Question 2 of 2Your file doesn't say whether 3 entries are movies or shows\. Check them now\?/,
+	)
 	assert.ok(urls(opened).some((url) => url.endsWith("/matches?offset=0")))
 	assert.deepEqual(opened.focus, {
 		tag: "h4",
@@ -215,7 +241,7 @@ test("Escape closes an entry without a choice and returns focus to its button", 
 	)
 })
 
-test("a choice waits in this preview until Update preview, and blocks Add to Want to See", () => {
+test("a choice waits in this preview until Update preview, and holds back leaving the rest out", () => {
 	const used = matching.used
 	assert.match(used.text, /Matched to The Office \(2005\), show\./)
 	assert.match(
@@ -228,12 +254,12 @@ test("a choice waits in this preview until Update preview, and blocks Add to Wan
 		type: "button",
 	})
 	assert.equal(used.confirmDisabled, true)
-	assert.equal(used.confirmReason, "wishlist-import-unapplied")
+	assert.equal(used.confirmReason, "import-match-unapplied")
 	assert.match(used.text, /Your matches aren't in this preview yet\./)
 	assert.equal(resolves(used).length, 0)
 })
 
-test("Clear removes a match the preview holds, and hiding the panel keeps every change", () => {
+test("Clear removes a match the preview holds, and going back from the question keeps every change", () => {
 	assert.match(
 		matching.cleared.text,
 		/GoTType unknown · ID 70305903Match removed · Not in this preview yet/,
@@ -264,20 +290,18 @@ test("a failed update keeps the choices and lets the member try again", () => {
 	assert.deepEqual(resolves(matching.updated)[1].body, resolves(failed)[0].body)
 })
 
-test("a new preview replaces the old one on screen, says so, and resets the Seen choice", () => {
+test("a new preview replaces the old one on screen, says so, and resets the Seen answer", () => {
 	const updated = matching.updated
 	assert.deepEqual(updated.focus, {
-		tag: "h3",
-		text: "Check before you import",
+		tag: "h2",
+		text: "What should come in?",
 		type: null,
 	})
 	assert.match(
 		updated.text,
-		/Updated with your changes\. The counts include them\. Your choice for titles you've already seen is back to Leave them as Seen\./,
+		/Updated with your changes\. The counts include them\. Your answer about titles you've already seen was reset\./,
 	)
-	assert.equal(updated.leaveChecked, true)
 	assert.equal(updated.confirmDisabled, false)
-	assert.match(updated.text, /New to your Wishlist2Seen in GoodWatch2/)
 	assert.doesNotMatch(updated.text, /Not in this preview yet/)
 	assert.ok(!urls(updated).some((url) => url.endsWith("/confirm")))
 })
@@ -302,11 +326,10 @@ test("a preview that can't take matches shows GoodWatch's own message for the co
 	assert.doesNotMatch(matching.oldPreview.text, /Update preview/)
 })
 
-test("with every entry matched, the block stays and a matched row shows the file's evidence and Change", () => {
-	assert.match(matching.allResolved.text, /Titles to check before you add them/)
+test("with every entry matched, the panel still shows the match and Change opens it", () => {
 	assert.match(
-		matching.matchedRow.text,
-		/Game of Thrones · 2011 · Show · Matched by youChange the match for GoTFrom your file: GoT · Type unknown · ID 70305903/,
+		matching.allResolved.text,
+		/GoTType unknown · ID 70305903Your match: Game of Thrones \(2011\) · ShowChange the match for GoT/,
 	)
 	const changed = matching.changeFromRow
 	assert.deepEqual(changed.focus, { tag: "input", text: "", type: "search" })
@@ -314,20 +337,6 @@ test("with every entry matched, the block stays and a matched row shows the file
 		changed.text,
 		/Your match: Game of Thrones \(2011\) · ShowFrom your file/,
 	)
-})
-
-test("Change after Hide matching opens the row asked for, on another row and on the same row again", () => {
-	const search = { tag: "input", text: "", type: "search" }
-	const other = matching.changeAfterHide
-	assert.deepEqual(other.focus, search)
-	assert.match(other.text, /Your match: Narcos \(2015\) · ShowFrom your file/)
-	assert.doesNotMatch(
-		other.text,
-		/Your match: Game of Thrones \(2011\) · ShowFrom your file/,
-	)
-	const same = matching.changeSameAfterHide
-	assert.deepEqual(same.focus, search)
-	assert.match(same.text, /Your match: Narcos \(2015\) · ShowFrom your file/)
 })
 
 test("search runs only when sent, and a type filter without results offers both types", () => {
@@ -346,60 +355,11 @@ test("search runs only when sent, and a type filter without results offers both 
 	assert.equal(urls(matching.tooShort).length, urls(matching.noResults).length)
 })
 
-test("Change on a row that repeats an entry asks the server for its entry and opens it, keeping other changes", () => {
-	const leaf = matching.focusLeaf
-	assert.ok(urls(leaf).some((url) => url.endsWith("/matches?entry=21")))
-	assert.ok(!urls(leaf).some((url) => url.endsWith("offset=50")))
-	assert.deepEqual(leaf.focus, { tag: "input", text: "", type: "search" })
-	assert.match(
-		leaf.text,
-		/Your match: Narcos \(2015\) · ShowFrom your file.*Listed 2 times in your file/,
-	)
-	assert.match(
-		leaf.text,
-		/Your match: Dark \(2017\) · Show · Not in this preview yet/,
-	)
-	assert.match(leaf.text, /1 change isn't in this preview yet/)
-})
-
-test("Change on an entry whose page isn't loaded shows a failed lookup with Try again, then opens it once", () => {
-	const failed = matching.focusFailed
-	assert.match(
-		failed.text,
-		/We couldn't reach GoodWatch\. Check your connection and try again\.Try again/,
-	)
-	assert.deepEqual(failed.focus, {
-		tag: "h4",
-		text: "Review matches",
-		type: null,
-	})
-	assert.match(failed.text, /1 change isn't in this preview yet/)
-	const later = matching.focusLater
-	assert.equal(
-		urls(later).filter((url) => url.endsWith("/matches?entry=300")).length,
-		2,
-	)
-	assert.ok(!urls(later).some((url) => url.endsWith("offset=50")))
-	assert.deepEqual(later.focus, { tag: "input", text: "", type: "search" })
-	assert.match(
-		later.text,
-		/Your match: Mindhunter \(2017\) · ShowFrom your file/,
-	)
-	assert.match(later.text, /Showing 51 of 51/)
-	assert.match(later.text, /1 change isn't in this preview yet/)
-	const merged = matching.focusMerged
-	assert.ok(urls(merged).some((url) => url.endsWith("offset=50")))
-	assert.equal(merged.text.match(/Your match: Mindhunter/g)?.length, 1)
-	assert.match(merged.text, /Showing 51 of 51/)
-})
-
-test("while Add to Want to See runs, every match control is off and a click changes nothing", () => {
+test("leaving the rest out starts the import: the panel goes, so no match can change while it starts", () => {
 	const locked = matching.locked
-	assert.match(locked.text, /Adding to Want to See/)
-	assert.equal(locked.use, true)
-	assert.equal(locked.search, true)
-	assert.equal(locked.clear, true)
-	assert.deepEqual(locked.change, [true, true])
+	assert.match(locked.text, /Starting your import/)
+	assert.equal(locked.use, false)
+	assert.equal(locked.clear, false)
 	assert.doesNotMatch(locked.text, /Not in this preview yet|Match cleared/)
 	assert.equal(resolves(locked).length, 0)
 })
@@ -645,8 +605,8 @@ test("a new preview cancels the open suggestion request and asks for no more pag
 			.map((item) => item.url.replace(/.*\//, "")),
 		["suggestions?offset=0"],
 	)
-	assert.match(run.text, /Review matches/)
-	assert.doesNotMatch(run.text, /Looking for matches|Hide matching/)
+	assert.match(run.text, /What should come in\?/)
+	assert.doesNotMatch(run.text, /Looking for matches/)
 })
 
 test("while Update preview runs, Accept, bulk accept, Undo accept, and Change are off and a tap changes nothing", () => {
@@ -680,7 +640,7 @@ test("Undo accept puts the suggestion back as it was, with focus on its Accept",
 	assert.doesNotMatch(run.text, /Not in this preview yet/)
 })
 
-test("Show more brings in the next page's suggestions, and a Change outside the loaded pages asks for none of the pages between", () => {
+test("Show more brings in the next page's suggestions", () => {
 	const offsets = (run: MatchRun) =>
 		run.sent
 			.filter((item) => item.url.includes("/suggestions"))
@@ -689,8 +649,6 @@ test("Show more brings in the next page's suggestions, and a Change outside the 
 		offsets(matching.bulkCap),
 		Array.from({ length: 11 }, (_, at) => at * 10),
 	)
-	assert.deepEqual(offsets(matching.focusLater), [0, 10, 20, 30, 40])
-	assert.deepEqual(offsets(matching.focusMerged), [0, 10, 20, 30, 40, 50])
 })
 
 test("loaded suggestions aren't asked for again when the tab regains focus or reconnects, open or hidden", () => {
@@ -751,26 +709,26 @@ test("matching groups only label originally unknown types as Type unknown", () =
 	assert.match(matching.opened.text, /Type unknown/)
 })
 
-test("a season choice offers Want to See the show unchecked without describing it as Seen", () => {
-	const page = text(rendered.seasonChoice)
-	assert.match(page, /Want to See the show/)
-	assert.doesNotMatch(page, /already seen|Seen in GoodWatch/)
-	assert.match(rendered.seasonChoice, /<input type="checkbox"[^>]*>/)
-	assert.doesNotMatch(
-		rendered.seasonChoice,
-		/<input type="checkbox"[^>]*checked/,
+test("a season choice asks about the whole show, nothing preselected, without describing it as Seen", () => {
+	const [screen] = watcharr.questions.seasonChoice.screens
+	assert.equal(
+		screen.heading,
+		"Your Watcharr file lists seasons or episodes of 1 show. Add the whole show to Want to See?",
 	)
-	assert.match(
-		rendered.seasonChoice,
-		/<button type="button"[^>]*disabled=""[^>]*>Add to Want to See/,
+	assert.deepEqual(
+		screen.answers.map((answer) => answer.pressed),
+		["false", "false"],
+	)
+	assert.doesNotMatch(
+		watcharr.questions.seasonChoice.after,
+		/already Seen|Seen in GoodWatch/,
 	)
 })
-test("source-Seen evidence offers rewatch without claiming GoodWatch has a Seen status", () => {
-	const page = text(rendered.sourceSeen)
-	assert.match(page, /marked Seen in GoodWatch or in this file/)
-	assert.match(page, /Add it as Want to rewatch/)
-	assert.match(page, /Leave off Wishlist/)
-	assert.doesNotMatch(page, /Leave it as Seen|Seen in GoodWatch 1/)
+
+test("source-Seen evidence asks about rewatch without claiming GoodWatch has a Seen status", () => {
+	const [screen] = watcharr.questions.sourceSeen.screens
+	assert.match(screen.heading, /in your Watcharr file is already Seen/)
+	assert.doesNotMatch(screen.heading, /in GoodWatch/)
 })
 
 test("confirming a whole-show choice does not also opt into rewatch", () => {
@@ -786,78 +744,32 @@ test("confirming a whole-show choice does not also opt into rewatch", () => {
 	})
 })
 
-test("a Watcharr library preview offers every imported kind and the shared watch-date and conflict choices", () => {
+test("a Watcharr library's Choose step offers every imported kind, with no watch-date choice", () => {
 	const page = text(rendered.watcharrLibrary)
-	assert.match(page, /What should GoodWatch import/)
+	assert.match(page, /What should come in\?/)
 	for (const label of [
-		"Ratings",
+		"Scores",
 		"Watches",
 		"Reviews",
 		"Show statuses",
 		"Want to See",
 	])
 		assert.ok(page.includes(label), label)
-	assert.match(page, /Uses each exported watch date with its stated precision/)
-	assert.match(page, /Use the export instead/)
-	assert.doesNotMatch(page, /Importing only adds titles to Want to See/)
+	assert.doesNotMatch(page, /watch date/i)
 })
 
-test("the full Watcharr preview offers Leave off Wishlist and Add as Want to rewatch independently of conflict policy", () => {
-	const page = text(rendered.watcharrLibrary)
-	assert.match(page, /Leave off Wishlist/)
-	assert.match(page, /Add it as Want to rewatch/)
-	assert.match(
-		rendered.watcharrLibrary,
-		/name="wishlist-rewatch"[^>]*checked=""/,
-	)
-	assert.doesNotMatch(page, /source export, and adds Planned titles/)
-})
-
-test("full Watcharr Confirm sends the independent rewatch opt-in under either conflict policy", () => {
-	const output = execFileSync(
-		"node_modules/.bin/vite-node",
-		[
-			"--config",
-			"app/ui/imports/source-import-test-vite.config.ts",
-			"app/ui/imports/watcharr-import-interaction.test-support.tsx",
-		],
-		{ encoding: "utf8" },
-	)
-	const runs = JSON.parse(
-		output.split("__WATCHARR_CHOICES__").at(-1) ?? "",
-	) as {
-		conflictChoice: string
-		rewatch: boolean
-		sent: {
-			wishlistRewatch?: boolean
-			conflictChoice: string
-			watchDates: string
-		}
-	}[]
-	assert.equal(runs.length, 4)
-	for (const run of runs) {
+test("a full Watcharr import sends the independent rewatch answer under either conflict answer, always with the file's dates", () => {
+	assert.equal(watcharr.runs.length, 4)
+	for (const run of watcharr.runs) {
 		assert.equal(run.sent.wishlistRewatch, run.rewatch)
 		assert.equal(run.sent.conflictChoice, run.conflictChoice)
 		assert.equal(run.sent.watchDates, "preserve")
 	}
 })
 
-test("the Watcharr show-status footnote explains recorded completion dates and the unknown-date fallback", () => {
-	const page = text(rendered.watcharrLibrary)
-	assert.match(
-		page,
-		/Whole-show completion marks aired regular episodes with the recorded date when the source has one, otherwise with unknown dates/,
-	)
-	assert.doesNotMatch(
-		page,
-		/Whole-show completion marks aired regular episodes with unknown dates/,
-	)
-})
-
-test("a Watcharr file with only Want to See and season or episode scores offers the scores in the full preview", () => {
+test("a Watcharr file with only Want to See and season or episode scores offers the scores on Choose", () => {
 	const page = text(rendered.plannedWithScores)
-	assert.match(page, /What should GoodWatch import\?/)
+	assert.match(page, /What should come in\?/)
 	assert.match(page, /Season and episode scores 2/)
-	assert.match(page, /Start import/)
-	assert.doesNotMatch(page, /Add to Want to See/)
+	assert.match(rendered.plannedWithScores, /<button[^>]*>Import<\/button>/)
 })

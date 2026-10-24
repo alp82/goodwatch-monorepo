@@ -1,10 +1,11 @@
-// The result screen of a finished or undone import, for every source: it loads the result grouped by title from
-// the import's items API and draws it with ImportResultView.
+// What a finished or undone import changed, for every source, from the import's items API grouped by title: the
+// result itself, the rest of a long section, and the buttons that put a list choice back.
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
-import { type ReactNode, useState } from "react"
+import { useEffect, useState } from "react"
 import type {
 	ImportResult as ImportResultData,
 	ImportResultPage,
+	ImportResultRow,
 	ImportResultSection,
 } from "~/domain/import-result"
 import {
@@ -15,7 +16,6 @@ import { useUserData } from "~/routes/api.user-data"
 import { createMediaKey } from "~/types/user-data"
 import { Spinner } from "~/ui/wait/Spinner"
 import {
-	ImportResultView,
 	LIST_LABEL,
 	type PutBack,
 	ResultRows,
@@ -23,7 +23,7 @@ import {
 	resultList,
 } from "./ImportResultView"
 import { request } from "./api"
-import { errorBox, secondaryButton, textLink } from "./shared"
+import { errorBox, textLink } from "./shared"
 
 /** The import routes whose items API serves `?by=title`. */
 export type ImportResultApi = "/api/imports" | "/api/imdb-import"
@@ -33,10 +33,69 @@ const itemsUrl = (api: ImportResultApi, id: string) =>
 	`${api}/${encodeURIComponent(id)}/items?by=title`
 
 /** The status is part of the key: Undo turns the import's result into the Undo result. */
-const resultKey = (api: ImportResultApi, id: string, status: string) =>
+export const resultKey = (api: ImportResultApi, id: string, status: string) =>
 	["import-result", api, id, status] as const
 
-function MoreRows({
+/** What the import changed, or what its Undo changed back, with the first titles of each section. */
+export function useImportResult(
+	api: ImportResultApi,
+	id: string,
+	status: string,
+) {
+	return useQuery({
+		queryKey: resultKey(api, id, status),
+		queryFn: () => request<ImportResultData>(itemsUrl(api, id)),
+	})
+}
+
+const sectionPage = (
+	api: ImportResultApi,
+	id: string,
+	section: ImportResultSection,
+	offset: number,
+) =>
+	request<ImportResultPage>(
+		`${itemsUrl(api, id)}&section=${section.key}&offset=${offset}&limit=${PAGE}`,
+	)
+
+/**
+ * Every row of one section, for what the Done step counts and puts back: the rows the result brought, then the rest a
+ * page at a time until none are left. Null while pages are still loading.
+ */
+export function useWholeSection(
+	api: ImportResultApi,
+	id: string,
+	status: string,
+	section: ImportResultSection | undefined,
+): ImportResultRow[] | null {
+	const more = !!section && section.total > section.rows.length
+	const query = useInfiniteQuery({
+		queryKey: [...resultKey(api, id, status), section?.key, "all"],
+		enabled: more,
+		initialPageParam: section?.rows.length ?? 0,
+		queryFn: ({ pageParam }) =>
+			section
+				? sectionPage(api, id, section, pageParam)
+				: Promise.resolve({ rows: [], total: 0 }),
+		getNextPageParam: (last, pages) => {
+			const loaded =
+				(section?.rows.length ?? 0) +
+				pages.reduce((n, page) => n + page.rows.length, 0)
+			return last.rows.length > 0 && loaded < last.total ? loaded : undefined
+		},
+	})
+	const { hasNextPage, isFetchingNextPage, fetchNextPage } = query
+	useEffect(() => {
+		if (more && hasNextPage && !isFetchingNextPage) void fetchNextPage()
+	}, [more, hasNextPage, isFetchingNextPage, fetchNextPage])
+	if (!section) return []
+	if (!more) return section.rows
+	if (!query.data || query.hasNextPage || query.isError) return null
+	return [...section.rows, ...query.data.pages.flatMap((page) => page.rows)]
+}
+
+/** The rest of a section that shows only its first rows, loaded when the member asks. */
+export function MoreRows({
 	api,
 	id,
 	status,
@@ -52,10 +111,7 @@ function MoreRows({
 		queryKey: [...resultKey(api, id, status), section.key],
 		enabled: open,
 		initialPageParam: section.rows.length,
-		queryFn: ({ pageParam }) =>
-			request<ImportResultPage>(
-				`${itemsUrl(api, id)}&section=${section.key}&offset=${pageParam}&limit=${PAGE}`,
-			),
+		queryFn: ({ pageParam }) => sectionPage(api, id, section, pageParam),
 		getNextPageParam: (last, pages) => {
 			const loaded =
 				section.rows.length + pages.reduce((n, page) => n + page.rows.length, 0)
@@ -98,7 +154,7 @@ function MoreRows({
  * Puts a title back on Want to See or Not interested, now, without the date it had before the import. A title the
  * member's data already has on that list, put back from here before or elsewhere, needs no button.
  */
-function PutBackButton({ title, list }: PutBack) {
+export function PutBackButton({ title, list }: PutBack) {
 	const wishlist = useWishlistMutation()
 	const notInterested = useNotInterestedMutation()
 	const { data } = useUserData()
@@ -149,61 +205,44 @@ function PutBackButton({ title, list }: PutBack) {
 	)
 }
 
-export function ImportResult({
-	api,
-	id,
-	status,
-	from,
-	focus,
-	children,
-}: {
-	api: ImportResultApi
-	id: string
-	/** "done" or "undone". */
-	status: string
-	/** Where the import came from: the file's name, or "your TMDB account". */
-	from: string
-	focus: boolean
-	/** Export notes and the actions, after the lists. */
-	children?: ReactNode
-}) {
-	const query = useQuery({
-		queryKey: resultKey(api, id, status),
-		queryFn: () => request<ImportResultData>(itemsUrl(api, id)),
-	})
-	if (!query.data)
-		return (
-			<section className="flex flex-col gap-4">
-				{query.isError ? (
-					<div className="flex flex-col items-start gap-3">
-						<p className={errorBox}>{query.error.message}</p>
-						<button
-							type="button"
-							className={secondaryButton}
-							onClick={() => query.refetch()}
-						>
-							Try again
-						</button>
-					</div>
-				) : (
-					<div className="flex items-center gap-2 text-gray-400">
-						<Spinner size="small" /> Loading what changed
-					</div>
-				)}
-				{children}
-			</section>
-		)
-	return (
-		<ImportResultView
-			result={query.data}
-			from={from}
-			focus={focus}
-			putBack={(put) => <PutBackButton {...put} />}
-			more={(section) => (
-				<MoreRows api={api} id={id} status={status} section={section} />
-			)}
-		>
-			{children}
-		</ImportResultView>
-	)
+/**
+ * Puts every title this import took off Want to See or Not interested back on that list, one after another. Titles
+ * the member's data already has on the list are skipped. Returns how many didn't go back.
+ */
+export function usePutAllBack() {
+	const wishlist = useWishlistMutation()
+	const notInterested = useNotInterestedMutation()
+	const { data } = useUserData()
+	const [state, setState] = useState<
+		{ at: "idle" } | { at: "running" } | { at: "done"; failed: number }
+	>({ at: "idle" })
+	const run = async (rows: readonly ImportResultRow[]) => {
+		setState({ at: "running" })
+		let failed = 0
+		for (const row of rows) {
+			if (!row.title) continue
+			for (const change of row.changes) {
+				if (change.type !== "list-cleared") continue
+				const key = createMediaKey(row.title.mediaType, row.title.tmdbId)
+				const lists =
+					change.list === "want_to_see" ? data?.wishlist : data?.notInterested
+				if (lists?.[key]) continue
+				const mutation =
+					change.list === "want_to_see" ? wishlist : notInterested
+				try {
+					const result = await mutation.mutateAsync({
+						mediaType: row.title.mediaType,
+						tmdbId: row.title.tmdbId,
+						action: "add",
+					})
+					if (result?.status !== "success") failed++
+				} catch {
+					failed++
+				}
+			}
+		}
+		setState({ at: "done", failed })
+		return failed
+	}
+	return { state, run }
 }

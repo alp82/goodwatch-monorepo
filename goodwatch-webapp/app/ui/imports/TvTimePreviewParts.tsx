@@ -1,8 +1,7 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 import type { ImportSummary } from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
-import { useOpenedOnce } from "~/utils/first-use"
-import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import { MatchCount } from "./ImportFlowParts"
 import {
 	WISHLIST_MATCH_MAX_CHANGES,
 	type WishlistMatchGroup,
@@ -15,15 +14,12 @@ import type { PreviewUpdate } from "./SourceImportPreviewModel"
 import {
 	TVTIME_COPY,
 	tvtimeMatchIntro,
-	tvtimeMatchedLine,
 	tvtimeProgress,
 	tvtimeRowsLeft,
 } from "./TvTimeMatchCopy"
 import type { MatchDraft, MatchTitle } from "./WishlistMatchPanel"
+import { WishlistMatchPanel } from "./WishlistMatching"
 import { errorBox, formatCount, infoBox, secondaryButton } from "./shared"
-
-const loadMatchPanel = () => import("./WishlistMatchPanel")
-const WishlistMatchPanel = lazy(reloadOnStaleChunk(loadMatchPanel))
 
 type Replace = (next: ImportSummary, update: PreviewUpdate) => void
 
@@ -181,18 +177,20 @@ export function TvTimeLookupNotices({
 	const outage = summary.tvtimeLookupUnavailableCount ?? 0
 	return (
 		<div className="flex flex-col gap-3">
-			{progress?.active && (
-				<div className={`${infoBox} space-y-2`}>
-					<p className="font-semibold" aria-live="polite">
-						{progress.step}
+			{progress?.active && summary.resolution && (
+				<div
+					className="flex flex-col gap-1 text-sm text-gray-400"
+					data-matching
+				>
+					<p className="font-semibold text-gray-200" aria-live="polite">
+						{progress.step}{" "}
+						<span className="font-normal text-gray-400">
+							<MatchCount
+								done={summary.resolution.processed}
+								total={summary.resolution.total}
+							/>
+						</span>
 					</p>
-					<p>{progress.line}</p>
-					<progress
-						value={summary.resolution?.processed}
-						max={Math.max(summary.resolution?.total ?? 1, 1)}
-						className="h-3 w-full accent-indigo-500"
-						aria-label="Rows checked"
-					/>
 					<p>
 						You can leave this page. Matching keeps going, and your preview is
 						here when you open TV Time again.
@@ -249,75 +247,54 @@ export function TvTimeLookupNotices({
 	)
 }
 
-/** The movies to match, with the shipped match panel loaded on first use. */
-export function TvTimeMatchSection({
+/** The movies to match, in the shipped match panel, open on its question's screen. */
+export function TvTimeMatchPanel({
 	summary,
 	matching,
+	visible,
 	onBack,
 }: {
 	summary: ImportSummary
 	matching: TvTimeMatching
+	visible: boolean
 	onBack: () => void
 }) {
-	const count = summary.wishlistMatchCount ?? 0
-	const [open, setOpen] = useState(false)
-	const opened = useOpenedOnce(open)
-	if (count === 0) return null
 	const { resolve } = matching
 	return (
 		<div className="flex flex-col gap-3">
-			<div className="space-y-1">
-				<h4 className="font-semibold text-gray-100">
-					{TVTIME_COPY.matchHeading}{" "}
-					<span className="font-normal text-gray-400">
-						{tvtimeMatchedLine(count, summary.wishlistUnresolvedMatchCount)}
-					</span>
-				</h4>
-				<p className="text-gray-300">
-					{tvtimeMatchIntro(count, summary.wishlistUnresolvedMatchCount)}
-				</p>
-			</div>
-			<button
-				type="button"
-				className={`${secondaryButton} self-start`}
-				aria-expanded={open}
-				onPointerEnter={() => void loadMatchPanel()}
-				onFocus={() => void loadMatchPanel()}
-				onClick={() => setOpen((value) => !value)}
-			>
-				{open ? "Hide matching" : "Match movies"}
-			</button>
-			<div hidden={!open}>
-				{opened && (
-					<Suspense fallback={<Spinner size="medium" />}>
-						<WishlistMatchPanel
-							importId={summary.id}
-							visible={open}
-							draft={matching.draft}
-							request={null}
-							updating={resolve.isPending}
-							locked={matching.locked}
-							error={
-								resolve.isError
-									? resolve.error
-									: matching.bulk.isError
-										? matching.bulk.error
-										: null
-							}
-							tvtimeBulkAccept={matching.acceptAll}
-							note={TVTIME_COPY.watchesFirst}
-							onChoose={matching.choose}
-							onRevert={matching.revert}
-							onAcceptAll={() => false}
-							onUndoAccepted={() => 0}
-							bulkAccepted={0}
-							onDiscard={matching.discard}
-							onUpdate={matching.update}
-							onBack={onBack}
-						/>
-					</Suspense>
+			<p className="text-gray-300">
+				{tvtimeMatchIntro(
+					summary.wishlistMatchCount ?? 0,
+					summary.wishlistUnresolvedMatchCount,
 				)}
-			</div>
+			</p>
+			<Suspense fallback={<Spinner size="medium" />}>
+				<WishlistMatchPanel
+					importId={summary.id}
+					visible={visible}
+					draft={matching.draft}
+					request={null}
+					updating={resolve.isPending}
+					locked={matching.locked}
+					error={
+						resolve.isError
+							? resolve.error
+							: matching.bulk.isError
+								? matching.bulk.error
+								: null
+					}
+					tvtimeBulkAccept={matching.acceptAll}
+					note={TVTIME_COPY.watchesFirst}
+					onChoose={matching.choose}
+					onRevert={matching.revert}
+					onAcceptAll={() => false}
+					onUndoAccepted={() => 0}
+					bulkAccepted={0}
+					onDiscard={matching.discard}
+					onUpdate={matching.update}
+					onBack={onBack}
+				/>
+			</Suspense>
 		</div>
 	)
 }

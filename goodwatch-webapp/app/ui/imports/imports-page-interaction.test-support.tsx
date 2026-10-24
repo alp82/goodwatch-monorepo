@@ -100,6 +100,49 @@ const imdbSummary = (
 
 type Sent = { url: string; body: unknown }
 let sent: Sent[] = []
+/** Imports the stand-in server knows by ID, for their detail and confirm answers. */
+const served = new Map<string, ImportSummary>()
+/** Rows whose score differs, as the items API pages them. */
+const conflictItems = [
+	{
+		index: 0,
+		key: "trakt:rating:heat",
+		kind: "rating",
+		mediaType: "movie",
+		title: "Heat",
+		year: 1995,
+		tmdbId: 949,
+		imdbId: null,
+		score: 9,
+		currentScore: 8,
+		outcome: "conflict",
+		reason: "You rated this 8 in GoodWatch.",
+	},
+	{
+		index: 1,
+		key: "mdblist:want:a",
+		kind: "want",
+		mediaType: "movie",
+		title: "Seen Film",
+		year: 2001,
+		tmdbId: 11,
+		imdbId: null,
+		outcome: "conflict",
+		reason: "Seen in GoodWatch.",
+	},
+	{
+		index: 2,
+		key: "mdblist:want:b",
+		kind: "want",
+		mediaType: "show",
+		title: "A Show",
+		year: 2020,
+		tmdbId: 12,
+		imdbId: null,
+		outcome: "conflict",
+		reason: "This file lists a season.",
+	},
+]
 const json = (body: unknown) =>
 	new Response(JSON.stringify(body), {
 		status: 200,
@@ -126,8 +169,30 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 	if (url === "/api/imdb-import/preview")
 		return json({ import: imdbSummary("preview", null, PREVIEW_ID) })
 	if (url.includes("/items?by=title"))
-		return json({ operation: "apply", titles: 0, sections: [] })
+		return json({ operation: "import", titles: 0, sections: [] })
+	if (url.includes("/items?outcome=conflict"))
+		return json({ items: conflictItems, total: conflictItems.length })
 	if (url.includes("/items")) return json({ items: [], total: 0 })
+	if (url.includes("/posters"))
+		return json({
+			posters: [
+				{ key: "movie:949", title: "Heat", posterPath: "/heat.jpg" },
+				{ key: "movie:11", title: "Seen Film", posterPath: "/seen.jpg" },
+			],
+		})
+	const id = url.match(/^\/api\/imports\/([0-9a-f-]{36})(\/confirm)?$/)
+	const known = id && served.get(id[1])
+	if (known && id?.[2]) {
+		const running = {
+			...known,
+			status: "running" as const,
+			stalled: false,
+			error: null,
+		}
+		served.set(known.id, running)
+		return json({ import: running })
+	}
+	if (known) return json({ import: known })
 	if (url === "/api/imports" || url === "/api/imdb-import")
 		return json({ imports: [] })
 	return json({ error: "not stubbed" })
@@ -197,32 +262,73 @@ async function page(props: Partial<PageProps> = {}) {
 				date: li.querySelector("[data-import-date]")?.textContent ?? "",
 				line: li.querySelector(".text-sm")?.textContent ?? "",
 			})),
-		/** Each mark in the logo row: the logo's file, or the letter tile's text. */
+		/** Each source on Bring, accounts first, then files: the logo's file, or the letter tile's text. */
 		marks: () =>
 			buttons()
-				.filter((button) => button.hasAttribute("aria-expanded"))
+				.filter((button) => button.hasAttribute("data-source-mark"))
 				.map((button) => {
-					const name = button.getAttribute("aria-label") ?? ""
+					const name = button.getAttribute("data-source-mark") ?? ""
 					const logo = button.querySelector("img")?.getAttribute("src")
 					return logo
 						? { name, logo: logo.split("/").at(-1)?.split("?")[0] }
 						: { name, tile: button.textContent ?? "" }
 				}),
-		/** Opens a source from the logo row: its mark, then the pop-out's button. */
+		/** Opens a source from Bring: an account to connect, or a file source under Where do I get my file?. */
 		open: async (name: string) => {
-			const mark = buttons().find((b) => b.getAttribute("aria-label") === name)
-			if (!mark) throw new Error(`No mark "${name}"`)
+			const find = () =>
+				buttons().find((b) => b.getAttribute("data-source-mark") === name)
+			if (!find()) {
+				const where = buttons().find(
+					(b) => b.textContent === "Where do I get my file?",
+				)
+				if (where && where.getAttribute("aria-expanded") !== "true")
+					await act(async () => where.click())
+			}
+			const mark = find()
+			if (!mark) throw new Error(`No source "${name}"`)
 			await act(async () => mark.click())
 			await settle()
-			const go = buttons().find(
+		},
+		/** Opens a fold by its label. */
+		unfold: async (label: string) => {
+			const fold = buttons().find(
 				(b) =>
-					b.textContent === `Import from ${name}` ||
-					b.textContent === `Connect ${name}`,
+					b.hasAttribute("aria-expanded") && b.textContent?.startsWith(label),
 			)
-			if (!go) throw new Error(`No pop-out button for "${name}"`)
-			await act(async () => go.click())
+			if (!fold) throw new Error(`No fold "${label}"`)
+			if (fold.getAttribute("aria-expanded") !== "true")
+				await act(async () => fold.click())
 			await settle()
 		},
+		/** The stepper: each step's name, whether it's current, ticked, and its note. */
+		steps: () =>
+			[...container.querySelectorAll("[data-step]")].map((li) => ({
+				step: li.getAttribute("data-step"),
+				current: !!li.querySelector("[aria-current=step]"),
+				done: li.hasAttribute("data-step-done"),
+				note: (li.querySelector("span + span")?.textContent ?? "").trim(),
+			})),
+		/** The answers on screen: their words, whether they're pressed, and which is suggested. */
+		answers: () =>
+			buttons()
+				.filter((b) => b.hasAttribute("data-answer"))
+				.map((b) => ({
+					text: (b.textContent ?? "").replace("Suggested", "").trim(),
+					pressed: b.getAttribute("aria-pressed"),
+					suggested: b.hasAttribute("data-suggested"),
+				})),
+		counter: () =>
+			container.querySelector("[data-question-counter]")?.textContent ?? null,
+		heading: () => container.querySelector("h2")?.textContent ?? null,
+		/** The state names set apart in the current heading. */
+		highlighted: () =>
+			[...container.querySelectorAll("h2 .text-amber-200")].map(
+				(span) => span.textContent,
+			),
+		locked: () => !!container.querySelector("fieldset[data-locked]"),
+		html: () => container.innerHTML,
+		wait: (ms: number) =>
+			act(async () => new Promise((resolve) => setTimeout(resolve, ms))),
 		/** Ticks the checkbox with this name. */
 		tick: async (name: string) => {
 			const input = container.querySelector(
@@ -329,11 +435,16 @@ const results: Record<string, unknown> = {}
 			summary("trakt", "undone", "2026-10-11T12:00:00.000Z"),
 		],
 	})
+	const closed = view.text()
+	await view.unfold("Where do I get my file?")
+	await view.unfold("Past imports")
 	results.list = {
 		opened: view.opened(),
 		history: view.history(),
 		text: view.text(),
+		closed,
 		marks: view.marks(),
+		steps: view.steps(),
 	}
 	await view.unmount()
 }
@@ -380,6 +491,7 @@ const results: Record<string, unknown> = {}
 		opened: view.opened(),
 		text: view.text(),
 		sent: [...sent],
+		steps: view.steps(),
 	}
 	await view.unmount()
 }
@@ -496,7 +608,7 @@ const movielens = (wishlist: boolean) =>
 		text: view.text(),
 		sent: [...sent],
 	}
-	await view.click("Preview import")
+	await view.click("Continue")
 	for (let i = 0; i < 5; i++) await settle()
 	results.movielensBothSent = {
 		opened: view.opened(),
@@ -571,8 +683,15 @@ const movielens = (wishlist: boolean) =>
 		text: view.text(),
 		sent: [...sent],
 	}
-	await view.pick("Add it as Want to rewatch")
-	await view.click("Add to Want to See")
+	await view.click("Import")
+	results.wishlistRewatchAsked = {
+		counter: view.counter(),
+		answers: view.answers(),
+		highlighted: view.highlighted(),
+	}
+	await view.click("Yes, add to Want to rewatch")
+	await view.wait(800)
+	for (let i = 0; i < 3; i++) await settle()
 	results.wishlistRewatch = {
 		opened: view.opened(),
 		text: view.text(),
@@ -588,7 +707,7 @@ const movielens = (wishlist: boolean) =>
 		initialSource: "wishlist",
 		openImport: done.id,
 	})
-	await view.click("Undo import")
+	await view.click("Undo this import")
 	results.wishlistUndo = { opened: view.opened(), text: view.text() }
 	await view.unmount()
 }
@@ -608,8 +727,13 @@ const movielens = (wishlist: boolean) =>
 {
 	const done = summary("letterboxd", "done", "2026-10-11T12:00:00.000Z")
 	const view = await page({ sourceImports: [done] })
+	await view.unfold("Past imports")
 	await view.click("Open the Letterboxd import")
-	results.historyOpened = { opened: view.opened(), text: view.text() }
+	results.historyOpened = {
+		opened: view.opened(),
+		text: view.text(),
+		steps: view.steps(),
+	}
 	await view.unmount()
 }
 
@@ -649,13 +773,163 @@ const movielens = (wishlist: boolean) =>
 		openImport: MDBLIST_PREVIEW_ID,
 	})
 	for (let i = 0; i < 3; i++) await settle()
-	await view.tick("wishlist-shows")
-	await view.click("Start import")
+	await view.click("Import")
+	const asked = view.text()
+	await view.click("Yes, add the whole show")
+	await view.wait(800)
+	for (let i = 0; i < 3; i++) await settle()
 	results.mdblistShows = {
-		text: view.text(),
+		text: asked,
 		confirms: sent
 			.filter((call) => call.url.endsWith("/confirm"))
 			.map((call) => call.body),
+	}
+	await view.unmount()
+}
+
+{
+	// Every question at once: scores that differ, Seen titles, and whole shows.
+	const preview: ImportSummary = {
+		...summary("mdblist", "preview", null, MDBLIST_PREVIEW_ID),
+		counts: {
+			new: 4,
+			unchanged: 1,
+			conflict: 3,
+			unmatched: 0,
+			unsupported: 0,
+			invalid: 0,
+			rows: 8,
+		},
+		kinds: {
+			rating: 2,
+			watch: 0,
+			want: 5,
+			favorite: 0,
+			review: 0,
+			show_status: 0,
+		},
+		wishlistRewatchChoiceCount: 1,
+		wishlistShowChoiceCount: 1,
+	}
+	served.set(preview.id, preview)
+	const view = await page({
+		sourceImports: [preview],
+		initialSource: "mdblist",
+		openImport: MDBLIST_PREVIEW_ID,
+	})
+	for (let i = 0; i < 3; i++) await settle()
+	const choose = {
+		heading: view.heading(),
+		steps: view.steps(),
+		highlighted: view.highlighted(),
+		html: view.html(),
+	}
+	await view.click("Import")
+	const first = {
+		counter: view.counter(),
+		heading: view.heading(),
+		answers: view.answers(),
+		steps: view.steps(),
+		posters: view.html().includes("/heat.jpg"),
+		examples: view.text().includes("yours 8 · MDBList 9"),
+	}
+	await view.click("Yes, keep my scores")
+	const locking = { answers: view.answers(), locked: view.locked() }
+	// Back while the answer locks in: the next screen never comes.
+	await view.click("Back")
+	await view.wait(800)
+	const backed = { heading: view.heading(), counter: view.counter() }
+	await view.click("Import")
+	const second = {
+		counter: view.counter(),
+		heading: view.heading(),
+		answers: view.answers(),
+		highlighted: view.highlighted(),
+	}
+	await view.click("No, leave it as Seen")
+	await view.wait(800)
+	const third = { counter: view.counter(), answers: view.answers() }
+	await view.click("Yes, add the whole show")
+	const beforeLock = sent.filter((call) => call.url.endsWith("/confirm")).length
+	await view.wait(800)
+	for (let i = 0; i < 3; i++) await settle()
+	results.questions = {
+		choose,
+		first,
+		locking,
+		backed,
+		second,
+		third,
+		beforeLock,
+		confirms: sent
+			.filter((call) => call.url.endsWith("/confirm"))
+			.map((call) => call.body),
+		after: view.text(),
+		afterSteps: view.steps(),
+	}
+	await view.unmount()
+}
+
+{
+	// A file whose titles are all in GoodWatch already.
+	const preview: ImportSummary = {
+		...summary("letterboxd", "preview", null, PREVIEW_ID),
+		counts: {
+			new: 0,
+			unchanged: 5,
+			conflict: 0,
+			unmatched: 0,
+			unsupported: 0,
+			invalid: 0,
+			rows: 5,
+		},
+	}
+	served.set(preview.id, preview)
+	const view = await page({
+		sourceImports: [preview],
+		initialSource: "letterboxd",
+		openImport: preview.id,
+	})
+	for (let i = 0; i < 3; i++) await settle()
+	results.caughtUp = { text: view.text(), steps: view.steps() }
+	await view.unmount()
+}
+
+{
+	// An import that stopped partway: the red strip, the reason, and Continue.
+	const failed: ImportSummary = {
+		...summary("letterboxd", "failed", null, PREVIEW_ID),
+		processed: 62,
+		total: 100,
+		error: "GoodWatch restarted for an update while your import was running.",
+		options: {
+			kinds: ["rating"],
+			conflictChoice: "keep",
+			watchDates: "preserve",
+		},
+		operation: "apply",
+	}
+	served.set(failed.id, failed)
+	const view = await page({
+		sourceImports: [failed],
+		initialSource: "letterboxd",
+		openImport: failed.id,
+	})
+	for (let i = 0; i < 3; i++) await settle()
+	const stopped = {
+		text: view.text(),
+		strip: view.html().match(/data-progress-strip="(\w+)"/)?.[1] ?? null,
+		steps: view.steps(),
+	}
+	await view.click("Continue")
+	for (let i = 0; i < 3; i++) await settle()
+	results.failed = {
+		stopped,
+		confirms: sent
+			.filter((call) => call.url.endsWith("/confirm"))
+			.map((call) => call.body),
+		after: view.text(),
+		strip: view.html().match(/data-progress-strip="(\w+)"/)?.[1] ?? null,
 	}
 	await view.unmount()
 }

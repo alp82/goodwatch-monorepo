@@ -8,9 +8,7 @@ import {
 } from "../../domain/imports.ts"
 
 const { buildSourceImportUpload } = await import("./SourceImportUpload.ts")
-const { sourceImportRequirements } = await import(
-	"./SourceImportPreviewModel.ts"
-)
+const { sourceOptions } = await import("./import-flow-model.ts")
 
 test("buildSourceImportUpload sends the selected source and untouched ZIP file", () => {
 	const file = new File(["archive"], "letterboxd-export.zip", {
@@ -22,23 +20,35 @@ test("buildSourceImportUpload sends the selected source and untouched ZIP file",
 	assert.equal(body.get("file"), file)
 })
 
-test("a rating-only selection can start without answering the watch-date question", () => {
-	assert.deepEqual(sourceImportRequirements(12, ["rating"], null), {
-		importsWatches: false,
-		canImport: true,
-		watchDates: "preserve",
-	})
+test("watch dates are never asked: an import always keeps the source's own dates", () => {
+	const summary = {
+		source: "letterboxd",
+		kinds: {
+			rating: 1,
+			watch: 12,
+			want: 0,
+			favorite: 0,
+			review: 0,
+			show_status: 0,
+		},
+		counts: {
+			new: 1,
+			unchanged: 0,
+			conflict: 0,
+			unmatched: 0,
+			unsupported: 0,
+			invalid: 0,
+			rows: 13,
+		},
+	} as never
+	assert.equal(sourceOptions(summary, ["rating"], {}).watchDates, "preserve")
 	assert.equal(
-		sourceImportRequirements(12, ["rating", "watch"], null).canImport,
-		false,
-	)
-	assert.equal(
-		sourceImportRequirements(12, ["watch"], "unknown").canImport,
-		true,
+		sourceOptions(summary, ["rating", "watch"], {}).watchDates,
+		"preserve",
 	)
 })
 
-test("the preview renders selected kinds, conditional date choice, and busy/error states", () => {
+test("Choose lists every kind with its count, all in, without a watch-date question, fine print, or busy/error states lost", () => {
 	const output = execFileSync(
 		"node_modules/.bin/vite-node",
 		[
@@ -89,11 +99,9 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 		/score is kept for its own episodes, such as S1 E1–12/,
 	)
 	assert.match(rendered.statusOnly, /Show statuses/)
-	assert.doesNotMatch(rendered.statusOnly, /How should watch dates be handled/)
-	assert.match(
-		rendered.statusOnly,
-		/Without added watches, Undo restores those choices/,
-	)
+	assert.doesNotMatch(rendered.statusOnly, /watch dates/i)
+	// The preview's fine print is gone; Undo says what it does when the member asks for it.
+	assert.doesNotMatch(rendered.statusOnly, /Undo restores/)
 	assert.equal(IMPORT_SHOW_STATUS_LABELS.completed, "Completed → Seen")
 	assert.match(rendered.kodiUpload, /Advanced/)
 	assert.match(rendered.kodiUpload, /Choose Kodi export XML or ZIP file/)
@@ -115,55 +123,31 @@ test("the preview renders selected kinds, conditional date choice, and busy/erro
 	assert.match(rendered.movielensUpload, /MovieLens ratings CSV/)
 	assert.match(rendered.movielensUpload, /MovieLens wishlist CSV/)
 	assert.match(rendered.movielensUpload, /optional/i)
-	assert.match(rendered.movielensUpload, /Preview import/)
+	assert.match(rendered.movielensUpload, />Continue</)
+	assert.match(rendered.ratingOnly, /What should come in\?/)
 	assert.match(rendered.ratingOnly, /type="checkbox"[^>]*checked=""/)
-	assert.doesNotMatch(rendered.ratingOnly, /How should watch dates be handled/)
-	assert.doesNotMatch(
-		rendered.ratingOnly,
-		/does not restore those earlier choices/,
-	)
+	assert.match(rendered.ratingOnly, /Scores/)
+	assert.doesNotMatch(rendered.ratingOnly, /watch dates/i)
 	assert.match(rendered.ratingOnly, /Preview could not start/)
-	assert.match(rendered.withWatches, /How should watch dates be handled/)
-	assert.match(
-		rendered.plexWatches,
-		/Undo restores the earlier choices when no newer watch or choice remains/,
-	)
-	assert.doesNotMatch(
-		rendered.plexWatches,
-		/Undo of added watches does not restore/,
-	)
+	assert.match(rendered.withWatches, /Watches<\/span><span[^>]*>2</)
+	assert.doesNotMatch(rendered.withWatches, /type="radio"/)
+	assert.doesNotMatch(rendered.plexWatches, /Undo restores|How rows compare/)
 	assert.match(rendered.plexSeasonScore, /S4/)
 	assert.match(rendered.plexSeasonScore, /Source 8.5/)
-	assert.match(
-		rendered.withWatches,
-		/Undo of added watches does not restore those choices/,
-	)
 	assert.match(rendered.withWatches, /Starting import/)
-	assert.match(rendered.withWatches, /disabled=""/)
-	// Fewest steps (owner rule): source dates are chosen already, so Start import works right away.
 	assert.match(
-		rendered.freshWatches,
-		/type="radio"[^>]*checked=""[^>]*\/><span><span[^>]*>Preserve dates from the export/,
-	)
-	assert.doesNotMatch(rendered.freshWatches, /Choose how to handle watch dates/)
-	assert.match(rendered.freshWatches, /Start import/)
-	assert.doesNotMatch(
-		rendered.freshWatches.match(/<button[^>]*>Start import/)?.[0] ?? "",
+		rendered.withWatches.match(/<button[^>]*>Starting import/)?.[0] ?? "",
 		/disabled=""/,
 	)
-	// A season or episode on the MDBList Watchlist waits for an unselected Want to See the show choice.
-	assert.match(rendered.mdblistShowChoice, /Want to See the show/)
-	assert.match(
-		rendered.mdblistShowChoice,
-		/Your MDBList Watchlist lists seasons or episodes of 1 show/,
-	)
+	// Fewest steps (owner rule): no watch-date question, so Import works right away.
+	assert.match(rendered.freshWatches, />Import</)
 	assert.doesNotMatch(
-		rendered.mdblistShowChoice.match(
-			/<input type="checkbox"[^>]*name="wishlist-shows"[^>]*>/,
-		)?.[0] ?? "missing",
-		/checked=""/,
+		rendered.freshWatches.match(/<button[^>]*>Import</)?.[0] ?? "missing",
+		/disabled=""/,
 	)
-	assert.match(rendered.mdblistShowChoice, /name="wishlist-shows"/)
+	// The whole-show choice is a question after Choose, so Choose has no box for it.
+	assert.doesNotMatch(rendered.mdblistShowChoice, /name="wishlist-shows"/)
+	assert.match(rendered.mdblistShowChoice, /Want to See<\/span><span[^>]*>2</)
 })
 
 test("buildSourceImportUpload rejects non-ZIP and oversized uploads before the request", () => {
@@ -295,11 +279,9 @@ test("TMDB offers Connect and an explicit return/cancel step without a file inpu
 	assert.match(rendered.failed, /Please try again/)
 	assert.match(rendered.failed, /Start a new connection/)
 	assert.doesNotMatch(rendered.preview, /export|Choose another file/i)
-	assert.match(rendered.preview, /TMDB data/)
-	assert.match(rendered.preview, /Connect TMDB again/)
-	assert.match(rendered.filePreview, /Rows in your export/)
-	assert.match(rendered.filePreview, /Use the export instead/)
-	assert.match(rendered.filePreview, /Choose another file/)
+	assert.match(rendered.preview, /Check these import details/)
+	assert.match(rendered.preview, /What should come in\?/)
+	assert.match(rendered.filePreview, /Check these export details/)
 	assert.match(rendered.failed, /\/api\/imports\/tmdb\/start/)
 })
 
@@ -357,7 +339,7 @@ test("background resolution keeps the existing preview poll active until it sett
 	assert.equal(sourceImportNeedsPolling({ status: "running" }), true)
 })
 
-test("custom list previews offer Lists with private and duplicate rules, and expose source order, notes and the created-list link", () => {
+test("custom lists come in as Lists, Done counts the lists made, and their entries keep source order, notes and the created-list link", () => {
 	const output = execFileSync(
 		"node_modules/.bin/vite-node",
 		[
@@ -371,24 +353,18 @@ test("custom list previews offer Lists with private and duplicate rules, and exp
 		output.split("__SOURCE_IMPORT_RENDER__").at(-1) ?? "",
 	)
 	assert.match(rendered.keptListReceipt, /1 list could not be deleted/)
+	assert.match(rendered.keptListReceipt, /Undone/)
 	assert.match(
 		rendered.keptListDetails,
 		/This list changed after import. Undo kept it./,
 	)
 	assert.doesNotMatch(rendered.keptListDetails, /List deleted by Undo/)
 	assert.match(rendered.keptListDetails, /href="\/lists\/AbCd012345"/)
-	assert.match(rendered.listReceipt, /1 list created/)
-	assert.doesNotMatch(
-		rendered.listReceipt,
-		/Nothing in your GoodWatch library changed/,
-	)
-	assert.match(rendered.listPreview, /Lists/)
-	assert.doesNotMatch(
-		rendered.listPreview,
-		/When GoodWatch already has different data/,
-	)
-	assert.match(rendered.listPreview, /private until you share/)
-	assert.match(rendered.listPreview, /creates a second list/)
+	assert.match(rendered.listReceipt, /Done\. 1 list is in GoodWatch/)
+	assert.match(rendered.listReceipt, /1<\/span><span[^>]*>Lists added/)
+	assert.doesNotMatch(rendered.listReceipt, /Nothing in your library changed/)
+	assert.match(rendered.listPreview, /Lists<\/span><span[^>]*>1</)
+	assert.doesNotMatch(rendered.listPreview, /Keep yours\?/)
 	assert.match(rendered.listDetails, /Source list/)
 	assert.match(rendered.listDetails, /A list note, not a review\./)
 	assert.match(rendered.listDetails, /value="2"/)

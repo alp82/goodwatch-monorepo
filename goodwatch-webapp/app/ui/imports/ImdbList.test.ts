@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { it } from "node:test"
-it("the existing IMDb upload asks list intent before sending and confirms shared Watchlist wants with separate rewatch consent", () => {
+it("the IMDb upload asks list intent before sending and confirms shared Watchlist wants with separate rewatch consent", () => {
 	const output = execFileSync(
 		"node_modules/.bin/vite-node",
 		[
@@ -43,9 +43,10 @@ it("explains a legacy file may be Ratings or Watchlist and sends the selected Ra
 	assert.deepEqual(result.initiallySelected, [])
 	assert.match(result.chooserText, /old ratings or Watchlist export/i)
 	assert.equal(result.sent[0].body.listKind, "ratings")
+	assert.deepEqual(result.suggested, [])
 })
 
-it("preselects My Watchlist for filenames containing watchlist in any case, including legacy exports, without submitting automatically", () => {
+it("suggests My Watchlist for filenames containing watchlist in any case, including legacy exports, but never picks it", () => {
 	for (const legacy of [false, true]) {
 		const output = execFileSync(
 			"node_modules/.bin/vite-node",
@@ -65,8 +66,9 @@ it("preselects My Watchlist for filenames containing watchlist in any case, incl
 		)
 		const result = JSON.parse(output.split("__IMDB_LIST_UI__").at(-1) ?? "")
 		assert.equal(result.before, 0)
-		assert.equal(result.initiallySelected.length, 1)
-		assert.match(result.initiallySelected[0], /^My Watchlist/)
+		assert.deepEqual(result.initiallySelected, [])
+		assert.equal(result.suggested.length, 1)
+		assert.match(result.suggested[0], /^My Watchlist/)
 		assert.equal(result.sent[0].body.listKind, "watchlist")
 	}
 })
@@ -94,7 +96,7 @@ it("custom-list uploads keep the source list title from the filename in an edita
 	assert.equal(result.sent[0].body.listKind, "custom-list")
 })
 
-it("an IMDb ratings preview says how many rows are episode scores and that they stay with their episodes", () => {
+it("an IMDb ratings file's Choose step counts its episode scores and says they stay with their episodes", () => {
 	const output = execFileSync(
 		"node_modules/.bin/vite-node",
 		[
@@ -105,17 +107,12 @@ it("an IMDb ratings preview says how many rows are episode scores and that they 
 		{ encoding: "utf8" },
 	)
 	const html = JSON.parse(output.split("__IMDB_EPISODES__").at(-1) ?? "")
+	assert.match(html.two, /What should come in\?/)
+	assert.match(html.two, /Episode scores<\/span><span[^>]*>2</)
 	assert.match(
 		html.two,
-		/Movies, shows and episodes are imported\. Shorts and games are not\./,
+		/Episode scores stay with their episodes: they never rate the whole show or mark an episode watched\./,
 	)
-	assert.match(
-		html.two,
-		/2 rows are episode scores\. Each stays with its episode, never becomes a rating of the show, and doesn&#x27;t mark the episode watched\./,
-	)
-	assert.match(
-		html.one,
-		/1 row is an episode score\. It stays with its episode,/,
-	)
+	assert.match(html.one, /Episode scores<\/span><span[^>]*>1</)
 	assert.doesNotMatch(html.none, /data-episode-scores/)
 })

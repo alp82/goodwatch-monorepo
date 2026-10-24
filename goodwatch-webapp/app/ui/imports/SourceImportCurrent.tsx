@@ -1,17 +1,20 @@
-import { ArrowDownTrayIcon } from "@heroicons/react/20/solid"
-import { useState } from "react"
+// One import, drawn by where it is in its life: Choose and the questions while it's a preview, the progress strip
+// while it runs or after it stopped, and the Done step once it finished or was undone.
+import { useRef, useState } from "react"
 import {
-	IMPORT_SOURCE_NAMES,
 	IMPORT_SOURCE_UPLOAD,
 	type ImportOptions,
 	type ImportSummary,
-	isFileImportSource,
 } from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
-import { FocusHeading } from "./FocusHeading"
+import { ImportDone } from "./ImportDone"
+import { useImportPosters } from "./ImportFlowData"
+import { Disclosure } from "./ImportFlowParts"
 import { ImportNotes } from "./ImportNotes"
-import { ImportResult } from "./ImportResult"
+import { ImportRun } from "./ImportRun"
+import { SourceImportChoose } from "./SourceImportChoose"
 import { sourceImportCopy } from "./SourceImportCopy"
+import { SourceOutcomeRow } from "./SourceImportCounts"
 import {
 	sourceSkippedDownloadUrl,
 	useConfirmSourceImport,
@@ -19,23 +22,27 @@ import {
 	useSourceImport,
 	useUndoSourceImport,
 } from "./SourceImportHooks"
-import { SourceOutcomeRow } from "./SourceImportCounts"
-import { SourceImportPreview } from "./SourceImportPreview"
 import type {
 	PreviewUpdate,
 	SourceImportChoices,
 } from "./SourceImportPreviewModel"
-import {
-	dangerButton,
-	errorBox,
-	formatCount,
-	primaryButton,
-	secondaryButton,
-	textLink,
-} from "./shared"
+import { sourceName, sourceThing } from "./import-flow-model"
+import { errorBox, secondaryButton, textLink } from "./shared"
 
-const skippedCount = (summary: ImportSummary) =>
-	summary.counts.unmatched + summary.counts.unsupported + summary.counts.invalid
+/** Options for a stopped import that never recorded its own, so Continue can still pick it up. */
+const FALLBACK_OPTIONS: ImportOptions = {
+	kinds: [
+		"rating",
+		"episode_rating",
+		"watch",
+		"want",
+		"favorite",
+		"review",
+		"show_status",
+	],
+	conflictChoice: "keep",
+	watchDates: "preserve",
+}
 
 export function SourceImportCurrent({
 	id,
@@ -58,10 +65,15 @@ export function SourceImportCurrent({
 	const confirm = useConfirmSourceImport(id)
 	const undo = useUndoSourceImport(id)
 	const summary = query.data?.import
+	const posters = useImportPosters("/api/imports", id, { enabled: !!summary })
 	useRefreshAfterSourceImport(summary)
+	// Done speaks of an import as just done when the member watched it run here.
+	const watched = useRef(false)
+	if (summary?.status === "running" || summary?.status === "preview")
+		watched.current = true
 	if (!summary)
 		return query.isError ? (
-			<div className="space-y-3">
+			<div className="space-y-3" aria-live="assertive">
 				<p className={errorBox}>{query.error.message}</p>
 				<button
 					type="button"
@@ -74,29 +86,14 @@ export function SourceImportCurrent({
 		) : (
 			<Spinner size="medium" />
 		)
-	const resume = () => {
-		if (summary.operation === "undo") {
-			undo.mutate()
-			return
-		}
-		const options: ImportOptions = summary.options ?? {
-			kinds: [
-				"rating",
-				"episode_rating",
-				"watch",
-				"want",
-				"favorite",
-				"review",
-				"show_status",
-			],
-			conflictChoice: "keep",
-			watchDates: "preserve",
-		}
-		confirm.mutate(options)
-	}
+	const src = sourceName(summary.source)
+	const copy = sourceImportCopy(summary.source)
+	const notes: [string, string] = [src, ""]
+	// Focus moves with the member's acts: a step that replaced the one they acted on takes it.
+	const acted = focus || confirm.isSuccess || undo.isSuccess
 	if (summary.status === "preview")
 		return (
-			<SourceImportPreview
+			<SourceImportChoose
 				summary={summary}
 				focus={focus}
 				confirming={confirm.isPending}
@@ -107,149 +104,114 @@ export function SourceImportCurrent({
 				updated={updated}
 				initialChoices={initialChoices}
 				onChoicesChange={onChoicesChange}
+				posters={posters}
 			/>
 		)
-	if (summary.status === "running") {
+	if (summary.status === "running" || summary.status === "failed") {
 		const undoing = summary.operation === "undo"
-		const pending = undoing ? undo.isPending : confirm.isPending
-		const actionError = undoing
-			? undo.isError
-				? undo.error.message
-				: null
-			: confirm.isError
-				? confirm.error.message
-				: null
+		const action = undoing ? undo : confirm
 		return (
-			<section className="space-y-4">
-				<FocusHeading focus={focus || confirm.isSuccess || undo.isSuccess}>
-					{undoing ? "Undoing your import" : "Importing your data"}
-				</FocusHeading>
-				<p>
-					GoodWatch has processed {formatCount(summary.processed)} of{" "}
-					{formatCount(summary.total)} rows.
-				</p>
-				<progress
-					value={summary.processed}
-					max={Math.max(summary.total, 1)}
-					className="h-3 w-full accent-indigo-500"
-				>
-					<span>
-						{summary.processed} of {summary.total}
-					</span>
-				</progress>
-				{summary.stalled && (
-					<div className="rounded-lg border border-amber-700 bg-amber-950/40 p-4">
-						<p>
-							This {undoing ? "undo" : "import"} stopped making progress. It is
-							safe to resume from where it stopped.
-						</p>
-						<button
-							type="button"
-							className={`${primaryButton} mt-3`}
-							disabled={pending}
-							onClick={resume}
-						>
-							{pending ? "Resuming" : undoing ? "Resume undo" : "Resume import"}
-						</button>
-					</div>
-				)}
-				{query.isError && (
-					<p className={errorBox}>
-						Progress could not be refreshed. GoodWatch will keep trying.
-					</p>
-				)}
-				{actionError && <p className={errorBox}>{actionError}</p>}
-			</section>
-		)
-	}
-	if (summary.status === "failed") {
-		const undoing = summary.operation === "undo"
-		const pending = undoing ? undo.isPending : confirm.isPending
-		const actionError = undoing
-			? undo.isError
-				? undo.error.message
-				: null
-			: confirm.isError
-				? confirm.error.message
-				: null
-		return (
-			<section className="space-y-4">
-				<FocusHeading focus={focus}>
-					The {undoing ? "undo" : "import"} didn't finish
-				</FocusHeading>
-				<p className={errorBox} role="alert">
-					{summary.error ??
-						`Something went wrong while ${undoing ? "undoing" : "importing"} your data.`}
-				</p>
-				<p>
-					{formatCount(summary.processed)} of {formatCount(summary.total)} rows
-					were processed. Resume to continue without repeating completed rows.
-				</p>
-				<div className="flex flex-wrap gap-3">
-					<button
-						type="button"
-						className={primaryButton}
-						disabled={pending}
-						onClick={resume}
-					>
-						{pending ? "Resuming" : undoing ? "Resume undo" : "Resume import"}
-					</button>
-					{!undoing && (
-						<button
-							type="button"
-							className={secondaryButton}
-							onClick={onUploadAnother}
-						>
-							{sourceImportCopy(summary.source).restart}
-						</button>
-					)}
-				</div>
-				{actionError && <p className={errorBox}>{actionError}</p>}
-			</section>
+			<ImportRun
+				summary={summary}
+				source={src}
+				posters={posters}
+				count={null}
+				focus={acted}
+				pending={action.isPending}
+				actionError={action.isError ? action.error.message : null}
+				checkFailed={query.isError}
+				onResume={() =>
+					undoing
+						? undo.mutate()
+						: confirm.mutate(summary.options ?? FALLBACK_OPTIONS)
+				}
+				onRestart={onUploadAnother}
+				restartLabel={copy.restart}
+				notes={notes}
+			/>
 		)
 	}
 	return (
-		<Receipt
+		<ImportDone
+			api="/api/imports"
 			summary={summary}
-			undoing={undo.isPending}
-			undoError={undo.isError ? undo.error.message : null}
-			onUndo={() => undo.mutate()}
+			source={src}
+			thing={sourceThing(summary.source)}
+			posters={posters}
+			focus={acted}
+			openedHere={watched.current || confirm.isSuccess}
+			undo={{
+				pending: undo.isPending,
+				error: undo.isError ? undo.error.message : null,
+				run: () => undo.mutate(),
+			}}
+			undoQuestion={undoQuestion(summary)}
 			onUploadAnother={onUploadAnother}
-		/>
+			anotherLabel={copy.another}
+			skippedUrl={sourceSkippedDownloadUrl(summary.id)}
+			notes={notes}
+		>
+			<SourceDoneNotes summary={summary} />
+		</ImportDone>
 	)
 }
 
-function Receipt({
-	summary,
-	undoing,
-	undoError,
-	onUndo,
-	onUploadAnother,
-}: {
-	summary: ImportSummary
-	undoing: boolean
-	undoError: string | null
-	onUndo: () => void
-	onUploadAnother: () => void
-}) {
-	const [askUndo, setAskUndo] = useState(false)
+/** What Undo does for this source, asked before it runs. */
+export function undoQuestion(summary: ImportSummary) {
 	const watcharrWatches =
 		summary.source === "wishlist" &&
 		(summary.kinds.watch > 0 || summary.kinds.show_status > 0)
-	const skipped = skippedCount(summary)
+	return summary.source === "plex" && summary.kinds.watch > 0
+		? "Undo this import? GoodWatch removes watches this import added and restores earlier scores and show statuses. Choices cleared by watches are restored when no newer watch or choice remains. Later ratings, statuses and list choices stay protected. Undo of Want to See does not restore earlier Not interested choices."
+		: watcharrWatches
+			? "Undo this import? GoodWatch removes watches this import added and restores earlier show statuses. Undo restores the earlier Want to See and Not interested choices when no newer watch or choice remains. Later ratings and reviews stay protected."
+			: summary.source === "wishlist"
+				? "Undo this import? GoodWatch takes the titles this import added off Want to See. Titles you changed since then stay as you left them. Titles the import took off Not interested aren't marked Not interested again. The result lists them so you can put them back."
+				: "Undo this import? GoodWatch removes watches this import added, even if you edited their dates later, and restores earlier show statuses. Later status, rating and list changes stay protected. Without added watches, restoring a status also restores its cleared Want to See or Not interested choices. Undo of added watches and Want to See does not restore those choices; the result lists them so you can put them back."
+}
+
+const ENTRY_OUTCOMES = [
+	"new",
+	"unchanged",
+	"conflict",
+	"unmatched",
+	"unsupported",
+	"invalid",
+] as const
+
+/** The source's credits, its lists as they came in, and the notes about its file, under the Done step's summary. */
+function SourceDoneNotes({ summary }: { summary: ImportSummary }) {
+	const credits = IMPORT_SOURCE_UPLOAD[summary.source]?.credits ?? []
+	const [listsOpen, setListsOpen] = useState(false)
+	const lists = summary.source === "imdb_list" || (summary.kinds.list ?? 0) > 0
+	if (!credits.length && !summary.warnings.length && !lists) return null
 	return (
-		<ImportResult
-			api="/api/imports"
-			id={summary.id}
-			status={summary.status}
-			from={
-				isFileImportSource(summary.source) || summary.source === "imdb_list"
-					? summary.fileName
-					: `your ${IMPORT_SOURCE_NAMES[summary.source]} account`
-			}
-			focus
-		>
-			{(IMPORT_SOURCE_UPLOAD[summary.source]?.credits ?? []).map((credit) => (
+		<div className="flex flex-col gap-3">
+			{lists && (
+				<Disclosure
+					label={
+						summary.source === "imdb_list"
+							? "Original IMDb list entries"
+							: "Lists and original export entries"
+					}
+					open={listsOpen}
+					onToggle={setListsOpen}
+				>
+					<ul className="divide-y divide-slate-800 rounded-lg border border-slate-700">
+						{ENTRY_OUTCOMES.filter(
+							(outcome) => summary.counts[outcome] > 0,
+						).map((outcome) => (
+							<SourceOutcomeRow
+								key={outcome}
+								importId={summary.id}
+								outcome={outcome}
+								count={summary.counts[outcome]}
+							/>
+						))}
+					</ul>
+				</Disclosure>
+			)}
+			{credits.map((credit) => (
 				<p key={credit.url} className="text-sm text-gray-400">
 					{credit.purpose} courtesy of{" "}
 					<a
@@ -263,104 +225,12 @@ function Receipt({
 					.
 				</p>
 			))}
-			{(summary.source === "imdb_list" || (summary.kinds.list ?? 0) > 0) && (
-				<details className="space-y-3">
-					<summary className="cursor-pointer font-semibold text-gray-100">
-						{summary.source === "imdb_list"
-							? "Original IMDb list entries"
-							: "Lists and original export entries"}
-					</summary>
-					<ul className="divide-y divide-slate-800 rounded-lg border border-slate-700">
-						{(
-							[
-								"new",
-								"unchanged",
-								"conflict",
-								"unmatched",
-								"unsupported",
-								"invalid",
-							] as const
-						)
-							.filter((outcome) => summary.counts[outcome] > 0)
-							.map((outcome) => (
-								<SourceOutcomeRow
-									key={outcome}
-									importId={summary.id}
-									outcome={outcome}
-									count={summary.counts[outcome]}
-								/>
-							))}
-					</ul>
-				</details>
-			)}
 			<ImportNotes
 				warnings={summary.warnings}
 				title={
 					summary.source === "wishlist" ? "About this file" : "Export notes"
 				}
 			/>
-			<div className="flex flex-wrap items-center gap-3">
-				{skipped > 0 && summary.status !== "undone" && (
-					<a
-						href={sourceSkippedDownloadUrl(summary.id)}
-						download
-						className={secondaryButton}
-					>
-						<ArrowDownTrayIcon className="size-5" aria-hidden />
-						Download skipped rows ({formatCount(skipped)} CSV)
-					</a>
-				)}
-				<button
-					type="button"
-					className={secondaryButton}
-					onClick={onUploadAnother}
-				>
-					{sourceImportCopy(summary.source).another}
-				</button>
-			</div>
-			{summary.canUndo &&
-				(askUndo ? (
-					<div className="rounded-lg border border-red-900 bg-red-950/40 p-4">
-						<p className="text-gray-100">
-							{summary.source === "plex" && summary.kinds.watch > 0
-								? "Undo this import? GoodWatch removes watches this import added and restores earlier scores and show statuses. Choices cleared by watches are restored when no newer watch or choice remains. Later ratings, statuses and list choices stay protected. Undo of Want to See does not restore earlier Not interested choices."
-								: watcharrWatches
-									? "Undo this import? GoodWatch removes watches this import added and restores earlier show statuses. Undo restores the earlier Want to See and Not interested choices when no newer watch or choice remains. Later ratings and reviews stay protected."
-									: summary.source === "wishlist"
-										? "Undo this import? GoodWatch takes the titles this import added off Want to See. Titles you changed since then stay as you left them. Titles the import took off Not interested aren't marked Not interested again. The result lists them so you can put them back."
-										: "Undo this import? GoodWatch removes watches this import added, even if you edited their dates later, and restores earlier show statuses. Later status, rating and list changes stay protected. Without added watches, restoring a status also restores its cleared Want to See or Not interested choices. Undo of added watches and Want to See does not restore those choices; the result lists them so you can put them back."}
-						</p>
-						<div className="mt-3 flex flex-wrap gap-3">
-							<button
-								type="button"
-								className={dangerButton}
-								disabled={undoing}
-								onClick={onUndo}
-							>
-								{undoing ? "Undoing" : "Yes, undo import"}
-							</button>
-							<button
-								type="button"
-								className={secondaryButton}
-								disabled={undoing}
-								// biome-ignore lint/a11y/noAutofocus: the question replaces the focused Undo button
-								autoFocus
-								onClick={() => setAskUndo(false)}
-							>
-								Keep the import
-							</button>
-						</div>
-					</div>
-				) : (
-					<button
-						type="button"
-						className={`${textLink} min-h-11 self-start`}
-						onClick={() => setAskUndo(true)}
-					>
-						Undo import
-					</button>
-				))}
-			{undoError && <p className={errorBox}>{undoError}</p>}
-		</ImportResult>
+		</div>
 	)
 }

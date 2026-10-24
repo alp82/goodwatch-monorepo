@@ -10,7 +10,7 @@ import {
 	groupImportResult,
 	skippedEntry,
 } from "~/domain/import-result"
-import { ImportResultView } from "./ImportResultView"
+import { ResultRows, ResultSection } from "./ImportResultView"
 
 const title = (
 	tmdbId: number,
@@ -135,24 +135,39 @@ const undone = firstRows(
 	]),
 )
 
+/** Every section title by title, as the Done step's folds draw them; Undo's not put back rows with their buttons. */
 const render = (result: ImportResult) =>
 	renderToStaticMarkup(
 		createElement(
 			MemoryRouter,
 			null,
-			createElement(ImportResultView, {
-				result,
-				from: "my-movies.csv",
-				focus: false,
-				putBack: (put) =>
-					createElement(
-						"button",
-						{ type: "button" },
-						`put back ${put.title.title} on ${put.list}`,
-					),
-				more: (section) =>
-					createElement("button", { type: "button" }, `more ${section.key}`),
-			}),
+			...result.sections.map((section) =>
+				section.key === "not_restored"
+					? createElement(
+							"div",
+							{ key: section.key },
+							createElement("h4", null, `Not put back ${section.count}`),
+							createElement(
+								"ul",
+								null,
+								createElement(ResultRows, {
+									rows: section.rows,
+									putBack: (put) =>
+										createElement(
+											"button",
+											{ type: "button" },
+											`put back ${put.title.title} on ${put.list}`,
+										),
+								}),
+							),
+						)
+					: createElement(ResultSection, {
+							key: section.key,
+							section,
+							more: (item) =>
+								createElement("button", { type: "button" }, `more ${item.key}`),
+						}),
+			),
 		),
 	)
 
