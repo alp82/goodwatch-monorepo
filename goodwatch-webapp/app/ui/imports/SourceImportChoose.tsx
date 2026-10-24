@@ -2,7 +2,9 @@ import { CheckIcon } from "@heroicons/react/20/solid"
 import { ArrowDownTrayIcon } from "@heroicons/react/20/solid"
 // The Choose step of an import and the questions after it, before anything changes: every kind the file brings with
 // its count, all in, one Import button; then one question per screen (a plain fact, then yes or no) for what only the
-// member can decide. The server takes every answer when the import starts, so the questions come first.
+// member can decide. A preview that counts its questions starts right after Choose and asks them while it runs
+// (ImportQuestions); only matching stays here. Older previews ask everything here, since the server takes every answer
+// when the import starts.
 import { Link } from "@remix-run/react"
 import { type ReactNode, useRef, useState } from "react"
 import type { ImportOptions, ImportSummary } from "~/domain/imports"
@@ -76,6 +78,11 @@ import {
 	waitsForAnswer,
 	wholeShowCount,
 } from "./import-flow-model"
+import {
+	asksWhileRunning,
+	runOptions,
+	runWouldWrite,
+} from "./import-questions-model"
 import {
 	errorBox,
 	infoBox,
@@ -184,17 +191,21 @@ function ChooseAndAsk({
 		!!summary.resolution &&
 		tvtimeProgress(summary.resolution).active
 	const content = sourcePreviewContent(summary, stillMatching)
-	const countNeedsRows = conflictCountNeedsRows(summary)
+	// A preview that counts its questions asks them while the import runs; only matching stays before it.
+	const live = asksWhileRunning(summary)
+	const countNeedsRows = !live && conflictCountNeedsRows(summary)
 	const conflicts = useConflictRows(
 		"/api/imports",
 		summary.id,
-		summary.counts.conflict > 0 && !isWishlistOnly(summary),
+		!live && summary.counts.conflict > 0 && !isWishlistOnly(summary),
 		countNeedsRows,
 	)
 	const scoreConflicts = scoreConflictCount(summary, conflicts?.total ?? null)
 	// The questions are settled once the conflict count is known, or known to be unknown; until then Import waits.
 	const settled = !countNeedsRows || conflicts !== null
-	const questions = sourceQuestions({ summary, kinds, scoreConflicts })
+	const questions = sourceQuestions({ summary, kinds, scoreConflicts }).filter(
+		(question) => !live || question === "matching",
+	)
 	const [screen, setScreen] = useState<Screen>({ at: "choose" })
 	const [dir, setDir] = useState<1 | -1>(1)
 	// Focus follows the member's own acts, never arrival.
@@ -219,6 +230,11 @@ function ChooseAndAsk({
 		if (!now.settled) return go({ at: "choose" }, -1)
 		const open = firstUnanswered(now.questions, final)
 		if (open) return go({ at: "ask", question: open }, 1)
+		if (live) {
+			const options = runOptions(summary, now.kinds, isWishlistOnly(summary))
+			if (!runWouldWrite(summary, options)) return go({ at: "nothing" }, 1)
+			return onConfirm(options)
+		}
 		if (!sourceWouldWrite(summary, now.kinds, final))
 			return go({ at: "nothing" }, 1)
 		onConfirm(sourceOptions(summary, now.kinds, final))

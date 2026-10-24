@@ -12,6 +12,7 @@ import {
 } from "./ImportFlowParts"
 import {
 	LONG_RUN_ROWS,
+	oneOrMany,
 	plural,
 	runProgress,
 	stopReason,
@@ -32,11 +33,17 @@ export function ProgressStrip({
 	summary,
 	posters,
 	label,
+	note,
+	resume,
 }: {
 	summary: RunSummary
 	posters: FlowPoster[]
 	/** "Importing 842 titles", or how an Undo says it. */
 	label: string
+	/** A short line under the bar: questions left, answers coming in. */
+	note?: string
+	/** A question is on screen: the strip itself carries why the run stopped, and Continue. */
+	resume?: { pending: boolean; run: () => void }
 }) {
 	const undo = summary.operation === "undo"
 	const stopped = summary.status === "failed" || summary.stalled
@@ -92,6 +99,27 @@ export function ProgressStrip({
 					tone={stopped ? "red" : "amber"}
 				/>
 			</div>
+			{note && (
+				<p className="mt-2 text-xs text-gray-400" data-strip-note>
+					{note}
+				</p>
+			)}
+			{stopped && resume && (
+				<div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+					<div className="min-w-0 text-sm">
+						<p className="font-semibold text-white">{stopReason(summary)}</p>
+						<p className="text-red-100/80">What came in so far is saved.</p>
+					</div>
+					<button
+						type="button"
+						className={primaryButton}
+						disabled={resume.pending}
+						onClick={resume.run}
+					>
+						{resume.pending ? "Continuing" : "Continue"}
+					</button>
+				</div>
+			)}
 		</section>
 	)
 }
@@ -113,6 +141,9 @@ export function ImportRun({
 	onRestart,
 	restartLabel,
 	notes,
+	putOff = 0,
+	answered = false,
+	note,
 }: {
 	summary: RunSummary
 	source: string
@@ -127,6 +158,12 @@ export function ImportRun({
 	restartLabel?: string
 	/** The stepper's notes under Bring and Choose. */
 	notes: [string, string]
+	/** Questions the member put off with Decide later: they wait for the end. */
+	putOff?: number
+	/** The member answered a question while it ran. */
+	answered?: boolean
+	/** The strip's line under the bar. */
+	note?: string
 }) {
 	const undo = summary.operation === "undo"
 	const stopped = summary.status === "failed" || summary.stalled
@@ -150,7 +187,12 @@ export function ImportRun({
 			: `Importing your ${source} titles`
 	return (
 		<div className="flex flex-col gap-6">
-			<ProgressStrip summary={summary} posters={posters} label={label} />
+			<ProgressStrip
+				summary={summary}
+				posters={posters}
+				label={label}
+				note={note}
+			/>
 			{stopped ? (
 				<section className="flex flex-col gap-4" data-run-stopped>
 					<StepHeading focus={focus}>
@@ -190,12 +232,18 @@ export function ImportRun({
 					<StepHeading focus={focus} className={headingClass}>
 						{undo
 							? "Undoing this import"
-							: `Your ${source} titles are moving in`}
+							: putOff > 0
+								? `${plural(putOff, "question")} ${oneOrMany(putOff, "waits", "wait")} for the end`
+								: answered
+									? "Thanks! Your titles are almost in"
+									: `Your ${source} titles are moving in`}
 					</StepHeading>
 					<p className="text-gray-400">
-						{summary.total >= LONG_RUN_ROWS
-							? "Ready in a few minutes. You can leave this page; it keeps going."
-							: "Ready in a moment."}
+						{!undo && putOff > 0
+							? `Nothing from ${oneOrMany(putOff, "it", "them")} changes until you answer.`
+							: summary.total >= LONG_RUN_ROWS
+								? "Ready in a few minutes. You can leave this page; it keeps going."
+								: "Ready in a moment."}
 					</p>
 				</section>
 			)}

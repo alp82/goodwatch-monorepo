@@ -54,6 +54,12 @@ import {
 	textLink,
 } from "./shared"
 
+/** Questions an import still holds rows for, which Done lists with a Decide button each. */
+export interface LeftToDecide {
+	count: number
+	node: ReactNode
+}
+
 export interface DoneImport {
 	id: string
 	status: string
@@ -74,6 +80,7 @@ export function ImportDone({
 	skippedUrl,
 	thing = "file",
 	notes,
+	left,
 	children,
 }: {
 	api: ImportResultApi
@@ -94,6 +101,8 @@ export function ImportDone({
 	skippedUrl: string
 	/** The stepper's notes under Bring and Choose. */
 	notes: [string, string]
+	/** Questions still waiting on the member: how many, and the list with their Decide buttons. */
+	left?: LeftToDecide
 	/** Credits, notes about the file, and what only one source says. */
 	children?: ReactNode
 }) {
@@ -142,6 +151,7 @@ export function ImportDone({
 			skippedUrl={skippedUrl}
 			thing={thing}
 			notes={notes}
+			left={left}
 		>
 			{children}
 		</Done>
@@ -204,6 +214,7 @@ function Done({
 	skippedUrl,
 	thing,
 	notes,
+	left,
 	children,
 }: {
 	api: ImportResultApi
@@ -220,6 +231,7 @@ function Done({
 	skippedUrl: string
 	thing: "file" | "account"
 	notes: [string, string]
+	left?: LeftToDecide
 	children?: ReactNode
 }) {
 	const { data } = useUserData()
@@ -240,12 +252,19 @@ function Done({
 	)
 	const asks = (clearedSection?.total ?? 0) > 0
 	const waits = asks && putBack === null
+	// Done's tick and "Done." wait for every question: the ones left while it ran, and putting titles back.
+	const toDecide = (left?.count ?? 0) + (waits ? 1 : 0)
 	const titles = result.titles
 	const lists = result.customLists?.created ?? 0
 	useReportStep({
 		step: 4,
-		notes: [notes[0], notes[1], "", waits ? "1 to decide" : ""],
-		allDone: !waits,
+		notes: [
+			notes[0],
+			notes[1],
+			"",
+			toDecide ? `${formatCount(toDecide)} to decide` : "",
+		],
+		allDone: toDecide === 0,
 	})
 	const what =
 		titles > 0
@@ -254,10 +273,12 @@ function Done({
 				? `${plural(lists, "list")} ${oneOrMany(lists, "is", "are")} in GoodWatch`
 				: null
 	const heading = !what
-		? "Done. Nothing in GoodWatch needed changing"
+		? toDecide
+			? "Nothing in GoodWatch changed yet"
+			: "Done. Nothing in GoodWatch needed changing"
 		: !openedHere
 			? `${plural(titles || lists, titles ? "title" : "list")} came in from ${source}`
-			: waits
+			: toDecide
 				? what
 				: `Done. ${what}`
 	const kept = section(result, "kept")
@@ -279,6 +300,8 @@ function Done({
 				<StepHeading focus={focus}>{heading}</StepHeading>
 				<PosterStack posters={posters} max={10} />
 			</div>
+
+			{left && left.count > 0 && left.node}
 
 			{asks && clearedSection && (
 				<ClearedQuestion

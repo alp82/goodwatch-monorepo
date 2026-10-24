@@ -172,7 +172,7 @@ export interface FlowPoster {
 	posterPath: string | null
 }
 
-function Poster({
+export function Poster({
 	poster,
 	className = "w-16",
 }: { poster: FlowPoster; className?: string }) {

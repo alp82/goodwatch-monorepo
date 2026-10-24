@@ -7,10 +7,11 @@ import {
 	type ImportSummary,
 } from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
-import { ImportDone } from "./ImportDone"
+import { ImportDone, type LeftToDecide } from "./ImportDone"
 import { useImportPosters } from "./ImportFlowData"
 import { Disclosure } from "./ImportFlowParts"
 import { ImportNotes } from "./ImportNotes"
+import { ImportWithQuestions, type RunExtras } from "./ImportQuestions"
 import { ImportRun } from "./ImportRun"
 import { SourceImportChoose } from "./SourceImportChoose"
 import { sourceImportCopy } from "./SourceImportCopy"
@@ -27,6 +28,7 @@ import type {
 	SourceImportChoices,
 } from "./SourceImportPreviewModel"
 import { sourceName, sourceThing } from "./import-flow-model"
+import { liveQuestions } from "./import-questions-model"
 import { errorBox, secondaryButton, textLink } from "./shared"
 
 /** Options for a stopped import that never recorded its own, so Continue can still pick it up. */
@@ -71,6 +73,8 @@ export function SourceImportCurrent({
 	const watched = useRef(false)
 	if (summary?.status === "running" || summary?.status === "preview")
 		watched.current = true
+	// The member pressed Import here: questions held while it runs come right away.
+	const startedHere = useRef(false)
 	if (!summary)
 		return query.isError ? (
 			<div className="space-y-3" aria-live="assertive">
@@ -98,7 +102,10 @@ export function SourceImportCurrent({
 				focus={focus}
 				confirming={confirm.isPending}
 				error={confirm.isError ? confirm.error.message : null}
-				onConfirm={(options) => confirm.mutate(options)}
+				onConfirm={(options) => {
+					startedHere.current = true
+					confirm.mutate(options)
+				}}
 				onBack={onUploadAnother}
 				onPreviewReplaced={onPreviewReplaced}
 				updated={updated}
@@ -107,9 +114,12 @@ export function SourceImportCurrent({
 				posters={posters}
 			/>
 		)
-	if (summary.status === "running" || summary.status === "failed") {
-		const undoing = summary.operation === "undo"
-		const action = undoing ? undo : confirm
+	const resume = () =>
+		summary.operation === "undo"
+			? undo.mutate()
+			: confirm.mutate(resumeOptions(summary.options))
+	const run = (extras?: RunExtras) => {
+		const action = summary.operation === "undo" ? undo : confirm
 		return (
 			<ImportRun
 				summary={summary}
@@ -120,18 +130,15 @@ export function SourceImportCurrent({
 				pending={action.isPending}
 				actionError={action.isError ? action.error.message : null}
 				checkFailed={query.isError}
-				onResume={() =>
-					undoing
-						? undo.mutate()
-						: confirm.mutate(summary.options ?? FALLBACK_OPTIONS)
-				}
+				onResume={resume}
 				onRestart={onUploadAnother}
 				restartLabel={copy.restart}
 				notes={notes}
+				{...extras}
 			/>
 		)
 	}
-	return (
+	const done = (left?: LeftToDecide) => (
 		<ImportDone
 			api="/api/imports"
 			summary={summary}
@@ -150,10 +157,47 @@ export function SourceImportCurrent({
 			anotherLabel={copy.another}
 			skippedUrl={sourceSkippedDownloadUrl(summary.id)}
 			notes={notes}
+			left={left}
 		>
 			<SourceDoneNotes summary={summary} />
 		</ImportDone>
 	)
+	// Questions held while it runs, from an import confirmed with `ask`. Undo has none.
+	if (
+		summary.options?.ask?.length &&
+		summary.operation !== "undo" &&
+		summary.status !== "undone"
+	)
+		return (
+			<ImportWithQuestions
+				api="/api/imports"
+				id={summary.id}
+				summary={summary}
+				questions={liveQuestions(summary)}
+				asked
+				source={src}
+				thing={sourceThing(summary.source)}
+				focus={acted}
+				startedHere={startedHere.current}
+				resume={{
+					pending: confirm.isPending,
+					run: resume,
+					error: confirm.isError ? confirm.error.message : null,
+				}}
+				renderRun={run}
+				renderDone={done}
+				notes={notes}
+			/>
+		)
+	if (summary.status === "running" || summary.status === "failed") return run()
+	return done()
+}
+
+/** What Continue sends again: the options the import started with. Answers are the server's own, never sent. */
+function resumeOptions(options: ImportOptions | null): ImportOptions {
+	if (!options) return FALLBACK_OPTIONS
+	const { answers: _answers, ...sent } = options
+	return sent
 }
 
 /** What Undo does for this source, asked before it runs. */
