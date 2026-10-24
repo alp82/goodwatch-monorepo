@@ -5,6 +5,7 @@ export type Bundle = Record<string, number>
 export type Level = -1 | 0 | 1 | 2
 export type Levels = Record<FamilyId, Level>
 
+/** Attribute weights translate site mood, theme and style rules into steering. */
 export interface Recipe {
 	id: string
 	name: string

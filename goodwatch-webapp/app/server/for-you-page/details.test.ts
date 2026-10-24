@@ -9,6 +9,7 @@ const state = {
 	queries: [] as { sql: string; params: unknown[] }[],
 	overlays: [] as string[],
 	reads: [] as string[],
+	cardLanguages: [] as (string | undefined)[],
 }
 Object.assign(globalThis, { forYouDetailTest: state })
 const stubs: Record<string, string> = {
@@ -16,7 +17,7 @@ const stubs: Record<string, string> = {
 	"~/utils/cache":
 		"export const withRedisDeadline = p => p; export const getRedisCluster = () => ({ get: async key => { globalThis.forYouDetailTest.reads.push(key); return null } });",
 	"~/server/media-overlay.server": `export async function overlayTitles(rows, language) { globalThis.forYouDetailTest.overlays.push(language); return rows.map(r => ({...r,title:'Localized title',overview:'Localized overview'})) }`,
-	"~/server/title-cards.server": `export async function getTitleCards(keys) { return keys.map(key => ({key,media_type:key>=2e12?'show':'movie',tmdb_id:key%1e12,title:'Title',poster_path:'/poster',backdrop_path:'/backdrop',runtime:90,tagline:'Tagline',services:[]})) }`,
+	"~/server/title-cards.server": `export async function getTitleCards(keys, ctx) { globalThis.forYouDetailTest.cardLanguages.push(ctx.language); if(ctx.language) throw Error("cards must be canonical"); return keys.map(key => ({key,media_type:key>=2e12?'show':'movie',tmdb_id:key%1e12,title:'Title',poster_path:'/poster',backdrop_path:'/backdrop',runtime:90,tagline:'Tagline',services:[]})) }`,
 }
 const { registerHooks } = nodeModule as unknown as {
 	registerHooks: (hooks: {
@@ -52,12 +53,11 @@ test("details batch primary-key reads, localize overview and reuse memory withou
 				q.sql.includes("tmdb_id = ANY(?)"),
 		),
 	)
-	assert.deepEqual(state.reads, [
-		"for-you-overview:v1:1000000000001",
-		"for-you-overview:v1:2000000000002",
-	])
+	assert.deepEqual(state.reads, [])
+	assert.deepEqual(state.cardLanguages, [undefined])
+	assert.deepEqual(state.overlays, ["de"])
 	await readOverviews([1e12 + 1, 2e12 + 2])
 	assert.equal(state.queries.length, 2)
-	assert.equal(state.reads.length, 2)
+	assert.equal(state.reads.length, 0)
 	await assert.rejects(readOverviews(Array(13).fill(1e12 + 1)), RangeError)
 })

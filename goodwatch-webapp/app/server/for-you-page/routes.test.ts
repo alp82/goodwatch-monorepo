@@ -9,11 +9,12 @@ const state = {
 	userId: null as string | null,
 	progress: null as unknown,
 	keys: [] as number[],
+	language: undefined as string | undefined,
 }
 Object.assign(globalThis, { forYouRouteTest: state })
 const stubs: Record<string, string> = {
 	"~/server/media-payload.server":
-		"export const presentCatalogLoader = load => load",
+		"export const presentCatalogLoader = load => load; export const apiDisplayLanguage = request => new URL(request.url).searchParams.get('displayLanguage') ?? undefined; export const liveMediaLanguage = async () => 'de'",
 	"~/utils/auth":
 		"export async function getUserIdFromRequest() { return globalThis.forYouRouteTest.userId }",
 	"~/server/viewer.server":
@@ -21,7 +22,7 @@ const stubs: Record<string, string> = {
 	"~/server/taste/index.server":
 		"export async function loadTaste() { return {} }",
 	"~/server/for-you-page/details.server":
-		"export async function getForYouDetails(ctx,taste,keys) { globalThis.forYouRouteTest.keys = keys; return {} }",
+		"export async function getForYouDetails(ctx,taste,keys) { globalThis.forYouRouteTest.keys = keys; globalThis.forYouRouteTest.language = ctx.language; return {} }",
 	"~/server/for-you-page/page.server":
 		"export async function loadForYouGuest(request, progress) { globalThis.forYouRouteTest.progress = progress; return {taste:null,posters:[],guestRatings:0} }",
 }
@@ -109,4 +110,7 @@ test("details API locks guests, validates batches and converts title keys", asyn
 	assert.equal(response.status, 200)
 	assert.equal(response.headers.get("Cache-Control"), "private, no-store")
 	assert.deepEqual(state.keys, [1e12 + 1, 2e12 + 2])
+	assert.equal(state.language, "de")
+	await details.loader(make("movie-1&displayLanguage=fr"))
+	assert.equal(state.language, "fr")
 })

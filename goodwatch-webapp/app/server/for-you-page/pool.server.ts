@@ -11,6 +11,7 @@ import { rankStep } from "~/domain/taste-match"
 import type { ExplorerPool } from "~/server/explorer/pool.server"
 import type { Taste } from "~/server/taste/index.server"
 import type { ViewerContext } from "~/server/viewer.server"
+import { parseTitleKey } from "~/utils/title-key"
 
 export const QUALITY_FLOOR = 63
 export const MIN_ON_SERVICES = 600
@@ -93,9 +94,12 @@ function top(indices: number[], scores: Float64Array, count: number): number[] {
 }
 
 /** Returns Explorer indices, without I/O or changes to the snapshot. */
-export function selectPool(input: PoolInput): Int32Array {
+export function selectPool(input: PoolInput): {
+	indices: Int32Array
+	scope: ForYouPool["scope"]
+} {
 	const { pool, taste, tasteView } = input
-	const { indices } = eligiblePool(input)
+	const { indices, scope } = eligiblePool(input)
 	const snapshot = pool.snapshot
 	const personal = tasteView?.subject !== "sample" && taste.vector !== null
 	const cosines = new Float64Array(pool.n)
@@ -119,8 +123,9 @@ export function selectPool(input: PoolInput): Int32Array {
 		const fp = snapshot.fingerprintAt(pool.rows[i])
 		for (let k = 0; k < FP_KEYS.length; k++)
 			z[i * FP_KEYS.length + k] =
-				((fp[k] === 255 ? 0 : fp[k]) - snapshot.stats.mean[k]) /
-				(snapshot.stats.sd[k] || 1)
+				fp[k] === 255
+					? 0
+					: (fp[k] - snapshot.stats.mean[k]) / (snapshot.stats.sd[k] || 1)
 	}
 	const score = new Float64Array(pool.n)
 	const quota = (attrs: Bundle, count: number) => {
@@ -169,7 +174,50 @@ export function selectPool(input: PoolInput): Int32Array {
 	}
 	for (const i of indices) score[i] = snapshot.columns.scores[pool.rows[i]]
 	add(top(indices, score, 100))
-	return Int32Array.from(selected)
+	return { indices: Int32Array.from(selected), scope }
+}
+
+/** Only rank twelve preview posters; no recipe quotas or pool column encoding. */
+export function selectPreview(input: PoolInput): number[] {
+	const { pool, taste, tasteView } = input
+	const { indices } = eligiblePool(input)
+	const scores = new Float64Array(pool.n)
+	const terms = Object.entries(LIBRARY[0].attrs).map(([key, weight]) => [
+		FP_KEYS.indexOf(key as (typeof FP_KEYS)[number]),
+		weight,
+	])
+	for (const i of indices) {
+		if (taste.vector && tasteView?.subject !== "sample") {
+			scores[i] = pool.snapshot.cosineAt(pool.rows[i], taste.vector) ?? 0
+		} else {
+			const fp = pool.snapshot.fingerprintAt(pool.rows[i])
+			for (const [k, weight] of terms)
+				scores[i] +=
+					weight *
+					(fp[k] === 255
+						? 0
+						: (fp[k] - pool.snapshot.stats.mean[k]) /
+							(pool.snapshot.stats.sd[k] || 1))
+		}
+	}
+	return top(indices, scores, 12)
+}
+
+export async function getForYouPreview(
+	ctx: ViewerContext,
+	taste: Taste,
+	tasteView: ForYouTaste | null,
+): Promise<string[]> {
+	const [{ getTitleSnapshot }, { explorerPool }] = await Promise.all([
+		import("~/server/title-snapshot/index.server"),
+		import("~/server/explorer/pool.server"),
+	])
+	const snapshot = getTitleSnapshot()
+	if (!snapshot) throw new Error("For you snapshot unavailable")
+	const pool = await explorerPool(snapshot)
+	return selectPreview({ pool, ctx, taste, tasteView, onServices: null }).map(
+		(i) => pool.display[i].poster,
+	)
 }
 
 export async function getForYouPool(
@@ -206,7 +254,8 @@ export async function getForYouPool(
 			}
 		: null
 	const input = { pool, ctx, taste, tasteView, onServices }
-	const indices = [...selectPool(input)]
+	const selection = selectPool(input)
+	const indices = [...selection.indices]
 	const rows = indices.map((i) => pool.rows[i])
 	const percentiles =
 		tasteView?.subject === "sample"
@@ -214,7 +263,10 @@ export async function getForYouPool(
 			: taste.percentile(indices.map((i) => pool.keys[i]))
 	const c = pool.snapshot.columns
 	const result: ForYouPool = {
-		keys: indices.map((i) => publicKey(pool.keys[i])),
+		keys: indices.map((i) => {
+			const { mediaType, tmdbId } = parseTitleKey(pool.keys[i])
+			return `${mediaType}-${tmdbId}`
+		}),
 		names: indices.map((i) => pool.display[i].title),
 		years: indices.map((i) => pool.display[i].year),
 		posters: indices.map((i) => pool.display[i].poster),
@@ -226,13 +278,10 @@ export async function getForYouPool(
 		fingerprints: encodeFingerprints(
 			rows.map((r) => pool.snapshot.fingerprintAt(r)),
 		),
-		scope: eligiblePool(input).scope,
+		scope: selection.scope,
 	}
 	console.info(
 		`For you pool: ${indices.length} titles, computed in ${Math.round(performance.now() - started)} ms`,
 	)
 	return result
 }
-
-export const publicKey = (key: number) =>
-	key >= 2e12 ? `show-${key - 2e12}` : `movie-${key - 1e12}`

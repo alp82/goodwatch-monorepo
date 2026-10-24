@@ -1,6 +1,10 @@
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { getForYouDetails } from "~/server/for-you-page/details.server"
-import { presentCatalogLoader } from "~/server/media-payload.server"
+import {
+	apiDisplayLanguage,
+	liveMediaLanguage,
+	presentCatalogLoader,
+} from "~/server/media-payload.server"
 import { loadTaste } from "~/server/taste/index.server"
 import { getViewerContext } from "~/server/viewer.server"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -32,6 +36,8 @@ async function load({ request }: LoaderFunctionArgs) {
 	})
 	try {
 		const ctx = await getViewerContext(request, undefined, userId)
+		ctx.language =
+			apiDisplayLanguage(request) ?? (await liveMediaLanguage(request, userId))
 		const taste = await loadTaste(ctx.viewer)
 		return json(await getForYouDetails(ctx, taste, keys), { headers })
 	} catch (error) {

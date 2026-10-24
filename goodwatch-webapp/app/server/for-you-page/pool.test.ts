@@ -3,7 +3,9 @@ import { test } from "node:test"
 import "../title-filter/test-alias.ts"
 import type { PoolInput } from "./pool.server.ts"
 
-const { selectPool, eligiblePool, POOL_MAX } = await import("./pool.server.ts")
+const { selectPool, selectPreview, eligiblePool, POOL_MAX } = await import(
+	"./pool.server.ts"
+)
 const { encodeSnapshot, joinChunks } = await import(
 	"../title-snapshot/format.server.ts"
 )
@@ -90,7 +92,7 @@ test("excludes seen, hidden, skipped, wishlist, low and unknown scores", () => {
 	input.ctx.wishlist = new Map([[1e12 + 4, new Date()]])
 	input.pool.snapshot.columns.scores[4] = 62
 	input.pool.snapshot.columns.scores[5] = 255
-	const indices = [...selectPool(input)]
+	const indices = [...selectPool(input).indices]
 	assert.equal(indices.length, 14)
 	assert.ok(indices.every((i) => i >= 6))
 	assert.deepEqual(selectPool(input), selectPool(input))
@@ -103,7 +105,8 @@ test("services scope counts eligible titles, requires loaded country and member 
 	assert.equal(eligiblePool(input).scope, "everywhere")
 	input.onServices = (key) => key <= 1e12 + 600
 	assert.equal(eligiblePool(input).scope, "services")
-	assert.ok([...selectPool(input)].every((i) => i < 600))
+	assert.ok([...selectPool(input).indices].every((i) => i < 600))
+	assert.equal(selectPool(input).scope, "services")
 	input.ctx.seen = new Set([1e12 + 1])
 	assert.equal(eligiblePool(input).scope, "everywhere")
 	input.ctx.seen = new Set()
@@ -119,7 +122,7 @@ test("all library and own recipes retain at least 15 quota winners; cap and 12k 
 	// Warm the same code paths before measuring steady-state request computation.
 	selectPool(input)
 	const started = performance.now()
-	const selected = new Set(selectPool(input))
+	const selected = new Set(selectPool(input).indices)
 	const ms = performance.now() - started
 	console.info(`12k selectPool: ${ms.toFixed(2)} ms; ${selected.size} titles`)
 	assert.ok(ms < 50, `selection took ${ms} ms`)
@@ -164,7 +167,54 @@ test("all library and own recipes retain at least 15 quota winners; cap and 12k 
 test("sample and absent taste skip the personal quota and remain deterministic", () => {
 	const input = fixture(100)
 	input.taste = { vector: null }
-	assert.ok(selectPool(input).length > 0)
+	assert.ok(selectPool(input).indices.length > 0)
 	input.tasteView = null
-	assert.ok(selectPool(input).length > 0)
+	assert.ok(selectPool(input).indices.length > 0)
+})
+
+test("missing fingerprints stay neutral in positive recipe quotas", () => {
+	const input = fixture(2000)
+	const snapshot = input.pool.snapshot
+	for (let i = 0; i < input.pool.n; i++) snapshot.fingerprintAt(i).fill(5)
+	Object.assign(snapshot.stats, {
+		mean: Array(74).fill(5),
+		sd: Array(74).fill(1),
+	})
+	snapshot.columns.scores.fill(70)
+	// Keep this late title outside taste, quality and tied library quotas.
+	snapshot.cosineAt = () => 0
+	const last = input.pool.n - 1
+	const fp = snapshot.fingerprintAt(last)
+	fp[FP_KEYS.indexOf("sports")] = 255
+	fp[FP_KEYS.indexOf("showbiz")] = 255
+	fp[FP_KEYS.indexOf("gaming")] = 6
+	assert.ok(input.tasteView)
+	input.tasteView.attributes = []
+	input.tasteView.groups = [
+		{
+			id: "side-0",
+			name: "Games and sports",
+			keys: ["sports", "gaming"],
+			count: 10,
+		},
+	]
+	assert.ok(new Set(selectPool(input).indices).has(last))
+})
+
+test("preview selects only twelve eligible titles by cosine or sample recipe", () => {
+	const input = fixture(100)
+	input.ctx.viewer = { kind: "guest", progress: { interactions: [] } }
+	input.ctx.hidden = new Set([input.pool.keys[99]])
+	input.pool.snapshot.cosineAt = (row) => row
+	const { indices } = eligiblePool(input)
+	assert.deepEqual(selectPreview(input), indices.slice(-12).reverse())
+	assert.ok(input.tasteView)
+	input.tasteView.subject = "sample"
+	input.pool.snapshot.cosineAt = () => {
+		throw Error("sample must use the recipe")
+	}
+	const preview = selectPreview(input)
+	assert.equal(preview.length, 12)
+	assert.ok(preview.every((i) => indices.includes(i)))
+	assert.deepEqual(preview, selectPreview(input))
 })

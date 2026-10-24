@@ -6,14 +6,12 @@ import { createDisplayMemory } from "~/server/title-display-memory.server"
 import type { ViewerContext } from "~/server/viewer.server"
 import { query } from "~/utils/crate"
 import { type TitleKey, parseTitleKey } from "~/utils/title-key"
-import { publicKey } from "./pool.server"
 
 const memory = createDisplayMemory<{ overview: string | null }>({
 	ttlMs: 6 * 60 * 60_000,
 })
-const cacheKey = (key: number) => `for-you-overview:v1:${key}`
 
-/** Canonical overviews; at most one primary-key statement per media type. */
+/** Canonical overviews cached in process; at most one Crate primary-key read per media type. */
 export async function readOverviews(
 	keys: TitleKey[],
 ): Promise<Map<TitleKey, string | null>> {
@@ -26,27 +24,6 @@ export async function readOverviews(
 		return false
 	})
 	if (!missing.length) return found
-	// Cache reads only: this feature adds no data-store writes.
-	const { getRedisCluster, withRedisDeadline } = await import("~/utils/cache")
-	const redis = await getRedisCluster()
-	if (redis)
-		await Promise.all(
-			missing.map(async (key) => {
-				const raw = await withRedisDeadline(redis.get(cacheKey(key))).catch(
-					() => null,
-				)
-				if (!raw) return
-				try {
-					const value: unknown = JSON.parse(raw)
-					if (value === null || typeof value === "string") {
-						found.set(key, value)
-						memory.set(key, { overview: value })
-					}
-				} catch {
-					/* A malformed entry is a miss. */
-				}
-			}),
-		)
 	for (const mediaType of ["movie", "show"] as const) {
 		const batch = missing.filter(
 			(key) => !found.has(key) && parseTitleKey(key).mediaType === mediaType,
@@ -74,7 +51,7 @@ export async function getForYouDetails(
 	if (keys.length > 12) throw new RangeError("At most 12 titles")
 	const started = performance.now()
 	const [cards, overviews] = await Promise.all([
-		getTitleCards(keys, ctx, taste),
+		getTitleCards(keys, { ...ctx, language: undefined }, taste),
 		readOverviews(keys),
 	])
 	const canonical = cards.map((card) => ({
@@ -85,18 +62,21 @@ export async function getForYouDetails(
 		? await overlayTitles(canonical, ctx.language)
 		: canonical
 	const result = Object.fromEntries(
-		localized.map((card) => [
-			publicKey(card.key),
-			{
-				runtime: card.runtime,
-				backdrop: card.backdrop_path,
-				overview: card.overview,
-				tagline: card.tagline,
-				services: card.services,
-				title: card.title,
-				poster: card.poster_path,
-			},
-		]),
+		localized.map((card) => {
+			const { mediaType, tmdbId } = parseTitleKey(card.key)
+			return [
+				`${mediaType}-${tmdbId}`,
+				{
+					runtime: card.runtime,
+					backdrop: card.backdrop_path,
+					overview: card.overview,
+					tagline: card.tagline,
+					services: card.services,
+					title: card.title,
+					poster: card.poster_path,
+				},
+			]
+		}),
 	)
 	console.info(
 		`For you details: ${cards.length} titles, computed in ${Math.round(performance.now() - started)} ms`,

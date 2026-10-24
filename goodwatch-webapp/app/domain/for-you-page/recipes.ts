@@ -1,5 +1,6 @@
 import { type FamilyId, type ForYouTaste, familyOf } from "./contract"
 import { FLAT, type Levels, type Recipe, shapeOf } from "./shape"
+// Source of truth: ~/ui/profile/taste/model FAMILY_COLOR; kept here to avoid server UI imports.
 const FAMILY_COLOR: Record<FamilyId, string> = {
 	feel: "#fb7185",
 	humor: "#facc15",
@@ -11,6 +12,7 @@ export const MIN_FIT = 15
 
 export const LIBRARY: Recipe[] = [
 	{
+		// Feel-good rule: wholesome and hopeful high, bleakness low.
 		id: "cozy",
 		name: "Cozy night in",
 		sub: "Warm, gentle, never grim",
@@ -32,6 +34,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Funny rule: any humor score high, bleakness low.
 		id: "laugh",
 		name: "Make me laugh",
 		sub: "Comedy first",
@@ -51,6 +54,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Mind-bending rule: surrealism, or complexity with philosophy or a non-linear story.
 		id: "mind",
 		name: "Bend my mind",
 		sub: "Surreal and layered",
@@ -70,6 +74,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Crime & mystery rule plus tension and pace.
 		id: "seat",
 		name: "Edge of my seat",
 		sub: "Tense and twisty",
@@ -89,6 +94,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// The Stylized style plus the craft scores.
 		id: "beautiful",
 		name: "Something beautiful",
 		sub: "Gorgeous to look at",
@@ -106,6 +112,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Action rule: adrenaline and spectacle high.
 		id: "big",
 		name: "Go big",
 		sub: "Spectacle, adrenaline",
@@ -125,6 +132,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Heavy rule: pathos or melancholy high.
 		id: "cry",
 		name: "A good cry",
 		sub: "Moving, cathartic",
@@ -144,6 +152,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Mystery theme: mystery 8 or more; intrigue and a well-built plot.
 		id: "whodunit",
 		name: "A proper whodunit",
 		sub: "Clues, suspects, a reveal",
@@ -161,6 +170,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Scary rule: scare 7 or more; uncanny and tension help.
 		id: "chills",
 		name: "Give me chills",
 		sub: "Scary and uncanny",
@@ -180,6 +190,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Romance rule: romance 7 or more.
 		id: "love",
 		name: "Fall in love",
 		sub: "Romance with heart",
@@ -199,6 +210,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Other worlds rule: fantasy or futuristic 7 or more; immersion makes it a place.
 		id: "elsewhere",
 		name: "Somewhere else",
 		sub: "Other worlds, wonder",
@@ -216,6 +228,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Future theme: futuristic or technology 7 or more; with ideas.
 		id: "future",
 		name: "Tomorrow's problems",
 		sub: "Sci-fi with ideas",
@@ -232,6 +245,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// History rule: biographical 6 or more, or historical 8 or more.
 		id: "history",
 		name: "Back in time",
 		sub: "History, true stories",
@@ -249,6 +263,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Satire plus the Politics theme.
 		id: "satire",
 		name: "Sharp and satirical",
 		sub: "Jokes with a point",
@@ -266,6 +281,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Dark humor and Satire rules: bleak, absurd comedy.
 		id: "darkjokes",
 		name: "Laugh in the dark",
 		sub: "Bleak and very funny",
@@ -283,6 +299,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Slow burn style: slow_burn 8 or more; depth carries it.
 		id: "slowburn",
 		name: "A slow burn",
 		sub: "Patient, deep, quiet",
@@ -301,6 +318,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Fast-paced style plus the action rule's adrenaline.
 		id: "rush",
 		name: "Pure adrenaline",
 		sub: "Fast, loud, no breaks",
@@ -319,6 +337,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Mind-bending rule with absurd humor, eccentricity and novelty.
 		id: "weird",
 		name: "Weird and wonderful",
 		sub: "Odd, playful, original",
@@ -335,6 +354,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Coming of age rule: coming_of_age 8 or more.
 		id: "growing",
 		name: "Growing up",
 		sub: "Coming of age",
@@ -353,6 +373,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Talky style: dialogue_centrality 8 or more; and the dialogue is good.
 		id: "talky",
 		name: "Great conversations",
 		sub: "Dialogue to lean in for",
@@ -370,6 +391,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Music style: music_centrality 7 or more.
 		id: "music",
 		name: "Turn it up",
 		sub: "Music at the heart",
@@ -385,6 +407,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Feel-good rule and Slow burn style: warmth with low tension and violence.
 		id: "gentle",
 		name: "Quiet and gentle",
 		sub: "Soft, slow, kind",
@@ -403,6 +426,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Funny and Feel-good rules with low complexity.
 		id: "easy",
 		name: "Easy watching",
 		sub: "Light, fun, no homework",
@@ -420,6 +444,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
+		// Other worlds rule reversed: realism over fantasy, with character depth.
 		id: "real",
 		name: "Real life",
 		sub: "Grounded, human, now",

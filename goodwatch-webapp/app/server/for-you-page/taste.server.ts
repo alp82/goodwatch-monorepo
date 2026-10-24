@@ -1,7 +1,7 @@
 import type { ForYouTaste } from "~/domain/for-you-page/contract"
 import type { PortraitViewer } from "~/server/taste-portrait/index.server"
 import type { FingerprintView, SidesView } from "~/server/taste-portrait/view"
-import { publicKey } from "./pool.server"
+import { parseTitleKey } from "~/utils/title-key"
 
 export function tasteFromPortrait(
 	fingerprint: FingerprintView,
@@ -13,13 +13,15 @@ export function tasteFromPortrait(
 	const loved: ForYouTaste["loved"] = {}
 	for (const key of carriers) {
 		const title = fingerprint.titles[key]
-		if (title && title.mine !== null && title.mine >= 8)
-			loved[publicKey(key)] = {
+		if (title && title.mine !== null && title.mine >= 8) {
+			const { mediaType, tmdbId } = parseTitleKey(key)
+			loved[`${mediaType}-${tmdbId}`] = {
 				title: title.title,
 				year: title.year,
 				poster: title.poster,
 				score: title.mine,
 			}
+		}
 	}
 	return {
 		subject: fingerprint.subject.kind,
@@ -30,7 +32,10 @@ export function tasteFromPortrait(
 				family,
 				edge,
 				tier,
-				carriers: carriers.map(publicKey),
+				carriers: carriers.map((key) => {
+					const { mediaType, tmdbId } = parseTitleKey(key)
+					return `${mediaType}-${tmdbId}`
+				}),
 			}),
 		),
 		groups: sides.sides.slice(0, 5).map((s) => ({

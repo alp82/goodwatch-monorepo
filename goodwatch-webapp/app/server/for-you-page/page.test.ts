@@ -54,9 +54,10 @@ function dependencies() {
 	return {
 		viewer: async () => ({ viewer: ctx.viewer, context: async () => ctx }),
 		loadTaste: async () => noTaste,
-		hasSnapshot: async () => true,
+		snapshotVersion: async (): Promise<string | null> => "test",
 		taste: async (): Promise<ForYouTaste | null> => taste,
 		pool: async () => pool,
+		preview: async () => pool.posters,
 	}
 }
 
@@ -68,7 +69,7 @@ test("guest page returns only its shell without reading context or stores", asyn
 			throw Error("must not read")
 		},
 	})
-	deps.hasSnapshot = async () => {
+	deps.snapshotVersion = async () => {
 		throw Error("must not read")
 	}
 	assert.deepEqual(await loadForYouPage(request, deps), { kind: "guest" })
@@ -83,12 +84,12 @@ test("member page returns the exact domain payload", async () => {
 })
 test("missing snapshot, empty taste and failed pool degrade gracefully", async () => {
 	const deps = dependencies()
-	deps.hasSnapshot = async () => false
+	deps.snapshotVersion = async () => null
 	assert.deepEqual(await loadForYouPage(request, deps), {
 		kind: "member",
 		status: "unavailable",
 	})
-	deps.hasSnapshot = async () => true
+	deps.snapshotVersion = async () => "test"
 	deps.taste = async () => null
 	assert.deepEqual(await loadForYouPage(request, deps), {
 		kind: "member",
@@ -110,10 +111,74 @@ test("preview returns compact data and rating count, or a safe unavailable previ
 		posters: ["/one.jpg"],
 		guestRatings: 1,
 	})
-	deps.hasSnapshot = async () => false
+	deps.snapshotVersion = async () => null
 	assert.deepEqual(await loadForYouGuest(request, undefined, deps), {
 		taste: null,
 		posters: [],
 		guestRatings: 1,
 	})
+})
+
+test("preview memo shares builds, respects progress/version, expires and stays bounded", async () => {
+	const deps = dependencies()
+	const guestCtx: ViewerContext = {
+		...ctx,
+		viewer: { kind: "guest", progress: { interactions: [] } },
+		ratings: new Map(),
+	}
+	deps.viewer = async () => ({
+		viewer: guestCtx.viewer,
+		context: async () => guestCtx,
+	})
+	let version = "memo-test"
+	deps.snapshotVersion = async () => version
+	let builds = 0
+	deps.preview = async () => {
+		builds++
+		return ["/preview.jpg"]
+	}
+	deps.pool = async () => {
+		throw Error("preview must not build the member pool")
+	}
+	let now = Date.now()
+	const realNow = Date.now
+	Date.now = () => now
+	try {
+		const load = () => loadForYouGuest(request, undefined, deps)
+		const [a, b] = await Promise.all([load(), load()])
+		assert.deepEqual(a, b)
+		assert.equal(builds, 1)
+		now += 10 * 60_000 - 1
+		await load()
+		assert.equal(builds, 1)
+		now++
+		await load()
+		assert.equal(builds, 2)
+		guestCtx.hidden = new Set([1e12 + 7])
+		await load()
+		assert.equal(builds, 3)
+		guestCtx.country = "FR"
+		await load()
+		assert.equal(builds, 4)
+		guestCtx.ratings = new Map([[1e12 + 8, 9]])
+		assert.equal((await load()).guestRatings, 1)
+		assert.equal(builds, 5)
+		for (let i = 0; i < 129; i++) {
+			version = `memo-bound-${i}`
+			await load()
+		}
+		const before = builds
+		version = "memo-bound-0"
+		await load()
+		assert.equal(builds, before + 1, "oldest entry is evicted at the bound")
+		version = "memo-retry"
+		deps.preview = async () => {
+			throw Error("temporary failure")
+		}
+		assert.deepEqual((await load()).posters, [])
+		deps.preview = async () => ["/retry.jpg"]
+		assert.deepEqual((await load()).posters, ["/retry.jpg"])
+	} finally {
+		Date.now = realNow
+	}
 })

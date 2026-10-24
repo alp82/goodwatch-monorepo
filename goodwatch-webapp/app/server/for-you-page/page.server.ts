@@ -1,7 +1,8 @@
+import { createHash } from "node:crypto"
 import type { ForYouGuest, ForYouPage } from "~/domain/for-you-page/contract"
 import type { PortraitViewer } from "~/server/taste-portrait/index.server"
 import type { GuestProgress } from "~/server/viewer.server"
-import { getForYouPool } from "./pool.server"
+import { getForYouPool, getForYouPreview } from "./pool.server"
 import { getForYouTaste } from "./taste.server"
 
 const defaults = {
@@ -15,14 +16,15 @@ const defaults = {
 		const { loadTaste } = await import("~/server/taste/index.server")
 		return loadTaste(who.viewer)
 	},
-	async hasSnapshot() {
+	async snapshotVersion() {
 		const { getTitleSnapshot } = await import(
 			"~/server/title-snapshot/index.server"
 		)
-		return getTitleSnapshot() !== null
+		return getTitleSnapshot()?.version ?? null
 	},
 	taste: getForYouTaste,
 	pool: getForYouPool,
+	preview: getForYouPreview,
 }
 
 /** Share the viewer read across portrait tabs and pool selection. */
@@ -50,7 +52,7 @@ export async function loadForYouPage(
 	const who = await viewer(request, undefined, deps)
 	if (who.viewer.kind === "guest") return { kind: "guest" }
 	try {
-		if (!(await deps.hasSnapshot()))
+		if (!(await deps.snapshotVersion()))
 			return { kind: "member", status: "unavailable" }
 		const [ctx, taste, view] = await Promise.all([
 			who.context(),
@@ -72,6 +74,13 @@ export async function loadForYouPage(
 	}
 }
 
+const previews = new Map<
+	string,
+	{ until: number; value: Promise<ForYouGuest> }
+>()
+const PREVIEW_MAX = 128
+const PREVIEW_TTL = 10 * 60_000
+
 export async function loadForYouGuest(
 	request: Request,
 	progress?: GuestProgress,
@@ -83,14 +92,47 @@ export async function loadForYouGuest(
 	try {
 		const ctx = await who.context()
 		guestRatings = ctx.ratings.size
-		if (!(await deps.hasSnapshot()))
-			return { taste: null, posters: [], guestRatings }
-		const [taste, view] = await Promise.all([
-			deps.loadTaste(who),
-			deps.taste(who),
-		])
-		const pool = await deps.pool(ctx, taste, view)
-		return { taste: view, posters: pool.posters.slice(0, 12), guestRatings }
+		const version = await deps.snapshotVersion()
+		if (!version) return { taste: null, posters: [], guestRatings }
+		// Sample posters also exclude progress titles, so include all eligibility sets.
+		const id = createHash("sha256")
+			.update(
+				JSON.stringify([
+					version,
+					ctx.viewer.kind === "member" ? ctx.viewer.userId : "guest",
+					ctx.country,
+					[...ctx.services].sort(),
+					[...ctx.ratings].sort((a, b) => a[0] - b[0]),
+					[...ctx.seen].sort(),
+					[...ctx.hidden].sort(),
+					[...ctx.skipped].sort(),
+					[...ctx.wishlist.keys()].sort(),
+				]),
+			)
+			.digest("base64url")
+		const now = Date.now()
+		const hit = previews.get(id)
+		if (hit && hit.until > now) return await hit.value
+		const value = (async () => {
+			const [taste, view] = await Promise.all([
+				deps.loadTaste(who),
+				deps.taste(who),
+			])
+			const posters = await deps.preview(ctx, taste, view)
+			return { taste: view, posters, guestRatings }
+		})()
+		previews.delete(id)
+		previews.set(id, { until: now + PREVIEW_TTL, value })
+		for (const [key, entry] of previews) {
+			if (entry.until > now && previews.size <= PREVIEW_MAX) break
+			previews.delete(key)
+		}
+		try {
+			return await value
+		} catch (error) {
+			if (previews.get(id)?.value === value) previews.delete(id)
+			throw error
+		}
 	} catch (error) {
 		console.error("For you preview unavailable:", error)
 		return { taste: null, posters: [], guestRatings }
