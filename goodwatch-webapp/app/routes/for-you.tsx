@@ -3,10 +3,11 @@ import {
 	type MetaFunction,
 	json,
 } from "@remix-run/node"
-import type { ShouldRevalidateFunction } from "@remix-run/react"
+import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
 import type { ForYouPage } from "~/domain/for-you-page/contract"
 import { loadForYouPage } from "~/server/for-you-page/page.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
+import { ForYouPage as ForYouPageView } from "~/ui/for-you/ForYouPage"
 import { buildMeta } from "~/utils/meta"
 
 export const loader = presentCatalogLoader(
@@ -27,7 +28,7 @@ export const meta: MetaFunction = () =>
 		pageMeta: {
 			title: "For you - GoodWatch",
 			url: "https://goodwatch.app/for-you",
-			description: "Picks steered by your taste.",
+			description: "Recommendations from your taste, steered by mood.",
 			image: "https://goodwatch.app/images/heroes/hero-movies.png",
 			alt: "For you on GoodWatch",
 		},
@@ -55,5 +56,6 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 }
 
 export default function ForYouRoute() {
-	return null
+	const data = useLoaderData<typeof loader>() as unknown as ForYouPage
+	return <ForYouPageView data={data} />
 }
