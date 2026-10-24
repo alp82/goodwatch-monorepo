@@ -11,21 +11,18 @@ import type {
 	ImportSummary,
 } from "~/domain/imports"
 import { sourceItemLocation } from "./SourceImportPreviewModel"
-import { wholeShowCount } from "./import-flow-model"
+import { rewatchCount, wholeShowCount } from "./import-flow-model"
 
-/**
- * Watches without a date (T5). The UI asks it, but the server refuses it in `ask` until T5 ships, so confirm leaves it
- * out while this is false.
- */
-export const ASK_UNDATED = false
-
-/** The questions confirm can defer today. */
+/** The questions confirm can defer, in the order `ask` lists them. */
 const SUPPORTED: readonly ImportQuestion[] = [
 	"conflict",
 	"rewatch",
 	"wholeShow",
-	...(ASK_UNDATED ? (["undated"] as const) : []),
+	"undated",
 ]
+
+/** Kinds a wishlist question (whole show, rewatch) can hold. */
+const WISH_KINDS: readonly ImportKind[] = ["want", "show_status"]
 
 /** The order the screens come in and Done lists them: per-title scores first, then the yes/no questions. */
 export const QUESTION_ORDER: readonly ImportQuestion[] = [
@@ -56,8 +53,12 @@ const waitingIn = (
 		? kinds.reduce((sum, kind) => sum + (question.byKind?.[kind] ?? 0), 0)
 		: question.waiting
 
-/** The questions confirm defers: every one the preview counts rows for, among the kinds left in, that the server takes. */
-export function askedQuestions(
+/**
+ * The questions a preview counts rows for among the kinds left in. A preview counts each row once, under the first
+ * question that would hold it (undated, whole show, rewatch, conflict), so these are the questions confirm holds rows
+ * for right away.
+ */
+export function heldAtConfirm(
 	summary: Pick<ImportSummary, "questions">,
 	kinds: readonly ImportKind[],
 ): ImportQuestion[] {
@@ -67,6 +68,26 @@ export function askedQuestions(
 				SUPPORTED.includes(question.kind) && waitingIn(question, kinds) > 0,
 		)
 		.map((question) => question.kind)
+}
+
+/**
+ * The questions confirm defers: those that hold rows right away, and every later question those rows can come to once
+ * answered. A season wish for a show already Seen waits on the whole show first and then on rewatch; a row that leaves
+ * the wishlist questions can still differ from GoodWatch. Asking a question that ends up holding nothing costs
+ * nothing: its screen only comes while it holds rows.
+ */
+export function askedQuestions(
+	summary: ImportSummary,
+	kinds: readonly ImportKind[],
+): ImportQuestion[] {
+	const held = heldAtConfirm(summary, kinds)
+	const wishes = kinds.some((kind) => WISH_KINDS.includes(kind))
+	const ask = new Set<ImportQuestion>(held)
+	if (wishes && wholeShowCount(summary) > 0) ask.add("wholeShow")
+	if (ask.has("wholeShow") || (wishes && rewatchCount(summary) > 0))
+		ask.add("rewatch")
+	if (ask.has("wholeShow") || ask.has("rewatch")) ask.add("conflict")
+	return SUPPORTED.filter((question) => ask.has(question))
 }
 
 /**
@@ -95,7 +116,9 @@ export function runOptions(
 /** Whether starting with these kinds can change anything: something new, or a question to answer while it runs. */
 export const runWouldWrite = (summary: ImportSummary, options: ImportOptions) =>
 	options.kinds.length > 0 &&
-	(summary.counts.new > 0 || (options.ask?.length ?? 0) > 0)
+	(summary.counts.new > 0 ||
+		((options.ask?.length ?? 0) > 0 &&
+			heldAtConfirm(summary, options.kinds).length > 0))
 
 /** The live questions of a confirmed general import, in screen order. */
 export const liveQuestions = (
@@ -246,12 +269,25 @@ export interface ScreenInput {
 	questions: readonly LiveQuestion[]
 	/** Held rows loaded for a question; undefined while they load (or for undated, which lists none). */
 	held: Partial<Record<ImportQuestion, readonly HeldRow[]>>
-	/** Screens answered on this visit. Their rows can still show in a list that hasn't caught up. */
+	/** Yes/no screens answered on this visit. Their rows can still show in a list that hasn't caught up. */
 	answered: ReadonlySet<string>
+	/**
+	 * Conflict rows answered on this visit, which a list that hasn't caught up can still show. Kept by row, not by
+	 * title: a title with rows the answer didn't reach comes back with those.
+	 */
+	answeredRows: ReadonlySet<number>
 }
 
 const open = (question: LiveQuestion | undefined) =>
 	!!question && question.waiting > 0 && question.answer === null
+
+/** The conflict titles still to answer among the loaded rows. */
+const conflictTitles = (input: ScreenInput) =>
+	groupHeld(
+		(input.held.conflict ?? []).filter(
+			(row) => !input.answeredRows.has(row.index),
+		),
+	)
 
 /** The screens still waiting on the member, in order. A conflict title shows once its held rows have loaded. */
 export function openScreens(input: ScreenInput): QuestionScreen[] {
@@ -259,9 +295,8 @@ export function openScreens(input: ScreenInput): QuestionScreen[] {
 	for (const question of input.questions) {
 		if (!open(question)) continue
 		if (question.kind === "conflict") {
-			for (const title of groupHeld(input.held.conflict ?? []))
-				if (!input.answered.has(`conflict:${title.key}`))
-					out.push({ q: "conflict", key: `conflict:${title.key}`, title })
+			for (const title of conflictTitles(input))
+				out.push({ q: "conflict", key: `conflict:${title.key}`, title })
 		} else if (!input.answered.has(question.kind))
 			out.push({ q: question.kind, key: question.kind })
 	}
@@ -275,10 +310,10 @@ export function openScreens(input: ScreenInput): QuestionScreen[] {
 export function unloadedConflicts(input: ScreenInput) {
 	const question = input.questions.find((item) => item.kind === "conflict")
 	if (!open(question) || !question) return 0
-	const shown = groupHeld(input.held.conflict ?? []).filter(
-		(title) => !input.answered.has(`conflict:${title.key}`),
+	const rows = conflictTitles(input).reduce(
+		(sum, title) => sum + title.rows.length,
+		0,
 	)
-	const rows = shown.reduce((sum, title) => sum + title.rows.length, 0)
 	return Math.max(0, question.waiting - rows)
 }
 

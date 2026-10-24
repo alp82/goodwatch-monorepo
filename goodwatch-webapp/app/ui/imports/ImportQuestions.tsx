@@ -2,7 +2,7 @@
 // each with Decide later; the run view while nothing is asked; and Done, which lists what's left to decide with a
 // Decide button each. An answer is sent when it's picked and only moves on once it's in, so a refused answer stays
 // on its screen, unpicked, with the reason.
-import { type ReactNode, useMemo, useRef, useState } from "react"
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 import type { ImportAnswer, ImportQuestion } from "~/domain/imports"
 import { Spinner } from "~/ui/wait/Spinner"
 import type { LeftToDecide } from "./ImportDone"
@@ -12,7 +12,6 @@ import {
 	type FlowPoster,
 	ListName,
 	Poster,
-	PosterRow,
 	QuestionScreen,
 	Slide,
 	useLockIn,
@@ -43,6 +42,9 @@ import {
 	unloadedConflicts,
 } from "./import-questions-model"
 import { errorBox, textLink } from "./shared"
+
+/** A focus request for whichever screen comes next. */
+const NEXT = "(next)"
 
 /** What the run view shows besides the import: questions put off, and whether any was answered. */
 export interface RunExtras {
@@ -85,7 +87,13 @@ export function ImportWithQuestions({
 	notes: [string, string]
 }) {
 	const [deferred, setDeferred] = useState(!startedHere)
-	const [acted, setActed] = useState(focus || startedHere)
+	/**
+	 * Where focus goes: NEXT moves it to the next screen that comes, once, because the member's own action brought it.
+	 * A screen that comes from the polling (an answer from another tab) leaves focus where it is.
+	 */
+	const [focusFor, setFocusFor] = useState<string | null>(
+		focus || startedHere ? NEXT : null,
+	)
 	/** Topic the member chose to decide from Done. Its first screen comes first. */
 	const [target, setTarget] = useState<ImportQuestion | null>(null)
 	/** Screens answered on this visit, in order, for the counter. */
@@ -95,7 +103,12 @@ export function ImportWithQuestions({
 		screen: Screen
 		picked: ImportAnswer
 	} | null>(null)
-	const [sameForAll, setSameForAll] = useState(false)
+	/** The screen whose "Same answer for all" is ticked: another screen never inherits it. */
+	const [sameForAllOn, setSameForAllOn] = useState<string | null>(null)
+	/** Conflict rows answered on this visit. */
+	const [answeredRows, setAnsweredRows] = useState<ReadonlySet<number>>(
+		() => new Set(),
+	)
 	const [error, setError] = useState<string | null>(null)
 	const lock = useLockIn()
 	const attempt = useRef({ locked: false, sent: false })
@@ -113,7 +126,7 @@ export function ImportWithQuestions({
 		wholeShow: showRows.rows,
 	}
 	const answered = useMemo(() => new Set(order), [order])
-	const input: ScreenInput = { questions, held, answered }
+	const input: ScreenInput = { questions, held, answered, answeredRows }
 	const screens = openScreens(input)
 	const left = leftToDecide(questions)
 	const posters = useImportPosters(api, id, {
@@ -126,9 +139,12 @@ export function ImportWithQuestions({
 	const pickScreen = (): Screen | "loading" | null => {
 		if (stay) return stay.screen
 		if (deferred) return null
+		// Differing titles come first: while their rows are on their way, the questions after them wait too.
 		const first =
 			screens.find((screen) => screen.q === target) ??
-			(target === "conflict" && unloadedConflicts(input) > 0
+			(unloadedConflicts(input) > 0 &&
+			(target === "conflict" ||
+				!screens.some((screen) => screen.q === "conflict"))
 				? null
 				: screens[0]) ??
 			null
@@ -140,6 +156,11 @@ export function ImportWithQuestions({
 		return expecting ? "loading" : null
 	}
 	const shown = pickScreen()
+	const shownKey = shown === "loading" ? shown : (shown?.key ?? null)
+	// The screen the member's action brought takes the focus request; with no screen to show, it lapses.
+	useEffect(() => {
+		if (focusFor === NEXT && shownKey !== "loading") setFocusFor(shownKey)
+	}, [focusFor, shownKey])
 
 	const applying = applyingCount(questions)
 	const open = screens.length + unloadedConflicts(input)
@@ -151,7 +172,7 @@ export function ImportWithQuestions({
 		.join(" · ")
 
 	const answer = (screen: Screen, value: ImportAnswer, all: boolean) => {
-		setActed(true)
+		if (stay) return
 		setError(null)
 		setStay({ screen, picked: value })
 		attempt.current = { locked: false, sent: false }
@@ -159,7 +180,8 @@ export function ImportWithQuestions({
 		const moveOn = () => {
 			if (!mine.locked || !mine.sent || attempt.current !== mine) return
 			setStay(null)
-			setSameForAll(false)
+			setSameForAllOn(null)
+			setFocusFor(NEXT)
 		}
 		lock.lock(screen.key, () => {
 			mine.locked = true
@@ -176,14 +198,23 @@ export function ImportWithQuestions({
 					),
 				]
 			: []
+		const perTitle = screen.q === "conflict" && !all ? screen.title : null
 		decide.mutate(
 			{
 				question: screen.q,
 				answer: value,
-				rows: screen.q === "conflict" && !all ? screen.title.rows : undefined,
+				rows: perTitle?.rows,
+				// Rows of this title beyond the loaded page are read first, so the answer covers all of them.
+				wholeTitle:
+					perTitle && unloadedConflicts(input) > 0 ? perTitle.key : undefined,
 			},
 			{
-				onSuccess: () => {
+				onSuccess: (response) => {
+					if (perTitle)
+						setAnsweredRows(
+							(before) =>
+								new Set([...before, ...(response.rows ?? perTitle.rows)]),
+						)
 					setOrder((before) => [
 						...new Set([...before, screen.key, ...conflictKeys]),
 					])
@@ -200,17 +231,15 @@ export function ImportWithQuestions({
 		)
 	}
 	const later = () => {
-		lock.cancel()
-		attempt.current = { locked: false, sent: false }
-		setActed(true)
-		setStay(null)
+		// An answer locking in or on its way is settled first: its question and any error stay until then.
+		if (stay) return
 		setError(null)
-		setSameForAll(false)
+		setSameForAllOn(null)
 		setTarget(null)
 		setDeferred(true)
 	}
 	const decideNow = (kind: ImportQuestion) => {
-		setActed(true)
+		setFocusFor(NEXT)
 		setError(null)
 		setTarget(kind)
 		setDeferred(false)
@@ -287,15 +316,19 @@ export function ImportWithQuestions({
 							order={order}
 							source={source}
 							thing={thing}
-							focus={acted}
+							focus={focusFor === NEXT || focusFor === shown.key}
 							posters={posters}
 							picked={stay?.screen.key === shown.key ? stay.picked : undefined}
 							locked={!!stay}
-							sameForAll={sameForAll}
-							onSameForAll={setSameForAll}
+							sameForAll={sameForAllOn === shown.key}
+							onSameForAll={(on) => setSameForAllOn(on ? shown.key : null)}
 							error={error}
 							onAnswer={(value) =>
-								answer(shown, value, shown.q === "conflict" && sameForAll)
+								answer(
+									shown,
+									value,
+									shown.q === "conflict" && sameForAllOn === shown.key,
+								)
 							}
 							onLater={later}
 						/>
@@ -549,8 +582,9 @@ function Ask({
 					<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-white/10 pt-4 text-sm">
 						<button
 							type="button"
-							className={`${textLink} min-h-11`}
+							className={`${textLink} min-h-11 disabled:cursor-default disabled:opacity-50`}
 							onClick={onLater}
+							disabled={locked}
 							data-decide-later
 						>
 							Decide later
@@ -608,7 +642,13 @@ function ConflictBody({
 	)
 }
 
-/** A few of the titles a yes/no question holds. */
+/** Titles a yes/no question shows as examples at most. */
+const HELD_SLOTS = 6
+
+/**
+ * A few of the titles a yes/no question holds. The row has its size from the first render: a slot waits as a blank
+ * poster until its title and poster come, so nothing below moves. One line, never wrapping; phones show three.
+ */
 function HeldPosters({
 	input,
 	kind,
@@ -618,14 +658,42 @@ function HeldPosters({
 	kind: ImportQuestion
 	posterOf: (key: string) => FlowPoster | null
 }) {
-	const shown: FlowPoster[] = []
+	const slots = Math.min(HELD_SLOTS, Math.max(1, questionSize(input, kind)))
+	const titles: { key: string; title: string }[] = []
 	for (const row of input.held[kind] ?? []) {
-		const poster = posterOf(row.posterKey)
-		if (poster && !shown.some((item) => item.key === poster.key))
-			shown.push(poster)
-		if (shown.length === 6) break
+		if (titles.length === slots) break
+		if (!titles.some((item) => item.key === row.posterKey))
+			titles.push({ key: row.posterKey, title: row.title })
 	}
-	return shown.length ? <PosterRow posters={shown} /> : null
+	return (
+		<ul className="flex gap-3 overflow-hidden" data-held-posters>
+			{Array.from({ length: slots }, (_, at) => {
+				const title = titles[at]
+				const poster = title ? posterOf(title.key) : null
+				return (
+					<li
+						// biome-ignore lint/suspicious/noArrayIndexKey: slots are positions; a title fills its slot when it loads
+						key={at}
+						className={`flex w-20 shrink-0 flex-col gap-1 sm:w-24 ${at >= 3 ? "max-sm:hidden" : ""}`}
+					>
+						<Poster
+							poster={
+								poster ?? {
+									key: title?.key ?? `slot:${at}`,
+									title: title?.title ?? "",
+									posterPath: null,
+								}
+							}
+							className="w-full"
+						/>
+						<span className="line-clamp-2 h-8 text-xs text-gray-300">
+							{title?.title}
+						</span>
+					</li>
+				)
+			})}
+		</ul>
+	)
 }
 
 /** What stays as it is while a question has no answer. Plain text: Done sets nothing apart. */

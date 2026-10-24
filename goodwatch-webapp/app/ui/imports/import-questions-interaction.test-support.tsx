@@ -35,12 +35,19 @@ import type {
 const ID = "00000000-0000-4000-8000-0000000000aa"
 const IMDB_ID = "00000000-0000-4000-8000-0000000000bb"
 
-/** A held row: what the items API lists, the question it waits on, and where it stands. */
-type Row = ImportItem & { question: ImportQuestion; state: string }
+/**
+ * A held row: what the items API lists, the question it waits on, and where it stands. `next` is the question it comes
+ * to once its first question is answered yes (the server's gate order): asked, it waits there; not asked, it is left.
+ */
+type Row = ImportItem & {
+	question: ImportQuestion
+	state: string
+	next?: ImportQuestion
+}
 const row = (
 	index: number,
 	question: ImportQuestion,
-	extra: Partial<ImportItem>,
+	extra: Partial<ImportItem> & { next?: ImportQuestion },
 ): Row =>
 	({
 		index,
@@ -65,6 +72,8 @@ const server = {
 	rows: [] as Row[],
 	/** Decide answers fail with this, once, then work. */
 	refuseNext: null as string | null,
+	/** How long a response waits before it arrives. It is made when the request comes, so it can be out of date. */
+	delay: null as ((url: string) => number) | null,
 }
 
 const freshRows = (): Row[] => [
@@ -204,16 +213,20 @@ const imdbLive = (): ImdbImportSummary => {
 /** Moves held rows as decide does: keep and leave are kept, the source's answers wait to be written. */
 function decide(question: ImportQuestion, answer: string, rows?: number[]) {
 	let decided = 0
+	const ask = server.summary?.options?.ask ?? []
 	for (const item of server.rows)
 		if (
 			item.state === `waiting:${question}` &&
 			(!rows || rows.includes(item.index))
 		) {
-			item.state =
-				answer === "keep" || answer === "leave"
-					? "kept"
-					: `approved:${question}`
 			decided++
+			if (answer === "keep" || answer === "leave") item.state = "kept"
+			else if (item.next) {
+				// Gated again: held for the next question when it was asked, else left as it is without asking.
+				item.state = ask.includes(item.next) ? `waiting:${item.next}` : "left"
+				item.question = item.next
+				item.next = undefined
+			} else item.state = `approved:${question}`
 		}
 	return decided
 }
@@ -229,6 +242,14 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 	const url = String(input)
 	const body = init?.body ? JSON.parse(String(init.body)) : null
 	sent.push({ url, body })
+	const response = respond(url, body)
+	const ms = server.delay?.(url) ?? 0
+	if (ms) await new Promise((resolve) => setTimeout(resolve, ms))
+	return response
+}) as typeof fetch
+
+// biome-ignore lint/suspicious/noExplicitAny: the stand-in reads whatever the client posts
+function respond(url: string, body: any): Response {
 	const path = url.split("?")[0]
 	const params = new URL(url, "https://goodwatch.app").searchParams
 	if (path.endsWith("/decide")) {
@@ -245,8 +266,14 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 			)
 			return json({ import: imdbLive(), decided })
 		}
+		const approved = () =>
+			server.rows.filter((item) => item.state.startsWith("approved:")).length
+		const before = approved()
 		const decided = decide(body.question, body.answer, body.rows)
 		const summary = server.summary as ImportSummary
+		// Answers that bring rows in start a finished run again.
+		if (summary.status === "done" && approved() > before)
+			summary.status = "running"
 		if (!body.rows && summary.options)
 			summary.options = {
 				...summary.options,
@@ -281,12 +308,14 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 	}
 	if (params.get("waiting")) {
 		const question = params.get("waiting")
-		const held = server.rows.filter(
+		const all = server.rows.filter(
 			(item) => item.state === `waiting:${question}`,
 		)
+		const offset = Number(params.get("offset") ?? 0)
+		const held = all.slice(offset, offset + Number(params.get("limit") ?? 50))
 		if (path.startsWith("/api/imdb-import"))
 			return json({
-				total: held.length,
+				total: all.length,
 				items: held.map((item) => ({
 					index: item.index,
 					imdbId: `tt${item.index}`,
@@ -303,8 +332,8 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 				})),
 			})
 		return json({
-			total: held.length,
-			items: held.map(({ question: _q, state, ...item }) => ({
+			total: all.length,
+			items: held.map(({ question: _q, state, next: _n, ...item }) => ({
 				...item,
 				applyState: state,
 			})),
@@ -327,7 +356,7 @@ globalThis.fetch = (async (input: string, init?: RequestInit) => {
 	if (path === "/api/imports" || path === "/api/imdb-import")
 		return json({ imports: [] })
 	return json({ error: "not stubbed" }, 404)
-}) as typeof fetch
+}
 
 const { createElement: h, act } = await import("react")
 const { createRoot } = await import("react-dom/client")
@@ -434,6 +463,32 @@ async function page(props: Partial<PageProps>) {
 		wait: async (ms: number) => {
 			await act(async () => new Promise((resolve) => setTimeout(resolve, ms)))
 			await settle()
+		},
+		/** The heading has focus, as a screen reader would land on it. */
+		headingFocused: () =>
+			!!document.activeElement &&
+			document.activeElement === container.querySelector("h2"),
+		laterDisabled: () =>
+			(
+				container.querySelector(
+					"[data-decide-later]",
+				) as unknown as HTMLButtonElement | null
+			)?.disabled ?? null,
+		checked: (name: string) =>
+			(
+				container.querySelector(
+					`input[name="${name}"]`,
+				) as unknown as HTMLInputElement | null
+			)?.checked ?? null,
+		/** The example poster slots of a yes/no question, with their titles. */
+		slots: () =>
+			[...container.querySelectorAll("[data-held-posters] li")].map((li) =>
+				(li.textContent ?? "").trim(),
+			),
+		/** Waits, a little at a time, until `done` holds or `ms` have passed. */
+		until: async (done: () => boolean, ms = 4000) => {
+			for (let waited = 0; waited < ms && !done(); waited += 50)
+				await act(async () => new Promise((resolve) => setTimeout(resolve, 50)))
 		},
 		/** The screen as a member sees it now. */
 		snap: () => ({
@@ -637,6 +692,217 @@ const results: Record<string, unknown> = {}
 		confirms,
 		decided: view.posts(),
 		second: view.snap(),
+	}
+	await view.unmount()
+}
+
+const DETAIL = `/api/imports/${ID}`
+const counted = (
+	waiting: Partial<Record<ImportQuestion, Record<string, number>>>,
+): ImportSummary["questions"] =>
+	(["conflict", "rewatch", "wholeShow", "undated"] as const).map((kind) => {
+		const byKind = waiting[kind] ?? {}
+		return {
+			kind,
+			waiting: Object.values(byKind).reduce((sum, n) => sum + n, 0),
+			applying: 0,
+			answer: null,
+			byKind,
+		}
+	})
+
+{
+	// A season wish for a show already Seen: held for the whole show first, then for rewatch once that's a yes.
+	server.rows = [
+		row(0, "wholeShow", {
+			kind: "want",
+			mediaType: "show",
+			tmdbId: 1396,
+			title: "Breaking Bad",
+			next: "rewatch",
+		}),
+	]
+	server.summary = {
+		...preview(true),
+		source: "mdblist",
+		fileName: "MDBList",
+		counts: { ...preview(true).counts, rows: 1, new: 0, conflict: 1 },
+		kinds: { ...preview(true).kinds, rating: 0, want: 1, review: 0 },
+		questions: counted({ wholeShow: { want: 1 } }),
+		wishlistShowChoiceCount: 1,
+		wishlistRewatchChoiceCount: 1,
+	}
+	// The held rows come late: the example posters keep their place meanwhile.
+	server.delay = (url) => (url.includes("waiting=wholeShow") ? 600 : 0)
+	const view = await page({
+		sourceImports: [server.summary],
+		initialSource: "mdblist",
+		openImport: ID,
+	})
+	await view.click("Import", true)
+	const slotsBefore = view.slots()
+	const heading = view.heading()
+	await view.wait(700)
+	const slotsAfter = view.slots()
+	server.delay = null
+	const confirms = view.posts().filter((call) => call.url.endsWith("/confirm"))
+	sent = []
+	await view.click("Yes, add the whole show")
+	await view.wait(LOCK)
+	results.seasonWish = {
+		heading,
+		confirms,
+		slotsBefore,
+		slotsAfter,
+		decided: view.posts(),
+		next: view.snap(),
+		row: server.rows[0].state,
+	}
+	await view.unmount()
+}
+
+{
+	// Heat's rows straddle the loaded page: its score comes first, 600 more of its entries after 199 other titles.
+	server.rows = [
+		row(0, "conflict", { score: 9, currentScore: 8 }),
+		...Array.from({ length: 199 }, (_, at) =>
+			row(at + 1, "conflict", {
+				title: `Film ${at + 1}`,
+				tmdbId: 10_000 + at,
+				score: 6,
+				currentScore: 7,
+			}),
+		),
+		...Array.from({ length: 600 }, (_, at) =>
+			row(200 + at, "conflict", {
+				kind: "review",
+				score: null,
+				currentScore: null,
+			}),
+		),
+	]
+	server.summary = {
+		...preview(true),
+		counts: { ...preview(true).counts, rows: 800, new: 0, conflict: 800 },
+		kinds: { ...preview(true).kinds, rating: 200, want: 0, review: 600 },
+		questions: counted({ conflict: { rating: 200, review: 600 } }),
+	}
+	const view = await page({
+		sourceImports: [server.summary],
+		initialSource: "trakt",
+		openImport: ID,
+	})
+	await view.click("Import", true)
+	for (let i = 0; i < 3; i++) await settle()
+	const first = view.heading()
+	sent = []
+	await view.click("Yes, keep my 8")
+	await view.wait(LOCK)
+	await view.until(() => view.heading() !== first)
+	const decided = view.posts()
+	results.split = {
+		first,
+		batches: decided.map((call) => {
+			const rows = (call.body as { rows?: number[] }).rows ?? []
+			return { count: rows.length, first: rows[0], last: rows.at(-1) }
+		}),
+		heldLeft: server.rows.filter(
+			(item) => item.tmdbId === 949 && item.state === "waiting:conflict",
+		).length,
+		next: view.heading(),
+	}
+
+	// While an answer is on its way, Decide later waits; a refused answer keeps its question and the reason.
+	server.refuseNext = "This import cannot accept answers now."
+	server.delay = (url) => (url.endsWith("/decide") ? 400 : 0)
+	const asked = view.heading()
+	sent = []
+	await view.click("No, use Trakt's 6")
+	const laterWhilePending = view.laterDisabled()
+	await view.click("Decide later")
+	const afterLaterClick = view.heading()
+	await view.wait(LOCK)
+	server.delay = null
+	results.pending = {
+		asked,
+		laterWhilePending,
+		afterLaterClick,
+		settled: { ...view.snap(), error: view.error() },
+		laterAfter: view.laterDisabled(),
+	}
+	await view.unmount()
+}
+
+{
+	// Another tab answers the title on screen: polling brings the next one. Its "Same answer for all" starts unticked,
+	// and focus stays where it was; the member's own answer moves focus to the screen it brings.
+	server.rows = freshRows()
+	server.summary = preview(true)
+	const view = await page({
+		sourceImports: [server.summary],
+		initialSource: "trakt",
+		openImport: ID,
+	})
+	await view.click("Import", true)
+	for (let i = 0; i < 3; i++) await settle()
+	const firstFocused = view.headingFocused()
+	await view.tick("same-for-all")
+	const tickedFirst = view.checked("same-for-all")
+	decide("conflict", "keep", [0, 1])
+	await view.until(() => (view.heading() ?? "").includes("Alien"))
+	const swapped = {
+		heading: view.heading(),
+		ticked: view.checked("same-for-all"),
+		focused: view.headingFocused(),
+	}
+	sent = []
+	await view.click("Yes, keep my 7")
+	await view.wait(LOCK)
+	results.otherTab = {
+		firstFocused,
+		tickedFirst,
+		swapped,
+		decided: view.posts(),
+		next: view.heading(),
+		nextFocused: view.headingFocused(),
+	}
+	await view.unmount()
+}
+
+{
+	// A progress read sent before an answer, and arriving after it, says the run is done with the question waiting.
+	// It is dropped: the run goes on, and Done comes with nothing left once the answer is in.
+	server.rows = [
+		row(4, "rewatch", { kind: "want", title: "Seen Film", tmdbId: 11 }),
+	]
+	server.summary = {
+		...preview(true),
+		questions: counted({ rewatch: { want: 1 } }),
+	}
+	const view = await page({
+		sourceImports: [server.summary],
+		initialSource: "trakt",
+		openImport: ID,
+	})
+	await view.click("Import", true)
+	for (let i = 0; i < 3; i++) await settle()
+	const asked = view.heading()
+	;(server.summary as ImportSummary).status = "done"
+	server.delay = (url) => (url === DETAIL ? 1200 : 0)
+	const polls = () => sent.filter((call) => call.url === DETAIL).length
+	const before = polls()
+	await view.until(() => polls() > before)
+	server.delay = null
+	await view.click("Yes, add to Want to rewatch")
+	await view.wait(LOCK)
+	// The answer's row goes in, and the run finishes.
+	for (const item of server.rows) item.state = "added"
+	;(server.summary as ImportSummary).status = "done"
+	await view.wait(1300)
+	await view.until(() => (view.heading() ?? "").startsWith("Done."))
+	results.stalePoll = {
+		asked,
+		final: { ...view.snap(), left: view.left() },
 	}
 	await view.unmount()
 }

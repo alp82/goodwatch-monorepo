@@ -50,6 +50,37 @@ const results = JSON.parse(
 	revisit: Snap & { left: Left[]; undo: boolean }
 	oldPreview: Snap & { confirms: Post[] }
 	imdb: { first: Snap; confirms: Post[]; decided: Post[]; second: Snap }
+	seasonWish: {
+		heading: string
+		confirms: Post[]
+		slotsBefore: string[]
+		slotsAfter: string[]
+		decided: Post[]
+		next: Snap
+		row: string
+	}
+	split: {
+		first: string
+		batches: { count: number; first: number; last: number }[]
+		heldLeft: number
+		next: string
+	}
+	pending: {
+		asked: string
+		laterWhilePending: boolean
+		afterLaterClick: string
+		settled: Snap & { error: string }
+		laterAfter: boolean
+	}
+	otherTab: {
+		firstFocused: boolean
+		tickedFirst: boolean
+		swapped: { heading: string; ticked: boolean; focused: boolean }
+		decided: Post[]
+		next: string
+		nextFocused: boolean
+	}
+	stalePoll: { asked: string; final: Snap & { left: Left[] } }
 }
 const { run } = results
 const DECIDE = "/api/imports/00000000-0000-4000-8000-0000000000aa/decide"
@@ -226,4 +257,93 @@ test("IMDb ratings start with ask, then each differing score is decided by its r
 		"You gave Alien a 6 in GoodWatch. IMDb has 9. Keep your 6?",
 	)
 	assert.equal(imdb.second.counter, "Question 2 of 2")
+})
+
+test("a season wish for a show already Seen is asked about rewatch after the whole show, never left silently", () => {
+	const { seasonWish } = results
+	assert.deepEqual(seasonWish.confirms[0]?.body, {
+		kinds: ["want"],
+		conflictChoice: "keep",
+		watchDates: "preserve",
+		ask: ["conflict", "rewatch", "wholeShow"],
+	})
+	assert.match(seasonWish.heading, /lists seasons or episodes of 1 show/)
+	assert.deepEqual(seasonWish.decided, [
+		{ url: DECIDE, body: { question: "wholeShow", answer: "add" } },
+	])
+	assert.equal(seasonWish.row, "waiting:rewatch")
+	assert.equal(
+		seasonWish.next.heading,
+		"1 title in your MDBList account is already Seen. Add it to Want to rewatch?",
+	)
+})
+
+test("the example posters keep their place while the held rows load", () => {
+	const { seasonWish } = results
+	assert.deepEqual(seasonWish.slotsBefore, [""], "a blank slot from the start")
+	assert.deepEqual(seasonWish.slotsAfter, ["Breaking Bad"])
+})
+
+test("a title whose rows go past the loaded page is answered for all of its rows, in batches of 500", () => {
+	const { split } = results
+	assert.equal(
+		split.first,
+		"You gave Heat an 8 in GoodWatch. Trakt has 9. Keep your 8?",
+	)
+	assert.deepEqual(split.batches, [
+		{ count: 500, first: 0, last: 698 },
+		{ count: 101, first: 699, last: 799 },
+	])
+	assert.equal(split.heldLeft, 0, "none of Heat's rows waits any more")
+	assert.equal(
+		split.next,
+		"You gave Film 1 a 7 in GoodWatch. Trakt has 6. Keep your 7?",
+	)
+})
+
+test("Decide later waits while an answer is on its way; a refused answer keeps its question and the reason", () => {
+	const { pending } = results
+	assert.equal(pending.laterWhilePending, true)
+	assert.equal(pending.afterLaterClick, pending.asked)
+	assert.equal(pending.settled.heading, pending.asked)
+	assert.equal(pending.settled.error, "This import cannot accept answers now.")
+	assert.deepEqual(pressed(pending.settled.answers), ["false", "false"])
+	assert.equal(pending.laterAfter, false)
+})
+
+test("a title answered in another tab: the next screen starts without Same answer for all, and focus stays", () => {
+	const { otherTab } = results
+	assert.equal(
+		otherTab.firstFocused,
+		true,
+		"Import moves focus to the question",
+	)
+	assert.equal(otherTab.tickedFirst, true)
+	assert.equal(
+		otherTab.swapped.heading,
+		"You gave Alien a 7 in GoodWatch. Trakt has 10. Keep your 7?",
+	)
+	assert.equal(otherTab.swapped.ticked, false)
+	assert.equal(otherTab.swapped.focused, false)
+	assert.deepEqual(otherTab.decided, [
+		{
+			url: DECIDE,
+			body: { question: "conflict", answer: "keep", rows: [2] },
+		},
+	])
+	assert.equal(
+		otherTab.next,
+		"You gave Brazil a 9 in GoodWatch. Trakt has 6. Keep your 9?",
+	)
+	assert.equal(otherTab.nextFocused, true, "the member's answer moves focus")
+})
+
+test("a progress read older than an answer can't undo it or stop the polling", () => {
+	const { stalePoll } = results
+	assert.equal(
+		stalePoll.asked,
+		"1 title in your Trakt file is already Seen. Add it to Want to rewatch?",
+	)
+	assert.equal(stalePoll.final.heading, "Done. 3 titles are in GoodWatch")
+	assert.deepEqual(stalePoll.final.left, [])
 })

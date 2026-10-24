@@ -5,7 +5,6 @@ import "../../server/title-filter/test-alias.ts"
 import type { HeldRow, LiveQuestion } from "./import-questions-model"
 
 const {
-	ASK_UNDATED,
 	askedQuestions,
 	conflictTitlesLeft,
 	groupHeld,
@@ -50,20 +49,59 @@ const q = (
 	byKind?: Record<string, number>,
 ) => ({ kind, waiting, applying: 0, answer: null, byKind })
 
-test("confirm asks every question the preview counts among the kinds left in, and never undated until T5", () => {
+test("confirm asks every question the preview counts among the kinds left in, undated included", () => {
 	const summary = preview([
 		q("conflict", 4, { rating: 4 }),
 		q("rewatch", 2, { want: 2 }),
 		q("wholeShow", 0, {}),
 		q("undated", 3, { watch: 3 }),
 	])
-	assert.equal(ASK_UNDATED, false)
 	assert.deepEqual(askedQuestions(summary, ["rating", "want", "watch"]), [
 		"conflict",
 		"rewatch",
+		"undated",
 	])
 	assert.deepEqual(askedQuestions(summary, ["rating"]), ["conflict"])
-	assert.deepEqual(askedQuestions(summary, ["watch"]), [])
+	assert.deepEqual(askedQuestions(summary, ["watch"]), ["undated"])
+})
+
+test("confirm also asks the questions a row can come to after its first answer", () => {
+	// A season wish for a show already Seen: the preview counts it once, under the whole show. After "add the whole
+	// show" it waits on rewatch, so rewatch is asked too and no wishlistRewatch placeholder decides it.
+	const seasonWish = preview([q("wholeShow", 1, { want: 1 })], {
+		source: "mdblist",
+		counts: { ...preview([]).counts, new: 0, conflict: 1 },
+		kinds: { want: 1 } as ImportSummary["kinds"],
+		wishlistShowChoiceCount: 1,
+		wishlistRewatchChoiceCount: 1,
+	})
+	assert.deepEqual(askedQuestions(seasonWish, ["want"]), [
+		"conflict",
+		"rewatch",
+		"wholeShow",
+	])
+	const options = runOptions(seasonWish, ["want"], false)
+	assert.deepEqual(options, {
+		kinds: ["want"],
+		conflictChoice: "keep",
+		watchDates: "preserve",
+		ask: ["conflict", "rewatch", "wholeShow"],
+	})
+	assert.equal(runWouldWrite(seasonWish, options), true)
+	// Rewatch rows counted nowhere first (they all wait on the whole show) are still asked when the preview has any.
+	const rewatchOnly = preview([q("conflict", 2, { rating: 2 })], {
+		source: "mdblist",
+		wishlistRewatchChoiceCount: 1,
+	})
+	assert.deepEqual(askedQuestions(rewatchOnly, ["rating", "want"]), [
+		"conflict",
+		"rewatch",
+	])
+	assert.deepEqual(
+		askedQuestions(rewatchOnly, ["rating"]),
+		["conflict"],
+		"without wishes kept, no wishlist question",
+	)
 })
 
 test("asked questions keep their placeholders; wishlist answers go only for questions not asked", () => {
@@ -75,8 +113,7 @@ test("asked questions keep their placeholders; wishlist answers go only for ques
 		kinds: ["rating", "want"],
 		conflictChoice: "keep",
 		watchDates: "preserve",
-		ask: ["conflict", "rewatch"],
-		wishlistShows: false,
+		ask: ["conflict", "rewatch", "wholeShow"],
 	})
 	assert.deepEqual(runOptions(summary, ["rating"], false), {
 		kinds: ["rating"],
@@ -95,8 +132,7 @@ test("asked questions keep their placeholders; wishlist answers go only for ques
 		kinds: ["want"],
 		conflictChoice: "keep",
 		watchDates: "preserve",
-		ask: ["wholeShow"],
-		wishlistRewatch: false,
+		ask: ["conflict", "rewatch", "wholeShow"],
 	})
 })
 
@@ -112,6 +148,14 @@ test("a run starts when something is new or a question waits, never with no kind
 		runWouldWrite(summary, runOptions(summary, ["want"], false)),
 		false,
 	)
+	// A question asked only for rows that could come to it later holds nothing at the start: nothing to run.
+	const later = preview([q("conflict", 0, {})], {
+		counts: { ...preview([]).counts, new: 0, conflict: 2 },
+		source: "mdblist",
+		wishlistRewatchChoiceCount: 2,
+	})
+	const options = runOptions(later, ["rating"], false)
+	assert.equal(runWouldWrite(later, options), false)
 	assert.equal(
 		runWouldWrite(summary, { ...runOptions(summary, [], false), kinds: [] }),
 		false,
@@ -230,6 +274,7 @@ test("screens: a title per differing score, then the yes/no questions; answered 
 		questions,
 		held: { conflict: [held(1, "Heat"), held(2, "Alien")] },
 		answered: new Set<string>(),
+		answeredRows: new Set<number>(),
 	}
 	assert.deepEqual(
 		openScreens(input).map((screen) => screen.key),
@@ -246,7 +291,7 @@ test("screens: a title per differing score, then the yes/no questions; answered 
 		questions: input.questions.map((question) =>
 			question.kind === "conflict" ? { ...question, waiting: 2 } : question,
 		),
-		answered: new Set(["conflict:movie:1"]),
+		answeredRows: new Set([1]),
 	}
 	assert.deepEqual(
 		questionCounter(after, ["conflict:movie:1"], "conflict:movie:2"),
@@ -281,4 +326,33 @@ test("a score reads with the article it's said with", () => {
 		"an",
 		"a",
 	])
+})
+
+test("answered conflict rows leave by row: a title with rows the answer didn't reach comes back with those", () => {
+	const questions = liveQuestions({
+		status: "running",
+		// The answer's response already counts row 0 as answered; the list hasn't caught up.
+		questions: [{ kind: "conflict", waiting: 2, applying: 0, answer: null }],
+	})
+	const heat = (index: number): HeldRow => ({
+		...held(index, "Heat"),
+		key: "movie:949",
+	})
+	const input = {
+		questions,
+		held: { conflict: [heat(0), held(1, "Alien"), heat(250)] },
+		answered: new Set<string>(),
+		answeredRows: new Set([0]),
+	}
+	const screens = openScreens(input)
+	assert.deepEqual(
+		screens.map((screen) => screen.key),
+		["conflict:movie:1", "conflict:movie:949"],
+	)
+	assert.deepEqual(
+		screens[1].q === "conflict" ? screens[1].title.rows : null,
+		[250],
+		"only the row not answered yet",
+	)
+	assert.equal(conflictTitlesLeft(input), 2)
 })
