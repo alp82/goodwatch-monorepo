@@ -578,7 +578,7 @@ function eligible(
 }
 
 /** Preserve row consent only when a failed write replaces its approval, as in general imports. */
-async function saveConsent(
+export async function saveConsent(
 	id: string,
 	rows: {
 		row_index: number
@@ -609,7 +609,7 @@ async function saveConsent(
 	)
 }
 
-async function transitionConflict(
+export async function transitionConflict(
 	id: string,
 	answer: "keep" | "imdb",
 	indexes?: number[],
@@ -627,7 +627,7 @@ async function transitionConflict(
 }
 
 /** Repair missed holds and whole answers on each pass without moving already-settled rows. */
-async function holdQuestions(userId: string, id: string) {
+export async function holdQuestions(userId: string, id: string) {
 	const row = await getImportRow(userId, id)
 	const options = questionOptions(row)
 	if (!options.ask) return
@@ -646,7 +646,7 @@ async function holdQuestions(userId: string, id: string) {
 	await recountQuestions(id, row.counts)
 }
 
-async function questionProcessed(id: string) {
+export async function questionProcessed(id: string) {
 	return (await questionStates(id)).reduce(
 		(n, row) =>
 			n +
@@ -659,7 +659,7 @@ async function questionProcessed(id: string) {
 }
 
 /** Every held or settled conflict counts in both progress measures. */
-async function questionTotal(id: string, counts: string) {
+export async function questionTotal(id: string, counts: string) {
 	const rows = await select<{ n: number }>(
 		"SELECT count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND outcome = 'conflict' AND apply_state IN ('waiting:conflict', 'approved:conflict', 'added', 'updated', 'kept', 'failed')",
 		[id],
@@ -668,11 +668,15 @@ async function questionTotal(id: string, counts: string) {
 	return parsed.new + parsed.update + Number(rows[0]?.n ?? 0)
 }
 
-async function recountQuestions(id: string, counts: string) {
+export async function recountQuestions(
+	id: string,
+	counts: string,
+	{ heartbeat = true } = {},
+) {
 	await refreshItems()
 	const tally = await readTally(id)
 	await run(
-		"UPDATE doc.user_import SET total = ?, processed = ?, added = ?, updated = ?, kept = ?, failed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+		`UPDATE doc.user_import SET total = ?, processed = ?, added = ?, updated = ?, kept = ?, failed = ?${heartbeat ? ", updated_at = CURRENT_TIMESTAMP" : ""} WHERE id = ?`,
 		[
 			await questionTotal(id, counts),
 			await questionProcessed(id),
@@ -763,6 +767,9 @@ export async function decideImport(
 	await refreshItems()
 	const decided = await transitionConflict(id, answer, indexes)
 	await refreshItems()
+	// Fence a finisher that saw no pending items before this decision. Preserve the
+	// heartbeat so the fresh read below can still recognize a stalled worker.
+	await recountQuestions(id, row.counts, { heartbeat: false })
 	row = await getImportRow(userId, id)
 	check()
 	if (
@@ -788,7 +795,7 @@ export async function decideImport(
 				startApply(userId, id)
 		}
 	}
-	await recountQuestions(id, row.counts)
+	await recountQuestions(id, row.counts, { heartbeat: false })
 	captureProductEvent(
 		userId,
 		"import question answered",

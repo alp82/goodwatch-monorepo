@@ -650,6 +650,84 @@ test("a decision racing finishing invalidates the CAS and is applied on the next
 	assert.equal(db.row.total, 1)
 })
 
+test("a per-row decision fences finishing before its restart read returns", async () => {
+	const db = conflicts()
+	const execute = db.execute.bind(db)
+	let releaseRead!: () => void
+	const heldRead = new Promise<void>((resolve) => {
+		releaseRead = resolve
+	})
+	let reachedRead!: () => void
+	const restartRead = new Promise<void>((resolve) => {
+		reachedRead = resolve
+	})
+	let decision: ReturnType<typeof b.decideImport> | undefined
+	let held = false
+	let staleFinish: number | undefined
+	db.execute = async (sql, params) => {
+		const result = await execute(sql, params)
+		if (
+			!held &&
+			sql.includes("FROM doc.user_import WHERE id = ?") &&
+			db.items[0].apply_state === "approved:conflict"
+		) {
+			held = true
+			assert.equal((result.json[0] as { status: string }).status, "running")
+			reachedRead()
+			await heldRead
+		}
+		if (
+			staleFinish === undefined &&
+			sql.startsWith("UPDATE doc.user_import SET status = ?, error = ?")
+		) {
+			staleFinish = result.rowcount
+			releaseRead()
+		}
+		return result
+	}
+	db.onFinish = async () => {
+		decision = b.decideImport(USER, IMPORT, "imdb", [0])
+		await restartRead
+	}
+	setCrateClientForTest(db)
+	await a.confirmImport(USER, IMPORT, "ask")
+	await settled()
+	await decision
+	assert.equal(staleFinish, 0, "the decision must invalidate the stale finish")
+	assert.equal(db.row.status, "done")
+	assert.equal(db.items[0].apply_state, "updated")
+})
+
+test("a keep decision preserves a stalled import's heartbeat and resumability", async () => {
+	const db = conflicts(2)
+	await a.confirmImport(USER, IMPORT, "ask")
+	await settled()
+	db.row.status = "running"
+	db.row.updated_at = new Date(0)
+	const heartbeat = db.row.updated_at
+	const response = await b.decideImport(USER, IMPORT, "keep", [0])
+	assert.equal(response.import.stalled, true)
+	assert.equal(db.row.updated_at, heartbeat)
+	assert.equal(db.starts, 1)
+	assert.equal((await b.confirmImport(USER, IMPORT, "keep")).status, "running")
+	await settled()
+	assert.equal(db.starts, 2)
+})
+
+test("a stalled undo offers retry and completes while a live undo does not", async () => {
+	const db = conflicts()
+	await a.confirmImport(USER, IMPORT, "ask")
+	await settled()
+	db.row.status = "running"
+	db.row.options = JSON.stringify({ ask: true, direction: "undo" })
+	assert.equal(a.summarize(await a.getImportRow(USER, IMPORT)).canUndo, false)
+	db.row.updated_at = new Date(0)
+	const summary = a.summarize(await a.getImportRow(USER, IMPORT))
+	assert.equal(summary.stalled, true)
+	assert.equal(summary.canUndo, true)
+	assert.equal((await b.undoImport(USER, IMPORT)).status, "undone")
+})
+
 test("decide honors the other-running-import lock before changing anything", async () => {
 	const db = conflicts()
 	await a.confirmImport(USER, IMPORT, "ask")
@@ -986,7 +1064,11 @@ for (const answer of [undefined, "keep", "imdb"] as const)
 					Number(db.row.processed) <= Number(db.row.total),
 					`${db.row.processed}/${db.row.total}`,
 				)
-				if (db.row.status === "done")
+				// A decision recounts approvals before claiming a completed import.
+				if (
+					db.row.status === "done" &&
+					!db.items.some((item) => item.apply_state === "approved:conflict")
+				)
 					assert.equal(db.row.processed, db.row.total)
 			}
 			return result

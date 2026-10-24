@@ -124,7 +124,8 @@ export function summarize(row: ImportRow): ImdbImportSummary {
 		stalled: isStalled(row),
 		canUndo:
 			(row.status === "done" && Number(row.added) + Number(row.updated) > 0) ||
-			(row.status === "failed" && questionOptions(row).direction === "undo"),
+			((row.status === "failed" || isStalled(row)) &&
+				questionOptions(row).direction === "undo"),
 		error:
 			row.status === "failed"
 				? (row.error ??
