@@ -76,8 +76,9 @@ export function useDrag({
   function transition(direction: number, width: number, apply: () => void) {
     const seq = ++sequence.current;
     if (reduced) {
+      // Keep the old title hidden until the new title's layout resets the card.
+      x.setValue(direction * width * 1.2);
       apply();
-      x.setValue(0);
       return;
     }
     Animated.timing(x, {

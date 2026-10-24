@@ -202,3 +202,34 @@ test('late poster load cannot flash the old title after choosing the next one',a
   pending.get('feedback-image-new.svg')!();await expect(image).toHaveCSS('opacity','1');
   await expect(page.getByTestId('poster')).toContainText('Isolated test c2');
 });
+
+
+test('cached next poster fades in without a full-opacity flash', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const f = await fixture(page);
+  const image = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="300"><rect width="200" height="300" fill="purple"/></svg>');
+  f.room.shared.candidates[0].posterUrl = image;
+  f.room.shared.candidates[1].posterUrl = image + '#next';
+  await page.evaluate(async src => { const img = new Image(); img.src = src; await img.decode(); }, image + '#next');
+  await page.reload();
+  await expect(page.getByTestId('poster-art')).toHaveCSS('opacity', '1');
+  await page.evaluate(() => {
+    (window as any).__fadeFrames = [];
+    const until = performance.now() + 1500;
+    function sample() {
+      const poster = document.querySelector('[data-testid="poster"]');
+      const art = poster?.querySelector('[data-testid="poster-art"]');
+      if (art && poster?.textContent?.includes('Isolated test c2')) (window as any).__fadeFrames.push(Number(getComputedStyle(art).opacity));
+      if (performance.now() < until) requestAnimationFrame(sample);
+    }
+    requestAnimationFrame(sample);
+  });
+  await page.getByRole('button', { name: 'Nope', exact: true }).click();
+  await expect(page.getByTestId('poster')).toContainText('Isolated test c2');
+  await expect(page.getByTestId('poster-art')).toHaveCSS('opacity', '1');
+  await page.waitForTimeout(300);
+  const frames: number[] = await page.evaluate(() => (window as any).__fadeFrames);
+  expect(frames.length).toBeGreaterThan(5);
+  expect(frames.some(opacity => opacity > 0 && opacity < 0.9)).toBe(true);
+  for (let i = 1; i < frames.length; i++) expect(frames[i]).toBeGreaterThanOrEqual(frames[i - 1]);
+});

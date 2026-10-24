@@ -22,10 +22,26 @@ export function Notice({ children, error = false }: { children: ReactNode; error
 export function Page({ children, eyebrow }: { children: ReactNode; eyebrow?: string }) {
   return <SafeAreaView style={s.safe}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.scroll}><View style={s.content}><View style={s.brandRow}><Text accessibilityLabel="YepWatch" style={s.brand}>Yep<Text style={{ color: colors.amber }}>Watch</Text></Text><Words muted style={{ fontSize: 13 }}>By GoodWatch</Words></View>{developmentNotice && <Notice>{developmentNotice}</Notice>}{eyebrow && <Words muted style={{ fontSize: 13, letterSpacing: 1 }}>{eyebrow.toUpperCase()}</Words>}{children}<Words muted style={s.footer}>Choose together. Play on your own screens.</Words></View></ScrollView></SafeAreaView>;
 }
-export function useReducedMotion() {
-  const [reduced, setReduced] = useState(true);
-  useEffect(() => { let active = true; AccessibilityInfo.isReduceMotionEnabled().then(v => { if (active) setReduced(v); }); const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduced); return () => { active = false; sub.remove(); }; }, []);
+/** Null means the asynchronous platform preference has not arrived yet. */
+export function useMotionPreference() {
+  const [reduced, setReduced] = useState<boolean | null>(null);
+  useEffect(() => {
+    let active = true;
+    let changed = false;
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', value => {
+      changed = true;
+      if (active) setReduced(value);
+    });
+    AccessibilityInfo.isReduceMotionEnabled().then(
+      value => { if (active && !changed) setReduced(value); },
+      () => { if (active && !changed) setReduced(true); },
+    );
+    return () => { active = false; sub.remove(); };
+  }, []);
   return reduced;
+}
+export function useReducedMotion() {
+  return useMotionPreference() ?? true;
 }
 /** Neutral presence only: this pulse never depends on a vote or current title. */
 export function ActivityDot({ active }: { active: boolean }) {

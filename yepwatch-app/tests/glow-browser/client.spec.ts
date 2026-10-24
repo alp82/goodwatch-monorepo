@@ -659,9 +659,10 @@ test('measured Yep exposure pauses for details and match inspection; missing rel
   expect(afterReload.activeExposureMs).toBeNull();
 });
 
+for (const reducedMotion of ['no-preference', 'reduce'] as const)
 for (const direction of [-1, 1])
-  test(`animated swipe ${direction} never re-enters with the opposite stamp`, async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
+  test(`${reducedMotion} swipe ${direction} never re-enters with the opposite stamp`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion });
     const f = await fixture(page);
     await page.route('**/commands', async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 450));
