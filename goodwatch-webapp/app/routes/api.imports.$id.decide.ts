@@ -6,7 +6,7 @@ import { NativeImportError } from "~/server/imports/store.server"
 import { analyticsAction } from "~/telemetry/product-analytics.server"
 const schema = z
 	.object({
-		question: z.enum(["conflict", "rewatch", "wholeShow"]),
+		question: z.enum(["conflict", "rewatch", "wholeShow", "undated"]),
 		answer: z.enum(["keep", "source", "add", "leave"]),
 		rows: z.array(z.number().int().safe().min(0)).min(1).max(500).optional(),
 	})

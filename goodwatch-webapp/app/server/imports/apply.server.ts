@@ -13,7 +13,12 @@ import {
 	withProductContext,
 } from "~/telemetry/product-analytics.server"
 import { QUESTION_KEPT_REASON } from "../../domain/import-result.ts"
-import { canImportWantToSee, importGate } from "../../domain/imports.ts"
+import {
+	canImportWantToSee,
+	importGate,
+	importUndatedTitles,
+	isUndatedImportWatch,
+} from "../../domain/imports.ts"
 import {
 	applyImportedEpisodeScore,
 	undoImportedEpisodeScore,
@@ -474,8 +479,18 @@ export async function holdQuestions(
 ) {
 	if (!options.ask?.length) return
 	const held = new Map<ImportQuestion, number[]>()
-	for (const item of await itemRows(userId, id, false, true)) {
-		const gate = importGate(item, options)
+	const items = await itemRows(
+		userId,
+		id,
+		false,
+		!options.ask.includes("undated"),
+	)
+	const undatedTitles = importUndatedTitles(items, options)
+	for (const item of items) {
+		if (item.applyState != null) continue
+		const gate = importGate(item, options, {
+			titleWaitsUndated: undatedTitles.has(ref(item)),
+		})
 		if ("hold" in gate) {
 			if (!held.has(gate.hold)) held.set(gate.hold, [])
 			held.get(gate.hold)?.push(item.index)
@@ -511,30 +526,44 @@ async function transitionConflict(
 export async function transitionWishlistQuestion(
 	userId: string,
 	id: string,
-	question: "rewatch" | "wholeShow",
+	question: "rewatch" | "wholeShow" | "undated",
 	answer: ImportAnswer,
 	indexes: number[] | null,
 	options: ImportOptions,
 ) {
 	let decided = 0
-	for (const item of await itemRows(userId, id)) {
+	const items = await itemRows(userId, id)
+	let undatedTitles: Set<string> | undefined
+	// Decide watches first, then release dependent intentions only when the title is settled.
+	if (question === "undated")
+		items.sort(
+			(a, b) => Number(b.kind === "watch") - Number(a.kind === "watch"),
+		)
+	for (const item of items) {
+		const dependent = question === "undated" && !isUndatedImportWatch(item)
 		if (
 			item.applyState !== `waiting:${question}` ||
-			(indexes && !indexes.includes(item.index))
+			(!dependent && indexes && !indexes.includes(item.index))
 		)
 			continue
-		item.payload._answer = {
-			...(item.payload._answer as object),
-			[question]: answer,
+		if (!dependent)
+			item.payload._answer = {
+				...(item.payload._answer as object),
+				[question]: answer,
+			}
+		if (dependent) {
+			undatedTitles ??= importUndatedTitles(items, options)
+			if (undatedTitles.has(ref(item))) continue
 		}
-		if (answer !== "leave") item.applyState = `approved:${question}`
+		if (answer !== "leave" || dependent)
+			item.applyState = `approved:${question}`
 		const gate =
-			answer === "leave"
+			answer === "leave" && !dependent
 				? { kept: true as const, question }
 				: importGate(item, options)
 		const keptQuestion = "kept" in gate ? gate.question : undefined
 		const state =
-			answer === "leave" || keptQuestion
+			(answer === "leave" && !dependent) || keptQuestion
 				? "kept"
 				: "hold" in gate
 					? `waiting:${gate.hold}`
@@ -544,7 +573,7 @@ export async function transitionWishlistQuestion(
 			[
 				state,
 				JSON.stringify(item.payload),
-				answer === "leave"
+				answer === "leave" && !dependent
 					? QUESTION_KEPT_REASON[question]
 					: keptQuestion
 						? QUESTION_KEPT_REASON[keptQuestion]
@@ -554,7 +583,8 @@ export async function transitionWishlistQuestion(
 				`waiting:${question}`,
 			],
 		)
-		decided += result.rowcount ?? 0
+		item.applyState = state as ImportItem["applyState"]
+		if (!dependent) decided += result.rowcount ?? 0
 	}
 	return decided
 }
@@ -570,7 +600,8 @@ export async function decideImport(
 	if (
 		(question !== "conflict" &&
 			question !== "rewatch" &&
-			question !== "wholeShow") ||
+			question !== "wholeShow" &&
+			question !== "undated") ||
 		!(question === "conflict" ? ["keep", "source"] : ["add", "leave"]).includes(
 			answer,
 		) ||
@@ -645,6 +676,19 @@ export async function decideImport(
 	// Publish row changes before touching the import version: a finisher that reads
 	// this version must also see the approvals, including across different pods.
 	await refreshItems()
+	if (question === "undated") {
+		// Concurrent per-row decisions may each have read another waiting watch. Re-read
+		// after publishing them and release only dependencies, without deciding other watches.
+		await transitionWishlistQuestion(
+			userId,
+			id,
+			"undated",
+			"add",
+			[],
+			JSON.parse(row.options ?? "null") as ImportOptions,
+		)
+		await refreshItems()
+	}
 	await run(
 		"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
 		[id],
@@ -721,8 +765,21 @@ async function applyRunStored(
 			}, HEARTBEAT_MS)
 			beat.unref()
 			await holdQuestions(userId, id, options)
-			for (const question of ["wholeShow", "rewatch"] as const) {
+			for (const question of ["undated", "wholeShow", "rewatch"] as const) {
 				const answer = options.answers?.[question]
+				if (
+					question === "undated" &&
+					options.ask?.includes(question) &&
+					!answer
+				)
+					await transitionWishlistQuestion(
+						userId,
+						id,
+						question,
+						"add",
+						[],
+						options,
+					)
 				if (options.ask?.includes(question) && answer)
 					await transitionWishlistQuestion(
 						userId,
@@ -745,8 +802,12 @@ async function applyRunStored(
 						journal.after,
 					])
 			}
+			const undatedTitles = importUndatedTitles(allItems, options)
 			const watchRefs = new Set(
-				pending
+				(options.ask?.includes("undated")
+					? allItems.filter((x) => x.applyState !== "kept")
+					: pending
+				)
 					.filter(
 						(x) =>
 							x.kind === "watch" &&
@@ -762,7 +823,9 @@ async function applyRunStored(
 				let state: keyof typeof tally = "kept"
 				let reason: string | undefined
 				try {
-					const gate = importGate(item, options)
+					const gate = importGate(item, options, {
+						titleWaitsUndated: undatedTitles.has(ref(item)),
+					})
 					if ("hold" in gate) continue
 					if ("kept" in gate) {
 						state = "kept"
@@ -1173,16 +1236,17 @@ async function undoImportStored(
 		const scoredEpisodes = items.filter(
 			(item) => item.kind === "episode_rating",
 		)
-		if (scoredEpisodes.length) {
+		const multiPass = summarize(
+			await getImportRow(userId, id),
+		).options?.ask?.includes("undated")
+		const scoreRows = scoredEpisodes.map((item) => ({ ...item, applied: true }))
+		const undoScoreWatches = async (after?: number) => {
 			const { undoImportedEpisodeWatches } = await import(
 				"./episode-score-watches.server.ts"
 			)
-			await undoImportedEpisodeWatches(
-				userId,
-				id,
-				scoredEpisodes.map((item) => ({ ...item, applied: true })),
-			)
+			await undoImportedEpisodeWatches(userId, id, scoreRows, after)
 		}
+		if (scoredEpisodes.length && !multiPass) await undoScoreWatches()
 		if (
 			items.some(
 				(item) =>
@@ -1192,8 +1256,13 @@ async function undoImportStored(
 			)
 		) {
 			const tracking = await import("./watch-items.server.ts")
-			await tracking.undoAppliedImportWatches(userId, id)
+			await tracking.undoAppliedImportWatches(
+				userId,
+				id,
+				multiPass && scoredEpisodes.length ? undoScoreWatches : undefined,
+			)
 		}
+		if (multiPass && scoredEpisodes.length) await undoScoreWatches(0)
 		const undoOrder = [...items].sort((a, b) => {
 			const aStamp = (a.payload.journal as Journal | undefined)?.stamp
 			const bStamp = (b.payload.journal as Journal | undefined)?.stamp

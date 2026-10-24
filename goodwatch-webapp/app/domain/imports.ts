@@ -611,7 +611,33 @@ export function effectiveImportOptions(
 	}
 }
 
-/** Shared gate order. T5 will enable undated holding, including wants with held watches for the same title. */
+/** A source watch that needs consent; snapshots restore state rather than propose a viewing. */
+export const isUndatedImportWatch = (item: ImportItem) =>
+	item.kind === "watch" &&
+	item.outcome === "new" &&
+	(!item.precision || item.precision === "unknown") &&
+	!item.watcharrSnapshot
+
+/** Titles still awaiting watch consent, including rows not held by confirm yet. */
+export function importUndatedTitles(
+	items: ImportItem[],
+	options: ImportOptions,
+): Set<string> {
+	return new Set(
+		options.ask?.includes("undated") && options.kinds.includes("watch")
+			? items
+					.filter(
+						(item) =>
+							isUndatedImportWatch(item) &&
+							(item.applyState === "waiting:undated" ||
+								(item.applyState == null && !options.answers?.undated)),
+					)
+					.map((item) => `${item.mediaType}:${item.tmdbId}`)
+			: [],
+	)
+}
+
+/** Shared gate order, independent of the order in ask. */
 export const IMPORT_QUESTION_GATE_ORDER = [
 	"undated",
 	"wholeShow",
@@ -626,8 +652,9 @@ export const IMPORT_QUESTION_GATE_ORDER = [
 export function importGate(
 	item: ImportItem & { payload?: Record<string, unknown> },
 	options: ImportOptions,
+	ctx: { titleWaitsUndated?: boolean } = {},
 ):
-	| { kept: true; question?: "wholeShow" | "rewatch" }
+	| { kept: true; question?: "wholeShow" | "rewatch" | "undated" }
 	| { hold: ImportQuestion }
 	| { effective: ImportOptions } {
 	const answers = {
@@ -663,8 +690,17 @@ export function importGate(
 		return { kept: true }
 	// Keep this order independent of the order of questions in ask.
 	for (const question of IMPORT_QUESTION_GATE_ORDER) {
-		// Reserved for T5: both undated watches and wants whose title has waiting:undated watches.
-		if (question === "undated") continue
+		if (question === "undated") {
+			if (!options.ask?.includes("undated")) continue
+			// A later watch plan clears intentions. Do not write a fresh intention before it.
+			if (ctx.titleWaitsUndated && ["want", "show_status"].includes(item.kind))
+				return { hold: "undated" }
+			if (!isUndatedImportWatch(item)) continue
+			if (!answers.undated) return { hold: "undated" }
+			if (answers.undated === "leave")
+				return { kept: true, question: "undated" }
+			continue
+		}
 		const applies =
 			question === "wholeShow"
 				? item.wishlistShowChoice

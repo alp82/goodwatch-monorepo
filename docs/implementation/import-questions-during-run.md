@@ -143,3 +143,26 @@ Each ticket ships to main alone without breaking the stage 1 UI: until T6, no cl
 - T5: an imported "completed" show status writes a status watch that undated episode watches may dedupe against. Test with a TV
   Time fixture.
 - Members who never answer keep `waiting:*` rows forever. That has no side effects, and Undo works.
+
+## T5 implementation notes
+
+With `ask: ["undated"]`, new source watches whose precision is absent or unknown wait for add/leave. Watcharr snapshots
+remain state restoration and bypass this question. Want to See, rewatch intentions and show statuses for the same title
+wait until all its undated watches are decided; leaving a watch out releases the dependent rows to their own next gate.
+A per-row answer keeps the other watches waiting. Waiting watches still count as file evidence when deciding Want to See.
+
+The first native tracking journal retains `state:<type>:<id>`; later passes use `#2`, `#3`, etc. Applied journals are reused
+only to finish observations they already own after a crash. New plans deduplicate against the live watch log. Thus an
+undated episode already imported with a date stays kept as a duplicate; a different episode is written without a date.
+Results group the plans' watch entries under one title. Undo reads native journals in reverse row order and interleaves
+any episode-score watch journals by their plan time. Score journals remain in their score row's `payload.scoreWatch`,
+so they cannot collide with native `state:` keys. Later native plan times advance beyond existing journal times.
+
+TV Time-like completed shows defer their status along with undated episodes. The approved episode watches are prepared
+before completion fills remaining aired episodes, so completion cannot swallow those watches in an earlier pass. A
+status deferred past this import's own dated watches can follow its journaled state transitions; an intervening member
+edit still prevents replacing the previewed status. The fixture covers completion, two passes, one watch per episode,
+and Undo. Imports without `ask` retain the original watch-date options, journal keys and Undo path.
+
+The real-Crate question-flow regression includes undated holding, per-row consent and dependent re-gating. Run it only
+against the disposable local test database; T5's sandbox verification uses the rejecting SQL fake and tracking fake.

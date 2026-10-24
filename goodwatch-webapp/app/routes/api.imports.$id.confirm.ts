@@ -11,7 +11,7 @@ const schema = z
 		conflictChoice: z.enum(["keep", "source"]),
 		watchDates: z.enum(["preserve", "unknown"]),
 		ask: z
-			.array(z.enum(["conflict", "rewatch", "wholeShow"]))
+			.array(z.enum(["conflict", "rewatch", "wholeShow", "undated"]))
 			.max(3)
 			.optional(),
 		wishlistShows: z.boolean().optional(),

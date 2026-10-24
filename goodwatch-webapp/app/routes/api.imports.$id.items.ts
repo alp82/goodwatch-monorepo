@@ -10,7 +10,7 @@ import {
 } from "~/server/imports/service.server"
 import { NativeImportError } from "~/server/imports/store.server"
 const schema = z.object({
-	waiting: z.enum(["conflict", "rewatch", "wholeShow"]).optional(),
+	waiting: z.enum(["conflict", "rewatch", "wholeShow", "undated"]).optional(),
 	outcome: z
 		.enum([
 			"new",

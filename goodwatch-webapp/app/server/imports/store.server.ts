@@ -328,7 +328,7 @@ export async function listItems(
 	limit: number,
 	/** Only the conflict rows confirm decides by the conflict choice, counted exactly; for the conflict question. */
 	followsChoice = false,
-	waiting?: "conflict" | "rewatch" | "wholeShow",
+	waiting?: "conflict" | "rewatch" | "wholeShow" | "undated",
 ) {
 	const summary = summarize(await getImportRow(userId, id))
 	if (waiting) {

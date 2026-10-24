@@ -123,7 +123,7 @@ supportedImportSql.add(
 supportedImportSql.add(
 	"UPDATE doc.user_import SET status = ?, finished_at = COALESCE(finished_at, CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP, error = ? WHERE id = ? AND _seq_no = ? AND _primary_term = ?",
 )
-for (const question of ["rewatch", "wholeShow"])
+for (const question of ["rewatch", "wholeShow", "undated"])
 	supportedImportSql.add(
 		`UPDATE doc.user_import_item SET apply_state = 'waiting:${question}' WHERE import_id = ? AND apply_state IS NULL AND row_index IN (?)`,
 	)

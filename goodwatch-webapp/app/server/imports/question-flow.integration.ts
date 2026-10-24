@@ -217,3 +217,76 @@ test("real Crate can keep an answered NULL row with its honest reason", async ()
 	assert.equal(item.applyState, "kept")
 	assert.equal(item.reason, "Left as Seen, as you chose.")
 })
+
+test("real Crate holds new undated watches and dependent wants, then re-gates per-row answers", async () => {
+	const options = {
+		kinds: ["watch", "want"] as ["watch", "want"],
+		conflictChoice: "keep" as const,
+		watchDates: "preserve" as const,
+		ask: ["undated", "rewatch"] as ["undated", "rewatch"],
+	}
+	await sql(
+		"INSERT INTO doc.user_import (id,user_id,source,status,options,total) VALUES ('undated-questions','member','tvtime','running',?,3)",
+		[JSON.stringify({ ...options, direction: "apply" })],
+	)
+	for (const [index, kind] of ["watch", "watch", "want"].entries())
+		await sql(
+			"INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,source_key,payload,outcome,tmdb_id,media_type) VALUES ('undated-questions',?,'member',?,?,?, ?,42,'show')",
+			[
+				index,
+				kind,
+				`${kind}:${index}`,
+				JSON.stringify({
+					kind,
+					precision: "unknown",
+					wishlistRewatchChoice: kind === "want",
+				}),
+				kind === "want" ? "conflict" : "new",
+			],
+		)
+	await refreshItems()
+	await holdQuestions("member", "undated-questions", options)
+	assert.deepEqual(
+		(await itemRows("member", "undated-questions")).map(
+			(row) => row.applyState,
+		),
+		Array(3).fill("waiting:undated"),
+	)
+	assert.equal(
+		await transitionWishlistQuestion(
+			"member",
+			"undated-questions",
+			"undated",
+			"add",
+			[0],
+			options,
+		),
+		1,
+	)
+	await refreshItems()
+	assert.deepEqual(
+		(await itemRows("member", "undated-questions")).map(
+			(row) => row.applyState,
+		),
+		["approved:undated", "waiting:undated", "waiting:undated"],
+	)
+	assert.equal(
+		await transitionWishlistQuestion(
+			"member",
+			"undated-questions",
+			"undated",
+			"leave",
+			[1],
+			options,
+		),
+		1,
+	)
+	await refreshItems()
+	const items = await itemRows("member", "undated-questions")
+	assert.deepEqual(
+		items.map((row) => row.applyState),
+		["approved:undated", "kept", "waiting:rewatch"],
+	)
+	assert.equal(items[1].reason, "Left out: no watch date, as you chose.")
+	assert.deepEqual(items[0].payload._answer, { undated: "add" })
+})

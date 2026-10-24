@@ -142,3 +142,39 @@ test("stage 1 explicit leave identifies the kept question without changing impli
 		)
 	}
 })
+
+test("undated is opt-in, applies only to new watches, and precedes dependent wishlist gates", () => {
+	const options: ImportOptions = {
+		kinds: ["watch", "want", "show_status"],
+		conflictChoice: "keep",
+		watchDates: "preserve",
+		ask: ["rewatch", "wholeShow", "undated"],
+	}
+	const watch: ImportItem = { ...row, kind: "watch", outcome: "new" }
+	assert.deepEqual(importGate(watch, options), { hold: "undated" })
+	assert.deepEqual(importGate({ ...watch, precision: "unknown" }, options), {
+		hold: "undated",
+	})
+	for (const item of [
+		{ ...watch, precision: "day" as const },
+		{ ...watch, watcharrSnapshot: true },
+	])
+		assert.ok("effective" in importGate(item, options))
+	assert.deepEqual(importGate({ ...watch, outcome: "unchanged" }, options), {
+		kept: true,
+	})
+	assert.ok("effective" in importGate(watch, { ...options, ask: undefined }))
+	assert.ok(
+		"effective" in
+			importGate({ ...watch, applyState: "approved:undated" }, options),
+	)
+	assert.deepEqual(
+		importGate(watch, { ...options, answers: { undated: "leave" } }),
+		{ kept: true, question: "undated" },
+	)
+	const want = { ...row, wishlistRewatchChoice: true, wishlistShowChoice: true }
+	assert.deepEqual(importGate(want, options, { titleWaitsUndated: true }), {
+		hold: "undated",
+	})
+	assert.deepEqual(importGate(want, options), { hold: "wholeShow" })
+})

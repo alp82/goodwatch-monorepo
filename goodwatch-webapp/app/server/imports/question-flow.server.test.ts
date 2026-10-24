@@ -547,7 +547,7 @@ test("HTTP decide, strict confirm ask, and waiting filter validate and enforce o
 	])
 		assert.equal((await send(decide, body)).status, 400)
 	for (const body of [
-		{ ...options, ask: ["undated"] },
+		{ ...options, ask: ["bogus"] },
 		{ ...options, answers: { conflict: "source" } },
 	])
 		assert.equal((await send(confirm, body)).status, 400)
@@ -562,7 +562,7 @@ test("HTTP decide, strict confirm ask, and waiting filter validate and enforce o
 			params: { id },
 			context: {},
 		})
-	assert.equal((await load("waiting=undated")).status, 400)
+	assert.equal((await load("waiting=undated")).status, 200)
 	assert.equal((await load("waiting=conflict&offset=-1")).status, 400)
 	assert.equal((await load("waiting=conflict", "other")).status, 404)
 	const response = await load("waiting=conflict&offset=1&limit=1")
@@ -1173,4 +1173,405 @@ test("stage 1 explicit leave replaces preview prompts with the chosen kept reaso
 		assert.ok(result.includes(reason))
 		assert.ok(!result.includes(prompt))
 	}
+})
+
+const undatedOptions: ImportOptions = {
+	kinds: ["watch", "want", "show_status"],
+	conflictChoice: "keep",
+	watchDates: "preserve",
+	ask: ["undated"],
+}
+function setupUndated(n = 1) {
+	const { db, id } = setup(n)
+	db.imports[0].total = n
+	const tracking = new FakeTrackingCrate()
+	setCrateClientForTest(tracking)
+	for (const [index, row] of db.items.entries()) {
+		row.kind = "watch"
+		row.outcome = "new"
+		row.source_key = `watch:${index}`
+		row.payload = JSON.stringify({
+			kind: "watch",
+			title: "One",
+			precision: "unknown",
+			watchedAt: null,
+		})
+	}
+	return { db, id, tracking }
+}
+
+test("undated watches hold before confirm returns; add/leave all or per row have honest results", async () => {
+	for (const answer of ["add", "leave"] as const)
+		for (const perRow of [false, true]) {
+			const { db, id, tracking } = setupUndated(2)
+			const summary = await confirmImport("member", id, undatedOptions)
+			assert.equal(summary.questions?.[0].waiting, 2)
+			assert.deepEqual(
+				db.items.map((row) => row.apply_state),
+				["waiting:undated", "waiting:undated"],
+			)
+			await settled(db)
+			assert.equal(tracking.log("member").length, 0)
+			const result = await decideImport(
+				"member",
+				id,
+				"undated",
+				answer,
+				perRow ? [0] : undefined,
+			)
+			assert.equal(result.decided, perRow ? 1 : 2)
+			await settled(db)
+			assert.equal(db.items[0].apply_state, answer === "add" ? "added" : "kept")
+			assert.equal(
+				tracking.log("member").length,
+				answer === "add" ? (perRow ? 1 : 2) : 0,
+			)
+			if (perRow) assert.equal(db.items[1].apply_state, "waiting:undated")
+			if (answer === "leave")
+				assert.match(
+					JSON.stringify(await getImportResult("member", id)),
+					/Left out: no watch date/,
+				)
+		}
+})
+
+test("dated and later undated passes have separate plans, merge by title, and undo newest first", async () => {
+	const { db, id, tracking } = setupUndated(2)
+	db.items[0].payload = JSON.stringify({
+		kind: "watch",
+		title: "One",
+		precision: "day",
+		watchedAt: "2020-01-01",
+	})
+	await confirmImport("member", id, undatedOptions)
+	await settled(db)
+	assert.equal(tracking.log("member").length, 1)
+	await decideImport("member", id, "undated", "add", [1])
+	await settled(db)
+	const plans = db.items.filter((row) => row.kind === "state")
+	assert.deepEqual(
+		plans.map((row) => row.source_key),
+		["state:movie:42", "state:movie:42#2"],
+	)
+	assert.deepEqual(
+		db.items.slice(0, 2).map((row) => row.apply_state),
+		["added", "kept"],
+	)
+	// An undated viewing matches the already imported dated viewing; keep that duplicate.
+	assert.equal(tracking.log("member").length, 1)
+	await undoImport("member", id)
+	assert.equal(db.imports[0].status, "undone")
+	assert.equal(tracking.log("member").length, 0)
+	assert.equal(tracking.table("user_watch_state").length, 0)
+})
+
+test("dependent wants wait on undated before wholeShow/rewatch, including per-row leave", async () => {
+	const { db, id } = setupUndated(3)
+	db.items[2].kind = "want"
+	db.items[2].outcome = "conflict"
+	db.items[2].payload = JSON.stringify({
+		kind: "want",
+		title: "One",
+		wishlistShowChoice: true,
+		wishlistRewatchChoice: true,
+	})
+	await confirmImport("member", id, {
+		...undatedOptions,
+		ask: ["rewatch", "wholeShow", "undated"],
+	})
+	await settled(db)
+	assert.equal(db.items[2].apply_state, "waiting:undated")
+	await decideImport("member", id, "undated", "leave", [0])
+	assert.equal(db.items[2].apply_state, "waiting:undated")
+	await decideImport("member", id, "undated", "leave", [1])
+	assert.equal(db.items[2].apply_state, "waiting:wholeShow")
+	// Two pods can each have read the other watch as waiting. A repeated per-row
+	// answer repairs the stranded dependency without deciding any other watches.
+	db.items[2].apply_state = "waiting:undated"
+	await decideImport("member", id, "undated", "leave", [0])
+	assert.equal(db.items[2].apply_state, "waiting:wholeShow")
+})
+
+function showFixture(
+	db: ImportDb,
+	tracking: FakeTrackingCrate,
+	showId: number,
+) {
+	for (const [index, row] of db.items.entries()) {
+		row.media_type = "show"
+		row.tmdb_id = showId
+		row.payload = JSON.stringify({
+			kind: "watch",
+			title: "TV Time show",
+			precision: index === 0 ? "day" : "unknown",
+			watchedAt: index === 0 ? "2020-01-01" : null,
+			episodeTmdbId: showId + index + 1,
+			season: 1,
+			episode: index + 1,
+		})
+	}
+	tracking.seed(
+		"episode",
+		[1, 2, 3].map((number) => ({
+			show_id: showId,
+			tmdb_id: showId + number,
+			season_number: 1,
+			episode_number: number,
+			name: `Episode ${number}`,
+			air_date: Date.UTC(2020, 0, 1),
+			runtime: 45,
+			still_path: null,
+			episode_type: "standard",
+			overview: null,
+			removed_at: null,
+		})),
+	)
+}
+
+test("two episode passes both write; results merge watches by title and Undo restores original pass/state", async () => {
+	const { db, id, tracking } = setupUndated(2)
+	showFixture(db, tracking, 9100)
+	tracking.seed("user_watch_state", [
+		{
+			user_id: "member",
+			tmdb_id: 9100,
+			media_type: "show",
+			state: "watching",
+			pass: 3,
+			state_changed_at: 1,
+			created_at: 1,
+			updated_at: 1,
+			rate_prompt_dismissed_at: null,
+			seen_question: "answered",
+			seen_group_id: null,
+			seen_from_state: null,
+			seen_from_state_changed_at: null,
+		},
+	])
+	tracking.seed("user_watch_log", [
+		{
+			user_id: "member",
+			watch_id: "before-import",
+			tmdb_id: 9100,
+			media_type: "show",
+			episode_tmdb_id: 9103,
+			season_number: 1,
+			episode_number: 3,
+			watched_at: null,
+			watched_at_precision: "unknown",
+			origin: "single",
+			import_id: null,
+			group_id: null,
+			pass: 3,
+			created_at: 1,
+			updated_at: 1,
+		},
+	])
+	const original = structuredClone(tracking.state("member", "show", 9100))
+	await confirmImport("member", id, undatedOptions)
+	await settled(db)
+	assert.equal(tracking.log("member").length, 2)
+	await decideImport("member", id, "undated", "add")
+	await settled(db)
+	assert.deepEqual(
+		db.items.slice(0, 2).map((row) => row.apply_state),
+		["added", "added"],
+	)
+	assert.deepEqual(
+		db.items.filter((row) => row.kind === "state").map((row) => row.source_key),
+		["state:show:9100", "state:show:9100#2"],
+	)
+	const result = await getImportResult("member", id)
+	assert.equal(
+		result.sections.find((section) => section.key === "watches_added")?.total,
+		1,
+	)
+	assert.equal(
+		result.sections.find((section) => section.key === "watches_added")?.count,
+		2,
+	)
+	await undoImport("member", id)
+	assert.equal(tracking.log("member").length, 1)
+	const restored = tracking.state("member", "show", 9100)
+	assert.equal(restored?.state, original?.state)
+	assert.equal(restored?.pass, original?.pass)
+	assert.ok(
+		db.items
+			.filter((row) => row.kind === "state")
+			.every((row) => row.undo_outcome === "reverted"),
+	)
+})
+
+test("TV Time completion waits for undated episodes, then fills gaps without swallowing approved watches", async () => {
+	const { db, id, tracking } = setupUndated(3)
+	db.imports[0].source = "tvtime"
+	showFixture(db, tracking, 9200)
+	db.items[2].kind = "show_status"
+	db.items[2].payload = JSON.stringify({
+		kind: "show_status",
+		title: "TV Time show",
+		showStatus: "completed",
+		completionScope: "show",
+		_previewStatus: null,
+	})
+	await confirmImport("member", id, undatedOptions)
+	await settled(db)
+	assert.equal(db.items[2].apply_state, "waiting:undated")
+	assert.equal(tracking.log("member").length, 1)
+	await decideImport("member", id, "undated", "add")
+	await settled(db)
+	assert.equal(db.items[1].apply_state, "added")
+	assert.equal(db.items[2].apply_state, "added")
+	assert.equal(tracking.log("member").length, 3)
+	assert.equal(
+		tracking.log("member").filter((row) => row.episode_tmdb_id === 9202).length,
+		1,
+	)
+	await undoImport("member", id)
+	assert.equal(tracking.log("member").length, 0)
+	assert.equal(tracking.state("member", "show", 9200), null)
+})
+
+test("per-row undated consent survives a failed watch write and resumes the same journal", async () => {
+	const { db, id, tracking } = setupUndated(2)
+	await confirmImport("member", id, undatedOptions)
+	await settled(db)
+	tracking.before = (statement) => {
+		if (statement.sql.startsWith("INSERT INTO user_watch_log"))
+			throw Error("fixture watch failure")
+	}
+	await decideImport("member", id, "undated", "add", [0])
+	await settled(db)
+	assert.equal(db.imports[0].status, "failed")
+	assert.equal(JSON.parse(String(db.items[0].payload))._answer.undated, "add")
+	assert.equal(db.items[1].apply_state, "waiting:undated")
+	tracking.before = undefined
+	await decideImport("member", id, "undated", "add", [0])
+	await settled(db)
+	assert.equal(db.items[0].apply_state, "added")
+	assert.equal(db.items[1].apply_state, "waiting:undated")
+	assert.equal(db.items.filter((row) => row.kind === "state").length, 1)
+})
+
+test("legacy watch dates, journal key and Undo are unchanged without ask", async () => {
+	for (const watchDates of ["preserve", "unknown"] as const) {
+		const { db, id, tracking } = setupUndated(2)
+		db.items[0].payload = JSON.stringify({
+			kind: "watch",
+			title: "One",
+			precision: "day",
+			watchedAt: "2020-01-01",
+		})
+		const legacy = {
+			kinds: ["watch"] as ["watch"],
+			conflictChoice: "keep" as const,
+			watchDates,
+		}
+		await confirmImport("member", id, legacy)
+		await settled(db)
+		assert.equal(JSON.parse(String(db.imports[0].options)).ask, undefined)
+		assert.deepEqual(
+			db.items
+				.filter((row) => row.kind === "state")
+				.map((row) => row.source_key),
+			["state:movie:42"],
+		)
+		assert.equal(
+			tracking.log("member")[0].watched_at_precision,
+			watchDates === "preserve" ? "day" : "unknown",
+		)
+		assert.equal(tracking.log("member")[1].watched_at_precision, "unknown")
+		await undoImport("member", id)
+		assert.equal(tracking.log("member").length, 0)
+	}
+})
+
+test("episode-score journals coexist with numbered watch plans for the same show", async () => {
+	const { db, id, tracking } = setupUndated(3)
+	showFixture(db, tracking, 9300)
+	db.items[2].kind = "episode_rating"
+	db.items[2].source_key = "score:9303"
+	db.items[2].payload = JSON.stringify({
+		kind: "episode_rating",
+		title: "Scored show",
+		scoreScope: "episode",
+		score: 8,
+		season: 1,
+		episode: 3,
+		episodeTmdbId: 9303,
+	})
+	await confirmImport("member", id, {
+		...undatedOptions,
+		kinds: ["watch", "episode_rating"],
+	})
+	await settled(db)
+	assert.ok(JSON.parse(String(db.items[2].payload)).scoreWatch?.applied)
+	assert.equal(tracking.log("member").length, 2)
+	await decideImport("member", id, "undated", "add")
+	await settled(db)
+	assert.equal(tracking.log("member").length, 3)
+	assert.deepEqual(
+		db.items.filter((row) => row.kind === "state").map((row) => row.source_key),
+		["state:show:9300", "state:show:9300#2"],
+	)
+	await undoImport("member", id)
+	assert.equal(tracking.log("member").length, 0)
+	assert.equal(tracking.state("member", "show", 9300), null)
+})
+
+test("a deferred completion preserves a member edit after the dated pass", async () => {
+	const { db, id, tracking } = setupUndated(3)
+	showFixture(db, tracking, 9400)
+	db.items[2].kind = "show_status"
+	db.items[2].payload = JSON.stringify({
+		kind: "show_status",
+		title: "Edited show",
+		showStatus: "completed",
+		completionScope: "show",
+		_previewStatus: null,
+	})
+	await confirmImport("member", id, undatedOptions)
+	await settled(db)
+	const state = tracking.table("user_watch_state")[0]
+	state.state = "on_hold"
+	state.updated_at = Number(state.updated_at) + 1
+	state._seq_no = Number(state._seq_no) + 1
+	await decideImport("member", id, "undated", "add")
+	await settled(db)
+	assert.equal(db.items[2].apply_state, "kept")
+	assert.equal(tracking.state("member", "show", 9400)?.state, "on_hold")
+	assert.equal(tracking.log("member").length, 2)
+})
+
+test("resume finishes an applied plan's observations before journaling newly approved watches", async () => {
+	const { db, id, tracking } = setupUndated(2)
+	showFixture(db, tracking, 9500)
+	const original = db.run.bind(db)
+	let fail = true
+	db.run = async (sql, params) => {
+		if (fail && sql.includes("SET apply_state = ?, watch_id = ?")) {
+			fail = false
+			throw Error("fixture observation interruption")
+		}
+		return original(sql, params)
+	}
+	await confirmImport("member", id, undatedOptions)
+	await settled(db)
+	assert.equal(db.imports[0].status, "failed")
+	assert.equal(
+		db.items.find((row) => row.kind === "state")?.apply_state,
+		"added",
+	)
+	await decideImport("member", id, "undated", "add", [1])
+	await settled(db)
+	assert.equal(db.imports[0].status, "done")
+	assert.deepEqual(
+		db.items.slice(0, 2).map((row) => row.apply_state),
+		["added", "added"],
+	)
+	assert.equal(tracking.log("member").length, 2)
+	assert.deepEqual(
+		db.items.filter((row) => row.kind === "state").map((row) => row.source_key),
+		["state:show:9500", "state:show:9500#2"],
+	)
 })

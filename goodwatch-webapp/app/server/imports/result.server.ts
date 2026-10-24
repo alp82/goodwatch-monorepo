@@ -120,7 +120,10 @@ function planEntries(
 		titleRows.flatMap((row) => (row.watch_id ? [row.watch_id] : [])),
 	)
 	const statusApplied = titleRows.some(
-		(row) => row.kind === "show_status" && written(row.apply_state),
+		(row) =>
+			row.kind === "show_status" &&
+			row.source_key === plan.statusItem?.key &&
+			written(row.apply_state),
 	)
 	const fromRows = new Set(
 		plan.addedKeys.map((rowKey) => importWatchId(source, rowKey)),

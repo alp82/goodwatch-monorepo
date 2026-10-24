@@ -1,8 +1,3 @@
-import {
-	captureProductEvent,
-	withProductContext,
-	eventUuid,
-} from "~/telemetry/product-analytics.server"
 // Tracking on the server: the one writer for the watch log and the watch state, and their reads
 // (docs/implementation/tracking/data-model.md, ADR 0008, ADR 0009).
 //
@@ -20,7 +15,6 @@ import {
 import { createHash, randomUUID } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import type { UndoOutcome } from "~/domain/import-result"
-import { crateEvent, withCrateOperation } from "~/utils/crate-diagnostics"
 import {
 	type ImportItem,
 	type ImportSource,
@@ -32,12 +26,12 @@ import {
 	STATES,
 	type TrackingEvent,
 	type WatchedWhen,
+	facts,
 	groupWatchId,
 	importShowStatus,
-	facts,
-	showAiredBy,
 	isDay,
 	serverShow,
+	showAiredBy,
 	utcDay,
 } from "~/domain/tracking/machine"
 import {
@@ -50,13 +44,13 @@ import {
 	type TitleTotals,
 	type WatchStateEntry,
 	applyShowEvent,
+	episodeScoreWatchId,
 	movieLogRow,
 	movieStateRow,
 	recordFromRows,
-	stateRowOf,
 	scoreWatchId,
-	episodeScoreWatchId,
 	settleMovieRows,
+	stateRowOf,
 	titleTotals,
 	watchStateOf,
 	watchedAt,
@@ -76,15 +70,21 @@ import {
 	STATE_ROW_QUERY,
 } from "~/server/tracking-sql"
 import { resetUserDataCache } from "~/server/userData.server"
+import {
+	captureProductEvent,
+	eventUuid,
+	withProductContext,
+} from "~/telemetry/product-analytics.server"
 import { cached } from "~/utils/cache"
 import {
 	type CrateValue,
 	execute,
-	isCrateRecoveryError,
 	insertRows,
+	isCrateRecoveryError,
 	query,
 	timestampsAsMillis,
 } from "~/utils/crate"
+import { crateEvent, withCrateOperation } from "~/utils/crate-diagnostics"
 import { canonicalTitleId } from "~/utils/title-identity"
 
 // ---------------------------------------------------------------------------------------------------------
@@ -1962,6 +1962,25 @@ function sameImportedViewing(a: LogRow, b: LogRow): boolean {
 	return Math.floor(a.watched_at / bucket) === Math.floor(b.watched_at / bucket)
 }
 
+/** Did only this import change the previewed state? Every link still checks the journal's exact state and time. */
+function followsImportPlans(
+	preview: Version,
+	current: StoredState | null,
+	plans: ImportTrackingPlan[],
+): boolean {
+	let state = current
+	for (const plan of [...plans].reverse()) {
+		if (
+			!isDeepStrictEqual(stateOnly(state), plan.afterState) ||
+			(state && state.updated_at !== plan.now)
+		)
+			return false
+		state = plan.beforeState
+		if (sameVersion(preview, state)) return true
+	}
+	return false
+}
+
 export async function prepareImportTrackingPlan(input: {
 	userId: string
 	importId: string
@@ -1969,6 +1988,8 @@ export async function prepareImportTrackingPlan(input: {
 	tmdbId: number
 	mediaType: MediaType
 	items: ImportItem[]
+	/** Earlier applied passes of this import; deferred statuses may follow only their own state transitions. */
+	priorPlans?: ImportTrackingPlan[]
 	watchDates: "preserve" | "unknown"
 	now: number
 	/**
@@ -2101,7 +2122,10 @@ export async function prepareImportTrackingPlan(input: {
 		isApplicableStatus(statusItem.showStatus)
 	) {
 		const preview = statusItem._previewStatus
-		const changed = preview !== undefined && !sameVersion(preview, beforeState)
+		const changed =
+			preview !== undefined &&
+			!sameVersion(preview, beforeState) &&
+			!followsImportPlans(preview, beforeState, input.priorPlans ?? [])
 		if (
 			changed ||
 			(beforeState &&
@@ -2289,8 +2313,9 @@ export async function applyImportTrackingPlan(
 		const log = await readImportLog(userId, plan.title)
 		const late = plan.watches.filter(
 			(watch) =>
-				!log.some((row) => ownRow(plan, row) && row.watch_id === watch.watch_id) &&
-				watchedElsewhere(plan, log, watch),
+				!log.some(
+					(row) => ownRow(plan, row) && row.watch_id === watch.watch_id,
+				) && watchedElsewhere(plan, log, watch),
 		)
 		await keepInstead(plan, late, checkpoint)
 	}
@@ -2310,8 +2335,9 @@ export async function applyImportTrackingPlan(
 		// the plan leaves it out: a stop at any point leaves a journal whose Undo takes back the status and the lists.
 		const overtaken = plan.watches.filter(
 			(watch) =>
-				log.some((row) => ownRow(plan, row) && row.watch_id === watch.watch_id) &&
-				watchedElsewhere(plan, log, watch),
+				log.some(
+					(row) => ownRow(plan, row) && row.watch_id === watch.watch_id,
+				) && watchedElsewhere(plan, log, watch),
 		)
 		if (overtaken.length) {
 			plan.pruned = [

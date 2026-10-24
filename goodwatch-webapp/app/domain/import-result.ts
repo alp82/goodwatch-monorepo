@@ -363,6 +363,7 @@ export const skippedEntry = (
 })
 
 export const QUESTION_KEPT_REASON = {
+	undated: "Left out: no watch date, as you chose.",
 	rewatch: "Left as Seen, as you chose.",
 	wholeShow: "Left off Want to See for the whole show, as you chose.",
 } as const

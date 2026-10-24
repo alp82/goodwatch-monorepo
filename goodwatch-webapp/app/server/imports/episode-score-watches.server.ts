@@ -1,3 +1,4 @@
+import { importedScoreTarget } from "../../domain/episode-scores.ts"
 // An imported episode score marks its episode watched (#759 follow-up): when the import wrote the score and no pass
 // has a watch of the episode, the import records one undated watch of it. Season and part scores mark nothing.
 //
@@ -12,7 +13,6 @@
 // first, so an episode the file also lists as watched isn't marked twice.
 import type { StoredUndoOutcome } from "../../domain/import-result.ts"
 import type { ImportItem, ImportSource } from "../../domain/imports.ts"
-import { importedScoreTarget } from "../../domain/episode-scores.ts"
 import { run } from "./store.server.ts"
 import type { ImportTrackingPlan } from "./tracking.server.ts"
 
@@ -49,6 +49,12 @@ export const setScoreWatchTrackingForTest = (
 
 const journalOf = (row: ScoredRow) =>
 	row.payload.scoreWatch as ScoreWatchJournal | undefined
+
+function requiredJournal(row: ScoredRow): ScoreWatchJournal {
+	const journal = journalOf(row)
+	if (!journal) throw new Error("The episode-score watch journal is missing.")
+	return journal
+}
 
 async function persist(
 	importId: string,
@@ -101,17 +107,17 @@ export async function markImportedEpisodesWatched(
 			// A state retry saw another write: the journal keeps the transition that lands.
 			await persist(importId, row, { ...journal, plan })
 		})
-		await persist(importId, row, { ...journalOf(row)!, applied: true })
+		await persist(importId, row, { ...requiredJournal(row), applied: true })
 	}
 	for (const [showId, showRows] of shows) {
 		const carriers = showRows.filter((row) => journalOf(row))
 		for (const row of carriers) {
-			const journal = journalOf(row)!
+			const journal = requiredJournal(row)
 			if (!journal.applied) await apply(row, journal)
 		}
 		const covered = new Set(
 			carriers.flatMap((row) => {
-				const { plan } = journalOf(row)!
+				const { plan } = requiredJournal(row)
 				return [...plan.addedKeys, ...plan.keptKeys]
 			}),
 		)
@@ -149,6 +155,8 @@ export async function undoImportedEpisodeWatches(
 	userId: string,
 	importId: string,
 	rows: ScoredRow[],
+	/** Native multi-pass imports interleave these receipts with their tracking plans. */
+	after?: number,
 ): Promise<void> {
 	const writer = await tracking()
 	const carriers = rows
@@ -156,12 +164,18 @@ export async function undoImportedEpisodeWatches(
 			const journal = journalOf(row)
 			return (
 				journal?.applied &&
+				(after === undefined || journal.plan.now >= after) &&
 				(!journal.undo || journal.undo === "reverting")
 			)
 		})
-		.sort((a, b) => b.index - a.index)
+		.sort((a, b) =>
+			after === undefined
+				? b.index - a.index
+				: requiredJournal(b).plan.now - requiredJournal(a).plan.now ||
+					b.index - a.index,
+		)
 	for (const row of carriers) {
-		const journal = journalOf(row)!
+		const journal = requiredJournal(row)
 		const resumed = journal.undo === "reverting"
 		await persist(importId, row, { ...journal, undo: "reverting" })
 		const outcome = await writer.undoImportTrackingPlan(
@@ -174,11 +188,11 @@ export async function undoImportedEpisodeWatches(
 		if (outcome === "reverted")
 			await writer.restoreImportTrackingIntentions(
 				userId,
-				journalOf(row)!.plan,
+				requiredJournal(row).plan,
 				async (plan) => {
-					await persist(importId, row, { ...journalOf(row)!, plan })
+					await persist(importId, row, { ...requiredJournal(row), plan })
 				},
 			)
-		await persist(importId, row, { ...journalOf(row)!, undo: outcome })
+		await persist(importId, row, { ...requiredJournal(row), undo: outcome })
 	}
 }

@@ -50,6 +50,14 @@ export async function applyPendingImportWatches(
 	)
 	if (!pending.length) return
 	const existingPlans = await plans(importId, userId)
+	const scorePlans = options.ask?.includes("undated")
+		? (await itemRows(userId, importId)).flatMap((item) => {
+				const journal = item.payload.scoreWatch as
+					| { plan: ImportTrackingPlan }
+					| undefined
+				return journal ? [journal.plan] : []
+			})
+		: []
 	const groups = new Map<string, typeof pending>()
 	for (const item of pending) {
 		const key = planKey(item)
@@ -59,11 +67,40 @@ export async function applyPendingImportWatches(
 		importRow.total,
 		...[...existingPlans.values()].map((row) => Number(row.row_index) + 1),
 	)
-	for (const [key, items] of groups) {
+	for (const [key, groupItems] of groups) {
+		let items = groupItems
 		const first = items[0]
 		if (!first || first.tmdbId === null)
 			throw new Error("A matched watch is missing its title ID.")
-		let stored = existingPlans.get(key)
+		// An applied plan can still own pending observations after a crash. Reuse it only
+		// for its own keys; newly approved watches need a fresh snapshot of the live log/state.
+		const titlePlans = [...existingPlans.entries()].filter(
+			([k]) => k === key || k.startsWith(`${key}#`),
+		)
+		const coveredBy = (row: (typeof titlePlans)[number][1]) =>
+			items.some(
+				(item) =>
+					row.plan.addedKeys.includes(item.key) ||
+					row.plan.keptKeys.includes(item.key) ||
+					row.plan.statusItem?.key === item.key,
+			)
+		let stored = options.ask?.includes("undated")
+			? titlePlans.find(
+					([, row]) => row.apply_state !== "added" || coveredBy(row),
+				)?.[1]
+			: existingPlans.get(key)
+		if (options.ask?.includes("undated") && stored) {
+			const owned = new Set([
+				...stored.plan.addedKeys,
+				...stored.plan.keptKeys,
+				...(stored.plan.statusItem ? [stored.plan.statusItem.key] : []),
+			])
+			items = items.filter((item) => owned.has(item.key))
+		}
+		const journalKey =
+			!stored && options.ask?.includes("undated") && titlePlans.length
+				? `${key}#${titlePlans.length + 1}`
+				: key
 		if (!stored) {
 			const plan = await prepareImportTrackingPlan({
 				userId,
@@ -72,8 +109,28 @@ export async function applyPendingImportWatches(
 				tmdbId: first.tmdbId,
 				mediaType: first.mediaType,
 				items,
+				...(options.ask?.includes("undated")
+					? {
+							priorPlans: [
+								...titlePlans
+									.filter(([, row]) => row.apply_state === "added")
+									.map(([, row]) => row.plan),
+								...scorePlans.filter(
+									(plan) =>
+										plan.title.mediaType === first.mediaType &&
+										plan.title.tmdbId === first.tmdbId,
+								),
+							].sort((a, b) => a.now - b.now),
+						}
+					: {}),
 				watchDates: options.watchDates,
-				now: Date.now(),
+				now: options.ask?.includes("undated")
+					? Math.max(
+							Date.now(),
+							...titlePlans.map(([, row]) => row.plan.now + 1),
+							...scorePlans.map((plan) => plan.now + 1),
+						)
+					: Date.now(),
 			})
 			const rowIndex = nextIndex++
 			// The title plan is the write-ahead journal. It must be durable before a watch or state row is changed.
@@ -83,14 +140,14 @@ export async function applyPendingImportWatches(
 					importId,
 					rowIndex,
 					userId,
-					key,
+					journalKey,
 					JSON.stringify(plan),
 					first.tmdbId,
 					first.mediaType,
 				],
 			)
 			await refreshItems()
-			stored = (await plans(importId, userId)).get(key)
+			stored = (await plans(importId, userId)).get(journalKey)
 			if (!stored)
 				throw new Error("The import watch plan could not be journaled.")
 		}
@@ -140,6 +197,7 @@ export async function applyPendingImportWatches(
 export async function undoAppliedImportWatches(
 	userId: string,
 	importId: string,
+	beforePlan?: (now: number) => Promise<void>,
 ) {
 	await getImportRow(userId, importId)
 	const stored = [...(await plans(importId, userId)).values()].filter(
@@ -148,6 +206,7 @@ export async function undoAppliedImportWatches(
 			(!row.undo_outcome || row.undo_outcome === "reverting"),
 	)
 	for (const row of stored.reverse()) {
+		await beforePlan?.(row.plan.now)
 		const resumed = row.undo_outcome === "reverting"
 		await recordUndo(importId, Number(row.row_index), "reverting")
 		await recordUndo(
