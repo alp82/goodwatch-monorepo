@@ -103,6 +103,16 @@ export interface Ports {
 	 * Puts a season or episode score back (#759), only while it is still what the batch's write left (`expected`):
 	 * "changed" when it was changed since, and then nothing is written. Throws when the part can't be found.
 	 */
+	/**
+	 * Takes back the undated watch an episode's score recorded (#759 follow-up), only while it is that same watch
+	 * (recorded at `created_at`), undated and still the score's. False when it isn't, and then nothing is removed.
+	 */
+	removeEpisodeScoreWatch(input: {
+		user_id: string
+		tmdb_id: number
+		watch_id: string
+		created_at: number
+	}): Promise<boolean>
 	restorePartScore(input: {
 		user_id: string
 		tmdb_id: number
@@ -529,18 +539,14 @@ export async function runBatch(
 				? row.write.event
 				: null
 		const group = watches.added.some((w) => w.group_id === row.actionId)
-		// A movie's score watch goes with its score, but an episode's (#759 follow-up) is removed by id, and only the
-		// one this item's own write says it recorded.
+		// A movie's score watch goes with its score. An episode's (#759 follow-up) is the one this item's own write says
+		// it recorded, kept with the time it was recorded, so Undo never takes a later score's watch under the same id.
 		const scoreWatch =
 			typeof row.write === "object" && "watch_added" in row.write
 				? row.write.watch_added
 				: undefined
 		const watchIds = watches.added
-			.filter(
-				(w) =>
-					w.group_id !== row.actionId &&
-					(w.origin !== "score" || w.id === scoreWatch),
-			)
+			.filter((w) => w.group_id !== row.actionId && w.origin !== "score")
 			.map((w) => w.id)
 		return {
 			...base,
@@ -578,12 +584,13 @@ export async function runBatch(
 			...(watches.removed.length
 				? { watches_removed: watches.removed.length }
 				: {}),
-			...(group || watchIds.length || event
+			...(group || watchIds.length || event || scoreWatch
 				? {
 						undo: {
 							...(group ? { group: row.actionId } : {}),
 							...(watchIds.length ? { watch_ids: watchIds } : {}),
 							...(event ? { event } : {}),
+							...(scoreWatch ? { score_watch: scoreWatch } : {}),
 						},
 					}
 				: {}),
@@ -662,6 +669,12 @@ const receiptItem = z.object({
 			group: z.string().max(100).optional(),
 			watch_ids: z.array(z.string().max(100)).max(1000).optional(),
 			event: z.string().max(40).optional(),
+			score_watch: z
+				.object({
+					id: z.string().regex(/^score-e[1-9]\d{0,15}$/),
+					created_at: z.number().int().nonnegative(),
+				})
+				.optional(),
 		})
 		.optional(),
 })
@@ -792,14 +805,27 @@ export async function undoBatch(
 						for (const w of current.watches)
 							if (w.group_id === undo.group) removed.add(w.id)
 				}
+				// The watch the item's episode score recorded: only that very watch, while it is undated and the score's.
+				// One the member dated since is theirs, as on the site, and one a later score recorded isn't the batch's.
+				const scoreWatch = undo?.score_watch
+				if (
+					scoreWatch &&
+					current.watches.some((w) => w.id === scoreWatch.id)
+				) {
+					if (
+						await ports.removeEpisodeScoreWatch({
+							user_id: userId,
+							tmdb_id: title.tmdb_id,
+							watch_id: scoreWatch.id,
+							created_at: scoreWatch.created_at,
+						})
+					) {
+						wrote = tasteWrite = true
+						removed.add(scoreWatch.id)
+					} else result.skipped.push("watch")
+				}
 				for (const watchId of undo?.watch_ids ?? []) {
-					const watch = current.watches.find((w) => w.id === watchId)
-					if (!watch) continue
-					// An episode score's watch that the member dated since is theirs now, as on the site.
-					if (watchId.startsWith("score-") && watch.origin !== "score") {
-						result.skipped.push("watch")
-						continue
-					}
+					if (!current.watches.some((w) => w.id === watchId)) continue
 					wrote = tasteWrite = true
 					const answer =
 						title.media_type === "movie"
@@ -981,7 +1007,10 @@ export async function undoBatch(
 		const watchesLeft = now.watches.some(
 			(w) =>
 				(item.undo?.group && w.group_id === item.undo.group) ||
-				item.undo?.watch_ids?.includes(w.id),
+				item.undo?.watch_ids?.includes(w.id) ||
+				(item.undo?.score_watch?.id === w.id &&
+					Date.parse(w.record_created_at) ===
+						item.undo.score_watch.created_at),
 		)
 		// Only what the batch changed counts: the member may have changed other marks of the title since.
 		const mismatched = (

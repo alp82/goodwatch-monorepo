@@ -237,18 +237,35 @@ export class FakeEpisodeScoreWatches {
 	calls: string[] = []
 	watched = new Map<number, string>()
 	failing = false
+	/** When each score's watch was recorded, as the tracking writer answers it. */
+	recorded = new Map<number, number>()
+	private clock = 1000
+	/** Runs as the watch is recorded, as a clear landing at that moment would. */
+	onMark: (() => void) | null = null
 	async mark(userId: string, showId: number, episodeTmdbId: number) {
 		this.calls.push(`mark ${userId} ${showId} ${episodeTmdbId}`)
 		if (this.failing) throw new Error("Crate is down")
 		if (this.watched.has(episodeTmdbId)) return null
 		const id = `score-e${episodeTmdbId}`
 		this.watched.set(episodeTmdbId, id)
-		return id
+		const createdAt = ++this.clock
+		this.recorded.set(episodeTmdbId, createdAt)
+		this.onMark?.()
+		return { watchId: id, createdAt }
 	}
-	async remove(userId: string, showId: number, episodeTmdbId: number) {
-		this.calls.push(`remove ${userId} ${showId} ${episodeTmdbId}`)
+	async remove(
+		userId: string,
+		showId: number,
+		episodeTmdbId: number,
+		createdAt?: number,
+	) {
+		this.calls.push(
+			`remove ${userId} ${showId} ${episodeTmdbId}${createdAt === undefined ? "" : ` at ${createdAt}`}`,
+		)
 		const id = this.watched.get(episodeTmdbId)
 		if (id !== `score-e${episodeTmdbId}`) return null
+		if (createdAt !== undefined && this.recorded.get(episodeTmdbId) !== createdAt)
+			return null
 		this.watched.delete(episodeTmdbId)
 		return id
 	}

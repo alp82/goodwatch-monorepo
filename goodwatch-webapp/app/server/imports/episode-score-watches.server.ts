@@ -169,14 +169,16 @@ export async function undoImportedEpisodeWatches(
 			journal.plan,
 			resumed,
 		)
+		// The outcome is journaled once the lists are back too: an Undo that stops before then is resumed, and putting
+		// them back again keeps what is already there.
+		if (outcome === "reverted")
+			await writer.restoreImportTrackingIntentions(
+				userId,
+				journalOf(row)!.plan,
+				async (plan) => {
+					await persist(importId, row, { ...journalOf(row)!, plan })
+				},
+			)
 		await persist(importId, row, { ...journalOf(row)!, undo: outcome })
-		if (outcome !== "reverted") continue
-		await writer.restoreImportTrackingIntentions(
-			userId,
-			journalOf(row)!.plan,
-			async (plan) => {
-				await persist(importId, row, { ...journalOf(row)!, plan })
-			},
-		)
 	}
 }

@@ -41,6 +41,7 @@ import {
 	snapshot,
 	restorePartScore,
 } from "./title-write.server.ts"
+import { removeScoredEpisodeWatch } from "../tracking.server"
 import type { ReadArgs } from "./tools.server"
 import type { WriteToolName } from "./write-names.ts"
 import { type WriteArgs, itemSchemas } from "./write-tools.server.ts"
@@ -88,6 +89,13 @@ export const liveWritePorts: WritePorts = {
 		)
 		if (typeof result === "object") throw new Error(result.refused)
 		return result
+	},
+	async removeEpisodeScoreWatch({ user_id, tmdb_id, watch_id, created_at }) {
+		const episode = Number(watch_id.slice("score-e".length))
+		return (
+			(await removeScoredEpisodeWatch(user_id, tmdb_id, episode, created_at)) !==
+			null
+		)
 	},
 	deleteMovieWatch: (userId, movieId, watchId) =>
 		applyWatchLogAction(userId, movieId, { type: "delete", watchId }),

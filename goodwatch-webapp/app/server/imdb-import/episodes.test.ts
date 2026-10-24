@@ -72,7 +72,15 @@ class FakeTracking {
 		}
 		return "reverted" as const
 	}
+	/** How many restores fail before one succeeds. */
+	restoreFails = 0
+	restoreAttempts = 0
 	async restoreImportTrackingIntentions() {
+		this.restoreAttempts++
+		if (this.restoreFails > 0) {
+			this.restoreFails--
+			throw new Error("Crate went away")
+		}
 		this.restored++
 	}
 }
@@ -960,6 +968,24 @@ test("Confirm marks the episodes it scored watched where no pass has a watch, an
 	// Undone once: a second Undo takes nothing more.
 	await undoImport(USER, preview.id).catch(() => null)
 	assert.deepEqual(tracking.undone, [`i-episode-score:${SHOW}:5001`])
+})
+
+test("an Undo that stopped while putting back Want to See or Not interested puts them back when it is tried again (#759 review)", async () => {
+	const preview = await createPreview(USER, "ratings.csv", file)
+	await confirmImport(USER, preview.id, "imdb")
+	await finished(preview.id)
+	tracking.restoreFails = 1
+	await assert.rejects(() => undoImport(USER, preview.id))
+	const carrier = () =>
+		crate.items
+			.map((x) => JSON.parse(String(x.payload ?? "{}")).scoreWatch)
+			.find(Boolean) as { undo?: string } | undefined
+	// Not journaled as done: the restore didn't happen.
+	assert.equal(carrier()?.undo, "reverting")
+	await undoImport(USER, preview.id)
+	assert.deepEqual([tracking.restoreAttempts, tracking.restored], [2, 1])
+	assert.equal(carrier()?.undo, "reverted")
+	assert.deepEqual([...tracking.watched], [])
 })
 
 test("keeping GoodWatch's ratings keeps the member's episode score, and a re-import updates only what the last import wrote", async () => {

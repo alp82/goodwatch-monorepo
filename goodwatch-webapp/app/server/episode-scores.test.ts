@@ -68,6 +68,24 @@ test("scoring an episode marks it watched once, a season marks nothing, and clea
 	])
 })
 
+test("a score cleared while its watch was being recorded leaves no watch behind (#759 review)", async () => {
+	const db = fake()
+	// The member clears the score on another page just as this score's watch is recorded.
+	watches.onMark = () => db.changeElsewhere("e62086", null)
+	const saved = await setEpisodeScore(
+		"member",
+		SHOW,
+		{ scope: "episode", episodeTmdbId: 62086 },
+		9,
+	)
+	assert.equal(saved.watchAdded, undefined)
+	assert.equal(watches.watched.has(62086), false)
+	assert.deepEqual(watches.calls, [
+		`mark member ${SHOW} 62086`,
+		`remove member ${SHOW} 62086 at 1001`,
+	])
+})
+
 test("an episode score is saved even when its watch can't be recorded", async () => {
 	const db = fake()
 	watches.failing = true

@@ -914,7 +914,7 @@ const UNMARKED_FROM = ["watching", "on_hold", "dropped", "seen"]
  * about itself. The Undo sends the rows as the page held them, so everything in it is checked as a member's input:
  * the state is one a show with watches has; a press stands only on a Seen show, under an id the browser or this
  * show's migration made; every watch is a regular episode's and has the id its origin gives it (the browser's for
- * a tick, the group's for a group action, an import's for an imported one); the dates fit their precision and have
+ * a tick, the group's for a group action, an import's for an imported one, its episode's for a score's); the dates fit their precision and have
  * come; and no time lies ahead. Whose import an imported watch names is checked against the table.
  */
 function restorableSeason(
@@ -958,6 +958,10 @@ function restorableSeason(
 		} else if (origin === "single") {
 			if (!validId(id) || group !== null || importId !== null) return false
 			if (!whole(episodeId)) return false
+		} else if (origin === "score") {
+			// The watch an episode's score recorded: its id names its episode.
+			if (!whole(episodeId) || group !== null || importId !== null) return false
+			if (id !== episodeScoreWatchId(episodeId)) return false
 		} else if (origin === "season" || origin === "upto" || origin === "seen") {
 			if (typeof group !== "string") return false
 			if (!validId(group) && !(origin === "seen" && group === migrated))
@@ -1030,6 +1034,11 @@ async function applyShowEventStored(
 	actionId?: string,
 	/** "score": the watch an episode's score records (`markScoredEpisodeWatched`). */
 	origin?: "score",
+	/**
+	 * Delete this watch only while it is still the version read here (`_seq_no`, `_primary_term`), so a change made
+	 * since, such as a date set on it, keeps it. The action is refused when it changed.
+	 */
+	guard?: { watchId: string; seq: number; term: number },
 ): Promise<TrackingResult> {
 	const bad = invalid(event, title.tmdbId, actionId, origin)
 	if (bad) return refusal(bad)
@@ -1086,7 +1095,20 @@ async function applyShowEventStored(
 		const { insert, deleteIds, state, stateWrite, clear } = applied.changes
 		// 4. The log rows: one insert, or one delete naming the rows the machine removed.
 		await insertLog(userId, insert, now)
-		await deleteLog(userId, deleteIds)
+		if (guard && deleteIds.includes(guard.watchId)) {
+			const { rowcount } = await run(
+				"DELETE FROM user_watch_log WHERE user_id = ? AND watch_id = ? AND _seq_no = ? AND _primary_term = ?",
+				[userId, guard.watchId, guard.seq, guard.term],
+			)
+			if (rowcount !== 1) {
+				await finish(userId)
+				return refusal("That watch changed since.", stateOnly(before))
+			}
+		}
+		await deleteLog(
+			userId,
+			guard ? deleteIds.filter((id) => id !== guard.watchId) : deleteIds,
+		)
 		// 5. The state row, which is also the lock: no row written means another action came in between.
 		if (!(await writeState(userId, title, stateWrite, state, before, now))) {
 			stale = insert.map((r) => r.watch_id)
@@ -1137,7 +1159,7 @@ export async function markScoredEpisodeWatched(
 	userId: string,
 	showId: number,
 	episodeTmdbId: number,
-): Promise<string | null> {
+): Promise<{ watchId: string; createdAt: number } | null> {
 	const title: TrackedTitle = {
 		mediaType: "show",
 		tmdbId: canonicalTitleId("show", showId),
@@ -1163,20 +1185,45 @@ export async function markScoredEpisodeWatched(
 		watchId,
 		"score",
 	)
-	return result.status === "applied" && result.inserted.includes(watchId)
-		? watchId
-		: null
+	if (result.status !== "applied" || !result.inserted.includes(watchId))
+		return null
+	// When it was recorded tells this watch from one a later score records under the same id.
+	const row = await scoreWatchRow(userId, title.tmdbId, watchId)
+	return row ? { watchId, createdAt: row.createdAt } : null
+}
+
+/** The score's watch of an episode as it is now (a read by the whole key), while it is still the score's. */
+async function scoreWatchRow(userId: string, showId: number, watchId: string) {
+	const [row] = await read<{
+		origin: string
+		watched_at: number | string | Date | null
+		created_at: number | string | Date
+		_seq_no: number
+		_primary_term: number
+	}>(
+		"SELECT origin, watched_at, created_at, _seq_no, _primary_term FROM user_watch_log WHERE user_id = ? AND watch_id = ? AND media_type = 'show' AND tmdb_id = ?",
+		[userId, watchId, showId],
+	)
+	if (!row || row.origin !== "score" || row.watched_at !== null) return null
+	return {
+		createdAt: ms(row.created_at) ?? 0,
+		seq: Number(row._seq_no),
+		term: Number(row._primary_term),
+	}
 }
 
 /**
- * Takes back the watch `markScoredEpisodeWatched` recorded for this episode, while it is still the score's: not
- * dated by the member since (a date makes it theirs, as for a movie's score watch). Through the state machine, so
- * a show the watch had started goes back to Not started. Answers the id of the watch it removed, or null.
+ * Takes back the watch `markScoredEpisodeWatched` recorded for this episode, while it is still the score's: undated
+ * and not made the member's own since (a date makes it theirs, as for a movie's score watch). With `createdAt`, only
+ * the watch recorded then: a later score's watch under the same id stays. The delete names the version read here,
+ * so a date set in between keeps the watch. Through the state machine, so a show the watch had started goes back to
+ * Not started. Answers the id of the watch it removed, or null.
  */
 export async function removeScoredEpisodeWatch(
 	userId: string,
 	showId: number,
 	episodeTmdbId: number,
+	createdAt?: number,
 ): Promise<string | null> {
 	const title: TrackedTitle = {
 		mediaType: "show",
@@ -1184,15 +1231,17 @@ export async function removeScoredEpisodeWatch(
 	}
 	if (!userId || !whole(title.tmdbId) || !whole(episodeTmdbId)) return null
 	const watchId = episodeScoreWatchId(episodeTmdbId)
-	const [owned] = await read<{ origin: string }>(
-		"SELECT origin FROM user_watch_log WHERE user_id = ? AND watch_id = ? AND media_type = 'show' AND tmdb_id = ?",
-		[userId, watchId, title.tmdbId],
+	const owned = await scoreWatchRow(userId, title.tmdbId, watchId)
+	if (!owned || (createdAt !== undefined && owned.createdAt !== createdAt))
+		return null
+	const result = await applyShowEventStored(
+		userId,
+		title,
+		{ type: "deleteWatch", watchId },
+		undefined,
+		undefined,
+		{ watchId, seq: owned.seq, term: owned.term },
 	)
-	if (owned?.origin !== "score") return null
-	const result = await applyShowEventStored(userId, title, {
-		type: "deleteWatch",
-		watchId,
-	})
 	return result.status === "applied" && result.deleted.includes(watchId)
 		? watchId
 		: null
@@ -1801,6 +1850,11 @@ const sameVersion = (a: Version, b: Version) =>
 export interface ImportTrackingPlan {
 	/** Watcharr and Plex Undo restore intentions only where no newer watches or choices remain. */
 	restoreIntentions?: boolean
+	/**
+	 * The plan records watches only of episodes no pass has a watch of (`onlyUnwatched`): the apply checks again and
+	 * keeps a watch whose episode was watched since. `keysByWatch` names each planned watch's item.
+	 */
+	onlyUnwatched?: { keysByWatch: Record<string, string> }
 	priorWatchIds?: string[]
 	userId: string
 	importId: string
@@ -2001,6 +2055,13 @@ export async function prepareImportTrackingPlan(input: {
 		}
 		plan.watches.push(row)
 		plan.addedKeys.push(item.key)
+		if (input.onlyUnwatched)
+			plan.onlyUnwatched = {
+				keysByWatch: {
+					...plan.onlyUnwatched?.keysByWatch,
+					[watchId]: item.key,
+				},
+			}
 	}
 
 	const statusItem: ImportStatusItem | undefined = input.items.find(
@@ -2156,6 +2217,32 @@ export async function applyImportTrackingPlan(
 ) {
 	if (userId !== plan.userId)
 		throw new Error("This import belongs to another member.")
+	if (plan.onlyUnwatched && plan.watches.length) {
+		// Watched since the plan was made, by the member or another writer: that watch is kept, not added twice.
+		await run("REFRESH TABLE user_watch_log")
+		const log = await readImportLog(userId, plan.title)
+		const planned = new Set(plan.watches.map((row) => row.watch_id))
+		const others = log.filter((row) => !planned.has(row.watch_id))
+		const late = plan.watches.filter((watch) =>
+			others.some(
+				(row) =>
+					(watch.episode_tmdb_id != null &&
+						row.episode_tmdb_id === watch.episode_tmdb_id) ||
+					(row.episode_tmdb_id == null &&
+						row.season_number === watch.season_number &&
+						row.episode_number === watch.episode_number),
+			),
+		)
+		if (late.length) {
+			const keys = plan.onlyUnwatched.keysByWatch
+			const lateIds = new Set(late.map((row) => row.watch_id))
+			const lateKeys = late.map((row) => keys[row.watch_id])
+			plan.watches = plan.watches.filter((row) => !lateIds.has(row.watch_id))
+			plan.addedKeys = plan.addedKeys.filter((key) => !lateKeys.includes(key))
+			plan.keptKeys = [...plan.keptKeys, ...lateKeys]
+			await checkpoint?.(plan)
+		}
+	}
 	if (!plan.watches.length && !plan.statusItem)
 		return {
 			added: 0,

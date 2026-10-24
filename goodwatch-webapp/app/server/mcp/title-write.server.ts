@@ -151,7 +151,8 @@ export interface PartWrite {
 /**
  * Sets or clears a part score; answers with a refusal, or with what the write left, which a batch keeps so its Undo
  * can tell its own write from a later change. Scoring an episode that no pass has a watch of marks it watched
- * (#759 follow-up): `watchAdded` is that watch's id, which a batch's Undo removes with the score.
+ * (#759 follow-up): `watchAdded` is that watch's id and the time it was recorded, by which a batch's Undo removes
+ * exactly that watch with the score.
  */
 export async function writePartScore(
 	userId: string,
@@ -160,7 +161,8 @@ export async function writePartScore(
 	score: number | null,
 	deps: PartDeps = livePartDeps,
 ): Promise<
-	{ refused: string } | { written: PartWrite; watchAdded?: string }
+	| { refused: string }
+	| { written: PartWrite; watchAdded?: { id: string; created_at: number } }
 > {
 	const target = await partScoreTarget(title, part, deps)
 	if ("refused" in target) return target
@@ -175,7 +177,14 @@ export async function writePartScore(
 				score: result.score?.score ?? null,
 				updatedAt: result.score?.updatedAt ?? null,
 			},
-			...(result.watchAdded ? { watchAdded: result.watchAdded } : {}),
+			...(result.watchAdded && result.watchAddedAt !== undefined
+				? {
+						watchAdded: {
+							id: result.watchAdded,
+							created_at: result.watchAddedAt,
+						},
+					}
+				: {}),
 		}
 	} catch (error) {
 		return refusalOf(error)
@@ -275,8 +284,11 @@ export type TitleWrite =
 			event: ShowAction["event"]["type"] | null
 			/** A part score's write: what it left, for a batch's receipt and Undo. */
 			part_written?: PartWrite
-			/** The undated watch an episode's score recorded, which a batch's Undo removes with the score. */
-			watch_added?: string
+			/**
+			 * The undated watch an episode's score recorded, and when: a batch's Undo removes that watch with the score,
+			 * and never a later score's watch under the same id.
+			 */
+			watch_added?: { id: string; created_at: number }
 	  }
 
 /**
@@ -296,7 +308,7 @@ export async function applyTitleWrite(
 	let removedWatchId: string | null = null
 	let appliedEvent: ShowAction["event"]["type"] | null = null
 	let partWritten: PartWrite | undefined
-	let watchAdded: string | undefined
+	let watchAdded: { id: string; created_at: number } | undefined
 	const part = partOf(name, args)
 	if (part) {
 		if (args.score === undefined)

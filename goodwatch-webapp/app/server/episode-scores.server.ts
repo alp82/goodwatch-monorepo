@@ -36,8 +36,17 @@ export const setEpisodeScoreDbForTest = (replacement?: EpisodeScoreDb) => {
 
 /** The watch an episode's score records and takes back (tracking.server.ts). */
 interface EpisodeScoreWatches {
-	mark(userId: string, showId: number, episodeTmdbId: number): Promise<string | null>
-	remove(userId: string, showId: number, episodeTmdbId: number): Promise<string | null>
+	mark(
+		userId: string,
+		showId: number,
+		episodeTmdbId: number,
+	): Promise<{ watchId: string; createdAt: number } | null>
+	remove(
+		userId: string,
+		showId: number,
+		episodeTmdbId: number,
+		createdAt?: number,
+	): Promise<string | null>
 }
 const liveWatches: EpisodeScoreWatches = {
 	mark: async (...args) =>
@@ -53,21 +62,17 @@ export const setEpisodeScoreWatchesForTest = (
 	watches = replacement ?? liveWatches
 }
 
-/**
- * The score is saved whatever happens to its watch: a failed watch is logged, and the member can tick the episode.
- * Answers the id of the watch added or removed, or null.
- */
-async function followWatch(
-	change: "mark" | "remove",
-	userId: string,
-	showId: number,
+/** The score is saved whatever happens to its watch: a failed watch is logged, and the member can tick the episode. */
+async function followWatch<T>(
+	what: string,
 	episodeTmdbId: number,
-): Promise<string | null> {
+	change: () => Promise<T | null>,
+): Promise<T | null> {
 	try {
-		return await watches[change](userId, showId, episodeTmdbId)
+		return await change()
 	} catch (error) {
 		console.error(
-			`Episode score: the watch of episode ${episodeTmdbId} wasn't ${change === "mark" ? "recorded" : "removed"}`,
+			`Episode score: the watch of episode ${episodeTmdbId} wasn't ${what}`,
 			error,
 		)
 		return null
@@ -241,8 +246,35 @@ export interface SetEpisodeScoreResult {
 	previous: number | null
 	/** The id of the undated watch this score recorded for its episode, when it recorded one. */
 	watchAdded?: string
+	/** When that watch was recorded: it tells this watch from one a later score records under the same id. */
+	watchAddedAt?: number
 	/** The id of the score's watch that clearing the score took back, when there was one. */
 	watchRemoved?: string
+}
+
+/**
+ * Records the episode's watch for a score just saved. A clear that landed meanwhile, before or after the watch, has
+ * removed the score: the watch this recorded is taken back, so no watch outlives its score.
+ */
+async function recordScoreWatch(
+	userId: string,
+	show: number,
+	key: string,
+	episodeTmdbId: number,
+): Promise<{ watchId: string; createdAt: number } | null> {
+	const added = await followWatch("recorded", episodeTmdbId, () =>
+		watches.mark(userId, show, episodeTmdbId),
+	)
+	if (!added) return null
+	const [still] = await db.select<{ score: number }>(
+		"SELECT score FROM user_episode_score WHERE user_id = ? AND tmdb_id = ? AND score_key = ?",
+		[userId, show, key],
+	)
+	if (still) return added
+	await followWatch("removed", episodeTmdbId, () =>
+		watches.remove(userId, show, episodeTmdbId, added.createdAt),
+	)
+	return null
 }
 
 /**
@@ -274,7 +306,9 @@ export async function setEpisodeScore(
 			)
 			const watchRemoved =
 				target.scope === "episode"
-					? await followWatch("remove", userId, show, target.episodeTmdbId)
+					? await followWatch("removed", target.episodeTmdbId, () =>
+							watches.remove(userId, show, target.episodeTmdbId),
+						)
 					: null
 			return {
 				status: removed.rowcount ? "cleared" : "unchanged",
@@ -303,7 +337,7 @@ export async function setEpisodeScore(
 		)
 		const watchAdded =
 			target.scope === "episode"
-				? await followWatch("mark", userId, show, target.episodeTmdbId)
+				? await recordScoreWatch(userId, show, key, target.episodeTmdbId)
 				: null
 		return {
 			status: "saved",
@@ -315,7 +349,9 @@ export async function setEpisodeScore(
 				updatedAt: now.toISOString(),
 			},
 			previous,
-			...(watchAdded ? { watchAdded } : {}),
+			...(watchAdded
+				? { watchAdded: watchAdded.watchId, watchAddedAt: watchAdded.createdAt }
+				: {}),
 		}
 	} catch (error) {
 		if (isMissingEpisodeScoreTable(error)) throw new EpisodeScoresUnavailable()

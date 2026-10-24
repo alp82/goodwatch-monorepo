@@ -26,7 +26,9 @@ const {
 	getShowTracking,
 	getWatchState,
 	getWatchTotals,
+	applyImportTrackingPlan,
 	markScoredEpisodeWatched,
+	prepareImportTrackingPlan,
 	removeScoredEpisodeWatch,
 	settleMovie,
 } = await import("./tracking.server.ts")
@@ -1559,7 +1561,7 @@ test("Delete a watch in the log: an unwatch when it was the episode's only watch
 
 test("Scoring an episode records one undated watch through the machine, none when any pass has one, and clearing takes back only the score's", async () => {
 	wantAndNotInterested()
-	assert.equal(await markScoredEpisodeWatched(user, SHOW, 102), "score-e102")
+	assert.equal((await markScoredEpisodeWatched(user, SHOW, 102))?.watchId, "score-e102")
 	assert.deepEqual(
 		logOf().map((r) => [
 			r.watch_id,
@@ -1594,7 +1596,7 @@ test("Scoring an episode records one undated watch through the machine, none whe
 	)
 
 	// A date the member sets makes the score's watch theirs: clearing the score leaves it.
-	assert.equal(await markScoredEpisodeWatched(user, SHOW, 103), "score-e103")
+	assert.equal((await markScoredEpisodeWatched(user, SHOW, 103))?.watchId, "score-e103")
 	await act({
 		type: "editWatchDate",
 		watchId: "score-e103",
@@ -1609,7 +1611,7 @@ test("Scoring an episode records one undated watch through the machine, none whe
 	)
 
 	// The show's only watch: taking it back leaves the show Not started (row 8).
-	assert.equal(await markScoredEpisodeWatched(user, SHORT, 301), "score-e301")
+	assert.equal((await markScoredEpisodeWatched(user, SHORT, 301))?.watchId, "score-e301")
 	assert.equal(stateOf(short)?.state, "watching")
 	assert.equal(await removeScoredEpisodeWatch(user, SHORT, 301), "score-e301")
 	assert.deepEqual([stateOf(short), logOf(short)], [null, []])
@@ -1618,6 +1620,113 @@ test("Scoring an episode records one undated watch through the machine, none whe
 		(await act({ type: "watch", season: 1, number: 2 }, "score-e102")).status,
 		"refused",
 	)
+})
+
+test("Taking back a score's watch removes only the exact watch that score recorded, while it is undated and still the score's (#759 review)", async () => {
+	// The member clears the score and scores again: a new watch under the same id. The first score's Undo leaves it.
+	const first = await markScoredEpisodeWatched(user, SHOW, 102)
+	assert.ok(first)
+	assert.equal(await removeScoredEpisodeWatch(user, SHOW, 102), "score-e102")
+	await new Promise((resolve) => setTimeout(resolve, 3))
+	const second = await markScoredEpisodeWatched(user, SHOW, 102)
+	assert.ok(second && second.createdAt !== first.createdAt)
+	assert.equal(
+		await removeScoredEpisodeWatch(user, SHOW, 102, first.createdAt),
+		null,
+	)
+	assert.deepEqual(ticks(), ["1.2"])
+	assert.equal(
+		await removeScoredEpisodeWatch(user, SHOW, 102, second.createdAt),
+		"score-e102",
+	)
+	assert.deepEqual(ticks(), [])
+
+	// The member dates the watch after the check read it: the delete finds it changed and leaves it.
+	await markScoredEpisodeWatched(user, SHOW, 103)
+	let dated = false
+	db.before = async (statement) => {
+		if (
+			!dated &&
+			statement.sql.startsWith("REFRESH TABLE user_watch_log")
+		) {
+			dated = true
+			db.before = undefined
+			await act({
+				type: "editWatchDate",
+				watchId: "score-e103",
+				when: { precision: "day", day: iso(midnight(-2)) },
+			})
+		}
+	}
+	assert.equal(await removeScoredEpisodeWatch(user, SHOW, 103), null)
+	assert.ok(dated)
+	assert.deepEqual(
+		logOf().map((r) => [r.watch_id, r.origin, r.watched_at_precision]),
+		[["score-e103", "single", "day"]],
+	)
+	assert.equal(stateOf()?.state, "watching")
+})
+
+test("An import's episode score watch is checked again when it is applied: an episode ticked since the plan isn't marked twice (#759 review)", async () => {
+	const plan = await prepareImportTrackingPlan({
+		userId: user,
+		importId: "imp-1",
+		source: "trakt",
+		tmdbId: SHOW,
+		mediaType: "show",
+		items: [101, 102].map((id) => ({
+			key: `episode-score:${SHOW}:${id}`,
+			kind: "watch",
+			mediaType: "show",
+			title: "Show",
+			year: null,
+			tmdbId: SHOW,
+			imdbId: null,
+			index: id,
+			outcome: "new",
+			reason: null,
+			episodeTmdbId: id,
+			season: 1,
+			episode: id - 100,
+			precision: "unknown",
+		})) as never,
+		watchDates: "unknown",
+		now: Date.now(),
+		onlyUnwatched: true,
+	})
+	assert.equal(plan.watches.length, 2)
+	await tick(1, 1, "tick-s1e1")
+	const saved: unknown[] = []
+	const result = await applyImportTrackingPlan(user, plan, async (next) => {
+		saved.push(structuredClone(next))
+	})
+	assert.equal(result.added, 1)
+	assert.deepEqual(
+		logOf()
+			.map((r) => [r.episode_number, r.origin])
+			.sort(),
+		[
+			[1, "single"],
+			[2, "import"],
+		],
+	)
+	// The plan that Undo reads says what was added and what was kept.
+	assert.deepEqual(
+		[plan.watches.length, plan.addedKeys, plan.keptKeys],
+		[1, [`episode-score:${SHOW}:102`], [`episode-score:${SHOW}:101`]],
+	)
+	assert.ok(saved.length >= 1)
+})
+
+test("Unmark season takes a score's watch with the season, and Undo puts it back (#759 review)", async () => {
+	await tick(1, 1, "tick-s1e1")
+	await markScoredEpisodeWatched(user, SHOW, 102)
+	const before = storedExactly()
+	const { result, restore } = await unmark(1)
+	assert.deepEqual(result.deleted.sort(), ["score-e102", "tick-s1e1"])
+	const put = await act(restore, undefined)
+	assert.equal(put.status, "applied", put.refused ?? "")
+	assert.deepEqual(storedExactly(), before)
 })
 
 // ---- movies ------------------------------------------------------------------------------------------------
