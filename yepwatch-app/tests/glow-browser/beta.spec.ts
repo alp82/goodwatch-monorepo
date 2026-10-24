@@ -52,6 +52,10 @@ for (const [width, height] of [[390,844],[1440,900]]) test(`home arrives in logo
   const t: Record<string,number> = await page.evaluate(() => (window as any).__arrival);
   expect(t.brand).toBeLessThan(t.intro); expect(t.intro).toBeLessThan(t.ios);
   expect(t.ios).toBeLessThan(t.android);expect(t.android).toBeLessThan(t.actions);
+  const card = page.locator('.install-card.ios');
+  await card.hover();
+  await expect(card).not.toHaveCSS('transform', 'none');
+  await page.mouse.move(0, 0);
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
   await page.screenshot({path:`.expo/home-entry-${width}.png`});
 });

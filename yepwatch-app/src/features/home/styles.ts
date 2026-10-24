@@ -8,11 +8,11 @@ export const homeCss = `
 @media(max-height:500px) and (min-width:650px){.home-landing main{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:44px 1fr;gap:10px 24px;padding:16px 0;min-height:100dvh;max-width:900px}.home-landing header{grid-column:1;grid-row:1}.home-landing .mini-intro{grid-column:1;grid-row:2;align-self:start;margin-top:8px}.home-landing .apps{grid-column:2;grid-row:1/3;align-self:start;gap:10px}.home-landing .install-card{padding:10px;width:min(48%,170px);gap:8px}.home-landing .browser-zone{grid-column:1;grid-row:2;align-self:end;gap:6px}.home-landing .browser-title{display:none}.home-landing .browser-actions button{min-height:44px;padding:8px;font-size:14px}.home-landing .return-room{min-height:28px}}
 @media(prefers-reduced-motion:reduce){.home-landing .install-card{transition:none}}
 
-.home-arrival header{z-index:2;animation:home-brand .32s cubic-bezier(.16,1,.3,1) both;transform-origin:center}
-.home-arrival .mini-intro{animation:home-enter .26s .28s both}
-.home-arrival .install-card.ios{animation:home-enter .28s .5s both}
-.home-arrival .install-card.android{animation:home-enter .28s .62s both}
-.home-arrival .browser-zone{animation:home-enter .28s .78s both}
+.home-arrival header{z-index:2;animation:home-brand .32s cubic-bezier(.16,1,.3,1) backwards;transform-origin:center}
+.home-arrival .mini-intro{animation:home-enter .26s .28s backwards}
+.home-arrival .install-card.ios{animation:home-enter .28s .5s backwards}
+.home-arrival .install-card.android{animation:home-enter .28s .62s backwards}
+.home-arrival .browser-zone{animation:home-enter .28s .78s backwards}
 @keyframes home-brand{from{transform:translateY(calc(50dvh - var(--header-center,50dvh))) scale(1.77778)}to{transform:translateY(0) scale(1)}}
 @keyframes home-enter{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
 @media(max-width:359px){@keyframes home-brand{from{transform:translateY(calc(50dvh - var(--header-center,50dvh))) scale(1.44444)}to{transform:translateY(0) scale(1)}}}
