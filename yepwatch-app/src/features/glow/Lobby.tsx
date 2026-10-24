@@ -123,11 +123,6 @@ export function Lobby({
     providerGroups.filter(
       (s) => !serviceSearch || s.name.toLowerCase().includes(serviceSearch.toLowerCase())
     ) ?? [];
-  providers.sort(
-    (a, b) =>
-      Number(b.selectionIds.some(id => services.includes(id))) - Number(a.selectionIds.some(id => services.includes(id))) ||
-      ([8, 9, 337, 350].includes(b.id) ? 1 : 0) - ([8, 9, 337, 350].includes(a.id) ? 1 : 0)
-  );
   return (
     <View
       style={{
@@ -200,7 +195,41 @@ export function Lobby({
         </View>
       </View>
       {editing && (
-        <Drawer title="Our room" close={() => setEditing(false)}>
+        <Drawer title={countryPicker ? "Choose country" : "Our room"} close={() => countryPicker ? setCountryPicker(false) : setEditing(false)}>
+          {countryPicker && (
+            <>
+              <Field
+                label="Find country"
+                value={countrySearch}
+                onChange={setCountrySearch}
+                placeholder="Search countries"
+              />
+              {metadata.data?.countries
+                .filter(
+                  (c) =>
+                    !countrySearch ||
+                    `${c.name} ${c.code}`.toLowerCase().includes(countrySearch.toLowerCase())
+                )
+                .map((c) => (
+                  <Pill
+                    key={c.code}
+                    label={c.name}
+                    gold={country === c.code}
+                    onPress={() => {
+                      setCountry(c.code);
+                      setServiceSearch('');
+                      setServices([]);
+                      setUseSavedProviders(true);
+                      setCountryPicker(false);
+                      setCountrySearch('');
+                    }}
+                  >
+                    {flag(c.code)} {c.name}
+                  </Pill>
+                ))}
+            </>
+          )}
+          {!countryPicker && <>
           <GText bold size={20}>
             What mood?
           </GText>
@@ -311,48 +340,16 @@ export function Lobby({
           <GText bold size={20}>
             Where are we watching?
           </GText>
-          <Pill label="Choose country" onPress={() => setCountryPicker((v) => !v)}>
+          <Pill label="Choose country" onPress={() => setCountryPicker(true)}>
             {country
               ? `${flag(country)} ${
                   metadata.data?.countries.find((c) => c.code === country)?.name ?? country
                 }`
               : 'Choose country'}
           </Pill>
-          {countryPicker && (
-            <>
-              <Field
-                label="Find country"
-                value={countrySearch}
-                onChange={setCountrySearch}
-                placeholder="Search countries"
-              />
-              {metadata.data?.countries
-                .filter(
-                  (c) =>
-                    !countrySearch ||
-                    `${c.name} ${c.code}`.toLowerCase().includes(countrySearch.toLowerCase())
-                )
-                .slice(0, 30)
-                .map((c) => (
-                  <Pill
-                    key={c.code}
-                    label={c.name}
-                    gold={country === c.code}
-                    onPress={() => {
-                      setCountry(c.code);
-                      setServices([]);
-                      setUseSavedProviders(true);
-                      setCountryPicker(false);
-                      setCountrySearch('');
-                    }}
-                  >
-                    {flag(c.code)} {c.name}
-                  </Pill>
-                ))}
-            </>
-          )}
+          {country ? <>
           <View style={{ gap: 8 }}>
-            <GText>Find streaming services</GText>
+            <GText>{providers.length} streaming services</GText>
             <View style={{ flexDirection: 'row', minHeight: 52, borderWidth: 1, borderColor: '#595959', borderRadius: 12, overflow: 'hidden', backgroundColor: '#0f0f0f' }}>
               <TextInput accessibilityLabel="Find streaming services" value={serviceSearch}
                 onChangeText={setServiceSearch} placeholder="Netflix, Prime Video…" placeholderTextColor="#999"
@@ -374,7 +371,7 @@ export function Lobby({
             </View>
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-            {providers.slice(0, serviceSearch ? 40 : 12).map((s) => (
+            {providers.map((s) => (
               <Pressable
                 key={s.id}
                 accessibilityRole="checkbox"
@@ -429,6 +426,10 @@ export function Lobby({
             change them for this room. Paid rentals aren’t included.
           </GText>
 
+          {metadata.data && !metadata.isFetching && !providers.length && <GText color={glow.muted}>
+            {serviceSearch ? 'No matching services. Try another name.' : 'No services are listed for this country yet.'}
+          </GText>}
+          </> : <GText color={glow.muted}>Choose your country to see its streaming services.</GText>}
           {metadata.isPending && <GText>Loading services…</GText>}
           {metadata.error && (
             <>
@@ -447,6 +448,7 @@ export function Lobby({
           >
             {disabled ? 'Saving…' : 'Save'}
           </Pill>
+          </>}
         </Drawer>
       )}
     </View>

@@ -39,7 +39,7 @@ import {
 	type TvSearchScreens,
 	type TvServiceScreens,
 	type TvShowsScreens,
-	loadFirstScreens,
+	preloadItemScreen,
 } from "./TvScreen"
 import { useReport } from "./kit"
 import { inputElement } from "./tv-dom"
@@ -139,13 +139,12 @@ export function TvLivingRoom({
 		[location.search, data],
 	)
 
-	// The first sign that a person uses the page: the screens any key can open are asked for, and a guest's pool.
+	// The first interaction starts a guest's pool. Screen code waits for its own key's intent.
 	const [interacted, setInteracted] = useState(false)
 	useEffect(
 		() =>
 			onFirstInteraction(() => {
 				setInteracted(true)
-				loadFirstScreens()
 			}),
 		[],
 	)
@@ -444,7 +443,10 @@ export function TvLivingRoom({
 				// Your taste's sign-up: the site's sign-up page, through the TV, back to the same TV screen.
 				case "sign-up":
 					leave(
-						authHref("sign-up", `${here.current.pathname}${here.current.search}`),
+						authHref(
+							"sign-up",
+							`${here.current.pathname}${here.current.search}`,
+						),
 					)
 					return
 				// Continue with Google, back to the same TV screen.
@@ -520,7 +522,8 @@ export function TvLivingRoom({
 	// A screen's code is asked for when the person is about to need it: Tonight's, which brings the title screen's,
 	// while its tile has the focus; the rating's on the title screen.
 	useEffect(() => {
-		if (!interacted) return
+		if (!interacted || tv.focused === "expand") return
+		preloadItemScreen(tv.focused)
 		const onHome = tv.screen.name === "home"
 		if (onHome && (tv.focused === "app:tonight" || tv.focused === "start:tonight"))
 			TonightCode.load().catch(() => {})

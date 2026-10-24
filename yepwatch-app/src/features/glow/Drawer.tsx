@@ -49,7 +49,8 @@ export function Drawer({
               justifyContent: 'space-between',
             }}
           >
-            <GText size={25} bold>
+            <Press label="Back" onPress={close}><Icon name="left" /></Press>
+            <GText size={25} bold style={{ flex: 1 }}>
               {title}
             </GText>
             <Press label="Close panel" onPress={close}>
@@ -58,6 +59,8 @@ export function Drawer({
           </View>
           <ScrollView
             keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator
+            persistentScrollbar
             contentContainerStyle={{ padding: 24, gap: 18 }}
           >
             {children}

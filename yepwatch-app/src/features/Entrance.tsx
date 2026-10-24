@@ -1,10 +1,11 @@
 import { guestOnly } from '../core/config';
-import { useEffect, useRef, useState } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { BackHandler, Platform, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Drawer } from './glow/Drawer';
-import { GText, Pill, Wordmark, glow } from './glow/theme';
-import { router } from 'expo-router';
+import { GText, Icon, Pill, Press, Wordmark, glow } from './glow/theme';
+import { router, useFocusEffect } from 'expo-router';
+import { loadRecentRoom, type RecentRoom } from '../core/continuous/recent-room';
 import * as Crypto from 'expo-crypto';
 import { Field } from '../components/ui';
 import { continuousApi as api, RoomFailure as ApiFailure } from '../core/continuous/api';
@@ -12,7 +13,7 @@ import { loadAccess, nativeClient, saveAccess } from '../core/credentials';
 import { inviteIntent, parseInvite } from '../core/invites';
 import { queryClient } from '../core/providers';
 import { continuousKey as roomKey } from '../core/continuous/useRoom';
-import { saveInvite } from '../core/continuous/invite-store';
+import { loadInvite, saveInvite } from '../core/continuous/invite-store';
 import { mergeRoom } from '../core/continuous/state';
 import { readAdmission, writeAdmission } from '../core/continuous/storage';
 import type { AdmissionRecovery } from '../core/continuous/recovery-state';
@@ -20,6 +21,12 @@ import { retainRequest, retryDeadline } from '../core/continuous/retry';
 import { useRetryCountdown } from '../core/continuous/useRetryCountdown';
 
 export function Entrance({ invite }: { invite?: string }) {
+  const [recent, setRecent] = useState<RecentRoom | null>(null);
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    void loadRecentRoom().then(value => { if (active) setRecent(value); }).catch(() => undefined);
+    return () => { active = false; };
+  }, []));
   const [joining, setJoining] = useState(Boolean(invite));
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState(invite ?? '');
@@ -99,14 +106,14 @@ export function Entrance({ invite }: { invite?: string }) {
       active = false;
     };
   }, [invite, checkVersion, intent]);
-  async function enter(join: boolean, member = false) {
+  async function enter(join: boolean, member = false, returning?: { code: string; nickname: string }) {
     if (inFlight.current || restoring || restoreFailed || (admission && admission.intent !== intent) || Date.now() < (admission?.retryAt ?? 0)) return;
     inFlight.current = true;
     setBusy(true);
     setError('');
     let saved = admission;
     try {
-      const cleanCode = join ? parseInvite(code) : '';
+      const cleanCode = join ? parseInvite(returning?.code ?? code) : '';
       if (join && !cleanCode)
         throw new Error('Enter the complete room code or YepWatch invitation link.');
       if (!saved) {
@@ -116,7 +123,7 @@ export function Entrance({ invite }: { invite?: string }) {
             contractVersion: 3,
             commandId: Crypto.randomUUID(),
             admissionSecret: Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(''),
-            nickname: nickname.trim(),
+            nickname: (returning?.nickname ?? nickname).trim(),
           },
           code: cleanCode,
           intent,
@@ -195,6 +202,16 @@ export function Entrance({ invite }: { invite?: string }) {
   const compact = height < 700;
   const landscape = height < 500 && width > height;
   const [options, setOptions] = useState(false);
+  const back = useCallback(() => {
+    if (options) setOptions(false);
+    else if (invite) router.replace('/');
+    else { setJoining(false); setError(''); }
+  }, [options, invite]);
+  useFocusEffect(useCallback(() => {
+    if (Platform.OS !== 'android' || (!joining && !invite && !options)) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => { back(); return true; });
+    return () => sub.remove();
+  }, [joining, invite, options, back]));
   const locked = busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: glow.bg, overflow: 'hidden' }}>
@@ -203,10 +220,13 @@ export function Entrance({ invite }: { invite?: string }) {
           paddingHorizontal: 24,
           height: compact ? 48 : 60,
           flexShrink: 0,
-          justifyContent: 'center',
+          alignItems: 'center',
+          flexDirection: 'row',
+          gap: 8,
         }}
       >
-        <Wordmark />
+        {(joining || invite) && <Press label="Back to start" onPress={back}><Icon name="left" /></Press>}
+        <View style={{ flex: 1 }}><Wordmark /></View>
       </View>
       <View
         style={{
@@ -240,6 +260,12 @@ export function Entrance({ invite }: { invite?: string }) {
             )}
           </View>
           <View style={{ flex: landscape ? 1 : undefined, gap: compact ? 10 : 18 }}>
+            {!invite && !joining && recent && !admission && <Pill label="Return to your room" gold disabled={locked} onPress={() => {
+              void loadInvite(recent.roomId).then(saved => {
+                if (saved) void enter(true, false, { code: saved.code, nickname: recent.nickname });
+                else router.push({ pathname: '/room/[id]', params: { id: recent.roomId } });
+              }).catch(() => setError('Could not restore your invitation. Try again.'));
+            }}>Return to your room</Pill>}
             {error && (
               <GText size={14} lines={2} color="#fca5a5">
                 {error}

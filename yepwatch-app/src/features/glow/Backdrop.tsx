@@ -1,19 +1,13 @@
-import { Image, View } from 'react-native';
+import { View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { s } from './theme';
-/** Native uses supported image blur and dark gradients; device color treatment still needs visual validation. */
-export function Backdrop({ url }: { url: string }) {
+/** A constant room atmosphere; choosing or browsing titles never reloads the background. */
+export function Backdrop() {
   return (
-    <View pointerEvents="none" style={[s.absolute, { overflow: 'hidden' }]}>
-      <Image
-        source={{ uri: url }}
-        blurRadius={12}
-        resizeMode="cover"
-        style={[s.absolute, { opacity: 0.4, transform: [{ scale: 1.12 }] }]}
-      />
+    <View testID="room-atmosphere" pointerEvents="none" style={[s.absolute, { overflow: 'hidden' }]}>
       <LinearGradient
-        colors={['#06060659', '#06060619', '#060606bf']}
-        locations={[0, 0.4, 1]}
+        colors={['#17140e', '#0b0b0e', '#070707']}
+        locations={[0, 0.45, 1]}
         style={s.absolute}
       />
     </View>

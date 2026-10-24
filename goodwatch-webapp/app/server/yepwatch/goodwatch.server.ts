@@ -1,4 +1,4 @@
-import { groupProviderChoices } from "../../utils/streaming-links.ts"
+import { providerCatalog, type ProviderCatalogRow } from './provider-catalog.ts'
 import { createAvailabilityAdapter } from './availability-adapter.ts'
 import type { ViewerContext } from '../viewer.server'
 import { createDeckAdapter, type CatalogReads } from './catalog-adapter.ts'
@@ -53,10 +53,12 @@ export const goodwatchReads: CatalogReads = {
 }
 const deck = createDeckAdapter(goodwatchReads)
 export const goodwatchCatalog: CatalogPort = {
-  async metadata() {
-    const [{ getCountries }, { MOODS }] = await Promise.all([import('../countries.server'), import('../../domain/moods')])
-    const [countries, services] = await Promise.all([getCountries({}), serviceCatalog()])
-    return { countries, services, providerGroups: groupProviderChoices(services), moods: MOODS.map(m => ({ id: m.key, label: m.name })) }
+  async metadata(country) {
+    const [{ getCountries }, { MOODS }, { searchQuery }] = await Promise.all([import('../countries.server'), import('../../domain/moods'), import('../combined-search/catalog.server')])
+    const [countries, rows] = await Promise.all([getCountries({}), country
+      ? searchQuery<ProviderCatalogRow>('SELECT DISTINCT tmdb_id,name,logo_path,order_by_country,order_default FROM streaming_service')
+      : Promise.resolve([])])
+    return { countries, ...providerCatalog(rows, country), moods: MOODS.map(m => ({ id: m.key, label: m.name })) }
   },
   async searchShows(query) {
     const { searchQuery } = await import('../combined-search/catalog.server')

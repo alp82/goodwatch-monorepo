@@ -1,8 +1,9 @@
 import { shareInvitation } from '../../core/share-invitation';
-import { useEffect, useRef, useState } from 'react';
-import { Linking, View, useWindowDimensions } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { BackHandler, Linking, Platform, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { rememberRoom } from '../../core/continuous/recent-room';
 import { useContinuousRoom } from '../../core/continuous/useRoom';
 import { latestRetainedVote, ownCard } from '../../core/continuous/state';
 import { groupActivity } from '../../core/continuous/activity';
@@ -58,6 +59,21 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const refilled = useRef(new Set<string>());
   const signinStarted = useRef(false);
   const send = state.send;
+  const back = useCallback(() => {
+    if (drawer) setDrawer(null);
+    else if (view === 'matches') setView('voting');
+    else router.replace('/');
+  }, [drawer, view]);
+  useFocusEffect(useCallback(() => {
+    if (Platform.OS !== 'android') return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => { back(); return true; });
+    return () => subscription.remove();
+  }, [back]));
+  const nickname = snapshot?.shared.participants.find(p => p.participantId === snapshot.own.participantId)?.nickname;
+  const expiresAt = snapshot?.shared.expiresAt;
+  useEffect(() => {
+    if (expiresAt && nickname) void rememberRoom({ roomId: id, nickname, expiresAt }).catch(() => undefined);
+  }, [id, nickname, expiresAt]);
   useEffect(() => {
     if (snapshot?.own.left) router.replace('/');
   }, [snapshot?.own.left]);
@@ -161,6 +177,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           <GText size={28} bold>
             {state.room.error ? 'Couldn’t load the room' : 'Getting the room ready…'}
           </GText>
+          <Pill label="Back to start" onPress={() => router.replace('/')}>Back to start</Pill>
           {state.room.error && (
             <Pill label="Retry room" onPress={() => void state.refetch().catch(() => undefined)}>
               Retry
@@ -423,7 +440,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
       edges={['top', 'bottom']}
       style={{ flex: 1, backgroundColor: glow.bg, overflow: 'hidden' }}
     >
-      {title?.backdropUrl && <Backdrop url={title.backdropUrl} />}
+      <Backdrop />
       <View
         style={{
           height: 60,
@@ -434,9 +451,14 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           paddingHorizontal: wide ? 40 : 20,
         }}
       >
-        <Press label="Open room" onPress={() => setDrawer('room')}>
-          <Wordmark size={24} />
-        </Press>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Press label={view === 'matches' ? 'Back to voting' : 'Back to start'} onPress={back}>
+            <Icon name="left" />
+          </Press>
+          <Press label="Open room" onPress={() => setDrawer('room')}>
+            <Wordmark size={width < 360 ? 20 : 24} />
+          </Press>
+        </View>
         <Faces
           localReaction={localReaction}
           people={people}

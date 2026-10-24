@@ -25,6 +25,7 @@ export default function Beta() {
       <ScrollView contentContainerStyle={{ padding: 24, alignItems: 'center' }}>
         <View style={{ width: '100%', maxWidth: 560, gap: 24 }}>
           <Wordmark />
+          <Pill label="Back to start" onPress={() => router.replace('/')}>Back to start</Pill>
           <View style={{ gap: 8 }}>
             <GText size={36} bold>Test YepWatch</GText>
             <GText color={glow.muted}>Bring a friend. Find something you both want to watch.</GText>

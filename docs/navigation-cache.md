@@ -78,7 +78,16 @@ Limits (`prefetch-queue.ts`): at most 2 prefetches at a time and 40 a minute, pr
 
 When a title page's data arrives through a press, hover, or focus prefetch, its hero backdrop starts loading with the hero's own `srcset` and `sizes` (`hero-backdrop.ts`), so the browser picks the same file the hero will.
 
-After `load`, at least 2 seconds later and in an idle moment, the code of the main page types (title, person, listings, best lists, Discover) is preloaded once.
+The TV's Full Details button carries `data-prefetch-href` and uses the same hover, DOM focus, and press listeners.
+The TV remote changes the screen's own focus without moving DOM focus, so `TvScreen` also starts that same prefetch
+when Full Details has remote focus. The button still dispatches the TV's existing navigation and View Transition.
+Other TV screens warm only when their own key has focus, rather than all starting at the first interaction.
+
+The detail hero, its prefetch, and its Early Hints use `?gw-cors=1` on every responsive image URL. TMDB's non-CORS
+response omits `Access-Control-Allow-Origin` without `Vary: Origin`; the browser can otherwise reuse a TV/CSS image
+response for the CORS hero and block it. The separate URL also fixes browsers that already cached that response.
+
+On phones, visible title/person data is prefetched after `load`, at least 2 seconds later and in an idle moment. Route code loads on hover, focus, or press intent; the page no longer preloads every catalog page type in the background.
 
 `window.__gwNavCache` counts prefetches, navigations answered per trigger, and misses.
 

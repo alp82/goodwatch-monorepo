@@ -42,6 +42,7 @@ export type TvView = {
 	expands?: string | null
 	/** The Expand key's words: short and about the page ("Full details", `destinationLabel`). */
 	expandLabel?: string | null
+	expandHref?: string | null
 	/** The navigation's item of the screen on show (`nav:tonight`), marked in the bar; null on other screens. */
 	here?: string | null
 	/** The person is a member: the white G says Start, not Home. */
@@ -180,10 +181,12 @@ export function Item({
 	children,
 	href,
 	linkData,
+	prefetchHref,
 }: {
 	id: string
 	href?: string
 	linkData?: Record<string, string | number>
+	prefetchHref?: string | null
 	/** For a screen reader, where the item shows a picture or an icon alone. */
 	label?: string
 	/** For an item that is on or off, such as a tab: whether it is on. */
@@ -220,6 +223,7 @@ export function Item({
 			{...linkData}
 			type={href ? undefined : "button"}
 			{...{ [TV_ITEM_ATTR]: id }}
+			data-prefetch-href={prefetchHref || undefined}
 			aria-current={focused || undefined}
 			aria-label={label}
 			aria-pressed={pressed}
@@ -832,13 +836,14 @@ export function Expand({
 	/** On the phone, in a row of tabs: smaller words and motif, the same touch target. */
 	compact?: boolean
 } = {}) {
-	const { canvas, expands, expandLabel } = useTvView()
+	const { canvas, expands, expandLabel, expandHref } = useTvView()
 	const P = canvas.edition === "phone"
 	const words = expandLabel ?? "Expand"
 	const motif = compact ? { w: 30, h: 22, arm: 7 } : MOTIF
 	return (
 		<Item
 			id="expand"
+			prefetchHref={expandHref}
 			label={expands ? `${words}: opens ${expands} on GoodWatch` : words}
 			className={`tvc-x flex shrink-0 items-center whitespace-nowrap ${P ? (compact ? "gap-1.5 px-2.5 text-[17px]" : "gap-2.5 px-3.5 text-[20px]") : "h-[64px] gap-4 px-6 text-[26px]"}`}
 			style={P ? { height: keyLength(canvas, 54) } : undefined}

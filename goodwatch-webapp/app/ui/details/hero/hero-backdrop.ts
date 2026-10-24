@@ -10,12 +10,21 @@ export const HERO_BACKDROP_SIZES: SizeRule[] = [
 // larger step is in the srcSet for the wide banner all the same.
 export const HERO_BACKDROP_MAX_WIDTH = 780
 
+// TMDB omits Access-Control-Allow-Origin on non-CORS requests without varying on Origin.
+// Separate the hero/103/prefetch URL from TV and CSS caches, including already cached images.
+export const heroBackdropPath = (path: string) => `${path}?gw-cors=1`
+
 /** The hero image's src, srcSet, and sizes, as `HeroBackdropImage` renders them. */
 export function heroBackdropSource(path: string) {
-	return tmdbFluidImage("backdrop", path, HERO_BACKDROP_SIZES, {
-		fallbackWidth: HERO_BACKDROP_MAX_WIDTH,
-		maxWidth: HERO_BACKDROP_MAX_WIDTH,
-	})
+	return tmdbFluidImage(
+		"backdrop",
+		heroBackdropPath(path),
+		HERO_BACKDROP_SIZES,
+		{
+			fallbackWidth: HERO_BACKDROP_MAX_WIDTH,
+			maxWidth: HERO_BACKDROP_MAX_WIDTH,
+		},
+	)
 }
 
 const started = new Set<string>()
