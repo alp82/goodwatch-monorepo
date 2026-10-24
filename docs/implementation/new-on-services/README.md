@@ -49,6 +49,10 @@ The rules are in `goodwatch-webapp/app/domain/new-on-services.ts` and reuse Newl
 
 - The ten best by GoodWatch score (rounded), then **Day by day**: exact days, the latest first ("Today", "Yesterday",
   "Thursday, October 22"), then the titles without a known day under **Also new**.
+- A title the catalog has no poster for shows the placeholder of the site's card grids
+  (`app/img/poster-placeholder.png`, as in `ui/Poster.tsx`), and goes after every title with a poster: in the top ten,
+  in each day and under Also new. On October 25, Netflix US had 4 such titles out of 101 (all shows with 0 or 1 votes
+  and no poster or backdrop in `movie`/`show`), Prime Video US 21 of 340.
 - A row says "New on Netflix today" or "on Thursday" where the day is exact, and only "New on Netflix" otherwise. No
   "this week" and no "last 30 days" anywhere.
 - The line under the heading: "101 movies and shows in the last 13 days, 1 of them today." and an info icon with
@@ -135,6 +139,15 @@ redirect chain, robots tag, canonical address, layout shift and console errors.
 | `dark-us-netflix` | `/new/us/netflix` with `prefers-color-scheme: dark` |
 | `us-netflix-from-germany-offer` | `/new/us/netflix` from Germany: the link to `/new/de/netflix` |
 | `country-us-every-service` | `/new/us` |
+| `first-screen-us-netflix` | `/new/us/netflix`, the first screen of a real load, no scrolling |
+
+`header-check.json` measures, on real loads of `/new/us/netflix`, `/new/de/hulu` and `/new/us` (desktop and phone,
+at load and after scrolling down and back up), where the fixed site header ends and where the breadcrumb and the
+heading start: the header ends at 64 to 65 px, the breadcrumb starts at 80 px and the heading at 120 px, so nothing is
+covered. A full-page capture draws fixed elements where the last scroll left them; for the whole-page shots the header
+is pinned to the top of the document during the capture. `report-visitor.json` is the latest visitor run;
+`report.json` and the `member-new` shots are from the earlier run with the signed-in preview, before the poster
+placeholder.
 
 The site has one dark theme, so the dark-mode shots look like the others. The signed-in shots log three React 421
 errors; the same three appear on `/settings`, `/for-you` and `/` in the same local preview, so they come from the

@@ -271,6 +271,28 @@ test("the ranked list is best score first, titles without a score last, newer fi
 	)
 })
 
+test("a title without a poster ranks after the titles with one, in the list and in its day", () => {
+	const list = [
+		{ key: dune, at: ago(2), score: 90, poster_path: null, exact: true },
+		{ key: arcane, at: ago(2), score: 60, poster_path: "/a.jpg", exact: true },
+		{ key: heat, at: ago(2), score: null, poster_path: "/h.jpg", exact: true },
+	]
+	assert.deepEqual(
+		rankByScore(list).map(({ key }) => key),
+		[arcane, heat, dune],
+	)
+	assert.deepEqual(
+		dayGroupsOf(list)[0].titles.map(({ key }) => key),
+		[arcane, heat, dune],
+	)
+	// Titles without a known day stay newest first, behind the ones with a poster.
+	const unknown = list.map((title, i) => ({ ...title, exact: false, at: ago(i) }))
+	assert.deepEqual(
+		dayGroupsOf(unknown)[0].titles.map(({ key }) => key),
+		[arcane, heat, dune],
+	)
+})
+
 test("day by day groups exact days, the latest first, and puts the titles without a day last", () => {
 	const list = [
 		{ key: dune, at: ago(2), exact: true, score: 60 },

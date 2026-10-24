@@ -1,0 +1,172 @@
+[
+  {
+    "shot": "us-netflix",
+    "device": "desktop",
+    "chain": [
+      "200 /new/us/netflix"
+    ],
+    "url": "/new/us/netflix",
+    "sideways": false,
+    "cls": 0,
+    "robots": "index, follow",
+    "canonical": "https://goodwatch.app/new/us/netflix",
+    "title": "New on Netflix (US): the latest movies and shows | GoodWatch",
+    "errors": []
+  },
+  {
+    "shot": "us-netflix",
+    "device": "phone",
+    "chain": [
+      "200 /new/us/netflix"
+    ],
+    "url": "/new/us/netflix",
+    "sideways": false,
+    "cls": 0,
+    "robots": "index, follow",
+    "canonical": "https://goodwatch.app/new/us/netflix",
+    "title": "New on Netflix (US): the latest movies and shows | GoodWatch",
+    "errors": []
+  },
+  {
+    "shot": "share-link-netflix-from-germany",
+    "device": "desktop",
+    "chain": [
+      "302 /new/netflix",
+      "200 /new/de/netflix"
+    ],
+    "url": "/new/de/netflix",
+    "sideways": false,
+    "cls": 0,
+    "robots": "index, follow",
+    "canonical": "https://goodwatch.app/new/de/netflix",
+    "title": "New on Netflix (DE): the latest movies and shows | GoodWatch",
+    "errors": []
+  },
+  {
+    "shot": "share-link-netflix-from-germany",
+    "device": "phone",
+    "chain": [
+      "302 /new/netflix",
+      "200 /new/de/netflix"
+    ],
+    "url": "/new/de/netflix",
+    "sideways": false,
+    "cls": 0,
+    "robots": "index, follow",
+    "canonical": "https://goodwatch.app/new/de/netflix",
+    "title": "New on Netflix (DE): the latest movies and shows | GoodWatch",
+    "errors": []
+  },
+  {
+    "shot": "empty-de-hulu",
+    "device": "desktop",
+    "chain": [
+      "200 /new/de/hulu"
+    ],
+    "url": "/new/de/hulu",
+    "sideways": false,
+    "cls": 0,
+    "robots": "noindex, follow",
+    "canonical": "https://goodwatch.app/new/de/hulu",
+    "title": "New on Hulu (DE): the latest movies and shows | GoodWatch",
+    "errors": []
+  },
+  {
+    "shot": "empty-de-hulu",
+    "device": "phone",
+    "chain": [
+      "200 /new/de/hulu"
+    ],
+    "url": "/new/de/hulu",
+    "sideways": false,
+    "cls": 0,
+    "robots": "noindex, follow",
+    "canonical": "https://goodwatch.app/new/de/hulu",
+    "title": "New on Hulu (DE): the latest movies and shows | GoodWatch",
+    "errors": []
+  },
+  {
+    "shot": "dark-us-netflix",
+    "device": "desktop",
+    "chain": [
+      "200 /new/us/netflix"
+    ],
+    "url": "/new/us/netflix",
+    "sideways": false,
+    "cls": 0,
+    "robots": "index, follow",
+    "canonical": "https://goodwatch.app/new/us/netflix",
+    "title": "New on Netflix (US): the latest movies and shows | GoodWatch",
+    "errors": []
+  },
+  {
+    "shot": "dark-us-netflix",
+    "device": "phone",
+    "chain": [
+      "200 /new/us/netflix"
+    ],
+    "url": "/new/us/netflix",
+    "sideways": false,
+    "cls": 0,
+    "robots": "index, follow",
+    "canonical": "https://goodwatch.app/new/us/netflix",
+    "title": "New on Netflix (US): the latest movies and shows | GoodWatch",
+    "errors": []
+  },
+  {
+    "shot": "us-netflix-from-germany-offer",
+    "device": "desktop",
+    "chain": [
+      "200 /new/us/netflix"
+    ],
+    "url": "/new/us/netflix",
+    "sideways": false,
+    "cls": 0,
+    "robots": "index, follow",
+    "canonical": "https://goodwatch.app/new/us/netflix",
+    "title": "New on Netflix (US): the latest movies and shows | GoodWatch",
+    "errors": []
+  },
+  {
+    "shot": "us-netflix-from-germany-offer",
+    "device": "phone",
+    "chain": [
+      "200 /new/us/netflix"
+    ],
+    "url": "/new/us/netflix",
+    "sideways": false,
+    "cls": 0,
+    "robots": "index, follow",
+    "canonical": "https://goodwatch.app/new/us/netflix",
+    "title": "New on Netflix (US): the latest movies and shows | GoodWatch",
+    "errors": []
+  },
+  {
+    "shot": "country-us-every-service",
+    "device": "desktop",
+    "chain": [
+      "200 /new/us"
+    ],
+    "url": "/new/us",
+    "sideways": false,
+    "cls": 0,
+    "robots": "index, follow",
+    "canonical": "https://goodwatch.app/new/us",
+    "title": "New on streaming in the United States: the latest movies and shows | GoodWatch",
+    "errors": []
+  },
+  {
+    "shot": "country-us-every-service",
+    "device": "phone",
+    "chain": [
+      "200 /new/us"
+    ],
+    "url": "/new/us",
+    "sideways": false,
+    "cls": 0,
+    "robots": "index, follow",
+    "canonical": "https://goodwatch.app/new/us",
+    "title": "New on streaming in the United States: the latest movies and shows | GoodWatch",
+    "errors": []
+  }
+]

@@ -1,0 +1,134 @@
+[
+  {
+    "path": "/new/us/netflix",
+    "device": "desktop",
+    "when": "load",
+    "scrollY": 0,
+    "headerBottom": 65,
+    "crumbsTop": 80,
+    "h1Top": 120,
+    "h1Text": "New on Netflix",
+    "covered": false
+  },
+  {
+    "path": "/new/us/netflix",
+    "device": "desktop",
+    "when": "back at top",
+    "scrollY": 0,
+    "headerBottom": 65,
+    "crumbsTop": 80,
+    "h1Top": 120,
+    "h1Text": "New on Netflix",
+    "covered": false
+  },
+  {
+    "path": "/new/us/netflix",
+    "device": "phone",
+    "when": "load",
+    "scrollY": 0,
+    "headerBottom": 64,
+    "crumbsTop": 80,
+    "h1Top": 120,
+    "h1Text": "New on Netflix",
+    "covered": false
+  },
+  {
+    "path": "/new/us/netflix",
+    "device": "phone",
+    "when": "back at top",
+    "scrollY": 0,
+    "headerBottom": 64,
+    "crumbsTop": 80,
+    "h1Top": 120,
+    "h1Text": "New on Netflix",
+    "covered": false
+  },
+  {
+    "path": "/new/de/hulu",
+    "device": "desktop",
+    "when": "load",
+    "scrollY": 0,
+    "headerBottom": 65,
+    "crumbsTop": 80,
+    "h1Top": 120,
+    "h1Text": "New on Hulu",
+    "covered": false
+  },
+  {
+    "path": "/new/de/hulu",
+    "device": "desktop",
+    "when": "back at top",
+    "scrollY": 0,
+    "headerBottom": 65,
+    "crumbsTop": 80,
+    "h1Top": 120,
+    "h1Text": "New on Hulu",
+    "covered": false
+  },
+  {
+    "path": "/new/de/hulu",
+    "device": "phone",
+    "when": "load",
+    "scrollY": 0,
+    "headerBottom": 64,
+    "crumbsTop": 80,
+    "h1Top": 120,
+    "h1Text": "New on Hulu",
+    "covered": false
+  },
+  {
+    "path": "/new/de/hulu",
+    "device": "phone",
+    "when": "back at top",
+    "scrollY": 0,
+    "headerBottom": 64,
+    "crumbsTop": 80,
+    "h1Top": 120,
+    "h1Text": "New on Hulu",
+    "covered": false
+  },
+  {
+    "path": "/new/us",
+    "device": "desktop",
+    "when": "load",
+    "scrollY": 0,
+    "headerBottom": 65,
+    "crumbsTop": 80,
+    "h1Top": 120,
+    "h1Text": "New on streaming in the United States",
+    "covered": false
+  },
+  {
+    "path": "/new/us",
+    "device": "desktop",
+    "when": "back at top",
+    "scrollY": 0,
+    "headerBottom": 65,
+    "crumbsTop": 80,
+    "h1Top": 120,
+    "h1Text": "New on streaming in the United States",
+    "covered": false
+  },
+  {
+    "path": "/new/us",
+    "device": "phone",
+    "when": "load",
+    "scrollY": 0,
+    "headerBottom": 64,
+    "crumbsTop": 80,
+    "h1Top": 120,
+    "h1Text": "New on streaming in the United States",
+    "covered": false
+  },
+  {
+    "path": "/new/us",
+    "device": "phone",
+    "when": "back at top",
+    "scrollY": 0,
+    "headerBottom": 64,
+    "crumbsTop": 80,
+    "h1Top": 120,
+    "h1Text": "New on streaming in the United States",
+    "covered": false
+  }
+]

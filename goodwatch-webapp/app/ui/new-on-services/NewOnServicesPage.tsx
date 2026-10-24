@@ -20,7 +20,7 @@ import ShareButton from "~/ui/button/ShareButton"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
-import { Flag, Logo, PosterRow, RankedRow, Sub } from "./parts"
+import { Flag, Logo, PosterImage, PosterRow, RankedRow, Sub } from "./parts"
 
 /** The page's trail, for the visible breadcrumb and the BreadcrumbList. */
 export function crumbsOf(data: NewPageData): Crumb[] {
@@ -104,16 +104,11 @@ function Waited({ data }: { data: NewPageData }) {
 									prefetch="intent"
 									className="flex items-center gap-3 rounded-xl p-1.5 hover:bg-white/[0.07]"
 								>
-									{title.poster_path ? (
-										<TmdbImage
-											kind="poster"
-											path={title.poster_path}
-											width={38}
-											className="h-14 w-[38px] shrink-0 rounded bg-white/5 object-cover"
-										/>
-									) : (
-										<span className="block h-14 w-[38px] shrink-0 rounded bg-white/10" />
-									)}
+									<PosterImage
+										path={title.poster_path}
+										width={38}
+										className="h-14 w-[38px] shrink-0 rounded bg-white/5 object-cover"
+									/>
 									<span className="min-w-0 flex-1">
 										<b className="block truncate text-sm text-white">
 											{title.title}

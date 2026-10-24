@@ -13,6 +13,8 @@ import type {
 import { TmdbImage } from "~/ui/TmdbImage"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { countryFlagUrl } from "~/utils/country-flag"
+import placeholder from "~/img/poster-placeholder.png"
+import { assetUrl } from "~/utils/asset-url"
 import { goodwatchVibeIndex } from "~/utils/ratings"
 
 export const Logo = ({
@@ -36,6 +38,36 @@ export const Logo = ({
 			className={`block shrink-0 rounded-lg bg-white/10 ring-1 ring-white/20 ${className}`}
 			style={{ width: size, height: size }}
 			aria-hidden
+		/>
+	)
+
+/**
+ * A title's poster, or the placeholder the site's card grids show for a title the catalog has no poster for
+ * (ui/Poster.tsx). Both reserve the 2:3 space, so nothing moves.
+ */
+export const PosterImage = ({
+	path,
+	width,
+	eager = false,
+	className,
+}: { path: string | null; width: number; eager?: boolean; className: string }) =>
+	path ? (
+		<TmdbImage
+			kind="poster"
+			path={path}
+			width={width}
+			priority={eager ? "eager" : "lazy"}
+			className={className}
+		/>
+	) : (
+		<img
+			src={assetUrl(placeholder)}
+			alt=""
+			width={width}
+			height={Math.round(width * 1.5)}
+			loading={eager ? "eager" : "lazy"}
+			decoding="async"
+			className={className}
 		/>
 	)
 
@@ -145,17 +177,12 @@ export function RankedRow({
 					{rank}
 				</span>
 				<span className="relative shrink-0">
-					{title.poster_path ? (
-						<TmdbImage
-							kind="poster"
-							path={title.poster_path}
-							width={64}
-							priority={eager ? "eager" : "lazy"}
-							className="h-24 w-16 rounded-md bg-white/5 object-cover"
-						/>
-					) : (
-						<span className="block h-24 w-16 rounded-md bg-white/10" />
-					)}
+					<PosterImage
+						path={title.poster_path}
+						width={64}
+						eager={eager}
+						className="h-24 w-16 rounded-md bg-white/5 object-cover"
+					/>
 					{wait && <WantMark className="absolute -left-1.5 -top-1.5 h-6 w-6" />}
 				</span>
 				<span className="min-w-0 flex-1">
@@ -187,16 +214,11 @@ export function PosterRow({
 				<li key={title.key} className="w-[calc(25%-6px)] sm:w-24 lg:w-[110px]">
 					<Link to={title.path} prefetch="intent" className="group block">
 						<span className="relative block">
-							{title.poster_path ? (
-								<TmdbImage
-									kind="poster"
-									path={title.poster_path}
-									width={110}
-									className="block aspect-[2/3] w-full rounded-md bg-white/5 object-cover ring-1 ring-white/10 group-hover:ring-amber-400/70"
-								/>
-							) : (
-								<span className="block aspect-[2/3] w-full rounded-md bg-white/10 ring-1 ring-white/10" />
-							)}
+							<PosterImage
+								path={title.poster_path}
+								width={110}
+								className="block aspect-[2/3] w-full rounded-md bg-white/5 object-cover ring-1 ring-white/10 group-hover:ring-amber-400/70"
+							/>
 							<Score
 								score={title.score}
 								className="absolute right-1 top-1 h-6 min-w-7 text-xs"

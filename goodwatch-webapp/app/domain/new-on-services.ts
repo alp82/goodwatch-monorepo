@@ -160,12 +160,24 @@ interface Ranked {
 	key: TitleKey
 	at: number
 	score: number | null
+	/** Left out when a caller doesn't know it; null when the catalog has no poster. */
+	poster_path?: string | null
 }
 
-/** Best GoodWatch score first, titles without a score last, the newer first on a tie. */
+// A card without a poster shows the placeholder: it goes after every card with one.
+const withPosterFirst = (a: Ranked, b: Ranked) =>
+	Number(b.poster_path !== null) - Number(a.poster_path !== null)
+
+/**
+ * Titles with a poster first; then best GoodWatch score first, titles without a score last, the newer first on a
+ * tie.
+ */
 export const rankByScore = <T extends Ranked>(list: readonly T[]): T[] =>
 	[...list].sort(
-		(a, b) => (b.score ?? -1) - (a.score ?? -1) || newestFirst(a, b),
+		(a, b) =>
+			withPosterFirst(a, b) ||
+			(b.score ?? -1) - (a.score ?? -1) ||
+			newestFirst(a, b),
 	)
 
 export interface DayGroup<T> {
@@ -174,7 +186,10 @@ export interface DayGroup<T> {
 	titles: T[]
 }
 
-/** Exact days, the latest first, each best first; then the titles without a known day, the newest first. */
+/**
+ * Exact days, the latest first, each best first; then the titles without a known day, the newest first. In each
+ * group, titles without a poster go last.
+ */
 export function dayGroupsOf<T extends Ranked & { exact: boolean }>(
 	list: readonly T[],
 ): DayGroup<T>[] {
@@ -192,7 +207,12 @@ export function dayGroupsOf<T extends Ranked & { exact: boolean }>(
 		.sort(([a], [b]) => b - a)
 		.map(([day, titles]) => ({ day, titles: rankByScore(titles) }))
 	if (unknown.length)
-		groups.push({ day: null, titles: [...unknown].sort(newestFirst) })
+		groups.push({
+			day: null,
+			titles: [...unknown].sort(
+				(a, b) => withPosterFirst(a, b) || newestFirst(a, b),
+			),
+		})
 	return groups
 }
 
