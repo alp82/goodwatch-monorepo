@@ -341,7 +341,7 @@ function Flyout({
 
 	if (phone)
 		return (
-			<Drawer open={Boolean(open)} onClose={() => onClose(false)} allSizes>
+			<Drawer open={Boolean(open)} onClose={() => onClose(false)} allSizes layer="z-[1300]">
 				<div className="mx-auto max-w-md p-1 text-white" data-watch-log-sheet>
 					{children}
 				</div>
@@ -355,7 +355,7 @@ function Flyout({
 			role="dialog"
 			aria-label={`Your watches of ${open.movie.title}`}
 			tabIndex={-1}
-			className={`${at?.fixed ? "fixed" : "absolute"} z-[90] max-h-[80vh] overflow-y-auto rounded-2xl border border-white/10 bg-stone-900 p-4 text-left text-white shadow-2xl shadow-black/70 outline-none`}
+			className={`${at?.fixed ? "fixed" : "absolute"} z-[1300] max-h-[80vh] overflow-y-auto rounded-2xl border border-white/10 bg-stone-900 p-4 text-left text-white shadow-2xl shadow-black/70 outline-none`}
 			style={
 				at
 					? { left: at.left, top: at.top, width: at.width }

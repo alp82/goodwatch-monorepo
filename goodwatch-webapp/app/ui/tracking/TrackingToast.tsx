@@ -23,7 +23,7 @@ export function TrackingToastHost({
 		<>
 			{toast && (
 				<div
-					className="pointer-events-none fixed inset-x-0 bottom-28 z-[1050] flex justify-center px-3 lg:bottom-6"
+					className="pointer-events-none fixed inset-x-0 bottom-28 z-[1300] flex justify-center px-3 lg:bottom-6"
 					aria-live="polite"
 				>
 					<div
@@ -188,7 +188,7 @@ function DateDialog({
 	}, [onClose])
 	return (
 		<div
-			className="fixed inset-0 z-[1100] flex items-end justify-center bg-black/70 sm:items-center"
+			className="fixed inset-0 z-[1300] flex items-end justify-center bg-black/70 sm:items-center"
 			onPointerDown={(event) => {
 				if (event.target === event.currentTarget) onClose()
 			}}

@@ -120,7 +120,7 @@ export default function NotSeenConfirm({
 
 	const label = "w-10 shrink-0 text-[10px] uppercase tracking-[0.08em]"
 	return createPortal(
-		<div className="fixed inset-0 z-[1200] flex items-end justify-center md:items-center md:p-4">
+		<div className="fixed inset-0 z-[1300] flex items-end justify-center md:items-center md:p-4">
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape and Keep as seen are the keyboard's way out. */}
 			<div
 				ref={shade}

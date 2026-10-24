@@ -2,7 +2,7 @@
 // the same spring in and ease out). It slides up from behind the taste bar and stops there, so nothing of it passes
 // over the site nav. The page behind dims like it does for the card. One fixed size, a small poster at the top.
 // Its code loads on first use (LazyDetail.tsx).
-// - next / previous: a sideways swipe anywhere on it (or the arrows, arrow keys) crossfades to the neighbour.
+// - next / previous: a sideways swipe anywhere on it (or the arrows under its poster, arrow keys) crossfades to the neighbour.
 // - close: drag it down (from the head, or anywhere when its content fits) past 110 px or with a flick, tap the
 //   dimmed page, Escape.
 // - focus moves into it on opening and stays in it and the taste bar; it returns to the pick's poster on closing.
@@ -241,6 +241,11 @@ export function TitleDrawer({
 										rank={index + 1}
 										poster="inline"
 										headProps={{ style: { touchAction: "none" } }}
+										steps={{
+											onStep: go,
+											canPrev: index > 0,
+											canNext: index < list.length - 1,
+										}}
 									/>
 									<div
 										ref={scroller}
@@ -250,12 +255,7 @@ export function TitleDrawer({
 										<DetailBody r={r} answer={answer(r)} />
 									</div>
 								</Crossfade>
-								<DetailFooter
-									r={r}
-									onStep={go}
-									canPrev={index > 0}
-									canNext={index < list.length - 1}
-								/>
+								<DetailFooter r={r} />
 							</motion.div>
 						</motion.div>
 					</div>

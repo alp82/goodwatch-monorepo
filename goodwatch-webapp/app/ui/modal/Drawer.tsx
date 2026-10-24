@@ -9,6 +9,8 @@ interface DrawerProps {
 	className?: string
 	/** Also on md and wider screens, for a sheet opened by touch on a tablet. */
 	allSizes?: boolean
+	/** Its stacking class; raise it for a drawer that can open over another overlay. */
+	layer?: string
 }
 
 /**
@@ -27,6 +29,7 @@ const Drawer: React.FC<DrawerProps> = ({
 	children,
 	className = "",
 	allSizes = false,
+	layer = "z-100",
 }) => {
 	const startY = useRef<number | null>(null)
 	const lastY = useRef<number>(0)
@@ -127,7 +130,7 @@ const Drawer: React.FC<DrawerProps> = ({
 
 	return createPortal(
 		<div
-			className={`fixed inset-0 z-100 flex items-end ${allSizes ? "" : "md:hidden"} ${isOpen ? "visible" : "invisible pointer-events-none"}`}
+			className={`fixed inset-0 ${layer} flex items-end ${allSizes ? "" : "md:hidden"} ${isOpen ? "visible" : "invisible pointer-events-none"}`}
 			aria-modal="true"
 			tabIndex={-1}
 		>

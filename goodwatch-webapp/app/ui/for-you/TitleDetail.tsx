@@ -5,7 +5,8 @@
 // - why: "Because you loved X" with its tiny poster (or the steer it answers), then one row of reason chips.
 // - what it's like: the title's three most distinctive traits, never repeating a reason chip.
 // - where to watch: service logos with short names, "+2" when there are more.
-// - footer: previous / next arrows and "Open title page".
+// - footer: Want to See, Seen, Not interested, and "Details" (the title page). The previous / next arrows sit under
+//   the poster: under the small one here on phones (DetailHead), under the big one beside the card on desktop.
 // Runtime, backdrop, services and overview load on demand (the details query); until then their room stays reserved.
 import { Link } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
@@ -17,9 +18,18 @@ import {
 } from "~/domain/for-you-page/contract"
 import type { Ranked } from "~/domain/for-you-page/rank"
 import gwLogo from "~/img/goodwatch-logo.webp?no-inline"
+import UserAction from "~/ui/auth/UserAction"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { DISPLAY } from "~/ui/my-pages/bits"
+import { ActionButton } from "~/ui/title-actions/ActionButton"
+import {
+	SEEN_INSTRUCTIONS,
+	SEEN_SO_NOT_HIDEABLE,
+	useTitleActions,
+} from "~/ui/title-actions/useTitleActions"
+import { useUndoToast, warmUndoToast } from "~/ui/title-actions/useUndoToast"
 import { ReasonChips } from "~/ui/title-card/ReasonChips"
+import { warmWatchLog } from "~/ui/watch-log/WatchLogHost"
 import { assetUrl } from "~/utils/asset-url"
 import { useAuthHref } from "~/utils/auth-href"
 import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
@@ -149,12 +159,15 @@ export const DetailHead = forwardRef<
 		rank: number
 		poster: PosterMode
 		headProps?: React.HTMLAttributes<HTMLDivElement>
+		/** Previous / next under the inline poster (phones). */
+		steps?: Steps
 	}
->(function DetailHead({ r, rank, poster, headProps }, slotRef) {
+>(function DetailHead({ r, rank, poster, headProps, steps }, slotRef) {
 	const { pool } = useForYou()
 	const t = titleAt(pool, r.index)
 	const { detail } = useDetail(t.key)
 	const side = poster === "none"
+	const inlineSteps = poster === "inline" && !!steps
 	return (
 		<div {...headProps} className="relative shrink-0 select-none">
 			<div
@@ -174,17 +187,20 @@ export const DetailHead = forwardRef<
 				className={`relative flex items-end gap-3.5 ${side ? "-mt-16 px-6" : "-mt-12 px-4"}`}
 			>
 				{poster === "inline" && (
-					<div className="w-[5.25rem] shrink-0 overflow-hidden rounded-lg bg-gray-800 shadow-xl ring-1 ring-white/15">
-						{t.poster ? (
-							<img
-								src={posterSrc(t.poster, "w185")}
-								alt={t.name}
-								draggable={false}
-								className="aspect-[2/3] w-full object-cover"
-							/>
-						) : (
-							<div className="aspect-[2/3] w-full" />
-						)}
+					<div className="flex w-[5.25rem] shrink-0 flex-col gap-2">
+						<div className="overflow-hidden rounded-lg bg-gray-800 shadow-xl ring-1 ring-white/15">
+							{t.poster ? (
+								<img
+									src={posterSrc(t.poster, "w185")}
+									alt={t.name}
+									draggable={false}
+									className="aspect-[2/3] w-full object-cover"
+								/>
+							) : (
+								<div className="aspect-[2/3] w-full" />
+							)}
+						</div>
+						{steps && <StepButtons {...steps} small />}
 					</div>
 				)}
 				{poster === "slot" && (
@@ -195,7 +211,7 @@ export const DetailHead = forwardRef<
 				)}
 				{/* Room for a two-line title whatever the title is. */}
 				<div
-					className={`flex min-w-0 flex-1 flex-col justify-end ${side ? "h-[6rem]" : "h-[5.5rem]"}`}
+					className={`flex min-w-0 flex-1 flex-col justify-end ${side ? "h-[6rem]" : "h-[5.5rem]"} ${inlineSteps ? "mb-11" : ""}`}
 				>
 					<p className="text-[11px] font-bold tracking-[0.14em] text-amber-400/85 uppercase">
 						#{rank} for you
@@ -209,7 +225,7 @@ export const DetailHead = forwardRef<
 						{metaOf(t, detail?.runtime)}
 					</p>
 				</div>
-				<div className="shrink-0 pb-1">
+				<div className={`shrink-0 pb-1 ${inlineSteps ? "mb-11" : ""}`}>
 					<GwBadge gw={t.score} />
 				</div>
 			</div>
@@ -400,30 +416,108 @@ export function DetailBody({
 	)
 }
 
-/** Previous / next (arrows only) and the title page link. */
-export function DetailFooter({
-	r,
-	onStep,
-	canPrev,
-	canNext,
-}: {
-	r: Ranked
+/** Previous / next: what the arrows need. */
+export type Steps = {
 	onStep: (d: -1 | 1) => void
 	canPrev: boolean
 	canNext: boolean
-}) {
+}
+
+/** Want to See, Seen, Not interested, and the title page link. Not interested answers with a toast that can undo it. */
+export function DetailFooter({ r }: { r: Ranked }) {
 	const { pool } = useForYou()
+	const t = titleAt(pool, r.index)
+	const a = useTitleActions({
+		mediaType: t.kind,
+		details: { tmdb_id: t.tmdbId, title: t.name },
+	})
+	const toast = useUndoToast()
+	const hideTitle = a.hidden
+		? "Hidden from your recommendations. Press to bring it back."
+		: a.canHide
+			? "Hide it from your recommendations"
+			: SEEN_SO_NOT_HIDEABLE
+	const pressHide = () => {
+		if (a.hidden) return a.unhide()
+		toast.say(`${t.name} is hidden from your recommendations`, a.hide())
+	}
+	const warm = () => {
+		warmUndoToast()
+		if (t.kind === "movie") warmWatchLog()
+	}
 	return (
-		<div className="flex shrink-0 items-center gap-2 border-t border-white/10 px-4 pt-2.5 pb-3 md:px-6 md:pt-3 md:pb-4">
-			<StepButton dir={-1} disabled={!canPrev} onClick={() => onStep(-1)} />
-			<StepButton dir={1} disabled={!canNext} onClick={() => onStep(1)} />
+		<div
+			className="flex shrink-0 items-center gap-2 border-t border-white/10 px-4 pt-2.5 pb-3 md:px-6 md:pt-3 md:pb-4"
+			onPointerEnter={warm}
+			onPointerDown={warm}
+			onFocus={warm}
+			data-title-actions=""
+		>
+			<ActionButton
+				kind="want"
+				label="short"
+				size="sm"
+				className="flex-1"
+				rewatch={a.seen}
+				active={a.want}
+				disabled={a.wantPending}
+				onClick={a.toggleWant}
+			/>
+			<UserAction instructions={SEEN_INSTRUCTIONS}>
+				<ActionButton
+					kind="seen"
+					label="short"
+					size="sm"
+					className="flex-1"
+					active={a.seen}
+					disabled={a.seenPending}
+					{...a.seenLog}
+					onClick={(event) => a.toggleSeen(event)}
+				/>
+			</UserAction>
+			<ActionButton
+				kind="hide"
+				label="wide"
+				size="sm"
+				className="max-sm:w-9 max-sm:flex-none sm:w-auto sm:flex-none sm:px-3"
+				active={a.hidden}
+				disabled={!a.canHide || a.hidePending}
+				title={hideTitle}
+				onClick={pressHide}
+			/>
 			<Link
-				to={titleAt(pool, r.index).href}
-				className="ml-auto flex min-h-11 items-center gap-1.5 rounded-full bg-amber-400 px-4 text-[14px] font-black text-gray-950 hover:bg-amber-300"
+				to={t.href}
+				className="flex h-9 shrink-0 items-center gap-1 rounded-lg bg-amber-400 px-3 text-[13px] font-black text-gray-950 hover:bg-amber-300"
 			>
-				Open title page
+				Details
 				<span aria-hidden="true">→</span>
 			</Link>
+			{toast.node}
+		</div>
+	)
+}
+
+/** The previous and next arrows side by side. */
+export function StepButtons({
+	onStep,
+	canPrev,
+	canNext,
+	small = false,
+}: Steps & { small?: boolean }) {
+	return (
+		<div className={`flex justify-center ${small ? "gap-2" : "gap-3"}`}>
+			<StepButton
+				dir={-1}
+				small={small}
+				disabled={!canPrev}
+				onClick={() => onStep(-1)}
+			/>
+			<StepButton
+				dir={1}
+				small={small}
+				disabled={!canNext}
+				onClick={() => onStep(1)}
+			/>
 		</div>
 	)
 }
@@ -431,15 +525,16 @@ export function DetailFooter({
 function StepButton({
 	dir,
 	disabled,
+	small,
 	onClick,
-}: { dir: -1 | 1; disabled: boolean; onClick: () => void }) {
+}: { dir: -1 | 1; disabled: boolean; small: boolean; onClick: () => void }) {
 	return (
 		<button
 			type="button"
 			onClick={onClick}
 			disabled={disabled}
 			aria-label={dir < 0 ? "Previous pick" : "Next pick"}
-			className="grid size-11 shrink-0 place-items-center rounded-full text-gray-200 ring-1 ring-white/15 hover:bg-white/5 disabled:opacity-25"
+			className={`grid shrink-0 place-items-center rounded-full bg-gray-900/80 text-gray-200 ring-1 ring-white/15 hover:bg-white/10 disabled:opacity-25 ${small ? "size-9" : "size-11"}`}
 		>
 			<svg viewBox="0 0 20 20" className="size-5" aria-hidden="true">
 				<path

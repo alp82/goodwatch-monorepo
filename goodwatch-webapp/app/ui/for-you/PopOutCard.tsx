@@ -4,7 +4,7 @@
 //   dims (opacity, no blur), the big poster casts a large soft shadow, and the card (TitleDetail.tsx) fades in beside
 //   it with a tiny rise.
 // - The card has one fixed size, measured once per open.
-// - Next / previous (arrows, arrow keys, a sideways swipe or drag on the card) move the pop-out: the current big poster
+// - Next / previous (the arrows under the big poster, arrow keys, a sideways swipe or drag on the card) move the pop-out: the current big poster
 //   settles back into its grid slot while the next one lifts from its slot, and the card slides to its new place; its
 //   content crossfades. A next poster that is off screen is scrolled into view first; one that isn't rendered fades in.
 // - Close: the backdrop, the big poster, the close button or Escape; the poster flies back to its place in the grid (or
@@ -24,6 +24,7 @@ import {
 	DetailBody,
 	DetailFooter,
 	DetailHead,
+	StepButtons,
 	detailImages,
 } from "./TitleDetail"
 import { posterSrc, titleAt, useForYou } from "./context"
@@ -47,6 +48,8 @@ const BACK = { duration: 0.22, ease: EASE_OUT } as const
 const MOVE = { duration: 0.24, ease: EASE_OUT } as const
 const GAP = 24
 const EDGE = 16
+/** The arrows' row under the big poster: its gap above plus the buttons. */
+const ARROWS = 12 + 44
 
 const useIso = typeof window === "undefined" ? useEffect : useLayoutEffect
 
@@ -103,8 +106,10 @@ function geoFor(from: Box | null, size: Size): Geo {
 	const vh = window.innerHeight
 	const cw = size.w
 	const ch = size.h
-	const pw = Math.round(Math.min(380, ch / 1.5, vw * 0.26))
+	const pw = Math.round(Math.min(380, (ch - ARROWS) / 1.5, vw * 0.26))
 	const ph = Math.round(pw * 1.5)
+	// The poster with its arrows under it.
+	const bh = ph + ARROWS
 	const sx = from ? from.x + from.w / 2 : vw / 2
 	const sy = from ? from.y + from.h / 2 : vh / 2
 	// The card goes where there is more room; the pair stays inside the screen.
@@ -113,9 +118,9 @@ function geoFor(from: Box | null, size: Size): Geo {
 		side === 1
 			? clamp(sx - pw / 2, EDGE, vw - EDGE - pw - GAP - cw)
 			: clamp(sx - pw / 2, EDGE + cw + GAP, vw - EDGE - pw)
-	const py = clamp(sy - ph / 2, EDGE, vh - EDGE - ph)
+	const py = clamp(sy - ph / 2, EDGE, vh - EDGE - bh)
 	const cx = side === 1 ? px + pw + GAP : px - GAP - cw
-	const cy = clamp(py + (ph - ch) / 2, EDGE, vh - EDGE - ch)
+	const cy = clamp(py + (bh - ch) / 2, EDGE, vh - EDGE - ch)
 	return {
 		side,
 		poster: { x: px, y: py, w: pw, h: ph },
@@ -167,6 +172,9 @@ export function PopOutCard({
 	const co = useMotionValue(1)
 	const mx = useMotionValue(0)
 	const my = useMotionValue(0)
+	// The arrows' offset (they follow the big poster between picks).
+	const ax = useMotionValue(0)
+	const ay = useMotionValue(0)
 
 	// Steps in flight end when the open title changes by anything but the step itself, on closing, when the screen
 	// drops below desktop, and on unmount.
@@ -191,6 +199,8 @@ export function PopOutCard({
 				co.set(1)
 				mx.set(0)
 				my.set(0)
+				ax.set(0)
+				ay.set(0)
 				return {
 					id: openId,
 					from: sourceOf(openId)?.box ?? null,
@@ -204,7 +214,7 @@ export function PopOutCard({
 				return { ...s, closing: true, back: sourceOf(s.id)?.box ?? null }
 			return s
 		})
-	}, [openId, enabled, cx, co, mx, my])
+	}, [openId, enabled, cx, co, mx, my, ax, ay])
 
 	// The grid posters hide while their big copies are out (the open one and any still flying home).
 	const hiddenKey = shown
@@ -303,6 +313,10 @@ export function PopOutCard({
 						my.set(my.get() + geo.card.y - now.card.y)
 						animate(mx, 0, MOVE)
 						animate(my, 0, MOVE)
+						ax.set(ax.get() + geo.poster.x - now.poster.x)
+						ay.set(ay.get() + geo.poster.y - now.poster.y)
+						animate(ax, 0, LIFT)
+						animate(ay, 0, LIFT)
 					},
 				})
 				if (!swapped) {
@@ -325,6 +339,8 @@ export function PopOutCard({
 			co,
 			mx,
 			my,
+			ax,
+			ay,
 			onOpen,
 			pool,
 			detail,
@@ -449,7 +465,7 @@ export function PopOutCard({
 				>
 					<DetailHead r={r} rank={index + 1} poster="none" />
 					<DetailBody r={r} answer={answer(r)} />
-					<DetailFooter r={r} onStep={() => {}} canPrev canNext />
+					<DetailFooter r={r} />
 				</div>
 			)}
 			<AnimatePresence>
@@ -534,13 +550,34 @@ export function PopOutCard({
 									<DetailBody r={r} answer={answer(r)} />
 								</div>
 							</Crossfade>
-							<DetailFooter
-								r={r}
-								onStep={go}
-								canPrev={index > 0}
-								canNext={index < list.length - 1}
-							/>
+							<DetailFooter r={r} />
 						</motion.div>
+					</motion.div>
+					{/* Previous / next, under the big poster. */}
+					<motion.div
+						className="fixed z-[1202]"
+						style={{
+							left: geo.poster.x,
+							top: geo.poster.y + geo.poster.h + ARROWS - 44,
+							width: geo.poster.w,
+							x: ax,
+							y: ay,
+							pointerEvents: closing ? "none" : undefined,
+						}}
+						initial={{ opacity: 0 }}
+						animate={{ opacity: closing ? 0 : 1 }}
+						transition={
+							closing
+								? { duration: 0.12, ease: [0.4, 0, 1, 1] }
+								: { duration: 0.22, delay: 0.06, ease: EASE_OUT }
+						}
+						data-pop-steps=""
+					>
+						<StepButtons
+							onStep={go}
+							canPrev={index > 0}
+							canNext={index < list.length - 1}
+						/>
 					</motion.div>
 				</>
 			)}

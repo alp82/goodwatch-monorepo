@@ -40,7 +40,7 @@ export function UndoToast({
 	}, [id, onDismiss])
 	return (
 		<div
-			className={`pointer-events-none fixed inset-x-0 z-[1050] flex justify-center px-4 ${className}`}
+			className={`pointer-events-none fixed inset-x-0 z-[1300] flex justify-center px-4 ${className}`}
 			aria-live="polite"
 		>
 			<AnimatePresence>
