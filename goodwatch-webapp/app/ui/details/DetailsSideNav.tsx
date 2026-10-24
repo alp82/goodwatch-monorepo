@@ -24,10 +24,9 @@ export default function DetailsSideNav({
 	// A tap from before the app was there goes to its section once the nav is ready (utils/replay-tap.ts).
 	useReplayedTap("nav", (el) => Boolean(navRef.current?.contains(el)))
 	return (
-		<div
-			className="hidden 2xl:block absolute left-0 right-0 m-auto max-w-[104rem] h-full"
-			style={{ top: `calc(${HEADER_HEIGHT} + 12px)` }}
-		>
+		// No `top`: the box starts where it would sit in the flow, right under the title header and whatever comes
+		// before it (the breadcrumbs show on some pages only), so the nav never starts under the header.
+		<div className="hidden 2xl:block absolute left-0 right-0 m-auto mt-3 max-w-[104rem] h-full">
 			<aside
 				className="sticky mr-4 w-32 z-20"
 				style={{ top: `calc(${HEADER_HEIGHT} + 76px)` }}
