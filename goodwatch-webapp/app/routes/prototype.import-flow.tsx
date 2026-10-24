@@ -15,6 +15,7 @@ import { VariantB3 } from "~/ui/prototype-import-flow/VariantB3"
 import { VariantB4 } from "~/ui/prototype-import-flow/VariantB4"
 import { VariantB5 } from "~/ui/prototype-import-flow/VariantB5"
 import { VariantB6 } from "~/ui/prototype-import-flow/VariantB6"
+import { VariantB7 } from "~/ui/prototype-import-flow/VariantB7"
 import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import { SettingsPage } from "~/ui/settings/SettingsPage"
 
@@ -34,6 +35,7 @@ const VARIANTS = {
 	B4: "Start from where your movies are",
 	B5: "Full-screen focus",
 	B6: "Imports while you answer",
+	B7: "B6 with round 2 feedback",
 } as const
 const ROUND_1 = { A: "One card", C: "See what comes in", D: "Import now, sort later" } as const
 
@@ -54,6 +56,7 @@ export default function PrototypeImportFlow() {
 			{variant === "B4" && <VariantB4 key={key} sim={sim} />}
 			{variant === "B5" && <VariantB5 key={key} sim={sim} />}
 			{variant === "B6" && <VariantB6 key={key} sim={sim} />}
+			{variant === "B7" && <VariantB7 key={key} sim={sim} />}
 			<ScenarioPanel sim={sim} />
 			<PrototypeSwitcher variants={VARIANTS} />
 		</SettingsPage>

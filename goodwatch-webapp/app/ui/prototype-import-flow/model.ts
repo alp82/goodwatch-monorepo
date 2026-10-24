@@ -131,6 +131,8 @@ export interface Scenario {
 	previous?: { at: string; added: number; fileName: string }
 	/** How the run ends. */
 	run: "ok" | "fails"
+	/** Why a failing run stopped, in the member's words (a deploy restarted the server, a source timed out, ...). */
+	failReason?: string
 	/** Seconds the run takes in the simulation. */
 	runSeconds: number
 	/** Posters of what comes in, for variants that show them. */
@@ -452,6 +454,7 @@ export const SCENARIOS: Scenario[] = [
 		rows: 1964,
 		kinds: kinds({ ratings: 612, watches: 842, want: 137, favorites: 4, reviews: 23 }),
 		run: "fails",
+		failReason: "GoodWatch restarted for an update while your import was running.",
 		runSeconds: 5,
 		sample: MOVIES,
 	},
