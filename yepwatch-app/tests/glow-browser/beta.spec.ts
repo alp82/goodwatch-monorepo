@@ -13,7 +13,7 @@ test('beta page offers the Android download and keeps the pending iPhone invitat
   await expect(page.getByText('Download Android beta', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Install on Android' }).click();
   expect(await page.evaluate(() => (window as any).__opened)).toEqual([
-    'https://expo.dev/accounts/alperortac/projects/yepwatch/builds/27939ebc-29f6-4fd8-9de4-b01be72e5866',
+    'https://expo.dev/accounts/alperortac/projects/yepwatch/builds/3fca3316-c601-4e83-820f-d43be38352f7',
   ]);
   await page.evaluate(() => { (window as any).__opened = []; });
   await expect(page.getByRole('button', { name: 'iPhone invitations coming soon' })).toBeDisabled();

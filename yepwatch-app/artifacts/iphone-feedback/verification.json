@@ -1,0 +1,106 @@
+{
+  "sourceCommit": "d7e0d12acb6dddf161e9fedb1acf896d141c3785",
+  "buildNumber": 9,
+  "checks": {
+    "appUnitPassed": 58,
+    "browserSuitePassed": 64,
+    "finalBootAndNavigationBrowserPassed": 11,
+    "providerCountryUnitPassed": 2,
+    "typecheck": "pass",
+    "lint": "zero errors; existing Voting.tsx unused import warning",
+    "apiContainerBuild": "pass",
+    "betaDownloadBrowserPassed": 1
+  },
+  "montenegro": {
+    "beforeServices": 964,
+    "afterServices": 21,
+    "afterGroups": 21,
+    "databaseRecordsChanged": false,
+    "liveUiProof": {
+      "source": "deployed app + actual public catalog, isolated room fixture; no real room writes",
+      "services": 21,
+      "groups": 21,
+      "labels": [
+        "Netflix",
+        "Disney Plus",
+        "Rakuten TV",
+        "JustWatch TV Free",
+        "Crunchyroll",
+        "FILMBOX+ Stream",
+        "Plex",
+        "HBO Max",
+        "Jolt Film",
+        "FOUND TV",
+        "MUBI",
+        "Bloodstream",
+        "KableOne",
+        "CaixaForum+",
+        "Artiflix",
+        "Tentkotta",
+        "Artify",
+        "Pijama Films",
+        "Filmtap",
+        "YOW.tv",
+        "Chilling"
+      ],
+      "lastReachable": true,
+      "mainPageScroll": false,
+      "pageErrors": [],
+      "interceptedTransportAttempts": 2
+    }
+  },
+  "native": {
+    "iosBuildId": "3ecabc01-6f92-4dc9-8da4-e38d21467f8c",
+    "androidPreviewBuildId": "3fca3316-c601-4e83-820f-d43be38352f7",
+    "status": "built",
+    "iosBuildStatus": "FINISHED",
+    "iosSubmissionId": "dd6e45df-e3cd-4c6b-93be-047e0ce3fb4f",
+    "iosUpload": "App Store Connect accepted",
+    "iosLaunchStoryboard": "SplashScreen (compiled in IPA)",
+    "iosArtifactSha256": "9ebb750516907a2fea65ea1eeccf2bbb4022974b864cc78b136878262a6c7b09",
+    "testflight": {
+      "appId": "6826403019",
+      "buildId": "4439fba9-9d0d-41cd-abf0-3cf9b0da009c",
+      "buildNumber": "9",
+      "processingState": "VALID",
+      "groups": [
+        "Team (Expo)",
+        "Friends beta"
+      ],
+      "reviewState": "WAITING_FOR_REVIEW",
+      "reviewError": null
+    },
+    "androidBuildStatus": "FINISHED",
+    "androidPackage": "com.yepwatch.preview",
+    "androidVersionCode": 9,
+    "androidApkSha256": "eb0333b9f2dd64c9aa34364f549e74434e531acab4b7753a7cd4e8b75682925e",
+    "androidSigningCertificateSha256": "7a4b9faa194c068222940ebe1661ab6f8fd3d714785a15bf76d23352a9752d1d",
+    "androidEmulator": {
+      "api": 35,
+      "architecture": "x86_64",
+      "upgrade": "8 to 9 without uninstall",
+      "coldLaunch": "pass",
+      "normalBoot": "Y pop and YepWatch reveal visually verified",
+      "reducedMotion": "fade visually verified",
+      "backToStart": "pass without replaying boot",
+      "roomActions": 0,
+      "metroRequired": false
+    },
+    "anonymousAndroidDownload": {
+      "time": "2026-10-24T07:53:03.718Z",
+      "anonymousBrowser": true,
+      "downloaded": true,
+      "bytes": 98758027,
+      "sha256": "eb0333b9f2dd64c9aa34364f549e74434e531acab4b7753a7cd4e8b75682925e"
+    }
+  },
+  "limitations": [
+    "No physical iPhone or Android execution in this pass.",
+    "Browser checks use Chromium; optional Linux WebKit runner lacks host libraries."
+  ],
+  "deployment": {
+    "fixes": "z05dhnrpt4mgtdygbr2cwyqq",
+    "status": "finished",
+    "publicHealthReady": true
+  }
+}
