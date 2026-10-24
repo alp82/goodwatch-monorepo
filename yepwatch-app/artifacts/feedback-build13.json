@@ -1,8 +1,8 @@
 {
   "nativeSource": "49fe5908814e1a507e5d02aa8b543623d8156784",
   "webOnlyFollowups": [
-    "d265e9485",
-    "8712e9c48"
+    "bca81210f015b850817a96639114b54770ed8489",
+    "936a88681e1b9450229046d416a8ec61465d7ef7"
   ],
   "ios": {
     "easBuildId": "339c6035-80ef-46d7-9c51-48e1985fe4c9",
@@ -84,5 +84,14 @@
     "Native execution used an owned Android API35 emulator, not a physical device.",
     "No physical iPhone, hardware audio or native software-keyboard overlap claim.",
     "Country ordering uses GoodWatch common-country order; locale hint uses an explicit device region, without location permissions."
-  ]
+  ],
+  "deployment": {
+    "commit": "24620ed08dbbc783637cdafa7eaf7d07cff8fd78",
+    "coolifyDeployment": "5pk2qh1ewh8gpwgq6zs1bust",
+    "status": "finished",
+    "healthReady": true,
+    "deployedStaticFeedbackChecks": 17,
+    "deployedStaticStreamingLinkChecks": 5,
+    "testScope": "Production static assets with isolated API fixtures; no tester room mutations"
+  }
 }
