@@ -5,6 +5,7 @@ import {
 	importActionable,
 	importInfo,
 } from "../../domain/imports.ts"
+import { episodeScoreObservation } from "./episode-rating-observations.server.ts"
 
 type Entry = { name: string; data: Uint8Array }
 type Row = Record<string, unknown>
@@ -90,7 +91,12 @@ function fileKind(name: string) {
 		return "moviesJson"
 	if (/followedtvshowcsv$/.test(n) || /usertvshowdatacsv$/.test(n))
 		return "followed"
-	if (/ratingslivevotescsv$/.test(n)) return "votes"
+	if (
+		/ratings(?:livevotes|3prodepisodevotes|prodepisodevotes|v2prodvotes)csv$/.test(
+			n,
+		)
+	)
+		return "votes"
 	if (/trackingprodrecordsv2csv$/.test(n)) return "v2"
 	if (/trackingprodrecordscsv$/.test(n)) return "v1"
 	if (
@@ -150,7 +156,6 @@ const officialAncillaryFiles = new Set([
 	"recommendations-prod-user-scores.csv",
 	"notifications-prod-notifications.csv",
 	"emotions-3-prod-episode_votes.csv",
-	"ratings-3-prod-episode_votes.csv",
 	"emotions-live-votes.csv",
 	"where-to-watch-prod-table.csv",
 	"comments-prod-comments.csv",
@@ -399,6 +404,24 @@ export function parseTvTime(
 							: "TV Time show ratings haven't been verified, so this rating wasn't imported.",
 					},
 				})
+			} else if (episode && verifiedMovieScale) {
+				add(
+					episodeScoreObservation(
+						base,
+						{
+							episodeTvdbId: id(row.tvdbid),
+							season: coordinate(row.season),
+							episode: id(row.episode),
+							episodeNumbering: "unknown",
+						},
+						{
+							key: `${base.key}:episode:${row.tvdbid}:rating`,
+							score: [2, 4, 6, 8, 10].includes(score) ? score : null,
+							invalidReason:
+								"This value isn't on TV Time's rating scale, so it wasn't imported.",
+						},
+					),
+				)
 			} else {
 				add({
 					...base,
@@ -504,6 +527,8 @@ export function parseTvTime(
 									rating: e.rating,
 								},
 								"episode",
+								false,
+								/^shows\.json$/i.test(basename(entry.name)),
 							)
 						}
 					}
@@ -575,22 +600,68 @@ export function parseTvTime(
 				continue
 			}
 			if (kind === "votes") {
-				add({
+				// TV Time's stars_wording_scalev2: bad, ok, good, great, wow.
+				// IDs are labels, not ordinal scores. UUID movie keys must split at the LAST hyphen.
+				const scores: Record<string, number> = {
+					"1": 2,
+					"27": 4,
+					"28": 6,
+					"29": 8,
+					"3": 10,
+				}
+				const score =
+					format === "votes"
+						? scores[string(row.votekey).split("-").at(-1) ?? ""]
+						: undefined
+				const base: ImportObservation = {
 					key: `tvtime:vote:${string(row.uuid)}:${string(row.votekey)}`,
-					kind: "unsupported",
+					kind: "rating",
 					mediaType: id(row.episodeid) ? "show" : "movie",
-					title: string(row.moviename) || "TV Time episode",
+					title:
+						string(row.seriesname) ||
+						string(row.moviename) ||
+						"TV Time episode",
 					year: null,
 					tmdbId: null,
 					imdbId: null,
-					score: null,
-					problem: {
-						outcome: "unsupported",
-						code: "tvtime_vote_scale_unknown",
-						reason:
-							"TV Time official vote keys have no verified rating scale. Ratings are not applied.",
-					},
-				})
+					score: score ?? null,
+					...(score === undefined
+						? {
+								problem: {
+									outcome: "unsupported",
+									code: "tvtime_vote_scale_unknown",
+									reason:
+										"This TV Time rating ID is not on the verified rating scale, so it wasn't imported.",
+								},
+							}
+						: {}),
+				}
+				if (id(row.episodeid))
+					add(
+						episodeScoreObservation(
+							base,
+							{
+								episodeTvdbId: id(row.episodeid),
+								season: coordinate(row.seasonnumber),
+								episode: id(row.episodenumber),
+								episodeNumbering: "unknown",
+							},
+							{
+								key: base.key,
+								score: base.score ?? null,
+								invalidReason: "Invalid TV Time rating.",
+								problem: base.problem,
+							},
+						),
+					)
+				else
+					add({
+						...base,
+						tvtimeMovie: {
+							sourceId: string(row.uuid) || undefined,
+							releaseDate: null,
+						},
+					})
 				continue
 			}
 			if (kind === "extension") {
@@ -699,6 +770,46 @@ export function parseTvTime(
 						instant,
 					)
 				}
+			}
+		}
+	}
+	// Vote files may precede tracking files in a ZIP. Index once: a large export can have
+	// thousands of votes and watches. Join by source IDs only, never by title.
+	const episodeParents = new Map<number, Set<number>>()
+	const movieEvidence = new Map<
+		string,
+		{ row: ImportObservation; conflict: boolean }
+	>()
+	for (const row of observations) {
+		if (row.kind === "watch" && row.episodeTvdbId && row.showTvdbId) {
+			const parents = episodeParents.get(row.episodeTvdbId) ?? new Set<number>()
+			parents.add(row.showTvdbId)
+			episodeParents.set(row.episodeTvdbId, parents)
+		}
+		if (row.kind !== "rating" && row.tvtimeMovie?.sourceId) {
+			const evidence = movieEvidence.get(row.tvtimeMovie.sourceId)
+			if (!evidence)
+				movieEvidence.set(row.tvtimeMovie.sourceId, { row, conflict: false })
+			else if (
+				row.title !== evidence.row.title ||
+				row.tvtimeMovie.releaseDate !== evidence.row.tvtimeMovie?.releaseDate ||
+				row.tvtimeMovie.country !== evidence.row.tvtimeMovie?.country
+			)
+				evidence.conflict = true
+		}
+	}
+	for (const row of observations) {
+		if (row.kind === "episode_rating" && row.episodeTvdbId) {
+			const shows = episodeParents.get(row.episodeTvdbId)
+			if (shows?.size === 1) row.showTvdbId = [...shows][0]
+		}
+		if (row.kind === "rating" && row.tvtimeMovie?.sourceId) {
+			const match = movieEvidence.get(row.tvtimeMovie.sourceId)
+			const evidence = match?.row
+			if (evidence && !match.conflict) {
+				row.tvtimeMovie = structuredClone(evidence.tvtimeMovie)
+				row.title = evidence.title
+				row.year = evidence.year
 			}
 		}
 	}

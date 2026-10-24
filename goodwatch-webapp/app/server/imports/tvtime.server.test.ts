@@ -218,12 +218,9 @@ test("TV Time JSON and Liberator CSV keep source identity without treating compu
 		parsed.observations.find((r) => r.episodeTvdbId === 200)?.showTvdbId,
 		100,
 	)
-	assert.ok(
-		parsed.observations.some(
-			(r) =>
-				r.problem?.outcome === "unsupported" &&
-				/episode ratings/i.test(r.problem.reason),
-		),
+	assert.equal(
+		parsed.observations.find((r) => r.kind === "episode_rating")?.score,
+		8,
 	)
 	const csv = await parseImportFile(
 		"tvtime",
@@ -265,10 +262,14 @@ test("TV Time ignores private archive payloads and keeps supplemental follows wi
 			["show_status", "dropped", 101],
 		],
 	)
-	assert.ok(
+	assert.deepEqual(
 		parsed.observations
 			.filter((r) => r.score !== undefined)
-			.every((r) => r.problem?.outcome === "unsupported"),
+			.map((r) => [r.kind, r.score, r.problem]),
+		[
+			["rating", 8, undefined],
+			["episode_rating", 10, undefined],
+		],
 	)
 	assert.ok(
 		!parsed.warnings.some((w) =>
@@ -669,7 +670,7 @@ test("official TV Time movie country survives in immutable matching evidence", a
 	)
 })
 
-test("TV Time official archives skip 51 ancillary files without warnings", async () => {
+test("TV Time official archives skip ancillary files without warnings", async () => {
 	const files = {
 		"tracking-prod-records-v2.csv":
 			"key,s_id,ep_id,s_no,ep_no,created_at\nwatch-episode-a,100,200,1,1,2024-01-01\n",

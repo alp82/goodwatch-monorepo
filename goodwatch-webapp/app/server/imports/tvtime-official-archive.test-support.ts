@@ -47,7 +47,6 @@ export const officialAncillaryFiles = [
 	"recommendations-prod-user-scores.csv",
 	"notifications-prod-notifications.csv",
 	"emotions-3-prod-episode_votes.csv",
-	"ratings-3-prod-episode_votes.csv",
 	"emotions-live-votes.csv",
 	"where-to-watch-prod-table.csv",
 	"comments-prod-comments.csv",

@@ -77,6 +77,8 @@ const supportedImportSql = new Set([
 	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE lower(title) = lower(?) AND release_year = ? LIMIT 2",
 	"SELECT tmdb_id, imdb_id, title, release_year FROM movie WHERE tmdb_id IN (?)",
 	"SELECT tmdb_id, imdb_id, title, release_year FROM show WHERE tmdb_id IN (?)",
+	"SELECT tmdb_id, imdb_id, title, release_year FROM show WHERE lower(title) = lower(?) LIMIT 2",
+	"SELECT tmdb_id, name, air_date FROM episode WHERE show_id = ? AND removed_at IS NULL LIMIT 50001",
 	"SELECT tmdb_id, media_type FROM user_favorite WHERE user_id = ? LIMIT 100000",
 	"SELECT tmdb_id, media_type FROM user_wishlist WHERE user_id = ? LIMIT 100000",
 	"SELECT tmdb_id, media_type, score, review, updated_at, _seq_no, _primary_term FROM user_score WHERE user_id = ? LIMIT 100000",
@@ -322,7 +324,8 @@ export class ImportDb {
 							? params.includes(String(row.imdb_id))
 							: String(row.title).toLowerCase() ===
 									String(params[0]).toLowerCase() &&
-								row.release_year === params[1],
+								(!s.includes("release_year = ?") ||
+									row.release_year === params[1]),
 				)
 			return rows as T[]
 		}

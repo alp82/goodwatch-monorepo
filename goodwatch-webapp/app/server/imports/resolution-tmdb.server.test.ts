@@ -3,6 +3,36 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { ResolutionContext } from "./resolution-job.server.ts"
 const { createResolutionTmdb } = await import("./resolution-tmdb.server.ts")
+test("TVDB identity recovery is bounded, cached and never sends the TMDB key to TVDB", async () => {
+	let attempts = 0
+	const ctx = {
+		job: { root: "root", deadline: Date.now() + 30000 },
+		signal: new AbortController().signal,
+		check: async () => ({}),
+		attempt: async () => {
+			attempts++
+		},
+		commit: async () => {},
+	} as unknown as ResolutionContext
+	const api = createResolutionTmdb({
+		cache: false,
+		take: async () => ({ allowed: true, store: "memory" }),
+		fetch: async (url) => {
+			const parsed = new URL(String(url))
+			assert.equal(parsed.origin, "https://thetvdb.com")
+			assert.equal(parsed.search, "")
+			return new Response(
+				'<div data-permission="episode-200-edit"></div><a href="https://www.imdb.com/title/tt1234567/">IMDB</a>',
+			)
+		},
+	})
+	assert.deepEqual(await api.get(ctx, "/tvdb/episode/200"), {
+		imdbId: "tt1234567",
+		name: null,
+		airDate: null,
+	})
+	assert.equal(attempts, 1)
+})
 test("background TMDB retries 429 after Retry-After and counts every attempt without caching failures", async () => {
 	let time = 0
 	let attempts = 0

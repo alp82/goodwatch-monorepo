@@ -9,7 +9,9 @@ import {
 	ResolutionStopped,
 } from "./resolution-job.server.ts"
 import { resolutionStore } from "./resolution-store.server.ts"
+import { readTvdbEpisode } from "./tvtime-identity.server.ts"
 const id = z.number().int().positive()
+class UnusableTvdbIdentity extends Error {}
 const schemas = {
 	find: z
 		.object({
@@ -129,14 +131,15 @@ export function createResolutionTmdb(
 			path: string,
 			params: Record<string, string> = {},
 		) {
-			const schema = /^\/find\/\d+$/.test(path)
+			const tvdb = /^\/tvdb\/episode\/(\d+)$/.exec(path)
+			const schema = /^\/find\/(?:\d+|tt\d+)$/.test(path)
 				? schemas.find
 				: path === "/search/movie"
 					? schemas.search
 					: /^\/movie\/\d+$/.test(path)
 						? schemas.movie
 						: null
-			if (!schema) throw Error("Unsupported import lookup")
+			if (!schema && !tvdb) throw Error("Unsupported import lookup")
 			const cacheKey = `cache/${ctx.job.root}/${createHash("sha256")
 				.update(path + JSON.stringify(params))
 				.digest("hex")}`
@@ -171,12 +174,20 @@ export function createResolutionTmdb(
 					}
 					await ctx.attempt()
 					await check(ctx)
-					const url = new URL(`https://api.themoviedb.org/3${path}`)
-					for (const [k, v] of Object.entries({
-						api_key: process.env.TMDB_API_KEY ?? "",
-						language: "en-US",
-						...params,
-					}))
+					const url = new URL(
+						tvdb
+							? `https://thetvdb.com/dereferrer/episode/${tvdb[1]}`
+							: `https://api.themoviedb.org/3${path}`,
+					)
+					for (const [k, v] of Object.entries(
+						tvdb
+							? {}
+							: {
+									api_key: process.env.TMDB_API_KEY ?? "",
+									language: "en-US",
+									...params,
+								},
+					))
 						url.searchParams.set(k, v)
 					try {
 						const response = await (options.fetch ?? fetch)(url, {
@@ -213,11 +224,46 @@ export function createResolutionTmdb(
 							} catch {}
 							continue
 						}
+						if (tvdb && response.status === 404) {
+							await response.body?.cancel()
+							await check(ctx)
+							if (options.cache !== false) {
+								if (ctx.deferCache) ctx.deferCache(cacheKey, null)
+								else await ctx.commit(cacheKey, null)
+							}
+							return null
+						}
+						if (tvdb && response.status === 202) {
+							await response.body?.cancel()
+							throw new UnusableTvdbIdentity()
+						}
 						if (!response.ok) {
 							await response.body?.cancel()
 							throw Error("Provider unavailable")
 						}
-						const value = schema.parse(await response.json())
+						let value: unknown
+						if (tvdb) {
+							// Bound streamed HTML as well as the advertised body size.
+							const reader = response.body?.getReader()
+							const buffers: Uint8Array[] = []
+							let bytes = 0
+							if (!reader) throw Error("Provider unavailable")
+							for (;;) {
+								const part = await reader.read()
+								if (part.done) break
+								bytes += part.value.byteLength
+								if (bytes > 1024 * 1024) {
+									await reader.cancel()
+									throw Error("Provider response too large")
+								}
+								buffers.push(part.value)
+							}
+							value = readTvdbEpisode(
+								Buffer.concat(buffers).toString("utf8"),
+								Number(tvdb[1]),
+							)
+							if (!value) throw new UnusableTvdbIdentity()
+						} else value = schema!.parse(await response.json())
 						await check(ctx)
 						if (options.cache !== false) {
 							if (ctx.deferCache) ctx.deferCache(cacheKey, value)
@@ -226,6 +272,8 @@ export function createResolutionTmdb(
 						return value
 					} catch (error) {
 						if (ctx.signal.aborted) throw new ResolutionStopped()
+						if (error instanceof UnusableTvdbIdentity)
+							throw Error("Provider unavailable")
 						if (
 							error instanceof ResolutionBudget ||
 							error instanceof ResolutionStopped

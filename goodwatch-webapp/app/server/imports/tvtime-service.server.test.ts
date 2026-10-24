@@ -455,7 +455,7 @@ test("official movie intents share one explicit movie-only choice and clearing r
 	)
 })
 
-test("matching an official movie keeps other archive intents and does not make unsupported votes applicable", async (t) => {
+test("matching an official movie keeps other archive intents and does not make unknown rating IDs applicable", async (t) => {
 	setup()
 	t.mock.method(
 		globalThis,
@@ -479,7 +479,7 @@ test("matching an official movie keeps other archive intents and does not make u
 			"tracking-prod-records-v2.csv":
 				"key,s_id,ep_id,s_no,ep_no,created_at,is_archived\nwatch-episode-one,100,200,4,24,2024-01-02 12:00:00,\nuser-series-one,100,,,,,true\n",
 			"ratings-live-votes.csv":
-				"episode_id,movie_name,uuid,vote_key,user_id\n,Localized,m1,stars_wording_scalev2-29,private-account\n",
+				"episode_id,movie_name,uuid,vote_key,user_id\n,Localized,m1,stars_wording_scalev2-999,private-account\n",
 		}),
 	)
 	const parentRows = (await getImportItems("member", p.id, undefined, 0, 50))
@@ -510,7 +510,7 @@ test("matching an official movie keeps other archive intents and does not make u
 		"dropped",
 	)
 	assert.equal(
-		rows.find((r) => r.kind === "unsupported")?.problem?.code,
+		rows.find((r) => r.problem?.outcome === "unsupported")?.problem?.code,
 		"tvtime_vote_scale_unknown",
 	)
 	await confirmImport("member", child.import.id, {

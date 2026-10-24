@@ -30,6 +30,10 @@ import {
 } from "./resolution-store.server.ts"
 import { resolutionTmdb } from "./resolution-tmdb.server.ts"
 import {
+	recoverTvtimeEpisode,
+	type TvdbEpisodeIdentity,
+} from "./tvtime-identity.server.ts"
+import {
 	NativeImportError,
 	getImportRow,
 	run,
@@ -56,6 +60,7 @@ type Group = {
 	lastIndex: number
 	evidence: TvtimeMovieEvidence
 	suggestion?: TvtimeMovieSuggestion
+	automaticPreviewId?: string
 }
 type PageCheckpoint = { rows: Record<string, ImportObservation> }
 type Link = {
@@ -116,6 +121,15 @@ const restore = (row: ImportItem): ImportObservation => {
 	return copy
 }
 async function resolve(ctx: ResolutionContext, rows: ImportObservation[]) {
+	const aliasKey = (id: number) => `alias/${ctx.job.root}/show/${id}`
+	for (const row of rows) {
+		if (!row.tmdbId && row.showTvdbId && !row.problem) {
+			const alias = (await resolutionStore.read(aliasKey(row.showTvdbId)))
+				?.value as { showId: number; title: string } | undefined
+			if (alias?.title === normalizeTvtimeTitle(row.title))
+				row.tmdbId = alias.showId
+		}
+	}
 	const pending = new Map<number, ReturnType<TvdbLookup>>()
 	const lookup: TvdbLookup = (id) => {
 		let value = pending.get(id)
@@ -133,6 +147,90 @@ async function resolve(ctx: ResolutionContext, rows: ImportObservation[]) {
 		return value
 	}
 	await matchCatalog("tvtime", rows, lookup)
+	const recovered: ImportObservation[] = []
+	for (let i = 0; i < rows.length; i += 4)
+		await Promise.all(
+			rows.slice(i, i + 4).map(async (row) => {
+				if (
+					!row.episodeTvdbId ||
+					!["episode_tvdb_not_found", "tvtime_show_unmatched"].includes(
+						row.problem?.code ?? "",
+					)
+				)
+					return
+				try {
+					const get = (path: string, params?: Record<string, string>) =>
+						request(ctx, path, params)
+					let target = await recoverTvtimeEpisode(
+						row.episodeTvdbId,
+						row.tmdbId,
+						get,
+					)
+					// With a verified parent, an exact episode title AND original air date can recover
+					// episodes without IMDb IDs. Never use season/episode coordinates as a fallback.
+					if (!target && row.tmdbId) {
+						const identity = (await get(
+							`/tvdb/episode/${row.episodeTvdbId}`,
+						)) as TvdbEpisodeIdentity | null
+						if (identity?.name && identity.airDate && !identity.imdbId) {
+							const episodes = await select<{
+								tmdb_id: number
+								name: string
+								air_date: string | number | Date | null
+							}>(
+								"SELECT tmdb_id, name, air_date FROM episode WHERE show_id = ? AND removed_at IS NULL LIMIT 50001",
+								[row.tmdbId],
+							)
+							if (episodes.length <= 50000) {
+								const hits = episodes.filter(
+									(e) =>
+										e.name &&
+										normalizeTvtimeTitle(e.name) ===
+											normalizeTvtimeTitle(identity.name!) &&
+										e.air_date != null &&
+										Number.isFinite(new Date(e.air_date).getTime()) &&
+										new Date(e.air_date).toISOString().slice(0, 10) ===
+											identity.airDate,
+								)
+								if (hits.length === 1)
+									target = { id: Number(hits[0].tmdb_id), show_id: row.tmdbId }
+							}
+						}
+					}
+					if (!target) return
+					if (!row.tmdbId) {
+						// A retired show ID needs both an episode's independent identity and an
+						// unambiguous, exact catalog parent title. A title search alone never resolves it.
+						const shows = await select<{ tmdb_id: number; title: string }>(
+							"SELECT tmdb_id, imdb_id, title, release_year FROM show WHERE lower(title) = lower(?) LIMIT 2",
+							[row.title.trim()],
+						)
+						if (
+							shows.length !== 1 ||
+							Number(shows[0].tmdb_id) !== target.show_id
+						)
+							return
+						if (row.showTvdbId)
+							await ctx.commit(aliasKey(row.showTvdbId), {
+								showId: target.show_id,
+								title: normalizeTvtimeTitle(row.title),
+							})
+					}
+					row.tmdbId = target.show_id
+					row.episodeTmdbId = target.id
+					row.problem = undefined
+					recovered.push(row)
+				} catch (error) {
+					if (
+						error instanceof ResolutionBudget ||
+						error instanceof ResolutionStopped
+					)
+						throw error
+					// A recovery provider failure cannot turn an unresolved row into a guessed match.
+				}
+			}),
+		)
+	if (recovered.length) await matchCatalog("tvtime", recovered, lookup)
 }
 async function addGroup(ctx: ResolutionContext, row: ImportItem) {
 	const key = resolutionGroupKey(ctx.job.root, row, row.index)
@@ -226,9 +324,17 @@ async function step(ctx: ResolutionContext): Promise<ResolutionStep> {
 						await ctx.commit(row.source_key, g)
 					}
 					result.processed += g.entryCount
-					result.held += g.entryCount
-					const reason = g.suggestion.reason ?? "tvtime_movie_review_required"
-					result.failed[reason] = (result.failed[reason] ?? 0) + g.entryCount
+					if (
+						g.suggestion.state === "suggested" &&
+						g.suggestion.proof &&
+						g.suggestion.proposal
+					)
+						result.matched += g.entryCount
+					else {
+						result.held += g.entryCount
+						const reason = g.suggestion.reason ?? "tvtime_movie_review_required"
+						result.failed[reason] = (result.failed[reason] ?? 0) + g.entryCount
+					}
 				}),
 			)
 		return result
@@ -355,6 +461,7 @@ async function publish(ctx: ResolutionContext) {
 	await ctx.check()
 	await run("DELETE FROM doc.user_import_item WHERE import_id = ?", [id])
 	const observations: ImportObservation[] = []
+	const decisions = await memberDecisions(j.root)
 	let after = -1
 	for (;;) {
 		await ctx.check()
@@ -365,6 +472,43 @@ async function publish(ctx: ResolutionContext) {
 		)?.value as PageCheckpoint | undefined
 		for (const item of page) {
 			const enriched = checkpoint?.rows[item.index]
+			const groupKey = resolutionGroupKey(j.root, item, item.index)
+			if (
+				!item.wishlistResolution &&
+				!decisions.has(groupKey.split("/").at(-1) ?? "") &&
+				item.wishlistOriginal?.manualMatchScope === "tvtime_movie"
+			) {
+				const group = (await resolutionStore.read(groupKey))?.value as
+					| Group
+					| undefined
+				const suggestion = group?.suggestion
+				if (
+					suggestion?.state === "suggested" &&
+					suggestion.proof &&
+					suggestion.proposal
+				) {
+					const proposal = suggestion.proposal
+					if (group!.automaticPreviewId !== id)
+						await ctx.commit(groupKey, { ...group, automaticPreviewId: id })
+					observations.push({
+						...restore(item),
+						tmdbId: proposal.tmdbId,
+						problem: undefined,
+						wishlistResolution: {
+							basis: "automatic",
+							mediaType: "movie",
+							tmdbId: proposal.tmdbId,
+							title: proposal.title,
+							year: proposal.year,
+							selectedAt: new Date().toISOString(),
+							parentImportId: j.activePreviewId,
+							parentRowIndex: item.index,
+							suggestionProof: suggestion.proof,
+						},
+					})
+					continue
+				}
+			}
 			observations.push(
 				item.wishlistResolution
 					? structuredClone(item)
@@ -847,6 +991,8 @@ export async function resolutionSuggestions(
 		key: string,
 	): Promise<TvtimeMovieSuggestion> => {
 		const decision = decisions.get(key.split("/").at(-1) ?? "")
+		if (!decision && g.automaticPreviewId === id)
+			return { state: "already_resolved" }
 		return decision
 			? {
 					state: decision.target ? "already_resolved" : "manual",

@@ -121,7 +121,7 @@ const TITLE_KIND: Record<TvtimeSuggestionProof["title"]["kind"], string> = {
 export function tvtimeSuggestionEvidence(proof: TvtimeSuggestionProof) {
 	const country =
 		proof.date.basis === "country" ? regionName(proof.date.country) : null
-	return `Same ${TITLE_KIND[proof.title.kind]} and release date${country ? ` in ${country}` : ""} on TMDB`
+	return `Same ${TITLE_KIND[proof.title.kind]} and release ${proof.date.basis === "year" ? "year" : "date"}${country ? ` in ${country}` : ""} on TMDB`
 }
 
 const SUGGESTION_NOTES: Partial<Record<WishlistSuggestionReason, string>> = {

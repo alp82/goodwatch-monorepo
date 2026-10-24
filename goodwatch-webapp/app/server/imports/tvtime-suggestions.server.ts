@@ -220,6 +220,16 @@ export async function suggestTvtimeMovie(
 					}
 				}
 			if (date) qualifying.push({ id, title, date })
+			else if (
+				(title.kind === "primary" || title.kind === "original") &&
+				/^\d{4}-\d\d-\d\d$/.test(m.release_date ?? "") &&
+				m.release_date!.slice(0, 4) === dates[0].slice(0, 4)
+			)
+				qualifying.push({
+					id,
+					title,
+					date: { value: dates[0].slice(0, 4), basis: "year" },
+				})
 		}
 		if (qualifying.length !== 1)
 			return manual(
@@ -234,7 +244,10 @@ export async function suggestTvtimeMovie(
 			state: "suggested",
 			proposal: { mediaType: "movie", tmdbId: match.id, ...catalog },
 			proof: {
-				rule: "tvtime_exact_title_release_date_v1",
+				rule:
+					match.date.basis === "year"
+						? "tvtime_exact_title_release_year_v1"
+						: "tvtime_exact_title_release_date_v1",
 				mediaType: "movie",
 				tmdbId: match.id,
 				sourceFingerprint: tvtimeEvidenceFingerprint(e),

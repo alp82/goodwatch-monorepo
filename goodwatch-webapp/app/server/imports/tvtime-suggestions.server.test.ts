@@ -24,6 +24,35 @@ const movie = {
 		],
 	},
 }
+test("one exact primary title and release year recovers inconsistent release days, while same-year remakes stay unresolved", async () => {
+	const get = async (path: string) =>
+		path === "/search/movie"
+			? { results: [{ id: 42 }], total_pages: 1 }
+			: { ...movie, title: "Localized movie", release_dates: { results: [] } }
+	const catalog = async () => ({
+		title: "Localized movie",
+		year: 2001,
+		posterPath: null,
+	})
+	const result = await suggestTvtimeMovie(evidence, { get, catalog })
+	assert.equal(result.state, "suggested")
+	assert.equal(result.proof?.rule, "tvtime_exact_title_release_year_v1")
+	assert.deepEqual(result.proof?.date, { value: "2001", basis: "year" })
+	const ambiguous = await suggestTvtimeMovie(evidence, {
+		get: async (path) =>
+			path === "/search/movie"
+				? { results: [{ id: 42 }, { id: 43 }], total_pages: 1 }
+				: {
+						...movie,
+						id: path === "/movie/42" ? 42 : 43,
+						title: "Localized movie",
+						release_dates: { results: [] },
+					},
+		catalog,
+	})
+	assert.equal(ambiguous.state, "manual")
+	assert.equal(ambiguous.reason, "tvtime_suggestion_ambiguous")
+})
 test("strict movie suggestions record exact alternative title and same-country theatrical date proof", async () => {
 	const result = await suggestTvtimeMovie(evidence, {
 		get: async (path) =>

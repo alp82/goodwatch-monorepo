@@ -12,7 +12,7 @@ export const SOURCE_OUTCOME_LABELS: Record<ImportOutcome, string> = {
 	new: "New in GoodWatch",
 	unchanged: "Already the same in GoodWatch",
 	conflict: "Different in GoodWatch",
-	unmatched: "Not in the GoodWatch catalog",
+	unmatched: "Not matched to a GoodWatch title",
 	unsupported: "Data GoodWatch can't import",
 	invalid: "Rows we couldn't read",
 }

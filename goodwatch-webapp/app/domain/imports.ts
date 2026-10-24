@@ -101,7 +101,7 @@ export const IMPORT_SOURCE_UPLOAD = {
 			"If your ZIP asks for a password, open it on your computer with that password. Put the CSV files from inside it in a new ZIP without a password and upload that, or upload tracking-prod-records-v2.csv by itself.",
 		],
 		notes:
-			"GoodWatch imports episode and movie watches, Watching and Dropped show statuses, and For later as Want to See. Movie ratings come only from TV Time Liberator files. Movies in TV Time's own export have no catalog ID, so you choose the GoodWatch movie for each one before it's added. Maximum size: 20 MB.",
+			"GoodWatch imports episode and movie watches and ratings, Watching and Dropped show statuses, and For later as Want to See. Movies with one verified title and release date or year match are matched automatically. Uncertain matches stay out of the import. Maximum size: 20 MB.",
 	},
 	letterboxd: {
 		...zipUpload,
@@ -369,7 +369,7 @@ export interface ImportObservation {
 	wishlistShowChoice?: boolean
 	wishlistRewatchChoice?: boolean
 	wishlistResolution?: {
-		basis: "member"
+		basis: "member" | "automatic"
 		suggestionProof?: TvtimeSuggestionProof
 		mediaType: ImportMediaType
 		tmdbId: number
@@ -439,7 +439,9 @@ export interface WishlistOriginalObservation {
 }
 
 export interface TvtimeSuggestionProof {
-	rule: "tvtime_exact_title_release_date_v1"
+	rule:
+		| "tvtime_exact_title_release_date_v1"
+		| "tvtime_exact_title_release_year_v1"
 	mediaType: "movie"
 	tmdbId: number
 	sourceFingerprint: string
@@ -451,7 +453,7 @@ export interface TvtimeSuggestionProof {
 	}
 	date: {
 		value: string
-		basis: "primary" | "country"
+		basis: "primary" | "country" | "year"
 		country?: string
 		releaseType?: number
 	}

@@ -3,15 +3,384 @@ import assert from "node:assert/strict"
 import { afterEach, test } from "node:test"
 import { FakeTrackingCrate } from "../tracking-fake-crate.ts"
 import { ImportDb } from "./import-db.test-support.ts"
+import { zipFixture } from "./zip-fixture.test-support.ts"
 import type { Param } from "./store.server.ts"
 const { setImportDbForTest } = await import("./store.server.ts")
 const { setCrateClientForTest } = await import("../../utils/crate.ts")
 const service = await import("./service.server.ts")
 const runtime = await import("./resolution-runtime.server.ts")
+const { holdTasteRebuildsForTest } = await import("../taste/member.server.ts")
+holdTasteRebuildsForTest()
+const { setImportEffectsForTest } = await import("./apply.server.ts")
+function legacyUnaccepted(db: ImportDb, id: string) {
+	for (const row of db.items) {
+		if (row.import_id === id && row.kind !== "resolution") {
+			const payload = JSON.parse(String(row.payload))
+			delete payload.wishlistResolution
+			payload.tmdbId = null
+			payload.problem = {
+				outcome: "unmatched",
+				code: "tvtime_movie_identity_missing",
+				reason: "Choose a movie to match it.",
+			}
+			payload.outcome = "unmatched"
+			row.payload = JSON.stringify(payload)
+			row.outcome = "unmatched"
+			row.tmdb_id = null
+		}
+		if (row.kind === "resolution") {
+			const payload = JSON.parse(String(row.payload))
+			if (payload.automaticPreviewId === id) {
+				delete payload.automaticPreviewId
+				row.payload = JSON.stringify(payload)
+			}
+		}
+	}
+}
 afterEach(() => {
 	setCrateClientForTest(null)
 	setImportDbForTest()
 	runtime.setResolutionNetworkForTest()
+	setImportEffectsForTest()
+})
+test("full TV Time reimports add recovered watches and scores once, preserve member changes, and undo only their additions", async () => {
+	const tracking = new FakeTrackingCrate()
+	setCrateClientForTest(tracking)
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			media_type: "show",
+			tmdb_id: 10,
+			tvdb_id: 100,
+			imdb_id: "tt1234500",
+			title: "Synthetic show",
+			release_year: 2001,
+		},
+		{
+			media_type: "movie",
+			tmdb_id: 42,
+			imdb_id: "tt0000042",
+			title: "Synthetic movie",
+			release_year: 2001,
+		},
+		{
+			media_type: "movie",
+			tmdb_id: 43,
+			imdb_id: "tt0000043",
+			title: "Later movie",
+			release_year: 2001,
+		},
+	]
+	db.episodes = [
+		{
+			show_id: 10,
+			tmdb_id: 20,
+			tvdb_id: 200,
+			season_number: 1,
+			episode_number: 1,
+			name: "First",
+		},
+		{
+			show_id: 10,
+			tmdb_id: 21,
+			tvdb_id: 999,
+			season_number: 2,
+			episode_number: 3,
+			name: "Recovered",
+		},
+	]
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	let recoveryAvailable = false
+	runtime.setResolutionNetworkForTest(async (_ctx, path, params) => {
+		if (path === "/tvdb/episode/300")
+			return recoveryAvailable
+				? { imdbId: "tt1234567", name: "Recovered", airDate: null }
+				: null
+		if (path === "/find/tt1234567")
+			return { tv_results: [], tv_episode_results: [{ id: 21, show_id: 10 }] }
+		if (path.startsWith("/find/"))
+			return { tv_results: [], tv_episode_results: [] }
+		if (path === "/search/movie")
+			return {
+				results: [{ id: params?.query === "later movie" ? 43 : 42 }],
+				total_pages: 1,
+			}
+		const id = path === "/movie/43" ? 43 : 42
+		return {
+			id,
+			title: id === 43 ? "Later movie" : "Synthetic movie",
+			original_title: "Original",
+			release_date: "2001-02-03",
+			alternative_titles: { titles: [] },
+			translations: { translations: [] },
+			release_dates: { results: [] },
+		}
+	})
+	const files = {
+		"tracking-prod-records-v2.csv":
+			"key,s_id,ep_id,s_no,ep_no,series_name,created_at,is_followed\nuser-series-one,100,,,,Synthetic show,2024-01-01,true\nwatch-episode-one,100,200,1,1,Synthetic show,2024-01-01,\nwatch-episode-two,100,300,1,2,Synthetic show,2024-01-02,\n",
+		"tracking-prod-records.csv":
+			"type,entity_type,uuid,movie_name,release_date,created_at\nwatch,movie,m1,Synthetic movie,2001-02-03,2024-01-01\nfollow,movie,m2,Later movie,2001-02-03,2024-01-01\n",
+	}
+	const preview = async (ratings: boolean) => {
+		const p = await service.previewImport(
+			"member",
+			"tvtime",
+			"tvtime-data.zip",
+			zipFixture({
+				...files,
+				...(ratings
+					? {
+							"ratings-3-prod-episode_votes.csv":
+								"vote_key,episode_id,series_name,season_number,episode_number\n200-person-29,200,Synthetic show,1,1\n300-person-3,300,Synthetic show,1,2\n",
+							"ratings-live-votes.csv":
+								"vote_key,episode_id,uuid,movie_name\nm1-person-3,0,m1,Synthetic movie\n",
+						}
+					: {}),
+			}),
+		)
+		await runtime.resolutionJobs.run(p.id)
+		const j = await runtime.resolutionJobs.read(p.id)
+		assert.ok(j?.replacementId)
+		return service.getImport("member", j.replacementId)
+	}
+	const apply = async (id: string) => {
+		await service.confirmImport("member", id, {
+			kinds: ["watch", "want", "show_status", "rating", "episode_rating"],
+			conflictChoice: "keep",
+			watchDates: "preserve",
+		})
+		for (let i = 0; i < 100; i++) {
+			const result = await service.getImport("member", id)
+			if (result.status === "done") {
+				assert.equal(result.applied.failed, 0)
+				return
+			}
+			if (result.status === "failed")
+				assert.fail(result.error ?? "Import failed")
+			await new Promise((resolve) => setTimeout(resolve, 5))
+		}
+		assert.fail("Import did not finish")
+	}
+	const original = await preview(false)
+	await apply(original.id)
+	assert.equal(tracking.log("member").length, 2)
+	const state = tracking
+		.table("user_watch_state")
+		.find((r) => r.tmdb_id === 10)!
+	state.state = "on_hold"
+	state.updated_at = new Date()
+	tracking.refresh("user_watch_state")
+	recoveryAvailable = true
+	const recovered = await preview(true)
+	assert.equal(recovered.counts.unmatched, 0)
+	await apply(recovered.id)
+	assert.equal(tracking.log("member").length, 3)
+	assert.equal(tracking.state("member", "show", 10)?.state, "on_hold")
+	assert.deepEqual(
+		db.episodeScores.map((r) => [r.episode_tmdb_id, r.score]).sort(),
+		[
+			[20, 8],
+			[21, 10],
+		],
+	)
+	assert.equal(db.scores[0].score, 10)
+	assert.equal(db.wishlist.length, 1)
+	const third = await preview(true)
+	await apply(third.id)
+	assert.equal(tracking.log("member").length, 3)
+	assert.equal(db.episodeScores.length, 2)
+	assert.equal(db.wishlist.length, 1)
+	// The member changes a score after importing. Reimport and Undo both preserve it.
+	db.episodeScores.find((r) => r.episode_tmdb_id === 20)!.score = 6
+	db.episodeScores.find((r) => r.episode_tmdb_id === 20)!.updated_at = new Date(
+		Date.now() + 1000,
+	)
+	db.scores[0].score = 7
+	db.scores[0].updated_at = new Date(Date.now() + 1000)
+	const afterEdits = await preview(true)
+	await apply(afterEdits.id)
+	assert.equal(db.episodeScores.find((r) => r.episode_tmdb_id === 20)?.score, 6)
+	assert.equal(db.scores[0].score, 7)
+	assert.equal(tracking.log("member").length, 3)
+	await service.undoImport("member", recovered.id)
+	assert.equal(tracking.log("member").length, 2)
+	assert.deepEqual(
+		db.episodeScores.map((r) => [r.episode_tmdb_id, r.score]),
+		[[20, 6]],
+	)
+	assert.equal(db.scores[0].score, 7)
+	assert.equal(db.wishlist.length, 1)
+})
+test("a reuploaded TV Time movie is matched automatically by verified title and date", async () => {
+	setCrateClientForTest(new FakeTrackingCrate())
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			media_type: "movie",
+			tmdb_id: 42,
+			imdb_id: "tt0000042",
+			title: "Synthetic movie",
+			release_year: 2001,
+			poster_path: null,
+		},
+	]
+	setImportDbForTest(db)
+	runtime.setResolutionNetworkForTest(async (_ctx, path) =>
+		path === "/search/movie"
+			? { results: [{ id: 42 }], total_pages: 1 }
+			: {
+					id: 42,
+					title: "Synthetic movie",
+					original_title: "Synthetic movie",
+					release_date: "2001-02-03",
+					alternative_titles: { titles: [] },
+					translations: { translations: [] },
+					release_dates: { results: [] },
+				},
+	)
+	const p = await service.previewImport(
+		"member",
+		"tvtime",
+		"tracking-prod-records.csv",
+		Buffer.from(
+			"type,entity_type,uuid,movie_name,release_date,created_at\nwatch,movie,m1,Synthetic movie,2001-02-03,2024-01-01\n",
+		),
+	)
+	await runtime.resolutionJobs.run(p.id)
+	const job = await runtime.resolutionJobs.read(p.id)
+	assert.ok(job?.replacementId)
+	const rows = await service.getImportItems(
+		"member",
+		job.replacementId,
+		undefined,
+		0,
+		50,
+	)
+	assert.equal(rows.items[0].outcome, "new")
+	assert.equal(rows.items[0].tmdbId, 42)
+	assert.equal(rows.items[0].wishlistResolution?.basis, "automatic")
+	assert.equal(rows.items[0].wishlistOriginal?.tmdbId, null)
+})
+test("background recovery keeps canonical episode identities and restores a retired show identity", async () => {
+	setCrateClientForTest(new FakeTrackingCrate())
+	const db = new ImportDb()
+	db.catalog = [
+		{
+			media_type: "show",
+			tmdb_id: 10,
+			tvdb_id: 999,
+			imdb_id: "tt1234500",
+			title: "Synthetic show",
+			release_year: 2001,
+		},
+	]
+	db.episodes = [
+		{
+			show_id: 10,
+			tmdb_id: 20,
+			tvdb_id: 9999,
+			season_number: 2,
+			episode_number: 3,
+			name: "An episode",
+			air_date: Date.parse("2001-02-03"),
+		},
+	]
+	setImportDbForTest(db)
+	runtime.setResolutionNetworkForTest(async (_ctx, path) => {
+		if (path === "/tvdb/episode/200")
+			return { imdbId: "tt1234567", name: "An episode", airDate: "2001-02-03" }
+		if (path === "/find/tt1234567")
+			return { tv_results: [], tv_episode_results: [{ id: 20, show_id: 10 }] }
+		return { tv_results: [], tv_episode_results: [] }
+	})
+	const p = await service.previewImport(
+		"member",
+		"tvtime",
+		"tracking-prod-records-v2.csv",
+		Buffer.from(
+			"key,s_id,ep_id,s_no,ep_no,series_name,created_at,is_followed\nuser-series-one,100,,,,Synthetic show,2024-01-01,true\nwatch-episode-one,100,200,1,2,Synthetic show,2024-01-01,\n",
+		),
+	)
+	await runtime.resolutionJobs.run(p.id)
+	const job = await runtime.resolutionJobs.read(p.id)
+	assert.ok(job?.replacementId)
+	const rows = (
+		await service.getImportItems("member", job.replacementId, undefined, 0, 50)
+	).items
+	assert.deepEqual(
+		rows.map((r) => [r.kind, r.outcome, r.tmdbId]),
+		[
+			["show_status", "new", 10],
+			["watch", "new", 10],
+		],
+	)
+	assert.equal(rows[1].episodeTmdbId, 20)
+	assert.equal(rows[1].season, 2)
+	assert.equal(rows[1].episode, 3)
+	assert.equal(rows[1].resolutionOriginal?.episodeTvdbId, 200)
+	assert.equal(db.episodes[0].tvdb_id, 9999)
+})
+test("an episode without IMDb needs a unique exact title and original air date under its verified show", async () => {
+	for (const ambiguous of [false, true]) {
+		setCrateClientForTest(new FakeTrackingCrate())
+		const db = new ImportDb()
+		db.catalog = [
+			{
+				media_type: "show",
+				tmdb_id: 10,
+				tvdb_id: 100,
+				imdb_id: null,
+				title: "Synthetic show",
+				release_year: 2001,
+			},
+		]
+		db.episodes = [
+			{
+				show_id: 10,
+				tmdb_id: 20,
+				tvdb_id: 999,
+				season_number: 2,
+				episode_number: 3,
+				name: "Recovered",
+				air_date: Date.parse("2001-02-03"),
+			},
+		]
+		if (ambiguous)
+			db.episodes.push({ ...db.episodes[0], tmdb_id: 21, episode_number: 4 })
+		setImportDbForTest(db)
+		runtime.setResolutionNetworkForTest(async (_ctx, path) =>
+			path === "/tvdb/episode/200"
+				? { imdbId: null, name: "Recovered", airDate: "2001-02-03" }
+				: { tv_results: [], tv_episode_results: [] },
+		)
+		const p = await service.previewImport(
+			"member",
+			"tvtime",
+			"tracking-prod-records-v2.csv",
+			Buffer.from(
+				"key,s_id,ep_id,s_no,ep_no,series_name,created_at\nwatch-episode-one,100,200,1,1,Synthetic show,2024-01-01\n",
+			),
+		)
+		await runtime.resolutionJobs.run(p.id)
+		const job = await runtime.resolutionJobs.read(p.id)
+		assert.ok(job?.replacementId)
+		const row = (
+			await service.getImportItems(
+				"member",
+				job.replacementId,
+				undefined,
+				0,
+				50,
+			)
+		).items[0]
+		assert.equal(row.outcome, ambiguous ? "unmatched" : "new")
+		assert.equal(row.episodeTmdbId, ambiguous ? undefined : 20)
+	}
 })
 test("upload returns a cached preview and a detached job publishes a matched replacement without applying watches", async () => {
 	setCrateClientForTest(new FakeTrackingCrate())
@@ -104,6 +473,10 @@ test("early Confirm cancels resolution and applies only the current cached previ
 		},
 	]
 	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
 	runtime.setResolutionNetworkForTest(async () => {
 		throw Error("Should not run")
 	})
@@ -126,6 +499,11 @@ test("early Confirm cancels resolution and applies only the current cached previ
 	)
 	await runtime.resolutionJobs.run(p.id)
 	assert.equal((await runtime.resolutionJobs.read(p.id))?.replacementId, null)
+	for (let i = 0; i < 100; i++) {
+		if ((await service.getImport("member", p.id)).status === "done") return
+		await new Promise((resolve) => setTimeout(resolve, 5))
+	}
+	assert.fail("Early import did not finish")
 })
 test("the job pages source rows and resolves watched parents before episodes and unwatched parents", async () => {
 	setCrateClientForTest(new FakeTrackingCrate())
@@ -214,7 +592,7 @@ test("the job pages source rows and resolves watched parents before episodes and
 	assert.equal(parentCheckpoints, 3)
 	assert.equal((await service.getImport("member", p.id)).resolution?.pending, 0)
 })
-test("strict movie proposals stay unmatched until acceptance; one bulk token creates one idempotent child", async () => {
+test("legacy unaccepted movie suggestions still accept idempotently after automatic matching ships", async () => {
 	setCrateClientForTest(new FakeTrackingCrate())
 	const db = new ImportDb()
 	db.catalog = [
@@ -253,10 +631,15 @@ test("strict movie proposals stay unmatched until acceptance; one bulk token cre
 	const j = await runtime.resolutionJobs.read(p.id)
 	assert.ok(j?.replacementId)
 	const matched = await service.getImport("member", j.replacementId)
-	assert.equal(matched.counts.unmatched, 2)
+	assert.equal(matched.counts.unmatched, 0)
+	// Model a persisted preview made before automatic matching was introduced.
+	legacyUnaccepted(db, matched.id)
 	assert.equal(matched.resolution?.failed, 0)
 	assert.deepEqual(matched.resolution?.failedByCode, {})
-	assert.equal(matched.resolution?.heldByCode.tvtime_movie_review_required, 2)
+	assert.equal(
+		matched.resolution?.heldByCode.tvtime_movie_review_required,
+		undefined,
+	)
 	const { resolutionStore } = await import("./resolution-store.server.ts")
 	const old = await resolutionStore.read(`job/${p.id}`)
 	assert.ok(old)
@@ -396,6 +779,7 @@ test("bulk acceptance covers more than 100 suggestions across pages and rejects 
 	const j = await runtime.resolutionJobs.read(p.id)
 	assert.ok(j?.replacementId)
 	let panelReads = 0
+	legacyUnaccepted(db, j.replacementId)
 	const read = db.select.bind(db)
 	db.select = async <T extends {}>(
 		sql: string,
@@ -713,12 +1097,7 @@ test("a confirmed suggested watch is not duplicated on re-import and Undo remove
 		await runtime.resolutionJobs.run(p.id)
 		const j = await runtime.resolutionJobs.read(p.id)
 		assert.ok(j?.replacementId)
-		const s = await service.getWishlistSuggestions("member", j.replacementId)
-		return (
-			await service.acceptSuggestedImport("member", j.replacementId, {
-				token: s.bulkAccept?.token,
-			})
-		).import
+		return service.getImport("member", j.replacementId)
 	}
 	const wait = async (id: string) => {
 		for (let i = 0; i < 100; i++) {
@@ -778,8 +1157,10 @@ test("definitive negative provider answers are scoped to the job and removed whe
 	let calls = 0
 	const api = createResolutionTmdb({
 		take: async () => ({ allowed: true, store: "memory" }),
-		fetch: async () => {
+		fetch: async (input) => {
 			calls++
+			if (String(input).startsWith("https://thetvdb.com/"))
+				return new Response(null, { status: 404 })
 			return Response.json({ tv_results: [], tv_episode_results: [] })
 		},
 	})
@@ -817,7 +1198,7 @@ test("definitive negative provider answers are scoped to the job and removed whe
 			"episode_tvdb_not_found",
 		)
 	}
-	assert.equal(calls, 2)
+	assert.equal(calls, 4)
 })
 test("a missing release date does not contradict the full date supplied by another row for the same movie", async () => {
 	setCrateClientForTest(new FakeTrackingCrate())
@@ -857,7 +1238,8 @@ test("a missing release date does not contradict the full date supplied by anoth
 	const j = await runtime.resolutionJobs.read(p.id)
 	assert.ok(j?.replacementId)
 	const s = await service.getWishlistSuggestions("member", j.replacementId)
-	assert.equal(s.bulkAccept?.eligibleCount, 1)
+	assert.equal(s.bulkAccept?.eligibleCount, 0)
+	assert.equal(s.groups[0].state, "already_resolved")
 	const original = await service.getImportItems(
 		"member",
 		j.replacementId,
@@ -948,6 +1330,7 @@ test("discard removes the preview family and all source-bearing resolution metad
 	await runtime.resolutionJobs.run(p.id)
 	const child = (await runtime.resolutionJobs.read(p.id))?.replacementId
 	assert.ok(child)
+	legacyUnaccepted(db, child)
 	const suggestions = await service.getWishlistSuggestions("member", child)
 	const accepted = await service.acceptSuggestedImport("member", child, {
 		token: suggestions.bulkAccept?.token,
