@@ -1,16 +1,20 @@
 // Development only: the For you page on a synthetic sample (app/ui/for-you/sample-pool.ts), with gray posters and
 // details answered from the same sample, so the page works without a member, Crate or Redis. ?as=guest|empty|
 // unavailable shows the other states; ?recipe= preselects a recipe as on the real page. As a guest, ?ratings=N sets
-// how many guest scores the preview reports (else the scores this browser holds). Returns 404 in production.
+// how many guest scores the preview reports (else the scores this browser holds). ?fail=details makes every details
+// request fail (500), ?fail=details-401 as after a session ended, ?fail=details-once fails for 10 s from the first
+// details request (long enough for the retries to give up), so Try again works after that. Returns 404 in production.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import {
 	type ShouldRevalidateFunction,
 	useLoaderData,
 	useSearchParams,
 } from "@remix-run/react"
+import { useMemo } from "react"
 import type { ForYouPage as ForYouPageData } from "~/domain/for-you-page/contract"
 import { ForYouPage } from "~/ui/for-you/ForYouPage"
 import type { GuestLoader } from "~/ui/for-you/GuestLock"
+import { DetailsError, type DetailsLoader } from "~/ui/for-you/context"
 import {
 	sampleDetails,
 	sampleGuest,
@@ -55,9 +59,33 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 	return defaultShouldRevalidate
 }
 
+let failingSince = 0
+const failingDetails =
+	(fail: string | null): DetailsLoader =>
+	async (keys, signal) => {
+		if (fail === "details" || fail === "details-401") {
+			await new Promise((r) => setTimeout(r, 200))
+			throw new DetailsError(fail === "details" ? 500 : 401)
+		}
+		if (fail === "details-once") {
+			failingSince ||= Date.now()
+			if (Date.now() - failingSince < 10_000) {
+				await new Promise((r) => setTimeout(r, 200))
+				throw new DetailsError(500)
+			}
+		}
+		return sampleDetails(keys, signal)
+	}
+
 export default function DevForYouPage() {
 	const data = useLoaderData<typeof loader>() as unknown as ForYouPageData
-	const ratings = useSearchParams()[0].get("ratings")
+	const [params] = useSearchParams()
+	const ratings = params.get("ratings")
+	const fail = params.get("fail")
+	const loadDetails = useMemo(
+		() => (fail ? failingDetails(fail) : sampleDetails),
+		[fail],
+	)
 	const loadGuest: GuestLoader = ({ interactions }) =>
 		sampleGuest(
 			ratings !== null
@@ -65,6 +93,6 @@ export default function DevForYouPage() {
 				: interactions.filter((i) => i.type === "score").length,
 		)
 	return (
-		<ForYouPage data={data} loadDetails={sampleDetails} loadGuest={loadGuest} />
+		<ForYouPage data={data} loadDetails={loadDetails} loadGuest={loadGuest} />
 	)
 }

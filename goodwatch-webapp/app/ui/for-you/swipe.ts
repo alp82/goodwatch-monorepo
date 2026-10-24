@@ -32,22 +32,44 @@ export function preload(urls: (string | null | undefined)[]): Promise<void> {
 const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms))
 
 /** Waits until the next title's images are decoded (220 ms at most), swaps synchronously, and hands the swipe values
- * to the new layer. */
+ * to the new layer. When `live()` is false by then (closed, unmounted, another title opened), nothing swaps. Returns
+ * whether it swapped. */
 export async function stepTo({
 	cx,
 	co,
 	ready,
 	swap,
+	live,
 }: {
 	cx: MotionValue<number>
 	co: MotionValue<number>
 	ready: Promise<void>
 	swap: () => void
-}) {
+	live: () => boolean
+}): Promise<boolean> {
 	await Promise.race([ready, wait(220)])
+	if (!live()) return false
 	flushSync(swap)
 	cx.set(0)
 	co.set(1)
+	return true
+}
+
+/**
+ * A generation token for steps: a step that waits (for images, for scrolling) runs on only while the token it took
+ * is current. `bump` invalidates every step in flight.
+ */
+export function useStepToken() {
+	const gen = useRef(0)
+	return useRef({
+		take: () => {
+			const at = gen.current
+			return () => gen.current === at
+		},
+		bump: () => {
+			gen.current++
+		},
+	}).current
 }
 
 type Gesture = {

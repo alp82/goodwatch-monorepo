@@ -3,6 +3,7 @@
 // picked for that taste sit in a static grid under one blur, a dark wash and a lock.
 // - Fewer than QUIZ_GOAL scores: "Take the quiz". QUIZ_GOAL or more (the quiz is done): "Sign up".
 // - The guest's progress lives in this browser, so it is posted to /api/for-you/pool, again whenever it changes.
+//   Until the page has read it (the server's HTML can't know it), the call to action keeps its room but shows neither.
 // The blur sits on a container that never animates; nothing moves under it.
 import { LockClosedIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
@@ -17,6 +18,7 @@ import {
 	snapshotGuestProgress,
 	useGuestInteractions,
 } from "~/utils/guest-progress"
+import { useHydrated } from "~/utils/hydrated"
 import useLocale from "~/utils/locale"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
 import { Heading } from "./Heading"
@@ -58,6 +60,8 @@ const scoresIn = (interactions: TasteInteraction[]) =>
 export function GuestLock({ load = fetchGuest }: { load?: GuestLoader }) {
 	const { locale } = useLocale()
 	const interactions = useGuestInteractions()
+	// The browser's progress is read from the first render after hydration on.
+	const read = useHydrated()
 	const preview = useQuery({
 		queryKey: ["for-you-guest", interactions, locale.language],
 		// Keep showing the last preview while a new rating recomputes it.
@@ -76,7 +80,7 @@ export function GuestLock({ load = fetchGuest }: { load?: GuestLoader }) {
 	return (
 		<div
 			className="mx-auto max-w-[1600px] overflow-x-clip px-4 pt-5 pb-28 md:px-8 lg:pb-10"
-			data-guest-lock={done ? "sign-up" : "quiz"}
+			data-guest-lock={read ? (done ? "sign-up" : "quiz") : "pending"}
 		>
 			<Heading className="mb-5 lg:mb-4" />
 
@@ -114,7 +118,7 @@ export function GuestLock({ load = fetchGuest }: { load?: GuestLoader }) {
 							: `Rate ${QUIZ_GOAL} titles you've seen, then pick a mood and drag your taste to steer.`}
 					</p>
 					<div className="mt-3 lg:mt-6">
-						<CallToAction done={done} />
+						<CallToAction done={read ? done : null} />
 					</div>
 				</div>
 			</div>
@@ -154,7 +158,9 @@ export function GuestLock({ load = fetchGuest }: { load?: GuestLoader }) {
 						<span className="grid size-14 place-items-center rounded-full bg-gray-950/85 ring-1 ring-amber-400/40">
 							<LockClosedIcon className="size-6 text-amber-400" aria-hidden />
 						</span>
-						<span className="text-[13px] font-semibold text-gray-200">
+						<span
+							className={`text-[13px] font-semibold text-gray-200 ${read ? "" : "invisible"}`}
+						>
 							{done ? "Sign up to unlock" : "Take the quiz to unlock"}
 						</span>
 					</span>
@@ -164,10 +170,21 @@ export function GuestLock({ load = fetchGuest }: { load?: GuestLoader }) {
 	)
 }
 
-function CallToAction({ done }: { done: boolean }) {
+/** `done` null: the progress isn't read yet; the button's room stays, empty. */
+function CallToAction({ done }: { done: boolean | null }) {
 	const signUp = useSignUpHref()
 	const className =
 		"inline-flex min-h-11 items-center rounded-full bg-amber-400 px-5 text-[14px] font-black text-gray-950 hover:bg-amber-300"
+	if (done === null)
+		return (
+			<span
+				aria-hidden="true"
+				className={`${className} invisible`}
+				data-cta="pending"
+			>
+				Take the quiz
+			</span>
+		)
 	return done ? (
 		<Link rel="nofollow" to={signUp} className={className} data-cta="sign-up">
 			Sign up

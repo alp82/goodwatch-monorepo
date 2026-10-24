@@ -45,7 +45,12 @@ import { DragHint } from "./DragHint"
 import { type GuestLoader, GuestLock } from "./GuestLock"
 import { HandlePrint } from "./HandlePrint"
 import { Heading } from "./Heading"
-import { PopOutCard } from "./PopOutCard"
+import {
+	LazyPopOutCard,
+	LazyTitleDrawer,
+	usePreloadDetailSurfaces,
+} from "./LazyDetail"
+import { PickContext } from "./PickTap"
 import { Results } from "./Results"
 import {
 	Dice,
@@ -55,17 +60,18 @@ import {
 	type Sheet,
 	TasteBar,
 } from "./TasteBar"
-import { PickContext, SHEET_IN, SHEET_OUT, TitleDrawer } from "./TitleDrawer"
 import {
 	type DetailsLoader,
 	ForYouContext,
 	type ForYouContextValue,
 	detailBatcher,
+	detailQuery,
 	detailQueryKey,
 	fetchDetails,
 	posterSrc,
 } from "./context"
-import { DIM, DIM_IN, DIM_OUT } from "./crossfade"
+import { DIM, DIM_IN, DIM_OUT, SHEET_IN, SHEET_OUT } from "./crossfade"
+import { useFocusScope } from "./focus"
 import { DESK_NARROW, type Surface, useSteering } from "./useSteering"
 
 const SWAP = { type: "spring", stiffness: 420, damping: 40 } as const
@@ -235,12 +241,31 @@ function Steering({
 			isDesk() ? "desk" : sheetRef.current === "recipes" ? "drawer" : "bar",
 		[],
 	)
+	// ?recipe= follows the recipe a pick, drag, dice or Reset lands on (replace, no scroll); handle levels stay out of
+	// the URL. A ?recipe= that changes from outside (a link, back / forward) sets the recipe.
+	const urlWrites = useRef(new Set<string | null>())
+	const writeRecipe = useCallback(
+		(id: string | null) => {
+			urlWrites.current.add(id)
+			setParams(
+				(p) => {
+					const next = new URLSearchParams(p)
+					if (id) next.set("recipe", id)
+					else next.delete("recipe")
+					return next
+				},
+				{ replace: true, preventScrollReset: true },
+			)
+		},
+		[setParams],
+	)
 	const steering = useSteering({
 		pool,
 		stats,
 		taste,
 		initialRecipe: params.get("recipe"),
 		surface,
+		onRecipe: writeRecipe,
 	})
 	const {
 		attr,
@@ -260,20 +285,14 @@ function Steering({
 		answer,
 	} = steering
 
-	// ?recipe= follows the picked recipe (replace, no scroll); handle levels stay out of the URL.
 	const urlRecipe = params.get("recipe")
+	const { follow, current } = steering
 	useEffect(() => {
-		if ((urlRecipe ?? null) === recipe) return
-		setParams(
-			(p) => {
-				const next = new URLSearchParams(p)
-				if (recipe) next.set("recipe", recipe)
-				else next.delete("recipe")
-				return next
-			},
-			{ replace: true, preventScrollReset: true },
-		)
-	}, [recipe, urlRecipe, setParams])
+		// Our own writes arrive here too: the URL caught up (or is on its way to the recipe already picked).
+		if (urlRecipe === current()) return urlWrites.current.clear()
+		if (urlWrites.current.has(urlRecipe)) return
+		follow(urlRecipe)
+	}, [urlRecipe, follow, current])
 
 	// ---------- title details: TanStack Query, batched ----------
 	const queryClient = useQueryClient()
@@ -282,10 +301,7 @@ function Steering({
 		(keys: string[]) => {
 			for (const key of keys)
 				if (queryClient.getQueryData(detailQueryKey(key)) === undefined)
-					queryClient.prefetchQuery({
-						queryKey: detailQueryKey(key),
-						queryFn: () => loadDetail(key),
-					})
+					queryClient.prefetchQuery(detailQuery(key, loadDetail))
 		},
 		[queryClient, loadDetail],
 	)
@@ -341,6 +357,16 @@ function Steering({
 		() => ({ openId: openKey, toggle: togglePick }),
 		[openKey, togglePick],
 	)
+	// Crossing the desktop breakpoint closes the pick and the drawers: each screen size has its own surfaces.
+	const [deskSeen, setDeskSeen] = useState(desk)
+	if (deskSeen !== desk) {
+		setDeskSeen(desk)
+		setOpenKey(null)
+		sheetRef.current = null
+		setSheetState(null)
+	}
+	usePreloadDetailSurfaces()
+
 	// The opened pick with the next five and the previous two, in one request.
 	useEffect(() => {
 		if (!openKey) return
@@ -374,6 +400,9 @@ function Steering({
 	/** Opens a drawer, or swaps the open one in place; the active one's own button closes it. */
 	const openSheet = (s: Exclude<Sheet, null>) => {
 		if (sheetRef.current === s) return closeSheet()
+		const from = document.activeElement
+		if (from instanceof HTMLElement && bar.current?.contains(from))
+			sheetFrom.current = from
 		setOpenKey(null)
 		// The tiles re-sort only on the way in, never under a finger.
 		if (s === "recipes") steering.sortDrawer()
@@ -403,6 +432,16 @@ function Steering({
 	}, [navigation.hubOpen, navigation.searchOpen, closeSheet])
 
 	const open = sheet !== null
+	// Focus moves into the drawer and stays in it and the taste bar (which switches between drawers); on closing it
+	// returns to the bar's button that opened it.
+	const sheetEl = useRef<HTMLDivElement>(null)
+	const sheetFrom = useRef<HTMLElement | null>(null)
+	useFocusScope({
+		active: open,
+		scope: () => [sheetEl.current, bar.current],
+		initial: () => sheetEl.current,
+		returnTo: () => sheetFrom.current,
+	})
 	// Escape closes; while a drawer is open on a phone the page sits at its top and doesn't scroll.
 	useEffect(() => {
 		if (!open) return
@@ -630,16 +669,17 @@ function Steering({
 
 				{/* Phones get the title drawer, desktop the pop-out card. */}
 				{!desk && (
-					<TitleDrawer
+					<LazyTitleDrawer
 						list={ranked}
 						openId={openKey}
 						onOpen={openPick}
 						onClose={closePick}
 						answer={answer}
 						bottom={lift + barH}
+						bar={bar}
 					/>
 				)}
-				<PopOutCard
+				<LazyPopOutCard
 					list={ranked}
 					openId={openKey}
 					onOpen={openPick}
@@ -689,11 +729,13 @@ function Steering({
 							aria-label={
 								sheet === "print" ? "Your taste print" : "Pick a mood"
 							}
+							ref={sheetEl}
+							tabIndex={-1}
 							initial={{ y: "100%" }}
 							animate={{ y: 0, transition: SHEET_IN }}
 							exit={{ y: "100%", transition: SHEET_OUT }}
 							style={{ top: cut }}
-							className="fixed inset-x-0 bottom-0 z-[39] lg:hidden"
+							className="fixed inset-x-0 bottom-0 z-[39] outline-none lg:hidden"
 							data-sheet={sheet}
 						>
 							<motion.div

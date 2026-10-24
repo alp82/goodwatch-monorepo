@@ -16,6 +16,7 @@ export type TasteAttribute = ForYouTaste["attributes"][number]
 /** Loads the details of up to 12 titles by pool key ("movie-550"). */
 export type DetailsLoader = (
 	keys: string[],
+	signal?: AbortSignal,
 ) => Promise<Record<string, ForYouDetail>>
 
 export interface ForYouContextValue {
@@ -28,8 +29,11 @@ export interface ForYouContextValue {
 	prefetch: (keys: string[]) => void
 	/** The cached detail of a title, without loading it. */
 	detail: (key: string) => ForYouDetail | null | undefined
-	/** Loads one title's detail (batched with the other requests of the same tick). */
-	loadDetail: (key: string) => Promise<ForYouDetail | null>
+	/** Loads one title's detail (batched with the other requests of the same tick); the signal cancels it. */
+	loadDetail: (
+		key: string,
+		signal?: AbortSignal,
+	) => Promise<ForYouDetail | null>
 }
 
 export const ForYouContext = createContext<ForYouContextValue | null>(null)
@@ -103,21 +107,62 @@ export const detailQueryKey = (key: string) => ["for-you-detail", key] as const
 /** At most this many titles per details request. */
 export const DETAILS_BATCH = 12
 
-/** Collects the detail requests made in one tick into requests of up to 12 titles. */
+/** A details request that failed with an HTTP status (401 once the session has ended). */
+export class DetailsError extends Error {
+	constructor(readonly status: number) {
+		super(`Details failed: ${status}`)
+		this.name = "DetailsError"
+	}
+}
+
+/** True for a failure that asking again won't fix: the session has ended. */
+export const isSignedOut = (error: unknown) =>
+	error instanceof DetailsError && error.status === 401
+
+/** The details query's options, shared by the detail views and the prefetches. A 401 is not retried. */
+export function detailQuery(
+	key: string,
+	loadDetail: ForYouContextValue["loadDetail"],
+) {
+	return {
+		queryKey: detailQueryKey(key),
+		queryFn: ({ signal }: { signal: AbortSignal }) => loadDetail(key, signal),
+		retry: (failures: number, error: unknown) =>
+			!isSignedOut(error) && failures < 3,
+	}
+}
+
+const aborted = (signal: AbortSignal) =>
+	signal.reason ?? new DOMException("Aborted", "AbortError")
+
+/**
+ * Collects the detail requests made in one tick into requests of up to 12 titles. A request whose signal aborts
+ * leaves its batch (or the queue); a batch whose requests have all left aborts its fetch.
+ */
 export function detailBatcher(load: DetailsLoader) {
+	type Batch = { controller: AbortController; waiters: Set<Waiter> }
 	type Waiter = {
 		resolve: (d: ForYouDetail | null) => void
 		reject: (e: unknown) => void
+		batch: Batch | null
 	}
 	let queue = new Map<string, Waiter[]>()
 	let timer: ReturnType<typeof setTimeout> | null = null
 	const flush = () => {
 		timer = null
-		const batch = [...queue]
+		const all = [...queue]
 		queue = new Map()
-		for (let at = 0; at < batch.length; at += DETAILS_BATCH) {
-			const part = batch.slice(at, at + DETAILS_BATCH)
-			load(part.map(([key]) => key)).then(
+		for (let at = 0; at < all.length; at += DETAILS_BATCH) {
+			const part = all.slice(at, at + DETAILS_BATCH)
+			const batch: Batch = {
+				controller: new AbortController(),
+				waiters: new Set(part.flatMap(([, waiters]) => waiters)),
+			}
+			for (const w of batch.waiters) w.batch = batch
+			load(
+				part.map(([key]) => key),
+				batch.controller.signal,
+			).then(
 				(found) => {
 					for (const [key, waiters] of part)
 						for (const w of waiters) w.resolve(found[key] ?? null)
@@ -129,21 +174,47 @@ export function detailBatcher(load: DetailsLoader) {
 			)
 		}
 	}
-	return (key: string) =>
+	const leave = (key: string, w: Waiter) => {
+		if (w.batch) {
+			const { batch } = w
+			batch.waiters.delete(w)
+			if (batch.waiters.size === 0) batch.controller.abort()
+			return
+		}
+		const waiters = queue.get(key)?.filter((x) => x !== w) ?? []
+		if (waiters.length) queue.set(key, waiters)
+		else queue.delete(key)
+		if (queue.size === 0 && timer) {
+			clearTimeout(timer)
+			timer = null
+		}
+	}
+	return (key: string, signal?: AbortSignal) =>
 		new Promise<ForYouDetail | null>((resolve, reject) => {
+			if (signal?.aborted) return reject(aborted(signal))
+			const w: Waiter = { resolve, reject, batch: null }
 			const waiters = queue.get(key) ?? []
-			waiters.push({ resolve, reject })
+			waiters.push(w)
 			queue.set(key, waiters)
 			timer ??= setTimeout(flush, 0)
+			signal?.addEventListener(
+				"abort",
+				() => {
+					leave(key, w)
+					reject(aborted(signal))
+				},
+				{ once: true },
+			)
 		})
 }
 
 /** The details endpoint: GET /api/for-you/details?keys=a,b,c. */
-export const fetchDetails: DetailsLoader = async (keys) => {
+export const fetchDetails: DetailsLoader = async (keys, signal) => {
 	const res = await fetch(
 		`/api/for-you/details?keys=${keys.map(encodeURIComponent).join(",")}`,
+		{ signal },
 	)
-	if (!res.ok) throw new Error(`Details failed: ${res.status}`)
+	if (!res.ok) throw new DetailsError(res.status)
 	return res.json()
 }
 

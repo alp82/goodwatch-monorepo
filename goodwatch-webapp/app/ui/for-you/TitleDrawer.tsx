@@ -1,18 +1,14 @@
-// Opening a pick's detail, and the phone title drawer.
-// - PickContext: the page tells the results which pick's detail is open and how to toggle it. `PickTap` wraps a
-//   result poster: a tap opens the detail instead of the title page (the detail links there; the card's own link
-//   stays for middle-click and new tabs). It carries data-pop-id so the pop-out card can lift that poster.
-// - TitleDrawer: on phones, the detail as a drawer with the recipe and print drawers' shell (rounded top, grab bar, the
-//   same spring in and ease out). It slides up from behind the taste bar and stops there, so nothing of it passes over
-//   the site nav. The page behind dims like it does for the card. One fixed size, a small poster at the top.
-//   - next / previous: a sideways swipe anywhere on it (or the arrows, arrow keys) crossfades to the neighbour.
-//   - close: drag it down (from the head, or anywhere when its content fits) past 110 px or with a flick, tap the
-//     dimmed page, Escape.
+// Phones: the title drawer, the detail as a drawer with the recipe and print drawers' shell (rounded top, grab bar,
+// the same spring in and ease out). It slides up from behind the taste bar and stops there, so nothing of it passes
+// over the site nav. The page behind dims like it does for the card. One fixed size, a small poster at the top.
+// Its code loads on first use (LazyDetail.tsx).
+// - next / previous: a sideways swipe anywhere on it (or the arrows, arrow keys) crossfades to the neighbour.
+// - close: drag it down (from the head, or anywhere when its content fits) past 110 px or with a flick, tap the
+//   dimmed page, Escape.
+// - focus moves into it on opening and stays in it and the taste bar; it returns to the pick's poster on closing.
 import { AnimatePresence, animate, motion, useMotionValue } from "framer-motion"
 import {
-	createContext,
 	useCallback,
-	useContext,
 	useEffect,
 	useLayoutEffect,
 	useRef,
@@ -26,54 +22,16 @@ import {
 	detailImages,
 } from "./TitleDetail"
 import { titleAt, useForYou } from "./context"
-import { Crossfade, DIM, DIM_IN, DIM_OUT } from "./crossfade"
-import { preload, stepTo, useSwipe } from "./swipe"
-
-export interface PickApi {
-	/** The pool key of the pick whose detail is showing. */
-	openId: string | null
-	toggle: (r: Ranked) => void
-}
-
-export const PickContext = createContext<PickApi | null>(null)
-
-/** A result poster: a tap opens its detail (a tap on the open one closes it). */
-export function PickTap({
-	r,
-	children,
-}: {
-	r: Ranked
-	children: React.ReactNode
-}) {
-	const api = useContext(PickContext)
-	const { pool } = useForYou()
-	if (!api) return <>{children}</>
-	const key = pool.keys[r.index]
-	const on = api.openId === key
-	return (
-		<div
-			data-pop-id={key}
-			className="relative cursor-pointer"
-			onClickCapture={(e) => {
-				if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return
-				e.preventDefault()
-				e.stopPropagation()
-				api.toggle(r)
-			}}
-		>
-			{children}
-			<span
-				aria-hidden="true"
-				className="pointer-events-none absolute -inset-1 rounded-xl ring-2 ring-amber-400 transition-opacity duration-200"
-				style={{ opacity: on ? 1 : 0 }}
-			/>
-		</div>
-	)
-}
-
-/** The recipe and print drawers' motion (ForYouPage.tsx), so all three drawers move alike. */
-export const SHEET_IN = { type: "spring", stiffness: 330, damping: 34 } as const
-export const SHEET_OUT = { duration: 0.28, ease: [0.4, 0, 0.9, 0.6] } as const
+import {
+	Crossfade,
+	DIM,
+	DIM_IN,
+	DIM_OUT,
+	SHEET_IN,
+	SHEET_OUT,
+} from "./crossfade"
+import { useFocusScope } from "./focus"
+import { preload, stepTo, useStepToken, useSwipe } from "./swipe"
 
 const useIso = typeof window === "undefined" ? useEffect : useLayoutEffect
 
@@ -85,6 +43,7 @@ export function TitleDrawer({
 	onClose,
 	answer,
 	bottom,
+	bar,
 }: {
 	list: Ranked[]
 	openId: string | null
@@ -93,6 +52,8 @@ export function TitleDrawer({
 	answer: (r: Ranked) => string | null
 	/** px from the screen's bottom to the taste bar's top; the drawer stops there. */
 	bottom: number
+	/** The taste bar, which stays usable below the drawer. */
+	bar?: React.RefObject<HTMLElement>
 }) {
 	const { pool, detail } = useForYou()
 	const index = openId
@@ -112,6 +73,15 @@ export function TitleDrawer({
 		[pool, detail],
 	)
 
+	// Steps in flight end when the open title changes by anything but the step itself, on closing, and on unmount.
+	const token = useStepToken()
+	useIso(() => token.bump(), [openId, token])
+	useEffect(() => () => token.bump(), [token])
+	const close = useCallback(() => {
+		token.bump()
+		onClose()
+	}, [onClose, token])
+
 	const busy = useRef(false)
 	const go = useCallback(
 		async (d: -1 | 1) => {
@@ -124,27 +94,32 @@ export function TitleDrawer({
 			if (busy.current) return
 			busy.current = true
 			try {
-				await stepTo({
+				const swapped = await stepTo({
 					cx,
 					co,
 					ready: preload(imagesOf(next)),
+					live: token.take(),
 					swap: () => {
 						setDir(d)
 						onOpen(next)
 					},
 				})
+				if (!swapped) {
+					cx.set(0)
+					co.set(1)
+				}
 			} finally {
 				busy.current = false
 			}
 		},
-		[list, index, onOpen, cx, co, imagesOf],
+		[list, index, onOpen, cx, co, imagesOf, token],
 	)
 
 	const open = !!r
 	useEffect(() => {
 		if (!open) return
 		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") return onClose()
+			if (e.key === "Escape") return close()
 			if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return
 			e.preventDefault()
 			e.stopImmediatePropagation()
@@ -158,7 +133,23 @@ export function TitleDrawer({
 			window.removeEventListener("keydown", onKey, true)
 			html.style.overflow = was
 		}
-	}, [open, onClose, go])
+	}, [open, close, go])
+
+	const dialog = useRef<HTMLDivElement>(null)
+	const clip = useRef<HTMLDivElement>(null)
+	const lastId = useRef<string | null>(null)
+	if (openId) lastId.current = openId
+	useFocusScope({
+		active: open,
+		scope: () => [clip.current, bar?.current],
+		initial: () => dialog.current,
+		returnTo: () =>
+			lastId.current
+				? document.querySelector<HTMLElement>(
+						`[data-pop-id="${CSS.escape(lastId.current)}"] a[href]`,
+					)
+				: null,
+	})
 
 	useEffect(() => {
 		if (open) {
@@ -191,7 +182,7 @@ export function TitleDrawer({
 		canPrev: index > 0,
 		canNext: index >= 0 && index < list.length - 1,
 		onStep: go,
-		onClose,
+		onClose: close,
 	})
 	const touch = fits ? "none" : "pan-y"
 
@@ -204,13 +195,14 @@ export function TitleDrawer({
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1, transition: DIM_IN }}
 						exit={{ opacity: 0, transition: DIM_OUT }}
-						onClick={onClose}
+						onClick={close}
 						className={`fixed inset-x-0 top-0 z-[1099] ${DIM}`}
 						style={{ bottom }}
 						data-title-scrim=""
 					/>
 					{/* A clip box that ends at the taste bar, so the drawer slides in from behind it. */}
 					<div
+						ref={clip}
 						className="pointer-events-none fixed inset-x-0 top-[max(4.5rem,10dvh)] z-[1100] overflow-hidden"
 						style={{ bottom }}
 					>
@@ -218,10 +210,12 @@ export function TitleDrawer({
 							// biome-ignore lint/a11y/useSemanticElements: a sliding drawer, not a modal <dialog>
 							role="dialog"
 							aria-label={titleAt(pool, r.index).name}
+							ref={dialog}
+							tabIndex={-1}
 							initial={{ y: "100%" }}
 							animate={{ y: 0, transition: SHEET_IN }}
 							exit={{ y: "100%", transition: SHEET_OUT }}
-							className="pointer-events-auto absolute inset-x-0 bottom-0 flex max-h-full flex-col"
+							className="pointer-events-auto absolute inset-x-0 bottom-0 flex max-h-full flex-col outline-none"
 							data-title-drawer=""
 						>
 							<motion.div

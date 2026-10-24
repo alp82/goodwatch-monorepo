@@ -85,6 +85,7 @@ export function useSteering({
 	taste,
 	initialRecipe,
 	surface,
+	onRecipe,
 }: {
 	pool: DecodedPool
 	stats: PoolStats
@@ -93,6 +94,8 @@ export function useSteering({
 	initialRecipe: string | null
 	/** Read on each drag release and dice roll. */
 	surface: () => Surface
+	/** Told when a pick, a drag, the dice or Reset changes the recipe (not when `follow` does). */
+	onRecipe?: (id: string | null) => void
 }) {
 	const byKey = useMemo(
 		() => new Map(taste.attributes.map((a) => [a.key, a])),
@@ -221,6 +224,8 @@ export function useSteering({
 	const letGoTimer = useRef(0)
 	useEffect(() => () => window.clearTimeout(letGoTimer.current), [])
 
+	const told = useRef(onRecipe)
+	told.current = onRecipe
 	const commit = useCallback((m: string | null, lv: Levels) => {
 		const s = live.current
 		if (s.recipe === m && levelsKey(s.levels) === levelsKey(lv)) return
@@ -231,7 +236,28 @@ export function useSteering({
 		live.current = { recipe: m, levels: lv }
 		setRecipe(m)
 		setLevels(lv)
+		if (s.recipe !== m) told.current?.(m)
 	}, [])
+
+	/** The recipe from outside (?recipe= changed by a link or back / forward): its shape, or your taste for none. */
+	const follow = useCallback(
+		(id: string | null) => {
+			const m = id ? byId.get(id) : undefined
+			const next = m?.id ?? null
+			const lv = m ? { ...m.shape } : FLAT
+			const s = live.current
+			if (s.recipe === next && levelsKey(s.levels) === levelsKey(lv)) return
+			window.clearTimeout(letGoTimer.current)
+			setLetGo(null)
+			live.current = { recipe: next, levels: lv }
+			setRecipe(next)
+			setLevels(lv)
+			setDrawerIds(orderFor(next, lv, DRAWER_SIZE))
+			setDeskIds(deskOrder(next))
+		},
+		[byId, orderFor, deskOrder],
+	)
+	const current = useCallback(() => live.current.recipe, [])
 
 	/** A tile tap in the drawer: pick it, or let it go and keep your own changes on top of it. */
 	const pick = (id: string) => {
@@ -375,6 +401,8 @@ export function useSteering({
 		drawerIds,
 		deskIds,
 		sortDrawer,
+		follow,
+		current,
 		pick,
 		pickOnDesk,
 		onSet,

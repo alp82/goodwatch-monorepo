@@ -21,11 +21,13 @@ import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { ReasonChips } from "~/ui/title-card/ReasonChips"
 import { assetUrl } from "~/utils/asset-url"
+import { useAuthHref } from "~/utils/auth-href"
 import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
 import {
 	type PoolTitle,
 	backdropSrc,
-	detailQueryKey,
+	detailQuery,
+	isSignedOut,
 	posterSrc,
 	titleAt,
 	useForYou,
@@ -33,13 +35,23 @@ import {
 
 const N = FP_KEYS.length
 
-/** One title's detail from the details query; undefined while it loads. */
-export function useDetail(key: string): ForYouDetail | null | undefined {
+/** One title's detail from the details query; `detail` is undefined while it loads or after it failed. */
+export function useDetail(key: string): {
+	detail: ForYouDetail | null | undefined
+	status: "pending" | "error" | "success"
+	signedOut: boolean
+	retry: () => void
+} {
 	const { loadDetail } = useForYou()
-	return useQuery({
-		queryKey: detailQueryKey(key),
-		queryFn: () => loadDetail(key),
-	}).data
+	const query = useQuery(detailQuery(key, loadDetail))
+	return {
+		detail: query.data,
+		// Asking again after a failure shows the loading state again.
+		status:
+			query.status === "error" && query.isFetching ? "pending" : query.status,
+		signedOut: isSignedOut(query.error),
+		retry: () => void query.refetch(),
+	}
 }
 
 export const metaOf = (t: PoolTitle, runtime: number | null | undefined) =>
@@ -141,7 +153,7 @@ export const DetailHead = forwardRef<
 >(function DetailHead({ r, rank, poster, headProps }, slotRef) {
 	const { pool } = useForYou()
 	const t = titleAt(pool, r.index)
-	const detail = useDetail(t.key)
+	const { detail } = useDetail(t.key)
 	const side = poster === "none"
 	return (
 		<div {...headProps} className="relative shrink-0 select-none">
@@ -222,8 +234,10 @@ export function DetailBody({
 }: { r: Ranked; answer: string | null }) {
 	const { pool } = useForYou()
 	const t = titleAt(pool, r.index)
-	const detail = useDetail(t.key)
-	const loading = detail === undefined
+	const { detail, status, signedOut, retry } = useDetail(t.key)
+	const loading = status === "pending"
+	const failed = status === "error"
+	const signIn = useAuthHref()("sign-in")
 	const loved = useLoved(r)
 	const reasonKeys = useMemo(
 		() => r.reasons.slice(0, 3).map((x) => x.key),
@@ -294,7 +308,37 @@ export function DetailBody({
 								<span className="h-2.5 w-8 animate-pulse rounded bg-white/[0.05]" />
 							</span>
 						))}
-					{!loading && shown.length === 0 && (
+					{failed && (
+						<p
+							className="flex min-w-0 items-center gap-1 self-center text-[13px] text-gray-500"
+							data-detail-error={signedOut ? "signed-out" : "failed"}
+						>
+							{signedOut ? (
+								<>
+									<span className="truncate">You're signed out.</span>
+									<Link
+										to={signIn}
+										className="flex min-h-11 shrink-0 items-center px-1.5 font-semibold text-gray-300 underline-offset-2 hover:text-white hover:underline"
+									>
+										Sign in
+									</Link>
+								</>
+							) : (
+								<>
+									<span className="truncate">Couldn't load the details.</span>
+									<button
+										type="button"
+										onClick={retry}
+										className="min-h-11 shrink-0 px-1.5 font-semibold text-gray-300 underline-offset-2 hover:text-white hover:underline"
+										data-detail-retry=""
+									>
+										Try again
+									</button>
+								</>
+							)}
+						</p>
+					)}
+					{status === "success" && shown.length === 0 && (
 						<p className="self-center text-[13px] text-gray-500">
 							Not streaming right now
 						</p>
@@ -340,6 +384,8 @@ export function DetailBody({
 						<span className="block h-3 w-11/12 animate-pulse rounded bg-white/[0.05]" />
 						<span className="block h-3 w-2/3 animate-pulse rounded bg-white/[0.05]" />
 					</div>
+				) : failed ? (
+					<div className="h-[3.75rem] md:h-20" aria-hidden="true" />
 				) : detail?.overview ? (
 					<p className="line-clamp-3 h-[3.75rem] text-[13px] leading-5 text-gray-400 md:line-clamp-4 md:h-20">
 						{detail.overview}

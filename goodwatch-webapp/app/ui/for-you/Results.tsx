@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from "react"
 import type { Ranked } from "~/domain/for-you-page/rank"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
-import { PickTap } from "./TitleDrawer"
+import { PickTap } from "./PickTap"
 import { posterSrc, titleAt, toCard, useForYou } from "./context"
 
 const SPRING = {

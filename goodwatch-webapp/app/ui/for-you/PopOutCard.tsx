@@ -28,7 +28,8 @@ import {
 } from "./TitleDetail"
 import { posterSrc, titleAt, useForYou } from "./context"
 import { Crossfade, DIM, DIM_IN, DIM_OUT, EASE_OUT } from "./crossfade"
-import { preload, stepTo, useSwipe } from "./swipe"
+import { useFocusScope } from "./focus"
+import { preload, stepTo, useStepToken, useSwipe } from "./swipe"
 
 type Box = { x: number; y: number; w: number; h: number }
 type Geo = { poster: Box; card: Box; side: 1 | -1 }
@@ -167,6 +168,20 @@ export function PopOutCard({
 	const mx = useMotionValue(0)
 	const my = useMotionValue(0)
 
+	// Steps in flight end when the open title changes by anything but the step itself, on closing, when the screen
+	// drops below desktop, and on unmount.
+	const token = useStepToken()
+	useIso(() => token.bump(), [openId, enabled, token])
+	useEffect(() => () => token.bump(), [token])
+
+	// Below desktop the pop-out is gone at once (the page closes the pick), its grid posters shown again.
+	useEffect(() => {
+		if (enabled) return
+		setShown(null)
+		setSize(null)
+		setLeaving([])
+	}, [enabled])
+
 	// Follow the page's open id: open, or start closing. (Steps set both at once, see go.)
 	useEffect(() => {
 		if (!enabled) return
@@ -235,7 +250,10 @@ export function PopOutCard({
 			}
 	}, [index, list, size, pool, detail])
 
-	const close = useCallback(() => onClose(), [onClose])
+	const close = useCallback(() => {
+		token.bump()
+		onClose()
+	}, [onClose, token])
 
 	const busy = useRef(false)
 	const go = useCallback(
@@ -248,6 +266,7 @@ export function PopOutCard({
 			}
 			if (busy.current) return
 			busy.current = true
+			const live = token.take()
 			try {
 				const nt = titleAt(pool, next.index)
 				const ready = preload(detailImages(nt, detail(nt.key), "w500"))
@@ -256,14 +275,20 @@ export function PopOutCard({
 				if (src?.el && !src.box) {
 					src.el.scrollIntoView({ block: "center", behavior: "smooth" })
 					await scrollSettled()
+					if (!live()) {
+						cx.set(0)
+						co.set(1)
+						return
+					}
 					src = sourceOf(nt.key)
 				}
 				const from = src?.box ?? null
 				const now = geoFor(from, size)
-				await stepTo({
+				const swapped = await stepTo({
 					cx,
 					co,
 					ready,
+					live,
 					swap: () => {
 						const back = sourceOf(keyOf(r))?.box ?? null
 						setLeaving((ls) => [
@@ -280,11 +305,16 @@ export function PopOutCard({
 						animate(my, 0, MOVE)
 					},
 				})
+				if (!swapped) {
+					cx.set(0)
+					co.set(1)
+				}
 			} finally {
 				busy.current = false
 			}
 		},
 		[
+			token,
 			list,
 			index,
 			shown,
@@ -355,6 +385,22 @@ export function PopOutCard({
 		canNext: index >= 0 && index < list.length - 1,
 		onStep: go,
 		onClose: close,
+	})
+
+	// Focus: into the card on opening, kept in it while it is out, back to the open pick's poster once it is home.
+	const dialog = useRef<HTMLDivElement>(null)
+	const lastId = useRef<string | null>(null)
+	if (shown) lastId.current = shown.id
+	useFocusScope({
+		active: !!shown && !!size && !!r,
+		scope: () => [layer.current],
+		initial: () => dialog.current,
+		returnTo: () =>
+			lastId.current
+				? document.querySelector<HTMLElement>(
+						`[data-pop-id="${CSS.escape(lastId.current)}"] a[href]`,
+					)
+				: null,
 	})
 
 	if (!enabled && !shown) return null
@@ -455,7 +501,10 @@ export function PopOutCard({
 						<motion.div
 							// biome-ignore lint/a11y/useSemanticElements: a positioned card, not a modal <dialog>
 							role="dialog"
+							aria-modal="true"
 							aria-label={titleAt(pool, r.index).name}
+							ref={dialog}
+							tabIndex={-1}
 							initial={{ opacity: 0, y: 4 }}
 							animate={closing ? { opacity: 0, y: 0 } : { opacity: 1, y: 0 }}
 							transition={
@@ -463,7 +512,7 @@ export function PopOutCard({
 									? { duration: 0.12, ease: [0.4, 0, 1, 1] }
 									: { duration: 0.22, delay: 0.06, ease: EASE_OUT }
 							}
-							className={`flex h-full flex-col ${CARD}`}
+							className={`flex h-full flex-col outline-none ${CARD}`}
 							style={{ touchAction: "pan-y" }}
 							data-pop-card=""
 							{...swipe}

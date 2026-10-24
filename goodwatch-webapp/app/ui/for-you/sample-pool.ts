@@ -205,8 +205,10 @@ const OVERVIEW =
 /** Details for sample keys, after a short wait so the loading state shows. */
 export async function sampleDetails(
 	keys: string[],
+	signal?: AbortSignal,
 ): Promise<Record<string, ForYouDetail>> {
 	await new Promise((r) => setTimeout(r, 350))
+	signal?.throwIfAborted()
 	const { pool } = sampleData()
 	const out: Record<string, ForYouDetail> = {}
 	for (const key of keys) {
