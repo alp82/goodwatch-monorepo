@@ -557,7 +557,15 @@ export interface ImportItem extends ImportObservation {
 	outcome: ImportOutcome
 	reason: string | null
 	currentScore?: number | null
-	applyState?: "added" | "updated" | "kept" | "failed" | "undone" | null
+	applyState?:
+		| "added"
+		| "updated"
+		| "kept"
+		| "failed"
+		| "undone"
+		| `waiting:${ImportQuestion}`
+		| `approved:${ImportQuestion}`
+		| null
 }
 
 /** Wishlist evidence whose Seen titles get their own Want to rewatch answer; others ride on the conflict choice. */
@@ -581,6 +589,57 @@ export const followsConflictChoice = (
 	(item.wishlistRewatchChoice
 		? !REWATCH_QUESTION_EVIDENCE.includes(item.wishlistEvidence?.source ?? "")
 		: item.wishlistRewatchChoice !== false)
+
+/** Resolve today's source-specific consent without changing the stored options. */
+export function effectiveImportOptions(
+	item: Pick<ImportItem, "wishlistEvidence">,
+	options: ImportOptions,
+): ImportOptions {
+	return {
+		...options,
+		wishlistRewatch: REWATCH_QUESTION_EVIDENCE.includes(
+			item.wishlistEvidence?.source ?? "",
+		)
+			? options.wishlistRewatch === true
+			: options.conflictChoice === "source",
+	}
+}
+
+/**
+ * Pure eligibility boundary before any writes. Future question holds can be returned here;
+ * today every row either keeps GoodWatch's data or passes with legacy effective options.
+ */
+export function importGate(
+	item: ImportItem,
+	options: ImportOptions,
+): { kept: true } | { effective: ImportOptions } {
+	const effective = effectiveImportOptions(item, options)
+	if (
+		item.kind === "unsupported" ||
+		!effective.kinds.includes(item.kind) ||
+		["unmatched", "unsupported", "invalid", "unchanged"].includes(item.outcome)
+	)
+		return { kept: true }
+	if (
+		item.outcome === "conflict" &&
+		((item.wishlistShowChoice && effective.wishlistShows !== true) ||
+			(item.wishlistRewatchChoice
+				? !effective.wishlistRewatch
+				: item.wishlistRewatchChoice !== false &&
+					effective.conflictChoice === "keep"))
+	)
+		return { kept: true }
+	return { effective }
+}
+
+export const IMPORT_QUESTIONS = [
+	"conflict",
+	"rewatch",
+	"wholeShow",
+	"undated",
+] as const
+export type ImportQuestion = (typeof IMPORT_QUESTIONS)[number]
+export type ImportAnswer = "keep" | "source" | "add" | "leave"
 
 export interface WishlistMatchEvidenceVariant {
 	title: string

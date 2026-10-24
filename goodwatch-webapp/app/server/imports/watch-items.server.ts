@@ -28,7 +28,7 @@ const planKey = (item: ImportItem) => `state:${item.mediaType}:${item.tmdbId}`
 
 async function plans(importId: string, userId: string) {
 	const rows = await select<PlanRow>(
-		"SELECT row_index, source_key, payload, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind = 'state' LIMIT 100001",
+		"SELECT row_index, source_key, payload, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind = 'state' ORDER BY row_index LIMIT 100001",
 		[importId, userId],
 	)
 	return new Map(

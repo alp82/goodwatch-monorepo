@@ -10,10 +10,7 @@ import {
 	eventUuid,
 	withProductContext,
 } from "~/telemetry/product-analytics.server"
-import {
-	REWATCH_QUESTION_EVIDENCE,
-	canImportWantToSee,
-} from "../../domain/imports.ts"
+import { canImportWantToSee, importGate } from "../../domain/imports.ts"
 import {
 	applyImportedEpisodeScore,
 	undoImportedEpisodeScore,
@@ -483,38 +480,18 @@ async function applyRunStored(
 				)
 				.map(ref),
 		)
-		const allowRewatch = (item: ImportItem) =>
-			// Sources whose preview asks Want to rewatch on its own, independent of the conflict choice.
-			REWATCH_QUESTION_EVIDENCE.includes(item.wishlistEvidence?.source ?? "")
-				? options.wishlistRewatch === true
-				: options.conflictChoice === "source"
 		const rewatchWishes: typeof pending = []
 		const tally = { added: 0, updated: 0, kept: 0, failed: 0 }
 		for (const item of pending) {
 			let state: keyof typeof tally = "kept"
 			try {
-				if (
-					item.kind === "unsupported" ||
-					!options.kinds.includes(item.kind) ||
-					["unmatched", "unsupported", "invalid", "unchanged"].includes(
-						item.outcome,
-					)
-				)
-					state = "kept"
-				else if (
-					item.outcome === "conflict" &&
-					((item.wishlistShowChoice && options.wishlistShows !== true) ||
-						(item.wishlistRewatchChoice
-							? !allowRewatch(item)
-							: item.wishlistRewatchChoice !== false &&
-								options.conflictChoice === "keep"))
-				)
-					state = "kept"
+				const gate = importGate(item, options)
+				if ("kept" in gate) state = "kept"
 				else if (
 					isWant(item) &&
 					item.wishlistRewatchChoice &&
 					watchRefs.has(ref(item)) &&
-					allowRewatch(item)
+					gate.effective.wishlistRewatch === true
 				) {
 					// A source can contain both past watches and a current rewatch intention.
 					// Add the intention after the watch writer has cleared earlier wishes.
@@ -547,7 +524,7 @@ async function applyRunStored(
 						id,
 						item,
 						"user_wishlist",
-						allowRewatch(item),
+						gate.effective.wishlistRewatch === true,
 					)
 				else if (item.kind === "favorite")
 					state = await applySet(userId, id, item, "user_favorite")

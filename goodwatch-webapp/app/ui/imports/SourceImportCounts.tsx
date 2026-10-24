@@ -203,6 +203,7 @@ export function SourceItem({
 					</summary>
 					<ol className="ml-6 list-decimal space-y-2">
 						{item.customList.entries.map(({ position, note, entry }, at) => (
+							// biome-ignore lint/suspicious/noArrayIndexKey: Stored receipt entries keep their original order.
 							<li key={at} value={position} className="text-gray-300">
 								<span>
 									{entry.title}
@@ -236,17 +237,7 @@ export function SourceItem({
 				: item.watchedAt
 					? `Watched ${item.watchedAt.slice(0, 10)}`
 					: null
-	const applied = item.applyState
-		? (
-				{
-					added: "Added",
-					updated: "Updated",
-					kept: "Kept",
-					failed: "Failed",
-					undone: "Undone",
-				} as const
-			)[item.applyState]
-		: null
+	const applied = applyLabel(item.applyState)
 	return (
 		<li className="text-sm">
 			<div className="flex flex-wrap justify-between gap-2">
@@ -317,13 +308,18 @@ export function SourceItem({
 	)
 }
 
-const APPLY_LABELS = {
+const APPLY_LABELS: Partial<
+	Record<NonNullable<ImportItem["applyState"]>, string>
+> = {
 	added: "Added",
 	updated: "Updated",
 	kept: "Kept",
 	failed: "Failed",
 	undone: "Undone",
-} as const
+}
+
+const applyLabel = (state: ImportItem["applyState"]) =>
+	state ? (APPLY_LABELS[state] ?? null) : null
 
 function MatchedItem({ item }: { item: ImportItem }) {
 	const matched = item.wishlistResolution
@@ -360,7 +356,7 @@ function MatchedItem({ item }: { item: ImportItem }) {
 				<span className="flex gap-3 tabular-nums text-gray-300">
 					{item.applyState && (
 						<span className="font-semibold text-gray-100">
-							{APPLY_LABELS[item.applyState]}
+							{applyLabel(item.applyState)}
 						</span>
 					)}
 				</span>
