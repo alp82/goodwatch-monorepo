@@ -10,6 +10,7 @@ import {
 } from "~/server/imports/service.server"
 import { NativeImportError } from "~/server/imports/store.server"
 const schema = z.object({
+	waiting: z.literal("conflict").optional(),
 	outcome: z
 		.enum([
 			"new",
@@ -33,6 +34,7 @@ export const loader = ({ request, params }: LoaderFunctionArgs) =>
 	withMember(request, async (userId, headers) => {
 		const q = new URL(request.url).searchParams
 		const parsed = schema.safeParse({
+			waiting: q.get("waiting") || undefined,
 			outcome: q.get("outcome") || undefined,
 			offset: q.get("offset") ?? undefined,
 			limit: q.get("limit") ?? undefined,
@@ -43,7 +45,8 @@ export const loader = ({ request, params }: LoaderFunctionArgs) =>
 		if (!parsed.success)
 			throw new NativeImportError(400, "We couldn't load those import rows.")
 		const id = importId(params)
-		const { by, section, outcome, offset, limit, follows } = parsed.data
+		const { by, section, outcome, offset, limit, follows, waiting } =
+			parsed.data
 		if (by === "title")
 			return json(
 				section
@@ -59,6 +62,7 @@ export const loader = ({ request, params }: LoaderFunctionArgs) =>
 				offset,
 				limit,
 				follows === "conflict-choice",
+				waiting,
 			),
 			{ headers },
 		)

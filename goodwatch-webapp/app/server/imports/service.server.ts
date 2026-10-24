@@ -6,7 +6,7 @@ import type {
 	ImportSummary,
 	ParsedImport,
 } from "~/domain/imports"
-import { confirmImport, undoImport } from "./apply.server.ts"
+import { confirmImport, questionStates, undoImport } from "./apply.server.ts"
 import type { ImportTitleRef } from "./result-catalog.server.ts"
 import {
 	getImportRow,
@@ -62,8 +62,29 @@ export const listImports = async (userId: string): Promise<ImportSummary[]> => {
 }
 export const getImport = async (userId: string, id: string) => {
 	const row = await getImportRow(userId, id)
+	const summary = summarize(row)
+	const tally =
+		row.status !== "preview" && summary.options?.ask
+			? await questionStates(id)
+			: null
 	return {
-		...summarize(row),
+		...summary,
+		...(tally
+			? {
+					questions: (summary.options?.ask ?? []).map((kind) => ({
+						kind,
+						waiting: Number(
+							tally.find((state) => state.apply_state === `waiting:${kind}`)
+								?.n ?? 0,
+						),
+						applying: Number(
+							tally.find((state) => state.apply_state === `approved:${kind}`)
+								?.n ?? 0,
+						),
+						answer: summary.options?.answers?.[kind] ?? null,
+					})),
+				}
+			: {}),
 		...(row.source === "tvtime"
 			? {
 					resolution: await (
@@ -80,7 +101,8 @@ export const getImportItems = (
 	offset: number,
 	limit: number,
 	followsChoice = false,
-) => listItems(userId, id, outcome, offset, limit, followsChoice)
+	waiting?: "conflict",
+) => listItems(userId, id, outcome, offset, limit, followsChoice, waiting)
 /** The outcomes whose titles the poster rows show, in the order they are filled. */
 const POSTER_OUTCOMES: ImportOutcome[] = ["new", "conflict", "unchanged"]
 /** Rows read per outcome to find the titles for a poster row; a title can have many rows. */
@@ -130,6 +152,7 @@ export const getImportResultPage = async (
 	)
 export const getSkippedCsv = (userId: string, id: string) =>
 	skippedCsv(userId, id)
+export { decideImport } from "./apply.server.ts"
 export { confirmImport, undoImport }
 export type { ImportOptions }
 

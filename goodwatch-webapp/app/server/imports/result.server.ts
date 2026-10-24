@@ -211,7 +211,12 @@ function unchangedEntry(
 	options: ImportOptions | null,
 	title: () => ImportResultTitle,
 ): ImportResultEntry | null {
-	if (row.kind === "state") return null
+	if (
+		row.kind === "state" ||
+		row.apply_state?.startsWith("waiting:") ||
+		row.apply_state?.startsWith("approved:")
+	)
+		return null
 	const kind = row.kind as ImportResultKind
 	const payload = () => parse<Partial<ImportItem>>(row.payload, {})
 	if (SKIPPED.includes(row.outcome))
@@ -243,7 +248,8 @@ function unchangedEntry(
 	const reason = keptReason({
 		outcome: row.outcome,
 		applyState: row.apply_state,
-		keepConflicts: options.conflictChoice === "keep",
+		keepConflicts:
+			options.conflictChoice === "keep" && !options.ask?.includes("conflict"),
 		kind,
 		reason: row.reason,
 	})

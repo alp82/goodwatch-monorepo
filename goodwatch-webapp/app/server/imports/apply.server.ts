@@ -1,7 +1,9 @@
 import type { UndoOutcome } from "~/domain/import-result"
 import type {
+	ImportAnswer,
 	ImportItem,
 	ImportOptions,
+	ImportQuestion,
 	ImportSource,
 	ImportSummary,
 } from "~/domain/imports"
@@ -20,9 +22,11 @@ import {
 	NativeImportError,
 	type Param,
 	activeRuns,
+	chunks,
 	claim,
 	getImportRow,
 	itemRows,
+	marks,
 	recordUndo,
 	refreshImports,
 	refreshItems,
@@ -408,24 +412,29 @@ async function markItem(
 	state: "added" | "updated" | "kept" | "failed",
 ) {
 	await run(
-		"UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed')",
+		"UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed' OR apply_state LIKE 'approved:%')",
 		[state, importId, item.index],
 	)
 }
 
-export async function recount(importId: string) {
-	await refreshItems()
-	const rows = await select<{ apply_state: string | null; n: number }>(
+export const questionStates = (importId: string) =>
+	select<{ apply_state: string | null; n: number }>(
 		"SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND kind <> 'state' AND kind <> 'resolution' GROUP BY apply_state",
 		[importId],
 	)
+export async function recount(importId: string) {
+	await refreshItems()
+	const rows = await questionStates(importId)
 	const tally = { added: 0, updated: 0, kept: 0, failed: 0, processed: 0 }
-	for (const row of rows)
+	for (const row of rows) {
+		if (row.apply_state?.startsWith("waiting:"))
+			tally.processed += Number(row.n)
 		if (row.apply_state && row.apply_state in tally) {
 			const n = Number(row.n)
 			tally[row.apply_state as "added" | "updated" | "kept" | "failed"] += n
 			tally.processed += n
 		}
+	}
 	await run(
 		"UPDATE doc.user_import SET processed = ?, added = ?, updated = ?, kept = ?, failed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
 		[
@@ -437,205 +446,370 @@ export async function recount(importId: string) {
 			importId,
 		],
 	)
-	return tally
+	return { ...tally, states: rows }
+}
+
+/** Hold only untouched rows; retries cannot overwrite a decision or a journal. */
+export async function holdQuestions(
+	userId: string,
+	id: string,
+	options: ImportOptions,
+) {
+	if (!options.ask?.length) return
+	const held = (await itemRows(userId, id)).filter(
+		(item) => item.applyState == null && "hold" in importGate(item, options),
+	)
+	for (const batch of chunks(held, 800))
+		await run(
+			`UPDATE doc.user_import_item SET apply_state = 'waiting:conflict' WHERE import_id = ? AND apply_state IS NULL AND row_index IN (${marks(batch.length)})`,
+			[id, ...batch.map((item) => item.index)],
+		)
+	await refreshItems()
+	await recount(id)
+}
+
+async function transitionConflict(
+	id: string,
+	answer: ImportAnswer,
+	indexes: number[] | null,
+) {
+	let decided = 0
+	for (const batch of indexes ? chunks(indexes, 500) : [null]) {
+		const result = await run(
+			`UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP${answer === "keep" ? ", reason = 'You chose to keep what GoodWatch has.'" : ""} WHERE import_id = ? AND apply_state = 'waiting:conflict'${batch ? ` AND row_index IN (${marks(batch.length)})` : ""}`,
+			[answer === "keep" ? "kept" : "approved:conflict", id, ...(batch ?? [])],
+		)
+		decided += result.rowcount ?? 0
+	}
+	return decided
+}
+
+/** Whole-question answers are durable before rows move, so repeating a decision repairs an interrupted request. */
+export async function decideImport(
+	userId: string,
+	id: string,
+	question: ImportQuestion,
+	answer: ImportAnswer,
+	rows?: number[],
+) {
+	if (
+		question !== "conflict" ||
+		!["keep", "source"].includes(answer) ||
+		(rows &&
+			(rows.length > 500 ||
+				rows.some((index) => !Number.isSafeInteger(index) || index < 0)))
+	)
+		throw new NativeImportError(400, "Choose a valid answer and import rows.")
+	let row = await getImportRow(userId, id)
+	const wasStalled = summarize(row).stalled
+	const check = () => {
+		const summary = summarize(row)
+		if (
+			summary.operation !== "apply" ||
+			!["running", "done", "failed"].includes(row.status)
+		)
+			throw new NativeImportError(409, "This import cannot accept answers now.")
+		if (!summary.options?.ask?.includes(question))
+			throw new NativeImportError(
+				400,
+				"This question was not asked for this import.",
+			)
+	}
+	check()
+	if (!rows) {
+		let saved = false
+		for (let attempt = 0; attempt < 3; attempt++) {
+			row = await getImportRow(userId, id)
+			check()
+			const options = JSON.parse(row.options ?? "null") as ImportOptions
+			options.answers = { ...options.answers, [question]: answer }
+			options.conflictChoice = answer === "source" ? "source" : "keep"
+			if (
+				await claim(
+					row,
+					"options = ?, conflict_choice = ?, updated_at = CURRENT_TIMESTAMP",
+					[JSON.stringify(options), options.conflictChoice],
+				)
+			) {
+				saved = true
+				break
+			}
+		}
+		if (!saved)
+			throw new NativeImportError(
+				409,
+				"The import changed. Try your answer again.",
+			)
+	}
+	const indexes = rows ? [...new Set(rows)] : null
+	const decided = await transitionConflict(id, answer, indexes)
+	await run(
+		"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+		[id],
+	)
+	await recount(id)
+	row = await getImportRow(userId, id)
+	if (
+		row.status === "done" ||
+		row.status === "failed" ||
+		(wasStalled && row.status === "running" && !activeRuns.has(id))
+	) {
+		const pending = await itemRows(userId, id, true)
+		if (
+			pending.some(
+				(item) =>
+					item.applyState == null || item.applyState?.startsWith("approved:"),
+			)
+		) {
+			if (
+				await claim(
+					row,
+					"status = 'running', options = ?, updated_at = CURRENT_TIMESTAMP, error = NULL",
+					[row.options],
+				)
+			) {
+				const options = JSON.parse(row.options ?? "null") as ImportOptions
+				await holdQuestions(userId, id, options)
+				void applyRun(userId, id, options)
+			}
+		}
+	}
+	captureProductEvent(
+		userId,
+		"import question answered",
+		{ import_id: id, question, answer, decided },
+		{
+			uuid: eventUuid(
+				`import-question:${userId}:${id}:${question}:${answer}:${indexes ? indexes.sort((a, b) => a - b).join(",") : "all"}`,
+			),
+		},
+	)
+	await refreshImports()
+	const { getImport } = await import("./service.server.ts")
+	return { import: await getImport(userId, id), decided }
 }
 
 async function applyRunStored(
 	userId: string,
 	id: string,
-	options: ImportOptions,
+	initialOptions: ImportOptions,
 ) {
 	if (activeRuns.has(id)) return
 	activeRuns.add(id)
 	let beat: NodeJS.Timeout | undefined
 	try {
-		beat = setInterval(
-			() =>
-				void run(
-					"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-					[id],
-				).catch(() => null),
-			HEARTBEAT_MS,
-		)
-		beat.unref()
-		const pending = await itemRows(userId, id, true)
-		const allItems = await itemRows(userId, id)
-		const ownScores = new Map<string, Snapshot[]>()
-		for (const item of allItems) {
-			const journal = item.payload.journal as Journal | undefined
-			if (journal && (item.kind === "rating" || item.kind === "review"))
-				ownScores.set(ref(item), [
-					...(ownScores.get(ref(item)) ?? []),
-					journal.after,
-				])
-		}
-		const watchRefs = new Set(
-			pending
-				.filter(
-					(x) =>
-						x.kind === "watch" &&
-						x.outcome === "new" &&
-						options.kinds.includes("watch") &&
-						x.tmdbId !== null,
-				)
-				.map(ref),
-		)
-		const rewatchWishes: typeof pending = []
-		const tally = { added: 0, updated: 0, kept: 0, failed: 0 }
-		for (const item of pending) {
-			let state: keyof typeof tally = "kept"
-			try {
-				const gate = importGate(item, options)
-				if ("kept" in gate) state = "kept"
-				else if (
-					isWant(item) &&
-					item.wishlistRewatchChoice &&
-					watchRefs.has(ref(item)) &&
-					gate.effective.wishlistRewatch === true
-				) {
-					// A source can contain both past watches and a current rewatch intention.
-					// Add the intention after the watch writer has cleared earlier wishes.
-					rewatchWishes.push(item)
-					continue
-				} else if (isWant(item) && watchRefs.has(ref(item))) state = "kept"
-				else if (item.kind === "rating" || item.kind === "review") {
-					state = await applyScoreLike(
-						userId,
-						id,
-						item,
-						ownScores.get(ref(item)) ?? [],
-					)
-					const journal = item.payload.journal as Journal | undefined
-					if (journal)
-						ownScores.set(ref(item), [
-							...(ownScores.get(ref(item)) ?? []),
-							journal.after,
-						])
-				} else if (item.kind === "episode_rating")
-					state = await applyImportedEpisodeScore(userId, id, item)
-				else if (item.kind === "list") {
-					const { applyImportedList } = await import(
-						"./custom-list-apply.server.ts"
-					)
-					state = await applyImportedList(userId, id, item)
-				} else if (isWant(item))
-					state = await applySet(
-						userId,
-						id,
-						item,
-						"user_wishlist",
-						gate.effective.wishlistRewatch === true,
-					)
-				else if (item.kind === "favorite")
-					state = await applySet(userId, id, item, "user_favorite")
-				// Watch rows are applied by the tracking phase below. Until a plan is available, leave them pending.
-				else if (item.kind === "watch" || item.kind === "show_status") continue
-			} catch {
-				state = "failed"
+		while (true) {
+			const options = JSON.parse(
+				(await getImportRow(userId, id)).options ??
+					JSON.stringify(initialOptions),
+			) as ImportOptions
+			// Repair an answer racing the confirm hold, or a crash after saving the answer.
+			if (options.ask?.includes("conflict") && options.answers?.conflict) {
+				await transitionConflict(id, options.answers.conflict, null)
+				await refreshItems()
 			}
-			tally[state]++
-			await markItem(id, item, state)
-			if (
-				(state === "added" || state === "updated") &&
-				(item.kind === "rating" ||
-					item.kind === "review" ||
-					isWant(item) ||
-					item.kind === "favorite")
+			beat = setInterval(
+				() =>
+					void run(
+						"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+						[id],
+					).catch(() => null),
+				HEARTBEAT_MS,
 			)
-				captureProductEvent(
-					userId,
-					isWant(item)
-						? "want to see added"
-						: item.kind === "favorite"
-							? "favorite added"
-							: item.kind === "review"
-								? "review saved"
-								: "rating saved",
-					{
-						tmdb_id: item.tmdbId ?? undefined,
-						media_type: item.mediaType,
-						score: item.score ?? undefined,
-						has_review: Boolean(item.review),
-						origin: "import",
-						import_id: id,
-					},
-					{ uuid: eventUuid(`import-item:${userId}:${id}:${item.index}`) },
+			beat.unref()
+			const pending = await itemRows(userId, id, true)
+			const allItems = await itemRows(userId, id)
+			const ownScores = new Map<string, Snapshot[]>()
+			for (const item of allItems) {
+				const journal = item.payload.journal as Journal | undefined
+				if (journal && (item.kind === "rating" || item.kind === "review"))
+					ownScores.set(ref(item), [
+						...(ownScores.get(ref(item)) ?? []),
+						journal.after,
+					])
+			}
+			const watchRefs = new Set(
+				pending
+					.filter(
+						(x) =>
+							x.kind === "watch" &&
+							x.outcome === "new" &&
+							options.kinds.includes("watch") &&
+							x.tmdbId !== null,
+					)
+					.map(ref),
+			)
+			const rewatchWishes: typeof pending = []
+			const tally = { added: 0, updated: 0, kept: 0, failed: 0 }
+			for (const item of pending) {
+				let state: keyof typeof tally = "kept"
+				try {
+					const gate = importGate(item, options)
+					if ("hold" in gate) {
+						await holdQuestions(userId, id, options)
+						continue
+					}
+					if ("kept" in gate) state = "kept"
+					else if (
+						isWant(item) &&
+						item.wishlistRewatchChoice &&
+						watchRefs.has(ref(item)) &&
+						gate.effective.wishlistRewatch === true
+					) {
+						// A source can contain both past watches and a current rewatch intention.
+						// Add the intention after the watch writer has cleared earlier wishes.
+						rewatchWishes.push(item)
+						continue
+					} else if (isWant(item) && watchRefs.has(ref(item))) state = "kept"
+					else if (item.kind === "rating" || item.kind === "review") {
+						state = await applyScoreLike(
+							userId,
+							id,
+							item,
+							ownScores.get(ref(item)) ?? [],
+						)
+						const journal = item.payload.journal as Journal | undefined
+						if (journal)
+							ownScores.set(ref(item), [
+								...(ownScores.get(ref(item)) ?? []),
+								journal.after,
+							])
+					} else if (item.kind === "episode_rating")
+						state = await applyImportedEpisodeScore(userId, id, item)
+					else if (item.kind === "list") {
+						const { applyImportedList } = await import(
+							"./custom-list-apply.server.ts"
+						)
+						state = await applyImportedList(userId, id, item)
+					} else if (isWant(item))
+						state = await applySet(
+							userId,
+							id,
+							item,
+							"user_wishlist",
+							gate.effective.wishlistRewatch === true,
+						)
+					else if (item.kind === "favorite")
+						state = await applySet(userId, id, item, "user_favorite")
+					// Watch rows are applied by the tracking phase below. Until a plan is available, leave them pending.
+					else if (item.kind === "watch" || item.kind === "show_status")
+						continue
+				} catch {
+					state = "failed"
+				}
+				tally[state]++
+				await markItem(id, item, state)
+				if (
+					(state === "added" || state === "updated") &&
+					(item.kind === "rating" ||
+						item.kind === "review" ||
+						isWant(item) ||
+						item.kind === "favorite")
 				)
-			await recount(id)
-		}
-		// tracking.server.ts completes watch items and stores its plans; imported lazily to keep parser-only tests light.
-		await refreshItems()
-		const watchPending = (await itemRows(userId, id, true)).filter(
-			(item) => item.kind === "watch" || item.kind === "show_status",
-		)
-		if (watchPending.length) {
-			const tracking = await import("./watch-items.server.ts")
-			await tracking.applyPendingImportWatches(userId, id, options)
-		}
-		// After the file's own watches: an episode this import scored is marked watched when no pass has a watch of it.
-		const scoredEpisodes = (await itemRows(userId, id)).filter(
-			(item) => item.kind === "episode_rating",
-		)
-		if (scoredEpisodes.length) {
-			const { markImportedEpisodesWatched } = await import(
-				"./episode-score-watches.server.ts"
+					captureProductEvent(
+						userId,
+						isWant(item)
+							? "want to see added"
+							: item.kind === "favorite"
+								? "favorite added"
+								: item.kind === "review"
+									? "review saved"
+									: "rating saved",
+						{
+							tmdb_id: item.tmdbId ?? undefined,
+							media_type: item.mediaType,
+							score: item.score ?? undefined,
+							has_review: Boolean(item.review),
+							origin: "import",
+							import_id: id,
+						},
+						{ uuid: eventUuid(`import-item:${userId}:${id}:${item.index}`) },
+					)
+				await recount(id)
+			}
+			// tracking.server.ts completes watch items and stores its plans; imported lazily to keep parser-only tests light.
+			await refreshItems()
+			const watchPending = (await itemRows(userId, id, true)).filter(
+				(item) => item.kind === "watch" || item.kind === "show_status",
 			)
-			await markImportedEpisodesWatched(
+			if (watchPending.length) {
+				const tracking = await import("./watch-items.server.ts")
+				await tracking.applyPendingImportWatches(userId, id, options)
+			}
+			// After the file's own watches: an episode this import scored is marked watched when no pass has a watch of it.
+			const scoredEpisodes = (await itemRows(userId, id)).filter(
+				(item) => item.kind === "episode_rating",
+			)
+			if (scoredEpisodes.length) {
+				const { markImportedEpisodesWatched } = await import(
+					"./episode-score-watches.server.ts"
+				)
+				await markImportedEpisodesWatched(
+					userId,
+					id,
+					(await getImportRow(userId, id)).source as ImportSource,
+					scoredEpisodes.map((item) => ({
+						...item,
+						applied:
+							item.applyState === "added" || item.applyState === "updated",
+					})),
+				)
+			}
+			for (const item of rewatchWishes) {
+				let state: "added" | "kept" | "failed"
+				try {
+					state = await applySet(userId, id, item, "user_wishlist", true)
+				} catch {
+					state = "failed"
+				}
+				await markItem(id, item, state)
+				if (state === "added")
+					captureProductEvent(
+						userId,
+						"want to see added",
+						{
+							tmdb_id: item.tmdbId ?? undefined,
+							media_type: item.mediaType,
+							origin: "import",
+							import_id: id,
+						},
+						{ uuid: eventUuid(`import-item:${userId}:${id}:${item.index}`) },
+					)
+			}
+			await refreshItems()
+			const appliedRatings = (await itemRows(userId, id)).filter(
+				(x) =>
+					x.kind === "rating" &&
+					x.mediaType === "movie" &&
+					(x.applyState === "added" || x.applyState === "updated") &&
+					x.tmdbId !== null,
+			)
+			await ratingEffects(
 				userId,
-				id,
-				(await getImportRow(userId, id)).source as ImportSource,
-				scoredEpisodes.map((item) => ({
-					...item,
-					applied: item.applyState === "added" || item.applyState === "updated",
-				})),
+				appliedRatings.flatMap((x) => (x.tmdbId === null ? [] : [x.tmdbId])),
 			)
+			await recount(id)
+			clearInterval(beat)
+			// Read the version before checking pending: every decision touches this version.
+			const finishing = await getImportRow(userId, id)
+			const left = await itemRows(userId, id, true)
+			if (left.some((item) => item.applyState !== "failed")) continue
+			const failed = left.length
+			if (
+				!(await claim(
+					finishing,
+					"status = ?, finished_at = COALESCE(finished_at, CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP, error = ?",
+					[
+						failed ? "failed" : "done",
+						failed
+							? "Some rows could not be applied. Try again to finish the import."
+							: null,
+					],
+				))
+			)
+				continue
+			break
 		}
-		for (const item of rewatchWishes) {
-			let state: "added" | "kept" | "failed"
-			try {
-				state = await applySet(userId, id, item, "user_wishlist", true)
-			} catch {
-				state = "failed"
-			}
-			await markItem(id, item, state)
-			if (state === "added")
-				captureProductEvent(
-					userId,
-					"want to see added",
-					{
-						tmdb_id: item.tmdbId ?? undefined,
-						media_type: item.mediaType,
-						origin: "import",
-						import_id: id,
-					},
-					{ uuid: eventUuid(`import-item:${userId}:${id}:${item.index}`) },
-				)
-		}
-		await refreshItems()
-		const appliedRatings = (await itemRows(userId, id)).filter(
-			(x) =>
-				x.kind === "rating" &&
-				x.mediaType === "movie" &&
-				(x.applyState === "added" || x.applyState === "updated") &&
-				x.tmdbId !== null,
-		)
-		await ratingEffects(
-			userId,
-			appliedRatings.flatMap((x) => (x.tmdbId === null ? [] : [x.tmdbId])),
-		)
-		const left = await itemRows(userId, id, true)
-		const failed = left.filter((x) => x.kind !== "unsupported").length
-		await recount(id)
-		await run(
-			"UPDATE doc.user_import SET status = ?, finished_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP, error = ? WHERE id = ?",
-			[
-				failed ? "failed" : "done",
-				failed
-					? "Some rows could not be applied. Try again to finish the import."
-					: null,
-				id,
-			],
-		)
 		await refreshImports()
 		await resetMemberData(userId)
 	} catch (error) {
@@ -676,12 +850,19 @@ export async function confirmImport(
 				watchDates: stored.watchDates,
 				wishlistShows: stored.wishlistShows,
 				wishlistRewatch: stored.wishlistRewatch,
+				...(stored.ask !== undefined ? { ask: stored.ask } : {}),
+				...(stored.answers !== undefined ? { answers: stored.answers } : {}),
 			}
 		: options
-	if (row.status === "done" || row.status === "undone") return summarize(row)
-	if (row.status === "running" && !summarize(row).stalled) return summarize(row)
-	if (!["preview", "failed", "running"].includes(row.status))
-		return summarize(row)
+	const response = () =>
+		stored?.ask
+			? import("./service.server.ts").then((service) =>
+					service.getImport(userId, id),
+				)
+			: Promise.resolve(summarize(row))
+	if (row.status === "done" || row.status === "undone") return response()
+	if (row.status === "running" && !summarize(row).stalled) return response()
+	if (!["preview", "failed", "running"].includes(row.status)) return response()
 	const started = await claim(
 		row,
 		"status = 'running', options = ?, conflict_choice = ?, confirmed_at = COALESCE(confirmed_at,CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP, error = NULL",
@@ -690,9 +871,14 @@ export async function confirmImport(
 			effectiveOptions.conflictChoice,
 		],
 	)
-	if (started) void applyRun(userId, id, effectiveOptions)
+	if (started) {
+		await holdQuestions(userId, id, effectiveOptions)
+		void applyRun(userId, id, effectiveOptions)
+	}
 	await refreshImports()
-	return summarize(await getImportRow(userId, id))
+	return effectiveOptions.ask
+		? (await import("./service.server.ts")).getImport(userId, id)
+		: summarize(await getImportRow(userId, id))
 }
 
 type UndoItem = Awaited<ReturnType<typeof itemRows>>[number]
@@ -845,6 +1031,11 @@ async function undoImportStored(
 		))
 	)
 		return summarize(await getImportRow(userId, id))
+	await run(
+		"UPDATE doc.user_import_item SET apply_state = 'kept' WHERE import_id = ? AND (apply_state LIKE 'waiting:%' OR apply_state LIKE 'approved:%')",
+		[id],
+	)
+	await refreshItems()
 	activeRuns.add(id)
 	const beat = setInterval(
 		() =>
@@ -963,8 +1154,16 @@ async function undoImportStored(
 	}
 }
 
+const localRuns = new Map<string, Promise<void>>()
 async function applyRun(userId: string, id: string, options: ImportOptions) {
-	return withProductContext(
+	// A decision can claim the next run after finishing CAS but before this pod exits the old run.
+	const previous = localRuns.get(id)
+	if (previous) {
+		await previous
+		const row = await getImportRow(userId, id)
+		if (row.status !== "running" || summarize(row).operation !== "apply") return
+	}
+	const task = withProductContext(
 		{ origin: "import", import_id: id, batch_id: id },
 		async () => {
 			captureProductEvent(
@@ -1002,6 +1201,12 @@ async function applyRun(userId: string, id: string, options: ImportOptions) {
 			}
 		},
 	)
+	localRuns.set(id, task)
+	try {
+		await task
+	} finally {
+		if (localRuns.get(id) === task) localRuns.delete(id)
+	}
 }
 
 export async function undoImport(userId: string, importId: string) {

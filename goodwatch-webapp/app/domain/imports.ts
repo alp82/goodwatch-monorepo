@@ -606,20 +606,38 @@ export function effectiveImportOptions(
 }
 
 /**
- * Pure eligibility boundary before any writes. Future question holds can be returned here;
- * today every row either keeps GoodWatch's data or passes with legacy effective options.
+ * Pure eligibility boundary before any writes. Open questions hold their rows;
+ * approved rows carry a row-level answer without changing the other rows' options.
  */
 export function importGate(
 	item: ImportItem,
 	options: ImportOptions,
-): { kept: true } | { effective: ImportOptions } {
-	const effective = effectiveImportOptions(item, options)
+): { kept: true } | { hold: ImportQuestion } | { effective: ImportOptions } {
+	const answered =
+		item.applyState === "approved:conflict"
+			? "source"
+			: options.answers?.conflict
+	const effective = effectiveImportOptions(
+		item,
+		answered
+			? {
+					...options,
+					conflictChoice: answered === "source" ? "source" : "keep",
+				}
+			: options,
+	)
 	if (
 		item.kind === "unsupported" ||
 		!effective.kinds.includes(item.kind) ||
 		["unmatched", "unsupported", "invalid", "unchanged"].includes(item.outcome)
 	)
 		return { kept: true }
+	if (
+		options.ask?.includes("conflict") &&
+		!answered &&
+		followsConflictChoice(item)
+	)
+		return { hold: "conflict" }
 	if (
 		item.outcome === "conflict" &&
 		((item.wishlistShowChoice && effective.wishlistShows !== true) ||
@@ -662,6 +680,10 @@ export interface WishlistMatchGroup {
 }
 
 export interface ImportOptions {
+	/** Questions deferred until the run; omitted by legacy clients. */
+	ask?: ImportQuestion[]
+	/** Server-written whole-question answers; per-row choices live in applyState. */
+	answers?: Partial<Record<ImportQuestion, ImportAnswer>>
 	/** Independent, explicit Watcharr Want to rewatch consent; never implied by rating conflicts. */
 	wishlistRewatch?: boolean
 	/** Explicit conversion of source season/episode wishes to whole-show wishes. */

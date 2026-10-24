@@ -65,7 +65,7 @@ const supportedImportSql = new Set([
 	"SELECT created_at, updated_at, _seq_no, _primary_term FROM user_wishlist WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 	"SELECT id, user_id, source, status, file_name, counts, processed, total, added, updated, kept, failed, error, created_at, updated_at, confirmed_at, finished_at, options, warnings, kinds, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term FROM doc.user_import WHERE id = ?",
 	"SELECT id, user_id, source, status, file_name, counts, processed, total, added, updated, kept, failed, error, created_at, updated_at, confirmed_at, finished_at, options, warnings, kinds, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term FROM doc.user_import WHERE user_id = ? AND source IN (?) AND status <> 'preview' ORDER BY created_at DESC LIMIT 100",
-	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND (apply_state IS NULL OR apply_state = 'failed') ORDER BY row_index LIMIT 100001",
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND (apply_state IS NULL OR apply_state = 'failed' OR apply_state LIKE 'approved:%') ORDER BY row_index LIMIT 100001",
 	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' ORDER BY row_index LIMIT 100001",
 	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' ORDER BY row_index LIMIT ? OFFSET ?",
 	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND outcome = ? ORDER BY row_index LIMIT ? OFFSET ?",
@@ -92,8 +92,8 @@ const supportedImportSql = new Set([
 	"UPDATE doc.user_import_item SET apply_state = 'added', applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND apply_state IS NULL",
 	"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND apply_state IN ('added','updated')",
 	"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND user_id = ? AND kind IN ('watch','state') AND apply_state IN ('added','kept')",
-	"UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed')",
-	"UPDATE doc.user_import_item SET apply_state = ?, watch_id = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed')",
+	"UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed' OR apply_state LIKE 'approved:%')",
+	"UPDATE doc.user_import_item SET apply_state = ?, watch_id = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND row_index = ? AND (apply_state IS NULL OR apply_state = 'failed' OR apply_state LIKE 'approved:%')",
 	"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ?",
 	"UPDATE episode SET tvdb_id = ? WHERE show_id = ? AND tmdb_id = ? AND removed_at IS NULL AND tvdb_id = ?",
 	"UPDATE episode SET tvdb_id = ? WHERE show_id = ? AND tmdb_id = ? AND removed_at IS NULL AND tvdb_id IS NULL",
@@ -101,6 +101,39 @@ const supportedImportSql = new Set([
 	"UPDATE user_score SET score = ?, review = ?, created_at = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
 	"UPDATE user_score SET score = ?, review = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
 ])
+supportedImportSql.add(
+	"UPDATE doc.user_import_item SET apply_state = 'waiting:conflict' WHERE import_id = ? AND apply_state IS NULL AND row_index IN (?)",
+)
+supportedImportSql.add(
+	"UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND apply_state = 'waiting:conflict'",
+)
+supportedImportSql.add(
+	"UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP WHERE import_id = ? AND apply_state = 'waiting:conflict' AND row_index IN (?)",
+)
+supportedImportSql.add(
+	"UPDATE doc.user_import_item SET apply_state = 'kept' WHERE import_id = ? AND (apply_state LIKE 'waiting:%' OR apply_state LIKE 'approved:%')",
+)
+supportedImportSql.add(
+	"UPDATE doc.user_import SET options = ?, conflict_choice = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND _seq_no = ? AND _primary_term = ?",
+)
+supportedImportSql.add(
+	"UPDATE doc.user_import SET status = ?, finished_at = COALESCE(finished_at, CURRENT_TIMESTAMP), updated_at = CURRENT_TIMESTAMP, error = ? WHERE id = ? AND _seq_no = ? AND _primary_term = ?",
+)
+for (const sql of [...supportedImportSql]) {
+	if (sql.includes("AND apply_state = 'waiting:conflict'"))
+		supportedImportSql.add(
+			sql.replace(
+				"applied_at = CURRENT_TIMESTAMP",
+				"applied_at = CURRENT_TIMESTAMP, reason = 'You chose to keep what GoodWatch has.'",
+			),
+		)
+}
+supportedImportSql.add(
+	"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+)
+supportedImportSql.add(
+	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND apply_state = ? ORDER BY row_index LIMIT ? OFFSET ?",
+)
 function assertSupportedImportSql(sql: string) {
 	// Crate rejects non-key predicates on an OCC write, even with the full PK.
 	// The real database regression is resolution-store.integration.ts.
@@ -389,6 +422,8 @@ export class ImportDb {
 				rows = rows.filter((x) => x.row_index === params[2])
 			if (s.includes("AND outcome = ?"))
 				rows = rows.filter((x) => x.outcome === params[2])
+			if (s.includes("AND apply_state = ?"))
+				rows = rows.filter((row) => row.apply_state === params[2])
 			if (s.includes("ORDER BY row_index"))
 				rows.sort((a, b) => Number(a.row_index) - Number(b.row_index))
 			if (s.includes("LIMIT ? OFFSET ?"))
@@ -404,7 +439,11 @@ export class ImportDb {
 				rows = rows.filter((x) => x.kind !== "resolution")
 			if (s.includes("apply_state IS NULL OR apply_state = 'failed'"))
 				rows = rows.filter(
-					(x) => x.apply_state == null || x.apply_state === "failed",
+					(x) =>
+						x.apply_state == null ||
+						x.apply_state === "failed" ||
+						(s.includes("LIKE 'approved:%'") &&
+							String(x.apply_state).startsWith("approved:")),
 				)
 			if (s.includes("GROUP BY apply_state")) {
 				const counts = new Map<unknown, number>()
@@ -681,8 +720,15 @@ export class ImportDb {
 				if (!claim || claim._seq_no !== seq || claim._primary_term !== term)
 					return { rowcount: 0 }
 				if (s.includes("options = ?")) claim.options = params[0]
-				claim.status = "running"
-				claim.error = null
+				if (s.includes("conflict_choice = ?")) claim.conflict_choice = params[1]
+				if (s.includes("status = 'running'")) claim.status = "running"
+				if (s.includes("confirmed_at =")) claim.confirmed_at ??= new Date()
+				if (s.includes("status = ?")) {
+					claim.status = params[0]
+					claim.error = params[1]
+					claim.finished_at ??= new Date()
+				}
+				if (s.includes("error = NULL")) claim.error = null
 				claim.updated_at = new Date()
 				claim._seq_no = ++this.version
 				return { rowcount: 1 }
@@ -739,6 +785,44 @@ export class ImportDb {
 			row.undo_outcome = params[0]
 			return { rowcount: 1 }
 		}
+		if (
+			s.startsWith("UPDATE doc.user_import_item SET apply_state") &&
+			(s.includes("row_index IN (") ||
+				s.includes("apply_state = 'waiting:conflict'") ||
+				s.includes("LIKE 'waiting:%'"))
+		) {
+			const holding = s.includes("SET apply_state = 'waiting:conflict'")
+			const undo = s.includes("LIKE 'waiting:%'")
+			const id = params[holding || undo ? 0 : 1]
+			const indexes = params.slice(holding ? 1 : 2)
+			let rowcount = 0
+			for (const row of this.items) {
+				if (
+					row.import_id !== id ||
+					(s.includes("row_index IN (") &&
+						!indexes.includes(row.row_index as Param))
+				)
+					continue
+				if (
+					holding
+						? row.apply_state != null
+						: undo
+							? !/^(waiting|approved):/.test(String(row.apply_state))
+							: row.apply_state !== "waiting:conflict"
+				)
+					continue
+				row.apply_state = holding
+					? "waiting:conflict"
+					: undo
+						? "kept"
+						: params[0]
+				if (!holding && !undo) row.applied_at = new Date()
+				if (s.includes("reason = 'You chose"))
+					row.reason = "You chose to keep what GoodWatch has."
+				rowcount++
+			}
+			return { rowcount }
+		}
 		if (s.startsWith("UPDATE doc.user_import_item SET apply_state = 'added'")) {
 			const row = requiredRow(
 				this.items.find(
@@ -757,7 +841,14 @@ export class ImportDb {
 					(x) => x.import_id === params[2] && x.row_index === params[3],
 				),
 			)
+			if (
+				row.apply_state != null &&
+				row.apply_state !== "failed" &&
+				!String(row.apply_state).startsWith("approved:")
+			)
+				return { rowcount: 0 }
 			row.apply_state = params[0]
+			row.applied_at = new Date()
 			row.watch_id = params[1]
 			return { rowcount: 1 }
 		}
@@ -767,14 +858,25 @@ export class ImportDb {
 					(x) => x.import_id === params[1] && x.row_index === params[2],
 				),
 			)
+			if (
+				s.includes("apply_state IS NULL") &&
+				row.apply_state != null &&
+				row.apply_state !== "failed" &&
+				!String(row.apply_state).startsWith("approved:")
+			)
+				return { rowcount: 0 }
 			row.apply_state = params[0]
+			row.applied_at = new Date()
 			return { rowcount: 1 }
 		}
 		if (s.includes("UPDATE doc.user_import_item SET apply_state = 'undone'")) {
 			for (const row of this.items)
 				if (
 					row.import_id === params[0] &&
-					["added", "updated", "kept"].includes(String(row.apply_state)) &&
+					(s.includes("kind IN ('watch','state')")
+						? ["added", "kept"]
+						: ["added", "updated"]
+					).includes(String(row.apply_state)) &&
 					(!s.includes("kind IN") ||
 						(s.includes("'show_status'")
 							? ["watch", "show_status", "state"]

@@ -158,6 +158,12 @@ export function summarize(row: ImportRow): ImportSummary {
 		options: storedOptions
 			? {
 					kinds: storedOptions.kinds,
+					...(storedOptions.ask !== undefined
+						? { ask: storedOptions.ask }
+						: {}),
+					...(storedOptions.answers !== undefined
+						? { answers: storedOptions.answers }
+						: {}),
 					conflictChoice: storedOptions.conflictChoice,
 					watchDates: storedOptions.watchDates,
 					...(storedOptions.wishlistRewatch !== undefined
@@ -295,7 +301,7 @@ export async function itemRows(
 	const rows = await select<
 		ItemRow & { undo_outcome: StoredUndoOutcome | null }
 	>(
-		`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' ${pendingOnly ? "AND (apply_state IS NULL OR apply_state = 'failed')" : ""} ORDER BY row_index LIMIT 100001`,
+		`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state, undo_outcome FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' ${pendingOnly ? "AND (apply_state IS NULL OR apply_state = 'failed' OR apply_state LIKE 'approved:%')" : ""} ORDER BY row_index LIMIT 100001`,
 		[id, userId],
 	)
 	return rows.map((row) => ({
@@ -321,8 +327,25 @@ export async function listItems(
 	limit: number,
 	/** Only the conflict rows confirm decides by the conflict choice, counted exactly; for the conflict question. */
 	followsChoice = false,
+	waiting?: "conflict",
 ) {
 	const summary = summarize(await getImportRow(userId, id))
+	if (waiting) {
+		const rows = await select<ItemRow>(
+			"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND apply_state = ? ORDER BY row_index LIMIT ? OFFSET ?",
+			[id, userId, `waiting:${waiting}`, limit, offset],
+		)
+		const counts = await select<{ apply_state: string | null; n: number }>(
+			"SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND kind <> 'state' AND kind <> 'resolution' GROUP BY apply_state",
+			[id],
+		)
+		return {
+			items: rows.map(publicItemRow),
+			total: Number(
+				counts.find((row) => row.apply_state === `waiting:${waiting}`)?.n ?? 0,
+			),
+		}
+	}
 	if (followsChoice) {
 		const conflicts = await select<ItemRow>(
 			"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND outcome = ? ORDER BY row_index LIMIT ? OFFSET ?",
