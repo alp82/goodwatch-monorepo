@@ -1,0 +1,156 @@
+[
+  {
+    "name": "card-slide-1",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/card-slide-1/card-slide-1.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 5267
+  },
+  {
+    "name": "card-place-1",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/card-place-1/card-place-1.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 6103
+  },
+  {
+    "name": "dice-shake-1",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/dice-shake-1/dice-shake-1.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 12372
+  },
+  {
+    "name": "dice-throw-1",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/dice-throw-1/dice-throw-1.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 5685
+  },
+  {
+    "name": "pluck-001",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/pluck-001/pluck-001.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 1296
+  },
+  {
+    "name": "pluck-002",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/pluck-002/pluck-002.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 1923
+  },
+  {
+    "name": "success-chime",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/success-chime/success-chime.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 4431
+  },
+  {
+    "name": "card-shove-1",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/card-shove-1/card-shove-1.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 6730
+  },
+  {
+    "name": "card-shove-2",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/card-shove-2/card-shove-2.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 6730
+  },
+  {
+    "name": "card-shove-3",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/card-shove-3/card-shove-3.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 6103
+  },
+  {
+    "name": "card-slide-2",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/card-slide-2/card-slide-2.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 5267
+  },
+  {
+    "name": "card-slide-3",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/card-slide-3/card-slide-3.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 5267
+  },
+  {
+    "name": "card-slide-4",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/card-slide-4/card-slide-4.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 4222
+  },
+  {
+    "name": "card-slide-5",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/card-slide-5/card-slide-5.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 5267
+  },
+  {
+    "name": "card-slide-6",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/card-slide-6/card-slide-6.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 5267
+  },
+  {
+    "name": "card-slide-7",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/card-slide-7/card-slide-7.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 5685
+  },
+  {
+    "name": "card-slide-8",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/card-slide-8/card-slide-8.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 5894
+  },
+  {
+    "name": "card-fan-1",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/card-fan-1/card-fan-1.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 6312
+  },
+  {
+    "name": "card-fan-2",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/card-fan-2/card-fan-2.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 11118
+  },
+  {
+    "name": "click-001",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/click-001/click-001.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 1296
+  },
+  {
+    "name": "click-002",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/click-002/click-002.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 669
+  },
+  {
+    "name": "click-003",
+    "source": "https://raw.githubusercontent.com/kapishdima/soundcn/main/registry/soundcn/sounds/click-003/click-003.ts",
+    "license": "CC0",
+    "author": "Kenney",
+    "bytes": 669
+  }
+]

@@ -52,4 +52,45 @@ export const introCss = `
 .home-landing .mini-control:focus-visible,.home-landing .mini-touch-controls .mini-control,.home-landing .mini-user-paused .mini-control{opacity:1;pointer-events:auto}
 @media(hover:hover){.home-landing .mini-intro:hover .mini-control{opacity:1;pointer-events:auto}}
 @media(prefers-reduced-motion:reduce){.home-landing .mini-control{transition:none}}
+
+/* Review v2: GoodWatch-like holds, eased departures and gentle movement while reading. */
+.mini-film,.mini-film *{animation-duration:18s}
+.mini-card{z-index:1}.mini-flick{z-index:3;background:linear-gradient(155deg,#343244,#191825)}
+.mini-yep{position:absolute;inset:0;z-index:2;border:1px solid #ffffff40;border-radius:6px;overflow:hidden;background:linear-gradient(155deg,#23463e,#0c171b);box-shadow:0 5px 12px #0006;animation:mini-yep 18s cubic-bezier(.22,1,.36,1) infinite both;animation-delay:var(--delay)}
+.mini-flick{animation-timing-function:cubic-bezier(.22,1,.36,1)}
+.mini-vote-mark{position:absolute;top:7px;left:3px;right:3px;text-align:center;border:1.5px solid currentColor;border-radius:3px;font:900 12px/1.5 GabaritoBold,system-ui;letter-spacing:.2px;transform:rotate(-9deg);opacity:0}
+.mini-vote-nope{color:#fff;background:#dc2626d9;animation:mini-nope-mark 18s ease infinite both;animation-delay:var(--delay)}
+.mini-vote-yep{color:#fff;background:#15803de8;transform:rotate(9deg);animation:mini-yep-mark 18s ease infinite both;animation-delay:var(--delay)}
+@keyframes mini-clock{0%{opacity:0}4%,96%{opacity:1}100%{opacity:0}}
+@keyframes mini-flick{0%,6%{opacity:1;transform:rotate(var(--tilt))}9%{opacity:1;transform:translate(-9px,1px) rotate(-9deg)}14%,100%{opacity:0;transform:translate(-84px,-12px) rotate(-27deg)}}
+@keyframes mini-nope-mark{0%,6%{opacity:0}8%,13%{opacity:1}15%,100%{opacity:0}}
+@keyframes mini-yep{0%,20%{opacity:1;transform:rotate(var(--tilt))}23%{opacity:1;transform:translate(10px,-2px) rotate(10deg)}28%,100%{opacity:0;transform:translate(84px,-14px) rotate(27deg)}}
+@keyframes mini-yep-mark{0%,20%{opacity:0}22%,27%{opacity:1}29%,100%{opacity:0}}
+@keyframes mini-tap{0%,5%{opacity:0;transform:translate(0,0) scale(.7)}7%,10%{opacity:.6;transform:translate(-8px,0) scale(1)}14%,19%{opacity:0;transform:translate(-70px,-12px) scale(.6)}20%{opacity:0;transform:translate(0,0) scale(.7)}22%,24%{opacity:.6;transform:translate(10px,-2px) scale(1)}28%,100%{opacity:0;transform:translate(70px,-12px) scale(.6)}}
+@keyframes mini-gather{0%,34%{transform:translateX(0);opacity:1}42%,100%{transform:translateX(calc(var(--offset) * -1));opacity:1}}
+@keyframes mini-gather-side{0%,34%{transform:translateX(0);opacity:1}40%{opacity:.8}43%,100%{transform:translateX(calc(var(--offset) * -1)) scale(.95);opacity:0}}
+@keyframes mini-winner{0%,35%{transform:scale(1);border-color:#ffffff40}43%{transform:scale(1.12);border-color:#fbbf24;box-shadow:0 0 20px #fbbf2433}49%,100%{transform:scale(1.16);border-color:#fbbf24;box-shadow:0 0 16px #fbbf2420}}
+@keyframes mini-hop{0%,22%{transform:scale(1)}24%{transform:scale(1.12,.84)}26%{transform:translateY(-8px)}30%,53%{transform:scale(1)}60%,100%{transform:translateY(-4px) scale(.6);opacity:0}}
+@keyframes mini-hop-left{0%,22%{transform:scale(1)}24%{transform:scale(1.12,.84)}26%{transform:translateY(-8px)}30%,34%{transform:scale(1)}42%,53%{transform:translateX(60px)}60%,100%{transform:translate(60px,-4px) scale(.6);opacity:0}}
+@keyframes mini-hop-right{0%,22%{transform:scale(1)}24%{transform:scale(1.12,.84)}26%{transform:translateY(-8px)}30%,34%{transform:scale(1)}42%,53%{transform:translateX(-60px)}60%,100%{transform:translate(-60px,-4px) scale(.6);opacity:0}}
+@keyframes mini-halo{0%,35%{opacity:0}44%{opacity:1}60%,100%{opacity:.6}}
+@keyframes mini-spark{0%,40%{opacity:0;transform:scale(.3)}44%{opacity:1;transform:scale(1.2)}50%,100%{opacity:0;transform:translateY(-8px) scale(.7)}}
+@keyframes mini-agree{0%,50%{opacity:0}53%,61%{opacity:1}65%,100%{opacity:0}}
+@keyframes mini-pip{0%,52%{background:#5c5132;transform:scale(1)}54%{background:#fbbf24;transform:scale(1.4)}57%,100%{background:#fbbf24;transform:scale(1)}}
+@keyframes mini-word{0%,57%{opacity:0}60%,100%{opacity:1}}
+@keyframes mini-caption-one{0%{opacity:0;transform:translateY(6px)}5%,29%{opacity:1;transform:translateY(0)}33%,100%{opacity:0;transform:translateY(-6px)}}
+@keyframes mini-caption-two{0%,31%{opacity:0;transform:translateY(6px)}36%,57%{opacity:1;transform:translateY(0)}61%,100%{opacity:0;transform:translateY(-6px)}}
+@keyframes mini-caption-three{0%,61%{opacity:0;transform:translateY(6px)}66%,100%{opacity:1;transform:translateY(0)}}
+@keyframes mini-cards-exit{0%,62%{opacity:1}67%,100%{opacity:0}}
+@keyframes mini-tv-enter{0%,63%{opacity:0;transform:scale(.65) translateY(8px)}71%{opacity:1;transform:scale(1)}100%{opacity:1;transform:scale(1.025)}}
+@keyframes stream-intro{0%,70%{opacity:1}76%,100%{opacity:0}}
+@keyframes movie-reveal{0%,70%{opacity:.2}77%,100%{opacity:1}}
+@keyframes movie-moon{0%,70%{transform:translate(9px,2px)}100%{transform:translate(-5px,-2px)}}
+@keyframes movie-stars{0%,70%{transform:translateX(0)}100%{transform:translateX(-8px)}}
+@keyframes movie-far{0%,70%{transform:translateX(0)}100%{transform:translateX(-18px)}}
+@keyframes movie-near{0%,70%{transform:translateX(0)}100%{transform:translateX(-42px)}}
+@keyframes movie-comet{0%,81%{opacity:0;transform:translate(0,0) rotate(25deg)}82%{opacity:1}88%,100%{opacity:0;transform:translate(63px,24px) rotate(25deg)}}
+@keyframes player-on{0%,75%{opacity:0}80%,100%{opacity:.85}}
+@keyframes player-progress{0%,75%{transform:scaleX(.2)}100%{transform:scaleX(2.2)}}
+.mini-quiet .mini-yep{display:none}
 `;

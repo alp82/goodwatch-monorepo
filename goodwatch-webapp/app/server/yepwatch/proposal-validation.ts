@@ -134,6 +134,7 @@ export const proposalCommandSchema = z
 				})
 				.strict(),
 			z.object({ type: z.literal("restart"), expectedRevision: n }).strict(),
+			z.object({ type: z.literal("resume_voting"), expectedRevision: n }).strict(),
 		]),
 	})
 	.strict()

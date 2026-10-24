@@ -53,6 +53,7 @@ All commands use actor credentials, deterministic command IDs, monotonically inc
 | Refill / anyone | Current generation/stream and usable screens | Append unseen page; retire fully answered nonmatches except proposal/last-answer pins | Slow people pin cards; honest exhausted/incomplete/capacity, no infinite/full-catalog guarantee |
 | Final check / server | Current proposal, every required person approved and Yep, usable screens | Persist checking, fresh occupied-screen evidence, CAS Done | No host finalize. Join/undo/replacement/withdraw defeats stale CAS; unknown retains proposal |
 | Retry / participant | Exact checker and proposal versions, complete agreement | New durable checking attempt | Explicit recovery; unavailable is not a decision |
+| Keep swiping / active participant | Decided, exact room revision | Return to choosing; keep cards, private answers, timing, roster and expiry; advance generation and clear proposal/agreements/decision | Explicit shared command. Back only reviews the saved decision. Exact retries cannot reopen a later decision |
 | Restart / host | Exact room revision | New setup/context/roster/generation; clear candidates/votes/proposal | Explicit only, never automatic after no match/away |
 
 ## Orthogonal state

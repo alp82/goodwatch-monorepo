@@ -1,3 +1,5 @@
+import { playFeedback } from '../feedback/sounds';
+import { useRoomFeedback, SoundToggle } from '../feedback/RoomFeedback';
 import { GoodWatchSignIn } from './GoodWatchSignIn';
 import { EdgeBack } from './EdgeBack';
 import { shareInvitation } from '../../core/share-invitation';
@@ -136,6 +138,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
     entry.required,
     send,
   ]);
+  useRoomFeedback(snapshot, drawer === 'trailer');
   const observedCard = snapshot ? ownCard(snapshot, optimistic) : null;
   const observedVote = snapshot?.own.votes.find((v) => v.candidateId === observedCard?.id);
   const exposureKey =
@@ -267,6 +270,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   });
   async function vote(yes: boolean) {
     if (!card || disabled) return;
+    playFeedback('swipe');
     const current = own.votes.find((v) => v.candidateId === card.id);
     setOptimistic(card.id);
     setLocalReaction({ at: Date.now(), answer: yes });
@@ -356,7 +360,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
             }
             onPress={() => {
               if (matches.length || shared.proposal) {
-                setView('matches');
+                playFeedback('matches'); setView('matches');
               }
             }}
             disabled={!matches.length && !shared.proposal}
@@ -556,6 +560,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           canRestart={own.canHost}
           disabled={disabled}
           watch={{ identity: card.identity, availability: shared.decision?.availability ?? [], screens: shared.screens }}
+          reopen={() => void send({ type: 'resume_voting', expectedRevision: shared.revision })}
           restart={() => void send({ type: 'restart', expectedRevision: shared.revision })}
         />
       ) : view === 'matches' ? (
@@ -590,7 +595,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           wide={wide}
           focus={active}
           setFocus={setActive}
-          keepVoting={() => { if (decided) setReviewingDecision(false); else setView('voting'); }}
+          keepVoting={() => { if (decided) void send({ type: 'resume_voting', expectedRevision: shared.revision }); else setView('voting'); }}
           propose={(id) => void propose(id)}
           agree={() => void agree(true)}
           withdraw={() => void agree(false)}
@@ -872,6 +877,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
               Start over with this group
             </Pill>
           )}
+          <SoundToggle />
           <Feedback />
         </Drawer>
       )}

@@ -31,3 +31,11 @@ Room configuration keeps Save outside the scrolling fields and providers. Countr
 A cached poster now waits for the asynchronous motion preference before revealing itself. The same opacity animation owns the fade on Android (the image's built-in fade is disabled). Reduced-motion voting keeps the outgoing card offscreen until the next title resets its position.
 
 Validation: 63 unit tests, 89 browser checks, typecheck/lint (one pre-existing warning), and both native exports passed. The regression reproduces a cached image arriving before the native motion-setting response, then verifies monotonic fading, reduced motion and failed preference reads. Native release validation is recorded with the build evidence when complete.
+
+## Build 14: approved motion, sound and continued voting
+
+Promoted the selected work from `prototype/yepwatch-polish-review` through `e9943588c`, without its review controls or fixture runtime. The GoodWatch-paced logo reveal keeps the same wordmark through its flight into the header. The larger, centered intro includes both Nope and Yep swipes. Details and Trailer now share the poster's top row; matches have one contextual Back control. Both platforms use the shared-cards icon with the tilted Y.
+
+**Keep swiping** explicitly reopens the shared decision: answers, cards, timings, people and expiry stay intact, while the proposal and approvals clear. A fresh agreement is required to decide again. Back still reviews the final choice without changing it. The command is revision-fenced and exact retries cannot reopen a later decision.
+
+Sound effects use the requested SoundCN/Kenney clips: join/leave plucks, outgoing shoves, incoming slides, card fans for the first deal and opening matches, clicks for lenses, dice cues and the final success chime. Room changes drive shared cues without revealing private answers. The Room drawer offers a persisted mute preference; backgrounding and trailers stop effects, and native effects respect silent mode. Asset provenance is in `assets/sounds/SOURCES.json`. The player keeps its embedded controls and removes the two redundant external actions.

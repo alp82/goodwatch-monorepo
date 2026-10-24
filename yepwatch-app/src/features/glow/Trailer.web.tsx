@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Linking, View } from 'react-native';
-import { GText, Pill } from './theme';
-import { embeddingRefused, playbackMessage, playerHtml, youtubeId, type Playback } from './trailer';
+import { View } from 'react-native';
+import { GText } from './theme';
+import { playbackMessage, playerHtml, youtubeId, type Playback } from './trailer';
 export function Trailer({ url }: { url: string }) {
   const id = youtubeId(url);
   const frame = useRef<HTMLIFrameElement>(null);
@@ -44,27 +44,6 @@ export function Trailer({ url }: { url: string }) {
       <GText color="#a3a3a3" size={14}>
         {playbackMessage(playback)}
       </GText>
-      {!embeddingRefused(playback) && (
-        <Pill
-          label="Play with sound"
-          icon="play"
-          onPress={() =>
-            frame.current?.contentWindow?.postMessage(
-              { channel, command: 'sound' },
-              window.location.origin
-            )
-          }
-        >
-          Play with sound
-        </Pill>
-      )}
-      <Pill
-        label="Watch on YouTube"
-        icon="external"
-        onPress={() => void Linking.openURL(`https://www.youtube.com/watch?v=${id}`)}
-      >
-        Watch on YouTube
-      </Pill>
     </View>
   );
 }

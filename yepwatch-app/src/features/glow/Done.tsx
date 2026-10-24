@@ -1,3 +1,4 @@
+import { SuccessHalo } from './SuccessHalo';
 import { FadeImage } from './FadeImage';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -15,6 +16,7 @@ export function Done({
   disabled,
   watch,
   restart,
+  reopen,
 }: {
   title: GlowTitle;
   width: number;
@@ -23,6 +25,7 @@ export function Done({
   disabled: boolean;
   watch: Omit<ComponentProps<typeof WatchLinks>, 'compact'>;
   restart: () => void;
+  reopen?: () => void;
 }) {
   const wide = width >= 900;
   const [available, setAvailable] = useState(Math.max(0, height - 120));
@@ -84,6 +87,7 @@ export function Done({
             <Icon name="tickets" size={48} color={glow.amber} />
           </View>
         )}
+        <SuccessHalo />
       </View>
       <View
         style={{
@@ -111,6 +115,7 @@ export function Done({
         )}
         <View style={{ width: '100%', maxWidth: 440, gap: 4, marginTop: compact ? 0 : 6 }}>
           <WatchLinks {...watch} compact={compact} />
+          {reopen && <Press label="Keep swiping" onPress={reopen} style={{backgroundColor:glow.amber,borderRadius:16,minHeight:48}}><GText bold color="#151515">Keep swiping</GText></Press>}
           {canRestart && (
             <Press label="Choose again" disabled={disabled} onPress={restart}>
               <GText bold color={glow.muted} size={14}>

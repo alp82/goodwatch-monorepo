@@ -1,8 +1,9 @@
+import { playFeedback } from '../feedback/sounds';
 import { FadeImage } from './FadeImage';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Animated, Pressable, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { GText, Icon, Press, Score, glow, s, native } from './theme';
+import { GText, Icon, Press, Score, glow, s } from './theme';
 import { useDrag } from './useDrag';
 import type { GesturePhase, GlowTitle } from './model';
 export function Poster({
@@ -48,6 +49,7 @@ export function Poster({
       }
       latch.current = true;
       setAnimating(true);
+      if (mode === 'voting') playFeedback('swipe');
       drag.transition(Math.sign(dx), width, () => {
         if (mode === 'voting') onVote(dx > 0);
         else onBrowse(dx < 0 ? 1 : -1);
@@ -56,6 +58,8 @@ export function Poster({
       });
     },
   });
+  const previousTitle = useRef(title.id);
+  useLayoutEffect(() => { if (previousTitle.current !== title.id && mode === 'voting') playFeedback('poster'); previousTitle.current = title.id; }, [title.id, mode]);
   const reset = drag.reset;
   // A server card replacement must cancel the prior external animation.
   useLayoutEffect(() => {
@@ -156,11 +160,11 @@ export function Poster({
                 gap: 9,
                 alignItems: 'center',
                 height: 44,
-                marginRight: title.trailerUrl ? 122 : 0,
+                paddingRight: 2,
               }}
             >
               {title.score !== null && <Score value={title.score} size={32} />}
-              <GText size={11} bold lines={1} color={glow.soft}>
+              <GText size={11} bold lines={1} color={glow.soft} style={{ flex: 1 }}>
                 {title.genres.join(' · ').toUpperCase()}
               </GText>
             </View>
@@ -175,7 +179,7 @@ export function Poster({
               importantForAccessibility="no-hide-descendants"
               style={{
                 position: 'absolute',
-                top: 28,
+                top: 82,
                 left: 18,
                 backgroundColor: '#15803d',
                 borderRadius: 12,
@@ -200,7 +204,7 @@ export function Poster({
               importantForAccessibility="no-hide-descendants"
               style={{
                 position: 'absolute',
-                top: 28,
+                top: 82,
                 right: 18,
                 backgroundColor: '#dc2626',
                 borderRadius: 12,
@@ -227,11 +231,11 @@ export function Poster({
           onPress={onTrailer}
           style={{
             position: 'absolute',
-            right: 14,
-            bottom: 16,
+            right: 16,
+            top: 16,
             borderRadius: 999,
-            paddingHorizontal: showText ? 18 : 24,
-            minHeight: showText ? 46 : 56,
+            paddingHorizontal: 12,
+            minHeight: 44,
             flexDirection: 'row',
             gap: 8,
             backgroundColor: '#fff',
@@ -250,7 +254,7 @@ export function Poster({
             <Icon name="play" size={16} color="#fff" />
           </View>
           <GText bold color="#151515" size={14}>
-            {showText ? 'Trailer' : 'Play trailer'}
+            Trailer
           </GText>
         </Press>
       )}
@@ -262,18 +266,19 @@ export function Poster({
         onBlur={() => setDetailsFocused(false)}
         style={{
           position: 'absolute',
-          left: 0,
-          top: 0,
+          left: 16,
+          top: 16,
           minWidth: 44,
-          height: 36,
+          height: 44,
           borderRadius: 12,
           paddingHorizontal: 10,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: native || detailsFocused ? '#0007' : 'transparent',
+          backgroundColor: detailsFocused ? '#fbbf24' : '#fbbf24df',
+          borderWidth: 1, borderColor: '#fff5', flexDirection: 'row', gap: 5,
         }}
       >
-        {(native || detailsFocused) && <GText size={11}>Details</GText>}
+        <GText size={14} bold color="#18130a">Details ↗</GText>
       </Pressable>
     </Animated.View>
   );

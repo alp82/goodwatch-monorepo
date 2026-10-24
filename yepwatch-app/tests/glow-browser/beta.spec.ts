@@ -39,9 +39,9 @@ for (const [width, height] of [[390,844],[1440,900]]) test(`home arrives in logo
     const observed: Record<string,number> = {};
     (window as any).__arrival = observed;
     function sample() {
-      for (const [name,selector] of Object.entries({brand:'.home-arrival header',intro:'.home-arrival .mini-intro',ios:'.install-card.ios',android:'.install-card.android',actions:'.browser-zone'})) {
+      for (const [name,selector] of Object.entries({brand:'.review-boot-word, .home-arrival header',intro:'.home-arrival .mini-intro',ios:'.install-card.ios',android:'.install-card.android',actions:'.browser-zone'})) {
         const el=document.querySelector(selector);
-        if (el && Number(getComputedStyle(el).opacity) > .05 && !observed[name]) observed[name]=performance.now();
+        if (el && getComputedStyle(el).visibility === 'visible' && Number(getComputedStyle(el).opacity) > .05 && !observed[name]) observed[name]=performance.now();
       }
       if (!observed.actions) requestAnimationFrame(sample);
     }
@@ -49,8 +49,10 @@ for (const [width, height] of [[390,844],[1440,900]]) test(`home arrives in logo
   });
   const start = Date.now();
   await page.goto('/');
+  await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => Boolean((window as any).__arrival.actions))).toBe(true);
   await expect(page.locator('.browser-zone')).toHaveCSS('opacity','1');
-  expect(Date.now() - start).toBeLessThan(4000);
+  expect(Date.now() - start).toBeLessThan(5500);
   const t: Record<string,number> = await page.evaluate(() => (window as any).__arrival);
   expect(t.brand).toBeLessThan(t.intro); expect(t.intro).toBeLessThan(t.ios);
   expect(t.ios).toBeLessThan(t.android);expect(t.android).toBeLessThan(t.actions);

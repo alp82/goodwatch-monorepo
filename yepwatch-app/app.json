@@ -17,13 +17,18 @@
     },
     "android": {
       "predictiveBackGestureEnabled": false,
-      "package": "dev.yepwatch.foundation"
+      "package": "dev.yepwatch.foundation",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#141414"
+      }
     },
     "web": {
       "bundler": "metro",
       "output": "single",
       "name": "YepWatch",
-      "description": "Choose something to watch, together."
+      "description": "Choose something to watch, together.",
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
@@ -38,11 +43,20 @@
           "imageWidth": 44,
           "resizeMode": "contain"
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false
+        }
       ]
     ],
     "experiments": {
       "autolinkingModuleResolution": true
     },
-    "backgroundColor": "#070707"
+    "backgroundColor": "#070707",
+    "icon": "./assets/icon.png"
   }
 }

@@ -1,3 +1,4 @@
+import { cue, playFeedback } from '../feedback/sounds';
 import { FadeImage } from './FadeImage';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, View } from 'react-native';
@@ -157,11 +158,11 @@ export function DecisionRoom({
   }
   function roll() {
     if (rolling || items.length < 2) return;
-    inspect('dice');
+    inspect('dice'); cue('dice-shake-1');
     const pool = items.filter((i) => i.title.id !== (focus ?? proposal?.candidateId));
     const target = pool[Math.floor(Math.random() * pool.length)] ?? items[0];
     if (reduced) {
-      setFocus(target.title.id);
+      setFocus(target.title.id); cue('dice-throw-1');
       return;
     }
     setRolling(true);
@@ -182,7 +183,7 @@ export function DecisionRoom({
       setTimeout(() => {
         setLit(null);
         setRolling(false);
-        setFocus(target.title.id);
+        setFocus(target.title.id); cue('dice-throw-1');
       }, time + 220)
     );
   }
@@ -312,33 +313,26 @@ export function DecisionRoom({
     <View style={{ flex: 1 }}>
       <View
         style={{
-          height: 48,
+          minHeight: 60,
+          paddingTop: 12,
+          paddingBottom: 12,
           flexDirection: 'row',
-          paddingHorizontal: wide ? 40 : 12,
+          paddingHorizontal: wide ? 40 : 24,
           alignItems: 'center',
           gap: 12,
         }}
       >
-        <Pill
-          label={readOnly ? "Back to Tonight" : "Keep voting"}
-          onPress={keepVoting}
-          icon="left"
-          style={{ minHeight: 40, paddingHorizontal: 12 }}
-        >
-          <GText size={14} bold>
-            {readOnly ? "Back to Tonight" : "Keep voting"}
-          </GText>
-        </Pill>
         <GText bold size={wide ? 20 : 16} lines={1}>
           {matchCount} {matchCount === 1 ? 'match' : 'matches'}
         </GText>
+        {readOnly && <Press label="Keep swiping" onPress={keepVoting} style={{ marginLeft: 'auto', minHeight: 40, paddingHorizontal: 14, backgroundColor: '#fbbf2420', borderRadius: 20 }}><GText size={13} bold color={glow.amber}>Keep swiping</GText></Press>}
         {wide && (
           <GText color={glow.muted} size={14}>
             · decide together
           </GText>
         )}
       </View>
-      <View style={{ height: 64, alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+      <View style={{ minHeight: 84, paddingTop: 6, paddingBottom: 16, alignItems: 'center', justifyContent: 'center', gap: 10 }}>
         <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
           {lenses.map((l) => (
             <View key={l.key}>
@@ -346,12 +340,12 @@ export function DecisionRoom({
                 label={`${l.label}: ${l.caption}`}
                 selected={lens === l.key}
                 onPress={() => {
-                  setLens(l.key);
+                  playFeedback('lens'); setLens(l.key);
                   inspect('lens');
                 }}
                 style={{
                   flexDirection: 'row',
-                  minHeight: 36,
+                  minHeight: 42,
                   gap: 5,
                   borderRadius: 18,
                   paddingHorizontal: wide ? 13 : 9,

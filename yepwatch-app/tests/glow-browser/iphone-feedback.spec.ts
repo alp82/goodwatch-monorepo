@@ -29,6 +29,7 @@ async function fixture(page: Page, setup = false) {
       const command = route.request().postDataJSON().command;
       writes.push(command); room.shared.revision++; room.own.nextSequence++;
       if (command.type === 'vote') { room.own.votes.push({ candidateId: command.candidateId, value: command.value, revision: 1, activeExposureMs: null, timingSource: 'unavailable' }); room.own.nextCandidateId = 'c2'; }
+      if (command.type === 'resume_voting') { room.shared.phase='choosing'; room.shared.decision=null; room.shared.proposal=null; room.shared.generation++; room.own.agreement.agreed=false; }
       if (command.type === 'leave') { left = true; room.own.left = true; }
       return route.fulfill({ json: { snapshot: room, receipt: {} } });
     }
@@ -290,4 +291,34 @@ test('GoodWatch sign-in is enabled without a guest nickname and includes its G m
   await expect.poll(() => requests.length).toBe(1);
   expect(requests[0].nickname).toBe('Guest');
   expect(f.writes).toEqual([]);
+});
+
+
+test('Keep swiping explicitly reopens the shared room; Back alone does not send a command', async ({page}) => {
+ const f=await fixture(page); f.room.shared.phase='decided';
+ f.room.shared.decision={candidateId:'c2',proposalVersion:1,decidedAt:Date.now(),availability:[]};
+ f.room.own.votes=[{candidateId:'c2',value:'watch',revision:1,activeExposureMs:null,timingSource:'unavailable'}];
+ await page.reload();
+ await page.getByRole('button',{name:'Keep swiping',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Yep',exact:true})).toBeVisible();
+ expect(f.writes).toEqual([{type:'resume_voting',expectedRevision:1}]);
+ expect(f.room.own.votes).toEqual([{candidateId:'c2',value:'watch',revision:1,activeExposureMs:null,timingSource:'unavailable'}]);
+});
+
+test('opening matches plays a bundled card fan, and lens selection plays a click', async ({ page }) => {
+  const clips: string[] = [];
+  page.on('request', request => { if (request.url().includes('.mp3')) clips.push(request.url()); });
+  await fixture(page);
+  await page.getByRole('button', { name: 'Inspect 1 matches' }).click();
+  await expect.poll(() => clips.some(url => /card-fan-[12]/.test(url))).toBe(true);
+  await page.getByRole('button', { name: /^Top score:/ }).click();
+  await expect.poll(() => clips.some(url => /click-00[123]/.test(url))).toBe(true);
+  const fan = clips.find(url => /card-fan-[12]/.test(url))!;
+  const duration = await page.evaluate(async url => {
+    const context = new AudioContext();
+    try { return (await context.decodeAudioData(await (await fetch(url)).arrayBuffer())).duration; }
+    finally { await context.close(); }
+  }, fan);
+  expect(duration).toBeGreaterThan(0);
+  expect(duration).toBeLessThan(5);
 });

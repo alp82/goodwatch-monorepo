@@ -227,7 +227,7 @@ test('inspection and dice never propose; shared proposal replacement and Keep vo
   await expect(page.getByText('Everyone agrees. Enjoy your watch.', { exact: true })).toHaveCount(
     0
   );
-  await page.getByRole('button', { name: 'Keep voting', exact: true }).click();
+  await page.getByRole('button', { name: 'Back to voting', exact: true }).click();
   await expect.poll(() => page.getByTestId('poster').innerText()).toBe(initial);
 });
 test('left swipe after reversal sends exactly the same pass as Nope and recenters', async ({
@@ -329,7 +329,7 @@ test('the creator invitation survives a full navigation/reload without bearer st
 });
 
 for (const error of [101, 150])
-  test(`embedding refusal ${error} offers YouTube and closing preserves card and pick`, async ({
+  test(`embedding refusal ${error} uses embedded controls and closing preserves card and pick`, async ({
     page,
   }) => {
     const f = await fixture(page);
@@ -359,7 +359,7 @@ for (const error of [101, 150])
         exact: true,
       })
     ).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Watch on YouTube', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Watch on YouTube', exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Play with sound', exact: true })).toHaveCount(0);
     // At least two periodic reports later the refusal remains actionable.
     await page.waitForTimeout(1600);
@@ -588,7 +588,7 @@ for (const viewport of [
     }));
     expect(doc.h).toBeLessThanOrEqual(viewport.height);
     expect(doc.w).toBeLessThanOrEqual(viewport.width);
-    await expect(page.getByRole('button', { name: 'Keep voting', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Back to voting', exact: true })).toBeVisible();
     expect(f.commands).toHaveLength(0);
     await page.screenshot({ path: `artifacts/hybrid/wall-fixture-${viewport.width}.png` });
   });
@@ -624,7 +624,7 @@ test('late newcomer can inspect and Agree to preserved nonmatch proposal with ex
   });
   await page.getByRole('button', { name: 'Take back your agreement', exact: true }).click();
   expect(f.commands.at(-1)?.command.type).toBe('agree');
-  await page.getByRole('button', { name: 'Keep voting', exact: true }).click();
+  await page.getByRole('button', { name: 'Back to voting', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Yep', exact: true })).toBeVisible();
 });
 
@@ -640,7 +640,7 @@ test('measured Yep exposure pauses for details and match inspection; missing rel
   await page.getByRole('button', { name: 'Close panel', exact: true }).last().click();
   await page.getByRole('button', { name: 'Inspect 2 matches', exact: true }).click();
   await page.waitForTimeout(700);
-  await page.getByRole('button', { name: 'Keep voting', exact: true }).click();
+  await page.getByRole('button', { name: 'Back to voting', exact: true }).click();
   await page.waitForTimeout(200);
   await page.getByRole('button', { name: 'Yep', exact: true }).click();
   await expect.poll(() => f.commands.at(-1)?.command.type).toBe('vote');

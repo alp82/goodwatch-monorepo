@@ -8,13 +8,27 @@ export const homeCss = `
 @media(max-height:500px) and (min-width:650px){.home-landing main{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:44px 1fr;gap:10px 24px;padding:16px 0;min-height:100dvh;max-width:900px}.home-landing header{grid-column:1;grid-row:1}.home-landing .mini-intro{grid-column:1;grid-row:2;align-self:start;margin-top:8px}.home-landing .apps{grid-column:2;grid-row:1/3;align-self:start;gap:10px}.home-landing .install-card{padding:10px;width:min(48%,170px);gap:8px}.home-landing .browser-zone{grid-column:1;grid-row:2;align-self:end;gap:6px}.home-landing .browser-title{display:none}.home-landing .browser-actions button{min-height:44px;padding:8px;font-size:14px}.home-landing .return-room{min-height:28px}}
 @media(prefers-reduced-motion:reduce){.home-landing .install-card{transition:none}}
 
-.home-arrival header{z-index:2;animation:home-brand .32s cubic-bezier(.16,1,.3,1) backwards;transform-origin:center}
-.home-arrival .mini-intro{animation:home-enter .26s .28s backwards}
-.home-arrival .install-card.ios{animation:home-enter .28s .5s backwards}
-.home-arrival .install-card.android{animation:home-enter .28s .62s backwards}
-.home-arrival .browser-zone{animation:home-enter .28s .78s backwards}
-@keyframes home-brand{from{transform:translateY(calc(50dvh - var(--header-center,50dvh))) scale(1.77778)}to{transform:translateY(0) scale(1)}}
+.home-arrival header{z-index:2}
+.home-arrival .mini-intro{animation:home-enter .5s .5s backwards}
+.home-arrival .install-card.ios{animation:home-enter .45s .85s backwards}
+.home-arrival .install-card.android{animation:home-enter .45s 1s backwards}
+.home-arrival .browser-zone{animation:home-enter .45s 1.15s backwards}
+.home-waiting .mini-intro,.home-waiting .apps,.home-waiting .browser-zone{visibility:hidden}
 @keyframes home-enter{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
 @media(max-width:359px){@keyframes home-brand{from{transform:translateY(calc(50dvh - var(--header-center,50dvh))) scale(1.44444)}to{transform:translateY(0) scale(1)}}}
 @media(prefers-reduced-motion:reduce){.home-arrival header,.home-arrival .mini-intro,.home-arrival .install-card,.home-arrival .browser-zone{animation:none}}
+/* One centered composition. No viewport-sized spacer between film and QR cards. */
+.home-landing.home-landing main{height:100dvh;min-height:0;justify-content:center;padding:24px 0;gap:22px}
+.home-landing.home-landing header{margin-bottom:34px;flex:none}
+.home-landing.home-landing .mini-intro{height:250px;min-height:250px;width:100%;margin:0}
+.home-landing.home-landing .mini-film{height:158px;pointer-events:none;transform:scale(1.65);transform-origin:50% 0}
+.home-landing.home-landing .apps{margin:0;flex-shrink:0;min-height:0}
+.home-landing.home-landing .install-card{width:210px;padding:14px;gap:12px}
+.home-landing.home-landing .browser-zone{flex:none}
+.home-landing.home-landing .mini-control{top:86px}
+@media(max-width:760px){.home-landing.home-landing main{gap:18px}.home-landing.home-landing header{margin-bottom:32px}.home-landing.home-landing .mini-intro{height:232px;min-height:232px}.home-landing.home-landing .mini-film{transform:scale(1.55)}.home-landing.home-landing .install-card{width:150px;padding:10px;gap:9px}.home-landing.home-landing .code{max-height:130px}.home-landing.home-landing .apps{gap:14px}.home-landing.home-landing .store small{display:none}}
+@media(max-height:760px){.home-landing.home-landing main{gap:12px;padding-top:14px;padding-bottom:14px}.home-landing.home-landing header{margin-bottom:22px}.home-landing.home-landing .mini-intro{height:192px;min-height:192px}.home-landing.home-landing .mini-film{transform:scale(1.48)}.home-landing.home-landing .install-card{width:124px;padding:8px;gap:6px}.home-landing.home-landing .store svg{width:22px;height:22px}.home-landing.home-landing .store strong{font-size:16px}.home-landing.home-landing .store small{display:none}.home-landing.home-landing .browser-zone{gap:9px}.home-landing.home-landing .mini-control{top:68px}}
+@media(max-height:620px){.home-landing.home-landing main{gap:10px}.home-landing.home-landing header{margin-bottom:14px}.home-landing.home-landing .mini-intro{height:168px;min-height:168px}.home-landing.home-landing .mini-film{transform:scale(1.3)}.home-landing.home-landing .install-card{width:104px}.home-landing.home-landing .browser-actions button{min-height:44px;padding:8px}.home-landing.home-landing .return-room{min-height:28px}}
+@media(max-width:350px){.home-landing.home-landing .store strong{font-size:13px}.home-landing.home-landing .store svg{width:18px;height:18px}.home-landing.home-landing .out{font-size:16px}.home-landing.home-landing .store{gap:3px}}
+@media(max-height:500px) and (min-width:650px){.home-landing.home-landing main{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:50px minmax(166px,1fr) auto;align-content:center;gap:12px 24px;padding:14px 0}.home-landing.home-landing header{grid-row:1;grid-column:1;margin:0}.home-landing.home-landing .mini-intro{grid-row:2;grid-column:1;align-self:center;height:166px;min-height:166px;margin:0}.home-landing.home-landing .mini-film{transform:scale(1.22)}.home-landing.home-landing .apps{grid-column:2;grid-row:1/4;align-self:center}.home-landing.home-landing .install-card{width:150px}.home-landing.home-landing .browser-zone{grid-row:3;grid-column:1;align-self:center}.home-landing.home-landing .browser-title{display:none}.home-landing.home-landing .mini-control{top:50px}}
 `;

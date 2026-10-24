@@ -217,6 +217,7 @@ export type RoomCommand =
 			expectedProposalVersion: number
 	  }
 	| { type: "restart"; expectedRevision: number }
+	| { type: "resume_voting"; expectedRevision: number }
 export interface CommandResult {
 	receipt: CommandReceipt
 	snapshot: RoomSnapshot
