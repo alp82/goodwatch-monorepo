@@ -21,7 +21,12 @@ import {
 	resultApi,
 } from "../imports/result-catalog.server.ts"
 import { MAX_ROWS } from "./file.server"
-import { getImportRow, listItems, select } from "./store.server"
+import {
+	getImportRow,
+	listItems,
+	questionOptions,
+	select,
+} from "./store.server"
 
 interface ResultRow {
 	row_index: number
@@ -33,7 +38,15 @@ interface ResultRow {
 	tmdb_id: number | null
 	media_type: "movie" | "show" | null
 	current_score: number | null
-	apply_state: "added" | "updated" | "kept" | "failed" | "undone" | null
+	apply_state:
+		| "added"
+		| "updated"
+		| "kept"
+		| "failed"
+		| "undone"
+		| "waiting:conflict"
+		| "approved:conflict"
+		| null
 	prior_score: number | null
 	applied_score: number | null
 	undo_outcome: StoredUndoOutcome | null
@@ -51,6 +64,11 @@ function entryOf(
 	keepConflicts: boolean,
 	row: ResultRow,
 ): ImportResultEntry | null {
+	if (
+		row.apply_state === "waiting:conflict" ||
+		row.apply_state === "approved:conflict"
+	)
+		return null
 	const label = exportLabel(row.title ?? row.imdb_id ?? "", row.year)
 	const episode = row.kind === "episode_rating"
 	const kind = episode ? "episode_rating" : "rating"
@@ -119,7 +137,8 @@ function entryOf(
 	const reason = keptReason({
 		outcome: row.outcome,
 		applyState: row.apply_state,
-		keepConflicts,
+		keepConflicts:
+			keepConflicts || row.reason === "You chose to keep what GoodWatch has.",
 		kind,
 		current: number(row.current_score),
 	})
@@ -143,7 +162,8 @@ const api = resultApi(select, async (userId, id) => {
 				rows.flatMap((row) => {
 					const entry = entryOf(
 						operation,
-						importRow.conflict_choice === "keep",
+						!questionOptions(importRow).ask &&
+							importRow.conflict_choice === "keep",
 						row,
 					)
 					return entry ? [entry] : []

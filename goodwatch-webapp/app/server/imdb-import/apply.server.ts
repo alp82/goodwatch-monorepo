@@ -1,8 +1,8 @@
-import {
-	captureProductEvent,
-	withProductContext,
-	eventUuid,
-} from "~/telemetry/product-analytics.server"
+import type {
+	ImdbConflictChoice,
+	ImdbImportCounts,
+	ImdbImportSummary,
+} from "~/domain/imdb-import"
 // Confirming an import writes its ratings to user_score; undo takes them back.
 //
 // Crate has no transactions, and a write that filters on anything but the whole primary key only sees rows after a
@@ -28,16 +28,16 @@ import {
 //   (imports/episode-score-watches.server.ts).
 import type { StoredUndoOutcome } from "~/domain/import-result"
 import type { ImportItem } from "~/domain/imports"
-import type {
-	ImdbConflictChoice,
-	ImdbImportCounts,
-	ImdbImportSummary,
-} from "~/domain/imdb-import"
 import { resetOnboardingMediaCache } from "~/server/onboarding-media.server"
 import { markTasteChanged } from "~/server/taste/index.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { settleMovies } from "~/server/tracking.server"
 import { resetUserDataCache } from "~/server/userData.server"
+import {
+	captureProductEvent,
+	eventUuid,
+	withProductContext,
+} from "~/telemetry/product-analytics.server"
 import { CrateTimeoutError } from "~/utils/crate"
 import { titleKey } from "~/utils/title-key"
 import {
@@ -51,15 +51,17 @@ import {
 import { titleRef } from "./classify.server"
 import { ImdbImportError, type ImportMediaType, MAX_ROWS } from "./file.server"
 import {
+	HEARTBEAT_MS,
+	type Param,
 	activeRuns,
 	chunks,
 	claimImport,
 	getImportRow,
-	HEARTBEAT_MS,
 	isStalled,
 	listImportRows,
 	marks,
-	type Param,
+	questionOptions,
+	questionStates,
 	refreshImports,
 	refreshItems,
 	run,
@@ -99,6 +101,9 @@ export const settleImportedMovies = (
 
 /** A row the import still has to write. */
 interface Pending {
+	apply_state?: string | null
+	payload?: string | null
+	outcome?: string
 	row_index: number
 	tmdb_id: number
 	media_type: ImportMediaType
@@ -108,6 +113,8 @@ interface Pending {
 }
 /** An episode row the import still has to write. Its payload holds the target and the score the preview saw. */
 interface PendingEpisode {
+	apply_state?: string | null
+	outcome?: string
 	row_index: number
 	tmdb_id: number
 	imdb_score: number
@@ -381,117 +388,154 @@ async function applyStored(userId: string, importId: string) {
 	let wrote = false
 	// Only title ratings change Taste and the caches that follow it; episode scores don't.
 	let wroteTitles = false
-	const stopHeartbeat = startHeartbeat(importId)
+	let stopHeartbeat = startHeartbeat(importId)
 	try {
-		const row = await getImportRow(userId, importId)
-		if (!row.confirmed_at || !row.conflict_choice)
-			throw new Error("The import was never confirmed")
-		const stamp = new Date(row.confirmed_at)
-		const useImdb = row.conflict_choice === "imdb"
+		while (true) {
+			const row = await getImportRow(userId, importId)
+			if (!row.confirmed_at || !row.conflict_choice)
+				throw new Error("The import was never confirmed")
+			const stamp = new Date(row.confirmed_at)
+			const useImdb = row.conflict_choice === "imdb"
 
-		await refreshItems()
-		if (!useImdb) {
-			await run(
-				"UPDATE doc.user_import_item SET apply_state = 'kept' WHERE import_id = ? AND outcome = 'conflict' AND apply_state IS NULL",
-				[importId],
-			)
 			await refreshItems()
-		}
-		const pending = await select<Pending>(
-			`SELECT row_index, tmdb_id, media_type, imdb_score, current_score FROM doc.user_import_item
-			 WHERE import_id = ? AND outcome IN ('new', 'update'${useImdb ? ", 'conflict'" : ""})
-			   AND (apply_state IS NULL OR apply_state = 'failed') AND kind IS NULL
+			if (questionOptions(row).ask) await holdQuestions(userId, importId)
+			else if (!useImdb) {
+				await run(
+					"UPDATE doc.user_import_item SET apply_state = 'kept' WHERE import_id = ? AND outcome = 'conflict' AND apply_state IS NULL",
+					[importId],
+				)
+				await refreshItems()
+			}
+			const pending = (
+				await select<Pending>(
+					`SELECT row_index, tmdb_id, media_type, imdb_score, current_score${questionOptions(row).ask ? ", apply_state, payload, outcome" : ""} FROM doc.user_import_item
+			 WHERE import_id = ? AND outcome IN ('new', 'update'${useImdb || questionOptions(row).ask ? ", 'conflict'" : ""})
+			   AND (apply_state IS NULL OR apply_state = 'failed'${questionOptions(row).ask ? " OR apply_state = 'approved:conflict'" : ""}) AND kind IS NULL
 			 ORDER BY row_index LIMIT ${MAX_ROWS}`,
-			[importId],
-		)
-		const episodes = await select<PendingEpisode>(
-			`SELECT row_index, tmdb_id, imdb_score, payload FROM doc.user_import_item
-			 WHERE import_id = ? AND kind = 'episode_rating' AND outcome IN ('new', 'update'${useImdb ? ", 'conflict'" : ""})
-			   AND (apply_state IS NULL OR apply_state = 'failed')
+					[importId],
+				)
+			).filter((item) =>
+				eligible(item, questionOptions(row).ask === true, useImdb),
+			)
+			const episodes = (
+				await select<PendingEpisode>(
+					`SELECT row_index, tmdb_id, imdb_score, payload${questionOptions(row).ask ? ", apply_state, outcome" : ""} FROM doc.user_import_item
+			 WHERE import_id = ? AND kind = 'episode_rating' AND outcome IN ('new', 'update'${useImdb || questionOptions(row).ask ? ", 'conflict'" : ""})
+			   AND (apply_state IS NULL OR apply_state = 'failed'${questionOptions(row).ask ? " OR apply_state = 'approved:conflict'" : ""})
 			 ORDER BY row_index LIMIT ${MAX_ROWS}`,
-			[importId],
-		)
-		// Rows that failed last time are tried again, so they start uncounted.
-		const tally = { ...(await readTally(importId)), failed: 0 }
-		const total = Number(row.total)
-		let processed = Math.max(0, total - pending.length - episodes.length)
-		const report = () =>
-			run(
-				"UPDATE doc.user_import SET processed = ?, added = ?, updated = ?, kept = ?, failed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+					[importId],
+				)
+			).filter((item) =>
+				eligible(item, questionOptions(row).ask === true, useImdb),
+			)
+			// Rows that failed last time are tried again, so they start uncounted.
+			const tally = { ...(await readTally(importId)), failed: 0 }
+			const total = questionOptions(row).ask
+				? await questionTotal(importId, row.counts)
+				: Number(row.total)
+			let processed = Math.max(0, total - pending.length - episodes.length)
+			const report = async () => {
+				if (questionOptions(row).ask)
+					return recountQuestions(importId, row.counts)
+				return run(
+					"UPDATE doc.user_import SET processed = ?, added = ?, updated = ?, kept = ?, failed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+					[
+						processed,
+						tally.added,
+						tally.updated,
+						tally.kept,
+						tally.failed,
+						importId,
+					],
+				)
+			}
+			await report()
+
+			for (const batch of chunks(pending, APPLY_BATCH)) {
+				await saveConsent(importId, batch)
+				wrote = true
+				wroteTitles = true
+				const states = await applyBatch(userId, stamp, batch)
+				await settleImportedMovies(userId, batch)
+				await recordStates(importId, states)
+				for (const state of states.values()) tally[state]++
+				processed += batch.length
+				await report()
+			}
+			for (const batch of chunks(episodes, APPLY_BATCH)) {
+				await saveConsent(importId, batch)
+				wrote = true
+				const states = new Map<number, ApplyState>()
+				for (const episode of batch)
+					states.set(
+						Number(episode.row_index),
+						await applyEpisode(userId, importId, episode),
+					)
+				await recordStates(importId, states)
+				for (const state of states.values()) tally[state]++
+				processed += batch.length
+				await report()
+			}
+			// An episode the import scored is marked watched when no pass has a watch of it (#759 follow-up).
+			await refreshItems()
+			const scored = await scoredEpisodeRows(importId, row.counts)
+			if (scored.length)
+				await markImportedEpisodesWatched(userId, importId, "imdb", scored)
+
+			await refreshItems()
+			const withoutFingerprint = await countWithoutFingerprint(importId).catch(
+				(error) => {
+					console.error(
+						"IMDb import: counting titles without a fingerprint failed:",
+						error,
+					)
+					return null
+				},
+			)
+			// From here on updated_at belongs to the result: a late heartbeat would change it under a resume.
+			await stopHeartbeat()
+			const version = await getImportRow(userId, importId)
+			await refreshItems()
+			if (questionOptions(row).ask) {
+				const pending = await select<{ row_index: number }>(
+					"SELECT row_index FROM doc.user_import_item WHERE import_id = ? AND (apply_state IS NULL AND outcome IN ('new', 'update', 'conflict') OR apply_state = 'approved:conflict') LIMIT 1",
+					[importId],
+				)
+				if (pending.length) {
+					stopHeartbeat = startHeartbeat(importId)
+					continue
+				}
+			}
+			const final = await readTally(importId)
+			const now = new Date()
+			const finished = await claimImport(
+				version,
+				`status = ?, error = ?, ${questionOptions(row).ask ? "total = ?, " : ""}processed = ?, added = ?, updated = ?, kept = ?, failed = ?, without_fingerprint = ?, finished_at = ?, updated_at = ?`,
 				[
-					processed,
-					tally.added,
-					tally.updated,
-					tally.kept,
-					tally.failed,
-					importId,
+					final.failed ? "failed" : "done",
+					final.failed
+						? `${final.failed} ${final.failed === 1 ? "rating" : "ratings"} couldn't be saved. Try again to finish the import.`
+						: null,
+					...(questionOptions(row).ask
+						? [await questionTotal(importId, row.counts)]
+						: []),
+					questionOptions(row).ask ? await questionProcessed(importId) : total,
+					final.added,
+					final.updated,
+					final.kept,
+					final.failed,
+					withoutFingerprint,
+					questionOptions(row).ask && version.finished_at !== null
+						? new Date(version.finished_at)
+						: final.failed
+							? null
+							: now,
+					now,
 				],
 			)
-		await report()
-
-		for (const batch of chunks(pending, APPLY_BATCH)) {
-			wrote = true
-			wroteTitles = true
-			const states = await applyBatch(userId, stamp, batch)
-			await settleImportedMovies(userId, batch)
-			await recordStates(importId, states)
-			for (const state of states.values()) tally[state]++
-			processed += batch.length
-			await report()
+			if (finished) break
+			stopHeartbeat = startHeartbeat(importId)
 		}
-		for (const batch of chunks(episodes, APPLY_BATCH)) {
-			wrote = true
-			const states = new Map<number, ApplyState>()
-			for (const episode of batch)
-				states.set(
-					Number(episode.row_index),
-					await applyEpisode(userId, importId, episode),
-				)
-			await recordStates(importId, states)
-			for (const state of states.values()) tally[state]++
-			processed += batch.length
-			await report()
-		}
-		// An episode the import scored is marked watched when no pass has a watch of it (#759 follow-up).
-		await refreshItems()
-		const scored = await scoredEpisodeRows(importId, row.counts)
-		if (scored.length)
-			await markImportedEpisodesWatched(userId, importId, "imdb", scored)
-
-		await refreshItems()
-		const final = await readTally(importId)
-		const withoutFingerprint = await countWithoutFingerprint(importId).catch(
-			(error) => {
-				console.error(
-					"IMDb import: counting titles without a fingerprint failed:",
-					error,
-				)
-				return null
-			},
-		)
-		// From here on updated_at belongs to the result: a late heartbeat would change it under a resume.
-		await stopHeartbeat()
-		const now = new Date()
-		await run(
-			`UPDATE doc.user_import
-			 SET status = ?, error = ?, processed = ?, added = ?, updated = ?, kept = ?, failed = ?, without_fingerprint = ?, finished_at = ?, updated_at = ?
-			 WHERE id = ?`,
-			[
-				final.failed ? "failed" : "done",
-				final.failed
-					? `${final.failed} ${final.failed === 1 ? "rating" : "ratings"} couldn't be saved. Try again to finish the import.`
-					: null,
-				total,
-				final.added,
-				final.updated,
-				final.kept,
-				final.failed,
-				withoutFingerprint,
-				final.failed ? null : now,
-				now,
-				importId,
-			],
-		)
 	} catch (error) {
 		console.error(`IMDb import ${importId} stopped:`, error)
 		await stopHeartbeat()
@@ -514,10 +558,265 @@ async function applyStored(userId: string, importId: string) {
 	}
 }
 
+const KEEP_REASON = "You chose to keep what GoodWatch has."
+
+function eligible(
+	row: {
+		outcome?: string
+		apply_state?: string | null
+		payload?: string | null
+	},
+	ask: boolean,
+	useImdb: boolean,
+) {
+	if (!ask || row.outcome !== "conflict") return true
+	return (
+		row.apply_state === "approved:conflict" ||
+		(row.apply_state === "failed" &&
+			(useImdb || JSON.parse(row.payload ?? "{}")._answer?.conflict === "imdb"))
+	)
+}
+
+/** Persist consent before writing: even a batch failure before recordStates can then be resumed. */
+async function saveConsent(
+	id: string,
+	rows: {
+		row_index: number
+		apply_state?: string | null
+		payload?: string | null
+	}[],
+) {
+	for (const row of rows)
+		if (row.apply_state === "approved:conflict") {
+			const payload = {
+				...JSON.parse(row.payload ?? "{}"),
+				_answer: { conflict: "imdb" },
+			}
+			row.payload = JSON.stringify(payload)
+			await run(
+				"UPDATE doc.user_import_item SET payload = ? WHERE import_id = ? AND row_index = ?",
+				[JSON.stringify(payload), id, row.row_index],
+			)
+		}
+}
+
+async function transitionConflict(
+	id: string,
+	answer: "keep" | "imdb",
+	indexes?: number[],
+) {
+	const result = await run(
+		`UPDATE doc.user_import_item SET apply_state = ?, applied_at = CURRENT_TIMESTAMP${answer === "keep" ? ", reason = ?" : ""} WHERE import_id = ? AND apply_state = 'waiting:conflict'${indexes ? ` AND row_index IN (${marks(indexes.length)})` : ""}`,
+		[
+			answer === "keep" ? "kept" : "approved:conflict",
+			...(answer === "keep" ? [KEEP_REASON] : []),
+			id,
+			...(indexes ?? []),
+		],
+	)
+	return result.rowcount ?? 0
+}
+
+/** Repair missed holds and whole answers on each pass without moving already-settled rows. */
+async function holdQuestions(userId: string, id: string) {
+	const row = await getImportRow(userId, id)
+	const options = questionOptions(row)
+	if (!options.ask) return
+	await refreshItems()
+	await run(
+		"UPDATE doc.user_import_item SET apply_state = 'waiting:conflict' WHERE import_id = ? AND outcome = 'conflict' AND apply_state IS NULL",
+		[id],
+	)
+	await refreshItems()
+	// Re-read: a whole answer may have raced the hold.
+	const answer = questionOptions(await getImportRow(userId, id)).answer
+	if (answer) {
+		await transitionConflict(id, answer)
+		await refreshItems()
+	}
+	await recountQuestions(id, row.counts)
+}
+
+async function questionProcessed(id: string) {
+	return (await questionStates(id)).reduce(
+		(n, row) =>
+			n +
+			(row.apply_state.startsWith("waiting:") ||
+			["added", "updated", "kept", "failed"].includes(row.apply_state)
+				? Number(row.n)
+				: 0),
+		0,
+	)
+}
+
+/** Conflict rows enter the write total only once they have consent; kept answers do not. */
+async function questionTotal(id: string, counts: string) {
+	const rows = await select<{ n: number }>(
+		"SELECT count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND outcome = 'conflict' AND (apply_state IN ('approved:conflict', 'added', 'updated', 'failed') OR (apply_state = 'kept' AND COALESCE(reason, '') <> ?))",
+		[id, KEEP_REASON],
+	)
+	const parsed = JSON.parse(counts) as ImdbImportCounts
+	return parsed.new + parsed.update + Number(rows[0]?.n ?? 0)
+}
+
+async function recountQuestions(id: string, counts: string) {
+	await refreshItems()
+	const tally = await readTally(id)
+	await run(
+		"UPDATE doc.user_import SET total = ?, processed = ?, added = ?, updated = ?, kept = ?, failed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+		[
+			await questionTotal(id, counts),
+			await questionProcessed(id),
+			tally.added,
+			tally.updated,
+			tally.kept,
+			tally.failed,
+			id,
+		],
+	)
+}
+
+async function cancelQuestions(id: string) {
+	await refreshItems()
+	await run(
+		"UPDATE doc.user_import_item SET apply_state = 'kept' WHERE import_id = ? AND apply_state IN ('waiting:conflict', 'approved:conflict')",
+		[id],
+	)
+	await refreshItems()
+}
+
+async function checkRunningLock(userId: string, id: string) {
+	await refreshImports()
+	if (
+		(await listImportRows(userId, "running")).some(
+			(other) => other.id !== id && !isStalled(other),
+		)
+	)
+		throw new ImdbImportError(
+			409,
+			"Another import is still running. Wait for it to finish, then try again.",
+		)
+}
+
+export async function decideImport(
+	userId: string,
+	id: string,
+	answer: "keep" | "imdb",
+	rows?: number[],
+) {
+	if (
+		!["keep", "imdb"].includes(answer) ||
+		(rows &&
+			(!rows.length ||
+				rows.length > 500 ||
+				rows.some((index) => !Number.isSafeInteger(index) || index < 0)))
+	)
+		throw new ImdbImportError(400, "Choose a valid answer and import rows.")
+	let row = await getImportRow(userId, id)
+	const wasStalled = isStalled(row)
+	const check = () => {
+		if (
+			!["running", "done", "failed"].includes(row.status) ||
+			questionOptions(row).direction === "undo" ||
+			undoing.has(id)
+		)
+			throw new ImdbImportError(409, "This import cannot accept answers now.")
+		if (!questionOptions(row).ask)
+			throw new ImdbImportError(
+				400,
+				"This question was not asked for this import.",
+			)
+	}
+	check()
+	if (!rows) {
+		let saved = false
+		for (let attempt = 0; attempt < 3; attempt++) {
+			row = await getImportRow(userId, id)
+			check()
+			if (
+				await claimImport(
+					row,
+					"options = ?, conflict_choice = ?, updated_at = CURRENT_TIMESTAMP",
+					[JSON.stringify({ ...questionOptions(row), answer }), answer],
+				)
+			) {
+				saved = true
+				break
+			}
+		}
+		if (!saved)
+			throw new ImdbImportError(
+				409,
+				"The import changed. Try your answer again.",
+			)
+	}
+	const indexes = rows ? [...new Set(rows)] : undefined
+	await refreshItems()
+	const decided = await transitionConflict(id, answer, indexes)
+	await refreshItems()
+	await run(
+		"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+		[id],
+	)
+	await recountQuestions(id, row.counts)
+	row = await getImportRow(userId, id)
+	check()
+	if (
+		row.status === "done" ||
+		row.status === "failed" ||
+		(wasStalled && row.status === "running" && !activeRuns.has(id))
+	) {
+		const approved = (await questionStates(id)).some(
+			(s) => s.apply_state === "approved:conflict" && Number(s.n) > 0,
+		)
+		if (approved) {
+			await checkRunningLock(userId, id)
+			// The lock read can race a heartbeat or another decision; only this version may restart.
+			row = await getImportRow(userId, id)
+			check()
+			if (
+				(row.status !== "running" || (wasStalled && !activeRuns.has(id))) &&
+				(await claimImport(
+					row,
+					"status = 'running', total = ?, error = NULL, updated_at = CURRENT_TIMESTAMP",
+					[await questionTotal(id, row.counts)],
+				))
+			)
+				startApply(userId, id)
+		}
+	}
+	captureProductEvent(
+		userId,
+		"import question answered",
+		{
+			import_id: id,
+			import_source: "imdb",
+			question: "conflict",
+			answer,
+			decided,
+		},
+		{
+			uuid: eventUuid(
+				`import-question:${userId}:${id}:conflict:${answer}:${indexes ? indexes.sort((a, b) => a - b).join(",") : "all"}`,
+			),
+		},
+	)
+	await refreshImports()
+	return { import: summarize(await getImportRow(userId, id)), decided }
+}
+
+const runTokens = new Map<string, object>()
 function startApply(userId: string, importId: string) {
+	const token = {}
+	runTokens.set(importId, token)
 	activeRuns.add(importId)
 	// Off the request path: the client polls the import for progress. `apply` never rejects.
-	void apply(userId, importId).finally(() => activeRuns.delete(importId))
+	void apply(userId, importId).finally(() => {
+		if (runTokens.get(importId) === token) {
+			runTokens.delete(importId)
+			activeRuns.delete(importId)
+		}
+	})
 }
 
 /**
@@ -532,6 +831,11 @@ export async function confirmImport(
 	// The look for another running import below filters on more than the key, so it needs the latest state searchable.
 	await refreshImports()
 	const row = await getImportRow(userId, importId)
+	if (questionOptions(row).direction === "undo")
+		throw new ImdbImportError(
+			409,
+			"This import is being undone. Try undo again to resume it.",
+		)
 	if (row.status === "done")
 		throw new ImdbImportError(409, "This import is already finished.")
 	if (row.status === "undone")
@@ -556,17 +860,25 @@ export async function confirmImport(
 			counts.new + counts.update + (choice === "imdb" ? counts.conflict : 0)
 		claimed = await claimImport(
 			row,
-			"status = 'running', conflict_choice = ?, total = ?, confirmed_at = ?, updated_at = CURRENT_TIMESTAMP",
-			[choice, total, new Date()],
+			`status = 'running', conflict_choice = ?, total = ?, confirmed_at = ?, updated_at = CURRENT_TIMESTAMP${choice === "ask" ? ", options = ?" : ""}`,
+			[
+				choice,
+				total,
+				new Date(),
+				...(choice === "ask" ? [JSON.stringify({ ask: true })] : []),
+			],
 		)
 	} else {
 		claimed = await claimImport(
 			row,
-			"status = 'running', error = NULL, updated_at = CURRENT_TIMESTAMP",
+			`status = 'running', error = NULL, ${questionOptions(row).ask ? "" : "finished_at = NULL, "}updated_at = CURRENT_TIMESTAMP`,
 			[],
 		)
 	}
-	if (claimed) startApply(userId, importId)
+	if (claimed) {
+		await holdQuestions(userId, importId)
+		startApply(userId, importId)
+	}
 	await refreshImports()
 	return summarize(await getImportRow(userId, importId))
 }
@@ -662,14 +974,33 @@ async function undoImportStored(
 ): Promise<ImdbImportSummary> {
 	const row = await getImportRow(userId, importId)
 	if (row.status === "undone") return summarize(row)
-	if (row.status !== "done")
+	if (
+		row.status !== "done" &&
+		!(
+			questionOptions(row).direction === "undo" &&
+			(row.status === "failed" || isStalled(row))
+		)
+	)
 		throw new ImdbImportError(409, "Only a finished import can be undone.")
 	if (undoing.has(importId))
 		throw new ImdbImportError(409, "This import is already being undone.")
+	if (
+		questionOptions(row).ask &&
+		!(await claimImport(
+			row,
+			"status = 'running', options = ?, updated_at = CURRENT_TIMESTAMP",
+			[JSON.stringify({ ...questionOptions(row), direction: "undo" })],
+		))
+	)
+		throw new ImdbImportError(409, "This import changed. Try undo again.")
 	undoing.add(importId)
+	const stopUndoHeartbeat = questionOptions(row).ask
+		? startHeartbeat(importId)
+		: async () => {}
 	// Only title ratings change Taste and the caches that follow it; until known, assume they do.
 	let titles = true
 	try {
+		if (questionOptions(row).ask) await cancelQuestions(importId)
 		await Promise.all([refreshItems(), refreshScores()])
 		const written = await select<Written>(
 			`SELECT row_index, tmdb_id, media_type, prior_score, applied_score, undo_outcome FROM doc.user_import_item
@@ -771,6 +1102,8 @@ async function undoImportStored(
 			"UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND apply_state IN ('added', 'updated')",
 			[importId],
 		)
+		await stopUndoHeartbeat()
+		if (questionOptions(row).ask) await cancelQuestions(importId)
 		await run(
 			"UPDATE doc.user_import SET status = 'undone', updated_at = ? WHERE id = ?",
 			[now, importId],
@@ -782,7 +1115,16 @@ async function undoImportStored(
 			{ uuid: eventUuid(`import:${userId}:${importId}:undone`) },
 		)
 		await Promise.all([refreshItems(), refreshImports()])
+	} catch (error) {
+		await stopUndoHeartbeat()
+		if (questionOptions(row).ask)
+			await run(
+				"UPDATE doc.user_import SET status = 'failed', error = ?, updated_at = ? WHERE id = ?",
+				["Undo stopped. Try undo again to finish it.", new Date(), importId],
+			)
+		throw error
 	} finally {
+		await stopUndoHeartbeat()
 		undoing.delete(importId)
 		if (titles) await ratingsChanged(userId)
 	}

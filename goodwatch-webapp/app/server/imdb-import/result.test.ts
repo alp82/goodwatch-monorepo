@@ -548,3 +548,47 @@ test("an IMDb import's poster row shows new titles first, then changed, differin
 		["Heat"],
 	)
 })
+
+test("waiting and approved IMDb conflicts are absent from written and skipped results", async () => {
+	crate.items = [
+		item(0, {
+			tmdb_id: 603,
+			outcome: "conflict",
+			apply_state: "waiting:conflict",
+		}),
+		item(1, {
+			tmdb_id: 603,
+			outcome: "conflict",
+			apply_state: "approved:conflict",
+		}),
+	]
+	const result = await imdbImportResult(USER, IMPORT)
+	assert.deepEqual(
+		result.sections.flatMap((section) => section.rows),
+		[],
+	)
+})
+
+test("per-row keep has an honest reason even when the whole question is unanswered", async () => {
+	crate.row.conflict_choice = "ask"
+	crate.items = [
+		item(0, {
+			tmdb_id: 603,
+			outcome: "conflict",
+			apply_state: "kept",
+			current_score: 4,
+			reason: "You chose to keep what GoodWatch has.",
+		}),
+	]
+	const result = await imdbImportResult(USER, IMPORT)
+	const changes = result.sections.flatMap((section) =>
+		section.rows.flatMap((row) => row.changes),
+	)
+	assert.ok(
+		changes.some(
+			(change) =>
+				change.type === "kept" &&
+				change.reason === "You chose to keep your GoodWatch rating of 4.",
+		),
+	)
+})

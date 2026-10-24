@@ -10,12 +10,19 @@ import type {
 	ImdbImportSummary,
 } from "~/domain/imdb-import"
 import { execute, query } from "~/utils/crate"
-import { csvLine, ImdbImportError, type ImportMediaType, MAX_ROWS } from "./file.server"
+import {
+	ImdbImportError,
+	type ImportMediaType,
+	MAX_ROWS,
+	csvLine,
+} from "./file.server"
 
 // Crate's client types its parameters narrowly; null is a valid argument.
 export type Param = string | number | Date | null
-export const run = (sql: string, params: Param[] = []) => execute(sql, params as (string | number | Date)[])
-export const select = <T extends {}>(sql: string, params: Param[] = []) => query<T>(sql, params as (string | number | Date)[])
+export const run = (sql: string, params: Param[] = []) =>
+	execute(sql, params as (string | number | Date)[])
+export const select = <T extends {}>(sql: string, params: Param[] = []) =>
+	query<T>(sql, params as (string | number | Date)[])
 
 export const marks = (count: number) => Array(count).fill("?").join(",")
 
@@ -44,7 +51,17 @@ export const STALL_MS = 60_000
  */
 export const activeRuns = new Set<string>()
 
+export interface QuestionOptions {
+	ask?: boolean
+	answer?: "keep" | "imdb"
+	direction?: "undo"
+}
+export const questionOptions = (row: ImportRow): QuestionOptions =>
+	JSON.parse(row.options ?? "{}")
+
 export interface ImportRow {
+	options?: string | null
+	questions?: ImdbImportSummary["questions"]
 	id: string
 	source: string
 	user_id: string
@@ -74,20 +91,24 @@ export interface ImportRow {
 	_primary_term: number
 }
 const IMPORT_COLUMNS =
-	"id, user_id, source, status, file_name, conflict_choice, counts, processed, total, added, updated, kept, failed, without_fingerprint, error, created_at, updated_at, confirmed_at, finished_at, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term"
+	"id, user_id, source, status, file_name, conflict_choice, counts, processed, total, added, updated, kept, failed, without_fingerprint, error, created_at, updated_at, confirmed_at, finished_at, options, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term"
 
 export const toMs = (value: number | string | Date) => new Date(value).getTime()
 
 export const isStalled = (row: ImportRow) =>
-	row.status === "running" && !activeRuns.has(row.id) && toMs(row.read_at) - toMs(row.updated_at) > STALL_MS
+	row.status === "running" &&
+	!activeRuns.has(row.id) &&
+	toMs(row.read_at) - toMs(row.updated_at) > STALL_MS
 
 export function summarize(row: ImportRow): ImdbImportSummary {
 	return {
+		...(row.questions ? { questions: row.questions } : {}),
 		id: row.id,
 		status: row.status,
 		fileName: row.file_name ?? "",
 		createdAt: new Date(row.created_at).toISOString(),
-		finishedAt: row.finished_at === null ? null : new Date(row.finished_at).toISOString(),
+		finishedAt:
+			row.finished_at === null ? null : new Date(row.finished_at).toISOString(),
 		counts: JSON.parse(row.counts) as ImdbImportCounts,
 		conflictChoice: row.conflict_choice,
 		processed: Number(row.processed),
@@ -98,29 +119,71 @@ export function summarize(row: ImportRow): ImdbImportSummary {
 			kept: Number(row.kept),
 			failed: Number(row.failed),
 		},
-		withoutFingerprint: row.without_fingerprint === null ? null : Number(row.without_fingerprint),
+		withoutFingerprint:
+			row.without_fingerprint === null ? null : Number(row.without_fingerprint),
 		stalled: isStalled(row),
-		canUndo: row.status === "done" && Number(row.added) + Number(row.updated) > 0,
-		error: row.status === "failed" ? (row.error ?? "The import stopped before it finished. Try again to finish it.") : null,
+		canUndo:
+			row.status === "done" && Number(row.added) + Number(row.updated) > 0,
+		error:
+			row.status === "failed"
+				? (row.error ??
+					"The import stopped before it finished. Try again to finish it.")
+				: null,
 	}
 }
 
 /** The member's own import. Someone else's import doesn't exist as far as they can tell. */
-export async function getImportRow(userId: string, id: string): Promise<ImportRow> {
-	const rows = await select<ImportRow>(`SELECT ${IMPORT_COLUMNS} FROM doc.user_import WHERE id = ?`, [id])
+export async function getImportRow(
+	userId: string,
+	id: string,
+): Promise<ImportRow> {
+	const rows = await select<ImportRow>(
+		`SELECT ${IMPORT_COLUMNS} FROM doc.user_import WHERE id = ?`,
+		[id],
+	)
 	const row = rows[0]
-	if (!row || row.user_id !== userId || (row.source !== undefined && row.source !== "imdb"))
-		throw new ImdbImportError(404, "We couldn't find that import. Upload the file again.")
+	if (
+		!row ||
+		row.user_id !== userId ||
+		(row.source !== undefined && row.source !== "imdb")
+	)
+		throw new ImdbImportError(
+			404,
+			"We couldn't find that import. Upload the file again.",
+		)
+	if (row.status !== "preview" && questionOptions(row).ask) {
+		const states = await questionStates(id)
+		row.questions = [
+			{
+				kind: "conflict",
+				waiting: Number(
+					states.find((s) => s.apply_state === "waiting:conflict")?.n ?? 0,
+				),
+				applying: Number(
+					states.find((s) => s.apply_state === "approved:conflict")?.n ?? 0,
+				),
+				answer: questionOptions(row).answer ?? null,
+			},
+		]
+	}
 	return row
 }
 
 /** The member's imports, newest first. With `status`, only those. */
-export function listImportRows(userId: string, status?: ImdbImportStatus): Promise<ImportRow[]> {
-	return select<ImportRow>(
+export async function listImportRows(
+	userId: string,
+	status?: ImdbImportStatus,
+): Promise<ImportRow[]> {
+	const rows = await select<ImportRow>(
 		`SELECT ${IMPORT_COLUMNS} FROM doc.user_import
 		 WHERE user_id = ? AND source = 'imdb' AND status ${status ? "= ?" : "<> 'preview'"}
 		 ORDER BY created_at DESC LIMIT 100`,
 		status ? [userId, status] : [userId],
+	)
+	return Promise.all(
+		rows.map((row) =>
+			!status && questionOptions(row).ask ? getImportRow(userId, row.id) : row,
+		),
 	)
 }
 
@@ -134,20 +197,29 @@ export function listImportRows(userId: string, status?: ImdbImportStatus): Promi
  * 5.10.9 two such claims within the refresh interval both reported one row (issue 313). Crate refuses a filter that
  * names the version together with another column, so whatever the claim depends on is checked on `row` beforehand.
  */
-export async function claimImport(row: ImportRow, set: string, params: Param[]): Promise<boolean> {
-	const claim = await run(`UPDATE doc.user_import SET ${set} WHERE id = ? AND _seq_no = ? AND _primary_term = ?`, [
-		...params,
-		row.id,
-		Number(row._seq_no),
-		Number(row._primary_term),
-	])
+export async function claimImport(
+	row: ImportRow,
+	set: string,
+	params: Param[],
+): Promise<boolean> {
+	const claim = await run(
+		`UPDATE doc.user_import SET ${set} WHERE id = ? AND _seq_no = ? AND _primary_term = ?`,
+		[...params, row.id, Number(row._seq_no), Number(row._primary_term)],
+	)
 	return claim.rowcount === 1
 }
 
 export const refreshImports = () => run("REFRESH TABLE doc.user_import")
+export const questionStates = (id: string) =>
+	select<{ apply_state: string; n: number }>(
+		"SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND apply_state IS NOT NULL GROUP BY apply_state",
+		[id],
+	)
+
 export const refreshItems = () => run("REFRESH TABLE doc.user_import_item")
 
 interface ItemRow {
+	row_index: number
 	imdb_id: string | null
 	title: string | null
 	year: number | null
@@ -174,18 +246,28 @@ export async function listItems(
 	outcome: ImdbImportOutcome | undefined,
 	offset: number,
 	limit: number,
+	waiting?: "conflict",
 ): Promise<{ items: ImdbImportItem[]; total: number }> {
 	const row = await getImportRow(userId, id)
 	const counts = JSON.parse(row.counts) as ImdbImportCounts
 	const rows = await select<ItemRow>(
-		`SELECT ${ITEM_COLUMNS} FROM doc.user_import_item
-		 WHERE import_id = ? AND user_id = ? ${outcome ? "AND outcome = ?" : ""}
+		`SELECT ${waiting ? "row_index, " : ""}${ITEM_COLUMNS} FROM doc.user_import_item
+		 WHERE import_id = ? AND user_id = ? ${outcome ? "AND outcome = ?" : ""} ${waiting ? "AND apply_state = 'waiting:conflict'" : ""}
 		 ORDER BY row_index LIMIT ? OFFSET ?`,
 		[id, userId, ...(outcome ? [outcome] : []), limit, offset],
 	)
 	return {
-		total: outcome ? counts[outcome] : counts.rows,
+		total: waiting
+			? Number(
+					(await questionStates(id)).find(
+						(s) => s.apply_state === "waiting:conflict",
+					)?.n ?? 0,
+				)
+			: outcome
+				? counts[outcome]
+				: counts.rows,
 		items: rows.map((item) => ({
+			...(waiting ? { index: Number(item.row_index) } : {}),
 			imdbId: item.imdb_id ?? "",
 			title: item.title ?? "",
 			year: item.year === null ? null : Number(item.year),
@@ -196,10 +278,16 @@ export async function listItems(
 			reason: item.reason,
 			tmdbId: item.tmdb_id === null ? null : Number(item.tmdb_id),
 			mediaType: item.media_type,
-			currentScore: item.current_score === null ? null : Number(item.current_score),
+			currentScore:
+				item.current_score === null ? null : Number(item.current_score),
 			episode:
-				item.kind === "episode_rating" && item.season_number != null && item.episode_number != null
-					? { season: Number(item.season_number), number: Number(item.episode_number) }
+				item.kind === "episode_rating" &&
+				item.season_number != null &&
+				item.episode_number != null
+					? {
+							season: Number(item.season_number),
+							number: Number(item.episode_number),
+						}
 					: null,
 		})),
 	}
@@ -214,7 +302,17 @@ export async function skippedCsv(userId: string, id: string): Promise<string> {
 		 ORDER BY row_index LIMIT ${MAX_ROWS}`,
 		[id, userId],
 	)
-	const lines = [csvLine(["Const", "Title", "Year", "Title Type", "Your Rating", "Date Rated", "Reason"])]
+	const lines = [
+		csvLine([
+			"Const",
+			"Title",
+			"Year",
+			"Title Type",
+			"Your Rating",
+			"Date Rated",
+			"Reason",
+		]),
+	]
 	for (const item of rows)
 		lines.push(
 			csvLine([

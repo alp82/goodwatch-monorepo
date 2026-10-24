@@ -1,5 +1,5 @@
-import type { ImportSummary } from "./imports"
 import type { ImdbFileChoice } from "./imdb-file"
+import type { ImportSummary } from "./imports"
 // IMDb ratings import: a member uploads the ratings CSV that IMDb exports, reviews a preview, and confirms.
 // These are the shapes the `/api/imdb-import/*` endpoints return and the Imports settings page draws.
 // Pure and shared by the server and the browser. See docs/research/imdb-ratings-import.md.
@@ -13,7 +13,7 @@ export type ImdbImportStatus =
 	| "undone"
 
 /** What to do with titles whose GoodWatch rating differs from the file. */
-export type ImdbConflictChoice = "keep" | "imdb"
+export type ImdbConflictChoice = "keep" | "imdb" | "ask"
 
 /**
  * What the import does with one row of the file. Every row has exactly one outcome,
@@ -58,6 +58,12 @@ export interface ImdbImportApplied {
 }
 
 export interface ImdbImportSummary {
+	questions?: {
+		kind: "conflict"
+		waiting: number
+		applying: number
+		answer: "keep" | "imdb" | null
+	}[]
 	id: string
 	status: ImdbImportStatus
 	fileName: string
@@ -82,6 +88,7 @@ export interface ImdbImportSummary {
 }
 
 export interface ImdbImportItem {
+	index?: number
 	/** `tt…`, or the raw value for an invalid row. */
 	imdbId: string
 	title: string

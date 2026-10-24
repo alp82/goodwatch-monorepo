@@ -9,6 +9,8 @@ import * as nodeModule from "node:module"
 import ts from "typescript"
 
 const STUBS: Record<string, string> = {
+	"/utils/auth.ts":
+		"export const getAuthFromRequest = async ({request}) => ({user: request.headers.get('x-fixture-member') ? {id: request.headers.get('x-fixture-member')} : null, headers: new Headers()})",
 	"/server/onboarding-media.server.ts":
 		"export const resetOnboardingMediaCache = async () => {}",
 	"/server/taste/index.server.ts":

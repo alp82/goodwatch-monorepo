@@ -1,4 +1,3 @@
-import { analyticsAction } from "~/telemetry/product-analytics.server"
 // POST /api/imdb-import/:id/confirm: starts writing the previewed ratings, or resumes an import that failed or
 // stalled. Answers at once with status `running`; GET /api/imdb-import/:id reports the progress.
 import { type ActionFunctionArgs, json } from "@remix-run/node"
@@ -11,12 +10,16 @@ import {
 	readJson,
 	withMember,
 } from "~/server/imdb-import/http.server"
+import { analyticsAction } from "~/telemetry/product-analytics.server"
 
-const requestSchema = z.object({ conflictChoice: z.enum(["keep", "imdb"]) })
+const requestSchema = z.object({
+	conflictChoice: z.enum(["keep", "imdb", "ask"]),
+})
 
 function productAction({ request, params }: ActionFunctionArgs) {
 	return withMember(request, async (userId, headers) => {
-		if (request.method !== "POST") return json({ error: "Method not allowed" }, { status: 405, headers })
+		if (request.method !== "POST")
+			return json({ error: "Method not allowed" }, { status: 405, headers })
 		const parsed = requestSchema.safeParse(await readJson(request))
 		if (!parsed.success)
 			throw new ImdbImportError(
