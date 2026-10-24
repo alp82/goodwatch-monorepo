@@ -211,8 +211,10 @@ test('cached next poster fades in without a full-opacity flash', async ({ page }
   f.room.shared.candidates[0].posterUrl = image;
   f.room.shared.candidates[1].posterUrl = image + '#next';
   await page.evaluate(async src => { const img = new Image(); img.src = src; await img.decode(); }, image + '#next');
+  const reloadStarted = Date.now();
   await page.reload();
   await expect(page.getByTestId('poster-art')).toHaveCSS('opacity', '1');
+  expect(Date.now() - reloadStarted).toBeLessThan(4000);
   await page.evaluate(() => {
     (window as any).__fadeFrames = [];
     const until = performance.now() + 1500;
