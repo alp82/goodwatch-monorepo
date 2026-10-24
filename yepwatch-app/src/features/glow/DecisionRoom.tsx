@@ -1,5 +1,6 @@
+import { FadeImage } from './FadeImage';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Image, View } from 'react-native';
+import { Animated, View } from 'react-native';
 import { useReducedMotion } from '../../components/ui';
 import { Drawer } from './Drawer';
 import { GText, Icon, Pill, Press, glow, native, type IconName } from './theme';
@@ -58,6 +59,7 @@ export function useDecisionPulse(key: string | number) {
   return value;
 }
 export function DecisionRoom({
+  readOnly = false,
   items,
   proposal,
   total,
@@ -77,6 +79,7 @@ export function DecisionRoom({
   cues,
   people,
 }: {
+  readOnly?: boolean;
   items: DecisionItem[];
   proposal: DecisionProposal | null;
   total: number;
@@ -317,13 +320,13 @@ export function DecisionRoom({
         }}
       >
         <Pill
-          label="Keep voting"
+          label={readOnly ? "Back to Tonight" : "Keep voting"}
           onPress={keepVoting}
           icon="left"
           style={{ minHeight: 40, paddingHorizontal: 12 }}
         >
           <GText size={14} bold>
-            Keep voting
+            {readOnly ? "Back to Tonight" : "Keep voting"}
           </GText>
         </Pill>
         <GText bold size={wide ? 20 : 16} lines={1}>
@@ -436,12 +439,12 @@ export function DecisionRoom({
               Your matches changed
             </GText>
             <GText color={glow.muted} size={14}>
-              Keep voting to discover more with everyone in the room.
+              {readOnly ? 'Return to Tonight to see the final choice.' : 'Keep voting to discover more with everyone in the room.'}
             </GText>
           </View>
         )}
       </View>
-      <Animated.View
+      {readOnly ? <View style={{ padding: 16, alignItems: 'center' }}><GText color={glow.amber}>Tonight’s choice is saved.</GText></View> : <Animated.View
         style={{
           alignSelf: 'center',
           width: '100%',
@@ -590,7 +593,7 @@ export function DecisionRoom({
             </GText>
           </Press>
         )}
-      </Animated.View>
+      </Animated.View>}
       {detailed && (
         <Drawer title={titleYear(detailed.title)} close={() => setDetail(null)}>
           <GText color={glow.muted}>
@@ -615,7 +618,7 @@ export function DecisionRoom({
 }
 function MiniPoster({ item }: { item: DecisionItem }) {
   return item.title.posterUrl ? (
-    <Image
+    <FadeImage
       source={{ uri: item.title.posterUrl }}
       style={{ width: 34, height: 51, borderRadius: 5 }}
     />
@@ -680,7 +683,7 @@ function DecisionTile({
         }}
       >
         {item.title.posterUrl ? (
-          <Image
+          <FadeImage
             accessible={false}
             source={{ uri: item.title.posterUrl }}
             style={{ width: '100%', height: '100%' }}

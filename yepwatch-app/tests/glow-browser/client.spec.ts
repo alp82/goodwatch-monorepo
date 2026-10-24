@@ -223,11 +223,7 @@ test('inspection and dice never propose; shared proposal replacement and Keep vo
   await page
     .getByRole('button', { name: 'Propose Another hidden match (2020) instead', exact: true })
     .click();
-  expect(
-    f.commands
-      .filter((c) => c.command.type === 'propose')
-      .map((c) => c.command.type === 'propose' && c.command.candidateId)
-  ).toEqual(['c2', 'c3']);
+  await expect.poll(() => f.commands.filter(c => c.command.type === 'propose').map(c => c.command.type === 'propose' && c.command.candidateId)).toEqual(['c2', 'c3']);
   await expect(page.getByText('Everyone agrees. Enjoy your watch.', { exact: true })).toHaveCount(
     0
   );
@@ -428,7 +424,7 @@ test('retired history cannot leave an enabled Undo that silently does nothing', 
   f.room.shared.matches = [];
   await page.getByRole('button', { name: 'Refresh room', exact: true }).click();
   await page.getByRole('button', { name: 'Undo last choice', exact: true }).click();
-  expect(f.commands.at(-1)?.command).toMatchObject({
+  await expect.poll(() => f.commands.at(-1)?.command).toMatchObject({
     type: 'vote',
     candidateId: 'c3',
     value: null,
@@ -464,7 +460,7 @@ for (const viewport of [
         }))
       ).toEqual({ scroll: 0, height: viewport.height, viewport: viewport.height });
     };
-    await page.goto('/');
+    await page.goto('/'); await page.getByRole('button', { name: 'Create a room', exact: true }).click();
     await page.getByLabel('Your nickname').fill('Layout check');
     await reachable('Create a room');
     await noPageScroll();
@@ -540,7 +536,7 @@ test('retained continuing-only setup has an explicit guest fallback without sile
   ).toBeEnabled();
   expect(f.commands).toHaveLength(0);
   await page.getByRole('button', { name: 'Save room description', exact: true }).click();
-  expect(f.commands).toHaveLength(1);
+  await expect.poll(() => f.commands.length).toBe(1);
   expect(f.commands[0].command).toMatchObject({
     type: 'configure',
     expectedContextVersion: 1,
@@ -619,7 +615,7 @@ test('late newcomer can inspect and Agree to preserved nonmatch proposal with ex
   await page
     .getByRole('button', { name: 'Agree to Hidden shared title (2020). 1 of 2 agree', exact: true })
     .click();
-  expect(f.commands.at(-1)?.command).toEqual({
+  await expect.poll(() => f.commands.at(-1)?.command).toEqual({
     type: 'agree',
     generation: 1,
     expectedRosterVersion: 1,
@@ -972,7 +968,7 @@ test('prompt presets become live search picks and grouped providers retain every
   await prime.click();await expect(prime).not.toBeChecked();await prime.click();
   const save=page.getByRole('button',{name:'Save room description'});
   await expect(save).toHaveText('Save');await save.click();
-  expect(f.commands.at(-1)?.command).toMatchObject({type:'configure',prompt:'Sports movies motivational',serviceIds:[8,9,10,119]});
+  await expect.poll(() => f.commands.at(-1)?.command).toMatchObject({type:'configure',prompt:'Sports movies motivational',serviceIds:[8,9,10,119]});
   await page.getByRole('button',{name:'Edit room description and services'}).click();
   await input.fill('');
   await expect(page.getByRole('button',{name:'Family night',exact:true})).toBeVisible();

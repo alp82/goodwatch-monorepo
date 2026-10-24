@@ -1,3 +1,5 @@
+import { EdgeBack } from './glow/EdgeBack';
+import { HomeLanding } from './home/HomeLanding';
 import { guestOnly } from '../core/config';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, Platform, View, useWindowDimensions } from 'react-native';
@@ -27,6 +29,7 @@ export function Entrance({ invite }: { invite?: string }) {
     void loadRecentRoom().then(value => { if (active) setRecent(value); }).catch(() => undefined);
     return () => { active = false; };
   }, []));
+  const [webCreating,setWebCreating]=useState(false);
   const [joining, setJoining] = useState(Boolean(invite));
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState(invite ?? '');
@@ -205,14 +208,24 @@ export function Entrance({ invite }: { invite?: string }) {
   const back = useCallback(() => {
     if (options) setOptions(false);
     else if (invite) router.replace('/');
-    else { setJoining(false); setError(''); }
+    else { setJoining(false); setWebCreating(false); setError(''); }
   }, [options, invite]);
   useFocusEffect(useCallback(() => {
-    if (Platform.OS !== 'android' || (!joining && !invite && !options)) return;
+    if (Platform.OS !== 'android' || (!joining && !invite && !options && !webCreating)) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => { back(); return true; });
     return () => sub.remove();
-  }, [joining, invite, options, back]));
+  }, [joining, invite, options, webCreating, back]));
   const locked = busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;
+  function returnToRoom() {
+    if (!recent) return;
+    void loadInvite(recent.roomId).then(saved => {
+      if (saved) void enter(true, false, { code: saved.code, nickname: recent.nickname });
+      else router.push({ pathname: '/room/[id]', params: { id: recent.roomId } });
+    }).catch(() => { setWebCreating(true); setError('Could not restore your invitation. Try again.'); });
+  }
+  if (Platform.OS === 'web' && !invite && !joining && !webCreating && !admission && !restoreFailed && !error) {
+    return <HomeLanding create={() => setWebCreating(true)} join={() => setJoining(true)} returnToRoom={recent ? returnToRoom : undefined} disabled={locked} />;
+  }
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: glow.bg, overflow: 'hidden' }}>
       <View
@@ -225,7 +238,7 @@ export function Entrance({ invite }: { invite?: string }) {
           gap: 8,
         }}
       >
-        {(joining || invite) && <Press label="Back to start" onPress={back}><Icon name="left" /></Press>}
+        {(joining || invite || webCreating) && <Press label="Back to start" onPress={back}><Icon name="left" /></Press>}
         <View style={{ flex: 1 }}><Wordmark /></View>
       </View>
       <View
@@ -390,6 +403,7 @@ export function Entrance({ invite }: { invite?: string }) {
           </Pill>}
         </Drawer>
       )}
+      {(joining || invite || webCreating) && <EdgeBack back={back} />}
     </SafeAreaView>
   );
 }

@@ -1,5 +1,6 @@
+import { FadeImage } from './FadeImage';
 import { useState } from 'react';
-import { Image, View } from 'react-native';
+import { View } from 'react-native';
 import { titleYear } from './decision-model';
 import type { GlowTitle } from './model';
 import { GText, Icon, Pill, Press, glow } from './theme';
@@ -71,7 +72,7 @@ export function Done({
         }}
       >
         {title.posterUrl ? (
-          <Image
+          <FadeImage
             source={{ uri: title.posterUrl }}
             accessibilityLabel={`${titleYear(title)} poster`}
             style={{ width: '100%', height: '100%' }}

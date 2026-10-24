@@ -1,3 +1,4 @@
+import { EdgeBack } from './EdgeBack';
 import { shareInvitation } from '../../core/share-invitation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, Linking, Platform, View, useWindowDimensions } from 'react-native';
@@ -39,6 +40,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const snapshot = state.room.data;
   const { width, height } = useWindowDimensions();
   const wide = width >= 900;
+  const [reviewingDecision,setReviewingDecision]=useState(false);
   const [view, setView] = useState<GlowView>('voting');
   const [active, setActive] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<'room' | 'details' | 'trailer' | null>(null);
@@ -61,9 +63,10 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const send = state.send;
   const back = useCallback(() => {
     if (drawer) setDrawer(null);
+    else if (snapshot?.shared.phase === 'decided') { setReviewingDecision(v => !v); setView('matches'); }
     else if (view === 'matches') setView('voting');
     else router.replace('/');
-  }, [drawer, view]);
+  }, [drawer, view, snapshot?.shared.phase]);
   useFocusEffect(useCallback(() => {
     if (Platform.OS !== 'android') return;
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => { back(); return true; });
@@ -93,6 +96,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setView('voting');
+    setReviewingDecision(false);
     setActive(null);
     setOptimistic(undefined);
   }, [snapshot?.shared.generation]);
@@ -197,7 +201,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
     active,
     pickId
   );
-  const card = decided
+  const card = decided && !reviewingDecision
     ? shared.candidates.find((c) => c.id === shared.decision?.candidateId)
     : view === 'matches'
     ? shared.candidates.find((c) => c.id === activeId)
@@ -230,7 +234,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const decisionItems = shared.candidates
     .filter(
       (c) =>
-        shared.matches.some((m) => m.candidateId === c.id) || shared.proposal?.candidateId === c.id
+        shared.matches.some((m) => m.candidateId === c.id) || shared.proposal?.candidateId === c.id || shared.decision?.candidateId === c.id
     )
     .map((c) => ({
       title: titlePresentation(c),
@@ -452,7 +456,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <Press label={view === 'matches' ? 'Back to voting' : 'Back to start'} onPress={back}>
+          <Press label={decided ? reviewingDecision ? 'Back to Tonight' : 'Back to matches' : view === 'matches' ? 'Back to voting' : 'Back to start'} onPress={back}>
             <Icon name="left" />
           </Press>
           <Press label="Open room" onPress={() => setDrawer('room')}>
@@ -542,7 +546,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           send={send}
           invite={() => setDrawer('room')}
         />
-      ) : decided && title ? (
+      ) : decided && title && !reviewingDecision ? (
         <Done
           title={title}
           width={width}
@@ -554,6 +558,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
         />
       ) : view === 'matches' ? (
         <DecisionRoom
+          readOnly={decided}
           items={decisionItems}
           proposal={
             shared.proposal
@@ -583,7 +588,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           wide={wide}
           focus={active}
           setFocus={setActive}
-          keepVoting={() => setView('voting')}
+          keepVoting={() => { if (decided) setReviewingDecision(false); else setView('voting'); }}
           propose={(id) => void propose(id)}
           agree={() => void agree(true)}
           withdraw={() => void agree(false)}
@@ -596,6 +601,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
             })
           }
           inspect={(kind, candidateId) => {
+            if (decided) return;
             if (kind === 'poster') {
               if (candidateId && shared.matches.some((m) => m.candidateId === candidateId))
                 state.inspect({ kind, candidateId });
@@ -926,6 +932,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
           <Trailer key={title.id} url={title.trailerUrl} />
         </Drawer>
       )}
+      <EdgeBack back={back} />
     </SafeAreaView>
   );
 }

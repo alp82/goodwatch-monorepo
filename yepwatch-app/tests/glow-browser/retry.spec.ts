@@ -23,7 +23,7 @@ for (const mode of ['create','join'] as const) test(`429 ${mode} retains the sam
     if (bodies.length === 2) { admitted = true; return route.fulfill({json:{credential:{roomId:'test-room',participantId:'host',token:'',expiresAt:room.shared.expiresAt},snapshot:room,invite:{code:'fixture-invite',path:'/r/fixture-invite'}}}); }
     return route.fulfill({status:429,headers:{'Retry-After':'2'},json:{error:{code:'limit_reached',message:'Please wait before retrying.',retryable:true}}});
   });
-  await page.goto('/'); await page.getByLabel('Your nickname').fill('Guest');
+  await page.goto('/'); await page.getByRole('button', { name: 'Create a room', exact: true }).click(); await page.getByLabel('Your nickname').fill('Guest');
   if(mode==='join') {await page.getByRole('button',{name:'Join with an invitation',exact:true}).click();await page.getByLabel('Room code or invitation').fill('fixture-invite');}
   const action=page.getByRole('button',{name:mode==='create'?'Create a room':'Join room',exact:true});
   await action.click(); await expect(action).toBeDisabled();
@@ -61,7 +61,7 @@ test('retryable command retains exact envelope + cooldown across reload; expiry 
 test('definitive admission failure clears bootstrap so corrected input gets a new request; malformed Retry-After is bounded',async({page})=>{
   await common(page);const bodies:GuestAdmissionRequest[]=[];
   await page.route('**/proposal/rooms',async route=>{bodies.push(route.request().postDataJSON());return route.fulfill({status:400,headers:{'Retry-After':'999999999999999'},json:{error:{code:'invalid_request',message:'Please correct your nickname.',retryable:false}}});});
-  await page.goto('/');await page.getByLabel('Your nickname').fill('First');await page.getByRole('button',{name:'Create a room',exact:true}).click();
+  await page.goto('/'); await page.getByRole('button', { name: 'Create a room', exact: true }).click();await page.getByLabel('Your nickname').fill('First');await page.getByRole('button',{name:'Create a room',exact:true}).click();
   await expect(page.getByText('Please correct your nickname.',{exact:true})).toBeVisible();
   await page.getByLabel('Your nickname').fill('Corrected');await page.getByRole('button',{name:'Create a room',exact:true}).click();
   await expect.poll(()=>bodies.length).toBe(2);expect(bodies[1].commandId).not.toBe(bodies[0].commandId);expect(bodies[1].nickname).toBe('Corrected');
@@ -94,7 +94,7 @@ for (const mode of ['create', 'join'] as const) test(`${mode} must persist the e
     bodies.push(route.request().postDataJSON());
     return route.fulfill({status:429,headers:{'Retry-After':'1'},json:{error:{code:'limit_reached',message:'Manual retry only',retryable:true}}});
   });
-  await page.goto('/'); await page.getByLabel('Your nickname').fill('Persist first');
+  await page.goto('/'); await page.getByRole('button', { name: 'Create a room', exact: true }).click(); await page.getByLabel('Your nickname').fill('Persist first');
   if (mode === 'join') { await page.getByRole('button',{name:'Join with an invitation',exact:true}).click();await page.getByLabel('Room code or invitation').fill('fixture-invite'); }
   const action=page.getByRole('button',{name:mode==='create'?'Create a room':'Join room',exact:true});
   await action.click();await expect(page.getByText(/storage is unavailable/)).toBeVisible();expect(bodies).toHaveLength(0);

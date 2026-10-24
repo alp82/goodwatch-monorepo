@@ -1,32 +1,33 @@
 import { expect, test } from '@playwright/test';
 
-test('beta page offers the Android download and keeps the pending iPhone invitation honest and feedback contains only explicit build details', async ({ page }) => {
+test('shared beta links redirect to the install-first home and both app links work', async ({ page }) => {
   const requests: string[] = [];
   await page.route('**/api/yepwatch/**', route => { requests.push(route.request().url()); return route.abort(); });
-  await page.addInitScript(() => {
-    (window as any).__opened = [];
-    window.open = ((url: string) => { (window as any).__opened.push(url); return null; }) as typeof window.open;
-  });
   await page.goto('/beta');
-  await expect(page.getByText('Test YepWatch', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Install on Android' })).toBeEnabled();
-  await expect(page.getByText('Download Android beta', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Install on Android' }).click();
-  expect(await page.evaluate(() => (window as any).__opened)).toEqual([
-    'https://expo.dev/accounts/alperortac/projects/yepwatch/builds/3fca3316-c601-4e83-820f-d43be38352f7',
-  ]);
-  await page.evaluate(() => { (window as any).__opened = []; });
-  await expect(page.getByRole('button', { name: 'iPhone invitations coming soon' })).toBeDisabled();
-  await page.getByRole('button', { name: 'Send feedback' }).click();
-  const opened = await page.evaluate(() => (window as any).__opened as string[]);
-  expect(opened).toHaveLength(1);
-  const mail = new URL(opened[0]);
-  expect(mail.protocol).toBe('mailto:');
-  expect(mail.pathname).toBe('hello@goodwatch.app');
-  expect(mail.searchParams.get('body')).toContain('What happened?');
-  expect(mail.searchParams.get('body')).toContain('YepWatch 0.1.0 · web');
-  expect(mail.searchParams.get('body')).not.toMatch(/room\/|cookie|token|invite/i);
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('link', { name: 'Install YepWatch on iPhone' })).toHaveAttribute('href', 'https://testflight.apple.com/join/V2gzwSFA');
+  await expect(page.getByRole('link', { name: 'Install YepWatch on Android' })).toHaveAttribute('href', 'https://expo.dev/accounts/alperortac/projects/yepwatch/builds/3fca3316-c601-4e83-820f-d43be38352f7');
+  await expect(page.getByText('Coming soon', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Create a room', exact: true }).click();
+  await expect(page.getByLabel('Your nickname')).toBeVisible();
+  await page.getByRole('button', { name: 'Back to start' }).click();
+  await page.getByRole('button', { name: 'Join a room', exact: true }).click();
+  await expect(page.getByLabel('Room code or invitation')).toBeVisible();
   expect(requests).toEqual([]);
-  await page.getByRole('button', { name: 'Try in your browser' }).click();
-  await expect(page.getByRole('button', { name: 'Create a room', exact: true })).toBeVisible();
+});
+
+test('explainer has a centered SVG pause control on hover, touch and keyboard focus', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion:'no-preference' });
+  await page.goto('/');
+  const film=page.locator('.mini-intro'); const pause=page.getByRole('button',{name:'Pause intro',exact:true});
+  await expect(pause).toHaveCSS('opacity','0');
+  await film.hover(); await expect(pause).toHaveCSS('opacity','1');
+  await expect(pause.locator('svg rect')).toHaveCount(2);
+  const a=await film.boundingBox(), b=await pause.boundingBox();expect(Math.abs(b!.x+b!.width/2-a!.x-a!.width/2)).toBeLessThan(2);
+  await pause.click();await expect(page.locator('.mini-film')).toHaveCSS('animation-play-state','paused');
+  await page.getByRole('button',{name:'Play intro',exact:true}).click();
+  await page.mouse.move(0,0);await expect(pause).toHaveCSS('opacity','0');
+  await film.dispatchEvent('pointerdown',{pointerType:'touch'});await expect(pause).toHaveCSS('opacity','1');
+  await page.emulateMedia({reducedMotion:'reduce'});await expect(pause).toHaveCount(0);
+  await expect(page.locator('.mini-film')).toHaveCSS('animation-name','none');
 });

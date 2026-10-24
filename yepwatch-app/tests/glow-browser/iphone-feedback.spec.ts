@@ -118,7 +118,7 @@ test('boot reveals YepWatch once, then stays absent during navigation', async ({
   await page.waitForTimeout(850);
   await page.screenshot({ path: '.expo/feedback-boot.png' });
   await expect(boot).toHaveCount(0, { timeout: 5000 });
-  await page.getByRole('button', { name: 'Join with an invitation' }).click();
+  await page.getByRole('button', { name: 'Join a room', exact: true }).click();
   await expect(boot).toHaveCount(0);
 });
 
@@ -136,4 +136,52 @@ test('room activity and exposure do not begin behind the boot overlay', async ({
   await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Yep', exact: true })).toBeVisible();
   expect(roomReads).toBeGreaterThan(0);
+});
+
+test('Tonight Back reviews matches without changing the decision; edge Back returns to Tonight', async ({ page }) => {
+  const f = await fixture(page);
+  f.room.shared.phase = 'decided';
+  f.room.shared.matches = [{ candidateId:'c1',averageYepMs:1000 },{candidateId:'c2',averageYepMs:2000}];
+  f.room.shared.decision = { candidateId:'c1',proposalVersion:1,decidedAt:Date.now(),availability:[] };
+  await page.reload();
+  await expect(page.getByText('TONIGHT',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Back to matches',exact:true}).click();
+  await expect(page.getByText('Tonight’s choice is saved.',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:/^Propose /})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:/^Agree to /})).toHaveCount(0);
+  await page.mouse.move(5,350);await page.mouse.down();await page.mouse.move(125,355,{steps:12});await page.mouse.up();
+  await expect(page.getByText('TONIGHT',{exact:true})).toBeVisible();
+  expect(f.writes).toEqual([]);expect(f.room.shared.decision?.candidateId).toBe('c1');
+});
+
+test('edge swipe closes matches and drawers, while a card swipe remains a vote', async ({page})=>{
+  const f=await fixture(page);
+  await page.getByRole('button',{name:'Inspect 1 matches'}).click();
+  await page.mouse.move(4,350);await page.mouse.down();await page.mouse.move(110,353,{steps:12});await page.mouse.up();
+  await expect(page.getByTestId('poster')).toBeVisible();
+  expect(f.writes).toEqual([]);
+  await page.getByRole('button',{name:'Open room',exact:true}).click();
+  const edge=page.getByRole('dialog').getByTestId('back-gesture-edge');await expect(edge).toBeVisible();const box=await edge.boundingBox();
+  await page.mouse.move(box!.x+5,box!.y+70);await page.mouse.down();await page.mouse.move(box!.x+115,box!.y+73,{steps:12});await page.mouse.up();
+  await expect(page.getByRole('button',{name:'Leave room',exact:true})).toHaveCount(0);
+  const poster=await page.getByTestId('poster').boundingBox();
+  await page.mouse.move(poster!.x+poster!.width/2,poster!.y+poster!.height*.35);await page.mouse.down();await page.mouse.move(poster!.x+poster!.width*.95,poster!.y+poster!.height*.35,{steps:12});await page.mouse.up();
+  await expect.poll(()=>f.writes.some(c=>c.type==='vote')).toBe(true);
+});
+
+test('late poster load cannot flash the old title after choosing the next one',async({page})=>{
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  const pending=new Map<string,()=>void>();
+  await page.route('**/feedback-image-*.svg',async route=>{
+    const key=route.request().url().split('/').pop()!;await new Promise<void>(resolve=>pending.set(key,resolve));
+    await route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="200" height="300"><rect width="200" height="300" fill="purple"/></svg>'});
+  });
+  const f=await fixture(page);f.room.shared.candidates[0].posterUrl='https://example.test/feedback-image-old.svg';f.room.shared.candidates[1].posterUrl='https://example.test/feedback-image-new.svg';
+  await page.reload();await expect.poll(()=>pending.has('feedback-image-old.svg')).toBe(true);
+  await page.getByRole('button',{name:'Yep',exact:true}).click();await expect.poll(()=>pending.has('feedback-image-new.svg')).toBe(true);
+  pending.get('feedback-image-old.svg')!();await page.waitForTimeout(100);
+  await expect(page.getByTestId('poster')).toContainText('Isolated test c2');
+  const image=page.getByTestId('poster-art');await expect(image).toHaveCSS('opacity','0');
+  pending.get('feedback-image-new.svg')!();await expect(image).toHaveCSS('opacity','1');
+  await expect(page.getByTestId('poster')).toContainText('Isolated test c2');
 });

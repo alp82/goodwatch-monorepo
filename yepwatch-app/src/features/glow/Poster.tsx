@@ -1,5 +1,6 @@
+import { FadeImage } from './FadeImage';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { Animated, Image, Pressable, View } from 'react-native';
+import { Animated, Pressable, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GText, Icon, Press, Score, glow, s, native } from './theme';
 import { useDrag } from './useDrag';
@@ -98,7 +99,8 @@ export function Poster({
         }}
       >
         {title.posterUrl ? (
-          <Image
+          <FadeImage
+            testID="poster-art"
             source={{ uri: title.posterUrl }}
             resizeMode="cover"
             style={s.absolute}
