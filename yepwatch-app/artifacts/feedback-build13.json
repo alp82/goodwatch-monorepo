@@ -1,0 +1,88 @@
+{
+  "nativeSource": "49fe5908814e1a507e5d02aa8b543623d8156784",
+  "webOnlyFollowups": [
+    "d265e9485",
+    "8712e9c48"
+  ],
+  "ios": {
+    "easBuildId": "339c6035-80ef-46d7-9c51-48e1985fe4c9",
+    "buildNumber": 13,
+    "testflight": {
+      "checkedAt": "2026-10-24T12:11:59.249Z",
+      "appId": "6826403019",
+      "buildId": "e825bd64-25bd-4bae-bada-d928f6f7bcb2",
+      "buildNumber": "13",
+      "processingState": "VALID",
+      "reviewState": "APPROVED",
+      "details": [
+        {
+          "autoNotifyEnabled": true,
+          "internalBuildState": "IN_BETA_TESTING",
+          "externalBuildState": "BETA_APPROVED"
+        }
+      ],
+      "groups": [
+        {
+          "name": "Friends beta",
+          "assigned": true,
+          "publicLinkEnabled": true,
+          "publicLink": "https://testflight.apple.com/join/V2gzwSFA"
+        }
+      ]
+    }
+  },
+  "android": {
+    "easBuildId": "238804a8-6e85-472b-8846-c799f00ea14a",
+    "buildNumber": 13,
+    "download": {
+      "time": "2026-10-24T12:14:51.021Z",
+      "anonymousBrowser": true,
+      "downloaded": true,
+      "bytes": 98790799,
+      "sha256": "fc1c380421ea98e378f2e2ecb157c168d4a83010604ee218588bcf2188a45016"
+    },
+    "install": {
+      "package": "com.yepwatch.preview",
+      "versionCode": 13,
+      "signerSha256": "7a4b9faa194c068222940ebe1661ab6f8fd3d714785a15bf76d23352a9752d1d",
+      "install": "Success",
+      "launch": "ok",
+      "target": "owned Pixel8 API35 emulator",
+      "preservedAppData": true
+    },
+    "home": {
+      "introMoves": true,
+      "signInEnabled": true,
+      "existingDecisionRecovered": true,
+      "device": "owned Android API35 emulator; not physical",
+      "introSamples": 7
+    },
+    "save": {
+      "fixedAcrossProviderScroll": true,
+      "before": "[66,2177][1014,2303]",
+      "after": "[66,2177][1014,2303]",
+      "scope": "real API provider list on owned emulator",
+      "afterSearchFocus": "[66,2177][1014,2303]",
+      "keyboardCoverage": "Search focus only; software keyboard overlap not asserted on emulator"
+    }
+  },
+  "verification": {
+    "unitTests": 63,
+    "chromiumFullSuite": 89,
+    "finalFocusedChromium": 10,
+    "finalWebKitStartupRegression": 4,
+    "otherFocusedWebKit": 12,
+    "nativeHermesExports": [
+      "ios",
+      "android"
+    ],
+    "typecheck": "pass",
+    "lint": "0 errors; 1 existing legacy unused import warning",
+    "qr": "Android URL regenerated and decoded successfully"
+  },
+  "limits": [
+    "Native execution used an owned Android API35 emulator, not a physical device.",
+    "No physical iPhone, hardware audio or native software-keyboard overlap claim.",
+    "Country ordering uses GoodWatch common-country order; locale hint uses an explicit device region, without location permissions."
+  ]
+}

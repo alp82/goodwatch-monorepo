@@ -6,7 +6,7 @@ test('shared beta links redirect to the install-first home and both app links wo
   await page.goto('/beta');
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('link', { name: 'Install YepWatch on iPhone' })).toHaveAttribute('href', 'https://testflight.apple.com/join/V2gzwSFA');
-  await expect(page.getByRole('link', { name: 'Install YepWatch on Android' })).toHaveAttribute('href', 'https://expo.dev/accounts/alperortac/projects/yepwatch/builds/b2c45558-bf54-49c2-aef4-a950a69a38d8');
+  await expect(page.getByRole('link', { name: 'Install YepWatch on Android' })).toHaveAttribute('href', 'https://expo.dev/accounts/alperortac/projects/yepwatch/builds/238804a8-6e85-472b-8846-c799f00ea14a');
   await expect(page.getByText('Coming soon', { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Create a room', exact: true }).click();
   await expect(page.getByLabel('Your nickname')).toBeVisible();
@@ -47,14 +47,17 @@ for (const [width, height] of [[390,844],[1440,900]]) test(`home arrives in logo
     }
     requestAnimationFrame(sample);
   });
+  const start = Date.now();
   await page.goto('/');
   await expect(page.locator('.browser-zone')).toHaveCSS('opacity','1');
+  expect(Date.now() - start).toBeLessThan(4000);
   const t: Record<string,number> = await page.evaluate(() => (window as any).__arrival);
   expect(t.brand).toBeLessThan(t.intro); expect(t.intro).toBeLessThan(t.ios);
   expect(t.ios).toBeLessThan(t.android);expect(t.android).toBeLessThan(t.actions);
   const card = page.locator('.install-card.ios');
+  const resting = (await card.boundingBox())!;
   await card.hover();
-  await expect(card).not.toHaveCSS('transform', 'none');
+  await expect.poll(async () => (await card.boundingBox())!.y).toBeLessThan(resting.y - 1);
   await page.mouse.move(0, 0);
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
   await page.screenshot({path:`.expo/home-entry-${width}.png`});
