@@ -1,0 +1,74 @@
+{
+  "sourceCommit": "7829d9e089a6d83ce152be30e9a56cf3b8a7243f",
+  "buildNumber": 14,
+  "web": {
+    "url": "https://yepwatch.com",
+    "deployment": "nx9rdgpwqxp0aesj418lbmls",
+    "status": "finished",
+    "coreLiveFlow": [
+      "create",
+      "configure",
+      "start",
+      "Yep",
+      "match",
+      "propose",
+      "Done",
+      "resume_voting"
+    ]
+  },
+  "checks": {
+    "unit": 65,
+    "browser": 91,
+    "proposal": 22,
+    "concurrencyRelease": 9,
+    "optInSkipped": 1,
+    "typecheck": "pass",
+    "lint": "zero errors; one existing legacy warning",
+    "nativeExports": [
+      "ios",
+      "android"
+    ],
+    "githubRun": 40125347063,
+    "githubConclusion": "success"
+  },
+  "ios": {
+    "easBuild": "e9153ede-f0d2-4b70-b2f8-9329ac417c07",
+    "submission": "c678dc76-83f2-4141-9802-95e9df8b0ba8",
+    "testflight": {
+      "appId": "6826403019",
+      "buildId": "f4bb54d7-8a72-4e3c-abef-6215a32eb49f",
+      "buildNumber": "14",
+      "groupId": "32f094d4-7cb6-43b9-bab3-e38e911ef63c",
+      "reviewId": "f4bb54d7-8a72-4e3c-abef-6215a32eb49f",
+      "reviewState": "APPROVED",
+      "assigned": true,
+      "details": [
+        {
+          "autoNotifyEnabled": true,
+          "internalBuildState": "IN_BETA_TESTING",
+          "externalBuildState": "BETA_APPROVED"
+        }
+      ],
+      "publicLinkEnabled": true
+    }
+  },
+  "android": {
+    "easBuild": "1513ddea-0de8-47af-916e-2d846b802979",
+    "status": "finished",
+    "sha256": "eed4e4fe1fa14853d014aba958f3b7dc21d5342e968857461fc5f4b51631efae",
+    "certificateSha256": "7a4b9faa194c068222940ebe1661ab6f8fd3d714785a15bf76d23352a9752d1d",
+    "anonymousDownload": true,
+    "emulator": {
+      "device": "Pixel 8 API 35",
+      "serial": "emulator-5566",
+      "coldLaunch": "passed",
+      "homeRendered": "passed",
+      "metroRequired": false,
+      "appErrors": 0
+    }
+  },
+  "limits": [
+    "Physical-device audio not verified in this release.",
+    "Existing leave-room redirect race: a successful Leave can show access-ended before returning home; Back to YepWatch remains available. Controller source is unchanged in this release."
+  ]
+}
