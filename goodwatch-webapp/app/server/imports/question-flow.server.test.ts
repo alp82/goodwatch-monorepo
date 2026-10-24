@@ -1015,3 +1015,49 @@ test("pre-deploy unchanged Seen wants stay unchanged even with new consent", asy
 	assert.equal(db.items[0].apply_state, "kept")
 	assert.equal(db.wishlist.length, 0)
 })
+
+test("stage 1 explicit leave replaces preview prompts with the chosen kept reason on Done", async () => {
+	for (const question of ["rewatch", "wholeShow"] as const) {
+		const { db, id } = setup(2)
+		db.items[0].kind = "want"
+		db.watches.push({
+			user_id: "member",
+			tmdb_id: 42,
+			media_type: "movie",
+			watch_id: "existing",
+		})
+		db.imports[0].source = "letterboxd"
+		const prompt =
+			question === "rewatch"
+				? "Seen in GoodWatch. Choose whether to add it as Want to rewatch."
+				: "This file lists a season or episode. Choose Want to See the show to add the whole show."
+		const reason =
+			question === "rewatch"
+				? "Left as Seen, as you chose."
+				: "Left off Want to See for the whole show, as you chose."
+		db.items[0].reason = prompt
+		db.items[0].payload = JSON.stringify({
+			...JSON.parse(String(db.items[0].payload)),
+			kind: "want",
+			wishlistRewatchChoice: question === "rewatch",
+			wishlistShowChoice: question === "wholeShow",
+		})
+		await confirmImport("member", id, {
+			kinds: ["rating", "want"],
+			conflictChoice: "source",
+			watchDates: "preserve",
+			...(question === "rewatch"
+				? { wishlistRewatch: false }
+				: { wishlistShows: false }),
+		})
+		await settled(db)
+		assert.equal(db.items[0].apply_state, "kept")
+		assert.equal(db.items[0].reason, reason)
+		assert.equal(db.wishlist.length, 0)
+		assert.equal(db.items[1].apply_state, "updated")
+		assert.equal(db.scores[0].score, 9)
+		const result = JSON.stringify(await getImportResult("member", id))
+		assert.ok(result.includes(reason))
+		assert.ok(!result.includes(prompt))
+	}
+})

@@ -527,8 +527,11 @@ export async function transitionWishlistQuestion(
 			...(item.payload._answer as object),
 			[question]: answer,
 		}
-		item.applyState = `approved:${question}`
-		const gate = importGate(item, options)
+		if (answer !== "leave") item.applyState = `approved:${question}`
+		const gate =
+			answer === "leave"
+				? { kept: true as const, question }
+				: importGate(item, options)
 		const keptQuestion = "kept" in gate ? gate.question : undefined
 		const state =
 			answer === "leave" || keptQuestion

@@ -662,12 +662,15 @@ function classify(
 				outcome: current.wants.has(ref)
 					? "unchanged"
 					: current.watched.has(ref) || row.wishlistRewatchChoice
-						? "conflict"
+						? row.wishlistEvidence || row.kind === "want"
+							? "conflict"
+							: "unchanged"
 						: row.wishlistShowChoice
 							? "conflict"
 							: "new",
 				wishlistRewatchChoice:
-					current.watched.has(ref) || !!row.wishlistRewatchChoice,
+					(!!row.wishlistEvidence || row.kind === "want") &&
+					(current.watched.has(ref) || !!row.wishlistRewatchChoice),
 				reason:
 					!current.wants.has(ref) &&
 					(current.watched.has(ref) || row.wishlistRewatchChoice)
@@ -675,7 +678,9 @@ function classify(
 							? current.watched.has(ref)
 								? "Seen in GoodWatch. Choose whether to add this title as Want to rewatch."
 								: "Seen at the source. Choose whether to add this title as Want to rewatch."
-							: "Seen in GoodWatch. Choose whether to add it as Want to rewatch."
+							: row.kind === "want"
+								? "Seen in GoodWatch. Choose whether to add it as Want to rewatch."
+								: "This title is already in your watch log."
 						: row.wishlistShowChoice && !current.wants.has(ref)
 							? "This file lists a season or episode. Choose Want to See the show to add the whole show."
 							: null,
@@ -1068,7 +1073,8 @@ export async function createParsedPreview(
 		const applies = {
 			conflict: followsConflictChoice(item),
 			rewatch:
-				(item.kind === "want" || item.kind === "show_status") &&
+				(item.kind === "want" ||
+					(item.kind === "show_status" && !!item.wishlistEvidence)) &&
 				item.outcome === "conflict" &&
 				item.wishlistRewatchChoice === true,
 			wholeShow:
@@ -1121,7 +1127,11 @@ export async function createParsedPreview(
 					...kinds,
 					_questions: questions,
 					_wishlistRewatchChoiceCount: items.filter(
-						(item) => item.outcome === "conflict" && item.wishlistRewatchChoice,
+						(item) =>
+							(item.kind === "want" ||
+								(item.kind === "show_status" && !!item.wishlistEvidence)) &&
+							item.outcome === "conflict" &&
+							item.wishlistRewatchChoice,
 					).length,
 					...(source === "wishlist" ||
 					source === "tvtime" ||

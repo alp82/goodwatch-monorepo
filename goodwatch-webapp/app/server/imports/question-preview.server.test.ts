@@ -316,3 +316,89 @@ test("Letterboxd watchlist already Seen is a rewatch conflict without wishlist e
 	)
 	assert.equal(payload.wishlistEvidence, undefined)
 })
+
+test("MAL Plan to Watch with an episode in the log stays unchanged without a rewatch question", async () => {
+	const { db, tracking } = setup()
+	db.animeSnapshot = {
+		schemaVersion: 1,
+		entries: [
+			{
+				anidbId: 1,
+				showId: 2,
+				season: 1,
+				offset: 0,
+				ranges: [],
+				ids: { myanimelist: [104], anilist: [], kitsu: [] },
+			},
+		],
+	}
+	db.watches = [{ user_id: "member", tmdb_id: 2, media_type: "show" }]
+	tracking.seed("user_watch_log", [
+		{
+			id: "episode-watch",
+			user_id: "member",
+			tmdb_id: 2,
+			media_type: "show",
+			episode_tmdb_id: 201,
+			season_number: 1,
+			episode_number: 1,
+			watched_at: null,
+			watched_at_precision: "unknown",
+			pass: 1,
+			origin: "single",
+		},
+	])
+	const summary = await createPreview(
+		"member",
+		"myanimelist",
+		"animelist.xml",
+		Buffer.from(
+			"<myanimelist><myinfo><user_export_type>1</user_export_type></myinfo><anime><series_animedb_id>104</series_animedb_id><series_title>Movie 2</series_title><series_episodes>12</series_episodes><my_watched_episodes>0</my_watched_episodes><my_status>Plan to Watch</my_status><my_score>0</my_score></anime></myanimelist>",
+		),
+	)
+	assert.equal(summary.counts.unchanged, 1)
+	assert.equal(summary.counts.conflict, 0)
+	assert.equal(summary.counts.new, 0)
+	assert.equal(summary.wishlistRewatchChoiceCount, 0)
+	assert.equal(question(summary, "rewatch").waiting, 0)
+	assert.deepEqual(question(summary, "rewatch").byKind, {})
+	const payload = JSON.parse(String(db.items[0].payload))
+	assert.equal(payload.kind, "show_status")
+	assert.equal(payload.wishlistEvidence, undefined)
+	assert.equal(payload.wishlistRewatchChoice, false)
+	assert.equal(db.items[0].reason, "This title is already in your watch log.")
+})
+
+test("MDBList and Trakt evidence-based Plan to Watch rewatch classification retains pre-T3 behavior", async () => {
+	for (const source of ["mdblist", "trakt"] as const) {
+		const { db } = setup()
+		db.watches = [{ user_id: "member", tmdb_id: 2, media_type: "show" }]
+		const summary = await createParsedPreview("member", `${source}.json`, {
+			source,
+			warnings: [],
+			observations: [
+				{
+					...observation("show_status", 2),
+					mediaType: "show",
+					showStatus: "plan_to_watch",
+					wishlistEvidence: {
+						source,
+						mediaType: "show",
+						completeness: "complete",
+					},
+				},
+			],
+		})
+		assert.equal(summary.counts.conflict, 1)
+		assert.equal(summary.wishlistRewatchChoiceCount, 1)
+		assert.deepEqual(question(summary, "rewatch").byKind, { show_status: 1 })
+		assert.equal(
+			JSON.parse(String(db.items[0].payload)).wishlistRewatchChoice,
+			true,
+		)
+		assert.equal(
+			db.items[0].reason,
+			"Seen in GoodWatch. Choose whether to add this title as Want to rewatch.",
+		)
+	}
+})

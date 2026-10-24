@@ -683,8 +683,21 @@ export function importGate(
 				? !effective.wishlistRewatch
 				: item.wishlistRewatchChoice !== false &&
 					effective.conflictChoice === "keep"))
-	)
+	) {
+		if (
+			item.wishlistShowChoice &&
+			effective.wishlistShows !== true &&
+			options.wishlistShows === false
+		)
+			return { kept: true, question: "wholeShow" }
+		if (
+			item.wishlistRewatchChoice &&
+			!effective.wishlistRewatch &&
+			options.wishlistRewatch === false
+		)
+			return { kept: true, question: "rewatch" }
 		return { kept: true }
+	}
 	return { effective }
 }
 

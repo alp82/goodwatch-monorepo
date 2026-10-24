@@ -116,3 +116,29 @@ test("gate preserves legacy coupling and honors explicit rewatch consent across 
 										assert.deepEqual(input, before)
 									}
 })
+
+test("stage 1 explicit leave identifies the kept question without changing implicit defaults", () => {
+	const options: ImportOptions = {
+		kinds: ["want"],
+		conflictChoice: "source",
+		watchDates: "preserve",
+	}
+	for (const question of ["wholeShow", "rewatch"] as const) {
+		const item = {
+			...row,
+			...(question === "wholeShow"
+				? { wishlistShowChoice: true }
+				: { wishlistRewatchChoice: true }),
+		}
+		assert.deepEqual(importGate(item, options), { kept: true })
+		assert.deepEqual(
+			importGate(item, {
+				...options,
+				...(question === "wholeShow"
+					? { wishlistShows: false }
+					: { wishlistRewatch: false }),
+			}),
+			{ kept: true, question },
+		)
+	}
+})
