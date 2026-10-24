@@ -14,7 +14,7 @@ export default function Layout() {
   const hideNative = useCallback(() => { if (Platform.OS !== 'web') void SplashScreen.hideAsync().catch(() => undefined); }, []);
   return <Providers><StatusBar style="light" /><View style={{ flex: 1, backgroundColor: '#070707' }}>
     <View style={{ flex: 1 }} pointerEvents={booted ? 'auto' : 'none'} accessibilityElementsHidden={!booted} importantForAccessibility={booted ? 'auto' : 'no-hide-descendants'} aria-hidden={!booted}>
-      {(loaded || error) && <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070707' } }} />}
+      {booted && (loaded || error) && <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070707' } }} />}
     </View>
     {!booted && <Boot ready={Boolean(loaded || error)} done={done} onLayout={hideNative} />}
   </View></Providers>;

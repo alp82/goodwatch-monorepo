@@ -121,3 +121,19 @@ test('boot reveals YepWatch once, then stays absent during navigation', async ({
   await page.getByRole('button', { name: 'Join with an invitation' }).click();
   await expect(boot).toHaveCount(0);
 });
+
+test('room activity and exposure do not begin behind the boot overlay', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  let roomReads = 0;
+  await page.route('**/api/yepwatch/v1/proposal/**', async route => {
+    roomReads++;
+    await route.fulfill({ json: continuousFixture() });
+  });
+  await page.goto('/room/test-room');
+  await expect(page.getByTestId('yepwatch-boot')).toBeVisible();
+  await page.waitForTimeout(500);
+  expect(roomReads).toBe(0);
+  await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Yep', exact: true })).toBeVisible();
+  expect(roomReads).toBeGreaterThan(0);
+});
