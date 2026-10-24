@@ -1964,6 +1964,88 @@ test("An import that drops its duplicate watch on resume still takes back the st
 	assert.equal(onWishlist(short), true)
 })
 
+for (const failAt of [1, 2])
+	test(`An import whose journal write fails while it drops a duplicate (write ${failAt}) still takes back its status and Want to See after a restart (#759 review 4)`, async () => {
+		db.seed("user_wishlist", [titleRow(short)])
+		const prepared = await prepareImportTrackingPlan({
+			userId: user,
+			importId: "imp-A",
+			source: "trakt",
+			tmdbId: SHORT,
+			mediaType: "show",
+			items: [301, 302].map((id) => ({
+				key: `episode-score:${SHORT}:${id}`,
+				kind: "watch",
+				mediaType: "show",
+				title: "Short",
+				year: null,
+				tmdbId: SHORT,
+				imdbId: null,
+				index: id,
+				outcome: "new",
+				reason: null,
+				episodeTmdbId: id,
+				season: 1,
+				episode: id - 300,
+				precision: "unknown",
+			})) as never,
+			watchDates: "unknown",
+			now: Date.now(),
+			onlyUnwatched: true,
+			restoreIntentions: true,
+		})
+		// The journal as the importer stores it: what the last checkpoint that succeeded serialized.
+		let journal = JSON.stringify(prepared)
+		const save = async (plan: unknown) => {
+			journal = JSON.stringify(plan)
+		}
+		await applyImportTrackingPlan(user, JSON.parse(journal), save)
+		assert.equal(stateOf(short)?.state, "seen")
+		db.seed(
+			"user_watch_log",
+			[301, 302].map((id) => ({
+				user_id: user,
+				watch_id: `i-b-${id}`,
+				media_type: "show",
+				tmdb_id: SHORT,
+				episode_tmdb_id: id,
+				season_number: 1,
+				episode_number: id - 300,
+				watched_at: Date.UTC(2020, 0, 1),
+				watched_at_precision: "day",
+				origin: "import",
+				group_id: null,
+				import_id: "imp-B",
+				pass: 1,
+				created_at: Date.now(),
+				updated_at: Date.now(),
+			})),
+		)
+		// The resume's journal write number `failAt` fails, and the process restarts from the stored journal.
+		let writes = 0
+		await assert.rejects(() =>
+			applyImportTrackingPlan(user, JSON.parse(journal), async (plan) => {
+				if (++writes === failAt) throw new Error("Crate went away")
+				await save(plan)
+			}),
+		)
+		await applyImportTrackingPlan(user, JSON.parse(journal), save)
+		assert.deepEqual(
+			logOf(short).map((r) => r.import_id),
+			["imp-B", "imp-B"],
+		)
+		// Undo B, then A from its stored journal.
+		db.rows.set(
+			"user_watch_log",
+			db.table("user_watch_log").filter((r) => r.import_id !== "imp-B"),
+		)
+		const stored = JSON.parse(journal)
+		assert.equal(await undoImportTrackingPlan(user, stored), "reverted")
+		await restoreImportTrackingIntentions(user, stored, save)
+		assert.deepEqual([stateOf(short), logOf(short)], [null, []])
+		assert.equal(onWishlist(short), true)
+	})
+
 // ---- movies ------------------------------------------------------------------------------------------------
 
 const movieAct = (event: TrackingAction, actionId = newId()) =>

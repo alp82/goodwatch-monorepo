@@ -2306,21 +2306,23 @@ export async function applyImportTrackingPlan(
 	let log = await readImportLog(userId, plan.title)
 	if (plan.onlyUnwatched) {
 		// Another watch of the episode landed between the check and the insert, or before a resume: this plan's own
-		// row is the extra one. It is deleted first and then left out of the plan, so Undo never misses a row.
+		// row is the extra one. The journal first says so while it still holds the watch, then the row is deleted, then
+		// the plan leaves it out: a stop at any point leaves a journal whose Undo takes back the status and the lists.
 		const overtaken = plan.watches.filter(
 			(watch) =>
 				log.some((row) => ownRow(plan, row) && row.watch_id === watch.watch_id) &&
 				watchedElsewhere(plan, log, watch),
 		)
 		if (overtaken.length) {
-			await deleteLog(
-				userId,
-				overtaken.map((row) => row.watch_id),
-			)
 			plan.pruned = [
 				...(plan.pruned ?? []),
 				...overtaken.map((row) => row.watch_id),
 			]
+			await checkpoint?.(plan)
+			await deleteLog(
+				userId,
+				overtaken.map((row) => row.watch_id),
+			)
 			await keepInstead(plan, overtaken, checkpoint)
 			const gone = new Set(overtaken.map((row) => row.watch_id))
 			log = log.filter((row) => !(ownRow(plan, row) && gone.has(row.watch_id)))
