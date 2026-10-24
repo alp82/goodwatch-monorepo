@@ -22,15 +22,15 @@ test("the hero backdrop is fetched first, and the page's scripts wait for it to 
 	assert.match(rendered.hero, /elementtiming="hero"/)
 	assert.match(
 		rendered.hero,
-		/src="https:\/\/image\.tmdb\.org\/t\/p\/w780\/backdrop\.jpg"/,
+		/src="https:\/\/image\.tmdb\.org\/t\/p\/w780\/backdrop\.jpg\?gw-cors=1"/,
 	)
 })
 
 test("the hero asks without credentials, and the 103's files are what its srcset gives on a phone and a desktop", () => {
 	assert.match(rendered.hero, /crossorigin="anonymous"/)
 	assert.deepEqual(rendered.files, {
-		phone: "https://image.tmdb.org/t/p/w780/backdrop.jpg",
-		desktop: "https://image.tmdb.org/t/p/w1280/backdrop.jpg",
+		phone: "https://image.tmdb.org/t/p/w780/backdrop.jpg?gw-cors=1",
+		desktop: "https://image.tmdb.org/t/p/w1280/backdrop.jpg?gw-cors=1",
 	})
 	for (const file of Object.values(rendered.files) as string[])
 		assert.ok(rendered.hero.includes(file), file)

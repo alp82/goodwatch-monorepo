@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { test } from "node:test"
-import { CACHED_ROUTE_IDS, WARM_ROUTE_IDS } from "./cached-routes.ts"
+import { CACHED_ROUTE_IDS } from "./cached-routes.ts"
 
 const routes = new URL("../routes/", import.meta.url)
 const source = (id: string) => {
@@ -30,8 +30,4 @@ test("no route hydrates through a clientLoader or renders a fallback: the first 
 				name,
 			)
 	}
-})
-
-test("the warm-up loads only cached routes' code", () => {
-	for (const id of WARM_ROUTE_IDS) assert.ok(CACHED_ROUTE_IDS.includes(id))
 })

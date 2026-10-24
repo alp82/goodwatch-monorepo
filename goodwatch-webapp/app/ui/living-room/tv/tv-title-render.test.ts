@@ -65,7 +65,7 @@ const rendered = JSON.parse(
 		Editions
 	>
 	rate: Editions & { items: string[]; phoneItems: string[]; waiting: string }
-	first: Record<"tonight" | "title" | "rate", string>
+	first: Record<"tonight" | "title" | "titlePhone" | "rate", string>
 }
 
 /** The item ids in the markup, in its order. */
@@ -503,7 +503,10 @@ test("without an offer URL the watch action honestly leads to Where to watch", (
 			// The phone's key says "Watch", and where it leads to a screen reader.
 			else {
 				assert.equal(label(state[edition], "watch"), "Watch")
-				assert.match(ariaOf(state[edition], "watch") ?? "", /^Watch: where it streams/)
+				assert.match(
+					ariaOf(state[edition], "watch") ?? "",
+					/^Watch: where it streams/,
+				)
 			}
 })
 
@@ -599,5 +602,15 @@ test("on every phone Watch next's Expand key is in a row of its own keys, not af
 		const keys = ids(p.tonight)
 		assert.equal(keys.filter((id) => id === "expand").length, 1, p.phone)
 		assert.ok(!keys.some((id) => id.startsWith("pick:")), p.phone)
+	}
+})
+
+// The TV's navigation button must enter the same intent prefetch path as catalog links.
+test("Full Details carries its canonical destination for hover, touch and keyboard prefetch", () => {
+	for (const html of [rendered.first.title, rendered.first.titlePhone]) {
+		assert.match(
+			html,
+			/data-tv-item="expand"[^>]*data-prefetch-href="\/movie\/[^"]+"/,
+		)
 	}
 })

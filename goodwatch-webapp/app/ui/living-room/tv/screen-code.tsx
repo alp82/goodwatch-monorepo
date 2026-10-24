@@ -132,11 +132,19 @@ export const ServiceData = screenCode<
 ).Screen
 
 /**
- * Asks for the screens any key can open, so they are there by the first press: the menu, What is GoodWatch?,
- * search, which the Remote's Search key and every top bar open, and the screen of a streaming key. Called at the
- * first interaction.
+ * Warm the screen the focused key opens. Full Details must not download the menu,
+ * search, About and service screens while the next page is loading.
  */
-export function loadFirstScreens() {
-	for (const code of [MenuCode, AboutCode, SearchCode, ServiceCode])
-		code.load().catch(() => {})
+export function preloadItemScreen(item: string) {
+	const code =
+		item === "bar:menu"
+			? MenuCode
+			: item === "bar:search"
+				? SearchCode
+				: item === "menu:about"
+					? AboutCode
+					: item.startsWith("service:")
+						? ServiceCode
+						: null
+	code?.load().catch(() => {})
 }

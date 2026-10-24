@@ -3,7 +3,8 @@
 //
 // The screen switch: home is part of the first view. Every other screen is a chunk of its own, asked for on first
 // use (screen-code.tsx). Every screen the machine knows has its entry here.
-import { type ReactNode, useMemo, useRef } from "react"
+import { prefetchPage, prefetchableUrl } from "~/navigation/instant-navigation"
+import { type ReactNode, useEffect, useMemo, useRef } from "react"
 import {
 	Boot,
 	CornerBar,
@@ -45,6 +46,7 @@ import {
 	type TvContext,
 	type TvScreen as Screen,
 	destinationLabel,
+	destinationHref,
 	destinationName,
 	hasNav,
 	menuItems,
@@ -72,7 +74,7 @@ export {
 	TitleCode,
 	TitleData,
 	TonightCode,
-	loadFirstScreens,
+	preloadItemScreen,
 } from "./screen-code"
 // The mini Explorer (slice 7).
 export { ExplorerData } from "./screen-code"
@@ -103,7 +105,13 @@ const SCREEN_NAME: Record<Screen["name"], string> = {
 export type TvScreenProps = {
 	tv: Pick<
 		Tv,
-		"state" | "focused" | "screenFocus" | "dispatch" | "ringOff" | "byPointer" | "unpoint"
+		| "state"
+		| "focused"
+		| "screenFocus"
+		| "dispatch"
+		| "ringOff"
+		| "byPointer"
+		| "unpoint"
 	>
 	canvas: TvCanvas
 	ctx: TvContext
@@ -188,6 +196,13 @@ export function TvScreen({
 	// The Expand key says where it leads.
 	const expands = destinationName(screen, ctx)
 	const expandLabel = destinationLabel(screen, ctx)
+	const expandHref = screen.name === "title" ? destinationHref(screen, ctx) : null
+	// Remote focus does not focus the DOM button. Join the same bounded, identity-aware cache.
+	useEffect(() => {
+		if (focused !== "expand" || !expandHref) return
+		const url = prefetchableUrl(expandHref)
+		if (url) prefetchPage(url, "focus")
+	}, [focused, expandHref])
 	// The navigation marks the screen on show; a member's home is Start.
 	const here = hasNav(screen, ctx)
 		? `nav:${screen.name === "home" ? "home" : screen.name}`
@@ -210,6 +225,7 @@ export function TvScreen({
 			dispatch,
 			expands,
 			expandLabel,
+			expandHref,
 			here,
 			member,
 			ringOff,
@@ -226,6 +242,7 @@ export function TvScreen({
 			dispatch,
 			expands,
 			expandLabel,
+			expandHref,
 			here,
 			member,
 			ringOff,
@@ -346,7 +363,11 @@ export function TvScreen({
 					}
 					style={
 						phone
-							? { left: keySize(canvas, 54) + 22, height: PHONE_HEAD, maxWidth: toastWidth }
+							? {
+									left: keySize(canvas, 54) + 22,
+									height: PHONE_HEAD,
+									maxWidth: toastWidth,
+								}
 							: { maxWidth: toastWidth }
 					}
 				>

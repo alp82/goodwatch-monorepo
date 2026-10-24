@@ -96,14 +96,14 @@ html[data-tv-transition]::view-transition-new(root) {
 }
 
 html[data-tv-transition="out"]::view-transition-old(root) {
-	animation: living-room-tv-room-out 0.9s cubic-bezier(0.65, 0, 0.35, 1) both;
+	animation: living-room-tv-room-out 0.4s cubic-bezier(0.65, 0, 0.35, 1) both;
 }
 
-/* The page fades into the picture during the first quarter second, over the TV's own screen. */
+/* The page fades into the picture while the TV expands, over the TV's own screen. */
 html[data-tv-transition="out"]::view-transition-new(root) {
 	animation:
-		living-room-tv-page-out 0.9s cubic-bezier(0.65, 0, 0.35, 1) both,
-		living-room-tv-fade-in 0.26s linear both;
+		living-room-tv-page-out 0.4s cubic-bezier(0.65, 0, 0.35, 1) both,
+		living-room-tv-fade-in 0.16s linear both;
 }
 
 html[data-tv-transition="in"]::view-transition-new(root) {
@@ -235,7 +235,7 @@ html[data-tv-transition="out"]:has(.living-room) [data-tv-bracket] {
 }
 
 html[data-tv-transition="out"]::view-transition-group(*) {
-	animation-duration: 0.9s;
+	animation-duration: 0.4s;
 	animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
 }
 

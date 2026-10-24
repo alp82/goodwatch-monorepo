@@ -4,14 +4,13 @@
 // - A press (pointer or touch down) starts at once: on a phone it's the first sign of a tap.
 // - Phones (no hover): when scrolling stops for SCROLL_IDLE_MS, the title and person links fully on screen nearest
 //   its center, up to VIEWPORT_LINKS.
-// - Once the browser is idle after load (WARM_DELAY_MS at least), the code of the main page types.
-import { VIEWPORT_LINK_SELECTOR, WARM_ROUTE_IDS } from "./cached-routes"
+// - Phones also prefetch visible title/person data after load. Code loads only for navigation intent.
+import { VIEWPORT_LINK_SELECTOR } from "./cached-routes"
 import {
 	type PrefetchTrigger,
 	cancelPrefetch,
 	prefetchPage,
 	prefetchableUrl,
-	preloadRouteCode,
 } from "./instant-navigation"
 import { nearestLinks } from "./viewport-links"
 
@@ -19,8 +18,19 @@ export const HOVER_DELAY_MS = 60
 export const SCROLL_IDLE_MS = 300
 export const WARM_DELAY_MS = 2000
 
-function linkOf(target: EventTarget | null): HTMLAnchorElement | null {
-	const anchor = (target as Element | null)?.closest?.("a[href]")
+type IntentElement = HTMLAnchorElement | HTMLButtonElement
+const intentHref = (element: IntentElement) =>
+	element instanceof HTMLAnchorElement
+		? element.href
+		: (element.dataset.prefetchHref ?? "")
+
+function linkOf(target: EventTarget | null): IntentElement | null {
+	const anchor = (target as Element | null)?.closest?.(
+		"a[href], button[data-prefetch-href]",
+	)
+	// TV navigation keeps its button: the remote and View Transition still own the click.
+	if (anchor instanceof HTMLButtonElement)
+		return anchor.disabled ? null : anchor
 	if (!(anchor instanceof HTMLAnchorElement)) return null
 	if (
 		anchor.hasAttribute("download") ||
@@ -36,8 +46,8 @@ function linkOf(target: EventTarget | null): HTMLAnchorElement | null {
 	return anchor
 }
 
-function prefetchLink(anchor: HTMLAnchorElement, trigger: PrefetchTrigger) {
-	const url = prefetchableUrl(anchor.href)
+function prefetchLink(anchor: IntentElement, trigger: PrefetchTrigger) {
+	const url = prefetchableUrl(intentHref(anchor))
 	if (url) prefetchPage(url, trigger)
 }
 
@@ -77,11 +87,11 @@ export function installLinkIntent(): void {
 	installed = true
 
 	let hoverTimer: number | undefined
-	let hovered: HTMLAnchorElement | null = null
+	let hovered: IntentElement | null = null
 	const stopHover = () => {
 		window.clearTimeout(hoverTimer)
 		if (hovered) {
-			const url = prefetchableUrl(hovered.href)
+			const url = prefetchableUrl(intentHref(hovered))
 			if (url) cancelPrefetch(url)
 		}
 		hovered = null
@@ -139,15 +149,9 @@ export function installLinkIntent(): void {
 		})
 	}
 
-	// Never before the first paint: after load, then WARM_DELAY_MS, then an idle moment.
-	afterLoad(() =>
-		window.setTimeout(
-			() =>
-				idle(() => {
-					for (const routeId of WARM_ROUTE_IDS) preloadRouteCode(routeId)
-					if (phone) prefetchVisible()
-				}),
-			WARM_DELAY_MS,
-		),
+	// Only phone-visible data is speculative. Warming every catalog route's code here competed with
+	// an active navigation and downloaded unrelated page types on every landing page.
+	if (phone) afterLoad(() =>
+		window.setTimeout(() => idle(prefetchVisible), WARM_DELAY_MS),
 	)
 }

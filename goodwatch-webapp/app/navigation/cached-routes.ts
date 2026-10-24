@@ -33,17 +33,6 @@ export const TITLE_ROUTE_IDS: readonly string[] = [
 	"routes/show.$showKey",
 ]
 
-/** The main page types, whose code loads when the browser is idle after the first page. */
-export const WARM_ROUTE_IDS: readonly CachedRouteId[] = [
-	"routes/movie.$movieKey",
-	"routes/show.$showKey",
-	"routes/person.$personKey",
-	"routes/$type._index",
-	"routes/$type.best",
-	"routes/$type.$category._index",
-	"routes/discover.($type)",
-]
-
 /** Links the phone prefetch looks at when a list stops scrolling: titles and people. */
 export const VIEWPORT_LINK_SELECTOR =
 	'a[href^="/movie/"], a[href^="/show/"], a[href^="/person/"]'

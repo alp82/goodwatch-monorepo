@@ -212,7 +212,7 @@ const titleOf = (title: TvTitleOnScreen, focused = "watch") =>
 	)
 
 /** What the TV draws for a screen before its code is there, as the server does. */
-function first(screen: Screen, titles: TvTitleScreens) {
+function first(screen: Screen, titles: TvTitleScreens, canvas = CANVAS.desktop) {
 	const state: TvState = {
 		screen,
 		focus: null,
@@ -232,7 +232,7 @@ function first(screen: Screen, titles: TvTitleScreens) {
 				byPointer: false,
 				unpoint: () => {},
 			}}
-			canvas={CANVAS.desktop}
+			canvas={canvas}
 			ctx={titleCtx}
 			apps={homeApps(guest, pool)}
 			toast={null}
@@ -416,6 +416,7 @@ console.log(
 		first: {
 			tonight: first({ name: "tonight", pick: 0 }, titles),
 			title: first(TITLE, titles),
+			titlePhone: first(TITLE, titles, CANVAS.phone),
 			rate: first(RATE, titles),
 		},
 	})}`,
