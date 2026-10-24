@@ -11,7 +11,9 @@ const {
 	heldFromImdbItem,
 	heldFromItem,
 	imdbLiveQuestions,
+	applyingCount,
 	leftToDecide,
+	leftToFinish,
 	liveQuestions,
 	openScreens,
 	questionCounter,
@@ -355,4 +357,51 @@ test("answered conflict rows leave by row: a title with rows the answer didn't r
 		"only the row not answered yet",
 	)
 	assert.equal(conflictTitlesLeft(input), 2)
+})
+
+test("a saved answer with rows still held is unfinished: no screen, not to decide, but to finish and counted as coming in", () => {
+	const questions = liveQuestions({
+		status: "done",
+		questions: [
+			// The request saved the answer and failed before it moved the rows.
+			{ kind: "conflict", waiting: 2, applying: 1, answer: "source" },
+			{ kind: "rewatch", waiting: 1, applying: 0, answer: null },
+			{ kind: "undated", waiting: 0, applying: 0, answer: "add" },
+		],
+	})
+	const input = {
+		questions,
+		held: { conflict: [held(1, "Heat"), held(2, "Alien")] },
+		answered: new Set<string>(),
+		answeredRows: new Set<number>(),
+	}
+	assert.deepEqual(
+		openScreens(input).map((screen) => screen.key),
+		["rewatch"],
+	)
+	assert.equal(conflictTitlesLeft(input), 0)
+	assert.deepEqual(leftToDecide(questions), ["rewatch"])
+	assert.deepEqual(leftToFinish(questions), [
+		{ kind: "conflict", answer: "source" },
+	])
+	assert.equal(applyingCount(questions), 3)
+	// Sent again, the answer moves the rows: nothing is left to finish.
+	assert.deepEqual(
+		leftToFinish([
+			{ kind: "conflict", waiting: 0, applying: 2, answer: "source" },
+		]),
+		[],
+	)
+	// IMDb's "use theirs" saved answer is finished with the same answer.
+	assert.deepEqual(
+		leftToFinish(
+			imdbLiveQuestions({
+				status: "done",
+				questions: [
+					{ kind: "conflict", waiting: 4, applying: 0, answer: "imdb" },
+				],
+			}),
+		),
+		[{ kind: "conflict", answer: "source" }],
+	)
 })

@@ -16,6 +16,11 @@ import { execute, query } from "~/utils/crate"
 import { csvLine } from "../import-csv.ts"
 
 export type Param = string | number | Date | null
+/** One title of an import, by the item's own TMDB columns: what `items?waiting=` narrows to. */
+export interface HeldTitleFilter {
+	tmdbId: number
+	mediaType: "movie" | "show"
+}
 type Result = { rowcount?: number }
 interface ImportDb {
 	run(sql: string, params: Param[]): Promise<Result>
@@ -329,13 +334,34 @@ export async function listItems(
 	/** Only the conflict rows confirm decides by the conflict choice, counted exactly; for the conflict question. */
 	followsChoice = false,
 	waiting?: "conflict" | "rewatch" | "wholeShow" | "undated",
+	/** Only one title's held rows, so a per-title answer reads them without paging the whole import. */
+	title?: HeldTitleFilter,
 ) {
 	const summary = summarize(await getImportRow(userId, id))
 	if (waiting) {
+		const where = `import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND apply_state = ?${waiting === "undated" ? " AND kind = 'watch'" : ""}${title ? " AND tmdb_id = ? AND media_type = ?" : ""}`
+		const params: Param[] = [
+			id,
+			userId,
+			`waiting:${waiting}`,
+			...(title ? [title.tmdbId, title.mediaType] : []),
+		]
 		const rows = await select<ItemRow>(
-			`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND apply_state = ?${waiting === "undated" ? " AND kind = 'watch'" : ""} ORDER BY row_index LIMIT ? OFFSET ?`,
-			[id, userId, `waiting:${waiting}`, limit, offset],
+			`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE ${where} ORDER BY row_index LIMIT ? OFFSET ?`,
+			[...params, limit, offset],
 		)
+		if (title)
+			return {
+				items: rows.map(publicItemRow),
+				total: Number(
+					(
+						await select<{ n: number }>(
+							`SELECT count(*) AS n FROM doc.user_import_item WHERE ${where}`,
+							params,
+						)
+					)[0]?.n ?? 0,
+				),
+			}
 		const counts = await select<{ apply_state: string | null; n: number }>(
 			`SELECT apply_state, count(*) AS n FROM doc.user_import_item WHERE import_id = ? AND ${waiting === "undated" ? "kind = 'watch'" : "kind <> 'state' AND kind <> 'resolution'"} GROUP BY apply_state`,
 			[id],

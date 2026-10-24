@@ -5,22 +5,22 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query"
-import { sourceImportKeys } from "./SourceImportHooks"
-import type { ImdbFileChoice } from "~/domain/imdb-file"
 import { useEffect, useRef } from "react"
+import type { ImdbFileChoice } from "~/domain/imdb-file"
 import {
 	IMDB_IMPORT_MAX_BYTES,
 	type ImdbConflictChoice,
+	type ImdbFilePreviewResponse,
 	type ImdbImportConfirmRequest,
 	type ImdbImportItemsResponse,
 	type ImdbImportListResponse,
 	type ImdbImportOutcome,
 	type ImdbImportPreviewRequest,
-	type ImdbFilePreviewResponse,
 	type ImdbImportResponse,
 	type ImdbImportStatus,
 	type ImdbImportSummary,
 } from "~/domain/imdb-import"
+import { sourceImportKeys } from "./SourceImportHooks"
 
 const API = "/api/imdb-import"
 const KEY = "imdb-import"
@@ -41,6 +41,16 @@ export const skippedDownloadUrl = (id: string) =>
 
 const GENERIC_ERROR = "Something went wrong on our side. Please try again."
 
+/** An answer the server refused, with its HTTP status. Its message is for the member. */
+export class RequestError extends Error {
+	constructor(
+		message: string,
+		readonly status: number,
+	) {
+		super(message)
+	}
+}
+
 /** Fetches JSON, and turns a network failure or an `{ error }` answer into an error for the member. */
 export async function request<T>(url: string, init?: RequestInit): Promise<T> {
 	let response: Response
@@ -53,10 +63,11 @@ export async function request<T>(url: string, init?: RequestInit): Promise<T> {
 	}
 	const body = await response.json().catch(() => null)
 	if (!response.ok || body === null)
-		throw new Error(
+		throw new RequestError(
 			typeof body?.error === "string" && body.error
 				? body.error
 				: GENERIC_ERROR,
+			response.status,
 		)
 	return body as T
 }

@@ -13,7 +13,7 @@ import type {
 } from "~/domain/imports"
 import type { ImportResultApi } from "./ImportResult"
 import { sourceImportKeys } from "./SourceImportHooks"
-import { imdbImportKeys, request } from "./api"
+import { RequestError, imdbImportKeys, request } from "./api"
 import {
 	type HeldRow,
 	heldFromImdbItem,
@@ -32,14 +32,15 @@ const LISTED: Record<ImportResultApi, readonly ImportQuestion[]> = {
 const heldKey = (api: ImportResultApi, id: string, question: ImportQuestion) =>
 	["import-held", api, id, question] as const
 
-/** One page of the rows held for a question, as held rows. */
+/** One page of the rows held for a question, as held rows; with `title`, only that title's (`tmdbId`, `mediaType`). */
 async function heldPage(
 	api: ImportResultApi,
 	id: string,
 	question: ImportQuestion,
 	offset: number,
+	title?: { tmdbId: string; mediaType: string },
 ): Promise<{ rows: HeldRow[]; total: number }> {
-	const url = `${api}/${encodeURIComponent(id)}/items?waiting=${question}&offset=${offset}&limit=${HELD_PAGE}`
+	const url = `${api}/${encodeURIComponent(id)}/items?waiting=${question}${title ? `&tmdbId=${title.tmdbId}&mediaType=${title.mediaType}` : ""}&offset=${offset}&limit=${HELD_PAGE}`
 	if (api === "/api/imdb-import") {
 		const page = await request<ImdbImportItemsResponse>(url)
 		return {
@@ -54,9 +55,26 @@ async function heldPage(
 /** Pages read at once while looking for every row of one title. */
 const PAGES_AT_ONCE = 4
 
+/** Every page of the held rows from the second on, a few at a time, each row passed to `take`. */
+async function restOfPages(
+	total: number,
+	read: (offset: number) => Promise<{ rows: HeldRow[] }>,
+	take: (row: HeldRow) => void,
+) {
+	const offsets: number[] = []
+	for (let offset = HELD_PAGE; offset < total; offset += HELD_PAGE)
+		offsets.push(offset)
+	for (let at = 0; at < offsets.length; at += PAGES_AT_ONCE)
+		for (const page of await Promise.all(
+			offsets.slice(at, at + PAGES_AT_ONCE).map(read),
+		))
+			for (const row of page.rows) take(row)
+}
+
 /**
- * Every row a question holds for one title (`HeldRow.key`). A title's rows can be anywhere in the file, so this reads
- * every page of the held rows, a few at a time.
+ * Every row a question holds for one title (`HeldRow.key`). The items API narrows the held rows to the title, so this
+ * is one request, more only past a page. A server from before that filter refuses it (400): then every page of the
+ * held rows is read, since a title's rows can be anywhere in the file.
  */
 export async function heldRowsOfTitle(
 	api: ImportResultApi,
@@ -64,22 +82,37 @@ export async function heldRowsOfTitle(
 	question: ImportQuestion,
 	key: string,
 ): Promise<number[]> {
-	const first = await heldPage(api, id, question, 0)
-	const found = new Set(
-		first.rows.filter((row) => row.key === key).map((row) => row.index),
-	)
-	const offsets: number[] = []
-	for (let offset = HELD_PAGE; offset < first.total; offset += HELD_PAGE)
-		offsets.push(offset)
-	for (let at = 0; at < offsets.length; at += PAGES_AT_ONCE) {
-		const pages = await Promise.all(
-			offsets
-				.slice(at, at + PAGES_AT_ONCE)
-				.map((offset) => heldPage(api, id, question, offset)),
-		)
-		for (const page of pages)
-			for (const row of page.rows) if (row.key === key) found.add(row.index)
+	const found = new Set<number>()
+	const take = (row: HeldRow) => {
+		if (row.key === key) found.add(row.index)
 	}
+	const ref = /^(movie|show):(\d+)(?::|$)/.exec(key)
+	if (ref) {
+		const title = { mediaType: ref[1], tmdbId: ref[2] }
+		const first = await heldPage(api, id, question, 0, title).catch(
+			(failure: unknown) => {
+				if (failure instanceof RequestError && failure.status === 400)
+					return null
+				throw failure
+			},
+		)
+		if (first) {
+			for (const row of first.rows) take(row)
+			await restOfPages(
+				first.total,
+				(offset) => heldPage(api, id, question, offset, title),
+				take,
+			)
+			return [...found]
+		}
+	}
+	const first = await heldPage(api, id, question, 0)
+	for (const row of first.rows) take(row)
+	await restOfPages(
+		first.total,
+		(offset) => heldPage(api, id, question, offset),
+		take,
+	)
 	return [...found]
 }
 

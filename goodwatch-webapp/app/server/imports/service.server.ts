@@ -9,6 +9,7 @@ import type {
 import { confirmImport, questionStates, undoImport } from "./apply.server.ts"
 import type { ImportTitleRef } from "./result-catalog.server.ts"
 import {
+	type HeldTitleFilter,
 	getImportRow,
 	listImportRows,
 	listItems,
@@ -108,7 +109,9 @@ export const getImportItems = (
 	limit: number,
 	followsChoice = false,
 	waiting?: "conflict" | "rewatch" | "wholeShow" | "undated",
-) => listItems(userId, id, outcome, offset, limit, followsChoice, waiting)
+	title?: HeldTitleFilter,
+) =>
+	listItems(userId, id, outcome, offset, limit, followsChoice, waiting, title)
 /** The outcomes whose titles the poster rows show, in the order they are filled. */
 const POSTER_OUTCOMES: ImportOutcome[] = ["new", "conflict", "unchanged"]
 /** Rows read per outcome to find the titles for a poster row; a title can have many rows. */

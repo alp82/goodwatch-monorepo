@@ -249,25 +249,51 @@ export async function listItems(
 	offset: number,
 	limit: number,
 	waiting?: "conflict",
+	/** Only one title's held rows (with `waiting`), so a per-title answer reads them without paging the whole import. */
+	title?: { tmdbId: number; mediaType: "movie" | "show" },
 ): Promise<{ items: ImdbImportItem[]; total: number }> {
 	const row = await getImportRow(userId, id)
 	const counts = JSON.parse(row.counts) as ImdbImportCounts
+	const held = waiting && title
 	const rows = await select<ItemRow>(
 		`SELECT ${waiting ? "row_index, " : ""}${ITEM_COLUMNS} FROM doc.user_import_item
-		 WHERE import_id = ? AND user_id = ? ${outcome ? "AND outcome = ?" : ""} ${waiting ? "AND apply_state = 'waiting:conflict'" : ""}
+		 WHERE import_id = ? AND user_id = ? ${outcome ? "AND outcome = ?" : ""} ${waiting ? "AND apply_state = 'waiting:conflict'" : ""} ${held ? "AND tmdb_id = ? AND media_type = ?" : ""}
 		 ORDER BY row_index LIMIT ? OFFSET ?`,
-		[id, userId, ...(outcome ? [outcome] : []), limit, offset],
+		[
+			id,
+			userId,
+			...(outcome ? [outcome] : []),
+			...(held ? [title.tmdbId, title.mediaType] : []),
+			limit,
+			offset,
+		],
 	)
 	return {
-		total: waiting
+		total: held
 			? Number(
-					(await questionStates(id)).find(
-						(s) => s.apply_state === "waiting:conflict",
-					)?.n ?? 0,
+					(
+						await select<{ n: number }>(
+							`SELECT count(*) AS n FROM doc.user_import_item
+							 WHERE import_id = ? AND user_id = ? ${outcome ? "AND outcome = ?" : ""} AND apply_state = 'waiting:conflict' AND tmdb_id = ? AND media_type = ?`,
+							[
+								id,
+								userId,
+								...(outcome ? [outcome] : []),
+								title.tmdbId,
+								title.mediaType,
+							],
+						)
+					)[0]?.n ?? 0,
 				)
-			: outcome
-				? counts[outcome]
-				: counts.rows,
+			: waiting
+				? Number(
+						(await questionStates(id)).find(
+							(s) => s.apply_state === "waiting:conflict",
+						)?.n ?? 0,
+					)
+				: outcome
+					? counts[outcome]
+					: counts.rows,
 		items: rows.map((item) => ({
 			...(waiting ? { index: Number(item.row_index) } : {}),
 			imdbId: item.imdb_id ?? "",

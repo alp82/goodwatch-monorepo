@@ -589,6 +589,74 @@ test("HTTP decide, strict confirm ask, and waiting filter validate and enforce o
 	assert.equal((await decision.json()).decided, 1)
 	assert.equal(db.items[1].reason, "You chose to keep what GoodWatch has.")
 })
+test("HTTP waiting filter narrows to one title's held rows, validated and owned", async () => {
+	const { db, id } = setup(6)
+	// Rows 0, 2, 5: movie 42. Row 1: movie 43. Row 3: show 42. Row 4: movie 42, but not held.
+	db.items[1].tmdb_id = 43
+	db.items[3].media_type = "show"
+	db.items[4].outcome = "unchanged"
+	const { loader: items } = await import(
+		"../../routes/api.imports.$id.items.ts"
+	)
+	await confirmImport("member", id, options)
+	await settled(db)
+	const load = (query: string, member = "member") =>
+		items({
+			request: new Request(
+				`https://example.test/api/imports/${id}/items?${query}`,
+				{ headers: { "x-fixture-member": member } },
+			),
+			params: { id },
+			context: {},
+		})
+	for (const query of [
+		"waiting=conflict&tmdbId=42",
+		"waiting=conflict&mediaType=movie",
+		"waiting=conflict&tmdbId=0&mediaType=movie",
+		"waiting=conflict&tmdbId=x&mediaType=movie",
+		"waiting=conflict&tmdbId=42&mediaType=episode",
+		"tmdbId=42&mediaType=movie",
+	])
+		assert.equal((await load(query)).status, 400, query)
+	assert.equal(
+		(await load("waiting=conflict&tmdbId=42&mediaType=movie", "other")).status,
+		404,
+	)
+	const movie = await (
+		await load("waiting=conflict&tmdbId=42&mediaType=movie")
+	).json()
+	assert.equal(movie.total, 3)
+	assert.deepEqual(
+		movie.items.map((item: { index: number }) => item.index),
+		[0, 2, 5],
+	)
+	const paged = await (
+		await load("waiting=conflict&tmdbId=42&mediaType=movie&offset=1&limit=1")
+	).json()
+	assert.equal(paged.total, 3)
+	assert.deepEqual(
+		paged.items.map((item: { index: number }) => item.index),
+		[2],
+	)
+	const show = await (
+		await load("waiting=conflict&tmdbId=42&mediaType=show")
+	).json()
+	assert.deepEqual(
+		show.items.map((item: { index: number }) => item.index),
+		[3],
+	)
+	assert.equal(show.total, 1)
+	// Answered rows are no longer held: the title lists what still waits.
+	await decideImport("member", id, "conflict", "keep", [0])
+	const after = await (
+		await load("waiting=conflict&tmdbId=42&mediaType=movie")
+	).json()
+	assert.deepEqual(
+		after.items.map((item: { index: number }) => item.index),
+		[2, 5],
+	)
+	assert.equal(after.total, 2)
+})
 test("stalled and failed runs can restart after a row approval; answer retry exhaustion is 409", async () => {
 	for (const status of ["failed", "running"]) {
 		const { db, id } = setup()

@@ -74,6 +74,8 @@ const server = {
 	refuseNext: null as string | null,
 	/** How long a response waits before it arrives. It is made when the request comes, so it can be out of date. */
 	delay: null as ((url: string) => number) | null,
+	/** A deploy from before items?waiting= took a title: it refuses tmdbId and mediaType with 400. */
+	noTitleFilter: false,
 }
 
 const freshRows = (): Row[] => [
@@ -308,8 +310,15 @@ function respond(url: string, body: any): Response {
 	}
 	if (params.get("waiting")) {
 		const question = params.get("waiting")
+		const tmdbId = params.get("tmdbId")
+		const mediaType = params.get("mediaType")
+		if ((tmdbId || mediaType) && server.noTitleFilter)
+			return json({ error: "We couldn't load those import rows." }, 400)
 		const all = server.rows.filter(
-			(item) => item.state === `waiting:${question}`,
+			(item) =>
+				item.state === `waiting:${question}` &&
+				(!tmdbId ||
+					(String(item.tmdbId) === tmdbId && item.mediaType === mediaType)),
 		)
 		const offset = Number(params.get("offset") ?? 0)
 		const held = all.slice(offset, offset + Number(params.get("limit") ?? 50))
@@ -800,8 +809,12 @@ const counted = (
 	await view.wait(LOCK)
 	await view.until(() => view.heading() !== first)
 	const decided = view.posts()
+	const titleReads = sent.filter((call) =>
+		call.url.includes("waiting=conflict"),
+	)
 	results.split = {
 		first,
+		reads: titleReads.map((call) => call.url),
 		batches: decided.map((call) => {
 			const rows = (call.body as { rows?: number[] }).rows ?? []
 			return { count: rows.length, first: rows[0], last: rows.at(-1) }
@@ -902,6 +915,154 @@ const counted = (
 	await view.until(() => (view.heading() ?? "").startsWith("Done."))
 	results.stalePoll = {
 		asked,
+		final: { ...view.snap(), left: view.left() },
+	}
+	await view.unmount()
+}
+
+{
+	// A 50,000-row import: Heat's two rows are at both ends of the file. Its answer reads them in one request.
+	server.rows = [
+		row(0, "conflict", { score: 9, currentScore: 8 }),
+		...Array.from({ length: 49_998 }, (_, at) =>
+			row(at + 1, "conflict", {
+				title: `Film ${at + 1}`,
+				tmdbId: 10_000 + at,
+				score: 6,
+				currentScore: 7,
+			}),
+		),
+		row(49_999, "conflict", {
+			kind: "review",
+			score: null,
+			currentScore: null,
+		}),
+	]
+	server.summary = {
+		...preview(true),
+		counts: { ...preview(true).counts, rows: 50_000, new: 0, conflict: 50_000 },
+		kinds: { ...preview(true).kinds, rating: 49_999, want: 0, review: 1 },
+		questions: counted({ conflict: { rating: 49_999, review: 1 } }),
+	}
+	const view = await page({
+		sourceImports: [server.summary],
+		initialSource: "trakt",
+		openImport: ID,
+	})
+	await view.click("Import", true)
+	for (let i = 0; i < 3; i++) await settle()
+	const first = view.heading()
+	sent = []
+	await view.click("Yes, keep my 8")
+	await view.wait(LOCK)
+	await view.until(() => view.heading() !== first)
+	results.large = {
+		first,
+		titleReads: sent
+			.filter((call) => call.url.includes("tmdbId="))
+			.map((call) => call.url),
+		pageReads: sent.filter(
+			(call) =>
+				call.url.includes("waiting=conflict") &&
+				!call.url.includes("tmdbId=") &&
+				!call.url.includes("offset=0&"),
+		).length,
+		decided: view.posts(),
+	}
+	await view.unmount()
+}
+
+{
+	// A deploy from before the title filter: Heat's rows are found by reading every page of the held rows.
+	server.noTitleFilter = true
+	server.rows = [
+		row(0, "conflict", { score: 9, currentScore: 8 }),
+		...Array.from({ length: 399 }, (_, at) =>
+			row(at + 1, "conflict", {
+				title: `Film ${at + 1}`,
+				tmdbId: 10_000 + at,
+				score: 6,
+				currentScore: 7,
+			}),
+		),
+		row(400, "conflict", { kind: "review", score: null, currentScore: null }),
+	]
+	server.summary = {
+		...preview(true),
+		counts: { ...preview(true).counts, rows: 401, new: 0, conflict: 401 },
+		kinds: { ...preview(true).kinds, rating: 400, want: 0, review: 1 },
+		questions: counted({ conflict: { rating: 400, review: 1 } }),
+	}
+	const view = await page({
+		sourceImports: [server.summary],
+		initialSource: "trakt",
+		openImport: ID,
+	})
+	await view.click("Import", true)
+	for (let i = 0; i < 3; i++) await settle()
+	const first = view.heading()
+	sent = []
+	await view.click("Yes, keep my 8")
+	await view.wait(LOCK)
+	await view.until(() => view.heading() !== first)
+	results.oldServer = {
+		reads: sent
+			.filter((call) => call.url.includes("waiting=conflict"))
+			.map((call) => call.url),
+		decided: view.posts(),
+	}
+	server.noTitleFilter = false
+	await view.unmount()
+}
+
+{
+	// A whole answer saved, but the request failed before its rows moved: they stay held under the answer. While the
+	// run goes on, the strip counts them and no question comes; Done lists the answer with Finish, which sends it again.
+	server.rows = freshRows().slice(2, 4)
+	for (const item of server.rows) item.state = "waiting:conflict"
+	server.summary = {
+		...preview(true),
+		status: "running",
+		options: {
+			kinds: ["rating"],
+			conflictChoice: "source",
+			watchDates: "preserve",
+			ask: ["conflict"],
+			answers: { conflict: "source" },
+		},
+		processed: 5,
+		total: 7,
+	}
+	const view = await page({ initialSource: "trakt", openImport: ID })
+	for (let i = 0; i < 3; i++) await settle()
+	const running = view.snap()
+	;(server.summary as ImportSummary).status = "done"
+	;(server.summary as ImportSummary).finishedAt = "2026-10-24T12:05:00.000Z"
+	await view.until(() => view.left().length > 0)
+	const done = { ...view.snap(), left: view.left() }
+	// The first Finish is refused: the answer stays listed, with the reason.
+	server.refuseNext = "This import cannot accept answers now."
+	sent = []
+	await view.click("Finish")
+	const refused = {
+		left: view.left(),
+		error:
+			view.text().match(/This import cannot accept answers now\./)?.[0] ?? "",
+		sent: view.posts(),
+	}
+	sent = []
+	await view.click("Finish")
+	const resent = view.posts()
+	// The answer's rows go in, and the run finishes again.
+	for (const item of server.rows) item.state = "updated"
+	;(server.summary as ImportSummary).status = "done"
+	await view.wait(1600)
+	await view.until(() => (view.heading() ?? "").startsWith("Done."))
+	results.unfinished = {
+		running,
+		done,
+		refused,
+		resent,
 		final: { ...view.snap(), left: view.left() },
 	}
 	await view.unmount()

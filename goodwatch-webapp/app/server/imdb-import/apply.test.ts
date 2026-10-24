@@ -393,6 +393,21 @@ class QuestionCrate extends FakeCrate {
 					json: [...tally].map(([apply_state, n]) => ({ apply_state, n })),
 				}
 			}
+			// One title's held rows (items?waiting=conflict&tmdbId=…&mediaType=…).
+			const title = (i: Record<string, unknown>) =>
+				!s.includes("AND tmdb_id = ? AND media_type = ?") ||
+				(i.tmdb_id === params.at(s.startsWith("SELECT count(*)") ? -2 : -4) &&
+					i.media_type === params.at(s.startsWith("SELECT count(*)") ? -1 : -3))
+			if (s.startsWith("SELECT count(*) AS n") && s.includes("tmdb_id = ?"))
+				return {
+					json: [
+						{
+							n: this.items.filter(
+								(i) => i.apply_state === "waiting:conflict" && title(i),
+							).length,
+						},
+					],
+				}
 			if (s.startsWith("SELECT count(*)"))
 				return {
 					json: [
@@ -416,9 +431,12 @@ class QuestionCrate extends FakeCrate {
 			if (s.startsWith("SELECT row_index, imdb_id"))
 				return {
 					json: this.items
-						.filter((i) => i.apply_state === "waiting:conflict")
+						.filter((i) => i.apply_state === "waiting:conflict" && title(i))
 						.sort((a, b) => Number(a.row_index) - Number(b.row_index))
-						.slice(Number(params[3]), Number(params[3]) + Number(params[2])),
+						.slice(
+							Number(params.at(-1)),
+							Number(params.at(-1)) + Number(params.at(-2)),
+						),
 				}
 			if (s.startsWith("SELECT row_index FROM"))
 				return {
@@ -944,6 +962,61 @@ test("HTTP decide is strict, authenticated and owned; waiting items are ordered,
 	assert.equal(decision.status, 200)
 	assert.equal((await decision.json()).decided, 1)
 	assert.equal(db.items[1].apply_state, "kept")
+})
+
+test("HTTP waiting filter narrows to one title's held rows, validated and owned", async () => {
+	const db = conflicts(4)
+	// Rows 0 and 3: movie 603. Row 1: movie 604. Row 2: show 603.
+	db.items[1].tmdb_id = 604
+	db.items[2].media_type = "show"
+	const { loader } = await import("../../routes/api.imdb-import.$id.items.ts")
+	await a.confirmImport(USER, IMPORT, "ask")
+	await settled()
+	const load = (query: string, member = USER) =>
+		loader({
+			request: new Request(
+				`https://example.test/api/imdb-import/${IMPORT}/items?${query}`,
+				{ headers: { "x-fixture-member": member } },
+			),
+			params: { id: IMPORT },
+			context: {},
+		})
+	for (const query of [
+		"waiting=conflict&tmdbId=603",
+		"waiting=conflict&mediaType=movie",
+		"waiting=conflict&tmdbId=-1&mediaType=movie",
+		"waiting=conflict&tmdbId=603&mediaType=tv",
+		"tmdbId=603&mediaType=movie",
+	])
+		assert.equal((await load(query)).status, 400, query)
+	assert.equal(
+		(await load("waiting=conflict&tmdbId=603&mediaType=movie", "stranger"))
+			.status,
+		404,
+	)
+	const movie = await (
+		await load("waiting=conflict&tmdbId=603&mediaType=movie&limit=1")
+	).json()
+	assert.equal(movie.total, 2)
+	assert.deepEqual(
+		movie.items.map((i: { index: number }) => i.index),
+		[0],
+	)
+	const next = await (
+		await load("waiting=conflict&tmdbId=603&mediaType=movie&offset=1&limit=1")
+	).json()
+	assert.deepEqual(
+		next.items.map((i: { index: number }) => i.index),
+		[3],
+	)
+	const show = await (
+		await load("waiting=conflict&tmdbId=603&mediaType=show")
+	).json()
+	assert.equal(show.total, 1)
+	assert.deepEqual(
+		show.items.map((i: { index: number }) => i.index),
+		[2],
+	)
 })
 
 test("answer CAS retries; concurrent restart claims start one runner", async () => {

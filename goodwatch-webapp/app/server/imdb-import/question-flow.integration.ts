@@ -5,9 +5,8 @@ import { after, before, test } from "node:test"
 import { setCrateClientForTest } from "../../utils/crate.ts"
 import type { Param } from "./store.server.ts"
 
-const { claimImport, getImportRow, refreshItems, run, select } = await import(
-	"./store.server.ts"
-)
+const { claimImport, getImportRow, listItems, refreshItems, run, select } =
+	await import("./store.server.ts")
 const {
 	holdQuestions,
 	questionProcessed,
@@ -51,7 +50,7 @@ before(async () => {
 		"CREATE TABLE doc.user_import (id TEXT PRIMARY KEY, user_id TEXT, source TEXT, status TEXT, file_name TEXT, conflict_choice TEXT, counts TEXT, processed BIGINT, total BIGINT, added BIGINT, updated BIGINT, kept BIGINT, failed BIGINT, without_fingerprint BIGINT, error TEXT, created_at TIMESTAMP, updated_at TIMESTAMP, confirmed_at TIMESTAMP, finished_at TIMESTAMP, options TEXT) WITH (number_of_replicas=0)",
 	)
 	await sql(
-		"CREATE TABLE doc.user_import_item (import_id TEXT, row_index INTEGER, outcome TEXT, apply_state TEXT, applied_at TIMESTAMP, reason TEXT, payload TEXT, PRIMARY KEY(import_id,row_index)) WITH (number_of_replicas=0)",
+		"CREATE TABLE doc.user_import_item (import_id TEXT, row_index INTEGER, user_id TEXT, imdb_id TEXT, title TEXT, year INTEGER, title_type TEXT, raw_rating TEXT, imdb_score INTEGER, date_rated TEXT, tmdb_id BIGINT, media_type TEXT, current_score INTEGER, kind TEXT, season_number INTEGER, episode_number INTEGER, outcome TEXT, apply_state TEXT, applied_at TIMESTAMP, reason TEXT, payload TEXT, PRIMARY KEY(import_id,row_index)) WITH (number_of_replicas=0)",
 	)
 	setCrateClientForTest({
 		async execute(stmt, args) {
@@ -206,4 +205,57 @@ test("real Crate holds IMDb conflicts, transitions answers, persists bulk consen
 	assert.equal(finished.status, "done")
 	assert.equal(finished.finished_at, finishedAt.getTime())
 	assert.equal(finished.processed, finished.total)
+})
+
+test("real Crate lists one title's held IMDb rows and counts them, by the item's tmdb_id and media_type", async () => {
+	const id = "title-filter"
+	const user = "member"
+	await sql(
+		"INSERT INTO doc.user_import (id,user_id,source,status,counts,options,created_at,updated_at) VALUES (?,?,'imdb','running',?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)",
+		[id, user, JSON.stringify({ conflict: 5 }), JSON.stringify({ ask: true })],
+	)
+	for (const [index, tmdbId, mediaType, state] of [
+		[0, 603, "movie", "waiting:conflict"],
+		[1, 604, "movie", "waiting:conflict"],
+		[2, 603, "show", "waiting:conflict"],
+		[3, 603, "movie", "waiting:conflict"],
+		[4, 603, "movie", "kept"],
+	] as const)
+		await sql(
+			"INSERT INTO doc.user_import_item (import_id,row_index,user_id,imdb_id,title,outcome,tmdb_id,media_type,imdb_score,current_score,apply_state) VALUES (?,?,?,?,'Fixture','conflict',?,?,9,4,?)",
+			[id, index, user, `tt${index}`, tmdbId, mediaType, state],
+		)
+	await refreshItems()
+	const movie = await listItems(user, id, undefined, 0, 1, "conflict", {
+		tmdbId: 603,
+		mediaType: "movie",
+	})
+	assert.equal(movie.total, 2)
+	assert.deepEqual(
+		movie.items.map((item) => item.index),
+		[0],
+	)
+	const rest = await listItems(user, id, undefined, 1, 200, "conflict", {
+		tmdbId: 603,
+		mediaType: "movie",
+	})
+	assert.deepEqual(
+		rest.items.map((item) => item.index),
+		[3],
+	)
+	const show = await listItems(user, id, undefined, 0, 200, "conflict", {
+		tmdbId: 603,
+		mediaType: "show",
+	})
+	assert.equal(show.total, 1)
+	assert.deepEqual(
+		show.items.map((item) => item.index),
+		[2],
+	)
+	await assert.rejects(() =>
+		listItems("other", id, undefined, 0, 200, "conflict", {
+			tmdbId: 603,
+			mediaType: "movie",
+		}),
+	)
 })

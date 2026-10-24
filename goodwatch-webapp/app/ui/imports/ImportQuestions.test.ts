@@ -61,6 +61,7 @@ const results = JSON.parse(
 	}
 	split: {
 		first: string
+		reads: string[]
 		batches: { count: number; first: number; last: number }[]
 		heldLeft: number
 		next: string
@@ -81,6 +82,20 @@ const results = JSON.parse(
 		nextFocused: boolean
 	}
 	stalePoll: { asked: string; final: Snap & { left: Left[] } }
+	large: {
+		first: string
+		titleReads: string[]
+		pageReads: number
+		decided: Post[]
+	}
+	oldServer: { reads: string[]; decided: Post[] }
+	unfinished: {
+		running: Snap
+		done: Snap & { left: Left[] }
+		refused: { left: Left[]; error: string; sent: Post[] }
+		resent: Post[]
+		final: Snap & { left: Left[] }
+	}
 }
 const { run } = results
 const DECIDE = "/api/imports/00000000-0000-4000-8000-0000000000aa/decide"
@@ -295,6 +310,13 @@ test("a title whose rows go past the loaded page is answered for all of its rows
 		{ count: 101, first: 699, last: 799 },
 	])
 	assert.equal(split.heldLeft, 0, "none of Heat's rows waits any more")
+	assert.deepEqual(
+		split.reads
+			.filter((url) => url.includes("tmdbId="))
+			.map((url) => new URL(url, "https://x").searchParams.get("offset")),
+		["0", "200", "400", "600"],
+		"only Heat's held rows are read, a page at a time",
+	)
 	assert.equal(
 		split.next,
 		"You gave Film 1 a 7 in GoodWatch. Trakt has 6. Keep your 7?",
@@ -346,4 +368,65 @@ test("a progress read older than an answer can't undo it or stop the polling", (
 	)
 	assert.equal(stalePoll.final.heading, "Done. 3 titles are in GoodWatch")
 	assert.deepEqual(stalePoll.final.left, [])
+})
+
+test("a title on a 50,000-row import is answered for all of its rows from one request", () => {
+	const { large } = results
+	assert.equal(
+		large.first,
+		"You gave Heat an 8 in GoodWatch. Trakt has 9. Keep your 8?",
+	)
+	assert.deepEqual(large.titleReads, [
+		"/api/imports/00000000-0000-4000-8000-0000000000aa/items?waiting=conflict&tmdbId=949&mediaType=movie&offset=0&limit=200",
+	])
+	assert.equal(large.pageReads, 0, "no page of the whole import is read")
+	assert.deepEqual(large.decided, [
+		{
+			url: DECIDE,
+			body: { question: "conflict", answer: "keep", rows: [0, 49_999] },
+		},
+	])
+})
+
+test("a server without the title filter (400) falls back to reading every held page", () => {
+	const { oldServer } = results
+	assert.match(oldServer.reads[0], /tmdbId=949&mediaType=movie/)
+	assert.deepEqual(
+		oldServer.reads
+			.slice(1, 4)
+			.map((url) => new URL(url, "https://x").searchParams.get("offset")),
+		["0", "200", "400"],
+	)
+	assert.ok(oldServer.reads.slice(1).every((url) => !url.includes("tmdbId=")))
+	assert.deepEqual(oldServer.decided, [
+		{
+			url: DECIDE,
+			body: { question: "conflict", answer: "keep", rows: [0, 400] },
+		},
+	])
+})
+
+test("a saved answer whose rows are still held: numbers while it runs, Finish on Done sends it again", () => {
+	const { unfinished } = results
+	assert.equal(unfinished.running.counter, null, "no question comes again")
+	assert.equal(unfinished.running.stripNote, "2 from your answers coming in")
+	const finish = {
+		kind: "conflict",
+		line: "Your answer for titles that differ from Trakt is still being applied.",
+		label: "Finish: your answer for titles that differ from Trakt",
+	}
+	assert.deepEqual(unfinished.done.left, [finish])
+	assert.match(unfinished.done.text, /1 left to decide/)
+	const again = [
+		{ url: DECIDE, body: { question: "conflict", answer: "source" } },
+	]
+	assert.deepEqual(unfinished.refused.sent, again)
+	assert.equal(
+		unfinished.refused.error,
+		"This import cannot accept answers now.",
+	)
+	assert.deepEqual(unfinished.refused.left, [finish])
+	assert.deepEqual(unfinished.resent, again)
+	assert.equal(unfinished.final.heading, "Done. 3 titles are in GoodWatch")
+	assert.deepEqual(unfinished.final.left, [])
 })

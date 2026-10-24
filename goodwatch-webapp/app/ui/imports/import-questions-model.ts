@@ -281,6 +281,14 @@ export interface ScreenInput {
 const open = (question: LiveQuestion | undefined) =>
 	!!question && question.waiting > 0 && question.answer === null
 
+/**
+ * A whole answer saved with rows still held for it. The server saves the answer before it moves the rows, so a request
+ * that failed between the two leaves them held; sending the same answer again moves them. While it is like this no
+ * screen asks the question again.
+ */
+const unfinished = (question: LiveQuestion) =>
+	question.waiting > 0 && question.answer !== null
+
 /** The conflict titles still to answer among the loaded rows. */
 const conflictTitles = (input: ScreenInput) =>
 	groupHeld(
@@ -351,9 +359,23 @@ export function questionCounter(
 export const leftToDecide = (questions: readonly LiveQuestion[]) =>
 	questions.filter(open).map((question) => question.kind)
 
-/** Rows the member's answers are writing now. */
+/** Whole answers Done lists as still being applied, in order, each with the answer Finish sends again. */
+export const leftToFinish = (
+	questions: readonly LiveQuestion[],
+): { kind: ImportQuestion; answer: ImportAnswer }[] =>
+	questions.flatMap((question) =>
+		unfinished(question) && question.answer
+			? [{ kind: question.kind, answer: question.answer }]
+			: [],
+	)
+
+/** Rows the member's answers are writing now, and rows still held under an answer already given. */
 export const applyingCount = (questions: readonly LiveQuestion[]) =>
-	questions.reduce((sum, question) => sum + question.applying, 0)
+	questions.reduce(
+		(sum, question) =>
+			sum + question.applying + (unfinished(question) ? question.waiting : 0),
+		0,
+	)
 
 /** Whether every held row of a conflict title is a score, so the copy can say "score". */
 export const isScoreTitle = (title: HeldTitle) =>

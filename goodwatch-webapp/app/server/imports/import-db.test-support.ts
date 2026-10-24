@@ -154,6 +154,16 @@ supportedImportSql.add(
 supportedImportSql.add(
 	"SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND apply_state = ? AND kind = 'watch' ORDER BY row_index LIMIT ? OFFSET ?",
 )
+// One title's held rows (items?waiting=…&tmdbId=…&mediaType=…), and their total.
+for (const watch of ["", " AND kind = 'watch'"]) {
+	const where = `import_id = ? AND user_id = ? AND kind <> 'state' AND kind <> 'resolution' AND apply_state = ?${watch} AND tmdb_id = ? AND media_type = ?`
+	supportedImportSql.add(
+		`SELECT row_index, kind, source_key, payload, outcome, reason, tmdb_id, media_type, current_score, apply_state FROM doc.user_import_item WHERE ${where} ORDER BY row_index LIMIT ? OFFSET ?`,
+	)
+	supportedImportSql.add(
+		`SELECT count(*) AS n FROM doc.user_import_item WHERE ${where}`,
+	)
+}
 function assertSupportedImportSql(sql: string) {
 	// Crate rejects non-key predicates on an OCC write, even with the full PK.
 	// The real database regression is resolution-store.integration.ts.
@@ -448,6 +458,12 @@ export class ImportDb {
 				rows = rows.filter((x) => x.outcome === params[2])
 			if (s.includes("AND apply_state = ?"))
 				rows = rows.filter((row) => row.apply_state === params[2])
+			if (s.includes("AND tmdb_id = ? AND media_type = ?"))
+				rows = rows.filter(
+					(row) =>
+						Number(row.tmdb_id) === Number(params[3]) &&
+						row.media_type === params[4],
+				)
 			if (s.includes("kind = 'watch'"))
 				rows = rows.filter((x) => x.kind === "watch")
 			if (s.includes("ORDER BY row_index"))
@@ -471,6 +487,8 @@ export class ImportDb {
 						(s.includes("LIKE 'approved:%'") &&
 							String(x.apply_state).startsWith("approved:")),
 				)
+			if (s.startsWith("SELECT count(*) AS n FROM doc.user_import_item"))
+				return [{ n: rows.length }] as unknown as T[]
 			if (s.includes("GROUP BY apply_state")) {
 				const counts = new Map<unknown, number>()
 				for (const row of rows)

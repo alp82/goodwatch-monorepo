@@ -3,8 +3,15 @@ import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
 import { after, before, test } from "node:test"
 import type { Param } from "./store.server.ts"
-const { setImportDbForTest, getImportRow, itemRows, claim, run, refreshItems } =
-	await import("./store.server.ts")
+const {
+	setImportDbForTest,
+	getImportRow,
+	itemRows,
+	claim,
+	run,
+	refreshItems,
+	listItems,
+} = await import("./store.server.ts")
 const { holdQuestions, recount, transitionWishlistQuestion } = await import(
 	"./apply.server.ts"
 )
@@ -289,4 +296,89 @@ test("real Crate holds new undated watches and dependent wants, then re-gates pe
 	)
 	assert.equal(items[1].reason, "Left out: no watch date, as you chose.")
 	assert.deepEqual(items[0].payload._answer, { undated: "add" })
+})
+
+test("real Crate lists one title's held rows and counts them, by the item's tmdb_id and media_type", async () => {
+	await sql(
+		"INSERT INTO doc.user_import (id,user_id,source,status,options,created_at,updated_at) VALUES ('title-filter','member','letterboxd','running',?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)",
+		[
+			JSON.stringify({
+				kinds: ["rating"],
+				ask: ["conflict"],
+				direction: "apply",
+			}),
+		],
+	)
+	for (const [index, tmdbId, mediaType, state] of [
+		[0, 42, "movie", "waiting:conflict"],
+		[1, 43, "movie", "waiting:conflict"],
+		[2, 42, "show", "waiting:conflict"],
+		[3, 42, "movie", "waiting:conflict"],
+		[4, 42, "movie", null],
+		[5, 42, "movie", "waiting:rewatch"],
+	] as const)
+		await sql(
+			"INSERT INTO doc.user_import_item (import_id,row_index,user_id,kind,source_key,payload,outcome,tmdb_id,media_type,apply_state) VALUES ('title-filter',?,'member','rating',?,?,'conflict',?,?,?)",
+			[
+				index,
+				`rating:${index}`,
+				JSON.stringify({ kind: "rating", title: "Fixture", score: 9 }),
+				tmdbId,
+				mediaType,
+				state,
+			],
+		)
+	await refreshItems()
+	const movie = await listItems(
+		"member",
+		"title-filter",
+		undefined,
+		0,
+		1,
+		false,
+		"conflict",
+		{ tmdbId: 42, mediaType: "movie" },
+	)
+	assert.equal(movie.total, 2)
+	assert.deepEqual(
+		movie.items.map((item) => item.index),
+		[0],
+	)
+	const rest = await listItems(
+		"member",
+		"title-filter",
+		undefined,
+		1,
+		200,
+		false,
+		"conflict",
+		{ tmdbId: 42, mediaType: "movie" },
+	)
+	assert.deepEqual(
+		rest.items.map((item) => item.index),
+		[3],
+	)
+	const show = await listItems(
+		"member",
+		"title-filter",
+		undefined,
+		0,
+		200,
+		false,
+		"conflict",
+		{ tmdbId: 42, mediaType: "show" },
+	)
+	assert.equal(show.total, 1)
+	assert.deepEqual(
+		show.items.map((item) => item.index),
+		[2],
+	)
+	await assert.rejects(
+		() =>
+			listItems("other", "title-filter", undefined, 0, 200, false, "conflict", {
+				tmdbId: 42,
+				mediaType: "movie",
+			}),
+		{ status: 404 },
+	)
 })

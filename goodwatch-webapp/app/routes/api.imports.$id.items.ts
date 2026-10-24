@@ -9,26 +9,42 @@ import {
 	getImportResultPage,
 } from "~/server/imports/service.server"
 import { NativeImportError } from "~/server/imports/store.server"
-const schema = z.object({
-	waiting: z.enum(["conflict", "rewatch", "wholeShow", "undated"]).optional(),
-	outcome: z
-		.enum([
-			"new",
-			"unchanged",
-			"conflict",
-			"unmatched",
-			"unsupported",
-			"invalid",
-		])
-		.optional(),
-	offset: z.coerce.number().int().safe().min(0).max(IMPORT_MAX_ROWS).default(0),
-	limit: z.coerce.number().int().safe().min(1).max(200).default(50),
-	by: z.enum(["title"]).optional(),
-	section: z.enum(IMPORT_RESULT_SECTION_KEYS).optional(),
-	follows: z.enum(["conflict-choice"]).optional(),
-})
+const schema = z
+	.object({
+		waiting: z.enum(["conflict", "rewatch", "wholeShow", "undated"]).optional(),
+		outcome: z
+			.enum([
+				"new",
+				"unchanged",
+				"conflict",
+				"unmatched",
+				"unsupported",
+				"invalid",
+			])
+			.optional(),
+		offset: z.coerce
+			.number()
+			.int()
+			.safe()
+			.min(0)
+			.max(IMPORT_MAX_ROWS)
+			.default(0),
+		limit: z.coerce.number().int().safe().min(1).max(200).default(50),
+		by: z.enum(["title"]).optional(),
+		section: z.enum(IMPORT_RESULT_SECTION_KEYS).optional(),
+		follows: z.enum(["conflict-choice"]).optional(),
+		tmdbId: z.coerce.number().int().safe().min(1).optional(),
+		mediaType: z.enum(["movie", "show"]).optional(),
+	})
+	// One title's held rows: both of its ids, and only for a question's held rows.
+	.refine(
+		({ tmdbId, mediaType, waiting }) =>
+			(tmdbId === undefined) === (mediaType === undefined) &&
+			(tmdbId === undefined || waiting !== undefined),
+	)
 // ?by=title: what the import changed, or what its Undo changed back, grouped by title (ImportResult).
 // ?by=title&section=…&offset=…&limit=…: more titles of one section (ImportResultPage).
+// ?waiting=…&tmdbId=…&mediaType=movie|show: only that title's rows held for the question, with their exact total.
 // ?follows=conflict-choice: only the conflict rows confirm decides by the conflict choice, with their exact total.
 export const loader = ({ request, params }: LoaderFunctionArgs) =>
 	withMember(request, async (userId, headers) => {
@@ -41,12 +57,23 @@ export const loader = ({ request, params }: LoaderFunctionArgs) =>
 			by: q.get("by") || undefined,
 			section: q.get("section") || undefined,
 			follows: q.get("follows") || undefined,
+			tmdbId: q.get("tmdbId") ?? undefined,
+			mediaType: q.get("mediaType") ?? undefined,
 		})
 		if (!parsed.success)
 			throw new NativeImportError(400, "We couldn't load those import rows.")
 		const id = importId(params)
-		const { by, section, outcome, offset, limit, follows, waiting } =
-			parsed.data
+		const {
+			by,
+			section,
+			outcome,
+			offset,
+			limit,
+			follows,
+			waiting,
+			tmdbId,
+			mediaType,
+		} = parsed.data
 		if (by === "title")
 			return json(
 				section
@@ -63,6 +90,7 @@ export const loader = ({ request, params }: LoaderFunctionArgs) =>
 				limit,
 				follows === "conflict-choice",
 				waiting,
+				tmdbId !== undefined && mediaType ? { tmdbId, mediaType } : undefined,
 			),
 			{ headers },
 		)

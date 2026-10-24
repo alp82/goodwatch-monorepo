@@ -35,6 +35,7 @@ import {
 	conflictTitlesLeft,
 	isScoreTitle,
 	leftToDecide,
+	leftToFinish,
 	openScreens,
 	questionCounter,
 	questionSize,
@@ -110,6 +111,9 @@ export function ImportWithQuestions({
 		() => new Set(),
 	)
 	const [error, setError] = useState<string | null>(null)
+	/** The saved answer Finish is sending again, and why the last one didn't go in. */
+	const [finishing, setFinishing] = useState<ImportQuestion | null>(null)
+	const [finishError, setFinishError] = useState<string | null>(null)
 	const lock = useLockIn()
 	const attempt = useRef({ locked: false, sent: false })
 	const decide = useDecide(api, id)
@@ -129,6 +133,7 @@ export function ImportWithQuestions({
 	const input: ScreenInput = { questions, held, answered, answeredRows }
 	const screens = openScreens(input)
 	const left = leftToDecide(questions)
+	const finish = leftToFinish(questions)
 	const posters = useImportPosters(api, id, {
 		outcome: "conflict",
 		limit: 48,
@@ -237,6 +242,22 @@ export function ImportWithQuestions({
 		setSameForAllOn(null)
 		setTarget(null)
 		setDeferred(true)
+	}
+	// A whole answer whose rows weren't moved: the same answer again moves them, and starts a finished run again.
+	const finishNow = (kind: ImportQuestion, value: ImportAnswer) => {
+		if (finishing) return
+		setFinishError(null)
+		setFinishing(kind)
+		decide.mutate(
+			{ question: kind, answer: value },
+			{
+				onSuccess: () => setFinishing(null),
+				onError: (failure) => {
+					setFinishing(null)
+					setFinishError(failure.message)
+				},
+			},
+		)
 	}
 	const decideNow = (kind: ImportQuestion) => {
 		setFocusFor(NEXT)
@@ -352,13 +373,17 @@ export function ImportWithQuestions({
 	return (
 		<>
 			{renderDone({
-				count: left.length,
+				count: left.length + finish.length,
 				node: (
 					<LeftList
 						kinds={left}
+						finish={finish}
 						input={input}
 						source={source}
 						onDecide={decideNow}
+						onFinish={finishNow}
+						finishing={finishing}
+						error={finishError}
 					/>
 				),
 			})}
@@ -732,28 +757,54 @@ function topicLabel(kind: ImportQuestion, input: ScreenInput) {
 	}
 }
 
-/** Done's list of questions left, each with Decide, which opens its first screen. */
+/** What a whole answer covers, for "Your answer for … is still being applied". */
+function answerTopic(kind: ImportQuestion, source: string) {
+	switch (kind) {
+		case "conflict":
+			return `titles that differ from ${source}`
+		case "undated":
+			return "watches without a date"
+		case "rewatch":
+			return "Seen titles on your wishlist"
+		case "wholeShow":
+			return "shows listed by season or episode"
+	}
+}
+
+/**
+ * Done's list of questions left, each with Decide, which opens its first screen; then answers given whose rows are
+ * still held, each with Finish, which sends the same answer again.
+ */
 function LeftList({
 	kinds,
+	finish,
 	input,
 	source,
 	onDecide,
+	onFinish,
+	finishing,
+	error,
 }: {
 	kinds: ImportQuestion[]
+	finish: { kind: ImportQuestion; answer: ImportAnswer }[]
 	input: ScreenInput
 	source: string
 	onDecide: (kind: ImportQuestion) => void
+	onFinish: (kind: ImportQuestion, answer: ImportAnswer) => void
+	finishing: ImportQuestion | null
+	error: string | null
 }) {
+	const count = kinds.length + finish.length
 	return (
 		<div
 			className="rounded-2xl bg-amber-400/5 p-5 ring-1 ring-amber-400/30"
 			data-left-to-decide
 		>
 			<h3 className="text-lg font-bold text-white">
-				{formatCount(kinds.length)} left to decide
+				{formatCount(count)} left to decide
 			</h3>
 			<p className="mt-1 text-sm text-gray-400">
-				Nothing from {oneOrMany(kinds.length, "this", "these")} changed yet.
+				Nothing from {oneOrMany(count, "this", "these")} changed yet.
 			</p>
 			<ul className="mt-2 divide-y divide-white/10">
 				{kinds.map((kind) => (
@@ -775,7 +826,37 @@ function LeftList({
 						</button>
 					</li>
 				))}
+				{finish.map(({ kind, answer }) => (
+					<li
+						key={`finish:${kind}`}
+						className="flex items-center gap-3 py-3"
+						data-left={kind}
+						data-left-finish
+					>
+						<span className="min-w-0 flex-1 text-gray-200">
+							Your answer for {answerTopic(kind, source)} is still being
+							applied.
+						</span>
+						<button
+							type="button"
+							className={`${textLink} inline-flex min-h-11 items-center gap-2`}
+							aria-label={`Finish: your answer for ${answerTopic(kind, source)}`}
+							disabled={finishing !== null}
+							onClick={() => onFinish(kind, answer)}
+						>
+							{finishing === kind && <Spinner size="small" />}
+							Finish
+						</button>
+					</li>
+				))}
 			</ul>
+			<div aria-live="assertive">
+				{error && (
+					<p className={`${errorBox} mt-2`} data-finish-error>
+						{error}
+					</p>
+				)}
+			</div>
 		</div>
 	)
 }
