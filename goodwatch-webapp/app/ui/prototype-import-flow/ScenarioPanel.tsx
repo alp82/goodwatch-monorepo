@@ -18,13 +18,13 @@ export function ScenarioPanel({ sim }: { sim: Sim }) {
 			<button
 				type="button"
 				onClick={() => setOpen(true)}
-				className="fixed right-3 bottom-20 z-50 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-black shadow-2xl ring-2 ring-fuchsia-500"
+				className="fixed right-3 bottom-[calc(10rem+env(safe-area-inset-bottom))] z-[60] lg:bottom-20 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-black shadow-2xl ring-2 ring-fuchsia-500"
 			>
 				Case: {sim.scenario.label} · {sim.phase.at}
 			</button>
 		)
 	return (
-		<aside className="fixed right-3 bottom-20 z-50 max-h-[70vh] w-72 overflow-y-auto rounded-2xl bg-white p-3 text-xs text-black shadow-2xl ring-2 ring-fuchsia-500">
+		<aside className="fixed right-3 bottom-[calc(10rem+env(safe-area-inset-bottom))] z-[60] lg:bottom-20 max-h-[60vh] w-72 overflow-y-auto rounded-2xl bg-white p-3 text-xs text-black shadow-2xl ring-2 ring-fuchsia-500">
 			<div className="mb-2 flex items-center justify-between">
 				<strong className="text-sm">Case</strong>
 				<span className="flex gap-2">

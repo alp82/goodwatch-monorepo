@@ -96,7 +96,10 @@ export default function PrototypeImportFlow() {
 				/>
 			)}
 			<ScenarioPanel sim={sim} />
-			<PrototypeSwitcher variants={VARIANTS} />
+			<PrototypeSwitcher
+				variants={VARIANTS}
+				position="bottom-[calc(6rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 lg:bottom-6"
+			/>
 		</SettingsPage>
 	)
 }
