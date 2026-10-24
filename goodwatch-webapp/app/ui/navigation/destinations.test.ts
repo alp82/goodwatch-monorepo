@@ -3,7 +3,7 @@
 // second Home row.
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { getDestinations } from "./destinations.ts"
+import { currentDestination, getDestinations } from "./destinations.ts"
 
 test("the home destination is called Home on the tile, in the palette and on the dock", () => {
 	const { home } = getDestinations()
@@ -16,4 +16,10 @@ test("no two destinations share a label, so the palette never lists one twice", 
 		(destination) => destination.label,
 	)
 	assert.equal(new Set(labels).size, labels.length)
+})
+
+test("the For you page and the pages under it belong to the For you destination", () => {
+	assert.equal(currentDestination("/for-you"), "forYou")
+	assert.equal(currentDestination("/for-you/anything"), "forYou")
+	assert.equal(currentDestination("/for-youth"), null)
 })

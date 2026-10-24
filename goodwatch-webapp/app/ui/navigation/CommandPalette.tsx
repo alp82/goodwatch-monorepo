@@ -52,6 +52,8 @@ const DEBOUNCE_MS = 150
 const PALETTE_DESTINATIONS: DestinationKey[] = [
 	"home",
 	"watchNext",
+	"forYou",
+	"myLibrary",
 	"discover",
 	"taste",
 	"explorer",
@@ -148,6 +150,8 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 				title: true,
 			})
 		for (const key of PALETTE_DESTINATIONS) {
+			// My library holds a member's marked titles; a guest has none.
+			if (key === "myLibrary" && !user) continue
 			const destination = destinations[key]
 			const words = `${destination.label} ${destination.short}`.toLowerCase()
 			if (needle && !words.includes(needle)) continue

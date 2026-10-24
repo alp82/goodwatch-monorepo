@@ -77,6 +77,7 @@ export function MobileDock() {
 	const dock = useRef<HTMLDivElement>(null)
 	const setStripTarget = navigation.setStripTarget
 	const docked = Boolean(navigation.strips)
+	const quiet = navigation.quietDock > 0
 	const wayBack = useTvWayBack()
 
 	useEffect(() => {
@@ -107,7 +108,9 @@ export function MobileDock() {
 			/>
 			<div
 				ref={dock}
-				className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl bg-gray-950/94 pb-[env(safe-area-inset-bottom)] text-gray-100 shadow-[0_-20px_50px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl lg:hidden"
+				className={`fixed inset-x-0 bottom-0 z-50 rounded-t-3xl pb-[env(safe-area-inset-bottom)] text-gray-100 shadow-[0_-20px_50px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.08)] lg:hidden ${
+					quiet ? "bg-gray-950" : "bg-gray-950/94 backdrop-blur-xl"
+				}`}
 			>
 				<div
 					ref={setStripTarget}
@@ -115,7 +118,13 @@ export function MobileDock() {
 						docked ? "flex items-end gap-1.5 px-2.5 pt-2.5 pb-2" : "hidden"
 					}
 				/>
-				<nav aria-label="Site" className="relative">
+				<nav
+					aria-label="Site"
+					className={`relative transition-opacity duration-150 motion-reduce:transition-none ${
+						quiet ? "pointer-events-none opacity-0" : ""
+					}`}
+					{...(quiet && { inert: "" })}
+				>
 					<DockButton docked={docked} leftFree={Boolean(wayBack)} />
 					{wayBack && (
 						// From the dock's edge to just short of the round key.
@@ -127,6 +136,20 @@ export function MobileDock() {
 			</div>
 		</>
 	)
+}
+
+/**
+ * Asks the phone dock to step back while `active`: its keys fade out (opacity only), can't be focused or pressed, and
+ * the dock turns opaque, so nothing of it (the raised G key above all) shows past a page's own sheets or bars laid
+ * over it. Several callers count up and down, like DockStrip; the dock is back once none is active.
+ */
+export function useQuietDock(active: boolean) {
+	const { setQuietDock } = useNavigation()
+	useEffect(() => {
+		if (!active) return
+		setQuietDock((count) => count + 1)
+		return () => setQuietDock((count) => count - 1)
+	}, [active, setQuietDock])
 }
 
 /**

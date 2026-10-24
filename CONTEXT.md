@@ -203,6 +203,14 @@ _Avoid_: Match score, Similarity
 The switch that blends taste match into whichever sort is chosen: the higher a title's taste match, the further it rises, and the best matches go to the top. It is on by default and never replaces the sort. Under Best match it shows on. Choosing Best match preserves the underlying For you preference; turning For you off under Best match requires leaving Best match for a plain sort.
 _Avoid_: Personalized sort, Recommended sort
 
+**For you page**:
+The page of recommendations only (`/for-you`): worthwhile titles the person hasn't seen, ordered by their taste and steered by their fingerprint and a recipe. Nothing on the Wishlist, Seen, Not interested or skipped shows. It shares its name with the For you switch; the page is "For you" in the navigation.
+_Avoid_: Picks, Recommendations page, Feed
+
+**Recipe**:
+A tile on the For you page that leans the order toward a blend of fingerprint attributes, such as one of the library's ready-made blends or one built from a taste group. Unlike a Mood, it is no fixed rule: titles are not in or out of a recipe, they rank higher the better they fit it. The code calls it `Recipe`; members see it by its name alone, with no noun for it.
+_Avoid_: Mood, Mood tile, Preset
+
 **Best match**:
 The sort that orders titles by taste match, highest first, on Discover and Watch next. It needs taste.
 _Avoid_: Recommended sort, Sort by match

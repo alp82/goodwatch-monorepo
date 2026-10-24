@@ -65,11 +65,14 @@ const TILE_TINTS: Partial<
 		wash: "from-emerald-200/25 to-emerald-200/[0.06]",
 		icon: "text-emerald-300",
 	},
-	myLibrary: {
-		wash: "from-teal-200/25 to-teal-200/[0.06]",
-		icon: "text-teal-300",
+	forYou: {
+		wash: "from-fuchsia-200/25 to-fuchsia-200/[0.06]",
+		icon: "text-fuchsia-300",
 	},
 }
+
+/** The For you tile's line: these are recommendations, chosen from what the person likes. */
+const FOR_YOU_SUBTITLE = "Recommended from your taste"
 
 function Tile({
 	destination,
@@ -226,7 +229,8 @@ function HubContent() {
 	const { pick, wishlistCount } = useTonightsPick()
 	// New episodes (#442) and titles that landed on the member's services (#456).
 	const { episodes, landed } = useWhatsNew()
-	// A member has My shows, My movies and My library in place of Watch next (#385).
+	// A member has My shows and My movies in place of Watch next (#385). My library is reached from their heads, the
+	// account menu, Settings and the profile, so its tile gave its place to For you.
 	const tracked = Boolean(user)
 	const pickOn = pick?.href ? currentDestination(pick.href.split("#")[0]) : null
 	// Search opens over the hub, which stays open beneath it: closing the hub would hand focus back to the key that
@@ -278,11 +282,6 @@ function HubContent() {
 							here={here === "myMovies"}
 							fresh={landedWords("movie", landed?.movies ?? null)}
 						/>
-						<Tile
-							destination={d.myLibrary}
-							subtitle={`${wishlistCount} to see, and what you have seen`}
-							here={here === "myLibrary"}
-						/>
 					</>
 				) : (
 					<Tile
@@ -291,6 +290,11 @@ function HubContent() {
 						here={here === "watchNext"}
 					/>
 				)}
+				<Tile
+					destination={d.forYou}
+					subtitle={FOR_YOU_SUBTITLE}
+					here={here === "forYou"}
+				/>
 				<Tile
 					destination={d.taste}
 					subtitle={TASTE_GROUPS_NAME.title}

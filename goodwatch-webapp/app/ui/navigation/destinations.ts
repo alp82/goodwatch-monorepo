@@ -9,6 +9,7 @@ import {
 	MagnifyingGlassIcon,
 	MapIcon,
 	PlayIcon,
+	SparklesIcon,
 	TvIcon,
 } from "@heroicons/react/24/solid"
 import type { ComponentType, SVGProps } from "react"
@@ -27,6 +28,8 @@ export type DestinationKey =
 	| "myShows"
 	| "myMovies"
 	| "myLibrary"
+	// Recommendations steered by the person's taste (routes/for-you.tsx). Not the For you switch on Discover.
+	| "forYou"
 
 export interface Destination {
 	key: DestinationKey
@@ -123,6 +126,13 @@ export function getDestinations(): Record<DestinationKey, Destination> {
 			href: "/my-library",
 			icon: BookmarkIcon,
 		},
+		forYou: {
+			key: "forYou",
+			label: "For you",
+			short: "For you",
+			href: "/for-you",
+			icon: SparklesIcon,
+		},
 	}
 }
 
@@ -130,6 +140,7 @@ const PREFIXES: [string, DestinationKey][] = [
 	["/my-shows", "myShows"],
 	["/my-movies", "myMovies"],
 	["/my-library", "myLibrary"],
+	["/for-you", "forYou"],
 	["/watch-next", "watchNext"],
 	["/wishlist", "watchNext"],
 	["/discover", "discover"],
