@@ -30,6 +30,7 @@ const {
 	markScoredEpisodeWatched,
 	prepareImportTrackingPlan,
 	removeScoredEpisodeWatch,
+	restoreImportTrackingIntentions,
 	undoImportTrackingPlan,
 	settleMovie,
 } = await import("./tracking.server.ts")
@@ -1873,6 +1874,94 @@ test("A resumed import still owns the score watch it inserted before it stopped 
 		logOf().map((r) => [r.watch_id, r.origin]),
 		[["tick-s1e1", "single"]],
 	)
+})
+
+test("A score's watch whose insert landed but whose answer was lost is still this call's own (#759 review 3)", async () => {
+	// The first attempt landed and its answer was lost: the retry writes nothing, and finds this call's own row.
+	db.before = async (statement) => {
+		if (
+			statement.sql.startsWith("INSERT INTO user_watch_log") &&
+			statement.params.includes("score-e102")
+		) {
+			db.before = undefined
+			await db.execute(statement.sql, statement.params)
+		}
+	}
+	const recorded = await markScoredEpisodeWatched(user, SHOW, 102)
+	assert.equal(recorded?.watchId, "score-e102")
+	assert.equal(
+		await removeScoredEpisodeWatch(user, SHOW, 102, recorded?.createdAt),
+		"score-e102",
+	)
+	assert.deepEqual(ticks(), [])
+})
+
+test("An import that drops its duplicate watch on resume still takes back the status and the Want to See it changed (#759 review 3)", async () => {
+	db.seed("user_wishlist", [titleRow(short)])
+	const plan = await prepareImportTrackingPlan({
+		userId: user,
+		importId: "imp-A",
+		source: "trakt",
+		tmdbId: SHORT,
+		mediaType: "show",
+		items: [301, 302].map((id) => ({
+			key: `episode-score:${SHORT}:${id}`,
+			kind: "watch",
+			mediaType: "show",
+			title: "Short",
+			year: null,
+			tmdbId: SHORT,
+			imdbId: null,
+			index: id,
+			outcome: "new",
+			reason: null,
+			episodeTmdbId: id,
+			season: 1,
+			episode: id - 300,
+			precision: "unknown",
+		})) as never,
+		watchDates: "unknown",
+		now: Date.now(),
+		onlyUnwatched: true,
+		restoreIntentions: true,
+	})
+	// Import A sets Seen and clears Want to See, then stops before its journal says so.
+	await applyImportTrackingPlan(user, plan, async () => {})
+	assert.equal(stateOf(short)?.state, "seen")
+	assert.equal(onWishlist(short), false)
+	// Import B logs another viewing of both episodes.
+	const viewing = (id: number) => ({
+		user_id: user,
+		watch_id: `i-b-${id}`,
+		media_type: "show",
+		tmdb_id: SHORT,
+		episode_tmdb_id: id,
+		season_number: 1,
+		episode_number: id - 300,
+		watched_at: Date.UTC(2020, 0, 1),
+		watched_at_precision: "day",
+		origin: "import",
+		group_id: null,
+		import_id: "imp-B",
+		pass: 1,
+		created_at: Date.now(),
+		updated_at: Date.now(),
+	})
+	db.seed("user_watch_log", [viewing(301), viewing(302)])
+	// A resumes and drops its duplicates; then B is undone, then A.
+	await applyImportTrackingPlan(user, plan, async () => {})
+	assert.deepEqual(
+		logOf(short).map((r) => r.import_id),
+		["imp-B", "imp-B"],
+	)
+	db.rows.set(
+		"user_watch_log",
+		db.table("user_watch_log").filter((r) => r.import_id !== "imp-B"),
+	)
+	assert.equal(await undoImportTrackingPlan(user, plan), "reverted")
+	await restoreImportTrackingIntentions(user, plan, async () => {})
+	assert.deepEqual([stateOf(short), logOf(short)], [null, []])
+	assert.equal(onWishlist(short), true)
 })
 
 // ---- movies ------------------------------------------------------------------------------------------------

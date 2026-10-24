@@ -1199,13 +1199,20 @@ export async function markScoredEpisodeWatched(
 	)
 	// The time this call's own insert recorded tells this watch from one a later score records under the same id.
 	// Not read back: by then the row can already be that later watch.
+	const recorded = result.recorded
 	if (
 		result.status !== "applied" ||
 		!result.inserted.includes(watchId) ||
-		result.recorded?.written !== 1
+		!recorded
 	)
 		return null
-	return { watchId, createdAt: result.recorded.at }
+	if (recorded.written === 1) return { watchId, createdAt: recorded.at }
+	// Nothing written: an earlier attempt of this same call landed and its answer was lost. The stored row is ours
+	// only when it is exactly what this call wrote.
+	const stored = await scoreWatchRow(userId, title.tmdbId, watchId)
+	return stored?.createdAt === recorded.at
+		? { watchId, createdAt: recorded.at }
+		: null
 }
 
 /** The score's watch of an episode as it is now (a read by the whole key), while it is still the score's. */
@@ -1871,6 +1878,11 @@ export interface ImportTrackingPlan {
 	 * keeps a watch whose episode was watched since. `keysByWatch` names each planned watch's item.
 	 */
 	onlyUnwatched?: { keysByWatch: Record<string, string> }
+	/**
+	 * Watches this plan wrote and then deleted as duplicates of a watch that landed meanwhile. The status and the
+	 * lists the plan changed with them are still its own: Undo takes those back even with no watch left.
+	 */
+	pruned?: string[]
 	priorWatchIds?: string[]
 	userId: string
 	importId: string
@@ -2305,6 +2317,10 @@ export async function applyImportTrackingPlan(
 				userId,
 				overtaken.map((row) => row.watch_id),
 			)
+			plan.pruned = [
+				...(plan.pruned ?? []),
+				...overtaken.map((row) => row.watch_id),
+			]
 			await keepInstead(plan, overtaken, checkpoint)
 			const gone = new Set(overtaken.map((row) => row.watch_id))
 			log = log.filter((row) => !(ownRow(plan, row) && gone.has(row.watch_id)))
@@ -2433,7 +2449,8 @@ export async function undoImportTrackingPlan(
 ): Promise<UndoOutcome> {
 	if (userId !== plan.userId)
 		throw new Error("This import belongs to another member.")
-	if (!plan.watches.length && !plan.statusItem) return "reverted"
+	if (!plan.watches.length && !plan.statusItem && !plan.pruned?.length)
+		return "reverted"
 	let outcome: UndoOutcome = "reverted"
 	await run("REFRESH TABLE user_watch_log")
 	const ownIds = new Set(plan.watches.map((row) => row.watch_id))
