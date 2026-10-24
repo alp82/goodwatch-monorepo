@@ -344,6 +344,7 @@ test("background and manual replacements keep excluded kinds and the conflict an
 				kinds: ["watch", "show_status"],
 				conflictChoice: "source",
 				watchDates: "preserve",
+				wishlistRewatch: false,
 			},
 		],
 	)
@@ -358,6 +359,7 @@ test("background and manual replacements keep excluded kinds and the conflict an
 				kinds: ["watch", "show_status"],
 				conflictChoice: "source",
 				watchDates: "preserve",
+				wishlistRewatch: false,
 			},
 		},
 	])

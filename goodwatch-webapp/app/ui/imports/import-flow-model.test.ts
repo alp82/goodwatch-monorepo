@@ -185,10 +185,16 @@ test("the options always keep the source's watch dates and send what the answers
 		kinds: ["rating", "watch"],
 		conflictChoice: "keep",
 		watchDates: "preserve",
+		wishlistRewatch: false,
 	})
 	assert.deepEqual(
 		sourceOptions(summary(), ["rating"], { conflicts: "source" }),
-		{ kinds: ["rating"], conflictChoice: "source", watchDates: "preserve" },
+		{
+			kinds: ["rating"],
+			conflictChoice: "source",
+			watchDates: "preserve",
+			wishlistRewatch: false,
+		},
 	)
 	const mdblist = summary({
 		source: "mdblist",

@@ -202,7 +202,8 @@ export function sourceOptions(
 		return {
 			kinds: ["want"],
 			conflictChoice: rewatch ? "source" : "keep",
-			...(rewatchCount(summary) > 0 ? { wishlistRewatch: rewatch } : {}),
+			// Always explicit, so the server never falls back to tying rewatch to the conflict answer.
+			wishlistRewatch: rewatch,
 			watchDates: "preserve",
 			...(shows
 				? { wishlistShows: answers["whole-show"] === ANSWER["whole-show"].add }
@@ -213,7 +214,7 @@ export function sourceOptions(
 		conflictChoice:
 			answers.conflicts === ANSWER.conflicts.source ? "source" : "keep",
 		watchDates: "preserve",
-		...(rewatchCount(summary) > 0 ? { wishlistRewatch: rewatch } : {}),
+		wishlistRewatch: rewatch,
 		...(shows
 			? { wishlistShows: answers["whole-show"] === ANSWER["whole-show"].add }
 			: {}),

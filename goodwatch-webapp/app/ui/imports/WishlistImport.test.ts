@@ -744,6 +744,7 @@ test("confirming a whole-show choice does not also opt into rewatch", () => {
 		kinds: ["want"],
 		conflictChoice: "keep",
 		watchDates: "preserve",
+		wishlistRewatch: false,
 		wishlistShows: true,
 	})
 })
