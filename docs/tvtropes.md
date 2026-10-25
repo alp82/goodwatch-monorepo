@@ -80,6 +80,9 @@ canonical checks. The three remaining labels are contextual or gender-swapped na
 It uses the existing recovery client's identifying user agent, a single worker lock and persistent pacing of at
 least six seconds. It stores validated introductions directly in Crate, preserving existing definitions and recording
 the source hash, exact text hash and original fetch time. Canonical URL and page heading must identify the subject.
+A renamed subject is also accepted when its exact old name matches the requested known URL and the source
+response explicitly redirects from that same URL to a validated canonical page. Contextual labels that merely link
+to a differently named trope do not meet that rule. Reviewed redirect evidence stays beside the run journals.
 Raw responses, the immutable queue, request/outcome journals and `progress.json` stay in the output directory.
 Saved pages are reused without fetching them again; a database interruption leaves a replayable record.
 

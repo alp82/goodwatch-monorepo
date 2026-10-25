@@ -37,7 +37,7 @@ def _main_url(value, *, navigation=False):
         return None
     if parsed.query:
         # A wiki redirect adds a breadcrumb query that does not change the page
-        # body. It is not evidence that the old name identifies the new subject.
+        # body. Alone it is not evidence that an arbitrary label identifies the subject.
         pairs = parse_qsl(parsed.query, keep_blank_values=True)
         if (not navigation or len(pairs) != 1 or pairs[0][0] != "from"
                 or not re.fullmatch(r"Main\.[A-Za-z0-9]+", pairs[0][1])):
@@ -49,6 +49,18 @@ def _main_url(value, *, navigation=False):
 
 def _identity(value):
     return "".join(c for c in unicodedata.normalize("NFKD", value or "").casefold() if c.isalnum())
+
+
+def _requested_redirect_identifies(name, requested_url, final_url, canonical):
+    # Only a caller's actual, canonical bare request can supply the old identity.
+    # Contextual labels that merely link another trope fail the slug comparison.
+    requested = _main_url(requested_url)
+    if not requested or requested != requested_url or requested == canonical:
+        return False
+    slug = urlparse(requested).path.rsplit("/", 1)[1]
+    if _identity(name) != _identity(slug):
+        return False
+    return parse_qsl(urlparse(final_url).query, keep_blank_values=True) == [("from", "Main." + slug)]
 
 
 def _text(node):
@@ -131,11 +143,13 @@ def _following_in_content(article, content):
             return
 
 
-def extract_description(html, name, final_url):
+def extract_description(html, name, final_url, *, requested_url=None):
     """Return {description, error, heading, canonical_url}; never fetch a page.
 
-    Only exact Main subjects with matching final/canonical URLs qualify. The
-    first examples/heading/rule boundary ends the introduction. At the byte cap,
+    Exact primary Main subjects qualify after final/canonical URL verification.
+    An old name qualifies only with its caller-supplied bare requested_url,
+    exact name/slug identity and the source's exact from=Main.OldSlug redirect.
+    The first examples/heading/rule boundary ends the introduction. At the byte cap,
     keep only complete paragraphs; a first paragraph that cannot fit is rejected.
     """
     result = {"description": None, "error": None, "heading": "", "canonical_url": None}
@@ -157,12 +171,10 @@ def extract_description(html, name, final_url):
     heading = soup.find("h1")
     if heading:
         # TV Tropes appends this UI breadcrumb after redirects. Only the primary
-        # heading identifies the subject; an AKA cannot satisfy an alias request.
+        # heading identifies the subject; the AKA itself never verifies an alias.
         for aka in heading.select(".aka-title"):
             aka.decompose()
     result["heading"] = re.sub(r"^Main\s*/\s*", "", _text(heading), flags=re.I) if heading else ""
-    if _identity(result["heading"]) != _identity(name):
-        return reject(f"Heading mismatch: {result['heading']!r}")
     canonicals = {
         urljoin(final, link.get("href", ""))
         for link in soup.select('link[rel~="canonical"]')
@@ -175,6 +187,10 @@ def extract_description(html, name, final_url):
     if canonical != final:
         return reject("Canonical URL does not match the final Main URL")
     result["canonical_url"] = canonical
+    heading_identity = _identity(result["heading"])
+    if heading_identity != _identity(name):
+        if not heading_identity or not _requested_redirect_identifies(name, requested_url, final_url, canonical):
+            return reject(f"Heading mismatch: {result['heading']!r}")
     _sanitize(soup)
     article = soup.select_one("#main-article")
     if not article:

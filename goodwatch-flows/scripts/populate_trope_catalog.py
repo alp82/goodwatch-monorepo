@@ -379,7 +379,7 @@ def run(db, output, *, all_requests=False, max_requests=200, delay=6, state_path
                         outcome(entry, "review", error="non_200_source", http_status=page.status)
                         continue
                     try:
-                        result = extractor(page.text, entry["name"], page.url)
+                        result = extractor(page.text, entry["name"], page.url, requested_url=valid_url)
                     except Exception as error:
                         outcome(entry, "review", error="extraction_error:" + type(error).__name__)
                         continue

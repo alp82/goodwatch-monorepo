@@ -68,7 +68,7 @@ class HTTP:
         return SimpleNamespace(status_code=status, url=url, text=text, content=text.encode(), headers={})
 
 
-def extract(html, name, url):
+def extract(html, name, url, *, requested_url=None):
     return {"description": html, "error": None, "heading": name, "canonical_url": url}
 
 
@@ -101,6 +101,23 @@ class PopulationTests(unittest.TestCase):
         self.assertEqual(len(db.reads), 2)
         self.assertTrue(all("OFFSET" not in sql for sql, _ in db.reads))
         self.assertEqual(db.reads[1][1], ("Trope 00999",))
+
+    def test_real_parser_recovers_an_exact_old_name_from_source_redirect_evidence(self):
+        old = "https://tvtropes.org/pmwiki/pmwiki.php/Main/OldName"
+        canonical = "https://tvtropes.org/pmwiki/pmwiki.php/Main/NewName"
+        html = (f'<html><head><link rel="canonical" href="{canonical}"></head><body>'
+                '<h1>New Name</h1><div id="main-article"><p>'
+                'A complete source definition for the same trope under its current name.'
+                '</p><hr></div></body></html>')
+        http = SimpleNamespace(get=lambda url, **kwargs: SimpleNamespace(
+            status_code=200, url=canonical + "?from=Main.OldName", text=html,
+            content=html.encode(), headers={}))
+        db = Database([{"name": "Old Name", "url": old, "description": None}])
+        result = self.run_worker(db, client=self.client(http), extractor=None)
+        self.assertEqual(result["stored"], 1)
+        self.assertEqual(result["review"], 0)
+        self.assertEqual(db.rows["Old Name"]["url"], canonical)
+        self.assertTrue(db.rows["Old Name"]["source_hash"])
 
     def test_all_mode_has_no_two_hundred_request_stop(self):
         db = Database([entry(i) for i in range(205)])
@@ -136,7 +153,7 @@ class PopulationTests(unittest.TestCase):
 
     def test_semantic_rejections_continue_instead_of_triggering_network_stop(self):
         db = Database([entry(i) for i in range(4)])
-        def semantic(html, name, url):
+        def semantic(html, name, url, *, requested_url=None):
             return extract(html, name, url) if name.endswith("00003") else {"description": None, "error": "ambiguous introduction"}
         result = self.run_worker(db, extractor=semantic)
         self.assertEqual(result["review"], 3)
@@ -182,7 +199,7 @@ class PopulationTests(unittest.TestCase):
     def test_shared_source_url_is_replayed_for_an_alias_without_second_request(self):
         first = entry(1)
         db = Database([first, entry(2, first["url"])])
-        def strict(html, name, url):
+        def strict(html, name, url, *, requested_url=None):
             return extract(html,name,url) if name==first["name"] else {"description":None,"error":"heading mismatch"}
         result = self.run_worker(db, extractor=strict, max_requests=1)
         self.assertEqual(result["stored"], 1)
@@ -194,7 +211,7 @@ class PopulationTests(unittest.TestCase):
 
     def test_external_review_fill_is_reconciled_without_another_source_request(self):
         db = Database([entry(1)])
-        reject = lambda html,name,url: {"description":None,"error":"manual check required"}
+        reject = lambda html,name,url,**kwargs: {"description":None,"error":"manual check required"}
         first = self.run_worker(db,extractor=reject)
         self.assertEqual(first["review"],1)
         db.rows[entry(1)["name"]]["description"] = "A reviewed description imported by another task."
@@ -217,7 +234,7 @@ class PopulationTests(unittest.TestCase):
         rows = [entry(1),entry(2)]
         db = Database(rows)
         http = HTTP(statuses={rows[0]["url"]:503})
-        reject = lambda html,name,url: {"description":None,"error":"manual check required"}
+        reject = lambda html,name,url,**kwargs: {"description":None,"error":"manual check required"}
         result = self.run_worker(db,client=self.client(http),extractor=reject)
         self.assertEqual(result["fetch_error"],1)
         self.assertEqual(result["review"],1)

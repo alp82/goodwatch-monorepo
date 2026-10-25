@@ -140,6 +140,65 @@ class TropeDescriptionTests(unittest.TestCase):
         self.assertIn('Heading mismatch', result["error"])
         self.assertEqual(result["heading"], 'Serious Business')
 
+    def test_verified_requested_slug_and_exact_source_redirect_accept_an_old_name(self):
+        requested = URL.replace('SeriousBusiness', 'OldName')
+        html = page(f'<p>{LEAD}</p><hr>', heading='Serious Business<div class="aka-title">(aka: Old Name)</div>')
+        final = URL + '?from=Main.OldName'
+        for name in ['Old Name', 'OLD—Name!']:
+            with self.subTest(name=name):
+                result = extract_description(html, name, final, requested_url=requested)
+                self.assertIsNone(result["error"])
+                self.assertEqual(result["heading"], 'Serious Business')
+                self.assertEqual(result["canonical_url"], URL)
+                self.assertEqual(result["description"], LEAD)
+        self.assertIsNone(extract_description(html, 'Old Name', final)["description"])
+
+    def test_requested_url_does_not_replace_explicit_redirect_evidence(self):
+        html = page(f'<p>{LEAD}</p><hr>')
+        requested = URL.replace('SeriousBusiness', 'OldName')
+        for final in [URL, URL + '#Examples']:
+            result = extract_description(html, 'Old Name', final, requested_url=requested)
+            self.assertIsNone(result["description"])
+            self.assertIn('Heading mismatch', result["error"])
+
+    def test_alias_requires_bare_https_requested_main_url(self):
+        requested = URL.replace('SeriousBusiness', 'OldName')
+        html = page(f'<p>{LEAD}</p><hr>')
+        for bad in [requested.replace('https:', 'http:'), requested.replace('://', '://www.'), requested + '?from=Main.Other', requested + '?', requested + '#Examples', requested + '#', requested.replace('/Main/', '/Film/'), requested + ';unexpected=1', ' ' + requested]:
+            with self.subTest(requested_url=bad):
+                result = extract_description(html, 'Old Name', URL + '?from=Main.OldName', requested_url=bad)
+                self.assertIsNone(result["description"])
+
+    def test_redirect_from_must_be_the_case_exact_requested_slug_and_only_query(self):
+        requested = URL.replace('SeriousBusiness', 'OldName')
+        html = page(f'<p>{LEAD}</p><hr>')
+        for query in ['from=Main.OtherName', 'from=Main.oldname', 'from=Main.OldName&from=Main.OldName', 'from=Main.OldName&other=1', 'from=Film.OldName']:
+            with self.subTest(query=query):
+                result = extract_description(html, 'Old Name', URL + '?' + query, requested_url=requested)
+                self.assertIsNone(result["description"])
+
+    def test_contextual_labels_cannot_claim_another_requested_slug(self):
+        html = page(f'<p>{LEAD}</p><hr>')
+        for name, slug in [('"Die Hard" on a Submarine', 'DieHardOnAnX'), ('"Stop Having Fun" Girl', 'StopHavingFunGuy'), ('A literal dialogue quotation', 'HypocriticalHumor')]:
+            with self.subTest(name=name):
+                result = extract_description(html, name, URL + '?from=Main.' + slug, requested_url=URL.replace('SeriousBusiness', slug))
+                self.assertIsNone(result["description"])
+                self.assertIn('Heading mismatch', result["error"])
+
+    def test_self_from_query_is_not_a_redirect_to_a_new_primary_page(self):
+        html = page(f'<p>{LEAD}</p><hr>', heading='A Different Primary Name')
+        result = extract_description(html, 'Serious Business', URL + '?from=Main.SeriousBusiness', requested_url=URL)
+        self.assertIsNone(result["description"])
+        self.assertIn('Heading mismatch', result["error"])
+
+    def test_alias_redirect_still_requires_matching_final_canonical_and_nonempty_primary_heading(self):
+        requested = URL.replace('SeriousBusiness', 'OldName')
+        final = URL + '?from=Main.OldName'
+        for html in [page(f'<p>{LEAD}</p><hr>', canonical=URL.replace('SeriousBusiness', 'DifferentPage')), page(f'<p>{LEAD}</p><hr>', canonical=''), page(f'<p>{LEAD}</p><hr>', heading='')]:
+            with self.subTest(html=html):
+                result = extract_description(html, 'Old Name', final, requested_url=requested)
+                self.assertIsNone(result["description"])
+
     def test_www_is_only_a_hostname_spelling_not_another_page_identity(self):
         for final, canonical in [(URL.replace('://', '://www.'), URL), (URL, URL.replace('://', '://www.'))]:
             result = self.extract(page(f'<p>{LEAD}</p><hr>', canonical=canonical), url=final)
