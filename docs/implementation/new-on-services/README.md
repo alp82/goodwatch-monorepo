@@ -123,6 +123,24 @@ A local production build (`remix-serve`, throwaway Valkey cluster, the same prox
 Sizes, Brotli: `/new/us/netflix` 30 KB, `/new/us` 43 KB, an empty page 15 KB (`/movies/best` is 42 KB). Layout shift
 measured in Chromium: 0 on every visitor page, 0.0002 on the member page on a desktop.
 
+## Where people find it
+
+The owner's places (Q67, October 25):
+
+- **Browse menu**: a "New on your services" tile in Yours, for members, after My shows and My movies
+  (`ui/navigation/Hub.tsx`, destination `new` in `destinations.ts`; only `/new` itself belongs to it).
+- **Command palette**: "New on your services" for a member (an essential), "New on streaming" for a visitor, both at
+  `/new` (`ui/navigation/palette-pages.ts`). Typing "new" finds it first.
+- **Start page**: below the room, for a member, "New on your services" with this week's arrivals (today and the six
+  days before), the best six as the shared poster cards and See all to `/new` (`getMemberWeekRow`, `BelowRoom.tsx`).
+  It reuses the cached read of `/new` and waits at most 250 ms; past that the page renders without it. A member's start
+  page was never stored; a guest's is unchanged.
+- **Title page**: under the streaming logos, "More new on Netflix" (two at most) for the title's streaming services
+  that have a page in the loaded country (`newPagesWithin`, from the links kept in memory for 10 minutes). Past the
+  title budget the page is incomplete, as with its other parts. A previewed country shows no link.
+- **My movies and My shows**: "New on your services" first among the head's links.
+- **Footer**: "New on streaming" in Explore, for everyone, to `/new/<country>` for the country the page renders for.
+
 ## Sitemap
 
 `goodwatch-webapp/scripts/sitemap_new.py` reads `https://goodwatch.app/api/new-on-services/pages`, the site's own list
