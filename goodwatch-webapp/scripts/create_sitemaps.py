@@ -218,9 +218,9 @@ def write_profile_sitemap(profiles, skip=frozenset()):
     return {"total_url_count": len(kept), "lastmod": lastmod, "profiles": kept}
 
 
-def create_new_sitemap(crate_cursor):
-    """The "New on your services" pages that have titles (sitemap_new.py)."""
-    return write_new_sitemap(select_new_pages(crate_cursor))
+def create_new_sitemap(fetch=None):
+    """The "New on your services" pages that have titles, as the site's pages index lists them (sitemap_new.py)."""
+    return write_new_sitemap(select_new_pages(fetch))
 
 
 def write_new_sitemap(pages, skip=frozenset()):
@@ -316,7 +316,7 @@ if __name__ == "__main__":
     profiles_result = create_profile_sitemap(crate_cursor)
     print(f"Profiles Sitemap Result: {profiles_result}")
 
-    new_result = create_new_sitemap(crate_cursor)
+    new_result = create_new_sitemap()
     print(f"New on services Sitemap Result: {new_result['total_url_count']} URLs")
 
     # Create master sitemap index

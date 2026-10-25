@@ -190,14 +190,6 @@ class SitemapRegenerationTests(unittest.TestCase):
                         # One member with a handle and enough public scores (sitemap_profiles.py).
                         connection.cursor.return_value.fetchall.return_value = [("u1", "amy", 30, 1792713600000, 1792895400000)]
                         return
-                    if 'FROM doc.country' in sql:
-                        connection.cursor.return_value.fetchall.return_value = [("US",)]
-                        return
-                    if 'FROM doc.availability_history' in sql:
-                        # Netflix in the United States has titles first seen in the window (sitemap_new.py).
-                        connection.cursor.return_value.fetchall.return_value = (
-                            [("US", "netflix", 12, 1792713600000)] if new_rows else [])
-                        return
                     if 'FROM doc.user_setting' in sql:
                         connection.cursor.return_value.fetchall.return_value = []
                         return
@@ -215,11 +207,20 @@ class SitemapRegenerationTests(unittest.TestCase):
                 original_load = worker.load_module
                 generation_day = [date(2026, 10, 18)]
 
+                generators = []
+                # The site's pages index (sitemap_new.py): Netflix in the United States has titles.
+                new_index = json.dumps({"pages": [
+                    {"path": "/new/us/netflix", "titles": 12, "latest": 1792713600000},
+                    {"path": "/new/us", "titles": 12, "latest": 1792713600000},
+                ] if new_rows else []}).encode()
+
                 def load(name, path):
                     module = original_load(name, path)
                     if name == "sitemap_generator":
+                        generators.append(module)
                         history_class = module.SitemapHistory
                         module.SitemapHistory = lambda directory: history_class(directory, today=generation_day[0])
+                        sys.modules["sitemap_new"].fetch_index = lambda url=None: new_index
                     if name == "sitemap_checker":
                         module.fetch = lambda url: (status_of(url), f'<link rel="canonical" href="{url}">', None)
                         module.fetch_robots = lambda: (module.RobotsRules("User-agent: *\nDisallow: /api/\n"), None)
@@ -232,8 +233,15 @@ class SitemapRegenerationTests(unittest.TestCase):
                       patch("builtins.print")):
                     if status == 200:
                         count, files = worker.generate_and_check(root)
-                        # Titles, people, categories, static pages (with the best-of lists), blog pages and profiles.
-                        self.assertEqual(count, 1134 + profiles + new_pages)
+                        # Titles, people, categories, static pages (with the best-of lists), blog pages, profiles and
+                        # the new-on-services pages. Categories and static pages come from the generator's own lists,
+                        # so a new landing page doesn't make this count stale.
+                        generator = generators[-1]
+                        categories = sum(
+                            1 + len(generator.extract_subcategories_from_typescript(kind, category))
+                            for kind in ("movies", "shows") for category in generator.MAIN_CATEGORIES)
+                        static_pages = len(generator.STATIC_ROUTES) + 3
+                        self.assertEqual(count, 700 + 300 + 30 + categories + static_pages + profiles + new_pages)
                         static = files[worker.OUTPUT + "sitemap_static.xml"].decode()
                         self.assertIn("<loc>https://goodwatch.app/blog</loc>\n    <lastmod>2026-10-12</lastmod>", static)
                         self.assertIn("<loc>https://goodwatch.app/blog/a-post</loc>\n    <lastmod>2026-10-02</lastmod>", static)

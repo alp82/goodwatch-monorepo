@@ -1,7 +1,7 @@
 // "New on your services" (#489 Part C): the rules of the pages at /new. A page lists the titles first seen on a
 // service in a country within its window (14 days, flat, never before the launch of Newly available), ranked by
 // GoodWatch score, and again day by day, the latest first. A title says its arrival day only where the day is exact;
-// otherwise it says "New on Netflix" and nothing more (#625, variation A). Backfilled offers are old catalog and never
+// otherwise it says "New on Netflix" and nothing more (#625). Backfilled offers are old catalog and never
 // an arrival. The continuity rules are those of Newly available (domain/newly-available.ts): offer types, a brand's
 // tiers and a return that joins an older stay are one arrival.
 //
@@ -21,6 +21,7 @@ import {
 	landingOn,
 	titlesThatCanLand,
 } from "./newly-available"
+import { withArticle } from "~/utils/country-article"
 import { duplicateProviderMapping } from "~/utils/streaming-links"
 
 const DAY_MS = 86_400_000
@@ -105,13 +106,17 @@ const newestFirst = (a: { at: number; key: number }, b: typeof a) =>
 	b.at - a.at || a.key - b.key
 
 /**
- * The titles that arrived on the services within the window, newest first. A title arrives when none of the services
+ * The titles that arrived on the services within the window (from `since` to the day of `until`), newest first. A title arrives when none of the services
  * carried it and one does now; the first of them is the service it arrived on. Stays of other services are not read,
  * so a title that moves from Hulu to Netflix is new on Netflix's page.
  */
 export function arrivalsOf(
 	stays: Iterable<HistoryStay>,
-	{ services, since }: { services: Iterable<number>; since: number },
+	{
+		services,
+		since,
+		until = Number.POSITIVE_INFINITY,
+	}: { services: Iterable<number>; since: number; until?: number },
 ): Arrival[] {
 	const rows: ServiceStay[] = []
 	for (const stay of stays)
@@ -127,7 +132,8 @@ export function arrivalsOf(
 	const arrivals: Arrival[] = []
 	for (const [key, fresh] of firstSeenOf(rows, Number.NEGATIVE_INFINITY)) {
 		const landing = landingOn(fresh.keys(), fresh, mine)
-		if (!landing || landing.at < since) continue
+		// A landing day after today (UTC) would be a data error: it is not listed.
+		if (!landing || landing.at < since || landing.at > utcDay(until)) continue
 		arrivals.push({
 			key,
 			service: landing.service,
@@ -136,6 +142,28 @@ export function arrivalsOf(
 		})
 	}
 	return arrivals.sort(newestFirst)
+}
+
+/**
+ * One country's arrivals from one read of every brand's stays: each brand's page by slug (brands without titles left
+ * out), and the country's page, where a title another brand carried before is not new. Each list is what
+ * `arrivalsOf` gives for that page alone: a brand's landing depends only on that brand's stays.
+ */
+export function countryArrivalsOf(
+	stays: readonly HistoryStay[],
+	{ since, until }: { since: number; until: number },
+): { brands: Record<string, Arrival[]>; all: Arrival[] } {
+	const brands: Record<string, Arrival[]> = {}
+	for (const brand of BRANDS) {
+		const list = arrivalsOf(stays, { services: [brand.ids[0]], since, until })
+		if (list.length) brands[brand.slug] = list
+	}
+	const all = arrivalsOf(stays, {
+		services: BRANDS.map((brand) => brand.ids[0]),
+		since,
+		until,
+	})
+	return { brands, all }
 }
 
 /**
@@ -333,26 +361,8 @@ export function tallyWords(
 	return `${countWords(list)} ${window}${today ? `, ${today} of them today` : ""}`
 }
 
-// Country names that English says with "the".
-const WITH_THE = new Set([
-	"Bahamas",
-	"Comoros",
-	"Czech Republic",
-	"Gambia",
-	"Maldives",
-	"Netherlands",
-	"Palestinian Territory",
-	"Philippines",
-	"Seychelles",
-	"Vatican",
-])
-
 /** "in Germany", "in the United States". */
-export const inCountry = (name: string) =>
-	WITH_THE.has(name) ||
-	/^United |Islands$|Republic|^Republic|Territory$/.test(name)
-		? `in the ${name}`
-		: `in ${name}`
+export const inCountry = (name: string) => `in ${withArticle(name)}`
 
 // ---------------------------------------------------------------------------------------------------------
 // Addresses

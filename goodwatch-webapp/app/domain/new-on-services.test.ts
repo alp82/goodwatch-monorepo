@@ -13,6 +13,7 @@ const {
 	serviceIdsOf,
 	windowStart,
 	arrivalsOf,
+	countryArrivalsOf,
 	waitsOf,
 	rankByScore,
 	dayGroupsOf,
@@ -93,6 +94,28 @@ test("reading a brand reads every id it has, and a service outside the brands re
 	assert.deepEqual(serviceIdsOf([73]), [73])
 })
 
+test("brands use the site's slugs and names: the streaming pages' slugs, the title page's short names", () => {
+	assert.deepEqual(
+		BRANDS.map(({ slug, name }) => [slug, name]),
+		[
+			["netflix", "Netflix"],
+			["amazon-prime", "Amazon Prime Video"],
+			["disney-plus", "Disney+"],
+			["hbo-max", "HBO Max"],
+			["apple-tv", "Apple TV"],
+			["hulu", "Hulu"],
+			["peacock", "Peacock"],
+			["paramount-plus", "Paramount+"],
+			["crunchyroll", "Crunchyroll"],
+			["mubi", "MUBI"],
+		],
+	)
+	// The streaming category pages (ui/explore/category/streaming.ts) already use these three slugs.
+	for (const slug of ["netflix", "amazon-prime", "disney-plus"])
+		assert.ok(brandBySlug(slug), slug)
+	assert.equal(brandBySlug("prime-video"), null)
+})
+
 test("no service slug looks like a country", () => {
 	for (const brand of BRANDS) assert.ok(!/^[a-z]{2}$/.test(brand.slug))
 })
@@ -104,6 +127,20 @@ test("the window holds today and the 13 days before it, and starts no earlier th
 	assert.equal(windowStart(NOW, LAUNCH), ago(13))
 	const lateLaunch = Date.parse("2026-10-20T08:30:00Z")
 	assert.equal(windowStart(NOW, lateLaunch), Date.parse("2026-10-20T00:00:00Z"))
+})
+
+test("a landing day after today is never listed", () => {
+	const arrivals = arrivalsOf(
+		[
+			stay({ key: dune, landedOn: ago(0) }),
+			stay({ key: arcane, landedOn: ago(-1) }),
+		],
+		{ services: [NETFLIX], since: ago(13), until: NOW },
+	)
+	assert.deepEqual(
+		arrivals.map(({ key }) => key),
+		[dune],
+	)
 })
 
 test("a page lists the titles first seen in its window, newest first", () => {
@@ -252,6 +289,34 @@ test("a member waits for their Want to See titles and the shows they watch", () 
 			[arcane, "watching"],
 			[titleKey("show", 9), "watching"],
 		],
+	)
+})
+
+test("one read of a country gives each brand's page and the country's page, each by its own rule", () => {
+	const stays = [
+		// On Hulu since long ago, now on Netflix too: new on Netflix's page, not on the country's page.
+		stay({ key: dune, service: HULU, landedOn: 0, backfill: true }),
+		stay({ key: dune, service: NETFLIX, landedOn: ago(2) }),
+		// Netflix with ads only: Netflix's page.
+		stay({ key: arcane, service: NETFLIX_ADS, landedOn: ago(1), exact: false }),
+		// Old on Netflix, new on its ad tier: on no page.
+		stay({ key: heat, service: NETFLIX, landedOn: 0, backfill: true }),
+		stay({ key: heat, service: NETFLIX_ADS, landedOn: ago(1) }),
+	]
+	const since = ago(13)
+	const { brands, all } = countryArrivalsOf(stays, { since, until: NOW })
+	assert.deepEqual(
+		brands.netflix,
+		arrivalsOf(stays, { services: [NETFLIX], since, until: NOW }),
+	)
+	assert.deepEqual(
+		brands.netflix.map(({ key }) => key),
+		[arcane, dune],
+	)
+	assert.equal(brands.hulu, undefined)
+	assert.deepEqual(
+		all.map(({ key }) => key),
+		[arcane],
 	)
 })
 

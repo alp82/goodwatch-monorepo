@@ -4,9 +4,10 @@ The pages at `/new` list what arrived on the big streaming services, per country
 [#489](https://github.com/alp82/goodwatch-monorepo/issues/489) Part C, child of map
 [#365](https://github.com/alp82/goodwatch-monorepo/issues/365).
 
-- Layout: variation D of the services-page prototype (branch `ghostex/3fbfaf5b`, `docs/prototypes/new-on-services/`).
-- Wording and day-by-day section: variation A of [#625](https://github.com/alp82/goodwatch-monorepo/issues/625)
-  (branch `prototype/arrival-dates`).
+- Layout: the landing-page design the owner picked from the services-page prototype (branch `ghostex/3fbfaf5b`,
+  `docs/prototypes/new-on-services/`).
+- Wording and day-by-day section: the "a day per arrival" design of
+  [#625](https://github.com/alp82/goodwatch-monorepo/issues/625) (branch `prototype/arrival-dates`).
 
 ## Addresses
 
@@ -36,11 +37,14 @@ The rules are in `goodwatch-webapp/app/domain/new-on-services.ts` and reuse Newl
   `firstSeenOf` and `landingOn` decide this, as for the Newly available signal. `firstSeenOf` now also says whether
   the landing day is exact, but only for readers that pass precision; the signal's output is unchanged.
 - The window is today and the 13 days before (UTC), never before the launch day of Newly available (`launchTime()`,
-  October 12, 2026, or `NEWLY_AVAILABLE_SINCE`). Until October 26 the window is therefore shorter, and the page says
-  "in the last 13 days".
+  October 12, 2026, or `NEWLY_AVAILABLE_SINCE`). A landing day after today is never listed.
 - A brand is one service: the ten brands of the daily list job (#682) are in
-  `app/domain/new-on-services-brands.json` with their TMDB ids (Netflix 8 and 1796, Prime Video 9, 119, 2100 and 10, and
-  so on). The sitemap generator reads the same file.
+  `app/domain/new-on-services-brands.json` with their TMDB ids (Netflix 8 and 1796, Amazon Prime Video 9, 119, 2100 and
+  10, and so on). Slugs follow the streaming category pages (`netflix`, `amazon-prime`, `disney-plus`); names follow the
+  site's copy and title pages ("Amazon Prime Video", "Disney+", "Paramount+", "Apple TV").
+- One read per country gives every brand's page and the country's page (`countryArrivalsOf`): a brand's landing
+  depends only on that brand's stays, so each list is what the page alone would read. On the country's page a title
+  another brand carried before is not new.
 - On the member's page, a title one of their services carried before is not new, and a title that moved between two
   of their services is not new either (`landingOn` with all their services).
 - Adult titles and titles the catalog lacks are left out.
@@ -52,10 +56,10 @@ The rules are in `goodwatch-webapp/app/domain/new-on-services.ts` and reuse Newl
 - A title the catalog has no poster for shows the placeholder of the site's card grids
   (`app/img/poster-placeholder.png`, as in `ui/Poster.tsx`), and goes after every title with a poster: in the top ten,
   in each day and under Also new. On October 25, Netflix US had 4 such titles out of 101 (all shows with 0 or 1 votes
-  and no poster or backdrop in `movie`/`show`), Prime Video US 21 of 340.
+  and no poster or backdrop in `movie`/`show`), Amazon Prime Video US 21 of 340.
 - A row says "New on Netflix today" or "on Thursday" where the day is exact, and only "New on Netflix" otherwise. No
   "this week" and no "last 30 days" anywhere.
-- The line under the heading: "101 movies and shows in the last 13 days, 1 of them today." and an info icon with
+- The line under the heading: "101 movies and shows in the last 14 days, 1 of them today." and an info icon with
   "Updated October 24": the latest `updated_at` of the brands' stays. Its `title` shows the time in UTC.
 - A member's page, and any page for a member with titles they wait for (Want to See, or a show they are Watching or
   have On hold), leads with "<title> is now on <service>" instead of the heading, as in the prototype.
@@ -68,12 +72,26 @@ The rules are in `goodwatch-webapp/app/domain/new-on-services.ts` and reuse Newl
 
 | Read | Statements | Cache |
 | --- | --- | --- |
-| A page's titles | 1 candidate statement, then 1 per media type and 1,000 titles, in parallel; display fields through `getDisplayFields` (Valkey, 6 h); 1 adult check | `cached()` `new-on-services-titles-v1`, per country, services and UTC day, 30 minutes |
-| The summary (links between pages, the update date, logos, country names) | 1 statement over all countries, `max(updated_at)`, logos, `getCountries` (cached a day) | `cached()` `new-on-services-summary-v1`, per UTC day, 60 minutes |
+| A country's arrivals: every brand's page and the country's page | 1 candidate statement, then 1 per media type and 1,000 titles, in parallel; display fields through `getDisplayFields` (Valkey, 6 h); 1 adult check | `cached()` `new-on-services-country-v1`, per country and UTC day, 30 minutes |
+| The links: every page with titles, with its count and latest day | 1 statement for the countries with any candidate, then the country entries above, 4 at a time | `cached()` `new-on-services-links-v1`, per UTC day, 60 minutes |
+| A member's titles | The same read for their services | `cached()` `new-on-services-member-v1`, per country, services and UTC day, 30 minutes |
+| The meta: update date and logos | `max(updated_at)` of the brands, logos | `cached()` `new-on-services-meta-v1`, per UTC day, 60 minutes |
 | The viewer | Member data and settings, both already cached | None |
 
-The page cache stores a visitor's page for 30 minutes as for every other catalog page. Day words ("today") follow UTC,
-so for up to 30 minutes after midnight a stored page can still call yesterday's arrivals "today".
+**One count for pages, links and the sitemap.** The links between pages (the services row, other countries) and the
+sitemap use the lengths of the lists the country entries hold, the same lists the pages show. So a linked page or a
+listed page has titles; on October 25 all 862 pages of the index answered `index, follow` with exactly the counted
+number of titles. Building the links for every country costs about 415 statements and 12 s of Crate time (6 s wall from
+the development machine) once per hour. A page waits 300 ms for them (`LINKS_BUDGET_MS`); past that it renders
+without the services row and the other countries, answers `Cache-Control: no-store` as an incomplete page, and the
+links finish in the background. That happens once per UTC day, right after midnight, and after a deploy.
+
+The country entries (30 minutes) and the links (60 minutes) refresh apart, so for up to an hour a link can count a
+page that has lost its last title since. The sitemap's minimum of 3 titles and the Windmill leave-out step cover it.
+
+Visitor pages get the root's shared policy (`s-maxage=1800, stale-while-revalidate=7200`). Day words ("today") follow
+UTC, so for up to about 2.5 hours after midnight a stored page can still list the 15th day back and call yesterday's
+arrivals "today".
 
 Measured on October 25, 2026 from a development machine over the tunnel, through a SELECT-only proxy in front of the
 production Crate (about 30 to 40 ms of the time per statement is the tunnel and the proxy):
@@ -81,48 +99,52 @@ production Crate (about 30 to 40 ms of the time per statement is the tunnel and 
 | Read | Rows | Time |
 | --- | --- | --- |
 | Netflix US: candidates, then stays | 110 candidates, 225 stays, 101 titles listed (34 with an exact day) | 110 to 450 ms (Crate 22 to 82 ms per statement) |
-| Prime Video US | 344 candidates, 704 stays | 300 to 370 ms |
-| Every service US | 581 titles listed | 310 to 360 ms |
-| Summary counts, all countries | 763 country and service groups | 200 to 540 ms (Crate 110 to 310 ms) |
+| Every brand in the US, one read | 581 titles on the country's page | 310 to 360 ms |
+| The links, every country | 138 countries, 862 pages, 4,002 distinct titles, 415 statements | 5.8 s wall, 12.2 s Crate |
 | `max(updated_at)` of the brands | 1 | 110 to 200 ms (Crate 55 ms) |
 
 A local production build (`remix-serve`, throwaway Valkey cluster, the same proxy):
 
 | Request | Time |
 | --- | --- |
-| First page with an empty data cache (summary included) | 0.65 s (`/new/us/netflix`); 0.41 s (`/new/us`) |
-| Another page, summary cached | 0.13 to 0.24 s |
-| Warm data cache | 8 to 13 ms |
+| First page with an empty data cache (links not ready: incomplete, `no-store`) | 0.60 s (`/new/us/netflix`); 0.31 s (`/new/de/netflix`) |
+| Warm data cache, with links | 6 to 31 ms |
 | Page cache hit | about 1 ms |
 | `/new/netflix` redirect | 2 ms |
+| `/api/new-on-services/pages`, warm | 3 ms, 53 KB |
 
 Sizes, Brotli: `/new/us/netflix` 30 KB, `/new/us` 43 KB, an empty page 15 KB (`/movies/best` is 42 KB). Layout shift
 measured in Chromium: 0 on every visitor page, 0.0002 on the member page on a desktop.
 
 ## Sitemap
 
-`goodwatch-webapp/scripts/sitemap_new.py` writes `sitemap_new.xml` with `/new/<country>/<service>` for every brand with
-at least `MIN_TITLES` (3) candidates in its window, and `/new/<country>` when one of them qualifies. `lastmod` is the day
-of the latest arrival. The count is of candidates, before the continuity rules, so the margin keeps a listed page
-non-empty. The Windmill wrapper `f/seo/regenerate_sitemaps.py` leaves out a `/new` page that fails the live check, as it
-does for profiles. `sitemap.xml` lists the file only when it has URLs.
+`goodwatch-webapp/scripts/sitemap_new.py` reads `https://goodwatch.app/api/new-on-services/pages`, the site's own list
+of pages with titles, and writes `sitemap_new.xml` with every page that has at least `MIN_TITLES` (3) titles. `lastmod`
+is the day of the latest arrival. The Python side restates no rule (window, launch day, backfill, continuity, adult
+titles), so `make sitemaps` too lists only pages that have titles when it runs. The Windmill wrapper
+`f/seo/regenerate_sitemaps.py` leaves out a `/new` page that fails the live check (its titles aged out at midnight), as
+it does for profiles. `sitemap.xml` lists the file only when it has URLs.
 
-On October 25, 2026 the selection gave **745 URLs** (136 country pages, 609 service pages) in 0.35 s. A sample of 60 of
-them all answered 200, `index, follow`, with their own canonical address, on the local build.
+On October 25, 2026 the index listed 862 pages with titles; the selection gave **745 URLs** (136 country pages, 609
+service pages).
 
 The next weekly run adds `sitemap_new.xml` to the index, so the owner resubmits `https://goodwatch.app/sitemaps/sitemap.xml`
 in Search Console after it lands (see `docs/sitemap.md`). The wrapper must be redeployed from `main` for the new file to
-be part of the Windmill run.
+be part of the Windmill run, and the webapp must be deployed first so that the index exists.
 
 ## Tests
 
-- `app/domain/new-on-services.test.ts`: the window, exact and unknown days, backfill, brands, continuity across
-  services, ranking, day groups, words, addresses, the country offer, robots and copy.
+- `app/domain/new-on-services.test.ts`: the window, exact and unknown days, future days, backfill, brands and their
+  slugs and names, continuity across services, one read per country, ranking, posters, day groups, words, addresses,
+  the country offer, robots and copy.
 - `app/server/new-on-services-read.test.ts`: the statements (no backfill candidate, the window, the brand's ids) and the
   rows turned into arrivals.
 - `app/server/new-on-services-page.test.ts`: every address against faked reads: the share redirect (`private,
-  no-store`), capitals, 404, noindex for an empty page, the offer, the day-by-day limit, and the member's page.
-- `scripts/test_sitemap_new.py`, and two cases in `goodwatch-flows/tests/test_sitemap_regeneration.py`.
+  no-store`), capitals, 404, noindex for an empty page, the offer, the day-by-day limit, the member's page, links that
+  count exactly what each page lists, the incomplete page, and the pages index.
+- `app/utils/country-article.test.ts`: country names with "the", shared with the Discord cards.
+- `scripts/test_sitemap_new.py`, and `goodwatch-flows/tests/test_sitemap_regeneration.py` (its URL count now comes from
+  the generator's own lists).
 
 ## Screenshots
 
@@ -134,7 +156,7 @@ redirect chain, robots tag, canonical address, layout shift and console errors.
 | --- | --- |
 | `us-netflix` | `/new/us/netflix`, whole page |
 | `share-link-netflix-from-germany` | `/new/netflix` with `Accept-Language: de-DE`: 302 to `/new/de/netflix` |
-| `member-new` | `/new`, signed in as the owner (Germany; Netflix, Prime Video, Disney Plus, HBO Max), whole page |
+| `member-new` | `/new`, signed in as the owner (Germany; Netflix, Amazon Prime Video, Disney+, HBO Max), whole page |
 | `empty-de-hulu` | `/new/de/hulu`: empty, `noindex, follow`, whole page |
 | `dark-us-netflix` | `/new/us/netflix` with `prefers-color-scheme: dark` |
 | `us-netflix-from-germany-offer` | `/new/us/netflix` from Germany: the link to `/new/de/netflix` |

@@ -109,5 +109,5 @@ export async function readArrivals(
 ): Promise<Arrival[]> {
 	const since = windowStart(now, launch)
 	const stays = await readArrivalStays({ country, services, since }, run)
-	return arrivalsOf(stays, { services, since })
+	return arrivalsOf(stays, { services, since, until: now })
 }

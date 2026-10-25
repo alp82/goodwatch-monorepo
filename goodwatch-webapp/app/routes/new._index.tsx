@@ -7,6 +7,7 @@ import {
 } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import { presentCatalogLoader } from "~/server/media-payload.server"
+import { PRIVATE_CACHE_CONTROL } from "~/utils/auth-cookie"
 import { newDeps } from "~/server/new-on-services.server"
 import {
 	type NewPageData,
@@ -15,12 +16,15 @@ import {
 import { NewOnServicesPage } from "~/ui/new-on-services/NewOnServicesPage"
 import { newOnServicesMeta } from "~/ui/new-on-services/meta"
 
+// The loader's Cache-Control (incomplete or private) reaches the document through the site's page headers.
+export { pageHeaders as headers } from "~/utils/headers"
+
 export const loader = presentCatalogLoader(
 	async ({ request }: LoaderFunctionArgs) => {
 		const page = await loadMemberPage(request, newDeps)
 		if (page instanceof Response) return page
 		return json<NewPageData>(page, {
-			headers: { "Cache-Control": "private, no-store" },
+			headers: { "Cache-Control": PRIVATE_CACHE_CONTROL },
 		})
 	},
 	{ live: true },

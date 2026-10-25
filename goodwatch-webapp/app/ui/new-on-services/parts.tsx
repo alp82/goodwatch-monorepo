@@ -1,6 +1,6 @@
-// The small pieces of the "New on your services" pages (#489 Part C), ported from prototype C's variation D
-// (branch ghostex/3fbfaf5b) with #625's day-by-day wording: a service's logo, the GoodWatch score, the Wishlist
-// mark, a country's flag, a ranked row, a row of posters, and the line that says when a title arrived.
+// The small pieces of the "New on your services" pages (#489 Part C): a service's logo, the GoodWatch score, the
+// Wishlist mark, a country's flag, a poster or its placeholder, a ranked row, a row of posters, and the line that says
+// when a title arrived (#625).
 import { BookmarkIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
@@ -203,7 +203,7 @@ export function RankedRow({
 	)
 }
 
-/** Small posters in a row that wraps, as below prototype C's ranked list. */
+/** Small posters in a row that wraps. */
 export function PosterRow({
 	titles,
 	data,

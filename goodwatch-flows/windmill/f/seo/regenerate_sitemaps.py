@@ -25,15 +25,13 @@ OUTPUT = "goodwatch-webapp/public/sitemaps/"
 SCRIPTS = "goodwatch-webapp/scripts/"
 CATEGORIES = "goodwatch-webapp/app/ui/explore/category/"
 BLOG_POSTS = "goodwatch-webapp/app/content/blog/posts.json"
-# The brands of the "New on your services" pages, read by sitemap_new.py.
-NEW_BRANDS = "goodwatch-webapp/app/domain/new-on-services-brands.json"
 TOKEN_VARIABLE = "u/Alp/GITHUB_SITEMAP_TOKEN"
 SOURCE_FILES = [SCRIPTS + name for name in (
     "create_sitemaps.py", "check_sitemap_urls.py", "sitemap_query.py",
     "sitemap_lastmod.py", "sitemap_selection.py", "sitemap_people.py", "sitemap_profiles.py", "sitemap_crate.py",
     "sitemap_blog.py", "sitemap_new.py",
     "utils.py",
-)] + [CATEGORIES + name + ".ts" for name in ("moods", "streaming", "genres")] + [BLOG_POSTS, NEW_BRANDS]
+)] + [CATEGORIES + name + ".ts" for name in ("moods", "streaming", "genres")] + [BLOG_POSTS]
 
 
 def request(url, method="GET", data=None, token=None, raw=False):
@@ -122,7 +120,7 @@ def generate_and_check(root):
                     "movie": movies["title_ids"], "show": shows["title_ids"],
                 })
                 profiles = generator.create_profile_sitemap(cursor)
-                new_pages = generator.create_new_sitemap(cursor)
+                new_pages = generator.create_new_sitemap()
                 lastmods = {
                     "movie": movies["lastmod"], "show": shows["lastmod"],
                     "static": static["lastmod"], "categories": categories["lastmod"], "people": people["lastmod"],

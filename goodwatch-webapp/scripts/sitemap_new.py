@@ -1,81 +1,47 @@
 """The "New on your services" pages for sitemap_new.xml (#489 Part C, docs/implementation/new-on-services/README.md).
 
-A page lists the titles first seen on a service in a country within its window: today and the 13 days before (UTC),
-never before the launch of Newly available. An empty page answers noindex, so only pages with titles are listed:
-/new/<country>/<service> for each brand with titles in the country, and /new/<country> when one of them has.
+The site itself says which pages have titles: /api/new-on-services/pages lists each page with its count and its latest
+arrival day, from the same rule and the same data as the pages and the links between them. So a page listed here has
+titles when it is generated, by the `make sitemaps` path too, and this file restates none of the rules (window, launch
+day, backfill, continuity, adult titles).
 
-The count here is the page's candidates: titles with a live open stay (not a backfill) first seen in the window. The
-page then applies the continuity rules (a title already on the brand's other tier is not new), which can leave some
-out. MIN_TITLES keeps a margin, so that a listed page still has titles when the live check reads it; the Windmill flow
-(f/seo/regenerate_sitemaps.py) leaves out a /new page that fails the check instead of failing the whole publish.
-
-The brands come from app/domain/new-on-services-brands.json, the list the pages use."""
+MIN_TITLES leaves out pages with very few titles. The live check can still find a page that emptied since it was read
+(its titles aged out at midnight); the Windmill flow (f/seo/regenerate_sitemaps.py) leaves such a page out instead of
+failing the whole publish."""
 import json
-import os
-from datetime import date, datetime, timedelta, timezone
-from typing import List, Optional, Tuple
+import re
+from datetime import date, datetime, timezone
+from typing import Callable, List, Optional, Tuple
+from urllib.request import Request, urlopen
 
 BASE_URL = "https://goodwatch.app"
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-BRANDS_FILE = os.path.join(SCRIPT_DIR, "../app/domain/new-on-services-brands.json")
-# LAUNCH in app/server/availability-first-seen.server.ts: the first day an arrival counts.
-LAUNCH = date(2026, 10, 12)
-# WINDOW_DAYS in app/domain/new-on-services.ts (LANDED_DAYS of Newly available).
-WINDOW_DAYS = 14
+PAGES_INDEX = f"{BASE_URL}/api/new-on-services/pages"
 MIN_TITLES = 3
-# LANDED_DAY in app/server/availability-first-seen.server.ts.
-LANDED_DAY = "CASE WHEN appeared_precision = 'exact' THEN appeared_on ELSE date_trunc('day', observed_at) END"
+PAGE_PATH = re.compile(r"^/new/[a-z]{2}(/[a-z0-9]+(-[a-z0-9]+)*)?$")
+# Building every country's counts takes a few seconds when the site's cache is cold.
+TIMEOUT_SECONDS = 120
 
 
-def read_brands(path: str = BRANDS_FILE) -> List[dict]:
-    with open(path, encoding="utf-8") as brands_file:
-        brands = json.load(brands_file)
-    for brand in brands:
-        if not brand.get("slug") or not brand.get("ids") or not all(isinstance(i, int) for i in brand["ids"]):
-            raise ValueError(f"Bad brand in {path}: {brand}")
-    return brands
+def fetch_index(url: str = PAGES_INDEX) -> bytes:
+    request = Request(url, headers={"Accept": "application/json", "User-Agent": "goodwatch-sitemaps"})
+    with urlopen(request, timeout=TIMEOUT_SECONDS) as response:
+        return response.read()
 
 
-def window_start(today: date) -> date:
-    return max(LAUNCH, today - timedelta(days=WINDOW_DAYS - 1))
-
-
-def epoch_ms(day: date) -> int:
-    return int(datetime(day.year, day.month, day.day, tzinfo=timezone.utc).timestamp() * 1000)
-
-
-def counts_query(brands: List[dict]) -> str:
-    case = " ".join(f"WHEN streaming_service_id IN ({', '.join(str(i) for i in b['ids'])}) THEN '{b['slug']}'"
-                    for b in brands)
-    ids = ", ".join(str(i) for b in brands for i in b["ids"])
-    return (
-        f"SELECT country_code, brand, count(*), max(landed) FROM ("
-        f"SELECT country_code, CASE {case} END AS brand, media_type, media_tmdb_id, max({LANDED_DAY}) AS landed "
-        f"FROM doc.availability_history "
-        f"WHERE streaming_type IN ('flatrate', 'free', 'ads') AND streaming_service_id IN ({ids}) "
-        f"AND dropped_on IS NULL AND appeared_source <> 'backfill' AND ({LANDED_DAY}) >= ? "
-        f"GROUP BY 1, 2, 3, 4) arrivals GROUP BY 1, 2 LIMIT 100000"
-    )
-
-
-def select_new_pages(cursor, today: Optional[date] = None,
-                     brands: Optional[List[dict]] = None) -> List[Tuple[str, Optional[date]]]:
+def select_new_pages(fetch: Optional[Callable[[str], bytes]] = None) -> List[Tuple[str, Optional[date]]]:
     """(URL, lastmod) pairs, sorted. lastmod is the day of the page's latest arrival."""
-    today = today or datetime.now(timezone.utc).date()
-    brands = brands if brands is not None else read_brands()
-    slugs = {b["slug"] for b in brands}
-    # The pages answer 404 for a country the site doesn't know (app/server/countries.server.ts).
-    cursor.execute("SELECT country_code FROM doc.country")
-    known = {row[0] for row in cursor.fetchall()}
-    cursor.execute(counts_query(brands), [epoch_ms(window_start(today))])
-    pages = {}
-    for country, slug, titles, latest in cursor.fetchall():
-        if country not in known or slug not in slugs or titles < MIN_TITLES:
+    raw = (fetch or fetch_index)(PAGES_INDEX)
+    try:
+        pages = json.loads(raw)["pages"]
+    except (ValueError, KeyError, TypeError):
+        raise ValueError(f"{PAGES_INDEX} did not answer with the pages index") from None
+    urls = []
+    for page in pages:
+        path, titles, latest = page.get("path"), page.get("titles"), page.get("latest")
+        if not isinstance(path, str) or not PAGE_PATH.match(path):
+            continue
+        if not isinstance(titles, int) or titles < MIN_TITLES:
             continue
         day = datetime.fromtimestamp(latest / 1000, timezone.utc).date() if isinstance(latest, (int, float)) else None
-        code = country.lower()
-        pages[f"{BASE_URL}/new/{code}/{slug}"] = day
-        country_url = f"{BASE_URL}/new/{code}"
-        previous = pages.get(country_url)
-        pages[country_url] = max(d for d in (previous, day) if d) if (previous or day) else None
-    return sorted(pages.items())
+        urls.append((f"{BASE_URL}{path}", day))
+    return sorted(urls)

@@ -1,4 +1,5 @@
 import { reasonsLine, type SearchReason } from "./search-reading.ts"
+import { withArticle } from "../../utils/country-article.ts"
 import type { Score } from "../scores.server.ts"
 import {
 	getVibeColorValue,
@@ -193,11 +194,7 @@ export function countryName(code: string) {
 	} catch {
 		/* Keep the code. */
 	}
-	return /^(United |Netherlands$|Philippines$|Bahamas$|Gambia$|Maldives$|Czech Republic$|Dominican Republic$|Central African Republic$|.* Islands$)/.test(
-		name,
-	)
-		? `the ${name}`
-		: name
+	return withArticle(name)
 }
 
 /** The vibe color of a GoodWatch score as an accent number, like the site's score ring. */

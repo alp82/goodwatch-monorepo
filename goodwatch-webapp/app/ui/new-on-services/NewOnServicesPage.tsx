@@ -1,11 +1,11 @@
-// "New on your services" (#489 Part C): one page for /new/us/netflix, /new/us and the member's /new. The layout is
-// prototype C's variation D (branch ghostex/3fbfaf5b, docs/prototypes/new-on-services/): a heading that answers the
-// search, the ten best arrivals ranked, then every arrival day by day (#625, variation A), the latest first, and
-// links to the other services and countries. A member's own page leads with what they waited for. Everything is in
-// the server HTML, with the sizes of its images reserved, so nothing moves after the first paint.
+// "New on your services" (#489 Part C): one page for /new/us/netflix, /new/us and the member's /new: a heading that
+// answers the search, the ten best arrivals ranked, then every arrival day by day, the latest first (#625), and links
+// to the other services and countries. A member's own page leads with what they waited for. Everything is in the
+// server HTML, with the sizes of its images reserved, so nothing moves after the first paint.
 import { ChevronRightIcon, InformationCircleIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import {
+	countryPath,
 	dateWords,
 	dayHeading,
 	inCountry,
@@ -18,6 +18,7 @@ import type {
 import { TmdbImage } from "~/ui/TmdbImage"
 import ShareButton from "~/ui/button/ShareButton"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
+import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { Flag, Logo, PosterImage, PosterRow, RankedRow, Sub } from "./parts"
@@ -29,37 +30,11 @@ export function crumbsOf(data: NewPageData): Crumb[] {
 		return [home, { label: "New on your services", path: "/new" }]
 	const country = {
 		label: `New ${inCountry(data.country.name)}`,
-		path: `/new/${data.country.code.toLowerCase()}`,
+		path: countryPath(data.country.code),
 	}
 	return data.kind === "country" || !data.brand
 		? [home, country]
 		: [home, country, { label: data.brand.name, path: data.path }]
-}
-
-function Crumbs({ data }: { data: NewPageData }) {
-	const crumbs = crumbsOf(data)
-	return (
-		<nav aria-label="Breadcrumb">
-			<ol className="flex flex-wrap items-center gap-1.5 text-sm font-semibold text-gray-300">
-				{crumbs.map((crumb, index) => (
-					<li key={crumb.path} className="flex items-center gap-1.5">
-						{index > 0 && (
-							<ChevronRightIcon className="h-4 w-4 text-gray-500" aria-hidden />
-						)}
-						{index === crumbs.length - 1 ? (
-							<span aria-current="page" className="text-amber-400">
-								{crumb.label}
-							</span>
-						) : (
-							<Link to={crumb.path} className="hover:text-white hover:underline">
-								{crumb.label}
-							</Link>
-						)}
-					</li>
-				))}
-			</ol>
-		</nav>
-	)
 }
 
 /** What a member waited for, in the place of the heading. */
@@ -163,12 +138,11 @@ const KEY_OFF = "bg-gray-950/60 text-gray-200 ring-white/15 hover:ring-white/40"
 
 /** Each service is a page of its own, so each key is a link. */
 function ServiceKeys({ data }: { data: NewPageData }) {
-	const country = data.country.code.toLowerCase()
 	return (
 		<nav aria-label="Services" className="flex flex-wrap gap-2">
 			{data.kind !== "member" && (
 				<Link
-					to={`/new/${country}`}
+					to={countryPath(data.country.code)}
 					prefetch="intent"
 					aria-current={data.kind === "country" ? "page" : undefined}
 					className={`${KEY} px-3 ${data.kind === "country" ? KEY_ON : KEY_OFF}`}
@@ -239,7 +213,7 @@ function Nothing({ data }: { data: NewPageData }) {
 			</p>
 			{data.kind === "service" && (
 				<Link
-					to={`/new/${data.country.code.toLowerCase()}`}
+					to={countryPath(data.country.code)}
 					prefetch="intent"
 					className="mt-4 inline-flex min-h-10 items-center rounded-xl bg-white/[0.06] px-4 py-2 text-sm font-bold text-gray-100 ring-1 ring-white/10 hover:ring-white/25"
 				>
@@ -342,6 +316,7 @@ export function NewOnServicesPage({ data }: { data: NewPageData }) {
 	const brand = data.kind === "service" ? data.brand : null
 	return (
 		<div className="pb-28">
+			<Breadcrumbs items={crumbsOf(data)} />
 			<section className="relative overflow-hidden border-b border-white/[0.07]">
 				{data.hero && (
 					<TmdbImage
@@ -355,7 +330,6 @@ export function NewOnServicesPage({ data }: { data: NewPageData }) {
 				)}
 				<span className="absolute inset-0 bg-linear-to-t from-gray-900 via-gray-900/80 to-gray-900/50" />
 				<div className={`${WRAP} relative flex flex-col gap-5 pb-7 pt-4`}>
-					<Crumbs data={data} />
 					{data.waited.length > 0 ? (
 						<Waited data={data} />
 					) : (

@@ -113,10 +113,10 @@ export function firstSeenOf(
 				)
 				.map(([id]) => id)
 			// Readers that don't pass precision (the Newly available signal) get the landing without it.
-			const told = history.some((stay) => stay.exact !== undefined)
+			const precisionGiven = history.some((stay) => stay.exact !== undefined)
 			times.set(
 				service,
-				told
+				precisionGiven
 					? { at, learnedAt, previousServices, exact }
 					: { at, learnedAt, previousServices },
 			)

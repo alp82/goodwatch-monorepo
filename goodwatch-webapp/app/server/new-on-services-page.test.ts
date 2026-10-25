@@ -1,18 +1,26 @@
 // "New on your services" (#489 Part C): what each address under /new answers. The share link leads to the viewer's
 // own country, an empty page is kept out of search engines, a page opened from another country offers the viewer's
-// own, and /new is the member's own page. Data comes from fakes of the reads (new-on-services.server.ts).
+// own, and /new is the member's own page. The links between pages and the sitemap's index count exactly what each
+// page lists. Data comes from fakes of the reads (new-on-services.server.ts).
 
 import "@remix-run/node"
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import "./title-filter/test-alias.ts"
 
-const { loadMemberPage, loadServicePage, loadWherePage, DAY_LIMIT } =
-	await import("./new-on-services-page.server.ts")
+const {
+	loadMemberPage,
+	loadServicePage,
+	loadWherePage,
+	loadPagesIndex,
+	linksOf,
+	DAY_LIMIT,
+} = await import("./new-on-services-page.server.ts")
 const { titleKey } = await import("../utils/title-key.ts")
 
 type Deps = Parameters<typeof loadServicePage>[3]
-type Title = Awaited<ReturnType<Deps["titles"]>>[number]
+type CountryArrivals = Awaited<ReturnType<Deps["country"]>>
+type Title = CountryArrivals["all"][number]
 
 const DAY = 86_400_000
 const NOW = Date.parse("2026-10-25T15:00:00Z")
@@ -36,30 +44,45 @@ const title = (id: number, over: Partial<Title> = {}): Title => ({
 	...over,
 })
 
+const COUNTRIES = [
+	{ code: "DE", name: "Germany" },
+	{ code: "US", name: "United States" },
+	{ code: "FR", name: "France" },
+]
+
+/** What each country's one read gives: every brand's list and the country's list. */
+const ARRIVALS: Record<string, CountryArrivals> = {
+	US: {
+		brands: {
+			netflix: [title(3), title(2), title(1)],
+			hulu: [title(4, { service: 15 })],
+		},
+		all: [title(4, { service: 15 }), title(3), title(2), title(1)],
+	},
+	DE: { brands: { netflix: [title(5)] }, all: [title(5)] },
+	FR: { brands: {}, all: [] },
+}
+
 function deps(over: Partial<Deps> = {}): Deps & { asked: unknown[] } {
 	const asked: unknown[] = []
 	return {
 		asked,
 		now: () => NOW,
 		launch: () => Date.parse("2026-10-01T00:00:00Z"),
-		summary: async () => ({
-			countries: [
-				{ code: "DE", name: "Germany" },
-				{ code: "US", name: "United States" },
-				{ code: "FR", name: "France" },
-			],
-			counts: {
-				US: { netflix: 3, hulu: 2 },
-				DE: { netflix: 1 },
-				FR: {},
-			},
+		countries: async () => COUNTRIES,
+		meta: async () => ({
 			updatedAt: ago(0) + 3_600_000,
 			logos: { netflix: "/netflix.png", hulu: "/hulu.png" },
 		}),
-		titles: async (input) => {
-			asked.push(input)
-			return input.country === "US" ? [title(1), title(2), title(3)] : []
+		country: async ({ country }) => {
+			asked.push(country)
+			return ARRIVALS[country] ?? { brands: {}, all: [] }
 		},
+		memberTitles: async () => [],
+		links: async () =>
+			linksOf(
+				COUNTRIES.map(({ code }) => ({ country: code, arrivals: ARRIVALS[code] })),
+			),
 		viewer: async () => ({ country: "US", member: null }),
 		serviceCards: async (ids) =>
 			ids.map((id) => ({ id, name: `Service ${id}`, logo_path: null })),
@@ -90,8 +113,8 @@ test("the share link sends each visitor to the page of their own country, and no
 
 test("a member's share link follows their saved country", async () => {
 	const answer = await loadWherePage(
-		request("/new/netflix"),
-		"netflix",
+		request("/new/amazon-prime"),
+		"amazon-prime",
 		deps({
 			viewer: async () => ({
 				country: "FR",
@@ -100,7 +123,7 @@ test("a member's share link follows their saved country", async () => {
 		}),
 	)
 	assert.ok(answer instanceof Response)
-	assert.equal(answer.headers.get("Location"), "/new/fr/netflix")
+	assert.equal(answer.headers.get("Location"), "/new/fr/amazon-prime")
 })
 
 test("a country in capitals moves to its lower-case address; an unknown part is not found", async () => {
@@ -108,14 +131,14 @@ test("a country in capitals moves to its lower-case address; an unknown part is 
 	assert.ok(moved instanceof Response)
 	assert.equal(moved.status, 301)
 	assert.equal(moved.headers.get("Location"), "/new/us")
-	for (const part of ["zz", "tubi"])
+	for (const part of ["zz", "tubi", "prime-video"])
 		await assert.rejects(
 			loadWherePage(request(`/new/${part}`), part, deps()),
 			(thrown: unknown) => thrown instanceof Response && thrown.status === 404,
 		)
 })
 
-test("a country's page lists every service of the country and links each service with titles", async () => {
+test("a country's page lists every brand of the country from the country's one read", async () => {
 	const fake = deps()
 	const page = asData(await loadWherePage(request("/new/us"), "us", fake))
 	assert.equal(page.kind, "country")
@@ -123,6 +146,8 @@ test("a country's page lists every service of the country and links each service
 	assert.equal(page.robots, "index, follow")
 	assert.equal(page.copy.heading, "New on streaming in the United States")
 	assert.equal(page.share, null)
+	assert.equal(page.total, 4)
+	assert.deepEqual(fake.asked, ["US"])
 	assert.deepEqual(
 		page.keys.map(({ slug, path }) => [slug, path]),
 		[
@@ -130,8 +155,11 @@ test("a country's page lists every service of the country and links each service
 			["hulu", "/new/us/hulu"],
 		],
 	)
-	const [input] = fake.asked as { services: number[] }[]
-	assert.equal(input.services.length, 10)
+	assert.deepEqual(
+		page.otherCountries.map(({ code }) => code),
+		["DE"],
+	)
+	assert.equal(page.incomplete, false)
 })
 
 // ---------------------------------------------------------------------------------------------------------
@@ -224,7 +252,7 @@ test("day by day shows the newest titles up to its limit and counts the rest", a
 			request("/new/us/netflix"),
 			"us",
 			"netflix",
-			deps({ titles: async () => many }),
+			deps({ country: async () => ({ brands: { netflix: many }, all: many }) }),
 		),
 	)
 	const shown = page.days.flatMap(({ titles }) => titles).length
@@ -232,6 +260,67 @@ test("day by day shows the newest titles up to its limit and counts the rest", a
 	assert.equal(page.more, 5)
 	assert.equal(page.total, DAY_LIMIT + 5)
 	assert.equal(page.ranked.length, 10)
+})
+
+// ---------------------------------------------------------------------------------------------------------
+// Links and the sitemap count exactly what a page lists
+
+test("the counts behind the links are the lengths of the lists the pages show", () => {
+	const { pages } = linksOf(
+		COUNTRIES.map(({ code }) => ({ country: code, arrivals: ARRIVALS[code] })),
+	)
+	assert.deepEqual(pages, [
+		{ country: "DE", brand: "netflix", titles: 1, latest: ago(5) },
+		{ country: "DE", brand: null, titles: 1, latest: ago(5) },
+		{ country: "US", brand: "netflix", titles: 3, latest: ago(1) },
+		{ country: "US", brand: "hulu", titles: 1, latest: ago(4) },
+		{ country: "US", brand: null, titles: 4, latest: ago(1) },
+	])
+})
+
+test("a link never leads to an empty page: every linked page renders indexable", async () => {
+	const fake = deps()
+	const { pages } = (await fake.links(NOW, true)) ?? { pages: [] }
+	for (const { country, brand } of pages) {
+		const page = asData(
+			brand
+				? await loadServicePage(request("/"), country.toLowerCase(), brand, fake)
+				: await loadWherePage(request("/"), country.toLowerCase(), fake),
+		)
+		assert.equal(page.robots, "index, follow", `${country} ${brand}`)
+		assert.ok(page.total > 0)
+	}
+})
+
+test("without the counts in time, a page renders without its links and is marked incomplete", async () => {
+	const page = asData(
+		await loadServicePage(
+			request("/new/us/netflix"),
+			"us",
+			"netflix",
+			deps({ links: async () => null }),
+		),
+	)
+	assert.equal(page.incomplete, true)
+	assert.deepEqual(page.otherCountries, [])
+	assert.deepEqual(
+		page.keys.map(({ slug }) => slug),
+		["netflix"],
+	)
+	// The page's own titles and robots don't depend on the links.
+	assert.equal(page.total, 3)
+	assert.equal(page.robots, "index, follow")
+})
+
+test("the pages index lists every page with titles, with its address, count and latest arrival", async () => {
+	const index = await loadPagesIndex(deps())
+	assert.deepEqual(index.pages, [
+		{ path: "/new/de/netflix", titles: 1, latest: ago(5) },
+		{ path: "/new/de", titles: 1, latest: ago(5) },
+		{ path: "/new/us/netflix", titles: 3, latest: ago(1) },
+		{ path: "/new/us/hulu", titles: 1, latest: ago(4) },
+		{ path: "/new/us", titles: 4, latest: ago(1) },
+	])
 })
 
 // ---------------------------------------------------------------------------------------------------------
@@ -258,7 +347,7 @@ test("/new is the member's own page: their services, their titles first, never l
 				waits: new Map([[titleKey("movie", 2), "want" as const]]),
 			},
 		}),
-		titles: async (input) => {
+		memberTitles: async (input) => {
 			fake.asked.push(input)
 			return [title(1), title(2), title(3, { service: 73 })]
 		},
