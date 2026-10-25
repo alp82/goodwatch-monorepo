@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://goodwatch.app/person/64295-alan-ritchson</loc>
-  </url>
-  <url>
     <loc>https://goodwatch.app/person/976-jason-statham</loc>
   </url>
   <url>
@@ -64,9 +61,6 @@
     <loc>https://goodwatch.app/person/500-tom-cruise</loc>
   </url>
   <url>
-    <loc>https://goodwatch.app/person/18897-jackie-chan</loc>
-  </url>
-  <url>
     <loc>https://goodwatch.app/person/5081-emily-blunt</loc>
   </url>
   <url>
@@ -89,5 +83,11 @@
   </url>
   <url>
     <loc>https://goodwatch.app/person/1817-linda-cardellini</loc>
+  </url>
+  <url>
+    <loc>https://goodwatch.app/person/2227-nicole-kidman</loc>
+  </url>
+  <url>
+    <loc>https://goodwatch.app/person/71070-amanda-seyfried</loc>
   </url>
 </urlset>
