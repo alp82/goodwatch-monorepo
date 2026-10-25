@@ -284,7 +284,7 @@ export async function handleFeedback(
 			}
 		}
 		let delivered = false
-		if (env.FEEDBACK_DISCORD_WEBHOOK_URL) {
+		if (env.DISCORD_FEEDBACK_WEBHOOK_URL) {
 			let receipt: Awaited<ReturnType<typeof postDiscord>> | undefined
 			try {
 				if (duplicate && !duplicate.threadId)
@@ -355,7 +355,7 @@ export async function postDiscord(
 	send: typeof fetch,
 	duplicate?: Extract<StoredReport, { kind: "duplicate" }>,
 ) {
-	const url = new URL(env.FEEDBACK_DISCORD_WEBHOOK_URL!)
+	const url = new URL(env.DISCORD_FEEDBACK_WEBHOOK_URL!)
 	if (
 		url.protocol !== "https:" ||
 		url.hostname !== "discord.com" ||
@@ -367,7 +367,7 @@ export async function postDiscord(
 	if (duplicate?.threadId) url.searchParams.set("thread_id", duplicate.threadId)
 	let tag: string | undefined
 	try {
-		const tags = JSON.parse(env.FEEDBACK_DISCORD_TAG_IDS ?? "{}")
+		const tags = JSON.parse(env.DISCORD_FEEDBACK_TAG_IDS ?? "{}")
 		if (/^\d{1,20}$/.test(tags[report.kind])) tag = tags[report.kind]
 	} catch {
 		/* optional */

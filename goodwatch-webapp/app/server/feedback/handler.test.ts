@@ -64,8 +64,8 @@ function fixture(member: string | null = null) {
 		now: () => now,
 		env: {
 			APP_ORIGIN: "https://goodwatch.app",
-			FEEDBACK_DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/123/abc",
-			FEEDBACK_DISCORD_TAG_IDS: '{"bug":"789"}',
+			DISCORD_FEEDBACK_WEBHOOK_URL: "https://discord.com/api/webhooks/123/abc",
+			DISCORD_FEEDBACK_TAG_IDS: '{"bug":"789"}',
 			SOURCE_COMMIT: "abc123",
 		} as Record<string, string | undefined>,
 	}
@@ -275,7 +275,7 @@ test("emails on Discord failure or an unset webhook, always emails contact, and 
 	assert.equal(refused.deps.store.discordId.mock.callCount(), 0)
 
 	const unset = fixture()
-	delete unset.deps.env.FEEDBACK_DISCORD_WEBHOOK_URL
+	delete unset.deps.env.DISCORD_FEEDBACK_WEBHOOK_URL
 	assert.equal((await unset.submit()).status, 200)
 	assert.equal(unset.deps.email.mock.callCount(), 1)
 	assert.equal(unset.deps.send.mock.callCount(), 0)

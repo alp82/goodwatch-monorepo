@@ -119,7 +119,7 @@ A deploy to main goes live before an operator runs the schema sync. Until then t
 
 ## Discord
 
-The webhook URL must be an `https://discord.com/api/.../webhooks/...` URL. For each new report, the handler posts one forum post with `?wait=true`, a `thread_name` of the kind and the first words of the message, the kind's tag from `FEEDBACK_DISCORD_TAG_IDS`, and `allowed_mentions: {"parse": []}`. The embed holds the message, the report id, the member id or `Guest`, the metadata, and the data report. Every display string goes through `display`, which removes links, email addresses, mentions, angle-bracket markup, Markdown characters, and control characters, and caps the length under Discord's limits (thread name 100, description 4096, field 1024, embed 6000). Screenshots are attached as `screenshot.webp`.
+The webhook URL must be an `https://discord.com/api/.../webhooks/...` URL. For each new report, the handler posts one forum post with `?wait=true`, a `thread_name` of the kind and the first words of the message, the kind's tag from `DISCORD_FEEDBACK_TAG_IDS`, and `allowed_mentions: {"parse": []}`. The embed holds the message, the report id, the member id or `Guest`, the metadata, and the data report. Every display string goes through `display`, which removes links, email addresses, mentions, angle-bracket markup, Markdown characters, and control characters, and caps the length under Discord's limits (thread name 100, description 4096, field 1024, embed 6000). Screenshots are attached as `screenshot.webp`.
 
 A duplicate uses the webhook's `thread_id` query parameter and the content `Duplicate count increased to <count>.`, followed by the same embed for the new submission (titled `Duplicate <count>: data`), because the key ignores the message, current value, and source. Mentions are disabled, and the reply has no `thread_name` and no tags. It preserves the original Discord receipt. If the original report has no thread receipt, the handler logs the failure and emails the submission without opening another post.
 
@@ -132,7 +132,7 @@ Nothing from a member other than the id reaches Discord: no email, no cookies, n
 `feedbackMail` sends to `hello@goodwatch.app` from the same address through the existing Purelymail transport (`AUTH_SMTP_USER`, `AUTH_SMTP_PASSWORD`). Reply-To is the validated sender email, which is required for contact messages. The handler emails:
 
 - every `contact` report, also after Discord succeeded;
-- every report when `FEEDBACK_DISCORD_WEBHOOK_URL` is unset or Discord fails.
+- every report when `DISCORD_FEEDBACK_WEBHOOK_URL` is unset or Discord fails.
 
 A delivery failure after the row is stored is logged with the report id and never fails the request. There is no retry worker; an unnotified row is found by its `discord_message_id IS NULL`.
 
@@ -146,8 +146,8 @@ All of these are optional. Without them the endpoint stores reports (once the ta
 
 | Variable | Purpose |
 | --- | --- |
-| `FEEDBACK_DISCORD_WEBHOOK_URL` | The private staff forum's webhook. |
-| `FEEDBACK_DISCORD_TAG_IDS` | JSON map of kind to forum tag id, such as `{"bug":"123","idea":"456","data":"789","contact":"012"}`. |
+| `DISCORD_FEEDBACK_WEBHOOK_URL` | The private staff forum's webhook. |
+| `DISCORD_FEEDBACK_TAG_IDS` | JSON map of kind to forum tag id, such as `{"bug":"123","idea":"456","data":"789","contact":"012"}`. |
 | `FEEDBACK_STAFF_MEMBER_IDS` | Comma separated member ids allowed to read screenshots. |
 | `AUTH_SMTP_USER`, `AUTH_SMTP_PASSWORD` | Existing SMTP credentials for the email path. |
 | `APP_ORIGIN`, `SOURCE_COMMIT` | Existing. The origin check and the build commit in the metadata. |
@@ -164,6 +164,6 @@ The tests use fakes for storage, the limiter, the session, Discord, and email. T
 ## Release checklist
 
 1. Create the Discord forum channel and its four tags, then a webhook for it.
-2. Set `FEEDBACK_DISCORD_WEBHOOK_URL`, `FEEDBACK_DISCORD_TAG_IDS`, and `FEEDBACK_STAFF_MEMBER_IDS` in Coolify.
+2. Set `DISCORD_FEEDBACK_WEBHOOK_URL`, `DISCORD_FEEDBACK_TAG_IDS`, and `FEEDBACK_STAFF_MEMBER_IDS` in Coolify.
 3. Run `f/sync/init/cratedb` (dry run, then apply) to create `doc.feedback_report` and `doc.feedback_screenshot`.
 4. Send one report of each kind from the site and check that each post carries the right tag.
