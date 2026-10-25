@@ -1,6 +1,6 @@
 // The small pieces of the "New on your services" pages (#489 Part C): a service's logo, the GoodWatch score, the
-// Wishlist mark, a country's flag, a poster or its placeholder, a ranked row, a row of posters, and the line that says
-// when a title arrived (#625).
+// Wishlist mark, a country's flag, a poster or its placeholder, a ranked row, a row of the site's poster cards, and the
+// line that says when a title arrived (#625).
 import { BookmarkIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
@@ -10,12 +10,14 @@ import type {
 	NewTitle,
 	PageService,
 } from "~/server/new-on-services-page.server"
+import { MovieTvCard } from "~/ui/MovieTvCard"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { countryFlagUrl } from "~/utils/country-flag"
 import placeholder from "~/img/poster-placeholder.png"
 import { assetUrl } from "~/utils/asset-url"
 import { goodwatchVibeIndex } from "~/utils/ratings"
+import type { SizeRule } from "~/utils/tmdb-image"
 
 export const Logo = ({
 	service,
@@ -203,36 +205,53 @@ export function RankedRow({
 	)
 }
 
-/** Small posters in a row that wraps. */
+// Four across on a phone (the S card: one number), then the M card's width, so the logos of the viewer's services show.
+const ROW_POSTER_SIZES: SizeRule[] = [
+	["(min-width: 1024px)", "112px"],
+	["(min-width: 640px)", "104px"],
+	[null, "23vw"],
+]
+
+/**
+ * The browse poster card (ui/MovieTvCard.tsx) in a row that wraps: the score pill, the viewer's own services with the
+ * one the title arrived on leading (`newOn`), and the title actions. The name goes under it, so a title without a
+ * poster still says what it is.
+ */
 export function PosterRow({
 	titles,
 	data,
 }: { titles: NewTitle[]; data: NewPageData }) {
 	return (
 		<ul className="mt-2 flex flex-wrap gap-2">
-			{titles.map((title) => (
-				<li key={title.key} className="w-[calc(25%-6px)] sm:w-24 lg:w-[110px]">
-					<Link to={title.path} prefetch="intent" className="group block">
-						<span className="relative block">
-							<PosterImage
-								path={title.poster_path}
-								width={110}
-								className="block aspect-[2/3] w-full rounded-md bg-white/5 object-cover ring-1 ring-white/10 group-hover:ring-amber-400/70"
-							/>
-							<Score
-								score={title.score}
-								className="absolute right-1 top-1 h-6 min-w-7 text-xs"
-							/>
-							{waitOf(data, title) && (
-								<WantMark className="absolute -left-1 -top-1 h-6 w-6" />
-							)}
-						</span>
+			{titles.map((title) => {
+				const service = data.services[title.service]
+				return (
+					<li
+						key={title.key}
+						className="w-[calc(25%-6px)] sm:w-[6.5rem] lg:w-28"
+					>
+						<MovieTvCard
+							details={{
+								tmdb_id: title.tmdb_id,
+								title: title.title,
+								release_year: title.release_year,
+								poster_path: title.poster_path,
+								goodwatch_overall_score_normalized_percent: title.score,
+								streaming_links: service
+									? [{ id: title.service, name: service.name, logo_path: service.logo_path }]
+									: [],
+							}}
+							mediaType={title.media_type}
+							posterSizes={ROW_POSTER_SIZES}
+							skipOffscreen
+							newOn={title.service}
+						/>
 						<span className="mt-1 block truncate text-xs text-gray-300">
 							{title.title}
 						</span>
-					</Link>
-				</li>
-			))}
+					</li>
+				)
+			})}
 		</ul>
 	)
 }
