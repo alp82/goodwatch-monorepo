@@ -1,7 +1,6 @@
 import { Link } from "@remix-run/react"
 import type { GenreRow as GenreRowData } from "~/server/genre-row/genre-row.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
-import { SmallBadgesContext } from "~/ui/title-card/small-badges"
 import type { SizeRule } from "~/utils/tmdb-image"
 
 // Four across below the large breakpoint, eight across the content width (at most 1,216 px) from it.
@@ -28,7 +27,6 @@ export default function GenreRow({ row, mediaType }: GenreRowProps) {
 					{row.heading}
 				</Link>
 			</h2>
-			<SmallBadgesContext.Provider value={true}>
 				<ul className="mt-4 grid grid-cols-4 lg:grid-cols-8 gap-2">
 					{row.titles.map((title) => (
 						<li key={title.tmdb_id}>
@@ -40,7 +38,6 @@ export default function GenreRow({ row, mediaType }: GenreRowProps) {
 						</li>
 					))}
 				</ul>
-			</SmallBadgesContext.Provider>
 		</section>
 	)
 }

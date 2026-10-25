@@ -1,10 +1,9 @@
 import type { TitleCard } from "~/server/title-cards.server"
-import { MovieTvCard } from "~/ui/MovieTvCard"
-import type { ActionsPlacement } from "~/ui/title-actions/TitleActionsFrame"
+import { type ActionsPlacement, MovieTvCard } from "~/ui/MovieTvCard"
 import type { ImagePriority } from "~/utils/tmdb-image"
 
-// The existing poster card for a title card from getTitleCards: its services as streaming badges, its taste match as
-// the pill under the GoodWatch score, and its rating badge above the title while an age limit is on.
+// The poster card for a title card from getTitleCards: its services (the card shows the viewer's own), and its rating
+// badge while an age limit is on.
 export function TitlePosterCard({
 	card,
 	prefetch,
@@ -12,6 +11,7 @@ export function TitlePosterCard({
 	skipOffscreen,
 	actions,
 	newOn,
+	skipWant,
 }: {
 	card: TitleCard
 	prefetch?: boolean
@@ -23,6 +23,8 @@ export function TitlePosterCard({
 	actions?: ActionsPlacement | false
 	/** The service the title is new on for the viewer (#489), by id, see MovieTvCard. */
 	newOn?: number | null
+	/** The list is the Wishlist: no Wishlist bookmark on the poster. */
+	skipWant?: boolean
 }) {
 	const details = {
 		...card,
@@ -41,7 +43,7 @@ export function TitlePosterCard({
 			skipOffscreen={skipOffscreen}
 			actions={actions}
 			newOn={newOn}
-			taste={{ match: card.match, reasons: card.reasons }}
+			skipWant={skipWant}
 			rating={card.rating}
 		/>
 	)

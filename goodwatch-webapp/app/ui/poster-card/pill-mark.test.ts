@@ -3,8 +3,14 @@ import { test } from "node:test"
 import { pillMark } from "./pill-mark.ts"
 
 test("a show status other than Seen comes first", () => {
-	assert.equal(pillMark({ score: 8, want: true, status: "watching" }), "watching")
-	assert.equal(pillMark({ score: null, want: false, status: "on_hold" }), "on_hold")
+	assert.equal(
+		pillMark({ score: 8, want: true, status: "watching" }),
+		"watching",
+	)
+	assert.equal(
+		pillMark({ score: null, want: false, status: "on_hold" }),
+		"on_hold",
+	)
 })
 
 test("the Wishlist bookmark shows unless the list is the Wishlist", () => {

@@ -6,7 +6,6 @@ import {
 	CheckIcon,
 	ChevronDownIcon,
 } from "@heroicons/react/24/solid"
-import { Link } from "@remix-run/react"
 import { useContext, useEffect, useRef, useState } from "react"
 import { TIER_CAPS, type WatchNextTierSize } from "~/domain/watch-next"
 import { useIsNotInterested } from "~/hooks/useUserDataAccessors"
@@ -19,7 +18,7 @@ import type {
 import { FIND_NEW_BELOW, ForYouLink } from "~/ui/for-you/ForYouLink"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import type { TitleKey } from "~/utils/title-key"
-import { NewOnContext, titleHref, useMoviesPage } from "./WatchNextHero"
+import { NewOnContext, useMoviesPage } from "./WatchNextHero"
 import {
 	SORT_WORDS,
 	TIER_LABEL,
@@ -33,7 +32,7 @@ import {
 } from "./labels"
 import { misfitWords } from "./labels"
 import { offersOf } from "./services"
-import { DISPLAY, posterUrl } from "./style"
+import { DISPLAY } from "./style"
 import { type WatchNextState, useTierCards } from "./useWatchNext"
 
 const ITEM: Record<WatchNextTierSize, string> = {
@@ -153,52 +152,37 @@ function TierRow({
 								aria-hidden
 							/>
 						)
-					return big ? (
+					// The list is the Wishlist: no bookmark on each poster.
+					return (
 						<div
 							key={key}
-							className={`min-w-0 ${ITEM[tier.size]}`}
+							className={`relative min-w-0 ${ITEM[tier.size]} ${tier.size === "sm" || misfits ? "opacity-75 hover:opacity-100 focus-within:opacity-100" : ""}`}
 							data-key={key}
 						>
 							<TitlePosterCard
 								card={title}
+								skipWant
 								newOn={newOn?.serviceOf(title.tmdb_id)}
 							/>
+							{/* A small poster has no room for logos: the service it just arrived on gets its sticker. */}
+							{!big &&
+								newOn?.sticker(
+									title.tmdb_id,
+									"pointer-events-none absolute bottom-1 left-1 z-10",
+								)}
 							{tier.size === "xl" && (
-								<div className="-mt-1 truncate px-1 text-xs text-gray-400">
+								<div className="mt-1 truncate px-1 text-xs text-gray-400">
 									{meta(title)}
 								</div>
 							)}
-						</div>
-					) : (
-						<div
-							key={key}
-							className={`min-w-0 ${ITEM[tier.size]}`}
-							data-key={key}
-						>
-							<Link
-								to={titleHref(title)}
-								className="relative block"
-								title={title.title}
-							>
-								{newOn?.sticker(title.tmdb_id, "absolute left-1 top-1 z-10")}
-								<img
-									src={posterUrl(
-										title.poster_path,
-										tier.size === "md" ? "w185" : "w92",
-									)}
-									alt={title.title}
-									loading="lazy"
-									className={`aspect-[2/3] w-full rounded-md bg-white/5 object-cover ring-1 ring-white/5 ${tier.size === "sm" || misfits ? "opacity-75 hover:opacity-100" : ""}`}
-								/>
-								{title.misfit && (
-									<span
-										className="mt-1 block truncate text-xs text-gray-400"
-										data-misfit={title.misfit.why}
-									>
-										{misfitWords(title.misfit)}
-									</span>
-								)}
-							</Link>
+							{title.misfit && (
+								<span
+									className="mt-1 block truncate text-xs text-gray-400"
+									data-misfit={title.misfit.why}
+								>
+									{misfitWords(title.misfit)}
+								</span>
+							)}
 						</div>
 					)
 				})}
