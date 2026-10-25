@@ -1,5 +1,6 @@
 """Full-catalog queue, source evidence, replayable writes, pacing and hard stops without network access."""
 import gzip
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -138,6 +139,63 @@ class PopulationTests(unittest.TestCase):
         self.assertEqual(second["stored"], 3)
         self.assertEqual(len(self.http.calls), 3)
         self.assertEqual(second["requests"], 3)
+
+    def test_priority_order_preserves_saved_queue_and_six_second_request_spacing(self):
+        rows = [entry(i) for i in range(4)]
+        db = Database(rows)
+        worker.prepare_queue(db, self.output)
+        queue_path = self.output / "queue.json"
+        original_queue = queue_path.read_bytes()
+        original_manifest = (self.output / "queue-manifest.json").read_bytes()
+        priority = self.root / "priority.json"
+        priority.write_text(json.dumps([rows[3]["name"], rows[1]["name"]]))
+        wall, requested_at = [100.0], []
+        original_get = self.http.get
+        def get(url, **kwargs):
+            requested_at.append(wall[0])
+            return original_get(url, **kwargs)
+        self.http.get = get
+        client = worker.DurablePacedClient(
+            self.output / "sources", 6, float("inf"), http=self.http,
+            sleep=lambda seconds: wall.__setitem__(0, wall[0] + seconds),
+            clock=lambda: wall[0], wall_clock=lambda: wall[0], pace_path=self.root / "pace.json")
+        result = self.run_worker(db, client=client, priority_names=priority)
+        self.assertEqual([url for url, _ in self.http.calls], [rows[i]["url"] for i in (3, 1, 0, 2)])
+        self.assertEqual(requested_at, [100.0, 106.0, 112.0, 118.0])
+        self.assertEqual(queue_path.read_bytes(), original_queue)
+        self.assertEqual((self.output / "queue-manifest.json").read_bytes(), original_manifest)
+        self.assertEqual(json.loads(original_manifest)["sha256"], hashlib.sha256(queue_path.read_bytes()).hexdigest())
+        self.assertEqual(result["priority_names"], {"names": 2, "sha256": hashlib.sha256(priority.read_bytes()).hexdigest()})
+
+    def test_priority_resume_skips_completed_priority_and_keeps_remaining_order(self):
+        rows = [entry(i) for i in range(3)]
+        db = Database(rows)
+        priority = self.root / "priority.json"
+        priority.write_text(json.dumps([rows[2]["name"]]))
+        first = self.run_worker(db, max_requests=1, priority_names=priority)
+        self.assertEqual(first["stored"], 1)
+        self.assertIsNotNone(db.rows[rows[2]["name"]]["description"])
+        queue_hash = hashlib.sha256((self.output / "queue.json").read_bytes()).hexdigest()
+        second = self.run_worker(db, priority_names=priority)
+        self.assertEqual(second["stored"], 3)
+        self.assertEqual([url for url, _ in self.http.calls], [rows[i]["url"] for i in (2, 0, 1)])
+        self.assertEqual(len(worker.read_journal(self.output / "requests.jsonl")), 3)
+        self.assertEqual(hashlib.sha256((self.output / "queue.json").read_bytes()).hexdigest(), queue_hash)
+
+    def test_invalid_priority_inputs_fail_before_any_http(self):
+        db = Database([entry(1), entry(2)])
+        worker.prepare_queue(db, self.output)
+        queue = (self.output / "queue.json").read_bytes()
+        priority = self.root / "priority.json"
+        for value in ("{", json.dumps({"names": [entry(1)["name"]]}), json.dumps([None]),
+                      json.dumps([entry(1)["name"], entry(1)["name"]]), json.dumps(["trope 00001"])):
+            with self.subTest(value=value):
+                priority.write_text(value)
+                with self.assertRaisesRegex(ValueError, "Priority names"):
+                    self.run_worker(db, priority_names=priority)
+                self.assertEqual(self.http.calls, [])
+                self.assertEqual((self.output / "queue.json").read_bytes(), queue)
+                self.assertFalse((self.output / "requests.jsonl").exists())
 
     def test_ready_evidence_retries_failed_database_write_without_any_new_http(self):
         db = Database([entry(1)], fail_writes=True)

@@ -159,6 +159,27 @@ def prepare_queue(db, output, *, refresh=False):
     return entries
 
 
+def prioritize_queue(entries, names_path=None):
+    """Change iteration order only; retain the saved queue and every exact name/URL."""
+    if names_path is None:
+        return entries, None
+    raw = Path(names_path).read_bytes()
+    try:
+        names = json.loads(raw)
+    except (ValueError, UnicodeDecodeError):
+        raise ValueError("Priority names must be a JSON array of exact queued names") from None
+    if not isinstance(names, list) or any(not isinstance(name, str) or not name for name in names):
+        raise ValueError("Priority names must be a JSON array of exact queued names")
+    if len(set(names)) != len(names):
+        raise ValueError("Priority names must not contain duplicates")
+    queued_names = {entry["name"] for entry in entries}
+    if any(name not in queued_names for name in names):
+        raise ValueError("Priority names must all exist exactly in the saved queue")
+    rank = {name: index for index, name in enumerate(names)}
+    ordered = sorted(entries, key=lambda entry: (0, rank[entry["name"]]) if entry["name"] in rank else (1, 0))
+    return ordered, {"names": len(names), "sha256": hashlib.sha256(raw).hexdigest()}
+
+
 def source_cache(output, saved=()):
     pages, metadata = {}, {}
     for directory in [*map(Path, saved), Path(output)]:
@@ -235,7 +256,7 @@ def reconcile_catalog(db, entries, latest, record_outcome, batch_size=1000):
 
 def run(db, output, *, all_requests=False, max_requests=200, delay=6, state_path=DEFAULT_STATE,
         lock_path=DEFAULT_LOCK, pace_path=DEFAULT_PACE, refresh_queue=False, retry_review=False,
-        saved=(), client=None, extractor=None, batch_size=1, emit=None, _lock_held=False):
+        saved=(), client=None, extractor=None, batch_size=1, emit=None, _lock_held=False, priority_names=None):
     if delay < 6 or max_requests < 1 or not 1 <= batch_size <= 100:
         raise ValueError("Use delay>=6, max_requests>=1 and batch_size between1 and100")
     output = Path(output)
@@ -247,6 +268,7 @@ def run(db, output, *, all_requests=False, max_requests=200, delay=6, state_path
         outcomes = read_journal(outcomes_path, repair=True)
         queue_urls = {row["name"]: row["url"] for row in queue}
         latest = {row["name"]: row for row in outcomes if row["name"] in queue_urls and row.get("queue_url") == queue_urls[row["name"]]}
+        ordered_queue, priority = prioritize_queue(queue, priority_names)
         pages, source_metadata = source_cache(output, saved)
         state = State(Path(state_path))
         shared_state_path = Path(lock_path).with_name(".source-block-state.json")
@@ -276,6 +298,8 @@ def run(db, output, *, all_requests=False, max_requests=200, delay=6, state_path
                      "requests": sum(not event.get("saved_from") for event in requests),
                      "requests_this_run": client.requests, "stop": stop, "retryable": retryable, "error_type": error_type,
                      "blocked_until": active_block().isoformat() if active_block() else None}
+            if priority is not None:
+                value["priority_names"] = priority
             atomic_json(output / "progress.json", value)
             return value
 
@@ -320,7 +344,7 @@ def run(db, output, *, all_requests=False, max_requests=200, delay=6, state_path
             if blocked:
                 stop = "source_blocked_until_recorded_deadline"
             else:
-                for entry in queue:
+                for entry in ordered_queue:
                     previous = latest.get(entry["name"], {})
                     if previous.get("status") in TERMINAL and not (retry_review and previous["status"] == "review"):
                         continue
@@ -545,10 +569,13 @@ def main():
     parser.add_argument("--delay", type=float, default=6)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--refresh-queue", action="store_true")
+    parser.add_argument("--priority-names", type=Path, help="JSON array of exact queued names to visit first; saved queue and resume outcomes remain unchanged")
     parser.add_argument("--retry-review", action="store_true", help="Re-extract rejected saved sources without bypassing source blocks")
     parser.add_argument("--saved", type=Path, action="append", default=[])
     parser.add_argument("--with-database", action="store_true", help="Include live database counts in status")
     args = parser.parse_args()
+    if args.priority_names is not None and args.command != "run":
+        parser.error("--priority-names is only valid for run")
     if args.command == "status":
         print(json.dumps(status(args.output, lock_path=args.lock, db=Crate(settings()) if args.with_database else None), indent=2))
         return
@@ -562,7 +589,7 @@ def main():
         return
     options = dict(max_requests=args.max_requests, delay=args.delay, state_path=args.state, lock_path=args.lock,
                    pace_path=args.pace_state, refresh_queue=args.refresh_queue, retry_review=args.retry_review,
-                   saved=args.saved, batch_size=args.batch_size)
+                   saved=args.saved, batch_size=args.batch_size, priority_names=args.priority_names)
     if args.until_complete:
         result = until_complete(args.output, db_factory=lambda: Crate(settings()), retry_initial=args.retry_initial,
                                 retry_max=args.retry_max, **options)

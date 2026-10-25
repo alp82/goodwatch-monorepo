@@ -103,11 +103,15 @@ response explicitly redirects from that same URL to a validated canonical page. 
 to a differently named trope do not meet that rule. Reviewed redirect evidence stays beside the run journals.
 Raw responses, the immutable queue, request/outcome journals and `progress.json` stay in the output directory.
 Saved pages are reused without fetching them again; a database interruption leaves a replayable record.
+`--priority-names FILE` accepts a JSON array of exact queued names to visit first, for example unprocessed known
+URLs absent from the verified archive. It changes in-memory visit order only; the saved queue, completed outcomes,
+source cache, shared lock, six-second pace and source-block state stay authoritative. The progress checkpoint records
+the priority file SHA256.
 
 The one-off user service is `goodwatch-trope-catalog-full.service`, with no recurring crawl schedule.
 Its output is `~/.cache/goodwatch/trope-catalog/full-2026-10-25/`; `inventory/` there holds the global inventory and
 URL review evidence. The run has no request-count cap with `--all`. Allow roughly 2½ days for the known URLs at
-the minimum pace, plus review. A 403, 429 or challenge records a shared cooldown and stops; three consecutive
+the minimum pace for a fully uncached HTTP pass, plus review. A 403, 429 or challenge records a shared cooldown and stops; three consecutive
 network/server failures or a database error stop the current pass. On the owner's explicit instruction to continue
 until the catalog is populated, `--until-complete` waits through recorded source cooldowns on the same network and
 backs off before retrying transient failures. Code/configuration errors and unresolved review entries require
