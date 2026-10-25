@@ -94,7 +94,7 @@ without the services row and the other countries, answers `Cache-Control: no-sto
 links finish in the background. That happens once per UTC day, right after midnight, and after a deploy.
 
 The country entries (30 minutes) and the links (60 minutes) refresh apart, so for up to an hour a link can count a
-page that has lost its last title since. The sitemap's minimum of 3 titles and the Windmill leave-out step cover it.
+page that has lost its last title since. The sitemap's minimum of 20 titles and the Windmill leave-out step cover it.
 
 Visitor pages get the root's shared policy (`s-maxage=1800, stale-while-revalidate=7200`). Day words ("today") follow
 UTC, so for up to about 2.5 hours after midnight a stored page can still list the 15th day back and call yesterday's
@@ -126,9 +126,11 @@ measured in Chromium: 0 on every visitor page, 0.0002 on the member page on a de
 ## Sitemap
 
 `goodwatch-webapp/scripts/sitemap_new.py` reads `https://goodwatch.app/api/new-on-services/pages`, the site's own list
-of pages with titles, and writes `sitemap_new.xml` with every page that has at least `MIN_TITLES` (3) titles. `lastmod`
-is the day of the latest arrival. The Python side restates no rule (window, launch day, backfill, continuity, adult
-titles), so `make sitemaps` too lists only pages that have titles when it runs. The Windmill wrapper
+of pages with titles, and writes `sitemap_new.xml` with the bigger pages only (owner, October 25): at least
+`MIN_TITLES` (20) titles, at most `MAX_URLS` (300) pages, the ones with the most titles when more qualify (ties by
+path). Pages outside the sitemap stay indexable. `lastmod` is the day of the latest arrival. The Python side restates
+no rule of the pages (window, launch day, backfill, continuity, adult titles), so `make sitemaps` too lists only pages
+that have titles when it runs. The Windmill wrapper
 `f/seo/regenerate_sitemaps.py` leaves out a `/new` page that fails the live check (its titles aged out at midnight), as
 it does for profiles. `sitemap.xml` lists the file only when it has URLs.
 

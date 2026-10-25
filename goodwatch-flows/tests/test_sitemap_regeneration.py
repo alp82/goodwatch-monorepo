@@ -208,11 +208,13 @@ class SitemapRegenerationTests(unittest.TestCase):
                 generation_day = [date(2026, 10, 18)]
 
                 generators = []
-                # The site's pages index (sitemap_new.py): Netflix in the United States has titles.
-                new_index = json.dumps({"pages": [
-                    {"path": "/new/us/netflix", "titles": 12, "latest": 1792713600000},
-                    {"path": "/new/us", "titles": 12, "latest": 1792713600000},
-                ] if new_rows else []}).encode()
+                # The site's pages index (sitemap_new.py): Netflix in the United States has enough titles for the
+                # sitemap, from the generator's own minimum.
+                def new_index(minimum):
+                    return json.dumps({"pages": [
+                        {"path": "/new/us/netflix", "titles": minimum, "latest": 1792713600000},
+                        {"path": "/new/us", "titles": minimum + 1, "latest": 1792713600000},
+                    ] if new_rows else []}).encode()
 
                 def load(name, path):
                     module = original_load(name, path)
@@ -220,7 +222,8 @@ class SitemapRegenerationTests(unittest.TestCase):
                         generators.append(module)
                         history_class = module.SitemapHistory
                         module.SitemapHistory = lambda directory: history_class(directory, today=generation_day[0])
-                        sys.modules["sitemap_new"].fetch_index = lambda url=None: new_index
+                        minimum = sys.modules["sitemap_new"].MIN_TITLES
+                        sys.modules["sitemap_new"].fetch_index = lambda url=None: new_index(minimum)
                     if name == "sitemap_checker":
                         module.fetch = lambda url: (status_of(url), f'<link rel="canonical" href="{url}">', None)
                         module.fetch_robots = lambda: (module.RobotsRules("User-agent: *\nDisallow: /api/\n"), None)

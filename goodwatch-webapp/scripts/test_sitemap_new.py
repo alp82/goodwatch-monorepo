@@ -3,7 +3,7 @@ import unittest
 from datetime import date
 
 import sitemap_new
-from sitemap_new import MIN_TITLES, PAGES_INDEX, select_new_pages
+from sitemap_new import MAX_URLS, MIN_TITLES, PAGES_INDEX, select_new_pages
 
 DAY = 1792800000000  # 2026-10-24 UTC, as the index gives days
 
@@ -19,9 +19,9 @@ class NewPagesTest(unittest.TestCase):
         def fetch(url):
             asked.append(url)
             return index([
-                {"path": "/new/us/netflix", "titles": 40, "latest": DAY},
-                {"path": "/new/us", "titles": 41, "latest": DAY},
-                {"path": "/new/de/hulu", "titles": 5, "latest": DAY - 86400000},
+                {"path": "/new/us/netflix", "titles": MIN_TITLES + 20, "latest": DAY},
+                {"path": "/new/us", "titles": MIN_TITLES + 21, "latest": DAY},
+                {"path": "/new/de/hulu", "titles": MIN_TITLES, "latest": DAY - 86400000},
             ])
 
         self.assertEqual(select_new_pages(fetch), [
@@ -38,6 +38,22 @@ class NewPagesTest(unittest.TestCase):
             {"path": "/new/fr", "titles": MIN_TITLES, "latest": None},
         ]))
         self.assertEqual(pages, [("https://goodwatch.app/new/fr", None)])
+
+    def test_at_most_max_urls_pages_with_the_most_titles_ties_by_path(self):
+        # MAX_URLS + 2 pages: the two smallest go, and of the two tied at the cut the later path goes.
+        pages = [{"path": f"/new/zz/s{i}", "titles": MIN_TITLES + 10 + i, "latest": DAY}
+                 for i in range(MAX_URLS - 1)]
+        pages += [
+            {"path": "/new/aa/tied-a", "titles": MIN_TITLES + 5, "latest": DAY},
+            {"path": "/new/aa/tied-b", "titles": MIN_TITLES + 5, "latest": DAY},
+            {"path": "/new/aa/least", "titles": MIN_TITLES + 1, "latest": DAY},
+        ]
+        picked = [url for url, _ in select_new_pages(lambda url: index(pages))]
+        self.assertEqual(len(picked), MAX_URLS)
+        self.assertIn("https://goodwatch.app/new/aa/tied-a", picked)
+        self.assertNotIn("https://goodwatch.app/new/aa/tied-b", picked)
+        self.assertNotIn("https://goodwatch.app/new/aa/least", picked)
+        self.assertEqual(picked, sorted(picked))
 
     def test_only_new_on_services_addresses_are_taken(self):
         pages = select_new_pages(lambda url: index([
