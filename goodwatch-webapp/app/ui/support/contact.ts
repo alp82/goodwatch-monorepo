@@ -1,6 +1,7 @@
 // The contact form on /support (#764): its topics, the checks before sending, the request it sends to
 // POST /api/feedback (kind `contact`, docs/implementation/feedback/README.md), and how a refusal reads.
 // No React here, so node:test covers it (contact.test.ts).
+import { z } from "zod"
 import type { FeedbackRequest } from "~/utils/feedback"
 
 export const SUPPORT_EMAIL = "hello@goodwatch.app"
@@ -34,8 +35,8 @@ export interface ContactDraft {
 
 export type ContactProblem = "message" | "email"
 
-// Close to what zod's email check and the browser's type=email accept; the server has the last word.
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// Match the endpoint's email validation.
+const EMAIL = z.string().email().max(EMAIL_MAX)
 
 /** What stops the draft from being sent, in the order the fields appear. */
 export function contactProblems(draft: ContactDraft): ContactProblem[] {
@@ -43,7 +44,7 @@ export function contactProblems(draft: ContactDraft): ContactProblem[] {
 	const message = draft.message.trim()
 	if (!message || message.length > MESSAGE_MAX) problems.push("message")
 	const email = draft.email.trim()
-	if (!EMAIL.test(email) || email.length > EMAIL_MAX) problems.push("email")
+	if (!EMAIL.safeParse(email).success) problems.push("email")
 	return problems
 }
 
@@ -56,6 +57,7 @@ export function buildContactRequest(
 	context: {
 		idempotencyKey: string
 		startedAt: number
+		website?: string
 		metadata?: FeedbackRequest["metadata"]
 	},
 ): FeedbackRequest {
@@ -67,7 +69,7 @@ export function buildContactRequest(
 		message: `${lines.join("\n")}\n\n${draft.message.trim()}`,
 		email: draft.email.trim(),
 		idempotencyKey: context.idempotencyKey,
-		website: "",
+		website: context.website ?? "",
 		startedAt: context.startedAt,
 		...(context.metadata ? { metadata: context.metadata } : {}),
 	}

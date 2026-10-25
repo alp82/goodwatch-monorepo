@@ -17,6 +17,7 @@ import {
 	type ComponentType,
 	type FormEvent,
 	type SVGProps,
+	useEffect,
 	useId,
 	useRef,
 	useState,
@@ -85,6 +86,9 @@ export function ContactSection() {
 	const [message, setMessage] = useState("")
 	const [typedEmail, setTypedEmail] = useState("")
 	const [title, setTitle] = useState("")
+	const [website, setWebsite] = useState("")
+	const body = useRef<HTMLDivElement>(null)
+	const [bodyHeight, setBodyHeight] = useState(0)
 	const [sending, setSending] = useState(false)
 	const [sentTo, setSentTo] = useState<string | null>(null)
 	const [failure, setFailure] = useState<ContactFailure | null>(null)
@@ -92,9 +96,22 @@ export function ContactSection() {
 	// When the form first opened, and one key per message: a retry reuses it, a new message gets a new one.
 	const startedAt = useRef<number | null>(null)
 	const key = useRef<string | null>(null)
+	const lastDraft = useRef<string | null>(null)
+	const success = useRef<HTMLParagraphElement>(null)
+	const hadSuccess = useRef(false)
 	const ids = useId()
 
 	const email = memberEmail ?? typedEmail
+
+	useEffect(() => {
+		if (sentTo !== null) {
+			success.current?.focus()
+			hadSuccess.current = true
+		} else if (hadSuccess.current) {
+			document.getElementById(`${ids}-message`)?.focus()
+			hadSuccess.current = false
+		}
+	}, [sentTo, ids])
 
 	const pick = (next: ContactTopic) => {
 		if (startedAt.current === null) startedAt.current = Date.now()
@@ -112,8 +129,17 @@ export function ContactSection() {
 			document.getElementById(`${ids}-${found[0]}`)?.focus()
 			return
 		}
-		const opened = startedAt.current ?? Date.now()
+		const now = Date.now()
+		if (startedAt.current === null || now - startedAt.current > 86_400_000) {
+			startedAt.current = now
+		}
+		const opened = startedAt.current
+		// An edited draft is a new report; only an unchanged retry shares its key.
+		const signature = JSON.stringify(draft)
+		if (lastDraft.current !== signature) key.current = null
+		lastDraft.current = signature
 		key.current ??= newIdempotencyKey(window.crypto)
+		setBodyHeight(body.current?.getBoundingClientRect().height ?? 0)
 		setSending(true)
 		setFailure(null)
 		try {
@@ -122,6 +148,7 @@ export function ContactSection() {
 				buildContactRequest(draft, {
 					idempotencyKey: key.current,
 					startedAt: opened,
+					website,
 					metadata: {
 						url: window.location.pathname,
 						locale: navigator.language,
@@ -159,25 +186,33 @@ export function ContactSection() {
 			<p className="mb-4 text-sm text-gray-400">
 				Pick one, then write to us. We answer by email.
 			</p>
-			<fieldset className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
+			<fieldset
+				disabled={sending}
+				className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3"
+			>
 				<legend className="sr-only">Topic</legend>
 				{CONTACT_TOPICS.map(({ id, label }) => {
 					const Icon = ICONS[id]
 					const on = topic === id
 					return (
-						<button
+						<label
 							key={id}
-							type="button"
-							aria-pressed={on}
-							onClick={() => pick(id)}
-							className={`flex min-h-14 cursor-pointer items-center gap-2.5 rounded-xl px-3 text-left text-sm font-semibold ring-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? "bg-amber-500/10 text-white ring-amber-500/60" : "bg-white/[0.04] text-gray-200 ring-white/10 hover:ring-white/25"}`}
+							className={`flex min-h-14 cursor-pointer items-center gap-2.5 rounded-xl px-3 text-left text-sm font-semibold ring-1 transition-colors focus-within:ring-2 focus-within:ring-amber-400 ${on ? "bg-amber-500/10 text-white ring-amber-500/60" : "bg-white/[0.04] text-gray-200 ring-white/10 hover:ring-white/25"}`}
 						>
+							<input
+								type="radio"
+								name={`${ids}-topic`}
+								value={id}
+								checked={on}
+								onChange={() => pick(id)}
+								className="sr-only"
+							/>
 							<Icon
 								className="size-5 shrink-0 text-amber-400"
 								aria-hidden="true"
 							/>
 							{label}
-						</button>
+						</label>
 					)
 				})}
 			</fieldset>
@@ -185,7 +220,7 @@ export function ContactSection() {
 			<p className="sr-only" aria-live="polite">
 				{sentTo !== null ? "Sent. We'll write back." : ""}
 			</p>
-			<div>
+			<div ref={body} style={{ minHeight: bodyHeight || undefined }}>
 				{sentTo !== null ? (
 					<div className="mt-5 flex flex-col gap-3 border-t border-white/10 pt-5">
 						<div className="flex items-start gap-3">
@@ -194,7 +229,11 @@ export function ContactSection() {
 								aria-hidden="true"
 							/>
 							<div>
-								<p className="text-lg font-semibold text-white">
+								<p
+									ref={success}
+									tabIndex={-1}
+									className="text-lg font-semibold text-white"
+								>
 									Sent. We'll write back.
 								</p>
 								<p className="mt-0.5 break-words text-sm text-gray-400">
@@ -216,7 +255,22 @@ export function ContactSection() {
 						onSubmit={submit}
 						className="mt-5 border-t border-white/10 pt-5"
 					>
-						<div className="flex flex-col gap-4 md:max-w-xl">
+						<fieldset
+							disabled={sending}
+							className="flex min-w-0 flex-col gap-4 md:max-w-xl"
+						>
+							<legend className="sr-only">Your message</legend>
+							<div hidden>
+								<label htmlFor={`${ids}-website`}>Website</label>
+								<input
+									id={`${ids}-website`}
+									name="website"
+									value={website}
+									onChange={(e) => setWebsite(e.target.value)}
+									autoComplete="off"
+									tabIndex={-1}
+								/>
+							</div>
 							{topic === "data" && (
 								<>
 									<p className="text-sm leading-relaxed text-gray-300">
@@ -334,14 +388,17 @@ export function ContactSection() {
 								className={`${SEND} sm:self-start sm:min-w-40`}
 							>
 								{sending ? (
-									<Spinner size="small" />
+									<>
+										<Spinner size="small" />
+										<span>Sending…</span>
+									</>
 								) : failure === "retry" ? (
 									"Try again"
 								) : (
 									"Send"
 								)}
 							</button>
-						</div>
+						</fieldset>
 					</form>
 				) : null}
 			</div>
