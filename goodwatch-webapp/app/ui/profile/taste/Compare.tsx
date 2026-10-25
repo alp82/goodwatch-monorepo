@@ -5,6 +5,7 @@ import { Link } from "@remix-run/react"
 import { useState } from "react"
 import type { ProfileTitle } from "~/domain/profile"
 import { matchTier } from "~/domain/profile-taste"
+import { PANEL_CARD_SIZES, ProfileCard } from "../ProfileCard"
 import { matchColor } from "../match"
 import { posterUrl, vibe } from "../parts"
 import { useTaste } from "./model"
@@ -333,27 +334,16 @@ function PickRow({
 	return (
 		<div>
 			<p className="mb-2 text-xs font-semibold text-gray-300">{title}</p>
-			<ul className="grid grid-cols-4 gap-2">
-				{items.map(({ t, note }) => (
-					<li key={t.key} className="min-w-0">
-						<Link to={t.href} className="group block">
-							{t.poster ? (
-								<img
-									src={posterUrl(t.poster) ?? ""}
-									alt=""
-									loading="lazy"
-									className="aspect-[2/3] w-full rounded-lg object-cover ring-1 ring-white/10 group-hover:ring-white/30"
-								/>
-							) : (
-								<span className="block aspect-[2/3] w-full rounded-lg bg-white/10" />
-							)}
-							<span className="mt-1 block truncate text-xs font-semibold text-gray-200">
-								{t.title}
-							</span>
-							<span className="block truncate text-[11px] text-gray-500">
-								{note}
-							</span>
-						</Link>
+			<ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+				{items.map(({ t, note }, i) => (
+					<li
+						key={t.key}
+						className={`flex min-w-0 flex-col gap-1 ${i === 3 ? "max-sm:hidden" : ""}`}
+					>
+						<ProfileCard title={t} posterSizes={PANEL_CARD_SIZES} />
+						<span className="block truncate text-[11px] text-gray-500">
+							{note}
+						</span>
 					</li>
 				))}
 			</ul>

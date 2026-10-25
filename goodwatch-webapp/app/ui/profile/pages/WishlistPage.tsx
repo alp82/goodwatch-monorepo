@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react"
 // The profile's Wishlist tab. The owner sees "Watch now" first (wishlist titles on their services, best match first),
 // the import call to action and the way to the editable page; a signed-in visitor sees the titles they've already
-// seen first, tagged with their own score. Then everything, newest first or by title.
+// seen first, their own score in each card's pill. Then everything, newest first or by title. The posters are the
+// site's poster cards, for the visitor to pick from; on the owner's own Wishlist they leave out the bookmark.
 import type { LibraryKind } from "~/domain/my-library"
 import type {
 	ProfileShell,
@@ -10,14 +11,12 @@ import type {
 } from "~/domain/profile"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { ImportCta } from "../ImportCta"
+import { ProfileCard } from "../ProfileCard"
 import {
-	GridPoster,
 	OwnerPageLink,
-	PosterScores,
 	Segmented,
 	SortSelect,
 	TILE,
-	YouChip,
 	count,
 	shortDate,
 } from "../parts"
@@ -59,8 +58,15 @@ export function WishlistPage({
 		? page.titles.filter((t) => you[t.key] != null).length
 		: 0
 	const movies = page.titles.filter((t) => t.mediaType === "movie").length
-	const mark = (t: ProfileTitle) => (
-		<PosterScores theirs={null} yours={you?.[t.key]} handle={shell.handle} />
+	const card = (t: ProfileTitle, caption: string | null | undefined) => (
+		<li key={t.key} className="flex min-w-0 flex-col gap-1.5">
+			<ProfileCard title={t} skipWant={owner} />
+			{caption && (
+				<span className="block truncate text-[11px] text-gray-500">
+					{caption}
+				</span>
+			)}
+		</li>
 	)
 
 	return (
@@ -101,13 +107,9 @@ export function WishlistPage({
 						On your services today, your best match first. Only you see this.
 					</p>
 					<ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8">
-						{page.watchNow.map((t) => (
-							<GridPoster
-								key={t.key}
-								title={t}
-								caption={t.match ? `${t.match}% match` : shortDate(t.date)}
-							/>
-						))}
+						{page.watchNow.map((t) =>
+							card(t, t.match ? `${t.match}% match` : shortDate(t.date)),
+						)}
 					</ul>
 				</section>
 			)}
@@ -115,8 +117,8 @@ export function WishlistPage({
 			{seenByYou > 0 && (
 				<p className="rounded-xl bg-sky-400/[0.07] px-4 py-3 text-sm text-sky-100 ring-1 ring-sky-400/25">
 					You've already seen <b>{count(seenByYou)}</b> of the titles @
-					{shell.handle} wants to see. Your scores show as <YouChip score={8} />{" "}
-					on those posters, first in the list.
+					{shell.handle} wants to see. They come first, with your score on the
+					poster.
 				</p>
 			)}
 
@@ -129,20 +131,16 @@ export function WishlistPage({
 						</span>
 					</h2>
 					<ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8">
-						{(all ? rest : rest.slice(0, FIRST)).map((t) => (
-							<GridPoster
-								key={t.key}
-								title={t}
-								mark={mark(t)}
-								caption={
-									t.date
-										? `Added ${shortDate(t.date)}`
-										: t.year
-											? String(t.year)
-											: undefined
-								}
-							/>
-						))}
+						{(all ? rest : rest.slice(0, FIRST)).map((t) =>
+							card(
+								t,
+								t.date
+									? `Added ${shortDate(t.date)}`
+									: t.year
+										? String(t.year)
+										: undefined,
+							),
+						)}
 					</ul>
 					{rest.length > FIRST && (
 						<button

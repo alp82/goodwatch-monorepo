@@ -378,35 +378,6 @@ export function TitleRow({
 	)
 }
 
-/** A poster in a grid with its name under it, and an optional mark over the poster. */
-export function GridPoster({
-	title,
-	caption,
-	mark,
-}: { title: ProfileTitle; caption?: ReactNode; mark?: ReactNode }) {
-	return (
-		<li className="relative min-w-0">
-			<Link to={title.href} className="group block">
-				<span className="relative block">
-					<PosterImg
-						title={title}
-						className="rounded-lg ring-1 ring-white/10 transition group-hover:ring-white/30"
-					/>
-					{mark}
-				</span>
-				<span className="mt-1.5 block truncate text-xs font-semibold text-gray-200">
-					{title.title}
-				</span>
-				{caption && (
-					<span className="block truncate text-[11px] text-gray-500">
-						{caption}
-					</span>
-				)}
-			</Link>
-		</li>
-	)
-}
-
 /**
  * Both scores in one strip under a poster, the profile owner's left and the visitor's right, a dash where one of them
  * hasn't rated it. It replaces a score chip and a "You" tag on the poster, which covered each other on small posters.
