@@ -261,9 +261,10 @@ export function useFadePresence(on: boolean, ms = 200) {
 }
 
 /**
- * While fix mode is on, the fixed site header and the page's sticky bar turn solid and sit above the fix layer, with a
- * scrim-colored tint over them. A part scrolled under them slides out of sight, as it does without fix mode, instead
- * of shining through a see-through header. The tint fades (opacity) before the rule goes.
+ * While fix mode is on, the site header and the page's sticky bar stop following the page: the header stays at the
+ * top of the page and the bar in its place, so both scroll away like the rest. A picked part can then sit at the very
+ * top of the window, and nothing draws over it. Neither changes size, so nothing on the page moves. Their scrim-colored
+ * tint fades (opacity) before the rule goes.
  */
 export function DimHeader({ on }: { on: boolean }) {
 	const { mounted, shown } = useFadePresence(on, 220)
@@ -272,9 +273,8 @@ export function DimHeader({ on }: { on: boolean }) {
 		"[data-site-header],[data-feedback-page] .sticky,[data-details-header]"
 	return (
 		<style data-fix-dim>
-			{`[data-site-header]{z-index:1001!important}
-[data-feedback-page] .sticky,[data-details-header]{z-index:1001!important}
-[data-site-header]>div,[data-site-header]>header,[data-feedback-page] .sticky,[data-details-header]{background-color:rgb(3 7 18)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+			{`[data-site-header]{position:absolute!important}
+[data-feedback-page] .sticky,[data-details-header]{position:relative!important}
 ${bars.split(",").map((b) => `${b}::after`).join(",")}{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:rgb(3 7 18);opacity:${shown ? 0.72 : 0};transition:opacity .2s ease-out}
 html[data-fix-phone="answer"] [data-site-header]::after{opacity:0}`}
 		</style>

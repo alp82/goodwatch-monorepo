@@ -1,9 +1,10 @@
 // PROTOTYPE - throwaway. Fix mode on phones (round 7, Split view picked). The side drawer is too big for a phone: it
 // covered the very part being reported. Here the drawer only offers the two paths; "Fix something on this page" slides
-// it back into the tab and fix mode runs from the bottom edge instead, where the app's dock is:
+// it back into the tab and fix mode runs from the bottom edge instead, where the app's dock is. The header and the
+// sticky bar scroll away with the page in fix mode (DimHeader):
 // - Picking: a slim bar, "Tap the part that's wrong", with the parts as a row of chips. The scrim, the outlines and the
 //   badges show at this stage only.
-// - Answering: the page scrolls the picked part to the top, under the header, and the questions sit in a sheet below
+// - Answering: the page scrolls the picked part to the top of the window, and the questions sit in a sheet below
 //   it. The sheet starts at about half the room (more when the part leaves more), grows a little and scrolls the form
 //   into sight once the form opens, and its grip (the top row) drags it to any height: down to see the part, up to
 //   type. Dragged almost shut, it folds to a slim bar with "Continue".
@@ -91,8 +92,7 @@ html[data-fix-phone="answer"] [data-fix-scrim],
 html[data-fix-phone="answer"] [data-fix-badge],
 html[data-fix-phone="answer"] [data-fix-overlay]:not([data-fix-overlay="${id}"]){opacity:0!important;pointer-events:none!important}
 html[data-fix-phone="answer"] [data-fix-overlay="${id}"]{pointer-events:none!important;border-style:solid!important;border-color:rgb(251 191 36)!important;background-color:transparent!important}
-html[data-fix-phone="answer"] [data-site-header]{opacity:1!important}
-html[data-fix-phone="answer"] [data-feedback-page] .sticky,html[data-fix-phone="answer"] [data-details-header]{opacity:0!important;pointer-events:none!important}`
+html[data-fix-phone="answer"] [data-site-header]{opacity:1!important}`
 }
 
 const clamp = (n: number, lo: number, hi: number) =>
@@ -178,21 +178,33 @@ export function PhoneFix({
 			setSize(null)
 			return
 		}
-		const max = roomUnderHeader()
-		setRoom(max)
 		const part = fix.element(pickedId)
-		const top = headerBottom()
-		const content = ROW + (bodyRef.current?.scrollHeight ?? max)
+		let max = roomUnderHeader()
 		let start = Math.round(max * START_SHARE)
 		if (part) {
+			// The header scrolls away in fix mode: the part goes to the window's top, unless the page can't scroll that
+			// far (then the header still shows above it).
 			const r = part.getBoundingClientRect()
-			// The part's outline stands 4px out; air above and below it.
-			start = Math.max(start, max + HANDLE + 8 - (r.height + 8) - 24 - HANDLE)
+			const docTop = r.top + window.scrollY
+			const target = Math.max(0, docTop - 16)
+			const header =
+				document.querySelector<HTMLElement>("[data-site-header]")
+					?.offsetHeight ?? 0
+			max = Math.round(
+				window.innerHeight - Math.max(0, header - target) - HANDLE - 8,
+			)
+			const partBottom = docTop - target + r.height + 4
+			start = Math.max(
+				Math.round(max * START_SHARE),
+				Math.round(window.innerHeight - partBottom - 20 - HANDLE),
+			)
 			window.scrollTo({
-				top: Math.max(0, r.top + window.scrollY - (top + 16)),
+				top: target,
 				behavior: reduced() ? "auto" : "smooth",
 			})
 		}
+		setRoom(max)
+		const content = ROW + (bodyRef.current?.scrollHeight ?? max)
 		setSize(clamp(Math.min(start, content), MIN_OPEN, max))
 	}, [pickedId])
 
@@ -349,7 +361,7 @@ export function PhoneFix({
 					"html[data-fix-phone] .tsqd-parent-container{display:none}html[data-fix-phone] [data-mobile-dock]{visibility:hidden;transition:visibility 0s linear .3s}html[data-fix-phone] [data-prototype-switcher]{opacity:0!important;pointer-events:none!important}[data-prototype-switcher]{transition:opacity .2s ease-out}html[data-fix-phone] [data-fix-badge],html[data-fix-phone] [data-feedback-page] .sticky,html[data-fix-phone] [data-details-header]{transition:opacity .2s ease-out}"
 				}
 			</style>
-			{/* While answering, the page's sticky bar steps aside and the other parts' outlines go. */}
+			{/* While answering, the other parts' outlines go. */}
 			{pickedId && <style>{answerRules(pickedId)}</style>}
 			{/* The tab, resting on the sheet as its handle. */}
 			<button
