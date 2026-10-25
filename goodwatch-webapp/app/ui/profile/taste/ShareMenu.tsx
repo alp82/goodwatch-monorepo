@@ -23,13 +23,16 @@ const cardImage = (page: string) => {
 export function ShareMenu({ shell }: { shell: ProfileShell }) {
 	const [open, setOpen] = useState(false)
 	const box = useRef<HTMLDivElement>(null)
+	const trigger = useRef<HTMLButtonElement>(null)
 	useEffect(() => {
 		if (!open) return
 		const onDown = (e: PointerEvent) => {
 			if (box.current && !box.current.contains(e.target as Node)) setOpen(false)
 		}
 		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") setOpen(false)
+			if (e.key !== "Escape") return
+			setOpen(false)
+			trigger.current?.focus()
 		}
 		window.addEventListener("pointerdown", onDown)
 		window.addEventListener("keydown", onKey)
@@ -46,6 +49,7 @@ export function ShareMenu({ shell }: { shell: ProfileShell }) {
 	return (
 		<div ref={box} className="relative">
 			<button
+				ref={trigger}
 				type="button"
 				aria-expanded={open}
 				aria-haspopup="true"
@@ -77,6 +81,7 @@ export function ShareMenu({ shell }: { shell: ProfileShell }) {
 									handle={shell.handle}
 									path={`/stats${c.path}`}
 									label="Share"
+									name={`Share ${c.name} card`}
 									className={`${QUIET_BUTTON} cursor-pointer`}
 								/>
 							</figcaption>

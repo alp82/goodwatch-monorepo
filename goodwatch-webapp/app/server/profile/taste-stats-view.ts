@@ -77,9 +77,12 @@ export function statsForViewer(
 		},
 		eras: {
 			...stats.eras,
+			// Best rated first is an order that shows the scores: without them, the panel goes by the GoodWatch score.
 			decades: stats.eras.decades.map((d) => ({
 				...d,
 				average: scores ? d.average : null,
+				titles: scores ? d.titles : d.byCrowd.map(unscored),
+				byCrowd: [],
 			})),
 			// Classics are the owner's 9s and 10s: the list itself says how they scored them.
 			classics: scores ? stats.eras.classics : [],

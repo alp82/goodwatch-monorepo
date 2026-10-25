@@ -114,12 +114,15 @@ export function ShareButton({
 	label = "Share profile",
 	className = AMBER_BUTTON,
 	compact = false,
+	name,
 }: {
 	handle: string
 	path?: string
 	label?: string
 	className?: string
 	compact?: boolean
+	/** The accessible name, when the visible label alone doesn't say what is shared. */
+	name?: string
 }) {
 	const [copied, setCopied] = useState(false)
 	const onClick = async () => {
@@ -140,7 +143,9 @@ export function ShareButton({
 		<button
 			type="button"
 			onClick={onClick}
-			aria-label={compact ? (copied ? "Link copied" : label) : undefined}
+			aria-label={
+				compact || name ? (copied ? "Link copied" : (name ?? label)) : undefined
+			}
 			className={`${className} ${compact ? ICON_ON_PHONE : ""}`}
 		>
 			{copied ? (

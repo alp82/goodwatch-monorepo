@@ -58,8 +58,28 @@ const stats = tasteStats({
 })
 const all = { scores: true, seen: true, shows: true, hours: true }
 
-test("everything visible: the stats pass through unchanged", () => {
-	assert.deepEqual(statsForViewer(stats, all), stats)
+test("everything visible: the stats pass through, without the crowd-ordered decade panels", () => {
+	assert.deepEqual(statsForViewer(stats, all), {
+		...stats,
+		eras: {
+			...stats.eras,
+			decades: stats.eras.decades.map((d) => ({ ...d, byCrowd: [] })),
+		},
+	})
+	assert.ok(stats.eras.decades[0].titles.length > 0)
+})
+
+test("without scores: a decade's panel goes by the GoodWatch score, unscored", () => {
+	const view = statsForViewer(stats, { ...all, scores: false })
+	for (const [i, d] of view.eras.decades.entries()) {
+		assert.deepEqual(
+			d.titles.map((x) => x.key),
+			stats.eras.decades[i].byCrowd.map((x) => x.key),
+		)
+		assert.ok(d.titles.length > 0)
+		assert.ok(d.titles.every((x) => x.score === null))
+		assert.deepEqual(d.byCrowd, [])
+	}
 })
 
 test("without scores: no score numbers, averages, rating style or score-ranked lists", () => {

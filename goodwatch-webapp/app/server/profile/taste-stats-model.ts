@@ -1,4 +1,8 @@
-import type { TastePerson, TasteStats } from "../../domain/profile-taste.ts"
+import {
+	DECADE_TITLES,
+	type TastePerson,
+	type TasteStats,
+} from "../../domain/profile-taste.ts"
 // The numbers of a profile's Taste tab (genres, people, eras, world, tags, facts, rating style, badges) from plain
 // per-title records. Pure: taste-stats.server.ts reads the records from Crate and the member's data.
 import type { ProfileTitle } from "../../domain/profile.ts"
@@ -55,6 +59,21 @@ const mean = (values: number[]) =>
 const byScore = (a: StatsTitle, b: StatsTitle) =>
 	(b.score ?? 0) - (a.score ?? 0) || (b.title.year ?? 0) - (a.title.year ?? 0)
 const withPoster = (t: StatsTitle) => t.title.poster !== null
+const byCrowd = (a: StatsTitle, b: StatsTitle) =>
+	(b.title.gw ?? 0) - (a.title.gw ?? 0) ||
+	(b.title.year ?? 0) - (a.title.year ?? 0)
+
+/** The first `n` titles in `order`, those with a poster first, so a panel fills with pictures before blanks. */
+const panelOf = (
+	titles: StatsTitle[],
+	order: (a: StatsTitle, b: StatsTitle) => number,
+	n: number,
+) => {
+	const sorted = [...titles].sort(order)
+	return [...sorted.filter(withPoster), ...sorted.filter((t) => !withPoster(t))]
+		.slice(0, n)
+		.map((t) => t.title)
+}
 
 /** The people with the most titles in a role, up to `top`, each with their best titles. Needs at least 2 titles. */
 export function rankPeople(
@@ -141,11 +160,12 @@ export function tasteStats(input: StatsInput): TasteStats {
 		.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
 
 	// Eras.
-	const decade = new Map<number, number[]>()
+	// A decade's titles are the rated ones its bar counts.
+	const decade = new Map<number, StatsTitle[]>()
 	for (const t of rated)
 		if (t.title.year) {
 			const d = Math.floor(t.title.year / 10) * 10
-			decade.set(d, [...(decade.get(d) ?? []), t.score as number])
+			decade.set(d, [...(decade.get(d) ?? []), t])
 		}
 	const years = rated.flatMap((t) => (t.title.year ? [t.title.year] : []))
 	const classics = rated
@@ -305,7 +325,13 @@ export function tasteStats(input: StatsInput): TasteStats {
 				.map(([d, list]) => ({
 					decade: d,
 					count: list.length,
-					average: round1(mean(list)),
+					average: round1(mean(list.map((t) => t.score as number))),
+					titles: panelOf(
+						list,
+						(a, b) => (b.score ?? 0) - (a.score ?? 0) || byCrowd(a, b),
+						DECADE_TITLES,
+					),
+					byCrowd: panelOf(list, byCrowd, DECADE_TITLES),
 				})),
 			averageYear,
 			classics,

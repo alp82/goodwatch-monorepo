@@ -5,6 +5,9 @@ import type { ProfileTitle } from "./profile"
 
 // ---------- Stats ----------
 
+/** Titles in a decade's panel on the Stats tab. */
+export const DECADE_TITLES = 14
+
 export interface TastePerson {
 	id: number
 	name: string
@@ -38,7 +41,15 @@ export interface TasteStats {
 		writers: TastePerson[]
 	}
 	eras: {
-		decades: { decade: number; count: number; average: number | null }[]
+		decades: {
+			decade: number
+			count: number
+			average: number | null
+			/** The decade's rated titles for its panel, best rated first; by GoodWatch score when scores are hidden. */
+			titles: ProfileTitle[]
+			/** The same titles by GoodWatch score, kept for viewers without the owner's scores; statsForViewer empties it. */
+			byCrowd: ProfileTitle[]
+		}[]
 		averageYear: number | null
 		classics: ProfileTitle[]
 	}

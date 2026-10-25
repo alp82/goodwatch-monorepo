@@ -4,7 +4,11 @@
 import { Link } from "@remix-run/react"
 import { useState } from "react"
 import { genreColor, movieGenre } from "~/domain/genre-colors"
-import type { TastePerson as Person, TasteStats } from "~/domain/profile-taste"
+import {
+	DECADE_TITLES,
+	type TastePerson as Person,
+	type TasteStats,
+} from "~/domain/profile-taste"
 import { PosterImg, count, posterUrl, vibe } from "../parts"
 import { type Kind, flag, money, pct, signed, useTaste } from "./model"
 import { MiniPoster, PANEL, Pills, SectionHead } from "./parts"
@@ -211,7 +215,9 @@ function mergeTvGenres(genres: GenreRow[]): GenreRow[] {
 		const count = known.count + g.count
 		const average =
 			known.average != null && g.average != null
-				? Math.round(((known.average * known.count + g.average * g.count) / count) * 10) / 10
+				? Math.round(
+						((known.average * known.count + g.average * g.count) / count) * 10,
+					) / 10
 				: (known.average ?? g.average)
 		const kinds = { ...known.kinds }
 		for (const [k, v] of Object.entries(g.kinds))
@@ -225,10 +231,16 @@ function mergeTvGenres(genres: GenreRow[]): GenreRow[] {
 
 export function People() {
 	const { stats, owner } = useStats()
-	const [by, setBy] = useState<"watched" | "rated">("rated")
+	const [byChoice, setBy] = useState<"watched" | "rated">("rated")
 	if (!stats) return null
 	const people = stats.people
 	const lists = { rated: people.bestDirectors, watched: people.directors }
+	// Best rated needs the owner's scores and directors with three rated films; without it, Most watched is the list.
+	const rankable = people.bestDirectors.length > 0
+	const by = rankable ? byChoice : "watched"
+	const shown = rankable
+		? (["rated", "watched"] as const)
+		: (["watched"] as const)
 	if (!lists[by].length && !people.actors.length) return null
 	return (
 		<section aria-labelledby="people" className="flex flex-col gap-5">
@@ -238,20 +250,22 @@ export function People() {
 				accent="directors"
 				sub={`The names ${owner ? "you" : "they"} keep coming back to. Movies only: shows have a director per episode.`}
 				right={
-					<Pills
-						label="Order"
-						value={by}
-						onChange={setBy}
-						options={[
-							{ value: "rated", label: "Best rated" },
-							{ value: "watched", label: "Most watched" },
-						]}
-					/>
+					rankable && (
+						<Pills
+							label="Order"
+							value={by}
+							onChange={setBy}
+							options={[
+								{ value: "rated", label: "Best rated" },
+								{ value: "watched", label: "Most watched" },
+							]}
+						/>
+					)
 				}
 			/>
 			{/* Both rankings share one grid cell; the hidden one keeps the taller height, so switching never moves the page. */}
 			<div className="grid">
-				{(["rated", "watched"] as const).map((key) => (
+				{shown.map((key) => (
 					<div
 						key={key}
 						className={`[grid-area:1/1] ${key === by ? "" : "invisible"}`}
@@ -391,7 +405,6 @@ function Compact({
 
 export function Eras() {
 	const { stats, owner } = useStats()
-	const { taste } = useTaste()
 	const d = stats?.eras.decades ?? []
 	// The decade with the most titles opens first.
 	const busiest = [...d].sort((a, b) => b.count - a.count)[0]
@@ -399,20 +412,16 @@ export function Eras() {
 	if (!stats || !d.length) return null
 	const decade = picked ?? busiest.decade
 	const most = Math.max(...d.map((x) => x.count))
-	const titles = Object.values(taste.titles)
-		.filter((t) => t.year != null && t.year >= decade && t.year < decade + 10)
-		.sort(
-			(a, b) =>
-				(b.score ?? 0) - (a.score ?? 0) || (b.gw ?? 0) - (a.gw ?? 0),
-		)
-	const SLOTS = 14
+	const current = d.find((x) => x.decade === decade)
+	const titles = current?.titles ?? []
+	// Without the owner's scores the panel goes by the GoodWatch score, so it doesn't claim to be their best.
+	const scored = current?.average != null
 	return (
 		<section aria-labelledby="eras" className="flex flex-col gap-5">
 			<SectionHead
 				id="eras"
 				lead={owner ? "When your titles" : "When their titles"}
 				accent="came out"
-				sub={`${owner ? "Your" : "Their"} titles average ${stats.eras.averageYear}.`}
 			/>
 			<div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
 				<div className={`${PANEL} flex flex-col p-4 sm:p-5`}>
@@ -465,14 +474,17 @@ export function Eras() {
 				</div>
 				<div className={`${PANEL} p-4 sm:p-5`} aria-live="polite">
 					<p className="mb-3 text-sm font-bold text-gray-200">
-						{owner ? "Your" : "Their"} best from the{" "}
+						{scored ? `${owner ? "Your" : "Their"} best from the` : "From the"}{" "}
 						<span className="text-amber-400">{decade}s</span>
 					</p>
 					<ul className="grid grid-cols-4 gap-2.5 sm:grid-cols-7">
-						{Array.from({ length: SLOTS }, (_, i) => {
+						{Array.from({ length: DECADE_TITLES }, (_, i) => {
 							const t = titles[i]
 							return (
-								<li key={t?.key ?? `empty-${i}`} className={i >= 8 ? "max-sm:hidden" : ""}>
+								<li
+									key={t?.key ?? `empty-${i}`}
+									className={i >= 8 ? "max-sm:hidden" : ""}
+								>
 									{t ? (
 										<>
 											<MiniPoster title={t} />
@@ -738,9 +750,7 @@ export function RatingStyle() {
 	const s = stats.style
 	if (!s) return null
 	const pos = (v: number) => `${((v - 1) / 9) * 100}%`
-	const kinds = (["movie", "show"] as Kind[]).filter(
-		(k) => s.byKind[k] != null,
-	)
+	const kinds = (["movie", "show"] as Kind[]).filter((k) => s.byKind[k] != null)
 	const KIND: Record<Kind, string> = {
 		movie: "Movies",
 		show: "Shows",
