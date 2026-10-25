@@ -1,4 +1,4 @@
-// A tracked show's half of the Seen and score control (ui/details/hero/SeenScore.tsx), and the question its score
+// A tracked show's half of the Seen and score control (ui/title-actions/SeenScore.tsx), and the question its score
 // dialog asks after a first score on a show that isn't started. Loaded for a member on a show page, after the page
 // is up; until then the control shows the status the member data has.
 //

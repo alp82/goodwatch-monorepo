@@ -3,7 +3,7 @@ import { PauseIcon } from "@heroicons/react/20/solid"
 // the progress and the Next episode as a chip that leads to its row in the episode list, and the question after a
 // first score when it is due; every other action is in the status menu. Not started: Want to See beside "Already
 // watching?", which leads to the episode list. The status, with its menu, and the score are one control in the
-// hero's ratings (ui/details/hero/SeenScore.tsx). When a score is due, the score half says so (RATE_DUE_EVENT).
+// hero's ratings (ui/title-actions/SeenScore.tsx). When a score is due, the score half says so (RATE_DUE_EVENT).
 // Loaded after the page is up; until its data is there, and for a show without an episode list, it shows what the
 // first paint showed.
 import {
@@ -18,7 +18,7 @@ import { episodeLabel } from "~/domain/tracking/machine"
 import type { ShowView } from "~/domain/tracking/show-page"
 import type { MenuEntry, MenuEntryId } from "~/domain/tracking/status-menu"
 import { EPISODE_GRID_ANCHOR } from "~/ui/details/episode-grid/scale"
-import { RATE_DUE_EVENT, SCORE_SAVED_EVENT } from "~/ui/details/hero/SeenScore"
+import { RATE_DUE_EVENT, SCORE_SAVED_EVENT } from "~/ui/title-actions/SeenScore"
 import { HALF_FOCUS } from "~/ui/details/hero/seen-score-faces"
 import { ActionButton } from "~/ui/title-actions/ActionButton"
 import { useTitleActions } from "~/ui/title-actions/useTitleActions"

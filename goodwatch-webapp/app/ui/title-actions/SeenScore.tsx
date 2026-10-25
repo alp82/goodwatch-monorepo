@@ -1,5 +1,5 @@
-// The person's Seen and score, one control in the hero's ratings: two halves of one frame, because they go
-// together. A movie is [Seen | score]; a show a member tracks is [status ▾ | score]; a show for a guest, or one
+// The person's Seen and score, one control: two halves of one frame, because they go together. The title page's
+// hero has it in its ratings, the quick view (ui/quick-view) in its footer, through TitleControl. A movie is [Seen | score]; a show a member tracks is [status ▾ | score]; a show for a guest, or one
 // without an episode list, is [Seen | score] too.
 //
 // - Seen on a movie that isn't Seen records a watch for now (the watch log's toast offers another date), then asks
@@ -12,11 +12,21 @@
 //   score on a show that isn't started, the picker asks "How far are you?" (ui/tracking/HeroStatus.tsx).
 //
 // The picker, the question, the confirmation, and the tracked status with its menu load on first use.
+//
+// The title page's control (`onPage`) also answers the page's own window events: the tracked show's prompt to rate
+// opens its picker, and a score that is due is said in its score half. A copy elsewhere (the quick view) keeps out.
 import { Suspense, lazy, useEffect, useRef, useState } from "react"
 import { useSeenToggle } from "~/hooks/useSeenToggle"
 import { useUserScore, useWatchState } from "~/hooks/useUserDataAccessors"
-import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import UserAction from "~/ui/auth/UserAction"
+import {
+	HALF_FOCUS,
+	ScoreFace,
+	SeenFace,
+	SeenSwitch,
+	SplitFrame,
+	StatusFace,
+} from "~/ui/details/hero/seen-score-faces"
 import {
 	SEEN_INSTRUCTIONS,
 	useTitleActions,
@@ -29,14 +39,6 @@ import { useHydrated } from "~/utils/hydrated"
 import { scoreLabels } from "~/utils/ratings"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { useReplayedTap } from "~/utils/useReplayedTap"
-import {
-	HALF_FOCUS,
-	ScoreFace,
-	SeenFace,
-	SeenSwitch,
-	SplitFrame,
-	StatusFace,
-} from "./seen-score-faces"
 
 const loadScoreDialog = () => import("~/ui/scoring/ScoreDialog")
 const ScoreDialog = lazy(reloadOnStaleChunk(loadScoreDialog))
@@ -44,7 +46,7 @@ const preloadScoreDialog = () => {
 	void loadScoreDialog().catch(() => {})
 }
 const NotSeenConfirm = lazy(
-	reloadOnStaleChunk(() => import("./NotSeenConfirm")),
+	reloadOnStaleChunk(() => import("~/ui/details/hero/NotSeenConfirm")),
 )
 const loadHeroStatus = () => import("~/ui/tracking/HeroStatus")
 const HeroStatus = lazy(reloadOnStaleChunk(loadHeroStatus))
@@ -69,10 +71,40 @@ export function openScorePicker() {
 	window.dispatchEvent(new Event(OPEN_SCORE_EVENT))
 }
 
+/** What the control reads of a title. `MovieResult` and `ShowResult` have it; a quick view builds it. */
+export interface ControlMedia {
+	mediaType: "movie" | "show"
+	details: {
+		tmdb_id: number
+		title: string
+		poster_path?: string | null
+		release_year?: string | number | null
+		number_of_episodes?: number | null
+		in_production?: boolean
+	}
+}
+
+/**
+ * What the person changed with the control, for a surface that answers it (the explorer's confirmations). "seen"
+ * that asked for the score comes once the picker closes.
+ */
+export type TitleChange = "want" | "unwant" | "seen" | "unseen" | "scored"
+
 export default function SeenScore({
 	media,
 	className = "",
-}: { media: MovieResult | ShowResult; className?: string }) {
+	onPage = true,
+	layer,
+	onChange,
+}: {
+	media: ControlMedia
+	className?: string
+	/** The title page's own control: taller from lg up, and it answers the page's window events. */
+	onPage?: boolean
+	/** The score picker's stacking layer, above a surface that is itself an overlay. */
+	layer?: string
+	onChange?: (change: TitleChange) => void
+}) {
 	const { mediaType } = media
 	const tmdbId = media.details.tmdb_id
 	const movie = mediaType === "movie"
@@ -96,32 +128,40 @@ export default function SeenScore({
 	const seenButton = useRef<HTMLButtonElement>(null)
 	const root = useRef<HTMLDivElement>(null)
 
+	/** Seen was marked and the picker asked for the score: the surface hears of it once the picker is done. */
+	const seenLater = useRef(false)
 	const close = () => {
 		setOpen(false)
 		setAfterSeen(false)
 		setHowFar(false)
+		if (seenLater.current) {
+			seenLater.current = false
+			onChange?.("seen")
+		}
 	}
 
 	const [due, setDue] = useState<"partway" | "all" | null>(null)
 	useEffect(() => {
+		if (!onPage) return
 		const onDue = (event: Event) =>
 			setDue((event as CustomEvent<"partway" | "all" | null>).detail)
 		window.addEventListener(RATE_DUE_EVENT, onDue)
 		return () => window.removeEventListener(RATE_DUE_EVENT, onDue)
-	}, [])
+	}, [onPage])
 
 	useEffect(() => {
+		if (!onPage) return
 		const onOpen = () => setOpen(true)
 		window.addEventListener(OPEN_SCORE_EVENT, onOpen)
 		return () => window.removeEventListener(OPEN_SCORE_EVENT, onOpen)
-	}, [])
+	}, [onPage])
 
 	const wasPending = useRef(false)
 	useEffect(() => {
-		if (wasPending.current && !isPending)
+		if (onPage && wasPending.current && !isPending)
 			window.dispatchEvent(new Event(SCORE_SAVED_EVENT))
 		wasPending.current = isPending
-	}, [isPending])
+	}, [isPending, onPage])
 
 	// The hero is in the server's HTML, so a tap can come before the app's script; the mark carries what Seen showed.
 	useReplayedTap("seen", (el) => Boolean(root.current?.contains(el)))
@@ -129,12 +169,19 @@ export default function SeenScore({
 	useReplayedTap("score", (el) => Boolean(root.current?.contains(el)))
 
 	// Marking a title Seen asks for its score next (useTitleActions decides when).
-	const pressSeen = (event: { currentTarget: EventTarget | null }) =>
-		a.toggleSeen(event, () => {
+	const pressSeen = (event: { currentTarget: EventTarget | null }) => {
+		let asked = false
+		const toggled = a.toggleSeen(event, () => {
+			asked = true
 			preloadScoreDialog()
 			setAfterSeen(true)
 			setOpen(true)
 		})
+		// With the movie watch log the log's host took the press and says what it did.
+		if (!toggled) return
+		if (asked) seenLater.current = true
+		else onChange?.(a.seen ? "unseen" : "seen")
+	}
 
 	// The score dialog's switch. Off takes a single watch from a movie without a score at once; with a score or more
 	// watches to lose, it asks first.
@@ -180,6 +227,7 @@ export default function SeenScore({
 
 	// A tracked show's status, as the member data has it, until its tracking is read.
 	const show = media.mediaType === "show" ? media : null
+	const episodes = show?.details.number_of_episodes
 	const firstStatus = (
 		<span className="flex h-full rounded-l-xl">
 			<StatusFace
@@ -189,8 +237,8 @@ export default function SeenScore({
 				}
 				detail={
 					entry
-						? entry.episodesWatched && show?.details.number_of_episodes
-							? `${entry.episodesWatched}/${show.details.number_of_episodes}`
+						? entry.episodesWatched && episodes
+							? `${entry.episodesWatched}/${episodes}`
 							: null
 						: "Set status"
 				}
@@ -218,7 +266,7 @@ export default function SeenScore({
 	return (
 		<div ref={root} className={className}>
 			<SplitFrame
-				big
+				big={onPage}
 				score={score}
 				left={left}
 				right={
@@ -252,6 +300,7 @@ export default function SeenScore({
 						value={score}
 						busy={isPending}
 						opener={scoreButton}
+						layer={layer}
 						aside={
 							movie && user && !howFar ? (
 								<SeenSwitch
@@ -304,6 +353,10 @@ export default function SeenScore({
 						onRate={(value) => {
 							// A guest at the rating limit gets the sign-up prompt instead; either way the picker is done.
 							const sent = rate(value)
+							if (sent) {
+								seenLater.current = false
+								onChange?.("scored")
+							}
 							if (sent && tracked && !entry && score === null) setHowFar(true)
 							else close()
 						}}
@@ -318,7 +371,11 @@ export default function SeenScore({
 						media={media}
 						score={score}
 						poster={media.details.poster_path || null}
-						year={media.details.release_year || null}
+						year={
+							media.details.release_year
+								? String(media.details.release_year)
+								: null
+						}
 						onDone={() => setConfirming(null)}
 						anchor={() =>
 							document.querySelector(

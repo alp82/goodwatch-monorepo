@@ -1,5 +1,5 @@
 // How the Seen and score control looks, apart from what it does: the frame of its two halves, and each half's face
-// for a given state. The control in the hero's ratings (SeenScore.tsx) and the preview of a change that removes
+// for a given state. The control (ui/title-actions/SeenScore.tsx) and the preview of a change that removes
 // something (NotSeenConfirm.tsx) draw the same faces, so the preview shows the control itself.
 import type { ReactNode } from "react"
 import type { Score } from "~/server/scores.server"

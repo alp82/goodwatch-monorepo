@@ -15,11 +15,10 @@ import type { WatchNextTitle } from "~/server/watch-next.server"
 import { BelowFoldProvider } from "~/ui/details/below-fold"
 import DetailsHero from "~/ui/details/hero/DetailsHero"
 import { MediaPreferenceProvider } from "~/ui/media-preference/MediaPreference"
-import ListActions from "~/ui/details/hero/ListActions"
-import SeenScore from "~/ui/details/hero/SeenScore"
 import { type HeroProviders, heroParts, withMemberSettings } from "~/ui/prototype-episode-tracking/hero-fixture"
 import { HARNESS_MEMBER, NEXT, SAMPLES, type Sample, createHarnessServer } from "~/ui/prototype-watch-log/harness-server"
 import { TitleActionsFrame } from "~/ui/title-actions/TitleActionsFrame"
+import { TitleControl } from "~/ui/title-actions/TitleControl"
 import { WatchLogHost } from "~/ui/watch-log/WatchLogHost"
 import { FinishPrompt, FinishToast } from "~/ui/watch-next/FinishPrompt"
 import { useFinish } from "~/ui/watch-next/useFinish"
@@ -113,10 +112,9 @@ export default function WatchLogHarness() {
 										<h3 className="font-bold">{sample.title}</h3>
 										<p className="mb-3 text-xs text-gray-400">{sample.starts}</p>
 										{/* The hero's two parts for a movie: the score rectangle of its ratings, and the action row. */}
-										<div className="mb-3 flex">
-											<SeenScore media={media(sample) as unknown as MovieResult} />
+										<div className="flex flex-col gap-2">
+											<TitleControl media={media(sample)} />
 										</div>
-										<ListActions media={media(sample) as unknown as MovieResult} />
 									</div>
 								))}
 							</div>

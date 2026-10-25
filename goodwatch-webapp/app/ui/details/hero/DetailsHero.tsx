@@ -2,14 +2,13 @@ import type { EpisodeGrid } from "~/server/episode-grid.server"
 import type { TitleSides } from "~/server/title-sides.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import EpisodeGridLink from "~/ui/details/hero/EpisodeGridLink"
-import ListActions from "~/ui/details/hero/ListActions"
 import RatingChips from "~/ui/details/hero/RatingChips"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
-import SeenScore from "~/ui/details/hero/SeenScore"
 import TitleSidesLine from "~/ui/details/hero/TitleSidesLine"
 import { HeroBackdropImage, HeroPoster, TrailerButton } from "~/ui/details/hero/Trailer"
 import WhereToWatch from "~/ui/details/hero/WhereToWatch"
 import type { SectionIds } from "~/ui/details/sections"
+import { TitleControl } from "~/ui/title-actions/TitleControl"
 import type { SectionProps } from "~/utils/scroll"
 
 type Media = MovieResult | ShowResult
@@ -66,8 +65,7 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 								</div>
 							</div>
 							<div className={`flex flex-col gap-2 max-md:w-full md:shrink-0 ${media.mediaType === "show" ? "md:w-[22rem]" : "md:w-[20rem]"}`}>
-								<SeenScore media={media} className="w-full" />
-								<ListActions media={media} />
+								<TitleControl media={media} />
 							</div>
 						</div>
 					</div>

@@ -20,6 +20,7 @@ export function TitleActionSet({
 	onOpenLog,
 	layout = "sheet",
 	scoring = true,
+	onWant,
 }: {
 	media: ScoredMedia
 	layout?: "sheet" | "row"
@@ -28,6 +29,8 @@ export function TitleActionSet({
 	onHide?: (undo: () => void) => void
 	/** The Seen button is about to open the movie's watch log: a sheet that holds this set makes room for it. */
 	onOpenLog?: () => void
+	/** Want to See was pressed in the row: on (added) or off. */
+	onWant?: (on: boolean) => void
 }) {
 	const a = useTitleActions(media)
 	// The title page's row is in the server's HTML, so a tap can come before the app's script. The mark carries the
@@ -47,7 +50,10 @@ export function TitleActionSet({
 	if (layout === "row")
 		return (
 			<div ref={row} data-title-actions className="flex min-w-0 gap-2">
-				<ActionButton kind="want" label="long" size="sm" className="flex-1" rewatch={a.seen} active={a.want} disabled={a.wantPending} data-replay-tap={`want:${a.want ? "on" : "off"}`} onClick={a.toggleWant} />
+				<ActionButton kind="want" label="long" size="sm" className="flex-1" rewatch={a.seen} active={a.want} disabled={a.wantPending} data-replay-tap={`want:${a.want ? "on" : "off"}`} onClick={() => {
+					a.toggleWant()
+					onWant?.(!a.want)
+				}} />
 				{(a.canHide || a.hidden) && (
 					<ActionButton kind="hide" label="wide" size="sm" className="max-sm:w-9 max-sm:flex-none sm:flex-1" active={a.hidden} disabled={a.hidePending} title={hideTitle} onClick={pressHide} />
 				)}
