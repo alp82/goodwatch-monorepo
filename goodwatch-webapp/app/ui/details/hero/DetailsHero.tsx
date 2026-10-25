@@ -25,7 +25,7 @@ export interface DetailsHeroProps {
 	sectionProps: SectionProps<SectionIds>
 	/** Where the title sits in the signed-in member's taste (taste groups); null when the page says nothing about it. */
 	sides?: TitleSides | null
-	/** The brands with a page of new arrivals in the loaded country, for where to watch's "More new on" (#489). */
+	/** The brands with a page of new arrivals in the loaded country, for where to watch's "What's new on" rows (#489). */
 	newPages?: NewPagesHere
 }
 

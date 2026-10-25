@@ -106,7 +106,7 @@ export default function WhereToWatch({
 	media: Media
 	/** The country `media`'s offers are for. */
 	country: string
-	/** The brands with a page of new arrivals in the loaded country (#489): "More new on Netflix" under the logos. */
+	/** The brands with a page of new arrivals in the loaded country (#489): "What's new on Netflix" under the services. */
 	newPages?: NewPagesHere
 	/** The country the header pair shows; differs from `country` while its offers load or failed to load. */
 	shownCountry?: string
@@ -141,18 +141,20 @@ export default function WhereToWatch({
 	const offer = OFFER_LABEL[type]
 	const verb = OFFER_VERB[type]
 	const here = country ? regionName(country) : "your country"
-	// The streaming services here that have a page of new arrivals, two at most: "More new on Netflix" (#489). Only
-	// for the loaded country's offers, so a previewed country never links to another country's page.
+	// The streaming services here that have a page of new arrivals, two at most, with the logo of their card:
+	// "What's new on Netflix" (#489). Only for the loaded country's offers, so a previewed country never links to
+	// another country's page.
+	const brandsSeen = new Set<string>()
 	const newOnHere =
 		newPages && newPages.country === country && type === "flatrate"
-			? [
-					...new Set(
-						links.flatMap((l) => {
-							const brand = brandOfService(l.id)
-							return brand && newPages.brands.includes(brand.slug) ? [brand] : []
-						}),
-					),
-				].slice(0, 2)
+			? links
+					.flatMap((l) => {
+						const brand = brandOfService(l.id)
+						if (!brand || brandsSeen.has(brand.slug) || !newPages.brands.includes(brand.slug)) return []
+						brandsSeen.add(brand.slug)
+						return [{ brand, logoPath: l.logoPath }]
+					})
+					.slice(0, 2)
 			: []
 	// Another offer type the country has, for a way out when this one has nothing.
 	const otherTab = OFFER_TABS.find(
@@ -340,21 +342,6 @@ export default function WhereToWatch({
 					{all ? "Show fewer" : `All ${links.length} services`}
 				</button>
 			)}
-			{newOnHere.length > 0 && (
-				<p data-new-on className="mt-2 flex flex-wrap gap-x-4 gap-y-1 px-1 text-xs">
-					{newOnHere.map((brand) => (
-						<Link
-							key={brand.slug}
-							to={servicePath(country, brand)}
-							prefetch="intent"
-							className="inline-flex items-center gap-1 font-semibold text-sky-300 hover:text-sky-200"
-						>
-							More new on {brand.name}
-							<ChevronRightIcon className="h-3 w-3" aria-hidden />
-						</Link>
-					))}
-				</p>
-			)}
 			{links.length > 0 && others.length > 0 && (
 				<button
 					type="button"
@@ -373,6 +360,35 @@ export default function WhereToWatch({
 					</span>
 					<ChevronRightIcon className="ml-auto h-3.5 w-3.5 shrink-0" />
 				</button>
+			)}
+			{/* The way to what else arrived on a service here: a quiet row like the other countries', with the logo of
+			    the service's card. It says nothing about this title being new. */}
+			{newOnHere.length > 0 && (
+				<ul data-new-on className={others.length > 0 ? "" : "mt-2"}>
+					{newOnHere.map(({ brand, logoPath }) => (
+						<li key={brand.slug}>
+							<Link
+								to={servicePath(country, brand)}
+								prefetch="intent"
+								className="flex w-full items-center gap-2 rounded-lg px-1 py-1 text-xs text-gray-400 hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-white"
+							>
+								<TmdbImage
+									kind="logo"
+									path={logoPath}
+									width={16}
+									ratio={1}
+									alt=""
+									className="h-4 w-4 shrink-0 rounded"
+								/>
+								<span className="min-w-0 truncate">
+									What's new on{" "}
+									<span className="font-semibold text-gray-200">{brand.name}</span>
+								</span>
+								<ChevronRightIcon className="ml-auto h-3.5 w-3.5 shrink-0" aria-hidden />
+							</Link>
+						</li>
+					))}
+				</ul>
 			)}
 			{links.length === 0 && otherTab && (
 				<button

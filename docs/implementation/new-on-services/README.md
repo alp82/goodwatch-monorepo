@@ -141,8 +141,10 @@ The owner's places (Q67, October 25):
   It reuses the cached read of `/new` and the page never waits for it: the row shows when it is ready by the time the
   rest of the page is, and its read fills the cache for the next visit either way. A member's start page was never
   stored; a guest's is unchanged.
-- **Title page**: under the streaming logos, "More new on Netflix" (two at most) for the title's streaming services
-  that have a page in the loaded country (`newPagesNow`). The title loaders never wait for it: it reads the last links
+- **Title page**: under the streaming services, after "Also streaming in", one quiet row per service in that row's
+  style: the service's logo, "What's new on Netflix" and a chevron (two at most), for the title's streaming services
+  that have a page in the loaded country (`newPagesNow`, `WhereToWatch.tsx`). The words never say the title itself is
+  new. The title loaders never wait for it: it reads the last links
   this process loaded (`utils/last-good.ts`), and a missing or 10-minute-old snapshot starts a load in the background,
   in its own read-health scope. Without links there is no link, and the page is just as complete and cacheable. A
   previewed country shows no link.
