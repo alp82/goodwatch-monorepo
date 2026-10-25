@@ -14,7 +14,9 @@
 // The picker, the question, the confirmation, and the tracked status with its menu load on first use.
 //
 // The title page's control (`onPage`) also answers the page's own window events: the tracked show's prompt to rate
-// opens its picker, and a score that is due is said in its score half. A copy elsewhere (the quick view) keeps out.
+// opens its picker, and a score that is due is said in its score half. A copy elsewhere (the quick view) keeps out;
+// for a tracked show it hosts the toasts and the date dialog of the show's tracking itself, which the title page's
+// hero hosts there.
 import { Suspense, lazy, useEffect, useRef, useState } from "react"
 import { useSeenToggle } from "~/hooks/useSeenToggle"
 import { useUserScore, useWatchState } from "~/hooks/useUserDataAccessors"
@@ -55,6 +57,11 @@ const HowFar = lazy(
 		loadHeroStatus().then((module) => ({ default: module.HowFar })),
 	),
 )
+const TrackingHost = lazy(
+	reloadOnStaleChunk(() =>
+		loadHeroStatus().then((module) => ({ default: module.TrackingHost })),
+	),
+)
 
 /** Sent on `window` to open the picker from elsewhere on the page: the prompt to rate of a tracked show. */
 const OPEN_SCORE_EVENT = "gw:open-score"
@@ -86,7 +93,8 @@ export interface ControlMedia {
 
 /**
  * What the person changed with the control, for a surface that answers it (the explorer's confirmations). "seen"
- * that asked for the score comes once the picker closes.
+ * that asked for the score comes once the picker closes, and only when the title is Seen by then: the movie watch
+ * log records the watch on its own, and the picker's switch can take it back.
  */
 export type TitleChange = "want" | "unwant" | "seen" | "unseen" | "scored"
 
@@ -130,14 +138,28 @@ export default function SeenScore({
 
 	/** Seen was marked and the picker asked for the score: the surface hears of it once the picker is done. */
 	const seenLater = useRef(false)
+	/** The picker that Seen opened is done: "seen" is said once the title is Seen (at once, when it already is). */
+	const [awaitSeen, setAwaitSeen] = useState(false)
 	const close = () => {
 		setOpen(false)
 		setAfterSeen(false)
 		setHowFar(false)
 		if (seenLater.current) {
 			seenLater.current = false
-			onChange?.("seen")
+			setAwaitSeen(true)
 		}
+	}
+	useEffect(() => {
+		if (!awaitSeen || open || !a.seen) return
+		setAwaitSeen(false)
+		onChange?.("seen")
+	}, [awaitSeen, open, a.seen])
+	/** Seen asks for the score of a title without one; with a score the surface hears of it once it is Seen. */
+	const askAfterSeen = () => {
+		preloadScoreDialog()
+		seenLater.current = true
+		setAfterSeen(true)
+		setOpen(true)
 	}
 
 	const [due, setDue] = useState<"partway" | "all" | null>(null)
@@ -168,20 +190,26 @@ export default function SeenScore({
 	// The score half too: a tap from before the app was there opens the picker once it is ready.
 	useReplayedTap("score", (el) => Boolean(root.current?.contains(el)))
 
-	// Marking a title Seen asks for its score next (useTitleActions decides when).
+	// Marking a title Seen asks for its score next (useTitleActions decides when). The surface hears of that Seen once
+	// the picker is done, also when the movie watch log's host took the press and records the watch itself.
 	const pressSeen = (event: { currentTarget: EventTarget | null }) => {
 		let asked = false
 		const toggled = a.toggleSeen(event, () => {
 			asked = true
-			preloadScoreDialog()
-			setAfterSeen(true)
-			setOpen(true)
+			askAfterSeen()
 		})
-		// With the movie watch log the log's host took the press and says what it did.
-		if (!toggled) return
-		if (asked) seenLater.current = true
-		else onChange?.(a.seen ? "unseen" : "seen")
+		// Otherwise, with the movie watch log, the press opened the log of a Seen movie: nothing changed yet.
+		if (!asked && toggled) onChange?.(a.seen ? "unseen" : "seen")
 	}
+
+	// A show's Seen from its status (the tracked half's menus), away from the title page: it asks for the score as
+	// Seen does everywhere, and the surface hears of it. The title page's hero says when a score is due instead.
+	const seenFromStatus = onPage
+		? undefined
+		: () => {
+				if (score === null) askAfterSeen()
+				else setAwaitSeen(true)
+			}
 
 	// The score dialog's switch. Off takes a single watch from a movie without a score at once; with a score or more
 	// watches to lose, it asks first.
@@ -249,7 +277,12 @@ export default function SeenScore({
 		seenHalf
 	) : hydrated ? (
 		<Suspense fallback={firstStatus}>
-			<HeroStatus media={media} first={firstStatus} seenHalf={seenHalf} />
+			<HeroStatus
+				media={media}
+				first={firstStatus}
+				seenHalf={seenHalf}
+				onSeen={seenFromStatus}
+			/>
 		</Suspense>
 	) : (
 		firstStatus
@@ -292,6 +325,11 @@ export default function SeenScore({
 					</button>
 				}
 			/>
+			{tracked && hydrated && !onPage && (
+				<Suspense fallback={null}>
+					<TrackingHost media={media} />
+				</Suspense>
+			)}
 			{opened && (
 				<Suspense fallback={null}>
 					<ScoreDialog
@@ -355,6 +393,7 @@ export default function SeenScore({
 							const sent = rate(value)
 							if (sent) {
 								seenLater.current = false
+								setAwaitSeen(false)
 								onChange?.("scored")
 							}
 							if (sent && tracked && !entry && score === null) setHowFar(true)

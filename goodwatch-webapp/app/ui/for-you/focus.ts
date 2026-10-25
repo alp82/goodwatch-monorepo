@@ -5,6 +5,7 @@
 // - on closing, focus returns to where it came from (or to `returnTo`), unless it has moved somewhere else since.
 // Escape stays with each surface, which closes itself.
 import { useEffect, useRef } from "react"
+import { inNestedOverlay } from "~/ui/overlay"
 
 const FOCUSABLE =
 	'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
@@ -24,11 +25,11 @@ function tabbable(roots: HTMLElement[]): HTMLElement[] {
 }
 
 /**
- * A dialog opened from inside a drawer or the card (the score picker) has its own keys: the surface's Escape, arrows
- * and Tab leave them alone while focus is there.
+ * An overlay opened from inside a drawer or the card (the score picker, the not-seen question, a status menu, the
+ * episode picker, the watch log; ui/overlay.ts) has its own keys: the surface's Escape, arrows and Tab leave them
+ * alone while focus is there, and focus in it isn't pulled back.
  */
-export const inNestedDialog = (t: EventTarget | null) =>
-	t instanceof Element && !!t.closest("[data-score-dialog]")
+export const inNestedDialog = inNestedOverlay
 
 /** Focus in another dialog (the site's hub or search) is that dialog's own. */
 const elsewhere = (n: Element) =>
@@ -71,21 +72,28 @@ export function useFocusScope({
 
 		const onKey = (e: KeyboardEvent) => {
 			if (e.key !== "Tab" || e.defaultPrevented) return
-			if (inNestedDialog(document.activeElement)) return
+			// An overlay outside the scope keeps its own Tab; a menu inside it goes round with the rest.
+			const at = document.activeElement
+			if (inNestedDialog(at) && !inside(at)) return
 			const list = tabbable(roots())
 			e.preventDefault()
 			if (!list.length) return enter()
-			const at = list.indexOf(document.activeElement as HTMLElement)
+			const index = list.indexOf(at as HTMLElement)
 			const step = e.shiftKey ? -1 : 1
 			const next =
-				at < 0
+				index < 0
 					? list[e.shiftKey ? list.length - 1 : 0]
-					: list[(at + step + list.length) % list.length]
+					: list[(index + step + list.length) % list.length]
 			next.focus()
 		}
 		const onFocusIn = (e: FocusEvent) => {
 			const t = e.target
-			if (inside(t) || (t instanceof Element && elsewhere(t))) return
+			if (
+				inside(t) ||
+				inNestedDialog(t) ||
+				(t instanceof Element && elsewhere(t))
+			)
+				return
 			enter()
 		}
 		document.addEventListener("keydown", onKey, true)

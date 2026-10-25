@@ -6,6 +6,7 @@ import { createPortal } from "react-dom"
 import { memberWatches, withoutWatch } from "~/domain/watch-log"
 import type { Score } from "~/server/scores.server"
 import { TmdbImage } from "~/ui/TmdbImage"
+import { NESTED_OVERLAY, useOverlayRoot } from "~/ui/overlay"
 import { type ScoredMedia, useScoreAction } from "~/ui/user/actions/ScoreAction"
 import { useWatchLog, useWatchLogAction } from "~/ui/watch-log/useWatchLog"
 import { useAnchoredPanel } from "./anchor"
@@ -56,6 +57,8 @@ export default function NotSeenConfirm({
 	const shade = useRef<HTMLDivElement>(null)
 	const keep = useRef<HTMLButtonElement>(null)
 	const at = useAnchoredPanel(panel, () => anchor?.() ?? null)
+	// Over the score dialog that asked, in full screen too.
+	const root = useOverlayRoot()
 	const done = useRef(onDone)
 	done.current = onDone
 
@@ -119,8 +122,12 @@ export default function NotSeenConfirm({
 	}, [])
 
 	const label = "w-10 shrink-0 text-[10px] uppercase tracking-[0.08em]"
+	if (!root) return null
 	return createPortal(
-		<div className="fixed inset-0 z-[1300] flex items-end justify-center md:items-center md:p-4">
+		<div
+			{...NESTED_OVERLAY}
+			className="fixed inset-0 z-[1300] flex items-end justify-center md:items-center md:p-4"
+		>
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape and Keep as seen are the keyboard's way out. */}
 			<div
 				ref={shade}
@@ -252,6 +259,6 @@ export default function NotSeenConfirm({
 				</div>
 			</div>
 		</div>,
-		document.body,
+		root,
 	)
 }

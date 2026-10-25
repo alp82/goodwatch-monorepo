@@ -4,7 +4,7 @@
 // page's). Every part keeps its height whatever the title has, so a step never moves anything.
 import { ArrowsPointingOutIcon, XMarkIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
-import type { ReactNode } from "react"
+import { type ReactNode, useLayoutEffect, useRef } from "react"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { TitleScorePill } from "~/ui/poster-card/ScorePill"
 import {
@@ -110,10 +110,30 @@ function Services({ offers }: { offers: readonly ServiceOffer[] | null }) {
 	)
 }
 
+/**
+ * The room above the footer, as `--menu-room` on it: a status menu that opens up from the footer keeps within the
+ * card (MENU_UP) and scrolls inside past that, since the card clips what leaves it.
+ */
+function useMenuRoom() {
+	const footer = useRef<HTMLDivElement>(null)
+	useLayoutEffect(() => {
+		const el = footer.current
+		if (!el) return
+		const set = () =>
+			el.style.setProperty("--menu-room", `${Math.max(0, el.offsetTop - 8)}px`)
+		set()
+		const resized = new ResizeObserver(set)
+		if (el.parentElement) resized.observe(el.parentElement)
+		return () => resized.disconnect()
+	}, [])
+	return footer
+}
+
 export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 	const { form, steps } = useQuickViewFrame()
 	const card = form === "card"
 	const name = t.media.details.title
+	const footer = useMenuRoom()
 	return (
 		<>
 			<div className="relative shrink-0 select-none">
@@ -222,6 +242,7 @@ export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 				)}
 			</div>
 			<div
+				ref={footer}
 				data-up=""
 				className="group/menus flex shrink-0 flex-col gap-2 border-t border-white/10 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
 			>

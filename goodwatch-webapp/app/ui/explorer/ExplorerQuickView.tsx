@@ -97,7 +97,7 @@ export function ExplorerQuickView({
 									logo_path: s.logo,
 								}))
 							: null,
-						story: card ? (card.overview ?? null) : undefined,
+						story: card ? card.title.overview : undefined,
 						onChange,
 					}}
 				/>

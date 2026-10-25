@@ -10,6 +10,7 @@ import {
 } from "react"
 import { createPortal } from "react-dom"
 import type { Score } from "~/server/scores.server"
+import { NESTED_OVERLAY, useOverlayRoot } from "~/ui/overlay"
 import { useAnchoredPanel } from "~/ui/scoring/anchor"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 
@@ -81,6 +82,8 @@ function Panel({
 }: Omit<Parameters<typeof ScoreDialog>[0], "open">) {
 	const panel = useRef<HTMLDivElement>(null)
 	const shade = useRef<HTMLDivElement>(null)
+	// Over the surface that opened it, in full screen too.
+	const root = useOverlayRoot()
 	// From md up it opens beside the control that opened it: the whole Seen and score control, when it is that.
 	const at = useAnchoredPanel(
 		panel,
@@ -156,9 +159,11 @@ function Panel({
 		}
 	}, [opener])
 
+	if (!root) return null
 	return createPortal(
 		<div
 			data-score-dialog
+			{...NESTED_OVERLAY}
 			className={`fixed inset-0 ${layer} flex items-end justify-center md:items-center md:p-4`}
 		>
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape closes it, and the Close button is the keyboard's way. */}
@@ -221,6 +226,6 @@ function Panel({
 				)}
 			</div>
 		</div>,
-		document.body,
+		root,
 	)
 }

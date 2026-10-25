@@ -17,11 +17,17 @@ import {
 	HALF_FOCUS,
 	StatusFace,
 } from "~/ui/details/hero/seen-score-faces"
+import { NESTED_OVERLAY } from "~/ui/overlay"
 import { useTitleActions } from "~/ui/title-actions/useTitleActions"
 import { useUndoToast, warmUndoToast } from "~/ui/title-actions/useUndoToast"
 import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import { StatusPill } from "./HeroTracking"
-import { MENU_UP, POPOVER, useDismiss } from "./TrackingToast"
+import {
+	MENU_UP,
+	POPOVER,
+	TrackingToastHost,
+	useDismiss,
+} from "./TrackingToast"
 import { type TrackingActions, useTrackingActions } from "./actions"
 import type { TrackedMedia } from "./gate"
 import { FOCUS, type ShowTracking, plural, useShowTracking } from "./store"
@@ -51,12 +57,18 @@ export default function HeroStatus({
 	media,
 	first,
 	seenHalf,
+	onSeen,
 }: {
 	media: TrackedMedia
 	/** The face the first paint showed, while the show's tracking is read. */
 	first: ReactNode
 	/** For a show without an episode list, or whose tracking could not be read: Seen for the whole show. */
 	seenHalf: ReactNode
+	/**
+	 * A Seen choice was pressed (Seen, Caught up, Mark all or the new episodes): the quick view asks for the score
+	 * and tells its place. The title page leaves it out: its hero says when a score is due (RATE_DUE_EVENT).
+	 */
+	onSeen?: () => void
 }) {
 	const tracking = useShowTracking(media.details.tmdb_id)
 	const actions = useTrackingActions(tracking.store, media.details.title)
@@ -66,12 +78,20 @@ export default function HeroStatus({
 	if (!tracking.ready || !view) return <>{first}</>
 	const { derived } = view
 	if (derived.state === "not_started")
-		return <StartMenu media={media} tracking={tracking} actions={actions} />
+		return (
+			<StartMenu
+				media={media}
+				tracking={tracking}
+				actions={actions}
+				onSeen={onSeen}
+			/>
+		)
 	return (
 		<StatusPill
 			view={view}
 			actions={actions}
 			onRewatch={toggleWant}
+			onSeen={onSeen}
 			face={
 				<StatusFace
 					tone={derived.displayState === "new_episodes" ? "new_episodes" : derived.state}
@@ -84,12 +104,28 @@ export default function HeroStatus({
 	)
 }
 
+/**
+ * The toasts (Undo, Set a date, errors) and the date dialog that the show's tracking answers with, for a surface
+ * without the title page's hero, which hosts them there (HeroTracking): the quick view, for the show it shows.
+ */
+export function TrackingHost({ media }: { media: TrackedMedia }) {
+	const tracking = useShowTracking(media.details.tmdb_id)
+	const actions = useTrackingActions(tracking.store, media.details.title)
+	return <TrackingToastHost tracking={tracking} actions={actions} />
+}
+
 /** Not started: a menu with the two ways in, Watching (up to an episode) and Seen, then Not interested. */
 function StartMenu({
 	media,
 	tracking,
 	actions,
-}: { media: TrackedMedia; tracking: ShowTracking; actions: TrackingActions }) {
+	onSeen,
+}: {
+	media: TrackedMedia
+	tracking: ShowTracking
+	actions: TrackingActions
+	onSeen?: () => void
+}) {
 	const a = useTitleActions(media)
 	const toast = useUndoToast()
 	const [open, setOpen] = useState(false)
@@ -120,12 +156,14 @@ function StartMenu({
 			{open && (
 				<div
 					data-start-menu
+					{...NESTED_OVERLAY}
 					className={`absolute left-0 top-full z-40 mt-1.5 w-80 max-w-[calc(100vw-2.5rem)] ${MENU_UP} p-2 ${POPOVER}`}
 				>
 					<Choices
 						tracking={tracking}
 						actions={actions}
 						onDone={() => setOpen(false)}
+						onSeen={onSeen}
 					/>
 					{(a.canHide || a.hidden) && (
 						<button
@@ -245,11 +283,14 @@ export function Choices({
 	actions,
 	onDone,
 	onlyScore,
+	onSeen,
 }: {
 	tracking: ShowTracking
 	actions: TrackingActions
 	onDone: () => void
 	onlyScore?: () => void
+	/** After Seen, once the choices are closed (HeroStatus's `onSeen`). */
+	onSeen?: () => void
 }) {
 	const [picking, setPicking] = useState(false)
 	const aired = tracking.view?.derived.aired ?? 0
@@ -293,6 +334,7 @@ export function Choices({
 				onClick={() => {
 					actions.pressSeen()
 					onDone()
+					onSeen?.()
 				}}
 				className={`${ROW} bg-white/[0.04] ring-white/10 hover:bg-white/[0.08]`}
 			>

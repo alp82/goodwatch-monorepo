@@ -4,7 +4,9 @@
 //
 // - On the title page (`place="page"`) the box is taller from lg up and answers the page's own events, and a member
 //   with episode tracking gets the show's status line and tracking actions around the row (ui/tracking/gate.tsx).
-// - In the quick view the score picker and its questions open above the view (`layer`), and the row is the plain one.
+// - In the quick view the score picker and its questions open above the view (`layer`), and the row is the plain one;
+//   a tracked show's toasts (Undo, Set a date) and its date dialog are hosted by the box (SeenScore), for the show the
+//   view shows.
 //
 // Not interested answers with a toast that can take it back; the button stays pressed while the title is hidden. The
 // toast is fetched when the pointer, the keyboard focus, or a finger reaches the row, so it is there by the press.

@@ -12,8 +12,9 @@
 // Phones: a bottom drawer over the dimmed page, with a 96 px poster in its head and previous / next beside Details
 // and close. A sideways swipe steps, a swipe down closes.
 //
-// Both: focus moves in on opening, Tab stays in, Escape closes and focus returns to the poster; a dialog opened from
-// inside (the score picker, the watch log) keeps its own keys (for-you/focus.ts).
+// Both: focus moves in on opening, Tab stays in, Escape closes and focus returns to the poster; an overlay opened from
+// inside (the score picker, the not-seen question, a status menu, the watch log) keeps its own keys and taps, and goes
+// where the view is in the document, so it shows over it in full screen too (ui/overlay.ts).
 import {
 	AnimatePresence,
 	animate,
@@ -30,7 +31,8 @@ import {
 	useState,
 } from "react"
 import { createPortal } from "react-dom"
-import { inNestedDialog, useFocusScope } from "~/ui/for-you/focus"
+import { useFocusScope } from "~/ui/for-you/focus"
+import { OverlayRoot, inNestedOverlay, nestedOverlayOpen } from "~/ui/overlay"
 
 export type Box = { x: number; y: number; w: number; h: number }
 
@@ -213,10 +215,33 @@ const toward = (b: Box | null, t: Box, k = 0.2) =>
 			}
 		: { x: 0, y: 0, scaleX: 0.96, scaleY: 0.96, opacity: 0 }
 
-/** Something of the view's own is open over it (the score picker, a menu): it has the keys and the taps. */
-const nestedOpen = (view: HTMLElement | null) =>
-	!!document.querySelector("[data-score-dialog]") ||
-	!!view?.querySelector('[aria-expanded="true"]')
+/**
+ * The wheel or the finger moving by `dy` scrolls something between `target` and `root`: a scrolling region of the
+ * view (a status menu with the episode picker) keeps its own scroll; nothing else under the view does.
+ */
+function scrollsInside(
+	target: EventTarget | null,
+	root: HTMLElement,
+	dy: number,
+) {
+	for (
+		let el = target instanceof Element ? target : null;
+		el && el !== root;
+		el = el.parentElement
+	) {
+		if (!(el instanceof HTMLElement) || el.scrollHeight <= el.clientHeight)
+			continue
+		const { overflowY } = getComputedStyle(el)
+		if (overflowY !== "auto" && overflowY !== "scroll") continue
+		if (
+			dy < 0
+				? el.scrollTop > 0
+				: el.scrollTop + el.clientHeight < el.scrollHeight - 1
+		)
+			return true
+	}
+	return false
+}
 
 /** A tap on the dim closes the view, unless it only dismissed something of the view's own. */
 function useCloseTap(
@@ -226,7 +251,7 @@ function useCloseTap(
 	const nested = useRef(false)
 	return {
 		onPointerDown: () => {
-			nested.current = nestedOpen(view.current)
+			nested.current = nestedOverlayOpen(view.current)
 		},
 		onClick: () => {
 			if (!nested.current) close()
@@ -247,7 +272,7 @@ function useKeys(
 	useEffect(() => {
 		if (!live) return
 		const onKey = (e: KeyboardEvent) => {
-			if (inNestedDialog(e.target) || nestedOpen(view.current)) return
+			if (inNestedOverlay(e.target) || nestedOverlayOpen(view.current)) return
 			const t = e.target
 			if (t instanceof Element && t.closest("input, textarea, select")) return
 			if (e.key === "Escape") {
@@ -272,7 +297,9 @@ export function QuickView(props: QuickViewProps) {
 	useEffect(() => setHost(props.container ?? document.body), [props.container])
 	if (!host) return null
 	return createPortal(
-		props.wide ? <LiftCard {...props} /> : <Drawer {...props} />,
+		<OverlayRoot.Provider value={host}>
+			{props.wide ? <LiftCard {...props} /> : <Drawer {...props} />}
+		</OverlayRoot.Provider>,
 		host,
 	)
 }
@@ -353,16 +380,31 @@ function LiftCard(p: QuickViewProps) {
 		[],
 	)
 
-	// The page behind doesn't scroll by wheel or finger while the view is out (a step's own scroll still does).
+	// The page behind doesn't scroll by wheel or finger while the view is out (a step's own scroll still does); a
+	// scrolling region inside the view does.
 	useEffect(() => {
 		const el = layer.current
 		if (!el) return
-		const stop = (e: Event) => e.preventDefault()
-		el.addEventListener("wheel", stop, { passive: false })
-		el.addEventListener("touchmove", stop, { passive: false })
+		let lastY = 0
+		const onWheel = (e: WheelEvent) => {
+			if (!scrollsInside(e.target, el, e.deltaY)) e.preventDefault()
+		}
+		const onTouchStart = (e: TouchEvent) => {
+			lastY = e.touches[0]?.clientY ?? 0
+		}
+		const onTouchMove = (e: TouchEvent) => {
+			const y = e.touches[0]?.clientY ?? lastY
+			const dy = lastY - y
+			lastY = y
+			if (!scrollsInside(e.target, el, dy)) e.preventDefault()
+		}
+		el.addEventListener("wheel", onWheel, { passive: false })
+		el.addEventListener("touchstart", onTouchStart, { passive: true })
+		el.addEventListener("touchmove", onTouchMove, { passive: false })
 		return () => {
-			el.removeEventListener("wheel", stop)
-			el.removeEventListener("touchmove", stop)
+			el.removeEventListener("wheel", onWheel)
+			el.removeEventListener("touchstart", onTouchStart)
+			el.removeEventListener("touchmove", onTouchMove)
 		}
 	}, [])
 
@@ -630,14 +672,15 @@ function Drawer(p: QuickViewProps) {
 						if (closing) p.onClose()
 					}}
 					onPointerDown={(e) => {
-						if ((e.target as Element).closest?.("[data-score-dialog]")) return
+						if (inNestedOverlay(e.target)) return
 						start.current = { x: e.clientX, y: e.clientY, id: e.pointerId }
 					}}
 					onPointerUp={(e) => {
 						const s = start.current
 						start.current = null
 						// The score picker and the menus are portals or popovers: their pointer events still bubble here.
-						if (!s || s.id !== e.pointerId || nestedOpen(view.current)) return
+						if (!s || s.id !== e.pointerId || nestedOverlayOpen(view.current))
+							return
 						const dx = e.clientX - s.x
 						const dyy = e.clientY - s.y
 						if (dyy > 80 && dyy > Math.abs(dx) * 1.5) return requestClose()

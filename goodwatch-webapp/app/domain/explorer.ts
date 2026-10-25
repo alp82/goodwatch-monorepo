@@ -190,7 +190,11 @@ export interface ExplorerParts {
 }
 
 export interface ExplorerCard {
-	title: ExplorerTitle
+	/**
+	 * The title with its story (null when there is none). The story is part of the title, so a display language
+	 * overlays it with the name (localizeTitlePayload).
+	 */
+	title: ExplorerTitle & { overview: string | null }
 	/** "Real scares and a slow burn, like The Thing"; null without taste. */
 	why: string | null
 	/** The closest title the viewer rated 8 or more. */
@@ -199,6 +203,4 @@ export interface ExplorerCard {
 	services: ExplorerService[]
 	/** A guest without taste: the card shows the sign-up prompt in place of the match. */
 	signUp: boolean
-	/** The title's story; null when there is none. */
-	overview: string | null
 }

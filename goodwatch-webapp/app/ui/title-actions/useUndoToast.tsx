@@ -2,11 +2,14 @@
 // before a person has acted.
 import { type ReactNode, Suspense, lazy, useCallback, useState } from "react"
 import { createPortal } from "react-dom"
+import { useOverlayRoot } from "~/ui/overlay"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import type { UndoToastMessage } from "./UndoToast"
 
 const loadUndoToast = reloadOnStaleChunk(() => import("./UndoToast"))
-const UndoToast = lazy(() => loadUndoToast().then((module) => ({ default: module.UndoToast })))
+const UndoToast = lazy(() =>
+	loadUndoToast().then((module) => ({ default: module.UndoToast })),
+)
 
 /** Fetches the toast ahead of its first message. Call it when an action that answers with the toast is likely. */
 export function warmUndoToast() {
@@ -23,7 +26,9 @@ export function useUndoToast(className?: string): {
 	dismiss: () => void
 	node: ReactNode
 } {
-	const [toast, setToast] = useState<(UndoToastMessage & { undo?: () => void }) | null>(null)
+	const [toast, setToast] = useState<
+		(UndoToastMessage & { undo?: () => void }) | null
+	>(null)
 	// Stays mounted after the first message, so a later one can animate out.
 	const [used, setUsed] = useState(false)
 	const say = useCallback((text: string, undo?: () => void) => {
@@ -31,21 +36,24 @@ export function useUndoToast(className?: string): {
 		setToast({ id: Date.now(), text, undo, undoable: Boolean(undo) })
 	}, [])
 	const dismiss = useCallback(() => setToast(null), [])
-	const node = used
-		? createPortal(
-				<Suspense fallback={null}>
-					<UndoToast
-						toast={toast}
-						className={className}
-						onDismiss={dismiss}
-						onUndo={() => {
-							toast?.undo?.()
-							setToast(null)
-						}}
-					/>
-				</Suspense>,
-				document.body,
-			)
-		: null
+	// At the end of the page, or of the surface's own root (the quick view's, in full screen).
+	const root = useOverlayRoot()
+	const node =
+		used && root
+			? createPortal(
+					<Suspense fallback={null}>
+						<UndoToast
+							toast={toast}
+							className={className}
+							onDismiss={dismiss}
+							onUndo={() => {
+								toast?.undo?.()
+								setToast(null)
+							}}
+						/>
+					</Suspense>,
+					root,
+				)
+			: null
 	return { say, dismiss, node }
 }

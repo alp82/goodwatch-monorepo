@@ -1,6 +1,7 @@
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
+import { useOverlayRoot } from "~/ui/overlay"
 
 interface DrawerProps {
 	open: boolean
@@ -17,8 +18,9 @@ interface DrawerProps {
  * A reusable Drawer component that slides up from the bottom on mobile screens.
  * Hidden on md+ screens by default. Uses Tailwind for styling.
  * Now supports drag-to-close via the handle.
- * Renders into document.body, so an ancestor's z-index, isolation, filter or
- * transform cannot trap it under the page or unpin it from the viewport.
+ * Renders into document.body (or the element in full screen, or the root of the
+ * overlay it opens from; ui/overlay.ts), so an ancestor's z-index, isolation,
+ * filter or transform cannot trap it under the page or unpin it from the viewport.
  */
 const DRAG_CLOSE_THRESHOLD = 80 // px
 const DRAG_UP_RESISTANCE = 0.4 // resistance factor for upward drag
@@ -39,6 +41,7 @@ const Drawer: React.FC<DrawerProps> = ({
 	const [mounted, setMounted] = useState(false)
 
 	useEffect(() => setMounted(true), [])
+	const root = useOverlayRoot()
 
 	// Animate in/out and manage body scroll
 	useEffect(() => {
@@ -126,13 +129,15 @@ const Drawer: React.FC<DrawerProps> = ({
 			: 999 // off-screen
 	const transition = dragging ? "none" : "transform 0.3s cubic-bezier(0.4,0,0.2,1)"
 
-	if (!mounted) return null
+	if (!mounted || !root) return null
 
 	return createPortal(
 		<div
 			className={`fixed inset-0 ${layer} flex items-end ${allSizes ? "" : "md:hidden"} ${isOpen ? "visible" : "invisible pointer-events-none"}`}
 			aria-modal="true"
 			tabIndex={-1}
+			// Open over a surface that is itself an overlay (the quick view), it keeps its own keys and taps.
+			data-nested-overlay={isOpen ? "" : undefined}
 		>
 			{/* Overlay */}
 			<div
@@ -167,7 +172,7 @@ const Drawer: React.FC<DrawerProps> = ({
 				{children}
 			</div>
 		</div>,
-		document.body,
+		root,
 	)
 }
 

@@ -5,6 +5,7 @@
 import { XMarkIcon } from "@heroicons/react/24/solid"
 import { type RefObject, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
+import { NESTED_OVERLAY, useOverlayRoot } from "~/ui/overlay"
 import type { TrackingActions } from "./actions"
 import { FOCUS, type ShowTracking } from "./store"
 
@@ -18,7 +19,8 @@ export function TrackingToastHost({
 	const { store, toast, dateRequest, today } = tracking
 	const host = useRef({})
 	useEffect(() => store.claimHost(host.current), [store])
-	if (!store.isHost(host.current)) return null
+	const root = useOverlayRoot()
+	if (!store.isHost(host.current) || !root) return null
 	return createPortal(
 		<>
 			{toast && (
@@ -71,7 +73,7 @@ export function TrackingToastHost({
 				/>
 			)}
 		</>,
-		document.body,
+		root,
 	)
 }
 
@@ -105,10 +107,11 @@ export function useDismiss(
 
 /**
  * A status menu opens up instead of down at the foot of a surface (the quick view's footer, marked `group/menus`
- * with `data-up`), where there is no room under it.
+ * with `data-up`), where there is no room under it. It is no taller than the room the footer says it has above it
+ * (`--menu-room`), and scrolls inside when it grows past that (the episode picker).
  */
 export const MENU_UP =
-	"group-data-[up]/menus:top-auto group-data-[up]/menus:bottom-full group-data-[up]/menus:mt-0 group-data-[up]/menus:mb-1.5"
+	"group-data-[up]/menus:top-auto group-data-[up]/menus:bottom-full group-data-[up]/menus:mt-0 group-data-[up]/menus:mb-1.5 group-data-[up]/menus:max-h-[var(--menu-room,24rem)] group-data-[up]/menus:overflow-y-auto group-data-[up]/menus:overscroll-contain"
 
 /** The surface of what opens in place over the page: the status menu, and a question outside it. */
 export const POPOVER =
@@ -195,6 +198,7 @@ function DateDialog({
 	}, [onClose])
 	return (
 		<div
+			{...NESTED_OVERLAY}
 			className="fixed inset-0 z-[1300] flex items-end justify-center bg-black/70 sm:items-center"
 			onPointerDown={(event) => {
 				if (event.target === event.currentTarget) onClose()

@@ -20,6 +20,7 @@ import { useUserScore } from "~/hooks/useUserDataAccessors"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
 import type { UserData } from "~/types/user-data"
 import Drawer from "~/ui/modal/Drawer"
+import { NESTED_OVERLAY, useOverlayRoot } from "~/ui/overlay"
 import { UndoToast } from "~/ui/title-actions/UndoToast"
 import { useUser } from "~/utils/auth"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
@@ -76,6 +77,7 @@ export default function WatchLogSurface({ press }: { press: SeenPress }) {
 	const { user } = useUser()
 	const act = useWatchLogAction()
 	const [open, setOpen] = useState<OpenLog | null>(null)
+	const root = useOverlayRoot()
 	const [toast, setToast] = useState<Toast | null>(null)
 	const dismiss = useCallback(() => setToast(null), [])
 	const say = useCallback(
@@ -211,21 +213,22 @@ export default function WatchLogSurface({ press }: { press: SeenPress }) {
 					/>
 				</Suspense>
 			)}
-			{createPortal(
-				<UndoToast
-					toast={toast}
-					onDismiss={dismiss}
-					onAction={() => {
-						toast?.onAction?.()
-						setToast(null)
-					}}
-					onUndo={() => {
-						toast?.undo()
-						setToast(null)
-					}}
-				/>,
-				document.body,
-			)}
+			{root &&
+				createPortal(
+					<UndoToast
+						toast={toast}
+						onDismiss={dismiss}
+						onAction={() => {
+							toast?.onAction?.()
+							setToast(null)
+						}}
+						onUndo={() => {
+							toast?.undo()
+							setToast(null)
+						}}
+					/>,
+					root,
+				)}
 		</>
 	)
 }
@@ -264,6 +267,9 @@ function Flyout({
 }) {
 	const phone = usePhone()
 	const panel = useRef<HTMLDivElement>(null)
+	// In the body it scrolls with the page; in an element in full screen it keeps to the screen.
+	const root = useOverlayRoot()
+	const inBody = typeof document !== "undefined" && root === document.body
 	const [at, setAt] = useState<{
 		left: number
 		top: number
@@ -286,6 +292,9 @@ function Flyout({
 					fixed: true,
 				})
 			const button = anchor.getBoundingClientRect()
+			const scroll = inBody
+				? { x: window.scrollX, y: window.scrollY }
+				: { x: 0, y: 0 }
 			const left = Math.max(
 				EDGE,
 				Math.min(button.left, window.innerWidth - width - EDGE),
@@ -297,10 +306,10 @@ function Flyout({
 					? button.bottom + GAP
 					: Math.max(EDGE, button.top - GAP - height)
 			setAt({
-				left: left + window.scrollX,
-				top: top + window.scrollY,
+				left: left + scroll.x,
+				top: top + scroll.y,
 				width,
-				fixed: false,
+				fixed: !inBody,
 			})
 		}
 		place()
@@ -312,7 +321,7 @@ function Flyout({
 			resized.disconnect()
 			window.removeEventListener("resize", place)
 		}
-	}, [popover, anchor])
+	}, [popover, anchor, inBody])
 
 	// The focus moves into the popover once it has its place: before that it is hidden and can't take it.
 	const placed = at !== null
@@ -341,16 +350,22 @@ function Flyout({
 
 	if (phone)
 		return (
-			<Drawer open={Boolean(open)} onClose={() => onClose(false)} allSizes layer="z-[1300]">
+			<Drawer
+				open={Boolean(open)}
+				onClose={() => onClose(false)}
+				allSizes
+				layer="z-[1300]"
+			>
 				<div className="mx-auto max-w-md p-1 text-white" data-watch-log-sheet>
 					{children}
 				</div>
 			</Drawer>
 		)
-	if (!open) return null
+	if (!open || !root) return null
 	return createPortal(
 		<div
 			ref={panel}
+			{...NESTED_OVERLAY}
 			// biome-ignore lint/a11y/useSemanticElements: a non-modal popover beside its button, not a <dialog>.
 			role="dialog"
 			aria-label={`Your watches of ${open.movie.title}`}
@@ -365,6 +380,6 @@ function Flyout({
 		>
 			{children}
 		</div>,
-		document.body,
+		root,
 	)
 }

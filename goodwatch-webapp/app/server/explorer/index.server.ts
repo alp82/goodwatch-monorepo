@@ -450,12 +450,12 @@ export async function getNearCard(
 		readOverviews([key]),
 	])
 	return {
-		title: titleOf(seat, i),
+		// The story goes with the title's own identity, so the response's display language translates both.
+		title: { ...titleOf(seat, i), overview: overviews.get(key) ?? null },
 		why,
 		like,
 		services,
 		signUp: ctx.viewer.kind === "guest" && taste.signal !== "some",
-		overview: overviews.get(key) ?? null,
 	}
 }
 

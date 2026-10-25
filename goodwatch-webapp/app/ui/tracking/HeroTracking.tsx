@@ -18,9 +18,10 @@ import { episodeLabel } from "~/domain/tracking/machine"
 import type { ShowView } from "~/domain/tracking/show-page"
 import type { MenuEntry, MenuEntryId } from "~/domain/tracking/status-menu"
 import { EPISODE_GRID_ANCHOR } from "~/ui/details/episode-grid/scale"
-import { RATE_DUE_EVENT, SCORE_SAVED_EVENT } from "~/ui/title-actions/SeenScore"
 import { HALF_FOCUS } from "~/ui/details/hero/seen-score-faces"
+import { NESTED_OVERLAY } from "~/ui/overlay"
 import { ActionButton } from "~/ui/title-actions/ActionButton"
+import { RATE_DUE_EVENT, SCORE_SAVED_EVENT } from "~/ui/title-actions/SeenScore"
 import { useTitleActions } from "~/ui/title-actions/useTitleActions"
 import {
 	ConfirmPanel,
@@ -162,12 +163,15 @@ export function StatusPill({
 	view,
 	actions,
 	onRewatch,
+	onSeen,
 	face,
 }: {
 	view: ShowView
 	actions: TrackingActions
 	/** Want to rewatch, on or off: the Wishlist's own writer, as the Want to See button uses it. */
 	onRewatch: () => void
+	/** After a Seen entry (Mark all, the new episodes), once the menu is closed (HeroStatus's `onSeen`). */
+	onSeen?: () => void
 	/** The status half's face: the button shows it. */
 	face: ReactNode
 }) {
@@ -206,6 +210,7 @@ export function StatusPill({
 					view={view}
 					actions={actions}
 					onRewatch={onRewatch}
+					onSeen={onSeen}
 					onDone={close}
 					className={`absolute left-0 top-full z-40 mt-1.5 w-80 max-w-[calc(100vw-2.5rem)] ${MENU_UP} ${POPOVER}`}
 				/>
@@ -223,12 +228,15 @@ export function StatusMenu({
 	view,
 	actions,
 	onRewatch,
+	onSeen,
 	onDone,
 	className = "",
 }: {
 	view: ShowView
 	actions: TrackingActions
 	onRewatch: () => void
+	/** After a Seen entry (Mark all, the new episodes), once the menu is closed. */
+	onSeen?: () => void
 	onDone: () => void
 	className?: string
 }) {
@@ -253,7 +261,8 @@ export function StatusMenu({
 		switch (entry.id) {
 			case "markNew":
 			case "markAll":
-				return actions.pressSeen()
+				actions.pressSeen()
+				return onSeen?.()
 			case "takeBack":
 				return actions.undoSeen()
 			case "notStarted":
@@ -282,6 +291,7 @@ export function StatusMenu({
 	return (
 		<div
 			ref={menuBox}
+			{...NESTED_OVERLAY}
 			role={confirming ? "alertdialog" : "menu"}
 			aria-label={confirming ? confirming.label : "Change the status"}
 			onKeyDown={confirming ? undefined : onMenuKey}
