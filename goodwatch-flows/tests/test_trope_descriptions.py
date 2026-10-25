@@ -337,6 +337,41 @@ class TropeDescriptionTests(unittest.TestCase):
         result = extract_description(html, "Time_Slip", target + "?from=Main.Time_Slip", requested_url=known)
         self.assertIsNone(result["error"])
 
+    def test_leading_verified_repair_notice_preserves_real_intro(self):
+        notice = '<h2> This page is <a href="https://tvtropes.org/pmwiki/posts.php?discussion=17289715800.37750000">under review</a> in the <a href="/pmwiki/pmwiki.php/Administrivia/TropeRepairShop">Trope Repair Shop</a>.</h2>'
+        lead = 'Media with a prominent focus on Black American people, whether it be historical or contemporary. Exploration of racial identity is common in these works, though the subject can also be highly varied.'
+        guidance = 'We ask to list works with African-Americans in central roles as opposed to periphery roles.'
+        body = '<p></p>' + notice + '<div class="indent">A long opening quotation is not part of the definition.</div><p>' + lead + '</p><p>' + guidance + '</p><hr><div class="folderlabel">Works</div><p>Excluded work example.</p>'
+        result = self.extract(page(body))
+        self.assertIsNone(result['error'])
+        self.assertEqual(result['description'], lead + '\n\n' + guidance)
+
+    def test_repair_notice_lookalikes_do_not_remove_heading_boundaries(self):
+        notice = '<h2>This page is <a href="https://tvtropes.org/pmwiki/posts.php?discussion=17289715800.37750000">under review</a> in the <a href="/pmwiki/pmwiki.php/Administrivia/TropeRepairShop">Trope Repair Shop</a>.</h2>'
+        for bad in [
+            notice.replace('/Administrivia/TropeRepairShop', '/Main/TropeRepairShop'),
+            notice.replace('/Administrivia/TropeRepairShop', '/Administrivia/TropeRepairShopExtra'),
+            notice.replace('href="/pmwiki/pmwiki.php/', 'href="https://tvtropes.org.evil.example/pmwiki/pmwiki.php/'),
+            notice.replace('href="/pmwiki/pmwiki.php/', 'href="https://tvtropes.org@evil.example/pmwiki/pmwiki.php/'),
+            notice.replace('https://tvtropes.org/pmwiki/posts.php', 'https://evil.example/pmwiki/posts.php'),
+            notice.replace('TropeRepairShop"', 'TropeRepairShop?other=1"'),
+            notice.replace('TropeRepairShop"', 'TropeRepairShop#Examples"'),
+            notice.replace('This page is', 'Examples are'),
+            notice.replace('under review', 'an example'),
+            notice.replace('h2', 'h3'),
+            '<h2>Examples</h2>',
+        ]:
+            with self.subTest(notice=bad):
+                self.assertIsNone(self.extract(page(bad + '<p>' + LEAD + '</p><hr>'))['description'])
+
+    def test_later_repair_notice_and_notice_outside_article_remain_boundaries(self):
+        notice = '<h2>This page is <a href="https://tvtropes.org/pmwiki/posts.php?discussion=17289715800.37750000">under review</a> in the <a href="/pmwiki/pmwiki.php/Administrivia/TropeRepairShop">Trope Repair Shop</a>.</h2>'
+        for lead in ['<p>' + LEAD + '</p>', LEAD]:
+            result = self.extract(page(lead + notice + '<p>Later section must not enter the introduction.</p><hr>'))
+            self.assertEqual(result['description'], LEAD)
+        html = page('<p>' + LEAD + '</p>').replace('</article>', '</article>' + notice + '<p>Outside content must be excluded.</p><hr>')
+        self.assertEqual(self.extract(html)['description'], LEAD)
+
     def test_rejects_missing_or_ambiguous_canonical(self):
         for html in [page(f'<p>{LEAD}</p><hr>').replace(f'<link rel="canonical" href="{URL}">', ''), page(f'<p>{LEAD}</p><hr>', canonical=''), page(f'<p>{LEAD}</p><hr>').replace('</head>', '<link rel="canonical" href="https://tvtropes.org/pmwiki/pmwiki.php/Main/Other"></head>')]:
             self.assertIsNone(self.extract(html)["description"])

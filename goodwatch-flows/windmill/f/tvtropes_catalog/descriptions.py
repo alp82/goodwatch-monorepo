@@ -194,7 +194,23 @@ def _leading_media_hatnote(node):
     return False
 
 
-def _skip_leading_media_hatnotes(article):
+def _leading_repair_notice(node):
+    if (not isinstance(node, Tag) or node.name != "h2"
+            or _text(node) != "This page is under review in the Trope Repair Shop."):
+        return False
+    links = node.find_all("a", href=True)
+    if len(links) != 2 or [_text(link) for link in links] != ["under review", "Trope Repair Shop"]:
+        return False
+    discussion, repair = [urlparse(urljoin("https://tvtropes.org", link["href"])) for link in links]
+    if any(url.scheme != "https" or url.netloc != "tvtropes.org" or url.params or url.fragment
+           for url in (discussion, repair)):
+        return False
+    return (repair.path == "/pmwiki/pmwiki.php/Administrivia/TropeRepairShop" and not repair.query
+            and discussion.path == "/pmwiki/posts.php"
+            and bool(re.fullmatch(r"discussion=\d+\.\d+", discussion.query)))
+
+
+def _skip_leading_metadata(article):
     # Only inspect the validated article's leading siblings. Once real intro
     # text or any other boundary occurs, every later heading retains its meaning.
     for node in list(article.children):
@@ -204,7 +220,7 @@ def _skip_leading_media_hatnotes(article):
             if node.strip():
                 break
             continue
-        if _leading_media_hatnote(node):
+        if _leading_media_hatnote(node) or _leading_repair_notice(node):
             node.decompose()
         elif any(_events(node)):
             break
@@ -277,7 +293,7 @@ def extract_description(html, name, final_url, *, requested_url=None):
     article = soup.select_one("#main-article")
     if not article:
         return reject("Missing main article")
-    _skip_leading_media_hatnotes(article)
+    _skip_leading_metadata(article)
     paragraphs, boundary = _collect(list(article.children))
     if not boundary:
         content = article.find_parent(id="main-content")
