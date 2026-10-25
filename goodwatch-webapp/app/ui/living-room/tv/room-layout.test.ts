@@ -43,8 +43,8 @@ describe("the desktop room, at the prototype's window sizes", () => {
 	const rows = [
 		[1920, 1080, 1857, 1003, 1.548, 0.564, 1352, 1346],
 		[1920, 940, 1857, 1003, 1.548, 0.5, 1317, 1305],
-		// A wide screen (WIDE_FROM): the TV fits the height.
-		[2560, 1300, 2252, 1216, 1.877, 0.68, 1627, 1631],
+		// A wide screen (WIDE_FROM): the TV leaves the whole Remote under it.
+		[2560, 1300, 1730, 934, 1.44, 0.46, 1252, 1236],
 		[1536, 730, 1483, 801, 1.236, 0.5, 1114, 1102],
 		[1440, 800, 1389, 750, 1.158, 0.5, 1063, 1051],
 		[1366, 650, 1317, 711, 1.098, 0.5, 1024, 1012],
@@ -162,28 +162,32 @@ describe("the Remote is under the TV, centred, at every size", () => {
 		assert.ok(L.height > 576, "the room's content is taller than the scene")
 	})
 
-	it("on a wide screen the TV is never taller than the scene (the owner, 2026-10-25), centred, the Remote's top under it", () => {
-		// The owner's ultrawide window: 2524 x 975, a scene of 2509 x 911. It was a TV of 2453 x 1325.
+	it("on a wide screen the TV sits a little lower and leaves the whole Remote under it, nothing scrolls (the owner, 2026-10-25)", () => {
+		// The owner's ultrawide window: 2524 x 975, a scene of 2509 x 911. It was a TV of 2453 x 1325, then one that
+		// fitted the height with only the Remote's top showing.
 		for (const [w, h] of [
 			[2509, 911],
 			[1921, 576],
 			[3440, 1300],
 			[5000, 1300],
+			[2545, 1500],
 		] as const) {
 			const L = layoutRoom(w, h)
 			const at = `${w} x ${h}`
-			assert.ok(
-				L.tv.top + L.tv.height <= h - top(h) + 1e-6,
-				`${at}: the TV's bottom inside the scene`,
-			)
+			near(L.tv.top, Math.max(6, h * 0.025), 1e-6, `${at}: the TV's top margin`)
 			assert.ok(
 				L.tv.width <= w - 2 * pad(w) + 1e-6,
 				`${at}: no wider than the scene's margins`,
 			)
 			near(L.tv.left + L.tv.width / 2, w / 2, 0.5, `${at}: the TV's middle`)
-			assert.ok(L.remote.top < h, `${at}: the Remote's top shows`)
+			assert.ok(L.remote.scale >= 0.46, `${at}: the Remote's size`)
+			assert.ok(
+				L.remote.top + SHOWN * L.remote.scale <= h + 1e-6,
+				`${at}: the whole Remote inside the scene`,
+			)
+			assert.equal(L.height, h, `${at}: no scrolling`)
 		}
-		near(layoutRoom(2509, 911).tv.width, 1659.7, 0.1, "the owner's window")
+		near(layoutRoom(2509, 911).tv.width, 1143.5, 0.1, "the owner's window")
 	})
 
 	it("up to WIDE_FROM a short window keeps the full-width TV", () => {

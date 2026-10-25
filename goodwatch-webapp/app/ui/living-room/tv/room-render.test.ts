@@ -129,7 +129,7 @@ test("living-room.css's first paint seats the room where the layouts do, at ever
 	)
 	assert.match(
 		first,
-		/min\(var\(--f-tvfull\), \(var\(--f-h\) - 2 \* var\(--f-tvt\)\) \* 1\.851515151515\)/,
+		/min\(var\(--f-tvfull\), \(var\(--f-h\) - var\(--f-tvt\) \+ 10px - 280\.6px\) \* 1\.851515151515\)/,
 	)
 	assert.match(
 		first,
@@ -148,11 +148,12 @@ test("living-room.css's first paint seats the room where the layouts do, at ever
 	for (let w = 768; w <= 2560; w += 61)
 		for (let h = 420; h <= 1500; h += 53) {
 			// The CSS's math, step by step.
-			const tvt = Math.max(6, h * 0.008)
-			const full = w - 2 * pad(w)
 			const wide = Math.min(1, Math.max(0, (w - 1920) * 1000))
+			const tvt = Math.max(6, h * (0.008 + 0.017 * wide))
+			const full = w - 2 * pad(w)
 			const tvw =
-				full - wide * (full - Math.min(full, (h - 2 * tvt) * 1.851515151515))
+				full -
+				wide * (full - Math.min(full, (h - tvt + 10 - 280.6) * 1.851515151515))
 			const tvh = tvw / 1.851515151515
 			const under = h - tvt - tvh + 18 - 8
 			const fit = Math.min(1, Math.max(0, (under - 280.6) * 10000 + 1))
