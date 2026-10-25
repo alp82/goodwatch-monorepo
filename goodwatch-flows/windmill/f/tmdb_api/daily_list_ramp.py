@@ -265,8 +265,11 @@ def run_daily_job(*, countries, service_ids, dry_run, requests_per_second, max_r
             if not dry_run:
                 from f.tmdb_api.list_offer_refresh import drain
                 try:
+                    # Leave catch-up capacity above the observed 20–23k daily
+                    # changes; the shared request and remaining-time caps win.
                     report['offer_refresh'] = drain(client, store.db, store.connector,
-                        dry_run=False, check_owned=owned, max_seconds=max(0, 28000 - (time.monotonic() - started)))
+                        dry_run=False, limit=30000, check_owned=owned,
+                        max_seconds=max(0, 27000 - (time.monotonic() - started)))
                 except job.RequestBudgetExceeded:
                     report['hard_budget_exceeded'] = True
             report['seconds'] = round(time.monotonic() - started, 3)

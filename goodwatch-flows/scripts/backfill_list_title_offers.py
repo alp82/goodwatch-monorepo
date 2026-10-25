@@ -169,7 +169,7 @@ def main():
     parser.add_argument('--drain', action='store_true', help='Preview pending queue, or consume it with --apply')
     parser.add_argument('--preview-offers', action='store_true', help='With --drain: fresh read-only source/offer/history diff')
     parser.add_argument('--check-sources', action='store_true', help='Read Mongo eligibility for --manifest; never writes')
-    parser.add_argument('--limit', type=int, default=1000, help='Titles per manual consumer batch (1..20000)')
+    parser.add_argument('--limit', type=int, default=1000, help='Titles per manual consumer batch (1..30000)')
     parser.add_argument('--max-requests', type=int, default=20000, help='Shared consumer HTTP budget, including retries')
     parser.add_argument('--wm-helper', type=Path, help='Local Windmill req helper; credentials remain in memory')
     args = parser.parse_args()
@@ -208,7 +208,7 @@ def main():
             if args.check_sources:
                 from f.db.mongodb import init_mongodb, close_mongodb
                 from mongoengine import get_db
-                init_mongodb()
+                init_mongodb(compressors='zlib')
                 try:
                     plan['source_eligibility'] = source_eligibility(get_db(), plan)
                 finally:
@@ -220,7 +220,7 @@ def main():
             return
         from f.db.mongodb import init_mongodb, close_mongodb
         from mongoengine import get_db
-        init_mongodb()
+        init_mongodb(compressors='zlib')
         try:
             print(json.dumps(enqueue_manifest(get_db(), plan, dry_run=False), indent=2))
         finally:

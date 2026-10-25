@@ -3,6 +3,7 @@ import ast
 import time
 from collections import defaultdict
 from contextlib import contextmanager
+from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 from pymongo.errors import DuplicateKeyError
 from copy import deepcopy
@@ -95,7 +96,8 @@ def load_copy(db: Any) -> Callable[..., dict]:
     body = [n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.Assign, ast.ClassDef))]
     namespace = dict(defaultdict=defaultdict, datetime=datetime, timedelta=timedelta,
                      Optional=Optional, Any=Any, Callable=Callable, Iterator=Iterator,
-                     contextmanager=contextmanager, uuid4=uuid4, DuplicateKeyError=DuplicateKeyError, time=time,
+                     contextmanager=contextmanager, ThreadPoolExecutor=ThreadPoolExecutor,
+                     uuid4=uuid4, DuplicateKeyError=DuplicateKeyError, time=time,
                      BaseModel=BaseModel, CrateConnector=Crate,
                      Movie=Record, Show=Record, StreamingAvailability=Record, StreamingEvidence=StreamingEvidence, build_evidence=build_evidence, quarantine_evidence=quarantine_evidence,
                      SCHEMAS={name: {"primary_key": ["tmdb_id"]} for name in ("movie", "show", "streaming_availability", "streaming_evidence")},

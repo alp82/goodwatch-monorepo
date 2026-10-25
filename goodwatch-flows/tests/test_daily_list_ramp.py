@@ -88,7 +88,8 @@ class DailyRampTests(unittest.TestCase):
              patch('f.tmdb_api.list_offer_refresh.drain', return_value={}) as drain:
             self.run_job()
         self.assertIs(drain.call_args.args[2], self.store.connector)
-        self.assertEqual(drain.call_args.kwargs['max_seconds'], 15450)
+        self.assertEqual(drain.call_args.kwargs['max_seconds'], 14450)
+        self.assertEqual(drain.call_args.kwargs['limit'], 30000)
 
     def test_rereads_checkpoints_first_then_admits_countries_in_order(self):
         self.checkpoint('US', 'movie')

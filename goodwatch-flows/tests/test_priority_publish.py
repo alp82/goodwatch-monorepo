@@ -3,7 +3,7 @@ import importlib.util
 import sys
 import unittest
 from collections import defaultdict
-from contextlib import ExitStack, nullcontext
+from contextlib import ExitStack, nullcontext, contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 from f.sync.copy import deleted_titles
+from f.sync.copy.vector_data import VECTOR_SOURCE_PROJECTIONS
 from qdrant_client import models as qm
 from f.sync.copy.qdrant_retry import (
     REQUEST_TIMEOUT_SECONDS, insert_points, update_points, write_with_retry,
@@ -285,7 +286,9 @@ class VectorPublicationTests(unittest.TestCase):
                 namespace = {
                     **DELETED_TITLE_HELPERS,
                     "QdrantConnector": object, "CrateConnector": lambda: crate, "get_db": lambda: db,
-                    "ExitStack": ExitStack,
+                    "ExitStack": ExitStack, "contextmanager": contextmanager,
+                    "VECTOR_SOURCE_PROJECTIONS": VECTOR_SOURCE_PROJECTIONS,
+                    "publication_leases": lambda db, media, ids: nullcontext((ids, lambda: None)),
                     **POINT_WRITE_HELPERS, "publication_lease": lambda *args: nullcontext(lambda: None),
                     "TmdbMovieDetails": MagicMock(), "TmdbTvDetails": MagicMock(),
                     "datetime": datetime, "timedelta": timedelta, "HOURS_TO_FETCH": 48,
@@ -298,7 +301,7 @@ class VectorPublicationTests(unittest.TestCase):
                     "QdrantMediaPoint": SimpleNamespace(make_point_id=lambda *args: 84),
                     "MEDIA_COLLECTION": "media",
                 }
-                functions = [function] + [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in ("_drivers", "_driver_batches", "_with_fingerprint", "_published_streaming", "_utc_stamp")]
+                functions = [function] + [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in ("_drivers", "_driver_batches", "_with_fingerprint", "_published_streaming", "_utc_stamp", "vector_publication_leases")]
                 exec(compile(ast.Module(body=functions, type_ignores=[]), "vector_data.py", "exec"), namespace)
                 if status in ("completed", "scheduled"):
                     result = namespace["copy_to_qdrant"](qc, "movie", {"tmdb_id": {"$in": [42]}}, recent_only=False, strict_writes=True)
@@ -339,7 +342,7 @@ class VectorSerializationTests(unittest.TestCase):
         self.qc.client.batch_update_points.side_effect = completed
         tree = ast.parse((ROOT / "sync" / "copy" / "vector_data.py").read_text())
         functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
-                     and node.name in ("copy_to_qdrant", "_drivers", "_driver_batches", "_with_fingerprint", "_published_streaming", "_utc_stamp")]
+                     and node.name in ("copy_to_qdrant", "_drivers", "_driver_batches", "_with_fingerprint", "_published_streaming", "_utc_stamp", "vector_publication_leases")]
         self.namespace = {
             **DELETED_TITLE_HELPERS,
             "QdrantConnector": object, "CrateConnector": lambda: self.crate,
@@ -348,8 +351,10 @@ class VectorSerializationTests(unittest.TestCase):
             "BATCH_SIZE": 100, "UPSERT_BATCH_SIZE": 100,
             "Optional": Optional, "List": List, "Tuple": Tuple, "Dict": Dict, "Any": Any,
             "ExitStack": ExitStack,
+            "contextmanager": contextmanager, "VECTOR_SOURCE_PROJECTIONS": VECTOR_SOURCE_PROJECTIONS,
             **POINT_WRITE_HELPERS,
             "publication_lease": load_copy(self.db).__globals__["publication_lease"],
+            "publication_leases": load_copy(self.db).__globals__["publication_leases"],
             "SCHEDULED_LEASE_WAIT_SECONDS": 0,
             "_fetch_tmdb_ids_keyset": MagicMock(side_effect=[([42], 42), ([], 42)]),
             "_fetch_map_by_ids": lambda *args: {42: {"tmdb_id": 42}},

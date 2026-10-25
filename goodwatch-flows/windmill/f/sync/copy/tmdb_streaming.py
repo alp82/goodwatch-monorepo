@@ -1,6 +1,7 @@
 import time
 from collections import defaultdict
 from contextlib import contextmanager
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from typing import Any, Callable, Iterator, Optional
 from uuid import uuid4
@@ -125,6 +126,10 @@ def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseM
     
     return total_result
 
+class PublicationBusy(RuntimeError):
+    """Another publisher owns this title; defer it without failing its peers."""
+
+
 @contextmanager
 def publication_lease(db: Any, media_type: str, tmdb_id: int, wait_seconds: float = 0) -> Iterator[Callable[[], None]]:
     """Serialize scheduled/targeted streaming snapshots, independently of demand."""
@@ -147,7 +152,7 @@ def publication_lease(db: Any, media_type: str, tmdb_id: int, wait_seconds: floa
             break
         except DuplicateKeyError as error:
             if time.monotonic() >= deadline:
-                raise RuntimeError(f"Streaming publication busy for {identity}") from error
+                raise PublicationBusy(f"Streaming publication busy for {identity}") from error
             time.sleep(LEASE_POLL_SECONDS)
 
     def check_owned() -> None:
@@ -629,35 +634,50 @@ def publish_batch(
     mongo_details: Any, mongo_providers: Any, service_ids: dict,
     refresh_budget: RefreshBudget, entity_counts: dict, publication: dict, pending_ids: set | None = None,
     targeted: bool = False,
+    defer_busy: bool = False,
 ) -> list[int]:
     """Publish many titles with one read per source and one bulk write per table.
 
     The same reconciliation and write order as publish_title, under one set of
     leases. Returns the titles left to publish_title: those another publisher
     holds, and those with an unmapped provider while refreshes remain.
+    With defer_busy, report busy IDs instead of retrying them one by one.
     """
     left: list[int] = []
     with publication_leases(mongo_db, media_type, tmdb_ids) as (owned, check_owned):
         owned_ids = set(owned)
-        left += [tmdb_id for tmdb_id in tmdb_ids if tmdb_id not in owned_ids]
+        busy = [tmdb_id for tmdb_id in tmdb_ids if tmdb_id not in owned_ids]
+        if defer_busy:
+            publication.setdefault('busy_ids', []).extend(busy)
+            if busy:
+                publication['status'] = 'partial_success'
+        else:
+            left += busy
         if not owned:
             return left
-        details_by_id = fetch_documents_in_batch(owned, mongo_details)
-        providers_by_id = fetch_all_documents_in_batch(owned, mongo_providers)
+        # These independent snapshots can be large. Mongo cursors run in their
+        # own workers; the one Crate cursor stays on the caller thread. Join
+        # both readers and recheck ownership before any publication write.
+        with ThreadPoolExecutor(max_workers=2) as readers:
+            details_read = readers.submit(fetch_documents_in_batch, owned, mongo_details)
+            providers_read = readers.submit(fetch_all_documents_in_batch, owned, mongo_providers)
+            check_owned()
+            connector.run("REFRESH TABLE streaming_availability")
+            existing_by_id = defaultdict(list)
+            for row in connector.select(
+                "SELECT * FROM streaming_availability WHERE media_tmdb_id = ANY(?) AND media_type = ?", (owned, media_type)
+            ):
+                existing_by_id[row["media_tmdb_id"]].append(row)
+            connector.run("REFRESH TABLE streaming_evidence")
+            prior_by_id = defaultdict(list)
+            for row in connector.select(
+                "SELECT media_tmdb_id, country_code FROM streaming_evidence WHERE media_tmdb_id = ANY(?) AND media_type = ?",
+                (owned, media_type),
+            ):
+                prior_by_id[row["media_tmdb_id"]].append(row["country_code"])
+            details_by_id = details_read.result()
+            providers_by_id = providers_read.result()
         check_owned()
-        connector.run("REFRESH TABLE streaming_availability")
-        existing_by_id = defaultdict(list)
-        for row in connector.select(
-            "SELECT * FROM streaming_availability WHERE media_tmdb_id = ANY(?) AND media_type = ?", (owned, media_type)
-        ):
-            existing_by_id[row["media_tmdb_id"]].append(row)
-        connector.run("REFRESH TABLE streaming_evidence")
-        prior_by_id = defaultdict(list)
-        for row in connector.select(
-            "SELECT media_tmdb_id, country_code FROM streaming_evidence WHERE media_tmdb_id = ANY(?) AND media_type = ?",
-            (owned, media_type),
-        ):
-            prior_by_id[row["media_tmdb_id"]].append(row["country_code"])
         refreshes_left = refresh_budget.remaining
         evidence: list[BaseModel] = []
         changed: list[BaseModel] = []
@@ -734,6 +754,7 @@ def copy_media(
     query_selector: dict = {},
     media_type: str = "movie",
     *, recent_only: bool = True, mapping_refresh_limit: int | None = None, targeted_batch: bool = False,
+    defer_busy: bool = False,
 ) -> dict:
     if media_type not in ("movie", "show"):
         raise ValueError("Unsupported streaming media type")
@@ -796,8 +817,14 @@ def copy_media(
             if tmdb_id in flagged_ids:
                 continue
             if tmdb_id in unresolved_by_id:
-                publish_quarantined(mongo_db, connector, tmdb_id, media_type, unresolved_by_id[tmdb_id],
-                                    lease_wait_seconds, publication, targeted)
+                try:
+                    publish_quarantined(mongo_db, connector, tmdb_id, media_type, unresolved_by_id[tmdb_id],
+                                        lease_wait_seconds, publication, targeted)
+                except PublicationBusy:
+                    if not defer_busy:
+                        raise
+                    publication.setdefault('busy_ids', []).append(tmdb_id)
+                    publication['status'] = 'partial_success'
             else:
                 publishable.append(tmdb_id)
         batches = [publishable] if targeted and not targeted_batch else [
@@ -806,11 +833,18 @@ def copy_media(
         for batch in batches:
             one_by_one = batch if targeted and not targeted_batch else publish_batch(
                 mongo_db, connector, batch, media_type, MediaClass, mongo_details, mongo_providers,
-                service_ids, refresh_budget, entity_counts, publication, pending_ids, targeted=targeted)
+                service_ids, refresh_budget, entity_counts, publication, pending_ids,
+                targeted=targeted, defer_busy=defer_busy)
             # Spend the refreshes before the next batch decides which titles to leave.
             for tmdb_id in one_by_one:
-                publish_title(mongo_db, connector, tmdb_id, media_type, MediaClass, mongo_details, mongo_providers,
-                              service_ids, lease_wait_seconds, refresh_budget, entity_counts, publication, targeted)
+                try:
+                    publish_title(mongo_db, connector, tmdb_id, media_type, MediaClass, mongo_details, mongo_providers,
+                                  service_ids, lease_wait_seconds, refresh_budget, entity_counts, publication, targeted)
+                except PublicationBusy:
+                    if not defer_busy:
+                        raise
+                    publication.setdefault('busy_ids', []).append(tmdb_id)
+                    publication['status'] = 'partial_success'
         if not targeted:
             print(f"  {min(start + BATCH_SIZE, len(candidate_ids))}/{len(candidate_ids)} {media_type} titles "
                   f"in {time.monotonic() - run_clock:.0f} s", flush=True)

@@ -35,7 +35,23 @@ leases. The shared copier remains the only writer of child offers and the
 `streaming_availabilities`, `streaming_country_codes`, and
 `streaming_service_ids` arrays. The same path publishes `streaming_evidence`
 and reconciles history. The vector writer rereads the published Crate snapshot
-under its existing lease. No whole details/ratings/DNA refresh is needed.
+under its existing lease, reusing the caller’s Crate connection. Strict vector
+publication uses one token and ownership query for the group. The offer drain
+drops busy IDs from streaming/vector groups, leaves their intents pending, and
+publishes the owned IDs. Other targeted callers retain their fail-fast policy. Targeted vector reads project only the
+fields used to build the same payload/vectors; the overwritten raw provider
+merge is omitted. The offer refresh skips the unrelated global deletion scan;
+selected flagged titles are still excluded and scheduled deletion behavior is
+unchanged. The streaming batch overlaps two Mongo source reads with its Crate
+reads while holding the publication leases; it joins the readers and rechecks
+ownership before writing. No whole details/ratings/DNA refresh is needed.
+The consumer prepares at most 20 titles at a time with six workers and groups
+successful results per media type. Every worker uses the same paced, locked
+TMDB client; retries still consume the shared budget. Source writes are narrow
+and guarded against a newer observation. The Crate cursor remains on the caller
+thread. Catalog existence and version-fenced queue acknowledgments use one
+operation per group. Mongo source reads use a narrow projection. List/backfill
+connections negotiate built-in zlib compression for large provider/proof reads.
 The consumer groups at most 20 prepared titles per media type. Both the shared
 streaming batch writer and vector writer receive the whole group: Mongo index
 setup and service-catalog reads occur once per group, and Crate reads/writes
@@ -78,19 +94,26 @@ service only.
 A failed source/publication/vector write retains the intent. A version token
 prevents acknowledgment from consuming newer work. Daily changes have priority
 over the older backfill, and unattempted work precedes failed retries at the same
-priority. The consumer handles at most 20,000 titles per invocation. Budget
+priority. The automatic daily consumer handles at most 30,000 titles; manual
+consumer invocations have the same 30,000-title maximum (20,000 by default). Budget
 exhaustion leaves the rest pending and triggers the existing hard-budget alert.
 The daily drain also consumes priority-0 backfill items after priority-1 daily
-changes, using any remaining part of that same 20,000-title allowance. Backfill
+changes, using any remaining part of that same 30,000-title allowance. Backfill
 is not restricted to manual execution. Inspect queue progress before planning
 manual batches or computing the day's remaining request allowance.
-The daily consumer also stops at 28,000 total run seconds, reserving time inside
-the existing 28,800-second flow timeout for reporting and cleanup. Excess work
+The daily consumer stops work at 27,000 total run seconds, reserving 1,800
+seconds inside the existing 28,800-second flow timeout for reporting and cleanup. Excess work
 stays queued and is reported as a warning. Manual consumer batches use the same
 runtime bound; the documented 1,000-title batches keep review/execution bounded.
-Twenty consecutive preparation/publication failures stop the drain, so a Qdrant
-outage spends at most one 20-title batch of TMDB reads before stopping. All intents
-remain pending. Queue sort and index directions share one definition; the bounded
+Twenty consecutive failure steps stop the drain. Individual preparation/title
+failures count individually; a shared catalog/publication exception records
+each affected title for retry but advances the streak once for the whole group.
+A complete publication outage therefore stops after 20 failed groups, at most
+400 title attempts; the shrinking remaining-streak allowance currently totals
+210 attempts for a single-media outage. Busy leases count as `deferred`, with
+identity/reason samples in `deferrals`, rather than failures. Their version-fenced
+last-attempt timestamp moves them behind unattempted peers next run. All unfinished
+intents remain pending. Queue sort and index directions share one definition; the bounded
 selection is materialized before sort keys change, preventing a failed item from
 being selected twice in the same invocation.
 Missing/deleted/duplicate source identities, missing catalog rows, provider 404s
@@ -106,22 +129,24 @@ defer codes; arbitrary upstream exception text is omitted.
 
 Read-only Windmill results:
 
-| Run | Existing requests | Existing title checks | New changes only, before retries | Full 20k drain including backfill, before retries |
+| Run | Existing requests | Existing title checks | New changes only, before retries | Full 30k daily drain including backfill, before retries |
 | --- | ---: | ---: | ---: | ---: |
-| October 24 | 164,495 | 18,436 | 182,931 | 184,495 |
-| October 25 | 169,005 | 18,950 | 187,955 | 189,005 |
+| October 24 | 164,495 | 18,436 | 182,931 | 194,495 |
+| October 25 | 169,005 | 18,950 | 187,955 | 199,005 |
 
 The upper bound assumes every checked title needs repair. Actual extra requests
-equal distinct queued changed/mismatching titles, not country/service rows. The 20,000
-consumer limit caps the normal added successful requests at 20,000, including
+equal distinct queued changed/mismatching titles, not country/service rows. The 30,000-title daily
+consumer limit caps the normal added successful requests at 30,000, including
 older pending work. All retries count toward the **same 350,000 hard limit**.
 No new schedule is needed: daily lists still start at 14:00 UTC, after the
 13:00 UTC recent-release recheck. Extra HTTP pacing alone is at most about
-22 minutes at 15 requests/second; publication time is additional and has not
-been measured in production before review. Count the day's requests as existing
+33 minutes 20 seconds at 15 requests/second; publication time is additional. The old consumer measured 1.574 s/title in the
+approved pilot; the throughput fix below still needs its reviewed live timing. Count the day's requests as existing
 list work + **all** daily-drain requests (both priorities) + manual previews +
 manual execution + retries. A full pending queue makes October 25's daily upper
-bound 189,005, rather than the fresh-change-only 187,955.
+bound 199,005, rather than the fresh-change-only 187,955. The higher cap leaves
+room for 20–23k daily changes and some backfill; the remaining-time bound can
+stop the consumer earlier. It does not reserve additional requests beyond 350k.
 
 ## Read-only backfill
 
@@ -169,18 +194,20 @@ titles** and one deferred duplicate identity, `movie:145249`. Resolve that
 through the existing details/identity path after review; do not pick an arbitrary
 source record. The normal backfill would spend about **58,274 fresh requests**
 before retries or newly discovered upstream deferrals. Its actual after counts
-are **not measured**, because production writes remain review-gated.
+are **not measured** for the full manifest. The approved 1,000-title pilot
+published 995 titles, deferred five, and left 57,280 intents pending; it did not
+finish the backfill.
 Previewing every eligible title once and then applying costs about **116,548
-requests** before retries. Alongside a full 20k October 25 daily drain, the
-conservative ceiling is **305,553 requests**, leaving **44,447** of the 350k
-allowance for retries. This deliberately gives no credit for backfill titles
+requests** before retries. Alongside a full 30k daily drain using October 25 list costs, the
+planning ceiling is **315,553 requests**, leaving **34,447** of the 350k
+allowance before other manual runs, profiling, or retries. This deliberately gives no credit for backfill titles
 already consumed automatically: those reduce subsequent manual execution.
 
 Committed evidence:
 [summary](implementation/daily-provider-lists/title-offer-backfill-20261025.json),
 [complete country/service CSV](implementation/daily-provider-lists/title-offer-backfill-20261025.csv).
 The complete 171 MB intent manifest with every title/scope is retained locally at
-`/tmp/title-offers-sync/backfill-reviewed.json`, intent-row SHA-256
+`~/.local/state/goodwatch/title-offers-backfill-20261025/backfill-reviewed.json`, intent-row SHA-256
 `4f0dfec84ca048f861fe792091cede514aed4e315d4be431fc8f0947e2b00a8c`.
 For example, DE/Netflix (ID 8) has 83 arrival and 1,299 drop mismatches;
 US/Netflix has 109 arrival and 1,218 drop mismatches. Dorothy, movie 1578079,
@@ -193,7 +220,9 @@ passes. The helper reads credentials in memory; do not print it or its token.
 
 ```bash
 WM_HELPER=/tmp/claude-1000/-home-alp-dev-projects-goodwatch-goodwatch-monorepo/9b66f89c-8298-487a-b040-f359220ae9af/scratchpad/wm.py
-BACKFILL_PLAN=/tmp/title-offers-sync/backfill-reviewed.json
+STATE_DIR="$HOME/.local/state/goodwatch/title-offers-backfill-20261025"
+mkdir -p "$STATE_DIR"
+BACKFILL_PLAN="$STATE_DIR/backfill-reviewed.json"
 ```
 
 The commands below use `uv run -q --with wmill --with mongoengine --with requests
@@ -219,7 +248,7 @@ offer_backfill() {
    manifest. An interrupted scan can add `--resume`:
 
    ```bash
-   offer_backfill --output /tmp/title-offers-sync/backfill-fresh-before.json --workers 2
+   offer_backfill --output "$STATE_DIR/backfill-fresh-before.json" --workers 2
    offer_backfill --manifest "$BACKFILL_PLAN" --check-sources
    ```
 
@@ -241,7 +270,7 @@ offer_backfill() {
    ```bash
    offer_backfill --drain --limit 1000
    offer_backfill --drain --preview-offers --limit 1000 \
-     --output /tmp/title-offers-sync/next-batch-offer-diff.json
+     --output "$STATE_DIR/next-batch-offer-diff.json"
    offer_backfill --drain --limit 1000 --max-requests 20000 --apply
    ```
 
@@ -251,7 +280,7 @@ offer_backfill() {
 5. Rerun the complete SELECT-only audit to a different file and compare summaries:
 
    ```bash
-   offer_backfill --output /tmp/title-offers-sync/backfill-after.json --workers 2
+   offer_backfill --output "$STATE_DIR/backfill-after.json" --workers 2
    ```
 
    Report actual residual arrivals/drops and full-ingestion/identity blockers.
@@ -327,3 +356,124 @@ PYTHONWARNINGS=ignore uv run -q --with pyyaml --with wmill --with mongoengine \
   --with crate --with sqlalchemy --with qdrant-client --with beautifulsoup4 \
   python -m unittest discover -s goodwatch-flows/tests -p 'test_daily*list*.py'
 ```
+
+
+## October 25 throughput profile and fix
+
+The approved live pilot selected 1,000 titles, published 995, deferred five,
+and used 1,000 TMDB requests without retries. Its drain took 1,566.106 seconds
+(**1.573976 s/published title**). The existing second-resolution vector logs
+account for approximately **508 seconds across 50 groups** (32% of the run).
+They do not time Mongo source writes or Crate bulk writes individually. Mongo
+profiling was disabled, and the matching Crate jobs were no longer retained;
+those historical write timings cannot be reconstructed accurately.
+
+A read-only probe of the first 40 repaired titles measured:
+
+- Sequential TMDB checks: **7.676 s**, or **0.192 s/title**; six concurrent
+  checks through the same paced client: **2.741 s**, or **0.069 s/title**.
+- Mongo source reads: **6.681 s** for the original 80 identity/full-document
+  reads. Small maintenance/lease reads averaged **28–34 ms** each.
+- A replay of the original vector path made **309 Mongo read calls in
+  18.675 s**, plus write RTT surrogates; the full vector stage took **20.754 s**.
+  The actual vector boundary test made 80 maintenance reads for 20 titles.
+- The original streaming replay spent **4.035 s** in eight Crate SELECTs and
+  **7.117 s** in 40 Mongo reads. Its Crate bulk-write read surrogates took
+  **0.107 s**; that last number is **not production bulk-write latency**.
+- The 40 titles' provider query returns **1,814 documents / 3.64 MB** and
+  executes on Mongo in **13 ms**. An uncompressed slow sample spent 13.241 s
+  receiving provider documents; the compressed sample spent 0.546 s. The live
+  handshake negotiated zlib (compressor ID 2), without installing a package.
+
+The patch overlaps provider/source preparation, removes repeated vector lease
+checks, projects vector inputs, avoids the global deletion scan during offer
+refreshes, overlaps Mongo/Crate source reads, and batches catalog checks and
+queue acknowledgments. It retains the existing streaming/vector writers and
+their publication fences. No production write was performed in this profile.
+
+| Read-only replay | Titles | Total seconds | Seconds/title |
+| --- | ---: | ---: | ---: |
+| Original consumer | 40 | 50.450 | 1.261247 |
+| Complete fix, same first 40 | 40 | 14.481 | 0.362029 |
+| Complete fix, first 120 | 120 | 71.102 | 0.592519 |
+| Complete fix, repeated 120 | 120 | 44.758 | 0.372983 |
+
+These are production-read timings with private in-memory queue/lease state.
+Every SQL/Mongo/Qdrant mutation and REFRESH is intercepted: writes use read RTT
+surrogates. Already repaired titles can also need fewer writes than new work.
+**They do not establish live write throughput.** All intermediate runs, including
+slower samples, are retained in the evidence. The repeated 120-title run spent
+9.270 s preparing sources, 24.457 s in streaming publication and 10.709 s in
+vector publication. Its 24 streaming SELECTs returned 36,551 rows; aggregate
+server SQL time was 1.041 s, showing that transfer/round trips remain material.
+The investigation used **600 read-only TMDB requests**, zero retries.
+
+Every future drain result now includes `timings`: preparation/publication wall
+seconds, cumulative worker seconds for TMDB/source reads/source writes,
+`streaming_publication`, `vector_publication`, queue acknowledgment, and actual
+Crate `select`, `run`, `upsert_many` and `run_many` durations. Worker seconds
+include shared pacing waits and overlap; nested Crate timings are parts of the
+publication stages, so these fields must not all be summed. A reviewed live
+pilot must still check `seconds_per_published_title` against 0.77 and inspect
+actual bulk/source-write timings before continuing a large drain.
+
+### If the fix is not deployed by October 26 at 14:00 UTC
+
+Read-only Windmill API checks confirmed the deployed schedule is enabled at
+14:00 UTC with `dry_run=false`, 15 requests/s and a 350,000 request budget. The
+list module still has a 28,800-second timeout and precedes the report module.
+Its deployed ramp completes list work first, then passes
+`max_seconds=max(0, 28000 - elapsed)` to the old 20,000-title drain. At the assumed
+12,550-second list stage, that leaves 15,450 seconds: about **9,816 titles** at
+the pilot's rate. New priority-1 work goes first; unused capacity consumes the
+priority-0 backfill. All unfinished/version-replaced work stays pending.
+
+Time exhaustion reports `runtime_budget`, warns about remaining queue depth,
+and leaves completed list checkpoints/history in place. Hard-budget exhaustion
+retains work and raises the existing report error; access/lease failures still
+stop the job, and the 20-consecutive-failure, >1%, and three-day rules remain.
+The deadline is cooperative between groups: in-flight HTTP/DB work can overrun
+it. The 800-second reserve is not an absolute guarantee that the report runs;
+a prolonged operation can still hit Windmill's hard timeout. No schedule or
+production configuration was changed by this fix.
+
+The complete regression run contains **308 cases: 291 passed, 17 optional
+checks skipped**, including all 113 daily-list cases. New tests cover bounded
+concurrency and the real shared-client hard budget, partial response failures,
+version-fenced group acknowledgment, overlapping reads with a single Crate
+thread, busy/replaced vector leases, identical projected payloads/vectors, and
+skipping global deletion work while excluding selected flagged titles.
+[Profile and safety evidence](implementation/daily-provider-lists/title-offer-performance-20261025.json)
+is committed. Full replay logs and scripts are under
+`~/.local/state/goodwatch/title-offer-performance-20261025/`. Keep new manifests,
+previews and reports in `~/.local/state/goodwatch/`, not `/tmp`.
+
+
+## Round 3 follow-up before deployment
+
+The work cutoff is now **27,000 seconds**, leaving **1,800 seconds** before the
+Windmill hard timeout. With a 12,550-second list stage the drain receives
+**14,450 seconds**, rather than 15,450. In-flight operations can still overrun a
+cooperative cutoff; the larger reserve protects normal retry/cleanup/reporting
+work. Manual live invocations use the same 27,000-second work allowance.
+
+Streaming and vector publishers now offer an explicit `defer_busy` mode used by
+the list consumer. One busy title is removed from the group, reported as
+`publication_busy`, and left pending; the remaining titles publish normally.
+Lease loss and real publication failures still prevent acknowledgment. Busy
+quarantined/fallback streaming titles follow the same deferral rule. Default
+scheduled and other targeted publication callers keep their existing behavior.
+A batch exception increments the failure streak **once**, while retaining
+per-title failure records and the existing >1%/three-day alert rules. Twenty
+individual source failures still stop after 20 attempts. The shared request
+budget, frozen queue selection and per-intent version fences are unchanged.
+
+`main()` and the Windmill schema accept **1–30,000** titles, matching the daily
+ramp; the manual default remains 20,000 and the runbook pilot remains 1,000 with
+`--max-requests 20000`. Validation rejects booleans and out-of-range limits.
+All requested changes passed **347 cases: 330 passed, 17 optional skipped**,
+covering busy streaming/vector handoffs, one-batch failure recovery, sustained
+batch-outage stopping, reporting reserve, and the manual entry limit.
+The next live 1,000-title timing must wait for the owner’s push and successful
+Windmill deployment. No production write or schedule change occurred in this
+follow-up. Logs are under `~/.local/state/goodwatch/title-offer-performance-20261025/`.
