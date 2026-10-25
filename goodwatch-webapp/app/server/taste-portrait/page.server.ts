@@ -5,8 +5,6 @@
 // instead (view: null here).
 import { json } from "@remix-run/node"
 import { publicView } from "~/server/profile/portrait-public"
-import { readCachedTasteStats } from "~/server/profile/taste-stats-cache.server"
-import { getTasteStats } from "~/server/profile/taste-stats.server"
 import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import type { ViewerContext } from "~/server/viewer.server"
 import { type ProfileTaste, buildProfileTaste } from "~/ui/profile/taste/model"
@@ -29,7 +27,7 @@ export interface TastePortraitData {
 	taste: ProfileTaste
 	/** The member's handle, for sharing and their profile's tabs; null before they pick one. */
 	handle: string | null
-	/** The average release year of their scored titles, when their profile numbers are at hand. */
+	/** The average release year of their rated titles with a title analysis. */
 	averageYear: number | null
 }
 
@@ -56,20 +54,14 @@ export async function loadTastePage(request: Request, userId: string | null) {
 			return context
 		},
 	}
-	const [sides, fingerprint, everyone, profile, stats] = await Promise.all([
+	const [sides, fingerprint, everyone, profile] = await Promise.all([
 		getTastePortrait(who, "sides"),
 		getTastePortrait(who, "fingerprint"),
 		getTastePortrait(who, "everyone"),
 		getCachedProfileByUserId(userId).catch(() => null),
-		// The profile numbers only add the average year: the page takes them when cached and never waits for them.
-		readCachedTasteStats(userId).catch(() => null),
 	])
 	if (sides.status !== "ready" || fingerprint.status !== "ready")
 		return json<TastePageData>({ kind: "groups", view: sides }, PRIVATE)
-	if (!stats)
-		getTasteStats(userId).catch((error) =>
-			console.error("[taste] profile numbers failed", error),
-		)
 	// The groups and the crowd without the suggestions and services the page doesn't show.
 	const taste = buildProfileTaste(
 		fingerprint,
@@ -81,7 +73,7 @@ export async function loadTastePage(request: Request, userId: string | null) {
 			kind: "portrait",
 			taste,
 			handle: profile?.handle ?? null,
-			averageYear: stats?.eras.averageYear ?? null,
+			averageYear: fingerprint.averageYear,
 		},
 		PRIVATE,
 	)

@@ -259,6 +259,8 @@ export interface FingerprintView extends ViewBase {
 	attributes: FingerprintAttribute[]
 	/** "The titles that are most you": two rows of eight. */
 	mostYou: TitleKey[]
+	/** The average release year of the rated titles with a title analysis; null without any. */
+	averageYear: number | null
 }
 
 export type PortraitView = SidesView | EveryoneView | FingerprintView

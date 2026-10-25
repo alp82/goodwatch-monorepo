@@ -469,5 +469,6 @@ function unavailable(tab: PortraitTab, kind: Viewer["kind"]): PortraitView {
 		families: FAMILIES,
 		attributes: [],
 		mostYou: [],
+		averageYear: null,
 	}
 }

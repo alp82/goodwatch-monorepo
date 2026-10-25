@@ -41,7 +41,7 @@ test("only titles scored 7 or more define an attribute, and never by a missing s
 	assert.deepEqual(picks.get(0), [1])
 })
 
-test("within a family a title fills at most two lists, the strongest pulls first, and short lists top up", () => {
+test("within a family a title fills at most two lists, the strongest pulls first, and short lists stay short", () => {
 	const star = title(1, 10, [9, 9, 9, 1])
 	const second = title(2, 8, [5, 5, 5, 1])
 	const all = [star, second]
@@ -59,12 +59,14 @@ test("within a family a title fills at most two lists, the strongest pulls first
 	assert.deepEqual(picks.get(2), [1])
 	assert.deepEqual(picks.get(0), [2])
 
-	// With only the star to pick from, the third list still gets it.
+	// With only the star to pick from, the weakest list stays empty rather than repeat it a third time.
 	const alone = definingTitles(
 		[0, 1, 2].map((k) => ({ k, family: "feel", edge: k, carriers: [star] })),
 		{ n: 1 },
 	)
-	assert.deepEqual(alone.get(0), [1])
+	assert.deepEqual(alone.get(2), [1])
+	assert.deepEqual(alone.get(1), [1])
+	assert.deepEqual(alone.get(0), [])
 })
 
 test("the cap counts per family: another family's lists start fresh", () => {
@@ -79,8 +81,8 @@ test("the cap counts per family: another family's lists start fresh", () => {
 		{ n: 1, perFamily: 1 },
 	)
 	assert.deepEqual(picks.get(0), [1])
-	// Topped up, since nothing else carries it.
-	assert.deepEqual(picks.get(1), [1])
+	// Past the cap, even with nothing else carrying it.
+	assert.deepEqual(picks.get(1), [])
 	assert.deepEqual(picks.get(2), [1])
 })
 

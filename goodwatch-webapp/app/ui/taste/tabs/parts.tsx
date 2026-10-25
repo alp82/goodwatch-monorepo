@@ -33,11 +33,6 @@ export type Titles = Record<string, PortraitTitle>
 export const titlesOf = (titles: Titles, keys: (TitleKey | null)[]) =>
 	keys.flatMap((key) => (key !== null && titles[key] ? [titles[key]] : []))
 
-/** "an 8", "a 7". */
-export const article = (n: number) => (n === 8 ? "an" : "a")
-
-export const percent = (x: number) => `${Math.round(x * 100)}%`
-export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 export const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 
 /** The app's vibe color for a 1 to 10 score. */

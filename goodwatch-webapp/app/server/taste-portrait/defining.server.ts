@@ -53,7 +53,7 @@ export function fingerprintMean(fingerprint: ArrayLike<number>): number {
  * The defining titles per attribute index, up to `n` each. Candidates are the attribute's carriers scored `minScore` or
  * more, ranked by how much the attribute stands out within the title, then by the attribute's score, then by the
  * person's score. Within a family, a title fills at most `perFamily` lists, the strongest pulls taken first; a list the
- * cap leaves short is topped up from its own ranking.
+ * cap leaves short stays short, never topped up with weaker titles.
  */
 export function definingTitles(
 	attributes: DefiningAttribute[],
@@ -93,10 +93,6 @@ export function definingTitles(
 			for (const key of order) {
 				if (picked.length === n) break
 				if ((used.get(key) ?? 0) < perFamily) picked.push(key)
-			}
-			for (const key of order) {
-				if (picked.length === n) break
-				if (!picked.includes(key)) picked.push(key)
 			}
 			for (const key of picked) used.set(key, (used.get(key) ?? 0) + 1)
 			picks.set(a.k, picked)

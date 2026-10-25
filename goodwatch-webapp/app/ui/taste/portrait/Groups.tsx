@@ -1,14 +1,24 @@
 // The member's taste groups, two to a row on wide screens: posters, the name, one data line, two quiet traits, and the
-// way into For you on that group.
+// way into For you on that group. The group the address asks for (`?side=`, as the TV's Expand key links) is scrolled
+// to, focused, and marked once the page opens.
+import { useEffect, useRef } from "react"
 import { ForYouLink } from "~/ui/for-you/ForYouLink"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { FAMILY_COLOR, useTaste } from "~/ui/profile/taste/model"
 import { MiniPoster, PANEL } from "~/ui/profile/taste/parts"
 import { TASTE_GROUPS_NAME } from "../taste-groups-name"
 
-export function TasteGroups() {
+export function TasteGroups({
+	requested = null,
+}: { requested?: string | null }) {
 	const { taste, title, attributeByKey } = useTaste()
 	const groups = taste.sides.list
+	const target = useRef<HTMLLIElement>(null)
+	useEffect(() => {
+		if (!requested || !target.current) return
+		target.current.scrollIntoView({ block: "center" })
+		target.current.focus({ preventScroll: true })
+	}, [requested])
 	if (!groups.length) return null
 	const usual = taste.usual
 	return (
@@ -22,10 +32,14 @@ export function TasteGroups() {
 			<ul className="mt-8 grid gap-6 md:grid-cols-2">
 				{groups.map((g) => {
 					const diff = usual != null ? g.average - usual : null
+					const asked = g.id === requested
 					return (
 						<li
 							key={g.id}
-							className={`${PANEL} flex flex-col gap-5 p-5 sm:p-7`}
+							ref={asked ? target : undefined}
+							tabIndex={asked ? -1 : undefined}
+							aria-current={asked ? "true" : undefined}
+							className={`${PANEL} flex scroll-mt-44 flex-col gap-5 p-5 outline-none sm:p-7 ${asked ? "ring-2 ring-amber-400/70" : ""}`}
 						>
 							<ul className="grid grid-cols-4 gap-3">
 								{g.here.slice(0, 4).map((k) => (

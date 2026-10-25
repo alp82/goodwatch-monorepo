@@ -8,6 +8,7 @@ import { useCallback, useEffect } from "react"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
 	type TastePageData,
+	type TastePortraitData,
 	loadTastePage,
 	tastePageViewer,
 } from "~/server/taste-portrait/page.server"
@@ -57,8 +58,29 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 
 export default function TasteRoute() {
 	const data = useLoaderData<typeof loader>() as TastePageData
-	if (data.kind === "portrait") return <TastePortrait data={data} />
+	if (data.kind === "portrait") return <Portrait data={data} />
 	return <StartOrGroups view={data.view} />
+}
+
+/**
+ * A member's one page, opened on the taste group the address asks for (`?side=`): the groups section scrolls to it.
+ * An address that names no group of the member's is the page as without one, and loses the parameter.
+ */
+function Portrait({ data }: { data: TastePortraitData }) {
+	const [params, setParams] = useSearchParams()
+	const requested = requestedSide(params)
+	const known =
+		requested !== null &&
+		data.taste.sides.list.some((side) => side.id === requested)
+	const unknown = requested !== null && !known
+	useEffect(() => {
+		if (unknown)
+			setParams((now) => withSide(now, null), {
+				replace: true,
+				preventScrollReset: true,
+			})
+	}, [unknown, setParams])
+	return <TastePortrait data={data} side={known ? requested : null} />
 }
 
 /**

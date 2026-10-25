@@ -25,14 +25,18 @@ import { TropesLink } from "./Tropes"
 import { VsEveryone } from "./VsEveryone"
 import { usePrintState } from "./print-state"
 
-export function TastePortrait({ data }: { data: TastePortraitData }) {
+/** `side`: the taste group the address asks for (`?side=`), already checked to be one of the member's; null for none. */
+export function TastePortrait({
+	data,
+	side = null,
+}: { data: TastePortraitData; side?: string | null }) {
 	const value = useMemo(
 		() => tasteContextValue(data.taste, null, null, data.handle ?? "", true),
 		[data.taste, data.handle],
 	)
 	return (
 		<TasteContext.Provider value={value}>
-			<Page handle={data.handle} averageYear={data.averageYear} />
+			<Page handle={data.handle} averageYear={data.averageYear} side={side} />
 		</TasteContext.Provider>
 	)
 }
@@ -40,7 +44,8 @@ export function TastePortrait({ data }: { data: TastePortraitData }) {
 function Page({
 	handle,
 	averageYear,
-}: { handle: string | null; averageYear: number | null }) {
+	side,
+}: { handle: string | null; averageYear: number | null; side: string | null }) {
 	const state = usePrintState()
 	const { taste } = useTaste()
 	const sections = useMemo(() => {
@@ -72,7 +77,7 @@ function Page({
 						<Explorer state={state} />
 					</div>
 				</section>
-				<TasteGroups />
+				<TasteGroups requested={side} />
 				<VsEveryone />
 				<div id="most-you" className="scroll-mt-44">
 					<MostYou />
@@ -82,7 +87,7 @@ function Page({
 					<Sharpen />
 					{handle && (
 						<Link
-							to={profileTabPath(handle, "taste")}
+							to={profileTabPath(handle, "stats")}
 							className="inline-flex min-h-11 items-center text-sm font-semibold text-gray-400 underline-offset-4 hover:text-white hover:underline"
 						>
 							Genres, eras, people, and more in your Stats →

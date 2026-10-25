@@ -20,6 +20,7 @@ import {
 	average,
 	round1,
 	round2,
+	yearOf,
 } from "./person.server"
 import type { FingerprintAttribute, FingerprintView, Tier } from "./view"
 import {
@@ -93,6 +94,7 @@ export function buildFingerprint(person: Person): FingerprintResult {
 		families: FAMILIES,
 		attributes: [],
 		mostYou: [],
+		averageYear: null,
 	}
 	if (rated.length < MIN_RATED) return empty
 
@@ -284,5 +286,14 @@ export function buildFingerprint(person: Person): FingerprintResult {
 		avoid: avoid.map((a) => a.key),
 		attributes,
 		mostYou,
+		averageYear: averageYearOf(rated),
 	}
+}
+
+function averageYearOf(rated: Person["rated"]): number | null {
+	const years = rated.flatMap((t) => {
+		const year = yearOf(t.facts)
+		return year === null ? [] : [year]
+	})
+	return years.length ? Math.round(average(years)) : null
 }

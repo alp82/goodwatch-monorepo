@@ -1,6 +1,7 @@
 // What pulls you: the attribute list flows down columns of seven rows beside the picked attribute's name, meaning and
-// numbers, with the titles it defines most across the full width underneath. The list area always holds seven rows,
-// so a family switch never moves the page.
+// numbers, with the titles it defines most across the full width underneath. The list area always holds seven rows
+// (below lg it scrolls inside them), the detail always holds two lines of meaning, and the titles always hold six
+// slots, so a family switch never moves the page at any width.
 import { Bar, FamilyButton } from "~/ui/profile/taste/FingerprintExplorer"
 import {
 	FAMILY_COLOR,
@@ -23,9 +24,7 @@ export function Explorer({ state }: { state: PrintState }) {
 	const { rows, max } = explorerRows(taste.attributes, state.family)
 	const picked = attributeByKey.get(state.key) as TasteAttribute
 	const columns = Math.max(1, Math.ceil(rows.length / PER_COLUMN))
-	const defining = (
-		picked.defining.length ? picked.defining : picked.carriers
-	).map(title)
+	const defining = picked.defining.map(title)
 	return (
 		<div className="flex flex-col gap-5">
 			<div className="flex flex-col gap-2">
@@ -38,7 +37,8 @@ export function Explorer({ state }: { state: PrintState }) {
 			</div>
 			<div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
 				<ul
-					className="grid gap-x-4 lg:h-[var(--box)] lg:grid-flow-col lg:grid-rows-[repeat(7,2.5rem)] lg:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))]"
+					key={state.family ?? "strongest"}
+					className="grid h-[var(--box)] auto-rows-[2.5rem] gap-x-4 overflow-y-auto overscroll-contain lg:overflow-visible lg:grid-flow-col lg:grid-rows-[repeat(7,2.5rem)] lg:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))]"
 					style={{
 						["--box" as string]: `${PER_COLUMN * ROW_REM}rem`,
 						["--cols" as string]: columns,
@@ -91,7 +91,9 @@ export function Explorer({ state }: { state: PrintState }) {
 								{FAMILY_NAMES[picked.family].name}
 							</span>
 						</div>
-						<p className="mt-1 line-clamp-2 text-gray-400">{picked.meaning}</p>
+						<p className="mt-1 line-clamp-2 min-h-[3rem] text-gray-400">
+							{picked.meaning}
+						</p>
 					</div>
 					<dl className="mt-auto grid grid-cols-3 gap-2 text-center">
 						<Stat label="of your titles" value={pct(picked.share)} />
@@ -106,20 +108,28 @@ export function Explorer({ state }: { state: PrintState }) {
 			</div>
 			<div>
 				<p className="mb-2 text-xs text-gray-500">Defined by {picked.label}</p>
-				<ul className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-					{Array.from({ length: TITLES }, (_, i) => {
-						const t = defining[i]
-						return (
-							<li key={t?.key ?? `empty-${i}`}>
-								{t ? (
-									<MiniPoster title={t} />
-								) : (
-									<span className="block aspect-[2/3] rounded-md bg-white/[0.03]" />
-								)}
-							</li>
-						)
-					})}
-				</ul>
+				<div className="relative">
+					<ul className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+						{Array.from({ length: TITLES }, (_, i) => {
+							const t = defining[i]
+							return (
+								<li key={t?.key ?? `empty-${i}`}>
+									{t ? (
+										<MiniPoster title={t} />
+									) : (
+										<span className="block aspect-[2/3] rounded-md bg-white/[0.03]" />
+									)}
+								</li>
+							)
+						})}
+					</ul>
+					{defining.length === 0 && (
+						<p className="absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-gray-500">
+							None of the titles you scored 7 or more stands out for{" "}
+							{picked.label} yet.
+						</p>
+					)}
+				</div>
 			</div>
 		</div>
 	)
