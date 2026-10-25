@@ -16,6 +16,10 @@ from f.tmdb_api import daily_provider_lists as job
 
 
 class RampStorage(Storage):
+    def __init__(self):
+        super().__init__()
+        self.connector = self.crate
+
     def inventory(self):
         return {key: deepcopy(value) for key, value in self.snapshots.items()}
 
@@ -76,6 +80,15 @@ class DailyRampTests(unittest.TestCase):
              patch.object(job, 'create_list_storage', return_value=self.store), \
              patch.object(job, 'datetime', FixedDateTime):
             return job.main(**options)
+
+    def test_offer_drain_receives_only_the_time_remaining_in_the_flow(self):
+        from f.tmdb_api import daily_list_ramp as ramp
+        with patch.object(ramp, 'run_ramp', return_value={}), \
+             patch.object(ramp.time, 'monotonic', side_effect=[0, 12550, 12551]), \
+             patch('f.tmdb_api.list_offer_refresh.drain', return_value={}) as drain:
+            self.run_job()
+        self.assertIs(drain.call_args.args[2], self.store.connector)
+        self.assertEqual(drain.call_args.kwargs['max_seconds'], 15450)
 
     def test_rereads_checkpoints_first_then_admits_countries_in_order(self):
         self.checkpoint('US', 'movie')

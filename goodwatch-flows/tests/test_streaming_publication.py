@@ -772,6 +772,21 @@ class StreamingPublicationTests(unittest.TestCase):
         self.assertEqual(result["shows"]["records_received"], 5)
         self.assertEqual(self.db.streaming_publication_leases.count_documents({}), 0)
 
+    def test_targeted_bulk_publication_uses_bounded_batches_and_reports_each_title(self) -> None:
+        self.copy.__globals__['SCHEDULED_BATCH_SIZE'] = 2
+        for tmdb_id in range(1, 6):
+            self.db.tmdb_tv_providers.insert_one(dict(tmdb_id=tmdb_id, country_code='US',
+                updated_at=self.now, streaming_links=[]))
+        crate = Crate()
+        select = crate.select
+        reads = []
+        crate.select = lambda sql, params=None: reads.append(sql) or select(sql, params)
+        result = self.copy(crate, {'tmdb_id': {'$in': [1, 2, 3, 4, 5]}}, 'show',
+                           recent_only=False, mapping_refresh_limit=0, targeted_batch=True)
+        self.assertEqual(sum('FROM streaming_availability' in sql for sql in reads), 3)
+        self.assertEqual(set(result['publication']['titles']), {'1', '2', '3', '4', '5'})
+        self.assertEqual(len(crate.media), 5)
+
     def test_scheduled_batch_publishes_a_busy_title_after_its_lease_is_released(self) -> None:
         for tmdb_id in (41, 43):
             self.db.tmdb_tv_providers.insert_one({"tmdb_id": tmdb_id, "country_code": "US", "updated_at": self.now, "streaming_links": []})

@@ -1,0 +1,61 @@
+{
+  "review_session": "S69:P50ai:G8ah1",
+  "reviewed_commit": "0c06ab385",
+  "fixes": [
+    "RampStorage exposes its recording Crate connector",
+    "20-title per-media publication batches use shared bulk streaming writes and one strict vector call",
+    "Baseline reads enqueue only actual published-offer mismatches",
+    "Stop at 20 consecutive failures, including across publication batches",
+    "Queue index and sort share directions; materialized selection prevents rereading mutated sort keys",
+    "Daily priority-0 backfill consumption and budgets are explicit in the runbook"
+  ],
+  "tests": {
+    "run": 288,
+    "passed": 271,
+    "skipped": 17,
+    "seconds": 8.705,
+    "daily_suites": {
+      "test_daily_list_ramp": 30,
+      "test_daily_provider_lists": 72,
+      "test_daily_provider_lists_integration": 2,
+      "test_daily_provider_lists_preview": 9
+    }
+  },
+  "benchmark": {
+    "benchmark": "1000_titles_actual_copier_in_memory_io",
+    "selected": 1000,
+    "published": 1000,
+    "failed": 0,
+    "remaining": 0,
+    "max_failure_days": 0,
+    "publication_batches": 50,
+    "failures": [],
+    "dry_run": false,
+    "seconds": 3.107951,
+    "seconds_per_published_title": 0.003108
+  },
+  "benchmark_scope": "Actual shared streaming copier; in-memory Mongo/Crate I/O and fake HTTP/vector boundary. Not production write throughput.",
+  "setup_calls": {
+    "titles": 1000,
+    "publication_and_vector_batches": 50,
+    "index_calls": 200,
+    "catalog_reads": 50,
+    "child_offer_reads": 50,
+    "previous_one_title_batches": 1000,
+    "previous_index_calls": 4000
+  },
+  "runtime": {
+    "flow_timeout_seconds": 28800,
+    "total_run_work_cutoff_seconds": 28000,
+    "example_list_seconds": 12550,
+    "remaining_drain_seconds": 15450
+  },
+  "budgets": {
+    "daily_drain_all_priorities_max_titles": 20000,
+    "oct25_daily_full_drain_before_retries": 189005,
+    "backfill_preview_plus_apply_before_retries": 116548,
+    "conservative_combined_before_retries": 305553
+  },
+  "production_writes_performed": false,
+  "production_throughput_measured": false
+}

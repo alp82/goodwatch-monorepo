@@ -13,6 +13,9 @@ publication leases. A verified change or disagreement stages a durable Mongo
 `tmdb_list_offer_refresh` intent **before** history and checkpoint writes.
 Matching unchanged scopes need no additional HTTP request. Multiple countries/services
 merge into one title intent; movie and show identities remain separate.
+On a baseline (`previous_at` absent), empty previous membership is not a change:
+only an actual child/aggregate mismatch queues a refresh. A newly introduced
+country or service therefore does not enqueue all already-correct list members.
 
 After the lists finish, `daily_list_ramp.run_daily_job` consumes these intents
 with the same `TMDBClient`: one fresh `/movie/{id}/watch/providers` or
@@ -25,13 +28,19 @@ the existing strict `WatchProviders` model before storage.
 
 `list_offer_refresh.publish_offers` calls
 `f/sync/copy/tmdb_streaming.copy_media` with exact TMDB IDs and
-`recent_only=False`, then `f/sync/copy/vector_data.copy_to_qdrant` with strict
+`recent_only=False`, `mapping_refresh_limit=0`, and `targeted_batch=True`, then
+`f/sync/copy/vector_data.copy_to_qdrant` with strict
 writes. These are the existing scheduled/targeted transformations and title
 leases. The shared copier remains the only writer of child offers and the
 `streaming_availabilities`, `streaming_country_codes`, and
 `streaming_service_ids` arrays. The same path publishes `streaming_evidence`
 and reconciles history. The vector writer rereads the published Crate snapshot
 under its existing lease. No whole details/ratings/DNA refresh is needed.
+The consumer groups at most 20 prepared titles per media type. Both the shared
+streaming batch writer and vector writer receive the whole group: Mongo index
+setup and service-catalog reads occur once per group, and Crate reads/writes
+are shared across titles. Individual history/identity failures stay pending
+while successful titles are acknowledged after vector publication.
 
 This deliberately uses a fresh per-title API read instead of constructing
 offers from discover membership. Discover proves only service membership;
@@ -71,10 +80,19 @@ prevents acknowledgment from consuming newer work. Daily changes have priority
 over the older backfill, and unattempted work precedes failed retries at the same
 priority. The consumer handles at most 20,000 titles per invocation. Budget
 exhaustion leaves the rest pending and triggers the existing hard-budget alert.
+The daily drain also consumes priority-0 backfill items after priority-1 daily
+changes, using any remaining part of that same 20,000-title allowance. Backfill
+is not restricted to manual execution. Inspect queue progress before planning
+manual batches or computing the day's remaining request allowance.
 The daily consumer also stops at 28,000 total run seconds, reserving time inside
 the existing 28,800-second flow timeout for reporting and cleanup. Excess work
 stays queued and is reported as a warning. Manual consumer batches use the same
 runtime bound; the documented 1,000-title batches keep review/execution bounded.
+Twenty consecutive preparation/publication failures stop the drain, so a Qdrant
+outage spends at most one 20-title batch of TMDB reads before stopping. All intents
+remain pending. Queue sort and index directions share one definition; the bounded
+selection is materialized before sort keys change, preventing a failed item from
+being selected twice in the same invocation.
 Missing/deleted/duplicate source identities, missing catalog rows, provider 404s
 and quarantines are reported for the existing full ingestion/identity path;
 the provider endpoint alone never authorizes title-wide deletion.
@@ -88,10 +106,10 @@ defer codes; arbitrary upstream exception text is omitted.
 
 Read-only Windmill results:
 
-| Run | Existing requests | Existing title checks | Upper bound with new title refreshes, before retries/backlog |
-| --- | ---: | ---: | ---: |
-| October 24 | 164,495 | 18,436 | 182,931 |
-| October 25 | 169,005 | 18,950 | 187,955 |
+| Run | Existing requests | Existing title checks | New changes only, before retries | Full 20k drain including backfill, before retries |
+| --- | ---: | ---: | ---: | ---: |
+| October 24 | 164,495 | 18,436 | 182,931 | 184,495 |
+| October 25 | 169,005 | 18,950 | 187,955 | 189,005 |
 
 The upper bound assumes every checked title needs repair. Actual extra requests
 equal distinct queued changed/mismatching titles, not country/service rows. The 20,000
@@ -100,7 +118,10 @@ older pending work. All retries count toward the **same 350,000 hard limit**.
 No new schedule is needed: daily lists still start at 14:00 UTC, after the
 13:00 UTC recent-release recheck. Extra HTTP pacing alone is at most about
 22 minutes at 15 requests/second; publication time is additional and has not
-been measured in production before review.
+been measured in production before review. Count the day's requests as existing
+list work + **all** daily-drain requests (both priorities) + manual previews +
+manual execution + retries. A full pending queue makes October 25's daily upper
+bound 189,005, rather than the fresh-change-only 187,955.
 
 ## Read-only backfill
 
@@ -150,8 +171,10 @@ source record. The normal backfill would spend about **58,274 fresh requests**
 before retries or newly discovered upstream deferrals. Its actual after counts
 are **not measured**, because production writes remain review-gated.
 Previewing every eligible title once and then applying costs about **116,548
-requests** before retries. Alongside the conservative October 25 daily estimate,
-that is **304,503 requests**, leaving about 45,497 of the 350k allowance for retries.
+requests** before retries. Alongside a full 20k October 25 daily drain, the
+conservative ceiling is **305,553 requests**, leaving **44,447** of the 350k
+allowance for retries. This deliberately gives no credit for backfill titles
+already consumed automatically: those reduce subsequent manual execution.
 
 Committed evidence:
 [summary](implementation/daily-provider-lists/title-offer-backfill-20261025.json),
@@ -276,3 +299,31 @@ one offer deletion; show 25391 planned six offer upserts. All three previews
 completed without errors in 3.441 seconds. Full diffs are retained at
 `/tmp/title-offers-sync/live-offer-preview.json`. These are plans, not executed
 production corrections.
+
+The review follow-up runs **every daily-list suite**, including
+`test_daily_list_ramp.py`, and adds baseline, remaining-time, consecutive-failure,
+indexed-selection and batched-publication regressions. A 1,000-title benchmark
+uses the actual shared streaming copier with in-memory Mongo/Crate adapters and
+a recorded vector boundary. It completes in **3.108 seconds (0.003108 s/title)**,
+using **50** copier/catalog/vector batches and **200** index setup calls, rather
+than 1,000 batches and 4,000 index setup calls. These are CPU/adapter timings;
+they do not establish production network/write throughput. The first reviewed
+1,000-title live batch must still be timed against the approximately
+**0.77 s/title** steady-state budget. Every consumer result now includes elapsed
+seconds, seconds per published title, and publication batch count.
+
+The complete follow-up verification ran **288 tests: 271 passed and 17 optional
+integration checks skipped**. All four daily-list suites ran: 30 ramp,
+72 provider-list, 2 integration and
+9 preview tests. The ramp suite includes the remaining-time handoff regression.
+[Review-fix evidence](implementation/daily-provider-lists/title-offer-review-fixes-20261025.json)
+records the measured timings and setup counts.
+
+To run every daily-list suite explicitly:
+
+```bash
+PYTHONWARNINGS=ignore uv run -q --with pyyaml --with wmill --with mongoengine \
+  --with mongomock --with requests --with pydantic --with python-dateutil \
+  --with crate --with sqlalchemy --with qdrant-client --with beautifulsoup4 \
+  python -m unittest discover -s goodwatch-flows/tests -p 'test_daily*list*.py'
+```

@@ -2,6 +2,7 @@
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 import importlib.util
+import json
 from pathlib import Path
 import sys
 import unittest
@@ -45,10 +46,16 @@ class RefreshTests(unittest.TestCase):
                                               'is_selected': True})
         self.crate = Mock()
         self.crate.select.return_value = [{'tmdb_id': 42}]
-        self.api, self.publish = API(), Mock()
+        self.api, self.publish = API(), Mock(return_value={})
 
     def enqueue(self, scopes=None):
         refresh.enqueue(self.db, 'movie', 42, scopes or {'DE_8': utc_ms(self.old)})
+
+    def seed_work(self, count):
+        self.db.tmdb_movie_details.delete_many({})
+        self.db.tmdb_movie_details.insert_many([dict(tmdb_id=i, updated_at=self.old) for i in range(1, count + 1)])
+        for tmdb_id in range(1, count + 1):
+            refresh.enqueue(self.db, 'movie', tmdb_id, {'DE_8': utc_ms(self.old)})
 
     def drain(self, **kwargs):
         return refresh.drain(self.api, self.db, self.crate, dry_run=False,
@@ -60,7 +67,7 @@ class RefreshTests(unittest.TestCase):
         result = self.drain()
         self.assertEqual(result['published'], 1)
         self.assertEqual(self.api.calls, ['/movie/42/watch/providers'])
-        self.publish.assert_called_once_with(self.crate, 'movie', 42)
+        self.publish.assert_called_once_with(self.crate, 'movie', [42])
         source = self.db.tmdb_movie_details.find_one({'tmdb_id': 42})
         from f.tmdb_api.models import TmdbMovieDetails
         # The next regular crawler must be able to load the strict document.
@@ -132,6 +139,101 @@ class RefreshTests(unittest.TestCase):
         self.assertEqual(result['remaining'], 1)
         self.assertEqual(self.api.calls, [])
 
+    def test_publication_outage_stops_after_twenty_requests_and_never_reselects_failures(self):
+        self.seed_work(100)
+        self.publish.side_effect = RuntimeError('Qdrant unavailable')
+        result = self.drain()
+        self.assertEqual((result['selected'], result['failed'], result['published']), (20, 20, 0))
+        self.assertEqual(result['deferred_reason'], 'consecutive_failures')
+        self.assertEqual(len(self.api.calls), 20)
+        self.assertEqual(result['remaining'], 100)
+        self.assertEqual(self.db.tmdb_list_offer_refresh.count_documents({'failure_day': {'$exists': True}}), 20)
+        self.assertIn([('pending', 1), *refresh.QUEUE_SORT],
+                      [index['key'] for index in self.db.tmdb_list_offer_refresh.index_information().values()])
+
+    def test_source_outage_stops_before_spending_requests_on_the_entire_queue(self):
+        self.seed_work(100)
+        self.db.tmdb_movie_details.delete_many({})
+        result = self.drain()
+        self.assertEqual((result['selected'], result['failed']), (20, 20))
+        self.assertEqual(self.api.calls, [])
+        self.publish.assert_not_called()
+
+    def test_failure_stop_budget_carries_across_publication_batches(self):
+        self.seed_work(100)
+        calls = []
+        def publish(connector, media, ids):
+            calls.append(ids)
+            if len(calls) == 1:
+                return {ids[-1]: 'history_publication_failed'}
+            raise RuntimeError('Qdrant unavailable')
+        self.publish.side_effect = publish
+        result = self.drain()
+        self.assertEqual([len(ids) for ids in calls], [20, 19])
+        self.assertEqual((result['published'], result['failed'], len(self.api.calls)), (19, 20, 39))
+        self.assertEqual(result['deferred_reason'], 'consecutive_failures')
+
+    def test_individual_history_failure_does_not_prevent_acknowledging_the_rest_of_the_batch(self):
+        self.seed_work(20)
+        self.publish.return_value = {3: 'history_publication_failed'}
+        result = self.drain()
+        self.assertEqual((result['published'], result['failed'], result['remaining']), (19, 1, 1))
+        self.assertTrue(self.db.tmdb_list_offer_refresh.find_one({'_id': 'movie:3'})['pending'])
+
+    def test_batch_publisher_vectors_only_successful_streaming_titles(self):
+        from f.sync.copy import tmdb_streaming, vector_data
+        from f.db import qdrant
+        publication = dict(history_errors={2: 'fixture'}, titles={
+            '1': dict(provider_state='present', streaming_availability=['8_DE']),
+            '2': dict(provider_state='present', streaming_availability=[]),
+            '3': dict(provider_state='quarantined', streaming_availability=None),
+        })
+        with patch.object(tmdb_streaming, 'copy_media', return_value={'publication': publication}) as copy, \
+             patch.object(vector_data, 'copy_to_qdrant') as vectors, patch.object(qdrant, 'QdrantConnector'):
+            failed = refresh.publish_offers(self.crate, 'movie', [1, 2, 3, 4])
+        self.assertEqual(set(failed), {2, 3, 4})
+        self.assertEqual(vectors.call_args.args[2], {'tmdb_id': {'$in': [1]}})
+        self.assertTrue(vectors.call_args.kwargs['strict_writes'])
+        self.assertTrue(copy.call_args.kwargs['targeted_batch'])
+
+    def test_remaining_time_is_checked_again_before_a_prepared_batch_is_published(self):
+        self.enqueue()
+        with patch.object(refresh.time, 'monotonic', side_effect=[0, 0, 2, 2]):
+            result = self.drain(max_seconds=1)
+        self.assertEqual(result['remaining'], 1)
+        self.assertEqual(result['deferred_reason'], 'runtime_budget')
+        self.publish.assert_not_called()
+
+    def test_1000_titles_share_index_catalog_and_vector_setup(self):
+        from f.sync.copy import tmdb_streaming, vector_data
+        from f.db import qdrant
+        class RecordingCrate(HistoryCrate):
+            def __init__(self):
+                super().__init__()
+                self.selects = []
+            def select(self, sql, params=None):
+                self.selects.append(sql)
+                if sql.startswith('SELECT tmdb_id FROM'):
+                    return [{'tmdb_id': params[0]}]
+                return super().select(sql, params)
+        self.seed_work(1000)
+        self.api.results = {'DE': {'link': 'https://tmdb/de', 'flatrate': [{'provider_id': 8, 'display_priority': 1}]}}
+        crate = RecordingCrate()
+        with patch.object(tmdb_streaming, 'get_db', return_value=self.db), \
+             patch.object(self.db.tmdb_movie_details, 'create_index', wraps=self.db.tmdb_movie_details.create_index) as details_index, \
+             patch.object(self.db.tmdb_movie_providers, 'create_index', wraps=self.db.tmdb_movie_providers.create_index) as providers_index, \
+             patch.object(vector_data, 'copy_to_qdrant') as vectors, patch.object(qdrant, 'QdrantConnector'), \
+             patch('builtins.print'):
+            result = refresh.drain(self.api, self.db, crate, dry_run=False, clock=lambda: self.now)
+        self.assertEqual(result['published'], 1000)
+        self.assertEqual(result['publication_batches'], 50)
+        self.assertEqual((details_index.call_count, providers_index.call_count, vectors.call_count), (50, 150, 50))
+        self.assertEqual(sum('FROM streaming_service' in sql for sql in crate.selects), 50)
+        self.assertEqual(sum('FROM streaming_availability' in sql for sql in crate.selects), 50)
+        self.assertEqual(len(crate.media), 1000)
+        self.assertEqual(len(self.api.calls), 1000)
+        print(json.dumps(dict(benchmark='1000_titles_actual_copier_in_memory_io', **result)), flush=True)
+
     def test_movie_and_show_ids_stay_distinct(self):
         self.enqueue()
         refresh.enqueue(self.db, 'show', 42, {'DE_8': utc_ms(self.old)})
@@ -195,10 +297,21 @@ class RefreshTests(unittest.TestCase):
         self.assertEqual(self.db.tmdb_list_offer_refresh.count_documents({}), 0)
         title.list_read.previous_offers = ()
         title.list_read.previous_present = False
+        title.list_read.previous_at = utc_ms(self.old)
         self.crate.select.side_effect = [[dict(media_tmdb_id=42, streaming_type='flatrate')],
             [dict(tmdb_id=42, has_offer=True, has_country=True, has_service=True)]]
         self.assertEqual(len(refresh.enqueue_list_mismatches(self.db, self.crate, 'movie', [title])), 1)
         self.assertTrue(self.db.tmdb_list_offer_refresh.find_one()['pending'])
+
+    def test_matching_baseline_members_are_not_queued_but_real_mismatches_are(self):
+        key = OfferKey(42, 'movie', 'DE', 8, 'flatrate')
+        title = HistoryTitle(42, dict(watch_providers_check={'checked_at': utc_ms(self.now)}),
+                             {key: key._asdict()}, {}, [], [], ListRead('DE', 8, utc_ms(self.now)))
+        self.crate.select.side_effect = [[dict(media_tmdb_id=42, streaming_type='flatrate')],
+            [dict(tmdb_id=42, has_offer=True, has_country=True, has_service=True)]]
+        self.assertEqual(refresh.enqueue_list_mismatches(self.db, self.crate, 'movie', [title]), [])
+        self.crate.select.side_effect = [[], [dict(tmdb_id=42, has_offer=False, has_country=False, has_service=False)]]
+        self.assertEqual(len(refresh.enqueue_list_mismatches(self.db, self.crate, 'movie', [title])), 1)
 
 
 class ListScopePublicationTests(unittest.TestCase):

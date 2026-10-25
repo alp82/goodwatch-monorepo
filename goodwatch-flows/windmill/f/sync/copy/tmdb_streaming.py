@@ -628,6 +628,7 @@ def publish_batch(
     mongo_db: Any, connector: CrateConnector, tmdb_ids: list[int], media_type: str, MediaClass: Any,
     mongo_details: Any, mongo_providers: Any, service_ids: dict,
     refresh_budget: RefreshBudget, entity_counts: dict, publication: dict, pending_ids: set | None = None,
+    targeted: bool = False,
 ) -> list[int]:
     """Publish many titles with one read per source and one bulk write per table.
 
@@ -678,6 +679,14 @@ def publish_batch(
             title_evidence, title_changed, title_removed, title_media = publication_writes(
                 tmdb_id, media_type, MediaClass, existing, details, providers, rows, verified, api_results,
                 service_ids, prior_by_id.get(tmdb_id, []))
+            if targeted:
+                publication['titles'][str(tmdb_id)] = {
+                    'provider_state': 'present' if providers else 'absent',
+                    'deferred_countries': sorted(unmapped),
+                    'streaming_availability': (
+                        sorted({f"{row['streaming_service_id']}_{row['country_code']}" for row in rows.values()})
+                        if title_media is not None else None),
+                }
             evidence += title_evidence
             changed += title_changed
             removed += title_removed
@@ -724,7 +733,7 @@ def copy_media(
     connector: CrateConnector,
     query_selector: dict = {},
     media_type: str = "movie",
-    *, recent_only: bool = True, mapping_refresh_limit: int | None = None,
+    *, recent_only: bool = True, mapping_refresh_limit: int | None = None, targeted_batch: bool = False,
 ) -> dict:
     if media_type not in ("movie", "show"):
         raise ValueError("Unsupported streaming media type")
@@ -791,13 +800,13 @@ def copy_media(
                                     lease_wait_seconds, publication, targeted)
             else:
                 publishable.append(tmdb_id)
-        batches = [publishable] if targeted else [
+        batches = [publishable] if targeted and not targeted_batch else [
             publishable[batch_start:batch_start + SCHEDULED_BATCH_SIZE]
             for batch_start in range(0, len(publishable), SCHEDULED_BATCH_SIZE)]
         for batch in batches:
-            one_by_one = batch if targeted else publish_batch(
+            one_by_one = batch if targeted and not targeted_batch else publish_batch(
                 mongo_db, connector, batch, media_type, MediaClass, mongo_details, mongo_providers,
-                service_ids, refresh_budget, entity_counts, publication, pending_ids)
+                service_ids, refresh_budget, entity_counts, publication, pending_ids, targeted=targeted)
             # Spend the refreshes before the next batch decides which titles to leave.
             for tmdb_id in one_by_one:
                 publish_title(mongo_db, connector, tmdb_id, media_type, MediaClass, mongo_details, mongo_providers,

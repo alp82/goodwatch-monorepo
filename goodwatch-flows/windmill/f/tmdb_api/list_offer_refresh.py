@@ -20,6 +20,11 @@ class RefreshDeferred(RuntimeError):
     """Stable operational reason, safe to include in reports without credentials."""
 
 
+QUEUE_SORT = [('priority', -1), ('last_attempt_at', 1), ('_id', 1)]
+PUBLISH_BATCH_SIZE = 20
+MAX_CONSECUTIVE_FAILURES = 20
+
+
 def enqueue_list_mismatches(db, connector, media_type, titles, *, dry_run=False):
     """Queue verified changes and scopes whose child or aggregate offers need repair."""
     titles = [title for title in titles if title.list_read
@@ -47,8 +52,9 @@ def enqueue_list_mismatches(db, connector, media_type, titles, *, dry_run=False)
     for title in titles:
         expected = {key.streaming_type for key in title.rows}
         parent = parents.get(title.tmdb_id, {})
-        verified_change = (expected != set(title.list_read.previous_offers)
-                           or bool(expected) != title.list_read.previous_present)
+        verified_change = (title.list_read.previous_at is not None and
+                           (expected != set(title.list_read.previous_offers)
+                            or bool(expected) != title.list_read.previous_present))
         needs_aggregate = (bool(expected) and not all(parent.get(field) for field in ('has_offer', 'has_country', 'has_service'))
                            or not expected and title.tmdb_id not in any_offer and parent.get('has_offer'))
         if verified_change or expected != actual.get(title.tmdb_id, set()) or needs_aggregate:
@@ -76,26 +82,33 @@ def enqueue(db, media_type, tmdb_id, scopes, *, priority=0):
     }, upsert=True)
 
 
-def publish_offers(connector, media_type, tmdb_id):
+def publish_offers(connector, media_type, tmdb_ids):
     # Reuse both existing writers, including their shared leases and strict
     # Qdrant writes. Never run the unrelated details/ratings/DNA crawlers.
     from f.sync.copy.tmdb_streaming import copy_media
     from f.sync.copy.vector_data import copy_to_qdrant
     from f.db.qdrant import QdrantConnector
     from f.sync.copy.qdrant_retry import REQUEST_TIMEOUT_SECONDS
-    selector = {'tmdb_id': {'$in': [tmdb_id]}}
-    result = copy_media(connector, selector, media_type, recent_only=False, mapping_refresh_limit=0)
-    if result.get('publication', {}).get('history_errors'):
-        raise RefreshDeferred('history_publication_failed')
-    title = result.get('publication', {}).get('titles', {}).get(str(tmdb_id), {})
-    if title.get('provider_state') == 'quarantined' or title.get('streaming_availability') is None:
-        raise RefreshDeferred('quarantined_or_unpublishable')
+    selector = {'tmdb_id': {'$in': tmdb_ids}}
+    result = copy_media(connector, selector, media_type, recent_only=False,
+                        mapping_refresh_limit=0, targeted_batch=True)
+    publication = result.get('publication', {})
+    failed = {}
+    for tmdb_id in tmdb_ids:
+        title = publication.get('titles', {}).get(str(tmdb_id), {})
+        if tmdb_id in publication.get('history_errors', {}):
+            failed[tmdb_id] = 'history_publication_failed'
+        elif title.get('provider_state') == 'quarantined' or title.get('streaming_availability') is None:
+            failed[tmdb_id] = 'quarantined_or_unpublishable'
+    eligible = [tmdb_id for tmdb_id in tmdb_ids if tmdb_id not in failed]
+    if not eligible:
+        return failed
     qdrant = QdrantConnector(timeout=REQUEST_TIMEOUT_SECONDS)
     try:
-        copy_to_qdrant(qdrant, media_type, selector, recent_only=False, strict_writes=True)
+        copy_to_qdrant(qdrant, media_type, {'tmdb_id': {'$in': eligible}}, recent_only=False, strict_writes=True)
     finally:
         qdrant.close()
-    return result
+    return failed
 
 
 def source_snapshot(previous, payload, proof, scopes):
@@ -122,8 +135,7 @@ def preview_pending(client, db, connector, *, limit=1000, clock=lambda: datetime
     from f.sync.availability_history import HistoryTitle, read_history, select_transitions, title_writes
     report = dict(dry_run=True, selected=0, failed=0, plans=[], failures=[])
     catalogs = {}
-    for item in db.tmdb_list_offer_refresh.find({'pending': True}).sort(
-            [('priority', -1), ('last_attempt_at', 1), ('_id', 1)]).limit(limit):
+    for item in db.tmdb_list_offer_refresh.find({'pending': True}).sort(QUEUE_SORT).limit(limit):
         report['selected'] += 1
         media, tmdb_id = item['media_type'], item['tmdb_id']
         details = db.tmdb_movie_details if media == 'movie' else db.tmdb_tv_details
@@ -190,78 +202,128 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
         title_checks, TMDBAccessDenied, RequestBudgetExceeded, LeaseLost,
     )
     dry_run = dry_run is not False
-    report = dict(selected=0, published=0, failed=0, remaining=0, max_failure_days=0, failures=[], dry_run=dry_run)
+    report = dict(selected=0, published=0, failed=0, remaining=0, max_failure_days=0,
+                  publication_batches=0, failures=[], dry_run=dry_run)
     work = db.tmdb_list_offer_refresh
     started = time.monotonic()
     if not dry_run:
-        work.create_index([('pending', 1), ('priority', -1), ('last_attempt_at', 1), ('_id', 1)])
-    for item in work.find({'pending': True}).sort([('priority', -1), ('last_attempt_at', 1), ('_id', 1)]).limit(limit):
+        work.create_index([('pending', 1), *QUEUE_SORT])
+    # Freeze this bounded selection before changing indexed sort keys. Otherwise
+    # a failed item moved to the end of the index can be read again in this run.
+    items = list(work.find({'pending': True}).sort(QUEUE_SORT).limit(limit))
+    consecutive_failures = 0
+
+    def out_of_time():
         if max_seconds is not None and time.monotonic() - started >= max_seconds:
             report['deferred_reason'] = 'runtime_budget'
-            break
-        report['selected'] += 1
-        if dry_run:
-            continue
+            return True
+        return False
+
+    def record_failure(item, error):
+        nonlocal consecutive_failures
         check_owned()
-        media, tmdb_id = item['media_type'], item['tmdb_id']
-        details = db.tmdb_movie_details if media == 'movie' else db.tmdb_tv_details
-        try:
-            sources = list(details.find({'tmdb_id': tmdb_id}, {'_id': 1, 'tmdb_deleted': 1}).limit(2))
-            if len(sources) > 1:
-                raise RefreshDeferred('duplicate_details_identity')
-            if not sources or sources[0].get('tmdb_deleted') is True:
-                raise RefreshDeferred('active_details_missing')
-            source = sources[0]
-            if not connector.select(f'SELECT tmdb_id FROM {media} WHERE tmdb_id = ?', (tmdb_id,)):
-                raise RefreshDeferred('catalog_title_missing')
-            _, payload, proof = title_checks(client, 'tv' if media == 'show' else 'movie', [tmdb_id], clock)[0]
-            if proof.get('deleted'):
-                # A provider endpoint's 404 is not a title-wide deletion intent.
-                raise RefreshDeferred('provider_reports_deleted')
+        day = utc_day(utc_ms(clock()))
+        streak = item.get('consecutive_failure_days', 0)
+        if item.get('failure_day') != day:
+            streak = streak + 1 if item.get('failure_day') == day - 86400000 else 1
+        failure = dict(identity=item['_id'], error=type(error).__name__, consecutive_failure_days=streak)
+        if isinstance(error, RefreshDeferred):
+            failure['reason'] = str(error)
+        work.update_one({'_id': item['_id'], 'version': item['version']}, {
+            '$set': {'error': failure['error'], 'failure_day': day, 'consecutive_failure_days': streak,
+                     'last_attempt_at': utc_ms(clock())}})
+        report['failed'] += 1
+        report['max_failure_days'] = max(report['max_failure_days'], streak)
+        if len(report['failures']) < 20:
+            report['failures'].append(failure)
+        consecutive_failures += 1
+        if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+            report['deferred_reason'] = 'consecutive_failures'
+
+    offset = 0
+    while offset < len(items):
+        ready = defaultdict(list)
+        # Prepared titles might all fail publication. Reserve only the attempts
+        # remaining before the consecutive-failure stop, even across batches.
+        while (offset < len(items) and sum(map(len, ready.values()))
+               < min(PUBLISH_BATCH_SIZE, MAX_CONSECUTIVE_FAILURES - consecutive_failures)):
+            item = items[offset]
+            if out_of_time() or consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+                break
+            offset += 1
+            report['selected'] += 1
+            if dry_run:
+                continue
             check_owned()
-            # A narrow source update must not advance the 30-day details queue,
-            # alter country retry state or overwrite a newer API observation.
-            previous = details.find_one({'_id': source['_id']}) or {}
-            # The standalone endpoint adds an id that the appended endpoint
-            # and Mongo's strict WatchProviders embedded model do not contain.
-            payload, proof, checks = source_snapshot(previous, payload, proof, item['scopes'])
-            scoped_proofs = {f'watch_providers_list_scopes.{scope}': value for scope, value in checks.items()}
-            saved = details.update_one({'_id': source['_id'], 'tmdb_deleted': {'$ne': True}, '$or': [
-                {'watch_providers_check.checked_at': {'$lte': proof['checked_at']}},
-                {'watch_providers_check.checked_at': {'$exists': False}},
-            ]}, {'$set': {'watch_providers': payload, 'watch_providers_check': proof,
-                         'watch_providers_error': '', 'watch_providers_attempted_at': clock(), **scoped_proofs}})
-            if saved.matched_count != 1:
-                raise RefreshDeferred('newer_source_won')
+            media, tmdb_id = item['media_type'], item['tmdb_id']
+            details = db.tmdb_movie_details if media == 'movie' else db.tmdb_tv_details
+            try:
+                sources = list(details.find({'tmdb_id': tmdb_id}, {'_id': 1, 'tmdb_deleted': 1}).limit(2))
+                if len(sources) > 1:
+                    raise RefreshDeferred('duplicate_details_identity')
+                if not sources or sources[0].get('tmdb_deleted') is True:
+                    raise RefreshDeferred('active_details_missing')
+                source = sources[0]
+                if not connector.select(f'SELECT tmdb_id FROM {media} WHERE tmdb_id = ?', (tmdb_id,)):
+                    raise RefreshDeferred('catalog_title_missing')
+                _, payload, proof = title_checks(client, 'tv' if media == 'show' else 'movie', [tmdb_id], clock)[0]
+                if proof.get('deleted'):
+                    # A provider endpoint's 404 is not a title-wide deletion intent.
+                    raise RefreshDeferred('provider_reports_deleted')
+                check_owned()
+                # A narrow source update must not advance the 30-day details queue,
+                # alter country retry state or overwrite a newer API observation.
+                previous = details.find_one({'_id': source['_id']}) or {}
+                # The standalone endpoint adds an id that the appended endpoint
+                # and Mongo's strict WatchProviders embedded model do not contain.
+                payload, proof, checks = source_snapshot(previous, payload, proof, item['scopes'])
+                scoped_proofs = {f'watch_providers_list_scopes.{scope}': value for scope, value in checks.items()}
+                saved = details.update_one({'_id': source['_id'], 'tmdb_deleted': {'$ne': True}, '$or': [
+                    {'watch_providers_check.checked_at': {'$lte': proof['checked_at']}},
+                    {'watch_providers_check.checked_at': {'$exists': False}},
+                ]}, {'$set': {'watch_providers': payload, 'watch_providers_check': proof,
+                             'watch_providers_error': '', 'watch_providers_attempted_at': clock(), **scoped_proofs}})
+                if saved.matched_count != 1:
+                    raise RefreshDeferred('newer_source_won')
+                check_owned()
+                ready[media].append(item)
+            except (TMDBAccessDenied, RequestBudgetExceeded, LeaseLost):
+                raise
+            except Exception as error:
+                record_failure(item, error)
+        for media, batch in ready.items():
+            if out_of_time() or consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+                break
             check_owned()
-            publish(connector, media, tmdb_id)
-            check_owned()
-            # A newer enqueue during publication remains pending.
-            work.update_one({'_id': item['_id'], 'version': item['version']}, {
-                '$set': {'pending': False, 'published_at': utc_ms(clock()), 'last_attempt_at': utc_ms(clock()),
-                         'consecutive_failure_days': 0},
-                '$unset': {'error': '', 'failure_day': ''}})
-            report['published'] += 1
-        except (TMDBAccessDenied, RequestBudgetExceeded, LeaseLost):
-            raise
-        except Exception as error:
-            check_owned()
-            day = utc_day(utc_ms(clock()))
-            streak = item.get('consecutive_failure_days', 0)
-            if item.get('failure_day') != day:
-                streak = streak + 1 if item.get('failure_day') == day - 86400000 else 1
-            # Error types only: dependencies can include credentials in errors.
-            failure = dict(identity=item['_id'], error=type(error).__name__, consecutive_failure_days=streak)
-            if isinstance(error, RefreshDeferred):
-                failure['reason'] = str(error)
-            work.update_one({'_id': item['_id'], 'version': item['version']}, {
-                '$set': {'error': failure['error'], 'failure_day': day, 'consecutive_failure_days': streak,
-                         'last_attempt_at': utc_ms(clock())}})
-            report['failed'] += 1
-            report['max_failure_days'] = max(report['max_failure_days'], streak)
-            if len(report['failures']) < 20:
-                report['failures'].append(failure)
+            try:
+                failed = publish(connector, media, [item['tmdb_id'] for item in batch]) or {}
+                check_owned()
+                report['publication_batches'] += 1
+            except (TMDBAccessDenied, RequestBudgetExceeded, LeaseLost):
+                raise
+            except Exception as error:
+                for item in batch:
+                    record_failure(item, error)
+                continue
+            for item in batch:
+                reason = failed.get(item['tmdb_id'])
+                if reason:
+                    record_failure(item, RefreshDeferred(reason))
+                    continue
+                # A newer enqueue during publication remains pending.
+                check_owned()
+                work.update_one({'_id': item['_id'], 'version': item['version']}, {
+                    '$set': {'pending': False, 'published_at': utc_ms(clock()), 'last_attempt_at': utc_ms(clock()),
+                             'consecutive_failure_days': 0},
+                    '$unset': {'error': '', 'failure_day': ''}})
+                report['published'] += 1
+                consecutive_failures = 0
+        if report.get('deferred_reason'):
+            break
     report['remaining'] = work.count_documents({'pending': True})
+    report['seconds'] = round(time.monotonic() - started, 6)
+    report['seconds_per_published_title'] = (round(report['seconds'] / report['published'], 6)
+                                           if report['published'] else None)
     return report
 
 
