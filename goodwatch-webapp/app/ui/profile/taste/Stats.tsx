@@ -1,5 +1,5 @@
 // The Stats tab's numbers: top genres as one ribbon, the people they keep coming back to, eras and favorite classics,
-// where it comes from, essence tags and tropes, fun facts, and how they score against the crowd (not another score
+// where it comes from, fun facts, and how they score against the crowd (not another score
 // histogram: the Scores tab has that). Country and language names come from the loader, so server and browser agree.
 import { Link } from "@remix-run/react"
 import { useState } from "react"
@@ -582,61 +582,6 @@ export function World() {
 							{l.name} <b className="text-white tabular-nums">{l.count}</b>
 						</li>
 					))}
-				</ul>
-			</div>
-		</section>
-	)
-}
-
-// ---------- Tags ----------
-
-export function Tags() {
-	const { stats, owner } = useStats()
-	const [which, setWhich] = useState<"essence" | "tropes">("essence")
-	if (!stats || (!stats.tags.essence.length && !stats.tags.tropes.length))
-		return null
-	const items = which === "essence" ? stats.tags.essence : stats.tags.tropes
-	const max = Math.max(...items.map((t) => t.count))
-	const min = Math.min(...items.map((t) => t.count))
-	return (
-		<section aria-labelledby="tags" className="flex flex-col gap-5">
-			<SectionHead
-				id="tags"
-				lead={owner ? "Your taste, in" : "Their taste, in"}
-				accent="tags"
-				sub="From the title analysis of everything scored 8 or more. Bigger is more often."
-				right={
-					<Pills
-						label="Tags"
-						value={which}
-						onChange={setWhich}
-						options={[
-							{ value: "essence", label: "Essence" },
-							{ value: "tropes", label: "Tropes" },
-						]}
-					/>
-				}
-			/>
-			<div className={`${PANEL} p-5 sm:p-6`}>
-				<ul className="flex flex-wrap items-baseline gap-x-5 gap-y-2">
-					{items.map((t, i) => {
-						const x = (t.count - min) / Math.max(1, max - min)
-						const hot = i < 5
-						return (
-							<li
-								key={t.name}
-								className={`leading-tight font-semibold ${hot ? "text-amber-400" : "text-gray-300"}`}
-								style={{
-									fontSize: `calc(0.85rem + ${x.toFixed(2)} * clamp(0.45rem, 2.4vw, 1.25rem))`,
-								}}
-							>
-								{t.name}
-								<span className="ml-1 align-baseline text-[11px] font-bold text-gray-500 tabular-nums">
-									{t.count}
-								</span>
-							</li>
-						)
-					})}
 				</ul>
 			</div>
 		</section>

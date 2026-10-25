@@ -4,7 +4,9 @@
 // notice. A guest's taste lives in their browser, so a guest's page asks /api/taste/portrait with the guest progress
 // instead (view: null here).
 import { json } from "@remix-run/node"
+import type { TasteTagCloud } from "~/domain/profile-taste"
 import { publicView } from "~/server/profile/portrait-public"
+import { getTasteStats } from "~/server/profile/taste-stats.server"
 import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import type { ViewerContext } from "~/server/viewer.server"
 import { type ProfileTaste, buildProfileTaste } from "~/ui/profile/taste/model"
@@ -29,6 +31,8 @@ export interface TastePortraitData {
 	handle: string | null
 	/** The average release year of their rated titles with a title analysis. */
 	averageYear: number | null
+	/** Their essence tags and tropes (the profile's stats, cached with the Stats tab); null when those fail to load. */
+	tags: TasteTagCloud | null
 }
 
 export type TastePageData = TasteGroupsData | TastePortraitData
@@ -54,6 +58,8 @@ export async function loadTastePage(request: Request, userId: string | null) {
 			return context
 		},
 	}
+	// Started with the views; only the portrait waits for it.
+	const statsLoad = getTasteStats(userId).catch(() => null)
 	const [sides, fingerprint, everyone, profile] = await Promise.all([
 		getTastePortrait(who, "sides"),
 		getTastePortrait(who, "fingerprint"),
@@ -62,6 +68,7 @@ export async function loadTastePage(request: Request, userId: string | null) {
 	])
 	if (sides.status !== "ready" || fingerprint.status !== "ready")
 		return json<TastePageData>({ kind: "groups", view: sides }, PRIVATE)
+	const stats = await statsLoad
 	// The groups and the crowd without the suggestions and services the page doesn't show.
 	const taste = buildProfileTaste(
 		fingerprint,
@@ -74,6 +81,10 @@ export async function loadTastePage(request: Request, userId: string | null) {
 			taste,
 			handle: profile?.handle ?? null,
 			averageYear: fingerprint.averageYear,
+			tags: stats && {
+				essence: stats.tags.essence.map(({ name, count }) => ({ name, count })),
+				tropes: stats.tags.tropes.map(({ name, count }) => ({ name, count })),
+			},
 		},
 		PRIVATE,
 	)

@@ -1,6 +1,6 @@
 // The Taste page for a member with a taste: one page around the fingerprint drawing. The viewer type beside the drawing,
-// what pulls you, the taste groups (each a way into For you), you vs everyone, the titles that are most you, the way to
-// the member's tropes, and ways to sharpen it. Spec: docs/implementation/taste-redesign.md.
+// what pulls you, the taste groups (each a way into For you), you vs everyone, the titles that are most you, their tags
+// with the way to their tropes, and ways to sharpen it. Spec: docs/implementation/taste-redesign.md.
 import { Link } from "@remix-run/react"
 import { useMemo } from "react"
 import type { TastePortraitData } from "~/server/taste-portrait/page.server"
@@ -21,7 +21,7 @@ import { Explorer } from "./Explorer"
 import { TasteGroups } from "./Groups"
 import { TasteHero } from "./Hero"
 import { type Section, SectionChips } from "./SectionChips"
-import { TropesLink } from "./Tropes"
+import { TasteTags, hasTags } from "./Tags"
 import { VsEveryone } from "./VsEveryone"
 import { usePrintState } from "./print-state"
 
@@ -36,7 +36,12 @@ export function TastePortrait({
 	)
 	return (
 		<TasteContext.Provider value={value}>
-			<Page handle={data.handle} averageYear={data.averageYear} side={side} />
+			<Page
+				handle={data.handle}
+				averageYear={data.averageYear}
+				tags={data.tags}
+				side={side}
+			/>
 		</TasteContext.Provider>
 	)
 }
@@ -44,8 +49,14 @@ export function TastePortrait({
 function Page({
 	handle,
 	averageYear,
+	tags,
 	side,
-}: { handle: string | null; averageYear: number | null; side: string | null }) {
+}: {
+	handle: string | null
+	averageYear: number | null
+	tags: TastePortraitData["tags"]
+	side: string | null
+}) {
 	const state = usePrintState()
 	const { taste } = useTaste()
 	const sections = useMemo(() => {
@@ -57,9 +68,9 @@ function Page({
 		if (taste.crowd.status === "ready")
 			list.push({ id: "everyone", label: "Vs everyone" })
 		if (taste.mostYou.length) list.push({ id: "most-you", label: "Most you" })
-		if (handle) list.push({ id: "tropes", label: "Tropes" })
+		if (hasTags(tags) || handle) list.push({ id: "tags", label: "Tags" })
 		return list
-	}, [taste, handle])
+	}, [taste, handle, tags])
 	return (
 		<div className="pb-32 text-white">
 			<TasteBanner member />
@@ -82,7 +93,7 @@ function Page({
 				<div id="most-you" className="scroll-mt-44">
 					<MostYou />
 				</div>
-				{handle && <TropesLink handle={handle} />}
+				<TasteTags tags={tags} handle={handle} />
 				<div className="flex flex-col gap-3">
 					<Sharpen />
 					{handle && (
