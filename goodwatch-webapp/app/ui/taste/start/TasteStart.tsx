@@ -6,6 +6,7 @@ import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
 import { fetchSmartTitles } from "~/routes/api.smart-titles"
 import { useUserData } from "~/routes/api.user-data"
 import type { Score } from "~/server/scores.server"
+import { MovieTvCard } from "~/ui/MovieTvCard"
 import type { ImportHandoff } from "~/ui/imports/ImportFileRouting"
 import {
 	type ImportSourceId,
@@ -16,8 +17,8 @@ import { useSourceImports } from "~/ui/imports/SourceImportHooks"
 import { useImdbImports } from "~/ui/imports/api"
 import { primaryButton } from "~/ui/imports/shared"
 import type { ScoringMedia } from "~/ui/scoring/types"
-import { RatingDots } from "~/ui/taste-quiz/TasteQuizPage"
 import { ackView, useScoreAck } from "~/ui/scoring/use-score-ack"
+import { RatingDots } from "~/ui/taste-quiz/TasteQuizPage"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import useLocale from "~/utils/locale"
 import { useTasteScoring } from "../hooks/useTasteScoring"
@@ -43,6 +44,9 @@ import {
 
 const keyOf = (t: { media_type: string; tmdb_id: number }) =>
 	`${t.media_type}-${t.tmdb_id}`
+/** "Rated so far": 48 px posters. */
+const STRIP_SIZES: [string | null, string][] = [[null, "48px"]]
+
 const image = (path: string | undefined, size: string) =>
 	path ? `https://image.tmdb.org/t/p/${size}${path}` : undefined
 const linkButton =
@@ -341,18 +345,14 @@ export function TasteStart() {
 									aria-label="Rated so far"
 								>
 									{rated.map((r) => (
-										<li key={keyOf(r.title)} className="relative w-12 shrink-0">
-											<img
-												src={image(r.title.poster_path, "w92")}
-												alt={`${r.title.title}, ${r.score}`}
-												className="rounded"
+										<li key={keyOf(r.title)} className="w-12 shrink-0">
+											{/* The poster card at 48 px: the score alone, and a tap opens the title. */}
+											<MovieTvCard
+												details={r.title}
+												mediaType={r.title.media_type}
+												posterSizes={STRIP_SIZES}
+												actions={false}
 											/>
-											<span
-												aria-hidden
-												className="absolute inset-x-0 bottom-0 bg-gray-950/80 text-center text-[11px] font-black text-amber-300"
-											>
-												{r.score}
-											</span>
 										</li>
 									))}
 								</ul>
@@ -439,7 +439,9 @@ function RateCard({
 					key={keyOf(x)}
 					className={a.leaving ? "score-ack-leave" : "score-ack-enter"}
 				>
-					<h2 className="mt-1 text-2xl font-extrabold md:text-3xl">{x.title}</h2>
+					<h2 className="mt-1 text-2xl font-extrabold md:text-3xl">
+						{x.title}
+					</h2>
 					<div className="text-sm text-gray-300">
 						{[x.release_year, x.genres?.slice(0, 3).join(", ")]
 							.filter(Boolean)

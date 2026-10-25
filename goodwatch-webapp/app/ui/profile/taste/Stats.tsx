@@ -11,7 +11,7 @@ import {
 } from "~/domain/profile-taste"
 import { PosterImg, count, posterUrl, vibe } from "../parts"
 import { type Kind, flag, money, pct, signed, useTaste } from "./model"
-import { MiniPoster, PANEL, Pills, SectionHead } from "./parts"
+import { PANEL, Pills, SectionHead, TastePoster } from "./parts"
 
 /** The stats with names for the codes, as the loader sends them. */
 export type NamedTasteStats = Omit<TasteStats, "world"> & {
@@ -332,8 +332,8 @@ function Directors({
 						</p>
 						<ul className="grid grid-cols-5 gap-2">
 							{p.titles.slice(0, 5).map((t) => (
-								<li key={t.key}>
-									<MiniPoster title={t} />
+								<li key={t.key} className="min-w-0">
+									<TastePoster title={t} sizes={DIRECTOR_SIZES} />
 								</li>
 							))}
 						</ul>
@@ -487,7 +487,7 @@ export function Eras() {
 								>
 									{t ? (
 										<>
-											<MiniPoster title={t} />
+											<TastePoster title={t} sizes={DECADE_SIZES} />
 											<span className="mt-1 block truncate text-[11px] text-gray-500">
 												{t.year}
 											</span>
@@ -848,3 +848,15 @@ function Mini({
 		</div>
 	)
 }
+
+/** A director's five posters, in a panel half the page wide from sm. */
+const DIRECTOR_SIZES: [string | null, string][] = [
+	["(min-width: 640px)", "90px"],
+	[null, "17vw"],
+]
+/** A decade's posters: four across on a phone, seven from sm. */
+const DECADE_SIZES: [string | null, string][] = [
+	["(min-width: 1024px)", "110px"],
+	["(min-width: 640px)", "12vw"],
+	[null, "21vw"],
+]

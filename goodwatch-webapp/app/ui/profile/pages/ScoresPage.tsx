@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from "react"
 // The profile's Scores tab: every score grouped by tier. The spread on top is the tier navigator: a bar jumps to its tier
 // (#tier-N, also Overview's link). Movies/Shows/All and a sort apply to every tier; a large tier shows its first 24 until
 // opened. The owner gets the import call to action and the way to the editable scores page; a signed-in visitor sees
-// their own scores as "You" tags and can keep to the titles both rated.
+// their own scores in each poster's pill and can keep to the titles both rated. The posters don't repeat the owner's
+// score: their tier's heading says it.
 import type { LibraryKind } from "~/domain/my-library"
 import type {
 	ProfileScoresPage,
@@ -11,22 +12,27 @@ import type {
 	ProfileTitle,
 } from "~/domain/profile"
 import { DISPLAY } from "~/ui/my-pages/bits"
+import { ScorePill } from "~/ui/poster-card/ScorePill"
 import { scoreLabels } from "~/utils/ratings"
 import { ImportCta } from "../ImportCta"
 import {
 	OwnerPageLink,
-	PosterScores,
+	ProfilePoster,
 	ScoreChip,
-	ScoredPoster,
 	Segmented,
 	SortSelect,
 	SpreadBars,
 	TILE,
-	YouChip,
 	count,
 } from "../parts"
 
 type Kind = LibraryKind
+const TIER_SIZES: [string | null, string][] = [
+	["(min-width: 1280px)", "120px"],
+	["(min-width: 768px)", "12vw"],
+	["(min-width: 640px)", "16vw"],
+	[null, "25vw"],
+]
 type Sort = "recent" | "gw" | "title"
 const FIRST = 24
 
@@ -142,8 +148,14 @@ export function ScoresPage({
 					<span className="min-w-0 flex-1">
 						You rated <b>{count(sharedCount)}</b> of these too, and score within
 						a point of @{shell.handle} on <b>{count(agree)}</b>. Your scores
-						show as <YouChip score={8} /> at the foot of each poster, @
-						{shell.handle}'s on the left.
+						show in each poster's pill, as{" "}
+						<ScorePill
+							score={8}
+							mark={null}
+							size="S"
+							className="align-middle"
+						/>
+						.
 					</span>
 					<button
 						type="button"
@@ -203,15 +215,8 @@ export function ScoresPage({
 						</h2>
 						<ul className="grid grid-cols-4 gap-2.5 sm:grid-cols-6 md:grid-cols-8 xl:grid-cols-10">
 							{shown.map((title) => (
-								<li key={title.key} className="relative min-w-0">
-									<ScoredPoster title={title} showScore={false} />
-									{you && (
-										<PosterScores
-											theirs={title.score}
-											yours={you[title.key]}
-											handle={shell.handle}
-										/>
-									)}
+								<li key={title.key} className="min-w-0">
+									<ProfilePoster title={title} sizes={TIER_SIZES} />
 								</li>
 							))}
 						</ul>

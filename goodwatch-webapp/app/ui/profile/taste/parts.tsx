@@ -1,10 +1,11 @@
-// Pieces the Stats tab's sections share: the "Your top **genres**" heading, the filter pills, and a small linked poster
-// with the owner's score.
-import { Link } from "@remix-run/react"
+// Pieces the Stats tab's sections share: the "Your top **genres**" heading, the filter pills, and the poster card with
+// the owner's score.
 import type { ReactNode } from "react"
 import type { ProfileTitle } from "~/domain/profile"
+import type { PosterProps } from "~/ui/Poster"
 import { DISPLAY } from "~/ui/my-pages/bits"
-import { PosterImg, ScoreChip } from "../parts"
+import { ProfilePoster } from "../parts"
+import { useTaste } from "./model"
 
 export const PANEL = "rounded-2xl bg-white/[0.035] ring-1 ring-white/10"
 
@@ -89,28 +90,19 @@ export function Pills<T extends string>({
 	)
 }
 
-/** A poster that links to its title, the owner's score in the corner. */
-export function MiniPoster({
+/**
+ * A scored poster on the Stats tab: the site's poster card, with the owner's score as its filled square when someone
+ * else looks. `sizes`: the poster's displayed widths.
+ */
+export function TastePoster({
 	title,
-	className = "",
-	score = true,
-}: { title: ProfileTitle; className?: string; score?: boolean }) {
+	sizes,
+}: {
+	title: ProfileTitle
+	sizes: PosterProps["sizes"]
+}) {
+	const { owner, handle } = useTaste()
 	return (
-		<Link
-			to={title.href}
-			prefetch="intent"
-			title={`${title.title}${title.year ? ` (${title.year})` : ""}`}
-			className={`group relative block ${className}`}
-		>
-			<PosterImg
-				title={title}
-				className="rounded-md shadow-lg ring-1 ring-white/10 transition-transform duration-150 group-hover:-translate-y-0.5 motion-reduce:transition-none"
-			/>
-			{score && title.score != null && (
-				<span className="absolute -right-1 -bottom-1">
-					<ScoreChip score={title.score} size="sm" />
-				</span>
-			)}
-		</Link>
+		<ProfilePoster title={title} owner={owner ? null : handle} sizes={sizes} />
 	)
 }

@@ -11,10 +11,9 @@ import { Link } from "@remix-run/react"
 import { type ReactNode, useMemo, useState } from "react"
 import { type ProfileShell, seesPart } from "~/domain/profile"
 import type { MemberCompare } from "~/domain/profile-taste"
-import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 import { ImportCta } from "../ImportCta"
-import { AMBER_BUTTON, QUIET_BUTTON, ScoreChip, TILE } from "../parts"
+import { AMBER_BUTTON, QUIET_BUTTON, TILE } from "../parts"
 import { CompareBanner } from "../taste/Compare"
 import {
 	Eras,
@@ -35,7 +34,7 @@ import {
 	theirLine,
 	useTaste,
 } from "../taste/model"
-import { MiniPoster, PANEL } from "../taste/parts"
+import { PANEL, TastePoster } from "../taste/parts"
 
 const EYEBROW = "text-[11px] font-bold tracking-[0.18em] uppercase"
 
@@ -233,7 +232,9 @@ function Summary({
 							<li key={g.id} className="flex items-center gap-3">
 								<span className="flex shrink-0 gap-1.5">
 									{g.here.slice(0, 2).map((k) => (
-										<MiniPoster key={k} title={title(k)} className="w-11" />
+										<span key={k} className="w-11">
+											<TastePoster title={title(k)} sizes={[[null, "44px"]]} />
+										</span>
 									))}
 								</span>
 								<span className="min-w-0">
@@ -362,22 +363,10 @@ function Count({ value, label }: { value: number; label: string }) {
 	)
 }
 
-/** Everyone's score as a ring, 0 to 100. */
-function Ring({ score }: { score: number }) {
-	return (
-		<ScoreRing
-			media={
-				{
-					details: { goodwatch_overall_score_normalized_percent: score },
-				} as Parameters<typeof ScoreRing>[0]["media"]
-			}
-			size={30}
-			label={false}
-		/>
-	)
-}
-
-/** A title against everyone: "9 vs 50", their score then everyone's. */
+/**
+ * A title against everyone: the poster card (the owner's score on it when someone else looks), the note, and "9 vs 50",
+ * their score then everyone's.
+ */
 function VsRow({
 	t,
 	mine,
@@ -399,15 +388,15 @@ function VsRow({
 				: "text-gray-300"
 	return (
 		<li className="flex items-center gap-3">
-			<MiniPoster title={t} score={false} className="w-10 shrink-0" />
+			<span className="w-[6.5rem] shrink-0">
+				<TastePoster title={t} sizes={[[null, "104px"]]} />
+			</span>
 			<span className="min-w-0 flex-1">
 				<span className="block truncate font-semibold">{t.title}</span>
-				<span className={`text-xs font-semibold ${color}`}>{note}</span>
-			</span>
-			<span className="flex shrink-0 items-center gap-2 text-xs text-gray-400">
-				<ScoreChip score={mine} size="sm" />
-				vs
-				<Ring score={everyone} />
+				<span className={`block text-xs font-semibold ${color}`}>{note}</span>
+				<span className="block text-xs tabular-nums text-gray-400">
+					{mine} vs everyone's {everyone}
+				</span>
 			</span>
 		</li>
 	)

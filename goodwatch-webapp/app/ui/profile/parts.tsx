@@ -9,8 +9,10 @@ import {
 } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { type ReactNode, useState } from "react"
-import type { ProfileTitle } from "~/domain/profile"
+import type { ProfileShell, ProfileTitle } from "~/domain/profile"
 import type { Score } from "~/server/scores.server"
+import { type CardTitle, MovieTvCard } from "~/ui/MovieTvCard"
+import type { PosterProps } from "~/ui/Poster"
 import { WRAP, tmdbImage } from "~/ui/my-pages/bits"
 import { getVibeColorValue } from "~/utils/ratings"
 
@@ -77,29 +79,43 @@ export function PosterImg({
 	)
 }
 
-/** A poster that links to its title, with the owner's score in the corner. */
-export function ScoredPoster({
+/** A profile title in the shape the poster card reads. */
+export const profileCardTitle = (title: ProfileTitle): CardTitle => ({
+	tmdb_id: title.tmdbId,
+	title: title.title,
+	release_year: title.year,
+	poster_path: title.poster,
+	goodwatch_overall_score_normalized_percent: title.gw,
+})
+
+/**
+ * A scored poster on a profile: the site's poster card (the visitor's own pill and actions). `owner` names the
+ * profile's member on someone else's profile: their score shows as the card's filled square. On the owner's own pages
+ * it is left out (the pill's "you" says it), and where the page shows it already (a Scores tier's heading).
+ */
+export function ProfilePoster({
 	title,
-	showScore = true,
-}: { title: ProfileTitle; showScore?: boolean }) {
+	owner,
+	sizes,
+}: {
+	title: ProfileTitle
+	owner?: string | null
+	sizes?: PosterProps["sizes"]
+}) {
 	return (
-		<Link
-			to={title.href}
-			className="group relative block"
-			title={`${title.title}${title.year ? ` (${title.year})` : ""}`}
-		>
-			<PosterImg
-				title={title}
-				className="rounded-lg shadow-lg ring-1 ring-white/10 transition-transform duration-150 group-hover:-translate-y-0.5 motion-reduce:transition-none"
-			/>
-			{showScore && (
-				<span className="absolute -right-1.5 -bottom-1.5">
-					<ScoreChip score={title.score} size="sm" />
-				</span>
-			)}
-		</Link>
+		<MovieTvCard
+			details={profileCardTitle(title)}
+			mediaType={title.mediaType}
+			posterSizes={sizes}
+			ownerScore={owner ? (title.score as Score | null) : null}
+			ownerName={owner ? `@${owner}` : null}
+		/>
 	)
 }
+
+/** The profile's member, for `ProfilePoster`'s `owner`: null when the viewer is that member. */
+export const posterOwner = (shell: Pick<ProfileShell, "viewer" | "handle">) =>
+	shell.viewer === "owner" ? null : shell.handle
 
 /** Round icon-only buttons on phones (the profile header's actions). */
 export const ICON_ON_PHONE = "max-sm:size-10 max-sm:justify-center max-sm:px-0"

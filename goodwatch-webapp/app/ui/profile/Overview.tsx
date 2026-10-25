@@ -26,11 +26,12 @@ import { matchColor, matchStrength } from "./match"
 import {
 	AMBER_BUTTON,
 	PosterImg,
+	ProfilePoster,
 	ScoreChip,
-	ScoredPoster,
 	SpreadBars,
 	TILE,
 	count,
+	posterOwner,
 	posterUrl,
 	shortDate,
 	vibe,
@@ -91,7 +92,11 @@ export function Overview({
 								key={title.key}
 								className={`min-w-0 ${i >= 6 ? "max-lg:hidden" : i >= 4 ? "max-sm:hidden" : ""}`}
 							>
-								<ScoredPoster title={title} />
+								<ProfilePoster
+									title={title}
+									owner={posterOwner(shell)}
+									sizes={FAVORITE_SIZES}
+								/>
 								<p className="mt-2 truncate text-xs font-semibold text-gray-200 sm:text-sm">
 									{title.title}
 								</p>
@@ -682,70 +687,58 @@ function MatchCard({
 
 type ActivityTab = "ratings" | "watching" | "wishlist"
 
-/** The score in a corner ribbon, in its strip colour. */
-function CornerScore({ score }: { score: number | null }) {
-	if (!score) return null
-	return (
-		<span
-			aria-label={`Scored ${score}`}
-			className="pointer-events-none absolute top-0 left-0 size-11 overflow-hidden rounded-tl-lg"
-		>
-			<span
-				className="absolute -top-[22px] -left-[22px] size-11 rotate-45"
-				style={{ background: vibe(score) }}
-			/>
-			<span className="absolute top-0.5 left-1 text-[11px] font-black text-gray-950">
-				{score}
-			</span>
-		</span>
-	)
-}
-
+/** The activity strip's poster: the poster card, then the title and its line under it. */
 function Card({
 	title,
 	line,
+	owner,
 	progress,
-}: { title: ProfileTitle; line: string; progress?: number | null }) {
+}: {
+	title: ProfileTitle
+	line: string
+	owner: string | null
+	progress?: number | null
+}) {
 	return (
 		<li className="w-32 shrink-0 snap-start sm:w-36">
-			<Link
-				to={title.href}
-				className="group block overflow-hidden rounded-lg bg-white/[0.04] ring-1 ring-white/10 hover:ring-white/25"
-			>
-				<span className="relative block">
-					<PosterImg
-						title={title}
-						className="transition-transform duration-200 group-hover:scale-[1.03] motion-reduce:transition-none"
-					/>
-					<CornerScore score={title.score} />
-				</span>
-				{progress != null && (
+			<ProfilePoster title={title} owner={owner} sizes={STRIP_SIZES} />
+			{progress != null && (
+				<span
+					className="mx-1 mt-1 block h-1 overflow-hidden rounded-full bg-white/10"
+					aria-label={`${Math.round(progress * 100)}% watched`}
+				>
 					<span
-						className="block h-1 bg-white/10"
-						aria-label={`${Math.round(progress * 100)}% watched`}
-					>
-						<span
-							className="block h-full origin-left bg-emerald-400"
-							style={{ transform: `scaleX(${progress})` }}
-						/>
-					</span>
-				)}
-				<span className="block px-2.5 py-2">
-					<span className="block truncate text-sm font-semibold text-gray-100">
-						{title.title}
-					</span>
-					<span className="block truncate text-xs text-gray-500">{line}</span>
+						className="block h-full origin-left bg-emerald-400"
+						style={{ transform: `scaleX(${progress})` }}
+					/>
 				</span>
-			</Link>
+			)}
+			<span className="block px-1 pt-1.5">
+				<span className="block truncate text-sm font-semibold text-gray-100">
+					{title.title}
+				</span>
+				<span className="block truncate text-xs text-gray-500">{line}</span>
+			</span>
 		</li>
 	)
 }
+
+const FAVORITE_SIZES: [string | null, string][] = [
+	["(min-width: 1024px)", "130px"],
+	["(min-width: 640px)", "16vw"],
+	[null, "25vw"],
+]
+const STRIP_SIZES: [string | null, string][] = [
+	["(min-width: 640px)", "144px"],
+	[null, "128px"],
+]
 
 function ActivityRow({
 	shell,
 	overview,
 }: { shell: ProfileShell; overview: ProfileOverview }) {
 	const see = (part: ProfilePart) => seesPart(shell, part)
+	const owner = posterOwner(shell)
 	const tabs: {
 		id: ActivityTab
 		label: string
@@ -863,13 +856,19 @@ function ActivityRow({
 			>
 				{current.id === "ratings" &&
 					overview.recent.map((t) => (
-						<Card key={t.key} title={t} line={shortDate(t.date)} />
+						<Card
+							key={t.key}
+							title={t}
+							line={shortDate(t.date)}
+							owner={owner}
+						/>
 					))}
 				{current.id === "watching" &&
 					overview.watching.map((s) => (
 						<Card
 							key={s.key}
 							title={s}
+							owner={owner}
 							line={s.next ?? `${s.watchedEpisodes} episodes`}
 							progress={
 								s.airedEpisodes
@@ -883,6 +882,7 @@ function ActivityRow({
 						<Card
 							key={t.key}
 							title={t}
+							owner={owner}
 							line={
 								t.date ? `Added ${shortDate(t.date)}` : String(t.year ?? "")
 							}

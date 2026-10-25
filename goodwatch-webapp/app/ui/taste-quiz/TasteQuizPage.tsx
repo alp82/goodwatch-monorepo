@@ -11,7 +11,6 @@ import { HiddenTileContext } from "~/ui/title-actions/hide-feedback"
 import { useContinueWithGoogle } from "~/utils/auth-client"
 import { useAuthHref } from "~/utils/auth-href"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
-import { getVibeColorValue } from "~/utils/ratings"
 import type { SizeRule } from "~/utils/tmdb-image"
 import { GoogleMark } from "./GoogleMark"
 import { QUIZ_GOAL, readQuizPress } from "./quiz-flow"
@@ -34,6 +33,11 @@ const backToPicks =
 const posterUrl = (path: string | undefined, size: string) =>
 	path ? `https://image.tmdb.org/t/p/${size}${path}` : undefined
 /** Three picks to a row, at most 56rem wide. */
+/** The kept titles' posters: 80 px, 112 px from md. */
+const KEPT_SIZES: SizeRule[] = [
+	["(min-width: 768px)", "112px"],
+	[null, "80px"],
+]
 const PICK_SIZES: SizeRule[] = [
 	["(min-width: 768px)", "250px"],
 	[null, "30vw"],
@@ -330,24 +334,16 @@ function KeepAsk({ q }: { q: TasteQuiz }) {
 				}
 			/>
 			<div className="mt-6 flex flex-wrap gap-3">
-				{q.kept.slice(-8).map(({ title, score }) => (
+				{q.kept.slice(-8).map(({ title }) => (
 					<div
 						key={`${title.media_type}-${title.tmdb_id}`}
-						className="relative"
+						className="w-20 md:w-28"
 					>
-						<img
-							src={posterUrl(title.poster_path, "w185")}
-							alt={title.title}
-							className="aspect-[2/3] w-20 rounded-md border-2 border-gray-800 object-cover md:w-28"
+						<MovieTvCard
+							details={title}
+							mediaType={title.media_type}
+							posterSizes={KEPT_SIZES}
 						/>
-						{score != null && (
-							<span
-								className="absolute -right-1.5 -top-1.5 flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-sm font-extrabold text-white ring-2 ring-gray-950"
-								style={{ background: getVibeColorValue(score) }}
-							>
-								{score}
-							</span>
-						)}
 					</div>
 				))}
 			</div>
