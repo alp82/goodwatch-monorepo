@@ -26,6 +26,36 @@ _HTML_TAG = re.compile(
 )
 
 
+_LITERAL_SPAN = re.compile(
+    r'(?<!\\)"(?:\\[^\r\n]|[^"\\\r\n])*"'
+    r'|“[^”\r\n]*”'
+    r'|(?<!`)(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)'
+)
+
+
+def _has_unquoted_html(text):
+    """Literal tag spellings are prose inside paired double quotes or backticks; never rewrite the text."""
+    tags = list(_HTML_TAG.finditer(text))
+    if not tags:
+        return False
+    literals = []
+    for match in _LITERAL_SPAN.finditer(text):
+        opening = text.rfind("<", 0, match.start())
+        # Attribute quotes inside an unquoted tag are not quoted prose, including custom tag names.
+        prefix = text[opening:match.start()] if opening >= 0 else ""
+        if prefix and ">" not in prefix and re.match(r"<[/!?]?[A-Za-z]", prefix):
+            continue
+        literals.append(match.span())
+    position = 0
+    for tag in tags:
+        while position < len(literals) and literals[position][1] <= tag.start():
+            position += 1
+        if (position == len(literals) or literals[position][0] > tag.start()
+                or literals[position][1] < tag.end()):
+            return True
+    return False
+
+
 def canonical_url(value):
     if value is None:
         return None
@@ -126,8 +156,8 @@ def normalize_record(row, *, evidence=None):
         if not isinstance(text, str) or not text.strip() or len(text) > 100_000:
             raise ValueError(f"{name}: description must be nonempty plain text")
         # Source prose can contain literal placeholders such as <Proper Noun>.
-        # Reject actual HTML elements without misclassifying those words as markup.
-        if _HTML_TAG.search(text):
+        # Quoted/code literals can also discuss real tag spellings without being markup.
+        if _has_unquoted_html(text):
             raise ValueError(f"{name}: description must be plain text, not HTML")
         if not url:
             raise ValueError(f"{name}: a description requires its canonical source URL")

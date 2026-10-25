@@ -101,6 +101,35 @@ class TropeCatalogTests(unittest.TestCase):
             with self.subTest(text=text), self.assertRaises(ValueError):
                 record(text=text)
 
+    def test_balanced_double_quotes_and_code_keep_literal_tag_spellings_byte_exact(self):
+        samples = [
+            'A tattoo reads "</head> <body>" on the character’s neck.',
+            'A tattoo reads “</head> <body>” on the character’s neck.',
+            'The tags "<p>" and "<p>" and "</p>" are quoted separately.',
+            'Inline code `<a href="example">text</a>` remains literal prose.',
+            'Code with a backtick ``<p> ` example </p>`` stays inside the paired run.',
+            'A fenced example follows: ```html\n<div>Example</div>\n```.',
+            'The phrase "a \\"quote\\" and <p> tag" preserves escapes.',
+        ]
+        for text in samples:
+            with self.subTest(text=text):
+                self.assertEqual(record(text=text)["description"], text)
+
+    def test_literal_spans_do_not_allow_unquoted_markup_or_attribute_quotes(self):
+        samples = [
+            '<p title="a quote">HTML</p>', '<img alt="<p>" src="example">',
+            '<custom-tag title="<p>">', '<custom-tag title=`<p>`>',
+            '<a href="example">HTML</a>', '<script>const example = "<p>";</script>',
+            'Quoted "<p>" followed by actual <p>HTML</p>.',
+            'Unclosed "<p>HTML</p>', 'Unclosed “<p>HTML</p>', 'Unclosed `<p>HTML</p>',
+            'Mismatched “<p>" delimiters.', "It's normal prose, and it's still <p>HTML</p>.",
+            "A single-quoted '<p>' is not an explicitly supported literal span.",
+            'The <p> tag has a later "unrelated quote".',
+        ]
+        for text in samples:
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                record(text=text)
+
     def test_descriptions_fill_gaps_and_replacements_require_an_explicit_option(self):
         old = normalize_record({"name": "Red Herring"})
         self.assertEqual(merged_record(old, record()), record())
