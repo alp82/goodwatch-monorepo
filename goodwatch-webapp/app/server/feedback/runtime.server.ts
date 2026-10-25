@@ -1,8 +1,9 @@
-import { execute, query } from "~/utils/crate"
+import { rateLimiter } from "~/server/rate-limit.server"
 import { getUserIdFromRequest } from "~/utils/auth"
-import { feedbackMail } from "./mail.server"
+import { execute, query } from "~/utils/crate"
 import { smtpTransport } from "../auth/mail.server"
-import { handleFeedback, type FeedbackStore } from "./handler.server"
+import { type FeedbackStore, handleFeedback } from "./handler.server"
+import { feedbackMail } from "./mail.server"
 
 // The shared helper types only scalar bindings; node-crate also supports null and object parameters.
 const run = execute as (
@@ -47,6 +48,7 @@ export const feedbackStore: FeedbackStore = {
 export function submit(request: Request) {
 	return handleFeedback(request, {
 		store: feedbackStore,
+		limiter: rateLimiter,
 		memberId: async (request) =>
 			(await getUserIdFromRequest({ request, fresh: true })) ?? null,
 		async email(r) {

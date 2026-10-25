@@ -1,17 +1,22 @@
+// POST /api/feedback (#763, docs/implementation/feedback/README.md). One entry point for bug, idea, data and
+// contact reports. Modelled on the wrong-title handler: same origin only, a body cap, a zod schema, a honeypot, a
+// minimum time to submit, and a rate limit per address and per member. The report is stored first, then posted to
+// the staff Discord forum, and emailed for contact messages and when Discord fails.
+//
+// - Storage failure (the table is missing, Crate is down) is soft: the report still goes to Discord and email, and
+//   the failure is logged. 503 only when nothing accepted the report.
+// - Delivery failure after the row is stored never fails the request.
 import { createHash } from "node:crypto"
 import sharp from "sharp"
-import { FormData, File } from "undici"
+import { File, FormData } from "undici"
 import { nativeFetch } from "../native-fetch.server.ts"
-import {
-	createRateLimit,
-	clientAddress,
-} from "../talked-about-now/rate-limit.server.ts"
 import { readJsonLimited } from "../profile/request.server.ts"
+import { clientAddress } from "../talked-about-now/rate-limit.server.ts"
 import {
+	type FeedbackInput,
+	display,
 	feedbackSchema,
 	safePath,
-	display,
-	type FeedbackInput,
 } from "./schema.ts"
 
 export interface Report {
@@ -35,33 +40,43 @@ export interface FeedbackStore {
 	): Promise<void>
 	screenshot(id: string): Promise<string | null>
 }
-export function feedbackLimits() {
-	return {
-		guest: createRateLimit({ limit: 5, windowMs: 3600000 }),
-		address: createRateLimit({ limit: 20, windowMs: 3600000 }),
-		member: createRateLimit({ limit: 20, windowMs: 3600000 }),
-	}
+/** The shared limiter (app/server/rate-limit.server.ts): counted in Valkey, so every webapp instance shares it. */
+export interface Limiter {
+	take(
+		name: string,
+		client: string,
+		windows: { limit: number; seconds: number }[],
+	): Promise<{ allowed: boolean; retryAfterSeconds?: number }>
 }
-const limits = feedbackLimits()
+const HOUR = 3600
+export const GUEST_LIMIT = { limit: 5, seconds: HOUR }
+export const MEMBER_LIMIT = { limit: 20, seconds: HOUR }
+export const MAX_SCREENSHOT_BYTES = 2 * 1024 * 1024
+/** A 2 MiB screenshot in base64 plus the report's fields. */
+export const MAX_BODY_BYTES = (MAX_SCREENSHOT_BYTES * 4) / 3 + 64000
+const SCREENSHOT_FORMATS = ["png", "webp", "jpeg"]
+
 const headers = {
 	"Cache-Control": "private, no-store",
 	"Content-Type": "application/json",
 }
-const answer = (status: number, body: unknown = null) =>
+const answer = (
+	status: number,
+	body: unknown = null,
+	extra: Record<string, string> = {},
+) =>
 	new Response(JSON.stringify(body), {
 		status,
-		headers: {
-			...headers,
-			...(status === 429 ? { "Retry-After": "3600" } : {}),
-		},
+		headers: { ...headers, ...extra },
 	})
+
 export interface Dependencies {
 	store: FeedbackStore
+	limiter: Limiter
 	memberId(request: Request): Promise<string | null>
 	email(report: Report): Promise<void>
 	env?: Record<string, string | undefined>
 	send?: typeof fetch
-	limits?: ReturnType<typeof feedbackLimits>
 	now?: () => number
 }
 export async function handleFeedback(
@@ -87,10 +102,7 @@ export async function handleFeedback(
 	if (!request.headers.get("content-type")?.startsWith("application/json"))
 		return answer(415)
 	try {
-		const body = await readJsonLimited(
-			request,
-			(2 * 1024 * 1024 * 4) / 3 + 64000,
-		)
+		const body = await readJsonLimited(request, MAX_BODY_BYTES)
 		if (!body.ok) return answer(body.problem === "too-large" ? 413 : 400)
 		const parsed = feedbackSchema.safeParse(body.value)
 		if (!parsed.success) return answer(400)
@@ -103,18 +115,24 @@ export async function handleFeedback(
 		)
 			return answer(400)
 		const memberId = await deps.memberId(request)
-		const address = clientAddress(request)
-		const limit = deps.limits ?? limits
-		if (
-			!(memberId
-				? limit.address.take(address) && limit.member.take(memberId)
-				: limit.guest.take(address))
-		)
-			return answer(429)
+		// The limiter keys carry a hash, never the address itself.
+		const address = createHash("sha256")
+			.update(clientAddress(request))
+			.digest("hex")
+		const verdict = memberId
+			? await firstRefusal(deps.limiter, [
+					["feedback-member", memberId, MEMBER_LIMIT],
+					["feedback-address", address, MEMBER_LIMIT],
+				])
+			: await deps.limiter.take("feedback-address", address, [GUEST_LIMIT])
+		if (!verdict.allowed)
+			return answer(429, null, {
+				"Retry-After": String(verdict.retryAfterSeconds ?? HOUR),
+			})
 		let screenshot: string | undefined
 		if (input.screenshot) {
 			const bytes = Buffer.from(input.screenshot, "base64")
-			if (bytes.length > 2 * 1024 * 1024) return answer(413)
+			if (bytes.length > MAX_SCREENSHOT_BYTES) return answer(413)
 			try {
 				const image = sharp(bytes, {
 					limitInputPixels: 16000000,
@@ -123,12 +141,12 @@ export async function handleFeedback(
 				})
 				const info = await image.metadata()
 				if (
-					!["webp", "jpeg"].includes(info.format ?? "") ||
+					!SCREENSHOT_FORMATS.includes(info.format ?? "") ||
 					(info.pages ?? 1) > 1
 				)
 					return answer(400)
 				const webp = await image.rotate().webp({ quality: 82 }).toBuffer()
-				if (webp.length > 2 * 1024 * 1024) return answer(413)
+				if (webp.length > MAX_SCREENSHOT_BYTES) return answer(413)
 				screenshot = webp.toString("base64")
 			} catch {
 				return answer(400)
@@ -148,7 +166,8 @@ export async function handleFeedback(
 			url: safePath(input.metadata?.url ?? ""),
 			userAgent: request.headers.get("user-agent")?.slice(0, 500),
 			country: country && /^[A-Z]{2}$/.test(country) ? country : undefined,
-			buildCommit: env.GIT_COMMIT ?? env.SOURCE_COMMIT ?? "unknown",
+			// Coolify supplies SOURCE_COMMIT at runtime (see list-exposure.server.ts).
+			buildCommit: env.SOURCE_COMMIT || "unknown",
 			receivedAt: new Date(now).toISOString(),
 		}
 		const report: Report = {
@@ -169,32 +188,69 @@ export async function handleFeedback(
 			screenshot,
 			createdAt: now,
 		}
-		if (!(await deps.store.insert(report))) return answer(200, { reportId: id })
+		// Storage first, so that a retry finds its row. A failing store (the table is not there yet, Crate is down)
+		// doesn't lose the report: it still goes to Discord and email, and the failure is logged.
+		let stored = false
+		try {
+			if (!(await deps.store.insert(report)))
+				return answer(200, { reportId: id })
+			stored = true
+		} catch (error) {
+			console.error("[feedback] storing the report failed; delivering anyway", {
+				reportId: id,
+				error: error instanceof Error ? error.message : String(error),
+			})
+		}
 		let delivered = false
 		if (env.FEEDBACK_DISCORD_WEBHOOK_URL) {
+			let receipt: Awaited<ReturnType<typeof postDiscord>> | undefined
 			try {
-				const result = await postDiscord(report, env, deps.send ?? nativeFetch)
+				receipt = await postDiscord(report, env, deps.send ?? nativeFetch)
 				delivered = true
-				await deps.store.discordId(id, result.id, result.channel_id ?? null)
-			} catch {
-				console.error("[feedback] Discord delivery or receipt storage failed", {
+			} catch (error) {
+				console.error("[feedback] Discord delivery failed", {
 					reportId: id,
+					error: error instanceof Error ? error.message : String(error),
 				})
 			}
+			if (receipt && stored) {
+				try {
+					await deps.store.discordId(id, receipt.id, receipt.channel_id ?? null)
+				} catch {
+					console.error("[feedback] storing the Discord receipt failed", {
+						reportId: id,
+					})
+				}
+			}
 		}
+		let emailed = false
 		if (!delivered || report.kind === "contact") {
 			try {
 				await deps.email(report)
-			} catch {
-				console.error("[feedback] email delivery failed; report retained", {
+				emailed = true
+			} catch (error) {
+				console.error("[feedback] email delivery failed", {
 					reportId: id,
+					error: error instanceof Error ? error.message : String(error),
 				})
 			}
 		}
+		if (!stored && !delivered && !emailed) return answer(503)
 		return answer(200, { reportId: id })
-	} catch {
+	} catch (error) {
+		console.error("[feedback] request failed", error)
 		return answer(503)
 	}
+}
+async function firstRefusal(
+	limiter: Limiter,
+	takes: [string, string, { limit: number; seconds: number }][],
+) {
+	for (const [name, client, window] of takes) {
+		const verdict = await limiter.take(name, client, [window])
+		if (!verdict.allowed) return verdict
+	}
+	return { allowed: true }
 }
 function sanitizeSource(value: string) {
 	const url = new URL(value)
@@ -224,6 +280,7 @@ export async function postDiscord(
 	} catch {
 		/* optional */
 	}
+	// Discord limits: thread_name 100, embed title 256, description 4096, field value 1024, embed total 6000.
 	const payload = {
 		thread_name:
 			`${report.kind}: ${display(report.message, 65) || report.id.slice(0, 12)}`.slice(
@@ -287,7 +344,7 @@ export async function postDiscord(
 		})
 		if (!response.ok) {
 			await response.arrayBuffer()
-			throw new Error("Discord failed")
+			throw new Error(`Discord answered ${response.status}`)
 		}
 		const result = (await response.json()) as {
 			id?: string
@@ -308,7 +365,16 @@ export async function readScreenshot(
 	if (!staff) return new Response(null, { status: 403, headers })
 	if (!/^[a-f0-9]{64}$/.test(id))
 		return new Response(null, { status: 404, headers })
-	const data = await store.screenshot(id)
+	let data: string | null
+	try {
+		data = await store.screenshot(id)
+	} catch (error) {
+		console.error("[feedback] reading a screenshot failed", {
+			reportId: id,
+			error: error instanceof Error ? error.message : String(error),
+		})
+		return new Response(null, { status: 503, headers })
+	}
 	return data
 		? new Response(Buffer.from(data, "base64"), {
 				headers: {

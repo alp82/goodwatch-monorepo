@@ -1,9 +1,0 @@
-{
-	"name": "goodwatch-feedback-tests",
-	"private": true,
-	"type": "module",
-	"devDependencies": { "vitest": "5.0.5" },
-	"scripts": {
-		"test": "vitest run --root ../.. --config scripts/feedback-tests/vitest.config.ts"
-	}
-}

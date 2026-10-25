@@ -26,7 +26,7 @@ export interface FeedbackRequest {
 		time?: string
 		sentryReplayId?: string
 	}
-	/** Raw base64 (no data URL), JPEG or WebP, at most 2 MiB decoded. */
+	/** Raw base64 (no data URL), PNG, WebP or JPEG, at most 2 MiB decoded. */
 	screenshot?: string
 }
 export async function submitFeedback(
