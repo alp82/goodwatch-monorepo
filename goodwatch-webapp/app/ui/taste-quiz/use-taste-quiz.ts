@@ -22,7 +22,9 @@ import type { ScoringMedia } from "~/ui/scoring/types"
 import { ackView, useScoreAck } from "~/ui/scoring/use-score-ack"
 import { useTasteScoring } from "~/ui/taste/hooks/useTasteScoring"
 import { useTitleQueue } from "~/ui/taste/hooks/useTitleQueue"
+import { useKeptCards } from "~/ui/title-actions/hide-feedback"
 import { canGuestRate, readGuestInteractions } from "~/utils/guest-progress"
+import { titleKey } from "~/utils/title-key"
 import {
 	type QuizAction,
 	initialQuizState,
@@ -151,11 +153,23 @@ export function useTasteQuiz({
 				.map((i) => ({ media_type: i.media_type, tmdb_id: i.tmdb_id })),
 		[interactions],
 	)
-	const { picks, isLoading: picksLoading } = useQuizPicks({
+	const { picks: listed, isLoading: picksLoading } = useQuizPicks({
 		scored,
 		exclude,
 		enabled: wantPicks || state.pickedBefore || state.screen !== "quiz",
 	})
+	// Not interested on a pick takes it out of the picks at once. Its card stays in place, under its cover with Undo,
+	// until the picks change after that; kept across the whole list, so the pages don't shift either.
+	const keyed = useMemo(
+		() =>
+			listed.map((pick) => ({
+				key: titleKey(pick.media_type, pick.tmdb_id),
+				pick,
+			})),
+		[listed],
+	)
+	const { cards: keptPicks, keeper: picksKeeper } = useKeptCards(keyed)
+	const picks = useMemo(() => keptPicks.map((c) => c.pick), [keptPicks])
 	const pages = pickPages(picks.length)
 
 
@@ -232,6 +246,8 @@ export function useTasteQuiz({
 		/** This visit's scores (and Want to See titles, score null), newest last, for the "Keep these?" ask. */
 		kept,
 		picks,
+		/** Provide through HiddenTileContext around the pick cards. */
+		picksKeeper,
 		pagePicks: picksOnPage(picks, state.page),
 		page: Math.min(state.page, pages - 1),
 		pages,

@@ -7,6 +7,7 @@ import { ForYouLink } from "~/ui/for-you/ForYouLink"
 import { DockStrip } from "~/ui/navigation"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
+import { HiddenTileContext } from "~/ui/title-actions/hide-feedback"
 import { useContinueWithGoogle } from "~/utils/auth-client"
 import { useAuthHref } from "~/utils/auth-href"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
@@ -442,11 +443,13 @@ function Picks({ q }: { q: TasteQuiz }) {
 						))}
 					</div>
 				) : q.pagePicks.length ? (
-					<div key={q.page} className="grid grid-cols-3 gap-2 sm:gap-4">
-						{q.pagePicks.map((p) => (
-							<PickCard key={`${p.media_type}-${p.tmdb_id}`} pick={p} />
-						))}
-					</div>
+					<HiddenTileContext.Provider value={q.picksKeeper}>
+						<div key={q.page} className="grid grid-cols-3 gap-2 sm:gap-4">
+							{q.pagePicks.map((p) => (
+								<PickCard key={`${p.media_type}-${p.tmdb_id}`} pick={p} />
+							))}
+						</div>
+					</HiddenTileContext.Provider>
 				) : (
 					<p className="py-10 text-center text-gray-400">
 						Rate a few titles you liked to get picks.
