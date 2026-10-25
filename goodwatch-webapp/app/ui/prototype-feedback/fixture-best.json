@@ -1,0 +1,205 @@
+{
+	"_source": "goodwatch MCP discover_titles, order=score, type=movie, 2026-10-25 (first 20; genres filled from TMDB where known)",
+	"titles": [
+		{
+			"tmdb_id": 1786905,
+			"media_type": "movie",
+			"title": "All Pass",
+			"release_year": 2026,
+			"poster_path": "/ruF5Y282FaN6VN9ujpYIP9CJe2V.jpg",
+			"genres": [],
+			"goodwatch_overall_score_normalized_percent": 99,
+			"path": "/movie/1786905-all-pass"
+		},
+		{
+			"tmdb_id": 1774540,
+			"media_type": "movie",
+			"title": "MANJAR",
+			"release_year": 2026,
+			"poster_path": "/wlUkHJsiYHxEvnMDgjy28kt3EEr.jpg",
+			"genres": [],
+			"goodwatch_overall_score_normalized_percent": 96,
+			"path": "/movie/1774540-manjar"
+		},
+		{
+			"tmdb_id": 1612063,
+			"media_type": "movie",
+			"title": "Twenty One Pilots: More Than We Ever Imagined",
+			"release_year": 2026,
+			"poster_path": "/5JvxjrXPTmwdY8VtFzHzQ23B8ba.jpg",
+			"genres": ["Music", "Documentary"],
+			"goodwatch_overall_score_normalized_percent": 96,
+			"path": "/movie/1612063-twenty-one-pilots-more-than-we-ever-imagined"
+		},
+		{
+			"tmdb_id": 238,
+			"media_type": "movie",
+			"title": "The Godfather",
+			"release_year": 1972,
+			"poster_path": "/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+			"genres": ["Drama", "Crime"],
+			"goodwatch_overall_score_normalized_percent": 95,
+			"path": "/movie/238-the-godfather"
+		},
+		{
+			"tmdb_id": 377462,
+			"media_type": "movie",
+			"title": "O.J.: Made in America",
+			"release_year": 2016,
+			"poster_path": "/nFmg2G4IJ0x9mALXkYFN8Gw0Dw5.jpg",
+			"genres": ["Documentary", "Crime"],
+			"goodwatch_overall_score_normalized_percent": 95,
+			"path": "/movie/377462-oj-made-in-america"
+		},
+		{
+			"tmdb_id": 613703,
+			"media_type": "movie",
+			"title": "Kadaisi Vivasayi",
+			"release_year": 2022,
+			"poster_path": "/8TNnEojAEc8Kt6HMWgQNRPcL9J3.jpg",
+			"genres": ["Drama"],
+			"goodwatch_overall_score_normalized_percent": 95,
+			"path": "/movie/613703-kadaisi-vivasayi"
+		},
+		{
+			"tmdb_id": 1431738,
+			"media_type": "movie",
+			"title": "Anbil Avan",
+			"release_year": 2026,
+			"poster_path": "/2cN2WjL4xQvbJIhxSjGmhXL41rX.jpg",
+			"genres": [],
+			"goodwatch_overall_score_normalized_percent": 95,
+			"path": "/movie/1431738-anbil-avan"
+		},
+		{
+			"tmdb_id": 389,
+			"media_type": "movie",
+			"title": "12 Angry Men",
+			"release_year": 1957,
+			"poster_path": "/zhG3vKWyDRaZYoaww1UVAi29T9h.jpg",
+			"genres": ["Drama"],
+			"goodwatch_overall_score_normalized_percent": 94,
+			"path": "/movie/389-12-angry-men"
+		},
+		{
+			"tmdb_id": 346,
+			"media_type": "movie",
+			"title": "Seven Samurai",
+			"release_year": 1954,
+			"poster_path": "/lOMGc8bnSwQhS4XyE1S99uH8NXf.jpg",
+			"genres": ["Action", "Drama"],
+			"goodwatch_overall_score_normalized_percent": 94,
+			"path": "/movie/346-seven-samurai"
+		},
+		{
+			"tmdb_id": 1765072,
+			"media_type": "movie",
+			"title": "You Can See Everything",
+			"release_year": 2026,
+			"poster_path": "/Ap8QwmKfSjYbWC4XIP8w9pdn72O.jpg",
+			"genres": [],
+			"goodwatch_overall_score_normalized_percent": 94,
+			"path": "/movie/1765072-you-can-see-everything"
+		},
+		{
+			"tmdb_id": 122019,
+			"media_type": "movie",
+			"title": "Macario",
+			"release_year": 1960,
+			"poster_path": "/fKRzGm3BiuOv3MuolazFOEgB8EX.jpg",
+			"genres": ["Fantasy", "Drama"],
+			"goodwatch_overall_score_normalized_percent": 94,
+			"path": "/movie/122019-macario"
+		},
+		{
+			"tmdb_id": 424,
+			"media_type": "movie",
+			"title": "Schindler's List",
+			"release_year": 1993,
+			"poster_path": "/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg",
+			"genres": ["Drama", "History"],
+			"goodwatch_overall_score_normalized_percent": 93,
+			"path": "/movie/424-schindlers-list"
+		},
+		{
+			"tmdb_id": 289,
+			"media_type": "movie",
+			"title": "Casablanca",
+			"release_year": 1943,
+			"poster_path": "/lGCEKlJo2CnWydQj7aamY7s1S7Q.jpg",
+			"genres": ["Drama", "Romance"],
+			"goodwatch_overall_score_normalized_percent": 93,
+			"path": "/movie/289-casablanca"
+		},
+		{
+			"tmdb_id": 567,
+			"media_type": "movie",
+			"title": "Rear Window",
+			"release_year": 1954,
+			"poster_path": "/ILVF0eJxHMddjxeQhswFtpMtqx.jpg",
+			"genres": ["Thriller", "Mystery"],
+			"goodwatch_overall_score_normalized_percent": 93,
+			"path": "/movie/567-rear-window"
+		},
+		{
+			"tmdb_id": 832,
+			"media_type": "movie",
+			"title": "M",
+			"release_year": 1931,
+			"poster_path": "/bTdZk3q2DWpBRnLiaaItKFWOVhI.jpg",
+			"genres": ["Drama", "Thriller"],
+			"goodwatch_overall_score_normalized_percent": 93,
+			"path": "/movie/832-m"
+		},
+		{
+			"tmdb_id": 10098,
+			"media_type": "movie",
+			"title": "The Kid",
+			"release_year": 1921,
+			"poster_path": "/drgMcyTsySQBnUPGaBThCHGdlWT.jpg",
+			"genres": ["Comedy", "Drama"],
+			"goodwatch_overall_score_normalized_percent": 93,
+			"path": "/movie/10098-the-kid"
+		},
+		{
+			"tmdb_id": 17663,
+			"media_type": "movie",
+			"title": "Anne of Green Gables",
+			"release_year": 1985,
+			"poster_path": "/z1owlDzKO3DQpFKNFBnuQlPF891.jpg",
+			"genres": ["Drama", "Family"],
+			"goodwatch_overall_score_normalized_percent": 93,
+			"path": "/movie/17663-anne-of-green-gables"
+		},
+		{
+			"tmdb_id": 16672,
+			"media_type": "movie",
+			"title": "Woman in the Dunes",
+			"release_year": 1964,
+			"poster_path": "/xiBr3bIT2xpbuIKo5bLK7ebP4O1.jpg",
+			"genres": ["Drama", "Thriller"],
+			"goodwatch_overall_score_normalized_percent": 93,
+			"path": "/movie/16672-woman-in-the-dunes"
+		},
+		{
+			"tmdb_id": 803,
+			"media_type": "movie",
+			"title": "Night and Fog",
+			"release_year": 1956,
+			"poster_path": "/2iWYQia8enOai7QEO3TvenleD7r.jpg",
+			"genres": ["Documentary", "History"],
+			"goodwatch_overall_score_normalized_percent": 93,
+			"path": "/movie/803-night-and-fog"
+		},
+		{
+			"tmdb_id": 533514,
+			"media_type": "movie",
+			"title": "Violet Evergarden: The Movie",
+			"release_year": 2020,
+			"poster_path": "/bajajkoErDst0JxdFyBkABiF9rW.jpg",
+			"genres": ["Animation", "Drama"],
+			"goodwatch_overall_score_normalized_percent": 93,
+			"path": "/movie/533514-violet-evergarden-the-movie"
+		}
+	]
+}

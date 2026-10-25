@@ -8,7 +8,7 @@ import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
 import { InstantRouteScroll } from "~/ui/nav/InstantRouteScroll"
 import { PageScrollbar } from "~/ui/nav/PageScrollbar"
 // PROTOTYPE: the global Feedback tab (#762), development only.
-import { RootFeedbackDock } from "~/ui/prototype-feedback/FeedbackDock"
+import { RootFeedbackDock } from "~/ui/prototype-feedback/GlobalFix"
 import { json } from "@remix-run/node"
 import type { User } from "@supabase/auth-js"
 import { resolveMediaContext } from "~/server/media-context.server"
@@ -251,6 +251,8 @@ export function ErrorBoundary() {
 			<MobileDock />
 			<HubDialog />
 			<SearchDialog />
+			{/* PROTOTYPE: the Feedback tab on error pages too (Send feedback only). */}
+			{import.meta.env.DEV && <RootFeedbackDock sendOnly />}
 		</NavigationProvider>
 	)
 

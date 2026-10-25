@@ -12,7 +12,11 @@ import {
 import { useEffect, useState } from "react"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { PrimaryButton } from "~/ui/auth/kit"
-import { INPUT } from "~/ui/prototype-feedback/FeedbackDock"
+import {
+	GuestEmail,
+	INPUT,
+	thanksLine,
+} from "~/ui/prototype-feedback/FeedbackDock"
 import person from "~/ui/prototype-feedback/fixture-person.json"
 import {
 	AREAS,
@@ -535,7 +539,14 @@ export function Result({
 	c,
 	onClose,
 	onAnother,
-}: { c: Correction; onClose: () => void; onAnother?: () => void }) {
+	email = "",
+}: {
+	c: Correction
+	onClose: () => void
+	onAnother?: () => void
+	/** A guest's email for an answer, if they left one. */
+	email?: string
+}) {
 	const { undo, corrections, viewer } = useFeedback()
 	const undone = corrections.find((x) => x.id === c.id)?.undone
 	const copy = OUTCOME_COPY[c.outcome]
@@ -559,6 +570,9 @@ export function Result({
 					</p>
 					<p className="mt-0.5 text-sm text-gray-400">
 						{undone ? "The page shows the old value again." : copy.body}
+						{viewer === "guest" &&
+							email.trim() &&
+							` ${thanksLine(true, email)}`}
 					</p>
 				</div>
 			</div>
@@ -637,6 +651,10 @@ export function ReportFlow({
 	const [step, setStep] = useState(0)
 	const [sent, setSent] = useState<Correction | null>(null)
 	const [d, setD] = useState<Draft>(() => newDraft(area ?? "watch"))
+	const [email, setEmail] = useState("")
+	const guestEmail = viewer === "guest" && d.problem && (
+		<GuestEmail value={email} onChange={setEmail} />
+	)
 	const pinned = sent ? null : spotOf(d)
 	useEffect(() => setPinned(pinned), [pinned, setPinned])
 	useEffect(() => () => setPinned(null), [setPinned])
@@ -647,7 +665,10 @@ export function ReportFlow({
 		setSent(null)
 		if (layout === "form") onPickArea?.(null)
 	}
-	if (sent) return <Result c={sent} onClose={onClose} onAnother={restart} />
+	if (sent)
+		return (
+			<Result c={sent} onClose={onClose} onAnother={restart} email={email} />
+		)
 
 	const problems = problemsOf(d.area)
 	const pick = (problem: Problem) => set({ problem })
@@ -711,6 +732,9 @@ export function ReportFlow({
 				)}
 				{step === 1 && hasQuestions && <Questions d={d} set={set} />}
 				{step === valuesStep && <Values d={d} set={set} />}
+				{step === valuesStep && guestEmail && (
+					<div className="mt-4">{guestEmail}</div>
+				)}
 				<Footer>
 					{outcome && step === valuesStep && (
 						<div className="mb-2">
@@ -801,6 +825,7 @@ export function ReportFlow({
 			{d.problem && ready(d, "questions") && (
 				<Values d={d} set={set} sideBySide={chips} />
 			)}
+			{d.problem && ready(d, "questions") && guestEmail}
 			<Footer>
 				{outcome && (
 					<div className="mb-2">

@@ -1,0 +1,464 @@
+{
+	"shell": {
+		"handle": "demo",
+		"viewer": "guest",
+		"visibility": {
+			"scores": "everyone",
+			"seen": "everyone",
+			"wishlist": "everyone",
+			"shows": "everyone",
+			"lists": "everyone",
+			"taste": "everyone",
+			"hours": "everyone",
+			"activity": "everyone"
+		},
+		"avatar": {
+			"url": null,
+			"color": "violet"
+		},
+		"cover": {
+			"backdrop": "/2UG177tWHy7xRmMKWJHB7nAUmKd.jpg",
+			"title": "Fullmetal Alchemist: Brotherhood"
+		},
+		"bio": "Mostly anime and old films. Scores are honest, not generous.",
+		"links": [
+			{
+				"service": "letterboxd",
+				"value": "demo"
+			}
+		],
+		"since": "2024-03",
+		"counts": {
+			"seen": 512,
+			"seenMovies": 318,
+			"rated": 446,
+			"wishlist": 37,
+			"lists": 2,
+			"hours": 1840,
+			"episodes": 2210,
+			"average": 7.4
+		},
+		"spread": [2, 3, 6, 14, 31, 58, 96, 121, 74, 41],
+		"indexable": true,
+		"dismissedImports": []
+	},
+	"overview": {
+		"favorites": [
+			{
+				"key": "movie-238",
+				"mediaType": "movie",
+				"tmdbId": 238,
+				"title": "The Godfather",
+				"year": 1972,
+				"poster": "/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+				"backdrop": "/ejdD20cdHNFAYAN2DlqPToXKyzx.jpg",
+				"href": "/movie/238-the-godfather",
+				"score": 10,
+				"gw": 95,
+				"date": "2026-10-20"
+			},
+			{
+				"key": "show-13916",
+				"mediaType": "show",
+				"tmdbId": 13916,
+				"title": "Death Note",
+				"year": 2006,
+				"poster": "/tCZFfYTIwrR7n94J6G14Y4hAFU6.jpg",
+				"backdrop": "/z8IPicmEKXUO4I2UDdMEqw7RqOE.jpg",
+				"href": "/show/13916-death-note",
+				"score": 10,
+				"gw": 95,
+				"date": "2026-10-19"
+			},
+			{
+				"key": "show-31911",
+				"mediaType": "show",
+				"tmdbId": 31911,
+				"title": "Fullmetal Alchemist: Brotherhood",
+				"year": 2009,
+				"poster": "/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
+				"backdrop": "/2UG177tWHy7xRmMKWJHB7nAUmKd.jpg",
+				"href": "/show/31911-fullmetal-alchemist-brotherhood",
+				"score": 10,
+				"gw": 95,
+				"date": "2026-10-18"
+			},
+			{
+				"key": "show-40075",
+				"mediaType": "show",
+				"tmdbId": 40075,
+				"title": "Gravity Falls",
+				"year": 2012,
+				"poster": "/qwi3p6PzKfQZ4YXBzv3CP5pO2dE.jpg",
+				"backdrop": "/lhg7eA6CTOCL10QNVdKiyxkgPsL.jpg",
+				"href": "/show/40075-gravity-falls",
+				"score": 10,
+				"gw": 95,
+				"date": "2026-10-17"
+			},
+			{
+				"key": "movie-389",
+				"mediaType": "movie",
+				"tmdbId": 389,
+				"title": "12 Angry Men",
+				"year": 1957,
+				"poster": "/zhG3vKWyDRaZYoaww1UVAi29T9h.jpg",
+				"backdrop": "/qqHQsStV6exghCM7zbObuYBiYxw.jpg",
+				"href": "/movie/389-12-angry-men",
+				"score": 10,
+				"gw": 94,
+				"date": "2026-09-16"
+			},
+			{
+				"key": "movie-346",
+				"mediaType": "movie",
+				"tmdbId": 346,
+				"title": "Seven Samurai",
+				"year": 1954,
+				"poster": "/lOMGc8bnSwQhS4XyE1S99uH8NXf.jpg",
+				"backdrop": "/qvZ91FwMq6O47VViAr8vZNQz3WI.jpg",
+				"href": "/movie/346-seven-samurai",
+				"score": 10,
+				"gw": 94,
+				"date": "2026-09-15"
+			},
+			{
+				"key": "show-30991",
+				"mediaType": "show",
+				"tmdbId": 30991,
+				"title": "Cowboy Bebop",
+				"year": 1998,
+				"poster": "/xDiXDfZwC6XYC6fxHI1jl3A3Ill.jpg",
+				"backdrop": "/A4PHx94G7mvM3b8vsDJ5HEaQ6uv.jpg",
+				"href": "/show/30991-cowboy-bebop",
+				"score": 10,
+				"gw": 94,
+				"date": "2026-09-14"
+			},
+			{
+				"key": "show-42509",
+				"mediaType": "show",
+				"tmdbId": 42509,
+				"title": "Steins;Gate",
+				"year": 2011,
+				"poster": "/96R4bV7dB8ramaWceNKsxvJgCUd.jpg",
+				"backdrop": "/gDvxT2z6TNxervG97WfpePRZ3aR.jpg",
+				"href": "/show/42509-steinsgate",
+				"score": 10,
+				"gw": 94,
+				"date": "2026-09-13"
+			}
+		],
+		"recent": [
+			{
+				"key": "show-136315",
+				"mediaType": "show",
+				"tmdbId": 136315,
+				"title": "The Bear",
+				"year": 2022,
+				"poster": "/eKfVzzEazSIjJMrw9ADa2x8ksLz.jpg",
+				"backdrop": "/aJtG4txtmiRHwAAqENQHZvBs6kY.jpg",
+				"href": "/show/136315-the-bear",
+				"score": 8,
+				"gw": 84,
+				"date": "2026-10-22"
+			},
+			{
+				"key": "show-209867",
+				"mediaType": "show",
+				"tmdbId": 209867,
+				"title": "Frieren: Beyond Journey's End",
+				"year": 2023,
+				"poster": "/dqZENchTd7lp5zht7BdlqM7RBhD.jpg",
+				"backdrop": "/rBOnrVlck7BIlGeWVlzYiZeg4l2.jpg",
+				"href": "/show/209867-frieren-beyond-journeys-end",
+				"score": 10,
+				"gw": 94,
+				"date": "2026-10-19"
+			},
+			{
+				"key": "movie-850165",
+				"mediaType": "movie",
+				"tmdbId": 850165,
+				"title": "The Iron Claw",
+				"year": 2023,
+				"poster": "/s2VLjcykJfwplJNGT5iEeCA0mRx.jpg",
+				"backdrop": "/4l65BWqJBl7hBwdIwp2nQdwsOuw.jpg",
+				"href": "/movie/850165-the-iron-claw",
+				"score": 7,
+				"gw": null,
+				"date": "2026-10-12"
+			},
+			{
+				"key": "show-219246",
+				"mediaType": "show",
+				"tmdbId": 219246,
+				"title": "When Life Gives You Tangerines",
+				"year": 2025,
+				"poster": "/1VC3sEFxYXYDqQUCAnvWfUsYg1s.jpg",
+				"backdrop": "/a9qlroMOHewiDsUR93PYMVfpbF5.jpg",
+				"href": "/show/219246-when-life-gives-you-tangerines",
+				"score": 9,
+				"gw": 94,
+				"date": "2026-10-05"
+			},
+			{
+				"key": "show-94796",
+				"mediaType": "show",
+				"tmdbId": 94796,
+				"title": "Crash Landing on You",
+				"year": 2019,
+				"poster": "/fgBNLPr6mC8pxuR79ENAJY4nBmj.jpg",
+				"backdrop": "/3yEHM2HT2vrUtO93YzTJNgEfiZG.jpg",
+				"href": "/show/94796-crash-landing-on-you",
+				"score": 8,
+				"gw": 94,
+				"date": "2026-09-28"
+			},
+			{
+				"key": "show-1044",
+				"mediaType": "show",
+				"tmdbId": 1044,
+				"title": "Planet Earth",
+				"year": 2006,
+				"poster": "/bNcNxUtZ520d5de5s78onoiSiwQ.jpg",
+				"backdrop": "/qmRUwosX4BsCj6QanpBYScLl3Sp.jpg",
+				"href": "/show/1044-planet-earth",
+				"score": 9,
+				"gw": 94,
+				"date": "2026-09-20"
+			}
+		],
+		"watching": [
+			{
+				"key": "show-136315",
+				"mediaType": "show",
+				"tmdbId": 136315,
+				"title": "The Bear",
+				"year": 2022,
+				"poster": "/eKfVzzEazSIjJMrw9ADa2x8ksLz.jpg",
+				"backdrop": "/aJtG4txtmiRHwAAqENQHZvBs6kY.jpg",
+				"href": "/show/136315-the-bear",
+				"score": null,
+				"gw": 84,
+				"date": "2026-10-22",
+				"watchedEpisodes": 21,
+				"airedEpisodes": 38,
+				"next": "S3 E4"
+			},
+			{
+				"key": "show-209867",
+				"mediaType": "show",
+				"tmdbId": 209867,
+				"title": "Frieren: Beyond Journey's End",
+				"year": 2023,
+				"poster": "/dqZENchTd7lp5zht7BdlqM7RBhD.jpg",
+				"backdrop": "/rBOnrVlck7BIlGeWVlzYiZeg4l2.jpg",
+				"href": "/show/209867-frieren-beyond-journeys-end",
+				"score": null,
+				"gw": 94,
+				"date": "2026-10-19",
+				"watchedEpisodes": 18,
+				"airedEpisodes": 28,
+				"next": "S1 E19"
+			}
+		],
+		"newestWishlist": [
+			{
+				"key": "show-246",
+				"mediaType": "show",
+				"tmdbId": 246,
+				"title": "Avatar: The Last Airbender",
+				"year": 2005,
+				"poster": "/yaGt4GIutpbXHsv48tWceWg6s56.jpg",
+				"backdrop": "/7oBGhqJIghRBvOwo5Qe0yM0cnMc.jpg",
+				"href": "/show/246-avatar-the-last-airbender",
+				"score": null,
+				"gw": 96,
+				"date": "2026-10-20"
+			},
+			{
+				"key": "show-219246",
+				"mediaType": "show",
+				"tmdbId": 219246,
+				"title": "When Life Gives You Tangerines",
+				"year": 2025,
+				"poster": "/1VC3sEFxYXYDqQUCAnvWfUsYg1s.jpg",
+				"backdrop": "/a9qlroMOHewiDsUR93PYMVfpbF5.jpg",
+				"href": "/show/219246-when-life-gives-you-tangerines",
+				"score": null,
+				"gw": 94,
+				"date": "2026-10-19"
+			},
+			{
+				"key": "show-94796",
+				"mediaType": "show",
+				"tmdbId": 94796,
+				"title": "Crash Landing on You",
+				"year": 2019,
+				"poster": "/fgBNLPr6mC8pxuR79ENAJY4nBmj.jpg",
+				"backdrop": "/3yEHM2HT2vrUtO93YzTJNgEfiZG.jpg",
+				"href": "/show/94796-crash-landing-on-you",
+				"score": null,
+				"gw": 94,
+				"date": "2026-10-18"
+			},
+			{
+				"key": "show-1044",
+				"mediaType": "show",
+				"tmdbId": 1044,
+				"title": "Planet Earth",
+				"year": 2006,
+				"poster": "/bNcNxUtZ520d5de5s78onoiSiwQ.jpg",
+				"backdrop": "/qmRUwosX4BsCj6QanpBYScLl3Sp.jpg",
+				"href": "/show/1044-planet-earth",
+				"score": null,
+				"gw": 94,
+				"date": "2026-10-17"
+			},
+			{
+				"key": "show-42509",
+				"mediaType": "show",
+				"tmdbId": 42509,
+				"title": "Steins;Gate",
+				"year": 2011,
+				"poster": "/96R4bV7dB8ramaWceNKsxvJgCUd.jpg",
+				"backdrop": "/gDvxT2z6TNxervG97WfpePRZ3aR.jpg",
+				"href": "/show/42509-steinsgate",
+				"score": null,
+				"gw": 94,
+				"date": "2026-10-16"
+			}
+		],
+		"lists": [
+			{
+				"id": "demo-list-anime",
+				"title": "Anime to start with",
+				"href": "/lists/demo-list-anime",
+				"posters": [
+					"https://image.tmdb.org/t/p/w500/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
+					"https://image.tmdb.org/t/p/w500/xDiXDfZwC6XYC6fxHI1jl3A3Ill.jpg",
+					"https://image.tmdb.org/t/p/w500/96R4bV7dB8ramaWceNKsxvJgCUd.jpg",
+					"https://image.tmdb.org/t/p/w500/dqZENchTd7lp5zht7BdlqM7RBhD.jpg"
+				]
+			},
+			{
+				"id": "demo-list-classics",
+				"title": "Old films that still hold up",
+				"href": "/lists/demo-list-classics",
+				"posters": [
+					"https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+					"https://image.tmdb.org/t/p/w500/zhG3vKWyDRaZYoaww1UVAi29T9h.jpg",
+					"https://image.tmdb.org/t/p/w500/lOMGc8bnSwQhS4XyE1S99uH8NXf.jpg"
+				]
+			}
+		],
+		"hotTakes": [
+			{
+				"title": {
+					"key": "show-136315",
+					"mediaType": "show",
+					"tmdbId": 136315,
+					"title": "The Bear",
+					"year": 2022,
+					"poster": "/eKfVzzEazSIjJMrw9ADa2x8ksLz.jpg",
+					"backdrop": "/aJtG4txtmiRHwAAqENQHZvBs6kY.jpg",
+					"href": "/show/136315-the-bear",
+					"score": 6,
+					"gw": 84,
+					"date": "2026-10-22"
+				},
+				"delta": -2.4
+			},
+			{
+				"title": {
+					"key": "show-40075",
+					"mediaType": "show",
+					"tmdbId": 40075,
+					"title": "Gravity Falls",
+					"year": 2012,
+					"poster": "/qwi3p6PzKfQZ4YXBzv3CP5pO2dE.jpg",
+					"backdrop": "/lhg7eA6CTOCL10QNVdKiyxkgPsL.jpg",
+					"href": "/show/40075-gravity-falls",
+					"score": 10,
+					"gw": 95,
+					"date": "2026-08-02"
+				},
+				"delta": 0.5
+			},
+			{
+				"title": {
+					"key": "show-1044",
+					"mediaType": "show",
+					"tmdbId": 1044,
+					"title": "Planet Earth",
+					"year": 2006,
+					"poster": "/bNcNxUtZ520d5de5s78onoiSiwQ.jpg",
+					"backdrop": "/qmRUwosX4BsCj6QanpBYScLl3Sp.jpg",
+					"href": "/show/1044-planet-earth",
+					"score": 6,
+					"gw": 94,
+					"date": "2026-07-11"
+				},
+				"delta": -3.4
+			}
+		]
+	},
+	"fingerprint": [
+		{
+			"key": "tension",
+			"family": "feel",
+			"edge": 1.6
+		},
+		{
+			"key": "wit_wordplay",
+			"family": "humor",
+			"edge": 1.3
+		},
+		{
+			"key": "historical",
+			"family": "world",
+			"edge": 1.1
+		},
+		{
+			"key": "character_depth",
+			"family": "story",
+			"edge": 1.4
+		},
+		{
+			"key": "slow_burn",
+			"family": "story",
+			"edge": 0.9
+		},
+		{
+			"key": "crime",
+			"family": "world",
+			"edge": 0.8
+		},
+		{
+			"key": "melancholy",
+			"family": "feel",
+			"edge": 0.7
+		},
+		{
+			"key": "dark_humor",
+			"family": "humor",
+			"edge": 0.6
+		},
+		{
+			"key": "cinematography",
+			"family": "craft",
+			"edge": 1.2
+		},
+		{
+			"key": "scare",
+			"family": "feel",
+			"edge": -1.2
+		},
+		{
+			"key": "physical_comedy",
+			"family": "humor",
+			"edge": -0.9
+		}
+	]
+}

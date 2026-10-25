@@ -18,6 +18,11 @@ import StaffPost from "~/ui/prototype-feedback/StaffPost"
 import { Switcher } from "~/ui/prototype-feedback/Switcher"
 import TitlePage from "~/ui/prototype-feedback/TitlePage"
 import fixture from "~/ui/prototype-feedback/fixture-title.json"
+import {
+	PAGE_TYPES,
+	type PageArea,
+	kindOf,
+} from "~/ui/prototype-feedback/areas"
 import { AREAS, type Area } from "~/ui/prototype-feedback/model"
 import { FeedbackProvider, useFeedback } from "~/ui/prototype-feedback/store"
 
@@ -55,11 +60,15 @@ function Screen() {
  * C: the global Feedback tab, here with the fix path on pages with correctable data (title, person). The staff post is
  * a Discord mock, not a GoodWatch page, so it has no tab. The root layout mounts the plain tab on every other page.
  */
-/** The choosable blocks per screen, in page order. */
-const PAGE_AREAS: Partial<Record<string, Area[]>> = {
-	title: ["scores", "watch", "analysis", "episodes", "details", "cast"],
-	feedback: ["scores", "watch", "analysis", "episodes", "details", "cast"],
-	person: ["person", "credits"],
+/** The choosable blocks per screen, in page order, from areas.ts (the parts this screen's fixture shows). */
+const typeAreas = (type: string) =>
+	(PAGE_TYPES.find((t) => t.id === type)?.areas ?? []).filter(
+		(a) => a.id in AREAS,
+	)
+const PAGE_AREAS: Partial<Record<string, PageArea[]>> = {
+	title: typeAreas("title"),
+	feedback: typeAreas("title"),
+	person: typeAreas("person"),
 }
 
 function ProtoDock() {
@@ -101,9 +110,9 @@ function ProtoDock() {
 						: null,
 					closePicked: () => setOpen(null),
 					areas: (PAGE_AREAS[screen] ?? []).map((a) => ({
-						id: a,
-						label: AREAS[a].label,
-						flagOnly: AREAS[a].problems.every((p) => p.flag),
+						id: a.id,
+						label: a.name,
+						flagOnly: kindOf(a) === "flag",
 					})),
 					hot,
 					setHot: (id) => setHot(id as Area | null),

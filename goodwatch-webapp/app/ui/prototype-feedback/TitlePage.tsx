@@ -164,11 +164,11 @@ export function Block({
 					aria-label={`${flagOnly ? "Flag" : "Fix"} ${AREAS[area].what}`}
 					data-fix-overlay={area}
 					data-lit={(fixMode && lit) || undefined}
-					className={`absolute ${overlayClass} z-20 cursor-pointer rounded-2xl border-2 border-dashed transition-[opacity,background-color,border-color] duration-200 ${fixMode ? "opacity-100" : "pointer-events-none opacity-0"} ${lit ? "border-solid border-amber-400 bg-amber-400/[0.07]" : flagOnly ? "border-white/40" : "border-amber-500/70"}`}
+					className={`absolute ${overlayClass} z-20 cursor-pointer rounded-2xl border-2 border-dashed transition-[opacity,background-color,border-color] duration-100 ${fixMode ? "opacity-100" : "pointer-events-none opacity-0"} ${lit ? "border-solid border-amber-400 bg-amber-400/[0.07]" : flagOnly ? "border-white/40" : "border-amber-500/70"}`}
 				>
 					<span
 						data-fix-badge
-						className={`absolute -top-3 right-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold shadow-lg transition-transform duration-200 ${lit ? "scale-110" : ""} ${flagOnly ? "bg-gray-200 text-gray-950" : "bg-amber-400 text-gray-950"}`}
+						className={`absolute -top-3 right-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold shadow-lg transition-transform duration-100 ${lit ? "scale-110" : ""} ${flagOnly ? "bg-gray-200 text-gray-950" : "bg-amber-400 text-gray-950"}`}
 					>
 						{flagOnly ? (
 							<FlagIcon className="size-3.5" />

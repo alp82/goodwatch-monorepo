@@ -1,14 +1,15 @@
 // PROTOTYPE - throwaway. The one feedback entry point (variant C, round 3): a quiet "Feedback" tab on the right edge of
-// every page, in the upper middle; tapped, it grows into the docked panel (a bottom sheet on phones) and shrinks back
-// into it on close. The panel offers two paths:
+// every page, in the upper middle; tapped, the tab itself opens out into the docked panel (a bottom sheet on phones):
+// the panel starts as an exact copy of the tab on the tab's spot, grows to its full size while the tab's face fades
+// into the panel's header, and closing folds it back into the tab (round 4). The panel offers two paths:
 // - "Fix something on this page" on pages with correctable data: the page's fix mode dims everything but the choosable
 //   blocks, marks them with a dashed outline and a Fix/Flag badge, and the panel lists them too; hovering either side
 //   lights up the other. A picked block's questions show in the panel.
 // - "Send feedback": one text box, bug or idea, and "Include a screenshot" (off by default) with a preview of what
 //   gets sent. Nothing is sent.
-// Pages without correctable data go straight to Send feedback. Contact stays on /support.
-// The root layout mounts it on every page in development; the feedback prototype mounts its own with the fix path.
-// It imports no fixtures, so it can live in the root layout.
+// Pages without correctable data go straight to Send feedback. Guests may leave an email if they want an answer.
+// The root layout mounts it on every page in development (GlobalFix.tsx, with the parts from areas.ts); the feedback
+// prototype mounts its own with the richer title and person flows. It imports no fixtures.
 import {
 	ArrowLeftIcon,
 	BugAntIcon,
@@ -20,7 +21,6 @@ import {
 	PencilSquareIcon,
 } from "@heroicons/react/20/solid"
 import { XMarkIcon } from "@heroicons/react/24/solid"
-import { Link, useMatches } from "@remix-run/react"
 import {
 	type ReactNode,
 	forwardRef,
@@ -30,12 +30,45 @@ import {
 	useState,
 } from "react"
 import { PrimaryButton } from "~/ui/auth/kit"
-import { useUser } from "~/utils/auth"
 
 export const INPUT =
 	"min-h-11 w-full rounded-lg bg-gray-900 px-3 text-gray-100 ring-1 ring-white/15 placeholder:text-gray-600 focus:ring-2 focus:ring-amber-400 focus:outline-none"
 
 type Kind = "bug" | "idea"
+
+/** Guests only: members get answers at their account's email. Optional. */
+export function GuestEmail({
+	value,
+	onChange,
+}: { value: string; onChange: (v: string) => void }) {
+	return (
+		<label className="flex flex-col gap-1.5" data-guest-email>
+			<span className="text-sm font-medium text-gray-300">
+				Your email{" "}
+				<span className="font-normal text-gray-500">
+					(if you want an answer)
+				</span>
+			</span>
+			<input
+				type="email"
+				inputMode="email"
+				autoComplete="email"
+				value={value}
+				onChange={(e) => onChange(e.target.value)}
+				placeholder="you@example.com"
+				className={INPUT}
+			/>
+		</label>
+	)
+}
+
+/** The "it's with us" line after sending, for who sent it and how. */
+export const thanksLine = (guest: boolean, email: string) =>
+	guest
+		? email.trim()
+			? `We'll answer at ${email.trim()}.`
+			: "We read every message."
+		: "If we have a question, we'll email you."
 
 function useIsWide() {
 	const [wide, setWide] = useState(false)
@@ -195,6 +228,7 @@ export function FeedbackForm({
 	const [kind, setKind] = useState<Kind>("bug")
 	const [text, setText] = useState("")
 	const [shot, setShot] = useState(false)
+	const [email, setEmail] = useState("")
 	const [sent, setSent] = useState(false)
 	if (sent)
 		return (
@@ -208,10 +242,7 @@ export function FeedbackForm({
 							Thanks! It's with us.
 						</p>
 						<p className="mt-0.5 text-sm text-gray-400">
-							We read every message.{" "}
-							{guest
-								? "Want an answer? Use the contact form on Support."
-								: "If we have a question, we'll email you."}
+							{thanksLine(guest, email)}
 						</p>
 					</div>
 				</div>
@@ -273,6 +304,7 @@ export function FeedbackForm({
 					</p>
 				)}
 			</div>
+			{guest && <GuestEmail value={email} onChange={setEmail} />}
 			<p className="text-xs text-gray-500">
 				We also get the page address, your browser and the app version.
 			</p>
@@ -318,46 +350,11 @@ function useHideOnScrollDown(active: boolean) {
 	return hidden
 }
 
-/**
- * Desktop: a vertical "Feedback" label on the right edge, in the upper middle of the window, below the header. Phones:
- * a slim tab with the icon, at the same height. While the panel is open the tab fades out under it (the panel grows out
- * of it), and fades back in as the panel shrinks back into it.
- * `?tab=2` puts it at the bottom right corner as a small round key instead (comparison).
- */
-const Tab = forwardRef<
-	HTMLButtonElement,
-	{ open: boolean; onOpen: () => void; wide: boolean; alt: boolean }
->(function Tab({ open, onOpen, wide, alt }, ref) {
-	const hidden = useHideOnScrollDown(!wide && !open)
-	const fade = open
-		? "pointer-events-none opacity-0 duration-150"
-		: "opacity-100 duration-200 delay-200"
-	if (alt)
-		return (
-			<button
-				ref={ref}
-				type="button"
-				onClick={onOpen}
-				aria-expanded={open}
-				aria-label="Feedback"
-				data-feedback-private
-				data-feedback-tab
-				className={`fixed right-3 z-[45] grid size-12 cursor-pointer place-items-center rounded-full bg-gray-950 text-gray-300 shadow-lg ring-1 ring-white/15 transition-[transform,opacity] hover:text-white bottom-[calc(var(--nav-dock-height,72px)+0.75rem)] lg:right-5 lg:bottom-5 ${fade} ${hidden ? "pointer-events-none translate-y-3 opacity-0" : ""}`}
-			>
-				<ChatBubbleLeftEllipsisIcon className="size-6" />
-			</button>
-		)
+/** The tab's face: the icon, and on wide screens the vertical label. The panel's opening copy wears the same face. */
+function TabFace({ wide, alt }: { wide: boolean; alt: boolean }) {
+	if (alt) return <ChatBubbleLeftEllipsisIcon className="size-6" aria-hidden />
 	return (
-		<button
-			ref={ref}
-			type="button"
-			onClick={onOpen}
-			aria-expanded={open}
-			aria-label="Feedback"
-			data-feedback-private
-			data-feedback-tab
-			className={`group fixed right-0 z-[45] flex cursor-pointer flex-col items-center gap-2.5 rounded-l-xl bg-gray-950 text-gray-200 shadow-[0_8px_30px_-6px_rgba(0,0,0,.7)] ring-1 ring-white/15 transition-[transform,opacity,background-color] ease-out hover:bg-gray-900 hover:text-white max-md:top-[42%] max-md:h-16 max-md:w-10 max-md:justify-center md:top-[30%] md:px-2.5 md:pt-3.5 md:pb-4 ${fade} ${hidden ? "translate-x-full" : ""}`}
-		>
+		<>
 			<ChatBubbleLeftEllipsisIcon
 				className="size-5 shrink-0 text-amber-400 transition-transform group-hover:scale-110"
 				aria-hidden
@@ -367,6 +364,49 @@ const Tab = forwardRef<
 					Feedback
 				</span>
 			)}
+		</>
+	)
+}
+const FACE_ALT =
+	"grid place-items-center rounded-full bg-gray-950 text-gray-300 ring-1 ring-white/15"
+const FACE =
+	"flex flex-col items-center gap-2.5 rounded-l-xl bg-gray-950 text-gray-200 ring-1 ring-white/15 max-md:justify-center md:px-2.5 md:pt-3.5 md:pb-4"
+
+/**
+ * Desktop: a vertical "Feedback" label on the right edge, in the upper middle of the window, below the header. Phones:
+ * a slim tab with the icon, at the same height. While the panel is out, the panel is the tab: it starts as the tab's
+ * exact copy on the same spot, so the tab steps aside (visibility, no fade) in the very frame the copy takes over, and
+ * comes back in the frame the panel has folded back into it.
+ * `?tab=2` puts it at the bottom right corner as a small round key instead (comparison).
+ */
+const Tab = forwardRef<
+	HTMLButtonElement,
+	{
+		open: boolean
+		covered: boolean
+		onOpen: () => void
+		wide: boolean
+		alt: boolean
+	}
+>(function Tab({ open, covered, onOpen, wide, alt }, ref) {
+	const hidden = useHideOnScrollDown(!wide && !covered)
+	const away = covered ? "invisible pointer-events-none" : ""
+	return (
+		<button
+			ref={ref}
+			type="button"
+			onClick={onOpen}
+			aria-expanded={open}
+			aria-label="Feedback"
+			data-feedback-private
+			data-feedback-tab
+			className={
+				alt
+					? `fixed right-3 z-[45] size-12 cursor-pointer shadow-lg transition-[transform,opacity] hover:text-white bottom-[calc(var(--nav-dock-height,72px)+0.75rem)] lg:right-5 lg:bottom-5 ${FACE_ALT} ${away} ${hidden ? "pointer-events-none translate-y-3 opacity-0" : ""}`
+					: `group fixed right-0 z-[45] cursor-pointer shadow-[0_8px_30px_-6px_rgba(0,0,0,.7)] transition-[transform,background-color] ease-out hover:bg-gray-900 hover:text-white max-md:top-[42%] max-md:h-16 max-md:w-10 md:top-[30%] ${FACE} ${away} ${hidden ? "translate-x-full" : ""}`
+			}
+		>
+			<TabFace wide={wide} alt={alt} />
 		</button>
 	)
 })
@@ -421,80 +461,96 @@ function Choice({
 	)
 }
 
-const ContactLine = () => (
-	<p className="text-xs text-gray-500">
-		Need an answer from us?{" "}
-		<Link
-			to="/support"
-			className="font-semibold text-gray-300 underline decoration-white/30 underline-offset-2 hover:text-white"
-		>
-			Contact us on Support
-		</Link>
-	</p>
-)
-
 /** Fix mode's list of the page's choosable blocks, linked both ways with the blocks on the page. */
 function AreaList({ fix }: { fix: FixPath }) {
-	const dwell = useRef(0)
-	useEffect(() => () => window.clearTimeout(dwell.current), [])
+	// The block lights up and, when it's off screen, starts scrolling into view in the same frame the pointer reaches
+	// its item: highlight on enter, scroll on the first move over it (a list that opens under a still pointer doesn't
+	// scroll the page). reveal() aims at absolute positions, so sweeping across items retargets one scroll.
+	const moved = useRef<string | null>(null)
+	// The outline lights up from here, without waiting for the page to re-render (a title page takes a frame or more);
+	// the page's own lit state follows.
+	const light = (id: string | null) => {
+		for (const el of document.querySelectorAll("[data-fix-overlay][data-hot]"))
+			el.removeAttribute("data-hot")
+		if (id)
+			document
+				.querySelector(`[data-fix-overlay="${CSS.escape(id)}"]`)
+				?.setAttribute("data-hot", "")
+	}
+	useEffect(() => () => light(null), [])
 	return (
-		<ul className="grid grid-cols-2 gap-1.5 md:grid-cols-1" data-fix-list>
-			{fix.areas.map((a) => {
-				const lit = fix.hot === a.id
-				return (
-					<li key={a.id}>
-						<button
-							type="button"
-							data-fix-item={a.id}
-							data-lit={lit || undefined}
-							onPointerEnter={() => fix.setHot(a.id)}
-							onPointerMove={(e) => {
-								// Off-screen blocks come into view after a short rest on the item: a moving mouse only, so a list
-								// that opens under a still pointer doesn't scroll the page.
-								if (e.pointerType !== "mouse") return
-								window.clearTimeout(dwell.current)
-								dwell.current = window.setTimeout(() => fix.reveal(a.id), 450)
-							}}
-							onPointerLeave={() => {
-								window.clearTimeout(dwell.current)
-								fix.setHot(null)
-							}}
-							onFocus={() => {
-								fix.setHot(a.id)
-								fix.reveal(a.id)
-							}}
-							onBlur={() => fix.setHot(null)}
-							onClick={() => {
-								fix.pick(a.id)
-								fix.reveal(a.id)
-							}}
-							className={`flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-xl px-2.5 text-left md:min-h-12 md:gap-3 md:px-3 ring-1 transition-[background-color,box-shadow] duration-150 ${lit ? "bg-amber-400/10 ring-amber-400" : "bg-white/[0.04] ring-white/10"}`}
-						>
-							<span
-								className={`grid size-7 shrink-0 place-items-center rounded-full ${a.flagOnly ? "bg-gray-200 text-gray-950" : "bg-amber-400 text-gray-950"}`}
-								aria-hidden
+		<>
+			<style>
+				{
+					"[data-fix-overlay][data-hot]{border-style:solid!important;border-color:rgb(251 191 36)!important;background-color:rgb(251 191 36/.07)!important}"
+				}
+			</style>
+			<ul className="grid grid-cols-2 gap-1.5 md:grid-cols-1" data-fix-list>
+				{fix.areas.map((a) => {
+					const lit = fix.hot === a.id
+					return (
+						<li key={a.id}>
+							<button
+								type="button"
+								data-fix-item={a.id}
+								data-lit={lit || undefined}
+								onPointerEnter={() => {
+									light(a.id)
+									fix.setHot(a.id)
+								}}
+								onPointerMove={(e) => {
+									if (e.pointerType !== "mouse" || moved.current === a.id)
+										return
+									moved.current = a.id
+									if (fix.hot !== a.id) fix.setHot(a.id)
+									fix.reveal(a.id)
+								}}
+								onPointerLeave={() => {
+									moved.current = null
+									light(null)
+									fix.setHot(null)
+								}}
+								onFocus={() => {
+									light(a.id)
+									fix.setHot(a.id)
+									fix.reveal(a.id)
+								}}
+								onBlur={() => {
+									light(null)
+									fix.setHot(null)
+								}}
+								onClick={() => {
+									fix.pick(a.id)
+									fix.reveal(a.id)
+								}}
+								className={`flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-xl px-2.5 text-left md:min-h-12 md:gap-3 md:px-3 ring-1 transition-[background-color,box-shadow] duration-100 ${lit ? "bg-amber-400/10 ring-amber-400" : "bg-white/[0.04] ring-white/10"}`}
 							>
-								{a.flagOnly ? (
-									<FlagIcon className="size-3.5" />
-								) : (
-									<PencilSquareIcon className="size-3.5" />
-								)}
-							</span>
-							<span className="min-w-0 flex-1 text-sm leading-tight font-semibold text-gray-100 md:text-base">
-								{a.label}
-							</span>
-							<span className="text-xs text-gray-500 max-md:hidden">
-								{a.flagOnly ? "Flag" : "Fix"}
-							</span>
-							<ChevronRightIcon
-								className={`size-5 shrink-0 transition-colors max-md:hidden ${lit ? "text-amber-400" : "text-gray-600"}`}
-								aria-hidden
-							/>
-						</button>
-					</li>
-				)
-			})}
-		</ul>
+								<span
+									className={`grid size-7 shrink-0 place-items-center rounded-full ${a.flagOnly ? "bg-gray-200 text-gray-950" : "bg-amber-400 text-gray-950"}`}
+									aria-hidden
+								>
+									{a.flagOnly ? (
+										<FlagIcon className="size-3.5" />
+									) : (
+										<PencilSquareIcon className="size-3.5" />
+									)}
+								</span>
+								<span className="min-w-0 flex-1 text-sm leading-tight font-semibold text-gray-100 md:text-base">
+									{a.label}
+								</span>
+								<span className="text-xs text-gray-500 max-md:hidden">
+									{a.flagOnly ? "Flag" : "Fix"}
+								</span>
+								<ChevronRightIcon
+									className={`size-5 shrink-0 transition-colors max-md:hidden ${lit ? "text-amber-400" : "text-gray-600"}`}
+									aria-hidden
+								/>
+							</button>
+						</li>
+					)
+				})}
+			</ul>
+		</>
 	)
 }
 
@@ -504,14 +560,18 @@ const reducedMotion = () =>
 	window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
 /**
- * The panel grows out of the tab and shrinks back into it: the panel sits at its final place, and starts clipped to the
- * tab's size and moved onto the tab (transform + clip-path), then opens to its full size while its content fades in.
- * Closing plays it backwards; tapping again mid-way reverses it from where it is.
+ * The tab opens out into the panel and folds back into it. The panel sits at its final place; on the first frame it's
+ * moved onto the tab (transform) and clipped to the tab's size and corners (clip-path), and its top layer is a copy of
+ * the tab's face (the ghost), so it looks exactly like the tab, which steps aside in that same frame. Then the clip
+ * opens to the full panel while the transform slides it home, the ghost fades out and the header and body fade in.
+ * Closing plays it backwards and hands back to the tab on the last frame; tapping again mid-way reverses from there.
+ * Transform, clip-path and opacity only. Reduced motion: a plain cross-fade.
  */
 function useMorph(
 	tab: React.RefObject<HTMLElement>,
 	panel: React.RefObject<HTMLElement>,
 	content: React.RefObject<HTMLElement>,
+	ghost: React.RefObject<HTMLElement>,
 ) {
 	const [open, setOpen] = useState(false)
 	const [shown, setShown] = useState(false)
@@ -533,17 +593,19 @@ function useMorph(
 		const p = panel.current
 		const t = tab.current
 		const c = content.current
-		if (!p || !c) return settle()
+		const g = ghost.current
+		if (!p || !c || !g) return settle()
 		const P = p.getBoundingClientRect()
 		const T = t?.getBoundingClientRect()
 		const timing: KeyframeAnimationOptions = {
-			duration: opening ? 320 : 280,
+			duration: opening ? 340 : 280,
 			easing: "cubic-bezier(.2,.85,.25,1)",
 			fill: "both",
 			direction: opening ? "normal" : "reverse",
 		}
 		let main: Animation
 		if (reducedMotion() || !T || !T.width) {
+			g.style.opacity = "0"
 			main = p.animate([{ opacity: 0 }, { opacity: 1 }], {
 				...timing,
 				duration: 160,
@@ -551,34 +613,51 @@ function useMorph(
 			})
 			anims.current = [main]
 		} else {
+			// The ghost: the tab's size and corners, pinned to the panel's top right corner (which starts on the tab's).
+			const radius = t ? getComputedStyle(t).borderRadius : "12px"
+			g.style.width = `${T.width}px`
+			g.style.height = `${T.height}px`
+			g.style.borderRadius = radius
+			if (t) g.style.backgroundColor = getComputedStyle(t).backgroundColor
+			g.style.opacity = ""
 			main = p.animate(
 				[
 					{
 						offset: 0,
 						transform: `translate(${T.right - P.right}px, ${T.top - P.top}px)`,
-						clipPath: `inset(0px 0px ${Math.max(0, P.height - T.height)}px ${Math.max(0, P.width - T.width)}px round 12px 0px 0px 12px)`,
-						opacity: 0,
+						clipPath: `inset(0px 0px ${Math.max(0, P.height - T.height)}px ${Math.max(0, P.width - T.width)}px round ${radius})`,
 					},
-					{ offset: 0.18, opacity: 1 },
-					// Ends a little outside the panel, so its ring and shadow aren't cut off on the last frames.
+					// The clip reaches the panel's own edges first; only then does it open a little past them, so the ring and
+					// shadow aren't cut off once it's out.
+					{
+						offset: 0.9,
+						clipPath: `inset(0px 0px 0px 0px round ${getComputedStyle(p).borderRadius})`,
+					},
 					{
 						offset: 1,
 						transform: "translate(0px, 0px)",
 						clipPath: "inset(-48px -48px -48px -48px round 64px)",
-						opacity: 1,
 					},
 				],
 				timing,
 			)
+			const face = g.animate(
+				[
+					{ offset: 0, opacity: 1 },
+					{ offset: 0.4, opacity: 0 },
+					{ offset: 1, opacity: 0 },
+				],
+				{ ...timing, easing: "linear" },
+			)
 			const inner = c.animate(
 				[
 					{ offset: 0, opacity: 0 },
-					{ offset: 0.2, opacity: 0 },
+					{ offset: 0.22, opacity: 0 },
 					{ offset: 1, opacity: 1 },
 				],
 				{ ...timing, easing: "linear" },
 			)
-			anims.current = [main, inner]
+			anims.current = [main, face, inner]
 		}
 		main.onfinish = settle
 	}
@@ -596,7 +675,7 @@ function useMorph(
 			setShown(true)
 		} else play(false)
 	}
-	// Opening: measure once the panel has its content, before the first paint.
+	// Opening: measure once the panel has its content, before the first paint, so the tab and its copy swap unseen.
 	useIsoLayoutEffect(() => {
 		if (shown && pending.current) {
 			pending.current = false
@@ -615,12 +694,15 @@ export function FeedbackDock({
 	const tabRef = useRef<HTMLButtonElement>(null)
 	const panelRef = useRef<HTMLElement>(null)
 	const contentRef = useRef<HTMLDivElement>(null)
+	const ghostRef = useRef<HTMLDivElement>(null)
 	const { open, shown, toggle, onClosed } = useMorph(
 		tabRef,
 		panelRef,
 		contentRef,
+		ghostRef,
 	)
-	const [mode, setMode] = useState<Mode>(startWith ?? (fix ? "choose" : "send"))
+	// "choose" waits until the page has a fix path; without one the panel shows Send feedback.
+	const [mode, setMode] = useState<Mode>(startWith ?? "choose")
 	const [alt, setAlt] = useState(false)
 	useEffect(
 		() =>
@@ -636,7 +718,7 @@ export function FeedbackDock({
 	const fixing = current === "fix" && Boolean(fix?.on)
 
 	// The panel keeps showing what it showed while it shrinks back into the tab; the mode resets once it's closed.
-	onClosed.current = () => setMode(fix ? "choose" : "send")
+	onClosed.current = () => setMode(startWith ?? "choose")
 	const close = () => {
 		toggle(false)
 		fix?.closePicked()
@@ -687,9 +769,6 @@ export function FeedbackDock({
 					body="A bug or an idea, in your words."
 					onClick={() => setMode("send")}
 				/>
-				<div className="mt-2">
-					<ContactLine />
-				</div>
 			</div>
 		)
 	else if (fixing && fix?.picked) body = fix.picked.flow
@@ -721,7 +800,6 @@ export function FeedbackDock({
 					Found a bug or have an idea? One message is enough.
 				</p>
 				<FeedbackForm style="tabs" guest={guest} onClose={close} />
-				<ContactLine />
 			</div>
 		)
 	const last = useRef<{ title: string; body: ReactNode; canGoBack: boolean }>({
@@ -737,6 +815,7 @@ export function FeedbackDock({
 			<Tab
 				ref={tabRef}
 				open={open}
+				covered={shown}
 				wide={wide}
 				alt={alt}
 				onOpen={() => toggle(true)}
@@ -751,6 +830,15 @@ export function FeedbackDock({
 				{...(!open && { inert: "" })}
 				className={`fixed inset-x-0 bottom-0 z-[1001] flex max-h-[80dvh] flex-col overflow-hidden rounded-t-[28px] bg-gray-950 shadow-[0_-20px_60px_-10px_rgba(0,0,0,.8)] ring-1 ring-amber-500/30 md:inset-x-auto md:top-20 md:right-4 md:bottom-auto md:max-h-[calc(100dvh-6rem)] md:w-[24rem] md:rounded-2xl ${fixing && open ? "max-md:max-h-[56dvh]" : ""} ${shown ? "" : "invisible pointer-events-none"}`}
 			>
+				{/* The tab's copy the panel starts as (see useMorph). */}
+				<div
+					ref={ghostRef}
+					aria-hidden
+					data-morph-ghost
+					className={`pointer-events-none absolute top-0 right-0 z-10 opacity-0 ${alt ? FACE_ALT : FACE}`}
+				>
+					<TabFace wide={wide} alt={alt} />
+				</div>
 				<div ref={contentRef} className="flex min-h-0 flex-1 flex-col">
 					<div className="shrink-0">
 						<div className="flex justify-center pt-2.5 pb-1 md:hidden">
@@ -766,6 +854,12 @@ export function FeedbackDock({
 								>
 									<ArrowLeftIcon className="size-5" />
 								</button>
+							)}
+							{!view.canGoBack && (
+								<ChatBubbleLeftEllipsisIcon
+									className="mr-1.5 size-5 shrink-0 text-amber-400"
+									aria-hidden
+								/>
 							)}
 							<h2 className="min-w-0 flex-1 truncate text-lg font-semibold text-white">
 								{view.title}
@@ -787,12 +881,4 @@ export function FeedbackDock({
 			</aside>
 		</>
 	)
-}
-
-/** The root layout's tab: every page but the feedback prototype, which mounts its own with the fix path. */
-export function RootFeedbackDock() {
-	const { user } = useUser()
-	const own = useMatches().some((m) => m.id === "routes/prototype.feedback")
-	if (own) return null
-	return <FeedbackDock guest={!user} />
 }
