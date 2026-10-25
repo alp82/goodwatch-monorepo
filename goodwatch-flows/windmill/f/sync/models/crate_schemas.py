@@ -541,7 +541,7 @@ SCHEMAS = {
         "columns": {
             "owner_id": "TEXT",
             "read_from": "LONG",
-            "pool": "TEXT INDEX OFF",
+            "pool": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
         },
         "primary_key": ["owner_id"],
         "shards": 3,

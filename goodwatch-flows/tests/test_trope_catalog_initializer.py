@@ -68,7 +68,7 @@ class TropeCatalogInitializerTests(unittest.TestCase):
         self.assertNotIn("FULLTEXT", catalog)
         self.assertNotIn("created_at", catalog)
         self.assertIn("PRIMARY KEY (owner_id)", snapshot)
-        self.assertIn("pool TEXT INDEX OFF", snapshot)
+        self.assertIn("pool TEXT INDEX OFF STORAGE WITH (columnstore = false)", snapshot)
         self.assertIn("content_length INTEGER", excerpts)
         self.assertTrue(connector.closed)
 
