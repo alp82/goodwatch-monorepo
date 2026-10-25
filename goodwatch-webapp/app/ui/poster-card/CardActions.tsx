@@ -591,7 +591,7 @@ function TapTiles({
 				)
 					onArt()
 			}}
-			className="absolute inset-0 z-20 flex flex-col justify-end overflow-hidden rounded-lg bg-linear-to-t from-gray-950/90 via-gray-950/60 to-gray-950/10 p-0.5"
+			className="absolute inset-0 z-20 hidden flex-col @min-[4.5rem]/card:flex justify-end overflow-hidden rounded-lg bg-linear-to-t from-gray-950/90 via-gray-950/60 to-gray-950/10 p-0.5"
 		>
 			<div
 				ref={rise}
