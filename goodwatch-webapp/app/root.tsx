@@ -7,6 +7,8 @@ import { reportBoundaryError } from "~/telemetry/telemetry"
 import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
 import { InstantRouteScroll } from "~/ui/nav/InstantRouteScroll"
 import { PageScrollbar } from "~/ui/nav/PageScrollbar"
+// PROTOTYPE: the global Feedback tab (#762), development only.
+import { RootFeedbackDock } from "~/ui/prototype-feedback/FeedbackDock"
 import { json } from "@remix-run/node"
 import type { User } from "@supabase/auth-js"
 import { resolveMediaContext } from "~/server/media-context.server"
@@ -389,6 +391,8 @@ function Root() {
 								<App />
 								{/* <CookieConsent /> */}
 								<ToastContainer />
+								{/* PROTOTYPE: the Feedback tab on every page, development only. */}
+								{import.meta.env.DEV && <RootFeedbackDock />}
 								<TelemetryBoot faststatsSiteKey={env.FASTSTATS_SITE_KEY} />
 								<InstantRouteScroll />
 								<PageScrollbar />

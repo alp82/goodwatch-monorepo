@@ -10,7 +10,7 @@ export type Viewer = "guest" | "member" | "trusted"
 export const VARIANTS: Record<Variant, string> = {
 	A: "Report links per section, bottom sheet",
 	B: "One “Something wrong?” sheet, edit in place",
-	C: "Fix mode marks every field, side panel",
+	C: "Feedback tab: fix mode or send feedback, side panel",
 }
 export const SCREENS: Record<Screen, string> = {
 	title: "Title",

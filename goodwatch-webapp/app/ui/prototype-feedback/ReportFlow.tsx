@@ -6,6 +6,7 @@
 import { ArrowUturnLeftIcon, CheckCircleIcon, ClockIcon, FlagIcon } from "@heroicons/react/20/solid"
 import { useState } from "react"
 import { PrimaryButton } from "~/ui/auth/kit"
+import { INPUT } from "~/ui/prototype-feedback/FeedbackDock"
 import { TmdbImage } from "~/ui/TmdbImage"
 import {
 	AREAS,
@@ -29,8 +30,7 @@ import person from "~/ui/prototype-feedback/fixture-person.json"
 
 export type Layout = "steps" | "form" | "chips"
 
-export const INPUT =
-	"min-h-11 w-full rounded-lg bg-gray-900 px-3 text-gray-100 ring-1 ring-white/15 placeholder:text-gray-600 focus:ring-2 focus:ring-amber-400 focus:outline-none"
+export { INPUT }
 const LABEL = "mb-2 block text-[11px] font-semibold uppercase tracking-[.12em] text-gray-500"
 
 export function Chip({ on, onClick, children, className = "" }: { on: boolean; onClick: () => void; children: React.ReactNode; className?: string }) {

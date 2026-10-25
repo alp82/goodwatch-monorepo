@@ -14,7 +14,7 @@ import {
 	TraitCards,
 } from "~/ui/prototype-feedback/PersonParts"
 import { useFeedback } from "~/ui/prototype-feedback/store"
-import { Block, FixBar, HeaderExtra, ReportSheet } from "~/ui/prototype-feedback/TitlePage"
+import { Block, HeaderExtra, ReportSheet } from "~/ui/prototype-feedback/TitlePage"
 import data from "~/ui/prototype-feedback/fixture-person.json"
 
 export default function PersonPage() {
@@ -29,7 +29,7 @@ export default function PersonPage() {
 						</Block>
 					</div>
 				</Hero>
-				{(variant === "B" || variant === "C") && (
+				{variant === "B" && (
 					<div className="absolute top-20 right-4 z-10 sm:right-[max(1rem,calc((100vw-80rem)/2+1rem))]">
 						<HeaderExtra phone />
 					</div>
@@ -77,7 +77,6 @@ export default function PersonPage() {
 				)}
 			</div>
 			<ReportSheet areas={PERSON_AREAS} />
-			<FixBar />
 		</main>
 	)
 }

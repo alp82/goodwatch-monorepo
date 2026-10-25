@@ -134,7 +134,7 @@ export function useFeedback() {
 
 export function FeedbackProvider({ children }: { children: ReactNode }) {
 	const [params] = useSearchParams()
-	const variant = (["A", "B", "C"].includes(params.get("variant") ?? "") ? params.get("variant") : "A") as Variant
+	const variant = (["A", "B", "C"].includes(params.get("variant") ?? "") ? params.get("variant") : "C") as Variant
 	const screen = (params.get("screen") ?? "title") as Screen
 	const viewer = (["guest", "member", "trusted"].includes(params.get("as") ?? "") ? params.get("as") : "member") as Viewer
 	const [corrections, setCorrections] = useState<Correction[]>([])

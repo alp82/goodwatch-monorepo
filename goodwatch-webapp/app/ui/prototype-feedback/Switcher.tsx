@@ -12,7 +12,7 @@ const seg = (on: boolean) =>
 export function Switcher() {
 	const [params, setParams] = useSearchParams()
 	const [folded, setFolded] = useState(false)
-	const variant = (params.get("variant") ?? "A") as Variant
+	const variant = (params.get("variant") ?? "C") as Variant
 	const screen = (params.get("screen") ?? "title") as Screen
 	const viewer = (params.get("as") ?? "member") as Viewer
 	const put = (key: string, value: string) => {

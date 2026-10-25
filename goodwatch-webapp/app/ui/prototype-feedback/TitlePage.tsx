@@ -3,8 +3,9 @@
 // - A: a quiet "Report a problem" link under each block; it opens a bottom sheet about that block.
 // - B: one "Something wrong?" button in the title header (and at the end of the page) that opens a full sheet with a
 //   section picker. Trusted members also get an Edit pencil on each correctable block that edits in place.
-// - C: a "Fix mode" switch in the title header. On, it marks every block (correctable or flag only); a tap opens a
-//   docked panel that leaves the page usable, so the next field is one tap away.
+// - C (the owner's pick): the global Feedback tab's "Fix something on this page" turns on fix mode. It marks every
+//   block (correctable or flag only); a tap shows that block's questions in the docked Feedback panel, which leaves the
+//   page usable, so the next field is one tap away.
 // A live correction changes the page at once, with a quiet "Corrected by members" line and Undo.
 import { CheckBadgeIcon, FlagIcon, PencilSquareIcon } from "@heroicons/react/20/solid"
 import { useEffect, useRef, useState } from "react"
@@ -170,7 +171,7 @@ function EditInPlace({ area }: { area: Area }) {
 // --- Header controls per variant ---
 
 export function HeaderExtra({ phone = false }: { phone?: boolean }) {
-	const { variant, setOpen, fixMode, setFixMode } = useFeedback()
+	const { variant, setOpen } = useFeedback()
 	if (variant === "B")
 		return (
 			<button
@@ -182,58 +183,10 @@ export function HeaderExtra({ phone = false }: { phone?: boolean }) {
 				Something wrong?
 			</button>
 		)
-	if (variant === "C")
-		return (
-			<button
-				type="button"
-				role="switch"
-				aria-checked={fixMode}
-				onClick={() => {
-					setFixMode(!fixMode)
-					if (fixMode) setOpen(null)
-				}}
-				className={`inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-full py-1 pr-3 pl-1 text-sm font-semibold ring-1 transition-colors ${phone ? "" : "max-sm:hidden"} ${fixMode ? "bg-amber-400 text-gray-950 ring-amber-400" : `${phone ? "bg-black/60" : "bg-white/[0.04]"} text-gray-200 ring-white/20 hover:ring-white/40`}`}
-			>
-				<span className={`relative h-6 w-10 rounded-full transition-colors ${fixMode ? "bg-gray-950" : "bg-white/15"}`} aria-hidden>
-					<span className={`absolute top-1 left-1 size-4 rounded-full transition-transform duration-300 ${fixMode ? "translate-x-4 bg-amber-400" : "bg-gray-300"}`} />
-				</span>
-				Fix mode
-			</button>
-		)
 	return null
 }
 
-/** C: while fix mode is on, a bar at the bottom says what to do. It slides; nothing on the page moves. */
-export function FixBar() {
-	const { variant, fixMode, setFixMode, setOpen, open, viewer } = useFeedback()
-	if (variant !== "C") return null
-	const shown = fixMode && !open
-	return (
-		<div
-			className={`fixed inset-x-3 bottom-24 z-[45] mx-auto flex max-w-xl items-center gap-3 rounded-2xl bg-gray-950 px-4 py-3 shadow-2xl ring-1 ring-amber-500/40 transition-[transform,opacity] duration-300 lg:bottom-20 ${shown ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[150%] opacity-0"}`}
-			aria-hidden={!shown}
-		>
-			<PencilSquareIcon className="size-5 shrink-0 text-amber-400" aria-hidden />
-			<p className="min-w-0 flex-1 text-sm text-gray-200">
-				Tap what's wrong.{" "}
-				<span className="text-gray-400">{viewer === "trusted" ? "Your fixes go live at once." : "We check fixes before they show."}</span>
-			</p>
-			<button
-				type="button"
-				tabIndex={shown ? 0 : -1}
-				onClick={() => {
-					setFixMode(false)
-					setOpen(null)
-				}}
-				className="shrink-0 cursor-pointer rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-black"
-			>
-				Done
-			</button>
-		</div>
-	)
-}
-
-/** The sheet every variant opens: A at the bottom, B on the right, C docked. */
+/** The sheet A and B open: A at the bottom, B on the right. C's questions show in the Feedback panel (FeedbackDock). */
 export function ReportSheet({ areas = TITLE_AREAS }: { areas?: Area[] }) {
 	const { variant, open, setOpen } = useFeedback()
 	const [picked, setPicked] = useState<Area | null>(null)
@@ -241,8 +194,9 @@ export function ReportSheet({ areas = TITLE_AREAS }: { areas?: Area[] }) {
 		if (open === "pick") setPicked(null)
 	}, [open])
 	const area = open === "pick" ? picked : open
-	const placement = variant === "A" ? "bottom" : variant === "B" ? "right" : "dock"
-	const title = open === null ? "" : area ? (variant === "C" ? `${AREAS[area].problems.every((p) => p.flag) ? "Flag" : "Fix"} ${AREAS[area].what}` : AREAS[area].label) : "Something wrong?"
+	if (variant === "C") return null
+	const placement = variant === "A" ? "bottom" : "right"
+	const title = open === null ? "" : area ? AREAS[area].label : "Something wrong?"
 	return (
 		<Sheet open={open !== null} onClose={() => setOpen(null)} title={title} placement={placement}>
 			{open !== null && (
@@ -250,7 +204,7 @@ export function ReportSheet({ areas = TITLE_AREAS }: { areas?: Area[] }) {
 					key={`${open}-${area}`}
 					area={area}
 					areas={areas}
-					layout={variant === "A" ? "steps" : variant === "B" ? "form" : "chips"}
+					layout={variant === "A" ? "steps" : "form"}
 					onClose={() => setOpen(null)}
 					onPickArea={setPicked}
 				/>
@@ -306,7 +260,7 @@ function Page() {
 								<div className="absolute inset-0 bg-gradient-to-r from-stone-950/85 via-stone-950/20 to-transparent" />
 							</div>
 							<TrailerButton media={media} className="absolute top-3 right-3 md:top-4 md:right-5" />
-							{variant !== "A" && (
+							{variant === "B" && (
 								<div className="absolute top-3 left-3 sm:hidden">
 									<HeaderExtra phone />
 								</div>
@@ -390,7 +344,6 @@ function Page() {
 				</div>
 			</div>
 			<ReportSheet />
-			<FixBar />
 		</div>
 	)
 }
