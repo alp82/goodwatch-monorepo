@@ -20,7 +20,7 @@ import {
 	textLength,
 } from "../discord/cards.ts"
 import { feedbackDetailsId } from "../discord/custom-id.ts"
-import type { FeedbackInput, FeedbackStatus } from "./schema.ts"
+import { safePath, type FeedbackInput, type FeedbackStatus } from "./schema.ts"
 
 export type FeedbackKind = FeedbackInput["kind"]
 type DataReport = NonNullable<FeedbackInput["data"]>
@@ -70,6 +70,8 @@ export const LIMITS = {
 export const SCREENSHOT_NAME = "screenshot.webp"
 
 const LINK = /https?:\/\/\S+|www\.\S+/gi
+const SECRET =
+	/\b(?:bearer\s+[^\s]+|(?:token|password|secret|authorization|cookie|session)(?:[_-]?(?:id|key|token))?\s*[:=]\s*[^\s&;]+)/gi
 const EMAIL = /\b[^\s@]+@[^\s@]+\.[^\s@]+\b/g
 
 /**
@@ -79,15 +81,24 @@ const EMAIL = /\b[^\s@]+@[^\s@]+\.[^\s@]+\b/g
 export function memberText(value: string, max: number = LIMITS.hero): string {
 	const clean = value
 		.replace(/\r\n?/g, "\n")
+		.replace(SECRET, "(secret removed)")
 		.replace(LINK, "(link removed)")
 		.replace(EMAIL, "(email removed)")
 		// biome-ignore lint/suspicious/noControlCharactersInRegex: removing control characters is the point.
 		.replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, " ")
 		.replace(/\n{3,}/g, "\n\n")
 		.trim()
-	const short =
-		clean.length > max ? `${clean.slice(0, max - 1).trimEnd()}…` : clean
-	return short.replace(/[\\*_~`|>#[\]()<:-]/g, "\\$&").replace(/@/g, "@​")
+	// Budget the escaped representation; never cut an escape pair or surrogate pair.
+	const chunks = [...clean].map((c) =>
+		c === "@" ? "@​" : /[\\*_~`|>#[\]()<:-]/.test(c) ? `\\${c}` : c,
+	)
+	if (chunks.join("").length <= max) return chunks.join("")
+	let short = ""
+	for (const chunk of chunks) {
+		if (short.length + chunk.length > max - 1) break
+		short += chunk
+	}
+	return `${short.trimEnd()}…`
 }
 /** One line of member text: memberText without line breaks. */
 const inline = (value: string, max: number) =>
@@ -95,7 +106,10 @@ const inline = (value: string, max: number) =>
 /** Text inside inline code: no backticks, one line, capped. */
 export const code = (value: unknown, max = 120) => {
 	const text = String(value ?? "")
-		.replace(/[`\s]+/g, " ")
+		.replace(SECRET, "(secret removed)")
+		.replace(LINK, "(link removed)")
+		.replace(EMAIL, "(email removed)")
+		.replace(/[`|\\<>@\[\]()\s]+/g, " ")
 		.trim()
 	return `\`${text.length > max ? `${text.slice(0, max - 1)}…` : text}\``
 }
@@ -125,7 +139,7 @@ export function deviceName(userAgent: unknown): string | null {
 	const browser =
 		BROWSERS.map(([name, pattern]) => {
 			const version = pattern.exec(ua)?.[1]
-			return version ? `${name} ${version}` : null
+			return version ? `${name} ${version.slice(0, 4)}` : null
 		}).find(Boolean) ?? null
 	const os = /iPhone|iPad|iPod/.test(ua)
 		? "iOS"
@@ -152,9 +166,15 @@ function screen(metadata: Record<string, unknown>) {
 	return `${viewport.width}×${viewport.height}${dpr && dpr !== 1 ? ` @${Math.round(dpr * 100) / 100}x` : ""}`
 }
 const shortPath = (value: unknown, max = 60) => {
-	const path = str(value)
+	const path = str(value) ? safePath(String(value)) : undefined
 	if (!path) return null
-	return code(path.length > max ? `${path.slice(0, max - 1)}…` : path, max)
+	let decoded = path
+	try {
+		decoded = decodeURIComponent(path)
+	} catch {
+		/* keep malformed escapes as text */
+	}
+	return code(decoded, max)
 }
 /** "Guest · 🇩🇪 · `/support` · en-US · dark · 2 minutes ago" */
 export function contextLine(report: PostReport, handle?: string | null) {
@@ -200,8 +220,12 @@ export function fieldName(field: string) {
 		.trim()
 		.toLowerCase()
 		.replace(/[\s-]+/g, "_")
-	if (FIELD_NAMES[key]) return FIELD_NAMES[key]
+	if (Object.prototype.hasOwnProperty.call(FIELD_NAMES, key))
+		return FIELD_NAMES[key]
 	const words = field
+		.replace(SECRET, "(secret removed)")
+		.replace(LINK, "(link removed)")
+		.replace(EMAIL, "(email removed)")
 		.replace(/[_\s.-]+/g, " ")
 		.replace(/([a-z])([A-Z])/g, "$1 $2")
 		.trim()
@@ -289,7 +313,7 @@ export function dataBlock(data: DataReport) {
 	const where = data.country
 		? ` in ${countryName(data.country)} ${flag(data.country)}`
 		: ""
-	const lines = [`**${fieldName(data.field)}**${where}`]
+	const lines = [`**${inline(fieldName(data.field), 200)}**${where}`]
 	const was = valueText(data.currentValue)
 	const now = valueText(data.suggestedValue)
 	if (was !== undefined) lines.push(`> Was: ${was}`)
@@ -305,10 +329,28 @@ export function dataBlock(data: DataReport) {
 
 // ---------- the post ----------
 
-const linkButton = (label: string, url: string): Component | null =>
-	url.length <= BUTTON_URL_LIMIT && /^https?:\/\//.test(url)
-		? { type: 2, style: 5, label: label.slice(0, LIMITS.buttonLabel), url }
-		: null
+const linkButton = (label: string, value: string): Component | null => {
+	try {
+		const url = new URL(value)
+		if (!["http:", "https:"].includes(url.protocol)) return null
+		// Never forward credentials, fragments, secret query parameters, or email-bearing URLs.
+		url.username = ""
+		url.password = ""
+		const decoded = decodeURIComponent(url.href)
+		if (decoded.match(EMAIL)) return null
+		const clean = url.origin + safePath(url.href)
+		return clean.length <= BUTTON_URL_LIMIT
+			? {
+					type: 2,
+					style: 5,
+					label: label.slice(0, LIMITS.buttonLabel),
+					url: clean,
+				}
+			: null
+	} catch {
+		return null
+	}
+}
 export function pageUrl(origin: string, path: unknown) {
 	const value = str(path)
 	if (!value?.startsWith("/")) return null
@@ -371,9 +413,9 @@ export function detailsLine(report: PostReport) {
 	].filter(Boolean)
 	return `-# Details ||${parts.join(" · ")}||`
 }
-function hero(report: PostReport) {
-	const text = memberText(report.message, LIMITS.hero)
-	return report.message.trim().length > LIMITS.hero
+function hero(report: PostReport, max = LIMITS.hero as number) {
+	const text = memberText(report.message, max)
+	return text.endsWith("…")
 		? `${text}\n-# Shortened for Discord. The full message is stored with the report.`
 		: text
 }
@@ -381,6 +423,7 @@ function hero(report: PostReport) {
 export function threadName(report: PostReport, prefix = "") {
 	const plain = (value: string) =>
 		value
+			.replace(SECRET, "")
 			.replace(LINK, "")
 			.replace(EMAIL, "")
 			.replace(/<[^>]*>|@\S+/g, "")
@@ -390,7 +433,7 @@ export function threadName(report: PostReport, prefix = "") {
 	const label = kindLabel(report.kind)
 	const subject =
 		report.kind === "data" && report.data
-			? `${report.data.entityName ? plain(report.data.entityName) : entityName(report.data).replace(/\\/g, "")} · ${fieldName(report.data.field)}`
+			? `${report.data.entityName ? plain(report.data.entityName) : entityName(report.data).replace(/\\/g, "")} · ${plain(fieldName(report.data.field))}`
 			: plain(report.message)
 	const name = `${prefix}${label}: ${subject || report.id.slice(0, 12)}`
 	return name.length > LIMITS.threadName
@@ -411,6 +454,7 @@ export function reportComponents(report: PostReport, options: PostOptions) {
 		report.kind === "data" && report.data
 			? `### ${kind.emoji} ${kind.label} · ${entityName(report.data)}`
 			: `### ${kind.emoji} ${kind.label}`
+	const mainText = { type: 10, content: "" }
 	const card = container(
 		[
 			{
@@ -418,7 +462,7 @@ export function reportComponents(report: PostReport, options: PostOptions) {
 				content: `${heading}\n-# ${contextLine(report, options.memberHandle)}`,
 			},
 			separator(),
-			{ type: 10, content: hero(report) },
+			mainText,
 			report.kind === "contact" && {
 				type: 10,
 				content:
@@ -450,7 +494,12 @@ export function reportComponents(report: PostReport, options: PostOptions) {
 		origin: options.origin,
 		details: options.interactive,
 	})
-	return finish([card, ...(row ? [row] : [])])
+	const components = [card, ...(row ? [row] : [])]
+	mainText.content = hero(
+		report,
+		Math.min(LIMITS.hero, LIMITS.text - textLength(components) - 90),
+	)
+	return finish(components)
 }
 /**
  * A further submission of an open data report, as a reply in its thread: a small "+1 duplicate" note, the new
@@ -464,7 +513,7 @@ export function duplicateComponents(
 ) {
 	const lines = [
 		`**+1 duplicate** (${count} total) · ${contextLine(report, options.memberHandle)}`,
-		memberText(report.message, 1500)
+		memberText(report.message, 1000)
 			.split("\n")
 			.map((line) => `> ${line}`)
 			.join("\n"),
@@ -521,9 +570,9 @@ export function detailsMessage(report: StoredDetails, origin: string) {
 	const device = [
 		deviceName(m.userAgent),
 		screen(m),
-		str(m.colorScheme),
-		str(m.locale),
-		m.country ? `${flag(m.country)} ${m.country}` : null,
+		str(m.colorScheme) ? inline(String(m.colorScheme), 20) : null,
+		str(m.locale) ? inline(String(m.locale), 35) : null,
+		flag(m.country) || null,
 	].filter(Boolean)
 	const lines = [
 		`**Report** ${code(report.id, 64)}`,

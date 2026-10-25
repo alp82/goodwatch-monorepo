@@ -125,22 +125,22 @@ Every post is a Components V2 message (`flags: 1 << 15`) in the look of the Good
 
 - **Heading:** the kind with an emoji (🐞 Bug, 💡 Idea, 🛠️ Data fix with the entity name, ✉️ Contact).
 - **Context line** (subtext): `Guest` or `Member @handle` (the public profile handle only; never a name, email, or member id), the country flag, the page path, locale, color scheme, and a live relative time (`<t:…:R>`).
-- **The message** as the main text. Links and email addresses are replaced with "(link removed)" and "(email removed)", Markdown and `<` are escaped, `@` is followed by a zero-width space, line breaks are kept. Above 2,400 characters it is shortened with a note; the full text is in Crate and the email.
+- **The message** as the main text. Links and email addresses are replaced with "(link removed)" and "(email removed)", Markdown and `<` are escaped, `@` is followed by a zero-width space, line breaks are kept. The escaped message is capped at 2,400 characters and shortened further when needed to fit the total text budget, with a note; the full text is in Crate and the email.
 - **Data reports:** the field in words ("Where to watch") and the country, then `Was:` and `Now:` and the source's domain. The entity name comes from `data.entityName`, which the reporting page sends (optional, not part of the dedupe key).
 - **Contact:** a note that the message was also emailed to hello@goodwatch.app.
-- **Buttons:** Open page (the reported GoodWatch URL), TMDB and IMDb when the ids allow (`tmdb_id`/`tmdbId`/`tmdb`, `imdb_id`/`imdbId`/`imdb`, plus season and episode numbers), `Source · <domain>`, and Details. Link buttons over 512 characters are left out.
+- **Buttons:** Open page (the reported GoodWatch URL), TMDB and IMDb when the ids allow (`tmdb_id`/`tmdbId`/`tmdb`, `imdb_id`/`imdbId`/`imdb`, plus season and episode numbers), `Source · <domain>`, and Details. Link buttons must be valid HTTP(S) URLs; credentials, fragments, and secret query parameters are removed, and email-bearing URLs and URLs over 512 characters are left out.
 - **Technical details** (report id, member id, route id, device from the user agent, viewport, build commit, Sentry replay id, dedupe key, received time) never show in the open. See below.
 
 The thread name is the kind and the first words of the message, or for data reports the entity and field (`Data fix: The Bear · Where to watch`), at most 100 characters. Tags come from `DISCORD_FEEDBACK_TAG_IDS`. Mentions are disabled on every message (`allowed_mentions: {"parse": []}`). The builders check Discord's limits themselves: 40 components, 4,000 characters of text, 80-character button labels, 512-character button URLs.
 
 ### Delivery: bot first, then webhook
 
-1. **Bot** (`DISCORD_BOT_TOKEN` and `DISCORD_FEEDBACK_FORUM_CHANNEL_ID`): `POST /channels/{forum}/threads` with the post as the starter message. The bot owns the message, so the post carries the **Details** button. A screenshot is uploaded as `files[0]` and shown in a media gallery (`attachment://screenshot.webp`).
+1. **Bot** (`DISCORD_BOT_TOKEN` and `DISCORD_FEEDBACK_FORUM_CHANNEL_ID`): `POST /channels/{forum}/threads` with a plain starter, then `PATCH /channels/{thread}/messages/{starter}` to set `IS_COMPONENTS_V2` and clear `content` to `null`. The bot owns the message, so the post carries the **Details** button. A screenshot is uploaded on the edit as `files[0]` with message-level attachment metadata and shown in a media gallery (`attachment://screenshot.webp`).
 2. **Webhook** (`DISCORD_FEEDBACK_WEBHOOK_URL`, used when the bot is not configured or its request fails): `?wait=true&with_components=true`. Discord lets a webhook the application doesn't own send only non-interactive components, so instead of the button the post ends with one subtext line behind a spoiler (`-# Details ||…||`). Discord refuses `files[n]` together with Components V2 on a webhook, so a screenshot follows as its own plain message in the thread. If that second message fails, the failure is logged and the report still counts as delivered.
 
 If every configured way fails, the report is emailed.
 
-Unverified against Discord: the Start Thread in Forum docs list only `SUPPRESS_EMBEDS` and `SUPPRESS_NOTIFICATIONS` as starter-message flags. If Discord refuses `IS_COMPONENTS_V2` there, the bot request fails and the webhook path posts the report, so nothing is lost, but there is no Details button. Check the first bot post after the bot gets access.
+Verified against the official docs: [Start Thread in Forum](https://discord.com/developers/docs/resources/channel#start-thread-in-forum-or-media-channel) permits only `SUPPRESS_EMBEDS` and `SUPPRESS_NOTIFICATIONS` on the starter, so direct V2 creation is not part of its documented contract. [Edit Message](https://discord.com/developers/docs/resources/message#edit-message) explicitly supports setting `IS_COMPONENTS_V2` when existing content is cleared. If creation fails, the webhook opens the post; if conversion fails after creation, it sends the full non-interactive report in that existing thread, without creating another forum post. If that also fails, the email fallback runs; the plain starter may remain.
 
 ### Details button
 
@@ -153,6 +153,8 @@ The button's custom id is `gw1:feedback-details:<report id>`. The press reaches 
 ### Duplicates
 
 A duplicate replies in the original thread (bot: `POST /channels/{thread}/messages`; webhook: `thread_id`) with a small note: `**+1 duplicate** (3 total)` with the new submitter's context line, their message as a quote, what they see and their source when given, and the spoilered details line. The merged submission has no row of its own, so its details are always inline. The reply has no thread name and no tags and keeps the original Discord receipt. If the original report has no thread receipt, the handler logs the failure and emails the submission without opening another post.
+
+Technical text is also sanitized: email addresses, links, and recognizable secret assignments are removed; member text cannot close the spoiler or inline-code delimiters.
 
 Every request uses `nativeFetch` (undici) with a 10 second timeout. The polyfilled global `fetch` crashed production when an abort fired during a request with a body (October 23, 2026); do not switch back.
 

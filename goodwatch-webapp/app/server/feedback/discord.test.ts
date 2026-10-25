@@ -14,6 +14,9 @@ import { feedbackDetailsReply, postDiscord } from "./discord.server.ts"
 import {
 	type PostReport,
 	type StoredDetails,
+	detailsMessage,
+	detailsLine,
+	duplicateComponents,
 	deviceName,
 	memberText,
 	reportComponents,
@@ -115,9 +118,14 @@ test("the bot path opens a forum thread with the Details button and no inline te
 	const payload = JSON.parse(init!.body as string)
 	assert.equal(payload.name, "Bug: The search box loses focus after typing.")
 	assert.deepEqual(payload.applied_tags, ["11"])
-	assert.equal(payload.message.flags, IS_COMPONENTS_V2)
+	assert.equal(payload.message.flags, undefined)
+	const edit = send.mock.calls[1].arguments[1]!
+	assert.equal(edit.method, "PATCH")
+	const edited = JSON.parse(edit.body as string)
+	assert.equal(edited.content, null)
+	assert.equal(edited.flags, IS_COMPONENTS_V2)
 	assert.deepEqual(payload.message.allowed_mentions, { parse: [] })
-	const components = payload.message.components as Component[]
+	const components = edited.components as Component[]
 	const details = buttons(components).find((b) => b.label === "Details")
 	assert.equal(details?.custom_id, `gw1:feedback-details:${id}`)
 	assert.equal(details?.style, 2)
@@ -149,7 +157,7 @@ test("the bot path puts a screenshot in a media gallery and a duplicate replies 
 		botEnv,
 		send as unknown as typeof fetch,
 	)
-	const form = send.mock.calls[0].arguments[1]!.body as unknown as {
+	const form = send.mock.calls[1].arguments[1]!.body as unknown as {
 		get(name: string): unknown
 	}
 	const payload = JSON.parse(form.get("payload_json") as string)
@@ -157,7 +165,7 @@ test("the bot path puts a screenshot in a media gallery and a duplicate replies 
 		{ id: 0, filename: "screenshot.webp" },
 	])
 	assert.ok(form.get("files[0]"))
-	const gallery = all(payload.message.components).find((c) => c.type === 12)
+	const gallery = all(payload.components).find((c) => c.type === 12)
 	assert.deepEqual((gallery?.items as { media: unknown }[])[0].media, {
 		url: "attachment://screenshot.webp",
 	})
@@ -445,4 +453,129 @@ test("the interactions endpoint routes Details presses before the member rate li
 	assert.equal(data.flags, IS_COMPONENTS_V2 | EPHEMERAL)
 	assert.match(texts(data.components), /Report details/)
 	assert.equal(take.mock.callCount(), 0)
+})
+
+test("escaped text and quote prefixes fit the V2 budget for maximal reports", () => {
+	const report: PostReport = {
+		...theBear,
+		message: "*\n".repeat(5000),
+		memberId: "m".repeat(64),
+		data: {
+			...theBear.data!,
+			entityName: "*".repeat(200),
+			field: "*".repeat(200),
+			currentValue: "*".repeat(4000),
+			suggestedValue: "*".repeat(4000),
+			providerIds: Array.from({ length: 50 }, (_, i) => i + 1),
+		},
+		metadata: {
+			...base.metadata,
+			routeId: "*".repeat(200),
+			url: "/" + "*".repeat(4000),
+		},
+	}
+	for (const interactive of [true, false]) {
+		const options = {
+			origin: "https://goodwatch.app",
+			interactive,
+			screenshotInline: false,
+		}
+		for (const components of [
+			reportComponents(report, options),
+			duplicateComponents(report, 5, options),
+		]) {
+			assert.ok(textLength(components) <= 4000)
+			assert.ok(componentCount(components) <= 40)
+		}
+	}
+	assert.ok(memberText("*".repeat(2400)).length <= 2400)
+	assert.doesNotMatch(memberText("*".repeat(2400)), /(?<!\\)\\…$/)
+})
+
+test("untrusted fields and technical details cannot expose emails, secrets or spoiler delimiters", () => {
+	const attack =
+		"|| [click](https://evil/path) @everyone private@example.com token=secret-value \\`"
+	const report = {
+		...theBear,
+		data: { ...theBear.data!, field: attack },
+		metadata: {
+			...base.metadata,
+			routeId: attack,
+			userAgent: attack,
+			locale: attack,
+		},
+	}
+	const components = reportComponents(report, {
+		origin: "https://goodwatch.app",
+		interactive: false,
+		screenshotInline: false,
+	})
+	const detail = detailsMessage(
+		{ ...stored, metadata: report.metadata },
+		"https://goodwatch.app",
+	)
+	const output = JSON.stringify([components, detail, threadName(report)])
+	for (const forbidden of [
+		"private@example.com",
+		"secret-value",
+		"https://evil",
+		"@everyone",
+		"[click](",
+	])
+		assert.ok(!output.includes(forbidden), forbidden)
+	assert.equal(detailsLine(report).split("||").length, 3)
+})
+
+test("link buttons validate URLs and remove secret queries and credentials", () => {
+	for (const sourceLink of [
+		"javascript:alert(1)",
+		"https://",
+		"https://example.com/?email=private%40example.com",
+	]) {
+		const components = reportComponents(
+			{ ...theBear, data: { ...theBear.data!, sourceLink } },
+			{
+				origin: "https://goodwatch.app",
+				interactive: false,
+				screenshotInline: false,
+			},
+		)
+		assert.ok(
+			!buttons(components).some((b) => String(b.label).startsWith("Source")),
+		)
+	}
+	const components = reportComponents(
+		{
+			...theBear,
+			data: {
+				...theBear.data!,
+				sourceLink:
+					"https://user:secret@example.com/page?token=private&ok=1#secret",
+			},
+		},
+		{
+			origin: "https://goodwatch.app",
+			interactive: false,
+			screenshotInline: false,
+		},
+	)
+	assert.equal(
+		buttons(components).find((b) => String(b.label).startsWith("Source"))?.url,
+		"https://example.com/page?ok=1",
+	)
+})
+
+test("data fields that match Object prototype keys remain ordinary member text", () => {
+	for (const field of ["constructor", "toString", "__proto__"]) {
+		assert.doesNotThrow(() =>
+			reportComponents(
+				{ ...theBear, data: { ...theBear.data!, field } },
+				{
+					origin: "https://goodwatch.app",
+					interactive: false,
+					screenshotInline: false,
+				},
+			),
+		)
+	}
 })

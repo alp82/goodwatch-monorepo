@@ -2,8 +2,8 @@
 // Details button.
 //
 // Two ways in, tried in this order:
-// 1. The bot (DISCORD_BOT_TOKEN + DISCORD_FEEDBACK_FORUM_CHANNEL_ID): POST /channels/{forum}/threads. The bot owns
-//    the message, so the post carries the staff-only Details button (and later #766's review buttons).
+// 1. The bot creates a plain forum starter, then edits it to Components V2 with the staff-only Details button.
+//    Start Thread does not document IS_COMPONENTS_V2; Edit Message explicitly supports the conversion.
 // 2. The webhook (DISCORD_FEEDBACK_WEBHOOK_URL) with ?with_components=true: a webhook the bot doesn't own may send only
 //    non-interactive components, so the details sit in a spoilered line instead. Discord refuses files[n] next to
 //    IS_COMPONENTS_V2 on a webhook, so a screenshot follows as its own message in the thread.
@@ -94,12 +94,13 @@ async function call<T>(
 	url: string,
 	init: { body: BodyInit; headers: Record<string, string> },
 	what: string,
+	method: "POST" | "PATCH" = "POST",
 ): Promise<T> {
 	const controller = new AbortController()
 	const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
 	try {
 		const response = await send(url, {
-			method: "POST",
+			method,
 			headers: init.headers,
 			body: init.body,
 			signal: controller.signal,
@@ -118,6 +119,16 @@ interface Context {
 	origin: string
 	memberHandle?: string | null
 	threadPrefix?: string
+}
+
+class BotEditFailure extends Error {
+	readonly threadId: string
+	readonly cause: unknown
+	constructor(threadId: string, cause: unknown) {
+		super("Bot starter conversion failed")
+		this.cause = cause
+		this.threadId = threadId
+	}
 }
 
 async function viaBot(
@@ -155,22 +166,29 @@ async function viaBot(
 		if (!result.id) throw new Error("Missing Discord receipt")
 		return { id: result.id, channel_id: result.channel_id }
 	}
-	const tag = tagFor(env, report.kind)
-	const request = body(
+	// Validate/build the final card before creating anything. Upload only when editing the message.
+	const edit = body(
 		{
-			name: threadName(report, context.threadPrefix),
-			...(tag ? { applied_tags: [tag] } : {}),
-			message: message(
+			...message(
 				reportComponents(report, {
 					...context,
 					interactive: true,
 					screenshotInline: true,
 				}),
 			),
+			content: null,
 		},
 		report.screenshot,
 	)
-	// The answer is the thread (a channel) with its starter message nested.
+	const tag = tagFor(env, report.kind)
+	const request = body({
+		name: threadName(report, context.threadPrefix),
+		...(tag ? { applied_tags: [tag] } : {}),
+		message: {
+			content: "Feedback report received. Details follow.",
+			allowed_mentions: { parse: [] },
+		},
+	})
 	const thread = await call<{ id?: string; message?: { id?: string } }>(
 		send,
 		`https://discord.com/api/v10/channels/${target.forum}/threads`,
@@ -178,7 +196,20 @@ async function viaBot(
 		"bot post",
 	)
 	if (!thread.id) throw new Error("Missing Discord receipt")
-	return { id: thread.message?.id ?? thread.id, channel_id: thread.id }
+	const messageId = thread.message?.id ?? thread.id
+	try {
+		await call(
+			send,
+			`https://discord.com/api/v10/channels/${thread.id}/messages/${messageId}`,
+			{ body: edit.body, headers: { ...edit.headers, ...auth } },
+			"bot starter edit",
+			"PATCH",
+		)
+	} catch (error) {
+		// The forum post exists: fallback must reuse it instead of opening a second post.
+		throw new BotEditFailure(thread.id, error)
+	}
+	return { id: messageId, channel_id: thread.id }
 }
 
 async function viaWebhook(
@@ -188,6 +219,7 @@ async function viaWebhook(
 	send: typeof fetch,
 	context: Context,
 	duplicate?: Duplicate,
+	existingThreadId?: string,
 ): Promise<Receipt> {
 	url.searchParams.set("wait", "true")
 	url.searchParams.set("with_components", "true")
@@ -197,6 +229,7 @@ async function viaWebhook(
 			throw new Error("Duplicate report has no Discord thread")
 		url.searchParams.set("thread_id", duplicate.threadId)
 	}
+	if (existingThreadId) url.searchParams.set("thread_id", existingThreadId)
 	const tag = tagFor(env, report.kind)
 	const components = duplicate
 		? duplicateComponents(report, duplicate.count, {
@@ -209,7 +242,7 @@ async function viaWebhook(
 				screenshotInline: false,
 			})
 	const payload = {
-		...(duplicate
+		...(duplicate || existingThreadId
 			? {}
 			: {
 					thread_name: threadName(report, context.threadPrefix),
@@ -265,11 +298,13 @@ export async function postDiscord(
 ): Promise<Receipt> {
 	const context: Context = { origin: appOrigin(env), ...extra }
 	const failures: string[] = []
+	let existingThreadId: string | undefined
 	const bot = botTarget(env)
 	if (bot) {
 		try {
 			return await viaBot(bot, report, env, send, context, duplicate)
 		} catch (error) {
+			if (error instanceof BotEditFailure) existingThreadId = error.threadId
 			failures.push(error instanceof Error ? error.message : String(error))
 			console.error("[feedback] bot delivery failed; trying the webhook", {
 				reportId: report.id,
@@ -278,7 +313,16 @@ export async function postDiscord(
 		}
 	}
 	const webhook = webhookTarget(env)
-	if (webhook) return viaWebhook(webhook, report, env, send, context, duplicate)
+	if (webhook)
+		return viaWebhook(
+			webhook,
+			report,
+			env,
+			send,
+			context,
+			duplicate,
+			existingThreadId,
+		)
 	throw new Error(failures[0] ?? "Discord is not configured")
 }
 
