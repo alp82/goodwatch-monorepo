@@ -118,10 +118,19 @@ test("living-room.css's first paint seats the room where the layouts do, at ever
 		/@container tvr \(min-width: [\d.]+px\) and \(min-height/,
 	)
 	assert.doesNotMatch(css, /data-remote-place="beside"/)
-	// The desktop, as written there: the TV across the room but for its margins, never taller than the room; the
-	// Remote inside the room where it fits down to its streaming keys (--f-fit), else under the TV, below the fold.
+	// The desktop, as written there: the TV across the room but for its margins; on a wide screen (WIDE_FROM) never
+	// taller than the room; the Remote inside the room where it fits down to its streaming keys (--f-fit), else under
+	// the TV, below the fold.
 	const first = css.slice(css.indexOf('.tvr[data-room="unmeasured"] > * {'))
-	assert.match(first, /--f-tvw: calc\(var\(--f-w\) - 2 \* var\(--f-pad\)\);/)
+	assert.match(first, /--f-tvfull: calc\(var\(--f-w\) - 2 \* var\(--f-pad\)\);/)
+	assert.match(
+		first,
+		/--f-wide: clamp\(0px, \(var\(--f-w\) - 1920px\) \* 1000, 1px\);/,
+	)
+	assert.match(
+		first,
+		/min\(var\(--f-tvfull\), \(var\(--f-h\) - 2 \* var\(--f-tvt\)\) \* 1\.851515151515\)/,
+	)
 	assert.match(
 		first,
 		/--f-fit: clamp\(0px, \(var\(--f-under\) - 280\.6px\) \* 10000 \+ 1px, 1px\)/,
@@ -140,7 +149,10 @@ test("living-room.css's first paint seats the room where the layouts do, at ever
 		for (let h = 420; h <= 1500; h += 53) {
 			// The CSS's math, step by step.
 			const tvt = Math.max(6, h * 0.008)
-			const tvw = w - 2 * pad(w)
+			const full = w - 2 * pad(w)
+			const wide = Math.min(1, Math.max(0, (w - 1920) * 1000))
+			const tvw =
+				full - wide * (full - Math.min(full, (h - 2 * tvt) * 1.851515151515))
 			const tvh = tvw / 1.851515151515
 			const under = h - tvt - tvh + 18 - 8
 			const fit = Math.min(1, Math.max(0, (under - 280.6) * 10000 + 1))
@@ -234,19 +246,35 @@ test("living-room.css's first paint seats the room where the layouts do, at ever
 	// On its side nothing is reserved at any width: the lip is a tab at the right.
 	assert.match(css, /--f-res: 0px;/)
 	// On its side the TV takes the width, its canvas 270 tall and as wide as the picture's shape (480 to 810).
-	assert.match(css, /--f-cw: clamp\(480px, round\(nearest, 270px \* tan\(atan2\(var\(--f-wid\), var\(--f-ph\)\)\), 1px\), 810px\);/)
-	assert.match(css, /--f-pw: calc\(var\(--f-ph\) \* tan\(atan2\(var\(--f-cw\), 270px\)\)\);/)
+	assert.match(
+		css,
+		/--f-cw: clamp\(480px, round\(nearest, 270px \* tan\(atan2\(var\(--f-wid\), var\(--f-ph\)\)\), 1px\), 810px\);/,
+	)
+	assert.match(
+		css,
+		/--f-pw: calc\(var\(--f-ph\) \* tan\(atan2\(var\(--f-cw\), 270px\)\)\);/,
+	)
 	for (let w = 568; w <= 1400; w += 47)
 		for (let h = 300; h <= 540; h += 17) {
 			const reserve = 0
 			const L = layoutPhoneLandscape(w, h, reserve)
 			const f = seat(w, h, reserve)
-			const cw = Math.max(480, Math.min(810, Math.round((270 * (w - 28)) / f.ph)))
+			const cw = Math.max(
+				480,
+				Math.min(810, Math.round((270 * (w - 28)) / f.ph)),
+			)
 			const at = `${w} x ${h}`
 			assert.ok(Math.abs(L.tv.height - f.ph) < 1e-6, `${at}: the TV's height`)
 			assert.equal(L.canvas.w, cw, `${at}: the canvas`)
-			assert.ok(Math.abs(L.tv.width - (cw * f.ph) / 270) < 1e-6, `${at}: the TV's width`)
-			assert.ok(Math.abs(L.remote.u - f.u) < 1e-9 && Math.abs(L.remote.top - f.pt) < 1e-6, `${at}: the Remote`)
+			assert.ok(
+				Math.abs(L.tv.width - (cw * f.ph) / 270) < 1e-6,
+				`${at}: the TV's width`,
+			)
+			assert.ok(
+				Math.abs(L.remote.u - f.u) < 1e-9 &&
+					Math.abs(L.remote.top - f.pt) < 1e-6,
+				`${at}: the Remote`,
+			)
 			assert.equal(L.height, h)
 		}
 })

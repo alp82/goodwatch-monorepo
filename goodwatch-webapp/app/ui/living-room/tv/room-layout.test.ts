@@ -13,9 +13,9 @@ import {
 	REMOTE_W,
 	ROOM_PHOTO,
 	TV_CANVAS,
+	WIDE_FROM,
 	layoutPhoneLandscape,
 	layoutPhoneRoom,
-	WIDE_FROM,
 	layoutRoom,
 	turnLimit,
 } from "./room-layout.ts"
