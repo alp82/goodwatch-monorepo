@@ -114,13 +114,13 @@ function SharePreview({ handle }: { handle: string }) {
 			className={`${PANEL} flex scroll-mt-32 flex-wrap items-center gap-4 p-3 sm:flex-nowrap sm:p-4`}
 		>
 			<img
-				src={`/og/u/${handle}/taste.jpg`}
+				src={`/og/u/${handle}/stats.jpg`}
 				alt="Your taste card as others see it when you share"
 				className="aspect-[1200/630] w-56 rounded-lg ring-1 ring-white/10 sm:w-72"
 			/>
 			<div className="flex min-w-0 flex-col items-start gap-2">
 				<p className="text-sm font-bold text-white">Share your viewer type</p>
-				<ShareButton handle={`${handle}/taste`} className={QUIET_BUTTON} />
+				<ShareButton handle={handle} path="/stats" label="Share" className={QUIET_BUTTON} />
 			</div>
 		</motion.div>
 	)
