@@ -1,15 +1,15 @@
-// PROTOTYPE - throwaway. Fix mode on phones (round 6). The side drawer is too big for a phone: it covered the very part
-// being reported. Here the drawer only offers the two paths; "Fix something on this page" slides it back into the tab
-// and fix mode runs from the bottom edge instead, where the app's dock is (the dock steps aside once it's covered):
+// PROTOTYPE - throwaway. Fix mode on phones (round 7, Split view picked). The side drawer is too big for a phone: it
+// covered the very part being reported. Here the drawer only offers the two paths; "Fix something on this page" slides
+// it back into the tab and fix mode runs from the bottom edge instead, where the app's dock is:
 // - Picking: a slim bar, "Tap the part that's wrong", with the parts as a row of chips. The scrim, the outlines and the
 //   badges show at this stage only.
-// - Answering, two variants for the owner to compare (?m=1|2):
-//   1 "Split view": the page scrolls the picked part to the top, under the header; the questions sit in a compact sheet
-//     below it that never reaches it (its height is what the part leaves). Only the picked part keeps its outline.
-//   2 "Quoted": the sheet takes the bottom part and quotes the picked part at its top: a live, scaled-down copy. Tapping
-//     the copy scrolls to the real part and folds the sheet to a slim bar until it's tapped again.
+// - Answering: the page scrolls the picked part to the top, under the header, and the questions sit in a sheet below
+//   it. The sheet starts at about half the room (more when the part leaves more), grows a little and scrolls the form
+//   into sight once the form opens, and its grip (the top row) drags it to any height: down to see the part, up to
+//   type. Dragged almost shut, it folds to a slim bar with "Continue".
 // The tab rests on the sheet's top right corner as its handle; tapping it closes fix mode, like pushing a drawer in.
-// Opening, closing and folding move by transform and fade by opacity only; nothing on the page shifts.
+// Opening, closing and folding move by transform only. Dragging sets the sheet's height directly: it's one fixed element,
+// so nothing on the page moves.
 import {
 	ArrowLeftIcon,
 	ChatBubbleLeftEllipsisIcon,
@@ -19,6 +19,7 @@ import {
 } from "@heroicons/react/20/solid"
 import { XMarkIcon } from "@heroicons/react/24/solid"
 import {
+	type PointerEvent as ReactPointerEvent,
 	type ReactNode,
 	useEffect,
 	useLayoutEffect,
@@ -28,15 +29,16 @@ import {
 import type { FixPath } from "~/ui/prototype-feedback/FeedbackDock"
 import { reduced, useFadePresence } from "~/ui/prototype-feedback/fix-scrim"
 
-export type PhoneVariant = 1 | 2
-
 /** The header row's height; the folded sheet shows just this row. */
 const ROW = 56
 /** How far the handle stands above the sheet. */
 const HANDLE = 30
-/** The least the questions get in Split view, however tall the part is. */
-const MIN_SHEET = 236
-const QUOTE_MAX = 140
+/** Below this, a dragged sheet folds to its slim bar. */
+const MIN_OPEN = ROW + 72
+/** The sheet's starting share of the room under the header, however tall the part is. */
+const START_SHARE = 0.52
+/** How far the sheet grows by itself once the form opens. */
+const FORM_SHARE = 0.72
 
 const useIsoLayoutEffect =
 	typeof window === "undefined" ? useEffect : useLayoutEffect
@@ -47,89 +49,6 @@ const headerBottom = () =>
 		document.querySelector("[data-site-header]")?.getBoundingClientRect()
 			.bottom ?? 0,
 	)
-
-/**
- * A live, scaled-down copy of the picked part: cloned again whenever the part changes (a live fix shows at once),
- * never clickable, without ids, form fields or the outline.
- */
-function Quote({ el, onTap }: { el: HTMLElement; onTap: () => void }) {
-	const host = useRef<HTMLDivElement>(null)
-	const [height, setHeight] = useState(0)
-	useEffect(() => {
-		const box = host.current
-		if (!box) return
-		let frame = 0
-		const draw = () => {
-			frame = 0
-			const r = el.getBoundingClientRect()
-			const w = box.clientWidth
-			if (!r.width || !w) return
-			const scale = Math.min(1, w / r.width, QUOTE_MAX / r.height)
-			const clone = el.cloneNode(true) as HTMLElement
-			for (const x of clone.querySelectorAll(
-				"[data-fix-overlay], [data-feedback-private], script",
-			))
-				x.remove()
-			for (const x of clone.querySelectorAll("input, textarea, select")) {
-				const bar = document.createElement("div")
-				bar.style.cssText =
-					"height:2.5rem;border-radius:.5rem;background:#1f2937"
-				x.replaceWith(bar)
-			}
-			for (const x of [clone, ...clone.querySelectorAll("[id]")])
-				x.removeAttribute("id")
-			for (const x of clone.querySelectorAll("img[loading]"))
-				x.removeAttribute("loading")
-			clone.style.cssText = `position:absolute;top:0;left:${Math.max(0, (w - r.width * scale) / 2)}px;width:${r.width}px;margin:0;transform:scale(${scale});transform-origin:0 0;pointer-events:none`
-			box.replaceChildren(clone)
-			setHeight(Math.round(r.height * scale))
-		}
-		draw()
-		// Changes inside the outline (lit, hovered) aren't the part's.
-		const mo = new MutationObserver((records) => {
-			if (
-				records.some(
-					(m) =>
-						!(
-							m.target instanceof Element ? m.target : m.target.parentElement
-						)?.closest("[data-fix-overlay]"),
-				) &&
-				!frame
-			)
-				frame = requestAnimationFrame(draw)
-		})
-		mo.observe(el, {
-			subtree: true,
-			childList: true,
-			characterData: true,
-			attributes: true,
-		})
-		return () => {
-			mo.disconnect()
-			cancelAnimationFrame(frame)
-		}
-	}, [el])
-	return (
-		<button
-			type="button"
-			onClick={onTap}
-			data-fix-quote
-			aria-label="Show it on the page"
-			className="group relative block w-full cursor-pointer overflow-hidden rounded-xl bg-gray-900 p-2 ring-1 ring-amber-400/60"
-		>
-			<div
-				ref={host}
-				aria-hidden
-				{...{ inert: "" }}
-				className="pointer-events-none relative w-full overflow-hidden"
-				style={{ height }}
-			/>
-			<span className="absolute right-2 bottom-2 rounded-full bg-gray-950/85 px-2 py-0.5 text-[11px] font-semibold text-gray-200 ring-1 ring-white/15">
-				Show on the page
-			</span>
-		</button>
-	)
-}
 
 /** The parts, as a sideways row of chips under "Tap the part that's wrong". */
 function PartChips({ fix }: { fix: FixPath }) {
@@ -173,13 +92,19 @@ html[data-fix-phone="answer"] [data-fix-badge],
 html[data-fix-phone="answer"] [data-fix-overlay]:not([data-fix-overlay="${id}"]){opacity:0!important;pointer-events:none!important}
 html[data-fix-phone="answer"] [data-fix-overlay="${id}"]{pointer-events:none!important;border-style:solid!important;border-color:rgb(251 191 36)!important;background-color:transparent!important}
 html[data-fix-phone="answer"] [data-site-header]{opacity:1!important}
-html[data-fix-phone="answer"] [data-feedback-page] .sticky{opacity:0!important;pointer-events:none!important}`
+html[data-fix-phone="answer"] [data-feedback-page] .sticky,html[data-fix-phone="answer"] [data-details-header]{opacity:0!important;pointer-events:none!important}`
 }
+
+const clamp = (n: number, lo: number, hi: number) =>
+	Math.max(lo, Math.min(hi, n))
+
+/** The room for the sheet: from just under the header (handle included) to the bottom edge. */
+const roomUnderHeader = () =>
+	Math.round(window.innerHeight - headerBottom() - HANDLE - 8)
 
 export function PhoneFix({
 	on,
 	fix,
-	variant,
 	title,
 	body,
 	onBack,
@@ -188,7 +113,6 @@ export function PhoneFix({
 	/** Phone fix mode is on (picking or answering). */
 	on: boolean
 	fix: FixPath | undefined
-	variant: PhoneVariant
 	title: string
 	/** The picked part's questions (or their thanks once sent). */
 	body: ReactNode
@@ -210,8 +134,24 @@ export function PhoneFix({
 	const shownBody = on ? body : last.current.body
 	const pickedId = on && answering ? (fix?.picked?.id ?? null) : null
 	const [mini, setMini] = useState(false)
-	const [sheetMax, setSheetMax] = useState<number | null>(null)
-	const [el, setEl] = useState<HTMLElement | null>(null)
+	/** The answering sheet's height (header row included); null while picking. */
+	const [size, setSize] = useState<number | null>(null)
+	const [room, setRoom] = useState(600)
+	const sheetRef = useRef<HTMLDivElement>(null)
+	const bodyRef = useRef<HTMLDivElement>(null)
+	/** Set before a size change: where the sheet starts (px down from its new resting place) once the new size lands. */
+	const flip = useRef<number | null>(null)
+	const drag = useRef<{
+		y: number
+		from: number
+		to: number
+		max: number
+	} | null>(null)
+	const panelRef = useRef<HTMLDivElement>(null)
+	/** The height to open at again after a drag folded the sheet. */
+	const restore = useRef<number | null>(null)
+	const sizeRef = useRef(size)
+	sizeRef.current = size
 
 	// The stage, for the page-wide rules (and the scroll helper's clear area).
 	useIsoLayoutEffect(() => {
@@ -221,48 +161,175 @@ export function PhoneFix({
 		return () => root.removeAttribute("data-fix-phone")
 	}, [on, answering])
 
-	// A new pick: find the part, size the sheet, and (Split view) bring the part under the header.
+	useEffect(() => {
+		if (!on) return
+		const measure = () => setRoom(roomUnderHeader())
+		measure()
+		window.addEventListener("resize", measure)
+		return () => window.removeEventListener("resize", measure)
+	}, [on])
+
+	// A new pick: size the sheet and bring the part under the header.
 	useIsoLayoutEffect(() => {
 		if (!on) return
 		setMini(false)
+		restore.current = null
 		if (!pickedId || !fix) {
-			setEl(null)
-			setSheetMax(null)
+			setSize(null)
 			return
 		}
+		const max = roomUnderHeader()
+		setRoom(max)
 		const part = fix.element(pickedId)
-		setEl(part)
 		const top = headerBottom()
-		const H = window.innerHeight
-		if (variant === 2 || !part) {
-			setSheetMax(H - top - 24 - HANDLE)
-			return
+		const content = ROW + (bodyRef.current?.scrollHeight ?? max)
+		let start = Math.round(max * START_SHARE)
+		if (part) {
+			const r = part.getBoundingClientRect()
+			// The part's outline stands 4px out; air above and below it.
+			start = Math.max(start, max + HANDLE + 8 - (r.height + 8) - 24 - HANDLE)
+			window.scrollTo({
+				top: Math.max(0, r.top + window.scrollY - (top + 16)),
+				behavior: reduced() ? "auto" : "smooth",
+			})
 		}
-		const r = part.getBoundingClientRect()
-		// The part's outline stands 4px out; 12px of air above and below it.
-		const room = H - top - (r.height + 8) - 24 - HANDLE
-		setSheetMax(Math.max(MIN_SHEET, room))
-		const target = r.top + window.scrollY - (top + 16)
-		window.scrollTo({
-			top: Math.max(0, target),
-			behavior: reduced() ? "auto" : "smooth",
+		setSize(clamp(Math.min(start, content), MIN_OPEN, max))
+	}, [pickedId])
+
+	// A size change lands without a jump: the sheet starts where it was (transform) and, for a grow, slides up.
+	useIsoLayoutEffect(() => {
+		const el = sheetRef.current
+		const from = flip.current
+		if (!el || from === null) return
+		flip.current = null
+		el.style.transition = "none"
+		el.style.transform = from ? `translateY(${from}px)` : "none"
+		if (from && !reduced()) {
+			el.getBoundingClientRect()
+			el.style.transition = ""
+			el.style.transform = "none"
+		} else {
+			el.style.transform = "none"
+			requestAnimationFrame(() => {
+				el.style.transition = ""
+			})
+		}
+	}, [size])
+
+	// Once more of the form opens (the next question, a text field), the sheet grows a little and scrolls it into sight.
+	useEffect(() => {
+		const box = bodyRef.current
+		if (!box || !pickedId) return
+		let timer = 0
+		const mo = new MutationObserver((records) => {
+			let fresh: HTMLElement | null = null
+			for (const m of records)
+				for (const n of m.addedNodes)
+					if (
+						n instanceof HTMLElement &&
+						n.tagName !== "STYLE" &&
+						n.getBoundingClientRect().height > 16 &&
+						(!fresh ||
+							fresh.compareDocumentPosition(n) &
+								Node.DOCUMENT_POSITION_PRECEDING)
+					)
+						fresh = n
+			const cur = sizeRef.current
+			if (!fresh || cur === null) return
+			const max = roomUnderHeader()
+			const want = clamp(
+				Math.min(ROW + box.scrollHeight, Math.round(max * FORM_SHARE)),
+				cur,
+				max,
+			)
+			if (want > cur + 8) {
+				flip.current = want - cur
+				setSize(want)
+			}
+			const el = fresh
+			window.clearTimeout(timer)
+			// After the new height lands, measure where the new part sits in the sheet.
+			timer = window.setTimeout(() => {
+				const at = el.getBoundingClientRect()
+				const b = box.getBoundingClientRect()
+				// The sheet's own sticky footer (Send) covers its bottom.
+				const foot = box.querySelector(".sticky")
+				const bottom = (foot?.getBoundingClientRect().top ?? b.bottom) - 12
+				const top = b.top + 12
+				let by = 0
+				if (at.height > bottom - top || at.top < top) by = at.top - top
+				else if (at.bottom > bottom) by = at.bottom - bottom
+				if (Math.abs(by) > 1)
+					box.scrollBy({ top: by, behavior: reduced() ? "auto" : "smooth" })
+			}, 40)
 		})
-	}, [pickedId, variant])
+		mo.observe(box, { childList: true, subtree: true })
+		return () => {
+			mo.disconnect()
+			window.clearTimeout(timer)
+		}
+	}, [pickedId])
 
 	if (!mounted || !fix) return null
-	const quote = variant === 2 && answering && el && !fix.done
-	const showOnPage = () => {
-		setMini(true)
-		// The fold has to land before the clear area is measured.
-		requestAnimationFrame(() => fix.reveal(pickedId ?? ""))
+
+	// The grip follows the finger with the sheet's real height (one fixed element; the page never moves), so the
+	// questions and Send stay at its bottom the whole way.
+	const grab = (e: ReactPointerEvent<HTMLDivElement>) => {
+		if (!answering || mini || size === null || e.button > 0) return
+		if ((e.target as Element).closest("button, a, input, textarea")) return
+		// No text selection or native drag (which would cancel the pointer) from the grip.
+		e.preventDefault()
+		window.getSelection()?.removeAllRanges()
+		// Up to the room under the header, but never taller than the questions (no empty space under Send).
+		const box = bodyRef.current
+		const last = box?.lastElementChild
+		const full =
+			box && last
+				? ROW +
+					last.getBoundingClientRect().bottom -
+					box.getBoundingClientRect().top +
+					box.scrollTop +
+					16
+				: room
+		drag.current = {
+			y: e.clientY,
+			from: size,
+			to: size,
+			max: Math.max(size, Math.min(room, Math.ceil(full))),
+		}
+		e.currentTarget.setPointerCapture(e.pointerId)
 	}
-	const bodyMax = sheetMax
-		? sheetMax - ROW - (quote ? QUOTE_MAX + 28 : 0)
-		: undefined
+	const move = (e: ReactPointerEvent<HTMLDivElement>) => {
+		const d = drag.current
+		const panel = panelRef.current
+		if (!d || !panel) return
+		d.to = clamp(d.from - (e.clientY - d.y), ROW, d.max)
+		panel.style.height = `${Math.round(d.to)}px`
+	}
+	const drop = () => {
+		const d = drag.current
+		drag.current = null
+		if (!d) return
+		const to = Math.round(d.to)
+		if (to < MIN_OPEN) {
+			// Folds from where the finger left it; "Continue" opens it at the size it had before.
+			restore.current = d.from
+			setSize(Math.max(ROW, to))
+			setMini(true)
+			return
+		}
+		setSize(to)
+	}
+	const unfold = () => {
+		setMini(false)
+		if (restore.current !== null) setSize(restore.current)
+		restore.current = null
+	}
+
 	return (
 		<div
+			ref={sheetRef}
 			data-fix-sheet={answering ? "answer" : "pick"}
-			data-fix-variant={variant}
 			data-mini={mini || undefined}
 			data-fix-row={ROW}
 			data-fix-handle-h={HANDLE}
@@ -279,7 +346,7 @@ export function PhoneFix({
 			{/* The prototype switcher steps aside in phone fix mode; the page layer's parts fade as the stage changes. */}
 			<style>
 				{
-					"html[data-fix-phone] .tsqd-parent-container{display:none}html[data-fix-phone] [data-mobile-dock]{visibility:hidden;transition:visibility 0s linear .3s}html[data-fix-phone] [data-prototype-switcher]{opacity:0!important;pointer-events:none!important}[data-prototype-switcher]{transition:opacity .2s ease-out}html[data-fix-phone] [data-fix-badge],html[data-fix-phone] [data-feedback-page] .sticky{transition:opacity .2s ease-out}"
+					"html[data-fix-phone] .tsqd-parent-container{display:none}html[data-fix-phone] [data-mobile-dock]{visibility:hidden;transition:visibility 0s linear .3s}html[data-fix-phone] [data-prototype-switcher]{opacity:0!important;pointer-events:none!important}[data-prototype-switcher]{transition:opacity .2s ease-out}html[data-fix-phone] [data-fix-badge],html[data-fix-phone] [data-feedback-page] .sticky,html[data-fix-phone] [data-details-header]{transition:opacity .2s ease-out}"
 				}
 			</style>
 			{/* While answering, the page's sticky bar steps aside and the other parts' outlines go. */}
@@ -299,15 +366,32 @@ export function PhoneFix({
 				/>
 			</button>
 			<div
+				ref={panelRef}
 				data-fix-panel
-				className="relative rounded-tl-3xl bg-gray-950 pb-[env(safe-area-inset-bottom)] shadow-[0_-24px_60px_-20px_rgba(0,0,0,.95)] ring-1 ring-white/12"
+				className="relative flex flex-col rounded-tl-3xl bg-gray-950 pb-[env(safe-area-inset-bottom)] shadow-[0_-24px_60px_-20px_rgba(0,0,0,.95)] ring-1 ring-white/12"
+				style={answering && size !== null ? { height: size } : undefined}
 			>
 				{/* Hides the ring's seam under the handle, so handle and sheet read as one shape. */}
 				<span
 					aria-hidden
 					className="pointer-events-none absolute -top-px right-px h-0.5 w-[38px] bg-gray-950"
 				/>
-				<div className="flex items-center gap-1 px-3" style={{ height: ROW }}>
+				{/* The grip: the whole top row drags the sheet (its buttons still tap). */}
+				<div
+					data-fix-grip
+					onPointerDown={grab}
+					onPointerMove={move}
+					onPointerUp={drop}
+					onPointerCancel={drop}
+					className={`relative flex shrink-0 items-center gap-1 px-3 ${answering && !mini ? "cursor-grab touch-none select-none active:cursor-grabbing" : ""}`}
+					style={{ height: ROW }}
+				>
+					{answering && !mini && (
+						<span
+							aria-hidden
+							className="pointer-events-none absolute top-1.5 left-1/2 h-1 w-10 -translate-x-1/2 rounded-full bg-white/25"
+						/>
+					)}
 					<button
 						type="button"
 						onClick={onBack}
@@ -319,7 +403,7 @@ export function PhoneFix({
 					{mini ? (
 						<button
 							type="button"
-							onClick={() => setMini(false)}
+							onClick={unfold}
 							data-fix-unfold
 							className="flex min-h-11 min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
 						>
@@ -347,21 +431,12 @@ export function PhoneFix({
 				{answering ? (
 					<div
 						key={on ? (live.id ?? "") : (last.current.id ?? "")}
-						className={`transition-opacity duration-200 ${mini ? "opacity-0" : "opacity-100"} motion-safe:animate-[fixin_.2s_ease-out]`}
+						ref={bodyRef}
+						className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 transition-opacity duration-200 ${mini ? "opacity-0" : "opacity-100"} motion-safe:animate-[fixin_.2s_ease-out]`}
 						{...(mini && { inert: "" })}
 					>
 						<style>{"@keyframes fixin{from{opacity:0}}"}</style>
-						{quote && (
-							<div className="px-4 pb-3">
-								<Quote el={el} onTap={showOnPage} />
-							</div>
-						)}
-						<div
-							className="overflow-y-auto overscroll-contain px-4 pb-4"
-							style={{ maxHeight: bodyMax }}
-						>
-							{shownBody}
-						</div>
+						{shownBody}
 					</div>
 				) : (
 					<div key="pick" className="motion-safe:animate-[fixin_.2s_ease-out]">

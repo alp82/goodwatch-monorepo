@@ -3,7 +3,7 @@
 // slides out of it to the left, joined to the tab's left edge and level with its top (moved up only as far as it must to
 // fit the window); tapping the tab again, Escape or the panel's close button slides it back in (and ends fix mode).
 // Phones open the same drawer from the tab; once fix mode starts, it goes back in and fix mode runs from the bottom edge
-// (PhoneFix.tsx, ?m=1|2). The panel offers two paths:
+// (PhoneFix.tsx). The panel offers two paths:
 // - "Fix something on this page" on pages with correctable data: the page's fix mode dims everything but the choosable
 //   blocks, marks them with a dashed outline and a Fix/Flag badge, and the panel lists them too; hovering either side
 //   lights up the other. A picked block's questions show in the panel.
@@ -23,7 +23,6 @@ import {
 	PencilSquareIcon,
 } from "@heroicons/react/20/solid"
 import { XMarkIcon } from "@heroicons/react/24/solid"
-import { useLocation } from "@remix-run/react"
 import {
 	type ReactNode,
 	createContext,
@@ -35,7 +34,7 @@ import {
 	useState,
 } from "react"
 import { PrimaryButton } from "~/ui/auth/kit"
-import { PhoneFix, type PhoneVariant } from "~/ui/prototype-feedback/PhoneFix"
+import { PhoneFix } from "~/ui/prototype-feedback/PhoneFix"
 
 /**
  * What a picked part's questions tell the panel: a report went out (fix mode's page layer goes, the thanks stay), the
@@ -863,10 +862,7 @@ export function FeedbackDock({
 	// A page without the fix path (or one that lost it) only sends feedback.
 	const current: Mode = fix ? mode : "send"
 	const fixing = current === "fix" && Boolean(fix?.on)
-	// Phones run fix mode from the bottom edge (PhoneFix), not the side drawer; ?m=1|2 picks the answering layout.
-	const { search } = useLocation()
-	const phoneVariant: PhoneVariant =
-		new URLSearchParams(search).get("m") === "2" ? 2 : 1
+	// Phones run fix mode from the bottom edge (PhoneFix), not the side drawer.
 	const phoneFix = !wide && fixing
 
 	// The drawer keeps showing what it showed while it slides back into the tab; the mode resets once it's in (unless
@@ -990,7 +986,6 @@ export function FeedbackDock({
 			<PhoneFix
 				on={phoneFix}
 				fix={fix}
-				variant={phoneVariant}
 				title={fix?.picked?.title ?? "Fix something"}
 				body={phoneFix && fix?.picked ? fix.picked.flow : null}
 				onBack={back}

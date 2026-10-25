@@ -261,15 +261,22 @@ export function useFadePresence(on: boolean, ms = 200) {
 }
 
 /**
- * While fix mode is on, the fixed site header and the page's sticky bar dim themselves (opacity), so a cut-out
- * scrolled under them never lights them up. They brighten again with a short fade before the rule goes.
+ * While fix mode is on, the fixed site header and the page's sticky bar turn solid and sit above the fix layer, with a
+ * scrim-colored tint over them. A part scrolled under them slides out of sight, as it does without fix mode, instead
+ * of shining through a see-through header. The tint fades (opacity) before the rule goes.
  */
 export function DimHeader({ on }: { on: boolean }) {
 	const { mounted, shown } = useFadePresence(on, 220)
 	if (!mounted) return null
+	const bars =
+		"[data-site-header],[data-feedback-page] .sticky,[data-details-header]"
 	return (
 		<style data-fix-dim>
-			{`[data-site-header],[data-feedback-page] .sticky{opacity:${shown ? 0.28 : 1};transition:opacity .2s ease-out}`}
+			{`[data-site-header]{z-index:1001!important}
+[data-feedback-page] .sticky,[data-details-header]{z-index:1001!important}
+[data-site-header]>div,[data-site-header]>header,[data-feedback-page] .sticky,[data-details-header]{background-color:rgb(3 7 18)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+${bars.split(",").map((b) => `${b}::after`).join(",")}{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:rgb(3 7 18);opacity:${shown ? 0.72 : 0};transition:opacity .2s ease-out}
+html[data-fix-phone="answer"] [data-site-header]::after{opacity:0}`}
 		</style>
 	)
 }
