@@ -25,9 +25,13 @@ export { CRAFT_KEYS, FAMILY_NAMES } from "~/domain/taste-attributes"
 export { TIER_NAMES } from "~/server/taste-portrait/view"
 
 export interface TasteAttribute
-	extends Omit<FingerprintAttribute, "carriers" | "against" | "exception"> {
+	extends Omit<
+		FingerprintAttribute,
+		"carriers" | "defining" | "against" | "exception"
+	> {
 	emoji: string
 	carriers: string[]
+	defining: string[]
 	against: string[]
 	exception: string | null
 }
@@ -145,6 +149,7 @@ export function buildProfileTaste(
 			...a,
 			emoji: FINGERPRINT_META[a.key]?.emoji ?? "",
 			carriers: a.carriers.map(keyOf),
+			defining: (a.defining ?? []).map(keyOf),
 			against: a.against.map(keyOf),
 			exception: a.exception == null ? null : keyOf(a.exception),
 		})),

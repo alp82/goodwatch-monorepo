@@ -1,6 +1,13 @@
 // Fingerprint: the person's 74 attributes against everyone, in the five fingerprint families, with the titles that
 // carry each attribute for them, the exception to their usual stance, and a viewer type named from three leanings.
 import type { TitleKey } from "~/server/title-snapshot/index.server"
+import {
+	type DefiningAttribute,
+	type ScoredAgainstEveryone,
+	definingTitles,
+	kindOffsets,
+	scoresVsEveryone,
+} from "./defining.server"
 import { FAMILIES, familyOf } from "./families.server"
 import {
 	K,
@@ -32,6 +39,8 @@ const AGAINST = 4
 const MOST_YOU = 16
 // Only well-known titles that aren't adult illustrate an attribute; every rating still counts toward the edges.
 const SHOWABLE_VOTES = 300
+// As You vs everyone counts them: titles with a GoodWatch score from enough votes.
+const EVERYONE_VOTES = 1000
 
 const rms = (v: ArrayLike<number>) => {
 	let squares = 0
@@ -136,6 +145,19 @@ export function buildFingerprint(person: Person): FingerprintResult {
 		return picked.map((r) => r.key)
 	}
 
+	// Against everyone: the person's scores on the titles carrying an attribute, after their generosity per kind.
+	const againstEveryone = new Map<TitleKey, ScoredAgainstEveryone>()
+	for (const r of rated)
+		if (r.facts.score && r.facts.votes >= EVERYONE_VOTES)
+			againstEveryone.set(r.key, {
+				key: r.key,
+				kind: r.facts.mediaType,
+				score: r.score,
+				everyone: r.facts.score,
+			})
+	const offsets = kindOffsets([...againstEveryone.values()])
+	const definingInput: DefiningAttribute[] = []
+
 	const attributes = new Array<FingerprintAttribute>(K)
 	const exceptions = new Set<TitleKey>()
 	// The strongest edges pick their titles first.
@@ -178,6 +200,12 @@ export function buildFingerprint(person: Person): FingerprintResult {
 				)
 				.find((r) => !exceptions.has(r.key))?.key ?? null
 		if (exception !== null) exceptions.add(exception)
+		definingInput.push({
+			k,
+			family: familyOf(key),
+			edge: edge[k],
+			carriers: strong.filter(showable),
+		})
 		attributes[k] = {
 			key,
 			label: label(key),
@@ -194,11 +222,18 @@ export function buildFingerprint(person: Person): FingerprintResult {
 					? round1(average(strong.map((r) => r.score)) - mu)
 					: null,
 			count: strong.length,
+			vs: scoresVsEveryone(
+				strong.flatMap((r) => againstEveryone.get(r.key) ?? []),
+				offsets,
+			),
 			carriers,
+			defining: [],
 			against,
 			exception,
 		}
 	}
+	for (const [k, keys] of definingTitles(definingInput))
+		attributes[k].defining = keys
 
 	// The line names what they seek and avoid most.
 	const worded = attributes.filter((a) => isWorded(a.key))

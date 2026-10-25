@@ -45,5 +45,10 @@ export function publicView<V extends SidesView | EveryoneView | FingerprintView>
 		} as V
 	if (view.tab === "everyone")
 		return { ...view, titles, ...(scores ? {} : { higher: [], lower: [] }) } as V
-	return { ...view, titles } as V
+	// The defining titles are for the subject's own Taste page; the profile shows the carriers.
+	return {
+		...view,
+		titles,
+		attributes: view.attributes.map((a) => ({ ...a, defining: [], vs: scores ? a.vs : null })),
+	} as V
 }

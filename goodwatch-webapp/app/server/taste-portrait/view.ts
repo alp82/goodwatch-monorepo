@@ -230,8 +230,14 @@ export interface FingerprintAttribute {
 	lift: number | null
 	/** How many of their rated titles carry it strongly. */
 	count: number
+	/** Their scores against the GoodWatch score on the titles carrying it strongly, after their generosity for movies
+	 * and for shows, on the 1 to 10 scale; null with fewer than 5 such titles. */
+	vs: number | null
 	/** Up to six titles that carry it for them, strongest first. */
 	carriers: TitleKey[]
+	/** Up to six titles scored 7 or more that it defines most: where it stands out most against the title's other
+	 * attributes, a title in at most two lists per family (defining.server.ts). */
+	defining: TitleKey[]
 	/** Up to four strong in it that they rated lowest or skipped (shown for an avoided attribute). */
 	against: TitleKey[]
 	/** Against their usual stance: a title rated at least max(8, usual + spread) for an avoided attribute, or at most
