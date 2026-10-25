@@ -14,7 +14,7 @@ import {
 	separator,
 	textLength,
 } from "../discord/cards.ts"
-import { safePath, type FeedbackInput } from "./schema.ts"
+import { type FeedbackInput, safePath } from "./schema.ts"
 
 export type FeedbackKind = FeedbackInput["kind"]
 type DataReport = NonNullable<FeedbackInput["data"]>
@@ -373,11 +373,13 @@ function buttons(
 	].filter(Boolean) as Component[]
 	return row.length ? { type: 1, components: row.slice(0, 5) } : null
 }
-/** Existing duplicate technical note; new reports use a separate details reply. */
+/**
+ * The duplicate reply's technical note, behind a spoiler. The merged submission has no row and no reply of its
+ * own; its report id sits on the line above.
+ */
 function duplicateDetailsLine(report: PostReport) {
 	const m = report.metadata
 	const parts = [
-		`Report ${code(report.id, 64)}`,
 		report.memberId ? `member ${code(report.memberId, 64)}` : null,
 		str(m.routeId) ? `route ${code(m.routeId, 80)}` : null,
 		[deviceName(m.userAgent), screen(m)].filter(Boolean).join(", ") || null,

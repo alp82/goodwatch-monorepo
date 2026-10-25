@@ -150,7 +150,7 @@ The reply is visible in the private forum, with mentions disabled and `SUPPRESS_
 
 ### Duplicates
 
-A duplicate replies in the original thread (bot: `POST /channels/{thread}/messages`; webhook: `thread_id`) with a small note: `**+1 duplicate** (3 total)` with the new submitter's context line, their message as a quote, what they see and their source when given, the existing spoilered technical note, and the new submission’s report id in small text (`-# Report`). Duplicates do not get a separate technical details reply. The reply has no thread name and no tags and keeps the original Discord receipt. If the original report has no thread receipt, the handler logs the failure and emails the submission without opening another post.
+A duplicate replies in the original thread (bot: `POST /channels/{thread}/messages`; webhook: `thread_id`) with a small note: `**+1 duplicate** (3 total)` with the new submitter's context line, their message as a quote, what they see and their source when given, the new submission's report id in small text (`-# Report`), and the spoilered technical note (member id, route, device, build, replay, dedupe key, received time). Duplicates do not get a separate technical details reply. The reply has no thread name and no tags and keeps the original Discord receipt. If the original report has no thread receipt, the handler logs the failure and emails the submission without opening another post.
 
 Technical text is also sanitized: email addresses, links, and recognizable secret assignments are removed; member text cannot inject inline-code delimiters.
 
