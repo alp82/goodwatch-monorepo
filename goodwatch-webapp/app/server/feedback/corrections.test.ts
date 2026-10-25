@@ -9,7 +9,10 @@ import {
 } from "./corrections.ts"
 import { feedbackSchema, type FeedbackInput } from "./schema.ts"
 import { applyCorrectionRows } from "./apply-corrections.ts"
-import { createCorrectionReader } from "./apply-corrections.server.ts"
+import {
+	correctionsFor,
+	createCorrectionReader,
+} from "./apply-corrections.server.ts"
 import { createCorrectionStore, type Sql } from "./correction-store.server.ts"
 import { undoCorrection } from "./undo.server.ts"
 import { reviewInteraction } from "./review.server.ts"
@@ -366,7 +369,7 @@ test("episode list, presentation and mapped translated grid use canonical number
 		"Translated",
 	)
 })
-test("reader batches simultaneous page shapes, caches empty entities and backs off missing tables", async () => {
+test("reader shares one snapshot of live corrections across pages and backs off missing tables", async () => {
 	let calls = 0,
 		time = 0
 	const reader = createCorrectionReader(
@@ -382,6 +385,8 @@ test("reader batches simultaneous page shapes, caches empty entities and backs o
 	])
 	assert.equal(calls, 1)
 	await reader.apply({ kind: "show", id: 1 }, [])
+	await reader.apply({ kind: "movie", id: 7 }, [])
+	await reader.apply({ kind: "person", id: 9 }, [])
 	assert.equal(calls, 1)
 	time = 5001
 	await reader.apply({ kind: "show", id: 1 }, [])
@@ -802,4 +807,16 @@ test("a correction reset matches only the named entities' pages", async () => {
 	assert.equal(match("/movie/6030"), false)
 	assert.equal(match("/show/603"), false)
 	assert.equal(match("/person/6384-keanu-reeves"), true)
+})
+test("the shared snapshot picks only the corrections that touch the page's entity", () => {
+	const base = correction({ status: "live" })
+	const all = [
+		{ ...base, id: "a", entity_kind: "show" as const, tmdb_id: 1, target: {} },
+		{ ...base, id: "b", entity_kind: "movie" as const, tmdb_id: 1, target: {} },
+		{ ...base, id: "c", entity_kind: "person" as const, tmdb_id: 5, target: { creditTmdbId: 1, creditMediaType: "tv" as const } },
+		{ ...base, id: "d", entity_kind: "show" as const, tmdb_id: 2, target: { personId: 5 } },
+	]
+	assert.deepEqual(correctionsFor({ kind: "show", id: 1 }, all).map((c) => c.id), ["a", "c"])
+	assert.deepEqual(correctionsFor({ kind: "movie", id: 1 }, all).map((c) => c.id), ["b"])
+	assert.deepEqual(correctionsFor({ kind: "person", id: 5 }, all).map((c) => c.id), ["c", "d"])
 })
