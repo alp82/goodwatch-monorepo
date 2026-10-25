@@ -1,0 +1,499 @@
+{
+  "audit_generated_at": "2026-10-25T18:56:21.046541+00:00",
+  "scope": "All newest history states per title/country/service/eligible type",
+  "history_rows_at_initial_probe": 10595142,
+  "countries": 139,
+  "titles_scanned": {
+    "movie": 254637,
+    "show": 74353
+  },
+  "before": {
+    "titles": 58275,
+    "scopes": 544411,
+    "arrivals": 50469,
+    "drops": 493942,
+    "arrival_titles": 7259,
+    "drop_titles": 53887,
+    "catalog_missing_titles": 0
+  },
+  "by_media_type": {
+    "movie": {
+      "titles": 47401,
+      "scopes": 450565,
+      "arrivals": 41220,
+      "drops": 409345,
+      "arrival_titles": 6062,
+      "drop_titles": 43931,
+      "catalog_missing_titles": 0
+    },
+    "show": {
+      "titles": 10874,
+      "scopes": 93846,
+      "arrivals": 9249,
+      "drops": 84597,
+      "arrival_titles": 1197,
+      "drop_titles": 9956,
+      "catalog_missing_titles": 0
+    }
+  },
+  "source_eligibility": {
+    "blocked_titles": 1,
+    "eligible_titles": 58274,
+    "reasons": {
+      "movie:145249": [
+        "duplicate_details_identity"
+      ]
+    }
+  },
+  "manifest": "/tmp/title-offers-sync/backfill-reviewed.json",
+  "sha256": "4f0dfec84ca048f861fe792091cede514aed4e315d4be431fc8f0947e2b00a8c",
+  "after": {
+    "status": "Not executed: production writes require review",
+    "counts": null
+  },
+  "request_cost": {
+    "per_refreshed_title": 1,
+    "backfill_eligible_titles": 58274,
+    "daily_oct24_requests": 164495,
+    "daily_oct24_title_checks": 18436,
+    "daily_oct25_requests": 169005,
+    "daily_oct25_title_checks": 18950,
+    "backfill_preview_plus_apply_before_retries": 116548,
+    "daily_upper_bound_plus_backfill_preview_and_apply_before_retries": 304503
+  },
+  "tests": {
+    "run": 249,
+    "executed": 234,
+    "skipped": 15,
+    "passed": true
+  },
+  "overlapping_scan_verification": {
+    "scopes_compared": 12664,
+    "differences": 0
+  },
+  "countries_scanned": [
+    "AD",
+    "AE",
+    "AG",
+    "AL",
+    "AO",
+    "AR",
+    "AT",
+    "AU",
+    "AZ",
+    "BA",
+    "BB",
+    "BE",
+    "BF",
+    "BG",
+    "BH",
+    "BM",
+    "BO",
+    "BR",
+    "BS",
+    "BY",
+    "BZ",
+    "CA",
+    "CD",
+    "CH",
+    "CI",
+    "CL",
+    "CM",
+    "CO",
+    "CR",
+    "CU",
+    "CV",
+    "CY",
+    "CZ",
+    "DE",
+    "DK",
+    "DO",
+    "DZ",
+    "EC",
+    "EE",
+    "EG",
+    "ES",
+    "FI",
+    "FJ",
+    "FR",
+    "GB",
+    "GF",
+    "GG",
+    "GH",
+    "GI",
+    "GQ",
+    "GR",
+    "GT",
+    "GY",
+    "HK",
+    "HN",
+    "HR",
+    "HU",
+    "ID",
+    "IE",
+    "IL",
+    "IN",
+    "IQ",
+    "IS",
+    "IT",
+    "JM",
+    "JO",
+    "JP",
+    "KE",
+    "KR",
+    "KW",
+    "LB",
+    "LC",
+    "LI",
+    "LT",
+    "LU",
+    "LV",
+    "LY",
+    "MA",
+    "MC",
+    "MD",
+    "ME",
+    "MG",
+    "MK",
+    "ML",
+    "MT",
+    "MU",
+    "MW",
+    "MX",
+    "MY",
+    "MZ",
+    "NE",
+    "NG",
+    "NI",
+    "NL",
+    "NO",
+    "NZ",
+    "OM",
+    "PA",
+    "PE",
+    "PF",
+    "PG",
+    "PH",
+    "PK",
+    "PL",
+    "PS",
+    "PT",
+    "PY",
+    "QA",
+    "RO",
+    "RS",
+    "RU",
+    "SA",
+    "SC",
+    "SE",
+    "SG",
+    "SI",
+    "SK",
+    "SM",
+    "SN",
+    "SV",
+    "TC",
+    "TD",
+    "TH",
+    "TN",
+    "TR",
+    "TT",
+    "TW",
+    "TZ",
+    "UA",
+    "UG",
+    "US",
+    "UY",
+    "VA",
+    "VE",
+    "XK",
+    "YE",
+    "ZA",
+    "ZM",
+    "ZW"
+  ],
+  "exact_drop_mismatches": {
+    "exact_drop_stays": 2520,
+    "scopes": 2520,
+    "titles": 615
+  },
+  "exact_drop_examples": [
+    {
+      "media_type": "movie",
+      "tmdb_id": 28,
+      "country": "DE",
+      "service_id": 219,
+      "streaming_type": "free",
+      "dropped_on": 1792886400000,
+      "observed_at": 1791806436398
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 62,
+      "country": "ES",
+      "service_id": 1838,
+      "streaming_type": "flatrate",
+      "dropped_on": 1792886400000,
+      "observed_at": 1792386017571
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 87,
+      "country": "GI",
+      "service_id": 119,
+      "streaming_type": "flatrate",
+      "dropped_on": 1792886400000,
+      "observed_at": 1763470816909
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 87,
+      "country": "IE",
+      "service_id": 119,
+      "streaming_type": "flatrate",
+      "dropped_on": 1792886400000,
+      "observed_at": 1763470816909
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 87,
+      "country": "JP",
+      "service_id": 8,
+      "streaming_type": "flatrate",
+      "dropped_on": 1792886400000,
+      "observed_at": 1791871233484
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 87,
+      "country": "JP",
+      "service_id": 1796,
+      "streaming_type": "flatrate",
+      "dropped_on": 1792886400000,
+      "observed_at": 1791871233484
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 89,
+      "country": "GI",
+      "service_id": 119,
+      "streaming_type": "flatrate",
+      "dropped_on": 1792886400000,
+      "observed_at": 1751224050650
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 89,
+      "country": "IE",
+      "service_id": 119,
+      "streaming_type": "flatrate",
+      "dropped_on": 1792886400000,
+      "observed_at": 1751224050650
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 89,
+      "country": "JP",
+      "service_id": 8,
+      "streaming_type": "flatrate",
+      "dropped_on": 1792886400000,
+      "observed_at": 1790337835941
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 89,
+      "country": "JP",
+      "service_id": 1796,
+      "streaming_type": "flatrate",
+      "dropped_on": 1792886400000,
+      "observed_at": 1790337835941
+    }
+  ],
+  "service_names": {
+    "8": [
+      "Netflix"
+    ],
+    "9": [
+      "Amazon Prime Video"
+    ],
+    "11": [
+      "MUBI"
+    ],
+    "15": [
+      "Hulu"
+    ],
+    "21": [
+      "Stan"
+    ],
+    "30": [
+      "WOW"
+    ],
+    "72": [
+      "Videoland"
+    ],
+    "73": [
+      "Tubi TV"
+    ],
+    "76": [
+      "Viaplay"
+    ],
+    "119": [
+      "Amazon Prime Video"
+    ],
+    "147": [
+      "M6+"
+    ],
+    "149": [
+      "Movistar Plus+ Ficci\u00f3n Total "
+    ],
+    "219": [
+      "ARD Mediathek"
+    ],
+    "257": [
+      "fuboTV"
+    ],
+    "283": [
+      "Crunchyroll"
+    ],
+    "304": [
+      "Joyn"
+    ],
+    "321": [
+      "Sky X"
+    ],
+    "337": [
+      "Disney Plus"
+    ],
+    "350": [
+      "Apple TV"
+    ],
+    "361": [
+      "TCM"
+    ],
+    "384": [
+      "HBO Max"
+    ],
+    "385": [
+      "BINGE"
+    ],
+    "386": [
+      "Peacock Premium"
+    ],
+    "387": [
+      "Peacock Premium Plus"
+    ],
+    "449": [
+      "Global TV"
+    ],
+    "472": [
+      "NLZIET"
+    ],
+    "510": [
+      "Discovery+"
+    ],
+    "531": [
+      "Paramount Plus"
+    ],
+    "572": [
+      "RTL Play"
+    ],
+    "578": [
+      "Strim"
+    ],
+    "582": [
+      "Paramount+ Amazon Channel"
+    ],
+    "633": [
+      "Paramount+ Roku Premium Channel"
+    ],
+    "1794": [
+      "Starz Amazon Channel"
+    ],
+    "1796": [
+      "Netflix Standard with Ads"
+    ],
+    "1825": [
+      "HBO Max Amazon Channel"
+    ],
+    "1838": [
+      "Tivify"
+    ],
+    "1899": [
+      "HBO Max"
+    ],
+    "1944": [
+      "TV4 Play"
+    ],
+    "2100": [
+      "Amazon Prime Video with Ads"
+    ],
+    "2161": [
+      "Sony One Amazon Channel"
+    ],
+    "2180": [
+      "Sony Pictures Amazon Channel"
+    ],
+    "2241": [
+      "Movistar Plus+"
+    ],
+    "2303": [
+      "Paramount Plus Premium"
+    ],
+    "2304": [
+      "Paramount Plus Basic with Ads"
+    ],
+    "2383": [
+      "Philo"
+    ],
+    "2616": [
+      "Paramount Plus Essential"
+    ],
+    "2670": [
+      "Novo 19"
+    ],
+    "2745": [
+      "Sony Pictures Core Amazon Channel"
+    ]
+  },
+  "sha256_algorithm": "SHA-256 over JSON intent rows, sorted keys and compact separators",
+  "live_read_only_preview": {
+    "dry_run": true,
+    "selected": 3,
+    "failed": 0,
+    "failures": [],
+    "requests": {
+      "requests": 3,
+      "retries": 0,
+      "refused": 0,
+      "discover": 0,
+      "title": 3,
+      "catalog": 0,
+      "deleted_responses": 0
+    },
+    "seconds": 3.441,
+    "artifact": "/tmp/title-offers-sync/live-offer-preview.json",
+    "plans": [
+      {
+        "identity": "movie:1578079",
+        "offer_upserts": 76,
+        "offer_deletes": 0,
+        "history_upserts": 8,
+        "deferred_countries": []
+      },
+      {
+        "identity": "movie:28",
+        "offer_upserts": 0,
+        "offer_deletes": 1,
+        "history_upserts": 0,
+        "deferred_countries": []
+      },
+      {
+        "identity": "show:25391",
+        "offer_upserts": 6,
+        "offer_deletes": 0,
+        "history_upserts": 0,
+        "deferred_countries": []
+      }
+    ]
+  }
+}

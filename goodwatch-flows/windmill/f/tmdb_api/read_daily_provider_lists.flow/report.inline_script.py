@@ -12,6 +12,13 @@ def main(report: dict):
         raise RuntimeError(f'Daily list access error: {failures[:10]}')
     if report.get('hard_budget_exceeded') or any(row.get('error') == 'RequestBudgetExceeded' for row in failures):
         raise RuntimeError('Daily list hard request budget exhausted; completed checkpoints retained')
+    refresh = report.get('offer_refresh') or {}
+    if refresh.get('remaining'):
+        warnings.warn(f"{refresh['remaining']} title offer refreshes remain queued; {refresh.get('deferred_reason', 'batch_limit_or_retry')}", RuntimeWarning)
+    if (refresh.get('failed', 0) * 100 > refresh.get('selected', 0)
+            or refresh.get('max_failure_days', 0) >= 3
+            or any(row.get('consecutive_failure_days', 0) >= 3 for row in refresh.get('failures', []))):
+        raise RuntimeError(f'Title offer refresh exceeded 1% failures or failed for 3 days: {refresh}')
     repeated = [row for row in failures if row.get('consecutive_failure_days', 0) >= 3]
     if repeated:
         raise RuntimeError(f'Daily lists failed for 3 consecutive days; checkpoints retained: {repeated[:10]}')

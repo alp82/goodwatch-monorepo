@@ -3,7 +3,8 @@ description: >-
   Proposed schedule 14:00 UTC daily. Fresh discover reads with completeness
   gates, fresh per-title confirmation, and shared availability-history precision
   rules. Dry runs take only an operational Mongo run lease; history reads use
-  SELECT. Never writes streaming_availability.
+  SELECT. Live runs queue verified offer mismatches, then refetch each affected
+  title once and use the shared streaming/vector publishers within the same budget.
 value:
   modules:
     - id: lists

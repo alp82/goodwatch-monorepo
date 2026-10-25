@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import NamedTuple
 from pydantic import BaseModel
 from f.tmdb_api.provider_evidence import (
-    DAY, HISTORY_OFFER_TYPES as OFFER_TYPES, snapshot_id, utc_day, utc_ms, validated_results,
+    DAY, HISTORY_OFFER_TYPES as OFFER_TYPES, snapshot_id, utc_day, utc_ms, validated_results, list_scope_checks,
 )
 
 PREMIERE_WINDOW_DAYS = 7
@@ -124,6 +124,7 @@ class Observation:
     verified: dict
     copy_at: int
     list_read: ListRead | None = None
+    scoped_checks: dict = field(default_factory=dict)
 
     @classmethod
     def from_title(cls, title, copy_at):
@@ -157,7 +158,7 @@ class Observation:
             scoped = None
             prior_offers = set(prior.get('offers') or [])
         return cls(api_at, results, offers, prior_at, prior_offers,
-                   fresh_prior, fresh_current, title.verified, copy_at, scoped)
+                   fresh_prior, fresh_current, title.verified, copy_at, scoped, list_scope_checks(details))
 
     def api_supports(self, key, row=None):
         if self.list_read is not None:
@@ -167,9 +168,15 @@ class Observation:
                 return True  # Complete list omission AND the fresh title check, including absent countries.
         if row is not None:
             return key.proof_identity in self.api_offers
+        scoped = self.scoped_checks.get((key.country_code, key.streaming_service_id, key.streaming_type))
+        if scoped is not None and not scoped[1]:
+            return True
         return key.country_code in (self.results or {})
 
     def source_time(self, key, row=None):
+        scoped = self.scoped_checks.get((key.country_code, key.streaming_service_id, key.streaming_type))
+        if row is None and scoped is not None and not scoped[1]:
+            return max(scoped[0], utc_ms((self.verified.get(key.country_code) or {}).get('updated_at')) or 0)
         if self.api_at is not None and self.api_supports(key, row):
             return self.api_at
         provider = self.verified.get(key.country_code) or {}
@@ -202,6 +209,14 @@ def select_transitions(titles, pending, media_type):
                 added[key] = row
         removed_keys = (OfferKey(*key) for key in title.removed)
         removed = [key for key in removed_keys if key.streaming_type in OFFER_TYPES]
+        # A backfill's fresh response can disprove an open history stay whose
+        # child offer was already missing. Explicit scoped intents repair that
+        # stay through this writer without a title-wide pending-marker repair.
+        desired = {availability_key(row) for row in title.rows.values()}
+        removed = sorted(set(removed) | {
+            OfferKey(title.tmdb_id, media_type, country, service, kind)
+            for (country, service, kind), (_, present) in list_scope_checks(title.details).items()
+            if not present and OfferKey(title.tmdb_id, media_type, country, service, kind) not in desired})
         if added or removed or title.deleted_at is not None or f'{media_type}:{title.tmdb_id}' in pending:
             transitions.append(Transition(title, added, removed))
     return transitions

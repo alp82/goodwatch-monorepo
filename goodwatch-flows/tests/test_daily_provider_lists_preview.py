@@ -108,6 +108,7 @@ def main():
             return dict(page=1, total_pages=0, total_results=0, results=[])
     class Storage:
         dry_run = False
+        db, connector = object(), object()
         def __init__(self): self.state = {}
         @contextmanager
         def run_lease(self): yield lambda: None
@@ -124,6 +125,12 @@ def main():
         def close(self): pass
         def save(self, identity, value): self.state[identity] = deepcopy(value)
     store = Storage()
+    refresh = types.ModuleType('f.tmdb_api.list_offer_refresh')
+    def drain(client, db, connector, **kwargs):
+        assert db is store.db and connector is store.connector
+        return dict(selected=0, failed=0, remaining=0)
+    refresh.drain = drain
+    sys.modules[refresh.__name__] = refresh
     job.TMDBClient, job.create_list_storage = API, lambda **kwargs: store
     entry = types.ModuleType('windmill_entry_copy')
     exec(compile(SOURCES['daily_job'], entry.__name__, 'exec'), entry.__dict__)

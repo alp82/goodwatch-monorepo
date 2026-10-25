@@ -1,0 +1,278 @@
+# Daily service lists and title offers
+
+The daily list job can establish an arrival/drop before the title's next full
+publication. Its verified changes now hand affected titles to the existing
+streaming publisher. This implements the owner's October 25, 2026 decision
+following #682 and #489 Part C.
+
+## Publication path
+
+`daily_list_storage.ListStorage.flush` compares each verified country/service
+scope with Crate's child offers and aggregate arrays under the existing title
+publication leases. A verified change or disagreement stages a durable Mongo
+`tmdb_list_offer_refresh` intent **before** history and checkpoint writes.
+Matching unchanged scopes need no additional HTTP request. Multiple countries/services
+merge into one title intent; movie and show identities remain separate.
+
+After the lists finish, `daily_list_ramp.run_daily_job` consumes these intents
+with the same `TMDBClient`: one fresh `/movie/{id}/watch/providers` or
+`/tv/{id}/watch/providers` request per selected title, including normal retry,
+cache-bypass, pacing and hard-budget rules. A narrow Mongo source update writes
+the normalized watch-provider payload, proof, attempt time and durable scoped
+evidence. It does not change details `updated_at`, selection state, the 30-day
+cycle, or country-scrape retry state. Standalone endpoint `id` is removed through
+the existing strict `WatchProviders` model before storage.
+
+`list_offer_refresh.publish_offers` calls
+`f/sync/copy/tmdb_streaming.copy_media` with exact TMDB IDs and
+`recent_only=False`, then `f/sync/copy/vector_data.copy_to_qdrant` with strict
+writes. These are the existing scheduled/targeted transformations and title
+leases. The shared copier remains the only writer of child offers and the
+`streaming_availabilities`, `streaming_country_codes`, and
+`streaming_service_ids` arrays. The same path publishes `streaming_evidence`
+and reconciles history. The vector writer rereads the published Crate snapshot
+under its existing lease. No whole details/ratings/DNA refresh is needed.
+
+This deliberately uses a fresh per-title API read instead of constructing
+offers from discover membership. Discover proves only service membership;
+the title endpoint supplies all countries, offer types, links and priorities.
+
+The consumer disables synchronous mapping-recovery web fetches through the
+shared copier's optional `mapping_refresh_limit=0`. Unmapped scraped countries
+retain/defer their contribution normally, while mapped API offers can publish.
+Thus no hidden TMDB requests escape this job's counter.
+
+## Drops and recovery
+
+An omitted API country normally means unknown. A list-confirmed scope plus the
+fresh title check is stronger evidence for the specific service's subscription,
+free and ad-supported offers. Durable `watch_providers_list_scopes` in the title
+source records that fresh check's time and eligible types for each monitored
+country/service. The shared reconciler removes disproved older contributions,
+including scraped and legacy rows, even when the entire country is omitted.
+Other services and rent/buy offers retain ordinary reconciliation rules.
+
+Cached, failed or concurrently saved details cannot revive those disproved
+offers. A newer cache-bypassed API result, or a newer successful web scrape, can
+supersede the scoped check. Scraped evidence excludes the same superseded offers.
+Quarantined identities remain frozen by the existing publisher.
+
+Regular details reads for a title with scoped evidence now bypass TMDB's cache
+using the existing request, so this adds no requests to that queue. An older
+cached request already in flight is treated as superseded in a country where
+it contradicts the verified scope: it cannot clear an already published arrival
+or re-add a disproved drop. Its evidence remains unknown until a fresh read.
+Scoped negative intents also reconcile an open history stay when its child
+offer was already missing; the shared history writer does this for the verified
+service only.
+
+A failed source/publication/vector write retains the intent. A version token
+prevents acknowledgment from consuming newer work. Daily changes have priority
+over the older backfill, and unattempted work precedes failed retries at the same
+priority. The consumer handles at most 20,000 titles per invocation. Budget
+exhaustion leaves the rest pending and triggers the existing hard-budget alert.
+The daily consumer also stops at 28,000 total run seconds, reserving time inside
+the existing 28,800-second flow timeout for reporting and cleanup. Excess work
+stays queued and is reported as a warning. Manual consumer batches use the same
+runtime bound; the documented 1,000-title batches keep review/execution bounded.
+Missing/deleted/duplicate source identities, missing catalog rows, provider 404s
+and quarantines are reported for the existing full ingestion/identity path;
+the provider endpoint alone never authorizes title-wide deletion.
+
+Existing list access, 350k, >1% and three-consecutive-day alert rules remain.
+The offer stage applies the same >1% and three-day thresholds to failed title
+refreshes. Operational error samples contain identity, error class and stable
+defer codes; arbitrary upstream exception text is omitted.
+
+## Request cost
+
+Read-only Windmill results:
+
+| Run | Existing requests | Existing title checks | Upper bound with new title refreshes, before retries/backlog |
+| --- | ---: | ---: | ---: |
+| October 24 | 164,495 | 18,436 | 182,931 |
+| October 25 | 169,005 | 18,950 | 187,955 |
+
+The upper bound assumes every checked title needs repair. Actual extra requests
+equal distinct queued changed/mismatching titles, not country/service rows. The 20,000
+consumer limit caps the normal added successful requests at 20,000, including
+older pending work. All retries count toward the **same 350,000 hard limit**.
+No new schedule is needed: daily lists still start at 14:00 UTC, after the
+13:00 UTC recent-release recheck. Extra HTTP pacing alone is at most about
+22 minutes at 15 requests/second; publication time is additional and has not
+been measured in production before review.
+
+## Read-only backfill
+
+`goodwatch-flows/scripts/backfill_list_title_offers.py` scans the whole history,
+not only recent exact arrivals or the daily job's 15 services. It selects the
+newest stay **per title, country, service and eligible offer type**, then compares
+the union of eligible types against child offers and title arrays. A closed
+flatrate stay beside an open ads stay is not a service drop. Rent/buy offers can
+legitimately keep an aggregate token after eligible offers end.
+
+Each batch reads every country for 1,000 titles once. At most two batches run
+concurrently. The audit uses SELECT only, writes a local resumable manifest,
+and records a SHA-256 over every proposed title/scope row. Its summary and
+country/service breakdown are in the accompanying audit evidence. The audit
+is a rolling read, not a database transaction; subsequent source changes can
+change the final correction. A fresh title response at execution takes priority
+over an older history snapshot. Never force old membership into current offers.
+
+The manifest dry run describes exactly the queue intents to be written. Queueing
+it does not hand-edit offers. The consumer refetches current truth and uses the
+same publisher as the daily job. A complete manifest is required for apply.
+After queueing, `--drain --preview-offers` uses fresh budgeted HTTP plus SELECT/find
+only to report each selected title's source fields, child upserts/deletes, title
+arrays, evidence, history and vector availability. It calls the same normalization
+and pure publication transformations as execution. Inspect this local diff before
+each live batch. Execution refetches again, so later upstream changes can alter
+the result; the preview is an observation, not a reservation of upstream truth.
+`--check-sources` reports titles needing a full ingestion or identity repair
+without performing one. Repeated applies/refreshes are safe, but spend another
+request per selected title.
+
+The October 25 full read-only audit scanned **254,637 movies and 74,353 shows**
+across **139 countries**. It found **58,275 affected titles**, comprising
+**50,469 arrival mismatches** (7,259 titles) and **493,942 drop mismatches**
+(53,887 titles): **544,411 country/service scopes**. A title can have both
+directions in different scopes. These counts include older disagreements,
+not just the exact arrivals displayed by `/new` today.
+An additional read-only latest-stay check confirmed **2,520 exact-drop stays
+across 615 titles** among the affected scopes, so the reverse problem is present
+for exact drops too. The CSV includes their country/service counts and names
+for all 48 affected provider IDs.
+
+All affected titles exist in Crate. Mongo preflight found **58,274 eligible
+titles** and one deferred duplicate identity, `movie:145249`. Resolve that
+through the existing details/identity path after review; do not pick an arbitrary
+source record. The normal backfill would spend about **58,274 fresh requests**
+before retries or newly discovered upstream deferrals. Its actual after counts
+are **not measured**, because production writes remain review-gated.
+Previewing every eligible title once and then applying costs about **116,548
+requests** before retries. Alongside the conservative October 25 daily estimate,
+that is **304,503 requests**, leaving about 45,497 of the 350k allowance for retries.
+
+Committed evidence:
+[summary](implementation/daily-provider-lists/title-offer-backfill-20261025.json),
+[complete country/service CSV](implementation/daily-provider-lists/title-offer-backfill-20261025.csv).
+The complete 171 MB intent manifest with every title/scope is retained locally at
+`/tmp/title-offers-sync/backfill-reviewed.json`, intent-row SHA-256
+`4f0dfec84ca048f861fe792091cede514aed4e315d4be431fc8f0947e2b00a8c`.
+For example, DE/Netflix (ID 8) has 83 arrival and 1,299 drop mismatches;
+US/Netflix has 109 arrival and 1,218 drop mismatches. Dorothy, movie 1578079,
+is in the manifest for Germany and other missing Netflix countries.
+
+## Commands after review
+
+Run from the reviewed worktree root. Keep production read-only until review
+passes. The helper reads credentials in memory; do not print it or its token.
+
+```bash
+WM_HELPER=/tmp/claude-1000/-home-alp-dev-projects-goodwatch-goodwatch-monorepo/9b66f89c-8298-487a-b040-f359220ae9af/scratchpad/wm.py
+BACKFILL_PLAN=/tmp/title-offers-sync/backfill-reviewed.json
+```
+
+The commands below use `uv run -q --with wmill --with mongoengine --with requests
+--with pydantic --with python-dateutil --with crate --with sqlalchemy --with
+qdrant-client python`. Define a shell function to keep them readable:
+
+```bash
+offer_backfill() {
+  uv run -q --with wmill --with mongoengine --with requests --with pydantic \
+    --with python-dateutil --with crate --with sqlalchemy --with qdrant-client \
+    python goodwatch-flows/scripts/backfill_list_title_offers.py \
+    --wm-helper "$WM_HELPER" "$@"
+}
+```
+
+1. Deploy the reviewed commit through main's existing
+   `push-windmill-workspace.yml`. Deploy all changed shared modules, metadata and
+   locks together. No new Crate table, schedule or Coolify setting is required.
+   Keep `watch_providers_list_scopes` in the strict Mongo model during any
+   rollback, so titles written by this version still deserialize. Retain pending
+   intents for replay; do not delete them or roll back source evidence.
+2. Refresh the SELECT-only audit if needed, or inspect the retained complete
+   manifest. An interrupted scan can add `--resume`:
+
+   ```bash
+   offer_backfill --output /tmp/title-offers-sync/backfill-fresh-before.json --workers 2
+   offer_backfill --manifest "$BACKFILL_PLAN" --check-sources
+   ```
+
+   If a fresh audit replaces the reviewed input, review that new file and set
+   `BACKFILL_PLAN` to its path before applying it.
+
+3. After the dry-run manifest and code pass review, enqueue exactly that manifest:
+
+   ```bash
+   offer_backfill --manifest "$BACKFILL_PLAN" --apply
+   ```
+
+4. Outside the daily list run (the existing run lease prevents overlap), preview
+   and then consume a bounded batch. Inspect failures and `remaining` before
+   repeating. A 1,000-title batch spends at most 20,000 HTTP requests including
+   retries; normally it spends at most 1,000. Account for manual requests beside
+   that day's normal run, and keep the combined operational allowance below 350k:
+
+   ```bash
+   offer_backfill --drain --limit 1000
+   offer_backfill --drain --preview-offers --limit 1000 \
+     --output /tmp/title-offers-sync/next-batch-offer-diff.json
+   offer_backfill --drain --limit 1000 --max-requests 20000 --apply
+   ```
+
+   Repeat successful batches until `remaining=0`; investigate deferred source or
+   identity cases instead of clearing them. The same consumer is deployed as
+   `f/tmdb_api/list_offer_refresh`; its defaults are read-only.
+5. Rerun the complete SELECT-only audit to a different file and compare summaries:
+
+   ```bash
+   offer_backfill --output /tmp/title-offers-sync/backfill-after.json --workers 2
+   ```
+
+   Report actual residual arrivals/drops and full-ingestion/identity blockers.
+   An upstream change can legitimately leave a mismatch with an older history
+   snapshot; inspect it rather than claiming zero from a dry run.
+
+## Cache limits
+
+There is no title-page invalidation in the existing publication path. This
+change reuses that path and corrects stored offers; it **does not promise
+immediate agreement in already cached responses**. In particular:
+
+- `app/server/title-details-cache.ts` includes country offers in data cached for
+  12 hours fresh plus 12 hours stale. A corrected Crate title can therefore
+  still show its previous offers for up to 24 hours, plus a cached HTML response.
+- Anonymous HTML uses 30 minutes fresh plus two hours stale in each webapp
+  process, with no publication reset across processes (ADR 0007).
+- `availability-index.server.ts` reloads each country's in-memory index every
+  six hours. Qdrant and Crate updates do not reset those indexes.
+- `availability.server.ts` caches raw evidence for 30 minutes. Its eligibility
+  clock is independent of cache age.
+
+Cache invalidation needs an application-wide mechanism; the flows cannot clear
+the process-local HTML/index state. Do not work around this by writing to
+Coolify. After applying, distinguish direct Crate/uncached verification from a
+warm title page. The actual post-backfill counts and user-visible freshness are
+unverified until the reviewed execution and cache expiry/invalidation.
+
+## Validation
+
+Focused tests cover durable staging before history failure, deduplication,
+separate movie/show identities, strict Mongo deserialization, dry-run inertness,
+hard-budget retention, version-fenced acknowledgment, source deferrals, scoped
+whole-country drops, legacy/scraped contributions, later cached/failed reads,
+newer positive checks, scheduled publication, type unions and aggregate-only
+backfill mismatches. Existing daily-list, streaming publication, availability
+and vector publication suites are also run. Live publication and backfill writes
+remain gated on review.
+
+The focused suite ran **249 tests: 234 passed and 15 optional integration checks
+were skipped**. A production read-only preview, guarded against all SQL/Mongo
+writes and using an in-memory queue, made exactly **three TMDB requests**:
+movie 1578079 planned 76 offer upserts and eight history upserts; movie 28 planned
+one offer deletion; show 25391 planned six offer upserts. All three previews
+completed without errors in 3.441 seconds. Full diffs are retained at
+`/tmp/title-offers-sync/live-offer-preview.json`. These are plans, not executed
+production corrections.

@@ -57,6 +57,14 @@ class RecheckCacheTests(unittest.TestCase):
                 title.reload()
                 self.assertFalse(title.watch_providers_check.get("cache_bypassed"))
 
+    def test_list_monitored_title_uses_a_fresh_regular_read_without_an_extra_request(self):
+        self.movie.watch_providers_list_scopes = {'DE_8': {'checked_at': 1, 'kinds': ['flatrate']}}
+        self.movie.save()
+        calls = self.run_fetch()
+        self.assertEqual(len(calls), 2)
+        self.assertIn('cb', calls[0][1])
+        self.assertNotIn('cb', calls[1][1])
+
 
 if __name__ == "__main__":
     unittest.main()

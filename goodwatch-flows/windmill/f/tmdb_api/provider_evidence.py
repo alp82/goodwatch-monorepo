@@ -99,3 +99,65 @@ def capture_provider_check(details, tmdb_id, now, *, previous=None, bypass_cache
 
 def main():
     pass
+
+
+def list_scope_checks(details):
+    """A list-confirmed scope plus a newer fresh API read defeats old offers.
+
+    This is service-scoped negative evidence, never an empty-country claim.
+    A newer successful web scrape can supersede the API check normally.
+    """
+    scopes = details.get('watch_providers_list_scopes') or {}
+    proof = details.get('watch_providers_check') or {}
+    at = proof.get('checked_at')
+    payload = details.get('watch_providers') or {}
+    # Validate/hash the all-country payload once per reconciliation, not once
+    # per offer. Large titles can have hundreds of country/service entries.
+    results = validated_results(payload) if scopes else None
+    fresh = (results is not None and proof.get('cache_bypassed') is True
+             and isinstance(at, int) and proof.get('payload_hash') == snapshot_id(payload))
+    offers = {(country, offer['provider_id'], kind) for country, data in (results or {}).items()
+              for kind in HISTORY_OFFER_TYPES for offer in data.get(kind, [])} if fresh else set()
+
+    checks = {}
+    for identity, scope in scopes.items():
+        if (not isinstance(scope, dict) or not isinstance(scope.get('checked_at'), int)
+                or not isinstance(scope.get('kinds'), list)):
+            continue
+        try:
+            country, service = identity.split('_')
+            service_id = int(service)
+        except (ValueError, TypeError):
+            continue
+        scope_at = scope['checked_at']
+        for kind in HISTORY_OFFER_TYPES:
+            if fresh and at >= scope_at:
+                checks[(country, service_id, kind)] = (at, (country, service_id, kind) in offers)
+            else:
+                # Independent of mutable cached/failed details snapshots.
+                checks[(country, service_id, kind)] = (scope_at, kind in scope['kinds'])
+    return checks
+
+
+def list_scope_checker(details):
+    checks = list_scope_checks(details)
+    def excludes(country, service_id, kind, source_at=None):
+        check = checks.get((country, service_id, kind))
+        return check is not None and not check[1] and (source_at is None or source_at <= check[0])
+    return excludes
+
+
+def list_scope_excludes(details, country, service_id, kind, source_at=None):
+    return list_scope_checker(details)(country, service_id, kind, source_at)
+
+
+def list_scope_conflicting_countries(details):
+    """A cached/older API snapshot cannot undo a verified scoped membership."""
+    checks = list_scope_checks(details)
+    if not checks:
+        return set()
+    api = validated_results(details.get('watch_providers') or {}) or {}
+    offers = {(country, offer['provider_id'], kind) for country, data in api.items()
+              for kind in HISTORY_OFFER_TYPES for offer in data.get(kind, [])}
+    return {country for (country, service, kind), (_, present) in checks.items()
+            if present != ((country, service, kind) in offers)}

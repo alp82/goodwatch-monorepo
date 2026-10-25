@@ -453,6 +453,9 @@ class CreatedBy(EmbeddedDocument):
 
 
 class BaseTmdbDetails(Document):
+    # Fresh list + title checks may disprove one service even when API omits
+    # the entire country. Keep this scope across ordinary details refreshes.
+    watch_providers_list_scopes = DictField()
     watch_providers_check = DictField()
     watch_providers_attempted_at = DateTimeField()
     watch_providers_error = StringField()

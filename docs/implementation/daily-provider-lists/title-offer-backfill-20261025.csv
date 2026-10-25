@@ -1,0 +1,993 @@
+country,service_id,service_name,arrivals,drops,titles,exact_drop_stays
+AD,8,Netflix,101,1499,1600,2
+AD,9,Amazon Prime Video,0,3,3,0
+AD,11,MUBI,15,864,879,0
+AD,119,Amazon Prime Video,124,905,1029,3
+AD,283,Crunchyroll,0,4,4,0
+AD,337,Disney Plus,0,2809,2809,1
+AD,1899,HBO Max,18,395,413,3
+AE,8,Netflix,66,1373,1439,11
+AE,9,Amazon Prime Video,0,5,5,0
+AE,11,MUBI,8,293,301,2
+AE,119,Amazon Prime Video,22,398,420,4
+AE,283,Crunchyroll,35,119,154,2
+AE,350,Apple TV,1,0,1,0
+AG,8,Netflix,96,1233,1329,27
+AG,9,Amazon Prime Video,0,21,21,0
+AG,11,MUBI,8,195,203,2
+AG,119,Amazon Prime Video,232,1200,1432,4
+AG,283,Crunchyroll,1,8,9,0
+AG,350,Apple TV,3,0,3,0
+AG,1899,HBO Max,32,890,922,5
+AL,8,Netflix,100,1055,1155,5
+AL,11,MUBI,8,856,864,0
+AL,119,Amazon Prime Video,40,305,345,0
+AL,283,Crunchyroll,1,8,9,0
+AL,337,Disney Plus,0,2542,2542,1
+AL,1899,HBO Max,29,52,81,2
+AO,8,Netflix,77,1414,1491,11
+AO,9,Amazon Prime Video,0,3,3,0
+AO,11,MUBI,8,187,195,2
+AO,119,Amazon Prime Video,3,5,8,0
+AR,8,Netflix,85,1334,1419,18
+AR,9,Amazon Prime Video,0,63,63,0
+AR,11,MUBI,16,416,432,3
+AR,119,Amazon Prime Video,234,1386,1620,9
+AR,283,Crunchyroll,37,177,214,14
+AR,337,Disney Plus,38,180,218,0
+AR,350,Apple TV,3,0,3,0
+AR,531,Paramount Plus,12,150,162,0
+AR,1899,HBO Max,29,844,873,5
+AR,2161,Sony One Amazon Channel,1,0,1,0
+AT,8,Netflix,78,1412,1490,5
+AT,9,Amazon Prime Video,371,1702,2073,18
+AT,11,MUBI,9,334,343,0
+AT,30,WOW,1,0,1,0
+AT,119,Amazon Prime Video,0,228,228,0
+AT,283,Crunchyroll,31,137,168,8
+AT,304,Joyn,1,0,1,0
+AT,321,Sky X,0,1,1,0
+AT,337,Disney Plus,108,319,427,0
+AT,350,Apple TV,3,0,3,0
+AT,531,Paramount Plus,12,207,219,0
+AT,1825,HBO Max Amazon Channel,1,0,1,0
+AT,1899,HBO Max,41,6,47,0
+AT,2100,Amazon Prime Video with Ads,368,1649,2017,18
+AU,8,Netflix,93,1372,1465,8
+AU,9,Amazon Prime Video,0,245,245,0
+AU,11,MUBI,13,236,249,0
+AU,21,Stan,1,0,1,0
+AU,119,Amazon Prime Video,353,2235,2588,4
+AU,283,Crunchyroll,39,154,193,0
+AU,337,Disney Plus,47,145,192,0
+AU,350,Apple TV,3,1,4,0
+AU,385,BINGE,1,0,1,0
+AU,531,Paramount Plus,27,211,238,0
+AU,1796,Netflix Standard with Ads,89,1092,1181,8
+AU,1825,HBO Max Amazon Channel,1,0,1,0
+AU,1899,HBO Max,20,288,308,2
+AU,2100,Amazon Prime Video with Ads,393,1318,1711,4
+AU,2303,Paramount Plus Premium,28,203,231,0
+AZ,8,Netflix,79,1039,1118,3
+AZ,119,Amazon Prime Video,33,19,52,0
+AZ,283,Crunchyroll,1,3,4,0
+AZ,350,Apple TV,3,0,3,0
+BA,8,Netflix,98,1128,1226,8
+BA,9,Amazon Prime Video,0,2,2,0
+BA,11,MUBI,8,796,804,0
+BA,119,Amazon Prime Video,36,309,345,0
+BA,283,Crunchyroll,1,15,16,0
+BA,337,Disney Plus,0,2535,2535,1
+BA,1899,HBO Max,29,884,913,2
+BB,8,Netflix,98,1315,1413,8
+BB,9,Amazon Prime Video,0,20,20,0
+BB,11,MUBI,8,187,195,0
+BB,119,Amazon Prime Video,232,1214,1446,2
+BB,283,Crunchyroll,1,7,8,0
+BB,1899,HBO Max,32,885,917,1
+BE,8,Netflix,81,1248,1329,1
+BE,9,Amazon Prime Video,0,83,83,0
+BE,11,MUBI,14,301,315,0
+BE,119,Amazon Prime Video,260,1005,1265,2
+BE,283,Crunchyroll,39,115,154,1
+BE,337,Disney Plus,44,333,377,0
+BE,350,Apple TV,3,0,3,0
+BE,572,RTL Play,1,0,1,0
+BE,1899,HBO Max,13,249,262,1
+BF,9,Amazon Prime Video,0,5,5,0
+BF,11,MUBI,7,188,195,0
+BF,119,Amazon Prime Video,212,1447,1659,3
+BF,283,Crunchyroll,1,8,9,0
+BG,8,Netflix,94,1202,1296,3
+BG,9,Amazon Prime Video,0,3,3,0
+BG,11,MUBI,8,235,243,0
+BG,119,Amazon Prime Video,48,325,373,0
+BG,283,Crunchyroll,0,84,84,0
+BG,337,Disney Plus,46,388,434,0
+BG,350,Apple TV,1,0,1,0
+BG,1899,HBO Max,27,1167,1194,2
+BH,8,Netflix,69,1330,1399,1
+BH,11,MUBI,8,194,202,0
+BH,119,Amazon Prime Video,32,340,372,0
+BH,283,Crunchyroll,1,7,8,0
+BH,350,Apple TV,2,0,2,0
+BM,8,Netflix,85,1442,1527,28
+BM,9,Amazon Prime Video,0,18,18,0
+BM,11,MUBI,14,178,192,2
+BM,119,Amazon Prime Video,227,1366,1593,12
+BM,283,Crunchyroll,1,11,12,0
+BM,350,Apple TV,3,0,3,0
+BO,8,Netflix,87,1325,1412,14
+BO,9,Amazon Prime Video,0,54,54,0
+BO,11,MUBI,15,384,399,2
+BO,119,Amazon Prime Video,241,1500,1741,9
+BO,283,Crunchyroll,2,2,4,0
+BO,337,Disney Plus,38,180,218,0
+BO,350,Apple TV,3,0,3,0
+BO,531,Paramount Plus,11,154,165,0
+BO,1899,HBO Max,28,865,893,5
+BR,8,Netflix,97,1400,1497,14
+BR,9,Amazon Prime Video,0,74,74,0
+BR,11,MUBI,16,397,413,1
+BR,119,Amazon Prime Video,188,1553,1741,5
+BR,283,Crunchyroll,41,174,215,11
+BR,337,Disney Plus,35,168,203,0
+BR,350,Apple TV,3,0,3,0
+BR,531,Paramount Plus,10,155,165,0
+BR,1796,Netflix Standard with Ads,95,1190,1285,14
+BR,1899,HBO Max,26,783,809,2
+BR,2100,Amazon Prime Video with Ads,197,826,1023,5
+BR,2161,Sony One Amazon Channel,1,0,1,0
+BR,2303,Paramount Plus Premium,10,148,158,0
+BS,8,Netflix,88,1079,1167,29
+BS,9,Amazon Prime Video,0,20,20,0
+BS,11,MUBI,14,179,193,2
+BS,119,Amazon Prime Video,219,1221,1440,9
+BS,283,Crunchyroll,1,10,11,0
+BS,350,Apple TV,3,0,3,0
+BS,1899,HBO Max,31,886,917,5
+BY,8,Netflix,76,892,968,3
+BY,11,MUBI,8,163,171,0
+BY,283,Crunchyroll,0,12,12,0
+BY,350,Apple TV,1,1,2,0
+BZ,8,Netflix,96,973,1069,23
+BZ,9,Amazon Prime Video,0,28,28,0
+BZ,11,MUBI,15,281,296,3
+BZ,119,Amazon Prime Video,345,3586,3931,12
+BZ,283,Crunchyroll,1,47,48,0
+BZ,337,Disney Plus,36,84,120,0
+BZ,350,Apple TV,3,0,3,0
+BZ,1899,HBO Max,35,505,540,5
+CA,8,Netflix,95,1194,1289,8
+CA,9,Amazon Prime Video,0,539,539,0
+CA,11,MUBI,11,252,263,0
+CA,119,Amazon Prime Video,393,2507,2900,35
+CA,283,Crunchyroll,33,178,211,10
+CA,337,Disney Plus,56,117,173,0
+CA,350,Apple TV,3,7,10,0
+CA,449,Global TV,1,0,1,0
+CA,531,Paramount Plus,11,195,206,0
+CA,582,Paramount+ Amazon Channel,1,0,1,0
+CA,1794,Starz Amazon Channel,1,0,1,0
+CA,1796,Netflix Standard with Ads,91,932,1023,8
+CA,2100,Amazon Prime Video with Ads,392,2385,2777,34
+CA,2303,Paramount Plus Premium,11,166,177,0
+CA,2304,Paramount Plus Basic with Ads,1,0,1,0
+CD,11,MUBI,8,195,203,1
+CD,119,Amazon Prime Video,191,1596,1787,8
+CD,283,Crunchyroll,0,8,8,0
+CH,8,Netflix,87,1492,1579,11
+CH,9,Amazon Prime Video,0,137,137,0
+CH,11,MUBI,8,303,311,1
+CH,119,Amazon Prime Video,465,1205,1670,10
+CH,283,Crunchyroll,4,57,61,0
+CH,337,Disney Plus,102,310,412,0
+CH,350,Apple TV,3,1,4,0
+CH,531,Paramount Plus,12,194,206,0
+CH,1899,HBO Max,42,5,47,0
+CI,8,Netflix,81,1472,1553,1
+CI,9,Amazon Prime Video,0,5,5,0
+CI,11,MUBI,7,188,195,0
+CI,119,Amazon Prime Video,198,1052,1250,3
+CI,283,Crunchyroll,1,4,5,0
+CL,8,Netflix,90,1300,1390,1
+CL,9,Amazon Prime Video,0,55,55,0
+CL,11,MUBI,16,383,399,0
+CL,119,Amazon Prime Video,245,1335,1580,2
+CL,283,Crunchyroll,40,170,210,0
+CL,337,Disney Plus,40,157,197,0
+CL,350,Apple TV,3,0,3,0
+CL,531,Paramount Plus,10,147,157,0
+CL,1899,HBO Max,29,841,870,1
+CL,2161,Sony One Amazon Channel,1,0,1,0
+CM,8,Netflix,82,1307,1389,1
+CM,9,Amazon Prime Video,0,19,19,0
+CM,11,MUBI,7,187,194,0
+CM,119,Amazon Prime Video,186,2013,2199,3
+CO,8,Netflix,86,1321,1407,17
+CO,9,Amazon Prime Video,0,58,58,0
+CO,11,MUBI,15,384,399,2
+CO,119,Amazon Prime Video,240,1366,1606,10
+CO,283,Crunchyroll,40,167,207,14
+CO,337,Disney Plus,39,157,196,0
+CO,350,Apple TV,3,0,3,0
+CO,531,Paramount Plus,10,148,158,0
+CO,1899,HBO Max,27,809,836,5
+CO,2161,Sony One Amazon Channel,1,0,1,0
+CR,8,Netflix,87,1251,1338,16
+CR,9,Amazon Prime Video,0,60,60,0
+CR,11,MUBI,15,384,399,4
+CR,119,Amazon Prime Video,238,1486,1724,7
+CR,283,Crunchyroll,3,68,71,0
+CR,337,Disney Plus,40,180,220,0
+CR,350,Apple TV,3,0,3,0
+CR,531,Paramount Plus,10,155,165,0
+CR,1899,HBO Max,28,864,892,5
+CR,2161,Sony One Amazon Channel,1,0,1,0
+CU,8,Netflix,70,1123,1193,2
+CU,11,MUBI,8,743,751,0
+CU,119,Amazon Prime Video,1,3,4,0
+CV,8,Netflix,96,1185,1281,11
+CV,11,MUBI,8,175,183,2
+CV,119,Amazon Prime Video,202,258,460,5
+CV,283,Crunchyroll,1,7,8,0
+CV,350,Apple TV,3,0,3,0
+CY,8,Netflix,92,1186,1278,103
+CY,9,Amazon Prime Video,0,2,2,0
+CY,11,MUBI,14,172,186,2
+CY,119,Amazon Prime Video,21,189,210,0
+CY,283,Crunchyroll,1,10,11,0
+CY,350,Apple TV,3,0,3,0
+CY,1899,HBO Max,12,5,17,2
+CZ,8,Netflix,79,1058,1137,1
+CZ,9,Amazon Prime Video,0,3,3,0
+CZ,11,MUBI,6,245,251,0
+CZ,119,Amazon Prime Video,44,353,397,0
+CZ,283,Crunchyroll,2,139,141,0
+CZ,337,Disney Plus,35,286,321,0
+CZ,350,Apple TV,3,0,3,0
+CZ,1899,HBO Max,29,1069,1098,2
+DE,8,Netflix,83,1299,1382,8
+DE,9,Amazon Prime Video,363,1651,2014,27
+DE,11,MUBI,10,327,337,2
+DE,119,Amazon Prime Video,0,250,250,0
+DE,219,ARD Mediathek,0,1,1,1
+DE,283,Crunchyroll,26,150,176,0
+DE,337,Disney Plus,54,269,323,0
+DE,350,Apple TV,3,0,3,0
+DE,531,Paramount Plus,12,199,211,0
+DE,1796,Netflix Standard with Ads,81,1017,1098,8
+DE,1825,HBO Max Amazon Channel,1,0,1,0
+DE,1899,HBO Max,41,6,47,0
+DE,2100,Amazon Prime Video with Ads,362,1604,1966,25
+DK,8,Netflix,87,1242,1329,1
+DK,9,Amazon Prime Video,0,17,17,0
+DK,11,MUBI,13,304,317,0
+DK,76,Viaplay,0,1,1,1
+DK,119,Amazon Prime Video,235,757,992,4
+DK,283,Crunchyroll,2,112,114,0
+DK,337,Disney Plus,54,456,510,0
+DK,350,Apple TV,3,0,3,0
+DK,1899,HBO Max,29,446,475,2
+DO,8,Netflix,86,1070,1156,4
+DO,9,Amazon Prime Video,0,16,16,0
+DO,11,MUBI,8,189,197,0
+DO,119,Amazon Prime Video,245,1157,1402,8
+DO,283,Crunchyroll,2,10,12,0
+DO,337,Disney Plus,37,147,184,0
+DO,350,Apple TV,1,0,1,0
+DO,531,Paramount Plus,12,109,121,0
+DO,1899,HBO Max,32,827,859,4
+DO,2161,Sony One Amazon Channel,1,0,1,0
+DZ,8,Netflix,65,1310,1375,1
+DZ,11,MUBI,7,185,192,0
+DZ,119,Amazon Prime Video,34,333,367,0
+DZ,283,Crunchyroll,1,8,9,0
+EC,8,Netflix,87,1326,1413,4
+EC,9,Amazon Prime Video,0,57,57,0
+EC,11,MUBI,15,392,407,1
+EC,119,Amazon Prime Video,239,1390,1629,5
+EC,283,Crunchyroll,3,99,102,0
+EC,337,Disney Plus,39,184,223,0
+EC,350,Apple TV,3,0,3,0
+EC,531,Paramount Plus,10,147,157,0
+EC,1899,HBO Max,28,842,870,4
+EE,8,Netflix,75,772,847,4
+EE,11,MUBI,8,168,176,0
+EE,119,Amazon Prime Video,61,158,219,0
+EE,283,Crunchyroll,2,12,14,0
+EE,337,Disney Plus,0,1965,1965,1
+EE,350,Apple TV,3,0,3,0
+EE,1899,HBO Max,24,10,34,1
+EG,8,Netflix,66,1463,1529,1
+EG,9,Amazon Prime Video,0,8,8,0
+EG,11,MUBI,8,297,305,0
+EG,119,Amazon Prime Video,22,448,470,2
+EG,283,Crunchyroll,1,11,12,0
+EG,337,Disney Plus,0,2959,2959,1
+EG,350,Apple TV,2,0,2,0
+ES,8,Netflix,80,1298,1378,2
+ES,9,Amazon Prime Video,0,179,179,0
+ES,11,MUBI,17,256,273,0
+ES,119,Amazon Prime Video,279,1307,1586,4
+ES,149,Movistar Plus+ Ficción Total ,1,0,1,0
+ES,283,Crunchyroll,31,109,140,1
+ES,337,Disney Plus,45,330,375,0
+ES,350,Apple TV,3,0,3,0
+ES,1796,Netflix Standard with Ads,74,1094,1168,2
+ES,1838,Tivify,1,3,4,3
+ES,1899,HBO Max,15,406,421,2
+ES,2100,Amazon Prime Video with Ads,305,844,1149,4
+ES,2241,Movistar Plus+,1,0,1,0
+FI,8,Netflix,80,1268,1348,14
+FI,9,Amazon Prime Video,0,18,18,0
+FI,11,MUBI,13,304,317,1
+FI,76,Viaplay,0,1,1,1
+FI,119,Amazon Prime Video,217,780,997,14
+FI,283,Crunchyroll,2,179,181,0
+FI,337,Disney Plus,65,479,544,0
+FI,350,Apple TV,3,0,3,0
+FI,1899,HBO Max,30,433,463,3
+FJ,8,Netflix,95,1440,1535,4
+FJ,11,MUBI,15,175,190,0
+FJ,119,Amazon Prime Video,100,161,261,1
+FJ,283,Crunchyroll,1,13,14,0
+FJ,350,Apple TV,3,0,3,0
+FJ,1899,HBO Max,25,12,37,0
+FR,8,Netflix,183,1241,1424,1
+FR,9,Amazon Prime Video,0,131,131,0
+FR,11,MUBI,14,333,347,0
+FR,119,Amazon Prime Video,874,1085,1959,1
+FR,147,M6+,1,0,1,0
+FR,283,Crunchyroll,37,143,180,1
+FR,337,Disney Plus,86,280,366,0
+FR,350,Apple TV,1,0,1,0
+FR,531,Paramount Plus,12,207,219,0
+FR,1796,Netflix Standard with Ads,184,1065,1249,1
+FR,1899,HBO Max,20,451,471,0
+FR,2100,Amazon Prime Video with Ads,895,708,1603,1
+FR,2303,Paramount Plus Premium,12,213,225,0
+FR,2670,Novo 19,1,0,1,0
+GB,8,Netflix,83,1319,1402,5
+GB,9,Amazon Prime Video,763,3041,3804,1
+GB,11,MUBI,13,269,282,0
+GB,119,Amazon Prime Video,0,950,950,0
+GB,283,Crunchyroll,37,151,188,0
+GB,337,Disney Plus,84,361,445,0
+GB,350,Apple TV,3,1,4,0
+GB,531,Paramount Plus,22,153,175,1
+GB,1796,Netflix Standard with Ads,80,1048,1128,5
+GB,1899,HBO Max,45,2,47,0
+GB,2100,Amazon Prime Video with Ads,756,3187,3943,1
+GB,2303,Paramount Plus Premium,22,124,146,2
+GF,8,Netflix,104,1501,1605,1
+GF,9,Amazon Prime Video,0,16,16,0
+GF,11,MUBI,14,287,301,0
+GF,119,Amazon Prime Video,206,1280,1486,0
+GF,283,Crunchyroll,1,5,6,0
+GG,11,MUBI,1,0,1,0
+GG,119,Amazon Prime Video,1,0,1,0
+GH,8,Netflix,90,927,1017,17
+GH,9,Amazon Prime Video,0,18,18,0
+GH,11,MUBI,8,186,194,2
+GH,119,Amazon Prime Video,204,1106,1310,14
+GH,283,Crunchyroll,0,8,8,0
+GH,350,Apple TV,3,0,3,0
+GI,8,Netflix,69,1359,1428,7
+GI,9,Amazon Prime Video,0,14,14,0
+GI,11,MUBI,13,235,248,1
+GI,119,Amazon Prime Video,280,1486,1766,23
+GI,283,Crunchyroll,0,8,8,0
+GQ,8,Netflix,86,1251,1337,1
+GQ,11,MUBI,8,184,192,0
+GQ,119,Amazon Prime Video,189,341,530,3
+GQ,283,Crunchyroll,1,4,5,0
+GR,8,Netflix,82,1072,1154,3
+GR,9,Amazon Prime Video,0,2,2,0
+GR,11,MUBI,8,271,279,0
+GR,119,Amazon Prime Video,17,162,179,1
+GR,283,Crunchyroll,2,82,84,0
+GR,337,Disney Plus,39,273,312,0
+GR,350,Apple TV,1,0,1,0
+GR,1899,HBO Max,11,5,16,2
+GT,8,Netflix,90,1330,1420,0
+GT,9,Amazon Prime Video,0,55,55,0
+GT,11,MUBI,15,386,401,0
+GT,119,Amazon Prime Video,241,1472,1713,1
+GT,283,Crunchyroll,0,124,124,0
+GT,337,Disney Plus,40,183,223,0
+GT,350,Apple TV,3,0,3,0
+GT,531,Paramount Plus,11,154,165,0
+GT,1899,HBO Max,28,862,890,1
+GT,2161,Sony One Amazon Channel,1,0,1,0
+GY,9,Amazon Prime Video,0,21,21,0
+GY,11,MUBI,15,295,310,0
+GY,119,Amazon Prime Video,241,3454,3695,1
+GY,283,Crunchyroll,0,8,8,0
+GY,1899,HBO Max,31,980,1011,2
+HK,8,Netflix,83,875,958,0
+HK,11,MUBI,8,165,173,0
+HK,119,Amazon Prime Video,35,267,302,1
+HK,283,Crunchyroll,1,33,34,0
+HK,337,Disney Plus,42,120,162,0
+HK,350,Apple TV,3,0,3,0
+HK,1899,HBO Max,27,348,375,1
+HN,8,Netflix,98,859,957,1
+HN,9,Amazon Prime Video,0,16,16,0
+HN,11,MUBI,15,244,259,0
+HN,119,Amazon Prime Video,295,833,1128,0
+HN,283,Crunchyroll,1,13,14,0
+HN,337,Disney Plus,41,140,181,0
+HN,350,Apple TV,1,0,1,0
+HN,531,Paramount Plus,1,1,2,0
+HN,1899,HBO Max,33,466,499,1
+HR,8,Netflix,79,1036,1115,1
+HR,9,Amazon Prime Video,0,2,2,0
+HR,11,MUBI,7,253,260,0
+HR,119,Amazon Prime Video,49,374,423,0
+HR,283,Crunchyroll,0,7,7,0
+HR,337,Disney Plus,49,410,459,0
+HR,1899,HBO Max,27,1031,1058,2
+HU,8,Netflix,81,1030,1111,0
+HU,9,Amazon Prime Video,0,6,6,0
+HU,11,MUBI,7,262,269,0
+HU,119,Amazon Prime Video,50,377,427,0
+HU,283,Crunchyroll,1,94,95,0
+HU,337,Disney Plus,36,268,304,0
+HU,350,Apple TV,3,0,3,0
+HU,1899,HBO Max,26,1188,1214,2
+ID,8,Netflix,85,1604,1689,19
+ID,9,Amazon Prime Video,0,8,8,0
+ID,11,MUBI,8,289,297,2
+ID,119,Amazon Prime Video,25,675,700,4
+ID,283,Crunchyroll,3,17,20,0
+ID,350,Apple TV,1,0,1,0
+ID,1899,HBO Max,27,612,639,2
+IE,8,Netflix,87,1404,1491,12
+IE,9,Amazon Prime Video,0,221,221,0
+IE,11,MUBI,13,292,305,3
+IE,119,Amazon Prime Video,859,2731,3590,56
+IE,283,Crunchyroll,37,166,203,6
+IE,337,Disney Plus,76,367,443,0
+IE,350,Apple TV,4,0,4,0
+IE,531,Paramount Plus,22,165,187,1
+IE,1899,HBO Max,43,2,45,0
+IE,2303,Paramount Plus Premium,22,141,163,1
+IL,8,Netflix,60,746,806,7
+IL,11,MUBI,8,685,693,2
+IL,119,Amazon Prime Video,6,148,154,2
+IL,283,Crunchyroll,0,39,39,0
+IL,350,Apple TV,3,0,3,0
+IL,1899,HBO Max,11,5,16,2
+IN,8,Netflix,83,1216,1299,8
+IN,9,Amazon Prime Video,0,301,301,0
+IN,11,MUBI,11,349,360,0
+IN,119,Amazon Prime Video,111,1952,2063,16
+IN,283,Crunchyroll,34,44,78,1
+IN,350,Apple TV,1,0,1,0
+IN,2100,Amazon Prime Video with Ads,128,1101,1229,16
+IN,2180,Sony Pictures Amazon Channel,1,0,1,0
+IQ,8,Netflix,65,1292,1357,10
+IQ,11,MUBI,8,882,890,2
+IQ,119,Amazon Prime Video,25,325,350,3
+IQ,283,Crunchyroll,0,2,2,0
+IS,8,Netflix,84,834,918,4
+IS,9,Amazon Prime Video,0,15,15,0
+IS,11,MUBI,8,174,182,0
+IS,119,Amazon Prime Video,82,410,492,2
+IS,283,Crunchyroll,0,31,31,0
+IS,337,Disney Plus,0,2177,2177,1
+IS,1899,HBO Max,10,5,15,1
+IT,8,Netflix,87,1265,1352,1
+IT,9,Amazon Prime Video,0,272,272,0
+IT,11,MUBI,19,342,361,0
+IT,119,Amazon Prime Video,321,1738,2059,6
+IT,283,Crunchyroll,50,115,165,0
+IT,337,Disney Plus,51,308,359,0
+IT,350,Apple TV,3,5,8,0
+IT,531,Paramount Plus,7,160,167,0
+IT,1796,Netflix Standard with Ads,0,3345,3345,0
+IT,1899,HBO Max,31,4,35,0
+IT,2100,Amazon Prime Video with Ads,359,1062,1421,6
+JM,8,Netflix,99,1317,1416,8
+JM,9,Amazon Prime Video,0,20,20,0
+JM,11,MUBI,8,190,198,0
+JM,119,Amazon Prime Video,253,1202,1455,1
+JM,283,Crunchyroll,1,5,6,0
+JM,337,Disney Plus,38,84,122,0
+JM,1899,HBO Max,32,882,914,2
+JO,8,Netflix,66,1335,1401,10
+JO,11,MUBI,8,191,199,2
+JO,119,Amazon Prime Video,27,337,364,2
+JO,283,Crunchyroll,0,9,9,0
+JO,350,Apple TV,2,0,2,0
+JP,8,Netflix,136,1370,1506,15
+JP,9,Amazon Prime Video,191,1919,2110,5
+JP,11,MUBI,8,219,227,0
+JP,15,Hulu,109,1143,1252,0
+JP,119,Amazon Prime Video,0,201,201,0
+JP,337,Disney Plus,58,121,179,0
+JP,350,Apple TV,3,0,3,0
+JP,1796,Netflix Standard with Ads,135,1076,1211,15
+JP,2100,Amazon Prime Video with Ads,202,1091,1293,5
+JP,2745,Sony Pictures Core Amazon Channel,1,0,1,0
+KE,8,Netflix,92,1276,1368,12
+KE,9,Amazon Prime Video,0,18,18,0
+KE,11,MUBI,8,186,194,0
+KE,119,Amazon Prime Video,191,1316,1507,3
+KE,283,Crunchyroll,1,6,7,0
+KR,8,Netflix,105,1124,1229,18
+KR,9,Amazon Prime Video,0,6,6,0
+KR,11,MUBI,9,262,271,0
+KR,119,Amazon Prime Video,6,323,329,0
+KR,283,Crunchyroll,1,40,41,0
+KR,337,Disney Plus,55,116,171,0
+KR,350,Apple TV,3,0,3,0
+KR,1796,Netflix Standard with Ads,106,876,982,18
+KW,8,Netflix,68,1336,1404,11
+KW,11,MUBI,8,191,199,1
+KW,119,Amazon Prime Video,25,345,370,2
+KW,283,Crunchyroll,1,10,11,0
+LB,8,Netflix,71,1318,1389,0
+LB,11,MUBI,8,884,892,0
+LB,119,Amazon Prime Video,27,333,360,0
+LB,283,Crunchyroll,1,4,5,0
+LB,350,Apple TV,2,0,2,0
+LC,8,Netflix,95,1334,1429,13
+LC,9,Amazon Prime Video,0,27,27,0
+LC,11,MUBI,8,196,204,3
+LC,119,Amazon Prime Video,230,1310,1540,14
+LC,283,Crunchyroll,0,4,4,0
+LC,337,Disney Plus,37,83,120,0
+LC,1899,HBO Max,31,890,921,5
+LI,8,Netflix,85,1349,1434,3
+LI,9,Amazon Prime Video,0,4,4,0
+LI,11,MUBI,8,171,179,0
+LI,119,Amazon Prime Video,221,627,848,3
+LI,283,Crunchyroll,1,5,6,0
+LI,337,Disney Plus,99,284,383,0
+LI,1899,HBO Max,42,8,50,0
+LT,8,Netflix,78,769,847,10
+LT,11,MUBI,8,169,177,3
+LT,119,Amazon Prime Video,60,164,224,1
+LT,283,Crunchyroll,1,42,43,0
+LT,337,Disney Plus,0,1957,1957,1
+LT,350,Apple TV,1,0,1,0
+LT,1899,HBO Max,23,9,32,1
+LU,8,Netflix,88,904,992,1
+LU,9,Amazon Prime Video,0,27,27,0
+LU,11,MUBI,16,193,209,0
+LU,119,Amazon Prime Video,434,564,998,4
+LU,283,Crunchyroll,3,29,32,0
+LU,337,Disney Plus,48,218,266,0
+LU,350,Apple TV,2,0,2,0
+LU,1899,HBO Max,41,5,46,0
+LV,8,Netflix,75,732,807,1
+LV,9,Amazon Prime Video,0,1,1,0
+LV,11,MUBI,8,171,179,0
+LV,119,Amazon Prime Video,61,148,209,0
+LV,283,Crunchyroll,1,9,10,0
+LV,337,Disney Plus,0,1971,1971,1
+LV,350,Apple TV,1,0,1,0
+LV,1899,HBO Max,22,10,32,1
+LY,8,Netflix,67,1292,1359,0
+LY,11,MUBI,8,193,201,0
+LY,119,Amazon Prime Video,35,338,373,0
+LY,283,Crunchyroll,1,4,5,0
+MA,8,Netflix,64,1224,1288,12
+MA,11,MUBI,7,186,193,2
+MA,119,Amazon Prime Video,32,334,366,3
+MA,283,Crunchyroll,0,7,7,0
+MC,8,Netflix,89,1545,1634,22
+MC,9,Amazon Prime Video,0,8,8,0
+MC,11,MUBI,14,285,299,1
+MC,119,Amazon Prime Video,147,944,1091,11
+MC,283,Crunchyroll,1,9,10,0
+MC,1899,HBO Max,19,578,597,3
+MD,8,Netflix,82,1070,1152,1
+MD,9,Amazon Prime Video,0,2,2,0
+MD,11,MUBI,8,165,173,0
+MD,119,Amazon Prime Video,38,361,399,0
+MD,283,Crunchyroll,35,127,162,1
+MD,350,Apple TV,3,0,3,0
+MD,1899,HBO Max,27,1093,1120,3
+ME,8,Netflix,95,1244,1339,9
+ME,11,MUBI,8,183,191,0
+ME,283,Crunchyroll,1,33,34,0
+ME,337,Disney Plus,0,2769,2769,1
+ME,1899,HBO Max,28,974,1002,2
+MG,8,Netflix,85,1304,1389,10
+MG,9,Amazon Prime Video,0,6,6,0
+MG,11,MUBI,8,186,194,2
+MG,119,Amazon Prime Video,196,1462,1658,18
+MK,8,Netflix,91,1097,1188,20
+MK,9,Amazon Prime Video,0,1,1,0
+MK,11,MUBI,8,695,703,2
+MK,119,Amazon Prime Video,37,310,347,3
+MK,283,Crunchyroll,1,34,35,0
+MK,337,Disney Plus,0,2541,2541,1
+MK,1899,HBO Max,27,885,912,5
+ML,8,Netflix,89,1091,1180,0
+ML,9,Amazon Prime Video,0,6,6,0
+ML,11,MUBI,7,189,196,0
+ML,119,Amazon Prime Video,211,1379,1590,2
+MT,8,Netflix,89,1306,1395,11
+MT,11,MUBI,12,761,773,3
+MT,119,Amazon Prime Video,71,351,422,2
+MT,283,Crunchyroll,1,7,8,0
+MT,337,Disney Plus,0,2189,2189,1
+MT,350,Apple TV,3,0,3,0
+MT,1899,HBO Max,8,8,16,2
+MU,8,Netflix,84,793,877,14
+MU,9,Amazon Prime Video,0,1,1,0
+MU,11,MUBI,8,175,183,1
+MU,119,Amazon Prime Video,0,1,1,0
+MU,283,Crunchyroll,0,2,2,0
+MU,350,Apple TV,3,0,3,0
+MW,8,Netflix,0,1,1,0
+MW,9,Amazon Prime Video,0,19,19,0
+MW,11,MUBI,8,188,196,0
+MW,119,Amazon Prime Video,183,2154,2337,4
+MX,8,Netflix,85,1327,1412,0
+MX,9,Amazon Prime Video,0,70,70,0
+MX,11,MUBI,16,442,458,0
+MX,119,Amazon Prime Video,220,1593,1813,0
+MX,283,Crunchyroll,42,173,215,0
+MX,337,Disney Plus,38,186,224,0
+MX,350,Apple TV,3,0,3,0
+MX,531,Paramount Plus,10,142,152,0
+MX,1796,Netflix Standard with Ads,83,1152,1235,0
+MX,1899,HBO Max,28,838,866,1
+MX,2100,Amazon Prime Video with Ads,233,893,1126,0
+MX,2161,Sony One Amazon Channel,1,0,1,0
+MX,2303,Paramount Plus Premium,10,136,146,0
+MY,8,Netflix,98,1465,1563,1
+MY,9,Amazon Prime Video,0,18,18,0
+MY,11,MUBI,7,311,318,0
+MY,119,Amazon Prime Video,37,653,690,1
+MY,283,Crunchyroll,0,4,4,0
+MY,350,Apple TV,3,0,3,0
+MY,1899,HBO Max,28,579,607,1
+MZ,8,Netflix,76,1241,1317,7
+MZ,9,Amazon Prime Video,0,3,3,0
+MZ,11,MUBI,8,174,182,2
+MZ,119,Amazon Prime Video,178,597,775,6
+MZ,283,Crunchyroll,1,9,10,0
+MZ,350,Apple TV,3,0,3,0
+NE,8,Netflix,85,1342,1427,0
+NE,9,Amazon Prime Video,0,168,168,0
+NE,11,MUBI,9,190,199,0
+NE,119,Amazon Prime Video,200,1262,1462,2
+NE,283,Crunchyroll,1,190,191,0
+NE,337,Disney Plus,0,69,69,0
+NE,350,Apple TV,0,94,94,0
+NE,531,Paramount Plus,0,179,179,0
+NE,1796,Netflix Standard with Ads,0,1674,1674,0
+NE,2100,Amazon Prime Video with Ads,0,753,753,0
+NG,8,Netflix,90,1283,1373,18
+NG,9,Amazon Prime Video,0,21,21,0
+NG,11,MUBI,7,187,194,1
+NG,119,Amazon Prime Video,189,1344,1533,6
+NG,283,Crunchyroll,1,6,7,0
+NI,8,Netflix,92,816,908,1
+NI,9,Amazon Prime Video,0,13,13,0
+NI,11,MUBI,15,256,271,0
+NI,119,Amazon Prime Video,291,1389,1680,2
+NI,283,Crunchyroll,0,13,13,0
+NI,337,Disney Plus,39,143,182,0
+NI,350,Apple TV,3,0,3,0
+NI,531,Paramount Plus,12,79,91,0
+NI,1899,HBO Max,35,465,500,2
+NL,8,Netflix,87,1139,1226,2
+NL,9,Amazon Prime Video,0,38,38,0
+NL,11,MUBI,14,325,339,1
+NL,72,Videoland,1,0,1,0
+NL,119,Amazon Prime Video,225,917,1142,2
+NL,283,Crunchyroll,37,136,173,0
+NL,337,Disney Plus,41,331,372,0
+NL,350,Apple TV,3,0,3,0
+NL,384,HBO Max,1,0,1,0
+NL,472,NLZIET,1,0,1,0
+NL,510,Discovery+,1,0,1,0
+NL,1899,HBO Max,26,669,695,1
+NO,8,Netflix,77,1266,1343,4
+NO,9,Amazon Prime Video,0,15,15,0
+NO,11,MUBI,13,322,335,0
+NO,76,Viaplay,0,1,1,1
+NO,119,Amazon Prime Video,239,764,1003,5
+NO,283,Crunchyroll,0,206,206,0
+NO,337,Disney Plus,56,449,505,0
+NO,350,Apple TV,3,0,3,0
+NO,578,Strim,1,0,1,0
+NO,1899,HBO Max,31,491,522,2
+NZ,8,Netflix,93,1426,1519,3
+NZ,9,Amazon Prime Video,0,148,148,0
+NZ,11,MUBI,14,251,265,0
+NZ,119,Amazon Prime Video,345,2036,2381,3
+NZ,283,Crunchyroll,38,155,193,0
+NZ,337,Disney Plus,49,134,183,0
+NZ,350,Apple TV,3,1,4,0
+NZ,1899,HBO Max,61,8,69,0
+NZ,2745,Sony Pictures Core Amazon Channel,0,1,1,0
+OM,8,Netflix,67,1278,1345,1
+OM,11,MUBI,8,191,199,0
+OM,119,Amazon Prime Video,27,337,364,0
+OM,283,Crunchyroll,0,7,7,0
+OM,350,Apple TV,1,0,1,0
+PA,8,Netflix,92,1182,1274,1
+PA,9,Amazon Prime Video,0,17,17,0
+PA,11,MUBI,15,278,293,0
+PA,119,Amazon Prime Video,276,1307,1583,2
+PA,283,Crunchyroll,0,6,6,0
+PA,337,Disney Plus,40,106,146,0
+PA,350,Apple TV,3,0,3,0
+PA,531,Paramount Plus,13,110,123,0
+PA,1899,HBO Max,32,855,887,1
+PE,8,Netflix,86,1323,1409,16
+PE,9,Amazon Prime Video,0,59,59,0
+PE,11,MUBI,15,411,426,3
+PE,119,Amazon Prime Video,234,1429,1663,9
+PE,283,Crunchyroll,44,182,226,14
+PE,337,Disney Plus,39,184,223,0
+PE,350,Apple TV,3,0,3,0
+PE,531,Paramount Plus,10,158,168,0
+PE,1899,HBO Max,28,846,874,5
+PE,2161,Sony One Amazon Channel,1,0,1,0
+PF,8,Netflix,86,1470,1556,3
+PF,9,Amazon Prime Video,0,17,17,0
+PF,11,MUBI,15,277,292,0
+PF,119,Amazon Prime Video,194,1223,1417,7
+PF,283,Crunchyroll,0,4,4,0
+PG,8,Netflix,0,1,1,0
+PG,9,Amazon Prime Video,0,19,19,0
+PG,11,MUBI,12,175,187,0
+PG,119,Amazon Prime Video,67,1576,1643,2
+PG,283,Crunchyroll,0,2,2,0
+PG,1899,HBO Max,40,28,68,1
+PH,8,Netflix,97,1614,1711,4
+PH,9,Amazon Prime Video,0,24,24,0
+PH,11,MUBI,8,297,305,0
+PH,119,Amazon Prime Video,52,1422,1474,2
+PH,283,Crunchyroll,0,3,3,0
+PH,337,Disney Plus,0,3194,3194,1
+PH,350,Apple TV,3,0,3,0
+PH,1899,HBO Max,27,579,606,2
+PK,8,Netflix,77,1650,1727,6
+PK,11,MUBI,13,313,326,0
+PK,119,Amazon Prime Video,12,267,279,0
+PK,1899,HBO Max,26,9,35,0
+PL,8,Netflix,79,1276,1355,2
+PL,9,Amazon Prime Video,0,53,53,0
+PL,11,MUBI,7,286,293,0
+PL,119,Amazon Prime Video,224,499,723,1
+PL,283,Crunchyroll,2,135,137,0
+PL,337,Disney Plus,39,286,325,0
+PL,350,Apple TV,3,0,3,0
+PL,1899,HBO Max,30,903,933,2
+PS,8,Netflix,66,1274,1340,1
+PS,11,MUBI,8,891,899,0
+PS,119,Amazon Prime Video,26,343,369,0
+PS,283,Crunchyroll,1,8,9,0
+PT,8,Netflix,73,1199,1272,1
+PT,9,Amazon Prime Video,0,42,42,0
+PT,11,MUBI,7,308,315,0
+PT,119,Amazon Prime Video,162,914,1076,1
+PT,283,Crunchyroll,31,114,145,0
+PT,337,Disney Plus,36,321,357,0
+PT,350,Apple TV,3,0,3,0
+PT,1899,HBO Max,18,790,808,12
+PY,8,Netflix,82,777,859,17
+PY,9,Amazon Prime Video,0,15,15,0
+PY,11,MUBI,16,244,260,4
+PY,119,Amazon Prime Video,285,824,1109,8
+PY,283,Crunchyroll,3,65,68,0
+PY,337,Disney Plus,39,138,177,0
+PY,350,Apple TV,3,0,3,0
+PY,531,Paramount Plus,12,76,88,0
+PY,1899,HBO Max,33,460,493,5
+PY,2161,Sony One Amazon Channel,1,0,1,0
+QA,8,Netflix,70,1364,1434,1
+QA,11,MUBI,8,193,201,0
+QA,119,Amazon Prime Video,27,340,367,0
+QA,283,Crunchyroll,0,7,7,0
+QA,350,Apple TV,1,0,1,0
+RO,8,Netflix,83,1272,1355,1
+RO,9,Amazon Prime Video,0,7,7,0
+RO,11,MUBI,7,320,327,0
+RO,119,Amazon Prime Video,33,421,454,1
+RO,283,Crunchyroll,1,142,143,0
+RO,337,Disney Plus,37,292,329,0
+RO,1899,HBO Max,28,1187,1215,3
+RS,8,Netflix,94,1082,1176,8
+RS,9,Amazon Prime Video,0,2,2,0
+RS,11,MUBI,8,832,840,0
+RS,119,Amazon Prime Video,40,312,352,1
+RS,283,Crunchyroll,1,36,37,0
+RS,337,Disney Plus,0,2536,2536,1
+RS,1899,HBO Max,29,884,913,2
+RU,11,MUBI,8,261,269,2
+RU,283,Crunchyroll,1,7,8,0
+RU,350,Apple TV,1,34,35,0
+SA,8,Netflix,69,1393,1462,8
+SA,9,Amazon Prime Video,0,8,8,0
+SA,11,MUBI,8,278,286,2
+SA,119,Amazon Prime Video,21,417,438,4
+SA,350,Apple TV,1,0,1,0
+SC,8,Netflix,86,1346,1432,29
+SC,11,MUBI,7,187,194,2
+SC,119,Amazon Prime Video,230,371,601,17
+SC,283,Crunchyroll,0,7,7,0
+SE,8,Netflix,80,1177,1257,13
+SE,9,Amazon Prime Video,0,29,29,0
+SE,11,MUBI,13,269,282,1
+SE,76,Viaplay,0,1,1,1
+SE,119,Amazon Prime Video,268,797,1065,12
+SE,283,Crunchyroll,34,147,181,5
+SE,337,Disney Plus,59,439,498,0
+SE,350,Apple TV,3,0,3,0
+SE,1899,HBO Max,34,451,485,3
+SE,1944,TV4 Play,1,0,1,0
+SG,8,Netflix,96,1614,1710,10
+SG,9,Amazon Prime Video,0,6,6,0
+SG,11,MUBI,8,290,298,2
+SG,119,Amazon Prime Video,42,638,680,4
+SG,283,Crunchyroll,3,31,34,0
+SG,337,Disney Plus,48,227,275,0
+SG,350,Apple TV,1,0,1,0
+SG,1899,HBO Max,27,581,608,3
+SI,8,Netflix,93,838,931,13
+SI,9,Amazon Prime Video,0,1,1,0
+SI,11,MUBI,8,811,819,3
+SI,119,Amazon Prime Video,67,148,215,1
+SI,283,Crunchyroll,1,54,55,0
+SI,337,Disney Plus,0,2094,2094,1
+SI,350,Apple TV,3,0,3,0
+SI,1899,HBO Max,29,714,743,4
+SK,8,Netflix,92,1202,1294,23
+SK,9,Amazon Prime Video,0,3,3,0
+SK,11,MUBI,7,238,245,3
+SK,119,Amazon Prime Video,53,358,411,1
+SK,283,Crunchyroll,3,85,88,0
+SK,337,Disney Plus,34,255,289,0
+SK,350,Apple TV,3,0,3,0
+SK,1899,HBO Max,28,1129,1157,3
+SM,8,Netflix,95,1282,1377,1
+SM,9,Amazon Prime Video,0,7,7,0
+SM,11,MUBI,18,234,252,0
+SM,119,Amazon Prime Video,315,1600,1915,6
+SM,283,Crunchyroll,1,9,10,0
+SM,337,Disney Plus,56,285,341,0
+SN,8,Netflix,86,1387,1473,7
+SN,9,Amazon Prime Video,0,5,5,0
+SN,11,MUBI,7,185,192,1
+SN,119,Amazon Prime Video,209,1329,1538,17
+SN,283,Crunchyroll,1,6,7,0
+SV,8,Netflix,89,1126,1215,23
+SV,9,Amazon Prime Video,0,14,14,0
+SV,11,MUBI,15,276,291,3
+SV,119,Amazon Prime Video,270,1297,1567,10
+SV,283,Crunchyroll,0,51,51,0
+SV,337,Disney Plus,40,145,185,0
+SV,350,Apple TV,3,0,3,0
+SV,531,Paramount Plus,12,121,133,0
+SV,1899,HBO Max,32,855,887,5
+TC,8,Netflix,93,1503,1596,47
+TC,9,Amazon Prime Video,0,26,26,0
+TC,11,MUBI,14,189,203,3
+TC,119,Amazon Prime Video,237,1283,1520,13
+TC,283,Crunchyroll,1,4,5,0
+TC,1899,HBO Max,32,888,920,5
+TD,8,Netflix,67,843,910,1
+TD,11,MUBI,7,188,195,0
+TD,119,Amazon Prime Video,154,790,944,3
+TD,283,Crunchyroll,0,3,3,0
+TH,8,Netflix,98,1622,1720,2
+TH,9,Amazon Prime Video,0,4,4,0
+TH,11,MUBI,8,299,307,0
+TH,119,Amazon Prime Video,28,641,669,2
+TH,283,Crunchyroll,5,28,33,0
+TH,350,Apple TV,1,0,1,0
+TH,1899,HBO Max,28,582,610,2
+TN,8,Netflix,67,1321,1388,0
+TN,11,MUBI,7,185,192,0
+TN,119,Amazon Prime Video,34,337,371,0
+TN,283,Crunchyroll,1,8,9,0
+TR,8,Netflix,76,1277,1353,12
+TR,9,Amazon Prime Video,0,2,2,0
+TR,11,MUBI,12,517,529,7
+TR,119,Amazon Prime Video,53,555,608,14
+TR,283,Crunchyroll,3,60,63,0
+TR,337,Disney Plus,41,108,149,0
+TR,1899,HBO Max,42,114,156,0
+TT,8,Netflix,96,1303,1399,7
+TT,9,Amazon Prime Video,0,19,19,0
+TT,11,MUBI,8,193,201,0
+TT,119,Amazon Prime Video,233,1241,1474,1
+TT,283,Crunchyroll,3,13,16,0
+TT,337,Disney Plus,37,83,120,0
+TT,350,Apple TV,3,0,3,0
+TT,1899,HBO Max,32,888,920,1
+TW,8,Netflix,90,1451,1541,7
+TW,9,Amazon Prime Video,0,3,3,0
+TW,11,MUBI,8,246,254,2
+TW,119,Amazon Prime Video,28,559,587,4
+TW,283,Crunchyroll,0,3,3,0
+TW,337,Disney Plus,41,203,244,0
+TW,350,Apple TV,3,0,3,0
+TW,1899,HBO Max,27,559,586,3
+TZ,8,Netflix,96,1069,1165,16
+TZ,11,MUBI,8,186,194,3
+TZ,119,Amazon Prime Video,173,733,906,6
+TZ,283,Crunchyroll,1,5,6,0
+UA,8,Netflix,65,620,685,2
+UA,11,MUBI,8,186,194,1
+UA,283,Crunchyroll,1,83,84,0
+UA,350,Apple TV,3,0,3,0
+UA,1899,HBO Max,26,3,29,1
+UG,8,Netflix,94,891,985,3
+UG,9,Amazon Prime Video,0,15,15,0
+UG,11,MUBI,8,175,183,0
+UG,119,Amazon Prime Video,206,990,1196,3
+UG,283,Crunchyroll,0,2,2,0
+UG,350,Apple TV,1,0,1,0
+US,8,Netflix,109,1218,1327,8
+US,9,Amazon Prime Video,977,3657,4634,19
+US,11,MUBI,15,273,288,5
+US,15,Hulu,157,987,1144,10
+US,73,Tubi TV,1,0,1,0
+US,119,Amazon Prime Video,0,6569,6569,0
+US,257,fuboTV,0,1,1,1
+US,283,Crunchyroll,23,172,195,12
+US,337,Disney Plus,45,153,198,0
+US,350,Apple TV,5,10,15,0
+US,361,TCM,2,0,2,0
+US,386,Peacock Premium,99,2255,2354,3
+US,387,Peacock Premium Plus,103,2141,2244,1
+US,531,Paramount Plus,0,772,772,0
+US,582,Paramount+ Amazon Channel,1,0,1,0
+US,633,Paramount+ Roku Premium Channel,1,0,1,0
+US,1796,Netflix Standard with Ads,105,907,1012,8
+US,1899,HBO Max,35,438,473,6
+US,2100,Amazon Prime Video with Ads,963,3601,4564,18
+US,2303,Paramount Plus Premium,71,40,111,1
+US,2383,Philo,1,1,2,0
+US,2616,Paramount Plus Essential,1,0,1,0
+US,2745,Sony Pictures Core Amazon Channel,1,0,1,0
+UY,8,Netflix,88,1140,1228,30
+UY,9,Amazon Prime Video,0,15,15,0
+UY,11,MUBI,16,270,286,3
+UY,119,Amazon Prime Video,277,1227,1504,9
+UY,283,Crunchyroll,0,49,49,0
+UY,337,Disney Plus,39,149,188,0
+UY,531,Paramount Plus,12,99,111,0
+UY,1899,HBO Max,32,848,880,5
+VA,9,Amazon Prime Video,0,11,11,0
+VA,11,MUBI,18,974,992,0
+VA,119,Amazon Prime Video,297,1742,2039,6
+VE,8,Netflix,89,1340,1429,1
+VE,9,Amazon Prime Video,0,52,52,0
+VE,11,MUBI,15,385,400,0
+VE,119,Amazon Prime Video,232,1485,1717,2
+VE,283,Crunchyroll,3,66,69,0
+VE,337,Disney Plus,38,184,222,0
+VE,350,Apple TV,1,3,4,0
+VE,531,Paramount Plus,10,153,163,0
+VE,1899,HBO Max,31,840,871,1
+XK,283,Crunchyroll,1,9,10,0
+YE,8,Netflix,66,1214,1280,1
+YE,11,MUBI,8,191,199,0
+YE,119,Amazon Prime Video,26,348,374,1
+YE,283,Crunchyroll,0,5,5,0
+ZA,8,Netflix,95,1281,1376,16
+ZA,9,Amazon Prime Video,0,38,38,0
+ZA,11,MUBI,8,299,307,2
+ZA,119,Amazon Prime Video,226,2160,2386,8
+ZA,283,Crunchyroll,44,171,215,8
+ZA,350,Apple TV,3,0,3,0
+ZM,8,Netflix,91,1325,1416,12
+ZM,11,MUBI,8,186,194,0
+ZM,119,Amazon Prime Video,145,825,970,3
+ZM,283,Crunchyroll,1,5,6,0
+ZW,8,Netflix,94,1042,1136,14
+ZW,11,MUBI,8,188,196,0
+ZW,119,Amazon Prime Video,165,741,906,4

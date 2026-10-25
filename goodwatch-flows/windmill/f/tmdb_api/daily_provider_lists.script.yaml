@@ -1,8 +1,8 @@
-summary: Read daily service lists into availability history
+summary: Read daily lists and refresh titles whose offers disagree
 description: >-
   Fresh, completeness-gated discover with per-title checks. Dry run by default;
-  only operational Mongo leases in dry runs; never writes
-  streaming_availability.
+  only operational Mongo leases in dry runs. Verified mismatches queue the
+  existing streaming publisher, with fresh watch-provider reads on this job's budget.
 lock: '!inline f/tmdb_api/daily_provider_lists.script.lock'
 concurrency_time_window_s: 0
 concurrent_limit: 1

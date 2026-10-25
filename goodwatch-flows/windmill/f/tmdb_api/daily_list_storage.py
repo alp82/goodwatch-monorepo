@@ -5,6 +5,7 @@
 # requests==2.34.2
 # wmill==1.815.0
 # pydantic==2.13.5
+# qdrant-client==1.19.1
 """Checkpoints and serialized history publication for daily discover reads."""
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
@@ -221,6 +222,11 @@ class ListStorage:
                         list_owned()
                         title_owned()
                     if owned:
+                        # Durable handoff precedes history and its checkpoint.
+                        # Consumer refetches once per title, deduplicating scopes.
+                        from f.tmdb_api.list_offer_refresh import enqueue_list_mismatches
+                        enqueue_list_mismatches(self.db, self.connector, media_type,
+                                                [remaining[tmdb_id] for tmdb_id in owned])
                         result = publish_history(self.connector, media_type,
                                                  [remaining[tmdb_id] for tmdb_id in owned], check_owned)
                         if result.errors:

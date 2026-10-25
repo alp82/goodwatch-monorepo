@@ -318,7 +318,8 @@ async def tmdb_fetch_details_from_api(
     # The awaited-list job feeds reserved document IDs through the regular queue.
     # Keep ordinary crawl reads cached even when the batch contains awaited titles.
     uncached_ids = set(bypass_cache_ids or [])
-    freshness = {id(entry): bypass_cache or str(entry.id) in uncached_ids for entry in next_entries}
+    freshness = {id(entry): bypass_cache or str(entry.id) in uncached_ids
+                 or bool(entry.watch_providers_list_scopes) for entry in next_entries}
     list_of_details = await asyncio.gather(
         *[
             isolate_failure(next_entry, fetch_api_data(next_entry, bypass_cache=freshness[id(next_entry)]))

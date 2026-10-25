@@ -1,7 +1,8 @@
 summary: Daily list checkpoint and history adapters
 description: >-
   Internal module. Preview history reads use SELECT; live main takes a Mongo run
-  lease. Publishers reuse the existing title leases and history writer.
+  lease. Publishers reuse the existing title leases and history writer, staging
+  durable title-offer refresh intents before history and checkpoint writes.
 lock: '!inline f/tmdb_api/daily_list_storage.script.lock'
 kind: script
 schema:

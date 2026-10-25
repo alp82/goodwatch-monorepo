@@ -23,6 +23,16 @@ stored payload, the fetch did not fail and the check is younger than 30 days.
 It removes no availability. Without such a check the arrays stay NULL, which
 means unknown.
 
+Daily service-list checks are the scoped exception: a verified list change
+queues a fresh all-country provider read and this same streaming publisher.
+Durable `watch_providers_list_scopes` evidence can remove older subscription,
+free or ad-supported contributions for that country/service even when TMDB
+omits the country. It leaves unrelated services and rent/buy contributions to
+the ordinary reconciler. Cached or failed details reads cannot undo that
+evidence; a newer fresh API result or successful web scrape can supersede it.
+The queue, backfill commands and cache limits are documented in
+[daily list title offers](daily-list-title-offers.md).
+
 Publication attempts provider resolution regardless of scrape age. If a country
 contains an unresolved provider, it releases the publication lease and runs the
 existing country-fetch job once with `refresh_for_mapping: true`. It then reloads

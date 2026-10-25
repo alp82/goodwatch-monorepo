@@ -84,6 +84,7 @@ def fetch_documents_in_batch(tmdb_ids: list[int], collection: Any) -> dict:
         "tmdb_id": 1,
         "watch_providers": 1,
         "watch_providers_check": 1,
+        "watch_providers_list_scopes": 1,
         "watch_providers_attempted_at": 1,
         "watch_providers_error": 1,
         "updated_at": 1,
@@ -213,7 +214,9 @@ def reconcile_availability(
     api_results = (details.get("watch_providers") or {}).get("results")
     api_results = api_results if details.get("updated_at") and isinstance(api_results, dict) else {}
     frozen = {row.get("country_code") for row in providers if row.get("identity_repair_pending")}
-    api_results = {country: result for country, result in api_results.items() if country not in frozen}
+    from f.tmdb_api.provider_evidence import list_scope_conflicting_countries
+    superseded = list_scope_conflicting_countries(details)
+    api_results = {country: result for country, result in api_results.items() if country not in frozen | superseded}
     verified = {row["country_code"]: row for row in providers
                 if row.get("country_code") and row.get("updated_at")
                 and row["country_code"] not in (deferred_countries or set())
@@ -263,6 +266,15 @@ def reconcile_availability(
             entry(country, offer["stream_type"], service_id).update(
                 stream_url=offer.get("stream_url"), price_dollar=offer.get("price_dollar"),
                 quality=offer.get("quality"))
+    # List-confirmed negatives also cover whole-country omissions and stale
+    # scraped/legacy contributions. Keep unrelated services and rent/buy intact.
+    from f.tmdb_api.provider_evidence import list_scope_checker
+    excludes = list_scope_checker(details)
+    source_times = {row.get('country_code'): utc_ms(row.get('updated_at')) for row in providers}
+    rows = {key: row for key, row in rows.items()
+            if key.country_code in frozen or not excludes(
+                key.country_code, key.streaming_service_id, key.streaming_type,
+                source_times.get(key.country_code))}
     return rows, verified, api_results
 
 
@@ -712,7 +724,7 @@ def copy_media(
     connector: CrateConnector,
     query_selector: dict = {},
     media_type: str = "movie",
-    *, recent_only: bool = True,
+    *, recent_only: bool = True, mapping_refresh_limit: int | None = None,
 ) -> dict:
     if media_type not in ("movie", "show"):
         raise ValueError("Unsupported streaming media type")
@@ -753,7 +765,8 @@ def copy_media(
     lease_wait_seconds = 0 if targeted else SCHEDULED_LEASE_WAIT_SECONDS
     # A targeted title refreshes every unmapped country; a scheduled run defers
     # them once its refreshes are spent, keeping their published contribution.
-    refresh_budget = RefreshBudget(None if targeted else SCHEDULED_MAPPING_REFRESHES)
+    refresh_budget = RefreshBudget(mapping_refresh_limit if mapping_refresh_limit is not None
+                                   else None if targeted else SCHEDULED_MAPPING_REFRESHES)
     # Either source can change independently. Merge them so API-only updates
     # reach the same reconciler without a second writer.
     pending_ids = None if query_selector else {row['_id'] for row in

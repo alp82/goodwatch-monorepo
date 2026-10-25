@@ -1,10 +1,14 @@
 """Atomic country envelopes containing independent source checks and contributions."""
 import json
-from f.tmdb_api.provider_evidence import OFFER_TYPES, snapshot_id, utc_ms, validated_results
+from f.tmdb_api.provider_evidence import (
+    OFFER_TYPES, snapshot_id, utc_ms, validated_results, list_scope_checker, list_scope_conflicting_countries,
+)
 from f.tmdb_web.provider_identity import provider_name_from_url
 
 
 def build_evidence(tmdb_id, media_type, details, providers, rows, verified, resolver, catalog, prior_countries=()):
+    excludes = list_scope_checker(details)
+    superseded = list_scope_conflicting_countries(details)
     api_payload = details.get("watch_providers") or {}
     api = validated_results(api_payload) or {}
     proof = details.get("watch_providers_check") or {}
@@ -51,9 +55,13 @@ def build_evidence(tmdb_id, media_type, details, providers, rows, verified, reso
                     if service is None or offer.get("stream_type") not in OFFER_TYPES:
                         reason = reason or "mapping_incomplete"
                         continue
+                    if excludes(country, service, offer.get('stream_type'), checked):
+                        continue
                     offers.append({"service_id": service, "offer_type": offer["stream_type"],
                                    "stream_url": offer.get("stream_url"), "price_dollar": offer.get("price_dollar"), "quality": offer.get("quality")})
             else:
+                if country in superseded:
+                    reason = reason or 'superseded'
                 if country not in api or checked is None:
                     reason = reason or "missing"
                 if details.get("watch_providers_error"):
@@ -71,7 +79,7 @@ def build_evidence(tmdb_id, media_type, details, providers, rows, verified, reso
             checks.append({"source": source, "snapshot_id": snapshot, "checked_at": checked,
                            "last_attempt_at": max(attempts) if attempts else None,
                            "state": "unknown" if reason else "usable", "reason": reason,
-                           "offer_types": list(OFFER_TYPES), "mapping_complete": reason not in ("mapping_incomplete", "identity_pending", "invalid", "missing"),
+                           "offer_types": list(OFFER_TYPES), "mapping_complete": reason not in ("mapping_incomplete", "identity_pending", "invalid", "missing", "superseded"),
                            "offers": [offer | {"snapshot_id": snapshot} for offer in offers]})
         # Unattributed published legacy rows cannot establish a negative.
         country_rows = rows_by_country.get(country, [])

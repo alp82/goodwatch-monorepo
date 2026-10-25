@@ -129,9 +129,12 @@ with continued membership, the list evidence does not label the type transition
 exact. The job does not heartbeat every open history row; `last_seen_on` keeps the
 history writer's transition-evidence meaning.
 
-No path writes `streaming_availability`, streaming evidence, media rows, title
-documents, the details queue, or its watermark. Catalog publication continues
-through the ordinary publisher.
+The original #682 implementation wrote history and checkpoints only. The
+[title-offer handoff](../../daily-list-title-offers.md) now queues verified
+offer mismatches before those writes, then refetches each affected title once
+and calls the ordinary streaming/vector publishers within the same budget.
+The list parser still does not write offers, reserve the details queue or
+advance its watermark.
 
 ## Completeness and request controls
 

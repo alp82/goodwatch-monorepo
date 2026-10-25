@@ -5,7 +5,8 @@
 # requests==2.34.2
 # wmill==1.815.0
 # pydantic==2.13.5
-"""Read daily service lists; publish only availability history and list checkpoints."""
+# qdrant-client==1.19.1
+"""Read daily lists, publish history/checkpoints and queue the shared title publisher."""
 from datetime import datetime, timezone
 from itertools import product
 from concurrent.futures import ThreadPoolExecutor

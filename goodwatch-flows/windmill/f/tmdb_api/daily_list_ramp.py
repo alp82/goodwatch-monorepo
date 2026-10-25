@@ -5,6 +5,7 @@
 # requests==2.34.2
 # wmill==1.815.0
 # pydantic==2.13.5
+# qdrant-client==1.19.1
 """Reread checkpoints, then baseline missing lists without blocking their siblings."""
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -259,6 +260,15 @@ def run_daily_job(*, countries, service_ids, dry_run, requests_per_second, max_r
             report = run_ramp(client, store, countries=sorted(set(countries)), service_ids=sorted(set(services)),
                               baseline_max_requests=baseline_max_requests,
                               baseline_max_memberships=baseline_max_memberships)
+            # Same pacing, retries and HARD budget as discovery/confirmation.
+            # Pending records survive budget exhaustion and publication failures.
+            if not dry_run:
+                from f.tmdb_api.list_offer_refresh import drain
+                try:
+                    report['offer_refresh'] = drain(client, store.db, store.connector,
+                        dry_run=False, check_owned=owned, max_seconds=max(0, 28000 - (time.monotonic() - started)))
+                except job.RequestBudgetExceeded:
+                    report['hard_budget_exceeded'] = True
             report['seconds'] = round(time.monotonic() - started, 3)
             report['requests'] = getattr(client, 'stats', {})
             report['history'] = getattr(store, 'stats', {})
