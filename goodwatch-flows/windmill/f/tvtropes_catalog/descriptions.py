@@ -70,7 +70,11 @@ def _requested_redirect_identifies(name, requested_url, final_url, canonical):
     slug = urlparse(requested).path.rsplit("/", 1)[1]
     if _identity(name) != _identity(slug):
         return False
-    return parse_qsl(urlparse(final_url).query, keep_blank_values=True) == [("from", "Main." + slug)]
+    pairs = parse_qsl(urlparse(final_url).query, keep_blank_values=True)
+    # The site also canonicalizes capitalization inside its redirect breadcrumb,
+    # e.g. AcCENTOnTheWrongSylLABle becomes AccentOnTheWrongSyllable.
+    return (len(pairs) == 1 and pairs[0][0] == "from"
+            and pairs[0][1].casefold() == ("Main." + slug).casefold())
 
 
 def _text(node):
@@ -222,7 +226,8 @@ def extract_description(html, name, final_url, *, requested_url=None):
 
     Exact primary Main subjects qualify after final/canonical URL verification.
     An old name qualifies only with its caller-supplied bare requested_url,
-    exact name/slug identity and the source's exact from=Main.OldSlug redirect.
+    exact name/slug identity and the source's from=Main.OldSlug redirect
+    (allowing the site's capitalization correction).
     The first examples/heading/rule boundary ends the introduction. At the byte cap,
     keep only complete paragraphs; a first paragraph that cannot fit is rejected.
     """

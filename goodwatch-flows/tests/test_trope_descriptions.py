@@ -215,13 +215,23 @@ class TropeDescriptionTests(unittest.TestCase):
                 result = extract_description(html, 'Old Name', URL + '?from=Main.OldName', requested_url=bad)
                 self.assertIsNone(result["description"])
 
-    def test_redirect_from_must_be_the_case_exact_requested_slug_and_only_query(self):
+    def test_redirect_from_must_identify_the_requested_slug_and_be_the_only_query(self):
         requested = URL.replace('SeriousBusiness', 'OldName')
         html = page(f'<p>{LEAD}</p><hr>')
-        for query in ['from=Main.OtherName', 'from=Main.oldname', 'from=Main.OldName&from=Main.OldName', 'from=Main.OldName&other=1', 'from=Film.OldName']:
+        for query in ['from=Main.OtherName', 'from=Main.OldNames', 'from=Main.OldName&from=Main.OldName', 'from=Main.OldName&other=1', 'from=Film.OldName']:
             with self.subTest(query=query):
                 result = extract_description(html, 'Old Name', URL + '?' + query, requested_url=requested)
                 self.assertIsNone(result["description"])
+
+    def test_source_redirect_breadcrumb_can_normalize_old_slug_capitalization(self):
+        requested = URL.replace('SeriousBusiness', 'AcCENTOnTheWrongSylLABle')
+        canonical = URL.replace('SeriousBusiness', 'AccentUponTheWrongSyllable')
+        html = page(f'<p>{LEAD}</p><hr>', heading='AcCENT upon the Wrong SylLABle', canonical=canonical)
+        final = canonical + '?from=Main.AccentOnTheWrongSyllable'
+        result = extract_description(html, 'Ac CENT On The Wrong Syl LA Ble', final, requested_url=requested)
+        self.assertIsNone(result["error"])
+        self.assertEqual(result["canonical_url"], canonical)
+        self.assertIsNone(extract_description(html, 'An Unrelated Label', final, requested_url=requested)["description"])
 
     def test_contextual_labels_cannot_claim_another_requested_slug(self):
         html = page(f'<p>{LEAD}</p><hr>')
