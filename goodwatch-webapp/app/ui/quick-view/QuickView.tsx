@@ -460,7 +460,7 @@ function LiftCard(p: QuickViewProps) {
 	const tap = useCloseTap(view, requestClose)
 	useFocusScope({
 		active: !closing,
-		scope: () => [layer.current, ...(p.scope?.() ?? [])],
+		scope: () => [layer.current, ...trackingToasts(), ...(p.scope?.() ?? [])],
 		initial: () => view.current,
 		returnTo: () =>
 			p.focusOf?.(state.current.cur.i) ??
@@ -598,7 +598,7 @@ function Drawer(p: QuickViewProps) {
 	const tap = useCloseTap(view, requestClose)
 	useFocusScope({
 		active: !closing,
-		scope: () => [layer.current, ...(p.scope?.() ?? [])],
+		scope: () => [layer.current, ...trackingToasts(), ...(p.scope?.() ?? [])],
 		initial: () => view.current,
 		returnTo: () => p.focusOf?.(p.index) ?? focusTarget(p.anchorOf(p.index)),
 	})
@@ -825,4 +825,9 @@ export function HeaderSteps({ onStep, canPrev, canNext }: Steps) {
 			</button>
 		</div>
 	)
+}
+
+/** A tracking toast (Undo, Set a date) is part of the view's focus scope, though it sits outside it. */
+function trackingToasts(): HTMLElement[] {
+	return [...document.querySelectorAll<HTMLElement>("[data-tracking-toasts]")]
 }

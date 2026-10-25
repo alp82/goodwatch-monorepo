@@ -25,6 +25,7 @@ export function TrackingToastHost({
 		<>
 			{toast && (
 				<div
+					data-tracking-toasts
 					className="pointer-events-none fixed inset-x-0 bottom-28 z-[1300] flex justify-center px-3 lg:bottom-6"
 					aria-live="polite"
 				>
