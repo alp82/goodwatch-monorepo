@@ -16,6 +16,7 @@ Issue: [#763](https://github.com/alp82/goodwatch-monorepo/issues/763). Map: [#76
 | `goodwatch-webapp/app/server/feedback/runtime.server.ts` | Wires the handler to Crate, the shared rate limiter, the session, and SMTP. |
 | `goodwatch-webapp/app/server/feedback/mail.server.ts` | The email for a report. |
 | `goodwatch-webapp/app/utils/feedback.ts` | `FeedbackRequest` and `submitFeedback` for the browser. |
+| `goodwatch-webapp/app/ui/support/ContactSection.tsx`, `contact.ts` | The contact form on `/support` ([#764](https://github.com/alp82/goodwatch-monorepo/issues/764)). Sends kind `contact` with the topic, and for data questions the title, at the top of the message. |
 | `goodwatch-flows/windmill/f/sync/models/crate_schemas.py` | The `feedback_report` and `feedback_screenshot` tables. |
 
 ## Request

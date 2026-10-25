@@ -29,15 +29,28 @@ export interface FeedbackRequest {
 	/** Raw base64 (no data URL), PNG, WebP or JPEG, at most 2 MiB decoded. */
 	screenshot?: string
 }
+/** A refusal from the endpoint; status is 0 when the request never got an answer. */
+export class FeedbackError extends Error {
+	readonly status: number
+	constructor(status: number) {
+		super(`Feedback submission failed (${status})`)
+		this.name = "FeedbackError"
+		this.status = status
+	}
+}
 export async function submitFeedback(
 	report: FeedbackRequest,
 ): Promise<{ reportId: string }> {
-	const response = await fetch("/api/feedback", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(report),
-	})
-	if (!response.ok)
-		throw new Error(`Feedback submission failed (${response.status})`)
+	let response: Response
+	try {
+		response = await fetch("/api/feedback", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(report),
+		})
+	} catch {
+		throw new FeedbackError(0)
+	}
+	if (!response.ok) throw new FeedbackError(response.status)
 	return response.json()
 }

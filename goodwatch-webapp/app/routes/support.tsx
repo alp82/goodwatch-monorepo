@@ -1,5 +1,5 @@
 // Support: how to reach us, how to disconnect an app, the fixes for AI apps (moved here from the old /connect page),
-// help with signing in, and the privacy policy. Styled like the Settings tiles.
+// help with signing in, and the privacy policy. Styled like the Settings tiles. The contact form (#764) comes first.
 import {
 	ArrowRightIcon,
 	ChatBubbleLeftRightIcon,
@@ -19,11 +19,12 @@ import {
 import { DESCRIPTION_SEARCH_EXAMPLE } from "~/ui/connector/example-prompts"
 import { Ui } from "~/ui/connector/help-parts"
 import { ACCOUNT_PATH } from "~/ui/settings/paths"
+import { CONTACT_SECTION_ID, ContactSection } from "~/ui/support/ContactSection"
+import { SUPPORT_EMAIL } from "~/ui/support/contact"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
-const SUPPORT_EMAIL = "hello@goodwatch.app"
 // The MCP endpoint's limits per member (endpoint.server.ts).
 const REQUESTS_PER_MINUTE = 60
 const REQUESTS_PER_HOUR = "1,000"
@@ -33,7 +34,7 @@ export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
 		title: "Support | GoodWatch",
 		description:
-			"Get help with GoodWatch: write to us, disconnect an AI app, fix a connection to Claude or ChatGPT, sign in or reset your password.",
+			"Get help with GoodWatch: send us a message, disconnect an AI app, fix a connection to Claude or ChatGPT, sign in or reset your password.",
 		url: "https://goodwatch.app/support",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "GoodWatch Support",
@@ -54,22 +55,23 @@ export default function Support() {
 					</h1>
 					<p className="max-w-xl text-lg leading-relaxed text-gray-300">
 						Something not working, or a question about your account? Write to
-						us. We read every email.
+						us. We read every message.
 					</p>
 				</div>
 				<div className="flex shrink-0 flex-col gap-2">
 					<a
-						href={`mailto:${SUPPORT_EMAIL}`}
+						href={`#${CONTACT_SECTION_ID}`}
 						className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-amber-700 px-5 py-3 font-semibold text-white transition hover:bg-amber-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
 					>
 						<EnvelopeIcon className="h-5 w-5" aria-hidden="true" />
-						{SUPPORT_EMAIL}
+						Write to us
 					</a>
-					<p className="text-center text-sm text-gray-400">
-						Write from your account's email address.
-					</p>
 				</div>
 			</header>
+
+			<div className="mt-4 md:mt-6">
+				<ContactSection />
+			</div>
 
 			<div className="mt-4 grid gap-4 md:mt-6 md:grid-cols-2">
 				<Tile
