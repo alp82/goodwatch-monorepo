@@ -1,6 +1,6 @@
 # Feedback reports
 
-`POST /api/feedback` is the one entry point for every report kind: `bug`, `idea`, `data`, and `contact`. Guests can send every kind. Each report is stored in Crate, posted to the private staff Discord forum, and emailed for contact messages and when Discord fails. Data reports are evidence only. This endpoint never changes catalog data.
+`POST /api/feedback` is the one entry point for every report kind: `bug`, `idea`, `data`, and `contact`. Guests can send every kind. Each new report is stored in Crate, posted to the private staff Discord forum, and emailed for contact messages and when Discord fails. Data reports are evidence only. This endpoint never changes catalog data.
 
 Issue: [#763](https://github.com/alp82/goodwatch-monorepo/issues/763). Map: [#762](https://github.com/alp82/goodwatch-monorepo/issues/762). Owner decisions: `docs/research/user-feedback-channels.md`.
 
@@ -12,10 +12,11 @@ Issue: [#763](https://github.com/alp82/goodwatch-monorepo/issues/763). Map: [#76
 | `goodwatch-webapp/app/routes/api.feedback.$reportId.screenshot.ts` | Serves a stored screenshot to staff. |
 | `goodwatch-webapp/app/server/feedback/handler.server.ts` | Request checks, rate limit, storage, Discord, email fallback. Takes its store, limiter, session, and mail as dependencies, so the tests run without services. |
 | `goodwatch-webapp/app/server/feedback/schema.ts` | The zod schema, `safePath` (query secret removal), and `display` (Discord text sanitizing). |
+| `goodwatch-webapp/app/server/feedback/store.server.ts` | Crate queries, duplicate merging, and screenshot storage. Runs no queries at module load. |
 | `goodwatch-webapp/app/server/feedback/runtime.server.ts` | Wires the handler to Crate, the shared rate limiter, the session, and SMTP. |
 | `goodwatch-webapp/app/server/feedback/mail.server.ts` | The email for a report. |
 | `goodwatch-webapp/app/utils/feedback.ts` | `FeedbackRequest` and `submitFeedback` for the browser. |
-| `goodwatch-flows/windmill/f/sync/models/crate_schemas.py` | The `feedback_report` table. |
+| `goodwatch-flows/windmill/f/sync/models/crate_schemas.py` | The `feedback_report` and `feedback_screenshot` tables. |
 
 ## Request
 
@@ -45,13 +46,39 @@ The rate limit uses the shared limiter in `app/server/rate-limit.server.ts`. It 
 
 ### Idempotency
 
-The report id is a SHA-256 hash of the sender (member id, or the hashed address for a guest) and the idempotency key. The row is inserted with `ON CONFLICT (id) DO NOTHING`. A retry that finds its row gets 200 with the same id and sends nothing again.
+The report id is a SHA-256 hash of the sender (member id, or the hashed address for a guest) and the idempotency key. The row is inserted with `ON CONFLICT (id) DO NOTHING`. A retry that finds its row gets 200 with the same id and sends nothing again. Merged submission ids are recorded in the original row's `metadata.feedbackSubmissionIds`, so their retries return the original report id without increasing the count, including after triage closes the report. Rate limits still apply to retries.
 
 ## Storage
 
-Table `doc.feedback_report`, one row per report: id, kind, message, `payload` (the data report), `metadata`, member id, sender email, status (`new`), Discord message and thread id, the screenshot as base64 WebP, created at. The screenshot column is stored like `doc.user_avatar.data`: `INDEX OFF`, no column store.
+Table `doc.feedback_report` holds report text, the data payload, metadata, sender identity, triage fields, and the Discord receipt. It never holds screenshot bytes. `has_screenshot` starts as false and becomes true after the screenshot row is stored. A failed marker update can leave it false even when the screenshot exists. The staff route reads the screenshot table directly.
 
-The table is registered in `crate_schemas.py` next to `user_avatar`. The webapp never creates tables and runs nothing against Crate at startup. Create the table by running the Windmill script `f/sync/init/cratedb` with `dry_run=true`, reviewing the plan, then running it with `dry_run=false`. Equivalent DDL:
+Table `doc.feedback_screenshot` holds one normalized WebP per report, keyed by `report_id`. Its `data` column stores base64 with `INDEX OFF` and no column store, as `doc.user_avatar.data` does. Its shard and replica settings also match `user_avatar`. Screenshot storage runs after the report insert. A screenshot write failure is logged and does not fail the report or remove the Discord attachment. A merged submission retains the original report's stored screenshot; its own screenshot is attached to the thread reply only.
+
+### Duplicate data reports
+
+For `data` reports, `dedupe_key` is the SHA-256 hex digest of canonical JSON with these fields in this order: `entityKind`, `ids`, `field`, and `suggestedValue`. Identifier keys are sorted lexicographically. String suggestions are trimmed and lowercased. Numeric, boolean, and null suggestions keep their type. An omitted suggestion omits that JSON field and differs from explicit null. Identifier values and field names are unchanged. Message, current value, source, country, and provider ids do not affect the key. Other report kinds store a null key.
+
+When a report with the same key has status `new` or `in_progress`, the handler increments its `duplicate_count`, sets `updated_at`, and returns `200 {"reportId":"<original id>"}`. It replies in the existing Discord thread instead of creating a forum post. Closed reports do not absorb new submissions. If several open rows exist, the oldest wins, with id as the tie breaker.
+
+Crate has no unique constraint for a non-primary-key column. A `REFRESH TABLE` before the lookup narrows the visibility window. A version-checked update prevents lost increments and merging into a report that staff closed after the read. Conflicts trigger up to three attempts. Concurrent first submissions can still both insert rows with the same key. This trade-off is accepted for this ticket. A storage error still takes the delivery fallback described below, so deduplication is best effort while Crate is unavailable.
+
+### Triage fields
+
+`FEEDBACK_STATUSES` in `schema.ts` is the single TypeScript status definition. The store validates statuses with its derived zod schema. The endpoint creates reports as `new` and does not accept status or staff identity from visitors.
+
+| Status | Meaning |
+| --- | --- |
+| `new` | Awaiting review. |
+| `in_progress` | Staff are reviewing or working on the report. |
+| `done` | The reported work is complete. |
+| `wont_fix` | Staff decided not to act. |
+| `duplicate` | Staff identified another report as the canonical report. |
+
+`updated_at` is nullable and records the last change when set, including duplicate increments. `handled_by` is a nullable staff member id for future triage. It starts as null. No staff update endpoint or UI is included. `correction_id` is a nullable reference to the future `doc.catalog_correction` row from [#766](https://github.com/alp82/goodwatch-monorepo/issues/766). This endpoint does not write it.
+
+### Create the tables
+
+Both tables are registered in `crate_schemas.py` next to `user_avatar`. The webapp never creates tables and runs nothing against Crate at startup. Run the Windmill script `f/sync/init/cratedb` with `dry_run=true`, review the plan, then run it with `dry_run=false`. Equivalent DDL:
 
 ```sql
 CREATE TABLE doc.feedback_report (
@@ -65,18 +92,35 @@ CREATE TABLE doc.feedback_report (
  status TEXT NOT NULL DEFAULT 'new',
  discord_message_id TEXT,
  discord_thread_id TEXT,
- screenshot TEXT INDEX OFF STORAGE WITH (columnstore = false),
+ dedupe_key TEXT,
+ duplicate_count INTEGER NOT NULL DEFAULT 1,
+ updated_at TIMESTAMP WITH TIME ZONE,
+ handled_by TEXT,
+ correction_id TEXT,
+ has_screenshot BOOLEAN,
+ created_at TIMESTAMP WITH TIME ZONE NOT NULL
+) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas = '0-1');
+
+CREATE TABLE doc.feedback_screenshot (
+ report_id TEXT PRIMARY KEY,
+ data TEXT INDEX OFF STORAGE WITH (columnstore = false),
+ content_type TEXT NOT NULL,
+ bytes INTEGER,
  created_at TIMESTAMP WITH TIME ZONE NOT NULL
 ) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas = '0-1');
 ```
 
-### Before the table exists
+This listing describes the final schema for new tables. If the earlier schema was applied, review an explicit migration to add the report columns and move existing screenshot data before removing the old `screenshot` column. Review the sync plan rather than assuming it migrates existing evidence.
 
-A deploy to main goes live before an operator runs the schema sync. Until then the insert fails. The handler logs the failure, still posts the report to Discord and emails it, and answers 200. Only when storage, Discord, and email all fail does it answer 503. The screenshot route answers 503 while the table is missing. Nothing else on the site is affected.
+### Before the tables exist
+
+A deploy to main goes live before an operator runs the schema sync. Until then the report insert fails if `doc.feedback_report` is missing. The handler logs the failure, still posts the report to Discord and emails it, and answers 200. Only when storage, Discord, and email all fail does it answer 503. If only `doc.feedback_screenshot` is missing, the report still stores and delivers, and the screenshot storage error is logged. The screenshot route answers 503 while its table is missing. Nothing else on the site is affected.
 
 ## Discord
 
-The webhook URL must be an `https://discord.com/api/.../webhooks/...` URL. The handler posts one forum post per report with `?wait=true`, a `thread_name` of the kind and the first words of the message, the kind's tag from `FEEDBACK_DISCORD_TAG_IDS`, and `allowed_mentions: {"parse": []}`. The embed holds the message, the report id, the member id or `Guest`, the metadata, and the data report. Every display string goes through `display`, which removes links, email addresses, mentions, angle-bracket markup, Markdown characters, and control characters, and caps the length under Discord's limits (thread name 100, description 4096, field 1024, embed 6000). Screenshots are attached as `screenshot.webp`.
+The webhook URL must be an `https://discord.com/api/.../webhooks/...` URL. For each new report, the handler posts one forum post with `?wait=true`, a `thread_name` of the kind and the first words of the message, the kind's tag from `FEEDBACK_DISCORD_TAG_IDS`, and `allowed_mentions: {"parse": []}`. The embed holds the message, the report id, the member id or `Guest`, the metadata, and the data report. Every display string goes through `display`, which removes links, email addresses, mentions, angle-bracket markup, Markdown characters, and control characters, and caps the length under Discord's limits (thread name 100, description 4096, field 1024, embed 6000). Screenshots are attached as `screenshot.webp`.
+
+A duplicate uses the webhook's `thread_id` query parameter and the content `Duplicate count increased to <count>.`, with mentions disabled, no `thread_name`, and no tags. It preserves the original Discord receipt. If the original report has no thread receipt, the handler logs the failure and emails the submission without opening another post.
 
 The request uses `nativeFetch` (undici) with a 10 second timeout. The polyfilled global `fetch` crashed production when an abort fired during a request with a body (October 23, 2026); do not switch back.
 
@@ -93,7 +137,7 @@ A delivery failure after the row is stored is logged with the report id and neve
 
 ## Screenshots for staff
 
-`GET /api/feedback/:reportId/screenshot` returns the WebP with `Cache-Control: private, no-store`. The caller must be signed in and listed in `FEEDBACK_STAFF_MEMBER_IDS`. An empty list denies everyone. The webapp has no staff role; the allowlist is the only staff check, and it stays server side.
+`GET /api/feedback/:reportId/screenshot` reads `doc.feedback_screenshot` by `report_id` and returns the stored content type and WebP bytes with `Cache-Control: private, no-store`. The caller must be signed in and listed in `FEEDBACK_STAFF_MEMBER_IDS`. An empty list denies everyone. The webapp has no staff role; the allowlist is the only staff check, and it stays server side.
 
 ## Environment
 
@@ -111,14 +155,14 @@ All of these are optional. Without them the endpoint stores reports (once the ta
 
 ```sh
 cd goodwatch-webapp
-node --test app/server/feedback/handler.test.ts
+node --test app/server/feedback/*.test.ts
 ```
 
-The tests use fakes for storage, the limiter, the session, Discord, and email. They cover validation, origin, body cap, both rate limits, the hashed limiter key, query secret removal, the Discord payload and its sanitizing, the email fallback, idempotency, the soft storage failure, screenshot normalization, and the staff check.
+The tests use fakes for storage, the limiter, the session, Discord, and email. They cover validation, origin, body cap, both rate limits, the hashed limiter key, query secret removal, the Discord payload and its sanitizing, the email fallback, idempotency, the soft storage failure, screenshot normalization, and the staff check. The store tests inject SQL results to cover dedupe misses, both open statuses, closed statuses, version conflicts, merged retries, status validation, screenshot table writes and reads, and screenshot storage failure. No test contacts a database or delivery service.
 
 ## Release checklist
 
 1. Create the Discord forum channel and its four tags, then a webhook for it.
 2. Set `FEEDBACK_DISCORD_WEBHOOK_URL`, `FEEDBACK_DISCORD_TAG_IDS`, and `FEEDBACK_STAFF_MEMBER_IDS` in Coolify.
-3. Run `f/sync/init/cratedb` (dry run, then apply) to create `doc.feedback_report`.
+3. Run `f/sync/init/cratedb` (dry run, then apply) to create `doc.feedback_report` and `doc.feedback_screenshot`.
 4. Send one report of each kind from the site and check that each post carries the right tag.

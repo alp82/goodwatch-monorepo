@@ -9,11 +9,14 @@ import {
 	type FeedbackStore,
 	type Limiter,
 	type Report,
+	type Screenshot,
+	type StoredReport,
+	dedupeKey,
 	handleFeedback,
 	readScreenshot,
 } from "./handler.server.ts"
 import { feedbackMail } from "./mail.server.ts"
-import { safePath } from "./schema.ts"
+import { FEEDBACK_STATUSES, feedbackStatusSchema, safePath } from "./schema.ts"
 
 const now = 1800000000000
 
@@ -34,16 +37,20 @@ function memoryLimiter(): Limiter {
 
 function fixture(member: string | null = null) {
 	const rows = new Map<string, Report>()
+	const screenshots = new Map<string, Screenshot>()
 	const store = {
-		insert: mock.fn(async (r: Report) => {
-			if (rows.has(r.id)) return false
+		insert: mock.fn(async (r: Report): Promise<StoredReport> => {
+			if (rows.has(r.id)) return { kind: "retry", reportId: r.id }
 			rows.set(r.id, r)
-			return true
+			return { kind: "new", reportId: r.id }
+		}),
+		storeScreenshot: mock.fn(async (id: string, screenshot: Screenshot) => {
+			screenshots.set(id, screenshot)
 		}),
 		discordId: mock.fn(
 			async (_id: string, _m: string, _t: string | null) => {},
 		),
-		screenshot: mock.fn(async (id: string) => rows.get(id)?.screenshot ?? null),
+		screenshot: mock.fn(async (id: string) => screenshots.get(id) ?? null),
 	} satisfies FeedbackStore
 	const deps = {
 		store,
@@ -89,7 +96,7 @@ function fixture(member: string | null = null) {
 			}),
 			deps as unknown as Dependencies,
 		)
-	return { rows, deps, submit }
+	return { rows, screenshots, deps, submit }
 }
 const quiet = (t: { mock: typeof mock }) =>
 	t.mock.method(console, "error", () => {})
@@ -354,7 +361,11 @@ test("normalizes PNG and JPEG screenshots to WebP and attaches them; staff autho
 	)
 	const r = [...f.rows.values()][0]
 	assert.equal(
-		(await sharp(Buffer.from(r.screenshot!, "base64")).metadata()).format,
+		(
+			await sharp(
+				Buffer.from(f.screenshots.get(r.id)!.data, "base64"),
+			).metadata()
+		).format,
 		"webp",
 	)
 	const form = f.deps.send.mock.calls[0].arguments[1]!.body as unknown as {
@@ -391,4 +402,197 @@ test("addresses mail to support with the validated contact sender as Reply-To", 
 	assert.equal(mail.from, "GoodWatch <hello@goodwatch.app>")
 	assert.equal(mail.replyTo, "sender@example.com")
 	assert.ok(String(mail.text).includes(report.id))
+})
+
+test("data keys canonicalize identifier order and suggestion case and whitespace only", async () => {
+	const f = fixture()
+	const data = {
+		entityKind: "movie",
+		ids: { tmdb: 1, imdb: "tt1" },
+		field: "title",
+		suggestedValue: " New title ",
+	}
+	await f.submit({ kind: "data", data })
+	await f.submit({
+		kind: "data",
+		data: {
+			...data,
+			ids: { imdb: "tt1", tmdb: 1 },
+			suggestedValue: "new TITLE",
+			currentValue: "ignored",
+			country: "DE",
+		},
+	})
+	const [a, b] = [...f.rows.values()]
+	assert.match(a.dedupeKey!, /^[a-f0-9]{64}$/)
+	assert.equal(a.dedupeKey, b.dedupeKey)
+	assert.equal(a.status, "new")
+	assert.equal(a.duplicateCount, 1)
+	assert.equal(a.updatedAt, null)
+	assert.equal(a.handledBy, null)
+	assert.equal(a.correctionId, null)
+	await f.submit({
+		kind: "data",
+		data: { ...data, suggestedValue: "different" },
+	})
+	assert.notEqual([...f.rows.values()][2].dedupeKey, a.dedupeKey)
+	for (const kind of ["bug", "idea", "contact"] as const) {
+		const g = fixture()
+		await g.submit({ kind, email: "sender@example.com" })
+		assert.equal([...g.rows.values()][0].dedupeKey, null)
+	}
+	// Numeric/boolean values keep their type; omitted and explicit null differ.
+	const input = {
+		kind: "data" as const,
+		message: "x",
+		website: "",
+		startedAt: now,
+		idempotencyKey: "unused",
+		data: { ...data, entityKind: "movie" as const },
+	}
+	for (const suggestedValue of [1, true, null, undefined])
+		assert.notEqual(
+			dedupeKey({ ...input, data: { ...input.data, suggestedValue } }),
+			a.dedupeKey,
+		)
+	assert.notEqual(
+		dedupeKey({ ...input, data: { ...input.data, suggestedValue: null } }),
+		dedupeKey({ ...input, data: { ...input.data, suggestedValue: undefined } }),
+	)
+})
+
+test("statuses have one validated definition and cannot be submitted by a visitor", async () => {
+	assert.deepEqual(FEEDBACK_STATUSES, [
+		"new",
+		"in_progress",
+		"done",
+		"wont_fix",
+		"duplicate",
+	])
+	for (const status of FEEDBACK_STATUSES)
+		assert.equal(feedbackStatusSchema.parse(status), status)
+	assert.equal(feedbackStatusSchema.safeParse("closed").success, false)
+	assert.equal(
+		(await fixture().submit({ status: "done", handledBy: "staff" })).status,
+		400,
+	)
+})
+
+test("a duplicate replies in the existing thread with the count and keeps the success shape", async () => {
+	const f = fixture()
+	const reportId = "a".repeat(64)
+	f.deps.store.insert.mock.mockImplementation(async () => ({
+		kind: "duplicate",
+		reportId,
+		count: 3,
+		threadId: "456",
+		retry: false,
+	}))
+	const response = await f.submit({
+		kind: "data",
+		data: { entityKind: "movie", ids: { tmdb: 1 }, field: "title" },
+	})
+	assert.equal(response.status, 200)
+	assert.deepEqual(await response.json(), { reportId })
+	const [url, init] = f.deps.send.mock.calls[0].arguments
+	assert.equal(new URL(String(url)).searchParams.get("thread_id"), "456")
+	assert.equal(new URL(String(url)).searchParams.get("wait"), "true")
+	assert.ok(init?.signal)
+	assert.deepEqual(JSON.parse(init!.body as string), {
+		content: "Duplicate count increased to 3.",
+		allowed_mentions: { parse: [] },
+	})
+	assert.equal(f.deps.store.discordId.mock.callCount(), 0)
+	assert.equal(f.deps.email.mock.callCount(), 0)
+	f.deps.store.insert.mock.mockImplementation(async () => ({
+		kind: "duplicate",
+		reportId,
+		count: 3,
+		threadId: "456",
+		retry: true,
+	}))
+	assert.equal((await f.submit()).status, 200)
+	assert.equal(f.deps.send.mock.callCount(), 1)
+})
+
+test("a duplicate with no thread uses email without opening a new forum post", async (t) => {
+	quiet(t)
+	const f = fixture()
+	f.deps.store.insert.mock.mockImplementation(async () => ({
+		kind: "duplicate",
+		reportId: "a".repeat(64),
+		count: 2,
+		threadId: null,
+		retry: false,
+	}))
+	assert.equal((await f.submit()).status, 200)
+	assert.equal(f.deps.send.mock.callCount(), 0)
+	assert.equal(f.deps.email.mock.callCount(), 1)
+})
+
+test("screenshot storage follows the report and fails softly with the attachment intact", async (t) => {
+	const errors = quiet(t)
+	const f = fixture()
+	const png = await sharp({
+		create: { width: 8, height: 8, channels: 3, background: "red" },
+	})
+		.png()
+		.toBuffer()
+	f.deps.store.storeScreenshot.mock.mockImplementation(
+		async (id, screenshot) => {
+			assert.ok(f.rows.has(id))
+			assert.equal(screenshot.contentType, "image/webp")
+			assert.equal(
+				screenshot.bytes,
+				Buffer.byteLength(screenshot.data, "base64"),
+			)
+			assert.equal(screenshot.createdAt, now)
+			throw new Error("RelationUnknown doc.feedback_screenshot")
+		},
+	)
+	assert.equal(
+		(await f.submit({ screenshot: png.toString("base64") })).status,
+		200,
+	)
+	assert.equal(f.deps.store.storeScreenshot.mock.callCount(), 1)
+	assert.equal(f.rows.size, 1)
+	assert.equal(f.screenshots.size, 0)
+	assert.equal([...f.rows.values()][0].hasScreenshot, false)
+	const form = f.deps.send.mock.calls[0].arguments[1]!.body as unknown as {
+		get(name: string): unknown
+	}
+	assert.ok(form.get("files[0]"))
+	assert.ok(
+		errors.mock.calls.some((call) =>
+			String(call.arguments[0]).includes("storing the screenshot failed"),
+		),
+	)
+	const report = [...f.rows.values()][0]
+	assert.equal(
+		(await readScreenshot(report.id, true, f.deps.store)).status,
+		404,
+	)
+})
+
+test("a missing report table during the data lookup also fails softly", async (t) => {
+	quiet(t)
+	const f = fixture()
+	const { createFeedbackStore } = await import("./store.server.ts")
+	const store = createFeedbackStore(async (sql) => {
+		assert.equal(sql, "REFRESH TABLE doc.feedback_report")
+		throw new Error("RelationUnknown doc.feedback_report")
+	})
+	// Use the actual store's data path, including its lookup before insert.
+	f.deps.store.insert.mock.mockImplementation(store.insert)
+	assert.equal(
+		(
+			await f.submit({
+				kind: "data",
+				data: { entityKind: "movie", ids: { tmdb: 1 }, field: "title" },
+			})
+		).status,
+		200,
+	)
+	assert.equal(f.rows.size, 0)
+	assert.equal(f.deps.send.mock.callCount(), 1)
 })

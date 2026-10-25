@@ -1,4 +1,14 @@
 import { z } from "zod"
+export const FEEDBACK_STATUSES = [
+	"new",
+	"in_progress",
+	"done",
+	"wont_fix",
+	"duplicate",
+] as const
+export const feedbackStatusSchema = z.enum(FEEDBACK_STATUSES)
+export type FeedbackStatus = z.infer<typeof feedbackStatusSchema>
+
 const text = z.string().max(200)
 const value = z.union([
 	z.string().max(4000),

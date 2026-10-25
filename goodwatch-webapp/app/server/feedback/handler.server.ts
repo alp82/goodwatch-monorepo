@@ -14,6 +14,7 @@ import { readJsonLimited } from "../profile/request.server.ts"
 import { clientAddress } from "../talked-about-now/rate-limit.server.ts"
 import {
 	type FeedbackInput,
+	type FeedbackStatus,
 	display,
 	feedbackSchema,
 	safePath,
@@ -29,16 +30,67 @@ export interface Report {
 	memberId: string | null
 	screenshot?: string
 	createdAt: number
+	updatedAt: number | null
+	handledBy: string | null
+	correctionId: string | null
+	status: FeedbackStatus
+	dedupeKey: string | null
+	duplicateCount: number
+	hasScreenshot: boolean
+}
+export interface Screenshot {
+	data: string
+	contentType: string
+	bytes: number
+	createdAt: number
+}
+export type StoredReport =
+	| { kind: "new" | "retry"; reportId: string }
+	| {
+			kind: "duplicate"
+			reportId: string
+			count: number
+			threadId: string | null
+			retry: boolean
+	  }
+
+/** Canonical field order and sorted identifier keys; only suggestions normalize strings. */
+export function dedupeKey(input: FeedbackInput): string | null {
+	if (input.kind !== "data" || !input.data) return null
+	const { entityKind, ids, field, suggestedValue } = input.data
+	return createHash("sha256")
+		.update(
+			JSON.stringify({
+				entityKind,
+				ids: Object.fromEntries(
+					Object.keys(ids)
+						.sort()
+						.map((key) => [key, ids[key]]),
+				),
+				field,
+				// Omitted suggestions remain distinct from an explicit null.
+				...(suggestedValue !== undefined
+					? {
+							suggestedValue:
+								typeof suggestedValue === "string"
+									? suggestedValue.trim().toLowerCase()
+									: suggestedValue,
+						}
+					: {}),
+			}),
+		)
+		.digest("hex")
 }
 export interface FeedbackStore {
-	/** Atomic INSERT ON CONFLICT DO NOTHING. False means a previously accepted retry. */
-	insert(report: Report): Promise<boolean>
+	/** Accept a new report, merge an open data report, or recognize an accepted retry. */
+	insert(report: Report): Promise<StoredReport>
+	storeScreenshot(id: string, screenshot: Screenshot): Promise<void>
 	discordId(
 		id: string,
 		messageId: string,
 		threadId: string | null,
 	): Promise<void>
-	screenshot(id: string): Promise<string | null>
+	screenshot(id: string): Promise<Screenshot | null>
 }
 /** The shared limiter (app/server/rate-limit.server.ts): counted in Valkey, so every webapp instance shares it. */
 export interface Limiter {
@@ -187,13 +239,26 @@ export async function handleFeedback(
 			memberId,
 			screenshot,
 			createdAt: now,
+			updatedAt: null,
+			handledBy: null,
+			correctionId: null,
+			status: "new",
+			dedupeKey: dedupeKey(input),
+			duplicateCount: 1,
+			hasScreenshot: false,
 		}
 		// Storage first, so that a retry finds its row. A failing store (the table is not there yet, Crate is down)
 		// doesn't lose the report: it still goes to Discord and email, and the failure is logged.
 		let stored = false
+		let duplicate: Extract<StoredReport, { kind: "duplicate" }> | undefined
 		try {
-			if (!(await deps.store.insert(report)))
-				return answer(200, { reportId: id })
+			const result = await deps.store.insert(report)
+			if (
+				result.kind === "retry" ||
+				(result.kind === "duplicate" && result.retry)
+			)
+				return answer(200, { reportId: result.reportId })
+			if (result.kind === "duplicate") duplicate = result
 			stored = true
 		} catch (error) {
 			console.error("[feedback] storing the report failed; delivering anyway", {
@@ -201,11 +266,34 @@ export async function handleFeedback(
 				error: error instanceof Error ? error.message : String(error),
 			})
 		}
+		if (stored && screenshot && !duplicate) {
+			try {
+				await deps.store.storeScreenshot(id, {
+					data: screenshot,
+					contentType: "image/webp",
+					bytes: Buffer.byteLength(screenshot, "base64"),
+					createdAt: now,
+				})
+				report.hasScreenshot = true
+			} catch (error) {
+				console.error("[feedback] storing the screenshot failed", {
+					reportId: id,
+					error: error instanceof Error ? error.message : String(error),
+				})
+			}
+		}
 		let delivered = false
 		if (env.FEEDBACK_DISCORD_WEBHOOK_URL) {
 			let receipt: Awaited<ReturnType<typeof postDiscord>> | undefined
 			try {
-				receipt = await postDiscord(report, env, deps.send ?? nativeFetch)
+				if (duplicate && !duplicate.threadId)
+					throw new Error("Duplicate report has no Discord thread")
+				receipt = await postDiscord(
+					report,
+					env,
+					deps.send ?? nativeFetch,
+					duplicate,
+				)
 				delivered = true
 			} catch (error) {
 				console.error("[feedback] Discord delivery failed", {
@@ -213,7 +301,7 @@ export async function handleFeedback(
 					error: error instanceof Error ? error.message : String(error),
 				})
 			}
-			if (receipt && stored) {
+			if (receipt && stored && !duplicate) {
 				try {
 					await deps.store.discordId(id, receipt.id, receipt.channel_id ?? null)
 				} catch {
@@ -236,7 +324,7 @@ export async function handleFeedback(
 			}
 		}
 		if (!stored && !delivered && !emailed) return answer(503)
-		return answer(200, { reportId: id })
+		return answer(200, { reportId: duplicate?.reportId ?? id })
 	} catch (error) {
 		console.error("[feedback] request failed", error)
 		return answer(503)
@@ -264,6 +352,7 @@ export async function postDiscord(
 	report: Report,
 	env: Record<string, string | undefined>,
 	send: typeof fetch,
+	duplicate?: Extract<StoredReport, { kind: "duplicate" }>,
 ) {
 	const url = new URL(env.FEEDBACK_DISCORD_WEBHOOK_URL!)
 	if (
@@ -273,6 +362,8 @@ export async function postDiscord(
 	)
 		throw new Error("Invalid webhook URL")
 	url.searchParams.set("wait", "true")
+	url.searchParams.delete("thread_id")
+	if (duplicate?.threadId) url.searchParams.set("thread_id", duplicate.threadId)
 	let tag: string | undefined
 	try {
 		const tags = JSON.parse(env.FEEDBACK_DISCORD_TAG_IDS ?? "{}")
@@ -281,42 +372,51 @@ export async function postDiscord(
 		/* optional */
 	}
 	// Discord limits: thread_name 100, embed title 256, description 4096, field value 1024, embed total 6000.
-	const payload = {
-		thread_name:
-			`${report.kind}: ${display(report.message, 65) || report.id.slice(0, 12)}`.slice(
-				0,
-				100,
-			),
-		...(tag ? { applied_tags: [tag] } : {}),
-		allowed_mentions: { parse: [] },
-		embeds: [
-			{
-				title: `Feedback: ${report.kind}`,
-				description: display(report.message, 3500),
-				fields: [
-					{ name: "Report", value: report.id },
+	const payload = duplicate
+		? {
+				content: `Duplicate count increased to ${duplicate.count}.`,
+				allowed_mentions: { parse: [] },
+			}
+		: {
+				thread_name:
+					`${report.kind}: ${display(report.message, 65) || report.id.slice(0, 12)}`.slice(
+						0,
+						100,
+					),
+				...(tag ? { applied_tags: [tag] } : {}),
+				allowed_mentions: { parse: [] },
+				embeds: [
 					{
-						name: "Member",
-						value: report.memberId ? display(report.memberId, 100) : "Guest",
+						title: `Feedback: ${report.kind}`,
+						description: display(report.message, 3500),
+						fields: [
+							{ name: "Report", value: report.id },
+							{
+								name: "Member",
+								value: report.memberId
+									? display(report.memberId, 100)
+									: "Guest",
+							},
+							{
+								name: "Context",
+								value:
+									display(JSON.stringify(report.metadata), 1000) ||
+									"Unavailable",
+							},
+							...(report.data
+								? [
+										{
+											name: "Data",
+											value:
+												display(JSON.stringify(report.data), 1000) ||
+												"Unavailable",
+										},
+									]
+								: []),
+						],
 					},
-					{
-						name: "Context",
-						value:
-							display(JSON.stringify(report.metadata), 1000) || "Unavailable",
-					},
-					...(report.data
-						? [
-								{
-									name: "Data",
-									value:
-										display(JSON.stringify(report.data), 1000) || "Unavailable",
-								},
-							]
-						: []),
 				],
-			},
-		],
-	}
+			}
 	let body: BodyInit
 	let requestHeaders: Record<string, string> = {}
 	if (report.screenshot) {
@@ -365,7 +465,7 @@ export async function readScreenshot(
 	if (!staff) return new Response(null, { status: 403, headers })
 	if (!/^[a-f0-9]{64}$/.test(id))
 		return new Response(null, { status: 404, headers })
-	let data: string | null
+	let data: Screenshot | null
 	try {
 		data = await store.screenshot(id)
 	} catch (error) {
@@ -376,10 +476,10 @@ export async function readScreenshot(
 		return new Response(null, { status: 503, headers })
 	}
 	return data
-		? new Response(Buffer.from(data, "base64"), {
+		? new Response(Buffer.from(data.data, "base64"), {
 				headers: {
 					"Cache-Control": "private, no-store",
-					"Content-Type": "image/webp",
+					"Content-Type": data.contentType,
 					"X-Content-Type-Options": "nosniff",
 					"Content-Security-Policy": "default-src 'none'",
 				},
