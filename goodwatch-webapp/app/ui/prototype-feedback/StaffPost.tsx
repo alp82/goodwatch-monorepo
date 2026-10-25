@@ -126,7 +126,7 @@ const STATUS_LINE: Record<Status, string> = {
 
 function Meta({ viewer }: { viewer: string }) {
 	return {
-		member: viewer === "guest" ? "Guest · no account" : viewer === "trusted" ? "@sam (trusted · 14 kept fixes)" : "@sam (member since 2026-08)",
+		member: viewer === "guest" ? "Guest · no account" : viewer === "trusted" ? "Trusted member · 14 kept fixes" : "Member since 2026-08",
 	}
 }
 
@@ -221,7 +221,7 @@ function Post({ post, variant, status, setStatus }: { post: PostId; variant: "A"
 				<div className={`mt-1 text-sm ${D.text}`}>Hi! I picked a handle in a hurry. Is there a way to change it without losing my ratings?</div>
 				<div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2">
 					<Field name="Topic" value="My account" />
-					<Field name="From" value={viewer === "guest" ? "Guest" : "@sam (member)"} />
+					<Field name="From" value={viewer === "guest" ? "Guest" : "Member"} />
 					<Field name="Reply to" value="Sent by email · not shown here" />
 					<Field name="Email" value="Delivered to hello@goodwatch.app" />
 				</div>

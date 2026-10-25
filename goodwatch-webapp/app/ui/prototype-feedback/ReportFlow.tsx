@@ -3,11 +3,17 @@
 // - steps (A): one question per screen, Back and Next.
 // - form (B): a section picker first, then every question on one scrolling form that opens as you answer.
 // - chips (C): one compact screen of chips with the before/after side by side.
-import { ArrowUturnLeftIcon, CheckCircleIcon, ClockIcon, FlagIcon } from "@heroicons/react/20/solid"
-import { useState } from "react"
+import {
+	ArrowUturnLeftIcon,
+	CheckCircleIcon,
+	ClockIcon,
+	FlagIcon,
+} from "@heroicons/react/20/solid"
+import { useEffect, useState } from "react"
+import { TmdbImage } from "~/ui/TmdbImage"
 import { PrimaryButton } from "~/ui/auth/kit"
 import { INPUT } from "~/ui/prototype-feedback/FeedbackDock"
-import { TmdbImage } from "~/ui/TmdbImage"
+import person from "~/ui/prototype-feedback/fixture-person.json"
 import {
 	AREAS,
 	type Area,
@@ -19,26 +25,52 @@ import {
 	OUTCOME_COPY,
 	type Outcome,
 	type Problem,
+	type Question,
 	SCORE_SOURCES,
 	SEASONS,
+	SOMETHING_ELSE,
 	type Viewer,
 	newDraft,
-	outcomeOf,
+	outcomeOfDraft,
+	problemsOf,
 } from "~/ui/prototype-feedback/model"
 import { currentValue, useFeedback } from "~/ui/prototype-feedback/store"
-import person from "~/ui/prototype-feedback/fixture-person.json"
 
 export type Layout = "steps" | "form" | "chips"
 
 export { INPUT }
-const LABEL = "mb-2 block text-[11px] font-semibold uppercase tracking-[.12em] text-gray-500"
+const LABEL =
+	"mb-2 block text-[11px] font-semibold uppercase tracking-[.12em] text-gray-500"
 
-export function Chip({ on, onClick, children, className = "" }: { on: boolean; onClick: () => void; children: React.ReactNode; className?: string }) {
+/** A chip. `spot` names the part of the page it stands for, which lights up while the chip is hovered or focused. */
+export function Chip({
+	on,
+	onClick,
+	children,
+	className = "",
+	spot,
+}: {
+	on: boolean
+	onClick: () => void
+	children: React.ReactNode
+	className?: string
+	spot?: string
+}) {
+	const { setSpot } = useFeedback()
+	const point = spot
+		? {
+				onPointerEnter: () => setSpot(spot),
+				onPointerLeave: () => setSpot(null),
+				onFocus: () => setSpot(spot),
+				onBlur: () => setSpot(null),
+			}
+		: {}
 	return (
 		<button
 			type="button"
 			aria-pressed={on}
 			onClick={onClick}
+			{...point}
 			className={`inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-sm transition-colors ${on ? "bg-white font-semibold text-black" : "bg-white/8 text-gray-200 hover:bg-white/15"} ${className}`}
 		>
 			{children}
@@ -46,7 +78,17 @@ export function Chip({ on, onClick, children, className = "" }: { on: boolean; o
 	)
 }
 
-function Row({ on, onClick, children, hint }: { on: boolean; onClick: () => void; children: React.ReactNode; hint?: React.ReactNode }) {
+function Row({
+	on,
+	onClick,
+	children,
+	hint,
+}: {
+	on: boolean
+	onClick: () => void
+	children: React.ReactNode
+	hint?: React.ReactNode
+}) {
 	return (
 		<button
 			type="button"
@@ -54,8 +96,13 @@ function Row({ on, onClick, children, hint }: { on: boolean; onClick: () => void
 			onClick={onClick}
 			className={`flex w-full cursor-pointer items-center gap-3 rounded-xl p-3 text-left ring-1 transition-colors ${on ? "bg-amber-500/10 ring-amber-500/60" : "bg-white/[0.04] ring-white/10 hover:ring-white/25"}`}
 		>
-			<span className={`size-4 shrink-0 rounded-full ring-2 ${on ? "bg-amber-400 ring-amber-400" : "ring-white/30"}`} aria-hidden />
-			<span className="min-w-0 flex-1 text-sm font-medium text-gray-100">{children}</span>
+			<span
+				className={`size-4 shrink-0 rounded-full ring-2 ${on ? "bg-amber-400 ring-amber-400" : "ring-white/30"}`}
+				aria-hidden
+			/>
+			<span className="min-w-0 flex-1 text-sm font-medium text-gray-100">
+				{children}
+			</span>
 			{hint}
 		</button>
 	)
@@ -68,49 +115,114 @@ const FlagHint = () => (
 	</span>
 )
 
-export function OutcomeLine({ outcome, viewer }: { outcome: Outcome; viewer: Viewer }) {
+export function OutcomeLine({
+	outcome,
+	viewer,
+}: { outcome: Outcome; viewer: Viewer }) {
 	if (outcome === "live")
 		return (
 			<p className="flex items-center gap-1.5 text-xs text-emerald-300">
-				<CheckCircleIcon className="size-4" aria-hidden /> Goes live as soon as you send it
+				<CheckCircleIcon className="size-4" aria-hidden /> Goes live as soon as
+				you send it
 			</p>
 		)
 	if (outcome === "pending")
 		return (
 			<p className="flex items-center gap-1.5 text-xs text-gray-400">
-				<ClockIcon className="size-4" aria-hidden /> {viewer === "guest" ? "We check it before it shows" : "Staff check it before it shows"}
+				<ClockIcon className="size-4" aria-hidden />{" "}
+				{viewer === "guest"
+					? "We check it before it shows"
+					: "Staff check it before it shows"}
 			</p>
 		)
 	return (
 		<p className="flex items-center gap-1.5 text-xs text-gray-400">
-			<FlagIcon className="size-4" aria-hidden /> We look into it. This part isn't edited by hand.
+			<FlagIcon className="size-4" aria-hidden /> We look into it. This part
+			isn't edited by hand.
 		</p>
 	)
 }
 
 // --- The questions after "what's wrong" ---
 
-function Questions({ d, set, compact }: { d: Draft; set: (p: Partial<Draft>) => void; compact?: boolean }) {
+function Questions({
+	d,
+	set,
+	compact,
+}: { d: Draft; set: (p: Partial<Draft>) => void; compact?: boolean }) {
 	const { media } = useFeedback()
 	const ask = d.problem?.ask ?? []
 	const offered = media.streaming_availabilities
-		.map((a) => media.streaming_services.find((s) => s.tmdb_id === a.streaming_service_id))
+		.map((a) =>
+			media.streaming_services.find(
+				(s) => s.tmdb_id === a.streaming_service_id,
+			),
+		)
 		.filter((s): s is NonNullable<typeof s> => Boolean(s))
-	const missing = OTHER_SERVICES.filter((s) => !offered.some((o) => o.tmdb_id === s.tmdb_id))
+	const missing = OTHER_SERVICES.filter(
+		(s) => !offered.some((o) => o.tmdb_id === s.tmdb_id),
+	)
 	const block = compact ? "flex flex-col gap-4" : "flex flex-col gap-5"
+	const isOther = (q: Question) => q in d.others
+	/** A regular answer drops the question's "Something else". */
+	const answer = (q: Question, p: Partial<Draft>) => {
+		const { [q]: _, ...rest } = d.others
+		set({ ...p, others: rest })
+	}
+	const other = (q: Question, clear: Partial<Draft> = {}) => (
+		<Chip
+			on={isOther(q)}
+			onClick={() =>
+				set({ ...clear, others: { ...d.others, [q]: d.others[q] ?? "" } })
+			}
+		>
+			{SOMETHING_ELSE}
+		</Chip>
+	)
+	const otherField = (q: Question, placeholder: string) =>
+		isOther(q) && (
+			<input
+				// biome-ignore lint/a11y/noAutofocus: it opens because the member just asked for it
+				autoFocus
+				value={d.others[q] ?? ""}
+				onChange={(e) => set({ others: { ...d.others, [q]: e.target.value } })}
+				aria-label={placeholder}
+				placeholder={placeholder}
+				className={`${INPUT} mt-2`}
+			/>
+		)
 	return (
 		<div className={block}>
 			{(ask.includes("provider") || ask.includes("missingProvider")) && (
 				<div>
-					<span className={LABEL}>{ask.includes("provider") ? "Which service?" : "Where is it?"}</span>
+					<span className={LABEL}>
+						{ask.includes("provider") ? "Which service?" : "Where is it?"}
+					</span>
 					<div className="flex flex-wrap gap-2">
 						{(ask.includes("provider") ? offered : missing).map((s) => (
-							<Chip key={s.tmdb_id} on={d.provider === s.tmdb_id} onClick={() => set({ provider: s.tmdb_id })} className="pl-1.5">
-								<TmdbImage kind="logo" path={s.logo} width={24} ratio={1} alt="" className="size-6 rounded-md" />
+							<Chip
+								key={s.tmdb_id}
+								on={d.provider === s.tmdb_id && !isOther("provider")}
+								onClick={() => answer("provider", { provider: s.tmdb_id })}
+								spot={
+									ask.includes("provider") ? `provider:${s.tmdb_id}` : undefined
+								}
+								className="pl-1.5"
+							>
+								<TmdbImage
+									kind="logo"
+									path={s.logo}
+									width={24}
+									ratio={1}
+									alt=""
+									className="size-6 rounded-md"
+								/>
 								{s.name}
 							</Chip>
 						))}
+						{other("provider", { provider: undefined })}
 					</div>
+					{otherField("provider", "Which service?")}
 				</div>
 			)}
 			{ask.includes("offer") && (
@@ -118,11 +230,18 @@ function Questions({ d, set, compact }: { d: Draft; set: (p: Partial<Draft>) => 
 					<span className={LABEL}>How?</span>
 					<div className="flex flex-wrap gap-2">
 						{(["flatrate", "rent", "buy"] as const).map((o) => (
-							<Chip key={o} on={d.offer === o} onClick={() => set({ offer: o })}>
+							<Chip
+								key={o}
+								on={d.offer === o && !isOther("offer")}
+								onClick={() => answer("offer", { offer: o })}
+								spot={`offer:${o}`}
+							>
 								{{ flatrate: "Stream", rent: "Rent", buy: "Buy" }[o]}
 							</Chip>
 						))}
+						{other("offer")}
 					</div>
+					{otherField("offer", "How can you watch it there?")}
 				</div>
 			)}
 			{ask.includes("country") && (
@@ -130,11 +249,18 @@ function Questions({ d, set, compact }: { d: Draft; set: (p: Partial<Draft>) => 
 					<span className={LABEL}>In which country?</span>
 					<div className="flex flex-wrap gap-2">
 						{COUNTRIES.map(([code, name]) => (
-							<Chip key={code} on={d.country === code} onClick={() => set({ country: code })}>
+							<Chip
+								key={code}
+								on={d.country === code && !isOther("country")}
+								onClick={() => answer("country", { country: code })}
+								spot="country"
+							>
 								{name}
 							</Chip>
 						))}
+						{other("country")}
 					</div>
+					{otherField("country", "Which country?")}
 				</div>
 			)}
 			{ask.includes("episode") && (
@@ -142,24 +268,37 @@ function Questions({ d, set, compact }: { d: Draft; set: (p: Partial<Draft>) => 
 					<span className={LABEL}>Which episode?</span>
 					<div className="flex flex-wrap gap-2">
 						{SEASONS.map((s) => (
-							<Chip key={s.number} on={d.season === s.number} onClick={() => set({ season: s.number, episode: 1 })}>
+							<Chip
+								key={s.number}
+								on={d.season === s.number && !isOther("season")}
+								onClick={() =>
+									answer("season", { season: s.number, episode: 1 })
+								}
+								spot={`season:${s.number}`}
+							>
 								Season {s.number}
 							</Chip>
 						))}
+						{other("season")}
 					</div>
-					<select
-						aria-label="Episode"
-						value={d.episode}
-						onChange={(e) => set({ episode: Number(e.target.value) })}
-						className={`${INPUT} mt-2`}
-					>
-						{SEASONS.find((s) => s.number === d.season)?.episodes.map((e) => (
-							<option key={e.number} value={e.number}>
-								Episode {e.number} · {e.title}
-							</option>
-						))}
-						{d.problem?.id === "ep-missing" && <option value={99}>Not in this list</option>}
-					</select>
+					{otherField("season", "Which episode? (season, number or title)")}
+					{!isOther("season") && (
+						<select
+							aria-label="Episode"
+							value={d.episode}
+							onChange={(e) => set({ episode: Number(e.target.value) })}
+							className={`${INPUT} mt-2`}
+						>
+							{SEASONS.find((s) => s.number === d.season)?.episodes.map((e) => (
+								<option key={e.number} value={e.number}>
+									Episode {e.number} · {e.title}
+								</option>
+							))}
+							{d.problem?.id === "ep-missing" && (
+								<option value={99}>Not in this list</option>
+							)}
+						</select>
+					)}
 				</div>
 			)}
 			{ask.includes("person") && (
@@ -167,12 +306,27 @@ function Questions({ d, set, compact }: { d: Draft; set: (p: Partial<Draft>) => 
 					<span className={LABEL}>Who?</span>
 					<div className="flex flex-wrap gap-2">
 						{CAST.map((c) => (
-							<Chip key={c.id} on={d.person === c.id} onClick={() => set({ person: c.id })} className="pl-1">
-								<TmdbImage kind="profile" path={c.profile_path} width={28} ratio={1} alt="" className="size-7 rounded-full object-cover" />
+							<Chip
+								key={c.id}
+								on={d.person === c.id && !isOther("person")}
+								onClick={() => answer("person", { person: c.id })}
+								spot={`person:${c.id}`}
+								className="pl-1"
+							>
+								<TmdbImage
+									kind="profile"
+									path={c.profile_path}
+									width={28}
+									ratio={1}
+									alt=""
+									className="size-7 rounded-full object-cover"
+								/>
 								{c.name}
 							</Chip>
 						))}
+						{other("person", { person: undefined })}
 					</div>
+					{otherField("person", "Who? Their name")}
 				</div>
 			)}
 			{ask.includes("credit") && (
@@ -180,11 +334,19 @@ function Questions({ d, set, compact }: { d: Draft; set: (p: Partial<Draft>) => 
 					<span className={LABEL}>Which title?</span>
 					<div className="flex flex-wrap gap-2">
 						{person.knownFor.map((c) => (
-							<Chip key={c.key} on={d.credit === c.key} onClick={() => set({ credit: c.key })}>
-								{c.title} <span className="text-xs opacity-60">{c.release_year}</span>
+							<Chip
+								key={c.key}
+								on={d.credit === c.key && !isOther("credit")}
+								onClick={() => answer("credit", { credit: c.key })}
+								spot={`credit:${c.key}`}
+							>
+								{c.title}{" "}
+								<span className="text-xs opacity-60">{c.release_year}</span>
 							</Chip>
 						))}
+						{other("credit", { credit: undefined })}
 					</div>
+					{otherField("credit", "Which title?")}
 				</div>
 			)}
 			{ask.includes("source") && (
@@ -192,11 +354,19 @@ function Questions({ d, set, compact }: { d: Draft; set: (p: Partial<Draft>) => 
 					<span className={LABEL}>Which score?</span>
 					<div className="flex flex-wrap gap-2">
 						{SCORE_SOURCES.map((s) => (
-							<Chip key={s.id} on={d.source === s.id} onClick={() => set({ source: s.id })}>
-								{s.label} <span className="tabular-nums opacity-60">{s.value}</span>
+							<Chip
+								key={s.id}
+								on={d.source === s.id && !isOther("source")}
+								onClick={() => answer("source", { source: s.id })}
+								spot={`source:${s.id}`}
+							>
+								{s.label}{" "}
+								<span className="tabular-nums opacity-60">{s.value}</span>
 							</Chip>
 						))}
+						{other("source", { source: undefined })}
 					</div>
+					{otherField("source", "Which score?")}
 				</div>
 			)}
 		</div>
@@ -204,26 +374,79 @@ function Questions({ d, set, compact }: { d: Draft; set: (p: Partial<Draft>) => 
 }
 
 /** The current value, filled in, and what it should be. */
-function Values({ d, set, sideBySide }: { d: Draft; set: (p: Partial<Draft>) => void; sideBySide?: boolean }) {
+function Values({
+	d,
+	set,
+	sideBySide,
+}: { d: Draft; set: (p: Partial<Draft>) => void; sideBySide?: boolean }) {
 	const p = d.problem
 	if (!p) return null
 	const removing = ["not-there", "not-in-it", "not-theirs"].includes(p.id)
+	if (p.id === "other")
+		return (
+			<div className="flex flex-col gap-4">
+				<label>
+					<span className={LABEL}>What's wrong?</span>
+					<textarea
+						// biome-ignore lint/a11y/noAutofocus: it opens because the member just picked "Something else"
+						autoFocus
+						value={d.note}
+						onChange={(e) => set({ note: e.target.value })}
+						rows={3}
+						placeholder="Tell us in your words"
+						className={`${INPUT} py-2.5`}
+					/>
+				</label>
+				<label>
+					<span className={LABEL}>
+						Source link{" "}
+						<span className="normal-case tracking-normal text-gray-600">
+							· optional
+						</span>
+					</span>
+					<input
+						value={d.link}
+						onChange={(e) => set({ link: e.target.value })}
+						inputMode="url"
+						placeholder="https://…"
+						className={INPUT}
+					/>
+				</label>
+			</div>
+		)
 	return (
 		<div className="flex flex-col gap-4">
-			<div className={sideBySide && p.suggest ? "grid grid-cols-2 gap-2" : "flex flex-col gap-4"}>
+			<div
+				className={
+					sideBySide && p.suggest
+						? "grid grid-cols-2 gap-2"
+						: "flex flex-col gap-4"
+				}
+			>
 				<div>
 					<span className={LABEL}>On GoodWatch now</span>
-					<p className="rounded-lg bg-white/[0.04] px-3 py-2.5 text-sm text-gray-300 ring-1 ring-white/10">{currentValue(d)}</p>
+					<p className="rounded-lg bg-white/[0.04] px-3 py-2.5 text-sm text-gray-300 ring-1 ring-white/10">
+						{currentValue(d)}
+					</p>
 				</div>
 				{p.suggest && (
 					<label>
 						<span className={LABEL}>
-							{p.suggest} <span className="normal-case tracking-normal text-gray-600">· optional</span>
+							{p.suggest}{" "}
+							<span className="normal-case tracking-normal text-gray-600">
+								· optional
+							</span>
 						</span>
 						<input
 							value={d.suggested}
 							onChange={(e) => set({ suggested: e.target.value })}
-							placeholder={p.id === "date" ? "e.g. June 22, 2022" : p.id === "character" ? "e.g. Carmen Berzatto" : "Type it here"}
+							placeholder={
+								p.id === "date"
+									? "e.g. June 22, 2022"
+									: p.id === "character"
+										? "e.g. Carmen Berzatto"
+										: "Type it here"
+							}
 							className={INPUT}
 						/>
 					</label>
@@ -233,7 +456,10 @@ function Values({ d, set, sideBySide }: { d: Draft; set: (p: Partial<Draft>) => 
 			{p.flag ? (
 				<label>
 					<span className={LABEL}>
-						What looks off? <span className="normal-case tracking-normal text-gray-600">· optional</span>
+						What looks off?{" "}
+						<span className="normal-case tracking-normal text-gray-600">
+							· optional
+						</span>
 					</span>
 					<textarea
 						value={d.note}
@@ -246,7 +472,10 @@ function Values({ d, set, sideBySide }: { d: Draft; set: (p: Partial<Draft>) => 
 			) : null}
 			<label>
 				<span className={LABEL}>
-					Source link <span className="normal-case tracking-normal text-gray-600">· optional</span>
+					Source link{" "}
+					<span className="normal-case tracking-normal text-gray-600">
+						· optional
+					</span>
 				</span>
 				<input
 					value={d.link}
@@ -260,20 +489,53 @@ function Values({ d, set, sideBySide }: { d: Draft; set: (p: Partial<Draft>) => 
 	)
 }
 
-function ready(d: Draft, stage: "problem" | "questions") {
+/** "questions": every question answered (a picked chip, or typed text after "Something else"). "send": that, plus the
+ * free text a "Something else" problem needs. */
+function ready(d: Draft, stage: "problem" | "questions" | "send") {
 	if (!d.problem) return false
 	if (stage === "problem") return true
 	const a = d.problem.ask
-	if ((a.includes("provider") || a.includes("missingProvider")) && !d.provider) return false
-	if (a.includes("person") && !d.person) return false
-	if (a.includes("credit") && !d.credit) return false
-	if (a.includes("source") && !d.source) return false
+	const ok = (q: Question, v: unknown) =>
+		q in d.others ? Boolean(d.others[q]?.trim()) : Boolean(v)
+	if (
+		(a.includes("provider") || a.includes("missingProvider")) &&
+		!ok("provider", d.provider)
+	)
+		return false
+	if (a.includes("offer") && !ok("offer", d.offer)) return false
+	if (a.includes("country") && !ok("country", d.country)) return false
+	if (a.includes("episode") && !ok("season", d.season)) return false
+	if (a.includes("person") && !ok("person", d.person)) return false
+	if (a.includes("credit") && !ok("credit", d.credit)) return false
+	if (a.includes("source") && !ok("source", d.source)) return false
+	if (stage === "send" && d.problem.id === "other" && !d.note.trim())
+		return false
 	return true
+}
+
+/** The part of the page the picked answers point at, lit while the questions are open. */
+function spotOf(d: Draft): string | null {
+	const a = d.problem?.ask ?? []
+	if (a.includes("person") && d.person && !("person" in d.others))
+		return `person:${d.person}`
+	if (a.includes("provider") && d.provider && !("provider" in d.others))
+		return `provider:${d.provider}`
+	if (a.includes("source") && d.source && !("source" in d.others))
+		return `source:${d.source}`
+	if (a.includes("credit") && d.credit && !("credit" in d.others))
+		return `credit:${d.credit}`
+	if (a.includes("episode") && !("season" in d.others))
+		return `episode:${d.season}:${d.episode}`
+	return null
 }
 
 // --- After sending ---
 
-export function Result({ c, onClose, onAnother }: { c: Correction; onClose: () => void; onAnother?: () => void }) {
+export function Result({
+	c,
+	onClose,
+	onAnother,
+}: { c: Correction; onClose: () => void; onAnother?: () => void }) {
 	const { undo, corrections, viewer } = useFeedback()
 	const undone = corrections.find((x) => x.id === c.id)?.undone
 	const copy = OUTCOME_COPY[c.outcome]
@@ -283,17 +545,29 @@ export function Result({ c, onClose, onAnother }: { c: Correction; onClose: () =
 				<span
 					className={`grid size-10 shrink-0 place-items-center rounded-full ${c.outcome === "live" ? "bg-emerald-500/15 text-emerald-300" : c.outcome === "pending" ? "bg-amber-500/15 text-amber-300" : "bg-white/10 text-gray-200"}`}
 				>
-					{c.outcome === "live" ? <CheckCircleIcon className="size-6" /> : c.outcome === "pending" ? <ClockIcon className="size-6" /> : <FlagIcon className="size-5" />}
+					{c.outcome === "live" ? (
+						<CheckCircleIcon className="size-6" />
+					) : c.outcome === "pending" ? (
+						<ClockIcon className="size-6" />
+					) : (
+						<FlagIcon className="size-5" />
+					)}
 				</span>
 				<div>
-					<p className="text-lg font-semibold text-white">{undone ? "Undone" : copy.title}</p>
-					<p className="mt-0.5 text-sm text-gray-400">{undone ? "The page shows the old value again." : copy.body}</p>
+					<p className="text-lg font-semibold text-white">
+						{undone ? "Undone" : copy.title}
+					</p>
+					<p className="mt-0.5 text-sm text-gray-400">
+						{undone ? "The page shows the old value again." : copy.body}
+					</p>
 				</div>
 			</div>
-			{c.outcome !== "flag" && (
+			{c.outcome !== "flag" && c.problem.id !== "other" && (
 				<div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-xl bg-white/[0.04] p-3 text-sm ring-1 ring-white/10">
 					<span className="text-gray-500">Was</span>
-					<span className="text-gray-400 line-through decoration-gray-600">{c.before}</span>
+					<span className="text-gray-400 line-through decoration-gray-600">
+						{c.before}
+					</span>
 					<span className="text-gray-500">Now</span>
 					<span className="font-medium text-gray-100">{c.after}</span>
 				</div>
@@ -315,11 +589,19 @@ export function Result({ c, onClose, onAnother }: { c: Correction; onClose: () =
 					</button>
 				)}
 				{onAnother && (
-					<button type="button" onClick={onAnother} className="min-h-10 cursor-pointer rounded-xl px-4 font-semibold text-gray-300 hover:bg-white/10">
+					<button
+						type="button"
+						onClick={onAnother}
+						className="min-h-10 cursor-pointer rounded-xl px-4 font-semibold text-gray-300 hover:bg-white/10"
+					>
 						Report something else
 					</button>
 				)}
-				<button type="button" onClick={onClose} className="ml-auto min-h-10 cursor-pointer rounded-xl bg-white px-5 font-semibold text-black hover:bg-gray-200">
+				<button
+					type="button"
+					onClick={onClose}
+					className="ml-auto min-h-10 cursor-pointer rounded-xl bg-white px-5 font-semibold text-black hover:bg-gray-200"
+				>
 					Done
 				</button>
 			</div>
@@ -328,7 +610,11 @@ export function Result({ c, onClose, onAnother }: { c: Correction; onClose: () =
 }
 
 function Footer({ children }: { children: React.ReactNode }) {
-	return <div className="sticky -bottom-4 -mx-4 mt-5 border-t border-white/10 bg-gray-950 px-4 pt-3 pb-5 sm:-mx-5 sm:px-5">{children}</div>
+	return (
+		<div className="sticky -bottom-4 -mx-4 mt-5 border-t border-white/10 bg-gray-950 px-4 pt-3 pb-5 sm:-mx-5 sm:px-5">
+			{children}
+		</div>
+	)
 }
 
 // --- The flow ---
@@ -347,10 +633,13 @@ export function ReportFlow({
 	onPickArea?: (a: Area | null) => void
 	areas?: Area[]
 }) {
-	const { viewer, submit } = useFeedback()
-	const [d, setD] = useState<Draft>(() => newDraft(area ?? "watch"))
+	const { viewer, submit, setPinned } = useFeedback()
 	const [step, setStep] = useState(0)
 	const [sent, setSent] = useState<Correction | null>(null)
+	const [d, setD] = useState<Draft>(() => newDraft(area ?? "watch"))
+	const pinned = sent ? null : spotOf(d)
+	useEffect(() => setPinned(pinned), [pinned, setPinned])
+	useEffect(() => () => setPinned(null), [setPinned])
 	const set = (p: Partial<Draft>) => setD((x) => ({ ...x, ...p }))
 	const restart = () => {
 		setD(newDraft(area ?? "watch"))
@@ -360,10 +649,10 @@ export function ReportFlow({
 	}
 	if (sent) return <Result c={sent} onClose={onClose} onAnother={restart} />
 
-	const def = AREAS[d.area]
+	const problems = problemsOf(d.area)
 	const pick = (problem: Problem) => set({ problem })
 	const send = () => setSent(submit(d))
-	const outcome = d.problem ? outcomeOf(d.problem, viewer) : null
+	const outcome = outcomeOfDraft(d, viewer)
 
 	if (layout === "form" && area === null)
 		return (
@@ -377,9 +666,15 @@ export function ReportFlow({
 							onClick={() => onPickArea?.(a)}
 							className="flex min-h-20 cursor-pointer flex-col items-start justify-between rounded-xl bg-white/[0.04] p-3 text-left ring-1 ring-white/10 hover:ring-white/30"
 						>
-							<span className="font-semibold text-gray-100">{AREAS[a].label}</span>
+							<span className="font-semibold text-gray-100">
+								{AREAS[a].label}
+							</span>
 							<span className="text-xs text-gray-500">
-								{AREAS[a].problems.every((p) => p.flag) ? "Flag it for us" : viewer === "trusted" ? "Fix it now" : "Suggest a fix"}
+								{AREAS[a].problems.every((p) => p.flag)
+									? "Flag it for us"
+									: viewer === "trusted"
+										? "Fix it now"
+										: "Suggest a fix"}
 							</span>
 						</button>
 					))}
@@ -399,9 +694,16 @@ export function ReportFlow({
 				</p>
 				{step === 0 && (
 					<div className="flex flex-col gap-2">
-						<p className="mb-1 text-base font-semibold text-gray-100">What's wrong?</p>
-						{def.problems.map((p) => (
-							<Row key={p.id} on={d.problem?.id === p.id} onClick={() => pick(p)} hint={p.flag ? <FlagHint /> : null}>
+						<p className="mb-1 text-base font-semibold text-gray-100">
+							What's wrong?
+						</p>
+						{problems.map((p) => (
+							<Row
+								key={p.id}
+								on={d.problem?.id === p.id}
+								onClick={() => pick(p)}
+								hint={p.flag ? <FlagHint /> : null}
+							>
 								{p.label}
 							</Row>
 						))}
@@ -417,17 +719,29 @@ export function ReportFlow({
 					)}
 					<div className="flex gap-2">
 						{step > 0 && (
-							<button type="button" onClick={() => setStep((s) => s - 1)} className="min-h-12 cursor-pointer rounded-xl px-4 font-semibold text-gray-300 hover:bg-white/10">
+							<button
+								type="button"
+								onClick={() => setStep((s) => s - 1)}
+								className="min-h-12 cursor-pointer rounded-xl px-4 font-semibold text-gray-300 hover:bg-white/10"
+							>
 								Back
 							</button>
 						)}
 						<div className="flex-1">
 							{step === valuesStep && d.problem ? (
-								<PrimaryButton type="button" onClick={send}>
+								<PrimaryButton
+									type="button"
+									onClick={send}
+									disabled={!ready(d, "send")}
+								>
 									{outcome === "live" ? "Fix it" : "Send"}
 								</PrimaryButton>
 							) : (
-								<PrimaryButton type="button" onClick={next} disabled={!ready(d, step === 0 ? "problem" : "questions")}>
+								<PrimaryButton
+									type="button"
+									onClick={next}
+									disabled={!ready(d, step === 0 ? "problem" : "questions")}
+								>
 									Next
 								</PrimaryButton>
 							)}
@@ -443,7 +757,11 @@ export function ReportFlow({
 	return (
 		<div className="flex flex-col gap-5">
 			{layout === "form" && (
-				<button type="button" onClick={() => onPickArea?.(null)} className="-mb-2 self-start text-sm font-semibold text-amber-500 hover:text-amber-400">
+				<button
+					type="button"
+					onClick={() => onPickArea?.(null)}
+					className="-mb-2 self-start text-sm font-semibold text-amber-500 hover:text-amber-400"
+				>
 					← Other parts
 				</button>
 			)}
@@ -451,17 +769,28 @@ export function ReportFlow({
 				<span className={LABEL}>What's wrong?</span>
 				{chips ? (
 					<div className="flex flex-wrap gap-2">
-						{def.problems.map((p) => (
-							<Chip key={p.id} on={d.problem?.id === p.id} onClick={() => pick(p)}>
-								{p.flag && <FlagIcon className="size-3.5 opacity-60" aria-hidden />}
+						{problems.map((p) => (
+							<Chip
+								key={p.id}
+								on={d.problem?.id === p.id}
+								onClick={() => pick(p)}
+							>
+								{p.flag && (
+									<FlagIcon className="size-3.5 opacity-60" aria-hidden />
+								)}
 								{p.label}
 							</Chip>
 						))}
 					</div>
 				) : (
 					<div className="flex flex-col gap-2">
-						{def.problems.map((p) => (
-							<Row key={p.id} on={d.problem?.id === p.id} onClick={() => pick(p)} hint={p.flag ? <FlagHint /> : null}>
+						{problems.map((p) => (
+							<Row
+								key={p.id}
+								on={d.problem?.id === p.id}
+								onClick={() => pick(p)}
+								hint={p.flag ? <FlagHint /> : null}
+							>
 								{p.label}
 							</Row>
 						))}
@@ -469,14 +798,20 @@ export function ReportFlow({
 				)}
 			</div>
 			{d.problem && <Questions d={d} set={set} compact={chips} />}
-			{d.problem && ready(d, "questions") && <Values d={d} set={set} sideBySide={chips} />}
+			{d.problem && ready(d, "questions") && (
+				<Values d={d} set={set} sideBySide={chips} />
+			)}
 			<Footer>
 				{outcome && (
 					<div className="mb-2">
 						<OutcomeLine outcome={outcome} viewer={viewer} />
 					</div>
 				)}
-				<PrimaryButton type="button" onClick={send} disabled={!ready(d, "questions")}>
+				<PrimaryButton
+					type="button"
+					onClick={send}
+					disabled={!ready(d, "send")}
+				>
 					{outcome === "live" ? "Fix it" : "Send"}
 				</PrimaryButton>
 			</Footer>

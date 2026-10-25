@@ -2,7 +2,7 @@
 // card, tiles). Members' email is filled in and locked; hello@goodwatch.app stays visible as a fallback.
 // - A: the form takes the header card's right side, where the email button was.
 // - B: the header keeps the email button; a full-width "Write to us" tile with topic chips comes first.
-// - C: pick a topic first (tiles); the form opens under it, and a data topic points to Report a problem.
+// - C: pick a topic first (tiles); the form opens under it.
 import {
 	ArrowRightIcon,
 	BugAntIcon,
@@ -23,7 +23,7 @@ import { Chip, INPUT } from "~/ui/prototype-feedback/ReportFlow"
 import { useFeedback } from "~/ui/prototype-feedback/store"
 
 const SUPPORT_EMAIL = "hello@goodwatch.app"
-const MEMBER_EMAIL = "sam.rivera@example.com"
+const MEMBER_EMAIL = "you@example.com"
 const linkClass = "font-semibold text-amber-500 hover:text-amber-400"
 const LABEL = "mb-1.5 block text-sm font-medium text-gray-300"
 
@@ -194,12 +194,6 @@ function TopicFirst() {
 			</div>
 			{topic && (
 				<div className="mt-5 border-t border-white/10 pt-5">
-					{topic === "data" && (
-						<p className="mb-4 rounded-xl bg-white/[0.04] p-3 text-sm text-gray-300 ring-1 ring-white/10">
-							Quickest: open the title and use <span className="font-semibold text-gray-100">Report a problem</span> next to the part that's
-							wrong. Members' fixes can go live at once.
-						</p>
-					)}
 					<div className="md:max-w-xl">
 						<Form key={topic} topic={topic} compact />
 					</div>
