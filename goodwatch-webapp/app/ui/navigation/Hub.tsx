@@ -36,6 +36,8 @@ import {
 import { useDragToClose } from "./useDragToClose"
 import { useTonightsPick } from "./useTonightsPick"
 import { useWhatsNew } from "./useWhatsNew"
+import { countryPath } from "~/domain/new-on-services"
+import useLocale from "~/utils/locale"
 
 const HUB_TITLE = "Browse GoodWatch"
 
@@ -67,10 +69,6 @@ const TILE_TINTS: Partial<
 	forYou: {
 		wash: "from-fuchsia-200/25 to-fuchsia-200/[0.06]",
 		icon: "text-fuchsia-300",
-	},
-	new: {
-		wash: "from-sky-200/25 to-sky-200/[0.06]",
-		icon: "text-sky-300",
 	},
 }
 
@@ -130,7 +128,7 @@ function Tile({
 	)
 }
 
-/** A small key: the places to explore, Home among them. */
+/** A small key: the places to explore, Home among them. The last of an odd number takes the whole row. */
 function SecondaryKey({
 	destination,
 	here,
@@ -141,7 +139,7 @@ function SecondaryKey({
 			to={destination.href}
 			prefetch="intent"
 			aria-current={here ? "page" : undefined}
-			className={`flex h-12 min-w-0 items-center gap-2.5 rounded-2xl bg-white/[0.04] px-3 font-bold text-gray-100 hover:bg-white/[0.08] ${here ? "shadow-[inset_0_0_0_1.5px_#fbbf24]" : ""}`}
+			className={`flex h-12 min-w-0 items-center gap-2.5 rounded-2xl bg-white/[0.04] px-3 font-bold text-gray-100 hover:bg-white/[0.08] last:odd:col-span-2 ${here ? "shadow-[inset_0_0_0_1.5px_#fbbf24]" : ""}`}
 		>
 			{destination.key === "home" ? (
 				<GoodWatchMark size={18} />
@@ -232,6 +230,15 @@ function HubContent() {
 	const { pathname } = useLocation()
 	const here = currentDestination(pathname)
 	const d = getDestinations()
+	// What arrived on streaming (#489), among the places to explore like Hot on socials: a member's own services at
+	// /new, a visitor's country page without the redirect. One name for both that fits a 360 px phone's key, where
+	// "New on streaming" (147 px) would be cut off.
+	const { locale } = useLocale()
+	const newOn: Destination = {
+		...d.new,
+		label: "New arrivals",
+		href: user ? d.new.href : countryPath(locale.country),
+	}
 	const { pick, wishlistCount } = useTonightsPick()
 	// New episodes (#442) and titles that landed on the member's services (#456).
 	const { episodes, landed } = useWhatsNew()
@@ -288,11 +295,6 @@ function HubContent() {
 							here={here === "myMovies"}
 							fresh={landedWords("movie", landed?.movies ?? null)}
 						/>
-						<Tile
-							destination={d.new}
-							subtitle="What arrived in the last 14 days"
-							here={here === "new"}
-						/>
 					</>
 				) : (
 					<Tile
@@ -313,12 +315,16 @@ function HubContent() {
 				/>
 			</Group>
 			<Group id="hub-explore" name="Explore">
-				{[d.discover, d.explorer, d.movies, d.shows, d.hot, d.home].map(
+				{[d.discover, d.explorer, d.movies, d.shows, d.hot, newOn, d.home].map(
 					(destination) => (
 						<SecondaryKey
 							key={destination.key}
 							destination={destination}
-							here={here === destination.key}
+							here={
+								destination === newOn
+									? pathname === newOn.href
+									: here === destination.key
+							}
 						/>
 					),
 				)}

@@ -132,8 +132,11 @@ measured in Chromium: 0 on every visitor page, 0.0002 on the member page on a de
 
 The owner's places (Q67, October 25):
 
-- **Browse menu**: a "New on your services" tile in Yours, for members, after My shows and My movies
-  (`ui/navigation/Hub.tsx`, destination `new` in `destinations.ts`; only `/new` itself belongs to it).
+- **Browse menu**: a "New arrivals" key in Explore, after Hot on socials, for everyone: a member's `/new`, a visitor's
+  `/new/<country>` (`ui/navigation/Hub.tsx`, destination `new` in `destinations.ts`; only `/new` itself belongs to
+  it). Home, now the odd last key, takes the whole row. Not a tile in Yours: a fifth tile left Taste alone in its row
+  and the two-line name ran into the icon on a phone. "New on streaming" doesn't fit a phone's key (147 px of 105 to
+  120 px); "New arrivals" (100 px) does at 360 px.
 - **Command palette**: "New on your services" for a member (an essential), "New on streaming" for a visitor, both at
   `/new` (`ui/navigation/palette-pages.ts`). Typing "new" finds it first.
 - **Start page**: below the room, for a member, "New on your services" with this week's arrivals (today and the six
