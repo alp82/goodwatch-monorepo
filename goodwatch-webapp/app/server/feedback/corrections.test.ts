@@ -254,6 +254,24 @@ test("details overlay changes dates and exact country offer types, adds service 
 	assert.equal((result.streaming_services[0] as any).name, "Service")
 	assert.equal(source.streaming_availabilities.length, 2)
 })
+test("combined offers lose only the reported type in the reported country", () => {
+	const source = ["DE", "US"].map((country_code) => ({
+		country_code, streaming_service_id: 3, streaming_type: "flatrate_and_buy",
+	}))
+	for (const offerType of ["flatrate", "buy"] as const) {
+		const removal = correction({ field: "offer", op: "remove",
+			target: { providerId: 3, offerType, country: "DE" } })
+		const result = applyCorrectionRows({ kind: "show", id: 1 }, source, [removal])
+		assert.equal(result[0].streaming_type, offerType === "flatrate" ? "buy" : "flatrate")
+		assert.equal(result[1].streaming_type, "flatrate_and_buy")
+		assert.equal(source[0].streaming_type, "flatrate_and_buy")
+		const both = applyCorrectionRows({ kind: "show", id: 1 }, source, [
+			removal, correction({ field: "offer", op: "remove", updated_at: 3,
+				target: { providerId: 3, offerType: offerType === "flatrate" ? "buy" : "flatrate", country: "DE" } }),
+		])
+		assert.deepEqual(both, [source[1]])
+	}
+})
 test("cast and person credits apply both directions and remove credit membership", () => {
 	const c = correction({
 		field: "character",

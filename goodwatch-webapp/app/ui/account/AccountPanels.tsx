@@ -86,7 +86,7 @@ function Identity({
 				{avatar}
 				<span className="min-w-0">
 					{me.email && (
-						<span className="block truncate text-sm text-gray-400">
+						<span data-feedback-private className="block truncate text-sm text-gray-400">
 							{me.email}
 						</span>
 					)}
@@ -107,7 +107,7 @@ function Identity({
 				<div className="min-w-0">
 					<p className="truncate font-bold text-white">@{me.handle}</p>
 					{me.email && (
-						<p className="truncate text-sm text-gray-400">{me.email}</p>
+						<p data-feedback-private className="truncate text-sm text-gray-400">{me.email}</p>
 					)}
 				</div>
 			</div>

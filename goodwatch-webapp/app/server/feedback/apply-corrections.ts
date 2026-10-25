@@ -98,11 +98,16 @@ export function applyCorrectionRows<T>(
 				const country = r.country_code ?? entity.country
 				if (
 					r.streaming_service_id === t.providerId &&
-					r.streaming_type === t.offerType &&
 					country === t.country &&
 					c.op === "remove"
-				)
-					return undefined
+				) {
+					if (r.streaming_type === t.offerType) return undefined
+					if (
+						r.streaming_type === "flatrate_and_buy" &&
+						(t.offerType === "flatrate" || t.offerType === "buy")
+					)
+						r.streaming_type = t.offerType === "flatrate" ? "buy" : "flatrate"
+				}
 			}
 		}
 		// A removed cast member also leaves the count: raw rows (cast_rows, cast_total), the details document

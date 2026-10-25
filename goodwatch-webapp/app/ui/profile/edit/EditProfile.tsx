@@ -548,7 +548,7 @@ function PictureChooser({
 						onClick={() => set({ avatar: { kind: "photo" } })}
 						className={`size-14 overflow-hidden rounded-full ${ring(draft.avatar.kind === "photo")}`}
 					>
-						<img src={photo} alt="" className="size-full object-cover" />
+						<img data-member-avatar src={photo} alt="" className="size-full object-cover" />
 					</button>
 				)}
 				{data.providerPhoto && (
@@ -563,6 +563,7 @@ function PictureChooser({
 					>
 						<img
 							src={data.providerPhoto}
+							data-member-avatar
 							alt=""
 							referrerPolicy="no-referrer"
 							className="size-full object-cover"

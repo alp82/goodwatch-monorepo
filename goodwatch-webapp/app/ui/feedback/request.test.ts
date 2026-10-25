@@ -22,6 +22,12 @@ const {
 	sendFailure,
 	summaryOf,
 } = await import("./request.ts")
+const { feedbackSchema } = await import("../../server/feedback/schema.ts")
+const { mapCorrection } = await import("../../server/feedback/corrections.ts")
+const { applyCorrectionRows } = await import(
+	"../../server/feedback/apply-corrections.ts"
+)
+type Correction = import("../../server/feedback/corrections.ts").Correction
 const { outcomeOf } = await import("../../utils/feedback.ts")
 type Subjects = import("./subject.ts").FeedbackSubject
 type Draft = import("./problems.ts").Draft
@@ -66,8 +72,20 @@ const show: Subjects = {
 		{
 			number: 1,
 			episodes: [
-				{ number: 1, name: "System", score: 8.2 },
-				{ number: 7, name: "Review", score: 9.4 },
+				{
+					number: 1,
+					name: "System",
+					score: 8.2,
+					canonicalSeason: 1,
+					canonicalNumber: 1,
+				},
+				{
+					number: 7,
+					name: "Review",
+					score: 9.4,
+					canonicalSeason: 1,
+					canonicalNumber: 7,
+				},
 			],
 		},
 	],
@@ -87,6 +105,7 @@ const person: Subjects = {
 			title: "The Bear",
 			year: "2022",
 			role: "as Carmen Berzatto",
+			currentRole: "Carmen Berzatto",
 		},
 	],
 }
@@ -270,7 +289,7 @@ test("credits on a person page point at the title by TMDB id and type", () => {
 		creditTmdbId: 136315,
 		creditMediaType: "tv",
 	})
-	assert.equal(r.data?.currentValue, "The Bear (2022) · as Carmen Berzatto")
+	assert.equal(r.data?.currentValue, "Carmen Berzatto")
 	const gone = data(
 		draft("credits", "not-theirs", person, { credit: "tv:136315" }),
 		person,
@@ -418,4 +437,256 @@ test("the summary says what to take off", () => {
 		summaryOf(r),
 		"Someone isn't in it: Ayo Edebiri as Sydney Adamu. Take it off",
 	)
+})
+
+/** Exercise the merged server, not a second client-side model of its behavior. */
+function correctionFor(d: Draft, subject: Subjects): Correction {
+	const request = feedbackSchema.parse(
+		buildReportRequest(reportOfDraft(d, subject), envelope),
+	)
+	const mapped = mapCorrection(request.data)
+	assert.ok(mapped)
+	return {
+		...mapped,
+		id: "correction",
+		status: "live",
+		member_id: "member",
+		reviewer: null,
+		report_id: "report",
+		source_link: null,
+		created_at: 1,
+		updated_at: 1,
+	}
+}
+
+test("episode corrections use canonical identity when displayed numbering differs", () => {
+	const subject: Subjects = {
+		...show,
+		grid: [
+			{
+				number: 1,
+				episodes: [
+					{
+						number: 2,
+						name: "Selected",
+						score: 8,
+						canonicalSeason: 2,
+						canonicalNumber: 1,
+					},
+					{
+						number: 3,
+						name: "Another",
+						score: 8,
+						canonicalSeason: 1,
+						canonicalNumber: 2,
+					},
+				],
+			},
+		],
+	}
+	const correction = correctionFor(
+		draft("episodes", "ep-title", subject, {
+			season: 1,
+			episode: 2,
+			suggested: "Correct title",
+		}),
+		subject,
+	)
+	assert.deepEqual(correction.target, { seasonNumber: 2, episodeNumber: 1 })
+	const result = applyCorrectionRows(
+		{ kind: "show", id: show.tmdbId },
+		{ seasons: subject.grid },
+		[correction],
+	)
+	assert.equal(result.seasons[0].episodes[0].name, "Correct title")
+	assert.equal(result.seasons[0].episodes[1].name, "Another")
+})
+
+test("unmatched grid episodes remain reports instead of guessing a catalog identity", () => {
+	const subject: Subjects = {
+		...show,
+		grid: [
+			{ number: 1, episodes: [{ number: 1, name: "Unmatched", score: 8 }] },
+		],
+	}
+	for (const problem of ["ep-title", "ep-date"]) {
+		const request = feedbackSchema.parse(
+			buildReportRequest(
+				reportOfDraft(
+					draft("episodes", problem, subject, {
+						suggested: problem === "ep-date" ? "2022-06-22" : "Title",
+					}),
+					subject,
+				),
+				envelope,
+			),
+		)
+		assert.equal(mapCorrection(request.data), null)
+	}
+})
+
+test("a character correction on an actor/producer credit changes characters, not jobs", () => {
+	const correction = correctionFor(
+		draft("credits", "role", person, {
+			credit: "tv:136315",
+			suggested: "Carmy",
+		}),
+		person,
+	)
+	const result = applyCorrectionRows(
+		{ kind: "person", id: person.tmdbId },
+		[
+			{
+				tmdb_id: 136315,
+				media_type: "show",
+				characters: ["Carmen Berzatto"],
+				jobs: ["Producer"],
+			},
+		],
+		[correction],
+	)
+	assert.deepEqual(result[0].characters, ["Carmy"])
+	assert.deepEqual(result[0].jobs, ["Producer"])
+})
+
+test("any retained typed Other answer prevents a live correction", () => {
+	const request = feedbackSchema.parse(
+		buildReportRequest(
+			reportOfDraft(
+				draft("watch", "missing", show, {
+					provider: 8,
+					offer: "flatrate",
+					link: "https://netflix.com/title/1",
+					others: { provider: "A different service" },
+				}),
+				show,
+			),
+			envelope,
+		),
+	)
+	assert.equal(mapCorrection(request.data), null)
+	assert.match(request.data?.note ?? "", /A different service/)
+	// Date corrections need no target, so dropping the target alone is not sufficient.
+	const date = data(draft("details", "date", show, {
+		suggested: "2022-06-22",
+		others: { episode: "A different episode" },
+	}), show)
+	assert.equal(mapCorrection(feedbackSchema.parse({
+		kind: "data", message: "Date", ...envelope, website: "", data: date,
+	}).data), null)
+})
+
+test("every rich problem builds a request accepted by the merged strict schema", () => {
+	for (const area of Object.keys(RICH_AREAS) as (keyof typeof RICH_AREAS)[]) {
+		const subject = area === "person" || area === "credits" ? person : show
+		for (const problem of problemsOf(area)) {
+			const request = buildReportRequest(
+				reportOfDraft(
+					draft(area, problem.id, subject, {
+						provider: 15,
+						providerName: "Hulu",
+						offer: "flatrate",
+						person: 1218635,
+						credit: "tv:136315",
+						source: "imdb",
+						suggested: "2022-06-22",
+						link: "https://example.com/source",
+						note: "What looks wrong",
+					}),
+					subject,
+				),
+				envelope,
+			)
+			assert.equal(
+				feedbackSchema.safeParse(request).success,
+				true,
+				`${area}/${problem.id}`,
+			)
+		}
+	}
+})
+
+test("all nine correction operations match the merged server mapping", () => {
+	const cases = [
+		["details", "date", "first_air_date", "set", false],
+		["episodes", "ep-title", "name", "set", false],
+		["episodes", "ep-date", "air_date", "set", false],
+		["cast", "character", "character", "set", false],
+		["cast", "not-in-it", "character", "remove", true],
+		["credits", "role", "role", "set", false],
+		["credits", "not-theirs", "role", "remove", true],
+		["watch", "not-there", "offer", "remove", false],
+		["watch", "missing", "offer", "add", false],
+	] as const
+	for (const [area, problem, field, op, review] of cases) {
+		const subject = area === "credits" ? person : show
+		const request = feedbackSchema.parse(
+			buildReportRequest(
+				reportOfDraft(
+					draft(area, problem, subject, {
+						provider: 15,
+						offer: "flatrate",
+						person: 1218635,
+						credit: "tv:136315",
+						suggested: "2022-06-22",
+						link: "https://example.com/source",
+					}),
+					subject,
+				),
+				envelope,
+			),
+		)
+		const correction = mapCorrection(request.data)
+		assert.ok(correction, `${area}/${problem}`)
+		assert.equal(correction.field, field)
+		assert.equal(correction.op, op)
+		assert.equal(correction.review, review)
+	}
+	const missing = data(
+		draft("watch", "missing", show, { provider: 15, offer: "flatrate" }),
+		show,
+	)
+	assert.equal(
+		mapCorrection(missing)?.review,
+		true,
+		"provider addition without evidence waits for staff",
+	)
+})
+
+test("email and evidence validators enforce the server syntax and size boundaries", () => {
+	for (const email of [
+		"a@b.c",
+		"a..b@example.com",
+		`${"a".repeat(243)}@example.com`,
+	]) {
+		assert.equal(emailProblem(email), true, email)
+	}
+	const maxEmail = `${"a".repeat(242)}@example.com`
+	assert.equal(maxEmail.length, 254)
+	assert.equal(emailProblem(maxEmail), false)
+	assert.equal(
+		feedbackSchema.safeParse(
+			buildMessageRequest(
+				{ kind: "bug", message: "Test" },
+				{ ...envelope, email: maxEmail },
+			),
+		).success,
+		true,
+	)
+	const maxLink = `https://example.com/${"a".repeat(1980)}`
+	assert.equal(maxLink.length, 2000)
+	assert.equal(linkProblem(maxLink), false)
+	assert.equal(linkProblem(`${maxLink}a`), true)
+	assert.equal(linkProblem("ftp://example.com/source"), true)
+	const request = buildReportRequest(
+		reportOfDraft(
+			draft("details", "date", show, {
+				suggested: "2022-06-22",
+				link: maxLink,
+			}),
+			show,
+		),
+		envelope,
+	)
+	assert.equal(feedbackSchema.safeParse(request).success, true)
 })

@@ -2,6 +2,7 @@
 // fix-mode-contract.md) and a message from Send feedback. No React here, so node:test covers it (request.test.ts).
 import type { FeedbackOutcome, FeedbackRequest } from "~/utils/feedback"
 import type { Report } from "./problems"
+import { z } from "zod"
 
 export type Envelope = {
 	idempotencyKey: string
@@ -17,15 +18,15 @@ const MESSAGE_MAX = 10000
 const NOTE_MAX = 2000
 const VALUE_MAX = 4000
 const SHORT = 50
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const LINK = /^https?:\/\/[^\s/]+\.[^\s]+$/i
+const EMAIL = z.string().email().max(254)
+const LINK = z.string().url().max(2000).refine((v) => /^https?:\/\//i.test(v))
 
 /** A guest's email is sent only when it looks like one; a typed-but-wrong one stops Send (see `emailProblem`). */
 export const emailProblem = (email: string) =>
-	email.trim() !== "" && !EMAIL.test(email.trim())
+	email.trim() !== "" && !EMAIL.safeParse(email.trim()).success
 /** A source link must be a whole web address. */
 export const linkProblem = (link: string) =>
-	link.trim() !== "" && !LINK.test(link.trim())
+	link.trim() !== "" && !LINK.safeParse(link.trim()).success
 
 const clip = (s: string, max: number) => (s.length > max ? s.slice(0, max) : s)
 
@@ -45,7 +46,7 @@ function common(e: Envelope) {
 		idempotencyKey: e.idempotencyKey,
 		website: e.website ?? "",
 		startedAt: e.startedAt,
-		...(email && EMAIL.test(email) ? { email } : {}),
+		...(email && !emailProblem(email) ? { email } : {}),
 		...(e.metadata ? { metadata: e.metadata } : {}),
 	}
 }
@@ -82,7 +83,7 @@ export function buildReportRequest(r: Report, e: Envelope): FeedbackRequest {
 			...(r.suggestedValue !== undefined
 				? { suggestedValue: clip(r.suggestedValue, VALUE_MAX) }
 				: {}),
-			...(link && LINK.test(link) ? { sourceLink: link } : {}),
+			...(link && !linkProblem(link) ? { sourceLink: link } : {}),
 			...(r.country ? { country: r.country } : {}),
 			...(r.providerIds?.length ? { providerIds: r.providerIds } : {}),
 			area: clip(r.area, SHORT),

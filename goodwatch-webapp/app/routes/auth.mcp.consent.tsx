@@ -187,7 +187,7 @@ function SignedInAs({ email, restartUrl }: { email: string; restartUrl: string }
 			</span>
 			<div className="min-w-0 flex-1 text-sm">
 				<p className="text-gray-400">Signed in as</p>
-				<p className="truncate font-medium text-gray-100">{email}</p>
+				<p data-feedback-private className="truncate font-medium text-gray-100">{email}</p>
 			</div>
 			<button type="button" onClick={switchAccount} disabled={busy} className="cursor-pointer text-sm font-medium text-amber-500 hover:text-amber-400">
 				{busy ? <Spinner size="small" /> : "Not you?"}

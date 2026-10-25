@@ -80,10 +80,6 @@ export function clearArea() {
 
 /** Where the running smooth scroll will end; null when the page isn't scrolling for us. */
 let aim: number | null = null
-if (typeof window !== "undefined")
-	window.addEventListener("scrollend", () => {
-		aim = null
-	})
 
 /** Brings an element into the clear area when it's (partly) outside it; a sideways row scrolls to it too. */
 export function reveal(el: HTMLElement | null) {
@@ -190,6 +186,17 @@ function useHoles(on: boolean) {
 }
 
 export function Scrim({ on }: { on: boolean }) {
+	useEffect(() => {
+		if (!on) return
+		const reset = () => {
+			aim = null
+		}
+		window.addEventListener("scrollend", reset)
+		return () => {
+			window.removeEventListener("scrollend", reset)
+			reset()
+		}
+	}, [on])
 	// Stays mounted for the fade out.
 	const { mounted, shown: visible } = useFadePresence(on, 240)
 	const { w, h, holes } = useHoles(mounted)

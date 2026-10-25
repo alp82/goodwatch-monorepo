@@ -611,8 +611,17 @@ export function reportOfDraft(
 		target.creditMediaType = type === "tv" ? "tv" : "movie"
 	}
 	if (asks("episode") && d.season !== undefined && d.episode !== undefined) {
-		target.seasonNumber = d.season
-		target.episodeNumber = d.episode
+		const title = asTitle(subject)
+		const episode = title && episodeOf(title, d.season, d.episode)
+		// Displayed IMDb/reviewed numbering is not necessarily the catalog identity.
+		// Without a resolved identity, staff must match the episode before applying it.
+		if (
+			episode?.canonicalSeason !== undefined &&
+			episode.canonicalNumber !== undefined
+		) {
+			target.seasonNumber = episode.canonicalSeason
+			target.episodeNumber = episode.canonicalNumber
+		}
 	}
 	const providerAsked = problem.ask.includes("provider")
 		? "provider"
@@ -638,15 +647,22 @@ export function reportOfDraft(
 	const link = d.link.trim()
 	return {
 		area: d.area,
-		problem: problem.id,
+		problem: typed.length ? "other" : problem.id,
 		label: problem.label,
 		kind: problem.flag ? "flag" : "fix",
 		subject: subjectOf(subject),
 		field: problem.field,
-		currentValue: isOther ? undefined : currentValue(d, subject),
+		currentValue: isOther
+			? undefined
+			: d.area === "credits" &&
+					problem.id === "role" &&
+					subject?.kind === "person"
+				? creditOf(subject, d.credit)?.currentRole
+				: currentValue(d, subject),
 		suggestedValue: suggested || undefined,
 		sourceLink: link || undefined,
-		target: Object.keys(target).length ? target : undefined,
+		// Any free-text answer needs review, including answers retained after switching problems.
+		target: !typed.length && Object.keys(target).length ? target : undefined,
 		note: note || undefined,
 		country,
 		providerIds: target.providerId ? [target.providerId] : undefined,

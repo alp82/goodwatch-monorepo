@@ -99,7 +99,7 @@ function MethodCard({
 				</span>
 				<div className="min-w-0 flex-1">
 					<p className="font-semibold text-white">{name}</p>
-					{detail && <p className="truncate text-sm text-gray-400">{detail}</p>}
+					{detail && <p data-feedback-private className="truncate text-sm text-gray-400">{detail}</p>}
 				</div>
 				<CheckCircleIcon
 					className="size-6 shrink-0 text-emerald-400"
@@ -175,7 +175,7 @@ export default function SettingsAccount() {
 					</span>
 					<div className="min-w-0 flex-1">
 						<p className="text-sm text-gray-400">Signed in as</p>
-						<p className="truncate text-xl font-black text-white md:text-2xl">
+						<p data-feedback-private className="truncate text-xl font-black text-white md:text-2xl">
 							{email}
 						</p>
 					</div>

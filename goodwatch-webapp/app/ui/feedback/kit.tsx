@@ -6,7 +6,8 @@ import {
 	ClockIcon,
 	FlagIcon,
 } from "@heroicons/react/20/solid"
-import { Link, useMatches } from "@remix-run/react"
+import { Link, useMatches, useRevalidator } from "@remix-run/react"
+import { useQueryClient } from "@tanstack/react-query"
 import {
 	type ReactNode,
 	createContext,
@@ -15,6 +16,7 @@ import {
 	useState,
 } from "react"
 import { holdBeforeSend, newIdempotencyKey } from "~/ui/support/contact"
+import { clearLoaderCache } from "~/navigation/instant-navigation"
 import {
 	FeedbackError,
 	type FeedbackOutcome,
@@ -69,6 +71,7 @@ export function GuestEmail({
 			</span>
 			<input
 				type="email"
+				maxLength={254}
 				inputMode="email"
 				autoComplete="email"
 				value={value}
@@ -131,12 +134,12 @@ export function Chip({
 	)
 }
 
-/** The line over Send: a fix is checked before it shows (the client doesn't know who is trusted); a flag is looked into. */
+/** The client does not know who is trusted; the server decides whether a fix goes live. */
 export function BeforeSendLine({ kind }: { kind: "fix" | "flag" }) {
 	return kind === "fix" ? (
 		<p className="flex items-center gap-1.5 text-xs text-gray-400">
-			<ClockIcon className="size-4" aria-hidden /> We check fixes before they
-			show
+			<ClockIcon className="size-4" aria-hidden /> Fixes may go live now or wait
+			for staff review
 		</p>
 	) : (
 		<p className="flex items-center gap-1.5 text-xs text-gray-400">
@@ -174,8 +177,8 @@ function useMetadata(): () => FeedbackRequest["metadata"] {
 		url: `${window.location.pathname}${window.location.search}`.slice(0, 4000),
 		...(routeId ? { routeId: routeId.slice(0, 200) } : {}),
 		viewport: {
-			width: Math.max(1, Math.round(window.innerWidth)),
-			height: Math.max(1, Math.round(window.innerHeight)),
+			width: Math.min(20000, Math.max(1, Math.round(window.innerWidth))),
+			height: Math.min(20000, Math.max(1, Math.round(window.innerHeight))),
 		},
 		dpr: Math.min(10, window.devicePixelRatio || 1),
 		locale: navigator.language.slice(0, 50),
@@ -189,6 +192,7 @@ function useMetadata(): () => FeedbackRequest["metadata"] {
  * report gets a new one. Waits out the endpoint's minimum fill time.
  */
 export function useSender() {
+	const refresh = useRefreshCorrections()
 	const startedAt = useRef(Date.now())
 	const key = useRef<string | null>(null)
 	const last = useRef("")
@@ -219,6 +223,7 @@ export function useSender() {
 				setTimeout(r, holdBeforeSend(startedAt.current, Date.now())),
 			)
 			const response = await submitFeedback(build(envelope(key.current)))
+			if (response.outcome === "live") refresh()
 			key.current = null
 			last.current = ""
 			startedAt.current = Date.now()
@@ -237,7 +242,19 @@ export function useSender() {
 	return { send, sending, failure, reset }
 }
 
-/** The thanks after a report, for the server's outcome; a live fix can be undone here. */
+/** Fetch mutations do not trigger Remix's loader revalidation automatically. */
+function useRefreshCorrections() {
+	const revalidator = useRevalidator()
+	const queryClient = useQueryClient()
+	return () => {
+		clearLoaderCache()
+		revalidator.revalidate()
+		void queryClient.invalidateQueries({ queryKey: ["episode-grid"] })
+		void queryClient.invalidateQueries({ queryKey: ["show-tracking"] })
+	}
+}
+
+/** The thanks after a report; members can undo their live or pending corrections here. */
 export function Result({
 	outcome,
 	correctionId,
@@ -261,10 +278,11 @@ export function Result({
 }) {
 	const flow = useFixFlow()
 	const guest = flow?.guest ?? false
+	const refresh = useRefreshCorrections()
 	const [undo, setUndo] = useState<"idle" | "busy" | "done" | "failed">("idle")
 	const undone = undo === "done"
 	const copy = OUTCOME_COPY[outcome]
-	const canUndo = outcome === "live" && correctionId && !undone
+	const canUndo = !guest && outcome !== "flag" && correctionId && !undone
 	return (
 		<div className="flex flex-col gap-4 py-1" data-feedback-result={outcome}>
 			<div className="flex items-start gap-3">
@@ -284,7 +302,11 @@ export function Result({
 						{undone ? "Undone" : copy.title}
 					</p>
 					<p className="mt-0.5 text-sm text-gray-400">
-						{undone ? "The page shows the old value again soon." : copy.body}{" "}
+						{undone
+							? outcome === "pending"
+								? "Your suggested change was withdrawn."
+								: "The page shows the old value again soon."
+							: copy.body}{" "}
 						{!undone &&
 							(thanks === "always" || (guest && email.trim())) &&
 							thanksLine(guest, email)}
@@ -328,6 +350,7 @@ export function Result({
 							setUndo("busy")
 							try {
 								await undoCorrection(correctionId)
+								refresh()
 								setUndo("done")
 							} catch {
 								setUndo("failed")

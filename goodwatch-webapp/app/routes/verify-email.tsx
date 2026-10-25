@@ -95,7 +95,7 @@ function Sent() {
 				title="Check your inbox"
 				sub={
 					<>
-						We sent a link to <strong className="text-gray-200">{sent.email}</strong>. Open it to confirm your email and finish signing up.
+						We sent a link to <strong data-feedback-private className="text-gray-200">{sent.email}</strong>. Open it to confirm your email and finish signing up.
 					</>
 				}
 			/>

@@ -2,6 +2,7 @@
 // all the page loads at first: the tab itself, rendered on the server, fixed, so it never moves the page. The drawer
 // and fix mode (FeedbackDock.tsx) load once the page is idle, or on the first pointer, focus or tap on the tab.
 import { ChatBubbleLeftEllipsisIcon } from "@heroicons/react/20/solid"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import {
 	type ComponentType,
 	type MutableRefObject,
@@ -86,7 +87,7 @@ const Tab = forwardRef<
 				out
 					? "z-[1002] rounded-l-none text-white ring-1 ring-amber-500/30"
 					: "z-[45] rounded-l-xl text-gray-200 shadow-[0_8px_30px_-6px_rgba(0,0,0,.7)] ring-1 ring-white/15 transition-[transform,opacity] ease-out hover:bg-gray-900 hover:text-white motion-reduce:transition-none"
-			} ${hidden || away ? "translate-x-full" : ""} ${away ? "opacity-0" : ""}`}
+			} ${hidden || away ? "translate-x-full" : ""} ${away ? "opacity-0" : "focus:translate-x-0"}`}
 		>
 			{/* Covers the drawer's right edge where it meets the tab, so the two join. */}
 			{out && (
@@ -107,6 +108,7 @@ const Tab = forwardRef<
 })
 
 const loadDock = () => import("./FeedbackDock")
+const loadDockOnIntent = reloadOnStaleChunk(loadDock)
 
 export function FeedbackTab({ sendOnly = false }: { sendOnly?: boolean }) {
 	const tabRef = useRef<HTMLButtonElement>(null)
@@ -118,10 +120,11 @@ export function FeedbackTab({ sendOnly = false }: { sendOnly?: boolean }) {
 	const [Dock, setDock] = useState<ComponentType<DockProps> | null>(null)
 	const openNow = useRef(false)
 	const loading = useRef(false)
-	const warm = useCallback(() => {
+	const warm = useCallback((intent = false) => {
 		if (loading.current) return
 		loading.current = true
-		loadDock().then(
+		const pending = intent ? loadDockOnIntent() : loadDock()
+		pending.then(
 			(m) => setDock(() => m.default),
 			() => {
 				loading.current = false
@@ -130,7 +133,7 @@ export function FeedbackTab({ sendOnly = false }: { sendOnly?: boolean }) {
 	}, [])
 	const toggleRef = useRef<() => void>(() => {
 		openNow.current = true
-		warm()
+		warm(true)
 	})
 	// The drawer's code after the page has settled, so the first tap opens it at once.
 	useEffect(() => {
@@ -139,10 +142,10 @@ export function FeedbackTab({ sendOnly = false }: { sendOnly?: boolean }) {
 			cancelIdleCallback?: (id: number) => void
 		}
 		if (w.requestIdleCallback) {
-			const id = w.requestIdleCallback(warm, { timeout: 6000 })
+			const id = w.requestIdleCallback(() => warm(), { timeout: 6000 })
 			return () => w.cancelIdleCallback?.(id)
 		}
-		const t = window.setTimeout(warm, 3000)
+		const t = window.setTimeout(() => warm(), 3000)
 		return () => window.clearTimeout(t)
 	}, [warm])
 	return (
@@ -151,7 +154,7 @@ export function FeedbackTab({ sendOnly = false }: { sendOnly?: boolean }) {
 				ref={tabRef}
 				{...tab}
 				onToggle={() => toggleRef.current()}
-				onWarm={warm}
+				onWarm={() => warm(true)}
 			/>
 			{Dock && (
 				<Dock

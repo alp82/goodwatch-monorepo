@@ -36,7 +36,13 @@ export type TitleSubject = {
 	/** The episode grid's seasons, as far as the page has them. */
 	grid: {
 		number: number
-		episodes: { number: number; name: string; score: number | null }[]
+		episodes: {
+			number: number
+			name: string
+			score: number | null
+			canonicalSeason?: number
+			canonicalNumber?: number
+		}[]
 	}[]
 }
 
@@ -55,6 +61,8 @@ export type PersonSubject = {
 		title: string
 		year: string | null
 		role: string
+		/** Raw character or job represented by the displayed role, for correction routing. */
+		currentRole: string
 	}[]
 }
 
@@ -186,6 +194,8 @@ export function titleSubject(
 			episodes: s.episodes.map((e) => ({
 				number: e.number,
 				name: e.name,
+				canonicalSeason: e.canonicalSeason,
+				canonicalNumber: e.canonicalNumber,
 				score: e.unrated ? null : e.score,
 			})),
 		})),

@@ -383,6 +383,7 @@ function Values({
 				value={d.link}
 				onChange={(e) => set({ link: e.target.value })}
 				inputMode="url"
+				maxLength={2000}
 				placeholder="https://…"
 				aria-invalid={badLink || undefined}
 				className={INPUT}

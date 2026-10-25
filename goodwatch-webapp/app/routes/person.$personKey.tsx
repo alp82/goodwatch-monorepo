@@ -205,6 +205,10 @@ function useFeedbackPerson(data: Data) {
 				title: c.title,
 				year: c.release_year ? String(c.release_year) : null,
 				role: subtitle(c),
+				currentRole:
+					c.characters.length && c.roles.includes("Acting")
+						? c.characters[0]
+						: (c.jobs[0] ?? c.characters[0] ?? ""),
 			}))
 		return {
 			kind: "person",

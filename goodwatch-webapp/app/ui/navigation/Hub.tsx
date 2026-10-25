@@ -203,7 +203,10 @@ function AccountRow() {
 				<b className="block truncate">
 					{me.handle ? `@${me.handle}` : "Your profile"}
 				</b>
-				<small className="block truncate text-[12.5px] text-gray-400">
+				<small
+					data-feedback-private={(!me.handle && !me.loaded) || undefined}
+					className="block truncate text-[12.5px] text-gray-400"
+				>
 					{me.handle
 						? "Your profile"
 						: me.loaded
