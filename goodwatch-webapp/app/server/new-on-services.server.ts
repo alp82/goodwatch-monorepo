@@ -40,6 +40,7 @@ import {
 	arrivalTitlesOf,
 	linksAcross,
 	newPagesLookup,
+	offersOf,
 	weekTitlesOf,
 } from "~/server/new-on-services-page.server"
 import {
@@ -48,6 +49,7 @@ import {
 } from "~/server/new-on-services-read.server"
 import {
 	MAX_KEYS,
+	getCardServices,
 	getDisplayFields,
 	getServiceCards,
 } from "~/server/title-cards.server"
@@ -210,15 +212,22 @@ export async function getMemberWeekRow({
 		const week = weekTitlesOf(await getMemberTitles({ country, services, now }), now)
 		if (!week.length) return null
 		const shown = week.slice(0, WEEK_ROW_LIMIT)
-		const cards = await newDeps.serviceCards([
-			...new Set(shown.map(({ service }) => service)),
+		const [cards, offers] = await Promise.all([
+			newDeps.serviceCards([...new Set(shown.map(({ service }) => service))]),
+			offersOf(country, shown, newDeps),
 		])
 		return {
-			titles: shown.map(({ backdrop_path, ...title }) => title),
+			titles: shown.map(({ backdrop_path, ...title }) => ({
+				...title,
+				offers: offers.offersOf(title),
+			})),
 			total: week.length,
-			services: Object.fromEntries(
-				cards.map(({ id, name, logo_path }) => [id, { name, logo_path }]),
-			),
+			services: {
+				...offers.services,
+				...Object.fromEntries(
+					cards.map(({ id, name, logo_path }) => [id, { name, logo_path }]),
+				),
+			},
 		}
 	} catch (error) {
 		console.error("New on your services: the start page's row failed", error)
@@ -379,6 +388,8 @@ export const newDeps: NewDeps = {
 	memberTitles: getMemberTitles,
 	links: linksWithin,
 	viewer: readViewer,
+	// The card-services reader: the title's current subscription services in the country, from the availability index.
+	offers: (country, keys) => getCardServices(country, keys, []),
 	serviceCards: async (ids) =>
 		(await getServiceCards(ids)).map((card) => ({
 			...card,

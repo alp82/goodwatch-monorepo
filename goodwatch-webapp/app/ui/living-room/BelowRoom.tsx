@@ -157,7 +157,11 @@ function NewOnYourServices({ row }: { row: NewWeekRow }) {
 			</header>
 			<ol className="lrb-titles">
 				{row.titles.map((title) => {
-					const service = row.services[title.service]
+					// Every service that carries it in the member's country; `newOn` leads with the one it arrived on.
+					const offers = (title.offers ?? [title.service]).flatMap((id) => {
+						const service = row.services[id]
+						return service ? [{ id, name: service.name, logo_path: service.logo_path }] : []
+					})
 					return (
 						<li key={title.key}>
 							<MovieTvCard
@@ -167,9 +171,7 @@ function NewOnYourServices({ row }: { row: NewWeekRow }) {
 									release_year: title.release_year,
 									poster_path: title.poster_path,
 									goodwatch_overall_score_normalized_percent: title.score,
-									streaming_links: service
-										? [{ id: title.service, name: service.name, logo_path: service.logo_path }]
-										: [],
+									streaming_links: offers,
 								}}
 								mediaType={title.media_type}
 								discover="none"

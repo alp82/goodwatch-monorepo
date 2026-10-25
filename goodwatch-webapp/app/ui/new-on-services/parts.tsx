@@ -213,9 +213,9 @@ const ROW_POSTER_SIZES: SizeRule[] = [
 ]
 
 /**
- * The browse poster card (ui/MovieTvCard.tsx) in a row that wraps: the score pill, the viewer's own services with the
- * one the title arrived on leading (`newOn`), and the title actions. The name goes under it, so a title without a
- * poster still says what it is.
+ * The browse poster card (ui/MovieTvCard.tsx) in a row that wraps: the score pill, the viewer's own services among
+ * the title's current offers with the one it arrived on leading (`newOn`), and the title actions. The name goes under
+ * it, so a title without a poster still says what it is.
  */
 export function PosterRow({
 	titles,
@@ -224,7 +224,12 @@ export function PosterRow({
 	return (
 		<ul className="mt-2 flex flex-wrap gap-2">
 			{titles.map((title) => {
-				const service = data.services[title.service]
+				// Every service that carries it in the page's country, so a member sees theirs even when it arrived on
+				// another one; `newOn` leads with the one it arrived on.
+				const offers = (title.offers ?? [title.service]).flatMap((id) => {
+					const service = data.offerServices[id] ?? data.services[id]
+					return service ? [{ id, name: service.name, logo_path: service.logo_path }] : []
+				})
 				return (
 					<li
 						key={title.key}
@@ -237,9 +242,7 @@ export function PosterRow({
 								release_year: title.release_year,
 								poster_path: title.poster_path,
 								goodwatch_overall_score_normalized_percent: title.score,
-								streaming_links: service
-									? [{ id: title.service, name: service.name, logo_path: service.logo_path }]
-									: [],
+								streaming_links: offers,
 							}}
 							mediaType={title.media_type}
 							posterSizes={ROW_POSTER_SIZES}

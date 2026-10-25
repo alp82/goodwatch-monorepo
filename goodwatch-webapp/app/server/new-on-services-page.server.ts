@@ -58,7 +58,16 @@ export type ArrivalTitle = {
 }
 
 /** A title as a page sends it: no backdrop, the page has one for its hero. */
-export type NewTitle = Omit<ArrivalTitle, "backdrop_path">
+export type NewTitle = Omit<ArrivalTitle, "backdrop_path"> & {
+	/**
+	 * The subscription services that carry it in the page's country now, by id, the one it arrived on among them: the
+	 * poster card shows the viewer's own (names and logos in the page's `offerServices`).
+	 */
+	offers?: number[]
+}
+
+/** A service's name and logo, for the poster cards' logos. */
+export type OfferService = { name: string; logo_path: string | null }
 
 /** One country's arrivals: each brand's page, by slug, and the country's page, each best first. */
 export type CountryArrivals = {
@@ -118,6 +127,14 @@ export interface NewDeps {
 	serviceCards(
 		ids: number[],
 	): Promise<{ id: number; name: string; logo_path: string | null }[]>
+	/**
+	 * The subscription services that carry each title in the country now, with names and logos; null for every title
+	 * while the country's availability loads.
+	 */
+	offers(
+		country: string,
+		keys: TitleKey[],
+	): Promise<({ id: number; name: string; logo_path: string | null }[] | null)[]>
 }
 
 export interface PageService {
@@ -144,6 +161,8 @@ export interface NewPageData {
 	waited: (NewTitle & { wait: "want" | "watching" })[]
 	/** The services the titles arrived on, by the id they count as. */
 	services: Record<number, PageService>
+	/** The names and logos of the services in the titles' `offers`. */
+	offerServices: Record<number, OfferService>
 	/** The services row: one link per service page. */
 	keys: (PageService & { path: string })[]
 	otherCountries: { code: string; name: string; path: string }[]
@@ -174,6 +193,36 @@ const sendTo = (to: string) =>
 
 const withoutBackdrop = ({ backdrop_path, ...title }: ArrivalTitle): NewTitle =>
 	title
+
+/**
+ * Each title's current offers in the country (the card-services reader), the arrival service always among them, and
+ * the names and logos of them all. `loading`: the country's availability isn't read yet, so only the arrival
+ * services are known.
+ */
+export async function offersOf(
+	country: string,
+	titles: readonly { key: TitleKey; service: number }[],
+	deps: Pick<NewDeps, "offers">,
+): Promise<{
+	offersOf: (title: { key: TitleKey; service: number }) => number[]
+	services: Record<number, OfferService>
+	loading: boolean
+}> {
+	const keys = [...new Set(titles.map(({ key }) => key))]
+	const found = keys.length ? await deps.offers(country, keys) : []
+	const byKey = new Map(keys.map((key, i) => [key, found[i] ?? null]))
+	const services: Record<number, OfferService> = {}
+	for (const list of found)
+		for (const { id, name, logo_path } of list ?? []) services[id] = { name, logo_path }
+	return {
+		offersOf: ({ key, service }) => {
+			const ids = (byKey.get(key) ?? []).map(({ id }) => id)
+			return ids.includes(service) ? ids : [service, ...ids]
+		},
+		services,
+		loading: keys.length > 0 && found.every((list) => list === null),
+	}
+}
 
 const latestOf = (titles: readonly ArrivalTitle[]) =>
 	titles.length ? Math.max(...titles.map(({ at }) => at)) : null
@@ -332,8 +381,8 @@ export type NewWeekRow = {
 	titles: NewTitle[]
 	/** Every title of this week, of which the row shows the best. */
 	total: number
-	/** The services the titles arrived on, by the id they count as. */
-	services: Record<number, { name: string; logo_path: string | null }>
+	/** The names and logos of the services in the titles' `offers`. */
+	services: Record<number, OfferService>
 }
 
 /** This week: today and the six days before it (UTC), from a member's titles, best first. */
@@ -430,22 +479,31 @@ async function buildPage({
 		kind === "member"
 			? BRANDS.filter((b) => families.includes(b.ids[0]))
 			: BRANDS.filter((b) => b === brand || hasTitles(country.code, b.slug))
-	const services = await servicesOf(
-		[...new Set([...families, ...titles.map(({ service }) => service)])],
-		meta,
-		deps,
-	)
+	const top = ranked.slice(0, TOP)
+	const [services, offers] = await Promise.all([
+		servicesOf(
+			[...new Set([...families, ...titles.map(({ service }) => service)])],
+			meta,
+			deps,
+		),
+		offersOf(country.code, [...top, ...newest, ...waited], deps),
+	])
+	const withOffers = <T extends NewTitle>(title: T): T => ({
+		...title,
+		offers: offers.offersOf(title),
+	})
 	return {
 		kind,
 		path,
 		country,
 		brand: brand ? brandService(brand, meta) : null,
-		ranked: ranked.slice(0, TOP).map(withoutBackdrop),
-		days: dayGroupsOf(newest),
+		ranked: top.map(withoutBackdrop).map(withOffers),
+		days: dayGroupsOf(newest.map(withOffers)),
 		more: Math.max(0, titles.length - DAY_LIMIT),
 		total: titles.length,
-		waited,
+		waited: waited.map(withOffers),
 		services,
+		offerServices: offers.services,
 		keys: brands.map((b) => ({
 			...brandService(b, meta),
 			path: servicePath(country.code, b),
@@ -486,7 +544,11 @@ async function buildPage({
 		member: viewer.member
 			? { hasServices: viewer.member.services.length > 0 }
 			: null,
-		incomplete: kind !== "member" && (links === null || Boolean(links.failed?.length)),
+		// Without the links, or before the country's availability is read (the cards would miss the services a title is
+		// on besides the one it arrived on), the page is incomplete and no cache keeps it.
+		incomplete:
+			kind !== "member" &&
+			(links === null || Boolean(links.failed?.length) || offers.loading),
 	}
 }
 

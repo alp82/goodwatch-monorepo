@@ -142,11 +142,15 @@ export default function WhereToWatch({
 	const verb = OFFER_VERB[type]
 	const here = country ? regionName(country) : "your country"
 	// The streaming services here that have a page of new arrivals, two at most, with the logo of their card:
-	// "What's new on Netflix" (#489). Only for the loaded country's offers, so a previewed country never links to
-	// another country's page.
+	// "What's new on Netflix" (#489). Only for the loaded country's offers and while no other country is previewed
+	// (loading or failed), so the rows never link to a country other than the one the block shows.
 	const brandsSeen = new Set<string>()
 	const newOnHere =
-		newPages && newPages.country === country && type === "flatrate"
+		newPages &&
+		newPages.country === country &&
+		!preview &&
+		shownCountry === country &&
+		type === "flatrate"
 			? links
 					.flatMap((l) => {
 						const brand = brandOfService(l.id)

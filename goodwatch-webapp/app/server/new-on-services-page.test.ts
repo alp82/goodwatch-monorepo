@@ -18,6 +18,7 @@ const {
 	arrivalTitlesOf,
 	weekTitlesOf,
 	newPagesHere,
+	offersOf,
 	DAY_LIMIT,
 } = await import("./new-on-services-page.server.ts")
 const { titleKey } = await import("../utils/title-key.ts")
@@ -88,6 +89,12 @@ function deps(over: Partial<Deps> = {}): Deps & { asked: unknown[] } {
 				COUNTRIES.map(({ code }) => ({ country: code, arrivals: ARRIVALS[code] })),
 			),
 		viewer: async () => ({ country: "US", member: null }),
+		// Every title is on Netflix and Hulu in the country, as the availability index has it.
+		offers: async (_country, keys) =>
+			keys.map(() => [
+				{ id: 8, name: "Netflix", logo_path: "/n.png" },
+				{ id: 15, name: "Hulu", logo_path: "/h.png" },
+			]),
 		serviceCards: async (ids) =>
 			ids.map((id) => ({ id, name: `Service ${id}`, logo_path: null })),
 		...over,
@@ -420,6 +427,44 @@ test("links read in full are complete, and the pages index names no failure", as
 	const links = await linksAcross(["US", "DE"], async (code) => ARRIVALS[code], 2)
 	assert.deepEqual(links.failed, [])
 	assert.deepEqual((await loadPagesIndex(deps({ links: async () => links }))).failed, [])
+})
+
+test("the cards get every service a title is on in the country, the one it arrived on among them", async () => {
+	const page = asData(await loadServicePage(request("/new/us/netflix"), "us", "netflix", deps()))
+	const cards = [...page.ranked, ...page.days.flatMap(({ titles }) => titles)]
+	assert.ok(cards.length > 0)
+	for (const card of cards) assert.deepEqual(card.offers, [8, 15])
+	assert.deepEqual(page.offerServices, {
+		8: { name: "Netflix", logo_path: "/n.png" },
+		15: { name: "Hulu", logo_path: "/h.png" },
+	})
+	assert.equal(page.incomplete, false)
+})
+
+test("the arrival service leads a title's offers when the index doesn't list it; unknown offers are just the arrival", async () => {
+	const titles = [
+		{ key: titleKey("movie", 1), service: 337 },
+		{ key: titleKey("movie", 2), service: 8 },
+	]
+	const read = await offersOf("US", titles, {
+		offers: async () => [[{ id: 8, name: "Netflix", logo_path: null }], null],
+	})
+	assert.deepEqual(read.offersOf(titles[0]), [337, 8])
+	assert.deepEqual(read.offersOf(titles[1]), [8])
+	assert.equal(read.loading, false)
+})
+
+test("before the country's availability is read, a page is incomplete and its cards show the arrival service", async () => {
+	const page = asData(
+		await loadServicePage(
+			request("/new/us/netflix"),
+			"us",
+			"netflix",
+			deps({ offers: async (_country, keys) => keys.map(() => null) }),
+		),
+	)
+	assert.equal(page.incomplete, true)
+	assert.ok(page.ranked.every(({ offers, service }) => offers?.length === 1 && offers[0] === service))
 })
 
 // ---------------------------------------------------------------------------------------------------------

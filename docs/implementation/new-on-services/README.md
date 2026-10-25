@@ -55,11 +55,12 @@ The rules are in `goodwatch-webapp/app/domain/new-on-services.ts` and reuse Newl
 - The ten best by GoodWatch score (rounded), then **Day by day**: exact days, the latest first ("Today", "Yesterday",
   "Thursday, October 22"), then the titles without a known day under **Also new**.
 - Day by day uses the site's browse poster card (`ui/MovieTvCard.tsx`): the score pill (GoodWatch score, the viewer's
-  score, one state icon), the logos of the viewer's own services with the one the title arrived on leading and ringed
-  (`newOn`), and the title actions (a panel on hover, tiles over the art after a first tap on a touch screen). The pill,
-  the logos and the actions read the viewer on the client, so a visitor's HTML is the same for everyone. Four cards
-  across on a phone (the S card: one number, no logos), 6.5 rem from `sm` and 7 rem from `lg` (the M card). The name
-  goes under each card. The ranked top ten stays a list.
+  score, one state icon), the logos of the viewer's own services among every service that carries the title in the
+  country now (`offers`, from the card-services reader `getCardServices`, the arrival service always among them), with
+  the one it arrived on leading and ringed (`newOn`), and the title actions (a panel on hover, tiles over the art
+  after a first tap on a touch screen). The pill, the logos and the actions read the viewer on the client, so a
+  visitor's HTML is the same for everyone. Four cards across on a phone (the S card: one number, no logos), 6.5 rem
+  from `sm` and 7 rem from `lg` (the M card). The name goes under each card. The ranked top ten stays a list.
 - A title the catalog has no poster for shows the placeholder of the site's card grids
   (`app/img/poster-placeholder.png`, as in `ui/Poster.tsx`), and goes after every title with a poster: in the top ten,
   in each day and under Also new. On October 25, Netflix US had 4 such titles out of 101 (all shows with 0 or 1 votes
@@ -238,4 +239,11 @@ preview's signed-in setup or the shared layout, not from this page.
 
 ## Not done
 
+- A title's own offers can trail its arrival by days. The daily provider lists
+  (`f/tmdb_api/daily_provider_lists.py`) write verified rows to `availability_history` only; the title's offers
+  (`streaming_availabilities`, which where to watch and the cards read) change at the title's next streaming
+  publication. On October 25, 125 of the 247 titles on `/new/us` (53 of 71 from that day, 25 of 48 from October 22)
+  were listed before their title page showed the service, for example Dorothy (1578079) on Netflix in Germany. The
+  cards always carry the arrival service, but the title page says "not streaming" until then. A fix belongs in the
+  pipeline: publish a title's offers when a daily list adds it.
 - Opening `/new` doesn't clear the Newly available signal (open question 8).
