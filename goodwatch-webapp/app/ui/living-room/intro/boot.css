@@ -182,3 +182,8 @@ html[data-gw-intro="seen"] .boot,
 html[data-gw-intro="seen"] .film-hold:not([data-film-hold="run"]) {
 	display: none;
 }
+/* The boot screen and the hold stack over the TV's canvas with their z-index: the TV keeps them inside its picture,
+   so the Remote, where it reaches over the picture's edge (aimed), stays on top. The film does the same (intro.css). */
+.tvr:has(.boot, .film-hold) [data-tvr-part="tv"] {
+	isolation: isolate;
+}
