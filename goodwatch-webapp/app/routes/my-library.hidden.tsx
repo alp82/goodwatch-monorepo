@@ -1,16 +1,20 @@
-// My library, Hidden titles: every title the member marked Not interested, newest first, as posters with Unhide under
-// each. It moved here from Settings (/settings/hidden redirects). A guest is asked to sign up.
-import { EyeIcon } from "@heroicons/react/20/solid"
+// My library, Hidden titles: every title the member marked Not interested, newest first, as poster cards under their
+// Not interested cover; the cover's Undo unhides the title, which then fades out of the list. It moved here from
+// Settings (/settings/hidden redirects). A guest is asked to sign up.
 import { type LoaderFunctionArgs, type MetaFunction, json } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
+import { useState } from "react"
 import { toast } from "react-toastify"
 import { useNotInterestedMutation } from "~/hooks/useUserDataMutations"
-import { Empty, GuestPage, MY_LIBRARY, PageHead, Poster, WRAP } from "~/ui/my-pages/bits"
+import { MovieTvCard } from "~/ui/MovieTvCard"
+import { POSTER_ROW_SIZES } from "~/ui/Poster"
+import { Empty, GuestPage, MY_LIBRARY, PageHead, WRAP } from "~/ui/my-pages/bits"
 import { type HiddenTitle, type HiddenTitles, useHiddenTitles } from "~/ui/settings/hidden-titles"
 import { Spinner } from "~/ui/wait/Spinner"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { useHydrated } from "~/utils/hydrated"
+import type { TitleKey } from "~/utils/title-key"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -27,6 +31,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await getUserIdFromRequest({ request })
 	return json({ signedIn: Boolean(userId) }, { headers: { "Cache-Control": "private, no-store" } })
 }
+
+const FADE_MS = 300
 
 const LINE = "Titles you marked Not interested. They stay out of your recommendations. You can still find them in search."
 
@@ -62,15 +68,26 @@ function HiddenTitlesPage() {
 	const { queryKey } = hidden
 	const { mutate: updateNotInterested, isPending, variables } = useNotInterestedMutation()
 	const hiddenOn = useHiddenOn()
+	// Unhidden titles fade out before they leave the list.
+	const [leaving, setLeaving] = useState<ReadonlySet<TitleKey>>(new Set())
 
 	const unhide = (title: HiddenTitle) =>
 		updateNotInterested(
 			{ mediaType: title.media_type, tmdbId: title.tmdb_id, action: "remove" },
 			{
-				onSuccess: () =>
-					client.setQueryData<HiddenTitles>(queryKey, (old) =>
-						old ? { titles: old.titles.filter((other) => other.key !== title.key) } : old,
-					),
+				onSuccess: () => {
+					setLeaving((keys) => new Set(keys).add(title.key))
+					window.setTimeout(() => {
+						client.setQueryData<HiddenTitles>(queryKey, (old) =>
+							old ? { titles: old.titles.filter((other) => other.key !== title.key) } : old,
+						)
+						setLeaving((keys) => {
+							const left = new Set(keys)
+							left.delete(title.key)
+							return left
+						})
+					}, FADE_MS)
+				},
 				onError: () => toast.error(`Couldn't unhide ${title.title}. Please try again.`),
 			},
 		)
@@ -101,29 +118,29 @@ function HiddenTitlesPage() {
 								const busy = isPending && variables?.tmdbId === title.tmdb_id && variables.mediaType === title.media_type
 								const on = hiddenOn(title.hiddenAt)
 								return (
-									<li key={title.key} className="flex flex-col">
-										<Link to={title.href} prefetch="intent" className="group mb-2 block">
-											<Poster
-												path={title.poster_path}
-												size="w185"
-												className="aspect-[2/3] w-full rounded-lg opacity-60 ring-1 ring-white/10 grayscale-[40%] transition-opacity group-hover:opacity-90"
-											/>
-											<span className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 font-semibold text-gray-100 group-hover:underline">
+									<li
+										key={title.key}
+										className={`flex min-w-0 flex-col gap-2 transition-opacity duration-300 motion-reduce:transition-none ${leaving.has(title.key) ? "opacity-0" : ""}`}
+									>
+										<MovieTvCard
+											details={title}
+											mediaType={title.media_type}
+											posterSizes={POSTER_ROW_SIZES}
+											hidden={{ onUndo: () => unhide(title), pending: busy || leaving.has(title.key) }}
+										/>
+										<div className="flex flex-col gap-0.5">
+											<Link
+												to={title.href}
+												prefetch="intent"
+												className="line-clamp-2 text-sm leading-5 font-semibold text-gray-100 hover:underline"
+											>
 												{title.title}
+											</Link>
+											<span className="line-clamp-2 text-xs leading-4 text-gray-500">
+												{[title.release_year, title.media_type === "show" ? "Series" : "Film"].filter(Boolean).join(" · ")}
+												{on && ` · hidden ${on}`}
 											</span>
-										</Link>
-										<span className="mb-2 line-clamp-2 min-h-8 text-xs leading-4 text-gray-500">
-											{[title.release_year, title.media_type === "show" ? "Series" : "Film"].filter(Boolean).join(" · ")}
-											{on && ` · hidden ${on}`}
-										</span>
-										<button
-											type="button"
-											disabled={busy}
-											onClick={() => unhide(title)}
-											className="mt-auto inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-gray-600 text-sm font-semibold text-gray-200 hover:border-gray-400 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-										>
-											<EyeIcon className="size-4" aria-hidden /> Unhide
-										</button>
+										</div>
 									</li>
 								)
 							})}
