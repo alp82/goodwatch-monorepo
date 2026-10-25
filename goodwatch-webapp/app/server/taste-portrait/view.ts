@@ -149,7 +149,7 @@ export interface EveryoneRow {
 	mine: number
 	/** GoodWatch score, 0 to 100. */
 	everyone: number
-	/** Points the person rates it above (positive) or below everyone, after their usual generosity. */
+	/** Points above or below everyone, after the person's usual generosity for movies or shows. */
 	delta: number
 }
 
@@ -179,6 +179,8 @@ export interface EveryoneView extends ViewBase {
 	/** Gap bars: the top and bottom four attributes and three genres at a gap of 2 or more, largest first. */
 	attributes: EveryoneGap[]
 	genres: EveryoneGap[]
+	/** Separate display lists with equal row counts, strongest gaps first within each selection. */
+	gapGroups: { genres: EveryoneGap[]; traits: EveryoneGap[] }
 }
 
 // ---------- Fingerprint ----------

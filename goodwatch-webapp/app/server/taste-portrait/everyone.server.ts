@@ -1,5 +1,6 @@
 // You vs everyone: where the person's ratings part ways with the GoodWatch score ("everyone" is the GoodWatch score,
 // not other members), after allowing for how generous they are overall.
+import { foldGenres } from "../../domain/genre-fold"
 import {
 	KEYS,
 	NON_CRAFT,
@@ -36,16 +37,30 @@ export function buildEveryone(person: Person): EveryoneResult {
 		lower: [],
 		attributes: [],
 		genres: [],
+		gapGroups: { genres: [], traits: [] },
 	}
 	if (counted.length < MIN_PER_BAR) return empty
 
 	const gaps = counted.map((r) => r.score * 10 - r.facts.score)
 	const offset = average(gaps)
+	const offsets = new Map(
+		(["movie", "show"] as const).map((kind) => [
+			kind,
+			average(
+				counted.flatMap((r, i) =>
+					r.facts.mediaType === kind ? [gaps[i]] : [],
+				),
+			),
+		]),
+	)
+	const adjusted = counted.map(
+		(r, i) => gaps[i] - (offsets.get(r.facts.mediaType) ?? 0),
+	)
 	const rows: (EveryoneRow & { votes: number })[] = counted.map((r, i) => ({
 		key: r.key,
 		mine: r.score,
 		everyone: r.facts.score,
-		delta: Math.round(gaps[i] - offset),
+		delta: Math.round(adjusted[i]),
 		votes: r.facts.votes,
 	}))
 	// By the gap, nudged toward titles people know, so the lists read as a conversation, not trivia.
@@ -90,9 +105,7 @@ export function buildEveryone(person: Person): EveryoneResult {
 	const byGap = (a: EveryoneGap, b: EveryoneGap) =>
 		b.delta - a.delta || a.id.localeCompare(b.id)
 	const attributeGaps = NON_CRAFT.map((k): EveryoneGap => {
-		const hits = counted.flatMap((r, i) =>
-			r.z[k] > 1 ? [gaps[i] - offset] : [],
-		)
+		const hits = counted.flatMap((r, i) => (r.z[k] > 1 ? [adjusted[i]] : []))
 		return {
 			id: KEYS[k],
 			name: capitalize(noun(KEYS[k])),
@@ -104,8 +117,8 @@ export function buildEveryone(person: Person): EveryoneResult {
 		.sort(byGap)
 	const byGenre = new Map<string, number[]>()
 	counted.forEach((r, i) => {
-		for (const genre of r.facts.genres)
-			byGenre.set(genre, [...(byGenre.get(genre) ?? []), gaps[i] - offset])
+		for (const genre of foldGenres(r.facts.genres))
+			byGenre.set(genre, [...(byGenre.get(genre) ?? []), adjusted[i]])
 	})
 	const genreGaps = [...byGenre]
 		.filter(([, deltas]) => deltas.length >= minTitles)
@@ -124,6 +137,15 @@ export function buildEveryone(person: Person): EveryoneResult {
 			.filter((g) => Math.abs(g.delta) >= MIN_GAP)
 			.sort(byGap)
 
+	const genres = ends(genreGaps, 3)
+	const traits = ends(attributeGaps, 3)
+	const rowCount = Math.min(genres.length, traits.length)
+	const strongest = (list: EveryoneGap[]) =>
+		[...list]
+			.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta) || byGap(a, b))
+			.slice(0, rowCount)
+			.sort(byGap)
+
 	return {
 		...empty,
 		status: "ready",
@@ -133,6 +155,7 @@ export function buildEveryone(person: Person): EveryoneResult {
 		higher,
 		lower,
 		attributes: ends(attributeGaps, 4),
-		genres: ends(genreGaps, 3),
+		genres,
+		gapGroups: { genres: strongest(genres), traits: strongest(traits) },
 	}
 }

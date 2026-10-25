@@ -65,9 +65,10 @@ export function YouVsEveryone({ view }: { view: EveryoneView }) {
 	const cold = view.attributes.filter((a) => a.delta <= -NAMED_GAP).reverse()
 	const hot = higher[0] && view.titles[higher[0].key]
 	const colder = lower[0] && view.titles[lower[0].key]
-	const gaps = [...view.genres, ...view.attributes].sort(
-		(a, b) => b.delta - a.delta,
-	)
+	const groups = [
+		{ name: "Genres", gaps: view.gapGroups.genres },
+		{ name: "Traits", gaps: view.gapGroups.traits },
+	]
 	const more = n < MOST && (allHigher.length > n || allLower.length > n)
 	const filtered = !isAllTitleTypes(type)
 	const none = filtered ? (
@@ -178,45 +179,52 @@ export function YouVsEveryone({ view }: { view: EveryoneView }) {
 				</div>
 			)}
 
-			{gaps.length > 0 && (
+			{groups.some((group) => group.gaps.length > 0) && (
 				<section className="mx-auto mt-14 max-w-7xl px-4 md:px-8">
 					<h2 className="text-2xl font-bold md:text-3xl">
 						Where you and everyone part ways
 					</h2>
 					<p className="mt-1 text-gray-400">
 						Average gap between your score and the GoodWatch score, after
-						allowing for how generous you are overall.
+						allowing for how generous you are with movies or shows.
 					</p>
-					<div className="mt-6 grid gap-x-10 gap-y-3 md:grid-cols-2">
-						{gaps.map((gap) => (
-							<div
-								key={gap.id}
-								className="grid grid-cols-[9rem_1fr_3rem] items-center gap-3 text-sm"
-							>
-								<span className="truncate text-gray-200">{gap.name}</span>
-								<span className="relative h-2 rounded-full bg-gray-800">
-									<span className="absolute inset-y-0 left-1/2 w-px bg-gray-500" />
-									<span
-										className={`absolute inset-y-0 rounded-full ${gap.delta > 0 ? "bg-emerald-500" : "bg-rose-500"}`}
-										style={
-											gap.delta > 0
-												? {
-														left: "50%",
-														width: `${Math.min(50, gap.delta * 5)}%`,
+					<div className="mt-6 grid gap-10 md:grid-cols-2">
+						{groups.map((group) => (
+							<div key={group.name} className="min-w-0">
+								<h3 className="mb-4 text-lg font-semibold">{group.name}</h3>
+								<div className="space-y-3">
+									{group.gaps.map((gap) => (
+										<div
+											key={gap.id}
+											className="grid grid-cols-[9rem_1fr_3rem] items-center gap-3 text-sm"
+										>
+											<span className="truncate text-gray-200">{gap.name}</span>
+											<span className="relative h-2 rounded-full bg-gray-800">
+												<span className="absolute inset-y-0 left-1/2 w-px bg-gray-500" />
+												<span
+													className={`absolute inset-y-0 rounded-full ${gap.delta > 0 ? "bg-emerald-500" : "bg-rose-500"}`}
+													style={
+														gap.delta > 0
+															? {
+																	left: "50%",
+																	width: `${Math.min(50, gap.delta * 5)}%`,
+																}
+															: {
+																	right: "50%",
+																	width: `${Math.min(50, -gap.delta * 5)}%`,
+																}
 													}
-												: {
-														right: "50%",
-														width: `${Math.min(50, -gap.delta * 5)}%`,
-													}
-										}
-									/>
-								</span>
-								<span
-									className={`text-right font-bold tabular-nums ${gap.delta > 0 ? "text-emerald-400" : "text-rose-400"}`}
-								>
-									{gap.delta > 0 ? "+" : ""}
-									{gap.delta}
-								</span>
+												/>
+											</span>
+											<span
+												className={`text-right font-bold tabular-nums ${gap.delta > 0 ? "text-emerald-400" : "text-rose-400"}`}
+											>
+												{gap.delta > 0 ? "+" : ""}
+												{gap.delta}
+											</span>
+										</div>
+									))}
+								</div>
 							</div>
 						))}
 					</div>

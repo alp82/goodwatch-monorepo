@@ -456,6 +456,7 @@ function unavailable(tab: PortraitTab, kind: Viewer["kind"]): PortraitView {
 			lower: [],
 			attributes: [],
 			genres: [],
+			gapGroups: { genres: [], traits: [] },
 		}
 	return {
 		...base,
