@@ -1,3 +1,15 @@
+export interface FeedbackTarget {
+	personId?: number
+	creditTmdbId?: number
+	creditMediaType?: "movie" | "tv"
+	seasonNumber?: number
+	episodeNumber?: number
+	providerId?: number
+	offerType?: "flatrate" | "free" | "ads" | "rent" | "buy"
+	country?: string
+	scoreSource?: string
+}
+
 /** Keep idempotencyKey unchanged when retrying. startedAt is when the form opened (epoch ms). */
 export interface FeedbackRequest {
 	kind: "bug" | "idea" | "data" | "contact"
@@ -17,6 +29,14 @@ export interface FeedbackRequest {
 		sourceLink?: string
 		country?: string
 		providerIds?: number[]
+		/** The page part, e.g. `watch`, `cast` (docs/implementation/feedback/fix-mode-contract.md). */
+		area?: string
+		/** The picked problem's id, `other` for "Something else". */
+		problem?: string
+		/** What the problem points at; only the keys the problem needs. */
+		target?: FeedbackTarget
+		/** Free text: "Something else", "What looks off?", or typed answers. */
+		note?: string
 	}
 	metadata?: {
 		url?: string
@@ -40,9 +60,53 @@ export class FeedbackError extends Error {
 		this.status = status
 	}
 }
+/** What a fix mode report did: applied now, waiting for staff, or a flag staff look at. */
+export type FeedbackOutcome = "live" | "pending" | "flag"
+
+/** The endpoint's answer. `outcome` and `correctionId` come with the corrections layer; older servers send neither. */
+export interface FeedbackResponse {
+	reportId: string
+	outcome?: FeedbackOutcome
+	correctionId?: string | null
+}
+
+/** The outcome to show: the server's, else `fallback` (what the report can be at most without a correction). */
+export function outcomeOf(
+	response: Partial<FeedbackResponse> | null | undefined,
+	fallback: Exclude<FeedbackOutcome, "live">,
+): { outcome: FeedbackOutcome; correctionId: string | null } {
+	const outcome = response?.outcome
+	if (outcome === "live" || outcome === "pending" || outcome === "flag")
+		return {
+			outcome,
+			correctionId:
+				typeof response?.correctionId === "string" && response.correctionId
+					? response.correctionId
+					: null,
+		}
+	return { outcome: fallback, correctionId: null }
+}
+
+/** Takes back the member's own live or pending correction. */
+export async function undoCorrection(
+	correctionId: string,
+): Promise<{ status: "reverted" | "withdrawn" }> {
+	let response: Response
+	try {
+		response = await fetch(
+			`/api/feedback/corrections/${encodeURIComponent(correctionId)}/undo`,
+			{ method: "POST", credentials: "same-origin" },
+		)
+	} catch {
+		throw new FeedbackError(0)
+	}
+	if (!response.ok) throw new FeedbackError(response.status)
+	return response.json()
+}
+
 export async function submitFeedback(
 	report: FeedbackRequest,
-): Promise<{ reportId: string }> {
+): Promise<FeedbackResponse> {
 	let response: Response
 	try {
 		response = await fetch("/api/feedback", {

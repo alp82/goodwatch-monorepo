@@ -101,16 +101,22 @@ export default function DetailsContent({
 					media={media}
 					grid={whole.scores}
 					onWanted={whole.load}
-					wrapper={section(
-						grid ? episodeGridHeight(grid) : { phone: 0, desktop: 0 },
-						sectionProps.episodes,
-					)}
+					wrapper={{
+						...section(
+							grid ? episodeGridHeight(grid) : { phone: 0, desktop: 0 },
+							sectionProps.episodes,
+						),
+						"data-feedback-area": "episodes",
+					}}
 				>
 					{gridView}
 				</TrackedEpisodes>
 			) : (
 				grid && (
-					<div {...section(episodeGridHeight(grid), sectionProps.episodes)}>
+					<div
+						{...section(episodeGridHeight(grid), sectionProps.episodes)}
+						data-feedback-area="episodes"
+					>
 						{gridView}
 					</div>
 				)
@@ -124,10 +130,16 @@ export default function DetailsContent({
 			{/*		countryCodes={streaming_country_codes}*/}
 			{/*	/>*/}
 			{/*</div>*/}
-			<div {...section(aboutHeight(), sectionProps.about)}>
+			<div
+				{...section(aboutHeight(), sectionProps.about)}
+				data-feedback-area="details"
+			>
 				<About media={media} navigateToSection={navigateToSection} />
 			</div>
-			<div {...section(actorsHeight(media), sectionProps.actors_and_crew)}>
+			<div
+				{...section(actorsHeight(media), sectionProps.actors_and_crew)}
+				data-feedback-area="cast"
+			>
 				<Actors
 					cast={cast}
 					total={cast_total}
@@ -135,12 +147,13 @@ export default function DetailsContent({
 					tmdbId={details.tmdb_id}
 				/>
 			</div>
-			<div {...section(crewHeight(media))}>
+			<div {...section(crewHeight(media))} data-feedback-area="cast">
 				<Crew crew={crew} />
 			</div>
 			{/* The genre row is part of Related: the navigation says so while it is on screen. */}
 			<div
 				{...sectionProps.related}
+				data-feedback-area="related"
 				className={`flex flex-col gap-12 ${sectionProps.related.className}`}
 			>
 				<div

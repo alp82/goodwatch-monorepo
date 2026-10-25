@@ -65,6 +65,7 @@ export function ProfileAvatar({
 			<img
 				src={avatar.url}
 				alt=""
+				data-member-avatar
 				className={`${cls} object-cover object-top`}
 			/>
 		)

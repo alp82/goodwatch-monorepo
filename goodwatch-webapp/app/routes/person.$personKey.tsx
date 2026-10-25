@@ -35,6 +35,11 @@ import {
 	useSearchParams,
 } from "@remix-run/react"
 import type React from "react"
+import { useMemo } from "react"
+import {
+	type PersonSubject,
+	usePublishFeedbackSubject,
+} from "~/ui/feedback/subject"
 import { personMetaText, titleCounts } from "~/domain/person-meta"
 import {
 	type TitleTypeFilter,
@@ -178,8 +183,46 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	]
 }
 
+/** Fix mode's questions read the person and the credits the page shows (ui/feedback). */
+function useFeedbackPerson(data: Data) {
+	const subject = useMemo<PersonSubject>(() => {
+		const p = data.profile
+		const seen = new Set<string>()
+		const credits = [
+			...data.knownFor,
+			...data.groups.flatMap((g: { items: Credit[] }) => g.items),
+		]
+			.filter((c) => {
+				const key = `${c.media_type}:${c.tmdb_id}`
+				if (seen.has(key)) return false
+				seen.add(key)
+				return true
+			})
+			.map((c) => ({
+				tmdbId: c.tmdb_id,
+				mediaType:
+					c.media_type === "show" ? ("tv" as const) : ("movie" as const),
+				title: c.title,
+				year: c.release_year ? String(c.release_year) : null,
+				role: subtitle(c),
+			}))
+		return {
+			kind: "person",
+			tmdbId: p.tmdb_id,
+			name: p.name,
+			department: p.known_for_department ?? null,
+			firstYear: p.stats.firstYear,
+			lastYear: p.stats.lastYear,
+			titleCount: p.stats.titles,
+			credits,
+		}
+	}, [data])
+	usePublishFeedbackSubject(subject)
+}
+
 export default function PersonPage() {
 	const data = useLoaderData<typeof loader>()
+	useFeedbackPerson(data)
 	return (
 		<main className="min-h-screen pb-24">
 			<Hero data={data}>
@@ -525,7 +568,10 @@ function Facts({ data }: { data: Data }) {
 	].filter((k, i) => k.n > 0 || (i === 0 && !s.shows))
 	const career = careerSummary(s)
 	return (
-		<div className="mt-6 grid grid-cols-2 divide-white/10 rounded-xl border border-white/10 bg-gray-900/70 backdrop-blur sm:grid-cols-3 lg:grid-cols-5 lg:divide-x">
+		<div
+			data-feedback-area="person"
+			className="mt-6 grid grid-cols-2 divide-white/10 rounded-xl border border-white/10 bg-gray-900/70 backdrop-blur sm:grid-cols-3 lg:grid-cols-5 lg:divide-x"
+		>
 			<Fact label="Titles" href={href({ type: null, anime: null }, "#titles")}>
 				<div className="flex items-center gap-4 text-lg font-semibold">
 					{kinds.map(({ n, one, many, Icon }) => (
@@ -1094,7 +1140,11 @@ function Titles({ data }: { data: Data }) {
 	const type = typeOf(f)
 	const others = !!(f.role || f.genre || f.decade || f.trait || f.minScore)
 	return (
-		<section id="titles" className="scroll-mt-20 space-y-5">
+		<section
+			id="titles"
+			data-feedback-area="credits"
+			className="scroll-mt-20 space-y-5"
+		>
 			<div className="flex items-baseline gap-3">
 				<h2 className="text-2xl font-bold">Movies and TV shows</h2>
 				<span className="text-gray-400">{data.total}</span>

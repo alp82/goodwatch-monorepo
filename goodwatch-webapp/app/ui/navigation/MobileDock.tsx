@@ -108,6 +108,7 @@ export function MobileDock() {
 			/>
 			<div
 				ref={dock}
+				data-mobile-dock
 				className={`fixed inset-x-0 bottom-0 z-50 rounded-t-3xl pb-[env(safe-area-inset-bottom)] text-gray-100 shadow-[0_-20px_50px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.08)] lg:hidden ${
 					quiet ? "bg-gray-950" : "bg-gray-950/94 backdrop-blur-xl"
 				}`}

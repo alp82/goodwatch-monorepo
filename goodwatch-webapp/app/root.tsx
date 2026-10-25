@@ -5,6 +5,7 @@ import { EARLY_TELEMETRY_SCRIPT } from "~/telemetry/early"
 import { GOOGLE_TAG_INLINE_SCRIPT } from "~/telemetry/google-tag"
 import { reportBoundaryError } from "~/telemetry/telemetry"
 import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
+import { FeedbackTab } from "~/ui/feedback/FeedbackTab"
 import { InstantRouteScroll } from "~/ui/nav/InstantRouteScroll"
 import { PageScrollbar } from "~/ui/nav/PageScrollbar"
 import { json } from "@remix-run/node"
@@ -249,6 +250,8 @@ export function ErrorBoundary() {
 			<MobileDock />
 			<HubDialog />
 			<SearchDialog />
+			{/* Send feedback only: an error page has no parts to fix. */}
+			<FeedbackTab sendOnly />
 		</NavigationProvider>
 	)
 
@@ -389,6 +392,8 @@ function Root() {
 								<App />
 								{/* <CookieConsent /> */}
 								<ToastContainer />
+								{/* The Feedback tab; its drawer and fix mode load after the page settles. */}
+								<FeedbackTab />
 								<TelemetryBoot faststatsSiteKey={env.FASTSTATS_SITE_KEY} />
 								<InstantRouteScroll />
 								<PageScrollbar />
