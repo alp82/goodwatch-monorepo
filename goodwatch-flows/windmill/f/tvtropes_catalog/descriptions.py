@@ -34,6 +34,9 @@ _BLOCK_TAGS = {
     "figcaption", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hr",
     "li", "main", "nav", "ol", "p", "pre", "section", "table", "ul",
 }
+_SCRIPT_CHARACTERS = re.compile(r"[0-9+\-=()−\s]+\Z")
+_SUPERSCRIPT = str.maketrans("0123456789+-=()−", "⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾⁻")
+_SUBSCRIPT = str.maketrans("0123456789+-=()−", "₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎₋")
 _STOP_IDS = {"article-footer", "main-footer", "footer", "content-footer", "main-article-footer", "article-bottom"}
 
 
@@ -111,6 +114,14 @@ def _sanitize(soup):
             node.decompose()
     for br in soup.find_all("br"):
         br.replace_with("\n")
+    # Preserve numeric formatting after note labels and hidden/quoted material are removed.
+    # Unicode has exact digit/operator forms; unsupported text and nested scripts stay unchanged.
+    for node in list(soup.find_all(["sup", "sub"])):
+        if node.find(["sup", "sub"]) or node.find_parent(["sup", "sub"]):
+            continue
+        text = node.get_text()
+        if text.strip() and _SCRIPT_CHARACTERS.fullmatch(text):
+            node.replace_with(text.translate(_SUPERSCRIPT if node.name == "sup" else _SUBSCRIPT))
 
 
 def _external_link_icon(node):

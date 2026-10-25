@@ -107,6 +107,34 @@ class TropeDescriptionTests(unittest.TestCase):
         result = self.extract(page(body))
         self.assertEqual(result["description"], LEAD + "\n\n" + SECOND)
 
+    def test_preserves_numeric_superscripts_and_chemical_subscripts(self):
+        body = '<p>The number 108 is 2<sup>2</sup> * 3<sup>3</sup>, while water is H<sub>2</sub>O and carbon dioxide is CO<sub>2</sub>.</p><hr>'
+        self.assertEqual(self.extract(page(body))["description"],
+                         'The number 108 is 2² * 3³, while water is H₂O and carbon dioxide is CO₂.')
+
+    def test_script_operators_and_whitespace_preserve_visible_source_notation(self):
+        body = '<p>The expression x<sup>(-2)+3=1</sup> appears beside Na<sup>+</sup> and x<sub>(2−1)</sub>; spaced x<sup> 2 3 </sup> remains spaced.</p><hr>'
+        self.assertEqual(self.extract(page(body))["description"],
+                         'The expression x⁽⁻²⁾⁺³⁼¹ appears beside Na⁺ and x₍₂₋₁₎; spaced x ² ³ remains spaced.')
+
+    def test_script_conversion_happens_after_notes_and_quotes_are_removed(self):
+        body = ('<blockquote>A quotation with 2<sup>99</sup> must be absent.</blockquote>'
+                '<p>The actual definition includes H<sub>2</sub>O'
+                '<span class="notelabel"><sup>12</sup></span>'
+                '<span class="notetext">A hidden note about 3<sup>4</sup>.</span>'
+                ' and nothing from the hidden annotation.</p><hr>')
+        self.assertEqual(self.extract(page(body))["description"],
+                         'The actual definition includes H₂O and nothing from the hidden annotation.')
+
+    def test_unsupported_script_letters_fractions_and_nested_scripts_are_not_guessed(self):
+        body = '<p>The 10<sup>th</sup> term x<sub>n</sub> and x<sup>1/2</sup> or x<sup>?</sup> keep their text; nested x<sup>2<sub>3</sub></sup> is left unchanged.</p><hr>'
+        self.assertEqual(self.extract(page(body))["description"],
+                         'The 10th term xn and x1/2 or x? keep their text; nested x23 is left unchanged.')
+
+    def test_plain_numbers_and_unformatted_formulas_remain_byte_exact(self):
+        text = 'An ordinary formula 2^2 * 3^3 and H2O already appears in plain text, without HTML numeric formatting.'
+        self.assertEqual(self.extract(page('<p>' + text + '</p><hr>'))["description"], text)
+
     def test_stops_at_first_rule_heading_or_examples_folder(self):
         for boundary in ['<hr>', '<h2>Examples:</h2>', '<h3>Film examples</h3>', '<p>Examples:</p>', '<div class="folderlabel">open/close all folders</div>', '<div class="folder"><p>Example content.</p></div>']:
             with self.subTest(boundary=boundary):
