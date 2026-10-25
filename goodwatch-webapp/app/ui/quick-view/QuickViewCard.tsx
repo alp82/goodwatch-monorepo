@@ -126,6 +126,9 @@ export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 							alt=""
 							draggable={false}
 							className="size-full object-cover opacity-50"
+							onError={(e) => {
+								e.currentTarget.style.visibility = "hidden"
+							}}
 						/>
 					)}
 					<span className="absolute inset-0 bg-linear-to-b from-gray-900/0 via-gray-900/55 to-gray-900" />
@@ -201,21 +204,21 @@ export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 				</section>
 				{t.services !== undefined && <Services offers={t.services} />}
 				{"story" in t && (
-				<section className="py-3">
-					<Label>Story</Label>
-					{t.story === undefined ? (
-						<div className="h-10 space-y-2 pt-1" aria-hidden="true">
-							<span className="block h-3 w-full animate-pulse rounded bg-white/[0.05]" />
-							<span className="block h-3 w-2/3 animate-pulse rounded bg-white/[0.05]" />
-						</div>
-					) : (
-						<p
-							className={`line-clamp-2 h-10 text-[13px] leading-5 ${t.story ? "text-gray-400" : "text-gray-600"}`}
-						>
-							{t.story || "No overview yet."}
-						</p>
-					)}
-				</section>
+					<section className="py-3">
+						<Label>Story</Label>
+						{t.story === undefined ? (
+							<div className="h-10 space-y-2 pt-1" aria-hidden="true">
+								<span className="block h-3 w-full animate-pulse rounded bg-white/[0.05]" />
+								<span className="block h-3 w-2/3 animate-pulse rounded bg-white/[0.05]" />
+							</div>
+						) : (
+							<p
+								className={`line-clamp-2 h-10 text-[13px] leading-5 ${t.story ? "text-gray-400" : "text-gray-600"}`}
+							>
+								{t.story || "No overview yet."}
+							</p>
+						)}
+					</section>
 				)}
 			</div>
 			<div

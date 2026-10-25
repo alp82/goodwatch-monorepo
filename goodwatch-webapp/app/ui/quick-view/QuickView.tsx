@@ -14,7 +14,13 @@
 //
 // Both: focus moves in on opening, Tab stays in, Escape closes and focus returns to the poster; a dialog opened from
 // inside (the score picker, the watch log) keeps its own keys (for-you/focus.ts).
-import { AnimatePresence, animate, motion, useMotionValue } from "framer-motion"
+import {
+	AnimatePresence,
+	animate,
+	motion,
+	useIsPresent,
+	useMotionValue,
+} from "framer-motion"
 import {
 	type ReactNode,
 	createContext,
@@ -213,7 +219,10 @@ const nestedOpen = (view: HTMLElement | null) =>
 	!!view?.querySelector('[aria-expanded="true"]')
 
 /** A tap on the dim closes the view, unless it only dismissed something of the view's own. */
-function useCloseTap(view: React.RefObject<HTMLElement | null>, close: () => void) {
+function useCloseTap(
+	view: React.RefObject<HTMLElement | null>,
+	close: () => void,
+) {
 	const nested = useRef(false)
 	return {
 		onPointerDown: () => {
@@ -360,8 +369,7 @@ function LiftCard(p: QuickViewProps) {
 	const go = async (d: -1 | 1) => {
 		const { cur, closing } = state.current
 		const ni = cur.i + d
-		if (busy.current || closing || !p.ordered || ni < 0 || ni >= p.count)
-			return
+		if (busy.current || closing || !p.ordered || ni < 0 || ni >= p.count) return
 		busy.current = true
 		try {
 			const el = p.anchorOf(ni)
@@ -525,11 +533,19 @@ function Drawer(p: QuickViewProps) {
 	const view = useRef<HTMLDivElement>(null)
 	const layer = useRef<HTMLDivElement>(null)
 	const [closing, setClosing] = useState(false)
+	/** The control that had the focus when a step began (the head's arrows): its twin in the new content gets it. */
+	const refocus = useRef<string | null>(null)
 	const steps: Steps | null = p.ordered
 		? {
 				onStep: (d) => {
 					const n = p.index + d
-					if (n >= 0 && n < p.count) p.onIndex(n)
+					if (n < 0 || n >= p.count) return
+					const at = document.activeElement
+					refocus.current =
+						at instanceof HTMLElement && view.current?.contains(at)
+							? (at.getAttribute("aria-label") ?? "")
+							: null
+					p.onIndex(n)
 				},
 				canPrev: p.index > 0,
 				canNext: p.index < p.count - 1,
@@ -544,6 +560,22 @@ function Drawer(p: QuickViewProps) {
 		initial: () => view.current,
 		returnTo: () => p.focusOf?.(p.index) ?? focusTarget(p.anchorOf(p.index)),
 	})
+	// The content that had the focus is leaving: the focus goes to the same control in the new one, or the drawer.
+	useEffect(() => {
+		const label = refocus.current
+		refocus.current = null
+		if (label === null) return
+		const twin = label
+			? [
+					...(view.current?.querySelectorAll<HTMLElement>(
+						`[aria-label="${CSS.escape(label)}"]`,
+					) ?? []),
+				].find((el) => !el.closest("[inert]"))
+			: undefined
+		;(twin && !twin.matches(":disabled") ? twin : view.current)?.focus({
+			preventScroll: true,
+		})
+	}, [p.index])
 	// The opened title stays in sight above the drawer as it steps.
 	useEffect(() => {
 		const el = p.anchorOf(p.index)
@@ -609,7 +641,11 @@ function Drawer(p: QuickViewProps) {
 						const dx = e.clientX - s.x
 						const dyy = e.clientY - s.y
 						if (dyy > 80 && dyy > Math.abs(dx) * 1.5) return requestClose()
-						if (!steps || Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dyy) * 1.5)
+						if (
+							!steps ||
+							Math.abs(dx) < 50 ||
+							Math.abs(dx) < Math.abs(dyy) * 1.5
+						)
 							return
 						steps.onStep(dx < 0 ? 1 : -1)
 					}}
@@ -630,17 +666,29 @@ function Drawer(p: QuickViewProps) {
 function Crossfade({ k, children }: { k: number; children: ReactNode }) {
 	return (
 		<AnimatePresence initial={false}>
-			<motion.div
-				key={k}
-				className="absolute inset-0 flex flex-col"
-				initial={{ opacity: 0 }}
-				animate={{ opacity: 1 }}
-				exit={{ opacity: 0, pointerEvents: "none" }}
-				transition={FADE}
-			>
-				{children}
-			</motion.div>
+			<Layer key={k}>{children}</Layer>
 		</AnimatePresence>
+	)
+}
+
+/** One title's content; a leaving one is inert, so neither a tap nor the focus lands in it. */
+function Layer({ children }: { children: ReactNode }) {
+	const present = useIsPresent()
+	const el = useRef<HTMLDivElement>(null)
+	useEffect(() => {
+		if (!present) el.current?.setAttribute("inert", "")
+	}, [present])
+	return (
+		<motion.div
+			ref={el}
+			className="absolute inset-0 flex flex-col"
+			initial={{ opacity: 0 }}
+			animate={{ opacity: 1 }}
+			exit={{ opacity: 0 }}
+			transition={FADE}
+		>
+			{children}
+		</motion.div>
 	)
 }
 

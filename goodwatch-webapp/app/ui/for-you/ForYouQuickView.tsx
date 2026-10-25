@@ -160,7 +160,9 @@ export function ForYouQuickView({
 			preload([
 				posterSrc(t.poster, "w185"),
 				posterSrc(t.poster, "w500"),
-				d?.backdrop ? `https://image.tmdb.org/t/p/w780${d.backdrop}` : undefined,
+				d?.backdrop
+					? `https://image.tmdb.org/t/p/w780${d.backdrop}`
+					: undefined,
 			])
 		}
 	}, [index, list, pool, detail])

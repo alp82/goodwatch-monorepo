@@ -64,10 +64,7 @@ function useCards(titles: MapViewTitle[], chunk: number) {
 	})
 }
 
-function MapCard({
-	titles,
-	index,
-}: { titles: MapViewTitle[]; index: number }) {
+function MapCard({ titles, index }: { titles: MapViewTitle[]; index: number }) {
 	const t = titles[index]
 	const { mediaType, tmdbId } = mediaOf(t)
 	const cards = useCards(titles, Math.floor(index / CHUNK))
