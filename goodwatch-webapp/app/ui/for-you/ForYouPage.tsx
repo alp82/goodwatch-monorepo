@@ -572,17 +572,18 @@ function Steering({
 				? "Pick a mood"
 				: "Change mood"
 	// The header row already says For you: the results carry a title only for a picked tile or a tweak.
-	const heading = !tile && !tweak ? null : (
-		<>
-			{tile?.name ?? "For you"}
-			{tweak && (
-				<span className="font-sans text-[0.8em] font-normal text-gray-400">
-					{" "}
-					· {tweak}
-				</span>
-			)}
-		</>
-	)
+	const heading =
+		!tile && !tweak ? null : (
+			<>
+				{tile?.name ?? "For you"}
+				{tweak && (
+					<span className="font-sans text-[0.8em] font-normal text-gray-400">
+						{" "}
+						· {tweak}
+					</span>
+				)}
+			</>
+		)
 	const liveDesk = useRef<HTMLSpanElement>(null)
 	const liveSheet = useRef<HTMLSpanElement>(null)
 	const [sheetBox, sheetSide] = useSquare()

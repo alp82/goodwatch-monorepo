@@ -1,4 +1,3 @@
-import { presentCatalogLoader } from "~/server/media-payload.server"
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import {
 	type ShouldRevalidateFunction,
@@ -6,12 +5,14 @@ import {
 	useSearchParams,
 } from "@remix-run/react"
 import { useCallback, useEffect } from "react"
-import type { SidesView } from "~/server/taste-portrait/view"
+import { presentCatalogLoader } from "~/server/media-payload.server"
 import {
-	type TasteTabData,
-	loadTasteTab,
+	type TastePageData,
+	loadTastePage,
 	tastePageViewer,
 } from "~/server/taste-portrait/page.server"
+import type { SidesView } from "~/server/taste-portrait/view"
+import { TastePortrait } from "~/ui/taste/portrait/TastePortrait"
 import {
 	onlySideChanged,
 	openingSide,
@@ -39,7 +40,7 @@ export const meta: MetaFunction<typeof loader> = () => {
 	const pageMeta: PageMeta = {
 		title: "Your taste - GoodWatch",
 		description:
-			"The movies and shows you love, grouped by what they share, what's close to your taste, and more of what you love on your services.",
+			"Your viewer type, what pulls you in movies and shows, your taste groups, and where you part ways with everyone.",
 		url: "https://goodwatch.app/taste",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "Your taste on GoodWatch",
@@ -51,11 +52,20 @@ export const meta: MetaFunction<typeof loader> = () => {
 
 async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const { userId } = await tastePageViewer(request)
-	return loadTasteTab(request, "sides", userId)
+	return loadTastePage(request, userId)
 }
 
 export default function TasteRoute() {
-	const data = useLoaderData<typeof loader>() as TasteTabData<"sides">
+	const data = useLoaderData<typeof loader>() as TastePageData
+	if (data.kind === "portrait") return <TastePortrait data={data} />
+	return <StartOrGroups view={data.view} />
+}
+
+/**
+ * A guest's taste groups (their taste lives in their browser), or a member's start while they begin their taste and
+ * the notice while it is prepared.
+ */
+function StartOrGroups({ view: memberView }: { view: SidesView | null }) {
 	const [params, setParams] = useSearchParams()
 	// The side on show takes the address's place, without a history entry: Back leaves the page in one step.
 	const onAddress = useCallback(
@@ -68,7 +78,7 @@ export default function TasteRoute() {
 	)
 
 	return (
-		<TasteTabFrame tab="sides" memberView={data.view}>
+		<TasteTabFrame tab="sides" memberView={memberView}>
 			{(view) => (
 				<Sides
 					view={view}

@@ -47,8 +47,6 @@ test("robots.txt lets a crawler read the pages that ask not to be indexed", asyn
 		)
 	const noindexPages = [
 		"/taste",
-		"/taste/fingerprint",
-		"/taste/everyone",
 		"/taste/quiz",
 		"/settings",
 		"/settings/account",
