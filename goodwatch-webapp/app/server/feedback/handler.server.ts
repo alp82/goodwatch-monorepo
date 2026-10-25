@@ -65,7 +65,8 @@ export function dedupeKey(input: FeedbackInput): string | null {
 				ids: Object.fromEntries(
 					Object.keys(ids)
 						.sort()
-						.map((key) => [key, ids[key]]),
+						// The schema accepts 603 and "603" for the same identifier.
+						.map((key) => [key, String(ids[key])]),
 				),
 				field,
 				// Omitted suggestions remain distinct from an explicit null.
@@ -372,10 +373,39 @@ export async function postDiscord(
 		/* optional */
 	}
 	// Discord limits: thread_name 100, embed title 256, description 4096, field value 1024, embed total 6000.
+	const embed = {
+		title: duplicate
+			? `Duplicate ${duplicate.count}: ${report.kind}`
+			: `Feedback: ${report.kind}`,
+		description: display(report.message, 3500),
+		fields: [
+			{ name: "Report", value: report.id },
+			{
+				name: "Member",
+				value: report.memberId ? display(report.memberId, 100) : "Guest",
+			},
+			{
+				name: "Context",
+				value: display(JSON.stringify(report.metadata), 1000) || "Unavailable",
+			},
+			...(report.data
+				? [
+						{
+							name: "Data",
+							value:
+								display(JSON.stringify(report.data), 1000) || "Unavailable",
+						},
+					]
+				: []),
+		],
+	}
+	// A duplicate replies in the original thread. The key ignores message, current value, and source, so the
+	// reply carries the new submission's evidence as its own embed instead of only the count.
 	const payload = duplicate
 		? {
 				content: `Duplicate count increased to ${duplicate.count}.`,
 				allowed_mentions: { parse: [] },
+				embeds: [embed],
 			}
 		: {
 				thread_name:
@@ -385,37 +415,7 @@ export async function postDiscord(
 					),
 				...(tag ? { applied_tags: [tag] } : {}),
 				allowed_mentions: { parse: [] },
-				embeds: [
-					{
-						title: `Feedback: ${report.kind}`,
-						description: display(report.message, 3500),
-						fields: [
-							{ name: "Report", value: report.id },
-							{
-								name: "Member",
-								value: report.memberId
-									? display(report.memberId, 100)
-									: "Guest",
-							},
-							{
-								name: "Context",
-								value:
-									display(JSON.stringify(report.metadata), 1000) ||
-									"Unavailable",
-							},
-							...(report.data
-								? [
-										{
-											name: "Data",
-											value:
-												display(JSON.stringify(report.data), 1000) ||
-												"Unavailable",
-										},
-									]
-								: []),
-						],
-					},
-				],
+				embeds: [embed],
 			}
 	let body: BodyInit
 	let requestHeaders: Record<string, string> = {}

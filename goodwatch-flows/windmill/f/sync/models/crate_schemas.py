@@ -1178,7 +1178,7 @@ SCHEMAS = {
             "updated_at": "TIMESTAMP WITH TIME ZONE",
             "handled_by": "TEXT",
             "correction_id": "TEXT",
-            "has_screenshot": "BOOLEAN",
+            "has_screenshot": "BOOLEAN NOT NULL DEFAULT false",
             "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
         },
         "primary_key": ["id"],

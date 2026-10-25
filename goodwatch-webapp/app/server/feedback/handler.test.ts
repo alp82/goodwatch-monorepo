@@ -436,6 +436,12 @@ test("data keys canonicalize identifier order and suggestion case and whitespace
 		data: { ...data, suggestedValue: "different" },
 	})
 	assert.notEqual([...f.rows.values()][2].dedupeKey, a.dedupeKey)
+	// The schema accepts a number or a string for an identifier; both name the same title.
+	await f.submit({
+		kind: "data",
+		data: { ...data, ids: { tmdb: "1", imdb: "tt1" } },
+	})
+	assert.equal([...f.rows.values()][3].dedupeKey, a.dedupeKey)
 	for (const kind of ["bug", "idea", "contact"] as const) {
 		const g = fixture()
 		await g.submit({ kind, email: "sender@example.com" })
@@ -498,10 +504,19 @@ test("a duplicate replies in the existing thread with the count and keeps the su
 	assert.equal(new URL(String(url)).searchParams.get("thread_id"), "456")
 	assert.equal(new URL(String(url)).searchParams.get("wait"), "true")
 	assert.ok(init?.signal)
-	assert.deepEqual(JSON.parse(init!.body as string), {
-		content: "Duplicate count increased to 3.",
-		allowed_mentions: { parse: [] },
-	})
+	const payload = JSON.parse(init!.body as string)
+	assert.equal(payload.content, "Duplicate count increased to 3.")
+	assert.deepEqual(payload.allowed_mentions, { parse: [] })
+	assert.equal(payload.thread_name, undefined)
+	assert.equal(payload.applied_tags, undefined)
+	// The reply carries the new submission's evidence: the key ignores message and source.
+	assert.equal(payload.embeds.length, 1)
+	assert.equal(payload.embeds[0].title, "Duplicate 3: data")
+	assert.match(
+		payload.embeds[0].fields.find((f: { name: string }) => f.name === "Data")
+			.value,
+		/tmdb/,
+	)
 	assert.equal(f.deps.store.discordId.mock.callCount(), 0)
 	assert.equal(f.deps.email.mock.callCount(), 0)
 	f.deps.store.insert.mock.mockImplementation(async () => ({

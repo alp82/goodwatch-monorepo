@@ -46,9 +46,14 @@ export function createFeedbackStore(run: Sql): FeedbackStore {
 								retry: true,
 							}
 					}
+					// A status this build does not know (hand edited, or a newer deploy) counts as closed:
+					// the report is stored as its own row instead of failing the request.
 					const row = candidates.find((row) => {
-						const status = feedbackStatusSchema.parse(row.status)
-						return status === "new" || status === "in_progress"
+						const status = feedbackStatusSchema.safeParse(row.status)
+						return (
+							status.success &&
+							(status.data === "new" || status.data === "in_progress")
+						)
 					})
 					if (!row) break
 					const ids = row.metadata?.feedbackSubmissionIds

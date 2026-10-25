@@ -56,9 +56,9 @@ Table `doc.feedback_screenshot` holds one normalized WebP per report, keyed by `
 
 ### Duplicate data reports
 
-For `data` reports, `dedupe_key` is the SHA-256 hex digest of canonical JSON with these fields in this order: `entityKind`, `ids`, `field`, and `suggestedValue`. Identifier keys are sorted lexicographically. String suggestions are trimmed and lowercased. Numeric, boolean, and null suggestions keep their type. An omitted suggestion omits that JSON field and differs from explicit null. Identifier values and field names are unchanged. Message, current value, source, country, and provider ids do not affect the key. Other report kinds store a null key.
+For `data` reports, `dedupe_key` is the SHA-256 hex digest of canonical JSON with these fields in this order: `entityKind`, `ids`, `field`, and `suggestedValue`. Identifier keys are sorted lexicographically and identifier values are converted to strings, so `603` and `"603"` match. String suggestions are trimmed and lowercased. Numeric, boolean, and null suggestions keep their type. An omitted suggestion omits that JSON field and differs from explicit null. Field names are unchanged. Message, current value, source, country, and provider ids do not affect the key. Other report kinds store a null key.
 
-When a report with the same key has status `new` or `in_progress`, the handler increments its `duplicate_count`, sets `updated_at`, and returns `200 {"reportId":"<original id>"}`. It replies in the existing Discord thread instead of creating a forum post. Closed reports do not absorb new submissions. If several open rows exist, the oldest wins, with id as the tie breaker.
+When a report with the same key has status `new` or `in_progress`, the handler increments its `duplicate_count`, sets `updated_at`, and returns `200 {"reportId":"<original id>"}`. It replies in the existing Discord thread instead of creating a forum post. Closed reports, and rows with a status this build does not know, do not absorb new submissions. If several open rows exist, the oldest wins, with id as the tie breaker.
 
 Crate has no unique constraint for a non-primary-key column. A `REFRESH TABLE` before the lookup narrows the visibility window. A version-checked update prevents lost increments and merging into a report that staff closed after the read. Conflicts trigger up to three attempts. Concurrent first submissions can still both insert rows with the same key. This trade-off is accepted for this ticket. A storage error still takes the delivery fallback described below, so deduplication is best effort while Crate is unavailable.
 
@@ -97,7 +97,7 @@ CREATE TABLE doc.feedback_report (
  updated_at TIMESTAMP WITH TIME ZONE,
  handled_by TEXT,
  correction_id TEXT,
- has_screenshot BOOLEAN,
+ has_screenshot BOOLEAN NOT NULL DEFAULT false,
  created_at TIMESTAMP WITH TIME ZONE NOT NULL
 ) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas = '0-1');
 
@@ -120,7 +120,7 @@ A deploy to main goes live before an operator runs the schema sync. Until then t
 
 The webhook URL must be an `https://discord.com/api/.../webhooks/...` URL. For each new report, the handler posts one forum post with `?wait=true`, a `thread_name` of the kind and the first words of the message, the kind's tag from `FEEDBACK_DISCORD_TAG_IDS`, and `allowed_mentions: {"parse": []}`. The embed holds the message, the report id, the member id or `Guest`, the metadata, and the data report. Every display string goes through `display`, which removes links, email addresses, mentions, angle-bracket markup, Markdown characters, and control characters, and caps the length under Discord's limits (thread name 100, description 4096, field 1024, embed 6000). Screenshots are attached as `screenshot.webp`.
 
-A duplicate uses the webhook's `thread_id` query parameter and the content `Duplicate count increased to <count>.`, with mentions disabled, no `thread_name`, and no tags. It preserves the original Discord receipt. If the original report has no thread receipt, the handler logs the failure and emails the submission without opening another post.
+A duplicate uses the webhook's `thread_id` query parameter and the content `Duplicate count increased to <count>.`, followed by the same embed for the new submission (titled `Duplicate <count>: data`), because the key ignores the message, current value, and source. Mentions are disabled, and the reply has no `thread_name` and no tags. It preserves the original Discord receipt. If the original report has no thread receipt, the handler logs the failure and emails the submission without opening another post.
 
 The request uses `nativeFetch` (undici) with a 10 second timeout. The polyfilled global `fetch` crashed production when an abort fired during a request with a body (October 23, 2026); do not switch back.
 
