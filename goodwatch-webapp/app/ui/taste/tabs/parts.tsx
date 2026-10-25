@@ -107,7 +107,7 @@ export function RatedPoster({
 	)
 }
 
-/** An unseen title as the site's poster card: GoodWatch score, taste match with its reasons, and services. */
+/** An unseen title as the site's poster card: the score pill and the viewer's services. */
 export function SuggestionCard({ t }: { t: PortraitTitle }) {
 	const details = {
 		tmdb_id: t.tmdbId,
@@ -127,7 +127,6 @@ export function SuggestionCard({ t }: { t: PortraitTitle }) {
 				details as unknown as Parameters<typeof MovieTvCard>[0]["details"]
 			}
 			mediaType={t.mediaType}
-			taste={{ match: t.match, reasons: t.reasons ?? [] }}
 		/>
 	)
 }

@@ -1,7 +1,24 @@
+// The browse poster card, on every surface that shows titles as posters (Discover, rows, person credits, franchises,
+// Watch next and My movies tiers). The poster links to the title page; over it sit the score pill (top right: the
+// GoodWatch score, the viewer's score, one state icon) and the logos of the viewer's own services (bottom left). The
+// card sizes its parts by its own width (`@container/card`): S under 6.5rem, M from 6.5rem, L from 11rem.
+//
+// The title actions (ui/poster-card/CardActions.tsx) load as their own chunk at the first interaction with the page
+// and mount on the first hover, focus or tap: a panel on hover for a pointer, tiles over the art after a first tap on
+// a touch screen (a second tap, or Open, goes to the title page). After Not interested the card keeps its place,
+// greyed, with Undo, until the list is next loaded.
 import { Link } from "@remix-run/react"
-import type React from "react"
+import {
+	Suspense,
+	lazy,
+	useCallback,
+	useContext,
+	useEffect,
+	useId,
+	useRef,
+	useState,
+} from "react"
 import type { RatingBadge } from "~/domain/age-content"
-import { useIsOnWishlist, useUserScore } from "~/hooks/useUserDataAccessors"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
 import type { OnboardingResult } from "~/server/onboarding-media.server"
@@ -9,19 +26,38 @@ import type { TitleCard } from "~/server/title-cards.server"
 import { Poster, type PosterProps } from "~/ui/Poster"
 import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
-import RatingOverlay from "~/ui/ratings/RatingOverlay"
-import StreamingOverlay from "~/ui/streaming/StreamingOverlay"
-import {
-	type ActionsPlacement,
-	TitleActionsFrame,
-} from "~/ui/title-actions/TitleActionsFrame"
+import type {
+	ActionsPlacement,
+	OpenActions,
+} from "~/ui/poster-card/CardActions"
+import { TitleScorePill } from "~/ui/poster-card/ScorePill"
+import { FOCUS } from "~/ui/poster-card/look"
+import { setRevealed, useRevealed } from "~/ui/poster-card/reveal"
+import { type ServiceOffer, YourServiceLogos } from "~/ui/poster-card/services"
+import { HiddenTileContext } from "~/ui/title-actions/hide-feedback"
+import { touchPointerNow, useTouchPointer } from "~/ui/title-actions/pointer"
 import { RatingMark } from "~/ui/title-card/RatingMark"
-import type { CardTaste } from "~/ui/title-card/TasteMatchPill"
-import { useSmallBadges } from "~/ui/title-card/small-badges"
-import UserDataOverlay from "~/ui/user/UserDataOverlay"
+import { onFirstInteraction } from "~/utils/first-interaction"
 import { titleToDashed } from "~/utils/helpers"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { extractRatings } from "~/utils/ratings"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+
+export type { ActionsPlacement }
+
+const loadCardActions = reloadOnStaleChunk(
+	() => import("~/ui/poster-card/CardActions"),
+)
+const CardActions = lazy(loadCardActions)
+
+// Fetched at the first sign that a person uses the page, so the first hover or tap finds the actions loaded and a
+// first view without interaction requests nothing.
+let preloaded = false
+function preloadCardActions() {
+	if (preloaded) return
+	preloaded = true
+	onFirstInteraction(() => void loadCardActions().catch(() => {}))
+}
 
 interface MovieTvCardProps {
 	details:
@@ -32,8 +68,6 @@ interface MovieTvCardProps {
 		| TitleCard
 	mediaType: "movie" | "show"
 	prefetch?: boolean
-	/** The viewer's taste match for the title. Posters no longer show it. */
-	taste?: CardTaste
 	/** The title's age rating for the viewer, shown while an age limit is on. */
 	rating?: RatingBadge | null
 	/** The poster's displayed widths, when the card isn't in the grid. */
@@ -46,20 +80,18 @@ interface MovieTvCardProps {
 	 */
 	skipOffscreen?: boolean
 	/**
-	 * Where the title actions (score, Want to See, Seen, Not interested) sit on the poster; `false` leaves them off, for
-	 * a surface where they would be wrong or cramped.
+	 * Where the title actions sit on the poster; `false` leaves them off, for a surface that opens titles its own way.
 	 */
 	actions?: ActionsPlacement | false
-	/** The service the title is new on for the viewer (#489), by id: its logo is marked, see StreamingOverlay. */
+	/** The service the title is new on for the viewer (#489), by id: its logo leads, ringed. */
 	newOn?: number | null
+	/** The list is the Wishlist: the pill leaves out the Wishlist bookmark. */
+	skipWant?: boolean
 }
 
-// The card rests at 95% and grows to full size under the pointer. With title actions the frame around the link
-// carries that, so the actions scale with the card; without them a plain box does. A press on the link (not on an
-// action) sinks the card a little, so the tap is answered before the next page is there. With reduced motion
-// it only dims.
-const SCALE =
-	"transition-[transform,scale,opacity] duration-100 transform scale-95 hover:scale-100 motion-safe:has-[>a:active]:scale-[0.93] has-[>a:active]:opacity-90"
+type CardDetails = MovieTvCardProps["details"] & {
+	streaming_links?: readonly ServiceOffer[] | null
+}
 
 export function MovieTvCard({
 	details,
@@ -71,113 +103,129 @@ export function MovieTvCard({
 	skipOffscreen = false,
 	actions = "bottom",
 	newOn,
+	skipWant = false,
 }: MovieTvCardProps) {
 	const ratings = extractRatings(details)
-	const small = useSmallBadges()
-	const userScoreData = useUserScore(mediaType, details.tmdb_id)
-	const userScore = userScoreData?.score ?? null
-	const onWishList = useIsOnWishlist(mediaType, details.tmdb_id)
+	const cardKey = useId()
+	const touchLater = useTouchPointer()
+	// Set by a tap that came before the idle-time answer: the tap itself tells the card it is on a touch screen.
+	const [touchNow, setTouchNow] = useState(false)
+	const touch = touchLater || touchNow
+	const revealed = useRevealed(cardKey)
+	const frame = useRef<HTMLDivElement>(null)
+	const [armed, setArmed] = useState(false)
+	const [open, setOpen] = useState<OpenActions>(null)
+	const [tile, setTile] = useState(false)
+	const arm = useCallback(() => setArmed(true), [])
+	useEffect(() => {
+		if (actions) preloadCardActions()
+	}, [actions])
 
-	// The badges (the viewer's score, the GoodWatch score, the services) sit over the poster but outside the link, so
-	// the link's text is the title and its year, which is what a crawler and a screen reader read as its name. They let
-	// the pointer through to the link. Inset by the link's 4 px border, they cover the same box as the poster.
-	const badges = (
+	// A grid whose list reloads keeps this card in place while its Not interested cover shows.
+	const keeper = useContext(HiddenTileContext)
+	const tmdbId = details.tmdb_id
+	const title = details.title
+	useEffect(() => {
+		if (!tile || !keeper) return
+		const kept = { mediaType, details: { tmdb_id: tmdbId, title } }
+		keeper.keep(kept)
+		return () => keeper.release(kept)
+	}, [tile, keeper, mediaType, tmdbId, title])
+
+	const href = `/${mediaType}/${details.tmdb_id}-${titleToDashed(canonicalMediaTitle(details))}`
+	const offers = (details as CardDetails).streaming_links
+	return (
 		<div
-			data-card-badges=""
-			className={`@container pointer-events-none absolute inset-[4px] ${skipOffscreen ? "[content-visibility:auto]" : ""}`}
+			ref={frame}
+			data-poster-card=""
+			onPointerEnter={actions ? arm : undefined}
+			onFocus={actions ? arm : undefined}
+			className={`group/card @container/card relative w-full min-w-0 ${open ? "z-30" : ""}`}
 		>
-			<UserDataOverlay score={userScore} onWishList={onWishList} />
-			{/* A lazy poster's score logo is lazy too: below the fold, it would be the card's only early request. */}
-			<RatingOverlay
-				ratings={ratings}
-				logoLoading={
-					!posterPriority || posterPriority === "lazy" ? "lazy" : undefined
-				}
-			/>
-			{details.streaming_links && (
-				<StreamingOverlay links={details.streaming_links} newOn={newOn} />
+			<Link
+				to={href}
+				prefetch={prefetch ? "viewport" : "intent"}
+				draggable="false"
+				onClick={(event) => {
+					// Touch: the first tap shows the actions over the art, the second opens the title.
+					if (!actions || tile) return
+					if (!touch) {
+						if (!touchPointerNow()) return
+						setTouchNow(true)
+					}
+					if (revealed) return setRevealed(null)
+					event.preventDefault()
+					setArmed(true)
+					setRevealed(cardKey)
+				}}
+				className={`block select-none overflow-hidden rounded-lg border-2 border-gray-800 bg-gray-900 [-webkit-touch-callout:none] can-hover:hover:border-amber-700/50 @min-[8rem]/card:border-4 ${tile ? "[&_img]:grayscale" : ""} ${FOCUS}`}
+			>
+				<div
+					className={
+						skipOffscreen
+							? "relative aspect-[2/3] [content-visibility:auto]"
+							: "relative"
+					}
+				>
+					<Poster
+						path={details.poster_path}
+						title={details.title}
+						lang={details.presentation?.title.language ?? "en"}
+						mediaType={mediaType}
+						tmdbId={details.tmdb_id}
+						sizes={posterSizes}
+						priority={posterPriority}
+					/>
+				</div>
+				{/* The link's name for a crawler and a screen reader: the title in its own language, and the year. */}
+				<span className="sr-only">
+					<MediaText value={presentedText(details, "title", details.title)} />
+					{details.release_year ? ` (${details.release_year})` : ""}
+				</span>
+			</Link>
+			{!tile && (
+				// Over the poster, outside the link; they let the pointer through to it.
+				<div
+					data-card-badges=""
+					className={`pointer-events-none absolute inset-0 ${skipOffscreen ? "[content-visibility:auto]" : ""}`}
+				>
+					<TitleScorePill
+						mediaType={mediaType}
+						tmdbId={details.tmdb_id}
+						goodwatch={ratings?.goodwatch_overall_score_normalized_percent}
+						skipWant={skipWant}
+						className="absolute right-1 top-1 z-[25] @min-[11rem]/card:right-2 @min-[11rem]/card:top-2"
+					/>
+					{rating && (
+						<RatingMark
+							rating={rating}
+							className="absolute left-1 top-1 @min-[11rem]/card:left-2 @min-[11rem]/card:top-2"
+						/>
+					)}
+					<YourServiceLogos
+						offers={offers}
+						newOn={newOn}
+						className={`absolute bottom-1.5 left-1.5 transition-opacity @min-[11rem]/card:bottom-2 @min-[11rem]/card:left-2 ${actions ? "can-hover:group-hover/card:opacity-0 can-hover:group-focus-within/card:opacity-0" : ""}`}
+					/>
+				</div>
+			)}
+			{actions && armed && (
+				<Suspense fallback={null}>
+					<CardActions
+						media={{ mediaType, details }}
+						href={href}
+						cardKey={cardKey}
+						frame={frame}
+						placement={actions}
+						touch={touch}
+						revealed={revealed}
+						open={open}
+						setOpen={setOpen}
+						tile={tile}
+						setTile={setTile}
+					/>
+				</Suspense>
 			)}
 		</div>
-	)
-	const link = (
-		<Link
-			className={`
-				@container
-				flex flex-col w-full
-				bg-gray-900 hover:bg-gray-800
-				border-4 rounded-lg border-gray-800 hover:border-amber-700/50
-				${small ? "max-lg:border-2" : ""}
-			`}
-			to={`/${mediaType}/${details.tmdb_id}-${titleToDashed(canonicalMediaTitle(details))}`}
-			prefetch={prefetch ? "viewport" : "intent"}
-			draggable="false"
-		>
-			<div
-				className={
-					skipOffscreen
-						? "relative aspect-[2/3] [content-visibility:auto]"
-						: "relative"
-				}
-			>
-				<Poster
-					path={details.poster_path}
-					title={details.title}
-					lang={details.presentation?.title.language ?? "en"}
-					mediaType={mediaType}
-					tmdbId={details.tmdb_id}
-					sizes={posterSizes}
-					priority={posterPriority}
-				/>
-
-				{/* The bottom left is the one free corner; a card too narrow for its title keeps the badge there. */}
-				{rating && (
-					<RatingMark
-						rating={rating}
-						className="absolute bottom-2 left-2 @6xs:hidden"
-					/>
-				)}
-				<div
-					// Without a rating the layout is what it was before the badge existed. The gradient covers the badges
-					// where the two meet (z-[1]), though the badges come after the link.
-					className={`
-						hidden @6xs:flex ${rating ? "flex-col items-start justify-end gap-1.5" : "items-end"}
-						absolute z-[1] bottom-0 w-full min-h-40 px-2 py-2
-						bg-linear-to-t from-black/70 to-transparent group-hover:from-black/90 group-hover:via-90%
-						overflow-hidden
-						${actions === "bottom" ? "can-hover:group-hover:pb-13 can-hover:group-focus-within:pb-13 touch:pr-13" : ""}
-					`}
-				>
-					{rating && <RatingMark rating={rating} />}
-					<span
-						className="
-							text-sm font-bold text-white
-							transition-transform duration-200 group-hover:-translate-y-1
-						"
-					>
-						{/* The title in its own language and direction; the year after it stays interface text. */}
-						<MediaText value={presentedText(details, "title", details.title)} />
-						{details.release_year ? ` (${details.release_year})` : ""}
-					</span>
-				</div>
-			</div>
-		</Link>
-	)
-	if (!actions)
-		return (
-			<div className={`relative flex w-full ${SCALE} group`}>
-				{link}
-				{badges}
-			</div>
-		)
-	return (
-		<TitleActionsFrame
-			media={{ mediaType, details }}
-			placement={actions}
-			className={`w-full ${SCALE}`}
-			openClassName="scale-100"
-		>
-			{link}
-			{badges}
-		</TitleActionsFrame>
 	)
 }

@@ -239,8 +239,8 @@ export function HowFar({
 
 const ROW = `flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left ring-1 transition-colors ${FOCUS}`
 
-/** Watching (opens the episode picker), Seen, and, after a score, Only the score. */
-function Choices({
+/** Watching (opens the episode picker), Seen, and, after a score, Only the score. A poster card's status menu shows them for a show that isn't started. */
+export function Choices({
 	tracking,
 	actions,
 	onDone,

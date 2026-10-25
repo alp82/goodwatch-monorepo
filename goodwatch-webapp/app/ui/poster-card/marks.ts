@@ -8,7 +8,12 @@ import {
 } from "~/hooks/useUserDataAccessors"
 import type { TitleMarks } from "./pill-mark"
 
-export { type PillMark, type TitleMarks, type WatchStatus, pillMark } from "./pill-mark"
+export {
+	type PillMark,
+	type TitleMarks,
+	type WatchStatus,
+	pillMark,
+} from "./pill-mark"
 
 export function useTitleMarks(
 	mediaType: "movie" | "show",
@@ -20,4 +25,3 @@ export function useTitleMarks(
 	const hidden = useIsNotInterested(mediaType, tmdbId)
 	return { score, want, status, hidden }
 }
-

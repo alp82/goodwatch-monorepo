@@ -172,35 +172,81 @@ export function StatusPill({
 	face: ReactNode
 }) {
 	const [open, setOpen] = useState(false)
-	/** The entry the menu asks about before it goes on. */
-	const [confirming, setConfirming] = useState<Entry | null>(null)
 	const root = useRef<HTMLDivElement>(null)
 	const pillButton = useRef<HTMLButtonElement>(null)
-	const close = () => {
-		setOpen(false)
-		setConfirming(null)
-	}
-	const menuBox = useRef<HTMLDivElement>(null)
-	// The menu takes the focus when it opens, so that the arrow keys and a screen reader are in it.
-	useEffect(() => {
-		if (open && !confirming)
-			menuBox.current
-				?.querySelector<HTMLElement>("[role=menuitem]")
-				?.focus({ preventScroll: true })
-	}, [open, confirming])
+	const close = () => setOpen(false)
 	useDismiss(open, root, (byKey) => {
 		close()
 		if (byKey) pillButton.current?.focus()
 	})
-	const { derived, press } = view
-	const menu = withNotStarted(view.menu, view)
+	const { derived } = view
 	if (derived.state === "not_started") return null
-	if (!menu.length)
+	if (!withNotStarted(view.menu, view).length)
 		return (
 			<span data-status-pill className="flex h-full rounded-l-xl">
 				{face}
 			</span>
 		)
+	return (
+		<div ref={root} className="relative flex h-full">
+			<button
+				ref={pillButton}
+				type="button"
+				data-status-pill
+				aria-haspopup="menu"
+				aria-expanded={open}
+				aria-label={`Status: ${derived.label}. Change it`}
+				onClick={() => (open ? close() : setOpen(true))}
+				className={`flex h-full cursor-pointer rounded-l-xl hover:brightness-110 ${HALF_FOCUS}`}
+			>
+				{face}
+			</button>
+			{open && (
+				<StatusMenu
+					view={view}
+					actions={actions}
+					onRewatch={onRewatch}
+					onDone={close}
+					className={`absolute left-0 top-full z-40 mt-1.5 w-80 max-w-[calc(100vw-2.5rem)] ${MENU_UP} ${POPOVER}`}
+				/>
+			)}
+		</div>
+	)
+}
+
+/**
+ * The entries of a started show's status menu, and the question some of them ask first. The hero's status pill and a
+ * poster card's status button open it. It takes the focus when it shows, so the arrow keys and a screen reader are in
+ * it; `onDone` closes it.
+ */
+export function StatusMenu({
+	view,
+	actions,
+	onRewatch,
+	onDone,
+	className = "",
+}: {
+	view: ShowView
+	actions: TrackingActions
+	onRewatch: () => void
+	onDone: () => void
+	className?: string
+}) {
+	/** The entry the menu asks about before it goes on. */
+	const [confirming, setConfirming] = useState<Entry | null>(null)
+	const menuBox = useRef<HTMLDivElement>(null)
+	useEffect(() => {
+		if (!confirming)
+			menuBox.current
+				?.querySelector<HTMLElement>("[role=menuitem]")
+				?.focus({ preventScroll: true })
+	}, [confirming])
+	const { derived, press } = view
+	const menu = withNotStarted(view.menu, view)
+	const close = () => {
+		setConfirming(null)
+		onDone()
+	}
 	const run = (entry: Entry, confirmed = false) => {
 		if (entry.confirm && !confirmed) return setConfirming(entry)
 		close()
@@ -234,91 +280,73 @@ export function StatusPill({
 		items[(at + by + items.length) % items.length]?.focus()
 	}
 	return (
-		<div ref={root} className="relative flex h-full">
-			<button
-				ref={pillButton}
-				type="button"
-				data-status-pill
-				aria-haspopup="menu"
-				aria-expanded={open}
-				aria-label={`Status: ${derived.label}. Change it`}
-				onClick={() => (open ? close() : setOpen(true))}
-				className={`flex h-full cursor-pointer rounded-l-xl hover:brightness-110 ${HALF_FOCUS}`}
-			>
-				{face}
-			</button>
-			{open && (
-				<div
-					ref={menuBox}
-					role={confirming ? "alertdialog" : "menu"}
-					aria-label={confirming ? confirming.label : "Change the status"}
-					onKeyDown={confirming ? undefined : onMenuKey}
-					className={`absolute left-0 top-full z-40 mt-1.5 w-80 max-w-[calc(100vw-2.5rem)] ${MENU_UP} ${POPOVER}`}
-				>
-					{confirming?.id === "takeBack" ? (
-						// The words are the menu entry's own: what the press marked, and where the show goes.
-						<ConfirmPanel
-							name="takeBack"
-							title="Take back Seen?"
-							text={confirming.note}
-							action="Take back"
-							look={TAKE_BACK_LOOK}
-							onCancel={close}
-							onConfirm={() => run(confirming, true)}
-						/>
-					) : confirming?.id === "notStarted" ? (
-						<ConfirmPanel
-							name="notStarted"
-							title="Mark as not started?"
-							text={`${confirming.note} The toast that follows can undo it.`}
-							action="Not started"
-							look={TAKE_BACK_LOOK}
-							onCancel={close}
-							onConfirm={() => run(confirming, true)}
-						/>
-					) : confirming ? (
-						<ConfirmPanel
-							name="watchAgain"
-							title={`Start pass ${derived.pass + 1}?`}
-							text="The ticks start empty. The watches of this pass stay in each episode's log. This can't be undone."
-							action="Watch again"
-							look="bg-sky-500 text-black hover:bg-sky-400"
-							onCancel={close}
-							onConfirm={() => run(confirming, true)}
-						/>
-					) : (
-						menu.map((entry) => {
-							const look = MENU_LOOK[entry.id]
-							return (
-								<button
-									key={entry.id}
-									type="button"
-									role="menuitem"
-									data-status-action={entry.id}
-									data-quiet={entry.quiet || undefined}
-									onClick={() => run(entry)}
-									className={`flex min-h-11 w-full cursor-pointer items-start gap-3 rounded-lg px-3 py-2 text-left hover:bg-white/10 ${FOCUS}`}
+		<div
+			ref={menuBox}
+			role={confirming ? "alertdialog" : "menu"}
+			aria-label={confirming ? confirming.label : "Change the status"}
+			onKeyDown={confirming ? undefined : onMenuKey}
+			className={className}
+		>
+			{confirming?.id === "takeBack" ? (
+				// The words are the menu entry's own: what the press marked, and where the show goes.
+				<ConfirmPanel
+					name="takeBack"
+					title="Take back Seen?"
+					text={confirming.note}
+					action="Take back"
+					look={TAKE_BACK_LOOK}
+					onCancel={close}
+					onConfirm={() => run(confirming, true)}
+				/>
+			) : confirming?.id === "notStarted" ? (
+				<ConfirmPanel
+					name="notStarted"
+					title="Mark as not started?"
+					text={`${confirming.note} The toast that follows can undo it.`}
+					action="Not started"
+					look={TAKE_BACK_LOOK}
+					onCancel={close}
+					onConfirm={() => run(confirming, true)}
+				/>
+			) : confirming ? (
+				<ConfirmPanel
+					name="watchAgain"
+					title={`Start pass ${derived.pass + 1}?`}
+					text="The ticks start empty. The watches of this pass stay in each episode's log. This can't be undone."
+					action="Watch again"
+					look="bg-sky-500 text-black hover:bg-sky-400"
+					onCancel={close}
+					onConfirm={() => run(confirming, true)}
+				/>
+			) : (
+				menu.map((entry) => {
+					const look = MENU_LOOK[entry.id]
+					return (
+						<button
+							key={entry.id}
+							type="button"
+							role="menuitem"
+							data-status-action={entry.id}
+							data-quiet={entry.quiet || undefined}
+							onClick={() => run(entry)}
+							className={`flex min-h-11 w-full cursor-pointer items-start gap-3 rounded-lg px-3 py-2 text-left hover:bg-white/10 ${FOCUS}`}
+						>
+							<look.Icon className={`mt-0.5 h-4 w-4 shrink-0 ${look.tint}`} />
+							<span className="min-w-0 flex-1">
+								<span
+									className={`block text-sm ${entry.quiet ? "font-medium text-gray-300" : "font-semibold text-white"}`}
 								>
-									<look.Icon
-										className={`mt-0.5 h-4 w-4 shrink-0 ${look.tint}`}
-									/>
-									<span className="min-w-0 flex-1">
-										<span
-											className={`block text-sm ${entry.quiet ? "font-medium text-gray-300" : "font-semibold text-white"}`}
-										>
-											{entry.label}
-										</span>
-										<span
-											className={`block text-xs ${entry.quiet ? "text-gray-500" : "text-gray-400"}`}
-										>
-											{entry.note}
-										</span>
-									</span>
-								</button>
-							)
-						})
-					)}
-				</div>
+									{entry.label}
+								</span>
+								<span
+									className={`block text-xs ${entry.quiet ? "text-gray-500" : "text-gray-400"}`}
+								>
+									{entry.note}
+								</span>
+							</span>
+						</button>
+					)
+				})
 			)}
 		</div>
 	)
