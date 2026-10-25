@@ -86,7 +86,8 @@ export const MOVIES_PAGE: MoviesPageParts = {
 			}
 			links={[
 				{ label: "My shows", to: MY_SHOWS },
-				{ label: "My library", to: MY_LIBRARY },
+				// On phones the head keeps one row; My library is in the browse menu there.
+				{ label: "My library", to: MY_LIBRARY, fromSm: true },
 			]}
 		/>
 	),

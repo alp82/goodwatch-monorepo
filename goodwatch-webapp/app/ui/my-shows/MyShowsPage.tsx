@@ -613,7 +613,8 @@ export function MyShowsPage({
 					.join(" · ")}
 				links={[
 					{ label: "My movies", to: MY_MOVIES },
-					{ label: "My library", to: MY_LIBRARY },
+					// On phones the head keeps one row; My library is in the browse menu there.
+					{ label: "My library", to: MY_LIBRARY, fromSm: true },
 				]}
 			/>
 			<div className={`${WRAP} flex flex-col gap-10 pt-2`}>

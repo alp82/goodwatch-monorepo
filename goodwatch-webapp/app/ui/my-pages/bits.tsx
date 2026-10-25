@@ -23,6 +23,8 @@ export const plural = (n: number, one: string, many = `${one}s`) =>
 export interface HeadLink {
 	label: string
 	to: string
+	/** Shown from the sm width up only, so a phone's head stays one row. */
+	fromSm?: boolean
 }
 
 /** A quiet key in a page's head that leads to one of the other pages. */
@@ -30,7 +32,7 @@ export const LinkKey = ({ link }: { link: HeadLink }) => (
 	<Link
 		to={link.to}
 		prefetch="intent"
-		className="inline-flex h-9 items-center gap-1 whitespace-nowrap rounded-xl px-3 text-sm font-bold text-gray-300 ring-1 ring-white/10 hover:bg-white/10 hover:text-white"
+		className={`${link.fromSm ? "hidden sm:inline-flex" : "inline-flex"} h-9 items-center gap-1 whitespace-nowrap rounded-xl px-3 text-sm font-bold text-gray-300 ring-1 ring-white/10 hover:bg-white/10 hover:text-white`}
 	>
 		{link.label}
 		<ChevronRightIcon className="h-4 w-4" aria-hidden />
@@ -49,9 +51,11 @@ export function PageHead({
 	/** A page under another one: the way back, above the name. */
 	back?: HeadLink
 }) {
+	// With one key on a phone, the key stays beside the name and the line under the name wraps in its column.
+	const oneRowOnPhones = links.filter((link) => !link.fromSm).length <= 1
 	return (
 		<header
-			className={`${WRAP} flex flex-wrap items-end gap-x-6 gap-y-3 pb-4 pt-6`}
+			className={`${WRAP} flex items-end gap-y-3 pb-4 pt-6 ${oneRowOnPhones ? "flex-nowrap gap-x-4 sm:flex-wrap sm:gap-x-6" : "flex-wrap gap-x-6"}`}
 			data-page-head
 		>
 			<div className="min-w-0">
