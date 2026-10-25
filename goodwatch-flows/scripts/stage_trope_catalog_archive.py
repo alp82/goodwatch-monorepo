@@ -3,6 +3,7 @@
 import argparse
 import gzip
 import hashlib
+from html.parser import HTMLParser
 from itertools import zip_longest
 import json
 import os
@@ -74,20 +75,99 @@ def verified_manifest(directory, progress):
     return manifest, provenance, path
 
 
-def candidate_urls(record):
-    """Selection only: the extractor subsequently proves every source identity."""
+class _MetadataComplete(Exception):
+    pass
+
+
+class _MetadataFallback(Exception):
+    pass
+
+
+class _CurrentURLParser(HTMLParser):
+    """Read only a plain metadata paragraph; browser repair remains the fallback's responsibility."""
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.collecting = False
+        self.suppressed = None
+        self.parts = []
+
+    def handle_starttag(self, tag, attrs):
+        if self.suppressed:
+            return
+        if tag in {'script', 'style', 'textarea', 'title', 'xmp', 'iframe', 'noembed', 'noframes', 'plaintext'}:
+            if self.collecting:
+                raise _MetadataFallback()
+            self.suppressed = tag
+            return
+        if self.collecting:
+            raise _MetadataFallback()  # Nested markup can require HTML5 paragraph repair.
+        identifiers = [value for key, value in attrs if key == 'id']
+        if 'current_url' in identifiers:
+            if tag != 'p' or identifiers != ['current_url']:
+                raise _MetadataFallback()
+            self.collecting = True
+
+    def handle_startendtag(self, tag, attrs):
+        if self.suppressed:
+            return
+        if self.collecting or any(key == 'id' and value == 'current_url' for key, value in attrs):
+            raise _MetadataFallback()
+
+    def handle_endtag(self, tag):
+        if self.suppressed:
+            if tag == self.suppressed:
+                self.suppressed = None
+            return
+        if self.collecting:
+            if tag != 'p':
+                raise _MetadataFallback()
+            raise _MetadataComplete()
+
+    def handle_data(self, data):
+        if self.collecting:
+            self.parts.append(data)
+
+    def handle_comment(self, data):
+        if self.collecting:
+            # Soup treats comments as separate nodes when stripping text runs.
+            raise _MetadataFallback()
+
+
+def _soup_candidate_urls(html):
     urls = set()
-    if record.get('ns') == 'Main' and isinstance(record.get('id'), str) and re.fullmatch(r'[A-Za-z0-9_]+', record['id']):
-        urls.add('https://tvtropes.org/pmwiki/pmwiki.php/Main/' + record['id'])
-    soup = BeautifulSoup(record['article'], 'html5lib')
-    for node in soup.select('#current_url'):
+    for node in BeautifulSoup(html, 'html5lib').select('#current_url'):
         try:
             value = canonical_url(node.get_text(strip=True))
         except ValueError:
             continue
         if value:
-            urls.add(value)
-    return {url.casefold() for url in urls}
+            urls.add(value.casefold())
+    return urls
+
+
+def _observed_candidate_urls(html, *, chunk_size=4096):
+    parser = _CurrentURLParser()
+    try:
+        for start in range(0, len(html), chunk_size):
+            parser.feed(html[start:start + chunk_size])
+        parser.close()
+    except _MetadataComplete:
+        try:
+            value = canonical_url(''.join(parser.parts).strip())
+        except ValueError:
+            return _soup_candidate_urls(html)
+        return {value.casefold()} if value else _soup_candidate_urls(html)
+    except (_MetadataFallback, AssertionError):
+        pass
+    return _soup_candidate_urls(html)
+
+
+def candidate_urls(record):
+    """Selection only: the extractor subsequently proves every source identity."""
+    urls = _observed_candidate_urls(record['article'])
+    if record.get('ns') == 'Main' and isinstance(record.get('id'), str) and re.fullmatch(r'[A-Za-z0-9_]+', record['id']):
+        urls.add(('https://tvtropes.org/pmwiki/pmwiki.php/Main/' + record['id']).casefold())
+    return urls
 
 
 def stage_archive(directory, catalog, output, *, progress=lambda item: None, extractor=extract_archive_description):

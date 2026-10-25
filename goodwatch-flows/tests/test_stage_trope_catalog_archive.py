@@ -50,6 +50,44 @@ def save_ledger(directory, ledger):
             handle.write(json.dumps(row) + '\n')
 
 
+class CandidateMetadataTests(unittest.TestCase):
+    def assert_equivalent(self, html, chunk_size=4096):
+        expected = stage._soup_candidate_urls(html)
+        self.assertEqual(stage._observed_candidate_urls(html, chunk_size=chunk_size), expected)
+        return expected
+
+    def test_metadata_survives_all_incremental_chunk_boundaries_and_stops_early(self):
+        html = '<div><!--before--><p class="hidden" id="current_url">  ' + URL + '  </p><div>Rest of a very large article</div>'
+        for size in (1, 2, 3, 7, 31, 4096):
+            with self.subTest(size=size), patch.object(stage, '_soup_candidate_urls', side_effect=AssertionError('unnecessary DOM parse')):
+                self.assertEqual(stage._observed_candidate_urls(html, chunk_size=size), {URL.casefold()})
+
+    def test_comment_and_script_lookalikes_are_not_metadata(self):
+        fake = URL.replace('ExactlyWhatIAimedAt', 'FalseSubject')
+        html = f'''<!--<p id="current_url">{fake}</p>--><script>const example = "<p id=\'current_url\'>{fake}</p>";</script><p id="current_url">{URL}</p>'''
+        self.assertEqual(self.assert_equivalent(html, 3), {URL.casefold()})
+
+    def test_textarea_lookalike_is_not_an_actual_metadata_element(self):
+        html = '<textarea><p id="current_url">https://tvtropes.org/pmwiki/pmwiki.php/Main/FalseSubject</p></textarea><p id="current_url">' + URL + '</p>'
+        self.assertEqual(self.assert_equivalent(html, 2), {URL.casefold()})
+
+    def test_nested_comments_and_missing_close_use_browser_fallback(self):
+        for html in ('<p id="current_url">' + URL,
+                     '<p id="current_url">' + URL + '<div>Implicitly closes the paragraph</div>',
+                     '<p id="current_url"><span>' + URL + '</span></p>',
+                     '<p id="current_url">' + URL + '<!-- comment --></p>',
+                     '<span id="current_url">' + URL + '</span>',
+                     '<p id="current_url">' + URL + '</div>', '<p>No metadata here.</p>'):
+            with self.subTest(html=html), patch.object(stage, '_soup_candidate_urls', wraps=stage._soup_candidate_urls) as fallback:
+                self.assert_equivalent(html, 3)
+                self.assertEqual(fallback.call_count, 2)  # expected baseline plus actual fallback
+
+    def test_unicode_backslashes_and_entities_receive_only_html_parsing(self):
+        for text in (URL, URL.replace('https:', 'http:'), URL + '\\u0041', URL + 'é', URL + '?x=1&amp;y=2'):
+            with self.subTest(text=text):
+                self.assert_equivalent('<p id="current_url">' + text + '</p>', 1)
+
+
 class ArchiveStagingTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
