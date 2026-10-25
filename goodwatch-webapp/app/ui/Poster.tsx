@@ -1,8 +1,9 @@
-import { assetUrl } from "~/utils/asset-url"
 import React from "react"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
 import placeholder from "~/img/poster-placeholder.png"
 import { TmdbImage, type TmdbImageProps } from "~/ui/TmdbImage"
+import { assetUrl } from "~/utils/asset-url"
+import { imageLoadingProps } from "~/utils/tmdb-image"
 import type { SizeRule } from "~/utils/tmdb-image"
 
 export interface PosterProps {
@@ -71,6 +72,7 @@ export function Poster({
 				src={assetUrl(placeholder)}
 				alt={alt}
 				draggable="false"
+				{...imageLoadingProps(priority)}
 			/>
 		)
 	}

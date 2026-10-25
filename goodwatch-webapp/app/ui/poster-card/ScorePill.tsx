@@ -142,7 +142,13 @@ export function ScorePill({
 		<span
 			className={`${score != null ? FROM_M[size] || "inline-flex" : "inline-flex"} ${p.h} items-center gap-1 rounded-[5px] ${p.px} bg-vibe-${goodwatchVibeIndex(goodwatch)} ${p.num} font-black tabular-nums text-white`}
 		>
-			<img src={assetUrl(gwLogo)} alt="" className={`${LOGO[size]} w-auto`} />
+			<img
+				src={assetUrl(gwLogo)}
+				alt=""
+				loading="lazy"
+				decoding="async"
+				className={`${LOGO[size]} w-auto`}
+			/>
 			<span className="sr-only">GoodWatch score </span>
 			{goodwatchScoreDisplay(goodwatch)}
 		</span>

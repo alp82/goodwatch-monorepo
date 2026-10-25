@@ -159,6 +159,9 @@ test("each poster is an image in the HTML that loads lazily and holds its place"
 		assert.match(tag, / alt="[^"]+"/)
 		assert.doesNotMatch(tag, /fetchpriority/)
 	}
+	// Every image of the section waits: the placeholder and the score pill's logo too.
+	for (const [tag] of rendered.full.matchAll(/<img\b[^>]*>/g))
+		assert.match(tag, / loading="lazy"/)
 	assert.doesNotMatch(rendered.empty, /<img/)
 })
 
