@@ -32,6 +32,7 @@ const startTitles: StartTitle[] = Array.from({ length: 16 }, (_, i) => ({
 	title: `Start ${i}`,
 	release_year: 2000 + i,
 	poster_path: i === 1 ? null : `/start-${i}.jpg`,
+	goodwatch_overall_score_normalized_percent: 70 + i,
 }))
 
 const guest: TvHomeData = {

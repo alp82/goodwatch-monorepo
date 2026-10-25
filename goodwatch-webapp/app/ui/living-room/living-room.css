@@ -432,92 +432,19 @@ main:has(.lr-page) + footer {
 
 /* The titles: a numbered poster grid, eight across on a wide window. Number, poster, title, and under it the kind
    and the year. A title without a poster keeps its place on a dark tile. */
+/* The start titles: the browse poster cards (MovieTvCard draws them, with the site's style sheet). The grid's gaps are
+   Discover's. */
 .lrb-titles {
 	margin-top: 1.75rem;
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: 1.5rem 0.9rem;
-	counter-reset: lrb;
+	gap: 0.5rem;
 }
-.lrb-titles li {
-	position: relative;
-	display: grid;
-	grid-template-columns: minmax(0, 1fr);
-	align-content: start;
-	counter-increment: lrb;
-}
-.lrb-titles li::after {
-	content: "";
-	grid-area: 1 / 1;
-	aspect-ratio: 2 / 3;
-	border-radius: 12px;
-	background: linear-gradient(160deg, #1f2937, #0b0f17);
-	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-}
-.lrb-titles li::before {
-	content: counter(lrb);
-	position: relative;
-	z-index: 2;
-	grid-area: 1 / 1;
-	align-self: start;
-	justify-self: start;
-	margin: 0.45rem;
-	min-width: 1.9rem;
-	padding: 0.15rem 0.45rem;
-	border-radius: 999px;
-	background: rgba(3, 7, 18, 0.82);
-	box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.45);
-	font-family: var(--lrb-font);
-	font-size: 13px;
-	font-weight: 800;
-	text-align: center;
-	font-variant-numeric: tabular-nums;
-	color: #fcd34d;
-}
-.lrb-titles img {
-	position: relative;
-	z-index: 1;
-	grid-area: 1 / 1;
-	width: 100%;
-	height: auto;
-	aspect-ratio: 2 / 3;
-	border-radius: 12px;
-	object-fit: cover;
-	box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.1);
-	transition: box-shadow 0.15s ease-out;
-}
-.lrb-titles a {
-	grid-area: 2 / 1;
-	margin-top: 0.65rem;
-	font-family: var(--lrb-font);
-	font-size: 15px;
-	font-weight: 700;
-	line-height: 1.25;
-	color: #fff;
-	display: -webkit-box;
-	-webkit-line-clamp: 2;
-	-webkit-box-orient: vertical;
-	overflow: hidden;
-}
-/* The whole card is the link's target. */
-.lrb-titles a::after {
-	content: "";
-	position: absolute;
-	inset: 0;
-	z-index: 3;
-}
-.lrb-titles li:hover a,
+/* The card's own focus ring, not the section's link outline. */
 .lrb-titles a:focus-visible {
-	color: #fcd34d;
-}
-.lrb-titles li:hover img {
-	box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55), 0 0 0 2px #fcd34d;
-}
-.lrb-titles span {
-	grid-area: 3 / 1;
-	margin-top: 0.2rem;
-	font-size: 12.5px;
-	color: #a3a3a3;
+	outline: revert-layer;
+	outline-offset: revert-layer;
+	border-radius: revert-layer;
 }
 
 /* The ways to browse: each hub a card with its own coloured tile and mark, then the category shortcuts. */
@@ -670,6 +597,7 @@ main:has(.lr-page) + footer {
 	}
 	.lrb-titles {
 		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 1rem;
 	}
 	.lrb-cards {
 		grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -686,7 +614,7 @@ main:has(.lr-page) + footer {
 @media (min-width: 1100px) {
 	.lrb-titles {
 		grid-template-columns: repeat(8, minmax(0, 1fr));
-		gap: 1.75rem 1rem;
+		gap: 1.25rem;
 	}
 }
 

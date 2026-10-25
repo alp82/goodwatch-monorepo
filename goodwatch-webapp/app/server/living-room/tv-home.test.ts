@@ -158,6 +158,7 @@ test("a guest's home holds the start titles and the first picture, and nothing p
 			title: "The Matrix",
 			release_year: 1999,
 			poster_path: "/matrix.jpg",
+			goodwatch_overall_score_normalized_percent: 85,
 		},
 	]
 	const services = [{ id: 8, name: "Netflix", logo_path: "/netflix.jpg" }]

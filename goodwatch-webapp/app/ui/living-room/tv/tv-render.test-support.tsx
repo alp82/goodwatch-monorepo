@@ -1,5 +1,6 @@
 // Run by tv-render.test.ts through vite-node: renders the TV's screens the way the server does and prints the
 // HTML with the item ids the machine lists for each, so the test can compare the two.
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { renderToStaticMarkup } from "react-dom/server"
 import { MemoryRouter } from "react-router-dom"
 import type { TitleCard } from "~/server/title-cards.server"
@@ -26,6 +27,7 @@ const startTitles: StartTitle[] = Array.from({ length: 16 }, (_, i) => ({
 	title: `Title ${i + 1}`,
 	release_year: 1990 + i,
 	poster_path: `/poster${i}.jpg`,
+	goodwatch_overall_score_normalized_percent: 70 + i,
 }))
 
 const guest: TvHomeData = {
@@ -141,31 +143,34 @@ const roomTv: RoomTv = {
 }
 const roomHtml = (data: TvHomeData, power: RoomTv["power"] = "on") =>
 	renderToStaticMarkup(
-		<MemoryRouter>
-			<TvRoom
-				tv={{ ...roomTv, power }}
-				startTitles={data.startTitles}
-				services={data.services}
-				renderScreen={(canvas) => (
-					<TvScreen
-						tv={{
-							state: stateOf(HOME, { power }),
-							focused: "app:tonight",
-							screenFocus: "app:tonight",
-							dispatch: () => {},
-							ringOff: false,
-							byPointer: false,
-							unpoint: () => {},
-						}}
-						canvas={canvas}
-						ctx={tvContextOf(data, null)}
-						apps={homeApps(data, null)}
-						home={data}
-						toast={null}
-					/>
-				)}
-			/>
-		</MemoryRouter>,
+		// The section below the room has poster cards, which read the viewer's marks through React Query.
+		<QueryClientProvider client={new QueryClient()}>
+			<MemoryRouter>
+				<TvRoom
+					tv={{ ...roomTv, power }}
+					startTitles={data.startTitles}
+					services={data.services}
+					renderScreen={(canvas) => (
+						<TvScreen
+							tv={{
+								state: stateOf(HOME, { power }),
+								focused: "app:tonight",
+								screenFocus: "app:tonight",
+								dispatch: () => {},
+								ringOff: false,
+								byPointer: false,
+								unpoint: () => {},
+							}}
+							canvas={canvas}
+							ctx={tvContextOf(data, null)}
+							apps={homeApps(data, null)}
+							home={data}
+							toast={null}
+						/>
+					)}
+				/>
+			</MemoryRouter>
+		</QueryClientProvider>,
 	)
 
 const editions = <T,>(draw: (canvas: TvCanvas) => T) => ({

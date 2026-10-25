@@ -117,6 +117,7 @@ const START_TITLES: StartTitle[] = [
 		title: "Knives Out",
 		release_year: 2019,
 		poster_path: "/pThyQovXQrw2m0s9x82twj48Jq4.jpg",
+		goodwatch_overall_score_normalized_percent: 80,
 	},
 	{
 		media_type: "movie",
@@ -124,6 +125,7 @@ const START_TITLES: StartTitle[] = [
 		title: "Arrival",
 		release_year: 2016,
 		poster_path: "/pEzNVQfdzYDzVK0XqxERIw2x2se.jpg",
+		goodwatch_overall_score_normalized_percent: 82,
 	},
 	{
 		media_type: "movie",
@@ -131,6 +133,7 @@ const START_TITLES: StartTitle[] = [
 		title: "Paddington 2",
 		release_year: 2017,
 		poster_path: "/1OJ9vkD5xPt3skC6KguyXAgagRZ.jpg",
+		goodwatch_overall_score_normalized_percent: 84,
 	},
 	{
 		media_type: "movie",
@@ -138,6 +141,7 @@ const START_TITLES: StartTitle[] = [
 		title: "Interstellar",
 		release_year: 2014,
 		poster_path: "/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg",
+		goodwatch_overall_score_normalized_percent: 86,
 	},
 ]
 

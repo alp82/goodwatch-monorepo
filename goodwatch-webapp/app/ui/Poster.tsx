@@ -16,6 +16,8 @@ export interface PosterProps {
 	sizes?: SizeRule[]
 	/** "lazy" by default. A page sets "eager" or "high" on the posters it shows without scrolling. */
 	priority?: TmdbImageProps["priority"]
+	/** The widest the poster is drawn, for a grid of smaller cards than POSTER_CARD_MAX_WIDTH: fewer files in srcset. */
+	maxWidth?: number
 }
 
 // A card in the grid (2 to 6 columns) or in a row (3 to 8 slides) is at most this wide.
@@ -50,6 +52,7 @@ export function Poster({
 	tmdbId,
 	sizes = POSTER_GRID_SIZES,
 	priority = "lazy",
+	maxWidth = POSTER_CARD_MAX_WIDTH,
 }: PosterProps) {
 	const impressionRef = usePosterImpression(
 		loading ? undefined : mediaType,
@@ -79,7 +82,7 @@ export function Poster({
 			path={path}
 			sizes={sizes}
 			minWidth={POSTER_CARD_MIN_WIDTH}
-			maxWidth={POSTER_CARD_MAX_WIDTH}
+			maxWidth={maxWidth}
 			priority={priority}
 			className={className}
 			alt={alt}

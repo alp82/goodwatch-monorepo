@@ -1,5 +1,6 @@
 // Run by room-render.test.ts through vite-node: renders the new room the way the server does and prints the
 // HTML, and compares room-layout.ts's copies of the photo, hand and Remote numbers with room.ts's.
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { renderToStaticMarkup } from "react-dom/server"
 import { MemoryRouter } from "react-router-dom"
 import type { StartTitle } from "../living-room-data"
@@ -29,6 +30,7 @@ const titles: StartTitle[] = Array.from({ length: 16 }, (_, i) => ({
 	title: `Title ${i + 1}`,
 	release_year: 1990 + i,
 	poster_path: `/poster${i}.jpg`,
+	goodwatch_overall_score_normalized_percent: 70 + i,
 }))
 
 const tv: RoomTv = {
@@ -42,14 +44,17 @@ const tv: RoomTv = {
 
 const render = (power: RoomTv["power"]) =>
 	renderToStaticMarkup(
-		<MemoryRouter>
-			<TvRoom
-				tv={{ ...tv, power }}
-				startTitles={titles}
-				services={[]}
-				renderScreen={() => <div data-screen />}
-			/>
-		</MemoryRouter>,
+		// The section below the room has poster cards, which read the viewer's marks through React Query.
+		<QueryClientProvider client={new QueryClient()}>
+			<MemoryRouter>
+				<TvRoom
+					tv={{ ...tv, power }}
+					startTitles={titles}
+					services={[]}
+					renderScreen={() => <div data-screen />}
+				/>
+			</MemoryRouter>
+		</QueryClientProvider>,
 	)
 
 const photo = ({ w, h, tv: t }: typeof ROOM | typeof PHONE_ROOM) => ({

@@ -54,23 +54,33 @@ const links = (html: string) =>
 		}),
 	)
 
-test("all 16 titles are plain links with the title as text", () => {
+test("all 16 titles are poster card links with the title and year as text", () => {
 	const titles = links(rendered.full).filter((link) =>
 		/^\/(movie|show)\//.test(link.href),
 	)
 	assert.equal(titles.length, 16)
 	assert.equal(new Set(titles.map((link) => link.href)).size, 16)
-	assert.deepEqual(titles[0], {
-		attributes: ' href="/movie/100-title-1"',
-		href: "/movie/100-title-1",
-		text: "Title 1",
-	})
+	assert.equal(titles[0].href, "/movie/100-title-1")
+	// The card's link name: read out and in the HTML for a crawler, not drawn under the poster.
+	assert.equal(titles[0].text, "Title 1 (1990)")
 	assert.equal(titles[1].href, "/show/101-title-2")
-	assert.equal(titles[2].text, "Law &amp; Order: Special Victims Unit")
-	// Nothing but the address: no script-only link, no nofollow.
-	for (const link of titles) assert.match(link.attributes, /^ href="[^"]+"$/)
-	assert.match(rendered.full, /<span>Movie · 1990<\/span>/)
-	assert.match(rendered.full, /<span>TV show<\/span>/)
+	assert.equal(titles[2].text, "Law &amp; Order: Special Victims Unit (1992)")
+	assert.equal(titles[5].text, "Title 6")
+	for (const link of titles) {
+		// A real address, followed: no script-only link, no nofollow, and no route lookup before the click.
+		assert.doesNotMatch(link.attributes, /nofollow|javascript:|onclick/i)
+		assert.doesNotMatch(link.attributes, /data-discover/)
+	}
+	assert.equal(rendered.full.match(/data-poster-card=""/g)?.length, 16)
+})
+
+test("each card shows the GoodWatch score it has, and no services", () => {
+	const pills = [
+		...rendered.full.matchAll(/GoodWatch score <\/span>(\d+)</g),
+	].map(([, score]) => Number(score))
+	// One of the 16 test titles has no score.
+	assert.equal(pills.length, 15)
+	assert.deepEqual(pills.slice(0, 4), [60, 61, 62, 64])
 })
 
 test("every hub is a plain link with its name as text, with and without titles", () => {
@@ -87,11 +97,17 @@ test("every hub is a plain link with its name as text, with and without titles",
 
 test("nothing in the section's HTML hides a link", () => {
 	for (const html of [rendered.full, rendered.empty]) {
-		// The two arrows and the lip's chevron are decoration and hold no link.
-		const withoutDecoration = html.replace(
-			/<(span|i) aria-hidden="true">[^<]*<\/\1>/g,
-			"",
-		)
+		// The two arrows and the lip's chevron are decoration and hold no link. A poster card's link name and its
+		// pill's words are read out, not drawn, as on every poster grid; the card's link itself is visible. The pill's
+		// logo shows on wider cards only, and the card clips the poster to its round corners.
+		const withoutDecoration = html
+			.replace(/<(span|i) aria-hidden="true">[^<]*<\/\1>/g, "")
+			.replace(
+				/<span class="sr-only">(<span lang="[^"]+">[^<]*<\/span>)?[^<]*<\/span>/g,
+				"",
+			)
+			.replace(/ class="hidden h-3 [^"]*"/g, "")
+			.replace(/ overflow-hidden /g, " ")
 		assert.doesNotMatch(
 			withoutDecoration,
 			/aria-hidden|\bhidden\b|\binert\b|sr-only|style=|<template|<noscript/,
@@ -119,19 +135,29 @@ test("the stylesheet hides nothing of the section but the lip's extras", () => {
 })
 
 test("each poster is an image in the HTML that loads lazily and holds its place", () => {
-	const images = [...rendered.full.matchAll(/<img\b[^>]*>/g)].map(
-		([tag]) => tag,
+	const posters = [...rendered.full.matchAll(/<img\b[^>]*>/g)]
+		.map(([tag]) => tag)
+		.filter((tag) => tag.includes("image.tmdb.org"))
+	// One of the 16 test titles has no poster: its card shows the placeholder.
+	assert.equal(posters.length, 15)
+	assert.match(
+		posters[0],
+		/ src="https:\/\/image\.tmdb\.org\/t\/p\/w154\/poster0\.jpg"/,
 	)
-	// One of the 16 test titles has no poster.
-	assert.equal(images.length, 15)
-	assert.equal(
-		images[0],
-		'<img src="https://image.tmdb.org/t/p/w154/poster0.jpg" srcSet="https://image.tmdb.org/t/p/w154/poster0.jpg 154w, https://image.tmdb.org/t/p/w342/poster0.jpg 342w" sizes="(min-width: 1100px) 140px, (min-width: 900px) 15vw, (min-width: 640px) 22vw, 30vw" width="154" height="231" alt="Title 1 poster" loading="lazy" decoding="async"/>',
+	// The small files only: the cards are at most 140 px wide, so w154 at 1x and w342 at 2x.
+	assert.match(
+		posters[0],
+		/ srcSet="https:\/\/image\.tmdb\.org\/t\/p\/w154\/poster0\.jpg 154w, https:\/\/image\.tmdb\.org\/t\/p\/w185\/poster0\.jpg 185w, https:\/\/image\.tmdb\.org\/t\/p\/w342\/poster0\.jpg 342w"/,
 	)
-	for (const tag of images) {
-		assert.match(tag, / loading="lazy"/)
-		assert.match(tag, / width="154" height="231"/)
-		assert.match(tag, / alt="[^"]+ poster"/)
+	assert.match(
+		posters[0],
+		/ sizes="\(min-width: 1100px\) 140px, \(min-width: 900px\) 15vw, \(min-width: 640px\) 22vw, [^"]*30vw"/,
+	)
+	for (const tag of posters) {
+		assert.match(tag, /^<img loading="lazy" decoding="async"/)
+		assert.match(tag, / width="140" height="210"/)
+		assert.match(tag, / alt="[^"]+"/)
+		assert.doesNotMatch(tag, /fetchpriority/)
 	}
 	assert.doesNotMatch(rendered.empty, /<img/)
 })

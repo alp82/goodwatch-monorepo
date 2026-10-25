@@ -93,10 +93,17 @@ interface MovieTvCardProps {
 		| CardTitle
 	mediaType: "movie" | "show"
 	prefetch?: boolean
+	/**
+	 * "none" for a page that keeps the router from asking for the title route when the card renders (the start page,
+	 * whose scripts all wait for the first paint): the route is looked up at the click instead.
+	 */
+	discover?: "none"
 	/** The title's age rating for the viewer, shown while an age limit is on. */
 	rating?: RatingBadge | null
 	/** The poster's displayed widths, when the card isn't in the grid. */
 	posterSizes?: PosterProps["sizes"]
+	/** The widest the poster is drawn, with `posterSizes`, when the cards are smaller than the grid's. */
+	posterMaxWidth?: PosterProps["maxWidth"]
 	/** Set by a page for the cards it shows without scrolling. Every other poster loads lazily. */
 	posterPriority?: PosterProps["priority"]
 	/**
@@ -124,8 +131,10 @@ export function MovieTvCard({
 	details,
 	mediaType,
 	prefetch = false,
+	discover,
 	rating,
 	posterSizes,
+	posterMaxWidth,
 	posterPriority,
 	skipOffscreen = false,
 	actions: actionsOn = "bottom",
@@ -175,6 +184,7 @@ export function MovieTvCard({
 			<Link
 				to={href}
 				prefetch={prefetch ? "viewport" : "intent"}
+				discover={discover}
 				draggable="false"
 				onClick={(event) => {
 					// Touch: the first tap shows the actions over the art, the second opens the title.
@@ -204,6 +214,7 @@ export function MovieTvCard({
 						mediaType={mediaType}
 						tmdbId={details.tmdb_id}
 						sizes={posterSizes}
+						maxWidth={posterMaxWidth}
 						priority={posterPriority}
 					/>
 				</div>

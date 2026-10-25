@@ -47,6 +47,11 @@ export async function loadStartTitlesAndPicture(
 				title: display.title,
 				release_year: display.release_year,
 				poster_path: display.poster_path,
+				// Whole points: what the card shows, in fewer bytes of the HTML's loader data.
+				goodwatch_overall_score_normalized_percent:
+					display.goodwatch_overall_score_normalized_percent == null
+						? null
+						: Math.floor(display.goodwatch_overall_score_normalized_percent),
 			})),
 			picture: found[0]?.backdrop_path ?? null,
 		}

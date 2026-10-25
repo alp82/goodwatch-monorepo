@@ -11,15 +11,20 @@ import {
 } from "@heroicons/react/20/solid"
 import gwLogo from "~/img/goodwatch-logo.webp?no-inline"
 import type { Score } from "~/server/scores.server"
-import { vibe } from "~/ui/profile/parts"
 import { assetUrl } from "~/utils/asset-url"
 import {
+	getVibeColorValue,
 	goodwatchScoreDisplay,
 	goodwatchVibeIndex,
 	hasGoodwatchScore,
 } from "~/utils/ratings"
 import { type PillMark, pillMark, useTitleMarks } from "./marks"
 import type { PartSize } from "./size"
+
+// The colour of the viewer's score, as on the profile (ui/profile/parts.tsx `vibe`). Not imported from there: that
+// module brings the profile's parts along, to every page with a poster card.
+const vibe = (score: number) =>
+	getVibeColorValue(Math.max(1, Math.min(10, Math.round(score))) as Score)
 
 const MARK_LOOK: Record<
 	PillMark,

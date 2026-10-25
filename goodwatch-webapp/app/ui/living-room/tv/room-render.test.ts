@@ -255,7 +255,10 @@ test("the section below the room follows it, with its lip, its 16 titles and its
 	const after = rendered.on.slice(rendered.on.indexOf('<section id="browse"'))
 	assert.ok(after.startsWith('<section id="browse"'))
 	assert.match(after, /<a href="#browse" class="lrb-lip">/)
-	assert.equal([...after.matchAll(/<a href="\/(movie|show)\//g)].length, 16)
+	assert.equal(
+		[...after.matchAll(/<a [^>]*href="\/(movie|show)\//g)].length,
+		16,
+	)
 	for (const hub of ["/discover", "/explorer", "/taste", "/movies/moods"])
 		assert.ok(after.includes(`href="${hub}"`), hub)
 })

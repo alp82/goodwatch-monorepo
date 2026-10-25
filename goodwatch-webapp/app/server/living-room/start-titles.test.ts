@@ -56,7 +56,7 @@ const display = (key: number): TitleDisplay => ({
 	release_year: 2000 + (key % 20),
 	runtime: null,
 	tagline: null,
-	goodwatch_overall_score_normalized_percent: 80,
+	goodwatch_overall_score_normalized_percent: 80.6,
 	goodwatch_overall_score_voting_count: 5000,
 })
 const displaysOf = async (keys: number[]) =>
@@ -91,6 +91,7 @@ test("the start titles are the pool's first for a visitor nobody knows anything 
 		title: "Title 60",
 		release_year: 2000,
 		poster_path: "/poster-60.jpg",
+		goodwatch_overall_score_normalized_percent: 80,
 	})
 })
 
@@ -166,6 +167,7 @@ test("the first start title lends its backdrop: the new TV's first picture", asy
 		"title",
 		"release_year",
 		"poster_path",
+		"goodwatch_overall_score_normalized_percent",
 	])
 
 	// When the first title has no display fields, the picture is the next one's: the first title on the page.

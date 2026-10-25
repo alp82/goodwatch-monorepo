@@ -1,37 +1,41 @@
 import type { TalkedRow } from "~/domain/talked-about-now"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
-import { mediaFieldLanguage } from "~/utils/media-presentation"
 // The section below the living room (#352): the start titles and the ways to browse GoodWatch, as plain
 // links in the server HTML. It is ordinary page content right after the room. Its top edge, the lip, lies over the
 // room's bottom edge and is the way down; `use-below-room.ts` owns how the page moves between the two.
 //
-// Every title and hub is a visible `<a href>` with its name as text: the start page is the page a crawler reads
-// most, and this is where it finds the rest of the site. Styles are in living-room.css (`.lrb`), with short class
-// names because the HTML has a byte budget.
+// Every title and hub is an `<a href>` with its name as text: the start page is the page a crawler reads most, and
+// this is where it finds the rest of the site. The titles are the browse poster cards (MovieTvCard), whose link text
+// is the title and year, read out but not drawn, as on every other poster grid. The section's own styles are in
+// living-room.css (`.lrb`), with short class names because the HTML has a byte budget.
 import { Link } from "@remix-run/react"
-import type { MouseEvent, ReactNode } from "react"
+import { type MouseEvent, type ReactNode, useMemo } from "react"
+import { MovieTvCard } from "~/ui/MovieTvCard"
 import { StartRowSlot } from "~/ui/talked-about-now/start-row/StartRowSlot"
+import {
+	HiddenTileContext,
+	useKeptCards,
+} from "~/ui/title-actions/hide-feedback"
 import { titleToDashed } from "~/utils/helpers"
-import MediaText from "~/ui/media-text/MediaText"
+import type { SizeRule } from "~/utils/tmdb-image"
+import { titleKey } from "~/utils/title-key"
 import type { StartTitle } from "./living-room-data"
 import { BELOW_ID, ROOM_ID } from "./use-below-room"
 
 export const startTitleHref = (
 	title: Pick<StartTitle, "media_type" | "tmdb_id" | "title">,
-) => `/${title.media_type}/${title.tmdb_id}-${titleToDashed(canonicalMediaTitle(title))}`
-
-/** "Movie · 2026": what the title is, quietly, under its name. */
-export const startTitleLine = (
-	title: Pick<StartTitle, "media_type" | "release_year">,
 ) =>
-	`${title.media_type === "movie" ? "Movie" : "TV show"}${title.release_year ? ` · ${title.release_year}` : ""}`
+	`/${title.media_type}/${title.tmdb_id}-${titleToDashed(canonicalMediaTitle(title))}`
 
-/** The poster's box: the cards of the poster grid are 105 to 140 px wide, so w154 at 1x and w342 at 2x. */
-export const START_POSTER = { width: 154, height: 231 }
+/** The widest a start poster is drawn: the cards of the grid are 105 to 140 px wide, so w154 at 1x and w342 at 2x. */
+export const START_POSTER_MAX_WIDTH = 140
 /** How wide a poster is drawn: three a row on a phone, four from 640 px, six from 900 px, eight from 1100 px. */
-const START_POSTER_SIZES = "(min-width: 1100px) 140px, (min-width: 900px) 15vw, (min-width: 640px) 22vw, 30vw"
-const poster = (path: string, size: string) =>
-	`https://image.tmdb.org/t/p/${size}${path}`
+const START_POSTER_SIZES: SizeRule[] = [
+	["(min-width: 1100px)", "140px"],
+	["(min-width: 900px)", "15vw"],
+	["(min-width: 640px)", "22vw"],
+	[null, "30vw"],
+]
 
 export const MAIN_HUBS = [
 	{
@@ -88,6 +92,41 @@ export type BelowRoomProps = {
 	intro?: ReactNode
 }
 
+/**
+ * The start titles as the browse poster cards, the grid Discover has: the poster links to the title page, with the
+ * title and year as the link's text for a screen reader and a crawler. Every poster loads lazily (the grid is below
+ * the room), and the card's actions load at the first interaction. The list is the same after a reload, so a card
+ * marked Not interested keeps its place with Undo; `useKeptCards` holds it there should the list change meanwhile.
+ */
+function StartTitleGrid({ titles }: { titles: StartTitle[] }) {
+	const keyed = useMemo(
+		() =>
+			titles.map((title) => ({
+				key: titleKey(title.media_type, title.tmdb_id),
+				title,
+			})),
+		[titles],
+	)
+	const { cards, keeper } = useKeptCards(keyed)
+	return (
+		<HiddenTileContext.Provider value={keeper}>
+			<ol className="lrb-titles">
+				{cards.map(({ key, title }) => (
+					<li key={key}>
+						<MovieTvCard
+							details={title}
+							mediaType={title.media_type}
+							discover="none"
+							posterSizes={START_POSTER_SIZES}
+							posterMaxWidth={START_POSTER_MAX_WIDTH}
+						/>
+					</li>
+				))}
+			</ol>
+		</HiddenTileContext.Provider>
+	)
+}
+
 export function BelowRoom({
 	titles,
 	talked = null,
@@ -101,11 +140,7 @@ export function BelowRoom({
 		</a>
 	)
 	return (
-		<section
-			id={BELOW_ID}
-			aria-labelledby="browse-title"
-			className="lrb"
-		>
+		<section id={BELOW_ID} aria-labelledby="browse-title" className="lrb">
 			<a href={`#${BELOW_ID}`} onClick={onDown} className="lrb-lip">
 				<span>
 					{/* An invitation, not the list's name: the heading under it has that. */}
@@ -131,30 +166,7 @@ export function BelowRoom({
 					</div>
 					{back}
 				</header>
-				{titles.length > 0 && (
-					<ol className="lrb-titles">
-						{titles.map((title) => (
-							<li key={`${title.media_type}-${title.tmdb_id}`}>
-								{title.poster_path && (
-									<img
-										src={poster(title.poster_path, "w154")}
-										srcSet={`${poster(title.poster_path, "w154")} 154w, ${poster(title.poster_path, "w342")} 342w`}
-										sizes={START_POSTER_SIZES}
-										width={START_POSTER.width}
-										height={START_POSTER.height}
-										alt={`${title.title} poster`}
-										loading="lazy"
-										decoding="async"
-									/>
-								)}
-								<Link to={startTitleHref(title)} discover="none">
-									<MediaText value={{ text: title.title, lang: mediaFieldLanguage(title) }} />
-								</Link>
-								<span>{startTitleLine(title)}</span>
-							</li>
-						))}
-					</ol>
-				)}
+				{titles.length > 0 && <StartTitleGrid titles={titles} />}
 				<div className="lrb-hubs">
 					{titles.length > 0 && <h2>Browse GoodWatch</h2>}
 					<ul className="lrb-cards">
@@ -173,7 +185,10 @@ export function BelowRoom({
 								<h3>{group.label}</h3>
 								<ul>
 									{group.links.map((link) => (
-										<li key={link.href} className={`lrb-by-${link.href.split("/").at(-1)}`}>
+										<li
+											key={link.href}
+											className={`lrb-by-${link.href.split("/").at(-1)}`}
+										>
 											<Link to={link.href} discover="none">
 												{link.label}
 											</Link>
