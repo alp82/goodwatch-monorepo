@@ -66,7 +66,8 @@ export function TitleActionSet({
 						disabled={a.seenPending}
 						{...a.seenLog}
 						onClick={(event) => {
-							a.toggleSeen(event)
+							// The sheet shows the score control above, or is itself the score picker's footer.
+							a.toggleSeen(event, null)
 							if (a.seenLog?.opensLog) onOpenLog?.()
 						}}
 					/>

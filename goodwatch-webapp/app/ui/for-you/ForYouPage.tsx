@@ -71,7 +71,7 @@ import {
 	posterSrc,
 } from "./context"
 import { DIM, DIM_IN, DIM_OUT, SHEET_IN, SHEET_OUT } from "./crossfade"
-import { useFocusScope } from "./focus"
+import { inNestedDialog, useFocusScope } from "./focus"
 import { DESK_NARROW, type Surface, useSteering } from "./useSteering"
 
 const SWAP = { type: "spring", stiffness: 420, damping: 40 } as const
@@ -446,7 +446,7 @@ function Steering({
 	useEffect(() => {
 		if (!open) return
 		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") closeSheet()
+			if (e.key === "Escape" && !inNestedDialog(e.target)) closeSheet()
 		}
 		window.addEventListener("keydown", onKey)
 		const html = document.documentElement

@@ -128,22 +128,19 @@ export default function SeenScore({
 	// The score half too: a tap from before the app was there opens the picker once it is ready.
 	useReplayedTap("score", (el) => Boolean(root.current?.contains(el)))
 
-	const pressSeen = (event: { currentTarget: EventTarget | null }) => {
-		const was = a.seen
-		a.toggleSeen(event)
-		// Marking a title Seen asks for its score next.
-		if (!was && score === null) {
+	// Marking a title Seen asks for its score next (useTitleActions decides when).
+	const pressSeen = (event: { currentTarget: EventTarget | null }) =>
+		a.toggleSeen(event, () => {
 			preloadScoreDialog()
 			setAfterSeen(true)
 			setOpen(true)
-		}
-	}
+		})
 
 	// The score dialog's switch. Off takes a single watch from a movie without a score at once; with a score or more
 	// watches to lose, it asks first.
 	const seenToggle = useSeenToggle(mediaType, tmdbId)
 	const pressSwitch = () => {
-		if (!a.seen) a.toggleSeen()
+		if (!a.seen) a.toggleSeen(null, null)
 		else if (score === null && seenToggle.watches <= 1)
 			seenToggle.toggle("remove")
 		else setConfirming("switch")
@@ -283,7 +280,7 @@ export default function SeenScore({
 												onClick={() => {
 													// The watch log opens beside the Seen half, where its date is changed.
 													close()
-													a.toggleSeen({ currentTarget: seenButton.current })
+													a.toggleSeen({ currentTarget: seenButton.current }, null)
 												}}
 												className="cursor-pointer font-semibold text-white underline decoration-white/30 underline-offset-2 hover:decoration-white"
 											>

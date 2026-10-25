@@ -263,6 +263,14 @@ function Actions({
 	}
 	const [rating, setRating] = useState(false)
 	const opener = useRef<HTMLButtonElement>(null)
+	// Marking it Seen asks for the score: the "seen" action, which can filter the card out, waits for the picker.
+	const seenLater = useRef<string | null>(null)
+	const closeRating = () => {
+		setRating(false)
+		const message = seenLater.current
+		seenLater.current = null
+		if (message) onAction(message, true)
+	}
 	const a = useTitleActions(media)
 	const seen = a.seen || title.seen
 	return (
@@ -271,7 +279,7 @@ function Actions({
 				<button ref={opener} type="button" aria-haspopup="dialog" aria-expanded={rating} onClick={() => setRating(true)} className="min-h-11 w-full cursor-pointer rounded-xl bg-white/10 px-3 py-2 text-sm font-bold text-white hover:bg-white/15">
 					{a.score ? `Your score: ${getScoreLabelText(a.score)}` : "Rate it"}
 				</button>
-				{rating && <Suspense fallback={null}><TitleScoreDialog media={media} open opener={opener} onClose={() => setRating(false)} onRated={() => { setRating(false); onAction("Score saved", true) }} /></Suspense>}
+				{rating && <Suspense fallback={null}><TitleScoreDialog media={media} open opener={opener} onClose={closeRating} onRated={() => { seenLater.current = null; setRating(false); onAction("Score saved", true) }} /></Suspense>}
 			</div>
 			<div className="ex-acts">
 				<ActionButton
@@ -292,8 +300,14 @@ function Actions({
 						onClick={(event) => {
 							// A rated movie stays Seen through its score: the press says so and sends nothing. With the
 							// movie watch log the press goes to the log, which answers with its own toast.
-							if (!a.toggleSeen(event)) return
-							onAction(a.seen ? "Unmarked as seen" : "Marked as seen", !a.seen)
+							let asked = false
+							const toggled = a.toggleSeen(event, () => {
+								asked = true
+								setRating(true)
+							})
+							if (!toggled) return
+							if (asked) seenLater.current = "Marked as seen"
+							else onAction(a.seen ? "Unmarked as seen" : "Marked as seen", !a.seen)
 						}}
 					/>
 				</UserAction>

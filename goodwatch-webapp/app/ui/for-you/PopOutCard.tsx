@@ -29,7 +29,7 @@ import {
 } from "./TitleDetail"
 import { posterSrc, titleAt, useForYou } from "./context"
 import { Crossfade, DIM, DIM_IN, DIM_OUT, EASE_OUT } from "./crossfade"
-import { useFocusScope } from "./focus"
+import { inNestedDialog, useFocusScope } from "./focus"
 import { preload, stepTo, useStepToken, useSwipe } from "./swipe"
 
 type Box = { x: number; y: number; w: number; h: number }
@@ -353,6 +353,7 @@ export function PopOutCard({
 	useEffect(() => {
 		if (!live) return
 		const onKey = (e: KeyboardEvent) => {
+			if (inNestedDialog(e.target)) return
 			if (e.key === "Escape") {
 				e.stopImmediatePropagation()
 				return close()

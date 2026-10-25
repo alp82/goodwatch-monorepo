@@ -30,7 +30,7 @@ import {
 	SHEET_IN,
 	SHEET_OUT,
 } from "./crossfade"
-import { useFocusScope } from "./focus"
+import { inNestedDialog, useFocusScope } from "./focus"
 import { preload, stepTo, useStepToken, useSwipe } from "./swipe"
 
 const useIso = typeof window === "undefined" ? useEffect : useLayoutEffect
@@ -119,6 +119,7 @@ export function TitleDrawer({
 	useEffect(() => {
 		if (!open) return
 		const onKey = (e: KeyboardEvent) => {
+			if (inNestedDialog(e.target)) return
 			if (e.key === "Escape") return close()
 			if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return
 			e.preventDefault()

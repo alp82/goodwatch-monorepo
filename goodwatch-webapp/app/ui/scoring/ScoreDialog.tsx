@@ -28,8 +28,11 @@ export default function ScoreDialog({
 	aside,
 	step,
 	footer,
+	layer = "z-[1100]",
 }: {
 	title: string
+	/** Its stacking layer: a surface that is itself an overlay (For you) opens it above. */
+	layer?: string
 	/** Beside the title: a movie's Seen switch. */
 	aside?: ReactNode
 	/** In place of the score picker: the next question after a score. */
@@ -58,6 +61,7 @@ export default function ScoreDialog({
 			aside={aside}
 			step={step}
 			footer={footer}
+			layer={layer}
 		/>
 	)
 }
@@ -73,6 +77,7 @@ function Panel({
 	aside,
 	step,
 	footer,
+	layer,
 }: Omit<Parameters<typeof ScoreDialog>[0], "open">) {
 	const panel = useRef<HTMLDivElement>(null)
 	const shade = useRef<HTMLDivElement>(null)
@@ -154,7 +159,7 @@ function Panel({
 	return createPortal(
 		<div
 			data-score-dialog
-			className="fixed inset-0 z-[1100] flex items-end justify-center md:items-center md:p-4"
+			className={`fixed inset-0 ${layer} flex items-end justify-center md:items-center md:p-4`}
 		>
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape closes it, and the Close button is the keyboard's way. */}
 			<div

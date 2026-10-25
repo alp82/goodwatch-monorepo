@@ -34,18 +34,24 @@ export function useTitleActions(media: ScoredMedia) {
 		[updateWishlist, mediaType, tmdbId, want],
 	)
 	/**
-	 * Members only: wrap the button in UserAction so a guest gets the sign-in prompt instead. Answers whether the
-	 * press toggled Seen here. With the movie watch log it did not: the log's host takes the press and says what it
-	 * did. Pass the click, so the log opens beside the button.
+	 * A press of a Seen button. Members only: wrap the button in UserAction so a guest gets the sign-in prompt
+	 * instead. Pass the click, so the movie watch log opens beside the button.
+	 *
+	 * Marking a title Seen that has no score asks for the score next: `askScore` opens the surface's score picker. It
+	 * is required, so no Seen button forgets the question; pass null only where the picker is already open.
+	 *
+	 * Answers whether the press toggled Seen here. With the movie watch log it did not: the log's host takes the press
+	 * and says what it did.
 	 */
 	const toggleSeen = useCallback(
-		(event?: { currentTarget: EventTarget | null }): boolean => {
+		(event: { currentTarget: EventTarget | null } | null, askScore: (() => void) | null): boolean => {
+			if (!seen && score === null) askScore?.()
 			if (!logged) return toggle()
 			const anchor = event?.currentTarget instanceof HTMLElement ? event.currentTarget : null
 			pressSeen({ movie: { tmdbId, title }, anchor, seen })
 			return false
 		},
-		[toggle, logged, tmdbId, title, seen],
+		[toggle, logged, tmdbId, title, seen, score],
 	)
 
 	const unhide = useCallback(

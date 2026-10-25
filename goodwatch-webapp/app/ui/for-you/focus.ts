@@ -23,6 +23,13 @@ function tabbable(roots: HTMLElement[]): HTMLElement[] {
 	)
 }
 
+/**
+ * A dialog opened from inside a drawer or the card (the score picker) has its own keys: the surface's Escape, arrows
+ * and Tab leave them alone while focus is there.
+ */
+export const inNestedDialog = (t: EventTarget | null) =>
+	t instanceof Element && !!t.closest("[data-score-dialog]")
+
 /** Focus in another dialog (the site's hub or search) is that dialog's own. */
 const elsewhere = (n: Element) =>
 	!!n.closest('[role="dialog"],#headlessui-portal-root')
@@ -64,6 +71,7 @@ export function useFocusScope({
 
 		const onKey = (e: KeyboardEvent) => {
 			if (e.key !== "Tab" || e.defaultPrevented) return
+			if (inNestedDialog(document.activeElement)) return
 			const list = tabbable(roots())
 			e.preventDefault()
 			if (!list.length) return enter()

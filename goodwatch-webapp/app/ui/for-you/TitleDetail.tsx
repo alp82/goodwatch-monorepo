@@ -5,12 +5,13 @@
 // - why: "Because you loved X" with its tiny poster (or the steer it answers), then one row of reason chips.
 // - what it's like: the title's three most distinctive traits, never repeating a reason chip.
 // - where to watch: service logos with short names, "+2" when there are more.
-// - footer: Want to See, Seen, Not interested, and "Details" (the title page). The previous / next arrows sit under
+// - footer: Want to See, Seen and the score as one split button, Not interested as its icon, and "Details" (the
+//   title page). Marking it Seen asks for the score, as everywhere. The previous / next arrows sit under
 //   the poster: under the small one here on phones (DetailHead), under the big one beside the card on desktop.
 // Runtime, backdrop, services and overview load on demand (the details query); until then their room stays reserved.
 import { Link } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
-import { forwardRef, useMemo } from "react"
+import { Suspense, forwardRef, lazy, useMemo, useRef, useState } from "react"
 import {
 	type CardService,
 	FP_KEYS,
@@ -19,6 +20,7 @@ import {
 import type { Ranked } from "~/domain/for-you-page/rank"
 import gwLogo from "~/img/goodwatch-logo.webp?no-inline"
 import UserAction from "~/ui/auth/UserAction"
+import { EyeIcon } from "~/ui/details/hero/seen-score-faces"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { ActionButton } from "~/ui/title-actions/ActionButton"
@@ -32,7 +34,13 @@ import { ReasonChips } from "~/ui/title-card/ReasonChips"
 import { warmWatchLog } from "~/ui/watch-log/WatchLogHost"
 import { assetUrl } from "~/utils/asset-url"
 import { useAuthHref } from "~/utils/auth-href"
-import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
+import {
+	goodwatchScoreDisplay,
+	goodwatchVibeIndex,
+	scoreLabels,
+	selectedScoreStyle,
+} from "~/utils/ratings"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import {
 	type PoolTitle,
 	backdropSrc,
@@ -44,6 +52,14 @@ import {
 } from "./context"
 
 const N = FP_KEYS.length
+
+const loadScoreDialog = reloadOnStaleChunk(
+	() => import("~/ui/scoring/TitleScoreDialog"),
+)
+const TitleScoreDialog = lazy(loadScoreDialog)
+const warmScoreDialog = () => {
+	void loadScoreDialog().catch(() => {})
+}
 
 /** One title's detail from the details query; `detail` is undefined while it loads or after it failed. */
 export function useDetail(key: string): {
@@ -423,15 +439,29 @@ export type Steps = {
 	canNext: boolean
 }
 
-/** Want to See, Seen, Not interested, and the title page link. Not interested answers with a toast that can undo it. */
+/**
+ * Want to See, then Seen and the score as one split button, then Not interested (its icon) and the title page link.
+ * Marking it Seen asks for the score; the score picker opens above the For you overlay. Not interested answers with
+ * a toast that can undo it. Labels stay whole down to a 360px phone: short words, and no arrow on Details there.
+ */
 export function DetailFooter({ r }: { r: Ranked }) {
 	const { pool } = useForYou()
 	const t = titleAt(pool, r.index)
-	const a = useTitleActions({
+	const media = {
 		mediaType: t.kind,
 		details: { tmdb_id: t.tmdbId, title: t.name },
-	})
+	}
+	const a = useTitleActions(media)
 	const toast = useUndoToast()
+	// The button that opened the score picker: it opens beside it, and focus returns there.
+	const opener = useRef<HTMLButtonElement | null>(null)
+	const [scoring, setScoring] = useState(false)
+	const scoreButton = useRef<HTMLButtonElement>(null)
+	const askScore = (from: HTMLButtonElement | null) => {
+		opener.current = from
+		warmScoreDialog()
+		setScoring(true)
+	}
 	const hideTitle = a.hidden
 		? "Hidden from your recommendations. Press to bring it back."
 		: a.canHide
@@ -443,11 +473,12 @@ export function DetailFooter({ r }: { r: Ranked }) {
 	}
 	const warm = () => {
 		warmUndoToast()
+		warmScoreDialog()
 		if (t.kind === "movie") warmWatchLog()
 	}
 	return (
 		<div
-			className="flex shrink-0 items-center gap-2 border-t border-white/10 px-4 pt-2.5 pb-3 md:px-6 md:pt-3 md:pb-4"
+			className="flex shrink-0 items-center gap-1.5 border-t border-white/10 px-4 pt-2.5 pb-3 sm:gap-2 md:px-6 md:pt-3 md:pb-4"
 			onPointerEnter={warm}
 			onPointerDown={warm}
 			onFocus={warm}
@@ -457,29 +488,74 @@ export function DetailFooter({ r }: { r: Ranked }) {
 				kind="want"
 				label="short"
 				size="sm"
-				className="flex-1"
+				className="flex-1 max-sm:!gap-1.5 max-sm:!px-1.5"
 				rewatch={a.seen}
 				active={a.want}
 				disabled={a.wantPending}
 				onClick={a.toggleWant}
 			/>
-			<UserAction instructions={SEEN_INSTRUCTIONS}>
-				<ActionButton
-					kind="seen"
-					label="short"
-					size="sm"
-					className="flex-1"
-					active={a.seen}
-					disabled={a.seenPending}
-					{...a.seenLog}
-					onClick={(event) => a.toggleSeen(event)}
-				/>
-			</UserAction>
+			<div
+				className={`flex h-9 shrink-0 items-stretch overflow-hidden rounded-lg ${a.score ? "" : "ring-1 ring-white/15"}`}
+			>
+				<UserAction instructions={SEEN_INSTRUCTIONS}>
+					<button
+						type="button"
+						aria-pressed={a.seen}
+						aria-haspopup={a.seenLog?.opensLog ? "dialog" : undefined}
+						aria-label={`Seen${a.seenLog?.count ? `, watched ${a.seenLog.count}` : ""}${a.seenLog?.opensLog ? ". Open your watches" : ""}`}
+						disabled={a.seenPending}
+						onPointerEnter={a.seenLog?.onPointerEnter}
+						onFocus={a.seenLog?.onFocus}
+						// The picker opens from the score half: Seen is disabled while its request runs, so focus couldn't
+						// return to it.
+						onClick={(event) =>
+							a.toggleSeen(event, () => askScore(scoreButton.current))
+						}
+						className={`flex shrink-0 cursor-pointer items-center gap-1 px-2 text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80 disabled:cursor-wait sm:gap-1.5 sm:px-2.5 ${a.seen ? "bg-green-500 text-black" : "bg-white/10 text-gray-100 hover:bg-white/20"}`}
+					>
+						<EyeIcon className={`h-4 w-4 ${a.seen ? "" : "text-green-300"}`} />
+						{a.seen ? "Seen" : "Seen?"}
+						{a.seenLog?.count && (
+							<span className="tabular-nums opacity-70">{a.seenLog.count}</span>
+						)}
+					</button>
+				</UserAction>
+				<button
+					ref={scoreButton}
+					type="button"
+					aria-haspopup="dialog"
+					aria-expanded={scoring}
+					aria-label={
+						a.score
+							? `Your score: ${a.score}, ${scoreLabels[a.score]}. Change it`
+							: `Rate this ${t.kind}`
+					}
+					title={a.score ? `Your score: ${scoreLabels[a.score]}` : "Rate it"}
+					onClick={(event) => askScore(event.currentTarget)}
+					className="flex min-w-9 cursor-pointer items-center justify-center px-2 text-xs font-bold tabular-nums text-white outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80"
+					style={
+						a.score
+							? selectedScoreStyle(a.score)
+							: { background: "rgba(255,255,255,.06)" }
+					}
+				>
+					{a.score ?? (
+						<svg
+							viewBox="0 0 20 20"
+							fill="currentColor"
+							className="h-4 w-4 shrink-0 text-amber-300"
+							aria-hidden="true"
+						>
+							<path d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" />
+						</svg>
+					)}
+				</button>
+			</div>
 			<ActionButton
 				kind="hide"
-				label="wide"
+				label="none"
 				size="sm"
-				className="max-sm:w-9 max-sm:flex-none sm:w-auto sm:flex-none sm:px-3"
+				className="!w-9 flex-none"
 				active={a.hidden}
 				disabled={!a.canHide || a.hidePending}
 				title={hideTitle}
@@ -487,11 +563,25 @@ export function DetailFooter({ r }: { r: Ranked }) {
 			/>
 			<Link
 				to={t.href}
-				className="flex h-9 shrink-0 items-center gap-1 rounded-lg bg-amber-400 px-3 text-[13px] font-black text-gray-950 hover:bg-amber-300"
+				className="flex h-9 shrink-0 items-center gap-1 rounded-lg bg-amber-400 px-2.5 text-[13px] font-black text-gray-950 hover:bg-amber-300 sm:px-3"
 			>
 				Details
-				<span aria-hidden="true">→</span>
+				<span aria-hidden="true" className="max-sm:hidden">
+					→
+				</span>
 			</Link>
+			{scoring && (
+				<Suspense fallback={null}>
+					<TitleScoreDialog
+						media={media}
+						open
+						opener={opener}
+						layer="z-[1300]"
+						onClose={() => setScoring(false)}
+						onRated={() => setScoring(false)}
+					/>
+				</Suspense>
+			)}
 			{toast.node}
 		</div>
 	)

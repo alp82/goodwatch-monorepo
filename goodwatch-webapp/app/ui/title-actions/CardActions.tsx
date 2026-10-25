@@ -1,6 +1,6 @@
 // The title actions of a poster card, loaded on demand by TitleActionsFrame: the hover row (Want to See, then Seen
 // and the score side by side, then Not interested), the score popover, the phone sheet, and the "Hidden" tile.
-// Marking a title Seen from the row opens the score popover.
+// Marking a title Seen from the row opens the score popover (useTitleActions asks for it).
 import { type RefObject, useContext, useEffect, useRef } from "react"
 import UserAction from "~/ui/auth/UserAction"
 import TitleScoreDialog from "~/ui/scoring/TitleScoreDialog"
@@ -99,12 +99,7 @@ export default function CardActions({
 							active={a.seen}
 							disabled={a.seenPending}
 							{...a.seenLog}
-							onClick={(event) => {
-								// Marking it Seen asks for the score next, as on the title page.
-								const was = a.seen
-								a.toggleSeen(event)
-								if (!was && a.score === null) setOpen("score")
-							}}
+							onClick={(event) => a.toggleSeen(event, () => setOpen("score"))}
 						/>
 					</UserAction>
 					<ScoreButton
