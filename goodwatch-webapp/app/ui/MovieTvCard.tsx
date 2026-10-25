@@ -35,7 +35,7 @@ import { FOCUS } from "~/ui/poster-card/look"
 import { setRevealed, useRevealed } from "~/ui/poster-card/reveal"
 import { type ServiceOffer, YourServiceLogos } from "~/ui/poster-card/services"
 import { HiddenTileContext } from "~/ui/title-actions/hide-feedback"
-import { useTouchPointer } from "~/ui/title-actions/pointer"
+import { touchPointerNow, useTouchPointer } from "~/ui/title-actions/pointer"
 import { RatingMark } from "~/ui/title-card/RatingMark"
 import { onFirstInteraction } from "~/utils/first-interaction"
 import { titleToDashed } from "~/utils/helpers"
@@ -107,7 +107,10 @@ export function MovieTvCard({
 }: MovieTvCardProps) {
 	const ratings = extractRatings(details)
 	const cardKey = useId()
-	const touch = useTouchPointer()
+	const touchLater = useTouchPointer()
+	// Set by a tap that came before the idle-time answer: the tap itself tells the card it is on a touch screen.
+	const [touchNow, setTouchNow] = useState(false)
+	const touch = touchLater || touchNow
 	const revealed = useRevealed(cardKey)
 	const frame = useRef<HTMLDivElement>(null)
 	const [armed, setArmed] = useState(false)
@@ -145,7 +148,11 @@ export function MovieTvCard({
 				draggable="false"
 				onClick={(event) => {
 					// Touch: the first tap shows the actions over the art, the second opens the title.
-					if (!actions || !touch || tile) return
+					if (!actions || tile) return
+					if (!touch) {
+						if (!touchPointerNow()) return
+						setTouchNow(true)
+					}
 					if (revealed) return setRevealed(null)
 					event.preventDefault()
 					setArmed(true)

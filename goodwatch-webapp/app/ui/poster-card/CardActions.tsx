@@ -119,7 +119,12 @@ export default function CardActions({
 	const tracked = isShow && Boolean(user)
 	const opener = useRef<HTMLElement | null>(null)
 	const [statusAt, setStatusAt] = useState<HTMLElement | null>(null)
-	const [statusUsed, setStatusUsed] = useState(false)
+	/**
+	 * The status menu or How far was used: ShowStatus stays mounted from then on, because it hosts the toasts (Undo,
+	 * Set a date, errors) that tracking answers with, including after How far's dialog closed. Never before, so a grid
+	 * of cards nobody touched mounts none.
+	 */
+	const [trackingUsed, setTrackingUsed] = useState(false)
 	const [howFar, setHowFar] = useState(false)
 	const undo = useRef<() => void>(() => {})
 
@@ -147,7 +152,7 @@ export default function CardActions({
 		const from = event.currentTarget
 		if (tracked) {
 			void loadShowStatus().catch(() => {})
-			setStatusUsed(true)
+			setTrackingUsed(true)
 			askAfterStatus.current = from
 			setStatusAt((was) => (was ? null : from))
 			return
@@ -437,9 +442,11 @@ export default function CardActions({
 					opener={opener}
 					onRated={() => {
 						// A first score on a show that isn't started asks how far, as on the title page.
-						if (tracked && !status && a.score === null && open !== "sheet")
+						if (tracked && !status && a.score === null && open !== "sheet") {
+							void loadShowStatus().catch(() => {})
+							setTrackingUsed(true)
 							setHowFar(true)
-						else if (open !== "sheet") closeDialog()
+						} else if (open !== "sheet") closeDialog()
 					}}
 					step={
 						howFar ? (
@@ -484,7 +491,7 @@ export default function CardActions({
 				/>
 			)}
 
-			{statusUsed && (
+			{trackingUsed && (
 				<Suspense fallback={null}>
 					<ShowStatus
 						media={media}

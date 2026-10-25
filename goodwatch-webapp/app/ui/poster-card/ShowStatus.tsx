@@ -1,8 +1,8 @@
 // A show's status from a poster card, for a member: the same choices as the title page's status half
 // (ui/tracking/HeroStatus.tsx). Not started: Watching (which asks for the last episode seen), Seen, and Not
 // interested. Started: the status menu. A show without an episode list, or whose tracking can't be read, has Seen for
-// the whole show. Loaded the first time a card's status button is pressed; it stays mounted afterwards, because it
-// hosts the toasts (with Undo) that tracking answers with.
+// the whole show. Loaded the first time a card's status button is pressed or its score asks How far; it stays mounted
+// afterwards, menu closed, because it hosts the toasts (with Undo) that tracking answers with.
 import { NoSymbolIcon } from "@heroicons/react/20/solid"
 import {
 	type ReactNode,
@@ -13,13 +13,13 @@ import {
 	useState,
 } from "react"
 import { createPortal } from "react-dom"
+import { useTitleActions } from "~/ui/title-actions/useTitleActions"
 import { Choices } from "~/ui/tracking/HeroStatus"
 import { StatusMenu } from "~/ui/tracking/HeroTracking"
 import { POPOVER, TrackingToastHost } from "~/ui/tracking/TrackingToast"
 import { useTrackingActions } from "~/ui/tracking/actions"
 import { useShowTracking } from "~/ui/tracking/store"
 import type { ScoredMedia } from "~/ui/user/actions/ScoreAction"
-import { useTitleActions } from "~/ui/title-actions/useTitleActions"
 import { FOCUS } from "./look"
 
 export default function ShowStatus({
@@ -170,12 +170,20 @@ function Popout({
 			top = Math.max(8, r.top - el.offsetHeight - 6)
 		setAt({ left, top })
 	}, [anchor])
+	// Focus goes into the panel when it opens: to its first choice, or to the panel itself while the choices load.
 	useLayoutEffect(() => {
 		place()
-		const focusable = panel.current?.querySelector<HTMLElement>("button")
-		if (!panel.current?.contains(document.activeElement))
-			focusable?.focus({ preventScroll: true })
+		const el = panel.current
+		if (!el || el.contains(document.activeElement)) return
+		const first = el.querySelector<HTMLElement>("button")
+		;(first ?? el).focus({ preventScroll: true })
 	}, [place])
+	// Once they have loaded, the first choice takes the focus the panel held meanwhile.
+	useLayoutEffect(() => {
+		const el = panel.current
+		if (!el || document.activeElement !== el) return
+		el.querySelector<HTMLElement>("button")?.focus({ preventScroll: true })
+	})
 	const latest = useRef(onClose)
 	latest.current = onClose
 	useEffect(() => {
@@ -212,7 +220,8 @@ function Popout({
 			// biome-ignore lint/a11y/useSemanticElements: a non-modal panel beside its button, not a <dialog>.
 			role="dialog"
 			aria-label={label}
-			className={`fixed z-[1150] max-h-[calc(100vh-1rem)] w-80 max-w-[calc(100vw-1rem)] overflow-y-auto text-white ${POPOVER}`}
+			tabIndex={-1}
+			className={`fixed z-[1150] outline-none max-h-[calc(100vh-1rem)] w-80 max-w-[calc(100vw-1rem)] overflow-y-auto text-white ${POPOVER}`}
 			style={{ left: at?.left ?? -9999, top: at?.top ?? 0 }}
 		>
 			{children}

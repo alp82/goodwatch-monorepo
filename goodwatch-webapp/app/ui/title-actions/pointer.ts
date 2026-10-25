@@ -21,9 +21,25 @@ function start() {
 			for (const listener of listeners) listener()
 		})
 	}
-	if ("requestIdleCallback" in window) window.requestIdleCallback(read, { timeout: 2000 })
+	if ("requestIdleCallback" in window)
+		window.requestIdleCallback(read, { timeout: 2000 })
 	else setTimeout(read, 200)
 	media.addEventListener("change", read)
+}
+
+/**
+ * The answer now, read from the media query, for a handler deciding what a tap does before the idle-time answer
+ * arrived (a tap in the first moments after load). Settles the shared answer too, so every card catches up.
+ */
+export function touchPointerNow() {
+	const now = !window.matchMedia(QUERY).matches
+	if (now !== touch) {
+		touch = now
+		startTransition(() => {
+			for (const listener of listeners) listener()
+		})
+	}
+	return now
 }
 
 export function useTouchPointer() {
