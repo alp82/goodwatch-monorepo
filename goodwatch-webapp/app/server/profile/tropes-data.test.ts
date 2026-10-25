@@ -47,11 +47,20 @@ function fixture(count = 6, tropeCount = 0, excerptCopies = 1) {
 		calls.push({ sql, params })
 		const ids = params.filter((p): p is number => typeof p === "number")
 		const rows = ids.flatMap<unknown>((id) =>
-			sql.includes("SELECT media_tmdb_id, content")
-				? Array.from({ length: excerptCopies }, () => ({
-						media_tmdb_id: id,
-						content: `<span class="spoiler">Secret ${id} &amp; more.</span>`,
-					}))
+			sql.includes("SELECT media_tmdb_id, name, content")
+				? [
+						// match() also finds other names sharing the words; only the exact name counts.
+						{
+							media_tmdb_id: id,
+							name: `${params[1]} Knowledge`,
+							content: "Decoy",
+						},
+						...Array.from({ length: excerptCopies }, () => ({
+							media_tmdb_id: id,
+							name: params[1],
+							content: `<span class="spoiler">Secret ${id} &amp; more.</span>`,
+						})),
+					]
 				: sql.includes("AS length")
 					? (tropeCount
 							? Array.from({ length: tropeCount }, (_, i) => `Trope ${i}`)
@@ -253,7 +262,7 @@ test("duplicate excerpt rows cannot truncate other requested titles", async () =
 		],
 	)
 	const excerpts = f.calls.filter((c) =>
-		c.sql.includes("SELECT media_tmdb_id, content"),
+		c.sql.includes("SELECT media_tmdb_id, name, content"),
 	)
 	assert.equal(excerpts.length, 3)
 	assert.ok(excerpts.every((c) => c.sql.includes("LIMIT 10000 OFFSET")))

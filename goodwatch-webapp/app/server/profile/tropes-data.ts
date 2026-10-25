@@ -226,18 +226,22 @@ export function createTropesLoader(deps: TropesDependencies) {
 					if (!ids.length) return
 					// Duplicate (title, name) rows must not crowd out other titles.
 					for (let offset = 0; ; offset += TROPE_PAGE) {
+						// `name` has a full-text index, where `=` never matches: match() finds the candidates
+						// and the exact name is checked here.
 						const rows = await deps.read<{
 							media_tmdb_id: number
+							name: string
 							content: string | null
 						}>(
-							`SELECT media_tmdb_id, content FROM trope WHERE media_type = ? AND name = ?
+							`SELECT media_tmdb_id, name, content FROM trope WHERE media_type = ? AND match(name, ?)
 					 AND media_tmdb_id IN (${placeholders(ids.length)})
-					 ORDER BY media_tmdb_id, content LIMIT ${TROPE_PAGE} OFFSET ${offset}`,
+					 ORDER BY media_tmdb_id LIMIT ${TROPE_PAGE} OFFSET ${offset}`,
 							[mediaType, trope, ...ids],
 						)
 						for (const row of rows) {
 							const key = `${mediaType}-${Number(row.media_tmdb_id)}`
 							if (
+								row.name !== trope ||
 								!allowed.has(key) ||
 								!visible.includes(key) ||
 								examples.has(key)
