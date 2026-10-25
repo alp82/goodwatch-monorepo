@@ -21,7 +21,7 @@ import { useTitleActions } from "~/ui/title-actions/useTitleActions"
 import { useUndoToast, warmUndoToast } from "~/ui/title-actions/useUndoToast"
 import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import { StatusPill } from "./HeroTracking"
-import { POPOVER, useDismiss } from "./TrackingToast"
+import { MENU_UP, POPOVER, useDismiss } from "./TrackingToast"
 import { type TrackingActions, useTrackingActions } from "./actions"
 import type { TrackedMedia } from "./gate"
 import { FOCUS, type ShowTracking, plural, useShowTracking } from "./store"
@@ -120,7 +120,7 @@ function StartMenu({
 			{open && (
 				<div
 					data-start-menu
-					className={`absolute left-0 top-full z-40 mt-1.5 w-80 max-w-[calc(100vw-2.5rem)] p-2 ${POPOVER}`}
+					className={`absolute left-0 top-full z-40 mt-1.5 w-80 max-w-[calc(100vw-2.5rem)] ${MENU_UP} p-2 ${POPOVER}`}
 				>
 					<Choices
 						tracking={tracking}

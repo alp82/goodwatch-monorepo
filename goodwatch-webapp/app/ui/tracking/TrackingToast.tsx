@@ -103,6 +103,13 @@ export function useDismiss(
 	}, [open, root])
 }
 
+/**
+ * A status menu opens up instead of down at the foot of a surface (the quick view's footer, marked `group/menus`
+ * with `data-up`), where there is no room under it.
+ */
+export const MENU_UP =
+	"group-data-[up]/menus:top-auto group-data-[up]/menus:bottom-full group-data-[up]/menus:mt-0 group-data-[up]/menus:mb-1.5"
+
 /** The surface of what opens in place over the page: the status menu, and a question outside it. */
 export const POPOVER =
 	"rounded-xl border border-white/10 bg-gray-900 p-1 shadow-2xl"

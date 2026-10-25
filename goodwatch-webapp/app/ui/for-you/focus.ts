@@ -1,4 +1,4 @@
-// Focus for the page's drawers and the pop-out card, without a dialog library (their motion stays their own, and the
+// Focus for the page's drawers and the quick view (ui/quick-view), without a dialog library (their motion stays their own, and the
 // taste bar stays usable beside its drawers):
 // - on opening, focus moves into the scope (unless it is already there);
 // - while open, Tab and Shift+Tab cycle through the scope's elements only, and focus that lands outside goes back in;

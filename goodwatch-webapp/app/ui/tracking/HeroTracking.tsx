@@ -24,6 +24,7 @@ import { ActionButton } from "~/ui/title-actions/ActionButton"
 import { useTitleActions } from "~/ui/title-actions/useTitleActions"
 import {
 	ConfirmPanel,
+	MENU_UP,
 	POPOVER,
 	TAKE_BACK_LOOK,
 	TrackingToastHost,
@@ -252,7 +253,7 @@ export function StatusPill({
 					role={confirming ? "alertdialog" : "menu"}
 					aria-label={confirming ? confirming.label : "Change the status"}
 					onKeyDown={confirming ? undefined : onMenuKey}
-					className={`absolute left-0 top-full z-40 mt-1.5 w-80 max-w-[calc(100vw-2.5rem)] ${POPOVER}`}
+					className={`absolute left-0 top-full z-40 mt-1.5 w-80 max-w-[calc(100vw-2.5rem)] ${MENU_UP} ${POPOVER}`}
 				>
 					{confirming?.id === "takeBack" ? (
 						// The words are the menu entry's own: what the press marked, and where the show goes.

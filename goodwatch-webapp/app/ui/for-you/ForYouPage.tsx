@@ -7,14 +7,14 @@
 // - three surfaces, clearly apart: the page with the strip, the drawer (a lighter sheet with rounded top corners), and
 //   the taste bar (TasteBar.tsx). Tap the bar's small print: the print drawer; tap the recipe: the recipe drawer; tap
 //   the active one again, the strip, Done or Escape, or drag the drawer's head down to close. Every drawer dims the
-//   page behind it like the title drawer does. While a drawer is open, or the bar is still sliding back, the site's
+//   page behind it like the quick view does. While a drawer is open, or the bar is still sliding back, the site's
 //   bottom nav steps back (useQuietDock).
 // - the print drawer has no instructions: a ghost fingertip drags one handle out and back (DragHint.tsx) on its first
 //   open and at most once more after a long idle.
-// - a tap on a pick opens the title drawer (TitleDrawer.tsx).
+// - a tap on a pick opens its quick view as a drawer (ForYouQuickView.tsx).
 //
 // Desktop: the print top left, filling a column as tall as the two rows of recipe tiles beside it; the dice top left,
-// Reset bottom left; the results full width below. A tap on a pick opens the pop-out card (PopOutCard.tsx).
+// Reset bottom left; the results full width below. A tap on a pick lifts it into its quick view (ForYouQuickView.tsx).
 //
 // No totals or counts anywhere; the recipe tiles never move while you steer.
 import { Link, useRevalidator, useSearchParams } from "@remix-run/react"
@@ -46,8 +46,7 @@ import { type GuestLoader, GuestLock } from "./GuestLock"
 import { HandlePrint } from "./HandlePrint"
 import { Heading } from "./Heading"
 import {
-	LazyPopOutCard,
-	LazyTitleDrawer,
+	LazyQuickView,
 	usePreloadDetailSurfaces,
 } from "./LazyDetail"
 import { PickContext } from "./PickTap"
@@ -70,7 +69,7 @@ import {
 	fetchDetails,
 	posterSrc,
 } from "./context"
-import { DIM, DIM_IN, DIM_OUT, SHEET_IN, SHEET_OUT } from "./crossfade"
+import { DIM, DIM_IN, DIM_OUT, SHEET_IN, SHEET_OUT } from "./motion"
 import { inNestedDialog, useFocusScope } from "./focus"
 import { DESK_NARROW, type Surface, useSteering } from "./useSteering"
 
@@ -667,25 +666,17 @@ function Steering({
 					)}
 				</section>
 
-				{/* Phones get the title drawer, desktop the pop-out card. */}
-				{!desk && (
-					<LazyTitleDrawer
-						list={ranked}
-						openId={openKey}
-						onOpen={openPick}
-						onClose={closePick}
-						answer={answer}
-						bottom={lift + barH}
-						bar={bar}
-					/>
-				)}
-				<LazyPopOutCard
+				{/* The open pick's quick view: a drawer on phones, the lifted card on desktop. */}
+				<LazyQuickView
+					key={desk ? "wide" : "drawer"}
 					list={ranked}
 					openId={openKey}
 					onOpen={openPick}
 					onClose={closePick}
 					answer={answer}
-					enabled={desk}
+					wide={desk}
+					bottom={lift + barH}
+					bar={bar}
 				/>
 
 				{/* ---------- phones: the drawer, under the strip; the bar is its footer ---------- */}

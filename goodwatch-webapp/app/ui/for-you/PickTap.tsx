@@ -1,6 +1,6 @@
 // Opening a pick's detail. PickContext: the page tells the results which pick's detail is open and how to toggle it.
 // `PickTap` wraps a result poster: a tap opens the detail instead of the title page (the detail links there; the
-// card's own link stays for middle-click and new tabs). It carries data-pop-id so the pop-out card can lift that
+// card's own link stays for middle-click and new tabs). It carries data-pop-id so the quick view can lift that
 // poster. A press on a poster starts loading the detail's code, so a first open never waits for it.
 import { createContext, useContext } from "react"
 import type { Ranked } from "~/domain/for-you-page/rank"

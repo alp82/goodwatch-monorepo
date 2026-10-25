@@ -1,56 +1,36 @@
-// The pick's detail surfaces, the phone title drawer and the desktop pop-out card, without their code in the page's
-// first load: they load on first use (with the detail, the swipes and the focus handling). The code for this screen
-// size loads when the page is interactive, and a press on a poster loads it too, so a first open doesn't wait for it.
-// Each surface mounts with its first opening and stays, so closing can still animate.
+// A pick's quick view (ForYouQuickView.tsx) without its code in the page's first load: it loads when the page is
+// interactive, and a press on a poster loads it too, so a first open doesn't wait for it.
 import { Suspense, lazy, useEffect } from "react"
-import { useOpenedOnce } from "~/utils/first-use"
 import { whenInteractive } from "~/utils/page-interactive"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
-const loadDrawer = () => import("./TitleDrawer")
-const loadCard = () => import("./PopOutCard")
-const TitleDrawer = lazy(
+const load = () => import("./ForYouQuickView")
+const ForYouQuickView = lazy(
 	reloadOnStaleChunk(() =>
-		loadDrawer().then((module) => ({ default: module.TitleDrawer })),
-	),
-)
-const PopOutCard = lazy(
-	reloadOnStaleChunk(() =>
-		loadCard().then((module) => ({ default: module.PopOutCard })),
+		load().then((module) => ({ default: module.ForYouQuickView })),
 	),
 )
 
-const desk = () => window.matchMedia("(min-width: 1024px)").matches
-
-/** Loads the detail surface for this screen size ahead of its first opening. */
+/** Loads the quick view ahead of its first opening. */
 export function preloadDetailSurfaces() {
-	void (desk() ? loadCard() : loadDrawer()).catch(() => {})
+	void load().catch(() => {})
 }
 
-type DrawerProps = React.ComponentProps<typeof TitleDrawer>
-type CardProps = React.ComponentProps<typeof PopOutCard>
-
-/** The surfaces' code, once the page is interactive. */
+/** The quick view's code, once the page is interactive. */
 export function usePreloadDetailSurfaces() {
 	useEffect(() => whenInteractive(preloadDetailSurfaces), [])
 }
 
-export function LazyTitleDrawer(props: DrawerProps) {
-	const opened = useOpenedOnce(props.openId !== null)
-	if (!opened) return null
-	return (
-		<Suspense fallback={null}>
-			<TitleDrawer {...props} />
-		</Suspense>
-	)
+type Props = Omit<React.ComponentProps<typeof ForYouQuickView>, "openId"> & {
+	openId: string | null
 }
 
-export function LazyPopOutCard(props: CardProps) {
-	const opened = useOpenedOnce(props.enabled && props.openId !== null)
-	if (!opened) return null
+/** The open pick's quick view, while one is open. */
+export function LazyQuickView({ openId, ...props }: Props) {
+	if (openId === null) return null
 	return (
 		<Suspense fallback={null}>
-			<PopOutCard {...props} />
+			<ForYouQuickView openId={openId} {...props} />
 		</Suspense>
 	)
 }
