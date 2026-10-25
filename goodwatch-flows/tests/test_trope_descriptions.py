@@ -261,6 +261,23 @@ class TropeDescriptionTests(unittest.TestCase):
             with self.subTest(canonical_suffix=suffix):
                 self.assertIsNone(self.extract(page(f'<p>{LEAD}</p><hr>', canonical=URL + suffix))["description"])
 
+    def test_source_canonical_can_correct_slug_case_without_changing_the_subject(self):
+        cases = [
+            ("A Day In The Lime Light", "ADayInTheLimeLight", "ADayInTheLimelight", "A Day in the Limelight"),
+            ("A Death In The Lime Light", "ADeathInTheLimeLight", "ADeathInTheLimelight", "A Death in the Limelight"),
+            ("A Dick Inname", "ADickInname", "ADickInName", "A Dick in Name"),
+        ]
+        for name, served_slug, canonical_slug, heading in cases:
+            served = URL.rsplit("/", 1)[0] + "/" + served_slug
+            canonical = URL.rsplit("/", 1)[0] + "/" + canonical_slug
+            html = page(f'<p>{LEAD}</p><hr>', heading=heading, canonical=canonical)
+            with self.subTest(name=name):
+                result = self.extract(html, name=name, url=served)
+                self.assertIsNone(result["error"])
+                self.assertEqual(result["canonical_url"], canonical)
+                self.assertIsNone(self.extract(html, name="Unrelated Label", url=served)["description"])
+                self.assertIsNone(self.extract(html, name=name, url=served + "Other")["description"])
+
     def test_rejects_missing_or_ambiguous_canonical(self):
         for html in [page(f'<p>{LEAD}</p><hr>').replace(f'<link rel="canonical" href="{URL}">', ''), page(f'<p>{LEAD}</p><hr>', canonical=''), page(f'<p>{LEAD}</p><hr>').replace('</head>', '<link rel="canonical" href="https://tvtropes.org/pmwiki/pmwiki.php/Main/Other"></head>')]:
             self.assertIsNone(self.extract(html)["description"])

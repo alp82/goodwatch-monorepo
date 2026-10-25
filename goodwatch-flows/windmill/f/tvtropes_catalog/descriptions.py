@@ -65,7 +65,7 @@ def _requested_redirect_identifies(name, requested_url, final_url, canonical):
     # Only a caller's actual, canonical bare request can supply the old identity.
     # Contextual labels that merely link another trope fail the slug comparison.
     requested = _main_url(requested_url)
-    if not requested or requested != requested_url or requested == canonical:
+    if not requested or requested != requested_url or requested.casefold() == canonical.casefold():
         return False
     slug = urlparse(requested).path.rsplit("/", 1)[1]
     if _identity(name) != _identity(slug):
@@ -222,7 +222,10 @@ def extract_description(html, name, final_url, *, requested_url=None):
         return reject("Missing or ambiguous canonical URL")
     result["canonical_url"] = next(iter(canonicals))
     canonical = _main_url(result["canonical_url"])
-    if canonical != final:
+    # The site can serve a stored case variant without redirecting while its
+    # canonical tag supplies the preferred spelling. Subject validation below
+    # still applies; a genuinely different slug must never pass this check.
+    if not canonical or canonical.casefold() != final.casefold():
         return reject("Canonical URL does not match the final Main URL")
     result["canonical_url"] = canonical
     heading_identity = _identity(result["heading"])
