@@ -6,9 +6,9 @@ import {
 	type DefiningCandidate,
 	definingTitles,
 	fingerprintMean,
-	kindOffsets,
 	scoresVsEveryone,
 } from "./defining.server.ts"
+import { kindOffsets } from "./generosity.server.ts"
 
 const title = (
 	key: number,

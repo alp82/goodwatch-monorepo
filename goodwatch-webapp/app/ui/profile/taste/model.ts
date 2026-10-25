@@ -82,6 +82,8 @@ export interface ProfileTaste {
 		lower: CrowdRow[]
 		attributes: EveryoneGap[]
 		genres: EveryoneGap[]
+		/** Where they part ways: genres and traits at equal length (unless one is empty), on the 1 to 10 scale. */
+		gapGroups: { genres: EveryoneGap[]; traits: EveryoneGap[] }
 	}
 	titles: Record<string, TasteTitle>
 }
@@ -123,7 +125,10 @@ export function buildProfileTaste(
 		return t?.anime ? "anime" : (t?.mediaType ?? parseTitleKey(key).mediaType)
 	}
 	// The everyone view measures gaps on the 0 to 100 GoodWatch scale; the profile shows points out of 10.
-	const inPoints = (g: EveryoneGap): EveryoneGap => ({ ...g, delta: g.delta / 10 })
+	const inPoints = (g: EveryoneGap): EveryoneGap => ({
+		...g,
+		delta: g.delta / 10,
+	})
 	const crowdRow = (r: EveryoneView["higher"][number]): CrowdRow => ({
 		key: keyOf(r.key),
 		mine: r.mine,
@@ -176,6 +181,10 @@ export function buildProfileTaste(
 			lower: (everyone.lower ?? []).map(crowdRow),
 			attributes: (everyone.attributes ?? []).map(inPoints),
 			genres: (everyone.genres ?? []).map(inPoints),
+			gapGroups: {
+				genres: (everyone.gapGroups?.genres ?? []).map(inPoints),
+				traits: (everyone.gapGroups?.traits ?? []).map(inPoints),
+			},
 		},
 		titles,
 	}

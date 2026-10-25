@@ -14,7 +14,7 @@ import {
 } from "~/ui/profile/taste/model"
 import { Pills } from "~/ui/profile/taste/parts"
 import { YourScore, vibe } from "../tabs/parts"
-import { type GapRow, gapLists } from "./gaps"
+import { type GapRow, gapRows } from "./gaps"
 
 const PAGE = 8
 const MOST = 30
@@ -58,7 +58,7 @@ export function VsEveryone() {
 	const count = (k: Kind) =>
 		[...c.higher, ...c.lower].filter((r) => k === "all" || typeOf(r) === k)
 			.length
-	const gaps = gapLists(c.genres, c.attributes, (id) => {
+	const gaps = gapRows(c.gapGroups, (id) => {
 		const a = attributeByKey.get(id)
 		return a ? { label: a.label, emoji: a.emoji } : null
 	})
@@ -134,7 +134,7 @@ export function VsEveryone() {
 					</h3>
 					<p className="mt-1 text-gray-400">
 						Your average score against the GoodWatch score, allowing for how
-						generous you are.
+						generous you are with movies and with shows.
 					</p>
 					<div className="mt-8 grid gap-x-12 gap-y-10 md:grid-cols-2">
 						<GapList heading="Genres" rows={gaps.genres} max={gaps.max} />

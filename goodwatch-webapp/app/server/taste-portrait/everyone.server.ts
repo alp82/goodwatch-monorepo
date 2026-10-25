@@ -1,6 +1,7 @@
 // You vs everyone: where the person's ratings part ways with the GoodWatch score ("everyone" is the GoodWatch score,
 // not other members), after allowing for how generous they are overall.
 import { foldGenres } from "../../domain/genre-fold"
+import { countsAgainstEveryone, kindOffsets } from "./generosity.server"
 import {
 	KEYS,
 	NON_CRAFT,
@@ -14,7 +15,6 @@ import { capitalize, noun } from "./words.server"
 
 type EveryoneResult = Omit<EveryoneView, "titles" | "subject">
 
-const MIN_VOTES = 1000
 const LISTED = 30
 // A bar needs this many titles; fewer rated titles leave the tab empty.
 const MIN_PER_BAR = 4
@@ -24,7 +24,7 @@ const MIN_GAP = 2
 export function buildEveryone(person: Person): EveryoneResult {
 	const counted = person.rated.filter(
 		(r): r is RatedTitle & { facts: { score: number } } =>
-			r.facts.score !== null && r.facts.score > 0 && r.facts.votes >= MIN_VOTES,
+			countsAgainstEveryone(r.facts),
 	)
 	const empty: EveryoneResult = {
 		tab: "everyone",
@@ -43,19 +43,14 @@ export function buildEveryone(person: Person): EveryoneResult {
 
 	const gaps = counted.map((r) => r.score * 10 - r.facts.score)
 	const offset = average(gaps)
-	const offsets = new Map(
-		(["movie", "show"] as const).map((kind) => [
-			kind,
-			average(
-				counted.flatMap((r, i) =>
-					r.facts.mediaType === kind ? [gaps[i]] : [],
-				),
-			),
-		]),
+	const offsets = kindOffsets(
+		counted.map((r) => ({
+			kind: r.facts.mediaType,
+			score: r.score,
+			everyone: r.facts.score,
+		})),
 	)
-	const adjusted = counted.map(
-		(r, i) => gaps[i] - (offsets.get(r.facts.mediaType) ?? 0),
-	)
+	const adjusted = counted.map((r, i) => gaps[i] - offsets[r.facts.mediaType])
 	const rows: (EveryoneRow & { votes: number })[] = counted.map((r, i) => ({
 		key: r.key,
 		mine: r.score,
@@ -139,7 +134,11 @@ export function buildEveryone(person: Person): EveryoneResult {
 
 	const genres = ends(genreGaps, 3)
 	const traits = ends(attributeGaps, 3)
-	const rowCount = Math.min(genres.length, traits.length)
+	// Both lists at the shorter one's length; with one list empty, the other keeps its own.
+	const rowCount =
+		genres.length && traits.length
+			? Math.min(genres.length, traits.length)
+			: Math.max(genres.length, traits.length)
 	const strongest = (list: EveryoneGap[]) =>
 		[...list]
 			.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta) || byGap(a, b))

@@ -173,3 +173,18 @@ test("handles movie-only, show-only, and insufficient ratings", () => {
 	assert.equal(view.status, "empty")
 	assert.deepEqual(view.gapGroups, { genres: [], traits: [] })
 })
+
+test("with no trait gaps, the genre gaps still show", () => {
+	const view = build([
+		...repeat(4, () => title("movie", 12, ["Drama"])),
+		...repeat(4, () => title("movie", -8, ["Comedy"])),
+	])
+	assert.deepEqual(
+		view.gapGroups.genres.map(({ id, delta }) => ({ id, delta })),
+		[
+			{ id: "Drama", delta: 10 },
+			{ id: "Comedy", delta: -10 },
+		],
+	)
+	assert.deepEqual(view.gapGroups.traits, [])
+})

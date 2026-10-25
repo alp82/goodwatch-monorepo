@@ -3,12 +3,15 @@
 import type { TitleKey } from "~/server/title-snapshot/index.server"
 import {
 	type DefiningAttribute,
-	type ScoredAgainstEveryone,
 	definingTitles,
-	kindOffsets,
 	scoresVsEveryone,
 } from "./defining.server"
 import { FAMILIES, familyOf } from "./families.server"
+import {
+	type ScoredAgainstEveryone,
+	countsAgainstEveryone,
+	kindOffsets,
+} from "./generosity.server"
 import {
 	K,
 	KEYS,
@@ -39,8 +42,6 @@ const AGAINST = 4
 const MOST_YOU = 16
 // Only well-known titles that aren't adult illustrate an attribute; every rating still counts toward the edges.
 const SHOWABLE_VOTES = 300
-// As You vs everyone counts them: titles with a GoodWatch score from enough votes.
-const EVERYONE_VOTES = 1000
 
 const rms = (v: ArrayLike<number>) => {
 	let squares = 0
@@ -148,9 +149,8 @@ export function buildFingerprint(person: Person): FingerprintResult {
 	// Against everyone: the person's scores on the titles carrying an attribute, after their generosity per kind.
 	const againstEveryone = new Map<TitleKey, ScoredAgainstEveryone>()
 	for (const r of rated)
-		if (r.facts.score && r.facts.votes >= EVERYONE_VOTES)
+		if (countsAgainstEveryone(r.facts))
 			againstEveryone.set(r.key, {
-				key: r.key,
 				kind: r.facts.mediaType,
 				score: r.score,
 				everyone: r.facts.score,

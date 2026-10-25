@@ -5,6 +5,8 @@
 // title's own mean over all attributes. Ranking by the raw attribute score instead lets one broad favorite define
 // dozens of attributes.
 
+import type { ScoredAgainstEveryone } from "./generosity.server"
+
 /** A fingerprint score the title analysis left out. */
 const MISSING = 255
 
@@ -103,35 +105,12 @@ export function definingTitles(
 	return picks
 }
 
-export interface ScoredAgainstEveryone {
-	key: number
-	kind: "movie" | "show"
-	/** The person's score, 1 to 10. */
-	score: number
-	/** The GoodWatch score, 0 to 100. */
-	everyone: number
-}
-
-/**
- * The person's generosity per kind: their mean score times ten minus the GoodWatch score, over their movies and over
- * their shows apart (GoodWatch scores shows higher than movies). A kind without titles has no offset.
- */
-export function kindOffsets(titles: ScoredAgainstEveryone[]) {
-	const of = (kind: ScoredAgainstEveryone["kind"]) => {
-		const gaps = titles
-			.filter((t) => t.kind === kind)
-			.map((t) => t.score * 10 - t.everyone)
-		return gaps.length ? gaps.reduce((a, b) => a + b, 0) / gaps.length : 0
-	}
-	return { movie: of("movie"), show: of("show") }
-}
-
 /**
  * The person's scores against the GoodWatch score on some titles, after their generosity per kind, on the 1 to 10
  * scale (0.4 is four GoodWatch points); null below `least` titles.
  */
 export function scoresVsEveryone(
-	titles: ScoredAgainstEveryone[],
+	titles: readonly ScoredAgainstEveryone[],
 	offsets: { movie: number; show: number },
 	least = 5,
 ): number | null {
