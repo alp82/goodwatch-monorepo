@@ -69,6 +69,15 @@ class NewPagesTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             select_new_pages(lambda url: json.dumps({"nope": []}).encode())
 
+    def test_an_incomplete_or_empty_index_is_refused_so_the_last_file_stays(self):
+        page = {"path": "/new/us/netflix", "titles": MIN_TITLES, "latest": DAY}
+        with self.assertRaises(ValueError):
+            select_new_pages(lambda url: json.dumps({"pages": [page], "failed": ["SE"]}).encode())
+        with self.assertRaises(ValueError):
+            select_new_pages(lambda url: index([]))
+        # An index with pages, none big enough, is complete: the sitemap then has no /new page.
+        self.assertEqual(select_new_pages(lambda url: index([{**page, "titles": MIN_TITLES - 1}])), [])
+
     def test_the_index_is_read_from_the_live_site(self):
         self.assertEqual(PAGES_INDEX, "https://goodwatch.app/api/new-on-services/pages")
         self.assertTrue(callable(sitemap_new.fetch_index))

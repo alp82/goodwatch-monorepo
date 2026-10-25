@@ -380,7 +380,7 @@ test("a title without a name is left out, and its page, the links and the pages 
 	assert.ok(index.pages.some(({ path }) => path === "/new/us/netflix"))
 })
 
-test("a country whose read fails is left out of the links; every other page keeps its links", async () => {
+test("a country whose read fails is left out of the links; the others keep theirs, and the links count as incomplete", async () => {
 	const failing = async (code: string) => {
 		if (code === "SE") throw new TypeError("Cannot read properties of null (reading 'toLowerCase')")
 		return ARRIVALS[code]
@@ -393,14 +393,16 @@ test("a country whose read fails is left out of the links; every other page keep
 	} finally {
 		console.error = logged
 	}
+	assert.deepEqual(links.failed, ["SE"])
 	assert.deepEqual(
 		[...new Set(links.pages.map(({ country }) => country))],
 		["DE", "US"],
 	)
+	// The page keeps its links to the countries that were read, and is not stored while one is missing.
 	const page = asData(
 		await loadServicePage(request("/new/us/netflix"), "us", "netflix", deps({ links: async () => links })),
 	)
-	assert.equal(page.incomplete, false)
+	assert.equal(page.incomplete, true)
 	assert.deepEqual(
 		page.otherCountries.map(({ code }) => code),
 		["DE"],
@@ -409,12 +411,15 @@ test("a country whose read fails is left out of the links; every other page keep
 		page.keys.map(({ slug }) => slug),
 		["netflix", "hulu"],
 	)
+	// The pages index names what failed, so its route answers an error and the sitemap keeps its last file.
+	const index = await loadPagesIndex(deps({ links: async () => links }))
+	assert.deepEqual(index.failed, ["SE"])
 })
 
-test("the title page names the brands with a page of their own in its country, not the country's page", () => {
-	const links = linksOf(COUNTRIES.map(({ code }) => ({ country: code, arrivals: ARRIVALS[code] })))
-	assert.deepEqual(newPagesHere(links, "US"), { country: "US", brands: ["netflix", "hulu"] })
-	assert.deepEqual(newPagesHere(links, "FR"), { country: "FR", brands: [] })
+test("links read in full are complete, and the pages index names no failure", async () => {
+	const links = await linksAcross(["US", "DE"], async (code) => ARRIVALS[code], 2)
+	assert.deepEqual(links.failed, [])
+	assert.deepEqual((await loadPagesIndex(deps({ links: async () => links }))).failed, [])
 })
 
 // ---------------------------------------------------------------------------------------------------------

@@ -127,17 +127,24 @@ export async function loadTvHome(request: Request) {
 		)
 		return { tonight: [], shows: { next: [], start: [] }, homeFailed: true }
 	})
-	// This week's arrivals on the member's services (#489), within a short budget so the page doesn't wait for them.
-	const newOn = viewer
+	// This week's arrivals on the member's services (#489). The page doesn't wait for them: the row shows when it is
+	// ready by the time the rest of the page is, and its read fills the cache for the next visit either way.
+	let newOn: NonNullable<TvHomeData["newOn"]> | null = null
+	void viewer
 		.then((v) => getMemberWeekRow({ country: v.country, services: v.services }))
-		.catch(() => null)
+		.then(
+			(row) => {
+				newOn = row
+			},
+			() => {},
+		)
 	const data: TvHomeData = {
 		...guestHome(await start, await services),
 		member: true,
 		...(await own),
 		talked: await talked,
 		popular: await popular,
-		newOn: await newOn,
+		newOn,
 	}
 	return { data, headers }
 }

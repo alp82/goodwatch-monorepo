@@ -93,6 +93,11 @@ the development machine) once per hour. A page waits 300 ms for them (`LINKS_BUD
 without the services row and the other countries, answers `Cache-Control: no-store` as an incomplete page, and the
 links finish in the background. That happens once per UTC day, right after midnight, and after a deploy.
 
+**A country's read can fail.** The other countries keep their pages and links, and the failed one is named in the
+links (`failed`). Such links are incomplete: the cache doesn't store them (the build notes a failed read, so the last
+stored links keep serving while stale), a process uses them for at most 2 minutes before it builds again, a page under
+`/new` that uses them is incomplete (`no-store`), and the pages index answers 503 instead of a shorter list.
+
 The country entries (30 minutes) and the links (60 minutes) refresh apart, so for up to an hour a link can count a
 page that has lost its last title since. The sitemap's minimum of 20 titles and the Windmill leave-out step cover it.
 
@@ -133,11 +138,14 @@ The owner's places (Q67, October 25):
   `/new` (`ui/navigation/palette-pages.ts`). Typing "new" finds it first.
 - **Start page**: below the room, for a member, "New on your services" with this week's arrivals (today and the six
   days before), the best six as the shared poster cards and See all to `/new` (`getMemberWeekRow`, `BelowRoom.tsx`).
-  It reuses the cached read of `/new` and waits at most 250 ms; past that the page renders without it. A member's start
-  page was never stored; a guest's is unchanged.
+  It reuses the cached read of `/new` and the page never waits for it: the row shows when it is ready by the time the
+  rest of the page is, and its read fills the cache for the next visit either way. A member's start page was never
+  stored; a guest's is unchanged.
 - **Title page**: under the streaming logos, "More new on Netflix" (two at most) for the title's streaming services
-  that have a page in the loaded country (`newPagesWithin`, from the links kept in memory for 10 minutes). Past the
-  title budget the page is incomplete, as with its other parts. A previewed country shows no link.
+  that have a page in the loaded country (`newPagesNow`). The title loaders never wait for it: it reads the last links
+  this process loaded (`utils/last-good.ts`), and a missing or 10-minute-old snapshot starts a load in the background,
+  in its own read-health scope. Without links there is no link, and the page is just as complete and cacheable. A
+  previewed country shows no link.
 - **My movies and My shows**: "New on your services" first among the head's links.
 - **Footer**: "New on streaming" in Explore, for everyone, to `/new/<country>` for the country the page renders for.
 
@@ -148,12 +156,16 @@ of pages with titles, and writes `sitemap_new.xml` with the bigger pages only (o
 `MIN_TITLES` (20) titles, at most `MAX_URLS` (300) pages, the ones with the most titles when more qualify (ties by
 path). Pages outside the sitemap stay indexable. `lastmod` is the day of the latest arrival. The Python side restates
 no rule of the pages (window, launch day, backfill, continuity, adult titles), so `make sitemaps` too lists only pages
-that have titles when it runs. The Windmill wrapper
-`f/seo/regenerate_sitemaps.py` leaves out a `/new` page that fails the live check (its titles aged out at midnight), as
-it does for profiles. `sitemap.xml` lists the file only when it has URLs.
+that have titles when it runs. The Windmill wrapper `f/seo/regenerate_sitemaps.py` leaves out a `/new` page that fails
+the live check (its titles aged out at midnight), as it does for profiles. `sitemap.xml` lists the file only when it
+has URLs.
 
-On October 25, 2026 the index listed 862 pages with titles; the selection gave **745 URLs** (136 country pages, 609
-service pages).
+An index that fails (503 when a country's read failed, a timeout), names failures, or lists no page makes
+`select_new_pages` raise. The wrapper then writes the previous `sitemap_new.xml` again (its URLs still go through the
+live check) instead of publishing a shorter or empty file; without a previous file it writes none.
+
+On October 25, 2026 the index listed 862 pages with titles; 533 had at least 20, and the cap kept **300 URLs** (131
+country pages, 169 service pages), the smallest with 79 titles.
 
 The next weekly run adds `sitemap_new.xml` to the index, so the owner resubmits `https://goodwatch.app/sitemaps/sitemap.xml`
 in Search Console after it lands (see `docs/sitemap.md`). The wrapper must be redeployed from `main` for the new file to
@@ -218,5 +230,4 @@ preview's signed-in setup or the shared layout, not from this page.
 
 ## Not done
 
-- No link to the pages from the navigation, My movies or My shows (open question 7 of the prototype).
 - Opening `/new` doesn't clear the Newly available signal (open question 8).

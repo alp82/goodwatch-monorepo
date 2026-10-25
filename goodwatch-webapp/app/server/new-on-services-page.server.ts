@@ -35,6 +35,7 @@ import {
 } from "~/domain/new-on-services"
 import { PRIVATE_CACHE_CONTROL } from "~/utils/auth-cookie"
 import { titlePath } from "~/utils/helpers"
+import { lastGood } from "~/utils/last-good"
 import type { TitleKey } from "~/utils/title-key"
 
 /** A title that arrived, as the reads give it. */
@@ -74,7 +75,11 @@ export type NewPageCount = {
 	latest: number | null
 }
 
-export type NewLinks = { pages: NewPageCount[] }
+export type NewLinks = {
+	pages: NewPageCount[]
+	/** The countries whose read failed: their pages are missing, so the links are incomplete and never stored. */
+	failed?: string[]
+}
 
 export type NewMeta = {
 	/** When the history of the brands last changed. */
@@ -201,7 +206,8 @@ export function linksOf(
 }
 
 /** Every page with titles across the countries, read a few countries at a time. A country whose read fails is left
- *  out with its pages and logged, so one bad record can't take the links of every page, and the sitemap, with it. */
+ *  out with its pages, logged and named in `failed`: the other pages keep their links, while the links count as
+ *  incomplete (not stored, and the pages index answers an error, so the sitemap keeps its last file). */
 export async function linksAcross(
 	countries: readonly string[],
 	read: (country: string) => Promise<CountryArrivals>,
@@ -209,12 +215,14 @@ export async function linksAcross(
 ): Promise<NewLinks> {
 	const queue = [...countries].sort()
 	const results = new Map<string, CountryArrivals>()
+	const failed: string[] = []
 	await Promise.all(
 		Array.from({ length: concurrency }, async () => {
 			for (let code = queue.shift(); code; code = queue.shift()) {
 				try {
 					results.set(code, await read(code))
 				} catch (error) {
+					failed.push(code)
 					console.error(
 						`New on your services: ${code} left out of the links`,
 						error,
@@ -223,14 +231,17 @@ export async function linksAcross(
 			}
 		}),
 	)
-	return linksOf(
-		[...results.keys()]
-			.sort()
-			.map((country) => ({
-				country,
-				arrivals: results.get(country) as CountryArrivals,
-			})),
-	)
+	return {
+		...linksOf(
+			[...results.keys()]
+				.sort()
+				.map((country) => ({
+					country,
+					arrivals: results.get(country) as CountryArrivals,
+				})),
+		),
+		failed: failed.sort(),
+	}
 }
 
 /** A title's display fields, as the catalog gives them. A title the import hasn't finished can lack a name. */
@@ -294,6 +305,22 @@ export function newPagesHere(links: NewLinks, country: string): NewPagesHere {
 		brands: links.pages
 			.filter((page) => page.country === country && page.brand !== null)
 			.map(({ brand }) => brand as string),
+	}
+}
+
+/**
+ * The title page's lookup of the brands with a page in a country: from the last links `loadLinks` gave, never waiting
+ * for them (utils/last-good.ts). Null while none have loaded; a load starts in the background then, and again when
+ * the links are older than `maxAgeMs`. A failed load keeps the last links and is tried again after `retryMs`.
+ */
+export function newPagesLookup(
+	loadLinks: () => Promise<NewLinks>,
+	{ maxAgeMs, retryMs }: { maxAgeMs: number; retryMs: number },
+): (country: string) => NewPagesHere | null {
+	const snapshot = lastGood(loadLinks, { maxAgeMs, retryMs })
+	return (country) => {
+		const links = snapshot.read()
+		return links ? newPagesHere(links, country) : null
 	}
 }
 
@@ -459,7 +486,7 @@ async function buildPage({
 		member: viewer.member
 			? { hasServices: viewer.member.services.length > 0 }
 			: null,
-		incomplete: kind !== "member" && links === null,
+		incomplete: kind !== "member" && (links === null || Boolean(links.failed?.length)),
 	}
 }
 
@@ -581,11 +608,14 @@ export async function loadMemberPage(
 }
 
 /** Every page with titles, for the sitemap (scripts/sitemap_new.py): the same counts the pages and their links use. */
-export async function loadPagesIndex(
-	deps: NewDeps,
-): Promise<{ pages: { path: string; titles: number; latest: number | null }[] }> {
+export async function loadPagesIndex(deps: NewDeps): Promise<{
+	pages: { path: string; titles: number; latest: number | null }[]
+	/** The countries whose read failed. Any at all: the index is incomplete, and its route answers an error. */
+	failed: string[]
+}> {
 	const links = await deps.links(deps.now(), true)
 	return {
+		failed: links ? (links.failed ?? []) : ["*"],
 		pages: (links?.pages ?? []).map(({ country, brand, titles, latest }) => {
 			const known = brand ? brandBySlug(brand) : null
 			return {

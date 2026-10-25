@@ -168,7 +168,25 @@ class SitemapRegenerationTests(unittest.TestCase):
         self.assertIn("<loc>https://goodwatch.app/new/us/netflix</loc>", new)
         self.assertIn(b"sitemap_new.xml", files[worker.OUTPUT + "sitemap.xml"])
 
-    def run_real_generator(self, status_of, status, profiles=1, new_pages=0, new_rows=False):
+    def test_a_failing_or_incomplete_pages_index_keeps_the_previous_new_on_services_file(self):
+        # The site answers 503 when a country's read failed, or an index lists nothing: the replay keeps the last
+        # sitemap_new.xml byte for byte instead of deleting or shortening it (#489 C).
+        for replay in ("error", "incomplete", "empty"):
+            with self.subTest(replay=replay):
+                files = self.run_real_generator(lambda url: 200, 200, new_pages=2, new_rows=True, replay_index=replay)
+                self.assertIn(worker.OUTPUT + "sitemap_new.xml", files)
+
+    def test_without_a_previous_file_a_failing_index_writes_none(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "previous-sitemaps").mkdir()
+            generator = Mock()
+            generator.create_new_sitemap.side_effect = HTTPError("u", 503, "incomplete", {}, None)
+            with patch("builtins.print"):
+                self.assertEqual(worker.new_on_services_sitemap(generator, root), {"pages": [], "lastmod": None})
+            generator.write_new_sitemap.assert_not_called()
+
+    def run_real_generator(self, status_of, status, profiles=1, new_pages=0, new_rows=False, replay_index=None):
         import shutil
         repo = Path(__file__).resolve().parents[2]
         files = None
@@ -210,11 +228,17 @@ class SitemapRegenerationTests(unittest.TestCase):
                 generators = []
                 # The site's pages index (sitemap_new.py): Netflix in the United States has enough titles for the
                 # sitemap, from the generator's own minimum.
+                index_mode = ["full"]
+
                 def new_index(minimum):
-                    return json.dumps({"pages": [
+                    if index_mode[0] == "error":
+                        raise HTTPError("https://goodwatch.app/api/new-on-services/pages", 503, "incomplete", {}, None)
+                    pages = [
                         {"path": "/new/us/netflix", "titles": minimum, "latest": 1792713600000},
                         {"path": "/new/us", "titles": minimum + 1, "latest": 1792713600000},
-                    ] if new_rows else []}).encode()
+                    ] if new_rows and index_mode[0] != "empty" else []
+                    failed = ["SE"] if index_mode[0] == "incomplete" else []
+                    return json.dumps({"pages": pages, "failed": failed}).encode()
 
                 def load(name, path):
                     module = original_load(name, path)
@@ -261,6 +285,8 @@ class SitemapRegenerationTests(unittest.TestCase):
                             (previous / Path(path).name).write_bytes(content)
                         shutil.rmtree(root / worker.OUTPUT)
                         generation_day[0] = date(2026, 10, 25)
+                        if replay_index:
+                            index_mode[0] = replay_index
                         again_count, again = worker.generate_and_check(root)
                         self.assertEqual(again_count, count)
                         self.assertEqual(again, files)

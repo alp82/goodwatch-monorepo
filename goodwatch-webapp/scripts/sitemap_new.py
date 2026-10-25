@@ -9,7 +9,10 @@ The sitemap lists only the bigger pages (owner, 2026-10-25): at least MIN_TITLES
 the ones with the most titles when more qualify (ties by path, so a run is stable). Every other page stays indexable;
 it is only not listed. The live check can still find a page that emptied since it was read (its titles aged out at
 midnight); the Windmill flow (f/seo/regenerate_sitemaps.py) leaves such a page out instead of failing the whole
-publish."""
+publish.
+
+An index that fails (the site answers an error when a country's read failed), names failures, or lists no page raises
+ValueError: the Windmill flow then keeps the previous sitemap_new.xml instead of publishing a shorter or empty one."""
 import json
 import re
 from datetime import date, datetime, timezone
@@ -36,9 +39,14 @@ def select_new_pages(fetch: Optional[Callable[[str], bytes]] = None) -> List[Tup
     the day of the page's latest arrival."""
     raw = (fetch or fetch_index)(PAGES_INDEX)
     try:
-        pages = json.loads(raw)["pages"]
+        index = json.loads(raw)
+        pages = index["pages"]
     except (ValueError, KeyError, TypeError):
         raise ValueError(f"{PAGES_INDEX} did not answer with the pages index") from None
+    # The site answers an error for an incomplete index (a country's read failed); an index that names failures or
+    # lists no page at all is refused the same way, so the caller keeps its last sitemap_new.xml.
+    if index.get("failed") or not isinstance(pages, list) or not pages:
+        raise ValueError(f"{PAGES_INDEX} answered an incomplete or empty pages index")
     picked = []
     for page in pages:
         path, titles, latest = page.get("path"), page.get("titles"), page.get("latest")

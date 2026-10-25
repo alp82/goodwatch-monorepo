@@ -5,12 +5,14 @@
 
 """Run the repository's sitemap generator and live gate, then publish one commit."""
 import hashlib
+import html
 import importlib.util
 import json
+import re
 import sys
 import tempfile
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
@@ -87,6 +89,27 @@ def load_module(name, path):
     return module
 
 
+PREVIOUS_URL = re.compile(r"<url>\s*<loc>([^<]+)</loc>(?:\s*<lastmod>(\d{4}-\d{2}-\d{2})</lastmod>)?")
+
+
+def new_on_services_sitemap(generator, root):
+    """sitemap_new.xml from the site's pages index (sitemap_new.py). When the index fails, is incomplete or lists no
+    page, the previous file's pages are written again: a bad read never empties or shortens the published file, and
+    the live check still leaves out a page that emptied since."""
+    try:
+        return generator.create_new_sitemap()
+    except Exception as error:
+        # The site's own answer (an HTTP error, a timeout, an incomplete index); it holds no secret, but the class says
+        # enough.
+        print(f"Keeping the previous sitemap_new.xml: the pages index failed ({type(error).__name__})", flush=True)
+    previous = root / "previous-sitemaps" / "sitemap_new.xml"
+    if not previous.exists():
+        return {"pages": [], "lastmod": None}
+    pages = [(html.unescape(loc), date.fromisoformat(day) if day else None)
+             for loc, day in PREVIOUS_URL.findall(previous.read_text())]
+    return generator.write_new_sitemap(pages)
+
+
 def generate_and_check(root):
     """Import the exact same generator/checker used by make sitemaps-checked."""
     scripts = root / SCRIPTS
@@ -120,7 +143,7 @@ def generate_and_check(root):
                     "movie": movies["title_ids"], "show": shows["title_ids"],
                 })
                 profiles = generator.create_profile_sitemap(cursor)
-                new_pages = generator.create_new_sitemap()
+                new_pages = new_on_services_sitemap(generator, root)
                 lastmods = {
                     "movie": movies["lastmod"], "show": shows["lastmod"],
                     "static": static["lastmod"], "categories": categories["lastmod"], "people": people["lastmod"],

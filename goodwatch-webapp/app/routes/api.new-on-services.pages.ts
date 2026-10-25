@@ -6,7 +6,17 @@ import { PUBLIC_DATA_CACHE_CONTROL } from "~/server/cache-identity.server"
 import { newDeps } from "~/server/new-on-services.server"
 import { loadPagesIndex } from "~/server/new-on-services-page.server"
 
-export const loader = async () =>
-	json(await loadPagesIndex(newDeps), {
-		headers: { "Cache-Control": PUBLIC_DATA_CACHE_CONTROL },
-	})
+// An incomplete index (a country's read failed) is an error, never stored: the sitemap keeps its last file rather than
+// publishing a list with countries missing.
+export const loader = async () => {
+	const index = await loadPagesIndex(newDeps)
+	if (index.failed.length)
+		return json(
+			{ error: "incomplete", failed: index.failed },
+			{ status: 503, headers: { "Cache-Control": "no-store" } },
+		)
+	return json(
+		{ pages: index.pages },
+		{ headers: { "Cache-Control": PUBLIC_DATA_CACHE_CONTROL } },
+	)
+}

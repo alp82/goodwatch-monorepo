@@ -4,9 +4,10 @@
 //   each brand's list and the country's list (domain countryArrivalsOf), with display fields. Adult titles, titles
 //   the catalog lacks and titles without a name are left out. Cached in Valkey per country and UTC day for 30 minutes.
 // - The links: every page with titles, built from the same country entries, so a linked page or a page the sitemap
-//   lists has titles. A country whose read fails is left out instead of failing them all. Cached per UTC day for an
-//   hour. A page waits LINKS_BUDGET_MS for them; past that it renders without them and is not stored, while the
-//   computation goes on and fills the cache.
+//   lists has titles. A country whose read fails is left out instead of failing them all, and then the links are
+//   incomplete: not stored, and the pages index answers an error. Cached per UTC day for an hour. A page under /new
+//   waits LINKS_BUDGET_MS for them; past that it renders without them and is not stored, while the computation goes
+//   on and fills the cache. A title page never waits: it reads the last links this process loaded (newPagesNow).
 // - A member's titles: the same read for their own services, which can include services outside the brands.
 // - The meta: when the brands' history last changed (the info icon) and the brands' logos.
 // - The viewer: the member's saved country, services and the titles they wait for, or the visitor's country.
@@ -24,18 +25,21 @@ import { LANDED_DAY, launchTime } from "~/server/availability-first-seen.server"
 import { cacheIdentity } from "~/server/cache-identity.server"
 import { getCountries } from "~/server/countries.server"
 import {
+	noteMediaReadFailure,
+	withMediaRequestHealth,
+} from "~/server/media-read-health.server"
+import {
 	type ArrivalTitle,
 	type CountryArrivals,
 	type NewDeps,
 	type NewLinks,
 	type NewMeta,
-	type NewPagesHere,
 	type NewWeekRow,
 	type Viewer,
 	WEEK_ROW_LIMIT,
 	arrivalTitlesOf,
 	linksAcross,
-	newPagesHere,
+	newPagesLookup,
 	weekTitlesOf,
 } from "~/server/new-on-services-page.server"
 import {
@@ -187,13 +191,10 @@ export function getMemberTitles({
 	})
 }
 
-/** How long the start page waits for a member's row before it renders without it. */
-const WEEK_ROW_BUDGET_MS = 250
-
 /**
  * The start page's row (#489, Q67): this week's arrivals on the member's services, from the read /new uses and its
- * cache. Null without saved services, without arrivals this week, or when the read isn't ready within the start
- * page's budget; the read goes on then and fills the cache for the next visit. Never fails.
+ * cache. Null without saved services or without arrivals this week. Never fails. The start page doesn't wait for it:
+ * it shows the row when the row is ready by the time the rest of the page is (tv-loader.server.ts).
  */
 export async function getMemberWeekRow({
 	country,
@@ -205,11 +206,13 @@ export async function getMemberWeekRow({
 	now?: number
 }): Promise<NewWeekRow | null> {
 	if (!services.length) return null
-	const read = getMemberTitles({ country, services, now }).then(async (titles) => {
-		const week = weekTitlesOf(titles, now)
+	try {
+		const week = weekTitlesOf(await getMemberTitles({ country, services, now }), now)
 		if (!week.length) return null
 		const shown = week.slice(0, WEEK_ROW_LIMIT)
-		const cards = await newDeps.serviceCards([...new Set(shown.map(({ service }) => service))])
+		const cards = await newDeps.serviceCards([
+			...new Set(shown.map(({ service }) => service)),
+		])
 		return {
 			titles: shown.map(({ backdrop_path, ...title }) => title),
 			total: week.length,
@@ -217,18 +220,9 @@ export async function getMemberWeekRow({
 				cards.map(({ id, name, logo_path }) => [id, { name, logo_path }]),
 			),
 		}
-	})
-	read.catch((error) =>
-		console.error("New on your services: the start page's row failed", error),
-	)
-	let timer: NodeJS.Timeout | undefined
-	const late = new Promise<null>((resolve) => {
-		timer = setTimeout(() => resolve(null), WEEK_ROW_BUDGET_MS)
-	})
-	try {
-		return await Promise.race([read.catch(() => null), late])
-	} finally {
-		clearTimeout(timer)
+	} catch (error) {
+		console.error("New on your services: the start page's row failed", error)
+		return null
 	}
 }
 
@@ -250,66 +244,53 @@ async function readLinks({ day }: { day: number }): Promise<NewLinks> {
 		),
 	])
 	const known = new Set(countries.map(({ code }) => code))
-	return linksAcross(
+	const links = await linksAcross(
 		candidates
 			.map(({ country_code }) => country_code)
 			.filter((code) => known.has(code)),
 		(country) => getCountryArrivals({ country, now }),
 		LINKS_CONCURRENCY,
 	)
+	// With a country missing the links are incomplete: a failed read for the cache, which then doesn't store them
+	// (and keeps serving the last stored links while they are stale).
+	if (links.failed?.length) noteMediaReadFailure()
+	return links
 }
 
-export function getLinks(now: number): Promise<NewLinks> {
-	return cached<{ day: number }, NewLinks>({
+/** After incomplete links, how long this process uses them before it builds them again. */
+const INCOMPLETE_LINKS_RETRY_MS = 2 * 60_000
+let incompleteLinks: { day: number; at: number; links: NewLinks } | null = null
+
+export async function getLinks(now: number): Promise<NewLinks> {
+	const day = utcDay(now)
+	// Incomplete links aren't stored, so without this every page would start a build of every country again.
+	if (
+		incompleteLinks &&
+		incompleteLinks.day === day &&
+		Date.now() - incompleteLinks.at < INCOMPLETE_LINKS_RETRY_MS
+	)
+		return incompleteLinks.links
+	const links = await cached<{ day: number }, NewLinks>({
 		name: "new-on-services-links-v1",
 		target: readLinks,
-		params: { day: utcDay(now) },
+		params: { day },
 		ttlMinutes: LINKS_TTL_MINUTES,
 	})
-}
-
-// The links in this process for a few minutes, so a title page doesn't read and parse them from Valkey each time.
-const LINKS_MEMO_MS = 10 * 60_000
-let linksMemo: { day: number; at: number; links: Promise<NewLinks> } | null = null
-
-function memoLinks(now: number): Promise<NewLinks> {
-	const day = utcDay(now)
-	if (!linksMemo || linksMemo.day !== day || now - linksMemo.at > LINKS_MEMO_MS) {
-		const links = getLinks(now)
-		linksMemo = { day, at: now, links }
-		links.catch(() => {
-			if (linksMemo?.links === links) linksMemo = null
-		})
-	}
-	return linksMemo.links
+	incompleteLinks = links.failed?.length ? { day, at: Date.now(), links } : null
+	return links
 }
 
 /**
- * The brands with a page of their own in the country, for the title page's "More new on Netflix" (#489, Q67), or
- * "late" when the links aren't ready within the page's budget (after midnight UTC, while they are built). Never fails:
- * without the links there is no page to name.
+ * The brands with a page of their own in the country, for the title page's "More new on Netflix" (#489, Q67), or null
+ * while this process has no links yet. It reads the last links this process loaded and never waits or fails, so the
+ * title page's speed and cacheability don't depend on it; without links it has no link to show. A missing or
+ * 10-minute-old snapshot starts a load in the background, in its own read-health scope: a failure in a load a title
+ * page started says nothing about that title page. A failed load is tried again a minute later.
  */
-export async function newPagesWithin(
-	country: string,
-	budgetMs: number,
-): Promise<NewPagesHere | "late"> {
-	const links = memoLinks(Date.now())
-	let timer: NodeJS.Timeout | undefined
-	const late = new Promise<"late">((resolve) => {
-		timer = setTimeout(() => resolve("late"), budgetMs)
-	})
-	try {
-		return await Promise.race([
-			links.then(
-				(all) => newPagesHere(all, country),
-				(): NewPagesHere => ({ country, brands: [] }),
-			),
-			late,
-		])
-	} finally {
-		clearTimeout(timer)
-	}
-}
+export const newPagesNow = newPagesLookup(
+	() => withMediaRequestHealth(() => getLinks(Date.now())),
+	{ maxAgeMs: 10 * 60_000, retryMs: 60_000 },
+)
 
 /** The links, or null when they aren't ready within a page's budget. The computation goes on either way. */
 async function linksWithin(now: number, wait: boolean): Promise<NewLinks | null> {
