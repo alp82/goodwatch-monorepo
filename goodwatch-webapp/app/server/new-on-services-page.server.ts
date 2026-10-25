@@ -358,18 +358,33 @@ export function newPagesHere(links: NewLinks, country: string): NewPagesHere {
 }
 
 /**
- * The title page's lookup of the brands with a page in a country: from the last links `loadLinks` gave, never waiting
- * for them (utils/last-good.ts). Null while none have loaded; a load starts in the background then, and again when
- * the links are older than `maxAgeMs`. A failed load keeps the last links and is tried again after `retryMs`.
+ * The title page's lookup of the brands with a page in a country, from the last complete links: `lookup` only reads and
+ * never loads, so a title request neither waits for the links nor starts their build. `refreshIfDue` loads them; the
+ * server calls it at start and on a timer (new-on-services.server.ts). Incomplete links (a country's read failed) are
+ * refused: the last complete links stay, and the next load waits `retryMs`.
  */
-export function newPagesLookup(
+export function newPagesSnapshot(
 	loadLinks: () => Promise<NewLinks>,
 	{ maxAgeMs, retryMs }: { maxAgeMs: number; retryMs: number },
-): (country: string) => NewPagesHere | null {
-	const snapshot = lastGood(loadLinks, { maxAgeMs, retryMs })
-	return (country) => {
-		const links = snapshot.read()
-		return links ? newPagesHere(links, country) : null
+): {
+	lookup: (country: string) => NewPagesHere | null
+	refreshIfDue: () => Promise<void>
+} {
+	const snapshot = lastGood(
+		async () => {
+			const links = await loadLinks()
+			if (links.failed?.length)
+				throw new Error(`incomplete links: ${links.failed.join(", ")}`)
+			return links
+		},
+		{ maxAgeMs, retryMs },
+	)
+	return {
+		lookup: (country) => {
+			const links = snapshot.peek()
+			return links ? newPagesHere(links, country) : null
+		},
+		refreshIfDue: () => snapshot.refreshIfDue(),
 	}
 }
 

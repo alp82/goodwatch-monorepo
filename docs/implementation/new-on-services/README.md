@@ -148,10 +148,11 @@ The owner's places (Q67, October 25):
 - **Title page**: under the streaming services, after "Also streaming in", one quiet row per service in that row's
   style: the service's logo, "What's new on Netflix" and a chevron (two at most), for the title's streaming services
   that have a page in the loaded country (`newPagesNow`, `WhereToWatch.tsx`). The words never say the title itself is
-  new. The title loaders never wait for it: it reads the last links
-  this process loaded (`utils/last-good.ts`), and a missing or 10-minute-old snapshot starts a load in the background,
-  in its own read-health scope. Without links there is no link, and the page is just as complete and cacheable. A
-  previewed country shows no link.
+  new. A title request only reads the last complete links this process loaded (`newPagesSnapshot`,
+  `utils/last-good.ts`): it never waits for them and never starts their build. The server loads them at start and
+  then every minute when they are missing or 10 minutes old (`startNewPagesRefresh` in `entry.server.tsx`, page roles,
+  in their own read-health scope); incomplete links are refused and the last complete ones stay. Without links there
+  is no row, and the page is just as complete and cacheable. A previewed country shows no row.
 - **My movies and My shows**: the last row of the opened "new on your services" list (`LandedRow.tsx`), "Everything
   new on your services", to `/new`. Not a key in the page head: those lead to the sibling lists, and a third, longer
   key wrapped the head onto two rows on a phone.

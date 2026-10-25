@@ -1,64 +1,62 @@
-// A value read without waiting (last-good.ts): cold it reads null at once and starts one load, an old value is
-// served while a refresh runs, and a failed load keeps the last value and waits before it tries again.
+// A value read without loading (last-good.ts): reading never starts a load; a refresh loads when the value is missing
+// or old, one at a time; a failed load keeps the last value and the next waits for the retry time.
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { lastGood } from "./last-good.ts"
-
-const flush = () => new Promise((resolve) => setImmediate(resolve))
 
 function clock() {
 	let time = 1_000_000
 	return { now: () => time, pass: (ms: number) => (time += ms) }
 }
 
-test("cold, a read returns null at once and starts one load, however many reads come meanwhile", async () => {
+test("reading never starts a load, however often it is read", () => {
 	let loads = 0
 	const snapshot = lastGood(
-		() => {
+		async () => {
 			loads++
-			return new Promise<string>(() => {})
+			return "value"
 		},
 		{ maxAgeMs: 60_000, retryMs: 10_000 },
 	)
-	const started = performance.now()
-	for (let i = 0; i < 5; i++) assert.equal(snapshot.read(), null)
-	assert.ok(performance.now() - started < 50)
-	await flush()
-	assert.equal(loads, 1)
+	for (let i = 0; i < 5; i++) assert.equal(snapshot.peek(), null)
+	assert.equal(loads, 0)
 })
 
-test("a finished load is read from then on; an old value is served while one refresh runs", async () => {
+test("a refresh loads when the value is missing or old, one load at a time", async () => {
 	const time = clock()
-	let resolve: (value: string) => void = () => {}
+	let finish: (value: string) => void = () => {}
 	let loads = 0
 	const snapshot = lastGood(
 		() => {
 			loads++
 			return new Promise<string>((done) => {
-				resolve = done
+				finish = done
 			})
 		},
 		{ maxAgeMs: 60_000, retryMs: 10_000, now: time.now },
 	)
-	snapshot.read()
-	resolve("first")
-	await flush()
-	assert.equal(snapshot.read(), "first")
+	const first = snapshot.refreshIfDue()
+	void snapshot.refreshIfDue()
 	assert.equal(loads, 1)
+	finish("first")
+	await first
+	assert.equal(snapshot.peek(), "first")
+	await snapshot.refreshIfDue()
+	assert.equal(loads, 1, "a fresh value isn't loaded again")
 	time.pass(61_000)
-	assert.equal(snapshot.read(), "first")
-	assert.equal(snapshot.read(), "first")
+	const second = snapshot.refreshIfDue()
+	assert.equal(snapshot.peek(), "first", "the old value serves while the refresh runs")
+	finish("second")
+	await second
+	assert.equal(snapshot.peek(), "second")
 	assert.equal(loads, 2)
-	resolve("second")
-	await flush()
-	assert.equal(snapshot.read(), "second")
 })
 
-test("a failed load keeps the last value and the next waits for the retry time; nothing pending stays", async () => {
+test("a failed load keeps the last value; the next waits for the retry time; nothing pending stays", async () => {
 	const time = clock()
 	const results: (() => Promise<string>)[] = [
 		() => Promise.resolve("good"),
-		() => Promise.reject(new Error("Crate is down")),
+		() => Promise.reject(new Error("incomplete")),
 		() => Promise.resolve("again"),
 	]
 	let loads = 0
@@ -67,30 +65,27 @@ test("a failed load keeps the last value and the next waits for the retry time; 
 		retryMs: 10_000,
 		now: time.now,
 	})
-	snapshot.read()
-	await flush()
+	await snapshot.refreshIfDue()
 	time.pass(61_000)
-	assert.equal(snapshot.read(), "good")
-	await flush()
+	await snapshot.refreshIfDue()
 	assert.equal(loads, 2)
+	assert.equal(snapshot.peek(), "good")
 	time.pass(5_000)
-	assert.equal(snapshot.read(), "good")
+	await snapshot.refreshIfDue()
 	assert.equal(loads, 2, "no new load before the retry time")
 	time.pass(5_001)
-	snapshot.read()
-	await flush()
+	await snapshot.refreshIfDue()
 	assert.equal(loads, 3)
-	assert.equal(snapshot.read(), "again")
+	assert.equal(snapshot.peek(), "again")
 })
 
-test("a load that throws at once counts as failed, not as a read error", async () => {
+test("a load that throws at once counts as failed and never rejects the refresh", async () => {
 	const snapshot = lastGood<string>(
 		() => {
 			throw new Error("no cluster")
 		},
 		{ maxAgeMs: 60_000, retryMs: 10_000 },
 	)
-	assert.equal(snapshot.read(), null)
-	await flush()
-	assert.equal(snapshot.read(), null)
+	await snapshot.refreshIfDue()
+	assert.equal(snapshot.peek(), null)
 })

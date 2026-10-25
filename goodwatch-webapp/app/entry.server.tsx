@@ -32,6 +32,7 @@ import { capLogLines } from "~/server/log-cap.server"
 import { protectMediaResponse } from "~/server/media-read-health.server"
 import { routeLabelFor } from "~/server/metrics/http.server"
 import { startMetrics } from "~/server/metrics/index.server"
+import { startNewPagesRefresh } from "~/server/new-on-services.server"
 import { startHotCards } from "~/server/og-image/hot-cards.server"
 import {
 	configurePageCache,
@@ -73,6 +74,8 @@ startMetrics()
 // roles keep the root loader's start, so they log what they did before roles.
 if (processRole() === "search") startProcessStats()
 startTitleSnapshot()
+// The title pages' "What's new on" links read the links of the /new pages that this keeps loaded (#489).
+if (processRole() !== "search") startNewPagesRefresh()
 // The page cache answers repeated anonymous pages before Express (see page-cache.server.ts). It starts before the
 // static files, so that the static handler is the outer one and its requests never reach the cache. The first call
 // of the route labeler starts loading the route list for the cache's metrics.

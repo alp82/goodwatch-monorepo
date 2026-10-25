@@ -39,7 +39,7 @@ import {
 	WEEK_ROW_LIMIT,
 	arrivalTitlesOf,
 	linksAcross,
-	newPagesLookup,
+	newPagesSnapshot,
 	offersOf,
 	weekTitlesOf,
 } from "~/server/new-on-services-page.server"
@@ -289,17 +289,33 @@ export async function getLinks(now: number): Promise<NewLinks> {
 	return links
 }
 
-/**
- * The brands with a page of their own in the country, for the title page's "More new on Netflix" (#489, Q67), or null
- * while this process has no links yet. It reads the last links this process loaded and never waits or fails, so the
- * title page's speed and cacheability don't depend on it; without links it has no link to show. A missing or
- * 10-minute-old snapshot starts a load in the background, in its own read-health scope: a failure in a load a title
- * page started says nothing about that title page. A failed load is tried again a minute later.
- */
-export const newPagesNow = newPagesLookup(
+// The links as title pages read them: the last complete links this process loaded. Title requests only read them;
+// the server loads them at start and then on a timer (startNewPagesRefresh), in their own read-health scope.
+const titleLinks = newPagesSnapshot(
 	() => withMediaRequestHealth(() => getLinks(Date.now())),
 	{ maxAgeMs: 10 * 60_000, retryMs: 60_000 },
 )
+
+/**
+ * The brands with a page of their own in the country, for the title page's "What's new on Netflix" (#489, Q67), or
+ * null while this process has no complete links yet. Only reads: it never waits, never fails and never starts a
+ * build, so the title page's speed and cacheability don't depend on it.
+ */
+export const newPagesNow = titleLinks.lookup
+
+const NEW_PAGES_TICK_MS = 60_000
+let newPagesRefreshing = false
+
+/**
+ * Keeps the title pages' links: a load at server start, then every minute a load when they are missing, 10 minutes
+ * old, or the last load failed a minute ago. In production, for a process that serves pages (entry.server.tsx).
+ */
+export function startNewPagesRefresh(): void {
+	if (newPagesRefreshing || process.env.NODE_ENV !== "production") return
+	newPagesRefreshing = true
+	void titleLinks.refreshIfDue()
+	setInterval(() => void titleLinks.refreshIfDue(), NEW_PAGES_TICK_MS).unref()
+}
 
 /** The links, or null when they aren't ready within a page's budget. The computation goes on either way. */
 async function linksWithin(now: number, wait: boolean): Promise<NewLinks | null> {
