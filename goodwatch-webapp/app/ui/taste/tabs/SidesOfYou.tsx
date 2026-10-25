@@ -14,12 +14,12 @@ import type {
 } from "~/server/taste-portrait/view"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { ForYouLink } from "~/ui/for-you/ForYouLink"
+import { PANEL_CARD_SIZES } from "~/ui/profile/ProfileCard"
 import { TASTE_GROUPS_NAME } from "../taste-groups-name"
 import {
-	RatedPoster,
+	PortraitCard,
 	type ServicesFilter,
 	ServicesSwitch,
-	SuggestionCard,
 	type Titles,
 	backdropUrl,
 	lowerFirst,
@@ -244,11 +244,11 @@ function Here({ side, titles }: { side: Side; titles: Titles }) {
 					Recommend me from this
 				</ForYouLink>
 			</div>
-			<div className="mt-6 grid grid-cols-4 gap-2">
+			<div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 max-sm:[&>*:nth-child(4)]:hidden">
 				{titlesOf(titles, side.here)
 					.slice(0, 4)
 					.map((t) => (
-						<RatedPoster key={t.key} t={t} size="w185" />
+						<PortraitCard key={t.key} t={t} posterSizes={PANEL_CARD_SIZES} />
 					))}
 			</div>
 		</Panel>
@@ -318,9 +318,9 @@ function JustPastIt({
 				<p className="mt-2 text-gray-200">{edge.why}</p>
 			</div>
 			{picks.length ? (
-				<div className="mt-6 grid grid-cols-4 gap-2">
+				<div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 max-sm:[&>*:nth-child(4)]:hidden">
 					{picks.map((t) => (
-						<RatedPoster key={t.key} t={t} size="w185" showScore={false} />
+						<PortraitCard key={t.key} t={t} posterSizes={PANEL_CARD_SIZES} />
 					))}
 				</div>
 			) : (
@@ -396,7 +396,7 @@ function MoreOfThis({
 			{shown.length ? (
 				<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
 					{shown.map((t) => (
-						<SuggestionCard key={t.key} t={t} />
+						<PortraitCard key={t.key} t={t} />
 					))}
 				</div>
 			) : (

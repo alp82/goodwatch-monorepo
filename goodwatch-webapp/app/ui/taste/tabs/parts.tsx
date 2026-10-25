@@ -1,15 +1,14 @@
-import { canonicalMediaTitle } from "~/utils/media-presentation"
-// Pieces the Taste page's three tabs share: title pictures and links, the person's own score, the poster with that
-// score, the suggestion card, and the On my services switch.
-import { Link } from "@remix-run/react"
-import { TmdbImage } from "~/ui/TmdbImage"
+// Pieces the Taste page's three tabs share: title pictures, the person's own score, the poster card, and the On my
+// services switch.
 import { useState } from "react"
 import type {
 	PortraitService,
 	PortraitTitle,
 } from "~/server/taste-portrait/view"
 import { MovieTvCard } from "~/ui/MovieTvCard"
-import { titleToDashed } from "~/utils/helpers"
+import type { PosterProps } from "~/ui/Poster"
+import { TmdbImage } from "~/ui/TmdbImage"
+import { copyMediaPresentation } from "~/utils/media-presentation"
 import type { TitleKey } from "~/utils/title-key"
 
 type PosterSize = "w185" | "w342" | "w500"
@@ -23,9 +22,6 @@ export const backdropUrl = (
 	t: PortraitTitle | null | undefined,
 	size: BackdropSize = "w1280",
 ) => (t?.backdrop ? `${TMDB_IMAGES}/${size}${t.backdrop}` : undefined)
-
-export const titleHref = (t: PortraitTitle) =>
-	`/${t.mediaType}/${t.tmdbId}-${titleToDashed(canonicalMediaTitle(t))}`
 
 export type Titles = Record<string, PortraitTitle>
 
@@ -67,61 +63,25 @@ export function YourScore({
 	)
 }
 
-/** A plain poster linking to the title, with the person's own score in the corner for a title they rated. */
-export function RatedPoster({
+/** A portrait title as the site's poster card: the score pill (GoodWatch score, the person's own score) and, for a
+ * title they haven't seen, the logos of their services that carry it. */
+export function PortraitCard({
 	t,
-	size = "w342",
-	showScore = true,
-	className = "",
-}: {
-	t: PortraitTitle
-	size?: PosterSize
-	showScore?: boolean
-	className?: string
-}) {
-	return (
-		<Link
-			to={titleHref(t)}
-			prefetch="intent"
-			className={`relative block overflow-hidden rounded-md border-2 border-gray-800 bg-gray-900 transition hover:border-amber-700/60 ${className}`}
-			title={t.title}
-		>
-			<img
-				src={posterUrl(t, size)}
-				alt={`Poster for ${t.title}`}
-				className="block aspect-[2/3] w-full object-cover"
-				loading="lazy"
-				draggable={false}
-			/>
-			{showScore && t.mine != null && (
-				<span className="absolute right-1 top-1">
-					<YourScore score={t.mine} size="sm" />
-				</span>
-			)}
-		</Link>
-	)
-}
-
-/** An unseen title as the site's poster card: the score pill and the viewer's services. */
-export function SuggestionCard({ t }: { t: PortraitTitle }) {
-	const details = {
-		tmdb_id: t.tmdbId,
-		title: t.title,
-		release_year: t.year,
-		poster_path: t.poster ?? undefined,
-		goodwatch_overall_score_normalized_percent: t.score,
-		streaming_links: t.services?.map((service) => ({
-			provider_id: service.id,
-			provider_name: service.name,
-			provider_logo_path: service.logo_path,
-		})),
-	}
+	posterSizes,
+}: { t: PortraitTitle; posterSizes?: PosterProps["sizes"] }) {
 	return (
 		<MovieTvCard
-			details={
-				details as unknown as Parameters<typeof MovieTvCard>[0]["details"]
-			}
+			details={{
+				tmdb_id: t.tmdbId,
+				title: t.title,
+				release_year: t.year,
+				poster_path: t.poster,
+				goodwatch_overall_score_normalized_percent: t.score,
+				streaming_links: t.services,
+				...copyMediaPresentation(t),
+			}}
 			mediaType={t.mediaType}
+			posterSizes={posterSizes}
 		/>
 	)
 }

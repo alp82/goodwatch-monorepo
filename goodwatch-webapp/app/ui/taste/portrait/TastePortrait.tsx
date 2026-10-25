@@ -8,7 +8,6 @@ import { IMPORTS_PATH } from "~/ui/imports/shared"
 import { WRAP } from "~/ui/my-pages/bits"
 import { profileTabPath } from "~/ui/profile/links"
 import { QUIET_BUTTON } from "~/ui/profile/parts"
-import { MostYou } from "~/ui/profile/taste/Hero"
 import {
 	TasteContext,
 	tasteContextValue,
@@ -20,6 +19,7 @@ import { TasteBanner } from "../tabs/TasteBanner"
 import { Explorer } from "./Explorer"
 import { TasteGroups } from "./Groups"
 import { TasteHero } from "./Hero"
+import { MostYou } from "./MostYou"
 import { type Section, SectionChips } from "./SectionChips"
 import { TropesLink } from "./Tropes"
 import { VsEveryone } from "./VsEveryone"

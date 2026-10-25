@@ -4,8 +4,9 @@
 import { useEffect, useRef } from "react"
 import { ForYouLink } from "~/ui/for-you/ForYouLink"
 import { DISPLAY } from "~/ui/my-pages/bits"
+import { PANEL_CARD_SIZES, ProfileCard } from "~/ui/profile/ProfileCard"
 import { FAMILY_COLOR, useTaste } from "~/ui/profile/taste/model"
-import { MiniPoster, PANEL } from "~/ui/profile/taste/parts"
+import { PANEL } from "~/ui/profile/taste/parts"
 import { TASTE_GROUPS_NAME } from "../taste-groups-name"
 
 export function TasteGroups({
@@ -41,10 +42,13 @@ export function TasteGroups({
 							aria-current={asked ? "true" : undefined}
 							className={`${PANEL} flex scroll-mt-44 flex-col gap-5 p-5 outline-none sm:p-7 ${asked ? "ring-2 ring-amber-400/70" : ""}`}
 						>
-							<ul className="grid grid-cols-4 gap-3">
-								{g.here.slice(0, 4).map((k) => (
-									<li key={k}>
-										<MiniPoster title={title(k)} />
+							<ul className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+								{g.here.slice(0, 4).map((k, i) => (
+									<li key={k} className={i === 3 ? "max-sm:hidden" : ""}>
+										<ProfileCard
+											title={title(k)}
+											posterSizes={PANEL_CARD_SIZES}
+										/>
 									</li>
 								))}
 							</ul>

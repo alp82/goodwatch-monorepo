@@ -1,8 +1,8 @@
+import { ProfileCard } from "~/ui/profile/ProfileCard"
 // What pulls you: the attribute list flows down columns of seven rows beside the picked attribute's name, meaning and
 // numbers, with the titles it defines most across the full width underneath. The list area always holds seven rows
 // (below lg it scrolls inside them), the detail always holds two lines of meaning, and the titles always hold six
 // slots, so a family switch never moves the page at any width.
-import { Bar, FamilyButton } from "~/ui/profile/taste/FingerprintExplorer"
 import {
 	FAMILY_COLOR,
 	FAMILY_NAMES,
@@ -12,7 +12,6 @@ import {
 	signed,
 	useTaste,
 } from "~/ui/profile/taste/model"
-import { MiniPoster } from "~/ui/profile/taste/parts"
 import { type PrintState, explorerRows } from "./print-state"
 
 const ROW_REM = 2.5
@@ -115,9 +114,9 @@ export function Explorer({ state }: { state: PrintState }) {
 							return (
 								<li key={t?.key ?? `empty-${i}`}>
 									{t ? (
-										<MiniPoster title={t} />
+										<ProfileCard title={t} />
 									) : (
-										<span className="block aspect-[2/3] rounded-md bg-white/[0.03]" />
+										<span className="block aspect-[2/3] rounded-lg bg-white/[0.03]" />
 									)}
 								</li>
 							)
@@ -179,5 +178,53 @@ function Stat({
 			</dd>
 			<dt className="text-[11px] leading-tight text-gray-500">{label}</dt>
 		</div>
+	)
+}
+
+/** A bar from the centre line, right when sought and left when avoided; it grows with transform only. */
+function Bar({
+	edge,
+	max,
+	color,
+	thin = false,
+}: { edge: number; max: number; color: string; thin?: boolean }) {
+	const size = Math.min(1, Math.abs(edge) / max)
+	return (
+		<span
+			className={`relative block overflow-hidden rounded-full bg-white/[0.06] ${thin ? "h-1.5" : "h-2.5"}`}
+		>
+			<span className="absolute inset-y-0 left-1/2 z-10 w-px bg-white/25" />
+			<span
+				className={`absolute inset-y-0 w-1/2 rounded-full transition-transform duration-500 ease-out ${edge >= 0 ? "left-1/2 origin-left" : "right-1/2 origin-right"}`}
+				style={{
+					background: color,
+					opacity: edge > 0 ? 1 : 0.55,
+					transform: `scaleX(${size})`,
+				}}
+			/>
+		</span>
+	)
+}
+
+function FamilyButton({
+	on,
+	onClick,
+	color,
+	children,
+}: { on: boolean; onClick: () => void; color: string; children: string }) {
+	return (
+		<button
+			type="button"
+			aria-pressed={on}
+			onClick={onClick}
+			className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold ring-1 transition-colors ${on ? "bg-white/10 text-white ring-white/40" : "text-gray-400 ring-white/10 hover:text-white"}`}
+		>
+			<span
+				aria-hidden
+				className="size-2.5 rounded-full"
+				style={{ background: color }}
+			/>
+			{children}
+		</button>
 	)
 }

@@ -2,17 +2,16 @@
 // useTasteQuiz; this file only renders it.
 import { Link } from "@remix-run/react"
 import { type ReactNode, useEffect } from "react"
-import type { Score } from "~/server/scores.server"
+import { MovieTvCard } from "~/ui/MovieTvCard"
 import { ForYouLink } from "~/ui/for-you/ForYouLink"
 import { DockStrip } from "~/ui/navigation"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import { useContinueWithGoogle } from "~/utils/auth-client"
 import { useAuthHref } from "~/utils/auth-href"
-import { titleToDashed } from "~/utils/helpers"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
-import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { getVibeColorValue } from "~/utils/ratings"
+import type { SizeRule } from "~/utils/tmdb-image"
 import { GoogleMark } from "./GoogleMark"
 import { QUIZ_GOAL, readQuizPress } from "./quiz-flow"
 import type { QuizPick } from "./use-quiz-picks"
@@ -33,6 +32,11 @@ const backToPicks =
 
 const posterUrl = (path: string | undefined, size: string) =>
 	path ? `https://image.tmdb.org/t/p/${size}${path}` : undefined
+/** Three picks to a row, at most 56rem wide. */
+const PICK_SIZES: SizeRule[] = [
+	["(min-width: 768px)", "250px"],
+	[null, "30vw"],
+]
 
 export function TasteQuizPage({
 	titles,
@@ -485,48 +489,20 @@ function PageArrow({ side, q }: { side: "prev" | "next"; q: TasteQuiz }) {
 	)
 }
 
+/** A pick as the site's poster card, with how close it is to the ratings under it (the card shows no match). */
 function PickCard({ pick }: { pick: QuizPick }) {
-	const score = Math.round(pick.goodwatch_overall_score_normalized_percent ?? 0)
 	return (
-		<Link
-			to={`/${pick.media_type}/${pick.tmdb_id}-${titleToDashed(canonicalMediaTitle(pick))}`}
-			className="flex flex-col overflow-hidden rounded-lg border-4 border-gray-800 bg-gray-900 hover:border-amber-700/50 hover:bg-gray-800"
-		>
-			<img
-				src={posterUrl(pick.poster_path, "w342")}
-				alt={`Poster for ${pick.title}`}
-				className="aspect-[2/3] w-full object-cover"
+		<div className="flex min-w-0 flex-col gap-1.5">
+			<MovieTvCard
+				details={pick}
+				mediaType={pick.media_type}
+				posterSizes={PICK_SIZES}
 			/>
-			<div className="flex flex-col gap-1 p-2 md:p-3">
-				<div className="truncate text-sm font-bold md:text-base">
-					<span lang={mediaFieldLanguage(pick)}>{pick.title}</span>
-				</div>
-				<div className="flex flex-wrap items-center gap-1.5 text-xs">
-					{score > 0 && (
-						<span
-							className="rounded px-1.5 py-0.5 font-black text-white"
-							style={{
-								background: getVibeColorValue(
-									Math.max(1, Math.min(10, Math.round(score / 10))) as Score,
-								),
-							}}
-						>
-							{score}
-						</span>
-					)}
-					{pick.match_percentage > 0 && (
-						<span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-bold text-amber-200">
-							{Math.round(pick.match_percentage)}% match
-						</span>
-					)}
-				</div>
-				{pick.release_year && (
-					<div className="hidden text-xs text-gray-500 sm:block">
-						{pick.release_year} ·{" "}
-						{pick.media_type === "movie" ? "Movie" : "Show"}
-					</div>
-				)}
-			</div>
-		</Link>
+			{pick.match_percentage > 0 && (
+				<p className="text-center text-xs font-bold text-amber-200 md:text-sm">
+					{Math.round(pick.match_percentage)}% match
+				</p>
+			)}
+		</div>
 	)
 }
