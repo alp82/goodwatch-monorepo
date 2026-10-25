@@ -1,6 +1,7 @@
 // Where the footer links go, grouped into its four columns, with the icon and the line that the footer's caption
 // shows while a link is pointed at.
 import {
+	CalendarDaysIcon,
 	CpuChipIcon,
 	FilmIcon,
 	FingerPrintIcon,
@@ -125,7 +126,8 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 				name: "New on streaming",
 				href: NEW_ON_STREAMING,
 				blurb: "What arrived in the last 14 days",
-				icon: SignalIcon,
+				// The calendar of the Browse menu and the search palette; the signal is Status's.
+				icon: CalendarDaysIcon,
 			},
 			{
 				name: "Watch next",

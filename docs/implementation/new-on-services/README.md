@@ -154,7 +154,8 @@ The owner's places (Q67, October 25):
 - **My movies and My shows**: the last row of the opened "new on your services" list (`LandedRow.tsx`), "Everything
   new on your services", to `/new`. Not a key in the page head: those lead to the sibling lists, and a third, longer
   key wrapped the head onto two rows on a phone.
-- **Footer**: "New on streaming" in Explore, for everyone, to `/new/<country>` for the country the page renders for.
+- **Footer**: "New on streaming" in Explore, for everyone, to `/new/<country>` for the country the page renders for,
+  with the calendar icon of the Browse menu and the palette (the signal icon is Status's).
 
 ## Sitemap
 
