@@ -181,9 +181,11 @@ def generate_and_check(root):
             lambda line: print(line, flush=True), robots, warnings,
         )
         print(checker.summary(len(urls), failures, problems, warnings), flush=True)
-        # A member profile that fails (its owner hid their scores or lost some since the list was read) is left out;
-        # it doesn't hold up the rest of the sitemaps.
-        profile_failures = [(url, reason) for url, reason in failures if urlparse(url).path.startswith("/u/")]
+        # A member profile that left (its owner hid their scores or lost some since the list was read: noindex, or 404
+        # when it is gone) is left out; it doesn't hold up the rest of the sitemaps. Any other failure (5xx, a timeout,
+        # a redirect) says nothing about the profile and stays fatal, so nothing is committed.
+        profile_failures = [(url, reason) for url, reason in failures
+                            if urlparse(url).path.startswith("/u/") and page_left(reason)]
         if profile_failures:
             for url, reason in profile_failures:
                 print(f"Leaving out profile {url}: {reason}", flush=True)

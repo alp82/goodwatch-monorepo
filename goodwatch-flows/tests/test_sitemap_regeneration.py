@@ -155,6 +155,10 @@ class SitemapRegenerationTests(unittest.TestCase):
         self.assertNotIn(worker.OUTPUT + "sitemap_profiles.xml", files)
         self.assertNotIn(b"sitemap_profiles.xml", files[worker.OUTPUT + "sitemap.xml"])
 
+    def test_a_profile_that_answers_503_fails_the_run(self):
+        # A 503 says nothing about the profile: nothing is committed, so the published profiles file stays.
+        self.run_real_generator(lambda url: 503 if "/u/" in url else 200, 503)
+
     def test_a_failing_new_on_services_page_is_left_out_not_fatal(self):
         # A /new page whose titles aged out of its window answers noindex: the rest still publishes (#489 C).
         files = self.run_real_generator(lambda url: 404 if "/new/" in url else 200, 200, new_pages=0, new_rows=True)
