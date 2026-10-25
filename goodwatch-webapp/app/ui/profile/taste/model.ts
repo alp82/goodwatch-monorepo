@@ -1,4 +1,4 @@
-// The profile's Taste tab data in one shape for its components: the taste portrait's three views (fingerprint, taste
+// The profile's Stats tab data in one shape for its components: the taste portrait's three views (fingerprint, taste
 // groups, you vs everyone) joined, titles keyed "movie-550" as ProfileTitle, every attribute with its emoji; plus the
 // family colours, tier words and small formatters. buildProfileTaste runs in the loader; the rest is browser-safe.
 import { createContext, useContext } from "react"
@@ -104,7 +104,7 @@ function toTitle(t: PortraitTitle): TasteTitle {
 	}
 }
 
-/** The three portrait views as the Taste tab's one shape. Runs in the loader. */
+/** The three portrait views as the Stats tab's one shape. Runs in the loader. */
 export function buildProfileTaste(
 	fingerprint: FingerprintView,
 	sides: SidesView,
@@ -241,7 +241,7 @@ export const TasteContext = createContext<TasteContextValue | null>(null)
 
 export function useTaste() {
 	const value = useContext(TasteContext)
-	if (!value) throw new Error("useTaste outside the Taste tab")
+	if (!value) throw new Error("useTaste outside the Stats tab")
 	return value
 }
 

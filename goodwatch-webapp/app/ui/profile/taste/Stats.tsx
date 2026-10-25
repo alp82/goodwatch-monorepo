@@ -1,8 +1,9 @@
-// The Taste tab's numbers: top genres as one ribbon, the people they keep coming back to, eras and favorite classics,
+// The Stats tab's numbers: top genres as one ribbon, the people they keep coming back to, eras and favorite classics,
 // where it comes from, essence tags and tropes, fun facts, and how they score against the crowd (not another score
 // histogram: the Scores tab has that). Country and language names come from the loader, so server and browser agree.
 import { Link } from "@remix-run/react"
 import { useState } from "react"
+import { genreColor, movieGenre } from "~/domain/genre-colors"
 import type { TastePerson as Person, TasteStats } from "~/domain/profile-taste"
 import { PosterImg, count, posterUrl, vibe } from "../parts"
 import { type Kind, flag, money, pct, signed, useTaste } from "./model"
@@ -21,20 +22,6 @@ function useStats() {
 	return { stats: stats as NamedTasteStats | null, owner, compare }
 }
 
-const PALETTE = [
-	"#3b82f6",
-	"#f59e0b",
-	"#f97316",
-	"#14b8a6",
-	"#ef4444",
-	"#8b5cf6",
-	"#a8a29e",
-	"#eab308",
-	"#ec4899",
-	"#22c55e",
-	"#06b6d4",
-	"#f43f5e",
-]
 const slug = (s: string) =>
 	s
 		.toLowerCase()
@@ -42,23 +29,18 @@ const slug = (s: string) =>
 		.replace(/^-|-$/g, "")
 const personHref = (p: { id: number; name: string }) =>
 	`/person/${p.id}-${slug(p.name)}`
-/** Rose to amber to green across a small range of averages, so close averages still read apart. */
-const relColor = (v: number, min: number, max: number) => {
-	const t = max > min ? (v - min) / (max - min) : 0.5
-	return `hsl(${Math.round(350 + t * 130) % 360} 75% ${52 + t * 6}%)`
-}
 
 // ---------- Genres ----------
 
 export function Genres() {
 	const { stats, owner } = useStats()
-	const [kind, setKind] = useState<"all" | Kind>("all")
+	const [kind, setKind] = useState<"all" | "movie" | "show">("all")
 	const [byChoice, setBy] = useState<"titles" | "score">("titles")
 	if (!stats?.genres.length) return null
 	// Averages are there only when the owner's scores are visible.
 	const scored = stats.genres.some((g) => g.average != null)
 	const by = scored ? byChoice : "titles"
-	const rows = stats.genres
+	const rows = mergeTvGenres(stats.genres)
 		.map((g) => ({ ...g, n: kind === "all" ? g.count : (g.kinds[kind] ?? 0) }))
 		.filter((g) => g.n > 0)
 		.sort((a, b) =>
@@ -84,7 +66,6 @@ export function Genres() {
 								{ value: "all", label: "All" },
 								{ value: "movie", label: "Movies" },
 								{ value: "show", label: "Shows" },
-								{ value: "anime", label: "Anime" },
 							]}
 						/>
 						{scored && (
@@ -102,33 +83,100 @@ export function Genres() {
 				}
 			/>
 			<div className={`${PANEL} p-4 sm:p-5`}>
-				<div className="flex h-12 overflow-hidden rounded-lg" aria-hidden>
-					{rows.map((g, i) => (
-						<span
+				<GenreRibbon rows={rows} total={total} />
+			</div>
+		</section>
+	)
+}
+
+type GenreRow = NamedTasteStats["genres"][number]
+
+type RibbonRow = GenreRow & { n: number }
+
+/** The genre ribbon and its legend. Hover, focus, or tap a segment or a legend row for the genre's numbers; the
+ * tooltip floats over the ribbon, so nothing moves. */
+function GenreRibbon({ rows, total }: { rows: RibbonRow[]; total: number }) {
+	const [tip, setTip] = useState<string | null>(null)
+	const [pinned, setPinned] = useState<string | null>(null)
+	const shown = tip ?? pinned
+	let at = 0
+	const centers = new Map<string, number>()
+	for (const g of rows) {
+		const w = (g.n / total) * 100
+		centers.set(g.name, at + w / 2)
+		at += w
+	}
+	const row = rows.find((g) => g.name === shown)
+	const center = shown ? (centers.get(shown) ?? 50) : 50
+	const hover = (name: string) => ({
+		onMouseEnter: () => setTip(name),
+		onMouseLeave: () => setTip(null),
+		onFocus: () => setTip(name),
+		onBlur: () => setTip(null),
+		onClick: () => setPinned((p) => (p === name ? null : name)),
+	})
+	return (
+		<>
+			<div className="relative">
+				<div className="flex h-12 overflow-hidden rounded-lg">
+					{rows.map((g) => (
+						<button
 							key={g.name}
-							className="flex min-w-0 items-center justify-center text-[11px] font-black text-gray-950 sm:text-xs"
+							type="button"
+							{...hover(g.name)}
+							aria-label={`${g.name}: ${g.n} titles, ${pct(g.n / total)}${g.average == null ? "" : `, average ${g.average.toFixed(1)}`}`}
+							className={`flex min-w-0 cursor-pointer items-center justify-center text-[11px] font-black text-gray-950 transition-opacity focus-visible:outline-none sm:text-xs ${shown && shown !== g.name ? "opacity-50" : ""}`}
 							style={{
 								width: `${(g.n / total) * 100}%`,
-								background: PALETTE[i % PALETTE.length],
+								background: genreColor(g.name),
 							}}
-							title={`${g.name}: ${g.n}`}
 						>
-							<span className="truncate px-1">
+							<span className="truncate px-1" aria-hidden>
 								{g.n / total > 0.09 ? pct(g.n / total) : ""}
 							</span>
-						</span>
+						</button>
 					))}
 				</div>
-				<ul className="mt-4 grid grid-cols-1 gap-x-6 gap-y-2 min-[420px]:grid-cols-2 lg:grid-cols-5">
-					{rows.map((g, i) => (
-						<li
-							key={g.name}
-							className="flex min-w-0 items-center gap-2 text-sm"
+				{row && (
+					<div
+						role="tooltip"
+						className="pointer-events-none absolute bottom-full z-10 mb-2 w-max max-w-56 -translate-x-1/2 rounded-lg bg-gray-900 px-3 py-2 text-sm shadow-xl ring-1 ring-white/15"
+						style={{ left: `clamp(4.5rem, ${center}%, calc(100% - 4.5rem))` }}
+					>
+						<span className="flex items-center gap-2 font-bold text-white">
+							<span
+								aria-hidden
+								className="size-2.5 rounded-sm"
+								style={{ background: genreColor(row.name) }}
+							/>
+							{row.name}
+						</span>
+						<span className="mt-0.5 flex items-center gap-2 text-xs text-gray-300 tabular-nums">
+							{row.n} titles · {pct(row.n / total)}
+							{row.average != null && (
+								<span
+									className="rounded px-1 text-[11px] font-black text-gray-950"
+									style={{ background: vibe(row.average) }}
+								>
+									{row.average.toFixed(1)}
+								</span>
+							)}
+						</span>
+					</div>
+				)}
+			</div>
+			<ul className="mt-4 grid grid-cols-1 gap-x-6 gap-y-1 min-[420px]:grid-cols-2 lg:grid-cols-5">
+				{rows.map((g) => (
+					<li key={g.name}>
+						<button
+							type="button"
+							{...hover(g.name)}
+							className={`flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-left text-sm hover:bg-white/5 ${shown === g.name ? "bg-white/[0.07]" : ""}`}
 						>
 							<span
 								aria-hidden
 								className="size-3 shrink-0 rounded-sm"
-								style={{ background: PALETTE[i % PALETTE.length] }}
+								style={{ background: genreColor(g.name) }}
 							/>
 							<span className="min-w-0 flex-1 truncate font-semibold text-gray-200">
 								{g.name}
@@ -138,33 +186,55 @@ export function Genres() {
 								<span
 									className="rounded px-1 text-[11px] font-black text-gray-950 tabular-nums"
 									style={{ background: vibe(g.average) }}
-									title={`Average score ${g.average}`}
 								>
 									{g.average.toFixed(1)}
 								</span>
 							)}
-						</li>
-					))}
-				</ul>
-			</div>
-		</section>
+						</button>
+					</li>
+				))}
+			</ul>
+		</>
 	)
+}
+
+/** TMDB's TV genre pairs counted as their movie genre (Sci-Fi & Fantasy as Science Fiction), so a genre shows once. */
+function mergeTvGenres(genres: GenreRow[]): GenreRow[] {
+	const byName = new Map<string, GenreRow>()
+	for (const g of genres) {
+		const name = movieGenre(g.name)
+		const known = byName.get(name)
+		if (!known) {
+			byName.set(name, { ...g, name, kinds: { ...g.kinds } })
+			continue
+		}
+		const count = known.count + g.count
+		const average =
+			known.average != null && g.average != null
+				? Math.round(((known.average * known.count + g.average * g.count) / count) * 10) / 10
+				: (known.average ?? g.average)
+		const kinds = { ...known.kinds }
+		for (const [k, v] of Object.entries(g.kinds))
+			kinds[k as Kind] = (kinds[k as Kind] ?? 0) + (v ?? 0)
+		byName.set(name, { ...known, count, average, kinds })
+	}
+	return [...byName.values()]
 }
 
 // ---------- People ----------
 
 export function People() {
 	const { stats, owner } = useStats()
-	const [by, setBy] = useState<"watched" | "rated">("watched")
+	const [by, setBy] = useState<"watched" | "rated">("rated")
 	if (!stats) return null
 	const people = stats.people
-	const directors = by === "watched" ? people.directors : people.bestDirectors
-	if (!directors.length && !people.actors.length) return null
+	const lists = { rated: people.bestDirectors, watched: people.directors }
+	if (!lists[by].length && !people.actors.length) return null
 	return (
 		<section aria-labelledby="people" className="flex flex-col gap-5">
 			<SectionHead
 				id="people"
-				lead={owner ? "Your most-watched" : "Their most-watched"}
+				lead={owner ? "Your favorite" : "Their favorite"}
 				accent="directors"
 				sub={`The names ${owner ? "you" : "they"} keep coming back to. Movies only: shows have a director per episode.`}
 				right={
@@ -173,69 +243,23 @@ export function People() {
 						value={by}
 						onChange={setBy}
 						options={[
-							{ value: "watched", label: "Most watched" },
 							{ value: "rated", label: "Best rated" },
+							{ value: "watched", label: "Most watched" },
 						]}
 					/>
 				}
 			/>
-			<div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-				<ol className="grid gap-4 sm:grid-cols-2">
-					{directors.slice(0, 4).map((p, i) => (
-						<li key={p.id} className={`${PANEL} min-w-0 p-4`}>
-							<p className="flex items-baseline gap-2">
-								<span className="rounded bg-amber-400/15 px-1.5 text-[11px] font-black text-amber-300 tabular-nums">
-									№ {String(i + 1).padStart(2, "0")}
-								</span>
-								<Link
-									to={personHref(p)}
-									className="truncate font-bold text-white hover:text-amber-300"
-								>
-									{p.name}
-								</Link>
-							</p>
-							<p className="mt-0.5 mb-3 text-xs text-gray-500">
-								{p.count} films{p.hours ? ` · ${p.hours} h` : ""}
-								{p.average != null && ` · average ${p.average}`}
-							</p>
-							<ul className="grid grid-cols-5 gap-2">
-								{p.titles.slice(0, 5).map((t) => (
-									<li key={t.key}>
-										<MiniPoster title={t} />
-									</li>
-								))}
-							</ul>
-						</li>
-					))}
-				</ol>
-				<div className={`${PANEL} p-4`}>
-					<p className="mb-2 text-xs font-bold tracking-[0.16em] text-gray-500 uppercase">
-						Ranks 5–{Math.min(directors.length, 8)}
-					</p>
-					<ol className="flex flex-col divide-y divide-white/5">
-						{directors.slice(4, 8).map((p, i) => (
-							<li key={p.id} className="flex items-center gap-3 py-2">
-								<span className="w-6 text-sm font-black text-gray-600 tabular-nums">
-									{String(i + 5).padStart(2, "0")}
-								</span>
-								<span className="block w-7 shrink-0">
-									{p.titles[0] && (
-										<PosterImg title={p.titles[0]} className="rounded-sm" />
-									)}
-								</span>
-								<Link
-									to={personHref(p)}
-									className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-200 hover:text-white"
-								>
-									{p.name}
-								</Link>
-								<span className="text-xs text-gray-500">{p.count} films</span>
-							</li>
-						))}
-					</ol>
-					<Compact title="Composers" people={people.composers} unit="films" />
-					<Compact title="Writers" people={people.writers} unit="films" />
-				</div>
+			{/* Both rankings share one grid cell; the hidden one keeps the taller height, so switching never moves the page. */}
+			<div className="grid">
+				{(["rated", "watched"] as const).map((key) => (
+					<div
+						key={key}
+						className={`[grid-area:1/1] ${key === by ? "" : "invisible"}`}
+						aria-hidden={key !== by}
+					>
+						<Directors directors={lists[key]} people={people} />
+					</div>
+				))}
 			</div>
 			<div className={`${PANEL} p-4 sm:p-5`}>
 				<p className="mb-3 text-sm font-bold text-gray-200">On screen most</p>
@@ -265,6 +289,72 @@ export function People() {
 				</ul>
 			</div>
 		</section>
+	)
+}
+
+function Directors({
+	directors,
+	people,
+}: { directors: Person[]; people: NamedTasteStats["people"] }) {
+	return (
+		<div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+			<ol className="grid gap-4 sm:grid-cols-2">
+				{directors.slice(0, 4).map((p, i) => (
+					<li key={p.id} className={`${PANEL} min-w-0 p-4`}>
+						<p className="flex items-baseline gap-2">
+							<span className="rounded bg-amber-400/15 px-1.5 text-[11px] font-black text-amber-300 tabular-nums">
+								№ {String(i + 1).padStart(2, "0")}
+							</span>
+							<Link
+								to={personHref(p)}
+								className="truncate font-bold text-white hover:text-amber-300"
+							>
+								{p.name}
+							</Link>
+						</p>
+						<p className="mt-0.5 mb-3 text-xs text-gray-500">
+							{p.count} films{p.hours ? ` · ${p.hours} h` : ""}
+							{p.average != null && ` · average ${p.average}`}
+						</p>
+						<ul className="grid grid-cols-5 gap-2">
+							{p.titles.slice(0, 5).map((t) => (
+								<li key={t.key}>
+									<MiniPoster title={t} />
+								</li>
+							))}
+						</ul>
+					</li>
+				))}
+			</ol>
+			<div className={`${PANEL} p-4`}>
+				<p className="mb-2 text-xs font-bold tracking-[0.16em] text-gray-500 uppercase">
+					Ranks 5–{Math.min(directors.length, 8)}
+				</p>
+				<ol className="flex flex-col divide-y divide-white/5">
+					{directors.slice(4, 8).map((p, i) => (
+						<li key={p.id} className="flex items-center gap-3 py-2">
+							<span className="w-6 text-sm font-black text-gray-600 tabular-nums">
+								{String(i + 5).padStart(2, "0")}
+							</span>
+							<span className="block w-7 shrink-0">
+								{p.titles[0] && (
+									<PosterImg title={p.titles[0]} className="rounded-sm" />
+								)}
+							</span>
+							<Link
+								to={personHref(p)}
+								className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-200 hover:text-white"
+							>
+								{p.name}
+							</Link>
+							<span className="text-xs text-gray-500">{p.count} films</span>
+						</li>
+					))}
+				</ol>
+				<Compact title="Composers" people={people.composers} unit="films" />
+				<Compact title="Writers" people={people.writers} unit="films" />
+			</div>
+		</div>
 	)
 }
 
@@ -301,87 +391,104 @@ function Compact({
 
 export function Eras() {
 	const { stats, owner } = useStats()
-	if (!stats?.eras.decades.length) return null
-	const d = stats.eras.decades
+	const { taste } = useTaste()
+	const d = stats?.eras.decades ?? []
+	// The decade with the most titles opens first.
+	const busiest = [...d].sort((a, b) => b.count - a.count)[0]
+	const [picked, setPicked] = useState<number | null>(null)
+	if (!stats || !d.length) return null
+	const decade = picked ?? busiest.decade
 	const most = Math.max(...d.map((x) => x.count))
-	// Without the owner's scores there are no averages: the bars share one colour.
-	const averages = d.flatMap((x) => (x.average == null ? [] : [x.average]))
-	const lo = Math.min(...averages)
-	const hi = Math.max(...averages)
-	const year = new Date().getFullYear()
+	const titles = Object.values(taste.titles)
+		.filter((t) => t.year != null && t.year >= decade && t.year < decade + 10)
+		.sort(
+			(a, b) =>
+				(b.score ?? 0) - (a.score ?? 0) || (b.gw ?? 0) - (a.gw ?? 0),
+		)
+	const SLOTS = 14
 	return (
 		<section aria-labelledby="eras" className="flex flex-col gap-5">
 			<SectionHead
 				id="eras"
 				lead={owner ? "When your titles" : "When their titles"}
 				accent="came out"
-				sub={`${owner ? "Your" : "Their"} titles average ${stats.eras.averageYear}. Bar height is titles; color runs from the lowest average decade (red) to the highest (green).`}
+				sub={`${owner ? "Your" : "Their"} titles average ${stats.eras.averageYear}.`}
 			/>
 			<div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
 				<div className={`${PANEL} flex flex-col p-4 sm:p-5`}>
-					<div className="flex h-44 items-end gap-1.5">
-						{d.map((x) => (
-							<div
-								key={x.decade}
-								className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
-							>
-								<span className="text-[10px] font-bold text-gray-400 tabular-nums">
-									{x.count}
-								</span>
-								<span
-									className="block w-full rounded-t-md"
-									style={{
-										height: `${Math.max(3, (x.count / most) * 100)}%`,
-										background:
-											x.average == null
-												? "#f59e0b"
-												: relColor(x.average, lo, hi),
-									}}
-									title={`${x.decade}s: ${x.count} titles${x.average == null ? "" : `, average ${x.average}`}`}
-								/>
-							</div>
-						))}
+					<div
+						className="flex h-52 items-stretch gap-1.5"
+						role="group"
+						aria-label="Decades"
+					>
+						{d.map((x) => {
+							const on = x.decade === decade
+							return (
+								<button
+									key={x.decade}
+									type="button"
+									onClick={() => setPicked(x.decade)}
+									aria-pressed={on}
+									aria-label={`${x.decade}s: ${x.count} titles${x.average == null ? "" : `, average ${x.average}`}`}
+									className="group flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-end gap-1 rounded-md focus-visible:outline-2 focus-visible:outline-amber-400"
+								>
+									<span
+										className={`text-[10px] font-bold tabular-nums ${on ? "text-amber-300" : "text-gray-400"}`}
+									>
+										{x.count}
+									</span>
+									<span
+										className={`block w-full rounded-t-md transition-colors ${on ? "bg-amber-400" : "bg-gray-500/60 group-hover:bg-gray-400/70"}`}
+										style={{
+											height: `${Math.max(3, (x.count / most) * 70)}%`,
+										}}
+									/>
+									<span
+										className={`text-[10px] font-bold tabular-nums ${on ? "text-white" : "text-gray-500"}`}
+									>
+										’{String(x.decade).slice(2)}
+									</span>
+									<span className="h-[18px]">
+										{x.average != null && (
+											<span
+												className="rounded px-1 text-[11px] font-black text-gray-950 tabular-nums"
+												style={{ background: vibe(x.average) }}
+											>
+												{x.average.toFixed(1)}
+											</span>
+										)}
+									</span>
+								</button>
+							)
+						})}
 					</div>
-					<div className="mt-1.5 flex gap-1.5">
-						{d.map((x) => (
-							<span
-								key={x.decade}
-								className="min-w-0 flex-1 text-center text-[10px] font-bold text-gray-500 tabular-nums"
-							>
-								’{String(x.decade).slice(2)}
-							</span>
-						))}
-					</div>
-					<p className="mt-3 text-xs text-gray-500">
-						Kindest decade: {(() => {
-							const best = [...d]
-								.filter((x) => x.count >= 10 && x.average != null)
-								.sort((a, b) => (b.average ?? 0) - (a.average ?? 0))[0]
-							return best ? (
-								<b className="text-gray-300">
-									the {best.decade}s ({best.average})
-								</b>
-							) : null
-						})()}
-					</p>
 				</div>
-				<div className={`${PANEL} p-4 sm:p-5`}>
-					<p className="text-sm font-bold text-gray-200">
-						{owner ? "Your" : "Their"} favorite{" "}
-						<span className="text-amber-400">classics</span>
-					</p>
-					<p className="mb-3 text-xs text-gray-500">
-						At least 25 years old ({year - 25} or earlier), scored 9 or 10
+				<div className={`${PANEL} p-4 sm:p-5`} aria-live="polite">
+					<p className="mb-3 text-sm font-bold text-gray-200">
+						{owner ? "Your" : "Their"} best from the{" "}
+						<span className="text-amber-400">{decade}s</span>
 					</p>
 					<ul className="grid grid-cols-4 gap-2.5 sm:grid-cols-7">
-						{stats.eras.classics.slice(0, 14).map((t, i) => (
-							<li key={t.key} className={i >= 8 ? "max-sm:hidden" : ""}>
-								<MiniPoster title={t} />
-								<span className="mt-1 block truncate text-[11px] text-gray-500">
-									{t.year}
-								</span>
-							</li>
-						))}
+						{Array.from({ length: SLOTS }, (_, i) => {
+							const t = titles[i]
+							return (
+								<li key={t?.key ?? `empty-${i}`} className={i >= 8 ? "max-sm:hidden" : ""}>
+									{t ? (
+										<>
+											<MiniPoster title={t} />
+											<span className="mt-1 block truncate text-[11px] text-gray-500">
+												{t.year}
+											</span>
+										</>
+									) : (
+										<>
+											<span className="block aspect-[2/3] rounded-md bg-white/[0.03]" />
+											<span className="mt-1 block text-[11px]">&nbsp;</span>
+										</>
+									)}
+								</li>
+							)
+						})}
 					</ul>
 				</div>
 			</div>
@@ -631,7 +738,7 @@ export function RatingStyle() {
 	const s = stats.style
 	if (!s) return null
 	const pos = (v: number) => `${((v - 1) / 9) * 100}%`
-	const kinds = (["movie", "show", "anime"] as Kind[]).filter(
+	const kinds = (["movie", "show"] as Kind[]).filter(
 		(k) => s.byKind[k] != null,
 	)
 	const KIND: Record<Kind, string> = {
@@ -659,7 +766,7 @@ export function RatingStyle() {
 								: `${signed(s.offset)} points against everyone`}
 						</span>
 					</div>
-					<div className="relative mt-8 mb-2 h-2 rounded-full bg-linear-to-r from-rose-500/60 via-amber-400/60 to-emerald-400/60">
+					<div className="relative mt-8 mb-2 h-2 rounded-full bg-white/[0.08]">
 						<Marker
 							at={pos(s.crowdAverage)}
 							label={`Everyone ${s.crowdAverage}`}

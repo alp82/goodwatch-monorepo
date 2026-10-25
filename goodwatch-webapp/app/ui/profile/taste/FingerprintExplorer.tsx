@@ -294,7 +294,7 @@ export function FingerprintExplorer() {
 }
 
 /** A bar from the centre line, right when sought and left when avoided; it grows with transform only. */
-function Bar({
+export function Bar({
 	edge,
 	max,
 	color,
@@ -318,7 +318,7 @@ function Bar({
 	)
 }
 
-function FamilyButton({
+export function FamilyButton({
 	on,
 	onClick,
 	color,
@@ -342,7 +342,7 @@ function FamilyButton({
 }
 
 /** One attribute, always the same height. */
-function Detail({ a }: { a: TasteAttribute }) {
+export function Detail({ a }: { a: TasteAttribute }) {
 	const { owner, title: tt } = useTaste()
 	const titles = (
 		a.edge >= 0 ? a.carriers : a.against.length ? a.against : a.carriers
