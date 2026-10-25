@@ -11,8 +11,8 @@ export const PROFILE_CARD_TABS = Object.keys(
 ) as ProfileCardTab[]
 
 /**
- * Sections of the Taste tab with a card of their own: /u/<handle>/taste/<view>. They sit under the Taste tab's path,
- * so they can't collide with a profile tab, and that page keeps the Taste card for its own link preview.
+ * Sections of the Stats tab with a card of their own: /u/<handle>/stats/<view>. They sit under the Stats tab's path,
+ * so they can't collide with a profile tab, and that page keeps the Stats card for its own link preview.
  */
 export const PROFILE_CARD_VIEWS = ["everyone", "sides"] as const
 export type ProfileCardView = (typeof PROFILE_CARD_VIEWS)[number]
@@ -21,7 +21,7 @@ export type ProfileCardView = (typeof PROFILE_CARD_VIEWS)[number]
 export const profileCardPaths = (handle: string) => [
 	`/u/${handle}`,
 	...PROFILE_CARD_TABS.map((tab) => `/u/${handle}/${tab}`),
-	...PROFILE_CARD_VIEWS.map((view) => `/u/${handle}/taste/${view}`),
+	...PROFILE_CARD_VIEWS.map((view) => `/u/${handle}/stats/${view}`),
 ]
 
 /** What the print needs of an attribute (the Whorl's shape). */
@@ -126,7 +126,7 @@ export const pullWords = (picks: { label: string }[]) =>
 		.map((p) => p.label.toLowerCase())
 		.join(" and ")
 
-// ---------- Taste tab sections: you vs everyone, taste groups ----------
+// ---------- Stats tab sections: you vs everyone, taste groups ----------
 
 /** A rated title of the everyone view, with its title resolved. */
 export interface EveryoneRowInput {
@@ -147,7 +147,7 @@ export interface EveryoneTake {
 	everyone: number
 }
 
-/** /u/<handle>/taste/everyone: titles they score far from everyone, each on a 1 to 10 line. */
+/** /u/<handle>/stats/everyone: titles they score far from everyone, each on a 1 to 10 line. */
 export interface OgProfileEveryoneContent extends CardPerson {
 	kind: "profile-everyone"
 	/** One or two: the strongest above everyone, then the strongest below. */
@@ -169,7 +169,7 @@ export interface CardSide {
 	posters: string[]
 }
 
-/** /u/<handle>/taste/sides: "Loves X, and just as much Y", the two taste groups least alike. No numbers. */
+/** /u/<handle>/stats/sides: "Loves X, and just as much Y", the two taste groups least alike. No numbers. */
 export interface OgProfileSidesContent extends CardPerson {
 	kind: "profile-sides"
 	first: CardSide

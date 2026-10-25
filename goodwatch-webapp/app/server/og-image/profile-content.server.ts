@@ -1,4 +1,4 @@
-// What the profile cards (/u/<handle>, /u/<handle>/<tab> and /u/<handle>/taste/<view>) show, as a signed-out visitor
+// What the profile cards (/u/<handle>, /u/<handle>/<tab> and /u/<handle>/stats/<view>) show, as a signed-out visitor
 // sees the profile: the same shell, tab loaders and portrait views the pages use, so a hidden part never reaches a
 // card. A tab or view whose part is hidden or empty gets the main card. No counts and no viewer type (owner decision,
 // 2026-10-23).
@@ -157,7 +157,7 @@ async function tabCard(
 			const { titles } = await loadProfileSeen(ownerId, shell)
 			if (!titles.length || !shell.counts.seen) return null
 			const movies = shell.counts.seenMovies / shell.counts.seen
-			// The decade comes from the Taste tab's numbers (their rated titles), so it goes with the scores.
+			// The decade comes from the Stats tab's numbers (their rated titles), so it goes with the scores.
 			const stats = seesPart(shell, "scores")
 				? await getTasteStats(ownerId).catch(() => null)
 				: null
@@ -233,7 +233,7 @@ async function tabCard(
 				},
 			}
 		}
-		case "taste": {
+		case "stats": {
 			const print = await printOf(view)
 			if (!print) return null
 			const sides = await getProfilePortrait(ownerId, "sides", {
@@ -257,7 +257,7 @@ async function tabCard(
 	}
 }
 
-/** A Taste tab section's card (the Taste tab's own rules: taste public, and scores for you vs everyone), or null. */
+/** A Stats tab section's card (the Stats tab's own rules: taste public, and scores for you vs everyone), or null. */
 async function viewCard(
 	view: Loaded,
 	section: ProfileCardView,
@@ -304,7 +304,7 @@ async function viewCard(
 		sides: sides.sides.map((s) => ({
 			id: s.id,
 			name: s.name,
-			// The group's colour is its first attribute's family, as on the Taste tab.
+			// The group's colour is its first attribute's family, as on the Stats tab.
 			family: familyOf(s.attributes[0]?.key ?? "") ?? "story",
 			posters: s.here.map((key) => poster(titleOf(sides.titles, key)?.poster)),
 		})),
@@ -320,7 +320,7 @@ async function viewCard(
 }
 
 /**
- * The card's content for a handle, a tab, and a Taste tab section (/u/<handle>/taste/<view>); null when no member has
+ * The card's content for a handle, a tab, and a Stats tab section (/u/<handle>/stats/<view>); null when no member has
  * the handle.
  */
 export async function profileCardContent(
@@ -339,7 +339,7 @@ export async function profileCardContent(
 	if (section) {
 		const known = PROFILE_CARD_VIEWS.find((v) => v === section)
 		return (
-			(tab === "taste" && known && (await viewCard(view, known))) ||
+			(tab === "stats" && known && (await viewCard(view, known))) ||
 			mainCard(view)
 		)
 	}

@@ -1,5 +1,5 @@
 // /profile: the member's own profile card, as a signed-out visitor sees the profile. The image is the profile's
-// link-preview card (/og/u/<handle>[/<tab>].jpg, /og/u/<handle>/taste/<view>.jpg), which draws only parts visible to
+// link-preview card (/og/u/<handle>[/<tab>].jpg, /og/u/<handle>/stats/<view>.jpg), which draws only parts visible to
 // everyone; the bot also refuses a part that isn't public instead of posting a card that silently falls back to the
 // main one.
 // Spec: docs/implementation/discord-bot/README.md
@@ -19,7 +19,7 @@ import {
 } from "./cards.ts"
 import { listCustomId } from "./custom-id.ts"
 
-/** A profile card tab or Taste tab section, as in PROFILE_CARD_TABS and PROFILE_CARD_VIEWS
+/** A profile card tab or Stats tab section, as in PROFILE_CARD_TABS and PROFILE_CARD_VIEWS
  * (app/ui/og-image/profile-card-model.ts). */
 type CardPath =
 	| "seen"
@@ -27,9 +27,9 @@ type CardPath =
 	| "wishlist"
 	| "shows"
 	| "lists"
-	| "taste"
-	| "taste/everyone"
-	| "taste/sides"
+	| "stats"
+	| "stats/everyone"
+	| "stats/sides"
 
 /**
  * Each /profile choice: its name in Discord, the card it shows (null is the main fingerprint card), where it links on
@@ -38,17 +38,17 @@ type CardPath =
  */
 export const PROFILE_CARDS = {
 	profile: { name: "Profile", image: null, link: "", parts: [] },
-	taste: { name: "Taste", image: "taste", link: "/taste", parts: ["taste"] },
+	taste: { name: "Taste", image: "stats", link: "/stats", parts: ["taste"] },
 	crowd: {
 		name: "Different from everyone",
-		image: "taste/everyone",
-		link: "/taste#everyone",
+		image: "stats/everyone",
+		link: "/stats#everyone",
 		parts: ["taste", "scores"],
 	},
 	sides: {
 		name: "Sides",
-		image: "taste/sides",
-		link: "/taste#sides",
+		image: "stats/sides",
+		link: "/stats#sides",
 		parts: ["taste"],
 	},
 	scores: {

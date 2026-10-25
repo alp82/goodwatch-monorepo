@@ -244,9 +244,9 @@ export const PROFILE_CARD_COPY = {
 		wishlist: "Wishlist",
 		shows: "Shows",
 		lists: "Lists",
-		taste: "Taste",
+		stats: "Stats",
 	},
-	/** Header names of the Taste tab sections with a card of their own (/u/<handle>/taste/<view>). */
+	/** Header names of the Stats tab sections with a card of their own (/u/<handle>/stats/<view>). */
 	views: {
 		everyone: "Vs everyone",
 		sides: "Taste groups",
