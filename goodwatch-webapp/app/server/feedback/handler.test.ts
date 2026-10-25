@@ -51,7 +51,6 @@ function fixture(member: string | null = null) {
 			async (_id: string, _m: string, _t: string | null) => {},
 		),
 		screenshot: mock.fn(async (id: string) => screenshots.get(id) ?? null),
-		details: mock.fn(async (_id: string) => null),
 	} satisfies FeedbackStore
 	const deps = {
 		store,
@@ -313,7 +312,7 @@ test("deduplicates concurrent retries before notifying", async () => {
 	const results = await Promise.all([f.submit(key), f.submit(key)])
 	assert.deepEqual(await results[0].json(), await results[1].json())
 	assert.equal(f.rows.size, 1)
-	assert.equal(f.deps.send.mock.callCount(), 1)
+	assert.equal(f.deps.send.mock.callCount(), 2)
 })
 
 test("a failing store (missing table) still delivers the report; 503 only when nothing took it", async (t) => {
@@ -324,7 +323,7 @@ test("a failing store (missing table) still delivers the report; 503 only when n
 	})
 	const response = await f.submit()
 	assert.equal(response.status, 200)
-	assert.equal(f.deps.send.mock.callCount(), 1)
+	assert.equal(f.deps.send.mock.callCount(), 2)
 	assert.equal(f.deps.store.discordId.mock.callCount(), 0)
 	assert.equal(f.deps.email.mock.callCount(), 0)
 	assert.ok(
@@ -380,8 +379,8 @@ test("normalizes PNG and JPEG screenshots to WebP and attaches them; staff autho
 	const card = JSON.parse(
 		f.deps.send.mock.calls[0].arguments[1]!.body as string,
 	)
-	assert.match(JSON.stringify(card), /Screenshot in the next message/)
-	const [followUrl, follow] = f.deps.send.mock.calls[1].arguments
+	assert.match(JSON.stringify(card), /Screenshot attached in the thread/)
+	const [followUrl, follow] = f.deps.send.mock.calls[2].arguments
 	assert.equal(new URL(String(followUrl)).searchParams.get("thread_id"), "456")
 	assert.equal(
 		new URL(String(followUrl)).searchParams.get("with_components"),
@@ -587,7 +586,7 @@ test("screenshot storage follows the report and fails softly with the attachment
 	assert.equal(f.rows.size, 1)
 	assert.equal(f.screenshots.size, 0)
 	assert.equal([...f.rows.values()][0].hasScreenshot, false)
-	const form = f.deps.send.mock.calls[1].arguments[1]!.body as unknown as {
+	const form = f.deps.send.mock.calls[2].arguments[1]!.body as unknown as {
 		get(name: string): unknown
 	}
 	assert.ok(form.get("files[0]"))
@@ -623,5 +622,36 @@ test("a missing report table during the data lookup also fails softly", async (t
 		200,
 	)
 	assert.equal(f.rows.size, 0)
-	assert.equal(f.deps.send.mock.callCount(), 1)
+	assert.equal(f.deps.send.mock.callCount(), 2)
 })
+
+for (const path of ["bot", "webhook"] as const) {
+	test(`${path} details reply failure does not email or fail the report`, async (t) => {
+		const errors = quiet(t)
+		const f = fixture()
+		if (path === "bot") {
+			f.deps.env.DISCORD_BOT_TOKEN = "bot-token"
+			f.deps.env.DISCORD_FEEDBACK_FORUM_CHANNEL_ID = "111111111111111111"
+		}
+		f.deps.send.mock.mockImplementation(async (_url, init) => {
+			const payload = JSON.parse(init!.body as string)
+			if (payload.flags & (1 << 12))
+				return new Response("Forbidden", { status: 403 })
+			return new Response(
+				JSON.stringify({
+					id: "222222222222222222",
+					channel_id: "222222222222222222",
+				}),
+			)
+		})
+		assert.equal((await f.submit()).status, 200)
+		assert.equal(f.deps.send.mock.callCount(), path === "bot" ? 3 : 2)
+		assert.equal(f.deps.email.mock.callCount(), 0)
+		assert.equal(f.deps.store.discordId.mock.callCount(), 1)
+		assert.ok(
+			errors.mock.calls.some((call) =>
+				String(call.arguments[0]).includes("posting report details"),
+			),
+		)
+	})
+}

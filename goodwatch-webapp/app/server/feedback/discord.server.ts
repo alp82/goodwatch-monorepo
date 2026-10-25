@@ -1,22 +1,12 @@
-// Delivery of the staff Discord post (docs/implementation/feedback/README.md, "Discord"), and the answer to its
-// Details button.
-//
-// Two ways in, tried in this order:
-// 1. The bot creates a plain forum starter, then edits it to Components V2 with the staff-only Details button.
-//    Start Thread does not document IS_COMPONENTS_V2; Edit Message explicitly supports the conversion.
-// 2. The webhook (DISCORD_FEEDBACK_WEBHOOK_URL) with ?with_components=true: a webhook the bot doesn't own may send only
-//    non-interactive components, so the details sit in a spoilered line instead. Discord refuses files[n] next to
-//    IS_COMPONENTS_V2 on a webhook, so a screenshot follows as its own message in the thread.
-// Each request uses nativeFetch (undici) with a 10 second timeout; the polyfilled fetch crashed production on abort.
+// Staff forum delivery: bot first, then webhook. Technical details follow as a quiet first reply.
+// Each request uses nativeFetch (undici) with a 10 second timeout.
 import { File, FormData } from "undici"
 import type { Component } from "../discord/cards.ts"
 import {
 	type PostReport,
 	SCREENSHOT_NAME,
-	type StoredDetails,
 	detailsMessage,
 	duplicateComponents,
-	ephemeralText,
 	MESSAGE_FLAGS,
 	reportComponents,
 	threadName,
@@ -131,6 +121,29 @@ class BotEditFailure extends Error {
 	}
 }
 
+async function postDetails(
+	report: PostReport,
+	send: typeof fetch,
+	context: Context,
+	url: string,
+	headers: Record<string, string> = {},
+) {
+	try {
+		const request = body(detailsMessage(report, context.origin))
+		await call(
+			send,
+			url,
+			{ body: request.body, headers: { ...request.headers, ...headers } },
+			"details reply",
+		)
+	} catch (error) {
+		console.error("[feedback] posting report details to Discord failed", {
+			reportId: report.id,
+			error: error instanceof Error ? error.message : String(error),
+		})
+	}
+}
+
 async function viaBot(
 	target: { forum: string; token: string },
 	report: PostReport,
@@ -172,7 +185,6 @@ async function viaBot(
 			...message(
 				reportComponents(report, {
 					...context,
-					interactive: true,
 					screenshotInline: true,
 				}),
 			),
@@ -209,6 +221,13 @@ async function viaBot(
 		// The forum post exists: fallback must reuse it instead of opening a second post.
 		throw new BotEditFailure(thread.id, error)
 	}
+	await postDetails(
+		report,
+		send,
+		context,
+		`https://discord.com/api/v10/channels/${thread.id}/messages`,
+		auth,
+	)
 	return { id: messageId, channel_id: thread.id }
 }
 
@@ -238,7 +257,6 @@ async function viaWebhook(
 			})
 		: reportComponents(report, {
 				...context,
-				interactive: false,
 				screenshotInline: false,
 			})
 	const payload = {
@@ -260,6 +278,20 @@ async function viaWebhook(
 	)
 	if (!result.id) throw new Error("Missing Discord receipt")
 	const receipt = { id: result.id, channel_id: result.channel_id }
+	if (!duplicate) {
+		// A webhook receipt normally includes channel_id; conversion fallback already knows the thread.
+		const threadId = receipt.channel_id ?? existingThreadId
+		const follow = new URL(url)
+		if (threadId) {
+			follow.searchParams.set("thread_id", threadId)
+			await postDetails(report, send, context, follow.toString())
+		} else {
+			console.error("[feedback] posting report details to Discord failed", {
+				reportId: report.id,
+				error: "Missing Discord thread receipt",
+			})
+		}
+	}
 	if (report.screenshot && receipt.channel_id) {
 		// Its own plain message in the thread; a failure here never fails the report.
 		try {
@@ -324,64 +356,4 @@ export async function postDiscord(
 			existingThreadId,
 		)
 	throw new Error(failures[0] ?? "Discord is not configured")
-}
-
-// ---------- the Details button ----------
-
-export interface DetailsInteraction {
-	guild_id?: string
-	member?: { user?: { id: string }; roles?: string[] }
-	user?: { id: string }
-}
-const list = (value: string | undefined) =>
-	(value ?? "")
-		.split(",")
-		.map((v) => v.trim())
-		.filter((v) => SNOWFLAKE.test(v))
-/**
- * Staff are Discord users in DISCORD_FEEDBACK_STAFF_USER_IDS, or server members holding a role in
- * DISCORD_FEEDBACK_STAFF_ROLE_IDS. Both empty denies everyone.
- */
-export function isFeedbackStaff(interaction: DetailsInteraction, env: Env) {
-	const user = interaction.member?.user?.id ?? interaction.user?.id
-	if (user && list(env.DISCORD_FEEDBACK_STAFF_USER_IDS).includes(user))
-		return true
-	const roles = list(env.DISCORD_FEEDBACK_STAFF_ROLE_IDS)
-	return Boolean(
-		interaction.guild_id &&
-			interaction.member?.roles?.some((role) => roles.includes(role)),
-	)
-}
-/** The ephemeral answer to a Details press. Authorization precedes any storage read. */
-export async function feedbackDetailsReply(
-	interaction: DetailsInteraction,
-	reportId: string,
-	deps: { load: (id: string) => Promise<StoredDetails | null>; env: Env },
-): Promise<{ data: ReturnType<typeof ephemeralText>; outcome: string }> {
-	if (!isFeedbackStaff(interaction, deps.env))
-		return {
-			data: ephemeralText("Only GoodWatch staff can see report details."),
-			outcome: "forbidden",
-		}
-	let report: StoredDetails | null
-	try {
-		report = await deps.load(reportId)
-	} catch (error) {
-		console.error("[feedback] reading report details failed", {
-			reportId,
-			error: error instanceof Error ? error.message : String(error),
-		})
-		return {
-			data: ephemeralText("The report details couldn't be loaded. Try again."),
-			outcome: "error",
-		}
-	}
-	if (!report)
-		return {
-			data: ephemeralText(
-				"This report isn't stored, so its details aren't available.",
-			),
-			outcome: "missing",
-		}
-	return { data: detailsMessage(report, appOrigin(deps.env)), outcome: "ok" }
 }

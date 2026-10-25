@@ -235,14 +235,3 @@ export function parseTogetherId(
 		...(match[3] ? { titleId: match[3] } : {}),
 	}
 }
-
-/** The staff-only Details button on a feedback post (docs/implementation/feedback/README.md). */
-export function feedbackDetailsId(reportId: string) {
-	if (reportId.length !== 64 || !/^[a-f0-9]{64}$/.test(reportId))
-		throw new Error("Invalid report id")
-	return `gw1:feedback-details:${reportId}`
-}
-export function parseFeedbackDetailsId(id: string): string | null {
-	if (id.length !== 85) return null
-	return /^gw1:feedback-details:([a-f0-9]{64})$/.exec(id)?.[1] ?? null
-}

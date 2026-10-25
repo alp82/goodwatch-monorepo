@@ -84,7 +84,6 @@ import {
 	parseListId,
 	parseListRef,
 	parseTogetherId,
-	parseFeedbackDetailsId,
 	listCustomId,
 	type ListRef,
 } from "./custom-id.ts"
@@ -111,8 +110,6 @@ function discoverArgs(
 		for_you: member && (order === "for_you" || order === "match"),
 	}
 }
-import { feedbackDetailsReply } from "../feedback/discord.server.ts"
-import type { StoredDetails } from "../feedback/discord-post.ts"
 export interface Interaction {
 	type: number
 	id?: string
@@ -194,9 +191,6 @@ export interface Dependencies extends PlaceDependencies {
 	titleStore?: () => Promise<CacheStore | null>
 	/** Where Try again keeps the original interaction for 15 minutes. */
 	retryStore?: () => Promise<RetryStore>
-	/** The stored feedback report behind a staff Details button. */
-	feedbackDetails?: (reportId: string) => Promise<StoredDetails | null>
-	env?: Record<string, string | undefined>
 }
 const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
 	guestPick: guestWatchPick,
@@ -282,9 +276,6 @@ const defaults: Required<Omit<Dependencies, "resolveMemberPlace">> = {
 	emojis: async () => (await import("./emoji.server.ts")).applicationEmojiIds(),
 	titleStore: valkeyTitleStore,
 	retryStore: valkeyRetryStore,
-	feedbackDetails: async (id) =>
-		(await import("../feedback/runtime.server.ts")).feedbackStore.details(id),
-	env: process.env,
 }
 /** Titles on /hot: four pages of three. */
 export const HOT_TITLES = 12
@@ -425,8 +416,7 @@ export async function routeInteraction(
 	const parsed = parseCustomId(customId),
 		list = parseListId(customId),
 		undo = parseUndoId(customId),
-		together = parseTogetherId(customId),
-		feedbackReport = parseFeedbackDetailsId(customId)
+		together = parseTogetherId(customId)
 	const finish = (outcome: string) => {
 		if (logged) return
 		logged = true
@@ -439,13 +429,7 @@ export async function routeInteraction(
 								parsed?.action ??
 								list?.action ??
 								together?.action ??
-								(another
-									? "another"
-									: undo
-										? "undo"
-										: feedbackReport
-											? "feedback-details"
-											: "unknown"),
+								(another ? "another" : undo ? "undo" : "unknown"),
 						}
 					: {
 							command: commands.some((c) => c.name === interaction.data?.name)
@@ -914,21 +898,6 @@ export async function routeInteraction(
 		const user = interaction.member?.user?.id ?? interaction.user?.id
 		if (!user)
 			return reply(textCard("This interaction has no user."), "invalid")
-		// Staff only and answered before the member rate limit: the check reads env, and the row read is one key.
-		if (interaction.type === 3 && feedbackReport) {
-			const answer = await within(
-				feedbackDetailsReply(interaction, feedbackReport, {
-					load: deps.feedbackDetails,
-					env: deps.env,
-				}),
-				2500,
-				{
-					data: textCard("Loading the report took too long. Try again."),
-					outcome: "timeout",
-				},
-			)
-			return reply(answer.data, answer.outcome)
-		}
 		const verdict = internal.retrying
 			? null
 			: await within<RateVerdict | null>(deps.take(user), 300, null)

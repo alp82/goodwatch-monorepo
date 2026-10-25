@@ -1,21 +1,16 @@
-// The staff Discord post: both delivery paths (bot with the Details button, webhook with the spoilered details
-// line), data report layout, Discord limits, and the staff-only Details answer. Discord is a fake throughout.
 import assert from "node:assert/strict"
 import { mock, test } from "node:test"
 import {
 	type Component,
 	componentCount,
-	EPHEMERAL,
 	IS_COMPONENTS_V2,
 	textLength,
 } from "../discord/cards.ts"
-import { routeInteraction } from "../discord/router.server.ts"
-import { feedbackDetailsReply, postDiscord } from "./discord.server.ts"
+import { postDiscord } from "./discord.server.ts"
 import {
 	type PostReport,
-	type StoredDetails,
 	detailsMessage,
-	detailsLine,
+	SUPPRESS_NOTIFICATIONS,
 	duplicateComponents,
 	deviceName,
 	memberText,
@@ -92,7 +87,7 @@ const texts = (components: Component[]) =>
 const buttons = (components: Component[]) =>
 	all(components).filter((c) => c.type === 2)
 
-test("the bot path opens a forum thread with the Details button and no inline technical details", async () => {
+test("the bot path opens a forum thread without Details controls and posts a quiet first reply", async () => {
 	const send = ok({
 		id: "999999999999999999",
 		message: { id: "888888888888888888" },
@@ -127,15 +122,25 @@ test("the bot path opens a forum thread with the Details button and no inline te
 	assert.deepEqual(payload.message.allowed_mentions, { parse: [] })
 	const components = edited.components as Component[]
 	const details = buttons(components).find((b) => b.label === "Details")
-	assert.equal(details?.custom_id, `gw1:feedback-details:${id}`)
-	assert.equal(details?.style, 2)
+	assert.equal(details, undefined)
+	assert.doesNotMatch(texts(components), /-# Details|\|\|/)
+	assert.equal(send.mock.callCount(), 3)
+	const follow = send.mock.calls[2].arguments
+	assert.equal(
+		follow[0],
+		"https://discord.com/api/v10/channels/999999999999999999/messages",
+	)
+	assert.deepEqual(
+		JSON.parse(follow[1]!.body as string),
+		detailsMessage(base, "https://goodwatch.app"),
+	)
 	const text = texts(components)
 	assert.match(text, /### 🐞 Bug/)
 	assert.match(
 		text,
 		/Guest · 🇩🇪 · `\/support\?tab=1` · en-US · dark · <t:1800000000:R>/,
 	)
-	// Technical details stay behind the button.
+	// Technical details appear in the reply only.
 	for (const hidden of [
 		id,
 		"routes/support",
@@ -189,9 +194,11 @@ test("the bot path puts a screenshot in a media gallery and a duplicate replies 
 	assert.match(text, /\*\*\+1 duplicate\*\* \(3 total\)/)
 	assert.match(text, /they see Disney\+/)
 	assert.match(text, /source justwatch\.com/)
+	assert.ok(text.includes(`-# Report \`${theBear.id}\``))
+	assert.equal(reply.mock.callCount(), 1)
 })
 
-test("when the bot is refused, the webhook posts with only non-interactive components and a spoilered details line", async (t) => {
+test("when the bot is refused, the webhook posts the starter then the details in the same thread", async (t) => {
 	t.mock.method(console, "error", () => {})
 	const send = mock.fn(
 		async (url: string | URL | Request, _init?: RequestInit) =>
@@ -205,7 +212,7 @@ test("when the bot is refused, the webhook posts with only non-interactive compo
 		send as unknown as typeof fetch,
 	)
 	assert.deepEqual(receipt, { id: "1", channel_id: "2" })
-	assert.equal(send.mock.callCount(), 2)
+	assert.equal(send.mock.callCount(), 3)
 	const [url, init] = send.mock.calls[1].arguments
 	const query = new URL(String(url)).searchParams
 	assert.equal(query.get("wait"), "true")
@@ -233,21 +240,14 @@ test("when the bot is refused, the webhook posts with only non-interactive compo
 	assert.match(text, /### 🛠️ Data fix · The Bear/)
 	assert.match(text, /\*\*Where to watch\*\* in the United States 🇺🇸\n/)
 	assert.match(text, /> Was: Disney\+\n> Now: \*\*Disney\+, Hulu\*\*/)
-	const details = text
-		.split("\n")
-		.find((line) => line.startsWith("-# Details ||"))
-	assert.ok(details?.endsWith("||"))
-	for (const shown of [
-		id,
-		"routes/support",
-		"Chrome 141 on macOS, 1440×900 @2x",
-		"build `726dea5`",
-		"replay `0123456789abcdef0123456789abcdef`",
-		"dedupe `cdcdcdcdcdcd`",
-		"<t:1800000000:f>",
-	])
-		assert.ok(details!.includes(shown), shown)
-	assert.ok(!text.includes("{"), "no raw JSON")
+	assert.doesNotMatch(text, /-# Details|\|\|/)
+	assert.ok(!text.includes(id))
+	const follow = send.mock.calls[2].arguments
+	assert.equal(new URL(String(follow[0])).searchParams.get("thread_id"), "2")
+	assert.deepEqual(
+		JSON.parse(follow[1]!.body as string),
+		detailsMessage(theBear, "https://goodwatch.app"),
+	)
 })
 
 test("everything stays within Discord's limits, and member text can't link, mention or format", () => {
@@ -263,23 +263,20 @@ test("everything stays within Discord's limits, and member text can't link, ment
 		},
 		metadata: { ...theBear.metadata, url: `/${"p".repeat(3000)}` },
 	}
-	for (const interactive of [true, false]) {
-		const components = reportComponents(long, {
-			origin: "https://goodwatch.app",
-			interactive,
-			screenshotInline: false,
-		})
-		assert.ok(textLength(components) <= 4000)
-		assert.ok(componentCount(components) <= 40)
-		for (const b of buttons(components)) {
-			assert.ok(String(b.label).length <= 80)
-			if (b.url) assert.ok(String(b.url).length <= 512)
-		}
-		// The 1000-character source is too long for a button and is left out.
-		assert.ok(
-			!buttons(components).some((b) => String(b.label).startsWith("Source")),
-		)
+	const components = reportComponents(long, {
+		origin: "https://goodwatch.app",
+		screenshotInline: false,
+	})
+	assert.ok(textLength(components) <= 4000)
+	assert.ok(componentCount(components) <= 40)
+	for (const b of buttons(components)) {
+		assert.ok(String(b.label).length <= 80)
+		if (b.url) assert.ok(String(b.url).length <= 512)
 	}
+	// The 1000-character source is too long for a button and is left out.
+	assert.ok(
+		!buttons(components).some((b) => String(b.label).startsWith("Source")),
+	)
 	assert.ok(threadName(long).length <= 100)
 	assert.ok(
 		threadName({ ...base, message: "y".repeat(500) }, "Design test: ").length <=
@@ -313,7 +310,6 @@ test("a signed-in member shows by public handle only, never by id or email", () 
 			{ ...base, memberId: "user-1", email: "a@b.co" } as PostReport,
 			{
 				origin: "https://goodwatch.app",
-				interactive: true,
 				screenshotInline: false,
 				memberHandle: "film_fan",
 			},
@@ -324,135 +320,39 @@ test("a signed-in member shows by public handle only, never by id or email", () 
 	assert.ok(!text.includes("a@b.co"))
 })
 
-const stored: StoredDetails = {
-	id,
-	kind: "bug",
-	status: "new",
-	memberId: "user-1",
-	metadata: base.metadata,
-	dedupeKey: null,
-	duplicateCount: 1,
-	hasScreenshot: true,
-	createdAt,
-}
-test("Details answers staff only, ephemerally, and denies by default before reading storage", async () => {
-	const load = mock.fn(async (_id: string) => stored)
-	const press = (user: string, roles?: string[], guild = "1") => ({
-		guild_id: guild,
-		member: { user: { id: user }, roles },
-	})
-	const denied = await feedbackDetailsReply(press("111111111111111111"), id, {
-		load,
-		env: {},
-	})
-	assert.equal(denied.outcome, "forbidden")
-	assert.equal(denied.data.flags & EPHEMERAL, EPHEMERAL)
-	assert.equal(load.mock.callCount(), 0)
-
-	const byUser = await feedbackDetailsReply(press("111111111111111111"), id, {
-		load,
-		env: {
-			DISCORD_FEEDBACK_STAFF_USER_IDS: "222222222222222222, 111111111111111111",
-		},
-	})
-	assert.equal(byUser.outcome, "ok")
-	assert.equal(byUser.data.flags, IS_COMPONENTS_V2 | EPHEMERAL)
-	const text = texts(byUser.data.components)
-	for (const shown of [
+test("details reply uses compact V2 with code values, a staff screenshot link, and no notifications", () => {
+	const report = { ...theBear, memberId: "user-1", screenshot: "webp" }
+	const reply = detailsMessage(report, "https://goodwatch.app")
+	assert.equal(reply.flags, IS_COMPONENTS_V2 | SUPPRESS_NOTIFICATIONS)
+	assert.equal(reply.flags & 64, 0, "not ephemeral")
+	assert.deepEqual(reply.allowed_mentions, { parse: [] })
+	const text = texts(reply.components)
+	for (const value of [
 		id,
-		"`user-1`",
+		"user-1",
+		"/show/136315-the-bear",
 		"routes/support",
-		"Chrome 141 on macOS",
-		"Mozilla/5.0",
+		"Chrome 141 on macOS · 1440×900 2x",
+		"en-US",
+		"dark",
+		"DE",
 		"726dea582abc",
-		"0123456789abcdef",
-	])
-		assert.ok(text.includes(shown), shown)
+		"2027-01-15T08:00:00.000Z",
+		"0123456789abcdef0123456789abcdef",
+		"cd".repeat(32),
+	]) {
+		assert.ok(text.includes(`\`${value}\``), value)
+	}
+	assert.ok(!text.includes("{"), "no raw JSON")
 	assert.equal(
-		buttons(byUser.data.components).find((b) => b.label === "Screenshot")?.url,
+		buttons(reply.components).find((b) => b.label === "Screenshot")?.url,
 		`https://goodwatch.app/api/feedback/${id}/screenshot`,
 	)
-
-	const roleEnv = { DISCORD_FEEDBACK_STAFF_ROLE_IDS: "333333333333333333" }
-	assert.equal(
-		(
-			await feedbackDetailsReply(press("4", ["333333333333333333"]), id, {
-				load,
-				env: roleEnv,
-			})
-		).outcome,
-		"ok",
+	assert.ok(
+		!buttons(detailsMessage(base, "https://goodwatch.app").components).some(
+			(b) => b.label === "Screenshot",
+		),
 	)
-	// A role claim outside a server, or a role that isn't listed, is refused.
-	assert.equal(
-		(
-			await feedbackDetailsReply(
-				{ user: { id: "4" }, member: { roles: ["333333333333333333"] } },
-				id,
-				{ load, env: roleEnv },
-			)
-		).outcome,
-		"forbidden",
-	)
-	assert.equal(
-		(await feedbackDetailsReply(press("4", ["5"]), id, { load, env: roleEnv }))
-			.outcome,
-		"forbidden",
-	)
-	const staff = { DISCORD_FEEDBACK_STAFF_USER_IDS: "111111111111111111" }
-	assert.equal(
-		(
-			await feedbackDetailsReply(press("111111111111111111"), id, {
-				load: async () => null,
-				env: staff,
-			})
-		).outcome,
-		"missing",
-	)
-	t_quiet()
-	assert.equal(
-		(
-			await feedbackDetailsReply(press("111111111111111111"), id, {
-				load: async () => {
-					throw new Error("RelationUnknown")
-				},
-				env: staff,
-			})
-		).outcome,
-		"error",
-	)
-})
-let restoreConsole: (() => void) | undefined
-function t_quiet() {
-	const original = console.error
-	console.error = () => {}
-	restoreConsole = () => {
-		console.error = original
-	}
-}
-test.afterEach(() => restoreConsole?.())
-
-test("the interactions endpoint routes Details presses before the member rate limit", async () => {
-	const take = mock.fn(async () => ({ allowed: true }))
-	const answer = await routeInteraction(
-		{
-			type: 3,
-			guild_id: "1",
-			member: { user: { id: "111111111111111111" } },
-			data: { custom_id: `gw1:feedback-details:${id}` },
-		},
-		{
-			take: take as never,
-			log: () => {},
-			feedbackDetails: async () => stored,
-			env: { DISCORD_FEEDBACK_STAFF_USER_IDS: "111111111111111111" },
-		},
-	)
-	assert.equal(answer.type, 4)
-	const data = answer.data as { flags: number; components: Component[] }
-	assert.equal(data.flags, IS_COMPONENTS_V2 | EPHEMERAL)
-	assert.match(texts(data.components), /Report details/)
-	assert.equal(take.mock.callCount(), 0)
 })
 
 test("escaped text and quote prefixes fit the V2 budget for maximal reports", () => {
@@ -474,19 +374,17 @@ test("escaped text and quote prefixes fit the V2 budget for maximal reports", ()
 			url: "/" + "*".repeat(4000),
 		},
 	}
-	for (const interactive of [true, false]) {
-		const options = {
-			origin: "https://goodwatch.app",
-			interactive,
-			screenshotInline: false,
-		}
-		for (const components of [
-			reportComponents(report, options),
-			duplicateComponents(report, 5, options),
-		]) {
-			assert.ok(textLength(components) <= 4000)
-			assert.ok(componentCount(components) <= 40)
-		}
+	const options = {
+		origin: "https://goodwatch.app",
+		screenshotInline: false,
+	}
+	for (const components of [
+		reportComponents(report, options),
+		duplicateComponents(report, 5, options),
+		detailsMessage(report, options.origin).components,
+	]) {
+		assert.ok(textLength(components) <= 4000)
+		assert.ok(componentCount(components) <= 40)
 	}
 	assert.ok(memberText("*".repeat(2400)).length <= 2400)
 	assert.doesNotMatch(memberText("*".repeat(2400)), /(?<!\\)\\…$/)
@@ -507,11 +405,10 @@ test("untrusted fields and technical details cannot expose emails, secrets or sp
 	}
 	const components = reportComponents(report, {
 		origin: "https://goodwatch.app",
-		interactive: false,
 		screenshotInline: false,
 	})
 	const detail = detailsMessage(
-		{ ...stored, metadata: report.metadata },
+		{ ...base, metadata: report.metadata },
 		"https://goodwatch.app",
 	)
 	const output = JSON.stringify([components, detail, threadName(report)])
@@ -523,7 +420,7 @@ test("untrusted fields and technical details cannot expose emails, secrets or sp
 		"[click](",
 	])
 		assert.ok(!output.includes(forbidden), forbidden)
-	assert.equal(detailsLine(report).split("||").length, 3)
+	assert.ok(!JSON.stringify(detail).includes("||"))
 })
 
 test("link buttons validate URLs and remove secret queries and credentials", () => {
@@ -536,7 +433,6 @@ test("link buttons validate URLs and remove secret queries and credentials", () 
 			{ ...theBear, data: { ...theBear.data!, sourceLink } },
 			{
 				origin: "https://goodwatch.app",
-				interactive: false,
 				screenshotInline: false,
 			},
 		)
@@ -555,7 +451,6 @@ test("link buttons validate URLs and remove secret queries and credentials", () 
 		},
 		{
 			origin: "https://goodwatch.app",
-			interactive: false,
 			screenshotInline: false,
 		},
 	)
@@ -572,10 +467,44 @@ test("data fields that match Object prototype keys remain ordinary member text",
 				{ ...theBear, data: { ...theBear.data!, field } },
 				{
 					origin: "https://goodwatch.app",
-					interactive: false,
 					screenshotInline: false,
 				},
 			),
 		)
 	}
+})
+
+test("technical values are individually capped and ignore unrequested metadata and email", () => {
+	const long = "x".repeat(10000)
+	const reply = detailsMessage(
+		{
+			...base,
+			memberId: long,
+			dedupeKey: long,
+			metadata: Object.fromEntries(
+				[
+					"url",
+					"routeId",
+					"userAgent",
+					"locale",
+					"colorScheme",
+					"country",
+					"buildCommit",
+					"sentryReplayId",
+					"email",
+					"cookies",
+				].map((key) => [key, key === "url" ? "/" + long : long]),
+			),
+			email: "member@example.com",
+		} as PostReport,
+		"https://goodwatch.app",
+	)
+	const text = texts(reply.components)
+	assert.ok(textLength(reply.components) <= 4000)
+	assert.ok(componentCount(reply.components) <= 40)
+	assert.ok(text.includes(`**Member id** \`${"x".repeat(63)}…\``))
+	assert.ok(text.includes(`**User agent** \`${"x".repeat(299)}…\``))
+	assert.ok(!text.includes("email"))
+	assert.ok(!text.includes("cookies"))
+	assert.ok(!text.includes("member@example.com"))
 })

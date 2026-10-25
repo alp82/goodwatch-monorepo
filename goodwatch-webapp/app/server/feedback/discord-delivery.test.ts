@@ -1,7 +1,11 @@
 import assert from "node:assert/strict"
 import { mock, test } from "node:test"
 import { postDiscord } from "./discord.server.ts"
-import type { PostReport } from "./discord-post.ts"
+import {
+	detailsMessage,
+	SUPPRESS_NOTIFICATIONS,
+	type PostReport,
+} from "./discord-post.ts"
 
 const report: PostReport = {
 	id: "ab".repeat(32),
@@ -33,7 +37,7 @@ test("forum creation uses documented starter fields; the edit converts it to V2"
 		id: messageId,
 		channel_id: threadId,
 	})
-	assert.equal(send.mock.callCount(), 2)
+	assert.equal(send.mock.callCount(), 3)
 	const create = JSON.parse(send.mock.calls[0].arguments[1]!.body as string)
 	assert.equal(create.message.flags, undefined)
 	assert.equal(create.message.components, undefined)
@@ -49,7 +53,11 @@ test("forum creation uses documented starter fields; the edit converts it to V2"
 	assert.equal(edit.content, null)
 	assert.equal(edit.flags, 1 << 15)
 	assert.deepEqual(edit.allowed_mentions, { parse: [] })
-	assert.match(JSON.stringify(edit.components), /gw1:feedback-details:/)
+	assert.doesNotMatch(JSON.stringify(edit.components), /Details|custom_id|\|\|/)
+	assert.deepEqual(
+		JSON.parse(send.mock.calls[2].arguments[1]!.body as string),
+		detailsMessage(report, "https://goodwatch.app"),
+	)
 	for (const call of send.mock.calls) assert.ok(call.arguments[1]?.signal)
 })
 
@@ -66,7 +74,7 @@ test("a failed conversion falls back to a full webhook card in the already-creat
 	)
 	const receipt = await postDiscord(report, env, send as typeof fetch)
 	assert.equal(receipt.channel_id, threadId)
-	assert.equal(send.mock.callCount(), 3)
+	assert.equal(send.mock.callCount(), 4)
 	const [url, init] = send.mock.calls[2].arguments
 	assert.equal(new URL(String(url)).searchParams.get("thread_id"), threadId)
 	assert.equal(new URL(String(url)).searchParams.get("with_components"), "true")
@@ -144,4 +152,59 @@ test("bot duplicate failure uses the original thread without creating another po
 	assert.equal(payload.thread_name, undefined)
 	assert.equal(payload.applied_tags, undefined)
 	assert.match(JSON.stringify(payload.components), /\+1 duplicate/)
+})
+
+for (const path of ["bot", "webhook"] as const) {
+	test(`${path} details reply failure is logged without failing or retrying delivery`, async (t) => {
+		const log = t.mock.method(console, "error", () => {})
+		const send = mock.fn(
+			async (_url: string | URL | Request, init?: RequestInit) => {
+				const payload =
+					typeof init?.body === "string" ? JSON.parse(init.body) : {}
+				if (payload.flags & SUPPRESS_NOTIFICATIONS)
+					throw new Error("reply failed")
+				return json({
+					id: threadId,
+					channel_id: threadId,
+					message: { id: messageId },
+				})
+			},
+		)
+		const receipt = await postDiscord(
+			report,
+			path === "bot" ? env : { ...env, DISCORD_BOT_TOKEN: undefined },
+			send as typeof fetch,
+		)
+		assert.equal(receipt.channel_id, threadId)
+		assert.equal(send.mock.callCount(), path === "bot" ? 3 : 2)
+		assert.equal(log.mock.callCount(), 1)
+		assert.match(
+			String(log.mock.calls[0].arguments[0]),
+			/posting report details/,
+		)
+	})
+}
+
+test("webhook sends details before the separate screenshot attachment", async () => {
+	const send = mock.fn(
+		async (_url: string | URL | Request, _init?: RequestInit) =>
+			json({ id: messageId, channel_id: threadId }),
+	)
+	const withScreenshot = {
+		...report,
+		screenshot: Buffer.from("webp").toString("base64"),
+	}
+	await postDiscord(
+		withScreenshot,
+		{ ...env, DISCORD_BOT_TOKEN: undefined },
+		send as typeof fetch,
+	)
+	assert.equal(send.mock.callCount(), 3)
+	const [url, init] = send.mock.calls[1].arguments
+	assert.equal(new URL(String(url)).searchParams.get("thread_id"), threadId)
+	assert.deepEqual(
+		JSON.parse(init!.body as string),
+		detailsMessage(withScreenshot, "https://goodwatch.app"),
+	)
+	assert.ok(typeof send.mock.calls[2].arguments[1]!.body !== "string")
 })

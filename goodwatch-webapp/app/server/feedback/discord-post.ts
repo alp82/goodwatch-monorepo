@@ -1,17 +1,12 @@
 // The staff Discord post for a feedback report (docs/implementation/feedback/README.md, "Discord"). Pure builders:
 // no network, no environment. Components V2, in the look of the GoodWatch bot's cards (amber container, link buttons).
 //
-// - The post leads with the kind, the member's message, and one human line (who, where, when). Data reports add a
-//   "was / now" block. Technical details stay behind a control: the Details button when the bot posts (staff only,
-//   answered ephemerally), or a spoilered subtext line when a plain webhook posts (it may not send buttons that
-//   call back).
-// - Display text never carries links, mentions, email addresses or a member's email. Mentions are also disabled on
-//   every payload.
+// Technical details follow as the first reply in the staff forum thread. Display text never carries links,
+// mentions, email addresses or a member's email. Mentions are disabled on every payload.
 import {
 	AMBER,
 	BUTTON_URL_LIMIT,
 	type Component,
-	EPHEMERAL,
 	IS_COMPONENTS_V2,
 	componentCount,
 	container,
@@ -19,8 +14,7 @@ import {
 	separator,
 	textLength,
 } from "../discord/cards.ts"
-import { feedbackDetailsId } from "../discord/custom-id.ts"
-import { safePath, type FeedbackInput, type FeedbackStatus } from "./schema.ts"
+import { safePath, type FeedbackInput } from "./schema.ts"
 
 export type FeedbackKind = FeedbackInput["kind"]
 type DataReport = NonNullable<FeedbackInput["data"]>
@@ -42,8 +36,6 @@ export interface PostOptions {
 	origin: string
 	/** The member's public profile handle, without @. Never their name or email. */
 	memberHandle?: string | null
-	/** True when the bot posts: a Details button replaces the spoilered details line. */
-	interactive: boolean
 	/** True when the screenshot rides in this message (media gallery); false when it follows as its own message. */
 	screenshotInline: boolean
 	/** Put in front of the thread name, for design tests. */
@@ -114,7 +106,6 @@ export const code = (value: unknown, max = 120) => {
 	return `\`${text.length > max ? `${text.slice(0, max - 1)}…` : text}\``
 }
 const ago = (ms: number) => `<t:${Math.floor(ms / 1000)}:R>`
-const exact = (ms: number) => `<t:${Math.floor(ms / 1000)}:f>`
 const str = (value: unknown) => (typeof value === "string" ? value : undefined)
 
 export function flag(country: unknown) {
@@ -364,10 +355,10 @@ export function pageUrl(origin: string, path: unknown) {
 		return null
 	}
 }
-/** "Open page", TMDB, IMDb, "Source", and the Details button when it can be answered. At most five per row. */
+/** Link buttons only, at most five per row. */
 function buttons(
 	report: PostReport,
-	options: { origin: string; details: boolean },
+	options: { origin: string },
 ): Component | null {
 	const page = pageUrl(options.origin, report.metadata.url)
 	const source = report.data?.sourceLink
@@ -379,25 +370,11 @@ function buttons(
 		source
 			? linkButton(`Source · ${hostname(source) ?? "link"}`, source)
 			: null,
-		options.details
-			? {
-					type: 2,
-					style: 2,
-					label: "Details",
-					emoji: { name: "🔎" },
-					custom_id: feedbackDetailsId(report.id),
-				}
-			: null,
 	].filter(Boolean) as Component[]
-	// Details is the one button the post can't do without when it is there.
-	const kept = row.length > 5 ? [...row.slice(0, 4), row[row.length - 1]] : row
-	return kept.length ? { type: 1, components: kept } : null
+	return row.length ? { type: 1, components: row.slice(0, 5) } : null
 }
-/**
- * Technical details for the webhook post, where no button can call back: one subtext line behind a spoiler.
- * Report id, member id, route, device, build, replay, dedupe key and time; never raw JSON.
- */
-export function detailsLine(report: PostReport) {
+/** Existing duplicate technical note; new reports use a separate details reply. */
+function duplicateDetailsLine(report: PostReport) {
 	const m = report.metadata
 	const parts = [
 		`Report ${code(report.id, 64)}`,
@@ -409,7 +386,7 @@ export function detailsLine(report: PostReport) {
 			: null,
 		str(m.sentryReplayId) ? `replay ${code(m.sentryReplayId, 40)}` : null,
 		report.dedupeKey ? `dedupe ${code(report.dedupeKey.slice(0, 12))}` : null,
-		`received ${exact(report.createdAt)}`,
+		`received <t:${Math.floor(report.createdAt / 1000)}:f>`,
 	].filter(Boolean)
 	return `-# Details ||${parts.join(" · ")}||`
 }
@@ -483,17 +460,12 @@ export function reportComponents(report: PostReport, options: PostOptions) {
 			!!report.screenshot &&
 				!options.screenshotInline && {
 					type: 10,
-					content: "-# 📎 Screenshot in the next message",
+					content: "-# 📎 Screenshot attached in the thread",
 				},
-			!options.interactive && separator(),
-			!options.interactive && { type: 10, content: detailsLine(report) },
 		],
 		AMBER,
 	)
-	const row = buttons(report, {
-		origin: options.origin,
-		details: options.interactive,
-	})
+	const row = buttons(report, options)
 	const components = [card, ...(row ? [row] : [])]
 	mainText.content = hero(
 		report,
@@ -503,13 +475,12 @@ export function reportComponents(report: PostReport, options: PostOptions) {
 }
 /**
  * A further submission of an open data report, as a reply in its thread: a small "+1 duplicate" note, the new
- * message, what differs (the dedupe key ignores message, current value and source), and its details line. The
- * merged submission has no row of its own, so its details are always inline.
+ * message, what differs (the dedupe key ignores message, current value and source), and the submission id.
  */
 export function duplicateComponents(
 	report: PostReport,
 	count: number,
-	options: Omit<PostOptions, "interactive" | "threadPrefix">,
+	options: Omit<PostOptions, "threadPrefix">,
 ) {
 	const lines = [
 		`**+1 duplicate** (${count} total) · ${contextLine(report, options.memberHandle)}`,
@@ -527,7 +498,8 @@ export function duplicateComponents(
 	if (extra.length) lines.push(`-# ${extra.join(" · ")}`)
 	if (report.screenshot && !options.screenshotInline)
 		lines.push("-# 📎 Screenshot in the next message")
-	lines.push(detailsLine(report))
+	lines.push(`-# Report ${code(report.id, 64)}`)
+	lines.push(duplicateDetailsLine(report))
 	const sourceButton = report.data?.sourceLink
 		? linkButton(
 				`Source · ${hostname(report.data.sourceLink) ?? "link"}`,
@@ -549,69 +521,49 @@ export function duplicateComponents(
 }
 export const MESSAGE_FLAGS = IS_COMPONENTS_V2
 
-// ---------- the Details answer ----------
+// ---------- the first thread reply ----------
 
-/** A stored report as the Details button reads it. */
-export interface StoredDetails {
-	id: string
-	kind: FeedbackKind
-	status: FeedbackStatus | string
-	memberId: string | null
-	metadata: Record<string, unknown>
-	dedupeKey: string | null
-	duplicateCount: number
-	hasScreenshot: boolean
-	createdAt: number
-}
-/** The ephemeral answer to Details: every technical detail, formatted for reading, with a screenshot link. */
-export function detailsMessage(report: StoredDetails, origin: string) {
+export const SUPPRESS_NOTIFICATIONS = 1 << 12
+
+/** Technical details available at delivery time, without a storage read or member email. */
+export function detailsMessage(report: PostReport, origin: string) {
 	const m = report.metadata
-	const kind = KINDS[report.kind] ?? { emoji: "📝", label: String(report.kind) }
-	const device = [
-		deviceName(m.userAgent),
-		screen(m),
-		str(m.colorScheme) ? inline(String(m.colorScheme), 20) : null,
-		str(m.locale) ? inline(String(m.locale), 35) : null,
-		flag(m.country) || null,
-	].filter(Boolean)
+	const device = [deviceName(m.userAgent), screen(m)]
+		.filter(Boolean)
+		.join(" · ")
 	const lines = [
-		`**Report** ${code(report.id, 64)}`,
-		`**Member** ${report.memberId ? code(report.memberId, 64) : "Guest"}`,
-		str(m.url) || str(m.routeId)
-			? `**Page** ${[shortPath(m.url, 120), str(m.routeId) ? `route ${code(m.routeId, 80)}` : null].filter(Boolean).join(" · ")}`
-			: null,
-		device.length ? `**Device** ${device.join(" · ")}` : null,
+		`**Report id** ${code(report.id, 64)}`,
+		`**Member id** ${code(report.memberId ?? "Guest", 64)}`,
+		str(m.url) ? `**Page** ${shortPath(m.url, 120)}` : null,
+		str(m.routeId) ? `**Route** ${code(m.routeId, 80)}` : null,
+		device ? `**Device and browser** ${code(device, 160)}` : null,
 		str(m.userAgent) ? `**User agent** ${code(m.userAgent, 300)}` : null,
-		str(m.buildCommit) ? `**Build** ${code(m.buildCommit, 40)}` : null,
-		`**Received** ${exact(report.createdAt)} (${ago(report.createdAt)})`,
+		str(m.locale) ? `**Locale** ${code(m.locale, 35)}` : null,
+		str(m.colorScheme) ? `**Color scheme** ${code(m.colorScheme, 20)}` : null,
+		str(m.country) ? `**Country** ${code(m.country, 35)}` : null,
+		str(m.buildCommit) ? `**Build commit** ${code(m.buildCommit, 64)}` : null,
+		`**Received** ${code(new Date(report.createdAt).toISOString(), 30)}`,
 		str(m.sentryReplayId)
-			? `**Sentry replay** ${code(m.sentryReplayId, 40)}`
+			? `**Sentry replay id** ${code(m.sentryReplayId, 40)}`
 			: null,
 		report.dedupeKey ? `**Dedupe key** ${code(report.dedupeKey, 64)}` : null,
 	].filter(Boolean)
-	const screenshot = report.hasScreenshot
+	const screenshot = report.screenshot
 		? linkButton("Screenshot", `${origin}/api/feedback/${report.id}/screenshot`)
 		: null
-	const components = finish([
-		container(
-			[
-				{
-					type: 10,
-					content: `### 🔎 Report details\n-# ${kind.emoji} ${kind.label} · ${String(report.status).replace(/_/g, " ")} · ${report.duplicateCount} ${report.duplicateCount === 1 ? "submission" : "submissions"}`,
-				},
-				separator(),
-				{ type: 10, content: lines.join("\n") },
-			],
-			AMBER,
-		),
-		...(screenshot ? [{ type: 1, components: [screenshot] }] : []),
-	])
-	return ephemeral(components)
+	return {
+		flags: IS_COMPONENTS_V2 | SUPPRESS_NOTIFICATIONS,
+		components: finish([
+			container(
+				[
+					{ type: 10, content: "### 🔎 Report details" },
+					separator(),
+					{ type: 10, content: lines.join("\n") },
+				],
+				AMBER,
+			),
+			...(screenshot ? [{ type: 1, components: [screenshot] }] : []),
+		]),
+		allowed_mentions: { parse: [] },
+	}
 }
-export const ephemeral = (components: Component[]) => ({
-	flags: IS_COMPONENTS_V2 | EPHEMERAL,
-	components,
-	allowed_mentions: { parse: [] },
-})
-export const ephemeralText = (text: string) =>
-	ephemeral([{ type: 10, content: text }])

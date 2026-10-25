@@ -12,7 +12,6 @@ import { nativeFetch } from "../native-fetch.server.ts"
 import { readJsonLimited } from "../profile/request.server.ts"
 import { clientAddress } from "../talked-about-now/rate-limit.server.ts"
 import { discordConfigured, postDiscord } from "./discord.server.ts"
-import type { StoredDetails } from "./discord-post.ts"
 import {
 	type FeedbackInput,
 	type FeedbackStatus,
@@ -92,8 +91,6 @@ export interface FeedbackStore {
 		threadId: string | null,
 	): Promise<void>
 	screenshot(id: string): Promise<Screenshot | null>
-	/** The stored report for the staff Details button; null when there is no row. */
-	details(id: string): Promise<StoredDetails | null>
 }
 /** The shared limiter (app/server/rate-limit.server.ts): counted in Valkey, so every webapp instance shares it. */
 export interface Limiter {
