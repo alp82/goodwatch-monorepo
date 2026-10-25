@@ -8,14 +8,14 @@
 // - Delivery failure after the row is stored never fails the request.
 import { createHash } from "node:crypto"
 import sharp from "sharp"
-import { File, FormData } from "undici"
 import { nativeFetch } from "../native-fetch.server.ts"
 import { readJsonLimited } from "../profile/request.server.ts"
 import { clientAddress } from "../talked-about-now/rate-limit.server.ts"
+import { discordConfigured, postDiscord } from "./discord.server.ts"
+import type { StoredDetails } from "./discord-post.ts"
 import {
 	type FeedbackInput,
 	type FeedbackStatus,
-	display,
 	feedbackSchema,
 	safePath,
 } from "./schema.ts"
@@ -92,6 +92,8 @@ export interface FeedbackStore {
 		threadId: string | null,
 	): Promise<void>
 	screenshot(id: string): Promise<Screenshot | null>
+	/** The stored report for the staff Details button; null when there is no row. */
+	details(id: string): Promise<StoredDetails | null>
 }
 /** The shared limiter (app/server/rate-limit.server.ts): counted in Valkey, so every webapp instance shares it. */
 export interface Limiter {
@@ -128,6 +130,8 @@ export interface Dependencies {
 	limiter: Limiter
 	memberId(request: Request): Promise<string | null>
 	email(report: Report): Promise<void>
+	/** The member's public profile handle for the staff post, or null. Never a name or an email. */
+	memberHandle?(memberId: string): Promise<string | null>
 	env?: Record<string, string | undefined>
 	send?: typeof fetch
 	now?: () => number
@@ -284,16 +288,21 @@ export async function handleFeedback(
 			}
 		}
 		let delivered = false
-		if (env.DISCORD_FEEDBACK_WEBHOOK_URL) {
+		if (discordConfigured(env)) {
 			let receipt: Awaited<ReturnType<typeof postDiscord>> | undefined
 			try {
 				if (duplicate && !duplicate.threadId)
 					throw new Error("Duplicate report has no Discord thread")
+				const memberHandle =
+					memberId && deps.memberHandle
+						? await withTimeout(deps.memberHandle(memberId), 1500)
+						: null
 				receipt = await postDiscord(
 					report,
 					env,
 					deps.send ?? nativeFetch,
 					duplicate,
+					{ memberHandle },
 				)
 				delivered = true
 			} catch (error) {
@@ -331,6 +340,20 @@ export async function handleFeedback(
 		return answer(503)
 	}
 }
+/** The value, or null when it fails or takes longer than the budget. */
+async function withTimeout<T>(work: Promise<T>, ms: number): Promise<T | null> {
+	let timer: ReturnType<typeof setTimeout> | undefined
+	try {
+		return await Promise.race([
+			work.catch(() => null),
+			new Promise<null>((resolve) => {
+				timer = setTimeout(() => resolve(null), ms)
+			}),
+		])
+	} finally {
+		clearTimeout(timer)
+	}
+}
 async function firstRefusal(
 	limiter: Limiter,
 	takes: [string, string, { limit: number; seconds: number }][],
@@ -348,113 +371,6 @@ function sanitizeSource(value: string) {
 	url.hash = ""
 	const path = safePath(value)
 	return url.origin + path
-}
-export async function postDiscord(
-	report: Report,
-	env: Record<string, string | undefined>,
-	send: typeof fetch,
-	duplicate?: Extract<StoredReport, { kind: "duplicate" }>,
-) {
-	const url = new URL(env.DISCORD_FEEDBACK_WEBHOOK_URL!)
-	if (
-		url.protocol !== "https:" ||
-		url.hostname !== "discord.com" ||
-		!/^\/api(?:\/v\d+)?\/webhooks\//.test(url.pathname)
-	)
-		throw new Error("Invalid webhook URL")
-	url.searchParams.set("wait", "true")
-	url.searchParams.delete("thread_id")
-	if (duplicate?.threadId) url.searchParams.set("thread_id", duplicate.threadId)
-	let tag: string | undefined
-	try {
-		const tags = JSON.parse(env.DISCORD_FEEDBACK_TAG_IDS ?? "{}")
-		if (/^\d{1,20}$/.test(tags[report.kind])) tag = tags[report.kind]
-	} catch {
-		/* optional */
-	}
-	// Discord limits: thread_name 100, embed title 256, description 4096, field value 1024, embed total 6000.
-	const embed = {
-		title: duplicate
-			? `Duplicate ${duplicate.count}: ${report.kind}`
-			: `Feedback: ${report.kind}`,
-		description: display(report.message, 3500),
-		fields: [
-			{ name: "Report", value: report.id },
-			{
-				name: "Member",
-				value: report.memberId ? display(report.memberId, 100) : "Guest",
-			},
-			{
-				name: "Context",
-				value: display(JSON.stringify(report.metadata), 1000) || "Unavailable",
-			},
-			...(report.data
-				? [
-						{
-							name: "Data",
-							value:
-								display(JSON.stringify(report.data), 1000) || "Unavailable",
-						},
-					]
-				: []),
-		],
-	}
-	// A duplicate replies in the original thread. The key ignores message, current value, and source, so the
-	// reply carries the new submission's evidence as its own embed instead of only the count.
-	const payload = duplicate
-		? {
-				content: `Duplicate count increased to ${duplicate.count}.`,
-				allowed_mentions: { parse: [] },
-				embeds: [embed],
-			}
-		: {
-				thread_name:
-					`${report.kind}: ${display(report.message, 65) || report.id.slice(0, 12)}`.slice(
-						0,
-						100,
-					),
-				...(tag ? { applied_tags: [tag] } : {}),
-				allowed_mentions: { parse: [] },
-				embeds: [embed],
-			}
-	let body: BodyInit
-	let requestHeaders: Record<string, string> = {}
-	if (report.screenshot) {
-		const form = new FormData()
-		form.set("payload_json", JSON.stringify(payload))
-		form.set(
-			"files[0]",
-			new File([Buffer.from(report.screenshot, "base64")], "screenshot.webp", {
-				type: "image/webp",
-			}),
-		)
-		body = form as unknown as BodyInit
-	} else {
-		body = JSON.stringify(payload)
-		requestHeaders = { "Content-Type": "application/json" }
-	}
-	const controller = new AbortController()
-	const timer = setTimeout(() => controller.abort(), 10000)
-	try {
-		const response = await send(url.toString(), {
-			method: "POST",
-			headers: requestHeaders,
-			body,
-			signal: controller.signal,
-		})
-		if (!response.ok) {
-			await response.arrayBuffer()
-			throw new Error(`Discord answered ${response.status}`)
-		}
-		const result = (await response.json()) as {
-			id?: string
-			channel_id?: string
-		}
-		if (!result.id) throw new Error("Missing Discord receipt")
-		return { id: result.id, channel_id: result.channel_id }
-	} finally {
-		clearTimeout(timer)
-	}
 }
 /** Authorization precedes storage access. Deny by default. */
 export async function readScreenshot(

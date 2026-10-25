@@ -11,6 +11,8 @@ Issue: [#763](https://github.com/alp82/goodwatch-monorepo/issues/763). Map: [#76
 | `goodwatch-webapp/app/routes/api.feedback.ts` | The route. `POST` only. |
 | `goodwatch-webapp/app/routes/api.feedback.$reportId.screenshot.ts` | Serves a stored screenshot to staff. |
 | `goodwatch-webapp/app/server/feedback/handler.server.ts` | Request checks, rate limit, storage, Discord, email fallback. Takes its store, limiter, session, and mail as dependencies, so the tests run without services. |
+| `goodwatch-webapp/app/server/feedback/discord-post.ts` | The staff post, the duplicate reply, and the Details answer as Components V2. Pure builders. |
+| `goodwatch-webapp/app/server/feedback/discord.server.ts` | Delivery (bot, then webhook) and the staff check behind the Details button. |
 | `goodwatch-webapp/app/server/feedback/schema.ts` | The zod schema, `safePath` (query secret removal), and `display` (Discord text sanitizing). |
 | `goodwatch-webapp/app/server/feedback/store.server.ts` | Crate queries, duplicate merging, and screenshot storage. Runs no queries at module load. |
 | `goodwatch-webapp/app/server/feedback/runtime.server.ts` | Wires the handler to Crate, the shared rate limiter, the session, and SMTP. |
@@ -119,13 +121,42 @@ A deploy to main goes live before an operator runs the schema sync. Until then t
 
 ## Discord
 
-The webhook URL must be an `https://discord.com/api/.../webhooks/...` URL. For each new report, the handler posts one forum post with `?wait=true`, a `thread_name` of the kind and the first words of the message, the kind's tag from `DISCORD_FEEDBACK_TAG_IDS`, and `allowed_mentions: {"parse": []}`. The embed holds the message, the report id, the member id or `Guest`, the metadata, and the data report. Every display string goes through `display`, which removes links, email addresses, mentions, angle-bracket markup, Markdown characters, and control characters, and caps the length under Discord's limits (thread name 100, description 4096, field 1024, embed 6000). Screenshots are attached as `screenshot.webp`.
+Every post is a Components V2 message (`flags: 1 << 15`) in the look of the GoodWatch bot's cards: an amber container and link buttons below it.
 
-A duplicate uses the webhook's `thread_id` query parameter and the content `Duplicate count increased to <count>.`, followed by the same embed for the new submission (titled `Duplicate <count>: data`), because the key ignores the message, current value, and source. Mentions are disabled, and the reply has no `thread_name` and no tags. It preserves the original Discord receipt. If the original report has no thread receipt, the handler logs the failure and emails the submission without opening another post.
+- **Heading:** the kind with an emoji (🐞 Bug, 💡 Idea, 🛠️ Data fix with the entity name, ✉️ Contact).
+- **Context line** (subtext): `Guest` or `Member @handle` (the public profile handle only; never a name, email, or member id), the country flag, the page path, locale, color scheme, and a live relative time (`<t:…:R>`).
+- **The message** as the main text. Links and email addresses are replaced with "(link removed)" and "(email removed)", Markdown and `<` are escaped, `@` is followed by a zero-width space, line breaks are kept. Above 2,400 characters it is shortened with a note; the full text is in Crate and the email.
+- **Data reports:** the field in words ("Where to watch") and the country, then `Was:` and `Now:` and the source's domain. The entity name comes from `data.entityName`, which the reporting page sends (optional, not part of the dedupe key).
+- **Contact:** a note that the message was also emailed to hello@goodwatch.app.
+- **Buttons:** Open page (the reported GoodWatch URL), TMDB and IMDb when the ids allow (`tmdb_id`/`tmdbId`/`tmdb`, `imdb_id`/`imdbId`/`imdb`, plus season and episode numbers), `Source · <domain>`, and Details. Link buttons over 512 characters are left out.
+- **Technical details** (report id, member id, route id, device from the user agent, viewport, build commit, Sentry replay id, dedupe key, received time) never show in the open. See below.
 
-The request uses `nativeFetch` (undici) with a 10 second timeout. The polyfilled global `fetch` crashed production when an abort fired during a request with a body (October 23, 2026); do not switch back.
+The thread name is the kind and the first words of the message, or for data reports the entity and field (`Data fix: The Bear · Where to watch`), at most 100 characters. Tags come from `DISCORD_FEEDBACK_TAG_IDS`. Mentions are disabled on every message (`allowed_mentions: {"parse": []}`). The builders check Discord's limits themselves: 40 components, 4,000 characters of text, 80-character button labels, 512-character button URLs.
 
-Nothing from a member other than the id reaches Discord: no email, no cookies, no tokens. The message id and channel id from the answer are written to the row.
+### Delivery: bot first, then webhook
+
+1. **Bot** (`DISCORD_BOT_TOKEN` and `DISCORD_FEEDBACK_FORUM_CHANNEL_ID`): `POST /channels/{forum}/threads` with the post as the starter message. The bot owns the message, so the post carries the **Details** button. A screenshot is uploaded as `files[0]` and shown in a media gallery (`attachment://screenshot.webp`).
+2. **Webhook** (`DISCORD_FEEDBACK_WEBHOOK_URL`, used when the bot is not configured or its request fails): `?wait=true&with_components=true`. Discord lets a webhook the application doesn't own send only non-interactive components, so instead of the button the post ends with one subtext line behind a spoiler (`-# Details ||…||`). Discord refuses `files[n]` together with Components V2 on a webhook, so a screenshot follows as its own plain message in the thread. If that second message fails, the failure is logged and the report still counts as delivered.
+
+If every configured way fails, the report is emailed.
+
+Unverified against Discord: the Start Thread in Forum docs list only `SUPPRESS_EMBEDS` and `SUPPRESS_NOTIFICATIONS` as starter-message flags. If Discord refuses `IS_COMPONENTS_V2` there, the bot request fails and the webhook path posts the report, so nothing is lost, but there is no Details button. Check the first bot post after the bot gets access.
+
+### Details button
+
+The button's custom id is `gw1:feedback-details:<report id>`. The press reaches `POST /api/discord/interactions` (`router.server.ts`), which answers before the member rate limit:
+
+- Staff only, deny by default: the presser's Discord user id must be in `DISCORD_FEEDBACK_STAFF_USER_IDS`, or, in a server, one of their roles in `DISCORD_FEEDBACK_STAFF_ROLE_IDS`. Others get "Only GoodWatch staff can see report details." The check runs before any storage read.
+- The answer is ephemeral (only the presser sees it): a card "Report details" with kind, status, and submission count, then report id, member id, page and route, device (browser and OS, viewport, color scheme, locale, country), the full user agent, build commit, received time, Sentry replay id, and dedupe key, plus a Screenshot link button to the staff screenshot route when one is stored.
+- The row is read with `feedbackStore.details` (one primary-key read, 2.5 second budget). A missing row says the report isn't stored.
+
+### Duplicates
+
+A duplicate replies in the original thread (bot: `POST /channels/{thread}/messages`; webhook: `thread_id`) with a small note: `**+1 duplicate** (3 total)` with the new submitter's context line, their message as a quote, what they see and their source when given, and the spoilered details line. The merged submission has no row of its own, so its details are always inline. The reply has no thread name and no tags and keeps the original Discord receipt. If the original report has no thread receipt, the handler logs the failure and emails the submission without opening another post.
+
+Every request uses `nativeFetch` (undici) with a 10 second timeout. The polyfilled global `fetch` crashed production when an abort fired during a request with a body (October 23, 2026); do not switch back.
+
+Nothing from a member other than the public handle reaches the visible post; the member id appears only behind the Details control. No email, no cookies, no tokens. The message id and thread id from the answer are written to the row.
 
 ## Email
 
@@ -146,11 +177,15 @@ All of these are optional. Without them the endpoint stores reports (once the ta
 
 | Variable | Purpose |
 | --- | --- |
-| `DISCORD_FEEDBACK_WEBHOOK_URL` | The private staff forum's webhook. |
+| `DISCORD_FEEDBACK_FORUM_CHANNEL_ID` | The private staff forum's channel id. With `DISCORD_BOT_TOKEN`, the bot posts reports and adds the Details button. |
+| `DISCORD_FEEDBACK_WEBHOOK_URL` | The private staff forum's webhook. The fallback when the bot is not set up or fails. |
+| `DISCORD_FEEDBACK_STAFF_USER_IDS` | Comma separated Discord user ids allowed to press Details. |
+| `DISCORD_FEEDBACK_STAFF_ROLE_IDS` | Comma separated Discord role ids allowed to press Details. Both lists empty denies everyone. |
 | `DISCORD_FEEDBACK_TAG_IDS` | JSON map of kind to forum tag id, such as `{"bug":"123","idea":"456","data":"789","contact":"012"}`. |
 | `FEEDBACK_STAFF_MEMBER_IDS` | Comma separated member ids allowed to read screenshots. |
 | `AUTH_SMTP_USER`, `AUTH_SMTP_PASSWORD` | Existing SMTP credentials for the email path. |
-| `APP_ORIGIN`, `SOURCE_COMMIT` | Existing. The origin check and the build commit in the metadata. |
+| `APP_ORIGIN`, `SOURCE_COMMIT` | Existing. The origin check, the Open page and Screenshot links, and the build commit in the metadata. |
+| `DISCORD_BOT_TOKEN` | Existing. The bot's token, also used for the bot path. |
 
 ## Tests
 
@@ -158,6 +193,8 @@ All of these are optional. Without them the endpoint stores reports (once the ta
 cd goodwatch-webapp
 node --test app/server/feedback/*.test.ts
 ```
+
+`discord.test.ts` covers both delivery paths (bot thread with the Details button and media gallery, webhook with only link buttons and the spoilered details line, the bot-to-webhook fallback, duplicate replies), the data report layout and reference links, Discord's limits, text sanitizing, the Details staff check (user list, role list, deny by default, before storage), and the router hand-off.
 
 The tests use fakes for storage, the limiter, the session, Discord, and email. They cover validation, origin, body cap, both rate limits, the hashed limiter key, query secret removal, the Discord payload and its sanitizing, the email fallback, idempotency, the soft storage failure, screenshot normalization, and the staff check. The store tests inject SQL results to cover dedupe misses, both open statuses, closed statuses, version conflicts, merged retries, status validation, screenshot table writes and reads, and screenshot storage failure. No test contacts a database or delivery service.
 
@@ -167,3 +204,9 @@ The tests use fakes for storage, the limiter, the session, Discord, and email. T
 2. Set `DISCORD_FEEDBACK_WEBHOOK_URL`, `DISCORD_FEEDBACK_TAG_IDS`, and `FEEDBACK_STAFF_MEMBER_IDS` in Coolify.
 3. Run `f/sync/init/cratedb` (dry run, then apply) to create `doc.feedback_report` and `doc.feedback_screenshot`.
 4. Send one report of each kind from the site and check that each post carries the right tag.
+
+### Enable the Details button
+
+1. In the forum channel's permissions, give the GoodWatch bot (or its role) View Channel, Send Messages, Create Posts, Send Messages in Threads, Attach Files, and Read Message History. A private forum needs the bot added explicitly.
+2. Set `DISCORD_FEEDBACK_FORUM_CHANNEL_ID` (right-click the forum, Copy Channel ID, with Developer Mode on) and `DISCORD_FEEDBACK_STAFF_USER_IDS` and/or `DISCORD_FEEDBACK_STAFF_ROLE_IDS` in Coolify. Keep `DISCORD_FEEDBACK_WEBHOOK_URL` as the fallback.
+3. Send one report and press Details as staff and as a non-staff account.

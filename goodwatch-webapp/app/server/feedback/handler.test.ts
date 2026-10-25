@@ -51,6 +51,7 @@ function fixture(member: string | null = null) {
 			async (_id: string, _m: string, _t: string | null) => {},
 		),
 		screenshot: mock.fn(async (id: string) => screenshots.get(id) ?? null),
+		details: mock.fn(async (_id: string) => null),
 	} satisfies FeedbackStore
 	const deps = {
 		store,
@@ -233,21 +234,28 @@ test("sends a tagged forum payload with mentions disabled and sanitized display 
 		email: "private@example.com",
 	})
 	const [url, options] = f.deps.send.mock.calls[0].arguments
-	assert.ok(String(url).includes("wait=true"))
+	assert.equal(new URL(String(url)).searchParams.get("wait"), "true")
+	assert.equal(new URL(String(url)).searchParams.get("with_components"), "true")
 	assert.ok(options?.signal)
 	const payload = JSON.parse(options!.body as string)
 	assert.deepEqual(payload.applied_tags, ["789"])
 	assert.deepEqual(payload.allowed_mentions, { parse: [] })
+	assert.equal(payload.flags, 1 << 15)
+	assert.equal(payload.embeds, undefined)
+	assert.equal(payload.content, undefined)
 	assert.equal(typeof payload.thread_name, "string")
 	assert.ok(payload.thread_name.length <= 100)
 	const text = JSON.stringify(payload)
+	assert.match(text, /### 🐞 Bug/)
+	assert.match(text, /Member · 🇩🇪/)
 	for (const forbidden of [
-		"https://",
+		"evil.test",
 		"@everyone",
 		"<@123>",
-		"**",
+		"**broken",
 		"private@example.com",
 		"me@example.com",
+		'"member"',
 	])
 		assert.ok(!text.includes(forbidden), forbidden)
 	assert.deepEqual(f.deps.store.discordId.mock.calls[0].arguments.slice(1), [
@@ -368,13 +376,23 @@ test("normalizes PNG and JPEG screenshots to WebP and attaches them; staff autho
 		).format,
 		"webp",
 	)
-	const form = f.deps.send.mock.calls[0].arguments[1]!.body as unknown as {
+	// The webhook may not send files next to Components V2: the card goes first, the screenshot follows in the thread.
+	const card = JSON.parse(
+		f.deps.send.mock.calls[0].arguments[1]!.body as string,
+	)
+	assert.match(JSON.stringify(card), /Screenshot in the next message/)
+	const [followUrl, follow] = f.deps.send.mock.calls[1].arguments
+	assert.equal(new URL(String(followUrl)).searchParams.get("thread_id"), "456")
+	assert.equal(
+		new URL(String(followUrl)).searchParams.get("with_components"),
+		null,
+	)
+	const form = follow!.body as unknown as {
 		get(name: string): unknown
 	}
-	assert.deepEqual(
-		JSON.parse(form.get("payload_json") as string).allowed_mentions,
-		{ parse: [] },
-	)
+	const followPayload = JSON.parse(form.get("payload_json") as string)
+	assert.deepEqual(followPayload.allowed_mentions, { parse: [] })
+	assert.equal(followPayload.flags, undefined)
 	assert.ok(form.get("files[0]"))
 	assert.equal((await readScreenshot(r.id, false, f.deps.store)).status, 403)
 	assert.equal(f.deps.store.screenshot.mock.callCount(), 0)
@@ -505,18 +523,14 @@ test("a duplicate replies in the existing thread with the count and keeps the su
 	assert.equal(new URL(String(url)).searchParams.get("wait"), "true")
 	assert.ok(init?.signal)
 	const payload = JSON.parse(init!.body as string)
-	assert.equal(payload.content, "Duplicate count increased to 3.")
+	assert.equal(payload.flags, 1 << 15)
 	assert.deepEqual(payload.allowed_mentions, { parse: [] })
 	assert.equal(payload.thread_name, undefined)
 	assert.equal(payload.applied_tags, undefined)
 	// The reply carries the new submission's evidence: the key ignores message and source.
-	assert.equal(payload.embeds.length, 1)
-	assert.equal(payload.embeds[0].title, "Duplicate 3: data")
-	assert.match(
-		payload.embeds[0].fields.find((f: { name: string }) => f.name === "Data")
-			.value,
-		/tmdb/,
-	)
+	const text = JSON.stringify(payload)
+	assert.match(text, /\*\*\+1 duplicate\*\* \(3 total\)/)
+	assert.match(text, /> Something broke/)
 	assert.equal(f.deps.store.discordId.mock.callCount(), 0)
 	assert.equal(f.deps.email.mock.callCount(), 0)
 	f.deps.store.insert.mock.mockImplementation(async () => ({
@@ -573,7 +587,7 @@ test("screenshot storage follows the report and fails softly with the attachment
 	assert.equal(f.rows.size, 1)
 	assert.equal(f.screenshots.size, 0)
 	assert.equal([...f.rows.values()][0].hasScreenshot, false)
-	const form = f.deps.send.mock.calls[0].arguments[1]!.body as unknown as {
+	const form = f.deps.send.mock.calls[1].arguments[1]!.body as unknown as {
 		get(name: string): unknown
 	}
 	assert.ok(form.get("files[0]"))

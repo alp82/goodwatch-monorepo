@@ -1,4 +1,5 @@
 import type { FeedbackStore, Report, StoredReport } from "./handler.server.ts"
+import type { StoredDetails } from "./discord-post.ts"
 import { feedbackStatusSchema } from "./schema.ts"
 
 type Sql = (
@@ -130,6 +131,39 @@ export function createFeedbackStore(run: Sql): FeedbackStore {
 				"UPDATE doc.feedback_report SET discord_message_id = ?, discord_thread_id = ? WHERE id = ?",
 				[messageId, threadId, id],
 			)
+		},
+		async details(id) {
+			const result = await run(
+				`SELECT id, kind, status, member_id, metadata, dedupe_key, duplicate_count, has_screenshot, created_at
+ FROM doc.feedback_report WHERE id = ?`,
+				[id],
+			)
+			const row = result.json?.[0] as
+				| {
+						id: string
+						kind: StoredDetails["kind"]
+						status: string
+						member_id: string | null
+						metadata: Record<string, unknown> | null
+						dedupe_key: string | null
+						duplicate_count: number | null
+						has_screenshot: boolean | null
+						created_at: number
+				  }
+				| undefined
+			return row
+				? {
+						id: row.id,
+						kind: row.kind,
+						status: row.status,
+						memberId: row.member_id,
+						metadata: row.metadata ?? {},
+						dedupeKey: row.dedupe_key,
+						duplicateCount: row.duplicate_count ?? 1,
+						hasScreenshot: Boolean(row.has_screenshot),
+						createdAt: Number(row.created_at),
+					}
+				: null
 		},
 		async screenshot(id) {
 			const result = await run(

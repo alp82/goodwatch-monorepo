@@ -1,4 +1,5 @@
 import { rateLimiter } from "~/server/rate-limit.server"
+import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { execute } from "~/utils/crate"
 import { smtpTransport } from "../auth/mail.server"
@@ -17,6 +18,8 @@ export function submit(request: Request) {
 	return handleFeedback(request, {
 		store: feedbackStore,
 		limiter: rateLimiter,
+		memberHandle: async (id) =>
+			(await getCachedProfileByUserId(id))?.handle?.trim() || null,
 		memberId: async (request) =>
 			(await getUserIdFromRequest({ request, fresh: true })) ?? null,
 		async email(r) {

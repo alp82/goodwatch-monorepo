@@ -8,6 +8,8 @@ export interface FeedbackRequest {
 	startedAt: number
 	data?: {
 		entityKind: "movie" | "show" | "season" | "episode" | "person"
+		/** The title or person name as the page shows it. */
+		entityName?: string
 		ids: Record<string, string | number>
 		field: string
 		currentValue?: string | number | boolean | null

@@ -27,6 +27,8 @@ export const feedbackSchema = z
 		data: z
 			.object({
 				entityKind: z.enum(["movie", "show", "season", "episode", "person"]),
+				/** The title or person name as the page shows it, for the staff post. Not part of the dedupe key. */
+				entityName: z.string().trim().min(1).max(200).optional(),
 				ids: z
 					.record(
 						z.string().max(50),
