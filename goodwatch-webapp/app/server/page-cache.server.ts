@@ -914,6 +914,7 @@ export const configurePageCache = (next: Parameters<typeof pageCache.configure>[
 }
 export const pageCacheWants = pageCache.wants
 export const resetPageCache = pageCache.reset
+let correctionPageRevision = ""
 const wrapped = new WeakSet<Server>()
 export function putPageCacheFirst(
 	server: Server,
@@ -924,12 +925,21 @@ export function putPageCacheFirst(
 	const listeners = server.listeners("request")
 	server.removeAllListeners("request")
 	server.on("request", (request, response) =>
-		withCrateHttpRequest(request, response, crateRouteLabel, () => cache.handle(request, response, () => {
-			withMediaRequestHealth(() => {
-				for (const listener of listeners)
-					Reflect.apply(listener, server, [request, response])
-			})
-		})),
+		withCrateHttpRequest(request, response, crateRouteLabel, () => {
+            const serve = () => cache.handle(request, response, () => {
+                withMediaRequestHealth(() => {
+                    for (const listener of listeners) Reflect.apply(listener, server, [request, response])
+                })
+            })
+            if (!/^\/(movie|show|person)\//.test(request.url ?? "")) return serve()
+            void import("./feedback/cache-revision.server.ts").then(async ({correctionCacheRevision}) => {
+                const revision = await correctionCacheRevision("details-movie-v2")
+                if (correctionPageRevision !== revision) {
+                    cache.reset(path => /^\/(movie|show|person)\//.test(path))
+                    correctionPageRevision = revision
+                }
+            }).then(serve,serve)
+        }),
 	)
 }
 const healthWrapped = new WeakSet<Server>()

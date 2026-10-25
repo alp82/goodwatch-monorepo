@@ -1,10 +1,11 @@
+import { applyCorrections } from "./feedback/apply-corrections.server"
 import { episodeMapping } from "~/domain/tracking/episode-mappings.server"
 import {
 	buildEpisodePresentation,
 	type EpisodePresentation,
 	type ImdbEpisodeRating,
 } from "~/domain/tracking/episode-presentation"
-import { getEpisodeList } from "~/server/tracking.server"
+import { getSourceEpisodeList } from "~/server/tracking.server"
 import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
 
@@ -30,7 +31,7 @@ export async function getEpisodePresentation(
 			params: { showId, version: mapping.version },
 			ttlMinutes: 10,
 			target: async () => {
-				const list = await getEpisodeList(showId)
+				const list = await getSourceEpisodeList(showId)
 				if (!list.length)
 					throw new Error("The selected show's episode catalog is unavailable")
 				const catalog = list.map((e) => ({
@@ -60,15 +61,19 @@ export async function getEpisodePresentation(
 						note: "IMDb ratings are temporarily unavailable.",
 					})
 				}
-				return buildEpisodePresentation(
+				return applyCorrections(
+                    { kind: "show", id: showId },
+                    buildEpisodePresentation(
 					catalog,
 					ratings.map(({ parent_id, ...e }) => ({ ...e, parentId: parent_id })),
 					mapping,
-				)
+                    ),
+                )
 			},
 		})
 	} catch (error) {
-		if (error instanceof RatingsUnavailable) return error.presentation
+		if (error instanceof RatingsUnavailable)
+            return applyCorrections({ kind: "show", id: showId }, error.presentation)
 		throw error
 	}
 }

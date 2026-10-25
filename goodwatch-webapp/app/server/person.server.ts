@@ -1,3 +1,5 @@
+import { correctionCacheRevision } from "./feedback/cache-revision.server"
+import { applyCorrections } from "./feedback/apply-corrections.server"
 import { personBestCredit } from "../utils/person-best.ts"
 import type { PresentedMedia } from "~/utils/media-presentation"
 import {
@@ -279,8 +281,9 @@ export async function getPersonCredits(id: number): Promise<PersonCredit[]> {
 		}
 		byKey.set(key, c)
 	}
-	for (const c of byKey.values()) c.weight = creditWeight(c)
-	return [...byKey.values()]
+	const effective = await applyCorrections({ kind: "person", id }, [...byKey.values()])
+	for (const c of effective) c.weight = creditWeight(c)
+	return effective
 }
 
 const KEY_JOBS =
@@ -476,6 +479,7 @@ export async function getPersonName(personId: number): Promise<string | null> {
 // one person skip Redis and the parse. Least recently used first; a missing person is kept too.
 // Callers must not change a profile they get back: it is shared between requests.
 const RECENT_PROFILES_MAX = 50
+let profileRevision = ""
 const RECENT_PROFILE_MS = 5 * 60 * 1000
 const recentProfiles = new Map<
 	number,
@@ -487,6 +491,12 @@ const loadingProfiles = new Map<number, Promise<PersonProfile | null>>()
 export async function getPersonProfile(
 	personId: number,
 ): Promise<PersonProfile | null> {
+	const revision = await correctionCacheRevision("person-profile-v2")
+	if (revision !== profileRevision) {
+        recentProfiles.clear()
+        loadingProfiles.clear()
+        profileRevision = revision
+    }
 	const recent = recentProfiles.get(personId)
 	if (recent) {
 		recentProfiles.delete(personId)
@@ -501,16 +511,20 @@ export async function getPersonProfile(
 
 	const load = getCachedPersonProfile(personId)
 		.then((profile) => {
-			recentProfiles.set(personId, {
-				profile,
-				expires: Date.now() + RECENT_PROFILE_MS,
-			})
+			if (revision === profileRevision) {
+                recentProfiles.set(personId, {
+                    profile,
+                    expires: Date.now() + RECENT_PROFILE_MS,
+                })
+            }
 			if (recentProfiles.size > RECENT_PROFILES_MAX) {
 				recentProfiles.delete(recentProfiles.keys().next().value as number)
 			}
 			return profile
 		})
-		.finally(() => loadingProfiles.delete(personId))
+		.finally(() => {
+            if (loadingProfiles.get(personId) === load) loadingProfiles.delete(personId)
+        })
 	loadingProfiles.set(personId, load)
 	return load
 }

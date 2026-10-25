@@ -1,3 +1,4 @@
+import { applyCorrections } from "./feedback/apply-corrections.server"
 import { createLocaleSourceCache } from "./locale-source-cache.server.ts"
 import { presentationLanguage } from "../utils/media-presentation.ts"
 import type {
@@ -105,7 +106,7 @@ export function overlayEpisodeText<T extends StableEpisodeText>(
 	language: string,
 ) {
 	return withMediaReadHealth(
-		() => overlayCore(kind, showId, rows, language, readEpisodeText),
+		async () => applyCorrections({ kind: "show", id: showId }, await overlayCore(kind, showId, rows, language, readEpisodeText)),
 		{ inheritFailure: true, overlay: true },
 	)
 }
@@ -114,7 +115,7 @@ export function overlayAlignedGrid(
 	language: string,
 ) {
 	return withMediaReadHealth(
-		() => overlayGridCore(grid, language, readEpisodeText),
+		async () => applyCorrections({ kind: "show", id: grid.showId }, await overlayGridCore(grid, language, readEpisodeText)),
 		{ inheritFailure: true, overlay: true },
 	)
 }

@@ -40,6 +40,7 @@ type WireSeason =
 	  ]
 
 export type EpisodeGridWire = Omit<EpisodeGrid, "seasons" | "specials"> & {
+	episodeCanonical?: Record<string, {canonicalSeason: number; canonicalNumber: number}>
 	episodeIds?: Record<string, number>
 	episodeLanguages?: Record<string, string>
 	seasons: WireSeason[]
@@ -87,7 +88,12 @@ const unpackScores = ([
 	metacriticUser: unpackScore(metacriticUser),
 })
 
+const canonicalPositions = (grid: EpisodeGrid) => Object.fromEntries([
+ ...grid.seasons.flatMap(s=>s.episodes.flatMap(e=>e.canonicalSeason !== undefined && e.canonicalNumber !== undefined ? [[`${s.number}:${e.number}`,{canonicalSeason:e.canonicalSeason,canonicalNumber:e.canonicalNumber}]] : [])),
+ ...grid.specials.flatMap((e,i)=>e.canonicalSeason !== undefined && e.canonicalNumber !== undefined ? [[`special:${i}`,{canonicalSeason:e.canonicalSeason,canonicalNumber:e.canonicalNumber}]] : []),
+])
 export const packEpisodeGrid = (grid: EpisodeGrid): EpisodeGridWire => ({
+    ...(Object.keys(canonicalPositions(grid)).length ? {episodeCanonical:canonicalPositions(grid)} : {}),
 	...grid,
 	...(grid.seasons.some(s => s.episodes.some(e => e.tmdbId)) || grid.specials.some(e => e.tmdbId) ? { episodeIds: Object.fromEntries([...grid.seasons.flatMap(s => s.episodes.filter(e => e.tmdbId).map(e => [`${s.number}:${e.number}`, e.tmdbId!])), ...grid.specials.flatMap((e, i) => e.tmdbId ? [[`special:${i}`, e.tmdbId]] : [])]) } : {}),
 	...(grid.seasons.some(s => s.episodes.some(e => e.nameLanguage)) || grid.specials.some(e => e.nameLanguage) ? { episodeLanguages: Object.fromEntries([...grid.seasons.flatMap(s => s.episodes.filter(e => e.nameLanguage).map(e => [`${s.number}:${e.number}`, e.nameLanguage!])), ...grid.specials.flatMap((e, i) => e.nameLanguage ? [[`special:${i}`, e.nameLanguage]] : [])]) } : {}),
@@ -119,7 +125,7 @@ export const packEpisodeGrid = (grid: EpisodeGrid): EpisodeGridWire => ({
 })
 
 export const unpackEpisodeGrid = (wire: EpisodeGridWire): EpisodeGrid => ({
-	...(({ episodeIds, episodeLanguages, ...metadata }) => metadata)(wire),
+	...(({ episodeCanonical, episodeIds, episodeLanguages, ...metadata }) => metadata)(wire),
 	seasons: wire.seasons.map(
 		([seasonNumber, maxEpisodeNumber, episodes, scores, coverage]): GridSeason => ({
 			number: seasonNumber,
@@ -128,6 +134,7 @@ export const unpackEpisodeGrid = (wire: EpisodeGridWire): EpisodeGrid => ({
 			episodes: episodes.map(
 				([number, name, score, votes, unrated, canonicalLabel]) => ({
 					number,
+                    ...wire.episodeCanonical?.[`${seasonNumber}:${number}`],
 					name,
 					...(wire.episodeIds?.[`${seasonNumber}:${number}`] ? { tmdbId: wire.episodeIds[`${seasonNumber}:${number}`] } : {}),
 					...(wire.episodeLanguages?.[`${seasonNumber}:${number}`] ? { nameLanguage: wire.episodeLanguages[`${seasonNumber}:${number}`] } : {}),
@@ -141,6 +148,7 @@ export const unpackEpisodeGrid = (wire: EpisodeGridWire): EpisodeGrid => ({
 		}),
 	),
 	specials: wire.specials.map(([name, score, votes, unrated], index) => ({
+        ...wire.episodeCanonical?.[`special:${index}`],
 		...(wire.episodeIds?.[`special:${index}`] ? { tmdbId: wire.episodeIds[`special:${index}`] } : {}),
 		...(wire.episodeLanguages?.[`special:${index}`] ? { nameLanguage: wire.episodeLanguages[`special:${index}`] } : {}),
 		name,

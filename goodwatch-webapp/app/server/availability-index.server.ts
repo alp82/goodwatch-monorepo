@@ -1,3 +1,6 @@
+import { correctionCacheRevision } from "./feedback/cache-revision.server"
+import { correctedAvailability } from "./feedback/availability-corrections.server"
+import type { Sql } from "./feedback/correction-store.server"
 import {
 	type FirstSeen,
 	type Landing,
@@ -208,7 +211,19 @@ export function preloadAvailability(): void {
 }
 
 // Returns the loaded index, and schedules a load when the country has none yet or its index is older than 6 hours.
+let correctionAvailabilityRevision = ""
+let correctionAvailabilityCheck = 0
 function loadedIndex(countryCode: string): CountryIndex | null {
+	if (Date.now() > correctionAvailabilityCheck) {
+        correctionAvailabilityCheck = Date.now() + 2000
+        void correctionCacheRevision("availability-index-corrections").then((revision) => {
+            if (revision === correctionAvailabilityRevision) return
+            correctionAvailabilityRevision = revision
+            const countries = [...indexes.keys()]
+            indexes.clear()
+            for (const country of countries) scheduleLoad(country)
+        })
+    }
 	const country = countryCode.toUpperCase()
 	if (!isCountryCode(country)) return null
 	const index = indexes.get(country) ?? null
@@ -253,7 +268,7 @@ async function loadCountry(country: string) {
 	const queryMs = performance.now() - started
 
 	const buildStarted = performance.now()
-	const index = await buildIndex(rows)
+	const index = await buildIndex(await correctedAvailability(country, rows, execute as Sql))
 	const buildMs = performance.now() - buildStarted
 
 	indexes.set(country, index)
@@ -392,3 +407,11 @@ function binarySearch(keys: Float64Array, key: number): number {
 }
 
 preloadAvailability()
+
+/** Discard a corrected country's index and schedule its replacement. */
+export function reloadAvailability(country?: string) {
+	if (!country) return
+	indexes.delete(country)
+	failedAt.delete(country)
+	scheduleLoad(country)
+}

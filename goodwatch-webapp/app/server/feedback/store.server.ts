@@ -10,6 +10,7 @@ interface Candidate {
 	status: unknown
 	duplicate_count: number
 	discord_thread_id: string | null
+	correction_id?: string | null
 	metadata: Record<string, unknown>
 	_version: number
 }
@@ -29,7 +30,7 @@ export function createFeedbackStore(run: Sql): FeedbackStore {
 					)
 					if (existing.json?.length) return { kind: "retry", reportId: r.id }
 					const result = await run(
-						`SELECT id, status, duplicate_count, discord_thread_id, metadata, _version
+						`SELECT id, status, duplicate_count, discord_thread_id, metadata, _version, correction_id
  FROM doc.feedback_report WHERE dedupe_key = ? ORDER BY created_at, id`,
 						[r.dedupeKey],
 					)
@@ -52,7 +53,9 @@ export function createFeedbackStore(run: Sql): FeedbackStore {
 						const status = feedbackStatusSchema.safeParse(row.status)
 						return (
 							status.success &&
-							(status.data === "new" || status.data === "in_progress")
+							(status.data === "new" ||
+								status.data === "in_progress" ||
+								(status.data === "done" && !!row.correction_id))
 						)
 					})
 					if (!row) break

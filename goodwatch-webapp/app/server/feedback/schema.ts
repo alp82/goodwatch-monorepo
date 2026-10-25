@@ -26,6 +26,28 @@ export const feedbackSchema = z
 		startedAt: z.number().int().positive(),
 		data: z
 			.object({
+				area: z.string().trim().min(1).max(50).optional(),
+				problem: z.string().trim().min(1).max(50).optional(),
+				note: z.string().max(2000).optional(),
+				target: z
+					.object({
+						personId: z.number().int().positive().safe().optional(),
+						creditTmdbId: z.number().int().positive().safe().optional(),
+						creditMediaType: z.enum(["movie", "tv"]).optional(),
+						seasonNumber: z.number().int().min(0).max(10000).optional(),
+						episodeNumber: z.number().int().min(0).max(100000).optional(),
+						providerId: z.number().int().positive().safe().optional(),
+						offerType: z
+							.enum(["flatrate", "free", "ads", "rent", "buy"])
+							.optional(),
+						country: z
+							.string()
+							.regex(/^[A-Z]{2}$/)
+							.optional(),
+						scoreSource: z.string().min(1).max(100).optional(),
+					})
+					.strict()
+					.optional(),
 				entityKind: z.enum(["movie", "show", "season", "episode", "person"]),
 				/** The title or person name as the page shows it, for the staff post. Not part of the dedupe key. */
 				entityName: z.string().trim().min(1).max(200).optional(),

@@ -1,3 +1,4 @@
+import { applyCorrections } from "./feedback/apply-corrections.server"
 // Tracking on the server: the one writer for the watch log and the watch state, and their reads
 // (docs/implementation/tracking/data-model.md, ADR 0008, ADR 0009).
 //
@@ -742,7 +743,7 @@ async function readEpisodeList({ showId }: { showId: number }) {
 }
 
 /** A show's episodes as TMDB lists them, specials in season 0. Public data, the same for everyone. */
-export async function getEpisodeList(
+export async function getSourceEpisodeList(
 	showId: number,
 ): Promise<EpisodeListRow[]> {
 	return cached<{ showId: number }, EpisodeListRow[]>({
@@ -751,6 +752,10 @@ export async function getEpisodeList(
 		params: { showId },
 		ttlMinutes: 10,
 	})
+}
+
+export async function getEpisodeList(showId: number): Promise<EpisodeListRow[]> {
+	return applyCorrections({ kind: "show", id: showId }, await getSourceEpisodeList(showId))
 }
 
 const listed = (rows: readonly EpisodeListRow[]): ListedEpisode[] =>

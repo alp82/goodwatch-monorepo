@@ -24,7 +24,7 @@ const realName = (name: string | null) => {
 export function identifyGridEpisodes<T extends ImdbGridEpisode>(
 	rows: readonly T[],
 	canonical: readonly CanonicalGridEpisode[],
-): (T & { tmdbId?: number; nameLanguage?: string })[] {
+): (T & { tmdbId?: number; nameLanguage?: string; canonicalSeason?: number; canonicalNumber?: number })[] {
 	const byImdb = new Map<string, CanonicalGridEpisode[]>()
 	const byName = new Map<string, CanonicalGridEpisode[]>()
 	const imdbNames = new Map<string, number>()
@@ -75,6 +75,7 @@ export function identifyGridEpisodes<T extends ImdbGridEpisode>(
 			? {
 					...row,
 					tmdbId: match.tmdb_id,
+                    canonicalSeason: match.season_number, canonicalNumber: match.episode_number,
 					// Preserve the IMDb name used by rating alignment. A same-name
 					// canonical English source can establish its language; an external
 					// ID alone establishes identity, not the language of IMDb's text.

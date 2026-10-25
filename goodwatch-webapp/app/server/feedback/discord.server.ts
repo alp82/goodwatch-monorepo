@@ -166,6 +166,7 @@ async function viaBot(
 				duplicateComponents(report, duplicate.count, {
 					...context,
 					screenshotInline: true,
+					interactive: true,
 				}),
 			),
 			report.screenshot,
@@ -186,6 +187,7 @@ async function viaBot(
 				reportComponents(report, {
 					...context,
 					screenshotInline: true,
+					interactive: true,
 				}),
 			),
 			content: null,

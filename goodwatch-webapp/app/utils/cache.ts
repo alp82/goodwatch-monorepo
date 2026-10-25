@@ -1,3 +1,4 @@
+import { correctionCacheRevision } from "../server/feedback/cache-revision.server.ts"
 import {
 	withMediaReadHealth,
 	failedMediaResult,
@@ -654,7 +655,8 @@ export const cached = async <
 		return await runTarget()
 	}
 	const cacheName = `cached-${name}`
-	const cacheKey = cacheEntryKey(name, params)
+	const revision = await correctionCacheRevision(name)
+	const cacheKey = cacheEntryKey(revision ? `${name}:${revision}` : name, params)
 
 	staleMinutes = Number.isFinite(staleMinutes) ? Math.max(0, staleMinutes) : 0
 	const physicalTtl = cachePhysicalTtlSeconds(ttlMinutes, staleMinutes)

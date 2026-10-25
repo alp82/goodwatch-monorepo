@@ -1,3 +1,5 @@
+import type { Correction } from "./corrections.ts"
+import { reviewButtons } from "./review-buttons.ts"
 // The staff Discord post for a feedback report (docs/implementation/feedback/README.md, "Discord"). Pure builders:
 // no network, no environment. Components V2, in the look of the GoodWatch bot's cards (amber container, link buttons).
 //
@@ -22,6 +24,7 @@ type DataReport = NonNullable<FeedbackInput["data"]>
 /** What the post needs from a report. A subset of Report, so the builders don't depend on the handler. */
 export interface PostReport {
 	id: string
+	correction?: Correction
 	kind: FeedbackKind
 	message: string
 	data?: DataReport
@@ -38,6 +41,7 @@ export interface PostOptions {
 	memberHandle?: string | null
 	/** True when the screenshot rides in this message (media gallery); false when it follows as its own message. */
 	screenshotInline: boolean
+	interactive?: boolean
 	/** Put in front of the thread name, for design tests. */
 	threadPrefix?: string
 }
@@ -313,7 +317,10 @@ export function dataBlock(data: DataReport) {
 		lines.push(
 			`-# Provider ids ${data.providerIds.slice(0, 10).map(String).join(", ")}`,
 		)
-	const source = data.sourceLink && hostname(data.sourceLink)
+	if (data.note) lines.push(memberText(data.note, 1000))
+    if (data.target && Object.keys(data.target).length)
+        lines.push(`-# Target ${code(JSON.stringify(data.target), 400)}`)
+    const source = data.sourceLink && hostname(data.sourceLink)
 	if (source) lines.push(`-# Source: ${inline(source, 80)}`)
 	return lines.join("\n")
 }
@@ -449,6 +456,10 @@ export function reportComponents(report: PostReport, options: PostOptions) {
 			},
 			report.data && separator(false),
 			report.data && { type: 10, content: dataBlock(report.data) },
+			report.correction && {
+				type: 10,
+				content: `Correction **${report.correction.status}** · ${report.correction.op} ${report.correction.field} · Target ${code(JSON.stringify(report.correction.target), 400)}`,
+			},
 			!!report.screenshot &&
 				options.screenshotInline && {
 					type: 12,
@@ -468,7 +479,15 @@ export function reportComponents(report: PostReport, options: PostOptions) {
 		AMBER,
 	)
 	const row = buttons(report, options)
-	const components = [card, ...(row ? [row] : [])]
+	const review =
+		report.correction && options.interactive
+			? reviewButtons(report.correction)
+			: null
+	const components = [
+		card,
+		...(row ? [row] : []),
+		...(review?.components.length ? [review] : []),
+	]
 	mainText.content = hero(
 		report,
 		Math.min(LIMITS.hero, LIMITS.text - textLength(components) - 90),

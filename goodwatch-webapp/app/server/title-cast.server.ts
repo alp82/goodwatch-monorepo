@@ -1,3 +1,4 @@
+import { applyCorrections } from "./feedback/apply-corrections.server"
 import { cached } from "~/utils/cache"
 import {
 	CAST_PAGE_SIZE,
@@ -41,9 +42,13 @@ async function fetchCastPage({ mediaType, tmdbId, offset }: TitleCastParams) {
  page_cast AS (SELECT array_agg(id) AS ids FROM (SELECT id FROM cast_people ORDER BY ord ASC, id ASC LIMIT ${CAST_PAGE_SIZE} OFFSET ${offset}) AS t)
  SELECT {cast_total = (SELECT count(*) FROM cast_people), cast_rows = ${selectedCastRows("page_cast")}} AS page
  `)) as { page: { cast_total: number; cast_rows: CastRow[] | null } }[]
-	const total = rows[0]?.page.cast_total ?? 0
+	const page = await applyCorrections(
+        { kind: mediaType, id: Number(tmdbId) },
+        rows[0]?.page ?? { cast_total: 0, cast_rows: null },
+    )
+    const total = page.cast_total
 	return {
-		cast: toCastMembers(rows[0]?.page.cast_rows),
+		cast: toCastMembers(page.cast_rows),
 		total,
 		offset,
 		nextOffset: nextCastOffset(offset, total),

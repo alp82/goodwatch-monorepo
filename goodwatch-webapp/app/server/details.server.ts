@@ -1,3 +1,4 @@
+import { applyCorrections } from "./feedback/apply-corrections.server"
 import { overlayTitles } from "./media-overlay.server.ts"
 import { CREW_ROLES } from "~/ui/details/crew-roles"
 import { query } from "~/utils/crate"
@@ -315,7 +316,7 @@ const _fetchFromDB = async (
 	if (!media.details.genres) {
 		media.details.genres = []
 	}
-	return media
+	return applyCorrections({ kind: mediaType, id: Number(mediaId), country: safeCountry.toUpperCase() }, media)
 }
 
 const canonicalDetails = createTitleDetailsGetters(_fetchFromDB)
