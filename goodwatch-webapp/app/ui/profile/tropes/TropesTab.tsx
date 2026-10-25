@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { type ProfileShell, seesPart } from "~/domain/profile"
-import type { ProfileTropes } from "~/server/profile/tropes-data"
 import { seesTropes } from "~/server/profile/tropes-model"
 import type { TropesPreview } from "~/server/profile/tropes-preview"
 import { WRAP } from "~/ui/my-pages/bits"
@@ -9,6 +8,12 @@ import { ProfileFrame } from "~/ui/profile/ProfileFrame"
 import { Body, TILE, count } from "~/ui/profile/parts"
 import { TropesPage } from "./TropesPage"
 import { useUser } from "~/utils/auth"
+import useLocale from "~/utils/locale"
+import {
+	mergeProfileTropeResource,
+	profileTropeQueryKey,
+	type ProfileTropeResource,
+} from "~/utils/profile-trope-resource"
 
 export interface TropesTabProps {
 	shell: ProfileShell
@@ -23,18 +28,9 @@ export function TropesTab({ shell, preview, pending }: TropesTabProps) {
 	}, [])
 	const client = useQueryClient()
 	const { user } = useUser()
-	const key = [
-		"profile-tropes-data",
-		shell.handle,
-		shell.viewer,
-		user?.id ?? null,
-		shell.visibility,
-	]
-	type FullData = {
-		tropes: ProfileTropes | null
-		pending: boolean
-		unchanged?: boolean
-	}
+	const { locale } = useLocale()
+	const key = profileTropeQueryKey(shell, user?.id ?? null, locale.language)
+	type FullData = ProfileTropeResource
 	const full = useQuery<FullData>({
 		queryKey: key,
 		enabled: mounted && seesTropes(shell) && (pending || !!preview?.total),
@@ -51,9 +47,7 @@ export function TropesTab({ shell, preview, pending }: TropesTabProps) {
 			)
 			if (!response.ok) throw new Error("Loading the trope filters failed.")
 			const result: FullData = await response.json()
-			return result.unchanged
-				? { ...result, tropes: previous?.tropes ?? null }
-				: result
+			return mergeProfileTropeResource(previous, result)
 		},
 		refetchInterval: (query) => (query.state.data?.pending ? 1500 : false),
 	})
