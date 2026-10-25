@@ -31,9 +31,12 @@ export const reduced = () =>
 
 /** The part of the window the page shows: below the fixed header and sticky bars, clear of a phone's feedback drawer. */
 export function clearArea() {
-	const header =
+	// In fix mode the header scrolls away with the page, so its bottom can be far above the window.
+	const header = Math.max(
+		0,
 		document.querySelector("[data-site-header]")?.getBoundingClientRect()
-			.bottom ?? 0
+			.bottom ?? 0,
+	)
 	// Phones: the bar or sheet at the bottom (with its handle) ends the clear part; while answering, the page's sticky
 	// bar steps aside, so the part can sit right under the header.
 	const sheet = document.querySelector<HTMLElement>("[data-fix-sheet]")
@@ -84,7 +87,11 @@ let aim: number | null = null
 let aimAt = 0
 
 /** Brings an element into the clear area when it's (partly) outside it; a sideways row scrolls to it too. */
-export function reveal(el: HTMLElement | null) {
+export function reveal(part: HTMLElement | HTMLElement[] | null) {
+	const els = (Array.isArray(part) ? part : [part]).filter(
+		(e): e is HTMLElement => Boolean(e),
+	)
+	const el = els[0]
 	if (!el) return
 	const behavior: ScrollBehavior = reduced() ? "auto" : "smooth"
 	for (
@@ -110,7 +117,14 @@ export function reveal(el: HTMLElement | null) {
 	const { top, bottom } = clearArea()
 	// A phone sheet can leave next to no room above it; then the sheet shows the part, not the page.
 	if (bottom - top < 64) return
-	const r = el.getBoundingClientRect()
+	// A part made of several elements (actors and crew) comes into view as a whole.
+	const rects = els.map((e) => e.getBoundingClientRect())
+	const r = {
+		top: Math.min(...rects.map((x) => x.top)),
+		height:
+			Math.max(...rects.map((x) => x.bottom)) -
+			Math.min(...rects.map((x) => x.top)),
+	}
 	const now = window.scrollY
 	if (aim !== null && Date.now() - aimAt > 1000) aim = null
 	const end = aim ?? now

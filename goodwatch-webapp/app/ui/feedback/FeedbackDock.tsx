@@ -50,7 +50,14 @@ import {
 	thanksLine,
 	useSender,
 } from "./kit"
-import { Outlines, Spotlight, findArea, findSpot, lc } from "./page-layer"
+import {
+	Outlines,
+	Spotlight,
+	areaElements,
+	findArea,
+	findSpot,
+	lc,
+} from "./page-layer"
 import { isRichArea } from "./problems"
 import { buildMessageRequest, emailProblem } from "./request"
 import { captureScreen } from "./screenshot"
@@ -446,9 +453,12 @@ function boxFor(tab: HTMLElement, wide: boolean): Box {
 	// scrollbar or a hover transform can't throw it off).
 	const right =
 		(Number.parseFloat(getComputedStyle(tab).right) || 0) + tab.offsetWidth
-	const header =
+	// Fix mode scrolls the header away; its bottom is then above the window.
+	const header = Math.max(
+		0,
 		document.querySelector("[data-site-header]")?.getBoundingClientRect()
-			.bottom ?? 0
+			.bottom ?? 0,
+	)
 	const dock = wide
 		? 0
 		: Number.parseFloat(
@@ -1046,7 +1056,7 @@ export default function FeedbackDock({
 	liveRef.current = live
 	const revealArea = useCallback((id: string) => {
 		const a = liveRef.current.find((x) => x.id === id)
-		if (a) reveal(findArea(a))
+		if (a) reveal(areaElements(a))
 	}, [])
 	// A new page ends fix mode.
 	useEffect(() => {
