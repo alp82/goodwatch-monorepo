@@ -56,6 +56,7 @@ class RefreshTests(unittest.TestCase):
         self.db.tmdb_movie_details.insert_many([dict(tmdb_id=i, updated_at=self.old) for i in range(1, count + 1)])
         for tmdb_id in range(1, count + 1):
             refresh.enqueue(self.db, 'movie', tmdb_id, {'DE_8': utc_ms(self.old)})
+        self.crate.select.return_value = [{'tmdb_id': i} for i in range(1, count + 1)]
 
     def drain(self, **kwargs):
         return refresh.drain(self.api, self.db, self.crate, dry_run=False,
@@ -94,7 +95,8 @@ class RefreshTests(unittest.TestCase):
         class PreviewCrate(HistoryCrate):
             def select(self, sql, params=None):
                 if sql.startswith('SELECT tmdb_id FROM'):
-                    return [{'tmdb_id': 42}]
+                    return [{'tmdb_id': tmdb_id} for tmdb_id in
+                            (params[0] if isinstance(params[0], list) else [params[0]])]
                 return super().select(sql, params)
         crate = PreviewCrate()
         self.enqueue()
@@ -194,11 +196,12 @@ class RefreshTests(unittest.TestCase):
         self.assertEqual(set(failed), {2, 3, 4})
         self.assertEqual(vectors.call_args.args[2], {'tmdb_id': {'$in': [1]}})
         self.assertTrue(vectors.call_args.kwargs['strict_writes'])
+        self.assertFalse(vectors.call_args.kwargs['delete_flagged'])
         self.assertTrue(copy.call_args.kwargs['targeted_batch'])
 
     def test_remaining_time_is_checked_again_before_a_prepared_batch_is_published(self):
         self.enqueue()
-        with patch.object(refresh.time, 'monotonic', side_effect=[0, 0, 2, 2]):
+        with patch.object(refresh.time, 'monotonic', side_effect=[0, 0, 0, 2, 2]):
             result = self.drain(max_seconds=1)
         self.assertEqual(result['remaining'], 1)
         self.assertEqual(result['deferred_reason'], 'runtime_budget')
@@ -214,7 +217,7 @@ class RefreshTests(unittest.TestCase):
             def select(self, sql, params=None):
                 self.selects.append(sql)
                 if sql.startswith('SELECT tmdb_id FROM'):
-                    return [{'tmdb_id': params[0]}]
+                    return [{'tmdb_id': tmdb_id} for tmdb_id in params[0]]
                 return super().select(sql, params)
         self.seed_work(1000)
         self.api.results = {'DE': {'link': 'https://tmdb/de', 'flatrate': [{'provider_id': 8, 'display_priority': 1}]}}

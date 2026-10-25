@@ -89,6 +89,7 @@ class DailyRampTests(unittest.TestCase):
             self.run_job()
         self.assertIs(drain.call_args.args[2], self.store.connector)
         self.assertEqual(drain.call_args.kwargs['max_seconds'], 15450)
+        self.assertEqual(drain.call_args.kwargs['limit'], 30000)
 
     def test_rereads_checkpoints_first_then_admits_countries_in_order(self):
         self.checkpoint('US', 'movie')

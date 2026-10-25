@@ -8,7 +8,7 @@ MAX_IDLE_TIME_MS = 120000
 MAX_QUERY_TIME_MS = 240000
 
 
-def init_mongodb():
+def init_mongodb(*, compressors: str | None = None):
     print(f"Initializing mongodb...")
     db_user = wmill.get_variable("u/Alp/MONGODB_USER")
     db_pass = wmill.get_variable("u/Alp/MONGODB_PASS")
@@ -24,6 +24,7 @@ def init_mongodb():
             connectTimeoutMS=MAX_CONNECT_TIME_MS,
             maxIdleTimeMS=MAX_IDLE_TIME_MS,
             socketTimeoutMS=MAX_QUERY_TIME_MS,
+            **({'compressors': compressors} if compressors else {}),
         )
         print(f"Successfully initialized mongodb")
     except Exception as error:

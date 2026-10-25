@@ -31,7 +31,9 @@ class ListStorage:
         if db is None:
             from f.db.mongodb import init_mongodb
             from mongoengine import get_db
-            init_mongodb()
+            # Provider/proof documents repeat URLs and country/service keys.
+            # Built-in zlib avoids a new dependency and is negotiated at connect.
+            init_mongodb(compressors='zlib')
             db = get_db()
         if connector is None:
             from f.db.cratedb import CrateConnector

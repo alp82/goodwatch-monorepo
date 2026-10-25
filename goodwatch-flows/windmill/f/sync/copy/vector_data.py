@@ -1,4 +1,4 @@
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
 # extra_requirements:
 # qdrant-client==1.19.1
 
@@ -17,7 +17,7 @@ from f.db.qdrant import QdrantConnector
 from f.db.cratedb import CrateConnector
 from f.sync.copy import sync_state
 from f.sync.copy.deleted_titles import delete_titles_from_qdrant, flag_spike, flagged_among, flagged_oldest_first
-from f.sync.copy.tmdb_streaming import SCHEDULED_LEASE_WAIT_SECONDS, publication_lease
+from f.sync.copy.tmdb_streaming import SCHEDULED_LEASE_WAIT_SECONDS, publication_lease, publication_leases
 from f.sync.copy.qdrant_retry import (
     REQUEST_TIMEOUT_SECONDS, insert_points, update_points, write_with_retry,
 )
@@ -42,6 +42,20 @@ FINGERPRINT_RAW_VECTOR = "fingerprint_v1_raw"
 
 # Started after every scheduled copy (not after targeted ones).
 TITLE_SNAPSHOT_SCRIPT = "f/sync/copy/title_snapshot"
+
+# Targeted publication needs the payload inputs, not credits, seasons, reviews
+# or DNA prose. Streaming is always replaced from the leased Crate aggregate.
+VECTOR_SOURCE_PROJECTIONS = {
+    'details': {name: 1 for name in ('tmdb_id', 'title', 'original_title', 'poster_path', 'backdrop_path',
+                                   'release_date', 'first_air_date', 'genres', 'vote_count', 'vote_average')},
+    'rating': {name: 1 for name in ('tmdb_id', 'user_score_normalized_percent', 'meta_score_normalized_percent',
+                                  'audience_score_normalized_percent', 'tomato_score_normalized_percent',
+                                  'user_score_vote_count', 'meta_score_vote_count',
+                                  'audience_score_vote_count', 'tomato_score_vote_count')},
+    'dna': {name: 1 for name in ('tmdb_id', 'vector_fingerprint', 'dna.social_suitability', 'dna.viewing_context',
+                               'dna.is_anime', 'dna.production_info.method', 'dna.fingerprint.scores')},
+    'tropes': {'tmdb_id': 1, 'tropes.name': 1},
+}
 
 # ---- Helpers ---------------------------------------------------------------
 
@@ -458,9 +472,10 @@ def _build_payload(
 # ---- Main copy loop --------------------------------------------------------
 
 
-def _published_streaming(media_type: str, ids: List[int]) -> Dict[int, List[str]]:
+def _published_streaming(media_type: str, ids: List[int], connector=None) -> Dict[int, List[str]]:
     """Scheduled catch-up uses the same published country snapshot as priority."""
-    connector = CrateConnector()
+    owns_connection = connector is None
+    connector = connector if connector is not None else CrateConnector()
     try:
         table = "movie" if media_type == "movie" else "show"
         connector.run(f"REFRESH TABLE {table}")
@@ -474,7 +489,27 @@ def _published_streaming(media_type: str, ids: List[int]) -> Dict[int, List[str]
             for row in rows if row.get("streaming_availabilities") is not None
         }
     finally:
-        connector.disconnect()
+        if owns_connection:
+            connector.disconnect()
+
+
+@contextmanager
+def vector_publication_leases(db, media_type, ids, strict_writes):
+    if strict_writes:
+        # Same leases and expiry fence as streaming, with one ownership query
+        # per group instead of two Mongo reads per title on every retry/check.
+        with publication_leases(db, media_type, sorted(ids)) as (owned, check_owned):
+            if set(owned) != set(ids):
+                raise RuntimeError('Streaming publication busy in strict vector batch')
+            yield check_owned
+    else:
+        with ExitStack() as leases:
+            checks = [leases.enter_context(publication_lease(
+                db, media_type, tmdb_id, SCHEDULED_LEASE_WAIT_SECONDS)) for tmdb_id in sorted(ids)]
+            def check_owned():
+                for check in checks:
+                    check()
+            yield check_owned
 
 
 def copy_to_qdrant(
@@ -483,6 +518,8 @@ def copy_to_qdrant(
     query_selector: dict,
     *, recent_only: bool = True, strict_writes: bool = False,
     since: Optional[datetime] = None, carried_ids=(),
+    streaming_connector=None,
+    delete_flagged: bool = True,
 ):
     """
     Combined copy into Qdrant.
@@ -553,14 +590,14 @@ def copy_to_qdrant(
         flagged_ids |= batch_flagged_ids
 
         # fetch maps by id
-        details_map = _fetch_map_by_ids(c_details, ids)
-        imdb_map = _fetch_map_by_ids(c_imdb, ids)
-        meta_map = _fetch_map_by_ids(c_meta, ids)
-        rotten_map = _fetch_map_by_ids(c_rotten, ids)
-        dna_map = _fetch_map_by_ids(c_dna, ids)
-        # providers: need both “latest row” per id (to get updated_at) and all rows (for merging tuples)
-        providers_multimap = _fetch_multimap_by_ids(c_prov, ids)
-        tropes_map = _fetch_map_by_ids(c_tropes, ids)
+        projections = VECTOR_SOURCE_PROJECTIONS if strict_writes else {}
+        details_map = _fetch_map_by_ids(c_details, ids, projections.get('details'))
+        imdb_map = _fetch_map_by_ids(c_imdb, ids, projections.get('rating'))
+        meta_map = _fetch_map_by_ids(c_meta, ids, projections.get('rating'))
+        rotten_map = _fetch_map_by_ids(c_rotten, ids, projections.get('rating'))
+        dna_map = _fetch_map_by_ids(c_dna, ids, projections.get('dna'))
+        providers_multimap = {} if strict_writes else _fetch_multimap_by_ids(c_prov, ids)
+        tropes_map = _fetch_map_by_ids(c_tropes, ids, projections.get('tropes'))
 
         # build points
         upsert_buffer: List[Tuple[int, Dict[str, Any], Dict[str, List[float]]]] = []
@@ -600,15 +637,11 @@ def copy_to_qdrant(
         # under the same title leases used by streaming reconciliation.
         for start in range(0, len(upsert_buffer), UPSERT_BATCH_SIZE):
             batch = upsert_buffer[start:start + UPSERT_BATCH_SIZE]
-            with ExitStack() as leases:
-                # A scheduled copy waits out the seconds-long leases of the streaming sync and
-                # the priority publish; a targeted publish fails fast and is retried.
-                lease_wait = 0 if strict_writes else SCHEDULED_LEASE_WAIT_SECONDS
-                checks = [leases.enter_context(publication_lease(db, media_type, tmdb_id, lease_wait))
-                          for tmdb_id, _, _ in sorted(batch, key=lambda item: item[0])]
-                for check_owned in checks:
-                    check_owned()
-                published_streaming = _published_streaming(media_type, [item[0] for item in batch])
+            with vector_publication_leases(db, media_type, [item[0] for item in batch], strict_writes) as check_publication_owned:
+                check_publication_owned()
+                ids = [item[0] for item in batch]
+                published_streaming = (_published_streaming(media_type, ids) if streaming_connector is None else
+                                       _published_streaming(media_type, ids, streaming_connector))
                 points = []
                 for tmdb_id, payload, vectors in batch:
                     # NULL/missing aggregates are unknown; only an explicit empty
@@ -626,10 +659,6 @@ def copy_to_qdrant(
                     ))
                 if not points:
                     continue
-                def check_publication_owned() -> None:
-                    for check_owned in checks:
-                        check_owned()
-
                 result = write_with_retry(
                     qc.client, MEDIA_COLLECTION,
                     insert_points(points) + update_points(points),
@@ -651,12 +680,14 @@ def copy_to_qdrant(
           f"deletion starts", flush=True)
     # Every flagged title is checked, not only the ones this run iterated over, oldest flag
     # first within the per-run budget, and nothing while the flags spike.
-    spike = flag_spike(c_details, db.tmdb_daily_dump_data, media_type)
-    oldest_first = flagged_oldest_first(c_details, sel)
-    deleted_titles = delete_titles_from_qdrant(
-        qc.client, MEDIA_COLLECTION, media_type, oldest_first + sorted(flagged_ids - set(oldest_first)),
-        QdrantMediaPoint.make_point_id, spike=spike,
-    )
+    deleted_titles = {'skipped': True, 'reason': 'offers_only'}
+    if delete_flagged:
+        spike = flag_spike(c_details, db.tmdb_daily_dump_data, media_type)
+        oldest_first = flagged_oldest_first(c_details, sel)
+        deleted_titles = delete_titles_from_qdrant(
+            qc.client, MEDIA_COLLECTION, media_type, oldest_first + sorted(flagged_ids - set(oldest_first)),
+            QdrantMediaPoint.make_point_id, spike=spike,
+        )
 
     print(f"{_utc_stamp()} {media_type} deletion done", flush=True)
 

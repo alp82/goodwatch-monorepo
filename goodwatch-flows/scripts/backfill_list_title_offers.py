@@ -208,7 +208,7 @@ def main():
             if args.check_sources:
                 from f.db.mongodb import init_mongodb, close_mongodb
                 from mongoengine import get_db
-                init_mongodb()
+                init_mongodb(compressors='zlib')
                 try:
                     plan['source_eligibility'] = source_eligibility(get_db(), plan)
                 finally:
@@ -220,7 +220,7 @@ def main():
             return
         from f.db.mongodb import init_mongodb, close_mongodb
         from mongoengine import get_db
-        init_mongodb()
+        init_mongodb(compressors='zlib')
         try:
             print(json.dumps(enqueue_manifest(get_db(), plan, dry_run=False), indent=2))
         finally:

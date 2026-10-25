@@ -1,0 +1,1438 @@
+{
+  "original_live_batch": {
+    "selected": 1000,
+    "published": 995,
+    "failed": 5,
+    "seconds": 1566.106102,
+    "seconds_per_published_title": 1.573976,
+    "vector_logged_seconds": 508,
+    "vector_batches": 50,
+    "vector_timestamp_resolution_seconds": 1,
+    "remaining_unattributed_seconds": 1058.106102
+  },
+  "historical_write_timing_unavailable": {
+    "mongo_profiler_enabled": false,
+    "matching_retained_crate_jobs": 0,
+    "note": "The completed batch lacks stage telemetry. Exact historical Mongo source-write and Crate bulk-write latency cannot be recovered. No further production writes were authorized or performed."
+  },
+  "readonly_probe": {
+    "read_timings": {
+      "mongo_source_read": {
+        "calls": 40,
+        "seconds": 5.175854553934187,
+        "mean": 0.12939636384835468,
+        "p50": 0.11265738197835162,
+        "max": 0.30318399402312934
+      },
+      "mongo_identity_read": {
+        "calls": 40,
+        "seconds": 1.1180075031588785,
+        "mean": 0.027950187578971962,
+        "p50": 0.02551485999720171,
+        "max": 0.04708503099391237
+      },
+      "mongo_lease_maintenance_read": {
+        "calls": 40,
+        "seconds": 1.1343254511011764,
+        "mean": 0.02835813627752941,
+        "p50": 0.02508921251865104,
+        "max": 0.05031754303490743
+      },
+      "mongo_lease_identity_read": {
+        "calls": 40,
+        "seconds": 1.3798798712086864,
+        "mean": 0.03449699678021716,
+        "p50": 0.025223641510820016,
+        "max": 0.2652847219724208
+      },
+      "crate_catalog_read": {
+        "calls": 40,
+        "seconds": 1.1701854360871948,
+        "mean": 0.02925463590217987,
+        "p50": 0.028195085033075884,
+        "max": 0.04622601700248197
+      }
+    },
+    "tmdb_sequential": {
+      "calls": 40,
+      "seconds": 7.675851288018748,
+      "mean": 0.1918962822004687,
+      "p50": 0.18542411550879478,
+      "max": 0.24150622595334426
+    },
+    "tmdb_concurrent_6": {
+      "calls": 40,
+      "seconds": 2.7407627609791234,
+      "seconds_per_title": 0.06851906902447809
+    },
+    "requests": {
+      "requests": 80,
+      "retries": 0,
+      "refused": 0,
+      "discover": 0,
+      "title": 80,
+      "catalog": 0,
+      "deleted_responses": 0
+    }
+  },
+  "readonly_replay_baseline": {
+    "selected": 40,
+    "published": 40,
+    "failed": 0,
+    "remaining": 0,
+    "max_failure_days": 0,
+    "publication_batches": 2,
+    "failures": [],
+    "dry_run": false,
+    "seconds": 50.449882,
+    "seconds_per_published_title": 1.261247,
+    "profile_mode": "Read-only replay; all write/refresh latency uses read RTT surrogates, never actual production writes",
+    "metrics": {
+      "prepare.mongo_read": {
+        "calls": 80,
+        "seconds": 6.680781118979212
+      },
+      "prepare.crate_select": {
+        "calls": 40,
+        "seconds": 1.1075269528664649
+      },
+      "prepare.mongo_write_read_surrogate": {
+        "calls": 40,
+        "seconds": 1.039987828116864
+      },
+      "streaming.mongo_index_read_surrogate": {
+        "calls": 8,
+        "seconds": 0.18661566893570125
+      },
+      "streaming.crate_select": {
+        "calls": 8,
+        "seconds": 4.034665284969378
+      },
+      "streaming.mongo_read": {
+        "calls": 40,
+        "seconds": 7.117026142950635
+      },
+      "streaming.mongo_write_read_surrogate": {
+        "calls": 46,
+        "seconds": 1.237338559818454
+      },
+      "streaming.crate_refresh_read_surrogate": {
+        "calls": 6,
+        "seconds": 0.15188457898329943
+      },
+      "streaming.crate_bulk_read_surrogate": {
+        "calls": 4,
+        "seconds": 0.10731846699491143
+      },
+      "streaming.wall": {
+        "calls": 2,
+        "seconds": 13.105741930019576
+      },
+      "vector.vector_read": {
+        "calls": 2,
+        "seconds": 0.16052220400888473
+      },
+      "vector.mongo_read": {
+        "calls": 309,
+        "seconds": 18.67490176379215
+      },
+      "vector.mongo_write_read_surrogate": {
+        "calls": 62,
+        "seconds": 1.5902426853426732
+      },
+      "vector.crate_refresh_read_surrogate": {
+        "calls": 2,
+        "seconds": 0.08249312604311854
+      },
+      "vector.crate_select": {
+        "calls": 2,
+        "seconds": 0.06575182301457971
+      },
+      "vector.vector_write_read_surrogate": {
+        "calls": 2,
+        "seconds": 0.14557446201797575
+      },
+      "vector.wall": {
+        "calls": 2,
+        "seconds": 20.754183285927866
+      }
+    },
+    "requests": {
+      "requests": 40,
+      "retries": 0,
+      "refused": 0,
+      "discover": 0,
+      "title": 40,
+      "catalog": 0,
+      "deleted_responses": 0
+    },
+    "wall_seconds": 50.45071960502537
+  },
+  "readonly_replay_runs": {
+    "optimized": {
+      "selected": 40,
+      "published": 40,
+      "failed": 0,
+      "remaining": 0,
+      "max_failure_days": 0,
+      "publication_batches": 2,
+      "failures": [],
+      "dry_run": false,
+      "timings": {
+        "catalog_reads": 1.174191,
+        "source_read_worker_seconds": 2.680153,
+        "tmdb_worker_seconds": 12.566393,
+        "source_write_worker_seconds": 1.023636,
+        "prepare_wall": 3.034036,
+        "streaming_publication": 9.59361,
+        "vector_publication": 10.980874,
+        "publication_wall": 20.57461
+      },
+      "seconds": 24.786127,
+      "seconds_per_published_title": 0.619653,
+      "profile_mode": "Read-only replay; all write/refresh latency uses read RTT surrogates, never actual production writes",
+      "metrics": {
+        "prepare.crate_select": {
+          "calls": 40,
+          "seconds": 1.1740634209127165
+        },
+        "prepare.mongo_read": {
+          "calls": 80,
+          "seconds": 2.6789827520842664
+        },
+        "prepare.mongo_write_read_surrogate": {
+          "calls": 40,
+          "seconds": 1.0232647191151045
+        },
+        "streaming.mongo_index_read_surrogate": {
+          "calls": 8,
+          "seconds": 0.20693631697213277
+        },
+        "streaming.crate_select": {
+          "calls": 8,
+          "seconds": 2.7243790471111424
+        },
+        "streaming.mongo_read": {
+          "calls": 40,
+          "seconds": 4.853908399178181
+        },
+        "streaming.mongo_write_read_surrogate": {
+          "calls": 46,
+          "seconds": 1.2030683069024235
+        },
+        "streaming.crate_refresh_read_surrogate": {
+          "calls": 6,
+          "seconds": 0.2214127549668774
+        },
+        "streaming.crate_bulk_read_surrogate": {
+          "calls": 4,
+          "seconds": 0.11166017199866474
+        },
+        "streaming.wall": {
+          "calls": 2,
+          "seconds": 9.593512014020234
+        },
+        "vector.vector_read": {
+          "calls": 2,
+          "seconds": 0.1555563229485415
+        },
+        "vector.mongo_read": {
+          "calls": 48,
+          "seconds": 9.135993651172612
+        },
+        "vector.mongo_write_read_surrogate": {
+          "calls": 33,
+          "seconds": 0.831638545030728
+        },
+        "vector.crate_refresh_read_surrogate": {
+          "calls": 2,
+          "seconds": 0.062460188986733556
+        },
+        "vector.crate_select": {
+          "calls": 2,
+          "seconds": 0.19059270899742842
+        },
+        "vector.vector_write_read_surrogate": {
+          "calls": 2,
+          "seconds": 0.16625397000461817
+        },
+        "vector.wall": {
+          "calls": 2,
+          "seconds": 10.598146444943268
+        }
+      },
+      "requests": {
+        "requests": 40,
+        "retries": 0,
+        "refused": 0,
+        "discover": 0,
+        "title": 40,
+        "catalog": 0,
+        "deleted_responses": 0
+      },
+      "wall_seconds": 24.786842515983153
+    },
+    "optimized-projection": {
+      "selected": 40,
+      "published": 40,
+      "failed": 0,
+      "remaining": 0,
+      "max_failure_days": 0,
+      "publication_batches": 2,
+      "failures": [],
+      "dry_run": false,
+      "timings": {
+        "catalog_reads": 1.120527,
+        "source_read_worker_seconds": 2.691527,
+        "tmdb_worker_seconds": 12.64891,
+        "source_write_worker_seconds": 1.074336,
+        "prepare_wall": 3.051861,
+        "streaming_publication": 7.98854,
+        "vector_publication": 5.466197,
+        "publication_wall": 13.454894
+      },
+      "seconds": 17.630443,
+      "seconds_per_published_title": 0.440761,
+      "profile_mode": "Read-only replay; all write/refresh latency uses read RTT surrogates, never actual production writes",
+      "metrics": {
+        "prepare.crate_select": {
+          "calls": 40,
+          "seconds": 1.1204132796847261
+        },
+        "prepare.mongo_read": {
+          "calls": 80,
+          "seconds": 2.690586935961619
+        },
+        "prepare.mongo_write_read_surrogate": {
+          "calls": 40,
+          "seconds": 1.0740100321127102
+        },
+        "streaming.mongo_index_read_surrogate": {
+          "calls": 8,
+          "seconds": 0.20851716707693413
+        },
+        "streaming.crate_select": {
+          "calls": 8,
+          "seconds": 2.3842015268746763
+        },
+        "streaming.mongo_read": {
+          "calls": 40,
+          "seconds": 3.6811704879510216
+        },
+        "streaming.mongo_write_read_surrogate": {
+          "calls": 46,
+          "seconds": 1.1919568542507477
+        },
+        "streaming.crate_refresh_read_surrogate": {
+          "calls": 6,
+          "seconds": 0.1678887659800239
+        },
+        "streaming.crate_bulk_read_surrogate": {
+          "calls": 4,
+          "seconds": 0.08880846400279552
+        },
+        "streaming.wall": {
+          "calls": 2,
+          "seconds": 7.988434502040036
+        },
+        "vector.vector_read": {
+          "calls": 2,
+          "seconds": 0.17452816397417337
+        },
+        "vector.mongo_read": {
+          "calls": 46,
+          "seconds": 3.6053939920384437
+        },
+        "vector.mongo_write_read_surrogate": {
+          "calls": 33,
+          "seconds": 0.8554082580376416
+        },
+        "vector.crate_refresh_read_surrogate": {
+          "calls": 2,
+          "seconds": 0.06735133897745982
+        },
+        "vector.crate_select": {
+          "calls": 2,
+          "seconds": 0.21380105195567012
+        },
+        "vector.vector_write_read_surrogate": {
+          "calls": 2,
+          "seconds": 0.17423311597667634
+        },
+        "vector.wall": {
+          "calls": 2,
+          "seconds": 5.099926259019412
+        }
+      },
+      "requests": {
+        "requests": 40,
+        "retries": 0,
+        "refused": 0,
+        "discover": 0,
+        "title": 40,
+        "catalog": 0,
+        "deleted_responses": 0
+      },
+      "wall_seconds": 17.631062011991162
+    },
+    "optimized-detailed": {
+      "selected": 40,
+      "published": 40,
+      "failed": 0,
+      "remaining": 0,
+      "max_failure_days": 0,
+      "publication_batches": 2,
+      "failures": [],
+      "dry_run": false,
+      "timings": {
+        "catalog_reads": 1.363319,
+        "source_read_worker_seconds": 2.851711,
+        "tmdb_worker_seconds": 12.571248,
+        "source_write_worker_seconds": 1.067684,
+        "prepare_wall": 3.095335,
+        "streaming_publication": 11.412049,
+        "vector_publication": 5.798759,
+        "publication_wall": 17.210962
+      },
+      "seconds": 21.67352,
+      "seconds_per_published_title": 0.541838,
+      "profile_mode": "Read-only replay; all write/refresh latency uses read RTT surrogates, never actual production writes",
+      "metrics": {
+        "prepare.crate_select": {
+          "calls": 40,
+          "seconds": 1.3632055410998873
+        },
+        "prepare.mongo_read.tmdb_movie_details": {
+          "calls": 80,
+          "seconds": 2.850638356001582
+        },
+        "prepare.mongo_write_read_surrogate": {
+          "calls": 40,
+          "seconds": 1.0673432470066473
+        },
+        "streaming.mongo_index_read_surrogate": {
+          "calls": 8,
+          "seconds": 0.19323106104275212
+        },
+        "streaming.crate_select": {
+          "calls": 8,
+          "seconds": 3.820375920913648
+        },
+        "streaming.mongo_read.tmdb_movie_details": {
+          "calls": 4,
+          "seconds": 0.848941212054342
+        },
+        "streaming.mongo_read.provider_identity_unresolved": {
+          "calls": 2,
+          "seconds": 0.06214241700945422
+        },
+        "streaming.mongo_read.provider_identity_maintenance": {
+          "calls": 16,
+          "seconds": 0.47325195895973593
+        },
+        "streaming.mongo_write_read_surrogate": {
+          "calls": 46,
+          "seconds": 1.171717147284653
+        },
+        "streaming.mongo_read.tmdb_movie_providers": {
+          "calls": 2,
+          "seconds": 3.799638250027783
+        },
+        "streaming.mongo_read.streaming_publication_leases": {
+          "calls": 14,
+          "seconds": 0.4721402660361491
+        },
+        "streaming.crate_refresh_read_surrogate": {
+          "calls": 6,
+          "seconds": 0.15311798703623936
+        },
+        "streaming.mongo_read.streaming_history_pending": {
+          "calls": 2,
+          "seconds": 0.05829018697841093
+        },
+        "streaming.crate_bulk_read_surrogate": {
+          "calls": 4,
+          "seconds": 0.09213552199071273
+        },
+        "streaming.wall": {
+          "calls": 2,
+          "seconds": 11.41193060099613
+        },
+        "vector.vector_read": {
+          "calls": 2,
+          "seconds": 0.17874062195187435
+        },
+        "vector.mongo_read": {
+          "calls": 4,
+          "seconds": 0.12414883601013571
+        },
+        "vector.mongo_read.tmdb_movie_details": {
+          "calls": 12,
+          "seconds": 1.936454173992388
+        },
+        "vector.mongo_read.imdb_movie_rating": {
+          "calls": 2,
+          "seconds": 0.060642865078989416
+        },
+        "vector.mongo_read.metacritic_movie_rating": {
+          "calls": 2,
+          "seconds": 0.05111831100657582
+        },
+        "vector.mongo_read.rotten_tomatoes_movie_rating": {
+          "calls": 2,
+          "seconds": 0.06334458204219118
+        },
+        "vector.mongo_read.dna_movie": {
+          "calls": 2,
+          "seconds": 0.5738522810279392
+        },
+        "vector.mongo_read.tv_tropes_movie_tags": {
+          "calls": 2,
+          "seconds": 0.2804133479949087
+        },
+        "vector.mongo_read.provider_identity_maintenance": {
+          "calls": 10,
+          "seconds": 0.28357577306451276
+        },
+        "vector.mongo_write_read_surrogate": {
+          "calls": 33,
+          "seconds": 0.9842517520883121
+        },
+        "vector.mongo_read.streaming_publication_leases": {
+          "calls": 8,
+          "seconds": 0.23159536410821602
+        },
+        "vector.crate_refresh_read_surrogate": {
+          "calls": 2,
+          "seconds": 0.07946407294366509
+        },
+        "vector.crate_select": {
+          "calls": 2,
+          "seconds": 0.25158147898036987
+        },
+        "vector.vector_write_read_surrogate": {
+          "calls": 2,
+          "seconds": 0.16203452297486365
+        },
+        "vector.mongo_read.tmdb_daily_dump_data": {
+          "calls": 2,
+          "seconds": 0.16125419700983912
+        },
+        "vector.wall": {
+          "calls": 2,
+          "seconds": 5.433369394042529
+        }
+      },
+      "requests": {
+        "requests": 40,
+        "retries": 0,
+        "refused": 0,
+        "discover": 0,
+        "title": 40,
+        "catalog": 0,
+        "deleted_responses": 0
+      },
+      "wall_seconds": 21.674136161978822
+    },
+    "optimized-final": {
+      "selected": 40,
+      "published": 40,
+      "failed": 0,
+      "remaining": 0,
+      "max_failure_days": 0,
+      "publication_batches": 2,
+      "failures": [],
+      "dry_run": false,
+      "timings": {
+        "catalog_reads": 0.074989,
+        "source_read_worker_seconds": 5.165514,
+        "tmdb_worker_seconds": 12.9141,
+        "source_write_worker_seconds": 1.937555,
+        "prepare_wall": 3.785953,
+        "crate_select": 6.398569,
+        "crate_run": 0.269289,
+        "crate_upsert_many": 0.145958,
+        "streaming_publication": 26.081899,
+        "vector_publication": 7.24504,
+        "publication_wall": 33.327107,
+        "queue_acknowledgment": 0.002179
+      },
+      "seconds": 37.190964,
+      "seconds_per_published_title": 0.929774,
+      "profile_mode": "Read-only replay; all write/refresh latency uses read RTT surrogates, never actual production writes",
+      "metrics": {
+        "prepare.crate_select": {
+          "calls": 2,
+          "seconds": 0.07496811402961612
+        },
+        "prepare.mongo_read.tmdb_movie_details": {
+          "calls": 80,
+          "seconds": 5.16458071192028
+        },
+        "prepare.mongo_write_read_surrogate": {
+          "calls": 40,
+          "seconds": 1.9372498311568052
+        },
+        "streaming.mongo_index_read_surrogate": {
+          "calls": 8,
+          "seconds": 0.2624394280137494
+        },
+        "streaming.crate_select": {
+          "calls": 8,
+          "seconds": 6.149605056911241
+        },
+        "streaming.mongo_read.tmdb_movie_details": {
+          "calls": 4,
+          "seconds": 2.525167608051561
+        },
+        "streaming.mongo_read.provider_identity_unresolved": {
+          "calls": 2,
+          "seconds": 0.10356156103080139
+        },
+        "streaming.mongo_read.provider_identity_maintenance": {
+          "calls": 16,
+          "seconds": 0.6129611030337401
+        },
+        "streaming.mongo_write_read_surrogate": {
+          "calls": 46,
+          "seconds": 1.9573431362514384
+        },
+        "streaming.mongo_read.tmdb_movie_providers": {
+          "calls": 2,
+          "seconds": 13.24088909290731
+        },
+        "streaming.mongo_read.streaming_publication_leases": {
+          "calls": 14,
+          "seconds": 0.53553026804002
+        },
+        "streaming.crate_refresh_read_surrogate": {
+          "calls": 6,
+          "seconds": 0.2092531289672479
+        },
+        "streaming.mongo_read.streaming_history_pending": {
+          "calls": 2,
+          "seconds": 0.0600414730142802
+        },
+        "streaming.crate_bulk_read_surrogate": {
+          "calls": 4,
+          "seconds": 0.14593341608997434
+        },
+        "streaming.wall": {
+          "calls": 2,
+          "seconds": 26.081792279030196
+        },
+        "vector.vector_read": {
+          "calls": 2,
+          "seconds": 0.2219653349602595
+        },
+        "vector.mongo_read": {
+          "calls": 4,
+          "seconds": 0.14860930090071633
+        },
+        "vector.mongo_read.tmdb_movie_details": {
+          "calls": 12,
+          "seconds": 2.6773277490283363
+        },
+        "vector.mongo_read.imdb_movie_rating": {
+          "calls": 2,
+          "seconds": 0.08393000299111009
+        },
+        "vector.mongo_read.metacritic_movie_rating": {
+          "calls": 2,
+          "seconds": 0.07840096903964877
+        },
+        "vector.mongo_read.rotten_tomatoes_movie_rating": {
+          "calls": 2,
+          "seconds": 0.07352948002517223
+        },
+        "vector.mongo_read.dna_movie": {
+          "calls": 2,
+          "seconds": 0.33338031405583024
+        },
+        "vector.mongo_read.tv_tropes_movie_tags": {
+          "calls": 2,
+          "seconds": 0.5122310959850438
+        },
+        "vector.mongo_read.provider_identity_maintenance": {
+          "calls": 10,
+          "seconds": 0.30278028693282977
+        },
+        "vector.mongo_write_read_surrogate": {
+          "calls": 33,
+          "seconds": 1.11323566082865
+        },
+        "vector.mongo_read.streaming_publication_leases": {
+          "calls": 8,
+          "seconds": 0.28014938795240596
+        },
+        "vector.crate_refresh_read_surrogate": {
+          "calls": 2,
+          "seconds": 0.06001044204458594
+        },
+        "vector.crate_select": {
+          "calls": 2,
+          "seconds": 0.24892822100082412
+        },
+        "vector.vector_write_read_surrogate": {
+          "calls": 2,
+          "seconds": 0.1826850560028106
+        },
+        "vector.mongo_read.tmdb_daily_dump_data": {
+          "calls": 2,
+          "seconds": 0.36362332303542644
+        },
+        "vector.wall": {
+          "calls": 2,
+          "seconds": 6.690610021993052
+        }
+      },
+      "requests": {
+        "requests": 40,
+        "retries": 0,
+        "refused": 0,
+        "discover": 0,
+        "title": 40,
+        "catalog": 0,
+        "deleted_responses": 0
+      },
+      "wall_seconds": 37.191561034996994
+    },
+    "optimized-compressed": {
+      "selected": 40,
+      "published": 40,
+      "failed": 0,
+      "remaining": 0,
+      "max_failure_days": 0,
+      "publication_batches": 2,
+      "failures": [],
+      "dry_run": false,
+      "timings": {
+        "catalog_reads": 0.075345,
+        "source_read_worker_seconds": 4.162831,
+        "tmdb_worker_seconds": 12.496395,
+        "source_write_worker_seconds": 1.491759,
+        "prepare_wall": 3.647406,
+        "crate_select": 15.19812,
+        "crate_run": 0.260922,
+        "crate_upsert_many": 0.162821,
+        "streaming_publication": 19.10941,
+        "vector_publication": 10.288954,
+        "publication_wall": 29.39851,
+        "queue_acknowledgment": 0.002284
+      },
+      "seconds": 33.124261,
+      "seconds_per_published_title": 0.828107,
+      "profile_mode": "Read-only replay; all write/refresh latency uses read RTT surrogates, never actual production writes",
+      "metrics": {
+        "prepare.crate_select": {
+          "calls": 2,
+          "seconds": 0.07532960805110633
+        },
+        "prepare.mongo_read.tmdb_movie_details": {
+          "calls": 80,
+          "seconds": 4.161986243329011
+        },
+        "prepare.mongo_write_read_surrogate": {
+          "calls": 40,
+          "seconds": 1.491470923065208
+        },
+        "streaming.mongo_index_read_surrogate": {
+          "calls": 8,
+          "seconds": 0.2806178809842095
+        },
+        "streaming.crate_select": {
+          "calls": 8,
+          "seconds": 15.102098100993317
+        },
+        "streaming.mongo_read.tmdb_movie_details": {
+          "calls": 4,
+          "seconds": 0.6105090390192345
+        },
+        "streaming.mongo_read.provider_identity_unresolved": {
+          "calls": 2,
+          "seconds": 0.056333902990445495
+        },
+        "streaming.mongo_read.provider_identity_maintenance": {
+          "calls": 18,
+          "seconds": 0.6334854659507982
+        },
+        "streaming.mongo_write_read_surrogate": {
+          "calls": 46,
+          "seconds": 1.60145717789419
+        },
+        "streaming.mongo_read.streaming_publication_leases": {
+          "calls": 16,
+          "seconds": 0.6370088781113736
+        },
+        "streaming.crate_refresh_read_surrogate": {
+          "calls": 6,
+          "seconds": 0.20105107798008248
+        },
+        "streaming.mongo_read.tmdb_movie_providers": {
+          "calls": 2,
+          "seconds": 0.5455199049902149
+        },
+        "streaming.mongo_read.streaming_history_pending": {
+          "calls": 2,
+          "seconds": 0.07918303896440193
+        },
+        "streaming.crate_bulk_read_surrogate": {
+          "calls": 4,
+          "seconds": 0.16279592103092
+        },
+        "streaming.wall": {
+          "calls": 2,
+          "seconds": 19.109323055075947
+        },
+        "vector.vector_read": {
+          "calls": 2,
+          "seconds": 0.22898175800219178
+        },
+        "vector.mongo_read": {
+          "calls": 4,
+          "seconds": 0.16212491691112518
+        },
+        "vector.mongo_read.tmdb_movie_details": {
+          "calls": 12,
+          "seconds": 5.123782601905987
+        },
+        "vector.mongo_read.imdb_movie_rating": {
+          "calls": 2,
+          "seconds": 0.32521444803569466
+        },
+        "vector.mongo_read.metacritic_movie_rating": {
+          "calls": 2,
+          "seconds": 0.08358454203698784
+        },
+        "vector.mongo_read.rotten_tomatoes_movie_rating": {
+          "calls": 2,
+          "seconds": 0.08678315108409151
+        },
+        "vector.mongo_read.dna_movie": {
+          "calls": 2,
+          "seconds": 0.19586722599342465
+        },
+        "vector.mongo_read.tv_tropes_movie_tags": {
+          "calls": 2,
+          "seconds": 0.1144158230163157
+        },
+        "vector.mongo_read.provider_identity_maintenance": {
+          "calls": 10,
+          "seconds": 0.3587992330431007
+        },
+        "vector.mongo_write_read_surrogate": {
+          "calls": 33,
+          "seconds": 1.1608787310542539
+        },
+        "vector.mongo_read.streaming_publication_leases": {
+          "calls": 8,
+          "seconds": 0.27934423490660265
+        },
+        "vector.crate_refresh_read_surrogate": {
+          "calls": 2,
+          "seconds": 0.05983845901209861
+        },
+        "vector.crate_select": {
+          "calls": 2,
+          "seconds": 0.09598240797640756
+        },
+        "vector.vector_write_read_surrogate": {
+          "calls": 2,
+          "seconds": 0.25352710793958977
+        },
+        "vector.mongo_read.tmdb_daily_dump_data": {
+          "calls": 2,
+          "seconds": 0.21784967300482094
+        },
+        "vector.wall": {
+          "calls": 2,
+          "seconds": 8.75799295998877
+        }
+      },
+      "requests": {
+        "requests": 40,
+        "retries": 0,
+        "refused": 0,
+        "discover": 0,
+        "title": 40,
+        "catalog": 0,
+        "deleted_responses": 0
+      },
+      "wall_seconds": 33.124878811999224
+    },
+    "optimized-complete": {
+      "selected": 40,
+      "published": 40,
+      "failed": 0,
+      "remaining": 80,
+      "max_failure_days": 0,
+      "publication_batches": 2,
+      "failures": [],
+      "dry_run": false,
+      "timings": {
+        "catalog_reads": 0.095146,
+        "source_read_worker_seconds": 3.075046,
+        "tmdb_worker_seconds": 12.307103,
+        "source_write_worker_seconds": 1.210647,
+        "prepare_wall": 3.121712,
+        "crate_select": 4.477678,
+        "crate_run": 0.254908,
+        "crate_upsert_many": 0.140581,
+        "streaming_publication": 7.973653,
+        "vector_publication": 3.284091,
+        "publication_wall": 11.257929,
+        "queue_acknowledgment": 0.003901
+      },
+      "seconds": 14.481157,
+      "seconds_per_published_title": 0.362029,
+      "mongo_negotiated_compressor_ids": [
+        2
+      ],
+      "profile_mode": "Read-only replay; all write/refresh latency uses read RTT surrogates, never actual production writes",
+      "metrics": {
+        "prepare.crate_select": {
+          "calls": 2,
+          "seconds": 0.09512902703136206
+        },
+        "prepare.mongo_read.tmdb_movie_details": {
+          "calls": 80,
+          "seconds": 3.0740536904195324
+        },
+        "prepare.mongo_write_read_surrogate": {
+          "calls": 40,
+          "seconds": 1.2102520887856372
+        },
+        "streaming.mongo_index_read_surrogate": {
+          "calls": 8,
+          "seconds": 0.25511308398563415
+        },
+        "streaming.crate_select": {
+          "calls": 8,
+          "seconds": 4.409536221937742
+        },
+        "streaming.mongo_read.tmdb_movie_details": {
+          "calls": 4,
+          "seconds": 0.28374910401180387
+        },
+        "streaming.mongo_read.provider_identity_unresolved": {
+          "calls": 2,
+          "seconds": 0.0851231089909561
+        },
+        "streaming.mongo_read.provider_identity_maintenance": {
+          "calls": 18,
+          "seconds": 0.5259487518924288
+        },
+        "streaming.mongo_write_read_surrogate": {
+          "calls": 46,
+          "seconds": 1.456610377994366
+        },
+        "streaming.mongo_read.streaming_publication_leases": {
+          "calls": 16,
+          "seconds": 0.49114822887349874
+        },
+        "streaming.crate_refresh_read_surrogate": {
+          "calls": 6,
+          "seconds": 0.19535616802750155
+        },
+        "streaming.mongo_read.tmdb_movie_providers": {
+          "calls": 2,
+          "seconds": 0.3871423060190864
+        },
+        "streaming.mongo_read.streaming_history_pending": {
+          "calls": 2,
+          "seconds": 0.06150379200698808
+        },
+        "streaming.crate_bulk_read_surrogate": {
+          "calls": 4,
+          "seconds": 0.1405609300127253
+        },
+        "streaming.wall": {
+          "calls": 2,
+          "seconds": 7.9735391400172375
+        },
+        "vector.vector_read": {
+          "calls": 2,
+          "seconds": 0.18890619894955307
+        },
+        "vector.mongo_read": {
+          "calls": 4,
+          "seconds": 0.14464383613085374
+        },
+        "vector.mongo_read.tmdb_movie_details": {
+          "calls": 8,
+          "seconds": 0.2568554910249077
+        },
+        "vector.mongo_read.imdb_movie_rating": {
+          "calls": 2,
+          "seconds": 0.09293784701731056
+        },
+        "vector.mongo_read.metacritic_movie_rating": {
+          "calls": 2,
+          "seconds": 0.06876851199194789
+        },
+        "vector.mongo_read.rotten_tomatoes_movie_rating": {
+          "calls": 2,
+          "seconds": 0.06240178906591609
+        },
+        "vector.mongo_read.dna_movie": {
+          "calls": 2,
+          "seconds": 0.06620891101192683
+        },
+        "vector.mongo_read.tv_tropes_movie_tags": {
+          "calls": 2,
+          "seconds": 0.07585131103405729
+        },
+        "vector.mongo_read.provider_identity_maintenance": {
+          "calls": 10,
+          "seconds": 0.3694273249129765
+        },
+        "vector.mongo_write_read_surrogate": {
+          "calls": 33,
+          "seconds": 0.9638799591339193
+        },
+        "vector.mongo_read.streaming_publication_leases": {
+          "calls": 8,
+          "seconds": 0.29190244886558503
+        },
+        "vector.crate_refresh_read_surrogate": {
+          "calls": 2,
+          "seconds": 0.059519762988202274
+        },
+        "vector.crate_select": {
+          "calls": 2,
+          "seconds": 0.06810619606403634
+        },
+        "vector.vector_write_read_surrogate": {
+          "calls": 2,
+          "seconds": 0.15487673797179013
+        },
+        "vector.wall": {
+          "calls": 2,
+          "seconds": 2.873714466986712
+        }
+      },
+      "requests": {
+        "requests": 40,
+        "retries": 0,
+        "refused": 0,
+        "discover": 0,
+        "title": 40,
+        "catalog": 0,
+        "deleted_responses": 0
+      },
+      "wall_seconds": 14.481873375945725
+    },
+    "optimized-120": {
+      "selected": 120,
+      "published": 120,
+      "failed": 0,
+      "remaining": 0,
+      "max_failure_days": 0,
+      "publication_batches": 6,
+      "failures": [],
+      "dry_run": false,
+      "timings": {
+        "catalog_reads": 0.302364,
+        "source_read_worker_seconds": 9.425366,
+        "tmdb_worker_seconds": 37.513529,
+        "source_write_worker_seconds": 4.882517,
+        "prepare_wall": 10.1052,
+        "crate_select": 38.172052,
+        "crate_run": 0.842834,
+        "crate_upsert_many": 0.487614,
+        "streaming_publication": 49.185254,
+        "vector_publication": 11.492227,
+        "publication_wall": 60.67796,
+        "queue_acknowledgment": 0.01425
+      },
+      "seconds": 71.102255,
+      "seconds_per_published_title": 0.592519,
+      "mongo_negotiated_compressor_ids": [
+        2
+      ],
+      "profile_mode": "Read-only replay; all write/refresh latency uses read RTT surrogates, never actual production writes",
+      "metrics": {
+        "prepare.crate_select": {
+          "calls": 6,
+          "seconds": 0.3023159390431829
+        },
+        "prepare.mongo_read.tmdb_movie_details": {
+          "calls": 240,
+          "seconds": 9.422580313810613
+        },
+        "prepare.mongo_write_read_surrogate": {
+          "calls": 120,
+          "seconds": 4.881536791392136
+        },
+        "streaming.mongo_index_read_surrogate": {
+          "calls": 24,
+          "seconds": 0.7708537961589172
+        },
+        "streaming.crate_select": {
+          "calls": 24,
+          "seconds": 37.516489509900566
+        },
+        "streaming.mongo_read.tmdb_movie_details": {
+          "calls": 12,
+          "seconds": 1.5306866080500185
+        },
+        "streaming.mongo_read.provider_identity_unresolved": {
+          "calls": 6,
+          "seconds": 0.19298413104843348
+        },
+        "streaming.mongo_read.provider_identity_maintenance": {
+          "calls": 54,
+          "seconds": 1.691332823887933
+        },
+        "streaming.mongo_write_read_surrogate": {
+          "calls": 138,
+          "seconds": 4.679282488941681
+        },
+        "streaming.mongo_read.streaming_publication_leases": {
+          "calls": 48,
+          "seconds": 1.7868296331726015
+        },
+        "streaming.crate_refresh_read_surrogate": {
+          "calls": 18,
+          "seconds": 0.6755465698661283
+        },
+        "streaming.mongo_read.tmdb_movie_providers": {
+          "calls": 6,
+          "seconds": 2.948345499986317
+        },
+        "streaming.mongo_read.streaming_history_pending": {
+          "calls": 6,
+          "seconds": 0.19089987204642966
+        },
+        "streaming.crate_bulk_read_surrogate": {
+          "calls": 12,
+          "seconds": 0.4875431679538451
+        },
+        "streaming.wall": {
+          "calls": 6,
+          "seconds": 49.18492897803662
+        },
+        "vector.vector_read": {
+          "calls": 6,
+          "seconds": 0.6470832289196551
+        },
+        "vector.mongo_read": {
+          "calls": 12,
+          "seconds": 0.4301289630238898
+        },
+        "vector.mongo_read.tmdb_movie_details": {
+          "calls": 24,
+          "seconds": 0.8499606861150824
+        },
+        "vector.mongo_read.imdb_movie_rating": {
+          "calls": 6,
+          "seconds": 0.24193418701179326
+        },
+        "vector.mongo_read.metacritic_movie_rating": {
+          "calls": 6,
+          "seconds": 0.19836893607862294
+        },
+        "vector.mongo_read.rotten_tomatoes_movie_rating": {
+          "calls": 6,
+          "seconds": 0.20974139805184677
+        },
+        "vector.mongo_read.dna_movie": {
+          "calls": 6,
+          "seconds": 0.7711308560683392
+        },
+        "vector.mongo_read.tv_tropes_movie_tags": {
+          "calls": 6,
+          "seconds": 0.34578552009770647
+        },
+        "vector.mongo_read.provider_identity_maintenance": {
+          "calls": 30,
+          "seconds": 0.9106559421052225
+        },
+        "vector.mongo_write_read_surrogate": {
+          "calls": 101,
+          "seconds": 3.265552734141238
+        },
+        "vector.mongo_read.streaming_publication_leases": {
+          "calls": 24,
+          "seconds": 0.7878230760688893
+        },
+        "vector.crate_refresh_read_surrogate": {
+          "calls": 6,
+          "seconds": 0.16720096505014226
+        },
+        "vector.crate_select": {
+          "calls": 6,
+          "seconds": 0.6554486500099301
+        },
+        "vector.vector_write_read_surrogate": {
+          "calls": 6,
+          "seconds": 0.7324277789448388
+        },
+        "vector.wall": {
+          "calls": 6,
+          "seconds": 10.245427140034735
+        }
+      },
+      "requests": {
+        "requests": 120,
+        "retries": 0,
+        "refused": 0,
+        "discover": 0,
+        "title": 120,
+        "catalog": 0,
+        "deleted_responses": 0
+      },
+      "wall_seconds": 71.10286955401534
+    },
+    "optimized-120-sql": {
+      "selected": 120,
+      "published": 120,
+      "failed": 0,
+      "remaining": 0,
+      "max_failure_days": 0,
+      "publication_batches": 6,
+      "failures": [],
+      "dry_run": false,
+      "timings": {
+        "catalog_reads": 0.30659,
+        "source_read_worker_seconds": 7.842256,
+        "tmdb_worker_seconds": 38.270124,
+        "source_write_worker_seconds": 3.687657,
+        "prepare_wall": 9.269517,
+        "crate_select": 14.533654,
+        "crate_run": 0.780129,
+        "crate_upsert_many": 0.478756,
+        "streaming_publication": 24.45689,
+        "vector_publication": 10.709169,
+        "publication_wall": 35.166502,
+        "queue_acknowledgment": 0.012727
+      },
+      "seconds": 44.757964,
+      "seconds_per_published_title": 0.372983,
+      "mongo_negotiated_compressor_ids": [
+        2
+      ],
+      "profile_mode": "Read-only replay; all write/refresh latency uses read RTT surrogates, never actual production writes",
+      "metrics": {
+        "prepare.crate_select": {
+          "calls": 6,
+          "seconds": 0.3065192489884794
+        },
+        "prepare.crate_sql.SELECT tmdb_id FROM movie WHERE tmdb_id = ANY(?)": {
+          "calls": 6,
+          "seconds": 0,
+          "rows": 120,
+          "server_ms": 46.67553500000001
+        },
+        "prepare.mongo_read.tmdb_movie_details": {
+          "calls": 240,
+          "seconds": 7.839438634808175
+        },
+        "prepare.mongo_write_read_surrogate": {
+          "calls": 120,
+          "seconds": 3.686605480965227
+        },
+        "streaming.mongo_index_read_surrogate": {
+          "calls": 24,
+          "seconds": 0.7442706529982388
+        },
+        "streaming.crate_select": {
+          "calls": 24,
+          "seconds": 13.919577532971743
+        },
+        "streaming.crate_sql.SELECT tmdb_id, name, media_type, order_by_country FROM streaming_service WHERE media_type = ?": {
+          "calls": 6,
+          "seconds": 0,
+          "rows": 5280,
+          "server_ms": 261.176967
+        },
+        "streaming.mongo_read.tmdb_movie_details": {
+          "calls": 12,
+          "seconds": 0.8875502267619595
+        },
+        "streaming.mongo_read.provider_identity_unresolved": {
+          "calls": 6,
+          "seconds": 0.1672354009351693
+        },
+        "streaming.mongo_read.provider_identity_maintenance": {
+          "calls": 54,
+          "seconds": 1.6590609748964198
+        },
+        "streaming.mongo_write_read_surrogate": {
+          "calls": 138,
+          "seconds": 4.132924309698865
+        },
+        "streaming.mongo_read.streaming_publication_leases": {
+          "calls": 48,
+          "seconds": 1.4610561971203424
+        },
+        "streaming.crate_refresh_read_surrogate": {
+          "calls": 18,
+          "seconds": 0.5841978549142368
+        },
+        "streaming.mongo_read.tmdb_movie_providers": {
+          "calls": 6,
+          "seconds": 1.4040043460554443
+        },
+        "streaming.crate_sql.SELECT * FROM streaming_availability WHERE media_tmdb_id = ANY(?) AND media_type = ?": {
+          "calls": 6,
+          "seconds": 0,
+          "rows": 16021,
+          "server_ms": 491.79094299999997
+        },
+        "streaming.crate_sql.SELECT media_tmdb_id, country_code FROM streaming_evidence WHERE media_tmdb_id = ANY(?) AND media_type = ?": {
+          "calls": 6,
+          "seconds": 0,
+          "rows": 7335,
+          "server_ms": 88.291636
+        },
+        "streaming.mongo_read.streaming_history_pending": {
+          "calls": 6,
+          "seconds": 0.18329143500886858
+        },
+        "streaming.crate_sql.SELECT * FROM availability_history WHERE media_tmdb_id = ANY(?) AND media_type = ?": {
+          "calls": 6,
+          "seconds": 0,
+          "rows": 7915,
+          "server_ms": 200.236885
+        },
+        "streaming.crate_bulk_read_surrogate": {
+          "calls": 12,
+          "seconds": 0.47869370214175433
+        },
+        "streaming.wall": {
+          "calls": 6,
+          "seconds": 24.456601429032162
+        },
+        "vector.vector_read": {
+          "calls": 6,
+          "seconds": 0.6009764070622623
+        },
+        "vector.mongo_read": {
+          "calls": 12,
+          "seconds": 0.37119694391731173
+        },
+        "vector.mongo_read.tmdb_movie_details": {
+          "calls": 24,
+          "seconds": 0.8386667469167151
+        },
+        "vector.mongo_read.imdb_movie_rating": {
+          "calls": 6,
+          "seconds": 0.22565247502643615
+        },
+        "vector.mongo_read.metacritic_movie_rating": {
+          "calls": 6,
+          "seconds": 0.23402716097189113
+        },
+        "vector.mongo_read.rotten_tomatoes_movie_rating": {
+          "calls": 6,
+          "seconds": 0.18923105200519785
+        },
+        "vector.mongo_read.dna_movie": {
+          "calls": 6,
+          "seconds": 0.17996140802279115
+        },
+        "vector.mongo_read.tv_tropes_movie_tags": {
+          "calls": 6,
+          "seconds": 0.41154781205113977
+        },
+        "vector.mongo_read.provider_identity_maintenance": {
+          "calls": 30,
+          "seconds": 0.9615859569748864
+        },
+        "vector.mongo_write_read_surrogate": {
+          "calls": 101,
+          "seconds": 3.170874443196226
+        },
+        "vector.mongo_read.streaming_publication_leases": {
+          "calls": 24,
+          "seconds": 0.7841350891394541
+        },
+        "vector.crate_refresh_read_surrogate": {
+          "calls": 6,
+          "seconds": 0.195849280920811
+        },
+        "vector.crate_select": {
+          "calls": 6,
+          "seconds": 0.6138697729329579
+        },
+        "vector.crate_sql.SELECT tmdb_id, streaming_availabilities FROM movie WHERE tmdb_id = ANY(?)": {
+          "calls": 6,
+          "seconds": 0,
+          "rows": 95,
+          "server_ms": 76.106329
+        },
+        "vector.vector_write_read_surrogate": {
+          "calls": 6,
+          "seconds": 0.5872386199771427
+        },
+        "vector.wall": {
+          "calls": 6,
+          "seconds": 9.394501626084093
+        }
+      },
+      "requests": {
+        "requests": 120,
+        "retries": 0,
+        "refused": 0,
+        "discover": 0,
+        "title": 120,
+        "catalog": 0,
+        "deleted_responses": 0
+      },
+      "wall_seconds": 44.75889213499613
+    }
+  },
+  "replay_limitations": [
+    "All production database/HTTP mutations are blocked. Mongo/Crate/Qdrant writes and REFRESH use read RTT surrogates and local lease/queue state. These are NOT measured live publication rates.",
+    "Already repaired titles can have fewer offer/history writes than a new change. The first 40 sample titles are shared across before/after; larger replays use the first 120 repaired titles.",
+    "Worker time counters overlap and include shared rate-limit wait; do not sum them with wall stages. Network/load variation is visible in all retained runs."
+  ],
+  "deployed_safety": {
+    "schedule": {
+      "enabled": true,
+      "schedule": "0 0 14 * * *",
+      "timezone": "UTC",
+      "args": {
+        "dry_run": false,
+        "max_requests": 350000,
+        "requests_per_second": 15,
+        "baseline_max_requests": 120000,
+        "baseline_max_memberships": 570000
+      }
+    },
+    "flow": {
+      "list_timeout": {
+        "type": "static",
+        "value": 28800
+      },
+      "module_ids": [
+        "lists",
+        "report"
+      ],
+      "report_warns_on_remaining": true
+    },
+    "ramp": {
+      "remaining_time_bound_present": true,
+      "list_stage_before_drain": true,
+      "hard_budget_caught": true
+    },
+    "drain": {
+      "default_limit": 20000,
+      "consecutive_failure_stop": true,
+      "runtime_stop": true
+    },
+    "code_or_schedule_mutations": false
+  },
+  "tests": {
+    "ran": 308,
+    "passed": 291,
+    "optional_skipped": 17,
+    "failed": 0,
+    "daily_list_cases": 113
+  },
+  "readonly_tmdb_requests_this_investigation": 600,
+  "large_artifact_directory": "/home/alp/.local/state/goodwatch/title-offer-performance-20261025",
+  "manifest_copy": "/home/alp/.local/state/goodwatch/title-offers-backfill-20261025/backfill-reviewed.json",
+  "production_mutations_this_investigation": 0
+}

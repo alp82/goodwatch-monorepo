@@ -1,6 +1,7 @@
 import time
 from collections import defaultdict
 from contextlib import contextmanager
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from typing import Any, Callable, Iterator, Optional
 from uuid import uuid4
@@ -642,22 +643,29 @@ def publish_batch(
         left += [tmdb_id for tmdb_id in tmdb_ids if tmdb_id not in owned_ids]
         if not owned:
             return left
-        details_by_id = fetch_documents_in_batch(owned, mongo_details)
-        providers_by_id = fetch_all_documents_in_batch(owned, mongo_providers)
+        # These independent snapshots can be large. Mongo cursors run in their
+        # own workers; the one Crate cursor stays on the caller thread. Join
+        # both readers and recheck ownership before any publication write.
+        with ThreadPoolExecutor(max_workers=2) as readers:
+            details_read = readers.submit(fetch_documents_in_batch, owned, mongo_details)
+            providers_read = readers.submit(fetch_all_documents_in_batch, owned, mongo_providers)
+            check_owned()
+            connector.run("REFRESH TABLE streaming_availability")
+            existing_by_id = defaultdict(list)
+            for row in connector.select(
+                "SELECT * FROM streaming_availability WHERE media_tmdb_id = ANY(?) AND media_type = ?", (owned, media_type)
+            ):
+                existing_by_id[row["media_tmdb_id"]].append(row)
+            connector.run("REFRESH TABLE streaming_evidence")
+            prior_by_id = defaultdict(list)
+            for row in connector.select(
+                "SELECT media_tmdb_id, country_code FROM streaming_evidence WHERE media_tmdb_id = ANY(?) AND media_type = ?",
+                (owned, media_type),
+            ):
+                prior_by_id[row["media_tmdb_id"]].append(row["country_code"])
+            details_by_id = details_read.result()
+            providers_by_id = providers_read.result()
         check_owned()
-        connector.run("REFRESH TABLE streaming_availability")
-        existing_by_id = defaultdict(list)
-        for row in connector.select(
-            "SELECT * FROM streaming_availability WHERE media_tmdb_id = ANY(?) AND media_type = ?", (owned, media_type)
-        ):
-            existing_by_id[row["media_tmdb_id"]].append(row)
-        connector.run("REFRESH TABLE streaming_evidence")
-        prior_by_id = defaultdict(list)
-        for row in connector.select(
-            "SELECT media_tmdb_id, country_code FROM streaming_evidence WHERE media_tmdb_id = ANY(?) AND media_type = ?",
-            (owned, media_type),
-        ):
-            prior_by_id[row["media_tmdb_id"]].append(row["country_code"])
         refreshes_left = refresh_budget.remaining
         evidence: list[BaseModel] = []
         changed: list[BaseModel] = []
