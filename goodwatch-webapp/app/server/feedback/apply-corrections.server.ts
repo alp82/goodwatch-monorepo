@@ -50,9 +50,17 @@ export function createCorrectionReader(run: Sql, now = Date.now) {
 				cache.set(key, hit)
 			}
 			const corrections = await hit.rows
-			return corrections.length
-				? applyCorrectionRows(entity, rows, corrections)
-				: rows
+			if (!corrections.length) return rows
+			try {
+				return applyCorrectionRows(entity, rows, corrections)
+			} catch (error) {
+				// A shape the overlay can't handle shows the source value; it never breaks the page.
+				console.error("[feedback] correction overlay failed", {
+					entity: key,
+					error: error instanceof Error ? error.message : String(error),
+				})
+				return rows
+			}
 		},
 	}
 }

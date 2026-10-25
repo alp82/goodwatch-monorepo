@@ -754,6 +754,8 @@ export async function getSourceEpisodeList(
 	})
 }
 
+/** The list with live member corrections (names, air dates) for pages and MCP. The writer above keeps the source
+ * list: a corrected air date changes no aired count in this release. */
 export async function getEpisodeList(showId: number): Promise<EpisodeListRow[]> {
 	return applyCorrections({ kind: "show", id: showId }, await getSourceEpisodeList(showId))
 }
@@ -1076,7 +1078,7 @@ async function applyShowEventStored(
 		const [before, stored, episodes] = await Promise.all([
 			readState(userId, title),
 			readLog(userId, title),
-			getEpisodeList(title.tmdbId),
+			getSourceEpisodeList(title.tmdbId),
 		])
 		// An action that took away a row of the last round had read it: the member undid this event, and running it
 		// again would put that watch back over their later choice. Rows still there are taken out and written again.
@@ -1185,7 +1187,7 @@ export async function markScoredEpisodeWatched(
 	await run("REFRESH TABLE user_watch_log")
 	const [log, episodes] = await Promise.all([
 		readLog(userId, title),
-		getEpisodeList(title.tmdbId),
+		getSourceEpisodeList(title.tmdbId),
 	])
 	const episode = episodes.find((row) => row.tmdb_id === episodeTmdbId)
 	if (!episode || watchedInAnyPass(log, episode)) return null
@@ -2153,7 +2155,7 @@ export async function prepareImportTrackingPlan(input: {
 			beforeState.state === "not_started" ||
 			beforeState.state === "watching")
 	) {
-		const episodes = await getEpisodeList(title.tmdbId)
+		const episodes = await getSourceEpisodeList(title.tmdbId)
 		const current = recordFromRows(
 			stateOnly(beforeState),
 			[...existing, ...plan.watches],
@@ -2183,7 +2185,7 @@ export async function prepareImportTrackingPlan(input: {
 		const status = plan.statusItem.showStatus
 		if (isApplicableStatus(status)) {
 			const show = showAiredBy(
-				listed(await getEpisodeList(title.tmdbId)),
+				listed(await getSourceEpisodeList(title.tmdbId)),
 				utcDay(input.now),
 			)
 			const result = importShowStatus(
@@ -2420,7 +2422,7 @@ export async function applyImportTrackingPlan(
 				record.pass = Math.max(1, ...combined.map((row) => row.pass))
 			const progress = facts(
 				showAiredBy(
-					listed(await getEpisodeList(plan.title.tmdbId)),
+					listed(await getSourceEpisodeList(plan.title.tmdbId)),
 					utcDay(Date.now()),
 				),
 				record,
@@ -2551,7 +2553,7 @@ export async function undoImportTrackingPlan(
 				record.pass = Math.max(1, ...remaining.map((row) => row.pass))
 				record.state = facts(
 					showAiredBy(
-						listed(await getEpisodeList(plan.title.tmdbId)),
+						listed(await getSourceEpisodeList(plan.title.tmdbId)),
 						utcDay(Date.now()),
 					),
 					record,

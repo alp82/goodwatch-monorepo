@@ -23,7 +23,7 @@ export async function getEpisodePresentation(
 	const mapping = episodeMapping(showId)
 	if (!mapping) return null
 	try {
-		return await cached<
+		const presentation = await cached<
 			{ showId: number; version: string },
 			EpisodePresentation
 		>({
@@ -61,19 +61,18 @@ export async function getEpisodePresentation(
 						note: "IMDb ratings are temporarily unavailable.",
 					})
 				}
-				return applyCorrections(
-                    { kind: "show", id: showId },
-                    buildEpisodePresentation(
+				return buildEpisodePresentation(
 					catalog,
 					ratings.map(({ parent_id, ...e }) => ({ ...e, parentId: parent_id })),
 					mapping,
-                    ),
-                )
+				)
 			},
 		})
+		// Live episode corrections (names, air dates) apply after the cache, so no cache reset is needed.
+		return applyCorrections({ kind: "show", id: showId }, presentation)
 	} catch (error) {
 		if (error instanceof RatingsUnavailable)
-            return applyCorrections({ kind: "show", id: showId }, error.presentation)
+			return applyCorrections({ kind: "show", id: showId }, error.presentation)
 		throw error
 	}
 }

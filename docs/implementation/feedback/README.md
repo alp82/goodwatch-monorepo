@@ -226,6 +226,8 @@ corrections, or Discord staff identity. Staff users and roles come from `DISCORD
 `DISCORD_FEEDBACK_STAFF_ROLE_IDS` (comma separated). Linked Discord accounts allow the server to check staff roles
 in the feedback forum's guild. A failed identity lookup grants no staff trust. Cast and credit removals always
 wait for review. Provider additions without a source link remain pending and cannot be approved without evidence.
+The link is evidence for staff only: an added offer links to the provider's where-to-watch page, never to the
+member's link.
 
 Reports are stored before correction processing. Missing correction tables leave the report stored and delivered
 with outcome `pending` and no correction id. Duplicates and accepted retries reuse the original correction and
@@ -235,13 +237,12 @@ Submission and review serialize each target field with a reserved `lock:<field h
 The row has status `withdrawn`, no member, and no effective value. It is a mutex, not an active pointer. Conditional
 version updates prevent concurrent decisions from overwriting one another. A competing suggestion stays pending
 while a live correction exists; staff must revert that correction before approving its replacement. Locks are
-removed after each operation. If a process dies while holding one, publication for that field fails closed. After
-confirming no writer is running, staff can remove the specific reserved row and retry. Do not bulk-delete locks
-while writers are active. Requested and completed decision events distinguish attempted decisions from successful
-conditional writes. Crate does not provide a transaction across the report, correction, and event tables.
+removed after each operation. A lock older than a minute belongs to a process that died while holding it; the next
+writer takes it over by version, so the field cannot stay blocked. Requested and completed decision events
+distinguish attempted decisions from successful conditional writes. Crate does not provide a transaction across the report, correction, and event tables.
 
-Shared readers use `applyCorrections` with one batched live-correction lookup per entity. Concurrent reads share the
-lookup, positive and empty results are cached for five seconds, and missing tables back off for 30 seconds. The
+Shared readers use `applyCorrections` after their caches, with one batched live-correction lookup per entity.
+Concurrent reads share the lookup, positive and empty results are cached for five seconds, and missing tables back off for 30 seconds. The
 lookup includes the opposite side of a person/title credit and provider metadata for additions. Dates, title cast,
 person credits, episode presentation, lists, and grids receive overlays; episode corrections win after translation.
 Canonical episode numbers are carried through mapped grids so display numbering cannot retarget a correction.
@@ -249,14 +250,15 @@ Presentation alignment still uses source names before applying corrections. A pe
 value to choose between character and job on the aggregated credit. This first release does not add credit rows,
 person dates, season/episode credits, release events, aired-count recalculation, or availability history.
 
-Live, approve, reject, revert, and undo rotate shared Valkey cache revisions for details, title cast, episode
-presentation, grid, episode list, and person profile. This invalidates every country, language, and pagination
-variant. These namespace resets also expire other entities in the named caches; this is deliberately broad for
-the first release. A revision prevents an old cache fill from populating the new revision. Revisions are checked at most every two
-seconds per process and cache namespace. The process page cache checks the revision for title/person requests;
-local matching pages and hot OG cards are also reset. OG reset markers now apply to `/movie/`, `/show/`, and
-`/person/` as well as member profiles. Stored OG bytes are forgotten for submitted and affected paths, best effort;
-external social caches cannot be recalled. Provider changes reload the country availability index, applying the
+Live, approve, reject, revert, and undo reset no data cache: every reader applies live corrections after its cache
+(`applyCorrections` on the cached details, cast page, episode presentation, grid, episode list, and person
+profile), and the lookup cache is five seconds. What must go is per page: the change is announced in Valkey
+(`catalog-correction-reset`, the last 50 changes with the paths they touch), and each process polls that key at
+most every two seconds before serving a title or person page, then drops only those entities' stored HTML pages
+and hot OG cards (`cache-revision.server.ts`). A whole-namespace reset would make every title and person page a
+cache miss at once. OG reset markers now apply to `/movie/`, `/show/`, and `/person/` as well as member profiles.
+Stored OG bytes are forgotten for submitted and affected paths, best effort; external social caches cannot be
+recalled. A provider change also reloads the corrected country's availability index in every process, applying the
 correction before grouping subscription/free/ad offers. Another offer type from the same provider remains intact.
 The browser's existing same-origin API-write interception clears its loader cache after feedback and undo requests.
 

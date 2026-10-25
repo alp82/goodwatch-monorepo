@@ -18,16 +18,21 @@ export async function getTitleCastPage(params: TitleCastParams) {
 		!isTitleCastOffset(params.offset)
 	)
 		throw new Response("Invalid cast parameters", { status: 400 })
-	return cached({
-		name: "title-cast-v1",
-		params: {
-			mediaType: params.mediaType,
-			tmdbId: String(canonicalTitleId(params.mediaType, Number(params.tmdbId))),
-			offset: params.offset,
-		},
-		target: fetchCastPage,
-		ttlMinutes: 24 * 60,
-	})
+	const tmdbId = canonicalTitleId(params.mediaType, Number(params.tmdbId))
+	// Live cast corrections apply after the cache (character names, removals), so no cache reset is needed.
+	return applyCorrections(
+		{ kind: params.mediaType, id: tmdbId },
+		await cached({
+			name: "title-cast-v1",
+			params: {
+				mediaType: params.mediaType,
+				tmdbId: String(tmdbId),
+				offset: params.offset,
+			},
+			target: fetchCastPage,
+			ttlMinutes: 24 * 60,
+		}),
+	)
 }
 async function fetchCastPage({ mediaType, tmdbId, offset }: TitleCastParams) {
 	const { query } = await import("~/utils/crate")
@@ -42,13 +47,9 @@ async function fetchCastPage({ mediaType, tmdbId, offset }: TitleCastParams) {
  page_cast AS (SELECT array_agg(id) AS ids FROM (SELECT id FROM cast_people ORDER BY ord ASC, id ASC LIMIT ${CAST_PAGE_SIZE} OFFSET ${offset}) AS t)
  SELECT {cast_total = (SELECT count(*) FROM cast_people), cast_rows = ${selectedCastRows("page_cast")}} AS page
  `)) as { page: { cast_total: number; cast_rows: CastRow[] | null } }[]
-	const page = await applyCorrections(
-        { kind: mediaType, id: Number(tmdbId) },
-        rows[0]?.page ?? { cast_total: 0, cast_rows: null },
-    )
-    const total = page.cast_total
+	const total = rows[0]?.page.cast_total ?? 0
 	return {
-		cast: toCastMembers(page.cast_rows),
+		cast: toCastMembers(rows[0]?.page.cast_rows),
 		total,
 		offset,
 		nextOffset: nextCastOffset(offset, total),

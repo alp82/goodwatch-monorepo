@@ -316,17 +316,32 @@ const _fetchFromDB = async (
 	if (!media.details.genres) {
 		media.details.genres = []
 	}
-	return applyCorrections({ kind: mediaType, id: Number(mediaId), country: safeCountry.toUpperCase() }, media)
+	return media
 }
 
 const canonicalDetails = createTitleDetailsGetters(_fetchFromDB)
+/** Live corrections (dates, the country's offers, cast) on the cached details, keyed by the canonical title id. */
+const correctedDetails = <T extends { details: { tmdb_id: number } }>(
+	kind: "movie" | "show",
+	country: string | undefined,
+	media: T,
+) =>
+	applyCorrections(
+		{ kind, id: Number(media.details.tmdb_id), country: country?.toUpperCase() },
+		media,
+	)
 export async function getDetailsForMovie(
 	params: import("./types/details-types").DetailsMovieParams,
 	options?: { bypassCache?: boolean; canonical?: boolean },
 ) {
-	const media = await canonicalDetails.getDetailsForMovie(
-		{ ...params, language: "en" },
-		{ bypassCache: !!options?.bypassCache },
+	// Live corrections apply after the cache, so a correction needs no cache reset to show.
+	const media = await correctedDetails(
+		"movie",
+		params.country,
+		await canonicalDetails.getDetailsForMovie(
+			{ ...params, language: "en" },
+			{ bypassCache: !!options?.bypassCache },
+		),
 	)
 	if (options?.canonical) return media
 	const [details] = await overlayTitles(
@@ -339,9 +354,13 @@ export async function getDetailsForShow(
 	params: import("./types/details-types").DetailsShowParams,
 	options?: { bypassCache?: boolean; canonical?: boolean },
 ) {
-	const media = await canonicalDetails.getDetailsForShow(
-		{ ...params, language: "en" },
-		{ bypassCache: !!options?.bypassCache },
+	const media = await correctedDetails(
+		"show",
+		params.country,
+		await canonicalDetails.getDetailsForShow(
+			{ ...params, language: "en" },
+			{ bypassCache: !!options?.bypassCache },
+		),
 	)
 	if (options?.canonical) return media
 	const [details] = await overlayTitles(

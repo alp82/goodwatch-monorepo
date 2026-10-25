@@ -81,10 +81,12 @@ export function applyCorrectionRows<T>(
 					(r.id ?? r.person_tmdb_id) === t.personId
 				if (cast || personCredit || titleCredit) {
 					if (c.op === "remove") return undefined
-					if ("characters" in r) {
+					if (Array.isArray(r.characters)) {
+						// A role lands on the side the old value came from. Cast members carry no jobs.
 						if (
 							c.field === "character" ||
 							r.characters.includes(c.old_value) ||
+							!Array.isArray(r.jobs) ||
 							!r.jobs.length
 						)
 							r.characters = [c.value]
@@ -103,10 +105,23 @@ export function applyCorrectionRows<T>(
 					return undefined
 			}
 		}
-		const castBefore = Array.isArray(r.cast_rows) ? r.cast_rows.length : 0
+		// A removed cast member also leaves the count: raw rows (cast_rows, cast_total), the details document
+		// (cast, cast_total), and a cast page (cast, total).
+		const castKey = Array.isArray(r.cast_rows)
+			? "cast_rows"
+			: Array.isArray(r.cast)
+				? "cast"
+				: null
+		const totalKey =
+			typeof r.cast_total === "number"
+				? "cast_total"
+				: castKey === "cast" && typeof r.total === "number"
+					? "total"
+					: null
+		const castBefore = castKey ? r[castKey].length : 0
 		for (const key of Object.keys(r)) r[key] = walk(r[key], s, key)
-		if (castBefore && typeof r.cast_total === "number")
-			r.cast_total -= castBefore - r.cast_rows.length
+		if (castKey && totalKey && castBefore)
+			r[totalKey] -= castBefore - r[castKey].length
 		// Both country membership and the selected country's offers use the same identity.
 		for (const c of live) {
 			if (
@@ -121,7 +136,11 @@ export function applyCorrectionRows<T>(
 					streaming_service_id: t.providerId,
 					streaming_type: t.offerType,
 				}
-			if ("streaming_services" in r && c.provider_name) {
+			if (
+				"streaming_services" in r &&
+				c.provider_name &&
+				(r.streaming_services == null || Array.isArray(r.streaming_services))
+			) {
 				r.streaming_services ??= []
 				if (!r.streaming_services.some((x: Row) => x.tmdb_id === t.providerId))
 					r.streaming_services.push({
@@ -131,7 +150,11 @@ export function applyCorrectionRows<T>(
 						order_default: null,
 					})
 			}
-			if ("streaming_countries" in r) {
+			// The trimmed details summarize countries as an object; only the raw country rows take an addition.
+			if (
+				"streaming_countries" in r &&
+				(r.streaming_countries == null || Array.isArray(r.streaming_countries))
+			) {
 				r.streaming_countries ??= []
 				if (
 					!r.streaming_countries.some(
@@ -143,7 +166,12 @@ export function applyCorrectionRows<T>(
 				)
 					r.streaming_countries.push({ ...offer, country_code: t.country })
 			}
-			if ("streaming_availabilities" in r && entity.country === t.country) {
+			if (
+				"streaming_availabilities" in r &&
+				entity.country === t.country &&
+				(r.streaming_availabilities == null ||
+					Array.isArray(r.streaming_availabilities))
+			) {
 				r.streaming_availabilities ??= []
 				if (
 					!r.streaming_availabilities.some(
@@ -152,9 +180,11 @@ export function applyCorrectionRows<T>(
 							x.streaming_type === t.offerType,
 					)
 				)
+					// The member's link is evidence for staff, never the page's watch link: with stream_url null
+					// the UI links to the provider's where-to-watch page.
 					r.streaming_availabilities.push({
 						...offer,
-						stream_url: c.source_link,
+						stream_url: null,
 						tmdb_link: null,
 						price_dollar: null,
 						quality: null,

@@ -12,6 +12,8 @@ export type Sql = (
 	params: unknown[],
 ) => Promise<{ rowcount: number; json?: unknown[] }>
 type Versioned = Correction & { _version: number }
+/** A lock older than this belongs to a dead process. Every locked operation finishes within seconds. */
+const LOCK_MAX_MS = 60000
 const decode = (r: Versioned): Versioned => ({
 	...r,
 	value: JSON.parse(String(r.value)),
@@ -40,15 +42,37 @@ export function createCorrectionStore(
 			[randomUUID(), c.id, action, actor, Date.now(), JSON.stringify(details)],
 		)
 	}
+	async function claim(id: string) {
+		const claimed = await run(
+			"INSERT INTO doc.catalog_correction (id, status, created_at) VALUES (?, 'withdrawn', ?) ON CONFLICT (id) DO NOTHING",
+			[id, Date.now()],
+		)
+		return claimed.rowcount === 1
+	}
 	async function lock<T>(c: Correction, work: () => Promise<T>): Promise<T> {
 		// The reserved row is a mutex, never an effective correction or an active pointer.
 		const id = `lock:${correctionKey(c)}`
-		const claimed = await run(
-			"INSERT INTO doc.catalog_correction (id, status) VALUES (?, 'withdrawn') ON CONFLICT (id) DO NOTHING",
-			[id],
-		)
-		if (claimed.rowcount !== 1)
-			throw new Error("Correction field is being reviewed")
+		let claimed = await claim(id)
+		if (!claimed) {
+			// A process that died while holding the lock must not block the field for good: a lock older than
+			// the longest operation is taken over, by version so two takers can't both win.
+			const held = await run(
+				"SELECT created_at, _version FROM doc.catalog_correction WHERE id = ?",
+				[id],
+			)
+			const row = held.json?.[0] as
+				| { created_at: number | string | null; _version: number }
+				| undefined
+			const age = row ? Date.now() - new Date(row.created_at ?? 0).getTime() : 0
+			if (row && age > LOCK_MAX_MS) {
+				await run(
+					"DELETE FROM doc.catalog_correction WHERE id = ? AND _version = ?",
+					[id, row._version],
+				)
+				claimed = await claim(id)
+			}
+		}
+		if (!claimed) throw new Error("Correction field is being reviewed")
 		try {
 			return await work()
 		} finally {

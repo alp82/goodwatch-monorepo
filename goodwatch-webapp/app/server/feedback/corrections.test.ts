@@ -523,9 +523,19 @@ function ledgerFixture() {
 			return { rowcount: 0, json: [] }
 		if (sql.startsWith("INSERT INTO doc.catalog_correction (id, status)")) {
 			if (rows.has(String(args[0]))) return { rowcount: 0 }
-			rows.set(String(args[0]), { id: args[0], status: "withdrawn" })
+			rows.set(String(args[0]), {
+				id: args[0],
+				status: "withdrawn",
+				created_at: args[1],
+				_version: 1,
+			})
 			return { rowcount: 1 }
 		}
+		if (sql.startsWith("SELECT created_at, _version"))
+			return {
+				rowcount: 1,
+				json: rows.has(String(args[0])) ? [rows.get(String(args[0]))] : [],
+			}
 		if (sql.startsWith("INSERT INTO doc.catalog_correction (")) {
 			const columns = sql.match(/\(([^)]+)\)/)![1].split(",")
 			const row = Object.fromEntries(columns.map((k, i) => [k, args[i]]))
@@ -706,4 +716,90 @@ test("translated episode lists retain day strings and canonical language provena
 	)
 	assert.equal(result.airDate, "2025-01-01")
 	assert.equal(result.textPresentation.name.source, "canonical")
+})
+test("a lock left by a dead process is taken over after a minute, a fresh one is not", async () => {
+	const f = ledgerFixture()
+	const lockId = `lock:${correctionKey(
+		correction({ field: "character", target: { personId: 2 } }),
+	)}`
+	f.rows.set(lockId, {
+		id: lockId,
+		status: "withdrawn",
+		created_at: Date.now() - 5000,
+		_version: 1,
+	})
+	assert.equal((await f.store.submit(f.report(id), true))?.status, "pending")
+	f.rows.delete(id)
+	f.rows.get(lockId).created_at = Date.now() - 120000
+	assert.equal((await f.store.submit(f.report(id), true))?.status, "live")
+	assert.equal(f.rows.has(lockId), false)
+})
+test("cast page and trimmed details shapes take corrections without crashing", () => {
+	const removal = correction({
+		field: "character",
+		op: "remove",
+		target: { personId: 2 },
+	})
+	const role = correction({
+		entity_kind: "person",
+		tmdb_id: 3,
+		field: "role",
+		target: { creditTmdbId: 1, creditMediaType: "tv" },
+		value: "Producer",
+		old_value: "Director",
+	})
+	const page = applyCorrectionRows(
+		{ kind: "show", id: 1 },
+		{
+			cast: [
+				{ id: 2, name: "Gone", characters: ["X"], profile_path: "p" },
+				{ id: 3, name: "Stays", characters: ["Y"], profile_path: "p" },
+			],
+			total: 40,
+			offset: 0,
+			nextOffset: 20,
+		},
+		[removal, role],
+	)
+	assert.deepEqual(
+		page.cast.map((m) => [m.id, m.characters]),
+		[[3, ["Producer"]]],
+	)
+	assert.equal(page.total, 39)
+	const add = correction({
+		field: "offer",
+		op: "add",
+		target: { providerId: 4, offerType: "free", country: "DE" },
+		provider_name: "Service",
+		source_link: "https://example.com/evidence",
+	})
+	const trimmed = applyCorrectionRows(
+		{ kind: "show", id: 1, country: "DE" },
+		{
+			details: { tmdb_id: 1, first_air_date: "2020-01-01" },
+			cast: [{ id: 2, name: "Gone", characters: ["X"], profile_path: "p" }],
+			cast_total: 1,
+			streaming_availabilities: [] as { stream_url: string | null }[],
+			streaming_services: [] as { name: string }[],
+			streaming_countries: { top: {}, count: 0 },
+		},
+		[removal, add],
+	)
+	assert.equal(trimmed.cast.length, 0)
+	assert.equal(trimmed.cast_total, 0)
+	assert.deepEqual(trimmed.streaming_countries, { top: {}, count: 0 })
+	// The member's evidence link never becomes the watch link.
+	assert.equal(trimmed.streaming_availabilities[0].stream_url, null)
+	assert.equal(trimmed.streaming_services[0].name, "Service")
+})
+test("a correction reset matches only the named entities' pages", async () => {
+	const { resetMatcher } = await import("./cache-revision.server.ts")
+	const match = resetMatcher(["/movie/603", "/person/6384"])
+	assert.equal(match("/movie/603"), true)
+	assert.equal(match("/movie/603-the-matrix"), true)
+	assert.equal(match("/movie/603/cast"), true)
+	assert.equal(match("/movie/603?tab=cast"), true)
+	assert.equal(match("/movie/6030"), false)
+	assert.equal(match("/show/603"), false)
+	assert.equal(match("/person/6384-keanu-reeves"), true)
 })

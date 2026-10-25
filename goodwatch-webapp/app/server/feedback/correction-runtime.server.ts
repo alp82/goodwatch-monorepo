@@ -1,18 +1,11 @@
 import { execute } from "~/utils/crate"
 import { createCorrectionStore, type Sql } from "./correction-store.server"
-import { resetCorrectionCaches } from "./cache-revision.server"
-import { resetCorrectionReader } from "./apply-corrections.server"
+import { announceCorrectionReset } from "./cache-revision.server"
 import { feedbackStaff, trustedAccount, type Correction } from "./corrections"
 import { nativeFetch } from "../native-fetch.server"
 const run = execute as Sql
 async function invalidate(c: Correction) {
 	try {
-		resetCorrectionReader()
-		await resetCorrectionCaches(c.field === "offer")
-		const { resetPageCache } = await import("../page-cache.server")
-		const { hotCards } = await import("../og-image/hot-cards.server")
-		const { forgetStoredCard } = await import("../og-image/store.server")
-		const { getRedisCluster } = await import("../../utils/cache")
 		const ids: [string, number][] = [[c.entity_kind, c.tmdb_id]]
 		if (c.target?.personId) ids.push(["person", c.target.personId])
 		if (c.target?.creditTmdbId)
@@ -20,12 +13,16 @@ async function invalidate(c: Correction) {
 				c.target.creditMediaType === "tv" ? "show" : "movie",
 				c.target.creditTmdbId,
 			])
-		const match = (path: string) =>
-			ids.some(([kind, id]) =>
-				new RegExp(`^/${kind}/${id}(?:[-/]|$)`).test(path),
-			)
-		resetPageCache(match)
-		hotCards.forget(match)
+		// Every process drops only these entities' pages (cache-revision.server.ts). Data caches keep their
+		// entries: the readers apply live corrections after the cache.
+		await announceCorrectionReset({
+			paths: ids.map(([kind, id]) => `/${kind}/${id}`),
+			...(c.field === "offer" && c.target?.country
+				? { country: c.target.country }
+				: {}),
+		})
+		const { forgetStoredCard } = await import("../og-image/store.server")
+		const { getRedisCluster } = await import("../../utils/cache")
 		const paths = await run(
 			"SELECT payload, metadata, message, member_id, created_at, discord_message_id, discord_thread_id FROM doc.feedback_report WHERE id = ?",
 			[c.report_id],
@@ -122,12 +119,6 @@ async function invalidate(c: Correction) {
 				})
 			}
 		}
-		if (c.field === "offer") {
-			const { reloadAvailability } = await import(
-				"../availability-index.server"
-			)
-			reloadAvailability(c.target?.country)
-		}
 	} catch {
 		console.error("[feedback] correction cache reset incomplete", {
 			correctionId: c.id,
@@ -138,7 +129,7 @@ export const correctionStore = createCorrectionStore(run, invalidate)
 /** All trust decisions share this function. Identity and account age come from the fresh session. */
 export async function isTrusted(memberId: string | null, createdAt?: number) {
 	if (!memberId) return false
-    if (trustedAccount(memberId, {createdAt})) return true
+	if (trustedAccount(memberId, { createdAt })) return true
 	let staff = false
 	try {
 		const { getUserLink } = await import("../discord/link.server")
