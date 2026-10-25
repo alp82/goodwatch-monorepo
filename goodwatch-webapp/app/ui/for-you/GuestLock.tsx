@@ -82,7 +82,7 @@ export function GuestLock({ load = fetchGuest }: { load?: GuestLoader }) {
 			className="mx-auto max-w-[1600px] overflow-x-clip px-4 pt-5 pb-28 md:px-8 lg:pb-10"
 			data-guest-lock={read ? (done ? "sign-up" : "quiz") : "pending"}
 		>
-			<Heading className="mb-5 lg:mb-4" />
+			<Heading className="mb-5 flex lg:mb-4" />
 
 			<div className="grid grid-cols-[7.5rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-6 lg:grid-cols-[19rem_minmax(0,1fr)] lg:items-stretch lg:gap-8 xl:grid-cols-[20.25rem_minmax(0,1fr)] xl:gap-10">
 				<figure className="relative flex min-w-0 flex-col items-center gap-2 lg:h-[20.25rem] lg:justify-center lg:gap-0">
