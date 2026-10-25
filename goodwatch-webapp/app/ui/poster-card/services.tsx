@@ -90,21 +90,25 @@ const BOX: Record<PartSize, string> = {
 	S: "size-5 rounded",
 	M: "size-5 rounded",
 	L: "size-6 rounded-md",
-	auto: "size-5 rounded @min-[11rem]/card:size-6 @min-[11rem]/card:rounded-md",
+	auto: "size-5 rounded",
 }
 const MORE_TEXT: Record<PartSize, string> = {
 	S: "text-[10px] leading-4",
 	M: "text-[10px] leading-4",
 	L: "text-[11px] leading-5",
-	auto: "text-[10px] leading-4 @min-[11rem]/card:text-[11px] @min-[11rem]/card:leading-5",
+	auto: "text-[10px] leading-4",
 }
 
 /** How many logos a size shows before "+N": L three, M two, S none (no room beside the pill). */
 export const LOGOS_SHOWN = { S: 0, M: 2, L: 3 } as const
 
+/** A poster card's logos ("auto"): two from 11rem, one from 6rem, none under 6rem (under ~40% of the card's width). */
+const CARD_LOGOS = 2
+
 /**
  * A row of service logos. With `newOn` (#489, the service the title just arrived on for the viewer) that logo leads,
- * ringed in sky blue. `size="auto"` shows none on an S card, two on M and three on L, each with "+N" for the rest.
+ * ringed in sky blue. `size="auto"` follows the card's width: none under 6rem, one from 6rem, two from 11rem, each
+ * with "+N" for the rest.
  */
 export function ServiceLogos({
 	services,
@@ -165,21 +169,18 @@ export function ServiceLogos({
 			</span>
 		)
 	}
-	// Auto: the third logo and the counts switch with the card's width.
+	// Auto: the second logo and the counts switch with the card's width.
 	return (
 		<span
-			className={`hidden items-center gap-1 @min-[6.5rem]/card:flex ${className}`}
+			className={`hidden items-center gap-1 @min-[6rem]/card:flex ${className}`}
 		>
 			{ordered
-				.slice(0, LOGOS_SHOWN.L)
+				.slice(0, CARD_LOGOS)
 				.map((service, index) =>
-					logo(
-						service,
-						index >= LOGOS_SHOWN.M ? "hidden @min-[11rem]/card:block" : "",
-					),
+					logo(service, index > 0 ? "hidden @min-[11rem]/card:block" : ""),
 				)}
-			{more(ordered.length - LOGOS_SHOWN.M, "@min-[11rem]/card:hidden")}
-			{more(ordered.length - LOGOS_SHOWN.L, "hidden @min-[11rem]/card:inline")}
+			{more(ordered.length - 1, "@min-[11rem]/card:hidden")}
+			{more(ordered.length - CARD_LOGOS, "hidden @min-[11rem]/card:inline")}
 		</span>
 	)
 }

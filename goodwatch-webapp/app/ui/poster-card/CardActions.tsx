@@ -1,6 +1,7 @@
 // A poster card's title actions, loaded on demand by the card (MovieTvCard):
 // - pointer devices: the panel over the poster's foot on hover or keyboard focus: Want to See, Seen (a show: its
-//   status), Not interested, and the score under them;
+//   status), Not interested, and the score under them (its label from 7.5rem, the number alone under it, no score row
+//   under 6rem, and no panel at all under 4.5rem, where the poster is only a link);
 // - touch screens, after the first tap on the poster: tiles over the lower art (Seen | Score, Want | Not for me) and
 //   an Open bar; a card under 7.5rem has Open and Actions, which opens the phone sheet;
 // - the score picker, the phone sheet (the picker with the whole action set and Open details), a show's status menu;
@@ -256,7 +257,7 @@ export default function CardActions({
 		<>
 			{!touch && (
 				<div
-					className={`absolute z-20 hidden transition-opacity can-hover:block ${PANEL_AT[placement]} ${
+					className={`absolute z-20 hidden transition-opacity can-hover:@min-[4.5rem]/card:block ${PANEL_AT[placement]} ${
 						busy
 							? "opacity-100"
 							: "opacity-0 group-hover/card:opacity-100 group-focus-within/card:opacity-100"
@@ -316,22 +317,22 @@ export default function CardActions({
 							aria-label={scoreName}
 							title={scoreName}
 							onClick={(event) => openScore(event.currentTarget)}
-							className={`${PANEL_BTN} col-span-3 text-xs tabular-nums ${a.score ? "font-bold text-white" : OFF}`}
+							className={`${PANEL_KEY} col-span-3 hidden text-xs tabular-nums @min-[6rem]/card:inline-flex ${a.score ? "font-bold text-white" : OFF}`}
 							style={a.score ? selectedScoreStyle(a.score) : undefined}
 						>
 							{a.score ? (
 								<>
-									<span className="truncate px-1 @min-[6.5rem]/card:hidden">
+									<span className="truncate px-1 @min-[7.5rem]/card:hidden">
 										{a.score}
 									</span>
-									<span className="hidden truncate px-1 @min-[6.5rem]/card:inline">
+									<span className="hidden truncate px-1 @min-[7.5rem]/card:inline">
 										{getScoreLabelText(a.score)}
 									</span>
 								</>
 							) : (
 								<>
 									<StarIcon className="text-yellow-300" aria-hidden />
-									<span className="hidden @min-[6.5rem]/card:inline">
+									<span className="hidden @min-[7.5rem]/card:inline">
 										Score
 									</span>
 								</>
@@ -505,7 +506,9 @@ export default function CardActions({
 	)
 }
 
-const PANEL_BTN = `inline-flex h-7 min-w-0 cursor-pointer items-center justify-center gap-1 rounded-md font-semibold transition-colors @min-[6.5rem]/card:h-8 [&_svg]:size-4 [&_svg]:shrink-0 disabled:cursor-not-allowed disabled:opacity-40 ${FOCUS}`
+/** A panel button without its display, for the score row that a narrow card leaves out. */
+const PANEL_KEY = `h-7 min-w-0 cursor-pointer items-center justify-center gap-1 rounded-md font-semibold transition-colors @min-[6.5rem]/card:h-8 [&_svg]:size-4 [&_svg]:shrink-0 disabled:cursor-not-allowed disabled:opacity-40 ${FOCUS}`
+const PANEL_BTN = `inline-flex ${PANEL_KEY}`
 
 const TILE = `inline-flex h-11 min-w-0 cursor-pointer flex-col items-center justify-center gap-1 whitespace-nowrap rounded-md text-[9px] font-semibold leading-none tracking-tight @min-[7.5rem]/card:text-[10.5px] [&_svg]:size-4 @min-[9rem]/card:h-[52px] @min-[9rem]/card:text-xs @min-[9rem]/card:[&_svg]:size-5 disabled:opacity-40 ${FOCUS}`
 

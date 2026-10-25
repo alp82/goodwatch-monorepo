@@ -1,7 +1,18 @@
-// The browse poster card, on every surface that shows titles as posters (Discover, rows, person credits, franchises,
-// Watch next and My movies tiers). The poster links to the title page; over it sit the score pill (top right: the
-// GoodWatch score, the viewer's score, one state icon) and the logos of the viewer's own services (bottom left). The
-// card sizes its parts by its own width (`@container/card`): S under 6.5rem, M from 6.5rem, L from 11rem.
+// The poster card, on every surface that shows titles as posters (Discover, rows, person credits, franchises, Watch
+// next, My movies tiers, and every scored poster on a profile). The poster links to the title page; over it sit the
+// score pill (top right: the GoodWatch score, the viewer's score, one state icon), the age badge (top left, while an
+// age limit is on), the logos of the viewer's own services (bottom left) and, on another member's pages, that
+// member's score as a filled square (`ownerScore`).
+//
+// What shows depends on the card's own width (`@container/card`, so the server's HTML is already right), and no part
+// covers more than ~40% of it:
+// | width            | pill                          | owner's square            | logos | actions                 |
+// | from 11rem/176px | GoodWatch + you (or + icon)   | top left, under the badge | 2     | full                    |
+// | 7.5rem-11rem     | you (or GoodWatch + icon)     | top left, under the badge | 1     | full                    |
+// | 6rem-7.5rem      | yours, else GoodWatch         | top right, instead of it  | 1     | score row as a number   |
+// | 4.5rem-6rem      | bare number                   | top right, instead of it  | 0     | no score row            |
+// | under 4.5rem     | bare number                   | top right, instead of it  | 0     | none: a tap opens it    |
+// The pill's rules are in ui/poster-card/ScorePill.tsx.
 //
 // The title actions (ui/poster-card/CardActions.tsx) load as their own chunk at the first interaction with the page
 // and mount on the first hover, focus or tap: a panel on hover for a pointer, tiles over the art after a first tap on
@@ -23,6 +34,7 @@ import type { RatingBadge } from "~/domain/age-content"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
 import type { OnboardingResult } from "~/server/onboarding-media.server"
+import type { Score } from "~/server/scores.server"
 import type { TitleCard } from "~/server/title-cards.server"
 import { Poster, type PosterProps } from "~/ui/Poster"
 import MediaText from "~/ui/media-text/MediaText"
@@ -32,6 +44,7 @@ import type {
 	OpenActions,
 } from "~/ui/poster-card/CardActions"
 import { HiddenCover } from "~/ui/poster-card/HiddenCover"
+import { OwnerScore } from "~/ui/poster-card/OwnerScore"
 import { TitleScorePill } from "~/ui/poster-card/ScorePill"
 import { FOCUS } from "~/ui/poster-card/look"
 import { setRevealed, useRevealed } from "~/ui/poster-card/reveal"
@@ -121,7 +134,17 @@ interface MovieTvCardProps {
 	skipWant?: boolean
 	/** The title is hidden already: the card starts under its Not interested cover, without actions. */
 	hidden?: HiddenState
+	/**
+	 * On another member's pages: their score for the title, as a filled square. Never on the viewer's own pages, where
+	 * the pill's "you" says it.
+	 */
+	ownerScore?: Score | null
+	/** Whose `ownerScore` it is, for the tooltip and screen readers. */
+	ownerName?: string | null
 }
+
+/** Under this width (4.5rem) the card has no actions: a tap opens the title. */
+const NO_ACTIONS_PX = 72
 
 type CardDetails = MovieTvCardProps["details"] & {
 	streaming_links?: readonly ServiceOffer[] | null
@@ -141,6 +164,8 @@ export function MovieTvCard({
 	newOn,
 	skipWant = false,
 	hidden,
+	ownerScore = null,
+	ownerName,
 }: MovieTvCardProps) {
 	const actions = hidden ? false : actionsOn
 	const ratings = extractRatings(details)
@@ -189,6 +214,9 @@ export function MovieTvCard({
 				onClick={(event) => {
 					// Touch: the first tap shows the actions over the art, the second opens the title.
 					if (!actions || tile) return
+					// Too narrow for tiles: the tap opens the title.
+					if ((frame.current?.offsetWidth ?? NO_ACTIONS_PX) < NO_ACTIONS_PX)
+						return
 					if (!touch) {
 						if (!touchPointerNow()) return
 						setTouchNow(true)
@@ -230,18 +258,40 @@ export function MovieTvCard({
 					data-card-badges=""
 					className={`pointer-events-none absolute inset-0 ${skipOffscreen ? "[content-visibility:auto]" : ""}`}
 				>
-					<TitleScorePill
-						mediaType={mediaType}
-						tmdbId={details.tmdb_id}
-						goodwatch={ratings?.goodwatch_overall_score_normalized_percent}
-						skipWant={skipWant}
-						className="absolute right-1 top-1 z-[25] @min-[11rem]/card:right-2 @min-[11rem]/card:top-2"
-					/>
-					{rating && (
-						<RatingMark
-							rating={rating}
-							className="absolute left-1 top-1 @min-[11rem]/card:left-2 @min-[11rem]/card:top-2"
+					<div className="absolute right-1 top-1 z-[25] flex flex-col items-end gap-1 @min-[11rem]/card:right-2 @min-[11rem]/card:top-2">
+						<TitleScorePill
+							mediaType={mediaType}
+							tmdbId={details.tmdb_id}
+							goodwatch={ratings?.goodwatch_overall_score_normalized_percent}
+							skipWant={skipWant}
+							// The owner's square takes the pill's place under 7.5rem.
+							className={
+								ownerScore != null
+									? "hidden! @min-[7.5rem]/card:inline-flex!"
+									: ""
+							}
 						/>
+						{ownerScore != null && (
+							<OwnerScore
+								score={ownerScore}
+								name={ownerName}
+								size="auto"
+								className="@min-[7.5rem]/card:hidden"
+							/>
+						)}
+					</div>
+					{(rating || ownerScore != null) && (
+						<div className="absolute left-1 top-1 flex flex-col items-start gap-1 @min-[11rem]/card:left-2 @min-[11rem]/card:top-2">
+							{rating && <RatingMark rating={rating} />}
+							{ownerScore != null && (
+								<OwnerScore
+									score={ownerScore}
+									name={ownerName}
+									size="auto"
+									className="hidden! @min-[7.5rem]/card:inline-flex!"
+								/>
+							)}
+						</div>
 					)}
 					<YourServiceLogos
 						offers={offers}
