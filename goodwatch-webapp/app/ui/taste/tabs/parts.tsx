@@ -35,34 +35,6 @@ export const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 export const vibe = (score10: number) =>
 	`var(--color-vibe-${Math.max(0, Math.min(100, Math.round(score10) * 10))})`
 
-/** The person's own score as the app draws a rating: a vibe-colored tile with the number. */
-export function YourScore({
-	score,
-	size = "md",
-	label,
-}: { score: number; size?: "sm" | "md" | "lg"; label?: string }) {
-	const dim =
-		size === "lg"
-			? "h-12 min-w-12 text-2xl"
-			: size === "sm"
-				? "h-6 min-w-6 text-xs"
-				: "h-9 min-w-9 text-base"
-	return (
-		<span className="inline-flex items-center gap-2">
-			<span
-				className={`inline-flex items-center justify-center rounded-md px-1.5 font-extrabold tabular-nums text-white ${dim}`}
-				style={{ background: vibe(score) }}
-				aria-label={label ? undefined : `Your score: ${score}`}
-			>
-				{score}
-			</span>
-			{label && (
-				<span className="text-xs leading-tight text-gray-300">{label}</span>
-			)}
-		</span>
-	)
-}
-
 /** A portrait title as the site's poster card: the score pill (GoodWatch score, the person's own score) and, for a
  * title they haven't seen, the logos of their services that carry it. */
 export function PortraitCard({

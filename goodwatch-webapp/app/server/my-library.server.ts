@@ -17,6 +17,7 @@ import {
 	needsTitles,
 } from "~/domain/my-library"
 import type { NewOn } from "~/domain/newly-available-words"
+import { type RowService, rowServices } from "~/server/row-services.server"
 import { getUserData } from "~/server/userData.server"
 import {
 	type MediaKey,
@@ -49,6 +50,10 @@ export interface LibraryItem extends PresentedMedia {
 	airedEpisodes: number | null
 	/** On the Want to See list: the service the title landed on in the last 14 days (#489). Left out otherwise. */
 	newOn?: NewOn
+	/** The GoodWatch score, 0 to 100. */
+	goodwatch: number | null
+	/** On the Want to See list: the member's own services that carry it (`withRowServices`). Left out otherwise. */
+	services?: RowService[]
 }
 
 export interface LibraryPage {
@@ -125,6 +130,7 @@ interface CardRow {
 	poster_path: string | null
 	release_year: number | null
 	aired_episode_count?: number | null
+	goodwatch_overall_score_normalized_percent: number | null
 }
 
 /** Q6. The cards of one step, by key. */
@@ -135,7 +141,7 @@ async function readCards(keys: readonly MediaKey[]) {
 		(["movie", "show"] as const).map(async (type) => {
 			if (!ids[type].length) return
 			const rows = await query<CardRow>(
-				`SELECT tmdb_id, title, poster_path, release_year${type === "show" ? ", aired_episode_count" : ""}
+				`SELECT tmdb_id, title, poster_path, release_year, goodwatch_overall_score_normalized_percent${type === "show" ? ", aired_episode_count" : ""}
 				 FROM ${type} WHERE tmdb_id IN (${marks(ids[type])})`,
 				ids[type],
 			)
@@ -198,6 +204,7 @@ export async function libraryPageOf(
 							: Math.min(entry.episodesWatched, aired)
 						: null,
 				airedEpisodes: aired,
+				goodwatch: card.goodwatch_overall_score_normalized_percent ?? null,
 				...(fresh ? { newOn: fresh } : {}),
 			},
 		]
@@ -229,4 +236,21 @@ export async function getLibraryPage(
 		offset,
 		newOn,
 	)
+}
+
+/** The member's own services on each title of a Want to See step, for the logos in its rows. */
+export async function withRowServices(
+	page: LibraryPage,
+	request: Request,
+	userId: string,
+): Promise<LibraryPage> {
+	if (page.status !== "want" || !page.items.length) return page
+	const services = await rowServices(request, page.items, userId)
+	if (!services) return page
+	return {
+		...page,
+		items: page.items.map((item) =>
+			services[item.key] ? { ...item, services: services[item.key] } : item,
+		),
+	}
 }

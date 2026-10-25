@@ -12,6 +12,7 @@ import type { LandedTitle } from "~/domain/newly-available-words"
 import { type MyShows, getMyShows } from "~/server/my-shows.server"
 import { getNewShows } from "~/server/new-episodes.server"
 import { getRecentlyLanded } from "~/server/newly-available.server"
+import { type RowServices, ownServicesOf } from "~/server/row-services.server"
 import { loadTaste } from "~/server/taste/index.server"
 import { getViewerContext } from "~/server/viewer.server"
 import { GuestPage } from "~/ui/my-pages/bits"
@@ -42,6 +43,7 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 				now: 0,
 				arrival: null as Arrival | null,
 				landed: [] as LandedTitle[],
+				services: {} as RowServices,
 			},
 			{ headers },
 		)
@@ -73,24 +75,37 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 				return []
 			}),
 	])
+	// The member's own services per show, for the logos in the rows.
+	const services = await ownServicesOf(
+		ctx,
+		[
+			...data.continue,
+			...data.pickUp,
+			...data.start,
+			...data.onHold,
+			...data.dropped,
+		].map((show) => ({ mediaType: "show" as const, tmdbId: show.id })),
+	)
 	const arrival: Arrival | null = fresh && {
 		since: fresh.since,
 		announcements: fresh.shows,
 		titles: fresh.shows.map((show) => show.title),
 	}
 	return json(
-		{ data: data as MyShows | null, now, arrival, landed },
+		{ data: data as MyShows | null, now, arrival, landed, services },
 		{ headers },
 	)
 }
 
 export default function MyShowsRoute() {
-	const { data, now, arrival, landed } = useLoaderData<typeof loader>() as {
-		data: MyShows | null
-		now: number
-		arrival: Arrival | null
-		landed: LandedTitle[]
-	}
+	const { data, now, arrival, landed, services } =
+		useLoaderData<typeof loader>() as {
+			data: MyShows | null
+			now: number
+			arrival: Arrival | null
+			landed: LandedTitle[]
+			services: RowServices
+		}
 	if (!data)
 		return (
 			<GuestPage
@@ -103,7 +118,15 @@ export default function MyShowsRoute() {
 				}}
 			/>
 		)
-	return <MyShowsPage data={data} now={now} arrival={arrival} landed={landed} />
+	return (
+		<MyShowsPage
+			data={data}
+			now={now}
+			arrival={arrival}
+			landed={landed}
+			services={services}
+		/>
+	)
 }
 
 export const loader = presentCatalogLoader(canonicalLoader, { live: true, hint: "show" })

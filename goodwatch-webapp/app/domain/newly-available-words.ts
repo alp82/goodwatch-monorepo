@@ -83,6 +83,8 @@ export interface LandedTitle {
 	tmdbId: number
 	title: string
 	poster_path: string | null
+	/** The GoodWatch score, 0 to 100, for the row's score pill. */
+	goodwatch?: number | null
 	/** When it landed, in milliseconds, and how many days ago by the calendar (UTC): 0 on the day itself. */
 	at: number
 	days: number

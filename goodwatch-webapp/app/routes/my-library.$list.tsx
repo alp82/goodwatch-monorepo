@@ -14,7 +14,11 @@ import {
 	libraryChoiceOf,
 	statusOfSlug,
 } from "~/domain/my-library"
-import { type LibraryPage, getLibraryPage } from "~/server/my-library.server"
+import {
+	type LibraryPage,
+	getLibraryPage,
+	withRowServices,
+} from "~/server/my-library.server"
 import { newOnForLibrary } from "~/server/newly-available.server"
 import { MyLibraryPage } from "~/ui/my-library/MyLibraryPage"
 import { GuestPage } from "~/ui/my-pages/bits"
@@ -69,11 +73,15 @@ async function canonicalLoader({ request, params }: LoaderFunctionArgs) {
 		...libraryChoiceOf(new URL(request.url).searchParams),
 		status,
 	}
-	const page = await getLibraryPage(
+	const page = await withRowServices(
+		await getLibraryPage(
+			userId,
+			choice,
+			0,
+			await newOnForLibrary(request, userId, choice.status),
+		),
+		request,
 		userId,
-		choice,
-		0,
-		await newOnForLibrary(request, userId, choice.status),
 	)
 	return json<Loaded>(
 		{ status, page, now: Date.now(), viewer: userId },

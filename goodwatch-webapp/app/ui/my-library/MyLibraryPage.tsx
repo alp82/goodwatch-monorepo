@@ -1,4 +1,4 @@
-import { getScoreLabelText, selectedScoreStyle } from "~/utils/ratings"
+import { getScoreLabelText } from "~/utils/ratings"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import useLocale from "~/utils/locale"
@@ -50,7 +50,14 @@ import {
 import { useScoreMutation } from "~/hooks/useUserDataMutations"
 import type { LibraryItem, LibraryPage } from "~/server/my-library.server"
 import type { Score } from "~/server/scores.server"
-import { NewOnWords } from "~/ui/my-pages/LandedRow"
+import type { PillMark } from "~/ui/poster-card/pill-mark"
+import { newOn } from "~/domain/newly-available-words"
+import {
+	RowLogos,
+	RowScores,
+	rowMark,
+	useRowMarks,
+} from "~/ui/list-row/RowScores"
 import {
 	Empty,
 	PageHead,
@@ -267,7 +274,10 @@ function SortSelect({
 // ---------------------------------------------------------------------------------------------------------
 // Rows
 
-/** The member's score, or a quiet key to give one. Either opens the rating bar. */
+/**
+ * A Seen row's end: the score pill, which opens the rating bar to change the member's score, or the pill (GoodWatch's
+ * score alone) and a quiet key to give one.
+ */
 function ScoreKey({
 	item,
 	score,
@@ -277,6 +287,9 @@ function ScoreKey({
 	score: number | null
 	onAsk: (item: LibraryItem) => void
 }) {
+	const pill = (
+		<RowScores goodwatch={item.goodwatch} score={score as Score | null} mark={null} />
+	)
 	return score !== null ? (
 		<button
 			type="button"
@@ -284,22 +297,24 @@ function ScoreKey({
 			onClick={() => onAsk(item)}
 			onPointerEnter={() => void loadRateBar().catch(() => {})}
 			aria-label={`Your score for ${item.title}: ${getScoreLabelText(score as Score)}. Change it`}
-			style={selectedScoreStyle(score as Score)}
-			className="flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg px-2 text-xs font-bold tabular-nums text-white hover:brightness-110"
+			className="flex min-h-11 shrink-0 cursor-pointer items-center rounded-lg hover:brightness-125"
 		>
-			{getScoreLabelText(score as Score)}
+			{pill}
 		</button>
 	) : (
-		<button
-			type="button"
-			data-rate={item.key}
-			onClick={() => onAsk(item)}
-			onPointerEnter={() => void loadRateBar().catch(() => {})}
-			aria-label={`Rate ${item.title}`}
-			className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-dashed border-white/25 text-xs font-semibold text-gray-300 hover:border-amber-300 hover:text-amber-200"
-		>
-			Rate
-		</button>
+		<span className="flex shrink-0 items-center gap-1.5">
+			{pill}
+			<button
+				type="button"
+				data-rate={item.key}
+				onClick={() => onAsk(item)}
+				onPointerEnter={() => void loadRateBar().catch(() => {})}
+				aria-label={`Rate ${item.title}`}
+				className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-dashed border-white/25 text-xs font-semibold text-gray-300 hover:border-amber-300 hover:text-amber-200"
+			>
+				Rate
+			</button>
+		</span>
 	)
 }
 
@@ -322,12 +337,15 @@ function Row({
 	item,
 	status,
 	score,
+	mark,
 	now,
 	onAsk,
 }: {
 	item: LibraryItem
 	status: LibraryStatus
 	score: number | null
+	/** The pill's state icon. */
+	mark: PillMark | null
 	now: number
 	onAsk: (item: LibraryItem) => void
 }) {
@@ -365,9 +383,23 @@ function Row({
 				inProgress && item.watchedAt
 				? `Last watched ${/^(Today|Yesterday)$/.test(watchedOn) ? watchedOn.toLowerCase() : watchedOn}`
 				: watchedOn
-	// The service a Want to See title is new on (#489). The poster here is too small for the logo, so the words
-	// carry it, with the logo beside them.
-	const fresh = item.newOn && <NewOnWords service={item.newOn} />
+	// The service a Want to See title is new on (#489): its logo leads the member's services in the row's words,
+	// ringed in sky blue, and the fact says it.
+	const fresh = item.newOn && (
+		<span className="font-semibold text-sky-200">{newOn(item.newOn.name)}</span>
+	)
+	const logos =
+		item.newOn &&
+		!item.services?.some((service) => service.id === item.newOn?.id)
+			? [
+					{
+						id: item.newOn.id,
+						name: item.newOn.name,
+						logoPath: item.newOn.logo_path,
+					},
+					...(item.services ?? []),
+				]
+			: item.services
 	return (
 		<li
 			className="flex items-center gap-2 border-b border-white/5"
@@ -386,8 +418,11 @@ function Row({
 					<b className="block truncate text-sm text-white group-hover:text-amber-200 md:text-base">
 						<span lang={mediaFieldLanguage(item)}>{item.title}</span>
 					</b>
-					<span className="block truncate text-xs text-gray-500">
-						{inProgress && episodes ? `${kind} · ${episodes}` : kind}
+					<span className="flex min-w-0 items-center gap-1.5 text-xs text-gray-500">
+						<RowLogos services={logos} newOn={item.newOn?.id} max={1} />
+						<span className="truncate">
+							{inProgress && episodes ? `${kind} · ${episodes}` : kind}
+						</span>
 					</span>
 					{inProgress && (
 						<span className="mt-1 block max-w-40">
@@ -408,8 +443,15 @@ function Row({
 					<span className="block truncate">{fact}</span>
 				</span>
 				{!seen && (
+					<RowScores
+						goodwatch={item.goodwatch}
+						score={score as Score | null}
+						mark={mark}
+					/>
+				)}
+				{!seen && (
 					<ChevronRightIcon
-						className="h-4 w-4 shrink-0 text-gray-600 group-hover:text-amber-300"
+						className="h-4 w-4 shrink-0 text-gray-600 group-hover:text-amber-300 max-sm:hidden"
 						aria-hidden
 					/>
 				)}
@@ -517,6 +559,12 @@ export function MyLibraryPage({
 	const [given, setGiven] = useState<Record<string, number | null>>({})
 	const scoreOf = (item: LibraryItem) =>
 		item.key in given ? given[item.key] : item.score
+	// The list's own status would be every row's icon: only a Want to See show says how far it got.
+	const marksOf = useRowMarks()
+	const markOf = (item: LibraryItem) =>
+		pageStatus === "want"
+			? rowMark(marksOf(item.mediaType, item.tmdbId), { want: true })
+			: null
 	// The app's score mutation, as from every other page.
 	const { mutate: rate } = useScoreMutation()
 	const onRated = useCallback(
@@ -621,6 +669,7 @@ export function MyLibraryPage({
 								item={item}
 								status={status}
 								score={scoreOf(item)}
+								mark={markOf(item)}
 								now={now}
 								onAsk={setAsked}
 							/>

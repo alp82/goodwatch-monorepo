@@ -16,6 +16,7 @@ import {
 import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { getRankedList } from "~/server/best-lists.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
+import { rowServices } from "~/server/row-services.server"
 import { ListHead } from "~/ui/best-lists/ListHead"
 import { ListPageLinks, RankedTitles } from "~/ui/best-lists/RankedTitles"
 import { notFound } from "~/ui/explore/address"
@@ -36,6 +37,7 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	const page = requestedPage(new URL(request.url).search)
 	if (page > pages) throw notFound()
 	const { first, last } = pageRange(page, total)
+	const shown = titles.slice(first - 1, last)
 	return {
 		kind,
 		page,
@@ -43,7 +45,12 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 		total,
 		popular,
 		first,
-		titles: titles.slice(first - 1, last),
+		titles: shown,
+		// A member's own services per title, for the logos in the rows; null for a guest, whose page is shared.
+		services: await rowServices(
+			request,
+			shown.map((t) => ({ mediaType: t.media_type, tmdbId: t.tmdb_id })),
+		),
 	}
 }
 
@@ -71,7 +78,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 }
 
 export default function BestList() {
-	const { kind, page, pages, total, popular, first, titles } =
+	const { kind, page, pages, total, popular, first, titles, services } =
 		useLoaderData<typeof loader>()
 	const copy = listCopy(kind, { total, popular, page })
 	const links = (
@@ -86,7 +93,7 @@ export default function BestList() {
 			>
 				<div className="mt-3">{links}</div>
 			</ListHead>
-			<RankedTitles titles={titles} first={first} />
+			<RankedTitles titles={titles} first={first} services={services} />
 			<div className="mx-auto mt-6 max-w-7xl px-4">{links}</div>
 		</div>
 	)

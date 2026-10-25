@@ -1,12 +1,22 @@
 import { useMemo, useState } from "react"
 // The profile's Seen tab: a diary, latest first, one group per month; titles without a watch date (older imports,
-// most shows) close the page under "No date". A signed-in visitor sees their own score next to the owner's.
+// most shows) close the page under "No date". Each row ends in the score pill (GoodWatch and the viewer's own score);
+// on another member's profile their score follows it, and a signed-in visitor's services show on what they haven't
+// seen.
 import type { LibraryKind } from "~/domain/my-library"
 import type {
 	ProfileSeenPage,
 	ProfileShell,
 	ProfileTitle,
 } from "~/domain/profile"
+import type { RowServices } from "~/server/row-services.server"
+import type { Score } from "~/server/scores.server"
+import {
+	RowLogos,
+	RowScores,
+	rowMark,
+	useRowMarks,
+} from "~/ui/list-row/RowScores"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { OwnerPageLink, Segmented, TILE, TitleRow, count } from "../parts"
 
@@ -25,11 +35,12 @@ const dayOf = (iso: string) => new Date(iso).getUTCDate()
 export function SeenPage({
 	shell,
 	page,
-	you,
+	services,
 }: {
 	shell: ProfileShell
 	page: ProfileSeenPage
-	you: Record<string, number> | null
+	/** A signed-in visitor's own services on the titles they haven't seen; null otherwise. */
+	services: RowServices | null
 }) {
 	const [kind, setKind] = useState<Kind>("all")
 	const [months, setMonths] = useState(FIRST_MONTHS)
@@ -43,7 +54,23 @@ export function SeenPage({
 	)
 	const { groups, undated } = useMemo(() => byMonth(titles), [titles])
 	const movies = page.titles.filter((t) => t.mediaType === "movie").length
-	const yours = (key: string) => you?.[key] ?? null
+	const marksOf = useRowMarks()
+	const other = shell.viewer !== "owner"
+	const parts = (title: ProfileTitle) => {
+		const marks = marksOf(title.mediaType, title.tmdbId)
+		return {
+			logos: <RowLogos services={services?.[title.key]} />,
+			end: (
+				<RowScores
+					goodwatch={title.gw}
+					score={marks.score}
+					mark={rowMark(marks)}
+					owner={other ? (title.score as Score | null) : null}
+					ownerName={`@${shell.handle}`}
+				/>
+			),
+		}
+	}
 
 	if (!page.titles.length)
 		return (
@@ -93,7 +120,7 @@ export function SeenPage({
 							<TitleRow
 								key={title.key}
 								title={title}
-								you={yours(title.key)}
+								{...parts(title)}
 								lead={
 									<span className="w-8 shrink-0 text-center text-sm font-bold tabular-nums text-gray-400">
 										{dayOf(title.date as string)}
@@ -128,11 +155,7 @@ export function SeenPage({
 					<ul className="divide-y divide-white/5">
 						{(allUndated ? undated : undated.slice(0, FIRST_UNDATED)).map(
 							(title) => (
-								<TitleRow
-									key={title.key}
-									title={title}
-									you={yours(title.key)}
-								/>
+								<TitleRow key={title.key} title={title} {...parts(title)} />
 							),
 						)}
 					</ul>

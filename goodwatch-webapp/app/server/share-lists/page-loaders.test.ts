@@ -137,6 +137,7 @@ const listDeps = (viewerId: string | null = null, unlisted = false) => ({
 		streaming_providers_default: "8",
 	}),
 	getListAvailability: async () => ({}),
+	getOwnerScores: async () => ({}),
 })
 
 for (const [viewerId, unlisted, isOwner] of [
@@ -153,10 +154,33 @@ for (const [viewerId, unlisted, isOwner] of [
 				assert.equal(value.list.id, view.list.id)
 				ensured = true
 			},
+			// Only a member with saved services needs the offers: the rows show nobody else's.
 			getListAvailability: async (items, country) => {
+				assert.ok(viewerId)
 				assert.deepEqual(items, view.list.items)
-				assert.equal(country, viewerId ? "DE" : "US")
-				return {}
+				assert.equal(country, "DE")
+				const offer = (serviceId: number, kind: "stream" | "rent") => ({
+					serviceId,
+					name: `Service ${serviceId}`,
+					logo: "",
+					logoPath: `/${serviceId}.png`,
+					url: null,
+					kind,
+				})
+				return {
+					"movie:1": {
+						state: "current" as const,
+						offers: [offer(8, "stream"), offer(9, "stream"), offer(8, "rent")],
+					},
+				}
+			},
+			// The owner's score ends the rows of someone else's list.
+			getOwnerScores: async (ownerId, viewer, entries) => {
+				assert.equal(isOwner, false)
+				assert.equal(ownerId, "owner")
+				assert.equal(viewer, viewerId ? "member" : "guest")
+				assert.deepEqual(entries, view.list.items)
+				return { "movie:1": 7 }
 			},
 		})(args())
 		assert.equal(ensured, true)
@@ -170,7 +194,13 @@ for (const [viewerId, unlisted, isOwner] of [
 		assert.equal(data.list.unlisted, unlisted)
 		assert.equal(data.isOwner, isOwner)
 		assert.deepEqual(data.items, view.titles)
-		if (viewerId) assert.ok(data.owned.includes(8))
+		assert.deepEqual(
+			data.services,
+			viewerId
+				? { "movie:1": [{ id: 8, name: "Service 8", logoPath: "/8.png" }] }
+				: null,
+		)
+		assert.deepEqual(data.ownerScores, isOwner ? null : { "movie:1": 7 })
 	})
 
 const overview = (list: ListView["list"]) => {

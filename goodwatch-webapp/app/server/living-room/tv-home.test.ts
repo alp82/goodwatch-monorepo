@@ -63,6 +63,7 @@ const toStart = (id: number): MyShowsStart => ({
 	title: `Start ${id}`,
 	poster_path: `/poster-${id}.jpg`,
 	backdrop_path: `/backdrop-${id}.jpg`,
+	goodwatch: null,
 	match: 77,
 	seasons: 1,
 	episodes: 8,

@@ -1,7 +1,11 @@
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import { libraryChoiceOf } from "~/domain/my-library"
-import { type LibraryPage, getLibraryPage } from "~/server/my-library.server"
+import {
+	type LibraryPage,
+	getLibraryPage,
+	withRowServices,
+} from "~/server/my-library.server"
 import { newOnForLibrary } from "~/server/newly-available.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 
@@ -23,15 +27,15 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 			{ status: 400, headers },
 		)
 	const choice = libraryChoiceOf(params)
-	return json<LibraryPage>(
-		await getLibraryPage(
-			userId,
-			choice,
-			offset,
-			await newOnForLibrary(request, userId, choice.status),
-		),
-		{ headers },
+	const page = await getLibraryPage(
+		userId,
+		choice,
+		offset,
+		await newOnForLibrary(request, userId, choice.status),
 	)
+	return json<LibraryPage>(await withRowServices(page, request, userId), {
+		headers,
+	})
 }
 
 export const loader = presentCatalogLoader(canonicalLoader, { live: true })

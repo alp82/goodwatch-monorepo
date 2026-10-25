@@ -3,7 +3,8 @@
 // keeps the height of the unfiltered row it holds, and an emptied slot holds that row, invisible.
 import { Link } from "@remix-run/react"
 import { useState } from "react"
-import ScoreRing from "~/ui/details/hero/ScoreRing"
+import type { Score } from "~/server/scores.server"
+import { RowScores, rowMark, useRowMarks } from "~/ui/list-row/RowScores"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { PosterImg, backdropUrl } from "~/ui/profile/parts"
 import {
@@ -13,7 +14,7 @@ import {
 	useTaste,
 } from "~/ui/profile/taste/model"
 import { Pills } from "~/ui/profile/taste/parts"
-import { YourScore, vibe } from "../tabs/parts"
+import { vibe } from "../tabs/parts"
 import { type GapRow, gapRows } from "./gaps"
 
 const PAGE = 8
@@ -23,24 +24,6 @@ type Kind = "all" | "movie" | "show"
 const KIND_WORD: Record<Exclude<Kind, "all">, string> = {
 	movie: "movies",
 	show: "shows",
-}
-
-function Ring({
-	gw,
-	size,
-	label = false,
-}: { gw: number | null; size: number; label?: boolean }) {
-	return (
-		<ScoreRing
-			media={
-				{
-					details: { goodwatch_overall_score_normalized_percent: gw },
-				} as Parameters<typeof ScoreRing>[0]["media"]
-			}
-			size={size}
-			label={label}
-		/>
-	)
 }
 
 /** A row's gap in GoodWatch points. */
@@ -233,8 +216,7 @@ function Lead({
 						)}
 					</p>
 					<div className="mt-3 flex flex-wrap items-center gap-3 md:mt-4 md:gap-4">
-						<YourScore score={row.mine} size="lg" label="You" />
-						<Ring gw={row.everyone} size={48} label />
+						<Scores row={row} t={t} size="L" />
 					</div>
 					<p className="mt-3 text-sm text-gray-300">
 						{tone === "up"
@@ -247,6 +229,23 @@ function Lead({
 	)
 }
 
+/** The row's pill: the GoodWatch score and the member's own, as the gap bar below draws them. */
+function Scores({
+	row,
+	t,
+	size,
+}: { row: CrowdRow; t: TasteTitle; size?: "L" }) {
+	const marks = useRowMarks()(t.mediaType, t.tmdbId)
+	return (
+		<RowScores
+			goodwatch={row.everyone}
+			score={row.mine as Score}
+			mark={rowMark({ ...marks, score: row.mine as Score })}
+			size={size}
+		/>
+	)
+}
+
 function Row({ row, t }: { row: CrowdRow; t: TasteTitle }) {
 	const mine = row.mine * 10
 	const lo = Math.min(mine, row.everyone)
@@ -254,23 +253,20 @@ function Row({ row, t }: { row: CrowdRow; t: TasteTitle }) {
 	return (
 		<Link
 			to={t.href}
-			className="grid grid-cols-[3.5rem_1fr] gap-4 rounded-xl border border-gray-800 bg-gray-950/60 p-2 pr-4 hover:border-gray-600"
+			className="grid grid-cols-[3.5rem_1fr] gap-3 rounded-xl border border-gray-800 bg-gray-950/60 p-2 pr-3 hover:border-gray-600 sm:gap-4 sm:pr-4"
 		>
 			<span className="block w-14">
 				<PosterImg title={t} className="aspect-[2/3] rounded-md object-cover" />
 			</span>
 			<div className="min-w-0 self-center">
-				<div className="flex items-center justify-between gap-3">
+				<div className="flex items-center justify-between gap-2">
 					<p className="truncate font-semibold">
 						{t.title}{" "}
 						{t.year && (
 							<span className="font-normal text-gray-400">({t.year})</span>
 						)}
 					</p>
-					<span className="flex shrink-0 items-center gap-2">
-						<YourScore score={row.mine} size="sm" />
-						<Ring gw={row.everyone} size={30} />
-					</span>
+					<Scores row={row} t={t} />
 				</div>
 				<div className="relative mt-3 h-4" aria-hidden>
 					<span className="absolute inset-x-0 top-1/2 h-px bg-gray-700" />

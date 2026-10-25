@@ -1,11 +1,19 @@
-// A page of a best-of list: numbered rows (rank, small poster, title, year and genres, the GoodWatch ring), two columns
+// A page of a best-of list: numbered rows (rank, small poster, title, year and genres, the score pill), two columns
 // on a wide screen, with the links to the list's pages above and below. Every title is a plain link in the server
-// HTML, to the sitemap's address of its page.
+// HTML, to the sitemap's address of its page. The page is the same for every visitor: the server's HTML shows the
+// GoodWatch score in the pill, and a member's own score, state and services join it from their data.
 import { Link } from "@remix-run/react"
 import { type ListKind, pagePath, pageRange } from "~/domain/best-lists"
 import type { ListTitle } from "~/server/best-lists.server"
+import type { RowServices } from "~/server/row-services.server"
+import { createMediaKey } from "~/types/user-data"
 import { TmdbImage } from "~/ui/TmdbImage"
-import ScoreRing from "~/ui/details/hero/ScoreRing"
+import {
+	RowLogos,
+	RowScores,
+	rowMark,
+	useRowMarks,
+} from "~/ui/list-row/RowScores"
 import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
 
@@ -46,50 +54,71 @@ export function ListPageLinks({
 export function RankedTitles({
 	titles,
 	first,
-}: { titles: ListTitle[]; first: number }) {
+	services,
+}: {
+	titles: ListTitle[]
+	first: number
+	/** The member's own services per title; null for a guest. */
+	services?: RowServices | null
+}) {
+	const marksOf = useRowMarks()
 	return (
 		<ol
 			start={first}
 			className="mx-auto mt-6 grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-x-8 px-4 lg:grid-cols-2"
 		>
-			{titles.map((t, i) => (
-				<li
-					key={t.tmdb_id}
-					className="border-b border-white/5 hover:bg-white/[0.02]"
-				>
-					<Link
-						to={t.path}
-						prefetch="intent"
-						className="group flex items-center gap-3 py-1.5 pl-1"
+			{titles.map((t, i) => {
+				const marks = marksOf(t.media_type, t.tmdb_id)
+				return (
+					<li
+						key={t.tmdb_id}
+						className="border-b border-white/5 hover:bg-white/[0.02]"
 					>
-						<span className="w-9 shrink-0 text-right text-sm font-bold tabular-nums text-gray-500 group-hover:text-amber-300">
-							{first + i}
-						</span>
-						{t.poster_path ? (
-							<TmdbImage
-								kind="poster"
-								path={t.poster_path}
-								width={40}
-								priority={i < EAGER_ROWS ? "eager" : "lazy"}
-								className="h-12 w-8 shrink-0 rounded-sm bg-white/5 object-cover sm:h-15 sm:w-10"
+						<Link
+							to={t.path}
+							prefetch="intent"
+							className="group flex items-center gap-3 py-1.5 pl-1"
+						>
+							<span className="w-6 shrink-0 text-right text-sm font-bold tabular-nums text-gray-500 group-hover:text-amber-300 sm:w-9">
+								{first + i}
+							</span>
+							{t.poster_path ? (
+								<TmdbImage
+									kind="poster"
+									path={t.poster_path}
+									width={40}
+									priority={i < EAGER_ROWS ? "eager" : "lazy"}
+									className="h-12 w-8 shrink-0 rounded-sm bg-white/5 object-cover sm:h-15 sm:w-10"
+								/>
+							) : (
+								<span className="block h-12 w-8 shrink-0 rounded-sm bg-white/10 sm:h-15 sm:w-10" />
+							)}
+							<span className="min-w-0 flex-1">
+								<span className="block truncate text-sm font-semibold text-white sm:text-base">
+									<MediaText value={presentedText(t, "title", t.title)} />
+								</span>
+								<span className="flex min-w-0 items-center gap-1.5 text-xs text-gray-500">
+									<RowLogos
+										services={
+											services?.[createMediaKey(t.media_type, t.tmdb_id)]
+										}
+									/>
+									<span className="truncate">
+										{[t.release_year, t.genres.join(", ")]
+											.filter(Boolean)
+											.join(" · ")}
+									</span>
+								</span>
+							</span>
+							<RowScores
+								goodwatch={t.goodwatch_overall_score_normalized_percent}
+								score={marks.score}
+								mark={rowMark(marks)}
 							/>
-						) : (
-							<span className="block h-12 w-8 shrink-0 rounded-sm bg-white/10 sm:h-15 sm:w-10" />
-						)}
-						<span className="min-w-0 flex-1">
-							<span className="block truncate text-sm font-semibold text-white sm:text-base">
-								<MediaText value={presentedText(t, "title", t.title)} />
-							</span>
-							<span className="block truncate text-xs text-gray-500">
-								{[t.release_year, t.genres.join(", ")]
-									.filter(Boolean)
-									.join(" · ")}
-							</span>
-						</span>
-						<ScoreRing media={{ details: t }} size={36} label={false} />
-					</Link>
-				</li>
-			))}
+						</Link>
+					</li>
+				)
+			})}
 		</ol>
 	)
 }

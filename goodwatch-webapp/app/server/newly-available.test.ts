@@ -1006,6 +1006,7 @@ test("My movies and My shows are told what landed in the last 14 days, the lates
 			tmdbId: HEAT,
 			title: "Heat",
 			poster_path: null,
+			goodwatch: null,
 			at: day(8),
 			days: 1,
 			// The short name, as the title page says it.
@@ -1016,6 +1017,7 @@ test("My movies and My shows are told what landed in the last 14 days, the lates
 			tmdbId: DUNE,
 			title: "Dune",
 			poster_path: null,
+			goodwatch: null,
 			at: day(3),
 			days: 6,
 			service: { id: NETFLIX, name: "Netflix", logo_path: "/netflix.png" },

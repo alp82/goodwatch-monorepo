@@ -3,9 +3,11 @@ import { canonicalMediaTitle } from "~/utils/media-presentation"
 // that names the latest with its service and its day, and opens to all of them with the day each landed. It stays
 // for the 14 days, whether the member has been here since or not. And the mark the same titles carry in a list:
 // the service's logo ringed in the sky blue of the signal with a "New" tab on a poster, or the logo beside the
-// words where the poster is too small for it.
+// words where the poster is too small for it. An opened row ends in the title's score pill, which the page hands
+// over (`parts`), like the row's logo: this file stays free of the poster parts (see below).
 import { ChevronRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
+import type { ReactNode } from "react"
 import {
 	type LandedTitle,
 	type NewOn,
@@ -68,15 +70,23 @@ export const NewOnWords = ({ service }: { service: NewOn }) => (
 	</span>
 )
 
+/** What an opened row shows that the page draws: the service's logo in the row's words, and the row's end. */
+export interface LandedRowParts {
+	logo: (title: LandedTitle, service: NewOn) => ReactNode
+	end: (title: LandedTitle) => ReactNode
+}
+
 export function LandedRow({
 	landed,
 	note,
+	parts,
 	className = "",
 }: {
 	/** The titles of the page's kind that landed in the last 14 days, the latest first. */
 	landed: readonly LandedTitle[]
 	/** What else is new about a title, said after its service: a show's new episode. */
 	note?: (title: LandedTitle) => string | null
+	parts?: LandedRowParts
 	className?: string
 }) {
 	const words = landedRowWords(landed)
@@ -156,28 +166,35 @@ export function LandedRow({
 									<b className="block truncate text-sm text-white">
 										{title.title}
 									</b>
-									<span className="flex items-center gap-1.5 text-xs text-gray-400">
-										{title.service && (
-											<Logo
-												service={title.service}
-												className="h-4 w-4 rounded"
-											/>
-										)}
+									<span className="flex min-w-0 items-center gap-1.5 text-xs text-gray-400">
+										{title.service &&
+											(parts ? (
+												parts.logo(title, title.service)
+											) : (
+												<Logo
+													service={title.service}
+													className="h-4 w-4 rounded"
+												/>
+											))}
 										<span className="truncate">
-											{title.service?.name ?? "On your services"}
+											<span className="font-semibold text-sky-200">
+												{newOn(title.service?.name ?? null)}
+											</span>
 											{also && ` · ${also}`}
+											<span className="sm:hidden"> · {when}</span>
 										</span>
 									</span>
 								</span>
 								<span
-									className="w-[92px] shrink-0 text-right md:w-36"
+									className="hidden w-24 shrink-0 text-right sm:block md:w-36"
 									data-landed-day
 								>
 									<b className="block text-sm text-white">{when}</b>
 									<span className="block text-xs text-gray-500">{detail}</span>
 								</span>
+								{parts?.end(title)}
 								<ChevronRightIcon
-									className="h-4 w-4 shrink-0 text-gray-600 group-hover:text-amber-300"
+									className="h-4 w-4 shrink-0 text-gray-600 group-hover:text-amber-300 max-sm:hidden"
 									aria-hidden
 								/>
 							</Link>

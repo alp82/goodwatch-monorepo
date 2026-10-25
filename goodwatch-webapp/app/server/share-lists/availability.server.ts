@@ -17,6 +17,8 @@ export interface ListOffer {
 	serviceId: number
 	name: string
 	logo: string
+	/** The TMDB path of the logo. */
+	logoPath: string | null
 	url: string | null
 	kind: OfferKind
 }
@@ -67,7 +69,7 @@ export async function getListAvailability(
 	if (!country || !entries.length)
 		return readListAvailability(entries, rawCountry)
 	return cached({
-		name: "share-list-availability-v1",
+		name: "share-list-availability-v2",
 		params: {
 			country,
 			titles: [
@@ -151,6 +153,7 @@ export async function readListAvailability(
 			logo: service.logo_path
 				? `https://image.tmdb.org/t/p/w92${service.logo_path}`
 				: "",
+			logoPath: service.logo_path,
 			url: r.stream_url || r.tmdb_link,
 			kind: KIND[r.streaming_type],
 			rank: service.order_by_country?.[country] ?? 999,
