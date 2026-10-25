@@ -156,7 +156,9 @@ export const correctionKey = (
 		)
 		.digest("hex")
 export const flagArea = (area?: string) =>
-	["analysis", "scores", "score"].includes(area ?? "")
+	["analysis", "scores", "score", "standout", "media", "related"].includes(
+		area ?? "",
+	)
 export function feedbackStaff(
 	user: string | undefined,
 	roles: string[] = [],

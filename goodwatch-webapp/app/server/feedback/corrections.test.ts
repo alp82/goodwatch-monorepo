@@ -5,6 +5,7 @@ import {
 	mapCorrection,
 	correctionKey,
 	feedbackStaff,
+	flagArea,
 	type Correction,
 } from "./corrections.ts"
 import { feedbackSchema, type FeedbackInput } from "./schema.ts"
@@ -837,4 +838,10 @@ test("the shared snapshot picks only the corrections that touch the page's entit
 	assert.deepEqual(correctionsFor({ kind: "show", id: 1 }, all).map((c) => c.id), ["a", "c"])
 	assert.deepEqual(correctionsFor({ kind: "movie", id: 1 }, all).map((c) => c.id), ["b"])
 	assert.deepEqual(correctionsFor({ kind: "person", id: 5 }, all).map((c) => c.id), ["c", "d"])
+})
+test("parts members can only flag answer with the flag outcome", () => {
+	for (const area of ["analysis", "scores", "standout", "media", "related"])
+		assert.equal(flagArea(area), true, area)
+	for (const area of ["cast", "watch", "episodes", "details", "credits", undefined])
+		assert.equal(flagArea(area), false, String(area))
 })

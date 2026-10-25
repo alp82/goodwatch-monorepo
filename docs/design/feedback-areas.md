@@ -112,6 +112,7 @@ The season and episode view is the Episodes part of a show's page; there is no s
 | Details | Fix and flag | Wrong year or date; Wrong number of seasons or episodes; The description is wrong (flag); Something else (staff review) |
 | Cast and crew | Fix | Wrong character name; Someone isn't in it; Someone is missing; Something else (staff review) |
 | Similar titles | Flag only | A title isn't similar (flag); A title is for a different audience (flag); Something else |
+| Media | Flag only | A trailer is for another title; A video doesn't play; A video or image doesn't fit; Something else |
 
 ### Person page
 
@@ -120,6 +121,7 @@ Routes: `person.$personKey.tsx`. Try it at `/person/287-brad-pitt`.
 | Area | Type | Chips |
 | --- | --- | --- |
 | Details | Fix and flag | Wrong main job; Wrong career years; Wrong photo (flag); Something else (staff review) |
+| What stands out | Flag only | A trait doesn't fit them; The chart looks off; Something else |
 | Credits | Fix | A title isn't theirs; Wrong role or character; A title is missing; Something else (staff review) |
 
 ### Member profile

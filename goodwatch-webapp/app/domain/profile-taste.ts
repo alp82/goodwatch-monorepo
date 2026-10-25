@@ -26,6 +26,12 @@ export interface TastePerson {
  * every average is null, `style` is null and titles carry no score; without Seen, `facts` is null; without Shows or
  * time watched, `facts.mostEpisodes` is null.
  */
+/** An essence tag and how many of the titles scored 8 or more carry it, for the Taste page's cloud. */
+export interface TasteTag {
+	name: string
+	count: number
+}
+
 export interface TasteStats {
 	genres: {
 		name: string

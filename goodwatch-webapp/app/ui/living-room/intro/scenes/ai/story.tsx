@@ -379,7 +379,7 @@ export function StoryWindow({
 											from={LOGGED.card}
 											eyebrow="Logged · S1 E1 · After Hours"
 										>
-											<p className="intro-ai-meta">Example member</p>
+											<p className="intro-ai-meta">Sam's watch history</p>
 											<Chips
 												from={LOGGED.card + 380}
 												items={[
