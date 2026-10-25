@@ -132,6 +132,25 @@ merges newly imported metadata into the saved queue; `--retry-review` rechecks r
 sources and the same block state. Neither flag clears a source block. Stop the worker with
 `systemctl --user stop goodwatch-trope-catalog-full.service`; its journals allow resuming without losing imported text.
 
+### Verified published archive recovery
+
+The same one-off run also uses the public `KaraKaraWitch/TvTroper-2025` archive at pinned revision
+`4d0928d851db919985081118b1f7f85abf0a90fd`. All 13 files were downloaded and checked against their
+published sizes and SHA256 hashes. Exact Main-record byte slices and decoded article hashes are retained locally.
+Archive metadata is evidence of archive retrieval, not an original TV Tropes capture date.
+
+`stage_trope_catalog_archive.py` verifies each local file and record, proves the source's primary or explicit AKA
+identity, and seals a missing-only batch. Identity failures, conflicting definitions and incomplete introductions
+remain in its review file. The one-off staging service is `goodwatch-trope-corpus-stage.service`; the sequential
+consumer is `goodwatch-trope-corpus-process.service`. Neither service requests TV Tropes pages or has a recurring
+schedule. Artifacts live under `~/.cache/goodwatch/trope-catalog/published-corpora/`.
+
+The consumer saves each batch's exact input hash, full before-images, write plan and full stored-document
+verification under `processing-v1/` and each stage's `pipeline/` directory. Verified batches are skipped on resume.
+An uncertain apply stops for read-only reconciliation against those receipts; never replay an unverified write
+blindly. Corrections to previously extracted text require separate source evidence and exact old-text/provenance
+guards. The direct HTTP worker continues recovering catalog entries that the archive cannot supply.
+
 ## Production: `crawl_tvtropes` flag
 
 `f/priority/crawl_all` has a `crawl_tvtropes` input, default `false`, like `crawl_imdb`. While it is off, both TV Tropes
