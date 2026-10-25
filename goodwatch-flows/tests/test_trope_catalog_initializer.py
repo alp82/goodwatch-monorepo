@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "windmill"))
-from f.sync.models.crate_schemas import SCHEMAS
+from f.sync.models.crate_schemas import ARCHIVE_COLUMN_TYPES, SCHEMAS
 from f.tvtropes_catalog.catalog import schema_sql
 
 
@@ -42,7 +42,10 @@ class RecordingCrate:
 
 
 def initialized_tables():
-    return {name: list(initializer.column_specs(schema)) for name, schema in SCHEMAS.items()}
+    return {name: {**{key: value.lower() for key, value in initializer.column_specs(schema).items()},
+                   **{f"{parent}['{child}']": kind.lower()
+                      for parent, children in schema.get("object_columns", {}).items() for child, kind in children.items()}}
+            for name, schema in SCHEMAS.items()}
 
 
 def run_initializer(connector, *, dry_run=False):
@@ -76,7 +79,7 @@ class TropeCatalogInitializerTests(unittest.TestCase):
         tables = initialized_tables()
         del tables["trope_catalog"]
         del tables["profile_tropes_snapshot"]
-        tables["trope"].remove("content_length")
+        del tables["trope"]["content_length"]
         connector = RecordingCrate(tables)
         run_initializer(connector)
         changes = [sql for sql, _ in connector.writes if sql.startswith(("CREATE TABLE", "ALTER TABLE"))]
@@ -99,6 +102,23 @@ class TropeCatalogInitializerTests(unittest.TestCase):
         run_initializer(connector)
         changes = [sql for sql, _ in connector.writes if sql.startswith(("CREATE TABLE", "ALTER TABLE"))]
         self.assertEqual(changes, [])
+
+    def test_existing_empty_archive_object_gets_all_nested_columns_in_dry_run(self):
+        tables = initialized_tables()
+        tables["trope_catalog"] = {key: value for key, value in tables["trope_catalog"].items() if "[" not in key}
+        connector = RecordingCrate(tables)
+        output = run_initializer(connector, dry_run=True)
+        for child, kind in ARCHIVE_COLUMN_TYPES.items():
+            self.assertIn(f"Would run: ALTER TABLE trope_catalog ADD COLUMN source_archive['{child}'] {kind}", output)
+        self.assertEqual(connector.writes, [])
+
+    def test_existing_partial_archive_mapping_adds_only_missing_children(self):
+        tables = initialized_tables()
+        del tables["trope_catalog"]["source_archive['byte_offset']"]
+        connector = RecordingCrate(tables)
+        run_initializer(connector)
+        changes = [sql for sql, _ in connector.writes if sql.startswith("ALTER TABLE")]
+        self.assertEqual(changes, ["ALTER TABLE trope_catalog ADD COLUMN source_archive['byte_offset'] BIGINT"])
 
     def test_seed_tool_and_standard_initializer_declare_the_same_catalog(self):
         self.assertEqual(schema_sql().replace(" IF NOT EXISTS", ""), initializer.create_table_sql("trope_catalog", SCHEMAS["trope_catalog"]))

@@ -1,5 +1,9 @@
 """General trope catalog import: attribution, preservation, dry runs and idempotence."""
 import hashlib
+import os
+from unittest.mock import patch
+from urllib.parse import urlsplit
+from uuid import uuid4
 from datetime import datetime, timezone
 from copy import deepcopy
 from pathlib import Path
@@ -8,7 +12,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "windmill"))
 from f.tvtropes_catalog.catalog import (
-    FIELDS, canonical_url, evidence_by_url, import_records, merged_record,
+    ARCHIVE_COLUMN_TYPES, FIELDS, canonical_url, evidence_by_url, import_records, merged_record,
     normalize_record, normalize_archive, records_from_document, schema_sql,
 )
 
@@ -37,6 +41,8 @@ class Database:
         self.writes = []
 
     def select(self, sql, params=()):
+        if "information_schema.columns" in sql:
+            return [{"column_name": f"source_archive['{key}']", "data_type": kind.lower()} for key, kind in ARCHIVE_COLUMN_TYPES.items()]
         if "information_schema.tables" in sql:
             return [{"table_name": "trope_catalog"}] if self.exists else []
         return [self.rows[name] for name in params if name in self.rows]
@@ -204,6 +210,38 @@ class TropeCatalogTests(unittest.TestCase):
         self.assertEqual(report["unchanged"],1)
         self.assertEqual(db.writes,[])
 
+    def test_archive_import_fails_before_upsert_if_nested_mapping_is_unknown(self):
+        class UnmappedDatabase(Database):
+            def select(self, sql, params=()):
+                return [] if "information_schema.columns" in sql else super().select(sql, params)
+        db = UnmappedDatabase([normalize_record({"name": "Red Herring", "url": URL})])
+        with self.assertRaisesRegex(RuntimeError, "explicitly declared nested column types"):
+            import_records(db, [record(source_archive=archive())], apply=True)
+        self.assertEqual(db.writes, [])
+
+    def test_silent_archive_object_loss_never_reports_success(self):
+        incoming = record(source_archive=archive())
+        class LossyDatabase(Database):
+            def run(self, sql, params=()):
+                super().run(sql, params)
+                if sql.startswith("INSERT"):
+                    self.rows[incoming["name"]] = {**incoming, "source_archive": None}
+            def select(self, sql, params=()):
+                rows = super().select(sql, params)
+                if "_doc AS actual_doc" in sql:
+                    return [{"name": row["name"], "actual_doc": row} for row in rows]
+                return rows
+        db = LossyDatabase([normalize_record({"name": "Red Herring", "url": URL})])
+        with self.assertRaisesRegex(RuntimeError, "stored-document verification failed"):
+            import_records(db, [incoming], apply=True)
+        self.assertEqual(sum(sql.startswith("INSERT") for sql, _ in db.writes), 1)
+
+    def test_archive_schema_declares_every_nested_field_before_first_write(self):
+        sql = schema_sql()
+        self.assertIn("source_archive OBJECT(DYNAMIC) AS (", sql)
+        for key, kind in ARCHIVE_COLUMN_TYPES.items():
+            self.assertIn(f"{key} {kind.upper()}", sql)
+
     def test_schema_uses_exact_names_and_separate_general_description(self):
         sql = schema_sql()
         self.assertIn("name TEXT", sql)
@@ -211,6 +249,70 @@ class TropeCatalogTests(unittest.TestCase):
         self.assertIn("PRIMARY KEY (name)", sql)
         self.assertIn("description TEXT INDEX OFF", sql)
         self.assertNotIn("media_tmdb_id", sql)
+
+
+@unittest.skipUnless(os.environ.get("TROPE_TEST_CRATE_URL"), "Set TROPE_TEST_CRATE_URL to an isolated local CrateDB")
+class ArchiveBulkCrateTests(unittest.TestCase):
+    def setUp(self):
+        from f.tvtropes_catalog import catalog
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+        from import_trope_catalog import Crate
+        url = os.environ["TROPE_TEST_CRATE_URL"]
+        if urlsplit(url).hostname not in ("127.0.0.1", "localhost", "::1"):
+            raise ValueError("Archive regression requires isolated local CrateDB")
+        self.db = Crate({"CRATE_HOSTS": url, "CRATE_USER": "crate", "CRATE_PASS": ""})
+        self.table = "test_archive_bulk_" + uuid4().hex
+        self.catalog = catalog
+        self.create_sql = schema_sql().replace("trope_catalog", self.table)
+        self.addCleanup(lambda: self.db.run(f"DROP TABLE IF EXISTS {self.table}"))
+        self.addCleanup(patch.stopall)
+        patch.object(catalog, "TABLE", self.table).start()
+        self.rows = [normalize_record({"name": f"Trope {i:04}", "url": URL,
+                     "description": TEXT, "source_archive": archive(byte_offset=4_300_000_000 + i, byte_length=100)})
+                     for i in range(400)]
+
+    def metadata_rows(self, sql):
+        self.db.run(sql)
+        self.db.run_many(f"INSERT INTO {self.table} (name,url) VALUES (?,?)", [(r["name"], r["url"]) for r in self.rows])
+        self.db.run(f"REFRESH TABLE {self.table}")
+
+    def test_existing_null_metadata_first_and_second_bulk_preserve_all_archive_objects(self):
+        self.metadata_rows(self.create_sql)
+        result = import_records(self.db, self.rows, apply=True, batch_size=200)
+        self.assertEqual(result["update"], 400)
+        stored = self.db.select(f"SELECT name,_doc AS actual_doc FROM {self.table} ORDER BY name")
+        for expected, actual in zip(self.rows, stored):
+            self.assertEqual(actual["actual_doc"]["source_archive"], expected["source_archive"])
+            self.assertEqual(actual["actual_doc"]["description_hash"], expected["description_hash"])
+        self.assertEqual(import_records(self.db, self.rows, apply=True)["unchanged"], 400)
+
+    def test_altered_empty_dynamic_object_is_rejected_before_first_bulk(self):
+        typed = self.create_sql[self.create_sql.index("source_archive OBJECT"):self.create_sql.index(", imported_at")]
+        self.metadata_rows(self.create_sql.replace(typed + ", ", ""))
+        self.db.run(f"ALTER TABLE {self.table} ADD COLUMN source_archive OBJECT(DYNAMIC)")
+        with self.assertRaisesRegex(RuntimeError, "explicitly declared nested column types"):
+            import_records(self.db, self.rows, apply=True)
+        stored = self.db.select(f"SELECT description FROM {self.table}")
+        self.assertTrue(all(row["description"] is None for row in stored))
+        # The standard initializer's additive migration must make that same old root usable.
+        from test_trope_catalog_initializer import initializer
+        from f.sync.models.crate_schemas import SCHEMAS
+        database = self.db
+        class LocalConnector:
+            def table_exists(self, table):
+                return True
+            def get_existing_columns(self, table):
+                return {row["column_name"]: row["data_type"] for row in database.select(
+                    "SELECT column_name,data_type FROM information_schema.columns WHERE table_schema='doc' AND table_name=?", (table,))}
+            def run(self, sql, params=None):
+                return database.run(sql, params or ())
+            def disconnect(self):
+                pass
+        with patch.object(initializer, "SCHEMAS", {self.table: SCHEMAS["trope_catalog"]}), patch.object(initializer, "BLOB_TABLES", {}), patch.object(initializer, "CrateConnector", LocalConnector):
+            initializer.init_database()
+        self.assertEqual(import_records(self.db, self.rows, apply=True)["update"], 400)
+        for stored, expected in zip(self.db.select(f"SELECT _doc AS actual_doc FROM {self.table} ORDER BY name"), self.rows):
+            self.assertEqual(stored["actual_doc"]["source_archive"], expected["source_archive"])
 
 
 if __name__ == "__main__":

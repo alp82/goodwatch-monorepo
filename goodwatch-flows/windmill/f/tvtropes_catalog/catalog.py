@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 import hashlib
 import re
 from urllib.parse import unquote, urlsplit
+from f.sync.models.crate_schemas import ARCHIVE_COLUMN_TYPES
 
 TABLE = "trope_catalog"
 FIELDS = ("name", "url", "description", "description_hash", "source", "source_hash", "fetched_at", "source_archive")
@@ -219,6 +220,45 @@ def ensure_schema(db, *, apply=False):
     return True
 
 
+def ensure_archive_mapping(db):
+    """Crate can drop dynamically discovered object values during a bulk conflict update. Fail before writes."""
+    rows = db.select("SELECT column_name,data_type FROM information_schema.columns "
+                     "WHERE table_schema = ? AND table_name = ? AND column_name LIKE ?",
+                     ("doc", TABLE, "source_archive[%"))
+    actual = {row["column_name"]: row["data_type"] for row in rows}
+    invalid = [f"source_archive['{key}']" for key, kind in ARCHIVE_COLUMN_TYPES.items()
+               if actual.get(f"source_archive['{key}']") != kind.lower()]
+    if invalid:
+        raise RuntimeError("Archive import requires explicitly declared nested column types before bulk UPSERT: "
+                           + ", ".join(invalid) + ". Apply the reviewed schema migration first.")
+
+
+def verify_archive_writes(db, records, *, batch_size=200, replace_descriptions=False):
+    """Read stored source documents: projections alone can conceal lost object provenance."""
+    for start in range(0, len(records), batch_size):
+        batch = records[start:start + batch_size]
+        marks = ",".join("?" for _ in batch)
+        stored = db.select(f"SELECT name,_doc AS actual_doc FROM {TABLE} WHERE name IN ({marks})",
+                           tuple(row["name"] for row in batch))
+        documents = {row["name"]: row["actual_doc"] for row in stored}
+        failed = []
+        for row in batch:
+            actual = documents.get(row["name"], {})
+            if not replace_descriptions and actual.get("description") is not None:
+                # A concurrently published description can win the guarded missing-only update.
+                if actual.get("description_hash") != row["description_hash"]:
+                    continue
+                if actual.get("source_hash") is not None or actual.get("fetched_at") is not None:
+                    continue
+            if (actual.get("description_hash") != row["description_hash"]
+                    or actual.get("source_archive") != row["source_archive"]):
+                failed.append(row["name"])
+        if failed:
+            raise RuntimeError("Archive import stored-document verification failed for " + str(len(failed))
+                               + " rows: " + ", ".join(failed[:10])
+                               + ". Writes may have succeeded partially; stop and inspect exact staged evidence before repair.")
+
+
 def import_records(db, records, *, apply=False, replace_descriptions=False, batch_size=200):
     """Import an already validated batch. Repeated imports preserve timestamps and unchanged rows."""
     if not 1 <= batch_size <= 1000:
@@ -247,6 +287,8 @@ def import_records(db, records, *, apply=False, replace_descriptions=False, batc
             report["insert" if old is None else "update"] += 1
             plans.append(incoming)
     if apply:
+        if any(row.get("source_archive") is not None for row in plans):
+            ensure_archive_mapping(db)
         # The conditional update also protects reviewed text when another importer writes between SELECT and INSERT.
         allow = "TRUE" if replace_descriptions else "description IS NULL"
         text_update = f"excluded.description IS NOT NULL AND ({allow})"
@@ -265,6 +307,9 @@ def import_records(db, records, *, apply=False, replace_descriptions=False, batc
                     db.run(sql, value)
         if plans:
             db.run(f"REFRESH TABLE {TABLE}")
+            archived = [row for row in plans if row.get("source_archive") is not None]
+            if archived:
+                verify_archive_writes(db, archived, batch_size=batch_size, replace_descriptions=replace_descriptions)
     return report
 
 

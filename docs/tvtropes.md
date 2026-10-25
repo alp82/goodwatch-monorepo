@@ -33,8 +33,10 @@ repository revision, dataset year or archive download date is not evidence of wh
 Their `source` remains `tvtropes`; `description_hash` still identifies the extracted text. Existing populated
 HTTP rows are preserved by the normal missing-only import guard, including their capture provenance.
 
-Declare `source_archive OBJECT(DYNAMIC)` through the standard Crate initializer before using the extended importer
+Declare `source_archive` and all its typed nested fields through the standard Crate initializer before using the extended importer
 against an existing database. The importer's create-if-missing check does not migrate an existing table's columns.
+An empty dynamic object alone is insufficient: Crate can omit newly inferred object fields during bulk conflict
+updates. Archive imports check the nested mappings before writes and verify the stored documents after each batch.
 
 On 2026-10-25 the original 100 descriptions were imported from the earlier prototype's saved responses and verified
 byte for byte, including URLs and provenance. The runtime JSON file was removed after verification. The app reads
