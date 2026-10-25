@@ -47,7 +47,8 @@ The rules are in `goodwatch-webapp/app/domain/new-on-services.ts` and reuse Newl
   another brand carried before is not new.
 - On the member's page, a title one of their services carried before is not new, and a title that moved between two
   of their services is not new either (`landingOn` with all their services).
-- Adult titles and titles the catalog lacks are left out.
+- Adult titles, titles the catalog lacks, and titles without a name are left out. A title the import has not
+  finished can lack a name.
 
 ## What a page says
 

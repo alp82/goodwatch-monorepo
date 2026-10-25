@@ -1,11 +1,12 @@
 // "New on your services" (#489 Part C): the reads behind the pages at /new (new-on-services-page.server.ts).
 //
 // - A country's arrivals: one read of every brand's stays in availability_history (new-on-services-read.server.ts),
-//   each brand's list and the country's list (domain countryArrivalsOf), with display fields, adult titles and
-//   titles the catalog lacks left out. Cached in Valkey per country and UTC day for 30 minutes.
+//   each brand's list and the country's list (domain countryArrivalsOf), with display fields. Adult titles, titles
+//   the catalog lacks and titles without a name are left out. Cached in Valkey per country and UTC day for 30 minutes.
 // - The links: every page with titles, built from the same country entries, so a linked page or a page the sitemap
-//   lists has titles. Cached per UTC day for an hour. A page waits LINKS_BUDGET_MS for them; past that it renders
-//   without them and is not stored, while the computation goes on and fills the cache.
+//   lists has titles. A country whose read fails is left out instead of failing them all. Cached per UTC day for an
+//   hour. A page waits LINKS_BUDGET_MS for them; past that it renders without them and is not stored, while the
+//   computation goes on and fills the cache.
 // - A member's titles: the same read for their own services, which can include services outside the brands.
 // - The meta: when the brands' history last changed (the info icon) and the brands' logos.
 // - The viewer: the member's saved country, services and the titles they wait for, or the visitor's country.
@@ -15,7 +16,6 @@ import {
 	type Arrival,
 	countryArrivalsOf,
 	familyOf,
-	rankByScore,
 	utcDay,
 	waitsOf,
 	windowStart,
@@ -30,7 +30,8 @@ import {
 	type NewLinks,
 	type NewMeta,
 	type Viewer,
-	linksOf,
+	arrivalTitlesOf,
+	linksAcross,
 } from "~/server/new-on-services-page.server"
 import {
 	readArrivalStays,
@@ -47,7 +48,6 @@ import { getMemberViewerContext } from "~/server/viewer.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { cached } from "~/utils/cache"
 import { execute, query } from "~/utils/crate"
-import { titlePath } from "~/utils/helpers"
 import { brandName, getShorterProviderLabel } from "~/utils/streaming-links"
 import { parseTitleKey, titleKey } from "~/utils/title-key"
 
@@ -63,7 +63,7 @@ const BRAND_FAMILIES = BRANDS.map((brand) => brand.ids[0])
 const BRAND_IDS = BRANDS.flatMap((brand) => brand.ids)
 
 // ---------------------------------------------------------------------------------------------------------
-// Titles: display fields, with adult titles and titles the catalog lacks left out
+// Titles: display fields, with adult titles, titles the catalog lacks and titles without a name left out
 
 async function adultKeys(keys: readonly number[]): Promise<Set<number>> {
 	const movies: number[] = []
@@ -95,35 +95,10 @@ async function titlesFor(lists: readonly Arrival[][]): Promise<ArrivalTitle[][]>
 		Promise.all(chunks.map((chunk) => getDisplayFields(chunk))),
 		adultKeys(keys),
 	])
-	const byKey = new Map(displays.flatMap((map) => [...map]))
-	return lists.map((arrivals) =>
-		rankByScore(
-			arrivals.flatMap((arrival): ArrivalTitle[] => {
-				const display = byKey.get(arrival.key)
-				if (!display || adult.has(arrival.key)) return []
-				return [
-					{
-						key: arrival.key,
-						tmdb_id: display.tmdb_id,
-						media_type: display.media_type,
-						title: display.title,
-						release_year: display.release_year,
-						runtime: display.runtime,
-						poster_path: display.poster_path,
-						backdrop_path: display.backdrop_path,
-						// The catalog keeps the score as a fraction; it is shown, and ranked, as a whole number.
-						score:
-							display.goodwatch_overall_score_normalized_percent === null
-								? null
-								: Math.round(display.goodwatch_overall_score_normalized_percent),
-						path: titlePath(display.media_type, display.tmdb_id, display.title),
-						service: arrival.service,
-						at: arrival.at,
-						exact: arrival.exact,
-					},
-				]
-			}),
-		),
+	return arrivalTitlesOf(
+		lists,
+		new Map(displays.flatMap((map) => [...map])),
+		adult,
 	)
 }
 
@@ -225,24 +200,12 @@ async function readLinks({ day }: { day: number }): Promise<NewLinks> {
 		),
 	])
 	const known = new Set(countries.map(({ code }) => code))
-	const queue = candidates
-		.map(({ country_code }) => country_code)
-		.filter((code) => known.has(code))
-		.sort()
-	const results = new Map<string, CountryArrivals>()
-	await Promise.all(
-		Array.from({ length: LINKS_CONCURRENCY }, async () => {
-			for (let code = queue.shift(); code; code = queue.shift())
-				results.set(code, await getCountryArrivals({ country: code, now }))
-		}),
-	)
-	return linksOf(
-		[...results.keys()]
-			.sort()
-			.map((country) => ({
-				country,
-				arrivals: results.get(country) as CountryArrivals,
-			})),
+	return linksAcross(
+		candidates
+			.map(({ country_code }) => country_code)
+			.filter((code) => known.has(code)),
+		(country) => getCountryArrivals({ country, now }),
+		LINKS_CONCURRENCY,
 	)
 }
 

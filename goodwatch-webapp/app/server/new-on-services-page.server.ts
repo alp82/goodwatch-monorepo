@@ -12,6 +12,7 @@
 import { redirect } from "@remix-run/node"
 import {
 	BRANDS,
+	type Arrival,
 	type Brand,
 	type DayGroup,
 	type PageKind,
@@ -32,6 +33,7 @@ import {
 	windowStart,
 } from "~/domain/new-on-services"
 import { PRIVATE_CACHE_CONTROL } from "~/utils/auth-cookie"
+import { titlePath } from "~/utils/helpers"
 import type { TitleKey } from "~/utils/title-key"
 
 /** A title that arrived, as the reads give it. */
@@ -195,6 +197,91 @@ export function linksOf(
 			})
 	}
 	return { pages }
+}
+
+/** Every page with titles across the countries, read a few countries at a time. A country whose read fails is left
+ *  out with its pages and logged, so one bad record can't take the links of every page, and the sitemap, with it. */
+export async function linksAcross(
+	countries: readonly string[],
+	read: (country: string) => Promise<CountryArrivals>,
+	concurrency: number,
+): Promise<NewLinks> {
+	const queue = [...countries].sort()
+	const results = new Map<string, CountryArrivals>()
+	await Promise.all(
+		Array.from({ length: concurrency }, async () => {
+			for (let code = queue.shift(); code; code = queue.shift()) {
+				try {
+					results.set(code, await read(code))
+				} catch (error) {
+					console.error(
+						`New on your services: ${code} left out of the links`,
+						error,
+					)
+				}
+			}
+		}),
+	)
+	return linksOf(
+		[...results.keys()]
+			.sort()
+			.map((country) => ({
+				country,
+				arrivals: results.get(country) as CountryArrivals,
+			})),
+	)
+}
+
+/** A title's display fields, as the catalog gives them. A title the import hasn't finished can lack a name. */
+export type ArrivalDisplay = {
+	tmdb_id: number
+	media_type: "movie" | "show"
+	title: string | null
+	release_year: number | null
+	runtime: number | null
+	poster_path: string | null
+	backdrop_path: string | null
+	goodwatch_overall_score_normalized_percent: number | null
+}
+
+/** Each list of arrivals as titles, best first. Titles the catalog lacks, adult titles and titles without a name are
+ *  left out: a page can't show, or link to, a title it can't name. */
+export function arrivalTitlesOf(
+	lists: readonly Arrival[][],
+	displays: ReadonlyMap<TitleKey, ArrivalDisplay>,
+	adult: ReadonlySet<TitleKey>,
+): ArrivalTitle[][] {
+	return lists.map((arrivals) =>
+		rankByScore(
+			arrivals.flatMap((arrival): ArrivalTitle[] => {
+				const display = displays.get(arrival.key)
+				if (!display || adult.has(arrival.key)) return []
+				const name = display.title?.trim()
+				if (!name) return []
+				return [
+					{
+						key: arrival.key,
+						tmdb_id: display.tmdb_id,
+						media_type: display.media_type,
+						title: name,
+						release_year: display.release_year,
+						runtime: display.runtime,
+						poster_path: display.poster_path,
+						backdrop_path: display.backdrop_path,
+						// The catalog keeps the score as a fraction; it is shown, and ranked, as a whole number.
+						score:
+							display.goodwatch_overall_score_normalized_percent === null
+								? null
+								: Math.round(display.goodwatch_overall_score_normalized_percent),
+						path: titlePath(display.media_type, display.tmdb_id, name),
+						service: arrival.service,
+						at: arrival.at,
+						exact: arrival.exact,
+					},
+				]
+			}),
+		),
+	)
 }
 
 function brandService(brand: Brand, meta: NewMeta): PageService {

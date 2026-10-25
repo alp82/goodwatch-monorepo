@@ -14,6 +14,8 @@ const {
 	loadWherePage,
 	loadPagesIndex,
 	linksOf,
+	linksAcross,
+	arrivalTitlesOf,
 	DAY_LIMIT,
 } = await import("./new-on-services-page.server.ts")
 const { titleKey } = await import("../utils/title-key.ts")
@@ -321,6 +323,90 @@ test("the pages index lists every page with titles, with its address, count and 
 		{ path: "/new/us/hulu", titles: 1, latest: ago(4) },
 		{ path: "/new/us", titles: 4, latest: ago(1) },
 	])
+})
+
+// ---------------------------------------------------------------------------------------------------------
+// One bad title or country breaks nothing else
+
+/** Display fields as the catalog gives them; a title the import hasn't finished has no name (October 25: TMDB 1805719). */
+const display = (id: number, name: string | null) => ({
+	tmdb_id: id,
+	media_type: "movie" as const,
+	title: name,
+	release_year: null,
+	runtime: null,
+	poster_path: null,
+	backdrop_path: null,
+	goodwatch_overall_score_normalized_percent: null,
+})
+
+test("a title without a name is left out, and its page, the links and the pages index still work", async () => {
+	const arrival = (id: number) => ({ key: titleKey("movie", id), service: 8, at: ago(1), exact: true })
+	const arrivals = [arrival(21), arrival(22), arrival(23)]
+	const displays = new Map([
+		[titleKey("movie", 21), display(21, " Niewidzialne ")],
+		[titleKey("movie", 22), display(22, null)],
+		[titleKey("movie", 23), display(23, "  ")],
+	])
+	const [netflix, all] = arrivalTitlesOf([arrivals, arrivals], displays, new Set())
+	assert.deepEqual(
+		all.map(({ title, path }) => [title, path]),
+		[["Niewidzialne", "/movie/21-niewidzialne"]],
+	)
+
+	const IE: CountryArrivals = { brands: { netflix }, all }
+	const fake = deps({
+		countries: async () => [...COUNTRIES, { code: "IE", name: "Ireland" }],
+		country: async ({ country }) => (country === "IE" ? IE : ARRIVALS[country]),
+	})
+	const links = await linksAcross(["US", "IE"], (code) => fake.country({ country: code, now: NOW }), 2)
+	fake.links = async () => links
+	assert.deepEqual(
+		links.pages.filter(({ country }) => country === "IE"),
+		[
+			{ country: "IE", brand: "netflix", titles: 1, latest: ago(1) },
+			{ country: "IE", brand: null, titles: 1, latest: ago(1) },
+		],
+	)
+
+	const page = asData(await loadServicePage(request("/new/ie/netflix"), "ie", "netflix", fake))
+	assert.equal(page.total, 1)
+	assert.equal(page.incomplete, false)
+	assert.equal(page.robots, "index, follow")
+	const index = await loadPagesIndex(fake)
+	assert.ok(index.pages.some(({ path, titles }) => path === "/new/ie/netflix" && titles === 1))
+	assert.ok(index.pages.some(({ path }) => path === "/new/us/netflix"))
+})
+
+test("a country whose read fails is left out of the links; every other page keeps its links", async () => {
+	const failing = async (code: string) => {
+		if (code === "SE") throw new TypeError("Cannot read properties of null (reading 'toLowerCase')")
+		return ARRIVALS[code]
+	}
+	const logged = console.error
+	console.error = () => {}
+	let links: Awaited<ReturnType<typeof linksAcross>>
+	try {
+		links = await linksAcross(["US", "SE", "DE"], failing, 4)
+	} finally {
+		console.error = logged
+	}
+	assert.deepEqual(
+		[...new Set(links.pages.map(({ country }) => country))],
+		["DE", "US"],
+	)
+	const page = asData(
+		await loadServicePage(request("/new/us/netflix"), "us", "netflix", deps({ links: async () => links })),
+	)
+	assert.equal(page.incomplete, false)
+	assert.deepEqual(
+		page.otherCountries.map(({ code }) => code),
+		["DE"],
+	)
+	assert.deepEqual(
+		page.keys.map(({ slug }) => slug),
+		["netflix", "hulu"],
+	)
 })
 
 // ---------------------------------------------------------------------------------------------------------
