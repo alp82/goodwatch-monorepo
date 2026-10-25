@@ -176,6 +176,24 @@ class SitemapRegenerationTests(unittest.TestCase):
                 files = self.run_real_generator(lambda url: 200, 200, new_pages=2, new_rows=True, replay_index=replay)
                 self.assertIn(worker.OUTPUT + "sitemap_new.xml", files)
 
+    def test_a_failing_index_and_failing_live_checks_publish_nothing(self):
+        # The index answers 503, the previous file is restored, and its URLs answer 503 too: that says nothing about
+        # the pages, so the run fails and nothing is committed, keeping the published sitemap_new.xml (#489 C).
+        self.run_real_generator(lambda url: 200, 200, new_pages=2, new_rows=True, replay_index="error",
+                                replay_status_of=lambda url: 503 if "/new/" in url else 200)
+
+    def test_only_a_gone_or_noindex_new_page_is_left_out(self):
+        for reason, left in [
+            ("status 404", True), ("status 410", True),
+            ("robots meta tag says 'noindex, follow', a sitemap lists pages to index", True),
+            ("X-Robots-Tag says 'noindex', a sitemap lists pages to index", True),
+            ("status 503", False), ("status 500", False), ("status 429", False),
+            ("no answer (TimeoutError: timed out)", False),
+            ("status 302, redirects to https://goodwatch.app/new/us", False),
+        ]:
+            with self.subTest(reason=reason):
+                self.assertEqual(worker.page_left(reason), left)
+
     def test_without_a_previous_file_a_failing_index_writes_none(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -186,7 +204,8 @@ class SitemapRegenerationTests(unittest.TestCase):
                 self.assertEqual(worker.new_on_services_sitemap(generator, root), {"pages": [], "lastmod": None})
             generator.write_new_sitemap.assert_not_called()
 
-    def run_real_generator(self, status_of, status, profiles=1, new_pages=0, new_rows=False, replay_index=None):
+    def run_real_generator(self, status_of, status, profiles=1, new_pages=0, new_rows=False, replay_index=None,
+                           replay_status_of=None):
         import shutil
         repo = Path(__file__).resolve().parents[2]
         files = None
@@ -229,6 +248,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                 # The site's pages index (sitemap_new.py): Netflix in the United States has enough titles for the
                 # sitemap, from the generator's own minimum.
                 index_mode = ["full"]
+                live = [status_of]
 
                 def new_index(minimum):
                     if index_mode[0] == "error":
@@ -249,7 +269,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                         minimum = sys.modules["sitemap_new"].MIN_TITLES
                         sys.modules["sitemap_new"].fetch_index = lambda url=None: new_index(minimum)
                     if name == "sitemap_checker":
-                        module.fetch = lambda url: (status_of(url), f'<link rel="canonical" href="{url}">', None)
+                        module.fetch = lambda url: (live[0](url), f'<link rel="canonical" href="{url}">', None)
                         module.fetch_robots = lambda: (module.RobotsRules("User-agent: *\nDisallow: /api/\n"), None)
                         module.MIN_DELAY_SECONDS = 0
                     return module
@@ -287,6 +307,11 @@ class SitemapRegenerationTests(unittest.TestCase):
                         generation_day[0] = date(2026, 10, 25)
                         if replay_index:
                             index_mode[0] = replay_index
+                        if replay_status_of:
+                            live[0] = replay_status_of
+                            with self.assertRaisesRegex(RuntimeError, "Sitemap check failed"):
+                                worker.generate_and_check(root)
+                            return files
                         again_count, again = worker.generate_and_check(root)
                         self.assertEqual(again_count, count)
                         self.assertEqual(again, files)

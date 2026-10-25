@@ -89,6 +89,15 @@ def load_module(name, path):
     return module
 
 
+# The live check's reasons (check_sitemap_urls.judge) that say a page is gone or kept out of the index.
+LEFT_PAGE = re.compile(r"^(status (404|410)|robots meta tag says .*noindex.*|X-Robots-Tag says .*noindex.*)$", re.I)
+
+
+def page_left(reason):
+    """Whether a failed live check says the page itself left (gone, or noindex), not that the check couldn't tell."""
+    return bool(LEFT_PAGE.match(reason))
+
+
 PREVIOUS_URL = re.compile(r"<url>\s*<loc>([^<]+)</loc>(?:\s*<lastmod>(\d{4}-\d{2}-\d{2})</lastmod>)?")
 
 
@@ -183,8 +192,11 @@ def generate_and_check(root):
             generator.create_master_sitemap_index(lastmods)
             failures = [failure for failure in failures if failure not in profile_failures]
             urls = [url for url in urls if url not in skip]
-        # A /new page whose titles aged out of its window since the list was read answers noindex: left out too.
-        new_failures = [(url, reason) for url, reason in failures if urlparse(url).path.startswith("/new/")]
+        # A /new page whose titles aged out of its window since the list was read answers noindex (or 404 when it is
+        # gone): left out too. Any other failure (5xx, a timeout, a redirect) says nothing about the page and stays
+        # fatal, so nothing is committed and the previous files stay.
+        new_failures = [(url, reason) for url, reason in failures
+                        if urlparse(url).path.startswith("/new/") and page_left(reason)]
         if new_failures:
             for url, reason in new_failures:
                 print(f"Leaving out new-on-services page {url}: {reason}", flush=True)
