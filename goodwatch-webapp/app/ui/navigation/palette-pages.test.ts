@@ -209,8 +209,9 @@ test("synonyms find pages", () => {
 	assert.deepEqual(top(member, "country"), ["country"])
 })
 
-test("new finds the newest releases until a page is named New", () => {
-	assert.deepEqual(top(member, "new"), ["discoverNewest"])
+test("new finds the page named New first, then the newest releases", () => {
+	assert.deepEqual(top(member, "new", 2), ["new", "discoverNewest"])
+	assert.deepEqual(top(visitor, "new"), ["new"])
 })
 
 test("prefixes and several words find pages", () => {

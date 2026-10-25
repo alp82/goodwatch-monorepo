@@ -10,6 +10,7 @@ import {
 	ArrowDownTrayIcon,
 	ArrowRightEndOnRectangleIcon,
 	BookmarkIcon,
+	CalendarDaysIcon,
 	ChartBarIcon,
 	ChatBubbleLeftEllipsisIcon,
 	Cog6ToothIcon,
@@ -298,6 +299,18 @@ const PAGES: Entry[] = [
 			"reddit",
 		],
 	}),
+	// What arrived on streaming in the last 14 days (#489): a member's own services; a visitor's country.
+	(viewer) =>
+		page(
+			"new",
+			viewer.member ? "New on your services" : "New on streaming",
+			"/new",
+			CalendarDaysIcon,
+			{
+				names: ["new", "new on streaming", "new on your services"],
+				words: ["just added", "new arrivals", "recently added", "arrived"],
+			},
+		),
 	page("bestMovies", "Best movies", "/movies/best", TrophyIcon, {
 		words: ["top movies", "best films", "top rated", "ranking", "greatest"],
 	}),
@@ -685,6 +698,7 @@ export const ESSENTIALS: Record<"member" | "visitor", string[]> = {
 		"myShows",
 		"myMovies",
 		"forYou",
+		"new",
 		"discover",
 		"taste",
 		"myLibrary",
