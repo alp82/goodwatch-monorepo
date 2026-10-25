@@ -1160,6 +1160,27 @@ SCHEMAS = {
         "timestamps": False,
         "replicas": "0-1",
     },
+    # Private feedback evidence; schema applied manually via f/sync/init/cratedb (#763).
+    "feedback_report": {
+        "columns": {
+            "id": "TEXT",
+            "kind": "TEXT NOT NULL",
+            "message": "TEXT NOT NULL",
+            "payload": "OBJECT(IGNORED)",
+            "metadata": "OBJECT(IGNORED)",
+            "member_id": "TEXT",
+            "sender_email": "TEXT INDEX OFF",
+            "status": "TEXT NOT NULL DEFAULT 'new'",
+            "discord_message_id": "TEXT",
+            "discord_thread_id": "TEXT",
+            "screenshot": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+        },
+        "primary_key": ["id"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
     # A member's uploaded profile photo (docs/implementation/member-profile/README.md): one 512 px WebP, base64, as
     # doc.social_image stores its images. `version` changes with every upload and is part of the photo's URL.
     "user_avatar": {
