@@ -12,6 +12,7 @@
 // | 6rem-7.5rem      | yours, else GoodWatch         | top right, instead of it  | 1     | score row as a number   |
 // | 4.5rem-6rem      | bare number                   | top right, instead of it  | 0     | no score row            |
 // | under 4.5rem     | bare number                   | top right, instead of it  | 0     | none: a tap opens it    |
+// The age badge sits top left, under 4.5rem bottom left (beside the score it wouldn't fit).
 // The pill's rules are in ui/poster-card/ScorePill.tsx.
 //
 // The title actions (ui/poster-card/CardActions.tsx) load as their own chunk at the first interaction with the page
@@ -281,7 +282,9 @@ export function MovieTvCard({
 						)}
 					</div>
 					{(rating || ownerScore != null) && (
-						<div className="absolute left-1 top-1 flex flex-col items-start gap-1 @min-[11rem]/card:left-2 @min-[11rem]/card:top-2">
+						// Under 4.5rem the badge and the score don't fit side by side: the badge goes to the foot, where no logos
+						// show at that width.
+						<div className="absolute bottom-1 left-1 flex flex-col items-start gap-1 @min-[4.5rem]/card:top-1 @min-[4.5rem]/card:bottom-auto @min-[11rem]/card:left-2 @min-[11rem]/card:top-2">
 							{rating && <RatingMark rating={rating} />}
 							{ownerScore != null && (
 								<OwnerScore

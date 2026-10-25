@@ -102,13 +102,13 @@ const MORE_TEXT: Record<PartSize, string> = {
 /** How many logos a size shows before "+N": L three, M two, S none (no room beside the pill). */
 export const LOGOS_SHOWN = { S: 0, M: 2, L: 3 } as const
 
-/** A poster card's logos ("auto"): two from 11rem, one from 6rem, none under 6rem (under ~40% of the card's width). */
+/** A poster card's logos ("auto"): two from 11rem, one from 6rem, none under 6rem; "+N" from 7.5rem (~40% of the card). */
 const CARD_LOGOS = 2
 
 /**
  * A row of service logos. With `newOn` (#489, the service the title just arrived on for the viewer) that logo leads,
- * ringed in sky blue. `size="auto"` follows the card's width: none under 6rem, one from 6rem, two from 11rem, each
- * with "+N" for the rest.
+ * ringed in sky blue. `size="auto"` follows the card's width: none under 6rem, one from 6rem, two from 11rem, and
+ * "+N" for the rest from 7.5rem.
  */
 export function ServiceLogos({
 	services,
@@ -179,7 +179,10 @@ export function ServiceLogos({
 				.map((service, index) =>
 					logo(service, index > 0 ? "hidden @min-[11rem]/card:block" : ""),
 				)}
-			{more(ordered.length - 1, "@min-[11rem]/card:hidden")}
+			{more(
+				ordered.length - 1,
+				"hidden @min-[7.5rem]/card:inline @min-[11rem]/card:hidden",
+			)}
 			{more(ordered.length - CARD_LOGOS, "hidden @min-[11rem]/card:inline")}
 		</span>
 	)
