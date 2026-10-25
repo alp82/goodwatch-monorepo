@@ -221,6 +221,39 @@ class PopulationTests(unittest.TestCase):
         self.assertEqual(second["phase"],"complete")
         self.assertEqual(len(self.http.calls),1)
 
+    def test_external_fill_during_a_pass_spares_the_upcoming_source_request(self):
+        first, second = entry(1), entry(2)
+        db = Database([first, second])
+        http = HTTP()
+        original_get = http.get
+        def filling_get(url, **kwargs):
+            response = original_get(url, **kwargs)
+            db.rows[second["name"]]["description"] = "A verified archive import filled this row during the pass."
+            return response
+        http.get = filling_get
+        result = self.run_worker(db, client=self.client(http))
+        self.assertEqual(len(http.calls), 1)
+        self.assertEqual(result["stored"], 1)
+        self.assertEqual(result["already_present"], 1)
+        self.assertEqual(result["phase"], "complete")
+
+    def test_final_reconciliation_resolves_an_earlier_review_filled_during_the_pass(self):
+        first, second = entry(1), entry(2)
+        db = Database([first, second])
+        http = HTTP()
+        original_get = http.get
+        def filling_get(url, **kwargs):
+            if url == second["url"]:
+                db.rows[first["name"]]["description"] = "A reviewed definition arrived after the first entry was rejected."
+            return original_get(url, **kwargs)
+        http.get = filling_get
+        def reviewing_extract(html, name, url, **kwargs):
+            return {"description": None, "error": "review required"} if name == first["name"] else extract(html, name, url)
+        result = self.run_worker(db, client=self.client(http), extractor=reviewing_extract)
+        self.assertEqual(result["review"], 0)
+        self.assertEqual(result["already_present"], 1)
+        self.assertEqual(result["phase"], "complete")
+
     def test_stored_status_cannot_hide_an_actually_null_database_description(self):
         db = Database([entry(1)])
         self.assertEqual(self.run_worker(db)["stored"],1)

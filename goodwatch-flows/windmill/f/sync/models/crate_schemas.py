@@ -556,6 +556,7 @@ SCHEMAS = {
             "source": "TEXT",
             "source_hash": "TEXT",
             "fetched_at": "TIMESTAMP",
+            "source_archive": "OBJECT(DYNAMIC)",
             "imported_at": "TIMESTAMP",
             "updated_at": "TIMESTAMP",
         },

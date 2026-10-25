@@ -324,6 +324,12 @@ def run(db, output, *, all_requests=False, max_requests=200, delay=6, state_path
                     previous = latest.get(entry["name"], {})
                     if previous.get("status") in TERMINAL and not (retry_review and previous["status"] == "review"):
                         continue
+                    # An archive import may fill this row after the pass began.
+                    # This exact primary-key read avoids fetching an already stored definition.
+                    if db.select("SELECT name FROM trope_catalog WHERE name = ? AND description IS NOT NULL LIMIT 1",
+                                 (entry["name"],)):
+                        outcome(entry, "already_present", reconciled=True)
+                        continue
                     if previous.get("status") == "ready":
                         pending.append((entry, normalize_record(previous["record"])))
                         if len(pending) >= batch_size:
@@ -402,6 +408,9 @@ def run(db, output, *, all_requests=False, max_requests=200, delay=6, state_path
                     if len(pending) >= batch_size:
                         flush()
                 flush()
+                if not stop:
+                    # Include external fills of earlier review entries before deciding this pass is done.
+                    reconcile_catalog(db, queue, latest, outcome)
         except KeyboardInterrupt:
             stop = "interrupted_resume_available"
         except Exception as error:

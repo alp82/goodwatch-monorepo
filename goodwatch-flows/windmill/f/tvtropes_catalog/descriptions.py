@@ -289,6 +289,14 @@ def extract_description(html, name, final_url, *, requested_url=None):
     if heading_identity != _identity(name):
         if not heading_identity or not _requested_redirect_identifies(name, requested_url, final_url, canonical):
             return reject(f"Heading mismatch: {result['heading']!r}")
+    return _extract_intro(soup, result)
+
+
+def _extract_intro(soup, result):
+    """Shared intro cleanup after the caller has verified its actual identity evidence."""
+    def reject(message):
+        return {**result, "error": message}
+
     _sanitize(soup)
     article = soup.select_one("#main-article")
     if not article:
@@ -317,6 +325,109 @@ def extract_description(html, name, final_url, *, requested_url=None):
         return reject("Missing or very short introduction before the examples boundary")
     result["description"] = text
     return result
+
+
+def extract_archive_description(record, name, known_url):
+    """Read an original decoded archive fragment; never construct missing metadata.
+
+    Archive identity comes from its real primary heading and three agreeing body
+    metadata fields, rather than the full HTTP document's canonical link. This
+    adapter supplies no transport or provenance timestamps/hashes. An original
+    record id may differ only when an actual archived AKA identifies it. An
+    original alias subject additionally requires its exact original catalog URL.
+    """
+    result = {"description": None, "error": None, "heading": "", "canonical_url": None}
+
+    def reject(message):
+        return {**result, "error": message}
+
+    # The publisher documents err=null for successful records; early shards
+    # omit that optional field. A non-null error still invalidates the capture.
+    if not isinstance(record, dict) or "error" in record or record.get("err") is not None:
+        return reject("Invalid or failed archive record")
+    if record.get("ns") != "Main":
+        return reject("Archive namespace is not Main")
+    slug = record.get("id")
+    if not isinstance(slug, str) or not re.fullmatch(r"[A-Za-z0-9_]+", slug):
+        return reject("Unsafe or missing archive Main id")
+    known = _main_url(known_url)
+    if not known:
+        return reject("Known catalog URL is not a Main identity")
+    if not isinstance(name, str) or not _identity(name):
+        return reject("Missing subject name")
+    html = record.get("article")
+    if not isinstance(html, str) or not html.strip():
+        return reject("Missing original archive HTML string")
+    try:
+        soup = BeautifulSoup(html, "html5lib")
+    except FeatureNotFound:
+        return reject("Missing html5lib parser dependency; install the pinned descriptions.script.lock dependencies before recovery")
+    content = soup.select("#main-content")
+    articles = soup.select("#main-article")
+    if len(content) != 1 or len(articles) != 1 or content[0] not in articles[0].parents:
+        return reject("Missing or ambiguous archive article structure")
+    # Wiki prose may itself contain h1 section boundaries. Only the distinct
+    # page header outside the real article can identify the primary subject.
+    headings = [node for node in soup.find_all("h1") if articles[0] not in node.parents]
+    if len(headings) != 1 or content[0] not in headings[0].parents:
+        return reject("Missing or ambiguous archive primary heading")
+    heading = headings[0]
+    aliases = heading.select(".aka-title")
+    original_alias = re.fullmatch(r"\(aka:\s*(.+?)\)", _text(aliases[0]), re.I) if len(aliases) == 1 else None
+    archived_alias_identifies_record = bool(original_alias and _identity(original_alias.group(1)) == _identity(slug))
+    for node in heading.select(".aka-title, .ns_parts, .watch_rank_wrap"):
+        node.decompose()
+    titles = heading.select(".wrapped_title, .wrap-entry-breadcrumb strong")
+    if len(titles) > 1:
+        return reject("Ambiguous archive primary heading")
+    result["heading"] = _text(titles[0] if titles else heading)
+    fields = {}
+    for field in ("groupname-hidden", "title-hidden", "current_url"):
+        nodes = soup.select("#" + field)
+        if len(nodes) != 1 or content[0] not in nodes[0].parents:
+            return reject("Missing or ambiguous archive body identity metadata")
+        node = nodes[0]
+        if field == "current_url":
+            if not ("hidden" in node.get("class", []) or node.has_attr("hidden")
+                    or _HIDDEN_STYLE.search(node.get("style", ""))):
+                return reject("Archive current URL is not hidden body metadata")
+            fields[field] = _text(node)
+        else:
+            if node.name != "input" or node.get("type", "").lower() != "hidden":
+                return reject("Archive group/title is not hidden input metadata")
+            fields[field] = node.get("value")
+    title = fields["title-hidden"]
+    if fields["groupname-hidden"] != "Main" or not isinstance(title, str) or not re.fullmatch(r"[A-Za-z0-9_]+", title):
+        return reject("Archive hidden namespace/title is not a Main identity")
+    expected = "https://tvtropes.org/pmwiki/pmwiki.php/Main/" + title
+    if title.casefold() != slug.casefold() and not archived_alias_identifies_record:
+        return reject("Archive original id differs without explicit archived AKA evidence")
+    try:
+        current = urlparse(fields["current_url"])
+    except ValueError:
+        return reject("Invalid archive current URL")
+    observed = _main_url(current._replace(scheme="https").geturl()) if current.scheme in {"http", "https"} else None
+    if not observed or observed.casefold() != expected.casefold():
+        return reject("Archive current URL does not match record/catalog identity")
+    primary_subject = (known.casefold() == observed.casefold()
+                       and _identity(result["heading"]) == _identity(name))
+    original = "https://tvtropes.org/pmwiki/pmwiki.php/Main/" + slug
+    original_alias_subject = (
+        title.casefold() != slug.casefold()
+        and known.casefold() == original.casefold()
+        and archived_alias_identifies_record
+        and _identity(name) == _identity(slug)
+        and _identity(result["heading"]) == _identity(title)
+    )
+    if not primary_subject and not original_alias_subject:
+        return reject("Archive catalog subject lacks primary or exact original-alias identity evidence")
+    result["canonical_url"] = observed
+    challenge = soup.select_one("#challenge-form, #cf-challenge-running, #challenge-running, .cf-challenge") is not None
+    _sanitize(soup)
+    text = _text(articles[0])
+    if (challenge or re.match(r"^(?:There is currently no text in this page|This page (?:does not exist|has been deleted)|Just a moment|Checking your browser|Access denied|Attention required|Verify you are human)\b", text, re.I)):
+        return reject("Archive body is an unavailable page or browser challenge")
+    return _extract_intro(soup, result)
 
 
 def main():

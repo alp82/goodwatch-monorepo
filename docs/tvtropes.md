@@ -21,8 +21,20 @@ Owner decisions (2026-09-21 and 2026-09-26), all binding:
 
 The Crate `trope_catalog` table is the source of truth for general trope definitions, separate from the `trope`
 table's per-title excerpts. Each exact name has an optional known Main-page URL and an optional description. Names with
-unresolved URL mappings have null URLs and remain queued for review. Descriptions retain the raw page's
+unresolved URL mappings have null URLs and remain queued for review. Direct HTTP descriptions retain the raw response's
 SHA256, the exact text's SHA256, actual fetch time, source, and import/update times. Unknown provenance stays null.
+
+Archived HTML fragments use nullable `source_archive` metadata instead of claiming a direct HTTP capture. This small
+object records the public Hugging Face dataset, full pinned revision and immutable file URL, verified file SHA256,
+exact JSONL-record SHA256, literal article-string UTF-8 SHA256, `payload_kind: article_html_fragment`, and the actual
+archive retrieval time. A byte offset/length pair can locate the exact record slice. Raw HTML stays in the local
+verified archive, never in this object. Archived descriptions keep both `source_hash` and `fetched_at` null: a
+repository revision, dataset year or archive download date is not evidence of when TV Tropes served that page.
+Their `source` remains `tvtropes`; `description_hash` still identifies the extracted text. Existing populated
+HTTP rows are preserved by the normal missing-only import guard, including their capture provenance.
+
+Declare `source_archive OBJECT(DYNAMIC)` through the standard Crate initializer before using the extended importer
+against an existing database. The importer's create-if-missing check does not migrate an existing table's columns.
 
 On 2026-10-25 the original 100 descriptions were imported from the earlier prototype's saved responses and verified
 byte for byte, including URLs and provenance. The runtime JSON file was removed after verification. The app reads

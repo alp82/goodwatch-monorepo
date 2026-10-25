@@ -1,15 +1,16 @@
 """General trope metadata, independent of the per-title `trope` table.
 
-This module imports reviewed data only. It never fetches TV Tropes pages. The source hash identifies captured page
-bytes; the description hash identifies the exact imported plain text. Unknown source hashes/dates stay null.
+This module imports reviewed data only. It never fetches TV Tropes pages. The source hash identifies a directly
+captured HTTP response; the description hash identifies exact imported plain text. Archive-only evidence lives in
+source_archive: original HTTP hashes and capture dates stay null when the corpus does not preserve them.
 """
 from datetime import datetime, timezone
 import hashlib
 import re
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 TABLE = "trope_catalog"
-FIELDS = ("name", "url", "description", "description_hash", "source", "source_hash", "fetched_at")
+FIELDS = ("name", "url", "description", "description_hash", "source", "source_hash", "fetched_at", "source_archive")
 SOURCE = "tvtropes"
 _HASH = re.compile(r"^[0-9a-f]{64}$")
 _HTML_TAG = re.compile(
@@ -53,6 +54,65 @@ def timestamp(value):
     return int(parsed.timestamp() * 1000)
 
 
+_ARCHIVE_REQUIRED = {
+    "provider", "dataset", "revision", "provider_url", "file_sha256", "record_sha256", "article_sha256", "payload_kind", "retrieved_at",
+}
+_ARCHIVE_OPTIONAL = {"byte_offset", "byte_length"}
+_DATASET = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*$")
+_REVISION = re.compile(r"^[0-9a-f]{40}$")
+
+
+def normalize_archive(value):
+    """Only immutable public archive references and digests, never article HTML or a fabricated capture date."""
+    if value is None:
+        return None
+    if not isinstance(value, dict) or set(value) - (_ARCHIVE_REQUIRED | _ARCHIVE_OPTIONAL) or _ARCHIVE_REQUIRED - set(value):
+        raise ValueError("source_archive must contain exactly the required archive metadata and optional byte locator")
+    if value["provider"] != "huggingface" or value["payload_kind"] != "article_html_fragment":
+        raise ValueError("source_archive provider/payload_kind must identify a Hugging Face article HTML fragment")
+    dataset, revision = value["dataset"], value["revision"]
+    if not isinstance(dataset, str) or len(dataset) > 300 or not _DATASET.fullmatch(dataset):
+        raise ValueError("source_archive.dataset must be an owner/repository name")
+    if not isinstance(revision, str) or not _REVISION.fullmatch(revision):
+        raise ValueError("source_archive.revision must be a full lowercase 40-character commit hash")
+    url = value["provider_url"]
+    if not isinstance(url, str) or len(url) > 2000 or any(c.isspace() or c in '<>"`\\' for c in url):
+        raise ValueError("source_archive.provider_url must be an immutable public archive URL")
+    parsed = urlsplit(url)
+    prefix = f"/datasets/{dataset}/resolve/{revision}/"
+    file_path = unquote(parsed.path[len(prefix):]) if parsed.path.startswith(prefix) else ""
+    if (parsed.scheme != "https" or parsed.netloc != "huggingface.co" or parsed.query or parsed.fragment
+            or not file_path or "\\" in file_path or any(ord(c) < 32 for c in file_path)
+            or any(part in ("", ".", "..") for part in file_path.split("/"))):
+        raise ValueError("source_archive.provider_url must pin the same dataset and revision to one file, without credentials or query")
+    normalized = {key: value[key] for key in ("provider", "dataset", "revision", "provider_url", "payload_kind")}
+    for key in ("file_sha256", "record_sha256", "article_sha256"):
+        digest = value[key]
+        if not isinstance(digest, str) or not _HASH.fullmatch(digest):
+            raise ValueError(f"source_archive.{key} must be a lowercase SHA256")
+        normalized[key] = digest
+    retrieved = value["retrieved_at"]
+    if isinstance(retrieved, bool) or not isinstance(retrieved, (str, int)):
+        raise ValueError("source_archive.retrieved_at must be a timezone-aware ISO timestamp or integer milliseconds")
+    try:
+        retrieved = timestamp(retrieved)
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError("source_archive.retrieved_at must be a timezone-aware ISO timestamp or integer milliseconds") from None
+    if retrieved is None or retrieved < 0:
+        raise ValueError("source_archive.retrieved_at must identify the actual archive retrieval time")
+    normalized["retrieved_at"] = retrieved
+    locator = _ARCHIVE_OPTIONAL & set(value)
+    if locator and locator != _ARCHIVE_OPTIONAL:
+        raise ValueError("source_archive byte_offset and byte_length must be supplied together")
+    if locator:
+        offset, length = value["byte_offset"], value["byte_length"]
+        if (type(offset) is not int or type(length) is not int or not 0 <= offset < 2**63 or not 1 <= length < 2**63
+                or offset + length >= 2**63):
+            raise ValueError("source_archive byte locator must contain nonnegative offset and positive length within signed 64-bit range")
+        normalized.update(byte_offset=offset, byte_length=length)
+    return normalized
+
+
 def normalize_record(row, *, evidence=None):
     if not isinstance(row, dict):
         raise ValueError("Each catalog entry must be an object")
@@ -73,17 +133,24 @@ def normalize_record(row, *, evidence=None):
     source = row.get("source") or (SOURCE if text is not None else None)
     if source not in (None, SOURCE):
         raise ValueError(f"{name}: unsupported source; imported descriptions must be attributed to TV Tropes")
-    evidence_row = (evidence or {}).get(url, {})
-    source_hash = row.get("source_hash", evidence_row.get("sha256"))
+    archive = normalize_archive(row.get("source_archive"))
+    if archive is not None and text is None:
+        raise ValueError(f"{name}: archive provenance requires a description")
+    if archive is not None and (row.get("source_hash") is not None or row.get("fetched_at") is not None):
+        raise ValueError(f"{name}: archive-only records cannot claim an original HTTP source_hash or fetched_at")
+    # A matching HTTP evidence log must not manufacture capture information for an archived fragment.
+    evidence_row = {} if archive is not None else (evidence or {}).get(url, {})
+    source_hash = None if archive is not None else row.get("source_hash", evidence_row.get("sha256"))
     if source_hash is not None and (not isinstance(source_hash, str) or not _HASH.fullmatch(source_hash)):
         raise ValueError(f"{name}: source_hash must be a lowercase SHA256")
-    fetched_at = timestamp(row.get("fetched_at", evidence_row.get("started_at")))
+    fetched_at = None if archive is not None else timestamp(row.get("fetched_at", evidence_row.get("started_at")))
     return {
         "name": name, "url": url, "description": text,
         "description_hash": hashlib.sha256(text.encode("utf-8")).hexdigest() if text is not None else None,
         "source": source if text is not None else None,
         "source_hash": source_hash if text is not None else None,
         "fetched_at": fetched_at if text is not None else None,
+        "source_archive": archive if text is not None else None,
     }
 
 

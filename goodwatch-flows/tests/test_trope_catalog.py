@@ -1,6 +1,7 @@
 """General trope catalog import: attribution, preservation, dry runs and idempotence."""
 import hashlib
 from datetime import datetime, timezone
+from copy import deepcopy
 from pathlib import Path
 import sys
 import unittest
@@ -8,7 +9,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "windmill"))
 from f.tvtropes_catalog.catalog import (
     FIELDS, canonical_url, evidence_by_url, import_records, merged_record,
-    normalize_record, records_from_document, schema_sql,
+    normalize_record, normalize_archive, records_from_document, schema_sql,
 )
 
 URL = "https://tvtropes.org/pmwiki/pmwiki.php/Main/RedHerring"
@@ -17,6 +18,16 @@ TEXT = "A clue that leads the audience away from the real explanation."
 
 def record(**patch):
     return normalize_record({"name": "Red Herring", "url": URL, "text": TEXT, **patch})
+
+
+def archive(**patch):
+    revision="a" * 40
+    return {
+        "provider":"huggingface", "dataset":"KaraKaraWitch/TvTroper-2025", "revision":revision,
+        "provider_url":f"https://huggingface.co/datasets/KaraKaraWitch/TvTroper-2025/resolve/{revision}/data/part1.jsonl",
+        "file_sha256":"b" * 64, "record_sha256":"c" * 64, "article_sha256":"d" * 64,
+        "payload_kind":"article_html_fragment", "retrieved_at":"2026-10-25T20:58:39Z", **patch,
+    }
 
 
 class Database:
@@ -118,6 +129,80 @@ class TropeCatalogTests(unittest.TestCase):
         result = import_records(db, [incoming], apply=True)
         self.assertEqual(result["unchanged"], 1)
         self.assertEqual(db.writes, [])
+
+    def test_archive_preserves_proof_without_claiming_an_original_http_capture(self):
+        normalized=record(source_archive=archive())
+        self.assertEqual(normalized["source"],"tvtropes")
+        self.assertIsNone(normalized["source_hash"])
+        self.assertIsNone(normalized["fetched_at"])
+        self.assertEqual(normalized["source_archive"]["article_sha256"],"d"*64)
+        self.assertEqual(normalized["source_archive"]["retrieved_at"],1792961919000)
+        self.assertEqual(normalized["description_hash"],hashlib.sha256(TEXT.encode()).hexdigest())
+
+    def test_an_http_evidence_log_does_not_invent_archive_page_provenance(self):
+        evidence={URL:{"sha256":"f"*64,"started_at":"2026-10-25T08:00:00Z"}}
+        row=normalize_record({"name":"Red Herring","url":URL,"text":TEXT,"source_archive":archive()},evidence=evidence)
+        self.assertIsNone(row["source_hash"])
+        self.assertIsNone(row["fetched_at"])
+        for patch in ({"source_hash":"f"*64},{"fetched_at":"2026-10-25T08:00:00Z"}):
+            with self.subTest(patch=patch),self.assertRaisesRegex(ValueError,"cannot claim"):
+                record(source_archive=archive(),**patch)
+
+    def test_archive_metadata_requires_a_description_and_cannot_be_attached_by_inventory(self):
+        with self.assertRaisesRegex(ValueError,"requires a description"):
+            normalize_record({"name":"Red Herring","url":URL,"source_archive":archive()})
+        incoming=normalize_record({"name":"Red Herring","url":URL})
+        self.assertIsNone(incoming["source_archive"])
+        archived=record(source_archive=archive())
+        self.assertEqual(merged_record(archived,incoming),archived)
+
+    def test_archive_missing_only_import_preserves_existing_http_text_and_all_provenance(self):
+        original=record(source_hash="f"*64,fetched_at="2026-10-25T08:00:00Z")
+        incoming=record(text="An older archived definition.",source_archive=archive())
+        self.assertEqual(merged_record(original,incoming),original)
+        db=Database([original])
+        report=import_records(db,[incoming],apply=True)
+        self.assertEqual(report["unchanged"],1)
+        self.assertEqual(db.writes,[])
+        self.assertIsNone(original["source_archive"])
+
+    def test_archive_metadata_requires_pinned_public_file_references_and_valid_hashes(self):
+        good=archive()
+        invalid=[{"provider":"other"},{"payload_kind":"full_http_response"},{"dataset":"../repo"},
+                 {"revision":"main"},{"provider_url":good["provider_url"].replace(good["revision"],"main")},
+                 {"provider_url":good["provider_url"].replace("TvTroper-2025/resolve","Other/resolve")},
+                 {"provider_url":good["provider_url"]+"?token=secret"},
+                 {"provider_url":good["provider_url"].replace("huggingface.co","user:secret@huggingface.co")},
+                 {"provider_url":good["provider_url"].replace("https:","http:")},
+                 {"provider_url":good["provider_url"]+"/../other.jsonl"},
+                 {"provider_url":good["provider_url"]+"#fragment"},
+                 {"provider_url":good["provider_url"]+" raw.html"},
+                 {"file_sha256":"bad"},{"record_sha256":"c"*63},{"article_sha256":"D"*64},
+                 {"retrieved_at":None},{"retrieved_at":True},{"retrieved_at":1.2},
+                 {"retrieved_at":"2026-10-25T20:58:39"},{"retrieved_at":-1},
+                 {"article":"<h1>raw HTML does not belong in metadata</h1>"}]
+        for patch in invalid:
+            with self.subTest(patch=patch),self.assertRaises(ValueError):
+                normalize_archive(archive(**patch))
+        missing=deepcopy(good);del missing["record_sha256"]
+        with self.assertRaises(ValueError):normalize_archive(missing)
+
+    def test_archive_byte_locator_is_an_optional_strict_pair(self):
+        valid=normalize_archive(archive(byte_offset=4_300_000_000,byte_length=1234))
+        self.assertEqual(valid["byte_offset"],4_300_000_000)
+        self.assertEqual(valid["byte_length"],1234)
+        self.assertEqual(normalize_archive(valid),valid)
+        for patch in ({"byte_offset":0},{"byte_length":12},{"byte_offset":-1,"byte_length":1},
+                      {"byte_offset":True,"byte_length":1},{"byte_offset":0,"byte_length":0},
+                      {"byte_offset":"0","byte_length":1},{"byte_offset":2**63,"byte_length":1}):
+            with self.subTest(patch=patch),self.assertRaises(ValueError):normalize_archive(archive(**patch))
+
+    def test_old_direct_http_records_remain_idempotent_with_new_nullable_archive_field(self):
+        old=record();old.pop("source_archive")
+        db=Database([old])
+        report=import_records(db,[record()],apply=True)
+        self.assertEqual(report["unchanged"],1)
+        self.assertEqual(db.writes,[])
 
     def test_schema_uses_exact_names_and_separate_general_description(self):
         sql = schema_sql()
