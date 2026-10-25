@@ -80,6 +80,8 @@ export function clearArea() {
 
 /** Where the running smooth scroll will end; null when the page isn't scrolling for us. */
 let aim: number | null = null
+/** When the aim was set: a smooth scroll takes well under a second, so an older aim (no scrollend came) is stale. */
+let aimAt = 0
 
 /** Brings an element into the clear area when it's (partly) outside it; a sideways row scrolls to it too. */
 export function reveal(el: HTMLElement | null) {
@@ -110,6 +112,7 @@ export function reveal(el: HTMLElement | null) {
 	if (bottom - top < 64) return
 	const r = el.getBoundingClientRect()
 	const now = window.scrollY
+	if (aim !== null && Date.now() - aimAt > 1000) aim = null
 	const end = aim ?? now
 	// The element's place in the window once the running scroll ends.
 	const at = r.top + now - end
@@ -120,6 +123,7 @@ export function reveal(el: HTMLElement | null) {
 	const target = Math.max(0, Math.min(max, r.top + now - offset))
 	if (Math.abs(target - end) < 2) return
 	aim = behavior === "smooth" ? target : null
+	aimAt = Date.now()
 	window.scrollTo({ top: target, behavior })
 }
 

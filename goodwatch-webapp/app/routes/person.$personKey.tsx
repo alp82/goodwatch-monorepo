@@ -236,6 +236,7 @@ export default function PersonPage() {
 				{/* Fewer than three rated titles give no signature, so there is nothing to compare. */}
 				{data.profile.signature.pillars.length > 0 && (
 					<Section
+						area="standout"
 						title="What stands out"
 						note={`Compared with the average well-known movie, over ${data.profile.signature.basedOn} of their titles. Select a trait to filter titles.`}
 					>
@@ -379,14 +380,17 @@ function Section({
 	note,
 	children,
 	className = "",
+	area,
 }: {
+	/** The feedback tab's fix mode can pick this section (data-feedback-area). */
+	area?: string
 	title: string
 	note?: string
 	children: React.ReactNode
 	className?: string
 }) {
 	return (
-		<section className={className}>
+		<section className={className} data-feedback-area={area}>
 			<h2 className="text-xl font-bold">{title}</h2>
 			{note && <p className="mt-0.5 text-sm text-gray-400">{note}</p>}
 			<div className="mt-4">{children}</div>

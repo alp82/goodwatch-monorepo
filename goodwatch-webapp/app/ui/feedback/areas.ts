@@ -327,6 +327,16 @@ export const PAGE_TYPES: PageType[] = [
 					flag("A title is for a different audience"),
 				],
 			},
+			{
+				id: "media",
+				name: "Media",
+				selector: '[data-feedback-area="media"]',
+				chips: [
+					flag("A trailer is for another title"),
+					flag("A video doesn't play"),
+					flag("A video or image doesn't fit"),
+				],
+			},
 		],
 		note: "The season and episode view is the Episodes part of a show's page; there is no separate season page.",
 	},
@@ -345,6 +355,15 @@ export const PAGE_TYPES: PageType[] = [
 					fix("Wrong main job"),
 					fix("Wrong career years"),
 					flag("Wrong photo"),
+				],
+			},
+			{
+				id: "standout",
+				name: "What stands out",
+				selector: '[data-feedback-area="standout"]',
+				chips: [
+					flag("A trait doesn't fit them"),
+					flag("The chart looks off"),
 				],
 			},
 			{

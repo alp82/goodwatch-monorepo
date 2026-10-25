@@ -1078,6 +1078,9 @@ export default function FeedbackDock({
 		setDone(false)
 		setSpot(null)
 		setPicked(id)
+		// A part picked on the page may be only partly in view: bring all of it in (phones place it themselves).
+		if (window.matchMedia("(min-width: 768px)").matches)
+			requestAnimationFrame(() => revealArea(id))
 	}
 	const fix: FixPath | undefined = live.length
 		? {

@@ -172,7 +172,10 @@ export default function DetailsContent({
 			<div {...section(sequelsHeight(media))}>
 				<SequelsPrequelsFranchise media={media} />
 			</div>
-			<div {...section(mediaHeight(media), sectionProps.media)}>
+			<div
+				{...section(mediaHeight(media), sectionProps.media)}
+				data-feedback-area="media"
+			>
 				<Media
 					videos={videos || []}
 					title={details.title}
