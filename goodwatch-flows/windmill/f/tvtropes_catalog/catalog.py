@@ -1,17 +1,29 @@
 """General trope metadata, independent of the per-title `trope` table.
 
-This module imports reviewed data only. It never fetches TV Tropes pages. The source hash identifies captured page
-bytes; the description hash identifies the exact imported plain text. Unknown source hashes/dates stay null.
+This module imports reviewed data only. It never fetches TV Tropes pages. The source hash identifies a directly
+captured HTTP response; the description hash identifies exact imported plain text. Archive-only evidence lives in
+source_archive: original HTTP hashes and capture dates stay null when the corpus does not preserve them.
 """
 from datetime import datetime, timezone
 import hashlib
 import re
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
+from f.sync.models.crate_schemas import ARCHIVE_COLUMN_TYPES
 
 TABLE = "trope_catalog"
-FIELDS = ("name", "url", "description", "description_hash", "source", "source_hash", "fetched_at")
+FIELDS = ("name", "url", "description", "description_hash", "source", "source_hash", "fetched_at", "source_archive")
 SOURCE = "tvtropes"
 _HASH = re.compile(r"^[0-9a-f]{64}$")
+_HTML_TAG = re.compile(
+    r"</?(?:a|abbr|address|area|article|aside|audio|b|base|bdi|bdo|blockquote|body|br|button|"
+    r"canvas|caption|cite|code|col|colgroup|data|datalist|dd|del|details|dfn|dialog|div|dl|dt|"
+    r"em|embed|fieldset|figcaption|figure|font|footer|form|h[1-6]|head|header|hgroup|hr|html|i|"
+    r"iframe|img|input|ins|kbd|label|legend|li|link|main|map|mark|math|menu|meta|meter|nav|"
+    r"noscript|object|ol|optgroup|option|output|p|picture|pre|progress|q|rp|rt|ruby|s|samp|"
+    r"script|search|section|select|slot|small|source|span|strike|strong|style|sub|summary|sup|"
+    r"svg|table|tbody|td|template|textarea|tfoot|th|thead|time|title|tr|track|tt|u|ul|var|"
+    r"video|wbr)(?=[\s/>])[^>]*>", re.IGNORECASE,
+)
 
 
 def canonical_url(value):
@@ -21,7 +33,7 @@ def canonical_url(value):
         raise ValueError("Trope URL must be a string")
     parts = urlsplit(value)
     if (parts.scheme not in ("http", "https") or parts.netloc.lower() not in ("tvtropes.org", "www.tvtropes.org")
-            or not re.fullmatch(r"/pmwiki/pmwiki\.php/Main/[A-Za-z0-9]+", parts.path)
+            or not re.fullmatch(r"/pmwiki/pmwiki\.php/Main/[A-Za-z0-9_]+", parts.path)
             or parts.query or parts.fragment):
         raise ValueError("Trope URL must identify a TV Tropes Main page without query or fragment")
     return "https://tvtropes.org" + parts.path
@@ -43,6 +55,65 @@ def timestamp(value):
     return int(parsed.timestamp() * 1000)
 
 
+_ARCHIVE_REQUIRED = {
+    "provider", "dataset", "revision", "provider_url", "file_sha256", "record_sha256", "article_sha256", "payload_kind", "retrieved_at",
+}
+_ARCHIVE_OPTIONAL = {"byte_offset", "byte_length"}
+_DATASET = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*$")
+_REVISION = re.compile(r"^[0-9a-f]{40}$")
+
+
+def normalize_archive(value):
+    """Only immutable public archive references and digests, never article HTML or a fabricated capture date."""
+    if value is None:
+        return None
+    if not isinstance(value, dict) or set(value) - (_ARCHIVE_REQUIRED | _ARCHIVE_OPTIONAL) or _ARCHIVE_REQUIRED - set(value):
+        raise ValueError("source_archive must contain exactly the required archive metadata and optional byte locator")
+    if value["provider"] != "huggingface" or value["payload_kind"] != "article_html_fragment":
+        raise ValueError("source_archive provider/payload_kind must identify a Hugging Face article HTML fragment")
+    dataset, revision = value["dataset"], value["revision"]
+    if not isinstance(dataset, str) or len(dataset) > 300 or not _DATASET.fullmatch(dataset):
+        raise ValueError("source_archive.dataset must be an owner/repository name")
+    if not isinstance(revision, str) or not _REVISION.fullmatch(revision):
+        raise ValueError("source_archive.revision must be a full lowercase 40-character commit hash")
+    url = value["provider_url"]
+    if not isinstance(url, str) or len(url) > 2000 or any(c.isspace() or c in '<>"`\\' for c in url):
+        raise ValueError("source_archive.provider_url must be an immutable public archive URL")
+    parsed = urlsplit(url)
+    prefix = f"/datasets/{dataset}/resolve/{revision}/"
+    file_path = unquote(parsed.path[len(prefix):]) if parsed.path.startswith(prefix) else ""
+    if (parsed.scheme != "https" or parsed.netloc != "huggingface.co" or parsed.query or parsed.fragment
+            or not file_path or "\\" in file_path or any(ord(c) < 32 for c in file_path)
+            or any(part in ("", ".", "..") for part in file_path.split("/"))):
+        raise ValueError("source_archive.provider_url must pin the same dataset and revision to one file, without credentials or query")
+    normalized = {key: value[key] for key in ("provider", "dataset", "revision", "provider_url", "payload_kind")}
+    for key in ("file_sha256", "record_sha256", "article_sha256"):
+        digest = value[key]
+        if not isinstance(digest, str) or not _HASH.fullmatch(digest):
+            raise ValueError(f"source_archive.{key} must be a lowercase SHA256")
+        normalized[key] = digest
+    retrieved = value["retrieved_at"]
+    if isinstance(retrieved, bool) or not isinstance(retrieved, (str, int)):
+        raise ValueError("source_archive.retrieved_at must be a timezone-aware ISO timestamp or integer milliseconds")
+    try:
+        retrieved = timestamp(retrieved)
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError("source_archive.retrieved_at must be a timezone-aware ISO timestamp or integer milliseconds") from None
+    if retrieved is None or retrieved < 0:
+        raise ValueError("source_archive.retrieved_at must identify the actual archive retrieval time")
+    normalized["retrieved_at"] = retrieved
+    locator = _ARCHIVE_OPTIONAL & set(value)
+    if locator and locator != _ARCHIVE_OPTIONAL:
+        raise ValueError("source_archive byte_offset and byte_length must be supplied together")
+    if locator:
+        offset, length = value["byte_offset"], value["byte_length"]
+        if (type(offset) is not int or type(length) is not int or not 0 <= offset < 2**63 or not 1 <= length < 2**63
+                or offset + length >= 2**63):
+            raise ValueError("source_archive byte locator must contain nonnegative offset and positive length within signed 64-bit range")
+        normalized.update(byte_offset=offset, byte_length=length)
+    return normalized
+
+
 def normalize_record(row, *, evidence=None):
     if not isinstance(row, dict):
         raise ValueError("Each catalog entry must be an object")
@@ -54,24 +125,33 @@ def normalize_record(row, *, evidence=None):
     if text is not None:
         if not isinstance(text, str) or not text.strip() or len(text) > 100_000:
             raise ValueError(f"{name}: description must be nonempty plain text")
-        if re.search(r"</?[A-Za-z][^>]*>", text):
+        # Source prose can contain literal placeholders such as <Proper Noun>.
+        # Reject actual HTML elements without misclassifying those words as markup.
+        if _HTML_TAG.search(text):
             raise ValueError(f"{name}: description must be plain text, not HTML")
         if not url:
             raise ValueError(f"{name}: a description requires its canonical source URL")
     source = row.get("source") or (SOURCE if text is not None else None)
     if source not in (None, SOURCE):
         raise ValueError(f"{name}: unsupported source; imported descriptions must be attributed to TV Tropes")
-    evidence_row = (evidence or {}).get(url, {})
-    source_hash = row.get("source_hash", evidence_row.get("sha256"))
+    archive = normalize_archive(row.get("source_archive"))
+    if archive is not None and text is None:
+        raise ValueError(f"{name}: archive provenance requires a description")
+    if archive is not None and (row.get("source_hash") is not None or row.get("fetched_at") is not None):
+        raise ValueError(f"{name}: archive-only records cannot claim an original HTTP source_hash or fetched_at")
+    # A matching HTTP evidence log must not manufacture capture information for an archived fragment.
+    evidence_row = {} if archive is not None else (evidence or {}).get(url, {})
+    source_hash = None if archive is not None else row.get("source_hash", evidence_row.get("sha256"))
     if source_hash is not None and (not isinstance(source_hash, str) or not _HASH.fullmatch(source_hash)):
         raise ValueError(f"{name}: source_hash must be a lowercase SHA256")
-    fetched_at = timestamp(row.get("fetched_at", evidence_row.get("started_at")))
+    fetched_at = None if archive is not None else timestamp(row.get("fetched_at", evidence_row.get("started_at")))
     return {
         "name": name, "url": url, "description": text,
         "description_hash": hashlib.sha256(text.encode("utf-8")).hexdigest() if text is not None else None,
         "source": source if text is not None else None,
         "source_hash": source_hash if text is not None else None,
         "fetched_at": fetched_at if text is not None else None,
+        "source_archive": archive if text is not None else None,
     }
 
 
@@ -140,6 +220,45 @@ def ensure_schema(db, *, apply=False):
     return True
 
 
+def ensure_archive_mapping(db):
+    """Crate can drop dynamically discovered object values during a bulk conflict update. Fail before writes."""
+    rows = db.select("SELECT column_name,data_type FROM information_schema.columns "
+                     "WHERE table_schema = ? AND table_name = ? AND column_name LIKE ?",
+                     ("doc", TABLE, "source_archive[%"))
+    actual = {row["column_name"]: row["data_type"] for row in rows}
+    invalid = [f"source_archive['{key}']" for key, kind in ARCHIVE_COLUMN_TYPES.items()
+               if actual.get(f"source_archive['{key}']") != kind.lower()]
+    if invalid:
+        raise RuntimeError("Archive import requires explicitly declared nested column types before bulk UPSERT: "
+                           + ", ".join(invalid) + ". Apply the reviewed schema migration first.")
+
+
+def verify_archive_writes(db, records, *, batch_size=200, replace_descriptions=False):
+    """Read stored source documents: projections alone can conceal lost object provenance."""
+    for start in range(0, len(records), batch_size):
+        batch = records[start:start + batch_size]
+        marks = ",".join("?" for _ in batch)
+        stored = db.select(f"SELECT name,_doc AS actual_doc FROM {TABLE} WHERE name IN ({marks})",
+                           tuple(row["name"] for row in batch))
+        documents = {row["name"]: row["actual_doc"] for row in stored}
+        failed = []
+        for row in batch:
+            actual = documents.get(row["name"], {})
+            if not replace_descriptions and actual.get("description") is not None:
+                # A concurrently published description can win the guarded missing-only update.
+                if actual.get("description_hash") != row["description_hash"]:
+                    continue
+                if actual.get("source_hash") is not None or actual.get("fetched_at") is not None:
+                    continue
+            if (actual.get("description_hash") != row["description_hash"]
+                    or actual.get("source_archive") != row["source_archive"]):
+                failed.append(row["name"])
+        if failed:
+            raise RuntimeError("Archive import stored-document verification failed for " + str(len(failed))
+                               + " rows: " + ", ".join(failed[:10])
+                               + ". Writes may have succeeded partially; stop and inspect exact staged evidence before repair.")
+
+
 def import_records(db, records, *, apply=False, replace_descriptions=False, batch_size=200):
     """Import an already validated batch. Repeated imports preserve timestamps and unchanged rows."""
     if not 1 <= batch_size <= 1000:
@@ -168,6 +287,8 @@ def import_records(db, records, *, apply=False, replace_descriptions=False, batc
             report["insert" if old is None else "update"] += 1
             plans.append(incoming)
     if apply:
+        if any(row.get("source_archive") is not None for row in plans):
+            ensure_archive_mapping(db)
         # The conditional update also protects reviewed text when another importer writes between SELECT and INSERT.
         allow = "TRUE" if replace_descriptions else "description IS NULL"
         text_update = f"excluded.description IS NOT NULL AND ({allow})"
@@ -186,6 +307,9 @@ def import_records(db, records, *, apply=False, replace_descriptions=False, batc
                     db.run(sql, value)
         if plans:
             db.run(f"REFRESH TABLE {TABLE}")
+            archived = [row for row in plans if row.get("source_archive") is not None]
+            if archived:
+                verify_archive_writes(db, archived, batch_size=batch_size, replace_descriptions=replace_descriptions)
     return report
 
 

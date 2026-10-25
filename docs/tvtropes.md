@@ -11,15 +11,32 @@ Owner decisions (2026-09-21 and 2026-09-26), all binding:
 - Production is challenged by IP address, so it doesn't crawl TV Tropes (see [the flag](#production-crawl_tvtropes-flag)).
 - Tropes are recovered from the dev machine in small, supervised batches that a person reviews before import. A
   scheduled crawler on the dev machine was rejected, because it would route around the IP block.
+  On 2026-10-25 the owner explicitly authorized a one-off run to scrape and store all missing general definitions,
+  across the global catalog rather than one profile. The full-catalog runner below implements that exception;
+  the source block rules and prohibition on scheduled crawling still apply.
 - TV Tropes' robots.txt disallows `Claude*` and other AI agents. Agents never read TV Tropes pages with their own
   web tools; only the runner below fetches pages, under its own user agent.
 
 ## General trope catalog
 
 The Crate `trope_catalog` table is the source of truth for general trope definitions, separate from the `trope`
-table's per-title excerpts. Each exact name has a known Main-page URL and an optional description. Names with
-ambiguous URL mappings remain outside metadata-only imports until reviewed. Descriptions retain the raw page's
+table's per-title excerpts. Each exact name has an optional known Main-page URL and an optional description. Names with
+unresolved URL mappings have null URLs and remain queued for review. Direct HTTP descriptions retain the raw response's
 SHA256, the exact text's SHA256, actual fetch time, source, and import/update times. Unknown provenance stays null.
+
+Archived HTML fragments use nullable `source_archive` metadata instead of claiming a direct HTTP capture. This small
+object records the public Hugging Face dataset, full pinned revision and immutable file URL, verified file SHA256,
+exact JSONL-record SHA256, literal article-string UTF-8 SHA256, `payload_kind: article_html_fragment`, and the actual
+archive retrieval time. A byte offset/length pair can locate the exact record slice. Raw HTML stays in the local
+verified archive, never in this object. Archived descriptions keep both `source_hash` and `fetched_at` null: a
+repository revision, dataset year or archive download date is not evidence of when TV Tropes served that page.
+Their `source` remains `tvtropes`; `description_hash` still identifies the extracted text. Existing populated
+HTTP rows are preserved by the normal missing-only import guard, including their capture provenance.
+
+Declare `source_archive` and all its typed nested fields through the standard Crate initializer before using the extended importer
+against an existing database. The importer's create-if-missing check does not migrate an existing table's columns.
+An empty dynamic object alone is insufficient: Crate can omit newly inferred object fields during bulk conflict
+updates. Archive imports check the nested mappings before writes and verify the stored documents after each batch.
 
 On 2026-10-25 the original 100 descriptions were imported from the earlier prototype's saved responses and verified
 byte for byte, including URLs and provenance. The runtime JSON file was removed after verification. The app reads
@@ -62,6 +79,58 @@ python goodwatch-flows/scripts/recover_trope_descriptions.py QUEUE.json RUN --ma
 Use a queue of `{name,url}` entries from existing catalog/title metadata, prioritize missing definitions on visible
 profile bands, and review canonical URL and exact subject against every saved page. The crawler restrictions above
 continue to apply. A scheduled network crawler is not part of this pipeline.
+
+### One-off full-catalog population, 2026-10-25
+
+The global inventory reads all 3,829,905 per-title `trope` associations, not a profile or the prototype's 694 titles.
+It expanded `trope_catalog` to 38,029 exact names, with 220 descriptions already stored and 37,809 initially missing.
+Of those names, 356 still have no unambiguous known URL. Those and source identity/extraction failures go to review;
+the runner never guesses URLs or substitutes generated descriptions.
+Offline review subsequently selected known fetch candidates for 353 of those 356 names, mostly case-only URL
+variants. These selections are not claims of canonical identity: each fetched page must still pass the heading and
+canonical checks. The three remaining labels are contextual or gender-swapped names without a unique subject.
+A subsequent audit of excluded URLs recovered eight more names from duplicated site prefixes and the known
+`Main/Time_Slip` route, bringing the inventory to 38,038 names. The exact underscore path is retained, never guessed.
+Non-Main links to creators, works and other namespaces remain outside the general-definition catalog; the URL audit
+and original grouped pairs are saved in the run's `inventory/` directory.
+
+`goodwatch-flows/scripts/populate_trope_catalog.py run --all` queues every catalog row whose description is null.
+It uses the existing recovery client's identifying user agent, a single worker lock and persistent pacing of at
+least six seconds. It stores validated introductions directly in Crate, preserving existing definitions and recording
+the source hash, exact text hash and original fetch time. Canonical URL and page heading must identify the subject.
+A renamed subject is also accepted when its exact old name matches the requested known URL and the source
+response explicitly redirects from that same URL to a validated canonical page. Contextual labels that merely link
+to a differently named trope do not meet that rule. Reviewed redirect evidence stays beside the run journals.
+Raw responses, the immutable queue, request/outcome journals and `progress.json` stay in the output directory.
+Saved pages are reused without fetching them again; a database interruption leaves a replayable record.
+
+The one-off user service is `goodwatch-trope-catalog-full.service`, with no recurring crawl schedule.
+Its output is `~/.cache/goodwatch/trope-catalog/full-2026-10-25/`; `inventory/` there holds the global inventory and
+URL review evidence. The run has no request-count cap with `--all`. Allow roughly 2½ days for the known URLs at
+the minimum pace, plus review. A 403, 429 or challenge records a shared cooldown and stops; three consecutive
+network/server failures or a database error stop the current pass. On the owner's explicit instruction to continue
+until the catalog is populated, `--until-complete` waits through recorded source cooldowns on the same network and
+backs off before retrying transient failures. Code/configuration errors and unresolved review entries require
+inspection; they are not retried in a loop. Never move the run to another network to bypass a block. The user
+service is enabled for reboot resumption, with user lingering enabled so logout does not stop it.
+
+```sh
+# Monitor the active service and its local checkpoint.
+systemctl --user status goodwatch-trope-catalog-full.service
+python goodwatch-flows/scripts/populate_trope_catalog.py status \
+  --output ~/.cache/goodwatch/trope-catalog/full-2026-10-25 --with-database
+
+# Resume the same queue after inspecting the stop reason and respecting any source cooldown.
+python goodwatch-flows/scripts/populate_trope_catalog.py run --all --until-complete \
+  --output ~/.cache/goodwatch/trope-catalog/full-2026-10-25 \
+  --state /home/alp/dev/projects/goodwatch/goodwatch-monorepo/docs/research/tvtropes-repair/runner-state.json
+```
+
+Use an environment with the recovery runner's dependencies and `html5lib`. The active service uses the flows venv
+and `PYTHONPATH=~/.cache/goodwatch/trope-catalog/deps` for the isolated parser dependencies. `--refresh-queue`
+merges newly imported metadata into the saved queue; `--retry-review` rechecks rejected entries against saved
+sources and the same block state. Neither flag clears a source block. Stop the worker with
+`systemctl --user stop goodwatch-trope-catalog-full.service`; its journals allow resuming without losing imported text.
 
 ## Production: `crawl_tvtropes` flag
 

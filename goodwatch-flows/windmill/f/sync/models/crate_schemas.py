@@ -10,6 +10,12 @@
 #                as TIMESTAMP.
 #   replicas     optional number_of_replicas for a new table, such as "0-1". Without it, the cluster default.
 #   rows         optional rows the table must hold, inserted on every run unless their key already exists.
+# Archive objects must have stable nested mappings before the first bulk ON CONFLICT update.
+ARCHIVE_COLUMN_TYPES = {key: "TEXT" for key in (
+    "provider", "dataset", "revision", "provider_url", "file_sha256", "record_sha256", "article_sha256", "payload_kind",
+)} | {key: "BIGINT" for key in ("retrieved_at", "byte_offset", "byte_length")}
+ARCHIVE_OBJECT_SQL = "OBJECT(DYNAMIC) AS (" + ", ".join(f"{key} {kind}" for key, kind in ARCHIVE_COLUMN_TYPES.items()) + ")"
+
 SCHEMAS = {
     "crawl_priority": {
         "columns": {
@@ -548,6 +554,7 @@ SCHEMAS = {
         "timestamps": False,
     },
     "trope_catalog": {
+        "object_columns": {"source_archive": ARCHIVE_COLUMN_TYPES},
         "columns": {
             "name": "TEXT",
             "url": "TEXT",
@@ -556,6 +563,7 @@ SCHEMAS = {
             "source": "TEXT",
             "source_hash": "TEXT",
             "fetched_at": "TIMESTAMP",
+            "source_archive": ARCHIVE_OBJECT_SQL,
             "imported_at": "TIMESTAMP",
             "updated_at": "TIMESTAMP",
         },

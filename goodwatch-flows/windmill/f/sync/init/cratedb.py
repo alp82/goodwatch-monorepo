@@ -51,7 +51,18 @@ def init_database(dry_run: bool = False):
                     if col_name.strip('"') not in existing_columns:
                         print(f"Adding missing column '{col_name}' to table '{table_name}'.")
                         change(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_type}")
-                # Sub-columns of objects are listed as parent['child'] and aren't declared one by one.
+                # Explicit nested mappings avoid dynamic object loss on conflict updates. A newly added
+                # root already includes these children; an older empty root needs additive migration.
+                for parent, children in spec.get("object_columns", {}).items():
+                    if parent not in existing_columns:
+                        continue
+                    for child, child_type in children.items():
+                        name = f"{parent}['{child}']"
+                        if name not in existing_columns:
+                            change(f"ALTER TABLE {table_name} ADD COLUMN {name} {child_type}")
+                        elif isinstance(existing_columns, dict) and existing_columns[name].lower() != child_type.lower():
+                            raise ValueError(f"Existing {table_name}.{name} has incompatible type; review migration manually")
+                # Other sub-columns of objects are listed as parent['child'] and stay untouched.
                 listed = {name.strip('"') for name in col_specs}
                 unlisted = sorted(name for name in existing_columns if "[" not in name and name not in listed)
                 if unlisted:

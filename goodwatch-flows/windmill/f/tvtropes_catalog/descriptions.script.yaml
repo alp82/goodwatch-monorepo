@@ -1,0 +1,9 @@
+summary: Parse general TV Tropes descriptions from saved HTML
+description: 'Pure library module: validates subject and canonical identity, extracts complete introductory paragraphs before examples. No transport or writes; main does nothing.'
+lock: '!inline f/tvtropes_catalog/descriptions.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []
