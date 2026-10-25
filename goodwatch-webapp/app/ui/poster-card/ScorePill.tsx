@@ -26,7 +26,8 @@ import {
 	hasGoodwatchScore,
 } from "~/utils/ratings"
 import { type PillMark, pillMark, useTitleMarks } from "./marks"
-import type { CardSize, PartSize } from "./size"
+import { pillParts } from "./pill-parts"
+import type { PartSize } from "./size"
 
 // The colour of the viewer's score, as on the profile (ui/profile/parts.tsx `vibe`). Not imported from there: that
 // module brings the profile's parts along, to every page with a poster card.
@@ -103,44 +104,6 @@ const LOOK = {
 	},
 } as const
 
-/** The GoodWatch logo in its block, fixed sizes: on L, and on M from an 8rem card. */
-const LOGO: Record<CardSize, string> = {
-	S: "hidden",
-	M: "hidden h-3 @min-[8rem]/card:inline",
-	L: "h-3.5",
-}
-
-/**
- * Which parts show, as classes ("hidden" for never, "" for always), for a fixed size or a card's widths ("auto").
- * With the viewer's score in a card, GoodWatch's number shows only from 11rem and the icon never.
- */
-function partsOf(
-	size: PartSize,
-	scored: boolean,
-	hasGw: boolean,
-	mark: boolean,
-) {
-	if (size !== "auto") {
-		const fromM = size === "S" ? "hidden" : ""
-		return {
-			gw: scored ? fromM : "",
-			mark: fromM,
-			label: "",
-			logo: LOGO[size],
-			pill: "",
-		}
-	}
-	return {
-		gw: scored ? "hidden @min-[11rem]/card:inline-flex" : "",
-		mark: scored ? "hidden" : "hidden @min-[7.5rem]/card:inline-flex",
-		// Still read out under 6.5rem.
-		label: "sr-only @min-[6.5rem]/card:not-sr-only",
-		logo: !scored && !mark ? "hidden h-3 @min-[8rem]/card:inline" : "hidden",
-		// Only a state icon, which a card under 7.5rem leaves out: no pill there.
-		pill: !scored && !hasGw ? "hidden @min-[7.5rem]/card:inline-flex" : "",
-	}
-}
-
 export interface ScorePillProps {
 	/** The GoodWatch score as a percent; nothing for a title without one. */
 	goodwatch?: number | null
@@ -164,7 +127,7 @@ export function ScorePill({
 	const hasGw = hasGoodwatchScore(goodwatch)
 	const scored = score != null
 	const showMark = mark != null && size !== "S" && !(size === "auto" && scored)
-	const parts = partsOf(size, scored, hasGw, showMark)
+	const parts = pillParts(size, scored, hasGw, showMark)
 	const gwShows = hasGw && parts.gw !== "hidden"
 	if (!gwShows && !scored && !showMark) return null
 	const show = (cls: string) => cls || "inline-flex"
