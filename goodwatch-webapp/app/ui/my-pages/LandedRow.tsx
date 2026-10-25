@@ -201,6 +201,21 @@ export function LandedRow({
 						</li>
 					)
 				})}
+				{/* Past the titles of the member's lists: everything that arrived on their services (#489). */}
+				<li className="border-t border-white/10">
+					<Link
+						to="/new"
+						prefetch="intent"
+						data-landed-all
+						className="group flex min-h-11 items-center gap-3 px-3 py-2 text-sm font-bold text-gray-200 hover:bg-white/[0.05] md:px-5"
+					>
+						Everything new on your services
+						<ChevronRightIcon
+							className="ml-auto h-4 w-4 shrink-0 text-gray-600 group-hover:text-amber-300"
+							aria-hidden
+						/>
+					</Link>
+				</li>
 			</ul>
 		</details>
 	)

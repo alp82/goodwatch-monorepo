@@ -151,7 +151,9 @@ The owner's places (Q67, October 25):
   this process loaded (`utils/last-good.ts`), and a missing or 10-minute-old snapshot starts a load in the background,
   in its own read-health scope. Without links there is no link, and the page is just as complete and cacheable. A
   previewed country shows no link.
-- **My movies and My shows**: "New on your services" first among the head's links.
+- **My movies and My shows**: the last row of the opened "new on your services" list (`LandedRow.tsx`), "Everything
+  new on your services", to `/new`. Not a key in the page head: those lead to the sibling lists, and a third, longer
+  key wrapped the head onto two rows on a phone.
 - **Footer**: "New on streaming" in Explore, for everyone, to `/new/<country>` for the country the page renders for.
 
 ## Sitemap
