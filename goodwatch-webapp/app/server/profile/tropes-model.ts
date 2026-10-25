@@ -1,3 +1,4 @@
+import { foldGenres } from "../../domain/genre-fold.ts"
 import type { ProfileShell, ProfileTitle } from "../../domain/profile.ts"
 import { seesPart } from "../../domain/profile.ts"
 
@@ -13,18 +14,6 @@ export const lovedZ = (loved: number, count: number, rate: number) =>
 export const defining = (length: number, tropeCount: number) =>
 	Math.log(1 + Math.max(0, length) / 100) /
 	Math.log(10 + Math.max(0, tropeCount))
-
-const TV_PAIRS: Record<string, string[]> = {
-	"Sci-Fi & Fantasy": ["Science Fiction", "Fantasy"],
-	"Action & Adventure": ["Action", "Adventure"],
-	"War & Politics": ["War"],
-}
-const DROP = new Set(["Kids", "Soap", "News", "Reality", "Talk"])
-export const foldGenres = (genres: string[]) => [
-	...new Set(
-		genres.filter((g) => !DROP.has(g)).flatMap((g) => TV_PAIRS[g] ?? [g]),
-	),
-]
 
 export interface PoolTitle {
 	k: string

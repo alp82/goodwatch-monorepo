@@ -15,6 +15,7 @@ import {
 
 const BATCH = 400
 const MAX_TITLES = 4_000
+const TROPE_PAGE = 10_000
 const placeholders = (n: number) =>
 	Array.from({ length: n }, () => "?").join(",")
 const batches = <T>(items: T[]) => {
@@ -131,34 +132,37 @@ export function createTropesLoader(deps: TropesDependencies) {
 		)
 		// Query completion order must not change the payload or its indexes.
 		titles.sort((a, b) => a.title.key.localeCompare(b.title.key))
-		const names = [...qualifyingTropes(titles)]
+		const names = qualifyingTropes(titles)
 		const lengths: TropeLength[] = []
-		if (names.length)
+		if (names.size)
 			await Promise.all(
 				(["movie", "show"] as const).flatMap((mediaType) =>
 					batches(
 						titles
 							.filter((t) => t.title.mediaType === mediaType)
 							.map((t) => t.title.tmdbId),
-					).flatMap((ids) =>
-						batches(names).map(async (ns) => {
-							// Strip tags in SQL: only names, URLs and lengths cross the wire.
+					).map(async (ids) => {
+						// Strip tags in SQL; paginate all names once per ID batch.
+						for (let offset = 0; ; offset += TROPE_PAGE) {
 							const rows = await deps.read<LengthRow>(
 								`SELECT media_tmdb_id, name, url,
 						 char_length(regexp_replace(content, '<[^>]*>', '', 'g')) AS length
 						 FROM trope WHERE media_type = ? AND media_tmdb_id IN (${placeholders(ids.length)})
-						 AND name IN (${placeholders(ns.length)}) LIMIT ${ids.length * ns.length}`,
-								[mediaType, ...ids, ...ns],
+						 ORDER BY media_tmdb_id, name, url, length
+						 LIMIT ${TROPE_PAGE} OFFSET ${offset}`,
+								[mediaType, ...ids],
 							)
 							for (const row of rows)
-								lengths.push({
-									key: `${mediaType}-${Number(row.media_tmdb_id)}`,
-									name: row.name,
-									url: row.url,
-									length: row.length,
-								})
-						}),
-					),
+								if (names.has(row.name))
+									lengths.push({
+										key: `${mediaType}-${Number(row.media_tmdb_id)}`,
+										name: row.name,
+										url: row.url,
+										length: row.length,
+									})
+							if (rows.length < TROPE_PAGE) break
+						}
+					}),
 				),
 			)
 		return buildTropePool(titles, lengths, deps.descriptions)
@@ -220,19 +224,29 @@ export function createTropesLoader(deps: TropesDependencies) {
 						.filter((k) => k.startsWith(`${mediaType}-`))
 						.map((k) => Number(k.split("-")[1]))
 					if (!ids.length) return
-					const rows = await deps.read<{
-						media_tmdb_id: number
-						content: string | null
-					}>(
-						`SELECT media_tmdb_id, content FROM trope WHERE media_type = ? AND name = ?
-					 AND media_tmdb_id IN (${placeholders(ids.length)}) LIMIT ${ids.length}`,
-						[mediaType, trope, ...ids],
-					)
-					for (const row of rows) {
-						const key = `${mediaType}-${Number(row.media_tmdb_id)}`
-						if (!allowed.has(key) || !visible.includes(key)) continue
-						const text = trimExample(htmlToText(row.content ?? ""))
-						if (text) examples.set(key, text)
+					// Duplicate (title, name) rows must not crowd out other titles.
+					for (let offset = 0; ; offset += TROPE_PAGE) {
+						const rows = await deps.read<{
+							media_tmdb_id: number
+							content: string | null
+						}>(
+							`SELECT media_tmdb_id, content FROM trope WHERE media_type = ? AND name = ?
+					 AND media_tmdb_id IN (${placeholders(ids.length)})
+					 ORDER BY media_tmdb_id, content LIMIT ${TROPE_PAGE} OFFSET ${offset}`,
+							[mediaType, trope, ...ids],
+						)
+						for (const row of rows) {
+							const key = `${mediaType}-${Number(row.media_tmdb_id)}`
+							if (
+								!allowed.has(key) ||
+								!visible.includes(key) ||
+								examples.has(key)
+							)
+								continue
+							const text = trimExample(htmlToText(row.content ?? ""))
+							if (text) examples.set(key, text)
+						}
+						if (rows.length < TROPE_PAGE) break
 					}
 				}),
 			)

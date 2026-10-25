@@ -1,3 +1,4 @@
+import { foldGenres } from "../../domain/genre-fold.ts"
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { DEFAULT_VISIBILITY } from "../../domain/profile.ts"
@@ -7,7 +8,6 @@ import {
 	defining,
 	definingTop,
 	excerptParams,
-	foldGenres,
 	leastTitles,
 	lovedZ,
 	seesTropes,

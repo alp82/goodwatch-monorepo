@@ -12,7 +12,7 @@ const empty = (): UserData => ({
 	skipped: {},
 	notInterested: {},
 })
-function fixture(count = 6, dense = false) {
+function fixture(count = 6, tropeCount = 0, excerptCopies = 1) {
 	const owner = empty()
 	const viewer = empty()
 	for (let i = 1; i <= count; i++)
@@ -48,22 +48,20 @@ function fixture(count = 6, dense = false) {
 		const ids = params.filter((p): p is number => typeof p === "number")
 		const rows = ids.flatMap<unknown>((id) =>
 			sql.includes("SELECT media_tmdb_id, content")
-				? {
+				? Array.from({ length: excerptCopies }, () => ({
 						media_tmdb_id: id,
 						content: `<span class="spoiler">Secret ${id} &amp; more.</span>`,
-					}
+					}))
 				: sql.includes("AS length")
-					? params
-							.filter(
-								(p): p is string =>
-									typeof p === "string" && p !== "movie" && p !== "show",
-							)
-							.map((name) => ({
-								media_tmdb_id: id,
-								name,
-								url: "https://tvtropes.org/common",
-								length: 1000,
-							}))
+					? (tropeCount
+							? Array.from({ length: tropeCount }, (_, i) => `Trope ${i}`)
+							: ["Common", `Rare ${id}`]
+						).map((name) => ({
+							media_tmdb_id: id,
+							name,
+							url: "https://tvtropes.org/common",
+							length: 1000,
+						}))
 					: {
 							tmdb_id: id,
 							title: `Title ${id}`,
@@ -72,14 +70,17 @@ function fixture(count = 6, dense = false) {
 							backdrop_path: "/b.jpg",
 							gw: 71.5,
 							genres: ["Sci-Fi & Fantasy"],
-							tropes: dense
-								? Array.from({ length: 190 }, (_, i) => `Trope ${i}`)
+							tropes: tropeCount
+								? Array.from({ length: tropeCount }, (_, i) => `Trope ${i}`)
 								: id === count
 									? []
 									: ["Common", "Common", `Rare ${id}`],
 						},
 		)
-		return rows as unknown as T[]
+		// Honor SQL bounds so truncation and pagination regressions are visible.
+		const limit = Number(sql.match(/LIMIT (\d+)/)?.[1] ?? 10_000)
+		const offset = Number(sql.match(/OFFSET (\d+)/)?.[1] ?? 0)
+		return rows.slice(offset, offset + limit) as unknown as T[]
 	}
 	const loader = createTropesLoader({
 		read,
@@ -207,21 +208,55 @@ test("excerpts restrict keys to this profile and trope but permit guest reveals"
 		RangeError,
 	)
 })
-test("800 titles batch reads and fetch only lengths", async () => {
-	const f = fixture(800, true)
+test("800 titles with 450 tropes page through lengths without name cross products", async () => {
+	const f = fixture(800, 450)
 	const pool = await f.loadProfileTropes("owner", f.shell)
 	assert.equal(pool?.pool.length, 800)
-	assert.equal(pool?.tropes.length, 190)
-	assert.ok(pool?.pool.every((t) => t.r.length === 190 && t.d.length === 190))
-	assert.equal(f.calls.length, 4)
+	assert.equal(pool?.tropes.length, 450)
+	assert.ok(
+		pool?.pool.every(
+			(t) =>
+				t.r.length === 450 && t.d.length === 450 && t.d.every((d) => d > 0),
+		),
+	)
+	const lengths = f.calls.filter((c) => c.sql.includes("AS length"))
+	// 180,000 rows per media type, including the final empty page.
+	assert.equal(lengths.length, 38)
+	assert.equal(f.calls.length, 40)
 	assert.ok(
 		f.calls.every((c) => !c.sql.includes("SELECT media_tmdb_id, content")),
 	)
 	assert.ok(
-		f.calls
-			.filter((c) => c.sql.includes("AS length"))
-			.every((c) => c.params.length === 591),
+		lengths.every(
+			(c) => c.params.length === 401 && !c.sql.includes("AND name"),
+		),
 	)
+	assert.ok(lengths.every((c) => c.sql.includes("LIMIT 10000 OFFSET")))
+})
+test("lengths discard names that do not qualify", async () => {
+	const f = fixture()
+	const pool = await f.loadProfileTropes("owner", f.shell)
+	assert.deepEqual(pool?.tropes, ["Common"])
+	assert.deepEqual(Object.keys(pool?.urls ?? {}), ["Common"])
+	assert.ok(pool?.pool.filter((t) => t.r.length).every((t) => t.d[0] > 0))
+})
+test("duplicate excerpt rows cannot truncate other requested titles", async () => {
+	const f = fixture(6, 0, 10_001)
+	assert.deepEqual(
+		await f.loadProfileTropeExcerpts("owner", f.shell, "Common", [
+			"movie-3",
+			"movie-1",
+		]),
+		[
+			{ key: "movie-3", text: "Secret 3 & more." },
+			{ key: "movie-1", text: "Secret 1 & more." },
+		],
+	)
+	const excerpts = f.calls.filter((c) =>
+		c.sql.includes("SELECT media_tmdb_id, content"),
+	)
+	assert.equal(excerpts.length, 3)
+	assert.ok(excerpts.every((c) => c.sql.includes("LIMIT 10000 OFFSET")))
 })
 test("empty libraries have finite bounds and no catalog reads", async () => {
 	const f = fixture(0)
