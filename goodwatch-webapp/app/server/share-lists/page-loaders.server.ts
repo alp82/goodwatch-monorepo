@@ -1,13 +1,9 @@
 import { type LoaderFunctionArgs, json, redirect } from "@remix-run/node"
 import { resolveCountry } from "~/server/country.server"
+import type { RowService, ownServicesOf } from "~/server/row-services.server"
 import type { ensureShareCard } from "~/server/share-card/images.server"
-import type { RowService } from "~/server/row-services.server"
-import type { getListAvailability } from "./availability.server"
-import type { getOwnerScores } from "./owner-scores.server"
-import type { getListView, listsByUser } from "./store.server"
-import { entryKey, type resolveCardTitles } from "./titles.server"
-import type { getProfilePage } from "./view.server"
 import type { getUserSettings } from "~/server/user-settings.server"
+import { createMediaKey } from "~/types/user-data"
 import { designByKey } from "~/ui/share-card/designs"
 import {
 	profilePath,
@@ -21,6 +17,10 @@ import type { ShareListSummary } from "~/ui/share-lists/ShareListTile"
 import type { getUserIdFromRequest } from "~/utils/auth"
 import { SHARE_LIST_PAGE_CACHE_CONTROL } from "~/utils/auth-cookie"
 import { duplicateProviderMapping } from "~/utils/streaming-links"
+import type { getOwnerScores } from "./owner-scores.server"
+import type { getListView, listsByUser } from "./store.server"
+import { entryKey, type resolveCardTitles } from "./titles.server"
+import type { getProfilePage } from "./view.server"
 
 // A list or profile can come back, so never cache a missing page.
 const notFound = () =>
@@ -34,7 +34,7 @@ type ShareListDependencies = {
 	ensureShareCard: typeof ensureShareCard
 	getUserIdFromRequest: typeof getUserIdFromRequest
 	getUserSettings: typeof getUserSettings
-	getListAvailability: typeof getListAvailability
+	getOwnServices: typeof ownServicesOf
 	getOwnerScores: typeof getOwnerScores
 }
 
@@ -69,8 +69,21 @@ export function createShareListPageLoader(deps: ShareListDependencies) {
 				.flatMap((id) => [id, ...(duplicateProviderMapping[id] ?? [])]),
 		)
 		const isOwner = viewerId === list.userId
-		const [availability, ownerScores] = await Promise.all([
-			owned.size ? deps.getListAvailability(list.items, country) : null,
+		const [own, ownerScores] = await Promise.all([
+			owned.size
+				? deps
+						.getOwnServices(
+							{ country, services: [...owned] },
+							list.items.map((e) => ({
+								mediaType: e.media_type,
+								tmdbId: e.tmdb_id,
+							})),
+						)
+						.catch((error) => {
+							console.error("[share-list] own services failed", error)
+							return null
+						})
+				: null,
 			// On someone else's list, the owner's score ends each row (as far as their profile shows it).
 			isOwner
 				? null
@@ -85,22 +98,12 @@ export function createShareListPageLoader(deps: ShareListDependencies) {
 							return null
 						}),
 		])
-		const services: Record<string, RowService[]> | null = availability && {}
-		if (availability && services)
-			for (const [key, title] of Object.entries(availability)) {
-				const mine = new Map<string, RowService>()
-				for (const offer of title.offers)
-					if (
-						offer.kind === "stream" &&
-						owned.has(offer.serviceId) &&
-						!mine.has(offer.name)
-					)
-						mine.set(offer.name, {
-							id: offer.serviceId,
-							name: offer.name,
-							logoPath: offer.logoPath,
-						})
-				if (mine.size) services[key] = [...mine.values()]
+		// Keyed by the list's own title keys ("movie:603").
+		const services: Record<string, RowService[]> | null = own && {}
+		if (own && services)
+			for (const e of list.items) {
+				const mine = own[createMediaKey(e.media_type, e.tmdb_id)]
+				if (mine?.length) services[entryKey(e)] = mine
 			}
 
 		const design = designByKey(list.design)

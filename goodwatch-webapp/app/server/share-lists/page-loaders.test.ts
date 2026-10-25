@@ -136,7 +136,7 @@ const listDeps = (viewerId: string | null = null, unlisted = false) => ({
 		country_default: "DE",
 		streaming_providers_default: "8",
 	}),
-	getListAvailability: async () => ({}),
+	getOwnServices: async () => ({}),
 	getOwnerScores: async () => ({}),
 })
 
@@ -154,25 +154,19 @@ for (const [viewerId, unlisted, isOwner] of [
 				assert.equal(value.list.id, view.list.id)
 				ensured = true
 			},
-			// Only a member with saved services needs the offers: the rows show nobody else's.
-			getListAvailability: async (items, country) => {
+			// Only a member with saved services needs their services: the rows show nobody else's.
+			getOwnServices: async (member, titles) => {
 				assert.ok(viewerId)
-				assert.deepEqual(items, view.list.items)
-				assert.equal(country, "DE")
-				const offer = (serviceId: number, kind: "stream" | "rent") => ({
-					serviceId,
-					name: `Service ${serviceId}`,
-					logo: "",
-					logoPath: `/${serviceId}.png`,
-					url: null,
-					kind,
-				})
-				return {
-					"movie:1": {
-						state: "current" as const,
-						offers: [offer(8, "stream"), offer(9, "stream"), offer(8, "rent")],
-					},
-				}
+				assert.equal(member.country, "DE")
+				assert.ok(member.services.includes(8))
+				assert.deepEqual(
+					titles,
+					view.list.items.map((e) => ({
+						mediaType: e.media_type,
+						tmdbId: e.tmdb_id,
+					})),
+				)
+				return { "movie-1": [{ id: 8, name: "Service 8", logoPath: "/8.png" }] }
 			},
 			// The owner's score ends the rows of someone else's list.
 			getOwnerScores: async (ownerId, viewer, entries) => {

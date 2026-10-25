@@ -15,7 +15,7 @@ import {
 import type { MetaFunction } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import { ensureShareCard } from "~/server/share-card/images.server"
-import { getListAvailability } from "~/server/share-lists/availability.server"
+import { ownServicesOf } from "~/server/row-services.server"
 import { getOwnerScores } from "~/server/share-lists/owner-scores.server"
 import { createShareListPageLoader } from "~/server/share-lists/page-loaders.server"
 import { getListView } from "~/server/share-lists/store.server"
@@ -51,7 +51,7 @@ const canonicalLoader = createShareListPageLoader({
 	ensureShareCard,
 	getUserIdFromRequest,
 	getUserSettings,
-	getListAvailability,
+	getOwnServices: ownServicesOf,
 	getOwnerScores,
 })
 
