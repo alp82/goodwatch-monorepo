@@ -18,6 +18,9 @@ import {
 } from "@heroicons/react/24/solid"
 import type { ComponentType } from "react"
 
+/** The "New on streaming" link's address until the footer puts the viewer's country in: /new/us. */
+export const NEW_ON_STREAMING = "/new"
+
 export const DISCORD_URL = "https://discord.gg/TVAcrfQzcA"
 export const CREATOR_URL = "https://x.com/alperortac"
 
@@ -116,6 +119,13 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 				href: "/hot-on-socials",
 				blurb: "What people talk about now",
 				icon: FireIcon,
+			},
+			{
+				// The page of the viewer's country: the footer puts the country in (NEW_ON_STREAMING, #489).
+				name: "New on streaming",
+				href: NEW_ON_STREAMING,
+				blurb: "What arrived in the last 14 days",
+				icon: SignalIcon,
 			},
 			{
 				name: "Watch next",

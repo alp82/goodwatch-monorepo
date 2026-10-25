@@ -9,7 +9,15 @@ import tmdbLogo from "~/img/tmdb-logo.svg"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { assetUrl } from "~/utils/asset-url"
 import { InviteCard } from "./InviteCard"
-import { CREATOR_URL, FOOTER_COLUMNS, type FooterLink, XMark } from "./links"
+import { countryPath } from "~/domain/new-on-services"
+import useLocale from "~/utils/locale"
+import {
+	CREATOR_URL,
+	FOOTER_COLUMNS,
+	type FooterLink,
+	NEW_ON_STREAMING,
+	XMark,
+} from "./links"
 import { Reveal, ScrambleText, useFooterView } from "./motion"
 
 const TAGLINE = "Every score, every service, one place."
@@ -110,6 +118,12 @@ export default function Footer() {
 	const [pointed, setPointed] = useState<FooterLink | null>(null)
 	const nav = useRef<HTMLElement>(null)
 	const glide = useRef<HTMLSpanElement>(null)
+	// "New on streaming" goes to the page of the viewer's country, which the page's HTML already depends on.
+	const { locale } = useLocale()
+	const inCountry = (link: FooterLink): FooterLink =>
+		link.href === NEW_ON_STREAMING
+			? { ...link, href: countryPath(locale.country) }
+			: link
 
 	// One highlight glides to the link under the pointer. It appears in place, then slides between links.
 	const pointAt = (link: FooterLink | null, target: HTMLElement | null) => {
@@ -186,34 +200,37 @@ export default function Footer() {
 									{column.title}
 								</h2>
 								<ul className="flex flex-col">
-									{column.links.map((link) => (
-										<li key={link.name}>
-											<FooterNavLink
-												link={link}
-												onPoint={(target) =>
-													pointAt(target ? link : null, target)
-												}
-												className="group relative -mx-3 flex h-9 items-center gap-2.5 rounded-lg px-3 text-sm text-gray-400 transition-colors hover:text-white focus-visible:text-white"
-											>
-												<link.icon
-													className="h-4 w-4 text-gray-600 transition-colors group-hover:text-amber-300 group-focus-visible:text-amber-300"
-													aria-hidden
-												/>
-												<span>{link.name}</span>
-												{link.external && (
-													<>
-														<ArrowUpRightIcon
-															className="h-3.5 w-3.5 text-gray-600"
-															aria-hidden
-														/>
-														<span className="sr-only">
-															(opens in a new tab)
-														</span>
-													</>
-												)}
-											</FooterNavLink>
-										</li>
-									))}
+									{column.links.map((footerLink) => {
+										const link = inCountry(footerLink)
+										return (
+											<li key={link.name}>
+												<FooterNavLink
+													link={link}
+													onPoint={(target) =>
+														pointAt(target ? link : null, target)
+													}
+													className="group relative -mx-3 flex h-9 items-center gap-2.5 rounded-lg px-3 text-sm text-gray-400 transition-colors hover:text-white focus-visible:text-white"
+												>
+													<link.icon
+														className="h-4 w-4 text-gray-600 transition-colors group-hover:text-amber-300 group-focus-visible:text-amber-300"
+														aria-hidden
+													/>
+													<span>{link.name}</span>
+													{link.external && (
+														<>
+															<ArrowUpRightIcon
+																className="h-3.5 w-3.5 text-gray-600"
+																aria-hidden
+															/>
+															<span className="sr-only">
+																(opens in a new tab)
+															</span>
+														</>
+													)}
+												</FooterNavLink>
+											</li>
+										)
+									})}
 								</ul>
 							</Reveal>
 						))}
