@@ -21,6 +21,8 @@ export const QUIZ_MS = 600_000
 const SHOW = 3000
 const FIRST_RIPPLE = 4600
 const EVERY = 2300
+/** When the twelve posters have dealt in: `--qd`, then one every 70 ms, each 750 ms (intro.css, `intro-turn-deal`). */
+const DEALT = SHOW + 200 + 11 * 70 + 750
 
 /** The quiz's twelve titles: the intro's titles after Interstellar. */
 const quizCards = (data: IntroData) =>
@@ -96,6 +98,16 @@ export function Quiz({ data }: SceneProps) {
 		}
 	}, [])
 
+	// The deal plays once. "Try three others" brings the grid back: without the stagger, its posters show at once
+	// rather than waiting out `--qd` again.
+	const [dealt, setDealt] = useState(false)
+	useEffect(() => {
+		const el = root.current
+		if (!el) return
+		const timer = setTimeout(() => setDealt(true), DEALT * stageK(el) + 100)
+		return () => clearTimeout(timer)
+	}, [])
+
 	// Back from sign-up: the quiz as the visitor left it, without "Your turn!" and the slots flying in again.
 	const [back] = useState(
 		() => typeof window !== "undefined" && Boolean(savedTaps()),
@@ -113,7 +125,7 @@ export function Quiz({ data }: SceneProps) {
 		<div ref={root} className="absolute inset-0">
 			<div className="intro-turn-glow" />
 			<div
-				className="intro-turn-quiz intro-turn-quiz-stagger intro-turn-a"
+				className={`intro-turn-quiz intro-turn-a ${dealt ? "" : "intro-turn-quiz-stagger"}`}
 				style={
 					{
 						"--qd": `${SHOW + 200}ms`,
