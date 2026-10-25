@@ -1,0 +1,17 @@
+{
+  "checked_at_utc": "2026-10-17T02:00:21.761749+00:00",
+  "metadata": [
+    {
+      "url": "https://goodwatch.app/.well-known/oauth-protected-resource/mcp",
+      "status": 200,
+      "resource": "https://goodwatch.app/mcp",
+      "issuer": null
+    },
+    {
+      "url": "https://goodwatch.app/.well-known/oauth-authorization-server/api/auth",
+      "status": 200,
+      "resource": null,
+      "issuer": "https://goodwatch.app/api/auth"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+--- live/goodwatch-search.yaml
++++ paste/goodwatch-search.yaml
+@@ -2,11 +2,11 @@
+   routers:
+     gw-search-https:
+       entryPoints:
+-        - https
+-      rule: 'Host(`goodwatch.app`) && (Path(`/api/combined-search`) || Path(`/api/command-palette`))'
++      - https
++      rule: Host(`goodwatch.app`) && (Path(`/api/combined-search`) || Path(`/api/command-palette`) || Path(`/mcp`))
+       priority: 1100
+       middlewares:
+-        - gw-search-mark
++      - gw-search-mark
+       service: gw-search
+       tls:
+         certResolver: letsencrypt
+@@ -17,8 +17,8 @@
+           X-Gw-Role: search
+     gw-webapp-www-to-apex:
+       redirectRegex:
+-        regex: '^https?://www\.goodwatch\.app/?(.*)'
+-        replacement: 'https://goodwatch.app/${1}'
++        regex: ^https?://www\.goodwatch\.app/?(.*)
++        replacement: https://goodwatch.app/${1}
+         permanent: true
+   services:
+     gw-search:
+@@ -29,5 +29,4 @@
+           interval: 2s
+           timeout: 1s
+         servers:
+-          -
+-            url: 'http://10.0.0.20:80'
++        - url: http://10.0.0.20:80
