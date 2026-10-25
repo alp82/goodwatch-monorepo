@@ -90,7 +90,9 @@ def load_module(name, path):
 
 
 # The live check's reasons (check_sitemap_urls.judge) that say a page is gone or kept out of the index.
-LEFT_PAGE = re.compile(r"^(status (404|410)|robots meta tag says .*noindex.*|X-Robots-Tag says .*noindex.*)$", re.I)
+# "none" means noindex, nofollow, and the checker counts it too (meta content="none", X-Robots-Tag "googlebot: none").
+LEFT_PAGE = re.compile(
+    r"^(status (404|410)|(robots meta tag|X-Robots-Tag) says .*\b(noindex|none)\b.*)$", re.I)
 
 
 def page_left(reason):
