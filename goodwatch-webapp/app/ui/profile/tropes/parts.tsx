@@ -306,15 +306,22 @@ export function Credits({
 				Read about it on TV Tropes (opens in a new tab)
 				<ArrowTopRightOnSquareIcon className="size-4" aria-hidden />
 			</a>
-			<a
-				href="https://creativecommons.org/licenses/by-nc-sa/3.0/"
-				target="_blank"
-				rel="noreferrer noopener license"
-				className="inline-flex min-h-11 items-center text-xs text-gray-500 hover:text-gray-300 hover:underline"
-			>
-				Excerpts from TV Tropes, CC BY-NC-SA 3.0
-			</a>
+			<LicenseCredit />
 		</div>
+	)
+}
+
+/** "Excerpts from TV Tropes, CC BY-NC-SA 3.0", linking to the license: quiet, 44 px tall to tap. */
+export function LicenseCredit({ className = "" }: { className?: string }) {
+	return (
+		<a
+			href="https://creativecommons.org/licenses/by-nc-sa/3.0/"
+			target="_blank"
+			rel="noreferrer noopener license"
+			className={`inline-flex min-h-11 items-center text-xs text-gray-500 hover:text-gray-300 hover:underline ${className}`}
+		>
+			Excerpts from TV Tropes, CC BY-NC-SA 3.0
+		</a>
 	)
 }
 

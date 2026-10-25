@@ -71,14 +71,14 @@ export function FacetTile({
 	)
 }
 
-/** A pick as a chip: picture, name, count, and × to remove it. 44 px on phones, 36 from sm on. */
+/** A pick as a chip: picture, name, count, and × to remove it. 44 px below the desktop breakpoint, 36 from lg on. */
 export function FacetChip({ c }: { c: Choice }) {
 	return (
 		<motion.span
 			layout="position"
 			initial={{ opacity: 0, scale: 0.9 }}
 			animate={{ opacity: 1, scale: 1 }}
-			className="relative isolate inline-flex h-11 max-w-[16rem] shrink-0 items-center overflow-hidden rounded-xl text-sm font-bold text-white ring-1 ring-white/25 [text-shadow:0_1px_4px_rgba(0,0,0,.6)] sm:h-9"
+			className="relative isolate inline-flex h-11 max-w-[16rem] shrink-0 items-center overflow-hidden rounded-xl text-sm font-bold text-white ring-1 ring-white/25 [text-shadow:0_1px_4px_rgba(0,0,0,.6)] lg:h-9"
 			style={{ boxShadow: `0 4px 18px -6px ${c.hue}` }}
 		>
 			<ChoiceArt hues={[c.hue]} path={c.picture} />
@@ -90,7 +90,7 @@ export function FacetChip({ c }: { c: Choice }) {
 				type="button"
 				aria-label={`Remove ${c.label}`}
 				onClick={c.toggle}
-				className="ml-0.5 flex h-full w-10 shrink-0 cursor-pointer items-center justify-center hover:bg-black/30 sm:w-8"
+				className="ml-0.5 flex h-full w-11 shrink-0 cursor-pointer items-center justify-center hover:bg-black/30 lg:w-8"
 			>
 				<XMarkIcon className="h-4 w-4" />
 			</button>

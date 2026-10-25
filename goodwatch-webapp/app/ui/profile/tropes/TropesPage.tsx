@@ -4,7 +4,7 @@
 //   What it is      the TV Tropes description (when there is one) and the numbers on one line
 //   below, side by side at the same height: the 12 defining titles as a poster grid, and the reader (the selected
 //   title's backdrop, "In <Title>", prev / next, the excerpt); on phones a poster row above the reader
-//   the TV Tropes link and the license credit
+//   the TV Tropes link and the license credit; a page-level credit also closes the list, for the bands' excerpts
 // The filter bar (FilterStrip) sits above. Motion: the tapped band holds still and the others slide (FLIP, transform
 // only), the detail fades in, switching titles crossfades; nothing moves with reduced motion.
 // Spec: docs/implementation/taste-redesign.md, decision 3.
@@ -23,12 +23,13 @@ import {
 	teaser,
 	tierOf,
 } from "./model"
-import { EASE, reveal, useBandMotion, useWide } from "./motion"
+import { EASE, reducedMotion, reveal, useBandMotion, useWide } from "./motion"
 import {
 	Credits,
 	type DetailState,
 	ExcerptStage,
 	InTitle,
+	LicenseCredit,
 	NoMatches,
 	Numbers,
 	PosterButton,
@@ -135,6 +136,12 @@ export function TropesPage({
 							</li>
 						)}
 					</ol>
+				)}
+				{rows.length > 0 && (
+					// Hero bands and band lines show TV Tropes text before any band opens.
+					<p className="flex justify-center">
+						<LicenseCredit />
+					</p>
 				)}
 			</div>
 		</MotionConfig>
@@ -316,14 +323,21 @@ function Detail({
 	)
 	return (
 		<div className="px-4 pb-4 sm:px-5 sm:pb-6 md:pl-[5.25rem]">
-			<section aria-label="What it is">
-				<WhatItIs />
+			<section aria-label={tag.description ? "What it is" : undefined}>
 				{tag.description && (
-					<p className="mt-1.5 max-w-3xl text-[16px] leading-relaxed text-gray-200 sm:text-[17px]">
-						{tag.description}
-					</p>
+					<>
+						<WhatItIs />
+						<p className="mt-1.5 max-w-3xl text-[16px] leading-relaxed text-gray-200 sm:text-[17px]">
+							{tag.description}
+						</p>
+					</>
 				)}
-				<Numbers tag={tag} usual={m.usual} owner={m.owner} className="mt-3" />
+				<Numbers
+					tag={tag}
+					usual={m.usual}
+					owner={m.owner}
+					className={tag.description ? "mt-3" : ""}
+				/>
 			</section>
 			{wide ? (
 				<section aria-label="The titles that define it" className="mt-6">
@@ -370,7 +384,7 @@ function PhoneRow({
 		// Scroll the row only, never the page.
 		list.scrollTo({
 			left: el.offsetLeft - list.clientWidth / 2 + el.clientWidth / 2,
-			behavior: "smooth",
+			behavior: reducedMotion() ? "instant" : "smooth",
 		})
 	}, [key])
 	return (

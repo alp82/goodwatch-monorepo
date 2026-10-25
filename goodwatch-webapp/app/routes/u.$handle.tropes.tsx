@@ -2,11 +2,19 @@
 // they show up in what they score 8 or more, each opening to its description, numbers, defining titles and their
 // excerpts (from /u/:handle/tropes/excerpts). The tab needs both the taste and the scores to be visible.
 // Spec: docs/implementation/taste-redesign.md, decision 3.
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
+import {
+	type LoaderFunctionArgs,
+	type MetaFunction,
+	json,
+} from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import { type ProfileShell, seesPart } from "~/domain/profile"
 import { presentCatalogLoader } from "~/server/media-payload.server"
-import { profileLoader } from "~/server/profile/route.server"
+import { protectMediaResponse } from "~/server/media-read-health.server"
+import {
+	loadProfileShell,
+	profileCacheControl,
+} from "~/server/profile/page.server"
 import {
 	type ProfileTropes,
 	loadProfileTropes,
@@ -25,12 +33,34 @@ interface Data {
 	tropes: ProfileTropes | null
 }
 
-const load = (args: LoaderFunctionArgs) =>
-	profileLoader(args, async ({ ownerId, viewerId, shell }) => ({
-		tropes: await loadProfileTropes(ownerId, shell, viewerId),
-	}))
+// The pool runs to thousands of titles, so it is localized as a plain object and serialized once, instead of going
+// through profileLoader's JSON response, which presentCatalogLoader would parse and serialize again.
+const present = presentCatalogLoader(
+	async (args: LoaderFunctionArgs) => {
+		const loaded = await loadProfileShell(
+			args.request,
+			args.params.handle ?? "",
+		)
+		if (loaded instanceof Response) return loaded
+		const { ownerId, viewerId, shell } = loaded
+		return {
+			shell,
+			tropes: await loadProfileTropes(ownerId, shell, viewerId),
+			cacheControl: profileCacheControl(viewerId),
+		}
+	},
+	{ live: true },
+)
 
-export const loader = presentCatalogLoader(load, { live: true })
+export async function loader(args: LoaderFunctionArgs) {
+	const result = await present(args)
+	if (result instanceof Response) return result
+	const { cacheControl, ...data } = result
+	const headers = new Headers({ "Cache-Control": cacheControl })
+	// A failed or still-pending catalog read keeps the page out of shared caches, as for a JSON response.
+	protectMediaResponse(headers, result)
+	return json<Data>(data, { headers })
+}
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	const d = data as Partial<Data> | undefined
