@@ -75,6 +75,13 @@ const REMOTE_FOOT = 8
 /** Type of 20 canvas pixels prints at 18 once the TV shows its canvas at 0.9. */
 export const TV_MIN_WIDTH = TV_CANVAS.w * 0.9
 
+/**
+ * A scene wider than this is a wide screen's (wider than a 1080p monitor's window): its TV is never taller than the
+ * scene (the owner, 2026-10-25). Up to it, the TV keeps the full width (the owner, 2026-10-21), and in a short
+ * window the room scrolls to its bottom.
+ */
+export const WIDE_FROM = 1920
+
 /** Where the desktop's Remote is: under the TV, always (the owner, 2026-10-21: no Remote beside a smaller TV). */
 export type RemotePlace = "below"
 
@@ -112,8 +119,9 @@ function canvasIn(tv: Rect, canvas: { w: number; h: number }) {
  * gutter): the TV at the top, as wide as the scene but for its margins, and the Remote centred under it, in the
  * hand, free to swing toward the cursor. At every size (the owner, 2026-10-21: only full-width TVs, with the
  * Remote centred).
- * - The TV's height follows from its width: in a wide, short window it is taller than the scene, and the room
- *   scrolls to its bottom and to the Remote.
+ * - The TV's height follows from its width: in a short window it is taller than the scene, and the room
+ *   scrolls to its bottom and to the Remote. On a wide screen (wider than WIDE_FROM) it is never taller than the
+ *   scene: narrower there, centred, and the Remote's top shows under it.
  * - Where the height leaves room, the Remote shows down to its streaming keys inside the scene, at the size the
  *   height suggests or smaller, down to REMOTE_MIN_UNDER; its top reaches a little over the picture's bottom
  *   margin, which lets it sit higher and be larger.
@@ -124,7 +132,8 @@ export function layoutRoom(w: number, h: number): RoomLayout {
 	const aspect = ROOM_PHOTO.tv.w / ROOM_PHOTO.tv.h
 	const pad = Math.max(14, Math.min(28, w * 0.0125))
 	const top = Math.max(6, h * 0.008)
-	const tvW = w - 2 * pad
+	const fullW = w - 2 * pad
+	const tvW = w > WIDE_FROM ? Math.min(fullW, (h - 2 * top) * aspect) : fullW
 	const tvH = tvW / aspect
 	const under = h - top - tvH + REMOTE_OVER_TV - REMOTE_FOOT
 	const fits = under >= REMOTE_SHOWN_UNDER * REMOTE_MIN_UNDER
@@ -196,7 +205,14 @@ export const PHONE_REMOTE: Record<
 	}
 > = {
 	// The fingers: where the palm, under them, holds the body's end (HAND: the palm ends 448 of its px under them).
-	hand: { w: 236, keys: 288, body: 388, grow: 1.3, share: 0.68, fingers: 388 - (448 * 236) / 382 },
+	hand: {
+		w: 236,
+		keys: 288,
+		body: 388,
+		grow: 1.3,
+		share: 0.68,
+		fingers: 388 - (448 * 236) / 382,
+	},
 }
 
 /** The wall left and right of the TV, the TV's bezel, the wall over it, and the stand's neck under it. */
@@ -300,7 +316,10 @@ function seatPhone(
 	const cw = side
 		? Math.max(
 				PHONE_WIDE_CANVAS.min,
-				Math.min(PHONE_WIDE_CANVAS.max, Math.round((PHONE_TV_CANVAS.h * widest) / ph)),
+				Math.min(
+					PHONE_WIDE_CANVAS.max,
+					Math.round((PHONE_TV_CANVAS.h * widest) / ph),
+				),
 			)
 		: PHONE_TV_CANVAS.w
 	const pw = side ? (cw * ph) / PHONE_TV_CANVAS.h : ph * PHONE_TV_ASPECT
@@ -402,10 +421,12 @@ export function layoutPhoneRoom(
 	const s = (outerW / PHONE_ROOM_PHOTO.tv.w) * 0.985
 	// The wall's photo is stretched to the TV's height, and at least as wide as the scene.
 	const ws = Math.max(s, w / PHONE_ROOM_PHOTO.w)
-	const wallLeft = w / 2 - (PHONE_ROOM_PHOTO.tv.x + PHONE_ROOM_PHOTO.tv.w / 2) * ws
+	const wallLeft =
+		w / 2 - (PHONE_ROOM_PHOTO.tv.x + PHONE_ROOM_PHOTO.tv.w / 2) * ws
 	const stretch = seat.seam / (CUT - SKY)
 	const fs = Math.max(s, w / PHONE_ROOM_PHOTO.w)
-	const floorLeft = w / 2 - (PHONE_ROOM_PHOTO.tv.x + PHONE_ROOM_PHOTO.tv.w / 2) * fs
+	const floorLeft =
+		w / 2 - (PHONE_ROOM_PHOTO.tv.x + PHONE_ROOM_PHOTO.tv.w / 2) * fs
 	return {
 		...seat,
 		wall: {
@@ -441,7 +462,10 @@ export function turnLimit(
 	return Math.max(0, Math.min(most, turn))
 }
 
-export type LandscapeRoomLayout = Omit<PhoneRoomLayout, "wall" | "floor" | "seam"> & {
+export type LandscapeRoomLayout = Omit<
+	PhoneRoomLayout,
+	"wall" | "floor" | "seam"
+> & {
 	/** The desktop's room photo, its TV behind ours. */
 	photo: Rect
 }

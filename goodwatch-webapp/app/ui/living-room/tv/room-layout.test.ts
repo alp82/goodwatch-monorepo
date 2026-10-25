@@ -15,6 +15,7 @@ import {
 	TV_CANVAS,
 	layoutPhoneLandscape,
 	layoutPhoneRoom,
+	WIDE_FROM,
 	layoutRoom,
 	turnLimit,
 } from "./room-layout.ts"
@@ -42,7 +43,8 @@ describe("the desktop room, at the prototype's window sizes", () => {
 	const rows = [
 		[1920, 1080, 1857, 1003, 1.548, 0.564, 1352, 1346],
 		[1920, 940, 1857, 1003, 1.548, 0.5, 1317, 1305],
-		[2560, 1300, 2489, 1344, 2.075, 0.68, 1755, 1759],
+		// A wide screen (WIDE_FROM): the TV fits the height.
+		[2560, 1300, 2252, 1216, 1.877, 0.68, 1627, 1631],
 		[1536, 730, 1483, 801, 1.236, 0.5, 1114, 1102],
 		[1440, 800, 1389, 750, 1.158, 0.5, 1063, 1051],
 		[1366, 650, 1317, 711, 1.098, 0.5, 1024, 1012],
@@ -158,6 +160,36 @@ describe("the Remote is under the TV, centred, at every size", () => {
 			"taller than the scene: the room scrolls to its bottom",
 		)
 		assert.ok(L.height > 576, "the room's content is taller than the scene")
+	})
+
+	it("on a wide screen the TV is never taller than the scene (the owner, 2026-10-25), centred, the Remote's top under it", () => {
+		// The owner's ultrawide window: 2524 x 975, a scene of 2509 x 911. It was a TV of 2453 x 1325.
+		for (const [w, h] of [
+			[2509, 911],
+			[1921, 576],
+			[3440, 1300],
+			[5000, 1300],
+		] as const) {
+			const L = layoutRoom(w, h)
+			const at = `${w} x ${h}`
+			assert.ok(
+				L.tv.top + L.tv.height <= h - top(h) + 1e-6,
+				`${at}: the TV's bottom inside the scene`,
+			)
+			assert.ok(
+				L.tv.width <= w - 2 * pad(w) + 1e-6,
+				`${at}: no wider than the scene's margins`,
+			)
+			near(L.tv.left + L.tv.width / 2, w / 2, 0.5, `${at}: the TV's middle`)
+			assert.ok(L.remote.top < h, `${at}: the Remote's top shows`)
+		}
+		near(layoutRoom(2509, 911).tv.width, 1659.7, 0.1, "the owner's window")
+	})
+
+	it("up to WIDE_FROM a short window keeps the full-width TV", () => {
+		const L = layoutRoom(WIDE_FROM, 576)
+		near(L.tv.width, WIDE_FROM - 2 * pad(WIDE_FROM), 1e-6, "full width")
+		assert.ok(L.tv.height > 576, "taller than the scene")
 	})
 
 	it("where the width limits it, the TV is as wide as the scene but for its margins", () => {
@@ -448,21 +480,46 @@ describe("the phone's room on its side", () => {
 	it("the TV takes the width, never taller than 16:9, wider where the height caps it; its canvas is 270 tall and as wide as its shape", () => {
 		for (const [w, h, reserve] of SIDE) {
 			const L = layoutPhoneLandscape(w, h, reserve)
-			assert.ok(L.tv.width / L.tv.height >= PHONE_TV_ASPECT - 1e-9, `${w} x ${h}: never taller than 16:9`)
+			assert.ok(
+				L.tv.width / L.tv.height >= PHONE_TV_ASPECT - 1e-9,
+				`${w} x ${h}: never taller than 16:9`,
+			)
 			near(L.tv.left + L.tv.width / 2, w / 2, 1e-9, `${w} x ${h}: centred`)
 			assert.equal(L.canvas.h, PHONE_TV_CANVAS.h)
-			assert.ok(L.canvas.w >= 480 && L.canvas.w <= 810, `${w} x ${h}: canvas ${L.canvas.w}`)
-			near(L.canvas.scale * L.canvas.w, L.tv.width, 1e-9, `${w} x ${h}: the canvas covers the TV`)
-			near(L.canvas.scale * L.canvas.h, L.tv.height, 1e-9, `${w} x ${h}: and its height`)
+			assert.ok(
+				L.canvas.w >= 480 && L.canvas.w <= 810,
+				`${w} x ${h}: canvas ${L.canvas.w}`,
+			)
+			near(
+				L.canvas.scale * L.canvas.w,
+				L.tv.width,
+				1e-9,
+				`${w} x ${h}: the canvas covers the TV`,
+			)
+			near(
+				L.canvas.scale * L.canvas.h,
+				L.tv.height,
+				1e-9,
+				`${w} x ${h}: and its height`,
+			)
 			// Full width, to the canvas's rounding, unless the picture would be wider than 3:1.
-			if (L.canvas.w < 810) near(L.tv.width, w - 28, L.canvas.scale, `${w} x ${h}: full width`)
+			if (L.canvas.w < 810)
+				near(L.tv.width, w - 28, L.canvas.scale, `${w} x ${h}: full width`)
 			else assert.ok(L.tv.width <= w - 28 + 1e-9)
-			near(h - reserve - L.remote.top, PHONE_PEEK, 1e-9, `${w} x ${h}: the Remote's top shows`)
+			near(
+				h - reserve - L.remote.top,
+				PHONE_PEEK,
+				1e-9,
+				`${w} x ${h}: the Remote's top shows`,
+			)
 			assert.equal(L.height, h, "the room never scrolls")
 		}
 		// The phone of the owner's report: 816 x 285 on a canvas of 773 x 270.
 		const L = layoutPhoneLandscape(844, 390, 0)
-		assert.deepEqual([Math.round(L.tv.width), Math.round(L.tv.height), L.canvas.w], [816, 285, 773])
+		assert.deepEqual(
+			[Math.round(L.tv.width), Math.round(L.tv.height), L.canvas.w],
+			[816, 285, 773],
+		)
 		// Upright keeps its fixed canvas.
 		assert.equal(realPhone(390, 844).canvas.w, 480)
 	})
