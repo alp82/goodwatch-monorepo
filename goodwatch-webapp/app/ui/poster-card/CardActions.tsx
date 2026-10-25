@@ -8,7 +8,6 @@
 // The rules are the title page's: Seen on an unscored title asks for the score (useTitleActions.toggleSeen), a seen
 // movie's Seen opens its watch log, a show's status goes through its tracking, a guest's Seen asks to sign in.
 import {
-	ArrowUturnLeftIcon,
 	BookmarkIcon,
 	ChevronDownIcon,
 	ChevronRightIcon,
@@ -50,6 +49,7 @@ import {
 	selectedScoreStyle,
 } from "~/utils/ratings"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import { HiddenCover } from "./HiddenCover"
 import { DARK, FOCUS, OFF } from "./look"
 import { type WatchStatus, useTitleMarks } from "./marks"
 import { getRevealed, setRevealed } from "./reveal"
@@ -648,44 +648,6 @@ function AfterSeen({
 				className="cursor-pointer text-sm text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white"
 			>
 				Skip for now
-			</button>
-		</div>
-	)
-}
-
-/**
- * After Not interested: the poster stays where it was, greyed under a dark layer, with what happened and Undo. An S
- * card has the icon and Undo; "Not interested" shows from M, "Off your picks" on L.
- */
-function HiddenCover({ title, onUndo }: { title: string; onUndo: () => void }) {
-	return (
-		<div
-			data-hidden-cover=""
-			className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-1.5 rounded-lg bg-gray-950/65 px-1.5 text-center"
-		>
-			<span className="flex size-7 items-center justify-center rounded-full bg-gray-950/90 ring-1 ring-pink-300/40 @min-[6.5rem]/card:size-8 @min-[11rem]/card:size-10">
-				<NoSymbolIcon
-					className="size-4 text-pink-300 @min-[11rem]/card:size-5"
-					aria-hidden
-				/>
-			</span>
-			<p className="hidden text-xs font-bold leading-tight text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.8)] @min-[6.5rem]/card:block @min-[11rem]/card:text-sm">
-				Not interested
-			</p>
-			<p className="-mt-1 hidden text-[11px] leading-tight text-gray-300 @min-[11rem]/card:block">
-				Off your picks
-			</p>
-			<button
-				type="button"
-				onClick={onUndo}
-				aria-label={`Undo Not interested for ${title}`}
-				className={`mt-0.5 inline-flex h-6 cursor-pointer items-center gap-1 rounded-md bg-white px-2 text-[11px] font-bold text-gray-950 shadow-md shadow-black/50 hover:bg-gray-200 @min-[6.5rem]/card:h-7 @min-[6.5rem]/card:px-2.5 @min-[6.5rem]/card:text-xs @min-[11rem]/card:h-8 @min-[11rem]/card:px-3 ${FOCUS}`}
-			>
-				<ArrowUturnLeftIcon
-					className="size-3.5 @min-[11rem]/card:size-4"
-					aria-hidden
-				/>
-				Undo
 			</button>
 		</div>
 	)

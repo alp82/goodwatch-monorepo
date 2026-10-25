@@ -6,7 +6,8 @@
 // The title actions (ui/poster-card/CardActions.tsx) load as their own chunk at the first interaction with the page
 // and mount on the first hover, focus or tap: a panel on hover for a pointer, tiles over the art after a first tap on
 // a touch screen (a second tap, or Open, goes to the title page). After Not interested the card keeps its place,
-// greyed, with Undo, until the list is next loaded.
+// greyed, with Undo, until the list is next loaded. A title already hidden (the Hidden titles page) starts under that
+// cover, and its Undo is the page's.
 import { Link } from "@remix-run/react"
 import {
 	Suspense,
@@ -30,6 +31,7 @@ import type {
 	ActionsPlacement,
 	OpenActions,
 } from "~/ui/poster-card/CardActions"
+import { HiddenCover } from "~/ui/poster-card/HiddenCover"
 import { TitleScorePill } from "~/ui/poster-card/ScorePill"
 import { FOCUS } from "~/ui/poster-card/look"
 import { setRevealed, useRevealed } from "~/ui/poster-card/reveal"
@@ -39,7 +41,10 @@ import { touchPointerNow, useTouchPointer } from "~/ui/title-actions/pointer"
 import { RatingMark } from "~/ui/title-card/RatingMark"
 import { onFirstInteraction } from "~/utils/first-interaction"
 import { titleToDashed } from "~/utils/helpers"
-import { canonicalMediaTitle } from "~/utils/media-presentation"
+import {
+	type PresentedMedia,
+	canonicalMediaTitle,
+} from "~/utils/media-presentation"
 import { extractRatings } from "~/utils/ratings"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
@@ -59,6 +64,25 @@ function preloadCardActions() {
 	onFirstInteraction(() => void loadCardActions().catch(() => {}))
 }
 
+/** The least a card needs, for a surface whose titles come in a shape of their own. */
+export interface CardTitle extends PresentedMedia {
+	tmdb_id: number
+	title: string
+	release_year?: number | string | null
+	poster_path?: string | null
+	/** GoodWatch score, 0 to 100. */
+	goodwatch_overall_score_normalized_percent?: number | null
+	/** The title's services where the viewer watches; the card shows the viewer's own among them. */
+	streaming_links?: readonly ServiceOffer[] | null
+}
+
+/** The Hidden titles page's card: the title is Not interested, and Undo takes that back. */
+export interface HiddenState {
+	onUndo: () => void
+	/** Undo is on its way. */
+	pending?: boolean
+}
+
 interface MovieTvCardProps {
 	details:
 		| MovieDetails
@@ -66,6 +90,7 @@ interface MovieTvCardProps {
 		| DiscoverResult
 		| OnboardingResult
 		| TitleCard
+		| CardTitle
 	mediaType: "movie" | "show"
 	prefetch?: boolean
 	/** The title's age rating for the viewer, shown while an age limit is on. */
@@ -87,6 +112,8 @@ interface MovieTvCardProps {
 	newOn?: number | null
 	/** The list is the Wishlist: the pill leaves out the Wishlist bookmark. */
 	skipWant?: boolean
+	/** The title is hidden already: the card starts under its Not interested cover, without actions. */
+	hidden?: HiddenState
 }
 
 type CardDetails = MovieTvCardProps["details"] & {
@@ -101,10 +128,12 @@ export function MovieTvCard({
 	posterSizes,
 	posterPriority,
 	skipOffscreen = false,
-	actions = "bottom",
+	actions: actionsOn = "bottom",
 	newOn,
 	skipWant = false,
+	hidden,
 }: MovieTvCardProps) {
+	const actions = hidden ? false : actionsOn
 	const ratings = extractRatings(details)
 	const cardKey = useId()
 	const touchLater = useTouchPointer()
@@ -115,7 +144,8 @@ export function MovieTvCard({
 	const frame = useRef<HTMLDivElement>(null)
 	const [armed, setArmed] = useState(false)
 	const [open, setOpen] = useState<OpenActions>(null)
-	const [tile, setTile] = useState(false)
+	const [tileShown, setTile] = useState(false)
+	const tile = tileShown || Boolean(hidden)
 	const arm = useCallback(() => setArmed(true), [])
 	useEffect(() => {
 		if (actions) preloadCardActions()
@@ -126,11 +156,11 @@ export function MovieTvCard({
 	const tmdbId = details.tmdb_id
 	const title = details.title
 	useEffect(() => {
-		if (!tile || !keeper) return
+		if (!tileShown || !keeper) return
 		const kept = { mediaType, details: { tmdb_id: tmdbId, title } }
 		keeper.keep(kept)
 		return () => keeper.release(kept)
-	}, [tile, keeper, mediaType, tmdbId, title])
+	}, [tileShown, keeper, mediaType, tmdbId, title])
 
 	const href = `/${mediaType}/${details.tmdb_id}-${titleToDashed(canonicalMediaTitle(details))}`
 	const offers = (details as CardDetails).streaming_links
@@ -209,6 +239,13 @@ export function MovieTvCard({
 					/>
 				</div>
 			)}
+			{hidden && (
+				<HiddenCover
+					title={details.title}
+					onUndo={hidden.onUndo}
+					pending={hidden.pending}
+				/>
+			)}
 			{actions && armed && (
 				<Suspense fallback={null}>
 					<CardActions
@@ -221,7 +258,7 @@ export function MovieTvCard({
 						revealed={revealed}
 						open={open}
 						setOpen={setOpen}
-						tile={tile}
+						tile={tileShown}
 						setTile={setTile}
 					/>
 				</Suspense>
