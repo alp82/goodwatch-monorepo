@@ -31,7 +31,7 @@ def canonical_url(value):
         raise ValueError("Trope URL must be a string")
     parts = urlsplit(value)
     if (parts.scheme not in ("http", "https") or parts.netloc.lower() not in ("tvtropes.org", "www.tvtropes.org")
-            or not re.fullmatch(r"/pmwiki/pmwiki\.php/Main/[A-Za-z0-9]+", parts.path)
+            or not re.fullmatch(r"/pmwiki/pmwiki\.php/Main/[A-Za-z0-9_]+", parts.path)
             or parts.query or parts.fragment):
         raise ValueError("Trope URL must identify a TV Tropes Main page without query or fragment")
     return "https://tvtropes.org" + parts.path

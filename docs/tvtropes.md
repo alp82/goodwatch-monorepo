@@ -75,6 +75,10 @@ the runner never guesses URLs or substitutes generated descriptions.
 Offline review subsequently selected known fetch candidates for 353 of those 356 names, mostly case-only URL
 variants. These selections are not claims of canonical identity: each fetched page must still pass the heading and
 canonical checks. The three remaining labels are contextual or gender-swapped names without a unique subject.
+A subsequent audit of excluded URLs recovered eight more names from duplicated site prefixes and the known
+`Main/Time_Slip` route, bringing the inventory to 38,038 names. The exact underscore path is retained, never guessed.
+Non-Main links to creators, works and other namespaces remain outside the general-definition catalog; the URL audit
+and original grouped pairs are saved in the run's `inventory/` directory.
 
 `goodwatch-flows/scripts/populate_trope_catalog.py run --all` queues every catalog row whose description is null.
 It uses the existing recovery client's identifying user agent, a single worker lock and persistent pacing of at

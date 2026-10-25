@@ -278,6 +278,55 @@ class TropeDescriptionTests(unittest.TestCase):
                 self.assertIsNone(self.extract(html, name="Unrelated Label", url=served)["description"])
                 self.assertIsNone(self.extract(html, name=name, url=served + "Other")["description"])
 
+    def test_leading_small_media_disambiguation_preserves_area51_intro(self):
+        hatnote = '''<h3><span class="font-s">For the film, see <em><a href="/pmwiki/pmwiki.php/Film/Area512015">Area 51 (2015)</a></em>.
+        For the <a href="/pmwiki/pmwiki.php/Main/Seinen">Seinen</a> manga, see <a href="/pmwiki/pmwiki.php/Manga/Area51Seinen">Area 51 (Seinen)</a>.
+        For the game, see <a href="/pmwiki/pmwiki.php/VideoGame/Area51FPS">Area 51 (FPS)</a>.</span></h3>'''
+        lead = 'A top-secret United States Air Force base in the Nevada desert, associated in fiction with aliens and government conspiracies.'
+        html = page('<p><!-- empty lead --></p>' + hatnote + '<div class="quoteright">Image</div><div class="acaptionright">Caption</div><p>' + lead + '</p><hr><h2>Examples</h2><p>Exclude this example.</p>', heading='Area 51', canonical=URL.replace('SeriousBusiness', 'Area51'))
+        result = self.extract(html, name='AREA 51', url=URL.replace('SeriousBusiness', 'AREA51'))
+        self.assertIsNone(result['error'])
+        self.assertEqual(result['description'], lead)
+
+    def test_only_leading_media_disambiguation_is_skipped(self):
+        hatnote = '<h4><span class="font-s">For the film, see <a href="/pmwiki/pmwiki.php/Film/OtherWork">Other Work</a>.</span></h4>'
+        for intro in ['<p>' + LEAD + '</p>', LEAD]:
+            result = self.extract(page(intro + hatnote + '<p>Later section text must never become part of the introduction.</p><hr>'))
+            self.assertEqual(result['description'], LEAD)
+
+    def test_leading_series_disambiguation_uses_the_known_series_namespace(self):
+        note = '<h3><span class="font-s">For the television series, see <a href="/pmwiki/pmwiki.php/Series/OtherWork">Other Work</a>.</span></h3>'
+        self.assertEqual(self.extract(page(note + '<p>' + LEAD + '</p><hr>'))["description"], LEAD)
+
+    def test_small_headings_and_examples_navigation_still_stop(self):
+        for heading in [
+            '<h3><span class="font-s">Examples</span></h3>',
+            '<h3><span class="font-s">For examples, see <a href="/pmwiki/pmwiki.php/Film/OtherWork">Other Work</a>.</span></h3>',
+            '<h3><span class="font-s">For the trope, see <a href="/pmwiki/pmwiki.php/Main/OtherTrope">Other Trope</a>.</span></h3>',
+            '<h3>For the film, see <a href="/pmwiki/pmwiki.php/Film/OtherWork">Other Work</a>.</h3>',
+            '<h3><span class="font-s">Background and development</span></h3>',
+            '<h3><span class="font-s">For the film, see <a href="https://unrelated.example/pmwiki/pmwiki.php/Film/OtherWork">Other Work</a>.</span></h3>',
+        ]:
+            with self.subTest(heading=heading):
+                result = self.extract(page(heading + '<p>' + LEAD + '</p><hr>'))
+                self.assertIsNone(result['description'])
+
+    def test_media_hatnote_is_not_skipped_in_fallback_outside_article(self):
+        hatnote = '<h3><span class="font-s">For the film, see <a href="/pmwiki/pmwiki.php/Film/OtherWork">Other Work</a>.</span></h3>'
+        html = page('<p>' + LEAD + '</p>').replace('</article>', '</article>' + hatnote + '<p>Outside section text must be excluded from this introduction.</p><hr>')
+        self.assertEqual(self.extract(html)['description'], LEAD)
+
+    def test_known_underscore_routes_are_preserved_without_guessing_a_slug(self):
+        known = URL.rsplit("/", 1)[0] + "/Time_Slip"
+        html = page(f'<p>{LEAD}</p><hr>', heading="Time Slip", canonical=known)
+        result = self.extract(html, name="Time_Slip", url=known)
+        self.assertIsNone(result["error"])
+        self.assertEqual(result["canonical_url"], known)
+        target = URL.rsplit("/", 1)[0] + "/NewName"
+        html = page(f'<p>{LEAD}</p><hr>', heading="New Name", canonical=target)
+        result = extract_description(html, "Time_Slip", target + "?from=Main.Time_Slip", requested_url=known)
+        self.assertIsNone(result["error"])
+
     def test_rejects_missing_or_ambiguous_canonical(self):
         for html in [page(f'<p>{LEAD}</p><hr>').replace(f'<link rel="canonical" href="{URL}">', ''), page(f'<p>{LEAD}</p><hr>', canonical=''), page(f'<p>{LEAD}</p><hr>').replace('</head>', '<link rel="canonical" href="https://tvtropes.org/pmwiki/pmwiki.php/Main/Other"></head>')]:
             self.assertIsNone(self.extract(html)["description"])

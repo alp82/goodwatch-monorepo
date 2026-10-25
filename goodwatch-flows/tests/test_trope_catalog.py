@@ -57,6 +57,7 @@ class TropeCatalogTests(unittest.TestCase):
 
     def test_only_canonical_main_pages_can_be_imported(self):
         self.assertEqual(canonical_url(URL.replace("https:", "http:")), URL)
+        self.assertEqual(canonical_url(URL.replace("RedHerring", "Time_Slip")), URL.replace("RedHerring", "Time_Slip"))
         for url in ("https://evil.test/Main/RedHerring", URL + "?x=y", URL + "#main", "https://tvtropes.org@evil.test/pmwiki/pmwiki.php/Main/RedHerring", URL.replace("Main/", "Film/")):
             with self.subTest(url=url), self.assertRaises(ValueError):
                 canonical_url(url)

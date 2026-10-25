@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup, Comment, FeatureNotFound, NavigableString, Tag
 
 MAX_DESCRIPTION_BYTES = 24_000
 MIN_DESCRIPTION_CHARS = 40
-_MAIN_PATH = re.compile(r"/pmwiki/pmwiki\.php/Main/[A-Za-z0-9]+")
+_MAIN_PATH = re.compile(r"/pmwiki/pmwiki\.php/Main/[A-Za-z0-9_]+")
 _HIDDEN_STYLE = re.compile(r"(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*hidden)\b", re.I)
 _HATNOTE = re.compile(r'^The (?:word|term|name|phrase) .{1,160} redirects? to this page\b', re.I)
 _EXAMPLES_LABEL = re.compile(r"^examples?(?:\s+subpages?|\s+of\s+this\s+trope|\s+include)?\s*[:.!]?$", re.I)
@@ -50,7 +50,7 @@ def _main_url(value, *, navigation=False):
         # body. Alone it is not evidence that an arbitrary label identifies the subject.
         pairs = parse_qsl(parsed.query, keep_blank_values=True)
         if (not navigation or len(pairs) != 1 or pairs[0][0] != "from"
-                or not re.fullmatch(r"Main\.[A-Za-z0-9]+", pairs[0][1])):
+                or not re.fullmatch(r"Main\.[A-Za-z0-9_]+", pairs[0][1])):
             return None
     if parsed.fragment and not navigation:
         return None
@@ -170,6 +170,42 @@ def _collect(nodes):
     return paragraphs, False
 
 
+def _leading_media_hatnote(node):
+    if not isinstance(node, Tag) or node.name not in {"h3", "h4"}:
+        return False
+    text = _text(node)
+    small = node.select_one(".font-s")
+    if (small is None or _text(small) != text
+            or not re.fullmatch(r"For\b.+,\s*see\b.+[.!]", text, re.I)
+            or re.search(r"\bexamples?\b", text, re.I)):
+        return False
+    # A disambiguation notice points to actual works, possibly with Main genre
+    # links interspersed. A small heading or examples navigator alone is not one.
+    for link in node.find_all("a", href=True):
+        parsed = urlparse(urljoin("https://tvtropes.org", link["href"]))
+        if (parsed.scheme == "https" and parsed.netloc == "tvtropes.org"
+                and re.fullmatch(r"/pmwiki/pmwiki\.php/(?:Film|Literature|Manga|Anime|VideoGame|ComicBook|Webcomic|WesternAnimation|Series|LiveActionTV)/[A-Za-z0-9_]+", parsed.path)
+                and not parsed.query and not parsed.fragment):
+            return True
+    return False
+
+
+def _skip_leading_media_hatnotes(article):
+    # Only inspect the validated article's leading siblings. Once real intro
+    # text or any other boundary occurs, every later heading retains its meaning.
+    for node in list(article.children):
+        if isinstance(node, Comment):
+            continue
+        if isinstance(node, NavigableString):
+            if node.strip():
+                break
+            continue
+        if _leading_media_hatnote(node):
+            node.decompose()
+        elif any(_events(node)):
+            break
+
+
 def _following_in_content(article, content):
     # The fallback begins after the validated article, never before its heading
     # or navigation, and never escapes the page's actual main-content region.
@@ -236,6 +272,7 @@ def extract_description(html, name, final_url, *, requested_url=None):
     article = soup.select_one("#main-article")
     if not article:
         return reject("Missing main article")
+    _skip_leading_media_hatnotes(article)
     paragraphs, boundary = _collect(list(article.children))
     if not boundary:
         content = article.find_parent(id="main-content")
