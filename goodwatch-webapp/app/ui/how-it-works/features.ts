@@ -2,7 +2,6 @@
 // intro's parts (pictures.tsx) or, for AI apps, the /use-with-ai chat demo. Facts checked on 2026-10-18:
 // - Score: goodwatch-flows/windmill/f/sync/copy/all_ratings.py (the mean of an audience average of TMDB, IMDb,
 //   Metacritic users and Rotten Tomatoes audience, and a critic average of Metascore and Tomatometer).
-// - 74 traits: VALID_FINGERPRINT_KEYS in server/utils/fingerprint.ts.
 // - 325 services, 139 countries, 1.5 million titles: server/living-room/intro/content.json (captured 2026-10-17).
 // - A 90% match is the top 1%: domain/taste-match.ts.
 
@@ -10,7 +9,8 @@ export type PictureId =
 	| "score"
 	| "streaming"
 	| "for-you"
-	| "feelings"
+	| "taste"
+	| "discord"
 	| "search"
 	| "filters"
 	| "explorer"
@@ -60,12 +60,12 @@ export const HOW_IT_WORKS_FEATURES: Feature[] = [
 	},
 	{
 		id: "title-analysis",
-		picture: "feelings",
+		picture: "taste",
 		phone: "square",
-		kicker: "Title analysis",
-		title: "How it feels",
-		line: "Every title is read on 74 traits, from tense to heartwarming. Pick by the evening you want.",
-		link: { to: "/explorer", label: "Browse by feeling" },
+		kicker: "Your taste",
+		title: "Your taste fingerprint",
+		line: "Your ratings draw your taste fingerprint. Tune it for more laughs or more tension, and your picks change with it.",
+		link: { to: "/for-you", label: "Tune your picks" },
 	},
 	{
 		id: "search",
@@ -117,8 +117,17 @@ export const HOW_IT_WORKS_FEATURES: Feature[] = [
 		picture: "chat",
 		phone: "square",
 		kicker: "AI apps",
-		title: "Ask in your AI chat",
-		line: "Claude, ChatGPT and other AI apps can find, log and rate titles for you.",
+		title: "Use with AI",
+		line: "Ask ChatGPT, Claude and other AI apps what to start tonight, compare scores, or log the episode you just watched.",
 		link: { to: "/use-with-ai", label: "Set it up" },
+	},
+	{
+		id: "discord",
+		picture: "discord",
+		phone: "square",
+		kicker: "Discord",
+		title: "Discord bot",
+		line: "Type /watch for a pick, its score and where it streams. Let everyone vote on what to watch together.",
+		link: { to: "/discord", label: "Add the Discord bot" },
 	},
 ]

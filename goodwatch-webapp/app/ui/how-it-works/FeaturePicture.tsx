@@ -71,7 +71,7 @@ export function FeaturePicture({
 		<div
 			ref={ref}
 			aria-hidden="true"
-			className={`hiw-pic-host relative w-full ${phone === "tall" ? "aspect-[4/5]" : "aspect-square"} sm:aspect-[2/1]`}
+			className={`hiw-pic-host ${id === "taste" || id === "discord" ? "hiw-pic-film" : ""} relative w-full ${phone === "tall" ? "aspect-[4/5]" : "aspect-square"} sm:aspect-[2/1]`}
 		>
 			{data && shown && (
 				<Suspense fallback={null}>

@@ -1,7 +1,7 @@
 // /how-it-works: one feature per row, centred: a kicker, a short headline and one line, then a big picture made from
 // the start page intro's parts (ui/how-it-works), then a link to the real page. The text is in the server's HTML; the
 // pictures load on demand as they scroll into view. Each row has an anchor (/how-it-works#score); the start page's
-// "How GoodWatch works" links to #score and #title-analysis.
+// "How GoodWatch works" links to #score. #title-analysis stays compatible with existing links.
 import type { MetaFunction } from "@remix-run/node"
 import {
 	FeaturePicture,
@@ -18,7 +18,7 @@ export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
 		title: "How GoodWatch works | GoodWatch",
 		description:
-			"One score from IMDb, Rotten Tomatoes, Metacritic and TMDB, 325 streaming services, picks for your taste, and how every movie and show feels.",
+			"One score from IMDb, Rotten Tomatoes, Metacritic and TMDB, 325 streaming services, picks for your taste, your taste fingerprint, AI apps and the Discord bot.",
 		url: "https://goodwatch.app/how-it-works",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "How GoodWatch works",
