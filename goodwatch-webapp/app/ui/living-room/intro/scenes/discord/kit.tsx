@@ -114,7 +114,7 @@ const runtime = (m: number) =>
 
 /** Example people. Discord's default avatar colours. */
 export const PEOPLE = [
-	{ name: "alp", color: "#3ba55d" },
+	{ name: "sam", color: "#3ba55d" },
 	{ name: "Mia", color: "#eb459e" },
 	{ name: "Leo", color: "#5865f2" },
 ]
@@ -149,7 +149,7 @@ export function AppName() {
 	)
 }
 
-/** "alp used /watch": the line above an app's answer. */
+/** "sam used /watch": the line above an app's answer. */
 export function Used({
 	user,
 	command,

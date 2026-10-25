@@ -262,7 +262,11 @@ function Thread({ data, opts }: SceneProps & { opts: ChannelOpts }) {
 				}}
 			>
 				<div style={{ height: "1.4em", paddingLeft: "3.05em" }}>
-					<Used user="alp" command="/watch" color={PEOPLE[0].color} />
+					<Used
+						user={PEOPLE[0].name}
+						command="/watch"
+						color={PEOPLE[0].color}
+					/>
 				</div>
 				<div style={{ display: "flex", gap: "0.85em" }}>
 					<AppAvatar />
