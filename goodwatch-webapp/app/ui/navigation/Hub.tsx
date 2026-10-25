@@ -68,6 +68,10 @@ const TILE_TINTS: Partial<
 		wash: "from-fuchsia-200/25 to-fuchsia-200/[0.06]",
 		icon: "text-fuchsia-300",
 	},
+	new: {
+		wash: "from-sky-200/25 to-sky-200/[0.06]",
+		icon: "text-sky-300",
+	},
 }
 
 /** The For you tile's line: these are recommendations, chosen from what the person likes. */
@@ -283,6 +287,11 @@ function HubContent() {
 							}
 							here={here === "myMovies"}
 							fresh={landedWords("movie", landed?.movies ?? null)}
+						/>
+						<Tile
+							destination={d.new}
+							subtitle="What arrived in the last 14 days"
+							here={here === "new"}
 						/>
 					</>
 				) : (

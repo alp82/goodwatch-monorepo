@@ -307,6 +307,7 @@ const PAGES: Entry[] = [
 			"/new",
 			CalendarDaysIcon,
 			{
+				destination: "new",
 				names: ["new", "new on streaming", "new on your services"],
 				words: ["just added", "new arrivals", "recently added", "arrived"],
 			},

@@ -23,3 +23,10 @@ test("the For you page and the pages under it belong to the For you destination"
 	assert.equal(currentDestination("/for-you/anything"), "forYou")
 	assert.equal(currentDestination("/for-youth"), null)
 })
+
+test("the member's /new belongs to New on your services; a country's pages under it belong to none", () => {
+	assert.equal(currentDestination("/new"), "new")
+	assert.equal(currentDestination("/new/us/netflix"), null)
+	assert.equal(currentDestination("/new/us"), null)
+	assert.equal(currentDestination("/newsletter"), null)
+})

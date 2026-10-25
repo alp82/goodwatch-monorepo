@@ -2,6 +2,7 @@
 // Browse panel, the dock's hub key, the Browse button, and the search palette all read from here.
 import {
 	BookmarkIcon,
+	CalendarDaysIcon,
 	FilmIcon,
 	FireIcon,
 	FingerPrintIcon,
@@ -30,6 +31,8 @@ export type DestinationKey =
 	| "myLibrary"
 	// Recommendations steered by the person's taste (routes/for-you.tsx). Not the For you switch on Discover.
 	| "forYou"
+	// What arrived on a member's own services in the last 14 days (routes/new._index.tsx, #489).
+	| "new"
 
 export interface Destination {
 	key: DestinationKey
@@ -133,6 +136,13 @@ export function getDestinations(): Record<DestinationKey, Destination> {
 			href: "/for-you",
 			icon: SparklesIcon,
 		},
+		new: {
+			key: "new",
+			label: "New on your services",
+			short: "New",
+			href: "/new",
+			icon: CalendarDaysIcon,
+		},
 	}
 }
 
@@ -154,6 +164,8 @@ const PREFIXES: [string, DestinationKey][] = [
 /** The destination the page at `pathname` belongs to; null for pages outside them (title pages, settings, …). */
 export function currentDestination(pathname: string): DestinationKey | null {
 	if (pathname === "/") return "home"
+	// Only the member's own page: /new/us/netflix and /new/us are public pages for a country, outside the destinations.
+	if (pathname === "/new") return "new"
 	for (const [prefix, key] of PREFIXES)
 		if (pathname === prefix || pathname.startsWith(`${prefix}/`)) return key
 	return null
