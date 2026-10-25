@@ -1,3 +1,4 @@
+import type { NewPagesHere } from "~/server/new-on-services-page.server"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import type { TitleSides } from "~/server/title-sides.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
@@ -24,6 +25,8 @@ export interface DetailsHeroProps {
 	sectionProps: SectionProps<SectionIds>
 	/** Where the title sits in the signed-in member's taste (taste groups); null when the page says nothing about it. */
 	sides?: TitleSides | null
+	/** The brands with a page of new arrivals in the loaded country, for where to watch's "More new on" (#489). */
+	newPages?: NewPagesHere
 }
 
 // The title page's overview, one card under the page's header (which has the title).
@@ -34,7 +37,7 @@ export interface DetailsHeroProps {
 // their list actions (for a tracked show also its status line). Under the banner, behind a line, where to watch across the card,
 // then for a member a quiet line on where the title sits in their Taste (taste groups). On a phone the two sides
 // stand over each other.
-export default function DetailsHero({ media, country, shownCountry, preview, episodeGrid = null, sectionProps, sides = null }: DetailsHeroProps) {
+export default function DetailsHero({ media, country, shownCountry, preview, episodeGrid = null, sectionProps, sides = null, newPages }: DetailsHeroProps) {
 	return (
 		<div className="relative mx-auto mb-10 mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div {...sectionProps.overview}>
@@ -75,6 +78,7 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 						country={country}
 						shownCountry={shownCountry}
 						preview={preview}
+						newPages={newPages}
 						className="mx-3 border-t border-white/10 pb-3 pt-4 md:mx-6 md:pb-5 md:pt-5"
 					/>
 					{sides && <TitleSidesLine sides={sides} mediaType={media.mediaType} tmdbId={media.details.tmdb_id} />}

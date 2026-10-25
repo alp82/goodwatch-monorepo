@@ -1,4 +1,6 @@
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
+import { brandOfService, servicePath } from "~/domain/new-on-services"
+import type { NewPagesHere } from "~/server/new-on-services-page.server"
 import { SERVICES_PATH } from "~/ui/settings/paths"
 import {
 	AdjustmentsHorizontalIcon,
@@ -98,11 +100,14 @@ export default function WhereToWatch({
 	country,
 	shownCountry = country,
 	preview = null,
+	newPages,
 	className = "",
 }: {
 	media: Media
 	/** The country `media`'s offers are for. */
 	country: string
+	/** The brands with a page of new arrivals in the loaded country (#489): "More new on Netflix" under the logos. */
+	newPages?: NewPagesHere
 	/** The country the header pair shows; differs from `country` while its offers load or failed to load. */
 	shownCountry?: string
 	preview?: "loading" | "failed" | null
@@ -136,6 +141,19 @@ export default function WhereToWatch({
 	const offer = OFFER_LABEL[type]
 	const verb = OFFER_VERB[type]
 	const here = country ? regionName(country) : "your country"
+	// The streaming services here that have a page of new arrivals, two at most: "More new on Netflix" (#489). Only
+	// for the loaded country's offers, so a previewed country never links to another country's page.
+	const newOnHere =
+		newPages && newPages.country === country && type === "flatrate"
+			? [
+					...new Set(
+						links.flatMap((l) => {
+							const brand = brandOfService(l.id)
+							return brand && newPages.brands.includes(brand.slug) ? [brand] : []
+						}),
+					),
+				].slice(0, 2)
+			: []
 	// Another offer type the country has, for a way out when this one has nothing.
 	const otherTab = OFFER_TABS.find(
 		(t) => t !== type && linksByTab[t].length > 0,
@@ -321,6 +339,21 @@ export default function WhereToWatch({
 				>
 					{all ? "Show fewer" : `All ${links.length} services`}
 				</button>
+			)}
+			{newOnHere.length > 0 && (
+				<p data-new-on className="mt-2 flex flex-wrap gap-x-4 gap-y-1 px-1 text-xs">
+					{newOnHere.map((brand) => (
+						<Link
+							key={brand.slug}
+							to={servicePath(country, brand)}
+							prefetch="intent"
+							className="inline-flex items-center gap-1 font-semibold text-sky-300 hover:text-sky-200"
+						>
+							More new on {brand.name}
+							<ChevronRightIcon className="h-3 w-3" aria-hidden />
+						</Link>
+					))}
+				</p>
 			)}
 			{links.length > 0 && others.length > 0 && (
 				<button

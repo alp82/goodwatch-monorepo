@@ -17,6 +17,7 @@ const {
 	linksAcross,
 	arrivalTitlesOf,
 	weekTitlesOf,
+	newPagesHere,
 	DAY_LIMIT,
 } = await import("./new-on-services-page.server.ts")
 const { titleKey } = await import("../utils/title-key.ts")
@@ -408,6 +409,12 @@ test("a country whose read fails is left out of the links; every other page keep
 		page.keys.map(({ slug }) => slug),
 		["netflix", "hulu"],
 	)
+})
+
+test("the title page names the brands with a page of their own in its country, not the country's page", () => {
+	const links = linksOf(COUNTRIES.map(({ code }) => ({ country: code, arrivals: ARRIVALS[code] })))
+	assert.deepEqual(newPagesHere(links, "US"), { country: "US", brands: ["netflix", "hulu"] })
+	assert.deepEqual(newPagesHere(links, "FR"), { country: "FR", brands: [] })
 })
 
 // ---------------------------------------------------------------------------------------------------------

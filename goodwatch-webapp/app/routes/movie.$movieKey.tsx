@@ -16,6 +16,8 @@ import { isCrawler } from "~/server/crawlers.server"
 import { getDetailsForMovie } from "~/server/details.server"
 import { titleDetailsWithin } from "~/server/title-page-budget"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
+import { newPagesWithin } from "~/server/new-on-services.server"
+import type { NewPagesHere } from "~/server/new-on-services-page.server"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
 import { relatedMapLookup, relatedSectionData } from "~/server/related-map.server"
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
@@ -71,6 +73,8 @@ export type LoaderData = {
 	breadcrumb: Crumb[]
 	/** Eight titles of the breadcrumb's genre (genre-row.server.ts); missing without one. */
 	genreRow?: GenreRow
+	/** The brands with a page of new arrivals in the country, for where to watch's \"More new on\" (#489). */
+	newPages?: NewPagesHere
 }
 
 const titleLoader = async ({
@@ -98,6 +102,8 @@ const titleLoader = async ({
 	const canonicalContent = isCrawler(request)
 	const language = canonicalContent ? "en" : effectiveContext.language
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
+	// The brands with a page of new arrivals in the country (#489), from the links in memory or Valkey.
+	const newPagesWork = newPagesWithin(country, TITLE_BUDGET_MS)
 	const details = titleDetailsWithin(
 		timeRequestWork(request, "data", () =>
 			getDetailsForMovie({ movieId, country, language }, { canonical: canonicalContent })),
@@ -164,9 +170,10 @@ const titleLoader = async ({
 	)
 	const dehydratedState = mergeDehydratedStates(extrasState)
 
-	const [sides, genre] = await Promise.all([
+	const [sides, genre, newPages] = await Promise.all([
 		titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS),
 		genreWork,
+		newPagesWork,
 	])
 	// The page's next 103 Early Hints response names its hero (server/hero-hints.ts).
 	if (media.details.backdrop_path)
@@ -183,12 +190,14 @@ const titleLoader = async ({
 		dehydratedState,
 		...(related.relatedMap && { relatedMap: related.relatedMap }),
 		...(genre && genre !== "late" && { genreRow: genre }),
+		...(newPages !== "late" && { newPages }),
 	}
 	// Without the related titles or an extra (a lookup ran out of its budget or failed) the page is incomplete:
 	// no cache may keep it. The page cache and a cache in front follow this header.
 	const complete =
 		related.complete &&
 		genre !== "late" &&
+		newPages !== "late" &&
 		titleExtrasEmbedded(extrasState, {
 			genres: media.details.genres,
 			movieSeries: media.movie_series,
@@ -201,7 +210,7 @@ const titleLoader = async ({
 export const loader: LoaderFunction = withRequestTiming(titleLoader)
 
 export default function DetailsMovie() {
-	const { media, params, countryIsFallback, talkedAboutNow, sides, breadcrumb, genreRow } = useLoaderData<LoaderData>()
+	const { media, params, countryIsFallback, talkedAboutNow, sides, breadcrumb, genreRow, newPages } = useLoaderData<LoaderData>()
 	const { country } = params
 
 	// return (
@@ -235,7 +244,7 @@ export default function DetailsMovie() {
 		return () => controller.abort()
 	}, [media, country, countryIsFallback])
 
-	return <Details media={media} country={country} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} genreRow={genreRow} />
+	return <Details media={media} country={country} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} genreRow={genreRow} newPages={newPages} />
 }
 
 // Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).

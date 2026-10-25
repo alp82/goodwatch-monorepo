@@ -1,3 +1,4 @@
+import type { NewPagesHere } from "~/server/new-on-services-page.server"
 import React from "react"
 import DetailsContent from "~/ui/details/DetailsContent"
 import DetailsSideNav from "~/ui/details/DetailsSideNav"
@@ -41,6 +42,8 @@ export interface DetailsProps {
 	breadcrumb?: readonly Crumb[]
 	/** Eight titles of the breadcrumb's genre, after the related titles. */
 	genreRow?: GenreRow
+	/** The brands with a page of new arrivals in the loaded country, for where to watch (#489). */
+	newPages?: NewPagesHere
 }
 
 export default function Details(props: DetailsProps) {
@@ -66,6 +69,7 @@ function DetailsPage({
 	sides,
 	breadcrumb = [],
 	genreRow,
+	newPages,
 }: DetailsProps) {
 	// The header pair's country and language, picked or saved, over the ones the page loaded with. Until their data
 	// is in (or when it fails), the page keeps the loaded title and offers, and where-to-watch says so; a picked
@@ -159,6 +163,7 @@ function DetailsPage({
 				episodeGrid={hasEpisodeGrid(episodeGrid) ? episodeGrid : null}
 				sectionProps={sectionProps}
 				sides={sides}
+				newPages={newPages}
 			/>
 
 			<div className="isolate">

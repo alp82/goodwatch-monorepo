@@ -23,6 +23,8 @@ import {
 } from "~/server/title-page-budget"
 import { getEpisodeGrid } from "~/server/episode-grid.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
+import { newPagesWithin } from "~/server/new-on-services.server"
+import type { NewPagesHere } from "~/server/new-on-services-page.server"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
 import {
 	relatedMapLookup,
@@ -88,6 +90,8 @@ type LoaderData = {
 	breadcrumb: Crumb[]
 	/** Eight titles of the breadcrumb's genre (genre-row.server.ts); missing without one. */
 	genreRow?: GenreRow
+	/** The brands with a page of new arrivals in the country, for where to watch's \"More new on\" (#489). */
+	newPages?: NewPagesHere
 }
 
 const titleLoader = async ({
@@ -111,6 +115,8 @@ const titleLoader = async ({
 	const canonicalContent = isCrawler(request)
 	const language = canonicalContent ? "en" : effectiveContext.language
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
+	// The brands with a page of new arrivals in the country (#489), from the links in memory or Valkey.
+	const newPagesWork = newPagesWithin(country, TITLE_BUDGET_MS)
 	const details = titleDetailsWithin(
 		timeRequestWork(request, "data", () => getDetailsForShow(
 			{ showId, country, language },
@@ -230,9 +236,10 @@ const titleLoader = async ({
 	)
 	const dehydratedState = mergeDehydratedStates(extrasState)
 
-	const [sides, genre] = await Promise.all([
+	const [sides, genre, newPages] = await Promise.all([
 		titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS),
 		genreWork,
+		newPagesWork,
 	])
 	// The page's next 103 Early Hints response names its hero (server/hero-hints.ts).
 	if (media.details.backdrop_path)
@@ -250,6 +257,7 @@ const titleLoader = async ({
 		dehydratedState,
 		...(related.relatedMap && { relatedMap: related.relatedMap }),
 		...(genre && genre !== "late" && { genreRow: genre }),
+		...(newPages !== "late" && { newPages }),
 	}
 	// A failed grid read or missing related titles or a missing extra makes the page incomplete.
 	// No cache may keep it. A grid read that resolves to null is complete.
@@ -257,6 +265,7 @@ const titleLoader = async ({
 		!episodeGridFailed &&
 		related.complete &&
 		genre !== "late" &&
+		newPages !== "late" &&
 		titleExtrasEmbedded(extrasState, { genres: media.details.genres })
 	return complete ? data : json(data, { headers: INCOMPLETE_PAGE_HEADERS })
 }
@@ -273,6 +282,7 @@ export default function DetailsTV() {
 		sides,
 		breadcrumb,
 		genreRow,
+		newPages,
 	} = useLoaderData<LoaderData>()
 	const { country } = params
 	const episodeGrid = useMemo(
@@ -317,7 +327,7 @@ export default function DetailsTV() {
 	}, [media, country, countryIsFallback])
 
 	return (
-		<Details media={media} country={country} episodeGrid={episodeGrid} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} genreRow={genreRow} />
+		<Details media={media} country={country} episodeGrid={episodeGrid} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} genreRow={genreRow} newPages={newPages} />
 	)
 }
 

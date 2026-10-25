@@ -285,6 +285,18 @@ export function arrivalTitlesOf(
 	)
 }
 
+/** The brands with a page of their own in a country (/new/us/netflix), by slug: the title page links to them. */
+export type NewPagesHere = { country: string; brands: string[] }
+
+export function newPagesHere(links: NewLinks, country: string): NewPagesHere {
+	return {
+		country,
+		brands: links.pages
+			.filter((page) => page.country === country && page.brand !== null)
+			.map(({ brand }) => brand as string),
+	}
+}
+
 /** How many titles the start page's row has, at most: two rows of three on a phone, one row of six from 640 px. */
 export const WEEK_ROW_LIMIT = 6
 

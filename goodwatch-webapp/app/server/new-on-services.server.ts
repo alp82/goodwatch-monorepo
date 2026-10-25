@@ -29,11 +29,13 @@ import {
 	type NewDeps,
 	type NewLinks,
 	type NewMeta,
+	type NewPagesHere,
 	type NewWeekRow,
 	type Viewer,
 	WEEK_ROW_LIMIT,
 	arrivalTitlesOf,
 	linksAcross,
+	newPagesHere,
 	weekTitlesOf,
 } from "~/server/new-on-services-page.server"
 import {
@@ -264,6 +266,49 @@ export function getLinks(now: number): Promise<NewLinks> {
 		params: { day: utcDay(now) },
 		ttlMinutes: LINKS_TTL_MINUTES,
 	})
+}
+
+// The links in this process for a few minutes, so a title page doesn't read and parse them from Valkey each time.
+const LINKS_MEMO_MS = 10 * 60_000
+let linksMemo: { day: number; at: number; links: Promise<NewLinks> } | null = null
+
+function memoLinks(now: number): Promise<NewLinks> {
+	const day = utcDay(now)
+	if (!linksMemo || linksMemo.day !== day || now - linksMemo.at > LINKS_MEMO_MS) {
+		const links = getLinks(now)
+		linksMemo = { day, at: now, links }
+		links.catch(() => {
+			if (linksMemo?.links === links) linksMemo = null
+		})
+	}
+	return linksMemo.links
+}
+
+/**
+ * The brands with a page of their own in the country, for the title page's "More new on Netflix" (#489, Q67), or
+ * "late" when the links aren't ready within the page's budget (after midnight UTC, while they are built). Never fails:
+ * without the links there is no page to name.
+ */
+export async function newPagesWithin(
+	country: string,
+	budgetMs: number,
+): Promise<NewPagesHere | "late"> {
+	const links = memoLinks(Date.now())
+	let timer: NodeJS.Timeout | undefined
+	const late = new Promise<"late">((resolve) => {
+		timer = setTimeout(() => resolve("late"), budgetMs)
+	})
+	try {
+		return await Promise.race([
+			links.then(
+				(all) => newPagesHere(all, country),
+				(): NewPagesHere => ({ country, brands: [] }),
+			),
+			late,
+		])
+	} finally {
+		clearTimeout(timer)
+	}
 }
 
 /** The links, or null when they aren't ready within a page's budget. The computation goes on either way. */
