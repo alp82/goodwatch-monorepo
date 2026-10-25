@@ -494,14 +494,14 @@ def _published_streaming(media_type: str, ids: List[int], connector=None) -> Dic
 
 
 @contextmanager
-def vector_publication_leases(db, media_type, ids, strict_writes):
+def vector_publication_leases(db, media_type, ids, strict_writes, defer_busy=False):
     if strict_writes:
         # Same leases and expiry fence as streaming, with one ownership query
         # per group instead of two Mongo reads per title on every retry/check.
         with publication_leases(db, media_type, sorted(ids)) as (owned, check_owned):
-            if set(owned) != set(ids):
+            if not defer_busy and set(owned) != set(ids):
                 raise RuntimeError('Streaming publication busy in strict vector batch')
-            yield check_owned
+            yield owned, check_owned
     else:
         with ExitStack() as leases:
             checks = [leases.enter_context(publication_lease(
@@ -509,7 +509,7 @@ def vector_publication_leases(db, media_type, ids, strict_writes):
             def check_owned():
                 for check in checks:
                     check()
-            yield check_owned
+            yield ids, check_owned
 
 
 def copy_to_qdrant(
@@ -520,6 +520,7 @@ def copy_to_qdrant(
     since: Optional[datetime] = None, carried_ids=(),
     streaming_connector=None,
     delete_flagged: bool = True,
+    defer_busy: bool = False,
 ):
     """
     Combined copy into Qdrant.
@@ -573,6 +574,7 @@ def copy_to_qdrant(
     invalid_fingerprint_scores = 0
     # Titles deleted on TMDB: collected over the whole run, removed once at the end.
     flagged_ids: set = set()
+    busy_ids: set = set()
 
     # Prefer compound hint if we filter by updated_at
     base_selector = {"updated_at": updated, **sel} if recent_only else sel
@@ -637,7 +639,13 @@ def copy_to_qdrant(
         # under the same title leases used by streaming reconciliation.
         for start in range(0, len(upsert_buffer), UPSERT_BATCH_SIZE):
             batch = upsert_buffer[start:start + UPSERT_BATCH_SIZE]
-            with vector_publication_leases(db, media_type, [item[0] for item in batch], strict_writes) as check_publication_owned:
+            with vector_publication_leases(db, media_type, [item[0] for item in batch], strict_writes,
+                                          defer_busy=defer_busy) as (owned, check_publication_owned):
+                owned = set(owned)
+                busy_ids.update(item[0] for item in batch if item[0] not in owned)
+                batch = [item for item in batch if item[0] in owned]
+                if not batch:
+                    continue
                 check_publication_owned()
                 ids = [item[0] for item in batch]
                 published_streaming = (_published_streaming(media_type, ids) if streaming_connector is None else
@@ -697,7 +705,8 @@ def copy_to_qdrant(
             "carried": len(carried), "carried_written": carried_written,
             "stale_stored_fingerprints": stale_stored_fingerprints,
             "invalid_fingerprint_scores": invalid_fingerprint_scores,
-            "publication": publication_stats, "deleted_titles": deleted_titles}
+            "publication": publication_stats, "deleted_titles": deleted_titles,
+            "busy_ids": sorted(busy_ids)}
 
 
 # ---- Entrypoint for Windmill ----------------------------------------------

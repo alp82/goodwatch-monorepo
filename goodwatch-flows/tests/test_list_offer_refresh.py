@@ -141,15 +141,16 @@ class RefreshTests(unittest.TestCase):
         self.assertEqual(result['remaining'], 1)
         self.assertEqual(self.api.calls, [])
 
-    def test_publication_outage_stops_after_twenty_requests_and_never_reselects_failures(self):
-        self.seed_work(100)
+    def test_publication_outage_counts_twenty_batch_failures_and_never_reselects_titles(self):
+        self.seed_work(1000)
         self.publish.side_effect = RuntimeError('Qdrant unavailable')
         result = self.drain()
-        self.assertEqual((result['selected'], result['failed'], result['published']), (20, 20, 0))
+        self.assertEqual((result['selected'], result['failed'], result['published']), (210, 210, 0))
         self.assertEqual(result['deferred_reason'], 'consecutive_failures')
-        self.assertEqual(len(self.api.calls), 20)
-        self.assertEqual(result['remaining'], 100)
-        self.assertEqual(self.db.tmdb_list_offer_refresh.count_documents({'failure_day': {'$exists': True}}), 20)
+        self.assertEqual(self.publish.call_count, 20)
+        self.assertEqual(len(set(self.api.calls)), 210)
+        self.assertEqual(result['remaining'], 1000)
+        self.assertEqual(self.db.tmdb_list_offer_refresh.count_documents({'failure_day': {'$exists': True}}), 210)
         self.assertIn([('pending', 1), *refresh.QUEUE_SORT],
                       [index['key'] for index in self.db.tmdb_list_offer_refresh.index_information().values()])
 
@@ -162,7 +163,7 @@ class RefreshTests(unittest.TestCase):
         self.publish.assert_not_called()
 
     def test_failure_stop_budget_carries_across_publication_batches(self):
-        self.seed_work(100)
+        self.seed_work(1000)
         calls = []
         def publish(connector, media, ids):
             calls.append(ids)
@@ -171,9 +172,56 @@ class RefreshTests(unittest.TestCase):
             raise RuntimeError('Qdrant unavailable')
         self.publish.side_effect = publish
         result = self.drain()
-        self.assertEqual([len(ids) for ids in calls], [20, 19])
-        self.assertEqual((result['published'], result['failed'], len(self.api.calls)), (19, 20, 39))
+        self.assertEqual([len(ids) for ids in calls], [20] + list(range(19, 0, -1)))
+        self.assertEqual((result['published'], result['failed'], len(self.api.calls)), (19, 191, 210))
         self.assertEqual(result['deferred_reason'], 'consecutive_failures')
+
+    def test_one_batch_exception_does_not_stop_subsequent_successful_groups(self):
+        self.seed_work(60)
+        self.publish.side_effect = [RuntimeError('one failed batch'), {}, {}, {}]
+        result = self.drain()
+        self.assertEqual((result['published'], result['failed'], result['remaining']), (40, 20, 20))
+        self.assertNotIn('deferred_reason', result)
+
+    def test_busy_title_is_deferred_without_counting_as_an_upstream_failure(self):
+        self.seed_work(40)
+        self.publish.side_effect = [{1: 'publication_busy'}, {}]
+        result = self.drain()
+        self.assertEqual((result['published'], result['failed'], result['deferred'], result['remaining']), (39, 0, 1, 1))
+        self.assertNotIn('failure_day', self.db.tmdb_list_offer_refresh.find_one({'_id': 'movie:1'}))
+
+    def test_streaming_busy_title_does_not_fail_its_group_or_consume_its_intent(self):
+        from f.sync.copy import tmdb_streaming, vector_data
+        self.seed_work(20)
+        self.api.results = {'DE': {'flatrate': [{'provider_id': 8}]}}
+        self.db.streaming_publication_leases.insert_one(dict(
+            _id='movie:3', token='other', expires_at=self.now.replace(tzinfo=None) + timedelta(minutes=15)))
+        class BatchCrate(HistoryCrate):
+            def select(self, sql, params=None):
+                if sql.startswith('SELECT tmdb_id FROM'):
+                    return [{'tmdb_id': i} for i in params[0]]
+                return super().select(sql, params)
+        with patch.object(tmdb_streaming, 'get_db', return_value=self.db), \
+             patch.object(vector_data, 'copy_to_qdrant', return_value={'busy_ids': []}) as vectors, \
+             patch('f.db.qdrant.QdrantConnector'):
+            result = refresh.drain(self.api, self.db, BatchCrate(), dry_run=False)
+        self.assertEqual((result['published'], result['failed'], result['deferred'], result['remaining']), (19, 0, 1, 1))
+        self.assertNotIn(3, vectors.call_args.args[2]['tmdb_id']['$in'])
+        self.assertEqual(self.db.streaming_publication_leases.find_one({'_id': 'movie:3'})['token'], 'other')
+
+    def test_manual_entry_accepts_thirty_thousand_and_preserves_reporting_reserve(self):
+        from contextlib import nullcontext
+        store = Mock(db=self.db, connector=self.crate)
+        store.run_lease.return_value = nullcontext(lambda: None)
+        with patch('f.tmdb_api.daily_list_storage.ListStorage', return_value=store), \
+             patch('f.tmdb_api.daily_provider_lists.TMDBClient'), \
+             patch.object(refresh, 'drain', return_value={}) as drain:
+            refresh.main(dry_run=False, limit=30000)
+        self.assertEqual(drain.call_args.kwargs['limit'], 30000)
+        self.assertEqual(drain.call_args.kwargs['max_seconds'], 27000)
+        for limit in (0, 30001, True):
+            with self.subTest(limit=limit), self.assertRaises(ValueError):
+                refresh.main(limit=limit)
 
     def test_individual_history_failure_does_not_prevent_acknowledging_the_rest_of_the_batch(self):
         self.seed_work(20)

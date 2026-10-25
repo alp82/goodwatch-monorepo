@@ -127,12 +127,14 @@ def publish_offers(connector, media_type, tmdb_ids, *, timings=None):
     connector = PublicationTimings(connector, timings)
     with timed_stage(timings, 'streaming_publication'):
         result = copy_media(connector, selector, media_type, recent_only=False,
-                            mapping_refresh_limit=0, targeted_batch=True)
+                            mapping_refresh_limit=0, targeted_batch=True, defer_busy=True)
     publication = result.get('publication', {})
     failed = {}
     for tmdb_id in tmdb_ids:
         title = publication.get('titles', {}).get(str(tmdb_id), {})
-        if tmdb_id in publication.get('history_errors', {}):
+        if tmdb_id in publication.get('busy_ids', []):
+            failed[tmdb_id] = 'publication_busy'
+        elif tmdb_id in publication.get('history_errors', {}):
             failed[tmdb_id] = 'history_publication_failed'
         elif title.get('provider_state') == 'quarantined' or title.get('streaming_availability') is None:
             failed[tmdb_id] = 'quarantined_or_unpublishable'
@@ -142,8 +144,11 @@ def publish_offers(connector, media_type, tmdb_ids, *, timings=None):
     with timed_stage(timings, 'vector_publication'):
         qdrant = QdrantConnector(timeout=REQUEST_TIMEOUT_SECONDS)
         try:
-            copy_to_qdrant(qdrant, media_type, {'tmdb_id': {'$in': eligible}}, recent_only=False,
-                           strict_writes=True, streaming_connector=connector, delete_flagged=False)
+            result = copy_to_qdrant(qdrant, media_type, {'tmdb_id': {'$in': eligible}}, recent_only=False,
+                                   strict_writes=True, streaming_connector=connector,
+                                   delete_flagged=False, defer_busy=True) or {}
+            for tmdb_id in result.get('busy_ids', []):
+                failed[tmdb_id] = 'publication_busy'
         finally:
             qdrant.close()
     return failed
@@ -241,7 +246,7 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
     )
     dry_run = dry_run is not False
     report = dict(selected=0, published=0, failed=0, remaining=0, max_failure_days=0,
-                  publication_batches=0, failures=[], dry_run=dry_run, timings={})
+                  publication_batches=0, failures=[], deferred=0, deferrals=[], dry_run=dry_run, timings={})
     timings, timing_lock = report['timings'], threading.Lock()
     work = db.tmdb_list_offer_refresh
     started = time.monotonic()
@@ -258,8 +263,13 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
             return True
         return False
 
-    def record_failure(item, error):
+    def advance_failure_streak():
         nonlocal consecutive_failures
+        consecutive_failures += 1
+        if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+            report['deferred_reason'] = 'consecutive_failures'
+
+    def record_failure(item, error, *, advance_streak=True):
         check_owned()
         day = utc_day(utc_ms(clock()))
         streak = item.get('consecutive_failure_days', 0)
@@ -275,9 +285,21 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
         report['max_failure_days'] = max(report['max_failure_days'], streak)
         if len(report['failures']) < 20:
             report['failures'].append(failure)
-        consecutive_failures += 1
-        if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
-            report['deferred_reason'] = 'consecutive_failures'
+        if advance_streak:
+            advance_failure_streak()
+
+    def record_batch_failure(batch, error):
+        for item in batch:
+            record_failure(item, error, advance_streak=False)
+        advance_failure_streak()
+
+    def record_busy(item):
+        check_owned()
+        work.update_one({'_id': item['_id'], 'version': item['version']}, {
+            '$set': {'last_attempt_at': utc_ms(clock())}})
+        report['deferred'] += 1
+        if len(report['deferrals']) < 20:
+            report['deferrals'].append(dict(identity=item['_id'], reason='publication_busy'))
 
     stopped = threading.Event()
 
@@ -349,9 +371,7 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
                 except (TMDBAccessDenied, RequestBudgetExceeded, LeaseLost):
                     raise
                 except Exception as error:
-                    for item in candidates:
-                        if item['media_type'] == media:
-                            record_failure(item, error)
+                    record_batch_failure([item for item in candidates if item['media_type'] == media], error)
             valid = []
             for item in candidates:
                 if item['media_type'] not in catalog_ids:
@@ -396,12 +416,14 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
             except (TMDBAccessDenied, RequestBudgetExceeded, LeaseLost):
                 raise
             except Exception as error:
-                for item in batch:
-                    record_failure(item, error)
+                record_batch_failure(batch, error)
                 continue
             acknowledged = []
             for item in batch:
                 reason = failed.get(item['tmdb_id'])
+                if reason == 'publication_busy':
+                    record_busy(item)
+                    continue
                 if reason:
                     record_failure(item, RefreshDeferred(reason))
                     continue
@@ -434,8 +456,8 @@ def main(dry_run: bool = True, max_requests: int = 350000, limit: int = 20000, p
     from f.tmdb_api.daily_provider_lists import TMDBClient
     from f.tmdb_api.daily_list_storage import ListStorage
     dry_run = dry_run is not False
-    if type(limit) is not int or not 1 <= limit <= 20000:
-        raise ValueError('limit must be between 1 and 20000')
+    if type(limit) is not int or not 1 <= limit <= 30000:
+        raise ValueError('limit must be between 1 and 30000')
     if preview_offers and not dry_run:
         raise ValueError('preview_offers requires dry_run=true')
     store = ListStorage(dry_run=dry_run)
@@ -447,7 +469,7 @@ def main(dry_run: bool = True, max_requests: int = 350000, limit: int = 20000, p
         with store.run_lease() as owned:
             client = TMDBClient(max_requests=max_requests)
             report = drain(client, store.db, store.connector, dry_run=False, limit=limit,
-                           max_seconds=28000, check_owned=owned)
+                           max_seconds=27000, check_owned=owned)
             report['requests'] = client.stats
             return report
     finally:

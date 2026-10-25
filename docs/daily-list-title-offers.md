@@ -36,8 +36,9 @@ leases. The shared copier remains the only writer of child offers and the
 `streaming_service_ids` arrays. The same path publishes `streaming_evidence`
 and reconciles history. The vector writer rereads the published Crate snapshot
 under its existing lease, reusing the caller’s Crate connection. Strict vector
-publication uses one token and ownership query for the group, and fails before
-writing if any requested lease is busy. Targeted vector reads project only the
+publication uses one token and ownership query for the group. The offer drain
+drops busy IDs from streaming/vector groups, leaves their intents pending, and
+publishes the owned IDs. Other targeted callers retain their fail-fast policy. Targeted vector reads project only the
 fields used to build the same payload/vectors; the overwritten raw provider
 merge is omitted. The offer refresh skips the unrelated global deletion scan;
 selected flagged titles are still excluded and scheduled deletion behavior is
@@ -94,19 +95,25 @@ A failed source/publication/vector write retains the intent. A version token
 prevents acknowledgment from consuming newer work. Daily changes have priority
 over the older backfill, and unattempted work precedes failed retries at the same
 priority. The automatic daily consumer handles at most 30,000 titles; manual
-consumer invocations retain their 20,000-title maximum. Budget
+consumer invocations have the same 30,000-title maximum (20,000 by default). Budget
 exhaustion leaves the rest pending and triggers the existing hard-budget alert.
 The daily drain also consumes priority-0 backfill items after priority-1 daily
 changes, using any remaining part of that same 30,000-title allowance. Backfill
 is not restricted to manual execution. Inspect queue progress before planning
 manual batches or computing the day's remaining request allowance.
-The daily consumer also stops at 28,000 total run seconds, reserving time inside
-the existing 28,800-second flow timeout for reporting and cleanup. Excess work
+The daily consumer stops work at 27,000 total run seconds, reserving 1,800
+seconds inside the existing 28,800-second flow timeout for reporting and cleanup. Excess work
 stays queued and is reported as a warning. Manual consumer batches use the same
 runtime bound; the documented 1,000-title batches keep review/execution bounded.
-Twenty consecutive preparation/publication failures stop the drain, so a Qdrant
-outage spends at most one 20-title batch of TMDB reads before stopping. All intents
-remain pending. Queue sort and index directions share one definition; the bounded
+Twenty consecutive failure steps stop the drain. Individual preparation/title
+failures count individually; a shared catalog/publication exception records
+each affected title for retry but advances the streak once for the whole group.
+A complete publication outage therefore stops after 20 failed groups, at most
+400 title attempts; the shrinking remaining-streak allowance currently totals
+210 attempts for a single-media outage. Busy leases count as `deferred`, with
+identity/reason samples in `deferrals`, rather than failures. Their version-fenced
+last-attempt timestamp moves them behind unattempted peers next run. All unfinished
+intents remain pending. Queue sort and index directions share one definition; the bounded
 selection is materialized before sort keys change, preventing a failed item from
 being selected twice in the same invocation.
 Missing/deleted/duplicate source identities, missing catalog rows, provider 404s
@@ -440,3 +447,33 @@ skipping global deletion work while excluding selected flagged titles.
 is committed. Full replay logs and scripts are under
 `~/.local/state/goodwatch/title-offer-performance-20261025/`. Keep new manifests,
 previews and reports in `~/.local/state/goodwatch/`, not `/tmp`.
+
+
+## Round 3 follow-up before deployment
+
+The work cutoff is now **27,000 seconds**, leaving **1,800 seconds** before the
+Windmill hard timeout. With a 12,550-second list stage the drain receives
+**14,450 seconds**, rather than 15,450. In-flight operations can still overrun a
+cooperative cutoff; the larger reserve protects normal retry/cleanup/reporting
+work. Manual live invocations use the same 27,000-second work allowance.
+
+Streaming and vector publishers now offer an explicit `defer_busy` mode used by
+the list consumer. One busy title is removed from the group, reported as
+`publication_busy`, and left pending; the remaining titles publish normally.
+Lease loss and real publication failures still prevent acknowledgment. Busy
+quarantined/fallback streaming titles follow the same deferral rule. Default
+scheduled and other targeted publication callers keep their existing behavior.
+A batch exception increments the failure streak **once**, while retaining
+per-title failure records and the existing >1%/three-day alert rules. Twenty
+individual source failures still stop after 20 attempts. The shared request
+budget, frozen queue selection and per-intent version fences are unchanged.
+
+`main()` and the Windmill schema accept **1–30,000** titles, matching the daily
+ramp; the manual default remains 20,000 and the runbook pilot remains 1,000 with
+`--max-requests 20000`. Validation rejects booleans and out-of-range limits.
+All requested changes passed **347 cases: 330 passed, 17 optional skipped**,
+covering busy streaming/vector handoffs, one-batch failure recovery, sustained
+batch-outage stopping, reporting reserve, and the manual entry limit.
+The next live 1,000-title timing must wait for the owner’s push and successful
+Windmill deployment. No production write or schedule change occurred in this
+follow-up. Logs are under `~/.local/state/goodwatch/title-offer-performance-20261025/`.

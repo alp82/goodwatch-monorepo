@@ -269,7 +269,7 @@ def run_daily_job(*, countries, service_ids, dry_run, requests_per_second, max_r
                     # changes; the shared request and remaining-time caps win.
                     report['offer_refresh'] = drain(client, store.db, store.connector,
                         dry_run=False, limit=30000, check_owned=owned,
-                        max_seconds=max(0, 28000 - (time.monotonic() - started)))
+                        max_seconds=max(0, 27000 - (time.monotonic() - started)))
                 except job.RequestBudgetExceeded:
                     report['hard_budget_exceeded'] = True
             report['seconds'] = round(time.monotonic() - started, 3)

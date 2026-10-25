@@ -145,9 +145,10 @@ class VectorLeaseTests(unittest.TestCase):
             side_effect=lambda client, collection, operations, owned: (
                 owned(), dict(attempts=1, retries=0, errors={}))[1]))
 
-    def copy(self, strict=True, delete_flagged=True):
+    def copy(self, strict=True, delete_flagged=True, defer_busy=False):
         return vector_data.copy_to_qdrant(Mock(), 'movie', {'tmdb_id': {'$in': self.ids}},
-                                         recent_only=False, strict_writes=strict, delete_flagged=delete_flagged)
+                                         recent_only=False, strict_writes=strict,
+                                         delete_flagged=delete_flagged, defer_busy=defer_busy)
 
     def test_one_group_ownership_check_replaces_per_title_round_trips(self):
         with patch.object(self.db.provider_identity_maintenance, 'find_one',
@@ -164,6 +165,34 @@ class VectorLeaseTests(unittest.TestCase):
             self.copy()
         self.write.assert_not_called()
         self.assertEqual(list(self.db.streaming_publication_leases.find({}, {'_id': 1})), [{'_id': 'movie:20'}])
+
+    def test_offer_refresh_drops_only_busy_vector_ids_and_publishes_the_others(self):
+        self.db.streaming_publication_leases.insert_one(dict(
+            _id='movie:20', token='other', expires_at=datetime.utcnow() + timedelta(minutes=15)))
+        result = self.copy(defer_busy=True)
+        self.assertEqual(result['upserts'], 19)
+        self.assertEqual(result['busy_ids'], [20])
+        ids = [p.payload['tmdb_id'] for p in self.write.call_args.args[2][0].upsert.points]
+        self.assertEqual(ids, list(range(1, 20)))
+        self.assertEqual(self.db.streaming_publication_leases.find_one({'_id': 'movie:20'})['token'], 'other')
+        self.assertEqual(self.db.streaming_publication_leases.count_documents({}), 1)
+
+    def test_busy_vector_title_remains_pending_after_the_full_drain_handoff(self):
+        now = datetime.utcnow()
+        for tmdb_id in self.ids:
+            refresh.enqueue(self.db, 'movie', tmdb_id, {'DE_8': refresh.utc_ms(now)})
+        self.db.streaming_publication_leases.insert_one(dict(
+            _id='movie:20', token='other', expires_at=now + timedelta(minutes=15)))
+        publication = {'titles': {str(i): dict(provider_state='present', streaming_availability=['8_DE'])
+                                  for i in self.ids}}
+        crate = Mock()
+        crate.select.return_value = [{'tmdb_id': i} for i in self.ids]
+        with patch.object(tmdb_streaming, 'copy_media', return_value={'publication': publication}), \
+             patch('f.db.qdrant.QdrantConnector'):
+            result = refresh.drain(fixtures.API(), self.db, crate, dry_run=False)
+        self.assertEqual((result['published'], result['failed'], result['deferred'], result['remaining']), (19, 0, 1, 1))
+        self.assertTrue(self.db.tmdb_list_offer_refresh.find_one({'_id': 'movie:20'})['pending'])
+        self.assertEqual(self.db.tmdb_list_offer_refresh.count_documents({'pending': False}), 19)
 
     def test_replaced_lease_fences_vector_writes_and_cleanup(self):
         def replace(*args):
