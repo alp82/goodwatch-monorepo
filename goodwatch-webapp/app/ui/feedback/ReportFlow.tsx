@@ -498,6 +498,7 @@ export function ReportFlow({
 			<Result
 				{...sent}
 				email={email}
+				thanks="email"
 				onAnother={restart}
 				onDone={() => flow?.done()}
 			/>

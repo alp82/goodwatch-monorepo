@@ -4,6 +4,7 @@
 
 const HIDDEN =
 	"[data-feedback-private], .search-private, [data-member-avatar], input, textarea, select, script, [contenteditable='true']"
+const MEDIA = "img, picture, video, iframe, canvas"
 /** Comfortably under the endpoint's 2 MiB. */
 const MAX_BYTES = 1_800_000
 const MAX_WIDTH = 1600
@@ -24,9 +25,20 @@ export async function captureScreen(): Promise<string | null> {
 			transform: `translate(${-window.scrollX}px, ${-window.scrollY}px)`,
 			transformOrigin: "0 0",
 		},
-		filter: (node) => !(node instanceof Element) || !node.matches(HIDDEN),
-		fetch: { bypassingCache: false },
-		timeout: 8000,
+		filter: (node) => {
+			if (!(node instanceof Element)) return true
+			if (node.matches(HIDDEN)) return false
+			// Pictures below the window don't show; leaving them out spares fetching them. (Above it they still take
+			// their room, so they stay.)
+			if (node.matches(MEDIA))
+				return node.getBoundingClientRect().top < window.innerHeight + 200
+			return true
+		},
+		// The page's TMDB pictures were loaded without CORS; the browser's cached copies can't be read back, so the
+		// capture asks for them afresh.
+		fetch: { bypassingCache: /^https:\/\/image\.tmdb\.org\// },
+		// Also how long it waits for the page's pictures: lazy ones below the window never load, so keep it short.
+		timeout: 2500,
 	})
 	return encode(canvas)
 }

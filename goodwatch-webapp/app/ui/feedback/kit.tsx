@@ -244,6 +244,7 @@ export function Result({
 	before,
 	after,
 	email = "",
+	thanks = "always",
 	onAnother,
 	onDone,
 }: {
@@ -253,6 +254,8 @@ export function Result({
 	before?: string
 	after?: string
 	email?: string
+	/** When the "we'll answer" line shows: always, or only for a guest who left an email. */
+	thanks?: "always" | "email"
 	onAnother: () => void
 	onDone: () => void
 }) {
@@ -282,7 +285,9 @@ export function Result({
 					</p>
 					<p className="mt-0.5 text-sm text-gray-400">
 						{undone ? "The page shows the old value again soon." : copy.body}{" "}
-						{!undone && thanksLine(guest, email)}
+						{!undone &&
+							(thanks === "always" || (guest && email.trim())) &&
+							thanksLine(guest, email)}
 					</p>
 				</div>
 			</div>

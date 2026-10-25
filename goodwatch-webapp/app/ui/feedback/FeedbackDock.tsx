@@ -1057,9 +1057,11 @@ export default function FeedbackDock({
 		setSpot(null)
 		setPinned(null)
 	}, [pathname])
-	// A hovered chip's part comes into view as it lights up.
+	// A hovered chip's part comes into view as it lights up. Not on phones: there the picked part already sits at the
+	// window's top, and a tap on a chip (which also "hovers" it) must not move the page.
 	useEffect(() => {
-		if (layer && spot) reveal(findSpot(spot))
+		if (layer && spot && window.matchMedia("(min-width: 768px)").matches)
+			reveal(findSpot(spot))
 	}, [layer, spot])
 
 	const leave = (v: boolean) => {
