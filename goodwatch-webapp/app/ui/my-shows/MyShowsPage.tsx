@@ -7,6 +7,8 @@
 // until explicitly dismissed or their first new episode watched. Visits clear only streaming-service news.
 // The shows that landed on the member's services in the last 14 days are one row above the list, which names the
 // latest and opens to all of them with their days, and each of them carries the service's logo on its row (#489).
+// Every row ends in the show's score pill; the member's services that carry it sit in the row's words, the one it
+// just landed on ringed in sky blue. The pictures carry nothing.
 import { ChevronRightIcon } from "@heroicons/react/20/solid"
 import { Link, useLocation } from "@remix-run/react"
 import { type ReactNode, useEffect, useMemo, useState } from "react"
@@ -30,8 +32,11 @@ import type {
 	MyShowsRow,
 	MyShowsStart,
 } from "~/server/my-shows.server"
+import type { RowService, RowServices } from "~/server/row-services.server"
 import { FIND_NEW_BELOW, ForYouLink } from "~/ui/for-you/ForYouLink"
-import { LandedRow, NewOnSticker, NewOnWords } from "~/ui/my-pages/LandedRow"
+import { RowLogos, RowScores, useRowMarks } from "~/ui/list-row/RowScores"
+import { useLandedRowParts } from "~/ui/list-row/landed"
+import { LandedRow, NewOnWords } from "~/ui/my-pages/LandedRow"
 import {
 	DISPLAY,
 	Empty,
@@ -98,6 +103,7 @@ interface RowWords {
 	title: string
 	poster_path: string | null
 	backdrop_path: string | null
+	goodwatch: number | null
 	tag: keyof typeof TAG
 	tagWord: string
 	fresh: boolean
@@ -113,6 +119,7 @@ const continueRow = (row: MyShowsRow, now: number): RowWords => ({
 	title: row.title,
 	poster_path: row.poster_path,
 	backdrop_path: row.backdrop_path,
+	goodwatch: row.goodwatch,
 	tag: row.kind === "seenNew" ? "seenNew" : "next",
 	tagWord: row.kind === "seenNew" ? "New episodes" : "Next episode",
 	fresh: row.kind === "next" && isNew(row.next?.airDate ?? null, now),
@@ -139,6 +146,7 @@ const startRow = (row: MyShowsStart): RowWords => ({
 	title: row.title,
 	poster_path: row.poster_path,
 	backdrop_path: row.backdrop_path,
+	goodwatch: row.goodwatch,
 	tag: "start",
 	tagWord: "Start",
 	fresh: false,
@@ -152,18 +160,43 @@ const startRow = (row: MyShowsStart): RowWords => ({
 	why: row.match ? `${row.match}% taste match` : "No taste match yet",
 })
 
+/** The member's services that carry a show, with the one it is new on (#489) among them. */
+const logosOf = (
+	services: RowService[] | undefined,
+	newOn: NewOn | undefined,
+): RowService[] => {
+	const list = services ?? []
+	if (!newOn || list.some((service) => service.id === newOn.id)) return list
+	return [
+		{ id: newOn.id, name: newOn.name, logoPath: newOn.logo_path },
+		...list,
+	]
+}
+
+/** The show's score pill. Every show here is one the member follows: the pill's state icon would repeat the group. */
+function ShowScores({
+	id,
+	goodwatch,
+}: { id: number; goodwatch: number | null }) {
+	const marks = useRowMarks()("show", id)
+	return <RowScores goodwatch={goodwatch} score={marks.score} mark={null} />
+}
+
 /** A row of the list. The whole row is the link to the show's page. */
 function Row({
 	row,
 	n,
 	big,
 	newOn,
+	services,
 }: {
 	row: RowWords
 	n: number
 	big: boolean
 	/** The service the show is new on, when it landed in the last 14 days (#489). */
 	newOn?: NewOn
+	/** The member's services that carry it. */
+	services?: RowService[]
 }) {
 	return (
 		<li data-row={row.id} data-tag={row.tag}>
@@ -173,7 +206,7 @@ function Row({
 				className={`group flex items-stretch gap-3 overflow-hidden rounded-2xl ring-1 ring-white/10 transition-colors hover:bg-white/[0.09] hover:ring-white/25 focus-visible:outline-2 focus-visible:outline-amber-300 md:gap-5 ${big ? "bg-white/[0.07]" : "bg-white/[0.04]"}`}
 			>
 				<span
-					className={`${DISPLAY} flex w-8 shrink-0 items-center justify-center text-3xl text-white/25 md:w-14 md:text-5xl`}
+					className={`${DISPLAY} flex w-6 shrink-0 items-center justify-center text-2xl text-white/25 sm:w-8 sm:text-3xl md:w-14 md:text-5xl`}
 					aria-hidden
 				>
 					{n}
@@ -189,23 +222,13 @@ function Row({
 							className="absolute inset-0 h-full w-full object-cover"
 						/>
 					)}
-					{newOn && (
-						<NewOnSticker service={newOn} className="absolute left-2 top-2" />
-					)}
 				</span>
-				<span className="relative my-3 shrink-0 sm:hidden">
+				<span className="my-3 shrink-0 sm:hidden">
 					<Poster
 						path={row.poster_path}
 						size="w185"
 						className="h-24 w-16 rounded-md"
 					/>
-					{newOn && (
-						<NewOnSticker
-							service={newOn}
-							small
-							className="absolute left-1 top-1"
-						/>
-					)}
 				</span>
 				<span
 					className={`flex min-w-0 flex-1 flex-col justify-center ${big ? "py-5" : "py-3"}`}
@@ -225,19 +248,27 @@ function Row({
 					</span>
 					<span className="truncate text-sm text-gray-200">{row.line}</span>
 					{/* On a phone the fact that places the row leads its last line; wider, it has a column of its own. */}
-					<span className="truncate text-xs text-gray-400">
-						<b className="font-semibold text-gray-300 md:hidden" data-why>
-							{row.why} ·{" "}
-						</b>
-						{row.meta}
+					<span className="flex min-w-0 items-center gap-1.5 text-xs text-gray-400">
+						<RowLogos
+							services={logosOf(services, newOn)}
+							newOn={newOn?.id}
+							max={1}
+						/>
+						<span className="truncate">
+							<b className="font-semibold text-gray-300 md:hidden" data-why>
+								{row.why} ·{" "}
+							</b>
+							{row.meta}
+						</span>
 					</span>
 				</span>
 				<span className="hidden w-40 shrink-0 items-center justify-end text-right text-sm font-semibold text-gray-300 md:flex">
 					{row.why}
 				</span>
-				<span className="flex shrink-0 items-center pr-2 md:pr-4">
+				<span className="flex shrink-0 items-center gap-1 pr-2 md:pr-4">
+					<ShowScores id={row.id} goodwatch={row.goodwatch} />
 					<ChevronRightIcon
-						className="h-5 w-5 text-gray-500 transition-colors group-hover:text-amber-300"
+						className="h-5 w-5 text-gray-500 transition-colors group-hover:text-amber-300 max-sm:hidden"
 						aria-hidden
 					/>
 				</span>
@@ -299,8 +330,9 @@ function QuietRow({
 						{fact}
 					</span>
 				</span>
+				<ShowScores id={row.id} goodwatch={row.goodwatch} />
 				<ChevronRightIcon
-					className="h-4 w-4 shrink-0 text-gray-600 group-hover:text-amber-300"
+					className="h-4 w-4 shrink-0 text-gray-600 group-hover:text-amber-300 max-sm:hidden"
 					aria-hidden
 				/>
 			</Link>
@@ -504,12 +536,14 @@ function WaitingRow({ rows, today }: { rows: MyShowsRow[]; today: string }) {
 }
 
 const NOTHING_LANDED: LandedTitle[] = []
+const NO_SERVICES: RowServices = {}
 
 export function MyShowsPage({
 	data,
 	now,
 	arrival = null,
 	landed = NOTHING_LANDED,
+	services = NO_SERVICES,
 }: {
 	data: MyShows
 	now: number
@@ -517,7 +551,10 @@ export function MyShowsPage({
 	arrival?: Arrival | null
 	/** The shows that landed on the member's services in the last 14 days, the latest first (#489). */
 	landed?: LandedTitle[]
+	/** The member's own services per show ("show-1399"), for the logos in the rows. */
+	services?: RowServices
 }) {
+	const landedParts = useLandedRowParts()
 	useMyShowsVisit()
 	// The server's day first, so that the page hydrates as it was sent; then the member's.
 	const [today, setToday] = useState(() =>
@@ -590,6 +627,7 @@ export function MyShowsPage({
 						note={(show) =>
 							withNewEpisode.has(show.tmdbId) ? "also a new episode" : null
 						}
+						parts={landedParts}
 						className="mb-4"
 					/>
 					{total === 0 && (
@@ -618,6 +656,7 @@ export function MyShowsPage({
 									n={i + 1}
 									big={i === 0}
 									newOn={newOn.get(row.id)}
+									services={services[`show-${row.id}`]}
 								/>
 							))}
 							<WaitingRow rows={data.waiting} today={today} />
@@ -636,6 +675,7 @@ export function MyShowsPage({
 									n={continues.length + i + 1}
 									big={!continues.length && i === 0}
 									newOn={newOn.get(row.id)}
+									services={services[`show-${row.id}`]}
 								/>
 							))}
 							{pickUpLeft > 0 && (
@@ -668,6 +708,7 @@ export function MyShowsPage({
 									n={continues.length + pickUps.length + i + 1}
 									big={!continues.length && !pickUps.length && i === 0}
 									newOn={newOn.get(row.id)}
+									services={services[`show-${row.id}`]}
 								/>
 							))}
 						</ol>

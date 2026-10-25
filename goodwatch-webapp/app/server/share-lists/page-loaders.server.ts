@@ -1,7 +1,9 @@
 import { type LoaderFunctionArgs, json, redirect } from "@remix-run/node"
 import { resolveCountry } from "~/server/country.server"
 import type { ensureShareCard } from "~/server/share-card/images.server"
+import type { RowService } from "~/server/row-services.server"
 import type { getListAvailability } from "./availability.server"
+import type { getOwnerScores } from "./owner-scores.server"
 import type { getListView, listsByUser } from "./store.server"
 import { entryKey, type resolveCardTitles } from "./titles.server"
 import type { getProfilePage } from "./view.server"
@@ -33,6 +35,7 @@ type ShareListDependencies = {
 	getUserIdFromRequest: typeof getUserIdFromRequest
 	getUserSettings: typeof getUserSettings
 	getListAvailability: typeof getListAvailability
+	getOwnerScores: typeof getOwnerScores
 }
 
 export function createShareListPageLoader(deps: ShareListDependencies) {
@@ -56,9 +59,8 @@ export function createShareListPageLoader(deps: ShareListDependencies) {
 			request,
 			countryDefault: settings?.country_default,
 		})
-		const availability = await deps.getListAvailability(list.items, country)
-
-		// The viewer's own services come first and get a check mark, as on title pages.
+		// The rows show only the viewer's own services that stream a title, as every list of titles does: a guest and a
+		// member without saved services see none, and the offers aren't read for them.
 		const owned = new Set(
 			(settings?.streaming_providers_default ?? "")
 				.split(",")
@@ -66,6 +68,40 @@ export function createShareListPageLoader(deps: ShareListDependencies) {
 				.map(Number)
 				.flatMap((id) => [id, ...(duplicateProviderMapping[id] ?? [])]),
 		)
+		const isOwner = viewerId === list.userId
+		const [availability, ownerScores] = await Promise.all([
+			owned.size ? deps.getListAvailability(list.items, country) : null,
+			// On someone else's list, the owner's score ends each row (as far as their profile shows it).
+			isOwner
+				? null
+				: deps
+						.getOwnerScores(
+							list.userId,
+							viewerId ? "member" : "guest",
+							list.items,
+						)
+						.catch((error) => {
+							console.error("[share-list] owner scores failed", error)
+							return null
+						}),
+		])
+		const services: Record<string, RowService[]> | null = availability && {}
+		if (availability && services)
+			for (const [key, title] of Object.entries(availability)) {
+				const mine = new Map<string, RowService>()
+				for (const offer of title.offers)
+					if (
+						offer.kind === "stream" &&
+						owned.has(offer.serviceId) &&
+						!mine.has(offer.name)
+					)
+						mine.set(offer.name, {
+							id: offer.serviceId,
+							name: offer.name,
+							logoPath: offer.logoPath,
+						})
+				if (mine.size) services[key] = [...mine.values()]
+			}
 
 		const design = designByKey(list.design)
 		const origin = publicOrigin()
@@ -82,11 +118,11 @@ export function createShareListPageLoader(deps: ShareListDependencies) {
 					unlisted: list.visibility === "unlisted",
 				},
 				items,
-				availability,
-				owned: [...owned],
+				services,
+				ownerScores,
 				country,
 				owner: { handle: owner.handle },
-				isOwner: viewerId === list.userId,
+				isOwner,
 				share: {
 					url: `${origin}${shareListPath(owner.handle, list.id)}`,
 					image: `${origin}${shareCardPreviewPath(list)}`,

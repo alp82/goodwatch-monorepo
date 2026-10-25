@@ -320,6 +320,7 @@ test("a show to start says what it costs and how well it fits", async () => {
 		title: "The Bear",
 		poster_path: "/p301.jpg",
 		backdrop_path: "/b301.jpg",
+		goodwatch: null,
 		match: 93,
 		seasons: 2,
 		episodes: 12,
@@ -742,6 +743,7 @@ test("a Seen item carries the last watch, the number of watches and the member's
 		addedAt: null,
 		episodesWatched: null,
 		airedEpisodes: null,
+		goodwatch: null,
 	})
 	// An imported watch without a date stays without one.
 	assert.equal(page.items[3].watchedAt, null)
@@ -781,7 +783,7 @@ test("the library reads no watch log beyond the member data, and titles only for
 	assert.equal(selects("user_watch_log").length, 1)
 	// Two steps, each one read of `movie` and one of `show` for its cards.
 	assert.equal(selects("movie").length, 2)
-	assert.ok(selects("movie").every((s) => /^SELECT tmdb_id, title, poster_path, release_year FROM movie/.test(s.sql)))
+	assert.ok(selects("movie").every((s) => /^SELECT tmdb_id, title, poster_path, release_year, goodwatch_overall_score_normalized_percent FROM movie/.test(s.sql)))
 	await getLibraryPage(user, { ...seen, sort: "title" })
 	assert.equal(selects("movie").filter((s) => s.sql.startsWith("SELECT tmdb_id, title FROM")).length, 1)
 	// The titles are kept: a search right after reads only its cards.

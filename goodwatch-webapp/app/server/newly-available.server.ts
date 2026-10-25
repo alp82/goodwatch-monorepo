@@ -272,6 +272,7 @@ export async function getRecentlyLanded(
 					tmdbId: landing.tmdbId,
 					title: display.title,
 					poster_path: display.poster_path,
+					goodwatch: display.goodwatch_overall_score_normalized_percent ?? null,
 					at: landing.at,
 					days: daysSinceLanding(landing.at, now),
 					service: services.get(landing.service) ?? null,

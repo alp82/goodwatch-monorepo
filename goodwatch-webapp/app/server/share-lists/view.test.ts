@@ -302,7 +302,7 @@ test("warm view and availability reads send no Crate statements and count hits",
 	assert.deepEqual(await getListView(id), view)
 	assert.deepEqual(await getListAvailability(entries, "DE"), availability)
 	assert.equal(db.statements.length, 0)
-	for (const cache of ["share-list-view-v1", "share-list-availability-v1"]) {
+	for (const cache of ["share-list-view-v1", "share-list-availability-v2"]) {
 		assert.match(
 			renderMetrics(),
 			new RegExp(

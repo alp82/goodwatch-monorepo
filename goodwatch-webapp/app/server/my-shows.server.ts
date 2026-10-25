@@ -39,6 +39,8 @@ export interface ShowCard extends PresentedMedia {
 	title: string
 	poster_path: string | null
 	backdrop_path: string | null
+	/** The GoodWatch score, 0 to 100. */
+	goodwatch: number | null
 }
 
 export interface NextEpisode {
@@ -104,6 +106,7 @@ interface CatalogRow {
 	number_of_seasons: number | null
 	number_of_episodes: number | null
 	episode_runtime: number[] | null
+	goodwatch_overall_score_normalized_percent: number | null
 }
 
 const BATCH = 500
@@ -117,7 +120,7 @@ export async function readShows(
 		const batch = ids.slice(i, i + BATCH)
 		const found = await query<CatalogRow>(
 			`SELECT tmdb_id, aired_episode_count, status, title, poster_path, backdrop_path, number_of_seasons,
-			        number_of_episodes, episode_runtime
+			        number_of_episodes, episode_runtime, goodwatch_overall_score_normalized_percent
 			 FROM show WHERE tmdb_id IN (${batch.map(() => "?").join(", ")})`,
 			batch,
 		)
@@ -411,6 +414,7 @@ const cardOf = (id: number, row: CatalogRow | undefined) => ({
 	title: row?.title ?? "Unknown show",
 	poster_path: row?.poster_path ?? null,
 	backdrop_path: row?.backdrop_path ?? null,
+	goodwatch: row?.goodwatch_overall_score_normalized_percent ?? null,
 })
 
 /**

@@ -358,12 +358,21 @@ export function HiddenPart({
 	)
 }
 
-/** One row of a title list: poster, title and year, kind, the owner's score, and the visitor's when they rated it. */
+/**
+ * One row of a title list: poster, title, year and kind with `logos` before them (the visitor's services), and the
+ * row's `end`: the score pill and the owner's score (ui/list-row/RowScores).
+ */
 export function TitleRow({
 	title,
 	lead,
-	you,
-}: { title: ProfileTitle; lead?: ReactNode; you?: number | null }) {
+	logos,
+	end,
+}: {
+	title: ProfileTitle
+	lead?: ReactNode
+	logos?: ReactNode
+	end?: ReactNode
+}) {
 	return (
 		<li className="flex items-center gap-3 py-2">
 			{lead}
@@ -377,19 +386,15 @@ export function TitleRow({
 				>
 					{title.title}
 				</Link>
-				<span className="block truncate text-xs text-gray-500">
-					{title.year ?? "–"} · {title.mediaType === "movie" ? "Movie" : "Show"}
+				<span className="flex min-w-0 items-center gap-1.5 text-xs text-gray-500">
+					{logos}
+					<span className="truncate">
+						{title.year ?? "–"} ·{" "}
+						{title.mediaType === "movie" ? "Movie" : "Show"}
+					</span>
 				</span>
 			</span>
-			{you != null && (
-				<span
-					className="flex items-center gap-1 text-[11px] font-bold text-sky-200"
-					title={`You scored it ${you}`}
-				>
-					You <ScoreChip score={you} size="sm" />
-				</span>
-			)}
-			{title.score != null && <ScoreChip score={title.score} size="sm" />}
+			{end}
 		</li>
 	)
 }

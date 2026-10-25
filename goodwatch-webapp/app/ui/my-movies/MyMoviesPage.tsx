@@ -4,6 +4,7 @@
 import { useMemo } from "react"
 import type { LandedTitle } from "~/domain/newly-available-words"
 import type { WatchNext } from "~/server/watch-next.server"
+import { useLandedRowParts } from "~/ui/list-row/landed"
 import { LandedRow, NewOnSticker } from "~/ui/my-pages/LandedRow"
 import { WRAP } from "~/ui/my-pages/bits"
 import { NewOnContext, type NewOnMark } from "~/ui/watch-next/WatchNextHero"
@@ -20,6 +21,7 @@ export function MyMoviesPage({
 	landed: LandedTitle[]
 }) {
 	useMyMoviesVisit()
+	const parts = useLandedRowParts()
 	const movies = useMemo(
 		() => ({
 			...MOVIES_PAGE,
@@ -27,12 +29,12 @@ export function MyMoviesPage({
 				<>
 					{MOVIES_PAGE.head(data)}
 					<div className={WRAP}>
-						<LandedRow landed={landed} className="mb-4" />
+						<LandedRow landed={landed} parts={parts} className="mb-4" />
 					</div>
 				</>
 			),
 		}),
-		[landed],
+		[landed, parts],
 	)
 	const mark = useMemo<NewOnMark>(() => {
 		const services = new Map(

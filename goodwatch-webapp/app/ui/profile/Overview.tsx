@@ -19,6 +19,8 @@ import {
 	seesPart,
 } from "~/domain/profile"
 import { type MemberCompare, matchTier } from "~/domain/profile-taste"
+import type { Score } from "~/server/scores.server"
+import { RowScores, rowMark, useRowMarks } from "~/ui/list-row/RowScores"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 import { scoreLabels } from "~/utils/ratings"
 import { profileTabPath } from "./links"
@@ -27,7 +29,6 @@ import {
 	AMBER_BUTTON,
 	PosterImg,
 	ProfilePoster,
-	ScoreChip,
 	SpreadBars,
 	TILE,
 	count,
@@ -217,38 +218,59 @@ export function Overview({
 				>
 					<ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
 						{overview.hotTakes.map(({ title, delta }) => (
-							<li key={title.key} className="min-w-0">
-								<Link
-									to={title.href}
-									className={`${TILE} flex items-center gap-3 p-2.5 hover:bg-white/[0.06]`}
-								>
-									<span className="block w-9 shrink-0">
-										<PosterImg title={title} className="rounded" />
-									</span>
-									<span className="min-w-0 flex-1">
-										<span className="block truncate text-sm font-semibold text-gray-200">
-											{title.title}
-										</span>
-										{title.gw != null && (
-											<span className="block text-xs text-gray-500">
-												Everyone: {(title.gw / 10).toFixed(1)}
-											</span>
-										)}
-									</span>
-									<span
-										className={`text-xs font-bold tabular-nums ${delta > 0 ? "text-emerald-400" : "text-red-400"}`}
-									>
-										{delta > 0 ? "+" : "−"}
-										{Math.abs(delta).toFixed(1)}
-									</span>
-									<ScoreChip score={title.score} size="sm" />
-								</Link>
-							</li>
+							<HotTake
+								key={title.key}
+								title={title}
+								delta={delta}
+								owner={owner ? null : `@${shell.handle}`}
+							/>
 						))}
 					</ul>
 				</Section>
 			)}
 		</div>
+	)
+}
+
+/**
+ * One hot take: the title and how far the owner's score is from everyone's, then the score pill (GoodWatch and the
+ * viewer's own score) and, on another member's profile, their score. `owner`: their handle; null on your own.
+ */
+function HotTake({
+	title,
+	delta,
+	owner,
+}: { title: ProfileTitle; delta: number; owner: string | null }) {
+	const marks = useRowMarks()(title.mediaType, title.tmdbId)
+	return (
+		<li className="min-w-0">
+			<Link
+				to={title.href}
+				className={`${TILE} flex items-center gap-3 p-2.5 hover:bg-white/[0.06]`}
+			>
+				<span className="block w-9 shrink-0">
+					<PosterImg title={title} className="rounded" />
+				</span>
+				<span className="min-w-0 flex-1">
+					<span className="block truncate text-sm font-semibold text-gray-200">
+						{title.title}
+					</span>
+					<span
+						className={`block text-xs font-bold tabular-nums ${delta > 0 ? "text-emerald-400" : "text-red-400"}`}
+					>
+						{delta > 0 ? "+" : "−"}
+						{Math.abs(delta).toFixed(1)} vs everyone
+					</span>
+				</span>
+				<RowScores
+					goodwatch={title.gw}
+					score={marks.score}
+					mark={rowMark(marks)}
+					owner={owner ? (title.score as Score | null) : null}
+					ownerName={owner}
+				/>
+			</Link>
+		</li>
 	)
 }
 

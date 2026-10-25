@@ -112,11 +112,19 @@ const TABLES: Record<string, Table> = {
 			"number_of_seasons",
 			"number_of_episodes",
 			"episode_runtime",
+			"goodwatch_overall_score_normalized_percent",
 		],
 	},
 	movie: {
 		key: ["tmdb_id"],
-		columns: ["tmdb_id", "title", "poster_path", "release_year", "runtime"],
+		columns: [
+			"tmdb_id",
+			"title",
+			"poster_path",
+			"release_year",
+			"runtime",
+			"goodwatch_overall_score_normalized_percent",
+		],
 	},
 	imdb_episode: {
 		key: ["show_id", "imdb_episode_id"],

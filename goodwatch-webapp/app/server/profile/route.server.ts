@@ -1,7 +1,10 @@
 // What every /u/:handle route's loader does: the shell (or the redirect to the lowercase handle, or 404), the page's
 // own data, the visitor's scores for "You" tags when the page shows them, and the profile's cache headers.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
-import type { ProfileShell } from "~/domain/profile"
+import type { ProfileShell, ProfileTitle } from "~/domain/profile"
+import { type RowServices, rowServices } from "~/server/row-services.server"
+import { getUserData } from "~/server/userData.server"
+import { type MediaKey, isSeen } from "~/types/user-data"
 import { loadProfileShell, profileCacheControl } from "./page.server"
 import { yourScores } from "./your-scores.server"
 
@@ -31,4 +34,23 @@ export async function visitorScores(
 ) {
 	if (!viewerId || shell.viewer !== "member") return null
 	return yourScores(viewerId, keys)
+}
+
+/**
+ * A signed-in visitor's own services on the titles of a page that they haven't seen, for the logos in its rows; null
+ * for the owner, a guest, or a visitor without saved services.
+ */
+export async function visitorServices(
+	request: Request,
+	viewerId: string | null,
+	shell: ProfileShell,
+	titles: readonly ProfileTitle[],
+): Promise<RowServices | null> {
+	if (!viewerId || shell.viewer !== "member") return null
+	const data = await getUserData({ user_id: viewerId })
+	return rowServices(
+		request,
+		titles.filter((t) => !isSeen(data, t.key as MediaKey)),
+		viewerId,
+	)
 }
