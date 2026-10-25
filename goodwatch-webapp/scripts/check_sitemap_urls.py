@@ -18,6 +18,8 @@ import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ElementTree
 
+from sitemap_http import build_opener
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_DIR = os.path.join(SCRIPT_DIR, "../public/sitemaps/")
 SITE_HOST = "goodwatch.app"
@@ -301,7 +303,7 @@ def read_page(stream) -> Tuple[str, int]:
 
 
 def fetch(url: str) -> Response:
-    opener = urllib.request.build_opener(NoRedirect)
+    opener = build_opener(NoRedirect)
     # No Accept-Encoding: the body comes uncompressed, so its size is what Google's limit counts.
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html"})
     try:
@@ -310,8 +312,9 @@ def fetch(url: str) -> Response:
             return Response(response.status, html, None, tuple(response.headers.get_all("X-Robots-Tag") or ()),
                             size)
     except urllib.error.HTTPError as error:
-        return Response(error.code, "", error.headers.get("Location"),
-                        tuple(error.headers.get_all("X-Robots-Tag") or ()))
+        with error:
+            return Response(error.code, "", error.headers.get("Location"),
+                            tuple(error.headers.get_all("X-Robots-Tag") or ()))
 
 
 def fetch_robots(base: str = f"https://{SITE_HOST}") -> Tuple[Optional[RobotsRules], Optional[str]]:
@@ -319,12 +322,13 @@ def fetch_robots(base: str = f"https://{SITE_HOST}") -> Tuple[Optional[RobotsRul
     (4xx) as no rules, and stops crawling the site when it can't get an answer (5xx, no response)."""
     request = urllib.request.Request(f"{base}/robots.txt", headers={"User-Agent": USER_AGENT})
     try:
-        with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
+        with build_opener().open(request, timeout=TIMEOUT_SECONDS) as response:
             return RobotsRules(response.read(MAX_HEAD_BYTES).decode("utf-8", errors="replace")), None
     except urllib.error.HTTPError as error:
-        if 400 <= error.code < 500:
-            return RobotsRules(""), None
-        return None, f"robots.txt: status {error.code}, Google crawls nothing while it can't read it"
+        with error:
+            if 400 <= error.code < 500:
+                return RobotsRules(""), None
+            return None, f"robots.txt: status {error.code}, Google crawls nothing while it can't read it"
     except Exception as error:
         return None, f"robots.txt: no answer ({type(error).__name__}: {error})"
 

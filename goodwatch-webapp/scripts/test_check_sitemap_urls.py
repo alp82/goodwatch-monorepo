@@ -1,11 +1,16 @@
-"""Run with: python3 -m unittest test_check_sitemap_urls (in this directory). Nothing here uses the network."""
+"""Run with: python3 -m unittest test_check_sitemap_urls (in this directory). Network tests use only a local HTTP server."""
 import os
 import tempfile
 import unittest
 
 import io
+import threading
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.error import HTTPError
 
-from check_sitemap_urls import (GOOGLE_HTML_LIMIT_BYTES, Response, RobotsRules, check_urls, find_canonicals,
+from sitemap_new import fetch_index
+
+from check_sitemap_urls import (GOOGLE_HTML_LIMIT_BYTES, Response, RobotsRules, check_urls, fetch, fetch_robots, find_canonicals,
                                 find_robots_meta, header_says_noindex, judge, read_page, read_sitemap_urls, summary,
                                 warn)
 
@@ -281,6 +286,130 @@ class ReadPageTest(unittest.TestCase):
         self.assertEqual(size, len(body))
         self.assertIn("</head>", html)
         self.assertLess(len(html), 70_000)
+
+
+class InformationalResponseTest(unittest.TestCase):
+    def setUp(self):
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.server.paths.append(self.path)
+                for status in self.server.informational:
+                    self.send_response_only(status)
+                    # These belong to the interim response, never to the final one.
+                    self.send_header("X-Robots-Tag", "noindex")
+                    self.send_header("Location", "/interim")
+                    self.end_headers()
+                self.send_response(200 if self.path == "/target" else self.server.final_status)
+                for name, value in self.server.final_headers:
+                    self.send_header(name, value)
+                if self.server.chunked:
+                    self.send_header("Transfer-Encoding", "chunked")
+                else:
+                    self.send_header("Content-Length", str(len(self.server.body)))
+                self.end_headers()
+                if self.server.chunked:
+                    self.wfile.write(f"{len(self.server.body):x}\r\n".encode()
+                                     + self.server.body + b"\r\n0\r\n\r\n")
+                else:
+                    self.wfile.write(self.server.body)
+
+            def log_message(self, *args):
+                pass
+
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.server.informational = [103]
+        self.server.final_status = 200
+        self.server.final_headers = []
+        self.server.chunked = False
+        self.server.body = page(MOVIE).encode()
+        self.server.paths = []
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        self.base = f"http://127.0.0.1:{self.server.server_port}"
+
+    def tearDown(self):
+        self.server.shutdown()
+        self.server.server_close()
+        self.thread.join()
+
+    def test_page_uses_final_200_body_headers_and_size(self):
+        self.server.final_headers = [("X-Robots-Tag", "index"), ("X-Robots-Tag", "googlebot: follow")]
+        response = fetch(self.base + "/page")
+        self.assertEqual(response, Response(200, page(MOVIE), None,
+                                           ("index", "googlebot: follow"), len(self.server.body)))
+        self.assertIsNone(judge(MOVIE, *response))
+        self.assertEqual(self.server.paths, ["/page"])
+
+    def test_page_reports_final_404_and_its_headers(self):
+        self.server.final_status = 404
+        self.server.final_headers = [("X-Robots-Tag", "none")]
+        self.assertEqual(fetch(self.base + "/missing"), Response(404, "", None, ("none",)))
+
+    def test_page_still_reports_redirect_without_following_it(self):
+        self.server.final_status = 302
+        self.server.final_headers = [("Location", "/target")]
+        self.assertEqual(fetch(self.base + "/redirect"), Response(302, "", "/target"))
+        self.assertEqual(self.server.paths, ["/redirect"])
+
+    def test_skips_multiple_informational_responses_and_decodes_chunked_body(self):
+        self.server.informational = [100, 102, 103, 103, 199]
+        self.server.chunked = True
+        response = fetch(self.base + "/page")
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.html, page(MOVIE))
+        self.assertEqual(response.size, len(self.server.body))
+
+    def test_protocol_switch_is_not_skipped(self):
+        self.server.informational = []
+        self.server.final_status = 101
+        self.server.body = b""
+        self.assertEqual(fetch(self.base + "/upgrade").status, 101)
+
+    def test_robots_uses_final_200_rules(self):
+        self.server.body = b"User-agent: *\nDisallow: /private\n"
+        robots, problem = fetch_robots(self.base)
+        self.assertIsNone(problem)
+        self.assertEqual(robots.blocking_rule(self.base + "/private"), "/private")
+        self.assertEqual(self.server.paths, ["/robots.txt"])
+
+    def test_robots_final_404_means_no_rules(self):
+        self.server.final_status = 404
+        robots, problem = fetch_robots(self.base)
+        self.assertIsNone(problem)
+        self.assertIsNone(robots.blocking_rule(self.base + "/private"))
+
+    def test_robots_final_503_still_fails_closed(self):
+        self.server.final_status = 503
+        robots, problem = fetch_robots(self.base)
+        self.assertIsNone(robots)
+        self.assertIn("status 503", problem)
+
+    def test_pages_index_reads_final_body(self):
+        self.server.body = b'{"pages": [], "failed": []}'
+        self.assertEqual(fetch_index(self.base + "/api/new-on-services/pages"), self.server.body)
+
+    def test_robots_still_follows_redirects(self):
+        self.server.final_status = 302
+        self.server.final_headers = [("Location", "/target")]
+        self.server.body = b"User-agent: *\nDisallow: /private\n"
+        robots, problem = fetch_robots(self.base)
+        self.assertIsNone(problem)
+        self.assertEqual(robots.blocking_rule(self.base + "/private"), "/private")
+        self.assertEqual(self.server.paths, ["/robots.txt", "/target"])
+
+    def test_pages_index_still_follows_redirects(self):
+        self.server.final_status = 302
+        self.server.final_headers = [("Location", "/target")]
+        self.server.body = b'{"pages": [], "failed": []}'
+        self.assertEqual(fetch_index(self.base + "/index"), self.server.body)
+        self.assertEqual(self.server.paths, ["/index", "/target"])
+
+    def test_pages_index_final_404_still_raises(self):
+        self.server.final_status = 404
+        with self.assertRaises(HTTPError) as caught:
+            fetch_index(self.base + "/api/new-on-services/pages")
+        self.assertEqual(caught.exception.code, 404)
+        caught.exception.close()
 
 
 class WarnTest(unittest.TestCase):

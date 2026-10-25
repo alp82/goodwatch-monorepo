@@ -17,7 +17,9 @@ import json
 import re
 from datetime import date, datetime, timezone
 from typing import Callable, List, Optional, Tuple
-from urllib.request import Request, urlopen
+from urllib.request import Request
+
+from sitemap_http import build_opener
 
 BASE_URL = "https://goodwatch.app"
 PAGES_INDEX = f"{BASE_URL}/api/new-on-services/pages"
@@ -30,7 +32,7 @@ TIMEOUT_SECONDS = 120
 
 def fetch_index(url: str = PAGES_INDEX) -> bytes:
     request = Request(url, headers={"Accept": "application/json", "User-Agent": "goodwatch-sitemaps"})
-    with urlopen(request, timeout=TIMEOUT_SECONDS) as response:
+    with build_opener().open(request, timeout=TIMEOUT_SECONDS) as response:
         return response.read()
 
 
