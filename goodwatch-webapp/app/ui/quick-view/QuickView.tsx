@@ -66,6 +66,8 @@ export interface QuickViewProps {
 	anchorOf: (index: number) => HTMLElement | null
 	/** The poster's box on screen, for a place whose posters aren't elements (a canvas). Default: the anchor's image. */
 	boxOf?: (index: number) => Box | null
+	/** Where focus returns on closing. Default: the anchor (its link or button). */
+	focusOf?: (index: number) => HTMLElement | null
 	/** The big poster's image (a TMDB path) and the title's name. */
 	posterOf: (index: number) => { path: string | null; name: string }
 	/** The card's content for a title: QuickViewCard with the place's data. */
@@ -405,7 +407,9 @@ function LiftCard(p: QuickViewProps) {
 		active: !closing,
 		scope: () => [layer.current, ...(p.scope?.() ?? [])],
 		initial: () => view.current,
-		returnTo: () => focusTarget(p.anchorOf(state.current.cur.i)),
+		returnTo: () =>
+			p.focusOf?.(state.current.cur.i) ??
+			focusTarget(p.anchorOf(state.current.cur.i)),
 	})
 
 	const pb = geo.poster
@@ -533,7 +537,7 @@ function Drawer(p: QuickViewProps) {
 		active: !closing,
 		scope: () => [layer.current, ...(p.scope?.() ?? [])],
 		initial: () => view.current,
-		returnTo: () => focusTarget(p.anchorOf(p.index)),
+		returnTo: () => p.focusOf?.(p.index) ?? focusTarget(p.anchorOf(p.index)),
 	})
 	// The opened title stays in sight above the drawer as it steps.
 	useEffect(() => {

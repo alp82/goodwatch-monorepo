@@ -199,4 +199,6 @@ export interface ExplorerCard {
 	services: ExplorerService[]
 	/** A guest without taste: the card shows the sign-up prompt in place of the match. */
 	signUp: boolean
+	/** The title's story; null when there is none. */
+	overview: string | null
 }

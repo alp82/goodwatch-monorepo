@@ -190,9 +190,13 @@ export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 							t.reason
 						)}
 					</div>
-					<div className="mt-2 h-5 overflow-hidden">
-						{t.note ?? <ReasonChips reasons={t.chips ?? []} />}
-					</div>
+					{t.note ? (
+						<div className="mt-2">{t.note}</div>
+					) : (
+						<div className="mt-2 h-5 overflow-hidden">
+							<ReasonChips reasons={t.chips ?? []} />
+						</div>
+					)}
 				</section>
 				{t.services !== undefined && <Services offers={t.services} />}
 				<section className="py-3">

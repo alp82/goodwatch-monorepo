@@ -24,6 +24,7 @@ import {
 	availabilityLoadedAt,
 	servicesFor,
 } from "~/server/availability-index.server"
+import { readOverviews } from "~/server/for-you-page/details.server"
 import { getStreamingProviders } from "~/server/streaming-providers.server"
 import { type Taste, loadTaste } from "~/server/taste/index.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
@@ -408,9 +409,9 @@ export async function getIsland(
 	return { grouping, id: query.id, ...treeOf(seat, shape, members.length) }
 }
 
-// ---------------------------------------------------------------- the near card
+// ---------------------------------------------------------------- the near card (the quick view's)
 
-/** The card of the title nearest the person's focus: match, why, services, and their state for the actions. */
+/** The quick view's data of a title on the map: match, why, services, the story, and their state for the actions. */
 export async function getNearCard(
 	ctx: ViewerContext,
 	key: TitleKey,
@@ -444,12 +445,17 @@ export async function getNearCard(
 			.join(", ")
 		why = text ? text.charAt(0).toUpperCase() + text.slice(1) : null
 	}
+	const [services, overviews] = await Promise.all([
+		servicesOf(seat.lists?.[i] ?? [], seat, true),
+		readOverviews([key]),
+	])
 	return {
 		title: titleOf(seat, i),
 		why,
 		like,
-		services: await servicesOf(seat.lists?.[i] ?? [], seat, true),
+		services,
 		signUp: ctx.viewer.kind === "guest" && taste.signal !== "some",
+		overview: overviews.get(key) ?? null,
 	}
 }
 

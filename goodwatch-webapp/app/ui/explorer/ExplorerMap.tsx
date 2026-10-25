@@ -29,7 +29,8 @@ import {
 import { NoTitlesOfType } from "~/ui/type-filter"
 import { useUser } from "~/utils/auth"
 import { Minimap } from "./Minimap"
-import { Caption, ProximityCard } from "./ProximityCard"
+import { Caption } from "./Caption"
+import { ExplorerQuickView } from "./ExplorerQuickView"
 import { Selection, type SelectionState } from "./Selection"
 import { TopBar } from "./TopBar"
 import { Tutorial, type TutorialStep, useTutorial } from "./Tutorial"
@@ -59,7 +60,7 @@ import { groupingOf, layRegions, localId, worldId } from "./regions"
 /** The map's filters as the URL holds them (null is the default). */
 type Filters = WorldQuery
 
-/** The title whose card is open: nearest the focus, or pinned by a tap. */
+/** The title nearest the focus (its caption), or pinned by a tap (its quick view). */
 interface Active {
 	key: number
 	island: string
@@ -285,8 +286,6 @@ export function ExplorerMap({
 	useEffect(() => {
 		setTouch(window.matchMedia?.("(pointer: coarse)").matches ?? false)
 	}, [])
-	const cardEl = useRef<HTMLDivElement>(null)
-	const anchorEl = useRef<HTMLDivElement>(null)
 	const goEl = useRef<HTMLDivElement>(null)
 	const captionEls = useRef(new Map<string, HTMLDivElement>())
 	const layerEl = useRef<HTMLDivElement>(null)
@@ -361,15 +360,16 @@ export function ExplorerMap({
 		setTimeout(() => setToast((t) => (t === text ? null : t)), 2200)
 	}
 
-	/** The focus without a mouse: the middle of the free part of the view (above the card sheet on phones). */
+	/** The focus without a mouse: the middle of the free part of the view (above the quick view's drawer on phones). */
 	const center = () => {
 		const p = padRef.current
 		const size = engineRef.current?.size() ?? { w: width, h: 800 }
 		const { w, h } = size
 		if (w < 640) {
 			const a = activeRef.current
-			if (!a) return { x: w / 2, y: p.t + (h - p.t - p.b) * 0.5 }
-			const top = a.pinned ? h - 60 - h * 0.5 : h - 60 - 176
+			if (!a?.pinned) return { x: w / 2, y: p.t + (h - p.t - p.b) * 0.5 }
+			// Above the quick view's drawer.
+			const top = h - 60 - h * 0.5
 			return { x: w / 2, y: p.t + Math.max(60, top - p.t) * 0.5 }
 		}
 		return { x: (p.l + w - p.r) / 2, y: (p.t + h - p.b) / 2 }
@@ -578,8 +578,9 @@ export function ExplorerMap({
 					if (dc < dn * 1.3 + 12) near = cur
 				}
 			}
-			if (!phone)
-				list = e
+			list = phone
+				? []
+				: e
 					.drawn()
 					.filter(
 						(d) =>
@@ -594,6 +595,8 @@ export function ExplorerMap({
 							Math.hypot(y.cx - pt.x, y.cy - pt.y),
 					)
 					.slice(0, 4)
+			// The nearest title's caption leads: a press on it opens its quick view.
+			if (near) list.unshift(near)
 			const key = near?.title.key ?? null
 			const now = performance.now()
 			if (key !== (a?.key ?? null)) {
@@ -621,45 +624,14 @@ export function ExplorerMap({
 		place()
 	}
 
-	/** Positions the card beside its poster, the captions under theirs (clear of each other), and "Go in" on a lone picked island. */
+	/** Positions the captions under their posters (clear of each other), and "Go in" on a lone picked island. */
 	const place = () => {
 		const e = engineRef.current
 		if (!e) return
 		const { w, h } = e.size()
 		const p = padRef.current
 		const a = activeRef.current
-		const el = anchorEl.current
-		let box: { x: number; y: number; w: number; h: number } | null = null
-		if (el && a && form === "float") {
-			const d = e.find(a.key, a.island)
-			const cw = el.offsetWidth || 340
-			const ch = el.offsetHeight || 420
-			if (d) {
-				let x = d.cx + d.w * 0.56 + 22
-				let sideX = "0%"
-				if (x + cw > w - p.r + 40) {
-					x = d.cx - d.w * 0.56 - 22 - cw
-					sideX = "100%"
-				}
-				if (x < 8) x = Math.min(w - cw - 8, Math.max(8, d.cx - cw / 2))
-				const y = Math.min(
-					h - ch - 12,
-					Math.max(Math.min(p.t - 4, h - ch - 12), d.cy - ch * 0.36),
-				)
-				el.style.transform = `translate3d(${Math.round(x)}px,${Math.round(y)}px,0)`
-				el.style.visibility = "visible"
-				el.style.setProperty("--ox", sideX)
-				box = { x, y, w: cw, h: ch }
-			} else if (!a.pinned) el.style.visibility = "hidden"
-		}
-		// On phones the card docks at the bottom; the zoom buttons move up above its peek.
-		const sheet =
-			form === "sheet" && a ? (cardEl.current?.offsetHeight ?? 0) : 0
-		stage.current?.style.setProperty(
-			"--ex-sheet",
-			`${sheet ? sheet + 12 : 0}px`,
-		)
-		const taken = box ? [box] : []
+		const taken: { x: number; y: number; w: number; h: number }[] = []
 		// Captions never cover the active poster either.
 		const shown = a ? e.find(a.key, a.island) : null
 		if (shown) taken.push({ x: shown.x, y: shown.y, w: shown.w, h: shown.h })
@@ -750,10 +722,8 @@ export function ExplorerMap({
 			const a = activeRef.current
 			return a ? { key: a.key, pinned: a.pinned, island: a.island } : null
 		},
-		card: () =>
-			form === "sheet"
-				? null
-				: (cardEl.current?.getBoundingClientRect() ?? null),
+		// The quick view covers the map: no thread from the poster to a card.
+		card: () => null,
 		onTapPoster: (d) => {
 			const a = activeRef.current
 			if (a?.pinned && a.key === d.title.key) return
@@ -783,8 +753,7 @@ export function ExplorerMap({
 		onFrame: () => compute(),
 		onPointer: () => compute(),
 		onHoverIsland: () => {},
-		holdsPointer: (to) =>
-			to instanceof Node && !!anchorEl.current?.contains(to),
+		holdsPointer: () => false,
 	}
 
 	/** Loads an island's tree once, for the query of the map it belongs to. */
@@ -1071,27 +1040,41 @@ export function ExplorerMap({
 	const where = activeIsland
 		? { name: activeIsland.name, color: rgbCss(activeIsland.tint) }
 		: { name: "", color: "#888" }
-	const cardNode = active && activeIsland && (
-		<ProximityCard
+	// A pinned title opens in the quick view. A title it marks Seen leaves the map (with Not seen yet on), and Seen
+	// that asks for the score says so only once the picker has closed (TitleControl), so nothing leaves under it.
+	const quickView = active?.pinned && activeIsland && (
+		<ExplorerQuickView
 			key={active.key}
-			ref={cardEl}
 			title={active.title}
 			where={where}
 			card={card}
-			pinned={active.pinned}
-			form={form}
-			peek={form === "sheet" && !active.pinned}
-			onPin={() => pin({ island: activeIsland, title: active.title })}
+			wide={form === "float"}
+			boxOf={() => {
+				const e = engineRef.current
+				const d = e?.find(active.key, active.island)
+				const at = posterCanvas.current?.getBoundingClientRect()
+				return d && at ? { x: at.left + d.x, y: at.top + d.y, w: d.w, h: d.h } : null
+			}}
+			focusOf={() => posterCanvas.current}
 			onClose={unpin}
-			onAction={(message, seen) => {
-				say(message)
-				if (seen !== undefined)
-					setSeenNow((s) => {
-						const next = new Set(s)
-						if (seen) next.add(active.key)
-						else next.delete(active.key)
-						return next
-					})
+			onChange={(change) => {
+				say(
+					{
+						want: "Added to Wishlist",
+						unwant: "Removed from Wishlist",
+						seen: "Marked as seen",
+						unseen: "Unmarked as seen",
+						scored: "Score saved",
+					}[change],
+				)
+				if (change === "want" || change === "unwant") return
+				const seen = change !== "unseen"
+				setSeenNow((s) => {
+					const next = new Set(s)
+					if (seen) next.add(active.key)
+					else next.delete(active.key)
+					return next
+				})
 			}}
 		/>
 	)
@@ -1216,16 +1199,6 @@ export function ExplorerMap({
 						</button>
 					</div>
 				)}
-				{form === "float" && active && (
-					<div
-						ref={anchorEl}
-						className="ex-anchor"
-						style={{ visibility: "hidden" }}
-					>
-						{cardNode}
-					</div>
-				)}
-				{form === "sheet" && cardNode}
 			</div>
 			<TopBar
 				selection={bar && !(phone && active?.pinned) ? selection : null}
@@ -1330,6 +1303,7 @@ export function ExplorerMap({
 				!focusIsland && <p className="ex-hint">{hint}</p>
 			)}
 			{toast && <output className="ex-toast">{toast}</output>}
+			{quickView}
 		</div>
 	)
 }
