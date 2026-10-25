@@ -25,6 +25,8 @@ test("every scene's content is there", () => {
 		"catalog",
 		"pick",
 		"pickFeel",
+		"shows",
+		"forYou",
 		"franchise",
 	])
 		assert.ok(content[name], name)
@@ -32,6 +34,18 @@ test("every scene's content is there", () => {
 	assert.ok(content.atlas.wall.length >= 128)
 	assert.ok(content.filters.steps.length >= 5)
 	assert.ok(content.catalog.movies + content.catalog.shows > 1_000_000)
+})
+
+test("the For you pick is a modern show, and the titles it was picked for are intro titles", () => {
+	const known = (key: number) =>
+		[...content.pool, ...content.shows].some(
+			(t: { key: number }) => t.key === key,
+		)
+	assert.ok(
+		content.shows.some((t: { key: number }) => t.key === content.forYou.pick),
+	)
+	for (const key of content.forYou.loved) assert.ok(known(key), String(key))
+	for (const t of content.shows) assert.ok(Array.isArray(t.feels))
 })
 
 test("the pick is an intro title", () => {

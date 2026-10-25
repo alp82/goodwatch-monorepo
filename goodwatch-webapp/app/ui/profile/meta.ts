@@ -1,9 +1,9 @@
 // The profile pages' meta: title "@handle · GoodWatch" (a tab adds its name), a description from the bio, the canonical
-// address, the link-preview card (/og/u/<handle>…), noindex unless the profile has enough public scores, and ProfilePage
+// address, the link-preview card (/og/u/<handle>…, or a section's own card for a shared section address), noindex unless the profile has enough public scores, and ProfilePage
 // structured data on an indexable Overview.
 import type { MetaDescriptor } from "@remix-run/node"
 import { type ProfilePart, type ProfileShell, seesPart } from "~/domain/profile"
-import { buildMeta } from "~/utils/meta"
+import { buildMeta, ogImageUrl } from "~/utils/meta"
 import { type ProfileTab, linkUrl, profileTabPath } from "./links"
 
 const TAB_NAMES: Record<ProfileTab, string> = {
@@ -13,13 +13,16 @@ const TAB_NAMES: Record<ProfileTab, string> = {
 	wishlist: "Wishlist",
 	shows: "Shows",
 	lists: "Lists",
-	taste: "Taste",
+	stats: "Stats",
+	tropes: "Tropes",
 }
 
 export function profileMeta(
 	shell: ProfileShell | undefined,
 	tab: ProfileTab,
 	line?: string,
+	/** A section of the tab with a card of its own (/u/<handle>/stats/<view>): the page is the tab, the card the section's. */
+	section?: string,
 ): MetaDescriptor[] {
 	if (!shell)
 		return [
@@ -60,7 +63,7 @@ export function profileMeta(
 					},
 				]
 			: []
-	return buildMeta({
+	const meta = buildMeta({
 		pageMeta: {
 			title,
 			description,
@@ -71,6 +74,15 @@ export function profileMeta(
 		robots: indexable ? "index, follow" : "noindex, nofollow",
 		structuredData: profilePage,
 	}) as MetaDescriptor[]
+	if (!section) return meta
+	const card = ogImageUrl(`${url}/${section}`)
+	return meta.map((tag) =>
+		"property" in tag && tag.property === "og:image"
+			? { ...tag, content: card }
+			: "name" in tag && tag.name === "twitter:image"
+				? { ...tag, content: card }
+				: tag,
+	)
 }
 
 /** "@handle on GoodWatch: 1,008 scores, taste and lists.", naming only what this visitor may see. */

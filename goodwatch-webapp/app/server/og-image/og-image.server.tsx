@@ -161,7 +161,7 @@ const store = createOgStore({
 	canonical: canonicalOgPath,
 	count: countOgCard,
 	// A member's profile card shows only what they make public, so it must go when they change that.
-	resettable: (path) => path.startsWith("/u/"),
+	resettable: (path) => /^\/(u|movie|show|person)\//.test(path),
 })
 
 /** Drops a page's stored card on every instance, e.g. after a member changes what their profile shows. */

@@ -1,11 +1,11 @@
-// A member's Taste tab numbers, cached in Redis for 10 minutes at `profile-taste-stats:v1:<user_id>` and cleared when
+// A member's Taste tab numbers, cached in Redis for 10 minutes at `profile-taste-stats:v2:<user_id>` and cleared when
 // their taste changes (markTasteChanged calls clearTasteStats), like the taste portrait's cache. A cached entry built
 // before the member's latest write had settled (`taste:touched:<user_id>`) is not used. Watches don't touch the taste,
 // so the numbers that read them (episodes, plate spinner) catch up within the 10 minutes.
 import type { TasteStats } from "~/domain/profile-taste"
 import { withBackendTimeout } from "~/utils/backend-timeout"
 
-const VERSION = "v1"
+const VERSION = "v2"
 const TTL_SECONDS = 10 * 60
 const SETTLE_MS = 1_500
 /** A slow Valkey must not hold the Taste tab: past this, the cache counts as a miss (reads) or is skipped (writes). */

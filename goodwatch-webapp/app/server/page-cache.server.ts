@@ -924,12 +924,20 @@ export function putPageCacheFirst(
 	const listeners = server.listeners("request")
 	server.removeAllListeners("request")
 	server.on("request", (request, response) =>
-		withCrateHttpRequest(request, response, crateRouteLabel, () => cache.handle(request, response, () => {
-			withMediaRequestHealth(() => {
-				for (const listener of listeners)
-					Reflect.apply(listener, server, [request, response])
-			})
-		})),
+		withCrateHttpRequest(request, response, crateRouteLabel, () => {
+			const serve = () =>
+				cache.handle(request, response, () => {
+					withMediaRequestHealth(() => {
+						for (const listener of listeners)
+							Reflect.apply(listener, server, [request, response])
+					})
+				})
+			if (!/^\/(movie|show|person)\//.test(request.url ?? "")) return serve()
+			// A correction announced by another process drops the pages it names before this one is served.
+			void import("./feedback/cache-revision.server.ts")
+				.then(({ pollCorrectionResets }) => pollCorrectionResets())
+				.then(serve, serve)
+		}),
 	)
 }
 const healthWrapped = new WeakSet<Server>()

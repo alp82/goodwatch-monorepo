@@ -83,7 +83,8 @@ function useMounted() {
 	return mounted
 }
 
-export function Results({ title }: { title: React.ReactNode }) {
+/** `title` names a picked tile or tweak; null for plain For you, which the page's header row already says. */
+export function Results({ title }: { title: React.ReactNode | null }) {
 	const size = useSize()
 	const mounted = useMounted()
 	return (
@@ -121,13 +122,15 @@ function PhoneList({
 	const four = ranked.slice(STRIP_ALL + 9, fourEnd)
 	return (
 		<div className="mx-auto max-w-xl">
-			<div className="flex h-8 items-center">
-				<h2
-					className={`${DISPLAY} min-w-0 flex-1 truncate text-[15px] leading-5 text-white`}
-				>
-					{title}
-				</h2>
-			</div>
+			{title != null && (
+				<div className="flex h-8 items-center">
+					<h2
+						className={`${DISPLAY} min-w-0 flex-1 truncate text-[15px] leading-5 text-white`}
+					>
+						{title}
+					</h2>
+				</div>
+			)}
 			<div className="grid grid-cols-12 gap-2">
 				{top.map((r, i) => {
 					const big = i < STRIP_BIG
@@ -253,9 +256,11 @@ function DeskList({
 	)
 	return (
 		<>
-			<h2 className={`${DISPLAY} mb-4 truncate text-2xl text-white`}>
-				{title}
-			</h2>
+			{title != null && (
+				<h2 className={`${DISPLAY} mb-4 truncate text-2xl text-white`}>
+					{title}
+				</h2>
+			)}
 			<div className={`grid gap-5 ${t.big}`}>
 				{big.map((r, i) =>
 					item(

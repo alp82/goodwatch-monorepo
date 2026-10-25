@@ -13,6 +13,7 @@ import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
 import { BelowFoldProvider, useBelowFold } from "~/ui/details/below-fold"
+import { usePublishTitleSubject } from "~/ui/feedback/subject"
 import type { Section } from "~/utils/scroll"
 import { REPLAY_TAP_SCRIPT } from "~/utils/replay-tap"
 import {
@@ -77,6 +78,8 @@ function DetailsPage({
 	})
 	const media = preview.media
 	const country = preview.offers ? loadedCountry : preference.shown.country
+	// Fix mode's questions read the page as shown (ui/feedback).
+	usePublishTitleSubject(media, country, episodeGrid)
 	const { details } = media
 	const { backdrop_path } = details
 	// Blurred by 64 px across the whole page, so the smallest backdrop is enough.

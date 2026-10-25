@@ -1160,6 +1160,25 @@ SCHEMAS = {
         "timestamps": False,
         "replicas": "0-1",
     },
+    # Member corrections. Source imports do not write these tables.
+    "catalog_correction": {
+        "columns": {
+            "id": "TEXT", "entity_kind": "TEXT", "tmdb_id": "BIGINT",
+            "target": 'OBJECT(STRICT) AS ("personId" BIGINT, "creditTmdbId" BIGINT, "creditMediaType" TEXT, "seasonNumber" INTEGER, "episodeNumber" INTEGER, "providerId" BIGINT, "offerType" TEXT, country TEXT)', "field": "TEXT", "op": "TEXT",
+            "value": "TEXT INDEX OFF", "old_value": "TEXT INDEX OFF",
+            "status": "TEXT", "member_id": "TEXT", "reviewer": "TEXT",
+            "report_id": "TEXT", "source_link": "TEXT",
+            "created_at": "TIMESTAMP WITH TIME ZONE", "updated_at": "TIMESTAMP WITH TIME ZONE",
+        },
+        "primary_key": ["id"], "shards": 1, "timestamps": False, "replicas": "0-1",
+    },
+    "catalog_correction_event": {
+        "columns": {
+            "id": "TEXT", "correction_id": "TEXT", "action": "TEXT",
+            "actor": "TEXT", "at": "TIMESTAMP WITH TIME ZONE", "details": "TEXT INDEX OFF",
+        },
+        "primary_key": ["id"], "shards": 1, "timestamps": False, "replicas": "0-1",
+    },
     # Private feedback evidence; schema applied manually via f/sync/init/cratedb (#763).
     "feedback_report": {
         "columns": {

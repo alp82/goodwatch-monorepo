@@ -109,7 +109,7 @@ function ForgotPassword() {
 					title="Check your inbox"
 					sub={
 						<>
-							If there's an account for <strong className="text-gray-200">{email}</strong>, a link to set a new password is on its way. It works for one hour.
+							If there's an account for <strong data-feedback-private className="text-gray-200">{email}</strong>, a link to set a new password is on its way. It works for one hour.
 						</>
 					}
 				/>

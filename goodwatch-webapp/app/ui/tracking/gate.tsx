@@ -116,6 +116,8 @@ export function TrackedEpisodes({
 		className?: string
 		style?: CSSProperties
 		ref?: (element: HTMLDivElement) => void
+		/** The page part fix mode outlines (ui/feedback/areas.ts). */
+		"data-feedback-area"?: string
 	}
 	/** Today's episode grid, or nothing for a show without one. */
 	children: ReactNode

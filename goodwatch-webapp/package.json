@@ -62,6 +62,7 @@
 		"isbot": "^5.1.17",
 		"jose": "^6.2.12",
 		"jpeg-js": "^0.4.4",
+		"modern-screenshot": "4.7.0",
 		"node-crate": "^3.0.0",
 		"nodemailer": "10.1.1",
 		"onnxruntime-node": "1.30.0",

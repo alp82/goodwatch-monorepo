@@ -1,0 +1,160 @@
+/* The story's big asks, the last frame, and the asks rushing past. Container units; every time is
+   calc(<n> * var(--k)); transform and opacity animations only. Phone picture rules:
+   @container (max-width: 760px) or (max-height: 360px). */
+
+/* ---- the big asks ---------------------------------------------------------------------------------------------- */
+.intro-ai-mid {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+}
+.intro-ai-ask-in {
+	position: relative;
+	animation: intro-ai-ask-in calc(var(--dur, 160ms) * var(--k)) ease-out
+		calc(var(--d, 0ms) * var(--k)) both;
+}
+@keyframes intro-ai-ask-in {
+	from {
+		opacity: 0;
+		transform: scale(0.94);
+	}
+}
+.intro-ai-ask {
+	display: inline-block;
+	white-space: nowrap;
+	font-family: ui-sans-serif, -apple-system, system-ui, "Segoe UI", Helvetica,
+		Arial, sans-serif;
+	font-weight: 500;
+	line-height: 1.2;
+	letter-spacing: -0.01em;
+	color: #fff;
+	text-shadow: 0 0.06em 0.4em rgba(0, 0, 0, 0.6);
+	transform-origin: 50% 50%;
+	animation: intro-ai-ask-fly calc(var(--dur, 460ms) * var(--k))
+		cubic-bezier(0.55, 0, 0.25, 1) calc(var(--d, 0ms) * var(--k)) both;
+}
+@keyframes intro-ai-ask-fly {
+	0% {
+		transform: none;
+		opacity: 1;
+	}
+	72% {
+		opacity: 1;
+	}
+	100% {
+		transform: translate(var(--fx, 0px), var(--fy, 0px)) scale(var(--fs, 0.3));
+		opacity: 0;
+	}
+}
+.intro-ai-scrim {
+	background: #05060a;
+}
+.intro-ai-bubble-text {
+	display: inline-block;
+}
+.intro-ai-ghost {
+	visibility: hidden;
+}
+.intro-ai-ghosts {
+	pointer-events: none;
+}
+
+/* The composer's caret on the last frame. */
+.intro-ai-comp-caret {
+	display: inline-block;
+	width: 0.09em;
+	height: 1.1em;
+	margin-right: 0.2em;
+	vertical-align: -0.18em;
+	background: var(--amber);
+	animation: intro-ai-blink calc(900ms * var(--k)) steps(1, end)
+		calc(var(--d, 0ms) * var(--k)) infinite both;
+}
+
+/* ---- headline and the last frame ------------------------------------------------------------------------------- */
+.intro-ai-head-move {
+	z-index: 2;
+	--ty: 33cqh;
+	--ts: 1.55;
+}
+.intro-ai-end {
+	position: absolute;
+	left: 28cqw;
+	right: 28cqw;
+	top: 55cqh;
+	font-family: ui-sans-serif, -apple-system, system-ui, "Segoe UI", Helvetica,
+		Arial, sans-serif;
+	font-size: max(12px, 1.9cqw);
+	line-height: 1.45;
+	color: #ececec;
+}
+.intro-ai-end .intro-ai-chat-comp {
+	margin: 0;
+}
+
+/* ---- the asks rushing past ------------------------------------------------------------------------------------- */
+.intro-ai-rush-pos {
+	position: relative;
+}
+.intro-ai-rush-near {
+	display: block;
+	animation: intro-ai-rush-near calc(var(--dur, 400ms) * var(--k)) var(--ease)
+		calc(var(--d, 0ms) * var(--k)) both;
+}
+@keyframes intro-ai-rush-near {
+	from {
+		opacity: 0;
+		transform: translate(var(--nx, 0), var(--ny, 0)) scale(var(--z0, 0.3));
+	}
+}
+.intro-ai-rush-pass {
+	display: block;
+	animation: intro-ai-rush-pass calc(var(--dur, 400ms) * var(--k))
+		cubic-bezier(0.5, 0, 0.95, 0.5) calc(var(--d, 0ms) * var(--k)) both;
+}
+@keyframes intro-ai-rush-pass {
+	to {
+		opacity: 0;
+		transform: translate(var(--px, 0), var(--py, 0)) scale(var(--z1, 2));
+	}
+}
+.intro-ai-rush-ask {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55em;
+	padding: 0.4em 0.85em;
+	border-radius: 1.2em;
+	background: #303030;
+	color: #ececec;
+	font-family: ui-sans-serif, -apple-system, system-ui, "Segoe UI", Helvetica,
+		Arial, sans-serif;
+	font-weight: 500;
+	line-height: 1.25;
+	white-space: nowrap;
+	box-shadow: 0 0.3em 1.2em rgba(0, 0, 0, 0.45);
+}
+.intro-ai-rush-tool {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4em;
+	font-size: 0.56em;
+	font-weight: 400;
+	color: #9b9b9b;
+}
+
+/* ---- phone picture --------------------------------------------------------------------------------------------- */
+@container (max-width: 760px) or (max-height: 360px) {
+	.intro-ai-head-move {
+		--ty: 27cqh;
+		--ts: 1.4;
+	}
+	.intro-ai-end {
+		left: 8cqw;
+		right: 8cqw;
+		top: 52cqh;
+		font-size: 12px;
+	}
+}

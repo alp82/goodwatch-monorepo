@@ -34,6 +34,7 @@ export function AccountAvatar({
 			<img
 				src={url}
 				alt=""
+				data-member-avatar
 				className={`shrink-0 rounded-full object-cover object-top transition ${ringClass}`}
 				style={{ width: size, height: size }}
 			/>

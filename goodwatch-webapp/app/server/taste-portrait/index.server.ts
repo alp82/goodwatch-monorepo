@@ -369,7 +369,7 @@ function viewKeys(view: Built): Set<TitleKey> {
 	else {
 		add(view.mostYou)
 		for (const a of view.attributes)
-			add([...a.carriers, ...a.against, a.exception])
+			add([...a.carriers, ...a.defining, ...a.against, a.exception])
 	}
 	return keys
 }
@@ -422,6 +422,7 @@ function prune(
 		attributes: view.attributes.map((a) => ({
 			...a,
 			carriers: list(a.carriers),
+			defining: list(a.defining),
 			against: list(a.against),
 			exception: one(a.exception),
 		})),
@@ -456,6 +457,7 @@ function unavailable(tab: PortraitTab, kind: Viewer["kind"]): PortraitView {
 			lower: [],
 			attributes: [],
 			genres: [],
+			gapGroups: { genres: [], traits: [] },
 		}
 	return {
 		...base,
@@ -467,5 +469,6 @@ function unavailable(tab: PortraitTab, kind: Viewer["kind"]): PortraitView {
 		families: FAMILIES,
 		attributes: [],
 		mostYou: [],
+		averageYear: null,
 	}
 }

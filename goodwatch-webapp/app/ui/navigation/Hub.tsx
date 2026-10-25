@@ -22,7 +22,6 @@ import { AccountAvatar } from "~/ui/account/AccountAvatar"
 import { useAccountSummary } from "~/ui/account/useAccountSummary"
 import { PROFILE_PATH } from "~/ui/settings/paths"
 import { profilePath } from "~/ui/share-card/links"
-import { TASTE_GROUPS_NAME } from "~/ui/taste/taste-groups-name"
 import { useUser } from "~/utils/auth"
 import { useOpenAfterMount } from "~/utils/first-use"
 import { useNavigation } from "./NavigationContext"
@@ -204,7 +203,10 @@ function AccountRow() {
 				<b className="block truncate">
 					{me.handle ? `@${me.handle}` : "Your profile"}
 				</b>
-				<small className="block truncate text-[12.5px] text-gray-400">
+				<small
+					data-feedback-private={(!me.handle && !me.loaded) || undefined}
+					className="block truncate text-[12.5px] text-gray-400"
+				>
 					{me.handle
 						? "Your profile"
 						: me.loaded
@@ -297,7 +299,7 @@ function HubContent() {
 				/>
 				<Tile
 					destination={d.taste}
-					subtitle={TASTE_GROUPS_NAME.title}
+					subtitle="Your viewer type"
 					here={here === "taste"}
 				/>
 			</Group>

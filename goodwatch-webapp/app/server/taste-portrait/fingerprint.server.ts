@@ -1,7 +1,17 @@
 // Fingerprint: the person's 74 attributes against everyone, in the five fingerprint families, with the titles that
 // carry each attribute for them, the exception to their usual stance, and a viewer type named from three leanings.
 import type { TitleKey } from "~/server/title-snapshot/index.server"
+import {
+	type DefiningAttribute,
+	definingTitles,
+	scoresVsEveryone,
+} from "./defining.server"
 import { FAMILIES, familyOf } from "./families.server"
+import {
+	type ScoredAgainstEveryone,
+	countsAgainstEveryone,
+	kindOffsets,
+} from "./generosity.server"
 import {
 	K,
 	KEYS,
@@ -10,6 +20,7 @@ import {
 	average,
 	round1,
 	round2,
+	yearOf,
 } from "./person.server"
 import type { FingerprintAttribute, FingerprintView, Tier } from "./view"
 import {
@@ -83,6 +94,7 @@ export function buildFingerprint(person: Person): FingerprintResult {
 		families: FAMILIES,
 		attributes: [],
 		mostYou: [],
+		averageYear: null,
 	}
 	if (rated.length < MIN_RATED) return empty
 
@@ -136,6 +148,18 @@ export function buildFingerprint(person: Person): FingerprintResult {
 		return picked.map((r) => r.key)
 	}
 
+	// Against everyone: the person's scores on the titles carrying an attribute, after their generosity per kind.
+	const againstEveryone = new Map<TitleKey, ScoredAgainstEveryone>()
+	for (const r of rated)
+		if (countsAgainstEveryone(r.facts))
+			againstEveryone.set(r.key, {
+				kind: r.facts.mediaType,
+				score: r.score,
+				everyone: r.facts.score,
+			})
+	const offsets = kindOffsets([...againstEveryone.values()])
+	const definingInput: DefiningAttribute[] = []
+
 	const attributes = new Array<FingerprintAttribute>(K)
 	const exceptions = new Set<TitleKey>()
 	// The strongest edges pick their titles first.
@@ -178,6 +202,12 @@ export function buildFingerprint(person: Person): FingerprintResult {
 				)
 				.find((r) => !exceptions.has(r.key))?.key ?? null
 		if (exception !== null) exceptions.add(exception)
+		definingInput.push({
+			k,
+			family: familyOf(key),
+			edge: edge[k],
+			carriers: strong.filter(showable),
+		})
 		attributes[k] = {
 			key,
 			label: label(key),
@@ -194,11 +224,18 @@ export function buildFingerprint(person: Person): FingerprintResult {
 					? round1(average(strong.map((r) => r.score)) - mu)
 					: null,
 			count: strong.length,
+			vs: scoresVsEveryone(
+				strong.flatMap((r) => againstEveryone.get(r.key) ?? []),
+				offsets,
+			),
 			carriers,
+			defining: [],
 			against,
 			exception,
 		}
 	}
+	for (const [k, keys] of definingTitles(definingInput))
+		attributes[k].defining = keys
 
 	// The line names what they seek and avoid most.
 	const worded = attributes.filter((a) => isWorded(a.key))
@@ -249,5 +286,14 @@ export function buildFingerprint(person: Person): FingerprintResult {
 		avoid: avoid.map((a) => a.key),
 		attributes,
 		mostYou,
+		averageYear: averageYearOf(rated),
 	}
+}
+
+function averageYearOf(rated: Person["rated"]): number | null {
+	const years = rated.flatMap((t) => {
+		const year = yearOf(t.facts)
+		return year === null ? [] : [year]
+	})
+	return years.length ? Math.round(average(years)) : null
 }

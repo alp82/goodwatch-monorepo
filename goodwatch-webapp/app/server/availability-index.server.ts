@@ -1,3 +1,5 @@
+import { correctedAvailability } from "./feedback/availability-corrections.server"
+import type { Sql } from "./feedback/correction-store.server"
 import {
 	type FirstSeen,
 	type Landing,
@@ -253,7 +255,7 @@ async function loadCountry(country: string) {
 	const queryMs = performance.now() - started
 
 	const buildStarted = performance.now()
-	const index = await buildIndex(rows)
+	const index = await buildIndex(await correctedAvailability(country, rows, execute as Sql))
 	const buildMs = performance.now() - buildStarted
 
 	indexes.set(country, index)
@@ -392,3 +394,11 @@ function binarySearch(keys: Float64Array, key: number): number {
 }
 
 preloadAvailability()
+
+/** Discard a corrected country's index and schedule its replacement. Only a loaded country reloads. */
+export function reloadAvailability(country?: string) {
+	if (!country || !indexes.has(country)) return
+	indexes.delete(country)
+	failedAt.delete(country)
+	scheduleLoad(country)
+}

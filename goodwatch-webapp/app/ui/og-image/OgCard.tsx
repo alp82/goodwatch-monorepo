@@ -4,7 +4,7 @@
 // - Discover and Explorer: amber panel with the pitch, top-scored posters on a dark panel.
 // - Use with AI: amber panel with the pitch, a chat answered with scored posters on a dark panel.
 // - Member profiles: amber band with the picture and @handle; the taste fingerprint with its strongest pulls, or for a
-//   tab, that tab's visual (ProfileCard.tsx); two Taste tab sections, you vs everyone and taste groups, have their own
+//   tab, that tab's visual (ProfileCard.tsx); two Stats tab sections, you vs everyone and taste groups, have their own
 //   (ProfileTasteCards.tsx).
 // - For you: amber bar with the logo, the example taste print over a wall of top-scored posters (ForYouCard.tsx).
 // - Every other page: backdrop across the top, amber band with the headline below.

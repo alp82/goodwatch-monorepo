@@ -1,3 +1,4 @@
+import { applyCorrections } from "./feedback/apply-corrections.server"
 // The episode grid of a show page (#153): IMDb episode ratings in IMDb's season and
 // episode numbering, plus one season score per provider. It has its own Redis entry so
 // the details payload and its cache entry stay the same size.
@@ -12,7 +13,9 @@ import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
 
 export interface GridEpisode {
-	tmdbId?: number
+	canonicalSeason?: number
+    canonicalNumber?: number
+    tmdbId?: number
 	nameLanguage?: string
 	/** IMDb episode number. 0 is a numbered special such as a Christmas episode. */
 	number: number
@@ -24,7 +27,9 @@ export interface GridEpisode {
 }
 
 export interface GridSpecial {
-	tmdbId?: number
+	canonicalSeason?: number
+    canonicalNumber?: number
+    tmdbId?: number
 	nameLanguage?: string
 	name: string
 	score: number
@@ -113,7 +118,9 @@ export const PROVIDER_ORDER: (keyof SeasonScores)[] = [
 
 interface EpisodeRow {
 	nameLanguage?: string
-	tmdbId?: number
+	canonicalSeason?: number
+    canonicalNumber?: number
+    tmdbId?: number
 	imdb_episode_id: string
 	season_number: number | null
 	episode_number: number | null
@@ -169,14 +176,14 @@ const TMDB_EPISODE_COUNT_TOLERANCE = 1
 export const getEpisodeGrid = async ({ showId }: { showId: string }) => {
 	if (!/^\d+$/.test(showId)) return null
 	const presentation = await getEpisodePresentation(Number(showId))
-	if (presentation) return presentationGrid(Number(showId), presentation)
-	return await cached<{ showId: string }, EpisodeGrid>({
+	if (presentation) return applyCorrections({ kind: "show", id: Number(showId) }, presentationGrid(Number(showId), presentation))
+	return applyCorrections({ kind: "show", id: Number(showId) }, await cached<{ showId: string }, EpisodeGrid>({
 		name: "episode-grid-media-v3",
 		target: _getEpisodeGrid,
 		params: { showId },
 		// The IMDb ingest runs daily and the critic crawls weekly per airing show.
 		ttlMinutes: 6 * 60,
-	})
+	}))
 }
 
 const _getEpisodeGrid = async ({
@@ -260,7 +267,7 @@ export const buildEpisodeGrid = (
 		const votes = row.votes ?? 0
 		if (row.season_number === null) {
 			specials.push({
-				...(row.tmdbId ? { tmdbId: row.tmdbId, nameLanguage: row.nameLanguage ?? "en" } : {}),
+				...(row.tmdbId ? { tmdbId: row.tmdbId, canonicalSeason: row.canonicalSeason, canonicalNumber: row.canonicalNumber, nameLanguage: row.nameLanguage ?? "en" } : {}),
 				name,
 				score: row.score,
 				votes,
@@ -277,7 +284,7 @@ export const buildEpisodeGrid = (
 		const existing = season.get(row.episode_number)
 		if (existing && existing.votes >= votes) continue
 		season.set(row.episode_number, {
-			...(row.tmdbId ? { tmdbId: row.tmdbId, nameLanguage: row.nameLanguage ?? "en" } : {}),
+			...(row.tmdbId ? { tmdbId: row.tmdbId, canonicalSeason: row.canonicalSeason, canonicalNumber: row.canonicalNumber, nameLanguage: row.nameLanguage ?? "en" } : {}),
 			number: row.episode_number,
 			name,
 			score: row.score,

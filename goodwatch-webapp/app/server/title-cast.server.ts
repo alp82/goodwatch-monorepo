@@ -1,3 +1,4 @@
+import { applyCorrections } from "./feedback/apply-corrections.server"
 import { cached } from "~/utils/cache"
 import {
 	CAST_PAGE_SIZE,
@@ -17,16 +18,21 @@ export async function getTitleCastPage(params: TitleCastParams) {
 		!isTitleCastOffset(params.offset)
 	)
 		throw new Response("Invalid cast parameters", { status: 400 })
-	return cached({
-		name: "title-cast-v1",
-		params: {
-			mediaType: params.mediaType,
-			tmdbId: String(canonicalTitleId(params.mediaType, Number(params.tmdbId))),
-			offset: params.offset,
-		},
-		target: fetchCastPage,
-		ttlMinutes: 24 * 60,
-	})
+	const tmdbId = canonicalTitleId(params.mediaType, Number(params.tmdbId))
+	// Live cast corrections apply after the cache (character names, removals), so no cache reset is needed.
+	return applyCorrections(
+		{ kind: params.mediaType, id: tmdbId },
+		await cached({
+			name: "title-cast-v1",
+			params: {
+				mediaType: params.mediaType,
+				tmdbId: String(tmdbId),
+				offset: params.offset,
+			},
+			target: fetchCastPage,
+			ttlMinutes: 24 * 60,
+		}),
+	)
 }
 async function fetchCastPage({ mediaType, tmdbId, offset }: TitleCastParams) {
 	const { query } = await import("~/utils/crate")

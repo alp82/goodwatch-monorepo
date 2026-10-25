@@ -98,18 +98,22 @@ export function canonicalOgPath(path: string): string | null {
 		return `/${segments.join("/")}`
 	}
 	if (first === "u") {
-		// A member's profile, each of its tabs, and two sections of the Taste tab (/u/<handle>/taste/everyone and
-		// /taste/sides) have their own card; list pages have theirs too (og.lists).
+		// A member's profile, each of its tabs, and two sections of the Stats tab (/u/<handle>/stats/everyone and
+		// /stats/sides) have their own card; list pages have theirs too (og.lists). Stats was called Taste before, and
+		// card addresses already shared under /taste get the Stats cards.
 		const handle = second?.toLowerCase() ?? ""
 		if (!/^[a-z][a-z0-9_]{2,29}$/.test(handle)) return null
+		const tab = third === "taste" ? "stats" : third
+		// The Tropes tab has no card of its own yet: its link preview is the profile's card.
+		if (tab === "tropes" && !fourth) return `/u/${handle}`
 		if (fourth)
 			return segments.length === 4 &&
-				third === "taste" &&
+				tab === "stats" &&
 				PROFILE_VIEWS.has(fourth)
-				? `/u/${handle}/taste/${fourth}`
+				? `/u/${handle}/stats/${fourth}`
 				: null
-		if (third && !PROFILE_TABS.has(third)) return null
-		return third ? `/u/${handle}/${third}` : `/u/${handle}`
+		if (tab && !PROFILE_TABS.has(tab)) return null
+		return tab ? `/u/${handle}/${tab}` : `/u/${handle}`
 	}
 	if (first === "discover") return "/discover"
 	if (first === "for-you" && segments.length === 1) return "/for-you"

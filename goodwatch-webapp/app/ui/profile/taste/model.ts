@@ -1,4 +1,4 @@
-// The profile's Taste tab data in one shape for its components: the taste portrait's three views (fingerprint, taste
+// The profile's Stats tab data in one shape for its components: the taste portrait's three views (fingerprint, taste
 // groups, you vs everyone) joined, titles keyed "movie-550" as ProfileTitle, every attribute with its emoji; plus the
 // family colours, tier words and small formatters. buildProfileTaste runs in the loader; the rest is browser-safe.
 import { createContext, useContext } from "react"
@@ -25,9 +25,13 @@ export { CRAFT_KEYS, FAMILY_NAMES } from "~/domain/taste-attributes"
 export { TIER_NAMES } from "~/server/taste-portrait/view"
 
 export interface TasteAttribute
-	extends Omit<FingerprintAttribute, "carriers" | "against" | "exception"> {
+	extends Omit<
+		FingerprintAttribute,
+		"carriers" | "defining" | "against" | "exception"
+	> {
 	emoji: string
 	carriers: string[]
+	defining: string[]
 	against: string[]
 	exception: string | null
 }
@@ -78,6 +82,8 @@ export interface ProfileTaste {
 		lower: CrowdRow[]
 		attributes: EveryoneGap[]
 		genres: EveryoneGap[]
+		/** Where they part ways: genres and traits at equal length (unless one is empty), on the 1 to 10 scale. */
+		gapGroups: { genres: EveryoneGap[]; traits: EveryoneGap[] }
 	}
 	titles: Record<string, TasteTitle>
 }
@@ -104,7 +110,7 @@ function toTitle(t: PortraitTitle): TasteTitle {
 	}
 }
 
-/** The three portrait views as the Taste tab's one shape. Runs in the loader. */
+/** The three portrait views as the Stats tab's one shape. Runs in the loader. */
 export function buildProfileTaste(
 	fingerprint: FingerprintView,
 	sides: SidesView,
@@ -119,7 +125,10 @@ export function buildProfileTaste(
 		return t?.anime ? "anime" : (t?.mediaType ?? parseTitleKey(key).mediaType)
 	}
 	// The everyone view measures gaps on the 0 to 100 GoodWatch scale; the profile shows points out of 10.
-	const inPoints = (g: EveryoneGap): EveryoneGap => ({ ...g, delta: g.delta / 10 })
+	const inPoints = (g: EveryoneGap): EveryoneGap => ({
+		...g,
+		delta: g.delta / 10,
+	})
 	const crowdRow = (r: EveryoneView["higher"][number]): CrowdRow => ({
 		key: keyOf(r.key),
 		mine: r.mine,
@@ -145,6 +154,7 @@ export function buildProfileTaste(
 			...a,
 			emoji: FINGERPRINT_META[a.key]?.emoji ?? "",
 			carriers: a.carriers.map(keyOf),
+			defining: (a.defining ?? []).map(keyOf),
 			against: a.against.map(keyOf),
 			exception: a.exception == null ? null : keyOf(a.exception),
 		})),
@@ -171,6 +181,10 @@ export function buildProfileTaste(
 			lower: (everyone.lower ?? []).map(crowdRow),
 			attributes: (everyone.attributes ?? []).map(inPoints),
 			genres: (everyone.genres ?? []).map(inPoints),
+			gapGroups: {
+				genres: (everyone.gapGroups?.genres ?? []).map(inPoints),
+				traits: (everyone.gapGroups?.traits ?? []).map(inPoints),
+			},
 		},
 		titles,
 	}
@@ -241,7 +255,7 @@ export const TasteContext = createContext<TasteContextValue | null>(null)
 
 export function useTaste() {
 	const value = useContext(TasteContext)
-	if (!value) throw new Error("useTaste outside the Taste tab")
+	if (!value) throw new Error("useTaste outside the Stats tab")
 	return value
 }
 

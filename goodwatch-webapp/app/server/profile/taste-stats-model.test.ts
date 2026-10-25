@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import { DECADE_TITLES } from "../../domain/profile-taste.ts"
 import type { ProfileTitle } from "../../domain/profile.ts"
 import {
 	type StatsInput,
@@ -152,4 +153,49 @@ test("an empty library gives empty stats without failing", () => {
 	assert.equal(stats.eras.averageYear, null)
 	assert.deepEqual(stats.badges, [])
 	assert.equal(stats.facts?.longest, null)
+})
+
+test("a decade's panel holds its rated titles, best rated first, posters before blanks, up to the panel size", () => {
+	const unrated = t({ score: null, year: 1994 })
+	const noPoster = t({ score: 10, year: 1991 })
+	noPoster.title.poster = null
+	// Scores 1..9, 1..7; GoodWatch 50..65.
+	const rated = Array.from({ length: 16 }, (_, i) =>
+		t({ score: 1 + (i % 9), year: 1990 + (i % 10) }),
+	)
+	rated.forEach((x, i) => {
+		x.title.gw = 50 + i
+	})
+	const input: StatsInput = {
+		titles: [unrated, noPoster, ...rated],
+		credits: [],
+		people,
+		watching: 0,
+		year: 2026,
+	}
+	const [nineties] = tasteStats(input).eras.decades
+	assert.equal(nineties.count, 17)
+	assert.equal(nineties.titles.length, DECADE_TITLES)
+	assert.ok(!nineties.titles.some((x) => x.key === unrated.title.key))
+	// The posterless 10 waits behind every title with a poster; tied scores go to the higher GoodWatch score.
+	assert.ok(!nineties.titles.some((x) => x.key === noPoster.title.key))
+	assert.deepEqual(
+		nineties.titles.slice(0, 4).map((x) => [x.score, x.gw]),
+		[
+			[9, 58],
+			[8, 57],
+			[7, 65],
+			[7, 56],
+		],
+	)
+	assert.deepEqual(
+		nineties.byCrowd.slice(0, 2).map((x) => x.gw),
+		[65, 64],
+	)
+	// With room left, the posterless title fills a slot.
+	const [few] = tasteStats({
+		...input,
+		titles: [noPoster, ...rated.slice(0, 3)],
+	}).eras.decades
+	assert.deepEqual(few.titles.at(-1)?.key, noPoster.title.key)
 })

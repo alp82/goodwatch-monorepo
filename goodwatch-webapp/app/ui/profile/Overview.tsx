@@ -108,7 +108,7 @@ export function Overview({
 						<Section
 							title="Taste"
 							more={{
-								to: profileTabPath(shell.handle, "taste"),
+								to: profileTabPath(shell.handle, "stats"),
 								label: "Full taste",
 							}}
 						>
@@ -204,7 +204,7 @@ export function Overview({
 					more={
 						see("taste")
 							? {
-									to: `${profileTabPath(shell.handle, "taste")}#everyone`,
+									to: `${profileTabPath(shell.handle, "stats")}#everyone`,
 									label: owner ? "You vs everyone" : "Them vs everyone",
 								}
 							: undefined
@@ -300,7 +300,7 @@ function TasteCard({
 		.filter((a): a is WhorlAttribute => a != null)
 	return (
 		<Link
-			to={profileTabPath(handle, "taste")}
+			to={profileTabPath(handle, "stats")}
 			prefetch="intent"
 			className={`${TILE} group relative isolate flex h-full flex-col gap-4 overflow-hidden p-5 hover:bg-white/[0.06]`}
 		>
@@ -447,7 +447,7 @@ function MatchCard({
 	taste: OverviewTaste | null
 }) {
 	const still = useReducedMotion() ?? false
-	const compareHref = `${profileTabPath(shell.handle, "taste")}#compare`
+	const compareHref = `${profileTabPath(shell.handle, "stats")}#compare`
 	if (compare.status === "thin")
 		return <ThinMatch compare={compare} handle={shell.handle} />
 	const p = compare.percent

@@ -1,4 +1,4 @@
-// Pieces the Taste tab's sections share: the "Your top **genres**" heading, the filter pills, and a small linked poster
+// Pieces the Stats tab's sections share: the "Your top **genres**" heading, the filter pills, and a small linked poster
 // with the owner's score.
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"

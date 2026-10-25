@@ -51,7 +51,7 @@ export default function DetailsHero({ media, country, shownCountry, preview, epi
 						<div className="flex flex-col gap-4 px-4 pb-4 pt-14 md:flex-row md:items-end md:justify-between md:px-6 md:pb-5 md:pt-28">
 							<div className="flex min-w-0 items-end gap-3 md:gap-6">
 								<HeroPoster media={media} className="w-[4.5rem] md:w-32" />
-								<div data-hero-ratings className="flex min-w-0 flex-col gap-2.5">
+								<div data-hero-ratings data-feedback-area="scores" className="flex min-w-0 flex-col gap-2.5">
 									<div className="md:hidden">
 										<ScoreRing media={media} size={48} />
 									</div>

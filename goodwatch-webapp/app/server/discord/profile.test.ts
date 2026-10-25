@@ -134,7 +134,7 @@ test("/profile registers a card option with readable choices for both installs",
 test("every card choice uses a real profile card", () => {
 	const cards = new Set<string>([
 		...PROFILE_CARD_TABS,
-		...PROFILE_CARD_VIEWS.map((view) => `taste/${view}`),
+		...PROFILE_CARD_VIEWS.map((view) => `stats/${view}`),
 	])
 	for (const card of Object.values(PROFILE_CARDS))
 		if (card.image) assert.ok(cards.has(card.image), card.image)
@@ -226,19 +226,19 @@ test("Different from everyone needs public scores too; Sides doesn't", async () 
 		handle: "film_fan",
 		visibility,
 	}).command("sides")
-	assert.match(image(sides.body)!, /\/og\/u\/film_fan\/taste\/sides\.jpg\?/)
+	assert.match(image(sides.body)!, /\/og\/u\/film_fan\/stats\/sides\.jpg\?/)
 })
 
 const EXPECTED: Record<ProfileCardChoice, { image: string; link: string }> = {
 	profile: { image: "/og/u/film_fan.jpg", link: "/u/film_fan" },
-	taste: { image: "/og/u/film_fan/taste.jpg", link: "/u/film_fan/taste" },
+	taste: { image: "/og/u/film_fan/stats.jpg", link: "/u/film_fan/stats" },
 	crowd: {
-		image: "/og/u/film_fan/taste/everyone.jpg",
-		link: "/u/film_fan/taste#everyone",
+		image: "/og/u/film_fan/stats/everyone.jpg",
+		link: "/u/film_fan/stats#everyone",
 	},
 	sides: {
-		image: "/og/u/film_fan/taste/sides.jpg",
-		link: "/u/film_fan/taste#sides",
+		image: "/og/u/film_fan/stats/sides.jpg",
+		link: "/u/film_fan/stats#sides",
 	},
 	scores: { image: "/og/u/film_fan/scores.jpg", link: "/u/film_fan/scores" },
 	seen: { image: "/og/u/film_fan/seen.jpg", link: "/u/film_fan/seen" },
@@ -290,11 +290,11 @@ test("Share to channel posts the public card at once, without a share button", a
 	const { type, data } = await f.share("gw1:profile-share:crowd")
 	assert.equal(type, 4)
 	assert.equal(data.flags & EPHEMERAL, 0)
-	assert.match(image(data)!, /\/og\/u\/film_fan\/taste\/everyone\.jpg\?/)
+	assert.match(image(data)!, /\/og\/u\/film_fan\/stats\/everyone\.jpg\?/)
 	assert.ok(!buttons(data).some((b) => b.label === "Share to channel"))
 	assert.equal(
 		buttons(data).find((b) => b.label === "Open on GoodWatch")!.url,
-		"https://goodwatch.app/u/film_fan/taste#everyone",
+		"https://goodwatch.app/u/film_fan/stats#everyone",
 	)
 })
 

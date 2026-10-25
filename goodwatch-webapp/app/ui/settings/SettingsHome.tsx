@@ -71,7 +71,7 @@ export function SettingsHome({
 							Choose your handle
 						</Link>
 					)}
-					{email && <p className="truncate text-sm text-gray-400">{email}</p>}
+					{email && <p data-feedback-private className="truncate text-sm text-gray-400">{email}</p>}
 				</div>
 			</header>
 

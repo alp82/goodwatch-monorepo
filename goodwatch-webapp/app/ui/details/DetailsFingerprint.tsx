@@ -171,7 +171,7 @@ export default function DetailsFingerprint({
 	}
 	return (
 		<section className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-			<div {...sectionProps}>
+			<div {...sectionProps} data-feedback-area="analysis">
 				<h2 className="flex items-center gap-2 text-lg font-semibold text-gray-300">
 					<img
 						src={assetUrl(fingerprintIcon)}

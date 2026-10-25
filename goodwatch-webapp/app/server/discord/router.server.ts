@@ -404,6 +404,17 @@ export async function routeInteraction(
 	 * replaces the error card in place. */
 	internal: { retrying?: boolean } = {},
 ): Promise<{ type: number; data?: unknown }> {
+    if (interaction.type === 3 && interaction.data?.custom_id?.startsWith("feedback:")) {
+        const { feedbackStaff } = await import("../feedback/corrections.ts")
+        const user = interaction.member?.user?.id ?? interaction.user?.id
+        if (!feedbackStaff(user,interaction.member?.roles)) return {type:4,data:{content:"Staff only.",flags:64}}
+        return defer(async () => {
+            const { reviewInteraction } = await import("../feedback/review.server.ts")
+            const { correctionStore } = await import("../feedback/correction-runtime.server.ts")
+            const result = await reviewInteraction(interaction,{decide: correctionStore.decide})
+            return result.type === 7 ? textCard("Correction updated.") : textCard((result.data as {content:string}).content)
+        }, body => (overrides.edit ?? defaults.edit)(interaction.application_id!,interaction.token!,body), () => {}, {ephemeral:true})
+    }
 	const deps = { ...defaults, ...overrides }
 	const start = Date.now()
 	let logged = false

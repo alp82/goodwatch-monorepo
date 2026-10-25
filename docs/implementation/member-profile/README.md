@@ -40,8 +40,10 @@ only because its fixture holds the owner's ratings).
 ## Pages
 
 `/u/:handle` (Overview), `/u/:handle/seen`, `/u/:handle/scores`, `/u/:handle/wishlist`, `/u/:handle/shows`,
-`/u/:handle/lists` (today a redirect; becomes the Lists tab), `/u/:handle/taste`. Tabs in that order: Overview, Seen,
-Scores, Wishlist, Shows, Lists, Taste. A part the viewer may not see hides its tab, tile and Overview section; opening
+`/u/:handle/lists` (today a redirect; becomes the Lists tab), `/u/:handle/stats` (was the Taste tab at
+`/u/:handle/taste`, which now redirects with a 301), `/u/:handle/tropes` (needs both Taste and Scores; see
+`docs/implementation/taste-redesign.md`, decision 3). Tabs in that order: Overview, Seen, Scores, Wishlist, Shows,
+Lists, Stats, Tropes. A part the viewer may not see hides its tab, tile and Overview section; opening
 its page directly shows a notice (members-only parts invite sign-up).
 
 Overview: header (picture, @handle, since, bio, link logos, Share / Edit profile or Compare tastes), the stat strip
@@ -63,9 +65,9 @@ is hidden from guests, or whose view is empty (too few ratings), falls back to t
 | Card | Path | Needs public | Shows |
 |---|---|---|---|
 | Main | `/og/u/<handle>.jpg` | nothing | The fingerprint with up to four pulls, or favorites' posters without a public taste. |
-| Tab | `/og/u/<handle>/<tab>.jpg` | the tab's part | The tab's visual and one line. `/u/<handle>/taste` keeps the Taste card. |
-| Vs everyone | `/og/u/<handle>/taste/everyone.jpg` | Taste and Scores | Two titles on a 1 to 10 line: their score (star) and everyone's (ring), in points out of 10. The strongest title above everyone and the strongest below; with one side empty, the two strongest of the other. |
-| Taste groups | `/og/u/<handle>/taste/sides.jpg` | Taste | "Loves X, and just as much Y": the two taste groups least alike, three posters each, no numbers. |
+| Tab | `/og/u/<handle>/<tab>.jpg` | the tab's part | The tab's visual and one line. `/u/<handle>/stats` keeps the Stats card; `/og/u/<handle>/taste…` addresses resolve to the Stats cards. Tropes has no card of its own: `/og/u/<handle>/tropes` resolves to the main card. |
+| Vs everyone | `/og/u/<handle>/stats/everyone.jpg` | Taste and Scores | Two titles on a 1 to 10 line: their score (star) and everyone's (ring), in points out of 10. The strongest title above everyone and the strongest below; with one side empty, the two strongest of the other. |
+| Taste groups | `/og/u/<handle>/stats/sides.jpg` | Taste | "Loves X, and just as much Y": the two taste groups least alike, three posters each, no numbers. |
 
 The two Taste tab section cards sit under `/taste/`, so they can't collide with a profile tab. Their rules are in
 `app/ui/og-image/profile-card-model.ts` (`everyoneTakes`, `sidesPair`), their layout in

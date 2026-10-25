@@ -86,11 +86,11 @@ Discord user is which GoodWatch member.
 
 - **Image.** The profile's link-preview card, which draws the profile as a signed-out visitor sees it:
   `/og/u/<handle>.jpg` for Profile (the fingerprint card), `/og/u/<handle>/<tab>.jpg` for the tab cards,
-  `/og/u/<handle>/taste/everyone.jpg` for Different from everyone, and `/og/u/<handle>/taste/sides.jpg` for Sides.
+  `/og/u/<handle>/stats/everyone.jpg` for Different from everyone, and `/og/u/<handle>/stats/sides.jpg` for Sides.
   The address carries `v=`, which changes every minute, because Discord's media proxy keeps an image by its address. The
   card route ignores the query, so the `og-card` cache still serves it.
-- **Link.** The profile or the tab. Different from everyone and Sides link to their section of the Taste tab
-  (`/u/<handle>/taste#everyone`, `#sides`). The table is `PROFILE_CARDS` in `app/server/discord/profile-cards.ts`. The
+- **Link.** The profile or the tab. Different from everyone and Sides link to their section of the Stats tab
+  (`/u/<handle>/stats#everyone`, `#sides`). The table is `PROFILE_CARDS` in `app/server/discord/profile-cards.ts`. The
   choice value `crowd` is kept because Share to channel buttons carry it; Discord never shows it.
 - **Hidden parts.** A card needs its parts visible to everyone (`canSee` for a guest): its tab's part, Taste for Sides,
   and Taste and Scores for Different from everyone (the card shows scores). Otherwise the answer names the first hidden

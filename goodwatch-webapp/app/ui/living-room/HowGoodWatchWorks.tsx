@@ -3,6 +3,7 @@
 // real page), and each item can start the TV's film at its chapter. Server-rendered, no animation, images lazy.
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
+import discordMark from "~/img/discord-mark-white.svg?no-inline"
 import disneyLogo from "~/img/disneyplus-logo-78.webp?no-inline"
 import fingerprintIcon from "~/img/fingerprint-156.webp?no-inline"
 import imdbLogo from "~/img/imdb-logo-78.webp?no-inline"
@@ -13,7 +14,6 @@ import rottenLogo from "~/img/rotten-logo-78.webp?no-inline"
 import { GoodWatchG } from "~/ui/brand/GoodWatchWordmark"
 import { IMPORT_SOURCE_LIST } from "~/ui/imports/ImportSources"
 import { SourceMark } from "~/ui/imports/SourceMark"
-import { MapArt } from "~/ui/living-room/tv/screens/app-art"
 import { ROOM_ID } from "~/ui/living-room/use-below-room"
 import { assetUrl } from "~/utils/asset-url"
 import { FILM_CHAPTER_EVENT } from "./intro/events"
@@ -104,12 +104,12 @@ const FEATURES: Feature[] = [
 		title: "Picked for you",
 		text: "Rate a few titles you loved and GoodWatch picks what you'll love next, and tells you why.",
 		link: { to: "/taste", label: "Find your taste" },
-		// The film's pick: Avatar, because you loved Interstellar and Inception (TMDB poster paths, fixed).
+		// The film's pick: Severance, because you loved Black Mirror and Inception (TMDB poster paths, fixed).
 		visual: () => (
 			<div className="hgw-v-pick">
 				{[
-					["/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg", "Interstellar"],
-					["/gKY6q7SjCkAU6FqvqWybDYgUKIF.jpg", "Avatar"],
+					["/seN6rRfN0I6n8iDXjlSMk1QjNcq.jpg", "Black Mirror"],
+					["/pPHpeI2X1qEd1CS1SeyrdhZ4qnT.jpg", "Severance"],
 					["/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg", "Inception"],
 				].map(([path, title], i) => (
 					<Img
@@ -121,15 +121,15 @@ const FEATURES: Feature[] = [
 						className={`hgw-v-poster ${i === 1 ? "hgw-v-chosen" : ""}`}
 					/>
 				))}
-				<span className="hgw-v-match">81% your taste</span>
+				<span className="hgw-v-match">90% your taste</span>
 			</div>
 		),
 	},
 	{
 		section: "fingerprint",
-		title: "How it feels",
-		text: "Every title is read for how it feels: spectacular, tense, heartwarming, funny. Pick by the evening you want, not by genre.",
-		link: { to: "/how-it-works#title-analysis", label: "About title analysis" },
+		title: "Your taste fingerprint",
+		text: "Your ratings draw your taste fingerprint and name what defines it. Want more laughs or more tension tonight? Tune it, and your picks change with it.",
+		link: { to: "/for-you", label: "See your picks" },
 		visual: () => (
 			<div className="hgw-v-feel">
 				<Img
@@ -141,9 +141,9 @@ const FEATURES: Feature[] = [
 				/>
 				<ul aria-hidden="true">
 					{[
-						["Spectacular", 92, "#a78bfa"],
-						["Wondrous", 78, "#60a5fa"],
-						["Tense", 61, "#f59e0b"],
+						["Novelty", 92, "#a78bfa"],
+						["Absurdist humor", 78, "#f59e0b"],
+						["Futuristic", 61, "#60a5fa"],
 					].map(([word, n, color]) => (
 						<li key={word as string}>
 							<span>{word}</span>
@@ -218,13 +218,6 @@ const FEATURES: Feature[] = [
 		),
 	},
 	{
-		section: "explorer",
-		title: "A map of how movies feel",
-		text: "Islands of titles that feel alike. Combine a mood, a theme and a style to see what they share.",
-		link: { to: "/explorer", label: "Open the Explorer" },
-		visual: () => <MapArt className="hgw-v-map" />,
-	},
-	{
 		section: "tracking",
 		title: "It keeps track for you",
 		text: "Your Wishlist and your shows in one place: the next episode, the show to pick up, and the day a wanted title arrives on your service.",
@@ -260,6 +253,37 @@ const FEATURES: Feature[] = [
 					→
 				</span>
 				<GoodWatchG height={44} />
+			</div>
+		),
+	},
+	{
+		section: "ai",
+		title: "Use with AI",
+		text: "Add GoodWatch to ChatGPT, Claude and other AI apps. Ask what to start tonight, whether it's any good, or log the episode you just watched, in your own words.",
+		link: { to: "/use-with-ai", label: "Set up Use with AI" },
+		visual: () => (
+			<div className="hgw-v-chat" aria-hidden="true">
+				<p className="hgw-v-ask">what should i start tonight?</p>
+				<p className="hgw-v-answer">
+					<GoodWatchG height={16} />
+					<span>
+						Start <b>The Penguin</b>. It's on your Wishlist.
+					</span>
+				</p>
+			</div>
+		),
+	},
+	{
+		section: "discord",
+		title: "Discord bot",
+		text: "Add the GoodWatch bot to your server. Type /watch for a pick with its score and where it streams, or let everyone vote on what to watch together.",
+		link: { to: "/discord", label: "Add the Discord bot" },
+		visual: () => (
+			<div className="hgw-v-discord">
+				<Img src={discordMark} alt="Discord" w={44} h={34} />
+				<span className="hgw-v-command" aria-hidden="true">
+					<b>/watch</b> movie night
+				</span>
 			</div>
 		),
 	},

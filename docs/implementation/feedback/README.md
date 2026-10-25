@@ -208,3 +208,88 @@ The tests use fakes for storage, the limiter, the session, Discord, and email. T
 1. In the forum channel's permissions, give the GoodWatch bot (or its role) View Channel, Send Messages, Create Posts, Send Messages in Threads, Attach Files, and Read Message History. A private forum needs the bot added explicitly.
 2. Set `DISCORD_FEEDBACK_FORUM_CHANNEL_ID` (right-click the forum, Copy Channel ID, with Developer Mode on) and `DISCORD_BOT_TOKEN` in Coolify. Keep `DISCORD_FEEDBACK_WEBHOOK_URL` as the fallback.
 3. Send one report and check the starter, first technical details reply, and screenshot when present.
+
+## Member corrections (#766 and #768)
+
+The [Fix mode contract](fix-mode-contract.md) defines the wire format. Data submissions accept bounded, strict
+`area`, `problem`, `target`, and `note` fields. Existing data clients can omit the new fields and continue to send
+reports. Responses include `{ reportId, outcome, correctionId }`; `outcome` is `live`, `pending`, or `flag`.
+Analysis and score areas are flag-only. Unknown problems and `other` never create corrections.
+
+`doc.catalog_correction` stores the target, field, operation (`set`, `add`, `remove`), JSON-encoded value and old
+value, member, reviewer, report id, source link, timestamps, and status (`pending`, `live`, `rejected`, `reverted`,
+`withdrawn`). `doc.catalog_correction_event` records append-only submission and decision events. Source imports
+continue to write their existing tables. Revert stops applying an override; it does not restore an old source value.
+
+The single `isTrusted(memberId)` function uses the fresh session's account age (90 days), three live kept
+corrections, or Discord staff identity. Staff users and roles come from `DISCORD_FEEDBACK_STAFF_USER_IDS` and
+`DISCORD_FEEDBACK_STAFF_ROLE_IDS` (comma separated). Linked Discord accounts allow the server to check staff roles
+in the feedback forum's guild. A failed identity lookup grants no staff trust. Cast and credit removals always
+wait for review. Provider additions without a source link remain pending and cannot be approved without evidence.
+The link is evidence for staff only: an added offer links to the provider's where-to-watch page, never to the
+member's link.
+
+Reports are stored before correction processing. Missing correction tables leave the report stored and delivered
+with outcome `pending` and no correction id. Duplicates and accepted retries reuse the original correction and
+Discord thread; completed reports linked to a correction remain eligible for duplicate counting.
+
+Submission and review serialize each target field with a reserved `lock:<field hash>` row in the correction table.
+The row has status `withdrawn`, no member, and no effective value. It is a mutex, not an active pointer. Conditional
+version updates prevent concurrent decisions from overwriting one another. A competing suggestion stays pending
+while a live correction exists; staff must revert that correction before approving its replacement. Locks are
+removed after each operation. A lock older than a minute belongs to a process that died while holding it; the next
+writer takes it over by version, so the field cannot stay blocked. Requested and completed decision events
+distinguish attempted decisions from successful conditional writes. Crate does not provide a transaction across the report, correction, and event tables.
+
+Shared readers use `applyCorrections` after their caches, with one batched live-correction lookup per entity.
+Concurrent reads share the lookup, positive and empty results are cached for five seconds, and missing tables back off for 30 seconds. The
+lookup includes the opposite side of a person/title credit and provider metadata for additions. Dates, title cast,
+person credits, episode presentation, lists, and grids receive overlays; episode corrections win after translation.
+Canonical episode numbers are carried through mapped grids so display numbering cannot retarget a correction.
+Presentation alignment still uses source names before applying corrections. A person role uses the observed old
+value to choose between character and job on the aggregated credit. This first release does not add credit rows,
+person dates, season/episode credits, release events, aired-count recalculation, or availability history.
+
+Live, approve, reject, revert, and undo reset no data cache: every reader applies live corrections after its cache
+(`applyCorrections` on the cached details, cast page, episode presentation, grid, episode list, and person
+profile), and the lookup cache is five seconds. What must go is per page: the change is announced in Valkey
+(`catalog-correction-reset`, the last 50 changes with the paths they touch), and each process polls that key at
+most every two seconds before serving a title or person page, then drops only those entities' stored HTML pages
+and hot OG cards (`cache-revision.server.ts`). A whole-namespace reset would make every title and person page a
+cache miss at once. OG reset markers now apply to `/movie/`, `/show/`, and `/person/` as well as member profiles.
+Stored OG bytes are forgotten for submitted and affected paths, best effort; external social caches cannot be
+recalled. A provider change also reloads the corrected country's availability index in every process, applying the
+correction before grouping subscription/free/ad offers. Another offer type from the same provider remains intact.
+The browser's existing same-origin API-write interception clears its loader cache after feedback and undo requests.
+
+Bot-delivered data posts include correction status, operation, target, before/after values, and source links.
+Approve and Reject buttons are available for pending corrections; live posts also expose Revert (Approve is
+disabled). The existing signed Discord interactions endpoint handles these buttons, checks staff user/role
+allowlists, and defers work to meet Discord's acknowledgement deadline. Decisions update the report status and
+edit the original bot post. Undo also updates that post. The webhook fallback keeps its existing link-only
+controls because a standalone webhook cannot receive the bot's interactive controls. Member email is never sent
+to Discord. Discord post edits and cache resets are best effort after the durable correction write.
+
+### Create the correction tables
+
+The declarations are in `goodwatch-flows/windmill/f/sync/models/crate_schemas.py`. After merge, run the existing
+`f/sync/init/cratedb` initializer in dry-run mode, inspect `catalog_correction` and `catalog_correction_event`, then
+apply it. No production DDL is run by the webapp. Deploying application code before the tables is supported.
+The strict target object declares every searchable target key even when no correction has populated it yet.
+
+### Correction tests
+
+Run explicit files, without an application server or production environment file:
+
+```sh
+node --test goodwatch-webapp/app/server/feedback/corrections.test.ts \
+  goodwatch-webapp/app/server/feedback/handler.test.ts \
+  goodwatch-webapp/app/server/feedback/store.test.ts \
+  goodwatch-webapp/app/server/feedback/discord.test.ts \
+  goodwatch-webapp/app/server/feedback/discord-delivery.test.ts \
+  goodwatch-webapp/app/server/feedback/security.test.ts
+```
+
+The tests inject SQL, identity, storage, clocks, and delivery. They cover the trust thresholds, all nine mappings,
+strict targets, `other`, missing evidence, immutable overlays, country and offer-type scope, canonical episode
+numbering, duplicate/retry reuse, ownership, staff button checks, conditional decisions, and missing-table behavior.

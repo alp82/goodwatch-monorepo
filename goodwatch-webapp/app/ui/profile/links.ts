@@ -11,7 +11,8 @@ export type ProfileTab =
 	| "wishlist"
 	| "shows"
 	| "lists"
-	| "taste"
+	| "stats"
+	| "tropes"
 
 export const profileTabPath = (handle: string, tab: ProfileTab = "overview") =>
 	tab === "overview" ? `/u/${handle}` : `/u/${handle}/${tab}`

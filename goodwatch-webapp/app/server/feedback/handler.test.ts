@@ -516,7 +516,11 @@ test("a duplicate replies in the existing thread with the count and keeps the su
 		data: { entityKind: "movie", ids: { tmdb: 1 }, field: "title" },
 	})
 	assert.equal(response.status, 200)
-	assert.deepEqual(await response.json(), { reportId })
+	assert.deepEqual(await response.json(), {
+		reportId,
+		outcome: "pending",
+		correctionId: null,
+	})
 	const [url, init] = f.deps.send.mock.calls[0].arguments
 	assert.equal(new URL(String(url)).searchParams.get("thread_id"), "456")
 	assert.equal(new URL(String(url)).searchParams.get("wait"), "true")
@@ -655,3 +659,81 @@ for (const path of ["bot", "webhook"] as const) {
 		)
 	})
 }
+
+test("correction tables can be absent without losing storage or delivery", async (t) => {
+	quiet(t)
+	const f = fixture("member")
+	const deps = f.deps as Dependencies
+	deps.isTrusted = async () => true
+	deps.corrections = {
+		submit: async () => {
+			throw new Error("RelationUnknownException")
+		},
+		response: async (reportId) => ({
+			reportId,
+			outcome: "pending",
+			correctionId: null,
+		}),
+	}
+	const response = await f.submit({
+		kind: "data",
+		data: {
+			entityKind: "movie",
+			ids: { tmdbId: 1 },
+			field: "release_date",
+			area: "details",
+			problem: "date",
+			suggestedValue: "2025-01-01",
+		},
+	})
+	const body = await response.json()
+	assert.equal(response.status, 200)
+	assert.equal(body.outcome, "pending")
+	assert.equal(body.correctionId, null)
+	assert.equal(f.rows.size, 1)
+	assert.ok(f.deps.send.mock.calls.length)
+})
+test("duplicates and accepted retries reuse the original correction without submitting again", async () => {
+	const f = fixture("member")
+	const deps = f.deps as Dependencies
+	let submissions = 0
+	deps.corrections = {
+		submit: async () => {
+			submissions++
+			return null
+		},
+		response: async (reportId) => ({
+			reportId,
+			outcome: "live",
+			correctionId: "c".repeat(64),
+		}),
+	}
+	f.deps.store.insert.mock.mockImplementation(async () => ({
+		kind: "duplicate",
+		reportId: "a".repeat(64),
+		count: 2,
+		threadId: "456",
+		retry: false,
+	}))
+	const input = {
+		kind: "data",
+		data: {
+			entityKind: "movie",
+			ids: { tmdbId: 1 },
+			field: "release_date",
+			area: "details",
+			problem: "date",
+			suggestedValue: "2025-01-01",
+		},
+	}
+	assert.equal((await (await f.submit(input)).json()).outcome, "live")
+	f.deps.store.insert.mock.mockImplementation(async () => ({
+		kind: "retry",
+		reportId: "a".repeat(64),
+	}))
+	assert.equal(
+		(await (await f.submit(input)).json()).correctionId,
+		"c".repeat(64),
+	)
+	assert.equal(submissions, 0)
+})

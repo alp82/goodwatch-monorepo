@@ -44,7 +44,7 @@ import { useNavigation } from "~/ui/navigation/NavigationContext"
 import { DragHint } from "./DragHint"
 import { type GuestLoader, GuestLock } from "./GuestLock"
 import { HandlePrint } from "./HandlePrint"
-import { Heading } from "./Heading"
+import { Heading, PhoneHeadingRow } from "./Heading"
 import {
 	LazyQuickView,
 	usePreloadDetailSurfaces,
@@ -168,7 +168,7 @@ function Unready({ status }: { status: "empty" | "unavailable" }) {
 	const revalidator = useRevalidator()
 	return (
 		<div className="mx-auto max-w-[1600px] px-4 pt-5 pb-16 md:px-8">
-			<Heading className="mb-6" />
+			<Heading className="mb-6 flex" />
 			<div
 				className="max-w-lg rounded-2xl bg-white/[0.035] p-6 ring-1 ring-white/10"
 				data-for-you-state={status}
@@ -570,17 +570,19 @@ function Steering({
 			: sheet === "recipes"
 				? "Pick a mood"
 				: "Change mood"
-	const heading = (
-		<>
-			{tile?.name ?? "For you"}
-			{tweak && (
-				<span className="font-sans text-[0.8em] font-normal text-gray-400">
-					{" "}
-					· {tweak}
-				</span>
-			)}
-		</>
-	)
+	// The header row already says For you: the results carry a title only for a picked tile or a tweak.
+	const heading =
+		!tile && !tweak ? null : (
+			<>
+				{tile?.name ?? "For you"}
+				{tweak && (
+					<span className="font-sans text-[0.8em] font-normal text-gray-400">
+						{" "}
+						· {tweak}
+					</span>
+				)}
+			</>
+		)
 	const liveDesk = useRef<HTMLSpanElement>(null)
 	const liveSheet = useRef<HTMLSpanElement>(null)
 	const [sheetBox, sheetSide] = useSquare()
@@ -590,7 +592,8 @@ function Steering({
 	return (
 		<ForYouContext.Provider value={ctx}>
 			<div className="mx-auto max-w-[1600px] overflow-x-clip px-4 pt-3 pb-28 sm:pt-5 md:px-8 lg:pb-10">
-				<Heading className="mb-4 hidden lg:block" />
+				<Heading className="mb-4 hidden lg:flex" />
+				<PhoneHeadingRow />
 
 				{/* Desktop: the print fills a column as tall as the two tile rows; the dice top left, Reset bottom left. */}
 				<div className="hidden lg:grid lg:grid-cols-[19rem_minmax(0,1fr)] lg:gap-8 xl:grid-cols-[20.25rem_minmax(0,1fr)] xl:gap-10">

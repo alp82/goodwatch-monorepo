@@ -105,17 +105,28 @@ export function ScoredPoster({
 export const ICON_ON_PHONE = "max-sm:size-10 max-sm:justify-center max-sm:px-0"
 
 /**
- * Copies the profile address (or opens the share sheet on touch devices); says "Link copied" for a moment. `compact`:
- * the icon alone on phones.
+ * Copies the profile address, or a page under it at `path` (or opens the share sheet on touch devices); says "Link
+ * copied" for a moment. `compact`: the icon alone on phones.
  */
 export function ShareButton({
 	handle,
+	path = "",
+	label = "Share profile",
 	className = AMBER_BUTTON,
 	compact = false,
-}: { handle: string; className?: string; compact?: boolean }) {
+	name,
+}: {
+	handle: string
+	path?: string
+	label?: string
+	className?: string
+	compact?: boolean
+	/** The accessible name, when the visible label alone doesn't say what is shared. */
+	name?: string
+}) {
 	const [copied, setCopied] = useState(false)
 	const onClick = async () => {
-		const url = `https://goodwatch.app/u/${handle}`
+		const url = `https://goodwatch.app/u/${handle}${path}`
 		try {
 			if (navigator.share && window.matchMedia("(pointer: coarse)").matches) {
 				await navigator.share({ title: `@${handle} on GoodWatch`, url })
@@ -133,7 +144,7 @@ export function ShareButton({
 			type="button"
 			onClick={onClick}
 			aria-label={
-				compact ? (copied ? "Link copied" : "Share profile") : undefined
+				compact || name ? (copied ? "Link copied" : (name ?? label)) : undefined
 			}
 			className={`${className} ${compact ? ICON_ON_PHONE : ""}`}
 		>
@@ -143,7 +154,7 @@ export function ShareButton({
 				<ShareIcon className="size-4" aria-hidden />
 			)}
 			<span className={compact ? "max-sm:hidden" : ""}>
-				{copied ? "Link copied" : "Share profile"}
+				{copied ? "Link copied" : label}
 			</span>
 		</button>
 	)

@@ -1,10 +1,11 @@
+import { applyCorrections } from "./feedback/apply-corrections.server"
 import { episodeMapping } from "~/domain/tracking/episode-mappings.server"
 import {
 	buildEpisodePresentation,
 	type EpisodePresentation,
 	type ImdbEpisodeRating,
 } from "~/domain/tracking/episode-presentation"
-import { getEpisodeList } from "~/server/tracking.server"
+import { getSourceEpisodeList } from "~/server/tracking.server"
 import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
 
@@ -22,7 +23,7 @@ export async function getEpisodePresentation(
 	const mapping = episodeMapping(showId)
 	if (!mapping) return null
 	try {
-		return await cached<
+		const presentation = await cached<
 			{ showId: number; version: string },
 			EpisodePresentation
 		>({
@@ -30,7 +31,7 @@ export async function getEpisodePresentation(
 			params: { showId, version: mapping.version },
 			ttlMinutes: 10,
 			target: async () => {
-				const list = await getEpisodeList(showId)
+				const list = await getSourceEpisodeList(showId)
 				if (!list.length)
 					throw new Error("The selected show's episode catalog is unavailable")
 				const catalog = list.map((e) => ({
@@ -67,8 +68,11 @@ export async function getEpisodePresentation(
 				)
 			},
 		})
+		// Live episode corrections (names, air dates) apply after the cache, so no cache reset is needed.
+		return applyCorrections({ kind: "show", id: showId }, presentation)
 	} catch (error) {
-		if (error instanceof RatingsUnavailable) return error.presentation
+		if (error instanceof RatingsUnavailable)
+			return applyCorrections({ kind: "show", id: showId }, error.presentation)
 		throw error
 	}
 }

@@ -177,7 +177,7 @@ function Expired() {
 		<AuthSplit>
 			<Heading icon={<LinkSlashIcon className="h-7 w-7 text-amber-400" />} title="This link no longer works" sub="Links to set a new password work for one hour and only once." />
 			{sent ? (
-				<Notice tone="ok">If there's an account for {email}, a new link is on its way. It works for one hour.</Notice>
+				<Notice tone="ok">If there's an account for <span data-feedback-private>{email}</span>, a new link is on its way. It works for one hour.</Notice>
 			) : (
 				<>
 					<ServiceNotice failure={failure} />

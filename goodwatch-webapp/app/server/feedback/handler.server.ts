@@ -1,3 +1,5 @@
+import { flagArea } from "./corrections.ts"
+import type { Correction } from "./corrections.ts"
 // POST /api/feedback (#763, docs/implementation/feedback/README.md). One entry point for bug, idea, data and
 // contact reports. Modelled on the wrong-title handler: same origin only, a body cap, a zod schema, a honeypot, a
 // minimum time to submit, and a rate limit per address and per member. The report is stored first, then posted to
@@ -33,6 +35,7 @@ export interface Report {
 	handledBy: string | null
 	correctionId: string | null
 	status: FeedbackStatus
+	correction?: Correction
 	dedupeKey: string | null
 	duplicateCount: number
 	hasScreenshot: boolean
@@ -68,6 +71,15 @@ export function dedupeKey(input: FeedbackInput): string | null {
 						.map((key) => [key, String(ids[key])]),
 				),
 				field,
+				area: input.data.area,
+				problem: input.data.problem,
+				target: input.data.target
+					? Object.fromEntries(
+							Object.entries(input.data.target).sort(([a], [b]) =>
+								a.localeCompare(b),
+							),
+						)
+					: undefined,
 				// Omitted suggestions remain distinct from an explicit null.
 				...(suggestedValue !== undefined
 					? {
@@ -124,6 +136,15 @@ const answer = (
 
 export interface Dependencies {
 	store: FeedbackStore
+	corrections?: {
+		submit(report: Report, trusted: boolean): Promise<Correction | null>
+		response(reportId: string): Promise<{
+			reportId: string
+			outcome: "live" | "pending" | "flag"
+			correctionId: string | null
+		}>
+	}
+	isTrusted?(memberId: string | null): Promise<boolean>
 	limiter: Limiter
 	memberId(request: Request): Promise<string | null>
 	email(report: Report): Promise<void>
@@ -259,7 +280,10 @@ export async function handleFeedback(
 				result.kind === "retry" ||
 				(result.kind === "duplicate" && result.retry)
 			)
-				return answer(200, { reportId: result.reportId })
+				return answer(
+					200,
+					await correctionResponse(result.reportId, deps, report.data?.area),
+				)
 			if (result.kind === "duplicate") duplicate = result
 			stored = true
 		} catch (error) {
@@ -267,6 +291,38 @@ export async function handleFeedback(
 				reportId: id,
 				error: error instanceof Error ? error.message : String(error),
 			})
+		}
+		let outcome: "live" | "pending" | "flag" = flagArea(report.data?.area)
+			? "flag"
+			: "pending"
+		let correctionId: string | null = null
+		if (stored && deps.corrections) {
+			try {
+				if (duplicate) {
+					const prior = await correctionResponse(
+						duplicate.reportId,
+						deps,
+						report.data?.area,
+					)
+					outcome = prior.outcome
+					correctionId = prior.correctionId
+				} else {
+					const correction = await deps.corrections.submit(
+						report,
+						(await deps.isTrusted?.(memberId)) ?? false,
+					)
+					if (correction) {
+						report.correction = correction
+						report.correctionId = correction.id
+						correctionId = correction.id
+						outcome = correction.status === "live" ? "live" : "pending"
+					}
+				}
+			} catch {
+				console.error("[feedback] correction storage unavailable", {
+					reportId: id,
+				})
+			}
 		}
 		if (stored && screenshot && !duplicate) {
 			try {
@@ -331,7 +387,11 @@ export async function handleFeedback(
 			}
 		}
 		if (!stored && !delivered && !emailed) return answer(503)
-		return answer(200, { reportId: duplicate?.reportId ?? id })
+		return answer(200, {
+			reportId: duplicate?.reportId ?? id,
+			outcome,
+			correctionId,
+		})
 	} catch (error) {
 		console.error("[feedback] request failed", error)
 		return answer(503)
@@ -398,4 +458,21 @@ export async function readScreenshot(
 				},
 			})
 		: new Response(null, { status: 404, headers })
+}
+
+async function correctionResponse(
+	reportId: string,
+	deps: Dependencies,
+	area?: string,
+) {
+	try {
+		if (deps.corrections) return await deps.corrections.response(reportId)
+	} catch {
+		/* Tables can arrive after the application. */
+	}
+	return {
+		reportId,
+		outcome: flagArea(area) ? ("flag" as const) : ("pending" as const),
+		correctionId: null,
+	}
 }

@@ -1,3 +1,4 @@
+import { applyCorrections } from "./feedback/apply-corrections.server"
 import { personBestCredit } from "../utils/person-best.ts"
 import type { PresentedMedia } from "~/utils/media-presentation"
 import {
@@ -485,6 +486,24 @@ const recentProfiles = new Map<
 const loadingProfiles = new Map<number, Promise<PersonProfile | null>>()
 
 export async function getPersonProfile(
+	personId: number,
+): Promise<PersonProfile | null> {
+	return correctedProfile(personId, await getRecentPersonProfile(personId))
+}
+
+/** Live credit corrections on top of the cached profile. A corrected profile is a copy, so the shared one stays. */
+async function correctedProfile(
+	personId: number,
+	profile: PersonProfile | null,
+): Promise<PersonProfile | null> {
+	if (!profile) return profile
+	const effective = await applyCorrections({ kind: "person", id: personId }, profile)
+	if (effective !== profile)
+		for (const c of effective.credits) c.weight = creditWeight(c)
+	return effective
+}
+
+async function getRecentPersonProfile(
 	personId: number,
 ): Promise<PersonProfile | null> {
 	const recent = recentProfiles.get(personId)

@@ -157,6 +157,7 @@ export default function WhereToWatch({
 			id="streaming"
 			ref={ref}
 			data-where-to-watch
+			data-feedback-area="watch"
 			{...arrival.block}
 			className={`@container relative min-w-0 ${className}${arrival.className}`}
 			// An address with `#streaming` lands the block clear of the site bar and the sticky title header.

@@ -87,7 +87,7 @@ test("every profile tab has a card", () => {
 		"scores",
 		"seen",
 		"shows",
-		"taste",
+		"stats",
 		"wishlist",
 	])
 })
@@ -218,12 +218,12 @@ test("the two numbers move apart only when they'd overlap, and stay in the box",
 	assert.deepEqual(labelCenters(860, 850, 110, 900), [845, 735])
 })
 
-test("a profile's card paths: main, each tab, and the two Taste tab sections", () => {
+test("a profile's card paths: main, each tab, and the two Stats tab sections", () => {
 	const paths = profileCardPaths("film_fan")
 	assert.equal(paths[0], "/u/film_fan")
-	assert.ok(paths.includes("/u/film_fan/taste"))
-	assert.ok(paths.includes("/u/film_fan/taste/everyone"))
-	assert.ok(paths.includes("/u/film_fan/taste/sides"))
+	assert.ok(paths.includes("/u/film_fan/stats"))
+	assert.ok(paths.includes("/u/film_fan/stats/everyone"))
+	assert.ok(paths.includes("/u/film_fan/stats/sides"))
 	assert.equal(paths.length, 1 + PROFILE_CARD_TABS.length + 2)
 })
 

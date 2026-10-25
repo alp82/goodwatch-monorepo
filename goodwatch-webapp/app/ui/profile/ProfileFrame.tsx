@@ -6,7 +6,13 @@ import {
 } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import type { CSSProperties, ReactNode } from "react"
-import { type ProfilePart, type ProfileShell, seesPart } from "~/domain/profile"
+import {
+	AUDIENCES,
+	type Audience,
+	type ProfilePart,
+	type ProfileShell,
+	seesPart,
+} from "~/domain/profile"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 // The frame of every profile page: the picture, @handle, since, bio, links and actions (in full on Overview, compact on
 // the other tabs), the stat strip, the tabs (only the parts the viewer may see; the owner sees a lock or a members
@@ -22,8 +28,8 @@ import {
 import {
 	AMBER_BUTTON,
 	HiddenPart,
-	QUIET_BUTTON,
 	ICON_ON_PHONE,
+	QUIET_BUTTON,
 	ShareButton,
 	count,
 	posterUrl,
@@ -59,6 +65,7 @@ export function ProfileAvatar({
 			<img
 				src={avatar.url}
 				alt=""
+				data-member-avatar
 				className={`${cls} object-cover object-top`}
 			/>
 		)
@@ -81,6 +88,8 @@ const TABS: {
 	tab: ProfileTab
 	label: string
 	part?: ProfilePart
+	/** A second part the tab needs; the narrower audience of the two marks it. */
+	also?: ProfilePart
 	count?: (s: ProfileShell) => number
 }[] = [
 	{ tab: "overview", label: "Overview" },
@@ -99,7 +108,8 @@ const TABS: {
 	},
 	{ tab: "shows", label: "Shows", part: "shows" },
 	{ tab: "lists", label: "Lists", part: "lists", count: (s) => s.counts.lists },
-	{ tab: "taste", label: "Taste", part: "taste" },
+	{ tab: "stats", label: "Stats", part: "taste" },
+	{ tab: "tropes", label: "Tropes", part: "taste", also: "scores" },
 ]
 
 /** "2019-03" → "March 2019". */
@@ -125,9 +135,17 @@ export function ProfileTabs({
 			<div
 				className={`${WRAP} flex gap-1 overflow-x-auto [scrollbar-width:none]`}
 			>
-				{TABS.filter((t) => !t.part || seesPart(shell, t.part)).map((t) => {
+				{TABS.filter(
+					(t) =>
+						(!t.part || seesPart(shell, t.part)) &&
+						(!t.also || seesPart(shell, t.also)),
+				).map((t) => {
 					const here = t.tab === active
-					const audience = t.part ? shell.visibility[t.part] : "everyone"
+					const audience = [t.part, t.also]
+						.map((p): Audience => (p ? shell.visibility[p] : "everyone"))
+						.reduce((a, b) =>
+							AUDIENCES.indexOf(b) > AUDIENCES.indexOf(a) ? b : a,
+						)
 					const n = t.count?.(shell)
 					return (
 						<Link
@@ -222,7 +240,7 @@ function Actions({ shell }: { shell: ProfileShell }) {
 		return (
 			<>
 				<Link
-					to={`${profileTabPath(shell.handle, "taste")}#compare`}
+					to={`${profileTabPath(shell.handle, "stats")}#compare`}
 					aria-label="Compare tastes"
 					className={`${AMBER_BUTTON} ${ICON_ON_PHONE}`}
 				>
@@ -356,7 +374,7 @@ export function StatStrip({
 			unit: "days",
 			unitShort: "d",
 			label: "Watched",
-			to: profileTabPath(shell.handle, "taste"),
+			to: profileTabPath(shell.handle, "stats"),
 			show: see("hours"),
 			visual: (
 				<span className="text-[11px] text-gray-500">
@@ -464,7 +482,8 @@ function CompactHead({
 	shell,
 	title,
 	line,
-}: { shell: ProfileShell; title: string; line?: string }) {
+	right,
+}: { shell: ProfileShell; title: string; line?: string; right?: ReactNode }) {
 	const home = profileTabPath(shell.handle)
 	return (
 		<header className={`${WRAP} flex items-center gap-3 pt-6 pb-4`}>
@@ -486,6 +505,7 @@ function CompactHead({
 				</h1>
 				{line && <p className="text-sm text-gray-400">{line}</p>}
 			</div>
+			{right && <div className="ml-auto shrink-0">{right}</div>}
 		</header>
 	)
 }
@@ -509,10 +529,13 @@ export function ProfileFrame({
 	line,
 	part,
 	posters,
+	headerRight,
 	children,
 }: {
 	shell: ProfileShell
 	tab: ProfileTab
+	/** The compact head's right end, such as the page's Share menu. */
+	headerRight?: ReactNode
 	/** The page's name under the compact head; Overview has the full head. */
 	title?: string
 	line?: string
@@ -530,6 +553,7 @@ export function ProfileFrame({
 					shell={shell}
 					title={title ?? ""}
 					line={allowed ? line : undefined}
+					right={headerRight}
 				/>
 			)}
 			<ProfileTabs shell={shell} active={tab} />
