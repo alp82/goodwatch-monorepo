@@ -31,6 +31,7 @@ import {
 import type { ReactNode } from "react"
 import { assetBase, assetUrl } from "~/utils/asset-url"
 import { HERO_TIMING } from "~/utils/start-after-paint"
+import type { NewWeekRow } from "~/server/new-on-services-page.server"
 import { BelowRoom } from "../BelowRoom"
 import { Remote, type RemoteService } from "../Remote"
 import type { StartTitle } from "../living-room-data"
@@ -82,6 +83,8 @@ export type TvRoomProps = {
 	startTitles: StartTitle[]
 	/** "Talked about now" below the room (#557). */
 	talked?: TalkedRow | null
+	/** This week's arrivals on a member's services (#489), below the room. */
+	newOn?: NewWeekRow | null
 	/** The person's own two streaming services: the Remotes' two keys, in their order. */
 	services: readonly RemoteService[]
 	/** Forces the Remote's place or the phone Remote's form, whatever the window would choose: for checks. */
@@ -111,6 +114,7 @@ export function TvRoom({
 	renderScreen,
 	startTitles,
 	talked,
+	newOn = null,
 	services,
 	want,
 	screenOverlay,
@@ -529,6 +533,7 @@ export function TvRoom({
 				intro={belowIntro}
 				titles={startTitles}
 				talked={talked}
+				newOn={newOn}
 				onDown={travel.onDown}
 				onBack={travel.onBack}
 			/>

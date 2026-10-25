@@ -570,6 +570,7 @@ export function TvLivingRoom({
 				tv={tv.room}
 				startTitles={data.startTitles}
 				talked={data.talked}
+				newOn={data.newOn ?? null}
 				services={data.services}
 				screenOverlay={screenOverlay}
 				belowIntro={belowIntro}

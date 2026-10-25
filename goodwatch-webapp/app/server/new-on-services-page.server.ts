@@ -30,6 +30,7 @@ import {
 	sharePath,
 	shareTarget,
 	tallyWords,
+	utcDay,
 	windowStart,
 } from "~/domain/new-on-services"
 import { PRIVATE_CACHE_CONTROL } from "~/utils/auth-cookie"
@@ -282,6 +283,27 @@ export function arrivalTitlesOf(
 			}),
 		),
 	)
+}
+
+/** How many titles the start page's row has, at most: two rows of three on a phone, one row of six from 640 px. */
+export const WEEK_ROW_LIMIT = 6
+
+/** The start page's row (#489, Q67): this week's arrivals on a member's services, best first, and the services. */
+export type NewWeekRow = {
+	titles: NewTitle[]
+	/** Every title of this week, of which the row shows the best. */
+	total: number
+	/** The services the titles arrived on, by the id they count as. */
+	services: Record<number, { name: string; logo_path: string | null }>
+}
+
+/** This week: today and the six days before it (UTC), from a member's titles, best first. */
+export function weekTitlesOf(
+	titles: readonly ArrivalTitle[],
+	now: number,
+): ArrivalTitle[] {
+	const since = utcDay(now) - 6 * 86_400_000
+	return titles.filter(({ at }) => at >= since)
 }
 
 function brandService(brand: Brand, meta: NewMeta): PageService {

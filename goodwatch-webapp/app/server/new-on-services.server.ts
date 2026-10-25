@@ -29,9 +29,12 @@ import {
 	type NewDeps,
 	type NewLinks,
 	type NewMeta,
+	type NewWeekRow,
 	type Viewer,
+	WEEK_ROW_LIMIT,
 	arrivalTitlesOf,
 	linksAcross,
+	weekTitlesOf,
 } from "~/server/new-on-services-page.server"
 import {
 	readArrivalStays,
@@ -180,6 +183,51 @@ export function getMemberTitles({
 		params: { country, families, day: utcDay(now) },
 		ttlMinutes: MEMBER_TTL_MINUTES,
 	})
+}
+
+/** How long the start page waits for a member's row before it renders without it. */
+const WEEK_ROW_BUDGET_MS = 250
+
+/**
+ * The start page's row (#489, Q67): this week's arrivals on the member's services, from the read /new uses and its
+ * cache. Null without saved services, without arrivals this week, or when the read isn't ready within the start
+ * page's budget; the read goes on then and fills the cache for the next visit. Never fails.
+ */
+export async function getMemberWeekRow({
+	country,
+	services,
+	now = Date.now(),
+}: {
+	country: string
+	services: readonly number[]
+	now?: number
+}): Promise<NewWeekRow | null> {
+	if (!services.length) return null
+	const read = getMemberTitles({ country, services, now }).then(async (titles) => {
+		const week = weekTitlesOf(titles, now)
+		if (!week.length) return null
+		const shown = week.slice(0, WEEK_ROW_LIMIT)
+		const cards = await newDeps.serviceCards([...new Set(shown.map(({ service }) => service))])
+		return {
+			titles: shown.map(({ backdrop_path, ...title }) => title),
+			total: week.length,
+			services: Object.fromEntries(
+				cards.map(({ id, name, logo_path }) => [id, { name, logo_path }]),
+			),
+		}
+	})
+	read.catch((error) =>
+		console.error("New on your services: the start page's row failed", error),
+	)
+	let timer: NodeJS.Timeout | undefined
+	const late = new Promise<null>((resolve) => {
+		timer = setTimeout(() => resolve(null), WEEK_ROW_BUDGET_MS)
+	})
+	try {
+		return await Promise.race([read.catch(() => null), late])
+	} finally {
+		clearTimeout(timer)
+	}
 }
 
 // ---------------------------------------------------------------------------------------------------------

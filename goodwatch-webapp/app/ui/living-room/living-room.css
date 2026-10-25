@@ -447,6 +447,22 @@ main:has(.lr-page) + footer {
 	border-radius: revert-layer;
 }
 
+/* A member's arrivals this week (#489): six cards, two rows of three on a phone and one row of six from 640 px. */
+.lrb-new {
+	margin-bottom: 2.75rem;
+}
+.lrb-new .lrb-head h2 {
+	font-size: clamp(1.6rem, 4vw, 2.25rem);
+}
+.lrb-new .lrb-titles {
+	margin-top: 1.25rem;
+}
+@media (min-width: 640px) {
+	.lrb-new .lrb-titles {
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+	}
+}
+
 /* The ways to browse: each hub a card with its own coloured tile and mark, then the category shortcuts. */
 .lrb-hubs {
 	margin-top: 3.5rem;

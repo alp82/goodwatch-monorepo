@@ -16,6 +16,7 @@ const {
 	linksOf,
 	linksAcross,
 	arrivalTitlesOf,
+	weekTitlesOf,
 	DAY_LIMIT,
 } = await import("./new-on-services-page.server.ts")
 const { titleKey } = await import("../utils/title-key.ts")
@@ -406,6 +407,17 @@ test("a country whose read fails is left out of the links; every other page keep
 	assert.deepEqual(
 		page.keys.map(({ slug }) => slug),
 		["netflix", "hulu"],
+	)
+})
+
+// ---------------------------------------------------------------------------------------------------------
+// The start page's row
+
+test("the start page's row takes this week: today and the six days before, best first as given", () => {
+	const titles = [title(9, { at: ago(0) }), title(8, { at: ago(7) }), title(7, { at: ago(6) }), title(6, { at: ago(3) })]
+	assert.deepEqual(
+		weekTitlesOf(titles, NOW).map(({ tmdb_id }) => tmdb_id),
+		[9, 7, 6],
 	)
 })
 

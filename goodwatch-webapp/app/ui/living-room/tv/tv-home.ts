@@ -1,3 +1,4 @@
+import type { NewWeekRow } from "../../../server/new-on-services-page.server.ts"
 import type { TalkedRow } from "~/domain/talked-about-now"
 import type { PresentedMedia } from "../../../utils/media-presentation.ts"
 import { copyMediaPresentation } from "../../../utils/media-presentation.ts"
@@ -110,6 +111,11 @@ export type TvHomeData = {
 	homeFailed?: boolean
 	/** "Talked about now" below the room (#557), for this viewer. Absent while the feature is off for them. */
 	talked?: TalkedRow | null
+	/**
+	 * This week's arrivals on a member's services, below the room (#489). Absent for a guest; null without saved
+	 * services, without arrivals this week, or when they weren't ready in time.
+	 */
+	newOn?: NewWeekRow | null
 	/**
 	 * A member's Sides of you, as home's list shows them (#673): the side holding the best pick in personal order
 	 * first. Absent for a guest; empty for a member without sides, whose home stays the row of tiles.

@@ -11,12 +11,14 @@
 // Prime Video, read from nowhere, so a guest's HTML stays the same for every guest. A member's are their first two
 // saved services (`loadTvServices`), filled up with Netflix and Prime Video.
 //
-// Members lead with their existing Next pick and get a secondary popular row. Taste groups load only on Taste.
+// Members lead with their existing Next pick and get a secondary popular row, and this week's arrivals on their
+// services below the room (#489). Taste groups load only on Taste.
 import { json } from "@remix-run/node"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { getTalkedAboutNow } from "~/server/talked-about-now/start-row.server"
 import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
 import { getTonightParts } from "~/server/home-doors.server"
+import { getMemberWeekRow } from "~/server/new-on-services.server"
 import type { Taste } from "~/server/taste/index.server"
 import { loadMemberTaste } from "~/server/taste/member.server"
 import {
@@ -125,12 +127,17 @@ export async function loadTvHome(request: Request) {
 		)
 		return { tonight: [], shows: { next: [], start: [] }, homeFailed: true }
 	})
+	// This week's arrivals on the member's services (#489), within a short budget so the page doesn't wait for them.
+	const newOn = viewer
+		.then((v) => getMemberWeekRow({ country: v.country, services: v.services }))
+		.catch(() => null)
 	const data: TvHomeData = {
 		...guestHome(await start, await services),
 		member: true,
 		...(await own),
 		talked: await talked,
 		popular: await popular,
+		newOn: await newOn,
 	}
 	return { data, headers }
 }

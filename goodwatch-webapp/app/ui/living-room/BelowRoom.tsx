@@ -10,6 +10,7 @@ import { canonicalMediaTitle } from "~/utils/media-presentation"
 // living-room.css (`.lrb`), with short class names because the HTML has a byte budget.
 import { Link } from "@remix-run/react"
 import { type MouseEvent, type ReactNode, useMemo } from "react"
+import type { NewWeekRow } from "~/server/new-on-services-page.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { StartRowSlot } from "~/ui/talked-about-now/start-row/StartRowSlot"
 import {
@@ -34,6 +35,13 @@ const START_POSTER_SIZES: SizeRule[] = [
 	["(min-width: 1100px)", "140px"],
 	["(min-width: 900px)", "15vw"],
 	["(min-width: 640px)", "22vw"],
+	[null, "30vw"],
+]
+
+/** The member's row of new arrivals: three a row on a phone, six from 640 px across at most 76rem of content. */
+const NEW_POSTER_SIZES: SizeRule[] = [
+	["(min-width: 1216px)", "190px"],
+	["(min-width: 640px)", "15vw"],
 	[null, "30vw"],
 ]
 
@@ -90,6 +98,8 @@ export type BelowRoomProps = {
 	onBack?: (e: MouseEvent) => void
 	/** Content at the top of the section, before the titles: "How GoodWatch works" for a guest. */
 	intro?: ReactNode
+	/** A member's arrivals on their services this week (#489); null for a guest and when there are none. */
+	newOn?: NewWeekRow | null
 }
 
 /**
@@ -127,12 +137,60 @@ function StartTitleGrid({ titles }: { titles: StartTitle[] }) {
 	)
 }
 
+/**
+ * A member's arrivals this week on their own services (#489), the best first, as the browse poster cards with the
+ * service each arrived on leading (`newOn`), and See all to their page at /new. Six: two rows of three on a phone,
+ * one row of six from 640 px (living-room.css `.lrb-new`).
+ */
+function NewOnYourServices({ row }: { row: NewWeekRow }) {
+	return (
+		<section aria-labelledby="new-on-yours" className="lrb-new">
+			<header className="lrb-head">
+				<div>
+					<p className="lrb-eye">This week</p>
+					<h2 id="new-on-yours">New on your services</h2>
+				</div>
+				<Link to="/new" prefetch="intent" className="lrb-back">
+					See all{row.total > row.titles.length ? ` ${row.total}` : ""}{" "}
+					<span aria-hidden>→</span>
+				</Link>
+			</header>
+			<ol className="lrb-titles">
+				{row.titles.map((title) => {
+					const service = row.services[title.service]
+					return (
+						<li key={title.key}>
+							<MovieTvCard
+								details={{
+									tmdb_id: title.tmdb_id,
+									title: title.title,
+									release_year: title.release_year,
+									poster_path: title.poster_path,
+									goodwatch_overall_score_normalized_percent: title.score,
+									streaming_links: service
+										? [{ id: title.service, name: service.name, logo_path: service.logo_path }]
+										: [],
+								}}
+								mediaType={title.media_type}
+								discover="none"
+								posterSizes={NEW_POSTER_SIZES}
+								newOn={title.service}
+							/>
+						</li>
+					)
+				})}
+			</ol>
+		</section>
+	)
+}
+
 export function BelowRoom({
 	titles,
 	talked = null,
 	onDown,
 	onBack,
 	intro,
+	newOn = null,
 }: BelowRoomProps) {
 	const back = (
 		<a href={`#${ROOM_ID}`} onClick={onBack} className="lrb-back">
@@ -156,6 +214,7 @@ export function BelowRoom({
 			</a>
 			<div className="lrb-in">
 				{intro}
+				{newOn && <NewOnYourServices row={newOn} />}
 				{talked && <StartRowSlot row={talked} />}
 				<header className="lrb-head">
 					<div>
