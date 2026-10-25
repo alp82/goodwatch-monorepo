@@ -127,6 +127,22 @@ export interface MapCore {
 	win: any
 }
 
+/** A title the quick view can show, with its page. */
+export interface MapViewTitle {
+	k: string
+	t: string
+	y: string
+	p: string
+	language?: string
+	href: string
+}
+/** What a tap on the title in the middle opens: it, then the titles on the map nearest first. */
+export interface MapView {
+	section: Element
+	/** The title in the middle first. */
+	titles: MapViewTitle[]
+}
+
 /** The address of a title's pack, and with a suffix of a further page of it. */
 export const PACK_PATH = "/api/related-map?key="
 
@@ -153,6 +169,8 @@ export function relatedMapEngine(
 		wait: Record<string, Promise<unknown>>
 		asked: number
 		nav: ((href: string) => void) | null
+		/** The app's quick view, once the app runs: a tap on the title in the middle opens it. */
+		open: ((view: MapView) => void) | null
 		fl: Record<string, Record<string, number>>
 		ex: Record<string, number>
 		late: Record<string, RawPack[]>
@@ -172,6 +190,7 @@ export function relatedMapEngine(
 		wait: {},
 		asked: 0,
 		nav: null,
+		open: null,
 		fl: {},
 		ex: {},
 		late: {},
@@ -683,6 +702,36 @@ export function relatedMapEngine(
 		if (G.packs[key]) ahead(s)
 		else ask(key, true)
 	}
+	/** The quick view's titles: the middle, then the map's posters that are drawn, nearest first. */
+	const viewOf = (s: Section): MapView => {
+		const ctx = ctxOf(stateOf(s))
+		const drawn: string[] = []
+		const steps = s.querySelectorAll("[data-pl-stage] [data-pl-step]")
+		for (let i = 0; i < steps.length; i++) {
+			const key = steps[i].getAttribute("data-pl-step") ?? ""
+			if (key && key !== ctx.c.k && drawn.indexOf(key) < 0) drawn.push(key)
+		}
+		const order = (ctx.list ?? []).map((t) => t.k)
+		const rank = (key: string) => {
+			const at = order.indexOf(key)
+			return at < 0 ? order.length : at
+		}
+		drawn.sort((a, b) => rank(a) - rank(b))
+		const titles: MapViewTitle[] = []
+		for (const key of [ctx.c.k, ...drawn]) {
+			const t = G.t[key]
+			if (t)
+				titles.push({
+					k: t.k,
+					t: t.t,
+					y: t.y,
+					p: t.p,
+					language: t.language,
+					href: hrefOf(t),
+				})
+		}
+		return { section: s, titles }
+	}
 	let swallow = 0
 	let pressed: { el: Element; at: number } | null = null
 	const hit = (event: Event, selector: string) => {
@@ -749,6 +798,13 @@ export function relatedMapEngine(
 			}
 			if (hit(event, "[data-pl-back]")) {
 				back(s, st.trail.length - 2)
+				return
+			}
+			// The title in the middle opens in the app's quick view, with the map's titles after it, nearest first.
+			const middle = hit(event, "[data-pl-center]")
+			if (middle && G.open) {
+				pressed = null
+				G.open(viewOf(s))
 				return
 			}
 			const control = hit(event, "[data-pl-act]")

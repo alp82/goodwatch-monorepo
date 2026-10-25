@@ -105,7 +105,7 @@ span.rm-p{height:calc(var(--pw)*1.5);aspect-ratio:auto}
 .rg .rm-p[data-r-x]{pointer-events:none}
 .rg .rm-p[style*="--dm"] img{opacity:.38;filter:saturate(.3)}
 .rg .rm-p[style*="--dm"]{box-shadow:none}
-.rg .rg-c{z-index:3;--ow:3px;--ol:#fff;cursor:default}
+.rg .rg-c{z-index:3;--ow:3px;--ol:#fff;cursor:pointer}
 .rg .rg-c:hover,.rg .rg-c:focus-visible{--ol:#fff}
 .rg .rg-c:active{filter:none}
 .rm-info.rg-info{gap:0}

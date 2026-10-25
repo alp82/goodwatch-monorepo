@@ -45,6 +45,7 @@ export interface QuickViewTitle {
 	chips?: string[]
 	/** The services that carry it; null while that loads. */
 	services?: readonly ServiceOffer[] | null
+	/** The story; leave the key out for a place that has none (its view is then SHORT). */
 	story?: string | null
 	/** Under the reason in place of the chips (the explorer's sign-up prompt for a guest). */
 	note?: ReactNode
@@ -199,6 +200,7 @@ export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 					)}
 				</section>
 				{t.services !== undefined && <Services offers={t.services} />}
+				{"story" in t && (
 				<section className="py-3">
 					<Label>Story</Label>
 					{t.story === undefined ? (
@@ -214,6 +216,7 @@ export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 						</p>
 					)}
 				</section>
+				)}
 			</div>
 			<div
 				data-up=""

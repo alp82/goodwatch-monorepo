@@ -11,18 +11,28 @@
 // When the server ran out of time before the page title's pack was there, the section holds its height with only its
 // heading, asks for the pack from the browser, and the engine draws the picture.
 //
+// A tap on the title in the middle opens it in the quick view (RelatedQuickView.tsx), with the map's titles after
+// it nearest first; its code loads on that tap.
+//
 // A walk is forgotten when the page is left.
 import { useMatches, useNavigate, useNavigation } from "@remix-run/react"
-import { useEffect, useRef, useState } from "react"
+import { Suspense, lazy, useEffect, useRef, useState } from "react"
 import type { RelatedMapData } from "~/server/related-map.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
-import type { RawPack } from "~/ui/related-map/engine"
+import type { MapView, RawPack } from "~/ui/related-map/engine"
 import cssPath from "~/ui/related-map/related-map.css?url"
 import { assetBase, assetUrl } from "~/utils/asset-url"
 import { useHydrated } from "~/utils/hydrated"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
 const loadClient = reloadOnStaleChunk(() => import("~/ui/related-map/client"))
+const RelatedQuickView = lazy(
+	reloadOnStaleChunk(() =>
+		import("~/ui/related-map/RelatedQuickView").then((module) => ({
+			default: module.RelatedQuickView,
+		})),
+	),
+)
 
 interface MapWindow {
 	/** True while the app loads another page. An engine that loads later reads it when it starts (engine.ts). */
@@ -30,6 +40,8 @@ interface MapWindow {
 	__gwRelatedMap?: {
 		boot: () => void
 		nav: ((href: string) => void) | null
+		/** Opens the title in the middle in the app's quick view (a tap on it). */
+		open: ((view: MapView) => void) | null
 		navigating?: (on: boolean) => void
 		render: (input: {
 			root: string
@@ -194,6 +206,9 @@ export default function RelatedMap({
 	}
 	const drawn = Boolean(held.current?.drawn)
 	const [, redraw] = useState(0)
+	/** The title in the middle, open in the quick view with the map's titles after it. */
+	const [view, setView] = useState<MapView | null>(null)
+	useEffect(() => setView(null), [localizedKey])
 	const [missing, setMissing] = useState<string | null>(null)
 	const title = media.details.title
 	const engineTag = useRef<HTMLScriptElement>(null)
@@ -252,11 +267,15 @@ export default function RelatedMap({
 		const stop = whenEngine(script, engineTag.current, () => {
 			if (!w.__gwRelatedMap) return
 			w.__gwRelatedMap.nav = (href) => navigate(href)
+			w.__gwRelatedMap.open = (next) => setView(next)
 			w.__gwRelatedMap.boot()
 		})
 		return () => {
 			stop()
-			if (w.__gwRelatedMap) w.__gwRelatedMap.nav = null
+			if (w.__gwRelatedMap) {
+				w.__gwRelatedMap.nav = null
+				w.__gwRelatedMap.open = null
+			}
 		}
 	}, [shown, drawn, script, navigate, localizedKey])
 	// A title without related titles after all: the section goes.
@@ -280,6 +299,11 @@ export default function RelatedMap({
 				dangerouslySetInnerHTML={{ __html: held.current?.html ?? "" }}
 			/>
 			<NavigationWatch />
+			{view && (
+				<Suspense fallback={null}>
+					<RelatedQuickView view={view} onClose={() => setView(null)} />
+				</Suspense>
+			)}
 			{inDocument && (
 				<>
 					{/* The inline script puts the style's link in here. React never looks inside. */}

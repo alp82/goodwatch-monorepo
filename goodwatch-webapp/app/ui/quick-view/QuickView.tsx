@@ -50,6 +50,8 @@ export function useQuickViewFrame(): Frame {
 
 /** The card's fixed size on wide screens and the drawer's height on phones, so a step never changes either. */
 export const CARD = { w: 400, h: 584, drawer: 532 } as const
+/** The card's and the drawer's heights without the story (a place that has none). */
+export const SHORT = { h: 500, drawer: 448 } as const
 
 export interface QuickViewProps {
 	/** How many titles the place has, and which one is open. */
@@ -78,6 +80,8 @@ export interface QuickViewProps {
 	scope?: () => (HTMLElement | null | undefined)[]
 	/** Where the view goes in the document: the element in full screen, when one is. */
 	container?: Element | null
+	/** The card's and the drawer's heights, when the place's content is shorter (SHORT). */
+	height?: { h: number; drawer: number }
 }
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -153,10 +157,10 @@ function scrollSettled(): Promise<void> {
 
 type Geo = { side: 1 | -1; poster: Box; card: Box }
 
-function geoFor(from: Box | null): Geo {
+function geoFor(from: Box | null, height: number): Geo {
 	const vw = document.documentElement.clientWidth
 	const vh = window.innerHeight
-	const ch = Math.min(CARD.h, vh - 2 * EDGE)
+	const ch = Math.min(height, vh - 2 * EDGE)
 	const pw = Math.round(
 		Math.min(340, (vh - 2 * EDGE - ARROWS) / 1.5, vw * 0.24),
 	)
@@ -293,7 +297,8 @@ function LiftCard(p: QuickViewProps) {
 		{ i: number; id: number; poster: Box; back: Box | null }[]
 	>([])
 	const [closing, setClosing] = useState<{ back: Box | null } | null>(null)
-	const geo = geoFor(cur.from)
+	const cardH = p.height?.h ?? CARD.h
+	const geo = geoFor(cur.from, cardH)
 	const cardX = useMotionValue(geo.card.x)
 	const cardY = useMotionValue(geo.card.y)
 	const arrX = useMotionValue(geo.poster.x)
@@ -314,7 +319,7 @@ function LiftCard(p: QuickViewProps) {
 	useEffect(() => {
 		if (p.index === state.current.cur.i || state.current.closing) return
 		const from = boxOf(p.index)
-		const now = geoFor(from)
+		const now = geoFor(from, cardH)
 		setCur({ i: p.index, from, dim: true })
 		cardX.set(now.card.x)
 		cardY.set(now.card.y)
@@ -367,7 +372,7 @@ function LiftCard(p: QuickViewProps) {
 			}
 			const from = boxOf(ni)
 			const old = state.current.geo
-			const now = geoFor(from)
+			const now = geoFor(from, cardH)
 			const back = boxOf(cur.i)
 			leaveId.current += 1
 			const id = leaveId.current
@@ -582,7 +587,7 @@ function Drawer(p: QuickViewProps) {
 					aria-label={t.name}
 					className="pointer-events-auto absolute inset-x-0 bottom-0 max-h-[92dvh] overflow-hidden rounded-t-2xl bg-gray-900 shadow-[0_-18px_40px_-10px_rgba(0,0,0,.9),inset_0_1px_0_rgba(255,255,255,.14)] outline-none"
 					style={{
-						height: `calc(${CARD.drawer}px + ${bottom ? "0px" : "env(safe-area-inset-bottom)"})`,
+						height: `calc(${p.height?.drawer ?? CARD.drawer}px + ${bottom ? "0px" : "env(safe-area-inset-bottom)"})`,
 						y: dy,
 						touchAction: "pan-y",
 					}}
