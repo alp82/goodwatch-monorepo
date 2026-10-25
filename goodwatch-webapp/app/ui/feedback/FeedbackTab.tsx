@@ -110,6 +110,16 @@ const Tab = forwardRef<
 const loadDock = () => import("./FeedbackDock")
 const loadDockOnIntent = reloadOnStaleChunk(loadDock)
 
+/** Opens the drawer of the tab on the page, as tapping the tab does; null while no tab is mounted. */
+let openFromElsewhere: (() => void) | null = null
+
+/** Opens the Feedback drawer (the command palette's "Send feedback"). False when the page has no Feedback tab. */
+export function openFeedback(): boolean {
+	if (!openFromElsewhere) return false
+	openFromElsewhere()
+	return true
+}
+
 export function FeedbackTab({ sendOnly = false }: { sendOnly?: boolean }) {
 	const tabRef = useRef<HTMLButtonElement>(null)
 	const [tab, setTab] = useState<TabState>({
@@ -135,6 +145,17 @@ export function FeedbackTab({ sendOnly = false }: { sendOnly?: boolean }) {
 		openNow.current = true
 		warm(true)
 	})
+	const openRef = useRef(false)
+	// Open, or handed over to phone fix mode: either way the drawer is already in use.
+	openRef.current = tab.open || tab.away
+	useEffect(() => {
+		openFromElsewhere = () => {
+			if (!openRef.current) toggleRef.current()
+		}
+		return () => {
+			openFromElsewhere = null
+		}
+	}, [])
 	// The drawer's code after the page has settled, so the first tap opens it at once.
 	useEffect(() => {
 		const w = window as Window & {

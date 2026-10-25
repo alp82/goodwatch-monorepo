@@ -1,15 +1,13 @@
 import useLocale from "~/utils/locale"
 import MediaText from "~/ui/media-text/MediaText"
-// The command palette: one field that goes anywhere. As soon as anything is typed, its first suggestion is
-// "Search Discover" (Discover's search mode), then up to eight matching titles ending in "Show 120 more" (Discover's
-// search mode again) when more match, then matching destinations ("Go to Taste"), then Sign up
-// for guests. Empty, it shows the destinations. The field sits in the dialog's header and the destinations
-// are compact rows, so the search leads. A combobox over a listbox: Up and Down move the active option, Enter runs
-// it; Escape closes the dialog around it.
-import {
-	ArrowRightEndOnRectangleIcon,
-	MagnifyingGlassIcon,
-} from "@heroicons/react/24/solid"
+// The command palette: one field that goes anywhere. Empty, it shows a few essential pages and a line saying how
+// much more typing reaches. Typed, it searches every page (palette-pages.ts) next to the titles: a page named
+// exactly comes first, so Enter goes there; then "Search Discover" (Discover's search mode); then pages that match
+// well; then up to eight matching titles ending in "Show 120 more" (Discover's search mode again) when more match;
+// then pages that match less well. The field sits in the dialog's header and pages are compact rows, so the search
+// leads. A combobox over a listbox: Up and Down move the active option, Enter runs it; Escape closes the dialog
+// around it.
+import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation, useNavigate } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
 import {
@@ -21,6 +19,9 @@ import {
 	useRef,
 	useState,
 } from "react"
+import { useAccountSummary } from "~/ui/account/useAccountSummary"
+import { openFeedback } from "~/ui/feedback/FeedbackTab"
+import { DiscordMark } from "~/ui/footer/links"
 import { useUser } from "~/utils/auth"
 import {
 	MIN_PREFIX_CHARS,
@@ -29,12 +30,15 @@ import {
 	paletteTitlePath,
 } from "~/utils/command-palette"
 import { tmdbImage, useSignUpHref } from "./bits"
+import { currentDestination, searchHref } from "./destinations"
 import {
-	type DestinationKey,
-	currentDestination,
-	getDestinations,
-	searchHref,
-} from "./destinations"
+	type PalettePage,
+	essentialPages,
+	matchPages,
+	palettePages,
+	placePages,
+	typeHint,
+} from "./palette-pages"
 import { paletteTitlesQuery, shownPaletteTitles } from "./palette-titles"
 import { useTonightsPick } from "./useTonightsPick"
 
@@ -47,20 +51,8 @@ const TITLES_BOX =
 	"lg:max-h-[min(300px,40dvh)] lg:overflow-y-auto lg:overscroll-contain"
 /** Waits this long after the last keystroke before asking for titles. */
 const DEBOUNCE_MS = 150
-
-/** The destinations the palette offers, in this order; ones whose page is off for the viewer are left out. */
-const PALETTE_DESTINATIONS: DestinationKey[] = [
-	"home",
-	"watchNext",
-	"forYou",
-	"myLibrary",
-	"discover",
-	"taste",
-	"explorer",
-	"movies",
-	"shows",
-	"hot",
-]
+/** "Send feedback" opens the Feedback drawer once the palette's dialog has closed (its leave transition is 200 ms). */
+const FEEDBACK_AFTER_MS = 250
 
 interface Row {
 	language?: string
@@ -68,7 +60,9 @@ interface Row {
 	label: string
 	sub?: string
 	href: string
-	/** A destination: a compact row, so the search field and its results lead. */
+	/** Runs in place of following `href` (see PalettePage). */
+	action?: PalettePage["action"]
+	/** A page: a compact row, so the search field and its results lead. */
 	compact?: boolean
 	icon?: ComponentType<SVGProps<SVGSVGElement>>
 	poster?: string | null
@@ -98,6 +92,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const navigate = useNavigate()
 	const { pathname } = useLocation()
 	const { user } = useUser()
+	const { handle } = useAccountSummary()
 	const signUp = useSignUpHref()
 	const { pick } = useTonightsPick()
 	// Opens empty: Discover's own field already shows the search on screen.
@@ -114,20 +109,57 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	}, [])
 
 	const trimmed = q.trim()
-	const needle = trimmed.toLowerCase()
+	const member = Boolean(user)
+	const pages = useMemo(
+		() => palettePages({ member, handle, signUpHref: signUp }),
+		[member, handle, signUp],
+	)
 	const rows = useMemo(() => {
-		const destinations = getDestinations()
 		const here = currentDestination(pathname)
-		const result: Row[] = []
-		if (trimmed)
-			result.push({
-				key: "search",
-				// The field above already shows the text: the row only names where Enter goes.
-				label: "Search Discover",
-				sub: "Moods, titles, and people",
-				href: searchHref(trimmed),
-				icon: MagnifyingGlassIcon,
-			})
+		const pickOn = pick?.href
+			? currentDestination(pick.href.split("#")[0])
+			: null
+		const pageRow = (page: PalettePage, typed: boolean): Row => {
+			const isHere = page.destination
+				? here === page.destination
+				: page.href === pathname
+			const upNext =
+				pick &&
+				page.destination &&
+				(page.destination === pickOn || page.destination === "watchNext")
+			return {
+				key: `go-${page.key}`,
+				label: page.cta || page.action ? page.label : `Go to ${page.label}`,
+				sub: page.cta
+					? page.sub
+					: isHere
+						? "You're here"
+						: upNext
+							? `${pick.title.title} is up next`
+							: typed
+								? page.sub
+								: undefined,
+				href: page.href,
+				action: page.action,
+				compact: !page.cta,
+				icon: page.icon === "discord" ? DiscordMark : page.icon,
+			}
+		}
+		if (!trimmed)
+			return essentialPages(pages, { member }).map((page) =>
+				pageRow(page, false),
+			)
+		const placed = placePages(matchPages(pages, trimmed))
+		const result: Row[] = placed.first.map((page) => pageRow(page, true))
+		result.push({
+			key: "search",
+			// The field above already shows the text: the row only names where Enter goes.
+			label: "Search Discover",
+			sub: "Moods, titles, and people",
+			href: searchHref(trimmed),
+			icon: MagnifyingGlassIcon,
+		})
+		for (const page of placed.beforeTitles) result.push(pageRow(page, true))
 		for (const title of titles)
 			result.push({
 				key: `title-${title.mediaType}-${title.tmdbId}`,
@@ -149,36 +181,9 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 				icon: MagnifyingGlassIcon,
 				title: true,
 			})
-		for (const key of PALETTE_DESTINATIONS) {
-			// My library holds a member's marked titles; a guest has none.
-			if (key === "myLibrary" && !user) continue
-			const destination = destinations[key]
-			const words = `${destination.label} ${destination.short}`.toLowerCase()
-			if (needle && !words.includes(needle)) continue
-			result.push({
-				key: `go-${key}`,
-				label: `Go to ${destination.label}`,
-				sub:
-					here === key
-						? "You're here"
-						: key === "watchNext" && pick
-							? `${pick.title.title} is up next`
-							: undefined,
-				href: destination.href,
-				compact: true,
-				icon: destination.icon,
-			})
-		}
-		if (!user && (!needle || "sign up".includes(needle)))
-			result.push({
-				key: "sign-up",
-				label: "Sign up",
-				sub: "Keep your Wishlist and let Best match learn your taste",
-				href: signUp,
-				icon: ArrowRightEndOnRectangleIcon,
-			})
+		for (const page of placed.afterTitles) result.push(pageRow(page, true))
 		return result
-	}, [pathname, trimmed, needle, titles, more, pick, user, signUp])
+	}, [pathname, trimmed, titles, more, pick, member, pages])
 
 	const at = Math.min(active, rows.length - 1)
 	const optionId = (index: number) => `${id}-option-${index}`
@@ -190,7 +195,12 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	})
 
 	const run = (row: Row) => {
-		navigate(row.href)
+		if (row.action === "feedback")
+			// After the dialog has handed focus back, so the drawer keeps it.
+			setTimeout(() => {
+				if (!openFeedback()) navigate(row.href)
+			}, FEEDBACK_AFTER_MS)
+		else navigate(row.href)
 		onDone()
 	}
 
@@ -269,6 +279,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 						aria-controls={`${id}-list`}
 						aria-autocomplete="list"
 						aria-activedescendant={at >= 0 ? optionId(at) : undefined}
+						aria-describedby={trimmed ? undefined : `${id}-hint`}
 						aria-label={PLACEHOLDER}
 						placeholder={PLACEHOLDER}
 						autoComplete="off"
@@ -303,6 +314,15 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 					</kbd>
 				</div>
 			</header>
+			{/* Opened empty, only the essentials show: this says how much typing reaches. */}
+			{!trimmed && (
+				<p
+					id={`${id}-hint`}
+					className="shrink-0 px-7 pt-3 text-[12.5px] text-gray-400 lg:px-6"
+				>
+					{typeHint(pages.length)}
+				</p>
+			)}
 			{/* The combobox pattern: focus stays in the field, which points at the active option, so the listbox and
 			    its options aren't focusable themselves, and a native <select> couldn't hold posters and links. */}
 			{/* biome-ignore lint/a11y/useFocusableInteractive: see above */}
