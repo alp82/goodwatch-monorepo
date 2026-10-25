@@ -2,7 +2,8 @@
 // chapter bar under them and a Next button at the bottom right. Once the quiz shows, Next and the chapter bar go and
 // nothing takes their place (the owner, 2026-10-22: no Replay at the end; the quiz's own keys lead on, and the TV's
 // menu plays the film again with "What is GoodWatch?"). A quick second press of Next lands on nothing.
-// Holding a press on the picture, or the space bar, plays the chapters at 2x until it's let go (speed.ts).
+// Holding a press on the picture, or the space bar, plays the chapters at 2x, then 3x and 4x, until it's let go
+// (speed.ts).
 import {
 	type CSSProperties,
 	type ReactNode,
@@ -15,10 +16,11 @@ import {
 } from "react"
 import { CHAPTERS, type Enter, type IntroData, type Scene } from "./scene"
 import {
-	FAST_RATE,
 	type FilmClock,
+	STEP_MS,
 	TOUCH_HOLD_MS,
 	filmClock,
+	holdRate,
 	rampRate,
 } from "./speed"
 
@@ -113,7 +115,10 @@ export function Player({
 		return clock.current?.after(overlap * k + 50, () => setPrev(null))
 	}, [prev, overlap, k])
 	const chapters = chapterCount(scenes)
-	const fast = useFastHold(useContext(StageElement), at < chapters, clock)
+	const speed = useFastHold(useContext(StageElement), at < chapters, clock)
+	// The overlay keeps its last number while it fades out.
+	const shown = useRef(2)
+	if (speed > 1) shown.current = speed
 
 	// The first scene shown comes in with `firstEnter`; every later one with its own hand-over.
 	const first = prev === null && jumps === 0 && at === startAt && firstEnter
@@ -148,10 +153,12 @@ export function Player({
 			{at < chapters && (
 				<div
 					className="film-fast"
-					data-on={fast || undefined}
+					data-on={speed > 1 || undefined}
 					aria-hidden="true"
 				>
-					2×
+					<span key={shown.current} className="film-fast-n">
+						{shown.current}×
+					</span>
 					<svg viewBox="0 0 24 24" aria-hidden="true">
 						<path
 							d="M3 5.5l9 6.5-9 6.5zm9 0l9 6.5-9 6.5z"
@@ -241,17 +248,28 @@ const isFilm = (animation: Animation) => {
 }
 
 /**
- * Whether the visitor holds the film at 2x, and the speed that follows it: a mouse press or the space bar speeds up
- * at once, a finger after `TOUCH_HOLD_MS` without moving (a tap or a scroll doesn't). A press on the chapter bar or
- * Next is theirs. While the speed isn't 1x, every frame sets it on the clock and on each animation on the stage, so
- * a scene that comes in at 2x plays at 2x too.
+ * The speed the visitor holds the film at (1 when not held): 2x, then 3x and 4x every `STEP_MS` held. A hold starts
+ * with a mouse press or the space bar at once, a finger after `TOUCH_HOLD_MS` without moving (a tap or a scroll doesn't). A press on the chapter bar or
+ * Next is theirs. While the speed isn't 1x, every frame sets it on the clock and on each animation on
+ * the stage, so a scene that comes in while held plays fast too.
  */
 function useFastHold(
 	stage: RefObject<HTMLDivElement> | null,
 	enabled: boolean,
 	clock: RefObject<FilmClock | null>,
-): boolean {
+): number {
 	const [fast, setFast] = useState(false)
+	const [heldFor, setHeldFor] = useState(0)
+	// Each step up comes `STEP_MS` into the hold; letting go starts over at 2x.
+	useEffect(() => {
+		setHeldFor(0)
+		if (!fast) return
+		const timers = [1, 2].map((n) =>
+			setTimeout(() => setHeldFor(n * STEP_MS), n * STEP_MS),
+		)
+		return () => timers.forEach(clearTimeout)
+	}, [fast])
+	const target = fast ? holdRate(heldFor) : 1
 
 	useEffect(() => {
 		const el = stage?.current
@@ -348,7 +366,7 @@ function useFastHold(
 		const el = stage?.current
 		const time = clock.current
 		if (!el || !time) return
-		const to = fast ? FAST_RATE : 1
+		const to = target
 		const from = time.rate
 		if (from === to && !fast) return
 		const start = performance.now()
@@ -366,7 +384,7 @@ function useFastHold(
 		}
 		step()
 		return () => cancelAnimationFrame(frame)
-	}, [fast, stage, clock])
+	}, [fast, target, stage, clock])
 
-	return fast
+	return target
 }

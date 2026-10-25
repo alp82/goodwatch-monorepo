@@ -1,15 +1,23 @@
-// The film's 2x: while a visitor holds a press on the picture (or holds the space bar), the film speeds up to twice
-// its pace within a moment, and eases back when they let go (the owner, 2026-10-25). Two things follow the speed:
+// The film's fast-forward: while a visitor holds a press on the picture (or holds the space bar), the film speeds up
+// to twice its pace within a moment, to 3x after 3 s held and 4x after 6 s, and eases back to 1x when they let go
+// (the owner, 2026-10-25). Two things follow the speed:
 // - the player's own timers (when a scene hands over), through `filmClock`;
 // - every CSS animation on the stage, through its `playbackRate` (player.tsx).
 
-/** The pace while held. */
-export const FAST_RATE = 2
-/** How long the speed takes to reach 2x, and to come back to 1x, in ms. */
+/** The paces while held, one more every `STEP_MS`. */
+export const HOLD_RATES = [2, 3, 4] as const
+export const STEP_MS = 3000
+/** How long the speed takes to reach a faster pace, and to come back to 1x, in ms. */
 export const RAMP_UP_MS = 260
 export const RAMP_DOWN_MS = 200
 /** A finger has to stay this long before the film speeds up: a tap or the start of a scroll doesn't. */
 export const TOUCH_HOLD_MS = 180
+
+/** The pace after `heldMs` of holding: 2x, then 3x after 3 s, then 4x after 6 s. */
+export function holdRate(heldMs: number): number {
+	const step = Math.floor(Math.max(0, heldMs) / STEP_MS)
+	return HOLD_RATES[Math.min(step, HOLD_RATES.length - 1)]
+}
 
 /** The speed `elapsed` ms into a ramp from `from` to `to`: quick at first, settling into the new pace. */
 export function rampRate(from: number, to: number, elapsed: number): number {

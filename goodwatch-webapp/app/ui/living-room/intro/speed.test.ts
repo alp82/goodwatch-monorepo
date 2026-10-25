@@ -1,6 +1,23 @@
 import assert from "node:assert/strict"
 import { afterEach, beforeEach, describe, it, mock } from "node:test"
-import { RAMP_DOWN_MS, RAMP_UP_MS, filmClock, rampRate } from "./speed.ts"
+import {
+	RAMP_DOWN_MS,
+	RAMP_UP_MS,
+	filmClock,
+	holdRate,
+	rampRate,
+} from "./speed.ts"
+
+describe("holdRate", () => {
+	it("is 2x at first, 3x after 3 s, and 4x after 6 s and on", () => {
+		assert.equal(holdRate(0), 2)
+		assert.equal(holdRate(2999), 2)
+		assert.equal(holdRate(3000), 3)
+		assert.equal(holdRate(5999), 3)
+		assert.equal(holdRate(6000), 4)
+		assert.equal(holdRate(60_000), 4)
+	})
+})
 
 describe("rampRate", () => {
 	it("starts at the old pace and reaches the new one at the ramp's end", () => {
