@@ -6,7 +6,13 @@ import {
 } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import type { CSSProperties, ReactNode } from "react"
-import { type ProfilePart, type ProfileShell, seesPart } from "~/domain/profile"
+import {
+	AUDIENCES,
+	type Audience,
+	type ProfilePart,
+	type ProfileShell,
+	seesPart,
+} from "~/domain/profile"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 // The frame of every profile page: the picture, @handle, since, bio, links and actions (in full on Overview, compact on
 // the other tabs), the stat strip, the tabs (only the parts the viewer may see; the owner sees a lock or a members
@@ -22,8 +28,8 @@ import {
 import {
 	AMBER_BUTTON,
 	HiddenPart,
-	QUIET_BUTTON,
 	ICON_ON_PHONE,
+	QUIET_BUTTON,
 	ShareButton,
 	count,
 	posterUrl,
@@ -81,6 +87,8 @@ const TABS: {
 	tab: ProfileTab
 	label: string
 	part?: ProfilePart
+	/** A second part the tab needs; the narrower audience of the two marks it. */
+	also?: ProfilePart
 	count?: (s: ProfileShell) => number
 }[] = [
 	{ tab: "overview", label: "Overview" },
@@ -100,6 +108,7 @@ const TABS: {
 	{ tab: "shows", label: "Shows", part: "shows" },
 	{ tab: "lists", label: "Lists", part: "lists", count: (s) => s.counts.lists },
 	{ tab: "stats", label: "Stats", part: "taste" },
+	{ tab: "tropes", label: "Tropes", part: "taste", also: "scores" },
 ]
 
 /** "2019-03" → "March 2019". */
@@ -125,9 +134,17 @@ export function ProfileTabs({
 			<div
 				className={`${WRAP} flex gap-1 overflow-x-auto [scrollbar-width:none]`}
 			>
-				{TABS.filter((t) => !t.part || seesPart(shell, t.part)).map((t) => {
+				{TABS.filter(
+					(t) =>
+						(!t.part || seesPart(shell, t.part)) &&
+						(!t.also || seesPart(shell, t.also)),
+				).map((t) => {
 					const here = t.tab === active
-					const audience = t.part ? shell.visibility[t.part] : "everyone"
+					const audience = [t.part, t.also]
+						.map((p): Audience => (p ? shell.visibility[p] : "everyone"))
+						.reduce((a, b) =>
+							AUDIENCES.indexOf(b) > AUDIENCES.indexOf(a) ? b : a,
+						)
 					const n = t.count?.(shell)
 					return (
 						<Link

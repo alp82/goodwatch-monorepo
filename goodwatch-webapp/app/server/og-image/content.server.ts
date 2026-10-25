@@ -104,6 +104,8 @@ export function canonicalOgPath(path: string): string | null {
 		const handle = second?.toLowerCase() ?? ""
 		if (!/^[a-z][a-z0-9_]{2,29}$/.test(handle)) return null
 		const tab = third === "taste" ? "stats" : third
+		// The Tropes tab has no card of its own yet: its link preview is the profile's card.
+		if (tab === "tropes" && !fourth) return `/u/${handle}`
 		if (fourth)
 			return segments.length === 4 &&
 				tab === "stats" &&

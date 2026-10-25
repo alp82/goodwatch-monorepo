@@ -14,6 +14,7 @@ const TAB_NAMES: Record<ProfileTab, string> = {
 	shows: "Shows",
 	lists: "Lists",
 	stats: "Stats",
+	tropes: "Tropes",
 }
 
 export function profileMeta(
