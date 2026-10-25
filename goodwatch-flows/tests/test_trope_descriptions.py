@@ -372,6 +372,30 @@ class TropeDescriptionTests(unittest.TestCase):
         html = page('<p>' + LEAD + '</p>').replace('</article>', '</article>' + notice + '<p>Outside content must be excluded.</p><hr>')
         self.assertEqual(self.extract(html)['description'], LEAD)
 
+    def test_trusted_external_link_icons_preserve_complete_intro_paragraphs(self):
+        for scheme in ['http', 'https']:
+            icon = '<img src="' + scheme + '://static.tvtropes.org/pmwiki/pub/external_link.gif" height="12" width="12" style="border:none;">'
+            body = '<p>A character holds up a <a class="urllink" href="https://example.com/cue">cue card' + icon + '</a> for another character to read, usually while hidden.</p><p>Also included are <a class="urllink" href="https://example.com/prompter">Teleprompters' + icon + '</a>, which display the words for someone else to read.</p><hr>'
+            result = self.extract(page(body))
+            self.assertIsNone(result['error'])
+            self.assertEqual(result['description'], 'A character holds up a cue card for another character to read, usually while hidden.\n\nAlso included are Teleprompters, which display the words for someone else to read.')
+
+    def test_external_icon_lookalikes_and_real_images_still_exclude_their_paragraph(self):
+        icon = '<img src="https://static.tvtropes.org/pmwiki/pub/external_link.gif" height="12" width="12">'
+        for altered in [
+            icon.replace('static.tvtropes.org', 'static.tvtropes.org.evil.example'),
+            icon.replace('static.tvtropes.org', 'static.tvtropes.org@evil.example'),
+            icon.replace('external_link.gif', 'illustration.gif'),
+            icon.replace('height="12"', 'height="120"'),
+            icon.replace('external_link.gif', 'external_link.gif?other=1'),
+            icon.replace('https:', 'data:'),
+        ]:
+            with self.subTest(image=altered):
+                html = '<p>An image-containing paragraph must still be excluded <a class="urllink" href="https://example.com">link' + altered + '</a>.</p><p>' + LEAD + '</p><hr>'
+                self.assertEqual(self.extract(page(html))['description'], LEAD)
+        html = '<p>This standalone icon has no external-link UI context ' + icon + ' and is not exempted.</p><p>' + LEAD + '</p><hr>'
+        self.assertEqual(self.extract(page(html))['description'], LEAD)
+
     def test_rejects_missing_or_ambiguous_canonical(self):
         for html in [page(f'<p>{LEAD}</p><hr>').replace(f'<link rel="canonical" href="{URL}">', ''), page(f'<p>{LEAD}</p><hr>', canonical=''), page(f'<p>{LEAD}</p><hr>').replace('</head>', '<link rel="canonical" href="https://tvtropes.org/pmwiki/pmwiki.php/Main/Other"></head>')]:
             self.assertIsNone(self.extract(html)["description"])

@@ -93,6 +93,11 @@ def _sanitize(soup):
     for node in list(soup.find_all(True)):
         if node.name is None or node.attrs is None:
             continue
+        if node.name == "img" and _external_link_icon(node):
+            # The wiki appends this UI marker to external links. It is not an
+            # illustration, and must not cause its entire paragraph to be lost.
+            node.decompose()
+            continue
         classes = set(node.get("class", []))
         if node.name in {"h3", "h4"} and _HATNOTE.match(_text(node)):
             node.decompose()
@@ -106,6 +111,19 @@ def _sanitize(soup):
             node.decompose()
     for br in soup.find_all("br"):
         br.replace_with("\n")
+
+
+def _external_link_icon(node):
+    if (node.get("width") != "12" or node.get("height") != "12"
+            or node.parent.name != "a" or "urllink" not in node.parent.get("class", [])):
+        return False
+    try:
+        url = urlparse(node.get("src", ""))
+    except (ValueError, TypeError):
+        return False
+    return (url.scheme in {"http", "https"} and url.netloc == "static.tvtropes.org"
+            and url.path == "/pmwiki/pub/external_link.gif"
+            and not url.params and not url.query and not url.fragment)
 
 
 def _paragraph_event(text, nodes):
