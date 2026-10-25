@@ -2,6 +2,7 @@ import type {
   MemberPrefill,
   MemberProgressResponse,
 } from "../../../packages/yepwatch-contracts/continuous.ts";
+import { fillWebFetchGaps } from "../web-fetch-gaps.server.ts";
 
 export const MEMBER_RESOURCE_PATH = "/api/yepwatch/account";
 export interface MemberResourceReads {
@@ -12,6 +13,9 @@ export interface MemberResourceReads {
 /** GoodWatch owns this endpoint. The live grant is checked on EVERY read; no caller-selected account. */
 export function createMemberResource(reads: MemberResourceReads) {
   return async (request: Request) => {
+    // remix-serve installs its Response after importing the build. This can be
+    // the first auth-related request on this instance, before auth fills the gaps.
+    fillWebFetchGaps();
     const headers = {
       "cache-control": "private, no-store",
       "referrer-policy": "no-referrer",

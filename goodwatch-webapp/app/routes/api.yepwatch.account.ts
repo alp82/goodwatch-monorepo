@@ -1,4 +1,5 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
+import { fillWebFetchGaps } from "../server/web-fetch-gaps.server";
 import { createMemberResource } from "../server/yepwatch/member-resource.server";
 import {
   goodwatchMemberPrefill,
@@ -11,6 +12,7 @@ import {
 } from "../server/auth/yepwatch-oauth-policy";
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  fillWebFetchGaps();
   const config = yepwatchOAuthEnvironment(process.env);
   if (!config)
     return Response.json(
@@ -31,6 +33,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   })(request);
 }
 export function action(_: ActionFunctionArgs) {
+  fillWebFetchGaps();
   return Response.json(
     { error: "method_not_allowed" },
     { status: 405, headers: { "cache-control": "private, no-store" } }
