@@ -76,6 +76,13 @@ class TropeCatalogTests(unittest.TestCase):
         self.assertEqual(merged_record(old, metadata), old)
         self.assertEqual(merged_record(old, metadata, replace_descriptions=True), old)
 
+    def test_literal_source_placeholders_are_preserved_but_html_is_rejected(self):
+        text = 'The character says "Here is <Proper Noun>" in the original source.'
+        self.assertEqual(record(text=text)["description"], text)
+        for text in ('<SCRIPT>alert(1)</SCRIPT>', '<img src=x>', '<span>text</span>', '<br/>'):
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                record(text=text)
+
     def test_descriptions_fill_gaps_and_replacements_require_an_explicit_option(self):
         old = normalize_record({"name": "Red Herring"})
         self.assertEqual(merged_record(old, record()), record())

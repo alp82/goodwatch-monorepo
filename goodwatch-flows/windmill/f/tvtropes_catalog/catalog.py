@@ -12,6 +12,16 @@ TABLE = "trope_catalog"
 FIELDS = ("name", "url", "description", "description_hash", "source", "source_hash", "fetched_at")
 SOURCE = "tvtropes"
 _HASH = re.compile(r"^[0-9a-f]{64}$")
+_HTML_TAG = re.compile(
+    r"</?(?:a|abbr|address|area|article|aside|audio|b|base|bdi|bdo|blockquote|body|br|button|"
+    r"canvas|caption|cite|code|col|colgroup|data|datalist|dd|del|details|dfn|dialog|div|dl|dt|"
+    r"em|embed|fieldset|figcaption|figure|font|footer|form|h[1-6]|head|header|hgroup|hr|html|i|"
+    r"iframe|img|input|ins|kbd|label|legend|li|link|main|map|mark|math|menu|meta|meter|nav|"
+    r"noscript|object|ol|optgroup|option|output|p|picture|pre|progress|q|rp|rt|ruby|s|samp|"
+    r"script|search|section|select|slot|small|source|span|strike|strong|style|sub|summary|sup|"
+    r"svg|table|tbody|td|template|textarea|tfoot|th|thead|time|title|tr|track|tt|u|ul|var|"
+    r"video|wbr)(?=[\s/>])[^>]*>", re.IGNORECASE,
+)
 
 
 def canonical_url(value):
@@ -54,7 +64,9 @@ def normalize_record(row, *, evidence=None):
     if text is not None:
         if not isinstance(text, str) or not text.strip() or len(text) > 100_000:
             raise ValueError(f"{name}: description must be nonempty plain text")
-        if re.search(r"</?[A-Za-z][^>]*>", text):
+        # Source prose can contain literal placeholders such as <Proper Noun>.
+        # Reject actual HTML elements without misclassifying those words as markup.
+        if _HTML_TAG.search(text):
             raise ValueError(f"{name}: description must be plain text, not HTML")
         if not url:
             raise ValueError(f"{name}: a description requires its canonical source URL")
