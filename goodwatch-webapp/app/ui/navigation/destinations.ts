@@ -40,6 +40,8 @@ export interface Destination {
 	label: string
 	/** The shorter name under the hub key. */
 	short: string
+	/** The name in the Browse button and the dock while on the page, when `label` is too long for one line there. */
+	here?: string
 	href: string
 	icon: ComponentType<SVGProps<SVGSVGElement>>
 }
@@ -140,6 +142,8 @@ export function getDestinations(): Record<DestinationKey, Destination> {
 			key: "new",
 			label: "New on your services",
 			short: "New",
+			// As the Browse menu's Explore key names it.
+			here: "New arrivals",
 			href: "/new",
 			icon: CalendarDaysIcon,
 		},

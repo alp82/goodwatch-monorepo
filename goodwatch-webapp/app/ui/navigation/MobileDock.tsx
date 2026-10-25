@@ -45,7 +45,7 @@ function DockButton({ docked, leftFree }: { docked: boolean; leftFree: boolean }
 					<Icon className="h-5 w-5" />
 				</span>
 				<b className="truncate text-[14px] text-gray-100">
-					{page?.label ?? "Browse"}
+					{page ? (page.here ?? page.label) : "Browse"}
 				</b>
 			</span>
 			<span

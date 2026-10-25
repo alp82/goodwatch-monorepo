@@ -60,9 +60,11 @@ function Waited({ data }: { data: NewPageData }) {
 				<Link
 					to={first.path}
 					prefetch="intent"
+					// The heading already names the title; a screen reader still hears which one.
+					aria-label={`Show details of ${first.title}`}
 					className="mt-4 inline-flex h-11 items-center gap-1 rounded-full bg-linear-to-b from-amber-400 to-amber-600 px-5 text-sm font-black text-gray-950 hover:brightness-110"
 				>
-					{first.title}
+					Show details
 					<ChevronRightIcon className="h-4 w-4" aria-hidden />
 				</Link>
 			</div>

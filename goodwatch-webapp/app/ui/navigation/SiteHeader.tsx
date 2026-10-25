@@ -26,14 +26,16 @@ function BrowseButton() {
 			aria-expanded={open}
 			aria-controls={open ? "site-hub" : undefined}
 			aria-haspopup="dialog"
-			className={`relative flex h-10 items-center gap-2 rounded-xl px-3.5 font-bold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] ${
+			className={`relative flex h-10 items-center gap-2 whitespace-nowrap rounded-xl px-3.5 font-bold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] ${
 				open
 					? "bg-amber-500/20 text-amber-200"
 					: "bg-white/[0.07] text-gray-100 hover:bg-white/[0.1]"
 			}`}
 		>
 			<Squares2X2Icon className="h-[18px] w-[18px]" aria-hidden />
-			{here && here !== "home" ? destinations[here].label : "Browse"}
+			{here && here !== "home"
+				? (destinations[here].here ?? destinations[here].label)
+				: "Browse"}
 			<ChevronDownIcon className="h-4 w-4" aria-hidden />
 			<NewEpisodesMark words={fresh} className="absolute -top-1.5 -right-1.5" />
 		</button>
