@@ -11,7 +11,12 @@ const seg = (on: boolean) =>
 
 export function Switcher() {
 	const [params, setParams] = useSearchParams()
+	// Phones start folded to a small pill, so the switcher doesn't eat the screen.
 	const [folded, setFolded] = useState(false)
+	useEffect(() => {
+		if (window.matchMedia("(max-width: 767px)").matches) setFolded(true)
+	}, [])
+	const phone = (params.get("m") === "2" ? "2" : "1") as "1" | "2"
 	const variant = (params.get("variant") ?? "C") as Variant
 	const screen = (params.get("screen") ?? "title") as Screen
 	const viewer = (params.get("as") ?? "member") as Viewer
@@ -33,6 +38,20 @@ export function Switcher() {
 		return () => window.removeEventListener("keydown", onKey)
 	})
 	if (process.env.NODE_ENV === "production") return null
+	if (folded)
+		return (
+			<button
+				type="button"
+				data-feedback-private
+				data-prototype-switcher
+				onClick={() => setFolded(false)}
+				aria-label="Show prototype options"
+				className="fixed top-[4.5rem] left-2 z-[1000] inline-flex cursor-pointer items-center gap-1 rounded-full bg-white py-1 pr-1.5 pl-2.5 text-xs font-semibold text-black shadow-2xl ring-2 ring-fuchsia-500 lg:top-auto lg:bottom-4 lg:left-1/2 lg:-translate-x-1/2"
+			>
+				{variant} · m{phone}
+				<ChevronDownIcon className="size-4" />
+			</button>
+		)
 	return (
 		<div
 			data-feedback-private
@@ -50,7 +69,7 @@ export function Switcher() {
 					→
 				</button>
 				<button type="button" onClick={() => setFolded((f) => !f)} className="cursor-pointer rounded-full p-1 hover:bg-neutral-200" aria-label={folded ? "Show options" : "Fold"}>
-					{folded ? <ChevronUpIcon className="size-4" /> : <ChevronDownIcon className="size-4" />}
+					<ChevronUpIcon className="size-4" />
 				</button>
 			</div>
 			{!folded && (
@@ -59,6 +78,13 @@ export function Switcher() {
 						{(Object.keys(SCREENS) as Screen[]).map((s) => (
 							<button key={s} type="button" onClick={() => put("screen", s)} className={seg(screen === s)}>
 								{SCREENS[s]}
+							</button>
+						))}
+					</div>
+					<div className="flex rounded-full bg-neutral-100" role="group" aria-label="Phone fix mode">
+						{(["1", "2"] as const).map((m) => (
+							<button key={m} type="button" onClick={() => put("m", m)} className={seg(phone === m)}>
+								{m === "1" ? "Phone: Split view" : "Phone: Quoted"}
 							</button>
 						))}
 					</div>

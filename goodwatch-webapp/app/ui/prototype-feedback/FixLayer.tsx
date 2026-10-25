@@ -7,14 +7,15 @@
 // - The scrim and reveal() live in fix-scrim.tsx (no fixtures), shared with the root layout's dock.
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
-import person from "~/ui/prototype-feedback/fixture-person.json"
-import { CAST, SCORE_SOURCES } from "~/ui/prototype-feedback/model"
 import {
 	DimHeader,
 	Scrim,
 	first,
 	reveal,
+	useFadePresence,
 } from "~/ui/prototype-feedback/fix-scrim"
+import person from "~/ui/prototype-feedback/fixture-person.json"
+import { CAST, SCORE_SOURCES } from "~/ui/prototype-feedback/model"
 import { useFeedback } from "~/ui/prototype-feedback/store"
 
 const SOURCE_ALT: Record<string, string> = {
@@ -82,7 +83,14 @@ export function revealArea(area: string) {
 	reveal(first(`[data-fix-overlay="${area}"]`))
 }
 
-function Spotlight({ spot }: { spot: string | null }) {
+function Spotlight({ spot: next }: { spot: string | null }) {
+	// The last spot stays for the fade out, so the ring never just vanishes.
+	const { mounted, shown } = useFadePresence(Boolean(next), 160)
+	const [kept, setKept] = useState(next)
+	useEffect(() => {
+		if (next) setKept(next)
+	}, [next])
+	const spot = mounted ? (next ?? kept) : null
 	const [box, setBox] = useState<{
 		x: number
 		y: number
@@ -120,20 +128,30 @@ function Spotlight({ spot }: { spot: string | null }) {
 			cancelAnimationFrame(frame)
 		}
 	}, [spot])
-	if (!box) return null
+	if (!box || !spot) return null
+	// Clipped to the page's width: a spot on a card scrolled out of a sideways row must not widen the page.
 	return createPortal(
 		<div
-			data-fix-spot={spot}
-			data-feedback-private
 			aria-hidden
-			className="pointer-events-none absolute top-0 left-0 z-[1000] rounded-xl ring-2 ring-amber-300 shadow-[0_0_0_4px_rgba(251,191,36,.25),0_0_24px_4px_rgba(251,191,36,.35)] motion-safe:animate-[fixspot_.2s_ease-out]"
+			data-feedback-private
+			className="pointer-events-none absolute top-0 left-0 z-[1000] overflow-clip"
 			style={{
-				transform: `translate(${box.x - 4}px, ${box.y - 4}px)`,
-				width: box.w + 8,
-				height: box.h + 8,
+				width: document.documentElement.clientWidth,
+				height: document.documentElement.scrollHeight,
 			}}
 		>
-			<style>{"@keyframes fixspot{from{opacity:0}}"}</style>
+			<div
+				data-fix-spot={spot}
+				data-feedback-private
+				aria-hidden
+				className="pointer-events-none absolute top-0 left-0 z-[1000] rounded-xl ring-2 ring-amber-300 shadow-[0_0_0_4px_rgba(251,191,36,.25),0_0_24px_4px_rgba(251,191,36,.35)] transition-opacity duration-150 ease-out motion-reduce:transition-none"
+				style={{
+					transform: `translate(${box.x - 4}px, ${box.y - 4}px)`,
+					width: box.w + 8,
+					height: box.h + 8,
+					opacity: shown ? 1 : 0,
+				}}
+			/>
 		</div>,
 		document.body,
 	)
@@ -141,8 +159,9 @@ function Spotlight({ spot }: { spot: string | null }) {
 
 /** Mounted by the prototype route: the scrim while fix mode is on, and the chip spotlight. */
 export function FixLayer() {
-	const { fixMode, variant, spot, pinned } = useFeedback()
-	const on = variant === "C" && fixMode
+	const { fixMode, fixDone, variant, spot, pinned } = useFeedback()
+	// A sent report ends the page layer too; the panel keeps its thanks.
+	const on = variant === "C" && fixMode && !fixDone
 	// A hovered chip's part comes into view at once, as it lights up (reveal() keeps rapid sweeps from fighting).
 	useEffect(() => {
 		if (on && spot) reveal(findSpot(spot))
@@ -151,7 +170,7 @@ export function FixLayer() {
 		<>
 			{/* The fixed site header (above the scrim) and the page's sticky bar dim themselves, so a cut-out scrolled under
 			    them never lights them up. */}
-			{on && <DimHeader />}
+			<DimHeader on={on} />
 			<Scrim on={on} />
 			<Spotlight spot={on ? (spot ?? pinned) : null} />
 		</>

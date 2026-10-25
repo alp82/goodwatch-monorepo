@@ -16,6 +16,7 @@ import {
 	GuestEmail,
 	INPUT,
 	thanksLine,
+	useFixFlow,
 } from "~/ui/prototype-feedback/FeedbackDock"
 import person from "~/ui/prototype-feedback/fixture-person.json"
 import {
@@ -648,6 +649,8 @@ export function ReportFlow({
 	areas?: Area[]
 }) {
 	const { viewer, submit, setPinned } = useFeedback()
+	// Inside the Feedback panel: sending ends fix mode's page layer, Done closes the panel.
+	const flow = useFixFlow()
 	const [step, setStep] = useState(0)
 	const [sent, setSent] = useState<Correction | null>(null)
 	const [d, setD] = useState<Draft>(() => newDraft(area ?? "watch"))
@@ -663,16 +666,25 @@ export function ReportFlow({
 		setD(newDraft(area ?? "watch"))
 		setStep(0)
 		setSent(null)
+		flow?.again()
 		if (layout === "form") onPickArea?.(null)
 	}
 	if (sent)
 		return (
-			<Result c={sent} onClose={onClose} onAnother={restart} email={email} />
+			<Result
+				c={sent}
+				onClose={flow?.done ?? onClose}
+				onAnother={restart}
+				email={email}
+			/>
 		)
 
 	const problems = problemsOf(d.area)
 	const pick = (problem: Problem) => set({ problem })
-	const send = () => setSent(submit(d))
+	const send = () => {
+		setSent(submit(d))
+		flow?.sent()
+	}
 	const outcome = outcomeOfDraft(d, viewer)
 
 	if (layout === "form" && area === null)

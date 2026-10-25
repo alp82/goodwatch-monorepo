@@ -20,6 +20,7 @@ import {
 	GuestEmail,
 	INPUT,
 	thanksLine,
+	useFixFlow,
 } from "~/ui/prototype-feedback/FeedbackDock"
 import {
 	type PageArea,
@@ -33,6 +34,7 @@ import {
 	Scrim,
 	reveal,
 	shown,
+	useFadePresence,
 } from "~/ui/prototype-feedback/fix-scrim"
 import { useUser } from "~/utils/auth"
 
@@ -117,19 +119,23 @@ function Outlines({
 	lit,
 	setHot,
 	pick,
+	shown: visible,
 }: {
 	areas: PageArea[]
 	boxes: Box[]
 	lit: string | null
 	setHot: (id: string | null) => void
 	pick: (id: string) => void
+	/** False while fading out (and for the frame before fading in). */
+	shown: boolean
 }) {
 	// A box clipped to the page's width, so an outline round a full-width part never makes the page scroll sideways.
 	return createPortal(
 		<div
 			data-feedback-private
 			data-global-fix
-			className="pointer-events-none absolute top-0 left-0 z-[1000] overflow-clip"
+			{...(!visible && { inert: "" })}
+			className={`pointer-events-none absolute top-0 left-0 z-[1000] overflow-clip transition-opacity duration-200 ease-out motion-reduce:transition-none ${visible ? "opacity-100" : "opacity-0"}`}
 			style={{
 				width: document.documentElement.clientWidth,
 				height: document.documentElement.scrollHeight,
@@ -152,7 +158,7 @@ function Outlines({
 						onFocus={() => setHot(b.id)}
 						onBlur={() => setHot(null)}
 						onClick={() => pick(b.id)}
-						className={`pointer-events-auto absolute top-0 left-0 cursor-pointer rounded-2xl border-2 border-dashed transition-[background-color,border-color] duration-100 ${on ? "border-solid border-amber-400 bg-amber-400/[0.07]" : flagOnly ? "border-white/40" : "border-amber-500/70"}`}
+						className={`absolute top-0 left-0 cursor-pointer rounded-2xl border-2 border-dashed transition-[opacity,background-color,border-color] duration-100 ${visible ? "pointer-events-auto" : ""} ${on ? "border-solid border-amber-400 bg-amber-400/[0.07]" : flagOnly ? "border-white/40" : "border-amber-500/70"}`}
 						style={{
 							transform: `translate(${b.x - 4}px, ${b.y - 4}px)`,
 							width: b.w + 8,
@@ -191,6 +197,8 @@ function AreaFlow({
 	const [note, setNote] = useState("")
 	const [email, setEmail] = useState("")
 	const [sent, setSent] = useState(false)
+	// Inside the Feedback panel: sending ends fix mode's page layer, Done closes the panel.
+	const flow = useFixFlow()
 	const chips = chipsOf(area)
 	const picked = chip === null ? null : chips[chip]
 	const other = picked?.label === SOMETHING_ELSE
@@ -222,6 +230,7 @@ function AreaFlow({
 							setSent(false)
 							setChip(null)
 							setNote("")
+							flow?.again()
 						}}
 						className="min-h-10 cursor-pointer rounded-xl px-4 font-semibold text-gray-300 hover:bg-white/10"
 					>
@@ -229,7 +238,7 @@ function AreaFlow({
 					</button>
 					<button
 						type="button"
-						onClick={onClose}
+						onClick={flow?.done ?? onClose}
 						className="ml-auto min-h-10 cursor-pointer rounded-xl bg-white px-5 font-semibold text-black hover:bg-gray-200"
 					>
 						Done
@@ -302,7 +311,10 @@ function AreaFlow({
 				<PrimaryButton
 					type="button"
 					disabled={!picked || (other && !note.trim())}
-					onClick={() => setSent(true)}
+					onClick={() => {
+						setSent(true)
+						flow?.sent()
+					}}
 				>
 					Send
 				</PrimaryButton>
@@ -350,13 +362,18 @@ export function RootFeedbackDock({
 	}, [check, pathname])
 
 	const [on, setOn] = useState(false)
+	const [done, setDone] = useState(false)
 	const [hot, setHot] = useState<string | null>(null)
 	const [picked, setPicked] = useState<string | null>(null)
+	// The page layer: outlines, badges and scrim. A sent report ends it while the panel keeps its thanks; every way out
+	// of fix mode fades it, then takes it out of the page.
+	const layer = on && !done
+	const fade = useFadePresence(layer)
 	const live = useMemo(
 		() => areas.filter((a) => found.includes(a.id)),
 		[areas, found],
 	)
-	const boxes = useBoxes(live, on)
+	const boxes = useBoxes(live, fade.mounted)
 	const pickedArea = live.find((a) => a.id === picked) ?? null
 	const revealRef = useRef((id: string) => {
 		const a = live.find((x) => x.id === id)
@@ -368,6 +385,7 @@ export function RootFeedbackDock({
 	}
 	useEffect(() => {
 		setOn(false)
+		setDone(false)
 		setPicked(null)
 		setHot(null)
 	}, [pathname])
@@ -378,11 +396,22 @@ export function RootFeedbackDock({
 				on,
 				setOn: (v) => {
 					setOn(v)
-					if (!v) setPicked(null)
+					setDone(false)
+					if (!v) {
+						setPicked(null)
+						setHot(null)
+					}
+				},
+				done,
+				setDone,
+				element: (id) => {
+					const a = live.find((x) => x.id === id)
+					return a ? findArea(a) : null
 				},
 				trusted: viewer === "trusted",
 				picked: pickedArea
 					? {
+							id: pickedArea.id,
 							title: `${kindOf(pickedArea) === "flag" ? "Flag" : "Fix"} ${lc(pickedArea.name)}`,
 							flow: (
 								<AreaFlow
@@ -402,22 +431,27 @@ export function RootFeedbackDock({
 				})),
 				hot,
 				setHot,
-				pick: setPicked,
+				pick: (id) => {
+					setDone(false)
+					setPicked(id)
+				},
 				reveal: (id) => revealRef.current(id),
 			}
 		: undefined
 	return (
 		<>
 			<FeedbackDock key={pathname} fix={fix} guest={viewer === "guest"} />
-			{on && <DimHeader />}
-			<Scrim on={on} />
-			{on && (
+			<DimHeader on={layer} />
+			<Scrim on={layer} />
+			{fade.mounted && (
 				<Outlines
 					areas={live}
 					boxes={boxes}
 					lit={picked ?? hot}
 					setHot={setHot}
+					shown={fade.shown}
 					pick={(id) => {
+						setDone(false)
 						setPicked(id)
 					}}
 				/>

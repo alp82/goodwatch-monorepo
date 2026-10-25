@@ -5,6 +5,7 @@ import {
 	type ReactNode,
 	createContext,
 	useContext,
+	useEffect,
 	useMemo,
 	useState,
 } from "react"
@@ -157,6 +158,9 @@ type Store = {
 	/** Fix mode (variant C). */
 	fixMode: boolean
 	setFixMode: (on: boolean) => void
+	/** A report was sent: the page layer goes while the panel shows the thanks. */
+	fixDone: boolean
+	setFixDone: (done: boolean) => void
 	/** The block under the pointer or focus, on the page or in the panel's list; both sides light it up. */
 	hot: Area | null
 	setHot: (a: Area | null) => void
@@ -190,7 +194,27 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
 	) as Viewer
 	const [corrections, setCorrections] = useState<Correction[]>([])
 	const [open, setOpen] = useState<Area | "pick" | null>(null)
-	const [fixMode, setFixMode] = useState(false)
+	const [fixMode, setFixModeRaw] = useState(false)
+	const [fixDone, setFixDone] = useState(false)
+	// Leaving fix mode drops everything it lit, so nothing is lit when it comes back.
+	const setFixMode = (on: boolean) => {
+		setFixModeRaw(on)
+		setFixDone(false)
+		if (!on) {
+			setHot(null)
+			setSpot(null)
+			setPinned(null)
+		}
+	}
+	// Another screen is another page: fix mode ends there.
+	useEffect(() => {
+		setFixModeRaw(false)
+		setFixDone(false)
+		setOpen(null)
+		setHot(null)
+		setSpot(null)
+		setPinned(null)
+	}, [screen])
 	const [hot, setHot] = useState<Area | null>(null)
 	const [spot, setSpot] = useState<string | null>(null)
 	const [pinned, setPinned] = useState<string | null>(null)
@@ -205,6 +229,8 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
 		setOpen,
 		fixMode,
 		setFixMode,
+		fixDone,
+		setFixDone,
 		hot,
 		setHot,
 		spot,

@@ -26,10 +26,37 @@ export const reduced = () =>
 	window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
 /** The part of the window the page shows: below the fixed header and sticky bars, clear of a phone's feedback drawer. */
-function clearArea() {
+export function clearArea() {
 	const header =
 		document.querySelector("[data-site-header]")?.getBoundingClientRect()
 			.bottom ?? 0
+	// Phones: the bar or sheet at the bottom (with its handle) ends the clear part; while answering, the page's sticky
+	// bar steps aside, so the part can sit right under the header.
+	const sheet = document.querySelector<HTMLElement>("[data-fix-sheet]")
+	if (sheet) {
+		const answering =
+			document.documentElement.getAttribute("data-fix-phone") === "answer"
+		const stickyBottom = answering
+			? header
+			: Array.from(
+					document.querySelectorAll<HTMLElement>(
+						"[data-feedback-page] .sticky",
+					),
+				).reduce((m, el) => {
+					const r = el.getBoundingClientRect()
+					return r.top <= header + 1 && r.bottom > m ? r.bottom : m
+				}, header)
+		// Where the sheet rests (handle included), not where a running slide has it now.
+		const panel = sheet.querySelector<HTMLElement>("[data-fix-panel]")
+		const row = Number(sheet.dataset.fixRow) || 56
+		const handle = Number(sheet.dataset.fixHandleH) || 0
+		const rest = panel
+			? window.innerHeight -
+				(sheet.hasAttribute("data-mini") ? row : panel.offsetHeight) -
+				handle
+			: sheet.getBoundingClientRect().top
+		return { top: stickyBottom + 12, bottom: rest - 12 }
+	}
 	const sticky = Array.from(
 		document.querySelectorAll<HTMLElement>("[data-feedback-page] .sticky"),
 	).reduce((m, el) => {
@@ -80,6 +107,8 @@ export function reveal(el: HTMLElement | null) {
 		}
 	}
 	const { top, bottom } = clearArea()
+	// A phone sheet can leave next to no room above it; then the sheet shows the part, not the page.
+	if (bottom - top < 64) return
 	const r = el.getBoundingClientRect()
 	const now = window.scrollY
 	const end = aim ?? now
@@ -159,20 +188,7 @@ function useHoles(on: boolean) {
 
 export function Scrim({ on }: { on: boolean }) {
 	// Stays mounted for the fade out.
-	const [mounted, setMounted] = useState(on)
-	const [visible, setVisible] = useState(false)
-	useEffect(() => {
-		if (on) {
-			setMounted(true)
-			const f = requestAnimationFrame(() =>
-				requestAnimationFrame(() => setVisible(true)),
-			)
-			return () => cancelAnimationFrame(f)
-		}
-		setVisible(false)
-		const t = window.setTimeout(() => setMounted(false), reduced() ? 0 : 240)
-		return () => window.clearTimeout(t)
-	}, [on])
+	const { mounted, shown: visible } = useFadePresence(on, 240)
 	const { w, h, holes } = useHoles(mounted)
 	if (!mounted || !w) return null
 	return createPortal(
@@ -221,11 +237,39 @@ export function Scrim({ on }: { on: boolean }) {
 	)
 }
 
-/** While fix mode is on, the fixed site header dims itself, so a cut-out scrolled under it never lights it up. */
-export const DimHeader = () => (
-	<style>
-		{
-			"[data-site-header],[data-feedback-page] .sticky{filter:brightness(.28);transition:filter .2s ease-out}"
+/**
+ * Mounted while `on`, and for a short fade after: `shown` turns true a frame after mounting (so the fade in runs) and
+ * false at once when `on` ends; `mounted` follows `ms` later. Everything fix mode puts on the page uses it, so nothing
+ * lingers and nothing pops.
+ */
+export function useFadePresence(on: boolean, ms = 200) {
+	const [mounted, setMounted] = useState(on)
+	const [shown, setShown] = useState(false)
+	useEffect(() => {
+		if (on) {
+			setMounted(true)
+			const f = requestAnimationFrame(() =>
+				requestAnimationFrame(() => setShown(true)),
+			)
+			return () => cancelAnimationFrame(f)
 		}
-	</style>
-)
+		setShown(false)
+		const t = window.setTimeout(() => setMounted(false), reduced() ? 0 : ms)
+		return () => window.clearTimeout(t)
+	}, [on, ms])
+	return { mounted, shown }
+}
+
+/**
+ * While fix mode is on, the fixed site header and the page's sticky bar dim themselves (opacity), so a cut-out
+ * scrolled under them never lights them up. They brighten again with a short fade before the rule goes.
+ */
+export function DimHeader({ on }: { on: boolean }) {
+	const { mounted, shown } = useFadePresence(on, 220)
+	if (!mounted) return null
+	return (
+		<style data-fix-dim>
+			{`[data-site-header],[data-feedback-page] .sticky{opacity:${shown ? 0.28 : 1};transition:opacity .2s ease-out}`}
+		</style>
+	)
+}

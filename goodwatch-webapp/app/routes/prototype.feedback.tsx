@@ -78,6 +78,8 @@ function ProtoDock() {
 		viewer,
 		fixMode,
 		setFixMode,
+		fixDone,
+		setFixDone,
 		open,
 		setOpen,
 		hot,
@@ -94,9 +96,16 @@ function ProtoDock() {
 						setFixMode(on)
 						if (!on) setOpen(null)
 					},
+					done: fixDone,
+					setDone: setFixDone,
+					element: (id) =>
+						document.querySelector<HTMLElement>(
+							`[data-feedback-page] [data-block="${CSS.escape(id)}"]`,
+						),
 					trusted: viewer === "trusted",
 					picked: area
 						? {
+								id: area,
 								title: `${AREAS[area].problems.every((p) => p.flag) ? "Flag" : "Fix"} ${AREAS[area].what}`,
 								flow: (
 									<ReportFlow
@@ -116,7 +125,10 @@ function ProtoDock() {
 					})),
 					hot,
 					setHot: (id) => setHot(id as Area | null),
-					pick: (id) => setOpen(id as Area),
+					pick: (id) => {
+						setFixDone(false)
+						setOpen(id as Area)
+					},
 					reveal: revealArea,
 				}
 	return (

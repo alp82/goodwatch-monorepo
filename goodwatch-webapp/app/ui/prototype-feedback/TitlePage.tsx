@@ -38,6 +38,7 @@ import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import FeedbackHeader from "~/ui/prototype-feedback/Header"
 import { ReportFlow } from "~/ui/prototype-feedback/ReportFlow"
 import { Sheet } from "~/ui/prototype-feedback/Sheet"
+import { useFadePresence } from "~/ui/prototype-feedback/fix-scrim"
 import fixture from "~/ui/prototype-feedback/fixture-title.json"
 import {
 	AREAS,
@@ -134,7 +135,12 @@ export function Block({
 	metaClass?: string
 	overlayClass?: string
 }) {
-	const { variant, viewer, fixMode, setOpen, open, hot, setHot } = useFeedback()
+	const { variant, viewer, fixMode, fixDone, setOpen, open, hot, setHot } =
+		useFeedback()
+	// The outline is on the page only while fix mode is (a short fade either way); a sent report ends it too.
+	const { mounted, shown } = useFadePresence(
+		variant === "C" && fixMode && !fixDone,
+	)
 	const lit = open === area || hot === area
 	const flagOnly = AREAS[area].problems.every((p) => p.flag)
 	const meta = (
@@ -151,11 +157,11 @@ export function Block({
 	return (
 		<div className="relative" data-block={area}>
 			{children}
-			{variant === "C" && (
+			{mounted && (
 				<button
 					type="button"
-					tabIndex={fixMode ? 0 : -1}
-					aria-hidden={!fixMode}
+					tabIndex={shown ? 0 : -1}
+					aria-hidden={!shown}
 					onClick={() => setOpen(area)}
 					onPointerEnter={() => setHot(area)}
 					onPointerLeave={() => setHot(null)}
@@ -163,8 +169,8 @@ export function Block({
 					onBlur={() => setHot(null)}
 					aria-label={`${flagOnly ? "Flag" : "Fix"} ${AREAS[area].what}`}
 					data-fix-overlay={area}
-					data-lit={(fixMode && lit) || undefined}
-					className={`absolute ${overlayClass} z-20 cursor-pointer rounded-2xl border-2 border-dashed transition-[opacity,background-color,border-color] duration-100 ${fixMode ? "opacity-100" : "pointer-events-none opacity-0"} ${lit ? "border-solid border-amber-400 bg-amber-400/[0.07]" : flagOnly ? "border-white/40" : "border-amber-500/70"}`}
+					data-lit={(shown && lit) || undefined}
+					className={`absolute ${overlayClass} z-20 cursor-pointer rounded-2xl border-2 border-dashed transition-[opacity,background-color,border-color] duration-200 ease-out ${shown ? "opacity-100" : "pointer-events-none opacity-0"} ${lit ? "border-solid border-amber-400 bg-amber-400/[0.07]" : flagOnly ? "border-white/40" : "border-amber-500/70"}`}
 				>
 					<span
 						data-fix-badge

@@ -1,8 +1,9 @@
 // PROTOTYPE - throwaway. The one feedback entry point (variant C, round 5): a quiet "Feedback" tab on the right edge of
 // every page, in the upper middle. The tab is a drawer's handle: tapped, it stays where it is, pressed, and the panel
 // slides out of it to the left, joined to the tab's left edge and level with its top (moved up only as far as it must to
-// fit the window); tapping the tab again, Escape or the panel's close button slides it back in. Phones work the same,
-// with a drawer nearly the window's width. The panel offers two paths:
+// fit the window); tapping the tab again, Escape or the panel's close button slides it back in (and ends fix mode).
+// Phones open the same drawer from the tab; once fix mode starts, it goes back in and fix mode runs from the bottom edge
+// (PhoneFix.tsx, ?m=1|2). The panel offers two paths:
 // - "Fix something on this page" on pages with correctable data: the page's fix mode dims everything but the choosable
 //   blocks, marks them with a dashed outline and a Fix/Flag badge, and the panel lists them too; hovering either side
 //   lights up the other. A picked block's questions show in the panel.
@@ -22,15 +23,27 @@ import {
 	PencilSquareIcon,
 } from "@heroicons/react/20/solid"
 import { XMarkIcon } from "@heroicons/react/24/solid"
+import { useLocation } from "@remix-run/react"
 import {
 	type ReactNode,
+	createContext,
 	forwardRef,
+	useContext,
 	useEffect,
 	useLayoutEffect,
 	useRef,
 	useState,
 } from "react"
 import { PrimaryButton } from "~/ui/auth/kit"
+import { PhoneFix, type PhoneVariant } from "~/ui/prototype-feedback/PhoneFix"
+
+/**
+ * What a picked part's questions tell the panel: a report went out (fix mode's page layer goes, the thanks stay), the
+ * person reports something else (it comes back), or Done (the panel closes). Null outside the panel.
+ */
+type FixFlow = { sent: () => void; again: () => void; done: () => void }
+const FixFlowContext = createContext<FixFlow | null>(null)
+export const useFixFlow = () => useContext(FixFlowContext)
 
 export const INPUT =
 	"min-h-11 w-full rounded-lg bg-gray-900 px-3 text-gray-100 ring-1 ring-white/15 placeholder:text-gray-600 focus:ring-2 focus:ring-amber-400 focus:outline-none"
@@ -359,9 +372,16 @@ function useHideOnScrollDown(active: boolean) {
  */
 const Tab = forwardRef<
 	HTMLButtonElement,
-	{ open: boolean; out: boolean; onToggle: () => void; wide: boolean }
->(function Tab({ open, out, onToggle, wide }, ref) {
-	const hidden = useHideOnScrollDown(!wide && !out)
+	{
+		open: boolean
+		out: boolean
+		onToggle: () => void
+		wide: boolean
+		/** Phones in fix mode: the tab rests on the bottom sheet as its handle instead. */
+		away?: boolean
+	}
+>(function Tab({ open, out, onToggle, wide, away = false }, ref) {
+	const hidden = useHideOnScrollDown(!wide && !out && !away)
 	return (
 		<button
 			ref={ref}
@@ -372,11 +392,12 @@ const Tab = forwardRef<
 			data-feedback-private
 			data-feedback-tab
 			data-out={out || undefined}
+			{...(away && { inert: "", "aria-hidden": true })}
 			className={`group fixed right-0 flex cursor-pointer flex-col items-center gap-2.5 bg-gray-950 max-md:top-[42%] max-md:h-16 max-md:w-10 max-md:justify-center md:top-[30%] md:px-2.5 md:pt-3.5 md:pb-4 ${
 				out
 					? "z-[1002] rounded-l-none text-white ring-1 ring-amber-500/30"
-					: "z-[45] rounded-l-xl text-gray-200 shadow-[0_8px_30px_-6px_rgba(0,0,0,.7)] ring-1 ring-white/15 transition-transform ease-out hover:bg-gray-900 hover:text-white"
-			} ${hidden ? "translate-x-full" : ""}`}
+					: "z-[45] rounded-l-xl text-gray-200 shadow-[0_8px_30px_-6px_rgba(0,0,0,.7)] ring-1 ring-white/15 transition-[transform,opacity] ease-out hover:bg-gray-900 hover:text-white"
+			} ${hidden || away ? "translate-x-full" : ""} ${away ? "opacity-0" : ""}`}
 		>
 			{/* Covers the drawer's right edge where it meets the tab, so the two join. */}
 			{out && (
@@ -410,7 +431,12 @@ export type FixPath = {
 	/** Trusted members' fixes go live at once; everyone else's are checked first. */
 	trusted: boolean
 	/** The picked block's title ("Fix where to watch") and its questions; null while nothing is picked. */
-	picked: { title: string; flow: ReactNode } | null
+	picked: { id: string; title: string; flow: ReactNode } | null
+	/** A report was sent: the page layer (scrim, outlines, badges) goes while the panel thanks. */
+	done: boolean
+	setDone: (done: boolean) => void
+	/** The block's element on the page (phones quote it and scroll to it). */
+	element: (id: string) => HTMLElement | null
 	closePicked: () => void
 	/** The choosable blocks, in page order; the panel lists them so a block can be picked from the page or the list. */
 	areas: FixArea[]
@@ -837,11 +863,20 @@ export function FeedbackDock({
 	// A page without the fix path (or one that lost it) only sends feedback.
 	const current: Mode = fix ? mode : "send"
 	const fixing = current === "fix" && Boolean(fix?.on)
+	// Phones run fix mode from the bottom edge (PhoneFix), not the side drawer; ?m=1|2 picks the answering layout.
+	const { search } = useLocation()
+	const phoneVariant: PhoneVariant =
+		new URLSearchParams(search).get("m") === "2" ? 2 : 1
+	const phoneFix = !wide && fixing
 
-	// The drawer keeps showing what it showed while it slides back into the tab; the mode resets once it's in.
-	onClosed.current = () => setMode(startWith ?? "choose")
+	// The drawer keeps showing what it showed while it slides back into the tab; the mode resets once it's in (unless
+	// it went in because phone fix mode took over).
+	onClosed.current = () => {
+		if (!phoneFix) setMode(startWith ?? "choose")
+	}
 	const close = () => {
-		toggle(false)
+		if (open) toggle(false)
+		else setMode(startWith ?? "choose")
 		fix?.closePicked()
 		fix?.setOn(false)
 	}
@@ -849,9 +884,16 @@ export function FeedbackDock({
 		if (fix?.picked) return fix.closePicked()
 		fix?.setOn(false)
 		setMode("choose")
+		// Phones: back from the bottom bar to the drawer's two paths.
+		if (phoneFix) toggle(true)
+	}
+	const flow: FixFlow = {
+		sent: () => fix?.setDone(true),
+		again: () => fix?.setDone(false),
+		done: close,
 	}
 	useEffect(() => {
-		if (!open) return
+		if (!open && !phoneFix) return
 		const esc = (e: KeyboardEvent) => e.key === "Escape" && close()
 		window.addEventListener("keydown", esc)
 		return () => window.removeEventListener("keydown", esc)
@@ -882,6 +924,8 @@ export function FeedbackDock({
 					onClick={() => {
 						fix.setOn(true)
 						setMode("fix")
+						// Phones: the drawer goes back into the tab; the bottom bar takes over.
+						if (!wide) toggle(false)
 					}}
 				/>
 				<Choice
@@ -931,19 +975,26 @@ export function FeedbackDock({
 	if (open) last.current = { title, body, canGoBack }
 	const view = open ? { title, body, canGoBack } : last.current
 
-	// On phones, fix mode keeps the drawer to half the window, so the page's parts show above or below it.
-	const cap =
-		box && fixing && !wide
-			? Math.min(box.height, Math.round(window.innerHeight * 0.5))
-			: box?.height
+	const cap = box?.height
 	return (
-		<>
+		<FixFlowContext.Provider value={flow}>
 			<Tab
 				ref={tabRef}
 				open={open}
 				out={out}
 				wide={wide}
-				onToggle={() => toggle(!open)}
+				away={phoneFix}
+				// Pushing the drawer in ends fix mode too, like the close button.
+				onToggle={() => (phoneFix || open ? close() : toggle(true))}
+			/>
+			<PhoneFix
+				on={phoneFix}
+				fix={fix}
+				variant={phoneVariant}
+				title={fix?.picked?.title ?? "Fix something"}
+				body={phoneFix && fix?.picked ? fix.picked.flow : null}
+				onBack={back}
+				onClose={close}
 			/>
 			<aside
 				ref={panelRef}
@@ -1001,10 +1052,10 @@ export function FeedbackDock({
 						</button>
 					</div>
 					<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 sm:px-5">
-						{out && view.body}
+						{out && !phoneFix && view.body}
 					</div>
 				</div>
 			</aside>
-		</>
+		</FixFlowContext.Provider>
 	)
 }
