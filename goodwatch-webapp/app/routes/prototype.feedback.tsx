@@ -1,6 +1,6 @@
 // PROTOTYPE - throwaway. User feedback, contact and data corrections (#762, #765, #767). Rounds 2-3: variant C (the owner's
 // pick) is the default, with one global Feedback tab (FeedbackDock) as the only entry point; round 1's A and B stay
-// reachable with ?variant=A|B. Also ?screen=title|person|feedback|contact|staff, ?as=guest|member|trusted, ?tab=2.
+// reachable with ?variant=A|B. Also ?screen=title|person|feedback|contact|staff, ?as=guest|member|trusted.
 // Real title and person page parts on fixtures (app/ui/prototype-feedback/*.json); everything happens in memory.
 // Run it with ./prototype-feedback.sh (no production settings, outbound connections blocked).
 import { json } from "@remix-run/node"
@@ -17,12 +17,12 @@ import { ReportFlow } from "~/ui/prototype-feedback/ReportFlow"
 import StaffPost from "~/ui/prototype-feedback/StaffPost"
 import { Switcher } from "~/ui/prototype-feedback/Switcher"
 import TitlePage from "~/ui/prototype-feedback/TitlePage"
-import fixture from "~/ui/prototype-feedback/fixture-title.json"
 import {
 	PAGE_TYPES,
 	type PageArea,
 	kindOf,
 } from "~/ui/prototype-feedback/areas"
+import fixture from "~/ui/prototype-feedback/fixture-title.json"
 import { AREAS, type Area } from "~/ui/prototype-feedback/model"
 import { FeedbackProvider, useFeedback } from "~/ui/prototype-feedback/store"
 

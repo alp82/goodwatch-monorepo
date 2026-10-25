@@ -1,7 +1,8 @@
-// PROTOTYPE - throwaway. The one feedback entry point (variant C, round 3): a quiet "Feedback" tab on the right edge of
-// every page, in the upper middle; tapped, the tab itself opens out into the docked panel (a bottom sheet on phones):
-// the panel starts as an exact copy of the tab on the tab's spot, grows to its full size while the tab's face fades
-// into the panel's header, and closing folds it back into the tab (round 4). The panel offers two paths:
+// PROTOTYPE - throwaway. The one feedback entry point (variant C, round 5): a quiet "Feedback" tab on the right edge of
+// every page, in the upper middle. The tab is a drawer's handle: tapped, it stays where it is, pressed, and the panel
+// slides out of it to the left, joined to the tab's left edge and level with its top (moved up only as far as it must to
+// fit the window); tapping the tab again, Escape or the panel's close button slides it back in. Phones work the same,
+// with a drawer nearly the window's width. The panel offers two paths:
 // - "Fix something on this page" on pages with correctable data: the page's fix mode dims everything but the choosable
 //   blocks, marks them with a dashed outline and a Fix/Flag badge, and the panel lists them too; hovering either side
 //   lights up the other. A picked block's questions show in the panel.
@@ -321,7 +322,7 @@ export function FeedbackForm({
 
 // --- The tab ---
 
-/** Hidden while the page scrolls down on phones, back on the first scroll up (transform only). */
+/** Hidden while the page scrolls down on phones, back on the first scroll up (transform only). Never while open. */
 function useHideOnScrollDown(active: boolean) {
 	const [hidden, setHidden] = useState(false)
 	useEffect(() => {
@@ -350,13 +351,42 @@ function useHideOnScrollDown(active: boolean) {
 	return hidden
 }
 
-/** The tab's face: the icon, and on wide screens the vertical label. The panel's opening copy wears the same face. */
-function TabFace({ wide, alt }: { wide: boolean; alt: boolean }) {
-	if (alt) return <ChatBubbleLeftEllipsisIcon className="size-6" aria-hidden />
+/**
+ * Desktop: a vertical "Feedback" label on the right edge, in the upper middle of the window, below the header. Phones:
+ * a slim tab with the icon, a little lower. It never moves and never goes away: it's the drawer's handle. While the
+ * drawer is out the tab is pressed: it takes the drawer's colour and edge, its inner corners square off and a strip
+ * over its inner edge hides the seam, so tab and drawer read as one shape. Tapping it again pushes the drawer back in.
+ */
+const Tab = forwardRef<
+	HTMLButtonElement,
+	{ open: boolean; out: boolean; onToggle: () => void; wide: boolean }
+>(function Tab({ open, out, onToggle, wide }, ref) {
+	const hidden = useHideOnScrollDown(!wide && !out)
 	return (
-		<>
+		<button
+			ref={ref}
+			type="button"
+			onClick={onToggle}
+			aria-expanded={open}
+			aria-label="Feedback"
+			data-feedback-private
+			data-feedback-tab
+			data-out={out || undefined}
+			className={`group fixed right-0 flex cursor-pointer flex-col items-center gap-2.5 bg-gray-950 max-md:top-[42%] max-md:h-16 max-md:w-10 max-md:justify-center md:top-[30%] md:px-2.5 md:pt-3.5 md:pb-4 ${
+				out
+					? "z-[1002] rounded-l-none text-white ring-1 ring-amber-500/30"
+					: "z-[45] rounded-l-xl text-gray-200 shadow-[0_8px_30px_-6px_rgba(0,0,0,.7)] ring-1 ring-white/15 transition-transform ease-out hover:bg-gray-900 hover:text-white"
+			} ${hidden ? "translate-x-full" : ""}`}
+		>
+			{/* Covers the drawer's right edge where it meets the tab, so the two join. */}
+			{out && (
+				<span
+					aria-hidden
+					className="pointer-events-none absolute inset-y-0 -left-px w-0.5 bg-gray-950"
+				/>
+			)}
 			<ChatBubbleLeftEllipsisIcon
-				className="size-5 shrink-0 text-amber-400 transition-transform group-hover:scale-110"
+				className={`size-5 shrink-0 text-amber-400 transition-transform ${out ? "" : "group-hover:scale-110"}`}
 				aria-hidden
 			/>
 			{wide && (
@@ -364,49 +394,6 @@ function TabFace({ wide, alt }: { wide: boolean; alt: boolean }) {
 					Feedback
 				</span>
 			)}
-		</>
-	)
-}
-const FACE_ALT =
-	"grid place-items-center rounded-full bg-gray-950 text-gray-300 ring-1 ring-white/15"
-const FACE =
-	"flex flex-col items-center gap-2.5 rounded-l-xl bg-gray-950 text-gray-200 ring-1 ring-white/15 max-md:justify-center md:px-2.5 md:pt-3.5 md:pb-4"
-
-/**
- * Desktop: a vertical "Feedback" label on the right edge, in the upper middle of the window, below the header. Phones:
- * a slim tab with the icon, at the same height. While the panel is out, the panel is the tab: it starts as the tab's
- * exact copy on the same spot, so the tab steps aside (visibility, no fade) in the very frame the copy takes over, and
- * comes back in the frame the panel has folded back into it.
- * `?tab=2` puts it at the bottom right corner as a small round key instead (comparison).
- */
-const Tab = forwardRef<
-	HTMLButtonElement,
-	{
-		open: boolean
-		covered: boolean
-		onOpen: () => void
-		wide: boolean
-		alt: boolean
-	}
->(function Tab({ open, covered, onOpen, wide, alt }, ref) {
-	const hidden = useHideOnScrollDown(!wide && !covered)
-	const away = covered ? "invisible pointer-events-none" : ""
-	return (
-		<button
-			ref={ref}
-			type="button"
-			onClick={onOpen}
-			aria-expanded={open}
-			aria-label="Feedback"
-			data-feedback-private
-			data-feedback-tab
-			className={
-				alt
-					? `fixed right-3 z-[45] size-12 cursor-pointer shadow-lg transition-[transform,opacity] hover:text-white bottom-[calc(var(--nav-dock-height,72px)+0.75rem)] lg:right-5 lg:bottom-5 ${FACE_ALT} ${away} ${hidden ? "pointer-events-none translate-y-3 opacity-0" : ""}`
-					: `group fixed right-0 z-[45] cursor-pointer shadow-[0_8px_30px_-6px_rgba(0,0,0,.7)] transition-[transform,background-color] ease-out hover:bg-gray-900 hover:text-white max-md:top-[42%] max-md:h-16 max-md:w-10 md:top-[30%] ${FACE} ${away} ${hidden ? "translate-x-full" : ""}`
-			}
-		>
-			<TabFace wide={wide} alt={alt} />
 		</button>
 	)
 })
@@ -559,53 +546,126 @@ const useIsoLayoutEffect =
 const reducedMotion = () =>
 	window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
+/** Corner radius of the drawer. */
+const R = 16
+const EASE = "cubic-bezier(.22,.8,.24,1)"
+
 /**
- * The tab opens out into the panel and folds back into it. The panel sits at its final place; on the first frame it's
- * moved onto the tab (transform) and clipped to the tab's size and corners (clip-path), and its top layer is a copy of
- * the tab's face (the ghost), so it looks exactly like the tab, which steps aside in that same frame. Then the clip
- * opens to the full panel while the transform slides it home, the ghost fades out and the header and body fade in.
- * Closing plays it backwards and hands back to the tab on the last frame; tapping again mid-way reverses from there.
- * Transform, clip-path and opacity only. Reduced motion: a plain cross-fade.
+ * Where the drawer goes. The panel element is a fixed column left of the tab, from below the header to above the
+ * bottom (and a phone's dock); what shows of it is a clip-path, so opening, closing and height changes are clip-path and
+ * transform only, never layout. The visible card's top meets the tab's top, moved up only as far as it must to fit.
  */
-function useMorph(
+type Box = { top: number; right: number; width: number; height: number }
+type Shape = { y: number; h: number; tr: number; br: number }
+
+function boxFor(tab: HTMLElement, wide: boolean): Box {
+	const T = tab.getBoundingClientRect()
+	// The tab is fixed to the right edge, so the drawer's right edge sits the tab's width further in (layout sizes, so a
+	// scrollbar or a hover transform can't throw it off).
+	const right =
+		(Number.parseFloat(getComputedStyle(tab).right) || 0) + tab.offsetWidth
+	const header =
+		document.querySelector("[data-site-header]")?.getBoundingClientRect()
+			.bottom ?? 0
+	const dock = wide
+		? 0
+		: Number.parseFloat(
+				getComputedStyle(document.documentElement).getPropertyValue(
+					"--nav-dock-height",
+				),
+			) || 0
+	const top = Math.max(0, header) + 8
+	const left = wide ? Math.max(8, T.left - 384) : 8
+	return {
+		top,
+		right,
+		width: T.left - left,
+		height: window.innerHeight - dock - 8 - top,
+	}
+}
+
+function shapeFor(tab: HTMLElement, box: Box, natural: number): Shape {
+	const T = tab.getBoundingClientRect()
+	const h = Math.min(natural, box.height)
+	// The tab's ring sits 1px outside it; the drawer's edge lines up with that.
+	const want = T.top - 1 - box.top
+	const y = Math.max(0, Math.min(want, box.height - h))
+	const bottom = box.top + y + h
+	return {
+		y,
+		h,
+		tr: Math.abs(y - want) < 1 ? 0 : R,
+		br: Math.abs(bottom - (T.bottom + 1)) < 1 ? 0 : R,
+	}
+}
+
+/** The edge (the panel element) and the surface inside it; `shut` is the width still hidden on the left. */
+const edgeClip = (b: Box, s: Shape, shut: number) =>
+	`inset(${s.y}px 0px ${b.height - s.y - s.h}px ${shut}px round ${R}px ${s.tr}px ${s.br}px ${R}px)`
+const surfaceClip = (b: Box, s: Shape, shut: number) =>
+	`inset(${s.y + 1}px 1px ${b.height - s.y - s.h + 1}px ${shut + 1}px round ${R - 1}px ${Math.max(0, s.tr - 1)}px ${Math.max(0, s.br - 1)}px ${R - 1}px)`
+const cardMove = (s: Shape, dx: number) => `translate(${dx}px, ${s.y + 1}px)`
+
+/**
+ * The drawer slides out of the tab to the left and back into it. Its right edge stays on the tab's left edge the whole
+ * time; the clip's left edge travels out (opening) or in (closing), and the content fades in a beat after the drawer
+ * starts moving. Tapping the tab mid-way reverses from there. When the content's height changes (a new step), the clip
+ * and the card's position glide to the new shape. Reduced motion: a plain fade.
+ */
+function useDrawer(
+	wide: boolean,
 	tab: React.RefObject<HTMLElement>,
 	panel: React.RefObject<HTMLElement>,
-	content: React.RefObject<HTMLElement>,
-	ghost: React.RefObject<HTMLElement>,
+	surface: React.RefObject<HTMLElement>,
+	card: React.RefObject<HTMLElement>,
 ) {
 	const [open, setOpen] = useState(false)
-	const [shown, setShown] = useState(false)
+	const [out, setOut] = useState(false)
+	const [box, setBox] = useState<Box | null>(null)
 	const want = useRef(false)
 	const anims = useRef<Animation[]>([])
 	const pending = useRef(false)
+	const shape = useRef<Shape | null>(null)
 	const onClosed = useRef<() => void>(() => {})
 
+	/** Writes the resting styles: the full shape when open, shut when closed. */
+	const rest = (b: Box, s: Shape, isOpen: boolean) => {
+		const p = panel.current
+		const f = surface.current
+		const c = card.current
+		if (!p || !f || !c) return
+		p.style.clipPath = edgeClip(b, s, isOpen ? 0 : b.width)
+		f.style.clipPath = surfaceClip(b, s, isOpen ? 0 : b.width)
+		c.style.transform = cardMove(s, 0)
+		c.style.opacity = isOpen ? "1" : "0"
+	}
 	const settle = () => {
 		const list = anims.current
 		anims.current = []
+		// Closed: rest shut before the animations let go, so the drawer can't flash open for a frame.
+		if (!want.current && box && shape.current) rest(box, shape.current, false)
 		for (const a of list) a.cancel()
 		if (!want.current) {
-			setShown(false)
+			setOut(false)
 			onClosed.current()
 		}
 	}
 	const play = (opening: boolean) => {
 		const p = panel.current
-		const t = tab.current
-		const c = content.current
-		const g = ghost.current
-		if (!p || !c || !g) return settle()
-		const P = p.getBoundingClientRect()
-		const T = t?.getBoundingClientRect()
+		const f = surface.current
+		const c = card.current
+		const b = box
+		const s = shape.current
+		if (!p || !f || !c || !b || !s) return settle()
+		rest(b, s, true)
 		const timing: KeyframeAnimationOptions = {
-			duration: opening ? 340 : 280,
-			easing: "cubic-bezier(.2,.85,.25,1)",
+			duration: opening ? 320 : 280,
+			easing: EASE,
 			fill: "both",
 			direction: opening ? "normal" : "reverse",
 		}
 		let main: Animation
-		if (reducedMotion() || !T || !T.width) {
-			g.style.opacity = "0"
+		if (reducedMotion()) {
 			main = p.animate([{ opacity: 0 }, { opacity: 1 }], {
 				...timing,
 				duration: 160,
@@ -613,53 +673,88 @@ function useMorph(
 			})
 			anims.current = [main]
 		} else {
-			// The ghost: the tab's size and corners, pinned to the panel's top right corner (which starts on the tab's).
-			const radius = t ? getComputedStyle(t).borderRadius : "12px"
-			g.style.width = `${T.width}px`
-			g.style.height = `${T.height}px`
-			g.style.borderRadius = radius
-			if (t) g.style.backgroundColor = getComputedStyle(t).backgroundColor
-			g.style.opacity = ""
 			main = p.animate(
 				[
-					{
-						offset: 0,
-						transform: `translate(${T.right - P.right}px, ${T.top - P.top}px)`,
-						clipPath: `inset(0px 0px ${Math.max(0, P.height - T.height)}px ${Math.max(0, P.width - T.width)}px round ${radius})`,
-					},
-					// The clip reaches the panel's own edges first; only then does it open a little past them, so the ring and
-					// shadow aren't cut off once it's out.
-					{
-						offset: 0.9,
-						clipPath: `inset(0px 0px 0px 0px round ${getComputedStyle(p).borderRadius})`,
-					},
-					{
-						offset: 1,
-						transform: "translate(0px, 0px)",
-						clipPath: "inset(-48px -48px -48px -48px round 64px)",
-					},
+					{ clipPath: edgeClip(b, s, b.width) },
+					{ clipPath: edgeClip(b, s, 0) },
 				],
 				timing,
 			)
-			const face = g.animate(
-				[
-					{ offset: 0, opacity: 1 },
-					{ offset: 0.4, opacity: 0 },
-					{ offset: 1, opacity: 0 },
-				],
-				{ ...timing, easing: "linear" },
-			)
-			const inner = c.animate(
-				[
-					{ offset: 0, opacity: 0 },
-					{ offset: 0.22, opacity: 0 },
-					{ offset: 1, opacity: 1 },
-				],
-				{ ...timing, easing: "linear" },
-			)
-			anims.current = [main, face, inner]
+			anims.current = [
+				main,
+				f.animate(
+					[
+						{ clipPath: surfaceClip(b, s, b.width) },
+						{ clipPath: surfaceClip(b, s, 0) },
+					],
+					timing,
+				),
+				c.animate(
+					[
+						{ offset: 0, opacity: 0, transform: cardMove(s, 28) },
+						{ offset: 0.3, opacity: 0, transform: cardMove(s, 20) },
+						{ offset: 1, opacity: 1, transform: cardMove(s, 0) },
+					],
+					timing,
+				),
+			]
 		}
 		main.onfinish = settle
+	}
+	/** Glides from the shape it had to the shape its content needs now. */
+	const reshape = () => {
+		const t = tab.current
+		const c = card.current
+		const b = box
+		if (!t || !c || !b || !want.current) return
+		const from = shape.current
+		const to = shapeFor(t, b, c.offsetHeight + 2)
+		shape.current = to
+		if (
+			from &&
+			from.y === to.y &&
+			from.h === to.h &&
+			from.tr === to.tr &&
+			from.br === to.br
+		)
+			return
+		// Mid-open: aim the running opening at the new shape.
+		if (anims.current.length) {
+			const [m, f, k] = anims.current as [Animation, Animation, Animation?]
+			if (reducedMotion() || !k) return rest(b, to, true)
+			;(m.effect as KeyframeEffect).setKeyframes([
+				{ clipPath: edgeClip(b, to, b.width) },
+				{ clipPath: edgeClip(b, to, 0) },
+			])
+			;(f.effect as KeyframeEffect).setKeyframes([
+				{ clipPath: surfaceClip(b, to, b.width) },
+				{ clipPath: surfaceClip(b, to, 0) },
+			])
+			;(k.effect as KeyframeEffect).setKeyframes([
+				{ offset: 0, opacity: 0, transform: cardMove(to, 28) },
+				{ offset: 0.3, opacity: 0, transform: cardMove(to, 20) },
+				{ offset: 1, opacity: 1, transform: cardMove(to, 0) },
+			])
+			return rest(b, to, true)
+		}
+		rest(b, to, true)
+		if (!from || reducedMotion()) return
+		const timing = { duration: 240, easing: EASE }
+		panel.current?.animate(
+			[{ clipPath: edgeClip(b, from, 0) }, { clipPath: edgeClip(b, to, 0) }],
+			timing,
+		)
+		surface.current?.animate(
+			[
+				{ clipPath: surfaceClip(b, from, 0) },
+				{ clipPath: surfaceClip(b, to, 0) },
+			],
+			timing,
+		)
+		c.animate(
+			[{ transform: cardMove(from, 0) }, { transform: cardMove(to, 0) }],
+			timing,
+		)
 	}
 	const toggle = (opening: boolean) => {
 		if (want.current === opening) return
@@ -671,18 +766,49 @@ function useMorph(
 			return
 		}
 		if (opening) {
+			if (tab.current) setBox(boxFor(tab.current, wide))
+			shape.current = null
 			pending.current = true
-			setShown(true)
+			setOut(true)
 		} else play(false)
 	}
-	// Opening: measure once the panel has its content, before the first paint, so the tab and its copy swap unseen.
+	// Opening: measure once the drawer has its content, before the first paint.
 	useIsoLayoutEffect(() => {
-		if (shown && pending.current) {
-			pending.current = false
-			play(true)
-		}
+		if (!out || !pending.current || !box) return
+		pending.current = false
+		const t = tab.current
+		const c = card.current
+		if (!t || !c) return
+		shape.current = shapeFor(t, box, c.offsetHeight + 2)
+		play(true)
 	})
-	return { open, shown, toggle, onClosed }
+	// A new step changes the content's height; the window can change size.
+	const reshapeRef = useRef(reshape)
+	reshapeRef.current = reshape
+	useEffect(() => {
+		const c = card.current
+		if (!out || !c) return
+		const ro = new ResizeObserver(() => reshapeRef.current())
+		ro.observe(c)
+		const resize = () => {
+			if (tab.current) setBox(boxFor(tab.current, wide))
+		}
+		window.addEventListener("resize", resize)
+		return () => {
+			ro.disconnect()
+			window.removeEventListener("resize", resize)
+		}
+	}, [out, card, tab, wide])
+	// A new box (window resized): rest on the new shape.
+	useIsoLayoutEffect(() => {
+		if (!box || !out || pending.current || anims.current.length) return
+		const t = tab.current
+		const c = card.current
+		if (!t || !c) return
+		shape.current = shapeFor(t, box, c.offsetHeight + 2)
+		rest(box, shape.current, want.current)
+	}, [box])
+	return { open, out, box, toggle, onClosed }
 }
 
 export function FeedbackDock({
@@ -693,22 +819,17 @@ export function FeedbackDock({
 	const wide = useIsWide()
 	const tabRef = useRef<HTMLButtonElement>(null)
 	const panelRef = useRef<HTMLElement>(null)
-	const contentRef = useRef<HTMLDivElement>(null)
-	const ghostRef = useRef<HTMLDivElement>(null)
-	const { open, shown, toggle, onClosed } = useMorph(
+	const surfaceRef = useRef<HTMLDivElement>(null)
+	const cardRef = useRef<HTMLDivElement>(null)
+	const { open, out, box, toggle, onClosed } = useDrawer(
+		wide,
 		tabRef,
 		panelRef,
-		contentRef,
-		ghostRef,
+		surfaceRef,
+		cardRef,
 	)
 	// "choose" waits until the page has a fix path; without one the panel shows Send feedback.
 	const [mode, setMode] = useState<Mode>(startWith ?? "choose")
-	const [alt, setAlt] = useState(false)
-	useEffect(
-		() =>
-			setAlt(new URLSearchParams(window.location.search).get("tab") === "2"),
-		[],
-	)
 	useEffect(() => {
 		if (startWith === "send") toggle(true)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -717,7 +838,7 @@ export function FeedbackDock({
 	const current: Mode = fix ? mode : "send"
 	const fixing = current === "fix" && Boolean(fix?.on)
 
-	// The panel keeps showing what it showed while it shrinks back into the tab; the mode resets once it's closed.
+	// The drawer keeps showing what it showed while it slides back into the tab; the mode resets once it's in.
 	onClosed.current = () => setMode(startWith ?? "choose")
 	const close = () => {
 		toggle(false)
@@ -810,15 +931,19 @@ export function FeedbackDock({
 	if (open) last.current = { title, body, canGoBack }
 	const view = open ? { title, body, canGoBack } : last.current
 
+	// On phones, fix mode keeps the drawer to half the window, so the page's parts show above or below it.
+	const cap =
+		box && fixing && !wide
+			? Math.min(box.height, Math.round(window.innerHeight * 0.5))
+			: box?.height
 	return (
 		<>
 			<Tab
 				ref={tabRef}
 				open={open}
-				covered={shown}
+				out={out}
 				wide={wide}
-				alt={alt}
-				onOpen={() => toggle(true)}
+				onToggle={() => toggle(!open)}
 			/>
 			<aside
 				ref={panelRef}
@@ -828,54 +953,55 @@ export function FeedbackDock({
 				data-feedback-panel
 				data-open={open || undefined}
 				{...(!open && { inert: "" })}
-				className={`fixed inset-x-0 bottom-0 z-[1001] flex max-h-[80dvh] flex-col overflow-hidden rounded-t-[28px] bg-gray-950 shadow-[0_-20px_60px_-10px_rgba(0,0,0,.8)] ring-1 ring-amber-500/30 md:inset-x-auto md:top-20 md:right-4 md:bottom-auto md:max-h-[calc(100dvh-6rem)] md:w-[24rem] md:rounded-2xl ${fixing && open ? "max-md:max-h-[56dvh]" : ""} ${shown ? "" : "invisible pointer-events-none"}`}
+				style={
+					box
+						? {
+								top: box.top,
+								right: box.right,
+								width: box.width,
+								height: box.height,
+							}
+						: undefined
+				}
+				className={`fixed z-[1001] bg-amber-500/30 ${out && box ? "" : "invisible pointer-events-none"}`}
 			>
-				{/* The tab's copy the panel starts as (see useMorph). */}
 				<div
-					ref={ghostRef}
+					ref={surfaceRef}
 					aria-hidden
-					data-morph-ghost
-					className={`pointer-events-none absolute top-0 right-0 z-10 opacity-0 ${alt ? FACE_ALT : FACE}`}
+					className="pointer-events-none absolute inset-0 bg-gray-950"
+				/>
+				{/* The visible card: its height is its content's; the clips above follow it (see useDrawer). */}
+				<div
+					ref={cardRef}
+					data-feedback-card
+					style={{ maxHeight: cap ? cap - 2 : undefined }}
+					className="absolute top-0 right-px left-px flex flex-col"
 				>
-					<TabFace wide={wide} alt={alt} />
-				</div>
-				<div ref={contentRef} className="flex min-h-0 flex-1 flex-col">
-					<div className="shrink-0">
-						<div className="flex justify-center pt-2.5 pb-1 md:hidden">
-							<span className="h-1.5 w-10 rounded-full bg-white/25" />
-						</div>
-						<div className="flex items-center gap-1 px-4 pt-1 pb-3 sm:px-5 md:pt-4">
-							{view.canGoBack && (
-								<button
-									type="button"
-									onClick={back}
-									aria-label="Back"
-									className="-ml-1.5 cursor-pointer rounded-full p-1.5 text-gray-300 hover:bg-white/10"
-								>
-									<ArrowLeftIcon className="size-5" />
-								</button>
-							)}
-							{!view.canGoBack && (
-								<ChatBubbleLeftEllipsisIcon
-									className="mr-1.5 size-5 shrink-0 text-amber-400"
-									aria-hidden
-								/>
-							)}
-							<h2 className="min-w-0 flex-1 truncate text-lg font-semibold text-white">
-								{view.title}
-							</h2>
+					<div className="flex shrink-0 items-center gap-1 px-4 pt-3 pb-3 sm:px-5 md:pt-4">
+						{view.canGoBack && (
 							<button
 								type="button"
-								onClick={close}
-								aria-label="Close"
-								className="cursor-pointer rounded-full p-1.5 text-gray-300 hover:bg-white/10"
+								onClick={back}
+								aria-label="Back"
+								className="-ml-1.5 cursor-pointer rounded-full p-1.5 text-gray-300 hover:bg-white/10"
 							>
-								<XMarkIcon className="size-5" />
+								<ArrowLeftIcon className="size-5" />
 							</button>
-						</div>
+						)}
+						<h2 className="min-w-0 flex-1 truncate text-lg font-semibold text-white">
+							{view.title}
+						</h2>
+						<button
+							type="button"
+							onClick={close}
+							aria-label="Close"
+							className="cursor-pointer rounded-full p-1.5 text-gray-300 hover:bg-white/10"
+						>
+							<XMarkIcon className="size-5" />
+						</button>
 					</div>
-					<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5">
-						{shown && view.body}
+					<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 sm:px-5">
+						{out && view.body}
 					</div>
 				</div>
 			</aside>

@@ -2,7 +2,7 @@
 // - Scrim: a dark layer over everything that can't be picked, with cut-outs around [data-fix-overlay] and
 //   [data-fix-badge]. It lives in page coordinates (absolute in <body>), so it scrolls with the page for free and never
 //   moves the layout. Clicks pass through.
-// - reveal(): brings an element into the visible area (below the header, above a phone sheet), smoothly, at once.
+// - reveal(): brings an element into the visible area (below the header, clear of a phone's feedback drawer), smoothly, at once.
 //   Rapid hovering doesn't make scrolls fight: each call aims at an absolute position, a new aim replaces the running
 //   one, and "is it on screen" is judged against where the running scroll will end, not where it is now.
 import { useEffect, useState } from "react"
@@ -25,7 +25,7 @@ export const reduced = () =>
 	typeof window !== "undefined" &&
 	window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
-/** The part of the window the page shows: below the fixed header and sticky bars, above a phone sheet. */
+/** The part of the window the page shows: below the fixed header and sticky bars, clear of a phone's feedback drawer. */
 function clearArea() {
 	const header =
 		document.querySelector("[data-site-header]")?.getBoundingClientRect()
@@ -36,16 +36,16 @@ function clearArea() {
 		const r = el.getBoundingClientRect()
 		return r.top <= header + 1 && r.bottom > m ? r.bottom : m
 	}, header)
-	const panel = document
-		.querySelector("[data-feedback-panel]")
+	const top = sticky + 12
+	const bottom = window.innerHeight - 12
+	// A phone's feedback drawer covers most of the width: the clear part is the larger one above or below it.
+	const card = document
+		.querySelector("[data-feedback-panel][data-open] [data-feedback-card]")
 		?.getBoundingClientRect()
-	const sheet =
-		panel &&
-		panel.width >= window.innerWidth - 1 &&
-		panel.top < window.innerHeight
-			? panel.top
-			: window.innerHeight
-	return { top: sticky + 12, bottom: sheet - 12 }
+	if (!card || card.width < window.innerWidth * 0.6) return { top, bottom }
+	return card.top - 12 - top >= bottom - (card.bottom + 12)
+		? { top, bottom: card.top - 12 }
+		: { top: card.bottom + 12, bottom }
 }
 
 /** Where the running smooth scroll will end; null when the page isn't scrolling for us. */
