@@ -12,8 +12,8 @@ import type { ProfileTitle } from "~/domain/profile"
 import type { TasteStats } from "~/domain/profile-taste"
 import { getUserData } from "~/server/userData.server"
 import type { MediaKey } from "~/types/user-data"
-import { query } from "~/utils/crate"
 import { titlePath } from "~/utils/helpers"
+import { readProfileCatalog as read } from "./catalog.server"
 import {
 	readCachedTasteStats,
 	writeCachedTasteStats,
@@ -33,31 +33,6 @@ const CREDIT_ROWS = 20_000
 const CAST_ORDER = 8
 const WRITER_JOBS = ["Screenplay", "Writer"]
 const COMPOSER_JOBS = ["Original Music Composer"]
-
-const QUERY_CONCURRENCY = 4
-
-/** Runs tasks with at most `n` at a time, in the order they came. */
-function queueOf(n: number) {
-	let active = 0
-	const waiting: (() => void)[] = []
-	return <T>(task: () => Promise<T>) =>
-		new Promise<T>((resolve, reject) => {
-			const run = () => {
-				active++
-				task()
-					.then(resolve, reject)
-					.finally(() => {
-						active--
-						waiting.shift()?.()
-					})
-			}
-			if (active < n) run()
-			else waiting.push(run)
-		})
-}
-const queued = queueOf(QUERY_CONCURRENCY)
-const read = <T extends {}>(sql: string, params: (string | number | Date)[]) =>
-	queued(() => query<T>(sql, params))
 
 const computing = new Map<string, Promise<TasteStats>>()
 
