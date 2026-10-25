@@ -612,6 +612,8 @@ export function MyShowsPage({
 					.filter(Boolean)
 					.join(" · ")}
 				links={[
+					// Everything that arrived on the member's services, past their lists (#489).
+					{ label: "New on your services", to: "/new" },
 					{ label: "My movies", to: MY_MOVIES },
 					{ label: "My library", to: MY_LIBRARY },
 				]}

@@ -85,6 +85,8 @@ export const MOVIES_PAGE: MoviesPageParts = {
 					: "The movies you want to see"
 			}
 			links={[
+				// Everything that arrived on the member's services, past their lists (#489).
+				{ label: "New on your services", to: "/new" },
 				{ label: "My shows", to: MY_SHOWS },
 				{ label: "My library", to: MY_LIBRARY },
 			]}
