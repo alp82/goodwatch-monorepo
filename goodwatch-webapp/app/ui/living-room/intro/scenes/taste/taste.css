@@ -1,0 +1,316 @@
+/* The "Your taste" chapter. Everything is CSS-timed: delays and durations are ms at k = 1, scaled by the stage's
+   --k. Transform and opacity only. */
+
+/* ---------- timelines: up to 8 transform moves and 8 opacity fades per element (kit.tsx tl()) ---------- */
+@keyframes intro-taste-m1 {
+	from {
+		transform: var(--m1a);
+	}
+	to {
+		transform: var(--m1b);
+	}
+}
+@keyframes intro-taste-m2 {
+	from {
+		transform: var(--m2a);
+	}
+	to {
+		transform: var(--m2b);
+	}
+}
+@keyframes intro-taste-m3 {
+	from {
+		transform: var(--m3a);
+	}
+	to {
+		transform: var(--m3b);
+	}
+}
+@keyframes intro-taste-m4 {
+	from {
+		transform: var(--m4a);
+	}
+	to {
+		transform: var(--m4b);
+	}
+}
+@keyframes intro-taste-m5 {
+	from {
+		transform: var(--m5a);
+	}
+	to {
+		transform: var(--m5b);
+	}
+}
+@keyframes intro-taste-m6 {
+	from {
+		transform: var(--m6a);
+	}
+	to {
+		transform: var(--m6b);
+	}
+}
+@keyframes intro-taste-m7 {
+	from {
+		transform: var(--m7a);
+	}
+	to {
+		transform: var(--m7b);
+	}
+}
+@keyframes intro-taste-m8 {
+	from {
+		transform: var(--m8a);
+	}
+	to {
+		transform: var(--m8b);
+	}
+}
+@keyframes intro-taste-o1 {
+	from {
+		opacity: var(--o1a);
+	}
+	to {
+		opacity: var(--o1b);
+	}
+}
+@keyframes intro-taste-o2 {
+	from {
+		opacity: var(--o2a);
+	}
+	to {
+		opacity: var(--o2b);
+	}
+}
+@keyframes intro-taste-o3 {
+	from {
+		opacity: var(--o3a);
+	}
+	to {
+		opacity: var(--o3b);
+	}
+}
+@keyframes intro-taste-o4 {
+	from {
+		opacity: var(--o4a);
+	}
+	to {
+		opacity: var(--o4b);
+	}
+}
+@keyframes intro-taste-o5 {
+	from {
+		opacity: var(--o5a);
+	}
+	to {
+		opacity: var(--o5b);
+	}
+}
+@keyframes intro-taste-o6 {
+	from {
+		opacity: var(--o6a);
+	}
+	to {
+		opacity: var(--o6b);
+	}
+}
+@keyframes intro-taste-o7 {
+	from {
+		opacity: var(--o7a);
+	}
+	to {
+		opacity: var(--o7b);
+	}
+}
+@keyframes intro-taste-o8 {
+	from {
+		opacity: var(--o8a);
+	}
+	to {
+		opacity: var(--o8b);
+	}
+}
+
+/* ---------- one-shot entrances (delay in --d) ---------- */
+.intro-taste-land {
+	animation: intro-taste-land calc(650ms * var(--k))
+		cubic-bezier(0.34, 1.4, 0.64, 1) calc(var(--d, 0ms) * var(--k)) both;
+}
+@keyframes intro-taste-land {
+	from {
+		opacity: 0;
+		transform: translateY(-3cqh) scale(1.35);
+	}
+}
+.intro-taste-pop {
+	animation: intro-taste-pop calc(520ms * var(--k))
+		cubic-bezier(0.34, 1.5, 0.64, 1) calc(var(--d, 0ms) * var(--k)) both;
+}
+@keyframes intro-taste-pop {
+	from {
+		opacity: 0;
+		transform: scale(0.4);
+	}
+}
+.intro-taste-press {
+	transform-origin: 0 0;
+	animation: intro-taste-press calc(260ms * var(--k)) ease-out
+		calc(var(--d, 0ms) * var(--k)) both;
+}
+@keyframes intro-taste-press {
+	50% {
+		transform: scale(0.8);
+	}
+}
+
+/* ---------- headline ---------- */
+.intro-taste-head {
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: -0.02em;
+	font-size: 4.6cqw;
+	white-space: nowrap;
+}
+
+/* ---------- the print ---------- */
+.intro-taste-print {
+	position: absolute;
+	container-type: size;
+}
+.intro-taste-print svg {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+.intro-taste-fam,
+.intro-taste-fill {
+	position: absolute;
+	inset: 0;
+	transform-origin: 50% 50%;
+}
+.intro-taste-band {
+	transform-origin: 50% 50%;
+	animation: intro-taste-band calc(800ms * var(--k))
+		cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--d, 0ms) * var(--k)) both;
+}
+@keyframes intro-taste-band {
+	from {
+		opacity: 0;
+		transform: scale(0.82) rotate(-8deg);
+	}
+}
+.intro-taste-at {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 0;
+	height: 0;
+}
+.intro-taste-handle {
+	position: absolute;
+	left: 0;
+	top: 0;
+	transform: translate(-50%, -50%);
+}
+.intro-taste-knob {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	border-radius: 999px;
+	height: 9cqw;
+	min-width: 9cqw;
+	padding: 0 2.6cqw;
+	font-weight: 900;
+	font-size: max(8px, 4.1cqw);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	line-height: 1;
+	white-space: nowrap;
+}
+.intro-taste-knob-on {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.intro-taste-print .intro-taste-cursor {
+	position: static;
+	display: block;
+	width: 9cqw;
+	height: 11.25cqw;
+	filter: drop-shadow(0 0.6cqw 1.4cqw rgba(0, 0, 0, 0.6));
+}
+.intro-taste-livepill {
+	position: absolute;
+	left: 50%;
+	top: -2cqw;
+	transform: translateX(-50%);
+	border-radius: 999px;
+	background: #fbbf24;
+	color: #030712;
+	font-weight: 900;
+	font-size: max(9px, 4.4cqw);
+	padding: 1.1cqw 3.4cqw;
+	white-space: nowrap;
+}
+
+/* ---------- posters ---------- */
+.intro-taste-poster {
+	position: absolute;
+	left: 0;
+	top: 0;
+	border-radius: 0.7cqw;
+	overflow: hidden;
+	background: #1f2937;
+	box-shadow: 0 0 0 0.12cqw rgba(255, 255, 255, 0.12), 0 1.2cqw 2.6cqw -0.8cqw
+		rgba(0, 0, 0, 0.9);
+}
+.intro-taste-poster img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.intro-taste-new {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	box-shadow: inset 0 0 0 0.35cqw #fbbf24;
+	opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.intro-taste-cursor,
+	.intro-taste-livepill {
+		display: none;
+	}
+}
+
+/* ---------- the defining attributes ---------- */
+.intro-taste-dot {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 3.2cqw;
+	height: 3.2cqw;
+	margin: -1.6cqw 0 0 -1.6cqw;
+	border-radius: 999px;
+	box-shadow: 0 0 0 0.7cqw var(--c);
+}
+.intro-taste-bigword {
+	position: absolute;
+	left: 0;
+	top: 0;
+	transform: translateY(-50%);
+	font-weight: 800;
+	letter-spacing: -0.02em;
+	line-height: 1;
+	white-space: nowrap;
+	font-size: 4.3cqw;
+}
+.intro-taste-bigword span {
+	margin-right: 0.3em;
+}

@@ -21,12 +21,13 @@ export const CHAPTERS = [
 	{ id: "score", name: "One score" },
 	{ id: "streaming", name: "Streaming" },
 	{ id: "recommendations", name: "For you" },
-	{ id: "fingerprint", name: "How it feels" },
+	{ id: "fingerprint", name: "Your taste" },
 	{ id: "search", name: "Search" },
 	{ id: "filters", name: "Filters" },
-	{ id: "explorer", name: "Explorer" },
 	{ id: "tracking", name: "Tracking" },
 	{ id: "imports", name: "Your ratings" },
+	{ id: "ai", name: "Use with AI" },
+	{ id: "discord", name: "Discord bot" },
 	{ id: "closer", name: "Your turn" },
 ] as const
 export type ChapterId = (typeof CHAPTERS)[number]["id"]
@@ -38,7 +39,10 @@ export type IntroData = {
 	 * score, services in the visitor's country, backdrop and three feeling words. The first is Interstellar.
 	 */
 	pool: IntroCard[]
-	/** Each scene's own content, by name (see server/living-room/intro/content.ts). */
+	/**
+	 * Each scene's own content, by name (server/living-room/intro/content.json), with `shows`: popular modern shows
+	 * as cards, like the pool's.
+	 */
 	extra: Record<string, unknown>
 }
 

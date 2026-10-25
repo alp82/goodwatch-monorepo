@@ -1,0 +1,409 @@
+/* The ChatGPT look-alike chat window and its answer cards. Container units only; every time is
+   calc(<n> * var(--k)); transform and opacity animations only. Phone picture rules:
+   @container (max-width: 760px) or (max-height: 360px). */
+
+/* ---- the window ----------------------------------------------------------------------------------------------- */
+.intro-ai-chat {
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	border-radius: 1.1cqw;
+	background: #212121;
+	color: #ececec;
+	box-shadow: 0 1.5cqw 3.5cqw rgba(0, 0, 0, 0.5), inset 0 0 0 1px
+		rgba(255, 255, 255, 0.08);
+	font-family: ui-sans-serif, -apple-system, system-ui, "Segoe UI", Helvetica,
+		Arial, sans-serif;
+	--fs: max(10px, 1.32cqw);
+	font-size: var(--fs);
+	line-height: 1.45;
+}
+.intro-ai-chat-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-shrink: 0;
+	padding: 0.75em 1em 0.4em;
+}
+.intro-ai-chat-model {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25em;
+	font-size: 1.12em;
+	font-weight: 500;
+	color: #ececec;
+}
+.intro-ai-chat-chev {
+	width: 0.95em;
+	height: 0.95em;
+	color: #9b9b9b;
+}
+.intro-ai-chat-note {
+	font-size: 0.66em;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: #6b6b6b;
+}
+.intro-ai-chat-view {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+}
+
+/* The thread: wrappers that each scroll one view up; exchanges sit one view apart. */
+.intro-ai-chat-scroll {
+	position: absolute;
+	inset: 0;
+	animation: intro-ai-chat-up calc(var(--dur, 650ms) * var(--k)) var(--inout)
+		calc(var(--d, 0ms) * var(--k)) both;
+}
+@keyframes intro-ai-chat-up {
+	to {
+		transform: translateY(-100%);
+	}
+}
+.intro-ai-chat-page {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 100%;
+	top: calc(var(--i) * 100%);
+}
+.intro-ai-chat-ex {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75em;
+	padding: 0.6em 1.4em 0.8em;
+}
+.intro-ai-chat-user {
+	align-self: flex-end;
+	max-width: 72%;
+	padding: 0.5em 1em;
+	border-radius: 1.4em;
+	background: #303030;
+	color: #ececec;
+	line-height: 1.35;
+	transform-origin: 100% 50%;
+}
+.intro-ai-chat-answer {
+	color: #ececec;
+	line-height: 1.5;
+}
+.intro-ai-chat-answer b {
+	font-weight: 600;
+	color: #fff;
+}
+
+/* The app call. */
+.intro-ai-chat-call {
+	display: flex;
+	align-items: center;
+	gap: 0.55em;
+	font-size: 0.9em;
+	color: #afafaf;
+	white-space: nowrap;
+}
+.intro-ai-chat-app {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 1.6em;
+	height: 1.6em;
+	border-radius: 0.45em;
+	background: #0a0a0a;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+.intro-ai-chat-callt {
+	position: relative;
+	display: grid;
+}
+.intro-ai-chat-callt > span {
+	grid-area: 1 / 1;
+}
+.intro-ai-chat-did b {
+	font-weight: 600;
+	color: #ececec;
+}
+.intro-ai-chat-tool {
+	color: #8f8f8f;
+}
+.intro-ai-chat-pulse {
+	display: inline-block;
+	animation: intro-ai-chat-pulse calc(900ms * var(--k)) ease-in-out infinite;
+}
+@keyframes intro-ai-chat-pulse {
+	50% {
+		opacity: 0.45;
+	}
+}
+
+/* The composer pill. */
+.intro-ai-chat-comp {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.7em;
+	margin: 0.3em 1.2em 1.1em;
+	padding: 0.5em 0.55em 0.5em 1em;
+	border-radius: 999px;
+	background: #303030;
+	box-shadow: 0 0.2em 0.8em rgba(0, 0, 0, 0.25);
+}
+.intro-ai-chat-plus {
+	font-size: 1.45em;
+	line-height: 1;
+	font-weight: 300;
+	color: #cfcfcf;
+}
+.intro-ai-chat-field {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+	height: 1.6em;
+	line-height: 1.6;
+	overflow: hidden;
+}
+.intro-ai-chat-ph {
+	display: block;
+	color: #9b9b9b;
+}
+.intro-ai-chat-field > .intro-ai-chat-ph {
+	position: absolute;
+	inset: 0;
+}
+.intro-ai-chat-mic {
+	width: 1.3em;
+	height: 1.3em;
+	color: #cfcfcf;
+}
+.intro-ai-chat-mic svg,
+.intro-ai-chat-send svg {
+	width: 100%;
+	height: 100%;
+}
+.intro-ai-chat-send {
+	position: relative;
+	flex-shrink: 0;
+	width: 2.1em;
+	height: 2.1em;
+	padding: 0.35em;
+	border-radius: 50%;
+	background: #fff;
+	color: #000;
+}
+.intro-ai-chat-send svg {
+	position: relative;
+}
+.intro-ai-chat-press {
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.3);
+	opacity: 0;
+	animation: intro-ai-chat-press calc(var(--dur, 260ms) * var(--k)) ease-out
+		calc(var(--d, 0ms) * var(--k)) both;
+}
+@keyframes intro-ai-chat-press {
+	0%,
+	100% {
+		opacity: 0;
+	}
+	30% {
+		opacity: 1;
+	}
+}
+
+/* ---- the GoodWatch cards (MCP poster grid) -------------------------------------------------------------------- */
+.intro-ai-chat-card {
+	position: relative;
+	flex-shrink: 0;
+}
+.intro-ai-chat-ban {
+	border-radius: 0.9cqw;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.intro-ai-chat-banmark {
+	position: absolute;
+	top: 0.7em;
+	right: 0.7em;
+	--mark: 0.95cqw;
+}
+.intro-ai-chat-banin {
+	display: flex;
+	align-items: flex-end;
+	gap: 1em;
+	padding: 1.6em 1em 1em;
+}
+.intro-ai-chat-pf {
+	flex: 0 0 7.4cqw;
+	border: 0.2cqw solid var(--g800);
+	--tab: 0.9cqw;
+}
+.intro-ai-chat-tx {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.3em;
+	min-width: 0;
+}
+.intro-ai-chat-tx .intro-ai-eyebrow,
+.intro-ai-chat-tx .intro-ai-meta {
+	font-size: 0.85em;
+}
+.intro-ai-chat-name {
+	font-size: 2.3em;
+	white-space: nowrap;
+}
+.intro-ai-chat-chips {
+	margin-top: 0.3em;
+	font-size: 0.9em;
+}
+.intro-ai-chat-btn {
+	margin-top: 0.35em;
+	font-size: 0.88em;
+}
+.intro-ai-chat-src {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+	margin-top: 0.35em;
+}
+.intro-ai-chat-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4em;
+	padding: 0.3em 0.65em 0.3em 0.4em;
+	border-radius: 0.5em;
+	background: rgba(255, 255, 255, 0.12);
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+.intro-ai-chat-logo {
+	width: 1.3em;
+	height: 1.3em;
+	object-fit: contain;
+}
+.intro-ai-chat-logo-w {
+	height: 1.15em;
+	width: auto;
+	border-radius: 0.15em;
+}
+.intro-ai-chat-eq {
+	color: var(--g400);
+	font-weight: 700;
+}
+.intro-ai .intro-ai-chat-bigtab {
+	position: static;
+	flex-direction: row;
+	gap: 0.3em;
+	padding: 0.35em 0.6em;
+	border-radius: 0.5em;
+	--tab: 1.15em;
+	font-size: 1.15em;
+}
+
+/* ---- the window under the headline --------------------------------------------------------------------------- */
+.intro-ai-chat-wide {
+	left: 16cqw;
+	right: 16cqw;
+	top: 17cqh;
+	bottom: 4cqh;
+}
+.intro-ai-chat-wide .intro-ai-chat-ex {
+	padding-left: 3em;
+	padding-right: 3em;
+}
+
+/* ---- phone picture -------------------------------------------------------------------------------------------- */
+@container (max-width: 760px) or (max-height: 360px) {
+	.intro-ai-chat {
+		--fs: 10px;
+		border-radius: 8px;
+	}
+	.intro-ai-chat-bar {
+		display: none;
+	}
+	.intro-ai-chat-ex {
+		gap: 5px;
+		padding: 6px 7px 4px;
+	}
+	.intro-ai-chat-user {
+		max-width: 92%;
+		padding: 3px 8px;
+		border-radius: 10px;
+		line-height: 1.25;
+	}
+	.intro-ai-chat-answer,
+	.intro-ai-chat-banmark,
+	.intro-ai-chat-tool,
+	.intro-ai-chat-mic,
+	.intro-ai-chat-plus,
+	.intro-ai-chat-tx .intro-ai-meta {
+		display: none;
+	}
+	.intro-ai-chat-call {
+		font-size: 9px;
+		gap: 4px;
+	}
+	.intro-ai-chat-comp {
+		margin: 2px 6px 6px;
+		padding: 3px 3px 3px 9px;
+		gap: 4px;
+	}
+	.intro-ai-chat-field {
+		height: 1.35em;
+	}
+	.intro-ai-chat-send {
+		width: 17px;
+		height: 17px;
+		padding: 3px;
+	}
+	.intro-ai-chat-ban {
+		border-radius: 6px;
+	}
+	.intro-ai-chat-banin {
+		padding: 8px 6px 6px;
+		gap: 6px;
+		align-items: center;
+	}
+	.intro-ai-chat-pf {
+		flex-basis: 12cqw;
+		--tab: 7px;
+	}
+	.intro-ai-chat-tx .intro-ai-eyebrow {
+		font-size: 8px;
+	}
+	.intro-ai-chat-name {
+		font-size: 14px;
+	}
+	.intro-ai-chat-chips,
+	.intro-ai-chat-btn {
+		font-size: 8px;
+	}
+	.intro-ai-chat-src {
+		gap: 3px;
+		font-size: 8px;
+	}
+	.intro-ai-chat-chip {
+		padding: 2px 4px 2px 3px;
+		gap: 2px;
+	}
+	.intro-ai .intro-ai-chat-bigtab {
+		font-size: 9px;
+	}
+	.intro-ai-chat-wide {
+		left: 3cqw;
+		right: 3cqw;
+		top: 19cqh;
+		bottom: 3cqh;
+	}
+	.intro-ai-chat-wide .intro-ai-chat-ex {
+		padding-left: 8px;
+		padding-right: 8px;
+	}
+}

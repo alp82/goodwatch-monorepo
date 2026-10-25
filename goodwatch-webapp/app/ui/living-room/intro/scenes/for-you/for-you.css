@@ -1,0 +1,133 @@
+/* The For you chapter: the backdrop, the hero text and the taste-match pill. Everything in cqw/cqh, every time
+   scaled by --k, transform and opacity animations only. Shared moves come from intro.css (intro-score-*). */
+
+/* The real taste-match pill (TasteMatchPill.tsx, 90 and above): amber gradient, a dark ring, a soft glow. */
+.intro-fy-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3em;
+	flex-shrink: 0;
+	border-radius: 999px;
+	background: linear-gradient(to bottom, #fcd34d, #f59e0b);
+	color: #030712;
+	font-family: ui-sans-serif, system-ui, sans-serif;
+	font-weight: 900;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	font-size: 2.4cqw;
+	line-height: 1;
+	padding: 0.32em 0.75em 0.32em 0.6em;
+	box-shadow: 0 0 0 0.3cqw #111827, 0 0 2.2cqw rgba(251, 191, 36, 0.55);
+}
+.intro-fy-pill svg {
+	width: 0.95em;
+	height: 0.95em;
+	opacity: 0.8;
+}
+
+/* The pick's backdrop, drifting in from a zoom, under a shade for the text. */
+.intro-fy-backdrop {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: #05060a;
+}
+.intro-fy-backdrop-zoom {
+	position: absolute;
+	inset: 0;
+	transform-origin: 55% 35%;
+	animation: intro-fy-backdrop-zoom calc(var(--dur) * var(--k))
+		cubic-bezier(0.2, 0.7, 0.3, 1) calc(var(--d) * var(--k)) both;
+}
+.intro-fy-backdrop-zoom img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: 60% 30%;
+}
+@keyframes intro-fy-backdrop-zoom {
+	from {
+		transform: scale(1.4);
+	}
+	to {
+		transform: scale(1.04);
+	}
+}
+.intro-fy-backdrop-shade {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+			to top,
+			rgba(5, 6, 10, 0.96) 0%,
+			rgba(5, 6, 10, 0.7) 30%,
+			rgba(5, 6, 10, 0) 62%
+		), linear-gradient(90deg, rgba(5, 6, 10, 0.7) 0%, rgba(5, 6, 10, 0) 55%);
+}
+.intro-fy-hero {
+	position: absolute;
+	left: 6cqw;
+	right: 6cqw;
+	bottom: 14cqh;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+.intro-fy-hero-kick {
+	font-family: ui-sans-serif, system-ui, sans-serif;
+	font-weight: 800;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: #fbbf24;
+	font-size: max(10px, 1.5cqw);
+}
+.intro-fy-hero-title {
+	margin-top: 0.8cqh;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+	font-weight: 900;
+	letter-spacing: -0.035em;
+	line-height: 0.95;
+	font-size: 10.5cqw;
+	color: #fff;
+	white-space: nowrap;
+	text-shadow: 0 0.4cqw 3cqw rgba(0, 0, 0, 0.5);
+}
+.intro-fy-hero-row {
+	margin-top: 3.4cqh;
+	display: flex;
+	align-items: center;
+	gap: 2cqw;
+}
+.intro-fy-hero-why {
+	font-family: ui-sans-serif, system-ui, sans-serif;
+	font-size: max(11px, 2.1cqw);
+	color: rgba(255, 255, 255, 0.8);
+	white-space: nowrap;
+}
+.intro-fy-hero-why b {
+	color: #fff;
+	font-weight: 700;
+}
+@container (max-width: 760px) or (max-height: 360px) {
+	.intro-fy-hero {
+		left: 5cqw;
+		bottom: 13cqh;
+	}
+	.intro-fy-hero-kick {
+		font-size: 3cqw;
+	}
+	.intro-fy-hero-title {
+		font-size: 14cqw;
+	}
+	.intro-fy-hero-row {
+		margin-top: 3cqh;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 2.6cqh;
+	}
+	.intro-fy-hero .intro-fy-pill {
+		font-size: 4cqw;
+	}
+	.intro-fy-hero-why {
+		font-size: 3.7cqw;
+	}
+}

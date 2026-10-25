@@ -9,7 +9,8 @@ import type { IntroCard } from "~/ui/living-room/intro/data"
 // - What is the same for everyone comes from content.json, a snapshot of the catalog taken when the film was made:
 //   the intro's titles and their feeling words, the five numbers behind the score chapter's title, the search phrase
 //   with its reading and results, the streaming wall, the Explorer's islands and combination, the filter steps and
-//   their counts, the pick and its feelings. It never runs the site's search or other costly work per request.
+//   their counts, the quiz's pick, popular modern shows for the For you, Use with AI and Discord bot chapters, and
+//   the For you chapter's pick. It never runs the site's search or other costly work per request.
 // - What depends on the visitor is read per request and kept per country for ten minutes: the titles as cards with
 //   their services where the visitor is (title-cards.server.ts), and the streaming chapter's title on Netflix there.
 import type { IntroData } from "~/ui/living-room/intro/scene"
@@ -22,7 +23,9 @@ const KEEP_MS = 10 * 60 * 1000
 /** How long a request waits for the visitor's country's availability to load after a restart. */
 const AVAILABILITY_WAIT_MS = 2500
 
-const feelsOf = new Map(content.pool.map((t) => [t.key, t.feels]))
+const feelsOf = new Map(
+	[...content.pool, ...content.shows].map((t) => [t.key, t.feels]),
+)
 
 /** The visitor's country and services: the intro's data is the same for every visitor who shares them. */
 const keyOf = (viewer: ViewerContext) =>
@@ -46,15 +49,22 @@ export async function loadIntro(request: Request): Promise<IntroData> {
 
 async function build(viewer: ViewerContext): Promise<IntroData> {
 	await availabilityLoaded(viewer.country, AVAILABILITY_WAIT_MS)
-	const keys = content.pool.map((t) => t.key as TitleKey)
-	const cards = await getTitleCards(keys, viewer, NO_TASTE)
-	const pool: IntroCard[] = cards.map((card) => ({
-		...card,
-		feels: feelsOf.get(Number(card.key)) ?? [],
-	}))
+	// Two reads: one read takes at most MAX_KEYS titles.
+	const cardsOf = async (titles: { key: number }[]): Promise<IntroCard[]> =>
+		(
+			await getTitleCards(
+				titles.map((t) => t.key as TitleKey),
+				viewer,
+				NO_TASTE,
+			)
+		).map((card) => ({ ...card, feels: feelsOf.get(Number(card.key)) ?? [] }))
+	const [pool, shows] = await Promise.all([
+		cardsOf(content.pool),
+		cardsOf(content.shows),
+	])
 	const netflix = await netflixFor(viewer.country, pool)
-	const { pool: _snapshotPool, capturedAt: _capturedAt, ...extra } = content
-	return { pool, extra: { ...extra, netflix } }
+	const { pool: _pool, shows: _shows, capturedAt: _at, ...extra } = content
+	return { pool, extra: { ...extra, shows, netflix } }
 }
 
 /**

@@ -1,5 +1,5 @@
-// The hand-over frame between "Picked for you" and "How it feels": the pick's poster alone, centred on black. The
-// pick ends on exactly this frame and the feelings start on it, so the cut between them is invisible.
+// The For you chapter's pick poster alone, centred on black: where the wall's dive leaves it and the backdrop takes
+// over (scenes/for-you/).
 import type { CSSProperties } from "react"
 import type { IntroCard } from "~/ui/living-room/intro/data"
 import { tmdbImageUrl } from "~/utils/tmdb-image"

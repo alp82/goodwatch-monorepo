@@ -1,0 +1,291 @@
+/* The "Use with AI" chapter's stage, motion classes, typing, and the GoodWatch card pieces. Sized in container units;
+   every time is calc(<n> * var(--k)); transform and opacity animations only. Phone picture rules:
+   @container (max-width: 760px) or (max-height: 360px). */
+.intro-ai {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: #05060a;
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+	--ease: cubic-bezier(0.16, 1, 0.3, 1);
+	--deal: cubic-bezier(0.25, 0.8, 0.25, 1);
+	--inout: cubic-bezier(0.65, 0, 0.35, 1);
+	--amber: #fbbf24;
+	--g900: #101828;
+	--g800: #1e2939;
+	--g400: #99a1af;
+}
+.intro-ai img {
+	display: block;
+}
+.intro-ai p {
+	margin: 0;
+}
+.intro-ai-amber {
+	color: var(--amber);
+}
+.intro-ai-layer {
+	position: absolute;
+	inset: 0;
+}
+
+/* Motion: delay --d, duration --dur, both in ms at k = 1. */
+.intro-ai-rise {
+	animation: intro-ai-rise calc(var(--dur, 800ms) * var(--k)) var(--ease)
+		calc(var(--d, 0ms) * var(--k)) both;
+}
+.intro-ai-fade {
+	animation: intro-ai-fade calc(var(--dur, 600ms) * var(--k)) ease-out
+		calc(var(--d, 0ms) * var(--k)) both;
+}
+.intro-ai-out {
+	animation: intro-ai-out calc(var(--dur, 500ms) * var(--k)) ease-in
+		calc(var(--d, 0ms) * var(--k)) both;
+}
+.intro-ai-pop {
+	animation: intro-ai-pop calc(var(--dur, 600ms) * var(--k))
+		cubic-bezier(0.34, 1.5, 0.64, 1) calc(var(--d, 0ms) * var(--k)) both;
+}
+.intro-ai-deal {
+	animation: intro-ai-deal calc(var(--dur, 700ms) * var(--k)) var(--deal)
+		calc(var(--d, 0ms) * var(--k)) both;
+}
+.intro-ai-to {
+	animation: intro-ai-to calc(var(--dur, 700ms) * var(--k)) var(--inout)
+		calc(var(--d, 0ms) * var(--k)) both;
+}
+@keyframes intro-ai-rise {
+	from {
+		opacity: 0;
+		transform: translateY(0.5em);
+	}
+}
+@keyframes intro-ai-fade {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes intro-ai-out {
+	to {
+		opacity: 0;
+	}
+}
+@keyframes intro-ai-pop {
+	from {
+		opacity: 0;
+		transform: scale(0.6);
+	}
+}
+@keyframes intro-ai-deal {
+	from {
+		opacity: 0;
+		transform: translateY(18%) scale(0.94);
+	}
+}
+@keyframes intro-ai-to {
+	to {
+		transform: translate(var(--tx, 0), var(--ty, 0)) scale(var(--ts, 1));
+		opacity: var(--to, 1);
+	}
+}
+
+/* The headline: big bold words, one amber. */
+.intro-ai-head {
+	font-weight: 800;
+	line-height: 1;
+	letter-spacing: -0.02em;
+	font-size: 5.4cqw;
+}
+.intro-ai-head > span {
+	display: inline-block;
+}
+.intro-ai-top {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 3.2cqh;
+	text-align: center;
+	white-space: nowrap;
+	font-size: 4.4cqw;
+}
+
+/* Typing, with a caret on the newest letter. */
+.intro-ai-typed {
+	display: inline;
+}
+.intro-ai-word {
+	display: inline-block;
+	white-space: nowrap;
+}
+.intro-ai-ch {
+	position: relative;
+	display: inline-block;
+	animation: intro-ai-fade calc(30ms * var(--k)) linear
+		calc(var(--d) * var(--k)) both;
+}
+.intro-ai-ch::after {
+	content: "";
+	position: absolute;
+	right: -0.06em;
+	top: 0.1em;
+	bottom: 0.05em;
+	width: 0.08em;
+	background: var(--amber);
+	opacity: 0;
+	animation: intro-ai-caret calc(var(--pc) * var(--k)) linear
+		calc(var(--d) * var(--k)) none;
+}
+.intro-ai-ch-last::after {
+	animation: intro-ai-blink calc(900ms * var(--k)) steps(1, end)
+		calc(var(--d) * var(--k)) infinite none;
+}
+@keyframes intro-ai-caret {
+	0%,
+	100% {
+		opacity: 1;
+	}
+}
+@keyframes intro-ai-blink {
+	0% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0;
+	}
+}
+
+/* The score tab (RatingOverlay / the widget's .score): G over the number, rounded top. */
+.intro-ai-tab {
+	position: absolute;
+	top: 5%;
+	right: 6%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.12em;
+	min-width: 2.1em;
+	padding: 0.4em 0.35em 0.2em;
+	border-radius: 999px 999px 0 0;
+	color: #fff;
+	font-weight: 700;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+	font-size: var(--tab, 1.1cqw);
+	box-shadow: 0 0.15em 0.4em rgba(0, 0, 0, 0.35);
+}
+.intro-ai-poster {
+	position: relative;
+	display: block;
+	aspect-ratio: 2 / 3;
+	border-radius: 0.5cqw;
+	overflow: hidden;
+	background: var(--g800);
+}
+.intro-ai-poster > img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.intro-ai-mark {
+	display: inline-flex;
+	padding: 0.3em 0.45em 0.22em 0.4em;
+	border-radius: 0.3em;
+	background: rgba(10, 10, 10, 0.55);
+	font-size: var(--mark, 1.1cqw);
+	line-height: 1;
+}
+
+/* The widget's banner (.feat). */
+.intro-ai-feat {
+	position: relative;
+	flex-shrink: 0;
+	isolation: isolate;
+	overflow: hidden;
+	border-radius: 0.8cqw;
+	background: var(--g900);
+	color: #fff;
+}
+.intro-ai-feat-bd {
+	position: absolute;
+	inset: 0;
+	z-index: -2;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center 20%;
+}
+.intro-ai-feat::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: linear-gradient(
+			90deg,
+			var(--g900) 0%,
+			rgba(16, 24, 40, 0.7) 45%,
+			rgba(16, 24, 40, 0.05) 100%
+		), linear-gradient(0deg, rgba(16, 24, 40, 0.8), transparent 50%);
+}
+.intro-ai-eyebrow {
+	font-weight: 600;
+	color: #fcd34d;
+}
+.intro-ai-display {
+	font-weight: 900;
+	letter-spacing: -0.03em;
+	line-height: 0.92;
+}
+.intro-ai-meta {
+	color: var(--g400);
+}
+.intro-ai-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45em;
+	padding: 0.3em 0.75em 0.3em 0.3em;
+	border-radius: 0.4em;
+	background: #fff;
+	color: #000;
+	font-weight: 700;
+	white-space: nowrap;
+}
+.intro-ai-btn img {
+	width: 1.7em;
+	height: 1.7em;
+	border-radius: 0.3em;
+}
+
+/* Pills under a banner's name, amber lead optional. */
+.intro-ai-pills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5em;
+	margin-top: 0.5em;
+}
+.intro-ai-pill {
+	display: inline-flex;
+	gap: 0.35em;
+	padding: 0.35em 0.75em;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.14);
+	font-weight: 600;
+	white-space: nowrap;
+}
+.intro-ai-pill b {
+	color: var(--amber);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.intro-ai * {
+		animation-duration: 1ms !important;
+		animation-delay: 0ms !important;
+		animation-iteration-count: 1 !important;
+	}
+}
+@container (max-width: 760px) or (max-height: 360px) {
+	.intro-ai-top {
+		font-size: 6.6cqw;
+		top: 3cqh;
+	}
+}

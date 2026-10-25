@@ -1,0 +1,565 @@
+/* The Discord bot chapter: Discord's dark theme, drawn after ui/discord-bot/DiscordMock.tsx, sized in em so the
+   scene sets one font-size in cqw on each part. */
+.intro-dc {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: #313338;
+	color: #dbdee1;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+	line-height: 1.25;
+}
+.intro-dc img {
+	display: block;
+	max-width: none;
+}
+.intro-dc em {
+	font-style: normal;
+	color: #fbbf24;
+}
+/* ---------- one animation helper: --an, --d (delay), --du (duration), --ez (easing), all at k = 1 ---------- */
+.intro-dc-a {
+	animation: var(--an) calc(var(--du, 600ms) * var(--k, 1))
+		var(--ez, cubic-bezier(0.16, 1, 0.3, 1)) calc(var(--d, 0ms) * var(--k, 1))
+		both;
+}
+@keyframes intro-dc-in {
+	from {
+		opacity: 0;
+		transform: translateY(0.6em);
+	}
+}
+@keyframes intro-dc-pop {
+	from {
+		opacity: 0;
+		transform: translateY(0.8em) scale(0.92);
+	}
+}
+@keyframes intro-dc-fade {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes intro-dc-out {
+	to {
+		opacity: 0;
+	}
+}
+@keyframes intro-dc-out-down {
+	to {
+		opacity: 0;
+		transform: translateY(0.8em);
+	}
+}
+@keyframes intro-dc-climb {
+	to {
+		transform: translateY(var(--to));
+	}
+}
+@keyframes intro-dc-press {
+	40% {
+		transform: scale(0.9);
+	}
+}
+@keyframes intro-dc-caret {
+	50% {
+		opacity: 0;
+	}
+}
+@keyframes intro-dc-push {
+	to {
+		transform: scale(var(--s, 1.04));
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.intro-dc-caret {
+		animation: none;
+	}
+	/* The last frame: every animation jumps to its end, layered ones in order. */
+	.intro-dc .intro-dc-a {
+		animation-duration: 1ms !important;
+		animation-delay: 0ms !important;
+		animation-iteration-count: 1 !important;
+	}
+}
+/* ---------- Discord pieces ---------- */
+.intro-dc-avatar {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	width: 2.2em;
+	height: 2.2em;
+	font-weight: 700;
+	color: #fff;
+}
+.intro-dc-app {
+	background: #fff;
+	padding: 0.4em;
+}
+.intro-dc-app img {
+	width: 100%;
+	height: 100%;
+	filter: invert(1);
+}
+.intro-dc-badge {
+	border-radius: 0.2em;
+	padding: 0 0.3em;
+	font-size: 0.62em;
+	line-height: 1.5;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: #fff;
+	background: #5865f2;
+}
+.intro-dc-card {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+	border-radius: 0.5em;
+	padding: 0.8em 0.9em 0.8em 1.15em;
+	background: #2b2d31;
+	box-shadow: inset 0.25em 0 0 var(--accent, #f59e0b), 0 0 0 1px #3a3c42;
+}
+.intro-dc-h1 {
+	font-size: 1.55em;
+	line-height: 1.1;
+	font-weight: 800;
+	color: #f2f3f5;
+}
+.intro-dc-small {
+	font-size: 0.82em;
+	color: #949ba4;
+}
+.intro-dc-facts {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.intro-dc-facts b {
+	color: #f2f3f5;
+}
+.intro-dc-sq {
+	display: inline-block;
+	width: 1.1em;
+	height: 1.1em;
+	border-radius: 0.3em;
+	vertical-align: -0.2em;
+	margin-right: 0.3em;
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+.intro-dc-btn {
+	display: inline-flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35em;
+	height: 1.95em;
+	border-radius: 0.45em;
+	padding: 0 0.8em;
+	font-size: 0.9em;
+	font-weight: 600;
+	white-space: nowrap;
+	color: #fff;
+	background: #4e5058;
+}
+.intro-dc-btn img {
+	width: 1.2em;
+	height: 1.2em;
+	border-radius: 0.3em;
+}
+.intro-dc-btn svg {
+	width: 0.85em;
+	height: 0.85em;
+}
+.intro-dc-btn-primary {
+	background: #5865f2;
+}
+.intro-dc-row {
+	display: flex;
+	gap: 0.45em;
+	overflow: hidden;
+}
+.intro-dc-sep {
+	height: 1px;
+	background: #3f4147;
+}
+.intro-dc-poster {
+	border-radius: 0.45em;
+	background: #1e1f22;
+	object-fit: cover;
+}
+.intro-dc-used {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 0.3em;
+	font-size: 0.85em;
+	color: #949ba4;
+	white-space: nowrap;
+}
+.intro-dc-used::before {
+	content: "";
+	position: absolute;
+	left: -1.9em;
+	top: 0.62em;
+	width: 1.5em;
+	height: 0.7em;
+	border-top: 2px solid #4e5058;
+	border-left: 2px solid #4e5058;
+	border-top-left-radius: 0.4em;
+}
+.intro-dc-used b {
+	color: #f2f3f5;
+	font-weight: 600;
+}
+.intro-dc-used span.cmd {
+	color: #00a8fc;
+}
+.intro-dc-mini {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.1em;
+	height: 1.1em;
+	border-radius: 50%;
+	font-size: 0.75em;
+	font-weight: 700;
+	color: #fff;
+}
+/* ---------- the channel window ---------- */
+.intro-dc-chan {
+	font-size: 2.5cqw;
+	display: flex;
+}
+.intro-dc-rail {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.55em;
+	width: 3.2em;
+	padding-top: 0.6em;
+	background: #1e1f22;
+	flex-shrink: 0;
+}
+.intro-dc-rail > span {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.2em;
+	height: 2.2em;
+	border-radius: 50%;
+	background: #313338;
+	font-size: 0.8em;
+	font-weight: 700;
+	color: #dbdee1;
+}
+.intro-dc-rail > span.on {
+	border-radius: 0.7em;
+	background: #5865f2;
+	color: #fff;
+}
+.intro-dc-rail i {
+	width: 1.4em;
+	height: 2px;
+	background: #3f4147;
+}
+.intro-dc-main {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+}
+.intro-dc-top {
+	position: absolute;
+	inset: 0 0 auto;
+	z-index: 3;
+	display: flex;
+	align-items: center;
+	gap: 0.4em;
+	height: 2.4em;
+	padding: 0 0.9em;
+	background: #313338;
+	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+	font-weight: 700;
+	color: #f2f3f5;
+}
+.intro-dc-top .hash {
+	font-size: 1.3em;
+	color: #80848e;
+	font-weight: 500;
+}
+.intro-dc-view {
+	position: absolute;
+	top: 2.4em;
+	bottom: 3.4em;
+	left: 0;
+	right: 0;
+	overflow: hidden;
+}
+.intro-dc-thread {
+	position: absolute;
+	inset: 0 0 auto;
+}
+.intro-dc-msg {
+	position: absolute;
+	left: 0.9em;
+	right: 0.9em;
+	display: flex;
+	gap: 0.85em;
+}
+.intro-dc-msg-name {
+	display: flex;
+	align-items: baseline;
+	gap: 0.4em;
+	font-weight: 600;
+	color: #f2f3f5;
+}
+.intro-dc-msg-name small {
+	font-size: 0.7em;
+	font-weight: 400;
+	color: #949ba4;
+}
+.intro-dc-react {
+	display: flex;
+	gap: 0.35em;
+	height: 1.6em;
+}
+.intro-dc-react span {
+	display: flex;
+	align-items: center;
+	gap: 0.3em;
+	border-radius: 0.5em;
+	padding: 0 0.5em;
+	font-size: 0.85em;
+	font-weight: 600;
+	background: #2b2d31;
+	box-shadow: 0 0 0 1px #3a3c42;
+}
+.intro-dc-react span.mine {
+	background: rgba(88, 101, 242, 0.25);
+	box-shadow: 0 0 0 1px #5865f2;
+	color: #dee0fc;
+}
+.intro-dc-input {
+	position: absolute;
+	left: 0.9em;
+	right: 0.9em;
+	bottom: 0.8em;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	gap: 0.7em;
+	height: 2.6em;
+	padding: 0 0.8em;
+	border-radius: 0.5em;
+	background: #383a40;
+}
+.intro-dc-plus {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.4em;
+	height: 1.4em;
+	border-radius: 50%;
+	background: #b5bac1;
+	color: #383a40;
+	font-weight: 800;
+	line-height: 1;
+}
+.intro-dc-typed {
+	position: relative;
+	flex: 1;
+	display: flex;
+	align-items: center;
+	height: 100%;
+	color: #f2f3f5;
+}
+.intro-dc-placeholder {
+	position: absolute;
+	left: 0;
+	color: #6d6f78;
+}
+.intro-dc-caret {
+	display: inline-block;
+	width: 1px;
+	height: 1.15em;
+	margin-left: 1px;
+	background: #f2f3f5;
+	animation: intro-dc-caret calc(900ms * var(--k, 1)) steps(1) infinite;
+}
+.intro-dc-menu {
+	position: absolute;
+	left: 0.9em;
+	right: 0.9em;
+	bottom: 3.9em;
+	z-index: 4;
+	overflow: hidden;
+	border-radius: 0.5em;
+	background: #2b2d31;
+	box-shadow: 0 0 0 1px #1e1f22, 0 0.6em 1.6em rgba(0, 0, 0, 0.45);
+	transform-origin: 30% 100%;
+}
+.intro-dc-menu-head {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+	height: 2em;
+	padding: 0 0.7em;
+	border-bottom: 1px solid #1e1f22;
+	font-size: 0.72em;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: #949ba4;
+}
+.intro-dc-menu-head .intro-dc-avatar {
+	width: 1.9em;
+	height: 1.9em;
+	padding: 0.3em;
+}
+.intro-dc-menu li {
+	display: flex;
+	align-items: baseline;
+	gap: 0.7em;
+	height: 2em;
+	padding: 0 0.8em;
+	line-height: 2em;
+	white-space: nowrap;
+	overflow: hidden;
+}
+.intro-dc-menu li b {
+	display: inline-block;
+	color: #f2f3f5;
+}
+.intro-dc-menu li span {
+	font-size: 0.85em;
+	color: #949ba4;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.intro-dc-menu li.on {
+	background: #35373c;
+}
+/* ---------- the stage: blurple, headline, window box, lifted card ---------- */
+.intro-dc-win {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: #313338;
+}
+.intro-dc-blurple {
+	background: radial-gradient(
+			80% 90% at 20% 40%,
+			rgba(255, 255, 255, 0.1),
+			transparent 60%
+		),
+		linear-gradient(135deg, #5865f2 0%, #4752c4 45%, #2b2f6e 85%, #1e1f22 120%);
+}
+.intro-dc-box {
+	position: absolute;
+}
+.intro-dc-title {
+	font-weight: 800;
+	line-height: 0.98;
+	letter-spacing: -0.025em;
+	color: #fff;
+	text-shadow: 0 0.4cqw 3cqw rgba(0, 0, 0, 0.3);
+	white-space: nowrap;
+}
+.intro-dc-title > span.l {
+	display: block;
+}
+.intro-dc-mark {
+	display: block;
+	height: 0.62em;
+	width: auto;
+	margin-bottom: 0.32em;
+}
+.intro-dc-burst {
+	position: absolute;
+	border-radius: 0.8em;
+	padding: 0.7em;
+	background: #313338;
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1.6em 3.6em
+		rgba(0, 0, 0, 0.55);
+	transform-origin: 0 0;
+}
+.intro-dc-burst .intro-dc-react {
+	position: absolute;
+	right: 1.4em;
+	bottom: -0.8em;
+}
+.intro-dc-burst .intro-dc-react span {
+	background: #2b2d31;
+	box-shadow: 0 0 0 1px #3a3c42, 0 0.3em 0.8em rgba(0, 0, 0, 0.4);
+}
+.intro-dc-burst .intro-dc-react span.mine {
+	background: #3c4270;
+}
+@keyframes intro-dc-slide {
+	from {
+		opacity: var(--o, 1);
+		transform: translate(var(--fx, 0), var(--fy, 0));
+	}
+}
+@keyframes intro-dc-back {
+	to {
+		opacity: 0;
+		transform: scale(0.9) translateY(-4%);
+	}
+}
+.intro-dc-title.center .intro-dc-mark {
+	margin-inline: auto;
+}
+.intro-dc-menu-at {
+	position: absolute;
+	left: 0.9em;
+	right: 0.9em;
+	bottom: 3.9em;
+	z-index: 4;
+}
+/* ---------- the step back: the window shrinks, the card lifts out ---------- */
+/* The window moves to (--tx, --ty), scaled and tilted, from its top-left corner. */
+@keyframes intro-dc-to {
+	to {
+		transform: translate(var(--tx, 0), var(--ty, 0)) scale(var(--ts, 1))
+			rotate(var(--tr, 0deg));
+	}
+}
+/* The thread's card lifts out of its spot (--fx, --fy, --fs) to its own place and tilt; its copy in the window fades
+   in the same few frames, so one card is seen leaving. */
+@keyframes intro-dc-lift {
+	from {
+		opacity: 0;
+		transform: translate(var(--fx), var(--fy)) scale(var(--fs));
+	}
+	12% {
+		opacity: 1;
+	}
+	to {
+		transform: rotate(var(--r, 0deg));
+	}
+}
+.intro-dc-shrink {
+	position: absolute;
+	inset: 0;
+	transform-origin: 0 0;
+	border-radius: 2.2cqw;
+	overflow: hidden;
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 3cqw 8cqw
+		rgba(0, 0, 0, 0.45);
+}
+.intro-dc-card-compact {
+	gap: 0.45em;
+}
+.intro-dc-card-compact .intro-dc-facts {
+	font-size: 1.15em;
+}
+.intro-dc-card-compact .intro-dc-btn {
+	font-size: 1.05em;
+}
+.intro-dc-burst.big-react .intro-dc-react {
+	font-size: 1.2em;
+}

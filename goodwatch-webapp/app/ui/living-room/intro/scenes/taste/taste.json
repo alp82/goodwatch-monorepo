@@ -1,0 +1,607 @@
+{
+	"note": "A real member's taste and the For you ranking (domain/for-you-page/rank.ts) of 865 real titles, worked out offline for the film at three handle shapes (flat, Humor at lots more, then World at lots more too), each keeping its top six well-known titles in order.",
+	"attributes": [
+		{
+			"key": "adrenaline",
+			"label": "Adrenaline",
+			"family": "feel",
+			"edge": 0.14,
+			"emoji": "⚡"
+		},
+		{
+			"key": "tension",
+			"label": "Tension",
+			"family": "feel",
+			"edge": -0.31,
+			"emoji": "😬"
+		},
+		{
+			"key": "scare",
+			"label": "Scare",
+			"family": "feel",
+			"edge": -0.24,
+			"emoji": "👻"
+		},
+		{
+			"key": "violence",
+			"label": "Violence",
+			"family": "feel",
+			"edge": -0.15,
+			"emoji": "🗡️"
+		},
+		{
+			"key": "romance",
+			"label": "Romance",
+			"family": "feel",
+			"edge": -0.54,
+			"emoji": "💞"
+		},
+		{
+			"key": "eroticism",
+			"label": "Eroticism",
+			"family": "feel",
+			"edge": -0.45,
+			"emoji": "🔥"
+		},
+		{
+			"key": "wholesome",
+			"label": "Wholesome",
+			"family": "feel",
+			"edge": 0.42,
+			"emoji": "🌈"
+		},
+		{
+			"key": "wonder",
+			"label": "Wonder",
+			"family": "feel",
+			"edge": 1.15,
+			"emoji": "✨"
+		},
+		{
+			"key": "pathos",
+			"label": "Pathos",
+			"family": "feel",
+			"edge": -0.19,
+			"emoji": "💔"
+		},
+		{
+			"key": "melancholy",
+			"label": "Melancholy",
+			"family": "feel",
+			"edge": -0.24,
+			"emoji": "🍂"
+		},
+		{
+			"key": "uncanny",
+			"label": "Uncanny",
+			"family": "feel",
+			"edge": 0.48,
+			"emoji": "🕯️"
+		},
+		{
+			"key": "catharsis",
+			"label": "Catharsis",
+			"family": "feel",
+			"edge": 0.33,
+			"emoji": "😭"
+		},
+		{
+			"key": "nostalgia",
+			"label": "Nostalgia",
+			"family": "feel",
+			"edge": 0.39,
+			"emoji": "📼"
+		},
+		{
+			"key": "situational_comedy",
+			"label": "Situational Comedy",
+			"family": "humor",
+			"edge": 0.44,
+			"emoji": "😂"
+		},
+		{
+			"key": "wit_wordplay",
+			"label": "Wit & Wordplay",
+			"family": "humor",
+			"edge": 0.68,
+			"emoji": "🧠"
+		},
+		{
+			"key": "physical_comedy",
+			"label": "Physical Comedy",
+			"family": "humor",
+			"edge": 0.9,
+			"emoji": "🤸"
+		},
+		{
+			"key": "cringe_humor",
+			"label": "Cringe Humor",
+			"family": "humor",
+			"edge": -0.04,
+			"emoji": "😖"
+		},
+		{
+			"key": "absurdist_humor",
+			"label": "Absurdist Humor",
+			"family": "humor",
+			"edge": 1.32,
+			"emoji": "🌀"
+		},
+		{
+			"key": "satire_parody",
+			"label": "Satire & Parody",
+			"family": "humor",
+			"edge": 1.17,
+			"emoji": "🎭"
+		},
+		{
+			"key": "dark_humor",
+			"label": "Dark Humor",
+			"family": "humor",
+			"edge": 0.55,
+			"emoji": "🕳️"
+		},
+		{
+			"key": "fantasy",
+			"label": "Fantasy",
+			"family": "world",
+			"edge": 0.42,
+			"emoji": "🧙"
+		},
+		{
+			"key": "futuristic",
+			"label": "Futuristic",
+			"family": "world",
+			"edge": 1.15,
+			"emoji": "🚀"
+		},
+		{
+			"key": "historical",
+			"label": "Historical",
+			"family": "world",
+			"edge": -0.31,
+			"emoji": "🏛️"
+		},
+		{
+			"key": "contemporary_realism",
+			"label": "Contemporary Realism",
+			"family": "world",
+			"edge": -0.66,
+			"emoji": "🏙️"
+		},
+		{
+			"key": "crime",
+			"label": "Crime",
+			"family": "world",
+			"edge": -0.01,
+			"emoji": "🕵️"
+		},
+		{
+			"key": "mystery",
+			"label": "Mystery",
+			"family": "world",
+			"edge": 0.08,
+			"emoji": "🧩"
+		},
+		{
+			"key": "warfare",
+			"label": "Warfare",
+			"family": "world",
+			"edge": 0.15,
+			"emoji": "🎖️"
+		},
+		{
+			"key": "political",
+			"label": "Politics",
+			"family": "world",
+			"edge": 0.41,
+			"emoji": "🏛️"
+		},
+		{
+			"key": "sports",
+			"label": "Sports",
+			"family": "world",
+			"edge": -0.06,
+			"emoji": "🏅"
+		},
+		{
+			"key": "biographical",
+			"label": "Biographical",
+			"family": "world",
+			"edge": -0.32,
+			"emoji": "🧬"
+		},
+		{
+			"key": "coming_of_age",
+			"label": "Coming of Age",
+			"family": "world",
+			"edge": -0.1,
+			"emoji": "🌱"
+		},
+		{
+			"key": "family_dynamics",
+			"label": "Family Dynamics",
+			"family": "world",
+			"edge": -0.58,
+			"emoji": "👨‍👩‍👧‍👦"
+		},
+		{
+			"key": "psychological",
+			"label": "Psychological",
+			"family": "world",
+			"edge": -0.08,
+			"emoji": "🧠"
+		},
+		{
+			"key": "showbiz",
+			"label": "Showbiz",
+			"family": "world",
+			"edge": 0.25,
+			"emoji": "🎬"
+		},
+		{
+			"key": "gaming",
+			"label": "Gaming",
+			"family": "world",
+			"edge": 0.33,
+			"emoji": "🎮"
+		},
+		{
+			"key": "pop_culture",
+			"label": "Pop Culture",
+			"family": "world",
+			"edge": 0.42,
+			"emoji": "📰"
+		},
+		{
+			"key": "social_commentary",
+			"label": "Social Commentary",
+			"family": "world",
+			"edge": 0.7,
+			"emoji": "🗣️"
+		},
+		{
+			"key": "class_and_capitalism",
+			"label": "Class & Capitalism",
+			"family": "world",
+			"edge": 0.24,
+			"emoji": "💰"
+		},
+		{
+			"key": "technology_and_humanity",
+			"label": "Tech & Humanity",
+			"family": "world",
+			"edge": 1.03,
+			"emoji": "🤖"
+		},
+		{
+			"key": "spiritual",
+			"label": "Spiritual",
+			"family": "world",
+			"edge": 0.35,
+			"emoji": "🕊️"
+		},
+		{
+			"key": "narrative_structure",
+			"label": "Narrative Structure",
+			"family": "story",
+			"edge": 0.78,
+			"emoji": "🏗️"
+		},
+		{
+			"key": "dialogue_quality",
+			"label": "Dialogue Quality",
+			"family": "story",
+			"edge": 0.65,
+			"emoji": "💬"
+		},
+		{
+			"key": "character_depth",
+			"label": "Character Depth",
+			"family": "story",
+			"edge": 0.31,
+			"emoji": "🧩"
+		},
+		{
+			"key": "slow_burn",
+			"label": "Slow Burn",
+			"family": "story",
+			"edge": -0.41,
+			"emoji": "🕯️"
+		},
+		{
+			"key": "fast_pace",
+			"label": "Fast Pace",
+			"family": "story",
+			"edge": 0.47,
+			"emoji": "🏎️"
+		},
+		{
+			"key": "intrigue",
+			"label": "Intrigue",
+			"family": "story",
+			"edge": 0.38,
+			"emoji": "🕵️"
+		},
+		{
+			"key": "complexity",
+			"label": "Complexity",
+			"family": "story",
+			"edge": 0.65,
+			"emoji": "🧠"
+		},
+		{
+			"key": "rewatchability",
+			"label": "Rewatchability",
+			"family": "story",
+			"edge": 1.4,
+			"emoji": "🔁"
+		},
+		{
+			"key": "hopefulness",
+			"label": "Hopefulness",
+			"family": "story",
+			"edge": 0.43,
+			"emoji": "🌤️"
+		},
+		{
+			"key": "bleakness",
+			"label": "Bleakness",
+			"family": "story",
+			"edge": -0.19,
+			"emoji": "🌫️"
+		},
+		{
+			"key": "ambiguity",
+			"label": "Ambiguity",
+			"family": "story",
+			"edge": 0.51,
+			"emoji": "❓"
+		},
+		{
+			"key": "novelty",
+			"label": "Novelty",
+			"family": "story",
+			"edge": 1.67,
+			"emoji": "✨"
+		},
+		{
+			"key": "homage_and_reference",
+			"label": "Homage & Reference",
+			"family": "story",
+			"edge": 0.19,
+			"emoji": "🖼️"
+		},
+		{
+			"key": "non_linear_narrative",
+			"label": "Non-linear Narrative",
+			"family": "story",
+			"edge": 0.52,
+			"emoji": "🕰️"
+		},
+		{
+			"key": "meta_narrative",
+			"label": "Meta Narrative",
+			"family": "story",
+			"edge": 0.8,
+			"emoji": "🪞"
+		},
+		{
+			"key": "surrealism",
+			"label": "Surrealism",
+			"family": "story",
+			"edge": 1.24,
+			"emoji": "🌀"
+		},
+		{
+			"key": "eccentricity",
+			"label": "Eccentricity",
+			"family": "story",
+			"edge": 1.25,
+			"emoji": "🎩"
+		},
+		{
+			"key": "philosophical",
+			"label": "Philosophical",
+			"family": "story",
+			"edge": 0.95,
+			"emoji": "🧘"
+		},
+		{
+			"key": "educational",
+			"label": "Educational",
+			"family": "story",
+			"edge": 0.35,
+			"emoji": "📚"
+		},
+		{
+			"key": "direction",
+			"label": "Direction",
+			"family": "craft",
+			"edge": 0.92,
+			"emoji": "🎬"
+		},
+		{
+			"key": "acting",
+			"label": "Acting",
+			"family": "craft",
+			"edge": 0.2,
+			"emoji": "🎭"
+		},
+		{
+			"key": "cinematography",
+			"label": "Cinematography",
+			"family": "craft",
+			"edge": 0.38,
+			"emoji": "🎥"
+		},
+		{
+			"key": "editing",
+			"label": "Editing",
+			"family": "craft",
+			"edge": 0.95,
+			"emoji": "✂️"
+		},
+		{
+			"key": "music_composition",
+			"label": "Music Composition",
+			"family": "craft",
+			"edge": 0.8,
+			"emoji": "🎼"
+		},
+		{
+			"key": "world_immersion",
+			"label": "World Immersion",
+			"family": "craft",
+			"edge": 0.59,
+			"emoji": "🌍"
+		},
+		{
+			"key": "spectacle",
+			"label": "Spectacle",
+			"family": "craft",
+			"edge": 0.57,
+			"emoji": "🎆"
+		},
+		{
+			"key": "visual_stylization",
+			"label": "Visual Stylization",
+			"family": "craft",
+			"edge": 1.15,
+			"emoji": "🎨"
+		},
+		{
+			"key": "pastiche",
+			"label": "Pastiche",
+			"family": "craft",
+			"edge": 0.53,
+			"emoji": "🧩"
+		},
+		{
+			"key": "psychedelic",
+			"label": "Psychedelic",
+			"family": "craft",
+			"edge": 0.99,
+			"emoji": "🌈"
+		},
+		{
+			"key": "grotesque",
+			"label": "Grotesque",
+			"family": "craft",
+			"edge": 0.07,
+			"emoji": "🧟"
+		},
+		{
+			"key": "camp_and_irony",
+			"label": "Camp & Irony",
+			"family": "craft",
+			"edge": 0.65,
+			"emoji": "💅"
+		},
+		{
+			"key": "dialogue_centrality",
+			"label": "Dialogue Centrality",
+			"family": "craft",
+			"edge": 0.54,
+			"emoji": "🗣️"
+		},
+		{
+			"key": "music_centrality",
+			"label": "Music Centrality",
+			"family": "craft",
+			"edge": 0.69,
+			"emoji": "🎵"
+		},
+		{
+			"key": "sound_centrality",
+			"label": "Sound Centrality",
+			"family": "craft",
+			"edge": 0.4,
+			"emoji": "🔊"
+		}
+	],
+	"states": {
+		"flat": [
+			"show-5895",
+			"show-21729",
+			"show-2418",
+			"show-65495",
+			"show-60728",
+			"show-96713"
+		],
+		"humor2": [
+			"show-2418",
+			"show-3793",
+			"movie-914",
+			"show-291904",
+			"show-60874",
+			"movie-324849"
+		],
+		"world2humor2": [
+			"movie-68",
+			"show-97727",
+			"show-197548",
+			"show-2418",
+			"show-60874",
+			"show-3793"
+		]
+	},
+	"titles": {
+		"show-5895": {
+			"title": "FLCL",
+			"poster": "/FkgA8CcmiLJGVCRYRQ2g2UfVtF.jpg"
+		},
+		"show-21729": {
+			"title": "Gurren Lagann",
+			"poster": "/sG0Z0yWJmzr7UW6183cmz5DAjqm.jpg"
+		},
+		"show-2418": {
+			"title": "The Venture Bros.",
+			"poster": "/ckQE1aLYQkRpp2HmHljiELAiOr1.jpg"
+		},
+		"show-65495": {
+			"title": "Atlanta",
+			"poster": "/8HZyGMnPLVVb00rmrh6A2SbK9NX.jpg"
+		},
+		"show-60728": {
+			"title": "Kill la Kill",
+			"poster": "/4F1WtP3dFIwLPOfa3u29VEVnNkf.jpg"
+		},
+		"show-96713": {
+			"title": "The Midnight Gospel",
+			"poster": "/me3kxfiFRkdto6SmDQv0nczjfmP.jpg"
+		},
+		"movie-68": {
+			"title": "Brazil",
+			"poster": "/2w09J0KUnVtJvqPYu8N63XjAyCR.jpg"
+		},
+		"show-291904": {
+			"title": "The Wonderfully Weird World of Gumball",
+			"poster": "/wG6tRzXB8lTE03i7NaqwO04z5Oy.jpg"
+		},
+		"show-60874": {
+			"title": "Space Dandy",
+			"poster": "/yNjRKE4W2ZJIoCDA2o6brNqpjg7.jpg"
+		},
+		"show-3793": {
+			"title": "Invader ZIM",
+			"poster": "/nbphRMU1yjDjcMC5RCPyCxc4Yff.jpg"
+		},
+		"movie-914": {
+			"title": "The Great Dictator",
+			"poster": "/nhMXB8GTdswYMCL9nepDZymJCOr.jpg"
+		},
+		"movie-324849": {
+			"title": "The Lego Batman Movie",
+			"poster": "/e1TliRWOdXQ73pRunbpFiGst6Kd.jpg"
+		},
+		"show-97727": {
+			"title": "Inside Job",
+			"poster": "/qwJUDMJ4i3KBYjeUFK9Js87iJEa.jpg"
+		},
+		"show-197548": {
+			"title": "Mrs. Davis",
+			"poster": "/tMr3mFACLuL4J7AEj8yDwcf5rnr.jpg"
+		}
+	}
+}

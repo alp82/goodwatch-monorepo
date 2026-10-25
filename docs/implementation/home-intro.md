@@ -1,9 +1,11 @@
 # The intro on the start page
 
-The start page's TV opens with a boot screen, then plays a guest a short film about GoodWatch, about 77 seconds in
-ten chapters, ending in a quiz that gives a real pick. Below the room, "How GoodWatch works" carries the same chapters
-as page content: it is what a crawler reads. The film was chosen in a prototype (branch `prototype/landing-experience`)
-over fourteen rounds of review.
+The start page's TV opens with a boot screen, then plays a guest a short film about GoodWatch in eleven chapters,
+ending in a quiz that gives a real pick. Below the room, "How GoodWatch works" carries the same chapters as page
+content: it is what a crawler reads. The film was chosen in a prototype (branch `prototype/landing-experience`) over
+fourteen rounds of review. On October 25, 2026 a second prototype (branch `prototype/intro-v2`, local) replaced the
+For you and How it feels chapters with For you (a modern show) and Your taste (the fingerprint), removed the
+Explorer chapter, added Use with AI and Discord bot, and hid the desktop's G over the picture until the quiz.
 
 ## What a visitor gets
 
@@ -65,7 +67,8 @@ same build scored 99 (FCP 1.4 s, LCP 2.1 s instead of 1.8 s and 2.6 s).
   - `player.tsx`: plays scenes with their hand-overs, the chapter bar, Next and Replay.
   - `scene.ts`: the chapters (`CHAPTERS`, in film order) and the scene contract.
   - `film.ts`: one scene per chapter, in `CHAPTERS` order.
-  - `scenes/`: one file per chapter. `parts/`: what scenes share. `quiz/taste-quiz.tsx`: the quiz.
+  - `scenes/`: one file per chapter, or one folder for a chapter with several files (`for-you/`, `taste/`, `ai/`,
+    `discord/`, each with its own style sheet). `parts/`: what scenes share. `quiz/taste-quiz.tsx`: the quiz.
   - `progress.ts`, `events.ts`, `data.ts`: progress rules, page events, data shapes.
 - `app/ui/living-room/HowGoodWatchWorks.tsx`, `how-goodwatch-works.css`: the section below the room (the page's H1).
 - `app/routes/api.intro.ts`, `app/server/living-room/intro/`: the film's data.
@@ -74,12 +77,15 @@ same build scored 99 (FCP 1.4 s, LCP 2.1 s instead of 1.8 s and 2.6 s).
 
 - `content.json` is a snapshot of the catalog taken on 2026-10-17: the intro's titles and their feeling words, the
   five numbers behind "One score", the search phrase with the site search's own reading and results, the streaming
-  wall and its counts, the Explorer's islands and combination, the filter steps and counts, the pick (Avatar, from the
-  guest recommendations for Interstellar and Inception) and its feelings, the franchise of each shown movie. Nothing
+  wall and its counts, the Explorer's islands and combination ("How GoodWatch works" pictures), the filter steps and
+  counts, the old For you pick (Avatar) and its feelings ("How it works" pictures), the franchise of each shown
+  movie. Added on 2026-10-25: `shows`, eight popular modern
+  shows (Severance, The Bear, Shōgun, Arcane, Wednesday, Fallout, The Penguin, House of the Dragon) with their
+  feeling words, and `forYou`, the For you chapter's pick (Severance, 90% match, for Black Mirror and Inception). Nothing
   here runs the site's search or other costly work per request; the combined search writes `search_history` and costs
   money, so never call it from the intro.
-- Per request (`intro.server.ts`), kept ten minutes per country and services: the titles as cards with their services
-  where the visitor is (`getTitleCards`), and the streaming chapter's title on Netflix there (`netflix.server.ts`, one
+- Per request (`intro.server.ts`), kept ten minutes per country and services: the titles and the modern shows
+  (`extra.shows`) as cards with their services where the visitor is (`getTitleCards`, two reads of at most 60), and the streaming chapter's title on Netflix there (`netflix.server.ts`, one
   Crate read per country, kept six hours). Without such a title, the chapter shows the snapshot's rows without "You".
 - `/api/intro?cards=movie:603,…` reads up to ten titles as cards for the quiz's pick.
 
@@ -92,3 +98,15 @@ branch (`app/server/prototype-intro/`). The counts drift slowly; the titles and 
 - Change a chapter: change its scene in `scenes/` and its entry in `film.ts` (`ms` must cover its animations).
 - A scene sizes everything in container units, scales every time by `--k`, animates only transform and opacity, and
   shows its last frame with reduced motion (`scene.ts`).
+
+## Chapter data kept in the code
+
+Some chapters show a member's moment with fixed data, read once and kept with the scene:
+
+- Your taste (`scenes/taste/taste.json`): a real member's taste fingerprint and their For you ranking
+  (`domain/for-you-page/rank.ts`) at each handle position the drag passes, worked out offline. The film doesn't
+  name the member.
+- Use with AI (`scenes/ai/examples.ts`, `uses.ts`): answers read from GoodWatch's MCP tools on 2026-10-25 (matches,
+  The Penguin's provider scores, HBO Max as the example member's service) and the burst's asks, one per MCP tool.
+- Discord bot (`scenes/discord/`): the #movie-night channel, its people and replies; the card is Arcane from
+  `extra.shows`.
