@@ -64,7 +64,8 @@ same build scored 99 (FCP 1.4 s, LCP 2.1 s instead of 1.8 s and 2.6 s).
   - `HomeIntro.tsx`: decides what the TV shows, listens for Just look around, "Watch in the intro" and the TV's About screen.
   - `boot.tsx`, `boot.css`: the boot screen, plain markup and CSS in the server's HTML.
   - `FilmScreen.tsx`: loaded on demand (`lazy`): reads `/api/intro`, then plays the film. Its code and `intro.css` are not on the page's first load.
-  - `player.tsx`: plays scenes with their hand-overs, the chapter bar, Next and Replay.
+  - `player.tsx`: plays scenes with their hand-overs, the chapter bar and Next. Holding a press on the picture (a finger after 180 ms) or the space bar plays the chapters at 2x with a centered "2×" overlay, easing back to 1x on release.
+  - `speed.ts`: the 2x ramp and the film clock the player's timers run on; the player sets the same speed on every animation on the stage.
   - `scene.ts`: the chapters (`CHAPTERS`, in film order) and the scene contract.
   - `film.ts`: one scene per chapter, in `CHAPTERS` order.
   - `scenes/`: one file per chapter, or one folder for a chapter with several files (`for-you/`, `taste/`, `ai/`,

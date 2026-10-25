@@ -4658,3 +4658,47 @@
 .film-home:not(.film-screen:has([data-scene="quiz"]) ~ .film-home) {
 	display: none;
 }
+
+/* The 2x overlay while a visitor holds the film (player.tsx, speed.ts). No blur: it sits over moving scenes. */
+.film-screen {
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+}
+.film-fast {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	z-index: 22;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5em;
+	padding: 0.35em 0.9em;
+	border-radius: 999px;
+	background: rgba(5, 6, 10, 0.66);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+	color: #fff;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+	font-weight: 800;
+	font-size: max(18px, 3cqw);
+	line-height: 1;
+	pointer-events: none;
+	opacity: 0;
+	transform: translate(-50%, -50%) scale(0.86);
+	transition:
+		opacity 0.16s ease-out,
+		transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.25);
+}
+.film-fast[data-on] {
+	opacity: 1;
+	transform: translate(-50%, -50%) scale(1);
+}
+.film-fast svg {
+	width: 0.85em;
+	height: 0.85em;
+}
+@media (prefers-reduced-motion: reduce) {
+	.film-fast {
+		transition: opacity 0.16s;
+	}
+}
