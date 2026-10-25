@@ -29,6 +29,52 @@ class TropeDescriptionTests(unittest.TestCase):
         html = page(f'<p><div class="indent">Opening quotation, not the definition.<div class="indent">— A speaker</div></div></p><p>{LEAD}</p><p>{SECOND}</p><hr><p>Example detail.</p>')
         self.assertEqual(self.extract(html)["description"], LEAD + "\n\n" + SECOND)
 
+    def test_real_shaped_image_caption_then_bare_linked_definition_keeps_the_first_paragraph(self):
+        definition = "A trope in comedy and other entertainment, Naked Apron is the practice of wearing an apron over otherwise minimal clothing."
+        body = ('<p><!--intro image comment--><div class="quoteright"><a><img alt="Image alt text"></a></div>'
+                '<div class="acaptionright">An image caption, not the definition.</div>'
+                '<!--caption repair instructions-->A trope in <a href="/Main/Comedy">comedy</a> and other entertainment, '
+                'Naked Apron is the practice of wearing an apron over otherwise minimal clothing.</p>'
+                '<p>The historical paragraph belongs after the actual definition, not before it.</p><hr>'
+                '<p>Examples do not belong in this definition.</p>')
+        result = self.extract(page(body))
+        self.assertIsNone(result["error"])
+        self.assertEqual(result["description"], definition + "\n\nThe historical paragraph belongs after the actual definition, not before it.")
+        self.assertNotIn('caption', result["description"])
+        self.assertNotIn('repair instructions', result["description"])
+        self.assertNotIn('Examples', result["description"])
+
+    def test_bare_intro_only_is_a_complete_paragraph(self):
+        body = 'A character treats an <em>un</em>usual game as <a>serious business</a>, even when everybody else is relaxed.<hr><p>Example.</p>'
+        result = self.extract(page(body))
+        self.assertEqual(result["description"], 'A character treats an unusual game as serious business, even when everybody else is relaxed.')
+
+    def test_nested_bare_runs_preserve_order_and_inline_word_boundaries(self):
+        body = ('<div>A <strong>nested</strong> definition explains the central convention in complete prose.'
+                '<section>Another bare <a>inline link</a> continues the explanation without inserting extra spaces before punctuation!</section>'
+                'The original wrapper then carries on with its own remaining explanation.'
+                '<p>A genuine paragraph follows the surrounding bare text.</p></div><hr>')
+        result = self.extract(page(body))
+        self.assertEqual(result["description"], 'A nested definition explains the central convention in complete prose.\n\n'
+                         'Another bare inline link continues the explanation without inserting extra spaces before punctuation!\n\n'
+                         'The original wrapper then carries on with its own remaining explanation.\n\n'
+                         'A genuine paragraph follows the surrounding bare text.')
+
+    def test_bare_examples_label_stops_before_bare_examples(self):
+        body = f'<p>{LEAD}</p>Examples:<div>Examples must never become part of the general introduction.</div>'
+        self.assertEqual(self.extract(page(body))["description"], LEAD)
+
+    def test_bare_quotes_comments_and_sidebars_are_not_article_definitions(self):
+        body = f'<!--A long hidden comment is not prose.--><span class="caption">Caption text.</span><div class="indent">Quotation.</div>{LEAD}<aside>Bare sidebar text is not an introduction.</aside>Unrelated text after sidebar.'
+        result = self.extract(page(body))
+        self.assertEqual(result["description"], LEAD)
+        self.assertNotIn('sidebar', result["description"])
+
+    def test_premature_article_close_keeps_bare_continuation_before_its_boundary(self):
+        html = f'<html><head><link rel="canonical" href="{URL}"></head><body><div id="main-content"><h1>Serious Business</h1><div id="main-article"><p>Opening context is still part of the introduction.</p></div>{LEAD}<p>{SECOND}</p><hr>Bare examples must not be copied.</div>Unrelated sidebar text outside main content.</body></html>'
+        result = self.extract(html)
+        self.assertEqual(result["description"], 'Opening context is still part of the introduction.\n\n' + LEAD + "\n\n" + SECOND)
+
     def test_premature_article_close_uses_only_bounded_main_content_continuation(self):
         html = f'<html><head><link rel="canonical" href="{URL}"></head><body><div id="main-content"><h1>Serious Business</h1><div id="main-article"><p>First, consider the common setup that introduces this sort of story.</p></div><div class="tvtropes-ad-unit"><p>Advertisement.</p></div><p>{LEAD}</p><p>{SECOND}</p><hr><h2>Examples</h2><p>An example that must not enter the definition.</p></div><footer><p>Another unrelated article.</p></footer></body></html>'
         result = self.extract(html)

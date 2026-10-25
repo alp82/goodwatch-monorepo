@@ -11,7 +11,7 @@ import re
 import unicodedata
 from urllib.parse import parse_qsl, urljoin, urlparse
 
-from bs4 import BeautifulSoup, FeatureNotFound, Tag
+from bs4 import BeautifulSoup, Comment, FeatureNotFound, NavigableString, Tag
 
 MAX_DESCRIPTION_BYTES = 24_000
 MIN_DESCRIPTION_CHARS = 40
@@ -23,6 +23,16 @@ _JUNK_CLASSES = {
     "quoteright", "quoteleft", "quoteblock", "quote", "acaptionright", "acaptionleft",
     "caption", "indent", "tvtropes-ad-unit", "ad-caption", "inlinefolder", "notelabel",
     "notetext", "footnote", "footnotes", "reference", "section-button", "editsection",
+}
+_INLINE_TAGS = {
+    "a", "abbr", "acronym", "b", "bdi", "bdo", "big", "cite", "code", "data", "del", "dfn",
+    "em", "font", "i", "img", "ins", "kbd", "label", "mark", "q", "ruby", "s", "samp",
+    "small", "span", "strong", "sub", "sup", "time", "tt", "u", "var", "wbr",
+}
+_BLOCK_TAGS = {
+    "address", "article", "aside", "blockquote", "dd", "div", "dl", "dt", "fieldset", "figure",
+    "figcaption", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hr",
+    "li", "main", "nav", "ol", "p", "pre", "section", "table", "ul",
 }
 _STOP_IDS = {"article-footer", "main-footer", "footer", "content-footer", "main-article-footer", "article-bottom"}
 
@@ -69,8 +79,8 @@ def _text(node):
     return re.sub(r"\s+", " ", node.get_text()).strip()
 
 
-def _quote(text, node):
-    if node.find("cite") or text.startswith(("—", "–")):
+def _quote(text, node=None):
+    if (node is not None and (node.name == "cite" or node.find("cite"))) or text.startswith(("—", "–")):
         return True
     return bool(re.fullmatch(r'[“"‘\'].*[”"’\'](?:\s*[—–-].*)?', text, re.S))
 
@@ -87,49 +97,77 @@ def _sanitize(soup):
                   or _HIDDEN_STYLE.search(node.get("style", "")))
         if (hidden or classes & _JUNK_CLASSES or node.name in {
                 "script", "style", "noscript", "iframe", "button", "select", "form",
-                "blockquote", "figcaption", "table",
+                "blockquote", "figcaption", "table", "svg", "canvas", "audio", "video",
         }):
             node.decompose()
     for br in soup.find_all("br"):
         br.replace_with("\n")
 
 
+def _paragraph_event(text, nodes):
+    text = re.sub(r"\s+", " ", text).strip()
+    if _EXAMPLES_LABEL.fullmatch(text):
+        yield "stop", ""
+        return
+    tags = [node for node in nodes if isinstance(node, Tag)]
+    if (text and not _quote(text) and not any(_quote(text, node) for node in tags)
+            and not any(node.name == "img" or node.find("img") for node in tags)
+            and not any((node.name == "a" and "/JustForFun/DescribeTopicHere" in node.get("href", ""))
+                        or node.select_one('a[href*="/JustForFun/DescribeTopicHere"]') for node in tags)
+            and text.casefold() not in {"advertisement:", "noreallife", "noexamplesplease"}):
+        yield "paragraph", text
+
+
+def _is_boundary(node):
+    classes = set(node.get("class", []))
+    return (node.name in {"hr", "h1", "h2", "h3", "h4", "h5", "h6", "footer", "aside", "nav", "header"}
+            or bool(classes & {"folder", "folderlabel", "article-footer", "main-footer"})
+            or node.get("id") in _STOP_IDS)
+
+
+def _container_events(nodes):
+    # Browser error recovery can leave the lead as bare text and inline links
+    # after an image div closes a p. Keep the entire sibling run as one paragraph,
+    # with actual source whitespace and inline word joins, before the next block.
+    inline = []
+    for node in nodes:
+        if isinstance(node, Comment):
+            continue
+        if isinstance(node, NavigableString) or (
+                isinstance(node, Tag) and node.name in _INLINE_TAGS
+                and not _is_boundary(node) and not node.find(_BLOCK_TAGS)):
+            inline.append(node)
+            continue
+        if inline:
+            text = "".join(str(part) if isinstance(part, NavigableString) else part.get_text() for part in inline)
+            yield from _paragraph_event(text, inline)
+            inline = []
+        yield from _events(node)
+    if inline:
+        text = "".join(str(part) if isinstance(part, NavigableString) else part.get_text() for part in inline)
+        yield from _paragraph_event(text, inline)
+
+
 def _events(node):
-    """Paragraphs/list items in source order, and a hard examples/footer boundary."""
+    """Paragraphs and bare inline runs in source order, with hard examples boundaries."""
     if not isinstance(node, Tag):
         return
-    classes = set(node.get("class", []))
-    if (node.name in {"hr", "h1", "h2", "h3", "h4", "h5", "h6", "footer", "aside", "nav", "header"}
-            or classes & {"folder", "folderlabel", "article-footer", "main-footer"}
-            or node.get("id") in _STOP_IDS):
+    if _is_boundary(node):
         yield "stop", ""
         return
     if node.name in {"p", "li"}:
-        text = _text(node)
-        if _EXAMPLES_LABEL.fullmatch(text):
-            yield "stop", ""
-            return
-        if (text and not _quote(text, node) and not node.find("img")
-                and not node.select_one('a[href*="/JustForFun/DescribeTopicHere"]')
-                and text.casefold() not in {"advertisement:", "noreallife", "noexamplesplease"}):
-            yield "paragraph", text
+        yield from _paragraph_event(_text(node), [node])
         return
-    for child in node.children:
-        yield from _events(child)
+    yield from _container_events(node.children)
 
 
 def _collect(nodes):
     paragraphs = []
-    boundary = False
-    for node in nodes:
-        for kind, text in _events(node):
-            if kind == "stop":
-                boundary = True
-                break
-            paragraphs.append(text)
-        if boundary:
-            break
-    return paragraphs, boundary
+    for kind, text in _container_events(nodes):
+        if kind == "stop":
+            return paragraphs, True
+        paragraphs.append(text)
+    return paragraphs, False
 
 
 def _following_in_content(article, content):
