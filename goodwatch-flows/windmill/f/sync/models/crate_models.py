@@ -369,6 +369,7 @@ class Trope(BaseModel):
     name: str
     url: Optional[str] = None
     content: Optional[str] = None
+    content_length: Optional[int] = None
 
 
 class AlternativeTitle(BaseModel):

@@ -537,6 +537,32 @@ SCHEMAS = {
         "primary_key": ["media_tmdb_id", "media_type", "tmdb_id"],
         "shards": 12,
     },
+    "profile_tropes_snapshot": {
+        "columns": {
+            "owner_id": "TEXT",
+            "read_from": "LONG",
+            "pool": "TEXT INDEX OFF",
+        },
+        "primary_key": ["owner_id"],
+        "shards": 3,
+        "timestamps": False,
+    },
+    "trope_catalog": {
+        "columns": {
+            "name": "TEXT",
+            "url": "TEXT",
+            "description": "TEXT INDEX OFF",
+            "description_hash": "TEXT",
+            "source": "TEXT",
+            "source_hash": "TEXT",
+            "fetched_at": "TIMESTAMP",
+            "imported_at": "TIMESTAMP",
+            "updated_at": "TIMESTAMP",
+        },
+        "primary_key": ["name"],
+        "shards": 3,
+        "timestamps": False,
+    },
     "trope": {
         "columns": {
             "media_tmdb_id": "INTEGER",
@@ -544,6 +570,7 @@ SCHEMAS = {
             "name": "TEXT INDEX USING FULLTEXT",
             "url": "TEXT",
             "content": "TEXT INDEX USING FULLTEXT",
+            "content_length": "INTEGER",
         },
         "primary_key": ["media_tmdb_id", "media_type", "name"],
         "shards": 3,

@@ -1,3 +1,4 @@
+import re
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Optional
@@ -217,6 +218,8 @@ def copy_changes(
                         name=trope_name,
                         url=trope.get("url"),
                         content=trope.get("html"),
+                        # Crate char_length uses UTF-16 code units, including two for astral characters.
+                        content_length=len(re.sub(r"<[^>]*>", "", trope.get("html") or "").encode("utf-16-le")) // 2,
                     ))
 
             media_documents.append(media)

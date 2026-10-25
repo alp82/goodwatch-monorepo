@@ -12,6 +12,7 @@ import { ChevronDownIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
 import type { ProfileShell } from "~/domain/profile"
+import type { TropesPreview } from "~/server/profile/tropes-preview"
 import type { ProfileTropes } from "~/server/profile/tropes.server"
 import { PosterImg, backdropUrl, posterUrl } from "~/ui/profile/parts"
 import { FilterStrip } from "./FilterStrip"
@@ -46,8 +47,17 @@ const PAGE = 30
 export function TropesPage({
 	shell,
 	data,
-}: { shell: ProfileShell; data: ProfileTropes }) {
-	const m = useTropeFacets(data, shell.viewer === "owner")
+	preview,
+	loading = false,
+	retry,
+}: {
+	shell: ProfileShell
+	data: ProfileTropes
+	preview?: TropesPreview
+	loading?: boolean
+	retry?: () => void
+}) {
+	const m = useTropeFacets(data, shell.viewer === "owner", preview)
 	const handle = shell.handle
 	const [open, setOpen] = useState<string | null>(null)
 	const [focus, setFocus] = useState<string | null>(null)
@@ -79,7 +89,28 @@ export function TropesPage({
 	return (
 		<MotionConfig reducedMotion="user">
 			<div className="flex flex-col gap-4">
-				<FilterStrip m={m} wide={strip} />
+				<fieldset
+					disabled={!!preview}
+					aria-busy={!!preview}
+					className="min-w-0"
+				>
+					<legend className="sr-only">Filter tropes</legend>
+					<FilterStrip m={m} wide={strip} />
+				</fieldset>
+				{preview && (
+					<p role="status" className="text-sm text-gray-400">
+						{loading ? (
+							"Preparing filters…"
+						) : (
+							<>
+								Filters could not load.{" "}
+								<button type="button" className="underline" onClick={retry}>
+									Try again
+								</button>
+							</>
+						)}
+					</p>
+				)}
 				{rows.length === 0 ? (
 					<NoMatches onClear={m.reset} />
 				) : (
@@ -124,14 +155,15 @@ export function TropesPage({
 								</li>
 							)
 						})}
-						{m.tropes.length > shown && (
+						{m.total > shown && (
 							<li data-flip="" className="flex justify-center pt-2">
 								<button
 									type="button"
+									disabled={!!preview}
 									onClick={() => setShown((n) => n + PAGE)}
 									className="min-h-11 cursor-pointer rounded-full px-5 text-sm font-bold text-gray-200 ring-1 ring-white/15 hover:bg-white/10"
 								>
-									Show {Math.min(PAGE, m.tropes.length - shown)} more tropes
+									Show {Math.min(PAGE, m.total - shown)} more tropes
 								</button>
 							</li>
 						)}

@@ -528,6 +528,16 @@ class TropesCopyTests(CopyTests):
     def carried(self, media_type):
         return state(self.db, "tvtropes", media_type).get("carried_ids")
 
+    def test_import_stores_excerpt_lengths_with_crate_unicode_semantics(self):
+        self.tropes("movie", 1, NOW - HOUR, tropes=(
+            {"name": "Unicode", "html": "<b>Hi</b> 🌞"},
+            {"name": "Empty", "html": None},
+        ))
+        _, _, _, error = self.run_main()
+        self.assertIsNone(error)
+        self.assertEqual([(row.name, row.content_length) for row in self.crate.records["trope"]],
+                         [("Unicode", 5), ("Empty", 0)])
+
     def test_the_first_run_copies_the_48_hour_window_and_records_its_start(self):
         self.tropes("movie", 1, NOW - HOUR)
         self.tropes("movie", 2, NOW - timedelta(hours=49))

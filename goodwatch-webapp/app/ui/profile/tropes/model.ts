@@ -230,10 +230,14 @@ export function nameSize(name: string, slot: "hero" | "big") {
 /** The page description: "The tropes @handle loves most: A, B and C." Null without ranked tropes. */
 export function tropesLine(
 	handle: string,
-	data: Pick<TropePool, "tropes" | "descriptions" | "urls" | "pool">,
+	data:
+		| Pick<TropePool, "tropes" | "descriptions" | "urls" | "pool">
+		| { ranked: { name: string }[] },
 ) {
-	const names = rankTropes(data, data.pool)
-		.ranked.slice(0, 3)
+	const names = (
+		"ranked" in data ? data.ranked : rankTropes(data, data.pool).ranked
+	)
+		.slice(0, 3)
 		.map((t) => t.name)
 	if (!names.length) return undefined
 	const list =

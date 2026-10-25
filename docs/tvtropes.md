@@ -14,6 +14,55 @@ Owner decisions (2026-09-21 and 2026-09-26), all binding:
 - TV Tropes' robots.txt disallows `Claude*` and other AI agents. Agents never read TV Tropes pages with their own
   web tools; only the runner below fetches pages, under its own user agent.
 
+## General trope catalog
+
+The Crate `trope_catalog` table is the source of truth for general trope definitions, separate from the `trope`
+table's per-title excerpts. Each exact name has a known Main-page URL and an optional description. Names with
+ambiguous URL mappings remain outside metadata-only imports until reviewed. Descriptions retain the raw page's
+SHA256, the exact text's SHA256, actual fetch time, source, and import/update times. Unknown provenance stays null.
+
+On 2026-10-25 the original 100 descriptions were imported from the earlier prototype's saved responses and verified
+byte for byte, including URLs and provenance. The runtime JSON file was removed after verification. The app reads
+current catalog entries independently of cached profile calculations, so additions require no code deployment once
+the database reader is deployed. The first page reads only its first 30 names.
+
+The initial catalog import contains 21,747 exact names/URLs and 120 descriptions: the original 100 plus 20
+source-verified additions reviewed by subagents. All 30 leading tropes of @alperortac's captured profile have a
+description. Of the prototype inventory, 222 ambiguous Main-URL mappings and seven invalid URLs were held out.
+The two bounded recovery batches and review evidence are saved under
+`~/.cache/goodwatch/trope-catalog/2026-10-25-{first20,next10}/`; the first batch stopped after ten responses on
+extraction failures, which were corrected by offline review without refetching. All 120 descriptions have actual
+source hashes and fetch timestamps. This count records the 2026-10-25 import, not a live coverage counter.
+
+`f/tvtropes_catalog/catalog` imports reviewed records in Windmill. The local CLI uses the existing Windmill CLI
+profile's Crate variables or `CRATE_HOSTS`, `CRATE_USER`, `CRATE_PASS`. Importing performs no TV Tropes requests.
+Input is a record array, `{records:[...]}`, or a name map; each record has `name`, `url`, and optionally `description`
+(or `text`), `source_hash`, `fetched_at`. The source is `tvtropes`. A captured recovery log can supply hash/date evidence.
+
+```sh
+# Inspect the exact insert/update/unchanged counts, then apply the same reviewed batch.
+python goodwatch-flows/scripts/import_trope_catalog.py REVIEWED.json --evidence-log RUN/run.json --expect-count N
+python goodwatch-flows/scripts/import_trope_catalog.py REVIEWED.json --evidence-log RUN/run.json --expect-count N --apply
+```
+
+Imports create the catalog if needed, check every bulk result, and are idempotent. Metadata-only rows preserve
+existing descriptions and attribution. Existing text is replaced only with explicit `--replace-descriptions`.
+
+For expansion, subagents may divide inventory and review saved source pages; the owner authorized this review path
+for general descriptions on 2026-10-25. One supervised local runner fetches the batch, using known Main URLs and the
+existing recovery client's identifying user agent and saved block state. The defaults are 20 requests, six seconds
+apart, with a hard stop on a block or three consecutive failures. It makes no database writes. Source archives and
+run evidence stay in the chosen output directory. General-definition extraction is a review candidate: quotes,
+footnotes, ellipses and setup-only paragraphs need checking against the saved introduction before import.
+
+```sh
+python goodwatch-flows/scripts/recover_trope_descriptions.py QUEUE.json RUN --max-requests 20 --delay 6
+```
+
+Use a queue of `{name,url}` entries from existing catalog/title metadata, prioritize missing definitions on visible
+profile bands, and review canonical URL and exact subject against every saved page. The crawler restrictions above
+continue to apply. A scheduled network crawler is not part of this pipeline.
+
 ## Production: `crawl_tvtropes` flag
 
 `f/priority/crawl_all` has a `crawl_tvtropes` input, default `false`, like `crawl_imdb`. While it is off, both TV Tropes

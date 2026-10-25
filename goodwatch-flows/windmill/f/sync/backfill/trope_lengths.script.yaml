@@ -1,0 +1,17 @@
+summary: Prepare profile trope snapshots and backfill excerpt lengths
+description: Run before deploying the profile performance change. Dry run is the default; applied runs resume from remaining null lengths.
+lock: '!inline f/sync/backfill/trope_lengths.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    dry_run:
+      type: boolean
+      default: true
+    batch_size:
+      type: integer
+      default: 100
+      minimum: 1
+      maximum: 500
+  required: []

@@ -1,83 +1,73 @@
 import { withBackendTimeout } from "~/utils/backend-timeout"
-// A member's trope pool, cached in Redis for 10 minutes at `profile-tropes:v1:<user_id>` and cleared when
-// their taste changes (markTasteChanged calls clearTropePool), like the taste portrait's cache. A cached entry built
-// before the member's latest write had settled (`taste:touched:<user_id>`) is not used. Watches don't touch the taste;
-// viewer Seen state is read separately on each request.
+import { execute, query } from "~/utils/crate"
 import type { TropePool } from "./tropes-model"
+import { createTropeSnapshots } from "./trope-snapshots"
 
-const VERSION = "v1"
-const TTL_SECONDS = 10 * 60
-const SETTLE_MS = 1_500
-/** A slow Valkey must not hold the Tropes tab: past this, the cache counts as a miss (reads) or is skipped (writes). */
-const REDIS_TIMEOUT_MS = 800
 const bounded = <T>(run: () => Promise<T>) =>
-	withBackendTimeout("valkey", REDIS_TIMEOUT_MS, run)
-
-const cacheKey = (userId: string) => `profile-tropes:${VERSION}:${userId}`
-const touchedKey = (userId: string) => `taste:touched:${userId}`
-
-interface TropesRedis {
-	get(key: string): Promise<string | null>
-	set(
-		key: string,
-		value: string,
-		expiry: "EX",
-		seconds: number,
-	): Promise<unknown>
-	del(key: string): Promise<number>
-}
-
-async function tropesRedis(): Promise<TropesRedis | null> {
+	withBackendTimeout("valkey", 800, run)
+async function redis() {
 	const { getRedisCluster } = await import("~/utils/cache")
-	return getRedisCluster() as unknown as TropesRedis | null
+	return getRedisCluster()
 }
 
-export async function readCachedTropePool(
-	userId: string,
-): Promise<TropePool | null> {
-	try {
-		const redis = await tropesRedis()
-		if (!redis) return null
-		const [raw, touched] = await bounded(() =>
-			Promise.all([redis.get(cacheKey(userId)), redis.get(touchedKey(userId))]),
+// Redis is the fast tier. Crate retains the last complete snapshot across expiry, eviction and restarts.
+// Neither cache contains viewer state; every request checks the current profile visibility first.
+const snapshots = createTropeSnapshots({
+	readFast: async (userId) => {
+		const store = await redis()
+		if (!store) return null
+		return bounded(() => store.get(`profile-tropes:v1:${userId}`))
+	},
+	readStored: async (userId) => {
+		const rows = await query<{ read_from: number; pool: string }>(
+			"SELECT read_from, pool FROM profile_tropes_snapshot WHERE owner_id = ?",
+			[userId],
+			{ timeoutMs: 800 },
 		)
-		if (!raw) return null
-		const entry = JSON.parse(raw) as { readFrom: number; stats: TropePool }
-		if (entry.readFrom < (Number(touched) || 0) + SETTLE_MS) return null
-		return entry.stats
-	} catch (error) {
-		console.error("Profile tropes: reading the cache failed:", error)
-		return null
-	}
-}
-
-export async function writeCachedTropePool(
-	userId: string,
-	stats: TropePool,
-	readFrom: number,
-): Promise<void> {
-	try {
-		const redis = await tropesRedis()
-		if (redis)
+		const row = rows[0]
+		return row
+			? JSON.stringify({
+					readFrom: Number(row.read_from),
+					stats: JSON.parse(row.pool),
+				})
+			: null
+	},
+	readTouched: async (userId) => {
+		const store = await redis()
+		return store ? bounded(() => store.get(`taste:touched:${userId}`)) : null
+	},
+	writeFast: async (userId, raw) => {
+		const store = await redis()
+		if (store)
 			await bounded(() =>
-				redis.set(
-					cacheKey(userId),
-					JSON.stringify({ readFrom, stats }),
-					"EX",
-					TTL_SECONDS,
+				store.eval(
+					`
+   local old = redis.call('GET', KEYS[1])
+   if old then
+    local ok, entry = pcall(cjson.decode, old)
+    if ok and type(entry) == 'table' and tonumber(entry.readFrom) and tonumber(entry.readFrom) > tonumber(ARGV[2]) then return 0 end
+   end
+   redis.call('SET', KEYS[1], ARGV[1], 'EX', 600)
+   return 1
+  `,
+					1,
+					`profile-tropes:v1:${userId}`,
+					raw,
+					String(JSON.parse(raw).readFrom),
 				),
 			)
-	} catch (error) {
-		console.error("Profile tropes: writing the cache failed:", error)
-	}
-}
+	},
+	writeStored: async (userId, pool: TropePool, readFrom) => {
+		// An older build on another instance must never replace a newer completed snapshot.
+		await execute(
+			`INSERT INTO profile_tropes_snapshot (owner_id, read_from, pool) VALUES (?, ?, ?)
+   ON CONFLICT (owner_id) DO UPDATE SET
+   pool = CASE WHEN read_from <= excluded.read_from THEN excluded.pool ELSE pool END,
+   read_from = greatest(read_from, excluded.read_from)`,
+			[userId, readFrom, JSON.stringify(pool)],
+		)
+	},
+})
 
-/** Drops the member's cached trope pool. Never throws. */
-export async function clearTropePool(userId: string): Promise<void> {
-	try {
-		const redis = await tropesRedis()
-		if (redis) await bounded(() => redis.del(cacheKey(userId)))
-	} catch (error) {
-		console.error("Profile tropes: clearing the cache failed:", error)
-	}
-}
+export const readCachedTropePool = snapshots.read
+export const writeCachedTropePool = snapshots.write

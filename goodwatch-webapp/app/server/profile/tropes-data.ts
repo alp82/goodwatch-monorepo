@@ -3,6 +3,10 @@ import type { MediaKey, UserData } from "../../types/user-data.ts"
 import { isSeen } from "../../types/user-data.ts"
 import { htmlToText } from "./trope-text.ts"
 import {
+	withTropeDescriptions,
+	type TropeDescriptions,
+} from "./trope-catalog-data.ts"
+import {
 	type TropeLength,
 	type TropePool,
 	type TropeSight,
@@ -48,19 +52,24 @@ interface LengthRow {
 export interface TropesDependencies {
 	read: CatalogRead
 	userData: (userId: string) => Promise<UserData>
-	readCache: (userId: string) => Promise<TropePool | null>
+	readCache: (
+		userId: string,
+	) => Promise<{ pool: TropePool; fresh: boolean; version?: number } | null>
 	writeCache: (
 		userId: string,
 		pool: TropePool,
 		readFrom: number,
 	) => Promise<void>
 	titlePath: (mediaType: "movie" | "show", id: number, title: string) => string
-	descriptions: Record<string, { text: string; url: string }>
+	readDescriptions: (names: string[]) => Promise<TropeDescriptions>
 }
 
 export interface ProfileTropes extends TropePool {
 	/** Viewer state is computed per request and never stored in the owner's pool cache. */
 	seen: string[]
+	version?: number
+	catalogVersion?: string
+	refreshing?: boolean
 }
 
 /** The server adapters supply cache, catalog and member reads; tests supply fakes. */
@@ -142,11 +151,11 @@ export function createTropesLoader(deps: TropesDependencies) {
 							.filter((t) => t.title.mediaType === mediaType)
 							.map((t) => t.title.tmdbId),
 					).map(async (ids) => {
-						// Strip tags in SQL; paginate all names once per ID batch.
+						// Read lengths prepared by the trope import; paginate all names once per ID batch.
 						for (let offset = 0; ; offset += TROPE_PAGE) {
 							const rows = await deps.read<LengthRow>(
 								`SELECT media_tmdb_id, name, url,
-						 char_length(regexp_replace(content, '<[^>]*>', '', 'g')) AS length
+						 coalesce(content_length, 0) AS length
 						 FROM trope WHERE media_type = ? AND media_tmdb_id IN (${placeholders(ids.length)})
 						 ORDER BY media_tmdb_id, name, url, length
 						 LIMIT ${TROPE_PAGE} OFFSET ${offset}`,
@@ -165,13 +174,17 @@ export function createTropesLoader(deps: TropesDependencies) {
 					}),
 				),
 			)
-		return buildTropePool(titles, lengths, deps.descriptions)
+		return buildTropePool(titles, lengths, {})
 	}
-	async function ownerPool(ownerId: string) {
-		const cached = await deps.readCache(ownerId)
-		if (cached) return cached
+	function refreshProfileTropes(
+		ownerId: string,
+		afterCurrent = false,
+	): Promise<TropePool> {
 		const pending = computing.get(ownerId)
-		if (pending) return pending
+		if (pending)
+			return afterCurrent
+				? pending.catch(() => null).then(() => refreshProfileTropes(ownerId))
+				: pending
 		const work = (async () => {
 			const readFrom = Date.now()
 			const pool = await compute(ownerId)
@@ -181,14 +194,30 @@ export function createTropesLoader(deps: TropesDependencies) {
 		computing.set(ownerId, work)
 		return work
 	}
+	async function ownerPool(ownerId: string, wait: boolean) {
+		const cached = await deps.readCache(ownerId)
+		if (cached?.fresh) return { ...cached.pool, version: cached.version }
+		const work = refreshProfileTropes(ownerId)
+		// Request paths use a stored snapshot, including a stale one, without waiting for catalog work.
+		// Attach a handler even when returning early: a failed background job must be retried, not unhandled.
+		work.catch((error) =>
+			console.error("Profile tropes: rebuilding failed:", error),
+		)
+		if (cached)
+			return { ...cached.pool, version: cached.version, refreshing: true }
+		return wait ? work : null
+	}
 	return {
+		refreshProfileTropes,
 		async loadProfileTropes(
 			ownerId: string,
 			shell: TropeSight,
 			viewerId: string | null = null,
+			options: { wait: boolean; descriptions?: boolean } = { wait: true },
 		): Promise<ProfileTropes | null> {
 			if (!seesTropes(shell)) return null
-			const pool = await ownerPool(ownerId)
+			const pool = await ownerPool(ownerId, options.wait)
+			if (!pool) return null
 			const keys = pool.pool.map((t) => t.k)
 			const viewer =
 				shell.viewer === "member" && viewerId
@@ -200,7 +229,11 @@ export function createTropesLoader(deps: TropesDependencies) {
 					: viewer
 						? keys.filter((k) => isSeen(viewer, k as MediaKey))
 						: []
-			return { ...pool, seen }
+			const descriptions =
+				options.descriptions === false
+					? {}
+					: await deps.readDescriptions(pool.tropes)
+			return { ...withTropeDescriptions(pool, descriptions), seen }
 		},
 		async loadProfileTropeExcerpts(
 			ownerId: string,
@@ -210,7 +243,8 @@ export function createTropesLoader(deps: TropesDependencies) {
 		): Promise<{ key: string; text: string }[]> {
 			if (!seesTropes(shell)) return []
 			if (keys.length > 16) throw new RangeError("At most 16 title keys")
-			const pool = await ownerPool(ownerId)
+			const pool = await ownerPool(ownerId, false)
+			if (!pool) return []
 			const index = pool.tropes.indexOf(trope)
 			if (index < 0) return []
 			const allowed = new Set(

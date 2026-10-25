@@ -8,33 +8,30 @@ import {
 	json,
 } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
-import { type ProfileShell, seesPart } from "~/domain/profile"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { protectMediaResponse } from "~/server/media-read-health.server"
 import {
 	loadProfileShell,
 	profileCacheControl,
 } from "~/server/profile/page.server"
+import { loadProfileTropes } from "~/server/profile/tropes.server"
+import { seesTropes } from "~/server/profile/tropes-model"
 import {
-	type ProfileTropes,
-	loadProfileTropes,
-} from "~/server/profile/tropes.server"
-import { WRAP } from "~/ui/my-pages/bits"
-import { ProfileFrame } from "~/ui/profile/ProfileFrame"
+	tropesPreview,
+	withPreviewDescriptions,
+} from "~/server/profile/tropes-preview"
+import { readTropeDescriptions } from "~/server/profile/trope-catalog.server"
 import { profileMeta } from "~/ui/profile/meta"
-import { Body, TILE, count } from "~/ui/profile/parts"
-import { TropesPage } from "~/ui/profile/tropes/TropesPage"
 import { tropesLine } from "~/ui/profile/tropes/model"
+
+import {
+	TropesTab,
+	type TropesTabProps as Data,
+} from "~/ui/profile/tropes/TropesTab"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
-interface Data {
-	shell: ProfileShell
-	tropes: ProfileTropes | null
-}
-
-// The pool runs to thousands of titles, so it is localized as a plain object and serialized once, instead of going
-// through profileLoader's JSON response, which presentCatalogLoader would parse and serialize again.
+// Only the first bands cross the document boundary. Full filtering data has its own private resource route.
 const present = presentCatalogLoader(
 	async (args: LoaderFunctionArgs) => {
 		const loaded = await loadProfileShell(
@@ -43,9 +40,18 @@ const present = presentCatalogLoader(
 		)
 		if (loaded instanceof Response) return loaded
 		const { ownerId, viewerId, shell } = loaded
+		const full = await loadProfileTropes(ownerId, shell, viewerId, {
+			wait: false,
+			descriptions: false,
+		})
+		const preview = full ? tropesPreview(full) : null
+		const descriptions = preview
+			? await readTropeDescriptions(preview.ranked.map((t) => t.name))
+			: {}
 		return {
 			shell,
-			tropes: await loadProfileTropes(ownerId, shell, viewerId),
+			preview: preview ? withPreviewDescriptions(preview, descriptions) : null,
+			pending: seesTropes(shell) && !full,
 			cacheControl: profileCacheControl(viewerId),
 		}
 	},
@@ -56,7 +62,9 @@ export async function loader(args: LoaderFunctionArgs) {
 	const result = await present(args)
 	if (result instanceof Response) return result
 	const { cacheControl, ...data } = result
-	const headers = new Headers({ "Cache-Control": cacheControl })
+	const headers = new Headers({
+		"Cache-Control": data.pending ? "private, no-store" : cacheControl,
+	})
 	// A failed or still-pending catalog read keeps the page out of shared caches, as for a JSON response.
 	protectMediaResponse(headers, result)
 	return json<Data>(data, { headers })
@@ -67,41 +75,10 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	return profileMeta(
 		d?.shell,
 		"tropes",
-		d?.shell && d.tropes ? tropesLine(d.shell.handle, d.tropes) : undefined,
+		d?.shell && d.preview ? tropesLine(d.shell.handle, d.preview) : undefined,
 	)
 }
 
 export default function ProfileTropesTab() {
-	const { shell, tropes } = useLoaderData() as Data
-	const owner = shell.viewer === "owner"
-	const carrying = tropes?.pool.filter((t) => t.r.length > 0).length ?? 0
-	const ready = !!tropes?.tropes.length
-	return (
-		<ProfileFrame
-			shell={shell}
-			tab="tropes"
-			// The tab shows scores and the titles that carry them: both parts must be visible.
-			part={seesPart(shell, "taste") ? "scores" : "taste"}
-			title="Tropes"
-			line={
-				tropes && ready
-					? `${count(tropes.tropes.length)} tropes across ${count(carrying)} of ${owner ? "your" : "their"} titles`
-					: undefined
-			}
-		>
-			{tropes && ready ? (
-				<div className={`${WRAP} pt-6 pb-40 text-white`}>
-					<TropesPage shell={shell} data={tropes} />
-				</div>
-			) : (
-				<Body>
-					<p className={`${TILE} px-6 py-14 text-center text-gray-400`}>
-						{owner
-							? "Your tropes show up here once you've scored more titles."
-							: `@${shell.handle} hasn't scored enough titles for tropes yet.`}
-					</p>
-				</Body>
-			)}
-		</ProfileFrame>
-	)
+	return <TropesTab {...useLoaderData<Data>()} />
 }

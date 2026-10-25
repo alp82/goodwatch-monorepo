@@ -97,18 +97,18 @@ function fixture(count = 6, tropeCount = 0, excerptCopies = 1) {
 			users.push(id)
 			return id === "owner" ? owner : viewer
 		},
-		readCache: async () => cached,
+		readCache: async () => (cached ? { pool: cached, fresh: true } : null),
 		writeCache: async (_, pool) => {
 			cached = pool
 			writes++
 		},
 		titlePath: (kind, id) => `/${kind}/${id}`,
-		descriptions: {
+		readDescriptions: async () => ({
 			Common: {
 				text: "Unchanged description.",
 				url: "https://tvtropes.org/common",
 			},
-		},
+		}),
 	})
 	const shell = {
 		viewer: "guest" as const,
@@ -188,6 +188,7 @@ test("hidden parts perform no reads", async () => {
 })
 test("excerpts restrict keys to this profile and trope but permit guest reveals", async () => {
 	const f = fixture()
+	await f.refreshProfileTropes("owner")
 	assert.deepEqual(
 		await f.loadProfileTropeExcerpts("owner", f.shell, "Common", [
 			"show-2",
@@ -241,6 +242,12 @@ test("800 titles with 450 tropes page through lengths without name cross product
 		),
 	)
 	assert.ok(lengths.every((c) => c.sql.includes("LIMIT 10000 OFFSET")))
+	assert.ok(
+		lengths.every(
+			(c) =>
+				c.sql.includes("content_length") && !c.sql.includes("regexp_replace"),
+		),
+	)
 })
 test("lengths discard names that do not qualify", async () => {
 	const f = fixture()
@@ -251,6 +258,7 @@ test("lengths discard names that do not qualify", async () => {
 })
 test("duplicate excerpt rows cannot truncate other requested titles", async () => {
 	const f = fixture(6, 0, 10_001)
+	await f.refreshProfileTropes("owner")
 	assert.deepEqual(
 		await f.loadProfileTropeExcerpts("owner", f.shell, "Common", [
 			"movie-3",
@@ -273,4 +281,136 @@ test("empty libraries have finite bounds and no catalog reads", async () => {
 	assert.deepEqual(pool?.years, [0, 0])
 	assert.deepEqual(pool?.pool, [])
 	assert.equal(f.calls.length, 0)
+})
+
+test("a cold page starts a build without waiting and the next read gets the snapshot", async () => {
+	const f = fixture()
+	assert.equal(
+		await f.loadProfileTropes("owner", f.shell, null, { wait: false }),
+		null,
+	)
+	const built = await f.refreshProfileTropes("owner")
+	assert.equal(built.pool.length, 6)
+	assert.equal(
+		(await f.loadProfileTropes("owner", f.shell, null, { wait: false }))?.pool
+			.length,
+		6,
+	)
+})
+
+test("stale snapshots are returned while a single background refresh runs", async () => {
+	const f = fixture()
+	const pool = (await f.loadProfileTropes("owner", f.shell))!
+	let unblock!: () => void
+	const blocked = new Promise<void>((resolve) => {
+		unblock = resolve
+	})
+	let reads = 0
+	const loader = createTropesLoader({
+		read: async () => [],
+		userData: async () => {
+			reads++
+			await blocked
+			return empty()
+		},
+		readCache: async () => ({ pool, fresh: false }),
+		writeCache: async () => {},
+		titlePath: () => "",
+		readDescriptions: async () => ({}),
+	})
+	const result = await loader.loadProfileTropes("owner", f.shell, null, {
+		wait: false,
+	})
+	assert.equal(result?.pool.length, 6)
+	await loader.loadProfileTropes("owner", f.shell, null, { wait: false })
+	assert.equal(reads, 1)
+	unblock()
+	await loader.refreshProfileTropes("owner")
+})
+
+test("a committed write during an in-flight build runs another build after it settles", async () => {
+	let release!: () => void
+	const gate = new Promise<void>((resolve) => {
+		release = resolve
+	})
+	let reads = 0
+	let writes = 0
+	const loader = createTropesLoader({
+		read: async () => [],
+		userData: async () => {
+			reads++
+			if (reads === 1) await gate
+			return empty()
+		},
+		readCache: async () => null,
+		writeCache: async () => {
+			writes++
+		},
+		titlePath: () => "",
+		readDescriptions: async () => ({}),
+	})
+	const first = loader.refreshProfileTropes("owner")
+	const afterWrite = loader.refreshProfileTropes("owner", true)
+	assert.equal(reads, 1)
+	release()
+	await Promise.all([first, afterWrite])
+	assert.equal(reads, 2)
+	assert.equal(writes, 2)
+})
+
+test("catalog additions replace legacy descriptions on warmed pools without a rebuild", async () => {
+	const f = fixture()
+	await f.refreshProfileTropes("owner")
+	const pool = f.cached!
+	pool.descriptions = { Common: "Old bundled description." }
+	let text: string | null = "Database description."
+	let ownerReads = 0
+	let descriptionReads = 0
+	const loader = createTropesLoader({
+		read: async () => {
+			throw Error("A warm pool must not read title or excerpt rows")
+		},
+		userData: async () => {
+			ownerReads++
+			return empty()
+		},
+		readCache: async () => ({ pool, fresh: true, version: 123 }),
+		writeCache: async () => {
+			throw Error("A warm pool must not be rebuilt")
+		},
+		titlePath: () => "",
+		readDescriptions: async (names) => {
+			descriptionReads++
+			assert.deepEqual(names, ["Common"])
+			return {
+				Common: {
+					text,
+					url: "https://tvtropes.org/pmwiki/pmwiki.php/Main/Common",
+				},
+			}
+		},
+	})
+	const first = (await loader.loadProfileTropes("owner", f.shell))!
+	assert.equal(first.descriptions.Common, "Database description.")
+	assert.equal(
+		first.urls.Common,
+		"https://tvtropes.org/pmwiki/pmwiki.php/Main/Common",
+	)
+	text = "Updated in the catalog."
+	const second = (await loader.loadProfileTropes("owner", f.shell))!
+	assert.equal(second.descriptions.Common, text)
+	assert.equal(first.version, second.version)
+	assert.notEqual(first.catalogVersion, second.catalogVersion)
+	text = null
+	const cleared = (await loader.loadProfileTropes("owner", f.shell))!
+	assert.deepEqual(cleared.descriptions, {})
+	assert.equal(ownerReads, 0)
+	assert.equal(descriptionReads, 3)
+	assert.equal(pool.descriptions.Common, "Old bundled description.")
+	const bare = (await loader.loadProfileTropes("owner", f.shell, null, {
+		wait: false,
+		descriptions: false,
+	}))!
+	assert.deepEqual(bare.descriptions, {})
+	assert.equal(descriptionReads, 3)
 })

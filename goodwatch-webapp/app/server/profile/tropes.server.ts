@@ -1,7 +1,7 @@
 import { getUserData } from "~/server/userData.server"
 import { titlePath } from "~/utils/helpers"
 import { readProfileCatalog } from "./catalog.server"
-import descriptions from "./trope-descriptions.json"
+import { readTropeDescriptions } from "./trope-catalog.server"
 import {
 	readCachedTropePool,
 	writeCachedTropePool,
@@ -15,7 +15,7 @@ const loaders = createTropesLoader({
 	readCache: readCachedTropePool,
 	writeCache: writeCachedTropePool,
 	titlePath,
-	descriptions,
+	readDescriptions: readTropeDescriptions,
 })
 
 /** Call with the context resolved by profileLoader or loadProfileShell. Hidden parts return null. */
@@ -23,3 +23,8 @@ export const loadProfileTropes = loaders.loadProfileTropes
 export const loadProfileTropeExcerpts = loaders.loadProfileTropeExcerpts
 export type { ProfileTropes } from "./tropes-data"
 export type { TropePool, PoolTitle } from "./tropes-model"
+
+/** Called off the ratings write path after writes have settled. A write during a build needs one more build. */
+export async function refreshProfileTropes(userId: string) {
+	return loaders.refreshProfileTropes(userId, true)
+}

@@ -1,0 +1,20 @@
+summary: General TV Tropes catalog import library
+description: Validates and imports reviewed metadata and descriptions. Does not fetch source pages.
+lock: '!inline f/tvtropes_catalog/catalog.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    records:
+      type: array
+      items:
+        type: object
+    dry_run:
+      type: boolean
+      default: true
+    replace_descriptions:
+      type: boolean
+      default: false
+  required:
+    - records

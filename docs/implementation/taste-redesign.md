@@ -116,11 +116,13 @@ read +3. The fix:
 - **Trope names per title:** the Crate `movie.tropes` and `show.tropes` columns hold the full lists.
 - **Per-title excerpts:** the Crate `trope` table (`media_tmdb_id`, `media_type`, `name`, `url`, `content` HTML),
   copied from Mongo `tv_tropes_*_tags` by `f/sync/copy/tvtropes`. Excerpt length is the length of the stripped text.
-- **General descriptions:** nothing in production stores them. The prototype fetched 100 once, in
-  `r6/descriptions-tvtropes.json`.
-  - Ship those 100 as a server data file. Show **What it is** only when a description exists.
-  - A wider description source is a follow-up: production crawls are blocked by Cloudflare, see
-    [[tvtropes-access-decisions]] in the team notes.
+- **General descriptions:** the shared Crate `trope_catalog` table stores exact names, canonical Main-page URLs,
+  nullable descriptions, source/page hashes and fetch/import timestamps. The original 100 prototype descriptions
+  were imported with their captured provenance on 2026-10-25; the app's JSON file was then removed.
+  - Profile snapshots retain title–trope relationships; current general descriptions are read independently so
+    additions become visible without rebuilding every profile.
+  - Show **What it is** only when a description exists. Recovery and reviewed batch imports:
+    [TV Tropes catalog](../tvtropes.md#general-trope-catalog).
 - **License:** TV Tropes text is CC BY-NC-SA 3.0. Every view that shows excerpts or descriptions carries the
   credit line and the license link.
 
@@ -129,3 +131,6 @@ read +3. The fix:
 - No prototype names (D6, S8, B3, r11) in production code, file names, or comments.
 - Ship to everyone. No feature switches.
 - No new third-party dependencies.
+
+
+Profile Tropes loading, background snapshots, and deployment order: [tropes-performance.md](tropes-performance.md).

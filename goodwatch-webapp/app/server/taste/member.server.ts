@@ -16,7 +16,6 @@
 import Redis from "ioredis"
 import { markPersonalOrderChanged } from "../personal-order/rebuild.server.ts"
 import { clearTasteStats } from "~/server/profile/taste-stats-cache.server"
-import { clearTropePool } from "~/server/profile/tropes-cache.server"
 import { clearTastePortrait } from "~/server/taste-portrait/cache.server"
 import {
 	type TitleSnapshot,
@@ -222,11 +221,7 @@ export async function markTasteChanged(
 		console.error("Taste: recording the write failed:", error)
 	}
 	// The Taste page's cached views and the profile's taste numbers describe the old ratings.
-	await Promise.all([
-		clearTastePortrait(userId),
-		clearTasteStats(userId),
-		clearTropePool(userId),
-	])
+	await Promise.all([clearTastePortrait(userId), clearTasteStats(userId)])
 	if (rebuildsHeld || scheduled.has(userId)) return
 	const timer = setTimeout(async () => {
 		scheduled.delete(userId)
@@ -234,7 +229,12 @@ export async function markTasteChanged(
 			// A rebuild already running may have read Crate before this write; run another after it.
 			await inflight.get(userId)?.catch(() => null)
 			const snapshot = getTitleSnapshot()
-			if (snapshot) await sharedRebuild(userId, snapshot)
+			await Promise.all([
+				snapshot ? sharedRebuild(userId, snapshot) : Promise.resolve(),
+				import("~/server/profile/tropes.server").then((m) =>
+					m.refreshProfileTropes(userId),
+				),
+			])
 		} catch (error) {
 			console.error("Taste: the scheduled rebuild failed:", error)
 		}

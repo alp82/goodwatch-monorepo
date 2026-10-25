@@ -323,12 +323,12 @@ function Count({ m, className = "" }: { m: TropeFacets; className?: string }) {
 			className={`whitespace-nowrap text-sm text-gray-400 tabular-nums ${className}`}
 		>
 			<motion.span
-				key={m.tropes.length}
+				key={m.total}
 				initial={{ opacity: 0.4 }}
 				animate={{ opacity: 1 }}
 				className="font-semibold text-white"
 			>
-				{m.tropes.length}
+				{m.total}
 			</motion.span>{" "}
 			tropes in {plural(m.carrying, "title")}
 		</span>
@@ -354,13 +354,14 @@ function PhoneSlab({ m }: { m: TropeFacets }) {
 	const eraOrScore = m.f.eras.length + (m.f.min !== "any" ? 1 : 0)
 	const sort = SORTS.find((s) => s.key === m.f.sort)
 	const segment = (d: Drawer) => ({
+		disabled: !m.ready,
 		type: "button" as const,
 		"aria-haspopup": "dialog" as const,
 		"aria-expanded": open === d,
 		whileTap: TAP,
 		onClick: () => setOpen(d),
 	})
-	const n = m.tropes.length
+	const n = m.total
 	const sheet = (d: Drawer, title: string) => ({
 		index: open === d ? 0 : -1,
 		onIndex: (i: number) => setOpen(i < 0 ? null : d),
