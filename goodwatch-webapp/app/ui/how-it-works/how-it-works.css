@@ -602,3 +602,12 @@
 		display: none;
 	}
 }
+
+/* The new film chapters keep their wide composition inside the existing picture box. */
+.hiw-pic-film .film-stage {
+	top: 50%;
+	bottom: auto;
+	height: auto;
+	aspect-ratio: 2 / 1;
+	transform: translateY(-50%);
+}

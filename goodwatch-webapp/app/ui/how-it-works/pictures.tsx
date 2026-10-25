@@ -1,6 +1,7 @@
-// The /how-it-works pictures: one still composition per feature, built from the start page intro's parts (brand
+// The /how-it-works pictures: compositions built from the start page intro's parts (brand
 // cards, the score ring, service logos, posters, feeling words, search reading chips, islands, import marks) and the
-// intro's data (/api/intro). Loaded on demand (FeaturePicture.tsx), so neither this code nor the intro's styles are
+// intro's data (/api/intro). Taste and Discord reuse their current film chapters. Loaded on demand
+// (FeaturePicture.tsx), so neither this code nor the intro's styles are
 // on the page's first load. Each picture mounts as it scrolls into view; its parts rise in one after another, then
 // it holds. Transform and opacity only.
 import "~/ui/living-room/intro/intro.css"
@@ -11,10 +12,9 @@ import { IMPORT_SOURCE_LIST } from "~/ui/imports/ImportSources"
 import { SourceMark } from "~/ui/imports/SourceMark"
 import type { IntroCard, IslandsData } from "~/ui/living-room/intro/data"
 import { BrandCard } from "~/ui/living-room/intro/parts/brand-cards"
+import { Island } from "~/ui/living-room/intro/parts/island-kit"
 import { Poster, picks } from "~/ui/living-room/intro/parts/feed-kit"
 import { famous, feelData, img } from "~/ui/living-room/intro/parts/feeling-kit"
-import { avatarFeel } from "~/ui/living-room/intro/parts/feelings-zoom"
-import { Island } from "~/ui/living-room/intro/parts/island-kit"
 import { BlobDefs, Logo, mapData } from "~/ui/living-room/intro/parts/map-kit"
 import {
 	Ring,
@@ -28,6 +28,9 @@ import { Stage } from "~/ui/living-room/intro/player"
 import type { IntroData } from "~/ui/living-room/intro/scene"
 import { filterData } from "~/ui/living-room/intro/scenes/filters"
 import type { PictureId } from "./features"
+import { pickOf } from "~/ui/living-room/intro/scenes/for-you/pick"
+import { YourTaste } from "~/ui/living-room/intro/scenes/taste/taste"
+import { DiscordBot } from "~/ui/living-room/intro/scenes/discord/discord"
 
 /** A part that rises in as its picture shows: `i` staggers it. */
 const R = ({
@@ -127,15 +130,7 @@ function StreamingPicture({ data }: { data: IntroData }) {
 }
 
 function ForYouPicture({ data }: { data: IntroData }) {
-	const p = (data.extra.pick ?? null) as {
-		loved: number[]
-		pick: number | null
-		match: number | null
-	} | null
-	const byKey = (k: number | null) =>
-		data.pool.find((c) => Number(c.key) === k) ?? null
-	const loved = (p?.loved ?? []).map(byKey).filter(Boolean) as IntroCard[]
-	const pick = byKey(p?.pick ?? null)
+	const { hero: pick, loved, match } = pickOf(data)
 	if (!pick) return null
 	return (
 		<div className="hiw-pic-row hiw-pic-foryou">
@@ -163,53 +158,16 @@ function ForYouPicture({ data }: { data: IntroData }) {
 					/>
 				</R>
 			</div>
-			{p?.match != null && (
+			{match != null && (
 				<div className="hiw-pic-col hiw-pic-match">
 					<R i={6} className="hiw-pic-big">
-						{p.match}%
+						{match}%
 					</R>
 					<R i={7} className="hiw-pic-label">
 						your taste
 					</R>
 				</div>
 			)}
-		</div>
-	)
-}
-
-function FeelPicture({ data }: { data: IntroData }) {
-	const f = avatarFeel(data)
-	if (!f) return null
-	return (
-		<div className="hiw-pic-bleed">
-			<img
-				src={img(f.hero.backdrop_path, "w1280")}
-				alt=""
-				className="hiw-pic-backdrop"
-			/>
-			<div className="hiw-pic-shade" />
-			<div className="hiw-pic-row hiw-pic-on-top">
-				<R i={0}>
-					<Poster
-						path={f.card.poster_path}
-						size="w500"
-						className="hiw-pic-p-lg"
-					/>
-				</R>
-				<div className="hiw-pic-words">
-					<R i={1} className="hiw-pic-small">
-						How {f.hero.title} feels
-					</R>
-					{f.words.map((w, i) => (
-						<R key={w.key} i={2 + i} className="hiw-pic-word">
-							<span className="hiw-pic-emoji" aria-hidden="true">
-								{w.emoji}
-							</span>{" "}
-							{w.word}.
-						</R>
-					))}
-				</div>
-			</div>
 		</div>
 	)
 }
@@ -482,7 +440,8 @@ const PICTURES: Record<PictureId, (p: { data: IntroData }) => ReactNode> = {
 	score: ScorePicture,
 	streaming: StreamingPicture,
 	"for-you": ForYouPicture,
-	feelings: FeelPicture,
+	taste: YourTaste,
+	discord: DiscordBot,
 	search: SearchPicture,
 	filters: FiltersPicture,
 	explorer: ExplorerPicture,
