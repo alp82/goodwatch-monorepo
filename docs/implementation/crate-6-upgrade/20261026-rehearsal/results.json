@@ -1,0 +1,824 @@
+{
+  "date": "2026-10-26",
+  "source_commit": "7ee29ce30673e3b4b3e4300df873dbbd8be0f4bb",
+  "path": [
+    "5.10.16",
+    "6.0.8",
+    "6.1.6",
+    "6.2.11",
+    "6.3.7",
+    "6.4.6"
+  ],
+  "images": {
+    "5.10.16": "crate@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+    "6.0.8": "crate@sha256:7b6af0abb4792123cfa225c8186471bbe81e039ef336af33095a181f4e8c17bf",
+    "6.1.6": "crate@sha256:c59adf651f296ce372018ae7d82167beb6ab469052e67cccdbfc57db19f69e46",
+    "6.2.11": "crate@sha256:696200f834ce187423ba40e4e83514747daad8ce37b28aeabec8f4b0949183b9",
+    "6.3.7": "crate@sha256:af6b41db307460e8189b6e84dfdc4b673ba36996c5a912cb3d776bcdfafe7f02",
+    "6.4.6": "crate@sha256:8d3e8778378236192724776877d2ea4546d5b5586362c8d174e6aa46177bb0fb"
+  },
+  "node_order_each_hop": [
+    2,
+    3,
+    1
+  ],
+  "event_counts": {
+    "hop-start": 6,
+    "health": 45,
+    "maintenance-replica-policy": 15,
+    "drain-start": 15,
+    "zero-primary-gate": 15,
+    "guarded-stop": 15,
+    "create": 15,
+    "replica-policy-restored": 15,
+    "auth-client-gate": 15,
+    "node-complete": 15,
+    "load-ended": 2,
+    "repository-cutover": 1,
+    "stage-snapshot": 5,
+    "hop-complete": 5,
+    "ledger-verified": 1
+  },
+  "steps": [
+    {
+      "utc": "2026-10-26T01:34:28.705593+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 2,
+      "to": "6.0.8",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 10.459
+    },
+    {
+      "utc": "2026-10-26T01:34:28.768691+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 2,
+      "to": "6.0.8",
+      "normal_stop_seconds": null,
+      "exit_code": 0,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:35:06.270672+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 2,
+      "to": "6.0.8",
+      "seconds": 48.024,
+      "counts": {
+        "write_ok": 451,
+        "logical_failures": 0,
+        "read_ok": 569,
+        "transient_attempts": 24,
+        "TimeoutError": 4,
+        "RemoteDisconnected": 4,
+        "URLError": 12,
+        "RuntimeError": 4
+      }
+    },
+    {
+      "utc": "2026-10-26T01:35:21.272250+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 3,
+      "to": "6.0.8",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 15.001
+    },
+    {
+      "utc": "2026-10-26T01:35:21.353746+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 3,
+      "to": "6.0.8",
+      "normal_stop_seconds": null,
+      "exit_code": 0,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:36:07.532591+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 3,
+      "to": "6.0.8",
+      "seconds": 61.262,
+      "counts": {
+        "write_ok": 1015,
+        "logical_failures": 0,
+        "read_ok": 1276,
+        "transient_attempts": 54,
+        "TimeoutError": 12,
+        "RemoteDisconnected": 8,
+        "URLError": 25,
+        "RuntimeError": 9
+      }
+    },
+    {
+      "utc": "2026-10-26T01:44:18.217853+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 1,
+      "to": "6.0.8",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 51.101
+    },
+    {
+      "utc": "2026-10-26T01:44:18.422095+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 1,
+      "to": "6.0.8",
+      "normal_stop_seconds": 0.186,
+      "exit_code": 143,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:45:04.248868+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 1,
+      "to": "6.0.8",
+      "seconds": 97.132,
+      "counts": {
+        "read_ok": 815,
+        "logical_failures": 0,
+        "write_ok": 642,
+        "transient_attempts": 45,
+        "RuntimeError": 4,
+        "TimeoutError": 28,
+        "RemoteDisconnected": 4,
+        "URLError": 9
+      }
+    },
+    {
+      "utc": "2026-10-26T01:45:04.906420+00:00",
+      "run": "qualified",
+      "event": "stage-snapshot",
+      "version": "6.0.8",
+      "name": "stage_608_20261026_014504"
+    },
+    {
+      "utc": "2026-10-26T01:45:45.501831+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 2,
+      "to": "6.1.6",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 40.595
+    },
+    {
+      "utc": "2026-10-26T01:45:45.556793+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 2,
+      "to": "6.1.6",
+      "normal_stop_seconds": null,
+      "exit_code": 0,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:46:29.796281+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 2,
+      "to": "6.1.6",
+      "seconds": 84.889,
+      "counts": {
+        "read_ok": 1561,
+        "logical_failures": 0,
+        "write_ok": 1245,
+        "transient_attempts": 90,
+        "RuntimeError": 9,
+        "TimeoutError": 52,
+        "RemoteDisconnected": 8,
+        "URLError": 21
+      }
+    },
+    {
+      "utc": "2026-10-26T01:47:11.823931+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 3,
+      "to": "6.1.6",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 42.028
+    },
+    {
+      "utc": "2026-10-26T01:47:11.955191+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 3,
+      "to": "6.1.6",
+      "normal_stop_seconds": 0.11,
+      "exit_code": 0,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:47:49.575285+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 3,
+      "to": "6.1.6",
+      "seconds": 79.779,
+      "counts": {
+        "read_ok": 2202,
+        "logical_failures": 0,
+        "write_ok": 1758,
+        "transient_attempts": 133,
+        "RuntimeError": 12,
+        "TimeoutError": 76,
+        "RemoteDisconnected": 12,
+        "URLError": 33
+      }
+    },
+    {
+      "utc": "2026-10-26T01:48:06.048051+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 1,
+      "to": "6.1.6",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 16.473
+    },
+    {
+      "utc": "2026-10-26T01:48:06.300233+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 1,
+      "to": "6.1.6",
+      "normal_stop_seconds": 0.23,
+      "exit_code": 143,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:48:52.159812+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 1,
+      "to": "6.1.6",
+      "seconds": 62.584,
+      "counts": {
+        "read_ok": 2995,
+        "logical_failures": 0,
+        "write_ok": 2353,
+        "transient_attempts": 157,
+        "RuntimeError": 16,
+        "TimeoutError": 81,
+        "RemoteDisconnected": 16,
+        "URLError": 44
+      }
+    },
+    {
+      "utc": "2026-10-26T01:48:53.094507+00:00",
+      "run": "qualified",
+      "event": "stage-snapshot",
+      "version": "6.1.6",
+      "name": "stage_616_20261026_014852"
+    },
+    {
+      "utc": "2026-10-26T01:49:36.565285+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 2,
+      "to": "6.2.11",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 43.47
+    },
+    {
+      "utc": "2026-10-26T01:49:36.585252+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 2,
+      "to": "6.2.11",
+      "normal_stop_seconds": null,
+      "exit_code": 0,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:50:08.786741+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 2,
+      "to": "6.2.11",
+      "seconds": 75.691,
+      "counts": {
+        "read_ok": 3915,
+        "logical_failures": 0,
+        "write_ok": 3103,
+        "transient_attempts": 408,
+        "RuntimeError": 252,
+        "TimeoutError": 81,
+        "RemoteDisconnected": 16,
+        "URLError": 59
+      }
+    },
+    {
+      "utc": "2026-10-26T01:50:28.426695+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 3,
+      "to": "6.2.11",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 19.64
+    },
+    {
+      "utc": "2026-10-26T01:50:28.443933+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 3,
+      "to": "6.2.11",
+      "normal_stop_seconds": null,
+      "exit_code": 0,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:51:04.951493+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 3,
+      "to": "6.2.11",
+      "seconds": 56.165,
+      "counts": {
+        "read_ok": 4658,
+        "logical_failures": 0,
+        "write_ok": 3702,
+        "transient_attempts": 521,
+        "RuntimeError": 350,
+        "TimeoutError": 81,
+        "RemoteDisconnected": 16,
+        "URLError": 74
+      }
+    },
+    {
+      "utc": "2026-10-26T01:51:46.510268+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 1,
+      "to": "6.2.11",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 41.559
+    },
+    {
+      "utc": "2026-10-26T01:51:46.793129+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 1,
+      "to": "6.2.11",
+      "normal_stop_seconds": 0.262,
+      "exit_code": 143,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:52:24.777625+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 1,
+      "to": "6.2.11",
+      "seconds": 79.826,
+      "counts": {
+        "read_ok": 5646,
+        "logical_failures": 0,
+        "write_ok": 4493,
+        "transient_attempts": 749,
+        "RuntimeError": 569,
+        "TimeoutError": 81,
+        "RemoteDisconnected": 16,
+        "URLError": 83
+      }
+    },
+    {
+      "utc": "2026-10-26T01:52:25.523505+00:00",
+      "run": "qualified",
+      "event": "stage-snapshot",
+      "version": "6.2.11",
+      "name": "stage_6211_20261026_015224"
+    },
+    {
+      "utc": "2026-10-26T01:52:39.333826+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 2,
+      "to": "6.3.7",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 13.809
+    },
+    {
+      "utc": "2026-10-26T01:52:39.354016+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 2,
+      "to": "6.3.7",
+      "normal_stop_seconds": null,
+      "exit_code": 0,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:53:22.493697+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 2,
+      "to": "6.3.7",
+      "seconds": 56.969,
+      "counts": {
+        "read_ok": 6441,
+        "logical_failures": 0,
+        "write_ok": 5123,
+        "transient_attempts": 828,
+        "RuntimeError": 638,
+        "TimeoutError": 81,
+        "RemoteDisconnected": 16,
+        "URLError": 93
+      }
+    },
+    {
+      "utc": "2026-10-26T01:54:04.138848+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 3,
+      "to": "6.3.7",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 41.645
+    },
+    {
+      "utc": "2026-10-26T01:54:04.204958+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 3,
+      "to": "6.3.7",
+      "normal_stop_seconds": null,
+      "exit_code": 0,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:54:40.755984+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 3,
+      "to": "6.3.7",
+      "seconds": 78.262,
+      "counts": {
+        "read_ok": 7387,
+        "logical_failures": 0,
+        "write_ok": 5899,
+        "transient_attempts": 1071,
+        "RuntimeError": 868,
+        "TimeoutError": 81,
+        "RemoteDisconnected": 16,
+        "URLError": 106
+      }
+    },
+    {
+      "utc": "2026-10-26T01:54:56.246280+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 1,
+      "to": "6.3.7",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 15.49
+    },
+    {
+      "utc": "2026-10-26T01:54:56.644413+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 1,
+      "to": "6.3.7",
+      "normal_stop_seconds": 0.378,
+      "exit_code": 143,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:55:41.217996+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 1,
+      "to": "6.3.7",
+      "seconds": 60.462,
+      "counts": {
+        "read_ok": 8232,
+        "logical_failures": 0,
+        "write_ok": 6543,
+        "transient_attempts": 1134,
+        "RuntimeError": 922,
+        "TimeoutError": 81,
+        "RemoteDisconnected": 16,
+        "URLError": 115
+      }
+    },
+    {
+      "utc": "2026-10-26T01:55:41.966607+00:00",
+      "run": "qualified",
+      "event": "stage-snapshot",
+      "version": "6.3.7",
+      "name": "stage_637_20261026_015541"
+    },
+    {
+      "utc": "2026-10-26T01:56:25.009614+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 2,
+      "to": "6.4.6",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 43.042
+    },
+    {
+      "utc": "2026-10-26T01:56:25.074477+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 2,
+      "to": "6.4.6",
+      "normal_stop_seconds": null,
+      "exit_code": 0,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:57:12.522123+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 2,
+      "to": "6.4.6",
+      "seconds": 90.555,
+      "counts": {
+        "read_ok": 9373,
+        "logical_failures": 0,
+        "write_ok": 7471,
+        "transient_attempts": 1382,
+        "RuntimeError": 1157,
+        "TimeoutError": 81,
+        "RemoteDisconnected": 16,
+        "URLError": 128
+      }
+    },
+    {
+      "utc": "2026-10-26T01:57:53.698614+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 3,
+      "to": "6.4.6",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 41.176
+    },
+    {
+      "utc": "2026-10-26T01:57:53.717554+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 3,
+      "to": "6.4.6",
+      "normal_stop_seconds": null,
+      "exit_code": 0,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:58:30.993086+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 3,
+      "to": "6.4.6",
+      "seconds": 78.471,
+      "counts": {
+        "read_ok": 10329,
+        "logical_failures": 0,
+        "write_ok": 8255,
+        "transient_attempts": 1624,
+        "RuntimeError": 1382,
+        "TimeoutError": 81,
+        "RemoteDisconnected": 16,
+        "URLError": 145
+      }
+    },
+    {
+      "utc": "2026-10-26T01:59:12.500099+00:00",
+      "run": "qualified",
+      "event": "zero-primary-gate",
+      "node": 1,
+      "to": "6.4.6",
+      "primaries": 0,
+      "missing": 0,
+      "drain_seconds": 41.507
+    },
+    {
+      "utc": "2026-10-26T01:59:12.888661+00:00",
+      "run": "qualified",
+      "event": "guarded-stop",
+      "node": 1,
+      "to": "6.4.6",
+      "normal_stop_seconds": 0.367,
+      "exit_code": 143,
+      "oom": false
+    },
+    {
+      "utc": "2026-10-26T01:59:59.552253+00:00",
+      "run": "qualified",
+      "event": "node-complete",
+      "node": 1,
+      "to": "6.4.6",
+      "seconds": 88.559,
+      "counts": {
+        "read_ok": 11442,
+        "logical_failures": 0,
+        "write_ok": 9135,
+        "transient_attempts": 1856,
+        "RuntimeError": 1604,
+        "TimeoutError": 82,
+        "RemoteDisconnected": 16,
+        "URLError": 154
+      }
+    },
+    {
+      "utc": "2026-10-26T02:00:00.270190+00:00",
+      "run": "qualified",
+      "event": "stage-snapshot",
+      "version": "6.4.6",
+      "name": "stage_646_20261026_015959"
+    }
+  ],
+  "load": {
+    "read_ok": 11453,
+    "logical_failures": 0,
+    "write_ok": 9143,
+    "transient_attempts": 1856,
+    "RuntimeError": 1604,
+    "TimeoutError": 82,
+    "RemoteDisconnected": 16,
+    "URLError": 154
+  },
+  "final_checks": {
+    "ledger_rows": 9143,
+    "all_keys_values_equal": true,
+    "table_policies_restored": 29,
+    "auth_REQUEST_retained": true,
+    "pre6_repository_unchanged": true,
+    "health": {
+      "nodes": [
+        [
+          "iRU4nc6cTkS0DX0ItkW3YQ",
+          "gw644-upgrade-1",
+          "6.4.6"
+        ],
+        [
+          "iFZTxohOSNq-HeeXSoOmuA",
+          "gw644-upgrade-2",
+          "6.4.6"
+        ],
+        [
+          "e3ix7Aw6RnO6Dq9Lbrg-Ag",
+          "gw644-upgrade-3",
+          "6.4.6"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          108,
+          0,
+          0
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "STARTED",
+          676
+        ]
+      ],
+      "failed_checks": [
+        [
+          0
+        ]
+      ]
+    },
+    "python-2.2.1": "{\"client\": \"crate-python\", \"version\": \"2.2.1\", \"parameter_read\": true, \"bulk_upsert\": true, \"occ\": true}",
+    "python-2.3.0": "{\"client\": \"crate-python\", \"version\": \"2.3.0\", \"parameter_read\": true, \"bulk_upsert\": true, \"occ\": true}",
+    "node-client.mjs": "{\"node_crate\":\"3.0.0\",\"pg\":\"8.23.1\",\"http_read\":true,\"pg_parameter_read\":true}\n",
+    "final-node-checks.mjs": "03:00:05 [CrateDB] SELECT from movie  27.14ms\n03:00:05 [CrateDB] SELECT from movie  30.60ms\n03:00:05 [CrateDB] SELECT from unknown  22.67ms\n{\"node_crate\":\"3.0.0\",\"wrapper_null_timestamp\":true,\"typed_array\":true,\"fulltext_named_count\":1000,\"restricted_auth_crud\":true,\"known_classifier_gap\":{\"participating\":true,\"coordinator\":false}}\n",
+    "privileges_unchanged": true,
+    "monitoring_root_all_nodes": true
+  },
+  "restore": {
+    "source_version": "5.10.16",
+    "target_version": "6.4.6",
+    "snapshot": "pre_upgrade_current_20261026_013417",
+    "catalog_rows": 1001,
+    "auth_payload_match": true,
+    "privileges_equal": true,
+    "blob_sha1": "e9e66cdc06d98fe97780c265331302483856dd0f",
+    "blob_separate_restore": true,
+    "old_repository_unchanged": true,
+    "health": {
+      "nodes": [
+        [
+          "elVyOXclTsKA9dRinBfDRA",
+          "gw644-restore-1",
+          "6.4.6"
+        ],
+        [
+          "oaFXka2tTiOFG-80EjXRfA",
+          "gw644-restore-2",
+          "6.4.6"
+        ],
+        [
+          "KR4Kty92S2S0SpGZ3cUeMg",
+          "gw644-restore-3",
+          "6.4.6"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          108,
+          0,
+          0
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "STARTED",
+          676
+        ]
+      ],
+      "failed_checks": [
+        [
+          0
+        ]
+      ]
+    },
+    "webapp_schema": "proposal-storage-schema.ts",
+    "correction": "SQL/user restore succeeded; immutable-file validation corrected to current repository path; GET/SHA1 and privileges verified.",
+    "current_yepwatch_fixture_match": true
+  },
+  "backup_helper": {
+    "version": "6.4.6",
+    "actual_backup_py_create_verify_list_drop": true,
+    "repository": "goodwatch-db-backup-v2",
+    "dropped_only_owned_snapshot": "compat_drop_20261026_020254"
+  },
+  "cleanup": {
+    "utc": "2026-10-26T02:05:59.479811+00:00",
+    "containers_removed": [
+      "gw644-upgrade-1",
+      "gw644-upgrade-2",
+      "gw644-upgrade-3",
+      "gw644-restore-1",
+      "gw644-restore-2",
+      "gw644-restore-3"
+    ],
+    "networks_removed": [
+      "gw644-upgrade",
+      "gw644-restore"
+    ],
+    "data_removed": [
+      "data-1",
+      "data-2",
+      "data-3",
+      "restore-data-1",
+      "restore-data-2",
+      "restore-data-3",
+      "snapshots",
+      "blob-backup"
+    ],
+    "proxies_stopped": true,
+    "production_access": false
+  },
+  "receipt_sha256": "5ac4b03a8c28059edabc659aabfb4a0f77f05ad389b2aed64f33305346637055",
+  "receipt_file_count": 109,
+  "typecheck_diagnostics": 192,
+  "tests": {
+    "backup": {
+      "passed": 38,
+      "subtests": 9
+    },
+    "flows": {
+      "passed": 38,
+      "subtests": 17,
+      "warnings": 11
+    },
+    "webapp_crate_catalog": {
+      "passed": 50
+    },
+    "auth_upgraded": {
+      "passed": 25
+    },
+    "auth_restored": {
+      "passed": 25
+    },
+    "typecheck": {
+      "exit": 2,
+      "diagnostics": 192
+    }
+  }
+}
