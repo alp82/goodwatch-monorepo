@@ -1,5 +1,6 @@
 const { spawnSync } = require('node:child_process');
-const env = { ...process.env, APP_VARIANT: process.env.APP_VARIANT ?? 'production', APP_BUILD_NUMBER: process.env.APP_BUILD_NUMBER ?? '4',
+const buildNumber = require('../eas.json').build.base.env.APP_BUILD_NUMBER;
+const env = { ...process.env, APP_VARIANT: process.env.APP_VARIANT ?? 'production', APP_BUILD_NUMBER: process.env.APP_BUILD_NUMBER ?? buildNumber,
   EXPO_NO_DOTENV: '1', EXPO_PUBLIC_API_ORIGIN: 'https://yepwatch.com', EXPO_PUBLIC_APP_ORIGIN: 'https://yepwatch.com',
   EXPO_PUBLIC_WS_ORIGIN: 'wss://yepwatch.com', EXPO_PUBLIC_ENABLE_FIXTURES: 'false', EXPO_PUBLIC_GUEST_ONLY: process.env.EXPO_PUBLIC_GUEST_ONLY ?? 'false' };
 delete env.EXPO_PUBLIC_DEVELOPMENT_NOTICE;

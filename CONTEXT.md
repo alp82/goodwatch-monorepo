@@ -365,3 +365,9 @@ A season's Tomatometer or Metascore as Rotten Tomatoes or Metacritic publish it,
 ## YepWatch rooms
 
 A YepWatch room shares one country/provider selection and one host-authored description. Jev interprets the prompt using GoodWatch search; its attributes are visible to the group and its ranked titles constrain suggestions. There is no selectable playback screen. Explicit Leave removes someone from the active group and transfers hosting if necessary; a disconnected participant still counts. See [the room-description decision](docs/adr/yepwatch-shared-room-description.md).
+
+**Your rooms**: The returning person's home lists active rooms remembered on this device. Each entry is refreshed with that room's existing credential; the index is a navigation aid, not a second source of room membership. Back preserves the person's place. Past decisions belong to History rather than the active-room list.
+
+**Start again**: The room owner's explicit way to begin another round after a final decision. It opens the existing settings for adjustment; cancelling preserves the decision, and only the explicit start resets the round. Reviewing matches after a decision never resumes voting.
+
+**Decision cheer**: An ephemeral tap or hold on the final poster, visible to room peers without changing votes or agreements. Popcorn falls past the poster. Holding together adds Marquee lights only when every non-dropped participant holds; multiple sessions from one participant count once. Hold evidence expires after 1.5 seconds, and ordinary presence heartbeats do not renew it. There is no Projector effect.
