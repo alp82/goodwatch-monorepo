@@ -81,7 +81,8 @@ function guestBody(interactions: TasteInteraction[]) {
 	return JSON.stringify({ guest: { interactions, country, services } })
 }
 
-async function request<T>(
+/** A GET for a member; for a guest, a POST that carries the guest progress. */
+export async function request<T>(
 	path: string,
 	query: string,
 	guest: TasteInteraction[] | null,

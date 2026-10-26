@@ -1,6 +1,6 @@
 import { presentCatalogLoader } from "~/server/media-payload.server"
-// My shows (#385): a member's shows for tonight. A guest has no watch state, so they are asked to sign up
-// (docs/implementation/tracking/my-library/README.md).
+// My shows (#385): a member's shows for tonight. A guest has no watch state: their page is the Wishlist's shows to
+// start, read from their browser, under a sign-up card for tracking (ui/my-shows/GuestMyShows.tsx).
 import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
@@ -15,7 +15,7 @@ import { getRecentlyLanded } from "~/server/newly-available.server"
 import { type RowServices, ownServicesOf } from "~/server/row-services.server"
 import { loadTaste } from "~/server/taste/index.server"
 import { getViewerContext } from "~/server/viewer.server"
-import { GuestPage } from "~/ui/my-pages/bits"
+import { GuestMyShows } from "~/ui/my-shows/GuestMyShows"
 import { MyShowsPage } from "~/ui/my-shows/MyShowsPage"
 import { getUserIdFromRequest } from "~/utils/auth"
 
@@ -55,7 +55,8 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 		getMyShows(
 			{
 				userId,
-				language: ctx.language,				country: ctx.country,
+				language: ctx.language,
+				country: ctx.country,
 				services: ctx.services,
 				taste: await loadTaste(ctx.viewer),
 			},
@@ -98,26 +99,16 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 }
 
 export default function MyShowsRoute() {
-	const { data, now, arrival, landed, services } =
-		useLoaderData<typeof loader>() as {
-			data: MyShows | null
-			now: number
-			arrival: Arrival | null
-			landed: LandedTitle[]
-			services: RowServices
-		}
-	if (!data)
-		return (
-			<GuestPage
-				name="My shows"
-				line="The next episode of each show you are watching, then the shows you want to start."
-				words={{
-					title: "Sign up to keep track of your shows",
-					detail:
-						"Mark the episodes you watched and pick up where you left off, on every device.",
-				}}
-			/>
-		)
+	const { data, now, arrival, landed, services } = useLoaderData<
+		typeof loader
+	>() as {
+		data: MyShows | null
+		now: number
+		arrival: Arrival | null
+		landed: LandedTitle[]
+		services: RowServices
+	}
+	if (!data) return <GuestMyShows />
 	return (
 		<MyShowsPage
 			data={data}
@@ -129,4 +120,7 @@ export default function MyShowsRoute() {
 	)
 }
 
-export const loader = presentCatalogLoader(canonicalLoader, { live: true, hint: "show" })
+export const loader = presentCatalogLoader(canonicalLoader, {
+	live: true,
+	hint: "show",
+})

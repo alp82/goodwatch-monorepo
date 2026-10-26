@@ -283,7 +283,11 @@ const listed = (
 	}))
 
 /** The page's plan and what it was made from, without any episode list: enough for the counts. */
-async function plan(viewer: MyShowsViewer, userData: UserData, now: number) {
+async function plan(
+	viewer: Pick<MyShowsViewer, "taste">,
+	userData: UserData,
+	now: number,
+) {
 	const tracked = showIds(userData.watchState)
 	const wanted = showIds(userData.wishlist).filter(
 		(id) => !(`show-${id}` in userData.watchState),
@@ -424,10 +428,36 @@ const cardOf = (id: number, row: CatalogRow | undefined) => ({
  */
 export async function getMyShows(
 	viewer: MyShowsViewer,
-	options: { episodeLists?: number; now?: number; upcoming?: boolean } = {},
+	options: MyShowsOptions = {},
+): Promise<MyShows> {
+	const userData = await getUserData({ user_id: viewer.userId })
+	return showsOf(viewer, userData, options)
+}
+
+/**
+ * My shows for a guest, from the guest progress their browser sent: the Wishlist's shows to start. A guest has no
+ * watch state, so every other group is empty.
+ */
+export function getGuestMyShows(
+	viewer: Omit<MyShowsViewer, "userId">,
+	userData: UserData,
+	options: MyShowsOptions = {},
+): Promise<MyShows> {
+	return showsOf({ ...viewer, userId: null }, userData, options)
+}
+
+interface MyShowsOptions {
+	episodeLists?: number
+	now?: number
+	upcoming?: boolean
+}
+
+async function showsOf(
+	viewer: Omit<MyShowsViewer, "userId"> & { userId: string | null },
+	userData: UserData,
+	options: MyShowsOptions,
 ): Promise<MyShows> {
 	const now = options.now ?? Date.now()
-	const userData = await getUserData({ user_id: viewer.userId })
 	const { shows, catalog, matchOf } = await plan(viewer, userData, now)
 	const today = utcDay(now)
 
@@ -438,7 +468,9 @@ export async function getMyShows(
 		...shows.pickUp.slice(0, Math.max(0, (options.episodeLists ?? 30) - shows.continue.length)),
 	]
 	const [next, upcoming] = await Promise.all([
-		readNextEpisodes(viewer.userId, userData, named, today),
+		viewer.userId
+			? readNextEpisodes(viewer.userId, userData, named, today)
+			: new Map<number, NextOfShow>(),
 		options.upcoming === false
 			? new Map<number, UpcomingEpisode>()
 			: readUpcoming(

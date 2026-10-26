@@ -70,7 +70,7 @@ const { setCrateClientForTest } = await import("../utils/crate.ts")
 const { setRedisClusterForTest, resetPendingResetsForTest } = await import(
 	"../utils/cache.ts"
 )
-const { getMyShows } = await import("./my-shows.server.ts")
+const { getMyShows, getGuestMyShows } = await import("./my-shows.server.ts")
 const { memberHome } = await import("./living-room/tv-home.server.ts")
 const { placedWords } = await import("../domain/my-shows.ts")
 const { getLibraryPage, forgetTitlesForTest } = await import(
@@ -286,6 +286,28 @@ test("My shows answers in the page's groups: Continue, Pick up, Start, waiting, 
 	// Best taste match first; the Wishlist's movie is not a show to start.
 	assert.deepEqual(names(page.start), ["The Bear", "Andor"])
 	assert.equal(page.total, 9)
+})
+
+test("a guest's My shows is the Wishlist's shows to start, from the guest progress", async () => {
+	seedShows()
+	const at = new Date(NOW - 86_400_000)
+	const entry = { createdAt: at, updatedAt: at }
+	const page = await getGuestMyShows(
+		{ country: "US", services: [], taste },
+		{
+			scores: {},
+			// Slow Horses is a show the member watches: for the guest it is one to start.
+			wishlist: { "show-302": entry, "show-101": entry, "movie-900": entry },
+			skipped: {},
+			notInterested: {},
+			watchState: {},
+			favorites: {},
+		},
+		{ now: NOW },
+	)
+	assert.deepEqual(page.start.map((row) => row.title).sort(), ["Andor", "Slow Horses"])
+	for (const group of [page.continue, page.pickUp, page.waiting, page.onHold, page.dropped])
+		assert.deepEqual(group, [])
 })
 
 test("a Continue row carries its Next episode from the cached episode list, and its progress from the member data", async () => {

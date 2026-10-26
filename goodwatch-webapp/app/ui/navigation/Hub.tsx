@@ -45,10 +45,6 @@ const HUB_TITLE = "Browse GoodWatch"
 const TILE_TINTS: Partial<
 	Record<DestinationKey, { wash: string; icon: string }>
 > = {
-	watchNext: {
-		wash: "from-amber-200/25 to-amber-200/[0.06]",
-		icon: "text-amber-300",
-	},
 	myShows: {
 		wash: "from-rose-200/25 to-rose-200/[0.06]",
 		icon: "text-rose-300",
@@ -240,12 +236,12 @@ function HubContent() {
 		label: "New arrivals",
 		href: user ? d.new.href : countryPath(locale.country),
 	}
-	const { pick, wishlistCount } = useTonightsPick()
+	const { pick } = useTonightsPick()
 	// New episodes (#442) and titles that landed on the member's services (#456).
 	const { episodes, landed } = useWhatsNew()
-	// A member has My shows and My movies in place of Watch next (#385). My library is reached from their heads, the
-	// account menu, Settings and the profile, so its tile gave its place to For you.
-	const tracked = Boolean(user)
+	// Everyone has My shows and My movies (#385): a guest's pages show their browser's Wishlist, and ask them to sign
+	// up for what needs an account. My library is reached from their heads, the account menu, Settings and the
+	// profile, so its tile gave its place to For you.
 	const pickOn = pick?.href ? currentDestination(pick.href.split("#")[0]) : null
 	// Search opens over the hub, which stays open beneath it: closing the hub would hand focus back to the key that
 	// opened it and take the keyboard down. Closing search comes back here; following a result closes both.
@@ -253,11 +249,6 @@ function HubContent() {
 		holdKeyboardForSearch()
 		navigation.setSearchOpen(true)
 	}
-	const watchSubtitle = user
-		? pick
-			? `${pick.title.title} next`
-			: "Your Wishlist, best first"
-		: `${wishlistCount} on your Wishlist`
 	// A link to the page the person is already on changes no location, so close on any link click.
 	const closeOnLink = (event: React.MouseEvent) => {
 		if ((event.target as HTMLElement).closest("a")) navigation.setHubOpen(false)
@@ -274,36 +265,26 @@ function HubContent() {
 				Search titles, people, moods
 			</button>
 			<Group id="hub-yours" name="Yours">
-				{tracked ? (
-					<>
-						<Tile
-							destination={d.myShows}
-							subtitle={
-								pickOn === "myShows" && pick
-									? `${pick.title.title}${pick.episode ? ` ${pick.episode.code}` : ""} next`
-									: "Continue, or start one"
-							}
-							here={here === "myShows"}
-							fresh={showsWords(episodes, landed?.shows ?? null)}
-						/>
-						<Tile
-							destination={d.myMovies}
-							subtitle={
-								pickOn === "myMovies" && pick
-									? `${pick.title.title} next`
-									: "Movies you want to see"
-							}
-							here={here === "myMovies"}
-							fresh={landedWords("movie", landed?.movies ?? null)}
-						/>
-					</>
-				) : (
-					<Tile
-						destination={d.watchNext}
-						subtitle={watchSubtitle}
-						here={here === "watchNext"}
-					/>
-				)}
+				<Tile
+					destination={d.myShows}
+					subtitle={
+						pickOn === "myShows" && pick
+							? `${pick.title.title}${pick.episode ? ` ${pick.episode.code}` : ""} next`
+							: "Continue, or start one"
+					}
+					here={here === "myShows"}
+					fresh={showsWords(episodes, landed?.shows ?? null)}
+				/>
+				<Tile
+					destination={d.myMovies}
+					subtitle={
+						pickOn === "myMovies" && pick
+							? `${pick.title.title} next`
+							: "Movies you want to see"
+					}
+					here={here === "myMovies" || here === "watchNext"}
+					fresh={landedWords("movie", landed?.movies ?? null)}
+				/>
 				<Tile
 					destination={d.forYou}
 					subtitle={FOR_YOU_SUBTITLE}

@@ -51,7 +51,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			{ headers },
 		)
 	if (what === "movies" || what === "cards") {
-		const options = parseWatchNextOptions(url, true)
+		const options = parseWatchNextOptions(url)
 		if (!options)
 			return json({ error: "Bad options" }, { status: 400, headers })
 		if (what === "movies")

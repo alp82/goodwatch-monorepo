@@ -544,9 +544,12 @@ export function MyShowsPage({
 	arrival = null,
 	landed = NOTHING_LANDED,
 	services = NO_SERVICES,
+	notice = null,
 }: {
 	data: MyShows
 	now: number
+	/** What leads the page under its head: a guest's sign-up card. */
+	notice?: ReactNode
 	/** What was new when the member arrived; null where nothing recorded it. */
 	arrival?: Arrival | null
 	/** The shows that landed on the member's services in the last 14 days, the latest first (#489). */
@@ -618,6 +621,7 @@ export function MyShowsPage({
 				]}
 			/>
 			<div className={`${WRAP} flex flex-col gap-10 pt-2`}>
+				{notice}
 				<section data-section="tonight">
 					<h2 className={`${DISPLAY} mb-4 text-2xl text-white md:text-3xl`}>
 						Watch next
