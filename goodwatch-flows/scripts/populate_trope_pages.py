@@ -98,10 +98,17 @@ class PageCatalog:
             return set()
         marks = ','.join('?' for _ in urls)
         rows = db.select(
-            'SELECT r.reference_url FROM trope_catalog_reference r '
-            'JOIN trope_catalog_page p ON r.canonical_url = p.url '
-            f'WHERE p.description IS NOT NULL AND r.reference_url IN ({marks}) LIMIT {len(urls)}', tuple(urls))
-        return {row['reference_url'] for row in rows}
+            f'SELECT reference_url,canonical_url FROM trope_catalog_reference WHERE reference_url IN ({marks}) LIMIT {len(urls)}', tuple(urls))
+        targets = sorted({row['canonical_url'] for row in rows})
+        if not targets:
+            return set()
+        # The description is deliberately not indexed/column-stored. Use its
+        # indexed digest as the availability marker and keep both reads on PKs;
+        # a distributed join can otherwise fetch every article for every batch.
+        target_marks = ','.join('?' for _ in targets)
+        described = {row['url'] for row in db.select(
+            f'SELECT url FROM trope_catalog_page WHERE url IN ({target_marks}) AND description_hash IS NOT NULL LIMIT {len(targets)}', tuple(targets))}
+        return {row['reference_url'] for row in rows if row['canonical_url'] in described}
 
     def contains(self, db, entry):
         return entry['url'] in self.present(db, [entry['url']])

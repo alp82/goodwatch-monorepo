@@ -22,9 +22,11 @@ class Database:
         self.references = set()
 
     def select(self, sql, params=()):
-        if 'JOIN trope_catalog_page' not in sql:
-            raise AssertionError(sql)
-        return [{'reference_url': url} for url in params if url in self.references]
+        if 'FROM trope_catalog_reference' in sql:
+            return [{'reference_url': url, 'canonical_url': url} for url in params if url in self.references]
+        if 'FROM trope_catalog_page' in sql and 'description_hash IS NOT NULL' in sql:
+            return [{'url': url} for url in params if url in self.references]
+        raise AssertionError(sql)
 
 
 class Catalog(PageCatalog):
@@ -140,6 +142,20 @@ class PagePopulationTests(unittest.TestCase):
         self.catalog.reconcile(self.db, entries, {BASE + 'One': {'status': 'stored'}},
                                lambda row, status, **kw: events.append((row['url'], status)))
         self.assertEqual(events, [(BASE + 'One', 'queued'), (BASE + 'Two', 'already_present')])
+
+    def test_reference_lookup_checks_alias_targets_without_scanning_article_text(self):
+        calls = []
+        class AliasDatabase:
+            def select(self, sql, params=()):
+                calls.append((sql, params))
+                if 'FROM trope_catalog_reference' in sql:
+                    return [{'reference_url': BASE + 'Old', 'canonical_url': BASE + 'Target'},
+                            {'reference_url': BASE + 'Unresolved', 'canonical_url': BASE + 'Missing'}]
+                return [{'url': BASE + 'Target'}]
+        self.assertEqual(PageCatalog.present(AliasDatabase(), [BASE + 'Old', BASE + 'Unresolved']), {BASE + 'Old'})
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(set(calls[1][1]), {BASE + 'Target', BASE + 'Missing'})
+        self.assertTrue(all('JOIN' not in sql and 'SELECT description' not in sql for sql, _ in calls))
 
     def test_record_preserves_real_heading_and_separate_reference(self):
         result = {'canonical_url': BASE + 'Canonical', 'heading': 'Actual title', 'description': 'Actual source introduction.'}
