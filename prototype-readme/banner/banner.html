@@ -1,0 +1,78 @@
+<!doctype html>
+<!-- PROTOTYPE: README banner source. Render with `node render.mjs` (writes ../assets/banner.webp). -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: Gabarito; font-weight: 700; src: url(Gabarito-Bold.ttf); }
+  @font-face { font-family: Gabarito; font-weight: 400; src: url(Gabarito-Regular.ttf); }
+  html, body { margin: 0; background: transparent; }
+  .card {
+    position: relative; width: 1280px; height: 400px; overflow: hidden;
+    border-radius: 20px; background: #09090b; isolation: isolate;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+  }
+  /* Poster wall, tilted and dimmed */
+  .wall {
+    position: absolute; left: -160px; top: -260px; width: 1640px;
+    display: grid; grid-template-columns: repeat(13, 1fr); gap: 14px;
+    transform: rotate(-9deg); opacity: 0.30; filter: saturate(0.55) brightness(0.9);
+  }
+  .wall img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 8px; display: block; }
+  /* Dim the wall, darker at the edges */
+  .shade {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 70% 95% at 50% 50%, rgba(9, 9, 11, 0.78) 0%, rgba(9, 9, 11, 0.86) 55%, rgba(9, 9, 11, 0.97) 100%);
+  }
+  /* Spotlight from above, like shieldcn's glow preset */
+  .spot {
+    position: absolute; inset: 0; mix-blend-mode: screen;
+    background:
+      radial-gradient(ellipse 34% 62% at 50% 0%, rgba(251, 191, 36, 0.30) 0%, rgba(251, 191, 36, 0.10) 55%, transparent 100%),
+      radial-gradient(ellipse 22% 40% at 50% 48%, rgba(255, 244, 214, 0.10) 0%, transparent 100%);
+  }
+  .content {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 18px; font-family: Gabarito;
+  }
+  .mark {
+    display: flex; align-items: baseline; font-weight: 700; font-size: 108px; line-height: 1;
+    letter-spacing: -0.01em; text-shadow: 0 6px 40px rgba(0, 0, 0, 0.6);
+  }
+  .mark img { height: 0.78em; margin-right: 0.055em; transform: translateY(0.005em); filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.6)); }
+  .ood { color: #ffffff; }
+  .watch { color: #fbbf24; }
+  .tag { font-size: 28px; font-weight: 400; color: #e4e4e7; letter-spacing: 0.01em; text-shadow: 0 2px 16px rgba(0, 0, 0, 0.8); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="wall" id="wall"></div>
+  <div class="shade"></div>
+  <div class="spot"></div>
+  <div class="content">
+    <div class="mark"><img src="g.svg" alt=""><span class="ood">ood</span><span class="watch">Watch</span></div>
+    <div class="tag">Find what to watch next</div>
+  </div>
+</div>
+<script>
+  // Well-known titles scored 80+ on GoodWatch (TMDB poster paths)
+  const posters = [
+    "anFx9aTOOYqgS3v7x3R84Kz67ly", "wa3ZQE9kLnqwN3vQ0NNjg1NPsCa", "eKfVzzEazSIjJMrw9ADa2x8ksLz", "iOb2fjXLbpJgyQXe46n1WtGCnaa",
+    "5rhTDKUhPYvpdQIijFIs5VoWsON", "bjiS5ipwxb9JFy3XRRN4OAilSeX", "AdYr4DjOgXvDUMwu6vEhZy1Rnxk", "1XS1oqL89opfnbLl8WnZY1O1uJx",
+    "3Cz7ySOQJmqiuTdrc6CY0r65yDI", "v3JuB15WybKmxDeT1hWdK3j6eSJ", "owhkU6KRqdXoUQpjV8uyZGPtX58", "h6Z2oogE4mJk2uffdtIlLhb0EHx",
+    "sJZcy8QsOPuRPiCfoCWVB3r9Ohg", "ogAWwbh3frWtiTyyXrZaVFtqCgp", "qk3eQ8jW4opJ48gFWYUXWaMT4l", "uRHsiw1wLxPHFXkkv4Ix1s0O6f4",
+    "rTc7ZXdroqjkKivFPvCPX0Ru7uw", "uOOtwVbSr4QDjAGIifLDwpb2Pdl", "f8aIvYk5h7Z8EP3dinCmVgQFYow", "hDxOMX8zzH1FiqKWVBzNaYGBkle",
+    "f1VCQIG2iCyOookdgOzwtUpwWC0", "7DJKHzAi83BmQrWLrYYOqcoKfhR", "k5UALlcA0EnviaCUn2wMjOWYiOO", "xppeysfvDKVx775MFuH8Z9BlpMk",
+    "k5Qg5rgPoKdh3yTJJrLtyoyYGwC", "iq6yrZ5LEDXf1ArCOYLq8PIUBpV",
+  ]
+  const wall = document.getElementById("wall")
+  for (let i = 0; i < 13 * 4; i++) {
+    const img = document.createElement("img")
+    img.src = `https://image.tmdb.org/t/p/w185/${posters[(i * 7) % posters.length]}.jpg`
+    wall.appendChild(img)
+  }
+</script>
+</body>
+</html>

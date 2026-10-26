@@ -2,7 +2,7 @@
 
 Question: what should the root README look like? Three variants, all with shieldcn badges:
 
-- [Variant A](variant-a.md): centered hero with a shieldcn header banner, feature table, repository map folded away
+- [Variant A](variant-a.md): round 2 (owner pick): branded banner with a poster wall, 12-feature grid from /how-it-works, stack in rows. Banner source in `banner/` (`node render.mjs`)
 - [Variant B](variant-b.md): product screenshot, tech stack badges, architecture diagram
 - [Variant C](variant-c.md): minimal docs page with small outline badges
 
