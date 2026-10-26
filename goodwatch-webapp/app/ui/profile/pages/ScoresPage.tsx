@@ -1,16 +1,19 @@
 import { PencilSquareIcon } from "@heroicons/react/20/solid"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
+import { useSearchParams, useRevalidator } from "@remix-run/react"
+import { useInfiniteQuery } from "@tanstack/react-query"
+import {
+	SCORES_PAGE_SIZE,
+	scoresParams,
+	type ScoresChoice,
+} from "~/domain/profile-scores"
+import useLocale from "~/utils/locale"
 // The profile's Scores tab: every score grouped by tier. The spread on top is the tier navigator: a bar jumps to its tier
 // (#tier-N, also Overview's link). Movies/Shows/All and a sort apply to every tier; a large tier shows its first 24 until
 // opened. The owner gets the import call to action and the way to the editable scores page; a signed-in visitor sees
 // their own scores in each poster's pill and can keep to the titles both rated. The posters don't repeat the owner's
 // score: their tier's heading says it. On the owner's own page the pill shows the GoodWatch score instead.
-import type { LibraryKind } from "~/domain/my-library"
-import type {
-	ProfileScoresPage,
-	ProfileShell,
-	ProfileTitle,
-} from "~/domain/profile"
+import type { ProfileScoresPage, ProfileShell } from "~/domain/profile"
 import { STICKY_SUBBAR } from "~/ui/layers"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { ScorePill } from "~/ui/poster-card/ScorePill"
@@ -27,76 +30,42 @@ import {
 	count,
 } from "../parts"
 
-type Kind = LibraryKind
 const TIER_SIZES: [string | null, string][] = [
 	["(min-width: 1280px)", "120px"],
 	["(min-width: 768px)", "12vw"],
 	["(min-width: 640px)", "16vw"],
 	[null, "25vw"],
 ]
-type Sort = "recent" | "gw" | "title"
-const FIRST = 24
-
-function sortTitles(titles: ProfileTitle[], sort: Sort) {
-	const list = [...titles]
-	if (sort === "gw") return list.sort((a, b) => (b.gw ?? 0) - (a.gw ?? 0))
-	if (sort === "title")
-		return list.sort((a, b) => a.title.localeCompare(b.title))
-	return list.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""))
-}
-
 export function ScoresPage({
 	shell,
 	page,
 	you,
+	viewerKey,
+	revision,
 }: {
 	shell: ProfileShell
 	page: ProfileScoresPage
 	you: Record<string, number> | null
+	viewerKey: string | null
+	revision: string
 }) {
-	const [kind, setKind] = useState<Kind>("all")
-	const [sort, setSort] = useState<Sort>("recent")
-	const [open, setOpen] = useState<Set<number>>(new Set())
-	const [both, setBoth] = useState(false)
+	const [params, setParams] = useSearchParams()
+	const { kind, sort, both } = page.choice
 	const owner = shell.viewer === "owner"
-	const all = useMemo(() => page.tiers.flatMap((t) => t.titles), [page.tiers])
-	const movies = all.filter((t) => t.mediaType === "movie").length
-	const sharedCount = you ? all.filter((t) => you[t.key] != null).length : 0
-	const agree = you
-		? all.filter(
-				(t) =>
-					you[t.key] != null &&
-					Math.abs((you[t.key] ?? 0) - (t.score ?? 0)) <= 1,
-			).length
-		: 0
-
-	const tiers = useMemo(
-		() =>
-			page.tiers
-				.map((tier) => ({
-					...tier,
-					titles: sortTitles(
-						kind === "all"
-							? tier.titles
-							: tier.titles.filter((t) => t.mediaType === kind),
-						sort,
-					).filter((t) => !both || you?.[t.key] != null),
-				}))
-				.filter((tier) => tier.titles.length),
-		[page.tiers, kind, sort, both, you],
+	const sharedCount = page.shared?.count ?? 0
+	const agree = page.shared?.agree ?? 0
+	const tiers = page.tiers
+	const spread = Array.from(
+		{ length: 10 },
+		(_, i) => tiers.find((t) => t.score === i + 1)?.total ?? 0,
 	)
-	// Unfiltered, a tier counts all its titles, also those past the page's limit (tier.total).
-	const whole = kind === "all" && !both
-	const sizeOf = (tier: (typeof tiers)[number]) =>
-		whole ? Math.max(tier.total ?? 0, tier.titles.length) : tier.titles.length
-	const spread = useMemo(
-		() =>
-			Array.from({ length: 10 }, (_, i) => {
-				const tier = tiers.find((t) => t.score === i + 1)
-				return tier ? sizeOf(tier) : 0
-			}),
-		[tiers, whole],
-	)
+	const setChoice = (patch: Partial<ScoresChoice>) => {
+		const next = new URLSearchParams(params)
+		for (const key of ["type", "sort", "both"]) next.delete(key)
+		for (const [key, value] of scoresParams({ ...page.choice, ...patch }))
+			next.set(key, value)
+		setParams(next, { preventScrollReset: true })
+	}
 	const jump = (score: number) =>
 		document
 			.getElementById(`tier-${score}`)
@@ -108,7 +77,7 @@ export function ScoresPage({
 			document.getElementById(hash)?.scrollIntoView({ block: "start" })
 	}, [])
 
-	if (!all.length)
+	if (!page.counts.all && !both)
 		return (
 			<>
 				<ImportCta shell={shell} what="ratings" />
@@ -144,7 +113,7 @@ export function ScoresPage({
 				)}
 			</div>
 			<ImportCta shell={shell} what="ratings" />
-			{you && sharedCount > 0 && (
+			{you && (sharedCount > 0 || both) && (
 				<div className="flex flex-wrap items-center gap-2 rounded-xl bg-sky-400/[0.07] px-4 py-3 text-sm text-sky-100 ring-1 ring-sky-400/25">
 					<span className="min-w-0 flex-1">
 						You rated <b>{count(sharedCount)}</b> of these too, and score within
@@ -161,7 +130,7 @@ export function ScoresPage({
 					<button
 						type="button"
 						aria-pressed={both}
-						onClick={() => setBoth(!both)}
+						onClick={() => setChoice({ both: !both })}
 						className={`min-h-9 rounded-full px-3 text-xs font-bold ring-1 ${both ? "bg-sky-400 text-gray-950 ring-sky-400" : "text-sky-200 ring-sky-400/40 hover:bg-sky-400/10"}`}
 					>
 						{both
@@ -177,17 +146,17 @@ export function ScoresPage({
 				<Segmented
 					label="Movies or shows"
 					value={kind}
-					onChange={setKind}
+					onChange={(kind) => setChoice({ kind })}
 					options={[
-						["all", `All ${count(all.length)}`],
-						["movie", `Movies ${count(movies)}`],
-						["show", `Shows ${count(all.length - movies)}`],
+						["all", `All ${count(page.counts.all)}`],
+						["movie", `Movies ${count(page.counts.movie)}`],
+						["show", `Shows ${count(page.counts.show)}`],
 					]}
 				/>
 				<span className="grow" />
 				<SortSelect
 					value={sort}
-					onChange={setSort}
+					onChange={(sort) => setChoice({ sort })}
 					options={[
 						{ key: "recent", label: "Last watched", hint: "Most recent first" },
 						{
@@ -200,64 +169,165 @@ export function ScoresPage({
 				/>
 			</div>
 
-			{tiers.map((tier) => {
-				const opened = open.has(tier.score)
-				const shown = opened ? tier.titles : tier.titles.slice(0, FIRST)
-				return (
-					<section
-						key={tier.score}
-						id={`tier-${tier.score}`}
-						className="scroll-mt-44"
-					>
-						<h2 className="mb-3 flex items-center gap-3 border-b border-white/10 pb-2">
-							<span className="flex h-10 w-10 shrink-0 scale-125 items-center justify-center">
-								<ScoreChip score={tier.score} />
-							</span>
-							<span className={`${DISPLAY} text-2xl`}>
-								{scoreLabels[tier.score]}
-							</span>
-							<span className="text-sm font-bold tabular-nums text-gray-500">
-								{count(sizeOf(tier))}
-							</span>
-						</h2>
-						<ul className="grid grid-cols-4 gap-2.5 sm:grid-cols-6 md:grid-cols-8 xl:grid-cols-10">
-							{shown.map((title) => (
-								<li key={title.key} className="min-w-0">
-									<ProfilePoster
-										title={title}
-										sizes={TIER_SIZES}
-										// The owner's score is the tier's: the pill shows GoodWatch's.
-										skipScore={owner}
-									/>
-								</li>
-							))}
-						</ul>
-						{opened && whole && sizeOf(tier) > tier.titles.length && (
-							<p className="mt-2 text-sm text-gray-500">
-								and {count(sizeOf(tier) - tier.titles.length)} more
-							</p>
-						)}
-						{tier.titles.length > FIRST && (
-							<button
-								type="button"
-								onClick={() =>
-									setOpen((now) => {
-										const next = new Set(now)
-										if (opened) next.delete(tier.score)
-										else next.add(tier.score)
-										return next
-									})
-								}
-								className="mt-3 rounded-full bg-white/[0.06] px-4 py-2 text-sm font-bold text-gray-100 ring-1 ring-white/15 hover:bg-white/[0.1]"
-							>
-								{opened
-									? "Show fewer"
-									: `Show all ${count(tier.titles.length)}`}
-							</button>
-						)}
-					</section>
-				)
-			})}
+			{!tiers.length && (
+				<p className="py-8 text-gray-400">No titles match these filters.</p>
+			)}
+			{tiers.map((tier) => (
+				<ScoreTier
+					key={`${scoresParams(page.choice)}:${tier.score}`}
+					initial={tier}
+					you={you}
+					shell={shell}
+					choice={page.choice}
+					viewerKey={viewerKey}
+					revision={revision}
+				/>
+			))}
 		</>
+	)
+}
+
+function ScoreTier({
+	initial,
+	you,
+	shell,
+	choice,
+	viewerKey,
+	revision,
+}: {
+	initial: ProfileScoresPage["tiers"][number]
+	you: Record<string, number> | null
+	shell: ProfileShell
+	choice: ScoresChoice
+	viewerKey: string | null
+	revision: string
+}) {
+	const { locale } = useLocale()
+	const revalidator = useRevalidator()
+	const [collapsed, setCollapsed] = useState(false)
+	const query = scoresParams(choice).toString()
+	const result = useInfiniteQuery({
+		queryKey: [
+			"profile-scores",
+			shell.handle,
+			viewerKey,
+			query,
+			locale.language,
+			revision,
+			initial.score,
+		],
+		initialPageParam: 0,
+		initialData: { pages: [{ tier: initial, you }], pageParams: [0] },
+		queryFn: async ({ pageParam, signal }) => {
+			const params = scoresParams(choice)
+			params.set("tier", String(initial.score))
+			params.set("offset", String(pageParam))
+			params.set("revision", revision)
+			params.set("displayLanguage", locale.language)
+			const response = await fetch(
+				`/api/profile/${encodeURIComponent(shell.handle)}/scores?${params}`,
+				{ signal },
+			)
+			if (response.status === 409)
+				throw new Error("Scores changed. Refresh scores to continue.")
+			if (!response.ok)
+				throw new Error("Could not load more scores. Retry to continue.")
+			const data = (await response.json()) as {
+				page: ProfileScoresPage
+				you: Record<string, number> | null
+			}
+			const tier = data.page.tiers.find((t) => t.score === initial.score)
+			if (!tier)
+				throw new Error("These scores changed. Refresh the page to continue.")
+			return { tier, you: data.you }
+		},
+		getNextPageParam: (last) => last.tier.next ?? undefined,
+	})
+	const pages = result.data.pages
+	// Keep cached batches across title navigation. Deduplicate if a rating moved while the reader was away.
+	const titles = [
+		...new Map(
+			pages.flatMap((p) => p.tier.titles).map((t) => [t.key, t]),
+		).values(),
+	]
+	const shown = collapsed ? titles.slice(0, SCORES_PAGE_SIZE) : titles
+	const total = pages[0].tier.total
+	const remaining = Math.max(0, total - shown.length)
+	return (
+		<section
+			id={`tier-${initial.score}`}
+			className="scroll-mt-44"
+			aria-label={`${initial.score} · ${scoreLabels[initial.score]}`}
+		>
+			<h2 className="mb-3 flex items-center gap-3 border-b border-white/10 pb-2">
+				<span className="flex h-10 w-10 shrink-0 scale-125 items-center justify-center">
+					<ScoreChip score={initial.score} />
+				</span>
+				<span className={`${DISPLAY} text-2xl`}>
+					{scoreLabels[initial.score]}
+				</span>
+				<span className="text-sm font-bold tabular-nums text-gray-500">
+					{count(total)}
+				</span>
+			</h2>
+			<ul className="grid grid-cols-4 gap-2.5 sm:grid-cols-6 md:grid-cols-8 xl:grid-cols-10">
+				{shown.map((title) => (
+					<li key={title.key} className="min-w-0">
+						<ProfilePoster
+							title={title}
+							sizes={TIER_SIZES}
+							skipScore={shell.viewer === "owner"}
+						/>
+					</li>
+				))}
+			</ul>
+			{total > SCORES_PAGE_SIZE && (
+				<div className="mt-3 flex flex-wrap items-center gap-3">
+					<p className="text-sm tabular-nums text-gray-400" aria-live="polite">
+						{count(shown.length)} of {count(total)}
+					</p>
+					{(collapsed || result.hasNextPage) && (
+						<button
+							type="button"
+							disabled={result.isFetching}
+							onClick={() => {
+								if (collapsed) setCollapsed(false)
+								else void result.fetchNextPage()
+							}}
+							className="min-h-11 rounded-full bg-white/[0.06] px-4 py-2 text-sm font-bold text-gray-100 ring-1 ring-white/15 hover:bg-white/[0.1] disabled:opacity-50"
+						>
+							{result.isFetching
+								? "Loading…"
+								: result.isError
+									? "Retry"
+									: collapsed
+										? "Show loaded titles"
+										: `Show ${Math.min(SCORES_PAGE_SIZE, remaining)} more`}
+						</button>
+					)}
+					{!collapsed && titles.length > SCORES_PAGE_SIZE && (
+						<button
+							type="button"
+							onClick={() => setCollapsed(true)}
+							className="min-h-11 px-3 text-sm font-bold text-gray-400 hover:text-white"
+						>
+							Show fewer
+						</button>
+					)}
+				</div>
+			)}
+			{result.isError && (
+				<p role="alert" className="mt-2 text-sm text-red-300">
+					{result.error.message}{" "}
+					<button
+						type="button"
+						className="underline"
+						onClick={() => revalidator.revalidate()}
+					>
+						Refresh scores
+					</button>
+				</p>
+			)}
+		</section>
 	)
 }

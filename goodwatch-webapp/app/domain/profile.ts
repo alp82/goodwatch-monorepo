@@ -230,14 +230,20 @@ export interface ProfileListsPage {
 	lists: import("~/ui/share-lists/ShareListTile").ShareListSummary[]
 }
 
-/** At most this many titles per score on the Scores tab; `total` says how many there are. */
-export const SCORES_TIER_MAX = 120
 /** At most this many titles on the Seen tab (the latest watches); `total` says how many there are. */
 export const SEEN_MAX = 400
 
 export interface ProfileScoresPage {
-	/** Each tier's latest titles, at most SCORES_TIER_MAX, with how many the tier holds. */
-	tiers: { score: number; titles: ProfileTitle[]; total: number }[]
+	choice: import("./profile-scores").ScoresChoice
+	counts: { all: number; movie: number; show: number }
+	shared: { count: number; agree: number } | null
+	/** One batch per tier, with totals from the entire matching library. */
+	tiers: {
+		score: number
+		titles: ProfileTitle[]
+		total: number
+		next: number | null
+	}[]
 }
 
 export interface ProfileSeenPage {

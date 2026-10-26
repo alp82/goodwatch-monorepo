@@ -7,14 +7,12 @@ import {
 	type ProfileListCard,
 	type ProfileListsPage,
 	type ProfileOverview,
-	type ProfileScoresPage,
 	type ProfileSeenPage,
 	type ProfileShell,
 	type ProfileShowsPage,
 	type ProfileTitle,
 	type ProfileViewer,
 	type ProfileWishlistPage,
-	SCORES_TIER_MAX,
 	SEEN_MAX,
 	type ShowGroup,
 	canSee,
@@ -266,27 +264,7 @@ export async function loadProfileOverview(
 	return { favorites, recent, watching, newestWishlist, lists, hotTakes }
 }
 
-export async function loadProfileScores(
-	ownerId: string,
-	shell: ProfileShell,
-): Promise<ProfileScoresPage> {
-	if (!seesPart(shell, "scores")) return { tiers: [] }
-	const library = await getProfileLibrary(ownerId)
-	const tiers = new Map<number, ProfileTitle[]>()
-	for (const t of library.scored.values()) {
-		const score = t.score as number
-		tiers.set(score, [...(tiers.get(score) ?? []), plainTitle(t)])
-	}
-	return {
-		tiers: [...tiers.entries()]
-			.sort((a, b) => b[0] - a[0])
-			.map(([score, titles]) => ({
-				score,
-				titles: titles.sort(byDateDesc).slice(0, SCORES_TIER_MAX),
-				total: titles.length,
-			})),
-	}
-}
+export { loadProfileScores } from "./scores.server"
 
 export async function loadProfileSeen(
 	ownerId: string,

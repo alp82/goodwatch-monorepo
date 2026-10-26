@@ -569,7 +569,8 @@ export function SortControl<K extends string>({
 				/>
 			</motion.button>
 			{portal
-				? typeof document !== "undefined" &&
+				? open &&
+					typeof document !== "undefined" &&
 					createPortal(<div ref={portalRoot}>{menu}</div>, document.body)
 				: menu}
 		</div>

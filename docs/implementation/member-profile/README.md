@@ -83,3 +83,13 @@ they were drawn. Discord's `/profile` uses these cards (`docs/implementation/dis
 `goodwatch-webapp/app/domain/profile.ts` (profile, visibility, pages) and `goodwatch-webapp/app/domain/profile-taste.ts`
 (taste stats, match, compare) hold the view models every loader returns. Server modules live in
 `goodwatch-webapp/app/server/profile/`.
+
+## Scores pagination
+
+The Scores tab counts the whole matching rated library. Its initial response contains at most 24 titles per
+rating tier; each tier's “Show 24 more” appends another batch and says how many are shown out of its total.
+Movies/Shows, sort, and the signed-in visitor's “both rated” filter live in the URL and are applied before paging.
+Equal sort values use the title key as a stable tie-breaker. Browser query caches retain loaded batches across
+navigation, partitioned by profile, viewer, language, choice, tier, and library revision. A changed revision asks
+the reader to refresh instead of mixing batches. Each batch resolves profile visibility again; authenticated
+responses are private. The Seen tab retains its separate existing limit.
