@@ -8,6 +8,53 @@ and temporarily hold the backup cron; those changes were restored.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Q37 urgent native abort — service restored October26,10:33 UTC
+
+**Supersedes the pending-decommission state below: the native action aborted at10:32:56 UTC.
+Crate-02 direct SQL returned at10:32:59; all nine requested public page probes returned200
+at10:33:11–12. No stop/restart, KILL, replica change or manual internal-marker reset.**
+
+The owner reported title-page503s while the native drain disabled new sessions. Owner explicitly
+authorized cancellation through the5.10 mechanism, including graceful-stop settings. Reviewed
+[5.10.16 DecommissioningService](https://github.com/crate/crate/blob/5.10.16/server/src/main/java/io/crate/cluster/gracefulstop/DecommissioningService.java):
+`exitIfNoActiveRequests` checks the dynamically updated graceful timeout when active work remains;
+`forceStopOrAbort` with force=false removes the decommission marker and calls
+`sqlOperations.enable()`. There is no separate cancel SQL statement in this implementation;
+resetting the internal marker alone does not run that enable/cancellation path. This used the
+native timeout-abort mechanism, not an invented marker-only cancellation.
+
+Before the change, rechecked force=false, timeout2h, allocationall and old active operations.
+At **10:32:56.057 UTC**, set transient `cluster.graceful_stop.timeout='1s'` through crate-01.
+The active native wait already exceeded that duration. Crate-02 logged **“Aborting graceful
+shutdown due to error”**, a gracefulStopTimeout TimeoutException, and at **10:32:56.483** removed
+`crate.internal.decommission.r0IgCe17SPOgudkQIGsRQA` (group changed from true to empty).
+At **10:32:59.505**, direct SQL on crate-02 succeeded. At **10:33:00.261**, restored the original
+`cluster.graceful_stop.timeout='2h'`; force remainedfalse throughout. No pending drain was resent.
+
+Verification through **all three coordinators**,10:33:10–34: each answered SQL, reported145 GREEN
+relations, zero missing/underreplicated shards, allocationall and every allocation exclusion empty.
+Graceful settings were again PRIMARIES/forcefalse/2h. The native allocation exclusion is gone;
+crate-02 is eligible to receive shards again. This establishes eligibility, not completion of a new
+recovery or clearance of the original closing-store locks. Existing allocation samples reported
+rebalancing throttled. Original container/PID/start time and restartcount0 remained unchanged.
+One initial diagnostic selected unsupported `sys.cluster.settings['crate']` and received404;
+the corrected supported-settings query succeeded through all three coordinators.
+
+Each requested page was fetched three times, body discarded, without following redirects:
+
+| Page | HTTP statuses | Seconds, successive requests |
+| --- | --- | --- |
+| `/movie/629-the-usual-suspects` | 200/200/200 | 0.476102 / 0.602423 / 0.426223 |
+| `/discover` | 200/200/200 | 0.899920 / 0.468605 / 0.551208 |
+| `/show/1396-breaking-bad` | 200/200/200 | 0.473120 / 0.457677 / 0.263274 |
+
+Recovery was reported immediately during the turn. Exact timestamps, scripts, selected runtime,
+SQL results and the short abort-log interval are in [q37-native-abort.json](q37-native-abort.json).
+Cron remains restored as previously verified; next11:05 scheduled snapshot is still future and
+not verified here. Original stale contexts/closing locks are not claimed fixed by aborting.
+Future maintenance must solve the three-copy primary-drain blocker and keep a tested native
+abort path ready before disabling a production coordinator. No further production change made.
+
 ## Q37 guarded restart attempt — October26,09:52–10:27 UTC
 
 **STOPPED before SIGTERM: crate-02 still has17 primaries. The native decommission remains
