@@ -2,6 +2,8 @@
 
 <a href="https://goodwatch.app"><picture><source media="(prefers-reduced-motion: reduce)" srcset=".github/readme/banner.webp"><img src=".github/readme/banner.avif" alt="GoodWatch: find what to watch next. A soft spotlight moves across a slowly drifting wall of posters." width="100%"></picture></a>
 
+**Movies and shows picked for your taste, one score you can trust, and where each one streams tonight.**
+
 <p>
   <a href="https://goodwatch.app"><img src="https://shieldcn.dev/badge/open-goodwatch.app-fbbf24.svg?logo=lu:Globe&height=48&fontSize=18&iconSize=20&padX=18&radius=10" alt="Open goodwatch.app"></a>
   <a href="https://discord.gg/TVAcrfQzcA"><img src="https://shieldcn.dev/discord/members/TVAcrfQzcA.svg?variant=branded&height=48&fontSize=18&iconSize=20&padX=18&radius=10" alt="Discord members"></a>
@@ -15,8 +17,6 @@
 </p>
 
 [Website](https://goodwatch.app) · [How it works](https://goodwatch.app/how-it-works) · [Use with AI](https://goodwatch.app/use-with-ai) · [Discord](https://discord.gg/TVAcrfQzcA)
-
-**Movies and shows picked for your taste, one score you can trust, and where each one streams tonight.**
 
 </div>
 
