@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { tropesPreview, withPreviewDescriptions } from "./tropes-preview.ts"
-import { buildTropePool } from "./tropes-model.ts"
 import { rankTropes, tropesLine } from "../../ui/profile/tropes/model.ts"
+import { buildTropePool } from "./tropes-model.ts"
+import { tropesPreview, withPreviewDescriptions } from "./tropes-preview.ts"
 
 test("first view preserves ranking and defining titles without shipping the filtering matrix", () => {
 	const pool = buildTropePool(
@@ -84,4 +84,56 @@ test("preview enriches visible bands from the current catalog without mutating t
 	assert.equal(result.ranked[1].url, "https://tvtropes.org/old")
 	assert.equal(original.ranked[0].description, "Legacy text")
 	assert.equal(result.data.pool.length, 0)
+})
+
+test("URI previews keep only thirty visible identities and show fresh canonical headings without changing their IDs", () => {
+	const ids = Array.from(
+		{ length: 45 },
+		(_, i) => `https://tvtropes.org/pmwiki/pmwiki.php/Main/Page${i}`,
+	)
+	const full = {
+		schema: 2,
+		genres: [],
+		years: [2000, 2000] as [number, number],
+		tropes: ids,
+		names: Object.fromEntries(ids.map((id, i) => [id, `Actual title ${i}`])),
+		labels: Object.fromEntries(ids.map((id) => [id, ["Contextual label"]])),
+		urls: Object.fromEntries(ids.map((id) => [id, id])),
+		descriptions: {},
+		titles: {},
+		seen: [],
+		pool: Array.from({ length: 3 }, (_, i) => ({
+			k: `movie-${i + 1}`,
+			m: 0 as const,
+			y: 2000,
+			s: 8,
+			g: [],
+			r: ids.map((_, r) => r),
+			d: ids.map(() => 100),
+		})),
+	}
+	const preview = tropesPreview(full)
+	assert.equal(preview.ranked.length, 30)
+	assert.ok(
+		preview.ranked.every(
+			(tag) =>
+				tag.id &&
+				tag.name.startsWith("Actual title") &&
+				tag.labels?.[0] === "Contextual label",
+		),
+	)
+	assert.equal(preview.data.pool.length, 0)
+	const first = preview.ranked[0]
+	assert.ok(first.id)
+	const enriched = withPreviewDescriptions(preview, {
+		[first.id]: {
+			url: first.id,
+			title: "Corrected primary heading",
+			text: "The linked page general definition.",
+		},
+	})
+	assert.equal(enriched.ranked[0].id, first.id)
+	assert.equal(enriched.ranked[0].name, "Corrected primary heading")
+	assert.deepEqual(enriched.ranked[0].labels, ["Contextual label"])
+	assert.equal(first.name, preview.ranked[0].name)
 })

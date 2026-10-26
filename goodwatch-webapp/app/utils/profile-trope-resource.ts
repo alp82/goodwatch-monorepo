@@ -43,7 +43,7 @@ export function profileTropeQueryKey(
 	language: string,
 ) {
 	return [
-		"profile-tropes-data",
+		"profile-tropes-data-v2",
 		shell.handle,
 		shell.viewer,
 		userId,

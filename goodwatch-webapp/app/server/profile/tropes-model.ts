@@ -27,8 +27,13 @@ export interface PoolTitle {
 }
 
 export interface TropePool {
+	schema?: number
 	genres: string[]
 	tropes: string[]
+	/** URI IDs in schema 2; names and contextual labels are presentation, never identity. */
+	names?: Record<string, string>
+	labels?: Record<string, string[]>
+	references?: Record<string, string[]>
 	urls: Record<string, string>
 	descriptions: Record<string, string>
 	titles: Record<string, ProfileTitle>
@@ -153,10 +158,13 @@ export function excerptParams(
 	params: URLSearchParams,
 ): { trope: string; keys: string[] } | null {
 	const trope = params.get("trope")?.trim() ?? ""
+	// URI and unresolved [label, route] IDs are longer than legacy display names.
+	const maxIdentity =
+		trope.startsWith("https://") || trope.startsWith("label:") ? 4096 : 300
 	const keys = (params.get("keys") ?? "").split(",")
 	if (
 		!trope ||
-		trope.length > 300 ||
+		trope.length > maxIdentity ||
 		keys.length > 16 ||
 		keys.some(
 			(k) =>

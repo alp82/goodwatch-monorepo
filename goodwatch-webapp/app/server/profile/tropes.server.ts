@@ -1,7 +1,10 @@
 import { getUserData } from "~/server/userData.server"
 import { titlePath } from "~/utils/helpers"
 import { readProfileCatalog } from "./catalog.server"
-import { readTropeDescriptions } from "./trope-catalog.server"
+import {
+	readTropeDescriptions,
+	resolveTropeReferences,
+} from "./trope-catalog.server"
 import {
 	readCachedTropePool,
 	writeCachedTropePool,
@@ -16,6 +19,7 @@ const loaders = createTropesLoader({
 	writeCache: writeCachedTropePool,
 	titlePath,
 	readDescriptions: readTropeDescriptions,
+	resolveReferences: resolveTropeReferences,
 })
 
 /** Call with the context resolved by profileLoader or loadProfileShell. Hidden parts return null. */

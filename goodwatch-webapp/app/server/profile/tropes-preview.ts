@@ -1,15 +1,15 @@
-import type { ProfileTropes } from "./tropes-data.ts"
-import type { TropeDescriptions } from "./trope-catalog-data.ts"
 import {
 	KINDS,
 	MINS,
 	NO_FACETS,
-	choiceStats,
-	erasOf,
-	eraOf,
-	rankTropes,
 	type RankedTrope,
+	choiceStats,
+	eraOf,
+	erasOf,
+	rankTropes,
 } from "../../ui/profile/tropes/model.ts"
+import type { TropeDescriptions } from "./trope-catalog-data.ts"
+import type { ProfileTropes } from "./tropes-data.ts"
 
 export const FIRST_TROPES = 30
 export interface TropesPreview {
@@ -57,7 +57,7 @@ export function tropesPreview(full: ProfileTropes): TropesPreview {
 		data: {
 			genres: full.genres,
 			years: full.years,
-			tropes: first.map((t) => t.name),
+			tropes: first.map((t) => t.id ?? t.name),
 			descriptions: {},
 			urls: {},
 			pool: [],
@@ -84,8 +84,9 @@ export function withPreviewDescriptions(
 		...preview,
 		ranked: preview.ranked.map((tag) => ({
 			...tag,
-			description: entries[tag.name]?.text || null,
-			url: entries[tag.name]?.url || tag.url,
+			name: entries[tag.id ?? tag.name]?.title || tag.name,
+			description: entries[tag.id ?? tag.name]?.text || null,
+			url: entries[tag.id ?? tag.name]?.url || tag.url,
 		})),
 	}
 }

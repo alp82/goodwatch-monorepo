@@ -83,7 +83,10 @@ export function keeps(t: PoolTitle, f: Facets, skip?: keyof Facets) {
 }
 
 export interface RankedTrope {
+	/** Stable target identity, independent of its displayed canonical title. */
+	id?: string
 	name: string
+	labels?: string[]
 	/** Titles in the filtered set that carry it. */
 	count: number
 	/** Of those, scored 8 or more. */
@@ -104,7 +107,10 @@ export interface RankedTrope {
  * filtered set's 8+ share; ties on loved count, then name. `usual` is the filtered set's average score.
  */
 export function rankTropes(
-	pool: Pick<TropePool, "tropes" | "descriptions" | "urls">,
+	pool: Pick<
+		TropePool,
+		"tropes" | "descriptions" | "urls" | "names" | "labels" | "schema"
+	>,
 	subset: PoolTitle[],
 ): { ranked: RankedTrope[]; usual: number } {
 	const entries = new Map<number, { t: PoolTitle; d: number }[]>()
@@ -124,7 +130,9 @@ export function rankTropes(
 		if (name === undefined) continue
 		const loved = list.filter((e) => e.t.s >= 8).length
 		ranked.push({
-			name,
+			...(pool.schema === undefined ? {} : { id: name }),
+			name: pool.names?.[name] ?? name,
+			...(pool.labels?.[name] ? { labels: pool.labels[name] } : {}),
 			count: list.length,
 			loved,
 			z: lovedZ(loved, list.length, rate),

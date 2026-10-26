@@ -71,11 +71,11 @@ export function TropesPage({
 	const pick = (tag: RankedTrope, title?: string) => {
 		snap(
 			list.current?.querySelector<HTMLElement>(
-				`[data-trope="${CSS.escape(tag.name)}"]`,
+				`[data-trope="${CSS.escape(tag.id ?? tag.name)}"]`,
 			) ?? null,
 		)
-		if (tag.name === open && !title) return setOpen(null)
-		setOpen(tag.name)
+		if ((tag.id ?? tag.name) === open && !title) return setOpen(null)
+		setOpen(tag.id ?? tag.name)
 		setFocus(title ?? tag.top[0] ?? null)
 	}
 	useEffect(() => {
@@ -116,13 +116,13 @@ export function TropesPage({
 				) : (
 					<ol ref={list} className="flex min-h-[50vh] flex-col gap-2">
 						{rows.map((tag, i) => {
-							const on = tag.name === open
+							const on = (tag.id ?? tag.name) === open
 							const tier = tierOf(i)
 							return (
 								<li
-									key={tag.name}
+									key={tag.id ?? tag.name}
 									data-flip=""
-									data-trope={tag.name}
+									data-trope={tag.id ?? tag.name}
 									ref={on ? openRef : undefined}
 									className={`relative overflow-hidden bg-gray-900 ring-1 transition-[box-shadow] ${tier === "compact" && !on ? "rounded-xl" : "rounded-2xl"} ${on ? "ring-amber-400/50" : "ring-white/10 hover:ring-white/25"}`}
 								>
@@ -300,7 +300,7 @@ function Preview({
 	const top = definingTitles(tag, m.titles)
 	const { loading, textOf } = useExcerpts(
 		handle,
-		tag.name,
+		tag.id ?? tag.name,
 		top.map((t) => t.key),
 	)
 	const t = top[0]

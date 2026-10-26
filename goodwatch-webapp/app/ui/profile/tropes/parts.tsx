@@ -30,9 +30,9 @@ export function useDetail(
 	onFocus: (key: string) => void,
 ) {
 	const top = definingTitles(tag, titles)
-	const { loading, textOf } = useExcerpts(
+	const { loading, textOf, labelOf } = useExcerpts(
 		handle,
-		tag.name,
+		tag.id ?? tag.name,
 		top.map((t) => t.key),
 	)
 	const [revealed, setRevealed] = useState<Set<string>>(() => new Set())
@@ -47,6 +47,7 @@ export function useDetail(
 		t,
 		loading,
 		textOf,
+		labelOf,
 		covered: (key: string) => !seen(key) && !revealed.has(key),
 		reveal: (key: string) => setRevealed((s) => new Set(s).add(key)),
 		step: (d: number) =>
@@ -250,6 +251,11 @@ export function ExcerptStage({
 							className={d.covered(t.key) ? "h-full overflow-hidden" : ""}
 							onReveal={() => d.reveal(t.key)}
 						/>
+						{d.labelOf(t.key) && (
+							<p className="mt-2 text-xs text-gray-400">
+								Listed as “{d.labelOf(t.key)}”
+							</p>
+						)}
 					</motion.div>
 				)}
 			</AnimatePresence>

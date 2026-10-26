@@ -14,19 +14,19 @@ import {
 	loadProfileShell,
 	profileCacheControl,
 } from "~/server/profile/page.server"
-import { loadProfileTropes } from "~/server/profile/tropes.server"
+import { readTropeDescriptions } from "~/server/profile/trope-catalog.server"
 import { seesTropes } from "~/server/profile/tropes-model"
 import {
 	tropesPreview,
 	withPreviewDescriptions,
 } from "~/server/profile/tropes-preview"
-import { readTropeDescriptions } from "~/server/profile/trope-catalog.server"
+import { loadProfileTropes } from "~/server/profile/tropes.server"
 import { profileMeta } from "~/ui/profile/meta"
 import { tropesLine } from "~/ui/profile/tropes/model"
 
 import {
-	TropesTab,
 	type TropesTabProps as Data,
+	TropesTab,
 } from "~/ui/profile/tropes/TropesTab"
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -46,7 +46,7 @@ const present = presentCatalogLoader(
 		})
 		const preview = full ? tropesPreview(full) : null
 		const descriptions = preview
-			? await readTropeDescriptions(preview.ranked.map((t) => t.name))
+			? await readTropeDescriptions(preview.ranked.map((t) => t.id ?? t.name))
 			: {}
 		return {
 			shell,

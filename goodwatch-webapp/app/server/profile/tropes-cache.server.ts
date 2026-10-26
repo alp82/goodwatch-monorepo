@@ -1,7 +1,7 @@
 import { withBackendTimeout } from "~/utils/backend-timeout"
 import { execute, query } from "~/utils/crate"
-import type { TropePool } from "./tropes-model"
 import { createTropeSnapshots } from "./trope-snapshots"
+import type { TropePool } from "./tropes-model"
 
 const bounded = <T>(run: () => Promise<T>) =>
 	withBackendTimeout("valkey", 800, run)
@@ -16,7 +16,7 @@ const snapshots = createTropeSnapshots({
 	readFast: async (userId) => {
 		const store = await redis()
 		if (!store) return null
-		return bounded(() => store.get(`profile-tropes:v1:${userId}`))
+		return bounded(() => store.get(`profile-tropes:v2:${userId}`))
 	},
 	readStored: async (userId) => {
 		const rows = await query<{ read_from: number; pool: string }>(
@@ -51,7 +51,7 @@ const snapshots = createTropeSnapshots({
    return 1
   `,
 					1,
-					`profile-tropes:v1:${userId}`,
+					`profile-tropes:v2:${userId}`,
 					raw,
 					String(JSON.parse(raw).readFrom),
 				),
