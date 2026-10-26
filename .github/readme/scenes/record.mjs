@@ -119,6 +119,11 @@ const enc = [
 	"0",
 	avif,
 ]
+// The loop is rendered to PNGs first, so it can start anywhere: START_MS rotates it (for example to open on the
+// finished conversation, which is also the picture a viewer sees before the animation plays).
+const LOOP = path.join(OUT, "loop")
+fs.rmSync(LOOP, { recursive: true, force: true })
+fs.mkdirSync(LOOP)
 if (FADE > 0) {
 	// The tail crossfades into the first frame and holds it for HOLD frames, so the encoder has settled on the
 	// clean first picture before the loop starts again; the output keeps the same length.
@@ -139,9 +144,18 @@ if (FADE > 0) {
 		`[0:v]trim=end=${offset},setpts=PTS-STARTPTS[a];[0:v]trim=start=${offset},setpts=PTS-STARTPTS[t];[t][1:v]blend=all_expr='A*(1-${w})+B*${w}'[b];[a][b]concat=n=2:v=1[v]`,
 		"-map",
 		"[v]",
-		...enc,
+		path.join(LOOP, "%04d.png"),
 	])
-} else ff([...seq, ...enc])
+} else ff([...seq, path.join(LOOP, "%04d.png")])
+{
+	const files = fs.readdirSync(LOOP).sort()
+	const k = Math.round((Number(process.env.START_MS ?? 0) / 1000) * FPS) % files.length
+	const rot = path.join(OUT, "rot")
+	fs.rmSync(rot, { recursive: true, force: true })
+	fs.mkdirSync(rot)
+	files.forEach((_, i) => fs.copyFileSync(path.join(LOOP, files[(i + k) % files.length]), path.join(rot, `${String(i).padStart(4, "0")}.png`)))
+	ff(["-framerate", String(FPS), "-i", path.join(rot, "%04d.png"), ...enc])
+}
 // One frame per second, for checking.
 ff([
 	"-framerate",
