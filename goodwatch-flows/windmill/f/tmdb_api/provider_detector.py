@@ -1,11 +1,34 @@
-# extra_requirements:
+# py: 3.12
+# requirements:
+# annotated-types==0.8.0
+# anyio==4.15.1
+# certifi==2026.10.23
+# charset-normalizer==3.5.2
 # crate==2.2.1
+# dnspython==2.9.0
+# grpcio==1.84.1
+# h11==0.16.0
+# h2==4.4.1
+# hpack==4.2.0
+# httpcore==1.0.9
+# httpx==0.28.1
+# hyperframe==6.1.0
+# idna==3.20
 # mongoengine==0.29.3
-# pymongo==4.18.1
-# requests==2.34.2
-# wmill==1.815.0
+# numpy==2.5.4
+# orjson==3.13.0
+# portalocker==3.2.0
+# protobuf==7.36.2
 # pydantic==2.13.5
+# pydantic-core==2.46.5
+# pymongo==4.18.1
 # qdrant-client==1.19.1
+# requests==2.34.2
+# typing-extensions==4.16.0
+# typing-inspection==0.4.4
+# urllib3==2.8.0
+# verlib2==26.2
+# wmill==1.815.0
 """Bounded provider detector over the streaming registry, read-only by default.
 
 Uses existing details records for sticky membership, due work and publication
