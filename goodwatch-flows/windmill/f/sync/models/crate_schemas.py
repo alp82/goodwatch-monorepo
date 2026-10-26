@@ -555,6 +555,26 @@ SCHEMAS = {
         "shards": 3,
         "timestamps": False,
     },
+    "trope_catalog_page": {
+        "object_columns": {"source_archive": ARCHIVE_COLUMN_TYPES},
+        "columns": {
+            "url": "TEXT", "title": "TEXT",
+            "description": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "description_hash": "TEXT", "source": "TEXT", "source_hash": "TEXT",
+            "fetched_at": "TIMESTAMP", "source_archive": ARCHIVE_OBJECT_SQL,
+            "imported_at": "TIMESTAMP", "updated_at": "TIMESTAMP",
+        },
+        "primary_key": ["url"], "shards": 3, "timestamps": False,
+    },
+    "trope_catalog_reference": {
+        "object_columns": {"source_archive": ARCHIVE_COLUMN_TYPES},
+        "columns": {
+            "reference_url": "TEXT", "canonical_url": "TEXT",
+            "source_hash": "TEXT", "fetched_at": "TIMESTAMP", "source_archive": ARCHIVE_OBJECT_SQL,
+            "imported_at": "TIMESTAMP", "updated_at": "TIMESTAMP",
+        },
+        "primary_key": ["reference_url"], "shards": 3, "timestamps": False,
+    },
     "trope_catalog": {
         "object_columns": {"source_archive": ARCHIVE_COLUMN_TYPES},
         "columns": {

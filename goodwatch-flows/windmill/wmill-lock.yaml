@@ -156,7 +156,7 @@ locks:
   f/sync/init/milvus: 5df8f35e0f5a1cd76913276651f81b69c068459960c1db48afa82d4f73dcbe56
   f/sync/init/qdrant: 7132fd7d462ec13658f1b612a0b0ba414ed7989c83690ae9d36bc46a3bddf44f
   f/sync/models/crate_models: 3725306a02c7fdc8a50db95bee01da324ff74f8f457e51dd93b75a37ad1e165e
-  f/sync/models/crate_schemas: 40668ea76e4c96d93f9d0e45fb4acce51c138b3997a174c42c3bdf7c11b47028
+  f/sync/models/crate_schemas: 168a98f95cf741fb0f82ce709d649d149792a1d69a7b39109217053e43dd26eb
   f/sync/models/milvus_schemas: 56cde86b69d5d2be4b6de4963b282b9e7a439f2de645797c4214a095cab8c832
   f/sync/models/qdrant_models: 4c65416a62ca99c58b515876ce2aadc122e009463a1393bc27766b03d3df06ab
   f/sync/models/qdrant_schemas: c4cf621730ef9cfc456b8b3bdd6b773fe06f27e7314b8472e0c0dd6da39e1263
