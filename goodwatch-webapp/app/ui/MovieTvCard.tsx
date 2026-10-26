@@ -135,6 +135,8 @@ interface MovieTvCardProps {
 	newOn?: number | null
 	/** The list is the Wishlist: the pill leaves out the Wishlist bookmark. */
 	skipWant?: boolean
+	/** The page shows the viewer's score already (their own Scores tier): the pill shows GoodWatch's instead. */
+	skipScore?: boolean
 	/** The title is hidden already: the card starts under its Not interested cover, without actions. */
 	hidden?: HiddenState
 	/**
@@ -167,6 +169,7 @@ export function MovieTvCard({
 	actions: actionsOn = "bottom",
 	newOn,
 	skipWant = false,
+	skipScore = false,
 	hidden,
 	ownerScore = null,
 	ownerName,
@@ -269,6 +272,7 @@ export function MovieTvCard({
 							tmdbId={details.tmdb_id}
 							goodwatch={ratings?.goodwatch_overall_score_normalized_percent}
 							skipWant={skipWant}
+							skipScore={skipScore}
 							// The owner's square takes the pill's place under 7.5rem.
 							className={
 								ownerScore != null

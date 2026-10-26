@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 // (#tier-N, also Overview's link). Movies/Shows/All and a sort apply to every tier; a large tier shows its first 24 until
 // opened. The owner gets the import call to action and the way to the editable scores page; a signed-in visitor sees
 // their own scores in each poster's pill and can keep to the titles both rated. The posters don't repeat the owner's
-// score: their tier's heading says it.
+// score: their tier's heading says it. On the owner's own page the pill shows the GoodWatch score instead.
 import type { LibraryKind } from "~/domain/my-library"
 import type {
 	ProfileScoresPage,
@@ -216,7 +216,12 @@ export function ScoresPage({
 						<ul className="grid grid-cols-4 gap-2.5 sm:grid-cols-6 md:grid-cols-8 xl:grid-cols-10">
 							{shown.map((title) => (
 								<li key={title.key} className="min-w-0">
-									<ProfilePoster title={title} sizes={TIER_SIZES} />
+									<ProfilePoster
+										title={title}
+										sizes={TIER_SIZES}
+										// The owner's score is the tier's: the pill shows GoodWatch's.
+										skipScore={owner}
+									/>
 								</li>
 							))}
 						</ul>

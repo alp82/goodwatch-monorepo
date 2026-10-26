@@ -68,6 +68,7 @@ export function PillMarkIcon({
 const LOOK = {
 	S: {
 		h: "h-5",
+		lh: "leading-5",
 		num: "text-[12px]",
 		you: "text-[9px]",
 		icon: "size-3.5",
@@ -77,6 +78,7 @@ const LOOK = {
 	},
 	M: {
 		h: "h-6",
+		lh: "leading-6",
 		num: "text-[14px]",
 		you: "text-[10px]",
 		icon: "size-4",
@@ -86,6 +88,7 @@ const LOOK = {
 	},
 	L: {
 		h: "h-7",
+		lh: "leading-7",
 		num: "text-[16px]",
 		you: "text-[11px]",
 		icon: "size-[18px]",
@@ -95,6 +98,7 @@ const LOOK = {
 	},
 	auto: {
 		h: "h-5 @min-[6.5rem]/card:h-6",
+		lh: "leading-5 @min-[6.5rem]/card:leading-6",
 		num: "text-[12px] @min-[6.5rem]/card:text-[14px]",
 		you: "text-[9px] @min-[6.5rem]/card:text-[10px]",
 		icon: "size-3.5 @min-[6.5rem]/card:size-4",
@@ -149,7 +153,8 @@ export function ScorePill({
 	)
 	const you = scored && (
 		<span
-			className={`inline-flex ${p.h} items-center gap-1 ${p.px} ${p.num} font-black tabular-nums`}
+			// On one baseline, not centred: centred, the small lowercase "you" sits lower than the digit.
+			className={`inline-flex ${p.h} ${p.lh} items-baseline gap-1 ${p.px} ${p.num} font-black tabular-nums`}
 			style={{ color: vibe(score) }}
 		>
 			<span className={`${parts.label} ${p.you} font-bold text-gray-300`}>
@@ -182,7 +187,7 @@ export function ScorePill({
 
 /**
  * The pill for a title, from the viewer's member data: their score, and the state icon. `skipWant` leaves the Wishlist
- * bookmark off, for a list that is the Wishlist.
+ * bookmark off, for a list that is the Wishlist; `skipScore` the viewer's score, where the page shows it already.
  */
 export function TitleScorePill({
 	mediaType,
@@ -190,6 +195,7 @@ export function TitleScorePill({
 	goodwatch,
 	size = "auto",
 	skipWant = false,
+	skipScore = false,
 	className,
 }: {
 	mediaType: "movie" | "show"
@@ -197,13 +203,16 @@ export function TitleScorePill({
 	goodwatch?: number | null
 	size?: PartSize
 	skipWant?: boolean
+	/** Leaves the viewer's score out where the page says it already (their own Scores tier): GoodWatch's shows. */
+	skipScore?: boolean
 	className?: string
 }) {
 	const marks = useTitleMarks(mediaType, tmdbId)
 	return (
 		<ScorePill
 			goodwatch={goodwatch}
-			score={marks.score}
+			score={skipScore ? null : marks.score}
+			// From the real score: a scored title stays without the Seen icon.
 			mark={pillMark(marks, skipWant)}
 			size={size}
 			className={className}

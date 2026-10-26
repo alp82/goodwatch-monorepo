@@ -92,15 +92,18 @@ export const profileCardTitle = (title: ProfileTitle): CardTitle => ({
  * A scored poster on a profile: the site's poster card (the visitor's own pill and actions). `owner` names the
  * profile's member on someone else's profile: their score shows as the card's filled square. On the owner's own pages
  * it is left out (the pill's "you" says it), and where the page shows it already (a Scores tier's heading).
+ * `skipScore`: the viewer's own score leaves the pill too, for the owner's Scores tiers, so GoodWatch's shows.
  */
 export function ProfilePoster({
 	title,
 	owner,
 	sizes,
+	skipScore = false,
 }: {
 	title: ProfileTitle
 	owner?: string | null
 	sizes?: PosterProps["sizes"]
+	skipScore?: boolean
 }) {
 	return (
 		<MovieTvCard
@@ -109,6 +112,7 @@ export function ProfilePoster({
 			posterSizes={sizes}
 			ownerScore={owner ? (title.score as Score | null) : null}
 			ownerName={owner ? `@${owner}` : null}
+			skipScore={skipScore}
 		/>
 	)
 }
