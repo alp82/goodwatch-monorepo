@@ -32,8 +32,10 @@ persistent operation rows older than one hour without a matching `sys.jobs` entr
 Windmill jobs. The two October 16 crate-02 entries remain; almost all other candidates started during
 crate-02's temporary membership loss/rejoin on October 22 at 05:55 UTC. All nodes still run 5.10.16.
 
-The leading hypothesis is task-initialization cleanup leaving detached operation statistics during
-participant loss. On 5.10.16 the operation statistics map is separate from active tasks; KILL targets
+The isolated follow-up reproduced missing-job operations, retained task objects and active-request
+shutdown waits on 5.10.16. Relevant upstream fixes exist in 6.2.0 and 6.4.3, but a 6.4.6 lab still
+retained tasks after node loss; no upgrade is established as a complete fix. Keep production unchanged.
+Task-initialization cleanup and the missing-coordinator disconnect path remain relevant mechanisms. On 5.10.16 the operation statistics map is separate from active tasks; KILL targets
 active tasks, and decommission waits on internal task/request counters rather than operation-row count.
 Neither absent `sys.jobs` rows nor zero reported bytes prove that cancellation is safe or that these
 statistics block shutdown. Exact orphan statement types/client identities have aged out of the jobs

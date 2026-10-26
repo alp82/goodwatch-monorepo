@@ -1,0 +1,389 @@
+{
+  "date": "2026-10-26",
+  "issue": 773,
+  "base_commit": "45b4d909d",
+  "method": "Full before/after details SQL captured with an injected query function; SELECT-only requests to production Crate; after repeated across three coordinators. No cached details getter or local server invoked.",
+  "titles": [
+    {
+      "kind": "movie",
+      "id": "629",
+      "before": {
+        "directors": [
+          {
+            "id": 9032,
+            "name": "Bryan Singer"
+          },
+          {
+            "id": 1854423,
+            "name": "Alan Steinman"
+          },
+          {
+            "id": 146605,
+            "name": "James D. Deck"
+          }
+        ],
+        "writers": [
+          {
+            "id": 9033,
+            "name": "Christopher McQuarrie"
+          }
+        ],
+        "producers": [
+          {
+            "id": 9032,
+            "name": "Bryan Singer"
+          },
+          {
+            "id": 6410,
+            "name": "Francine Maisler"
+          },
+          {
+            "id": 1527280,
+            "name": "Lisa Miller Katz"
+          }
+        ],
+        "composers": [
+          {
+            "id": 113088,
+            "name": "Charleen Richards-Steeves"
+          },
+          {
+            "id": 13173,
+            "name": "Tami Treadwell"
+          },
+          {
+            "id": 1367493,
+            "name": "John T. Cucci"
+          }
+        ]
+      },
+      "after": {
+        "directors": [
+          {
+            "id": 9032,
+            "name": "Bryan Singer"
+          }
+        ],
+        "writers": [
+          {
+            "id": 9033,
+            "name": "Christopher McQuarrie"
+          }
+        ],
+        "producers": [
+          {
+            "id": 9032,
+            "name": "Bryan Singer"
+          },
+          {
+            "id": 9034,
+            "name": "Michael McDonnell"
+          }
+        ],
+        "composers": [
+          {
+            "id": 9039,
+            "name": "John Ottman"
+          }
+        ]
+      },
+      "source_credits": 128,
+      "source_credits_without_department": 0,
+      "creator_credits": 0,
+      "crew_matches_director_and_composer_credits": true,
+      "after_identical_across_coordinators": 3
+    },
+    {
+      "kind": "show",
+      "id": "1396",
+      "before": {
+        "directors": [
+          {
+            "id": 29779,
+            "name": "Michelle MacLaren"
+          },
+          {
+            "id": 111338,
+            "name": "Adam Bernstein"
+          },
+          {
+            "id": 66633,
+            "name": "Vince Gilligan"
+          }
+        ],
+        "writers": [
+          {
+            "id": 24951,
+            "name": "Peter Gould"
+          },
+          {
+            "id": 1223193,
+            "name": "George Mastras"
+          },
+          {
+            "id": 1223198,
+            "name": "Moira Walley-Beckett"
+          }
+        ],
+        "producers": [
+          {
+            "id": 1223199,
+            "name": "Melissa Bernstein"
+          },
+          {
+            "id": 1223200,
+            "name": "Stewart Lyons"
+          },
+          {
+            "id": 1223202,
+            "name": "Diane Mercer"
+          }
+        ],
+        "composers": [
+          {
+            "id": 1280070,
+            "name": "Dave Porter"
+          }
+        ]
+      },
+      "after": {
+        "directors": [
+          {
+            "id": 29779,
+            "name": "Michelle MacLaren"
+          },
+          {
+            "id": 111338,
+            "name": "Adam Bernstein"
+          },
+          {
+            "id": 66633,
+            "name": "Vince Gilligan"
+          }
+        ],
+        "writers": [
+          {
+            "id": 24951,
+            "name": "Peter Gould"
+          },
+          {
+            "id": 1223193,
+            "name": "George Mastras"
+          },
+          {
+            "id": 1223198,
+            "name": "Moira Walley-Beckett"
+          }
+        ],
+        "producers": [
+          {
+            "id": 1223199,
+            "name": "Melissa Bernstein"
+          },
+          {
+            "id": 1223200,
+            "name": "Stewart Lyons"
+          },
+          {
+            "id": 1223202,
+            "name": "Diane Mercer"
+          }
+        ],
+        "composers": [
+          {
+            "id": 1280070,
+            "name": "Dave Porter"
+          }
+        ]
+      },
+      "source_credits": 118,
+      "source_credits_without_department": 118,
+      "creator_credits": 1,
+      "crew_matches_director_and_composer_credits": true,
+      "after_identical_across_coordinators": 3
+    },
+    {
+      "kind": "show",
+      "id": "66732",
+      "before": {
+        "directors": [
+          {
+            "id": 1179419,
+            "name": "Matt Duffer"
+          },
+          {
+            "id": 1179422,
+            "name": "Ross Duffer"
+          },
+          {
+            "id": 17825,
+            "name": "Shawn Levy"
+          }
+        ],
+        "writers": [
+          {
+            "id": 1179419,
+            "name": "Matt Duffer"
+          },
+          {
+            "id": 1179422,
+            "name": "Ross Duffer"
+          },
+          {
+            "id": 1666689,
+            "name": "Paul Dichter"
+          }
+        ],
+        "producers": [
+          {
+            "id": 3025043,
+            "name": "Rand Geiger"
+          },
+          {
+            "id": 1113659,
+            "name": "Lampton Enochs"
+          },
+          {
+            "id": 1916848,
+            "name": "Kate Trefry"
+          }
+        ],
+        "composers": [
+          {
+            "id": 1685626,
+            "name": "Kyle Dixon"
+          },
+          {
+            "id": 2225636,
+            "name": "Michael Stein"
+          },
+          {
+            "id": 1155140,
+            "name": "Dan Romer"
+          }
+        ]
+      },
+      "after": {
+        "directors": [
+          {
+            "id": 1179419,
+            "name": "Matt Duffer"
+          },
+          {
+            "id": 1179422,
+            "name": "Ross Duffer"
+          },
+          {
+            "id": 17825,
+            "name": "Shawn Levy"
+          }
+        ],
+        "writers": [
+          {
+            "id": 1179419,
+            "name": "Matt Duffer"
+          },
+          {
+            "id": 1179422,
+            "name": "Ross Duffer"
+          },
+          {
+            "id": 1666689,
+            "name": "Paul Dichter"
+          }
+        ],
+        "producers": [
+          {
+            "id": 3025043,
+            "name": "Rand Geiger"
+          },
+          {
+            "id": 1113659,
+            "name": "Lampton Enochs"
+          },
+          {
+            "id": 1916848,
+            "name": "Kate Trefry"
+          }
+        ],
+        "composers": [
+          {
+            "id": 1685626,
+            "name": "Kyle Dixon"
+          },
+          {
+            "id": 2225636,
+            "name": "Michael Stein"
+          },
+          {
+            "id": 1155140,
+            "name": "Dan Romer"
+          }
+        ]
+      },
+      "source_credits": 189,
+      "source_credits_without_department": 189,
+      "creator_credits": 2,
+      "crew_matches_director_and_composer_credits": true,
+      "after_identical_across_coordinators": 3
+    }
+  ],
+  "native_sql_fixtures": [
+    {
+      "fixture": "exact Director excludes popular assistant",
+      "expected_ids": [
+        2
+      ],
+      "actual_ids": [
+        2
+      ]
+    },
+    {
+      "fixture": "department fallback",
+      "expected_ids": [
+        1
+      ],
+      "actual_ids": [
+        1
+      ]
+    },
+    {
+      "fixture": "Music without department",
+      "expected_ids": [
+        2
+      ],
+      "actual_ids": [
+        2
+      ]
+    },
+    {
+      "fixture": "deduplicate accepted writing jobs",
+      "expected_ids": [
+        1,
+        2
+      ],
+      "actual_ids": [
+        1,
+        2
+      ]
+    },
+    {
+      "fixture": "null credit tie",
+      "expected_ids": [
+        1,
+        2,
+        3
+      ],
+      "actual_ids": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "fixture": "Creator is distinct from Director",
+      "expected_ids": [],
+      "actual_ids": []
+    }
+  ]
+}

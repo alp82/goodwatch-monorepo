@@ -8,6 +8,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const app = resolve(here, "../../app")
 const noCache = `export const cached=async({target,params})=>target(params); export const declareResettableCache=()=>{}; export const resetCache=async()=>1; export const resetCacheConfirmed=async()=>true; export const getRedisCluster=()=>null; export const readCacheMarker=async()=>null; export const writeCacheMarker=async()=>{}; export const withRedisDeadline=promise=>promise;`
 const stubs = {
+	"server/genre-row/genre-row.server.ts": `export const genreRow=async()=>null; export const relatedMapKeys=async()=>[];`,
 	"utils/cache.ts": noCache,
 	"utils/auth.ts": `export const getUserIdFromRequest=async()=>"proof-member"; export const useUser=()=>{throw new Error("UI not exercised")}; export const getAuthFromRequest=async()=>({user:{id:"proof-member"},headers:new Headers()});`,
 	"server/media-context.server.ts": `export const saveMediaPreferences=async()=>{}; export const currentSavedMediaPreferences=async()=>({}); export const resolveMediaContext=async()=>({effectiveContext:{country:"US",language:"en",services:[]}});`,

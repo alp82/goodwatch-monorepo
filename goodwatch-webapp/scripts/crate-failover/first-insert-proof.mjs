@@ -9,6 +9,7 @@ export async function firstInsertProof({
 	setCrateClientForTest,
 	check,
 }) {
+	const clusterPort = process.env.CRATE_PORT
 	const results = []
 	for (const mediaType of ["show", "movie"]) {
 		for (const disposition of [
@@ -213,7 +214,7 @@ export async function firstInsertProof({
 				} finally {
 					setCrateClientForTest(null)
 					Object.assign(process.env, {
-						CRATE_PORT: "17430",
+						CRATE_PORT: clusterPort,
 						CRATE_TIMEOUT_MS: "10000",
 					})
 					await Promise.all(

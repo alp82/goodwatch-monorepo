@@ -1,0 +1,589 @@
+{
+  "collected_utc": "2026-10-26T01:01:47.066450+00:00",
+  "base_commit": "45b4d909d5ba3d0e7d12b1af6337a7665bd47aa0",
+  "scope": "Isolated Docker only; no production connection or change.",
+  "candidate_definition": "Operation older than 10 seconds, absent from full sys.jobs ID sample, after stopping workload; repeated samples and full GC. This differs intentionally from the one-hour production-age filter.",
+  "fixture": {
+    "rows": 100000,
+    "shards": 6,
+    "replicas": 1,
+    "payload_chars": 128,
+    "heap": "768m",
+    "container_memory": "1500m",
+    "cpus_per_container": 2,
+    "network_internal": true,
+    "published_ports_actual": false,
+    "credentials_or_production_env_used": false,
+    "load_workers_disconnect": 48,
+    "http_timeout_seconds": 4
+  },
+  "versions": {
+    "5.10.16": {
+      "image": "crate@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "orphans": 470,
+      "distinct_job_ids": 132,
+      "by_node": {
+        "gw644-repro-1": 224,
+        "gw644-repro-2": 138,
+        "gw644-repro-3": 108
+      },
+      "by_phase": {
+        "collect": 194,
+        "distributed merge": 95,
+        "join-merge": 76,
+        "hash-join": 38,
+        "fetchPhase": 67
+      },
+      "sum_positive_reported_used_bytes": 2415915,
+      "full_gc_histograms": {
+        "1": {
+          "io.crate.expression.reference.sys.operation.OperationContext": {
+            "instances": 224,
+            "shallow_bytes": 8960
+          },
+          "io.crate.execution.engine.collect.CollectTask": {
+            "instances": 86,
+            "shallow_bytes": 6880
+          },
+          "io.crate.execution.jobs.RootTask": {
+            "instances": 60,
+            "shallow_bytes": 4800
+          }
+        },
+        "2": {
+          "io.crate.execution.engine.collect.CollectTask": {
+            "instances": 89,
+            "shallow_bytes": 7120
+          },
+          "io.crate.execution.jobs.RootTask": {
+            "instances": 88,
+            "shallow_bytes": 7040
+          },
+          "io.crate.expression.reference.sys.operation.OperationContext": {
+            "instances": 154,
+            "shallow_bytes": 6160
+          },
+          "io.crate.execution.engine.fetch.FetchTask": {
+            "instances": 71,
+            "shallow_bytes": 5112
+          }
+        },
+        "3": {
+          "io.crate.expression.reference.sys.operation.OperationContext": {
+            "instances": 108,
+            "shallow_bytes": 4320
+          },
+          "io.crate.execution.engine.collect.CollectTask": {
+            "instances": 42,
+            "shallow_bytes": 3360
+          },
+          "io.crate.execution.jobs.RootTask": {
+            "instances": 30,
+            "shallow_bytes": 2400
+          }
+        }
+      },
+      "workload_counts": [
+        {
+          "utc": "2026-10-26T00:45:58.557998+00:00",
+          "event": "load-stop",
+          "cycle": "pause-1",
+          "counts": {
+            "ok": 1383,
+            "TimeoutError": 323,
+            "RuntimeError": 8
+          }
+        },
+        {
+          "utc": "2026-10-26T00:47:50.326787+00:00",
+          "event": "load-stop",
+          "cycle": "disconnect-2",
+          "counts": {
+            "ok": 1630,
+            "TimeoutError": 514,
+            "RuntimeError": 100,
+            "KeyError": 577
+          }
+        }
+      ],
+      "shutdown_receipts": [
+        {
+          "utc": "2026-10-26T00:49:02.987257+00:00",
+          "event": "shutdown-test-start",
+          "label": "orphan-shutdown",
+          "target": 1
+        },
+        {
+          "utc": "2026-10-26T00:49:44.280446+00:00",
+          "event": "post-drain-wait",
+          "label": "orphan-shutdown",
+          "elapsed": 41.212,
+          "state": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 1797797,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-10-26T00:43:21.715401693Z",
+            "FinishedAt": "0001-01-01T00:00:00Z"
+          },
+          "drain_result": {
+            "cols": [],
+            "rows": [
+              []
+            ],
+            "rowcount": 1,
+            "duration": 2710.5247
+          }
+        },
+        {
+          "utc": "2026-10-26T00:49:44.521540+00:00",
+          "event": "normal-stop",
+          "label": "orphan-shutdown",
+          "elapsed": 0.209,
+          "result": "gw644-repro-1",
+          "state": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 143,
+            "Error": "",
+            "StartedAt": "2026-10-26T00:43:21.715401693Z",
+            "FinishedAt": "2026-10-26T00:49:44.433386282Z"
+          }
+        },
+        {
+          "utc": "2026-10-26T00:50:33.413836+00:00",
+          "event": "shutdown-test-start",
+          "label": "clean-target-baseline",
+          "target": 1
+        },
+        {
+          "utc": "2026-10-26T00:50:33.489317+00:00",
+          "event": "zero-primaries",
+          "label": "clean-target-baseline",
+          "elapsed": 0.021
+        },
+        {
+          "utc": "2026-10-26T00:50:38.625303+00:00",
+          "event": "post-drain-wait",
+          "label": "clean-target-baseline",
+          "elapsed": 5.147,
+          "state": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-10-26T00:49:44.537018051Z",
+            "FinishedAt": "2026-10-26T00:50:38.538276964Z"
+          },
+          "drain_result": {
+            "cols": [],
+            "rows": [
+              []
+            ],
+            "rowcount": 1,
+            "duration": 13.404592
+          }
+        },
+        {
+          "utc": "2026-10-26T00:52:27.450950+00:00",
+          "event": "shutdown-test-start",
+          "label": "stats-only-shutdown",
+          "target": 3
+        },
+        {
+          "utc": "2026-10-26T00:53:08.718804+00:00",
+          "event": "post-drain-wait",
+          "label": "stats-only-shutdown",
+          "elapsed": 41.195,
+          "state": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 1798219,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-10-26T00:43:21.895561868Z",
+            "FinishedAt": "0001-01-01T00:00:00Z"
+          },
+          "drain_result": {
+            "cols": [],
+            "rows": [
+              []
+            ],
+            "rowcount": 1,
+            "duration": 10.648333
+          }
+        },
+        {
+          "utc": "2026-10-26T00:53:08.960042+00:00",
+          "event": "normal-stop",
+          "label": "stats-only-shutdown",
+          "elapsed": 0.206,
+          "result": "gw644-repro-3",
+          "state": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 143,
+            "Error": "",
+            "StartedAt": "2026-10-26T00:43:21.895561868Z",
+            "FinishedAt": "2026-10-26T00:53:08.867727544Z"
+          }
+        }
+      ],
+      "local_kill_samples": [
+        {
+          "utc": "2026-10-26T00:52:04.373317+00:00",
+          "event": "local-kill-sample",
+          "selected_node": "gw644-repro-3",
+          "phase": "collect",
+          "job_id": "1cd64f13-cbae-078e-fafd-7d73a106168d",
+          "before": [
+            [
+              "gw644-repro-3",
+              "distributed merge",
+              0
+            ],
+            [
+              "gw644-repro-3",
+              "collect",
+              0
+            ]
+          ],
+          "result": {
+            "cols": [],
+            "rows": [
+              []
+            ],
+            "rowcount": 0,
+            "duration": 4.338944
+          },
+          "after": [
+            [
+              "gw644-repro-3",
+              "distributed merge",
+              0
+            ],
+            [
+              "gw644-repro-3",
+              "collect",
+              0
+            ]
+          ]
+        },
+        {
+          "utc": "2026-10-26T00:52:04.435761+00:00",
+          "event": "local-kill-sample",
+          "selected_node": "gw644-repro-2",
+          "phase": "fetchPhase",
+          "job_id": "00709393-60fb-d6cb-3eed-5ef586e3dde8",
+          "before": [
+            [
+              "gw644-repro-2",
+              "fetchPhase",
+              -1
+            ],
+            [
+              "gw644-repro-2",
+              "collect",
+              0
+            ]
+          ],
+          "result": {
+            "cols": [],
+            "rows": [
+              []
+            ],
+            "rowcount": 0,
+            "duration": 1.356524
+          },
+          "after": []
+        }
+      ]
+    },
+    "6.4.6": {
+      "image": "crate@sha256:8d3e8778378236192724776877d2ea4546d5b5586362c8d174e6aa46177bb0fb",
+      "orphans": 96,
+      "distinct_job_ids": 36,
+      "by_node": {
+        "gw644-repro646-2": 96
+      },
+      "by_phase": {
+        "collect": 42,
+        "fetchPhase": 28,
+        "join-merge": 12,
+        "hash-join": 6,
+        "distributed merge": 8
+      },
+      "sum_positive_reported_used_bytes": 16487456,
+      "full_gc_histograms": {
+        "1": {},
+        "2": {
+          "io.crate.execution.engine.collect.CollectTask": {
+            "instances": 48,
+            "shallow_bytes": 3840
+          },
+          "io.crate.execution.jobs.RootTask": {
+            "instances": 42,
+            "shallow_bytes": 3360
+          },
+          "io.crate.execution.engine.fetch.FetchTask": {
+            "instances": 28,
+            "shallow_bytes": 2016
+          }
+        },
+        "3": {}
+      },
+      "workload_counts": [
+        {
+          "utc": "2026-10-26T00:52:19.918890+00:00",
+          "event": "load-stop",
+          "cycle": "disconnect-patched",
+          "counts": {
+            "ok": 3767,
+            "TimeoutError": 484,
+            "KeyError": 825,
+            "RuntimeError": 245
+          }
+        }
+      ],
+      "shutdown_receipts": [
+        {
+          "utc": "2026-10-26T00:53:26.788591+00:00",
+          "event": "shutdown-test-start",
+          "label": "patched-orphan-shutdown",
+          "target": 2
+        },
+        {
+          "utc": "2026-10-26T00:53:26.875816+00:00",
+          "event": "zero-primaries",
+          "label": "patched-orphan-shutdown",
+          "elapsed": 0.027
+        },
+        {
+          "utc": "2026-10-26T00:53:45.321908+00:00",
+          "event": "post-drain-wait",
+          "label": "patched-orphan-shutdown",
+          "elapsed": 18.464,
+          "state": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 2125089,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-10-26T00:51:05.427529252Z",
+            "FinishedAt": "0001-01-01T00:00:00Z"
+          },
+          "drain_result": {
+            "cols": [],
+            "rows": [
+              []
+            ],
+            "rowcount": 1,
+            "duration": 15.151511
+          }
+        },
+        {
+          "utc": "2026-10-26T00:53:45.540208+00:00",
+          "event": "normal-stop",
+          "label": "patched-orphan-shutdown",
+          "elapsed": 0.185,
+          "result": "gw644-repro646-2",
+          "state": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 143,
+            "Error": "",
+            "StartedAt": "2026-10-26T00:51:05.427529252Z",
+            "FinishedAt": "2026-10-26T00:53:45.431829324Z"
+          }
+        },
+        {
+          "utc": "2026-10-26T00:54:42.630292+00:00",
+          "event": "shutdown-test-start",
+          "label": "patched-clean-baseline",
+          "target": 2
+        },
+        {
+          "utc": "2026-10-26T00:54:42.713121+00:00",
+          "event": "zero-primaries",
+          "label": "patched-clean-baseline",
+          "elapsed": 0.034
+        },
+        {
+          "utc": "2026-10-26T00:54:47.826055+00:00",
+          "event": "post-drain-wait",
+          "label": "patched-clean-baseline",
+          "elapsed": 5.137,
+          "state": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-10-26T00:53:45.553556283Z",
+            "FinishedAt": "2026-10-26T00:54:47.751513746Z"
+          },
+          "drain_result": {
+            "cols": [],
+            "rows": [
+              []
+            ],
+            "rowcount": 1,
+            "duration": 11.605636
+          }
+        }
+      ],
+      "local_kill_samples": []
+    }
+  },
+  "cleanup": {
+    "utc": "2026-10-26T00:55:49.458610+00:00",
+    "containers": [
+      {
+        "container": "gw644-repro-1",
+        "stopped": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 143,
+          "Error": "",
+          "StartedAt": "2026-10-26T00:50:38.657244158Z",
+          "FinishedAt": "2026-10-26T00:55:48.101229978Z"
+        },
+        "removed": true
+      },
+      {
+        "container": "gw644-repro-2",
+        "stopped": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 143,
+          "Error": "",
+          "StartedAt": "2026-10-26T00:43:21.800534726Z",
+          "FinishedAt": "2026-10-26T00:55:48.396973054Z"
+        },
+        "removed": true
+      },
+      {
+        "container": "gw644-repro-3",
+        "stopped": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 143,
+          "Error": "",
+          "StartedAt": "2026-10-26T00:53:08.975278853Z",
+          "FinishedAt": "2026-10-26T00:55:48.584271044Z"
+        },
+        "removed": true
+      },
+      {
+        "container": "gw644-repro646-1",
+        "stopped": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 143,
+          "Error": "",
+          "StartedAt": "2026-10-26T00:51:05.314695081Z",
+          "FinishedAt": "2026-10-26T00:55:48.894875947Z"
+        },
+        "removed": true
+      },
+      {
+        "container": "gw644-repro646-2",
+        "stopped": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 143,
+          "Error": "",
+          "StartedAt": "2026-10-26T00:54:47.857795676Z",
+          "FinishedAt": "2026-10-26T00:55:49.071931149Z"
+        },
+        "removed": true
+      },
+      {
+        "container": "gw644-repro646-3",
+        "stopped": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 143,
+          "Error": "",
+          "StartedAt": "2026-10-26T00:51:05.540121701Z",
+          "FinishedAt": "2026-10-26T00:55:49.278583193Z"
+        },
+        "removed": true
+      }
+    ],
+    "networks_removed": [
+      "gw644-repro",
+      "gw644-repro646"
+    ],
+    "data_dirs_removed": 6,
+    "remaining_owned_containers": 0
+  },
+  "receipt_archive_sha256": "60a5c063e76e2b063648e8c2fac7d266ddfb2db73211cd937b7a3891b4aace61"
+}

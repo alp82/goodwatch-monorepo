@@ -25,7 +25,7 @@ services:
       - -Cgateway.recover_after_data_nodes=2
       - -Cgateway.recover_after_time=0s
       - -Cnode.name=node1
-    ports: ["127.0.0.1:17430:4200"]
+    ports: ["127.0.0.1:${CRATE_PROOF_PORT:-17430}:4200"]
     volumes: ["node1-data:/data"]
   node2:
     <<: *crate
@@ -40,7 +40,7 @@ services:
       - -Cgateway.recover_after_data_nodes=2
       - -Cgateway.recover_after_time=0s
       - -Cnode.name=node2
-    ports: ["127.0.0.2:17430:4200"]
+    ports: ["127.0.0.2:${CRATE_PROOF_PORT:-17430}:4200"]
     volumes: ["node2-data:/data"]
   node3:
     <<: *crate
@@ -55,7 +55,7 @@ services:
       - -Cgateway.recover_after_data_nodes=2
       - -Cgateway.recover_after_time=0s
       - -Cnode.name=node3
-    ports: ["127.0.0.3:17430:4200"]
+    ports: ["127.0.0.3:${CRATE_PROOF_PORT:-17430}:4200"]
     volumes: ["node3-data:/data"]
 
 volumes:

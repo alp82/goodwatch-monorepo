@@ -5,6 +5,7 @@ import { query } from "~/utils/crate"
 import { CAST_DOCUMENT_SIZE } from "~/utils/title-cast"
 import { castRowsCTEs, selectedCastRows } from "./title-cast-sql"
 import { createTitleDetailsGetters } from "./title-details-cache"
+import { crewPeople, selectedCrewCTEs, type CrewRole } from "./title-crew-sql.ts"
 import {
 	generateMediaFieldAssignments,
 	getFieldsByMediaType,
@@ -18,9 +19,6 @@ export {
 	DETAILS_TTL_MINUTES,
 	DETAILS_STALE_MINUTES,
 } from "./title-details-cache"
-
-const creditedCrew = (job: string, limit: number) =>
-	`ARRAY(SELECT {id = id, name = name} FROM crew_rows WHERE job = '${job}' ORDER BY popularity DESC LIMIT ${limit})`
 
 const _fetchFromDB = async (
 	mediaType: "movie" | "show",
@@ -180,6 +178,7 @@ const _fetchFromDB = async (
                   SELECT p.tmdb_id AS id, pw.credit_id AS credit_id, p.name AS name, pw.job AS job, pw.department AS department, p.popularity AS popularity, pw.episode_count_total AS episode_count_total
                   FROM worked_on_data pw JOIN people_data p ON pw.person_tmdb_id = p.tmdb_id
                 ),
+                ${selectedCrewCTEs},
 				backdrops AS (
 						SELECT array_agg(obj) as val
 						FROM (
@@ -293,14 +292,12 @@ const _fetchFromDB = async (
                 cast_rows = ${selectedCastRows("top_cast")},
                 crew = {${Object.entries(CREW_ROLES)
 									.map(
-										([key, role]) =>
-											`${key} = ARRAY(SELECT {id = id, credit_id = credit_id, name = name} FROM crew_rows WHERE job = '${role.job}' OR department = '${role.department}' ORDER BY episode_count_total DESC NULLS LAST, popularity DESC NULLS LAST, credit_id ASC LIMIT 3)`,
+										([key]) => `${key} = ${crewPeople(key as CrewRole)}`,
 									)
 									.join(",")}},
                 credits = {
-                  directors = ${creditedCrew("Director", 5)},
-                  composers = ${creditedCrew("Original Music Composer", 5)},
-                  executive_producers = ${creditedCrew("Executive Producer", 3)}
+                  directors = ${crewPeople("directors", 5)},
+                  composers = ${crewPeople("composers", 5)}
                 },
                 images = (SELECT val FROM images),
 				videos = (SELECT val FROM videos)

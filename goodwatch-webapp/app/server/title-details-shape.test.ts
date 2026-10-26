@@ -86,6 +86,9 @@ test("trim caches only the permitted shape, keeping array order and null video l
 			].sort(),
 		)
 		assert.equal(result.details.title, "Original")
+		assert.deepEqual(Object.keys(result.credits).sort(), [
+			"actors", "composers", "directors",
+		])
 		assert.deepEqual(result.details.genres, [])
 		assert.deepEqual(result.details.keywords, SOURCE_KEYWORDS)
 		assert.equal(result.details.tropes_count, 35)
@@ -342,7 +345,6 @@ test("fingerprint inputs survive processing but do not leak into details", async
 			credits: {
 				directors: [{ id: 2, name: "Director" }],
 				composers: [],
-				executive_producers: [],
 			},
 		},
 		"movie",

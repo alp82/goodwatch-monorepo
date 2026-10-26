@@ -10,8 +10,9 @@ import { setTimeout as delay } from "node:timers/promises"
 const exec = promisify(execFile)
 const directory = fileURLToPath(new URL(".", import.meta.url))
 const output = process.argv[2] ?? `${directory}results/observations.json`
-const compose = ["compose", "-f", `${directory}compose.yaml`, "-p", "goodwatch-client-588"]
-const endpoints = [1, 2, 3].map((i) => `http://127.0.0.${i}:17430`)
+const compose = ["compose", "-f", `${directory}compose.yaml`, "-p", process.env.CRATE_PROOF_PROJECT ?? "goodwatch-client-588"]
+const proofPort = process.env.CRATE_PROOF_PORT ?? "17430"
+const endpoints = [1, 2, 3].map((i) => `http://127.0.0.${i}:${proofPort}`)
 assert.match(process.env.DOCKER_HOST ?? "", /^unix:\//, "Only a local Unix Docker socket is allowed")
 assert.ok(!process.env.DOCKER_CONTEXT, "Unset DOCKER_CONTEXT")
 if (process.env.CRATE_PROOF_TRACKING_ONLY === "1") {
@@ -19,18 +20,19 @@ if (process.env.CRATE_PROOF_TRACKING_ONLY === "1") {
 	assert.equal(process.env.CRATE_PROOF_FIRST_INSERT, "1", "Tracking-only proof requires tracking recovery scenarios")
 }
 Object.assign(process.env, {
-	CRATE_HOSTS: "127.0.0.1,127.0.0.2,127.0.0.3", CRATE_PORT: "17430",
+	CRATE_HOSTS: process.env.CRATE_PROOF_SURVIVORS_ONLY === "1" ? "127.0.0.2,127.0.0.3" : "127.0.0.1,127.0.0.2,127.0.0.3", CRATE_PORT: proofPort,
 	CRATE_USER: "crate", CRATE_PASS: "", CRATE_TIMEOUT_MS: "10000",
 })
 const clientPath = process.env.CRATE_PROOF_BASELINE === "1" ? "./baseline-crate.ts" : "../../app/utils/crate.ts"
-const { query, execute, upsert, insertRows, setCrateClientForTest } = await import(clientPath)
+const { query, execute, upsert, insertRows, setCrateClientForTest, getCrateClient } = await import(clientPath)
+if (process.env.CRATE_PROOF_TRACE === "1") (await import("./trace.mjs")).traceClient(getCrateClient())
 const report = { startedAt: new Date().toISOString(), client: clientPath,
 	clientSha256: createHash("sha256").update(await readFile(new URL(clientPath, import.meta.url))).digest("hex"),
 	baselineCommit: process.env.CRATE_PROOF_BASELINE === "1" ? process.env.CRATE_PROOF_BASELINE_COMMIT : null,
 	trackingOnly: process.env.CRATE_PROOF_TRACKING_ONLY === "1",
-	nodeVersion: process.version, endpointScope: endpoints, assertions: [], failures: [] }
+	nodeVersion: process.version, clientHosts: process.env.CRATE_HOSTS, trace: process.env.CRATE_PROOF_TRACE === "1", endpointScope: endpoints, assertions: [], failures: [] }
 report.sourceSha256 = {}
-for (const path of ["../../app/utils/crate.ts", "../../app/utils/crate-diagnostics.ts", "../../app/server/tracking.server.ts", "../../app/server/combined-search/catalog.server.ts", "../../app/server/search-ranking/search-index-build.server.ts", "../../app/server/page-cache.server.ts", "./verify.mjs", "./first-insert-proof.mjs", "./removal-retry-proof.mjs", "./page-proof.mjs", "./build-page-proof.mjs", "./page-loaders.ts", "./compose.yaml", "./run.sh", ...(process.env.CRATE_PROOF_PAGES === "1" ? ["./page-loaders.generated.mjs"] : [])])
+for (const path of ["../../app/utils/crate.ts", "../../app/utils/crate-diagnostics.ts", "../../app/server/tracking.server.ts", "../../app/server/combined-search/catalog.server.ts", "../../app/server/search-ranking/search-index-build.server.ts", "../../app/server/page-cache.server.ts", "./verify.mjs", "./trace.mjs", "./first-insert-proof.mjs", "./removal-retry-proof.mjs", "./page-proof.mjs", "./build-page-proof.mjs", "./page-loaders.ts", "./compose.yaml", "./run.sh", ...(process.env.CRATE_PROOF_PAGES === "1" ? ["./page-loaders.generated.mjs"] : [])])
  report.sourceSha256[path] = createHash("sha256").update(await readFile(new URL(path, import.meta.url))).digest("hex")
 report.trackingBaselineCommit = process.env.CRATE_PROOF_TRACKING_BASELINE_COMMIT ?? null
 report.trackingRuntimeSha256 = report.trackingBaselineCommit
@@ -146,7 +148,7 @@ async function lostResponseProof(kind, timeout = false) {
 		return { id, timeout, kind, writes, seqBefore, appliedSeq, seqAfter, n, outcome }
 	} finally {
 		setCrateClientForTest(null)
-		Object.assign(process.env, { CRATE_PORT: "17430", CRATE_TIMEOUT_MS: "10000" })
+		Object.assign(process.env, { CRATE_PORT: proofPort, CRATE_TIMEOUT_MS: "10000" })
 		await Promise.all(servers.map(async (server) => { server.closeAllConnections(); await new Promise((resolve) => server.close(resolve)) }))
 	}
 }

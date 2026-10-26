@@ -122,9 +122,9 @@ export async function preparePageProof(sql) {
 	)
 	// CREATE acknowledgement is not a readiness gate for every coordinator. Start the fault from a healthy cluster.
 	for (const endpoint of [
-		"http://127.0.0.1:17430",
-		"http://127.0.0.2:17430",
-		"http://127.0.0.3:17430",
+		`http://127.0.0.1:${process.env.CRATE_PROOF_PORT ?? "17430"}`,
+		`http://127.0.0.2:${process.env.CRATE_PROOF_PORT ?? "17430"}`,
+		`http://127.0.0.3:${process.env.CRATE_PROOF_PORT ?? "17430"}`,
 	]) {
 		const until = Date.now() + 90_000
 		let ready = false

@@ -1,8 +1,9 @@
 # Crate Docker forwarding hardening — owner runbook (#669)
 
 Status: inventory and proposed procedure only. Collected 2026-10-26 UTC from
-origin/main `bb1265d4a`. **No host firewall, Docker, Crate configuration or data
-was changed.** The owner applies changes after review. Do not push this branch
+initial origin/main `bb1265d4a`; owner-decision follow-up starts from
+origin/main `084697a87` (original runbook merged as `aa4cef22d`).
+**No host firewall, Docker, Crate configuration or data was changed.** The owner applies changes after review. Do not push this branch
 or execute the mutation blocks as part of agent inventory.
 
 ## Evidence and actual clients
@@ -40,7 +41,7 @@ published. Querying sys tables creates ordinary query log entries.
 | Monitoring on `.10` | Three active Uptime Kuma HTTP json-query monitors, one per node, interval 60 seconds; server sockets from `.10` to each | `.10`, HTTP 4200 | Allow HTTP; Alloy has no Crate target in inspected configs, no Crate socket caught |
 | Backups on `.11` | Root cron at minute 5 each hour, `goodwatch_backup`, password file; log confirms 00:07:31 successful run; `backup.py` tries `.11`, then `.12/.13` | Scheduled host HTTP client; no backup socket during sample | Keep host-origin local HTTP and `.11` remote HTTP; snapshot files use mounted storage, not another Crate port |
 | Crate peers | Every node has 13 inbound transport sockets from each of the other two, plus outgoing sockets | Other `.11/.12/.13`, transport 4300 | Allow only these three host IPs for transport |
-| PostgreSQL clients | No established 5432 socket in any Crate namespace; `sys.nodes.connections.psql`: open 0, lifetime total 4 per node | Historical clients unknown | No demonstrated ongoing dependency; owner must decide admin exception |
+| PostgreSQL clients | No established 5432 socket in any Crate namespace; `sys.nodes.connections.psql`: open 0, lifetime total 4 per node | Historical clients unknown | Owner decided: deny forwarded 5432, no admin exception |
 
 Initial server-side incoming HTTP socket counts:
 
@@ -66,12 +67,20 @@ verified by that query.
 Use IPv4 iptables through the installed nft compatibility backend, not a native
 nft Docker ruleset: all three hosts run Docker 28.5.1, iptables 1.8.7 `(nf_tables)`,
 with `FORWARD -> DOCKER-USER -> DOCKER-FORWARD` before UFW forwarding chains.
-DNAT maps each private host address to `172.19.0.2` on the same port.
+The initial inventory mapped each private host address to `172.19.0.2` on the
+same port. Follow-up network inspection finds `.13` Crate now on
+`172.20.0.0/16`; inspect live NAT/container addresses again before rollout.
+Original-destination matching below deliberately does not hardcode container IPs.
 Compose publishes only `${SELF_IP}:4200/4300/5432`.
 [Docker documents DOCKER-USER and original-destination matching](https://docs.docker.com/engine/network/firewall-iptables/);
 [UFW INPUT does not protect these published ports](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
 
-Proposed policy, requiring owner review:
+Owner decisions: deny forwarded PostgreSQL with no admin exception; implement
+the allowlist first. Docker/UFW generated-comment work is the separate later
+project [#775](https://github.com/alp82/goodwatch-monorepo/issues/775), not an
+allowlist rollout prerequisite. The owner applies this procedure.
+
+Proposed HTTP/transport policy for final review:
 
 - HTTP: exact private host IPs `.10–.21` and `.30–.32`, covering observed clients
   plus deployed workers whose transient jobs were not caught. This trusts every
@@ -80,9 +89,8 @@ Proposed policy, requiring owner review:
   subnet and pinned bridge before use. Never allow arbitrary `172.16.0.0/12`.
 - Transport: only `.11/.12/.13`. The self entry supports host-origin paths;
   peer replication must stay healthy after each node's change.
-- PostgreSQL: reject forwarded connections from all sources until an owner names
-  an administration client. Alternative: add only a named private `/32` to the
-  generated 5432 policy with `gw-crate: admin PostgreSQL` purpose.
+- PostgreSQL: reject forwarded connections from all sources. The owner chose no
+  administration exception; there are no 5432 allows in the generator.
 - Restrict only ORIGINAL-direction connections whose original destination is
   this host's published address and port. Authorized sources RETURN to existing
   DOCKER-USER rules, preserving existing address blocks and Docker isolation.
@@ -101,9 +109,9 @@ was done. See [Crate system tables](https://cratedb.com/docs/crate/reference/en/
 
 Run on **one node at a time**, `.11`, then `.12`, then `.13`. Keep an existing
 SSH session and verify a fresh private SSH login at every checkpoint. Commands
-below are a proposed owner rollout; none were run by the agent. First resolve
-the PostgreSQL and generated-comment decisions at the end. Stop on any failed
-checkpoint and use the rollback; do not proceed to the next host.
+below are a proposed owner rollout; none were run by the agent. PostgreSQL and
+project ordering are decided; complete the remaining traffic/lifecycle checks.
+Stop on any failed checkpoint and use the rollback; do not proceed to the next host.
 
 ### 1. Capture state and validate topology (read-only apart from evidence files)
 
@@ -283,20 +291,59 @@ iptables -nvL GW-CRATE-669 --line-numbers
 
 | Source | HTTP 4200 on all three | Transport 4300 on all three | PostgreSQL 5432 on all three |
 | --- | --- | --- | --- |
-| Webapp `.21`, search `.20`, worker private hosts, monitoring `.10` | Fresh authenticated SELECT / normal monitor must work | Reject (except Crate-host sources) | Reject, unless owner approved a named exception |
+| Webapp `.21`, search `.20`, worker private hosts, monitoring `.10` | Fresh authenticated SELECT / normal monitor must work | Reject (except Crate-host sources) | Reject; no exception |
 | Each local worker on `.11/.12/.13` | Authenticated SELECT both local and peer must work | Reject local bridge source | Reject |
 | Each peer Crate host | HTTP allowed; ordinary job/backup probe succeeds | Fresh peer TCP succeeds; 3 healthy nodes, transport connections retained | Reject |
-| Owner's selected **unlisted private source** | Reject with TCP RST | Reject with TCP RST | Reject with TCP RST |
-| Unrelated local Docker network on each node | Reject | Reject | Reject |
+| Local `node-exporter` on each Crate node, to that node’s private address | Reject | Reject | Reject |
 
-Select a real routed, unlisted private machine with the owner. Never spoof a
-production source, add an IP to a host, or change routes for the test. An
-existing unrelated Docker container may be used via `nsenter`; capture its
-actual source and the matching reject counter. A timeout alone is inconclusive:
-require the reject counter to increase on the target (and RST/refused at the
-source); an HTTP 401 is **not** a firewall rejection. If no such source exists,
-the owner must provide an isolated test client; mark this checkpoint incomplete.
-Existing two-way peer sockets are not proof of a fresh allowed connection.
+Use the existing **`node-exporter`** container on **each target's own host** for
+negative probes. Read-only inspection on October 26 confirmed all three running
+on the separate `goodwatch-metrics_default` bridge, with no Crate sockets:
+
+| Target host | Local test container source | Metrics bridge | Crate bridge |
+| --- | --- | --- | --- |
+| `.11` | `node-exporter`, `172.20.0.2` | `br-6ed5eb804827` | `br-bdbb13d29272` |
+| `.12` | `node-exporter`, `172.20.0.2` | `br-a2e6a38b5920` | `br-9bd2d1630eb4` |
+| `.13` | `node-exporter`, `172.19.0.2` | `br-aa3d19f72d76` | `br-3a511684cc44` |
+
+These are observations, not pinned identities: inspect again and stop if the
+container becomes host-networked, joins the Crate/worker bridge, or uses an
+allowed source. `ip route get` confirmed the metrics gateway/eth0 source only;
+no connection probes were run by the agent. The host's Python runs through
+`nsenter -n`, so the container needs no Python install or modification.
+
+```bash
+# On each target host, use its LOCAL node-exporter and SELF from step 1.
+TEST_PID=$(docker inspect node-exporter --format '{{.State.Pid}}')
+docker inspect node-exporter --format '{{.State.Running}} {{.HostConfig.NetworkMode}} {{json .NetworkSettings.Networks}}'
+nsenter -t "$TEST_PID" -n ip route get "$SELF"
+iptables -nvL GW-CRATE-669 --line-numbers
+nsenter -t "$TEST_PID" -n python3 - "$SELF" <<'PYNEG'
+import errno, socket, sys
+for port in (4200, 4300, 5432):
+    try:
+        with socket.create_connection((sys.argv[1], port), timeout=3):
+            pass
+    except OSError as exc:
+        if exc.errno != errno.ECONNREFUSED:
+            raise SystemExit(f'{port}: inconclusive rejection: {exc}')
+        print(f'{port}: refused; confirm matching target reject counter increased')
+    else:
+        raise SystemExit(f'{port}: unexpectedly connected')
+PYNEG
+iptables -nvL GW-CRATE-669 --line-numbers
+```
+
+Checkpoint: each port's reject counter increases and each fresh connect is
+refused. A timeout is inconclusive; a refused connection without a matching
+counter can instead mean no listener. An HTTP 401 is not firewall rejection.
+Run the same connect script before rollout to record the baseline (the policy
+assertion is expected to fail if ports accept connections). The post-apply
+assertion must pass on all three local containers. **Do not use one container on
+`.11` to establish HTTP rejection on `.12/.13`: remote traffic can be SNATed to
+allowed `.11`.** Repeat locally per target; this tests an unapproved bridge
+source, not an unlisted remote private host. Do not spoof addresses or change
+routes/networks. Existing peer sockets are not proof of a fresh allowed connection.
 
 Wait for all three 60-second monitors to pass, a normal job on each provisional
 worker class/host to finish, and the next hourly backup on `.11` to complete.
@@ -395,6 +442,94 @@ destination match. Do not restore a stale complete `iptables-save` on startup.
 Native Docker nft backend migration requires a separately designed forward-hook
 policy; `iptables (nf_tables)` alone does not mean native Docker nft backend.
 
+## Provenance of the incident address blocks (read-only follow-up)
+
+The source is **`/usr/local/sbin/goodwatch-block-malicious.sh`** on all three
+Crate hosts, not Docker or the worker INPUT reconciler. Its header identifies
+containment for the **2026-07 Patroni/etcd compromise**: one address is the
+`p.sh` payload/`reflect_client` C2, the other is the DDoS victim targeted by the
+botnet. Do not classify the victim as the attacker. The script adds bidirectional
+DOCKER-USER DROP rules plus INPUT-source and OUTPUT-destination blocks for both
+addresses, with `iptables -C` checks and `-I ... 1` inserts. The owner attributes
+this containment to an earlier agent; the artifacts do not identify that agent's
+session/person independently.
+
+| Host | Script and unit installation mtime (UTC, 2026-08-28) | Last successful service start shown by systemd |
+| --- | --- | --- |
+| `.11` | Script 20:33:44; unit 20:33:44 | 2026-09-03 20:53:17 UTC |
+| `.12` | Script 20:36:57; unit 20:36:57 | 2026-08-28 20:36:59 UTC |
+| `.13` | Script 20:37:00; unit 20:37:00 | 2026-08-28 20:37:01 UTC |
+
+These are file timestamps and systemd execution state, not an audited installer
+transcript. `/root/incident-2026-08-28/` retains `timestamps.txt`, captured
+Postgres crontab, process/connection snapshots and hashes on all three nodes;
+`.11/.12` also retain `p.sh` and captured reflect-client artifacts. Saved
+Postgres crontabs launch `reflect_client` at reboot against the same C2. These
+are historical evidence files, not current scheduled jobs. No payload was
+executed or external address contacted. Do not publish those files or payload keys.
+
+`/etc/systemd/system/goodwatch-block-malicious.service` is **enabled**,
+`Type=oneshot`, `RemainAfterExit=yes`, `WantedBy=multi-user.target`, ordered
+`After=docker.service network-online.target`, and calls the script above. All
+three report active/exited with `ExecMainStatus=0`; retained journal queries
+returned no entries. Thus a boot reapply mechanism exists and has run
+successfully; no reboot was performed to retest it. It is **not** a timer or a
+Docker `ExecStartPost` hook: a later Docker restart does not automatically
+rerun an already active oneshot. If DOCKER-USER rules disappear, this service
+alone does not prove immediate repair. It also skips DOCKER-USER when that chain
+is absent and ends with unconditional `exit 0`, so service success alone does not
+prove each insert succeeded. Read-only `iptables -C` confirms all eight expected
+active drops per host: two INPUT-source, two OUTPUT-destination, two forwarding-
+source and two forwarding-destination rules. Docker itself is enabled on all
+three. No current cron reapply was found.
+
+Search coverage: working-tree root/docs/incident-related filenames and git
+pickaxe searches for both addresses and `DOCKER-USER`; `/root` notes, scripts and
+available shell histories, `/etc/systemd/system`, cron, UFW, iptables persistence
+and local admin scripts across `.10–.21/.30–.32`. Excluded dependency/cache/secret
+stores and large/binary files. Repository pickaxe first finds the addresses in
+inspection evidence at `b773eb59f` (October 14), not their installer; later
+commits only repeat the observation. No independent origin/reapply references
+were found on other inspected hosts. Absence of matches is not proof that no
+other automation exists.
+
+### Keep containment separate from the Crate generator
+
+**Keep the existing script/service and all current rules in place during #669.**
+They block INPUT, OUTPUT and all Docker forwarding, including egress to a DDoS
+victim. Moving them into a Crate-only original-destination guard would lose that
+host-wide protection; copying global drops into it would make a database policy
+own unrelated incident containment and complicate its rollback. The existing
+checks also depend on the exact uncommented rule shape. The Crate guard's RETURN
+allows approved traffic to continue through those existing drops; its rollback
+must never remove them or disable their service.
+
+The private script is the existing authoritative address file on each host.
+Keep addresses there; no public address should appear in repository commands,
+issue bodies or committed evidence. For the later comment project, review a
+separate root-only address file such as
+`/etc/goodwatch-containment/blocked-ipv4` populated **on-host** from the existing
+script, and have that same containment generator emit comments such as
+`gw-containment: block incident C2` / `gw-containment: prevent DDoS participation`
+in create/check/delete paths. Preserve all three chains and boot behavior,
+address any restart/reload gap, and stage exact-match adoption/rollback tests.
+This is scoped to [#775](https://github.com/alp82/goodwatch-monorepo/issues/775),
+not an instruction to execute the preserved incident payload or rewrite live rules.
+
+Read-only owner confirmation, with address-bearing script content kept private:
+
+```bash
+systemctl cat goodwatch-block-malicious.service
+systemctl is-enabled goodwatch-block-malicious.service
+systemctl show goodwatch-block-malicious.service -p ExecMainStartTimestamp -p ExecMainStatus
+stat -c '%n %y' /usr/local/sbin/goodwatch-block-malicious.sh /etc/systemd/system/goodwatch-block-malicious.service
+# Compare INPUT/OUTPUT/DOCKER-USER against the private script on-host only.
+```
+
+Checkpoint: enabled service still points to the reviewed private script; all
+incident drops remain before/after the allowlist rollout and its rollback.
+Do not restart the service as part of agent read-only confirmation.
+
 ## Durable generated comments: owners and remaining work
 
 The new guard generator above owns every `gw-crate:` rule and its exact inverse.
@@ -410,9 +545,11 @@ not this forwarding guard.
 | Worker/webapp INPUT permissions | Repo `reconcile.py` `comment_for()` and UFW arguments, per-host JSON; systemd timer | Already emits UFW metadata comments. Keep prefix and exact-match adoption/cleanup tests. Kernel annotations require the UFW generator change below |
 | UFW generated base/user/IPv6 rules | Installed UFW Python backend plus `/etc/ufw/before.rules`, `after.rules`, `before6.rules`, `after6.rules`, user rule generation | Record installed package/version and managed file hashes. Patch/build a pinned UFW package so all emitters and their deletes/checks share owner/purpose comments; explicit templates can carry `-m comment`. Preserve metadata too. Test add/delete/reload/reset/IPv6 and upgrades in staging |
 | Docker DNAT/filter/isolation/masquerade, IPv6/container DNS | Installed Docker Engine/libnetwork firewall generator, triggered by container/network lifecycle | A pinned Engine patch must emit e.g. `docker: Crate HTTP publish` / `docker: bridge isolation` at creation AND exact-match delete/check sites. Deploying a fork/upgrade is a separate owner decision, with staged lifecycle/upgrade tests and package rollback |
-| Existing address deny entries in DOCKER-USER | Live rule provenance not established by this inventory | Owner identifies installer/automation and purpose privately; add comments there and its inverse/check path, then regenerate only those entries. Do not copy their public addresses to this repo |
+| Existing incident containment INPUT/OUTPUT/DOCKER-USER blocks | Private `/usr/local/sbin/goodwatch-block-malicious.sh`, enabled `goodwatch-block-malicious.service` on `.11/.12/.13` | Keep separate from the Crate guard for the provenance/scope reasons above; durable owner/purpose comments belong in this generator’s insert AND check paths, not live rule edits. Address authority remains the private host script; no addresses in this repo |
 
-**The universal kernel-comment requirement is not satisfied by this draft.**
+**The universal kernel-comment project is deferred by owner decision to
+[#775](https://github.com/alp82/goodwatch-monorepo/issues/775).** It is not a gate
+for #669; every new rule in this allowlist generator still carries a comment.
 UFW's metadata comments are not kernel comments, and Docker Compose has no
 per-generated-rule comment option. Never append comments to live Docker rules:
 Docker may fail to find/delete them and leave stale rules. Never disable Docker
@@ -453,21 +590,18 @@ package rollback and recreation procedure before any deployment.
 
 ## Owner decisions and acceptance still outstanding
 
-1. PostgreSQL: recommend **no forwarded 5432 access** until a named admin private
-   `/32` is supplied. Alternative: retain named administration access now; provide
-   its source and exercise an authenticated PostgreSQL SELECT before rollout.
-2. HTTP workers: recommend provisional exact host allowances above until a normal
-   cycle proves each worker's needs. Alternative: a tighter observed-only list
-   after a longer inventory; the short sample cannot justify dropping idle workers.
-3. Comments: recommend review source filtering separately and track a pinned
-   Docker/UFW generator implementation before claiming full #669 completion.
-   Alternative: require the universal kernel-comment rollout first. This draft
-   does not authorize an exception to the repository's every-rule comment rule.
-4. Supply an unlisted routed private source for negative probes, and identify the
-   owner/generator of the existing DOCKER-USER address blocks. UFW hook lifecycle tests,
-   generator patches and any direct-routing policy remain prerequisites for rollout.
+- Decided: deny all forwarded PostgreSQL 5432, no admin exception.
+- Decided: allowlist first; universal Docker/UFW generated comments move to
+  [#775](https://github.com/alp82/goodwatch-monorepo/issues/775).
+- Decided: use the existing local `node-exporter` network namespace on each
+  Crate host for negative probes, with the source/counter checks above.
+- HTTP worker allowances remain provisional until a normal cycle establishes
+  needs; the short sample cannot justify dropping deployed idle workers.
+- Actual allowed/refused traffic, normal jobs/monitoring/backup, UFW hook lifecycle
+  behavior and direct-routing assessment remain owner rollout checks. No
+  firewall mutation or lifecycle test was made during this follow-up.
 
-## Local validation of this documentation change
+## Local validation of the initial inventory change
 
 - Nine shell command blocks and both embedded scripts pass `bash -n`.
 - Relative documentation links resolve, inventory JSON parses, `git diff --check` passes.
@@ -481,3 +615,20 @@ package rollback and recreation procedure before any deployment.
   typing). Only Markdown/JSON changed; no application/type fixes were attempted.
 - No production enforcement, denied-source probes, rule parser load, systemd
   installation, reboot/restart/reload or network recreation was performed.
+
+## Local validation of the owner-decision follow-up
+
+- Eleven shell blocks and both embedded generator/rollback scripts pass `bash -n`;
+  embedded Python snippets compile without execution. No firewall tool ran locally.
+- Relative links resolve, retained inventory JSON parses, incident addresses are
+  absent from the runbook, and `git diff --check` passes.
+- Existing firewall/Compose regression suite: 16 passed, 8 subtests passed.
+- GitHub readback confirms #775 has `enhancement` and `ready-for-human`, the required
+  AI-triage preamble/blank line, and #669 links the new project.
+- Host inspections covered service configuration/state, incident artifacts,
+  script timestamps, available history/cron/persistence references, container
+  network identity, routing tables and existing sockets only. Reboot, restart,
+  rule application and negative traffic probes remain unperformed.
+- Follow-up `npx tsc --noEmit` exited 2 with 192 diagnostics in unchanged
+  webapp sources; the complete log stays in private local scratch. No application
+  code or flow dependencies were changed for this documentation task.

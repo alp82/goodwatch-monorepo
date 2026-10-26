@@ -294,7 +294,6 @@ export interface CreditedPeople {
 	actors: { id: number; name: string }[]
 	directors: { id: number; name: string }[]
 	composers: { id: number; name: string }[]
-	executive_producers: { id: number; name: string }[]
 }
 export interface MovieSeriesResult {
 	id: number

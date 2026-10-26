@@ -6,10 +6,10 @@ import { cached, readCacheMarker, writeCacheMarker } from "~/utils/cache"
 import { canonicalTitleId } from "~/utils/title-identity"
 import { type RawTitleDetails, trimTitleDetails } from "./title-details-shape"
 
-// The names are part of the cache keys. v2 holds the trimmed shape (see title-details-shape): code
-// that expects the full statement result (the unversioned names) must never read these values.
-export const DETAILS_MOVIE_CACHE_NAME = "details-movie-v2"
-export const DETAILS_SHOW_CACHE_NAME = "details-show-v3"
+// The names are part of the cache keys. These versions select exact crew jobs before department
+// fallback, so entries holding the previous department-wide selection must never be reused.
+export const DETAILS_MOVIE_CACHE_NAME = "details-movie-v3"
+export const DETAILS_SHOW_CACHE_NAME = "details-show-v4"
 // Title data may be up to 24 hours old. A value is fresh for 12 hours, and for 12 more hours it is
 // served while one refresh runs. So a title that is requested often is at most 12 hours behind, the
 // data cache keeps every value for 24 hours, and nothing older than that is served. The value holds

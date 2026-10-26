@@ -36,7 +36,7 @@ export default function Crew({ crew }: CrewProps) {
 				</div>
 				<div className="font-semibold flex-1">
 					{people.map((person, index) => (
-						<React.Fragment key={person.credit_id}>
+						<React.Fragment key={person.id}>
 							{index > 0 && ", "}
 							<Link
 								to={personPath(person.id, person.name)}

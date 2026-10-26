@@ -1,0 +1,3334 @@
+{
+  "issue": 774,
+  "baseCommit": "45b4d909d",
+  "scope": "Disposable local CrateDB 5.10.16 only; CPU limit 1 and heap 384m per node; no production .env",
+  "runs": {
+    "baseline": {
+      "startedAt": "2026-10-26T00:46:57.368Z",
+      "finishedAt": "2026-10-26T00:48:34.939Z",
+      "passed": false,
+      "clientSha256": "327af57052f4a276abf42a39ffad4cf9d9a4a7feafbd2f05d742f9f2e262a0e3",
+      "sourceSha256": {
+        "../../app/utils/crate.ts": "327af57052f4a276abf42a39ffad4cf9d9a4a7feafbd2f05d742f9f2e262a0e3",
+        "../../app/utils/crate-diagnostics.ts": "1e4e070a8f1d73c7ee509e15bcf3b276ad15b110c65c1469f31dad2cd25f4e18",
+        "../../app/server/tracking.server.ts": "071bb60a67ac92e818afb5f80199ea628c487d886085ac85888f3e1716562be3",
+        "../../app/server/combined-search/catalog.server.ts": "97c880db2d271b3c74639494972cdbcaa510875a07a3c4342b3f2d0170cae547",
+        "../../app/server/search-ranking/search-index-build.server.ts": "7456f61c6f4781582d05c9628901c039c11005f195e86a13b965ad1c1496a63b",
+        "../../app/server/page-cache.server.ts": "b974c43015f1986342ed6d1bec71ed6ae5903f47bfb4706ab992cc6a5ae4f1a0",
+        "./verify.mjs": "396ae461ff0850398eeded3e6ab47fe02411c344f2eb01a5fb5e3067005873e0",
+        "./first-insert-proof.mjs": "004af7b290421ede323e0cffef635645a70ac1964b1fe80419e6690c87d3244b",
+        "./page-proof.mjs": "854c0c987729c60598b6e2f853d1dd0dade8529e1e6172a838adad00870c533b",
+        "./build-page-proof.mjs": "656283777f7a7f296ab7fe8fe7ce4ff19a33daf5d53f99e5a4498c1da6e7de65",
+        "./page-loaders.ts": "80c419f50e51429cb3084d01b8c4b0f58d1c93ceb62e8eb3d995b3c60d1e272c",
+        "./compose.yaml": "01c1b77e149cab39532bea3948c504aea23494ae809161a197c0802fdb923136",
+        "./run.sh": "f1b361d4ff1204dea842611db21d197d621d07d4a7ce6d42aa8a9f92d2e0d847",
+        "./page-loaders.generated.mjs": "9e3c52d214fc9466ad077d50a22b9f22dee65c500e0faeca3f75fa32d3065725"
+      },
+      "endpointScope": [
+        "http://127.0.0.1:17774",
+        "http://127.0.0.2:17774",
+        "http://127.0.0.3:17774"
+      ],
+      "stop": {
+        "requestedAt": "2026-10-26T00:47:22.158Z",
+        "elapsedMs": 3002,
+        "command": "ALTER CLUSTER DECOMMISSION node1",
+        "settings": [
+          [
+            {
+              "timeout": "2h",
+              "min_availability": "PRIMARIES",
+              "force": false
+            }
+          ]
+        ],
+        "acknowledgedAt": "2026-10-26T00:47:49.113Z",
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-10-26T00:46:57.186862147Z",
+          "FinishedAt": "2026-10-26T00:47:54.326164393Z"
+        },
+        "completedAt": "2026-10-26T00:47:54.608Z"
+      },
+      "restartedAt": "2026-10-26T00:47:57.012Z",
+      "load": {
+        "durationMs": 75714,
+        "stats": {
+          "reads": {
+            "succeeded": 3859,
+            "failed": 0,
+            "maxMs": 3436.659083999999
+          },
+          "keyed": {
+            "succeeded": 401,
+            "failed": 0
+          },
+          "upsert": {
+            "succeeded": 470,
+            "failed": 0
+          },
+          "generic": {
+            "succeeded": 377,
+            "failed": 2
+          }
+        },
+        "acknowledgedWrites": {
+          "keyed": 401,
+          "upsert": 470,
+          "generic": 377
+        }
+      },
+      "artifactName": "baseline.json",
+      "artifactSha256": "1bb9e37a53b3e27623742b92b71c789d4706dfeab7aadbd9ccc59f379a51c55e",
+      "pages": {
+        "movie": {
+          "succeeded": 166,
+          "failed": 3,
+          "maxMs": 3006.5834030000005
+        },
+        "show": {
+          "succeeded": 192,
+          "failed": 1,
+          "maxMs": 3001.3865979999973
+        },
+        "person": {
+          "succeeded": 229,
+          "failed": 0,
+          "maxMs": 3587.217850000001
+        },
+        "library": {
+          "succeeded": 299,
+          "failed": 0,
+          "maxMs": 3477.447954999996
+        },
+        "explore": {
+          "succeeded": 452,
+          "failed": 0,
+          "maxMs": 3340.2662809999965
+        },
+        "watch": {
+          "succeeded": 77,
+          "failed": 0,
+          "maxMs": 4070.603873
+        },
+        "score": {
+          "succeeded": 73,
+          "failed": 0,
+          "maxMs": 11054.176441999996
+        },
+        "catalog": {
+          "succeeded": 839,
+          "failed": 0,
+          "maxMs": 2761.4775579999987
+        }
+      },
+      "error": "No failed page loaders/actions\n\n4 !== 0\n",
+      "cleanup": {
+        "verifiedAt": "2026-10-26T00:48:36.082Z",
+        "project": "gw774-title-503",
+        "containersRemaining": 0,
+        "volumesRemaining": 0,
+        "networksRemaining": 0
+      },
+      "deadlineFailures": [
+        {
+          "time": "2026-10-26T00:47:29.253Z",
+          "event": "crate.http",
+          "role": "both",
+          "requestId": "91f5760b-1e9c-4bc1-819e-fd5c7ac156dd",
+          "route": "/movie/:movieKey",
+          "method": "GET",
+          "status": 503,
+          "hadCrateFailure": false,
+          "outcome": "failed",
+          "durationMs": 3002.166247000001
+        },
+        {
+          "time": "2026-10-26T00:47:40.775Z",
+          "event": "crate.http",
+          "role": "both",
+          "requestId": "8d72cf3a-ab77-47e1-9911-bc3da015958a",
+          "route": "/movie/:movieKey",
+          "method": "GET",
+          "status": 503,
+          "hadCrateFailure": false,
+          "outcome": "failed",
+          "durationMs": 3002.626989000004
+        },
+        {
+          "time": "2026-10-26T00:48:07.742Z",
+          "event": "crate.http",
+          "role": "both",
+          "requestId": "2a5ed6da-4e5a-4df2-82a2-70b9a0bd6ea6",
+          "route": "/movie/:movieKey",
+          "method": "GET",
+          "status": 503,
+          "hadCrateFailure": false,
+          "outcome": "failed",
+          "durationMs": 3000.591916999998
+        },
+        {
+          "time": "2026-10-26T00:48:08.809Z",
+          "event": "crate.http",
+          "role": "both",
+          "requestId": "03be043e-cc3c-4111-8b0c-5ebd384d277f",
+          "route": "/show/:showKey",
+          "method": "GET",
+          "status": 503,
+          "hadCrateFailure": false,
+          "outcome": "failed",
+          "durationMs": 3000.416102000003
+        }
+      ],
+      "failedRequestTitleAttempts": [],
+      "titleAttemptsByHost": {}
+    },
+    "traced": {
+      "startedAt": "2026-10-26T00:48:46.464Z",
+      "finishedAt": "2026-10-26T00:50:22.224Z",
+      "passed": false,
+      "clientSha256": "327af57052f4a276abf42a39ffad4cf9d9a4a7feafbd2f05d742f9f2e262a0e3",
+      "sourceSha256": {
+        "../../app/utils/crate.ts": "327af57052f4a276abf42a39ffad4cf9d9a4a7feafbd2f05d742f9f2e262a0e3",
+        "../../app/utils/crate-diagnostics.ts": "1e4e070a8f1d73c7ee509e15bcf3b276ad15b110c65c1469f31dad2cd25f4e18",
+        "../../app/server/tracking.server.ts": "071bb60a67ac92e818afb5f80199ea628c487d886085ac85888f3e1716562be3",
+        "../../app/server/combined-search/catalog.server.ts": "97c880db2d271b3c74639494972cdbcaa510875a07a3c4342b3f2d0170cae547",
+        "../../app/server/search-ranking/search-index-build.server.ts": "7456f61c6f4781582d05c9628901c039c11005f195e86a13b965ad1c1496a63b",
+        "../../app/server/page-cache.server.ts": "b974c43015f1986342ed6d1bec71ed6ae5903f47bfb4706ab992cc6a5ae4f1a0",
+        "./verify.mjs": "8ff44486e93431851f0d2b5bc145fe83ddae452be87fc6ca2f6eef6bc9d95edf",
+        "./first-insert-proof.mjs": "004af7b290421ede323e0cffef635645a70ac1964b1fe80419e6690c87d3244b",
+        "./page-proof.mjs": "854c0c987729c60598b6e2f853d1dd0dade8529e1e6172a838adad00870c533b",
+        "./build-page-proof.mjs": "656283777f7a7f296ab7fe8fe7ce4ff19a33daf5d53f99e5a4498c1da6e7de65",
+        "./page-loaders.ts": "80c419f50e51429cb3084d01b8c4b0f58d1c93ceb62e8eb3d995b3c60d1e272c",
+        "./compose.yaml": "01c1b77e149cab39532bea3948c504aea23494ae809161a197c0802fdb923136",
+        "./run.sh": "f1b361d4ff1204dea842611db21d197d621d07d4a7ce6d42aa8a9f92d2e0d847",
+        "./page-loaders.generated.mjs": "9e3c52d214fc9466ad077d50a22b9f22dee65c500e0faeca3f75fa32d3065725"
+      },
+      "endpointScope": [
+        "http://127.0.0.1:17774",
+        "http://127.0.0.2:17774",
+        "http://127.0.0.3:17774"
+      ],
+      "stop": {
+        "requestedAt": "2026-10-26T00:49:09.860Z",
+        "elapsedMs": 3001,
+        "command": "ALTER CLUSTER DECOMMISSION node1",
+        "settings": [
+          [
+            {
+              "timeout": "2h",
+              "force": false,
+              "min_availability": "PRIMARIES"
+            }
+          ]
+        ],
+        "acknowledgedAt": "2026-10-26T00:49:26.348Z",
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-10-26T00:48:46.240026614Z",
+          "FinishedAt": "2026-10-26T00:49:31.670556736Z"
+        },
+        "completedAt": "2026-10-26T00:49:31.819Z"
+      },
+      "restartedAt": "2026-10-26T00:49:34.442Z",
+      "load": {
+        "durationMs": 75244,
+        "stats": {
+          "reads": {
+            "succeeded": 5013,
+            "failed": 0,
+            "maxMs": 3338.800749999995
+          },
+          "keyed": {
+            "succeeded": 593,
+            "failed": 0
+          },
+          "upsert": {
+            "succeeded": 597,
+            "failed": 0
+          },
+          "generic": {
+            "succeeded": 399,
+            "failed": 1
+          }
+        },
+        "acknowledgedWrites": {
+          "keyed": 593,
+          "upsert": 597,
+          "generic": 399
+        }
+      },
+      "artifactName": "traced.json",
+      "artifactSha256": "5c3f67df5b796318f3d5525eff6594f08dc2c64c18a457fe2fa6c4a37901ca59",
+      "pages": {
+        "movie": {
+          "succeeded": 211,
+          "failed": 3,
+          "maxMs": 3003.995565000001
+        },
+        "show": {
+          "succeeded": 236,
+          "failed": 2,
+          "maxMs": 3004.5047750000012
+        },
+        "person": {
+          "succeeded": 311,
+          "failed": 0,
+          "maxMs": 3721.2040899999993
+        },
+        "library": {
+          "succeeded": 388,
+          "failed": 0,
+          "maxMs": 3522.167730999994
+        },
+        "explore": {
+          "succeeded": 525,
+          "failed": 0,
+          "maxMs": 3422.772874000002
+        },
+        "watch": {
+          "succeeded": 124,
+          "failed": 0,
+          "maxMs": 2134.845039
+        },
+        "score": {
+          "succeeded": 118,
+          "failed": 0,
+          "maxMs": 2732.645255999996
+        },
+        "catalog": {
+          "succeeded": 1020,
+          "failed": 0,
+          "maxMs": 2671.868386000002
+        }
+      },
+      "error": "No failed page loaders/actions\n\n5 !== 0\n",
+      "cleanup": {
+        "verifiedAt": "2026-10-26T00:50:23.155Z",
+        "project": "gw774-title-503",
+        "containersRemaining": 0,
+        "volumesRemaining": 0,
+        "networksRemaining": 0
+      },
+      "deadlineFailures": [
+        {
+          "time": "2026-10-26T00:49:09.862Z",
+          "event": "crate.http",
+          "role": "both",
+          "requestId": "9d2334fc-f133-480b-a089-e2f4c2fe7ac8",
+          "route": "/movie/:movieKey",
+          "method": "GET",
+          "status": 503,
+          "hadCrateFailure": false,
+          "outcome": "failed",
+          "durationMs": 3001.131695
+        },
+        {
+          "time": "2026-10-26T00:49:26.683Z",
+          "event": "crate.http",
+          "role": "both",
+          "requestId": "4513fd7b-f5f0-4794-a3c9-5417c4d831b4",
+          "route": "/movie/:movieKey",
+          "method": "GET",
+          "status": 503,
+          "hadCrateFailure": false,
+          "outcome": "failed",
+          "durationMs": 3000.9732220000005
+        },
+        {
+          "time": "2026-10-26T00:49:27.919Z",
+          "event": "crate.http",
+          "role": "both",
+          "requestId": "a24c6ba6-79f4-4d20-8dd2-4de54796ae31",
+          "route": "/show/:showKey",
+          "method": "GET",
+          "status": 503,
+          "hadCrateFailure": false,
+          "outcome": "failed",
+          "durationMs": 3001.254265000003
+        },
+        {
+          "time": "2026-10-26T00:49:46.709Z",
+          "event": "crate.http",
+          "role": "both",
+          "requestId": "ef6c7183-9341-4561-ba2b-d38fb09551df",
+          "route": "/movie/:movieKey",
+          "method": "GET",
+          "status": 503,
+          "hadCrateFailure": false,
+          "outcome": "failed",
+          "durationMs": 3001.086586000005
+        },
+        {
+          "time": "2026-10-26T00:49:47.301Z",
+          "event": "crate.http",
+          "role": "both",
+          "requestId": "e847742f-4ce7-45c0-a1f2-ddfbbe6504b8",
+          "route": "/show/:showKey",
+          "method": "GET",
+          "status": 503,
+          "hadCrateFailure": false,
+          "outcome": "failed",
+          "durationMs": 3000.714624
+        }
+      ],
+      "failedRequestTitleAttempts": [
+        {
+          "time": "2026-10-26T00:49:06.862Z",
+          "event": "proof.sql_started",
+          "requestId": "9d2334fc-f133-480b-a089-e2f4c2fe7ac8",
+          "traceId": 87,
+          "host": "127.0.0.1:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 3334
+        },
+        {
+          "time": "2026-10-26T00:49:09.935Z",
+          "event": "proof.sql_finished",
+          "requestId": "9d2334fc-f133-480b-a089-e2f4c2fe7ac8",
+          "traceId": 87,
+          "host": "127.0.0.1:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 3334,
+          "durationMs": 3072.5665929999996,
+          "serverDurationMs": 3070.6345,
+          "outcome": "succeeded"
+        },
+        {
+          "time": "2026-10-26T00:49:23.683Z",
+          "event": "proof.sql_started",
+          "requestId": "4513fd7b-f5f0-4794-a3c9-5417c4d831b4",
+          "traceId": 3629,
+          "host": "127.0.0.1:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 3334
+        },
+        {
+          "time": "2026-10-26T00:49:24.919Z",
+          "event": "proof.sql_started",
+          "requestId": "a24c6ba6-79f4-4d20-8dd2-4de54796ae31",
+          "traceId": 3835,
+          "host": "127.0.0.1:17774",
+          "sqlShapeId": "aaa59236ecf6157e",
+          "timeoutMs": 3334
+        },
+        {
+          "time": "2026-10-26T00:49:27.019Z",
+          "event": "proof.sql_finished",
+          "requestId": "4513fd7b-f5f0-4794-a3c9-5417c4d831b4",
+          "traceId": 3629,
+          "host": "127.0.0.1:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 3334,
+          "durationMs": 3335.8302769999937,
+          "errorClass": "CrateTimeoutError",
+          "outcome": "failed"
+        },
+        {
+          "time": "2026-10-26T00:49:27.019Z",
+          "event": "proof.sql_started",
+          "requestId": "4513fd7b-f5f0-4794-a3c9-5417c4d831b4",
+          "traceId": 4281,
+          "host": "127.0.0.3:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 3333
+        },
+        {
+          "time": "2026-10-26T00:49:27.601Z",
+          "event": "proof.sql_finished",
+          "requestId": "4513fd7b-f5f0-4794-a3c9-5417c4d831b4",
+          "traceId": 4281,
+          "host": "127.0.0.3:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 3333,
+          "durationMs": 582.4198739999993,
+          "serverDurationMs": 497.48703,
+          "outcome": "succeeded"
+        },
+        {
+          "time": "2026-10-26T00:49:28.253Z",
+          "event": "proof.sql_finished",
+          "requestId": "a24c6ba6-79f4-4d20-8dd2-4de54796ae31",
+          "traceId": 3835,
+          "host": "127.0.0.1:17774",
+          "sqlShapeId": "aaa59236ecf6157e",
+          "timeoutMs": 3334,
+          "durationMs": 3334.645755999998,
+          "errorClass": "CrateTimeoutError",
+          "outcome": "failed"
+        },
+        {
+          "time": "2026-10-26T00:49:28.253Z",
+          "event": "proof.sql_started",
+          "requestId": "a24c6ba6-79f4-4d20-8dd2-4de54796ae31",
+          "traceId": 4569,
+          "host": "127.0.0.3:17774",
+          "sqlShapeId": "aaa59236ecf6157e",
+          "timeoutMs": 3333
+        },
+        {
+          "time": "2026-10-26T00:49:28.596Z",
+          "event": "proof.sql_finished",
+          "requestId": "a24c6ba6-79f4-4d20-8dd2-4de54796ae31",
+          "traceId": 4569,
+          "host": "127.0.0.3:17774",
+          "sqlShapeId": "aaa59236ecf6157e",
+          "timeoutMs": 3333,
+          "durationMs": 342.9803600000014,
+          "serverDurationMs": 246.82047,
+          "outcome": "succeeded"
+        },
+        {
+          "time": "2026-10-26T00:49:43.709Z",
+          "event": "proof.sql_started",
+          "requestId": "ef6c7183-9341-4561-ba2b-d38fb09551df",
+          "traceId": 9327,
+          "host": "127.0.0.1:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 3334
+        },
+        {
+          "time": "2026-10-26T00:49:44.301Z",
+          "event": "proof.sql_started",
+          "requestId": "e847742f-4ce7-45c0-a1f2-ddfbbe6504b8",
+          "traceId": 9486,
+          "host": "127.0.0.1:17774",
+          "sqlShapeId": "aaa59236ecf6157e",
+          "timeoutMs": 3334
+        },
+        {
+          "time": "2026-10-26T00:49:47.043Z",
+          "event": "proof.sql_finished",
+          "requestId": "ef6c7183-9341-4561-ba2b-d38fb09551df",
+          "traceId": 9327,
+          "host": "127.0.0.1:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 3334,
+          "durationMs": 3334.5651249999937,
+          "errorClass": "CrateTimeoutError",
+          "outcome": "failed"
+        },
+        {
+          "time": "2026-10-26T00:49:47.043Z",
+          "event": "proof.sql_started",
+          "requestId": "ef6c7183-9341-4561-ba2b-d38fb09551df",
+          "traceId": 10109,
+          "host": "127.0.0.3:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 3333
+        },
+        {
+          "time": "2026-10-26T00:49:47.057Z",
+          "event": "proof.sql_finished",
+          "requestId": "ef6c7183-9341-4561-ba2b-d38fb09551df",
+          "traceId": 10109,
+          "host": "127.0.0.3:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 3333,
+          "durationMs": 13.206084000004921,
+          "serverDurationMs": 12.259823,
+          "outcome": "succeeded"
+        },
+        {
+          "time": "2026-10-26T00:49:47.636Z",
+          "event": "proof.sql_finished",
+          "requestId": "e847742f-4ce7-45c0-a1f2-ddfbbe6504b8",
+          "traceId": 9486,
+          "host": "127.0.0.1:17774",
+          "sqlShapeId": "aaa59236ecf6157e",
+          "timeoutMs": 3334,
+          "durationMs": 3334.760903999995,
+          "errorClass": "CrateTimeoutError",
+          "outcome": "failed"
+        },
+        {
+          "time": "2026-10-26T00:49:47.636Z",
+          "event": "proof.sql_started",
+          "requestId": "e847742f-4ce7-45c0-a1f2-ddfbbe6504b8",
+          "traceId": 10376,
+          "host": "127.0.0.3:17774",
+          "sqlShapeId": "aaa59236ecf6157e",
+          "timeoutMs": 3333
+        },
+        {
+          "time": "2026-10-26T00:49:47.943Z",
+          "event": "proof.sql_finished",
+          "requestId": "e847742f-4ce7-45c0-a1f2-ddfbbe6504b8",
+          "traceId": 10376,
+          "host": "127.0.0.3:17774",
+          "sqlShapeId": "aaa59236ecf6157e",
+          "timeoutMs": 3333,
+          "durationMs": 306.6547869999995,
+          "serverDurationMs": 304.9374,
+          "outcome": "succeeded"
+        }
+      ],
+      "titleAttemptsByHost": {
+        "127.0.0.1:17774": {
+          "attempts": 87,
+          "failed": 5,
+          "succeeded": 82,
+          "p50Ms": 362.47873000000254,
+          "maxMs": 3072.5665929999996
+        },
+        "127.0.0.2:17774": {
+          "attempts": 199,
+          "failed": 1,
+          "succeeded": 198,
+          "p50Ms": 162.53415099999984,
+          "maxMs": 2135.9791750000004
+        },
+        "127.0.0.3:17774": {
+          "attempts": 173,
+          "failed": 1,
+          "succeeded": 172,
+          "p50Ms": 162.2486790000039,
+          "maxMs": 1661.5911059999999
+        }
+      }
+    },
+    "survivors": {
+      "startedAt": "2026-10-26T00:50:51.104Z",
+      "finishedAt": "2026-10-26T00:53:09.138Z",
+      "passed": true,
+      "clientSha256": "327af57052f4a276abf42a39ffad4cf9d9a4a7feafbd2f05d742f9f2e262a0e3",
+      "sourceSha256": {
+        "../../app/utils/crate.ts": "327af57052f4a276abf42a39ffad4cf9d9a4a7feafbd2f05d742f9f2e262a0e3",
+        "../../app/utils/crate-diagnostics.ts": "1e4e070a8f1d73c7ee509e15bcf3b276ad15b110c65c1469f31dad2cd25f4e18",
+        "../../app/server/tracking.server.ts": "071bb60a67ac92e818afb5f80199ea628c487d886085ac85888f3e1716562be3",
+        "../../app/server/combined-search/catalog.server.ts": "97c880db2d271b3c74639494972cdbcaa510875a07a3c4342b3f2d0170cae547",
+        "../../app/server/search-ranking/search-index-build.server.ts": "7456f61c6f4781582d05c9628901c039c11005f195e86a13b965ad1c1496a63b",
+        "../../app/server/page-cache.server.ts": "b974c43015f1986342ed6d1bec71ed6ae5903f47bfb4706ab992cc6a5ae4f1a0",
+        "./verify.mjs": "3720e5839c9ba189f643d4987bfc380ab6c99f5e7c9a16e36b496dfe05710d00",
+        "./first-insert-proof.mjs": "004af7b290421ede323e0cffef635645a70ac1964b1fe80419e6690c87d3244b",
+        "./page-proof.mjs": "854c0c987729c60598b6e2f853d1dd0dade8529e1e6172a838adad00870c533b",
+        "./build-page-proof.mjs": "656283777f7a7f296ab7fe8fe7ce4ff19a33daf5d53f99e5a4498c1da6e7de65",
+        "./page-loaders.ts": "80c419f50e51429cb3084d01b8c4b0f58d1c93ceb62e8eb3d995b3c60d1e272c",
+        "./compose.yaml": "01c1b77e149cab39532bea3948c504aea23494ae809161a197c0802fdb923136",
+        "./run.sh": "f1b361d4ff1204dea842611db21d197d621d07d4a7ce6d42aa8a9f92d2e0d847",
+        "./page-loaders.generated.mjs": "9e3c52d214fc9466ad077d50a22b9f22dee65c500e0faeca3f75fa32d3065725"
+      },
+      "endpointScope": [
+        "http://127.0.0.1:17774",
+        "http://127.0.0.2:17774",
+        "http://127.0.0.3:17774"
+      ],
+      "clientHosts": "127.0.0.2,127.0.0.3",
+      "stop": {
+        "requestedAt": "2026-10-26T00:51:16.503Z",
+        "elapsedMs": 3000,
+        "command": "ALTER CLUSTER DECOMMISSION node1",
+        "settings": [
+          [
+            {
+              "min_availability": "PRIMARIES",
+              "force": false,
+              "timeout": "2h"
+            }
+          ]
+        ],
+        "acknowledgedAt": "2026-10-26T00:51:38.283Z",
+        "state": {
+          "Status": "exited",
+          "Running": false,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 0,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-10-26T00:50:50.958011576Z",
+          "FinishedAt": "2026-10-26T00:51:43.548845395Z"
+        },
+        "completedAt": "2026-10-26T00:51:43.771Z"
+      },
+      "restartedAt": "2026-10-26T00:51:46.282Z",
+      "load": {
+        "durationMs": 75184,
+        "stats": {
+          "reads": {
+            "succeeded": 6178,
+            "failed": 0,
+            "maxMs": 587.996779000001
+          },
+          "keyed": {
+            "succeeded": 621,
+            "failed": 0
+          },
+          "upsert": {
+            "succeeded": 638,
+            "failed": 0
+          },
+          "generic": {
+            "succeeded": 400,
+            "failed": 0
+          }
+        },
+        "acknowledgedWrites": {
+          "keyed": 621,
+          "upsert": 638,
+          "generic": 400
+        }
+      },
+      "lostResponses": [
+        {
+          "id": "lost-increment-reset",
+          "timeout": false,
+          "kind": "increment",
+          "writes": 1,
+          "seqBefore": 660,
+          "appliedSeq": 661,
+          "seqAfter": 661,
+          "n": 1,
+          "outcome": "Returned indeterminate error without replay"
+        },
+        {
+          "id": "lost-increment-timeout",
+          "timeout": true,
+          "kind": "increment",
+          "writes": 1,
+          "seqBefore": 725,
+          "appliedSeq": 726,
+          "seqAfter": 726,
+          "n": 1,
+          "outcome": "Returned indeterminate error without replay"
+        },
+        {
+          "id": "lost-upsert-reset",
+          "timeout": false,
+          "kind": "upsert",
+          "writes": 1,
+          "seqBefore": 662,
+          "appliedSeq": 663,
+          "seqAfter": 663,
+          "n": 1,
+          "outcome": "Recovered by key readback"
+        },
+        {
+          "id": "lost-upsert-timeout",
+          "timeout": true,
+          "kind": "upsert",
+          "writes": 1,
+          "seqBefore": 727,
+          "appliedSeq": 728,
+          "seqAfter": 728,
+          "n": 1,
+          "outcome": "Recovered by key readback"
+        },
+        {
+          "id": "lost-insert-reset",
+          "timeout": false,
+          "kind": "insert",
+          "writes": 2,
+          "seqBefore": 729,
+          "appliedSeq": 731,
+          "seqAfter": 731,
+          "n": 1,
+          "outcome": "Replayed fixed key with DO NOTHING"
+        },
+        {
+          "id": "lost-insert-timeout",
+          "timeout": true,
+          "kind": "insert",
+          "writes": 2,
+          "seqBefore": 734,
+          "appliedSeq": 736,
+          "seqAfter": 736,
+          "n": 1,
+          "outcome": "Replayed fixed key with DO NOTHING"
+        },
+        {
+          "id": "lost-tracking-cas-reset",
+          "timeout": false,
+          "kind": "tracking-cas",
+          "writes": 1,
+          "seqBefore": 123,
+          "appliedSeq": 124,
+          "seqAfter": 124,
+          "outcome": "Real score action recovered CAS by versioned state readback"
+        },
+        {
+          "id": "lost-tracking-cas-timeout",
+          "timeout": true,
+          "kind": "tracking-cas",
+          "writes": 1,
+          "seqBefore": 124,
+          "appliedSeq": 125,
+          "seqAfter": 125,
+          "outcome": "Real score action recovered CAS by versioned state readback"
+        }
+      ],
+      "pageWatchAudit": {
+        "acknowledged": 133,
+        "stored": 133,
+        "unique": 133
+      },
+      "artifactName": "survivors.json",
+      "artifactSha256": "f72b7f2cd81c0d222eb9417d10a60281d085f309b85d047df57fa51145cfa376",
+      "pages": {
+        "movie": {
+          "succeeded": 279,
+          "failed": 0,
+          "maxMs": 2782.0406610000064
+        },
+        "show": {
+          "succeeded": 354,
+          "failed": 0,
+          "maxMs": 1864.2626459999956
+        },
+        "person": {
+          "succeeded": 495,
+          "failed": 0,
+          "maxMs": 964.272023999998
+        },
+        "library": {
+          "succeeded": 497,
+          "failed": 0,
+          "maxMs": 665.1361519999991
+        },
+        "explore": {
+          "succeeded": 593,
+          "failed": 0,
+          "maxMs": 662.1237790000014
+        },
+        "watch": {
+          "succeeded": 133,
+          "failed": 0,
+          "maxMs": 2068.104599000002
+        },
+        "score": {
+          "succeeded": 124,
+          "failed": 0,
+          "maxMs": 10030.080680999992
+        },
+        "catalog": {
+          "succeeded": 1172,
+          "failed": 0,
+          "maxMs": 376.52508300000045
+        }
+      },
+      "error": null,
+      "cleanup": {
+        "verifiedAt": "2026-10-26T00:53:09.961Z",
+        "project": "gw774-title-503",
+        "containersRemaining": 0,
+        "volumesRemaining": 0,
+        "networksRemaining": 0
+      },
+      "deadlineFailures": [],
+      "failedRequestTitleAttempts": [],
+      "titleAttemptsByHost": {
+        "127.0.0.2:17774": {
+          "attempts": 315,
+          "failed": 0,
+          "succeeded": 315,
+          "p50Ms": 71.84316499999841,
+          "maxMs": 2778.416373999993
+        },
+        "127.0.0.3:17774": {
+          "attempts": 318,
+          "failed": 0,
+          "succeeded": 318,
+          "p50Ms": 162.26226700000552,
+          "maxMs": 2066.8524590000015
+        }
+      }
+    },
+    "fixed": {
+      "startedAt": "2026-10-26T00:53:30.482Z",
+      "finishedAt": "2026-10-26T00:53:52.312Z",
+      "passed": false,
+      "clientSha256": "05f36bf5e901b9ae4641e9762cc4076384678430520490570ab1b08b46a48d23",
+      "sourceSha256": {
+        "../../app/utils/crate.ts": "05f36bf5e901b9ae4641e9762cc4076384678430520490570ab1b08b46a48d23",
+        "../../app/utils/crate-diagnostics.ts": "1e4e070a8f1d73c7ee509e15bcf3b276ad15b110c65c1469f31dad2cd25f4e18",
+        "../../app/server/tracking.server.ts": "071bb60a67ac92e818afb5f80199ea628c487d886085ac85888f3e1716562be3",
+        "../../app/server/combined-search/catalog.server.ts": "97c880db2d271b3c74639494972cdbcaa510875a07a3c4342b3f2d0170cae547",
+        "../../app/server/search-ranking/search-index-build.server.ts": "7456f61c6f4781582d05c9628901c039c11005f195e86a13b965ad1c1496a63b",
+        "../../app/server/page-cache.server.ts": "b974c43015f1986342ed6d1bec71ed6ae5903f47bfb4706ab992cc6a5ae4f1a0",
+        "./verify.mjs": "3720e5839c9ba189f643d4987bfc380ab6c99f5e7c9a16e36b496dfe05710d00",
+        "./first-insert-proof.mjs": "004af7b290421ede323e0cffef635645a70ac1964b1fe80419e6690c87d3244b",
+        "./page-proof.mjs": "854c0c987729c60598b6e2f853d1dd0dade8529e1e6172a838adad00870c533b",
+        "./build-page-proof.mjs": "656283777f7a7f296ab7fe8fe7ce4ff19a33daf5d53f99e5a4498c1da6e7de65",
+        "./page-loaders.ts": "80c419f50e51429cb3084d01b8c4b0f58d1c93ceb62e8eb3d995b3c60d1e272c",
+        "./compose.yaml": "01c1b77e149cab39532bea3948c504aea23494ae809161a197c0802fdb923136",
+        "./run.sh": "f1b361d4ff1204dea842611db21d197d621d07d4a7ce6d42aa8a9f92d2e0d847",
+        "./page-loaders.generated.mjs": "b333014153ba6cfa30720adf2ec29f961796057d72ea029d968dcf64f4dbc049"
+      },
+      "endpointScope": [
+        "http://127.0.0.1:17774",
+        "http://127.0.0.2:17774",
+        "http://127.0.0.3:17774"
+      ],
+      "clientHosts": "127.0.0.1,127.0.0.2,127.0.0.3",
+      "artifactName": "fixed.json",
+      "artifactSha256": "e4e01f2d140bc6501a25e74a4a0f0907f441375324f5b81795cc40c357e8196a",
+      "pages": {
+        "movie": {
+          "succeeded": 0,
+          "failed": 1,
+          "maxMs": 3009.553265999999
+        },
+        "show": {
+          "succeeded": 1,
+          "failed": 0,
+          "maxMs": 366.1032120000018
+        },
+        "person": {
+          "succeeded": 1,
+          "failed": 0,
+          "maxMs": 310.7239869999976
+        },
+        "library": {
+          "succeeded": 1,
+          "failed": 0,
+          "maxMs": 9.289835999999923
+        },
+        "explore": {
+          "succeeded": 1,
+          "failed": 0,
+          "maxMs": 79.66634300000078
+        },
+        "watch": {
+          "succeeded": 1,
+          "failed": 0,
+          "maxMs": 245.78300099999979
+        },
+        "score": {
+          "succeeded": 1,
+          "failed": 0,
+          "maxMs": 65.74302799999714
+        },
+        "catalog": {
+          "succeeded": 1,
+          "failed": 0,
+          "maxMs": 7.855553999997937
+        }
+      },
+      "error": "movie: HTTP 503 {\"data\":{},\"errors\":{\"movie\":{\"message\":\"Title temporarily unavailable. Please try again shortly.\"}}}\n\n503 !== 200\n",
+      "cleanup": {
+        "verifiedAt": "2026-10-26T00:53:52.947Z",
+        "project": "gw774-title-503",
+        "containersRemaining": 0,
+        "volumesRemaining": 0,
+        "networksRemaining": 0
+      },
+      "deadlineFailures": [
+        {
+          "time": "2026-10-26T00:53:51.225Z",
+          "event": "crate.http",
+          "role": "both",
+          "requestId": "f747a981-e680-4c1f-8ced-efcd83d47045",
+          "route": "/movie/:movieKey",
+          "method": "GET",
+          "status": 503,
+          "hadCrateFailure": true,
+          "outcome": "failed",
+          "durationMs": 3007.0016149999974
+        }
+      ],
+      "failedRequestTitleAttempts": [
+        {
+          "time": "2026-10-26T00:53:48.225Z",
+          "event": "proof.sql_started",
+          "requestId": "f747a981-e680-4c1f-8ced-efcd83d47045",
+          "traceId": 8,
+          "host": "127.0.0.2:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 1000
+        },
+        {
+          "time": "2026-10-26T00:53:49.226Z",
+          "event": "proof.sql_finished",
+          "requestId": "f747a981-e680-4c1f-8ced-efcd83d47045",
+          "traceId": 8,
+          "host": "127.0.0.2:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 1000,
+          "durationMs": 1000.9130889999979,
+          "errorClass": "CrateTimeoutError",
+          "outcome": "failed"
+        },
+        {
+          "time": "2026-10-26T00:53:49.226Z",
+          "event": "proof.sql_started",
+          "requestId": "f747a981-e680-4c1f-8ced-efcd83d47045",
+          "traceId": 11,
+          "host": "127.0.0.3:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 1000
+        },
+        {
+          "time": "2026-10-26T00:53:50.225Z",
+          "event": "proof.sql_finished",
+          "requestId": "f747a981-e680-4c1f-8ced-efcd83d47045",
+          "traceId": 11,
+          "host": "127.0.0.3:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 1000,
+          "durationMs": 998.7209750000002,
+          "errorClass": "CrateTimeoutError",
+          "outcome": "failed"
+        },
+        {
+          "time": "2026-10-26T00:53:50.225Z",
+          "event": "proof.sql_started",
+          "requestId": "f747a981-e680-4c1f-8ced-efcd83d47045",
+          "traceId": 12,
+          "host": "127.0.0.1:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 8000
+        },
+        {
+          "time": "2026-10-26T00:53:51.482Z",
+          "event": "proof.sql_finished",
+          "requestId": "f747a981-e680-4c1f-8ced-efcd83d47045",
+          "traceId": 12,
+          "host": "127.0.0.1:17774",
+          "sqlShapeId": "1c77bcf1b6f12016",
+          "timeoutMs": 8000,
+          "durationMs": 1257.5263109999978,
+          "serverDurationMs": 1255.762,
+          "outcome": "succeeded"
+        }
+      ],
+      "titleAttemptsByHost": {
+        "127.0.0.1:17774": {
+          "attempts": 2,
+          "failed": 0,
+          "succeeded": 2,
+          "p50Ms": 1257.5263109999978,
+          "maxMs": 1257.5263109999978
+        },
+        "127.0.0.2:17774": {
+          "attempts": 1,
+          "failed": 1,
+          "succeeded": 0,
+          "p50Ms": null,
+          "maxMs": null
+        },
+        "127.0.0.3:17774": {
+          "attempts": 1,
+          "failed": 1,
+          "succeeded": 0,
+          "p50Ms": null,
+          "maxMs": null
+        }
+      },
+      "meaning": "REJECTED timeout candidate, not a shipped fix; fails movie warmup before the fault"
+    }
+  },
+  "traceSourceSha256": "0a9ba6406a0ad8dcdede1b29c8cf90fa6a24dddaab180b0220a763bdba2ed9b4",
+  "clusterSamples": [
+    {
+      "time": "2026-10-26T00:49:01.046427+00:00",
+      "cpu": [
+        [
+          "node3",
+          77
+        ],
+        [
+          "node1",
+          69
+        ],
+        [
+          "node2",
+          93
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:02.297670+00:00",
+      "cpu": [
+        [
+          "node3",
+          73
+        ],
+        [
+          "node2",
+          87
+        ],
+        [
+          "node1",
+          66
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:03.436468+00:00",
+      "cpu": [
+        [
+          "node3",
+          11
+        ],
+        [
+          "node1",
+          29
+        ],
+        [
+          "node2",
+          79
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:04.543339+00:00",
+      "cpu": [
+        [
+          "node3",
+          18
+        ],
+        [
+          "node2",
+          100
+        ],
+        [
+          "node1",
+          27
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975744453
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:05.898263+00:00",
+      "cpu": [
+        [
+          "node3",
+          75
+        ],
+        [
+          "node2",
+          67
+        ],
+        [
+          "node1",
+          64
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:07.041082+00:00",
+      "cpu": [
+        [
+          "node3",
+          48
+        ],
+        [
+          "node2",
+          53
+        ],
+        [
+          "node1",
+          99
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975747338
+        ],
+        [
+          1792975747301
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:08.498807+00:00",
+      "cpu": [
+        [
+          "node3",
+          98
+        ],
+        [
+          "node2",
+          76
+        ],
+        [
+          "node1",
+          99
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975747338
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:10.298128+00:00",
+      "cpu": [
+        [
+          "node3",
+          100
+        ],
+        [
+          "node2",
+          84
+        ],
+        [
+          "node1",
+          67
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975750655
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:11.798612+00:00",
+      "cpu": [
+        [
+          "node2",
+          99
+        ],
+        [
+          "node1",
+          100
+        ],
+        [
+          "node3",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975752046
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:13.399352+00:00",
+      "cpu": [
+        [
+          "node2",
+          100
+        ],
+        [
+          "node1",
+          100
+        ],
+        [
+          "node3",
+          94
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975753397
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:14.735670+00:00",
+      "cpu": [
+        [
+          "node3",
+          100
+        ],
+        [
+          "node2",
+          97
+        ],
+        [
+          "node1",
+          93
+        ]
+      ],
+      "shards": [
+        [
+          "UNASSIGNED",
+          1
+        ],
+        [
+          "STARTED",
+          160
+        ]
+      ],
+      "titles": [
+        [
+          1792975754898
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:16.135614+00:00",
+      "cpu": [
+        [
+          "node1",
+          93
+        ],
+        [
+          "node2",
+          98
+        ],
+        [
+          "node3",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "UNASSIGNED",
+          1
+        ],
+        [
+          "STARTED",
+          160
+        ]
+      ],
+      "titles": [
+        [
+          1792975756650
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:17.798489+00:00",
+      "cpu": [
+        [
+          "node3",
+          97
+        ],
+        [
+          "node2",
+          91
+        ],
+        [
+          "node1",
+          90
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:19.198500+00:00",
+      "cpu": [
+        [
+          "node3",
+          96
+        ],
+        [
+          "node2",
+          66
+        ],
+        [
+          "node1",
+          67
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975759202
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:20.497926+00:00",
+      "cpu": [
+        [
+          "node3",
+          93
+        ],
+        [
+          "node2",
+          100
+        ],
+        [
+          "node1",
+          27
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975760544
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:21.743369+00:00",
+      "cpu": [
+        [
+          "node3",
+          67
+        ],
+        [
+          "node1",
+          36
+        ],
+        [
+          "node2",
+          98
+        ]
+      ],
+      "shards": [
+        [
+          "CLOSED",
+          1
+        ],
+        [
+          "UNASSIGNED",
+          1
+        ],
+        [
+          "STARTED",
+          159
+        ]
+      ],
+      "titles": [
+        [
+          1792975761642
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:22.842511+00:00",
+      "cpu": [
+        [
+          "node3",
+          56
+        ],
+        [
+          "node1",
+          30
+        ],
+        [
+          "node2",
+          98
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:24.045137+00:00",
+      "cpu": [
+        [
+          "node1",
+          52
+        ],
+        [
+          "node3",
+          51
+        ],
+        [
+          "node2",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:25.145208+00:00",
+      "cpu": [
+        [
+          "node3",
+          97
+        ],
+        [
+          "node1",
+          47
+        ],
+        [
+          "node2",
+          98
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:26.244452+00:00",
+      "cpu": [
+        [
+          "node3",
+          54
+        ],
+        [
+          "node2",
+          98
+        ],
+        [
+          "node1",
+          36
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:27.344658+00:00",
+      "cpu": [
+        [
+          "node3",
+          73
+        ],
+        [
+          "node1",
+          51
+        ],
+        [
+          "node2",
+          81
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975767403
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:28.600655+00:00",
+      "cpu": [
+        [
+          "node3",
+          100
+        ],
+        [
+          "node1",
+          17
+        ],
+        [
+          "node2",
+          84
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975768705
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:29.897609+00:00",
+      "cpu": [
+        [
+          "node3",
+          96
+        ],
+        [
+          "node1",
+          29
+        ],
+        [
+          "node2",
+          99
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:31.142077+00:00",
+      "cpu": [
+        [
+          "node3",
+          90
+        ],
+        [
+          "node2",
+          100
+        ],
+        [
+          "node1",
+          29
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:32.644017+00:00",
+      "cpu": [
+        [
+          "node3",
+          98
+        ],
+        [
+          "node2",
+          95
+        ]
+      ],
+      "shards": [
+        [
+          "UNASSIGNED",
+          30
+        ],
+        [
+          "STARTED",
+          131
+        ]
+      ],
+      "titles": [
+        [
+          1792975772804
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:33.997548+00:00",
+      "cpu": [
+        [
+          "node3",
+          100
+        ],
+        [
+          "node2",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "UNASSIGNED",
+          30
+        ],
+        [
+          "STARTED",
+          131
+        ]
+      ],
+      "titles": [
+        [
+          1792975773904
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:35.144778+00:00",
+      "cpu": [
+        [
+          "node3",
+          98
+        ],
+        [
+          "node2",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "UNASSIGNED",
+          30
+        ],
+        [
+          "STARTED",
+          131
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:36.300590+00:00",
+      "cpu": [
+        [
+          "node3",
+          100
+        ],
+        [
+          "node2",
+          92
+        ]
+      ],
+      "shards": [
+        [
+          "UNASSIGNED",
+          30
+        ],
+        [
+          "STARTED",
+          131
+        ]
+      ],
+      "titles": [
+        [
+          1792975776346
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:37.444641+00:00",
+      "cpu": [
+        [
+          "node3",
+          90
+        ],
+        [
+          "node2",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "UNASSIGNED",
+          30
+        ],
+        [
+          "STARTED",
+          131
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:38.644774+00:00",
+      "cpu": [
+        [
+          "node3",
+          70
+        ],
+        [
+          "node2",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "UNASSIGNED",
+          30
+        ],
+        [
+          "STARTED",
+          131
+        ]
+      ],
+      "titles": [
+        [
+          1792975778647
+        ],
+        [
+          1792975778688
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:39.842153+00:00",
+      "cpu": [
+        [
+          "node3",
+          67
+        ],
+        [
+          "node2",
+          99
+        ]
+      ],
+      "shards": [
+        [
+          "UNASSIGNED",
+          30
+        ],
+        [
+          "STARTED",
+          131
+        ]
+      ],
+      "titles": [
+        [
+          1792975779888
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:40.945509+00:00",
+      "cpu": [
+        [
+          "node3",
+          100
+        ],
+        [
+          "node1",
+          75
+        ],
+        [
+          "node2",
+          95
+        ]
+      ],
+      "shards": [
+        [
+          "UNASSIGNED",
+          28
+        ],
+        [
+          "STARTED",
+          133
+        ]
+      ],
+      "titles": [
+        [
+          1792975781048
+        ],
+        [
+          1792975781200
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:42.502841+00:00",
+      "cpu": [
+        [
+          "node3",
+          75
+        ],
+        [
+          "node2",
+          46
+        ],
+        [
+          "node1",
+          78
+        ]
+      ],
+      "shards": [
+        [
+          "UNASSIGNED",
+          26
+        ],
+        [
+          "STARTED",
+          134
+        ],
+        [
+          "POST_RECOVERY",
+          1
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:43.964092+00:00",
+      "cpu": [
+        [
+          "node1",
+          100
+        ],
+        [
+          "node2",
+          23
+        ],
+        [
+          "node3",
+          22
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          1
+        ],
+        [
+          "UNASSIGNED",
+          24
+        ],
+        [
+          "STARTED",
+          136
+        ]
+      ],
+      "titles": [
+        [
+          1792975784110
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:45.264043+00:00",
+      "cpu": [
+        [
+          "node1",
+          100
+        ],
+        [
+          "node2",
+          75
+        ],
+        [
+          "node3",
+          50
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          1
+        ],
+        [
+          "UNASSIGNED",
+          23
+        ],
+        [
+          "STARTED",
+          137
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:46.465830+00:00",
+      "cpu": [
+        [
+          "node3",
+          28
+        ],
+        [
+          "node2",
+          48
+        ],
+        [
+          "node1",
+          96
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          1
+        ],
+        [
+          "UNASSIGNED",
+          22
+        ],
+        [
+          "STARTED",
+          138
+        ]
+      ],
+      "titles": [
+        [
+          1792975786751
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:47.765733+00:00",
+      "cpu": [
+        [
+          "node3",
+          75
+        ],
+        [
+          "node1",
+          97
+        ],
+        [
+          "node2",
+          75
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          1
+        ],
+        [
+          "UNASSIGNED",
+          20
+        ],
+        [
+          "STARTED",
+          139
+        ],
+        [
+          "POST_RECOVERY",
+          1
+        ]
+      ],
+      "titles": [
+        [
+          1792975787664
+        ],
+        [
+          1792975787664
+        ],
+        [
+          1792975788002
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:49.243460+00:00",
+      "cpu": [
+        [
+          "node3",
+          99
+        ],
+        [
+          "node1",
+          99
+        ],
+        [
+          "node2",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "UNASSIGNED",
+          19
+        ],
+        [
+          "STARTED",
+          142
+        ]
+      ],
+      "titles": [
+        [
+          1792975789201
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:50.342256+00:00",
+      "cpu": [
+        [
+          "node3",
+          86
+        ],
+        [
+          "node1",
+          79
+        ],
+        [
+          "node2",
+          98
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          1
+        ],
+        [
+          "UNASSIGNED",
+          13
+        ],
+        [
+          "STARTED",
+          147
+        ]
+      ],
+      "titles": [
+        [
+          1792975790448
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:51.450537+00:00",
+      "cpu": [
+        [
+          "node3",
+          99
+        ],
+        [
+          "node1",
+          73
+        ],
+        [
+          "node2",
+          98
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          1
+        ],
+        [
+          "UNASSIGNED",
+          8
+        ],
+        [
+          "STARTED",
+          152
+        ]
+      ],
+      "titles": [
+        [
+          1792975791602
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:52.645509+00:00",
+      "cpu": [
+        [
+          "node3",
+          74
+        ],
+        [
+          "node2",
+          100
+        ],
+        [
+          "node1",
+          73
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          2
+        ],
+        [
+          "UNASSIGNED",
+          4
+        ],
+        [
+          "STARTED",
+          155
+        ]
+      ],
+      "titles": [
+        [
+          1792975792596
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:53.763624+00:00",
+      "cpu": [
+        [
+          "node1",
+          100
+        ],
+        [
+          "node3",
+          60
+        ],
+        [
+          "node2",
+          50
+        ]
+      ],
+      "shards": [
+        [
+          "UNASSIGNED",
+          2
+        ],
+        [
+          "STARTED",
+          158
+        ],
+        [
+          "POST_RECOVERY",
+          1
+        ]
+      ],
+      "titles": [
+        [
+          1792975793711
+        ],
+        [
+          1792975793945
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:55.062957+00:00",
+      "cpu": [
+        [
+          "node3",
+          43
+        ],
+        [
+          "node2",
+          49
+        ],
+        [
+          "node1",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          160
+        ],
+        [
+          "POST_RECOVERY",
+          1
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:56.263541+00:00",
+      "cpu": [
+        [
+          "node3",
+          42
+        ],
+        [
+          "node2",
+          37
+        ],
+        [
+          "node1",
+          96
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975796166
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:57.465156+00:00",
+      "cpu": [
+        [
+          "node3",
+          55
+        ],
+        [
+          "node1",
+          100
+        ],
+        [
+          "node2",
+          45
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:49:58.665539+00:00",
+      "cpu": [
+        [
+          "node3",
+          33
+        ],
+        [
+          "node2",
+          30
+        ],
+        [
+          "node1",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          160
+        ],
+        [
+          "POST_RECOVERY",
+          1
+        ]
+      ],
+      "titles": [
+        [
+          1792975798563
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:49:59.863750+00:00",
+      "cpu": [
+        [
+          "node3",
+          66
+        ],
+        [
+          "node2",
+          51
+        ],
+        [
+          "node1",
+          93
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:50:01.165492+00:00",
+      "cpu": [
+        [
+          "node3",
+          72
+        ],
+        [
+          "node2",
+          47
+        ],
+        [
+          "node1",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:50:02.563496+00:00",
+      "cpu": [
+        [
+          "node3",
+          50
+        ],
+        [
+          "node1",
+          100
+        ],
+        [
+          "node2",
+          30
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975802608
+        ],
+        [
+          1792975802766
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:50:03.768764+00:00",
+      "cpu": [
+        [
+          "node3",
+          56
+        ],
+        [
+          "node2",
+          27
+        ],
+        [
+          "node1",
+          95
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975803966
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:50:05.165660+00:00",
+      "cpu": [
+        [
+          "node3",
+          30
+        ],
+        [
+          "node2",
+          60
+        ],
+        [
+          "node1",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "UNASSIGNED",
+          1
+        ],
+        [
+          "STARTED",
+          160
+        ]
+      ],
+      "titles": [
+        [
+          1792975805363
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:50:06.463611+00:00",
+      "cpu": [
+        [
+          "node3",
+          48
+        ],
+        [
+          "node1",
+          97
+        ],
+        [
+          "node2",
+          63
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          160
+        ],
+        [
+          "POST_RECOVERY",
+          1
+        ]
+      ],
+      "titles": [
+        [
+          1792975806762
+        ],
+        [
+          1792975806610
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:50:07.763428+00:00",
+      "cpu": [
+        [
+          "node3",
+          28
+        ],
+        [
+          "node2",
+          62
+        ],
+        [
+          "node1",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975807709
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:50:08.962913+00:00",
+      "cpu": [
+        [
+          "node3",
+          34
+        ],
+        [
+          "node1",
+          100
+        ],
+        [
+          "node2",
+          35
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:50:10.064805+00:00",
+      "cpu": [
+        [
+          "node3",
+          48
+        ],
+        [
+          "node1",
+          100
+        ],
+        [
+          "node2",
+          42
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975810008
+        ],
+        [
+          1792975810009
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:50:11.165459+00:00",
+      "cpu": [
+        [
+          "node3",
+          41
+        ],
+        [
+          "node2",
+          31
+        ],
+        [
+          "node1",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975811270
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:50:12.463595+00:00",
+      "cpu": [
+        [
+          "node3",
+          47
+        ],
+        [
+          "node2",
+          47
+        ],
+        [
+          "node1",
+          97
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          160
+        ],
+        [
+          "POST_RECOVERY",
+          1
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:50:13.565655+00:00",
+      "cpu": [
+        [
+          "node3",
+          48
+        ],
+        [
+          "node2",
+          33
+        ],
+        [
+          "node1",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975813667
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:50:14.864065+00:00",
+      "cpu": [
+        [
+          "node3",
+          46
+        ],
+        [
+          "node2",
+          33
+        ],
+        [
+          "node1",
+          99
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975814964
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:50:16.065656+00:00",
+      "cpu": [
+        [
+          "node3",
+          45
+        ],
+        [
+          "node2",
+          35
+        ],
+        [
+          "node1",
+          96
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975816264
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:50:17.265272+00:00",
+      "cpu": [
+        [
+          "node3",
+          38
+        ],
+        [
+          "node1",
+          100
+        ],
+        [
+          "node2",
+          42
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:50:18.363021+00:00",
+      "cpu": [
+        [
+          "node3",
+          31
+        ],
+        [
+          "node1",
+          96
+        ],
+        [
+          "node2",
+          55
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:50:19.465180+00:00",
+      "cpu": [
+        [
+          "node3",
+          32
+        ],
+        [
+          "node1",
+          99
+        ],
+        [
+          "node2",
+          41
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975819508
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:50:20.564759+00:00",
+      "cpu": [
+        [
+          "node2",
+          40
+        ],
+        [
+          "node3",
+          43
+        ],
+        [
+          "node1",
+          100
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975820664
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:50:21.763066+00:00",
+      "cpu": [
+        [
+          "node3",
+          31
+        ],
+        [
+          "node1",
+          97
+        ],
+        [
+          "node2",
+          38
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": [
+        [
+          1792975821768
+        ]
+      ]
+    },
+    {
+      "time": "2026-10-26T00:50:51.879659+00:00",
+      "cpu": {
+        "error": "[Errno 104] Connection reset by peer"
+      },
+      "shards": {
+        "error": "[Errno 104] Connection reset by peer"
+      },
+      "titles": {
+        "error": "[Errno 104] Connection reset by peer"
+      }
+    },
+    {
+      "time": "2026-10-26T00:50:52.880938+00:00",
+      "cpu": {
+        "error": "[Errno 104] Connection reset by peer"
+      },
+      "shards": {
+        "error": "[Errno 104] Connection reset by peer"
+      },
+      "titles": {
+        "error": "[Errno 104] Connection reset by peer"
+      }
+    },
+    {
+      "time": "2026-10-26T00:50:53.882175+00:00",
+      "cpu": {
+        "error": "[Errno 104] Connection reset by peer"
+      },
+      "shards": {
+        "error": "[Errno 104] Connection reset by peer"
+      },
+      "titles": {
+        "error": "[Errno 104] Connection reset by peer"
+      }
+    },
+    {
+      "time": "2026-10-26T00:50:54.883555+00:00",
+      "cpu": {
+        "error": "[Errno 104] Connection reset by peer"
+      },
+      "shards": {
+        "error": "[Errno 104] Connection reset by peer"
+      },
+      "titles": {
+        "error": "[Errno 104] Connection reset by peer"
+      }
+    },
+    {
+      "time": "2026-10-26T00:50:55.884748+00:00",
+      "cpu": {
+        "error": "[Errno 104] Connection reset by peer"
+      },
+      "shards": {
+        "error": "[Errno 104] Connection reset by peer"
+      },
+      "titles": {
+        "error": "[Errno 104] Connection reset by peer"
+      }
+    },
+    {
+      "time": "2026-10-26T00:50:56.885932+00:00",
+      "cpu": [
+        [
+          "node3",
+          100
+        ],
+        [
+          "node2",
+          68
+        ]
+      ],
+      "shards": [],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:50:58.682619+00:00",
+      "cpu": [
+        [
+          "node3",
+          99
+        ],
+        [
+          "node1",
+          74
+        ],
+        [
+          "node2",
+          40
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          2
+        ],
+        [
+          "STARTED",
+          7
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:51:00.179938+00:00",
+      "cpu": [
+        [
+          "node3",
+          88
+        ],
+        [
+          "node2",
+          42
+        ],
+        [
+          "node1",
+          45
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          2
+        ],
+        [
+          "UNASSIGNED",
+          1
+        ],
+        [
+          "STARTED",
+          15
+        ],
+        [
+          "POST_RECOVERY",
+          1
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:51:01.286121+00:00",
+      "cpu": [
+        [
+          "node3",
+          99
+        ],
+        [
+          "node2",
+          61
+        ],
+        [
+          "node1",
+          71
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          1
+        ],
+        [
+          "STARTED",
+          39
+        ],
+        [
+          "POST_RECOVERY",
+          1
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:51:02.381824+00:00",
+      "cpu": [
+        [
+          "node3",
+          100
+        ],
+        [
+          "node2",
+          65
+        ],
+        [
+          "node1",
+          64
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          2
+        ],
+        [
+          "UNASSIGNED",
+          2
+        ],
+        [
+          "STARTED",
+          71
+        ],
+        [
+          "POST_RECOVERY",
+          2
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:51:03.484244+00:00",
+      "cpu": [
+        [
+          "node3",
+          98
+        ],
+        [
+          "node2",
+          59
+        ],
+        [
+          "node1",
+          50
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          1
+        ],
+        [
+          "UNASSIGNED",
+          2
+        ],
+        [
+          "STARTED",
+          98
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:51:04.580733+00:00",
+      "cpu": [
+        [
+          "node3",
+          98
+        ],
+        [
+          "node2",
+          44
+        ],
+        [
+          "node1",
+          42
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          2
+        ],
+        [
+          "UNASSIGNED",
+          1
+        ],
+        [
+          "STARTED",
+          122
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:51:05.683344+00:00",
+      "cpu": [
+        [
+          "node3",
+          100
+        ],
+        [
+          "node1",
+          69
+        ],
+        [
+          "node2",
+          66
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          1
+        ],
+        [
+          "UNASSIGNED",
+          4
+        ],
+        [
+          "STARTED",
+          153
+        ],
+        [
+          "POST_RECOVERY",
+          1
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:51:06.786756+00:00",
+      "cpu": [
+        [
+          "node3",
+          95
+        ],
+        [
+          "node2",
+          64
+        ],
+        [
+          "node1",
+          90
+        ]
+      ],
+      "shards": [
+        [
+          "RECOVERING",
+          1
+        ],
+        [
+          "STARTED",
+          160
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:51:07.984549+00:00",
+      "cpu": [
+        [
+          "node3",
+          62
+        ],
+        [
+          "node2",
+          23
+        ],
+        [
+          "node1",
+          99
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    },
+    {
+      "time": "2026-10-26T00:51:09.086805+00:00",
+      "cpu": [
+        [
+          "node3",
+          5
+        ],
+        [
+          "node1",
+          57
+        ],
+        [
+          "node2",
+          76
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          161
+        ]
+      ],
+      "titles": []
+    }
+  ],
+  "validation": {
+    "focusedBeforeCandidate": {
+      "passed": 29,
+      "failed": 0
+    },
+    "candidateFocused": {
+      "passed": 32,
+      "failed": 0,
+      "regressionRed": "Title details gate returned actual HTTP 503 before cap; candidate passes synthetic regression but fails cold real-Crate warmup."
+    },
+    "baselineWebSuite": {
+      "tests": 5266,
+      "passed": 5246,
+      "failed": 11,
+      "skipped": 8,
+      "todo": 1
+    },
+    "typecheck": {
+      "diagnostics": 192,
+      "baselineAndCandidateOutputsIdentical": true
+    },
+    "pytest": {
+      "collectionErrors": 87
+    },
+    "build": "Passed (production build and 1,183 precompressed files)",
+    "productionTitleTimeoutSSR": {
+      "passed": 5,
+      "failed": 0,
+      "invocation": "Built main, then node --test against a scratch copy of scripts/title-page-timeouts.test.mjs; only change was forwarding TMPDIR into its explicit child environment. All assertions unchanged."
+    },
+    "finalFocused": {
+      "passed": 29,
+      "failed": 0
+    }
+  }
+}

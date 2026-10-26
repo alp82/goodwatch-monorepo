@@ -280,8 +280,8 @@ export const buildJsonLdDetail = (
 			jsonLd.endDate = new Date(d.last_air_date).toISOString().slice(0, 10)
 		if (d.number_of_seasons) jsonLd.numberOfSeasons = d.number_of_seasons
 		if (d.number_of_episodes) jsonLd.numberOfEpisodes = d.number_of_episodes
-		const creators = jsonLdPeople(media.credits.executive_producers)
-		if (creators.length) jsonLd.producer = creators
+		const producers = jsonLdPeople(media.crew.producers)
+		if (producers.length) jsonLd.producer = producers
 	}
 
 	// One WatchAction per offer with a link of its own in the page's country; none at all without one.
