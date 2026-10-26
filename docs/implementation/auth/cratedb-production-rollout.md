@@ -22,6 +22,41 @@ The original stale contexts cleared, but two newer orphan entries remain on crat
 KILL/restart was attempted. The historical sections below preserve decisions and observations at their stated times;
 do not interpret their original staging warnings or pending checks as current blockers or repeat completed work.
 
+## Current stale-context and restart advice — #644
+
+**Updated 2026-10-26; read-only investigation, no new production action authorized.**
+See the [investigation and sanitized evidence](cratedb-production/20261026-operation-contexts/README.md).
+All three coordinators agree across repeated samples: **crate-01 1,460 / crate-02 112 / crate-03 2,897**
+persistent operation rows older than one hour without a matching `sys.jobs` entry (4,469 rows,
+1,653 distinct job IDs cluster-wide). Exclude the additional 100 old operations with matching live
+Windmill jobs. The two October 16 crate-02 entries remain; almost all other candidates started during
+crate-02's temporary membership loss/rejoin on October 22 at 05:55 UTC. All nodes still run 5.10.16.
+
+The leading hypothesis is task-initialization cleanup leaving detached operation statistics during
+participant loss. On 5.10.16 the operation statistics map is separate from active tasks; KILL targets
+active tasks, and decommission waits on internal task/request counters rather than operation-row count.
+Neither absent `sys.jobs` rows nor zero reported bytes prove that cancellation is safe or that these
+statistics block shutdown. Exact orphan statement types/client identities have aged out of the jobs
+log; the investigation records the confirmation path and relevant upstream change.
+
+**Do not use KILL as stale-context clearance.** Both historical attempts returned rowcount 0 and left
+rows behind. Any Q34/Q37 KILL instructions below are historical, superseded by this advice and the
+later rollout-specific no-more-KILL decision. Do not execute the archived cancellation script.
+Recommend leaving production unchanged while a separately scoped isolated reproduction/upstream
+investigation establishes a remedy. No immediate restart, stats toggle or timeout change is advised.
+
+For a future separately owner-approved necessary restart, inventory operations and jobs twice at least
+one minute apart through every coordinator. Retain health/client/backup gates, `force=false`, and the
+zero-primary drain. If the daemon then remains alive, use the documented host-managed normal SIGTERM
+with unlimited grace, after immediately rechecking zero primaries and StopSignal. Normal TERM is not
+itself a decommission. Never use KILL ALL, automatic/individual stale-ID cancellation, SIGKILL, shortened
+grace or force=true as a workaround. If normal stop does not finish, leave its unlimited-grace wait in
+place and report for a decision; prior rollout approval is not standing authorization for new maintenance.
+
+Current health is 143 GREEN rows and 21 passing checks, but **two shard copies have RELOCATING routing**
+(1,161 others STARTED/STARTED). The strict settled-shard restart gate is not satisfied by this snapshot.
+Use fresh gates for any future maintenance; historical shard/table counts below are not current targets.
+
 ## Approved continuation — 2026-10-15, after Q37 stop
 
 The owner explicitly approved the #547 normal-stop precedent for **this rollout**. No more KILLs.
@@ -77,7 +112,7 @@ The dedicated webapp secret remains on crate-01 at
 No Coolify setting was changed by this operator. No Crate/worker restart, HBA enablement or PR merge into main occurred.
 The next credential-bearing scheduled backup is **2026-10-16 00:05 UTC**, not yet observed in this session.
 
-Q37 permits individually revalidated orphan-ID KILLs on crate-02/03, but Q35 requires stopping when they do not clear.
+Historically, Q37 permitted individually revalidated orphan-ID KILLs on crate-02/03, with a Q35 stop if they did not clear.
 **Historical restriction, now superseded:** the subsequent owner decision above explicitly permits the zero-primary
 unlimited-grace normal stop with these contexts still present. The inventory below is the original six-host baseline;
 the execution record supplies expanded current coverage. Do not regenerate existing secrets/users or blindly
@@ -120,8 +155,7 @@ Latest independently verified snapshot `hourly_20261015_230501` is SUCCESS (23:1
 Crate-02's old entries started Oct 15 **04:01:09 UTC**, around the prior crate-03 restart. Crate-03's started
 **20:37:12 UTC**, around the prior crate-01 stop. Causality remains unproven. The complete candidate IDs are in
 `operations-final.json`; re-query before proposing any individual cancellation. **No KILL ALL, automatic KILL,
-forced stop, shortened grace, or changing force=true.** The original stale-context block is superseded by the explicit normal-stop continuation above; data health must still be GREEN before drain. Q37 permits individual orphan-ID KILLs, with an immediate `sys.jobs` recheck before each;
-It does not authorize killing active member queries or forced stops. The later continuation authorizes normal SIGTERM after zero primaries despite uncleared contexts.
+forced stop, shortened grace, or changing force=true.** The original stale-context block is superseded by the explicit normal-stop continuation above; data health must still be GREEN before drain. The historical Q37 individual-ID KILL permission is superseded; do not repeat it or execute the archived cancellation script. The later continuation authorizes normal SIGTERM after zero primaries despite uncleared contexts.
 
 ## Production client inventory
 

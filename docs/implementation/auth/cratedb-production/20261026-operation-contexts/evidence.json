@@ -1,0 +1,1668 @@
+{
+  "issue": 644,
+  "definition": "Operation older than one hour whose job_id is absent from the full sys.jobs sample, persistent across observations; candidate, not proof of absent internal task.",
+  "operations_columns": [
+    "node['name']",
+    "job_id",
+    "id",
+    "name",
+    "started",
+    "used_bytes"
+  ],
+  "operations_sha256": "da9ac48a7f1b2ce413ab8f318480ba9960d9ffbc369ea35c6841c721ae40aef3",
+  "samples": [
+    {
+      "started_utc": "2026-10-26T00:11:04.170346+00:00",
+      "coordinator": 11,
+      "by_node": {
+        "crate-01": {
+          "older_than_one_hour": 1546,
+          "orphan_candidates": 1460,
+          "orphan_job_ids": 768,
+          "names": {
+            "collect": 1194,
+            "distributed merge": 266
+          },
+          "used_bytes": {
+            "0": 1460
+          },
+          "oldest_utc": "2026-10-22T05:55:27.637000+00:00",
+          "newest_utc": "2026-10-22T05:55:32.040000+00:00"
+        },
+        "crate-02": {
+          "older_than_one_hour": 112,
+          "orphan_candidates": 112,
+          "orphan_job_ids": 111,
+          "names": {
+            "fetchPhase": 110,
+            "collect": 1,
+            "distributed merge": 1
+          },
+          "used_bytes": {
+            "-1": 110,
+            "0": 2
+          },
+          "oldest_utc": "2026-10-16T00:01:06.877000+00:00",
+          "newest_utc": "2026-10-22T05:55:22.333000+00:00"
+        },
+        "crate-03": {
+          "older_than_one_hour": 2911,
+          "orphan_candidates": 2897,
+          "orphan_job_ids": 1517,
+          "names": {
+            "collect": 2364,
+            "distributed merge": 523,
+            "hash-join": 4,
+            "join-merge": 6
+          },
+          "used_bytes": {
+            "0": 2893,
+            "-1": 4
+          },
+          "oldest_utc": "2026-10-22T05:55:27.612000+00:00",
+          "newest_utc": "2026-10-22T05:55:44.121000+00:00"
+        }
+      },
+      "jobs_columns": [
+        "id",
+        "username",
+        "started"
+      ],
+      "jobs": [
+        [
+          "93e423de-6714-8e49-b8e1-c9fde2475ca3",
+          "admin",
+          1792973468281
+        ],
+        [
+          "82fe7b8f-2874-3487-84c4-7b8b425d272e",
+          "goodwatch_windmill",
+          1792199485014
+        ],
+        [
+          "6cf96668-32d6-66e5-a8b7-c9ea6fa769ad",
+          "goodwatch_auth",
+          1792973468298
+        ],
+        [
+          "e78ecead-1dfd-8f8b-03ef-2d419b5bca3a",
+          "goodwatch_windmill",
+          1792246493815
+        ],
+        [
+          "9eda5cda-f2ef-2779-f488-ff75f03dc578",
+          "admin",
+          1792973468291
+        ],
+        [
+          "5b0c1d43-e78c-86c6-b133-de8e03246256",
+          "crate",
+          1792973468297
+        ],
+        [
+          "ee8d9223-f29d-cbeb-ef22-0e62336b70f5",
+          "goodwatch_windmill",
+          1792963960632
+        ],
+        [
+          "734504b5-1b3d-256a-ecaa-28a9255a6ba8",
+          "goodwatch_windmill",
+          1792199124809
+        ]
+      ],
+      "nodes": [
+        [
+          "xlclgwGeSHe18p5J4WvfFA",
+          "crate-01",
+          "5.10.16"
+        ],
+        [
+          "r0IgCe17SPOgudkQIGsRQA",
+          "crate-02",
+          "5.10.16"
+        ],
+        [
+          "ch8EXZwrQVmCls79_T_vUg",
+          "crate-03",
+          "5.10.16"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          143,
+          0,
+          0
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "RELOCATING",
+          2
+        ],
+        [
+          "STARTED",
+          "STARTED",
+          1161
+        ]
+      ],
+      "checks": [
+        [
+          21,
+          0
+        ]
+      ],
+      "cluster": [
+        [
+          "all",
+          {
+            "min_availability": "PRIMARIES",
+            "force": false,
+            "timeout": "2h"
+          }
+        ]
+      ],
+      "operations_sha256": "da9ac48a7f1b2ce413ab8f318480ba9960d9ffbc369ea35c6841c721ae40aef3"
+    },
+    {
+      "started_utc": "2026-10-26T00:11:36.238764+00:00",
+      "coordinator": 11,
+      "by_node": {
+        "crate-01": {
+          "older_than_one_hour": 1546,
+          "orphan_candidates": 1460,
+          "orphan_job_ids": 768,
+          "names": {
+            "collect": 1194,
+            "distributed merge": 266
+          },
+          "used_bytes": {
+            "0": 1460
+          },
+          "oldest_utc": "2026-10-22T05:55:27.637000+00:00",
+          "newest_utc": "2026-10-22T05:55:32.040000+00:00"
+        },
+        "crate-02": {
+          "older_than_one_hour": 112,
+          "orphan_candidates": 112,
+          "orphan_job_ids": 111,
+          "names": {
+            "fetchPhase": 110,
+            "collect": 1,
+            "distributed merge": 1
+          },
+          "used_bytes": {
+            "-1": 110,
+            "0": 2
+          },
+          "oldest_utc": "2026-10-16T00:01:06.877000+00:00",
+          "newest_utc": "2026-10-22T05:55:22.333000+00:00"
+        },
+        "crate-03": {
+          "older_than_one_hour": 2911,
+          "orphan_candidates": 2897,
+          "orphan_job_ids": 1517,
+          "names": {
+            "collect": 2364,
+            "distributed merge": 523,
+            "hash-join": 4,
+            "join-merge": 6
+          },
+          "used_bytes": {
+            "0": 2893,
+            "-1": 4
+          },
+          "oldest_utc": "2026-10-22T05:55:27.612000+00:00",
+          "newest_utc": "2026-10-22T05:55:44.121000+00:00"
+        }
+      },
+      "jobs_columns": [
+        "id",
+        "username",
+        "started"
+      ],
+      "jobs": [
+        [
+          "82fe7b8f-2874-3487-84c4-7b8b425d272e",
+          "goodwatch_windmill",
+          1792199485014
+        ],
+        [
+          "b6137e59-4ae6-7399-a05e-e36a27f1aa19",
+          "goodwatch_windmill",
+          1792973496080
+        ],
+        [
+          "e78ecead-1dfd-8f8b-03ef-2d419b5bca3a",
+          "goodwatch_windmill",
+          1792246493815
+        ],
+        [
+          "0405d6d9-fa1c-b88f-711b-e02894d5f430",
+          "crate",
+          1792973498660
+        ],
+        [
+          "a8817d3f-3484-d756-7618-4b5e13f65684",
+          "admin",
+          1792973494081
+        ],
+        [
+          "ee8d9223-f29d-cbeb-ef22-0e62336b70f5",
+          "goodwatch_windmill",
+          1792963960632
+        ],
+        [
+          "734504b5-1b3d-256a-ecaa-28a9255a6ba8",
+          "goodwatch_windmill",
+          1792199124809
+        ],
+        [
+          "c7fcdc18-313d-bccb-1d6d-da4ed20814dd",
+          "admin",
+          1792973498656
+        ]
+      ],
+      "nodes": [
+        [
+          "xlclgwGeSHe18p5J4WvfFA",
+          "crate-01",
+          "5.10.16"
+        ],
+        [
+          "r0IgCe17SPOgudkQIGsRQA",
+          "crate-02",
+          "5.10.16"
+        ],
+        [
+          "ch8EXZwrQVmCls79_T_vUg",
+          "crate-03",
+          "5.10.16"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          143,
+          0,
+          0
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "RELOCATING",
+          2
+        ],
+        [
+          "STARTED",
+          "STARTED",
+          1161
+        ]
+      ],
+      "checks": [
+        [
+          21,
+          0
+        ]
+      ],
+      "cluster": [
+        [
+          "all",
+          {
+            "min_availability": "PRIMARIES",
+            "force": false,
+            "timeout": "2h"
+          }
+        ]
+      ],
+      "operations_sha256": "da9ac48a7f1b2ce413ab8f318480ba9960d9ffbc369ea35c6841c721ae40aef3"
+    },
+    {
+      "started_utc": "2026-10-26T00:12:31.542959+00:00",
+      "coordinator": 11,
+      "by_node": {
+        "crate-01": {
+          "older_than_one_hour": 1546,
+          "orphan_candidates": 1460,
+          "orphan_job_ids": 768,
+          "names": {
+            "collect": 1194,
+            "distributed merge": 266
+          },
+          "used_bytes": {
+            "0": 1460
+          },
+          "oldest_utc": "2026-10-22T05:55:27.637000+00:00",
+          "newest_utc": "2026-10-22T05:55:32.040000+00:00"
+        },
+        "crate-02": {
+          "older_than_one_hour": 112,
+          "orphan_candidates": 112,
+          "orphan_job_ids": 111,
+          "names": {
+            "fetchPhase": 110,
+            "collect": 1,
+            "distributed merge": 1
+          },
+          "used_bytes": {
+            "-1": 110,
+            "0": 2
+          },
+          "oldest_utc": "2026-10-16T00:01:06.877000+00:00",
+          "newest_utc": "2026-10-22T05:55:22.333000+00:00"
+        },
+        "crate-03": {
+          "older_than_one_hour": 2911,
+          "orphan_candidates": 2897,
+          "orphan_job_ids": 1517,
+          "names": {
+            "collect": 2364,
+            "distributed merge": 523,
+            "hash-join": 4,
+            "join-merge": 6
+          },
+          "used_bytes": {
+            "0": 2893,
+            "-1": 4
+          },
+          "oldest_utc": "2026-10-22T05:55:27.612000+00:00",
+          "newest_utc": "2026-10-22T05:55:44.121000+00:00"
+        }
+      },
+      "jobs_columns": [
+        "id",
+        "username",
+        "started"
+      ],
+      "jobs": [
+        [
+          "83b1f0cf-2e49-6c36-df75-321ad28aa5a2",
+          "admin",
+          1792973549162
+        ],
+        [
+          "82fe7b8f-2874-3487-84c4-7b8b425d272e",
+          "goodwatch_windmill",
+          1792199485014
+        ],
+        [
+          "e78ecead-1dfd-8f8b-03ef-2d419b5bca3a",
+          "goodwatch_windmill",
+          1792246493815
+        ],
+        [
+          "d86d53f5-cfe2-8a43-7ff0-980c6e84b126",
+          "crate",
+          1792973554005
+        ],
+        [
+          "ee8d9223-f29d-cbeb-ef22-0e62336b70f5",
+          "goodwatch_windmill",
+          1792963960632
+        ],
+        [
+          "734504b5-1b3d-256a-ecaa-28a9255a6ba8",
+          "goodwatch_windmill",
+          1792199124809
+        ]
+      ],
+      "nodes": [
+        [
+          "xlclgwGeSHe18p5J4WvfFA",
+          "crate-01",
+          "5.10.16"
+        ],
+        [
+          "r0IgCe17SPOgudkQIGsRQA",
+          "crate-02",
+          "5.10.16"
+        ],
+        [
+          "ch8EXZwrQVmCls79_T_vUg",
+          "crate-03",
+          "5.10.16"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          143,
+          0,
+          0
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "RELOCATING",
+          2
+        ],
+        [
+          "STARTED",
+          "STARTED",
+          1161
+        ]
+      ],
+      "checks": [
+        [
+          21,
+          0
+        ]
+      ],
+      "cluster": [
+        [
+          "all",
+          {
+            "min_availability": "PRIMARIES",
+            "force": false,
+            "timeout": "2h"
+          }
+        ]
+      ],
+      "operations_sha256": "da9ac48a7f1b2ce413ab8f318480ba9960d9ffbc369ea35c6841c721ae40aef3"
+    },
+    {
+      "started_utc": "2026-10-26T00:11:04.170766+00:00",
+      "coordinator": 12,
+      "by_node": {
+        "crate-01": {
+          "older_than_one_hour": 1546,
+          "orphan_candidates": 1460,
+          "orphan_job_ids": 768,
+          "names": {
+            "collect": 1194,
+            "distributed merge": 266
+          },
+          "used_bytes": {
+            "0": 1460
+          },
+          "oldest_utc": "2026-10-22T05:55:27.637000+00:00",
+          "newest_utc": "2026-10-22T05:55:32.040000+00:00"
+        },
+        "crate-02": {
+          "older_than_one_hour": 112,
+          "orphan_candidates": 112,
+          "orphan_job_ids": 111,
+          "names": {
+            "fetchPhase": 110,
+            "collect": 1,
+            "distributed merge": 1
+          },
+          "used_bytes": {
+            "-1": 110,
+            "0": 2
+          },
+          "oldest_utc": "2026-10-16T00:01:06.877000+00:00",
+          "newest_utc": "2026-10-22T05:55:22.333000+00:00"
+        },
+        "crate-03": {
+          "older_than_one_hour": 2911,
+          "orphan_candidates": 2897,
+          "orphan_job_ids": 1517,
+          "names": {
+            "collect": 2364,
+            "distributed merge": 523,
+            "hash-join": 4,
+            "join-merge": 6
+          },
+          "used_bytes": {
+            "0": 2893,
+            "-1": 4
+          },
+          "oldest_utc": "2026-10-22T05:55:27.612000+00:00",
+          "newest_utc": "2026-10-22T05:55:44.121000+00:00"
+        }
+      },
+      "jobs_columns": [
+        "id",
+        "username",
+        "started"
+      ],
+      "jobs": [
+        [
+          "82fe7b8f-2874-3487-84c4-7b8b425d272e",
+          "goodwatch_windmill",
+          1792199485014
+        ],
+        [
+          "fd345cda-2fd8-8c21-be7e-4ddc3f76643b",
+          "crate",
+          1792973468636
+        ],
+        [
+          "e78ecead-1dfd-8f8b-03ef-2d419b5bca3a",
+          "goodwatch_windmill",
+          1792246493815
+        ],
+        [
+          "ee8d9223-f29d-cbeb-ef22-0e62336b70f5",
+          "goodwatch_windmill",
+          1792963960632
+        ],
+        [
+          "734504b5-1b3d-256a-ecaa-28a9255a6ba8",
+          "goodwatch_windmill",
+          1792199124809
+        ]
+      ],
+      "nodes": [
+        [
+          "xlclgwGeSHe18p5J4WvfFA",
+          "crate-01",
+          "5.10.16"
+        ],
+        [
+          "r0IgCe17SPOgudkQIGsRQA",
+          "crate-02",
+          "5.10.16"
+        ],
+        [
+          "ch8EXZwrQVmCls79_T_vUg",
+          "crate-03",
+          "5.10.16"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          143,
+          0,
+          0
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "RELOCATING",
+          2
+        ],
+        [
+          "STARTED",
+          "STARTED",
+          1161
+        ]
+      ],
+      "checks": [
+        [
+          21,
+          0
+        ]
+      ],
+      "cluster": [
+        [
+          "all",
+          {
+            "timeout": "2h",
+            "force": false,
+            "min_availability": "PRIMARIES"
+          }
+        ]
+      ],
+      "operations_sha256": "da9ac48a7f1b2ce413ab8f318480ba9960d9ffbc369ea35c6841c721ae40aef3"
+    },
+    {
+      "started_utc": "2026-10-26T00:11:36.238899+00:00",
+      "coordinator": 12,
+      "by_node": {
+        "crate-01": {
+          "older_than_one_hour": 1546,
+          "orphan_candidates": 1460,
+          "orphan_job_ids": 768,
+          "names": {
+            "collect": 1194,
+            "distributed merge": 266
+          },
+          "used_bytes": {
+            "0": 1460
+          },
+          "oldest_utc": "2026-10-22T05:55:27.637000+00:00",
+          "newest_utc": "2026-10-22T05:55:32.040000+00:00"
+        },
+        "crate-02": {
+          "older_than_one_hour": 112,
+          "orphan_candidates": 112,
+          "orphan_job_ids": 111,
+          "names": {
+            "fetchPhase": 110,
+            "collect": 1,
+            "distributed merge": 1
+          },
+          "used_bytes": {
+            "-1": 110,
+            "0": 2
+          },
+          "oldest_utc": "2026-10-16T00:01:06.877000+00:00",
+          "newest_utc": "2026-10-22T05:55:22.333000+00:00"
+        },
+        "crate-03": {
+          "older_than_one_hour": 2911,
+          "orphan_candidates": 2897,
+          "orphan_job_ids": 1517,
+          "names": {
+            "collect": 2364,
+            "distributed merge": 523,
+            "hash-join": 4,
+            "join-merge": 6
+          },
+          "used_bytes": {
+            "0": 2893,
+            "-1": 4
+          },
+          "oldest_utc": "2026-10-22T05:55:27.612000+00:00",
+          "newest_utc": "2026-10-22T05:55:44.121000+00:00"
+        }
+      },
+      "jobs_columns": [
+        "id",
+        "username",
+        "started"
+      ],
+      "jobs": [
+        [
+          "e34de73a-1ca3-420f-27ea-17ef935e2abe",
+          "admin",
+          1792973498861
+        ],
+        [
+          "82fe7b8f-2874-3487-84c4-7b8b425d272e",
+          "goodwatch_windmill",
+          1792199485014
+        ],
+        [
+          "c7b02ca1-9f2d-0a0b-44c0-5e38f8e9b256",
+          "crate",
+          1792973498898
+        ],
+        [
+          "b6137e59-4ae6-7399-a05e-e36a27f1aa19",
+          "goodwatch_windmill",
+          1792973496080
+        ],
+        [
+          "e78ecead-1dfd-8f8b-03ef-2d419b5bca3a",
+          "goodwatch_windmill",
+          1792246493815
+        ],
+        [
+          "a8817d3f-3484-d756-7618-4b5e13f65684",
+          "admin",
+          1792973494081
+        ],
+        [
+          "ee8d9223-f29d-cbeb-ef22-0e62336b70f5",
+          "goodwatch_windmill",
+          1792963960632
+        ],
+        [
+          "734504b5-1b3d-256a-ecaa-28a9255a6ba8",
+          "goodwatch_windmill",
+          1792199124809
+        ],
+        [
+          "3f580810-6a60-1d4f-11ca-74f9ea6124ae",
+          "goodwatch_auth",
+          1792973498897
+        ]
+      ],
+      "nodes": [
+        [
+          "xlclgwGeSHe18p5J4WvfFA",
+          "crate-01",
+          "5.10.16"
+        ],
+        [
+          "r0IgCe17SPOgudkQIGsRQA",
+          "crate-02",
+          "5.10.16"
+        ],
+        [
+          "ch8EXZwrQVmCls79_T_vUg",
+          "crate-03",
+          "5.10.16"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          143,
+          0,
+          0
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "RELOCATING",
+          2
+        ],
+        [
+          "STARTED",
+          "STARTED",
+          1161
+        ]
+      ],
+      "checks": [
+        [
+          21,
+          0
+        ]
+      ],
+      "cluster": [
+        [
+          "all",
+          {
+            "timeout": "2h",
+            "force": false,
+            "min_availability": "PRIMARIES"
+          }
+        ]
+      ],
+      "operations_sha256": "da9ac48a7f1b2ce413ab8f318480ba9960d9ffbc369ea35c6841c721ae40aef3"
+    },
+    {
+      "started_utc": "2026-10-26T00:12:31.543102+00:00",
+      "coordinator": 12,
+      "by_node": {
+        "crate-01": {
+          "older_than_one_hour": 1546,
+          "orphan_candidates": 1460,
+          "orphan_job_ids": 768,
+          "names": {
+            "collect": 1194,
+            "distributed merge": 266
+          },
+          "used_bytes": {
+            "0": 1460
+          },
+          "oldest_utc": "2026-10-22T05:55:27.637000+00:00",
+          "newest_utc": "2026-10-22T05:55:32.040000+00:00"
+        },
+        "crate-02": {
+          "older_than_one_hour": 112,
+          "orphan_candidates": 112,
+          "orphan_job_ids": 111,
+          "names": {
+            "fetchPhase": 110,
+            "collect": 1,
+            "distributed merge": 1
+          },
+          "used_bytes": {
+            "-1": 110,
+            "0": 2
+          },
+          "oldest_utc": "2026-10-16T00:01:06.877000+00:00",
+          "newest_utc": "2026-10-22T05:55:22.333000+00:00"
+        },
+        "crate-03": {
+          "older_than_one_hour": 2911,
+          "orphan_candidates": 2897,
+          "orphan_job_ids": 1517,
+          "names": {
+            "collect": 2364,
+            "distributed merge": 523,
+            "hash-join": 4,
+            "join-merge": 6
+          },
+          "used_bytes": {
+            "0": 2893,
+            "-1": 4
+          },
+          "oldest_utc": "2026-10-22T05:55:27.612000+00:00",
+          "newest_utc": "2026-10-22T05:55:44.121000+00:00"
+        }
+      },
+      "jobs_columns": [
+        "id",
+        "username",
+        "started"
+      ],
+      "jobs": [
+        [
+          "83b1f0cf-2e49-6c36-df75-321ad28aa5a2",
+          "admin",
+          1792973549162
+        ],
+        [
+          "82fe7b8f-2874-3487-84c4-7b8b425d272e",
+          "goodwatch_windmill",
+          1792199485014
+        ],
+        [
+          "68dfd1f5-2bc9-2f5d-7ce1-5de7138e62a5",
+          "crate",
+          1792973553936
+        ],
+        [
+          "bf462f81-b59e-3052-0a3c-d78f9d4102cb",
+          "goodwatch_auth",
+          1792973553935
+        ],
+        [
+          "e78ecead-1dfd-8f8b-03ef-2d419b5bca3a",
+          "goodwatch_windmill",
+          1792246493815
+        ],
+        [
+          "ee8d9223-f29d-cbeb-ef22-0e62336b70f5",
+          "goodwatch_windmill",
+          1792963960632
+        ],
+        [
+          "734504b5-1b3d-256a-ecaa-28a9255a6ba8",
+          "goodwatch_windmill",
+          1792199124809
+        ]
+      ],
+      "nodes": [
+        [
+          "xlclgwGeSHe18p5J4WvfFA",
+          "crate-01",
+          "5.10.16"
+        ],
+        [
+          "r0IgCe17SPOgudkQIGsRQA",
+          "crate-02",
+          "5.10.16"
+        ],
+        [
+          "ch8EXZwrQVmCls79_T_vUg",
+          "crate-03",
+          "5.10.16"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          143,
+          0,
+          0
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "RELOCATING",
+          2
+        ],
+        [
+          "STARTED",
+          "STARTED",
+          1161
+        ]
+      ],
+      "checks": [
+        [
+          21,
+          0
+        ]
+      ],
+      "cluster": [
+        [
+          "all",
+          {
+            "timeout": "2h",
+            "force": false,
+            "min_availability": "PRIMARIES"
+          }
+        ]
+      ],
+      "operations_sha256": "da9ac48a7f1b2ce413ab8f318480ba9960d9ffbc369ea35c6841c721ae40aef3"
+    },
+    {
+      "started_utc": "2026-10-26T00:11:04.171014+00:00",
+      "coordinator": 13,
+      "by_node": {
+        "crate-01": {
+          "older_than_one_hour": 1546,
+          "orphan_candidates": 1460,
+          "orphan_job_ids": 768,
+          "names": {
+            "collect": 1194,
+            "distributed merge": 266
+          },
+          "used_bytes": {
+            "0": 1460
+          },
+          "oldest_utc": "2026-10-22T05:55:27.637000+00:00",
+          "newest_utc": "2026-10-22T05:55:32.040000+00:00"
+        },
+        "crate-02": {
+          "older_than_one_hour": 112,
+          "orphan_candidates": 112,
+          "orphan_job_ids": 111,
+          "names": {
+            "fetchPhase": 110,
+            "collect": 1,
+            "distributed merge": 1
+          },
+          "used_bytes": {
+            "-1": 110,
+            "0": 2
+          },
+          "oldest_utc": "2026-10-16T00:01:06.877000+00:00",
+          "newest_utc": "2026-10-22T05:55:22.333000+00:00"
+        },
+        "crate-03": {
+          "older_than_one_hour": 2911,
+          "orphan_candidates": 2897,
+          "orphan_job_ids": 1517,
+          "names": {
+            "collect": 2364,
+            "distributed merge": 523,
+            "hash-join": 4,
+            "join-merge": 6
+          },
+          "used_bytes": {
+            "0": 2893,
+            "-1": 4
+          },
+          "oldest_utc": "2026-10-22T05:55:27.612000+00:00",
+          "newest_utc": "2026-10-22T05:55:44.121000+00:00"
+        }
+      },
+      "jobs_columns": [
+        "id",
+        "username",
+        "started"
+      ],
+      "jobs": [
+        [
+          "556a9c15-fb3f-4edc-679c-9978c5e6fb12",
+          "crate",
+          1792973468669
+        ],
+        [
+          "82fe7b8f-2874-3487-84c4-7b8b425d272e",
+          "goodwatch_windmill",
+          1792199485014
+        ],
+        [
+          "753fb078-d7f1-632b-3a58-bb4bcddabc23",
+          "goodwatch_auth",
+          1792973468670
+        ],
+        [
+          "e78ecead-1dfd-8f8b-03ef-2d419b5bca3a",
+          "goodwatch_windmill",
+          1792246493815
+        ],
+        [
+          "ee8d9223-f29d-cbeb-ef22-0e62336b70f5",
+          "goodwatch_windmill",
+          1792963960632
+        ],
+        [
+          "734504b5-1b3d-256a-ecaa-28a9255a6ba8",
+          "goodwatch_windmill",
+          1792199124809
+        ]
+      ],
+      "nodes": [
+        [
+          "xlclgwGeSHe18p5J4WvfFA",
+          "crate-01",
+          "5.10.16"
+        ],
+        [
+          "r0IgCe17SPOgudkQIGsRQA",
+          "crate-02",
+          "5.10.16"
+        ],
+        [
+          "ch8EXZwrQVmCls79_T_vUg",
+          "crate-03",
+          "5.10.16"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          143,
+          0,
+          0
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "RELOCATING",
+          2
+        ],
+        [
+          "STARTED",
+          "STARTED",
+          1161
+        ]
+      ],
+      "checks": [
+        [
+          21,
+          0
+        ]
+      ],
+      "cluster": [
+        [
+          "all",
+          {
+            "min_availability": "PRIMARIES",
+            "timeout": "2h",
+            "force": false
+          }
+        ]
+      ],
+      "operations_sha256": "da9ac48a7f1b2ce413ab8f318480ba9960d9ffbc369ea35c6841c721ae40aef3"
+    },
+    {
+      "started_utc": "2026-10-26T00:11:36.239172+00:00",
+      "coordinator": 13,
+      "by_node": {
+        "crate-01": {
+          "older_than_one_hour": 1546,
+          "orphan_candidates": 1460,
+          "orphan_job_ids": 768,
+          "names": {
+            "collect": 1194,
+            "distributed merge": 266
+          },
+          "used_bytes": {
+            "0": 1460
+          },
+          "oldest_utc": "2026-10-22T05:55:27.637000+00:00",
+          "newest_utc": "2026-10-22T05:55:32.040000+00:00"
+        },
+        "crate-02": {
+          "older_than_one_hour": 112,
+          "orphan_candidates": 112,
+          "orphan_job_ids": 111,
+          "names": {
+            "fetchPhase": 110,
+            "collect": 1,
+            "distributed merge": 1
+          },
+          "used_bytes": {
+            "-1": 110,
+            "0": 2
+          },
+          "oldest_utc": "2026-10-16T00:01:06.877000+00:00",
+          "newest_utc": "2026-10-22T05:55:22.333000+00:00"
+        },
+        "crate-03": {
+          "older_than_one_hour": 2911,
+          "orphan_candidates": 2897,
+          "orphan_job_ids": 1517,
+          "names": {
+            "collect": 2364,
+            "distributed merge": 523,
+            "hash-join": 4,
+            "join-merge": 6
+          },
+          "used_bytes": {
+            "0": 2893,
+            "-1": 4
+          },
+          "oldest_utc": "2026-10-22T05:55:27.612000+00:00",
+          "newest_utc": "2026-10-22T05:55:44.121000+00:00"
+        }
+      },
+      "jobs_columns": [
+        "id",
+        "username",
+        "started"
+      ],
+      "jobs": [
+        [
+          "a075de85-feda-19bb-272d-1b6c619270df",
+          "goodwatch_auth",
+          1792973499513
+        ],
+        [
+          "30a13d08-05da-b1f0-d6e0-fb99c4304eff",
+          "crate",
+          1792973499514
+        ],
+        [
+          "82fe7b8f-2874-3487-84c4-7b8b425d272e",
+          "goodwatch_windmill",
+          1792199485014
+        ],
+        [
+          "1ef697f6-0ccc-089d-cc1f-777735cbc69e",
+          "goodwatch_auth",
+          1792973499516
+        ],
+        [
+          "b6137e59-4ae6-7399-a05e-e36a27f1aa19",
+          "goodwatch_windmill",
+          1792973496080
+        ],
+        [
+          "e78ecead-1dfd-8f8b-03ef-2d419b5bca3a",
+          "goodwatch_windmill",
+          1792246493815
+        ],
+        [
+          "a8817d3f-3484-d756-7618-4b5e13f65684",
+          "admin",
+          1792973494081
+        ],
+        [
+          "ee8d9223-f29d-cbeb-ef22-0e62336b70f5",
+          "goodwatch_windmill",
+          1792963960632
+        ],
+        [
+          "734504b5-1b3d-256a-ecaa-28a9255a6ba8",
+          "goodwatch_windmill",
+          1792199124809
+        ],
+        [
+          "90a9c6b9-2403-6151-cabc-0e4cc2e6be86",
+          "admin",
+          1792973499510
+        ]
+      ],
+      "nodes": [
+        [
+          "xlclgwGeSHe18p5J4WvfFA",
+          "crate-01",
+          "5.10.16"
+        ],
+        [
+          "r0IgCe17SPOgudkQIGsRQA",
+          "crate-02",
+          "5.10.16"
+        ],
+        [
+          "ch8EXZwrQVmCls79_T_vUg",
+          "crate-03",
+          "5.10.16"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          143,
+          0,
+          0
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "RELOCATING",
+          2
+        ],
+        [
+          "STARTED",
+          "STARTED",
+          1161
+        ]
+      ],
+      "checks": [
+        [
+          21,
+          0
+        ]
+      ],
+      "cluster": [
+        [
+          "all",
+          {
+            "min_availability": "PRIMARIES",
+            "timeout": "2h",
+            "force": false
+          }
+        ]
+      ],
+      "operations_sha256": "da9ac48a7f1b2ce413ab8f318480ba9960d9ffbc369ea35c6841c721ae40aef3"
+    },
+    {
+      "started_utc": "2026-10-26T00:12:31.543244+00:00",
+      "coordinator": 13,
+      "by_node": {
+        "crate-01": {
+          "older_than_one_hour": 1546,
+          "orphan_candidates": 1460,
+          "orphan_job_ids": 768,
+          "names": {
+            "collect": 1194,
+            "distributed merge": 266
+          },
+          "used_bytes": {
+            "0": 1460
+          },
+          "oldest_utc": "2026-10-22T05:55:27.637000+00:00",
+          "newest_utc": "2026-10-22T05:55:32.040000+00:00"
+        },
+        "crate-02": {
+          "older_than_one_hour": 112,
+          "orphan_candidates": 112,
+          "orphan_job_ids": 111,
+          "names": {
+            "fetchPhase": 110,
+            "collect": 1,
+            "distributed merge": 1
+          },
+          "used_bytes": {
+            "-1": 110,
+            "0": 2
+          },
+          "oldest_utc": "2026-10-16T00:01:06.877000+00:00",
+          "newest_utc": "2026-10-22T05:55:22.333000+00:00"
+        },
+        "crate-03": {
+          "older_than_one_hour": 2911,
+          "orphan_candidates": 2897,
+          "orphan_job_ids": 1517,
+          "names": {
+            "collect": 2364,
+            "distributed merge": 523,
+            "hash-join": 4,
+            "join-merge": 6
+          },
+          "used_bytes": {
+            "0": 2893,
+            "-1": 4
+          },
+          "oldest_utc": "2026-10-22T05:55:27.612000+00:00",
+          "newest_utc": "2026-10-22T05:55:44.121000+00:00"
+        }
+      },
+      "jobs_columns": [
+        "id",
+        "username",
+        "started"
+      ],
+      "jobs": [
+        [
+          "d1255e0f-56e7-199c-d29b-5ed4bcecb5cb",
+          "goodwatch_auth",
+          1792973553922
+        ],
+        [
+          "64accdaa-4a12-b528-56d0-2466b86aa62e",
+          "crate",
+          1792973553922
+        ],
+        [
+          "83b1f0cf-2e49-6c36-df75-321ad28aa5a2",
+          "admin",
+          1792973549162
+        ],
+        [
+          "82fe7b8f-2874-3487-84c4-7b8b425d272e",
+          "goodwatch_windmill",
+          1792199485014
+        ],
+        [
+          "a39e4c22-53a5-8967-9d47-0734809a97f1",
+          "goodwatch_auth",
+          1792973553924
+        ],
+        [
+          "e78ecead-1dfd-8f8b-03ef-2d419b5bca3a",
+          "goodwatch_windmill",
+          1792246493815
+        ],
+        [
+          "ee8d9223-f29d-cbeb-ef22-0e62336b70f5",
+          "goodwatch_windmill",
+          1792963960632
+        ],
+        [
+          "734504b5-1b3d-256a-ecaa-28a9255a6ba8",
+          "goodwatch_windmill",
+          1792199124809
+        ]
+      ],
+      "nodes": [
+        [
+          "xlclgwGeSHe18p5J4WvfFA",
+          "crate-01",
+          "5.10.16"
+        ],
+        [
+          "r0IgCe17SPOgudkQIGsRQA",
+          "crate-02",
+          "5.10.16"
+        ],
+        [
+          "ch8EXZwrQVmCls79_T_vUg",
+          "crate-03",
+          "5.10.16"
+        ]
+      ],
+      "health": [
+        [
+          "GREEN",
+          143,
+          0,
+          0
+        ]
+      ],
+      "shards": [
+        [
+          "STARTED",
+          "RELOCATING",
+          2
+        ],
+        [
+          "STARTED",
+          "STARTED",
+          1161
+        ]
+      ],
+      "checks": [
+        [
+          21,
+          0
+        ]
+      ],
+      "cluster": [
+        [
+          "all",
+          {
+            "min_availability": "PRIMARIES",
+            "timeout": "2h",
+            "force": false
+          }
+        ]
+      ],
+      "operations_sha256": "da9ac48a7f1b2ce413ab8f318480ba9960d9ffbc369ea35c6841c721ae40aef3"
+    }
+  ],
+  "detail_queries": {
+    "log_matches": {
+      "cols": [
+        "id",
+        "username",
+        "started",
+        "ended",
+        "statement_type",
+        "failed"
+      ],
+      "rows": [],
+      "rowcount": 0,
+      "duration": 241.7837
+    },
+    "log_range": {
+      "cols": [
+        "node['name']",
+        "count(*)",
+        "min(started)",
+        "max(started)"
+      ],
+      "rows": [
+        [
+          "crate-02",
+          10002,
+          1792973430084,
+          1792973518155
+        ],
+        [
+          "crate-03",
+          10003,
+          1792973430068,
+          1792973518153
+        ],
+        [
+          "crate-01",
+          10002,
+          1792973440635,
+          1792973518131
+        ]
+      ],
+      "rowcount": 3,
+      "duration": 69.06408
+    },
+    "stats": {
+      "cols": [
+        "settings['stats']",
+        "settings['statement_timeout']"
+      ],
+      "rows": [
+        [
+          {
+            "breaker": {
+              "log": {
+                "operations": {
+                  "limit": "819.1mb"
+                },
+                "jobs": {
+                  "limit": "819.1mb"
+                }
+              }
+            },
+            "jobs_log_expiration": "0s",
+            "service": {
+              "interval": "24h",
+              "max_bytes_per_sec": "40mb"
+            },
+            "operations_log_expiration": "0s",
+            "jobs_log_size": 10000,
+            "jobs_log_persistent_filter": "false",
+            "jobs_log_filter": "true",
+            "operations_log_size": 10000,
+            "enabled": true
+          },
+          "0ms"
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 2.779761
+    },
+    "old_jobs": {
+      "cols": [
+        "id",
+        "username",
+        "started",
+        "statement_type"
+      ],
+      "rows": [
+        [
+          "82fe7b8f-2874-3487-84c4-7b8b425d272e",
+          "goodwatch_windmill",
+          1792199485014,
+          "OTHER"
+        ],
+        [
+          "e78ecead-1dfd-8f8b-03ef-2d419b5bca3a",
+          "goodwatch_windmill",
+          1792246493815,
+          "SELECT"
+        ],
+        [
+          "ee8d9223-f29d-cbeb-ef22-0e62336b70f5",
+          "goodwatch_windmill",
+          1792963960632,
+          "OTHER"
+        ],
+        [
+          "734504b5-1b3d-256a-ecaa-28a9255a6ba8",
+          "goodwatch_windmill",
+          1792199124809,
+          "OTHER"
+        ]
+      ],
+      "rowcount": 4,
+      "duration": 19.619812
+    }
+  },
+  "node_log_signatures": {
+    "11": [
+      {
+        "runtime": {
+          "started": "2026-10-16T00:19:54.139365228Z",
+          "status": "running",
+          "oom": false,
+          "restart_count": 0,
+          "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307"
+        }
+      },
+      {
+        "log_window": "2026-10-22T05:54:00Z/05:57:00Z",
+        "returncode": 0,
+        "line_count": 122,
+        "signatures": {
+          "NodeNotConnectedException": 0,
+          "NodeDisconnectedException": 0,
+          "ConnectTransportException": 0,
+          "ReceiveTimeoutTransportException": 0,
+          "RejectedExecutionException": 0,
+          "CircuitBreakingException": 0,
+          "OutOfMemoryError": 0,
+          "JobKilledException": 0,
+          "node-left": 0,
+          "node-join": 0,
+          "master node changed": 0,
+          "detected_master": 0,
+          "stopping": 0,
+          "started": 0,
+          "stats.enabled": 0,
+          "disconnected": 0,
+          "connection reset": 0,
+          "failed to": 0,
+          "timed out": 0
+        },
+        "event_times": {}
+      }
+    ],
+    "12": [
+      {
+        "runtime": {
+          "started": "2026-10-15T23:45:26.513850873Z",
+          "status": "running",
+          "oom": false,
+          "restart_count": 0,
+          "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307"
+        }
+      },
+      {
+        "log_window": "2026-10-22T05:54:00Z/05:57:00Z",
+        "returncode": 0,
+        "line_count": 62515,
+        "signatures": {
+          "NodeNotConnectedException": 0,
+          "NodeDisconnectedException": 0,
+          "ConnectTransportException": 0,
+          "ReceiveTimeoutTransportException": 0,
+          "RejectedExecutionException": 0,
+          "CircuitBreakingException": 0,
+          "OutOfMemoryError": 0,
+          "JobKilledException": 0,
+          "node-left": 0,
+          "node-join": 0,
+          "master node changed": 2,
+          "detected_master": 0,
+          "stopping": 0,
+          "started": 18,
+          "stats.enabled": 0,
+          "disconnected": 0,
+          "connection reset": 0,
+          "failed to": 19,
+          "timed out": 8
+        },
+        "event_times": {
+          "master node changed": [
+            "2026-10-22T05:55:23.594916788Z",
+            "2026-10-22T05:55:25.754587451Z"
+          ],
+          "started": [
+            "2026-10-22T05:55:21.142374746Z",
+            "2026-10-22T05:55:21.143162587Z",
+            "2026-10-22T05:55:21.239214032Z",
+            "2026-10-22T05:55:21.364581823Z",
+            "2026-10-22T05:55:21.367749181Z",
+            "2026-10-22T05:55:21.375738702Z",
+            "2026-10-22T05:55:21.563007473Z",
+            "2026-10-22T05:55:21.585618875Z",
+            "2026-10-22T05:55:21.812131922Z",
+            "2026-10-22T05:55:21.914817749Z"
+          ],
+          "failed to": [
+            "2026-10-22T05:55:42.873656644Z",
+            "2026-10-22T05:55:42.904673513Z",
+            "2026-10-22T05:55:42.955687066Z",
+            "2026-10-22T05:55:42.980708959Z",
+            "2026-10-22T05:55:43.006395860Z",
+            "2026-10-22T05:55:43.120985763Z",
+            "2026-10-22T05:55:43.191155310Z",
+            "2026-10-22T05:55:43.268246740Z",
+            "2026-10-22T05:55:21.142374746Z",
+            "2026-10-22T05:55:21.143162587Z"
+          ],
+          "timed out": [
+            "2026-10-22T05:55:42.873740987Z",
+            "2026-10-22T05:55:42.904715682Z",
+            "2026-10-22T05:55:42.955727865Z",
+            "2026-10-22T05:55:42.980749987Z",
+            "2026-10-22T05:55:43.006452760Z",
+            "2026-10-22T05:55:43.121029439Z",
+            "2026-10-22T05:55:43.191228603Z",
+            "2026-10-22T05:55:43.268291147Z"
+          ]
+        }
+      }
+    ],
+    "13": [
+      {
+        "runtime": {
+          "started": "2026-10-16T00:01:38.667288036Z",
+          "status": "running",
+          "oom": false,
+          "restart_count": 0,
+          "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307"
+        }
+      },
+      {
+        "log_window": "2026-10-22T05:54:00Z/05:57:00Z",
+        "returncode": 0,
+        "line_count": 200,
+        "signatures": {
+          "NodeNotConnectedException": 0,
+          "NodeDisconnectedException": 0,
+          "ConnectTransportException": 0,
+          "ReceiveTimeoutTransportException": 0,
+          "RejectedExecutionException": 0,
+          "CircuitBreakingException": 0,
+          "OutOfMemoryError": 0,
+          "JobKilledException": 0,
+          "node-left": 1,
+          "node-join": 1,
+          "master node changed": 0,
+          "detected_master": 0,
+          "stopping": 0,
+          "started": 3,
+          "stats.enabled": 0,
+          "disconnected": 0,
+          "connection reset": 0,
+          "failed to": 3,
+          "timed out": 2
+        },
+        "event_times": {
+          "node-left": [
+            "2026-10-22T05:55:14.611762101Z"
+          ],
+          "node-join": [
+            "2026-10-22T05:55:32.085536043Z"
+          ],
+          "started": [
+            "2026-10-22T05:55:28.183561931Z",
+            "2026-10-22T05:55:28.238329707Z",
+            "2026-10-22T05:55:28.340192510Z"
+          ],
+          "failed to": [
+            "2026-10-22T05:55:28.183561931Z",
+            "2026-10-22T05:55:28.238329707Z",
+            "2026-10-22T05:55:28.340192510Z"
+          ],
+          "timed out": [
+            "2026-10-22T05:55:15.008962222Z"
+          ]
+        }
+      }
+    ]
+  }
+}

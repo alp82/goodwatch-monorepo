@@ -1,0 +1,15 @@
+Sanitized read-only docker logs, 2026-10-22 05:54–05:57 UTC. IP addresses redacted; SQL text excluded.
+
+crate-01
+{"exception_classes": {}, "warning_error_components": {}}
+
+crate-02
+{"exception_classes": {"ElasticsearchException": 1, "RemoteTransportException": 24, "CoordinationStateRejectedException": 1, "ShardLockObtainFailedException": 8, "IllegalStateException": 11, "StacklessClosedChannelException": 1905, "IOException": 1133, "NoLongerPrimaryShardException": 10, "AlreadyClosedException": 2, "CompletionException": 9}, "warning_error_components": {"o.e.t.InboundHandler     ": 9, "i.c.e.d.u.TransportShardUpsertAction": 8, "o.e.t.OutboundHandler    ": 1915, "o.e.c.a.s.ShardStateAction": 4, "o.e.i.e.Engine           ": 3, "o.e.i.c.IndicesClusterStateService": 3, "i.c.e.e.c.c.RemoteCollector": 9}}
+2026-10-22T05:55:23.593385103Z Caused by: org.elasticsearch.cluster.coordination.CoordinationStateRejectedException: leader check from unknown node
+2026-10-22T05:55:23.594916788Z [2026-10-22T05:55:23,594][INFO ][o.e.c.s.ClusterApplierService] [crate-02] master node changed {previous [{crate-03}{ch8EXZwrQVmCls79_T_vUg}{IrSJXqa1RcWzhcmM_ZvigA}{<IP>}{<IP>:4300}{dm}{http_address=<IP>:4200}], current []}, term: 1417, version: 1103798, reason: becoming candidate: onLeaderFailure
+2026-10-22T05:55:25.754587451Z [2026-10-22T05:55:25,754][INFO ][o.e.c.s.ClusterApplierService] [crate-02] master node changed {previous [], current [{crate-03}{ch8EXZwrQVmCls79_T_vUg}{IrSJXqa1RcWzhcmM_ZvigA}{<IP>}{<IP>:4300}{dm}{http_address=<IP>:4200}]}, term: 1417, version: 1103801, reason: ApplyCommitRequest{term=1417, version=1103801, sourceNode={crate-03}{ch8EXZwrQVmCls79_T_vUg}{IrSJXqa1RcWzhcmM_ZvigA}{<IP>}{<IP>:4300}{dm}{http_address=<IP>:4200}}
+
+crate-03
+{"exception_classes": {"RemoteTransportException": 3, "IllegalStateException": 3, "NoLongerPrimaryShardException": 3}, "warning_error_components": {"o.e.t.TransportService   ": 1, "o.e.c.r.a.AllocationService": 14, "o.e.c.a.s.ShardStateAction": 3}}
+2026-10-22T05:55:14.611762101Z [2026-10-22T05:55:14,610][INFO ][o.e.c.s.MasterService    ] [crate-03] node-left[{crate-02}{r0IgCe17SPOgudkQIGsRQA}{kGRaqs5eTKKXaruOVcR-MQ}{<IP>}{<IP>:4300}{dm}{http_address=<IP>:4200} followers check retry count exceeded], term: 1417, version: 1103799, reason: removed {{crate-02}{r0IgCe17SPOgudkQIGsRQA}{kGRaqs5eTKKXaruOVcR-MQ}{<IP>}{<IP>:4300}{dm}{http_address=<IP>:4200},}
+2026-10-22T05:55:32.085536043Z [2026-10-22T05:55:32,085][INFO ][o.e.c.s.MasterService    ] [crate-03] node-join[{crate-02}{r0IgCe17SPOgudkQIGsRQA}{kGRaqs5eTKKXaruOVcR-MQ}{<IP>}{<IP>:4300}{dm}{http_address=<IP>:4200} join existing leader], term: 1417, version: 1103801, reason: added {{crate-02}{r0IgCe17SPOgudkQIGsRQA}{kGRaqs5eTKKXaruOVcR-MQ}{<IP>}{<IP>:4300}{dm}{http_address=<IP>:4200},}

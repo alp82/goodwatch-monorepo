@@ -1,0 +1,36 @@
+Validation on origin/main bb1265d4a with documentation/evidence changes only.
+
+Production reads:
+- Nine direct-coordinator samples (three rounds x three endpoints), same 4,569 operation rows.
+- Local recomputation: 4,469 persistent orphan candidates, 1,653 distinct IDs; 100 rows excluded for matching live jobs.
+- Canonical rows SHA256 checked against every sample; >60-second persistence checked.
+- JSON parsing, gzip decompression, new relative document links and git diff --check: PASS.
+
+python3 -m pytest goodwatch-crate -q
+38 passed, 9 subtests passed in 4.36s.
+
+uv run --no-project --with pytest --with croniter --with requests python -m pytest goodwatch-flows/tests/test_crate_backup_health.py goodwatch-flows/tests/test_crate_cluster_health.py -q
+28 passed, 13 subtests passed in 0.14s.
+Initial system-Python collection lacked croniter; isolated uv dependencies resolved it without repository changes.
+
+Inside goodwatch-webapp:
+npm ci --include=dev
+Initial install failed because sharp detected global libvips and attempted a source build requiring node-addon-api.
+SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm ci --include=dev
+PASS. No production .env copied, preview or application server started.
+
+node --test app/utils/crate-timeout.test.ts app/utils/crate-null-timestamp.test.ts app/utils/crate-insert-rows.test.ts app/utils/crate-failover.test.ts app/utils/crate-diagnostics.test.ts app/utils/crate-credentials.test.ts app/server/combined-search/catalog-failover.test.ts
+50 tests, 50 pass, 0 fail, 0 skipped (2.077s). Timeout integration uses loopback HTTP.
+
+npx tsc --noEmit
+Exit 2, 192 TS diagnostics. Examples:
+app/hooks/usePageTracking.ts(110,25): TS18048: 'data.pages' is possibly 'undefined'.
+app/routes/$type.$category.$page.tsx(47,20): TS7053: string cannot index { movies: string; shows: string; }.
+Application source, package manifests, lockfiles and tsconfig are unchanged from the fetched main revision.
+An earlier attempt before dependencies were fully installed did not invoke TypeScript; the result above is the actual compiler run after successful npm ci.
+
+Limits:
+No CrateDB engine fault reproduction, task-map introspection, resource-release verification or upgrade validation.
+No end-to-end production shutdown experiment, KILL, node restart or production write.
+No regression test added: this task changes documentation and records an engine hypothesis, not an engine fix.
+Exact orphan SQL statement types and source clients are unavailable in the retained jobs-log window.
