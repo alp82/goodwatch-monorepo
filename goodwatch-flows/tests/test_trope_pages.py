@@ -84,6 +84,34 @@ class PagesTests(unittest.TestCase):
         self.assertEqual(choose_record(archived,page(),PAGE_FIELDS)[1],'higher_priority')
         self.assertIsNone(choose_record(page(),older,PAGE_FIELDS)[0])
         self.assertEqual(choose_record(page(),page(source_hash='e'*64,fetched_at=200),PAGE_FIELDS)[1],'newer_http')
+    def test_newer_or_higher_priority_metadata_cannot_erase_definition_or_its_capture(self):
+        archived=page(source_hash=None,fetched_at=None,source_archive=archive())
+        metadata=page(title='A newer metadata heading',description=None,source_hash='e'*64,fetched_at=200)
+        for old in (page(),archived):
+            with self.subTest(old_source=old['source_hash']):
+                self.assertEqual(choose_record(old,metadata,PAGE_FIELDS),(None,'definition_preserved'))
+                db=Database();db.tables[PAGE_TABLE][URL]={**old,'imported_at':1,'updated_at':1}
+                before=deepcopy(db.tables[PAGE_TABLE][URL])
+                report=import_document(db,{'pages':[metadata]},apply=True)
+                self.assertEqual(report['writes'],0)
+                self.assertEqual(db.tables[PAGE_TABLE][URL],before)
+                self.assertEqual(db.writes,[])
+
+    def test_archive_definition_fills_http_metadata_with_its_own_title_and_provenance(self):
+        metadata=page(title='A newer observed heading',description=None,fetched_at=500)
+        definition=page(title='The source definition heading',source_hash=None,fetched_at=None,source_archive=archive())
+        desired,reason=choose_record(metadata,definition,PAGE_FIELDS)
+        self.assertEqual(reason,'fill_description')
+        self.assertEqual(desired,definition)
+        self.assertIsNone(desired['source_hash']);self.assertIsNone(desired['fetched_at'])
+        db=Database();db.tables[PAGE_TABLE][URL]={**metadata,'imported_at':1,'updated_at':1}
+        self.assertTrue(import_document(db,{'pages':[definition]},apply=True)['verified'])
+        actual=db.tables[PAGE_TABLE][URL]
+        self.assertEqual(actual['title'],definition['title'])
+        self.assertEqual(actual['source_archive'],definition['source_archive'])
+        self.assertIsNone(actual['source_hash']);self.assertIsNone(actual['fetched_at'])
+        self.assertEqual(actual['imported_at'],1)
+
     def test_equal_rank_conflicting_mapping_is_preserved_and_reported(self):
         old=ref();incoming=ref(canonical_url=URL+'Other',source_hash='e'*64)
         self.assertEqual(choose_record(old,incoming,REFERENCE_FIELDS)[1],'equal_priority_conflict')

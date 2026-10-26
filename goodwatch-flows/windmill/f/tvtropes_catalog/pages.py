@@ -112,12 +112,20 @@ def _same_capture(old, incoming):
 
 
 def choose_record(old, incoming, fields):
+    """Prefer verified definitions over metadata-only captures, then compare definition source precedence.
+
+    Filling a metadata-only page replaces its title and provenance with the complete incoming capture;
+    an archive body must never inherit an unrelated HTTP hash. Metadata cannot erase an existing definition.
+    """
     if old is None:
         return incoming, 'insert'
     if all(old.get(key) == incoming.get(key) for key in fields):
         return None, 'unchanged'
-    if 'description' in fields and old.get('description') is None and incoming.get('description') is not None:
-        return incoming, 'fill_description'
+    if 'description' in fields:
+        if old.get('description') is not None and incoming.get('description') is None:
+            return None, 'definition_preserved'
+        if old.get('description') is None and incoming.get('description') is not None:
+            return incoming, 'fill_description'
     if _same_capture(old, incoming):
         return None, 'same_capture_preserved'
     old_rank, rank = source_priority(old), source_priority(incoming)
