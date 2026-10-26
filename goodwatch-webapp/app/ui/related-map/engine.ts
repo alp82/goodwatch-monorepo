@@ -642,10 +642,17 @@ export function relatedMapEngine(
 		s.__awake = true
 		const st = stateOf(s)
 		adopt(s)
-		ask(st.root, true).then(() => {
-			fitted(s)
-			ahead(s)
-		})
+		const first = () =>
+			ask(st.root, true).then(() => {
+				fitted(s)
+				ahead(s)
+			})
+		// The app hands over a wait (RelatedMap.tsx, navigation/instant-navigation.ts: afterNavigationWork): the page title's
+		// pack waits until the app's own page prefetches are done, so a tap on a person or title nearby isn't stuck
+		// behind it (#753). A tap on the map asks at once. Without the app (a crawler, before it runs), at once too.
+		const defer = (win as { __gwRelatedMapDefer?: (run: () => void) => void } | undefined)?.__gwRelatedMapDefer
+		if (defer) defer(() => void first())
+		else void first()
 		fitted(s)
 	}
 	/** The form lays its picture out for the stage's size: it hears the size when the section wakes and when it changes. */

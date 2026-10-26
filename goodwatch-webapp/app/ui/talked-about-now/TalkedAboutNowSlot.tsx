@@ -1,9 +1,11 @@
 // The place of "Talked about now" on a title page (#558), the only part of the section in the page's first view: an
-// empty element. When a visitor comes near it, the section's posts are requested and its code loads; the section
-// appears only if the title has posts. A visitor who doesn't scroll, and a crawler, request neither, so the page's
+// empty element. When a visitor comes near it, and the page's own navigation work is done (navigation/instant-navigation.ts,
+// afterNavigationWork: a tap on a person isn't stuck behind these requests, #753), the section's posts are requested and its
+// code loads; the section appears only if the title has posts. A visitor who doesn't scroll, and a crawler, request neither, so the page's
 // first view is the same with the section on or off.
 import { useQueryClient } from "@tanstack/react-query"
 import { Suspense, lazy, useEffect, useRef, useState } from "react"
+import { afterNavigationWork } from "~/navigation/instant-navigation"
 import { onFirstInteraction } from "~/utils/first-interaction"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { type SocialTitleRef, titleSocialQuery } from "./query"
@@ -24,20 +26,26 @@ export function TalkedAboutNowSlot({ media }: { media: TalkedAboutNowMedia }) {
 
 	useEffect(() => {
 		setNear(false)
+		let cancel = () => {}
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (!entries.some((entry) => entry.isIntersecting)) return
 				observer.disconnect()
-				// The posts and the code load side by side.
-				void queryClient.prefetchQuery(titleSocialQuery(title))
-				setNear(true)
+				cancel = afterNavigationWork(() => {
+					// The posts and the code load side by side.
+					void queryClient.prefetchQuery(titleSocialQuery(title))
+					setNear(true)
+				})
 			},
 			{ rootMargin: "800px 0px" },
 		)
 		if (slot.current) observer.observe(slot.current)
 		// The code is fetched at the first sign of use, so the section is there when the visitor reaches it.
 		onFirstInteraction(() => void loadSection().catch(() => {}))
-		return () => observer.disconnect()
+		return () => {
+			observer.disconnect()
+			cancel()
+		}
 	}, [queryClient, title.mediaType, title.tmdbId])
 
 	return (

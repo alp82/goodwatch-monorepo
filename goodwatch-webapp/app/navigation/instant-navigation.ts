@@ -605,3 +605,63 @@ export function installWriteWatch(): void {
 		return pending
 	}
 }
+
+// A title page's late sections (the related map, Talked about now) load their data after the reader comes near them.
+// On a phone that is also when the reader reaches the cast and the page prefetches the people on screen: the sections'
+// requests and pictures then shared the connection with the next page's code and data, and a tap on a person waited
+// about a second (production, October 26, 2026, #753). So a section also waits until the page's own navigation work
+// is done, at most SECTION_MAX_WAIT_MS.
+
+/** How long after the last scroll the page counts as settled: the phone's prefetch starts 300 ms after a scroll. */
+export const SECTION_SETTLE_MS = 400
+/** The longest a section waits for the navigation work. */
+export const SECTION_MAX_WAIT_MS = 2500
+const SECTION_CHECK_MS = 100
+
+let lastScroll = 0
+let scrollWatched = false
+
+function navigationWorkIdle(): boolean {
+	return (
+		queue.running === 0 &&
+		queue.queued === 0 &&
+		warming === 0 &&
+		warmQueue.length === 0 &&
+		remix().__remixRouter?.state.navigation.state !== "loading" &&
+		Date.now() - lastScroll >= SECTION_SETTLE_MS
+	)
+}
+
+/**
+ * Runs `start` once the page's own navigation work is idle: no page prefetch or code warm-up loading or waiting, no page
+ * change loading, and no scroll for SECTION_SETTLE_MS. At the latest after SECTION_MAX_WAIT_MS. Returns a cancel.
+ */
+export function afterNavigationWork(start: () => void): () => void {
+	if (!scrollWatched) {
+		scrollWatched = true
+		document.addEventListener(
+			"scroll",
+			() => {
+				lastScroll = Date.now()
+			},
+			{ capture: true, passive: true },
+		)
+	}
+	const until = Date.now() + SECTION_MAX_WAIT_MS
+	let timer: ReturnType<typeof setTimeout> | undefined
+	let done = false
+	const check = () => {
+		if (done) return
+		if (navigationWorkIdle() || Date.now() >= until) {
+			done = true
+			start()
+			return
+		}
+		timer = setTimeout(check, SECTION_CHECK_MS)
+	}
+	timer = setTimeout(check, 0)
+	return () => {
+		done = true
+		clearTimeout(timer)
+	}
+}

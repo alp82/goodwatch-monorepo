@@ -375,3 +375,15 @@ test("an engine that starts during a page change waits for it to end", async () 
 	hand.tick()
 	assert.equal(ahead(page.asked).length, 8)
 })
+
+test("the page title's pack waits for the app's navigation work when the app hands over a wait (#753)", async () => {
+	const held: (() => void)[] = []
+	const page = browser(served(), () => new Promise(() => {}), undefined, {
+		__gwRelatedMapDefer: (run: () => void) => held.push(run),
+	})
+	await settled()
+	assert.deepEqual(page.asked, [], "nothing is asked for while the app's work goes on")
+	assert.equal(held.length, 1)
+	held[0]()
+	assert.deepEqual(page.asked, ["/api/related-map?key=m1"])
+})

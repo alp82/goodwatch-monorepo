@@ -17,6 +17,7 @@
 // A walk is forgotten when the page is left.
 import { useMatches, useNavigate, useNavigation } from "@remix-run/react"
 import { Suspense, lazy, useEffect, useRef, useState } from "react"
+import { afterNavigationWork } from "~/navigation/instant-navigation"
 import type { RelatedMapData } from "~/server/related-map.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { MapView, RawPack } from "~/ui/related-map/engine"
@@ -37,6 +38,8 @@ const RelatedQuickView = lazy(
 interface MapWindow {
 	/** True while the app loads another page. An engine that loads later reads it when it starts (engine.ts). */
 	__gwAppLoading?: boolean
+	/** How the engine waits before it asks for the page title's pack (engine.ts, wake). */
+	__gwRelatedMapDefer?: (run: () => void) => void
 	__gwRelatedMap?: {
 		boot: () => void
 		nav: ((href: string) => void) | null
@@ -181,6 +184,12 @@ function documentMarkup(rootKey: string): string {
 	)
 }
 
+// The engine's wait before it asks for the page title's pack (engine.ts, wake), handed over once the app runs.
+if (typeof window !== "undefined")
+	(window as MapWindow).__gwRelatedMapDefer = (run) => {
+		afterNavigationWork(run)
+	}
+
 export default function RelatedMap({
 	media,
 }: {
@@ -218,8 +227,11 @@ export default function RelatedMap({
 	useEffect(() => {
 		if (shown) keepStyle(css, cssPath)
 	}, [shown, css])
+	const section = useRef<HTMLElement>(null)
 	// A late section: the pack is asked for from the browser, again and again further apart when a request fails, and the
-	// engine draws the picture from it.
+	// engine draws the picture from it. Only when the reader comes near the section and the page's own navigation work is
+	// done (navigation/instant-navigation.ts, afterNavigationWork): on a phone the section is close to the cast, and a
+	// tap on a person waited behind the pack and its pictures (#753). The section keeps its height meanwhile.
 	useEffect(() => {
 		if (!shown || drawn) return
 		const w = window as MapWindow
@@ -253,9 +265,21 @@ export default function RelatedMap({
 					timer = setTimeout(attempt, tries <= 4 ? 1200 * tries : 15000)
 				})
 		}
-		attempt()
+		let cancelWait = () => {}
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (!entries.some((entry) => entry.isIntersecting)) return
+				observer.disconnect()
+				cancelWait = afterNavigationWork(attempt)
+			},
+			{ rootMargin: "800px 0px" },
+		)
+		if (section.current) observer.observe(section.current)
+		else cancelWait = afterNavigationWork(attempt)
 		return () => {
 			gone = true
+			observer.disconnect()
+			cancelWait()
 			clearTimeout(timer)
 			stop()
 		}
@@ -283,6 +307,7 @@ export default function RelatedMap({
 	return (
 		<>
 			<section
+				ref={section}
 				// The height is the styled section's own: 602 px on a phone, 576 px on a wide screen. Until the style is
 				// there the content is hidden, and the style's first rule shows it.
 				className="pl pl-map h-[602px] overflow-hidden lg:h-[576px] [&>*]:invisible"
