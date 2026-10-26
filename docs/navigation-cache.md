@@ -72,7 +72,7 @@ Remix doesn't prefetch data for routes with a `clientLoader`, so the site does i
 - Press: `pointerdown` of a mouse, touch, or pen starts at once. On a phone this is the first sign of a tap.
 - Phones (`(hover: none)`): when scrolling stops for 300 ms, and once after load, the four title and person links fully on screen nearest its center.
 
-The prefetch resolves the URL with the router's routes, and fetches `?_data=<route id>` for each cached route the navigation would load, as Remix decides it (a route that stays loads again only when the query changes and its `shouldRevalidate` agrees). Press, hover, and focus also add `modulepreload` links for the route's code.
+The prefetch resolves the URL with the router's routes, and fetches `?_data=<route id>` for each cached route the navigation would load, as Remix decides it (a route that stays loads again only when the query changes and its `shouldRevalidate` agrees). Press, hover, and focus also add `modulepreload` links for the route's code; a phone's viewport prefetch adds them at low priority.
 
 Limits (`prefetch-queue.ts`): at most 2 prefetches at a time and 40 a minute, presses included: a swipe on a phone that starts on a poster presses the link without opening it. A press goes first, hover and focus wait in front of viewport prefetches. Only the navigation itself loads outside these limits. Nothing is prefetched while the tab is hidden, with Data Saver, or on a 2G connection. Waiting prefetches are dropped when the tab is hidden or the cache is cleared, and each checks again when its turn comes that the tab is visible and the identity is the same.
 
@@ -87,7 +87,7 @@ The detail hero, its prefetch, and its Early Hints use `?gw-cors=1` on every res
 response omits `Access-Control-Allow-Origin` without `Vary: Origin`; the browser can otherwise reuse a TV/CSS image
 response for the CORS hero and block it. The separate URL also fixes browsers that already cached that response.
 
-On phones, visible title/person data is prefetched after `load`, at least 2 seconds later and in an idle moment. Route code loads on hover, focus, or press intent; the page no longer preloads every catalog page type in the background.
+On phones, visible title/person data is prefetched after `load`, at least 2 seconds later and in an idle moment, and so is the code of those page types: once per type, as `modulepreload` links at low priority (#753). Without it the first tap to a title or person page on a phone waited about a second for the route's code. A press, hover, or focus on a link of that type raises the links still waiting to high. Other route code loads on hover, focus, or press intent; the page doesn't preload every catalog page type in the background.
 
 `window.__gwNavCache` counts prefetches, navigations answered per trigger, and misses.
 

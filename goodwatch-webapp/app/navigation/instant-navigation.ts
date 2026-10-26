@@ -319,31 +319,43 @@ function saveData(): boolean {
 	)
 }
 
-const preloaded = new Set<string>()
+/** The links this module added, by address; those added at low priority may still be raised. */
+const preloaded = new Map<string, HTMLLinkElement | null>()
 
-function addLink(rel: string, href: string, as?: string) {
-	if (preloaded.has(href)) return
-	preloaded.add(href)
+function addLink(rel: string, href: string, as?: string, low = false) {
+	if (preloaded.has(href)) {
+		const link = preloaded.get(href)
+		// A press or hover after a phone's warm-up: the files it asked for at low priority are wanted now.
+		if (!low && link && link.fetchPriority === "low") link.fetchPriority = "high"
+		return
+	}
 	if (
 		document.querySelector(
 			`link[href="${CSS.escape(href)}"], script[src="${CSS.escape(href)}"]`,
 		)
-	)
+	) {
+		preloaded.set(href, null)
 		return
+	}
 	const link = document.createElement("link")
 	link.rel = rel
 	if (as) link.as = as
+	if (low) link.fetchPriority = "low"
 	link.href = href
+	preloaded.set(href, link)
 	document.head.appendChild(link)
 }
 
-/** Loads a route's code (its module, the modules it imports, and its style sheets) without running it. */
-export function preloadRouteCode(routeId: string): void {
+/**
+ * Loads a route's code (its module, the modules it imports, and its style sheets) without running it. `low` for a
+ * warm-up that nobody asked for yet: a later call without it raises the files still waiting.
+ */
+export function preloadRouteCode(routeId: string, low = false): void {
 	const route = remix().__remixManifest?.routes[routeId]
 	if (!route || remix().__remixRouteModules?.[routeId]) return
 	for (const href of [route.module, ...(route.imports ?? [])])
-		addLink("modulepreload", href)
-	for (const href of route.css ?? []) addLink("prefetch", href, "style")
+		addLink("modulepreload", href, undefined, low)
+	for (const href of route.css ?? []) addLink("prefetch", href, "style", low)
 }
 
 /**
@@ -414,8 +426,11 @@ export function prefetchPage(url: URL, trigger: PrefetchTrigger): void {
 	const identity = currentIdentity()
 	if (!identity) return
 	const routes = routesToLoad(router, url)
-	if (trigger !== "viewport")
-		for (const match of routes) preloadRouteCode(match.route.id)
+	// Code on intent at once. For what a phone shows (viewport), at low priority: a page type's files come once
+	// (title pages share them), and the phone's first change to a title or person page then doesn't wait about a
+	// second for them after the tap (#753).
+	for (const match of routes)
+		preloadRouteCode(match.route.id, trigger === "viewport")
 	for (const match of routes) {
 		const routeId = match.route.id
 		const key = cacheKey(identity, routeId, url)
