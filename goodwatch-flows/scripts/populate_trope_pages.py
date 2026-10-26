@@ -144,6 +144,10 @@ def main():
     parser.add_argument('--all', action='store_true')
     parser.add_argument('--retry-review', action='store_true')
     args = parser.parse_args()
+    # Dependency failures must precede every source request, including an
+    # otherwise uncached URI whose first parse would discover a missing parser.
+    from bs4 import BeautifulSoup
+    BeautifulSoup('', 'html5lib')
     options = dict(catalog=PageCatalog(args.inventory), extractor=linked_description,
                    saved=args.saved, state_path=args.state, lock_path=DEFAULT_LOCK,
                    pace_path=DEFAULT_PACE, retry_review=args.retry_review)
