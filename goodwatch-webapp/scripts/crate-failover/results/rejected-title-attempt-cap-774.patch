@@ -1,0 +1,95 @@
+diff --git a/goodwatch-webapp/app/server/details.server.ts b/goodwatch-webapp/app/server/details.server.ts
+index c9ea13d85..b6891f7bd 100644
+--- a/goodwatch-webapp/app/server/details.server.ts
++++ b/goodwatch-webapp/app/server/details.server.ts
+@@ -306,7 +306,7 @@ const _fetchFromDB = async (
+ 				videos = (SELECT val FROM videos)
+ 		} AS media
+ 		FROM media_data m;
+-	`)) as { media: RawTitleDetails }[]
++	`, [], { maxReadAttemptMs: 1000 })) as { media: RawTitleDetails }[]
+ 
+ 	if (!result[0]) return null
+ 	const { media } = result[0]
+diff --git a/goodwatch-webapp/app/utils/crate-failover.test.ts b/goodwatch-webapp/app/utils/crate-failover.test.ts
+index 6a205fdcf..8a2834985 100644
+--- a/goodwatch-webapp/app/utils/crate-failover.test.ts
++++ b/goodwatch-webapp/app/utils/crate-failover.test.ts
+@@ -380,3 +380,38 @@ test("a tracking CAS or increment refused before TCP connects is sent once to an
+  }
+  assert.equal(received[0].length,0)
+ })
++
++
++test("title details fail over a silent draining coordinator before their 3 s page deadline", async (t) => {
++ const { titleDetailsWithin } = await import("../server/title-page-budget.ts")
++ const received = await cluster(t, [
++  () => {},
++  (_, __, res) => answer(res),
++  (_, __, res) => answer(res),
++ ])
++ const work = query("WITH media_data AS (SELECT 1 AS n) SELECT n FROM media_data", [], { maxReadAttemptMs: 1000 })
++ try {
++  assert.deepEqual(await titleDetailsWithin(work), [{ n: 1 }])
++ } finally { await work.catch(() => {}) }
++ assert.deepEqual(received.map(host => host.length), [1, 1, 0])
++})
++
++test("a read attempt cap does not shorten a mutation or replay it", async (t) => {
++ const received = await cluster(t, [
++  (_, __, res) => setTimeout(() => answer(res), 100),
++  (_, __, res) => answer(res),
++ ])
++ await getCrateClient().execute("UPDATE saved SET n = n + 1", [], { maxReadAttemptMs: 20 })
++ assert.deepEqual(received.map(host => host.length), [1, 0])
++})
++
++
++test("the final coordinator retains the remaining read budget after capped attempts", async (t) => {
++ const received = await cluster(t, [
++  () => {},
++  () => {},
++  (_, __, res) => setTimeout(() => answer(res), 100),
++ ])
++ assert.deepEqual(await query("SELECT n", [], { maxReadAttemptMs: 20, timeoutMs: 1000 }), [{ n: 1 }])
++ assert.deepEqual(received.map(host => host.length), [1, 1, 1])
++})
+diff --git a/goodwatch-webapp/app/utils/crate.ts b/goodwatch-webapp/app/utils/crate.ts
+index 969c33146..571504ca3 100644
+--- a/goodwatch-webapp/app/utils/crate.ts
++++ b/goodwatch-webapp/app/utils/crate.ts
+@@ -165,6 +165,8 @@ const capLog = (value: unknown, indent?: number): string => {
+ }
+ 
+ export interface CrateReadOptions {
++	/** Cap safe read attempts while another coordinator remains; the last host retains the overall budget. */
++	maxReadAttemptMs?: number
+ 	timeoutMs?: number
+ 	signal?: AbortSignal
+ 	/** Search keeps its undici transport and never prints raw SQL/search text. The retry policy is shared. */
+@@ -267,7 +269,8 @@ class CrateClient {
+ 		try {
+ 			const timeoutMs = options.timeoutMs ?? getTimeoutMs()
+ 			const deadline = performance.now() + timeoutMs
+-			const replaySafe = isRead(query) || SAFE_REFRESH.test(query)
++			const read = isRead(query)
++			const replaySafe = read || SAFE_REFRESH.test(query)
+ 			const tried = new Set<number>()
+ 			const missingMetadata = new Set<number>()
+ 			let nodeLoss = false
+@@ -283,9 +286,14 @@ class CrateClient {
+ 				// caller budget waiting for the first dead socket.
+ 				const remaining = deadline - performance.now()
+ 				if (remaining <= 0) throw new CrateTimeoutError(timeoutMs)
+-				const attemptTimeoutMs = replaySafe && (this.hosts.length > 1 || round > 0)
++				let attemptTimeoutMs = replaySafe && (this.hosts.length > 1 || round > 0)
+ 					? Math.max(1, Math.ceil(remaining / (this.hosts.length - tried.size + 1)))
+ 					: Math.max(1, Math.ceil(remaining))
++				// A page can have a tighter deadline than the shared fill's total SQL budget.
++				// Move a silent draining coordinator out of its critical path while retaining
++				// the full remaining budget if every alternative is slow too.
++				if (read && tried.size < this.hosts.length && Number.isFinite(options.maxReadAttemptMs) && options.maxReadAttemptMs! > 0)
++					attemptTimeoutMs = Math.min(attemptTimeoutMs, Math.ceil(options.maxReadAttemptMs!))
+ 				attempts++
+ 				const attempt = { ...details, host: host.address, attempt: attempts, timeoutMs: attemptTimeoutMs }
+ 				const attemptStart = performance.now()

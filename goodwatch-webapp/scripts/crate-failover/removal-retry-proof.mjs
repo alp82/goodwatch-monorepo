@@ -4,6 +4,7 @@ import { createServer } from "node:http"
 // Only the disposable loopback cluster. Device A has deleted the old watch but has not acquired the state;
 // device B sees the empty episode and ticks it again before A's original CAS reaches CrateDB.
 export async function removalRetryProof({ pageProof, sql, endpoints, setCrateClientForTest, check }) {
+	const clusterPort = process.env.CRATE_PORT
 	const results = []
 	for (const removal of ["unwatch", "unmarkSeason"]) {
 		for (const disposition of ["conflict", "reset", "timeout"]) {
@@ -73,7 +74,7 @@ export async function removalRetryProof({ pageProof, sql, endpoints, setCrateCli
 				results.push({ id, disposition, removal, httpStatus: disposition === "conflict" ? 409 : 500, replacementVersion, watches, stateWrites })
 			} finally {
 				setCrateClientForTest(null)
-				process.env.CRATE_PORT = "17430"
+				process.env.CRATE_PORT = clusterPort
 				await Promise.all(servers.map(async (server) => {
 					server.closeAllConnections()
 					await new Promise((resolve) => server.close(resolve))

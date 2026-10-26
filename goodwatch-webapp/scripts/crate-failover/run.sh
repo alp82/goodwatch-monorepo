@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Owns only the disposable local goodwatch-client-588 Docker Compose project.
+# Owns only its disposable local Docker Compose project.
 set -euo pipefail
 cd "$(dirname "$0")"
 if [[ -S "/run/user/$(id -u)/docker.sock" ]]; then
@@ -8,9 +8,11 @@ else
   export DOCKER_HOST=unix:///var/run/docker.sock
 fi
 unset DOCKER_CONTEXT
-compose=(docker compose -f "$PWD/compose.yaml" -p goodwatch-client-588)
+export CRATE_PROOF_PROJECT="${CRATE_PROOF_PROJECT:-goodwatch-client-588}"
+export CRATE_PROOF_PORT="${CRATE_PROOF_PORT:-17430}"
+compose=(docker compose -f "$PWD/compose.yaml" -p "$CRATE_PROOF_PROJECT")
 if [[ -n "$("${compose[@]}" ps -aq)" ]]; then
-  echo 'Refusing to reuse existing goodwatch-client-588 containers.' >&2
+  echo "Refusing to reuse existing $CRATE_PROOF_PROJECT containers." >&2
   exit 1
 fi
 output="${CRATE_PROOF_OUTPUT:-$PWD/results/observations.json}"
@@ -24,7 +26,7 @@ cleanup() {
     return 1
   fi
   for resource in volume network; do
-    if [[ -n "$(docker "$resource" ls -q --filter label=com.docker.compose.project=goodwatch-client-588)" ]]; then
+    if [[ -n "$(docker "$resource" ls -q --filter label=com.docker.compose.project=$CRATE_PROOF_PROJECT)" ]]; then
       echo "Cleanup failed: owned $resource resources still exist." >&2
       return 1
     fi
@@ -32,7 +34,7 @@ cleanup() {
   node - "$output" <<'JS'
 const fs = require('node:fs');
 fs.writeFileSync(process.argv[2].replace(/\.json$/, '-cleanup.json'), JSON.stringify({
-  verifiedAt: new Date().toISOString(), project: 'goodwatch-client-588',
+  verifiedAt: new Date().toISOString(), project: process.env.CRATE_PROOF_PROJECT,
   containersRemaining: 0, volumesRemaining: 0, networksRemaining: 0,
 }, null, 2) + '\n');
 JS
