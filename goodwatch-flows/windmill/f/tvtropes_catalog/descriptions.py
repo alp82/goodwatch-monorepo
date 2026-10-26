@@ -459,5 +459,126 @@ def extract_archive_description(record, name, known_url):
     return _extract_intro(soup, result)
 
 
+def _document_main_url(value, *, historical_http=False):
+    if not isinstance(value, str) or value != value.strip() or any(ord(c) < 32 for c in value):
+        return None
+    try:
+        parsed = urlparse(value)
+    except ValueError:
+        return None
+    if historical_http and parsed.scheme == "http":
+        value = parsed._replace(scheme="https").geturl()
+    return _main_url(value)
+
+
+def extract_document_archive_description(original_url, html, name, known_url):
+    """Read actual archived document evidence, independently of HTTP identity.
+
+    The published URI is a record locator, not a final HTTP response URL. The
+    real head canonical and body identity fields corroborate the primary page.
+    Alias subjects additionally need the original alias URI and actual AKA.
+    No document metadata, redirect chain, capture date or response hash is made up.
+    """
+    result = {"description": None, "error": None, "heading": "", "canonical_url": None}
+
+    def reject(message):
+        return {**result, "error": message}
+
+    original = _document_main_url(original_url, historical_http=True)
+    known = _document_main_url(known_url)
+    if not original or not known:
+        return reject("Document archive requires bare known/original Main URLs")
+    if not isinstance(name, str) or not _identity(name):
+        return reject("Missing subject name")
+    if not isinstance(html, str) or not html.strip():
+        return reject("Missing original archived HTML document string")
+    # html5lib manufactures a head for fragments. Check the original authored
+    # head too, using the literal prefix without constructing any missing tags.
+    head_end = re.search(r"</head\s*>", html, re.I)
+    if not head_end:
+        return reject("Missing actual archived document head")
+    authored_heads = BeautifulSoup(html[:head_end.end()], "html.parser").find_all("head")
+    if len(authored_heads) != 1:
+        return reject("Missing or ambiguous actual archived document head")
+    authored_links = authored_heads[0].select('link[rel~="canonical"]')
+    if len(authored_links) != 1:
+        return reject("Missing or ambiguous actual head canonical")
+    canonical = _document_main_url(authored_links[0].get("href"), historical_http=True)
+    if not canonical:
+        return reject("Archived head canonical is not a bare Main URL")
+    try:
+        soup = BeautifulSoup(html, "html5lib")
+    except FeatureNotFound:
+        return reject("Missing html5lib parser dependency; install the pinned descriptions.script.lock dependencies before recovery")
+    links = soup.head.select('link[rel~="canonical"]') if soup.head else []
+    if len(links) != 1 or _document_main_url(links[0].get("href"), historical_http=True) != canonical:
+        return reject("Parsed document head contradicts original canonical evidence")
+    contents, articles = soup.select("#main-content"), soup.select("#main-article")
+    if len(contents) != 1 or len(articles) != 1 or contents[0] not in articles[0].parents:
+        return reject("Missing or ambiguous document main article")
+    content, article = contents[0], articles[0]
+    headings = [h for h in content.select('h1.entry-title[itemprop="headline"]')
+                if article not in h.parents]
+    if len(headings) != 1:
+        return reject("Missing or ambiguous scoped document primary heading")
+    heading = headings[0]
+    aliases = heading.select(".aka-title")
+    alias = None
+    if len(aliases) == 1:
+        match = re.fullmatch(r"(?:\(aka:\s*(.+?)\)|aka:\s*(.+))", _text(aliases[0]), re.I)
+        alias = (match.group(1) or match.group(2)).strip() if match else None
+    for node in heading.select(".aka-title, .ns_parts, .watch_rank_wrap"):
+        node.decompose()
+    titles = heading.select(".wrapped_title, .wrap-entry-breadcrumb strong")
+    if len(titles) > 1:
+        return reject("Ambiguous document primary title")
+    result["heading"] = _text(titles[0] if titles else heading)
+    if not _identity(result["heading"]):
+        return reject("Missing actual document primary title")
+    fields = {}
+    for key in ("groupname-hidden", "title-hidden", "current_url"):
+        nodes = soup.select("#" + key)
+        if len(nodes) != 1 or content not in nodes[0].parents:
+            return reject("Missing or ambiguous document body identity metadata")
+        node = nodes[0]
+        if key == "current_url":
+            if not ("hidden" in node.get("class", []) or node.has_attr("hidden")
+                    or _HIDDEN_STYLE.search(node.get("style", ""))):
+                return reject("Document current URL is not hidden metadata")
+            fields[key] = _document_main_url(_text(node), historical_http=True)
+        else:
+            if node.name != "input" or node.get("type", "").lower() != "hidden":
+                return reject("Document group/title is not hidden input metadata")
+            fields[key] = node.get("value")
+    title = fields["title-hidden"]
+    if (fields["groupname-hidden"] != "Main" or not isinstance(title, str)
+            or not re.fullmatch(r"[A-Za-z0-9_]+", title)
+            or canonical.casefold() != ("https://tvtropes.org/pmwiki/pmwiki.php/Main/" + title).casefold()
+            or not fields["current_url"] or fields["current_url"].casefold() != canonical.casefold()):
+        return reject("Document head and hidden body identities disagree")
+    original_slug = urlparse(original).path.rsplit("/", 1)[1]
+    original_alias = (original.casefold() != canonical.casefold() and alias
+                      and _identity(alias) == _identity(original_slug))
+    primary_subject = (_identity(name) == _identity(result["heading"])
+                       and (known.casefold() == canonical.casefold()
+                            or (known.casefold() == original.casefold() and original_alias)))
+    alias_subject = (original_alias and known.casefold() in {original.casefold(), canonical.casefold()}
+                     and _identity(name) == _identity(alias))
+    if not primary_subject and not alias_subject:
+        return reject("Document catalog subject lacks exact primary/original-AKA identity")
+    result["canonical_url"] = canonical
+    challenge = soup.select_one("#challenge-form, #cf-challenge-running, #challenge-running, .cf-challenge") is not None
+    _sanitize(soup)
+    _skip_leading_metadata(article)
+    text = _text(article)
+    paragraphs, _ = _collect(list(article.children))
+    lead = paragraphs[0] if paragraphs else text
+    if (challenge or re.match(r"^(?:We (?:don't|don’t|do not) have an article named|There is currently no text in this page|This page (?:does not exist|has been deleted)|Just a moment|Checking your browser|Access denied|Attention required|Verify you are human)\b", text, re.I)):
+        return reject("Archived document is unavailable or a browser challenge")
+    if re.search(r"\b(?:may|can) refer to(?:\b|[.:])|\bdisambiguation page\b", lead, re.I) or re.match(r"A link somewhere\b.*(?:sent you|led you)", lead, re.I):
+        return reject("Archived document is a disambiguation stub")
+    return _extract_intro(soup, result)
+
+
 def main():
     pass
