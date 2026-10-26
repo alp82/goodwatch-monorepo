@@ -14,9 +14,9 @@
   <a href="LICENSE"><img src="https://shieldcn.dev/github/license/alp82/goodwatch-monorepo.svg?variant=outline" alt="MIT license"></a>
 </p>
 
-**Movies and shows picked for your taste, one score you can trust, and where each one streams tonight.**
-
 [Website](https://goodwatch.app) · [How it works](https://goodwatch.app/how-it-works) · [Use with AI](https://goodwatch.app/use-with-ai) · [Discord](https://discord.gg/TVAcrfQzcA)
+
+**Movies and shows picked for your taste, one score you can trust, and where each one streams tonight.**
 
 </div>
 
