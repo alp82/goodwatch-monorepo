@@ -1,6 +1,9 @@
-import { chromium } from "playwright-core"
+const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? "playwright-core")
 
 export const BASE = `${process.env.HARNESS ?? "http://127.0.0.1:3084"}/prototype/episode-tracking-real`
+if (!["127.0.0.1", "localhost", "[::1]"].includes(new URL(BASE).hostname)) {
+	throw new Error("HARNESS must be a loopback URL; this driver is for isolated local runs only")
+}
 export const SHOTS = process.env.SHOTS ?? "./shots"
 
 export const VIEWPORTS = {
@@ -10,13 +13,23 @@ export const VIEWPORTS = {
 }
 
 export async function launch() {
-	return chromium.launch({ executablePath: "/usr/bin/chromium", headless: true })
+	return chromium.launch({ ...(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {}), headless: true })
 }
 
 export async function open(browser, size, query, { ready = true, navigationTimeout = 30000 } = {}) {
 	// A fixed locale, so that the dates the page writes in the member's locale can be checked: "19 Oct 2024".
 	const context = await browser.newContext({ viewport: VIEWPORTS[size], ...VIEWPORTS[size], locale: "en-GB" })
 	const page = await context.newPage()
+	page.setDefaultTimeout(10000)
+	// Keep remote images/telemetry and incidental shell writes out of a fixture-only run.
+	await page.route("**/*", async (route) => {
+		const request = route.request()
+		const url = new URL(request.url())
+		if (url.origin !== new URL(BASE).origin) return route.fulfill({ status: 204, body: "" })
+		if (url.pathname === "/api/poster-impressions") return route.fulfill({ status: 204, body: "" })
+		if (!["GET", "HEAD"].includes(request.method())) return route.abort("blockedbyclient")
+		return route.continue()
+	})
 	const errors = []
 	page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`))
 	page.on("console", (m) => {
@@ -25,7 +38,7 @@ export async function open(browser, size, query, { ready = true, navigationTimeo
 	const external = []
 	page.on("request", (r) => {
 		const u = new URL(r.url())
-		if (u.pathname.startsWith("/api/") && !u.pathname.startsWith("/api/tracking") && r.method() !== "GET") external.push(`${r.method()} ${u.pathname}`)
+		if (u.pathname !== "/api/poster-impressions" && u.pathname.startsWith("/api/") && !u.pathname.startsWith("/api/tracking") && r.method() !== "GET") external.push(`${r.method()} ${u.pathname}`)
 	})
 	await page.goto(`${BASE}?${query}`, { waitUntil: "domcontentloaded", timeout: navigationTimeout })
 	await page.waitForSelector("[data-harness]", { timeout: 60000 })
