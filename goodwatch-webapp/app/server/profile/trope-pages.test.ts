@@ -5,6 +5,7 @@ import {
 	createTropePageReader,
 	createTropeReferenceReader,
 	mainTropeUrl,
+	tropePageUrl,
 } from "./trope-pages.ts"
 const url = (slug: string) =>
 	`https://tvtropes.org/pmwiki/pmwiki.php/Main/${slug}`
@@ -117,4 +118,103 @@ test("only the evidenced exact duplicated TV Tropes origin is repaired", () => {
 		duplicate.replace("Main/", "Film/"),
 	])
 		assert.equal(mainTropeUrl(invalid), null)
+})
+
+test("approved general canonical namespaces stay distinct from strict Main source references", () => {
+	const namespaces = [
+		"Main",
+		"DuelingWorks",
+		"Headscratchers",
+		"Mohs",
+		"MediaNotes",
+		"Administrivia",
+		"NamesToKnowInAnime",
+		"ReferencedBy",
+		"ShoutOut",
+		"Analysis",
+		"UsefulNotes",
+		"HistoricalFiction",
+	]
+	for (const ns of namespaces) {
+		const canonical = `https://tvtropes.org/pmwiki/pmwiki.php/${ns}/ObservedPage`
+		assert.equal(tropePageUrl(canonical), canonical)
+		assert.equal(mainTropeUrl(canonical), ns === "Main" ? canonical : null)
+	}
+	for (const invalid of [
+		"Creator",
+		"Film",
+		"Literature",
+		"VideoGame",
+		"WesternAnimation",
+		"Anime",
+		"mohs",
+		"Unknown",
+	]) {
+		assert.equal(
+			tropePageUrl(
+				`https://tvtropes.org/pmwiki/pmwiki.php/${invalid}/ObservedPage`,
+			),
+			null,
+		)
+	}
+	assert.equal(
+		tropePageUrl("https://evil.test/pmwiki/pmwiki.php/Mohs/OneBigLie"),
+		null,
+	)
+	assert.equal(
+		tropePageUrl(
+			"https://tvtropes.org/pmwiki/pmwiki.php/Mohs/OneBigLie?from=Main.X",
+		),
+		null,
+	)
+})
+
+test("Main references resolve to actual Mohs pages; only known general self-identities resolve as originals", async () => {
+	const main = url("OneBigLie")
+	const mohs = "https://tvtropes.org/pmwiki/pmwiki.php/Mohs/OneBigLie"
+	const wrongOriginal =
+		"https://tvtropes.org/pmwiki/pmwiki.php/Analysis/UnprovenOriginal"
+	const creator = "https://tvtropes.org/pmwiki/pmwiki.php/Creator/Someone"
+	const metadata = createTropeReferenceReader(
+		async <T extends {}>(sql: string, params: (string | number | Date)[]) => {
+			if (sql.includes("trope_catalog_reference"))
+				return [
+					{ reference_url: main, canonical_url: mohs },
+					{ reference_url: mohs, canonical_url: mohs },
+					{ reference_url: wrongOriginal, canonical_url: mohs },
+					{ reference_url: url("Unsafe"), canonical_url: creator },
+				] as unknown as T[]
+			return [{ url: mohs, title: "One Big Lie" }] as unknown as T[]
+		},
+	)
+	const resolved = await metadata([
+		main,
+		mohs,
+		wrongOriginal,
+		url("Unsafe"),
+		creator,
+	])
+	assert.deepEqual(resolved[main], { url: mohs, title: "One Big Lie" })
+	assert.deepEqual(resolved[mohs], { url: mohs, title: "One Big Lie" })
+	assert.equal(resolved[wrongOriginal], undefined)
+	assert.equal(resolved[url("Unsafe")], undefined)
+	const descriptions = createTropePageReader(
+		async <T extends {}>(_sql: string, params: (string | number | Date)[]) => {
+			assert.deepEqual(params, [mohs])
+			return [
+				{
+					url: mohs,
+					title: "One Big Lie",
+					description: "The actual general-page introduction.",
+				},
+			] as unknown as T[]
+		},
+	)
+	assert.deepEqual(await descriptions([mohs, creator]), {
+		[mohs]: {
+			url: mohs,
+			title: "One Big Lie",
+			text: "The actual general-page introduction.",
+		},
+	})
 })

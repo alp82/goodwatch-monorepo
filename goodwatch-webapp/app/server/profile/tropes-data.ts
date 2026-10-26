@@ -10,7 +10,11 @@ import {
 	catalogVersion,
 	withTropeDescriptions,
 } from "./trope-catalog-data.ts"
-import { type TropePageReferences, mainTropeUrl } from "./trope-pages.ts"
+import {
+	type TropePageReferences,
+	mainTropeUrl,
+	tropePageUrl,
+} from "./trope-pages.ts"
 import { htmlToText } from "./trope-text.ts"
 import { buildUriTropePool, tropeTarget } from "./trope-uri-pool.ts"
 import {
@@ -314,8 +318,10 @@ export function createTropesLoader(deps: TropesDependencies) {
 				const sourceUrls = pool.references?.[trope] ?? []
 				const identities: TropePageReferences = Object.fromEntries(
 					sourceUrls.flatMap((url) => {
-						const reference = mainTropeUrl(url)
-						return reference && mainTropeUrl(trope)
+						const reference = tropePageUrl(url)
+						return reference &&
+							tropePageUrl(trope) &&
+							(mainTropeUrl(reference) || reference === trope)
 							? [[reference, { url: trope, title: null }]]
 							: []
 					}),

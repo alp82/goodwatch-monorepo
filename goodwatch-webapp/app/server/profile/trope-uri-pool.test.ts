@@ -157,3 +157,41 @@ test("evidenced duplicated-origin source references resolve metadata but retain 
 		[[0], [0], [0]],
 	)
 })
+
+test("approved general source routes require known self identity; work/creator targets and unproven general redirects remain isolated", () => {
+	const original = url("Original")
+	const general = "https://tvtropes.org/pmwiki/pmwiki.php/Analysis/ObservedPage"
+	const otherGeneral =
+		"https://tvtropes.org/pmwiki/pmwiki.php/UsefulNotes/OtherPage"
+	const creator = "https://tvtropes.org/pmwiki/pmwiki.php/Creator/Someone"
+	const source = titles().map((t) => ({
+		key: t.title.key,
+		name: "Source label",
+		url: general,
+		length: 100,
+	}))
+	const unresolved = buildUriTropePool(titles(), source, {})
+	assert.ok(unresolved.tropes[0].startsWith("label:"))
+	const known = buildUriTropePool(titles(), source, {
+		[general]: { url: general, title: "Actual analysis heading" },
+	})
+	assert.deepEqual(known.tropes, [general])
+	assert.equal(known.urls[general], general)
+	const redirected = buildUriTropePool(titles(), source, {
+		[general]: { url: otherGeneral, title: "Unproven redirect" },
+	})
+	assert.ok(redirected.tropes[0].startsWith("label:"))
+	assert.equal(redirected.names?.[redirected.tropes[0]], "Source label")
+	const unsafe = buildUriTropePool(
+		titles(),
+		titles().map((t) => ({
+			key: t.title.key,
+			name: "Source label",
+			url: original,
+			length: 100,
+		})),
+		{ [original]: { url: creator, title: "Wrong creator subject" } },
+	)
+	assert.deepEqual(unsafe.tropes, [original])
+	assert.equal(unsafe.names?.[original], "Source label")
+})

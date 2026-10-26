@@ -1,24 +1,50 @@
 import type { TropeDescriptions } from "./trope-catalog-data.ts"
 import type { CatalogRead } from "./tropes-data.ts"
 
-/** Same conservative Main-route normalization as the catalog importer; never guess a slug. */
-export function mainTropeUrl(input: string | null | undefined): string | null {
+const GENERAL_TROPE_NAMESPACES = new Set([
+	"Main",
+	"DuelingWorks",
+	"Headscratchers",
+	"Mohs",
+	"MediaNotes",
+	"Administrivia",
+	"NamesToKnowInAnime",
+	"ReferencedBy",
+	"ShoutOut",
+	"Analysis",
+	"UsefulNotes",
+	"HistoricalFiction",
+])
+
+/** Only observed, approved general-page namespaces; work and creator pages are separate subjects. */
+export function tropePageUrl(input: string | null | undefined): string | null {
 	// Historical title imports prepended this exact origin to an already absolute link.
-	// Repair only the evidenced two-origin form, then apply every ordinary route check below.
 	const duplicated = "https://tvtropes.orghttps://tvtropes.org/"
-	if (input?.startsWith(duplicated))
-		input = input.slice("https://tvtropes.org".length)
+	const candidate = input?.startsWith(duplicated)
+		? input.slice("https://tvtropes.org".length)
+		: input
 	if (
-		!input ||
-		!/^https?:\/\/(?:www\.)?tvtropes\.org\/pmwiki\/pmwiki\.php\/Main\/[A-Za-z0-9_]+$/i.test(
-			input,
+		!candidate ||
+		!/^https?:\/\/(?:www\.)?tvtropes\.org\/pmwiki\/pmwiki\.php\/[A-Za-z]+\/[A-Za-z0-9_]+$/i.test(
+			candidate,
 		)
 	)
 		return null
-	const url = new URL(input)
-	if (!/^\/pmwiki\/pmwiki\.php\/Main\/[A-Za-z0-9_]+$/.test(url.pathname))
-		return null
-	return `https://tvtropes.org${url.pathname}`
+	const url = new URL(candidate)
+	const route = /^\/pmwiki\/pmwiki\.php\/([A-Za-z]+)\/[A-Za-z0-9_]+$/.exec(
+		url.pathname,
+	)
+	return route && GENERAL_TROPE_NAMESPACES.has(route[1])
+		? `https://tvtropes.org${url.pathname}`
+		: null
+}
+
+/** Raw source discovery stays Main-only. No page URL or slug is ever guessed. */
+export function mainTropeUrl(input: string | null | undefined): string | null {
+	const page = tropePageUrl(input)
+	return page?.startsWith("https://tvtropes.org/pmwiki/pmwiki.php/Main/")
+		? page
+		: null
 }
 
 export interface TropePageReference {
@@ -58,7 +84,7 @@ async function batched<T extends {}>(
 /** Background pool construction reads identities/titles only, never every article description. */
 export function createTropeReferenceReader(read: CatalogRead) {
 	return async (input: string[]): Promise<TropePageReferences> => {
-		const urls = [...new Set(input.flatMap((url) => mainTropeUrl(url) ?? []))]
+		const urls = [...new Set(input.flatMap((url) => tropePageUrl(url) ?? []))]
 		const allowed = new Set(urls)
 		const references = await batched<{
 			reference_url: string
@@ -72,8 +98,12 @@ export function createTropeReferenceReader(read: CatalogRead) {
 		)
 		const targets = new Map<string, string>()
 		for (const row of references) {
-			const target = mainTropeUrl(row.canonical_url)
-			if (allowed.has(row.reference_url) && target)
+			const target = tropePageUrl(row.canonical_url)
+			if (
+				allowed.has(row.reference_url) &&
+				target &&
+				(mainTropeUrl(row.reference_url) || row.reference_url === target)
+			)
 				targets.set(row.reference_url, target)
 		}
 		const pages = await batched<{ url: string; title: string | null }>(
@@ -85,7 +115,7 @@ export function createTropeReferenceReader(read: CatalogRead) {
 		)
 		const titles = new Map(
 			pages
-				.filter((p) => mainTropeUrl(p.url) === p.url)
+				.filter((p) => tropePageUrl(p.url) === p.url)
 				.map((p) => [p.url, p.title?.trim() || null]),
 		)
 		return Object.fromEntries(
@@ -102,7 +132,7 @@ export function createTropeReferenceReader(read: CatalogRead) {
 /** Small request-time read: preview supplies only the first thirty target IDs. */
 export function createTropePageReader(read: CatalogRead) {
 	return async (input: string[]): Promise<TropeDescriptions> => {
-		const urls = input.filter((url) => mainTropeUrl(url) === url)
+		const urls = input.filter((url) => tropePageUrl(url) === url)
 		const allowed = new Set(urls)
 		const rows = await batched<{
 			url: string

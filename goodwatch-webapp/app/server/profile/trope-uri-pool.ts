@@ -1,4 +1,8 @@
-import { type TropePageReferences, mainTropeUrl } from "./trope-pages.ts"
+import {
+	type TropePageReferences,
+	mainTropeUrl,
+	tropePageUrl,
+} from "./trope-pages.ts"
 import {
 	type TropeLength,
 	type TropePool,
@@ -8,16 +12,33 @@ import {
 	leastTitles,
 } from "./tropes-model.ts"
 
-/** Shared by pool construction and excerpt authorization. Invalid/non-Main routes keep their label identity. */
+/** Main originals may resolve to an approved page; other approved routes require known self-identity. */
+function associationPage(url: string | null, resolved: TropePageReferences) {
+	const reference = tropePageUrl(url)
+	if (!reference) return null
+	const entry = resolved[reference]
+	const target = tropePageUrl(entry?.url)
+	if (mainTropeUrl(reference))
+		return {
+			reference,
+			url: target ?? reference,
+			title: target ? entry?.title : null,
+		}
+	return target === reference
+		? { reference, url: target, title: entry?.title }
+		: null
+}
+
+/** Shared by pool construction and excerpt authorization. Unapproved routes keep their contextual identity. */
 export function tropeTarget(
 	name: string,
 	url: string | null,
 	resolved: TropePageReferences = {},
 ) {
-	const reference = mainTropeUrl(url)
-	return reference
-		? (mainTropeUrl(resolved[reference]?.url) ?? reference)
-		: `label:${JSON.stringify([name, url ?? ""])}`
+	return (
+		associationPage(url, resolved)?.url ??
+		`label:${JSON.stringify([name, url ?? ""])}`
+	)
 }
 
 /** Group associations before applying the title-count threshold. A title contributes once to each target. */
@@ -62,8 +83,7 @@ export function buildUriTropePool(
 		const allReferences = references.get(id) ?? new Set<string>()
 		if (url) allReferences.add(url)
 		references.set(id, allReferences)
-		const reference = mainTropeUrl(url)
-		const title = reference ? resolved[reference]?.title : null
+		const title = associationPage(url, resolved)?.title
 		if (title) names[id] = title
 	}
 	for (const row of associations) add(row.key, row.name, row.url, row.length)
@@ -122,7 +142,7 @@ export function buildUriTropePool(
 				[...(references.get(id) ?? new Set<string>())].sort(),
 			]),
 		),
-		urls: Object.fromEntries(kept.map((id) => [id, mainTropeUrl(id) ?? ""])),
+		urls: Object.fromEntries(kept.map((id) => [id, tropePageUrl(id) ?? ""])),
 		descriptions: {},
 	}
 }

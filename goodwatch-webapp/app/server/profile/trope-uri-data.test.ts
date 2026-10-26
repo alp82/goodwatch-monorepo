@@ -2,9 +2,11 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { DEFAULT_VISIBILITY } from "../../domain/profile.ts"
 import type { UserData } from "../../types/user-data.ts"
+import { rankTropes } from "../../ui/profile/tropes/model.ts"
 import { buildUriTropePool } from "./trope-uri-pool.ts"
 import { type CatalogRead, createTropesLoader } from "./tropes-data.ts"
 import type { TropePool, TropeTitle } from "./tropes-model.ts"
+import { tropesPreview, withPreviewDescriptions } from "./tropes-preview.ts"
 const url = (slug: string) =>
 	`https://tvtropes.org/pmwiki/pmwiki.php/Main/${slug}`
 const user = (): UserData => ({
@@ -345,4 +347,115 @@ test("visible descriptions authorize owner target IDs, bound reads, refresh vers
 	})
 	assert.equal(matrix?.tropes[0], target)
 	assert.deepEqual(matrix?.descriptions, {})
+})
+
+test("Main to Mohs targets retain canonical titles through ranking, first30, lazy descriptions and authorized movie excerpts", async () => {
+	const original = url("OneBigLie")
+	const canonical = "https://tvtropes.org/pmwiki/pmwiki.php/Mohs/OneBigLie"
+	const resolved = { [original]: { url: canonical, title: "One Big Lie" } }
+	const pool = buildUriTropePool(
+		titles,
+		titles.map((t) => ({
+			key: t.title.key,
+			name: "A contextual lie label",
+			url: original,
+			length: 100,
+		})),
+		resolved,
+	)
+	assert.deepEqual(pool.tropes, [canonical])
+	assert.equal(pool.urls[canonical], canonical)
+	assert.equal(rankTropes(pool, pool.pool).ranked[0].name, "One Big Lie")
+	const visible = withPreviewDescriptions(
+		tropesPreview({ ...pool, seen: [] }),
+		{
+			[canonical]: {
+				url: canonical,
+				title: "One Big Lie",
+				text: "Actual observed Mohs general definition.",
+			},
+		},
+	)
+	assert.equal(visible.ranked.length, 1)
+	assert.equal(visible.ranked[0].id, canonical)
+	assert.equal(
+		visible.ranked[0].description,
+		"Actual observed Mohs general definition.",
+	)
+	assert.deepEqual(visible.ranked[0].labels, ["A contextual lie label"])
+	const reads: string[][] = []
+	const loader = createTropesLoader({
+		read: async <T extends {}>(
+			sql: string,
+			params: (string | number | Date)[],
+		) => {
+			assert.ok(sql.includes("url IN (?)"))
+			assert.ok(params.includes(original))
+			assert.ok(!params.includes(canonical))
+			return [
+				{
+					media_tmdb_id: 1,
+					name: "A contextual lie label",
+					url: original,
+					content: "Actual movie-specific write-up.",
+				},
+				{
+					media_tmdb_id: 999,
+					name: "Other",
+					url: original,
+					content: "Not in owner pool.",
+				},
+			] as unknown as T[]
+		},
+		userData: async () => user(),
+		readCache: async () => ({ pool, fresh: true, version: 123 }),
+		writeCache: async () => {},
+		titlePath: () => "",
+		resolveReferences: async () => resolved,
+		readDescriptions: async (ids) => {
+			reads.push(ids)
+			return Object.fromEntries(
+				ids.map((id) => [
+					id,
+					{
+						url: id,
+						title: "Updated One Big Lie",
+						text: "Current observed general definition.",
+					},
+				]),
+			)
+		},
+	})
+	const lazy = await loader.loadProfileTropeDescriptions("owner", shell, [
+		canonical,
+		"https://tvtropes.org/pmwiki/pmwiki.php/Creator/Someone",
+	])
+	assert.deepEqual(reads, [[canonical]])
+	assert.equal(lazy.entries[canonical].title, "Updated One Big Lie")
+	assert.deepEqual(
+		await loader.loadProfileTropeExcerpts("owner", shell, canonical, [
+			"movie-1",
+			"movie-999",
+		]),
+		[
+			{
+				key: "movie-1",
+				text: "Actual movie-specific write-up.",
+				label: "A contextual lie label",
+				labels: ["A contextual lie label"],
+			},
+		],
+	)
+	const before = reads.length
+	assert.deepEqual(
+		(
+			await loader.loadProfileTropeDescriptions(
+				"owner",
+				{ ...shell, visibility: { ...DEFAULT_VISIBILITY, taste: "me" } },
+				[canonical],
+			)
+		).entries,
+		{},
+	)
+	assert.equal(reads.length, before)
 })
