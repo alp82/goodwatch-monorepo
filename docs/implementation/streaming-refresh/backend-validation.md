@@ -22,7 +22,17 @@ The final focused backend run passed **99 checks**, including disposable real Mo
 
 The complete backend suite remains red. Under the same Python environment and offline runner, the feature checkout ran 1,863 tests with 79 failures, 112 errors and 97 skips. Clean HEAD (`a9f4cf06cd51aa73cf5e6bec6ad8eab7389751f2`) ran 1,796 tests with 79 failures, 118 errors and 89 skips. There were **zero new failure/error labels** in the feature run. The baseline export contained only `goodwatch-flows`; its six additional error labels reference unavailable sibling webapp/schema artifacts. This is a matched backend comparison, not a claim that every unrelated failure was independently diagnosed. Counts, command and limits are saved in [backend-test-comparison.json](backend-test-comparison.json).
 
-Frontend/opened-demand results are recorded separately in [opened-demand-validation.json](opened-demand-validation.json). The frontend build and focused checks passed. Full-tree TypeScript still reports 192 diagnostics, with zero in changed files, but no clean-HEAD TypeScript comparison establishes their baseline status. All six performance-budget surfaces failed; a matching generated-chunk comparison is not a baseline browser performance run. These limitations remain visible release evidence, not passed checks.
+Frontend/opened-demand results are recorded separately in [opened-demand-validation.json](opened-demand-validation.json). The frontend build and focused checks passed. Full-tree TypeScript reports 192 diagnostics on both clean base and feature, with byte-identical complete output and zero introduced diagnostics; see [typescript-validation.json](typescript-validation.json). All six performance-budget surfaces failed; a matching generated-chunk comparison is not a baseline browser performance run. These limitations remain visible release evidence, not passed checks.
+
+## Real CrateDB opened-demand checks
+
+Seven checks passed on a dedicated disposable CrateDB 5.10.12 container: the three new opened-demand integration scenarios and four existing priority-queue integration scenarios. The new tests execute the actual frontend TypeScript SQL factory through Node, then exercise its SQL with the real queue claim/acknowledgment implementation. They cover twelve concurrent mixed-source increments, canonical alias folding, preservation of claim fields and accepted opens through metadata acknowledgment, the seven-day metadata cooldown, and recent-open selection.
+
+This caught an implementation bug: CrateDB 5.10.12 rejects `ADD COLUMN IF NOT EXISTS`. The migration now reads `information_schema.columns`, adds a missing column using supported syntax, retains an existing matching timestamp column, and refuses an incompatible type. Applying the migration twice to an existing populated scratch table passes without resetting demand or leases. The 14 focused migration/queue unit checks also pass after this correction. These checks make no production writes and do not establish live cluster behavior.
+
+```bash
+TEST_CRATE_URL=http://127.0.0.1:<scratch-port> PYTHONPATH=goodwatch-flows/windmill:goodwatch-flows/tests python goodwatch-flows/tests/offline_unittest.py test_opened_demand_crate test_priority_queue_integration
+```
 
 ## Run tests without external network access
 

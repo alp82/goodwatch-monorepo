@@ -7,10 +7,21 @@ Uses the existing Crate connection settings; reads credentials only for --apply.
 
 import argparse
 
-SQL = "ALTER TABLE crawl_priority ADD COLUMN IF NOT EXISTS last_opened_at TIMESTAMP WITH TIME ZONE"
+SQL = "ALTER TABLE crawl_priority ADD COLUMN last_opened_at TIMESTAMP WITH TIME ZONE"
+EXISTING_TYPE = """SELECT data_type FROM information_schema.columns
+WHERE table_schema = current_schema() AND table_name = 'crawl_priority'
+AND column_name = 'last_opened_at'"""
 
 
 def migrate(cursor):
+    # CrateDB does not support ADD COLUMN IF NOT EXISTS. Read the schema first
+    # and refuse an incompatible existing column instead of masking errors.
+    cursor.execute(EXISTING_TYPE)
+    existing = cursor.fetchone()
+    if existing:
+        if existing[0] != 'timestamp with time zone':
+            raise RuntimeError(f'Unexpected last_opened_at type: {existing[0]}')
+        return
     cursor.execute(SQL)
 
 
@@ -21,6 +32,7 @@ def main():
     parser.add_argument("--windmill-workspace")
     args = parser.parse_args()
     print(SQL + ";")
+    print("Apply checks information_schema first; an existing matching column is retained.")
     print("Read contract: CAST(last_opened_at AS BIGINT), UTC epoch milliseconds; NULL means no accepted open.")
     if not args.apply:
         print("Dry run only. No database connection or writes.")

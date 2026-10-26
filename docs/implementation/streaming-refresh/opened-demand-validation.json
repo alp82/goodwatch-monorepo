@@ -15,7 +15,11 @@
     "passed": false,
     "error_count": 192,
     "changed_file_errors": 0,
-    "log": "/tmp/opened-demand-typecheck-4.log"
+    "log": "/tmp/opened-demand-typecheck-4.log",
+    "baseline_error_count": 192,
+    "outputs_byte_identical": true,
+    "introduced_diagnostics": 0,
+    "comparison": "typescript-validation.json"
   },
   "tests": {
     "node": {
@@ -139,15 +143,16 @@
     "Startup publisher reported0written/0skipped/484failed in0ms; do not interpret this as484 observed proxy rejection requests.",
     "An initial aborted HTTP Lighthouse run sent a Sentry tunnel POST returning200 before explicit tunnel blocking was added; it may have emitted development error telemetry. Final runs blocked that sink.",
     "Initial proxy rejected read-only WITH queries and caused local title500s; corrected proxy yielded actual movie SSR200 before final budget.",
-    "No migration or demand write was executed against live storage; real-store concurrency acceptance remains separate rollout proof."
+    "No migration or demand write was executed against live storage. Real-store migration/concurrency/metadata-ack behavior now passes against disposable local CrateDB5.10.12; deployment acceptance remains separate rollout proof."
   ],
   "migration": {
     "path": "goodwatch-flows/scripts/migrate_opened_demand.py",
     "dry_run": "python goodwatch-flows/scripts/migrate_opened_demand.py",
     "explicit_apply_from_flows": "python scripts/migrate_opened_demand.py --apply --env-file .env",
-    "executed": "dry-run only",
-    "sql": "ALTER TABLE crawl_priority ADD COLUMN IF NOT EXISTS last_opened_at TIMESTAMP WITH TIME ZONE",
-    "read_contract": "Nullable UTC timestamp, CAST(last_opened_at AS BIGINT) yields UTC epoch milliseconds"
+    "executed": "dry-run plus disposable local CrateDB integration only; no production migration",
+    "sql": "ALTER TABLE crawl_priority ADD COLUMN last_opened_at TIMESTAMP WITH TIME ZONE",
+    "read_contract": "Nullable UTC timestamp, CAST(last_opened_at AS BIGINT) yields UTC epoch milliseconds",
+    "idempotence": "Read information_schema.columns first, retain existing timestamp with time zone, reject incompatible type; ADD COLUMN IF NOT EXISTS is not supported by tested CrateDB5.10.12."
   },
   "review": {
     "diff_check_passed": true,

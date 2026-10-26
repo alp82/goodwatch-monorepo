@@ -18,13 +18,24 @@ def test_migration_only_adds_idempotent_timestamp(monkeypatch):
     calls = []
 
     class Cursor:
+        column_type = None
+
         def execute(self, sql):
             calls.append(sql)
+            if sql == migration.SQL:
+                self.column_type = 'timestamp with time zone'
 
-    migration.migrate(Cursor())
-    migration.migrate(Cursor())
-    assert calls == [migration.SQL, migration.SQL]
-    assert migration.SQL == "ALTER TABLE crawl_priority ADD COLUMN IF NOT EXISTS last_opened_at TIMESTAMP WITH TIME ZONE"
+        def fetchone(self):
+            return (self.column_type,) if self.column_type else None
+
+    cursor = Cursor()
+    migration.migrate(cursor)
+    migration.migrate(cursor)
+    assert calls == [migration.EXISTING_TYPE, migration.SQL, migration.EXISTING_TYPE]
+    cursor.column_type = 'text'
+    import pytest
+    with pytest.raises(RuntimeError, match='Unexpected last_opened_at type'):
+        migration.migrate(cursor)
     schema = load(ROOT / "windmill/f/sync/models/crate_schemas.py").SCHEMAS["crawl_priority"]
     assert schema["columns"]["last_opened_at"] == "TIMESTAMP WITH TIME ZONE"
     for field in ("demand", "acknowledged_demand", "claimed_demand", "last_success_at", "lease_token", "lease_expires_at"):
