@@ -406,3 +406,52 @@ test("a wait that ends after the section shows another title, or has gone, asks 
 		assert.deepEqual(page.asked, [], change)
 	}
 })
+
+test("a press on a late map's placeholder makes one request: the app's, not the engine's too (#753)", async () => {
+	const { whenSectionWanted } = await import("./late-wait.ts")
+	const hand = handWindow()
+	const asked: string[] = []
+	const onSection: ((event: unknown) => void)[] = []
+	// A late section before its pack: the heading only, no stage.
+	const section: Record<string, unknown> = {
+		getAttribute: (name: string) => (name === "data-pl-root" ? "m1" : name === "data-pl-title" ? "The Middle" : null),
+		hasAttribute: () => false,
+		querySelector: () => null,
+		querySelectorAll: () => [],
+		contains: () => true,
+		addEventListener: (type: string, run: (event: unknown) => void) => {
+			if (type === "pointerdown") onSection.push(run)
+		},
+		removeEventListener() {},
+	}
+	section.closest = (selector: string) => (selector === "[data-related-map]" ? section : null)
+	const heading = { closest: (selector: string) => (selector === "[data-related-map]" ? section : null) }
+	relatedMap({
+		...hand.win,
+		document: {
+			querySelectorAll: (selector: string) => (selector === "[data-related-map]" ? [section] : []),
+			addEventListener() {},
+			activeElement: null,
+		},
+		clearTimeout() {},
+		performance: { now: () => 0 },
+		fetch: (url: string) => {
+			asked.push(url)
+			return new Promise(() => {})
+		},
+	})
+	whenSectionWanted(
+		section as unknown as Element,
+		() => asked.push("the app's late request"),
+		() => () => {},
+		class {
+			observe() {}
+			disconnect() {}
+		} as unknown as typeof IntersectionObserver,
+	)
+	// One press: the engine hears it on the window, the app on the section.
+	hand.fire("pointerdown", heading, { timeStamp: 1, clientX: 0, clientY: 0, button: 0 })
+	for (const run of onSection) run({ type: "pointerdown" })
+	hand.tick()
+	assert.deepEqual(asked, ["the app's late request"])
+})

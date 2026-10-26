@@ -22,6 +22,11 @@ test("before the page watches scrolls, a wait counts as just after a scroll", ()
 	assert.ok(t.unwatchedAt >= 400 && t.unwatchedAt < 700, String(t.unwatchedAt))
 })
 
+test("a scroll just before the first waiter counts: it waits until 400 ms after that scroll", () => {
+	assert.equal(t.afterScrollEarly, -1)
+	assert.ok(t.afterScrollAt >= 280 && t.afterScrollAt < 550, String(t.afterScrollAt))
+})
+
 test("with nothing going on, a section's request starts soon", () => {
 	assert.ok(t.idleAt >= 0 && t.idleAt < 300, String(t.idleAt))
 })

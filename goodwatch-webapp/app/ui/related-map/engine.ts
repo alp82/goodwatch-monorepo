@@ -638,6 +638,9 @@ export function relatedMapEngine(
 		}
 	}
 	function wake(s: Section) {
+		// A late section's placeholder (its heading, no picture yet) is the app's: RelatedMap.tsx asks for its pack and
+		// draws it, then boots the engine again. Waking here too would ask for the same pack a second time (#753).
+		if (!q(s, "[data-pl-stage]")) return
 		if (s.__awake) return
 		s.__awake = true
 		const st = stateOf(s)

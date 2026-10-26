@@ -107,6 +107,14 @@ await new Promise((r) => setTimeout(r, 500))
 const idle = await timed(() => {})
 const idleAt = await idle.wait(600)
 
+// 1b. Scrolls watched, a scroll, and the first waiter 100 ms later (the scroll brought the section near): it settles
+// from that scroll, not before 400 ms after it.
+for (const l of scrollListeners) l()
+await new Promise((r) => setTimeout(r, 100))
+const afterScroll = await timed(() => {})
+const afterScrollEarly = await afterScroll.wait(200)
+const afterScrollAt = await afterScroll.wait(400)
+
 // 2. The reader just scrolled: not before 400 ms after the scroll.
 const scrolled = await timed(() => {
 	for (const l of scrollListeners) l()
@@ -137,6 +145,6 @@ gone.cancel()
 const goneAt = await gone.wait(700)
 
 console.log(
-	`__SECTION_WAIT__${JSON.stringify({ unwatchedEarly, unwatchedAt, idleAt, scrolledEarly, scrolledAt, busyDuring, busyAt, stuckAt, goneAt })}`,
+	`__SECTION_WAIT__${JSON.stringify({ afterScrollEarly, afterScrollAt, unwatchedEarly, unwatchedAt, idleAt, scrolledEarly, scrolledAt, busyDuring, busyAt, stuckAt, goneAt })}`,
 )
 export {}
