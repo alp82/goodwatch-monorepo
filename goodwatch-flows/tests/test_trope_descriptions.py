@@ -19,6 +19,30 @@ class TropeDescriptionTests(unittest.TestCase):
     def extract(self, html, name="Serious Business", url=URL):
         return extract_description(html, name, url)
 
+    def test_linked_mode_returns_actual_title_without_relabeling_the_source(self):
+        html = page(f'<p>{LEAD}</p><hr>')
+        self.assertIsNotNone(extract_description(html, 'A contextual character label', URL)['error'])
+        result = extract_description(html, None, URL, requested_url=URL, linked=True)
+        self.assertIsNone(result['error'])
+        self.assertEqual(result['heading'], 'Serious Business')
+        self.assertEqual(result['description'], LEAD)
+
+    def test_linked_http_alias_requires_actual_requested_redirect_binding(self):
+        original = 'https://tvtropes.org/pmwiki/pmwiki.php/Main/OldName'
+        html = page(f'<p>{LEAD}</p><hr>')
+        good = extract_description(html, 'Unrelated contextual label', URL + '?from=Main.OldName',
+                                   requested_url=original, linked=True)
+        self.assertIsNone(good['error'])
+        for final in (URL, URL + '?from=Main.OtherName'):
+            with self.subTest(final=final):
+                result = extract_description(html, 'Serious Business', final, requested_url=original, linked=True)
+                self.assertIsNone(result['description'])
+
+    def test_linked_http_still_rejects_missing_heading_and_canonical_mismatch(self):
+        for html, final in ((page(f'<p>{LEAD}</p><hr>', heading=''), URL),
+                            (page(f'<p>{LEAD}</p><hr>', canonical=URL + 'Other'), URL)):
+            self.assertIsNone(extract_description(html, None, final, linked=True)['description'])
+
     def test_preserves_all_complete_intro_paragraphs_instead_of_first_two_or_four_sentences(self):
         paras = [f"Introductory paragraph {i} explains a different part of the same narrative convention." for i in range(8)]
         result = self.extract(page("".join(f"<p>{p}</p>" for p in paras) + '<hr><h2>Examples</h2><p>Do not include this example.</p>'))

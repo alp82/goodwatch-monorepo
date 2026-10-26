@@ -64,20 +64,23 @@ def _identity(value):
     return "".join(c for c in unicodedata.normalize("NFKD", value or "").casefold() if c.isalnum())
 
 
-def _requested_redirect_identifies(name, requested_url, final_url, canonical):
-    # Only a caller's actual, canonical bare request can supply the old identity.
-    # Contextual labels that merely link another trope fail the slug comparison.
+def _requested_redirect_binds(requested_url, final_url, canonical):
+    """Bind an actual bare request to the source's captured redirect breadcrumb."""
     requested = _main_url(requested_url)
     if not requested or requested != requested_url or requested.casefold() == canonical.casefold():
         return False
     slug = urlparse(requested).path.rsplit("/", 1)[1]
-    if _identity(name) != _identity(slug):
-        return False
     pairs = parse_qsl(urlparse(final_url).query, keep_blank_values=True)
     # The site also canonicalizes capitalization inside its redirect breadcrumb,
     # e.g. AcCENTOnTheWrongSylLABle becomes AccentOnTheWrongSyllable.
     return (len(pairs) == 1 and pairs[0][0] == "from"
             and pairs[0][1].casefold() == ("Main." + slug).casefold())
+
+
+def _requested_redirect_identifies(name, requested_url, final_url, canonical):
+    # Contextual labels that merely link another trope fail the slug comparison.
+    return (_requested_redirect_binds(requested_url, final_url, canonical)
+            and _identity(name) == _identity(urlparse(requested_url).path.rsplit("/", 1)[1]))
 
 
 def _text(node):
@@ -266,7 +269,7 @@ def _following_in_content(article, content):
             return
 
 
-def extract_description(html, name, final_url, *, requested_url=None):
+def extract_description(html, name, final_url, *, requested_url=None, linked=False):
     """Return {description, error, heading, canonical_url}; never fetch a page.
 
     Exact primary Main subjects qualify after final/canonical URL verification.
@@ -275,6 +278,8 @@ def extract_description(html, name, final_url, *, requested_url=None):
     (allowing the site's capitalization correction).
     The first examples/heading/rule boundary ends the introduction. At the byte cap,
     keep only complete paragraphs; a first paragraph that cannot fit is rejected.
+    Linked mode returns the actual source title for a verified reference URI,
+    independently of its contextual label; redirect URI evidence remains required.
     """
     result = {"description": None, "error": None, "heading": "", "canonical_url": None}
 
@@ -286,7 +291,7 @@ def extract_description(html, name, final_url, *, requested_url=None):
         return reject("Final URL is not a known HTTPS TV Tropes Main page")
     if not isinstance(html, (str, bytes)) or not html:
         return reject("Missing HTML")
-    if not isinstance(name, str) or not _identity(name):
+    if not linked and (not isinstance(name, str) or not _identity(name)):
         return reject("Missing subject name")
     try:
         soup = BeautifulSoup(html, "html5lib")
@@ -315,7 +320,14 @@ def extract_description(html, name, final_url, *, requested_url=None):
         return reject("Canonical URL does not match the final Main URL")
     result["canonical_url"] = canonical
     heading_identity = _identity(result["heading"])
-    if heading_identity != _identity(name):
+    if linked:
+        if not heading_identity:
+            return reject("Missing actual source heading")
+        reference = _main_url(requested_url) if requested_url is not None else final
+        if (not reference or (reference.casefold() != canonical.casefold()
+                              and not _requested_redirect_binds(requested_url, final_url, canonical))):
+            return reject("Requested reference URI does not identify the final Main page")
+    elif heading_identity != _identity(name):
         if not heading_identity or not _requested_redirect_identifies(name, requested_url, final_url, canonical):
             return reject(f"Heading mismatch: {result['heading']!r}")
     return _extract_intro(soup, result)
@@ -356,7 +368,7 @@ def _extract_intro(soup, result):
     return result
 
 
-def extract_archive_description(record, name, known_url):
+def extract_archive_description(record, name, known_url, *, linked=False):
     """Read an original decoded archive fragment; never construct missing metadata.
 
     Archive identity comes from its real primary heading and three agreeing body
@@ -364,6 +376,8 @@ def extract_archive_description(record, name, known_url):
     adapter supplies no transport or provenance timestamps/hashes. An original
     record id may differ only when an actual archived AKA identifies it. An
     original alias subject additionally requires its exact original catalog URL.
+    Linked mode stores the actual primary title instead of comparing it with a
+    contextual label; known/original URI and actual AKA bindings stay mandatory.
     """
     result = {"description": None, "error": None, "heading": "", "canonical_url": None}
 
@@ -382,7 +396,7 @@ def extract_archive_description(record, name, known_url):
     known = _main_url(known_url)
     if not known:
         return reject("Known catalog URL is not a Main identity")
-    if not isinstance(name, str) or not _identity(name):
+    if not linked and (not isinstance(name, str) or not _identity(name)):
         return reject("Missing subject name")
     html = record.get("article")
     if not isinstance(html, str) or not html.strip():
@@ -410,6 +424,8 @@ def extract_archive_description(record, name, known_url):
     if len(titles) > 1:
         return reject("Ambiguous archive primary heading")
     result["heading"] = _text(titles[0] if titles else heading)
+    if linked and not _identity(result["heading"]):
+        return reject("Missing actual archive primary title")
     fields = {}
     for field in ("groupname-hidden", "title-hidden", "current_url"):
         nodes = soup.select("#" + field)
@@ -439,14 +455,14 @@ def extract_archive_description(record, name, known_url):
     if not observed or observed.casefold() != expected.casefold():
         return reject("Archive current URL does not match record/catalog identity")
     primary_subject = (known.casefold() == observed.casefold()
-                       and _identity(result["heading"]) == _identity(name))
+                       and (linked or _identity(result["heading"]) == _identity(name)))
     original = "https://tvtropes.org/pmwiki/pmwiki.php/Main/" + slug
     original_alias_subject = (
         title.casefold() != slug.casefold()
         and known.casefold() == original.casefold()
         and archived_alias_identifies_record
-        and _identity(name) == _identity(slug)
-        and _identity(result["heading"]) == _identity(title)
+        and (linked or _identity(name) == _identity(slug))
+        and (linked or _identity(result["heading"]) == _identity(title))
     )
     if not primary_subject and not original_alias_subject:
         return reject("Archive catalog subject lacks primary or exact original-alias identity evidence")
@@ -471,13 +487,15 @@ def _document_main_url(value, *, historical_http=False):
     return _main_url(value)
 
 
-def extract_document_archive_description(original_url, html, name, known_url):
+def extract_document_archive_description(original_url, html, name, known_url, *, linked=False):
     """Read actual archived document evidence, independently of HTTP identity.
 
     The published URI is a record locator, not a final HTTP response URL. The
     real head canonical and body identity fields corroborate the primary page.
     Alias subjects additionally need the original alias URI and actual AKA.
     No document metadata, redirect chain, capture date or response hash is made up.
+    Linked mode ignores the contextual label, retaining the same original/canonical
+    URI and real AKA evidence and returning the actual nonempty primary heading.
     """
     result = {"description": None, "error": None, "heading": "", "canonical_url": None}
 
@@ -488,7 +506,7 @@ def extract_document_archive_description(original_url, html, name, known_url):
     known = _document_main_url(known_url)
     if not original or not known:
         return reject("Document archive requires bare known/original Main URLs")
-    if not isinstance(name, str) or not _identity(name):
+    if not linked and (not isinstance(name, str) or not _identity(name)):
         return reject("Missing subject name")
     if not isinstance(html, str) or not html.strip():
         return reject("Missing original archived HTML document string")
@@ -559,11 +577,11 @@ def extract_document_archive_description(original_url, html, name, known_url):
     original_slug = urlparse(original).path.rsplit("/", 1)[1]
     original_alias = (original.casefold() != canonical.casefold() and alias
                       and _identity(alias) == _identity(original_slug))
-    primary_subject = (_identity(name) == _identity(result["heading"])
+    primary_subject = ((linked or _identity(name) == _identity(result["heading"]))
                        and (known.casefold() == canonical.casefold()
                             or (known.casefold() == original.casefold() and original_alias)))
     alias_subject = (original_alias and known.casefold() in {original.casefold(), canonical.casefold()}
-                     and _identity(name) == _identity(alias))
+                     and (linked or _identity(name) == _identity(alias)))
     if not primary_subject and not alias_subject:
         return reject("Document catalog subject lacks exact primary/original-AKA identity")
     result["canonical_url"] = canonical

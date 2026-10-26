@@ -29,6 +29,27 @@ class ArchiveDescriptionsTest(unittest.TestCase):
     def extract(self, data=None, name='Exactly What I Aimed At', url=URL):
         return extract_archive_description(record() if data is None else data, name, url)
 
+    def test_linked_fragment_uses_actual_title_without_contextual_label_equality(self):
+        self.assertIsNotNone(self.extract(name='A character-specific label')['error'])
+        result = extract_archive_description(record(), None, URL, linked=True)
+        self.assertIsNone(result['error'])
+        self.assertEqual(result['heading'], 'Exactly What I Aimed At')
+        self.assertIn(LEAD, result['description'])
+
+    def test_linked_fragment_original_alias_still_requires_real_aka_and_known_uri(self):
+        original = 'https://tvtropes.org/pmwiki/pmwiki.php/Main/OldName'
+        html = fragment().replace('</span>\n<div class="watch_rank_wrap">',
+                                  '</span><div class="aka-title">(aka: Old Name)</div>\n<div class="watch_rank_wrap">')
+        data = {**record(html), 'id': 'OldName'}
+        self.assertIsNone(extract_archive_description(data, 'Contextual label', original, linked=True)['error'])
+        self.assertIsNone(extract_archive_description(data, None, URL + 'Unrelated', linked=True)['description'])
+        self.assertIsNone(extract_archive_description({**record(), 'id': 'OldName'}, None, original, linked=True)['description'])
+
+    def test_linked_fragment_rejects_empty_title_or_contradictory_body_identity(self):
+        for html in (fragment().replace('>Exactly What I Aimed At</span>', '></span>'),
+                     fragment().replace('Main/ExactlyWhatIAimedAt</p>', 'Main/OtherPage</p>')):
+            self.assertIsNone(extract_archive_description(record(html), None, URL, linked=True)['description'])
+
     def test_real_shaped_fragment_uses_actual_body_metadata_without_document_head(self):
         self.assertNotIn('<link', record()['article'])
         result = self.extract()

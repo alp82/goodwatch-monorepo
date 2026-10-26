@@ -19,6 +19,25 @@ class DocumentArchiveDescriptionsTest(unittest.TestCase):
     def extract(self, html=None, *, original=URL, name='Abandoned Catchphrase', known=URL):
         return extract_document_archive_description(original, document() if html is None else html, name, known)
 
+    def test_linked_document_retains_actual_title_and_ignores_contextual_label(self):
+        self.assertIsNotNone(self.extract(name='Contextual label')['error'])
+        result = extract_document_archive_description(URL, document(), None, URL, linked=True)
+        self.assertIsNone(result['error'])
+        self.assertEqual(result['heading'], 'Abandoned Catchphrase')
+        self.assertEqual(result['description'], LEAD)
+
+    def test_linked_document_alias_needs_real_aka_and_never_binds_unrelated_known_uri(self):
+        original = BASE + 'OldName'
+        html = document(aka='aka: Old Name')
+        self.assertIsNone(extract_document_archive_description(original, html, 'Contextual label', original, linked=True)['error'])
+        for known, body in ((BASE + 'UnrelatedPage', html), (original, document())):
+            self.assertIsNone(extract_document_archive_description(original, body, 'Abandoned Catchphrase', known, linked=True)['description'])
+
+    def test_linked_document_still_requires_heading_body_identity_and_real_intro(self):
+        for html in (document(heading=''), document().replace('value="Main"', 'value="Film"'),
+                     document(body='<p>This name may refer to unrelated subjects.</p><hr>')):
+            self.assertIsNone(extract_document_archive_description(URL, html, None, URL, linked=True)['description'])
+
     def test_actual_full_document_metadata_without_fictitious_http_final_url(self):
         result = self.extract()
         self.assertIsNone(result['error'])
