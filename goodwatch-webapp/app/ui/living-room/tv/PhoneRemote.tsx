@@ -9,8 +9,7 @@
 // streaming keys under it, then the grip. It has no power key: "Turn off" is in the TV's menu, and a dark TV turns
 // on with any key here. Where the window is short it rests with its top showing and a tap raises it (TvRoom.tsx).
 import type { ReactNode } from "react"
-import gwLogo from "~/img/goodwatch-logo-white.svg"
-import { assetUrl } from "~/utils/asset-url"
+import { whiteMark } from "~/ui/brand/white-mark"
 import {
 	ICON,
 	Icon,
@@ -190,7 +189,7 @@ export function PhoneRemote({
 			</div>
 			{/* The grip: the mark, where the palm holds it. */}
 			<img
-				src={assetUrl(gwLogo)}
+				{...whiteMark()}
 				alt=""
 				aria-hidden
 				draggable={false}

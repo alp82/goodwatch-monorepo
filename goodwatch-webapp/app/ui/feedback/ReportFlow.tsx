@@ -5,7 +5,7 @@ import { FlagIcon } from "@heroicons/react/20/solid"
 import { useEffect, useState } from "react"
 import { useStreamingProviders } from "~/routes/api.streaming-providers"
 import { TmdbImage } from "~/ui/TmdbImage"
-import { PrimaryButton } from "~/ui/auth/kit"
+import { PrimaryButton } from "~/ui/auth/PrimaryButton"
 import { regionName } from "~/utils/display-names"
 import {
 	brandName,

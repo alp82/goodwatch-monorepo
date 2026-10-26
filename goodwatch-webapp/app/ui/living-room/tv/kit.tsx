@@ -278,6 +278,13 @@ export function Img({
 	const { canvas } = useTvView()
 	return (
 		<img
+			// Before the window is measured (the server's HTML, under the boot screen): low priority, so that the
+			// TV's pictures don't share the connection with the room's (the first screen's largest, its LCP:
+			// TvRoom.tsx); in the window Chrome would raise them (#236). In both editions: they name the same files,
+			// and a hidden copy without it raises the shown one. The page's scripts start once the room has painted
+			// (utils/start-after-paint.ts), so the measured render raises them only after that, and later screens ask
+			// as usual.
+			{...(canvas.first && { fetchpriority: "low" })}
 			src={src}
 			width={width}
 			height={height}

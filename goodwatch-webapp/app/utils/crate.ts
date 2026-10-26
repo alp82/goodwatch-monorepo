@@ -111,7 +111,7 @@ const isAvailabilityError = (error: unknown): boolean =>
 // disappeared. These SQL failures do not make that coordinator unhealthy.
 const isNodeLossError = (error: unknown): boolean => error instanceof CrateError && (
 	/^(NodeNotConnectedException|NoSuchNodeException)\[/.test(error.message) ||
-	/^JobKilledException\[Job killed\. Participating node .+ disconnected\]$/.test(error.message)
+	/^JobKilledException\[Job killed\. (?:Participating|Coordinator) node .+ disconnected\]$/.test(error.message)
 )
 
 // During restart the HTTP listener can answer before the coordinator has the cluster's table metadata.

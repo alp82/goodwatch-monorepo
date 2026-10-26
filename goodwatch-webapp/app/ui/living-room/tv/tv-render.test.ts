@@ -354,6 +354,14 @@ test("before the window is measured the room holds both editions of the screen, 
 		assert.equal(count(screen, "<img"), 6)
 		assert.equal(count(screen, 'loading="lazy"'), 6)
 	}
+	// The TV's pictures under the boot screen ask with low priority, so they don't share the connection with the
+	// room's pictures (the LCP). Both editions: they name the same files, and a hidden copy without it raises the
+	// shown one (#236).
+	for (const screen of screens)
+		assert.equal(count(screen, 'fetchpriority="low"'), 6)
+	// Once the window is measured (after the room has painted), they ask as usual, so later screens aren't held back.
+	assert.doesNotMatch(rendered.home.guest.phone, /fetchpriority/)
+	assert.doesNotMatch(rendered.home.guest.desktop, /fetchpriority/)
 	// Before the window is measured both editions are drawn with the desktop's items; the phone's header has its G
 	// and Menu already, which every phone screen has.
 	assert.deepEqual(ids(room), [

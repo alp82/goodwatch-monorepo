@@ -1,7 +1,8 @@
 # Production CrateDB 5.10.16 → 6.4.6 — #644
 
-Planning and isolated rehearsal only, prepared from main **7ee29ce30** on October 26, 2026.
-**No production connection, SQL, restart, credential, setting, schedule or filesystem change was made.**
+Initial planning/rehearsal used main **7ee29ce30**. Read-only production preparation and the full release audit
+were updated from main **1770d08d1** on October 26, 2026.
+**No production write, restart, credential, setting, schedule or filesystem change was made.**
 Owner option B authorizes preparation, not execution. This is a reviewable candidate procedure with
 explicit go/no-go gates; the previous #562 restart approval does not authorize this major upgrade.
 
@@ -33,8 +34,8 @@ corruption bugs. Pin every image by the reviewed digest in the rehearsal receipt
 
 ## Decisions required before production
 
-1. **Client compatibility patch:** review/test the webapp's `isNodeLossError` matcher for the newer
-   `Coordinator node … disconnected` message. Its present expression accepts only `Participating node`.
+1. **Client compatibility patch:** this preparation updates/tests the webapp and operator-script node-loss
+   matchers for both `Participating node` and `Coordinator node` messages. Review/deploy it before production6.x.
    Retain the distinction between recoverable reads and indeterminate writes; add no blanket write replay.
 2. **BLOB read scope:** approve an effective search-reader privilege policy before the first 6.2.11 node.
    In the 6.4.6 lab, `GRANT DQL ON TABLE blob.search_index_files` did not authorize HTTP GET/HEAD:
@@ -53,7 +54,100 @@ corruption bugs. Pin every image by the reviewed digest in the rehearsal receipt
    production writes after a snapshot cannot be guaranteed recoverable by that snapshot. Zero-loss rollback
    requires an approved write freeze/queue/replay mechanism; this lab's fixed-key retries are not that mechanism.
 
-## Preflight — obtain fresh production evidence after separate authorization
+## Read-only production preflight — October 26, 2026
+
+Collected from all three trusted-loopback coordinators, Docker/runtime metadata and snapshot manifests
+at **02:36–02:47 UTC** from main `1770d08d1`. No production data, config, grants, schedules, processes or
+repositories were changed; no production snapshot or restore was started. This is a dated preparation
+record, not permission to execute. [Evidence and commands](crate-6-upgrade/20261026-preflight/README.md),
+[structured inventory](crate-6-upgrade/20261026-preflight/results.json).
+
+| Gate / measurement | Observed result and implication |
+| --- | --- |
+| Versions/membership | Three members, all **5.10.16**; crate-03 master. IDs match the previous rollout. |
+| Health/checks | All coordinators agree: **145 GREEN**, zero missing/underreplicated shards, zero failed cluster/node checks. |
+| **Stop readiness — NOT passed** | **1,175 copies: 1,173 STARTED/STARTED and two STARTED/RELOCATING**, present in both samples. `person_appeared_in` shard4 primary on crate-01 and shard5 replica on crate-03 point to crate-02. Historical recovery DONE is not a completed routing transition. Require every copy STARTED/STARTED and independent checkpoint/placement verification before any drain; investigate read-only if this persists. |
+| Creation versions | **145 base tables: 94 created5.10.9, 51 created5.10.16; zero partitions, zero closed tables.** No pre5.x recreation/reindex prerequisite was found. This includes BLOB and retained backup schemas. Repeat before execution. |
+| DDL/analyzers | SHOW CREATE succeeded for all144 SQL tables; BLOB SHOW CREATE is unsupported and was inventoried separately. Only `standard` fulltext analyzer observed; no removed analyzer names, `soft_deletes.enabled`, explicit `current_catalog` identifier or legacy creation versions found. |
+| Replica policy | **106 tables `0-1`, nine `1`, thirty `2`**. The thirty include15 auth tables plus **`user_mcp_action`** with wait1/REQUEST, and14 YepWatch tables with wait3/REQUEST. All145 tables use REQUEST. The earlier29-table rehearsal omitted `user_mcp_action`: include it in the exact approved list, preserve its wait1, and verify its keyed-write/readback behavior. No unaccounted table write blocks observed. |
+| Effective settings | Allocation/rebalance `all`; no node exclusions; graceful stop PRIMARIES/force=false/2h. Recovery cap **40MiB/s per node**, two concurrent recoveries; all gateways expect/recover-after3 data nodes. No `gateway.auto_import_dangling_indices` override in startup argv/effective settings. |
+| Node config/HBA | All image tags5.10.16, heaps16GiB, same data volumes, `/snapshots` allowlist and shared bind. HBA enabled: trusted `crate` only at127.0.0.1, password fallback. Preserve these settings. Captured argv/effective settings are available; Crate's REST settings endpoint returned404, so persistent/transient provenance was not obtained through it. Export approved configuration sources before execution. |
+| Current data | **40,993,871,678 bytes (38.18GiB) primary**, **80,709,631,140 bytes (75.17GiB) all copies**, excluding translogs. Live data can differ from the older snapshot. |
+| Node free disk | crate-01 **215.5GiB**, crate-02 **199.2GiB**, crate-03 **237.4GiB**; each data filesystem about300.17GiB. Shared backup filesystem has **1.055TiB free** across all mounts. These are filesystem totals, not reserved recovery capacity. |
+| BLOB inventory | Exactly **`blob.search_index_files`**, three primary/three replica shards, **21 objects / 137,651,413 bytes (131.27MiB) per complete copy**. No other BLOB table found. SQL snapshots omit these objects. Owner must approve the content classification and future-table read scope before schema DQL is added. |
+| Installed page/search clients | Both page containers (.20/.21) and search-a/b (.20): **Node24.22.1, node-crate3.0.0, pg8.23.1**. Image identities recorded; this prep patch is not deployed. |
+| Installed flow clients | **17 Python worker containers on15 hosts** expose cached crate-python **2.0.0,2.2.1,2.3.0** (2.0.0 under Python3.11;2.2.1 under3.11/3.12;2.3.0 under3.12). Two native workers have no such package at probed paths. Cache presence does not establish which active script lock a running job selected; inventory/qualification of that mapping remains a gate. The earlier rehearsal did not cover2.0.0. Supplemental isolated single-node canaries now pass all three versions on both5.10.16 and6.4.6 for typed array/object parameters and `_version` OCC; this is not end-to-end active-job qualification. |
+| Installed backup | Actual `/root/goodwatch/goodwatch-monorepo/goodwatch-crate/backup.py` SHA256 recorded; its existing uv environment is **Python3.14.0 / requests2.32.5**, uv0.9.10. Uses HTTP requests, not crate-python. No installer or backup invocation was run. |
+| Repositories | Active filesystem repository `goodwatch-db-backup-v2` at `/snapshots/v2`; legacy `goodwatch-db-backup` at `/snapshots`. Active repository **131,239,461,309 bytes (122.23GiB)** apparent size. Legacy parent traversal exceeded the100s read budget; its separate retained size is unverified. Choose a disjoint6.x path, never a child of either repository. |
+| Latest captured snapshot | **`hourly_20261026_020501`**, SUCCESS,5.10.16,567 SQL shards, no failures; started02:05:02.293, finished02:05:43.747 UTC (**41.454s**), global state included. A fresh protected snapshot is still required at execution. |
+| Snapshot recovery set | Read all567 shard manifests: **36,257,350,348 bytes (33.77GiB),58,837 referenced files**. Only **2,129,430,348 bytes (1.98GiB),11,561 files** were incremental. Manifest parser follows the tagged5.10.16 stream format and asserts complete consumption. No shard-content reads or production restore. |
+| #644 residuals | Both samples agree: crate-01 **1,460**, crate-02 **112**, crate-03 **2,897** contexts older than1h without a matching job. They match the existing report; no KILL or cleanup was attempted. |
+
+### Full-volume restore estimate and booked window
+
+**Book a twelve-hour operator maintenance window**, replacing the earlier provisional six-hour estimate:
+**one hour preflight, three hours for15 replacements, five hours for protected repository/snapshot gates,
+one hour for verification/soak, two hours held for recovery/escalation**. This is a scheduling estimate,
+not twelve hours of planned user outage or a guarantee that an unlimited-grace stop completes on a deadline.
+Use homogeneous-version checkpoints; do not start another hop after hour10 or if its forecast exceeds the
+remaining upgrade budget. Restore schedules/settings deliberately at the checkpoint. Never accelerate a
+stop or waive copy/health gates to meet the booking.
+
+For the captured33.77GiB SQL recovery set, **40MiB/s serial transfer alone is14.4 minutes**; three nodes
+can recover concurrently but share the repository. At conservative **10–20MiB/s aggregate effective read
+throughput**, transfer is **29–58 minutes**. Budget **60–120 minutes** for a fresh-cluster recovery including
+bootstrap, many small files, replica recovery, users/HBA/BLOB verification and application cutover. Current
+primary SQL size is larger than the snapshot and adds roughly4–8 transfer minutes at those assumed rates.
+The measured incremental write rate (about49MiB/s) is not a measured restore rate. Neither snapshot SUCCESS
+nor metadata proves file readability, full-volume RTO or reverse restore compatibility. A firm **validated**
+RTO cannot be derived from metadata alone: before promising one, run a separately authorized full-volume
+restore on isolated capacity from a protected repository copy. Do not run it in production.
+
+Protecting a122.23GiB repository by serial copy alone costs **104–209 minutes at10–20MiB/s**.
+Do not assume snapshots are independent full files, or copy only a snapshot's small manifest. Before the
+window, approve/complete protected-copy seeding or qualify a version-specific repository rotation: freeze
+each pre-hop path read-only and move the **same active registration** to a fresh disjoint path for each
+homogeneous minor, so later writers never touch older recovery points. This extends the lab's first-hop
+rotation and needs a local/isolated qualification before production. Five fresh40GiB-stage snapshots
+cost roughly **3–6 hours at10–20MiB/s**, before metadata overhead; the five-hour gate allowance assumes
+at least12MiB/s effective aggregate throughput. If the verified rate/forecast cannot meet it, extend the
+booking or stop at a homogeneous checkpoint. Repeated full copies of the growing retained repository
+are **not** silently included in this booking. The separate full-volume DR qualification must finish
+before execution approval, not consume the two-hour emergency reserve.
+
+### Exact execution approvals still needed
+
+1. **Reviewed code rollout:** approve/deploy this compatibility patch to page/search images and the operator
+   population scripts before6.x. It recognizes both node-loss messages while retaining generic-write ambiguity
+   and explicit non-retryable receipt safeguards. Qualify actual selected flow locks and additional release-audit
+   canaries, including feedback/correction `_version` OCC, parameter inference and social-ranking windows.
+2. **BLOB scope:** explicitly approve DQL on **all current/future `blob` tables** for `goodwatch_search`, currently
+   the single131.27MiB search index; retain negative PUT/DELETE behavior. Table grants/DENYs are not a proven
+   narrowing mechanism for this HTTP bug. If future-table access is unacceptable, defer this workaround/upgrade
+   until a verified narrower alternative exists. No grant is made in prep.
+3. **Temporary write/copy policy:** approve the exact **30-table** inventory in the evidence, including
+   `user_mcp_action`; only14 wait3 tables temporarily use2, with brief guarded write blocks. Preserve all original
+   wait1/REQUEST settings; reduce replicas2→1 only for the last old node of each hop, then restore every original
+   copy/setting before proceeding. Alternatively approve additional compatible capacity and rehearse it.
+4. **RPO/write handling:** choose either **up to60 minutes of accepted post-snapshot write loss** (only if protected
+   checkpoint age and hop forecasts remain within60 minutes; otherwise stop at a checkpoint and refresh before
+   proceeding), or another explicitly quantified bound (for example120min if full-stage snapshots make60min infeasible),
+   or **zero-loss rollback**, which needs an approved write freeze/queue/replay design before execution.
+   Current hourly snapshots/synthetic fixed-key retries do not themselves provide zero loss. Agree client-facing
+   handling of brief write blocks and non-idempotent errors; never silently replay arbitrary writes.
+5. **Recovery/cutover owner:** name the operator with authority to stop, rebuild a pre-hop-version cluster in fresh
+   directories, restore/cut over and reconcile post-snapshot writes, plus a substitute and escalation route. Approve
+   the60–120min planning allowance and isolated restore-capacity drill; otherwise do not promise a verified RTO.
+6. **Backup/config/window:** approve exact disjoint shared6.x path/mounts/allowlist, storage capacity for protected
+   per-hop repository copies and separate BLOB backups, bounded schedule/schema-job holds with restoration owner,
+   and the twelve-hour slot/checkpoint deadlines. Freeze SWAP/RENAME with other DDL during snapshot gates: the
+   earlier safe-swap improvement was reverted in6.3.6/6.4.1. Review config provenance, preserve password HBA and
+   approve the exact image digests/commit. No freeze, mount change or schedule hold is authorized by preparation.
+
+**Current status: preparation only; execution is NO-GO.** Settle the two routing transitions, finish the
+remaining client/config/recovery qualification and obtain the approvals above before scheduling a drain.
+
+## Preflight — repeat fresh evidence before execution
 
 Keep all evidence/config exports in a protected operator directory; no passwords, password hashes,
 member statements or arguments in public receipts. Use `TMPDIR=$HOME/.cache/gw-work/644-upgrade` on the
@@ -224,7 +318,7 @@ Use the installed credentialed backup helper with its current user/password-file
 new snapshot independently through every coordinator, plus monitoring of that active identifier and the
 separate BLOB backup. Restore the exact held schedule with explicit readback while homogeneous. Hold it
 again before the next mixed hop. Do not let old/new clusters concurrently write one repository.
-Snapshot changes in6.0 had historical stuck-query regressions, including a fix in6.1.6; any stalled operation
+Historical stuck-snapshot fixes are included in6.0.7/6.1.6, hence both selected targets; any stalled operation
 is an abort/owner decision, not a reason to KILL it or claim success from an HTTP acknowledgement.
 
 Before **each** next minor, quiesce every repository writer and freeze a protected, version-qualified
@@ -285,8 +379,9 @@ passed **50**, backup unit tests **38 plus 9 subtests**, and relevant flow tests
 Pinned node-crate/pg and both Python driver versions passed parameterized client canaries; Python bulk
 upsert/OCC and actual wrapper fulltext, typed-array and NULL-timestamp queries passed.
 
-`npx tsc --noEmit` fails with **192 diagnostics in unchanged application source**; no application file was
-modified. The node-loss matcher gap and BLOB table-grant failure are reproduced findings, not fixes.
+The original rehearsal and this preparation's `npx tsc --noEmit` both report **192 existing diagnostics
+in unrelated application source**. This preparation changes only node-loss matching and regression tests
+in application code. The earlier node-loss gap is patched/tested in the present preparation, awaiting deployment; the BLOB table-grant failure remains.
 Production-specific identities/configuration and protected later-minor rollback restores remain unverified.
 Both isolated clusters, six containers, two networks, their data/snapshot/BLOB directories and local proxies
 were removed after verification; cached images were retained.
@@ -299,11 +394,10 @@ synthetic data and fresh5.10-created indices. It cannot qualify old production i
 production kernel/storage behavior, peak traffic or full-volume restore throughput. No claim that6.4.6
 fully fixes #644 is made; the earlier isolated disconnect trial retained tasks even on6.4.6.
 
-**Reserve a six-hour production window provisionally**, with owner checkpoints at every homogeneous stage
-and a separately measured recovery allowance. Fifteen nodes × roughly8–12 minutes from the earlier guarded
-rollout is2–3 hours before five backup gates, preflight, replication restoration and soak. The fresh-data lab
-is not a production benchmark. Revise this estimate after current disk/data/recovery and restore measurements;
-if the slot expires, stop at a healthy homogeneous checkpoint rather than compressing safety gates.
+**Book the twelve-hour window detailed in the production preflight above**, including two hours reserved
+for recovery/escalation. The fresh-data lab is not a production benchmark. The60–120min full-volume restore
+allowance is an estimate from measured sizes and assumed read rates, not a tested RTO. Stop at a healthy
+homogeneous checkpoint if the remaining budget cannot cover the next hop; never compress safety gates.
 
 Execution approval must identify the exact commit/digests, compatibility patch, BLOB scope, temporary copy/
 write-admission exception, repository paths and schedule holds, window, RPO and rollback/cutover owner.

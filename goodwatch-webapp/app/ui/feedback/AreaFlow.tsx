@@ -2,7 +2,7 @@
 // Send. These are reports for staff; nothing changes on the page.
 import { FlagIcon } from "@heroicons/react/20/solid"
 import { useState } from "react"
-import { PrimaryButton } from "~/ui/auth/kit"
+import { PrimaryButton } from "~/ui/auth/PrimaryButton"
 import { type FeedbackOutcome, outcomeOf } from "~/utils/feedback"
 import { type PageArea, SOMETHING_ELSE, chipsOf } from "./areas"
 import {

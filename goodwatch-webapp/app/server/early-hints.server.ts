@@ -11,7 +11,9 @@
 import { subscribe } from "node:diagnostics_channel"
 import type { IncomingMessage, Server } from "node:http"
 import gabaritoLatin from "~/fonts/gabarito-latin.woff2"
+import primeVideoLogo from "~/img/primevideo-logo.svg"
 import cssTailwind from "~/tailwind.css?url"
+import { WHITE_MARK } from "~/ui/brand/white-mark"
 import { HOME_SHEETS } from "~/ui/living-room/home-sheets"
 import { HAND_IMAGE } from "~/ui/living-room/room"
 import { PHONE_ROOM_ART, ROOM_ART } from "~/ui/living-room/tv/room-art"
@@ -27,6 +29,8 @@ const FILES = {
 		phone: [PHONE_ROOM_ART.avif, HAND_IMAGE.avif],
 		desktop: [ROOM_ART.avif, HAND_IMAGE.avif],
 	},
+	// The Prime Video mark is living-room.css's `.tv-mark-9` mask.
+	marks: { images: [WHITE_MARK], masks: [primeVideoLogo] },
 }
 
 let started = false

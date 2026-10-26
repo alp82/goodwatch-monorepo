@@ -12,12 +12,10 @@
 @import "swiper/css/navigation";
 @import "react-toastify/dist/ReactToastify.css";
 
-/* Safelist */
+/* Safelist: only class names that code builds from parts, which Tailwind can't find in the source. Add a line with the
+   module that builds them, and take it out with that module (#236: four lines had outlived theirs, 43 KB of the sheet). */
 @source inline("bg-vibe-{{0..100..10}}{/35,}"); /* /35 for desktop score selector*/
 @source inline("text-vibe-{{0..100..10}}");
-@source inline("{bg,border-t}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-{600,900}"); /* Fingerprint */
-@source inline("bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-900/50"); /* DNA tags */
-@source inline("bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-950/70"); /* Sign in */
 /* Buttons (ui/button/Button.tsx): only the highlight colors in use. Add a color here when a Button uses a new highlight. */
 @source inline("from-{gray,stone,emerald,sky,cyan}-{50,800,200/15,800/15}");
 @source inline("to-{gray,stone,emerald,sky,cyan}-{300,900,200/20,800/20}");
@@ -30,10 +28,6 @@
 @source inline("hover:after:to-{gray,stone,emerald,sky,cyan}-{200,700}");
 @source inline("text-{gray,stone,emerald,sky,cyan}-{100,900}");
 @source inline("group-active:text-{gray,stone,emerald,sky,cyan}-{300,700}");
-/* Discover filter sections (ui/filter/FilterBarSection.tsx): the colors in server/types/discover-types.tsx. */
-@source inline("from-{amber,blue,cyan,emerald,green,indigo,orange,pink,purple,rose,slate,teal}-700/{50,80}");
-@source inline("via-{amber,blue,cyan,emerald,green,indigo,orange,pink,purple,rose,slate,teal}-900/{50,80}");
-@source inline("to-{amber,blue,cyan,emerald,green,indigo,orange,pink,purple,rose,slate,teal}-800/{50,80}");
 
 @theme {
 	--breakpoint-xs: 475px;

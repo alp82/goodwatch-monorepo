@@ -6,9 +6,8 @@
 //
 // The streaming keys stand for the person's own two services (`services`): a key shows that service's mark
 // (`ServiceMark`), opens the TV screen "On <service>" and is pressed while that screen shows.
-import { assetUrl } from "~/utils/asset-url"
 import { type ReactNode, useEffect, useRef, useState } from "react"
-import gwLogo from "~/img/goodwatch-logo-white.svg"
+import { whiteMark } from "~/ui/brand/white-mark"
 import { REMOTE_H } from "./room"
 import type { RoomKey } from "./tv/room-tv"
 
@@ -252,7 +251,7 @@ export function Remote({
 				</div>
 				<div className="flex-1" />
 				<img
-					src={assetUrl(gwLogo)}
+					{...whiteMark()}
 					alt=""
 					className="mx-auto mb-2 h-7 opacity-20"
 				/>
