@@ -93,7 +93,11 @@ export const links: LinksFunction = () => [
 		sizes: "16x16",
 		href: "/favicon-16x16.png",
 	},
-	{ rel: "manifest", href: assetUrl("/site.webmanifest") },
+	// On the site's own host, like the icons: the manifest's `start_url` and `scope` ("/") are read against its own
+	// address, and a browser ignores them on another host than the page's. With credentials, so that the request
+	// takes the page's own connection: a browser fetches a manifest without them otherwise, on a connection of its
+	// own, and on the static hostname that was a connection opened before the first paint (#236).
+	{ rel: "manifest", href: "/site.webmanifest", crossOrigin: "use-credentials" },
 	// On the static hostname the stylesheet is fetched without credentials, like the scripts and the font, so that it
 	// uses the connection the preconnect hint opened. Without it the page's only render-blocking request would wait
 	// for a second connection to the same host.
