@@ -1,3 +1,4 @@
+import { unlimitedRestBudget } from "./rest-test-budget.ts"
 import assert from "node:assert/strict"
 import { generateKeyPairSync, sign } from "node:crypto"
 import { test } from "node:test"
@@ -433,6 +434,7 @@ test("REST retries twice on 429, respects delay and keeps webhook auth separate"
 	const calls: { url: string; init?: RequestInit }[] = [],
 		delays: number[] = []
 	const rest = discordRest({
+		budget: unlimitedRestBudget,
 		botToken: "test-token",
 		fetch: async (url, init) => {
 			calls.push({ url: String(url), init })
@@ -462,6 +464,7 @@ test("REST retries twice on 429, respects delay and keeps webhook auth separate"
 test("REST stops after two retries and surfaces errors", async () => {
 	let count = 0
 	const rest = discordRest({
+		budget: unlimitedRestBudget,
 		fetch: async () => {
 			count++
 			return Response.json({ retry_after: 0 }, { status: 429 })
@@ -903,6 +906,7 @@ test("cancelling a progress edit aborts its request and prevents a rate-limit re
 	const abort = new AbortController()
 	let calls = 0
 	const rest = discordRest({
+		budget: unlimitedRestBudget,
 		fetch: async (_url, init) => {
 			calls++
 			assert.equal(init?.signal?.aborted, false)
@@ -917,18 +921,25 @@ test("cancelling a progress edit aborts its request and prevents a rate-limit re
 	})
 	assert.equal(calls, 1)
 	let requestSignal: AbortSignal | null | undefined
+	let started!: () => void
+	const requestStarted = new Promise<void>((resolve) => {
+		started = resolve
+	})
 	const pending = discordRest({
+		budget: unlimitedRestBudget,
 		fetch: async (_url, init) => {
 			requestSignal = init?.signal
 			return new Promise((_resolve, reject) => {
 				requestSignal?.addEventListener("abort", () =>
 					reject(new Error("cancelled")),
 				)
+				started()
 			})
 		},
 	})
 	const cancel = new AbortController()
 	const edit = pending.editOriginal("app", "token", {}, cancel.signal)
+	await requestStarted
 	cancel.abort()
 	await assert.rejects(edit, /cancelled/)
 	assert.equal(requestSignal?.aborted, true)

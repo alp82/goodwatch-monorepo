@@ -1,3 +1,4 @@
+import { unlimitedRestBudget } from "./rest-test-budget.ts"
 import "../title-filter/test-alias.ts"
 import assert from "node:assert/strict"
 import { test } from "node:test"
@@ -60,6 +61,7 @@ for (const failure of [false, true])
 		)
 		const calls: { url: string; init?: RequestInit }[] = []
 		const rest = discordRest({
+			budget: unlimitedRestBudget,
 			fetch: async (url, init) => {
 				calls.push({ url: String(url), init })
 				return new Response(null, { status: failure ? 404 : 200 })

@@ -293,6 +293,9 @@ don't appear in its search counts.
 
 A small Discord REST client (`app/server/discord/rest.server.ts`) sends bot-token requests, follows `429` answers with
 `retry_after`, and stays under the 50 requests per second global limit.
+Every attempt, including a retry, uses one shared Valkey budget across bot-token and interaction-webhook requests.
+A global `429` extends a shared cooldown; ordinary route limits delay only the request that received them. Without
+Valkey, the request budget and cooldown fall back to the current process, like the interaction rate limiter.
 
 `npm run discord:register` overwrites the global commands with `PUT /applications/{id}/commands`. Run it when commands
 change, not on every deploy.

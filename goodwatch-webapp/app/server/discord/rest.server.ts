@@ -1,15 +1,27 @@
 import { nativeFetch } from "../native-fetch.server.ts"
 import { drain, fetchWithTimeout } from "./fetch-timeout.ts"
+import { setTimeout as sleepTimer } from "node:timers/promises"
+import type { RestBudget } from "./rest-limit.server.ts"
+
+// Keep loading the application cache lazy, so scripts and fixture clients need no app bootstrap.
+const sharedBudget: RestBudget = {
+	take: async () =>
+		(await import("./rest-limit.server.ts")).discordRestBudget.take(),
+	pause: async (ms) =>
+		(await import("./rest-limit.server.ts")).discordRestBudget.pause(ms),
+}
 export function discordRest(
 	options: {
 		fetch?: typeof fetch
 		botToken?: string
-		sleep?: (ms: number) => Promise<void>
+		sleep?: (ms: number, signal?: AbortSignal) => Promise<void>
+		budget?: RestBudget
 	} = {},
 ) {
 	const send = options.fetch ?? nativeFetch
 	const sleep =
-		options.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)))
+		options.sleep ?? ((ms, signal) => sleepTimer(ms, undefined, { signal }))
+	const budget = options.budget ?? sharedBudget
 	async function request(
 		method: string,
 		path: string,
@@ -22,6 +34,13 @@ export function discordRest(
 			throw new Error("Discord bot token is missing")
 		for (let attempt = 0; ; attempt++) {
 			signal?.throwIfAborted()
+			for (;;) {
+				const wait = await budget.take()
+				signal?.throwIfAborted()
+				if (wait <= 0) break
+				await sleep(wait, signal)
+				signal?.throwIfAborted()
+			}
 			const outcome = await fetchWithTimeout(
 				send,
 				`https://discord.com/api/v10${path}`,
@@ -36,9 +55,15 @@ export function discordRest(
 				},
 				10_000,
 				async (response) => {
-					if (response.status === 429 && attempt < 2) {
-						const data = (await response.json()) as { retry_after: number }
-						return { retryAfter: data.retry_after }
+					if (response.status === 429) {
+						const data = (await response.json()) as {
+							retry_after: number
+							global?: boolean
+						}
+						return {
+							retryAfter: data.retry_after,
+							global: data.global === true,
+						}
 					}
 					const data =
 						response.ok && readBody
@@ -50,7 +75,9 @@ export function discordRest(
 			if ("retryAfter" in outcome && outcome.retryAfter !== undefined) {
 				if (!Number.isFinite(outcome.retryAfter) || outcome.retryAfter < 0)
 					throw new Error("Invalid Discord retry delay")
-				await sleep(outcome.retryAfter * 1000)
+				if (outcome.global) await budget.pause(outcome.retryAfter * 1000)
+				if (attempt >= 2) throw new Error("Discord REST status 429")
+				await sleep(outcome.retryAfter * 1000, signal)
 				continue
 			}
 			if (!outcome.ok) throw new Error(`Discord REST status ${outcome.status}`)
