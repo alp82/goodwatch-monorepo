@@ -1,0 +1,24 @@
+{
+  "change": "Final match review returns to Your rooms instead of looping back to Tonight.",
+  "navigation": [
+    "Tonight",
+    "Matches review",
+    "Your rooms"
+  ],
+  "preserved": [
+    "Final decision",
+    "History re-entry",
+    "Owner explicit Start again",
+    "No votes or room writes during navigation"
+  ],
+  "regression": {
+    "file": "tests/glow-browser/iphone-feedback.spec.ts",
+    "cases": [
+      "button Back and History re-entry",
+      "edge-swipe Back and History re-entry"
+    ],
+    "redLog": "/tmp/yepwatch-decision-back-red.log",
+    "greenLog": "/tmp/yepwatch-decision-back-green.log"
+  },
+  "nativeConnection": "Separate unresolved tester report; this navigation change does not fix or diagnose the transport failure."
+}

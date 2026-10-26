@@ -146,7 +146,7 @@ test('room activity and exposure do not begin behind the boot overlay', async ({
   expect(roomReads).toBeGreaterThan(0);
 });
 
-test('Tonight Back reviews matches without changing the decision; edge Back returns to Tonight', async ({ page }) => {
+for (const navigation of ['button', 'edge'] as const) test(`Tonight review ${navigation} Back returns to Your rooms without changing the decision`, async ({ page }) => {
   const f = await fixture(page);
   f.room.shared.phase = 'decided';
   f.room.shared.matches = [{ candidateId:'c1',averageYepMs:1000 },{candidateId:'c2',averageYepMs:2000}];
@@ -158,7 +158,13 @@ test('Tonight Back reviews matches without changing the decision; edge Back retu
   await expect(page.getByText('Tonight’s choice is saved.',{exact:true})).toBeVisible();
   await expect(page.getByRole('button',{name:/^Propose /})).toHaveCount(0);
   await expect(page.getByRole('button',{name:/^Agree to /})).toHaveCount(0);
-  await page.mouse.move(5,350);await page.mouse.down();await page.mouse.move(125,355,{steps:12});await page.mouse.up();
+  await expect(page.getByRole('button',{name:'Back to Your rooms',exact:true})).toBeVisible();
+  if (navigation === 'button') await page.getByRole('button',{name:'Back to Your rooms',exact:true}).click();
+  else { await page.mouse.move(5,350);await page.mouse.down();await page.mouse.move(125,355,{steps:12});await page.mouse.up(); }
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('button',{name:'History',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'History',exact:true}).click();
+  await page.getByRole('button',{name:/^Isolated test c1,/}).click();
   await expect(page.getByText('TONIGHT',{exact:true})).toBeVisible();
   expect(f.writes).toEqual([]);expect(f.room.shared.decision?.candidateId).toBe('c1');
 });

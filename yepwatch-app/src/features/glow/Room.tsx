@@ -89,10 +89,13 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const decidedPhase = snapshot?.shared.phase === 'decided';
   const back = useCallback(() => {
     if (panel) setPanel(null);
-    else if (decidedPhase) setReviewingDecision((v) => !v);
+    else if (decidedPhase) {
+      if (reviewingDecision) toRooms();
+      else setReviewingDecision(true);
+    }
     else if (view === 'matches') setView('voting');
     else toRooms();
-  }, [panel, view, decidedPhase]);
+  }, [panel, view, decidedPhase, reviewingDecision]);
   useFocusEffect(useCallback(() => {
     if (Platform.OS !== 'android') return;
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => { back(); return true; });
@@ -268,7 +271,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   const backTarget: BackTarget = panel
     ? { label: viewName, short: viewName, onPress: () => setPanel(null) }
     : decided
-    ? reviewingDecision ? { label: 'Tonight', short: 'Tonight', onPress: back } : { label: 'Matches', short: 'Matches', onPress: back }
+    ? reviewingDecision ? roomsBack : { label: 'Matches', short: 'Matches', onPress: back }
     : view === 'matches' && !inLobby ? { label: 'Voting', short: 'Voting', onPress: back } : roomsBack;
   const panelTitle = panel === 'room' ? 'Our room' : panel === 'settings' ? 'Mood & services' : panel === 'restart' ? 'Start again' : panel === 'trailer' ? 'Trailer' : panel === 'details' ? title?.title ?? 'Details' : null;
   const status = shared.phase === 'setup' ? 'Setting up'
