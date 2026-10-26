@@ -1,0 +1,19 @@
+summary: batch
+description: Shared bounded availability page scheduling.
+lock: '!inline f/tmdb_web/tmdb_crawl_providers/batch.script.lock'
+kind: script
+schema:
+  type: object
+  properties:
+    entries:
+      type: array
+      items:
+        type: object
+    publication_enabled:
+      type: boolean
+      default: false
+    shadow_selection:
+      type: boolean
+      default: true
+  required:
+    - entries

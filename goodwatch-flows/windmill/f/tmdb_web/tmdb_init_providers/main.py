@@ -33,6 +33,7 @@ def initialize_batch(
         "next_fetch_at": 1,
         "lease_token": 1,
         "consecutive_failures": 1,
+        "streaming_links": 1,
         "country_identity_ready": 1,
     }
     for document in collection.find(

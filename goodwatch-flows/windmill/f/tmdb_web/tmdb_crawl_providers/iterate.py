@@ -40,6 +40,7 @@ def main(next_ids: dict) -> list[dict]:
                         "id": identity,
                         "type": media_type,
                         "tmdb_id": document["tmdb_id"],
+                        "tier": next_ids.get("tiers", {}).get(identity),
                     }
                 )
         return entries

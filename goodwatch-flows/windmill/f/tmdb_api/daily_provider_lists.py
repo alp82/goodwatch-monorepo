@@ -60,17 +60,19 @@ class BaselineBudgetExceeded(RequestBudgetExceeded):
 
 class TMDBClient:
     """One paced budget shared by all six HTTP workers, including retries."""
-    def __init__(self, requests_per_second=15, max_requests=350000):
+    def __init__(self, requests_per_second=15, max_requests=350000, before_request=None):
         import wmill
         if not 0 < requests_per_second <= 20:
             raise ValueError('requests_per_second must be greater than zero and at most 20')
         if type(max_requests) is not int or not 1 <= max_requests <= 350000:
             raise ValueError('max_requests must be an integer between 1 and 350000')
+        self.before_request = before_request
         self.key = wmill.get_variable('u/Alp/TMDB_API_KEY')
         self.interval, self.max_requests = 1 / requests_per_second, max_requests
         self.lock, self.local = threading.Lock(), threading.local()
         self.next_request = 0
         self.access_denied = None
+        self.latencies_ms = []
         self.baseline_limit = None
         self.stats = dict(requests=0, retries=0, refused=0, discover=0, title=0, catalog=0, deleted_responses=0)
 
@@ -88,14 +90,23 @@ class TMDBClient:
                     time.sleep(max(0, min(1, self.next_request - time.monotonic())))
                 if self.access_denied is not None:
                     raise self.access_denied
+                if self.before_request is not None:
+                    self.before_request()
                 self.next_request = time.monotonic() + self.interval
                 self.stats['requests'] += 1
                 self.stats['discover' if path.startswith('/discover/') else 'title' if path.endswith('/watch/providers') else 'catalog'] += 1
+            request_started = time.monotonic()
             try:
                 response = self.local.session.get('https://api.themoviedb.org/3' + path,
-                    params=dict(params, api_key=self.key, cb=uuid4().hex), timeout=(5, 30))
+                    params=dict(params, api_key=self.key, cb=uuid4().hex), timeout=(5, 30), allow_redirects=False)
             except requests.RequestException:
                 response = None
+            elapsed_ms = (time.monotonic() - request_started) * 1000
+            with self.lock:
+                self.latencies_ms.append(elapsed_ms)
+                status = str(response.status_code) if response is not None else 'transport_error'
+                statuses = self.stats.setdefault('statuses', {})
+                statuses[status] = statuses.get(status, 0) + 1
             if response is not None and response.status_code == 200:
                 try:
                     return response.json()
@@ -166,8 +177,9 @@ def eligible_kinds(payload, country, service_id):
 
 class TitleChecks:
     """Deduplicate all-country title checks in a disposable, bounded-memory cache."""
-    def __init__(self, client, clock):
+    def __init__(self, client, clock, observation_db=None, dry_run=True):
         self.client, self.clock = client, clock
+        self.observation_db, self.dry_run = observation_db, dry_run
 
     def __enter__(self):
         self.directory = tempfile.TemporaryDirectory(prefix='goodwatch-list-checks-')
@@ -183,8 +195,14 @@ class TitleChecks:
         found, missing = {}, []
         for tmdb_id in ids:
             row = self.db.execute('SELECT payload FROM checks WHERE media = ? AND id = ?', (media, tmdb_id)).fetchone()
-            if row:
-                _, payload, proof = json.loads(zlib.decompress(row[0]))
+            cached = json.loads(zlib.decompress(row[0])) if row else None
+            if cached is None and self.observation_db is not None:
+                from f.tmdb_api.provider_observations import read_observation
+                shared = read_observation(self.observation_db, media, tmdb_id)
+                if shared and shared['proof'].get('cache_bypassed') is True:
+                    cached = (tmdb_id, shared['payload'], shared['proof'])
+            if cached:
+                _, payload, proof = cached
                 if proof.get('deleted'):
                     if utc_day(proof['checked_at']) == utc_day(list_at):
                         found[tmdb_id] = (tmdb_id, payload, proof)
@@ -200,6 +218,12 @@ class TitleChecks:
                     continue
             missing.append(tmdb_id)
         for result in title_checks(self.client, media, missing, self.clock):
+            if self.observation_db is not None and not result[2].get('deleted'):
+                from f.tmdb_api.provider_observations import save_observation
+                saved = save_observation(self.observation_db, media, result[0], result[1], result[2]['checked_at'],
+                                         cache_bypassed=True, dry_run=self.dry_run)
+                if saved['status'] in ('saved', 'reused'):
+                    result = (result[0], saved['payload'], saved['proof'])
             found[result[0]] = result
             self.db.execute('INSERT OR REPLACE INTO checks VALUES (?, ?, ?)',
                             (media, result[0], zlib.compress(json.dumps(result).encode())))
@@ -434,7 +458,7 @@ def run_daily_lists(client, store, *, countries, service_ids, media_types=('movi
     clock = (lambda: now) if now else (lambda: datetime.now(timezone.utc))
     if report is None:
         report = dict(lists_completed=0, lists_failed=0, lists_skipped=0, dry_run=store.dry_run, lists=[])
-    with (nullcontext(title_reads) if title_reads is not None else TitleChecks(client, clock)) as title_reads:
+    with (nullcontext(title_reads) if title_reads is not None else TitleChecks(client, clock, getattr(store, "db", None), store.dry_run)) as title_reads:
         for country, media_type, service_id in (product(countries, media_types, service_ids) if scopes is None else scopes):
             try:
                 summary = read_daily_list(client, store, title_reads, country, media_type, service_id, clock)

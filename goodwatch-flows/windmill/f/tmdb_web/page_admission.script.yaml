@@ -1,0 +1,11 @@
+summary: page_admission
+description: Shared bounded availability page scheduling.
+lock: '!inline f/tmdb_web/page_admission.script.lock'
+kind: script
+schema:
+  type: object
+  properties:
+    dry_run:
+      type: boolean
+      default: true
+  required: []

@@ -28,6 +28,7 @@ StreamType = (
 class StreamingLink(BaseModel):
     stream_url: Optional[str]
     stream_type: Optional[StreamType]
+    provider_id: Optional[int] = None
     provider_name: Optional[str]
     price_dollar: Optional[float]
     quality: Optional[str]
@@ -49,6 +50,7 @@ class TmdbStreamingCrawlResult(BaseModel):
 class StreamingLinkDoc(EmbeddedDocument):
     stream_url = StringField()
     stream_type = StringField()
+    provider_id = IntField()
     provider_name = StringField()
     price_dollar = FloatField()
     quality = StringField()
@@ -76,7 +78,15 @@ class BaseTmdbProviders(Document):
     # Copied from the TMDB details flag when TMDB permanently removed the title; missing means not deleted.
     tmdb_deleted = BooleanField(default=False)
 
+    provider_change_observed_at = IntField()
+    provider_change_pending = BooleanField()
+    provider_change_revision = StringField()
+    provider_observed_at = DateTimeField()
+    provider_title_observed_at = DateTimeField()
+    provider_verified_empty = BooleanField()
+    api_confirmation_pending = BooleanField()
     country_code = StringField()
+    has_streaming_links = BooleanField()
     streaming_links = EmbeddedDocumentListField(StreamingLinkDoc)
     count_expected = IntField()
     count_available = IntField()

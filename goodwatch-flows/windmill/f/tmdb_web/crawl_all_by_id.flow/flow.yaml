@@ -2,55 +2,52 @@ summary: ''
 description: Crawl multiple TMDB streaming provider pages by id
 value:
   modules:
-    - id: a
-      value:
-        type: script
-        input_transforms:
-          next_ids:
-            type: javascript
-            expr: flow_input.next_ids
-        path: f/tmdb_web/tmdb_crawl_providers/iterate
-        tag_override: null
-      continue_on_error: false
-      timeout:
-        type: static
-        value: 300
-    - id: b
-      value:
-        type: forloopflow
-        modules:
-          - id: c
-            value:
-              type: script
-              input_transforms:
-                next_id:
-                  type: javascript
-                  expr: flow_input.iter.value
-              path: f/tmdb_web/tmdb_crawl_providers/fetch
-              tag_override: null
-            continue_on_error: false
-            retry:
-              constant:
-                attempts: 0
-                seconds: 0
-              exponential:
-                attempts: 0
-                multiplier: 1
-                random_factor: 0
-                seconds: 2
-            timeout:
-              type: static
-              value: 60
-        iterator:
+  - id: a
+    value:
+      type: script
+      input_transforms:
+        next_ids:
           type: javascript
-          expr: results.a
-        parallel: true
-        parallelism:
+          expr: flow_input.next_ids
+      path: f/tmdb_web/tmdb_crawl_providers/iterate
+      tag_override: null
+    continue_on_error: false
+    timeout:
+      type: static
+      value: 300
+  - id: b
+    value:
+      type: forloopflow
+      modules:
+      - id: c
+        value:
+          type: script
+          path: f/tmdb_web/tmdb_crawl_providers/batch
+          tag_override: null
+          input_transforms:
+            entries:
+              type: javascript
+              expr: flow_input.iter.value
+            publication_enabled:
+              type: javascript
+              expr: flow_input.publication_enabled ?? true
+            shadow_selection:
+              type: javascript
+              expr: flow_input.shadow_selection ?? false
+        timeout:
           type: static
-          value: 3
-        skip_failures: true
+          value: 600
+      iterator:
+        type: javascript
+        expr: 'Array.from({length: Math.ceil(results.a.length / 20)}, (_, i) => results.a.slice(i
+          * 20, (i + 1) * 20))'
+      parallel: true
+      parallelism:
+        type: static
+        value: 3
+      skip_failures: true
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties:
     next_ids:
@@ -59,5 +56,11 @@ schema:
       default: null
       format: ''
       properties: {}
+    publication_enabled:
+      type: boolean
+      default: true
+    shadow_selection:
+      type: boolean
+      default: false
   required:
-    - next_ids
+  - next_ids

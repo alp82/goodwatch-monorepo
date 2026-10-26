@@ -160,7 +160,7 @@ def run_ramp(client, store, *, countries, service_ids, baseline_max_requests=120
                   hard_budget_exceeded=False,
                   rereads_estimated_requests=estimated_rereads, rereads_complete=True,
                   rereads_budget_exceeded=estimated_rereads > client.max_requests - reread_start)
-    with job.TitleChecks(client, clock) as title_reads:
+    with job.TitleChecks(client, clock, getattr(store, "db", None), store.dry_run) as title_reads:
         try:
             job.run_daily_lists(client, store, countries=[], service_ids=[], scopes=scopes,
                                 title_reads=title_reads, report=report)

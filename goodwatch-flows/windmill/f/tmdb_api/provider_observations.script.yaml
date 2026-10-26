@@ -1,0 +1,8 @@
+summary: Ordered shared TMDB provider observations
+description: Internal shared provider persistence and targeted publication helpers
+lock: '!inline f/tmdb_api/provider_observations.script.lock'
+kind: script
+schema:
+  type: object
+  properties: {}
+  required: []

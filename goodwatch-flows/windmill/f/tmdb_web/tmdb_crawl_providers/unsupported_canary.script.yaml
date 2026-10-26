@@ -1,0 +1,11 @@
+summary: Monthly unsupported-country canary
+description: Explicit Niger canary; normal selectors exclude NE.
+lock: '!inline f/tmdb_web/tmdb_crawl_providers/unsupported_canary.script.lock'
+kind: script
+schema:
+  type: object
+  properties:
+    dry_run:
+      type: boolean
+      default: true
+  required: []

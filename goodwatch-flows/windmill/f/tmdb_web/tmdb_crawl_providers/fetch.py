@@ -1,3 +1,12 @@
+# requirements:
+# beautifulsoup4==4.15.0
+# httpx==0.28.1
+# h2==4.3.0
+# mongoengine==0.29.3
+# pymongo==4.18.1
+# pydantic==2.13.5
+# requests==2.34.2
+# wmill==1.815.0
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 import re
@@ -7,10 +16,11 @@ from bson import ObjectId
 from bs4 import BeautifulSoup
 from mongoengine import get_db
 import requests
+import httpx
 
 from f.db.mongodb import init_mongodb, close_mongodb
-from f.tmdb_web import country_state
-from f.tmdb_web.provider_identity import provider_name_from_url
+from f.tmdb_web import country_state, page_admission
+from f.tmdb_web.provider_identity import provider_name_from_url, provider_id_from_url
 from f.tmdb_web.models import (
     TmdbStreamingCrawlResult,
     StreamingLink,
@@ -74,10 +84,12 @@ def validate_offer_country(url: str, country_code: str) -> None:
         raise ValueError("Clickout country does not match requested country")
 
 
-def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
+def crawl_tmdb_watch_page(next_entry: dict, request=None) -> TmdbStreamingCrawlResult:
     url = next_entry["tmdb_watch_url"]
     country_code = next_entry["country_code"]
-    response = requests.get(
+    if request is None:
+        raise ValueError("A page-admitted transport is required")
+    response = request(
         url,
         headers={
             "Accept-Language": "en-US",
@@ -88,15 +100,19 @@ def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
     soup = BeautifulSoup(response.text, "html.parser")
     title = soup.find("title")
     page_title = title.get_text(" ", strip=True).lower() if title else ""
-    challenge = any(text in page_title for text in (
+    # Exact interstitial titles only when the country/offer structure is absent.
+    # A film named Just a Moment is ordinary content, not a global refusal.
+    challenge = response.headers.get("cf-mitigated") == "challenge" or bool(
+        soup.select_one("#challenge-form, #challenge-running, script[src*='/cdn-cgi/challenge-platform/']")
+    ) or (soup.select_one("#ott_offers_window") is None and page_title.rstrip(". !") in {
         "just a moment", "please wait", "checking your browser", "attention required",
-        "verify you are human", "security verification",
-    )) or response.headers.get("cf-mitigated") == "challenge"
+        "verify you are human", "security verification"})
     reason = (
         "rate_limited" if response.status_code == 429 else
         "challenge" if challenge else
         "forbidden" if response.status_code == 403 or "request error (403)" in page_title else
-        "server_error" if 500 <= response.status_code < 600 else None
+        "server_error" if 500 <= response.status_code < 600 else
+        "page_not_found" if response.status_code == 404 else None
     )
     if reason:
         return TmdbStreamingCrawlResult(
@@ -126,6 +142,8 @@ def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
         if header not in StreamHeaderToType:
             raise ValueError(f"Unknown offer type: {header}")
         providers = provider_block.select("li.ott_filter_best_price")
+        if not providers:
+            raise ValueError(f"Offer block has no parseable provider rows: {header}")
         for provider in providers:
             provider_link = provider.select_one("a")
             if provider_link is None:
@@ -170,6 +188,7 @@ def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
                     stream_url=stream_url,
                     stream_type=StreamHeaderToType.get(header),
                     provider_name=provider_name,
+                    provider_id=provider_id_from_url(stream_url),
                     price_dollar=price,
                     quality=quality,
                 )
@@ -186,7 +205,7 @@ def crawl_tmdb_watch_page(next_entry: dict) -> TmdbStreamingCrawlResult:
     )
 
 
-def main(next_id: dict, refresh_for_mapping: bool = False) -> dict:
+def fetch_one(db, next_id: dict, refresh_for_mapping: bool = False, client=None, publication_enabled=True) -> dict:
     media_type = next_id.get("type")
     if (
         media_type not in ("movie", "tv")
@@ -194,82 +213,133 @@ def main(next_id: dict, refresh_for_mapping: bool = False) -> dict:
         or not ObjectId.is_valid(next_id["id"])
     ):
         raise ValueError("Expected a movie/tv provider document ObjectId")
-    init_mongodb()
+    collection = db[f"tmdb_{media_type}_providers"]
+    identity = ObjectId(next_id["id"])
+    document = collection.find_one({"_id": identity})
+    outcome = {"id": str(identity), "type": media_type}
+    if document is None:
+        return {
+            **outcome,
+            "outcome": "failed",
+            "error": "Provider document not found",
+        }
+    outcome.update(
+        tmdb_id=document["tmdb_id"],
+        country_code=document.get("country_code"),
+    )
+    countries, errors = country_state.identity_map(
+        list(collection.find({"tmdb_id": document["tmdb_id"]})), media_type
+    )
+    if identity in errors:
+        country_state.record_identity_error(collection, document, errors[identity])
+        return {**outcome, "outcome": "failed", "error": errors[identity]}
+    country = country_state.country_from_url(
+        document["tmdb_watch_url"], document["tmdb_id"], media_type
+    )
+    outcome["country_code"] = country
+    country_state.normalize_document(collection, document, country)
+    claimed = country_state.claim(db, collection, identity, refresh_for_mapping=refresh_for_mapping, availability_tier=next_id.get("tier"))
+    if claimed is None:
+        current = collection.find_one({"_id": identity}) or {}
+        now = datetime.utcnow()
+        fresh = bool(
+            current.get("updated_at")
+            and current["updated_at"] > now - country_state.FRESHNESS
+            and current.get("next_fetch_at")
+            and current["next_fetch_at"] > now
+            and not current.get("consecutive_failures")
+        )
+        return {
+            **outcome,
+            "outcome": "fresh" if fresh and not refresh_for_mapping else "deferred",
+            "next_fetch_at": current.get("next_fetch_at"),
+            "mapping_refresh_after": current.get("mapping_refresh_after"),
+            "upstream_retry_at": country_state.upstream_deadline(db),
+        }
+    if not page_admission.charge_pair(db, next_id.get("tier", "sweep")):
+        country_state.release_claim(collection, claimed)
+        return {**outcome, "outcome": "daily_budget"}
+    permit = None
+    def request(url, **kwargs):
+        nonlocal permit
+        from urllib.parse import urljoin
+        retries = 0
+        for redirect in range(8):
+            permit = page_admission.acquire(db, tier=next_id.get("tier") or "sweep", upstream_permit=permit if permit and permit["probe_token"] else None)
+            if permit is None:
+                raise RuntimeError("Page admission unavailable")
+            try:
+                try:
+                    response = client.get(url, follow_redirects=False, **kwargs)
+                except httpx.TransportError:
+                    if retries >= 2 or permit["probe_token"]:
+                        raise
+                    retries += 1
+                    continue
+            finally:
+                page_admission.release(db, permit)
+            if 500 <= response.status_code < 600 and retries < 2 and not permit["probe_token"]:
+                retries += 1
+                continue
+            if response.status_code not in (301, 302, 303, 307, 308):
+                return response
+            target = urljoin(url, response.headers["location"])
+            if urlsplit(target).hostname not in {"www.themoviedb.org", "themoviedb.org"} or urlsplit(target).scheme != "https":
+                raise ValueError("Unexpected watch-page redirect")
+            url = target
+        raise ValueError("Too many watch-page redirects")
     try:
-        db = get_db()
-        collection = db[f"tmdb_{media_type}_providers"]
-        identity = ObjectId(next_id["id"])
-        document = collection.find_one({"_id": identity})
-        outcome = {"id": str(identity), "type": media_type}
-        if document is None:
-            return {
-                **outcome,
-                "outcome": "failed",
-                "error": "Provider document not found",
-            }
-        outcome.update(
-            tmdb_id=document["tmdb_id"],
-            country_code=document.get("country_code"),
-        )
-        countries, errors = country_state.identity_map(
-            list(collection.find({"tmdb_id": document["tmdb_id"]})), media_type
-        )
-        if identity in errors:
-            country_state.record_identity_error(collection, document, errors[identity])
-            return {**outcome, "outcome": "failed", "error": errors[identity]}
-        country = country_state.country_from_url(
-            document["tmdb_watch_url"], document["tmdb_id"], media_type
-        )
-        outcome["country_code"] = country
-        country_state.normalize_document(collection, document, country)
-        claimed = country_state.claim(db, collection, identity, refresh_for_mapping=refresh_for_mapping)
-        if claimed is None:
-            current = collection.find_one({"_id": identity})
-            now = datetime.utcnow()
-            fresh = bool(
-                current.get("updated_at")
-                and current["updated_at"] > now - country_state.FRESHNESS
-                and current.get("next_fetch_at")
-                and current["next_fetch_at"] > now
-                and not current.get("consecutive_failures")
-            )
-            return {
-                **outcome,
-                "outcome": "fresh" if fresh and not refresh_for_mapping else "deferred",
-                "next_fetch_at": current.get("next_fetch_at"),
-                "mapping_refresh_after": current.get("mapping_refresh_after"),
-                "upstream_retry_at": country_state.upstream_deadline(db),
-            }
-        permit = country_state.acquire_upstream(db)
+        result = crawl_tmdb_watch_page(claimed, request=request)
+    except Exception as error:
         if permit is None:
             country_state.release_claim(collection, claimed)
-            return {**outcome, "outcome": "upstream_blocked",
-                    "upstream_retry_at": country_state.upstream_deadline(db)}
-        try:
-            result = crawl_tmdb_watch_page(claimed)
-        except Exception as error:
-            if permit["probe_token"]:
-                state = country_state.block_upstream(db, permit, "probe_failed")
-                country_state.release_claim(collection, claimed)
-                return {**outcome, "outcome": "upstream_blocked",
-                        "block_reason": "probe_failed", "upstream_retry_at": state["blocked_until"]}
-            saved = country_state.save_failure(db, collection, claimed, error)
-            return {**outcome, "outcome": "failed" if saved else "deferred",
-                    "retry_saved": saved, "error": str(error)}
-        if result.block_reason:
-            state = country_state.block_upstream(
-                db, permit, result.block_reason, retry_at=result.retry_at)
+            return {**outcome, "outcome": "upstream_blocked", "error": str(error)}
+        if permit and permit["probe_token"]:
+            state = country_state.block_upstream(db, permit, "probe_failed")
             country_state.release_claim(collection, claimed)
             return {**outcome, "outcome": "upstream_blocked",
-                    "block_reason": result.block_reason, "http_status": result.http_status,
-                    "upstream_retry_at": state.get("blocked_until")}
-        if result.streaming_links is None:
-            raise ValueError("Successful crawl must supply verified streaming links")
-        saved = country_state.save_success(
-            collection, claimed, [link.model_dump() for link in result.streaming_links])
+                    "block_reason": "probe_failed", "upstream_retry_at": state["blocked_until"]}
+        saved = country_state.save_failure(db, collection, claimed, error)
+        return {**outcome, "outcome": "failed" if saved else "deferred",
+                "retry_saved": saved, "error": str(error)}
+    if permit["probe_token"] and result.block_reason:
+        state = country_state.block_upstream(db, permit, "probe_failed")
+        country_state.release_claim(collection, claimed)
+        return {**outcome, "outcome": "upstream_blocked", "block_reason": "probe_failed", "upstream_retry_at": state["blocked_until"]}
+    if result.block_reason == "page_not_found":
+        collection.update_one(country_state.fence(claimed, datetime.utcnow()), {"$set": {"api_confirmation_pending": True}})
+        country_state.save_failure(db, collection, claimed, "page_not_found")
+        return {**outcome, "outcome": "page_not_found"}
+    if result.block_reason == "server_error":
+        country_state.save_failure(db, collection, claimed, "server_error")
+        return {**outcome, "outcome": "failed", "http_status": result.http_status}
+    if result.block_reason:
+        state = country_state.block_upstream(
+            db, permit, result.block_reason, retry_at=result.retry_at)
+        country_state.release_claim(collection, claimed)
+        return {**outcome, "outcome": "upstream_blocked",
+                "block_reason": result.block_reason, "http_status": result.http_status,
+                "upstream_retry_at": state.get("blocked_until")}
+    if result.streaming_links is None:
+        raise ValueError("Successful crawl must supply verified streaming links")
+    if not publication_enabled:
+        country_state.release_claim(collection, claimed)
         country_state.reopen_upstream(db, permit)
-        return {**outcome, "outcome": "fetched" if saved else "deferred",
-                "http_status": result.http_status,
-                "providers": result.model_dump() if saved else None}
+        return {**outcome, "outcome": "verified_shadow", "http_status": result.http_status}
+    if not country_state.reopen_upstream(db, permit):
+        country_state.release_claim(collection, claimed)
+        return {**outcome, "outcome": "deferred"}
+    saved = country_state.save_success(
+        collection, claimed, [link.model_dump() for link in result.streaming_links])
+    return {**outcome, "outcome": "fetched" if saved else "deferred",
+            "http_status": result.http_status,
+            "providers": result.model_dump() if saved else None}
+
+
+def main(next_id: dict, refresh_for_mapping: bool = False, publication_enabled: bool = True) -> dict:
+    init_mongodb()
+    try:
+        with httpx.Client(http2=True) as client:
+            return fetch_one(get_db(), next_id, refresh_for_mapping, client, publication_enabled)
     finally:
         close_mongodb()

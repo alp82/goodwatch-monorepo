@@ -23,7 +23,7 @@ def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
 
 # Publication decodes each offer's URL for reconciliation and again for evidence.
 @lru_cache(maxsize=16384)
-def provider_name_from_url(url: str | None) -> str | None:
+def provider_identity_from_url(url: str | None) -> tuple[str, int] | None:
     """Absent metadata permits exact-name fallback; malformed metadata fails."""
     if not url:
         return None
@@ -84,7 +84,7 @@ def provider_name_from_url(url: str | None) -> str | None:
             identities.add((name, vendor_id))
         if len(identities) != 1:
             raise ValueError("Missing or conflicting clickout provider identities")
-        return next(iter(identities))[0]
+        return next(iter(identities))
     except (
         ValueError,
         TypeError,
@@ -98,3 +98,14 @@ def provider_name_from_url(url: str | None) -> str | None:
 
 def main() -> None:
     pass
+
+
+def provider_name_from_url(url):
+    identity = provider_identity_from_url(url)
+    return identity[0] if identity else None
+
+
+def provider_id_from_url(url):
+    """JustWatch clickout ID; resolve against the current TMDB catalog first."""
+    identity = provider_identity_from_url(url)
+    return identity[1] if identity else None

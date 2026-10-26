@@ -30,7 +30,7 @@ from f.sync.availability_history import (
 )
 from f.sync.availability_evidence import build_evidence, quarantine_evidence
 from f.tmdb_api.provider_evidence import snapshot_id, utc_ms, validated_results
-from f.tmdb_web.provider_identity import provider_name_from_url
+from f.tmdb_web.provider_identity import provider_id_from_url, provider_name_from_url
 
 BATCH_SIZE = 5000
 SUB_BATCH_SIZE = 50000
@@ -173,11 +173,30 @@ def publication_lease(db: Any, media_type: str, tmdb_id: int, wait_seconds: floa
 
 def scoped_provider_id(
     name: str, country: str, stream_type: str, catalog: dict[str, list[dict]],
-    api_results: dict,
+    api_results: dict, *, clickout_url: str | None = None,
 ) -> int | None:
-    """Resolve exact catalog or title API names in the same offer scope."""
+    """Prefer catalog-recognized clickout identity, else scoped exact names."""
+    clickout_id = provider_id_from_url(clickout_url)
     candidates = catalog.get(name, [])
     identities = {row["tmdb_id"] for row in candidates}
+    catalog_ids = {row['tmdb_id'] for values in catalog.values() for row in values}
+    scoped = api_results.get(country, {}).get(stream_type, []) or []
+    scoped_ids = {offer.get('provider_id') for offer in scoped}
+    named_ids = {offer.get('provider_id') for offer in scoped
+                 if offer.get('provider_name') == name and offer.get('provider_id') in catalog_ids}
+    if clickout_id in catalog_ids:
+        # JW IDs are not a guaranteed TMDB namespace. A known scoped name wins
+        # a collision; the Apple store rename is corroborated by its scoped ID.
+        if len(named_ids) == 1:
+            return next(iter(named_ids))
+        if clickout_id in identities:
+            return clickout_id
+        same_name_in_scope = identities & scoped_ids
+        if len(same_name_in_scope) == 1:
+            return next(iter(same_name_in_scope))
+        if clickout_id in scoped_ids and not same_name_in_scope:
+            return clickout_id
+        return None
     if len(identities) == 1:
         return next(iter(identities))
     if not identities:
@@ -265,9 +284,14 @@ def reconcile_availability(
     for country, provider in verified.items():
         for offer in provider.get("streaming_links", []) or []:
             provider_name = provider_name_from_url(offer.get("stream_url")) or offer.get("provider_name")
-            service_id = scoped_provider_id(provider_name, country, offer["stream_type"], service_ids, api_results)
+            service_id = scoped_provider_id(provider_name, country, offer["stream_type"], service_ids,
+                                             api_results, clickout_url=offer.get('stream_url'))
             if service_id is None:
                 raise UnmappedStreamingProvider(provider_name, tmdb_id, media_type, country)
+            from f.tmdb_api.provider_evidence import api_excludes_older_web_offer
+            if api_excludes_older_web_offer(details, country, offer['stream_type'], service_id,
+                                            provider.get('updated_at')):
+                continue
             entry(country, offer["stream_type"], service_id).update(
                 stream_url=offer.get("stream_url"), price_dollar=offer.get("price_dollar"),
                 quality=offer.get("quality"))
@@ -554,16 +578,27 @@ def publish_quarantined(
         }
 
 
+@contextmanager
+def publication_audit(audit_context, check_owned):
+    """Optional operator archive/receipt scope inside the existing title lease."""
+    if audit_context is None:
+        yield
+    else:
+        with audit_context(check_owned):
+            yield
+
+
 def publish_title(
     mongo_db: Any, connector: CrateConnector, tmdb_id: int, media_type: str, MediaClass: Any,
     mongo_details: Any, mongo_providers: Any, service_ids: dict, lease_wait_seconds: float,
     refresh_budget: RefreshBudget, entity_counts: dict, publication: dict, targeted: bool,
+    audit_context: Optional[Callable] = None,
 ) -> None:
     """Publish one title under its own lease, refreshing unmapped countries within the budget."""
     with publication_snapshot(
         mongo_db, connector, tmdb_id, media_type, mongo_details, mongo_providers, service_ids,
         lease_wait_seconds, refresh_budget,
-    ) as snapshot:
+    ) as snapshot, publication_audit(audit_context, snapshot[0]):
         check_owned, existing, providers, rows, verified, api_results, refresh_outcomes, details = snapshot
         unverified = [
             row for row in providers

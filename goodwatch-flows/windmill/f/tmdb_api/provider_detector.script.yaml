@@ -1,0 +1,35 @@
+summary: Bounded TMDB provider detector
+description: Preview reads only; shadow stores isolated observations; publish
+  uses the existing targeted streaming publisher.
+lock: '!inline f/tmdb_api/provider_detector.script.lock'
+concurrency_time_window_s: 0
+concurrent_limit: 1
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    max_requests:
+      type: integer
+      default: 100000
+      maximum: 100000
+      minimum: 1
+    max_seconds:
+      type: integer
+      default: 3600
+      maximum: 3600
+      minimum: 1
+    max_titles:
+      type: integer
+      default: 100000
+      maximum: 100000
+      minimum: 1
+    mode:
+      type: string
+      default: preview
+      enum:
+        - preview
+        - shadow
+        - publish
+  required: []
+timeout: 3900

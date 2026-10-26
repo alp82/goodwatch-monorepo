@@ -27,6 +27,8 @@ def eligibility(now: datetime | None = None) -> dict:
             {"country_identity_error": None},
             # Titles deleted on TMDB are never crawled; a missing flag counts as not deleted.
             {"tmdb_deleted": {"$ne": True}},
+            {"country_code": {"$ne": "NE"}},
+            {"provider_verified_empty": {"$ne": True}},
             {
                 "$or": [
                     {"next_fetch_at": {"$lte": now}},
@@ -54,7 +56,7 @@ def claim(
     collection: Collection,
     identity: ObjectId,
     now: datetime | None = None,
-    *, refresh_for_mapping: bool = False,
+    *, refresh_for_mapping: bool = False, availability_tier: str | None = None,
 ) -> dict | None:
     now = now or datetime.utcnow()
     if upstream_deadline(db, now) is not None:
@@ -67,6 +69,8 @@ def claim(
         selector = {"$and": [
             {"country_identity_error": None},
             {"tmdb_deleted": {"$ne": True}},
+            {"country_code": {"$ne": "NE"}},
+            {"provider_verified_empty": {"$ne": True}},
             {"$or": [{"lease_expires_at": None}, {"lease_expires_at": {"$lte": now}}]},
             {"$or": [{"mapping_refresh_after": None}, {"mapping_refresh_after": {"$lte": now}}]},
             {"$or": [{"consecutive_failures": None}, {"consecutive_failures": 0},
@@ -75,11 +79,25 @@ def claim(
         # Retain this after a successful HTTP response: its provider names may
         # still be unmapped, and repeated publication must not hammer the source.
         lease["mapping_refresh_after"] = now + MAPPING_REFRESH_BACKOFF
-    return collection.find_one_and_update(
+    if availability_tier == "unsupported_probe":
+        selector = eligibility(now)
+        selector["$and"] = [part for part in selector["$and"] if "country_code" not in part]
+        selector["$and"].append({"country_code": "NE"})
+    elif availability_tier and not refresh_for_mapping:
+        from f.tmdb_web.availability_selector import available, due
+        candidate = collection.find_one({"_id": identity}, {"tmdb_id": 1})
+        if candidate is None:
+            return None
+        selector = {"$and": [available(now), due(availability_tier, now, [candidate["tmdb_id"]])]}
+    claimed = collection.find_one_and_update(
         {"_id": identity, **selector},
         {"$set": lease},
         return_document=ReturnDocument.AFTER,
     )
+
+    if claimed:
+        claimed["claim_provider_change_revision"] = claimed.get("provider_change_revision")
+    return claimed
 
 
 def fence(document: dict, now: datetime) -> dict:
@@ -98,10 +116,11 @@ def save_success(
 ) -> bool:
     now = now or datetime.utcnow()
     result = collection.update_one(
-        fence(document, now),
+        {**fence(document, now), "tmdb_deleted": {"$ne": True}},
         {
             "$set": {
                 "streaming_links": links,
+                "has_streaming_links": bool(links),
                 "updated_at": now,
                 "next_fetch_at": now + FRESHNESS,
                 "consecutive_failures": 0,
@@ -116,6 +135,8 @@ def save_success(
             },
         },
     )
+    if result.modified_count == 1 and document.get("claim_provider_change_revision") is not None:
+        collection.update_one({"_id": document["_id"], "provider_change_revision": document["claim_provider_change_revision"], "updated_at": now}, {"$set": {"provider_change_pending": False}})
     return result.modified_count == 1
 
 
@@ -183,7 +204,10 @@ def reopen_upstream(db: Database, permit: dict, now: datetime | None = None) -> 
     fields = {"consecutive_blocks": 0, "last_success_at": now}
     if permit["probe_token"]:
         fields["reopened_at"] = now
-    result = db.tmdb_streaming_upstream.update_one(upstream_fence(permit), {
+    selector = upstream_fence(permit)
+    if permit['probe_token']:
+        selector['probe_expires_at'] = {'$gt': now}
+    result = db.tmdb_streaming_upstream.update_one(selector, {
         "$set": fields,
         "$unset": {"blocked_until": "", "blocked_since": "", "block_reason": "",
                    "probe_token": "", "probe_expires_at": ""},
@@ -303,7 +327,8 @@ def identity_map(documents: list[dict], media_type: str) -> tuple[dict, dict]:
 def normalization_update(document: dict, country: str) -> tuple[dict, dict]:
     # Compare the fields used to derive state: never overwrite a concurrent scrape,
     # retry or replacement claim while migrating legacy records.
-    fields: dict = {"country_code": country, "country_identity_ready": True}
+    fields: dict = {"country_code": country, "country_identity_ready": True,
+                    "has_streaming_links": bool(document.get("streaming_links"))}
     if document.get("next_fetch_at") is None:
         fields["next_fetch_at"] = (
             document["updated_at"] + FRESHNESS
@@ -336,6 +361,10 @@ def normalize_document(
 
 
 def ensure_indexes(collection: Collection) -> None:
+    collection.create_index(
+        [("updated_at", 1), ("has_streaming_links", 1), ("_id", 1)],
+        name="availability_oldest_links",
+    )
     collection.create_index(
         [("next_fetch_at", 1), ("lease_expires_at", 1)],
         name="country_eligibility",
@@ -499,6 +528,7 @@ def insertion_update(
             "created_at": now,
             "next_fetch_at": datetime(1970, 1, 1),
             "consecutive_failures": 0,
+            "has_streaming_links": False,
             "original_title": original_title,
             "popularity": popularity,
         }

@@ -1,3 +1,4 @@
+import socket
 """Shared upstream gate regressions; no real network or database writes."""
 import sys
 import unittest
@@ -19,6 +20,9 @@ NOW = datetime(2026, 10, 17, 12)
 
 class UpstreamTests(unittest.TestCase):
     def setUp(self):
+        guard = patch.object(socket.socket, "connect", side_effect=AssertionError("Network forbidden in tests"))
+        guard.start()
+        self.addCleanup(guard.stop)
         self.db = mongomock.MongoClient().test
 
     def test_classification_and_honest_identity(self):
@@ -30,8 +34,8 @@ class UpstreamTests(unittest.TestCase):
         ]:
             with self.subTest(code=code, reason=reason):
                 response = SimpleNamespace(status_code=code, text=text, headers={})
-                with patch.object(fetch.requests, 'get', return_value=response) as http:
-                    result = fetch.crawl_tmdb_watch_page({'tmdb_watch_url': 'https://www.themoviedb.org/movie/42/watch?locale=US', 'country_code': 'US'})
+                with patch.object(fetch.httpx.Client, 'get', return_value=response) as http:
+                    result = fetch.crawl_tmdb_watch_page({'tmdb_watch_url': 'https://www.themoviedb.org/movie/42/watch?locale=US', 'country_code': 'US'}, request=fetch.httpx.Client.get)
                 self.assertEqual(result.block_reason, reason)
                 self.assertTrue(http.call_args.kwargs['headers']['User-Agent'].startswith('GoodWatchBot/'))
 
@@ -98,7 +102,7 @@ class UpstreamTests(unittest.TestCase):
                 identity = self.db.tmdb_movie_providers.insert_one({
                     'tmdb_id': 42, 'country_code': 'US',
                     'tmdb_watch_url': 'https://www.themoviedb.org/movie/42/watch?locale=US'}).inserted_id
-                with patch.object(fetch, 'init_mongodb'), patch.object(fetch, 'close_mongodb'), patch.object(fetch, 'get_db', return_value=self.db), patch.object(fetch.requests, 'get', return_value=response):
+                with patch.object(fetch, 'init_mongodb'), patch.object(fetch, 'close_mongodb'), patch.object(fetch, 'get_db', return_value=self.db), patch.object(fetch.httpx.Client, 'get', return_value=response):
                     result = fetch.main({'id': str(identity), 'type': 'movie'})
                 self.assertEqual(result['outcome'], 'upstream_blocked')
                 self.assertEqual(result['block_reason'], 'probe_failed')
@@ -127,11 +131,13 @@ class UpstreamTests(unittest.TestCase):
         self.assertIsNone(fetch.retry_deadline(None))
 
     def test_block_does_not_fail_or_reschedule_country(self):
+        from f.tmdb_web.page_admission import initialize
+        initialize(self.db)
         collection = self.db.tmdb_movie_providers
         before = {'tmdb_id': 42, 'country_code': 'US', 'tmdb_watch_url': 'https://www.themoviedb.org/movie/42/watch?locale=US', 'updated_at': NOW - timedelta(days=8), 'next_fetch_at': NOW - timedelta(days=1), 'streaming_links': [{'provider_name': 'Old'}], 'consecutive_failures': 2}
         identity = collection.insert_one(before).inserted_id
         original = collection.find_one({'_id': identity})
-        with patch.object(fetch, 'init_mongodb'), patch.object(fetch, 'close_mongodb'), patch.object(fetch, 'get_db', return_value=self.db), patch.object(fetch.requests, 'get', return_value=SimpleNamespace(status_code=403, text='<title>Just a moment...</title>', headers={})):
+        with patch.object(fetch, 'init_mongodb'), patch.object(fetch, 'close_mongodb'), patch.object(fetch, 'get_db', return_value=self.db), patch.object(fetch.httpx.Client, 'get', return_value=SimpleNamespace(status_code=403, text='<title>Just a moment...</title>', headers={})):
             result = fetch.main({'id': str(identity), 'type': 'movie'})
         self.assertEqual(result['outcome'], 'upstream_blocked')
         self.assertEqual(result['block_reason'], 'challenge')

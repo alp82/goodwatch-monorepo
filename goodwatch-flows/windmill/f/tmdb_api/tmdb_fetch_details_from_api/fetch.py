@@ -12,7 +12,8 @@ from f.data_source.common import get_documents_for_ids
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_api.deleted_propagation import propagate_tmdb_deleted
 from f.tmdb_api.provider_evidence import capture_provider_check, snapshot_id, is_tmdb_deleted_response
-from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
+from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails, WatchProviders
+from f.tmdb_api.provider_observations import save_observation, read_observation, record_attempt
 
 
 BATCH_SIZE = 30
@@ -80,15 +81,27 @@ async def isolate_failure(next_entry, coroutine):
         return failed_entry
 
 
+def provider_failure(next_entry, now, error):
+    if next_entry._created:
+        next_entry.update(set__watch_providers_attempted_at=now, set__watch_providers_error=error)
+    else:
+        record_attempt(next_entry._get_db(), "movie" if isinstance(next_entry, TmdbMovieDetails) else "show",
+                       next_entry.tmdb_id, now, error)
+
+
 async def fetch_api_data(
     next_entry: Union[TmdbMovieDetails, TmdbTvDetails], bypass_cache: bool = False,
 ) -> tuple[dict, Union[TmdbMovieDetails, TmdbTvDetails]]:
     options = {"bypass_cache": True} if bypass_cache else {}
     try:
         if isinstance(next_entry, TmdbMovieDetails):
-            return fetch_movie_data(next_entry, **options)
+            result = fetch_movie_data(next_entry, **options)
+            next_entry._provider_observed_at = datetime.utcnow()
+            return result
         elif isinstance(next_entry, TmdbTvDetails):
-            return fetch_tv_data(next_entry, **options)
+            result = fetch_tv_data(next_entry, **options)
+            next_entry._provider_observed_at = datetime.utcnow()
+            return result
         raise TypeError("Unexpected TMDB media model")
     except requests.HTTPError as e:
         if is_tmdb_deleted_response(e.response):
@@ -105,10 +118,10 @@ async def fetch_api_data(
             )
             print(f"skipping {next_entry.original_title} (id: {next_entry.tmdb_id}): deleted on TMDB")
             return None
-        next_entry.update(set__watch_providers_attempted_at=datetime.utcnow(), set__watch_providers_error="provider_request_failed")
+        provider_failure(next_entry, datetime.utcnow(), "provider_request_failed")
         raise
     except Exception:
-        next_entry.update(set__watch_providers_attempted_at=datetime.utcnow(), set__watch_providers_error="provider_request_failed")
+        provider_failure(next_entry, datetime.utcnow(), "provider_request_failed")
         raise
 
 
@@ -141,18 +154,15 @@ def fetch_tv_data(next_entry: TmdbTvDetails, bypass_cache: bool = False) -> tupl
 async def convert_and_save_details(
     next_entry: Union[TmdbMovieDetails, TmdbTvDetails], details: dict, bypass_cache: bool = False
 ):
-    now = datetime.utcnow()
+    now = getattr(next_entry, "_provider_observed_at", None) or datetime.utcnow()
+    provider_payload = details.get("watch/providers")
     try:
         proof = capture_provider_check(details, next_entry.tmdb_id, now,
                                        previous=next_entry.watch_providers_check, bypass_cache=bypass_cache)
     except ValueError:
-        next_entry.update(set__watch_providers_attempted_at=now, set__watch_providers_error="identity_mismatch")
+        provider_failure(next_entry, now, "identity_mismatch")
         raise
-    next_entry.watch_providers_attempted_at = now
-    next_entry.watch_providers_error = "" if proof else "missing_or_invalid_provider_response"
-    if proof:
-        next_entry.watch_providers_check = proof
-    else:
+    if not proof:
         # Keep prior payload and proof together; omission must never refresh them.
         details.pop("watch/providers", None)
     if isinstance(next_entry, TmdbMovieDetails):
@@ -168,7 +178,7 @@ async def convert_and_save_details(
         else TmdbTvDetails._fields
     )
     for key in fields:
-        if key in converted_details:
+        if key in converted_details and not key.startswith("watch_providers"):
             value = converted_details[key]
             if value == "":
                 value = None
@@ -184,9 +194,6 @@ async def convert_and_save_details(
 
             setattr(next_entry, key, value)
 
-    if proof:
-        # Bind to Mongo's normalized representation, including cleaned strings.
-        next_entry.watch_providers_check = proof | {"payload_hash": snapshot_id(next_entry.watch_providers.to_mongo().to_dict())}
     next_entry.updated_at = datetime.utcnow()
     next_entry.is_selected = False
     # A title that comes back on TMDB is restored.
@@ -194,7 +201,45 @@ async def convert_and_save_details(
     next_entry.tmdb_deleted = False
     next_entry.tmdb_deleted_at = None
     try:
-        next_entry.save()
+        if next_entry._created:
+            # New documents have no concurrent provider writer yet. The regular
+            # queue supplies persisted documents; this also supports imports.
+            next_entry.watch_providers_attempted_at = now
+            next_entry.watch_providers_error = "" if proof else "missing_or_invalid_provider_response"
+            if proof:
+                from f.tmdb_api.provider_observations import normalize_payload
+                next_entry.watch_providers = WatchProviders(**normalize_payload(provider_payload))
+                next_entry.watch_providers_check = proof | {"payload_hash": snapshot_id(next_entry.watch_providers.to_mongo().to_dict())}
+            next_entry.save()
+            if not next_entry._created and proof:
+                save_observation(next_entry._get_db(), "movie" if isinstance(next_entry, TmdbMovieDetails) else "show",
+                                 next_entry.tmdb_id, provider_payload, now, cache_bypassed=bypass_cache)
+        else:
+            db = next_entry._get_db()
+            media_type = "movie" if isinstance(next_entry, TmdbMovieDetails) else "show"
+            # A full document save could replay provider state read before an API
+            # detector/list writer. Persist metadata with explicit field ownership.
+            metadata = {key: value for key, value in next_entry.to_mongo().to_dict().items()
+                        if key not in ("_id", "tmdb_deleted", "tmdb_deleted_at")
+                        and not key.startswith(("watch_providers", "provider_detector"))}
+            collection = next_entry._get_collection()
+            collection.update_one({"_id": next_entry.id}, {"$set": metadata})
+            # A slow metadata success cannot resurrect an API deletion observed
+            # after that response. Restoration is independent of metadata fields.
+            restored = collection.update_one({"_id": next_entry.id, "tmdb_deleted": True, "$or": [
+                {"tmdb_deleted_at": {"$lte": now}}, {"tmdb_deleted_at": None},
+            ]}, {"$set": {"tmdb_deleted": False, "tmdb_deleted_at": None}})
+            was_deleted = restored.modified_count == 1
+            if proof:
+                save_observation(db, media_type, next_entry.tmdb_id, provider_payload, now,
+                                 cache_bypassed=bypass_cache)
+            else:
+                record_attempt(db, media_type, next_entry.tmdb_id, now, "missing_or_invalid_provider_response")
+            current = read_observation(db, media_type, next_entry.tmdb_id)
+            if current:
+                next_entry.watch_providers = WatchProviders(**current['payload'])
+                next_entry.watch_providers_check = current['proof']
+            next_entry._clear_changed_fields()
         print(
             f"details saved for {next_entry.title} (id: {next_entry.tmdb_id}) (popularity: {next_entry.popularity})"
         )

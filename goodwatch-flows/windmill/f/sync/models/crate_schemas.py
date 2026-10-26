@@ -26,6 +26,8 @@ SCHEMAS = {
             "claimed_demand": "BIGINT DEFAULT 0",
             "alias_demand_transfers": "OBJECT(DYNAMIC)",
             "last_success_at": "TIMESTAMP",
+            # Accepted first-party title views; independent of metadata acknowledgment.
+            "last_opened_at": "TIMESTAMP WITH TIME ZONE",
             "lease_token": "TEXT",
             "lease_expires_at": "TIMESTAMP",
         },

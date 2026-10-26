@@ -2,6 +2,7 @@
 import json
 from f.tmdb_api.provider_evidence import (
     OFFER_TYPES, snapshot_id, utc_ms, validated_results, list_scope_checker, list_scope_conflicting_countries,
+    api_excludes_older_web_offer,
 )
 from f.tmdb_web.provider_identity import provider_name_from_url
 
@@ -48,12 +49,15 @@ def build_evidence(tmdb_id, media_type, details, providers, rows, verified, reso
                         continue
                     try:
                         name = provider_name_from_url(offer.get("stream_url")) or offer.get("provider_name")
-                        service = resolver(name, country, offer.get("stream_type"), catalog, api)
+                        service = resolver(name, country, offer.get("stream_type"), catalog, api,
+                                           clickout_url=offer.get('stream_url'))
                     except (ValueError, TypeError):
                         reason = reason or "invalid"
                         continue
                     if service is None or offer.get("stream_type") not in OFFER_TYPES:
                         reason = reason or "mapping_incomplete"
+                        continue
+                    if api_excludes_older_web_offer(details, country, offer['stream_type'], service, checked):
                         continue
                     if excludes(country, service, offer.get('stream_type'), checked):
                         continue

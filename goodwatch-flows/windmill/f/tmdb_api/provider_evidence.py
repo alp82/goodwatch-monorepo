@@ -46,11 +46,29 @@ def snapshot_id(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
 
 
+def api_excludes_older_web_offer(details, country, kind, service_id, web_checked_at):
+    """Only newer, explicit, uncached country proof can supersede a page offer."""
+    payload, proof = details.get('watch_providers') or {}, details.get('watch_providers_check') or {}
+    results = validated_results(payload)
+    page_at = web_checked_at if type(web_checked_at) is int else utc_ms(web_checked_at)
+    api_at = proof.get('checked_at')
+    if (results is None or country not in results or kind not in OFFER_TYPES
+            or country not in proof.get('countries', []) or proof.get('cache_bypassed') is not True
+            or proof.get('payload_hash') != snapshot_id(payload) or type(api_at) is not int
+            or page_at is None or api_at <= page_at):
+        return False
+    return not any(offer['provider_id'] == service_id for offer in results[country].get(kind, []))
+
+
 def validated_results(payload):
     if not isinstance(payload, dict) or not isinstance(payload.get("results"), dict):
         return None
+    if payload.get("success") is False or payload.get("total_pages", 1) != 1:
+        return None
     for country, data in payload["results"].items():
         if not isinstance(country, str) or len(country) != 2 or not country.isascii() or not country.isalpha() or country != country.upper() or not isinstance(data, dict):
+            return None
+        if set(data) - {"link", *OFFER_TYPES}:
             return None
         if data.get("link") is not None and not isinstance(data["link"], str):
             return None

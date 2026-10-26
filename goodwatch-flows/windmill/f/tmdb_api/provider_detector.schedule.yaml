@@ -1,0 +1,10 @@
+summary: Hourly provider detector shadow, 00:00–11:00 UTC
+schedule: 0 0 0-11 * * *
+timezone: UTC
+script_path: f/tmdb_api/provider_detector
+is_flow: false
+args:
+  mode: shadow
+enabled: false
+no_flow_overlap: true
+cron_version: v2

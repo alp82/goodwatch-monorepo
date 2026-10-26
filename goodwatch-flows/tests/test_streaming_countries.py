@@ -1,3 +1,4 @@
+import socket
 """Country scraping contracts at Mongo persistence and script entrypoints.
 
 Run with: python -m unittest discover -s tests -p test_streaming_countries.py
@@ -29,7 +30,12 @@ def country_control(code: str) -> str:
 
 class CountryStateTests(unittest.TestCase):
     def setUp(self) -> None:
+        guard = patch.object(socket.socket, "connect", side_effect=AssertionError("Network forbidden in tests"))
+        guard.start()
+        self.addCleanup(guard.stop)
         self.db = mongomock.MongoClient().countries
+        from f.tmdb_web.page_admission import initialize
+        initialize(self.db)
         self.collection = self.db.tmdb_movie_providers
         self.now = datetime(2026, 9, 10, 12)
 
@@ -46,15 +52,15 @@ class CountryStateTests(unittest.TestCase):
         from f.tmdb_web.tmdb_crawl_providers import fetch
         empty = '<div id="ott_offers_window"><p class="no_offers">No offers</p></div>'
         controls = ['', '<script>$("#ott_country_filter").kendoDropDownList({value: "DE", dataValueField: "country_code"});</script>',
-                    '<script>$("#ott_country_filter").kendoDropDownList({value: "NE", dataValueField: "country_code"});$("#ott_country_filter").kendoDropDownList({value: "DE", dataValueField: "country_code"});</script>']
+                    '<script>$("#ott_country_filter").kendoDropDownList({value: "DO", dataValueField: "country_code"});$("#ott_country_filter").kendoDropDownList({value: "DE", dataValueField: "country_code"});</script>']
         pages = [empty + control for control in controls]
-        pages.append(country_control('NE') + '<div id="ott_offers_window"><div class="ott_provider"><h3>Stream</h3><li class="ott_filter_best_price"><a href="https://click.justwatch.com/a?uct_country=de" title="Watch on Old">Watch</a></li></div></div>')
+        pages.append(country_control('DO') + '<div id="ott_offers_window"><div class="ott_provider"><h3>Stream</h3><li class="ott_filter_best_price"><a href="https://click.justwatch.com/a?uct_country=de" title="Watch on Old">Watch</a></li></div></div>')
         for page in pages:
             self.collection.delete_many({})
-            identity = self.country(country_code='NE', tmdb_watch_url='https://www.themoviedb.org/movie/42/watch?locale=NE',
+            identity = self.country(country_code='DO', tmdb_watch_url='https://www.themoviedb.org/movie/42/watch?locale=DO',
                                     updated_at=self.now, next_fetch_at=self.now, streaming_links=[{'provider_name': 'Old', 'stream_url': 'https://old'}])
             response = SimpleNamespace(status_code=200, text=page, headers={})
-            with patch.object(fetch, 'init_mongodb'), patch.object(fetch, 'close_mongodb'), patch.object(fetch, 'get_db', return_value=self.db), patch.object(fetch.requests, 'get', return_value=response):
+            with patch.object(fetch, 'init_mongodb'), patch.object(fetch, 'close_mongodb'), patch.object(fetch, 'get_db', return_value=self.db), patch.object(fetch.httpx.Client, 'get', return_value=response):
                 result = fetch.main({'id': str(identity), 'type': 'movie'})
             self.assertEqual(result['outcome'], 'failed')
             self.assertTrue(result['retry_saved'])
@@ -118,7 +124,7 @@ class CountryStateTests(unittest.TestCase):
                                 streaming_links=[{"provider_name": "Cineplex"}])
         page = country_control("US") + '<div id="ott_offers_window"><p class="no_offers">No offers</p></div>'
         response = SimpleNamespace(status_code=200, text=page, headers={})
-        with patch.object(fetch, "init_mongodb"), patch.object(fetch, "close_mongodb"), patch.object(fetch, "get_db", return_value=self.db), patch.object(fetch.requests, "get", return_value=response) as request:
+        with patch.object(fetch, "init_mongodb"), patch.object(fetch, "close_mongodb"), patch.object(fetch, "get_db", return_value=self.db), patch.object(fetch.httpx.Client, "get", return_value=response) as request:
             result = fetch.main({"id": str(identity), "type": "movie"}, refresh_for_mapping=True)
             self.assertEqual(result["outcome"], "fetched")
             result = fetch.main({"id": str(identity), "type": "movie"}, refresh_for_mapping=True)
@@ -136,7 +142,7 @@ class CountryStateTests(unittest.TestCase):
         ):
             identity = self.country(**fields)
             self.assertIsNone(country_state.claim(self.db, self.collection, identity, now=self.now, refresh_for_mapping=True))
-        self.db.tmdb_streaming_upstream.insert_one({"_id": "tmdb_watch", "blocked_until": self.now + timedelta(hours=1)})
+        self.db.tmdb_streaming_upstream.update_one({"_id": "tmdb_watch"}, {"$set": {"blocked_until": self.now + timedelta(hours=1)}})
         identity = self.country()
         self.assertIsNone(country_state.claim(self.db, self.collection, identity, now=self.now, refresh_for_mapping=True))
 
@@ -347,7 +353,7 @@ class CountryStateTests(unittest.TestCase):
             patch.object(fetch, "init_mongodb"),
             patch.object(fetch, "close_mongodb"),
             patch.object(fetch, "get_db", return_value=self.db),
-            patch.object(fetch.requests, "get", return_value=response) as http,
+            patch.object(fetch.httpx.Client, "get", return_value=response) as http,
         ):
             first = fetch.main({"id": str(identity), "type": "movie"})
             second = fetch.main({"id": str(identity), "type": "movie"})
@@ -372,7 +378,7 @@ class CountryStateTests(unittest.TestCase):
             patch.object(fetch, "init_mongodb"),
             patch.object(fetch, "close_mongodb"),
             patch.object(fetch, "get_db", return_value=self.db),
-            patch.object(fetch.requests, "get", return_value=response),
+            patch.object(fetch.httpx.Client, "get", return_value=response),
         ):
             result = fetch.main({"id": str(identity), "type": "movie"})
         self.assertEqual(result["outcome"], "failed")
@@ -444,7 +450,7 @@ class CountryStateTests(unittest.TestCase):
                 headers={},
             )
             http = stack.enter_context(
-                patch.object(fetch.requests, "get", return_value=response)
+                patch.object(fetch.httpx.Client, "get", return_value=response)
             )
             outcomes = [
                 fetch.main(identity)["outcome"] for identity in priority
@@ -471,7 +477,7 @@ class CountryStateTests(unittest.TestCase):
             patch.object(fetch, "init_mongodb"),
             patch.object(fetch, "close_mongodb"),
             patch.object(fetch, "get_db", return_value=self.db),
-            patch.object(fetch.requests, "get", return_value=response) as http,
+            patch.object(fetch.httpx.Client, "get", return_value=response) as http,
         ):
             for identity in ids:
                 response.text = html + country_control(self.collection.find_one({"_id": identity})["country_code"])
@@ -589,7 +595,7 @@ class CountryStateTests(unittest.TestCase):
             patch.object(fetch, "init_mongodb"),
             patch.object(fetch, "close_mongodb"),
             patch.object(fetch, "get_db", return_value=self.db),
-            patch.object(fetch.requests, "get") as http,
+            patch.object(fetch.httpx.Client, "get") as http,
         ):
             first = selector.main()["movie_ids"]
             self.assertEqual(

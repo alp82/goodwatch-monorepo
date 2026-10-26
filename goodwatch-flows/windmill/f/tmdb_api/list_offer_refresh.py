@@ -325,18 +325,21 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
             if proof.get('deleted'):
                 raise RefreshDeferred('provider_reports_deleted')
             check_owned()
-            with timed_stage(timings, 'source_read_worker_seconds', timing_lock):
-                previous = details.find_one({'_id': source['_id']}, {'tmdb_id': 1, 'watch_providers_check': 1}) or {}
-            payload, proof, checks = source_snapshot(previous, payload, proof, item['scopes'])
-            scoped_proofs = {f'watch_providers_list_scopes.{scope}': value for scope, value in checks.items()}
+            from f.tmdb_api.provider_observations import save_observation
             with timed_stage(timings, 'source_write_worker_seconds', timing_lock):
-                saved = details.update_one({'_id': source['_id'], 'tmdb_deleted': {'$ne': True}, '$or': [
-                    {'watch_providers_check.checked_at': {'$lte': proof['checked_at']}},
-                    {'watch_providers_check.checked_at': {'$exists': False}},
-                ]}, {'$set': {'watch_providers': payload, 'watch_providers_check': proof,
-                             'watch_providers_error': '', 'watch_providers_attempted_at': clock(), **scoped_proofs}})
-            if saved.matched_count != 1:
-                raise RefreshDeferred('newer_source_won')
+                saved = save_observation(db, media, tmdb_id, payload, proof['checked_at'], cache_bypassed=True)
+                if saved['status'] not in ('saved', 'reused'):
+                    raise RefreshDeferred('newer_source_won' if saved['status'] == 'stale' else 'invalid_provider_source')
+                # List scopes are independent evidence. Advance each one only
+                # while the exact all-country observation still owns the source.
+                payload, proof, checks = source_snapshot({'tmdb_id': tmdb_id,
+                    'watch_providers_check': saved['proof']}, saved['payload'], saved['proof'], item['scopes'])
+                for scope, value in checks.items():
+                    details.update_one({'_id': source['_id'],
+                        'watch_providers_check.checked_at': saved['checked_at'], '$or': [
+                            {f'watch_providers_list_scopes.{scope}.checked_at': {'$lte': value['checked_at']}},
+                            {f'watch_providers_list_scopes.{scope}.checked_at': None},
+                        ]}, {'$set': {f'watch_providers_list_scopes.{scope}': value}})
             check_owned()
             return item
         except (TMDBAccessDenied, RequestBudgetExceeded, LeaseLost):

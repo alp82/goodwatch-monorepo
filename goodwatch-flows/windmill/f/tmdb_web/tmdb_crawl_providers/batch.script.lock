@@ -1,0 +1,25 @@
+# workspace-dependencies-mode: manual
+# py: 3.12
+annotated-types==0.8.0
+anyio==4.15.1
+beautifulsoup4==4.15.0
+certifi==2026.10.23
+charset-normalizer==3.5.2
+dnspython==2.9.0
+h11==0.16.0
+h2==4.3.0
+hpack==4.2.0
+httpcore==1.0.9
+httpx==0.28.1
+hyperframe==6.1.0
+idna==3.20
+mongoengine==0.29.3
+pydantic==2.13.5
+pydantic-core==2.46.5
+pymongo==4.18.1
+requests==2.34.2
+soupsieve==3.0.4
+typing-extensions==4.16.0
+typing-inspection==0.4.4
+urllib3==2.8.0
+wmill==1.815.0

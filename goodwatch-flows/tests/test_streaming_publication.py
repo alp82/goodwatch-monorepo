@@ -1,5 +1,6 @@
 """Publication boundary tests using Mongo collections and a recording Crate adapter."""
 import ast
+import json
 import time
 from collections import defaultdict
 from contextlib import contextmanager
@@ -20,7 +21,7 @@ from pydantic import BaseModel, ConfigDict
 
 ROOT = Path(__file__).parents[1] / "windmill" / "f"
 sys.path.insert(0, str(ROOT.parent))
-from f.tmdb_web.provider_identity import provider_name_from_url
+from f.tmdb_web.provider_identity import provider_id_from_url, provider_name_from_url
 from f.sync.copy.deleted_titles import flagged_among
 from f.sync.availability_history import HistoryTitle, HistoryPublication, OfferKey, availability_key, acknowledge_history, publish_history
 from f.sync.availability_evidence import build_evidence, quarantine_evidence
@@ -102,6 +103,7 @@ def load_copy(db: Any) -> Callable[..., dict]:
                      Movie=Record, Show=Record, StreamingAvailability=Record, StreamingEvidence=StreamingEvidence, build_evidence=build_evidence, quarantine_evidence=quarantine_evidence,
                      SCHEMAS={name: {"primary_key": ["tmdb_id"]} for name in ("movie", "show", "streaming_availability", "streaming_evidence")},
                      get_db=lambda: db, provider_name_from_url=provider_name_from_url,
+                     provider_id_from_url=provider_id_from_url,
                      flagged_among=flagged_among,
                      publish_history=publish_history, acknowledge_history=acknowledge_history,
                      HistoryTitle=HistoryTitle, HistoryPublication=HistoryPublication, OfferKey=OfferKey, availability_key=availability_key,
@@ -124,6 +126,78 @@ class StreamingPublicationTests(unittest.TestCase):
 
     def publish(self, crate: Crate) -> dict:
         return self.copy(crate, {"tmdb_id": {"$in": [42]}}, "show", recent_only=False)
+
+    def test_clickout_store_identity_merges_rows_and_agrees_with_evidence(self):
+        catalog = [{"tmdb_id": 2, "name": "Apple TV Store"}, {"tmdb_id": 350, "name": "Apple TV"}]
+        class CatalogCrate(Crate):
+            def select(self, sql, params=None):
+                return catalog if 'FROM streaming_service' in sql else super().select(sql, params)
+        payload = {'results': {'US': {'link': 'https://tmdb/watch', 'buy': [
+            {'provider_id': 2, 'provider_name': 'Apple TV Store', 'display_priority': 1}]}}}
+        from f.tmdb_api.provider_evidence import capture_provider_check
+        proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42, self.now)
+        self.db.tmdb_tv_details.update_one({'tmdb_id': 42}, {'$set': {
+            'updated_at': self.now, 'watch_providers': payload, 'watch_providers_check': proof}})
+        url = clickout_url('Apple TV', 2)
+        self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'US',
+            'updated_at': self.now, 'streaming_links': [{'provider_name': 'Apple TV',
+                'stream_type': 'buy', 'stream_url': url, 'price_dollar': 4.99, 'quality': 'HD'}]})
+        crate = CatalogCrate([availability(streaming_type='buy', streaming_service_id=350)])
+        self.publish(crate)
+        self.assertEqual([r['streaming_service_id'] for r in crate.rows], [2])
+        self.assertEqual(crate.rows[0]['stream_url'], url)
+        self.assertEqual(crate.rows[0]['tmdb_link'], 'https://tmdb/watch')
+        envelope = json.loads(crate.evidence[(42, 'show', 'US')]['payload'])
+        self.assertEqual(envelope['checks'][0]['offers'][0]['service_id'], 2)
+
+    def test_unknown_vendor_namespace_keeps_exact_catalog_name_fallback(self):
+        resolve = self.copy.__globals__['scoped_provider_id']
+        catalog = {'Disney Plus': [{'tmdb_id': 337, 'name': 'Disney Plus'}]}
+        self.assertEqual(resolve('Disney Plus', 'US', 'flatrate', catalog, {},
+                                 clickout_url=clickout_url('Disney Plus', 2706)), 337)
+
+    def test_vendor_namespace_collision_requires_scoped_identity(self):
+        resolve = self.copy.__globals__['scoped_provider_id']
+        catalog = {'Disney Plus': [{'tmdb_id': 337, 'name': 'Disney Plus'}],
+                   'Unrelated': [{'tmdb_id': 2706, 'name': 'Unrelated'}]}
+        api = {'US': {'flatrate': [{'provider_id': 337, 'provider_name': 'Disney Plus'}]}}
+        self.assertEqual(resolve('Disney Plus', 'US', 'flatrate', catalog, api,
+                                 clickout_url=clickout_url('Disney Plus', 2706)), 337)
+        self.assertIsNone(resolve('Disney Plus', 'US', 'flatrate', catalog, {},
+                                  clickout_url=clickout_url('Disney Plus', 2706)))
+
+    def test_newer_explicit_uncached_api_excludes_old_page_membership(self):
+        from f.tmdb_api.provider_evidence import capture_provider_check
+        payload = {'results': {'US': {'link': 'https://tmdb/watch', 'flatrate': [
+            {'provider_id': 9, 'provider_name': 'Amazon'}]}}}
+        proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42, self.now, bypass_cache=True)
+        self.db.tmdb_tv_details.update_one({'tmdb_id': 42}, {'$set': {
+            'updated_at': self.now, 'watch_providers': payload, 'watch_providers_check': proof}})
+        key = self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'US',
+            'updated_at': self.now - timedelta(days=1), 'streaming_links': [{'provider_name': 'Netflix',
+                'stream_type': 'flatrate', 'stream_url': 'https://old-netflix.example'}]}).inserted_id
+        crate = Crate([availability()])
+        self.publish(crate)
+        self.assertEqual([r['streaming_service_id'] for r in crate.rows], [9])
+        web = json.loads(crate.evidence[(42, 'show', 'US')]['payload'])['checks'][0]
+        self.assertEqual(web['offers'], [])
+        # A newer page is still independent positive evidence.
+        self.db.tmdb_tv_providers.update_one({'_id': key}, {'$set': {'updated_at': self.now + timedelta(seconds=1)}})
+        self.publish(crate)
+        self.assertEqual({r['streaming_service_id'] for r in crate.rows}, {8, 9})
+
+    def test_cached_or_unproven_api_cannot_erase_page_membership(self):
+        from f.tmdb_api.provider_evidence import capture_provider_check
+        payload = {'results': {'US': {'flatrate': [{'provider_id': 9, 'provider_name': 'Amazon'}]}}}
+        proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42, self.now)
+        self.db.tmdb_tv_details.update_one({'tmdb_id': 42}, {'$set': {
+            'updated_at': self.now, 'watch_providers': payload, 'watch_providers_check': proof}})
+        self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'US',
+            'updated_at': self.now - timedelta(days=1), 'streaming_links': [{'provider_name': 'Netflix',
+                'stream_type': 'flatrate', 'stream_url': 'https://old-netflix.example'}]})
+        crate = Crate()
+        self.publish(crate)
+        self.assertEqual({r['streaming_service_id'] for r in crate.rows}, {8, 9})
 
     def test_details_then_pending_streaming_preserves_published_child_aggregate_and_vector(self) -> None:
         import sys
@@ -283,8 +357,9 @@ class StreamingPublicationTests(unittest.TestCase):
         identities = [('U-NEXT', 84, 84), ('HBO Max on U-Next', 2284, 2284), ('Disney Plus', 2706, 337)]
         links = ''.join(f'<li class="ott_filter_best_price"><a title="Watch Smallville on {name}" href="{escape(clickout_url(name, vendor))}">Watch</a></li>' for name, vendor, _ in identities)
         response = type('Response', (), {'status_code': 200, 'headers': {}, 'text': '<div id="ott_offers_window"><div class="ott_provider"><h3>Stream</h3>' + links + '</div></div><script>$("#ott_country_filter").kendoDropDownList({value: "JP", dataValueField: "country_code"});</script>'})()
-        with patch('f.tmdb_web.tmdb_crawl_providers.fetch.requests.get', return_value=response):
-            result = crawl_tmdb_watch_page({'tmdb_watch_url': 'https://www.themoviedb.org/tv/4604/watch', 'country_code': 'JP'})
+        result = crawl_tmdb_watch_page(
+            {'tmdb_watch_url': 'https://www.themoviedb.org/tv/4604/watch', 'country_code': 'JP'},
+            request=Mock(return_value=response))
         self.assertEqual([link.provider_name for link in result.streaming_links], [name for name, _, _ in identities])
         self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'JP', 'updated_at': self.now,
                                               'streaming_links': [link.model_dump() for link in result.streaming_links]})
@@ -312,7 +387,7 @@ class StreamingPublicationTests(unittest.TestCase):
         self.assertEqual(crate.media[42]['streaming_availabilities'], ['JP_2284'])
 
     def test_invalid_context_fails_and_unknown_full_name_defers_without_data_loss(self) -> None:
-        for url in ['https://click.justwatch.com/a?cx=bad!', clickout_url('Unknown full provider', 9)]:
+        for url in ['https://click.justwatch.com/a?cx=bad!', clickout_url('Unknown full provider', 99999)]:
             self.db.tmdb_tv_providers.delete_many({})
             self.db.tmdb_tv_providers.insert_one({'tmdb_id': 42, 'country_code': 'US', 'updated_at': self.now,
                 'streaming_links': [{'provider_name': 'Amazon', 'stream_type': 'flatrate', 'stream_url': url}]})

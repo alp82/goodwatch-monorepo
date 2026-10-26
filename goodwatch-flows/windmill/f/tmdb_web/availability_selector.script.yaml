@@ -1,0 +1,8 @@
+summary: availability_selector
+description: Shared bounded availability page scheduling.
+lock: '!inline f/tmdb_web/availability_selector.script.lock'
+kind: script
+schema:
+  type: object
+  properties: {}
+  required: []
