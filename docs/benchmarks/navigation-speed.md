@@ -665,3 +665,33 @@ Breaking Bad 12 images, 237 KB; most of it the four cast photos above (140 / 145
 - Keep the rest: hero backdrops, hub tiles and the second backdrop would drop to 0.6–0.8 file pixels per CSS pixel
   (visibly soft); the similar-titles row and wide posters save under 15 KB; the best lists are already at TMDB's
   smallest poster.
+
+### Late sections wait for the page's navigation work
+
+Same what-if method as the cast photos above; before is `990419700`, after the change without the cast photos.
+
+**The change** (`283c3eb65`, with the review fixes in `994b83982`; not on main, owner Q39 pending): the related map's pack (the app's late path and the engine's wake) and Talked about now's
+posts start once their section is near and the page's own navigation work is idle (no page prefetch or code warm-up
+loading or waiting, no page change loading, 400 ms after the last scroll), at most 2.5 s later. A tap on the map, also on the
+placeholder of a late one, still asks at once.
+
+| Measure | Before | After |
+| --- | --- | --- |
+| Phone title → first person, median (max) | 891 (1,141) ms | 1,015 (2,006) ms |
+| Phone, all steps, median and p90 | 90, 843 ms | 94, 737 ms |
+| Related map and posts filled before the reader reaches them | phone and desktop, 4/4 | phone and desktop, 4/4 |
+| Layout shift while skimming the title page | 0, 0.02, 0, 0 | 0, 0, 0, 0 |
+| Title page LCP (Lighthouse mobile, CPU capped, 3 runs) | 2,188 ms | 2,186 ms |
+
+The section requests no longer start before the tap, but title → first person doesn't get faster: their bytes are a
+small part of what is in flight. Desktop tap in the what-if varies with production's first-byte time through the
+pass-through (median of all steps 48 → 45 ms, list → title 359 → 770 ms in these rounds), and desktop hover is
+unchanged or better (p90 374 → 102 ms).
+
+**Review fixes** (`994b83982`): the engine's waits are dropped when the section shows another title or goes, and the
+engine asks only if the section is still in the document with the same title; scrolls are watched from hydration, and a
+wait that starts before counts as just after a scroll (so it never starts ahead of the phone's 300 ms viewport
+prefetch); a tap on a late map's placeholder starts its request at once (`ui/related-map/late-wait.ts`). The
+measurements in the table are from before these fixes; they change when requests start in those edge cases only.
+The Talked about now slot still reserves no height: it shows only when a title has posts, which the page learns from
+that request, and in the skims above it filled before the reader reached it.
