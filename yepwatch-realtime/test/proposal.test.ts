@@ -5,7 +5,7 @@ import { paths, type ServerRealtimeFrame, type ServerActivity } from '@goodwatch
 import { createGateway } from '../src/gateway.js'
 import type { ActivityBus, ActivityFrame } from '../src/activity.js'
 import { proposalProjection } from '../src/proposal-projection.js'
-import { proposalClientActivitySchema } from '../src/proposal-activity.js'
+import { cheerAllowed, proposalClientActivitySchema } from '../src/proposal-activity.js'
 import { fixture, FakeBus, proposalSnapshot } from './fixture.js'
 import { connect, until, sleep } from './client.js'
 
@@ -30,7 +30,7 @@ class MemoryActivity extends EventEmitter implements ActivityBus {
   state(ready: boolean) { this.ready = ready; this.emit('state', ready) }
   close() {}
 }
-async function setup(t: test.TestContext, pointers = false, roomDetails = false) {
+async function setup(t: test.TestContext, pointers = false, roomDetails = false, cheers = false) {
   const api = await fixture('proposal'); api.state.shared = choosing(); if (roomDetails) { api.state.shared.savedServiceIds = [8,337]; api.state.shared.description = {prompt:'A cosy mystery',attributes:[{text:'Mystery',kind:'want'}]}; api.state.shared.participants.push({participantId:'person-3',nickname:'Dropped',screenId:'screen-1',ready:true,dropped:true}) }; api.state.leaseMs = 60_000
   const hub = new ActivityHub(), buses = [new FakeBus(), new FakeBus()], activities = [hub.bus(), hub.bus()]
   const gateways = buses.map((b, n) => createGateway(api.authority, b, { port: 0, auditMs: 1000 }, { activityBus: activities[n], proposal: true }))
@@ -39,7 +39,7 @@ async function setup(t: test.TestContext, pointers = false, roomDetails = false)
   const clients = await Promise.all(addresses.map((a, n) => {
     assert(a && typeof a !== 'string');
     return connect<ServerRealtimeFrame>(`ws://127.0.0.1:${a.port}${paths.realtime}`).then(client => {
-      client.ws.send(JSON.stringify({type:'authenticate',ticket:api.ticket(`person-${n+1}`),roomId:'room-1',lastRevision:null,...(pointers && n === 1 ? {pointers:true}: {}),...(roomDetails && n === 1 ? {roomDetails:true}: {})}));return client;
+      client.ws.send(JSON.stringify({type:'authenticate',ticket:api.ticket(`person-${n+1}`),roomId:'room-1',lastRevision:null,...(pointers && n === 1 ? {pointers:true}: {}),...(roomDetails && n === 1 ? {roomDetails:true}: {}),...(cheers && n === 1 ? {cheers:true}: {})}));return client;
     })
   }))
   await until(() => clients.every(c => c.frames.some(f => f.type === 'activity.session')))
@@ -162,4 +162,59 @@ test('Dropped places remain visible but are excluded from required agreement; co
  s.proposal!.requiredCount = 2
  s.matches = []
  assert.equal(proposalProjection(s,s.roomId).phase,'decided')
+})
+
+
+test('Decision cheer has a bounded public shape and current-generation scope', () => {
+  const frame = { type: 'activity', sessionId: 'session', sequence: 1, view: 'matches', cheer: { kind: 'hold', generation: 1, seed: 13 } }
+  assert(proposalClientActivitySchema.safeParse(frame).success)
+  for (const change of [{ view: 'voting' }, { gesture: 'handle' }, { inspection: { kind: 'dice' } },
+    { cheer: { ...frame.cheer, seed: -1 } }, { cheer: { ...frame.cheer, seed: 2147483648 } },
+    { cheer: { ...frame.cheer, participantId: 'other' } }, { cheer: { ...frame.cheer, generation: 1.5 } }])
+    assert(!proposalClientActivitySchema.safeParse({ ...frame, ...change }).success)
+  const cheer = { cheer: { kind: 'hold' as const, generation: 1, seed: 13 } }
+  const scope = { phase: 'decided', generation: 1, participants: [{ participantId: 'one' }] }
+  assert(cheerAllowed(cheer, scope, 'one'))
+  assert(!cheerAllowed(cheer, { ...scope, phase: 'choosing' }, 'one'))
+  assert(!cheerAllowed(cheer, { ...scope, generation: 2 }, 'one'))
+  assert(!cheerAllowed(cheer, { ...scope, participants: [{ participantId: 'one', dropped: true }] }, 'one'))
+})
+
+test('Two gateways relay decision cheers to capable clients; stale and restarted-generation cheers disappear', async t => {
+  const { api, hub, buses, clients: [old, modern] } = await setup(t, false, false, true)
+  const generation = api.state.shared.generation
+  const cheer = { kind: 'hold', generation, seed: 735 }
+  send(old, 0, { cheer })
+  await sleep(300)
+  assert.equal(events(modern.frames).length, 0, 'not a celebration before a decision')
+  api.state.shared.phase = 'decided'
+  api.state.shared.decision = { candidateId: 'movie:1', proposalVersion: 1, decidedAt: Date.now(), availability: [] }
+  api.state.shared.revision++
+  buses.forEach(bus => bus.hint(api.state.shared.revision))
+  await until(() => modern.frames.some(f => f.type === 'room.updated' && f.snapshot.phase === 'decided'))
+  send(old, 1, { cheer })
+  await until(() => events(modern.frames).some(f => f.cheer?.kind === 'hold'))
+  const first = events(modern.frames).find(f => f.cheer)!
+  assert.deepEqual(first.cheer, cheer)
+  assert.equal(first.participantId, 'person-1')
+  send(modern, 0, { cheer: { ...cheer, kind: 'tap' } })
+  await until(() => events(old.frames).length > 0)
+  assert.equal(events(old.frames).at(-1)!.cheer, undefined, 'old strict clients never receive new field')
+  hub.emit({ ...first, sequence: 20, serverTime: Date.now() - 1600, expiresAt: Date.now() + 3000 })
+  await until(() => events(modern.frames).some(f => f.sequence === 20))
+  assert.equal(events(modern.frames).find(f => f.sequence === 20)!.cheer, undefined)
+  send(old, 21)
+  await until(() => events(modern.frames).some(f => f.sequence === 21))
+  assert.equal(events(modern.frames).find(f => f.sequence === 21)!.cheer, undefined, 'heartbeat has no cheer replay')
+  send(old, 22, { cheer: { ...cheer, kind: 'release' } })
+  await until(() => events(modern.frames).some(f => f.cheer?.kind === 'release'))
+  const before = events(modern.frames).length
+  // A new round fences both queued sender frames and already-published old-generation events.
+  send(old, 23, { cheer })
+  api.state.shared = { ...choosing(), generation: generation + 1, revision: api.state.shared.revision + 1 }
+  buses.forEach(bus => bus.hint(api.state.shared.revision))
+  await until(() => modern.frames.some(f => f.type === 'room.updated' && f.snapshot.generation === generation + 1))
+  hub.emit({ ...first, sequence: 24, serverTime: Date.now(), expiresAt: Date.now() + 3000 })
+  await sleep(300)
+  assert(!events(modern.frames).slice(before).some(f => f.cheer), 'no old decision cheer after restart')
 })

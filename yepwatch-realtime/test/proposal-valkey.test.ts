@@ -41,7 +41,9 @@ test('Proposal real disposable Valkey, two gateways, revision repair and compile
   const addresses = await Promise.all(gateways.map(g => g.listen()))
   await until(() => revisions.every(b => b.ready) && activity.every(b => b.ready), 5000)
   const clients = await Promise.all(addresses.map((a, n) => {
-    assert(a && typeof a !== 'string'); return connect<ServerRealtimeFrame>(`ws://127.0.0.1:${a.port}${paths.realtime}`, api.ticket(`person-${n + 1}`))
+    assert(a && typeof a !== 'string'); return connect<ServerRealtimeFrame>(`ws://127.0.0.1:${a.port}${paths.realtime}`).then(client => {
+      client.ws.send(JSON.stringify({ type: 'authenticate', ticket: api.ticket(`person-${n + 1}`), roomId: 'room-1', lastRevision: null, cheers: true })); return client
+    })
   }))
   await until(() => clients.every(c => c.frames.some(f => f.type === 'activity.session')))
   const [a, b] = clients, session = a.frames.find(f => f.type === 'activity.session')!
@@ -58,6 +60,22 @@ test('Proposal real disposable Valkey, two gateways, revision repair and compile
   await sleep(280); assert.equal(b.frames.filter(f => f.type === 'activity').length, before)
   a.ws.send(JSON.stringify({ type: 'activity', sessionId: session.sessionId, sequence: 1, view: 'matches', inspection: { kind: 'dice' } }))
   await until(() => b.frames.some(f => f.type === 'activity' && f.inspection?.kind === 'dice'))
+  // Public decision celebrations cross the same real broker as inspection cues.
+  api.state.shared.phase = 'decided'
+  api.state.shared.proposalVersion = 1
+  api.state.shared.proposal = { candidateId: 'movie:1', version: 1, previousCandidateId: null, agreeCount: 2, requiredCount: 2, averageYepMs: null }
+  api.state.shared.decision = { candidateId: 'movie:1', proposalVersion: 1, decidedAt: Date.now(), availability: [] }
+  api.state.shared.revision = 3
+  await publisher.publish(REVISION_CHANNEL, JSON.stringify({ roomId: 'room-1', revision: 3 }))
+  await until(() => clients.every(c => c.frames.some(f => f.type === 'room.updated' && f.snapshot.revision === 3)))
+  const cheer = { kind: 'hold', generation: api.state.shared.generation, seed: 1234 }
+  a.ws.send(JSON.stringify({ type: 'activity', sessionId: session.sessionId, sequence: 2, view: 'matches', cheer }))
+  await until(() => b.frames.some(f => f.type === 'activity' && f.cheer?.kind === 'hold'))
+  const held = b.frames.find(f => f.type === 'activity' && f.cheer?.kind === 'hold')!
+  assert.equal(held.type, 'activity')
+  assert.equal(held.participantId, 'person-1'); assert.deepEqual(held.cheer, cheer)
+  a.ws.send(JSON.stringify({ type: 'activity', sessionId: session.sessionId, sequence: 3, view: 'matches', cheer: { ...cheer, kind: 'release' } }))
+  await until(() => b.frames.some(f => f.type === 'activity' && f.cheer?.kind === 'release'))
   const reservation = createServer(); await new Promise<void>(resolve => reservation.listen(0, '127.0.0.1', resolve))
   const addr = reservation.address(); assert(addr && typeof addr !== 'string')
   await new Promise<void>(resolve => reservation.close(() => resolve()))

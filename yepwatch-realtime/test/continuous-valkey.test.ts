@@ -73,7 +73,7 @@ test('Continuous real three-master Valkey, two gateways, ephemeral privacy and c
     env: { PATH: process.env.PATH, YEPWATCH_GATEWAY_SECRET: secret, YEPWATCH_API_ORIGIN: api.origin,
       YEPWATCH_VALKEY_NODES: JSON.stringify(nodes), YEPWATCH_REALTIME_PORT: String(address.port), YEPWATCH_CONTINUOUS: '1' }, stdio: ['ignore', 'pipe', 'pipe'] })
   t.after(() => { if (child.exitCode === null) child.kill('SIGTERM') })
-  let started = false; child.stdout.on('data', raw => { if (raw.toString().includes('listening on loopback')) started = true }); child.stderr.resume()
+  let started = false; child.stdout.on('data', raw => { if (raw.toString().includes('gateway listening on 127.0.0.1:')) started = true }); child.stderr.resume()
   await until(() => started, 3000)
   let healthy = false
   for (let i = 0; i < 50 && !healthy; i++) {

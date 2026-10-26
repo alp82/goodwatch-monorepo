@@ -268,6 +268,13 @@ export interface ActivityPointer {
 	pressed: boolean
 	kind: "mouse" | "touch"
 }
+/** Public celebration of the confirmed decision; ephemeral, never a vote or agreement. */
+export interface DecisionCheer {
+	kind: "tap" | "hold" | "release"
+	generation: number
+	/** One random composition seed per press/hold; renewals retain it. */
+	seed: number
+}
 export interface ClientActivity {
 	type: "activity"
 	sessionId: string
@@ -279,6 +286,8 @@ export interface ClientActivity {
 	inspection?: MatchInspection
 	/** Normalized poster surface, no card/title/answer. Null removes the pointer. Never heartbeat-replayed. */
 	pointer?: ActivityPointer | null
+	/** Matches view only, current decided generation. Hold evidence expires with pulseTtlMs. */
+	cheer?: DecisionCheer
 }
 export interface ServerActivity extends ClientActivity {
 	roomId: string
@@ -301,6 +310,7 @@ export type ClientRealtimeFrame =
 			roomId: string
 			lastRevision: number | null
 			pointers?: true
+			cheers?: true
 	  }
 	| { type: "ping" }
 	| ClientActivity

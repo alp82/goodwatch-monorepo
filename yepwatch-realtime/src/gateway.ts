@@ -8,7 +8,7 @@ import { paths as proposalPaths, type SharedRoomSnapshot as ProposalSnapshot } f
 import { AuthorityError, validateAttachment, validateView, validateScopedView, type Authority } from './authority.js'
 import { continuousProjection } from './continuous-projection.js'
 import { proposalProjection } from './proposal-projection.js'
-import { inspectionAllowed, proposalClientActivitySchema, proposalServerActivitySchema } from './proposal-activity.js'
+import { cheerAllowed, type DecisionActivityScope, inspectionAllowed, proposalClientActivitySchema, proposalServerActivitySchema } from './proposal-activity.js'
 import { ActivityRelay, type ActivityBus, type ActivitySender } from './activity.js'
 import type { RevisionBus } from './bus.js'
 import { authenticateSchema } from './projection.js'
@@ -31,6 +31,8 @@ interface Client {
   room?: Room
   activity?: ActivitySender; participantIds?: Set<string>
   pointers?: boolean
+  cheers?: boolean
+  decisionActivity?: DecisionActivityScope
   roomDetails?: boolean
   inspectionMatches?: { matches: { candidateId: string }[] }
 }
@@ -152,12 +154,15 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
             if (send(client, { type: client.initial || client.degraded ? 'room.snapshot' : 'room.updated', snapshot: client.roomDetails ? result.snapshot : { ...Object.fromEntries(Object.entries(result.snapshot).filter(([key]) => key !== 'description' && key !== 'savedServiceIds')), participants: result.snapshot.participants.filter(p => !('dropped' in p && p.dropped)).map(p => Object.fromEntries(Object.entries(p).filter(([key]) => key !== 'dropped'))) } as typeof result.snapshot })) {
               client.lastRevision = result.snapshot.revision; client.initial = false; client.degraded = false
               client.participantIds = new Set(result.snapshot.participants.map(p => p.participantId))
-              if ('matches' in result.snapshot) client.inspectionMatches = { matches: result.snapshot.matches.map(m => ({ candidateId: m.candidateId })) }
+              if ('matches' in result.snapshot) {
+                client.inspectionMatches = { matches: result.snapshot.matches.map(m => ({ candidateId: m.candidateId })) }
+                client.decisionActivity = { phase: result.snapshot.phase, generation: result.snapshot.generation, participants: result.snapshot.participants }
+              }
               if (relay && !client.activity) {
                 client.activity = relay.open(room.id, result.attachment.participantId,
                   () => !draining && !client.degraded && !client.initial && client.lastRevision >= room.target && deliveryReady() && client.ws.readyState === WebSocket.OPEN,
                   () => Math.min(client.attachment!.leaseExpiresAt, client.attachment!.roomExpiresAt),
-                  activity => !continuous?.proposal || inspectionAllowed(activity, client.inspectionMatches))
+                  activity => !continuous?.proposal || (inspectionAllowed(activity, client.inspectionMatches) && cheerAllowed(activity, client.decisionActivity, result.attachment.participantId)))
                 send(client, { type: 'activity.session', roomId: room.id, sessionId: client.activity.sessionId, serverTime: Date.now() })
               }
             }
@@ -194,9 +199,9 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
       const a = client.attachment
       if (!a || client.initial || client.degraded || client.lastRevision < room.target || a.participantId === frame.participantId ||
           a.leaseExpiresAt <= Date.now() || a.roomExpiresAt <= Date.now() || !client.participantIds?.has(frame.participantId)) continue
-      if (continuous?.proposal && !inspectionAllowed(frame, client.inspectionMatches)) continue
-      const { pointer, ...legacy } = frame
-      send(client, client.pointers ? frame : legacy)
+      if (continuous?.proposal && (!inspectionAllowed(frame, client.inspectionMatches) || !cheerAllowed(frame, client.decisionActivity, frame.participantId))) continue
+      const { pointer, cheer, ...legacy } = frame
+      send(client, { ...legacy, ...(client.pointers && pointer !== undefined ? { pointer } : {}), ...(client.cheers && cheer ? { cheer } : {}) })
     }
   }, () => onState(false), 2048, continuous.proposal ? { client: proposalClientActivitySchema, server: proposalServerActivitySchema } : undefined) : undefined
   continuous?.activityBus.on('state', onState)
@@ -247,9 +252,10 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
         // Exactly one application frame is allowed before authentication completes.
         if (client.authenticating) { fail(client, 'unauthorized'); return }
         client.authenticating = true
-        const parsed = (continuous?.proposal ? authenticateSchema.extend({ pointers: z.literal(true).optional(), roomDetails: z.literal(true).optional() }) : authenticateSchema).safeParse(input)
+        const parsed = (continuous?.proposal ? authenticateSchema.extend({ pointers: z.literal(true).optional(), cheers: z.literal(true).optional(), roomDetails: z.literal(true).optional() }) : authenticateSchema).safeParse(input)
         if (!parsed.success) { fail(client, 'invalid_request'); return }
         client.pointers = 'pointers' in parsed.data && parsed.data.pointers === true
+        client.cheers = 'cheers' in parsed.data && parsed.data.cheers === true
         client.roomDetails = 'roomDetails' in parsed.data && parsed.data.roomDetails === true
         void (async () => {
           try {

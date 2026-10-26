@@ -65,7 +65,7 @@ test('Disposable real Valkey: two gateways, dropped bus, reconnect and conservat
       YEPWATCH_VALKEY_URL: url, YEPWATCH_REALTIME_PORT: String(processAddress.port) }, stdio: ['ignore', 'pipe', 'pipe'] })
   t.after(() => { if (child.exitCode === null) child.kill('SIGKILL') })
   let output = ''; child.stdout.on('data', chunk => { output += chunk }); child.stderr.on('data', chunk => { output += chunk })
-  await until(() => output.includes('listening on loopback'), 3000)
+  await until(() => output.includes('gateway listening on 127.0.0.1:'), 3000)
   let processReady = false
   for (let n = 0; n < 50 && !processReady; n++) {
     processReady = (await fetch(`http://127.0.0.1:${processAddress.port}${paths.realtime}/health`)).status === 200

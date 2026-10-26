@@ -78,3 +78,9 @@ Production path routing/TLS, public exposure and deployment remain outside this 
 ### Live poster pointers
 
 New clients opt in with `pointers: true` at authentication. Proposal activity optionally carries `pointer: {x, y, pressed, kind}` with normalized coordinates in [0,1], or null on release. This field is voting-view-only, is removed after 1.5 seconds, and is stripped for older clients. Client motion samples are bounded to one per 280ms; rendering interpolates between them. Heartbeats contain no pointer. Clients hold the horizontal contact coordinate during pressed voting gestures; no title, vote direction, or answer is sent. Peers receive identical neutral answer reactions.
+
+### Decision celebration
+
+Clients opt in with `cheers: true` at authentication. In the matches view, a decided room accepts an exclusive `cheer: {kind: "tap" | "hold" | "release", generation, seed}` pulse. The current generation and non-dropped sender are checked against the authorized snapshot before acceptance, queued transmission, and receiver delivery. Seeds are integers from 0 through 2147483647. This action changes no vote, agreement, or durable room state.
+
+Hold evidence expires after 1.5 seconds. Clients renew only while actively holding, every 500 ms; ordinary presence heartbeats never repeat a cheer. Release, backgrounding, navigation, and connection loss clear the local hold. Clients count distinct non-dropped participants, never sessions, for the all-hold effect. Older clients receive the ordinary activity frame without the new field. The selected visual is randomized popcorn passing through the poster, with a Marquee bonus when everyone holds; there is no Projector.
