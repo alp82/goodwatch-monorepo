@@ -1,0 +1,1594 @@
+{
+  "started_utc": "2026-10-26T08:20:04.881396+00:00",
+  "finished_utc": "2026-10-26T08:50:16.152902+00:00",
+  "sample_interval_seconds": 150,
+  "sample_count": 13,
+  "coordinator_observation_count": 39,
+  "window_seconds": 1799.999975,
+  "outcome": "STALLED_TARGET_SHARD_CREATION",
+  "production_writes": 0,
+  "coordinator_agreement": true,
+  "observed_completed_moves": 0,
+  "observed_placement_changes": 0,
+  "node_counts": {
+    "crate-02": {
+      "copies": 391,
+      "primaries": 34
+    },
+    "crate-03": {
+      "copies": 393,
+      "primaries": 263
+    },
+    "crate-01": {
+      "copies": 391,
+      "primaries": 273
+    }
+  },
+  "pending": [
+    [
+      "doc",
+      "person_appeared_in",
+      "",
+      4,
+      "ch8EXZwrQVmCls79_T_vUg",
+      "crate-03",
+      false,
+      "STARTED",
+      "RELOCATING",
+      "r0IgCe17SPOgudkQIGsRQA",
+      309898516,
+      "DONE",
+      "PEER",
+      {
+        "recovered": 390996692,
+        "used": 390996692,
+        "percent": 100.0,
+        "reused": 0
+      },
+      17277,
+      {
+        "max_seq_no": 16582340,
+        "global_checkpoint": 16582340,
+        "local_checkpoint": 16582340
+      }
+    ],
+    [
+      "doc",
+      "person_worked_on",
+      "",
+      5,
+      "ch8EXZwrQVmCls79_T_vUg",
+      "crate-03",
+      false,
+      "STARTED",
+      "RELOCATING",
+      "r0IgCe17SPOgudkQIGsRQA",
+      364256077,
+      "DONE",
+      "PEER",
+      {
+        "recovered": 306566234,
+        "used": 306566234,
+        "percent": 100.0,
+        "reused": 0
+      },
+      8189,
+      {
+        "max_seq_no": 16233863,
+        "global_checkpoint": 16233863,
+        "local_checkpoint": 16233863
+      }
+    ]
+  ],
+  "targets": [
+    {
+      "relation": "doc.person_appeared_in",
+      "shard": 4,
+      "observations": [
+        {
+          "utc": "2026-10-26T08:23:39.594034+00:00",
+          "bytes": 379471136,
+          "files": 154,
+          "mtime_ns": 1792648534395734880,
+          "inventory_sha256": "b1203200bcd3b293284418e0309f892682fd31efb4442f2057cd3553e725f7bd"
+        },
+        {
+          "utc": "2026-10-26T08:26:12.358225+00:00",
+          "bytes": 379471136,
+          "files": 154,
+          "mtime_ns": 1792648534395734880,
+          "inventory_sha256": "b1203200bcd3b293284418e0309f892682fd31efb4442f2057cd3553e725f7bd"
+        },
+        {
+          "utc": "2026-10-26T08:28:45.075164+00:00",
+          "bytes": 379471136,
+          "files": 154,
+          "mtime_ns": 1792648534395734880,
+          "inventory_sha256": "b1203200bcd3b293284418e0309f892682fd31efb4442f2057cd3553e725f7bd"
+        },
+        {
+          "utc": "2026-10-26T08:31:18.153524+00:00",
+          "bytes": 379471136,
+          "files": 154,
+          "mtime_ns": 1792648534395734880,
+          "inventory_sha256": "b1203200bcd3b293284418e0309f892682fd31efb4442f2057cd3553e725f7bd"
+        },
+        {
+          "utc": "2026-10-26T08:33:50.853295+00:00",
+          "bytes": 379471136,
+          "files": 154,
+          "mtime_ns": 1792648534395734880,
+          "inventory_sha256": "b1203200bcd3b293284418e0309f892682fd31efb4442f2057cd3553e725f7bd"
+        },
+        {
+          "utc": "2026-10-26T08:36:23.021056+00:00",
+          "bytes": 379471136,
+          "files": 154,
+          "mtime_ns": 1792648534395734880,
+          "inventory_sha256": "b1203200bcd3b293284418e0309f892682fd31efb4442f2057cd3553e725f7bd"
+        },
+        {
+          "utc": "2026-10-26T08:38:58.139917+00:00",
+          "bytes": 379471136,
+          "files": 154,
+          "mtime_ns": 1792648534395734880,
+          "inventory_sha256": "b1203200bcd3b293284418e0309f892682fd31efb4442f2057cd3553e725f7bd"
+        },
+        {
+          "utc": "2026-10-26T08:41:30.868652+00:00",
+          "bytes": 379471136,
+          "files": 154,
+          "mtime_ns": 1792648534395734880,
+          "inventory_sha256": "b1203200bcd3b293284418e0309f892682fd31efb4442f2057cd3553e725f7bd"
+        },
+        {
+          "utc": "2026-10-26T08:44:03.609808+00:00",
+          "bytes": 379471136,
+          "files": 154,
+          "mtime_ns": 1792648534395734880,
+          "inventory_sha256": "b1203200bcd3b293284418e0309f892682fd31efb4442f2057cd3553e725f7bd"
+        },
+        {
+          "utc": "2026-10-26T08:46:36.287496+00:00",
+          "bytes": 379471136,
+          "files": 154,
+          "mtime_ns": 1792648534395734880,
+          "inventory_sha256": "b1203200bcd3b293284418e0309f892682fd31efb4442f2057cd3553e725f7bd"
+        },
+        {
+          "utc": "2026-10-26T08:49:09.023739+00:00",
+          "bytes": 379471136,
+          "files": 154,
+          "mtime_ns": 1792648534395734880,
+          "inventory_sha256": "b1203200bcd3b293284418e0309f892682fd31efb4442f2057cd3553e725f7bd"
+        },
+        {
+          "utc": "2026-10-26T08:50:06.302543+00:00",
+          "bytes": 379471136,
+          "files": 154,
+          "mtime_ns": 1792648534395734880,
+          "inventory_sha256": "b1203200bcd3b293284418e0309f892682fd31efb4442f2057cd3553e725f7bd"
+        }
+      ]
+    },
+    {
+      "relation": "doc.person_worked_on",
+      "shard": 5,
+      "observations": [
+        {
+          "utc": "2026-10-26T08:23:39.594034+00:00",
+          "bytes": 321295612,
+          "files": 124,
+          "mtime_ns": 1792648530303503923,
+          "inventory_sha256": "0457a7854bcf92550048c0a1bca08077fd76072c86ed4e25fc34c50721d73a6c"
+        },
+        {
+          "utc": "2026-10-26T08:26:12.358225+00:00",
+          "bytes": 321295612,
+          "files": 124,
+          "mtime_ns": 1792648530303503923,
+          "inventory_sha256": "0457a7854bcf92550048c0a1bca08077fd76072c86ed4e25fc34c50721d73a6c"
+        },
+        {
+          "utc": "2026-10-26T08:28:45.075164+00:00",
+          "bytes": 321295612,
+          "files": 124,
+          "mtime_ns": 1792648530303503923,
+          "inventory_sha256": "0457a7854bcf92550048c0a1bca08077fd76072c86ed4e25fc34c50721d73a6c"
+        },
+        {
+          "utc": "2026-10-26T08:31:18.153524+00:00",
+          "bytes": 321295612,
+          "files": 124,
+          "mtime_ns": 1792648530303503923,
+          "inventory_sha256": "0457a7854bcf92550048c0a1bca08077fd76072c86ed4e25fc34c50721d73a6c"
+        },
+        {
+          "utc": "2026-10-26T08:33:50.853295+00:00",
+          "bytes": 321295612,
+          "files": 124,
+          "mtime_ns": 1792648530303503923,
+          "inventory_sha256": "0457a7854bcf92550048c0a1bca08077fd76072c86ed4e25fc34c50721d73a6c"
+        },
+        {
+          "utc": "2026-10-26T08:36:23.021056+00:00",
+          "bytes": 321295612,
+          "files": 124,
+          "mtime_ns": 1792648530303503923,
+          "inventory_sha256": "0457a7854bcf92550048c0a1bca08077fd76072c86ed4e25fc34c50721d73a6c"
+        },
+        {
+          "utc": "2026-10-26T08:38:58.139917+00:00",
+          "bytes": 321295612,
+          "files": 124,
+          "mtime_ns": 1792648530303503923,
+          "inventory_sha256": "0457a7854bcf92550048c0a1bca08077fd76072c86ed4e25fc34c50721d73a6c"
+        },
+        {
+          "utc": "2026-10-26T08:41:30.868652+00:00",
+          "bytes": 321295612,
+          "files": 124,
+          "mtime_ns": 1792648530303503923,
+          "inventory_sha256": "0457a7854bcf92550048c0a1bca08077fd76072c86ed4e25fc34c50721d73a6c"
+        },
+        {
+          "utc": "2026-10-26T08:44:03.609808+00:00",
+          "bytes": 321295612,
+          "files": 124,
+          "mtime_ns": 1792648530303503923,
+          "inventory_sha256": "0457a7854bcf92550048c0a1bca08077fd76072c86ed4e25fc34c50721d73a6c"
+        },
+        {
+          "utc": "2026-10-26T08:46:36.287496+00:00",
+          "bytes": 321295612,
+          "files": 124,
+          "mtime_ns": 1792648530303503923,
+          "inventory_sha256": "0457a7854bcf92550048c0a1bca08077fd76072c86ed4e25fc34c50721d73a6c"
+        },
+        {
+          "utc": "2026-10-26T08:49:09.023739+00:00",
+          "bytes": 321295612,
+          "files": 124,
+          "mtime_ns": 1792648530303503923,
+          "inventory_sha256": "0457a7854bcf92550048c0a1bca08077fd76072c86ed4e25fc34c50721d73a6c"
+        },
+        {
+          "utc": "2026-10-26T08:50:06.302543+00:00",
+          "bytes": 321295612,
+          "files": 124,
+          "mtime_ns": 1792648530303503923,
+          "inventory_sha256": "0457a7854bcf92550048c0a1bca08077fd76072c86ed4e25fc34c50721d73a6c"
+        }
+      ]
+    }
+  ],
+  "snapshots": [
+    {
+      "utc": "2026-10-26T08:20:04.881494+00:00",
+      "summaries": [
+        {
+          "host": 11,
+          "start": "2026-10-26T08:20:04.882129+00:00",
+          "end": "2026-10-26T08:20:11.062567+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 12,
+          "start": "2026-10-26T08:20:04.882363+00:00",
+          "end": "2026-10-26T08:20:10.953568+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 13,
+          "start": "2026-10-26T08:20:04.882555+00:00",
+          "end": "2026-10-26T08:20:11.025064+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-26T08:22:34.881480+00:00",
+      "summaries": [
+        {
+          "host": 11,
+          "start": "2026-10-26T08:22:34.881690+00:00",
+          "end": "2026-10-26T08:22:40.910967+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 12,
+          "start": "2026-10-26T08:22:34.881828+00:00",
+          "end": "2026-10-26T08:22:41.050879+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 13,
+          "start": "2026-10-26T08:22:34.882122+00:00",
+          "end": "2026-10-26T08:22:41.038898+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-26T08:25:04.881470+00:00",
+      "summaries": [
+        {
+          "host": 11,
+          "start": "2026-10-26T08:25:04.881651+00:00",
+          "end": "2026-10-26T08:25:10.950391+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 12,
+          "start": "2026-10-26T08:25:04.881764+00:00",
+          "end": "2026-10-26T08:25:10.785701+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 13,
+          "start": "2026-10-26T08:25:04.881977+00:00",
+          "end": "2026-10-26T08:25:11.024594+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-26T08:27:34.881469+00:00",
+      "summaries": [
+        {
+          "host": 11,
+          "start": "2026-10-26T08:27:34.881682+00:00",
+          "end": "2026-10-26T08:27:40.843845+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 12,
+          "start": "2026-10-26T08:27:34.881803+00:00",
+          "end": "2026-10-26T08:27:40.821066+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 13,
+          "start": "2026-10-26T08:27:34.882169+00:00",
+          "end": "2026-10-26T08:27:40.099793+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-26T08:30:04.881468+00:00",
+      "summaries": [
+        {
+          "host": 11,
+          "start": "2026-10-26T08:30:04.881654+00:00",
+          "end": "2026-10-26T08:30:10.951441+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 12,
+          "start": "2026-10-26T08:30:04.881762+00:00",
+          "end": "2026-10-26T08:30:10.951503+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 13,
+          "start": "2026-10-26T08:30:04.881938+00:00",
+          "end": "2026-10-26T08:30:10.299523+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-26T08:32:34.881470+00:00",
+      "summaries": [
+        {
+          "host": 11,
+          "start": "2026-10-26T08:32:34.881722+00:00",
+          "end": "2026-10-26T08:32:40.791101+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 12,
+          "start": "2026-10-26T08:32:34.881905+00:00",
+          "end": "2026-10-26T08:32:40.912762+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 13,
+          "start": "2026-10-26T08:32:34.882204+00:00",
+          "end": "2026-10-26T08:32:41.055401+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-26T08:35:04.881469+00:00",
+      "summaries": [
+        {
+          "host": 11,
+          "start": "2026-10-26T08:35:04.881692+00:00",
+          "end": "2026-10-26T08:35:10.832719+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 12,
+          "start": "2026-10-26T08:35:04.881809+00:00",
+          "end": "2026-10-26T08:35:10.951772+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 13,
+          "start": "2026-10-26T08:35:04.881921+00:00",
+          "end": "2026-10-26T08:35:10.901650+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-26T08:37:34.881472+00:00",
+      "summaries": [
+        {
+          "host": 11,
+          "start": "2026-10-26T08:37:34.881718+00:00",
+          "end": "2026-10-26T08:37:40.670539+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 12,
+          "start": "2026-10-26T08:37:34.881859+00:00",
+          "end": "2026-10-26T08:37:40.653713+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 13,
+          "start": "2026-10-26T08:37:34.882033+00:00",
+          "end": "2026-10-26T08:37:41.421367+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-26T08:40:04.881470+00:00",
+      "summaries": [
+        {
+          "host": 11,
+          "start": "2026-10-26T08:40:04.881701+00:00",
+          "end": "2026-10-26T08:40:10.732815+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 12,
+          "start": "2026-10-26T08:40:04.881830+00:00",
+          "end": "2026-10-26T08:40:10.849695+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 13,
+          "start": "2026-10-26T08:40:04.882010+00:00",
+          "end": "2026-10-26T08:40:11.297857+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-26T08:42:34.881473+00:00",
+      "summaries": [
+        {
+          "host": 11,
+          "start": "2026-10-26T08:42:34.881722+00:00",
+          "end": "2026-10-26T08:42:40.537320+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 12,
+          "start": "2026-10-26T08:42:34.881919+00:00",
+          "end": "2026-10-26T08:42:40.719652+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 13,
+          "start": "2026-10-26T08:42:34.882058+00:00",
+          "end": "2026-10-26T08:42:41.007566+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-26T08:45:04.881469+00:00",
+      "summaries": [
+        {
+          "host": 11,
+          "start": "2026-10-26T08:45:04.881675+00:00",
+          "end": "2026-10-26T08:45:10.951186+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 12,
+          "start": "2026-10-26T08:45:04.881790+00:00",
+          "end": "2026-10-26T08:45:10.488196+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 13,
+          "start": "2026-10-26T08:45:04.882027+00:00",
+          "end": "2026-10-26T08:45:10.997665+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-26T08:47:34.881468+00:00",
+      "summaries": [
+        {
+          "host": 11,
+          "start": "2026-10-26T08:47:34.881684+00:00",
+          "end": "2026-10-26T08:47:40.785057+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 12,
+          "start": "2026-10-26T08:47:34.881805+00:00",
+          "end": "2026-10-26T08:47:40.854321+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 13,
+          "start": "2026-10-26T08:47:34.882043+00:00",
+          "end": "2026-10-26T08:47:41.084770+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-26T08:50:04.881469+00:00",
+      "summaries": [
+        {
+          "host": 11,
+          "start": "2026-10-26T08:50:04.881651+00:00",
+          "end": "2026-10-26T08:50:11.025937+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 12,
+          "start": "2026-10-26T08:50:04.881845+00:00",
+          "end": "2026-10-26T08:50:11.101580+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        },
+        {
+          "host": 13,
+          "start": "2026-10-26T08:50:04.882016+00:00",
+          "end": "2026-10-26T08:50:11.150565+00:00",
+          "health": [
+            [
+              "GREEN",
+              145,
+              0,
+              0
+            ]
+          ],
+          "counts": {
+            "crate-02": {
+              "copies": 391,
+              "primaries": 34
+            },
+            "crate-03": {
+              "copies": 393,
+              "primaries": 263
+            },
+            "crate-01": {
+              "copies": 391,
+              "primaries": 273
+            }
+          },
+          "write_blocks": [],
+          "checks": [],
+          "node_checks": [],
+          "placement_sha256": "62d267e18e167d58d6cd98990554953be6ccab47bdeb23dfd53781f754445e68"
+        }
+      ]
+    }
+  ],
+  "historical_failures": {
+    "backoff_sum_seconds": 4055.692,
+    "events": [
+      {
+        "utc": "2026-10-26T03:28:17.516415185Z",
+        "line": "2026-10-26T03:28:17.516415185Z [2026-10-26T03:28:17,513][WARN ][o.e.c.r.a.AllocationService] [crate-03] failing shard [failed shard, shard [person_appeared_in][4], node[r0IgCe17SPOgudkQIGsRQA], relocating [xlclgwGeSHe18p5J4WvfFA], [P], recovery_source[peer recovery], s[INITIALIZING], a[id=cWvvyuOhTQ6g6yE0hXl3LA, rId=iQXHriVTRUuyIBWvHwxTQw], expected_shard_size[305690781], message [failed to create shard], markAsStale [true], failure [org.elasticsearch.common.io.stream.NotSerializableExceptionWrapper: NoSuchElementException: Reached maximum amount of backoff iterations. Only 1000 iterations allowed."
+      },
+      {
+        "utc": "2026-10-26T03:28:17.623306297Z",
+        "line": "2026-10-26T03:28:17.623306297Z [2026-10-26T03:28:17,622][WARN ][o.e.c.r.a.AllocationService] [crate-03] failing shard [failed shard, shard [person_appeared_in][5], node[r0IgCe17SPOgudkQIGsRQA], relocating [ch8EXZwrQVmCls79_T_vUg], [R], recovery_source[peer recovery], s[INITIALIZING], a[id=2wXPGtokRO6im4SAaObDsQ, rId=lD8odiLOTBWKc8cg6UzQTQ], expected_shard_size[329381598], message [failed to create shard], markAsStale [true], failure [org.elasticsearch.common.io.stream.NotSerializableExceptionWrapper: NoSuchElementException: Reached maximum amount of backoff iterations. Only 1000 iterations allowed."
+      },
+      {
+        "utc": "2026-10-26T04:35:53.738280289Z",
+        "line": "2026-10-26T04:35:53.738280289Z [2026-10-26T04:35:53,734][WARN ][o.e.c.r.a.AllocationService] [crate-03] failing shard [failed shard, shard [person_worked_on][5], node[r0IgCe17SPOgudkQIGsRQA], relocating [ch8EXZwrQVmCls79_T_vUg], [R], recovery_source[peer recovery], s[INITIALIZING], a[id=9IZfC4M5RrW_i04nsa_7rQ, rId=HM9zmbF3TCyZfY2r70msfA], expected_shard_size[367832999], message [failed to create shard], markAsStale [true], failure [org.elasticsearch.common.io.stream.NotSerializableExceptionWrapper: NoSuchElementException: Reached maximum amount of backoff iterations. Only 1000 iterations allowed."
+      },
+      {
+        "utc": "2026-10-26T04:35:53.822513192Z",
+        "line": "2026-10-26T04:35:53.822513192Z [2026-10-26T04:35:53,821][WARN ][o.e.c.r.a.AllocationService] [crate-03] failing shard [failed shard, shard [person_appeared_in][4], node[r0IgCe17SPOgudkQIGsRQA], relocating [ch8EXZwrQVmCls79_T_vUg], [R], recovery_source[peer recovery], s[INITIALIZING], a[id=Ou4Bq5NYQQKJpHqLwPhVDQ, rId=5pQ22AWWT0-CE3SZWofaSQ], expected_shard_size[310479308], message [failed to create shard], markAsStale [true], failure [org.elasticsearch.common.io.stream.NotSerializableExceptionWrapper: NoSuchElementException: Reached maximum amount of backoff iterations. Only 1000 iterations allowed."
+      },
+      {
+        "utc": "2026-10-26T05:43:29.954538527Z",
+        "line": "2026-10-26T05:43:29.954538527Z [2026-10-26T05:43:29,952][WARN ][o.e.c.r.a.AllocationService] [crate-03] failing shard [failed shard, shard [person_worked_on][4], node[r0IgCe17SPOgudkQIGsRQA], relocating [ch8EXZwrQVmCls79_T_vUg], [R], recovery_source[peer recovery], s[INITIALIZING], a[id=_NA2wELqQa-etXOiwReTRw, rId=kXJTFopkTzqby2r3MmM5kQ], expected_shard_size[300806337], message [failed to create shard], markAsStale [true], failure [org.elasticsearch.common.io.stream.NotSerializableExceptionWrapper: NoSuchElementException: Reached maximum amount of backoff iterations. Only 1000 iterations allowed."
+      },
+      {
+        "utc": "2026-10-26T05:43:30.032902425Z",
+        "line": "2026-10-26T05:43:30.032902425Z [2026-10-26T05:43:30,032][WARN ][o.e.c.r.a.AllocationService] [crate-03] failing shard [failed shard, shard [person_appeared_in][5], node[r0IgCe17SPOgudkQIGsRQA], relocating [ch8EXZwrQVmCls79_T_vUg], [R], recovery_source[peer recovery], s[INITIALIZING], a[id=6sGhj4H3Su-fdCHfkrqGrw, rId=lD8odiLOTBWKc8cg6UzQTQ], expected_shard_size[346899134], message [failed to create shard], markAsStale [true], failure [org.elasticsearch.common.io.stream.NotSerializableExceptionWrapper: NoSuchElementException: Reached maximum amount of backoff iterations. Only 1000 iterations allowed."
+      },
+      {
+        "utc": "2026-10-26T06:51:06.149314656Z",
+        "line": "2026-10-26T06:51:06.149314656Z [2026-10-26T06:51:06,147][WARN ][o.e.c.r.a.AllocationService] [crate-03] failing shard [failed shard, shard [person_worked_on][5], node[r0IgCe17SPOgudkQIGsRQA], relocating [ch8EXZwrQVmCls79_T_vUg], [R], recovery_source[peer recovery], s[INITIALIZING], a[id=1lC_8jmsS5iCNi3Z0G6UeQ, rId=HM9zmbF3TCyZfY2r70msfA], expected_shard_size[368242519], message [failed to create shard], markAsStale [true], failure [org.elasticsearch.common.io.stream.NotSerializableExceptionWrapper: NoSuchElementException: Reached maximum amount of backoff iterations. Only 1000 iterations allowed."
+      },
+      {
+        "utc": "2026-10-26T06:51:06.222153751Z",
+        "line": "2026-10-26T06:51:06.222153751Z [2026-10-26T06:51:06,221][WARN ][o.e.c.r.a.AllocationService] [crate-03] failing shard [failed shard, shard [person_appeared_in][4], node[r0IgCe17SPOgudkQIGsRQA], relocating [ch8EXZwrQVmCls79_T_vUg], [R], recovery_source[peer recovery], s[INITIALIZING], a[id=0hlNCFcVR2mVIlmbFGfbBw, rId=5pQ22AWWT0-CE3SZWofaSQ], expected_shard_size[311703352], message [failed to create shard], markAsStale [true], failure [org.elasticsearch.common.io.stream.NotSerializableExceptionWrapper: NoSuchElementException: Reached maximum amount of backoff iterations. Only 1000 iterations allowed."
+      },
+      {
+        "utc": "2026-10-26T07:58:42.389216404Z",
+        "line": "2026-10-26T07:58:42.389216404Z [2026-10-26T07:58:42,386][WARN ][o.e.c.r.a.AllocationService] [crate-03] failing shard [failed shard, shard [person_worked_on][4], node[r0IgCe17SPOgudkQIGsRQA], relocating [ch8EXZwrQVmCls79_T_vUg], [R], recovery_source[peer recovery], s[INITIALIZING], a[id=6rWpH8a8QzS04PuxKKzzDw, rId=kXJTFopkTzqby2r3MmM5kQ], expected_shard_size[301227532], message [failed to create shard], markAsStale [true], failure [org.elasticsearch.common.io.stream.NotSerializableExceptionWrapper: NoSuchElementException: Reached maximum amount of backoff iterations. Only 1000 iterations allowed."
+      },
+      {
+        "utc": "2026-10-26T07:58:42.486776776Z",
+        "line": "2026-10-26T07:58:42.486776776Z [2026-10-26T07:58:42,486][WARN ][o.e.c.r.a.AllocationService] [crate-03] failing shard [failed shard, shard [person_appeared_in][5], node[r0IgCe17SPOgudkQIGsRQA], relocating [ch8EXZwrQVmCls79_T_vUg], [R], recovery_source[peer recovery], s[INITIALIZING], a[id=UWV1pt4pR_moRczG-3Wh6Q, rId=lD8odiLOTBWKc8cg6UzQTQ], expected_shard_size[348429619], message [failed to create shard], markAsStale [true], failure [org.elasticsearch.common.io.stream.NotSerializableExceptionWrapper: NoSuchElementException: Reached maximum amount of backoff iterations. Only 1000 iterations allowed."
+      }
+    ]
+  },
+  "receipt_sha256": "8230292aebd637754564f4057066b205e4ca9780a19fa967cdc0f3e3f82d2b8e",
+  "receipt_file_count": 53,
+  "limits": [
+    "Relocation targets are omitted by these 5.10.16 system-table routing iterators; absence is not proof of physical absence.",
+    "Only source last-recovery DONE counters are visible; these are not current target transfer counters.",
+    "On-disk metadata is unchanged; exact shard-lock holder was not identified.",
+    "Two-and-a-half-minute sampling can miss short-lived transitions; no placement changes/completions were observed."
+  ]
+}
