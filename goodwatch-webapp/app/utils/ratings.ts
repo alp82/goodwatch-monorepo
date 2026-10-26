@@ -104,11 +104,9 @@ export const scoreLabels = [
 
 /**
  * The word for a GoodWatch score (0 to 100), the same on title pages, og cards, and in Discord: rounded to the nearest
- * band, so 92 is "Excellent" and 95 is "Masterpiece". Scores under 15 are "Unwatchable". Null when there's no score.
- * Members' own 1 to 10 scores index `scoreLabels` directly.
+ * band, so 92 is "Excellent" and 95 is "Masterpiece". Scores under 15 are "Unwatchable". Null when there's no score
+ * (null, undefined, NaN, or infinite). Members' own 1 to 10 scores index `scoreLabels` directly.
  */
-export function scoreWord(score: number): string
-export function scoreWord(score: number | null | undefined): string | null
 export function scoreWord(score: number | null | undefined): string | null {
 	if (score == null || !Number.isFinite(score)) return null
 	return scoreLabels[Math.min(10, Math.max(1, Math.round(score / 10)))]

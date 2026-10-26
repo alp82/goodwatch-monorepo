@@ -232,7 +232,7 @@ export const ScoreBlock = ({ score }: { score: number }) => (
 					letterSpacing: 3,
 				}}
 			>
-				{scoreWord(score).toUpperCase()}
+				{scoreWord(score)?.toUpperCase()}
 			</div>
 		</div>
 	</div>
