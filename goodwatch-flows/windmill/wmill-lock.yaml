@@ -175,7 +175,7 @@ locks:
   f/tmdb_api/daily_provider_lists: 7e2ca5323dfe5ea18e777d26584ecff4650c2762e44996f7486072213eea1ed9
   f/tmdb_api/list_offer_refresh: f0a03d118fe8963b65890b5ea81be20e451ce2f511bdc4c280d089e45f2169c6
   f/tmdb_api/models: 75d6a75b732f4b1a9970a9c7a7539e88d02c0f3d6ae27108cfa440d8152a2bc7
-  f/tmdb_api/provider_detector: 665118344b000d5c36f5b6cfe937ef6c12fa04556ba86fd99a753a84e46fda25
+  f/tmdb_api/provider_detector: 431e2d94982e81e35b2003fc7296112b18e7750eb91f451a154091b841c50aac
   f/tmdb_api/provider_evidence: 6565a4220729cc9b33177696eb157bf08ee0195740ca1636c5da635514d283f9
   f/tmdb_api/provider_observations: a8540f80224c83a1923209645da16abc9fe92486e0847c24c68e427c28c65b70
   f/tmdb_api/read_daily_provider_lists.flow:
