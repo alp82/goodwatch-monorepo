@@ -19,7 +19,7 @@ SAMPLE_SIZE = 5
 
 REFRESH = "REFRESH TABLE user_watch_log, user_watch_state"
 SELECT_STATES = ("SELECT user_id, tmdb_id, media_type, state, state_changed_at, pass, seen_press_group, "
-                 "seen_press_from FROM user_watch_state")
+                 "seen_press_from, rate_prompt_dismissed_at, seen_question FROM user_watch_state")
 SELECT_GROUP_SIZES = ("SELECT user_id, group_id, count(*) AS n FROM user_watch_log "
                       "WHERE user_id = ANY(?) AND group_id = ANY(?) GROUP BY user_id, group_id")
 SELECT_SHOWS = "SELECT tmdb_id, episodes_updated_at FROM show WHERE tmdb_id = ANY(?)"

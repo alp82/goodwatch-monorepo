@@ -165,11 +165,11 @@ type StoredShowResult = TrackingResult & {
 	recorded?: { at: number; written: number }
 }
 
-/** Another action on the same show kept getting in between. The log rows are written; the same request repairs. */
+/** Another action on the same title kept getting in between. The log rows are written; the same request repairs. */
 export class TrackingConflictError extends Error {
 	constructor() {
 		super(
-			"Another action on this show came in at the same time. Please try again.",
+			"Another action on this title came in at the same time. Please try again.",
 		)
 		this.name = "TrackingConflictError"
 	}
@@ -1570,7 +1570,13 @@ async function applyMovieEvent(
 		default:
 			return refusal("A movie is watched or rated. It has no other status.")
 	}
-	const settled = await settleMovie(userId, movieId)
+	let settled: MovieSettled
+	try {
+		settled = await settleMovie(userId, movieId)
+	} catch (error) {
+		if (error instanceof TrackingConflictError) await finish(userId)
+		throw error
+	}
 	// A score takes the movie off Not interested, and off the Wishlist when the score is what makes the movie
 	// Seen. That is asked of the rows and not of this request, so that a request sent again still clears it.
 	if (event.type === "rate" && event.score !== null)

@@ -10,6 +10,7 @@ import {
 	applyWatchLogAction,
 	getMovieWatchLog,
 } from "~/server/watch-log.server"
+import { TrackingConflictError } from "~/server/tracking.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 
 // A movie's watch log, for members:
@@ -112,13 +113,19 @@ async function productAction({ request }: ActionFunctionArgs) {
 	} catch {
 		return answer({ error: "Send { tmdb_id, action }" }, 400)
 	}
-	return answer(
-		(await applyWatchLogAction(
-			viewer.userId,
-			body.tmdb_id,
-			body.action,
-		)) satisfies WatchLogAnswer,
-	)
+	try {
+		return answer(
+			(await applyWatchLogAction(
+				viewer.userId,
+				body.tmdb_id,
+				body.action,
+			)) satisfies WatchLogAnswer,
+		)
+	} catch (error) {
+		if (error instanceof TrackingConflictError)
+			return answer({ error: error.message }, 409)
+		throw error
+	}
 }
 
 export const action = analyticsAction(productAction)

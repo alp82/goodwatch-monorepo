@@ -266,6 +266,25 @@ class VerifyTests(unittest.TestCase):
             "movie state rows without a watch", "movies with a watch and no state row",
             "old rows without a Seen state row", "scored movies without a watch"])
 
+    def test_retained_movie_receipts_are_expected_but_do_not_count_as_seen(self):
+        crate = tables()
+        migrate(crate)
+        receipt = copy.deepcopy(next(row for row in crate.rows("user_watch_state") if row["media_type"] == "movie"))
+        receipt.update(tmdb_id=999, state="not_started", seen_press_group=None, seen_press_from=None,
+                       rate_prompt_dismissed_at=None, seen_question=None)
+        crate.tables["user_watch_state"].append(receipt)
+
+        report = self.verified(crate)
+
+        self.assertTrue(report["ok"], report["problems"])
+        self.assertEqual(report["counts"]["titles that count as Seen: after"], 4)
+        receipt["seen_question"] = "pending"
+        self.assertIn("malformed state rows", self.verified(crate)["problems"])
+        receipt["seen_question"] = None
+        # A receipt cannot stand in for the Seen state of a movie that still has a watch.
+        next(row for row in crate.rows("user_watch_state") if row["tmdb_id"] == 603)["state"] = "not_started"
+        self.assertIn("movies with a watch and no state row", self.verified(crate)["problems"])
+
     def test_verification_writes_nothing(self):
         crate = tables()
 

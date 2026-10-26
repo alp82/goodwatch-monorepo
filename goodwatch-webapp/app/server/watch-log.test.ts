@@ -475,3 +475,28 @@ test("the endpoint is for movies: it never touches a show's watches", async () =
 	await act({ type: "editDate", watchId: show[0].watch_id, when: { precision: "unknown" } })
 	assert.deepEqual(db.log(MEMBER), show)
 })
+
+test("movie state conflicts answer HTTP 409 with the tracking conflict message", async () => {
+	await send({ type: "watch", watchId: "movie-existing" })
+	const original = db.execute.bind(db)
+	db.execute = async (sql, params = []) => /^\s*UPDATE user_watch_state\b/.test(sql)
+		? { rowcount: 0, json: [] } : original(sql, params)
+	setCrateClientForTest(db)
+	const { response, body } = await send({ type: "watch", watchId: "movie-conflicted" })
+	assert.equal(response.status, 409)
+	assert.match(body.error ?? "", /Another action on this title/)
+})
+
+test("MCP movie writes return a refusal when state conflicts exhaust retries", async () => {
+	const { applyTitleWrite, snapshot } = await import("./mcp/title-write.server.ts")
+	const title = { media_type: "movie" as const, tmdb_id: MOVIE, title: "The Matrix", release_year: 1999 }
+	await send({ type: "watch", watchId: "movie-existing" })
+	const before = await snapshot(MEMBER, title)
+	const original = db.execute.bind(db)
+	db.execute = async (sql, params = []) => /^\s*UPDATE user_watch_state\b/.test(sql)
+		? { rowcount: 0, json: [] } : original(sql, params)
+	setCrateClientForTest(db)
+	const result = await applyTitleWrite(MEMBER, "https://goodwatch.test", "log_watch", { action_id: "movie-conflicted" }, title, before, "movie-conflicted")
+	assert.ok("refused" in result)
+	assert.match(result.refused ?? "", /Another action on this title/)
+})

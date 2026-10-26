@@ -904,10 +904,10 @@ test("an IMDb import's scores record the score's watch for its movies, and its u
 	)
 	assert.match(
 		source,
-		/await applyBatch\(userId, stamp, batch\)\s+await settleImportedMovies\(userId, batch\)\s+await recordStates/,
+		/await applyBatch\(userId, stamp, batch\)\s+await settleImportedMovies\(userId, batch\)\s+await saveConsent\(importId, batch, states\)\s+await recordStates/,
 	)
 	assert.match(
-		source.slice(source.indexOf("export async function undoImport")),
+		source.slice(source.indexOf("async function undoImportStored")),
 		/await settleImportedMovies\(userId, written\)[\s\S]+apply_state = 'undone'/,
 	)
 })

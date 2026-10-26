@@ -14,6 +14,7 @@ import {
 	applyShowTrackingAction,
 } from "../show-tracking.server"
 import {
+	TrackingConflictError,
 	getEpisodeList,
 	getMovieTracking,
 	getShowTracking,
@@ -134,7 +135,10 @@ async function partScoreTarget(
 const refusalOf = (error: unknown) => {
 	if (error instanceof EpisodeScoresUnavailable)
 		return { refused: "Season and episode scores aren't available yet." }
-	if (error instanceof EpisodeScoreTargetError)
+	if (
+		error instanceof EpisodeScoreTargetError ||
+		error instanceof TrackingConflictError
+	)
 		return { refused: error.message }
 	throw error
 }
@@ -299,10 +303,21 @@ export type TitleWrite =
 
 /**
  * One title's write through the site's own writers, as a single MCP call and every item of a batch make it.
- * `actionId` names the watches and groups it makes, so the same action sent again writes nothing twice. A refusal
- * writes nothing. It leaves the member data reset, taste and the result to the caller.
+ * `actionId` names the watches and groups it makes, so the same action sent again writes nothing twice. A domain
+ * refusal writes nothing; a tracking conflict may have written log rows before losing state ownership. It leaves
+ * the member data reset, taste and the result to the caller.
  */
 export async function applyTitleWrite(
+	...args: Parameters<typeof applyTitleWriteStored>
+): Promise<TitleWrite> {
+	try {
+		return await applyTitleWriteStored(...args)
+	} catch (error) {
+		return refusalOf(error)
+	}
+}
+
+async function applyTitleWriteStored(
 	userId: string,
 	origin: string,
 	name: WriteToolName,

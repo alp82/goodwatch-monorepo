@@ -94,7 +94,9 @@ Known residuals, unchanged by this fix:
   `stateOnly` hides receipts from individual/MCP reads; `STATES_QUERY`, Discover, smart titles, recommendations
   and prototype readers filter on state. Awaited-title reads restrict show states. Account deletion still purges
   receipts. The proof now runs the original ten show scenarios plus ten matching movie watch-log scenarios.
-  Deployments must drain older movie writers, which still physically delete these keys. Bulk updates now issue
+  Deployments must drain older movie writers, which still physically delete these keys. Redeploy
+  **goodwatch-search** (`search-a` and `search-b`, serving `/mcp`) by hand with `goodwatch-search/deploy.sh`
+  right after the pages: they are tracking writers too. Bulk updates now issue
   one CAS per existing movie; first inserts and log IO remain batched.
 - **Removal retries (#634 follow-up).** Each round completes its log deletion before its state CAS. If a later
   round selects any log rows for deletion, they were added or restored after the previous deletion/snapshot;

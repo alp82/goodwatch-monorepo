@@ -4540,3 +4540,22 @@ test("an unwatch can retry a state conflict without deleting a replacement watch
 	assert.deepEqual(ticks(), ["1.2"])
 	assert.equal((await getShowTracking(user, SHOW)).state?.state, "watching")
 })
+
+test("a movie that exhausts state conflicts resets member data before reporting the conflict", async () => {
+	await act({ type: "watch" }, "movie-existing", movie)
+	const original = db.execute.bind(db)
+	let attempts = 0
+	db.execute = async (sql, params = []) => {
+		if (/^\s*UPDATE user_watch_state\b/.test(sql)) {
+			attempts++
+			return { rowcount: 0, json: [] }
+		}
+		return original(sql, params)
+	}
+	setCrateClientForTest(db)
+	const resetBefore = resets()
+	await assert.rejects(act({ type: "watch" }, "movie-conflicted", movie), TrackingConflictError)
+	assert.equal(attempts, 4)
+	assert.equal(resets(), resetBefore + 1)
+	assert.match(new TrackingConflictError().message, /this title/)
+})

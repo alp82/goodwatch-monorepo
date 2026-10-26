@@ -205,6 +205,13 @@ def malformed_log_row(row: dict) -> Optional[str]:
     return None
 
 
+def movie_receipt(row: dict) -> bool:
+    """An empty retained movie key is a first-insert fence, not a Seen state."""
+    return (row["media_type"] == "movie" and row["state"] == "not_started" and row["pass"] == 1
+            and all(row.get(field) is None for field in (
+                "seen_press_group", "seen_press_from", "rate_prompt_dismissed_at", "seen_question")))
+
+
 def malformed_state_row(row: dict) -> Optional[str]:
     """Why a state row breaks invariant 2, 3 or 7 of the data model, or None."""
     group, pressed_from = row.get("seen_press_group"), row.get("seen_press_from")
@@ -212,7 +219,7 @@ def malformed_state_row(row: dict) -> Optional[str]:
         return "half a Seen press"
     if group is not None and row["state"] != "seen":
         return "a Seen press on a show that is not Seen"
-    if row["media_type"] == "movie" and (row["state"] != "seen" or row["pass"] != 1):
+    if row["media_type"] == "movie" and not movie_receipt(row) and (row["state"] != "seen" or row["pass"] != 1):
         return "a movie that is not Seen in pass 1"
     return None
 
@@ -262,7 +269,7 @@ def verify(
         if row["media_type"] == "movie" and not any(watch["origin"] != "score" for watch in logs.get(key, ())):
             problems["old movie rows without a watch"].append(key)
 
-    # The score's watch (invariant 4), and a movie's state row exactly while it has a watch (invariant 3).
+    # The score's watch (invariant 4), and a movie's logical Seen state exactly while it has a watch (invariant 3).
     for key in score_keys:
         if key[2] == "movie" and not logs.get(key):
             problems["scored movies without a watch"].append(key)
@@ -270,10 +277,10 @@ def verify(
         by_score = [watch for watch in watches if watch["origin"] == "score"]
         if by_score and (len(watches) > 1 or key not in score_keys):
             problems["score's watches beside another watch or without a score"].append(key)
-        if key[2] == "movie" and key not in states:
+        if key[2] == "movie" and states.get(key, {}).get("state") != "seen":
             problems["movies with a watch and no state row"].append(key)
-    for key in states:
-        if key[2] == "movie" and not logs.get(key):
+    for key, row in states.items():
+        if key[2] == "movie" and not movie_receipt(row) and not logs.get(key):
             problems["movie state rows without a watch"].append(key)
 
     # The group of every migrated show against today's episode list.
