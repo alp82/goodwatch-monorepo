@@ -76,3 +76,22 @@ Recovery locations:
 The original dump is 2,282,167,152 bytes and matches SHA-256 `5299d930f8e1870c5ee10c3365d48e28a02eb2cbc3de944d3a102ef4de2f9d4b`. All ten original checksum sidecars were reverified at the deletion gate, along with the three-exception manifest (`6e491c849b8d626e76fa5e486152eab745381c556977d00d27f9017b618c005b`). Fresh archives have separate manifests and hashes.
 
 For logical recovery, use the unchanged custom dump and `application-postgres-restore-with-three-source-exceptions.list`, omitting exactly `priority_queue_movie_tmdb_id_key`, `priority_queue_tv_tmdb_id_key`, and `user_settings_user_id_key_key`. These source UNIQUE constraints were already violated by retained raw rows. The prior restore passed with all 25 raw table counts matching; no exact-schema restore is claimed. Reconcile duplicates deliberately before recreating those constraints. See [the migration recovery instructions](postgres-retirement.md) for original source/restore versions and demand reconciliation. Rebuilding infrastructure requires the retained configurations and scoped firewall changes; simply restarting old units is no longer possible.
+
+## Retention cleanup completed: October 26, 2026 (#14)
+
+Verification completed at **2026-10-26T00:48:53Z**, after the retention deadline. The owner approved the exact inventory, confirmed no active recovery need, and instructed us to keep the newest Storage Box dump (Q13). The updated private manifest is `/home/alp/.cache/gw-work/14/delete-manifest.json`.
+
+| Removed location | Files | Logical bytes removed |
+| --- | ---: | ---: |
+| Local recovery payloads, credentials and rollback definitions | 115 | 2,455,768,086 |
+| `.11`, the two enumerated `/root/backup` SQL dumps | 2 | 4,549,040,112 |
+| Storage Box, older live SQL dumps | 466 | 2,288,362,451,352 |
+| **Total** | **583** | **2,295,367,259,550** |
+
+Seven selective archive rewrites reduced compressed sizes by another **19,708,863 bytes**. They removed retired configuration/tooling members and 45 attributed Postgres firewall tuple blocks, preserving shared Caddy/monitoring/cron configuration, observer evidence and unrelated firewall rules. No recursive directory or snapshot deletion was performed. Current service backups, Windmill, provider-repair archives, the mixed pgAdmin volume and Auth recovery material retained for #683 were preserved.
+
+**Kept live dump:** Storage Box `/home/goodwatch/postgres/goodwatch_2026-09-09_00-31.sql.gz`, **2,275,697,474 bytes**. Its filename is the newest in the frozen inventory; its size matches the former `.11` copy and is consistent with the preceding dump. This cleanup checked its presence and size, without restoring it. The custom dump and configurations described in the September recovery instructions above have now been removed or sanitized; those instructions are historical.
+
+All 583 deleted paths were verified absent. Every rewritten archive was fully read; retained member metadata and unchanged content hashes matched the pre-deletion baseline. Each rewritten archive has adjacent `<archive>.retention-20261026.json` member receipts and `<archive>.retention-20261026.sha256` hashes. The aggregate receipt is `/home/alp/.local/state/goodwatch/postgres-retirement/final-20260915/retention-cleanup-20261026.json`; historical manifests remain unchanged.
+
+The shared Storage Box snapshots `Automatic-2026-10-23T01-06-59`, `Automatic-2026-10-24T01-14-18` and `Automatic-2026-10-25T01-17-16` were individually rechecked: each still contains all 467 original dumps, totaling **2,290,638,148,826 logical bytes per snapshot**, until normal rotation. Reported byte reductions describe live files and archive sizes; actual physical space reclamation was not measured and is limited by retained snapshot references.
