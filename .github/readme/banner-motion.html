@@ -1,0 +1,141 @@
+<!doctype html>
+<!-- The animated README banner (banner.avif): a dim wall of posters drifts slowly while a soft spotlight moves over it
+     and shows color, like the sign-up page; a poster flips once when the light reaches it. render-motion.mjs calls
+     window.renderAt(t) for every frame, so the loop is the same on every render. -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: Gabarito; font-weight: 700; src: url(../../goodwatch-webapp/app/server/og-image/fonts/Gabarito-Bold.ttf); }
+  @font-face { font-family: Gabarito; font-weight: 400; src: url(../../goodwatch-webapp/app/server/og-image/fonts/Gabarito-Regular.ttf); }
+  html, body { margin: 0; background: #09090b; }
+  .card { position: relative; width: 1280px; height: 400px; overflow: hidden; background: #09090b; isolation: isolate; }
+  .layer { position: absolute; inset: 0; }
+  .wall { position: absolute; left: 640px; top: 200px; width: 0; height: 0; will-change: transform; }
+  .wall img { position: absolute; border-radius: 7px; object-fit: cover; display: block; }
+  .grey img { filter: grayscale(1) brightness(.2) contrast(1.1); }
+  .color img { filter: saturate(.7) brightness(.58); }
+  .color { opacity: .8; }
+  .glow { position: absolute; inset: 0; mix-blend-mode: screen; }
+  .vignette {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 30% 42% at 50% 50%, rgba(9,9,11,.84) 0%, rgba(9,9,11,.6) 55%, transparent 100%),
+      linear-gradient(90deg, rgba(9,9,11,.55), transparent 14%, transparent 86%, rgba(9,9,11,.55));
+  }
+  .content { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; font-family: Gabarito; }
+  .mark { display: flex; align-items: baseline; font-weight: 700; font-size: 108px; line-height: 1; letter-spacing: -0.01em; text-shadow: 0 6px 40px rgba(0,0,0,.7); }
+  .mark img { height: .78em; margin-right: .055em; transform: translateY(.005em); filter: drop-shadow(0 6px 30px rgba(0,0,0,.6)); }
+  .ood { color: #fff; } .watch { color: #fbbf24; }
+  .tag { font-size: 28px; color: #e4e4e7; letter-spacing: .01em; text-shadow: 0 2px 16px rgba(0,0,0,.9); }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="layer grey"><div class="wall" id="grey"></div></div>
+  <div class="layer color" id="colorLayer"><div class="wall" id="color"></div></div>
+  <div class="glow" id="glow"></div>
+  <div class="vignette"></div>
+  <div class="content">
+    <div class="mark"><img src="../../goodwatch-webapp/app/img/goodwatch-logo-white.svg" alt=""><span class="ood">ood</span><span class="watch">Watch</span></div>
+    <div class="tag">Find what to watch next</div>
+  </div>
+</div>
+<script src="posters.js"></script>
+<script>
+  const T = Number(new URLSearchParams(location.search).get("T") || 26)
+  // Well-known titles scored 80+ on GoodWatch (TMDB poster paths), same pool as banner.html
+  const posters = [
+    "anFx9aTOOYqgS3v7x3R84Kz67ly", "wa3ZQE9kLnqwN3vQ0NNjg1NPsCa", "eKfVzzEazSIjJMrw9ADa2x8ksLz", "iOb2fjXLbpJgyQXe46n1WtGCnaa",
+    "5rhTDKUhPYvpdQIijFIs5VoWsON", "bjiS5ipwxb9JFy3XRRN4OAilSeX", "AdYr4DjOgXvDUMwu6vEhZy1Rnxk", "1XS1oqL89opfnbLl8WnZY1O1uJx",
+    "3Cz7ySOQJmqiuTdrc6CY0r65yDI", "v3JuB15WybKmxDeT1hWdK3j6eSJ", "owhkU6KRqdXoUQpjV8uyZGPtX58", "h6Z2oogE4mJk2uffdtIlLhb0EHx",
+    "sJZcy8QsOPuRPiCfoCWVB3r9Ohg", "ogAWwbh3frWtiTyyXrZaVFtqCgp", "qk3eQ8jW4opJ48gFWYUXWaMT4l", "uRHsiw1wLxPHFXkkv4Ix1s0O6f4",
+    "rTc7ZXdroqjkKivFPvCPX0Ru7uw", "uOOtwVbSr4QDjAGIifLDwpb2Pdl", "f8aIvYk5h7Z8EP3dinCmVgQFYow", "hDxOMX8zzH1FiqKWVBzNaYGBkle",
+    "f1VCQIG2iCyOookdgOzwtUpwWC0", "7DJKHzAi83BmQrWLrYYOqcoKfhR", "k5UALlcA0EnviaCUn2wMjOWYiOO", "xppeysfvDKVx775MFuH8Z9BlpMk",
+    "k5Qg5rgPoKdh3yTJJrLtyoyYGwC", "iq6yrZ5LEDXf1ArCOYLq8PIUBpV",
+  ].concat(window.POSTERS || []).filter((p, i, a) => a.indexOf(p) === i).map((p) => `https://image.tmdb.org/t/p/w185/${p}.jpg`)
+
+  const TW = 100, TH = 150, GAP = 12, PX = TW + GAP, PY = TH + GAP
+  const ROT = -7 * Math.PI / 180
+  const DRIFT = [-10, -4.4] // px per second, in wall coordinates
+  const ENTER = 105, EXIT = 150, DEAL = 1.1
+
+  const state = new Map() // "r,c" -> { flips, at, dir, inside }
+  const posterOf = (r, c, flips) => posters[(((r * 7 + c * 3 + flips * 29) % posters.length) + posters.length) % posters.length]
+
+  function spot(t) {
+    const a = (2 * Math.PI * t) / T
+    return { x: 640 + 440 * Math.sin(a), y: 200 + 90 * Math.sin(2 * a + 0.6) }
+  }
+
+  function toCard(wx, wy) {
+    return [640 + wx * Math.cos(ROT) - wy * Math.sin(ROT), 200 + wx * Math.sin(ROT) + wy * Math.cos(ROT)]
+  }
+
+  const pools = { grey: [], color: [] }
+  function img(layer, i) {
+    const list = pools[layer]
+    while (list.length <= i) {
+      const el = document.createElement("img")
+      document.getElementById(layer).appendChild(el)
+      list.push(el)
+    }
+    return list[i]
+  }
+  const ease = (x) => 1 - Math.pow(1 - x, 3)
+
+  let lastT = -1
+  window.renderAt = (t) => {
+    const s = spot(t)
+    const ox = DRIFT[0] * t, oy = DRIFT[1] * t
+    const c0 = Math.floor((-900 - ox) / PX), c1 = Math.ceil((900 - ox) / PX)
+    const r0 = Math.floor((-520 - oy) / PY), r1 = Math.ceil((520 - oy) / PY)
+    const used = { grey: 0, color: 0 }
+    const put = (layer, src, x, y, style) => {
+      const el = img(layer, used[layer]++)
+      if (el.getAttribute("src") !== src) el.src = src
+      el.style.cssText = `left:${x}px;top:${y}px;width:${TW}px;height:${TH}px;display:block;${style || ""}`
+    }
+    for (let r = r0; r <= r1; r++) {
+      for (let c = c0; c <= c1; c++) {
+        const wx = c * PX + ox, wy = r * PY + oy
+        const [cx, cy] = toCard(wx + TW / 2, wy + TH / 2)
+        if (cx < -150 || cx > 1430 || cy < -150 || cy > 550) continue
+        const key = r + "," + c
+        let st = state.get(key)
+        if (!st) { st = { flips: 0, at: -9, dir: [1, 0], inside: false }; state.set(key, st) }
+        if (t > lastT) {
+          const d = Math.hypot(cx - s.x, cy - s.y)
+          if (!st.inside && d < ENTER) {
+            st.inside = true; st.flips++; st.at = t
+            const dx = cx - s.x, dy = cy - s.y
+            st.dir = Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)]
+          } else if (st.inside && d > EXIT) st.inside = false
+        }
+        const now = posterOf(r, c, st.flips)
+        put("grey", now, c * PX, r * PY)
+        const p = (t - st.at) / DEAL
+        if (p >= 0 && p < 1 && st.flips > 0) {
+          const e = ease(p)
+          put("color", posterOf(r, c, st.flips - 1), c * PX, r * PY)
+          put("color", now, c * PX, r * PY, `opacity:${e};transform:translate(${-st.dir[0] * 5 * (1 - e)}%,${-st.dir[1] * 5 * (1 - e)}%) scale(${1.04 - 0.04 * e});z-index:1`)
+        } else put("color", now, c * PX, r * PY)
+      }
+    }
+    for (const layer of ["grey", "color"]) for (let i = used[layer]; i < pools[layer].length; i++) pools[layer][i].style.display = "none"
+    const deg = (ROT * 180) / Math.PI
+    const wallT = `rotate(${deg}deg) translate(${ox}px, ${oy}px)` // sub-pixel drift: one transform, no rounded left/top
+    document.getElementById("grey").style.transform = wallT
+    document.getElementById("color").style.transform = wallT
+    const cl = document.getElementById("colorLayer")
+    const glow = document.getElementById("glow")
+    const mask = `radial-gradient(circle 220px at ${s.x}px ${s.y}px, #000 5%, transparent 100%)`
+    cl.style.maskImage = cl.style.webkitMaskImage = mask
+    glow.style.background = `radial-gradient(circle 260px at ${s.x}px ${s.y}px, rgba(251,191,36,.08), transparent 100%), radial-gradient(ellipse 34% 62% at 50% 0%, rgba(251,191,36,.09), transparent 100%)`
+    lastT = t
+  }
+  window.preload = () => Promise.all(posters.map((src) => new Promise((ok) => { const i = new Image(); i.onload = i.onerror = ok; i.src = src })))
+  window.renderAt(0)
+</script>
+</body>
+</html>
