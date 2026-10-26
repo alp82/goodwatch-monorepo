@@ -9,6 +9,19 @@ export interface ProfileTropeResource {
 	seen?: string[]
 }
 
+export const wantsThinTropes = (params: URLSearchParams) =>
+	params.get("format") === "thin-v1"
+
+/** Opt in on every v3 request, including the first request with no cached versions. */
+export function profileTropeRequestParams(previous?: ProfileTropeResource) {
+	const params = new URLSearchParams({ format: "thin-v1" })
+	if (previous?.tropes?.version)
+		params.set("version", String(previous.tropes.version))
+	if (previous?.tropes?.catalogVersion)
+		params.set("catalogVersion", previous.tropes.catalogVersion)
+	return params
+}
+
 /** Definitions and source associations have their own small, authorized resources. */
 export function thinProfileTropes(tropes: ProfileTropes): ProfileTropes {
 	const { references, labels, descriptions, ...matrix } = tropes
@@ -20,7 +33,9 @@ export function profileTropeResource(
 	pending: boolean,
 	params: URLSearchParams,
 ): ProfileTropeResource {
-	const thin = tropes ? thinProfileTropes(tropes) : null
+	// Existing open tabs still expect the full contract throughout a rolling deployment.
+	const thin =
+		tropes && wantsThinTropes(params) ? thinProfileTropes(tropes) : tropes
 	const unchanged =
 		!!thin?.version &&
 		params.get("version") === String(thin.version) &&

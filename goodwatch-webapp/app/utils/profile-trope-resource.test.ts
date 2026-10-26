@@ -9,6 +9,8 @@ import {
 	mergeProfileTropeResource,
 	profileTropeQueryKey,
 	profileTropeResource,
+	profileTropeRequestParams,
+	wantsThinTropes,
 } from "./profile-trope-resource.ts"
 
 const empty = (): UserData => ({
@@ -197,7 +199,11 @@ test("filter matrices contain neither article text nor server-only source labels
 		references: Object.fromEntries(ids.map((id) => [id, [id]])),
 		labels: Object.fromEntries(ids.map((id) => [id, ["Contextual label"]])),
 	}
-	const resource = profileTropeResource(pool, false, new URLSearchParams())
+	const resource = profileTropeResource(
+		pool,
+		false,
+		profileTropeRequestParams(),
+	)
 	assert.deepEqual(resource.tropes?.descriptions, {})
 	assert.equal("references" in (resource.tropes ?? {}), false)
 	assert.equal("labels" in (resource.tropes ?? {}), false)
@@ -210,9 +216,50 @@ test("filter matrices contain neither article text nor server-only source labels
 		},
 		false,
 		new URLSearchParams({
+			format: "thin-v1",
 			version: "123",
 			catalogVersion: resource.tropes?.catalogVersion ?? "",
 		}),
 	)
 	assert.equal(changed.unchanged, true)
+})
+
+test("thin format is explicitly negotiated on cold and warm requests while legacy clients retain their full contract", () => {
+	const pool = {
+		...buildTropePool([], [], {}),
+		seen: [],
+		version: 321,
+		catalogVersion: "legacy-definition-version",
+		descriptions: { Context: "Full general definition" },
+		labels: { Context: ["Original label"] },
+		references: {
+			Context: ["https://tvtropes.org/pmwiki/pmwiki.php/Main/Actual"],
+		},
+	}
+	const cold = profileTropeRequestParams()
+	assert.equal(cold.get("format"), "thin-v1")
+	assert.equal(cold.has("version"), false)
+	const thin = profileTropeResource(pool, false, cold)
+	assert.deepEqual(thin.tropes?.descriptions, {})
+	assert.equal(thin.tropes?.catalogVersion, "thin-v1")
+	const warm = profileTropeRequestParams(thin)
+	assert.equal(warm.get("format"), "thin-v1")
+	assert.equal(profileTropeResource(pool, false, warm).unchanged, true)
+	for (const params of [
+		new URLSearchParams(),
+		new URLSearchParams({ format: "unknown" }),
+	]) {
+		assert.equal(wantsThinTropes(params), false)
+		const legacy = profileTropeResource(pool, false, params)
+		assert.equal(legacy.tropes, pool)
+		assert.equal(legacy.tropes?.descriptions.Context, "Full general definition")
+		assert.deepEqual(legacy.tropes?.labels, pool.labels)
+		assert.deepEqual(legacy.tropes?.references, pool.references)
+		assert.equal(legacy.tropes?.catalogVersion, "legacy-definition-version")
+	}
+	const legacyWarm = new URLSearchParams({
+		version: "321",
+		catalogVersion: "legacy-definition-version",
+	})
+	assert.equal(profileTropeResource(pool, false, legacyWarm).unchanged, true)
 })

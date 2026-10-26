@@ -12,6 +12,7 @@ import {
 	type ProfileTropeResource,
 	mergeProfileTropeResource,
 	profileTropeQueryKey,
+	profileTropeRequestParams,
 } from "~/utils/profile-trope-resource"
 import { TropesPage } from "./TropesPage"
 
@@ -36,11 +37,7 @@ export function TropesTab({ shell, preview, pending }: TropesTabProps) {
 		enabled: mounted && seesTropes(shell) && (pending || !!preview?.total),
 		queryFn: async ({ signal }) => {
 			const previous = client.getQueryData<FullData>(key)
-			const version = previous?.tropes?.version
-			const params = new URLSearchParams()
-			if (version) params.set("version", String(version))
-			if (previous?.tropes?.catalogVersion)
-				params.set("catalogVersion", previous.tropes.catalogVersion)
+			const params = profileTropeRequestParams(previous)
 			const response = await fetch(
 				`/u/${encodeURIComponent(shell.handle)}/tropes/data${params.size ? `?${params}` : ""}`,
 				{ signal },
