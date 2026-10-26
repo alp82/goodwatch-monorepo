@@ -1,0 +1,140 @@
+{
+  "date": "2026-10-26",
+  "main_commit": "bb1265d4a5a980a4fcd32023fed85ac49029a7d0",
+  "url": "https://goodwatch.app/movie/629-the-usual-suspects",
+  "http_gets": 16,
+  "browser_gets": 8,
+  "googlebot_gets": 8,
+  "page_cache_hits": 1,
+  "page_cache_misses": 15,
+  "distinct_html_crew_selections": 1,
+  "html_and_redis_crew": {
+    "directors": [
+      {
+        "id": 9032,
+        "credit_id": "52fe4260c3a36847f8019a7d",
+        "name": "Bryan Singer"
+      },
+      {
+        "id": 1402170,
+        "credit_id": "586ccc90c3a3680379005f0f",
+        "name": "Haley McLane"
+      },
+      {
+        "id": 146605,
+        "credit_id": "5f2374f9c3514c00362e4f31",
+        "name": "James D. Deck"
+      }
+    ],
+    "writers": [
+      {
+        "id": 9033,
+        "credit_id": "586bfd6892514148480002f5",
+        "name": "Christopher McQuarrie"
+      }
+    ],
+    "producers": [
+      {
+        "id": 9032,
+        "credit_id": "52fe4260c3a36847f8019a89",
+        "name": "Bryan Singer"
+      },
+      {
+        "id": 6410,
+        "credit_id": "52fe4260c3a36847f8019ac5",
+        "name": "Francine Maisler"
+      },
+      {
+        "id": 1527280,
+        "credit_id": "586cd311925141087200661f",
+        "name": "Lisa Miller Katz"
+      }
+    ],
+    "composers": [
+      {
+        "id": 113088,
+        "credit_id": "63293dc5a3b5e6007ddf2850",
+        "name": "Charleen Richards-Steeves"
+      },
+      {
+        "id": 13173,
+        "credit_id": "63293d342dffd8007f2185f2",
+        "name": "Tami Treadwell"
+      },
+      {
+        "id": 113075,
+        "credit_id": "586cd34dc3a3680386006a29",
+        "name": "Chuck Michael"
+      }
+    ]
+  },
+  "redis_timestamp": 1792932494825,
+  "redis_ttl_at_inspection": 45358,
+  "direct_crew_queries": 12,
+  "complete_details_queries": 6,
+  "crate_coordinators": 3,
+  "distinct_sql_crew_selections": 1,
+  "sql_crew": {
+    "directors": [
+      {
+        "id": 9032,
+        "credit_id": "52fe4260c3a36847f8019a7d",
+        "name": "Bryan Singer"
+      },
+      {
+        "id": 1854423,
+        "credit_id": "5f23752fdf857c0038ddd75a",
+        "name": "Alan Steinman"
+      },
+      {
+        "id": 146605,
+        "credit_id": "5f2374f9c3514c00362e4f31",
+        "name": "James D. Deck"
+      }
+    ],
+    "writers": [
+      {
+        "id": 9033,
+        "credit_id": "586bfd6892514148480002f5",
+        "name": "Christopher McQuarrie"
+      }
+    ],
+    "producers": [
+      {
+        "id": 9032,
+        "credit_id": "52fe4260c3a36847f8019a89",
+        "name": "Bryan Singer"
+      },
+      {
+        "id": 6410,
+        "credit_id": "52fe4260c3a36847f8019ac5",
+        "name": "Francine Maisler"
+      },
+      {
+        "id": 1527280,
+        "credit_id": "586cd311925141087200661f",
+        "name": "Lisa Miller Katz"
+      }
+    ],
+    "composers": [
+      {
+        "id": 113088,
+        "credit_id": "63293dc5a3b5e6007ddf2850",
+        "name": "Charleen Richards-Steeves"
+      },
+      {
+        "id": 13173,
+        "credit_id": "63293d342dffd8007f2185f2",
+        "name": "Tami Treadwell"
+      },
+      {
+        "id": 1367493,
+        "credit_id": "63293d6a524978007e9f4aaf",
+        "name": "John T. Cucci"
+      }
+    ]
+  },
+  "crew_row_count": 128,
+  "null_credit_ids": 0,
+  "duplicate_sort_keys": 0
+}
