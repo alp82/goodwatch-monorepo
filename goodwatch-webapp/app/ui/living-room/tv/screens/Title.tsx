@@ -15,6 +15,7 @@
 // keys; each is a step of its own, so Back returns to the overview (tv-machine.ts, `section`). Every key is a touch
 // target, 44 px or more on the phone's screen (`keySize` in kit.tsx).
 import { Suspense, lazy } from "react"
+import { useTitleOpened } from "~/hooks/useTitleOpened"
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
 import { AREA_COLOR } from "~/ui/details/fingerprint/areas"
 import { composeHeadline } from "~/ui/details/fingerprint/headline"
@@ -65,12 +66,15 @@ const TitlePanel = lazy(reloadOnStaleChunk(() => import("./TitlePanel")))
  */
 export function TitleData({
 	report,
+	active,
 	...title
 }: Parameters<typeof useTvTitle>[0] & {
 	report: (title: TvTitleReport | null) => void
+	active: boolean
 }) {
 	const current = useTvTitle(title)
 	const ref = current.title ? parseTvTitleKey(current.title.key) : null
+	useTitleOpened(ref?.mediaType, ref?.tmdbId, active, ".tvc")
 	useProductExposure("title opened", current.title?.key ?? null, {
 		source: "living_room",
 		surface: "title",

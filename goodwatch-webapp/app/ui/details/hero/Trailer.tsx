@@ -1,7 +1,6 @@
 import { PlayIcon } from "@heroicons/react/24/solid"
 import { TrailerMark } from "./trailer-mark"
 import { Suspense, lazy, useRef, useState } from "react"
-import { usePosterImpression } from "~/hooks/usePosterImpression"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { useOpenedOnce } from "~/utils/first-use"
@@ -110,7 +109,6 @@ const preloadPosterFullScreen = () => {
 
 /** The poster on the banner. A press opens it over the whole screen; it grows out of this place and returns to it. */
 export function HeroPoster({ media, className = "" }: { media: Media; className?: string }) {
-	const impressionRef = usePosterImpression(media.mediaType, media.details.tmdb_id)
 	const thumb = useRef<HTMLButtonElement>(null)
 	const [open, setOpen] = useState(false)
 	const opened = useOpenedOnce(open)
@@ -130,7 +128,6 @@ export function HeroPoster({ media, className = "" }: { media: Media; className?
 				className={`block aspect-[2/3] shrink-0 cursor-zoom-in overflow-hidden rounded-xl bg-white/5 shadow-[0_8px_30px_rgba(0,0,0,.7)] ring-1 ring-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 ${className}`}
 			>
 				<TmdbImage
-					imgRef={impressionRef}
 					kind="poster"
 					lang={media.details.presentation?.title.language ?? "en"}
 					path={media.details.poster_path}

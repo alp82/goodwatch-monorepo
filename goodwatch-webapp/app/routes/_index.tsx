@@ -118,6 +118,7 @@ export default function Index() {
 				key={locale.language}
 				data={data}
 				screenOverlay={intro.screen}
+				screenObscured={intro.screenObscured}
 				onPower={intro.onPower}
 				belowIntro={intro.below}
 				homeHeadingAs={intro.homeHeadingAs}

@@ -1,53 +1,6 @@
 import { useEffect, useRef } from "react"
 
-interface Impression {
-	media_type: "movie" | "show"
-	tmdb_id: number
-}
-
-const seen = new Set<string>()
-const pending = new Map<string, Impression>()
-let flushTimer: ReturnType<typeof setTimeout> | undefined
-let visitorId: string | undefined
-let listening = false
-
-function flush() {
-	clearTimeout(flushTimer)
-	flushTimer = undefined
-	if (!pending.size) return
-	const items = [...pending.values()].slice(0, 50)
-	for (const item of items) pending.delete(`${item.media_type}:${item.tmdb_id}`)
-	void fetch("/api/poster-impressions", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ visitorId, items }),
-		keepalive: true,
-	}).catch(() => {}) // Impression collection must never interrupt browsing.
-	if (pending.size) flushTimer = setTimeout(flush, 1000)
-}
-
-function enqueue(item: Impression) {
-	if (!visitorId) {
-		try {
-			visitorId = sessionStorage.getItem("poster-impression-visitor") || crypto.randomUUID()
-			sessionStorage.setItem("poster-impression-visitor", visitorId)
-		} catch {
-			visitorId = crypto.randomUUID()
-		}
-	}
-	const key = `${item.media_type}:${item.tmdb_id}`
-	if (seen.has(key)) return
-	seen.add(key)
-	pending.set(key, item)
-	if (!listening) {
-		listening = true
-		window.addEventListener("pagehide", flush)
-		document.addEventListener("visibilitychange", () => {
-			if (document.visibilityState === "hidden") flush()
-		})
-	}
-	if (!flushTimer) flushTimer = setTimeout(flush, 1000)
-}
+import { enqueueDemand } from "~/utils/title-demand"
 
 /** Count a poster after one continuous second with at least half visible. */
 export function usePosterImpression(mediaType?: "movie" | "show", tmdbId?: number) {
@@ -61,7 +14,7 @@ export function usePosterImpression(mediaType?: "movie" | "show", tmdbId?: numbe
 			clearTimeout(timer)
 			if (visible && document.visibilityState === "visible") {
 				timer = setTimeout(() => {
-					enqueue({ media_type: mediaType, tmdb_id: tmdbId })
+					enqueueDemand({ media_type: mediaType, tmdb_id: tmdbId, source_kind: "poster" })
 					observer.disconnect()
 				}, 1000)
 			}

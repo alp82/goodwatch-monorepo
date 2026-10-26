@@ -1,5 +1,6 @@
 import type { NewPagesHere } from "~/server/new-on-services-page.server"
 import React from "react"
+import { useTitleOpened } from "~/hooks/useTitleOpened"
 import DetailsContent from "~/ui/details/DetailsContent"
 import DetailsSideNav from "~/ui/details/DetailsSideNav"
 import { navSections, sections } from "~/ui/details/sections"
@@ -47,6 +48,7 @@ export interface DetailsProps {
 }
 
 export default function Details(props: DetailsProps) {
+	useTitleOpened(props.media.mediaType, props.media.details.tmdb_id)
 	const { details } = props.media
 	return (
 		<BelowFoldProvider titleKey={`${props.media.mediaType}-${details.tmdb_id}`}>

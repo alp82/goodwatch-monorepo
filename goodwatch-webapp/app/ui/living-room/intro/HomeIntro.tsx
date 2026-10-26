@@ -85,6 +85,8 @@ type Showing =
 export type HomeIntro = {
 	/** Over the TV's picture. */
 	screen: ReactNode
+	/** The intro or its boot/hold still covers the TV picture. */
+	screenObscured: boolean
 	/** At the top of the section below the room. */
 	below?: ReactNode
 	/** The TV home headline's tag. */
@@ -277,6 +279,7 @@ export function useHomeIntro({ member }: { member: boolean }): HomeIntro {
 			</Suspense>
 		)
 	return {
+		screenObscured: Boolean(film) || holding || !hydrated || boot,
 		screen: (
 			<>
 				{film}

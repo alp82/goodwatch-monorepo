@@ -114,6 +114,7 @@ function Edition({
 export function TvLivingRoom({
 	data,
 	screenOverlay,
+	screenObscured = false,
 	onPower,
 	belowIntro,
 	homeHeadingAs = "h1",
@@ -121,6 +122,8 @@ export function TvLivingRoom({
 	data: TvHomeData
 	/** Over the TV's picture: the intro's boot screen and film. */
 	screenOverlay?: ReactNode
+	/** The intro still covers the TV picture; loaded title data is not a visible title yet. */
+	screenObscured?: boolean
 	/** Told the TV's power as it changes: the intro stops when the set goes off and boots again when it comes on. */
 	onPower?: (power: TvPower) => void
 	/** At the top of the section below the room: "How GoodWatch works" for a guest. */
@@ -598,6 +601,7 @@ export function TvLivingRoom({
 			{/* A screen's data, once for both editions. It draws nothing. */}
 			{onTitle && (
 				<TitleData
+					active={tv.room.power === "on" && !tv.room.menuOpen && !screenObscured}
 					screen={screen}
 					member={data.member}
 					known={known}
