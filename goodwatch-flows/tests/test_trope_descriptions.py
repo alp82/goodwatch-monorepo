@@ -27,6 +27,46 @@ class TropeDescriptionTests(unittest.TestCase):
         self.assertEqual(result['heading'], 'Serious Business')
         self.assertEqual(result['description'], LEAD)
 
+    def test_linked_http_ignores_video_h1_before_the_authored_scoped_primary(self):
+        html=page(f'<p>{LEAD}</p><hr>')
+        primary='<h1 class="entry-title" itemprop="headline"><span class="wrapped_title">Serious Business</span></h1>'
+        html=html.replace('<h1>Main / Serious Business</h1>', '<h1 class="video-title">A video overlay title</h1>'+primary)
+        html=html.replace('<body>','<body><h1>Another overlay before main content</h1>')
+        result=extract_description(html,None,URL,linked=True)
+        self.assertIsNone(result['error']);self.assertEqual(result['heading'],'Serious Business')
+        self.assertEqual(result['description'],LEAD)
+
+    def test_linked_http_accepts_current_captured_entry_title_without_itemprop(self):
+        html=page(f'<p>{LEAD}</p><hr>').replace('<h1>Main / Serious Business</h1>',
+            '<h1 class="entry-title text-[26px] font-bold">Serious Business</h1>')
+        html=html.replace('<body>','<body><h1 class="video-title">Video before main content</h1>')
+        result=extract_description(html,None,URL,linked=True)
+        self.assertIsNone(result['error']);self.assertEqual(result['heading'],'Serious Business')
+        self.assertEqual(result['description'],LEAD)
+
+    def test_linked_http_rejects_ambiguous_authored_or_plain_scoped_primaries(self):
+        for attrs in ('',' class="entry-title" itemprop="headline"'):
+            html=page(f'<p>{LEAD}</p><hr>').replace('<h1>Main / Serious Business</h1>',f'<h1{attrs}>Serious Business</h1><h1{attrs}>Other Subject</h1>')
+            with self.subTest(attrs=attrs):
+                self.assertIn('ambiguous scoped linked primary',extract_description(html,None,URL,linked=True)['error'])
+
+    def test_linked_http_requires_unique_real_wrapper_and_article_relationship(self):
+        valid=page(f'<p>{LEAD}</p><hr>')
+        variants=[valid.replace('id="main-content"','id="other-content"'),valid.replace('</body>','<div id="main-content"></div></body>'),
+                  valid.replace('id="main-article"','id="other-article"'),valid.replace('<div id="main-article">','</div><div id="main-article">')]
+        for html in variants:
+            with self.subTest(html=html):
+                self.assertIn('linked main article',extract_description(html,None,URL,linked=True)['error'])
+        minimal=valid.replace('id="main-content"','id="other-content"')
+        self.assertEqual(extract_description(minimal,'Serious Business',URL)['description'],LEAD)
+
+    def test_linked_http_scoped_title_excludes_alias_namespace_and_watch_ui(self):
+        html=page(f'<p>{LEAD}</p><hr>').replace('<h1>Main / Serious Business</h1>',
+            '<h1 class="entry-title" itemprop="headline"><div class="wrap-entry-breadcrumb"><strong><span class="ns_parts">Main / </span>Serious Business</strong>'
+            '<div class="aka-title">aka: Old Label</div></div><div class="watch_rank_wrap">10 Following</div></h1>')
+        result=extract_description(html,None,URL,linked=True)
+        self.assertIsNone(result['error']);self.assertEqual(result['heading'],'Serious Business')
+
     def test_linked_http_alias_requires_actual_requested_redirect_binding(self):
         original = 'https://tvtropes.org/pmwiki/pmwiki.php/Main/OldName'
         html = page(f'<p>{LEAD}</p><hr>')

@@ -298,11 +298,26 @@ def extract_description(html, name, final_url, *, requested_url=None, linked=Fal
     except FeatureNotFound:
         return reject("Missing html5lib parser dependency; install the pinned descriptions.script.lock dependencies before recovery")
     heading = soup.find("h1")
+    if linked:
+        contents, articles = soup.select("#main-content"), soup.select("#main-article")
+        if len(contents) != 1 or len(articles) != 1 or contents[0] not in articles[0].parents:
+            return reject("Missing or ambiguous linked main article")
+        scoped = [h for h in contents[0].find_all("h1") if articles[0] not in h.parents]
+        authored = [h for h in scoped if "entry-title" in h.get("class", []) and h.get("itemprop") == "headline"]
+        candidates = authored or scoped
+        if len(candidates) != 1:
+            return reject("Missing or ambiguous scoped linked primary heading")
+        heading = candidates[0]
     if heading:
-        # TV Tropes appends this UI breadcrumb after redirects. Only the primary
-        # heading identifies the subject; the AKA itself never verifies an alias.
-        for aka in heading.select(".aka-title"):
-            aka.decompose()
+        # Only the page's primary heading identifies its title; AKA/watch UI is not the title.
+        for node in heading.select(".aka-title, .ns_parts, .watch_rank_wrap" if linked else ".aka-title"):
+            node.decompose()
+        if linked:
+            titles = heading.select(".wrapped_title, .wrap-entry-breadcrumb strong")
+            if len(titles) > 1:
+                return reject("Ambiguous linked primary title")
+            if titles:
+                heading = titles[0]
     result["heading"] = re.sub(r"^Main\s*/\s*", "", _text(heading), flags=re.I) if heading else ""
     canonicals = {
         urljoin(final, link.get("href", ""))
