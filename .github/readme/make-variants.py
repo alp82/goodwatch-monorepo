@@ -121,7 +121,7 @@ def switcher(current):
 
 
 why = re.search(r"## Why GoodWatch\n\n(.+?)\n", a).group(1)
-a = a.replace(why, f'<p align="center">\n{lines(why)}\n</p>', 1).replace("## Why GoodWatch", '<h2 align="center">Why GoodWatch</h2>', 1)
+a = a.replace(why, f'<p align="center">\n{lines(why)}\n</p>\n<br>', 1).replace("## Why GoodWatch", '<h2 align="center">Why GoodWatch</h2>', 1)
 
 # Round 3: layout A only, stills instead of moving clips (clips/record.mjs stills).
 open("README.md", "w").write("> [!NOTE]\n> README animation prototype, round 3: animated header, feature stills.\n\n" + a)

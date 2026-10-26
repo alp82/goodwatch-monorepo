@@ -29,6 +29,7 @@ and 325 streaming services in 139 countries into one place.<br>
 Then it narrows all of that down to the few titles<br>
 that fit your taste and your evening.
 </p>
+<br>
 
 <p align="center"><img src="https://shieldcn.dev/badge/Score-fbbf24.svg?logo=lu:Star&size=xs" alt="Score"></p>
 <h3 align="center">One score you can trust</h3>
