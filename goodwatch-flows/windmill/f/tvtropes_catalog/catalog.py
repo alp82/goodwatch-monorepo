@@ -94,13 +94,13 @@ _REVISION = re.compile(r"^[0-9a-f]{40}$")
 
 
 def normalize_archive(value):
-    """Only immutable public archive references and digests, never article HTML or a fabricated capture date."""
+    """Only immutable public archive references and digests, never raw HTML or a fabricated capture date."""
     if value is None:
         return None
     if not isinstance(value, dict) or set(value) - (_ARCHIVE_REQUIRED | _ARCHIVE_OPTIONAL) or _ARCHIVE_REQUIRED - set(value):
         raise ValueError("source_archive must contain exactly the required archive metadata and optional byte locator")
-    if value["provider"] != "huggingface" or value["payload_kind"] != "article_html_fragment":
-        raise ValueError("source_archive provider/payload_kind must identify a Hugging Face article HTML fragment")
+    if value["provider"] != "huggingface" or value["payload_kind"] not in ("article_html_fragment", "html_document"):
+        raise ValueError("source_archive provider/payload_kind must identify a Hugging Face article HTML fragment or HTML document")
     dataset, revision = value["dataset"], value["revision"]
     if not isinstance(dataset, str) or len(dataset) > 300 or not _DATASET.fullmatch(dataset):
         raise ValueError("source_archive.dataset must be an owner/repository name")

@@ -24,12 +24,19 @@ table's per-title excerpts. Each exact name has an optional known Main-page URL 
 unresolved URL mappings have null URLs and remain queued for review. Direct HTTP descriptions retain the raw response's
 SHA256, the exact text's SHA256, actual fetch time, source, and import/update times. Unknown provenance stays null.
 
-Archived HTML fragments use nullable `source_archive` metadata instead of claiming a direct HTTP capture. This small
+Archived HTML uses nullable `source_archive` metadata instead of claiming a direct HTTP capture. This small
 object records the public Hugging Face dataset, full pinned revision and immutable file URL, verified file SHA256,
-exact JSONL-record SHA256, literal article-string UTF-8 SHA256, `payload_kind: article_html_fragment`, and the actual
-archive retrieval time. A byte offset/length pair can locate the exact record slice. Raw HTML stays in the local
-verified archive, never in this object. Archived descriptions keep both `source_hash` and `fetched_at` null: a
-repository revision, dataset year or archive download date is not evidence of when TV Tropes served that page.
+exact archived-record SHA256, literal HTML-string UTF-8 SHA256, payload kind, and the actual archive retrieval time.
+`payload_kind: article_html_fragment` identifies an article fragment; `payload_kind: html_document` identifies a
+saved full HTML document. Even a full document does not establish the original HTTP wire bytes or capture date.
+The record digest uses the source format's documented original byte boundaries; the HTML digest covers the
+literal archived string encoded as UTF-8. Neither digest becomes a direct HTTP `source_hash`.
+
+A byte offset/length pair can locate a contiguous record slice in an uncompressed source file. For compressed
+records, including records inside a ZIP member, omit these DB fields: member names and decompressed offsets stay
+in local verification evidence. Raw HTML stays in the local verified archive, never in this object. Archived
+descriptions keep both `source_hash` and `fetched_at` null: a repository revision, dataset year or archive download
+date is not evidence of when TV Tropes served that page.
 Their `source` remains `tvtropes`; `description_hash` still identifies the extracted text. Existing populated
 HTTP rows are preserved by the normal missing-only import guard, including their capture provenance.
 

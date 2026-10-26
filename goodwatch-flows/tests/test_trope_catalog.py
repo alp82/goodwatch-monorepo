@@ -183,6 +183,36 @@ class TropeCatalogTests(unittest.TestCase):
             with self.subTest(patch=patch),self.assertRaisesRegex(ValueError,"cannot claim"):
                 record(source_archive=archive(),**patch)
 
+    def test_full_html_archive_document_preserves_pinned_provenance_without_http_capture_claims(self):
+        metadata=archive(dataset="RyokoExtra/TvTroper",revision="65ca60f908e536ce4ec1ac123415596379f363cd",
+                         provider_url="https://huggingface.co/datasets/RyokoExtra/TvTroper/resolve/65ca60f908e536ce4ec1ac123415596379f363cd/pages.zip",
+                         payload_kind="html_document")
+        evidence={URL:{"sha256":"f"*64,"started_at":"2026-10-25T08:00:00Z"}}
+        normalized=normalize_record({"name":"Red Herring","url":URL,"text":TEXT,"source_archive":metadata},evidence=evidence)
+        self.assertEqual(normalized["source_archive"]["payload_kind"],"html_document")
+        self.assertEqual(normalized["source_archive"]["revision"],metadata["revision"])
+        self.assertEqual(normalized["source_archive"]["file_sha256"],metadata["file_sha256"])
+        self.assertEqual(normalized["source_archive"]["record_sha256"],metadata["record_sha256"])
+        self.assertEqual(normalized["source_archive"]["article_sha256"],metadata["article_sha256"])
+        self.assertNotIn("byte_offset",normalized["source_archive"])
+        self.assertNotIn("byte_length",normalized["source_archive"])
+        self.assertIsNone(normalized["source_hash"])
+        self.assertIsNone(normalized["fetched_at"])
+        self.assertEqual(normalize_record(normalized),normalized)
+        for patch in ({"source_hash":"f"*64},{"fetched_at":"2023-01-01T00:00:00Z"}):
+            with self.subTest(patch=patch),self.assertRaisesRegex(ValueError,"cannot claim"):
+                record(source_archive=metadata,**patch)
+
+    def test_archive_payload_kinds_are_explicit_and_zip_member_locators_remain_local(self):
+        self.assertEqual(normalize_archive(archive())["payload_kind"],"article_html_fragment")
+        for kind in (None,"html","full_html","http_response","Article_Html_Fragment",[],{}):
+            with self.subTest(kind=kind),self.assertRaises(ValueError):
+                normalize_archive(archive(payload_kind=kind))
+        for patch in ({"revision":"main"},{"file_sha256":"invalid"},{"zip_member":"pages.json"},
+                      {"member_byte_offset":123},{"record_sha256":None},{"article_sha256":"A"*64}):
+            with self.subTest(patch=patch),self.assertRaises(ValueError):
+                normalize_archive(archive(payload_kind="html_document",**patch))
+
     def test_archive_metadata_requires_a_description_and_cannot_be_attached_by_inventory(self):
         with self.assertRaisesRegex(ValueError,"requires a description"):
             normalize_record({"name":"Red Herring","url":URL,"source_archive":archive()})
