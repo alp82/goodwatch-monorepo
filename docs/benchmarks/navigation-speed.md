@@ -670,7 +670,7 @@ Breaking Bad 12 images, 237 KB; most of it the four cast photos above (140 / 145
 
 Same what-if method as the cast photos above; before is `990419700`, after the change without the cast photos.
 
-**The change** (`283c3eb65`, with the review fixes in `994b83982`; not on main, owner Q39 pending): the related map's pack (the app's late path and the engine's wake) and Talked about now's
+**The change** (`283c3eb65`, with the review fixes in `994b83982`; and `e6de0b608`; owner Q39: ship): the related map's pack (the app's late path and the engine's wake) and Talked about now's
 posts start once their section is near and the page's own navigation work is idle (no page prefetch or code warm-up
 loading or waiting, no page change loading, 400 ms after the last scroll), at most 2.5 s later. A tap on the map, also on the
 placeholder of a late one, still asks at once.
@@ -695,3 +695,7 @@ prefetch); a tap on a late map's placeholder starts its request at once (`ui/rel
 measurements in the table are from before these fixes; they change when requests start in those edge cases only.
 The Talked about now slot still reserves no height: it shows only when a title has posts, which the page learns from
 that request, and in the skims above it filled before the reader reached it.
+
+**Second review fix** (`e6de0b608`): the engine no longer wakes a late map's placeholder (no stage yet), so a tap on it
+makes one request, the app's, not two. Tests now cover a scroll just before the first waiter, and, with the real
+`RelatedMap` in happy-dom, a page change or unmount during the wait (`related-map-cleanup.test.ts`).
