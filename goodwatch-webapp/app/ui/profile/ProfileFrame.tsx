@@ -13,6 +13,7 @@ import {
 	type ProfileShell,
 	seesPart,
 } from "~/domain/profile"
+import { STICKY_BAR } from "~/ui/layers"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 // The frame of every profile page: the picture, @handle, since, bio, links and actions (in full on Overview, compact on
 // the other tabs), the stat strip, the tabs (only the parts the viewer may see; the owner sees a lock or a members
@@ -130,7 +131,7 @@ export function ProfileTabs({
 	return (
 		<nav
 			aria-label="Profile"
-			className="sticky top-14 z-30 border-b border-white/10 bg-gray-950/95 md:top-16"
+			className={`sticky top-14 ${STICKY_BAR} border-b border-white/10 bg-gray-950/95 md:top-16`}
 		>
 			<div
 				className={`${WRAP} flex gap-1 overflow-x-auto [scrollbar-width:none]`}

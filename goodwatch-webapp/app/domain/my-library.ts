@@ -42,6 +42,13 @@ export const SORT_LABEL: Record<LibrarySort, string> = {
 	score: "My score",
 	title: "Title",
 }
+/** The line under each sort in the sort menu. */
+export const SORT_HINT: Record<LibrarySort, string> = {
+	added: "Newest first",
+	last: "Most recent first",
+	score: "Highest scored first",
+	title: "A to Z",
+}
 
 export type LibraryKind = "all" | "movie" | "show"
 

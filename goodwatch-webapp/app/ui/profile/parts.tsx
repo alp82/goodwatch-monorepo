@@ -13,6 +13,8 @@ import type { ProfileShell, ProfileTitle } from "~/domain/profile"
 import type { Score } from "~/server/scores.server"
 import { type CardTitle, MovieTvCard } from "~/ui/MovieTvCard"
 import type { PosterProps } from "~/ui/Poster"
+import { SortControl } from "~/ui/filter-bar/controls"
+import type { SortOption } from "~/ui/filter-bar/labels"
 import { WRAP, tmdbImage } from "~/ui/my-pages/bits"
 import { getVibeColorValue } from "~/utils/ratings"
 
@@ -296,26 +298,22 @@ export function Segmented<T extends string>({
 	)
 }
 
+/** The page's sort: Discover's sort button, with its menu in a portal because it sits in a sticky row. */
 export function SortSelect<T extends string>({
 	value,
 	onChange,
 	options,
-}: { value: T; onChange: (v: T) => void; options: [T, string][] }) {
+}: { value: T; onChange: (v: T) => void; options: SortOption<T>[] }) {
 	return (
-		<label className="flex items-center gap-2 text-sm text-gray-400">
-			Sort
-			<select
-				value={value}
-				onChange={(e) => onChange(e.target.value as T)}
-				className="rounded-full bg-white/[0.06] px-3 py-1.5 text-sm font-semibold text-gray-100 ring-1 ring-white/15"
-			>
-				{options.map(([key, text]) => (
-					<option key={key} value={key}>
-						{text}
-					</option>
-				))}
-			</select>
-		</label>
+		<SortControl
+			size="sm"
+			align="right"
+			portal
+			menuClassName="w-64"
+			options={options}
+			value={value}
+			onChange={onChange}
+		/>
 	)
 }
 

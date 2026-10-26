@@ -1,8 +1,3 @@
-import { getScoreLabelText } from "~/utils/ratings"
-import { mediaFieldLanguage } from "~/utils/media-presentation"
-import { canonicalMediaTitle } from "~/utils/media-presentation"
-import useLocale from "~/utils/locale"
-import { mediaLanguageUrl } from "~/utils/media-presentation"
 // A list of My library (#385): every title a member has marked under one status, on that status's page under the
 // hub (/my-library/want, /seen, /not-rated, /watching, /on-hold, /dropped). The hub leads to the pages, so a page has
 // no status choice of its own, only the way back; the three show statuses share a small switch.
@@ -11,7 +6,6 @@ import { mediaLanguageUrl } from "~/utils/media-presentation"
 // with 1,500 Seen titles. The choice lives in the URL (`/my-library/seen?sort=score&type=movie&q=alien`), and each
 // step is one read of /api/my-library.
 import {
-	ChevronDownIcon,
 	ChevronRightIcon,
 	MagnifyingGlassIcon,
 	XMarkIcon,
@@ -32,12 +26,13 @@ import {
 	useState,
 } from "react"
 import {
+	LIBRARY_HUB,
 	type LibraryChoice,
 	type LibraryKind,
 	type LibrarySort,
 	type LibraryStatus,
-	LIBRARY_HUB,
 	SHOW_STATUSES,
+	SORT_HINT,
 	SORT_LABEL,
 	STATUS_LABEL,
 	addedWords,
@@ -47,24 +42,25 @@ import {
 	statusPage,
 	watchedWords,
 } from "~/domain/my-library"
+import { newOn } from "~/domain/newly-available-words"
 import { useScoreMutation } from "~/hooks/useUserDataMutations"
 import type { LibraryItem, LibraryPage } from "~/server/my-library.server"
 import type { Score } from "~/server/scores.server"
-import type { PillMark } from "~/ui/poster-card/pill-mark"
-import { newOn } from "~/domain/newly-available-words"
+import { SortControl } from "~/ui/filter-bar/controls"
 import {
 	RowLogos,
 	RowScores,
 	rowMark,
 	useRowMarks,
 } from "~/ui/list-row/RowScores"
-import {
-	Empty,
-	PageHead,
-	Poster,
-	WRAP,
-} from "~/ui/my-pages/bits"
+import { Empty, PageHead, Poster, WRAP } from "~/ui/my-pages/bits"
+import type { PillMark } from "~/ui/poster-card/pill-mark"
 import { titleToDashed } from "~/utils/helpers"
+import useLocale from "~/utils/locale"
+import { mediaFieldLanguage } from "~/utils/media-presentation"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
+import { getScoreLabelText } from "~/utils/ratings"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
 const loadRateBar = reloadOnStaleChunk(() => import("./RateBar"))
@@ -78,7 +74,9 @@ async function fetchLibrary(
 ): Promise<LibraryPage> {
 	const params = libraryParams(choice)
 	if (offset) params.set("offset", String(offset))
-	const response = await fetch(mediaLanguageUrl(`/api/my-library?${params}`, language))
+	const response = await fetch(
+		mediaLanguageUrl(`/api/my-library?${params}`, language),
+	)
 	if (!response.ok) throw new Error(`My library answered ${response.status}`)
 	return (await response.json()) as LibraryPage
 }
@@ -249,25 +247,18 @@ function SortSelect({
 	onPick: (sort: LibrarySort) => void
 }) {
 	return (
-		<label className="relative flex h-11 shrink-0 items-center rounded-xl bg-white/[0.06] pl-3 text-sm font-bold text-gray-200 ring-1 ring-white/10 focus-within:ring-amber-300">
-			<span className="sr-only">Sort</span>
-			<select
-				value={sort}
-				onChange={(event) => onPick(event.target.value as LibrarySort)}
-				data-sort
-				className="h-full cursor-pointer appearance-none bg-transparent pr-8 font-bold text-gray-100 outline-none"
-			>
-				{sorts.map((key) => (
-					<option key={key} value={key} className="bg-gray-900">
-						{SORT_LABEL[key]}
-					</option>
-				))}
-			</select>
-			<ChevronDownIcon
-				className="pointer-events-none absolute right-2 h-4 w-4 text-gray-400"
-				aria-hidden
-			/>
-		</label>
+		<SortControl
+			align="right"
+			portal
+			menuClassName="w-64"
+			options={sorts.map((key) => ({
+				key,
+				label: SORT_LABEL[key],
+				hint: SORT_HINT[key],
+			}))}
+			value={sort}
+			onChange={onPick}
+		/>
 	)
 }
 
@@ -288,7 +279,11 @@ function ScoreKey({
 	onAsk: (item: LibraryItem) => void
 }) {
 	const pill = (
-		<RowScores goodwatch={item.goodwatch} score={score as Score | null} mark={null} />
+		<RowScores
+			goodwatch={item.goodwatch}
+			score={score as Score | null}
+			mark={null}
+		/>
 	)
 	return score !== null ? (
 		<button
@@ -518,11 +513,14 @@ export function MyLibraryPage({
 
 	const result = useInfiniteQuery({
 		queryKey: [...libraryQueryKey, viewer, query, locale.language],
-		queryFn: ({ pageParam }) => fetchLibrary(choice, pageParam, locale.language),
+		queryFn: ({ pageParam }) =>
+			fetchLibrary(choice, pageParam, locale.language),
 		initialPageParam: 0,
 		getNextPageParam: (last) => last.next ?? undefined,
 		initialData:
-			query === initialQuery && (!initial.items[0]?.presentation || initial.items[0].presentation.language === locale.language)
+			query === initialQuery &&
+			(!initial.items[0]?.presentation ||
+				initial.items[0].presentation.language === locale.language)
 				? { pages: [initial], pageParams: [0] }
 				: undefined,
 		placeholderData: keepPreviousData,
@@ -575,7 +573,12 @@ export function MyLibraryPage({
 				{
 					onSettled: async () => {
 						await client.invalidateQueries({ queryKey: libraryQueryKey })
-						setGiven((current) => { if (current[item.key] !== score) return current; const next = { ...current }; delete next[item.key]; return next })
+						setGiven((current) => {
+							if (current[item.key] !== score) return current
+							const next = { ...current }
+							delete next[item.key]
+							return next
+						})
 					},
 				},
 			)
@@ -603,7 +606,9 @@ export function MyLibraryPage({
 				back={{ label: "My library", to: LIBRARY_HUB }}
 			/>
 			<div className={`${WRAP} flex flex-col gap-3`}>
-				{showsOnly && <ShowStatusSwitch status={status} counts={first.counts} />}
+				{showsOnly && (
+					<ShowStatusSwitch status={status} counts={first.counts} />
+				)}
 				<div className="flex flex-wrap items-center gap-2" data-controls>
 					{!showsOnly && (
 						<KindFilter

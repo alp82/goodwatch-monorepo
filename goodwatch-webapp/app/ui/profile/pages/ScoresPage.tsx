@@ -11,6 +11,7 @@ import type {
 	ProfileShell,
 	ProfileTitle,
 } from "~/domain/profile"
+import { STICKY_SUBBAR } from "~/ui/layers"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { ScorePill } from "~/ui/poster-card/ScorePill"
 import { scoreLabels } from "~/utils/ratings"
@@ -170,7 +171,9 @@ export function ScoresPage({
 				</div>
 			)}
 
-			<div className="sticky top-[6.5rem] z-20 -mx-4 flex flex-wrap items-center gap-3 bg-gray-950/90 px-4 py-2 sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8">
+			<div
+				className={`sticky top-[6.5rem] ${STICKY_SUBBAR} -mx-4 flex flex-wrap items-center gap-3 bg-gray-950/90 px-4 py-2 sm:-mx-6 sm:px-6 md:top-28 lg:-mx-8 lg:px-8`}
+			>
 				<Segmented
 					label="Movies or shows"
 					value={kind}
@@ -186,9 +189,13 @@ export function ScoresPage({
 					value={sort}
 					onChange={setSort}
 					options={[
-						["recent", "Last watched"],
-						["gw", "GoodWatch score"],
-						["title", "Title"],
+						{ key: "recent", label: "Last watched", hint: "Most recent first" },
+						{
+							key: "gw",
+							label: "GoodWatch score",
+							hint: "Highest scored first",
+						},
+						{ key: "title", label: "Title", hint: "A to Z" },
 					]}
 				/>
 			</div>

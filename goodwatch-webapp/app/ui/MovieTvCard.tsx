@@ -38,6 +38,7 @@ import type { OnboardingResult } from "~/server/onboarding-media.server"
 import type { Score } from "~/server/scores.server"
 import type { TitleCard } from "~/server/title-cards.server"
 import { Poster, type PosterProps } from "~/ui/Poster"
+import { CARD, CARD_RAISED } from "~/ui/layers"
 import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
 import type {
@@ -211,7 +212,7 @@ export function MovieTvCard({
 			data-poster-card=""
 			onPointerEnter={actions ? arm : undefined}
 			onFocus={actions ? arm : undefined}
-			className={`group/card @container/card relative w-full min-w-0 ${open ? "z-30" : ""}`}
+			className={`group/card @container/card relative w-full min-w-0 ${CARD} ${open ? CARD_RAISED : ""}`}
 		>
 			<Link
 				to={href}

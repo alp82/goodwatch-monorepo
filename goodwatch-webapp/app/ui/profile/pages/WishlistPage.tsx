@@ -87,8 +87,8 @@ export function WishlistPage({
 					value={sort}
 					onChange={setSort}
 					options={[
-						["added", "Last added"],
-						["title", "Title"],
+						{ key: "added", label: "Last added", hint: "Newest first" },
+						{ key: "title", label: "Title", hint: "A to Z" },
 					]}
 				/>
 				{owner && (

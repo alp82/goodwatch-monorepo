@@ -37,6 +37,7 @@ import {
 	queryKeyAccountSummary,
 	useAccountSummary,
 } from "~/ui/account/useAccountSummary";
+import { STICKY_BAR } from "~/ui/layers";
 import { DISPLAY } from "~/ui/my-pages/bits";
 // Edit profile (/settings/profile): the picture (an uploaded photo cropped in the browser, the sign-in provider's photo,
 // the handle's initial on a colour, or a favorite's poster), the cover, the bio, links to other profiles, and who sees
@@ -191,7 +192,7 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 
 	return (
 		<div className="flex flex-col gap-6">
-			<div className="sticky top-14 z-30 -mx-4 flex flex-wrap items-center gap-3 border-b border-white/10 bg-gray-950/95 px-4 py-3 md:top-16 md:-mx-8 md:px-8">
+			<div className={`sticky top-14 ${STICKY_BAR} -mx-4 flex flex-wrap items-center gap-3 border-b border-white/10 bg-gray-950/95 px-4 py-3 md:top-16 md:-mx-8 md:px-8`}>
 				<Link
 					to={profileTabPath(data.handle)}
 					className="text-sm font-semibold text-amber-500 hover:text-amber-400"

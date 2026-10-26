@@ -8,6 +8,7 @@
 // The member's whole list comes with the page; rows are drawn in steps while scrolling, so a long list stays light.
 import { ArrowUturnLeftIcon, ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { STICKY_BAR } from "~/ui/layers"
 import { LIBRARY_HUB } from "~/domain/my-library"
 import {
 	type Direction,
@@ -235,7 +236,7 @@ export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 
 				{picked.length > 0 && (
 					<div
-						className={`sticky top-[var(--nav-header-height,0px)] z-20 flex flex-wrap items-center gap-2 rounded-2xl bg-gray-900/95 px-3 py-2 text-sm ring-1 ring-amber-400/40 ${s.save.kind === "saving" ? "[&_button]:pointer-events-none [&_button]:opacity-50" : ""}`}
+						className={`sticky top-[var(--nav-header-height,0px)] ${STICKY_BAR} flex flex-wrap items-center gap-2 rounded-2xl bg-gray-900/95 px-3 py-2 text-sm ring-1 ring-amber-400/40 ${s.save.kind === "saving" ? "[&_button]:pointer-events-none [&_button]:opacity-50" : ""}`}
 						aria-busy={s.save.kind === "saving"}
 						data-selection
 					>
