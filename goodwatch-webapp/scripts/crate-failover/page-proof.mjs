@@ -316,6 +316,7 @@ export async function preparePageProof(sql) {
 		migration,
 		stats,
 		acknowledgedWatches,
+		movieAction: (id, action) => request(["watch", "/api/watch-log", () => ({ tmdb_id: id, action })]),
 		trackingAction: (id, event, actionId) => request(["tracking", "/api/tracking/show", () => ({ id, event, actionId })]),
 		requestRoute: (kind) => request(cases.find(([name]) => name === kind)),
 		warm: async () => {

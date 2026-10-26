@@ -882,10 +882,10 @@ test("an IMDb import's scores record the score's watch for its movies, and its u
 	)
 	assert.equal(onWishlist(fresh), true)
 
-	// Settling again, as a run that broke off does, writes nothing.
+	// Settling again records no more watches; each retained state is checked by version.
 	db.statements.length = 0
 	await settleImportedMovies(user, items)
-	assert.deepEqual(db.sent("INSERT", "UPDATE", "DELETE"), [])
+	assert.deepEqual(db.sent("INSERT", "UPDATE", "DELETE"), Array(4).fill("UPDATE user_watch_state"))
 
 	// The undo took two of the scores back. One movie has the member's own watch, which stays.
 	dropScore(fresh)

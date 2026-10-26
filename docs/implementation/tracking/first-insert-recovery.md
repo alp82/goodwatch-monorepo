@@ -87,10 +87,15 @@ Rollback:
 
 Known residuals, unchanged by this fix:
 
-- **Movies.** `settleMovie` resends its state INSERT through the generic helper and physically deletes the row.
-  A lost INSERT followed by the member deleting the watch leaves Seen without a watch, until the next settle of
-  that movie. A delayed original can do the same without any resend. A `todo` test in `tracking.test.ts` records
-  it; closing it needs a retained movie key as well.
+- **Movies (#633 follow-up).** Movie keys now use the same immutable first-insert receipt and logical removal.
+  Single settlement uses guarded insert/CAS recovery; bulk settlement keeps batched first inserts and checks
+  existing keys by version. Empty first settlements also fence an older in-flight insert. A later watch updates
+  the retained key. No schema change: `insert_token` and `not_started` already apply to both media types.
+  `stateOnly` hides receipts from individual/MCP reads; `STATES_QUERY`, Discover, smart titles, recommendations
+  and prototype readers filter on state. Awaited-title reads restrict show states. Account deletion still purges
+  receipts. The proof now runs the original ten show scenarios plus ten matching movie watch-log scenarios.
+  Deployments must drain older movie writers, which still physically delete these keys. Bulk updates now issue
+  one CAS per existing movie; first inserts and log IO remain batched.
 - **A rerun after a removal.** If an unwatch loses its CAS to another device that saw the episode unticked and
   ticked it again, the rerun takes away the new tick. Only the insert side is guarded above.
 - The generic watch-log insert retry behavior is unchanged.

@@ -1356,7 +1356,8 @@ test("dated and later undated passes have separate plans, merge by title, and un
 	await undoImport("member", id)
 	assert.equal(db.imports[0].status, "undone")
 	assert.equal(tracking.log("member").length, 0)
-	assert.equal(tracking.table("user_watch_state").length, 0)
+	assert.equal(tracking.state("member", "movie", 42), null)
+	assert.equal(tracking.table("user_watch_state").length, 1)
 })
 
 test("dependent wants wait on undated before wholeShow/rewatch, including per-row leave", async () => {

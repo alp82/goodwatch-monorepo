@@ -229,7 +229,7 @@ const STATE_KEY = ["user_id", "tmdb_id", "media_type"]
 const DELETE_CHUNK = 500
 
 type StoredState = StateRow & {
-	/** Immutable receipt for the first physical show-state insert, retained through logical deletion. */
+	/** Immutable receipt for the first physical title-state insert, retained through logical deletion. */
 	insert_token: string | null
 	_seq_no: number
 	_primary_term: number
@@ -383,26 +383,8 @@ async function insertState(
 	row: StateRow,
 	now: number,
 ): Promise<boolean> {
-	if (title.mediaType === "movie") {
-		const { rowcount } = await insertRows(
-			"user_watch_state",
-			STATE_COLUMNS,
-			[
-				[
-					userId,
-					title.tmdbId,
-					title.mediaType,
-					...stateValues(row),
-					new Date(now),
-					new Date(now),
-				],
-			],
-			{ conflict: STATE_KEY },
-		)
-		return rowcount === 1
-	}
-	// A show key is never removed by a tracking action. This token identifies our first insert even after
-	// a later action replaces its values with an empty receipt. An identical delayed insert cannot recreate it.
+	// A title key is never removed by tracking. The immutable receipt survives logical removal,
+	// so even a delayed first insert cannot recreate Seen after the member removed its watch.
 	const token = randomUUID()
 	const columns = [...STATE_COLUMNS, "insert_token"]
 	const params: CrateValue[] = [
@@ -477,6 +459,16 @@ async function writeState(
 	return applied
 }
 
+const emptyStateRow = (now: number): StateRow => ({
+	state: "not_started",
+	state_changed_at: now,
+	pass: 1,
+	seen_press_group: null,
+	seen_press_from: null,
+	rate_prompt_dismissed_at: null,
+	seen_question: null,
+})
+
 async function writeStateStored(
 	userId: string,
 	title: TrackedTitle,
@@ -490,15 +482,7 @@ async function writeStateStored(
 		return row ? insertState(userId, title, row, now) : true
 	// Logical removal retains the physical key and its immutable receipt. Even a still-running original INSERT
 	// loses ON CONFLICT after an unwatch. A later real watch updates this key by its original CAS version.
-	const storedRow: StateRow = row ?? {
-		state: "not_started",
-		state_changed_at: now,
-		pass: 1,
-		seen_press_group: null,
-		seen_press_from: null,
-		rate_prompt_dismissed_at: null,
-		seen_question: null,
-	}
+	const storedRow = row ?? emptyStateRow(now)
 	if (!before) return false
 	const key: CrateValue[] = [
 		userId,
@@ -1302,7 +1286,7 @@ export interface MovieSettled {
 
 /**
  * Makes a movie's rows follow the movie rule: the score's watch exists exactly while the movie has a score and no
- * log row of another origin, and the state row exists exactly while a log row does.
+ * log row of another origin, and the logical Seen state exists exactly while a log row does; empty physical receipts are retained.
  *
  * Every path that writes a movie's score or log itself calls this after its write: the rating control, the taste
  * quiz, the guest transfer, an import and its undo. It reads `user_score` by key, so it sees a score written just
@@ -1316,61 +1300,44 @@ export async function settleMovie(
 		mediaType: "movie",
 		tmdbId: canonicalTitleId("movie", movieId),
 	}
-	await run("REFRESH TABLE user_watch_log")
-	const [before, log, hasScore] = await Promise.all([
-		readState(userId, title),
-		readLog(userId, title),
-		readScore(userId, title.tmdbId),
-	])
-	const now = Date.now()
-	const settled = settleMovieRows({
-		movieId: title.tmdbId,
-		log,
-		hasScore,
-		hasState: before !== null,
-		now,
-	})
-	await insertLog(userId, settled.insert, now)
-	await deleteLog(userId, settled.deleteIds)
-	let state = stateOnly(before)
-	if (settled.stateWrite === "insert") {
-		state = movieStateRow(now)
-		if (await insertState(userId, title, state, now))
-			captureProductEvent(userId, "watch state changed", {
-				tmdb_id: title.tmdbId,
-				media_type: "movie",
-				from_state: "not_started",
-				to_state: "seen",
-			})
-	}
-	if (settled.stateWrite === "delete") {
-		state = null
-		await run(
-			"DELETE FROM user_watch_state WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
-			[userId, title.tmdbId, "movie"],
-		)
-	}
-	if (settled.stateWrite === "delete")
-		captureProductEvent(userId, "watch state changed", {
-			tmdb_id: title.tmdbId,
-			media_type: "movie",
-			from_state: "seen",
-			to_state: "not_started",
+	for (let round = 0; round <= STATE_RETRIES; round++) {
+		await run("REFRESH TABLE user_watch_log")
+		const [before, log, hasScore] = await Promise.all([
+			readState(userId, title),
+			readLog(userId, title),
+			readScore(userId, title.tmdbId),
+		])
+		const now = Date.now()
+		const settled = settleMovieRows({
+			movieId: title.tmdbId,
+			log,
+			hasScore,
+			hasState: stateOnly(before) !== null,
+			now,
 		})
-	return {
-		seen: settled.seen,
-		state,
-		byScoreAlone: settled.byScoreAlone,
-		inserted: settled.insert.map((r) => r.watch_id),
-		deleted: settled.deleteIds,
+		await insertLog(userId, settled.insert, now)
+		await deleteLog(userId, settled.deleteIds)
+		const state = settled.seen ? stateOnly(before) ?? movieStateRow(now) : null
+		// Fence even an empty first read: an older Seen INSERT may still be in flight.
+		const stored = state ?? emptyStateRow(now)
+		if (!(await writeState(userId, title, before ? "update" : "insert", before ? state : stored, before, now)))
+			continue
+		return {
+			seen: settled.seen,
+			state,
+			byScoreAlone: settled.byScoreAlone,
+			inserted: settled.insert.map((r) => r.watch_id),
+			deleted: settled.deleteIds,
+		}
 	}
+	throw new TrackingConflictError()
 }
 
 const SETTLE_CHUNK = 500
 
 /**
  * The movie rule for many movies at once, for a path that wrote or removed many scores: an import and its undo.
- * A handful of statements per 500 movies, where `settleMovie` takes five for one. Like `settleMovie`, it leaves the
+ * Batches score/log reads and log writes per 500 movies; state ownership is checked per title. Like `settleMovie`, it leaves the
  * Wishlist and the member data cache to the caller.
  */
 export async function settleMovies(
@@ -1396,18 +1363,17 @@ export async function settleMovies(
 				`SELECT tmdb_id, watch_id, origin FROM user_watch_log ${where}`,
 				[userId, ...chunk],
 			),
-			read<{ tmdb_id: number }>(
-				`SELECT tmdb_id FROM user_watch_state ${where}`,
+			read<Record<string, unknown>>(
+				`SELECT tmdb_id, state, state_changed_at, pass, seen_press_group, seen_press_from, rate_prompt_dismissed_at, seen_question, insert_token, updated_at, _seq_no, _primary_term FROM user_watch_state ${where}`,
 				[userId, ...chunk],
 			),
 		])
 		const scored = new Set(scores.map((r) => Number(r.tmdb_id)))
-		const stated = new Set(states.map((r) => Number(r.tmdb_id)))
+		const prior = new Map(states.map((r) => [Number(r.tmdb_id), storedState(r)]))
 		const now = Date.now()
 		const insert: LogRow[] = []
 		const remove: string[] = []
-		const stateInsert: number[] = []
-		const stateDelete: number[] = []
+		const next = new Map<number, StateRow | null>()
 		for (const movieId of chunk) {
 			const settled = settleMovieRows({
 				movieId,
@@ -1417,58 +1383,51 @@ export async function settleMovies(
 						...movieLogRow(movieId, r.watch_id, r.origin, undefined, now),
 					})),
 				hasScore: scored.has(movieId),
-				hasState: stated.has(movieId),
+				hasState: stateOnly(prior.get(movieId) ?? null) !== null,
 				now,
 			})
 			insert.push(...settled.insert)
 			remove.push(...settled.deleteIds)
-			if (settled.stateWrite === "insert") stateInsert.push(movieId)
-			if (settled.stateWrite === "delete") stateDelete.push(movieId)
+			next.set(movieId, settled.seen ? stateOnly(prior.get(movieId) ?? null) ?? movieStateRow(now) : null)
 		}
 		await insertLog(userId, insert, now)
 		await deleteLog(userId, remove)
-		if (stateInsert.length) {
-			const insertedStates = await insertRows(
-				"user_watch_state",
-				STATE_COLUMNS,
-				stateInsert.map((movieId) => [
-					userId,
-					movieId,
-					"movie",
-					...stateValues(movieStateRow(now)),
-					new Date(now),
-					new Date(now),
-				]),
-				{ conflict: STATE_KEY },
-			)
-			if (insertedStates.rowcount)
-				captureProductEvent(userId, "watch state changed", {
-					media_type: "movie",
-					from_state: "not_started",
-					to_state: "seen",
-					watch_count: insertedStates.rowcount,
-					tmdb_ids:
-						insertedStates.rowcount === stateInsert.length
-							? stateInsert.slice(0, 100)
-							: undefined,
-				})
-		}
-		if (stateDelete.length) {
-			const deletedStates = await run(
-				`DELETE FROM user_watch_state WHERE user_id = ? AND media_type = 'movie' AND tmdb_id IN (${marks(stateDelete.length)})`,
-				[userId, ...stateDelete],
-			)
-			if (deletedStates.rowcount)
-				captureProductEvent(userId, "watch state changed", {
-					media_type: "movie",
-					from_state: "seen",
-					to_state: "not_started",
-					removed_count: deletedStates.rowcount,
-					tmdb_ids:
-						deletedStates.rowcount === stateDelete.length
-							? stateDelete.slice(0, 100)
-							: undefined,
-				})
+		// New keys can still be inserted in one statement. Retained receipts make a delayed batch harmless:
+		// ON CONFLICT cannot recreate Seen over a later removal. Existing keys require their own CAS.
+		const first = chunk.filter((id) => !prior.get(id))
+		const created = await insertRows(
+			"user_watch_state",
+			[...STATE_COLUMNS, "insert_token"],
+			first.map((id) => [userId, id, "movie", ...stateValues(next.get(id) ?? emptyStateRow(now)),
+				new Date(now), new Date(now), randomUUID()]),
+			{ conflict: STATE_KEY },
+		)
+		if (created.rowcount === first.length && first.some((id) => next.get(id)))
+			captureProductEvent(userId, "watch state changed", {
+				media_type: "movie",
+				from_state: "not_started",
+				to_state: "seen",
+				watch_count: first.filter((id) => next.get(id)).length,
+				tmdb_ids: first.filter((id) => next.get(id)).slice(0, 100),
+			})
+		for (const movieId of chunk) {
+			if (!prior.get(movieId)) {
+				if (created.rowcount !== first.length) {
+					const retried = await settleMovie(userId, movieId)
+					inserted.push(...retried.inserted)
+					deleted.push(...retried.deleted)
+				}
+				continue
+			}
+			const before = prior.get(movieId) ?? null
+			const row = next.get(movieId) ?? null
+			const title: TrackedTitle = { mediaType: "movie", tmdbId: movieId }
+			if (!(await writeState(userId, title, "update", row, before, now))) {
+				// A known conflict requires fresh watches and score, never a replay of the bulk snapshot.
+				const retried = await settleMovie(userId, movieId)
+				inserted.push(...retried.inserted)
+				deleted.push(...retried.deleted)
+			}
 		}
 		inserted.push(...insert.map((r) => r.watch_id))
 		deleted.push(...remove)

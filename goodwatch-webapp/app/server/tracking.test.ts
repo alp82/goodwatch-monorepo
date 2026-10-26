@@ -33,6 +33,7 @@ const {
 	restoreImportTrackingIntentions,
 	undoImportTrackingPlan,
 	settleMovie,
+	settleMovies,
 } = await import("./tracking.server.ts")
 type TrackingAction = import("./tracking.server.ts").TrackingAction
 type TrackedTitle = import("./tracking.server.ts").TrackedTitle
@@ -2121,7 +2122,7 @@ test("Movie: Seen in one tap inserts one single watch now, makes the state row, 
 	const [, again] = await sentBy(() =>
 		movieAct({ type: "watch" }, "movie-watch-2"),
 	)
-	assert.deepEqual(writes(again), ["INSERT user_watch_log"])
+	assert.deepEqual(writes(again), ["INSERT user_watch_log", "UPDATE user_watch_state"])
 	assert.equal(logOf(movie).length, 2)
 })
 
@@ -2138,6 +2139,7 @@ test("Movie: add a watch in the log with a chosen day or no date, and it replace
 	assert.deepEqual(writes(sent), [
 		"INSERT user_watch_log",
 		"DELETE user_watch_log",
+		"UPDATE user_watch_state",
 	])
 	assert.deepEqual(movieLog(), [["movie-watch-1", "single", "day"]])
 	assert.equal(logOf(movie)[0].watched_at, Date.UTC(2019, 2, 12))
@@ -2188,21 +2190,21 @@ test("Movie: rating one that has no log row records the score's watch, makes it 
 	// Rating again inserts nothing more.
 	score(6)
 	const [, again] = await sentBy(() => movieAct({ type: "rate", score: 6 }))
-	assert.deepEqual(writes(again), [])
+	assert.deepEqual(writes(again), ["UPDATE user_watch_state"])
 	assert.equal(logOf(movie).length, 1)
 })
 
-test("Movie: rating one that has a log row writes no watch and no state, and clears only Not interested", async () => {
+test("Movie: rating one that has a log row writes no watch and keeps its state, and clears only Not interested", async () => {
 	await movieAct({ type: "watch" }, "movie-watch-1")
 	wantAndNotInterested(movie)
 	score(8)
 	const [, sent] = await sentBy(() => movieAct({ type: "rate", score: 8 }))
-	assert.deepEqual(writes(sent), ["DELETE user_not_interested"])
+	assert.deepEqual(writes(sent), ["UPDATE user_watch_state", "DELETE user_not_interested"])
 	assert.deepEqual(movieLog(), [["movie-watch-1", "single", "moment"]])
 	assert.deepEqual([onWishlist(movie), notInterested(movie)], [true, false])
 })
 
-test("Movie: clearing the score deletes the score's watch, and the state row when no log row is left", async () => {
+test("Movie: clearing the score removes the score's watch and logically clears Seen when no log row is left", async () => {
 	score(8)
 	await movieAct({ type: "rate", score: 8 })
 	score(null)
@@ -2211,7 +2213,7 @@ test("Movie: clearing the score deletes the score's watch, and the state row whe
 	)
 	assert.deepEqual(writes(sent), [
 		"DELETE user_watch_log",
-		"DELETE user_watch_state",
+		"UPDATE user_watch_state",
 	])
 	assert.deepEqual(
 		[cleared.deleted, cleared.state, logOf(movie), stateOf(movie)],
@@ -2223,7 +2225,7 @@ test("Movie: clearing the score deletes the score's watch, and the state row whe
 	await movieAct({ type: "rate", score: 7 })
 	score(null)
 	const [, kept] = await sentBy(() => movieAct({ type: "rate", score: null }))
-	assert.deepEqual(writes(kept), [])
+	assert.deepEqual(writes(kept), ["UPDATE user_watch_state"])
 	assert.deepEqual(
 		[movieLog(), stateOf(movie)?.state],
 		[[["movie-watch-1", "single", "moment"]], "seen"],
@@ -2270,7 +2272,7 @@ test("Movie: deleting a watch in the log; the last one of a rated movie brings t
 	const [one, sent] = await sentBy(() =>
 		movieAct({ type: "deleteWatch", watchId: "movie-watch-2" }),
 	)
-	assert.deepEqual(writes(sent), ["DELETE user_watch_log"])
+	assert.deepEqual(writes(sent), ["DELETE user_watch_log", "UPDATE user_watch_state"])
 	assert.deepEqual(
 		[one.deleted, stateOf(movie)?.state],
 		[["movie-watch-2"], "seen"],
@@ -2281,7 +2283,7 @@ test("Movie: deleting a watch in the log; the last one of a rated movie brings t
 	)
 	assert.deepEqual(writes(lastSent), [
 		"DELETE user_watch_log",
-		"DELETE user_watch_state",
+		"UPDATE user_watch_state",
 	])
 	assert.deepEqual([last.state, logOf(movie), stateOf(movie)], [null, [], null])
 	// The last watch of a rated movie: the score's watch comes back and the movie stays Seen.
@@ -2293,6 +2295,7 @@ test("Movie: deleting a watch in the log; the last one of a rated movie brings t
 	assert.deepEqual(writes(ratedSent), [
 		"DELETE user_watch_log",
 		"INSERT user_watch_log",
+		"UPDATE user_watch_state",
 	])
 	assert.deepEqual(
 		[rated.inserted, movieLog(), stateOf(movie)?.state],
@@ -2381,7 +2384,7 @@ test("Movie: removing all watches deletes every watch the member logged in one s
 	const [all, sent] = await sentBy(() => movieAct({ type: "removeWatches" }))
 	assert.deepEqual(writes(sent), [
 		"DELETE user_watch_log",
-		"DELETE user_watch_state",
+		"UPDATE user_watch_state",
 	])
 	assert.deepEqual(
 		[all.status, [...all.deleted].sort(), logOf(movie), stateOf(movie)],
@@ -2428,7 +2431,7 @@ test("Movie: Undo of a delete inserts the same row again, with its id, its date 
 	)
 	assert.deepEqual(writes(sent), [
 		"INSERT user_watch_log",
-		"INSERT user_watch_state",
+		"UPDATE user_watch_state",
 	])
 	assert.deepEqual([back.status, back.inserted], ["applied", ["movie-watch-1"]])
 	const { updated_at: _, ...row } = logOf(movie)[0]
@@ -4046,12 +4049,7 @@ test("an indeterminate first INSERT never reruns its event over a different crea
 	assert.deepEqual(ticks(), ["1.1", "1.2"])
 })
 
-// Q32 for movies, out of this fix's scope (first-insert-recovery.md): `settleMovie` resends its state INSERT
-// through the generic helper, and a movie's state row is physically deleted. A delayed original alone can also
-// land after the delete, so a resend policy cannot close it; the next settle of the movie removes the row.
-test("a lost movie state INSERT never leaves Seen without a watch once the member deleted the watch", {
-	todo: "movie state rows have no retained key yet",
-}, async () => {
+test("a lost movie state INSERT never leaves Seen without a watch once the member deleted the watch", async () => {
 	const original = db.execute.bind(db)
 	let intercepted = false
 	db.execute = async (sql, params = []) => {
@@ -4461,5 +4459,39 @@ for (const event of [
 		assert.equal(held.state?.state, "on_hold")
 		assert.ok((held.state?.state_changed_at ?? 0) > 0)
 		assert.deepEqual(held.log, [])
+	})
+}
+
+for (const bulk of [false, true]) {
+	test(`a delayed movie first INSERT cannot recreate Seen after ${bulk ? "bulk" : "single"} settlement removed its watch`, async () => {
+		const original = db.execute.bind(db)
+		let pending: (() => Promise<unknown>) | undefined
+		let sends = 0
+		db.execute = async (sql, params = []) => {
+			if (/^\s*INSERT INTO user_watch_state\b/.test(sql)) {
+				sends++
+				if (sends === 1) {
+					pending = () => original(sql, params)
+					throw Object.assign(new Error("fixture delayed movie INSERT"), { code: "ECONNRESET" })
+				}
+				if (sends === 2) {
+					await pending?.()
+					await original("DELETE FROM user_watch_log WHERE user_id = ? AND watch_id = ?", [user, "movie-delayed"])
+					if (bulk) await settleMovies(user, [MOVIE])
+					else await settleMovie(user, MOVIE)
+				}
+			}
+			return original(sql, params)
+		}
+		setCrateClientForTest(db)
+		await act({ type: "watch" }, "movie-delayed", movie)
+		await pending?.()
+		assert.equal((await getMovieTracking(user, MOVIE)).state, null)
+		assert.deepEqual((await getMovieTracking(user, MOVIE)).log, [])
+		assert.deepEqual(await getWatchState(user), {})
+		const receipt = db.table("user_watch_state")[0].insert_token
+		await act({ type: "watch" }, "movie-later", movie)
+		assert.equal((await getMovieTracking(user, MOVIE)).state?.state, "seen")
+		assert.equal(db.table("user_watch_state")[0].insert_token, receipt)
 	})
 }
