@@ -35,7 +35,7 @@ import { useLobbyEntry } from './useLobbyEntry';
 import { ScorePill } from './ScorePill';
 import { Shuffle } from './Shuffle';
 import { AppFrame, SubHeader, useFrameSize, type BackTarget } from '../shell/Frame';
-import { Action, Chip, Label, Panel, Thumb } from '../shell/parts';
+import { Action, Chip, Label, Panel, Thumb, CoveredBody } from '../shell/parts';
 import { COLUMN, R, column, stampStyle } from '../shell/tokens';
 import { roomLabel } from '../rooms/home-model';
 import { RoomSettings } from '../rooms/RoomSettings';
@@ -454,7 +454,7 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
       subheader={<>{subheader}{developmentNotice ? <GText size={11} color={glow.muted} style={{ textAlign: 'center', paddingHorizontal: 12 }}>{developmentNotice}</GText> : null}{notices}</>}
     >
       {/* Panels cover the body; it stays laid out (posters keep their measured size) but is hidden from assistive tech. */}
-      <View aria-hidden={Boolean(panel)} importantForAccessibility={panel ? 'no-hide-descendants' : 'auto'} accessibilityElementsHidden={Boolean(panel)} style={{ flex: 1, minHeight: 0 }}>{body}</View>
+      <CoveredBody covered={Boolean(panel)}>{body}</CoveredBody>
       {panel === 'settings' && (
         <RoomSettings snapshot={snapshot} preview={(input, signal) => continuousApi.preview(state.access!, input, signal)} disabled={disabled} action="Save" busyLabel="Saving…" submit={saveSettings} />
       )}

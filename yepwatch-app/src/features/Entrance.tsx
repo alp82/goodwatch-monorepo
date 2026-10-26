@@ -23,7 +23,7 @@ import { Ledger } from './rooms/Ledger';
 import { HistoryPanel, JoinPanel, NamePanel, ProfilePanel } from './rooms/panels';
 import { useHome } from './rooms/useHome';
 import { AppFrame, SubHeader, type BackTarget } from './shell/Frame';
-import { Avatar, RoundButton } from './shell/parts';
+import { Avatar, RoundButton, CoveredBody } from './shell/parts';
 import { column } from './shell/tokens';
 
 type PanelKind = 'name-create' | 'join' | 'profile' | 'history';
@@ -125,6 +125,8 @@ export function Entrance({ invite }: { invite?: string }) {
     setBusy(true);
     setError('');
     let saved = admission;
+    // Recovery continues the original action, including sign-in after admission.
+    member = saved ? saved.member === true : member;
     try {
       const cleanCode = join ? parseInvite(returning?.code ?? joinCode ?? code) : '';
       if (join && !cleanCode)
@@ -140,6 +142,7 @@ export function Entrance({ invite }: { invite?: string }) {
           },
           code: cleanCode,
           intent,
+          member,
           retryAt: 0,
         };
       }
@@ -260,11 +263,13 @@ export function Entrance({ invite }: { invite?: string }) {
           right={<RoundButton label="History" icon="clock" onPress={() => setPanel('history')} />} />
       ) : null}
     >
+      <CoveredBody covered={Boolean(shown)}>
       {returning ? (
         <Ledger rooms={home.active} unavailable={home.unavailable} loading={home.loadingRooms} open={open} newRoom={create} join={() => { setError(''); setPanel('join'); }} retry={home.retry} disabled={locked} />
       ) : (
         <Landing create={create} join={() => { setError(''); setPanel('join'); }} signIn={signIn} disabled={locked} />
       )}
+      </CoveredBody>
       {!shown && error ? <View style={{ ...column, paddingBottom: 8 }}><GText size={14} color="#fca5a5">{error}</GText></View> : null}
       {shown === 'name-create' && (
         <NamePanel initial={admission?.request.nickname ?? known ?? nickname} busy={locked} error={error} action={actionLabel('Create room', 'Retry room request')}

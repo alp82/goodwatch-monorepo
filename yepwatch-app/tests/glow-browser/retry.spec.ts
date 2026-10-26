@@ -116,3 +116,37 @@ for (const mode of ['create', 'join'] as const) test(`${mode} must persist the e
   const stored=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('yepwatch.v3.admission.')!));
   expect(stored.request).toEqual(first.request); expect(stored.code).toBe(first.code);
 });
+
+test('GoodWatch sign-in intent survives admission cooldown and reload without changing the request', async ({ page }) => {
+  const room = await common(page); const requests: GuestAdmissionRequest[] = []; let signIns = 0;
+  await page.route('**/proposal/rooms', async route => {
+    requests.push(route.request().postDataJSON());
+    if (requests.length === 1) return route.fulfill({ status: 429, headers: { 'Retry-After': '2' }, json: { error: { code: 'limit_reached', message: 'Wait then retry', retryable: true } } });
+    return route.fulfill({ json: { credential: { roomId: 'test-room', participantId: 'host', token: '', expiresAt: room.shared.expiresAt }, snapshot: room, invite: { code: 'fixture-invite', path: '/r/fixture-invite' } } });
+  });
+  await page.route('**/proposal/member/start', async route => {
+    signIns++;
+    await route.fulfill({ status: 501, json: { error: { code: 'not_implemented', message: 'No external issuer in this test', retryable: false } } });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Continue with GoodWatch', exact: true }).click();
+  await expect(page.getByRole('button', { name: CREATE })).toBeDisabled();
+  await page.reload();
+  await expect(page.getByRole('button', { name: CREATE })).toBeEnabled();
+  expect(requests).toHaveLength(1); expect(signIns).toBe(0);
+  await page.getByRole('button', { name: CREATE }).click();
+  await expect.poll(() => signIns).toBe(1);
+  expect(requests).toHaveLength(2); expect(requests[1]).toEqual(requests[0]);
+});
+
+test('covered entrance controls are inert until the panel closes', async ({ page }) => {
+  await common(page); await page.goto('/');
+  await page.getByRole('button', { name: 'Join a room', exact: true }).click();
+  const body = page.getByTestId('covered-body'); await expect(body).toHaveAttribute('inert', '');
+  for (let i = 0; i < 12; i++) {
+    await page.keyboard.press('Tab');
+    expect(await page.evaluate(() => Boolean(document.activeElement?.closest('[inert]')))).toBe(false);
+  }
+  await page.getByRole('button', { name: 'Back to Start', exact: true }).click();
+  await expect(body).not.toHaveAttribute('inert');
+});

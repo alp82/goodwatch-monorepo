@@ -90,3 +90,9 @@ test('native SecureStore admission write failures propagate on every attempt, wi
   allow=true;await exports.writeAdmission!('',saved);
   assert.equal(writes.length,3);assert.ok(writes.every(w=>w.key==='yepwatch.v3.admission.stable-intent-hash' && w.value===JSON.stringify(saved)));
 });
+
+test('admission recovery retains sign-in intent and rejects corrupt intent flags', () => {
+  const saved = { intent: '', code: '', retryAt: 0, member: true, request: { contractVersion: 3, commandId: 'same', admissionSecret: 'same-secret', nickname: 'Guest' } };
+  assert.deepEqual(decodeAdmissionRecovery(JSON.stringify(saved), ''), saved);
+  assert.throws(() => decodeAdmissionRecovery(JSON.stringify({ ...saved, member: 'true' }), ''));
+});

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode, type ComponentRef } from 'react';
 import { Animated, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useReducedMotion } from '../../components/ui';
 import { peerColor } from '../glow/model';
@@ -92,4 +92,12 @@ export function Panel({ children, footer, testID }: { children: ReactNode; foote
       </KeyboardAvoidingView>
     </Animated.View>
   );
+}
+
+/** Preserve layout under panels, while excluding covered controls from focus and touches. */
+export function CoveredBody({ covered, children }: { covered: boolean; children: ReactNode }) {
+  const attach = useCallback((node: ComponentRef<typeof View> | null) => {
+    if (Platform.OS === 'web' && node) (node as unknown as HTMLElement).inert = covered;
+  }, [covered]);
+  return <View ref={attach} testID="covered-body" pointerEvents={covered ? 'none' : 'auto'} aria-hidden={covered} importantForAccessibility={covered ? 'no-hide-descendants' : 'auto'} accessibilityElementsHidden={covered} style={{ flex: 1, minHeight: 0 }}>{children}</View>;
 }
