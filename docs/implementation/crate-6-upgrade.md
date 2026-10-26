@@ -1,20 +1,23 @@
-# Production CrateDB 5.10.16 → 6.4.6 — #644
+# Rolling CrateDB 5.10.16 → 6.4.6 — Q32 / #644
 
-Initial planning/rehearsal used main **7ee29ce30**. Read-only production preparation and the full release audit
-were updated from main **1770d08d1** on October 26, 2026.
-**No production write, restart, credential, setting, schedule or filesystem change was made.**
-Owner option B authorizes preparation, not execution. This is a reviewable candidate procedure with
-explicit go/no-go gates; the previous #562 restart approval does not authorize this major upgrade.
+Q32 selects the rolling route. **This is planning, not production execution authorization.**
+This revision incorporates the Fable review's seven points and supersedes the earlier per-minor
+rollback-copy plan and twelve-hour estimate. Production was not changed by this preparation.
 
-[Compatibility/source review](../research/crate-6-upgrade-compatibility.md),
-[current guarded-stop runbook](auth/cratedb-production-rollout.md#current-stale-context-and-restart-advice--644),
-[#644 operation-retention evidence](auth/cratedb-production/20261026-operation-contexts/README.md).
+**Current start gate is NO-GO:** the [08:20–08:50 UTC observation](auth/cratedb-production/20261026-operation-contexts/README.md#read-only-rebalance-follow-up--08200850-utc-october-26)
+found two unchanged replica relocations toward crate-02, no completed moves, and historical
+shard-creation failures caused by shard-lock acquisition retries. Changing relocation identities
+was not evidence of successful recovery. Resolve this in a separately approved task; do not cancel,
+restart, KILL or waive a gate under Q32's planning approval.
 
-## Supported path and scope
+Evidence: [43-release compatibility audit](../research/crate-6-upgrade-compatibility.md),
+[three-node rehearsal](crate-6-upgrade/20261026-rehearsal/README.md),
+[production inventory](crate-6-upgrade/20261026-preflight/README.md), and
+[current guarded-stop procedure](auth/cratedb-production-rollout.md#current-stale-context-and-restart-advice--644).
 
-A direct **rolling** 5.10 → 6.4.6 jump is not documented. Complete every node and verification at each boundary:
+## Path and checkpoints
 
-| Hop | Target | Supported rolling source |
+| Hop | Complete all nodes to | Documented rolling predecessor |
 | --- | --- | --- |
 | 1 | **6.0.8** | >=5.10.1 |
 | 2 | **6.1.6** | >=6.0.2 |
@@ -22,257 +25,216 @@ A direct **rolling** 5.10 → 6.4.6 jump is not documented. Complete every node 
 | 4 | **6.3.7** | >=6.2.0 |
 | 5 | **6.4.6** | >=6.3.0 |
 
-Use **crate-02 → crate-03 → crate-01 at each hop**, fifteen replacements. Do not begin the next
-minor until all three nodes are on the current target, fully recovered, original table settings
-restored, client gates passed and a stage snapshot verified.
-The [rolling guide](https://cratedb.com/docs/guide/admin/upgrade/rolling.html#version-requirements)
-and each target's release notes govern support. The [6.0.8 note](https://cratedb.com/docs/crate/reference/en/6.0/appendices/release-notes/6.0.8.html)
-appears to misprint its target as 6.0.6; the [6.0.0 note](https://cratedb.com/docs/crate/reference/en/6.0/appendices/release-notes/6.0.0.html)
-explicitly permits >=5.10.1, and patch upgrades within a minor are supported. This plan deliberately
-uses patched intermediates rather than the initial 6.0/6.1/6.2/6.3 releases with known old-metadata
-corruption bugs. Pin every image by the reviewed digest in the rehearsal receipts; never deploy `latest`.
+Order **crate-02 → crate-03 → crate-01 at every hop**: fifteen replacements. Pin the
+[rehearsed image digests](crate-6-upgrade/20261026-rehearsal/results.json); never substitute `latest`
+or an earlier unpatched intermediate. Complete recovery, restore original table policy and finish
+all three nodes before beginning another hop. A direct rolling5.10→6.4 jump is not supported by
+these instructions. The [rolling guide](https://cratedb.com/docs/guide/admin/upgrade/rolling.html#version-requirements)
+and target release notes govern compatibility;6.0.8's rolling sentence appears to misprint its
+own target as6.0.6, while [6.0.0](https://cratedb.com/docs/crate/reference/en/6.0/appendices/release-notes/6.0.0.html)
+explicitly permits >=5.10.1.
 
-## Decisions required before production
+**Recommend separate complete-hop windows**, ending each day with every node on the same version.
+The guide describes supported mixtures during the rolling process and completion/recovery of every
+node. It does **not** provide assurance for deliberately operating a mixed cluster across multiple
+days; the [system-table warning](https://cratedb.com/docs/crate/reference/en/5.10/admin/system-information.html)
+only explains querying a temporary mixed state. Therefore do not schedule overnight mixed operation.
+This is a conservative operating rule, not a claimed vendor-defined maximum number of mixed hours.
+An unplanned mixed-version pause is an actively staffed incident/owner decision; never hurry an
+unsafe node change just to reach a homogeneous checkpoint.
 
-1. **Client compatibility patch:** this preparation updates/tests the webapp and operator-script node-loss
-   matchers for both `Participating node` and `Coordinator node` messages. Review/deploy it before production6.x.
-   Retain the distinction between recoverable reads and indeterminate writes; add no blanket write replay.
-2. **BLOB read scope:** approve an effective search-reader privilege policy before the first 6.2.11 node.
-   In the 6.4.6 lab, `GRANT DQL ON TABLE blob.search_index_files` did not authorize HTTP GET/HEAD:
-   it returned 404 `Schema 'blob' unknown`, even after a fresh re-grant. Schema-level DQL worked;
-   PUT/DELETE remained denied. A schema grant reads **all current and future BLOB tables**. Inventory them
-   and obtain explicit approval; do not assume table-scoped DENY protects other BLOBs from this HTTP path.
-   If that scope is unacceptable, stop for a verified upstream/client alternative.
-3. **Three-copy maintenance exception:** approve the active-copy/write-admission and last-node replica
-   policy below, including brief table write blocks during settings changes. Otherwise provision compatible
-   extra capacity and rehearse that alternative before scheduling production. No waiver of zero primaries,
-   no missing primaries, `force=false` or unlimited-grace normal stop is proposed.
-4. **Backup hold and repository transition:** approve bounded scheduled-backup holds while versions are
-   mixed, protected old-repository retention, a separate shared 6.x repository path and coordinated
-   registration cutover preserving the identifier used by the writer and monitor.
-5. **Window and recovery policy:** choose a maintenance window, checkpoints and the rollback RPO. Continued
-   production writes after a snapshot cannot be guaranteed recoverable by that snapshot. Zero-loss rollback
-   requires an approved write freeze/queue/replay mechanism; this lab's fixed-key retries are not that mechanism.
+## Production basis and time budget
 
-## Read-only production preflight — October 26, 2026
+The October26 inventory found145 base tables:94 created5.10.9 and51 created5.10.16, no partitions
+or closed tables, and no creation-version reindex prerequisite. All144 SQL SHOW CREATE results were
+read; only the standard analyzer was observed. Repeat metadata/config checks before execution.
 
-Collected from all three trusted-loopback coordinators, Docker/runtime metadata and snapshot manifests
-at **02:36–02:47 UTC** from main `1770d08d1`. No production data, config, grants, schedules, processes or
-repositories were changed; no production snapshot or restore was started. This is a dated preparation
-record, not permission to execute. [Evidence and commands](crate-6-upgrade/20261026-preflight/README.md),
-[structured inventory](crate-6-upgrade/20261026-preflight/results.json).
+| Initial node | Primary copies / approximate bytes | Transfer-only floor at40MiB/s |
+| --- | --- | --- |
+| crate-02 | 34 /0.132GB | About3 seconds; **not** its complete stop/recovery time |
+| crate-03 | 263 /17.1GB | About6.8 minutes |
+| crate-01 | 273 /23.9GB | About9.5 minutes |
 
-| Gate / measurement | Observed result and implication |
-| --- | --- |
-| Versions/membership | Three members, all **5.10.16**; crate-03 master. IDs match the previous rollout. |
-| Health/checks | All coordinators agree: **145 GREEN**, zero missing/underreplicated shards, zero failed cluster/node checks. |
-| **Stop readiness — NOT passed** | **1,175 copies: 1,173 STARTED/STARTED and two STARTED/RELOCATING**, present in both samples. `person_appeared_in` shard4 primary on crate-01 and shard5 replica on crate-03 point to crate-02. Historical recovery DONE is not a completed routing transition. Require every copy STARTED/STARTED and independent checkpoint/placement verification before any drain; investigate read-only if this persists. |
-| Creation versions | **145 base tables: 94 created5.10.9, 51 created5.10.16; zero partitions, zero closed tables.** No pre5.x recreation/reindex prerequisite was found. This includes BLOB and retained backup schemas. Repeat before execution. |
-| DDL/analyzers | SHOW CREATE succeeded for all144 SQL tables; BLOB SHOW CREATE is unsupported and was inventoried separately. Only `standard` fulltext analyzer observed; no removed analyzer names, `soft_deletes.enabled`, explicit `current_catalog` identifier or legacy creation versions found. |
-| Replica policy | **106 tables `0-1`, nine `1`, thirty `2`**. The thirty include15 auth tables plus **`user_mcp_action`** with wait1/REQUEST, and14 YepWatch tables with wait3/REQUEST. All145 tables use REQUEST. The earlier29-table rehearsal omitted `user_mcp_action`: include it in the exact approved list, preserve its wait1, and verify its keyed-write/readback behavior. No unaccounted table write blocks observed. |
-| Effective settings | Allocation/rebalance `all`; no node exclusions; graceful stop PRIMARIES/force=false/2h. Recovery cap **40MiB/s per node**, two concurrent recoveries; all gateways expect/recover-after3 data nodes. No `gateway.auto_import_dangling_indices` override in startup argv/effective settings. |
-| Node config/HBA | All image tags5.10.16, heaps16GiB, same data volumes, `/snapshots` allowlist and shared bind. HBA enabled: trusted `crate` only at127.0.0.1, password fallback. Preserve these settings. Captured argv/effective settings are available; Crate's REST settings endpoint returned404, so persistent/transient provenance was not obtained through it. Export approved configuration sources before execution. |
-| Current data | **40,993,871,678 bytes (38.18GiB) primary**, **80,709,631,140 bytes (75.17GiB) all copies**, excluding translogs. Live data can differ from the older snapshot. |
-| Node free disk | crate-01 **215.5GiB**, crate-02 **199.2GiB**, crate-03 **237.4GiB**; each data filesystem about300.17GiB. Shared backup filesystem has **1.055TiB free** across all mounts. These are filesystem totals, not reserved recovery capacity. |
-| BLOB inventory | Exactly **`blob.search_index_files`**, three primary/three replica shards, **21 objects / 137,651,413 bytes (131.27MiB) per complete copy**. No other BLOB table found. SQL snapshots omit these objects. Owner must approve the content classification and future-table read scope before schema DQL is added. |
-| Installed page/search clients | Both page containers (.20/.21) and search-a/b (.20): **Node24.22.1, node-crate3.0.0, pg8.23.1**. Image identities recorded; this prep patch is not deployed. |
-| Installed flow clients | **17 Python worker containers on15 hosts** expose cached crate-python **2.0.0,2.2.1,2.3.0** (2.0.0 under Python3.11;2.2.1 under3.11/3.12;2.3.0 under3.12). Two native workers have no such package at probed paths. Cache presence does not establish which active script lock a running job selected; inventory/qualification of that mapping remains a gate. The earlier rehearsal did not cover2.0.0. Supplemental isolated single-node canaries now pass all three versions on both5.10.16 and6.4.6 for typed array/object parameters and `_version` OCC; this is not end-to-end active-job qualification. |
-| Installed backup | Actual `/root/goodwatch/goodwatch-monorepo/goodwatch-crate/backup.py` SHA256 recorded; its existing uv environment is **Python3.14.0 / requests2.32.5**, uv0.9.10. Uses HTTP requests, not crate-python. No installer or backup invocation was run. |
-| Repositories | Active filesystem repository `goodwatch-db-backup-v2` at `/snapshots/v2`; legacy `goodwatch-db-backup` at `/snapshots`. Active repository **131,239,461,309 bytes (122.23GiB)** apparent size. Legacy parent traversal exceeded the100s read budget; its separate retained size is unverified. Choose a disjoint6.x path, never a child of either repository. |
-| Latest captured snapshot | **`hourly_20261026_020501`**, SUCCESS,5.10.16,567 SQL shards, no failures; started02:05:02.293, finished02:05:43.747 UTC (**41.454s**), global state included. A fresh protected snapshot is still required at execution. |
-| Snapshot recovery set | Read all567 shard manifests: **36,257,350,348 bytes (33.77GiB),58,837 referenced files**. Only **2,129,430,348 bytes (1.98GiB),11,561 files** were incremental. Manifest parser follows the tagged5.10.16 stream format and asserts complete consumption. No shard-content reads or production restore. |
-| #644 residuals | Both samples agree: crate-01 **1,460**, crate-02 **112**, crate-03 **2,897** contexts older than1h without a matching job. They match the existing report; no KILL or cleanup was attempted. |
+Primary placement changes during drains: crate-02 will not necessarily remain a cheap34-primary
+node on later hops. Budget up to **24GiB of primary movement per node**, about10.2min at40MiB/s,
+plus restart and replica catch-up. A receiving node's40MiB/s limit is shared by concurrent recoveries;
+two recoveries do not imply80MiB/s on that node. Existing local files may be reused, but a fresh-data
+lab and an incremental backup do not establish production reuse or drain throughput.
 
-### Full-volume restore estimate and booked window
+Current logical data was38.18GiB primary /75.17GiB across copies, excluding translogs. A node holds
+roughly21–31GB of logical shard data. If much needs retransmission, replica recovery adds another
+roughly8–13min at the same rate, before contention and metadata/sequence catch-up. Allow:
 
-**Book a twelve-hour operator maintenance window**, replacing the earlier provisional six-hour estimate:
-**one hour preflight, three hours for15 replacements, five hours for protected repository/snapshot gates,
-one hour for verification/soak, two hours held for recovery/escalation**. This is a scheduling estimate,
-not twelve hours of planned user outage or a guarantee that an unlimited-grace stop completes on a deadline.
-Use homogeneous-version checkpoints; do not start another hop after hour10 or if its forecast exceeds the
-remaining upgrade budget. Restore schedules/settings deliberately at the checkpoint. Never accelerate a
-stop or waive copy/health gates to meet the booking.
+- **45–60 minutes per node**: roughly10–20min drain allowance,2–5min normal stop/start/rejoin,
+  10–20min catch-up and10min stable health/heap/client verification. These are planning allowances,
+  not a stop deadline; a2h graceful-drain timeout or a slow unlimited-grace normal stop can overrun them.
+- **2½–3½ hours per three-node hop**, including a15–30min homogeneous soak/checkpoint.
+- **Book5 hours for the first hop**, including the protected baseline, BLOB copy and first6.x repository
+  snapshot; **book4 hours for each remaining hop**. Have the rollback owner available for at least
+  another2h after each slot. These five windows total21 booked hours, usually across five days.
+- A continuous alternative needs approximately **20–24 hours**, including checks, first full6.x
+  backup and recovery reserve. Prefer complete-hop windows to reduce operator fatigue, **only if
+  the owner accepts the campaign-wide rollback RPO below or qualifies write preservation**.
 
-For the captured33.77GiB SQL recovery set, **40MiB/s serial transfer alone is14.4 minutes**; three nodes
-can recover concurrently but share the repository. At conservative **10–20MiB/s aggregate effective read
-throughput**, transfer is **29–58 minutes**. Budget **60–120 minutes** for a fresh-cluster recovery including
-bootstrap, many small files, replica recovery, users/HBA/BLOB verification and application cutover. Current
-primary SQL size is larger than the snapshot and adds roughly4–8 transfer minutes at those assumed rates.
-The measured incremental write rate (about49MiB/s) is not a measured restore rate. Neither snapshot SUCCESS
-nor metadata proves file readability, full-volume RTO or reverse restore compatibility. A firm **validated**
-RTO cannot be derived from metadata alone: before promising one, run a separately authorized full-volume
-restore on isolated capacity from a protected repository copy. Do not run it in production.
+Revise forecasts from the first real drain/catch-up. Do not start another node unless the remaining
+slot covers its forecast plus a homogeneous recovery checkpoint. Do not start another hop late in
+a slot. No schedule changes, capacity increase or recovery-rate setting change is implied by this estimate.
 
-Protecting a122.23GiB repository by serial copy alone costs **104–209 minutes at10–20MiB/s**.
-Do not assume snapshots are independent full files, or copy only a snapshot's small manifest. Before the
-window, approve/complete protected-copy seeding or qualify a version-specific repository rotation: freeze
-each pre-hop path read-only and move the **same active registration** to a fresh disjoint path for each
-homogeneous minor, so later writers never touch older recovery points. This extends the lab's first-hop
-rotation and needs a local/isolated qualification before production. Five fresh40GiB-stage snapshots
-cost roughly **3–6 hours at10–20MiB/s**, before metadata overhead; the five-hour gate allowance assumes
-at least12MiB/s effective aggregate throughput. If the verified rate/forecast cannot meet it, extend the
-booking or stop at a homogeneous checkpoint. Repeated full copies of the growing retained repository
-are **not** silently included in this booking. The separate full-volume DR qualification must finish
-before execution approval, not consume the two-hour emergency reserve.
+## Gates before every hop and every node
 
-### Exact execution approvals still needed
+Record through **all three coordinators**, using explicit columns in mixed versions. Obtain at least
+10min of stable readings before the first change and before proceeding to another node:
 
-1. **Reviewed code rollout:** approve/deploy this compatibility patch to page/search images and the operator
-   population scripts before6.x. It recognizes both node-loss messages while retaining generic-write ambiguity
-   and explicit non-retryable receipt safeguards. Qualify actual selected flow locks and additional release-audit
-   canaries, including feedback/correction `_version` OCC, parameter inference and social-ranking windows.
-2. **BLOB scope:** explicitly approve DQL on **all current/future `blob` tables** for `goodwatch_search`, currently
-   the single131.27MiB search index; retain negative PUT/DELETE behavior. Table grants/DENYs are not a proven
-   narrowing mechanism for this HTTP bug. If future-table access is unacceptable, defer this workaround/upgrade
-   until a verified narrower alternative exists. No grant is made in prep.
-3. **Temporary write/copy policy:** approve the exact **30-table** inventory in the evidence, including
-   `user_mcp_action`; only14 wait3 tables temporarily use2, with brief guarded write blocks. Preserve all original
-   wait1/REQUEST settings; reduce replicas2→1 only for the last old node of each hop, then restore every original
-   copy/setting before proceeding. Alternatively approve additional compatible capacity and rehearse it.
-4. **RPO/write handling:** choose either **up to60 minutes of accepted post-snapshot write loss** (only if protected
-   checkpoint age and hop forecasts remain within60 minutes; otherwise stop at a checkpoint and refresh before
-   proceeding), or another explicitly quantified bound (for example120min if full-stage snapshots make60min infeasible),
-   or **zero-loss rollback**, which needs an approved write freeze/queue/replay design before execution.
-   Current hourly snapshots/synthetic fixed-key retries do not themselves provide zero loss. Agree client-facing
-   handling of brief write blocks and non-idempotent errors; never silently replay arbitrary writes.
-5. **Recovery/cutover owner:** name the operator with authority to stop, rebuild a pre-hop-version cluster in fresh
-   directories, restore/cut over and reconcile post-snapshot writes, plus a substitute and escalation route. Approve
-   the60–120min planning allowance and isolated restore-capacity drill; otherwise do not promise a verified RTO.
-6. **Backup/config/window:** approve exact disjoint shared6.x path/mounts/allowlist, storage capacity for protected
-   per-hop repository copies and separate BLOB backups, bounded schedule/schema-job holds with restoration owner,
-   and the twelve-hour slot/checkpoint deadlines. Freeze SWAP/RENAME with other DDL during snapshot gates: the
-   earlier safe-swap improvement was reverted in6.3.6/6.4.1. Review config provenance, preserve password HBA and
-   approve the exact image digests/commit. No freeze, mount change or schedule hold is authorized by preparation.
+1. Three expected members/IDs/versions; **all health rows GREEN**, zero missing/underreplicated copies,
+   no failed cluster/node checks, original copy counts and every visible copy **STARTED/STARTED**.
+   **No RELOCATING or INITIALIZING routing and no CREATED/RECOVERING/POST_RECOVERY copy.** The current
+   two pending moves fail this gate even though health is GREEN. Check placement/checkpoints independently.
+   Target rows are omitted by these5.10 system-table routing iterators; missing SQL target rows alone do
+   not prove missing recovery. Source DONE/100% counters are historical, not target-transfer progress.
+2. **Proposed heap gate: used/max <75% on every node for10min**, sampled at least every30s, with no
+   upward pressure/GC-overhead pattern. Use measured `heap['max']`:17,179,869,184bytes is16GiB
+   (about17.2decimalGB), so75% is12GiB. Reported75–80% operation leaves limited spare capacity for two
+   survivors. If this gate cannot be met, wait or obtain a separately approved workload reduction;
+   do not force GC, raise heap or relax the threshold silently. Hold the next action on any breach;
+   >=85% for2min, repeated GC stalls, OOM or breaker pressure is an abort/escalation condition.
+3. Load5/load15 no greater than available processors and no growing work/recovery queue; current nodes
+   report16 processors and observed loads were well below16. Compare member latency/error rates with a
+   recorded10min baseline. Unexpected sustained degradation stops progression. No extra load generator.
+4. **Backup cron held and independently read back**, with no CREATE/DROP SNAPSHOT in progress. Save
+   the exact named cron, restoration owner and deadline. Hold schema/SWAP/RENAME and index-publication
+   jobs for the hop; snapshot safety was reverted in6.3.6/6.4.1. Resume only at a homogeneous checkpoint.
+5. Protected5.10.16 recovery point and BLOB SHA1 manifest verified; restore capacity and credentials ready.
+   Enough surviving-node disk/headroom, not just nominal free space. Prior readings showed roughly
+   199–237GiB free per data filesystem and1.055TiB on the shared backup filesystem; refresh them.
+6. Reviewed app patch deployed to both page/search images and relevant operator scripts, actual worker
+   locks qualified, correct/missing/wrong credential reads and trusted local administration checked,
+   required BLOB reads working. Preserve #562 password HBA; no user recreation or secret changes.
+7. Original allocation/rebalance settings, table settings, Docker restart policies, image/config hashes,
+   paths and stop signals recorded. Current stop settings are PRIMARIES/force=false/2h. No unaccounted
+   exclusion, write block or previous drain. Effective settings/argv are captured in the dated evidence;
+   export configuration provenance before execution, without putting credentials in receipts.
 
-**Current status: preparation only; execution is NO-GO.** Settle the two routing transitions, finish the
-remaining client/config/recovery qualification and obtain the approvals above before scheduling a drain.
-
-## Preflight — repeat fresh evidence before execution
-
-Keep all evidence/config exports in a protected operator directory; no passwords, password hashes,
-member statements or arguments in public receipts. Use `TMPDIR=$HOME/.cache/gw-work/644-upgrade` on the
-operator host, never `/tmp`; do not copy a production `.env` into a preview or local test server.
-Run the existing trusted-loopback SSH `crate_sql` helper on each host. Execute only selected metadata reads
-until the execution approval below exists.
-
-- Record node IDs, current master, exact images/digests, original Compose/env file hashes, volumes,
-  private binds, StopSignal, restart policies, HBA argv, `crate.yml`, persistent/transient/default settings,
-  repository registrations and mounts. Preserve the #562 trusted loopback and password rules unchanged.
-- Require all three members, every health row GREEN, all copies STARTED/STARTED, no failed cluster/node
-  checks, allocation at its captured baseline and sufficient surviving-node disk/recovery headroom.
-  Use current counts, not the old 96/962 or the lab's counts. Sample operations/jobs twice a minute apart;
-  record #644 residuals without KILL. New unexplained load, a drain already in flight or unsettled shards stops preflight.
-- Inventory every user-created table **and partition**, including retained backup schemas and closed objects.
-  Separate views (which may have no creation version) from base-table indices, then parse creation versions numerically. Any index created before **5.x** blocks the major upgrade until a
-  separately reviewed reindex/recreation, semantic comparison and new backup/restore drill are complete.
-  Passing fresh-schema lab tests does not establish production compatibility.
-- Review actual stored analyzers, table settings and node settings. Reject removed analyzers/options or
-  `soft_deletes.enabled` before 6.0; remove a present `gateway.auto_import_dangling_indices` before 6.4
-  through a reviewed config change. No automatic setting resets or global compatibility toggles.
-- Export original replica counts, literal `write.wait_for_active_shards`, `translog.durability`, write blocks,
-  partition overrides and placement for every table touched by the maintenance policy. Stop if the actual
-  policy differs materially from the rehearsed one, including an unexpected blocked/partitioned table.
-- Inventory actual users, grants/DENYs, role membership and client identities. Verify current installed
-  node-crate/pg and every active Windmill lock/version, not just package manifests. Search-a/b run the
-  webapp image. Source locks are **node-crate 3.0.0**, **pg 8.23.1**, **crate-python 2.2.1 and 2.3.0**.
-- Gate both page hosts, search-a/b, actual Windmill workers, backup helper, monitoring/Kuma, readonly scripts
-  and PostgreSQL-wire administration against each node with their existing credentials. Require correct
-  identity/access, wrong/missing passwords refused, local trusted `crate` intact, auth-table DENYs effective,
-  and authenticated BLOB GET/HEAD including redirects. Negative PUT/DELETE tests must not target real data.
-- Verify the latest installed scheduled backup actually succeeded, the repository is usable and the existing
-  restore drill/RTO covers these data. Capture an explicit fresh named pre-upgrade snapshot, independently
-  verify SUCCESS, and preserve it outside automatic retention. Separately copy/verify BLOB content by SHA1
-  and size. Snapshots exclude BLOB tables. Protect users/roles/password metadata and the auth payload keys
-  required to interpret restored data.
-- Prepare a disjoint shared 6.x filesystem repository with enough free space and correct ownership on every
-  Crate host. If the old repository occupies `/snapshots`, **do not nest the new repository underneath it**.
-  Example: host `/mnt/backup-cratedb/snapshots-v6` → container `/snapshots-v6`, with both approved paths in
-  `path.repo`. Review these explicit mount/allowlist changes with the image changes; retain all unrelated argv,
-  bindings, data volumes, credentials and settings. Prove actual shared-filesystem visibility on all hosts.
-
-Selected SQL for the inventory (explicit columns are required during mixed versions):
+Useful metadata reads (the exact production inventory contains the complete query list):
 
 ```sql
-SELECT id,name,version['number'] FROM sys.nodes ORDER BY name;
-SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards)
-FROM sys.health GROUP BY health;
+SELECT id,name,version['number'],heap,load,os_info['available_processors'] FROM sys.nodes;
+SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health;
 SELECT state,routing_state,count(*) FROM sys.shards GROUP BY state,routing_state;
-SELECT id,description,passed FROM sys.checks WHERE NOT passed;
-SELECT node_id,id,description,passed FROM sys.node_checks WHERE NOT passed;
-SELECT table_schema,table_name,table_type,closed,version,number_of_replicas,settings
-FROM information_schema.tables
+SELECT node['name'],primary,count(*),sum(size) FROM sys.shards GROUP BY node['name'],primary;
+SELECT table_schema,table_name,shard_id,node_id,primary,current_state,explanation,decisions
+FROM sys.allocations WHERE current_state <> 'STARTED';
+SELECT table_schema,table_name,number_of_replicas,settings FROM information_schema.tables
 WHERE table_schema NOT IN ('sys','information_schema','pg_catalog');
-SELECT table_schema,table_name,partition_ident,closed,version,number_of_replicas,settings
-FROM information_schema.table_partitions;
-SELECT grantee,class,ident,type,state FROM sys.privileges;
-SELECT name,superuser FROM sys.users;
-SELECT name,type,settings FROM sys.repositories;
 ```
 
-## Three-copy policy and why ordering matters
+## Three-copy/write policy: keep only the rehearsed changes
 
-Auth tables intentionally use two replicas, REQUEST translog durability and write-wait **1**. Current
-YepWatch typed tables use two replicas and write-wait **3**. Preserve auth's wait 1 and REQUEST durability.
-`write.wait_for_active_shards` is a **pre-write active-copy check**, not an acknowledgement quorum or a
-promise that writes reached that many copies. See the [domain/ADR discussion](../research/crate-6-upgrade-compatibility.md#three-copy-tables-and-the-zero-primary-stop-gate).
+The [exact30-table inventory](crate-6-upgrade/20261026-preflight/results.json) is15 auth tables plus
+`user_mcp_action` with replicas2, wait1 and REQUEST, and14 YepWatch tables with replicas2, wait3 and
+REQUEST. The rehearsal covered29; production adds `user_mcp_action`. Qualify its action-receipt path
+before execution and preserve its original wait1/REQUEST semantics. Do not apply a wildcard ALTER.
 
-The initial lab correctly refused to stop the last 5.10 node while ten primaries remained on it. With
-three copies occupying three nodes, there may be no destination slot for its primary relocation.
-An attempted early replica reduction followed by restoration also failed to recover GREEN in the mixed
-major: newer-primary → older-replica allocation can be refused. Neither failed strategy is the runbook.
+For the **first two replacements of a hop**, retain all original copies/replicas2. Only the14 original
+wait3 tables temporarily use wait2. Apply the rehearsed transition per reviewed table: block writes,
+RESET write-wait, SET2, verify on every coordinator, then restore the original write-block state.
+The brief block prevents writes during RESET's default1 interval. Restore wait3 only after rejoin and
+full original replication. Never change auth or `user_mcp_action` wait1 or REQUEST durability.
+`write.wait_for_active_shards` is a pre-write active-copy check, not an acknowledgement quorum.
 
-The candidate policy preserves the original replica count for the **first two** replacements of each
-hop. For tables whose original write-wait is 3 or `all`, temporarily use 2 while a node is absent.
-For the **last old-version node only**, after both survivors are upgraded, temporarily reduce the captured
-three-copy tables to one replica so the zero-primary drain can place their copies on the upgraded survivors.
-Do not apply this reduction indiscriminately to all tables or before the first node.
+**Never remove copies in the middle of a mixed-version hop and try to rebuild them onto older nodes.**
+[NodeVersionAllocationDecider](https://github.com/crate/crate/blob/6.0.8/server/src/main/java/org/elasticsearch/cluster/routing/allocation/decider/NodeVersionAllocationDecider.java#L82)
+rejects recovery from a newer primary to an older major/minor replica. The failed early-reduction
+trial demonstrated this: restoring replicas did not restore GREEN.
 
-A lab settings transition exposed validation against the old write-wait when lowering replica count.
-For affected three-active-copy tables, block writes briefly, RESET write-wait, SET it to 2, verify the
-result on all coordinators, then release the write block. This prevents admitting writes during the RESET's
-default-1 interval. The application must present planned maintenance/retry behavior for that brief block;
-ordinary non-idempotent requests must not be blindly replayed. Captured originals govern restoration.
+There is one unresolved policy distinction to approve explicitly. The successful three-node rehearsal
+needed replicas2→1 for the **last old node only**, after both survivors were already at the target,
+to provide a destination for its remaining primaries. It then drained to zero primaries, upgraded,
+restored replicas2, recovered every original copy and restored wait3. Without that last-node change,
+the earlier strict zero-primary drain retained ten primaries.
+
+**That last-node reduction really removes a copy while one old node remains.** It is an explicit bounded
+exception, not compliance with an absolute “no copy removal while mixed” rule. Q32's rolling choice does
+not silently authorize it. If the owner requires the absolute rule, the three-node procedure remains
+NO-GO for the third node: provide compatible extra capacity and rehearse that variant first. Do not
+waive zero primaries, force a stop or invent an untested primary-promotion workaround.
 
 ```sql
--- Reviewed per-table list only, with writes deliberately gated during this transition:
+-- Only the reviewed original wait3 tables, with the approved brief write block:
 ALTER TABLE doc.REVIEWED_TABLE SET ("blocks.write"=true);
 ALTER TABLE doc.REVIEWED_TABLE RESET ("write.wait_for_active_shards");
 ALTER TABLE doc.REVIEWED_TABLE SET ("write.wait_for_active_shards"='2');
--- Verify current setting through every coordinator, then restore original write-block state.
-ALTER TABLE doc.REVIEWED_TABLE SET ("blocks.write"=false);
--- Only before the LAST old-version node, where the original replica count is exactly2:
-ALTER TABLE doc.REVIEWED_TABLE SET (number_of_replicas=1);
+-- Read back through every coordinator, then restore original blocks.write=false.
+-- Only if the separate LAST-OLD-NODE exception is explicitly approved:
+-- ALTER TABLE doc.REVIEWED_THREE_COPY_TABLE SET (number_of_replicas=1);
 ```
 
-Before drain require GREEN at the reviewed temporary policy, with no unexpected missing copy. After rejoin,
-restore allocation, settle the current policy, restore original replicas to2 for last-node changes, require
-all original copies STARTED/STARTED and GREEN, and **only then** restore original write-wait3/`all`.
-Restore literal original values; never reset all settings to defaults. Capture independent readbacks and
-require no active unaccounted write block. Unexpected second node loss or failure to regain original
-replication stops the run immediately; no next replacement.
+Require GREEN at the exact approved temporary policy before drain. After rejoin, restore allocation,
+settle, restore original replicas where changed, require all original copies STARTED/STARTED, then restore
+literal original write-wait. Verify all30 policies independently. Another node loss, failed recovery or
+unexpected block ends progression; no further reduction.
 
-## Each node replacement — repeat at all five targets
+## One protected baseline and ordinary incremental backups
 
-Freeze schema-changing jobs/initializers while versions are mixed. Keep routine read/write traffic only
-within the approved maintenance/admission/RPO policy. Do not KILL member work or snapshots.
+The **only planned rollback target is one protected pre-upgrade5.10.16 snapshot plus its BLOB SHA1 copy**,
+taken immediately before the first hop. Protect user/privilege metadata, startup/HBA configuration and
+external auth payload keys as well. Briefly hold index publication while pairing SQL metadata with the
+BLOB manifest; verify every referenced digest/length. Snapshots exclude BLOB tables.
 
-1. Check all previous gates and the target's current image/ID. Hold new scheduled backup starts and let
-   an existing snapshot/drop finish. Save the exact cron before its bounded hold using the existing safe
-   named-file tooling/readback; never `crontab -` as a read command. Record a restoration owner/deadline.
-2. Apply the approved table maintenance policy above. Before the last old node, verify both survivors
-   have the target version. Require GREEN at that reviewed policy. Set the target Docker restart policy to
-   `no` before decommission and verify it. Preserve the captured original policy for its rejoin.
-3. Through a surviving trusted-loopback coordinator, preserve `min_availability=PRIMARIES`, `force=false`
-   and the existing **2h** graceful timeout; set allocation to `primaries` as in the guarded runbook.
-   Issue `ALTER CLUSTER DECOMMISSION 'crate-0N'`. Acknowledgement is not the stop gate. Monitor progress;
-   a lost HTTP/SSH response is not permission to repeat a mutating operation blindly.
-4. Through a survivor, freshly require **zero primaries on the target**, zero missing primary shards,
-   no unresolved target relocation, exclusion still effective and force=false. Re-read immediately before
-   stopping; timeout/aborted decommission can restore placement. Stale-route read errors may be retried
-   through a survivor; unrelated SQL, permission or health errors stop the run.
-5. If the process exited naturally, verify its exit and primary availability. If still running, confirm
-   StopSignal unset/SIGTERM/15 and use the current runbook's **host-managed** stop, preserving its wait
-   across SSH loss. Use a fresh unique unit name:
+The captured baseline example contained33.77GiB across567 SQL shards/58,837 files. Its41.454s elapsed
+covered only1.98GiB incremental upload. [Snapshots in one repository are incremental](https://cratedb.com/docs/crate/reference/en/6.4/admin/snapshots.html#creating-a-snapshot):
+later snapshots share unchanged data. **Do not budget40GiB for every hop or make per-minor protected
+repository copies.** Keep the protected snapshot's whole repository/dependency set intact and outside
+retention; freeze every writer/retention process for that protected5.10 repository for the campaign.
+Copying a small manifest alone is insufficient. Protection/isolated restore qualification
+is a prerequisite, not work hidden inside the emergency recovery reserve.
+
+After all three nodes reach6.0.8, follow the [major-upgrade repository advice](https://cratedb.com/docs/crate/reference/en/6.4/admin/snapshots.html#creating-a-repository)
+**once**: retain the5.10 repository read-only and switch the hardcoded active registration
+`goodwatch-db-backup-v2` to a new disjoint6.x path. Both `backup.py` and the monitor use that identifier.
+A reviewed example is old `/snapshots/v2` preserved under `goodwatch-pre6`, new shared host
+`/mnt/backup-cratedb/snapshots-v6` mounted as `/snapshots-v6`, with both paths allowlisted.
+Do not nest the new path inside an existing repository; preserve all unrelated node/HBA configuration.
+Only registration changes are intended; DROP REPOSITORY must never mean deleting its files.
+
+Create/verify the first6.x snapshot, then use **that same6.x repository** for ordinary incremental
+snapshots at homogeneous checkpoints and between windows. Independently verify SUCCESS/no failures,
+backup-helper/monitor access and BLOB backup freshness. Actual deltas may grow when segments change;
+measure them, rather than assuming either zero cost or a full40GiB every time. These snapshots support
+normal6.x operations; **they are not a promised downgrade recovery point for5.10 or earlier6.x minors**.
+
+Keep backup cron held throughout each mixed hop and verify the hold before every node. Restore its exact
+saved schedule only after the homogeneous backup/checkpoint, with readback; hold it again before the next
+window. Keep the protected5.10 baseline unchanged throughout the campaign. No schedule is changed in prep.
+
+## What members experience
+
+Two coordinators keep serving traffic while one node drains/stops/rejoins. Expect slower reads during
+routing convergence and recovery I/O, and occasional brief request errors: the
+[rolling guide](https://cratedb.com/docs/guide/admin/upgrade/rolling.html) explicitly warns distributed
+requests can fail. This is reduced disruption, not a zero-error guarantee or a full-site outage plan.
+
+The webapp patch recognizes both5.10 `Participating node … disconnected` and6.x `Coordinator node …
+disconnected`, plus existing transport/routing errors. Reads fail over within their existing timeout;
+exhausted budgets can still show a page/search error. Recovery errors alone do not exclude a healthy
+coordinator. Generic dispatched mutations are **not blindly replayed**: receipt/CAS/readback paths may
+confirm success, while ambiguous writes must remain ambiguous. Members can see a failed action or need
+a status refresh. Brief approved per-table write blocks can also reject relevant writes; do not tell
+members to repeat a non-idempotent action without its receipt/status check. Background workers and
+catalog latency may slow while replicas catch up. Review live error/latency signals before the next swap.
+
+## Per-node execution template — future approval only
+
+1. Pass **all gates above**, including cron hold,10min stable health/heap and sufficient slot remaining.
+   Verify the target/node ID and exactly which version is on both survivors. Apply only the approved table
+   policy; for the last old node, obtain the explicit exception or qualified capacity variant described above.
+2. Set the target's Docker restart policy to `no`, preserving its original for rejoin. Preserve
+   PRIMARIES/force=false/2h and set allocation to `primaries` as in the guarded runbook. Through a surviving
+   trusted-loopback coordinator, issue `ALTER CLUSTER DECOMMISSION 'crate-0N'`. Acknowledgement is not clearance.
+3. Freshly verify zero primaries on the target, no missing primary, no unresolved target relocation,
+   exclusion still effective and force=false. Re-read immediately before any stop: a timed-out decommission
+   can restore placement. Lost SSH/HTTP acknowledgement is not permission to repeat a mutation blindly.
+4. If already exited naturally, verify exit/no OOM and surviving availability. If still running, verify
+   StopSignal unset/SIGTERM/15 and use the host-managed unlimited-grace stop with a unique unit:
 
    ```bash
    systemd-run --unit="gw-crate6-stop-UNIQUE" --property=Type=exec \
@@ -280,125 +242,78 @@ within the approved maintenance/admission/RPO policy. Do not KILL member work or
      /usr/bin/docker stop --timeout=-1 crate-0N
    ```
 
-   Never shorten grace, set force=true, issue KILL/KILL ALL, use Compose to stop a running target, or
-   escalate to SIGKILL. If it has not exited after15 minutes, leave the unlimited wait running and request
-   a decision. This review threshold is not a kill timeout.
-6. Once stopped, recreate **only that node** from the frozen reviewed configuration with the target digest,
-   the same data volume and node identity, the reviewed repository mounts/allowlist and unchanged HBA.
-   Do not run an older minor/major image against a directory already opened by a newer version.
-7. Require the same node ID, correct new version, all three members, original trusted-local administration,
-   correct/wrong/missing credential gates, schema permissions and required BLOB reads. Run real catalog,
-   typed-array/object, auth CAS/readback and monitoring queries. Check actual page/search/worker behavior,
-   not only `SELECT 1`. Defer snapshots until versions are homogeneous.
-8. Restore allocation to the captured baseline, regain GREEN/STARTED, restore original table policy in the
-   order above, verify every original copy and setting, and restore the target's original Docker restart policy.
-   No next node until this complete gate passes. Preserve authenticated loopback recovery routes on survivors.
+   After15min request an owner decision while leaving the wait intact. Never shorten grace, force=true,
+   KILL/KILL ALL, SIGKILL or use Compose to stop a running target. TERM itself does not perform a drain.
+5. Once stopped, recreate only that node with the reviewed target digest, same data/node identity,
+   approved repository mounts and unchanged HBA/credentials/configuration. Never reopen its data with an
+   older major/minor image. Require same ID, correct version and all three members on rejoin.
+6. Restore allocation and original table policy in the proven order, then original Docker restart policy.
+   Require all original copies STARTED/STARTED, GREEN, no pending relocation, original write-wait/REQUEST,
+   no unaccounted write block, healthy heap/load and client/access canaries. No next node until these pass.
+7. At the end of each complete hop: all three at the target,15–30min soak, authenticated page/search/worker,
+   BLOB, monitoring, backup and auth/feedback/typed-room canaries; verified ordinary snapshot; saved schedule
+   restored/read back. Overnight only in this homogeneous recovered state. No blanket production test writes.
 
-The lab used local Docker stop processes; production's SSH-independent systemd wrapper remains mandatory.
-Do not generalize a sub-second lab SIGTERM to production shutdown or recovery time.
+Use the runbook's SSH `crate_sql` recipe; operator scratch is under `~/.cache/gw-work/644`, never `/tmp`.
+Do not put production `.env` into any preview/test server. Preserve role DENYs and trusted loopback;
+negative BLOB mutation tests belong to disposable fixtures, never real production objects.
 
-## Homogeneous-stage backup and repository gates
+## BLOB grant recommendation
 
-After the first complete hop to6.0.8, use a new repository **path** before allowing 6.x snapshot writes.
-`backup.py` and the flow monitor both hardcode `goodwatch-db-backup-v2`; merely creating a new v3 name
-leaves them writing/monitoring the old location. With the backup hold still active and no running repository
-mutation, verify the old path is protected, drop only the active **registration**, register the old path
-read-only under a protected name, and register the **same active identifier** at the new disjoint6 path.
-`DROP REPOSITORY` does not delete its files. Inventory the actual paths before constructing these statements.
+**Recommend `GRANT DQL ON SCHEMA blob TO goodwatch_search` before the first6.2.11 node**, under explicit
+execution approval. Current inventory has one table, `blob.search_index_files`:21 objects/131.27MiB per
+copy. The owner controls future BLOB table creation, and `goodwatch_windmill` already has schema-wide
+DQL/DML/DDL for index publication. This is a reasonable reader scope for this deployment.
 
-```sql
-DROP REPOSITORY "goodwatch-db-backup-v2";
-CREATE REPOSITORY "goodwatch-pre6" TYPE fs
-WITH (location='/REVIEWED_OLD_PATH',readonly=true);
-CREATE REPOSITORY "goodwatch-db-backup-v2" TYPE fs
-WITH (location='/REVIEWED_DISJOINT_6_PATH');
-```
+The6.4.6 lab proved schema DQL permits GET/HEAD, while table-only DQL failed because the HTTP path checks
+the internal index identifier. Retain no DML/DDL for search, preserve password enforcement and verify
+GET/HEAD/redirects. The grant intentionally covers future BLOB tables too; do not rely on table-level
+DENY to narrow this HTTP bug. Future sensitive BLOB data needs a deliberate privilege/design review.
 
-Use the installed credentialed backup helper with its current user/password-file mechanism. Verify an actual
-new snapshot independently through every coordinator, plus monitoring of that active identifier and the
-separate BLOB backup. Restore the exact held schedule with explicit readback while homogeneous. Hold it
-again before the next mixed hop. Do not let old/new clusters concurrently write one repository.
-Historical stuck-snapshot fixes are included in6.0.7/6.1.6, hence both selected targets; any stalled operation
-is an abort/owner decision, not a reason to KILL it or claim success from an HTTP acknowledgement.
+## Abort, rollback and RPO
 
-Before **each** next minor, quiesce every repository writer and freeze a protected, version-qualified
-copy of the complete pre-hop repository (or use a separate immutable per-stage path), plus its BLOB
-manifest and settings/privilege inventory. Independently establish readability/restore on that pre-hop
-image before exposing the copy to a newer writer. Preserve it outside routine retention. A named
-snapshot in the one evolving6.x repository is insufficient to promise earlier-minor rollback. The
-local drill proves the original5.10 recovery point; later-minor rollback copies/readability are an
-additional production gate, not a claim established by the forward-restore test.
+Abort/hold on any failed gate, missing primary, second node loss, unexplained policy drift, failed backup,
+unsafe disk/heap/GC/load, broken permissions/client behavior or unexpected write outcome. A stuck target
+lock or new pending relocation is not permission to cancel it under this plan. At a healthy homogeneous
+checkpoint, stop progression and restore the agreed schedules/settings; otherwise remain actively staffed
+and escalate. Preserve observations and receipts; do not race image downgrades.
 
-## Abort and rollback
+**Rollback from any6.x stage is restore-based to5.10.16**, using fresh data directories and the single
+protected pre-upgrade snapshot plus paired BLOB copy. There is no in-place major/minor downgrade and no
+planned rollback to6.0/6.1/6.2/6.3 checkpoints. The
+[planning guide](https://cratedb.com/docs/guide/admin/upgrade/planning.html#define-a-rollback-plan)
+requires backup-based recovery for major/minor transitions. Restore table data and USERMANAGEMENT with
+operator authority, preserve HBA/configuration/payload keys and verify data, identities, grants, BLOB
+hashes, original policies and GREEN replication before an explicitly owned cutover. Do not blindly
+RESTORE ALL over live metadata or grant AL to the routine backup user. Never let two clusters write
+one repository, and never run5.10 against a directory opened by6.x.
 
-Abort on missing primaries, unexpected loss of another node, unapproved policy drift, incomplete original
-replication, unsafe disk/recovery conditions, table-version/analyzer incompatibility, auth/permission or
-client failures, lost required BLOB access, unexpected write outcomes or a failed/unverified backup.
-If a fully homogeneous intermediate stage is healthy, stop there and request a decision. Preserve snapshots,
-write receipts and the current image/metadata state; do not race back through image downgrades.
+The33.77GiB captured recovery set implies14.4min serial transfer at40MiB/s; at10–20MiB/s effective shared
+read rate it is29–58min. Retain a **60–120min recovery planning allowance**, including fresh startup,
+replicas, BLOB/auth/client checks and cutover. It remains an estimate until a full-volume isolated restore
+qualifies it. The earlier drill proved a small5.10 snapshot restores forward into6.4; it did not establish
+production-volume RTO. Do not restore anything in production as a qualification test.
 
-Before any newer image has opened data, an unstarted config change can be reverted to the saved5.10
-configuration. Once a node has opened6.x data, or a later6.x minor has opened it, **major/minor rollback
-is backup-based**, not an in-place image swap. The [planning guide](https://cratedb.com/docs/guide/admin/upgrade/planning.html)
-explicitly distinguishes that from limited patch-level downgrades.
+RPO options, chosen before the first node:
 
-Rebuild an isolated cluster on the **pre-hop version** using fresh directories; restore its protected
-pre-hop snapshot, matching users/privileges and the separate BLOB backup, preserve HBA and external payload
-keys, prove identities/data/digests, then execute a separately approved cutover. Never point it at the newer
-cluster's writable repository or reuse upgraded directories. `RESTORE … TABLES` excludes cluster metadata;
-`USERMANAGEMENT` restores users/roles/grants and requires operator AL authority. `ALL` also overwrites settings
-and metadata; do not use it blindly. The routine backup user must not receive AL just for a restore.
+- **Accept the loss window:** every write after the protected5.10 snapshot can be lost on rollback,
+  including member actions/auth records and ingestion. With five daily windows this can span several
+  days; later6.x snapshots do not shorten the planned5.10 rollback point. Set an explicit maximum
+  elapsed loss window and stop/reschedule if it is exceeded.
+- **Preserve writes:** qualify either an all-writer freeze/read-only maintenance period, or a durable
+  mutation journal/queue with tested5.10 replay, ordering, idempotency and external/auth/BLOB handling.
+  The latter is additional implementation work, not an existing guarantee. Queueing only Windmill jobs,
+  ordinary HTTP retries and keyed fixture writes do not preserve all member mutations. A days-long
+  freeze has substantial member impact; a continuous window may be preferable if that is the only option.
 
-Writes accepted after the rollback snapshot are outside that recovery point. A forward5.10→6.4 restore
-proves forward compatibility of the fixture, not reverse snapshot compatibility or zero-loss rollback.
-The owner must explicitly accept a bounded RPO or authorize the write freeze/queue/replay needed for it.
+## Owner approvals
 
-## Rehearsal record and production timing
-
-The three-node Docker fixture completed all **15 replacements**, in the documented five-hop order,
-with fifteen zero-primary/no-missing-primary receipts and fifteen normal-exit receipts (no OOM/forced kill).
-Every node retained its identity. At each homogeneous boundary the original table policy was restored,
-all 676 fixture shard copies were STARTED/STARTED, all 108 health rows were GREEN, and a stage snapshot
-was verified through the actual `backup.py` SQL path. Final backup create/verify/list/drop also passed.
-The fixture includes all 76 pipeline schema tables, 15 auth tables, the current 14 YepWatch typed tables,
-synthetic catalog rows and a separately backed-up BLOB. It uses password HBA and restricted fixture roles.
-
-The bounded load completed **11,453 reads and 9,143 writes**, with every acknowledged key/value verified
-exactly afterward and zero exhausted logical requests. There were **1,856 transient attempts**, including
-planned write-block errors and node-loss/timeouts; the harness retried fixed-key fixture writes and does
-not establish safe replay of arbitrary production mutations or an outage-free user experience.
-Discovery attempts were stopped at their failed guards. The qualified sequence resumed after first-hop
-controller/observer corrections; this was not a single uninterrupted execution of a frozen automation script.
-The final runbook records the successful policy, including RESET/write-block sequencing.
-
-An independent clean three-node **6.4.6** cluster restored the protected **5.10.16** snapshot with TABLES
-and USERMANAGEMENT. Catalog/auth/typed-room samples, privileges, password behavior and separate BLOB
-SHA1 matched; the original repository file hashes remained unchanged. The real auth integration suite
-passed **25 tests on the upgraded cluster and 25 on the restored cluster**. Webapp Crate/catalog tests
-passed **50**, backup unit tests **38 plus 9 subtests**, and relevant flow tests **38 plus 17 subtests**.
-Pinned node-crate/pg and both Python driver versions passed parameterized client canaries; Python bulk
-upsert/OCC and actual wrapper fulltext, typed-array and NULL-timestamp queries passed.
-
-The original rehearsal and this preparation's `npx tsc --noEmit` both report **192 existing diagnostics
-in unrelated application source**. This preparation changes only node-loss matching and regression tests
-in application code. The earlier node-loss gap is patched/tested in the present preparation, awaiting deployment; the BLOB table-grant failure remains.
-Production-specific identities/configuration and protected later-minor rollback restores remain unverified.
-Both isolated clusters, six containers, two networks, their data/snapshot/BLOB directories and local proxies
-were removed after verification; cached images were retained.
-
-See [rehearsal evidence](crate-6-upgrade/20261026-rehearsal/README.md), [structured results](crate-6-upgrade/20261026-rehearsal/results.json)
-and the compressed scripts/logs/receipts linked there.
-
-Source/client compatibility details and primary citations are in the linked research note. The lab uses
-synthetic data and fresh5.10-created indices. It cannot qualify old production indices, dormant clients,
-production kernel/storage behavior, peak traffic or full-volume restore throughput. No claim that6.4.6
-fully fixes #644 is made; the earlier isolated disconnect trial retained tasks even on6.4.6.
-
-**Book the twelve-hour window detailed in the production preflight above**, including two hours reserved
-for recovery/escalation. The fresh-data lab is not a production benchmark. The60–120min full-volume restore
-allowance is an estimate from measured sizes and assumed read rates, not a tested RTO. Stop at a healthy
-homogeneous checkpoint if the remaining budget cannot cover the next hop; never compress safety gates.
-
-Execution approval must identify the exact commit/digests, compatibility patch, BLOB scope, temporary copy/
-write-admission exception, repository paths and schedule holds, window, RPO and rollback/cutover owner.
-Until those approvals and fresh production preflight pass, this document does not authorize execution.
+- [ ] **Window/dates:** choose five homogeneous windows (first5h, then4h each) or a20–24h continuous slot;
+  name operators, backup/cron restoration responsibility and recovery standby. Approve exact commit/digests/config paths.
+- [ ] **Heap threshold:** approve <75% for10min on every node, plus the load/GC hold/abort gates; record any revised number explicitly.
+- [ ] **Write policy:** approve the exact30-table brief write blocks/wait changes and the bounded last-old-node copy exception,
+  or require no removal while mixed and qualify extra capacity first. No early replica removal or waived zero-primary gate.
+- [ ] **RPO choice:** accept an explicit snapshot-to-rollback loss window (including several days if split), or fund/qualify complete write preservation.
+- [ ] **BLOB grant:** approve schema DQL for `goodwatch_search`, including owner-controlled future BLOB tables; retain no search DML/DDL.
+- [ ] **Rollback owner:** name the person/substitute authorized to restore5.10.16 in fresh directories, validate/reconcile writes and order cutover;
+  approve isolated restore capacity and qualify the60–120min recovery allowance before execution.

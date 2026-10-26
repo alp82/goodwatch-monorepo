@@ -6,6 +6,151 @@ setting change, client repair, snapshot mutation or file write was performed.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Q31 production cancellation — stopped at the pre-check, 2026-10-26
+
+Started from fetched `origin/main` **93521e697**, on branch `fix/644-q31-cancel-relocations`.
+The owner authorized exactly two cancellations, conditional on an unchanged pre-check. Read-only
+queries through the runbook's SSH/trusted-loopback `crate_sql` route began at **08:15:22 UTC** on
+all three coordinators. **The exact-copy guard failed. Neither CANCEL statement was sent.** No
+production data/settings/process/schedule change, restart, repeated cancellation or KILL occurred.
+
+All three coordinators agreed on these two non-STARTED/STARTED rows, both targeting crate-02
+(`r0IgCe17SPOgudkQIGsRQA`):
+
+| Relation | Shard | Current source/copy | Current state | Q31-approved copy |
+| --- | --- | --- | --- | --- |
+| `doc.person_appeared_in` | 4 | **crate-03 replica** | STARTED/RELOCATING | crate-01 **primary** of this relation/shard |
+| `doc.person_worked_on` | 5 | **crate-03 replica** | STARTED/RELOCATING | crate-03 replica of **person_appeared_in**, shard5 |
+
+The approved `person_appeared_in` shard4 primary on crate-01 and shard5 replica on crate-03 are
+both already **STARTED/STARTED**, with no relocation target. `person_appeared_in` shards4/5 have
+no copy on crate-02 in the captured query. That targeted copy query did **not** cover
+`person_worked_on` shard5; do not infer the absence of its target from it.
+
+Other pre-checks passed: **145 GREEN health rows**, zero missing/underreplicated shards, no failed
+cluster/node checks, all three members still5.10.16, and no table write/read-only/write-on-disk-full
+blocks. Exactly the two rows in the table were non-STARTED/STARTED; no INITIALIZING row was returned.
+
+[The structured pre-check receipt](q31-precheck.json) preserves every query, explicit result column
+and all three coordinator responses. Local validation confirmed their agreement and that the exact
+approved source/table/primary tuple check fails before reaching any mutation. No application code
+changed, so no application test suite was run for this evidence-only update.
+
+**The post-cancel verification,30-minute observation and conditional crate-02 log collection were
+not performed:** the owner's stop-on-difference condition took precedence, and there was no approved
+cancellation to observe. The samples do not establish how long the current relocations have existed,
+whether the older copies completed naturally or were changed by another operator, or why these two
+replicas are relocating. No additional production reads were made after identifying the mismatch.
+
+Production remains unchanged by this attempt. Retain it as-is unless the owner explicitly approves
+a revised operation for the actual two replicas, with a fresh exact-copy/target/health pre-check.
+The prior Q31 statements must not be adapted or replayed under their original approval.
+
+## Read-only rebalance follow-up — 08:20–08:50 UTC, October 26
+
+**Result: stalled target-shard creation, not demonstrated healthy rebalancing.** No cancellation,
+restart, config change, diagnostic attachment or production write was performed. This follow-up
+continued on `fix/644-q31-cancel-relocations` after the Q31 guard stopped the earlier attempt.
+
+Thirteen scheduled rounds at150-second intervals ran from **08:20:04.881 to08:50:04.881 UTC**;
+final queries/log collection finished08:50:16.153. Every round queried all three coordinators:
+**39 observations**, all145 GREEN, no missing/underreplicated shards, no failed cluster/node checks
+and no table write/read-only blocks. Full shard-placement hashes agree across all39 observations
+and are unchanged for the entire30-minute span. **Zero completed moves or new placements observed.**
+
+| Pending copy in every sample | Source → intended target | Observed duration |
+| --- | --- | --- |
+| `doc.person_appeared_in`, shard4 **replica** | crate-03 → crate-02 | Entire30-minute watch; also present at08:15 Q31 pre-check, so at least34min observed |
+| `doc.person_worked_on`, shard5 **replica** | crate-03 → crate-02 | Entire30-minute watch; also present at08:15 Q31 pre-check, so at least34min observed |
+
+| Node | Copies, first → last | Primaries, first → last |
+| --- | --- | --- |
+| crate-01 | 391 →391 | 273 →273 |
+| crate-02 | 391 →391 | 34 →34 |
+| crate-03 | 393 →393 | 263 →263 |
+
+`sys.allocations` consistently reports the two source copies RELOCATING. The sampled other
+eligible shards report rebalancing throttled; the configured concurrent-rebalance limit is2.
+The configured balance weights are0.45 for total copies and0.55 for copies per index, threshold1.
+[The tagged allocator](https://github.com/crate/crate/blob/5.10.16/server/src/main/java/org/elasticsearch/cluster/routing/allocation/allocator/BalancedShardsAllocator.java#L163)
+uses those counts, not equal primary counts. Thus34 primaries alone is not a balancing failure;
+the unchanged placements and repeated creation failures are the evidence of stalled work.
+
+### Correcting the “no target row” inference
+
+Neither system table returned a target row on crate-02, so no target INITIALIZING/RECOVERING
+stage or current target-byte counter could be observed through these queries. **That absence
+alone is not evidence that no target exists.** In5.10.16,
+[`SysShardsTableInfo`](https://github.com/crate/crate/blob/5.10.16/server/src/main/java/io/crate/metadata/sys/SysShardsTableInfo.java#L260)
+uses `allAssignedShardsGrouped`, and
+[`SysAllocations`](https://github.com/crate/crate/blob/5.10.16/server/src/main/java/io/crate/expression/reference/sys/shard/SysAllocations.java#L78)
+uses `routingTable().allShards()`. Those iterators omit the synthetic relocation-target entries;
+[`RoutingTable`](https://github.com/crate/crate/blob/5.10.16/server/src/main/java/org/elasticsearch/cluster/routing/RoutingTable.java#L241)
+has a separate target-including iterator. The prior interpretation of missing SQL target rows
+was too strong. Privilege filtering is not the explanation: these reads use trusted superuser `crate`.
+
+The source rows' DONE/100% recovery values stayed fixed:390,996,692bytes/17,277ms for
+`person_appeared_in`4 and306,566,234bytes/8,189ms for `person_worked_on`5. Those describe the
+source's previous recovery, **not** a progressing transfer to crate-02.
+
+Read-only filesystem checks on crate-02 found both intended paths already exist:
+
+| On-disk shard directory | Apparent bytes / files | Newest file timestamp |
+| --- | --- | --- |
+| `person_appeared_in`4 | 379,471,136 /154 | Oct22 05:55:34.396 UTC |
+| `person_worked_on`5 | 321,295,612 /124 | Oct22 05:55:30.304 UTC |
+
+Twelve metadata samples from08:23:39.594 through08:50:06.303 found identical complete file inventories,
+sizes and modification timestamps: **zero observed growth**. Crate-02's Java process had open
+handles to old segment files in both paths at the first/final FD checks. This does not identify
+the shard-lock owner or prove that a new target engine was successfully created. No shard-data file contents
+were read, no heap dump/thread attachment was taken and no GC was requested.
+
+### Logs explain the changing identities before this watch
+
+A separate bounded read of02:45–08:15 UTC logs found master-side **failed target creation**, not
+successful relocation completions. At03:28:17 the master failed the original `person_appeared_in`4
+primary from crate-01 and shard5 replica from crate-03 on target crate-02. Further paired failures
+occurred at04:35:53,05:43:29,06:51:06 and07:58:42, with new attempts involving
+`person_appeared_in`4/5 and `person_worked_on`4/5. The failure reports explicitly name the target
+as INITIALIZING and contain `failed to create shard` and:
+
+```text
+java.util.NoSuchElementException: Reached maximum amount of backoff iterations. Only 1000 iterations allowed.
+  at io.crate.action.LimitedExponentialBackoff$LimitedExponentialBackoffIterator.next(...:74)
+  at org.elasticsearch.indices.IndicesService.createShard(...:529)
+```
+
+[The exact5.10.16 createShard path](https://github.com/crate/crate/blob/5.10.16/server/src/main/java/org/elasticsearch/indices/IndicesService.java#L507)
+retries after `ShardLockObtainFailedException`; the stack's backoff call is inside that catch.
+[Its backoff implementation](https://github.com/crate/crate/blob/5.10.16/server/src/main/java/io/crate/action/LimitedExponentialBackoff.java#L47)
+sums to4,055.692seconds, matching the observed roughly**67min36sec** failure cadence. This supports
+**target shard-lock contention on crate-02**, with failures/retries explaining the changed identities.
+The specific holder and any connection to orphaned fetch/search contexts remain unproven.
+
+During the live watch there were no logged new allocation/recovery failures, membership changes,
+OOM, corruption or disk-watermark events. There were BLOB HTTP connection-reset warnings, and a
+crate-02 GC-overhead warning at08:47:27:578ms collecting in1.1s. Those do not explain away the
+unchanged30-minute placement record. The earlier log window also includes an operations-log
+queue breaker clear on crate-01; log-buffer pressure is not itself proof of the target lock owner.
+All container runtimes remained running with unchanged start times and zero recorded restarts.
+
+### Receipts and limits
+
+- [rebalance-watch.json](rebalance-watch.json): all-round summaries, counts, stable-placement checks,
+  target-directory samples, historical failures and archive SHA256.
+- [rebalance-samples.json.gz](rebalance-samples.json.gz): UTF-8 file map of full39 shard/health/allocation
+  readbacks, explicit SELECT queries, bounded/sanitized logs, filesystem/FD metadata, scripts and tagged sources.
+- Local checks verified13 rounds, all39 placement hashes equal, all health/check/block gates, stable
+  target file inventories, JSON/archive integrity and Python-script syntax. No application code changed;
+  application test suites were not rerun for this evidence-only task.
+
+Sampling can miss short-lived transitions between rounds; zero **observed** moves is the supported
+statement. Directory growth is a supplementary observation, not a network-throughput measurement.
+No current target transfer rate is available from these SQL views. The two copies demonstrably
+made no observed progress over the requested window. No further production action is authorized
+by this read-only watch; the rolling-upgrade start gate remains unmet.
+
 ## Isolated follow-up — owner option A, 2026-10-26 00:43–00:56 UTC
 
 **Reproduced: yes on 5.10.16. The tested newer version, 6.4.6, still reproduced a residual failure.**
