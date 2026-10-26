@@ -148,6 +148,21 @@ test("Compact title details preserve provider scales, five billed actors, linked
 		["trailer_url"],
 	)
 })
+test("MCP keeps all five selected director credits", () => {
+	const directors = Array.from({ length: 5 }, (_, id) => ({
+		id, name: `Director ${id}`,
+	}))
+	const result = compactTitleDetails(
+		{ ...media, credits: { ...media.credits, directors } },
+		"https://goodwatch.app",
+		{},
+	)
+	assert.deepEqual(
+		result.directors?.map((person) => person.name),
+		directors.map((person) => person.name),
+	)
+})
+
 test("Season scores use the site's grid, missing scores stay null, episode paging is separate and never fills gaps", () => {
 	const result = titleSeasons(media, grid, {
 		include: ["seasons", "episodes"],

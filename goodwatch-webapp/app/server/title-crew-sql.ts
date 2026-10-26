@@ -3,7 +3,7 @@ import { CREW_ROLES } from "../ui/details/crew-roles.ts"
 export type CrewRole = keyof typeof CREW_ROLES
 
 /** The rows used by every rendering of a title's crew line. */
-export function selectedCrewRows(role: CrewRole): string {
+export function selectedCrewRows(role: CrewRole, limit: 3 | 5 = 3): string {
 	const { jobs, department } = CREW_ROLES[role]
 	const exactJob = `job IN (${jobs.map((job) => `'${job}'`).join(", ")})`
 	// Aggregate show credits can have no department. Match jobs independently of it.
@@ -16,17 +16,17 @@ export function selectedCrewRows(role: CrewRole): string {
  GROUP BY id, name
  ) AS people
  ORDER BY episode_count_total DESC NULLS LAST, popularity DESC NULLS LAST,
-   credit_id ASC NULLS LAST, id ASC, name ASC LIMIT 3`
+   credit_id ASC NULLS LAST, id ASC, name ASC LIMIT ${limit}`
 }
 
 export const selectedCrewCTEs = Object.keys(CREW_ROLES)
-	.map(
-		(role) =>
-			`selected_crew_${role} AS (${selectedCrewRows(role as CrewRole)})`,
-	)
+	.map((role) => {
+		const limit = role === "directors" || role === "composers" ? 5 : 3
+		return `selected_crew_${role} AS (${selectedCrewRows(role as CrewRole, limit)})`
+	})
 	.join(",\n")
 
-export const crewPeople = (role: CrewRole) =>
+export const crewPeople = (role: CrewRole, limit: 3 | 5 = 3) =>
 	`ARRAY(SELECT {id = id, credit_id = credit_id, name = name} FROM selected_crew_${role}
  ORDER BY episode_count_total DESC NULLS LAST, popularity DESC NULLS LAST,
-   credit_id ASC NULLS LAST, id ASC, name ASC)`
+   credit_id ASC NULLS LAST, id ASC, name ASC LIMIT ${limit})`

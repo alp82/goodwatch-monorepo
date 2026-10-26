@@ -233,7 +233,6 @@ export function trimTitleDetails(
 			actors: raw.cast_lead_rows ?? [],
 			directors: raw.credits?.directors ?? [],
 			composers: raw.credits?.composers ?? [],
-			executive_producers: raw.credits?.executive_producers ?? [],
 		},
 		streaming_availabilities: (raw.streaming_availabilities ?? []).map(
 			({ streaming_service_id, streaming_type, stream_url }) => ({

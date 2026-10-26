@@ -20,9 +20,6 @@ export {
 	DETAILS_STALE_MINUTES,
 } from "./title-details-cache"
 
-const creditedCrew = (job: string, limit: number) =>
-	`ARRAY(SELECT {id = id, name = name} FROM crew_rows WHERE job = '${job}' ORDER BY popularity DESC LIMIT ${limit})`
-
 const _fetchFromDB = async (
 	mediaType: "movie" | "show",
 	mediaId: string,
@@ -299,9 +296,8 @@ const _fetchFromDB = async (
 									)
 									.join(",")}},
                 credits = {
-                  directors = ${crewPeople("directors")},
-                  composers = ${crewPeople("composers")},
-                  executive_producers = ${creditedCrew("Executive Producer", 3)}
+                  directors = ${crewPeople("directors", 5)},
+                  composers = ${crewPeople("composers", 5)}
                 },
                 images = (SELECT val FROM images),
 				videos = (SELECT val FROM videos)

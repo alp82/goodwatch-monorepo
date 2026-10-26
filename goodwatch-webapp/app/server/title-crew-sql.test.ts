@@ -1,7 +1,11 @@
 import assert from "node:assert/strict"
 import { createRequire } from "node:module"
 import { test } from "node:test"
-import { selectedCrewRows, type CrewRole } from "./title-crew-sql.ts"
+import {
+	crewPeople,
+	selectedCrewCTEs,
+	type CrewRole,
+} from "./title-crew-sql.ts"
 
 // Exercise the actual SQL predicate, grouping and ordering offline. Crate-specific
 // ARRAY/object projections are outside this standard SQL selection; production
@@ -16,7 +20,7 @@ type Row = [
 	number | null,
 	number | null,
 ]
-function select(role: CrewRole, rows: Row[]) {
+function select(role: CrewRole, rows: Row[], limit: 3 | 5 = 3) {
 	const db = new DatabaseSync(":memory:")
 	try {
 		db.exec(
@@ -26,8 +30,13 @@ function select(role: CrewRole, rows: Row[]) {
 			"INSERT INTO crew_rows VALUES (?, ?, ?, ?, ?, ?, ?)",
 		)
 		for (const row of rows) insert.run(...row)
+		// Replace only Crate's object/ARRAY projection with an id projection.
+		// Keep the production CTEs, ordering and renderer-specific limits intact.
+		const selection = crewPeople(role, limit)
+			.slice("ARRAY(".length, -1)
+			.replace("{id = id, credit_id = credit_id, name = name}", "id")
 		return db
-			.prepare(selectedCrewRows(role))
+			.prepare(`WITH ${selectedCrewCTEs} ${selection}`)
 			.all()
 			.map((row: { id: number }) => row.id)
 	} finally {
@@ -76,6 +85,40 @@ test("Music is an exact composer job even without a Sound department", () => {
 		]),
 		[2],
 	)
+})
+
+test("Music Director and Co-Director beat department fallback without requiring a department", () => {
+	for (const [role, job, department] of [
+		["composers", "Music Director", "Sound"],
+		["directors", "Co-Director", "Directing"],
+	] as const) {
+		assert.deepEqual(
+			select(role, [
+				[1, "a", "Department colleague", "Assistant", department, 100, 100],
+				[2, "b", "Credited person", job, null, 1, 1],
+			]),
+			[2],
+		)
+	}
+})
+
+test("director and composer credits keep five people while page lines keep the same first three", () => {
+	for (const [role, job] of [
+		["directors", "Director"],
+		["composers", "Music Director"],
+	] as const) {
+		const rows: Row[] = [6, 4, 2, 5, 3, 1].map((id) => [
+			id,
+			`credit-${id}`,
+			`Person ${id}`,
+			job,
+			null,
+			10 - id,
+			1,
+		])
+		assert.deepEqual(select(role, rows), [1, 2, 3])
+		assert.deepEqual(select(role, rows, 5), [1, 2, 3, 4, 5])
+	}
 })
 
 test("department fallback applies only when no accepted job exists", () => {

@@ -25,11 +25,6 @@ const show = (actors: { id: number; name: string }[]) =>
 			actors,
 			directors: [],
 			composers: [],
-			executive_producers: [
-				{ id: 1, name: "Matt Duffer" },
-				{ id: 2, name: "Ross Duffer" },
-				{ id: 1, name: "Matt Duffer" },
-			],
 		},
 		crew: {
 			directors: [],
@@ -78,7 +73,7 @@ test("the title's structured data names each actor and producer once", () => {
 	assert.equal(jsonLd.producer.length, 2)
 })
 
-test("show JSON-LD uses the visible Producer selection rather than executive producers", () => {
+test("show JSON-LD uses the visible Producer selection", () => {
 	const media = show([]) as { crew: { producers: unknown[] } }
 	media.crew.producers = [{ id: 9, name: "Credited producer" }]
 	const jsonLd = buildJsonLdDetail(page, media as never) as {
@@ -87,6 +82,25 @@ test("show JSON-LD uses the visible Producer selection rather than executive pro
 	assert.deepEqual(jsonLd.producer.map((person) => person.name), [
 		"Credited producer",
 	])
+})
+
+test("movie JSON-LD keeps five director and composer credits", () => {
+	const people = Array.from({ length: 5 }, (_, id) => ({
+		id, name: `Person ${id}`,
+	}))
+	const jsonLd = buildJsonLdDetail(page, {
+		mediaType: "movie",
+		details: { title: "Movie" },
+		credits: { actors: [], directors: people, composers: people },
+	} as never) as { director: { name: string }[]; musicBy: { name: string }[] }
+	assert.deepEqual(
+		jsonLd.director.map((person) => person.name),
+		people.map((person) => person.name),
+	)
+	assert.deepEqual(
+		jsonLd.musicBy.map((person) => person.name),
+		people.map((person) => person.name),
+	)
 })
 
 test("a title without actors has no actor property", () => {
@@ -101,7 +115,6 @@ test("a title's structured data has no null value and no empty list", () => {
 		crew: Record<string, unknown>
 	}
 	Object.assign(bare.details, { genres: [], number_of_seasons: null, number_of_episodes: 0 })
-	bare.credits.executive_producers = []
 	bare.crew.producers = []
 	const json = JSON.stringify(buildJsonLdDetail(page, bare as never))
 	assert.doesNotMatch(json, /null|\[\]/)

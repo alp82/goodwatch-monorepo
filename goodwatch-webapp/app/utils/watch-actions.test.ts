@@ -26,7 +26,7 @@ const movie = (offers: Offer[]) =>
 	({
 		mediaType: "movie",
 		details: { tmdb_id: 603, title: "The Matrix", genres: [] },
-		credits: { actors: [], directors: [], composers: [], executive_producers: [] },
+		credits: { actors: [], directors: [], composers: [] },
 		streaming_availabilities: offers,
 		streaming_services: services,
 	}) as never

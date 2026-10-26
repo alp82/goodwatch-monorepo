@@ -1,13 +1,13 @@
 /** Prefer these jobs; use the department only when none of these jobs is credited. */
 export const CREW_ROLES = {
-	directors: { jobs: ["Director"], department: "Directing" },
+	directors: { jobs: ["Director", "Co-Director"], department: "Directing" },
 	writers: {
 		jobs: ["Writer", "Screenplay", "Story", "Novel"],
 		department: "Writing",
 	},
 	producers: { jobs: ["Producer"], department: "Production" },
 	composers: {
-		jobs: ["Original Music Composer", "Music"],
+		jobs: ["Original Music Composer", "Music", "Music Director"],
 		department: "Sound",
 	},
 } as const
