@@ -102,9 +102,10 @@ function deps(over: Partial<Deps> = {}): Deps & { asked: unknown[] } {
 }
 
 const request = (path: string) => new Request(`https://goodwatch.app${path}`)
-const asData = <T>(value: T | Response): T => {
+const asData = <T>(value: T | Response): Exclude<T, { kind: "preview" }> => {
 	assert.ok(!(value instanceof Response), "expected page data")
-	return value as T
+	assert.notEqual((value as { kind?: string }).kind, "preview", "expected page data")
+	return value as Exclude<T, { kind: "preview" }>
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -120,6 +121,54 @@ test("the share link sends each visitor to the page of their own country, and no
 	assert.equal(answer.status, 302)
 	assert.equal(answer.headers.get("Location"), "/new/de/netflix")
 	assert.equal(answer.headers.get("Cache-Control"), "private, no-store")
+})
+
+const SLACKBOT = "Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)"
+const preview = (path: string) =>
+	new Request(`https://goodwatch.app${path}`, {
+		headers: { "User-Agent": SLACKBOT },
+	})
+
+test("a link preview of the share link gets the link's own page, which names where it leads", async () => {
+	const answer = await loadWherePage(
+		preview("/new/netflix"),
+		"netflix",
+		deps({ viewer: async () => ({ country: "DE", member: null }) }),
+	)
+	assert.deepEqual(answer, {
+		kind: "preview",
+		path: "/new/netflix",
+		to: "/new/de/netflix",
+		copy: {
+			heading: "New on Netflix",
+			title: "New on Netflix: the latest movies and shows | GoodWatch",
+			description:
+				"What's new on Netflix in your country, with GoodWatch scores. Updated daily.",
+		},
+	})
+})
+
+test("a link preview of /new gets the link's own page; a search crawler is still sent on", async () => {
+	const answer = await loadMemberPage(
+		preview("/new"),
+		deps({ viewer: async () => ({ country: "DE", member: null }) }),
+	)
+	assert.ok(!(answer instanceof Response))
+	assert.equal(answer.kind, "preview")
+	assert.equal(answer.path, "/new")
+	assert.equal(answer.to, "/new/de")
+	assert.equal(answer.copy.title, "New on your services | GoodWatch")
+	const crawler = await loadMemberPage(
+		new Request("https://goodwatch.app/new", {
+			headers: {
+				"User-Agent":
+					"Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+			},
+		}),
+		deps({ viewer: async () => ({ country: "DE", member: null }) }),
+	)
+	assert.ok(crawler instanceof Response)
+	assert.equal(crawler.status, 302)
 })
 
 test("a member's share link follows their saved country", async () => {

@@ -109,6 +109,17 @@ async function inlineImages(content: OgContent): Promise<OgContent> {
 								: visual,
 			}
 		}
+		case "new-services": {
+			const inline = async <T extends { logo: string | null }>(logo: T) => ({
+				...logo,
+				logo: await toDataUri(logo.logo),
+			})
+			return {
+				...content,
+				brand: content.brand && (await inline(content.brand)),
+				logos: await Promise.all(content.logos.map(inline)),
+			}
+		}
 		case "person":
 			return { ...content, photo: await toDataUri(content.photo) }
 		default:

@@ -8,7 +8,12 @@ import {
 	type WatchedType,
 	getDiscoverResults,
 } from "~/server/discover.server"
+import {
+	canonicalNewPath,
+	newServicesContent,
+} from "~/server/og-image/new-services-content.server"
 import { profileCardContent } from "~/server/og-image/profile-content.server"
+import { newDeps } from "~/server/new-on-services.server"
 import { getPersonProfile } from "~/server/person.server"
 import { moods } from "~/ui/explore/category/moods"
 import {
@@ -115,6 +120,7 @@ export function canonicalOgPath(path: string): string | null {
 		if (tab && !PROFILE_TABS.has(tab)) return null
 		return tab ? `/u/${handle}/${tab}` : `/u/${handle}`
 	}
+	if (first === "new") return canonicalNewPath(segments)
 	if (first === "discover") return "/discover"
 	if (first === "for-you" && segments.length === 1) return "/for-you"
 	if (first === "explorer" && segments.length === 1) return "/explorer"
@@ -486,5 +492,6 @@ export async function resolveOgContent(
 	if (first === "person") return personContent(Number(second))
 	if (first === "u") return profileCardContent(second, third, fourth)
 	if (first === "movies" || first === "shows") return browseContent(path)
+	if (first === "new") return newServicesContent(path, newDeps)
 	return staticPageContent(path)
 }

@@ -27,12 +27,14 @@ import {
 	readWhere,
 	robotsFor,
 	servicePath,
+	shareCopy,
 	sharePath,
 	shareTarget,
 	tallyWords,
 	utcDay,
 	windowStart,
 } from "~/domain/new-on-services"
+import { cardClient } from "~/server/og-image/clients"
 import { PRIVATE_CACHE_CONTROL } from "~/utils/auth-cookie"
 import { titlePath } from "~/utils/helpers"
 import { lastGood } from "~/utils/last-good"
@@ -190,6 +192,28 @@ const moved = (to: string) => redirect(to, 301)
 // Depends on who asks: never stored.
 const sendTo = (to: string) =>
 	redirect(to, { status: 302, headers: { "Cache-Control": PRIVATE_CACHE_CONTROL } })
+
+/**
+ * /new and a share link (/new/netflix) send each visitor elsewhere, so a link preview would show the card of the page
+ * it lands on. A link-preview client (Slack, WhatsApp, X, ...) gets the link's own page instead: its head names the
+ * link's own card. The page sends anyone who opens it on, since some in-app browsers send such a User-Agent too.
+ */
+export interface NewPreviewData {
+	kind: "preview"
+	path: string
+	/** Where the link sends this reader. */
+	to: string
+	copy: { heading: string; title: string; description: string }
+}
+
+const isLinkPreview = (request: Request) =>
+	cardClient(request.headers.get("user-agent")) === "preview"
+
+const previewOf = (
+	path: string,
+	to: string,
+	copy: NewPreviewData["copy"],
+): NewPreviewData => ({ kind: "preview", path, to, copy })
 
 const withoutBackdrop = ({ backdrop_path, ...title }: ArrivalTitle): NewTitle =>
 	title
@@ -577,7 +601,7 @@ export async function loadWherePage(
 	request: Request,
 	segment: string,
 	deps: NewDeps,
-): Promise<NewPageData | Response> {
+): Promise<NewPageData | NewPreviewData | Response> {
 	const now = deps.now()
 	const countries = await deps.countries()
 	const where = readWhere(segment, new Set(countries.map(({ code }) => code)))
@@ -585,7 +609,10 @@ export async function loadWherePage(
 	if (where.kind === "redirect") return moved(where.to)
 	if (where.kind === "share") {
 		const viewer = await deps.viewer(request)
-		return sendTo(shareTarget(where.brand, viewer.country))
+		const to = shareTarget(where.brand, viewer.country)
+		return isLinkPreview(request)
+			? previewOf(sharePath(where.brand), to, shareCopy(where.brand.name))
+			: sendTo(to)
 	}
 	const [arrivals, meta, links, viewer] = await Promise.all([
 		deps.country({ country: where.country, now }),
@@ -654,9 +681,21 @@ export async function loadServicePage(
 export async function loadMemberPage(
 	request: Request,
 	deps: NewDeps,
-): Promise<NewPageData | Response> {
+): Promise<NewPageData | NewPreviewData | Response> {
 	const viewer = await deps.viewer(request)
-	if (!viewer.member) return sendTo(countryPath(viewer.country))
+	if (!viewer.member) {
+		const to = countryPath(viewer.country)
+		if (!isLinkPreview(request)) return sendTo(to)
+		const { heading, title, description } = pageCopy({
+			kind: "member",
+			brand: null,
+			country: viewer.country,
+			countryName: viewer.country,
+			tally: "",
+			count: 0,
+		})
+		return previewOf("/new", to, { heading, title, description })
+	}
 	const now = deps.now()
 	const { services } = viewer.member
 	const country = viewer.member.savedCountry ?? viewer.country

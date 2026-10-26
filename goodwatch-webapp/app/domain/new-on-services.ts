@@ -419,6 +419,19 @@ export const robotsFor = (kind: PageKind, count: number) =>
 		? ("noindex, follow" as const)
 		: ("index, follow" as const)
 
+/** The head of a share link (/new/netflix) for a link preview: the service, in whichever country the reader is. */
+export function shareCopy(brand: string): {
+	heading: string
+	title: string
+	description: string
+} {
+	return {
+		heading: `New on ${brand}`,
+		title: `New on ${brand}: the latest movies and shows | GoodWatch`,
+		description: `What's new on ${brand} in your country, with GoodWatch scores. Updated daily.`,
+	}
+}
+
 export function pageCopy({
 	kind,
 	brand,

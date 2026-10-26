@@ -235,6 +235,21 @@ export const FOR_YOU_CARD_COPY = {
 } as const
 
 // The member profile cards (/u/<handle> and its tabs). No counts and no viewer type: lines use shares and words.
+// The cards of the "New on your services" pages (/new): a service in a country, a country, the member's own page, and
+// the share link that sends each viewer to their own country.
+export const NEW_SERVICES_CARD_COPY = {
+	service: (brand: string) => `New on ${brand}`,
+	country: "New on streaming",
+	member: "New on your services",
+	shareTag: "In your country",
+	tally: (count: number) =>
+		count === 1 ? "1 new movie or show" : `${count.toLocaleString("en-US")} new movies and shows`,
+	// The member card's wall marks a few services as the viewer's own, the rest step back.
+	memberPicks: ["netflix", "hulu", "paramount-plus"],
+	// The share card's disc: a few countries' flags stand for "yours, wherever you are".
+	shareFlags: ["US", "DE", "GB", "JP"],
+} as const
+
 export const PROFILE_CARD_COPY = {
 	/** Under the picks on the main card: the question a visitor answers by opening the profile. */
 	teaser: "How well does your taste match?",
