@@ -48,44 +48,47 @@ assert len(features) == 12, len(features)
 
 def clip_img(f, width="100%"):
     path = clip(FEATURE_CLIP[f["key"]])
-    return f'<img src="{path}" alt="{f["title"]}: animated clip from the GoodWatch intro" width="{width}">' if path else ""
+    return f'<img src="{path}" alt="{f["title"]}: a scene from the GoodWatch intro" width="{width}">' if path else ""
 
 
-# A: roaming spotlight banner, one highlight reel under "Why GoodWatch", grid unchanged
-a = banner_re.sub(banner("roam", "GoodWatch: find what to watch next. A spotlight moves across a slowly drifting wall of posters."), base)
-reel = clip("reel")
-if reel:
-    a = a.replace(
-        "\n<table>\n<tr>",
-        f'\n<p align="center"><a href="https://goodwatch.app/how-it-works"><img src="{reel}" alt="A short reel from the GoodWatch intro film" width="100%"></a></p>\n\n<table>\n<tr>',
-        1,
-    )
+# Round 2: banner A (calmer), features as sections instead of a table. Each clip rests on a still and moves once
+# per 16 s cycle; neighbors take turns (clips/record.mjs PULSE). The highlight reel is gone: too busy.
+WIDTH = {"score": "62%", "explorer": "60%", "ai": "72%"}  # clips with a lot of empty space get less room
+GAP = "\n<br>\n\n"
 
-# B: stage light banner, every grid cell starts with its clip
-b = banner_re.sub(banner("stage", "GoodWatch: find what to watch next. A stage light swings over a slowly drifting wall of posters."), base)
-rows = []
-for i in range(0, len(features), 2):
-    tds = []
-    for f in features[i : i + 2]:
-        tds.append(f'<td width="50%" valign="top">\n\n{clip_img(f)}<br>\n{f["badge"]}<br>\n**{f["title"]}**<br>\n{f["text"]}\n\n</td>')
-    rows.append("<tr>\n" + "\n".join(tds) + "\n</tr>")
-b = grid_re.sub(lambda _: "<table>\n" + "\n".join(rows) + "\n</table>", b)
 
-# C: sign-up card banner, features with a clip become alternating rows; the rest stay a compact list
-c = banner_re.sub(banner("card", "GoodWatch: Somewhere in here is your next favorite. A spotlight moves across a drifting wall of posters."), base)
-with_clip = [f for f in features if clip(FEATURE_CLIP[f["key"]])]
-without = [f for f in features if not clip(FEATURE_CLIP[f["key"]])]
-rows = []
-for i, f in enumerate(with_clip):
-    pic = f'<td width="58%" valign="middle">{clip_img(f)}</td>'
-    text = f'<td valign="middle">\n\n{f["badge"]}<br>\n<h3>{f["title"]}</h3>\n{f["text"]}\n\n</td>'
-    rows.append("<tr>\n" + (pic + "\n" + text if i % 2 == 0 else text + "\n" + pic) + "\n</tr>")
-more = ""
-if without:
-    more = "\n\n" + "\n".join(f'- {f["badge"]} **{f["title"]}.** {f["text"]}' for f in without)
-c = grid_re.sub(lambda _: "<table>\n" + "\n".join(rows) + "\n</table>" + more, c)
+def head(f, align="center"):
+    return f'<p align="{align}">{f["badge"]}</p>\n<h3 align="{align}">{f["title"]}</h3>\n<p align="{align}">{f["text"]}</p>'
 
-for name, text, key in (("README.md", a, "A"), ("README-B.md", b, "B"), ("README-C.md", c, "C")):
-    text = switcher(key) + text
-    open(name, "w").write(text)
+
+def stacked(f):
+    pic = clip_img(f, WIDTH.get(FEATURE_CLIP[f["key"]], "86%"))
+    return head(f) + (f'\n<p align="center">{pic}</p>' if pic else "")
+
+
+def sided(f, i):
+    pic = clip_img(f, "52%")
+    if not pic:
+        return head(f)
+    side = "right" if i % 2 else "left"
+    pic = pic.replace("<img ", f'<img align="{side}" hspace="18" ', 1)
+    return f'{pic}\n\n<br>\n\n{f["badge"]}\n<h3>{f["title"]}</h3>\n{f["text"]}\n<br clear="{side}">'
+
+
+banner_a = banner("roam", "GoodWatch: find what to watch next. A soft spotlight moves across a slowly drifting wall of posters.")
+a = banner_re.sub(banner_a, base)
+a = grid_re.sub(lambda _: GAP.join(stacked(f) for f in features), a)
+b = banner_re.sub(banner_a, base)
+b = grid_re.sub(lambda _: GAP.join(sided(f, i) for i, f in enumerate(features)), b)
+
+
+def switcher(current):
+    links = {"A": "README.md", "B": "README-B.md"}
+    names = {"A": "stacked sections", "B": "alternating sides"}
+    parts = [f"**{k}: {names[k]}**" if k == current else f"[{k}: {names[k]}]({links[k]})" for k in links]
+    return "> [!NOTE]\n> README animation prototype, round 2. Layouts: " + " · ".join(parts) + "\n\n"
+
+
+for name, text, key in (("README.md", a, "A"), ("README-B.md", b, "B")):
+    open(name, "w").write(switcher(key) + text)
     print("wrote", name)

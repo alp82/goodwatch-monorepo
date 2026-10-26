@@ -12,8 +12,9 @@
   .layer { position: absolute; inset: 0; }
   .wall { position: absolute; left: 640px; top: 200px; width: 0; height: 0; }
   .wall img { position: absolute; border-radius: 7px; object-fit: cover; display: block; }
-  .grey img { filter: grayscale(1) brightness(.32) contrast(1.2); }
-  .color img { filter: saturate(1.05) brightness(.92); }
+  .grey img { filter: grayscale(1) brightness(.2) contrast(1.1); }
+  .color img { filter: saturate(.6) brightness(.46); }
+  .color { opacity: .8; }
   .glow { position: absolute; inset: 0; mix-blend-mode: screen; }
   .vignette {
     position: absolute; inset: 0;
@@ -65,7 +66,7 @@
   const MODE = new URLSearchParams(location.search).get("v") || "roam"
   const V = MODE === "card" ? "roam" : MODE
   if (MODE === "card") document.getElementById("card").classList.add("cardmode")
-  const T = Number(new URLSearchParams(location.search).get("T") || 14)
+  const T = Number(new URLSearchParams(location.search).get("T") || 40)
   // Well-known titles scored 80+ on GoodWatch (TMDB poster paths), same pool as banner.html
   const posters = [
     "anFx9aTOOYqgS3v7x3R84Kz67ly", "wa3ZQE9kLnqwN3vQ0NNjg1NPsCa", "eKfVzzEazSIjJMrw9ADa2x8ksLz", "iOb2fjXLbpJgyQXe46n1WtGCnaa",
@@ -79,8 +80,8 @@
 
   const TW = 100, TH = 150, GAP = 12, PX = TW + GAP, PY = TH + GAP
   const ROT = -7 * Math.PI / 180
-  const DRIFT = [-16, -7] // px per second, in wall coordinates
-  const ENTER = 105, EXIT = 150, DEAL = 0.75
+  const DRIFT = [-5, -2.2] // px per second, in wall coordinates
+  const ENTER = 105, EXIT = 150, DEAL = 1.6
 
   const hash = (r, c) => { let h = (r * 73856093) ^ (c * 19349663); h = (h ^ (h >>> 13)) * 1274126177; return Math.abs(h ^ (h >>> 16)) }
   const state = new Map() // "r,c" -> { flips, at, dir, inside }
@@ -92,7 +93,7 @@
       const th = 0.42 * Math.sin(a)
       return { x: 640 + Math.tan(th) * 520, y: 300, th }
     }
-    return { x: 640 + 500 * Math.sin(a), y: 200 + 115 * Math.sin(2 * a + 0.6) }
+    return { x: 640 + 440 * Math.sin(a), y: 200 + 90 * Math.sin(2 * a + 0.6) }
   }
 
   function toCard(wx, wy) {
@@ -145,7 +146,7 @@
         if (p >= 0 && p < 1 && st.flips > 0) {
           const e = ease(p)
           put("color", posterOf(r, c, st.flips - 1), wx, wy)
-          put("color", now, wx, wy, `opacity:${e};transform:translate(${-st.dir[0] * 14 * (1 - e)}%,${-st.dir[1] * 14 * (1 - e)}%) scale(${1.12 - 0.12 * e});z-index:1`)
+          put("color", now, wx, wy, `opacity:${e};transform:translate(${-st.dir[0] * 5 * (1 - e)}%,${-st.dir[1] * 5 * (1 - e)}%) scale(${1.04 - 0.04 * e});z-index:1`)
         } else put("color", now, wx, wy)
       }
     }
@@ -162,9 +163,9 @@
       glow.style.background = `radial-gradient(ellipse 230px 140px at ${s.x}px ${s.y}px, rgba(251,191,36,.20), transparent 100%), ${beam}`
       glow.style.maskImage = glow.style.webkitMaskImage = `linear-gradient(#000 0%, #000 70%, transparent 100%)`
     } else {
-      const mask = `radial-gradient(circle 230px at ${s.x}px ${s.y}px, #000 30%, transparent 100%)`
+      const mask = `radial-gradient(circle 220px at ${s.x}px ${s.y}px, #000 5%, transparent 100%)`
       cl.style.maskImage = cl.style.webkitMaskImage = mask
-      glow.style.background = `radial-gradient(circle 260px at ${s.x}px ${s.y}px, rgba(251,191,36,.13), transparent 100%), radial-gradient(ellipse 34% 62% at 50% 0%, rgba(251,191,36,.16), transparent 100%)`
+      glow.style.background = `radial-gradient(circle 260px at ${s.x}px ${s.y}px, rgba(251,191,36,.05), transparent 100%), radial-gradient(ellipse 34% 62% at 50% 0%, rgba(251,191,36,.09), transparent 100%)`
     }
     const au = document.getElementById("aurora")
     if (au) au.style.transform = `translate(-50%, -50%) rotate(${(360 * t) / T}deg)`

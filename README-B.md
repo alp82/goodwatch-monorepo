@@ -1,9 +1,9 @@
 > [!NOTE]
-> README animation prototype. Variants: [A: spotlight banner + reel](README.md) · **B: stage light + clips in the grid** · [C: sign-up card + feature rows](README-C.md)
+> README animation prototype, round 2. Layouts: [A: stacked sections](README.md) · **B: alternating sides**
 
 <div align="center">
 
-<a href="https://goodwatch.app"><picture><source media="(prefers-reduced-motion: reduce)" srcset=".github/readme/banner.webp"><img src=".github/readme/banner-stage.avif" alt="GoodWatch: find what to watch next. A stage light swings over a slowly drifting wall of posters." width="100%"></picture></a>
+<a href="https://goodwatch.app"><picture><source media="(prefers-reduced-motion: reduce)" srcset=".github/readme/banner.webp"><img src=".github/readme/banner-roam.avif" alt="GoodWatch: find what to watch next. A soft spotlight moves across a slowly drifting wall of posters." width="100%"></picture></a>
 
 <p>
   <a href="https://goodwatch.app"><img src="https://shieldcn.dev/badge/open-goodwatch.app-fbbf24.svg?logo=lu:Globe" alt="Open goodwatch.app"></a>
@@ -23,116 +23,119 @@
 
 You have more services than ever and still spend the evening scrolling. GoodWatch brings 1.5 million movies and shows, their scores, and 325 streaming services in 139 countries into one place. Then it narrows all of that down to the few titles that fit your taste and your evening.
 
-<table>
-<tr>
-<td width="50%" valign="top">
-
-<img src=".github/readme/clips/score.avif" alt="One score you can trust: animated clip from the GoodWatch intro" width="100%"><br>
-<img src="https://shieldcn.dev/badge/Score-fbbf24.svg?logo=lu:Star&size=xs" alt="Score"><br>
-**One score you can trust**<br>
-IMDb, Rotten Tomatoes, Metacritic, and TMDB in one number. Critics count half, audiences the other half.
-
-</td>
-<td width="50%" valign="top">
-
-<img src=".github/readme/clips/streaming.avif" alt="Where it streams: animated clip from the GoodWatch intro" width="100%"><br>
-<img src="https://shieldcn.dev/badge/Streaming-fbbf24.svg?logo=lu:Tv&size=xs" alt="Streaming"><br>
-**Where it streams**<br>
-325 services in 139 countries. See which of your services has it tonight.
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-<img src=".github/readme/clips/for-you.avif" alt="Picked for your taste: animated clip from the GoodWatch intro" width="100%"><br>
-<img src="https://shieldcn.dev/badge/For%20you-fbbf24.svg?logo=lu:Sparkles&size=xs" alt="For you"><br>
-**Picked for your taste**<br>
-Rate titles you loved. Your match shows how well everything else fits, and 90% means your top 1%.
-
-</td>
-<td width="50%" valign="top">
-
-<img src=".github/readme/clips/taste.avif" alt="Your taste fingerprint: animated clip from the GoodWatch intro" width="100%"><br>
-<img src="https://shieldcn.dev/badge/Your%20taste-fbbf24.svg?logo=lu:Fingerprint&size=xs" alt="Your taste"><br>
-**Your taste fingerprint**<br>
-Every title is analyzed across 74 attributes. Your ratings draw your fingerprint, and you can tune it for more laughs or more tension.
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-<img src=".github/readme/clips/search.avif" alt="Search by mood: animated clip from the GoodWatch intro" width="100%"><br>
-<img src="https://shieldcn.dev/badge/Search-fbbf24.svg?logo=lu:Search&size=xs" alt="Search"><br>
-**Search by mood**<br>
-Type the evening you want, such as "cozy mystery with a twist", and get the titles that fit it.
-
-</td>
-<td width="50%" valign="top">
-
-<img src=".github/readme/clips/discover.avif" alt="From everything to tonight: animated clip from the GoodWatch intro" width="100%"><br>
-<img src="https://shieldcn.dev/badge/Discover-fbbf24.svg?logo=lu:ListFilter&size=xs" alt="Discover"><br>
-**From everything to tonight**<br>
-Narrow 1.5 million titles down to a few: on your services, not seen yet, the right mood, and a high score.
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-<img src=".github/readme/clips/explorer.avif" alt="A map of how movies feel: animated clip from the GoodWatch intro" width="100%"><br>
-<img src="https://shieldcn.dev/badge/Explorer-fbbf24.svg?logo=lu:Map&size=xs" alt="Explorer"><br>
-**A map of how movies feel**<br>
-Browse islands of titles that feel alike. Mix two titles to see what they share.
-
-</td>
-<td width="50%" valign="top">
+<img align="left" hspace="18" src=".github/readme/clips/score.avif" alt="One score you can trust: a scene from the GoodWatch intro" width="52%">
 
 <br>
-<img src="https://shieldcn.dev/badge/Episodes-fbbf24.svg?logo=lu:LayoutGrid&size=xs" alt="Episodes"><br>
-**Every episode at a glance**<br>
-A ratings grid for every season shows where a show peaks and where it drops off.
 
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
+<img src="https://shieldcn.dev/badge/Score-fbbf24.svg?logo=lu:Star&size=xs" alt="Score">
+<h3>One score you can trust</h3>
+IMDb, Rotten Tomatoes, Metacritic, and TMDB in one number. Critics count half, audiences the other half.
+<br clear="left">
+<br>
 
-<img src=".github/readme/clips/tracking.avif" alt="It keeps track for you: animated clip from the GoodWatch intro" width="100%"><br>
-<img src="https://shieldcn.dev/badge/Tracking-fbbf24.svg?logo=lu:ListChecks&size=xs" alt="Tracking"><br>
-**It keeps track for you**<br>
+<img align="right" hspace="18" src=".github/readme/clips/streaming.avif" alt="Where it streams: a scene from the GoodWatch intro" width="52%">
+
+<br>
+
+<img src="https://shieldcn.dev/badge/Streaming-fbbf24.svg?logo=lu:Tv&size=xs" alt="Streaming">
+<h3>Where it streams</h3>
+325 services in 139 countries. See which of your services has it tonight.
+<br clear="right">
+<br>
+
+<img align="left" hspace="18" src=".github/readme/clips/for-you.avif" alt="Picked for your taste: a scene from the GoodWatch intro" width="52%">
+
+<br>
+
+<img src="https://shieldcn.dev/badge/For%20you-fbbf24.svg?logo=lu:Sparkles&size=xs" alt="For you">
+<h3>Picked for your taste</h3>
+Rate titles you loved. Your match shows how well everything else fits, and 90% means your top 1%.
+<br clear="left">
+<br>
+
+<img align="right" hspace="18" src=".github/readme/clips/taste.avif" alt="Your taste fingerprint: a scene from the GoodWatch intro" width="52%">
+
+<br>
+
+<img src="https://shieldcn.dev/badge/Your%20taste-fbbf24.svg?logo=lu:Fingerprint&size=xs" alt="Your taste">
+<h3>Your taste fingerprint</h3>
+Every title is analyzed across 74 attributes. Your ratings draw your fingerprint, and you can tune it for more laughs or more tension.
+<br clear="right">
+<br>
+
+<img align="left" hspace="18" src=".github/readme/clips/search.avif" alt="Search by mood: a scene from the GoodWatch intro" width="52%">
+
+<br>
+
+<img src="https://shieldcn.dev/badge/Search-fbbf24.svg?logo=lu:Search&size=xs" alt="Search">
+<h3>Search by mood</h3>
+Type the evening you want, such as "cozy mystery with a twist", and get the titles that fit it.
+<br clear="left">
+<br>
+
+<img align="right" hspace="18" src=".github/readme/clips/discover.avif" alt="From everything to tonight: a scene from the GoodWatch intro" width="52%">
+
+<br>
+
+<img src="https://shieldcn.dev/badge/Discover-fbbf24.svg?logo=lu:ListFilter&size=xs" alt="Discover">
+<h3>From everything to tonight</h3>
+Narrow 1.5 million titles down to a few: on your services, not seen yet, the right mood, and a high score.
+<br clear="right">
+<br>
+
+<img align="left" hspace="18" src=".github/readme/clips/explorer.avif" alt="A map of how movies feel: a scene from the GoodWatch intro" width="52%">
+
+<br>
+
+<img src="https://shieldcn.dev/badge/Explorer-fbbf24.svg?logo=lu:Map&size=xs" alt="Explorer">
+<h3>A map of how movies feel</h3>
+Browse islands of titles that feel alike. Mix two titles to see what they share.
+<br clear="left">
+<br>
+
+<p align="center"><img src="https://shieldcn.dev/badge/Episodes-fbbf24.svg?logo=lu:LayoutGrid&size=xs" alt="Episodes"></p>
+<h3 align="center">Every episode at a glance</h3>
+<p align="center">A ratings grid for every season shows where a show peaks and where it drops off.</p>
+<br>
+
+<img align="left" hspace="18" src=".github/readme/clips/tracking.avif" alt="It keeps track for you: a scene from the GoodWatch intro" width="52%">
+
+<br>
+
+<img src="https://shieldcn.dev/badge/Tracking-fbbf24.svg?logo=lu:ListChecks&size=xs" alt="Tracking">
+<h3>It keeps track for you</h3>
 Your Wishlist and your shows in one place, with a heads-up when a title lands on one of your services.
+<br clear="left">
+<br>
 
-</td>
-<td width="50%" valign="top">
+<img align="right" hspace="18" src=".github/readme/clips/imports.avif" alt="Bring your ratings: a scene from the GoodWatch intro" width="52%">
 
-<img src=".github/readme/clips/imports.avif" alt="Bring your ratings: animated clip from the GoodWatch intro" width="100%"><br>
-<img src="https://shieldcn.dev/badge/Imports-fbbf24.svg?logo=lu:Download&size=xs" alt="Imports"><br>
-**Bring your ratings**<br>
+<br>
+
+<img src="https://shieldcn.dev/badge/Imports-fbbf24.svg?logo=lu:Download&size=xs" alt="Imports">
+<h3>Bring your ratings</h3>
 Import from IMDb, Letterboxd, Trakt, Plex, and more, so your taste is ready on day one.
+<br clear="right">
+<br>
 
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
+<img align="left" hspace="18" src=".github/readme/clips/ai.avif" alt="Use with AI: a scene from the GoodWatch intro" width="52%">
 
-<img src=".github/readme/clips/ai.avif" alt="Use with AI: animated clip from the GoodWatch intro" width="100%"><br>
-<img src="https://shieldcn.dev/badge/AI%20apps-fbbf24.svg?logo=lu:Bot&size=xs" alt="AI apps"><br>
-**Use with AI**<br>
+<br>
+
+<img src="https://shieldcn.dev/badge/AI%20apps-fbbf24.svg?logo=lu:Bot&size=xs" alt="AI apps">
+<h3>Use with AI</h3>
 Ask ChatGPT, Claude, and other AI apps what to start tonight, compare scores, or log the episode you just watched.
+<br clear="left">
+<br>
 
-</td>
-<td width="50%" valign="top">
+<img align="right" hspace="18" src=".github/readme/clips/discord.avif" alt="Discord bot: a scene from the GoodWatch intro" width="52%">
 
-<img src=".github/readme/clips/discord.avif" alt="Discord bot: animated clip from the GoodWatch intro" width="100%"><br>
-<img src="https://shieldcn.dev/badge/Discord-fbbf24.svg?logo=discord&size=xs" alt="Discord"><br>
-**Discord bot**<br>
+<br>
+
+<img src="https://shieldcn.dev/badge/Discord-fbbf24.svg?logo=discord&size=xs" alt="Discord">
+<h3>Discord bot</h3>
 Type `/watch` for a pick, its score, and where it streams. Let everyone vote on what to watch together.
-
-</td>
-</tr>
-</table>
+<br clear="right">
 
 <p align="center"><a href="https://goodwatch.app/how-it-works"><b>See how it works →</b></a></p>
 

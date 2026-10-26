@@ -350,13 +350,73 @@ function encodeReel({ name, width, fps, quality, parts }) {
 	console.log(`${name}.webp  ${(fs.statSync(out).size / 1024).toFixed(0)} KB  ${(length - xf).toFixed(1)}s`)
 }
 
+// PROTOTYPE "pulse" cut: each clip rests on a still and plays only its essence once per CYCLE s. Slot "a" moves early
+// in the cycle and slot "b" half a cycle later, so neighboring sections in the README take turns. `at`/`len` are in
+// the encoded clip's time (the contact sheets), still = the essence's last frame. `still: true` is a single picture.
+const CYCLE = 16
+const PULSE_FPS = 20
+const LEAD = 0.5 // crossfade from the still into the essence's first frame
+const PULSE = [
+	{ name: "score", at: 0.3, len: 3.4, slot: "a" },
+	{ name: "streaming", at: 0.3, len: 2.6, slot: "b" },
+	{ name: "for-you", at: 0.7, len: 3.2, slot: "a" },
+	{ name: "taste", at: 2.9, len: 2.4, slot: "b" },
+	{ name: "search", at: 0.0, len: 3.6, slot: "a" },
+	{ name: "discover", at: 2.6, len: 3.1, slot: "b" },
+	{ name: "explorer", at: 1.3, still: true },
+	{ name: "tracking", at: 0.3, len: 3.7, slot: "a" },
+	{ name: "imports", at: 0.3, len: 4.5, slot: "b" },
+	{ name: "ai", at: 0.0, len: 2.05, slot: "a" },
+	{ name: "discord", at: 1.0, len: 3.6, slot: "b" },
+]
+
+function encodePulse({ name, at, len = 0, slot, still }) {
+	const clip = CLIPS.find((c) => c.name === name)
+	const raw = clip.from + (clip.fade ?? 0.6) + at
+	const dir = path.join(RAW, "pulse", name)
+	fs.rmSync(dir, { recursive: true, force: true })
+	fs.mkdirSync(dir, { recursive: true })
+	const { list, crop } = concatList(clip.src, raw, Math.max(len, 0.2) + 0.1)
+	const [w, h, x, y] = crop
+	ffmpeg(["-f", "concat", "-safe", "0", "-i", list, "-vf", `crop=${w}:${h}:${x}:${y},scale=${clip.width}:-2:flags=lanczos,fps=${PULSE_FPS}`, path.join(dir, "e%04d.png")])
+	const essence = fs.readdirSync(dir).filter((f) => f.startsWith("e")).sort().slice(0, still ? 1 : Math.round(len * PULSE_FPS))
+	const last = path.join(dir, essence.at(-1))
+	const out = path.join(HERE, `${name}.avif`)
+	if (still) {
+		ffmpeg(["-i", last, "-c:v", "libaom-av1", "-crf", "30", "-still-picture", "1", "-pix_fmt", "yuv420p", out])
+		console.log(`${name}.avif  ${(fs.statSync(out).size / 1024).toFixed(0)} KB  still`)
+		return
+	}
+	// The cycle: still, LEAD crossfade into the first essence frame, the essence, then still again.
+	const total = CYCLE * PULSE_FPS
+	const start = Math.round((slot === "a" ? 1 : 1 + CYCLE / 2) * PULSE_FPS)
+	const lead = Math.round(LEAD * PULSE_FPS)
+	const frames = []
+	for (let i = 0; i < total; i++) {
+		const k = i - start
+		if (k >= 0 && k < essence.length) frames.push(path.join(dir, essence[k]))
+		else if (k < 0 && k >= -lead) {
+			const blend = path.join(dir, `x${String(k + lead).padStart(3, "0")}.png`)
+			const wgt = Math.round(((k + lead + 1) / (lead + 1)) * 100)
+			execFileSync("magick", [last, path.join(dir, essence[0]), "-compose", "blend", "-define", `compose:args=${wgt}`, "-composite", blend])
+			frames.push(blend)
+		} else frames.push(last)
+	}
+	const seq = path.join(dir, "seq")
+	fs.mkdirSync(seq)
+	frames.forEach((f, i) => fs.copyFileSync(f, path.join(seq, `${String(i).padStart(4, "0")}.png`)))
+	ffmpeg(["-framerate", String(PULSE_FPS), "-i", path.join(seq, "%04d.png"), "-c:v", "libaom-av1", "-crf", "34", "-cpu-used", "4", "-pix_fmt", "yuv420p", "-f", "avif", "-loop", "0", out])
+	console.log(`${name}.avif  ${(fs.statSync(out).size / 1024).toFixed(0)} KB  moves ${len}s of ${CYCLE}s (slot ${slot})`)
+}
+
 const args = process.argv.slice(2)
-const phases = args.filter((a) => ["intro", "hiw", "encode"].includes(a))
+const phases = args.filter((a) => ["intro", "hiw", "encode", "pulse"].includes(a))
 const only = args.filter((a) => !phases.includes(a))
-const run = (p) => phases.length === 0 || phases.includes(p)
+const run = (p) => (phases.length === 0 && p !== "pulse") || phases.includes(p)
 if (run("intro")) await recordIntro(only)
 if (run("hiw")) await recordHiw(only)
 if (run("encode")) {
 	for (const clip of CLIPS) if (!only.length || only.includes(clip.name)) encodeClip(clip)
 	if (!only.length || only.includes("reel")) encodeReel(REEL)
 }
+if (phases.includes("pulse")) for (const p of PULSE) if (!only.length || only.includes(p.name)) encodePulse(p)
