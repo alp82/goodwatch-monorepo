@@ -31,6 +31,16 @@ const show = (actors: { id: number; name: string }[]) =>
 				{ id: 1, name: "Matt Duffer" },
 			],
 		},
+		crew: {
+			directors: [],
+			writers: [],
+			composers: [],
+			producers: [
+				{ id: 1, name: "Matt Duffer" },
+				{ id: 2, name: "Ross Duffer" },
+				{ id: 1, name: "Matt Duffer" },
+			],
+		},
 	}) as never
 
 test("a person with two credits is named once, at the first position", () => {
@@ -68,6 +78,17 @@ test("the title's structured data names each actor and producer once", () => {
 	assert.equal(jsonLd.producer.length, 2)
 })
 
+test("show JSON-LD uses the visible Producer selection rather than executive producers", () => {
+	const media = show([]) as { crew: { producers: unknown[] } }
+	media.crew.producers = [{ id: 9, name: "Credited producer" }]
+	const jsonLd = buildJsonLdDetail(page, media as never) as {
+		producer: { name: string }[]
+	}
+	assert.deepEqual(jsonLd.producer.map((person) => person.name), [
+		"Credited producer",
+	])
+})
+
 test("a title without actors has no actor property", () => {
 	const jsonLd = buildJsonLdDetail(page, show([])) as { actor?: unknown }
 	assert.equal(jsonLd.actor, undefined)
@@ -77,9 +98,11 @@ test("a title's structured data has no null value and no empty list", () => {
 	const bare = show([]) as {
 		details: Record<string, unknown>
 		credits: Record<string, unknown>
+		crew: Record<string, unknown>
 	}
 	Object.assign(bare.details, { genres: [], number_of_seasons: null, number_of_episodes: 0 })
 	bare.credits.executive_producers = []
+	bare.crew.producers = []
 	const json = JSON.stringify(buildJsonLdDetail(page, bare as never))
 	assert.doesNotMatch(json, /null|\[\]/)
 	const parsed = JSON.parse(json)

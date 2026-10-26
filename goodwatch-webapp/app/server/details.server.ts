@@ -5,6 +5,7 @@ import { query } from "~/utils/crate"
 import { CAST_DOCUMENT_SIZE } from "~/utils/title-cast"
 import { castRowsCTEs, selectedCastRows } from "./title-cast-sql"
 import { createTitleDetailsGetters } from "./title-details-cache"
+import { crewPeople, selectedCrewCTEs, type CrewRole } from "./title-crew-sql.ts"
 import {
 	generateMediaFieldAssignments,
 	getFieldsByMediaType,
@@ -180,6 +181,7 @@ const _fetchFromDB = async (
                   SELECT p.tmdb_id AS id, pw.credit_id AS credit_id, p.name AS name, pw.job AS job, pw.department AS department, p.popularity AS popularity, pw.episode_count_total AS episode_count_total
                   FROM worked_on_data pw JOIN people_data p ON pw.person_tmdb_id = p.tmdb_id
                 ),
+                ${selectedCrewCTEs},
 				backdrops AS (
 						SELECT array_agg(obj) as val
 						FROM (
@@ -293,13 +295,12 @@ const _fetchFromDB = async (
                 cast_rows = ${selectedCastRows("top_cast")},
                 crew = {${Object.entries(CREW_ROLES)
 									.map(
-										([key, role]) =>
-											`${key} = ARRAY(SELECT {id = id, credit_id = credit_id, name = name} FROM crew_rows WHERE job = '${role.job}' OR department = '${role.department}' ORDER BY episode_count_total DESC NULLS LAST, popularity DESC NULLS LAST, credit_id ASC LIMIT 3)`,
+										([key]) => `${key} = ${crewPeople(key as CrewRole)}`,
 									)
 									.join(",")}},
                 credits = {
-                  directors = ${creditedCrew("Director", 5)},
-                  composers = ${creditedCrew("Original Music Composer", 5)},
+                  directors = ${crewPeople("directors")},
+                  composers = ${crewPeople("composers")},
                   executive_producers = ${creditedCrew("Executive Producer", 3)}
                 },
                 images = (SELECT val FROM images),

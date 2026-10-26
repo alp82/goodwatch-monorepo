@@ -73,7 +73,7 @@ registerHooks({
 		if (url.endsWith("/media-context.server.ts"))
 			source = `export const resolveMediaContext=async()=>{globalThis.__mediaRolloutTest.live++;return {effectiveContext:{country:'FR',language:'fr'}}}`
 		if (url.endsWith("/title-details-cache.ts"))
-			source = `export const createTitleDetailsGetters=()=>({getDetailsForMovie:async()=>globalThis.__mediaRolloutTest.canonical,getDetailsForShow:async()=>globalThis.__mediaRolloutTest.canonical});export const DETAILS_MISSING_CACHE_NAME='details-missing-v1', DETAILS_MISSING_TTL_SECONDS=60,DETAILS_MOVIE_CACHE_NAME='details-movie-v2',DETAILS_SHOW_CACHE_NAME='details-show-v3',DETAILS_TTL_MINUTES=720,DETAILS_STALE_MINUTES=720`
+			source = `export const createTitleDetailsGetters=()=>({getDetailsForMovie:async()=>globalThis.__mediaRolloutTest.canonical,getDetailsForShow:async()=>globalThis.__mediaRolloutTest.canonical});export const DETAILS_MISSING_CACHE_NAME='details-missing-v1', DETAILS_MISSING_TTL_SECONDS=60,DETAILS_MOVIE_CACHE_NAME='details-movie-v3',DETAILS_SHOW_CACHE_NAME='details-show-v4',DETAILS_TTL_MINUTES=720,DETAILS_STALE_MINUTES=720`
 		return source
 			? { format: "module", source, shortCircuit: true }
 			: next(url, context)

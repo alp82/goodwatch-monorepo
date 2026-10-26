@@ -1,7 +1,13 @@
-/** The job and department of each crew line. A crew member shows when either matches. */
+/** Prefer these jobs; use the department only when none of these jobs is credited. */
 export const CREW_ROLES = {
-	directors: { job: "Director", department: "Directing" },
-	writers: { job: "Writer", department: "Writing" },
-	producers: { job: "Producer", department: "Production" },
-	composers: { job: "Original Music Composer", department: "Sound" },
+	directors: { jobs: ["Director"], department: "Directing" },
+	writers: {
+		jobs: ["Writer", "Screenplay", "Story", "Novel"],
+		department: "Writing",
+	},
+	producers: { jobs: ["Producer"], department: "Production" },
+	composers: {
+		jobs: ["Original Music Composer", "Music"],
+		department: "Sound",
+	},
 } as const
