@@ -12,6 +12,7 @@ import {
 	timeoutSetting,
 	withBackendTimeout,
 } from "../../utils/backend-timeout.ts"
+import { readTmdbCustomLists } from "./tmdb-custom-lists.server.ts"
 import { episodeScoreObservation } from "./episode-rating-observations.server.ts"
 
 /** Only fixed messages cross this boundary: fetch errors and TMDB bodies can contain credentials. */
@@ -394,6 +395,23 @@ export function createTmdbClient(options: {
 						),
 					)
 			}
+			const lists = await readTmdbCustomLists({
+				accountId,
+				request: async (path) => {
+					await sleep(30)
+					return request(path, sessionId)
+				},
+				check: () => {
+					if (Date.now() > deadline)
+						throw new TmdbError(
+							"This TMDB account took too long to read. Please try again.",
+						)
+				},
+				fail: (message) => new TmdbError(message),
+				remaining: IMPORT_MAX_ROWS - observations.length,
+			})
+			observations.push(...lists.observations)
+			warnings.push(...lists.warnings)
 			return { source: "tmdb", observations, warnings }
 		},
 	}

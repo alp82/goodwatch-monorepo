@@ -58,6 +58,7 @@ const { setImportDbForTest } = await import("./store.server.ts")
 const { setImportEffectsForTest } = await import("./apply.server.ts")
 const {
 	previewImport,
+	previewFetchedImport,
 	getImportResult,
 	getImportItems,
 	confirmImport,
@@ -620,4 +621,106 @@ it("Undo preserves a member edit arriving between its read and delete", async ()
 			.customList?.undoReason ?? "",
 		/changed/i,
 	)
+})
+
+it("TMDB fetched lists preview without library changes, Confirm privately, and Undo only the unchanged imported list", async () => {
+	const { createTmdbClient } = await import("./tmdb-client.server.ts")
+	const db = new ImportDb()
+	db.catalog = [
+		{ tmdb_id: 862, title: "Synthetic movie", release_year: 1995 },
+		{ tmdb_id: 43, title: "Synthetic show", release_year: 2020 },
+	]
+	const lists = new ListCrate()
+	setCrateClientForTest(lists)
+	setImportDbForTest(db)
+	setImportEffectsForTest(
+		async () => {},
+		async () => {},
+	)
+	const client = createTmdbClient({
+		apiKey: "synthetic-app",
+		sleep: async () => {},
+		fetch: async (input) => {
+			const path = new URL(String(input)).pathname
+			if (path.endsWith("/lists"))
+				return new Response(
+					JSON.stringify({
+						page: 1,
+						total_pages: 1,
+						total_results: 1,
+						results: [
+							{
+								id: 9,
+								name: "Source TMDB list",
+								description: "TMDB description",
+								item_count: 2,
+							},
+						],
+					}),
+				)
+			if (path === "/3/list/9")
+				return new Response(
+					JSON.stringify({
+						id: 9,
+						name: "Source TMDB list",
+						description: "TMDB description",
+						item_count: 2,
+						page: 1,
+						total_pages: 1,
+						total_results: 2,
+						items: [
+							{ id: 43, media_type: "tv", name: "Synthetic show" },
+							{ id: 862, media_type: "movie", title: "Synthetic movie" },
+						],
+					}),
+				)
+			return new Response(
+				JSON.stringify({
+					page: 1,
+					total_pages: 0,
+					total_results: 0,
+					results: [],
+				}),
+			)
+		},
+	})
+	const parsed = await client.readAccount("42", "synthetic-session")
+	for (const edited of [false, true]) {
+		const preview = await previewFetchedImport("member", "TMDB account", parsed)
+		assert.equal(preview.kinds.list, 1)
+		assert.equal(lists.lists.size, edited ? 1 : 0)
+		await confirmImport("member", preview.id, {
+			kinds: ["list"],
+			conflictChoice: "keep",
+			watchDates: "preserve",
+		})
+		assert.equal((await finish(preview.id)).status, "done")
+		const row = (
+			await getImportItems("member", preview.id, undefined, 0, 100)
+		).items.find((row) => row.kind === "list")!
+		const id = row.customList!.createdId!
+		const saved = await getList(id)
+		assert.equal(saved?.title, "Source TMDB list")
+		assert.equal(saved?.visibility, "private")
+		assert.equal(saved?.collection?.description, "TMDB description")
+		assert.deepEqual(
+			saved?.items.map((item) => [item.media_type, item.tmdb_id]),
+			[
+				["show", 43],
+				["movie", 862],
+			],
+		)
+		if (edited) {
+			lists.lists.get(id)!.title = "Member edit"
+			lists.lists.get(id)!.content_hash = "member-edit"
+			lists.lists.get(id)!._seq_no = 2
+		}
+		await undoImport("member", preview.id)
+		assert.equal(
+			(await getList(id))?.title ?? null,
+			edited ? "Member edit" : null,
+		)
+	}
+	assert.equal(db.wishlist.length, 0)
+	assert.equal(db.scores.length, 0)
 })

@@ -19,8 +19,9 @@ export function TmdbConnectControls({
 				{state ? "Return from TMDB" : "Connect TMDB"}
 			</h3>
 			<p className="text-gray-400">
-				Bring your movie and show ratings, Want to See and favorites into
-				GoodWatch. You will review everything before changing your library.
+				Bring your movie and show ratings, Want to See, favorites, and custom
+				lists into GoodWatch. Imported lists start private. You will review
+				everything before changing your library.
 			</p>
 			<p className="text-sm text-gray-400">
 				TMDB grants read and write access. GoodWatch only reads your lists, then

@@ -90,7 +90,9 @@ The screenshots render the real shared preview and stylesheet with data generate
 by the synthetic service test. The surrounding Imports/Trakt headings are local
 harness markup. No production member, real export or live source account was used.
 
-TMDB and MDBList acquisition remain follow-up work, as scoped in #758. The shared
+MDBList acquisition shipped in e307c02e7. TMDB v3 acquisition is covered by
+[TMDB custom lists](tmdb-custom-lists.md); its source limitations and verification
+are recorded there. The shared
 `list` observation and writer can be reused by those adapters. The main shared
 integration points for the parallel #755 thread are `domain/imports.ts`,
 `imports/preview.server.ts`, `imports/apply.server.ts` and `Imports` UI kind labels.

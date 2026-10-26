@@ -90,7 +90,7 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 		id: "tmdb",
 		logo: tmdbLogo,
 		tile: "TMDB",
-		gets: ["Ratings", "Want to See", "Favorites"],
+		gets: ["Ratings", "Want to See", "Favorites", "Lists"],
 		wait: "Seconds",
 		connect: true,
 	},

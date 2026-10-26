@@ -692,6 +692,15 @@ test("the v3 client and connection flow delete sessions after success, list fail
 					return new Response(JSON.stringify({ id: 123 }))
 				}
 				if (mode === "list-failure") throw new Error("member-secret")
+				if (url.pathname.endsWith("/lists"))
+					return new Response(
+						JSON.stringify({
+							page: 1,
+							total_pages: 0,
+							total_results: 0,
+							results: [],
+						}),
+					)
 				return new Response(
 					JSON.stringify({
 						page: 1,
@@ -720,7 +729,11 @@ test("the v3 client and connection flow delete sessions after success, list fail
 			id,
 			start.headers.get("Set-Cookie") ?? "",
 		)
-		assert.equal(response.status, mode === "success" ? 303 : 502)
+		assert.equal(
+			response.status,
+			mode === "success" ? 303 : 502,
+			await response.clone().text(),
+		)
 		assert.deepEqual(calls.at(-1), {
 			path: "/3/authentication/session",
 			method: "DELETE",

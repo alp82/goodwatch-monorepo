@@ -13,6 +13,13 @@ test("TMDB reads all seven paginated lists, rounds half steps up and leaves v3 r
 			const path = new URL(String(url))
 			assert.equal(path.searchParams.get("api_key"), "application-secret")
 			assert.equal(path.searchParams.get("session_id"), "member-secret")
+			if (path.pathname.endsWith("/lists"))
+				return Response.json({
+					page: 1,
+					total_pages: 0,
+					total_results: 0,
+					results: [],
+				})
 			assert.match(
 				path.pathname,
 				/^\/3\/account\/account\/((rated|watchlist|favorite)\/(movies|tv)|rated\/tv\/episodes)$/,
@@ -40,7 +47,7 @@ test("TMDB reads all seven paginated lists, rounds half steps up and leaves v3 r
 		},
 	})
 	const parsed = await client.readAccount("account", "member-secret")
-	assert.equal(requests.length, 10)
+	assert.equal(requests.length, 11)
 	assert.equal(parsed.source, "tmdb")
 	assert.deepEqual(
 		parsed.observations.map((x) => [x.key, x.score ?? null, x.addedAt]),
@@ -358,6 +365,13 @@ test("page counts are bounded in items, and changing counts warn while keeping t
 		sleep: async () => {},
 		fetch: async (url) => {
 			const path = new URL(String(url))
+			if (path.pathname.endsWith("/lists"))
+				return Response.json({
+					page: 1,
+					total_pages: 0,
+					total_results: 0,
+					results: [],
+				})
 			const page = Number(path.searchParams.get("page"))
 			return Response.json({
 				page,

@@ -2970,6 +2970,13 @@ it("TMDB's six fetched lists share kind selection, skipped receipts, repeat prev
 		sleep: async () => {},
 		fetch: async (url) => {
 			const path = new URL(String(url)).pathname
+			if (path.endsWith("/lists"))
+				return Response.json({
+					page: 1,
+					total_pages: 0,
+					total_results: 0,
+					results: [],
+				})
 			const id = path.includes("/rated/")
 				? 1
 				: path.includes("/watchlist/")

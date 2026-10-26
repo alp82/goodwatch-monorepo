@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-10-26T00:06:56.798Z",
+  "source": "TMDB public list 1",
+  "scope": "Real public paginated list details; account-list index supplied synthetically. No authenticated member account, production writes or full-account coverage claim.",
+  "referenceItems": 68,
+  "referencePages": 4,
+  "capturedItems": 68,
+  "uniqueTypedIdentities": 68,
+  "unsupported": 0,
+  "warnings": [],
+  "requests": 5,
+  "elapsedMs": 748,
+  "verdict": "pass for public list details"
+}
