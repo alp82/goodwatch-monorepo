@@ -39,8 +39,7 @@ value:
           value: 600
       iterator:
         type: javascript
-        expr: 'Array.from({length: Math.ceil(results.a.length / 20)}, (_, i) => results.a.slice(i
-          * 20, (i + 1) * 20))'
+        expr: '((items) => Array.from({length: Math.ceil(items.length / 20)}, (_, i) => items.slice(i * 20, (i + 1) * 20)))(results.a)'
       parallel: true
       parallelism:
         type: static
