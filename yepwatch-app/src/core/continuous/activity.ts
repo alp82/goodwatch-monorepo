@@ -31,7 +31,8 @@ export function applyActivity(
     return next;
   }
   const pulse =
-    (incoming.gesture || incoming.beat || incoming.inspection) &&
+    // A decision cheer (tap or hold, not release) also counts as a short public pulse.
+    (incoming.gesture || incoming.beat || incoming.inspection || (incoming.cheer && incoming.cheer.kind !== 'release')) &&
     incoming.serverTime + ACTIVITY_LIMITS.pulseTtlMs > now
       ? incoming
       : old?.pulse && old.pulse.serverTime + ACTIVITY_LIMITS.pulseTtlMs > now

@@ -1,7 +1,7 @@
 import { playFeedback } from '../feedback/sounds';
 import { FadeImage } from './FadeImage';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { Animated, Pressable, View } from 'react-native';
+import { Animated, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GText, Icon, Press, Score, glow, s } from './theme';
 import { useDrag } from './useDrag';
@@ -18,6 +18,7 @@ export function Poster({
   onDetails,
   onTrailer,
   onGesture,
+  stampStyle,
 }: {
   title: GlowTitle;
   width: number;
@@ -30,6 +31,8 @@ export function Poster({
   onDetails: () => void;
   onTrailer: () => void;
   onGesture: (phase: GesturePhase) => void;
+  /** Optional overrides for the YEP / NOPE stamps (shape only); omitted keeps the approved look. */
+  stampStyle?: StyleProp<ViewStyle>;
 }) {
   const [detailsFocused, setDetailsFocused] = useState(false);
   const latch = useRef(false);
@@ -177,7 +180,7 @@ export function Poster({
               pointerEvents="none"
               accessibilityElementsHidden
               importantForAccessibility="no-hide-descendants"
-              style={{
+              style={[{
                 position: 'absolute',
                 top: 82,
                 left: 18,
@@ -191,7 +194,7 @@ export function Poster({
                   outputRange: [0, 0.35, 1],
                   extrapolate: 'clamp',
                 }),
-              }}
+              }, stampStyle]}
             >
               <GText size={40} bold>
                 YEP
@@ -202,7 +205,7 @@ export function Poster({
               pointerEvents="none"
               accessibilityElementsHidden
               importantForAccessibility="no-hide-descendants"
-              style={{
+              style={[{
                 position: 'absolute',
                 top: 82,
                 right: 18,
@@ -216,7 +219,7 @@ export function Poster({
                   outputRange: [1, 0.35, 0],
                   extrapolate: 'clamp',
                 }),
-              }}
+              }, stampStyle]}
             >
               <GText size={40} bold>
                 NOPE

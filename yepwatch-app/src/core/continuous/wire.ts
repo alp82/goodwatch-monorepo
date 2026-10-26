@@ -261,6 +261,14 @@ const frame = z.discriminatedUnion('type', [
           z.object({ kind: z.literal('dice') }).strict(),
         ])
         .optional(),
+      cheer: z
+        .object({
+          kind: z.enum(['tap', 'hold', 'release']),
+          generation: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+          seed: z.number().int().min(0).max(2147483647),
+        })
+        .strict()
+        .optional(),
       roomId: id,
       participantId: id,
       serverTime: n,
@@ -283,7 +291,14 @@ export function parseFrame(raw: unknown): ServerRealtimeFrame | null {
         result.data.type === 'activity' &&
         ((result.data.pointer !== undefined && result.data.view !== 'voting') ||
           (result.data.inspection && result.data.view !== 'matches') ||
-          (result.data.beat && result.data.view !== 'voting'))
+          (result.data.beat && result.data.view !== 'voting') ||
+          // A decision cheer travels alone on the matches (Tonight) view.
+          (result.data.cheer &&
+            (result.data.view !== 'matches' ||
+              result.data.gesture !== undefined ||
+              result.data.beat !== undefined ||
+              result.data.pointer !== undefined ||
+              result.data.inspection !== undefined)))
       )
       ? result.data
       : null;

@@ -3,6 +3,7 @@ import {
   type ActivityView,
   type ActivityPointer,
   type ActivityGesture,
+  type DecisionCheer,
   type MatchInspection,
   type RealtimeTicket,
   type ServerActivity,
@@ -100,6 +101,26 @@ export class ContinuousRealtime {
     this.lastPointerAt = now;
     this.sendActivity(undefined, undefined, undefined, undefined, pointer);
   }
+  private cheerTimes: number[] = [];
+  /** One decision cheer frame on the matches (Tonight) view. Never stored, so view renewals cannot replay it.
+   * Client-side guard: at most 4 cheer frames per second; a release always goes out so holds never stick. */
+  sendCheer(cheer: DecisionCheer) {
+    if (!this.active || !this.live || !this.session || !this.socket) return false;
+    const now = Date.now();
+    this.cheerTimes = this.cheerTimes.filter((t) => now - t < 1000);
+    if (cheer.kind !== 'release' && this.cheerTimes.length >= 4) return false;
+    this.cheerTimes.push(now);
+    this.socket.send(
+      JSON.stringify({
+        type: 'activity',
+        sessionId: this.session,
+        sequence: ++this.sequence,
+        view: 'matches',
+        cheer: { kind: cheer.kind, generation: cheer.generation, seed: cheer.seed },
+      })
+    );
+    return true;
+  }
   sendActivity(
     view = this.view,
     gesture?: ActivityGesture,
@@ -193,6 +214,7 @@ export class ContinuousRealtime {
             roomId: this.o.roomId,
             lastRevision: this.o.revision(),
             pointers: true,
+            cheers: true,
             roomDetails: true,
           })
         );

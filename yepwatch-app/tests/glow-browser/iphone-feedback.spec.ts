@@ -31,6 +31,9 @@ async function fixture(page: Page, setup = false) {
       if (command.type === 'vote') { room.own.votes.push({ candidateId: command.candidateId, value: command.value, revision: 1, activeExposureMs: null, timingSource: 'unavailable' }); room.own.nextCandidateId = 'c2'; }
       if (command.type === 'resume_voting') { room.shared.phase='choosing'; room.shared.decision=null; room.shared.proposal=null; room.shared.generation++; room.own.agreement.agreed=false; }
       if (command.type === 'leave') { left = true; room.own.left = true; }
+      if (command.type === 'restart') { room.shared.phase = 'setup'; room.shared.generation++; room.shared.contextVersion++; room.shared.rosterVersion++; room.shared.decision = null; room.shared.proposal = null; room.own.votes = []; room.own.nextCandidateId = 'c1'; room.shared.stream = { version: 2, state: 'ready', reason: null }; }
+      if (command.type === 'configure') { room.shared.contextVersion++; room.shared.screens[0].serviceIds = command.serviceIds; room.shared.description = { prompt: command.prompt, attributes: [] }; }
+      if (command.type === 'start') room.shared.phase = 'choosing';
       return route.fulfill({ json: { snapshot: room, receipt: {} } });
     }
     if (left) return route.fulfill({ status: 403, json: { error: { code: 'forbidden', message: 'Left room', retryable: false } } });
@@ -44,7 +47,7 @@ async function fixture(page: Page, setup = false) {
 
 test('full provider list scrolls in popularity order; country selects a new list', async ({ page }) => {
   const f = await fixture(page, true);
-  await page.getByRole('button', { name: 'Edit room description and services' }).click();
+  await page.getByRole('button', { name: 'Mood & services' }).click();
   const services = page.getByRole('checkbox', { name: /^Service / });
   await expect(services).toHaveCount(65);
   await expect(services.first()).toHaveAccessibleName('Service 01');
@@ -63,25 +66,28 @@ test('full provider list scrolls in popularity order; country selects a new list
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
 });
 
-test('Back closes matches, returns home without leaving, and restores the same room after reload', async ({ page }) => {
+test('Back closes matches, returns to Your rooms without leaving, and reopens the same room after reload', async ({ page }) => {
   const f = await fixture(page);
   const original = await page.getByTestId('poster').innerText();
   await page.getByRole('button', { name: 'Inspect 1 matches' }).click();
-  await page.getByRole('button', { name: 'Back to voting' }).click();
+  await page.getByRole('button', { name: 'Back to Voting' }).click();
   await expect(page.getByTestId('poster')).toHaveText(original, { useInnerText: true });
-  await page.getByRole('button', { name: 'Back to start' }).click();
-  await expect(page.getByRole('button', { name: 'Return to your room' })).toBeVisible();
+  await page.getByRole('button', { name: 'Back to Your rooms' }).click();
+  await expect(page.getByRole('button', { name: 'Open Host’s room' })).toBeVisible();
+  await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);
   await page.reload();
-  await page.getByRole('button', { name: 'Return to your room' }).click();
+  await page.getByRole('button', { name: 'Open Host’s room' }).click();
   await expect(page.getByTestId('poster')).toHaveText(original, { useInnerText: true });
   expect(f.writes).toEqual([]);
 });
 
-test('explicit Leave can rejoin with the existing identity through the home shortcut', async ({ page }) => {
+test('explicit Leave moves the room to History; Return rejoins with the existing identity', async ({ page }) => {
   const f = await fixture(page);
-  await page.getByRole('button', { name: 'Open room' }).click();
+  await page.getByRole('button', { name: /^Room, \d/ }).click();
   await page.getByRole('button', { name: 'Leave room', exact: true }).click();
-  await page.getByRole('button', { name: 'Return to your room' }).click();
+  await expect(page.getByRole('button', { name: 'Open Host’s room' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'History', exact: true }).click();
+  await page.getByRole('button', { name: 'Return', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Yep', exact: true })).toBeVisible();
   expect(f.writes.map(c => c.type)).toEqual(['leave', 'join']);
   expect(f.room.own.participantId).toBe('host');
@@ -98,11 +104,11 @@ test('voting preserves the atmosphere instead of changing backdrop images', asyn
 });
 
 for (const [width, height] of [[320,568], [375,667], [390,844], [844,390], [1440,900]]) {
-  test(`Back and recent-room entry fit ${width}x${height}`, async ({ page }) => {
+  test(`Back and Your rooms fit ${width}x${height}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     await fixture(page);
-    await page.getByRole('button', { name: 'Back to start' }).click();
-    const back = page.getByRole('button', { name: 'Return to your room' });
+    await page.getByRole('button', { name: 'Back to Your rooms' }).click();
+    const back = page.getByRole('button', { name: 'Open Host’s room' });
     const bounds = await back.boundingBox();
     expect(bounds!.y).toBeGreaterThanOrEqual(0);
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(height);
@@ -120,6 +126,7 @@ test('boot reveals YepWatch once, then stays absent during navigation', async ({
   await page.screenshot({ path: '.expo/feedback-boot.png' });
   await expect(boot).toHaveCount(0, { timeout: 5000 });
   await page.getByRole('button', { name: 'Join a room', exact: true }).click();
+  await page.getByRole('button', { name: 'Back to Start', exact: true }).click();
   await expect(boot).toHaveCount(0);
 });
 
@@ -146,7 +153,8 @@ test('Tonight Back reviews matches without changing the decision; edge Back retu
   f.room.shared.decision = { candidateId:'c1',proposalVersion:1,decidedAt:Date.now(),availability:[] };
   await page.reload();
   await expect(page.getByText('TONIGHT',{exact:true})).toBeVisible();
-  await page.getByRole('button',{name:'Back to matches',exact:true}).click();
+  await page.getByRole('button',{name:'Back to Matches',exact:true}).click();
+  await expect(page.getByRole('button',{name:/Keep voting|Keep swiping/})).toHaveCount(0);
   await expect(page.getByText('Tonight’s choice is saved.',{exact:true})).toBeVisible();
   await expect(page.getByRole('button',{name:/^Propose /})).toHaveCount(0);
   await expect(page.getByRole('button',{name:/^Agree to /})).toHaveCount(0);
@@ -176,8 +184,9 @@ for (const input of ['mouse', 'touch'] as const) {
     await swipe(4,350,110,353);
     await expect(page.getByTestId('poster')).toBeVisible();
     expect(f.writes).toEqual([]);
-    await page.getByRole('button', { name: 'Open room', exact: true }).click();
-    const edge = page.getByRole('dialog').getByTestId('back-gesture-edge');
+    await page.getByRole('button', { name: /^Room, \d/ }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    const edge = page.getByTestId('back-gesture-edge');
     await expect(edge).toBeVisible(); const box = await edge.boundingBox();
     await swipe(box!.x+5,box!.y+70,box!.x+115,box!.y+73);
     await expect(page.getByRole('button', { name: 'Leave room', exact: true })).toHaveCount(0);
@@ -241,8 +250,8 @@ for (const [width, height] of [[320, 568], [390, 844], [844, 390]]) {
   test(`Save stays visible while scrolling all providers at ${width}x${height}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const f = await fixture(page, true);
-    await page.getByRole('button', { name: 'Edit room description and services' }).click();
-    const save = page.getByRole('button', { name: 'Save room description', exact: true });
+    await page.getByRole('button', { name: 'Mood & services' }).click();
+    const save = page.getByRole('button', { name: 'Save', exact: true });
     await expect(save).toBeInViewport({ ratio: 1 });
     const before = await save.boundingBox();
     const last = page.getByRole('checkbox', { name: 'Service 65', exact: true });
@@ -270,39 +279,52 @@ test('device region suggests country only for an unconfigured room; a saved coun
   f.room.shared.screens[0].country = 'DE';
   f.room.shared.screens[0].confirmed = true;
   await page.reload();
-  await page.getByRole('button', { name: 'Edit room description and services' }).click();
+  await page.getByRole('button', { name: 'Mood & services' }).click();
   await expect(page.getByRole('button', { name: 'Choose country' })).toContainText('Germany');
 });
 
-test('GoodWatch sign-in is enabled without a guest nickname and includes its G mark', async ({ page }) => {
+test('Continue with GoodWatch needs no guest name and shows its G mark', async ({ page }) => {
   const f = await fixture(page, true);
   const requests: any[] = [];
   await page.route('**/proposal/rooms', async route => {
     requests.push(route.request().postDataJSON());
     await route.fulfill({ status: 503, json: { error: {code:'busy', message:'Fixture stops before actual sign-in', retryable:true} } });
   });
+  await page.evaluate(() => sessionStorage.clear());
   await page.goto('/');
-  await page.getByRole('button', { name: 'Create a room', exact: true }).click();
-  const signin = page.getByRole('button', { name: 'Sign in with GoodWatch', exact: true });
-  await expect(page.getByLabel('Your nickname')).toHaveValue('');
+  const signin = page.getByRole('button', { name: 'Continue with GoodWatch', exact: true });
   await expect(signin).toBeEnabled();
-  await expect(signin.locator('img')).toHaveCount(1);
+  await expect(signin.locator('svg, img')).toHaveCount(1);
   await signin.click();
   await expect.poll(() => requests.length).toBe(1);
   expect(requests[0].nickname).toBe('Guest');
   expect(f.writes).toEqual([]);
 });
 
+test('Tonight is final: host Start again opens prefilled settings, Back keeps the decision, confirm starts the next round', async ({page}) => {
+  const f=await fixture(page); f.room.shared.phase='decided';
+  f.room.shared.decision={candidateId:'c2',proposalVersion:1,decidedAt:Date.now(),availability:[]};
+  await page.reload();
+  await expect(page.getByRole('button',{name:/Keep swiping|Keep voting/})).toHaveCount(0);
+  await page.getByRole('button',{name:'Start again',exact:true}).click();
+  await expect(page.getByRole('checkbox',{name:'Service 08',exact:true})).toBeChecked();
+  await page.getByRole('button',{name:'Back to Tonight',exact:true}).click();
+  await expect(page.getByText('Isolated test c2 (2020)',{exact:true})).toBeVisible();
+  expect(f.writes).toEqual([]);
+  await page.getByRole('button',{name:'Start again',exact:true}).click();
+  await page.getByRole('button',{name:'Start again',exact:true}).last().click();
+  await expect(page.getByRole('button',{name:'Yep',exact:true})).toBeVisible();
+  // The small fixture deck then asks for more cards on its own (refill).
+  expect(f.writes.map(c=>c.type).slice(0,2)).toEqual(['restart','start']);
+  expect(f.writes[1]).toEqual({type:'start',expectedRosterVersion:2,expectedContextVersion:2,hostReady:true});
+});
 
-test('Keep swiping explicitly reopens the shared room; Back alone does not send a command', async ({page}) => {
- const f=await fixture(page); f.room.shared.phase='decided';
- f.room.shared.decision={candidateId:'c2',proposalVersion:1,decidedAt:Date.now(),availability:[]};
- f.room.own.votes=[{candidateId:'c2',value:'watch',revision:1,activeExposureMs:null,timingSource:'unavailable'}];
- await page.reload();
- await page.getByRole('button',{name:'Keep swiping',exact:true}).click();
- await expect(page.getByRole('button',{name:'Yep',exact:true})).toBeVisible();
- expect(f.writes).toEqual([{type:'resume_voting',expectedRevision:1}]);
- expect(f.room.own.votes).toEqual([{candidateId:'c2',value:'watch',revision:1,activeExposureMs:null,timingSource:'unavailable'}]);
+test('guests see who can start again and get no Start again control', async ({page}) => {
+  const f=await fixture(page); f.room.shared.phase='decided'; f.room.own.canHost=false;
+  f.room.shared.decision={candidateId:'c2',proposalVersion:1,decidedAt:Date.now(),availability:[]};
+  await page.reload();
+  await expect(page.getByText('Host can start again',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Start again'})).toHaveCount(0);
 });
 
 test('opening matches plays a bundled card fan, and lens selection plays a click', async ({ page }) => {

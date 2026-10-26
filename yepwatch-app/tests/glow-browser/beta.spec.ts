@@ -9,8 +9,8 @@ test('shared beta links redirect to the install-first home and both app links wo
   await expect(page.getByRole('link', { name: 'Install YepWatch on Android' })).toHaveAttribute('href', 'https://expo.dev/accounts/alperortac/projects/yepwatch/builds/1513ddea-0de8-47af-916e-2d846b802979');
   await expect(page.getByText('Coming soon', { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Create a room', exact: true }).click();
-  await expect(page.getByLabel('Your nickname')).toBeVisible();
-  await page.getByRole('button', { name: 'Back to start' }).click();
+  await expect(page.getByLabel('Your name')).toBeVisible();
+  await page.getByRole('button', { name: 'Back to Start' }).click();
   await page.getByRole('button', { name: 'Join a room', exact: true }).click();
   await expect(page.getByLabel('Room code or invitation')).toBeVisible();
   expect(requests).toEqual([]);
@@ -32,35 +32,20 @@ test('explainer has a centered SVG pause control on hover, touch and keyboard fo
   await expect(page.locator('.mini-film')).toHaveCSS('animation-name','none');
 });
 
-for (const [width, height] of [[390,844],[1440,900]]) test(`home arrives in logo, intro, cards, actions order at ${width}`, async ({page}) => {
+for (const [width, height] of [[390,844],[1440,900]]) test(`first visit lands once on one wordmark, intro, install and browser choices at ${width}`, async ({page}) => {
   await page.setViewportSize({width,height});
   await page.emulateMedia({reducedMotion:'no-preference'});
-  await page.addInitScript(() => {
-    const observed: Record<string,number> = {};
-    (window as any).__arrival = observed;
-    function sample() {
-      for (const [name,selector] of Object.entries({brand:'.review-boot-word, .home-arrival header',intro:'.home-arrival .mini-intro',ios:'.install-card.ios',android:'.install-card.android',actions:'.browser-zone'})) {
-        const el=document.querySelector(selector);
-        if (el && getComputedStyle(el).visibility === 'visible' && Number(getComputedStyle(el).opacity) > .05 && !observed[name]) observed[name]=performance.now();
-      }
-      if (!observed.actions) requestAnimationFrame(sample);
-    }
-    requestAnimationFrame(sample);
-  });
   const start = Date.now();
   await page.goto('/');
   await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);
-  await expect.poll(() => page.evaluate(() => Boolean((window as any).__arrival.actions))).toBe(true);
-  await expect(page.locator('.browser-zone')).toHaveCSS('opacity','1');
   expect(Date.now() - start).toBeLessThan(5500);
-  const t: Record<string,number> = await page.evaluate(() => (window as any).__arrival);
-  expect(t.brand).toBeLessThan(t.intro); expect(t.intro).toBeLessThan(t.ios);
-  expect(t.ios).toBeLessThan(t.android);expect(t.android).toBeLessThan(t.actions);
-  const card = page.locator('.install-card.ios');
-  const resting = (await card.boundingBox())!;
-  await card.hover();
-  await expect.poll(async () => (await card.boundingBox())!.y).toBeLessThan(resting.y - 1);
-  await page.mouse.move(0, 0);
+  // The boot word lands on the header wordmark: exactly one visible brand afterwards.
+  const brand = page.locator('[data-home-brand]');
+  await expect(brand).toHaveCount(1);
+  await expect(brand).toHaveCSS('opacity', '1');
+  await expect(page.locator('.mini-intro')).toBeVisible();
+  for (const name of ['Install YepWatch on iPhone', 'Install YepWatch on Android']) await expect(page.getByRole('link', { name })).toBeInViewport();
+  for (const name of ['Create a room', 'Join a room', 'Continue with GoodWatch']) await expect(page.getByRole('button', { name, exact: true })).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
   await page.screenshot({path:`.expo/home-entry-${width}.png`});
 });

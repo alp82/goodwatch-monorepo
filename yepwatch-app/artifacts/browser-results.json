@@ -2,11 +2,11 @@
   "config": {
     "argv": [
       "/home/alp/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
-      "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/node_modules/.bin/playwright",
+      "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/node_modules/.bin/playwright",
       "test"
     ],
-    "configFile": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/playwright.config.ts",
-    "rootDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/glow-browser",
+    "configFile": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/playwright.config.ts",
+    "rootDir": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser",
     "failOnFlakyTests": false,
     "forbidOnly": false,
     "fullyParallel": false,
@@ -22,7 +22,7 @@
     "preserveOutput": "always",
     "projects": [
       {
-        "outputDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/artifacts/browser-traces",
+        "outputDir": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -30,7 +30,7 @@
         },
         "id": "",
         "name": "",
-        "testDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/glow-browser",
+        "testDir": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -42,15 +42,15 @@
       {
         "grep": {},
         "grepInvert": null,
-        "outputDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/artifacts/browser-traces",
+        "outputDir": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
           "actualWorkers": 1
         },
         "name": "",
-        "testDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/glow-browser",
-        "snapshotDir": "/home/alp/dev/projects/goodwatch/goodwatch-monorepo/yepwatch-app/tests/glow-browser",
+        "testDir": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser",
+        "snapshotDir": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser",
         "testIgnore": [],
         "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
         "timeout": 30000,
@@ -100,6 +100,255 @@
   },
   "suites": [
     {
+      "title": "beta.spec.ts",
+      "file": "beta.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "shared beta links redirect to the install-first home and both app links work",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 6251,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Your nickname')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Your nickname') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Your nickname')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Your nickname')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Your nickname') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Your nickname')\u001b[22m\n\n    at /home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts:12:50",
+                    "location": {
+                      "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts",
+                      "column": 50,
+                      "line": 12
+                    },
+                    "snippet": "  10 |   await expect(page.getByText('Coming soon', { exact: true })).toHaveCount(0);\n  11 |   await page.getByRole('button', { name: 'Create a room', exact: true }).click();\n> 12 |   await expect(page.getByLabel('Your nickname')).toBeVisible();\n     |                                                  ^\n  13 |   await page.getByRole('button', { name: 'Back to start' }).click();\n  14 |   await page.getByRole('button', { name: 'Join a room', exact: true }).click();\n  15 |   await expect(page.getByLabel('Room code or invitation')).toBeVisible();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts",
+                        "column": 50,
+                        "line": 12
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByLabel('Your nickname')\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByLabel('Your nickname') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByLabel('Your nickname')\u001b[22m\n\n\n  10 |   await expect(page.getByText('Coming soon', { exact: true })).toHaveCount(0);\n  11 |   await page.getByRole('button', { name: 'Create a room', exact: true }).click();\n> 12 |   await expect(page.getByLabel('Your nickname')).toBeVisible();\n     |                                                  ^\n  13 |   await page.getByRole('button', { name: 'Back to start' }).click();\n  14 |   await page.getByRole('button', { name: 'Join a room', exact: true }).click();\n  15 |   await expect(page.getByLabel('Room code or invitation')).toBeVisible();\n    at /home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts:12:50"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-26T18:20:42.824Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/beta-shared-beta-links-red-15620-ome-and-both-app-links-work/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/beta-shared-beta-links-red-15620-ome-and-both-app-links-work/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts",
+                    "column": 50,
+                    "line": 12
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "9e1062bfa6acc4fb8bd6-1af75f67f26e84ef41ef",
+          "file": "beta.spec.ts",
+          "line": 3,
+          "column": 5
+        },
+        {
+          "title": "explainer has a centered SVG pause control on hover, touch and keyboard focus",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4658,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-26T18:20:49.346Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9e1062bfa6acc4fb8bd6-6afdbf7a72acb275ab52",
+          "file": "beta.spec.ts",
+          "line": 19,
+          "column": 5
+        },
+        {
+          "title": "home arrives in logo, intro, cards, actions order at 390",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 5095,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n    at /home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts:53:92",
+                    "location": {
+                      "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts",
+                      "column": 92,
+                      "line": 53
+                    },
+                    "snippet": "  51 |   await page.goto('/');\n  52 |   await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);\n> 53 |   await expect.poll(() => page.evaluate(() => Boolean((window as any).__arrival.actions))).toBe(true);\n     |                                                                                            ^\n  54 |   await expect(page.locator('.browser-zone')).toHaveCSS('opacity','1');\n  55 |   expect(Date.now() - start).toBeLessThan(5500);\n  56 |   const t: Record<string,number> = await page.evaluate(() => (window as any).__arrival);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts",
+                        "column": 92,
+                        "line": 53
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n\n  51 |   await page.goto('/');\n  52 |   await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);\n> 53 |   await expect.poll(() => page.evaluate(() => Boolean((window as any).__arrival.actions))).toBe(true);\n     |                                                                                            ^\n  54 |   await expect(page.locator('.browser-zone')).toHaveCSS('opacity','1');\n  55 |   expect(Date.now() - start).toBeLessThan(5500);\n  56 |   const t: Record<string,number> = await page.evaluate(() => (window as any).__arrival);\n    at /home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts:53:92"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-26T18:20:54.049Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/beta-home-arrives-in-logo-intro-cards-actions-order-at-390/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/beta-home-arrives-in-logo-intro-cards-actions-order-at-390/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts",
+                    "column": 92,
+                    "line": 53
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "9e1062bfa6acc4fb8bd6-19d9cd8d6311b299bdb0",
+          "file": "beta.spec.ts",
+          "line": 35,
+          "column": 59
+        },
+        {
+          "title": "home arrives in logo, intro, cards, actions order at 1440",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 5080,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n    at /home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts:53:92",
+                    "location": {
+                      "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts",
+                      "column": 92,
+                      "line": 53
+                    },
+                    "snippet": "  51 |   await page.goto('/');\n  52 |   await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);\n> 53 |   await expect.poll(() => page.evaluate(() => Boolean((window as any).__arrival.actions))).toBe(true);\n     |                                                                                            ^\n  54 |   await expect(page.locator('.browser-zone')).toHaveCSS('opacity','1');\n  55 |   expect(Date.now() - start).toBeLessThan(5500);\n  56 |   const t: Record<string,number> = await page.evaluate(() => (window as any).__arrival);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts",
+                        "column": 92,
+                        "line": 53
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n\n  51 |   await page.goto('/');\n  52 |   await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);\n> 53 |   await expect.poll(() => page.evaluate(() => Boolean((window as any).__arrival.actions))).toBe(true);\n     |                                                                                            ^\n  54 |   await expect(page.locator('.browser-zone')).toHaveCSS('opacity','1');\n  55 |   expect(Date.now() - start).toBeLessThan(5500);\n  56 |   const t: Record<string,number> = await page.evaluate(() => (window as any).__arrival);\n    at /home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts:53:92"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-26T18:20:59.426Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/beta-home-arrives-in-logo-intro-cards-actions-order-at-1440/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/beta-home-arrives-in-logo-intro-cards-actions-order-at-1440/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/beta.spec.ts",
+                    "column": 92,
+                    "line": 53
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "9e1062bfa6acc4fb8bd6-0a30c4cc1d4294cb34aa",
+          "file": "beta.spec.ts",
+          "line": 35,
+          "column": 59
+        }
+      ]
+    },
+    {
       "title": "client.spec.ts",
       "file": "client.spec.ts",
       "column": 0,
@@ -118,15 +367,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 935,
+                  "duration": 943,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:37:46.336Z",
+                  "startTime": "2026-10-26T18:21:04.814Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -136,7 +385,7 @@
           ],
           "id": "e8997666eb3abf7f4bb0-da33a4e5e6466aff02ee",
           "file": "client.spec.ts",
-          "line": 128,
+          "line": 179,
           "column": 7
         },
         {
@@ -152,15 +401,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 929,
+                  "duration": 917,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:37:47.313Z",
+                  "startTime": "2026-10-26T18:21:05.806Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -170,7 +419,7 @@
           ],
           "id": "e8997666eb3abf7f4bb0-a88c4c3f624cc5d63391",
           "file": "client.spec.ts",
-          "line": 128,
+          "line": 179,
           "column": 7
         },
         {
@@ -186,15 +435,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 915,
+                  "duration": 914,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:37:48.248Z",
+                  "startTime": "2026-10-26T18:21:06.731Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -204,12 +453,12 @@
           ],
           "id": "e8997666eb3abf7f4bb0-ab8dc8d2b8bd1b17f3a3",
           "file": "client.spec.ts",
-          "line": 128,
+          "line": 179,
           "column": 7
         },
         {
           "title": "inspection and dice never propose; shared proposal replacement and Keep voting preserve own card",
-          "ok": true,
+          "ok": false,
           "tags": [],
           "tests": [
             {
@@ -220,25 +469,52 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1185,
-                  "errors": [],
+                  "status": "timedOut",
+                  "duration": 30039,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts",
+                        "column": 75,
+                        "line": 230
+                      },
+                      "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Back to voting', exact: true })\u001b[22m\n\n\n  228 |     0\n  229 |   );\n> 230 |   await page.getByRole('button', { name: 'Back to voting', exact: true }).click();\n      |                                                                           ^\n  231 |   await expect.poll(() => page.getByTestId('poster').innerText()).toBe(initial);\n  232 | });\n  233 | test('left swipe after reversal sends exactly the same pass as Nope and recenters', async ({\n    at /home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts:230:75"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:37:49.168Z",
+                  "startTime": "2026-10-26T18:21:07.649Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/client-inspection-and-dice-38fd9-ep-voting-preserve-own-card/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/client-inspection-and-dice-38fd9-ep-voting-preserve-own-card/trace.zip"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "unexpected"
             }
           ],
           "id": "e8997666eb3abf7f4bb0-67b8f7495ce8270d6421",
           "file": "client.spec.ts",
-          "line": 153,
+          "line": 204,
           "column": 5
         },
         {
@@ -254,15 +530,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1263,
+                  "duration": 1316,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:37:50.357Z",
+                  "startTime": "2026-10-26T18:21:37.942Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -272,7 +548,7 @@
           ],
           "id": "e8997666eb3abf7f4bb0-b20b140316f78a74591e",
           "file": "client.spec.ts",
-          "line": 171,
+          "line": 233,
           "column": 5
         },
         {
@@ -288,15 +564,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1821,
+                  "duration": 3166,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:37:51.625Z",
+                  "startTime": "2026-10-26T18:21:39.317Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -306,7 +582,7 @@
           ],
           "id": "e8997666eb3abf7f4bb0-dea59c74b54fbad3694f",
           "file": "client.spec.ts",
-          "line": 196,
+          "line": 254,
           "column": 5
         },
         {
@@ -322,15 +598,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 932,
+                  "duration": 944,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:37:53.451Z",
+                  "startTime": "2026-10-26T18:21:42.490Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -340,11 +616,11 @@
           ],
           "id": "e8997666eb3abf7f4bb0-8a45cd3942ff2f14e742",
           "file": "client.spec.ts",
-          "line": 211,
+          "line": 269,
           "column": 5
         },
         {
-          "title": "one explicit guest readiness uses the confirmed screen assignment fence",
+          "title": "guest inherits the confirmed couch screen and becomes protocol ready without another confirmation",
           "ok": true,
           "tags": [],
           "tests": [
@@ -356,15 +632,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 922,
+                  "duration": 886,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:37:54.387Z",
+                  "startTime": "2026-10-26T18:21:43.441Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -372,14 +648,14 @@
               "status": "expected"
             }
           ],
-          "id": "e8997666eb3abf7f4bb0-60c9be7700fb09cc499d",
+          "id": "e8997666eb3abf7f4bb0-9f4a18ba0619d951fe08",
           "file": "client.spec.ts",
-          "line": 222,
+          "line": 280,
           "column": 5
         },
         {
           "title": "unavailable account start stays an honest guest state inside the room drawer",
-          "ok": true,
+          "ok": false,
           "tags": [],
           "tests": [
             {
@@ -390,30 +666,57 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1006,
-                  "errors": [],
+                  "status": "timedOut",
+                  "duration": 30027,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts",
+                        "column": 70,
+                        "line": 298
+                      },
+                      "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Open room', exact: true })\u001b[22m\n\n\n  296 | }) => {\n  297 |   await fixture(page);\n> 298 |   await page.getByRole('button', { name: 'Open room', exact: true }).click();\n      |                                                                      ^\n  299 |   await page.getByRole('button', { name: 'Sign in with GoodWatch', exact: true }).click();\n  300 |   await expect(\n  301 |     page\n    at /home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts:298:70"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:37:55.313Z",
+                  "startTime": "2026-10-26T18:21:44.332Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/client-unavailable-account-34ba9-tate-inside-the-room-drawer/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/client-unavailable-account-34ba9-tate-inside-the-room-drawer/trace.zip"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "unexpected"
             }
           ],
           "id": "e8997666eb3abf7f4bb0-8fea29975487410ca494",
           "file": "client.spec.ts",
-          "line": 234,
+          "line": 294,
           "column": 5
         },
         {
           "title": "the creator invitation survives a full navigation/reload without bearer storage",
-          "ok": true,
+          "ok": false,
           "tags": [],
           "tests": [
             {
@@ -424,30 +727,57 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1752,
-                  "errors": [],
+                  "status": "timedOut",
+                  "duration": 30040,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts",
+                        "column": 70,
+                        "line": 324
+                      },
+                      "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Open room', exact: true })\u001b[22m\n\n\n  322 |   );\n  323 |   await page.reload();\n> 324 |   await page.getByRole('button', { name: 'Open room', exact: true }).click();\n      |                                                                      ^\n  325 |   await expect(page.getByRole('button', { name: 'Share invitation', exact: true })).toBeEnabled();\n  326 |   await expect(\n  327 |     page.getByText(`${new URL(page.url()).origin}/r/isolated-invite`, { exact: true })\n    at /home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts:324:70"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:37:56.324Z",
+                  "startTime": "2026-10-26T18:22:14.601Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/client-the-creator-invitat-ac584-load-without-bearer-storage/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/client-the-creator-invitat-ac584-load-without-bearer-storage/trace.zip"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "unexpected"
             }
           ],
           "id": "e8997666eb3abf7f4bb0-06146695042d03a2d703",
           "file": "client.spec.ts",
-          "line": 253,
+          "line": 313,
           "column": 5
         },
         {
-          "title": "embedding refusal 101 offers YouTube and closing preserves card and pick",
-          "ok": true,
+          "title": "embedding refusal 101 uses embedded controls and closing preserves card and pick",
+          "ok": false,
           "tags": [],
           "tests": [
             {
@@ -458,30 +788,57 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 6,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 3443,
-                  "errors": [],
+                  "status": "timedOut",
+                  "duration": 30042,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts",
+                        "column": 81,
+                        "line": 367
+                      },
+                      "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Close panel', exact: true }).last()\u001b[22m\n\n\n  365 |     await page.waitForTimeout(1600);\n  366 |     await expect(page.getByRole('button', { name: 'Play with sound', exact: true })).toHaveCount(0);\n> 367 |     await page.getByRole('button', { name: 'Close panel', exact: true }).last().click();\n      |                                                                                 ^\n  368 |     await expect.poll(() => page.getByTestId('poster').innerText()).toBe(card);\n  369 |     expect(f.commands).toHaveLength(0);\n  370 |     await page.getByRole('button', { name: 'Inspect 2 matches', exact: true }).click();\n    at /home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts:367:81"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:37:58.080Z",
+                  "startTime": "2026-10-26T18:22:44.917Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/client-embedding-refusal-1-a15b5-ing-preserves-card-and-pick/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/client-embedding-refusal-1-a15b5-ing-preserves-card-and-pick/trace.zip"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "unexpected"
             }
           ],
-          "id": "e8997666eb3abf7f4bb0-459b01f731ce15f511fc",
+          "id": "e8997666eb3abf7f4bb0-fe316bc8aa40f53625da",
           "file": "client.spec.ts",
-          "line": 272,
+          "line": 332,
           "column": 7
         },
         {
-          "title": "embedding refusal 150 offers YouTube and closing preserves card and pick",
-          "ok": true,
+          "title": "embedding refusal 150 uses embedded controls and closing preserves card and pick",
+          "ok": false,
           "tags": [],
           "tests": [
             {
@@ -492,25 +849,52 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 7,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 3427,
-                  "errors": [],
+                  "status": "timedOut",
+                  "duration": 30044,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts",
+                        "column": 81,
+                        "line": 367
+                      },
+                      "message": "Error: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Close panel', exact: true }).last()\u001b[22m\n\n\n  365 |     await page.waitForTimeout(1600);\n  366 |     await expect(page.getByRole('button', { name: 'Play with sound', exact: true })).toHaveCount(0);\n> 367 |     await page.getByRole('button', { name: 'Close panel', exact: true }).last().click();\n      |                                                                                 ^\n  368 |     await expect.poll(() => page.getByTestId('poster').innerText()).toBe(card);\n  369 |     expect(f.commands).toHaveLength(0);\n  370 |     await page.getByRole('button', { name: 'Inspect 2 matches', exact: true }).click();\n    at /home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts:367:81"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:38:01.528Z",
+                  "startTime": "2026-10-26T18:23:15.238Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/client-embedding-refusal-1-228d7-ing-preserves-card-and-pick/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/client-embedding-refusal-1-228d7-ing-preserves-card-and-pick/trace.zip"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "unexpected"
             }
           ],
-          "id": "e8997666eb3abf7f4bb0-7b14eeeab87a21369f55",
+          "id": "e8997666eb3abf7f4bb0-1547744d7735178f6d21",
           "file": "client.spec.ts",
-          "line": 272,
+          "line": 332,
           "column": 7
         },
         {
@@ -526,15 +910,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 8,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1777,
+                  "duration": 1842,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:38:04.959Z",
+                  "startTime": "2026-10-26T18:23:45.546Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -544,7 +928,7 @@
           ],
           "id": "e8997666eb3abf7f4bb0-d3f10e313d73a96612f7",
           "file": "client.spec.ts",
-          "line": 299,
+          "line": 376,
           "column": 5
         },
         {
@@ -560,15 +944,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 8,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 995,
+                  "duration": 3424,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:38:06.739Z",
+                  "startTime": "2026-10-26T18:23:47.440Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -578,7 +962,7 @@
           ],
           "id": "e8997666eb3abf7f4bb0-fd239eb629b68511d61d",
           "file": "client.spec.ts",
-          "line": 310,
+          "line": 392,
           "column": 5
         },
         {
@@ -594,15 +978,15 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 8,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1097,
+                  "duration": 1146,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:38:07.737Z",
+                  "startTime": "2026-10-26T18:23:50.869Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -612,7 +996,7 @@
           ],
           "id": "e8997666eb3abf7f4bb0-2b8c7cfe7b45e59e4dff",
           "file": "client.spec.ts",
-          "line": 321,
+          "line": 409,
           "column": 5
         },
         {
@@ -628,25 +1012,60 @@
               "projectName": "",
               "results": [
                 {
-                  "workerIndex": 0,
+                  "workerIndex": 8,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 3813,
-                  "errors": [],
+                  "status": "interrupted",
+                  "duration": 12194,
+                  "error": {
+                    "message": "Error: locator.fill: Test ended.\nCall log:\n\u001b[2m  - waiting for getByLabel('Your nickname')\u001b[22m\n",
+                    "stack": "Error: locator.fill: Test ended.\nCall log:\n\u001b[2m  - waiting for getByLabel('Your nickname')\u001b[22m\n\n    at /home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts:460:44",
+                    "location": {
+                      "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts",
+                      "column": 44,
+                      "line": 460
+                    },
+                    "snippet": "  458 |     };\n  459 |     await page.goto('/'); await page.getByRole('button', { name: 'Create a room', exact: true }).click();\n> 460 |     await page.getByLabel('Your nickname').fill('Layout check');\n      |                                            ^\n  461 |     await reachable('Create a room');\n  462 |     await noPageScroll();\n  463 |     await page.screenshot({ path: `artifacts/glow/layout-entry-${viewport.width}.png` });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts",
+                        "column": 44,
+                        "line": 460
+                      },
+                      "message": "Error: locator.fill: Test ended.\nCall log:\n\u001b[2m  - waiting for getByLabel('Your nickname')\u001b[22m\n\n\n  458 |     };\n  459 |     await page.goto('/'); await page.getByRole('button', { name: 'Create a room', exact: true }).click();\n> 460 |     await page.getByLabel('Your nickname').fill('Layout check');\n      |                                            ^\n  461 |     await reachable('Create a room');\n  462 |     await noPageScroll();\n  463 |     await page.screenshot({ path: `artifacts/glow/layout-entry-${viewport.width}.png` });\n    at /home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts:460:44"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-22T10:38:08.838Z",
+                  "startTime": "2026-10-26T18:23:52.023Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/client-entry-setup-and-lon-c1e30-hout-page-scroll-at-320x568/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/artifacts/browser-traces/client-entry-setup-and-lon-c1e30-hout-page-scroll-at-320x568/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/alp/.cache/yepwatch-rooms-cheers-release/yepwatch-app/tests/glow-browser/client.spec.ts",
+                    "column": 44,
+                    "line": 460
+                  }
                 }
               ],
-              "status": "expected"
+              "status": "skipped"
             }
           ],
           "id": "e8997666eb3abf7f4bb0-a4c4ffe66cc862ec378a",
           "file": "client.spec.ts",
-          "line": 338,
+          "line": 438,
           "column": 7
         },
         {
@@ -660,27 +1079,13 @@
               "expectedStatus": "passed",
               "projectId": "",
               "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 3793,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-22T10:38:12.655Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
+              "results": [],
+              "status": "skipped"
             }
           ],
           "id": "e8997666eb3abf7f4bb0-0790a95823a015b592be",
           "file": "client.spec.ts",
-          "line": 338,
+          "line": 438,
           "column": 7
         },
         {
@@ -694,27 +1099,13 @@
               "expectedStatus": "passed",
               "projectId": "",
               "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 3796,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-22T10:38:16.454Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
+              "results": [],
+              "status": "skipped"
             }
           ],
           "id": "e8997666eb3abf7f4bb0-508a361b5445c46e85b7",
           "file": "client.spec.ts",
-          "line": 338,
+          "line": 438,
           "column": 7
         },
         {
@@ -728,27 +1119,13 @@
               "expectedStatus": "passed",
               "projectId": "",
               "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 3797,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-22T10:38:20.254Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
+              "results": [],
+              "status": "skipped"
             }
           ],
           "id": "e8997666eb3abf7f4bb0-1e11956748c9b560c830",
           "file": "client.spec.ts",
-          "line": 338,
+          "line": 438,
           "column": 7
         },
         {
@@ -762,27 +1139,13 @@
               "expectedStatus": "passed",
               "projectId": "",
               "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 3819,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-22T10:38:24.054Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
+              "results": [],
+              "status": "skipped"
             }
           ],
           "id": "e8997666eb3abf7f4bb0-77d04549a645cab41fc1",
           "file": "client.spec.ts",
-          "line": 338,
+          "line": 438,
           "column": 7
         },
         {
@@ -796,27 +1159,13 @@
               "expectedStatus": "passed",
               "projectId": "",
               "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 2774,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-22T10:38:27.877Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
+              "results": [],
+              "status": "skipped"
             }
           ],
           "id": "e8997666eb3abf7f4bb0-097c0f8a5830a9b5ead0",
           "file": "client.spec.ts",
-          "line": 392,
+          "line": 506,
           "column": 5
         },
         {
@@ -830,27 +1179,13 @@
               "expectedStatus": "passed",
               "projectId": "",
               "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1811,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-22T10:38:30.656Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
+              "results": [],
+              "status": "skipped"
             }
           ],
           "id": "e8997666eb3abf7f4bb0-95c51468406e61710710",
           "file": "client.spec.ts",
-          "line": 420,
+          "line": 559,
           "column": 7
         },
         {
@@ -864,27 +1199,13 @@
               "expectedStatus": "passed",
               "projectId": "",
               "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1797,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-22T10:38:32.471Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
+              "results": [],
+              "status": "skipped"
             }
           ],
           "id": "e8997666eb3abf7f4bb0-cc4d832678ccc3bdda94",
           "file": "client.spec.ts",
-          "line": 420,
+          "line": 559,
           "column": 7
         },
         {
@@ -898,27 +1219,13 @@
               "expectedStatus": "passed",
               "projectId": "",
               "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1897,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-22T10:38:34.271Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
+              "results": [],
+              "status": "skipped"
             }
           ],
           "id": "e8997666eb3abf7f4bb0-b4f0c143632780e542f8",
           "file": "client.spec.ts",
-          "line": 420,
+          "line": 559,
           "column": 7
         },
         {
@@ -932,27 +1239,13 @@
               "expectedStatus": "passed",
               "projectId": "",
               "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 2010,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-22T10:38:36.174Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
+              "results": [],
+              "status": "skipped"
             }
           ],
           "id": "e8997666eb3abf7f4bb0-4176f0695cff956b149d",
           "file": "client.spec.ts",
-          "line": 447,
+          "line": 596,
           "column": 5
         },
         {
@@ -966,39 +1259,1293 @@
               "expectedStatus": "passed",
               "projectId": "",
               "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 4596,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-22T10:38:38.190Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
+              "results": [],
+              "status": "skipped"
             }
           ],
           "id": "e8997666eb3abf7f4bb0-6786c1644ec548dade88",
           "file": "client.spec.ts",
-          "line": 463,
+          "line": 631,
           "column": 5
+        },
+        {
+          "title": "no-preference swipe -1 never re-enters with the opposite stamp",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-34830cdf7b54bcfa27cd",
+          "file": "client.spec.ts",
+          "line": 664,
+          "column": 7
+        },
+        {
+          "title": "no-preference swipe 1 never re-enters with the opposite stamp",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-c72422923a5b61ec36bb",
+          "file": "client.spec.ts",
+          "line": 664,
+          "column": 7
+        },
+        {
+          "title": "reduce swipe -1 never re-enters with the opposite stamp",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-fde93f46b9afb6b67178",
+          "file": "client.spec.ts",
+          "line": 664,
+          "column": 7
+        },
+        {
+          "title": "reduce swipe 1 never re-enters with the opposite stamp",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-7588622a6ae4a6da19fb",
+          "file": "client.spec.ts",
+          "line": 664,
+          "column": 7
+        },
+        {
+          "title": "agreement and take back keep wall and button geometry fixed",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-5e1d63b716f1b0d7693f",
+          "file": "client.spec.ts",
+          "line": 712,
+          "column": 5
+        },
+        {
+          "title": "live hover positions cross the poster, pressed swipes stay private, release removes touch",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-77ca810d86c474fc55ed",
+          "file": "client.spec.ts",
+          "line": 731,
+          "column": 5
+        },
+        {
+          "title": "room prompt and mobile service selection publish attributes without screen settings",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-a23e247dad3fc88e8d06",
+          "file": "client.spec.ts",
+          "line": 813,
+          "column": 5
+        },
+        {
+          "title": "leaving the room sends one explicit command and returns to the entrance",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-53f89c22eea5d1108679",
+          "file": "client.spec.ts",
+          "line": 850,
+          "column": 5
+        },
+        {
+          "title": "dropped people keep a visible place without inflating the active room count",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-1a6309cb17c09df706c9",
+          "file": "client.spec.ts",
+          "line": 861,
+          "column": 6
+        },
+        {
+          "title": "shared saved-provider defaults preselect the union, filter unavailable providers and preserve room edits",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-3dc1d87d173f70d8fb7b",
+          "file": "client.spec.ts",
+          "line": 872,
+          "column": 5
+        },
+        {
+          "title": "invitation sharing handles browser no-share",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-80c90341d6d673df9c34",
+          "file": "client.spec.ts",
+          "line": 900,
+          "column": 7
+        },
+        {
+          "title": "invitation sharing handles browser rejected",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-5617b172abea37a0fec3",
+          "file": "client.spec.ts",
+          "line": 900,
+          "column": 7
+        },
+        {
+          "title": "invitation sharing handles browser cancelled",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-ff66fba497b14f2f97b1",
+          "file": "client.spec.ts",
+          "line": 900,
+          "column": 7
+        },
+        {
+          "title": "invitation sharing handles browser manual",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-2b2c45f2f8ed8408fa41",
+          "file": "client.spec.ts",
+          "line": 900,
+          "column": 7
+        },
+        {
+          "title": "prompt presets become live search picks and grouped providers retain every selected alias",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e8997666eb3abf7f4bb0-cfb2da0f00bb1ae01deb",
+          "file": "client.spec.ts",
+          "line": 928,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "fade-image.spec.ts",
+      "file": "fade-image.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "cached poster waits for motion settings: animate",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "271b3bd41eb9b5c45193-5b2ffe8b0dceff1bf1a3",
+          "file": "fade-image.spec.ts",
+          "line": 7,
+          "column": 5
+        },
+        {
+          "title": "cached poster waits for motion settings: reduce",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "271b3bd41eb9b5c45193-9380fa052001d2079a60",
+          "file": "fade-image.spec.ts",
+          "line": 7,
+          "column": 5
+        },
+        {
+          "title": "cached poster waits for motion settings: unavailable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "271b3bd41eb9b5c45193-c43a6fd127d982b6089c",
+          "file": "fade-image.spec.ts",
+          "line": 7,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "iphone-feedback.spec.ts",
+      "file": "iphone-feedback.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "full provider list scrolls in popularity order; country selects a new list",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-bcc2c12f6d79bb3d5d91",
+          "file": "iphone-feedback.spec.ts",
+          "line": 45,
+          "column": 5
+        },
+        {
+          "title": "Back closes matches, returns home without leaving, and restores the same room after reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-0dd31e73b8d37e6008d8",
+          "file": "iphone-feedback.spec.ts",
+          "line": 66,
+          "column": 5
+        },
+        {
+          "title": "explicit Leave can rejoin with the existing identity through the home shortcut",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-742fe954d87e026924c6",
+          "file": "iphone-feedback.spec.ts",
+          "line": 80,
+          "column": 5
+        },
+        {
+          "title": "voting preserves the atmosphere instead of changing backdrop images",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-30a33575683c8123c7af",
+          "file": "iphone-feedback.spec.ts",
+          "line": 90,
+          "column": 5
+        },
+        {
+          "title": "Back and recent-room entry fit 320x568",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-369cf43ef76cd368b396",
+          "file": "iphone-feedback.spec.ts",
+          "line": 101,
+          "column": 7
+        },
+        {
+          "title": "Back and recent-room entry fit 375x667",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-00876bf5a6005f0536ff",
+          "file": "iphone-feedback.spec.ts",
+          "line": 101,
+          "column": 7
+        },
+        {
+          "title": "Back and recent-room entry fit 390x844",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-8aba497c6e0dc096a3ed",
+          "file": "iphone-feedback.spec.ts",
+          "line": 101,
+          "column": 7
+        },
+        {
+          "title": "Back and recent-room entry fit 844x390",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-3bb72ceda1c487086be0",
+          "file": "iphone-feedback.spec.ts",
+          "line": 101,
+          "column": 7
+        },
+        {
+          "title": "Back and recent-room entry fit 1440x900",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-559177af6979dd64c64e",
+          "file": "iphone-feedback.spec.ts",
+          "line": 101,
+          "column": 7
+        },
+        {
+          "title": "boot reveals YepWatch once, then stays absent during navigation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-736b42895f1bb4e54805",
+          "file": "iphone-feedback.spec.ts",
+          "line": 114,
+          "column": 5
+        },
+        {
+          "title": "room activity and exposure do not begin behind the boot overlay",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-38583f8829b409150e56",
+          "file": "iphone-feedback.spec.ts",
+          "line": 126,
+          "column": 5
+        },
+        {
+          "title": "Tonight Back reviews matches without changing the decision; edge Back returns to Tonight",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-c5d91d16248ec0e4c5ce",
+          "file": "iphone-feedback.spec.ts",
+          "line": 142,
+          "column": 5
+        },
+        {
+          "title": "mouse edge swipe closes matches and drawers, while a card swipe remains a vote",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-05eadcfae6e13148de97",
+          "file": "iphone-feedback.spec.ts",
+          "line": 159,
+          "column": 7
+        },
+        {
+          "title": "touch edge swipe closes matches and drawers, while a card swipe remains a vote",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-2886387f36dd6989f39a",
+          "file": "iphone-feedback.spec.ts",
+          "line": 159,
+          "column": 7
+        },
+        {
+          "title": "late poster load cannot flash the old title after choosing the next one",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-d33c74e77350a04b0ec0",
+          "file": "iphone-feedback.spec.ts",
+          "line": 190,
+          "column": 5
+        },
+        {
+          "title": "cached next poster fades in without a full-opacity flash",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-e7d1727739a6cee49979",
+          "file": "iphone-feedback.spec.ts",
+          "line": 208,
+          "column": 5
+        },
+        {
+          "title": "Save stays visible while scrolling all providers at 320x568",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-d89b2f91509f92e0ba90",
+          "file": "iphone-feedback.spec.ts",
+          "line": 241,
+          "column": 7
+        },
+        {
+          "title": "Save stays visible while scrolling all providers at 390x844",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-034712cd26baf65c77a0",
+          "file": "iphone-feedback.spec.ts",
+          "line": 241,
+          "column": 7
+        },
+        {
+          "title": "Save stays visible while scrolling all providers at 844x390",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-a84402b7a4114022ffe7",
+          "file": "iphone-feedback.spec.ts",
+          "line": 241,
+          "column": 7
+        },
+        {
+          "title": "device region suggests country only for an unconfigured room; a saved country wins",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-007b83bd30f3295927ca",
+          "file": "iphone-feedback.spec.ts",
+          "line": 259,
+          "column": 5
+        },
+        {
+          "title": "GoodWatch sign-in is enabled without a guest nickname and includes its G mark",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-8963e01ab9f2a82727f4",
+          "file": "iphone-feedback.spec.ts",
+          "line": 277,
+          "column": 5
+        },
+        {
+          "title": "Keep swiping explicitly reopens the shared room; Back alone does not send a command",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-ffd1af2ba98ee63f2f45",
+          "file": "iphone-feedback.spec.ts",
+          "line": 297,
+          "column": 5
+        },
+        {
+          "title": "opening matches plays a bundled card fan, and lens selection plays a click",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "411d6a6a8a3f80d7e5d5-0df878fb2492048ee34b",
+          "file": "iphone-feedback.spec.ts",
+          "line": 308,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "lobby-entry.spec.ts",
+      "file": "lobby-entry.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "guests see one room selection without a screen picker or setup controls",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1a284e0ae00fe7608e5c-b170897b9eddcb5af3f3",
+          "file": "lobby-entry.spec.ts",
+          "line": 116,
+          "column": 5
+        },
+        {
+          "title": "missing actual services never produces assignment/readiness or another confirmation action",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1a284e0ae00fe7608e5c-c8513e4bad40704853ac",
+          "file": "lobby-entry.spec.ts",
+          "line": 129,
+          "column": 5
+        },
+        {
+          "title": "uncertain automatic assignment retries the exact envelope after reload, then automatically readies",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1a284e0ae00fe7608e5c-a9bc9771047e402c75a3",
+          "file": "lobby-entry.spec.ts",
+          "line": 137,
+          "column": 5
+        },
+        {
+          "title": "failed entry refresh has bounded recovery through Retry connection without a Ready action",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1a284e0ae00fe7608e5c-8eaf89f3c63949137020",
+          "file": "lobby-entry.spec.ts",
+          "line": 156,
+          "column": 5
+        },
+        {
+          "title": "fresh context is used for automatic entry; later roster/context resets re-ready once with current fences",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1a284e0ae00fe7608e5c-1716efeb5c3ecdba7380",
+          "file": "lobby-entry.spec.ts",
+          "line": 168,
+          "column": 5
+        },
+        {
+          "title": "lost ready response retries its exact envelope without another confirmation and clears recovery feedback",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1a284e0ae00fe7608e5c-94070b0ac1e3effa132b",
+          "file": "lobby-entry.spec.ts",
+          "line": 192,
+          "column": 5
+        },
+        {
+          "title": "definitive failed ready write stops without loops and generic connection retry uses the unchanged sequence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1a284e0ae00fe7608e5c-9752d6aac4147679543d",
+          "file": "lobby-entry.spec.ts",
+          "line": 205,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "native-intro.spec.ts",
+      "file": "native-intro.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "bundled native intro loops locally, pauses on touch and suspends in background",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "8ffbcf62de7f1c80c832-a1fc9872b85df19361d5",
+          "file": "native-intro.spec.ts",
+          "line": 3,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "retry.spec.ts",
+      "file": "retry.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "429 create retains the same bootstrap through reload/cooldown; retries only on manual press",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1d4db9983fd58b264f38-7c8cb4abd126f805d73c",
+          "file": "retry.spec.ts",
+          "line": 16,
+          "column": 52
+        },
+        {
+          "title": "429 join retains the same bootstrap through reload/cooldown; retries only on manual press",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1d4db9983fd58b264f38-080608fce2744866fa40",
+          "file": "retry.spec.ts",
+          "line": 16,
+          "column": 52
+        },
+        {
+          "title": "retryable command retains exact envelope + cooldown across reload; expiry is manual and no proposal agreement is invented",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1d4db9983fd58b264f38-ad3948c96b4f537c5880",
+          "file": "retry.spec.ts",
+          "line": 42,
+          "column": 5
+        },
+        {
+          "title": "definitive admission failure clears bootstrap so corrected input gets a new request; malformed Retry-After is bounded",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1d4db9983fd58b264f38-993be932327854b09e71",
+          "file": "retry.spec.ts",
+          "line": 61,
+          "column": 5
+        },
+        {
+          "title": "terminal HTTP status takes precedence over retryable busy and never offers a pending action",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1d4db9983fd58b264f38-a6d35992acc3b412890d",
+          "file": "retry.spec.ts",
+          "line": 70,
+          "column": 5
+        },
+        {
+          "title": "create must persist the exact bootstrap before every submit after repeated storage failures",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1d4db9983fd58b264f38-97faa091f59f7af40f5b",
+          "file": "retry.spec.ts",
+          "line": 77,
+          "column": 53
+        },
+        {
+          "title": "join must persist the exact bootstrap before every submit after repeated storage failures",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1d4db9983fd58b264f38-92211c69705295149746",
+          "file": "retry.spec.ts",
+          "line": 77,
+          "column": 53
+        }
+      ]
+    },
+    {
+      "title": "watch-links.spec.ts",
+      "file": "watch-links.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Tonight provider links and GoodWatch details fit 320x568",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "33ce040a22ee537de90f-2dd245423e7a93b5b5cb",
+          "file": "watch-links.spec.ts",
+          "line": 5,
+          "column": 6
+        },
+        {
+          "title": "Tonight provider links and GoodWatch details fit 375x667",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "33ce040a22ee537de90f-84046e7dd164500a26b3",
+          "file": "watch-links.spec.ts",
+          "line": 5,
+          "column": 6
+        },
+        {
+          "title": "Tonight provider links and GoodWatch details fit 390x844",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "33ce040a22ee537de90f-4bcf086b14bf60d4bfe9",
+          "file": "watch-links.spec.ts",
+          "line": 5,
+          "column": 6
+        },
+        {
+          "title": "Tonight provider links and GoodWatch details fit 844x390",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "33ce040a22ee537de90f-3098d8bb9473a4e8c97d",
+          "file": "watch-links.spec.ts",
+          "line": 5,
+          "column": 6
+        },
+        {
+          "title": "Tonight provider links and GoodWatch details fit 1440x900",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "33ce040a22ee537de90f-a35806c60002e8bcbda0",
+          "file": "watch-links.spec.ts",
+          "line": 5,
+          "column": 6
         }
       ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-22T10:37:39.261Z",
-    "duration": 63558.156,
-    "expected": 26,
-    "skipped": 0,
-    "unexpected": 0,
+    "startTime": "2026-10-26T18:20:36.732Z",
+    "duration": 207531.21899999998,
+    "expected": 11,
+    "skipped": 72,
+    "unexpected": 8,
     "flaky": 0
   }
 }

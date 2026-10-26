@@ -122,7 +122,7 @@ test('guests see one room selection without a screen picker or setup controls', 
     page.getByRole('button', { name: /Choose.*screen|Watch on|Ready to watch/ })
   ).toHaveCount(0);
   await expect(
-    page.getByRole('button', { name: 'Edit room description and services' })
+    page.getByRole('button', { name: 'Mood & services' })
   ).toHaveCount(0);
   expect(f.room.own.agreement.agreed).toBe(false);
 });

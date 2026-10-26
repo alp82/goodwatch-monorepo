@@ -1,6 +1,16 @@
 import { test, expect, type Page } from '@playwright/test';
 import type { CommandEnvelope, GuestAdmissionRequest } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousFixture } from '../continuous-fixture';
+const CREATE = /^(Create room|Retry room request|Retry in \d+s|Connecting…)$/;
+const JOIN = /^(Join|Retry joining|Retry in \d+s|Connecting…)$/;
+/** Opens Create (name) or Join (code + name) the way a first visit does. */
+async function open(page: Page, mode: 'create' | 'join', name: string) {
+  await page.goto('/');
+  await page.getByRole('button', { name: mode === 'create' ? 'Create a room' : 'Join a room', exact: true }).click();
+  if (mode === 'join') await page.getByLabel('Room code or invitation').fill('fixture-invite');
+  await page.getByLabel('Your name').fill(name);
+  return page.getByRole('button', { name: mode === 'create' ? CREATE : JOIN });
+}
 async function common(page: Page) {
   const room = continuousFixture();
   room.shared.stream = { state: 'exhausted', version: 1, reason: 'catalog_end' };
@@ -23,14 +33,13 @@ for (const mode of ['create','join'] as const) test(`429 ${mode} retains the sam
     if (bodies.length === 2) { admitted = true; return route.fulfill({json:{credential:{roomId:'test-room',participantId:'host',token:'',expiresAt:room.shared.expiresAt},snapshot:room,invite:{code:'fixture-invite',path:'/r/fixture-invite'}}}); }
     return route.fulfill({status:429,headers:{'Retry-After':'2'},json:{error:{code:'limit_reached',message:'Please wait before retrying.',retryable:true}}});
   });
-  await page.goto('/'); await page.getByRole('button', { name: 'Create a room', exact: true }).click(); await page.getByLabel('Your nickname').fill('Guest');
-  if(mode==='join') {await page.getByRole('button',{name:'Join with an invitation',exact:true}).click();await page.getByLabel('Room code or invitation').fill('fixture-invite');}
-  const action=page.getByRole('button',{name:mode==='create'?'Create a room':'Join room',exact:true});
+  const action = await open(page, mode, 'Guest');
   await action.click(); await expect(action).toBeDisabled();
   await expect(page.getByText(/Your room request is saved/)).toBeVisible();
   expect(bodies).toHaveLength(1); const first=structuredClone(bodies[0]);
   await page.reload(); await expect(action).toBeDisabled();
-  await expect(page.getByLabel('Your nickname')).toHaveValue('Guest');
+  if (mode === 'create') await expect(page.getByLabel('Your name')).toHaveValue('Guest');
+  else await expect(page.getByText('Joining as Guest', { exact: true })).toBeVisible();
   if(mode==='join') await expect(page.getByLabel('Room code or invitation')).toHaveValue('fixture-invite');
   await expect(action).toBeEnabled(); expect(bodies).toHaveLength(1);
   await page.waitForTimeout(150); expect(bodies).toHaveLength(1);
@@ -61,9 +70,9 @@ test('retryable command retains exact envelope + cooldown across reload; expiry 
 test('definitive admission failure clears bootstrap so corrected input gets a new request; malformed Retry-After is bounded',async({page})=>{
   await common(page);const bodies:GuestAdmissionRequest[]=[];
   await page.route('**/proposal/rooms',async route=>{bodies.push(route.request().postDataJSON());return route.fulfill({status:400,headers:{'Retry-After':'999999999999999'},json:{error:{code:'invalid_request',message:'Please correct your nickname.',retryable:false}}});});
-  await page.goto('/'); await page.getByRole('button', { name: 'Create a room', exact: true }).click();await page.getByLabel('Your nickname').fill('First');await page.getByRole('button',{name:'Create a room',exact:true}).click();
+  const action = await open(page, 'create', 'First'); await action.click();
   await expect(page.getByText('Please correct your nickname.',{exact:true})).toBeVisible();
-  await page.getByLabel('Your nickname').fill('Corrected');await page.getByRole('button',{name:'Create a room',exact:true}).click();
+  await page.getByLabel('Your name').fill('Corrected');await action.click();
   await expect.poll(()=>bodies.length).toBe(2);expect(bodies[1].commandId).not.toBe(bodies[0].commandId);expect(bodies[1].nickname).toBe('Corrected');
 });
 
@@ -94,9 +103,7 @@ for (const mode of ['create', 'join'] as const) test(`${mode} must persist the e
     bodies.push(route.request().postDataJSON());
     return route.fulfill({status:429,headers:{'Retry-After':'1'},json:{error:{code:'limit_reached',message:'Manual retry only',retryable:true}}});
   });
-  await page.goto('/'); await page.getByRole('button', { name: 'Create a room', exact: true }).click(); await page.getByLabel('Your nickname').fill('Persist first');
-  if (mode === 'join') { await page.getByRole('button',{name:'Join with an invitation',exact:true}).click();await page.getByLabel('Room code or invitation').fill('fixture-invite'); }
-  const action=page.getByRole('button',{name:mode==='create'?'Create a room':'Join room',exact:true});
+  const action = await open(page, mode, 'Persist first');
   await action.click();await expect(page.getByText(/storage is unavailable/)).toBeVisible();expect(bodies).toHaveLength(0);
   await expect(action).toBeEnabled();await action.click();await expect(action).toBeDisabled();await expect(action).toHaveText(/Retry in/);
   expect(bodies).toHaveLength(0); // A retained in-memory request is not proof of persistence.

@@ -22,7 +22,12 @@ import { readCommandRecovery, writePending } from './storage';
 import { useRetryCountdown } from './useRetryCountdown';
 import { ContinuousRealtime } from './realtime';
 import { applyActivity, pruneActivity, type PeerActivity } from './activity';
+import { applyCheerFrame, emptyCheers, freshCheerEvents, holderSeeds, nextCheerExpiry, pruneCheers, type CheerEvent, type CheerState } from './cheers';
+import { ACTIVITY_LIMITS } from '@goodwatch/yepwatch-contracts/proposal';
 export const continuousKey = (id: string) => ['proposal-room', id] as const;
+/** Your rooms keeps one query per room; room snapshots update it directly. */
+export const homeRoomKey = (roomId: string) => ['home-room', roomId] as const;
+const EMPTY_HOLDERS: ReadonlyMap<string, number> = new Map();
 export function useContinuousRoom(roomId: string) {
   const [access, setAccess] = useState<RoomAccess | null>();
   const [connection, setConnection] = useState<Connection>('connecting');
@@ -36,6 +41,13 @@ export function useContinuousRoom(roomId: string) {
   const retrySeconds = useRetryCountdown(retryAt);
   const [activities, setActivities] = useState(new Map<string, PeerActivity>());
   const clock = useRef(0);
+  // Decision cheers: peer state lives in a ref (pure folds), holders/events are published as state.
+  const cheerState = useRef<CheerState>(emptyCheers());
+  const [cheerVersion, setCheerVersion] = useState(0);
+  const [cheerHolders, setCheerHolders] = useState<{ generation: number; ids: Map<string, number> }>({ generation: -1, ids: new Map() });
+  const [cheerEvents, setCheerEvents] = useState<CheerEvent[]>([]);
+  const ownHoldSeed = useRef<number | null>(null);
+  const ownCheerSeq = useRef(0);
   const channel = useRef<ContinuousRealtime | null>(null);
   const queue = useRef(
     new PersistentCommands(() => Crypto.randomUUID(), { write: (e, until) => writePending(roomId, e, until) })
@@ -86,6 +98,9 @@ export function useContinuousRoom(roomId: string) {
       queryClient.setQueryData<CachedRoom>(continuousKey(roomId), (old) =>
         mergeRoom(old, incoming)
       );
+      // Your rooms reads the same authoritative state: Back after Done or Start again is never stale.
+      const merged = queryClient.getQueryData<CachedRoom>(continuousKey(roomId));
+      if (merged) queryClient.setQueryData(homeRoomKey(roomId), merged);
     },
     [roomId, expired, end]
   );
@@ -194,8 +209,28 @@ export function useContinuousRoom(roomId: string) {
         if (state === 'expired') end('expired');
         else if (!terminalRef.current) setConnection(state);
       },
-      clearActivity: () => setActivities(new Map()),
+      clearActivity: () => {
+        setActivities(new Map());
+        cheerState.current = emptyCheers();
+        setCheerHolders({ generation: -1, ids: new Map() });
+        setCheerEvents((old) => old.filter((e) => e.self));
+        setCheerVersion((v) => v + 1);
+      },
       activity: (frame) => {
+        if (frame.cheer) {
+          // Only the confirmed decision of the current generation can be cheered.
+          const shared = cached()?.shared;
+          if (!shared || shared.phase !== 'decided' || frame.cheer.generation !== shared.generation) return;
+          const now = Date.now() + clock.current;
+          const result = applyCheerFrame(cheerState.current, frame, now, cached()?.own.participantId ?? '');
+          cheerState.current = result.state;
+          setCheerHolders({ generation: shared.generation, ids: holderSeeds(result.state, now, shared.generation) });
+          setCheerVersion((v) => v + 1);
+          if (result.event) {
+            const event = result.event;
+            setCheerEvents((old) => [...old, event].slice(-24));
+          }
+        }
         if (
           frame.inspection?.kind === 'poster' &&
           !cached()?.shared.matches.some(
@@ -239,6 +274,27 @@ export function useContinuousRoom(roomId: string) {
     );
     return () => clearTimeout(timer);
   }, [activities]);
+  // One-shot expiry: a holder whose renewals stop disappears within the pulse TTL; no tick while nobody holds.
+  useEffect(() => {
+    const now = Date.now() + clock.current;
+    const next = nextCheerExpiry(cheerState.current, now);
+    if (next === null) return;
+    const timer = setTimeout(() => {
+      const at = Date.now() + clock.current;
+      cheerState.current = pruneCheers(cheerState.current, at);
+      setCheerHolders((old) => ({ generation: old.generation, ids: holderSeeds(cheerState.current, at, old.generation) }));
+      setCheerVersion((v) => v + 1);
+    }, Math.max(1, next - now));
+    return () => clearTimeout(timer);
+  }, [cheerVersion]);
+  // Bursts expire with the pulse TTL (one timer per change, none while empty).
+  useEffect(() => {
+    if (!cheerEvents.length) return;
+    const now = Date.now() + clock.current;
+    const next = Math.min(...cheerEvents.map((e) => e.at)) + ACTIVITY_LIMITS.pulseTtlMs;
+    const timer = setTimeout(() => setCheerEvents((old) => freshCheerEvents(old, Date.now() + clock.current)), Math.max(1, next - now));
+    return () => clearTimeout(timer);
+  }, [cheerEvents]);
   useEffect(() => {
     const deadline = room.data?.shared.expiresAt;
     if (!deadline || terminal) return;
@@ -275,9 +331,28 @@ export function useContinuousRoom(roomId: string) {
       setPending(terminalRef.current ? null : queue.current.pending);
     }
   }
+  const decided = room.data?.shared.phase === 'decided' ? room.data.shared.generation : null;
   return {
     room,
     access,
+    /** Peer participants (distinct, not sessions) currently holding for the shown decision, with their episode seed. */
+    cheerHolders: decided !== null && cheerHolders.generation === decided ? cheerHolders.ids : EMPTY_HOLDERS,
+    /** Bursts to render (taps and first holds), own ones included with self:true; current decision only. */
+    cheerEvents: decided === null ? [] : cheerEvents.filter((e) => e.generation === decided),
+    /** Sends one cheer frame for the confirmed decision; local feedback is immediate even if offline. */
+    cheer: (kind: 'tap' | 'hold' | 'release', seed: number) => {
+      const snapshot = cached();
+      if (!snapshot || snapshot.shared.phase !== 'decided') return;
+      const generation = snapshot.shared.generation;
+      channel.current?.sendCheer({ kind, generation, seed });
+      const first = kind === 'tap' || (kind === 'hold' && ownHoldSeed.current !== seed);
+      if (kind === 'hold') ownHoldSeed.current = seed;
+      if (kind === 'release') ownHoldSeed.current = null;
+      if (first) {
+        const event: CheerEvent = { id: `self:${++ownCheerSeq.current}`, participantId: snapshot.own.participantId, kind, seed, generation, at: Date.now() + clock.current, self: true };
+        setCheerEvents((old) => [...old, event].slice(-24));
+      }
+    },
     connection,
     error,
     busy,

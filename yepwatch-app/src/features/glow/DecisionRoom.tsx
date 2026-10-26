@@ -79,6 +79,9 @@ export function DecisionRoom({
   inspect,
   cues,
   people,
+  renderBadge,
+  shape,
+  inset,
 }: {
   readOnly?: boolean;
   items: DecisionItem[];
@@ -91,7 +94,8 @@ export function DecisionRoom({
   wide: boolean;
   focus: string | null;
   setFocus: (id: string | null) => void;
-  keepVoting: () => void;
+  /** Optional so a read-only review can omit Keep swiping; production passes it. */
+  keepVoting?: () => void;
   propose: (id: string) => void;
   agree: () => void;
   withdraw: () => void;
@@ -99,8 +103,16 @@ export function DecisionRoom({
   inspect: (kind: InspectionCue['kind'], candidateId?: string) => void;
   cues: InspectionCue[];
   people: GlowPerson[];
+  /** Optional poster badge renderer; returning undefined (or omitting it) keeps the built-in lens badge. */
+  renderBadge?: (item: DecisionItem, lens: DecisionLens, tiny: boolean, best: boolean, width: number) => React.ReactNode | undefined;
+  /** Optional corner radii for text controls and the proposal panel; omitted keeps the approved values. */
+  shape?: { control: number; card: number };
+  /** Optional horizontal inset of the matches header row; defaults to 40 wide / 24 compact. */
+  inset?: number;
 }) {
   const reduced = useReducedMotion();
+  const ctl = (fallback: number) => shape?.control ?? fallback;
+  const card = (fallback: number) => shape?.card ?? fallback;
   const [lens, setLens] = useState<DecisionLens>('score');
   const [area, setArea] = useState({ width: 340, height: 250 });
   const [detail, setDetail] = useState<string | null>(null);
@@ -221,7 +233,7 @@ export function DecisionRoom({
           }}
           style={{
             minHeight: 48,
-            borderRadius: 16,
+            borderRadius: ctl(16),
             paddingHorizontal: 12,
             paddingRight: 64,
             flexDirection: 'row',
@@ -282,7 +294,7 @@ export function DecisionRoom({
             label="Take back your agreement"
             onPress={withdraw}
             disabled={disabled}
-            style={{ position: 'absolute', top: 0, right: 0, width: 54, height: 48, borderLeftWidth: 1, borderLeftColor: glow.amber, borderRadius: 12 }}
+            style={{ position: 'absolute', top: 0, right: 0, width: 54, height: 48, borderLeftWidth: 1, borderLeftColor: glow.amber, borderRadius: ctl(12) }}
           >
             <Icon name="undo" size={20} color={glow.amber} />
           </Press>
@@ -317,7 +329,7 @@ export function DecisionRoom({
           paddingTop: 12,
           paddingBottom: 12,
           flexDirection: 'row',
-          paddingHorizontal: wide ? 40 : 24,
+          paddingHorizontal: inset ?? (wide ? 40 : 24),
           alignItems: 'center',
           gap: 12,
         }}
@@ -325,7 +337,7 @@ export function DecisionRoom({
         <GText bold size={wide ? 20 : 16} lines={1}>
           {matchCount} {matchCount === 1 ? 'match' : 'matches'}
         </GText>
-        {readOnly && <Press label="Keep swiping" onPress={keepVoting} style={{ marginLeft: 'auto', minHeight: 40, paddingHorizontal: 14, backgroundColor: '#fbbf2420', borderRadius: 20 }}><GText size={13} bold color={glow.amber}>Keep swiping</GText></Press>}
+        {readOnly && keepVoting && <Press label="Keep swiping" onPress={keepVoting} style={{ marginLeft: 'auto', minHeight: 40, paddingHorizontal: 14, backgroundColor: '#fbbf2420', borderRadius: ctl(20) }}><GText size={13} bold color={glow.amber}>Keep swiping</GText></Press>}
         {wide && (
           <GText color={glow.muted} size={14}>
             · decide together
@@ -347,7 +359,7 @@ export function DecisionRoom({
                   flexDirection: 'row',
                   minHeight: 42,
                   gap: 5,
-                  borderRadius: 18,
+                  borderRadius: ctl(18),
                   paddingHorizontal: wide ? 13 : 9,
                   borderWidth: 1,
                   borderColor: lens === l.key ? glow.amber : glow.line,
@@ -417,6 +429,7 @@ export function DecisionRoom({
                 lit={lit === item.title.id}
                 proposalVersion={proposal?.candidateId === item.title.id ? proposal.version : 0}
                 dots={peerDots('poster', item.title.id)}
+                renderBadge={renderBadge}
                 onPress={() => {
                   if (!rolling) {
                     if (item.title.id === (focus ?? proposal?.candidateId))
@@ -443,9 +456,9 @@ export function DecisionRoom({
           alignSelf: 'center',
           width: '100%',
           maxWidth: 1040,
-          borderTopLeftRadius: 28,
-          borderTopRightRadius: 28,
-          borderRadius: wide ? 28 : undefined,
+          borderTopLeftRadius: card(28),
+          borderTopRightRadius: card(28),
+          borderRadius: wide ? card(28) : undefined,
           marginBottom: wide ? 18 : 0,
           borderWidth: 1,
           borderColor: proposal ? '#fbbf2470' : glow.line,
@@ -507,7 +520,7 @@ export function DecisionRoom({
                 gold
                 disabled={disabled || checking}
                 icon="tickets"
-                style={{ borderRadius: 16, minHeight: 44 }}
+                style={{ borderRadius: ctl(16), minHeight: 44 }}
               >
                 {proposal ? 'Propose this instead' : 'Propose this'}
               </Pill>
@@ -643,6 +656,7 @@ function DecisionTile({
   proposalVersion,
   dots,
   onPress,
+  renderBadge,
 }: {
   item: DecisionItem;
   width: number;
@@ -655,9 +669,11 @@ function DecisionTile({
   proposalVersion: number;
   dots: React.ReactNode;
   onPress: () => void;
+  renderBadge?: (item: DecisionItem, lens: DecisionLens, tiny: boolean, best: boolean, width: number) => React.ReactNode | undefined;
 }) {
   const pulse = useDecisionPulse(proposalVersion);
   const tiny = width < 82;
+  const customBadge = renderBadge?.(item, lens, tiny, best, width);
   return (
     <Press
       label={`Inspect ${titleYear(item.title)}, ${lensFact(item, lens)}${proposed ? ', proposed' : ''}${best ? ', best' : ''}`}
@@ -689,7 +705,7 @@ function DecisionTile({
             </GText>
           </View>
         )}
-        <View
+        {customBadge !== undefined ? customBadge : <View
           pointerEvents="none"
           style={{
             position: 'absolute',
@@ -704,7 +720,7 @@ function DecisionTile({
           <GText size={tiny ? 9 : 12} bold color={best ? '#201400' : glow.ink} lines={1}>
             {lensFact(item, lens, tiny)}
           </GText>
-        </View>
+        </View>}
         {proposed && (
           <View
             pointerEvents="none"

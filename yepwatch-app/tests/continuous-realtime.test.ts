@@ -87,6 +87,7 @@ test('activity requires authenticated live snapshot and a fresh session; backgro
     roomId: 'test-room',
     lastRevision: 1,
     pointers: true,
+    cheers: true,
     roomDetails: true,
   });
   h.client.sendActivity('matches', 'handle');
@@ -261,4 +262,29 @@ test('malformed public activity is never delivered; unknown frame triggers repai
   assert.equal(delivered, 0);
   assert.equal(s.closed, true);
   h.client.stop();
+});
+test('decision cheers go out as one matches frame, are rate limited, and the 3 s view renewal never replays them', async () => {
+  const h = harness();
+  h.client.setView('matches');
+  assert.equal(h.client.sendCheer({ kind: 'tap', generation: 2, seed: 7 }), false);
+  h.client.start();
+  await tick();
+  const s = h.sockets[0];
+  s.open();
+  assert.equal(JSON.parse(s.sent[0]).cheers, true);
+  s.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  s.frame({ type: 'activity.session', roomId: 'test-room', sessionId: 'live', serverTime: Date.now() });
+  const before = s.sent.length;
+  assert.equal(h.client.sendCheer({ kind: 'hold', generation: 2, seed: 99 }), true);
+  assert.deepEqual(JSON.parse(s.sent.at(-1)!), { type: 'activity', sessionId: 'live', sequence: 2, view: 'matches', cheer: { kind: 'hold', generation: 2, seed: 99 } });
+  h.run(3000);
+  const renewal = JSON.parse(s.sent.at(-1)!);
+  assert.equal(renewal.cheer, undefined);
+  assert.equal(renewal.view, 'matches');
+  // At most four cheer frames per second, but a release always goes out.
+  for (let i = 0; i < 6; i++) h.client.sendCheer({ kind: 'hold', generation: 2, seed: 99 });
+  const cheers = s.sent.slice(before).map((x) => JSON.parse(x)).filter((f) => f.cheer);
+  assert.equal(cheers.length, 4);
+  assert.equal(h.client.sendCheer({ kind: 'release', generation: 2, seed: 99 }), true);
+  assert.equal(JSON.parse(s.sent.at(-1)!).cheer.kind, 'release');
 });

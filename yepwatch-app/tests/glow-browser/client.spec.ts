@@ -142,6 +142,22 @@ async function fixture(page: Page, setupGuest = false) {
             isProposer: true,
           };
         }
+        if (c.type === 'restart') {
+          room.shared.phase = 'setup';
+          room.shared.generation++;
+          room.shared.contextVersion++;
+          room.shared.rosterVersion++;
+          room.shared.decision = null;
+          room.shared.proposal = null;
+          room.shared.matches = [];
+          room.own.votes = [];
+          room.own.nextCandidateId = 'c1';
+        }
+        if (c.type === 'start') {
+          if (c.expectedContextVersion !== room.shared.contextVersion || c.expectedRosterVersion !== room.shared.rosterVersion)
+            return route.fulfill({ status: 409, json: { error: { code: 'conflict', message: 'State version changed', retryable: false }, snapshot: room } });
+          room.shared.phase = 'choosing';
+        }
         if (c.type === 'agree') {
           room.own.agreement = {
             proposalVersion: room.shared.proposalVersion,
@@ -227,7 +243,7 @@ test('inspection and dice never propose; shared proposal replacement and Keep vo
   await expect(page.getByText('Everyone agrees. Enjoy your watch.', { exact: true })).toHaveCount(
     0
   );
-  await page.getByRole('button', { name: 'Back to voting', exact: true }).click();
+  await page.getByRole('button', { name: 'Back to Voting', exact: true }).click();
   await expect.poll(() => page.getByTestId('poster').innerText()).toBe(initial);
 });
 test('left swipe after reversal sends exactly the same pass as Nope and recenters', async ({
@@ -295,8 +311,8 @@ test('unavailable account start stays an honest guest state inside the room draw
   page,
 }) => {
   await fixture(page);
-  await page.getByRole('button', { name: 'Open room', exact: true }).click();
-  await page.getByRole('button', { name: 'Sign in with GoodWatch', exact: true }).click();
+  await page.getByRole('button', { name: /^Room, \d/ }).click();
+  await page.getByRole('button', { name: 'Continue with GoodWatch', exact: true }).click();
   await expect(
     page
       .getByText(
@@ -306,7 +322,7 @@ test('unavailable account start stays an honest guest state inside the room draw
       .last()
   ).toBeVisible();
   await expect(page.getByText('Signed in with GoodWatch', { exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Close panel', exact: true }).last().click();
+  await page.getByRole('button', { name: 'Back to Voting', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Yep', exact: true })).toBeEnabled();
 });
 
@@ -321,7 +337,7 @@ test('the creator invitation survives a full navigation/reload without bearer st
     )
   );
   await page.reload();
-  await page.getByRole('button', { name: 'Open room', exact: true }).click();
+  await page.getByRole('button', { name: /^Room, \d/ }).click();
   await expect(page.getByRole('button', { name: 'Share invitation', exact: true })).toBeEnabled();
   await expect(
     page.getByText(`${new URL(page.url()).origin}/r/isolated-invite`, { exact: true })
@@ -364,7 +380,7 @@ for (const error of [101, 150])
     // At least two periodic reports later the refusal remains actionable.
     await page.waitForTimeout(1600);
     await expect(page.getByRole('button', { name: 'Play with sound', exact: true })).toHaveCount(0);
-    await page.getByRole('button', { name: 'Close panel', exact: true }).last().click();
+    await page.getByRole('button', { name: 'Back to Voting', exact: true }).click();
     await expect.poll(() => page.getByTestId('poster').innerText()).toBe(card);
     expect(f.commands).toHaveLength(0);
     await page.getByRole('button', { name: 'Inspect 2 matches', exact: true }).click();
@@ -456,21 +472,20 @@ for (const viewport of [
         }))
       ).toEqual({ scroll: 0, height: viewport.height, viewport: viewport.height });
     };
-    await page.goto('/'); await page.getByRole('button', { name: 'Create a room', exact: true }).click();
-    await page.getByLabel('Your nickname').fill('Layout check');
+    await page.goto('/');
     await reachable('Create a room');
+    await reachable('Continue with GoodWatch');
     await noPageScroll();
     await page.screenshot({ path: `artifacts/glow/layout-entry-${viewport.width}.png` });
-    if (await page.getByRole('button', { name: 'More options', exact: true }).count()) {
-      await page.getByRole('button', { name: 'More options', exact: true }).click();
-      await reachable('Sign in with GoodWatch');
-      await page.getByRole('button', { name: 'Join with an invitation', exact: true }).click();
-    } else {
-      await reachable('Sign in with GoodWatch');
-      await page.getByRole('button', { name: 'Join with an invitation', exact: true }).click();
-    }
-    await page.getByLabel('Room code or invitation').fill('isolated-code');
-    await reachable('Join room');
+    await page.getByRole('button', { name: 'Create a room', exact: true }).click();
+    await page.getByLabel('Your name').fill('Layout check');
+    await reachable('Create room');
+    await noPageScroll();
+    await page.getByRole('button', { name: 'Back to Start', exact: true }).click();
+    await page.getByRole('button', { name: 'Join a room', exact: true }).click();
+    await page.getByLabel('Room code or invitation').fill('ABC234');
+    await page.getByLabel('Your name').fill('Layout check');
+    await reachable('Join');
     await noPageScroll();
     await page.screenshot({ path: `artifacts/glow/layout-join-${viewport.width}.png` });
 
@@ -479,7 +494,6 @@ for (const viewport of [
     await page.reload();
     await reachable('Start choosing');
     await reachable('Invite friends');
-    await reachable('Refresh room');
     await noPageScroll();
     await page.screenshot({ path: `artifacts/glow/layout-setup-${viewport.width}.png` });
     f.room.shared.phase = 'decided';
@@ -496,8 +510,8 @@ for (const viewport of [
     const details = page.getByRole('link', { name: 'Full details on GoodWatch' });
     await expect(details).toBeVisible();
     await details.click({ trial: true });
-    await reachable('Choose again');
-    await reachable('Refresh room');
+    await reachable('Start again');
+    await expect(page.getByRole('button', { name: /Keep swiping|Keep voting/ })).toHaveCount(0);
     await noPageScroll();
     await page.screenshot({ path: `artifacts/glow/layout-done-${viewport.width}.png` });
   });
@@ -512,10 +526,10 @@ test('retained continuing-only setup has an explicit guest fallback without sile
   f.room.own.member = { state: 'unavailable', prefill: null };
   await page.reload();
   await page
-    .getByRole('button', { name: 'Edit room description and services', exact: true })
+    .getByRole('button', { name: 'Mood & services', exact: true })
     .click();
   await expect(
-    page.getByRole('button', { name: 'Save room description', exact: true })
+    page.getByRole('button', { name: 'Save', exact: true })
   ).toBeDisabled();
   await expect(page.getByText('More settings', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('checkbox', { name: 'Continue my shows', exact: true })).toHaveCount(
@@ -526,14 +540,14 @@ test('retained continuing-only setup has an explicit guest fallback without sile
   // Neither opening settings nor selecting guest modes silently removes the retained kind.
   expect(f.commands).toHaveLength(0);
   await expect(
-    page.getByRole('button', { name: 'Save room description', exact: true })
+    page.getByRole('button', { name: 'Save', exact: true })
   ).toBeDisabled();
   await page.getByRole('button', { name: 'Use movies and new shows', exact: true }).click();
   await expect(
-    page.getByRole('button', { name: 'Save room description', exact: true })
+    page.getByRole('button', { name: 'Save', exact: true })
   ).toBeEnabled();
   expect(f.commands).toHaveLength(0);
-  await page.getByRole('button', { name: 'Save room description', exact: true }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect.poll(() => f.commands.length).toBe(1);
   expect(f.commands[0].command).toMatchObject({
     type: 'configure',
@@ -544,7 +558,7 @@ test('retained continuing-only setup has an explicit guest fallback without sile
     constraints: { kinds: ['movie', 'show_start'], maxMinutes: 45, moods: [] },
   });
   await expect(
-    page.getByRole('button', { name: 'Save room description', exact: true })
+    page.getByRole('button', { name: 'Save', exact: true })
   ).toHaveCount(0);
   await page.reload();
   expect(f.room.shared.constraints.kinds).toEqual(['movie', 'show_start']);
@@ -588,7 +602,7 @@ for (const viewport of [
     }));
     expect(doc.h).toBeLessThanOrEqual(viewport.height);
     expect(doc.w).toBeLessThanOrEqual(viewport.width);
-    await expect(page.getByRole('button', { name: 'Back to voting', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Back to Voting', exact: true })).toBeVisible();
     expect(f.commands).toHaveLength(0);
     await page.screenshot({ path: `artifacts/hybrid/wall-fixture-${viewport.width}.png` });
   });
@@ -624,7 +638,7 @@ test('late newcomer can inspect and Agree to preserved nonmatch proposal with ex
   });
   await page.getByRole('button', { name: 'Take back your agreement', exact: true }).click();
   expect(f.commands.at(-1)?.command.type).toBe('agree');
-  await page.getByRole('button', { name: 'Back to voting', exact: true }).click();
+  await page.getByRole('button', { name: 'Back to Voting', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Yep', exact: true })).toBeVisible();
 });
 
@@ -637,10 +651,10 @@ test('measured Yep exposure pauses for details and match inspection; missing rel
   await page.getByTestId('poster').click({ position: { x: 20, y: 20 } });
   await page.getByRole('dialog').waitFor();
   await page.waitForTimeout(700);
-  await page.getByRole('button', { name: 'Close panel', exact: true }).last().click();
+  await page.getByRole('button', { name: 'Back to Voting', exact: true }).click();
   await page.getByRole('button', { name: 'Inspect 2 matches', exact: true }).click();
   await page.waitForTimeout(700);
-  await page.getByRole('button', { name: 'Back to voting', exact: true }).click();
+  await page.getByRole('button', { name: 'Back to Voting', exact: true }).click();
   await page.waitForTimeout(200);
   await page.getByRole('button', { name: 'Yep', exact: true }).click();
   await expect.poll(() => f.commands.at(-1)?.command.type).toBe('vote');
@@ -816,7 +830,7 @@ test('room prompt and mobile service selection publish attributes without screen
   const f = await fixture(page);
   f.room.shared.phase = 'setup';
   await page.reload();
-  await page.getByRole('button', { name: 'Edit room description and services' }).click();
+  await page.getByRole('button', { name: 'Mood & services' }).click();
   await expect(
     page.getByRole('button', { name: /More settings|Add remote screen|Watch on/ })
   ).toHaveCount(0);
@@ -829,7 +843,7 @@ test('room prompt and mobile service selection publish attributes without screen
   await expect(page.getByRole('textbox', { name: 'Find country' })).toBeVisible();
   await page.getByRole('button', { name: 'Germany', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Netflix', exact: true }).click();
-  await page.getByRole('button', { name: 'Save room description' }).click();
+  await page.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByText('Funny', { exact: true })).toBeVisible();
   await expect.poll(() => f.commands.at(-1)?.command).toMatchObject({
     type: 'configure',
@@ -840,7 +854,7 @@ test('room prompt and mobile service selection publish attributes without screen
   await page.reload();
   await expect(page.getByText('funny comfort watch', { exact: true })).toBeVisible();
   await expect(page.getByText('Funny', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Edit room description and services' }).click();
+  await page.getByRole('button', { name: 'Mood & services' }).click();
   await page.getByRole('textbox', { name: 'Describe what to watch' }).waitFor();
   await page.screenshot({ path: test.info().outputPath('settings-mobile.png'), animations: 'disabled' });
   await page.getByRole('checkbox', {name: 'Netflix', exact: true}).scrollIntoViewIfNeeded();
@@ -851,7 +865,7 @@ test('leaving the room sends one explicit command and returns to the entrance', 
   page,
 }) => {
   const f = await fixture(page);
-  await page.getByRole('button', { name: 'Open room' }).click();
+  await page.getByRole('button', { name: /^Room, \d/ }).click();
   await page.getByRole('button', { name: 'Leave room', exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
   expect(f.commands.filter((e) => e.command.type === 'leave')).toHaveLength(1);
@@ -864,8 +878,8 @@ test('leaving the room sends one explicit command and returns to the entrance', 
  await page.reload();
  await expect(page.getByLabel('Sam, dropped', {exact:true})).toBeVisible();
  await expect(page.getByRole('button', {name:'Room, 1 person'})).toBeVisible();
- await page.getByRole('button',{name:'Open room'}).click();
- await expect(page.getByText('Sam · Dropped',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:/^Room, \d/}).click();
+ await expect(page.getByText('Sam · Left',{exact:true})).toBeVisible();
  await page.screenshot({path:test.info().outputPath('dropped-mobile.png'),animations:'disabled'});
  });
 
@@ -880,18 +894,18 @@ test('shared saved-provider defaults preselect the union, filter unavailable pro
  await expect(page.getByRole('checkbox',{name:'Disney+',exact:true})).toBeChecked();
  await page.getByRole('checkbox',{name:'Netflix',exact:true}).click();
  await expect(page.getByRole('checkbox',{name:'Netflix',exact:true})).not.toBeChecked();
- await page.getByRole('button',{name:'Save room description',exact:true}).click();
+ await page.getByRole('button',{name:'Save',exact:true}).click();
  await expect.poll(()=>f.commands.at(-1)?.command.type).toBe('configure');
  expect(f.commands.at(-1)?.command).toMatchObject({serviceIds:[337]});
  await expect(page.getByRole('dialog')).toHaveCount(0);
- await expect(page.getByRole('button',{name:'Edit room description and services'})).toBeEnabled();
+ await expect(page.getByRole('button',{name:'Mood & services'})).toBeEnabled();
  await page.reload();
- await page.getByRole('button',{name:'Edit room description and services'}).click();
+ await page.getByRole('button',{name:'Mood & services'}).click();
  await expect(page.getByRole('checkbox',{name:'Netflix',exact:true})).not.toBeChecked();
  await expect(page.getByRole('checkbox',{name:'Disney+',exact:true})).toBeChecked();
  await page.getByRole('button',{name:'Use everyone’s saved services',exact:true}).click();
  await expect(page.getByRole('checkbox',{name:'Netflix',exact:true})).toBeChecked();
- await page.getByRole('button',{name:'Save room description',exact:true}).click();
+ await page.getByRole('button',{name:'Save',exact:true}).click();
  await expect.poll(()=>f.commands.filter(c=>c.command.type==='configure').length).toBe(2);
  expect(f.commands.at(-1)?.command).toMatchObject({serviceIds:[8,337]});
 });
@@ -909,7 +923,7 @@ for (const mode of ['no-share', 'rejected', 'cancelled', 'manual'] as const) {
       } } });
     }, mode);
     await fixture(page);
-    await page.getByRole('button', { name: 'Open room', exact: true }).click();
+    await page.getByRole('button', { name: /^Room, \d/ }).click();
     await page.getByRole('button', { name: 'Share invitation', exact: true }).click();
     if (mode === 'no-share' || mode === 'rejected') {
       await expect(page.getByText('Invitation copied.', { exact: true })).toBeVisible();
@@ -945,7 +959,7 @@ test('prompt presets become live search picks and grouped providers retain every
     await route.fulfill({json:{prompt,attributes:[{text:prompt==='Old mood'?'Outdated pick':'Motivational',kind:'want'},{text:'Not horror',kind:'excluded'},{text:'Wholesome',kind:'want',key:'wholesome'},{text:'Low bleakness',kind:'avoid',key:'bleakness'}]}}).catch(()=>{});
   });
   await page.reload();
-  await page.getByRole('button',{name:'Edit room description and services'}).click();
+  await page.getByRole('button',{name:'Mood & services'}).click();
   for(const name of ['funny comfort watch','A twisty thriller','Family night']) await expect(page.getByRole('button',{name,exact:true})).toBeVisible();
   const input=page.getByRole('textbox',{name:'Describe what to watch'});
   await input.fill('Old mood');
@@ -965,11 +979,68 @@ test('prompt presets become live search picks and grouped providers retain every
   await expect(prime).toHaveCount(1);await expect(prime).toBeChecked();
   await expect(page.getByRole('checkbox',{name:'Amazon Video',exact:true})).toHaveCount(0);
   await prime.click();await expect(prime).not.toBeChecked();await prime.click();
-  const save=page.getByRole('button',{name:'Save room description'});
+  const save=page.getByRole('button',{name:'Save'});
   await expect(save).toHaveText('Save');await save.click();
   await expect.poll(() => f.commands.at(-1)?.command).toMatchObject({type:'configure',prompt:'Sports movies motivational',serviceIds:[8,9,10,119]});
-  await page.getByRole('button',{name:'Edit room description and services'}).click();
+  await page.getByRole('button',{name:'Mood & services'}).click();
   await input.fill('');
   await expect(page.getByRole('button',{name:'Family night',exact:true})).toBeVisible();
   await expect(page.getByText('Jev’s read',{exact:true})).toHaveCount(0);
+});
+
+test('Tonight cheers send real activity: tap, renewed hold with one seed, all-hold Marquee, release on pointer up', async ({ page }) => {
+  const f = await fixture(page);
+  f.room.shared.participants.push({ participantId: 'peer', nickname: 'Friend', screenId: 'tv', ready: true });
+  f.room.shared.phase = 'decided';
+  f.room.shared.decision = { candidateId: 'c1', proposalVersion: 1, decidedAt: Date.now(), availability: [] };
+  const sent: any[] = [];
+  let peerSend: (message: string) => void = () => {};
+  await page.route('**/realtime-ticket', (route) => route.fulfill({ json: { ticket: 'fixture-ticket', expiresAt: Date.now() + 10000, websocketPath: '/api/yepwatch/v1/proposal/realtime' } }));
+  await page.routeWebSocket('**/realtime', (ws) => {
+    peerSend = (message) => ws.send(message);
+    ws.onMessage((raw) => {
+      const message = JSON.parse(String(raw));
+      sent.push(message);
+      if (message.type === 'authenticate') {
+        ws.send(JSON.stringify({ type: 'room.snapshot', snapshot: f.room.shared }));
+        ws.send(JSON.stringify({ type: 'activity.session', roomId: 'test-room', sessionId: 'own-session', serverTime: Date.now() }));
+      }
+    });
+  });
+  await page.reload();
+  const poster = page.getByRole('button', { name: /^Cheer for / });
+  await poster.waitFor();
+  await expect.poll(() => sent.some((m) => m.type === 'authenticate' && m.cheers === true)).toBe(true);
+  await expect(poster).toBeEnabled();
+  await poster.click();
+  await expect.poll(() => sent.filter((m) => m.cheer?.kind === 'tap').length).toBe(1);
+  const tap = sent.find((m) => m.cheer?.kind === 'tap');
+  expect(tap).toMatchObject({ type: 'activity', view: 'matches', cheer: { kind: 'tap', generation: 1 } });
+  expect(tap.gesture ?? tap.pointer ?? tap.inspection ?? tap.beat).toBeUndefined();
+  await expect(page.getByTestId('cheer-kernel').first()).toBeAttached();
+  const box = (await poster.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await expect.poll(() => sent.filter((m) => m.cheer?.kind === 'hold').length, { timeout: 4000 }).toBeGreaterThanOrEqual(3);
+  const holds = sent.filter((m) => m.cheer?.kind === 'hold');
+  expect(new Set(holds.map((h) => h.cheer.seed)).size).toBe(1);
+  await expect(page.getByTestId('cheer-marquee')).toHaveCount(0);
+  peerSend(JSON.stringify({ type: 'activity', roomId: 'test-room', participantId: 'peer', sessionId: 'peer-session', sequence: 1, view: 'matches', serverTime: Date.now(), expiresAt: Date.now() + 6000, cheer: { kind: 'hold', generation: 1, seed: 99 } }));
+  await expect(page.getByTestId('cheer-marquee')).toBeAttached();
+  await page.mouse.up();
+  await expect.poll(() => sent.filter((m) => m.cheer?.kind === 'release').length).toBe(1);
+  await expect(page.getByTestId('cheer-marquee')).toHaveCount(0);
+  await expect(page.getByText(/cheering/)).toHaveCount(0);
+  expect(f.commands).toHaveLength(0);
+});
+
+test('tapping outside a field dismisses the keyboard in panels', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Join a room', exact: true }).click();
+  const code = page.getByLabel('Room code or invitation');
+  await code.focus();
+  await expect(code).toBeFocused();
+  await page.getByText('YOUR NAME', { exact: true }).click();
+  await expect(code).not.toBeFocused();
+  await expect(page.getByLabel('Your name')).not.toBeFocused();
 });

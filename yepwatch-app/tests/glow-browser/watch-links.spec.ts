@@ -28,7 +28,7 @@ for (const [width,height] of [[320,568],[375,667],[390,844],[844,390],[1440,900]
   const last=page.getByRole('link',{name:'Watch on Apple TV'});await last.scrollIntoViewIfNeeded();await last.click({trial:true});
   await expect(page.getByRole('link',{name:'Find on Disney+'})).toHaveAttribute('href','https://www.themoviedb.org/tv/1411/watch?locale=DE');
   const details=page.getByRole('link',{name:'Full details on GoodWatch'});await expect(details).toHaveAttribute('href','https://goodwatch.app/show/1411');await details.click({trial:true});
-  await page.getByRole('button',{name:'Choose again',exact:true}).click({trial:true});
+  await page.getByRole('button',{name:'Start again',exact:true}).click({trial:true});
   expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight)).toBe(true);
   await netflix.scrollIntoViewIfNeeded();await page.screenshot({path:`.expo/tonight-links-${width}.png`});
   if (width === 390) {

@@ -1,37 +1,42 @@
-import { GoodWatchSignIn } from './glow/GoodWatchSignIn';
 import { EdgeBack } from './glow/EdgeBack';
-import { HomeLanding } from './home/HomeLanding';
 import { guestOnly } from '../core/config';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BackHandler, Platform, View, useWindowDimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Drawer } from './glow/Drawer';
-import { GText, Icon, Pill, Press, Wordmark, glow } from './glow/theme';
+import { BackHandler, Platform, View } from 'react-native';
+import { GText, Press, glow } from './glow/theme';
 import { router, useFocusEffect } from 'expo-router';
-import { loadRecentRoom, type RecentRoom } from '../core/continuous/recent-room';
 import * as Crypto from 'expo-crypto';
-import { Field } from '../components/ui';
 import { continuousApi as api, RoomFailure as ApiFailure } from '../core/continuous/api';
 import { loadAccess, nativeClient, saveAccess } from '../core/credentials';
 import { inviteIntent, parseInvite } from '../core/invites';
 import { queryClient } from '../core/providers';
 import { continuousKey as roomKey } from '../core/continuous/useRoom';
 import { loadInvite, saveInvite } from '../core/continuous/invite-store';
+import { roomRegistry } from '../core/continuous/room-registry';
 import { mergeRoom } from '../core/continuous/state';
 import { readAdmission, writeAdmission } from '../core/continuous/storage';
 import type { AdmissionRecovery } from '../core/continuous/recovery-state';
 import { retainRequest, retryDeadline } from '../core/continuous/retry';
 import { useRetryCountdown } from '../core/continuous/useRetryCountdown';
+import { Landing } from './home/Landing';
+import { greeting, type HomeRoom } from './rooms/home-model';
+import { Ledger } from './rooms/Ledger';
+import { HistoryPanel, JoinPanel, NamePanel, ProfilePanel } from './rooms/panels';
+import { useHome } from './rooms/useHome';
+import { AppFrame, SubHeader, type BackTarget } from './shell/Frame';
+import { Avatar, RoundButton } from './shell/parts';
+import { column } from './shell/tokens';
 
+type PanelKind = 'name-create' | 'join' | 'profile' | 'history';
+
+/**
+ * The entrance: first visit lands on the approved intro; returning people land on their active rooms.
+ * Create, Join, the one-time name, Profile and History are panels in the same frame. Admission keeps
+ * the existing recovery: the exact request is persisted before every submit and retried as-is.
+ */
 export function Entrance({ invite }: { invite?: string }) {
-  const [recent, setRecent] = useState<RecentRoom | null>(null);
-  useFocusEffect(useCallback(() => {
-    let active = true;
-    void loadRecentRoom().then(value => { if (active) setRecent(value); }).catch(() => undefined);
-    return () => { active = false; };
-  }, []));
-  const [webCreating,setWebCreating]=useState(false);
-  const [joining, setJoining] = useState(Boolean(invite));
+  const home = useHome();
+  useFocusEffect(useCallback(() => { home.reload(); }, [])); // eslint-disable-line react-hooks/exhaustive-deps
+  const [panel, setPanel] = useState<PanelKind | null>(invite ? 'join' : null);
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState(invite ?? '');
   const [busy, setBusy] = useState(false);
@@ -46,6 +51,8 @@ export function Entrance({ invite }: { invite?: string }) {
   const [restoreFailed, setRestoreFailed] = useState(false);
   const [restoreVersion, setRestoreVersion] = useState(0);
   const retrySeconds = useRetryCountdown(admission?.retryAt ?? 0);
+  // A pending admission request reopens the panel it came from, with its exact name and code.
+  const setJoining = (on: boolean) => { if (on) setPanel('join'); };
   useEffect(() => {
     let active = true;
     void readAdmission(intent).then((saved) => {
@@ -110,14 +117,16 @@ export function Entrance({ invite }: { invite?: string }) {
       active = false;
     };
   }, [invite, checkVersion, intent]);
-  async function enter(join: boolean, member = false, returning?: { code: string; nickname: string }) {
+  /** The name is remembered once admitted, for every later room on this device. */
+  const rememberName = (name: string) => (name && name !== 'Guest' ? roomRegistry.setNickname(name).catch(() => undefined) : Promise.resolve());
+  async function enter(join: boolean, member = false, returning?: { code: string; nickname: string }, name?: string, joinCode?: string) {
     if (inFlight.current || restoring || restoreFailed || (admission && admission.intent !== intent) || Date.now() < (admission?.retryAt ?? 0)) return;
     inFlight.current = true;
     setBusy(true);
     setError('');
     let saved = admission;
     try {
-      const cleanCode = join ? parseInvite(returning?.code ?? code) : '';
+      const cleanCode = join ? parseInvite(returning?.code ?? joinCode ?? code) : '';
       if (join && !cleanCode)
         throw new Error('Enter the complete room code or YepWatch invitation link.');
       if (!saved) {
@@ -127,7 +136,7 @@ export function Entrance({ invite }: { invite?: string }) {
             contractVersion: 3,
             commandId: Crypto.randomUUID(),
             admissionSecret: Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(''),
-            nickname: (returning?.nickname ?? nickname).trim() || (member ? 'Guest' : ''),
+            nickname: (returning?.nickname ?? name ?? nickname).trim() || (member ? 'Guest' : ''),
           },
           code: cleanCode,
           intent,
@@ -160,6 +169,7 @@ export function Entrance({ invite }: { invite?: string }) {
               path: inviteIntent(saved.code),
             });
             await writeAdmission(intent, null);
+            await rememberName(saved.request.nickname);
             router.replace({
               pathname: '/room/[id]',
               params: { id: roomId, ...(member ? { signin: '1' } : {}) },
@@ -185,6 +195,7 @@ export function Entrance({ invite }: { invite?: string }) {
       queryClient.setQueryData(['continuous-invite', result.credential.roomId], result.invite);
       await writeAdmission(intent, null);
       setAdmission(null);
+      await rememberName(saved.request.nickname);
       router.replace({
         pathname: '/room/[id]',
         params: { id: result.credential.roomId, ...(member ? { signin: '1' } : {}) },
@@ -202,197 +213,71 @@ export function Entrance({ invite }: { invite?: string }) {
       setBusy(false);
     }
   }
-  const { width, height } = useWindowDimensions();
-  const compact = height < 700;
-  const landscape = height < 500 && width > height;
-  const [options, setOptions] = useState(false);
-  const back = useCallback(() => {
-    if (options) setOptions(false);
-    else if (invite) router.replace('/');
-    else { setJoining(false); setWebCreating(false); setError(''); }
-  }, [options, invite]);
-  useFocusEffect(useCallback(() => {
-    if (Platform.OS !== 'android' || (!joining && !invite && !options && !webCreating)) return;
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => { back(); return true; });
-    return () => sub.remove();
-  }, [joining, invite, options, webCreating, back]));
+  const known = home.nickname;
   const locked = busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;
-  function returnToRoom() {
-    if (!recent) return;
-    void loadInvite(recent.roomId).then(saved => {
-      if (saved) void enter(true, false, { code: saved.code, nickname: recent.nickname });
-      else router.push({ pathname: '/room/[id]', params: { id: recent.roomId } });
-    }).catch(() => { setWebCreating(true); setError('Could not restore your invitation. Try again.'); });
+  const closePanel = useCallback(() => { setError(''); if (invite) router.replace('/'); else setPanel(null); }, [invite]);
+  useFocusEffect(useCallback(() => {
+    if (Platform.OS !== 'android' || !panel) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => { closePanel(); return true; });
+    return () => sub.remove();
+  }, [panel, closePanel]));
+  const open = (roomId: string) => router.push({ pathname: '/room/[id]', params: { id: roomId } });
+  /** Return to a room you left: the saved invitation re-admits the same identity. */
+  function returnTo(room: HomeRoom) {
+    const self = room.people.find((p) => p.self)?.nickname ?? known ?? '';
+    void loadInvite(room.roomId).then((saved) => {
+      if (saved) void enter(true, false, { code: saved.code, nickname: self });
+      else open(room.roomId);
+    }).catch(() => setError('Could not restore your invitation. Try again.'));
   }
-  if (!invite && !joining && !webCreating && !admission && !restoreFailed && !error) {
-    return <HomeLanding create={() => setWebCreating(true)} join={() => setJoining(true)} returnToRoom={recent ? returnToRoom : undefined} disabled={locked} signIn={guestOnly ? undefined : () => void enter(false, true)} />;
-  }
+  const create = () => { setError(''); if (known && !admission) void enter(false, false, undefined, known); else setPanel('name-create'); };
+  // GoodWatch supplies the name, so Continue with GoodWatch never asks for one first.
+  const signIn = guestOnly ? undefined : () => { setError(''); void enter(false, true, undefined, known ?? ''); };
+  const returning = home.hasRooms || Boolean(known);
+  const pending = admission ? (admission.code ? 'join' : 'name-create') : null;
+  const shown: PanelKind | null = panel ?? pending ?? (restoreFailed || recoveryBlocked ? 'join' : null);
+  const titles: Record<PanelKind, string> = { 'name-create': 'New room', join: invite ? 'Join the room' : 'Join a room', profile: 'Profile', history: 'History' };
+  const backTo: BackTarget | null = shown ? { label: returning ? 'Your rooms' : 'Start', short: returning ? 'Rooms' : 'Start', onPress: closePanel } : null;
+  const active = home.active.length;
+  const actionLabel = (first: string, again: string) => (busy ? 'Connecting…' : retrySeconds > 0 ? `Retry in ${retrySeconds}s` : admission ? again : first);
+  const notices = (
+    <>
+      {checkingInvite && <GText size={14} color={glow.muted}>Restoring your place in the room…</GText>}
+      {retrySeconds > 0 && <GText size={13} color={glow.muted}>Try again in {retrySeconds}s. Your room request is saved.</GText>}
+      {admission && <GText size={12} color={glow.muted}>Retry preserves your identity and room request.</GText>}
+      {restoreFailed && <Press label="Retry saved request" onPress={() => { setRestoring(true); setError(''); setRestoreVersion((v) => v + 1); }} style={{ alignSelf: 'flex-start', minHeight: 44 }}><GText bold color={glow.amber}>Retry saved request</GText></Press>}
+      {recoveryBlocked && <Press label="Retry membership check" onPress={() => { setRecoveryBlocked(false); setCheckingInvite(true); setError(''); setCheckVersion((v) => v + 1); }} style={{ alignSelf: 'flex-start', minHeight: 44 }}><GText bold color={glow.amber}>Retry membership check</GText></Press>}
+    </>
+  );
+  if (!home.ready) return <AppFrame>{null}</AppFrame>;
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: glow.bg, overflow: 'hidden' }}>
-      <View
-        style={{
-          paddingHorizontal: 24,
-          height: compact ? 48 : 60,
-          flexShrink: 0,
-          alignItems: 'center',
-          flexDirection: 'row',
-          gap: 8,
-        }}
-      >
-        {(joining || invite || webCreating) && <Press label="Back to start" onPress={back}><Icon name="left" /></Press>}
-        <View style={{ flex: 1 }}><Wordmark /></View>
-      </View>
-      <View
-        style={{
-          flex: 1,
-          minHeight: 0,
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingHorizontal: 24,
-          paddingVertical: compact ? 12 : 24,
-        }}
-      >
-        <View
-          style={{
-            width: '100%',
-            maxWidth: landscape ? 880 : 420,
-            gap: compact ? 12 : 18,
-            flexDirection: landscape ? 'row' : 'column',
-            alignItems: landscape ? 'center' : undefined,
-          }}
-        >
-          <View style={{ flex: landscape ? 1 : undefined, gap: compact ? 8 : 18 }}>
-            <GText size={compact ? 32 : 43} bold style={{ letterSpacing: -1.4 }}>
-              Less browsing.{'\n'}More watching.
-            </GText>
-            {!compact && (
-              <GText color={glow.muted}>
-                {invite || joining
-                  ? 'Join your friends and find your shared Yep.'
-                  : 'Find something you’ll all want to watch.'}
-              </GText>
-            )}
-          </View>
-          <View style={{ flex: landscape ? 1 : undefined, gap: compact ? 10 : 18 }}>
-            {!invite && !joining && recent && !admission && <Pill label="Return to your room" gold disabled={locked} onPress={() => {
-              void loadInvite(recent.roomId).then(saved => {
-                if (saved) void enter(true, false, { code: saved.code, nickname: recent.nickname });
-                else router.push({ pathname: '/room/[id]', params: { id: recent.roomId } });
-              }).catch(() => setError('Could not restore your invitation. Try again.'));
-            }}>Return to your room</Pill>}
-            {error && (
-              <GText size={14} lines={2} color="#fca5a5">
-                {error}
-              </GText>
-            )}
-            {restoreFailed && <Pill label="Retry saved request" onPress={() => {
-              setRestoring(true); setError(''); setRestoreVersion(v => v + 1);
-            }}>Retry saved request</Pill>}
-            {retrySeconds > 0 && <GText size={13} color={glow.muted}>Try again in {retrySeconds}s. Your room request is saved.</GText>}
-            {checkingInvite && (
-              <GText size={14} color={glow.muted}>
-                Restoring your place in the room…
-              </GText>
-            )}
-            {recoveryBlocked && (
-              <Pill
-                label="Retry membership check"
-                onPress={() => {
-                  setRecoveryBlocked(false);
-                  setCheckingInvite(true);
-                  setError('');
-                  setCheckVersion((v) => v + 1);
-                }}
-              >
-                Retry membership check
-              </Pill>
-            )}
-            <Field
-              label="Your nickname"
-              value={nickname}
-              onChange={(v) => {
-                if (!admission) setNickname(v);
-              }}
-              placeholder="What should we call you?"
-            />
-            {!invite && joining && (
-              <Field
-                label="Room code or invitation"
-                value={code}
-                onChange={(v) => {
-                  if (!admission) setCode(v);
-                }}
-                placeholder="Paste the invitation link"
-              />
-            )}
-            <Pill
-              label={invite || joining ? 'Join room' : 'Create a room'}
-              gold
-              disabled={locked || !nickname.trim() || (joining && !code.trim())}
-              onPress={() => void enter(Boolean(invite || joining))}
-            >
-              {retrySeconds > 0 ? `Retry in ${retrySeconds}s` : busy
-                ? 'Connecting…'
-                : admission
-                ? 'Retry room request'
-                : invite || joining
-                ? 'Join room'
-                : 'Create a room'}
-            </Pill>
-            {compact ? (
-              <Pill label="More options" onPress={() => setOptions(true)}>
-                More options
-              </Pill>
-            ) : (
-              <>
-                {!invite && (
-                  <Pill
-                    label={joining ? 'Create a room instead' : 'Join with an invitation'}
-                    disabled={locked || Boolean(admission)}
-                    onPress={() => {
-                      setJoining((v) => !v);
-                      setCode('');
-                      setError('');
-                    }}
-                  >
-                    {joining ? 'Create a room instead' : 'Join with an invitation'}
-                  </Pill>
-                )}
-                {!guestOnly && <GoodWatchSignIn disabled={locked || (joining && !code.trim())} onPress={() => void enter(Boolean(invite || joining), true)} />}
-              </>
-            )}
-            <GText size={12} color={glow.muted}>
-              {guestOnly ? 'Choose together. No account needed.' : 'No account needed. Use your GoodWatch account for saved preferences and show progress.'}
-            </GText>
-            {admission && (
-              <GText size={12} color={glow.muted}>
-                Retry preserves your identity and room request.
-              </GText>
-            )}
-          </View>
-        </View>
-      </View>
-      {options && (
-        <Drawer title="More ways to join" close={() => setOptions(false)}>
-          {error && <GText size={14} color="#fca5a5">{error}</GText>}
-          {!invite && (
-            <Pill
-              label={joining ? 'Create a room instead' : 'Join with an invitation'}
-              disabled={locked || Boolean(admission)}
-              onPress={() => {
-                setJoining((v) => !v);
-                setOptions(false);
-                setCode('');
-                setError('');
-              }}
-            >
-              {joining ? 'Create a room instead' : 'Join with an invitation'}
-            </Pill>
-          )}
-          {!guestOnly && <GoodWatchSignIn disabled={locked || (joining && !code.trim())} onPress={() => void enter(Boolean(invite || joining), true)} />}
-        </Drawer>
+    <AppFrame
+      onLogo={shown ? closePanel : undefined}
+      people={<Press label="Profile" onPress={() => { setError(''); setPanel('profile'); }} style={{ alignItems: 'flex-end' }}><Avatar name={known} /></Press>}
+      subheader={shown ? <SubHeader back={backTo} title={titles[shown]} /> : returning ? (
+        <SubHeader large title={known ? `${greeting(new Date().getHours())}, ${known}` : greeting(new Date().getHours())}
+          subtitle={<GText size={13} color={glow.muted}>{active ? `${active} ${active === 1 ? 'room' : 'rooms'} going` : 'No rooms going'}</GText>}
+          right={<RoundButton label="History" icon="clock" onPress={() => setPanel('history')} />} />
+      ) : null}
+    >
+      {returning ? (
+        <Ledger rooms={home.active} unavailable={home.unavailable} loading={home.loadingRooms} open={open} newRoom={create} join={() => { setError(''); setPanel('join'); }} retry={home.retry} disabled={locked} />
+      ) : (
+        <Landing create={create} join={() => { setError(''); setPanel('join'); }} signIn={signIn} disabled={locked} />
       )}
-      {(joining || invite || webCreating) && <EdgeBack back={back} />}
-    </SafeAreaView>
+      {!shown && error ? <View style={{ ...column, paddingBottom: 8 }}><GText size={14} color="#fca5a5">{error}</GText></View> : null}
+      {shown === 'name-create' && (
+        <NamePanel initial={admission?.request.nickname ?? known ?? nickname} busy={locked} error={error} action={actionLabel('Create room', 'Retry room request')}
+          submit={(name) => void enter(false, false, undefined, name)} extra={notices} />
+      )}
+      {shown === 'join' && (
+        <JoinPanel nickname={admission ? admission.request.nickname : known} initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={error}
+          editName={() => setPanel('profile')}
+          submit={(c, name) => void enter(true, false, undefined, name, c)} extra={notices} />
+      )}
+      {shown === 'profile' && <ProfilePanel nickname={known} save={(name) => { void home.setNickname(name).then(() => setPanel(invite ? 'join' : null)); }} />}
+      {shown === 'history' && <HistoryPanel decisions={home.decisions} left={home.left} canOpen={(id) => home.decidedRooms.has(id)} openRoom={open} returnTo={returnTo} busy={locked} />}
+      {shown && <EdgeBack back={closePanel} />}
+    </AppFrame>
   );
 }
