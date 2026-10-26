@@ -1,0 +1,44 @@
+{
+  "checkedAt": "2026-10-26T00:12:17.916010+00:00",
+  "scope": "Read-only deployment and schema checks; source-account imports not exercised. Baseline before the TMDB list release.",
+  "liveCommit": "7bdbbb95da7e3a20f229afaeb9acbc7c9289985f",
+  "servingInstances": [
+    {
+      "host": "abio",
+      "container": "gk4owk8-20261025T233843",
+      "healthy": true,
+      "liveHttpStatus": 200,
+      "readyHttpStatus": 200
+    },
+    {
+      "host": "vector1",
+      "container": "gk4owk8-20261025T234125",
+      "healthy": true,
+      "liveHttpStatus": 200,
+      "readyHttpStatus": 200
+    }
+  ],
+  "acceptedCommitAncestors": {
+    "MDBList": true,
+    "Watcharr": true,
+    "IMDb Watchlist": true,
+    "custom lists": true,
+    "scoped score owner followups": true,
+    "Plex library state": true
+  },
+  "schemaColumnsPresent": [
+    "doc.user_list.collection_metadata",
+    "doc.user_import_item.undo_outcome",
+    "doc.user_episode_score.user_id",
+    "doc.user_import_connection.id"
+  ],
+  "ownerAcceptance": {
+    "IMDb": "Owner confirms a user tested IMDb live; no additional row counts supplied.",
+    "Watcharr": "Owner explicitly accepts without a real-member export test."
+  },
+  "limits": [
+    "No real Plex source-account test performed. Existing partial-library and RSS completeness warnings remain.",
+    "MDBList lists over 100 entries and unranked lists have not been tested with real source data.",
+    "No authenticated TMDB custom-list account test performed. Public-list detail benchmark and synthetic account-index coverage are separate."
+  ]
+}

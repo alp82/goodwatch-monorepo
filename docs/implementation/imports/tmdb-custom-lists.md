@@ -23,6 +23,8 @@ includes list records and their entries; index and content page counts are cappe
 at 2,500 each. Failed requests, malformed rows, unexpected list/page identities,
 and duplicate typed identities reject the read rather than reporting an empty
 list. Changed or mismatched counts produce actionable partial-import warnings.
+Every account preview also shows a visible notice about missing list notes and
+possible private/mixed-list omissions, even when all returned counts agree.
 Unknown media types stay visible as unsupported entries.
 
 This is the v3-accessible list scope. TMDB documents mixed-media/private lists and
@@ -57,7 +59,7 @@ The account-list index for this check was synthetic. This verifies public conten
 paging, not an authenticated member's complete list inventory. Aggregate evidence:
 [public list check](../../verification/import-wave-2026-10-26/tmdb-public-list.json).
 
-Import/IMDb/import-UI/shared-list regression: **901 passed, 0 failed**. Typecheck
+Import/IMDb/import-UI/shared-list regression: **902 passed, 0 failed**. Typecheck
 has the same **334 output lines** as the untouched starting commit
 `7bdbbb95da7e3a20f229afaeb9acbc7c9289985f`; no diagnostic was added. These are local
 checks, not deployment or signed-in member acceptance.

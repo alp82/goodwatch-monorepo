@@ -412,6 +412,12 @@ export function createTmdbClient(options: {
 			})
 			observations.push(...lists.observations)
 			warnings.push(...lists.warnings)
+			// The v3 connection cannot prove list coverage, so this shows even when every count matches.
+			warnings.push(
+				importActionable(
+					"Notes on TMDB list entries aren’t imported, and some private lists or lists that mix movies and shows may be missing. Compare these lists with your lists on TMDB.",
+				),
+			)
 			return { source: "tmdb", observations, warnings }
 		},
 	}

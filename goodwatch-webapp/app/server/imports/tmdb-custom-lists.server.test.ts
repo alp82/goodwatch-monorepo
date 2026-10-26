@@ -196,3 +196,15 @@ test("TMDB count mismatches remain actionable and unsupported media remains visi
 		"unsupported",
 	)
 })
+
+test("even a count-consistent TMDB account preview warns that list coverage and notes may be missing", async () => {
+	const parsed = await sourceFixture().readAccount("42", "synthetic-session")
+	assert.ok(
+		parsed.warnings.some(
+			(warning) =>
+				warning.kind === "actionable" &&
+				/list/i.test(warning.message) &&
+				/notes/i.test(warning.message),
+		),
+	)
+})
