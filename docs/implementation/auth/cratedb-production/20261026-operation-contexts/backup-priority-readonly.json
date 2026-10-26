@@ -1,0 +1,727 @@
+{
+  "coordinators": [
+    {
+      "host": 11,
+      "utc": "2026-10-26T11:39:24.304482+00:00",
+      "queries": {
+        "snapshots": {
+          "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND (name LIKE 'hourly_20261026_11%' OR name LIKE 'hourly_20261026_12%') ORDER BY started",
+          "result": {
+            "cols": [
+              "repository",
+              "name",
+              "state",
+              "started",
+              "finished",
+              "total_shards",
+              "failures"
+            ],
+            "rows": [
+              [
+                "goodwatch-db-backup-v2",
+                "hourly_20261026_110502",
+                "IN_PROGRESS",
+                1793012702127,
+                0,
+                567,
+                []
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 18129.398
+          }
+        },
+        "copies": {
+          "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE (table_name='person_appeared_in' AND id=4) OR (table_name='person_worked_on' AND id=5) ORDER BY table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "backup_20260925_deleted_titles",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_appeared_in",
+                4,
+                "crate-02",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_appeared_in",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_worked_on",
+                5,
+                "crate-02",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_worked_on",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ]
+            ],
+            "rowcount": 12,
+            "duration": 16.92944
+          }
+        },
+        "nonstarted": {
+          "sql": "SELECT schema_name,table_name,id,node['id'],node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE state <> 'STARTED' OR routing_state <> 'STARTED' ORDER BY table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['id']",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "xlclgwGeSHe18p5J4WvfFA",
+                "crate-01",
+                true,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                5,
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 10.309756
+          }
+        },
+        "health": {
+          "sql": "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health",
+          "result": {
+            "cols": [
+              "health",
+              "count(*)",
+              "sum(missing_shards)",
+              "sum(underreplicated_shards)"
+            ],
+            "rows": [
+              [
+                "GREEN",
+                145,
+                0,
+                0
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 2.682917
+          }
+        }
+      }
+    },
+    {
+      "host": 12,
+      "utc": "2026-10-26T11:39:24.304693+00:00",
+      "queries": {
+        "snapshots": {
+          "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND (name LIKE 'hourly_20261026_11%' OR name LIKE 'hourly_20261026_12%') ORDER BY started",
+          "result": {
+            "cols": [
+              "repository",
+              "name",
+              "state",
+              "started",
+              "finished",
+              "total_shards",
+              "failures"
+            ],
+            "rows": [
+              [
+                "goodwatch-db-backup-v2",
+                "hourly_20261026_110502",
+                "IN_PROGRESS",
+                1793012702127,
+                0,
+                567,
+                []
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 18814.45
+          }
+        },
+        "copies": {
+          "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE (table_name='person_appeared_in' AND id=4) OR (table_name='person_worked_on' AND id=5) ORDER BY table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "backup_20260925_deleted_titles",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_appeared_in",
+                4,
+                "crate-02",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_appeared_in",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_worked_on",
+                5,
+                "crate-02",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_worked_on",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ]
+            ],
+            "rowcount": 12,
+            "duration": 18.181635
+          }
+        },
+        "nonstarted": {
+          "sql": "SELECT schema_name,table_name,id,node['id'],node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE state <> 'STARTED' OR routing_state <> 'STARTED' ORDER BY table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['id']",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "xlclgwGeSHe18p5J4WvfFA",
+                "crate-01",
+                true,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                5,
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 10.535354
+          }
+        },
+        "health": {
+          "sql": "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health",
+          "result": {
+            "cols": [
+              "health",
+              "count(*)",
+              "sum(missing_shards)",
+              "sum(underreplicated_shards)"
+            ],
+            "rows": [
+              [
+                "GREEN",
+                145,
+                0,
+                0
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 3.830285
+          }
+        }
+      }
+    },
+    {
+      "host": 13,
+      "utc": "2026-10-26T11:39:24.305012+00:00",
+      "queries": {
+        "snapshots": {
+          "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND (name LIKE 'hourly_20261026_11%' OR name LIKE 'hourly_20261026_12%') ORDER BY started",
+          "result": {
+            "cols": [
+              "repository",
+              "name",
+              "state",
+              "started",
+              "finished",
+              "total_shards",
+              "failures"
+            ],
+            "rows": [
+              [
+                "goodwatch-db-backup-v2",
+                "hourly_20261026_110502",
+                "IN_PROGRESS",
+                1793012702127,
+                0,
+                567,
+                []
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 16524.697
+          }
+        },
+        "copies": {
+          "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE (table_name='person_appeared_in' AND id=4) OR (table_name='person_worked_on' AND id=5) ORDER BY table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "backup_20260925_deleted_titles",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_appeared_in",
+                4,
+                "crate-02",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_appeared_in",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_worked_on",
+                5,
+                "crate-02",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_worked_on",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ]
+            ],
+            "rowcount": 12,
+            "duration": 20.716404
+          }
+        },
+        "nonstarted": {
+          "sql": "SELECT schema_name,table_name,id,node['id'],node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE state <> 'STARTED' OR routing_state <> 'STARTED' ORDER BY table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['id']",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "xlclgwGeSHe18p5J4WvfFA",
+                "crate-01",
+                true,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                5,
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 13.282149
+          }
+        },
+        "health": {
+          "sql": "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health",
+          "result": {
+            "cols": [
+              "health",
+              "count(*)",
+              "sum(missing_shards)",
+              "sum(underreplicated_shards)"
+            ],
+            "rows": [
+              [
+                "GREEN",
+                145,
+                0,
+                0
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 2.442831
+          }
+        }
+      }
+    }
+  ],
+  "settings": {
+    "utc": "2026-10-26T11:42:18.607425+00:00",
+    "sql": "SELECT settings['cluster']['routing']['rebalance']['enable'],settings['cluster']['routing']['allocation']['enable'] FROM sys.cluster",
+    "result": {
+      "cols": [
+        "settings['cluster']['routing']['rebalance']['enable']",
+        "settings['cluster']['routing']['allocation']['enable']"
+      ],
+      "rows": [
+        [
+          "all",
+          "all"
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 1.756036
+    }
+  }
+}

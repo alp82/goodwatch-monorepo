@@ -8,6 +8,17 @@ and temporarily hold the backup cron; those changes were restored.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Backup-first follow-up — read-only,11:39 UTC
+
+[Current copies, snapshot concurrency, target-cancel and conditional DROP proposal](backup-recovery-source-notes.md),
+with [all-coordinator receipts](backup-priority-readonly.json). **No writes executed.** The12:05 UTC
+run was still future at this check; the failed11:05 UTC run was12:05 CET. A running snapshot is not
+a universal CREATE mutex in5.10.16, but new full snapshots can queue on the blocked shard.
+Important correction to an absence-based inference: no physical target in sys.shards does not mean
+there is no logical relocation target. Tagged RoutingNodes constructs that target; cancelling the
+crate-02 target can preserve the crate-01 source STARTED, unlike cancelling the active source.
+This is a source-based proposal requiring new owner approval, not production validation.
+
 ## Restored backup cron verification — October26,11:05–11:36 UTC
 
 **Cron ran, but the scheduled backup did not succeed. At11:35:02 UTC the helper logged
