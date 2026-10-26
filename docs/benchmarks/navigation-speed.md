@@ -498,10 +498,19 @@ and the title route needs about 111 KB compressed in 29 files beyond the shell (
 
 ### Changes
 
-- `e466c9f46`: the hub tiles draw a lazy `img` with `object-cover` and a `srcset` (`ui/explore/TileBackdrop.tsx`).
-- `b23e02086`: a phone's viewport prefetch (after load and when scrolling stops) also preloads the code of those
-  links' page types, once per type, at low priority; a press, hover or focus raises the links still waiting
-  (`app/navigation/instant-navigation.ts`, [navigation-cache.md](../navigation-cache.md#prefetch)).
+- The hub tiles draw an `img` with `object-cover` and a `srcset` sized to the grid (`ui/explore/TileBackdrop.tsx`):
+  the first section's first two rows at once, every other tile lazily. No tile is fetched ahead of the rest: the
+  hubs' largest content is their intro text (Lighthouse, phone and desktop).
+- A phone's viewport prefetch (after load and when scrolling stops) also warms the code of those links' page types,
+  once per type, at low priority and three files at a time; not on the start page, not on 3G
+  (`app/navigation/instant-navigation.ts`, [navigation-cache.md](../navigation-cache.md#prefetch)). Chrome doesn't
+  raise a request already loading: in a DevTools-protocol check, a changed `fetchPriority`, a second
+  `modulepreload` or `import()` all left a low request at low (a `prefetch` warm-up let a later high request
+  attach to the low transfer, with no speed-up). So the warm-up keeps little in flight, and a press, hover or focus
+  drops the waiting files: its own preload asks for them at normal priority.
+  `goodwatch-benchmark/navigation/warmup-check.mjs` checks this in a browser (phone, slow 4G): a best list warms the
+  title code, at most three files at once, a tap takes the rest at high priority, and the start page warms nothing
+  after scrolling to its title links (the first version of this change started 20 low-priority scripts there).
 
 ### Before and after, local production build
 
@@ -512,19 +521,22 @@ production with `SELECT` only (4,098 cast rows, 5,719 crew rows, 7,212 people), 
 The local `/shows` hub shows its category tiles but no title rows, and local loaders are smaller than production's,
 so local waits are shorter than production's; the comparison is between the two local builds.
 
-Phone (Pixel 7, 150 ms, 1.6 Mbit/s, 4× CPU), median and maximum of five, milliseconds:
+Phone (Pixel 7, 150 ms, 1.6 Mbit/s, 4× CPU), median and maximum of five, milliseconds; before and after measured
+in the same session:
 
 | Step | Before | After |
 | --- | --- | --- |
-| List → first title | 1,307 (1,325) | 94 (115) |
-| Title → first person | 226 (229) | 71 (125) |
-| Shows → best list | 1,013 (1,015) | 194 (208) |
-| Best list → title | 873 (877) | 196 (207) |
-| Hub → Discover | 715 (721) | 713 (729) |
-| All steps, median and p90 | 209, 1,013 | 100, 247 |
+| List → first title | 1,308 (1,327) | 92 (93) |
+| Title → first person | 228 (229) | 62 (78) |
+| Shows → best list | 1,011 (1,014) | 211 (266) |
+| Best list → title | 878 (881) | 193 (207) |
+| Hub → Discover | 710 (723) | 731 (735) |
+| All steps, median and p90 | 228, 1,014 | 92, 247 |
 
-Desktop tap and desktop hover are unchanged (median of all steps 42 → 43 ms and 22 → 22 ms). Every round of every
-profile verified 13/13 destinations.
+Desktop hover is unchanged (median of all steps 23 → 22 ms, p90 56 → 35). Desktop tap's median of all steps is
+44 → 42 ms; its list → first title is 40 → 53 ms in these runs, with no warm-up on a desktop (one round of the after
+set stopped with `ERR_CERT_VERIFIER_CHANGED` before its first page and was run again in full). Every counted round
+of every profile verified 13/13 destinations.
 
 Costs and limits:
 - A phone on a best list now downloads the title route's code (about 111 KB compressed) after load at low priority;

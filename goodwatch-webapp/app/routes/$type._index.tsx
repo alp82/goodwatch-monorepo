@@ -9,7 +9,7 @@ import React from "react"
 import { exploreAddressExists, notFound } from "~/ui/explore/address"
 import { type NavType, navLabel } from "~/ui/explore/config"
 import { mainNavigation } from "~/ui/explore/main-nav"
-import { TileBackdrop } from "~/ui/explore/TileBackdrop"
+import { TileBackdrop, tilePriority } from "~/ui/explore/TileBackdrop"
 import { exploreHubCopy } from "~/ui/explore/page-copy"
 import { listNoun } from "~/domain/best-lists"
 import {
@@ -86,7 +86,7 @@ export default function Movies() {
 						</div>
 					</Link>
 				</div>
-				{Object.values(mainNavigation).map((navItem) => {
+				{Object.values(mainNavigation).map((navItem, section) => {
 					const items = Object.values(navItem.items).filter((pageData) => {
 						return ["all", type].includes(pageData?.type)
 					})
@@ -103,7 +103,7 @@ export default function Movies() {
 								<span className="text-xl">{navItem.description}</span>
 							</div>
 							<div className="my-6 grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-								{items.map((item) => {
+								{items.map((item, index) => {
 									return (
 										<Link
 											key={item.path}
@@ -112,7 +112,10 @@ export default function Movies() {
 											className="group relative block w-full aspect-7/4 overflow-hidden transition-transform duration-200 hover:scale-105"
 										>
 											<div className="absolute inset-0">
-												<TileBackdrop path={item.backdrop_path} />
+												<TileBackdrop
+													path={item.backdrop_path}
+													priority={tilePriority(section, index)}
+												/>
 												<div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 transition-colors duration-300" />
 											</div>
 

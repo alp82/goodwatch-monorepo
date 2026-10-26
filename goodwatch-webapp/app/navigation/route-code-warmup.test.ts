@@ -13,27 +13,29 @@ const out = execFileSync(
 	{ encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
 )
 const rendered = JSON.parse(out.split("__WARMUP__").at(-1) ?? "") as Record<
-	"viewport" | "afterPress" | "all",
+	"first" | "afterOneLoad" | "afterPress" | "startPage" | "slow",
 	string[]
 >
 
-test("what a phone shows warms its page type's code once, at low priority", () => {
-	// Two title links on screen: one set of the title route's files, not two. The person route isn't asked for.
-	assert.deepEqual(rendered.viewport, [
-		"modulepreload /assets/movie.js low",
-		"modulepreload /assets/details.js low",
-		"modulepreload /assets/shell.js low",
+test("what a phone shows warms its page type's code once, at low priority, three files at a time", () => {
+	// Two title links on screen: one set of the title route's six files, not two, and only three loading at once.
+	// Chrome can't raise a request that is already loading, so little may be in flight when the reader taps.
+	assert.deepEqual(rendered.first, [
+		"/assets/movie.js low",
+		"/assets/details-0.js low",
+		"/assets/details-1.js low",
+	])
+	assert.deepEqual(rendered.afterOneLoad.slice(3), ["/assets/details-2.js low"])
+})
+
+test("a press takes the files still waiting at normal priority, at once", () => {
+	assert.deepEqual(rendered.afterPress.slice(4), [
+		"/assets/details-3.js auto",
+		"/assets/details-4.js auto",
 	])
 })
 
-test("a press raises a waiting warm-up, and loads another page type's code at once", () => {
-	assert.deepEqual(rendered.afterPress, [
-		"modulepreload /assets/movie.js high",
-		"modulepreload /assets/details.js high",
-		"modulepreload /assets/shell.js high",
-	])
-	assert.deepEqual(rendered.all.slice(3), [
-		"modulepreload /assets/person.js auto",
-		"modulepreload /assets/person-parts.js auto",
-	])
+test("the start page and a 3G connection warm no code", () => {
+	assert.deepEqual(rendered.startPage, [])
+	assert.deepEqual(rendered.slow, [])
 })
