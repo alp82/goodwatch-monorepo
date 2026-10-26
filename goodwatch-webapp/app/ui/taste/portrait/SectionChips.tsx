@@ -57,7 +57,7 @@ export function SectionChips({ sections }: { sections: Section[] }) {
 	return (
 		<nav
 			aria-label="Taste sections"
-			className="sticky top-16 z-20 border-b border-white/5 bg-gray-950/95"
+			className="sticky top-16 z-40 border-b border-white/5 bg-gray-950/95"
 		>
 			<ul
 				className={`${WRAP} flex gap-1.5 overflow-x-auto py-2 [scrollbar-width:none]`}
