@@ -387,3 +387,22 @@ test("the page title's pack waits for the app's navigation work when the app han
 	held[0]()
 	assert.deepEqual(page.asked, ["/api/related-map?key=m1"])
 })
+
+test("a wait that ends after the section shows another title, or has gone, asks for nothing (#753)", async () => {
+	for (const change of ["another title", "gone"] as const) {
+		const held: (() => void)[] = []
+		const page = browser(served(), () => new Promise(() => {}), undefined, {
+			__gwRelatedMapDefer: (run: () => void) => held.push(run),
+		})
+		await settled()
+		const section = (page.win.document as { querySelectorAll: (s: string) => Record<string, unknown>[] })
+			.querySelectorAll("[data-related-map]")[0]
+		if (change === "gone") section.isConnected = false
+		else {
+			const own = section.getAttribute as (name: string) => string | null
+			section.getAttribute = (name: string) => (name === "data-pl-root" ? "m2" : own(name))
+		}
+		held[0]()
+		assert.deepEqual(page.asked, [], change)
+	}
+})

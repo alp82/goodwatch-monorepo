@@ -22,6 +22,7 @@ import type { RelatedMapData } from "~/server/related-map.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { MapView, RawPack } from "~/ui/related-map/engine"
 import cssPath from "~/ui/related-map/related-map.css?url"
+import { whenSectionWanted } from "~/ui/related-map/late-wait"
 import { assetBase, assetUrl } from "~/utils/asset-url"
 import { useHydrated } from "~/utils/hydrated"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
@@ -184,11 +185,22 @@ function documentMarkup(rootKey: string): string {
 	)
 }
 
-// The engine's wait before it asks for the page title's pack (engine.ts, wake), handed over once the app runs.
+// The engine's wait before it asks for the page title's pack (engine.ts, wake), handed over once the app runs. The waits
+// under way are dropped when the section shows another title or goes (RelatedMap's effect), so no request starts for a
+// title the reader left; the engine also checks the section before it asks.
+const engineWaits = new Set<() => void>()
 if (typeof window !== "undefined")
 	(window as MapWindow).__gwRelatedMapDefer = (run) => {
-		afterNavigationWork(run)
+		const cancel = afterNavigationWork(() => {
+			engineWaits.delete(cancel)
+			run()
+		})
+		engineWaits.add(cancel)
 	}
+function dropEngineWaits() {
+	for (const cancel of engineWaits) cancel()
+	engineWaits.clear()
+}
 
 export default function RelatedMap({
 	media,
@@ -228,6 +240,8 @@ export default function RelatedMap({
 		if (shown) keepStyle(css, cssPath)
 	}, [shown, css])
 	const section = useRef<HTMLElement>(null)
+	// Another title in the section, or the section gone: the engine's waits for the old one end (engineWaits).
+	useEffect(() => dropEngineWaits, [localizedKey])
 	// A late section: the pack is asked for from the browser, again and again further apart when a request fails, and the
 	// engine draws the picture from it. Only when the reader comes near the section and the page's own navigation work is
 	// done (navigation/instant-navigation.ts, afterNavigationWork): on a phone the section is close to the cast, and a
@@ -265,21 +279,11 @@ export default function RelatedMap({
 					timer = setTimeout(attempt, tries <= 4 ? 1200 * tries : 15000)
 				})
 		}
-		let cancelWait = () => {}
-		const observer = new IntersectionObserver(
-			(entries) => {
-				if (!entries.some((entry) => entry.isIntersecting)) return
-				observer.disconnect()
-				cancelWait = afterNavigationWork(attempt)
-			},
-			{ rootMargin: "800px 0px" },
-		)
-		if (section.current) observer.observe(section.current)
-		else cancelWait = afterNavigationWork(attempt)
+		// Near and after the navigation work, or at once when the reader taps the placeholder (late-wait.ts).
+		const stopWaiting = whenSectionWanted(section.current, attempt, afterNavigationWork)
 		return () => {
 			gone = true
-			observer.disconnect()
-			cancelWait()
+			stopWaiting()
 			clearTimeout(timer)
 			stop()
 		}

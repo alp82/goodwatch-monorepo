@@ -1,6 +1,6 @@
 // Run by section-wait.test.ts through vite-node: afterNavigationWork on a minimal browser, timed with real timers.
 // Imported before the stubs: libraries in its import graph check for a browser when they load.
-const { afterNavigationWork, prefetchPage } = await import(
+const { afterNavigationWork, prefetchPage, watchScrolls } = await import(
 	"./instant-navigation"
 )
 
@@ -95,7 +95,15 @@ const timed = async (prepare: () => void) => {
 	}
 }
 
-// 1. Nothing going on: soon.
+// 0. A wait before the page watched scrolls (a scroll may have brought the section near): settled conservatively,
+// not before 400 ms.
+const unwatched = await timed(() => {})
+const unwatchedEarly = await unwatched.wait(250)
+const unwatchedAt = await unwatched.wait(500)
+
+// 1. Scrolls watched from the start (installLinkIntent), nothing going on: soon.
+watchScrolls()
+await new Promise((r) => setTimeout(r, 500))
 const idle = await timed(() => {})
 const idleAt = await idle.wait(600)
 
@@ -129,6 +137,6 @@ gone.cancel()
 const goneAt = await gone.wait(700)
 
 console.log(
-	`__SECTION_WAIT__${JSON.stringify({ idleAt, scrolledEarly, scrolledAt, busyDuring, busyAt, stuckAt, goneAt })}`,
+	`__SECTION_WAIT__${JSON.stringify({ unwatchedEarly, unwatchedAt, idleAt, scrolledEarly, scrolledAt, busyDuring, busyAt, stuckAt, goneAt })}`,
 )
 export {}

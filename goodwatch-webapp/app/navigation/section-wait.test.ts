@@ -17,6 +17,11 @@ const t = JSON.parse(out.split("__SECTION_WAIT__").at(-1) ?? "") as Record<
 	number
 >
 
+test("before the page watches scrolls, a wait counts as just after a scroll", () => {
+	assert.equal(t.unwatchedEarly, -1)
+	assert.ok(t.unwatchedAt >= 400 && t.unwatchedAt < 700, String(t.unwatchedAt))
+})
+
 test("with nothing going on, a section's request starts soon", () => {
 	assert.ok(t.idleAt >= 0 && t.idleAt < 300, String(t.idleAt))
 })

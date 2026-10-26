@@ -11,6 +11,7 @@ import {
 	cancelPrefetch,
 	prefetchPage,
 	prefetchableUrl,
+	watchScrolls,
 } from "./instant-navigation"
 import { nearestLinks } from "./viewport-links"
 
@@ -85,6 +86,8 @@ let installed = false
 export function installLinkIntent(): void {
 	if (installed) return
 	installed = true
+	// For the title page's late sections, which wait for this page's own prefetches (afterNavigationWork).
+	watchScrolls()
 
 	let hoverTimer: number | undefined
 	let hovered: IntentElement | null = null

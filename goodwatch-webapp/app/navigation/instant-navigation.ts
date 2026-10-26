@@ -621,6 +621,22 @@ const SECTION_CHECK_MS = 100
 let lastScroll = 0
 let scrollWatched = false
 
+/**
+ * Starts watching scrolls for afterNavigationWork. installLinkIntent calls it after hydration, so a scroll that brings a
+ * section near is seen. A wait that starts before (scrolls unknown) counts as just after a scroll.
+ */
+export function watchScrolls(): void {
+	if (scrollWatched) return
+	scrollWatched = true
+	document.addEventListener(
+		"scroll",
+		() => {
+			lastScroll = Date.now()
+		},
+		{ capture: true, passive: true },
+	)
+}
+
 function navigationWorkIdle(): boolean {
 	return (
 		queue.running === 0 &&
@@ -638,14 +654,9 @@ function navigationWorkIdle(): boolean {
  */
 export function afterNavigationWork(start: () => void): () => void {
 	if (!scrollWatched) {
-		scrollWatched = true
-		document.addEventListener(
-			"scroll",
-			() => {
-				lastScroll = Date.now()
-			},
-			{ capture: true, passive: true },
-		)
+		watchScrolls()
+		// The scroll that brought the section near may have come just before: settle as if it had.
+		lastScroll = Date.now()
 	}
 	const until = Date.now() + SECTION_MAX_WAIT_MS
 	let timer: ReturnType<typeof setTimeout> | undefined

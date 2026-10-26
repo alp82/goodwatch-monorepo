@@ -651,7 +651,13 @@ export function relatedMapEngine(
 		// pack waits until the app's own page prefetches are done, so a tap on a person or title nearby isn't stuck
 		// behind it (#753). A tap on the map asks at once. Without the app (a crawler, before it runs), at once too.
 		const defer = (win as { __gwRelatedMapDefer?: (run: () => void) => void } | undefined)?.__gwRelatedMapDefer
-		if (defer) defer(() => void first())
+		if (defer)
+			defer(() => {
+				// The reader may have left: a section that has gone, or shows another title now, asks for nothing.
+				if ((s as { isConnected?: boolean }).isConnected === false) return
+				if (s.getAttribute("data-pl-root") !== st.root) return
+				void first()
+			})
 		else void first()
 		fitted(s)
 	}
