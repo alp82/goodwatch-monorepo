@@ -8,6 +8,16 @@ and temporarily hold the backup cron; those changes were restored.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Q40 — tonight's restart plan (not executed)
+
+Owner approved planning for crate-02 around **2026-10-27 03:00 UTC**, with a separate **go** still
+required. [Exact plan and30-table inventory](q40-execution-plan.md) include all145 table policies,
+verbatim replica expressions, lower/restore SQL, the14-table execution scope, guarded write-wait
+changes, page-monitor/abort rules and a04:30 UTC hard stop. **Health-wait cancellation is an execution blocker while pending moves remain;
+a short initial timeout is explicitly rejected as unsafe without qualification.** Today performed **read-only inventory
+and local preparation only**; no Q40 production changes. The other16 three-copy auth/MCP tables
+are reference inventory, not an approved reduction. A fresh primary outside the14 is NO-GO.
+
 ## Q37 urgent native abort — service restored October26,10:33 UTC
 
 **Supersedes the pending-decommission state below: the native action aborted at10:32:56 UTC.
