@@ -68,3 +68,15 @@ test("wider screens keep the file they had: 144 px at their own pixel ratio", ()
 	assert.equal(attr("width"), "144")
 	assert.equal(attr("height"), "216")
 })
+
+test("the phone rule ends at 768 px: 767 px takes the 185 px file, 768 px the one for 144 px", () => {
+	for (const dpr of [2, 3]) {
+		assert.match(pick(767, dpr), /\/w185\/face\.jpg/, `767 px at ${dpr}x`)
+		assert.match(pick(768, dpr), /\/h632\/face\.jpg/, `768 px at ${dpr}x`)
+	}
+	assert.match(
+		pick(768, 1),
+		/\/w185\/face\.jpg/,
+		"768 px at 1x: 144 px fits the 185 px file",
+	)
+})
