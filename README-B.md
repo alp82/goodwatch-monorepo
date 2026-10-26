@@ -136,6 +136,9 @@ Ask ChatGPT, Claude, and other AI apps what to start tonight, compare scores, or
 <h3>Discord bot</h3>
 Type `/watch` for a pick, its score, and where it streams. Let everyone vote on what to watch together.
 <br clear="right">
+<br>
+
+
 
 <p align="center"><a href="https://goodwatch.app/how-it-works"><b>See how it works →</b></a></p>
 

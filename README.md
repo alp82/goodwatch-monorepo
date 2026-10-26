@@ -92,6 +92,9 @@ You have more services than ever and still spend the evening scrolling. GoodWatc
 <h3 align="center">Discord bot</h3>
 <p align="center">Type `/watch` for a pick, its score, and where it streams. Let everyone vote on what to watch together.</p>
 <p align="center"><img src=".github/readme/clips/discord.avif" alt="Discord bot: a scene from the GoodWatch intro" width="86%"></p>
+<br>
+
+
 
 <p align="center"><a href="https://goodwatch.app/how-it-works"><b>See how it works →</b></a></p>
 

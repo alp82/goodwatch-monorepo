@@ -77,9 +77,9 @@ def sided(f, i):
 
 banner_a = banner("roam", "GoodWatch: find what to watch next. A soft spotlight moves across a slowly drifting wall of posters.")
 a = banner_re.sub(banner_a, base)
-a = grid_re.sub(lambda _: GAP.join(stacked(f) for f in features), a)
+a = grid_re.sub(lambda _: GAP.join(stacked(f) for f in features) + GAP, a)
 b = banner_re.sub(banner_a, base)
-b = grid_re.sub(lambda _: GAP.join(sided(f, i) for i, f in enumerate(features)), b)
+b = grid_re.sub(lambda _: GAP.join(sided(f, i) for i, f in enumerate(features)) + GAP, b)
 
 
 def switcher(current):
