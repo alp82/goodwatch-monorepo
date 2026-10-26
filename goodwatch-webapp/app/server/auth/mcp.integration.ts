@@ -86,6 +86,77 @@ test("MCP clients discover the canonical resource and issuer with CIMD, DCR and 
 	}
 })
 
+test("MCP scope discovery opens sign-in when the shared issuer enables YepWatch", async () => {
+	const sharedAuth = createGoodwatchAuth({
+		sql,
+		storage: new ValkeyAuthStorage(() => redis),
+		mail,
+		baseURL: origin,
+		secret: "local-mcp-secret-at-least-32-characters",
+		google: { clientId: "local", clientSecret: "local" },
+		mcp: { resource },
+		yepwatch: {
+			resource: `${origin}/api/yepwatch/v1/continuous`,
+			clientId: "dedicated-yepwatch-client",
+			redirectUris: [`${origin}/yepwatch/callback`],
+		},
+	})
+	for (const path of [
+		"/.well-known/oauth-protected-resource",
+		"/.well-known/oauth-protected-resource/mcp",
+	]) {
+		const response = await sharedAuth.handler(new Request(`${origin}${path}`))
+		assert.equal(response.status, 200)
+		const metadata = await response.json()
+		assert.deepEqual(metadata.scopes_supported, ["mcp:read", "mcp:write"])
+		const redirectUri = "http://127.0.0.1:3357/callback"
+		const registration = await sharedAuth.handler(
+			new Request(`${origin}/api/auth/oauth2/register`, {
+				method: "POST",
+				headers: {
+					"content-type": "application/json",
+					"x-forwarded-for": "127.0.0.2",
+				},
+				body: JSON.stringify({
+					client_name: "Scope discovery regression",
+					application_type: "native",
+					redirect_uris: [redirectUri],
+					grant_types: ["authorization_code"],
+					response_types: ["code"],
+					token_endpoint_auth_method: "none",
+					scope: metadata.scopes_supported.join(" "),
+				}),
+			}),
+		)
+		assert.equal(registration.status, 201, await registration.clone().text())
+		const client = await registration.json()
+		const params = new URLSearchParams({
+			client_id: client.client_id,
+			redirect_uri: redirectUri,
+			response_type: "code",
+			resource: metadata.resource,
+			scope: metadata.scopes_supported.join(" "),
+			state: "scope-discovery-regression-state-32-characters",
+			code_challenge_method: "S256",
+			code_challenge: "a".repeat(43),
+		})
+		const authorization = await sharedAuth.handler(
+			new Request(`${origin}/api/auth/oauth2/authorize?${params}`),
+		)
+		assert.equal(authorization.status, 302, await authorization.clone().text())
+		assert.equal(
+			new URL(authorization.headers.get("location")!, origin).pathname,
+			"/sign-in",
+		)
+	}
+	const issuer = await sharedAuth.handler(
+		new Request(`${origin}/.well-known/oauth-authorization-server/api/auth`),
+	)
+	const metadata = await issuer.json()
+	assert.ok(metadata.scopes_supported.includes("yepwatch:read"))
+	assert.ok(metadata.scopes_supported.includes("offline_access"))
+})
+
 const deliveries: string[] = []
 const capturedMail = new AuthMailQueue({
 	sendMail: async (message) => {

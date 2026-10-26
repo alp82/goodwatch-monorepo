@@ -15,9 +15,9 @@ test("MCP refuses anonymous callers and never caches the challenge", async () =>
 	const response = await handle(new Request("http://localhost:3336/mcp"))
 	assert.equal(response.status, 401)
 	assert.match(response.headers.get("WWW-Authenticate") ?? "", /Bearer/)
-	assert.doesNotMatch(
+	assert.match(
 		response.headers.get("WWW-Authenticate") ?? "",
-		/(?:^|[, ])scope=/,
+		/scope="mcp:read mcp:write"/,
 	)
 	assert.match(
 		response.headers.get("WWW-Authenticate") ?? "",

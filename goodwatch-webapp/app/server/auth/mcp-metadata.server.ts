@@ -16,6 +16,8 @@ export async function bearerMcpMetadata(request: Request, response: Response) {
 	metadata.dpop_signing_alg_values_supported = undefined
 	metadata.dpop_bound_access_tokens_required = undefined
 	if (metadata.resource) {
+		// The shared issuer also supports YepWatch; MCP clients must only discover MCP scopes.
+		metadata.scopes_supported = ["mcp:read", "mcp:write"]
 		metadata.resource_name = mcpServerInfo.title
 		metadata.resource_documentation = mcpServerInfo.websiteUrl
 		metadata.logo_uri = mcpServerInfo.icons[2].src

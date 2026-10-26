@@ -85,13 +85,13 @@ export function createReadMcpHandler(
 			const [header] = (request.headers.get("Authorization") ?? "").split(",")
 			auth = await verifyBearerToken(header || undefined, authOptions)
 		} catch (error) {
-			// No initial scope hint: clients discover both supported scopes from resource metadata.
+			// Guide initial authorization to MCP scopes even when the issuer serves other resources.
 			// Enforcement stays read-only at the gate; write calls have their own scope check below.
 			return bearerAuthChallengeResponse(error, {
 				...authOptions,
 				requiredScopes:
 					error instanceof OAuthError && error.code === "invalid_token"
-						? []
+						? ["mcp:read", "mcp:write"]
 						: authOptions.requiredScopes,
 			})
 		}
