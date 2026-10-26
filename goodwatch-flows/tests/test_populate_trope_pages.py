@@ -11,7 +11,7 @@ import unittest
 FLOWS = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(FLOWS / 'windmill'), str(FLOWS / 'scripts')]
 from populate_trope_pages import PageCatalog, inventory_urls
-from populate_trope_catalog import atomic_json, run
+from populate_trope_catalog import atomic_json, run, transient_backend_error
 from recover_tvtropes import LocalClient
 
 BASE = 'https://tvtropes.org/pmwiki/pmwiki.php/Main/'
@@ -56,11 +56,34 @@ class PagePopulationTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
+    def test_explicit_uncertain_write_is_never_a_transient_retry(self):
+        from urllib.error import URLError
+        class UncertainWrite(RuntimeError):
+            retryable = False
+        try:
+            try:
+                raise URLError('private transport details')
+            except URLError:
+                raise UncertainWrite('Inspect receipt') from None
+        except UncertainWrite as error:
+            self.assertFalse(transient_backend_error(error))
+
     def test_queue_deduplicates_by_known_uri_not_contextual_label(self):
         self.assertEqual(inventory_urls([self.inventory]), [BASE + 'MultipleEndings'])
         rows = self.catalog.prepare(self.db, self.root / 'run')
         self.assertEqual(rows, [{'name': BASE + 'MultipleEndings', 'url': BASE + 'MultipleEndings'}])
         self.assertEqual(rows, self.catalog.prepare(self.db, self.root / 'run'))
+
+    def test_restart_with_unverified_write_fails_before_source_requests(self):
+        output = self.root / 'run'
+        self.catalog.prepare(self.db, output)
+        journal = output / 'database-events.jsonl'
+        journal.write_text(json.dumps({'document_sha256': 'a' * 64, 'phase': 'before_write'}) + '\n')
+        with self.assertRaisesRegex(ValueError, 'Unverified page write'):
+            self.catalog.prepare(self.db, output)
+        with journal.open('a') as handle:
+            handle.write(json.dumps({'document_sha256': 'a' * 64, 'phase': 'complete'}) + '\n')
+        self.assertEqual(len(self.catalog.prepare(self.db, output)), 1)
 
     def test_changed_inventory_or_saved_queue_fails_closed(self):
         output = self.root / 'run'

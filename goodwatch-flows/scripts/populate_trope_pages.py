@@ -15,8 +15,8 @@ sys.path[:0] = [str(FLOWS / 'windmill'), str(FLOWS / 'scripts')]
 from f.tvtropes_catalog.catalog import canonical_url
 from f.tvtropes_catalog.descriptions import extract_description
 from import_trope_catalog import Crate, settings
-from populate_trope_catalog import (DEFAULT_LOCK, DEFAULT_PACE, DEFAULT_STATE, atomic_json,
-                                     run, until_complete, utcnow)
+from populate_trope_catalog import (DEFAULT_LOCK, DEFAULT_PACE, DEFAULT_STATE, atomic_json, append_json,
+                                     read_journal, run, until_complete, utcnow)
 
 
 def inventory_urls(paths):
@@ -47,7 +47,19 @@ class PageCatalog:
         if refresh:
             raise ValueError('Use a new page run directory for a changed global inventory')
         output = Path(output)
+        self.output = output
         output.mkdir(parents=True, exist_ok=True)
+        # A crash after a write began requires read-only inspection, even when
+        # the ready source record is replayable. Never infer a failed write.
+        attempts = {}
+        for event in read_journal(output / 'database-events.jsonl'):
+            identity = event.get('document_sha256')
+            if event.get('phase') == 'before_write':
+                attempts[identity] = True
+            elif event.get('phase') == 'complete':
+                attempts[identity] = False
+        if any(attempts.values()):
+            raise ValueError('Unverified page write attempt: inspect receipts and stored documents before resuming')
         path, manifest_path = output / 'queue.json', output / 'queue-manifest.json'
         inventory = [{'path': str(p), 'sha256': hashlib.sha256(p.read_bytes()).hexdigest()}
                      for p in self.inventories]
@@ -107,11 +119,14 @@ class PageCatalog:
                            for reference in sorted({entry['url'], url})],
         })
 
-    @staticmethod
-    def write(db, records):
+    def write(self, db, records):
         from f.tvtropes_catalog.pages import import_document
         for document in records:
-            import_document(db, document, apply=True)
+            digest = hashlib.sha256(json.dumps(document, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+            def receipt(event):
+                append_json(self.output / 'database-events.jsonl',
+                            {'document_sha256': digest, 'at': utcnow().isoformat(), **event})
+            import_document(db, document, apply=True, on_event=receipt)
 
 
 def linked_description(html, name, final_url, *, requested_url=None):

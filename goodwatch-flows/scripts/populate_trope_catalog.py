@@ -220,6 +220,8 @@ class DurablePacedClient(LocalClient):
 
 def transient_backend_error(error):
     """Retry only recognized transport/availability failures; SQL/data/configuration bugs must stop."""
+    if getattr(type(error), "retryable", None) is False:
+        return False
     if isinstance(error, HTTPError):
         return error.code in (502, 503, 504)
     if isinstance(error, (TimeoutError, ConnectionError, URLError)):
