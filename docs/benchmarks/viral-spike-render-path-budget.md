@@ -917,3 +917,92 @@ The limits for these three lines were reset to the measured value plus the usual
 and total bytes). The other lines stay as they are. Two of them already failed before this change and still do:
 scripts (movie 24, show 26, limit 20) and host requests (movie 38, show 41, limits 37 and 36). The local build counts
 21 static scripts on the movie page before this change, so those failures come from earlier commits.
+
+
+## Production remeasurement, October 26, 2026 (#236)
+
+Measurement only, before choosing further work. Anonymous `https://goodwatch.app/`, no scrolling or
+interaction. Seven sequential runs at 00:16–00:20 UTC on the same worker3 generator, using the unmodified
+`goodwatch-benchmark/lighthouse/run.sh`: Lighthouse 13.5.0, existing image
+`gw-bench-lighthouse:13.5.0-6dd25f05`, Chromium 154.0.8037.92, mobile 412 × 823, default simulated slow 4G,
+CPU slowdown 2.7, fresh browser/profile per run, `--hide-scrollbars`, public production path. No app server,
+production environment file, or production administration was used. Source checkout: `bb1265d4a`; the
+production deployment SHA was not independently established.
+
+The existing [validity rule](../../goodwatch-benchmark/README.md) excludes CPU benchmark below 1,050 or
+observed FCP above 1,000 ms. Five runs qualify: 1, 2, 3, 4 and 7. Run 5 had benchmark 1,047; run 6 had
+observed FCP 3,941 ms. Both remain in the evidence. Valid runs' benchmark range is 1,098–1,304 (median
+1,266.5), versus October 14's 1,177–1,280. No CPU recalibration or limit change was made. Percentiles are
+nearest rank; with five valid samples p90 is the maximum. These are lab measurements, not field percentiles
+or a controlled before/after of a single change.
+
+| Measure | October 14: worst median of three budget runs | October 26 median | October 26 p90 |
+| --- | --- | --- | --- |
+| Mobile LCP | 4,559 ms | 2,349 ms | 2,535 ms |
+| Script requests | 11 | 33 | 33 |
+| Script transfer bytes | 192,965 | 393,659 | 393,685 |
+
+The later October 14 confirmation above measured 4,416 ms and 189,155 script bytes. The new LCP median is
+48.5% below the requested 4,559 ms comparison, but still 349 ms above #236's 2,000 ms goal. Script bytes
+increased 104%, and the count tripled. Bytes and counts use the existing `extractMetrics` in
+`goodwatch-benchmark/scripts/budget.mjs`: all HTTP(S) `Script` entries in Lighthouse's `network-requests`,
+summing `transferSize`, including dynamically requested chunks through the end of the capture. This is
+neither decoded JavaScript size nor a count restricted to requests before LCP.
+
+| Run | Simulated LCP (ms) | Scripts | Script bytes | Observed FCP (ms) | CPU benchmark | Included |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 2,535 | 33 | 393,651 | 257 | 1,304 | Yes |
+| 2 | 1,944 | 33 | 393,685 | 542 | 1,281 | Yes |
+| 3 | 2,041 | 33 | 393,667 | 612 | 1,266.5 | Yes |
+| 4 | 2,465 | 33 | 393,659 | 341 | 1,244 | Yes |
+| 5 | 1,913 | 33 | 393,644 | 421 | 1,047 | No: CPU |
+| 6 | 2,028 | 33 | 393,656 | 3,941 | 1,273.5 | No: FCP |
+| 7 | 2,349 | 33 | 393,651 | 224 | 1,098 | Yes |
+
+Pooling all seven without exclusions gives LCP median 2,041 ms, p90 2,535 ms. No run was excluded because
+of its LCP. The LCP element is the **hand image** in all seven reports:
+`img[elementtiming="hero"]`, `https://static.goodwatch.app/assets/hand--zEoEhaM.avif`, with
+`fetchpriority="high"` on the element. It matches the existing home `lcp_element` rule.
+
+### The three largest LCP phases now
+
+Evidence: [selected Lighthouse audits for all seven runs](remeasure-2026-10-26/home-lighthouse.json),
+especially `lcp-breakdown-insight`. Ranked by median phase duration across the five valid reports:
+
+1. **Element render delay: 402 ms.** The hand has finished loading but has not been painted as LCP.
+   The five reports also identify five render-blocking stylesheets (`living-room`, `tailwind`,
+   `how-goodwatch-works`, `boot`, `start-row`). `render-blocking-insight` estimates 550–900 ms FCP
+   savings but **zero LCP savings**; this is evidence to investigate rendering, not proof that deleting
+   CSS would recover that much LCP. Main-thread work and JavaScript execution audits are retained too;
+   their whole-capture totals cannot be attributed entirely to work before LCP.
+2. **LCP image transfer: 82 ms.** The hand transfers about 28.3 KB. `network-requests` marks its preload
+   priority `Low`, and `lcp-discovery-insight` says the preload lacks the high-priority hint even though
+   the image element has it. Testing a matching high-priority preload is a concrete possible follow-up;
+   this measurement does not establish its gain.
+3. **Document TTFB: 57 ms.** This includes the network path; it is not just server computation.
+   `document-latency-insight` reports no redirect and no document-latency LCP saving. It is a smaller
+   opportunity than rendering in this observed breakdown.
+
+The remaining phase, resource discovery/load delay, has median 31 ms. **These are observed, unthrottled
+trace phases**, not components to add to the simulated 2,349 ms. Their sum varies per run, and medians
+of phases need not sum to the median total. Simulated LCP is reported separately above. A trace-backed
+breakdown ranks phases; it does not isolate causal savings without an experiment.
+
+Other costs warrant attention even with better LCP: valid-run median TBT **986 ms** (p90 **1,201 ms**),
+80 image requests and 782,639 image transfer bytes, 1,255,994 total transfer bytes. Current home limits in
+`urls/budget.json` are already more permissive than October 14 (26 scripts, 301,056 script bytes), yet
+these measurements exceed both, plus the 150 ms TBT, 28 images, 378,880 image bytes, 44 site/static
+requests, two blocking requests and 817,152 total bytes limits. No budget thresholds were changed.
+
+### Decision options
+
+- **Recommended:** commission a small #236 investigation of rendering and the hand preload, with TBT
+  and script/image growth as guardrails. The lab median is near 2 s, but it misses the issue's goal and
+  the page now has substantially more blocking work. Do not assume the old JavaScript-only diagnosis
+  explains today's LCP.
+- **Prioritize #753 instead:** first obtain the member baseline described in
+  [navigation-speed.md](navigation-speed.md#production-remeasurement-october-26-2026-753), then choose
+  the measured slow member path. An authentication cache remains an owner tradeoff, not a justified
+  default from anonymous results.
+- **Do nothing for now:** reasonable if the owner accepts these lab results and the payload/TBT budget
+  overruns; it leaves #236's 2 s goal unmet. Real phones, field LCP, Safari and Firefox remain unmeasured.

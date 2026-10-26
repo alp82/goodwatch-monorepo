@@ -172,3 +172,121 @@ What is still slow:
 - **Hub → Discover** didn't get faster: the hub's links open in a dialog and the step waits for Discover's own server answer (170 to 340 ms).
 
 Documents: a Googlebot and browser snapshot of 60 production URLs after the deploy, compared with the snapshot from before any change, showed no change in structure apart from two title pages that were incomplete (`no-store`) on one side, which the page cache never stores, and loader data keys that differ with them. Text differences are data updates and [#754](https://github.com/alp82/goodwatch-monorepo/issues/754).
+
+
+## Production remeasurement, October 26, 2026 (#753)
+
+Measurement only. The October 23 analysis above remains historical; this section measures the current
+anonymous baseline after tickets 1–4. Source checkout `bb1265d4a`; the production deployment SHA was
+not independently established. Direct public `https://goodwatch.app`, from the owner's machine, using
+**unmodified** `goodwatch-benchmark/navigation/nav.mjs`. Measurements ran at 00:16–00:30 UTC. Three fresh browsers per profile/mode,
+Playwright 1.58.2 and Chromium build 1248 (the same browser build named in the earlier method), no cookies,
+proxy, related-map blocking, local app server or production environment file. Profiles remain desktop
+1440 × 900 unthrottled, and Pixel 7 slow 4G (150 ms latency, 1.6 Mbit/s down, 750 kbit/s up), CPU 4×.
+The script's 1.2 s reader pause and 300 ms desktop hover remain unchanged. Runs are sequential on this
+machine; Lighthouse ran on worker3. Navigation timing is measured in the page, from pointerdown to the
+first frame after Remix commits, not until all images finish or the initial page load completes.
+
+Reproduction (with Playwright available and `TMPDIR=$HOME/.cache/gw-work/236-753`):
+
+```sh
+CHROME_PATH="$HOME/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome" \
+  node goodwatch-benchmark/navigation/nav.mjs https://goodwatch.app desktop hover 3 "$TMPDIR/desktop-hover.json"
+CHROME_PATH="$HOME/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome" \
+  node goodwatch-benchmark/navigation/nav.mjs https://goodwatch.app desktop tap 3 "$TMPDIR/desktop-tap.json"
+CHROME_PATH="$HOME/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome" \
+  node goodwatch-benchmark/navigation/nav.mjs https://goodwatch.app mobile tap 3 "$TMPDIR/mobile-tap.json"
+```
+
+Raw navigation evidence (all requests, without filtering) is in [remeasure-2026-10-26/](remeasure-2026-10-26/), retaining each step's
+target, timing, error and requests. Percentiles are nearest rank, pooled over successful steps as in
+`navigation/stats.py`. Three runs per mode are a small lab sample, not a field p90.
+
+| Anonymous profile | October 23 before: median, p90 (ms) | October 23 after: median, p90 (ms) | October 26: median, p90 (ms) | Successful steps |
+| --- | --- | --- | --- | --- |
+| Desktop, hover | 165, 475 | 36, 338 | 25, 170 | 39/39 |
+| Desktop, tap | 188, 303 | 91, 308 | 88, 338 | 39/39 |
+| Phone, tap | 355, 1,448 | 51, 675 | 43, 1,273 | 24/39 |
+
+| Step | October 23 after: desktop hover / phone tap median (ms) | October 26 desktop hover median / max (ms) | October 26 desktop tap median / max (ms) | October 26 phone tap median / max (ms) |
+| --- | --- | --- | --- | --- |
+| List → first title | 22 / 88 | 23 / 54 | 170 / 194 | 1,276 / 1,277 |
+| Title → first person | 25 / 1,170 | 188 / 275 | 106 / 118 | 886 / 1,193 |
+| Person → title | 21 / 51 | 21 / 52 | 22 / 41 | 54 / 54 |
+| Back or Forward (12 samples each) | 36 / 26 | 30 / 93 | 54 / 96 | 31 / 35 |
+| Hub → Discover | Not separately tabulated / unavailable | 23 / 23 | 338 / 905 | Unavailable |
+| Shows → category | Not separately tabulated / unavailable | 170 / 505 | 222 / 370 | Unavailable |
+
+**Phone coverage caveat:** each run had two 30-second hub-selector timeouts and one missing shows/category
+link: nine explicit errors total. In addition, the `title→title` and `discover→title` slots produced
+`commit: null, paint: null` in all three runs: six further unmeasured steps. The unchanged harness waited
+for them but recorded no commit/paint; this does not establish either their latency or whether their target
+navigation completed. `stats.py` excludes these entries, so only **24/39** steps enter the phone aggregate,
+versus **39/39** for each desktop mode. A 43 ms phone median is not evidence that the full journey became
+faster than October 23: the mix of timed steps differs, and slow/missing steps are not assigned zero.
+After the failed hub navigation, the `category→title` slot actually starts from a title page; its median
+is 63 ms (max 65), not a verified category-page transition. All timed steps were SPA changes; no recorded
+step triggered a document load. Phone hub and intended category coverage remain open.
+
+**Specific slow paths:** the phone's first title is consistently 1,273–1,277 ms, versus the earlier after
+median of 88 ms. In every run 29 script requests start between pointerdown and paint; `detailsMeta` starts
+10–13 ms after the press and takes 1,215–1,224 ms. This aligns closely with the delayed commit, although
+it is not an isolated causal test. The first person route's script starts 6–8 ms after the tap and takes
+820–1,099 ms, alongside its 859–1,193 ms paint times. The first-person targets differ between runs
+(Diane Keaton and Robert Duvall), and the desktop target is Richard S. Castellano: these automatic link
+choices are not a controlled comparison of one identical page. Desktop tap's hub → Discover median is
+338 ms, maximum 905 ms. These tails matter despite fast cached/history transitions.
+
+### Member measurement remains open
+
+No production member session was supplied to this task. The harness starts a fresh isolated browser and
+cannot reuse the owner's signed-in browser. No password or credentials were requested, copied from `.env`,
+or committed. Anonymous results cannot establish member speed or the cost of session resolution.
+
+The smallest owner input is **one valid goodwatch.app member session cookie export**, in the Playwright
+cookie-array JSON format accepted by `browserContext.addCookies`, placed outside the repository, for example
+`$HOME/.cache/gw-work/236-753/private/member.cookies.json` (directory mode 700, file mode 600).
+Each cookie needs `name`, `value`, and either `url` or `domain` plus `path`; preserve the export's `secure`,
+`httpOnly`, `sameSite` and expiry fields. This is a cookie array, not an entire `storageState` wrapper.
+Only cookies needed for the current site's member session are needed; a password is unnecessary.
+The owner can supply the private file path via the orchestrator. Do not paste cookie values in an issue,
+benchmark document, or console output.
+
+Then repeat each command with that private file path as the final argument, verify that the browser is
+actually a member (rather than silently accepting an expired session as anonymous), and report member
+results separately. Record only that the member identity was verified, not the identity or cookie values.
+These runs were not performed, and #753's member question is still unanswered. The existing catalog-only
+flow does not cover member-only My movies/My shows pages either; those would need a separately specified
+flow, with their visit side effects considered before running under this read-only brief.
+
+### Recommendation and validation
+
+- **First #753 follow-up:** supply the member session and measure it before choosing an authentication
+  optimization. Session memoization/cookie caching changes next-request sign-out behavior and remains an
+  owner decision; these anonymous timings do not justify it.
+- **Anonymous follow-up:** first confirm and repair the phone benchmark's missing commits and
+  mobile selectors in a separate benchmark task, so it verifies the intended destination for every step.
+  Then prioritize warming the first title/person route code before the tap, and inspect prefetch/network
+  contention, before an instant frame from card data. The first title is now about 1.276 s, with late
+  route code reaching nearly the same duration; history steps are already around 31 ms. If the owner
+  chooses an app follow-up from today's partial evidence, that route-code path is the best-supported
+  #753 candidate. Do not change session caching on the strength of these anonymous runs.
+- **Alternative priority:** the home median improved from 4,559 to 2,349 ms, but still misses #236's 2 s
+  goal, and median TBT is 986 ms with 33 scripts. See the
+  [home report](viral-spike-render-path-budget.md#production-remeasurement-october-26-2026-236).
+  A small rendering/preload investigation with payload/TBT guardrails is the recommended implementation
+  option if work must start before the member session is available. Otherwise keep this as measurement
+  only until the member baseline is available. Doing nothing accepts the remaining delays and overruns.
+- **Checks on unchanged application source:** benchmark Node tests **51 passed, 0 failed**; benchmark
+  self-test passed (summaries, abort reporting, trimming, medians, deltas, 1,535 long-tail entries).
+  `npm ci --include=dev` succeeded with `SHARP_IGNORE_GLOBAL_LIBVIPS=1` after the first attempt failed
+  because global libvips triggered a Sharp source build. No environment file was copied or server started.
+  `npx tsc --noEmit` exited 2 with **192 TS diagnostics** (including existing `usePageTracking` undefined
+  `data.pages` and route indexing errors). `npm test` exited 1: **5,244 tests, 5,226 passed, 9 failed,
+  8 skipped, 1 todo**. Failures include search/title-snapshot module loading, committed interaction cache
+  invalidation, IMDb import/watch assertions, auth notice assertions and library picker assertions.
+  This commit changes no app source or test and makes no claim that the existing app checks pass.
+  Flows/`pytest` were not run because no flow changed. Raw command logs remain in
+  `$HOME/.cache/gw-work/236-753/` on the measurement machine.
+- **Limits:** no member session, real phone, Safari, Firefox or field measurements. Navigation timing
+  does not prove that destination images are visible at the first measured frame.

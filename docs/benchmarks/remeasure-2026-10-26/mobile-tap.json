@@ -1,0 +1,4003 @@
+[
+ [
+  {
+   "step": "list→title",
+   "target": "/movie/238-the-godfather",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 59,
+   "commit": 1264,
+   "paint": 1277,
+   "images": 1310,
+   "lastData": 4288,
+   "res": [
+    {
+     "u": "/assets/Hub-BXzprMLb.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 2,
+     "dur": 401,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/newly-available-CdW-ISSY.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 3,
+     "dur": 205,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/useAccountSummary-Sp_Q5BY0.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 3,
+     "dur": 182,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/my-library-DEZ6IJMK.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 4,
+     "dur": 392,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/headless-DWNPY8zs.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 4,
+     "dur": 1043,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/SearchPanel-Csk39ce2.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 5,
+     "dur": 405,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/movie._movieKey-jCY2T0BO.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 12,
+     "dur": 413,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/detailsMeta-Cwafxdno.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 13,
+     "dur": 1215,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/title-icons-BhFcobWO.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 14,
+     "dur": 216,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/ScoreRing-B_YqB5z0.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 14,
+     "dur": 223,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/MediaPreference-CO7MoBx4.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 15,
+     "dur": 522,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/moods-EYQNFuYl.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 16,
+     "dur": 597,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/fingerprint-DxWuc5pz.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 16,
+     "dur": 537,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/headline-CaDOdNs6.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 16,
+     "dur": 641,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/fingerprint-8T2GFbH-.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 16,
+     "dur": 266,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/ShieldCheckIcon-DzwpSzkz.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 17,
+     "dur": 258,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/FilmIcon-DIZkFWso.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 17,
+     "dur": 273,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/ChartBarIcon-eoDd35OP.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 18,
+     "dur": 280,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/TvIcon-DxHudXSb.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 18,
+     "dur": 287,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/MovieTvCard-DcwlTXuO.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 18,
+     "dur": 460,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/RatingsGrid-DIbXYEH9.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 19,
+     "dur": 608,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/scale-BTpjZUPI.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 19,
+     "dur": 308,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/AdjustmentsHorizontalIcon-DCX5gW2F.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 20,
+     "dur": 330,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/gate-CGTzGRoy.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 20,
+     "dur": 472,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/band-BUuvdakw.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 20,
+     "dur": 345,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/RatingChips-BgWIWITN.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 21,
+     "dur": 479,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/TitleControl-xJ_omN5F.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 21,
+     "dur": 366,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/SeenScore-BwRL5wHI.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 21,
+     "dur": 561,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/seen-score-faces-DfrJvgrv.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 22,
+     "dur": 568,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/t/p/w780/ejdD20cdHNFAYAN2DlqPToXKyzx.jpg?gw-cors=1",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 24,
+     "dur": 1121,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 1278,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/US.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1362,
+     "dur": 158,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/assets/imdb-logo-250-CeagZQn7.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1391,
+     "dur": 189,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/metacritic-logo-icon-64-8MrO7JJU.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1391,
+     "dur": 182,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/flags/NE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1422,
+     "dur": 165,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/DE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1423,
+     "dur": 179,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/AT.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1423,
+     "dur": 172,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w154/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1522,
+     "dur": 178,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/assets/goodwatch-logo-DdoCnKKV.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1544,
+     "dur": 186,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/t/p/w300/ejdD20cdHNFAYAN2DlqPToXKyzx.jpg",
+     "host": "image.tmdb.org",
+     "type": "css",
+     "start": 1686,
+     "dur": 179,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/assets/related-map-BmSnmGtB.css",
+     "host": "static.goodwatch.app",
+     "type": "link",
+     "start": 1870,
+     "dur": 213,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/related-map-lc4sVgbg.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 1871,
+     "dur": 370,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/t/p/w154/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1979,
+     "dur": 268,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w154/4N4BMd0Mm0kHAmF7RZgL5lW3cwc.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1979,
+     "dur": 246,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w154/surh9i8VYeeq9186fKHnUg5Q5dg.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1980,
+     "dur": 252,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1980,
+     "dur": 177,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/4N4BMd0Mm0kHAmF7RZgL5lW3cwc.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1980,
+     "dur": 185,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/assets/faststats-browser-1PC-6x_E.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 3772,
+     "dur": 283,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 4073,
+     "dur": 215,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    }
+   ]
+  },
+  {
+   "step": "title→person",
+   "target": "/person/3092-diane-keaton",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 48,
+   "commit": 1183,
+   "paint": 1193,
+   "images": 2961,
+   "lastData": 2038,
+   "res": [
+    {
+     "u": "/assets/person._personKey-BNMW4nf6.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 8,
+     "dur": 1099,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/TypeFilter-BZM5yd2O.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 9,
+     "dur": 589,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/person/3086-richard-s-castellano?_data=routes%2Fperson.%24personKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 1041,
+     "dur": 524,
+     "ttfb": 42,
+     "kb": 4,
+     "cached": false
+    },
+    {
+     "u": "/person/1433439-paul-baxley?_data=routes%2Fperson.%24personKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 1172,
+     "dur": 866,
+     "ttfb": 79,
+     "kb": 8,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 1180,
+     "dur": 288,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 1183,
+     "dur": 308,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 1187,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w780/pGzqRKrYeK4LogoysNro0vG8d8N.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1212,
+     "dur": 1742,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/assets/poster-placeholder-DazNXA6K.png",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1240,
+     "dur": 663,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    }
+   ]
+  },
+  {
+   "step": "person→title",
+   "target": "/movie/238-the-godfather",
+   "link": "plain",
+   "doc": false,
+   "harnessLag": 56,
+   "commit": 38,
+   "paint": 54,
+   "images": 72,
+   "lastData": 1295,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 35,
+     "dur": 165,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 37,
+     "dur": 178,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 53,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/US.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 69,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/assets/imdb-logo-250-CeagZQn7.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 81,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/metacritic-logo-icon-64-8MrO7JJU.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 81,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/flags/NE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 91,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/DE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 91,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/AT.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 91,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w300/ejdD20cdHNFAYAN2DlqPToXKyzx.jpg",
+     "host": "image.tmdb.org",
+     "type": "css",
+     "start": 169,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 546,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/4N4BMd0Mm0kHAmF7RZgL5lW3cwc.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 547,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/person/1158-al-pacino?_data=routes%2Fperson.%24personKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 886,
+     "dur": 319,
+     "ttfb": 269,
+     "kb": 10,
+     "cached": false
+    },
+    {
+     "u": "/person/3085-james-caan?_data=routes%2Fperson.%24personKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 891,
+     "dur": 209,
+     "ttfb": 53,
+     "kb": 11,
+     "cached": false
+    },
+    {
+     "u": "/person/3084-marlon-brando?_data=routes%2Fperson.%24personKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 1105,
+     "dur": 190,
+     "ttfb": 63,
+     "kb": 9,
+     "cached": false
+    }
+   ]
+  },
+  {
+   "step": "title→title",
+   "target": "/movie/402431-wicked",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 49,
+   "commit": null,
+   "paint": null,
+   "images": 16938,
+   "lastData": 9861,
+   "res": [
+    {
+     "u": "/t/p/w780/w22GVYotTIVC1dUd58mRhwPqiS.jpg?gw-cors=1",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 129,
+     "dur": 342,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 9693,
+     "dur": 168,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    }
+   ]
+  },
+  {
+   "step": "back",
+   "target": null,
+   "link": null,
+   "doc": false,
+   "harnessLag": 1,
+   "commit": 10,
+   "paint": 29,
+   "images": 50,
+   "lastData": 1050,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 16,
+     "dur": 172,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 18,
+     "dur": 185,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 22,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w780/pGzqRKrYeK4LogoysNro0vG8d8N.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 37,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/assets/poster-placeholder-DazNXA6K.png",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 61,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/t/p/w92/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 533,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/movie/238-the-godfather?_data=routes%2Fmovie.%24movieKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 810,
+     "dur": 240,
+     "ttfb": 91,
+     "kb": 16,
+     "cached": false
+    }
+   ]
+  },
+  {
+   "step": "back",
+   "target": null,
+   "link": null,
+   "doc": false,
+   "harnessLag": 1,
+   "commit": 8,
+   "paint": 33,
+   "images": 42,
+   "lastData": 189,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 13,
+     "dur": 161,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 15,
+     "dur": 174,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 18,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/US.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 49,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/assets/imdb-logo-250-CeagZQn7.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 49,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/metacritic-logo-icon-64-8MrO7JJU.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 49,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/flags/NE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 58,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/DE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 58,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/AT.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 58,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w300/ejdD20cdHNFAYAN2DlqPToXKyzx.jpg",
+     "host": "image.tmdb.org",
+     "type": "css",
+     "start": 137,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    }
+   ]
+  },
+  {
+   "step": "hub→discover",
+   "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('header button:has-text(\"Movies\"), header button:has-text(\"Shows\"), header button[aria-haspopup]').first()\u001b"
+  },
+  {
+   "step": "discover→title",
+   "target": "/movie/16869-inglourious-basterds",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 43,
+   "commit": null,
+   "paint": null,
+   "images": 16824,
+   "lastData": 10306,
+   "res": [
+    {
+     "u": "/t/p/w780/hwNtEmmugU5Yd7hpfprNWI0DGIn.jpg?gw-cors=1",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 6,
+     "dur": 414,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 10082,
+     "dur": 224,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    }
+   ]
+  },
+  {
+   "step": "hub→shows",
+   "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('header button:has-text(\"Movies\"), header button:has-text(\"Shows\"), header button[aria-haspopup]').first()\u001b"
+  },
+  {
+   "step": "shows→category",
+   "error": "no link"
+  },
+  {
+   "step": "category→title",
+   "target": "/movie/16869-inglourious-basterds",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 49,
+   "commit": 38,
+   "paint": 60,
+   "images": 78,
+   "lastData": 256,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 36,
+     "dur": 205,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 38,
+     "dur": 218,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 60,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/CA.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 83,
+     "dur": 210,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/AU.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 83,
+     "dur": 217,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w154/aupnPtagH9JVBuMrGEanf4iqXEQ.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 113,
+     "dur": 286,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w300/hwNtEmmugU5Yd7hpfprNWI0DGIn.jpg",
+     "host": "image.tmdb.org",
+     "type": "css",
+     "start": 143,
+     "dur": 233,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w154/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 475,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 475,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w154/44uAnmSqvA4yBOdbPWN8YgQHjWm.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 475,
+     "dur": 193,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/44uAnmSqvA4yBOdbPWN8YgQHjWm.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 476,
+     "dur": 162,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w154/9GQLqBo5obK0r3nhZl24BadRKPq.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 476,
+     "dur": 200,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    }
+   ]
+  },
+  {
+   "step": "back",
+   "target": null,
+   "link": null,
+   "doc": false,
+   "harnessLag": 1,
+   "commit": 10,
+   "paint": 33,
+   "images": 42,
+   "lastData": 262,
+   "res": [
+    {
+     "u": "/movie/238-the-godfather?_data=routes%2Fmovie.%24movieKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 10,
+     "dur": 252,
+     "ttfb": 60,
+     "kb": 16,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 14,
+     "dur": 166,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 16,
+     "dur": 179,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 19,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    }
+   ]
+  },
+  {
+   "step": "forward",
+   "target": null,
+   "link": null,
+   "doc": false,
+   "harnessLag": 1,
+   "commit": 5,
+   "paint": 27,
+   "images": 35,
+   "lastData": 194,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 9,
+     "dur": 170,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 11,
+     "dur": 183,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 13,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    }
+   ]
+  }
+ ],
+ [
+  {
+   "step": "list→title",
+   "target": "/movie/238-the-godfather",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 58,
+   "commit": 1261,
+   "paint": 1273,
+   "images": 1298,
+   "lastData": 4556,
+   "res": [
+    {
+     "u": "/assets/Hub-BXzprMLb.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 1,
+     "dur": 506,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/newly-available-CdW-ISSY.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 2,
+     "dur": 234,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/useAccountSummary-Sp_Q5BY0.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 2,
+     "dur": 174,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/my-library-DEZ6IJMK.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 2,
+     "dur": 392,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/headless-DWNPY8zs.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 3,
+     "dur": 1035,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/SearchPanel-Csk39ce2.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 3,
+     "dur": 405,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/movie._movieKey-jCY2T0BO.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 9,
+     "dur": 407,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/detailsMeta-Cwafxdno.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 10,
+     "dur": 1224,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/title-icons-BhFcobWO.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 11,
+     "dur": 218,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/ScoreRing-B_YqB5z0.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 11,
+     "dur": 211,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/MediaPreference-CO7MoBx4.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 12,
+     "dur": 517,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/moods-EYQNFuYl.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 12,
+     "dur": 591,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/fingerprint-DxWuc5pz.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 13,
+     "dur": 538,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/fingerprint-8T2GFbH-.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 13,
+     "dur": 254,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/headline-CaDOdNs6.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 13,
+     "dur": 636,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/ShieldCheckIcon-DzwpSzkz.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 13,
+     "dur": 268,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/FilmIcon-DIZkFWso.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 14,
+     "dur": 283,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/ChartBarIcon-eoDd35OP.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 14,
+     "dur": 275,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/TvIcon-DxHudXSb.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 14,
+     "dur": 289,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/MovieTvCard-DcwlTXuO.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 15,
+     "dur": 447,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/RatingsGrid-DIbXYEH9.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 15,
+     "dur": 604,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/scale-BTpjZUPI.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 16,
+     "dur": 304,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/gate-CGTzGRoy.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 16,
+     "dur": 460,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/AdjustmentsHorizontalIcon-DCX5gW2F.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 16,
+     "dur": 318,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/band-BUuvdakw.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 16,
+     "dur": 325,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/TitleControl-xJ_omN5F.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 17,
+     "dur": 339,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/RatingChips-BgWIWITN.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 17,
+     "dur": 482,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/SeenScore-BwRL5wHI.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 17,
+     "dur": 549,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/seen-score-faces-DfrJvgrv.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 18,
+     "dur": 556,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/t/p/w780/ejdD20cdHNFAYAN2DlqPToXKyzx.jpg?gw-cors=1",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 19,
+     "dur": 1147,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 1273,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/US.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1318,
+     "dur": 156,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/assets/imdb-logo-250-CeagZQn7.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1326,
+     "dur": 185,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/metacritic-logo-icon-64-8MrO7JJU.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1326,
+     "dur": 178,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/flags/DE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1347,
+     "dur": 171,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/NE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1347,
+     "dur": 180,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/AT.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1348,
+     "dur": 187,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w154/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1395,
+     "dur": 192,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/assets/goodwatch-logo-DdoCnKKV.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1403,
+     "dur": 198,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/t/p/w300/ejdD20cdHNFAYAN2DlqPToXKyzx.jpg",
+     "host": "image.tmdb.org",
+     "type": "css",
+     "start": 1454,
+     "dur": 176,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/assets/related-map-BmSnmGtB.css",
+     "host": "static.goodwatch.app",
+     "type": "link",
+     "start": 1562,
+     "dur": 219,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/related-map-lc4sVgbg.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 1563,
+     "dur": 383,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/t/p/w154/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1646,
+     "dur": 270,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1646,
+     "dur": 173,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/4N4BMd0Mm0kHAmF7RZgL5lW3cwc.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1646,
+     "dur": 188,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w154/4N4BMd0Mm0kHAmF7RZgL5lW3cwc.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1646,
+     "dur": 240,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w154/surh9i8VYeeq9186fKHnUg5Q5dg.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1646,
+     "dur": 255,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/assets/faststats-browser-1PC-6x_E.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 3455,
+     "dur": 284,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 3755,
+     "dur": 209,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/static/dead-clicks-autocapture.js?v=1.295.0",
+     "host": "a.goodwatch.app",
+     "type": "script",
+     "start": 4233,
+     "dur": 323,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=60, must-revalidate"
+    }
+   ]
+  },
+  {
+   "step": "title→person",
+   "target": "/person/3087-robert-duvall",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 39,
+   "commit": 876,
+   "paint": 886,
+   "images": 2272,
+   "lastData": 1461,
+   "res": [
+    {
+     "u": "/assets/person._personKey-BNMW4nf6.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 6,
+     "dur": 855,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/TypeFilter-BZM5yd2O.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 6,
+     "dur": 495,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/person/3086-richard-s-castellano?_data=routes%2Fperson.%24personKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 730,
+     "dur": 454,
+     "ttfb": 49,
+     "kb": 4,
+     "cached": false
+    },
+    {
+     "u": "/person/1433439-paul-baxley?_data=routes%2Fperson.%24personKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 737,
+     "dur": 724,
+     "ttfb": 54,
+     "kb": 8,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 873,
+     "dur": 267,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 875,
+     "dur": 294,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 885,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w780/pGzqRKrYeK4LogoysNro0vG8d8N.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 900,
+     "dur": 1363,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    }
+   ]
+  },
+  {
+   "step": "person→title",
+   "target": "/movie/238-the-godfather",
+   "link": "plain",
+   "doc": false,
+   "harnessLag": 52,
+   "commit": 34,
+   "paint": 51,
+   "images": 65,
+   "lastData": 1071,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 32,
+     "dur": 161,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 33,
+     "dur": 182,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 49,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/person/1158-al-pacino?_data=routes%2Fperson.%24personKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 822,
+     "dur": 249,
+     "ttfb": 73,
+     "kb": 10,
+     "cached": false
+    },
+    {
+     "u": "/person/3084-marlon-brando?_data=routes%2Fperson.%24personKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 827,
+     "dur": 236,
+     "ttfb": 61,
+     "kb": 9,
+     "cached": false
+    }
+   ]
+  },
+  {
+   "step": "title→title",
+   "target": "/movie/402431-wicked",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 58,
+   "commit": null,
+   "paint": null,
+   "images": 16828,
+   "lastData": 9866,
+   "res": [
+    {
+     "u": "/t/p/w780/w22GVYotTIVC1dUd58mRhwPqiS.jpg?gw-cors=1",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 6,
+     "dur": 343,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 9703,
+     "dur": 163,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    }
+   ]
+  },
+  {
+   "step": "back",
+   "target": null,
+   "link": null,
+   "doc": false,
+   "harnessLag": 0,
+   "commit": 9,
+   "paint": 32,
+   "images": 43,
+   "lastData": 980,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 14,
+     "dur": 165,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 16,
+     "dur": 177,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 19,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w780/pGzqRKrYeK4LogoysNro0vG8d8N.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 32,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w92/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 456,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/movie/238-the-godfather?_data=routes%2Fmovie.%24movieKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 738,
+     "dur": 242,
+     "ttfb": 63,
+     "kb": 16,
+     "cached": false
+    }
+   ]
+  },
+  {
+   "step": "back",
+   "target": null,
+   "link": null,
+   "doc": false,
+   "harnessLag": 1,
+   "commit": 7,
+   "paint": 33,
+   "images": 42,
+   "lastData": 198,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 12,
+     "dur": 172,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 14,
+     "dur": 184,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 17,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    }
+   ]
+  },
+  {
+   "step": "hub→discover",
+   "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('header button:has-text(\"Movies\"), header button:has-text(\"Shows\"), header button[aria-haspopup]').first()\u001b"
+  },
+  {
+   "step": "discover→title",
+   "target": "/movie/16869-inglourious-basterds",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 45,
+   "commit": null,
+   "paint": null,
+   "images": 18027,
+   "lastData": 10307,
+   "res": [
+    {
+     "u": "/movie/16869-inglourious-basterds?_data=routes%2Fmovie.%24movieKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 3937,
+     "dur": 242,
+     "ttfb": 95,
+     "kb": 16,
+     "cached": false
+    },
+    {
+     "u": "/movie/335984-blade-runner-2049?_data=routes%2Fmovie.%24movieKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 4009,
+     "dur": 244,
+     "ttfb": 71,
+     "kb": 16,
+     "cached": false
+    },
+    {
+     "u": "/t/p/w780/hwNtEmmugU5Yd7hpfprNWI0DGIn.jpg?gw-cors=1",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 4186,
+     "dur": 382,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 10089,
+     "dur": 218,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    }
+   ]
+  },
+  {
+   "step": "hub→shows",
+   "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('header button:has-text(\"Movies\"), header button:has-text(\"Shows\"), header button[aria-haspopup]').first()\u001b"
+  },
+  {
+   "step": "shows→category",
+   "error": "no link"
+  },
+  {
+   "step": "category→title",
+   "target": "/movie/16869-inglourious-basterds",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 49,
+   "commit": 41,
+   "paint": 63,
+   "images": 82,
+   "lastData": 239,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 39,
+     "dur": 187,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 40,
+     "dur": 199,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 62,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/CA.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 113,
+     "dur": 210,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/AU.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 113,
+     "dur": 217,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w154/aupnPtagH9JVBuMrGEanf4iqXEQ.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 144,
+     "dur": 307,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w300/hwNtEmmugU5Yd7hpfprNWI0DGIn.jpg",
+     "host": "image.tmdb.org",
+     "type": "css",
+     "start": 192,
+     "dur": 236,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w154/44uAnmSqvA4yBOdbPWN8YgQHjWm.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 609,
+     "dur": 201,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/44uAnmSqvA4yBOdbPWN8YgQHjWm.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 610,
+     "dur": 171,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w154/9GQLqBo5obK0r3nhZl24BadRKPq.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 610,
+     "dur": 194,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    }
+   ]
+  },
+  {
+   "step": "back",
+   "target": null,
+   "link": null,
+   "doc": false,
+   "harnessLag": 1,
+   "commit": 13,
+   "paint": 35,
+   "images": 44,
+   "lastData": 268,
+   "res": [
+    {
+     "u": "/movie/238-the-godfather?_data=routes%2Fmovie.%24movieKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 13,
+     "dur": 255,
+     "ttfb": 66,
+     "kb": 16,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 17,
+     "dur": 176,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 18,
+     "dur": 190,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 21,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/DE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 49,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/AT.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 49,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w300/ejdD20cdHNFAYAN2DlqPToXKyzx.jpg",
+     "host": "image.tmdb.org",
+     "type": "css",
+     "start": 122,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    }
+   ]
+  },
+  {
+   "step": "forward",
+   "target": null,
+   "link": null,
+   "doc": false,
+   "harnessLag": 1,
+   "commit": 6,
+   "paint": 27,
+   "images": 35,
+   "lastData": 192,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 9,
+     "dur": 168,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 11,
+     "dur": 181,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 13,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/CA.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 33,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/AU.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 33,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w154/aupnPtagH9JVBuMrGEanf4iqXEQ.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 65,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w300/hwNtEmmugU5Yd7hpfprNWI0DGIn.jpg",
+     "host": "image.tmdb.org",
+     "type": "css",
+     "start": 86,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w154/44uAnmSqvA4yBOdbPWN8YgQHjWm.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 463,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w154/9GQLqBo5obK0r3nhZl24BadRKPq.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 463,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/44uAnmSqvA4yBOdbPWN8YgQHjWm.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 463,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    }
+   ]
+  }
+ ],
+ [
+  {
+   "step": "list→title",
+   "target": "/movie/238-the-godfather",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 61,
+   "commit": 1264,
+   "paint": 1276,
+   "images": 1303,
+   "lastData": 4607,
+   "res": [
+    {
+     "u": "/assets/Hub-BXzprMLb.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 2,
+     "dur": 413,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/newly-available-CdW-ISSY.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 2,
+     "dur": 359,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/useAccountSummary-Sp_Q5BY0.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 2,
+     "dur": 194,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/my-library-DEZ6IJMK.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 3,
+     "dur": 405,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/headless-DWNPY8zs.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 3,
+     "dur": 1027,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/SearchPanel-Csk39ce2.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 3,
+     "dur": 396,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/movie._movieKey-jCY2T0BO.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 9,
+     "dur": 413,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/detailsMeta-Cwafxdno.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 10,
+     "dur": 1222,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/title-icons-BhFcobWO.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 11,
+     "dur": 216,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/ScoreRing-B_YqB5z0.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 11,
+     "dur": 223,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/MediaPreference-CO7MoBx4.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 12,
+     "dur": 523,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/fingerprint-DxWuc5pz.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 12,
+     "dur": 537,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/moods-EYQNFuYl.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 12,
+     "dur": 582,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/fingerprint-8T2GFbH-.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 13,
+     "dur": 252,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/headline-CaDOdNs6.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 13,
+     "dur": 627,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/ShieldCheckIcon-DzwpSzkz.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 13,
+     "dur": 281,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/FilmIcon-DIZkFWso.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 14,
+     "dur": 288,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/ChartBarIcon-eoDd35OP.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 14,
+     "dur": 274,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/TvIcon-DxHudXSb.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 14,
+     "dur": 266,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/MovieTvCard-DcwlTXuO.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 14,
+     "dur": 460,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/RatingsGrid-DIbXYEH9.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 15,
+     "dur": 595,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/scale-BTpjZUPI.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 16,
+     "dur": 317,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/gate-CGTzGRoy.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 16,
+     "dur": 466,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/band-BUuvdakw.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 16,
+     "dur": 309,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/AdjustmentsHorizontalIcon-DCX5gW2F.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 16,
+     "dur": 324,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/RatingChips-BgWIWITN.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 16,
+     "dur": 473,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/TitleControl-xJ_omN5F.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 17,
+     "dur": 352,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/SeenScore-BwRL5wHI.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 17,
+     "dur": 547,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/seen-score-faces-DfrJvgrv.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 17,
+     "dur": 555,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/t/p/w780/ejdD20cdHNFAYAN2DlqPToXKyzx.jpg?gw-cors=1",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 19,
+     "dur": 1161,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 1276,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/US.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1331,
+     "dur": 156,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/assets/imdb-logo-250-CeagZQn7.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1339,
+     "dur": 186,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/metacritic-logo-icon-64-8MrO7JJU.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1339,
+     "dur": 177,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/flags/NE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1362,
+     "dur": 170,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/DE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1362,
+     "dur": 177,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/AT.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1362,
+     "dur": 185,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w154/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1417,
+     "dur": 190,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/assets/goodwatch-logo-DdoCnKKV.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 1422,
+     "dur": 199,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/t/p/w300/ejdD20cdHNFAYAN2DlqPToXKyzx.jpg",
+     "host": "image.tmdb.org",
+     "type": "css",
+     "start": 1474,
+     "dur": 178,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/assets/related-map-BmSnmGtB.css",
+     "host": "static.goodwatch.app",
+     "type": "link",
+     "start": 1584,
+     "dur": 218,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/related-map-lc4sVgbg.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 1585,
+     "dur": 382,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/t/p/w154/4N4BMd0Mm0kHAmF7RZgL5lW3cwc.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1682,
+     "dur": 248,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w154/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1682,
+     "dur": 270,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w154/surh9i8VYeeq9186fKHnUg5Q5dg.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1682,
+     "dur": 255,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1682,
+     "dur": 180,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/4N4BMd0Mm0kHAmF7RZgL5lW3cwc.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 1682,
+     "dur": 187,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/assets/faststats-browser-1PC-6x_E.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 3473,
+     "dur": 287,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 3778,
+     "dur": 207,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/static/dead-clicks-autocapture.js?v=1.295.0",
+     "host": "a.goodwatch.app",
+     "type": "script",
+     "start": 4288,
+     "dur": 319,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=60, must-revalidate"
+    }
+   ]
+  },
+  {
+   "step": "title→person",
+   "target": "/person/3087-robert-duvall",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 51,
+   "commit": 843,
+   "paint": 859,
+   "images": 2244,
+   "lastData": 1425,
+   "res": [
+    {
+     "u": "/assets/person._personKey-BNMW4nf6.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 6,
+     "dur": 820,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/TypeFilter-BZM5yd2O.js",
+     "host": "static.goodwatch.app",
+     "type": "script",
+     "start": 7,
+     "dur": 474,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/person/3086-richard-s-castellano?_data=routes%2Fperson.%24personKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 687,
+     "dur": 454,
+     "ttfb": 55,
+     "kb": 4,
+     "cached": false
+    },
+    {
+     "u": "/person/1433439-paul-baxley?_data=routes%2Fperson.%24personKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 695,
+     "dur": 730,
+     "ttfb": 56,
+     "kb": 8,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 839,
+     "dur": 264,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 843,
+     "dur": 284,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 851,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w780/pGzqRKrYeK4LogoysNro0vG8d8N.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 869,
+     "dur": 1353,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    }
+   ]
+  },
+  {
+   "step": "person→title",
+   "target": "/movie/238-the-godfather",
+   "link": "plain",
+   "doc": false,
+   "harnessLag": 49,
+   "commit": 33,
+   "paint": 54,
+   "images": 72,
+   "lastData": 1174,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 30,
+     "dur": 167,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 32,
+     "dur": 180,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 54,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/US.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 79,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/assets/imdb-logo-250-CeagZQn7.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 79,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/metacritic-logo-icon-64-8MrO7JJU.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 79,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/flags/NE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 91,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/DE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 91,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/AT.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 91,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w300/ejdD20cdHNFAYAN2DlqPToXKyzx.jpg",
+     "host": "image.tmdb.org",
+     "type": "css",
+     "start": 176,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 580,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/4N4BMd0Mm0kHAmF7RZgL5lW3cwc.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 580,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/person/1158-al-pacino?_data=routes%2Fperson.%24personKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 927,
+     "dur": 238,
+     "ttfb": 77,
+     "kb": 10,
+     "cached": false
+    },
+    {
+     "u": "/person/3084-marlon-brando?_data=routes%2Fperson.%24personKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 937,
+     "dur": 237,
+     "ttfb": 42,
+     "kb": 9,
+     "cached": false
+    }
+   ]
+  },
+  {
+   "step": "title→title",
+   "target": "/movie/402431-wicked",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 45,
+   "commit": null,
+   "paint": null,
+   "images": 16973,
+   "lastData": 9856,
+   "res": [
+    {
+     "u": "/t/p/w780/w22GVYotTIVC1dUd58mRhwPqiS.jpg?gw-cors=1",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 5,
+     "dur": 340,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 9686,
+     "dur": 170,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    }
+   ]
+  },
+  {
+   "step": "back",
+   "target": null,
+   "link": null,
+   "doc": false,
+   "harnessLag": 1,
+   "commit": 10,
+   "paint": 29,
+   "images": 47,
+   "lastData": 1072,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 15,
+     "dur": 164,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 17,
+     "dur": 185,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 23,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w780/pGzqRKrYeK4LogoysNro0vG8d8N.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 36,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w92/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 472,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/movie/238-the-godfather?_data=routes%2Fmovie.%24movieKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 749,
+     "dur": 323,
+     "ttfb": 51,
+     "kb": 16,
+     "cached": false
+    }
+   ]
+  },
+  {
+   "step": "back",
+   "target": null,
+   "link": null,
+   "doc": false,
+   "harnessLag": 1,
+   "commit": 7,
+   "paint": 30,
+   "images": 38,
+   "lastData": 197,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 11,
+     "dur": 172,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 13,
+     "dur": 184,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 16,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/US.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 36,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/assets/imdb-logo-250-CeagZQn7.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 36,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/assets/metacritic-logo-icon-64-8MrO7JJU.webp",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 36,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000, immutable"
+    },
+    {
+     "u": "/flags/NE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 58,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/DE.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 58,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/AT.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 58,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w300/ejdD20cdHNFAYAN2DlqPToXKyzx.jpg",
+     "host": "image.tmdb.org",
+     "type": "css",
+     "start": 125,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    }
+   ]
+  },
+  {
+   "step": "hub→discover",
+   "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('header button:has-text(\"Movies\"), header button:has-text(\"Shows\"), header button[aria-haspopup]').first()\u001b"
+  },
+  {
+   "step": "discover→title",
+   "target": "/movie/16869-inglourious-basterds",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 51,
+   "commit": null,
+   "paint": null,
+   "images": 16723,
+   "lastData": 10286,
+   "res": [
+    {
+     "u": "/t/p/w780/hwNtEmmugU5Yd7hpfprNWI0DGIn.jpg?gw-cors=1",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 5,
+     "dur": 577,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000"
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 10096,
+     "dur": 190,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    }
+   ]
+  },
+  {
+   "step": "hub→shows",
+   "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('header button:has-text(\"Movies\"), header button:has-text(\"Shows\"), header button[aria-haspopup]').first()\u001b"
+  },
+  {
+   "step": "shows→category",
+   "error": "no link"
+  },
+  {
+   "step": "category→title",
+   "target": "/movie/16869-inglourious-basterds",
+   "link": "remix",
+   "doc": false,
+   "harnessLag": 53,
+   "commit": 41,
+   "paint": 65,
+   "images": 79,
+   "lastData": 238,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 38,
+     "dur": 185,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 41,
+     "dur": 197,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 63,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/CA.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 93,
+     "dur": 212,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/flags/AU.svg",
+     "host": "static.goodwatch.app",
+     "type": "img",
+     "start": 93,
+     "dur": 205,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w154/aupnPtagH9JVBuMrGEanf4iqXEQ.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 120,
+     "dur": 350,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000"
+    },
+    {
+     "u": "/t/p/w300/hwNtEmmugU5Yd7hpfprNWI0DGIn.jpg",
+     "host": "image.tmdb.org",
+     "type": "css",
+     "start": 158,
+     "dur": 298,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000"
+    },
+    {
+     "u": "/t/p/w154/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 491,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w45/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 491,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31919000"
+    },
+    {
+     "u": "/t/p/w154/44uAnmSqvA4yBOdbPWN8YgQHjWm.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 491,
+     "dur": 459,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000"
+    },
+    {
+     "u": "/t/p/w45/44uAnmSqvA4yBOdbPWN8YgQHjWm.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 492,
+     "dur": 241,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000"
+    },
+    {
+     "u": "/t/p/w154/9GQLqBo5obK0r3nhZl24BadRKPq.png",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 492,
+     "dur": 271,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000"
+    }
+   ]
+  },
+  {
+   "step": "back",
+   "target": null,
+   "link": null,
+   "doc": false,
+   "harnessLag": 1,
+   "commit": 12,
+   "paint": 33,
+   "images": 42,
+   "lastData": 261,
+   "res": [
+    {
+     "u": "/movie/238-the-godfather?_data=routes%2Fmovie.%24movieKey",
+     "host": "goodwatch.app",
+     "type": "fetch",
+     "start": 11,
+     "dur": 250,
+     "ttfb": 57,
+     "kb": 16,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 15,
+     "dur": 164,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 17,
+     "dur": 176,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 20,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    }
+   ]
+  },
+  {
+   "step": "forward",
+   "target": null,
+   "link": null,
+   "doc": false,
+   "harnessLag": 0,
+   "commit": 6,
+   "paint": 22,
+   "images": 38,
+   "lastData": 198,
+   "res": [
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 11,
+     "dur": 171,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/v1/web",
+     "host": "metrics.faststats.dev",
+     "type": "beacon",
+     "start": 13,
+     "dur": 185,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false
+    },
+    {
+     "u": "/favicon-32x32.png",
+     "host": "goodwatch.app",
+     "type": "other",
+     "start": 17,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": true,
+     "cc": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+     "u": "/t/p/w154/aupnPtagH9JVBuMrGEanf4iqXEQ.jpg",
+     "host": "image.tmdb.org",
+     "type": "img",
+     "start": 71,
+     "dur": 1,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000"
+    },
+    {
+     "u": "/t/p/w300/hwNtEmmugU5Yd7hpfprNWI0DGIn.jpg",
+     "host": "image.tmdb.org",
+     "type": "css",
+     "start": 117,
+     "dur": 0,
+     "ttfb": 0,
+     "kb": 0,
+     "cached": false,
+     "cc": "public, max-age=31536000"
+    }
+   ]
+  }
+ ]
+]
