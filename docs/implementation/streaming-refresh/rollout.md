@@ -1,6 +1,6 @@
 # Streaming refresh rollout
 
-Status: not deployed. The commands below are an operator runbook, not a record of completed production actions. Review the [approved plan](plan.md) and [local validation limits](backend-validation.md) before enabling work. Keep the page ceiling at **1.3 total wire requests/second** across all legacy/new workers, including redirects, retries and probes. Keep API detector allocation separate.
+The initial approved shadow cutover is recorded in [deployment-2026-10-26.md](deployment-2026-10-26.md). The commands below remain the operator runbook; the publication canary and expansion stages have not run. Review the [approved plan](plan.md) and [local validation limits](backend-validation.md) before enabling work. Keep the page ceiling at **1.3 total wire requests/second** across all legacy/new workers, including redirects, retries and probes. Keep API detector allocation separate.
 
 ## Defaults and controls
 

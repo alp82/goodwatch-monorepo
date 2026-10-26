@@ -1,6 +1,6 @@
 # Streaming refresh backend validation
 
-Status: implementation and local validation only. This checkout has not been deployed. No production database migration, index creation, repair, schedule enablement or publication was performed by this implementation task. Production acceptance remains outstanding; the [approved plan](plan.md) defines the release gates.
+This document records local validation before the owner-approved production cutover; see [deployment-2026-10-26.md](deployment-2026-10-26.md) for the separate execution evidence. No production writes were performed during the local checks recorded here. Production acceptance remains outstanding; the [approved plan](plan.md) defines the release gates.
 
 ## Recorded local checks
 
