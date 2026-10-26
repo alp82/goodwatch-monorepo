@@ -547,3 +547,49 @@ Costs and limits:
 - Members were not measured: a local member needs a local sign-in flow, and production member runs need a new
   owner-authorized session export.
 - Production numbers after deploy are pending.
+
+### Production after deploy — October 26, 2026
+
+Production served `990419700` from 05:44:06 UTC; both deployments of it had finished by 05:44:34. Runs:
+**05:45–06:09 UTC**, unchanged `nav.mjs`, anonymous, five fresh-browser rounds per profile, same desktop and phone
+settings as the [complete remeasurement](#complete-phone-coverage-and-member-measurements--october-26-2026-753).
+The browser's host-resolver rules made Google Analytics, Google Tag Manager, Sentry, PostHog and DoubleClick hosts
+unresolvable (checked first: no request to them succeeded), in addition to the harness's own write guard; the harness
+itself and its request handling are unchanged. All 65/65 steps of every profile verified their destination.
+
+Navigation press → first frame, milliseconds, median and p90, against the anonymous columns of the earlier production
+measurement (01:50–02:26 UTC):
+
+| Profile | Before | After |
+| --- | --- | --- |
+| Phone, tap | 56, 2,464 | 98, 787 |
+| Desktop, tap | 73, 176 | 95, 405 (rerun 06:03–06:09: 90, 306) |
+| Desktop, hover | 21, 41 | 21, 157 |
+
+Phone per route, median and p90 (= maximum of five):
+
+| Step | Before | After |
+| --- | --- | --- |
+| List → first title | 1,264, 1,274 | 100, 113 |
+| Title → first person | 1,072, 1,082 | 991, 1,514 |
+| Hub → Discover | 580, 585 | 779, 802 |
+| Hub → shows | 317, 379 | 316, 448 |
+| Shows → best list | 3,476, 3,695 | 313, 445 |
+| Best list → title | 2,461, 2,546 | 292, 391 |
+
+- **The multi-second phone waits are gone:** shows → best list and best list → title no longer wait behind the hub's
+  pictures, and the first title page no longer waits for its code.
+- **Title → first person stays about a second.** The person page's code and data are prefetched when the reader scrolls
+  to the cast (they start about 605 ms before the press), but on the title page they share the connection with the
+  title page's own loads: the related map (about 1.6 s), the social section (about 2.2 s) and its pictures. The
+  person data (11 KB) took about 1.57 s and the code 1.15 s. This is the next phone lever: the title page's late
+  requests, not missing preparation.
+- **Desktop tap** waits on the loader's first byte: for example hub → shows reports 0.1–0.2 ms of server time with a
+  39–362 ms first byte, and list → title 16–105 ms of server time with 114–336 ms. No changed code runs on a desktop
+  (the code warm-up is phone-only, the hub change affects only the hubs); the difference to the earlier run is in the
+  path to production at this hour. The first desktop runs also started one minute after the deploy, with cold caches.
+- **`warmup-check.mjs` against production** (06:02:49–06:03:18 UTC, same host blocking): all five checks pass; a best
+  list warms 3 title files at low priority, at most three at once, the tap takes the other 20 at high priority, and
+  the start page's 4 title prefetches start no code.
+
+Raw files are under `~/.cache/gw-work/753p/prod/` on the measuring machine.
