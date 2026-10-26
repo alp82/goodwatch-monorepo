@@ -58,6 +58,9 @@ python goodwatch-flows/scripts/populate_trope_pages.py \
 Verified cached captures and published archives are imported before a remaining
 network pass. Source precedence is verified direct HTTP, then the pinned 2025
 archive, then the pinned 2023 archive; equal-priority conflicts require inspection.
+Metadata-only captures never erase an existing definition. An empty page may be
+filled from an available definition, adopting that definition's complete title and
+provenance rather than borrowing a newer metadata-only capture's HTTP evidence.
 Neither archive supplies original HTTP hashes or capture dates. The frontend groups
 associations by resolved page before qualification, counts each title once, and
 retains the original labels for per-title excerpts. Description reads remain
