@@ -26,66 +26,77 @@
 <h3 align="center">One score you can trust</h3>
 <p align="center">IMDb, Rotten Tomatoes, Metacritic, and TMDB in one&nbsp;number.</p>
 <p align="center"><img src=".github/readme/features/score.avif" alt="One score you can trust: a scene from the GoodWatch intro" width="70%"></p>
+<p align="center"><a href="https://goodwatch.app/how-it-works#score">How the score works&nbsp;→</a></p>
 <br>
 
 <p align="center"><img src="https://shieldcn.dev/badge/Streaming-fbbf24.svg?logo=lu:Tv&size=xs" alt="Streaming"></p>
 <h3 align="center">Where it streams</h3>
 <p align="center">325 services in 139 countries, and which of yours has it&nbsp;tonight.</p>
 <p align="center"><img src=".github/readme/features/streaming.avif" alt="Where it streams: a scene from the GoodWatch intro" width="86%"></p>
+<p align="center"><a href="https://goodwatch.app/new">New on streaming&nbsp;→</a></p>
 <br>
 
 <p align="center"><img src="https://shieldcn.dev/badge/For%20you-fbbf24.svg?logo=lu:Sparkles&size=xs" alt="For you"></p>
 <h3 align="center">Picked for your taste</h3>
 <p align="center">Rate what you loved, and see how well everything else fits&nbsp;you.</p>
 <p align="center"><img src=".github/readme/features/for-you.avif" alt="Picked for your taste: a scene from the GoodWatch intro" width="86%"></p>
+<p align="center"><a href="https://goodwatch.app/for-you">Open For you&nbsp;→</a></p>
 <br>
 
 <p align="center"><img src="https://shieldcn.dev/badge/Your%20taste-fbbf24.svg?logo=lu:Fingerprint&size=xs" alt="Your taste"></p>
 <h3 align="center">Your taste fingerprint</h3>
 <p align="center">Your ratings draw a taste fingerprint you can tune at any&nbsp;time.</p>
 <p align="center"><img src=".github/readme/features/taste.avif" alt="Your taste fingerprint: a scene from the GoodWatch intro" width="86%"></p>
+<p align="center"><a href="https://goodwatch.app/taste">Draw your fingerprint&nbsp;→</a></p>
 <br>
 
 <p align="center"><img src="https://shieldcn.dev/badge/Search-fbbf24.svg?logo=lu:Search&size=xs" alt="Search"></p>
 <h3 align="center">Search by mood</h3>
 <p align="center">Type the evening you want, like "cozy mystery with a&nbsp;twist".</p>
 <p align="center"><img src=".github/readme/features/search.avif" alt="Search by mood: a scene from the GoodWatch intro" width="86%"></p>
+<p align="center"><a href="https://goodwatch.app/discover?q=cozy+mystery+with+a+twist">Try this search&nbsp;→</a></p>
 <br>
 
 <p align="center"><img src="https://shieldcn.dev/badge/Discover-fbbf24.svg?logo=lu:ListFilter&size=xs" alt="Discover"></p>
 <h3 align="center">From everything to tonight</h3>
 <p align="center">Narrow 1.5 million titles down to the few that fit&nbsp;tonight.</p>
 <p align="center"><img src=".github/readme/features/discover.avif" alt="From everything to tonight: a scene from the GoodWatch intro" width="86%"></p>
+<p align="center"><a href="https://goodwatch.app/discover">Open Discover&nbsp;→</a></p>
 <br>
 
 <p align="center"><img src="https://shieldcn.dev/badge/Episodes-fbbf24.svg?logo=lu:LayoutGrid&size=xs" alt="Episodes"></p>
 <h3 align="center">Every episode at a glance</h3>
 <p align="center">A ratings grid shows where a show peaks and where it drops&nbsp;off.</p>
 <p align="center"><img src=".github/readme/features/episodes.avif" alt="Every episode at a glance: a scene from the GoodWatch intro" width="64%"></p>
+<p align="center"><a href="https://goodwatch.app/show/1399-game-of-thrones#episodes">See the Game of Thrones grid&nbsp;→</a></p>
 <br>
 
 <p align="center"><img src="https://shieldcn.dev/badge/Tracking-fbbf24.svg?logo=lu:ListChecks&size=xs" alt="Tracking"></p>
 <h3 align="center">It keeps track for you</h3>
 <p align="center">Your Wishlist and shows in one place, with streaming&nbsp;alerts.</p>
 <p align="center"><img src=".github/readme/features/tracking.avif" alt="It keeps track for you: a scene from the GoodWatch intro" width="86%"></p>
+<p align="center"><a href="https://goodwatch.app/my-shows">Track your shows&nbsp;→</a></p>
 <br>
 
 <p align="center"><img src="https://shieldcn.dev/badge/Imports-fbbf24.svg?logo=lu:Download&size=xs" alt="Imports"></p>
 <h3 align="center">Bring your history</h3>
 <p align="center">Import ratings, watch history, and Wishlists from other&nbsp;apps.</p>
 <p align="center"><img src=".github/readme/features/imports.avif" alt="Bring your history: a scene from the GoodWatch intro" width="86%"></p>
+<p align="center"><a href="https://goodwatch.app/settings/imports">Import your history&nbsp;→</a></p>
 <br>
 
 <p align="center"><img src="https://shieldcn.dev/badge/AI%20apps-fbbf24.svg?logo=lu:Bot&size=xs" alt="AI apps"></p>
 <h3 align="center">Use with AI</h3>
 <p align="center">Ask ChatGPT, Claude, and other AI apps what to watch&nbsp;tonight.</p>
 <p align="center"><img src=".github/readme/features/ai.avif" alt="Use with AI: a scene from the GoodWatch intro" width="86%"></p>
+<p align="center"><a href="https://goodwatch.app/use-with-ai">Set up Use with AI&nbsp;→</a></p>
 <br>
 
 <p align="center"><img src="https://shieldcn.dev/badge/Discord-fbbf24.svg?logo=discord&size=xs" alt="Discord"></p>
 <h3 align="center">Discord bot</h3>
 <p align="center">Type <code>/watch</code> for a pick, or <code>/together</code> to vote as a&nbsp;group.</p>
 <p align="center"><img src=".github/readme/features/discord.avif" alt="Discord bot: a scene from the GoodWatch intro" width="86%"></p>
+<p align="center"><a href="https://goodwatch.app/discord">Add the Discord bot&nbsp;→</a></p>
 <br>
 
 
