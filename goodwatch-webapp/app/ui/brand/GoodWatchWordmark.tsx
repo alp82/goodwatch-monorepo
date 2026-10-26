@@ -13,7 +13,7 @@ export const BROWSER_FONT_FAMILY =
 	'"Gabarito Brand", "Gabarito Fallback", "Gabarito Fallback Roboto", sans-serif'
 export const SATORI_FONT_FAMILY = "Gabarito"
 
-// The paths of app/img/goodwatch-logo-amber.svg, with its two group transforms.
+// The paths of app/img/goodwatch-logo-white.svg, with its two group transforms.
 const G_WIDTH = 179.84172
 const G_HEIGHT = 189.15848
 const G_RING =
