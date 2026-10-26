@@ -18,7 +18,7 @@ The write-call challenge previously requested only `mcp:write`, although every M
 
 `app/server/mcp/identity.ts` supplies title, short description, website and HTTPS PNG icons to MCP `serverInfo`. Protected-resource metadata also has `resource_name`, `resource_documentation` and `logo_uri`; AS/OIDC metadata has `service_documentation`. The Registry manifest mirrors the protocol identity, with a regression checking parity and actual PNG dimensions.
 
-The **existing** `app/img/goodwatch-logo-amber.svg` is centered with padding on a dark square. `scripts/build-mcp-icons.mjs` deterministically renders it with the existing resvg dependency; no generated branding or new image dependency. Outputs:
+The **existing** `app/img/goodwatch-logo-white.svg` is centered with padding on a dark square. `scripts/build-mcp-icons.mjs` deterministically renders it with the existing resvg dependency; no generated branding or new image dependency. Outputs:
 
 - `https://goodwatch.app/mcp-icons/goodwatch-48.png`
 - `https://goodwatch.app/mcp-icons/goodwatch-128.png`

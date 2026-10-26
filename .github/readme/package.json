@@ -1,0 +1,12 @@
+{
+  "name": "goodwatch-readme-banner",
+  "private": true,
+  "description": "Renders the README banner (banner.html) to banner.webp",
+  "type": "module",
+  "scripts": {
+    "render": "node render.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "1.56.1"
+  }
+}
