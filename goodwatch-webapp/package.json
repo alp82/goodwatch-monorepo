@@ -99,6 +99,7 @@
 		"@types/pg": "8.23.1",
 		"@types/react": "^18.3.12",
 		"@types/react-dom": "^18.3.1",
+		"esbuild": "0.25.3",
 		"eslint": "^8.57.1",
 		"happy-dom": "20.14.5",
 		"remark-gfm": "4.0.1",
