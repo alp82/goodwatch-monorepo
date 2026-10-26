@@ -12,7 +12,7 @@ const files = {
 		phone: ["/assets/room-phone-E5.avif", "/assets/hand-F6.avif"],
 		desktop: ["/assets/room-G7.avif", "/assets/hand-F6.avif"],
 	},
-	marks: ["/assets/logo-white-H8.svg", "/assets/primevideo-logo-I9.svg"],
+	marks: { images: ["/assets/logo-white-H8.svg"], masks: ["/assets/primevideo-logo-I9.svg"] },
 }
 const page = (url: string, headers: Record<string, string> = {}) => ({
 	method: "GET",
@@ -98,7 +98,8 @@ describe("earlyHintLinks", () => {
 			"</assets/room-phone-E5.avif>; rel=preload; as=image; fetchpriority=high",
 			"</assets/hand-F6.avif>; rel=preload; as=image; fetchpriority=high",
 			"</assets/logo-white-H8.svg>; rel=preload; as=image",
-			"</assets/primevideo-logo-I9.svg>; rel=preload; as=image",
+			// A CSS mask is fetched in CORS mode on any host, so its preload is too.
+			"</assets/primevideo-logo-I9.svg>; rel=preload; as=image; crossorigin",
 		])
 	})
 })

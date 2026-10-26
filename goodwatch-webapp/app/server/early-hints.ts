@@ -4,8 +4,8 @@
 //
 // The hints follow the page's own elements, so the browser can use what they fetch: while the files come from the
 // static hostname, the style sheets (root.tsx, _index.tsx) and the room's pictures (TvRoom.tsx, PhoneRoom.tsx) ask with
-// `crossorigin`, and Chrome preloads a file of another host from a 103 response in that mode only; so do the marks'
-// images (Remote.tsx, PhoneRemote.tsx, navigation/bits.tsx) and mask. The page's other images go with credentials,
+// `crossorigin`, and Chrome preloads a file of another host from a 103 response in that mode only; so does the white
+// G mark (ui/brand/white-mark.ts), and a CSS mask is fetched in that mode anyway. The page's other images go with credentials,
 // and a browser keeps the two kinds on separate connections, so there is a preconnect for each.
 
 export type EarlyHintsRequest = {
@@ -32,11 +32,12 @@ export type EarlyHintsFiles = {
 	 */
 	room: { phone: string[]; desktop: string[] }
 	/**
-	 * The start page's small marks on its first screen, in every layout: the G on the Remotes and the Prime Video mark
-	 * on its key (a CSS mask, which the browser fetches without credentials). Hinted so that they don't wait for a
-	 * connection of their own while the room paints.
+	 * The start page's small marks on its first screen, in every layout, hinted so that they don't wait for a
+	 * connection of their own while the room paints. `images` are `img` elements, which ask like the room's pictures
+	 * (the G on the Remotes, ui/brand/white-mark.ts). `masks` are CSS masks (the Prime Video mark on its key), which a
+	 * browser fetches in CORS mode on any host, the site's own too.
 	 */
-	marks: string[]
+	marks: { images: string[]; masks: string[] }
 }
 
 const header = (value: string | string[] | undefined) =>
@@ -102,7 +103,9 @@ export function earlyHintLinks(
 		links.push(
 			`<${base}${picture}>; rel=preload; as=image${cors}; fetchpriority=high`,
 		)
-	for (const mark of files.marks)
+	for (const mark of files.marks.images)
 		links.push(`<${base}${mark}>; rel=preload; as=image${cors}`)
+	for (const mask of files.marks.masks)
+		links.push(`<${base}${mask}>; rel=preload; as=image; crossorigin`)
 	return links
 }

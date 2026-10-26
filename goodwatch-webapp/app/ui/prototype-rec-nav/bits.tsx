@@ -1,9 +1,8 @@
-import { assetUrl } from "~/utils/asset-url"
 // PROTOTYPE - throwaway. #192: small pieces shared by the page mocks and the navigation variants, drawn after
 // the settled prototypes' existing components (poster card, GoodWatch score, amber taste-match pill).
 import { FingerPrintIcon, HomeIcon, MagnifyingGlassIcon, MapIcon, PlayIcon } from "@heroicons/react/24/solid"
 import type { ComponentType, SVGProps } from "react"
-import logoWhite from "~/img/goodwatch-logo-white.svg"
+import { whiteMark } from "~/ui/brand/white-mark"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import type { NTitle } from "./data"
 import { type PageKey, SERVICES, type Who, img, logo, matchOf, useShell } from "./model"
@@ -20,13 +19,13 @@ export function Wordmark({ small }: { small?: boolean }) {
 	const s = useShell()
 	return (
 		<button type="button" className={`rn-wordmark ${small ? "is-small" : ""}`} onClick={() => s.go("home")} aria-label="GoodWatch home">
-			{small ? <img src={assetUrl(logoWhite)} alt="" /> : <GoodWatchWordmark fontSize={30} />}
+			{small ? <img {...whiteMark()} alt="" /> : <GoodWatchWordmark fontSize={30} />}
 		</button>
 	)
 }
 
 export function GMark({ size = 22 }: { size?: number }) {
-	return <img src={assetUrl(logoWhite)} alt="" className="rn-gmark" style={{ height: size, width: size }} />
+	return <img {...whiteMark()} alt="" className="rn-gmark" style={{ height: size, width: size }} />
 }
 
 export function Score({ v }: { v: number }) {

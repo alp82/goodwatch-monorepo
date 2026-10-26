@@ -359,9 +359,8 @@ test("before the window is measured the room holds both editions of the screen, 
 	// shown one (#236).
 	for (const screen of screens)
 		assert.equal(count(screen, 'fetchpriority="low"'), 6)
-	// Once the window is measured, the phone's still do: an image whose priority changes while it loads is raised
-	// again. The desktop's ask as usual.
-	assert.match(rendered.home.guest.phone, /<img[^>]*fetchpriority="low"/)
+	// Once the window is measured (after the room has painted), they ask as usual, so later screens aren't held back.
+	assert.doesNotMatch(rendered.home.guest.phone, /fetchpriority/)
 	assert.doesNotMatch(rendered.home.guest.desktop, /fetchpriority/)
 	// Before the window is measured both editions are drawn with the desktop's items; the phone's header has its G
 	// and Menu already, which every phone screen has.

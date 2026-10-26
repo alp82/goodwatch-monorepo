@@ -1,10 +1,9 @@
 // The Discord bot chapter's shared parts: Discord's look after ui/discord-bot/DiscordMock.tsx (whose cards follow
 // app/server/discord/cards.ts), sized in em so a scene scales it with one font-size, and fed from the intro's titles.
 import type { CSSProperties, ReactNode } from "react"
-import logoWhite from "~/img/goodwatch-logo-white.svg"
+import { whiteMark } from "~/ui/brand/white-mark"
 import type { IntroCard } from "~/ui/living-room/intro/data"
 import type { IntroData } from "~/ui/living-room/intro/scene"
-import { assetUrl } from "~/utils/asset-url"
 import { goodwatchVibeIndex, scoreWord } from "~/utils/ratings"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 
@@ -132,7 +131,7 @@ export function UserAvatar({ name, color }: { name: string; color: string }) {
 export function AppAvatar() {
 	return (
 		<span aria-hidden="true" className="intro-dc-avatar intro-dc-app">
-			<img src={assetUrl(logoWhite)} alt="" />
+			<img {...whiteMark()} alt="" />
 		</span>
 	)
 }
