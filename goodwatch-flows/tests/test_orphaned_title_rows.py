@@ -45,7 +45,7 @@ class FakeCrate:
     def _owned(table, row, media_type, tmdb_id):
         if table in ("movie", "show"):
             return table == media_type and row["tmdb_id"] == tmdb_id
-        if table == "season":
+        if "show_id" in SCHEMAS.get(table, {}).get("columns", {}):
             return media_type == "show" and row["show_id"] == tmdb_id
         return row.get("media_type") == media_type and row.get("media_tmdb_id", row.get("tmdb_id")) == tmdb_id
 

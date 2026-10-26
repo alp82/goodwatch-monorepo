@@ -8,7 +8,7 @@ registry, retaining the existing spike guard, per-run title budget, batching,
 media-type isolation, and child-before-parent deletion order. Member-owned data
 is retained.
 
-## Production read-only snapshot
+## Historical Crate-parent diagnostic (not cleanup candidates)
 
 Observed on 2026-10-26 at approximately 00:11–00:12 UTC using the Windmill
 read-only preview recipe (`f.db.cratedb.CrateConnector`). Preview jobs
@@ -18,7 +18,7 @@ No stored scripts were changed or deployed. Counts and grouped totals agreed.
 Production schema discovery found exactly these eight non-member tables with
 `show_id`.
 
-| Table | Orphan rows | Distinct show IDs |
+| Table | Rows without a Crate show | Distinct show IDs |
 | --- | ---: | ---: |
 | `season_translation` | 10 | 4 |
 | `episode_translation` | 80 | 7 |
@@ -29,44 +29,70 @@ Production schema discovery found exactly these eight non-member tables with
 | `metacritic_season` | 44 | 19 |
 | `season` | 0 | 0 |
 
-Total: **29,781 rows**. An orphan here means its `show_id` has no matching
-`doc.show.tmdb_id`; this does not establish whether Mongo still has the show.
-The normal orphan sweep also checks Mongo details and the TMDB daily dump,
-so deploying the fix does not necessarily remove every row in this count.
+Total: **29,781 rows without a Crate `show` row**. These are diagnostic
+counts only, not deletion candidates. The earlier cleanup proposal based on
+these IDs was incorrect and its SQL file has been removed. Do not use this
+snapshot to delete data.
 
-The exact count SQL for each table is the following, substituting its name:
+These tables' writers use Mongo as their show authority. A show that Mongo still
+knows can legitimately lack a Crate `show` row, for example when its title is
+missing, it has never entered a copy window, or a newer daily dump unflags it.
+IMDb ingest maps IDs from Mongo; episode copy selects from Mongo and tolerates
+a missing Crate show; translations use Crate episodes and Mongo; critic season
+publication does not require a Crate show. A Crate-only anti-join therefore
+includes valid rows that must be kept.
 
-```sql
-SELECT count(*) AS orphan_rows
-FROM doc.episode AS child
-LEFT JOIN doc.show AS parent ON child.show_id = parent.tmdb_id
-WHERE parent.tmdb_id IS NULL;
-```
+## Cleanup rule and operation after deploy
 
-IDs for the proposed one-off cleanup were read with:
+A show's catalog children are eligible for deletion only when either:
 
-```sql
-SELECT child.show_id, count(*) AS orphan_rows
-FROM doc.episode AS child
-LEFT JOIN doc.show AS parent ON child.show_id = parent.tmdb_id
-WHERE parent.tmdb_id IS NULL
-GROUP BY child.show_id
-ORDER BY child.show_id;
-```
+- Its Mongo `tmdb_tv_details` document is flagged `tmdb_deleted = true`.
+- It is absent from Mongo `tmdb_tv_details` and from the TMDB daily dump
+  (`tmdb_daily_dump_data`, `type = 'tv'`, accepting numeric and string IDs).
 
-## Proposed cleanup, not executed
+`plan_flagged_title_rows` plans the first case from explicit Mongo flags.
+`sweep_orphaned_titles` plans the second case by checking both Mongo sources.
+After deployment, the module's own normal runs clean real leftovers through
+these paths, including rows whose Crate parent was already deleted. No one-off
+Crate-only cleanup is needed. Existing spike guards and per-run budgets still
+apply, so a backlog can require several runs; a guard refusal requires review.
 
-[Exact snapshot SQL](issue-676-orphan-cleanup.sql) contains the literal orphan
-show IDs per table, batched to 500, and a SELECT before each DELETE to detect
-restored parent rows. The DELETE syntax matches the existing production deletion
-path (`show_id = ANY(...)`). No DELETE was sent to production or tested against
-production. `season` needs no DELETE.
+After eligible leftovers have drained, remaining child rows belong to shows
+Mongo still knows or the daily dump still lists, and must be retained even if
+their Crate `show` rows are absent. Counts of missing Crate parents alone cannot
+establish completion or authorize deletion.
 
-Recommendation: review and deploy the registry fix first. Recount and regenerate
-the snapshot immediately before an independently authorized cleanup, and ensure
-every parent preflight returns no rows. A snapshot is not a lock against concurrent
-catalog changes; coordinate with sync when applying it. This artifact grants no
-cleanup authorization.
+## Correct-rule read-only counts
+
+Recounted on 2026-10-26 at 00:23 UTC in preview job
+`01a17597-2df9-0264-835c-59cabacc3314`. The preview loaded the reviewed local
+`deleted_titles.py` into memory without deploying it, restricted the catalog
+registry to these eight show-scoped children plus `show`, and called
+`sweep_orphaned_titles(..., dry_run=True)` plus `plan_flagged_title_rows` with
+Mongo's flagged IDs. Row counts used SELECTs over the resulting per-table IDs.
+A connector wrapper exposed only SELECT; Mongo access used reads only.
+
+| Table | Rows of Mongo-flagged shows | Rows absent from Mongo and dump |
+| --- | ---: | ---: |
+| `season_translation` | 12 | 0 |
+| `episode_translation` | 84 | 0 |
+| `episode` | 1,507 | 0 |
+| `imdb_episode` | 26,258 | 0 |
+| `imdb_season` | 1,792 | 0 |
+| `rotten_tomatoes_season` | 108 | 0 |
+| `metacritic_season` | 44 | 0 |
+| `season` | 7 | 0 |
+
+Total eligible child rows: **29,812**, all belonging to Mongo-flagged shows.
+No show with catalog rows was absent from both Mongo and the daily dump in this
+scope. These are raw eligibility counts before the runtime spike guards and
+per-run budgets, not a prediction of a single run's deletions. The flagged plan
+also includes children whose Crate `show` row still exists, so it is not a subset
+of the historical Crate-parent diagnostic above. The two snapshots were taken
+at different times as well.
+
+No cleanup SQL is provided: use the module's own guarded runs after deployment.
+No production DELETE, data repair, or deployment was performed.
 
 ## Verification
 
@@ -103,3 +129,12 @@ TMPDIR=~/.cache/gw-work/676 PYTHONPATH=goodwatch-flows \
 
 Raw logs are local scratch artifacts under `~/.cache/gw-work/676/`:
 `red.log`, `targeted.log`, `pytest-full.log`, `pytest-baseline.log`, and `tsc.log`.
+
+Review follow-up: removed the unsafe Crate-parent-based SQL artifact and
+regenerated the counts above with Mongo/daily-dump eligibility. Corrected
+`FakeCrate._owned` to recognize every schema table with `show_id`. The three
+focused deletion suites were rerun: 42 passed, 2 subtests passed, and the same
+existing social-table coverage failure. `git diff --check` passed. Webapp sources
+remain unchanged; the prior type-check result above still applies. Follow-up
+logs: `review-targeted.log` and `corrected-count-results.json` in the same scratch
+directory.
