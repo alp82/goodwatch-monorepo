@@ -28,14 +28,14 @@ export const PHONE_ROOM_PHOTO = {
 export const REMOTE_W = 312
 export const REMOTE_H = 610
 
-/** The hand photo (1024 x 1536) and the placeholder the Remote replaces in it. */
+/** The extended sleeve sprite and the Remote's registration box (its top is outside the cropped sprite). */
 export const HAND = {
-	w: 1024,
-	h: 1536,
-	x: 321,
-	y: 68,
-	pw: 382,
-	ph: 1060,
+	w: 972,
+	h: 1619,
+	x: 111,
+	y: -270,
+	pw: 240,
+	ph: 666,
 } as const
 
 /** The TV screens are drawn on a fixed canvas that scales to cover the TV. */
@@ -214,14 +214,14 @@ export const PHONE_REMOTE: Record<
 		fingers: number
 	}
 > = {
-	// The fingers: where the palm, under them, holds the body's end (HAND: the palm ends 448 of its px under them).
+	// The fingers: where the palm, under them, holds the body's end (HAND: the palm ends 281 of its px under them).
 	hand: {
 		w: 236,
 		keys: 288,
 		body: 388,
 		grow: 1.3,
 		share: 0.68,
-		fingers: 388 - (448 * 236) / 382,
+		fingers: 388 - (281 * 236) / 240,
 	},
 }
 
@@ -243,7 +243,7 @@ const CUT = 478
 /** The photo row that sits at the top of the scene. */
 const SKY = 30
 /** In the hand photo the fingers begin this far under the top of the Remote's place, and the palm ends there. */
-const FINGERS = 612
+const FINGERS = 385
 
 export type PhoneRoomLayout = {
 	form: PhoneRemoteForm

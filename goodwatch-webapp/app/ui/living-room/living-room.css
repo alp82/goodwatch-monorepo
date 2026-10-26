@@ -1037,10 +1037,10 @@ html[data-tv-transition] .tvr-bracket {
 }
 /* The hand photo around the Remote: HAND in room-layout.ts at the Remote's scale, the Remote's end in its palm. */
 .tvr[data-room="unmeasured"] .tvr-f-dhand {
-	left: calc(-262.17801 * var(--f-r));
-	top: calc(-311.298429 * var(--f-r));
-	width: calc(836.356021 * var(--f-r));
-	height: calc(1254.534031 * var(--f-r));
+	left: calc(-144.3 * var(--f-r));
+	top: calc(95.2 * var(--f-r));
+	width: calc(1263.6 * var(--f-r));
+	height: calc(2104.7 * var(--f-r));
 }
 .tvr[data-room="unmeasured"] .tvr-f-rscale {
 	transform: scale(tan(atan2(var(--f-r), 1px)));
@@ -1101,10 +1101,10 @@ html[data-tv-transition] .tvr-bracket {
 	}
 	/* The hand: its palm holds the body's end (388 units down), its fingers come round the body above it. */
 	.tvr[data-room="unmeasured"] .tvr-f-phand {
-		left: calc(var(--f-pl2) - 321 * 236 * var(--f-u) / 382);
-		top: calc(var(--f-pt) + 388 * var(--f-u) - 1128 * 236 * var(--f-u) / 382);
-		width: calc(1024 * 236 * var(--f-u) / 382);
-		height: calc(1536 * 236 * var(--f-u) / 382);
+		left: calc(var(--f-pl2) - 111 * 236 * var(--f-u) / 240);
+		top: calc(var(--f-pt) + 388 * var(--f-u) - 396 * 236 * var(--f-u) / 240);
+		width: calc(972 * 236 * var(--f-u) / 240);
+		height: calc(1619 * 236 * var(--f-u) / 240);
 	}
 }
 /* Upright (`layoutPhoneRoom`): the wall with the TV on it, stretched to the TV's height, and the sideboard. */

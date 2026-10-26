@@ -194,7 +194,7 @@ test("living-room.css's first paint seats the room where the layouts do, at ever
 	)
 	assert.match(
 		css,
-		/top: calc\(var\(--f-pt\) \+ 388 \* var\(--f-u\) - 1128 \* 236 \* var\(--f-u\) \/ 382\);/,
+		/top: calc\(var\(--f-pt\) \+ 388 \* var\(--f-u\) - 396 \* 236 \* var\(--f-u\) \/ 240\);/,
 	)
 	assert.match(css, /--f-cw: 480px;/)
 	assert.match(css, /width: var\(--f-cw\);\s*height: 270px;/)

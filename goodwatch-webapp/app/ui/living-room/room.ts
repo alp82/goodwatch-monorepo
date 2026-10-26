@@ -34,8 +34,8 @@ export const HAND_IMAGE = { avif: handAvif, webp: handWebp }
 /** The Remote's natural width. */
 export const REMOTE_W = 312
 
-/** The hand photo (1024 x 1536) and the placeholder the Remote replaces in it. */
-export const HAND = { w: 1024, h: 1536, x: 321, y: 68, pw: 382, ph: 1060 }
+/** The extended sleeve sprite and the Remote's registration box (its top is outside the cropped sprite). */
+export const HAND = { w: 972, h: 1619, x: 111, y: -270, pw: 240, ph: 666 }
 
 /**
  * The Remote's length: its keys and a short grip with the logo (the owner, 2026-10-22: no long empty body). It is
