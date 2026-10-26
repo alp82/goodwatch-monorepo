@@ -16,6 +16,7 @@ import {
 	titleTypeOf,
 } from "~/domain/title-type"
 import { cached } from "~/utils/cache"
+import { SCORE_BANDS } from "~/utils/score-bands"
 import { query } from "~/utils/crate"
 
 type MediaType = "movie" | "show"
@@ -636,14 +637,6 @@ export function parseGridFilters(p: URLSearchParams): GridFilters {
 export const decadeOf = (c: { release_year: number | null }) =>
 	c.release_year ? String(Math.floor(c.release_year / 10) * 10) : "upcoming"
 
-const SCORE_BANDS = [
-	{ key: "90", min: 90, label: "90 to 100" },
-	{ key: "80", min: 80, label: "80 to 89" },
-	{ key: "70", min: 70, label: "70 to 79" },
-	{ key: "60", min: 60, label: "60 to 69" },
-	{ key: "30", min: 30, label: "30 to 59" },
-	{ key: "0", min: 0, label: "0 to 29" },
-]
 const bandOf = (c: PersonCredit) =>
 	c.score == null || c.votes < MIN_VOTES
 		? "unrated"

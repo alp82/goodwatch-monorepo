@@ -72,6 +72,7 @@ import { personPath, pluralize, titleToDashed } from "~/utils/helpers"
 import { useHydrated } from "~/utils/hydrated"
 import { buildMeta } from "~/utils/meta"
 import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
+import { scoreBandWordsFor } from "~/utils/score-bands"
 import type { SizeRule } from "~/utils/tmdb-image"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
 
@@ -1105,17 +1106,6 @@ function Arrange({ data }: { data: Data }) {
 	)
 }
 
-// Words from scoreLabels in utils/ratings, merged where a band spans several of them.
-const BAND_WORDS: Record<string, string> = {
-	"90": "Excellent",
-	"80": "Great",
-	"70": "Good",
-	"60": "Decent",
-	"30": "Bad to mediocre",
-	"0": "Unwatchable to terrible",
-	unrated: "Not rated yet",
-}
-
 /** Score band heading: GoodWatch disc in the band's vibe color, score word, numeric range. */
 function ScoreGroupHeading({
 	bandKey,
@@ -1131,7 +1121,7 @@ function ScoreGroupHeading({
 			/>
 			<div>
 				<h3 className="text-2xl font-black leading-tight">
-					{BAND_WORDS[bandKey] ?? label}
+					{scoreBandWordsFor(bandKey) ?? label}
 				</h3>
 				{rated && (
 					<p className="text-sm tabular-nums text-gray-300">Score {label}</p>
