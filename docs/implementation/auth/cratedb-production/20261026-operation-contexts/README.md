@@ -8,6 +8,19 @@ and temporarily hold the backup cron; those changes were restored.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Q49 — October27 runner-up window,planning only
+
+Owner selected **October27 11:30–13:00 UTC**: gates11:20, lastSIGTERM12:00, hard stop13:00.
+[Active plain-restart plan](q40-execution-plan.md) now uses those times, the11:05 backup gate,
+the12:05 potential cron skip and a unique October27 stop-unit name. Await explicit go around11:15;
+**no production checks, watcher, settings, schedules, jobs or restart were started for this update**.
+
+The owner explicitly retained the heavy-work gate: if a heavy Windmill job is running at the
+fresh gates, stop and report rather than waiting it out or changing schedules. Accepted light jobs
+remain running. Historical runner-up risks (including the11:00 provider-detector carry-over) must
+be checked live after go, not treated as a passed gate. The normal unlimited-grace procedure and
+all phase-specific restoration/handover rules remain unchanged. No automatic restart is scheduled.
+
 ## Q47 GO — stopped at initial workload gate,October26 21:20–21:23 UTC
 
 **No restart or production preparation was performed.** The owner gave explicit go for the plain

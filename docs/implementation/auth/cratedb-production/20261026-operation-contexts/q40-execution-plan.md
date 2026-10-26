@@ -1,19 +1,21 @@
 # Q43 — plain restart of crate-02
 
-**Planning only. Wait for the owner's explicit go at21:30 UTC on2026-10-26 (22:30 CET).**
+**Planning only. Wait for the owner's explicit go around11:15 UTC on2026-10-27.**
+**Q49: gates11:20 UTC; start11:30 UTC (12:30 CET). No production check or action before go.**
 This replaces the Q40 drain procedure. The route is a **plain normal stop/start of crate-02**, with
 its existing5.10.16 image/container/data/config. There is **no decommission, drain, zero-primary gate
 or replica lowering**. Never KILL/SIGKILL, force a stop, shorten normal-stop grace, promote a stale
 primary, close/reopen tables, delete lock files or restart a second time. No restart was executed
-while preparing this revision. Only the separately approved Q44 backup rescue was executed today.
+while preparing this revision. Only the separately approved Q44 backup rescue was executed onOctober26.
 
-**No SIGTERM after22:00 UTC. Hard stop for new maintenance work23:00 UTC.** A running unlimited-grace
+**No SIGTERM after12:00 UTC. Hard stop for new maintenance work13:00 UTC.** A running unlimited-grace
 stop is never killed to meet either time. At a failed gate, stop progression and use the phase-specific
 handover below. Keep a staffed operator, a second SSH session and the independent page watcher.
 
-## Current evidence and scope
+## Recorded evidence and scope — fresh gates required
 
-- Rebalance is already **none** on every coordinator under the owner's12:50 hold; allocation isall.
+- Last recorded October26 state:rebalance **none** under the owner's12:50 hold; allocationall.
+  Re-read both settings after go; no production state was inspected for this Q49 time update.
 - Q44 target-only cancel of person_worked_on4 oncrate-02 at13:17:08 preserved the primary oncrate-01
   and unblocked `hourly_20261026_130501`: **SUCCESS13:17:09.276,567 shards, no failures**, all coordinators.
   The scheduled helper finished13:18:34. [Action receipts](q44-target-cancel.json).
@@ -29,36 +31,38 @@ handover below. Keep a staffed operator, a second SSH session and the independen
   enableall to test real placement, then observe20–30min. A recurring shard-lock error immediately
   returns rebalance tonone. Successful new placement plus no lock errors is the agreed proof.
 
-## Q46 proposed window and remaining workload
+## Q49 owner-selected runner-up window
 
-Q46 moves the proposed start to **2026-10-26 21:30 UTC**, after comparing all Windmill schedules
-and809 recent root jobs over the next24h. [Full inventory, runtimes and ranking](q46-window-research.md).
-**No production operation or scheduling change was started for this comparison.** Await explicit go;
-the previous03:00 proposal is superseded.
+**October27,2026: gates11:20–11:30 UTC, start11:30, no SIGTERM after12:00, hard stop13:00.**
+Owner chose the runner-up after the October26 attempt stopped at a live heavy-workload gate.
+This supersedes the previous evening window; the plain-restart route and per-step abort rules remain
+unchanged. [Window research](q46-window-research.md) remains historical evidence, not a current gate.
+No Q49 production checks, watcher, setting change, job or restart have been started during this update.
 
-| Choice | Gates10min before | Start UTC | Last SIGTERM,start+30min | Hard stop,start+90min |
-| --- | --- | --- | --- | --- |
-| **Chosen practical** | **Oct26 21:20–21:30** | **Oct26 21:30** | **Oct26 22:00** | **Oct26 23:00** |
-| Runner-up, not the active plan | Oct27 11:20–11:30 | Oct27 11:30 | Oct27 12:00 | Oct27 13:00 |
+| Milestone | UTC onOctober27 | CET |
+| --- | --- | --- |
+| Await explicit go | Around11:15 | Around12:15 |
+| Fresh gates/watcher | 11:20–11:30 | 12:20–12:30 |
+| Start preparation | 11:30 | 12:30 |
+| Last permitted SIGTERM | 12:00 | 13:00 |
+| Hard stop for new maintenance | 13:00 | 14:00 |
 
-Normal expectation45–75min including20–30min observation; reserve90min. The selected start follows
-the21:00 bulk TMDB daily copy's recent maximum finish~21:26:56 and avoids the major overnight
-batches. A raw model minimum at21:25 was rounded later for that carry-over margin (<1%proxy difference).
-The distinct runner-up has about2.6%more modeled root-wall-time overlap and provider-detector carry-in.
-Traffic counts are a secondary/noisy signal, not proof of low load.
+Normal expectation45–75min including20–30min observation; reserve90min. A running unlimited-grace
+stop is never killed to meet the deadline. No automatic retry or scheduled restart is installed.
 
-**There is no fully heavy-free90min with unchanged schedules.** Recurring crawls remain throughout.
-Selected-window conflicts include Bluesky21:40/22:40, RSS22:20, DNA copy22:00 and embedding22:45
-(P90~15min/max~16min). Provider initialization starts23:00 at the hard-stop boundary. Thus Q46's
-relative quietest window does not silently clear the existing no-heavy-job gate. Owner must accept
-the specifically documented baseline/late work or coordinate it separately before go. No schedule
-pause or job cancellation was authorized or made by this research.
+**If a heavy Windmill job is running at the gates, stop and report, as in the October26 attempt.**
+Window approval does not waive that gate. Do not wait for heavy work to finish, pause/cancel it, or
+reclassify it solely to make the slot fit. The previously accepted light jobs can keep running.
+Read the complete live schedules and active queue/root/descendant state after go; verify deployments
+fresh as well. The research warned of possible11:00 provider-detector carry-over toward12:00, vector
+copy12:30, deletion sync12:50 and recurring social/crawl work. These are forecast risks, not a fresh
+inspection or an assertion that the gate passes. No Windmill schedule change is authorized here.
 
-Latest pre-window hourly should be **21:05 SUCCESS**, with none IN_PROGRESS. If it is still running
-at21:30, wait; never stop a node mid-snapshot. If the stop cannot safely be dispatched by22:00, do
-not restart. Backup cron is held during the work, normally skipping22:05; restore exactly afterwards
-and record the actual next run (usually23:05). Coolify has no planned deploy per owner; repeat live
-deployment/queue/Windmill checks at21:20. A delayed unlimited stop is never killed to meet23:00.
+Latest pre-window hourly should be **11:05 SUCCESS**, with none IN_PROGRESS. If it is still running
+at11:30, follow the snapshot-wait rule; never stop a node mid-snapshot. If SIGTERM cannot safely be
+dispatched by12:00, do not restart. Hold the backup cron exactly during maintenance, normally skipping
+12:05, restore it afterwards and record the actual next run (usually13:05). Owner reported no planned
+Coolify deploy; check current deployment/queue state at11:20, rather than assuming yesterday's result.
 
 
 ## Common read/write route and evidence
@@ -138,7 +142,7 @@ Follow only the approved normal stop/start recovery and handover rules below, wi
 
 ## Ordered execution
 
-### 1. Gates21:20–21:30 UTC
+### 1. Gates11:20–11:30 UTC
 
 Require owner go, **three expected nodes/IDs, all5.10.16**,145 GREEN health rows on all coordinators,
 zero missing/underreplicated shards, passing checks, no unexpected write blocks and original policies.
@@ -147,8 +151,8 @@ has active copies needed for safe primary promotion when crate-02 leaves; do not
 lists which copies/primaries are on the target. There is no zero-primary requirement.
 
 Require latest **hourly snapshot SUCCESS**, record exact name/finish/no failures/shard count, and
-**none IN_PROGRESS**, no pending deletion/restore or active backup process. The21:05 hourly run is
-expected; if still in progress at21:30, wait. Recheck immediately before SIGTERM after cron hold.
+**none IN_PROGRESS**, no pending deletion/restore or active backup process. The11:05 hourly run is
+expected; if still in progress at11:30, wait. Recheck immediately before SIGTERM after cron hold.
 Q44 below can rescue a genuinely stalled snapshot; it does not permit stopping during it.
 
 Require **no RELOCATING primary anywhere**. A relocating replica is acceptable only towardcrate-02
@@ -156,10 +160,11 @@ Require **no RELOCATING primary anywhere**. A relocating replica is acceptable o
 any initializing target row must be the matching counterpart of that allowed replica move oncrate-02.
 No unrelated initializing copies or survivor-to-survivor moves. Stop on a different unsafe state.
 
-Require no deploy/maintenance running or scheduled21:30–23:00: read GitHub deployment/workspace sync
+Require no deploy/maintenance running or scheduled11:30–13:00: read GitHub deployment/workspace sync
 runs and Coolify deployment queue; owner confirms no main deploy during the window. Read Windmill
 `GET schedules/list` in full, timezones/seconds included, and live `GET jobs/queue/list` (paginated,
-root jobs and descendants). Resolve the bulk/long-running conflicts above and any carry-over job.
+root jobs and descendants). **A running heavy job is a stop/report gate under Q49**; do not
+wait it out, cancel it or override the gate. Accepted light jobs continue.
 Do not POST/run a preview job as a read-only gate. Do not mutate schedules without separate approval.
 
 Start watcher and require **three complete healthy baseline rounds**. Confirm separate operator access
@@ -179,7 +184,7 @@ ssh -o BatchMode=yes root@10.0.0.11 python3 - hold < "$TMPDIR/cron-hold.py"
 # Save returned state path privately; verify readback/hash and no active backup first.
 ```
 
-Do not hold while the21:05 job is still running and assume it cancelled that job. Resolve/wait for
+Do not hold while the11:05 job is still running and assume it cancelled that job. Resolve/wait for
 that job before changing node state. Record which later hourly run(s) the hold may skip. If a
 concurrent cron edit occurs, helper refuses overwrite; stop and report rather than reconstructing it.
 
@@ -223,13 +228,13 @@ Recheck three members/GREEN/all primaries active, no IN_PROGRESS snapshot/active
 replica-only relocation state, exact14 temporary waits2 and unchanged replicas, healthy watcher,
 StopSignal unset/SIGTERM/15 and unchanged target container/PID/config/image. Capture both allocation
 and rebalance again:primaries/none. Recheck the alarm immediately before dispatch. **No zero-primary
-gate. No SIGTERM after22:00 UTC**; if preparation finishes too late, reverse it and stop.
+gate. No SIGTERM after12:00 UTC**; if preparation finishes too late, reverse it and stop.
 
 Set watcher phasestopping only when dispatching the confirmed stop. One unique host-managed unit
 oncrate-02; normal configured SIGTERM, unlimited grace:
 
 ```bash
-systemd-run --unit=gw-crate02-q43-stop-20261026T2130 \
+systemd-run --unit=gw-crate02-q43-stop-20261027T1130 \
   --property=Type=exec --property=TimeoutStopSec=infinity --property=SendSIGKILL=no \
   /usr/bin/docker stop --timeout=-1 crate-02
 ```
@@ -312,11 +317,11 @@ ssh -o BatchMode=yes root@10.0.0.11 python3 - restore REVIEWED_STATE_PATH < "$TM
 ```
 
 Read back byte-for-byte hash and one active original job/no hold marker. Do not overwrite unrelated
-concurrent edits. Record skipped hours and the next actual `5 * * * *` UTC run; if restored before22:05,
-next is22:05, otherwise23:05. Do not trigger a manual substitute. Record verification pending until
+concurrent edits. Record skipped hours and the next actual `5 * * * *` UTC run; if restored before12:05,
+next is12:05, otherwise13:05. Do not trigger a manual substitute. Record verification pending until
 the next scheduled run is actually observed. Final normal success:three nodes, original table policies,
 GREEN/all copies started, restartalways, allocationall/rebalanceall, healthy watcher and lock proof.
-**23:00 hard stop** for new work. Stop only the local watcher after final checks/handover. No push.
+**13:00 hard stop** for new work. Stop only the local watcher after final checks/handover. No push.
 
 ## Abort and two-node handover rules
 
@@ -337,7 +342,7 @@ survivor primaries are stably STARTED and no conflicting snapshot/job is active;
 explicitly why it remains held and obtain owner ownership, not a silent indefinite hold. Allocation
 remainsprimaries until the approved rejoin step or a new owner decision.
 
-## Q44 backup rescue before tonight, including a stalled21:05 run
+## Q44 backup-rescue reference, including a stalled pre-window hourly run
 
 Skipping a backup is acceptable. Do not cancel merely because a move exists. Only if a **running
 backup is demonstrably stalled on a relocating primary towardcrate-02**, fresh all-coordinator reads
@@ -346,7 +351,7 @@ allows **target-only** cancellation oncrate-02, **without allow_primary**. Never
 replica, never substitute a different copy after failed lookup, and record each exact statement/time,
 pre/post roles and backup outcome. The13:17 action is the existing example in [receipts](q44-target-cancel.json).
 No proactive cancellations, DROP or manual snapshot under Q44. After any action, still wait for the
-21:05 snapshot to finish SUCCESS/no IN_PROGRESS before step5; do not stop a node mid-snapshot.
+11:05 snapshot to finish SUCCESS/no IN_PROGRESS before step5; do not stop a node mid-snapshot.
 
 ## Preparation verification and limits
 
