@@ -8,6 +8,23 @@ and temporarily hold the backup cron; those changes were restored.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Q43 — active plain-restart plan,awaiting go
+
+[Q43 execution plan](q40-execution-plan.md) replaces the drain route: **plain normal stop/start only,
+no decommission, no drain, no zero-primary gate and no replica lowering**. It includes the exact
+backup-cron helper, temporary14-table wait3→2→3 scripts, unlimited normal-stop grace, same-container
+start, all-node health/settings/policy gates, phase-specific abort/two-node handovers, a five-endpoint
+10-second watcher, no SIGTERM after03:30 and04:30 UTC hard stop. Q43 explicitly enables rebalanceall
+after rejoin/GREEN/original policies to prove placement for20–30min, then returnsnone on a lock error
+or failed test; this supersedes the previous proof-before-enable order. No Q43 restart/preparation
+mutation has been executed. Rebalance remainsnone/allocationall after today's completed Q44 action.
+
+**Open scheduling gate:** read-only Windmill API inspection found53 enabled schedules;26 trigger
+in/at the03:00–04:30 UTC window, including03:00 IMDb ingest/TMDB details and04:00 ratings initialization,
+plus repeated long-running crawls. [Sanitized schedules,timezone evaluation and root-job runtime evidence](q43-windmill-evidence.json.gz).
+No schedule was changed. Resolve heavy-work conflicts or choose another window before go; fresh
+02:50 schedule/queue/deployment/snapshot checks remain mandatory. Local watcher tests passed10/10.
+
 ## Q44 — target-only cancel unblocked the13:05 snapshot
 
 At **13:17:08.954 UTC**, under the new owner authorization, executed exactly once:

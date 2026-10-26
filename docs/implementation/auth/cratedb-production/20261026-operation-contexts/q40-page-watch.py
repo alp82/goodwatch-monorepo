@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Future Q40 read-only curl monitor. Writes local evidence/abort flags; never runs SQL."""
+"""Q43 read-only HTTP watcher. Writes local alarms; never changes production settings."""
 import argparse
 import concurrent.futures
 import datetime
@@ -9,27 +9,35 @@ from pathlib import Path
 import subprocess
 import time
 
-PATHS = ("/movie/629-the-usual-suspects", "/discover", "/show/1396-breaking-bad")
+ENDPOINTS = (
+    ("/movie/629-the-usual-suspects", 200),
+    ("/show/1396-breaking-bad", 200),
+    ("/discover", 200),
+    ("/mcp", 401),
+    ("/.well-known/oauth-protected-resource/mcp", 200),
+)
+PHASES = {"baseline", "pre_stop", "stopping", "recovery", "rebalancing", "complete"}
 
 
-def assess(status, seconds, exit_code, previous_failures):
-    failures = previous_failures + 1 if exit_code or status != 200 else 0
-    return failures, failures >= 3 or seconds > 3.0
+def assess(status, seconds, exit_code, previous_failures, expected=200):
+    failures = previous_failures + 1 if exit_code or status != expected else 0
+    return failures, bool(failures or seconds > 3.0)
 
 
-def probe(path):
-    started = time.monotonic()
+def probe(path, expected):
+    start = time.monotonic()
+    started_utc = datetime.datetime.now(datetime.timezone.utc).isoformat()
     result = subprocess.run(
         ["curl", "-s", "--max-time", "5", "-o", "/dev/null", "-w",
          "%{http_code} %{time_total}", "https://goodwatch.app" + path],
         capture_output=True, text=True, timeout=7,
     )
-    parts = result.stdout.split()
     try:
+        parts = result.stdout.split()
         status, seconds = int(parts[0]), float(parts[1])
     except (IndexError, ValueError):
-        status, seconds = 0, time.monotonic() - started
-    return path, status, seconds, result.returncode
+        status, seconds = 0, time.monotonic() - start
+    return path, expected, status, seconds, result.returncode, started_utc
 
 
 def marker(path, record):
@@ -42,29 +50,31 @@ def marker(path, record):
 
 
 def watch(args):
-    failures = dict.fromkeys(PATHS, 0)
-    heartbeat = Path(args.heartbeat)
-    phase_file = Path(args.phase_file)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
-        while True:
+    failures = {path: 0 for path, _ in ENDPOINTS}
+    heartbeat, phase_file = Path(args.heartbeat), Path(args.phase_file)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
+        while not (args.stop_file and Path(args.stop_file).exists()):
             start = time.monotonic()
             heartbeat.write_text(str(time.time()) + "\n")
-            futures = [pool.submit(probe, path) for path in PATHS]
-            for future in concurrent.futures.as_completed(futures):
-                path, status, seconds, exit_code = future.result()
-                failures[path], alarm = assess(status, seconds, exit_code, failures[path])
+            pending = [pool.submit(probe, path, expected) for path, expected in ENDPOINTS]
+            for future in concurrent.futures.as_completed(pending):
+                path, expected, status, seconds, exit_code, started_utc = future.result()
+                failures[path], alarm = assess(status, seconds, exit_code, failures[path], expected)
                 phase = phase_file.read_text().strip()
-                if phase not in {"baseline", "drain", "stopping", "recovery", "complete"}:
-                    raise ValueError("Invalid phase; controller must stop progression")
+                if phase not in PHASES:
+                    raise ValueError("Invalid phase; stop progression")
                 record = {
                     "utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                    "phase": phase, "path": path, "status": status, "seconds": seconds,
+                    "probe_started_utc": started_utc, "phase": phase, "path": path,
+                    "expected": expected, "status": status, "seconds": seconds,
                     "exit": exit_code, "failure_streak": failures[path], "alarm": alarm,
                 }
                 print(json.dumps(record), flush=True)
-                if alarm and phase == "drain":
+                if alarm:
                     marker(args.abort_file, record)
             heartbeat.write_text(str(time.time()) + "\n")
+            if args.stop_file and Path(args.stop_file).exists():
+                break
             time.sleep(max(0, 10 - (time.monotonic() - start)))
 
 
@@ -72,11 +82,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for option in ("phase-file", "abort-file", "heartbeat"):
         parser.add_argument("--" + option, required=True)
+    parser.add_argument("--stop-file")
     args = parser.parse_args()
     try:
         watch(args)
     except Exception as error:
-        # Fail closed locally. Controller checks this marker and heartbeat before SIGTERM.
         marker(args.abort_file, {"monitor_error": type(error).__name__})
         raise
 

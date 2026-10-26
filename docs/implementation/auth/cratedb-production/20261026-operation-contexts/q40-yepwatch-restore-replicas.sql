@@ -1,3 +1,4 @@
+-- HISTORICAL Q40 reference only; Q43 does not execute replica-setting statements.
 -- PLANNED ONLY. Requires owner go, current-policy match and per-statement readback.
 -- Submit one statement at a time through crate_sql; stop on any error.
 ALTER TABLE "doc"."yepwatch_agreement" SET (number_of_replicas='2');
