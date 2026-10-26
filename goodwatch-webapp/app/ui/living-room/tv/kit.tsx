@@ -278,6 +278,14 @@ export function Img({
 	const { canvas } = useTvView()
 	return (
 		<img
+			// Low priority, so that the TV's pictures don't share the connection with the room's (the first screen's
+			// largest, its LCP: TvRoom.tsx) while the boot screen covers them; in the window Chrome would raise them
+			// (#236). Before the window is measured in both editions: they name the same files, and a hidden copy
+			// without it raises the shown one. On a phone also afterwards: a picture whose priority changes while it
+			// loads is raised again.
+			{...((canvas.first || canvas.edition === "phone") && {
+				fetchpriority: "low",
+			})}
 			src={src}
 			width={width}
 			height={height}

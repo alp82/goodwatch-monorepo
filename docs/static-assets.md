@@ -122,7 +122,9 @@ is answered as before, so the origin stays a complete copy.
   and fonts use that connection. The stylesheet link carries `crossorigin` too while the page names the static
   hostname: a browser keeps requests with and without credentials on separate connections, and without the attribute
   the render-blocking stylesheet would wait for a second connection that no hint opened. The start page's own style
-  sheets and its room pictures carry it too. Other images still use that second connection.
+  sheets (all of them in `HOME_SHEETS`, `app/ui/living-room/home-sheets.ts`), its room pictures and the white G
+  mark carry it too; the 103 Early Hints response names them (`app/server/early-hints.ts`). Other images still use
+  that second connection.
 
 ### Early Hints
 

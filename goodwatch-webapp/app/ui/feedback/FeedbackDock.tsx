@@ -32,7 +32,7 @@ import {
 	useRef,
 	useState,
 } from "react"
-import { PrimaryButton } from "~/ui/auth/kit"
+import { PrimaryButton } from "~/ui/auth/PrimaryButton"
 import { useUser } from "~/utils/auth"
 import { AreaFlow } from "./AreaFlow"
 import type { DockProps } from "./FeedbackTab"

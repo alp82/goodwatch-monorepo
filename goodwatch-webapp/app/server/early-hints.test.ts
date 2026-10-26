@@ -12,6 +12,7 @@ const files = {
 		phone: ["/assets/room-phone-E5.avif", "/assets/hand-F6.avif"],
 		desktop: ["/assets/room-G7.avif", "/assets/hand-F6.avif"],
 	},
+	marks: ["/assets/logo-white-H8.svg", "/assets/primevideo-logo-I9.svg"],
 }
 const page = (url: string, headers: Record<string, string> = {}) => ({
 	method: "GET",
@@ -35,6 +36,11 @@ const homeSheets = [
 	`<${base}/assets/living-room-B2.css>; rel=preload; as=style; crossorigin`,
 	`<${base}/assets/boot-C3.css>; rel=preload; as=style; crossorigin`,
 ]
+/** The first screen's small marks, which every browser draws: after the room's pictures. */
+const marks = [
+	`<${base}/assets/logo-white-H8.svg>; rel=preload; as=image; crossorigin`,
+	`<${base}/assets/primevideo-logo-I9.svg>; rel=preload; as=image; crossorigin`,
+]
 
 describe("earlyHintLinks", () => {
 	it("gives a phone's start page the shared hints, its style sheets and the portrait room's pictures", () => {
@@ -43,8 +49,9 @@ describe("earlyHintLinks", () => {
 			[
 				...shared,
 				...homeSheets,
-				`<${base}/assets/room-phone-E5.avif>; rel=preload; as=image; crossorigin`,
-				`<${base}/assets/hand-F6.avif>; rel=preload; as=image; crossorigin`,
+				`<${base}/assets/room-phone-E5.avif>; rel=preload; as=image; crossorigin; fetchpriority=high`,
+				`<${base}/assets/hand-F6.avif>; rel=preload; as=image; crossorigin; fetchpriority=high`,
+				...marks,
 			],
 		)
 	})
@@ -53,8 +60,9 @@ describe("earlyHintLinks", () => {
 		assert.deepEqual(earlyHintLinks(page("/", desktop), base, files), [
 			...shared,
 			...homeSheets,
-			`<${base}/assets/room-G7.avif>; rel=preload; as=image; crossorigin`,
-			`<${base}/assets/hand-F6.avif>; rel=preload; as=image; crossorigin`,
+			`<${base}/assets/room-G7.avif>; rel=preload; as=image; crossorigin; fetchpriority=high`,
+			`<${base}/assets/hand-F6.avif>; rel=preload; as=image; crossorigin; fetchpriority=high`,
+			...marks,
 		])
 	})
 
@@ -62,6 +70,7 @@ describe("earlyHintLinks", () => {
 		assert.deepEqual(earlyHintLinks(page("/"), base, files), [
 			...shared,
 			...homeSheets,
+			...marks,
 		])
 		assert.deepEqual(
 			earlyHintLinks(
@@ -69,7 +78,7 @@ describe("earlyHintLinks", () => {
 				base,
 				files,
 			),
-			[...shared, ...homeSheets],
+			[...shared, ...homeSheets, ...marks],
 		)
 	})
 
@@ -86,8 +95,10 @@ describe("earlyHintLinks", () => {
 			'</assets/gabarito-latin-D4.woff2>; rel=preload; as=font; type="font/woff2"; crossorigin',
 			"</assets/living-room-B2.css>; rel=preload; as=style",
 			"</assets/boot-C3.css>; rel=preload; as=style",
-			"</assets/room-phone-E5.avif>; rel=preload; as=image",
-			"</assets/hand-F6.avif>; rel=preload; as=image",
+			"</assets/room-phone-E5.avif>; rel=preload; as=image; fetchpriority=high",
+			"</assets/hand-F6.avif>; rel=preload; as=image; fetchpriority=high",
+			"</assets/logo-white-H8.svg>; rel=preload; as=image",
+			"</assets/primevideo-logo-I9.svg>; rel=preload; as=image",
 		])
 	})
 })

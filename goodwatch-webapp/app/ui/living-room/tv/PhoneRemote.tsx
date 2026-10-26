@@ -10,7 +10,7 @@
 // on with any key here. Where the window is short it rests with its top showing and a tap raises it (TvRoom.tsx).
 import type { ReactNode } from "react"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
-import { assetUrl } from "~/utils/asset-url"
+import { assetBase, assetUrl } from "~/utils/asset-url"
 import {
 	ICON,
 	Icon,
@@ -191,6 +191,9 @@ export function PhoneRemote({
 			{/* The grip: the mark, where the palm holds it. */}
 			<img
 				src={assetUrl(gwLogo)}
+				// Without credentials on the static hostname, as the 103 Early Hints response preloads it
+				// (server/early-hints.ts).
+				crossOrigin={assetBase() ? "anonymous" : undefined}
 				alt=""
 				aria-hidden
 				draggable={false}

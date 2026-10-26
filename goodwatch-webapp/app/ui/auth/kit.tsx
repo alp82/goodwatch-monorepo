@@ -148,31 +148,7 @@ export function PasswordRule({ password }: { password: string }) {
 	)
 }
 
-export function PrimaryButton({
-	children,
-	busy,
-	disabled,
-	onClick,
-	type = "submit",
-}: {
-	children: ReactNode
-	busy?: boolean
-	disabled?: boolean
-	onClick?: () => void
-	type?: "submit" | "button"
-}) {
-	return (
-		<button
-			type={type}
-			onClick={onClick}
-			disabled={busy || disabled}
-			aria-busy={busy || undefined}
-			className={AUTH_SUBMIT_CLASS}
-		>
-			{busy ? <Spinner size="small" /> : children}
-		</button>
-	)
-}
+export { PrimaryButton } from "./PrimaryButton"
 
 export function SecondaryButton({ children, onClick, busy, disabled }: { children: ReactNode; onClick?: () => void; busy?: boolean; disabled?: boolean }) {
 	return (

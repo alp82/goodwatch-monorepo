@@ -5,7 +5,7 @@ import logoWhite from "~/img/goodwatch-logo-white.svg"
 import { LazyAccountMenu } from "~/ui/account/LazyAccountMenu"
 // Small pieces shared by the dock, the header, and the hub: the GoodWatch mark, Tonight's pick as a tiny poster, and
 // the account slot (Sign in for guests, the avatar and its menu for members).
-import { assetUrl } from "~/utils/asset-url"
+import { assetBase, assetUrl } from "~/utils/asset-url"
 import { useUser } from "~/utils/auth"
 import { useAuthHref } from "~/utils/auth-href"
 import { currentDestination, getDestinations } from "./destinations"
@@ -18,6 +18,9 @@ export function GoodWatchMark({ size = 22 }: { size?: number }) {
 	return (
 		<img
 			src={assetUrl(logoWhite)}
+			// Without credentials on the static hostname, like the start page's Remotes, whose G the 103 Early Hints
+			// response preloads that way (server/early-hints.ts): one request for the file, on the warm connection.
+			crossOrigin={assetBase() ? "anonymous" : undefined}
 			alt=""
 			className="block shrink-0"
 			style={{ width: size, height: size }}
