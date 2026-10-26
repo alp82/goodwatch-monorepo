@@ -225,6 +225,41 @@ test("caller cancellation closes the active request without retrying or evicting
 	assert.equal(received.flat().length, before)
 })
 
+for (const role of ["Participating", "Coordinator"]) {
+	const message = `JobKilledException[Job killed. ${role} node node2 disconnected]`
+	test(`${role} node loss retries reads after routing recovers`, async (t) => {
+		let failures = 0
+		const received = await cluster(t, [(_, __, res) => {
+			if (failures++ > 0) return answer(res)
+			res.writeHead(500, { "Content-Type": "application/json" })
+			res.end(JSON.stringify({ error: { message, code: 5000 } }))
+		}])
+		assert.deepEqual(await query("SELECT n", [], { timeoutMs: 1_000 }), [{ n: 1 }])
+		assert.equal(received[0].length, 2)
+		await query("SELECT n")
+		assert.equal(received[0].length, 3)
+	})
+
+	test(`${role} node loss leaves a generic write indeterminate without replay`, async (t) => {
+		const received = await cluster(t, [(_, __, res) => {
+			res.writeHead(500, { "Content-Type": "application/json" })
+			res.end(JSON.stringify({ error: { message, code: 5000 } }))
+		}, (_, __, res) => answer(res)])
+		await assert.rejects(execute("UPDATE saved SET n = n + 1"), { message })
+		assert.equal(received.flat().length, 1)
+	})
+}
+
+test("an unrelated job cancellation is surfaced without retry", async (t) => {
+	const message = "JobKilledException[Job killed. Killed by user]"
+	const received = await cluster(t, [(_, __, res) => {
+		res.writeHead(500, { "Content-Type": "application/json" })
+		res.end(JSON.stringify({ error: { message, code: 5000 } }))
+	}, (_, __, res) => answer(res)])
+	await assert.rejects(query("SELECT n"), { message })
+	assert.equal(received.flat().length, 1)
+})
+
 test("reads wait for shard routing to recover when surviving coordinators still reference a lost node", async (t) => {
 	let recoveredAt = Infinity
 	const messages = [

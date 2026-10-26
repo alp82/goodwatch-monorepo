@@ -231,6 +231,11 @@ def transient_backend_error(error):
         message.startswith("No CrateDB coordinator answered the read")
         or message.startswith("CrateDB write transport failed")
         or re.match(r"CrateDB SQL error \((?:502|503|504)\d*\)", message)
+        or re.fullmatch(
+            r"(?:CrateDB SQL error \(\d+\): )?"
+            r"JobKilledException\[Job killed\. (?:Participating|Coordinator) node .+ disconnected\]",
+            message,
+        )
         or any(kind in message for kind in ("NoShardAvailableActionException", "UnavailableShardsException", "NodeNotConnectedException", "ConnectTransportException"))
     ):
         return True

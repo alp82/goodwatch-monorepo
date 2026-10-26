@@ -1,0 +1,602 @@
+{
+  "source_commit": "1770d08d17a690f3813f2a0987e7998fd1374070",
+  "first_utc": "2026-10-26T02:36:10.759820+00:00",
+  "last_utc": "2026-10-26T02:46:29.083658+00:00",
+  "nodes": [
+    [
+      "xlclgwGeSHe18p5J4WvfFA",
+      "crate-01",
+      "5.10.16"
+    ],
+    [
+      "r0IgCe17SPOgudkQIGsRQA",
+      "crate-02",
+      "5.10.16"
+    ],
+    [
+      "ch8EXZwrQVmCls79_T_vUg",
+      "crate-03",
+      "5.10.16"
+    ]
+  ],
+  "health": [
+    [
+      "GREEN",
+      145,
+      0,
+      0
+    ]
+  ],
+  "shards": [
+    [
+      "STARTED",
+      "RELOCATING",
+      2
+    ],
+    [
+      "STARTED",
+      "STARTED",
+      1173
+    ]
+  ],
+  "failed_cluster_checks": [
+    [
+      0
+    ]
+  ],
+  "failed_node_checks": [
+    [
+      0
+    ]
+  ],
+  "tables": 145,
+  "creation_versions": {
+    "5.10.9": 94,
+    "5.10.16": 51
+  },
+  "partitions": 0,
+  "closed_tables": 0,
+  "replica_policies": {
+    "0-1": 106,
+    "2": 30,
+    "1": 9
+  },
+  "three_copy_policy": [
+    {
+      "schema": "doc",
+      "table": "auth_account",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "auth_capacity",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "auth_jwks",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "auth_oauth_access_token",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "auth_oauth_client",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "auth_oauth_client_assertion",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "auth_oauth_client_resource",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "auth_oauth_consent",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "auth_oauth_refresh_token",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "auth_oauth_resource",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "auth_rate_limit",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "auth_session",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "auth_user",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "auth_user_email",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "auth_verification",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "user_mcp_action",
+      "replicas": "2",
+      "write_wait": "1",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "yepwatch_agreement",
+      "replicas": "2",
+      "write_wait": "3",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "yepwatch_candidate",
+      "replicas": "2",
+      "write_wait": "3",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "yepwatch_command_receipt",
+      "replicas": "2",
+      "write_wait": "3",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "yepwatch_control",
+      "replicas": "2",
+      "write_wait": "3",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "yepwatch_decision",
+      "replicas": "2",
+      "write_wait": "3",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "yepwatch_invitation",
+      "replicas": "2",
+      "write_wait": "3",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "yepwatch_member_grant",
+      "replicas": "2",
+      "write_wait": "3",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "yepwatch_member_intent",
+      "replicas": "2",
+      "write_wait": "3",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "yepwatch_participant",
+      "replicas": "2",
+      "write_wait": "3",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "yepwatch_proposal",
+      "replicas": "2",
+      "write_wait": "3",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "yepwatch_room",
+      "replicas": "2",
+      "write_wait": "3",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "yepwatch_runtime",
+      "replicas": "2",
+      "write_wait": "3",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "yepwatch_ticket",
+      "replicas": "2",
+      "write_wait": "3",
+      "durability": "REQUEST"
+    },
+    {
+      "schema": "doc",
+      "table": "yepwatch_vote",
+      "replicas": "2",
+      "write_wait": "3",
+      "durability": "REQUEST"
+    }
+  ],
+  "current_primary_bytes": 40993871678,
+  "all_copy_bytes": 80709631140,
+  "blob_sizes": [
+    [
+      "blob",
+      "search_index_files",
+      false,
+      3,
+      137651413,
+      21
+    ],
+    [
+      "blob",
+      "search_index_files",
+      true,
+      3,
+      137651413,
+      21
+    ]
+  ],
+  "snapshot": {
+    "snapshot": "hourly_20261026_020501",
+    "full_bytes": 36257350348,
+    "incremental_bytes": 2129430348,
+    "files": 58837,
+    "incremental_files": 11561,
+    "backup_runtime": {
+      "python": "3.14.0 (main, Oct 31 2025, 23:03:06) [Clang 21.1.4 ]",
+      "requests": "2.32.5"
+    }
+  },
+  "snapshot_started": 1792980302293,
+  "snapshot_finished": 1792980343747,
+  "repository_bytes": 131239461309,
+  "clients": [
+    {
+      "host": 21,
+      "container": "gk4owk8-20261026T023232",
+      "cwd": "/app",
+      "node": "v24.22.1",
+      "node-crate": "3.0.0",
+      "pg": "8.23.1"
+    },
+    {
+      "host": 20,
+      "container": "gk4owk8-20261026T023515",
+      "cwd": "/app",
+      "node": "v24.22.1",
+      "node-crate": "3.0.0",
+      "pg": "8.23.1"
+    },
+    {
+      "host": 20,
+      "container": "goodwatch-search-b",
+      "cwd": "/app",
+      "node": "v24.22.1",
+      "node-crate": "3.0.0",
+      "pg": "8.23.1"
+    },
+    {
+      "host": 20,
+      "container": "goodwatch-search-a",
+      "cwd": "/app",
+      "node": "v24.22.1",
+      "node-crate": "3.0.0",
+      "pg": "8.23.1"
+    }
+  ],
+  "python_worker_caches": [
+    {
+      "host": 10,
+      "container": "windmill-highperf_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 10,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 14,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 15,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 12,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 16,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 13,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 11,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 17,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 21,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 18,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 20,
+      "container": "windmill-highperf_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 20,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 19,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 31,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 30,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    },
+    {
+      "host": 32,
+      "container": "windmill-default_worker-1",
+      "versions": [
+        "2.0.0",
+        "2.2.1",
+        "2.3.0"
+      ]
+    }
+  ],
+  "orphans": [
+    [
+      "crate-02",
+      112,
+      1792108866877,
+      1792648522333
+    ],
+    [
+      "crate-03",
+      2897,
+      1792648527612,
+      1792648544121
+    ],
+    [
+      "crate-01",
+      1460,
+      1792648527637,
+      1792648532040
+    ]
+  ],
+  "production_changes": false,
+  "issues": [
+    "Two RELOCATING shard rows despite GREEN: do not drain until all copies STARTED/STARTED.",
+    "Native worker containers have no cached crate package at probed paths; cached versions do not prove active script locks.",
+    "Read-only sys.cluster captured effective cluster settings; persistent/transient provenance was not exposed by the unsupported REST settings route."
+  ],
+  "release_notes_reviewed": 43,
+  "receipt_file_count": 100,
+  "receipt_sha256": "b0139f6ac5e038231e46693563bca2bc20572b723ce0387f31a7231c7b3b6540",
+  "snapshot_manifest_format_sources": [
+    "ChecksumBlobStoreFormat.java",
+    "BlobStoreIndexShardSnapshot.java",
+    "StoreFileMetadata.java"
+  ],
+  "extra_local_canaries": {
+    "results": [
+      {
+        "server": "CrateDB 5.10.16 (built bc622f1/NA, Linux 7.2.11-arch1-1 amd64, OpenJDK 64-Bit Server VM 23.0.2+7)",
+        "driver": "2.0.0",
+        "array_object_parameters": true,
+        "legacy_version_OCC": true
+      },
+      {
+        "server": "CrateDB 5.10.16 (built bc622f1/NA, Linux 7.2.11-arch1-1 amd64, OpenJDK 64-Bit Server VM 23.0.2+7)",
+        "driver": "2.2.1",
+        "array_object_parameters": true,
+        "legacy_version_OCC": true
+      },
+      {
+        "server": "CrateDB 5.10.16 (built bc622f1/NA, Linux 7.2.11-arch1-1 amd64, OpenJDK 64-Bit Server VM 23.0.2+7)",
+        "driver": "2.3.0",
+        "array_object_parameters": true,
+        "legacy_version_OCC": true
+      },
+      {
+        "server": "CrateDB 6.4.6 (built 0a184fa/NA, Linux 7.2.11-arch1-1 amd64, OpenJDK 64-Bit Server VM 25.0.4.1+1-LTS)",
+        "driver": "2.0.0",
+        "array_object_parameters": true,
+        "legacy_version_OCC": true
+      },
+      {
+        "server": "CrateDB 6.4.6 (built 0a184fa/NA, Linux 7.2.11-arch1-1 amd64, OpenJDK 64-Bit Server VM 25.0.4.1+1-LTS)",
+        "driver": "2.2.1",
+        "array_object_parameters": true,
+        "legacy_version_OCC": true
+      },
+      {
+        "server": "CrateDB 6.4.6 (built 0a184fa/NA, Linux 7.2.11-arch1-1 amd64, OpenJDK 64-Bit Server VM 25.0.4.1+1-LTS)",
+        "driver": "2.3.0",
+        "array_object_parameters": true,
+        "legacy_version_OCC": true
+      }
+    ],
+    "cleanup": true
+  },
+  "tests": {
+    "webapp_crate_catalog": 55,
+    "flow_population_receipts": {
+      "passed": 65,
+      "subtests": 35
+    },
+    "flows_monitoring_bulk": {
+      "passed": 38,
+      "subtests": 17,
+      "warnings": 11
+    },
+    "backup": {
+      "passed": 38,
+      "subtests": 9
+    },
+    "typecheck": {
+      "exit_code": 2,
+      "diagnostics": 192,
+      "changed_file_diagnostics": 0
+    }
+  },
+  "window_hours": 12,
+  "restore_estimate_minutes": [
+    60,
+    120
+  ],
+  "validated_full_volume_RTO": false,
+  "local_cleanup_verified_utc": "2026-10-26T03:01:13.569411+00:00"
+}
