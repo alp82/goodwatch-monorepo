@@ -791,30 +791,26 @@ test("Shared provider defaults union active linked accounts without changing the
 })
 
 
-test("Keep swiping preserves answers, invalidates old agreements, and exact retries cannot reopen a later decision", async () => {
+test("Final decisions reject legacy Keep swiping without changing votes; only owner restart begins a new round", async () => {
  const f = await fixture()
  const cards = (await f.service.read(f.id, credential(f.a))).shared.candidates
  for (const person of [f.a, f.b]) await f.vote(person, cards[0].id, "watch")
  await f.propose(f.a, cards[0].id)
  const done = (await f.agree(f.b)).snapshot
  assert.equal(done.shared.phase, "decided")
- const before = await f.service.read(f.id, credential(f.b))
- const envelope: CommandEnvelope = { commandId: randomBytes(16).toString("hex"), sequence: before.own.nextSequence, command: { type: "resume_voting", expectedRevision: before.shared.revision } }
- const resumed = (await f.service.command(f.id, credential(f.b), envelope)).snapshot
- assert.equal(resumed.shared.phase, "choosing")
- assert.equal(resumed.shared.decision, null)
- assert.equal(resumed.shared.proposal, null)
- assert.equal(resumed.own.agreement.agreed, false)
- assert.equal(resumed.shared.generation, before.shared.generation + 1)
- assert.deepEqual(resumed.own.votes, before.own.votes)
- assert.deepEqual(resumed.shared.candidates, before.shared.candidates)
- assert.equal(resumed.shared.expiresAt, before.shared.expiresAt)
- const retry = await f.service.command(f.id, credential(f.b), envelope)
- assert.equal(retry.snapshot.shared.generation, resumed.shared.generation)
- await assert.rejects(f.send(f.a, { type: "resume_voting", expectedRevision: before.shared.revision }), /decision|changed/)
- await f.propose(f.a, cards[0].id)
- const again = (await f.agree(f.b)).snapshot
- assert.equal(again.shared.phase, "decided")
- await f.service.command(f.id, credential(f.b), envelope)
- assert.equal((await f.service.read(f.id, credential(f.a))).shared.phase, "decided")
+ for (const person of [f.a, f.b]) {
+  const before = await f.service.read(f.id, credential(person))
+  const envelope: CommandEnvelope = { commandId: randomBytes(16).toString("hex"), sequence: before.own.nextSequence, command: { type: "resume_voting", expectedRevision: before.shared.revision } }
+  for (let retry = 0; retry < 2; retry++) {
+   await assert.rejects(f.service.command(f.id, credential(person), envelope), (e: unknown) => e instanceof RoomError && e.code === "conflict" && /decision is final/.test(e.message))
+   assert.deepEqual(await f.service.read(f.id, credential(person)), before)
+  }
+ }
+ await assert.rejects(f.send(f.b, { type: "restart", expectedRevision: done.shared.revision }), /host/i)
+ const restarted = (await f.send(f.a, { type: "restart", expectedRevision: done.shared.revision })).snapshot
+ assert.equal(restarted.shared.phase, "setup")
+ assert.equal(restarted.shared.decision, null)
+ assert(restarted.shared.generation > done.shared.generation)
+ assert.deepEqual(restarted.shared.screens, done.shared.screens)
+ assert.deepEqual(restarted.shared.constraints, done.shared.constraints)
 })

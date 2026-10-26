@@ -331,21 +331,12 @@ export function proposalTransition(
 		return next
 	}
 	if (c.type === "resume_voting") {
-		requireRoom(original.phase === "decided", "conflict", "There is no final decision to reopen")
-		requireRoom(original.revision === c.expectedRevision, "conflict", "Room changed; review it before continuing")
-		const next = structuredClone(original)
-		next.phase = "choosing"
-		next.decision = null
-		next.generation++
-		next.proposalVersion++
-		next.proposal = null
-		clearApprovals(next)
-		next.agreement = { version: next.agreement.version + 1, state: "none", error: null }
-		next.revision++
-		// Preserve cards, private answers, timing, roster, context and expiry. A fresh
-		// proposal and unanimous agreement are required before another decision.
-		return next
+		// Keep parsing the legacy command so older installed clients receive an
+		// actionable error. A final decision is never reopened; only the owner's
+		// explicit restart may begin another round.
+		requireRoom(false, "conflict", "This decision is final. The room owner can choose Start again for a new round.")
 	}
+
 	if (c.type === "configure") {
 		const next = proposalTransition(
 			original,
