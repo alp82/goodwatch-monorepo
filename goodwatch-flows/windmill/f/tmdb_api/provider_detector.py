@@ -140,6 +140,20 @@ class Admission:
         raise DetectorStopped('admission_contention')
 
 
+def ensure_registry_indexes(db):
+    """Explicit rollout preparation; normal detector runs never build indexes."""
+    for media in ('movie', 'show'):
+        sources, countries = evidence.collections(db, media)
+        sources.create_index(
+            [('provider_detector_registered', 1), ('tmdb_id', 1), ('popularity', 1)],
+            partialFilterExpression={'provider_detector_registered': True},
+            name='provider_detector_registered')
+        countries.create_index(
+            [('api_confirmation_pending', 1), ('tmdb_id', 1)],
+            partialFilterExpression={'api_confirmation_pending': True},
+            name='provider_detector_confirmation')
+
+
 def registry(db, connector, now):
     """Current offers/prior check stamps, sticky observations, accepted opens and 404s."""
     result = {}
@@ -152,12 +166,12 @@ def registry(db, connector, now):
             '''SELECT tmdb_id FROM crawl_priority WHERE media_type = ? AND last_opened_at >= ?''',
             (media, utc_ms(now - timedelta(days=1))))}
         confirmed = {canonical_title_id(media, row['tmdb_id']) for row in countries.find(
-            {'api_confirmation_pending': True}, {'tmdb_id': 1})}
+            {'api_confirmation_pending': True}, {'_id': 0, 'tmdb_id': 1})}
         for row in rows:
             key = (media, canonical_title_id(media, row['tmdb_id']))
             result[key] = dict(row, tmdb_id=key[1], opened=key[1] in opened,
                                confirmation=key[1] in confirmed)
-        for row in sources.find({'provider_detector_registered': True}, {'tmdb_id': 1, 'popularity': 1}):
+        for row in sources.find({'provider_detector_registered': True}, {'_id': 0, 'tmdb_id': 1, 'popularity': 1}):
             key = (media, canonical_title_id(media, row['tmdb_id']))
             result.setdefault(key, dict(row, tmdb_id=key[1], opened=key[1] in opened,
                                         confirmation=key[1] in confirmed))
