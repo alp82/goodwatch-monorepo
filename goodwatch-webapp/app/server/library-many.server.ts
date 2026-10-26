@@ -1,3 +1,4 @@
+import type { TitleMarksWritten } from "./mcp/title-marks.ts"
 // Wishlist and Not interested changes for many titles of one member at once, for MCP batch writes: one multi-row
 // statement per change (and per media type for a delete) and one member data reset, where the single-title writers
 // in wishList.server.ts and not-interested.server.ts take several statements and a reset per title.
@@ -51,13 +52,13 @@ export const updateWishListMany = async ({
 	user_id: string
 	titles: readonly ManyTitles[]
 	action: "add" | "remove"
-}): Promise<{ rowcount: number }> => {
+}): Promise<{ rowcount: number; written?: TitleMarksWritten }> => {
 	const { unique, groups } = byMediaType(titles)
 	if (!user_id || !unique.length) return { rowcount: 0 }
 	let rowcount = 0
+	const now = new Date()
 	try {
 		if (action === "add") {
-			const now = new Date()
 			rowcount = (
 				await insertRows(
 					"user_wishlist",
@@ -90,7 +91,18 @@ export const updateWishListMany = async ({
 		if (rowcount) await markTasteChanged(user_id)
 		await resetOnboardingMediaCache({ userId: user_id, searchTerm: "" })
 	}
-	return { rowcount }
+	return {
+		rowcount,
+		written: {
+			want_to_see: {
+				value: action === "add",
+				updatedAt: action === "add" ? now.toISOString() : null,
+			},
+			...(action === "add"
+				? { not_interested: { value: false, updatedAt: null } }
+				: {}),
+		},
+	}
 }
 
 /**
@@ -106,14 +118,14 @@ export const updateNotInterestedMany = async ({
 	user_id: string
 	titles: readonly ManyTitles[]
 	action: "add" | "remove"
-}): Promise<{ rowcount: number }> => {
+}): Promise<{ rowcount: number; written?: TitleMarksWritten }> => {
 	const { unique, groups } = byMediaType(titles)
 	if (!user_id || !unique.length) return { rowcount: 0 }
 	const inList = (ids: number[]) => ids.map(() => "?").join(", ")
 	let rowcount = 0
+	const now = new Date()
 	try {
 		if (action === "add") {
-			const now = new Date()
 			rowcount = (
 				await insertRows(
 					"user_not_interested",
@@ -149,5 +161,16 @@ export const updateNotInterestedMany = async ({
 		await resetUserDataCache({ user_id })
 		await resetOnboardingMediaCache({ userId: user_id, searchTerm: "" })
 	}
-	return { rowcount }
+	return {
+		rowcount,
+		written: {
+			not_interested: {
+				value: action === "add",
+				updatedAt: action === "add" ? now.toISOString() : null,
+			},
+			...(action === "add"
+				? { want_to_see: { value: false, updatedAt: null } }
+				: {}),
+		},
+	}
 }

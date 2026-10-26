@@ -1,3 +1,4 @@
+import type { TitleMarksWritten } from "./title-marks.ts"
 import type { UserData } from "../../types/user-data"
 import {
 	EpisodeScoreTargetError,
@@ -285,6 +286,8 @@ export type TitleWrite =
 	| {
 			removedWatchId: string | null
 			event: ShowAction["event"]["type"] | null
+			/** The title marks this write left, for a batch's receipt and Undo. */
+			title_written?: TitleMarksWritten
 			/** A part score's write: what it left, for a batch's receipt and Undo. */
 			part_written?: PartWrite
 			/**
@@ -310,6 +313,16 @@ export async function applyTitleWrite(
 ): Promise<TitleWrite> {
 	let removedWatchId: string | null = null
 	let appliedEvent: ShowAction["event"]["type"] | null = null
+	let titleWritten: TitleMarksWritten | undefined
+	const recordClears = (cleared?: {
+		wantToSeeAddedAt: string | null
+		notInterested: boolean
+	}) => {
+		if (cleared?.wantToSeeAddedAt)
+			(titleWritten ??= {}).want_to_see = { value: false, updatedAt: null }
+		if (cleared?.notInterested)
+			(titleWritten ??= {}).not_interested = { value: false, updatedAt: null }
+	}
 	let partWritten: PartWrite | undefined
 	let watchAdded: { id: string; created_at: number } | undefined
 	const part = partOf(name, args)
@@ -330,25 +343,46 @@ export async function applyTitleWrite(
 			score: args.score as Score | null,
 			review: before.review ?? undefined,
 		})
+		titleWritten = updated.written
+			? {
+					score: updated.written,
+					...(args.score !== null
+						? { not_interested: { value: false, updatedAt: null } }
+						: {}),
+					...(updated.cleared?.wantToSeeAddedAt
+						? { want_to_see: { value: false, updatedAt: null } }
+						: {}),
+				}
+			: undefined
 		// Clearing an already absent score has a zero-row delete, but its native settlement still repairs tracking.
 		if (updated.status !== "success" && args.score !== null)
 			throw new Error("Rating write failed")
 	} else if (name === "set_want_to_see") {
 		if (args.want_to_see === undefined)
 			return { refused: "Choose whether to add or remove Want to See" }
+		let nativeWritten: TitleMarksWritten["want_to_see"]
 		if (title.media_type === "show" && args.want_to_see) {
 			const accepted = await applyShowTrackingAction(userId, {
 				id: title.tmdb_id,
 				event: { type: "wantToSee", on: true },
 			})
 			if (accepted.status !== "applied") return { refused: accepted.refused }
+			nativeWritten = accepted.wishlistWritten
 		}
-		await updateWishList({
+		const updated = await updateWishList({
 			user_id: userId,
 			tmdb_id: title.tmdb_id,
 			media_type: title.media_type,
 			action: args.want_to_see ? "add" : "remove",
 		})
+		titleWritten = {
+			...(nativeWritten || updated.written
+				? { want_to_see: nativeWritten ?? updated.written }
+				: {}),
+			...(args.want_to_see
+				? { not_interested: { value: false, updatedAt: null } }
+				: {}),
+		}
 	} else if (name === "set_not_interested") {
 		if (args.not_interested === undefined)
 			return { refused: "Choose whether to set or clear Not interested" }
@@ -429,6 +463,7 @@ export async function applyTitleWrite(
 				event,
 			})
 			if (applied.status !== "applied") return { refused: applied.refused }
+			recordClears(applied.cleared)
 			appliedEvent = event.type
 		}
 	} else if (name === "undo_watch") {
@@ -464,7 +499,11 @@ export async function applyTitleWrite(
 		const when = args.date
 			? { precision: "day" as const, day: args.date }
 			: { precision: "unknown" as const }
-		let applied: { status: string; refused: string | null }
+		let applied: {
+			status: string
+			refused: string | null
+			cleared?: { wantToSeeAddedAt: string | null; notInterested: boolean }
+		}
 		if (title.media_type === "movie") {
 			if (
 				args.season !== undefined ||
@@ -529,7 +568,7 @@ export async function applyTitleWrite(
 					if (dated.status !== "applied")
 						throw new Error("Could not set range watch date")
 				}
-				applied = { status: "applied", refused: null }
+				applied = { status: "applied", refused: null, cleared: result.cleared }
 			} else {
 				if (season === undefined || episode === undefined)
 					return {
@@ -543,10 +582,12 @@ export async function applyTitleWrite(
 			}
 		}
 		if (applied.status !== "applied") return { refused: applied.refused }
+		recordClears(applied.cleared)
 	} else return { refused: "Unsupported write tool" }
 	return {
 		removedWatchId,
 		event: appliedEvent,
+		...(titleWritten ? { title_written: titleWritten } : {}),
 		...(partWritten ? { part_written: partWritten } : {}),
 		...(watchAdded ? { watch_added: watchAdded } : {}),
 	}

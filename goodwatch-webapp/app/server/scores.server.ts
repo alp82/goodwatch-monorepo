@@ -33,6 +33,8 @@ export interface UpdateScoresPayload {
 
 export interface UpdateScoresResult {
 	status: "success" | "failed"
+	written?: { value: number | null; updatedAt: string | null }
+	cleared?: { wantToSeeAddedAt: string | null; notInterested: boolean }
 }
 
 /**
@@ -61,23 +63,16 @@ export const updateScores = async ({
 		"SELECT score FROM user_score WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
 		[user_id, tmdb_id, media_type],
 	)
+	const writtenAt = new Date()
 	let result: { rowcount?: number }
 
 	if (score) {
-		// Use upsert for adding/updating scores
 		result = await upsert({
 			table: "user_score",
-			data: [
-				{
-				user_id,
-				tmdb_id,
-				media_type: media_type,
-				score,
-				review: review || null,
-			},
-			],
+			data: [{ user_id, tmdb_id, media_type, score, review: review || null }],
 			conflictColumns: ["user_id", "tmdb_id", "media_type"],
-			ignoreUpdate: false, // Update score and review on conflict
+			ignoreUpdate: false,
+			timestamp: writtenAt,
 		})
 	} else {
 		// Use execute for deleting scores
@@ -101,6 +96,7 @@ export const updateScores = async ({
 	if (result.rowcount) markPersonalOrderChanged(user_id)
 	if (score != null) await clearNotInterested(user_id, tmdb_id, media_type)
 
+	let cleared: UpdateScoresResult["cleared"]
 	let wasReset = false
 	try {
 		// After the score is stored: the writer reads it by its key. It resets the member data when it applied.
@@ -110,6 +106,7 @@ export const updateScores = async ({
 			{ type: "rate", score: score || null, byHand: by_hand !== false },
 		)
 		wasReset = tracked.status === "applied"
+		cleared = tracked.cleared
 	} finally {
 		// Also when tracking refused or failed: the score itself is stored.
 		if (!wasReset) await resetUserDataCache({ user_id })
@@ -119,5 +116,10 @@ export const updateScores = async ({
 
 	return {
 		status: (result.rowcount || 0) >= 1 ? "success" : "failed",
+		cleared,
+		written: {
+			value: score ?? null,
+			updatedAt: score ? writtenAt.toISOString() : null,
+		},
 	}
 }

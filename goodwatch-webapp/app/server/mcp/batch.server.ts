@@ -1,8 +1,10 @@
+import type { TitleMark, TitleMarksWritten } from "./title-marks.ts"
+import type { restoreTitleMark } from "./title-mark-store.server.ts"
 // Batches of MCP title writes: up to MAX_BATCH_ITEMS titles in one call of rate_title, set_want_to_see,
 // set_not_interested, set_show_status or log_watch, and undo_watch with batch_id to take a whole call back.
 //
 // - Every item is validated, resolved and written on its own. A not found, ambiguous or invalid item writes
-//   nothing; the others still go ahead. Each item reports what it did, from the rows read back after the writes.
+//   nothing; the others still go ahead. Title marks report the writer's values and stamps; tracking is read back.
 // - The member's data is read once before and once after, not twice per title. Wishlist and Not interested
 //   changes go out as multi-row statements. Ratings, watches and show states go through the site's own writers,
 //   one title at a time, since each settles the title's tracking rows; the member-wide refresh their writers
@@ -43,6 +45,7 @@ type Resolved =
 type Summary = ReturnType<Ports["summary"]>
 
 export interface Ports {
+	restoreTitleMark: typeof restoreTitleMark
 	/** A title by ID, or by name and optional year as search_titles finds it. A batch passes only names. */
 	resolve(selector: ReadArgs, origin: string): Promise<Resolved>
 	/** Catalog titles by canonical key ("movie:603"), at most 60 per call; missing keys are absent. */
@@ -70,12 +73,12 @@ export interface Ports {
 		user_id: string
 		titles: { tmdb_id: number; media_type: "movie" | "show"; addedAt?: Date }[]
 		action: "add" | "remove"
-	}): Promise<unknown>
+	}): Promise<{ written?: TitleMarksWritten } | void>
 	notInterestedMany(input: {
 		user_id: string
 		titles: { tmdb_id: number; media_type: "movie" | "show" }[]
 		action: "add" | "remove"
-	}): Promise<unknown>
+	}): Promise<{ written?: TitleMarksWritten } | void>
 	/** Runs `work` with member data resets held back to one at its end. */
 	deferResets<T>(work: () => Promise<T>): Promise<T>
 	resetUserData(userId: string): Promise<unknown>
@@ -218,6 +221,7 @@ interface Row {
 	more_candidates?: boolean
 	before?: Snapshot
 	write?: TitleWrite | "bulk" | "skipped" | "failed"
+	titleWritten?: TitleMarksWritten
 }
 
 /** Whether the item asks for what the title already has, so it is reported without a write. */
@@ -401,17 +405,20 @@ export async function runBatch(
 			group: typeof pending,
 			write: (
 				titles: { tmdb_id: number; media_type: "movie" | "show" }[],
-			) => Promise<unknown>,
+			) => Promise<{ written?: TitleMarksWritten } | void>,
 		) => {
 			if (!group.length) return
 			try {
-				await write(
+				const answer = await write(
 					group.map((row) => ({
 						tmdb_id: row.title.tmdb_id,
 						media_type: row.title.media_type,
 					})),
 				)
-				for (const row of group) row.write = "bulk"
+				for (const row of group) {
+					row.write = "bulk"
+					row.titleWritten = answer?.written
+				}
 			} catch {
 				for (const row of group) row.write = "failed"
 			}
@@ -509,6 +516,17 @@ export async function runBatch(
 		if (!now) return unconfirmed
 		const watches = watchChanges(name, was, now, row.actionId)
 		const all = changesOf(was, now)
+		const titleWritten =
+			row.titleWritten ??
+			(typeof row.write === "object" && "title_written" in row.write
+				? row.write.title_written
+				: undefined)
+		if (!part)
+			for (const key of ["score", "want_to_see", "not_interested"] as const) {
+				delete all[key]
+				const own = titleWritten?.[key]
+				if (own && was[key] !== own.value) all[key] = [was[key], own.value]
+			}
 		// What this item's own part write left. The read-back may already show another page's later change, which
 		// isn't this batch's to report or to undo (#759 review).
 		const written =
@@ -559,6 +577,15 @@ export async function runBatch(
 					}
 				: {}),
 			changes,
+			...(!part
+				? {
+						title_written: Object.fromEntries(
+							Object.entries(titleWritten ?? {}).filter(
+								([key]) => key in changes,
+							),
+						),
+					}
+				: {}),
 			// Undo puts this part's score back, by its key, while it is still what `part_written` says. A clear, or a
 			// write that wasn't confirmed, leaves nothing to recognize it by: Undo isn't offered, and the result says so.
 			...(part
@@ -651,6 +678,15 @@ const receiptItem = z.object({
 		.partialRecord(z.enum(MARKS), z.tuple([markValue, markValue]))
 		.optional(),
 	want_to_see_added_at: z.unknown().optional(),
+	title_written: z
+		.partialRecord(
+			z.enum(["score", "want_to_see", "not_interested"]),
+			z.object({
+				value: z.union([z.number(), z.boolean(), z.null()]),
+				updatedAt: z.string().max(40).nullable(),
+			}),
+		)
+		.optional(),
 	part_target: z
 		.object({
 			season: z.number().int().min(1),
@@ -753,6 +789,7 @@ export async function undoBatch(
 			notes: string[]
 			/** A part score Undo put back: [what the batch left, what it is now]. */
 			part?: [unknown, unknown]
+			marks?: Partial<Record<TitleMark, [unknown, unknown]>>
 		}
 	>()
 	let wrote = false
@@ -766,6 +803,7 @@ export async function undoBatch(
 				failed: boolean
 				notes: string[]
 				part?: [unknown, unknown]
+				marks?: Partial<Record<TitleMark, [unknown, unknown]>>
 			} = { skipped: [], failed: false, notes: [] }
 			outcomes.set(item.index, result)
 			// What to do with one mark the batch changed: nothing, put it back, or keep the member's newer value.
@@ -896,73 +934,67 @@ export async function undoBatch(
 						} else if (restored === "changed") result.skipped.push("part_score")
 					}
 				}
-				// 3. The score.
-				const score = field("score")
-				const oldScore = was("score")
-				if (
-					score === "revert" &&
-					(oldScore === null ||
-						(typeof oldScore === "number" &&
-							Number.isInteger(oldScore) &&
-							oldScore >= 1 &&
-							oldScore <= 10))
-				) {
-					wrote = tasteWrite = true
-					await ports.updateScores({
+				// Restore marks only from a confirmed write, with the same optimistic protection as part scores.
+				let scoreAfter: number | null = current.score
+				for (const key of ["score", "not_interested", "want_to_see"] as const) {
+					if (!changes[key]) continue
+					const expected = item.title_written?.[key]
+					if (!expected) {
+						result.notes.push(
+							`This ${key} write wasn't confirmed, so Undo can't restore it safely.`,
+						)
+						continue
+					}
+					if (
+						key === "not_interested" &&
+						was(key) === true &&
+						(scoreAfter !== null ||
+							result.notes.length ||
+							current.watches.some(
+								(w) => !removed.has(w.id) && w.origin !== "score",
+							) ||
+							(title.media_type === "show" &&
+								(field("status") === "revert"
+									? was("status")
+									: current.status) !== "not_started"))
+					) {
+						result.notes.push(
+							"Not interested isn't put back on a title you have rated, watched or started.",
+						)
+						continue
+					}
+					const value = was(key)
+					if (
+						key === "score"
+							? !(
+									value === null ||
+									(typeof value === "number" &&
+										Number.isInteger(value) &&
+										value >= 1 &&
+										value <= 10)
+								)
+							: typeof value !== "boolean"
+					)
+						continue
+					const restored = await ports.restoreTitleMark({
 						user_id: userId,
 						tmdb_id: title.tmdb_id,
 						media_type: title.media_type,
-						score: oldScore,
-						review: current.review ?? undefined,
+						mark: key,
+						expected,
+						value: value as number | boolean | null,
+						addedAt:
+							typeof item.want_to_see_added_at === "string"
+								? item.want_to_see_added_at
+								: null,
 					})
-				} else if (score === "changed") result.skipped.push("score")
-				// 4. Not interested before Want to See: putting a title on the Wishlist clears Not interested.
-				// Put back only where the single tool would allow it: unrated, unwatched, and a show still Not started.
-				const hidden = field("not_interested")
-				const scoreAfter = score === "revert" ? oldScore : current.score
-				const statusAfter =
-					field("status") === "revert" ? was("status") : current.status
-				const allowed =
-					scoreAfter === null &&
-					!result.notes.length &&
-					!current.watches.some(
-						(w) => !removed.has(w.id) && w.origin !== "score",
-					) &&
-					(title.media_type === "movie" || statusAfter === "not_started")
-				if (hidden === "revert" && was("not_interested") && !allowed)
-					result.notes.push(
-						"Not interested isn't put back on a title you have rated, watched or started.",
-					)
-				else if (hidden === "revert") {
-					wrote = tasteWrite = true
-					await ports.notInterestedMany({
-						user_id: userId,
-						titles: [{ tmdb_id: title.tmdb_id, media_type: title.media_type }],
-						action: was("not_interested") ? "add" : "remove",
-					})
-				} else if (hidden === "changed") result.skipped.push("not_interested")
-				// A watch or score of the batch may have taken the title off the Wishlist: it goes back at its old time.
-				const wanted = field("want_to_see")
-				if (wanted === "revert") {
-					const addedAt =
-						typeof item.want_to_see_added_at === "string"
-							? new Date(item.want_to_see_added_at)
-							: null
-					wrote = tasteWrite = true
-					await ports.wishlistMany({
-						user_id: userId,
-						titles: [
-							{
-								tmdb_id: title.tmdb_id,
-								media_type: title.media_type,
-								...(addedAt && addedAt.getTime() <= Date.now()
-									? { addedAt }
-									: {}),
-							},
-						],
-						action: was("want_to_see") ? "add" : "remove",
-					})
-				} else if (wanted === "changed") result.skipped.push("want_to_see")
+					if (restored === "restored") {
+						wrote = tasteWrite = true
+						;(result.marks ??= {})[key] = [expected.value, value]
+					}
+					if (restored === "changed") result.skipped.push(key)
+					else if (key === "score") scoreAfter = value as number | null
+				}
 			} catch {
 				result.failed = true
 			}
@@ -985,6 +1017,10 @@ export async function undoBatch(
 		}
 		const changes = item.changes ?? {}
 		const all = now ? changesOf(current, now) : {}
+		for (const key of ["score", "want_to_see", "not_interested"] as const) {
+			delete all[key]
+			if (outcome.marks?.[key]) all[key] = outcome.marks[key]
+		}
 		// A part score item reports only its part, from what Undo did by the part's key: the title's read names the
 		// part by season and episode, which a renumbering may have moved.
 		const undone: Partial<Record<Mark, [unknown, unknown]>> = item.part_target
@@ -1009,8 +1045,7 @@ export async function undoBatch(
 				(item.undo?.group && w.group_id === item.undo.group) ||
 				item.undo?.watch_ids?.includes(w.id) ||
 				(item.undo?.score_watch?.id === w.id &&
-					Date.parse(w.record_created_at) ===
-						item.undo.score_watch.created_at),
+					Date.parse(w.record_created_at) === item.undo.score_watch.created_at),
 		)
 		// Only what the batch changed counts: the member may have changed other marks of the title since.
 		const mismatched = (

@@ -1,3 +1,7 @@
+import { restoreTitleMark } from "./title-mark-store.server.ts"
+import { applyTrackingEvent } from "../tracking.server"
+import { markPersonalOrderChanged } from "../personal-order/rebuild.server.ts"
+import { resetOnboardingMediaCache } from "../onboarding-media.server"
 import { createHash } from "node:crypto"
 import { titleKey } from "../../utils/title-key"
 import {
@@ -55,6 +59,28 @@ export interface WritePorts extends Ports {
 export const liveWritePorts: WritePorts = {
 	readAction,
 	runAction,
+	async restoreTitleMark(input) {
+		const result = await restoreTitleMark(input)
+		if (result === "restored") {
+			try {
+				if (input.mark === "score")
+					await applyTrackingEvent(
+						input.user_id,
+						{ mediaType: input.media_type, tmdbId: input.tmdb_id },
+						{ type: "rate", score: input.value as Score | null, byHand: true },
+					)
+			} finally {
+				markPersonalOrderChanged(input.user_id)
+				await resetUserDataCache({ user_id: input.user_id })
+				await markTasteChanged(input.user_id)
+				await resetOnboardingMediaCache({
+					userId: input.user_id,
+					searchTerm: "",
+				})
+			}
+		}
+		return result
+	},
 	resolve,
 	async titlesById(keys) {
 		const displays = await getDisplayFields(

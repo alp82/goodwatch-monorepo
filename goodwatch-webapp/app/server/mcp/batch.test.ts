@@ -143,6 +143,7 @@ function fakeLibrary() {
 		scoreWatchRemovals: [] as string[],
 	}
 	/** Season and episode scores, apart from the title's own score: `user|show:id|<store key>`. */
+	const titleStamps = new Map<string, string>()
 	const parts = new Map<string, number>()
 	/** TMDB episode ids by `show|season|episode`; renumbering moves an id to new coordinates. */
 	const episodeIds = new Map<string, number>()
@@ -380,6 +381,7 @@ function fakeLibrary() {
 				}
 			} else if (name === "rate_title") {
 				marks.score = args.score ?? null
+				titleStamps.set(`${keyOf(userId, title)}|score`, stamp())
 				marks.not_interested = false
 				if (title.media_type === "movie") settleMovie(marks, title.tmdb_id)
 			} else if (name === "set_want_to_see") {
@@ -430,12 +432,38 @@ function fakeLibrary() {
 					return { removedWatchId: null, event: "hold" }
 				}
 			}
-			return { removedWatchId: null, event: null }
+			return {
+				removedWatchId: null,
+				event: null,
+				title_written:
+					name === "rate_title"
+						? {
+								score: {
+									value: args.score ?? null,
+									updatedAt:
+										args.score == null
+											? null
+											: titleStamps.get(`${keyOf(userId, title)}|score`)!,
+								},
+								not_interested: { value: false, updatedAt: null },
+							}
+						: name === "set_want_to_see"
+							? {
+									want_to_see: { value: !!args.want_to_see, updatedAt: null },
+								}
+							: name === "log_watch" && title.media_type === "movie"
+								? {
+										want_to_see: { value: false, updatedAt: null },
+									}
+								: undefined,
+			}
 		},
 		async wishlistMany({ user_id, titles: list, action }) {
+			const updatedAt = stamp()
 			calls.wishlistMany.push({ action, count: list.length })
 			for (const t of list) {
 				const marks = marksOf(user_id, t)
+				titleStamps.set(`${keyOf(user_id, t)}|want_to_see`, updatedAt)
 				marks.want_to_see = action === "add"
 				marks.want_to_see_added_at =
 					action === "add"
@@ -443,13 +471,37 @@ function fakeLibrary() {
 						: null
 				if (action === "add") marks.not_interested = false
 			}
+			return {
+				written: {
+					want_to_see: {
+						value: action === "add",
+						updatedAt: action === "add" ? updatedAt : null,
+					},
+					...(action === "add"
+						? { not_interested: { value: false, updatedAt: null } }
+						: {}),
+				},
+			}
 		},
 		async notInterestedMany({ user_id, titles: list, action }) {
+			const updatedAt = stamp()
 			calls.notInterestedMany.push({ action, count: list.length })
 			for (const t of list) {
 				const marks = marksOf(user_id, t)
+				titleStamps.set(`${keyOf(user_id, t)}|not_interested`, updatedAt)
 				marks.not_interested = action === "add"
 				if (action === "add") marks.want_to_see = false
+			}
+			return {
+				written: {
+					not_interested: {
+						value: action === "add",
+						updatedAt: action === "add" ? updatedAt : null,
+					},
+					...(action === "add"
+						? { want_to_see: { value: false, updatedAt: null } }
+						: {}),
+				},
 			}
 		},
 		async deferResets(work) {
@@ -477,6 +529,37 @@ function fakeLibrary() {
 			const marks = marksOf(user_id, { media_type, tmdb_id })
 			marks.score = score
 			if (media_type === "movie") settleMovie(marks, tmdb_id)
+		},
+		async restoreTitleMark({
+			user_id,
+			tmdb_id,
+			media_type,
+			mark,
+			expected,
+			value,
+			addedAt,
+		}) {
+			const title = { tmdb_id, media_type }
+			const marks = marksOf(user_id, title)
+			const current = marks[mark]
+			if (
+				current !== expected.value ||
+				(current !== null &&
+					current !== false &&
+					titleStamps.get(`${keyOf(user_id, title)}|${mark}`) !==
+						expected.updatedAt)
+			)
+				return "changed"
+			if (current === value) return "already"
+			if (mark === "score") {
+				marks.score = value as number | null
+				if (media_type === "movie") settleMovie(marks, tmdb_id)
+			} else {
+				marks[mark] = value as boolean
+				if (mark === "want_to_see")
+					marks.want_to_see_added_at = value ? (addedAt ?? null) : null
+			}
+			return "restored"
 		},
 		async restorePartScore({ user_id, tmdb_id, key: part, expected, score }) {
 			const key = `${user_id}|show:${tmdb_id}|${part}`
@@ -530,7 +613,11 @@ function fakeLibrary() {
 	}
 	const set = (userId: string, id: string, values: Partial<Marks>) => {
 		const [media_type, raw] = id.split(":")
-		Object.assign(marksOf(userId, { media_type, tmdb_id: Number(raw) }), values)
+		const title = { media_type, tmdb_id: Number(raw) }
+		Object.assign(marksOf(userId, title), values)
+		for (const mark of ["score", "want_to_see", "not_interested"] as const)
+			if (mark in values)
+				titleStamps.set(`${keyOf(userId, title)}|${mark}`, stamp())
 	}
 	const get = (userId: string, id: string) => {
 		const [media_type, raw] = id.split(":")
@@ -702,9 +789,13 @@ test("A batch of 50 ratings writes title by title with resets held to one", asyn
 		},
 		status: "done",
 		changes: { score: [null, 1], status: [null, "seen"], watch_count: [0, 1] },
+		title_written: {
+			score: { value: 1, updatedAt: "2026-10-24T00:00:00.001Z" },
+		},
 		watches_added: 1,
 	})
-	assert.ok(JSON.stringify(result).length < 20_000)
+	// The write stamp on each receipt adds optimistic Undo protection.
+	assert.ok(JSON.stringify(result).length < 25_000)
 })
 
 test("51 items are refused with a message to split, before any write", async () => {
@@ -1144,7 +1235,7 @@ test("Undo puts Not interested back only on a title that is still unrated and un
 	assert.equal(lib.get(ME, "movie:1002").not_interested, false)
 })
 
-test("An undo with nothing to take back makes no reset and no taste rebuild", async () => {
+test("An undo keeps a newer removal without a reset or taste rebuild", async () => {
 	const lib = fakeLibrary()
 	await write(lib, "set_want_to_see", {
 		action_id: "w",
@@ -1160,7 +1251,7 @@ test("An undo with nothing to take back makes no reset and no taste rebuild", as
 	})
 	assert.deepEqual(
 		itemsOf(undone).map((i) => i.status),
-		["already_undone"],
+		["changed_since"],
 	)
 	assert.equal(lib.calls.resets, resets)
 	assert.equal(lib.calls.taste, taste)
@@ -1282,9 +1373,9 @@ test("rate_title with a season, or a season and episode, scores only that part o
 		[["score-e102", "score"]],
 	)
 	assert.deepEqual(
-		(
-			result.changes as { watches_added: { id: string }[] }
-		).watches_added.map((w) => w.id),
+		(result.changes as { watches_added: { id: string }[] }).watches_added.map(
+			(w) => w.id,
+		),
 		["score-e102"],
 	)
 	assert.equal(lib.part(ME, 3001, 1, 2), 9)
@@ -1827,4 +1918,184 @@ test("A batch says which of its changes Undo can't take back, and only when it h
 		String(undo?.description),
 		/except a cleared season or episode score, or a write that wasn't confirmed, which it reports as not_undoable/,
 	)
+})
+
+for (const [tool, initial, requested, later, field] of [
+	["rate_title", 4, 8, 9, "score"],
+	["set_want_to_see", true, false, true, "want_to_see"],
+	["set_not_interested", true, false, true, "not_interested"],
+] as const) {
+	test(`Whole-title ${field} receipt owns its write across the read-back race (#761)`, async () => {
+		const lib = fakeLibrary()
+		lib.set(ME, "show:3001", { [field]: initial })
+		const read = lib.ports.userData
+		let reads = 0
+		lib.ports.userData = async (...args) => {
+			if (++reads === 2) lib.set(ME, "show:3001", { [field]: later })
+			return read(...args)
+		}
+		const result = await write(lib, tool, {
+			action_id: "title-race",
+			items: [{ title_id: "show:3001", [field]: requested }],
+		})
+		assert.deepEqual(
+			(result.items as { changes: Record<string, unknown> }[])[0].changes[
+				field
+			],
+			[initial, requested],
+		)
+		const undone = await write(lib, "undo_watch", {
+			action_id: "undo-title-race",
+			batch_id: "title-race",
+		})
+		assert.equal(lib.get(ME, "show:3001")[field], later)
+		assert.equal(itemsOf(undone)[0].status, "changed_since")
+	})
+}
+
+for (const [tool, field, requested] of [
+	["rate_title", "score", 8],
+	["set_want_to_see", "want_to_see", true],
+	["set_not_interested", "not_interested", true],
+] as const) {
+	test(`Undo keeps another tab's same-value ${field} rewrite (#761)`, async () => {
+		const lib = fakeLibrary()
+		await write(lib, tool, {
+			action_id: "same-value",
+			items: [{ title_id: "movie:1001", [field]: requested }],
+		})
+		lib.set(ME, "movie:1001", { [field]: requested })
+		const undone = await write(lib, "undo_watch", {
+			action_id: "undo-same-value",
+			batch_id: "same-value",
+		})
+		assert.equal(itemsOf(undone)[0].status, "changed_since")
+		assert.equal(lib.get(ME, "movie:1001")[field], requested)
+	})
+}
+
+test("Whole-title restores use the inspected row version, including conflicts during Undo (#761)", async () => {
+	const { restoreTitleMark } = await import("./title-mark-store.server.ts")
+	const updatedAt = "2026-10-24T00:00:00.001Z"
+	for (const mark of ["score", "want_to_see", "not_interested"] as const) {
+		for (const conflict of [false, true]) {
+			const statements: { sql: string; params: unknown[] }[] = []
+			const db = {
+				async query<T>() {
+					return [
+						{ score: 8, updated_at: updatedAt, _seq_no: 12, _primary_term: 3 },
+					] as T[]
+				},
+				async execute(sql: string, params: unknown[]) {
+					statements.push({ sql, params })
+					return { rowcount: conflict ? 0 : 1 }
+				},
+			}
+			const answer = await restoreTitleMark(
+				{
+					user_id: ME,
+					tmdb_id: 1001,
+					media_type: "movie",
+					mark,
+					expected: { value: mark === "score" ? 8 : true, updatedAt },
+					value: mark === "score" ? 4 : false,
+				},
+				db,
+			)
+			assert.equal(answer, conflict ? "changed" : "restored")
+			assert.equal(statements.length, 1)
+			assert.match(statements[0].sql, /AND _seq_no = \? AND _primary_term = \?/)
+			assert.deepEqual(statements[0].params.slice(-2), [12, 3])
+		}
+		const statements: string[] = []
+		const db = {
+			async query<T>() {
+				return [] as T[]
+			},
+			async execute(sql: string) {
+				statements.push(sql)
+				return { rowcount: 0 }
+			},
+		}
+		assert.equal(
+			await restoreTitleMark(
+				{
+					user_id: ME,
+					tmdb_id: 1001,
+					media_type: "movie",
+					mark,
+					expected: { value: mark === "score" ? null : false, updatedAt: null },
+					value: mark === "score" ? 4 : true,
+				},
+				db,
+			),
+			"changed",
+		)
+		assert.match(statements[0], /ON CONFLICT .* DO NOTHING/)
+	}
+})
+
+test("A newer title-mark stamp prevents any Undo statement (#761)", async () => {
+	const { restoreTitleMark } = await import("./title-mark-store.server.ts")
+	for (const mark of ["score", "want_to_see", "not_interested"] as const) {
+		const answer = await restoreTitleMark(
+			{
+				user_id: ME,
+				tmdb_id: 1001,
+				media_type: "movie",
+				mark,
+				expected: {
+					value: mark === "score" ? 8 : true,
+					updatedAt: "2026-10-24T00:00:00.001Z",
+				},
+				value: mark === "score" ? 4 : false,
+			},
+			{
+				async query<T>() {
+					return [
+						{
+							score: 8,
+							updated_at: "2026-10-24T00:00:00.002Z",
+							_seq_no: 13,
+							_primary_term: 3,
+						},
+					] as T[]
+				},
+				async execute() {
+					assert.fail("A changed mark must not be written")
+				},
+			},
+		)
+		assert.equal(answer, "changed")
+	}
+})
+
+test("Undo skips a whole-title write landing after its initial snapshot (#761)", async () => {
+	const lib = fakeLibrary()
+	lib.set(ME, "show:3001", { score: 4 })
+	await write(lib, "rate_title", {
+		action_id: "undo-race",
+		items: [{ title_id: "show:3001", score: 8 }],
+	})
+	const restore = lib.ports.restoreTitleMark
+	lib.ports.restoreTitleMark = async (...args) => {
+		lib.set(ME, "show:3001", { score: 9 })
+		return restore(...args)
+	}
+	const undone = await write(lib, "undo_watch", {
+		action_id: "undo-race-result",
+		batch_id: "undo-race",
+	})
+	assert.equal(itemsOf(undone)[0].status, "changed_since")
+	assert.deepEqual((undone.items as { kept: string[] }[])[0].kept, ["score"])
+	assert.equal(lib.get(ME, "show:3001").score, 9)
+})
+
+test("Old whole-title receipts without a write stamp cannot overwrite a score (#761)", async () => {
+ const lib = fakeLibrary()
+ const result = await write(lib, "rate_title", { action_id: "old-receipt", items: [{ title_id: "show:3001", score: 8 }] })
+ delete (result.items as { title_written?: unknown }[])[0].title_written
+ const undone = await write(lib, "undo_watch", { action_id: "undo-old-receipt", batch_id: "old-receipt" })
+ assert.equal(itemsOf(undone)[0].status, "not_undoable")
+ assert.equal(lib.get(ME, "show:3001").score, 8)
 })

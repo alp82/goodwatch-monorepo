@@ -25,6 +25,7 @@ export interface UpdateWishListPayload {
 
 export interface UpdateWishListResult {
 	status: "success" | "failed"
+	written?: { value: boolean; updatedAt: string | null }
 }
 
 export const updateWishList = async ({
@@ -42,6 +43,7 @@ export const updateWishList = async ({
 
 	tmdb_id = canonicalTitleId(media_type, tmdb_id)
 
+	const writtenAt = new Date()
 	let result: { rowcount?: number }
 
 	if (action === "add") {
@@ -58,6 +60,7 @@ export const updateWishList = async ({
 			],
 			conflictColumns: ["user_id", "tmdb_id", "media_type"],
 			ignoreUpdate: true, // Just ignore if already exists
+			timestamp: writtenAt,
 		})
 	} else {
 		// Use execute for deleting wishlist items
@@ -84,5 +87,6 @@ export const updateWishList = async ({
 
 	return {
 		status: (result.rowcount || 0) >= 1 ? "success" : "failed",
+		...(action === "remove" || result.rowcount ? { written: { value: action === "add", updatedAt: action === "add" ? writtenAt.toISOString() : null } } : {}),
 	}
 }

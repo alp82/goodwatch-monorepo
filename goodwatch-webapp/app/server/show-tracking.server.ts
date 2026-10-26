@@ -394,7 +394,9 @@ export function parseShowAction(body: unknown): ShowAction | null {
 export async function applyShowTrackingAction(
 	userId: string,
 	action: ShowAction,
-): Promise<ActionAnswer> {
+): Promise<ActionAnswer & {
+	wishlistWritten?: { value: boolean; updatedAt: string | null }
+}> {
 	const title: TrackedTitle = {
 		mediaType: "show",
 		tmdbId: canonicalTitleId("show", action.id),
@@ -485,8 +487,9 @@ export async function applyShowTrackingAction(
 			cleared: result.cleared,
 		}
 	const notStarted = (stored.state?.state ?? "not_started") === "not_started"
+	let wishlistWrite: Awaited<ReturnType<typeof updateWishList>> | undefined
 	if (event.type === "wantToSee" && notStarted)
-		await updateWishList({
+		wishlistWrite = await updateWishList({
 			user_id: userId,
 			tmdb_id: title.tmdbId,
 			media_type: "show",
@@ -506,6 +509,7 @@ export async function applyShowTrackingAction(
 		),
 		deleted: result.deleted,
 		cleared: result.cleared,
+		wishlistWritten: wishlistWrite?.written,
 	}
 }
 

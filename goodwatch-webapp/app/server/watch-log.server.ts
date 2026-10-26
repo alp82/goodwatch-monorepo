@@ -48,6 +48,8 @@ export interface WatchLogAnswer {
 	refused: string | null
 	/** The log after the action, or as it stays after a refusal. */
 	watches: WatchLogEntry[]
+	/** Intention rows this action itself removed, for batch Undo receipts. */
+	cleared?: { wantToSeeAddedAt: string | null; notInterested: boolean }
 }
 
 /**
@@ -162,5 +164,6 @@ export async function applyWatchLogAction(
 		status: result.status,
 		refused: result.refused,
 		watches: await getMovieWatchLog(userId, movieId),
+		cleared: result.cleared,
 	}
 }

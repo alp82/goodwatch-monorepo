@@ -495,6 +495,8 @@ interface UpsertOptions {
 	data: Record<string, any>[]
 	conflictColumns: string[]
 	ignoreUpdate?: boolean
+	/** A caller-owned stamp to identify this write in an optimistic Undo receipt. */
+	timestamp?: Date
 }
 
 const upsertRows = async ({
@@ -502,11 +504,12 @@ const upsertRows = async ({
 	data,
 	conflictColumns,
 	ignoreUpdate = false,
+	timestamp,
 }: UpsertOptions) => {
 	if (!data.length) return { rowcount: 0 }
 
 	// Add timestamps to all data rows
-	const now = new Date()
+	const now = timestamp ?? new Date()
 	const dataWithTimestamps = data.map(row => ({
 		...row,
 		// Add created_at if not present (will be used for inserts)
