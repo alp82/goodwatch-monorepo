@@ -8,6 +8,52 @@ and temporarily hold the backup cron; those changes were restored.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Q42 — stopped at changed preflight,October26,12:44–12:46 UTC
+
+**Backups recovered before any Q42 mutation. All coordinators now verify both snapshots SUCCESS:**
+
+| Snapshot, repositorygoodwatch-db-backup-v2 | Started UTC | Finished UTC | Shards/failures |
+| --- | --- | --- | --- |
+| `hourly_20261026_110502` | 11:05:02.127 | **11:40:33.416** | 567 / none |
+| `hourly_20261026_120501` | 12:05:01.818 | **12:05:17.641** | 567 / none |
+
+The11:05 helper had timed out at11:35, but the native snapshot subsequently completed; its client
+failure did not mean the native snapshot failed. The12:05 scheduled run logged successful creation,
+verification and `Backup run finished` at **12:06:44 UTC**. No manual snapshot was necessary or created.
+This supersedes the earlier observations of IN_PROGRESS and a failed fresh-backup gate.
+[Q42 receipts, all-node queries, cron/settings and page samples](q42-preflight-stop.json).
+
+Owner approved the proposed five-step recovery, with rebalance to remainnone until tonight, but
+also explicitly required stopping at the first unexpected result. Fresh checks showed the approved
+**primary** relocation was gone: person_appeared_in4 primary oncrate-01 was STARTED/STARTED, with
+null relocating_node. Its **replica oncrate-03** is now STARTED/RELOCATING towardcrate-02; the other
+pending move is person_worked_on5 **replica oncrate-03→crate-02**. All three coordinators agree and
+report145 GREEN relations, zero missing/underreplicated shards. These are different copies/roles
+from the blocking primary on which the target-only approval was based. **Stopped before mutation;
+did not redirect the approved command to the now-relocating replica.**
+
+No rebalance hold, cron hold, CANCEL, DROP, CREATE, replica change, decommission, restart or KILL
+was executed. **Rebalance remainsall**, allocationall, gracefulPRIMARIES/forcefalse/2h. The instruction
+to keep rebalance none would apply after reaching that step; because preflight stopped first, no
+hold was applied. Do not hand over the cluster as though balancing is disabled for tonight.
+
+Cron remains byte-for-byte original (SHA256
+`374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37`), with one active named backup
+entry. No hold/restoration was needed; the12:05 job had already finished before this attempt, so
+there was no manual/scheduled collision.
+
+A local strict first-failure watcher checked the three requested URLs in parallel every10s with
+5s curl timeouts, **12:44:36–12:45:46 UTC**: **24/24 HTTP200**, no transport failures or alarms,
+maximum2.293s. The baseline first round was slower than subsequent requests but below3s.
+The watcher was stopped locally with SIGINT after the preflight stop; no production process was
+signalled. Watcher selection tests confirm first non200/transport failure triggers immediately.
+
+Validation: parsed all receipts; two SUCCESS snapshots and exact changed shard roles agree through
+all3 coordinators;567 shards/no failures each; original cron hash; all/all settings;24 successful
+page samples; local diff check. No application code or production state changed. Future restart
+still needs fresh gates and the unresolved health-wait cancellation qualification; successful
+snapshots do not prove the old crate-02 closing-store locks are cleared.
+
 ## Backup-first follow-up — read-only,11:39 UTC
 
 [Current copies, snapshot concurrency, target-cancel and conditional DROP proposal](backup-recovery-source-notes.md),

@@ -1,0 +1,1036 @@
+{
+  "recorded_utc": "2026-10-26T12:47:46.458119+00:00",
+  "scope": "Q42 approved recovery with stop on first unexpected result",
+  "result": "STOPPED_AT_PREFLIGHT_CHANGED_SNAPSHOT_AND_COPY_STATE",
+  "production_mutations": [],
+  "manual_snapshot_created": false,
+  "rebalance_hold_applied": false,
+  "cron_hold_applied": false,
+  "coordinators": [
+    {
+      "host": 11,
+      "utc": "2026-10-26T12:44:45.879877+00:00",
+      "queries": {
+        "snapshots": {
+          "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND (name LIKE 'hourly_20261026_11%' OR name LIKE 'hourly_20261026_12%') ORDER BY started",
+          "result": {
+            "cols": [
+              "repository",
+              "name",
+              "state",
+              "started",
+              "finished",
+              "total_shards",
+              "failures"
+            ],
+            "rows": [
+              [
+                "goodwatch-db-backup-v2",
+                "hourly_20261026_110502",
+                "SUCCESS",
+                1793012702127,
+                1793014833416,
+                567,
+                []
+              ],
+              [
+                "goodwatch-db-backup-v2",
+                "hourly_20261026_120501",
+                "SUCCESS",
+                1793016301818,
+                1793016317641,
+                567,
+                []
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 17426.49
+          }
+        },
+        "copies": {
+          "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE (table_name='person_appeared_in' AND id=4) OR (table_name='person_worked_on' AND id=5) ORDER BY table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "backup_20260925_deleted_titles",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_appeared_in",
+                4,
+                "crate-02",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_appeared_in",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_worked_on",
+                5,
+                "crate-02",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_worked_on",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 12,
+            "duration": 15.939246
+          }
+        },
+        "nonstarted": {
+          "sql": "SELECT schema_name,table_name,id,node['id'],node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE state <> 'STARTED' OR routing_state <> 'STARTED' ORDER BY table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['id']",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 10.517201
+          }
+        },
+        "health": {
+          "sql": "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health",
+          "result": {
+            "cols": [
+              "health",
+              "count(*)",
+              "sum(missing_shards)",
+              "sum(underreplicated_shards)"
+            ],
+            "rows": [
+              [
+                "GREEN",
+                145,
+                0,
+                0
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 5.387602
+          }
+        }
+      }
+    },
+    {
+      "host": 12,
+      "utc": "2026-10-26T12:44:45.880027+00:00",
+      "queries": {
+        "snapshots": {
+          "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND (name LIKE 'hourly_20261026_11%' OR name LIKE 'hourly_20261026_12%') ORDER BY started",
+          "result": {
+            "cols": [
+              "repository",
+              "name",
+              "state",
+              "started",
+              "finished",
+              "total_shards",
+              "failures"
+            ],
+            "rows": [
+              [
+                "goodwatch-db-backup-v2",
+                "hourly_20261026_110502",
+                "SUCCESS",
+                1793012702127,
+                1793014833416,
+                567,
+                []
+              ],
+              [
+                "goodwatch-db-backup-v2",
+                "hourly_20261026_120501",
+                "SUCCESS",
+                1793016301818,
+                1793016317641,
+                567,
+                []
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 15749.598
+          }
+        },
+        "copies": {
+          "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE (table_name='person_appeared_in' AND id=4) OR (table_name='person_worked_on' AND id=5) ORDER BY table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "backup_20260925_deleted_titles",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_appeared_in",
+                4,
+                "crate-02",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_appeared_in",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_worked_on",
+                5,
+                "crate-02",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_worked_on",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 12,
+            "duration": 13.496638
+          }
+        },
+        "nonstarted": {
+          "sql": "SELECT schema_name,table_name,id,node['id'],node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE state <> 'STARTED' OR routing_state <> 'STARTED' ORDER BY table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['id']",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 11.834182
+          }
+        },
+        "health": {
+          "sql": "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health",
+          "result": {
+            "cols": [
+              "health",
+              "count(*)",
+              "sum(missing_shards)",
+              "sum(underreplicated_shards)"
+            ],
+            "rows": [
+              [
+                "GREEN",
+                145,
+                0,
+                0
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 2.25868
+          }
+        }
+      }
+    },
+    {
+      "host": 13,
+      "utc": "2026-10-26T12:44:45.880289+00:00",
+      "queries": {
+        "snapshots": {
+          "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND (name LIKE 'hourly_20261026_11%' OR name LIKE 'hourly_20261026_12%') ORDER BY started",
+          "result": {
+            "cols": [
+              "repository",
+              "name",
+              "state",
+              "started",
+              "finished",
+              "total_shards",
+              "failures"
+            ],
+            "rows": [
+              [
+                "goodwatch-db-backup-v2",
+                "hourly_20261026_110502",
+                "SUCCESS",
+                1793012702127,
+                1793014833416,
+                567,
+                []
+              ],
+              [
+                "goodwatch-db-backup-v2",
+                "hourly_20261026_120501",
+                "SUCCESS",
+                1793016301818,
+                1793016317641,
+                567,
+                []
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 17711.586
+          }
+        },
+        "copies": {
+          "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE (table_name='person_appeared_in' AND id=4) OR (table_name='person_worked_on' AND id=5) ORDER BY table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "backup_20260925_deleted_titles",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_appeared_in",
+                4,
+                "crate-02",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_appeared_in",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "crate-01",
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_stale_child_rows",
+                "person_worked_on",
+                5,
+                "crate-02",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "backup_20260925_deleted_titles",
+                "person_worked_on",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 12,
+            "duration": 14.02657
+          }
+        },
+        "nonstarted": {
+          "sql": "SELECT schema_name,table_name,id,node['id'],node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE state <> 'STARTED' OR routing_state <> 'STARTED' ORDER BY table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['id']",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "doc",
+                "person_appeared_in",
+                4,
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                5,
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 13.785409
+          }
+        },
+        "health": {
+          "sql": "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health",
+          "result": {
+            "cols": [
+              "health",
+              "count(*)",
+              "sum(missing_shards)",
+              "sum(underreplicated_shards)"
+            ],
+            "rows": [
+              [
+                "GREEN",
+                145,
+                0,
+                0
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 5.239713
+          }
+        }
+      }
+    }
+  ],
+  "backup_log": {
+    "utc": "2026-10-26T12:47:46.424932+00:00",
+    "lines": [
+      "2026-10-26T11:05:02Z Creating snapshot: hourly_20261026_110502...",
+      "2026-10-26T11:35:02Z SQL CREATE failed at http://10.0.0.11:4200/_sql: ReadTimeout; not replayed; inspect server outcome",
+      "2026-10-26T11:35:02Z BACKUP FAILED: Snapshot creation failed: hourly_20261026_110502",
+      "2026-10-26T12:05:01Z Creating snapshot: hourly_20261026_120501...",
+      "2026-10-26T12:05:19Z Snapshot created successfully.",
+      "2026-10-26T12:05:19Z Checking for expired snapshots...",
+      "2026-10-26T12:05:37Z Deleting expired snapshot: hourly_20261026_070501",
+      "2026-10-26T12:06:01Z Deleting expired snapshot: hourly_20261026_080501",
+      "2026-10-26T12:06:26Z Deleted 2 of 3 expired snapshot(s).",
+      "2026-10-26T12:06:26Z Verifying the snapshots of this run...",
+      "2026-10-26T12:06:44Z Verified: hourly_20261026_120501",
+      "2026-10-26T12:06:44Z Backup run finished."
+    ]
+  },
+  "settings": {
+    "utc": "2026-10-26T12:45:51.778006+00:00",
+    "sql": "SELECT settings['cluster']['routing']['rebalance']['enable'],settings['cluster']['routing']['allocation']['enable'],settings['cluster']['graceful_stop'] FROM sys.cluster",
+    "result": {
+      "cols": [
+        "settings['cluster']['routing']['rebalance']['enable']",
+        "settings['cluster']['routing']['allocation']['enable']",
+        "settings['cluster']['graceful_stop']"
+      ],
+      "rows": [
+        [
+          "all",
+          "all",
+          {
+            "min_availability": "PRIMARIES",
+            "force": false,
+            "timeout": "2h"
+          }
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 1.665139
+    }
+  },
+  "cron_readback": {
+    "utc": "2026-10-26T12:45:52.966251+00:00",
+    "mode": "inspect",
+    "before_sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
+    "held_sha256": "806d2b5543e26b77aac5a7853d5bfc404c418041b0338a761040daf763f4fcd9",
+    "one_named_backup_entry": true
+  },
+  "page_samples": [
+    {
+      "utc": "2026-10-26T12:44:36.701249+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.506586,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:44:38.350975+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 2.156374,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:44:38.487713+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 2.292972,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:44:46.629975+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.434426,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:44:46.649562+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.454089,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:44:47.014033+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.818553,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:44:56.387994+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.190365,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:44:56.462181+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.265994,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:44:56.521592+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.323431,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:06.499631+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.303331,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:06.518203+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.322175,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:06.566246+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.370191,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:16.428103+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.23296,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:16.498097+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.303056,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:16.545724+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.350724,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:26.401454+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.206223,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:26.640614+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.445142,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:27.489339+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 1.293836,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:36.369487+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.174728,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:36.393276+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.198433,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:36.426295+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.231491,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:46.404628+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.209487,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:46.438088+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.242955,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T12:45:46.457612+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.262294,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    }
+  ],
+  "page_monitor_source": "#!/usr/bin/env python3\n\"\"\"Future Q40 read-only curl monitor. Writes local evidence/abort flags; never runs SQL.\"\"\"\nimport argparse\nimport concurrent.futures\nimport datetime\nimport json\nimport os\nfrom pathlib import Path\nimport subprocess\nimport time\n\nPATHS = (\"/movie/629-the-usual-suspects\", \"/discover\", \"/show/1396-breaking-bad\")\n\n\ndef assess(status, seconds, exit_code, previous_failures):\n    failures = previous_failures + 1 if exit_code or status != 200 else 0\n    return failures, bool(exit_code or status != 200 or seconds > 3.0)\n\n\ndef probe(path):\n    started = time.monotonic()\n    result = subprocess.run(\n        [\"curl\", \"-s\", \"--max-time\", \"5\", \"-o\", \"/dev/null\", \"-w\",\n         \"%{http_code} %{time_total}\", \"https://goodwatch.app\" + path],\n        capture_output=True, text=True, timeout=7,\n    )\n    parts = result.stdout.split()\n    try:\n        status, seconds = int(parts[0]), float(parts[1])\n    except (IndexError, ValueError):\n        status, seconds = 0, time.monotonic() - started\n    return path, status, seconds, result.returncode\n\n\ndef marker(path, record):\n    try:\n        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)\n    except FileExistsError:\n        return\n    with os.fdopen(fd, \"w\") as output:\n        output.write(json.dumps(record) + \"\\n\")\n\n\ndef watch(args):\n    failures = dict.fromkeys(PATHS, 0)\n    heartbeat = Path(args.heartbeat)\n    phase_file = Path(args.phase_file)\n    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:\n        while True:\n            start = time.monotonic()\n            heartbeat.write_text(str(time.time()) + \"\\n\")\n            futures = [pool.submit(probe, path) for path in PATHS]\n            for future in concurrent.futures.as_completed(futures):\n                path, status, seconds, exit_code = future.result()\n                failures[path], alarm = assess(status, seconds, exit_code, failures[path])\n                phase = phase_file.read_text().strip()\n                if phase not in {\"baseline\", \"drain\", \"stopping\", \"recovery\", \"complete\"}:\n                    raise ValueError(\"Invalid phase; controller must stop progression\")\n                record = {\n                    \"utc\": datetime.datetime.now(datetime.timezone.utc).isoformat(),\n                    \"phase\": phase, \"path\": path, \"status\": status, \"seconds\": seconds,\n                    \"exit\": exit_code, \"failure_streak\": failures[path], \"alarm\": alarm,\n                }\n                print(json.dumps(record), flush=True)\n                if alarm and phase == \"drain\":\n                    marker(args.abort_file, record)\n            heartbeat.write_text(str(time.time()) + \"\\n\")\n            time.sleep(max(0, 10 - (time.monotonic() - start)))\n\n\ndef main():\n    parser = argparse.ArgumentParser(description=__doc__)\n    for option in (\"phase-file\", \"abort-file\", \"heartbeat\"):\n        parser.add_argument(\"--\" + option, required=True)\n    args = parser.parse_args()\n    try:\n        watch(args)\n    except Exception as error:\n        # Fail closed locally. Controller checks this marker and heartbeat before SIGTERM.\n        marker(args.abort_file, {\"monitor_error\": type(error).__name__})\n        raise\n\n\nif __name__ == \"__main__\":\n    main()\n",
+  "page_monitor_stop": "SIGINT of local watcher only, exit130; no production process signalled",
+  "unexpected_condition": "Approved relocating primary on crate-01 was already STARTED, both snapshots SUCCESS; current relocation is a replica on crate-03, different from approved primary target cancellation."
+}

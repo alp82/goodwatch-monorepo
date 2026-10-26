@@ -2,7 +2,13 @@
 
 **Planning only, prepared October26. No Q40 mutation or monitoring loop was executed today.**
 Execute only after a fresh owner **go**, around **2026-10-27 03:00 UTC** (04:00 CET).
-**Additional fresh-backup blocker:** the scheduled `hourly_20261026_110502` run logged BACKUP
+**Latest Q42 update,12:44 UTC:** the11:05 snapshot ultimately finished SUCCESS at11:40:33;
+the12:05 scheduled snapshot also finished SUCCESS at12:05:17, verified through every coordinator.
+The failed client wait below is historical; the fresh-backup blocker at that observation cleared.
+Q42 stopped before mutation because the approved primary relocation had already cleared. Rebalance
+remainsall, not an applied hold. Revalidate all gates tonight; health-wait cancellation is still unqualified.
+
+**Historical fresh-backup blocker (superseded by the Q42 update):** the scheduled `hourly_20261026_110502` run logged BACKUP
 FAILED at11:35:02 after CREATE ReadTimeout; native snapshot still IN_PROGRESS at11:36. Latest verified
 SUCCESS remains09:05. See [backup evidence](README.md#restored-backup-cron-verification--october2611051136-utc).
 Do not execute Q40 without a fresh successful backup and no active snapshot.
