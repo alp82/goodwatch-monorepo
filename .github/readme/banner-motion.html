@@ -10,10 +10,10 @@
   html, body { margin: 0; background: #09090b; }
   .card { position: relative; width: 1280px; height: 400px; overflow: hidden; background: #09090b; isolation: isolate; }
   .layer { position: absolute; inset: 0; }
-  .wall { position: absolute; left: 640px; top: 200px; width: 0; height: 0; }
+  .wall { position: absolute; left: 640px; top: 200px; width: 0; height: 0; will-change: transform; }
   .wall img { position: absolute; border-radius: 7px; object-fit: cover; display: block; }
   .grey img { filter: grayscale(1) brightness(.2) contrast(1.1); }
-  .color img { filter: saturate(.6) brightness(.46); }
+  .color img { filter: saturate(.7) brightness(.58); }
   .color { opacity: .8; }
   .glow { position: absolute; inset: 0; mix-blend-mode: screen; }
   .vignette {
@@ -141,19 +141,20 @@
           } else if (st.inside && d > EXIT) st.inside = false
         }
         const now = posterOf(r, c, st.flips)
-        put("grey", now, wx, wy)
+        put("grey", now, c * PX, r * PY)
         const p = (t - st.at) / DEAL
         if (p >= 0 && p < 1 && st.flips > 0) {
           const e = ease(p)
-          put("color", posterOf(r, c, st.flips - 1), wx, wy)
-          put("color", now, wx, wy, `opacity:${e};transform:translate(${-st.dir[0] * 5 * (1 - e)}%,${-st.dir[1] * 5 * (1 - e)}%) scale(${1.04 - 0.04 * e});z-index:1`)
-        } else put("color", now, wx, wy)
+          put("color", posterOf(r, c, st.flips - 1), c * PX, r * PY)
+          put("color", now, c * PX, r * PY, `opacity:${e};transform:translate(${-st.dir[0] * 5 * (1 - e)}%,${-st.dir[1] * 5 * (1 - e)}%) scale(${1.04 - 0.04 * e});z-index:1`)
+        } else put("color", now, c * PX, r * PY)
       }
     }
     for (const layer of ["grey", "color"]) for (let i = used[layer]; i < pools[layer].length; i++) pools[layer][i].style.display = "none"
     const deg = (ROT * 180) / Math.PI
-    document.getElementById("grey").style.transform = `rotate(${deg}deg)`
-    document.getElementById("color").style.transform = `rotate(${deg}deg)`
+    const wallT = `rotate(${deg}deg) translate(${ox}px, ${oy}px)` // sub-pixel drift: one transform, no rounded left/top
+    document.getElementById("grey").style.transform = wallT
+    document.getElementById("color").style.transform = wallT
     const cl = document.getElementById("colorLayer")
     const glow = document.getElementById("glow")
     if (V === "stage") {
@@ -165,7 +166,7 @@
     } else {
       const mask = `radial-gradient(circle 220px at ${s.x}px ${s.y}px, #000 5%, transparent 100%)`
       cl.style.maskImage = cl.style.webkitMaskImage = mask
-      glow.style.background = `radial-gradient(circle 260px at ${s.x}px ${s.y}px, rgba(251,191,36,.05), transparent 100%), radial-gradient(ellipse 34% 62% at 50% 0%, rgba(251,191,36,.09), transparent 100%)`
+      glow.style.background = `radial-gradient(circle 260px at ${s.x}px ${s.y}px, rgba(251,191,36,.08), transparent 100%), radial-gradient(ellipse 34% 62% at 50% 0%, rgba(251,191,36,.09), transparent 100%)`
     }
     const au = document.getElementById("aurora")
     if (au) au.style.transform = `translate(-50%, -50%) rotate(${(360 * t) / T}deg)`

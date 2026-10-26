@@ -1,0 +1,152 @@
+/* PROTOTYPE (README clip "ai"): the intro's ChatGPT look-alike, bigger, as one window filling the picture.
+   Transform and opacity animations only; every time is calc(<n> * var(--k)). */
+.rm-ai {
+	background: radial-gradient(70% 80% at 50% 40%, #11131a, #05060a);
+}
+.rm-ai .rm-ai-win {
+	left: 11cqw;
+	right: 11cqw;
+	top: 3.5cqh;
+	bottom: 3.5cqh;
+	--fs: 1.9cqw;
+	border-radius: 1.4cqw;
+}
+.rm-ai .intro-ai-chat-bar {
+	padding: 0.6em 1em 0.35em;
+}
+.rm-ai-view {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+}
+.rm-ai-topfade {
+	position: absolute;
+	inset: 0 0 auto;
+	height: 1.4em;
+	background: linear-gradient(#212121, rgba(33, 33, 33, 0));
+	pointer-events: none;
+}
+.rm-ai-scroll {
+	animation: rm-ai-scroll calc(var(--dur, 560ms) * var(--k, 1)) cubic-bezier(0.45, 0, 0.25, 1)
+		calc(var(--d, 0ms) * var(--k, 1)) both;
+}
+@keyframes rm-ai-scroll {
+	to {
+		transform: translateY(var(--dy, 0px));
+	}
+}
+.rm-ai-thread {
+	display: flex;
+	flex-direction: column;
+	gap: 0.7em;
+	padding: 0.4em 2em 0.6em;
+}
+.rm-ai .intro-ai-chat-user {
+	max-width: 70%;
+	padding: 0.45em 0.95em;
+}
+.rm-ai .intro-ai-chat-call {
+	font-size: 0.82em;
+}
+.rm-ai .intro-ai-chat-answer {
+	line-height: 1.4;
+}
+.rm-ai-word {
+	display: inline-block;
+}
+
+/* The banner card, in em of the chat's size instead of the intro's cqw. */
+.rm-ai .intro-ai-chat-ban {
+	border-radius: 0.6em;
+}
+.rm-ai .intro-ai-chat-banmark {
+	--mark: 0.62em;
+}
+.rm-ai .intro-ai-chat-banin {
+	padding: 1.1em 1em 0.9em;
+	gap: 0.9em;
+}
+.rm-ai .intro-ai-chat-pf {
+	flex: 0 0 4.4em;
+	border-width: 0.12em;
+	border-radius: 0.35em;
+	--tab: 0.5em;
+}
+.rm-ai .intro-ai-chat-name {
+	font-size: 1.9em;
+}
+.rm-ai .intro-ai-chat-tx .intro-ai-eyebrow,
+.rm-ai .intro-ai-chat-tx .intro-ai-meta {
+	font-size: 0.8em;
+}
+.rm-ai .intro-ai-chat-btn {
+	font-size: 0.8em;
+}
+
+/* The small cards: thumb, eyebrow, one row. */
+.rm-ai-strip {
+	display: flex;
+	align-items: center;
+	gap: 0.8em;
+	padding: 0.6em 0.9em 0.6em 0.6em;
+	border-radius: 0.6em;
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+.rm-ai-strip::before {
+	display: none;
+}
+.rm-ai-thumb {
+	flex: none;
+	width: 2.5em;
+	aspect-ratio: 2 / 3;
+	border-radius: 0.3em;
+	object-fit: cover;
+}
+.rm-ai-strip-tx {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25em;
+	min-width: 0;
+}
+.rm-ai-strip-tx .intro-ai-eyebrow {
+	font-size: 0.8em;
+}
+.rm-ai-strip .intro-ai-chat-src {
+	margin-top: 0.1em;
+	font-size: 0.9em;
+}
+.rm-ai-strip .intro-ai-pills {
+	margin-top: 0.1em;
+	font-size: 0.85em;
+}
+
+/* The composer's field: the placeholder and each ask's typed text, layered. */
+.rm-ai .intro-ai-chat-comp {
+	margin: 0.3em 1.6em 0.9em;
+}
+.rm-ai-field-layer {
+	position: absolute;
+	inset: 0;
+	white-space: nowrap;
+}
+.rm-ai-typed {
+	color: #ececec;
+}
+.rm-ai-gap {
+	display: block;
+	animation: rm-ai-gap calc(var(--dur) * var(--k, 1)) linear calc(var(--d) * var(--k, 1)) both;
+}
+/* Out fast as typing starts, back after the send (for any length: the edges are short). */
+@keyframes rm-ai-gap {
+	0% {
+		opacity: 1;
+	}
+	4%,
+	92% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}

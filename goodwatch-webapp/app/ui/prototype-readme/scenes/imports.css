@@ -1,0 +1,238 @@
+/* PROTOTYPE (README clip "imports"). Container units on the 1440x770 stage; transform and opacity animations only;
+   every time is calc(<n> * var(--k)). */
+.rm-imp {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: #05060a;
+}
+.rm-imp img {
+	display: block;
+	max-width: none;
+}
+.rm-imp-a {
+	display: block;
+	animation: var(--an) calc(var(--du) * var(--k, 1)) var(--ez, cubic-bezier(0.16, 1, 0.3, 1))
+		calc(var(--d) * var(--k, 1)) both;
+}
+.rm-imp-glow {
+	position: absolute;
+	left: 30cqw;
+	top: 15cqh;
+	width: 48cqw;
+	height: 70cqh;
+	background: radial-gradient(closest-side, rgba(251, 191, 36, 0.13), transparent);
+	pointer-events: none;
+}
+
+/* ---- sources */
+.rm-imp-src {
+	position: absolute;
+	z-index: 3;
+	width: 9cqw;
+	margin-left: -4.5cqw;
+	margin-top: -4.5cqw;
+	display: flex;
+	flex-direction: column-reverse;
+	align-items: center;
+	gap: 1.1cqh;
+}
+/* The top row's names sit above its tiles: column-reverse puts the name last; for the top row, flip it. */
+.rm-imp-src-top {
+	flex-direction: column;
+	margin-top: calc(-4.5cqw - 1.1cqh - 1.75cqw);
+}
+.rm-imp-tile {
+	display: flex;
+	width: 9cqw;
+	height: 9cqw;
+	border-radius: 1.8cqw;
+	overflow: hidden;
+	box-sizing: border-box;
+	box-shadow: 0 1cqw 2.4cqw rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.rm-imp-tile img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+.rm-imp-tile b {
+	margin: auto;
+	font-weight: 900;
+	font-size: 2.2cqw;
+	color: #fff;
+}
+.rm-imp-name {
+	font-weight: 700;
+	font-size: 1.75cqw;
+	line-height: 1;
+	color: rgba(255, 255, 255, 0.82);
+	white-space: nowrap;
+}
+@keyframes rm-imp-nudge {
+	0%,
+	100% {
+		transform: none;
+	}
+	35% {
+		transform: scale(1.06);
+	}
+}
+
+/* ---- things in flight: an outer x move, an inner y move, and the life (fade in, shrink, fade out) */
+.rm-imp-thing {
+	position: absolute;
+	z-index: 2;
+	width: 0;
+	height: 0;
+}
+.rm-imp-thing > .rm-imp-a,
+.rm-imp-thing > .rm-imp-a > .rm-imp-a {
+	width: 0;
+	height: 0;
+}
+.rm-imp-thing .rm-imp-a .rm-imp-a .rm-imp-a {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 0;
+	height: 0;
+}
+@keyframes rm-imp-x {
+	to {
+		transform: translateX(var(--tx));
+	}
+}
+@keyframes rm-imp-y {
+	to {
+		transform: translateY(var(--ty));
+	}
+}
+@keyframes rm-imp-life {
+	0% {
+		opacity: 0;
+		transform: scale(0.9);
+	}
+	8% {
+		opacity: 1;
+	}
+	25% {
+		transform: scale(1);
+	}
+	55% {
+		transform: scale(0.85);
+	}
+	72% {
+		opacity: 1;
+	}
+	96%,
+	100% {
+		opacity: 0;
+		transform: scale(0.15);
+	}
+}
+.rm-imp-thing .rm-imp-poster {
+	flex: none;
+	width: 5.6cqw;
+	border-radius: 0.5cqw;
+	box-shadow: 0 0.8cqw 2cqw rgba(0, 0, 0, 0.6);
+}
+.rm-imp-score {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	padding: 0.5cqw 1cqw;
+	border-radius: 999px;
+	background: #fbbf24;
+	color: #111;
+	font-weight: 900;
+	font-size: 2cqw;
+	line-height: 1;
+	white-space: nowrap;
+	box-shadow: 0 0.8cqw 2cqw rgba(0, 0, 0, 0.55);
+}
+.rm-imp-bookmark {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 4.4cqw;
+	height: 4.4cqw;
+	border-radius: 1cqw;
+	background: #1b2130;
+	color: #fbbf24;
+	box-shadow: 0 0.8cqw 2cqw rgba(0, 0, 0, 0.55), inset 0 0 0 0.15cqw rgba(251, 191, 36, 0.6);
+}
+.rm-imp-bookmark svg {
+	width: 55%;
+	height: 55%;
+}
+
+/* ---- the G */
+.rm-imp-g {
+	position: absolute;
+	z-index: 4;
+	width: 0;
+	height: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	filter: drop-shadow(0 0 3cqw rgba(251, 191, 36, 0.45));
+}
+.rm-imp-g .rm-imp-gulp {
+	flex: none;
+}
+.rm-imp-gbox {
+	position: relative;
+	display: block;
+}
+.rm-imp-hole {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 7.6cqw;
+	height: 7.6cqw;
+	margin: -3.8cqw 0 0 -3.8cqw;
+	border-radius: 50%;
+	background: radial-gradient(closest-side, rgb(86, 67, 18), rgb(80, 62, 17) 80%, rgb(72, 56, 16));
+}
+@keyframes rm-imp-gulp {
+	0%,
+	100% {
+		transform: none;
+	}
+	40% {
+		transform: scale(1.06);
+	}
+}
+
+/* ---- picks */
+.rm-imp-kicker {
+	position: absolute;
+	font-weight: 800;
+	font-size: 1.75cqw;
+	line-height: 1;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: #fbbf24;
+	white-space: nowrap;
+}
+.rm-imp-pick {
+	position: absolute;
+	width: 9cqw;
+	margin-left: -4.5cqw;
+	margin-top: -6.75cqw;
+}
+.rm-imp-pick img {
+	width: 100%;
+	aspect-ratio: 2 / 3;
+	border-radius: 0.6cqw;
+	object-fit: cover;
+	box-shadow: 0 1cqw 2.6cqw rgba(0, 0, 0, 0.6);
+}
+@media (prefers-reduced-motion: reduce) {
+	.rm-imp .rm-imp-a {
+		animation-duration: 1ms !important;
+		animation-delay: 0ms !important;
+	}
+}

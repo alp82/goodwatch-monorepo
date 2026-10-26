@@ -1,0 +1,276 @@
+/* PROTOTYPE (README clip "discord"): the intro's Discord look (scenes/discord/discord.css) for a /together round.
+   The window on the left, the private voting cards on the right, on Discord's blurple. Transform and opacity
+   animations only; every time is calc(<n> * var(--k)). */
+.rm-dc {
+	background: radial-gradient(70% 90% at 80% 40%, rgba(255, 255, 255, 0.1), transparent 60%),
+		linear-gradient(135deg, #5865f2 0%, #4752c4 45%, #2b2f6e 85%, #1e1f22 120%);
+}
+.rm-dc-a {
+	animation: var(--an) calc(var(--du, 600ms) * var(--k, 1)) var(--ez, cubic-bezier(0.16, 1, 0.3, 1))
+		calc(var(--d, 0ms) * var(--k, 1)) both;
+}
+@keyframes rm-dc-climb {
+	to {
+		transform: translateY(var(--dy, 0px));
+	}
+}
+@keyframes rm-dc-swapin {
+	from {
+		opacity: 0;
+		transform: translateY(0.35em);
+	}
+}
+@keyframes rm-dc-leave {
+	to {
+		opacity: 0;
+		transform: translateY(-0.35em);
+	}
+}
+@keyframes rm-dc-rise {
+	from {
+		opacity: 0;
+		transform: translateY(1.2em) scale(0.97);
+	}
+}
+@keyframes rm-dc-lit {
+	from {
+		opacity: 0;
+	}
+}
+
+/* ---- the window */
+.rm-dc .rm-dc-win {
+	inset: 4cqh auto 4cqh 3cqw;
+	width: 57cqw;
+	display: flex;
+	font-size: 1.9cqw;
+	border-radius: 1.2cqw;
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 2cqw 5cqw rgba(0, 0, 0, 0.45);
+}
+.rm-dc-base {
+	position: absolute;
+	inset: 0 0 auto;
+	transform: translateY(var(--y0, 0px));
+}
+.rm-dc-thread {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 0.9em;
+	padding: 0 0.9em;
+}
+.rm-dc-welcome {
+	padding: 0 0 0.4em;
+}
+.rm-dc-welcome-hash {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.6em;
+	height: 2.6em;
+	border-radius: 50%;
+	background: #41434a;
+	font-size: 1.1em;
+	font-weight: 500;
+	color: #fff;
+	font-size: 1.6em;
+}
+.rm-dc-welcome h3 {
+	margin-top: 0.3em;
+	font-size: 1.35em;
+	font-weight: 800;
+	color: #f2f3f5;
+}
+.rm-dc-welcome p {
+	font-size: 0.85em;
+	color: #b5bac1;
+}
+.rm-dc-msg {
+	display: flex;
+	gap: 0.85em;
+}
+.rm-dc-used {
+	height: 1.4em;
+	padding-left: 3.05em;
+}
+.rm-dc-appbody {
+	display: flex;
+	gap: 0.85em;
+}
+.rm-dc-appcol {
+	width: 22.5em;
+}
+.rm-dc-appcol > .intro-dc-msg-name {
+	height: 1.6em;
+}
+.rm-dc-cards {
+	display: grid;
+	align-items: start;
+}
+.rm-dc-cards > * {
+	grid-area: 1 / 1;
+}
+.rm-dc-card {
+	gap: 0.4em;
+}
+.rm-dc-card .intro-dc-h1 {
+	font-size: 1.35em;
+}
+.rm-dc-strong {
+	color: #f2f3f5;
+}
+.rm-dc-swap {
+	display: inline-grid;
+}
+.rm-dc-swap > * {
+	grid-area: 1 / 1;
+}
+.rm-dc-row {
+	display: flex;
+	gap: 0.7em;
+	margin: 0.15em 0;
+}
+.rm-dc-rowposter {
+	flex: none;
+	width: 3em;
+	height: 4.5em;
+}
+.rm-dc-rowtx {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2em;
+	min-width: 0;
+}
+.rm-dc-rowname {
+	font-size: 1.1em;
+	color: #f2f3f5;
+}
+.rm-dc-label {
+	color: #f2f3f5;
+}
+.rm-dc-select {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 2em;
+	padding: 0 0.6em;
+	border-radius: 0.35em;
+	background: #1e1f22;
+	color: #949ba4;
+	font-size: 0.9em;
+}
+.rm-dc-select svg {
+	width: 1.1em;
+	height: 1.1em;
+}
+.rm-dc-decided-img {
+	width: 100%;
+	height: 8.2em;
+	object-position: center 30%;
+	margin: 0.2em 0;
+}
+.intro-dc-row .rm-dc-a,
+.rm-dc-row > .rm-dc-a {
+	display: inline-flex;
+}
+.rm-dc-menu li span {
+	font-size: 0.75em;
+}
+
+/* ---- the private voting cards */
+.rm-dc-ballots {
+	position: absolute;
+	left: 63cqw;
+	right: 3cqw;
+	top: 50%;
+	translate: 0 -50%;
+	display: flex;
+	flex-direction: column;
+	gap: 1.4cqh;
+	font-size: 1.62cqw;
+}
+.rm-dc-ballot {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35em;
+}
+.rm-dc-only {
+	display: flex;
+	align-items: center;
+	gap: 0.35em;
+	font-size: 0.85em;
+	color: #e0e3ff;
+}
+.rm-dc-only b {
+	color: #fff;
+}
+.rm-dc-only .intro-dc-mini {
+	width: 1.35em;
+	height: 1.35em;
+	font-size: 0.85em;
+}
+.rm-dc .rm-dc-bal-card {
+	display: grid;
+	padding: 0.6em 0.8em 0.65em 1em;
+	box-shadow: inset 0.25em 0 0 #f59e0b, 0 0 0 1px #3a3c42, 0 1em 2.4em rgba(0, 0, 0, 0.35);
+}
+.rm-dc-bal-card > * {
+	grid-area: 1 / 1;
+}
+.rm-dc-face {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35em;
+}
+.rm-dc-bal-row {
+	display: flex;
+	gap: 0.75em;
+}
+.rm-dc-bal-poster {
+	flex: none;
+	width: 3em;
+	height: 4.5em;
+}
+.rm-dc-bal-tx {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25em;
+	min-width: 0;
+}
+.rm-dc-bal-name {
+	font-size: 1.2em;
+	line-height: 1.1;
+	color: #f2f3f5;
+}
+.rm-dc-bal-tx .intro-dc-row {
+	margin-top: 0.2em;
+}
+.rm-dc .rm-dc-yep,
+.rm-dc .rm-dc-nope {
+	position: relative;
+	overflow: hidden;
+	min-width: 4.2em;
+}
+.rm-dc .rm-dc-yep {
+	background: #248046;
+}
+.rm-dc .rm-dc-nope {
+	background: #da373c;
+}
+/* The pressed vote: a white ring and a lighter face that stay. */
+.rm-dc-chosen i {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: rgba(255, 255, 255, 0.22);
+	box-shadow: inset 0 0 0 0.12em #fff;
+}
+.rm-dc-chosen {
+	isolation: isolate;
+}
+@media (prefers-reduced-motion: reduce) {
+	.rm-dc .rm-dc-a {
+		animation-duration: 1ms !important;
+		animation-delay: 0ms !important;
+	}
+}

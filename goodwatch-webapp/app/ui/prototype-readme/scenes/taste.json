@@ -1,0 +1,222 @@
+{
+	"note": "PROTOTYPE (README taste loop, 2026-10-26): the For you ranking (domain/for-you-page/rank.ts + shape.ts steerOf, no recipe) of the same 865 real unseen titles and the same member taste as the intro's taste.json (prototype/for-you data/candidates.json), at the flat shape and one section at a time: Craft lots more, Feel less, Humor lots more, World less, Story lots more. Each list is that shape's top six in order, skipping less-known titles (the intro fixture's rule). Recomputed with the real ranker; flat and humor2 match the intro fixture.",
+	"steps": [
+		{
+			"family": "craft",
+			"level": 2,
+			"state": "craft2"
+		},
+		{
+			"family": "feel",
+			"level": -1,
+			"state": "feelm"
+		},
+		{
+			"family": "humor",
+			"level": 2,
+			"state": "humor2"
+		},
+		{
+			"family": "world",
+			"level": -1,
+			"state": "worldm"
+		},
+		{
+			"family": "story",
+			"level": 2,
+			"state": "story2"
+		}
+	],
+	"states": {
+		"flat": [
+			"show-5895",
+			"show-21729",
+			"show-2418",
+			"show-65495",
+			"show-60728",
+			"show-96713"
+		],
+		"craft2": [
+			"show-5895",
+			"show-60728",
+			"show-67195",
+			"show-21729",
+			"show-39218",
+			"show-1087"
+		],
+		"feelm": [
+			"movie-68",
+			"show-58957",
+			"show-2710",
+			"show-76331",
+			"show-1087",
+			"movie-817758"
+		],
+		"humor2": [
+			"show-2418",
+			"show-3793",
+			"movie-914",
+			"show-291904",
+			"show-60874",
+			"movie-324849"
+		],
+		"worldm": [
+			"movie-11830",
+			"movie-10315",
+			"movie-9428",
+			"show-1877",
+			"movie-414419",
+			"show-61617"
+		],
+		"story2": [
+			"show-5895",
+			"movie-3902",
+			"show-65495",
+			"show-2418",
+			"movie-792307",
+			"movie-452522"
+		]
+	},
+	"titles": {
+		"show-5895": {
+			"title": "FLCL",
+			"year": 2000,
+			"poster": "/FkgA8CcmiLJGVCRYRQ2g2UfVtF.jpg"
+		},
+		"show-21729": {
+			"title": "Gurren Lagann",
+			"year": 2007,
+			"poster": "/sG0Z0yWJmzr7UW6183cmz5DAjqm.jpg"
+		},
+		"show-2418": {
+			"title": "The Venture Bros.",
+			"year": 2004,
+			"poster": "/ckQE1aLYQkRpp2HmHljiELAiOr1.jpg"
+		},
+		"show-65495": {
+			"title": "Atlanta",
+			"year": 2016,
+			"poster": "/8HZyGMnPLVVb00rmrh6A2SbK9NX.jpg"
+		},
+		"show-60728": {
+			"title": "Kill la Kill",
+			"year": 2013,
+			"poster": "/4F1WtP3dFIwLPOfa3u29VEVnNkf.jpg"
+		},
+		"show-96713": {
+			"title": "The Midnight Gospel",
+			"year": 2020,
+			"poster": "/me3kxfiFRkdto6SmDQv0nczjfmP.jpg"
+		},
+		"show-67195": {
+			"title": "Legion",
+			"year": 2017,
+			"poster": "/xhJtYVTsdXQCIlB5hAXkMCPUG9y.jpg"
+		},
+		"show-39218": {
+			"title": "Puella Magi Madoka Magica",
+			"year": 2011,
+			"poster": "/9Leopb4OB9j9FkP5JNHRZZlPPdg.jpg"
+		},
+		"show-1087": {
+			"title": "Serial Experiments Lain",
+			"year": 1998,
+			"poster": "/3MQo7PPuntw8GaZrsBPZcJLJity.jpg"
+		},
+		"movie-68": {
+			"title": "Brazil",
+			"year": 1985,
+			"poster": "/2w09J0KUnVtJvqPYu8N63XjAyCR.jpg"
+		},
+		"show-58957": {
+			"title": "Nathan for You",
+			"year": 2013,
+			"poster": "/6tGXlz61c44onUg6EdRkbhjcaPA.jpg"
+		},
+		"show-2710": {
+			"title": "It's Always Sunny in Philadelphia",
+			"year": 2005,
+			"poster": "/o0tMMK33JqmtpcWw0H41cEr9xQB.jpg"
+		},
+		"show-76331": {
+			"title": "Succession",
+			"year": 2018,
+			"poster": "/z0XiwdrCQ9yVIr4O0pxzaAYRxdW.jpg"
+		},
+		"movie-817758": {
+			"title": "TÁR",
+			"year": 2022,
+			"poster": "/dRVAlaU0vbG6hMf2K45NSiIyoUe.jpg"
+		},
+		"show-3793": {
+			"title": "Invader ZIM",
+			"year": 2001,
+			"poster": "/nbphRMU1yjDjcMC5RCPyCxc4Yff.jpg"
+		},
+		"movie-914": {
+			"title": "The Great Dictator",
+			"year": 1940,
+			"poster": "/nhMXB8GTdswYMCL9nepDZymJCOr.jpg"
+		},
+		"show-291904": {
+			"title": "The Wonderfully Weird World of Gumball",
+			"year": 2025,
+			"poster": "/wG6tRzXB8lTE03i7NaqwO04z5Oy.jpg"
+		},
+		"show-60874": {
+			"title": "Space Dandy",
+			"year": 2014,
+			"poster": "/yNjRKE4W2ZJIoCDA2o6brNqpjg7.jpg"
+		},
+		"movie-324849": {
+			"title": "The Lego Batman Movie",
+			"year": 2017,
+			"poster": "/e1TliRWOdXQ73pRunbpFiGst6Kd.jpg"
+		},
+		"movie-11830": {
+			"title": "Tampopo",
+			"year": 1985,
+			"poster": "/ArYdSuX3zY9fMsE4LqmBl7xJq5R.jpg"
+		},
+		"movie-10315": {
+			"title": "Fantastic Mr. Fox",
+			"year": 2009,
+			"poster": "/bOVr292mwn3jxr1e0NmUPM1rcjo.jpg"
+		},
+		"movie-9428": {
+			"title": "The Royal Tenenbaums",
+			"year": 2001,
+			"poster": "/nG7hZJn7wQTSDCQT39Gy3s3tbrp.jpg"
+		},
+		"show-1877": {
+			"title": "Phineas and Ferb",
+			"year": 2007,
+			"poster": "/g6TidT7be954rrzPPBTIXkSmfXj.jpg"
+		},
+		"movie-414419": {
+			"title": "Kill Bill: The Whole Bloody Affair",
+			"year": 2011,
+			"poster": "/nSOJfWJCdVFZQwXQA7RXn7FIIiY.jpg"
+		},
+		"show-61617": {
+			"title": "Over the Garden Wall",
+			"year": 2014,
+			"poster": "/m3lU8n7WxzMecxKZcqhq5y5ESy.jpg"
+		},
+		"movie-3902": {
+			"title": "I'm Not There",
+			"year": 2007,
+			"poster": "/bucgvB7gQqcl1m71efHkenfIMTj.jpg"
+		},
+		"movie-792307": {
+			"title": "Poor Things",
+			"year": 2023,
+			"poster": "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg"
+		},
+		"movie-452522": {
+			"title": "Twin Peaks",
+			"year": 1989,
+			"poster": "/Apg4fMfr1Wi19Ilu5HXh4nClCv9.jpg"
+		}
+	}
+}

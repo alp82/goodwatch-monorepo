@@ -51,78 +51,50 @@ def clip_img(f, width="100%"):
     return f'<img src="{path}" alt="{f["title"]}: a scene from the GoodWatch intro" width="{width}">' if path else ""
 
 
-# Round 2: banner A (calmer), features as sections instead of a table. Each clip rests on a still and moves once
-# per 16 s cycle; neighbors take turns (clips/record.mjs PULSE). The highlight reel is gone: too busy.
-WIDTH = {"score": "62%", "explorer": "60%", "ai": "72%"}  # clips with a lot of empty space get less room
+# Round 4: one short centered sentence per section, no hand-set line breaks (research:
+# docs/research/readme-description-formatting.md). At most 65 characters: one line on desktop, two even lines on a
+# phone. A no-break space before the last word stops a lone word on a phone.
+MAX_CHARS = 65
+WHY = [
+    "You pay for more services than ever and still keep scrolling.",
+    "GoodWatch finds the few titles that fit your taste and evening.",
+]
+SAY = {
+    "Score": "IMDb, Rotten Tomatoes, Metacritic, and TMDB in one number.",
+    "Streaming": "325 services in 139 countries, and which of yours has it tonight.",
+    "For you": "Rate what you loved, and see how well everything else fits you.",
+    "Your taste": "Your ratings draw a taste fingerprint you can tune at any time.",
+    "Search": 'Type the evening you want, like "cozy mystery with a twist".',
+    "Discover": "Narrow 1.5 million titles down to the few that fit tonight.",
+    "Episodes": "A ratings grid shows where a show peaks and where it drops off.",
+    "Tracking": "Your Wishlist and shows in one place, with streaming alerts.",
+    "Imports": "Import from IMDb, Letterboxd, Trakt, Plex, and more.",
+    "AI apps": "Ask ChatGPT, Claude, and other AI apps what to watch tonight.",
+    "Discord": "Type /watch for a pick, or /together to vote as a group.",
+}
+SKIP = {"Explorer"}  # owner: remove for now
+WIDTH = {"score": "70%", "episodes": "64%"}
 GAP = "\n<br>\n\n"
 
 
-MAX_LINE = 58  # characters; GitHub has no max-width, so long descriptions get hand-set line breaks
+def sentence(text):
+    assert len(text) <= MAX_CHARS, f"{len(text)} chars: {text}"
+    head_, _, last = text.rpartition(" ")
+    text = f"{head_}&nbsp;{last}"
+    return re.sub(r"(/watch|/together)", r"<code>\1</code>", text)
 
 
-def lines(text):
-    """One sentence per line; a sentence longer than MAX_LINE splits into balanced lines at word breaks."""
-    import math
-    import textwrap
-
-    out = []
-    for sentence in re.split(r"(?<=[.!?])\s+", text.strip()):
-        if len(sentence) > MAX_LINE:
-            # Prefer a comma break that keeps both halves under MAX_LINE and close in length.
-            cuts = [m.end() for m in re.finditer(r",\s|:\s", sentence)]
-            cuts = [c for c in cuts if c <= MAX_LINE + 4 and len(sentence) - c <= MAX_LINE + 4]
-            if cuts:
-                c = min(cuts, key=lambda c: abs(2 * c - len(sentence)))
-                out += [sentence[:c].strip(), sentence[c:].strip()]
-                continue
-        n = math.ceil(len(sentence) / MAX_LINE)
-        width = math.ceil(len(sentence) / n) + 6
-        wrapped = textwrap.wrap(sentence, width=width, break_on_hyphens=False)
-        # Don't leave a short word ("a", "the", "of") hanging at a line's end.
-        for i in range(len(wrapped) - 1):
-            head_, _, last = wrapped[i].rpartition(" ")
-            if head_ and (len(last) <= 2 or last in ("the", "and", "with", "for")):
-                wrapped[i], wrapped[i + 1] = head_, last + " " + wrapped[i + 1]
-        out += wrapped
-    # Markdown isn't parsed inside these HTML blocks.
-    return re.sub(r"`([^`]+)`", r"<code>\1</code>", "<br>\n".join(out))
-
-
-def head(f, align="center"):
-    return f'<p align="{align}">{f["badge"]}</p>\n<h3 align="{align}">{f["title"]}</h3>\n<p align="{align}">\n{lines(f["text"])}\n</p>'
-
-
-def stacked(f):
+def section(f):
     pic = clip_img(f, WIDTH.get(FEATURE_CLIP[f["key"]], "86%"))
-    return head(f) + (f'\n<p align="center">{pic}</p>' if pic else "")
-
-
-def sided(f, i):
-    pic = clip_img(f, "52%")
-    if not pic:
-        return head(f)
-    side = "right" if i % 2 else "left"
-    pic = pic.replace("<img ", f'<img align="{side}" hspace="18" ', 1)
-    return f'{pic}\n\n<br>\n\n{f["badge"]}\n<h3>{f["title"]}</h3>\n{f["text"]}\n<br clear="{side}">'
+    out = f'<p align="center">{f["badge"]}</p>\n<h3 align="center">{f["title"]}</h3>\n<p align="center">{sentence(SAY[f["key"]])}</p>'
+    return out + (f'\n<p align="center">{pic}</p>' if pic else "")
 
 
 banner_a = banner("roam", "GoodWatch: find what to watch next. A soft spotlight moves across a slowly drifting wall of posters.")
 a = banner_re.sub(banner_a, base)
-a = grid_re.sub(lambda _: GAP.join(stacked(f) for f in features) + GAP, a)
-b = banner_re.sub(banner_a, base)
-b = grid_re.sub(lambda _: GAP.join(sided(f, i) for i, f in enumerate(features)) + GAP, b)
-
-
-def switcher(current):
-    links = {"A": "README.md", "B": "README-B.md"}
-    names = {"A": "stacked sections", "B": "alternating sides"}
-    parts = [f"**{k}: {names[k]}**" if k == current else f"[{k}: {names[k]}]({links[k]})" for k in links]
-    return "> [!NOTE]\n> README animation prototype, round 2. Layouts: " + " · ".join(parts) + "\n\n"
-
-
+a = grid_re.sub(lambda _: GAP.join(section(f) for f in features if f["key"] not in SKIP) + GAP, a)
 why = re.search(r"## Why GoodWatch\n\n(.+?)\n", a).group(1)
-a = a.replace(why, f'<p align="center">\n{lines(why)}\n</p>\n<br>', 1).replace("## Why GoodWatch", '<h2 align="center">Why GoodWatch</h2>', 1)
-
-# Round 3: layout A only, stills instead of moving clips (clips/record.mjs stills).
-open("README.md", "w").write("> [!NOTE]\n> README animation prototype, round 3: animated header, feature stills.\n\n" + a)
+a = a.replace(why, "\n".join(f'<p align="center">{sentence(w)}</p>' for w in WHY) + "\n<br>", 1)
+a = a.replace("## Why GoodWatch", '<h2 align="center">Why GoodWatch</h2>', 1)
+open("README.md", "w").write("> [!NOTE]\n> README animation prototype, round 4.\n\n" + a)
 print("wrote README.md")
