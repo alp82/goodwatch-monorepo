@@ -1,0 +1,361 @@
+{
+  "collected_date_utc": "2026-10-26",
+  "method": "Private SSH read-only; ss in host and container network namespaces; iptables/NAT/nft; Crate SELECT; configuration and logs",
+  "hosts_inspected": [
+    "10.0.0.10",
+    "10.0.0.11",
+    "10.0.0.12",
+    "10.0.0.13",
+    "10.0.0.14",
+    "10.0.0.15",
+    "10.0.0.16",
+    "10.0.0.17",
+    "10.0.0.18",
+    "10.0.0.19",
+    "10.0.0.20",
+    "10.0.0.21",
+    "10.0.0.30",
+    "10.0.0.31",
+    "10.0.0.32"
+  ],
+  "coordinators": [
+    {
+      "host": "10.0.0.11",
+      "node": "crate-01",
+      "version": "5.10.16",
+      "backend": "iptables 1.8.7 (nf_tables); Docker 28.5.1",
+      "published_ipv4": {
+        "address": "10.0.0.11",
+        "ports": [
+          4200,
+          4300,
+          5432
+        ]
+      },
+      "dnat_container": "172.19.0.2",
+      "uncommented_rules_ipv4_ipv6": 279,
+      "private_source_allowlist": false,
+      "connections": {
+        "http": {
+          "open": 17,
+          "total": 5851050
+        },
+        "psql": {
+          "open": 0,
+          "total": 4
+        },
+        "transport": {
+          "open": 26,
+          "total": 30
+        }
+      },
+      "incoming_socket_counts": [
+        {
+          "port": 4200,
+          "source": "10.0.0.10",
+          "count": 1
+        },
+        {
+          "port": 4200,
+          "source": "10.0.0.15",
+          "count": 1
+        },
+        {
+          "port": 4200,
+          "source": "10.0.0.18",
+          "count": 1
+        },
+        {
+          "port": 4200,
+          "source": "10.0.0.20",
+          "count": 7
+        },
+        {
+          "port": 4200,
+          "source": "10.0.0.21",
+          "count": 6
+        },
+        {
+          "port": 4300,
+          "source": "10.0.0.12",
+          "count": 13
+        },
+        {
+          "port": 4300,
+          "source": "10.0.0.13",
+          "count": 13
+        }
+      ],
+      "jobs_by_user": {
+        "goodwatch_windmill": 4,
+        "crate": 1,
+        "goodwatch_auth": 1
+      },
+      "jobs_log_by_user": {
+        "yepwatch_catalog": 61,
+        "yepwatch_runtime": 279,
+        "admin": 2292,
+        "goodwatch_windmill": 1069,
+        "crate": 6,
+        "goodwatch_auth": 26299
+      },
+      "docker_user_existing_drop_count": 4,
+      "local_worker_network": {
+        "name": "windmill_default",
+        "compose_project": "windmill",
+        "compose_network": "default",
+        "bridge": "br-windmill",
+        "subnet": "172.28.0.0/24",
+        "container_ip": "172.28.0.2"
+      }
+    },
+    {
+      "host": "10.0.0.12",
+      "node": "crate-02",
+      "version": "5.10.16",
+      "backend": "iptables 1.8.7 (nf_tables); Docker 28.5.1",
+      "published_ipv4": {
+        "address": "10.0.0.12",
+        "ports": [
+          4200,
+          4300,
+          5432
+        ]
+      },
+      "dnat_container": "172.19.0.2",
+      "uncommented_rules_ipv4_ipv6": 242,
+      "private_source_allowlist": false,
+      "connections": {
+        "http": {
+          "open": 11,
+          "total": 518134
+        },
+        "psql": {
+          "open": 0,
+          "total": 4
+        },
+        "transport": {
+          "open": 26,
+          "total": 85
+        }
+      },
+      "incoming_socket_counts": [
+        {
+          "port": 4200,
+          "source": "10.0.0.10",
+          "count": 1
+        },
+        {
+          "port": 4200,
+          "source": "10.0.0.18",
+          "count": 1
+        },
+        {
+          "port": 4200,
+          "source": "10.0.0.20",
+          "count": 5
+        },
+        {
+          "port": 4200,
+          "source": "10.0.0.21",
+          "count": 3
+        },
+        {
+          "port": 4300,
+          "source": "10.0.0.11",
+          "count": 13
+        },
+        {
+          "port": 4300,
+          "source": "10.0.0.13",
+          "count": 13
+        }
+      ],
+      "jobs_by_user": {
+        "goodwatch_windmill": 4,
+        "crate": 1,
+        "goodwatch_auth": 1
+      },
+      "jobs_log_by_user": {
+        "yepwatch_catalog": 61,
+        "yepwatch_runtime": 279,
+        "admin": 2299,
+        "goodwatch_windmill": 1070,
+        "crate": 4,
+        "goodwatch_auth": 26291
+      },
+      "docker_user_existing_drop_count": 4,
+      "local_worker_network": {
+        "name": "windmill_default",
+        "compose_project": "windmill",
+        "compose_network": "default",
+        "bridge": "br-windmill",
+        "subnet": "172.28.0.0/24",
+        "container_ip": "172.28.0.2"
+      }
+    },
+    {
+      "host": "10.0.0.13",
+      "node": "crate-03",
+      "version": "5.10.16",
+      "backend": "iptables 1.8.7 (nf_tables); Docker 28.5.1",
+      "published_ipv4": {
+        "address": "10.0.0.13",
+        "ports": [
+          4200,
+          4300,
+          5432
+        ]
+      },
+      "dnat_container": "172.19.0.2",
+      "uncommented_rules_ipv4_ipv6": 237,
+      "private_source_allowlist": false,
+      "connections": {
+        "http": {
+          "open": 11,
+          "total": 518020
+        },
+        "psql": {
+          "open": 0,
+          "total": 4
+        },
+        "transport": {
+          "open": 26,
+          "total": 46
+        }
+      },
+      "incoming_socket_counts": [
+        {
+          "port": 4200,
+          "source": "10.0.0.10",
+          "count": 1
+        },
+        {
+          "port": 4200,
+          "source": "10.0.0.18",
+          "count": 1
+        },
+        {
+          "port": 4200,
+          "source": "10.0.0.20",
+          "count": 5
+        },
+        {
+          "port": 4200,
+          "source": "10.0.0.21",
+          "count": 3
+        },
+        {
+          "port": 4300,
+          "source": "10.0.0.11",
+          "count": 13
+        },
+        {
+          "port": 4300,
+          "source": "10.0.0.12",
+          "count": 13
+        }
+      ],
+      "jobs_by_user": {
+        "admin": 2,
+        "goodwatch_windmill": 4,
+        "crate": 2
+      },
+      "jobs_log_by_user": {
+        "yepwatch_catalog": 60,
+        "yepwatch_runtime": 266,
+        "admin": 2291,
+        "goodwatch_windmill": 1066,
+        "crate": 10,
+        "goodwatch_auth": 26310
+      },
+      "docker_user_existing_drop_count": 4,
+      "local_worker_network": {
+        "name": "windmill_default",
+        "compose_project": "windmill",
+        "compose_network": "default",
+        "bridge": "br-windmill",
+        "subnet": "172.28.0.0/24",
+        "container_ip": "172.28.0.2"
+      }
+    }
+  ],
+  "limitations": [
+    "Short samples do not prove absence of scheduled/transient clients.",
+    "sys.jobs and sys.jobs_log do not attribute source addresses.",
+    "PostgreSQL historic total 4 each; origin of historic sessions unknown.",
+    "Snapshot SELECTs timed out after 15 seconds; backup success read from existing log.",
+    "No firewall mutations, traffic rejection tests or lifecycle changes performed."
+  ],
+  "worker_samples": {
+    "10.0.0.10": [],
+    "10.0.0.11": [
+      {
+        "destination": "10.0.0.11",
+        "port": 4200
+      },
+      {
+        "destination": "10.0.0.12",
+        "port": 4200
+      },
+      {
+        "destination": "10.0.0.13",
+        "port": 4200
+      }
+    ],
+    "10.0.0.12": [],
+    "10.0.0.13": [],
+    "10.0.0.14": [],
+    "10.0.0.15": [
+      {
+        "destination": "10.0.0.11",
+        "port": 4200
+      }
+    ],
+    "10.0.0.16": [],
+    "10.0.0.17": [],
+    "10.0.0.18": [
+      {
+        "destination": "10.0.0.11",
+        "port": 4200
+      },
+      {
+        "destination": "10.0.0.12",
+        "port": 4200
+      },
+      {
+        "destination": "10.0.0.13",
+        "port": 4200
+      }
+    ],
+    "10.0.0.19": [],
+    "10.0.0.20": [],
+    "10.0.0.21": [],
+    "10.0.0.30": [],
+    "10.0.0.31": [],
+    "10.0.0.32": []
+  },
+  "monitoring": {
+    "host": "10.0.0.10",
+    "kind": "Uptime Kuma json-query",
+    "targets": [
+      "http://10.0.0.11:4200",
+      "http://10.0.0.12:4200",
+      "http://10.0.0.13:4200"
+    ],
+    "interval_seconds": 60,
+    "active": true
+  },
+  "backup": {
+    "host": "10.0.0.11",
+    "schedule": "5 * * * *",
+    "user": "goodwatch_backup",
+    "secret_delivery": "protected password file; value not collected",
+    "log_finished_utc": "2026-10-26T00:07:31Z",
+    "log_verified_snapshots": [
+      "hourly_20261026_000501",
+      "daily_20261026_000501"
+    ],
+    "snapshot_sql_independent_verification": "timeout"
+  }
+}
