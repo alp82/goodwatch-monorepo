@@ -4,13 +4,13 @@
 //   guest, 5+ ratings    Your taste, Save my taste · free
 //   just saved           Saved to your account (after Continue with Google, `?saved=1`)
 //   new member           a slim Rate more band
-//   established member   a quiet Rate more link
+//   established member   no banner
 import { Link, useSearchParams } from "@remix-run/react"
 import { useScoresCount } from "~/hooks/useUserDataAccessors"
 import { GoogleMark } from "~/ui/taste-quiz/GoogleMark"
 import { QUIZ_PATH, RatingDots } from "~/ui/taste-quiz/TasteQuizPage"
-import { useContinueWithGoogle } from "~/utils/auth-client"
 import { QUIZ_GOAL } from "~/ui/taste-quiz/quiz-flow"
+import { useContinueWithGoogle } from "~/utils/auth-client"
 import { useAuthHref } from "~/utils/auth-href"
 import { useGuestInteractions } from "~/utils/guest-progress"
 
@@ -31,22 +31,18 @@ function MemberBanner() {
 	const rated = useScoresCount()
 	if (params.get("saved") === "1")
 		return <YourTaste line="Saved to your account. Rate more to sharpen it." />
-	const isNew = rated < NEW_MEMBER_RATINGS
+	if (rated >= NEW_MEMBER_RATINGS) return null
 	return (
 		<section
 			aria-label="Rate more"
-			className={isNew ? "border-b border-white/10 bg-gray-900/60" : ""}
+			className="border-b border-white/10 bg-gray-900/60"
 		>
-			<div
-				className={`mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 md:px-8 ${isNew ? "py-2.5" : "justify-end pt-3"}`}
-			>
-				{isNew && (
-					<p className="text-sm text-gray-300">
-						Your taste is from {rated} {rated === 1 ? "rating" : "ratings"}. A
-						few more and it gets sharper.
-					</p>
-				)}
-				<Link to={QUIZ_PATH} className={isNew ? rateButton : rateLink}>
+			<div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 md:px-8">
+				<p className="text-sm text-gray-300">
+					Your taste is from {rated} {rated === 1 ? "rating" : "ratings"}. A few
+					more and it gets sharper.
+				</p>
+				<Link to={QUIZ_PATH} className={rateButton}>
 					Rate more →
 				</Link>
 			</div>
