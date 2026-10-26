@@ -254,15 +254,39 @@ def reconcile_catalog(db, entries, latest, record_outcome, batch_size=1000):
             record_outcome(entry, "queued", error="description_missing_in_catalog")
 
 
+
+class LabelCatalog:
+    """Catalog adapter used by the shared paced, resumable population loop."""
+    prepare = staticmethod(prepare_queue)
+    reconcile = staticmethod(reconcile_catalog)
+    restore = staticmethod(normalize_record)
+    write = staticmethod(lambda db, records: import_records(db, records, apply=True))
+
+    @staticmethod
+    def contains(db, entry):
+        return bool(db.select("SELECT name FROM trope_catalog WHERE name = ? AND description IS NOT NULL LIMIT 1",
+                              (entry["name"],)))
+
+    @staticmethod
+    def record(entry, result, evidence, page):
+        record = normalize_record({"name": entry["name"], "url": result.get("canonical_url") or page.url,
+                                   "description": result["description"], "source_hash": evidence.get("sha256"),
+                                   "fetched_at": evidence.get("started_at")})
+        if not record["source_hash"] or record["fetched_at"] is None:
+            raise ValueError("Missing captured source provenance")
+        return record
+
+
 def run(db, output, *, all_requests=False, max_requests=200, delay=6, state_path=DEFAULT_STATE,
         lock_path=DEFAULT_LOCK, pace_path=DEFAULT_PACE, refresh_queue=False, retry_review=False,
-        saved=(), client=None, extractor=None, batch_size=1, emit=None, _lock_held=False, priority_names=None):
+        saved=(), client=None, extractor=None, batch_size=1, emit=None, _lock_held=False, priority_names=None, catalog=None):
     if delay < 6 or max_requests < 1 or not 1 <= batch_size <= 100:
         raise ValueError("Use delay>=6, max_requests>=1 and batch_size between1 and100")
     output = Path(output)
+    catalog = catalog or LabelCatalog()
     emit = emit or (lambda value: print(json.dumps(value, ensure_ascii=False), flush=True))
     with nullcontext() if _lock_held else worker_lock(lock_path):
-        queue = prepare_queue(db, output, refresh=refresh_queue)
+        queue = catalog.prepare(db, output, refresh=refresh_queue)
         requests_path, outcomes_path = output / "requests.jsonl", output / "outcomes.jsonl"
         requests = read_journal(requests_path, repair=True)
         outcomes = read_journal(outcomes_path, repair=True)
@@ -314,7 +338,7 @@ def run(db, output, *, all_requests=False, max_requests=200, delay=6, state_path
         def flush():
             if not pending:
                 return
-            import_records(db, [row[1] for row in pending], apply=True)
+            catalog.write(db, [row[1] for row in pending])
             for entry, record in pending:
                 outcome(entry, "stored", record=record)
             pending.clear()
@@ -339,7 +363,7 @@ def run(db, output, *, all_requests=False, max_requests=200, delay=6, state_path
 
         checkpoint()
         try:
-            reconcile_catalog(db, queue, latest, outcome)
+            catalog.reconcile(db, queue, latest, outcome)
             blocked = active_block()
             if blocked:
                 stop = "source_blocked_until_recorded_deadline"
@@ -350,12 +374,11 @@ def run(db, output, *, all_requests=False, max_requests=200, delay=6, state_path
                         continue
                     # An archive import may fill this row after the pass began.
                     # This exact primary-key read avoids fetching an already stored definition.
-                    if db.select("SELECT name FROM trope_catalog WHERE name = ? AND description IS NOT NULL LIMIT 1",
-                                 (entry["name"],)):
+                    if catalog.contains(db, entry):
                         outcome(entry, "already_present", reconciled=True)
                         continue
                     if previous.get("status") == "ready":
-                        pending.append((entry, normalize_record(previous["record"])))
+                        pending.append((entry, catalog.restore(previous["record"])))
                         if len(pending) >= batch_size:
                             flush()
                         continue
@@ -418,11 +441,7 @@ def run(db, output, *, all_requests=False, max_requests=200, delay=6, state_path
                         continue
                     evidence = source_metadata.get(valid_url, {})
                     try:
-                        record = normalize_record({"name": entry["name"], "url": result.get("canonical_url") or page.url,
-                                                   "description": result["description"], "source_hash": evidence.get("sha256"),
-                                                   "fetched_at": evidence.get("started_at")})
-                        if not record["source_hash"] or record["fetched_at"] is None:
-                            raise ValueError("Missing captured source provenance")
+                        record = catalog.record(entry, result, evidence, page)
                     except ValueError as error:
                         # Validation diagnostics contain only the public source name/record, never transport headers.
                         outcome(entry, "review", error="invalid_record_or_missing_provenance", validation_error=str(error), extraction=result)
@@ -434,7 +453,7 @@ def run(db, output, *, all_requests=False, max_requests=200, delay=6, state_path
                 flush()
                 if not stop:
                     # Include external fills of earlier review entries before deciding this pass is done.
-                    reconcile_catalog(db, queue, latest, outcome)
+                    catalog.reconcile(db, queue, latest, outcome)
         except KeyboardInterrupt:
             stop = "interrupted_resume_available"
         except Exception as error:
