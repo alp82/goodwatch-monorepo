@@ -1,0 +1,157 @@
+{
+  "scope": "First-party opened-title demand; frontend, impression endpoint, priority timestamp and additive schema migration",
+  "build": {
+    "command": "cd goodwatch-webapp && npm run build",
+    "passed": true,
+    "log": "/tmp/opened-demand-build-4.log",
+    "dependency_setup": "Final build uses isolated npm ci with SHARP_IGNORE_GLOBAL_LIBVIPS=1. Initial failed borrowed-dependency build created a Vite temporary configuration cache under the original node_modules/.vite-temp; no original tracked source/config or build/ outputs were changed."
+  },
+  "focused_types": {
+    "passed": true,
+    "log": "/tmp/opened-demand-focused-types.log",
+    "scope": "New demand controller, hook, endpoint service, SQL statement and their tests; strict standalone tsc"
+  },
+  "full_typecheck": {
+    "passed": false,
+    "error_count": 192,
+    "changed_file_errors": 0,
+    "log": "/tmp/opened-demand-typecheck-4.log"
+  },
+  "tests": {
+    "node": {
+      "passed": 8,
+      "command": "node --test goodwatch-webapp/app/hooks/useTitleOpened.test.ts goodwatch-webapp/app/utils/title-demand.test.ts goodwatch-webapp/app/server/poster-impressions.server.test.ts goodwatch-webapp/app/server/utils/priority-statement.test.ts"
+    },
+    "python": {
+      "passed": 14,
+      "command": "python3 -m pytest goodwatch-flows/tests/test_opened_demand_migration.py goodwatch-flows/tests/test_priority_queue.py -q"
+    }
+  },
+  "landing_budget": {
+    "passed": false,
+    "exit_code": 1,
+    "run": "goodwatch-benchmark/results/20261026T015809Z-lighthouse-streaming-opened-demand-https",
+    "failures": {
+      "home": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "image_count",
+        "blocking_requests"
+      ],
+      "movie": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "total_bytes"
+      ],
+      "show": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "total_bytes"
+      ],
+      "person": [
+        "html_bytes",
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "total_bytes"
+      ],
+      "discover": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "third_party_origins",
+        "total_bytes",
+        "lcp_ms",
+        "lcp_element"
+      ],
+      "share_list": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "total_bytes"
+      ]
+    },
+    "environment": "Final local production build, HTTPS temporary proxy, Lighthouse local Docker, CPU slowdown2.7, one run per surface. This local CPU is not the calibrated generator. A baseline build overlapped part of this run, so timing metrics are informational. Redis disabled, leaving existing ancillary genres and Discover reads degraded.",
+    "sinks_blocked": [
+      "poster impressions",
+      "OG warmup",
+      "Sentry tunnel",
+      "PostHog",
+      "Faststats"
+    ],
+    "caps_changed": false
+  },
+  "baseline_comparison": {
+    "method": "Clean HEAD webapp archive built separately with same dependencies; compare Brotli sizes of matching JS chunk names actually requested by final Lighthouse run. Every observed script has a matching baseline chunk name; this is not a second baseline browser benchmark.",
+    "baseline_build_passed": true,
+    "log": "/tmp/opened-demand-baseline-build.log",
+    "per_surface": {
+      "discover": {
+        "matchedScriptChunks": 47,
+        "unmatched": [],
+        "currentBrotliBytes": 535248,
+        "baselineBrotliBytesForSameChunkNames": 531723,
+        "delta": 3525
+      },
+      "home": {
+        "matchedScriptChunks": 33,
+        "unmatched": [],
+        "currentBrotliBytes": 378398,
+        "baselineBrotliBytesForSameChunkNames": 375633,
+        "delta": 2765
+      },
+      "movie": {
+        "matchedScriptChunks": 44,
+        "unmatched": [],
+        "currentBrotliBytes": 403439,
+        "baselineBrotliBytesForSameChunkNames": 400019,
+        "delta": 3420
+      },
+      "person": {
+        "matchedScriptChunks": 24,
+        "unmatched": [],
+        "currentBrotliBytes": 298982,
+        "baselineBrotliBytesForSameChunkNames": 296807,
+        "delta": 2175
+      },
+      "share_list": {
+        "matchedScriptChunks": 23,
+        "unmatched": [],
+        "currentBrotliBytes": 308599,
+        "baselineBrotliBytesForSameChunkNames": 307680,
+        "delta": 919
+      },
+      "show": {
+        "matchedScriptChunks": 44,
+        "unmatched": [],
+        "currentBrotliBytes": 403476,
+        "baselineBrotliBytesForSameChunkNames": 400051,
+        "delta": 3425
+      }
+    },
+    "interpretation": "Existing caps are below baseline matched-chunk bytes on every surface; this change adds approximately0.9\u20133.5KiB of Brotli script bytes in this comparison. No unrelated budget limit increases."
+  },
+  "isolation_notes": [
+    "All Crate traffic from local app used a temporary proxy permitting SELECT/WITH read statements and GET blob objects only; mutating SQL, multi-statements and blob writes were rejected.",
+    "Startup publisher reported0written/0skipped/484failed in0ms; do not interpret this as484 observed proxy rejection requests.",
+    "An initial aborted HTTP Lighthouse run sent a Sentry tunnel POST returning200 before explicit tunnel blocking was added; it may have emitted development error telemetry. Final runs blocked that sink.",
+    "Initial proxy rejected read-only WITH queries and caused local title500s; corrected proxy yielded actual movie SSR200 before final budget.",
+    "No migration or demand write was executed against live storage; real-store concurrency acceptance remains separate rollout proof."
+  ],
+  "migration": {
+    "path": "goodwatch-flows/scripts/migrate_opened_demand.py",
+    "dry_run": "python goodwatch-flows/scripts/migrate_opened_demand.py",
+    "explicit_apply_from_flows": "python scripts/migrate_opened_demand.py --apply --env-file .env",
+    "executed": "dry-run only",
+    "sql": "ALTER TABLE crawl_priority ADD COLUMN IF NOT EXISTS last_opened_at TIMESTAMP WITH TIME ZONE",
+    "read_contract": "Nullable UTC timestamp, CAST(last_opened_at AS BIGINT) yields UTC epoch milliseconds"
+  },
+  "review": {
+    "diff_check_passed": true,
+    "contract": "source_kind omitted defaults poster; explicit opened; source-separated1800second dedupe; server current timestamp monotonic; canonical media/TMDB identity; no acknowledgment, cooldown, claim or lease changes",
+    "ui": "Details hook independent of poster; hero duplicate removed; TV title/rating share hook gated by power/menu/intro and viewport visibility; responsive canvas replacement rebound"
+  }
+}

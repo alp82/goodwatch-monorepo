@@ -1,0 +1,26 @@
+{
+  "command": "PYTHONPATH=goodwatch-flows/windmill:goodwatch-flows/tests python goodwatch-flows/tests/offline_unittest.py discover -s goodwatch-flows/tests -p test_*.py",
+  "feature": {
+    "tests": 1863,
+    "failures": 79,
+    "errors": 112,
+    "skipped": 97
+  },
+  "base_commit": "a9f4cf06cd51aa73cf5e6bec6ad8eab7389751f2",
+  "baseline": {
+    "tests": 1796,
+    "failures": 79,
+    "errors": 118,
+    "skipped": 89
+  },
+  "new_failure_labels": [],
+  "baseline_only_error_labels": [
+    "ERROR: test_all_audit_verdicts_and_per_source_release_bar (test_social_relevance.RelevanceTests)",
+    "ERROR: test_deployment_ddl_matches_initializer (test_list_exposure_schema.ListExposureSchemaTests)",
+    "ERROR: test_migration_uses_the_initializer_column_definitions (test_native_import_schema.NativeImportSchemaTests)",
+    "ERROR: test_schema_registry_and_migration_match_stable_locale_keys (test_media_language_text.TranslationIngestionTest)",
+    "ERROR: test_shared_registry_parity (test_provider_alias_resolution.AliasResolutionTests)",
+    "ERROR: test_the_hand_written_table_has_the_columns_the_webapp_uses (test_mcp_action_schema.McpActionSchemaTests)"
+  ],
+  "limits": "Same Python environment, network denied. Baseline exported goodwatch-flows only, so six extra errors reference unavailable sibling artifacts. Existing failures include missing optional dependencies and unrelated trope/social/sitemap checks. Focused current tests with disposable Mongo:99 passed."
+}
