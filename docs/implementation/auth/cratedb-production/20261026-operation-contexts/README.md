@@ -8,6 +8,20 @@ and temporarily hold the backup cron; those changes were restored.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Q46 — chosen proposed window21:30 UTC,read-only
+
+[Complete schedule/runtime/window research](q46-window-research.md):56 schedules/53 enabled,
+809 recent completed root jobs, current queue/deploy metadata and seven full UTC days of aggregate
+captured pageviews. **Recommend October26 21:30–23:00 UTC**, gates21:20, lastSIGTERM22:00.
+Runner-up October27 11:30–13:00 UTC. [Active plain-restart plan](q40-execution-plan.md) now uses the
+chosen dates/cutoffs and latest pre-window21:05 backup gate. No job, schedule, cron, setting, deploy
+or process was changed or started for Q46; no automatic restart was scheduled.
+
+The time shift lowers added batch overlap but is **not a heavy-free slot**: continuous crawls,
+hourly social work and22:45 embedding remain, with23:00 provider initialization at the boundary.
+The earlier strict no-heavy-work gate still needs an explicit owner decision on that baseline;
+no workload exception or pause is silently assumed. All execution gates and explicit go still apply.
+
 ## Q43 — active plain-restart plan,awaiting go
 
 [Q43 execution plan](q40-execution-plan.md) replaces the drain route: **plain normal stop/start only,
