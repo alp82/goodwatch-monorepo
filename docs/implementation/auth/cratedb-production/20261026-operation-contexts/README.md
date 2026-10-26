@@ -60,8 +60,8 @@ and are unchanged for the entire30-minute span. **Zero completed moves or new pl
 
 | Pending copy in every sample | Source → intended target | Observed duration |
 | --- | --- | --- |
-| `doc.person_appeared_in`, shard4 **replica** | crate-03 → crate-02 | Entire30-minute watch; also present at08:15 Q31 pre-check, so at least35min observed |
-| `doc.person_worked_on`, shard5 **replica** | crate-03 → crate-02 | Entire30-minute watch; also present at08:15 Q31 pre-check, so at least35min observed |
+| `doc.person_appeared_in`, shard4 **replica** | crate-03 → crate-02 | Entire30-minute watch; also present at08:15 Q31 pre-check, so at least34min observed |
+| `doc.person_worked_on`, shard5 **replica** | crate-03 → crate-02 | Entire30-minute watch; also present at08:15 Q31 pre-check, so at least34min observed |
 
 | Node | Copies, first → last | Primaries, first → last |
 | --- | --- | --- |
@@ -100,10 +100,10 @@ Read-only filesystem checks on crate-02 found both intended paths already exist:
 | `person_appeared_in`4 | 379,471,136 /154 | Oct22 05:55:34.396 UTC |
 | `person_worked_on`5 | 321,295,612 /124 | Oct22 05:55:30.304 UTC |
 
-Twelve metadata samples from08:23:37 through08:50:05 found identical complete file inventories,
+Twelve metadata samples from08:23:39.594 through08:50:06.303 found identical complete file inventories,
 sizes and modification timestamps: **zero observed growth**. Crate-02's Java process had open
 handles to old segment files in both paths at the first/final FD checks. This does not identify
-the shard-lock owner or prove that a new target engine was successfully created. No file contents
+the shard-lock owner or prove that a new target engine was successfully created. No shard-data file contents
 were read, no heap dump/thread attachment was taken and no GC was requested.
 
 ### Logs explain the changing identities before this watch
