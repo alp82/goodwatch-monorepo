@@ -378,12 +378,12 @@ function encodePulse({ name, at, len = 0, slot, still }) {
 	fs.mkdirSync(dir, { recursive: true })
 	const { list, crop } = concatList(clip.src, raw, Math.max(len, 0.2) + 0.1)
 	const [w, h, x, y] = crop
-	ffmpeg(["-f", "concat", "-safe", "0", "-i", list, "-vf", `crop=${w}:${h}:${x}:${y},scale=${clip.width}:-2:flags=lanczos,fps=${PULSE_FPS}`, path.join(dir, "e%04d.png")])
+	ffmpeg(["-f", "concat", "-safe", "0", "-i", list, "-vf", `crop=${w}:${h}:${x}:${y},scale=${still ? w : clip.width}:-2:flags=lanczos,fps=${PULSE_FPS}`, path.join(dir, "e%04d.png")])
 	const essence = fs.readdirSync(dir).filter((f) => f.startsWith("e")).sort().slice(0, still ? 1 : Math.round(len * PULSE_FPS))
 	const last = path.join(dir, essence.at(-1))
 	const out = path.join(HERE, `${name}.avif`)
 	if (still) {
-		ffmpeg(["-i", last, "-c:v", "libaom-av1", "-crf", "30", "-still-picture", "1", "-pix_fmt", "yuv420p", out])
+		ffmpeg(["-i", last, "-c:v", "libaom-av1", "-crf", "22", "-still-picture", "1", "-pix_fmt", "yuv420p", out])
 		console.log(`${name}.avif  ${(fs.statSync(out).size / 1024).toFixed(0)} KB  still`)
 		return
 	}
@@ -410,13 +410,17 @@ function encodePulse({ name, at, len = 0, slot, still }) {
 }
 
 const args = process.argv.slice(2)
-const phases = args.filter((a) => ["intro", "hiw", "encode", "pulse"].includes(a))
+const phases = args.filter((a) => ["intro", "hiw", "encode", "pulse", "stills"].includes(a))
 const only = args.filter((a) => !phases.includes(a))
-const run = (p) => (phases.length === 0 && p !== "pulse") || phases.includes(p)
+const run = (p) => (phases.length === 0 && !["pulse", "stills"].includes(p)) || phases.includes(p)
 if (run("intro")) await recordIntro(only)
 if (run("hiw")) await recordHiw(only)
 if (run("encode")) {
 	for (const clip of CLIPS) if (!only.length || only.includes(clip.name)) encodeClip(clip)
 	if (!only.length || only.includes("reel")) encodeReel(REEL)
 }
+// Stills: the frame each pulse rests on (the essence's last frame), as a single AVIF picture.
+if (phases.includes("stills"))
+	for (const p of PULSE)
+		if (!only.length || only.includes(p.name)) encodePulse(p.still ? p : { name: p.name, at: p.at + p.len - 1 / PULSE_FPS, still: true })
 if (phases.includes("pulse")) for (const p of PULSE) if (!only.length || only.includes(p.name)) encodePulse(p)

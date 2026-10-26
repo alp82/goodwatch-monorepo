@@ -57,8 +57,39 @@ WIDTH = {"score": "62%", "explorer": "60%", "ai": "72%"}  # clips with a lot of 
 GAP = "\n<br>\n\n"
 
 
+MAX_LINE = 58  # characters; GitHub has no max-width, so long descriptions get hand-set line breaks
+
+
+def lines(text):
+    """One sentence per line; a sentence longer than MAX_LINE splits into balanced lines at word breaks."""
+    import math
+    import textwrap
+
+    out = []
+    for sentence in re.split(r"(?<=[.!?])\s+", text.strip()):
+        if len(sentence) > MAX_LINE:
+            # Prefer a comma break that keeps both halves under MAX_LINE and close in length.
+            cuts = [m.end() for m in re.finditer(r",\s|:\s", sentence)]
+            cuts = [c for c in cuts if c <= MAX_LINE + 4 and len(sentence) - c <= MAX_LINE + 4]
+            if cuts:
+                c = min(cuts, key=lambda c: abs(2 * c - len(sentence)))
+                out += [sentence[:c].strip(), sentence[c:].strip()]
+                continue
+        n = math.ceil(len(sentence) / MAX_LINE)
+        width = math.ceil(len(sentence) / n) + 6
+        wrapped = textwrap.wrap(sentence, width=width, break_on_hyphens=False)
+        # Don't leave a short word ("a", "the", "of") hanging at a line's end.
+        for i in range(len(wrapped) - 1):
+            head_, _, last = wrapped[i].rpartition(" ")
+            if head_ and (len(last) <= 2 or last in ("the", "and", "with", "for")):
+                wrapped[i], wrapped[i + 1] = head_, last + " " + wrapped[i + 1]
+        out += wrapped
+    # Markdown isn't parsed inside these HTML blocks.
+    return re.sub(r"`([^`]+)`", r"<code>\1</code>", "<br>\n".join(out))
+
+
 def head(f, align="center"):
-    return f'<p align="{align}">{f["badge"]}</p>\n<h3 align="{align}">{f["title"]}</h3>\n<p align="{align}">{f["text"]}</p>'
+    return f'<p align="{align}">{f["badge"]}</p>\n<h3 align="{align}">{f["title"]}</h3>\n<p align="{align}">\n{lines(f["text"])}\n</p>'
 
 
 def stacked(f):
@@ -89,6 +120,9 @@ def switcher(current):
     return "> [!NOTE]\n> README animation prototype, round 2. Layouts: " + " · ".join(parts) + "\n\n"
 
 
-for name, text, key in (("README.md", a, "A"), ("README-B.md", b, "B")):
-    open(name, "w").write(switcher(key) + text)
-    print("wrote", name)
+why = re.search(r"## Why GoodWatch\n\n(.+?)\n", a).group(1)
+a = a.replace(why, f'<p align="center">\n{lines(why)}\n</p>', 1).replace("## Why GoodWatch", '<h2 align="center">Why GoodWatch</h2>', 1)
+
+# Round 3: layout A only, stills instead of moving clips (clips/record.mjs stills).
+open("README.md", "w").write("> [!NOTE]\n> README animation prototype, round 3: animated header, feature stills.\n\n" + a)
+print("wrote README.md")

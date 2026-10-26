@@ -66,7 +66,7 @@
   const MODE = new URLSearchParams(location.search).get("v") || "roam"
   const V = MODE === "card" ? "roam" : MODE
   if (MODE === "card") document.getElementById("card").classList.add("cardmode")
-  const T = Number(new URLSearchParams(location.search).get("T") || 40)
+  const T = Number(new URLSearchParams(location.search).get("T") || 26)
   // Well-known titles scored 80+ on GoodWatch (TMDB poster paths), same pool as banner.html
   const posters = [
     "anFx9aTOOYqgS3v7x3R84Kz67ly", "wa3ZQE9kLnqwN3vQ0NNjg1NPsCa", "eKfVzzEazSIjJMrw9ADa2x8ksLz", "iOb2fjXLbpJgyQXe46n1WtGCnaa",
@@ -80,8 +80,8 @@
 
   const TW = 100, TH = 150, GAP = 12, PX = TW + GAP, PY = TH + GAP
   const ROT = -7 * Math.PI / 180
-  const DRIFT = [-5, -2.2] // px per second, in wall coordinates
-  const ENTER = 105, EXIT = 150, DEAL = 1.6
+  const DRIFT = [-10, -4.4] // px per second, in wall coordinates
+  const ENTER = 105, EXIT = 150, DEAL = 1.1
 
   const hash = (r, c) => { let h = (r * 73856093) ^ (c * 19349663); h = (h ^ (h >>> 13)) * 1274126177; return Math.abs(h ^ (h >>> 16)) }
   const state = new Map() // "r,c" -> { flips, at, dir, inside }
