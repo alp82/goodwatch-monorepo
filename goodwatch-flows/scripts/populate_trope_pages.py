@@ -66,6 +66,9 @@ class PageCatalog:
                 attempts[identity] = False
         if any(attempts.values()):
             raise ValueError('Unverified page write attempt: inspect receipts and stored documents before resuming')
+        # Only after proving no write is uncertain may a torn, pre-write tail
+        # be trimmed or a complete final JSON event receive its missing newline.
+        read_journal(output / 'database-events.jsonl', repair=True)
         path, manifest_path = output / 'queue.json', output / 'queue-manifest.json'
         inventory = [{'path': str(p), 'sha256': hashlib.sha256(p.read_bytes()).hexdigest()}
                      for p in self.inventories]

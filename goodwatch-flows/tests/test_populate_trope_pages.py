@@ -105,6 +105,24 @@ class PagePopulationTests(unittest.TestCase):
         ]))
         self.assertEqual(inventory_urls([self.inventory]), [BASE + 'Recovered'])
 
+    def test_safe_final_receipt_without_newline_is_repaired_before_append(self):
+        output = self.root / 'run'
+        self.catalog.prepare(self.db, output)
+        journal = output / 'database-events.jsonl'
+        before = {'document_sha256': 'a' * 64, 'phase': 'before_write'}
+        complete = {'document_sha256': 'a' * 64, 'phase': 'complete'}
+        journal.write_text(json.dumps(before) + '\n' + json.dumps(complete))
+        self.catalog.prepare(self.db, output)
+        with journal.open('a') as handle:
+            handle.write(json.dumps({'phase': 'planned'}) + '\n')
+        self.assertEqual(len([json.loads(line) for line in journal.read_text().splitlines()]), 3)
+        # An unverified final write event remains untouched for inspection.
+        raw = json.dumps(before)
+        journal.write_text(raw)
+        with self.assertRaisesRegex(ValueError, 'Unverified page write'):
+            self.catalog.prepare(self.db, output)
+        self.assertEqual(journal.read_text(), raw)
+
     def test_changed_inventory_or_saved_queue_fails_closed(self):
         output = self.root / 'run'
         self.catalog.prepare(self.db, output)
