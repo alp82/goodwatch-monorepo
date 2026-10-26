@@ -150,3 +150,34 @@ test('covered entrance controls are inert until the panel closes', async ({ page
   await page.getByRole('button', { name: 'Back to Start', exact: true }).click();
   await expect(body).not.toHaveAttribute('inert');
 });
+
+for (const mode of ['create', 'join'] as const) test(`Back escapes an unconfirmed ${mode} without forgetting its exact retry`, async ({ page }) => {
+  await common(page); const bodies: GuestAdmissionRequest[]=[];
+  if(mode==='join') await page.route('**/proposal/rooms/test-room', route => route.fulfill({status:401,json:{error:{code:'unauthorized',message:'No existing membership',retryable:false}}}));
+  await page.route(mode==='create'?'**/proposal/rooms':'**/proposal/rooms/test-room/join', route => { bodies.push(route.request().postDataJSON()); return route.abort('failed'); });
+  const action=await open(page,mode,'Connection check');
+  await action.click();
+  await expect(page.getByText('Your action has not been confirmed. Retry the same action to reconcile it.',{exact:true})).toBeVisible();
+  await expect(action).toBeEnabled();
+  await action.click();await expect.poll(()=>bodies.length).toBe(2);expect(bodies[1]).toEqual(bodies[0]);
+  // Reload restores the pending form, but still allows Back.
+  await page.reload();
+  await expect(action).toBeEnabled();
+  await page.getByRole('button',{name:'Back to Start',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Create a room',exact:true})).toBeVisible();
+  await expect(page.getByLabel('Your name')).toHaveCount(0);
+  expect(bodies).toHaveLength(2);
+  // Even the other entry action resumes the original operation, without replacing its identity.
+  await page.getByRole('button',{name:mode==='create'?'Join a room':'Create a room',exact:true}).click();
+  await expect(action).toBeEnabled();await action.click();
+  await expect.poll(()=>bodies.length).toBe(3);expect(bodies[2]).toEqual(bodies[0]);
+});
+
+test('Back during admission cooldown allows reopening the saved request without a new POST',async({page})=>{
+  await common(page);let posts=0;
+  await page.route('**/proposal/rooms',route=>{posts++;return route.fulfill({status:429,headers:{'Retry-After':'60'},json:{error:{code:'limit_reached',message:'Wait before retrying',retryable:true}}});});
+  const action=await open(page,'create','Connection check');await action.click();await expect(action).toBeDisabled();
+  await page.getByRole('button',{name:'Back to Start',exact:true}).click();
+  await page.getByRole('button',{name:'Create a room',exact:true}).click();
+  await expect(action).toBeDisabled();await expect(action).toHaveText(/Retry in/);expect(posts).toBe(1);
+});

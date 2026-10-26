@@ -1,0 +1,27 @@
+{
+  "base": "902d703aba20057b931f395c0154221b6b08ea7d",
+  "status": "Local fix verified; not published or in TestFlight",
+  "reproduced": "An aborted create request retained its admission; Back cleared panel but pending fallback reopened it immediately.",
+  "fix": "Navigation dismissal is independent from request persistence. Create/join/sign-in resume the retained operation. Reopening during cooldown sends no POST. Android Back covers restored pending forms.",
+  "checks": {
+    "unit": 96,
+    "browserRegression": 38,
+    "finalFocusedBrowser": 3,
+    "typecheck": "pass",
+    "lint": "0 errors, one existing unused View warning",
+    "nativeExports": [
+      "ios",
+      "android"
+    ]
+  },
+  "connectionDiagnosis": {
+    "publicReady": 200,
+    "nativeCreate": 200,
+    "exactNativeRetry": 200,
+    "iphoneBuild": 15,
+    "publicOriginInActualIpa": true,
+    "reproducedTesterNetworkFailure": false,
+    "pending": "Compare Safari and app on the same iPhone, Wi-Fi versus cellular."
+  },
+  "scope": "No tester account, room, device or personal data accessed. Fresh isolated connection-check room used; no production configuration changed."
+}

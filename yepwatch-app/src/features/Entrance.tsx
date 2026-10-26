@@ -47,12 +47,12 @@ export function Entrance({ invite }: { invite?: string }) {
   const [checkVersion, setCheckVersion] = useState(0);
   const intent = invite ?? '';
   const [admission, setAdmission] = useState<AdmissionRecovery | null>(null);
+  // Keeping an uncertain request must not trap navigation inside its form.
+  const [recoveryDismissed, setRecoveryDismissed] = useState(false);
   const [restoring, setRestoring] = useState(true);
   const [restoreFailed, setRestoreFailed] = useState(false);
   const [restoreVersion, setRestoreVersion] = useState(0);
   const retrySeconds = useRetryCountdown(admission?.retryAt ?? 0);
-  // A pending admission request reopens the panel it came from, with its exact name and code.
-  const setJoining = (on: boolean) => { if (on) setPanel('join'); };
   useEffect(() => {
     let active = true;
     void readAdmission(intent).then((saved) => {
@@ -61,7 +61,6 @@ export function Entrance({ invite }: { invite?: string }) {
       if (saved) {
         setNickname(saved.request.nickname);
         setCode(saved.code);
-        setJoining(Boolean(saved.code));
       }
       setRestoreFailed(false);
     }).catch(() => {
@@ -122,6 +121,7 @@ export function Entrance({ invite }: { invite?: string }) {
   async function enter(join: boolean, member = false, returning?: { code: string; nickname: string }, name?: string, joinCode?: string) {
     if (inFlight.current || restoring || restoreFailed || (admission && admission.intent !== intent) || Date.now() < (admission?.retryAt ?? 0)) return;
     inFlight.current = true;
+    setRecoveryDismissed(false);
     setBusy(true);
     setError('');
     let saved = admission;
@@ -218,12 +218,13 @@ export function Entrance({ invite }: { invite?: string }) {
   }
   const known = home.nickname;
   const locked = busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;
-  const closePanel = useCallback(() => { setError(''); if (invite) router.replace('/'); else setPanel(null); }, [invite]);
+  const closePanel = useCallback(() => { setError(''); setRecoveryDismissed(true); setPanel(null); if (invite) router.replace('/'); }, [invite]);
+  const recoveryPanel = !recoveryDismissed && (admission || restoreFailed || recoveryBlocked);
   useFocusEffect(useCallback(() => {
-    if (Platform.OS !== 'android' || !panel) return;
+    if (Platform.OS !== 'android' || (!panel && !recoveryPanel)) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => { closePanel(); return true; });
     return () => sub.remove();
-  }, [panel, closePanel]));
+  }, [panel, recoveryPanel, closePanel]));
   const open = (roomId: string) => router.push({ pathname: '/room/[id]', params: { id: roomId } });
   /** Return to a room you left: the saved invitation re-admits the same identity. */
   function returnTo(room: HomeRoom) {
@@ -233,16 +234,22 @@ export function Entrance({ invite }: { invite?: string }) {
       else open(room.roomId);
     }).catch(() => setError('Could not restore your invitation. Try again.'));
   }
-  const create = () => { setError(''); if (known && !admission) void enter(false, Boolean(home.member), undefined, known); else setPanel('name-create'); };
+  const resumeAdmission = () => {
+    if (!admission && !restoreFailed && !recoveryBlocked) return false;
+    setRecoveryDismissed(false); setPanel(admission ? (admission.code ? 'join' : 'name-create') : 'join');
+    return true;
+  };
+  const create = () => { setError(''); if (resumeAdmission()) return; if (known && !admission) void enter(false, Boolean(home.member), undefined, known); else setPanel('name-create'); };
   // GoodWatch supplies the name, so Continue with GoodWatch never asks for one first.
   const signIn = guestOnly ? undefined : () => {
     setError('');
+    if (resumeAdmission()) return;
     if (home.signInRoomId) router.push({ pathname: '/room/[id]', params: { id: home.signInRoomId, signin: '1' } });
     else void enter(false, true, undefined, known ?? '');
   };
   const returning = home.hasRooms || Boolean(known);
   const pending = admission ? (admission.code ? 'join' : 'name-create') : null;
-  const shown: PanelKind | null = panel ?? pending ?? (restoreFailed || recoveryBlocked ? 'join' : null);
+  const shown: PanelKind | null = panel ?? (recoveryDismissed ? null : pending ?? (restoreFailed || recoveryBlocked ? 'join' : null));
   const titles: Record<PanelKind, string> = { 'name-create': 'New room', join: invite ? 'Join the room' : 'Join a room', profile: 'Profile', history: 'History' };
   const backTo: BackTarget | null = shown ? { label: returning ? 'Your rooms' : 'Start', short: returning ? 'Rooms' : 'Start', onPress: closePanel } : null;
   const active = home.active.length;
@@ -269,9 +276,9 @@ export function Entrance({ invite }: { invite?: string }) {
     >
       <CoveredBody covered={Boolean(shown)}>
       {returning ? (
-        <Ledger rooms={home.active} unavailable={home.unavailable} loading={home.loadingRooms} open={open} newRoom={create} join={() => { setError(''); setPanel('join'); }} retry={home.retry} disabled={locked} />
+        <Ledger rooms={home.active} unavailable={home.unavailable} loading={home.loadingRooms} open={open} newRoom={create} join={() => { setError(''); if (!resumeAdmission()) setPanel('join'); }} retry={home.retry} disabled={busy || checkingInvite || restoring} />
       ) : (
-        <Landing create={create} join={() => { setError(''); setPanel('join'); }} signIn={signIn} disabled={locked} />
+        <Landing create={create} join={() => { setError(''); if (!resumeAdmission()) setPanel('join'); }} signIn={signIn} disabled={busy || checkingInvite || restoring} />
       )}
       </CoveredBody>
       {!shown && error ? <View style={{ ...column, paddingBottom: 8 }}><GText size={14} color="#fca5a5">{error}</GText></View> : null}
