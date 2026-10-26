@@ -135,3 +135,25 @@ test("long unresolved label/route identifiers stay fetchable while massive reque
 		null,
 	)
 })
+
+test("evidenced duplicated-origin source references resolve metadata but retain raw URL evidence for excerpts", () => {
+	const reference = url("OldPage")
+	const malformed = `https://tvtropes.org${reference}`
+	const target = url("CanonicalPage")
+	const pool = buildUriTropePool(
+		titles(),
+		titles().flatMap((t) => [
+			{ key: t.title.key, name: "Context A", url: malformed, length: 100 },
+			{ key: t.title.key, name: "Context B", url: reference, length: 200 },
+		]),
+		{ [reference]: { url: target, title: "Actual primary heading" } },
+	)
+	assert.deepEqual(pool.tropes, [target])
+	assert.equal(pool.names?.[target], "Actual primary heading")
+	assert.deepEqual(pool.references?.[target], [reference, malformed].sort())
+	assert.deepEqual(pool.labels?.[target], ["Context A", "Context B"])
+	assert.deepEqual(
+		pool.pool.map((t) => t.r),
+		[[0], [0], [0]],
+	)
+})

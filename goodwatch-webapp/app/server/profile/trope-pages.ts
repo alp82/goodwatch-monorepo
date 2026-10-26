@@ -3,6 +3,11 @@ import type { CatalogRead } from "./tropes-data.ts"
 
 /** Same conservative Main-route normalization as the catalog importer; never guess a slug. */
 export function mainTropeUrl(input: string | null | undefined): string | null {
+	// Historical title imports prepended this exact origin to an already absolute link.
+	// Repair only the evidenced two-origin form, then apply every ordinary route check below.
+	const duplicated = "https://tvtropes.orghttps://tvtropes.org/"
+	if (input?.startsWith(duplicated))
+		input = input.slice("https://tvtropes.org".length)
 	if (
 		!input ||
 		!/^https?:\/\/(?:www\.)?tvtropes\.org\/pmwiki\/pmwiki\.php\/Main\/[A-Za-z0-9_]+$/i.test(

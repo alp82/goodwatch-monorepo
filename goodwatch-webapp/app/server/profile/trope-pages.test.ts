@@ -103,3 +103,18 @@ test("Main route normalization preserves slug case, rejects query tricks and oth
 	])
 		assert.equal(mainTropeUrl(u), null)
 })
+
+test("only the evidenced exact duplicated TV Tropes origin is repaired", () => {
+	const duplicate = `https://tvtropes.org${url("KnownPage")}`
+	assert.equal(mainTropeUrl(duplicate), url("KnownPage"))
+	for (const invalid of [
+		`https://tvtropes.org${duplicate}`,
+		"https://tvtropes.orghttps://evil.test/pmwiki/pmwiki.php/Main/KnownPage",
+		"https://evil.testhttps://tvtropes.org/pmwiki/pmwiki.php/Main/KnownPage",
+		"https://tvtropes.orghttps://tvtropes.org.evil.test/pmwiki/pmwiki.php/Main/KnownPage",
+		`${duplicate}?from=Main.Other`,
+		`${duplicate}#section`,
+		duplicate.replace("Main/", "Film/"),
+	])
+		assert.equal(mainTropeUrl(invalid), null)
+})
