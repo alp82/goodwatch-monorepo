@@ -1,0 +1,66 @@
+{
+  "purpose": "Integrate opened-title producer with independently deployed current main without reverting webapp changes",
+  "branch": "integrate/streaming-refresh-main-20261026",
+  "starting_feature_revision": "16934545571780002fb116b53b69e0baddbfcb72",
+  "merged_main_revision": "703ede89f80b4df32319fe84eac579b43e0518e8",
+  "first_merge_revision": "3d0864b66449ef7f47b841a7ce5b039d6987942a",
+  "latest_feature_revision": "46520bf5d5083db963b1d8d28da88282223da953",
+  "conflicts": [],
+  "source_preservation": "Relative to merged main, the webapp differs only in the17 reviewed opened-demand producer files. All74 independently changed main webapp files are retained.",
+  "frontend_tests": {
+    "command": "node --test goodwatch-webapp/app/hooks/useTitleOpened.test.ts goodwatch-webapp/app/utils/title-demand.test.ts goodwatch-webapp/app/server/poster-impressions.server.test.ts goodwatch-webapp/app/server/utils/priority-statement.test.ts",
+    "passed": 8,
+    "failed": 0
+  },
+  "crate_client_tests": {
+    "command": "node --test goodwatch-webapp/app/utils/crate-failover.test.ts goodwatch-webapp/app/utils/crate-null-timestamp.test.ts",
+    "passed": 29,
+    "failed": 0,
+    "scope": "Local HTTP fixture tests only; no live storage"
+  },
+  "build": {
+    "passed": true,
+    "command": "cd goodwatch-webapp && node node_modules/@remix-run/dev/dist/cli.js vite:build && node scripts/precompress.mjs",
+    "precompressed_files": 1186,
+    "dependency_handling": "Package/lock files identical; existing patched package dependencies linked read-only one package at a time, with Vite temporary cache local to integration worktree. patch-package not repeated on borrowed packages.",
+    "log": "/tmp/streaming-main-integration-build.log"
+  },
+  "typecheck": {
+    "command": "npm run typecheck -- --pretty false",
+    "baseline_revision": "703ede89f80b4df32319fe84eac579b43e0518e8",
+    "baseline_exit_code": 2,
+    "integration_exit_code": 2,
+    "baseline_diagnostics": 192,
+    "integration_diagnostics": 192,
+    "introduced": 0,
+    "resolved": 0,
+    "entire_output_byte_identical": true,
+    "output_sha256": "e269dd665773e582317a4dd1905324cb7a863ff56e326ea152ba80dcb23a30d9",
+    "baseline_log": "/tmp/streaming-main-703ede89-types.log",
+    "integration_log": "/tmp/streaming-main-integration-types.log"
+  },
+  "backend_manifest_from_main": [
+    "f/tvtropes_catalog/catalog.py",
+    "f/tvtropes_catalog/descriptions.py",
+    "f/tvtropes_catalog/pages.py",
+    "f/tvtropes_catalog/pages.script.lock",
+    "f/tvtropes_catalog/pages.script.yaml"
+  ],
+  "backend_scope": "Only independently shipped TV Tropes resources enter from main. The schema matches main plus last_opened_at. Latest root-owned detector commit is merged unchanged; this integration performs no Windmill deployment.",
+  "production_readback": {
+    "observed_at_utc": "2026-10-26T08:40Z",
+    "abio": {
+      "container": "gk4owk8-20261026T082937",
+      "source_commit": "703ede89f80b4df32319fe84eac579b43e0518e8",
+      "health": "healthy"
+    },
+    "vector1": {
+      "container": "gk4owk8-20261026T083246",
+      "source_commit": "703ede89f80b4df32319fe84eac579b43e0518e8",
+      "health": "healthy"
+    },
+    "registry_image": "ghcr.io/alp82/goodwatch-webapp:703ede89f80b4df32319fe84eac579b43e0518e8"
+  },
+  "deployment_method": "Root can fast-forward feat/streaming-refresh to this integration tip, review current main drift again, then integrate into main through the existing main-triggered Coolify deployment. Do not deploy the prior stale feature image or change the Coolify branch. Both page instances must report the resulting SOURCE_COMMIT and healthy readiness. Search roles are separately deployed and are not needed for the page producer.",
+  "production_mutations": "None by this integration agent; no push, main merge, image deployment or Coolify setting change"
+}

@@ -177,14 +177,20 @@ def selection(db, registered, now, *, shadow=False, persist=False, owned=lambda:
         for offset in range(0, len(ids), BATCH):
             owned()
             batch = ids[offset:offset + BATCH]
-            # Avoid retaining the full provider payload for the whole registry.
-            sources = details.find({'tmdb_id': {'$in': batch}, 'tmdb_deleted': {'$ne': True}})
+            selector = {'tmdb_id': {'$in': batch}, 'tmdb_deleted': {'$ne': True}}
+            if persist:
+                details.update_many({**selector, 'provider_detector_registered': {'$ne': True}},
+                                    {'$set': {'provider_detector_registered': True}})
+            # Metadata includes large credits/images/recommendation payloads.
+            # Selection needs only provider evidence and scheduling fields.
+            sources = details.find(selector, {field: 1 for field in (
+                'tmdb_id', 'popularity', 'watch_providers', 'watch_providers_check',
+                'watch_providers_shadow', 'watch_providers_publication_pending', due_field)})
+            initial_due = []
             for source in sources:
                 tmdb_id = source['tmdb_id']
                 key = (media, tmdb_id)
                 info = registered[key]
-                if persist and source.get('provider_detector_registered') is not True:
-                    details.update_one({'_id': source['_id']}, {'$set': {'provider_detector_registered': True}})
                 live = evidence.observation(source)
                 prior_shadow = evidence.observation(source | source['watch_providers_shadow']) if shadow and source.get('watch_providers_shadow') else None
                 observed = max((item for item in (live, prior_shadow) if item),
@@ -201,7 +207,7 @@ def selection(db, registered, now, *, shadow=False, persist=False, owned=lambda:
                        or (last is None and (daily or due_at is not None or day_slot(media, tmdb_id) == utc_ms(now) // DAY % 7)))
                 if last is None and due and due_at is None and persist:
                     due_at = now
-                    details.update_one({'_id': source['_id'], due_field: None}, {'$set': {due_field: due_at}})
+                    initial_due.append(tmdb_id)
                 pending = source.get('watch_providers_publication_pending') if not shadow else None
                 if due or pending or copy_live:
                     candidates.append(dict(media_type=media, tmdb_id=tmdb_id, tier=tier, due=due,
@@ -209,6 +215,9 @@ def selection(db, registered, now, *, shadow=False, persist=False, owned=lambda:
                                            tmdb_url=info.get('tmdb_url'), due_at=due_at, copy_live=copy_live))
                 else:
                     fresh += 1
+            if initial_due:
+                details.update_many({'tmdb_id': {'$in': initial_due}, due_field: None},
+                                    {'$set': {due_field: now}})
     rank = {'confirmation': 0, 'opened': 1, 'popular': 2, 'sweep': 3}
     candidates.sort(key=lambda item: (rank[item['tier']], item['last_checked_at'] or 0,
                                       item['media_type'], item['tmdb_id']))
