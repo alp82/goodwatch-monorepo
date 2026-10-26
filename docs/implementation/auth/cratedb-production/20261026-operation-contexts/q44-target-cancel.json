@@ -1,0 +1,1939 @@
+{
+  "scope": "Q44 owner-approved target-only cancellation of a primary relocation blocking a running snapshot",
+  "before": [
+    {
+      "host": 11,
+      "utc": "2026-10-26T13:15:45.966916+00:00",
+      "queries": {
+        "snapshot": {
+          "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name='hourly_20261026_130501'",
+          "result": {
+            "cols": [
+              "repository",
+              "name",
+              "state",
+              "started",
+              "finished",
+              "total_shards",
+              "failures"
+            ],
+            "rows": [
+              [
+                "goodwatch-db-backup-v2",
+                "hourly_20261026_130501",
+                "IN_PROGRESS",
+                1793019901675,
+                0,
+                567,
+                []
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 17632.52
+          }
+        },
+        "copies": {
+          "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE schema_name='doc' AND table_name='person_worked_on' AND id=4 ORDER BY node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "doc",
+                "person_worked_on",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 14.128213
+          }
+        },
+        "settings": {
+          "sql": "SELECT settings['cluster']['routing']['rebalance']['enable'],settings['cluster']['routing']['allocation']['enable'] FROM sys.cluster",
+          "result": {
+            "cols": [
+              "settings['cluster']['routing']['rebalance']['enable']",
+              "settings['cluster']['routing']['allocation']['enable']"
+            ],
+            "rows": [
+              [
+                "none",
+                "all"
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 0.733228
+          }
+        },
+        "health": {
+          "sql": "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health",
+          "result": {
+            "cols": [
+              "health",
+              "count(*)",
+              "sum(missing_shards)",
+              "sum(underreplicated_shards)"
+            ],
+            "rows": [
+              [
+                "GREEN",
+                145,
+                0,
+                0
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 4.666088
+          }
+        },
+        "nonstarted": {
+          "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE state<>'STARTED' OR routing_state<>'STARTED' ORDER BY table_name,id",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "doc",
+                "person_appeared_in",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 8.23201
+          }
+        }
+      }
+    },
+    {
+      "host": 12,
+      "utc": "2026-10-26T13:15:45.967123+00:00",
+      "queries": {
+        "snapshot": {
+          "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name='hourly_20261026_130501'",
+          "result": {
+            "cols": [
+              "repository",
+              "name",
+              "state",
+              "started",
+              "finished",
+              "total_shards",
+              "failures"
+            ],
+            "rows": [
+              [
+                "goodwatch-db-backup-v2",
+                "hourly_20261026_130501",
+                "IN_PROGRESS",
+                1793019901675,
+                0,
+                567,
+                []
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 17070.873
+          }
+        },
+        "copies": {
+          "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE schema_name='doc' AND table_name='person_worked_on' AND id=4 ORDER BY node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "doc",
+                "person_worked_on",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 14.76002
+          }
+        },
+        "settings": {
+          "sql": "SELECT settings['cluster']['routing']['rebalance']['enable'],settings['cluster']['routing']['allocation']['enable'] FROM sys.cluster",
+          "result": {
+            "cols": [
+              "settings['cluster']['routing']['rebalance']['enable']",
+              "settings['cluster']['routing']['allocation']['enable']"
+            ],
+            "rows": [
+              [
+                "none",
+                "all"
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 1.193507
+          }
+        },
+        "health": {
+          "sql": "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health",
+          "result": {
+            "cols": [
+              "health",
+              "count(*)",
+              "sum(missing_shards)",
+              "sum(underreplicated_shards)"
+            ],
+            "rows": [
+              [
+                "GREEN",
+                145,
+                0,
+                0
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 3.005329
+          }
+        },
+        "nonstarted": {
+          "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE state<>'STARTED' OR routing_state<>'STARTED' ORDER BY table_name,id",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "doc",
+                "person_appeared_in",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 14.005645
+          }
+        }
+      }
+    },
+    {
+      "host": 13,
+      "utc": "2026-10-26T13:15:45.967340+00:00",
+      "queries": {
+        "snapshot": {
+          "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name='hourly_20261026_130501'",
+          "result": {
+            "cols": [
+              "repository",
+              "name",
+              "state",
+              "started",
+              "finished",
+              "total_shards",
+              "failures"
+            ],
+            "rows": [
+              [
+                "goodwatch-db-backup-v2",
+                "hourly_20261026_130501",
+                "IN_PROGRESS",
+                1793019901675,
+                0,
+                567,
+                []
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 17058.525
+          }
+        },
+        "copies": {
+          "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE schema_name='doc' AND table_name='person_worked_on' AND id=4 ORDER BY node['name']",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "doc",
+                "person_worked_on",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                4,
+                "crate-03",
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 12.372956
+          }
+        },
+        "settings": {
+          "sql": "SELECT settings['cluster']['routing']['rebalance']['enable'],settings['cluster']['routing']['allocation']['enable'] FROM sys.cluster",
+          "result": {
+            "cols": [
+              "settings['cluster']['routing']['rebalance']['enable']",
+              "settings['cluster']['routing']['allocation']['enable']"
+            ],
+            "rows": [
+              [
+                "none",
+                "all"
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 0.967031
+          }
+        },
+        "health": {
+          "sql": "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health",
+          "result": {
+            "cols": [
+              "health",
+              "count(*)",
+              "sum(missing_shards)",
+              "sum(underreplicated_shards)"
+            ],
+            "rows": [
+              [
+                "GREEN",
+                145,
+                0,
+                0
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 2.48907
+          }
+        },
+        "nonstarted": {
+          "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE state<>'STARTED' OR routing_state<>'STARTED' ORDER BY table_name,id",
+          "result": {
+            "cols": [
+              "schema_name",
+              "table_name",
+              "id",
+              "node['name']",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "doc",
+                "person_appeared_in",
+                5,
+                "crate-03",
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "doc",
+                "person_worked_on",
+                4,
+                "crate-01",
+                true,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 10.680418
+          }
+        }
+      }
+    }
+  ],
+  "cancel_start": {
+    "utc": "2026-10-26T13:17:08.106448+00:00",
+    "sql": "ALTER TABLE doc.person_worked_on REROUTE CANCEL SHARD 4 ON 'crate-02'"
+  },
+  "cancel": {
+    "utc": "2026-10-26T13:17:08.954572+00:00",
+    "sql": "ALTER TABLE doc.person_worked_on REROUTE CANCEL SHARD 4 ON 'crate-02'",
+    "exit": 0,
+    "stdout": "{\"cols\":[],\"rows\":[[]],\"rowcount\":1,\"duration\":160.82794}",
+    "stderr": ""
+  },
+  "after": [
+    {
+      "host": 11,
+      "utc": "2026-10-26T13:17:08.956010+00:00",
+      "copies": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-01",
+            true,
+            "STARTED",
+            "STARTED",
+            null
+          ],
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-03",
+            false,
+            "STARTED",
+            "STARTED",
+            null
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 13.781308
+      },
+      "settings": {
+        "cols": [
+          "settings['cluster']['routing']['rebalance']['enable']",
+          "settings['cluster']['routing']['allocation']['enable']"
+        ],
+        "rows": [
+          [
+            "none",
+            "all"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 0.871158
+      },
+      "health": {
+        "cols": [
+          "health",
+          "count(*)",
+          "sum(missing_shards)",
+          "sum(underreplicated_shards)"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            145,
+            0,
+            0
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 2.915855
+      },
+      "nonstarted": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_appeared_in",
+            5,
+            "crate-03",
+            false,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 10.938907
+      }
+    },
+    {
+      "host": 12,
+      "utc": "2026-10-26T13:17:08.956132+00:00",
+      "copies": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-01",
+            true,
+            "STARTED",
+            "STARTED",
+            null
+          ],
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-03",
+            false,
+            "STARTED",
+            "STARTED",
+            null
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 12.383923
+      },
+      "settings": {
+        "cols": [
+          "settings['cluster']['routing']['rebalance']['enable']",
+          "settings['cluster']['routing']['allocation']['enable']"
+        ],
+        "rows": [
+          [
+            "none",
+            "all"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 1.471856
+      },
+      "health": {
+        "cols": [
+          "health",
+          "count(*)",
+          "sum(missing_shards)",
+          "sum(underreplicated_shards)"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            145,
+            0,
+            0
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 2.481301
+      },
+      "nonstarted": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_appeared_in",
+            5,
+            "crate-03",
+            false,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 10.911917
+      }
+    },
+    {
+      "host": 13,
+      "utc": "2026-10-26T13:17:08.956316+00:00",
+      "copies": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-01",
+            true,
+            "STARTED",
+            "STARTED",
+            null
+          ],
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-03",
+            false,
+            "STARTED",
+            "STARTED",
+            null
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 10.321341
+      },
+      "settings": {
+        "cols": [
+          "settings['cluster']['routing']['rebalance']['enable']",
+          "settings['cluster']['routing']['allocation']['enable']"
+        ],
+        "rows": [
+          [
+            "none",
+            "all"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 1.136347
+      },
+      "health": {
+        "cols": [
+          "health",
+          "count(*)",
+          "sum(missing_shards)",
+          "sum(underreplicated_shards)"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            145,
+            0,
+            0
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 3.715113
+      },
+      "nonstarted": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_appeared_in",
+            5,
+            "crate-03",
+            false,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 14.909389
+      }
+    }
+  ],
+  "snapshot_after": [
+    {
+      "host": 11,
+      "utc": "2026-10-26T13:17:40.390224+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_13%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_130501",
+            "SUCCESS",
+            1793019901675,
+            1793020629276,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 17882.336
+      }
+    },
+    {
+      "host": 12,
+      "utc": "2026-10-26T13:17:40.390376+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_13%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_130501",
+            "SUCCESS",
+            1793019901675,
+            1793020629276,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 16017.985
+      }
+    },
+    {
+      "host": 13,
+      "utc": "2026-10-26T13:17:40.390616+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_13%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_130501",
+            "SUCCESS",
+            1793019901675,
+            1793020629276,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 17202.697
+      }
+    }
+  ],
+  "backup_host": {
+    "utc": "2026-10-26T13:21:19.202705+00:00",
+    "cron_sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
+    "active_backup_jobs": 1,
+    "schedule_fields": [
+      [
+        "5",
+        "*",
+        "*",
+        "*",
+        "*"
+      ]
+    ],
+    "hold_marker_count": 0,
+    "backup_log_lines": [
+      "2026-10-26T13:05:01Z Creating snapshot: hourly_20261026_130501...",
+      "2026-10-26T13:17:11Z Snapshot created successfully.",
+      "2026-10-26T13:17:11Z Checking for expired snapshots...",
+      "2026-10-26T13:17:29Z Deleting expired snapshot: hourly_20261026_090502",
+      "2026-10-26T13:18:16Z Deleted 1 of 1 expired snapshot(s).",
+      "2026-10-26T13:18:16Z Verifying the snapshots of this run...",
+      "2026-10-26T13:18:34Z Backup run finished."
+    ],
+    "cron_journal_exit": 0,
+    "cron_invocations": [
+      {
+        "realtime_us": "1793019901365616",
+        "pid": "1840032",
+        "job": "goodwatch-crate/backup.py",
+        "root_job": true
+      }
+    ]
+  },
+  "page_samples": [
+    {
+      "utc": "2026-10-26T13:15:45.194904+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.402719,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:15:46.323148+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 1.530876,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:15:46.325028+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 1.533321,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:15:55.065499+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.273002,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:15:55.199234+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.407002,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:15:55.472407+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.67974,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:05.175835+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.382827,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:05.844715+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 1.05123,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:06.066794+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 1.273273,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:15.117816+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.324114,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:15.547044+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.754126,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:15.749708+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.956347,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:25.472960+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.680563,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:25.581763+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.789149,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:25.888243+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 1.095939,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:35.193894+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.39907,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:35.311743+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.515679,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:35.337489+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.541591,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:45.014018+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.218852,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:45.047629+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.25139,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:45.064822+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.268559,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:54.975783+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.180824,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:54.994720+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.20079,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:16:55.043717+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.249465,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:04.986591+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.193384,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:04.994558+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.201165,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:05.100940+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.30761,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:14.958631+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.165702,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:15.064472+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.271467,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:15.170756+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.377888,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:25.030676+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.236721,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:25.075587+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.281396,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:25.410283+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.615699,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:34.972663+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.178803,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:34.989915+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.196374,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:35.131120+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.33721,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:45.010615+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.217355,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:45.018941+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.225568,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:45.035238+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.241918,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:54.944592+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.150936,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:54.970495+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.175924,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:17:55.035672+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.241976,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:04.968077+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.173869,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:04.968223+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.173897,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:05.013313+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.219171,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:15.047916+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.253282,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:15.076795+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.281901,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:15.106203+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.310719,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:25.062258+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.26837,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:25.100274+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.306607,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:25.182231+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.388473,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:35.025847+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.232595,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:35.044864+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.250676,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:35.054165+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.259786,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:45.070707+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.277332,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:45.088391+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.29461,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:45.161273+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.367696,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:54.976417+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.176404,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:55.032384+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.232097,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:18:55.032553+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.233407,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:04.978818+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.18473,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:05.019396+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.225223,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:05.064687+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.270789,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:14.973480+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.179121,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:15.008715+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.214678,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:15.008839+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.214546,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:25.043610+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.248642,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:25.067113+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.272647,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:25.120313+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.325765,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:34.966554+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.172411,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:34.986749+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.192811,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:34.993514+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.198277,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:45.305355+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.511166,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:46.232772+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 1.437475,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:46.593420+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 1.79902,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:55.038195+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.243984,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:55.148608+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.353338,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:19:56.103035+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 1.307648,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:05.021146+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.226043,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:05.054288+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.259302,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:05.081326+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.286476,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:14.985803+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.190845,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:15.065333+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.270774,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:15.130969+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.335643,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:24.974645+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.179386,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:25.024439+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.229272,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:25.040929+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.246419,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:34.956454+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.16154,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:34.959363+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.163511,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:34.991474+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.196678,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:45.020229+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.225509,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:45.036758+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.242657,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:45.058448+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.263712,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:54.957473+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.16262,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:54.979164+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.183475,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:20:54.980535+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.186002,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:21:05.007740+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.212036,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:21:05.016134+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.21946,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:21:05.031445+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.23568,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:21:15.011475+00:00",
+      "phase": "drain",
+      "path": "/discover",
+      "status": 200,
+      "seconds": 0.215949,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:21:15.019827+00:00",
+      "phase": "drain",
+      "path": "/movie/629-the-usual-suspects",
+      "status": 200,
+      "seconds": 0.224715,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    },
+    {
+      "utc": "2026-10-26T13:21:15.053835+00:00",
+      "phase": "drain",
+      "path": "/show/1396-breaking-bad",
+      "status": 200,
+      "seconds": 0.258083,
+      "exit": 0,
+      "failure_streak": 0,
+      "alarm": false
+    }
+  ],
+  "resume_readonly_state": {
+    "utc": "2026-10-26T13:23:47.174337+00:00",
+    "settings": {
+      "cols": [
+        "settings['cluster']['routing']['rebalance']['enable']",
+        "settings['cluster']['routing']['allocation']['enable']"
+      ],
+      "rows": [
+        [
+          "none",
+          "all"
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 1.093105
+    },
+    "health": {
+      "cols": [
+        "health",
+        "count(*)",
+        "sum(missing_shards)",
+        "sum(underreplicated_shards)"
+      ],
+      "rows": [
+        [
+          "GREEN",
+          145,
+          0,
+          0
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 6.349331
+    }
+  },
+  "page_monitor_stopped": "Only local watcher SIGINT, exit130; no production process signal"
+}

@@ -859,5 +859,128 @@
         "duration": 16.836037
       }
     }
-  ]
+  ],
+  "final_1305_snapshot": [
+    {
+      "host": 11,
+      "utc": "2026-10-26T13:17:40.390224+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_13%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_130501",
+            "SUCCESS",
+            1793019901675,
+            1793020629276,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 17882.336
+      }
+    },
+    {
+      "host": 12,
+      "utc": "2026-10-26T13:17:40.390376+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_13%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_130501",
+            "SUCCESS",
+            1793019901675,
+            1793020629276,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 16017.985
+      }
+    },
+    {
+      "host": 13,
+      "utc": "2026-10-26T13:17:40.390616+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_13%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_130501",
+            "SUCCESS",
+            1793019901675,
+            1793020629276,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 17202.697
+      }
+    }
+  ],
+  "final_1305_host": {
+    "utc": "2026-10-26T13:21:19.202705+00:00",
+    "cron_sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
+    "active_backup_jobs": 1,
+    "schedule_fields": [
+      [
+        "5",
+        "*",
+        "*",
+        "*",
+        "*"
+      ]
+    ],
+    "hold_marker_count": 0,
+    "backup_log_lines": [
+      "2026-10-26T13:05:01Z Creating snapshot: hourly_20261026_130501...",
+      "2026-10-26T13:17:11Z Snapshot created successfully.",
+      "2026-10-26T13:17:11Z Checking for expired snapshots...",
+      "2026-10-26T13:17:29Z Deleting expired snapshot: hourly_20261026_090502",
+      "2026-10-26T13:18:16Z Deleted 1 of 1 expired snapshot(s).",
+      "2026-10-26T13:18:16Z Verifying the snapshots of this run...",
+      "2026-10-26T13:18:34Z Backup run finished."
+    ],
+    "cron_journal_exit": 0,
+    "cron_invocations": [
+      {
+        "realtime_us": "1793019901365616",
+        "pid": "1840032",
+        "job": "goodwatch-crate/backup.py",
+        "root_job": true
+      }
+    ]
+  },
+  "followup_q44": "Explicitly authorized target-only cancel recorded in q44-target-cancel.json; snapshot finished13:17:09.276"
 }

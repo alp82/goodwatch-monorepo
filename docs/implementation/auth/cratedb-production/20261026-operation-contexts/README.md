@@ -8,6 +8,39 @@ and temporarily hold the backup cron; those changes were restored.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Q44 — target-only cancel unblocked the13:05 snapshot
+
+At **13:17:08.954 UTC**, under the new owner authorization, executed exactly once:
+
+```sql
+ALTER TABLE doc.person_worked_on REROUTE CANCEL SHARD 4 ON 'crate-02';
+```
+
+The snapshot had remained IN_PROGRESS for over10min, with the sole relocating primary still
+person_worked_on4 oncrate-01→crate-02. All-node preflight verified that source primary, its STARTED
+replica oncrate-03,145 GREEN relations, rebalancenone/allocationall, and a healthy page watcher.
+No allow_primary, source cancellation, DROP, manual CREATE, restart, replica or cron change.
+[Before/action/after receipts](q44-target-cancel.json).
+
+Every coordinator immediately confirmed **the same primary remained oncrate-01 and replica oncrate-03,
+both STARTED/STARTED with no relocation**. The unrelated person_appeared_in5 replica move was untouched.
+Cluster stayed145 GREEN, no missing/underreplicated shards; rebalance remainsnone, allocationall.
+
+**hourly_20261026_130501 became SUCCESS at13:17:09.276 UTC**,567 shards/no failures, verified through
+all3 coordinators. The scheduled helper logged successful creation13:17:11 and **Backup run finished
+13:18:34** after its normal retention/verification. Cron hash stayedexactoriginal, one active job/no
+hold marker. This completes the previously pending13:05 backup verification and demonstrates the
+logical target cancellation preserved the active source while removing the snapshot's routing blocker.
+
+Page watcher ran every10s with5s timeouts from **2026-10-26T13:15:45.194904+00:00 to 2026-10-26T13:21:15.053835+00:00**:
+**102/102 HTTP200**, no transport/slow-page alarms, maximum1.799s. Stopped only that local watcher
+with SIGINT after operation/backup verification; no production process was signalled.
+
+Q44 remains limited until tonight to target-only cancellation when an observed primary relocation
+towardcrate-02 is actually blocking a running backup. No proactive replica/source cancellation.
+Each future action needs fresh exact-copy/snapshot/health checks and its own timestamped receipt;
+never replay an ambiguous command. An accepted skipped backup does not justify another kind of repair.
+
 ## Rebalance hold — owner-approved,October26 12:50 UTC
 
 Applied **only** `SET GLOBAL TRANSIENT "cluster.routing.rebalance.enable"='none'` once,
@@ -29,12 +62,12 @@ manual snapshot, replica change, decommission, restart, KILL or cron change was 
 The12:49/12:50 preflight,12:56/13:01 observations and13:05 all-node readbacks retain this primary
 relocation; the owner was notified that it could still delay the next snapshot despite the hold.
 
-**13:05 backup verification ongoing at this record:** root cron invoked at13:05:01.365616 UTC;
+**Historical13:05 verification, later completed under Q44 above:** root cron invoked at13:05:01.365616 UTC;
 `hourly_20261026_130501` started13:05:01.675. At13:05:52–13:06:10 every coordinator returned
 IN_PROGRESS, finish0,567 shards, no listed failures. Do not treat this as SUCCESS. Original cron
 hash remains `374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37`, one active
 `5 * * * *` job, no hold marker. Continue read-only verification; no additional production action
-is authorized to complete that snapshot. This record will be supplemented with its outcome.
+is authorized to complete that snapshot. Its SUCCESS and the authorized follow-up action are recorded above.
 
 ## Q42 — stopped at changed preflight,October26,12:44–12:46 UTC
 
