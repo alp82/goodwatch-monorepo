@@ -1,6 +1,9 @@
+> [!NOTE]
+> README animation prototype. Variants: **A: spotlight banner + reel** · [B: stage light + clips in the grid](README-B.md) · [C: sign-up card + feature rows](README-C.md)
+
 <div align="center">
 
-<a href="https://goodwatch.app"><img src=".github/readme/banner.webp" alt="GoodWatch: find what to watch next" width="100%"></a>
+<a href="https://goodwatch.app"><picture><source media="(prefers-reduced-motion: reduce)" srcset=".github/readme/banner.webp"><img src=".github/readme/banner-roam.avif" alt="GoodWatch: find what to watch next. A spotlight moves across a slowly drifting wall of posters." width="100%"></picture></a>
 
 <p>
   <a href="https://goodwatch.app"><img src="https://shieldcn.dev/badge/open-goodwatch.app-fbbf24.svg?logo=lu:Globe" alt="Open goodwatch.app"></a>
@@ -19,6 +22,8 @@
 ## Why GoodWatch
 
 You have more services than ever and still spend the evening scrolling. GoodWatch brings 1.5 million movies and shows, their scores, and 325 streaming services in 139 countries into one place. Then it narrows all of that down to the few titles that fit your taste and your evening.
+
+<p align="center"><a href="https://goodwatch.app/how-it-works"><img src=".github/readme/clips/reel.avif" alt="A short reel from the GoodWatch intro film" width="100%"></a></p>
 
 <table>
 <tr>
