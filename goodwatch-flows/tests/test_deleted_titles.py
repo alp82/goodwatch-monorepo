@@ -17,6 +17,7 @@ from f.sync.copy.deleted_titles import (
 )
 from f.sync.models.crate_schemas import SCHEMAS
 
+SHOW_CHILDREN = {name for name, spec in SCHEMAS.items() if "show_id" in spec["columns"]}
 CALM = {"tripped": False}
 
 
@@ -72,10 +73,11 @@ class DeleteFromCrateTests(unittest.TestCase):
         connector = FakeConnector()
         delete_titles_from_crate(connector, "show", [5], spike=CALM)
         tables = [sql.split()[2] for sql, _ in connector.deletes()]
-        self.assertEqual(tables[-2:], ["season", "show"])
+        self.assertEqual(tables[-1], "show")
+        self.assertIn("season", tables)
         self.assertNotIn("movie", tables)
         for sql, params in connector.deletes():
-            self.assertTrue(params[0] == "show" or sql.split()[2] in ("season", "show"))
+            self.assertTrue(params[0] == "show" or sql.split()[2] in (*SHOW_CHILDREN, "show"))
 
     def test_user_tables_are_untouched_and_all_derived_tables_are_covered(self):
         connector = FakeConnector()
@@ -151,6 +153,85 @@ class FlaggedLookupTests(unittest.TestCase):
         collection = MagicMock()
         self.assertEqual(flagged_among(collection, []), set())
         collection.find.assert_not_called()
+
+
+class ShowChildDeletionTests(unittest.TestCase):
+    def test_every_catalog_show_child_is_registered(self):
+        registered = {table.name for table in deleted_titles.title_tables("show")}
+        self.assertFalse(SHOW_CHILDREN - registered)
+        self.assertTrue(SHOW_CHILDREN.isdisjoint(
+            table.name for table in deleted_titles.title_tables("movie")))
+
+    def test_show_children_deleted_by_show_id_even_without_parent_row(self):
+        from test_orphaned_title_rows import FakeCrate
+
+        for title_row in (True, False):
+            with self.subTest(title_row=title_row):
+                crate = FakeCrate()
+                crate.add_title("show", 5, children=[], title_row=title_row)
+                crate.add_title("show", 6, children=[])
+                crate.add_title("movie", 5)
+                for table in SHOW_CHILDREN:
+                    # Multiple rows per deleted show; overlapping child ids across shows.
+                    crate.tables[table] = [
+                        {"show_id": show_id, "tmdb_id": child_id}
+                        for show_id, child_id in ((5, 101), (5, 102), (6, 101))
+                    ]
+                result = delete_titles_from_crate(crate, "show", [5], spike=CALM)
+                for table in SHOW_CHILDREN:
+                    self.assertEqual(crate.tables[table], [{"show_id": 6, "tmdb_id": 101}])
+                    self.assertEqual(result["rows_deleted"][table], 2)
+                    self.assertIn((f"DELETE FROM {table} WHERE show_id = ANY(?)", ([5],)), crate.statements)
+                self.assertEqual(crate.tables["show"], [{"tmdb_id": 6}])
+                self.assertEqual(crate.tables["movie"], [{"tmdb_id": 5}])
+                self.assertEqual(len(crate.tables["user_score"]), 3)
+                deletes = [sql.split()[2] for sql, _ in crate.statements if sql.startswith("DELETE")]
+                if title_row:
+                    self.assertEqual(deletes[-1], "show")
+                # Retrying a completed deletion is harmless.
+                self.assertEqual(delete_titles_from_crate(crate, "show", [5], spike=CALM)["rows_deleted"], {})
+
+    def test_show_children_obey_spike_guard_budget_and_batches(self):
+        from test_orphaned_title_rows import FakeCrate
+        from unittest.mock import patch
+
+        crate = FakeCrate()
+        ids = list(range(deleted_titles.DELETE_BATCH_SIZE + 1))
+        for table in SHOW_CHILDREN:
+            crate.tables[table] = [{"show_id": i, "tmdb_id": 101} for i in ids]
+        result = delete_titles_from_crate(crate, "show", ids, spike={"tripped": True})
+        self.assertTrue(result["refused_spike"])
+        self.assertEqual(crate.statements, [])
+        with patch.object(deleted_titles, "MAX_DELETED_TITLES_PER_RUN", 1):
+            result = delete_titles_from_crate(crate, "show", ids, spike=CALM)
+        self.assertTrue(result["budget_reached"])
+        self.assertEqual(result["titles_planned"], 1)
+        for table in SHOW_CHILDREN:
+            self.assertEqual(len(crate.tables[table]), len(ids) - 1)
+            self.assertEqual(result["rows_deleted"][table], 1)
+        # Restore the first title so every table needs two DELETE batches.
+        for table in SHOW_CHILDREN:
+            crate.tables[table].append({"show_id": 0, "tmdb_id": 101})
+        crate.statements.clear()
+        delete_titles_from_crate(crate, "show", ids, spike=CALM)
+        for table in SHOW_CHILDREN:
+            batches = [params[-1] for sql, params in crate.statements
+                       if sql == f"DELETE FROM {table} WHERE show_id = ANY(?)"]
+            self.assertEqual([len(batch) for batch in batches], [500, 1])
+            self.assertEqual(crate.tables[table], [])
+
+    def test_child_only_orphan_sweep_dry_run_then_delete(self):
+        from test_orphaned_title_rows import FakeCrate, mongo
+
+        crate = FakeCrate()
+        for table in SHOW_CHILDREN:
+            crate.tables[table] = [{"show_id": 5, "tmdb_id": 101}]
+        details, daily = mongo()
+        result = deleted_titles.sweep_orphaned_titles(crate, "show", details, daily, dry_run=True)
+        self.assertEqual(result["plan"], {table: [5] for table in SHOW_CHILDREN})
+        self.assertFalse(any(sql.startswith("DELETE") for sql, _ in crate.statements))
+        result = deleted_titles.sweep_orphaned_titles(crate, "show", details, daily)
+        self.assertEqual(result["rows_deleted"], {table: 1 for table in SHOW_CHILDREN})
 
 
 if __name__ == "__main__":

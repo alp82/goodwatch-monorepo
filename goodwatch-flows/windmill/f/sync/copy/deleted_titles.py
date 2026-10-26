@@ -99,7 +99,18 @@ class TitleTable:
 # the title visible to the next run instead of orphaning its rows.
 CHILD_TABLES = (
     *(TitleTable(table, "media_tmdb_id", key_columns=ROW_KEY_COLUMNS.get(table, ())) for table in TITLE_KEYED_TABLES),
-    TitleTable("season", "show_id", media_types=("show",), media_type_column=False),
+    # Catalog children are scoped by the parent show, never by their own episode/season id.
+    # Member-owned watch/score tables remain outside this registry.
+    *(TitleTable(table, "show_id", media_types=("show",), media_type_column=False) for table in (
+        "season_translation",
+        "episode_translation",
+        "episode",
+        "imdb_episode",
+        "imdb_season",
+        "rotten_tomatoes_season",
+        "metacritic_season",
+        "season",
+    )),
 )
 MEDIA_TITLE_TABLES = {
     media_type: TitleTable(table, "tmdb_id", media_types=(media_type,), media_type_column=False)

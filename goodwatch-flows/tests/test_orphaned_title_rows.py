@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 
+from f.sync.models.crate_schemas import SCHEMAS
 from f.sync.copy import deleted_titles
 from f.sync.copy.deleted_titles import (
     TITLE_KEYED_TABLES,
@@ -23,6 +24,7 @@ class FakeCrate:
 
     def __init__(self):
         self.tables = {table: [] for table in (*TITLE_KEYED_TABLES, "season", "movie", "show", "user_score", "availability_history")}
+        self.tables.update({name: [] for name, spec in SCHEMAS.items() if "show_id" in spec["columns"]})
         self.cur = SimpleNamespace(rowcount=0)
         self.statements = []
 
