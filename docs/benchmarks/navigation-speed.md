@@ -593,3 +593,75 @@ Phone per route, median and p90 (= maximum of five):
   the start page's 4 title prefetches start no code.
 
 Raw files are under `~/.cache/gw-work/753p/prod/` on the measuring machine.
+
+## Title → first person on phones: cast photos and an image audit — October 26, 2026 (#753, owners Q34, Q38)
+
+On production a phone's title → first person change took about a second although the person page's code and data were
+prefetched before the tap: the person data (11 KB, first byte 48–137 ms) took about 1.5 s to arrive.
+
+**Method.** Local production builds on the local data stack, with a
+what-if in the TLS front: the title and person pages' data requests (`?_data=` GETs) and the two section endpoints
+(`/api/related-map`, `/api/social/title`) answer from production, without cookies; documents, code and everything
+else stay local. Production runs the same server code as both builds; the change is in the browser only. `nav.mjs`
+unchanged, 5 rounds per profile; analytics, error-reporting and product-analytics hosts unresolvable in the browser.
+
+**What the connection carries at the tap.** At the press on a cast member, 22 requests (about 750 KB) were in flight:
+twelve cast photos at `h632` (22–67 KB each, started when the reader scrolled to the cast), the hero backdrop, and the
+prefetches. On production the related map's pack (9 KB) and Talked about now's request were also in flight; in the
+what-if they had finished before the tap. Those two requests are the subject of the late-section change further down.
+
+**The cast photos are the lever.** An experiment (request routing, so with the HTTP cache off: compare only these two
+runs) served every `h632` profile picture as `w185`. Phone title → first person, 5 rounds: **697 → 351 ms** median,
+835 → 371 ms max; all steps' p90 719 → 445 ms. The cast circle is 144 CSS px: on a phone with a pixel ratio above 1.3
+the browser takes the 421 px `h632` file, and TMDB has no size between `w185` and `h632`. Serving `w185` there is
+a little softer on high-density phones; the owner chose it for phones (Q38).
+
+### Cast photos on phones (owner Q38)
+
+`fb875b1a8`: under 768 px wide the cast circles (144 CSS px) take TMDB's `w185` file instead of `h632`; wider screens
+keep the file for 144 px at their own pixel ratio. Same what-if method, phone, 5 rounds (both builds also carried the late-section wait described below, not on main;
+the cast change doesn't depend on it): **title → first person
+860 → 328 ms median** (974 → 405 ms max), **all steps p90 773 → 405 ms**. On a Pixel 7 (2.625×) a 140 px circle now
+gets 185 file pixels (1.32 per CSS pixel) instead of 421 (3.01): same layout, a little softer in fine detail such as
+hair and beards (phone screenshots of the cast row before and after are in the report).
+
+### Posters and backdrops on phones: audit (owner question)
+
+Production, Pixel 7 (412 × 915 CSS px, 2.625×), slow 4G, 4× CPU, a reader scrolling through each page, October 26,
+11:20–11:23 UTC; analytics hosts unresolvable. Bytes are what the phone downloaded; the next smaller file's bytes are
+from TMDB's `Content-Length`. "px per CSS px" is file pixels per drawn CSS pixel of the image's box (for
+`object-cover`, the covered width): a 2× phone looks sharp at about 2, a 3× phone at about 3.
+
+The site's `sizes` already aim at about 2 file pixels per CSS pixel on phones (`tmdbSizes`: slots above 2.5× count as
+about 2×), so most images sit at 2–3 and the next smaller TMDB size falls well under 2:
+
+| Page | Images | Drawn CSS px | Now: file, px per CSS px, KB | Next smaller: file, px per CSS px, KB | Saving |
+| --- | --- | --- | --- | --- | --- |
+| Title (Godfather / Breaking Bad) | hero backdrop | 512 | w780, 1.52, 40 / 80 | w300, 0.59, 7 / 18 | 33 / 62 KB |
+| Title | cast photos (before Q38) | 140 | h632, 3.01, 140 / 145 (four) | w185, 1.32, 45 / 44 | 94 / 101 KB |
+| Title | related map posters | 56 | w154, 2.75, 62 / 51 (eight) | w92, 1.64, 34 / 34 | 28 / 17 KB |
+| Title | related map middle poster | 62 | w154, 2.48, 4 / 10 | w92, 1.48, 3 / 5 | 1 / 4 KB |
+| Title | similar titles row | 85 | w185, 2.18, 102 / 85 (eight) | w154, 1.81, 96 / 83 | 6 / 2 KB |
+| Title | wide posters | 174 | w342, 1.97, 34 (three) | w185, 1.06, 21 | 13 KB |
+| Title | second backdrop | 380 | w780, 2.05, 40 / 80 | w300, 0.79, 7 / 18 | 33 / 62 KB |
+| Title | small poster tiles | 48 | w154, 3.21, 12 (three) | w92, 1.92, 19 | none (TMDB's w92 is larger here) |
+| Person (Diane Keaton) | filmography grid | 115 | w342, 2.97, 1,915 (69) | w185, 1.61, 1,135 | **779 KB** |
+| Person | portrait | 96 | h632, 4.39, 33 | w185, 1.93, 10 | 22 KB |
+| Person | credits list thumbnails | 48 | w185, 3.85, 96 (twelve) | w154, 3.21, 108 | none |
+| Person | page backdrop (behind the header) | 1,106 | w780, 0.71, 27 | w300, 0.27, 12 | 15 KB |
+| Shows hub | category tiles | 386 | w780, 2.02, 1,857 (36) | w300, 0.78, 536 | 1,321 KB |
+| Best lists | list posters | 32 | w92, 2.88, about 1,080 (250) | none smaller | none |
+
+In flight at a typical tap (the first person link scrolled into view, then 1.2 s): Godfather 17 images, 289 KB;
+Breaking Bad 12 images, 237 KB; most of it the four cast photos above (140 / 145 KB), which `49a73b61d` cuts to about
+45 KB. On the person page, the hub and the best lists nothing was in flight at that moment.
+
+**Recommendation.**
+- Person page filmography grid: `w185` on phones would save 779 KB per person page, at 1.61 file pixels per CSS pixel
+  on a 2.625× phone: softer than now, about the same trade as the cast photos (1.32). Worth an owner look, with
+  screenshots, as its own change.
+- Person page portrait: `w185` (1.93) saves 22 KB with little visible cost; cheap to do alongside.
+- Related map posters: `w92` (1.64) saves 17–28 KB per title page; small, optional.
+- Keep the rest: hero backdrops, hub tiles and the second backdrop would drop to 0.6–0.8 file pixels per CSS pixel
+  (visibly soft); the similar-titles row and wide posters save under 15 KB; the best lists are already at TMDB's
+  smallest poster.
