@@ -1,0 +1,19 @@
+{
+  "status": "Safe local diagnostics implemented; tester iPhone connection failure remains unreproduced.",
+  "trigger": "Safari works on the tester phone; native TestFlight admission fails with a generic unconfirmed-action message.",
+  "observations": [
+    "Actual build 15 IPA embeds https://yepwatch.com, with ATS restrictions intact.",
+    "Fresh native-protocol admission and exact replay succeed against the public API.",
+    "Expo native fetch differs from Safari; no transport change or TLS relaxation was made."
+  ],
+  "change": "Expandable connection details in create/join errors: platform/build, failure category, stage, HTTP status if received and bounded elapsed time.",
+  "privacy": "No raw native error, URL, body, headers, nickname, room identity or credential is retained or submitted.",
+  "validation": {
+    "unitTests": 101,
+    "unitLog": "/tmp/yepwatch-connection-unit.log",
+    "typecheck": "passed",
+    "lint": "zero errors; existing unused View warning",
+    "nativeExports": "iOS and Android passed"
+  },
+  "limit": "Injected diagnostic cases verify reporting and retry preservation, not the cause of the physical iPhone failure. No new mobile binary is distributed by this commit."
+}

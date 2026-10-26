@@ -1,3 +1,5 @@
+import { ConnectionDetails } from './rooms/ConnectionDetails';
+import type { ConnectionDiagnostic } from '../core/continuous/connection-diagnostic';
 import { EdgeBack } from './glow/EdgeBack';
 import { guestOnly } from '../core/config';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -42,6 +44,7 @@ export function Entrance({ invite }: { invite?: string }) {
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
   const [error, setError] = useState('');
+  const [diagnostic, setDiagnostic] = useState<ConnectionDiagnostic | undefined>();
   const [checkingInvite, setCheckingInvite] = useState(Boolean(invite));
   const [recoveryBlocked, setRecoveryBlocked] = useState(false);
   const [checkVersion, setCheckVersion] = useState(0);
@@ -124,6 +127,7 @@ export function Entrance({ invite }: { invite?: string }) {
     setRecoveryDismissed(false);
     setBusy(true);
     setError('');
+    setDiagnostic(undefined);
     let saved = admission;
     // Recovery continues the original action, including sign-in after admission.
     member = saved ? saved.member === true : member;
@@ -205,6 +209,7 @@ export function Entrance({ invite }: { invite?: string }) {
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not join this room.');
+      setDiagnostic(e instanceof ApiFailure ? e.diagnostic : undefined);
       if (saved) {
         const next = retainRequest(e) ? { ...saved, retryAt: retryDeadline(e) } : null;
         setAdmission(next);
@@ -256,6 +261,7 @@ export function Entrance({ invite }: { invite?: string }) {
   const actionLabel = (first: string, again: string) => (busy ? 'Connecting…' : retrySeconds > 0 ? `Retry in ${retrySeconds}s` : admission ? again : first);
   const notices = (
     <>
+      {error && diagnostic && <ConnectionDetails diagnostic={diagnostic} />}
       {checkingInvite && <GText size={14} color={glow.muted}>Restoring your place in the room…</GText>}
       {retrySeconds > 0 && <GText size={13} color={glow.muted}>Try again in {retrySeconds}s. Your room request is saved.</GText>}
       {admission && <GText size={12} color={glow.muted}>Retry preserves your identity and room request.</GText>}

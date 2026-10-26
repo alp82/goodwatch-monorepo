@@ -16,6 +16,7 @@ import {
   type MemberProgressResponse,
   type MemberExchangeRequest,
 } from '@goodwatch/yepwatch-contracts/proposal';
+import { connectionDiagnostic, type ConnectionDiagnostic, type ConnectionStage } from './connection-diagnostic';
 import { apiUrl } from '../config';
 import { parseRetryAfter } from './retry';
 import type { RoomAccess } from '../credentials';
@@ -27,7 +28,8 @@ export class RoomFailure extends Error {
     readonly snapshot?: RoomSnapshot,
     readonly details?: ApiError['error']['details'],
     readonly retryable = false,
-    readonly retryAfterSeconds?: number
+    readonly retryAfterSeconds?: number,
+    readonly diagnostic?: ConnectionDiagnostic
   ) {
     super(message);
     this.name = 'RoomFailure';
@@ -44,11 +46,14 @@ export class ContinuousApi {
     access?: RoomAccess,
     signal?: AbortSignal
   ): Promise<T> {
+    const started = Date.now();
+    let stage: ConnectionStage = 'address';
+    let timedOut = false;
     const controller = new AbortController();
     const abort = () => controller.abort();
     if (signal?.aborted) abort();
     else signal?.addEventListener('abort', abort, { once: true });
-    const timer = setTimeout(abort, 15000);
+    const timer = setTimeout(() => { timedOut = true; abort(); }, 15000);
     let response: Response | undefined;
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
@@ -58,13 +63,16 @@ export class ContinuousApi {
       headers['X-YepWatch-Participant'] = access.participantId;
     }
     try {
-      response = await this.fetcher(apiUrl(path), {
+      const url = apiUrl(path);
+      stage = 'request';
+      response = await this.fetcher(url, {
         method: body === undefined ? 'GET' : 'POST',
         body: body === undefined ? undefined : JSON.stringify(body),
         credentials: 'include',
         headers,
         signal: controller.signal,
       });
+      stage = 'response';
       const result = await response.json();
       if (!response.ok) {
         const e = result as ApiError;
@@ -90,7 +98,8 @@ export class ContinuousApi {
         undefined,
         undefined,
         false,
-        response ? parseRetryAfter(response.headers.get('Retry-After')) : undefined
+        response ? parseRetryAfter(response.headers.get('Retry-After')) : undefined,
+        connectionDiagnostic(e, stage, response?.status, Date.now() - started, timedOut, signal?.aborted === true)
       );
     } finally {
       clearTimeout(timer);

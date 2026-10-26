@@ -158,6 +158,9 @@ for (const mode of ['create', 'join'] as const) test(`Back escapes an unconfirme
   const action=await open(page,mode,'Connection check');
   await action.click();
   await expect(page.getByText('Your action has not been confirmed. Retry the same action to reconcile it.',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Connection details',exact:true}).click();
+  await expect(page.getByText(/web · network · request/)).toBeVisible();
+  await expect(page.getByText(/No HTTP response/)).toBeVisible();
   await expect(action).toBeEnabled();
   await action.click();await expect.poll(()=>bodies.length).toBe(2);expect(bodies[1]).toEqual(bodies[0]);
   // Reload restores the pending form, but still allows Back.
