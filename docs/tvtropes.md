@@ -67,10 +67,23 @@ retains the original labels for per-title excerpts. Description reads remain
 independent of expensive profile calculations, with only the first 30 bands loaded
 for the initial page.
 
+The filtering request opts into `GET /u/:handle/tropes/data?format=thin-v1` and
+returns the compact matrix without article text or server-only original-label and
+reference maps. Older clients retain the full response contract during rolling
+deployment. `POST /u/:handle/tropes/descriptions` takes a JSON array of at most
+60 IDs and at most 256 KiB of actual streamed input, checks current profile
+visibility and membership in the owner's pool, then reads only those definitions.
+Visible bands keep their server-rendered text while filters, pagination and
+optional description requests settle. A failed optional read does not disable
+filters or erase successful text. Browser query generation 3 is independent of
+the durable pool schema 2; durable schema-2 rows use `v2:<ownerId>` keys so an older
+instance cannot read a URI matrix as if it contained display labels.
 
-The Crate `trope_catalog` table is the source of truth for general trope definitions, separate from the `trope`
-table's per-title excerpts. Each exact name has an optional known Main-page URL and an optional description. Names with
-unresolved URL mappings have null URLs and remain queued for review. Direct HTTP descriptions retain the raw response's
+
+The legacy Crate `trope_catalog` table retains exact original labels and their previously imported definitions,
+separate from the `trope` table's per-title excerpts. The URI-keyed page/reference tables above now supply runtime
+general definitions. Each legacy name has an optional known Main-page URL and description; unresolved label mappings
+remain available for audit and review. Direct HTTP descriptions retain the raw response's
 SHA256, the exact text's SHA256, actual fetch time, source, and import/update times. Unknown provenance stays null.
 
 Archived HTML uses nullable `source_archive` metadata instead of claiming a direct HTTP capture. This small
@@ -165,7 +178,15 @@ URLs absent from the verified archive. It changes in-memory visit order only; th
 source cache, shared lock, six-second pace and source-block state stay authoritative. The progress checkpoint records
 the priority file SHA256.
 
-The one-off user service is `goodwatch-trope-catalog-full.service`, with no recurring crawl schedule.
+The original one-off label service was `goodwatch-trope-catalog-full.service`, with no recurring crawl schedule.
+After its saved queue completed, it was disabled in favor of `goodwatch-trope-pages-full.service`.
+The latter waits for verified cache imports, queues only globally missing Main-reference URLs,
+reuses all original captures and source-block/pacing state, and never refetches completed pages.
+Its receipts and immutable URI queue are in `~/.cache/goodwatch/trope-catalog/pages-full-2026-10-26/`.
+A source write with an uncertain result requires inspection before resumption; complete write
+receipts are checked before repairing a torn journal tail. Cache-only staging/import continuations
+are separate one-off services, skip sealed completed batches and resume on reboot. They issue no
+source requests and are not recurring crawlers.
 Its output is `~/.cache/goodwatch/trope-catalog/full-2026-10-25/`; `inventory/` there holds the global inventory and
 URL review evidence. The run has no request-count cap with `--all`. Allow roughly 2½ days for the known URLs at
 the minimum pace for a fully uncached HTTP pass, plus review. A 403, 429 or challenge records a shared cooldown and stops; three consecutive
