@@ -28,7 +28,7 @@ label stays separate. A label such as “Bad End” pointing to “Multiple Endi
 therefore carries the actual “Multiple Endings” title and its general description;
 it does not claim that the page defines the literal contextual label.
 
-`trope_catalog_page` stores one source-verified page per canonical Main URL, with
+`trope_catalog_page` stores source-verified general pages under their actual canonical URLs, with
 its actual primary title, general introduction and capture/archive provenance.
 `trope_catalog_reference` maps an observed reference URL to that page and retains
 its own evidence, so updating a page cannot erase redirect evidence. Both tables
@@ -42,6 +42,15 @@ observed URL. Linked mode removes only the requirement that contextual text equa
 the primary title. A redirect/alias needs captured route evidence; a different
 unrelated canonical, a work/creator namespace, an unavailable page or a browser
 challenge does not qualify. No title or route is generated from a label.
+
+Original discovery and network requests remain restricted to known Main URLs.
+An actual captured redirect can identify an approved general notes, analysis or
+index namespace as its canonical destination; `GENERAL_PAGE_NAMESPACES` in the
+catalog module lists those namespaces. These records keep their actual published
+header, including its namespace context when present. Creator and individual
+movie/show pages remain separate subjects. A verified page with no published
+introduction retains its title and reference with a null description, rather than
+borrowing an epigraph or turning its navigation list into a definition.
 
 The page population command reuses the existing single source worker's lock,
 saved captures, durable six-second pace, source-block state and transient-error
@@ -196,8 +205,11 @@ backs off before retrying transient failures. Code/configuration errors and unre
 inspection; they are not retried in a loop. Never move the run to another network to bypass a block. The user
 service is enabled for reboot resumption, with user lingering enabled so logout does not stop it.
 
+The following commands describe the original label-pass checkpoint, retained for audit.
+The active URI pass uses the page service and run directory above.
+
 ```sh
-# Monitor the active service and its local checkpoint.
+# Inspect the original service and its local checkpoint.
 systemctl --user status goodwatch-trope-catalog-full.service
 python goodwatch-flows/scripts/populate_trope_catalog.py status \
   --output ~/.cache/goodwatch/trope-catalog/full-2026-10-25 --with-database
