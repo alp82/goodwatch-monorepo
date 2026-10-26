@@ -1,0 +1,70 @@
+{
+  "result": "STOPPED_AT_WORKLOAD_GATE_BEFORE_ANY_PRODUCTION_MUTATION",
+  "base": "7c9ca7bbc1660c8cec0cf807956b8075cb7cac5b",
+  "branch": "fix/644-q47-crate02-plain-restart",
+  "runbook_reference": "f50b76655",
+  "runbook_matches_reference": true,
+  "runbook_sha256": "792a7c2b31f8baa30b5f37af0133657735b30f20272f4dc82db7b0507df7d5f1",
+  "stop_utc": "2026-10-26T21:22:42.341203+00:00",
+  "blocking_flow": {
+    "id": "01a174a4-169f-be62-b3b1-118ce2163038",
+    "type": "QueuedJob",
+    "job_kind": "flow",
+    "script_path": "f/tmdb_api/read_daily_provider_lists",
+    "schedule_path": "f/tmdb_api/read_daily_provider_lists",
+    "running": true,
+    "started_at": "2026-10-26T14:00:00.009991Z",
+    "scheduled_for": "2026-10-26T14:00:00Z",
+    "duration_ms": null,
+    "success": null,
+    "canceled": false,
+    "suspend": 0,
+    "suspend_until": null,
+    "tag": "flow",
+    "module_states": [
+      {
+        "index": 0,
+        "type": "InProgress",
+        "job": "01a17882-cc15-3f94-2df0-8e6deb515cdc",
+        "job_count": 0
+      },
+      {
+        "index": 1,
+        "type": "WaitingForPriorSteps",
+        "job": null,
+        "job_count": 0
+      }
+    ],
+    "utc": "2026-10-26T21:21:08.721265+00:00"
+  },
+  "production_mutations": [],
+  "initial_crate_checks": "All3 coordinators:3 nodes5.10.16,145 GREEN,all copiesSTARTED,no snapshotIN_PROGRESS,checks passing",
+  "full_ten_minute_stability_gate_completed": false,
+  "snapshot": [
+    "goodwatch-db-backup-v2",
+    "hourly_20261026_210501",
+    "SUCCESS",
+    1793048702233,
+    1793048721248,
+    567,
+    []
+  ],
+  "page_samples": 75,
+  "page_max_seconds": 1.899932,
+  "page_first_utc": "2026-10-26T21:20:15.026695+00:00",
+  "page_last_utc": "2026-10-26T21:22:35.300470+00:00",
+  "expected_statuses_all_passed": true,
+  "watcher_stopped_normally": true,
+  "container_pid_unchanged": 3628315,
+  "restart_policy": "always",
+  "allocation": "all",
+  "rebalance": "none",
+  "cron_original_sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
+  "wait3_restoration_needed": false,
+  "cron_restoration_needed": false,
+  "next_scheduled_backup_utc": "2026-10-26T22:05:00Z",
+  "next_backup_observed": false,
+  "receipt_sha256": "74aafb813b8091d31dddf149f1aa9bc380901c2ef825019469cd58860b0a2b5f",
+  "no_push": true,
+  "all_145_policy_values_match_prior_inventory": true
+}

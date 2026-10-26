@@ -8,6 +8,55 @@ and temporarily hold the backup cron; those changes were restored.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Q47 GO — stopped at initial workload gate,October26 21:20–21:23 UTC
+
+**No restart or production preparation was performed.** The owner gave explicit go for the plain
+restart, with fresh gates and a stop on any failed gate. At the live workload gate, Windmill still
+reported the large **f/tmdb_api/read_daily_provider_lists** flow running from **14:00:00.009 UTC**,
+over7h20m into its run. Direct GET confirmation at21:21:08 showed runningtrue, canceledfalse,
+suspend0 and module0 **InProgress**, not merely a scheduled future trigger. Job ID
+**01a174a4-169f-be62-b3b1-118ce2163038**. This was the bulk carry-over the quiet-window research aimed
+to avoid, outside Q47's accepted light-job baseline. The operator reported the first stop during
+gates and did not proceed toward21:30 or retry after the stop.
+
+[Summary](q47-preflight-stop.json), [sanitized gate/runtime/cron/API/page receipts](q47-preflight-stop.json.gz).
+Fresh branch **fix/644-q47-crate02-plain-restart**, base **7c9ca7bbc1660c8cec0cf807956b8075cb7cac5b** fromorigin/main. The active runbook was verified
+byte-for-byte identical to the owner referencef50b76655 (SHA256792a7c2b31f8baa30b5f37af0133657735b30f20272f4dc82db7b0507df7d5f1).
+The owner's checkout was not used or modified.
+
+Initial checks completed before the workload stop:
+
+- All3 expected members,5.10.16;145 GREEN relations through every coordinator, no missing or
+  underreplicated shards, no RELOCATING/INITIALIZING copies, all node checks passing.
+- Latest hourly **hourly_20261026_210501 SUCCESS**, started21:05:02.233,
+  finished**21:05:21.248 UTC**,567 shards/no failures; no IN_PROGRESS snapshot or SQL maintenance job.
+- Allocation**all**, rebalance**none**, gracefulPRIMARIES/forcefalse/2h on all coordinators.
+  All145 captured policies match the prior inventory;14 YepWatch tables remain replicas2/wait3,
+  REQUEST and original false block flags. No partition was present.
+- No active Coolify deploy; the latest12 GitHub runs were completed. Windmill bulk-flow metadata
+  is the failed gate. No schedule/job was changed, cancelled or paused.
+- Watcher ran every10s across all5 requested endpoints. **75 expected responses**,
+  no transport/status/slow-page alarm, maximum**1.900s**. MCP401 was expected and
+  accepted; title/show/discover/discovery returned200. The3s rule was unchanged. The watcher ended
+  normally via its local stop flag after read-only evidence capture.
+- This early stop means the full10min heap/load stability/final pre-stop gates were **not completed**;
+  the above are initial passing observations, not a claim that every execution gate cleared.
+
+No cron hold, write-wait/write-block change, restart-policy change, allocation/rebalance change,
+decommission, drain, replica change, cancellation, SIGTERM, start or KILL occurred. Consequently
+there was nothing to reverse. Post-stop runtime readback proved the original container/image/config/
+mounts, PID**3628315**, October15 start time, restartcount0 and restart policy**always** unchanged.
+Cron readback was exactly original SHA256
+**374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37**, one active named backup job,
+no hold installed. Next scheduled backup is**22:05 UTC**, not yet observed here.
+
+Rebalance intentionally remainsnone under the earlier owner hold. Lock clearance is untested;
+there is no new JVM, placement test or20–30min recovery observation. A later attempt needs an owner
+decision and fresh passing gates; no automatic retry or background restart is scheduled.
+Local watcher tests passed10/10. Receipt parsing, all-node checks, policy/runtime/cron comparisons,
+page assertions, archive hash and diff checks passed. No application code changed; app suites/typecheck
+were not rerun for this evidence-only stop record.
+
 ## Q46 — chosen proposed window21:30 UTC,read-only
 
 [Complete schedule/runtime/window research](q46-window-research.md):56 schedules/53 enabled,
