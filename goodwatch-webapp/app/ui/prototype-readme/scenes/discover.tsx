@@ -6,6 +6,7 @@ import type { SceneProps } from "~/ui/living-room/intro/scene"
 const css = `
 .readme-discover .intro-switch { animation: none !important; transform: none !important; }
 .readme-discover .intro-switch-h { display: none; }
+.readme-discover .intro-switch-foot { display: none; }
 .readme-discover .intro-switch-left { top: 15cqh; left: 5cqw; }
 .readme-discover .intro-switch-right { top: 12.4cqh; left: 51cqw; right: auto; }
 `

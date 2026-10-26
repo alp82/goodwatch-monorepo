@@ -150,3 +150,6 @@
 		opacity: 1;
 	}
 }
+
+/* No "Illustration" note in the README clip (owner, round 5). */
+.intro-ai-chat-note { display: none !important; }

@@ -1,5 +1,5 @@
 > [!NOTE]
-> README animation prototype, round 4.
+> README animation prototype, round 5.
 
 <div align="center">
 
@@ -74,9 +74,9 @@
 <br>
 
 <p align="center"><img src="https://shieldcn.dev/badge/Imports-fbbf24.svg?logo=lu:Download&size=xs" alt="Imports"></p>
-<h3 align="center">Bring your ratings</h3>
-<p align="center">Import from IMDb, Letterboxd, Trakt, Plex, and&nbsp;more.</p>
-<p align="center"><img src=".github/readme/clips/imports.avif" alt="Bring your ratings: a scene from the GoodWatch intro" width="86%"></p>
+<h3 align="center">Bring your history</h3>
+<p align="center">Import ratings, watch history, and Wishlists from other&nbsp;apps.</p>
+<p align="center"><img src=".github/readme/clips/imports.avif" alt="Bring your history: a scene from the GoodWatch intro" width="86%"></p>
 <br>
 
 <p align="center"><img src="https://shieldcn.dev/badge/AI%20apps-fbbf24.svg?logo=lu:Bot&size=xs" alt="AI apps"></p>

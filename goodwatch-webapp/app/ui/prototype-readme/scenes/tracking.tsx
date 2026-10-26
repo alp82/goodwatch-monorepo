@@ -1,5 +1,5 @@
 // PROTOTYPE (README still "tracking"): the intro Tracking scene's first four alert cards (Want to See, now on a
-// service, Continue, Pick up) in a 2x2 grid filling the picture, still, with the "Example of what members get" label.
+// service, Continue, Pick up) in a 2x2 grid filling the picture, still.
 // The cards are the intro's (same classes and data rules as scenes/tracking.tsx), only larger.
 import type { CSSProperties, ReactNode } from "react"
 import type { IntroCard } from "~/ui/living-room/intro/data"
@@ -198,7 +198,7 @@ export const TRACKING_BOX = { x: 0, y: 0, w: 1440, h: 640 }
 const css = `
 .readme-tracking { position:absolute; left:0; top:0; width:1440px; height:${TRACKING_BOX.h}px; overflow:hidden;
 	background: radial-gradient(70% 80% at 50% 50%, #17140b 0%, #05060a 75%); font-family:"Gabarito",ui-sans-serif,system-ui,sans-serif; color:#fff; }
-.readme-tracking-grid { position:absolute; left:32px; right:32px; top:96px; bottom:44px;
+.readme-tracking-grid { position:absolute; left:32px; right:32px; top:40px; bottom:100px;
 	display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:28px; }
 .readme-tracking .intro-feed-card { --ch: 100%; height:100%; gap: 24px; padding: 0 26px 0 22px;
 	border-radius: 24px; border-left-width: 10px; }
@@ -221,7 +221,6 @@ export function ReadmeTracking({ data }: SceneProps) {
 	return (
 		<div className="readme-tracking">
 			<style>{css}</style>
-			<div className="intro-feed-example">Example of what members get</div>
 			<div className="readme-tracking-grid">
 				{ms.map((m) => (
 					<Card key={m.kind} m={m} />
