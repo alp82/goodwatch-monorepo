@@ -85,6 +85,18 @@ class PagePopulationTests(unittest.TestCase):
             handle.write(json.dumps({'document_sha256': 'a' * 64, 'phase': 'complete'}) + '\n')
         self.assertEqual(len(self.catalog.prepare(self.db, output)), 1)
 
+    def test_initial_queue_skips_described_references_but_retains_full_scope_receipt(self):
+        self.db.references.add(BASE + 'MultipleEndings')
+        output = self.root / 'run'
+        self.assertEqual(self.catalog.prepare(self.db, output), [])
+        manifest = json.loads((output / 'queue-manifest.json').read_text())
+        self.assertEqual(manifest['known_references'], 1)
+        self.assertEqual(manifest['initially_described'], 1)
+        self.assertEqual(manifest['entries'], 0)
+        # The saved queue stays immutable if another writer later changes coverage.
+        self.db.references.clear()
+        self.assertEqual(self.catalog.prepare(self.db, output), [])
+
     def test_only_audited_exact_duplicate_origin_is_repaired(self):
         self.inventory.write_text(json.dumps([
             {'url': 'https://tvtropes.org' + BASE + 'Recovered'},

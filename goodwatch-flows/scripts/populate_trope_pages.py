@@ -76,11 +76,17 @@ class PageCatalog:
                 raise ValueError('Saved page queue or inventory changed; preserve it and use a new run directory')
             return json.loads(path.read_text())
         # `name` is the stable journal identity, not a claim about the page title.
-        entries = [{'name': url, 'url': url} for url in inventory_urls(self.inventories)]
+        known = inventory_urls(self.inventories)
+        present = set()
+        for start in range(0, len(known), 400):
+            present.update(self.present(db, known[start:start + 400]))
+        entries = [{'name': url, 'url': url} for url in known if url not in present]
         atomic_json(path, entries)
         atomic_json(manifest_path, {'created_at': utcnow().isoformat(), 'entries': len(entries),
+                                   'known_references': len(known), 'initially_described': len(present),
                                    'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
-                                   'inventories': inventory, 'scope': 'global known Main reference URLs'})
+                                   'inventories': inventory,
+                                   'scope': 'all globally known Main references missing described pages'})
         return entries
 
     @staticmethod
