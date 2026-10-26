@@ -8,6 +8,48 @@ and temporarily hold the backup cron; those changes were restored.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Restored backup cron verification — October26,11:05–11:36 UTC
+
+**Cron ran, but the scheduled backup did not succeed. At11:35:02 UTC the helper logged
+BACKUP FAILED after its30-minute CREATE read timeout; the server-side snapshot remained
+IN_PROGRESS on all three coordinators at11:35:57–11:36:16.** This is not a SUCCESS receipt.
+No manual backup, retry, snapshot cancel/delete, cron modification or production mutation occurred.
+Started from fresh main `1df1af8d0`; branch `fix/644-q40-restart-execution-plan` also holds the
+separately requested read-only Q40 plan. [Structured receipts](q37-restored-backup-verification.json)
+contain the cron invocation, redacted schedule metadata, log lines, all-coordinator snapshot reads,
+latest successful snapshot, current relocations and tagged source excerpts/hash.
+
+- Journal confirms root cron invoked the backup at **11:05:02.006417 UTC**. The backup log records
+  `Creating snapshot: hourly_20261026_110502` at11:05:02.
+- Repo `goodwatch-db-backup-v2`: snapshot started **11:05:02.127**,567 shards, finish0 and no failures
+  listed. All three coordinators returned IN_PROGRESS at11:06,11:11,11:16,11:21 and11:35–36.
+  Empty failures with an unfinished snapshot is not proof of a valid rollback target.
+- At **11:35:02**, log: `SQL CREATE failed ... ReadTimeout; not replayed; inspect server outcome`,
+  then `BACKUP FAILED: Snapshot creation failed: hourly_20261026_110502`. The client timeout did
+  not cancel the native snapshot, and no cancellation was attempted here.
+- Latest current SUCCESS, independently re-read at11:35:57, remains **hourly_20261026_090502**,
+  finished09:05:30.639,567 shards, no failures. It is over2½ hours old at this observation.
+- Cron at11:35:58 has exactly one active backup line, schedule `5 * * * *`, zero Q37 hold markers,
+  and original SHA256 `374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37`.
+  Schedule restoration is confirmed; do not confuse it with successful snapshot completion.
+
+**Best-supported explanation:** `doc.person_appeared_in` primary shard4 remains RELOCATING from
+crate-01 toward crate-02, still observed11:36:14 (also present before the11:05 snapshot).
+Tagged5.10.16 [SnapshotsService](https://github.com/crate/crate/blob/5.10.16/server/src/main/java/org/elasticsearch/snapshots/SnapshotsService.java#L2067)
+sets a relocating primary's snapshot shard state to WAITING and
+[keeps waiting while it relocates](https://github.com/crate/crate/blob/5.10.16/server/src/main/java/org/elasticsearch/snapshots/SnapshotsService.java#L718).
+The replica move for shard5 also remains pending. SQL does not expose the internal per-snapshot
+shard WAITING state here, so the particular internal holder is inferred from source and persistent
+routing, not directly measured. No REROUTE, restart or lock manipulation was performed to test it.
+
+**Q40 fresh-backup gate fails on this evidence.** A working cron alone does not clear it. Resolve
+snapshot completion and the health-wait cancellation safety issue in the plan before a new go;
+this turn stops with those findings for an owner decision. No further production action authorized.
+
+Validation: parsed receipts; checked three-coordinator state agreement, cron journal timestamp,
+original cron hash/one active schedule/no hold marker, failure log and latest-success metadata.
+No application code changed; no webapp/flow suites or typecheck were run for this evidence update.
+
 ## Q40 — tonight's restart plan (not executed)
 
 Owner approved planning for crate-02 around **2026-10-27 03:00 UTC**, with a separate **go** still
@@ -60,8 +102,8 @@ Each requested page was fetched three times, body discarded, without following r
 
 Recovery was reported immediately during the turn. Exact timestamps, scripts, selected runtime,
 SQL results and the short abort-log interval are in [q37-native-abort.json](q37-native-abort.json).
-Cron remains restored as previously verified; next11:05 scheduled snapshot is still future and
-not verified here. Original stale contexts/closing locks are not claimed fixed by aborting.
+Cron remained restored at that observation; the later11:05 run is recorded above and failed its
+CREATE client wait while the server-side snapshot remained IN_PROGRESS. Original stale contexts/closing locks are not claimed fixed by aborting.
 Future maintenance must solve the three-copy primary-drain blocker and keep a tested native
 abort path ready before disabling a production coordinator. No further production change made.
 
@@ -159,7 +201,7 @@ No authenticated MCP tool invocation or sustained member traffic validation was 
 
 The10:05 scheduled backup was skipped during the hold. Cron is restored to its original
 `5 * * * *` schedule (one active backup job, no hold marker, hash reconfirmed10:25).
-**The next11:05 UTC scheduled run is not yet verified.** The explicit gate-failure instruction
+**At that time, the next11:05 UTC scheduled run was not yet verified; its later failed outcome is recorded above.** The explicit gate-failure instruction
 was to stop and report; no manual backup was substituted. Latest verified snapshot remains09:05.
 
 ### Owner decision before further changes

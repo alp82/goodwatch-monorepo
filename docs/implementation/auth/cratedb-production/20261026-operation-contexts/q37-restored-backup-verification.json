@@ -1,0 +1,318 @@
+{
+  "scope": "Read-only verification of restored scheduled backup; no backup retry or snapshot mutation",
+  "recorded_utc": "2026-10-26T11:37:34.157676+00:00",
+  "initial_snapshots": [
+    {
+      "host": 11,
+      "utc": "2026-10-26T11:06:14.506753+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_11%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_110502",
+            "IN_PROGRESS",
+            1793012702127,
+            0,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 17342.457
+      }
+    },
+    {
+      "host": 12,
+      "utc": "2026-10-26T11:06:14.506888+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_11%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_110502",
+            "IN_PROGRESS",
+            1793012702127,
+            0,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 18243.28
+      }
+    },
+    {
+      "host": 13,
+      "utc": "2026-10-26T11:06:14.507065+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_11%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_110502",
+            "IN_PROGRESS",
+            1793012702127,
+            0,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 16184.652
+      }
+    }
+  ],
+  "latest_snapshots": [
+    {
+      "host": 11,
+      "utc": "2026-10-26T11:35:57.582125+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_11%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_110502",
+            "IN_PROGRESS",
+            1793012702127,
+            0,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 15832.575
+      }
+    },
+    {
+      "host": 12,
+      "utc": "2026-10-26T11:35:57.582381+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_11%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_110502",
+            "IN_PROGRESS",
+            1793012702127,
+            0,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 18370.135
+      }
+    },
+    {
+      "host": 13,
+      "utc": "2026-10-26T11:35:57.582598+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_11%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_110502",
+            "IN_PROGRESS",
+            1793012702127,
+            0,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 16742.555
+      }
+    }
+  ],
+  "initial_host": {
+    "utc": "2026-10-26T11:06:15.608268+00:00",
+    "cron_sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
+    "active_backup_jobs": 1,
+    "schedule_fields": [
+      [
+        "5",
+        "*",
+        "*",
+        "*",
+        "*"
+      ]
+    ],
+    "hold_marker_count": 0,
+    "backup_log_lines": [
+      "2026-10-26T11:05:02Z Creating snapshot: hourly_20261026_110502..."
+    ],
+    "cron_journal_exit": 0,
+    "cron_invocations": [
+      {
+        "realtime_us": "1793012702006417",
+        "pid": "1815267",
+        "job": "goodwatch-crate/backup.py",
+        "root_job": true
+      }
+    ]
+  },
+  "latest_host": {
+    "utc": "2026-10-26T11:35:58.753658+00:00",
+    "cron_sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
+    "active_backup_jobs": 1,
+    "schedule_fields": [
+      [
+        "5",
+        "*",
+        "*",
+        "*",
+        "*"
+      ]
+    ],
+    "hold_marker_count": 0,
+    "backup_log_lines": [
+      "2026-10-26T11:05:02Z Creating snapshot: hourly_20261026_110502...",
+      "2026-10-26T11:35:02Z SQL CREATE failed at http://10.0.0.11:4200/_sql: ReadTimeout; not replayed; inspect server outcome",
+      "2026-10-26T11:35:02Z BACKUP FAILED: Snapshot creation failed: hourly_20261026_110502"
+    ],
+    "cron_journal_exit": 0,
+    "cron_invocations": [
+      {
+        "realtime_us": "1793012702006417",
+        "pid": "1815267",
+        "job": "goodwatch-crate/backup.py",
+        "root_job": true
+      }
+    ]
+  },
+  "relocations": {
+    "utc": "2026-10-26T11:36:14.701286+00:00",
+    "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE state<>'STARTED' OR routing_state<>'STARTED' ORDER BY table_name,id",
+    "result": {
+      "cols": [
+        "schema_name",
+        "table_name",
+        "id",
+        "node['name']",
+        "primary",
+        "state",
+        "routing_state",
+        "relocating_node"
+      ],
+      "rows": [
+        [
+          "doc",
+          "person_appeared_in",
+          4,
+          "crate-01",
+          true,
+          "STARTED",
+          "RELOCATING",
+          "r0IgCe17SPOgudkQIGsRQA"
+        ],
+        [
+          "doc",
+          "person_appeared_in",
+          5,
+          "crate-03",
+          false,
+          "STARTED",
+          "RELOCATING",
+          "r0IgCe17SPOgudkQIGsRQA"
+        ]
+      ],
+      "rowcount": 2,
+      "duration": 13.171524
+    }
+  },
+  "source": {
+    "url": "https://github.com/crate/crate/blob/5.10.16/server/src/main/java/org/elasticsearch/snapshots/SnapshotsService.java",
+    "license": "Apache-2.0 as in source header",
+    "sha256": "63b45de55155f1c1aa0023ba454a160459514d0f61edbf13ad3533e22f871e77",
+    "excerpts": {
+      "lines_718_733": "            } else if (shardStatus.state() == ShardState.WAITING) {\n                IndexRoutingTable indexShardRoutingTable = routingTable.index(shardId.getIndex());\n                if (indexShardRoutingTable != null) {\n                    IndexShardRoutingTable shardRouting = indexShardRoutingTable.shard(shardId.id());\n                    if (shardRouting != null && shardRouting.primaryShard() != null) {\n                        if (shardRouting.primaryShard().started()) {\n                            // Shard that we were waiting for has started on a node, let's process it\n                            snapshotChanged = true;\n                            LOGGER.trace(\"starting shard that we were waiting for [{}] on node [{}]\", shardId, shardStatus.nodeId());\n                            shards.put(shardId,\n                                    new ShardSnapshotStatus(shardRouting.primaryShard().currentNodeId(), shardStatus.generation()));\n                            continue;\n                        } else if (shardRouting.primaryShard().initializing() || shardRouting.primaryShard().relocating()) {\n                            // Shard that we were waiting for hasn't started yet or still relocating - will continue to wait\n                            shards.put(shardId, shardStatus);\n                            continue;",
+      "lines_2060_2082": "                    final ShardSnapshotStatus shardSnapshotStatus;\n                    ShardRouting primary = indexRoutingTable.shard(i).primaryShard();\n                    if (readyToExecute == false || inFlightShardStates.isActive(indexName, i)) {\n                        shardSnapshotStatus = ShardSnapshotStatus.UNASSIGNED_QUEUED;\n                    } else if (primary == null || !primary.assignedToNode()) {\n                        shardSnapshotStatus = new ShardSnapshotStatus(null, ShardState.MISSING,\n                                \"primary shard is not allocated\", shardRepoGeneration);\n                    } else if (primary.relocating() || primary.initializing()) {\n                        shardSnapshotStatus = new ShardSnapshotStatus(\n                                primary.currentNodeId(), ShardState.WAITING, shardRepoGeneration);\n                    } else if (!primary.started()) {\n                        shardSnapshotStatus =\n                                new ShardSnapshotStatus(primary.currentNodeId(), ShardState.MISSING,\n                                        \"primary shard hasn't been started yet\", shardRepoGeneration);\n                    } else {\n                        shardSnapshotStatus =\n                                new ShardSnapshotStatus(primary.currentNodeId(), shardRepoGeneration);\n                    }\n                    builder.put(shardId, shardSnapshotStatus);\n                }\n            }\n        }\n        return builder.build();"
+    }
+  },
+  "snapshot_internal_waiting_state_directly_observed": false,
+  "best_hypothesis": "Snapshot waits on relocating person_appeared_in primary shard 4: tagged source assigns WAITING to relocating primaries and keeps waiting until routing settles.",
+  "latest_success": {
+    "utc": "2026-10-26T11:35:57.581881+00:00",
+    "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND state='SUCCESS' ORDER BY started DESC LIMIT 1",
+    "result": {
+      "cols": [
+        "repository",
+        "name",
+        "state",
+        "started",
+        "finished",
+        "total_shards",
+        "failures"
+      ],
+      "rows": [
+        [
+          "goodwatch-db-backup-v2",
+          "hourly_20261026_090502",
+          "SUCCESS",
+          1793005502597,
+          1793005530639,
+          567,
+          []
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 15843.511
+    }
+  },
+  "backup_helper_outcome": "BACKUP FAILED at 11:35:02 UTC after CREATE ReadTimeout; server-side snapshot still IN_PROGRESS"
+}

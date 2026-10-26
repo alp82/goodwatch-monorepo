@@ -2,6 +2,11 @@
 
 **Planning only, prepared October26. No Q40 mutation or monitoring loop was executed today.**
 Execute only after a fresh owner **go**, around **2026-10-27 03:00 UTC** (04:00 CET).
+**Additional fresh-backup blocker:** the scheduled `hourly_20261026_110502` run logged BACKUP
+FAILED at11:35:02 after CREATE ReadTimeout; native snapshot still IN_PROGRESS at11:36. Latest verified
+SUCCESS remains09:05. See [backup evidence](README.md#restored-backup-cron-verification--october2611051136-utc).
+Do not execute Q40 without a fresh successful backup and no active snapshot.
+
 **Execution blocker identified during planning:** a pending global relocation can keep the5.10
 native action in its health-wait phase, where today's dynamic-timeout abort is not prompt.
 A proposed30s initial timeout was rejected after reviewing the unchecked timed-out response path:
