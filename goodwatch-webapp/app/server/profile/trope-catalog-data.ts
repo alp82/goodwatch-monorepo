@@ -4,6 +4,8 @@ import type { CatalogRead } from "./tropes-data.ts"
 export interface TropeDescription {
 	text: string | null
 	url: string
+	/** Actual page heading; legacy name-keyed rows cannot supply this proof. */
+	title?: string | null
 }
 export type TropeDescriptions = Record<string, TropeDescription>
 interface CatalogRow {
@@ -62,10 +64,19 @@ export function withTropeDescriptions<
 	T extends {
 		descriptions: Record<string, string>
 		urls: Record<string, string>
+		names?: Record<string, string>
 	},
 >(pool: T, entries: TropeDescriptions) {
 	return {
 		...pool,
+		names: {
+			...pool.names,
+			...Object.fromEntries(
+				Object.entries(entries).flatMap(([id, row]) =>
+					row.title ? [[id, row.title]] : [],
+				),
+			),
+		},
 		descriptions: Object.fromEntries(
 			Object.entries(entries).flatMap(([name, row]) =>
 				row.text ? [[name, row.text]] : [],

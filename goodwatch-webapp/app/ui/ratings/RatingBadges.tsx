@@ -1,6 +1,6 @@
 import { assetUrl } from "~/utils/asset-url"
 import React from "react"
-import gwLogo from "~/img/goodwatch-logo-white.svg"
+import { whiteMark } from "~/ui/brand/white-mark"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import metacriticLogo from "~/img/metacritic-logo-96.webp"
 import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
@@ -47,7 +47,7 @@ export default function RatingBadges({
 				>
 					<img
 						className={`block h-9 p-1.5 rounded-full shadow-xl ${vibeColorIndex == null ? "bg-gray-950" : `bg-vibe-${vibeColorIndex}`}`}
-						src={assetUrl(gwLogo)}
+						{...whiteMark()}
 						alt="GoodWatch Logo"
 					/>
 					<dd className="text-base">

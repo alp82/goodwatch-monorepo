@@ -319,30 +319,83 @@ function saveData(): boolean {
 	)
 }
 
+/** The addresses of the links this module added, and of those the page already had. */
 const preloaded = new Set<string>()
 
-function addLink(rel: string, href: string, as?: string) {
-	if (preloaded.has(href)) return
+/** Adds a preload link; false when the page already asked for the file. */
+function addLink(rel: string, href: string, as?: string, low = false): boolean {
+	if (preloaded.has(href)) return false
 	preloaded.add(href)
 	if (
 		document.querySelector(
 			`link[href="${CSS.escape(href)}"], script[src="${CSS.escape(href)}"]`,
 		)
 	)
-		return
+		return false
 	const link = document.createElement("link")
 	link.rel = rel
 	if (as) link.as = as
+	if (low) {
+		link.fetchPriority = "low"
+		const done = () => {
+			warming--
+			pumpWarmup()
+		}
+		link.addEventListener("load", done)
+		link.addEventListener("error", done)
+	}
 	link.href = href
 	document.head.appendChild(link)
+	return true
 }
 
-/** Loads a route's code (its module, the modules it imports, and its style sheets) without running it. */
-export function preloadRouteCode(routeId: string): void {
+// A phone's code warm-up: the files of the page types it shows, at low priority and WARM_AT_ONCE at a time. Chrome
+// doesn't raise a request that is already loading (a second link, `import()` or a changed `fetchPriority` all left it
+// at low in a CDP check, #753), so a tap finds at most these few small files at low priority; the ones still waiting
+// go at normal priority with the tap's own preload, and an intent drops the rest of the queue.
+const WARM_AT_ONCE = 3
+const warmQueue: { rel: string; href: string; as?: string }[] = []
+let warming = 0
+
+function pumpWarmup() {
+	while (warming < WARM_AT_ONCE && warmQueue.length) {
+		const next = warmQueue.shift()
+		if (!next) continue
+		warming++
+		if (!addLink(next.rel, next.href, next.as, true)) warming--
+	}
+}
+
+function warmLink(rel: string, href: string, as?: string) {
+	if (preloaded.has(href) || warmQueue.some((item) => item.href === href)) return
+	warmQueue.push({ rel, href, as })
+	pumpWarmup()
+}
+
+/** Whether a phone may warm code it wasn't asked for: not on the start page (its LCP and TBT budget, #236), not on 3G. */
+function mayWarmCode(): boolean {
+	if (window.location.pathname === "/") return false
+	const type = (navigator as Navigator & { connection?: { effectiveType?: string } })
+		.connection?.effectiveType
+	return !/(^|-)3g$/.test(type ?? "")
+}
+
+/**
+ * Loads a route's code (its module, the modules it imports, and its style sheets) without running it. `warm` for a
+ * phone's warm-up that nobody asked for yet: queued at low priority. Without it the files go at once, and the files
+ * the warm-up still holds back are dropped from its queue.
+ */
+export function preloadRouteCode(routeId: string, warm = false): void {
 	const route = remix().__remixManifest?.routes[routeId]
 	if (!route || remix().__remixRouteModules?.[routeId]) return
-	for (const href of [route.module, ...(route.imports ?? [])])
-		addLink("modulepreload", href)
+	const code = [route.module, ...(route.imports ?? [])]
+	if (warm) {
+		for (const href of code) warmLink("modulepreload", href)
+		for (const href of route.css ?? []) warmLink("prefetch", href, "style")
+		return
+	}
+	warmQueue.length = 0
+	for (const href of code) addLink("modulepreload", href)
 	for (const href of route.css ?? []) addLink("prefetch", href, "style")
 }
 
@@ -414,8 +467,13 @@ export function prefetchPage(url: URL, trigger: PrefetchTrigger): void {
 	const identity = currentIdentity()
 	if (!identity) return
 	const routes = routesToLoad(router, url)
+	// Code on intent at once. For what a phone shows (viewport), warmed at low priority: a page type's files come
+	// once (title pages share them), and the phone's first change to a title or person page then doesn't wait about a
+	// second for them after the tap (#753).
 	if (trigger !== "viewport")
 		for (const match of routes) preloadRouteCode(match.route.id)
+	else if (mayWarmCode())
+		for (const match of routes) preloadRouteCode(match.route.id, true)
 	for (const match of routes) {
 		const routeId = match.route.id
 		const key = cacheKey(identity, routeId, url)

@@ -37,7 +37,7 @@ gives the rule for each kind of file:
 | Route scripts and preloads of a later navigation in the browser | The browser entry rewrites the file list that the page loaded, with the host that its own scripts came from. |
 | Lazy chunks and their preloads | A chunk imports another one with a relative path, so the import follows the script. `experimental.renderBuiltUrl` in `vite.config.js` makes Vite's preload helper resolve against the script too, and not against the page. |
 | Fonts and images named in a style sheet | The style sheet names them with a path, so they follow the style sheet. |
-| The style sheet, the font preload, the web manifest, imported images, `public/` images and flags | `assetUrl(path)` puts the chosen host in front. |
+| The style sheet, the font preload, imported images, `public/` images and flags | `assetUrl(path)` puts the chosen host in front. |
 | The related map's script and style sheet on a title page | `assetUrl(path)` too. The build writes the script next to Vite's files with a hashed name (see [related-map.md](implementation/related-map.md)). |
 
 `assetUrl` and `assetBase` (`app/utils/asset-url.ts`) work on both sides:
@@ -63,7 +63,7 @@ Rules for code:
 | --- | --- |
 | Hashed build files under `/assets/`: scripts, style sheets, fonts, imported images | Documents, loader data, `/api/` |
 | `public/` images (`/images/`) and flags (`/flags/`) | `robots.txt`, the sitemaps |
-| The web manifest, and with it the icons that it names | The favicon and the touch icon |
+| | The favicon, the touch icon, and the web manifest with the icons that it names |
 | | OG cards under `/og/`, and the share card fonts under `/fonts/share-card` |
 
 ## The probe
@@ -116,13 +116,14 @@ is answered as before, so the origin stays a complete copy.
 ## Headers
 
 - Build files under `/assets/`, font files, and the web manifest answer `Access-Control-Allow-Origin: *`, on the
-  site's host too. Module scripts, their preloads, fonts, and the web manifest are fetched with CORS when they come
-  from another host.
+  site's host too. Module scripts, their preloads, and fonts are fetched with CORS when they come from another host.
 - While a page names the static hostname, its first link is `<link rel="preconnect" crossorigin>` for it. Scripts
   and fonts use that connection. The stylesheet link carries `crossorigin` too while the page names the static
   hostname: a browser keeps requests with and without credentials on separate connections, and without the attribute
   the render-blocking stylesheet would wait for a second connection that no hint opened. The start page's own style
-  sheets and its room pictures carry it too. Other images still use that second connection.
+  sheets (all of them in `HOME_SHEETS`, `app/ui/living-room/home-sheets.ts`), its room pictures and the white G
+  mark carry it too; the 103 Early Hints response names them (`app/server/early-hints.ts`). Other images still use
+  that second connection.
 
 ### Early Hints
 
@@ -170,8 +171,12 @@ With the label, an instance that is set to `origin` doesn't fire it.
   keeps its address. It recovers on its next reload, or when a lazy chunk fails to load, which reloads the page
   (`app/utils/stale-chunk.ts`).
 - An imported image whose address doesn't go through `assetUrl` stays on the origin.
-- The web manifest names its icons with paths, so they come from the static hostname. Its `start_url` isn't set, so
-  an installed site still starts on the site's own host.
+- The web manifest stays on the site's own host (#236, owner decision October 26, 2026). Its `start_url` and
+  `scope` are `/`, which a browser reads against the manifest's own address: from the static hostname they named
+  that host, and Chrome ignores a `start_url` or `scope` on another host than the page's. It is a small file with
+  a short cache, so it costs the site's host little. The link carries `crossorigin="use-credentials"`: a browser
+  fetches a manifest without credentials otherwise, on a connection of its own, and with them it takes the
+  page's connection. Its icons come from the site's host too.
 
 ## Check it locally
 

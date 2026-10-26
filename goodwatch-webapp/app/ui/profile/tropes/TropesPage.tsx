@@ -15,6 +15,7 @@ import type { ProfileShell } from "~/domain/profile"
 import type { TropesPreview } from "~/server/profile/tropes-preview"
 import type { ProfileTropes } from "~/server/profile/tropes.server"
 import { PosterImg, backdropUrl, posterUrl } from "~/ui/profile/parts"
+import { describeTrope } from "~/utils/profile-trope-descriptions"
 import { FilterStrip } from "./FilterStrip"
 import {
 	type RankedTrope,
@@ -39,6 +40,7 @@ import {
 	definingTitles,
 	useDetail,
 } from "./parts"
+import { useDescriptions } from "./useDescriptions"
 import { useExcerpts } from "./useExcerpts"
 import { type TropeFacets, useTropeFacets } from "./useTropeFacets"
 
@@ -48,12 +50,14 @@ export function TropesPage({
 	shell,
 	data,
 	preview,
+	descriptionSeed,
 	loading = false,
 	retry,
 }: {
 	shell: ProfileShell
 	data: ProfileTropes
 	preview?: TropesPreview
+	descriptionSeed?: TropesPreview
 	loading?: boolean
 	retry?: () => void
 }) {
@@ -62,6 +66,8 @@ export function TropesPage({
 	const [open, setOpen] = useState<string | null>(null)
 	const [focus, setFocus] = useState<string | null>(null)
 	const [shown, setShown] = useState(PAGE)
+	const visible = m.tropes.slice(0, shown)
+	const descriptions = useDescriptions(shell, visible, descriptionSeed)
 	const list = useRef<HTMLOListElement>(null)
 	const openRef = useRef<HTMLLIElement | null>(null)
 	const snap = useBandMotion(list, open)
@@ -71,11 +77,11 @@ export function TropesPage({
 	const pick = (tag: RankedTrope, title?: string) => {
 		snap(
 			list.current?.querySelector<HTMLElement>(
-				`[data-trope="${CSS.escape(tag.name)}"]`,
+				`[data-trope="${CSS.escape(tag.id ?? tag.name)}"]`,
 			) ?? null,
 		)
-		if (tag.name === open && !title) return setOpen(null)
-		setOpen(tag.name)
+		if ((tag.id ?? tag.name) === open && !title) return setOpen(null)
+		setOpen(tag.id ?? tag.name)
 		setFocus(title ?? tag.top[0] ?? null)
 	}
 	useEffect(() => {
@@ -85,7 +91,7 @@ export function TropesPage({
 		return () => cancelAnimationFrame(id)
 	}, [open])
 
-	const rows = m.tropes.slice(0, shown)
+	const rows = visible.map((tag) => describeTrope(tag, descriptions))
 	return (
 		<MotionConfig reducedMotion="user">
 			<div className="flex flex-col gap-4">
@@ -116,13 +122,13 @@ export function TropesPage({
 				) : (
 					<ol ref={list} className="flex min-h-[50vh] flex-col gap-2">
 						{rows.map((tag, i) => {
-							const on = tag.name === open
+							const on = (tag.id ?? tag.name) === open
 							const tier = tierOf(i)
 							return (
 								<li
-									key={tag.name}
+									key={tag.id ?? tag.name}
 									data-flip=""
-									data-trope={tag.name}
+									data-trope={tag.id ?? tag.name}
 									ref={on ? openRef : undefined}
 									className={`relative overflow-hidden bg-gray-900 ring-1 transition-[box-shadow] ${tier === "compact" && !on ? "rounded-xl" : "rounded-2xl"} ${on ? "ring-amber-400/50" : "ring-white/10 hover:ring-white/25"}`}
 								>
@@ -300,7 +306,7 @@ function Preview({
 	const top = definingTitles(tag, m.titles)
 	const { loading, textOf } = useExcerpts(
 		handle,
-		tag.name,
+		tag.id ?? tag.name,
 		top.map((t) => t.key),
 	)
 	const t = top[0]

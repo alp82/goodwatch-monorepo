@@ -120,6 +120,28 @@ class TropeCatalogInitializerTests(unittest.TestCase):
         changes = [sql for sql, _ in connector.writes if sql.startswith("ALTER TABLE")]
         self.assertEqual(changes, ["ALTER TABLE trope_catalog ADD COLUMN source_archive['byte_offset'] BIGINT"])
 
+    def test_standard_initializer_creates_uri_tables_with_typed_archive_mappings(self):
+        connector = RecordingCrate()
+        run_initializer(connector)
+        statements = [sql for sql, _ in connector.writes]
+        for table, key in (("trope_catalog_page", "url"), ("trope_catalog_reference", "reference_url")):
+            sql = next(s for s in statements if s.startswith(f"CREATE TABLE {table} "))
+            self.assertIn(f"PRIMARY KEY ({key})", sql)
+            for child, kind in ARCHIVE_COLUMN_TYPES.items():
+                self.assertIn(f"{child} {kind}", sql)
+        page_sql = next(s for s in statements if s.startswith("CREATE TABLE trope_catalog_page "))
+        self.assertIn("description TEXT INDEX OFF STORAGE WITH (columnstore = false)", page_sql)
+
+    def test_existing_uri_tables_receive_missing_archive_children_without_other_changes(self):
+        tables = initialized_tables()
+        for table in ("trope_catalog_page", "trope_catalog_reference"):
+            tables[table] = {key: value for key, value in tables[table].items() if "[" not in key}
+        connector = RecordingCrate(tables)
+        run_initializer(connector)
+        alters = [sql for sql, _ in connector.writes if sql.startswith("ALTER TABLE")]
+        self.assertEqual(len(alters), 2 * len(ARCHIVE_COLUMN_TYPES))
+        self.assertTrue(all("source_archive[" in sql for sql in alters))
+
     def test_seed_tool_and_standard_initializer_declare_the_same_catalog(self):
         self.assertEqual(schema_sql().replace(" IF NOT EXISTS", ""), initializer.create_table_sql("trope_catalog", SCHEMAS["trope_catalog"]))
 

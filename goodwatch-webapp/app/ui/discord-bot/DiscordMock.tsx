@@ -2,9 +2,8 @@
 // and the slash command menu. Static markup only. The cards follow what the bot sends (app/server/discord/cards.ts and
 // together/cards.ts), drawn with the owner's picks from the card prototype: the backdrop title card, the member part in
 // its own amber container, the /together message with match posters, and the voting card with a poster beside it.
-import logoWhite from "~/img/goodwatch-logo-white.svg"
+import { whiteMark } from "~/ui/brand/white-mark"
 import type { ReactNode } from "react"
-import { assetUrl } from "~/utils/asset-url"
 import { goodwatchVibeIndex, scoreWord } from "~/utils/ratings"
 import { tmdbFixedImage, tmdbImageUrl } from "~/utils/tmdb-image"
 
@@ -95,7 +94,7 @@ export function AppAvatar({ size = "md" }: { size?: "md" | "lg" }) {
 			className={`flex shrink-0 items-center justify-center rounded-full bg-white ${box}`}
 		>
 			<img
-				src={assetUrl(logoWhite)}
+				{...whiteMark()}
 				alt=""
 				className="h-full w-full invert"
 				width={24}

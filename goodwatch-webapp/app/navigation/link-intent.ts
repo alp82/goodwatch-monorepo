@@ -4,7 +4,7 @@
 // - A press (pointer or touch down) starts at once: on a phone it's the first sign of a tap.
 // - Phones (no hover): when scrolling stops for SCROLL_IDLE_MS, the title and person links fully on screen nearest
 //   its center, up to VIEWPORT_LINKS.
-// - Phones also prefetch visible title/person data after load. Code loads only for navigation intent.
+// - Phones also prefetch visible title/person data after load, and their page types' code once, at low priority.
 import { VIEWPORT_LINK_SELECTOR } from "./cached-routes"
 import {
 	type PrefetchTrigger,
@@ -149,8 +149,9 @@ export function installLinkIntent(): void {
 		})
 	}
 
-	// Only phone-visible data is speculative. Warming every catalog route's code here competed with
-	// an active navigation and downloaded unrelated page types on every landing page.
+	// Only what a phone shows is speculative: its data, and the code of those page types (instant-navigation.ts).
+	// Warming every catalog route's code here competed with an active navigation and downloaded unrelated page
+	// types on every landing page.
 	if (phone) afterLoad(() =>
 		window.setTimeout(() => idle(prefetchVisible), WARM_DELAY_MS),
 	)

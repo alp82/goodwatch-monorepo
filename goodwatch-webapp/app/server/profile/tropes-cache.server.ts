@@ -1,7 +1,7 @@
 import { withBackendTimeout } from "~/utils/backend-timeout"
 import { execute, query } from "~/utils/crate"
-import type { TropePool } from "./tropes-model"
 import { createTropeSnapshots } from "./trope-snapshots"
+import type { TropePool } from "./tropes-model"
 
 const bounded = <T>(run: () => Promise<T>) =>
 	withBackendTimeout("valkey", 800, run)
@@ -12,16 +12,19 @@ async function redis() {
 
 // Redis is the fast tier. Crate retains the last complete snapshot across expiry, eviction and restarts.
 // Neither cache contains viewer state; every request checks the current profile visibility first.
+// Keep durable generations separate too: an older instance must never read a
+// URI-indexed matrix while a rolling deployment still serves label-indexed pools.
+const storedOwner = (userId: string) => `v2:${userId}`
 const snapshots = createTropeSnapshots({
 	readFast: async (userId) => {
 		const store = await redis()
 		if (!store) return null
-		return bounded(() => store.get(`profile-tropes:v1:${userId}`))
+		return bounded(() => store.get(`profile-tropes:v2:${userId}`))
 	},
 	readStored: async (userId) => {
 		const rows = await query<{ read_from: number; pool: string }>(
 			"SELECT read_from, pool FROM profile_tropes_snapshot WHERE owner_id = ?",
-			[userId],
+			[storedOwner(userId)],
 			{ timeoutMs: 800 },
 		)
 		const row = rows[0]
@@ -51,7 +54,7 @@ const snapshots = createTropeSnapshots({
    return 1
   `,
 					1,
-					`profile-tropes:v1:${userId}`,
+					`profile-tropes:v2:${userId}`,
 					raw,
 					String(JSON.parse(raw).readFrom),
 				),
@@ -64,7 +67,7 @@ const snapshots = createTropeSnapshots({
    ON CONFLICT (owner_id) DO UPDATE SET
    pool = CASE WHEN read_from <= excluded.read_from THEN excluded.pool ELSE pool END,
    read_from = greatest(read_from, excluded.read_from)`,
-			[userId, readFrom, JSON.stringify(pool)],
+			[storedOwner(userId), readFrom, JSON.stringify(pool)],
 		)
 	},
 })

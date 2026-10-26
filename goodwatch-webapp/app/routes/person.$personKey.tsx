@@ -2,7 +2,6 @@ import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { presentCatalogLoader } from "~/server/media-payload.server"
-import { assetUrl } from "~/utils/asset-url"
 import {
 	ArrowDownIcon,
 	ArrowUpIcon,
@@ -46,7 +45,7 @@ import {
 	isAllTitleTypes,
 	titleTypeParams,
 } from "~/domain/title-type"
-import gwLogo from "~/img/goodwatch-logo-white.svg"
+import { whiteMark } from "~/ui/brand/white-mark"
 import type { DiscoverResult } from "~/server/discover.server"
 import {
 	type GridFilters,
@@ -453,7 +452,7 @@ function GoodWatchScore({
 		<span className="inline-flex items-center gap-2">
 			<img
 				className={`block rounded-full p-1.5 shadow-xl bg-vibe-${v} ${size === "sm" ? "h-7" : "h-9"}`}
-				src={assetUrl(gwLogo)}
+				{...whiteMark()}
 				alt="GoodWatch score"
 			/>
 			<span>
@@ -1115,7 +1114,7 @@ function ScoreGroupHeading({
 	return (
 		<div className="flex items-center gap-3">
 			<img
-				src={assetUrl(gwLogo)}
+				{...whiteMark()}
 				alt=""
 				className={`h-10 rounded-full p-2 shadow-xl ${rated ? `bg-vibe-${Number(bandKey)}` : "bg-gray-700"}`}
 			/>

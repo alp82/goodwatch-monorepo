@@ -475,6 +475,17 @@ class SupervisorTests(unittest.TestCase):
         self.assertFalse(worker.transient_backend_error(HTTPError("http://local",401,"unauthorized",{},None)))
         self.assertFalse(worker.transient_backend_error(RuntimeError("CrateDB SQL error (4000): syntax")))
 
+    def test_node_loss_messages_allow_recovery_but_never_override_uncertain_writes(self):
+        class UncertainWrite(RuntimeError):
+            retryable = False
+        for role in ("Participating", "Coordinator"):
+            message = f"CrateDB SQL error (5000): JobKilledException[Job killed. {role} node node2 disconnected]"
+            with self.subTest(role=role):
+                self.assertTrue(worker.transient_backend_error(RuntimeError(message)))
+                self.assertFalse(worker.transient_backend_error(UncertainWrite(message)))
+        self.assertFalse(worker.transient_backend_error(RuntimeError(
+            "CrateDB SQL error (5000): JobKilledException[Job killed. Killed by user]")))
+
     def test_transient_database_startup_failure_is_retried_inside_the_one_off_job(self):
         factory_calls=[]
         def factory():

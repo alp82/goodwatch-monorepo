@@ -19,6 +19,99 @@ class TropeDescriptionTests(unittest.TestCase):
     def extract(self, html, name="Serious Business", url=URL):
         return extract_description(html, name, url)
 
+    def test_linked_general_opt_in_retains_actual_namespace_title_and_main_route_proof(self):
+        canonical = URL.replace('/Main/SeriousBusiness', '/Mohs/OneBigLie')
+        original = URL.replace('SeriousBusiness', 'OneBigLie')
+        final = canonical + '?from=Main.OneBigLie'
+        html = page(f'<p>{LEAD}</p><hr>', canonical=canonical,
+                    heading='<span class="ns_parts">Mohs / </span><span class="wrapped_title">One Big Lie</span>'
+                            '<div class="aka-title">aka: Old label</div><span class="watch_rank_wrap">Follow</span>')
+        result = extract_description(html, None, final, requested_url=original, linked=True, allow_general=True)
+        self.assertIsNone(result['error'])
+        self.assertEqual(result['heading'], 'Mohs / One Big Lie')
+        self.assertEqual(result['canonical_url'], canonical)
+        self.assertEqual(result['description'], LEAD)
+        self.assertIsNotNone(extract_description(html, None, final, requested_url=original, linked=True)['error'])
+        self.assertIsNotNone(extract_description(html, 'One Big Lie', final, allow_general=True)['error'])
+        for requested in (original+'Other', original.replace('tvtropes.org','evil.example'), canonical):
+            with self.subTest(requested=requested):
+                self.assertIsNotNone(extract_description(html,None,final,requested_url=requested,linked=True,allow_general=True)['error'])
+        for namespace in ('Creator', 'Film', 'Series'):
+            forbidden = html.replace('/Mohs/', '/'+namespace+'/')
+            self.assertIsNotNone(extract_description(forbidden,None,final.replace('/Mohs/','/'+namespace+'/'),
+                                                    requested_url=original,linked=True,allow_general=True)['error'])
+        wrong = html.replace('href="'+canonical+'"', 'href="'+canonical+'Other"')
+        self.assertIsNotNone(extract_description(wrong,None,final,requested_url=original,linked=True,allow_general=True)['error'])
+
+    def test_linked_general_opt_in_leaves_main_title_cleanup_unchanged(self):
+        html=page(f'<p>{LEAD}</p><hr>', heading='<span class="ns_parts">Main / </span>Serious Business')
+        self.assertEqual(extract_description(html,None,URL,linked=True,allow_general=True),
+                         extract_description(html,None,URL,linked=True))
+
+    def test_linked_mode_returns_actual_title_without_relabeling_the_source(self):
+        html = page(f'<p>{LEAD}</p><hr>')
+        self.assertIsNotNone(extract_description(html, 'A contextual character label', URL)['error'])
+        result = extract_description(html, None, URL, requested_url=URL, linked=True)
+        self.assertIsNone(result['error'])
+        self.assertEqual(result['heading'], 'Serious Business')
+        self.assertEqual(result['description'], LEAD)
+
+    def test_linked_http_ignores_video_h1_before_the_authored_scoped_primary(self):
+        html=page(f'<p>{LEAD}</p><hr>')
+        primary='<h1 class="entry-title" itemprop="headline"><span class="wrapped_title">Serious Business</span></h1>'
+        html=html.replace('<h1>Main / Serious Business</h1>', '<h1 class="video-title">A video overlay title</h1>'+primary)
+        html=html.replace('<body>','<body><h1>Another overlay before main content</h1>')
+        result=extract_description(html,None,URL,linked=True)
+        self.assertIsNone(result['error']);self.assertEqual(result['heading'],'Serious Business')
+        self.assertEqual(result['description'],LEAD)
+
+    def test_linked_http_accepts_current_captured_entry_title_without_itemprop(self):
+        html=page(f'<p>{LEAD}</p><hr>').replace('<h1>Main / Serious Business</h1>',
+            '<h1 class="entry-title text-[26px] font-bold">Serious Business</h1>')
+        html=html.replace('<body>','<body><h1 class="video-title">Video before main content</h1>')
+        result=extract_description(html,None,URL,linked=True)
+        self.assertIsNone(result['error']);self.assertEqual(result['heading'],'Serious Business')
+        self.assertEqual(result['description'],LEAD)
+
+    def test_linked_http_rejects_ambiguous_authored_or_plain_scoped_primaries(self):
+        for attrs in ('',' class="entry-title" itemprop="headline"'):
+            html=page(f'<p>{LEAD}</p><hr>').replace('<h1>Main / Serious Business</h1>',f'<h1{attrs}>Serious Business</h1><h1{attrs}>Other Subject</h1>')
+            with self.subTest(attrs=attrs):
+                self.assertIn('ambiguous scoped linked primary',extract_description(html,None,URL,linked=True)['error'])
+
+    def test_linked_http_requires_unique_real_wrapper_and_article_relationship(self):
+        valid=page(f'<p>{LEAD}</p><hr>')
+        variants=[valid.replace('id="main-content"','id="other-content"'),valid.replace('</body>','<div id="main-content"></div></body>'),
+                  valid.replace('id="main-article"','id="other-article"'),valid.replace('<div id="main-article">','</div><div id="main-article">')]
+        for html in variants:
+            with self.subTest(html=html):
+                self.assertIn('linked main article',extract_description(html,None,URL,linked=True)['error'])
+        minimal=valid.replace('id="main-content"','id="other-content"')
+        self.assertEqual(extract_description(minimal,'Serious Business',URL)['description'],LEAD)
+
+    def test_linked_http_scoped_title_excludes_alias_namespace_and_watch_ui(self):
+        html=page(f'<p>{LEAD}</p><hr>').replace('<h1>Main / Serious Business</h1>',
+            '<h1 class="entry-title" itemprop="headline"><div class="wrap-entry-breadcrumb"><strong><span class="ns_parts">Main / </span>Serious Business</strong>'
+            '<div class="aka-title">aka: Old Label</div></div><div class="watch_rank_wrap">10 Following</div></h1>')
+        result=extract_description(html,None,URL,linked=True)
+        self.assertIsNone(result['error']);self.assertEqual(result['heading'],'Serious Business')
+
+    def test_linked_http_alias_requires_actual_requested_redirect_binding(self):
+        original = 'https://tvtropes.org/pmwiki/pmwiki.php/Main/OldName'
+        html = page(f'<p>{LEAD}</p><hr>')
+        good = extract_description(html, 'Unrelated contextual label', URL + '?from=Main.OldName',
+                                   requested_url=original, linked=True)
+        self.assertIsNone(good['error'])
+        for final in (URL, URL + '?from=Main.OtherName'):
+            with self.subTest(final=final):
+                result = extract_description(html, 'Serious Business', final, requested_url=original, linked=True)
+                self.assertIsNone(result['description'])
+
+    def test_linked_http_still_rejects_missing_heading_and_canonical_mismatch(self):
+        for html, final in ((page(f'<p>{LEAD}</p><hr>', heading=''), URL),
+                            (page(f'<p>{LEAD}</p><hr>', canonical=URL + 'Other'), URL)):
+            self.assertIsNone(extract_description(html, None, final, linked=True)['description'])
+
     def test_preserves_all_complete_intro_paragraphs_instead_of_first_two_or_four_sentences(self):
         paras = [f"Introductory paragraph {i} explains a different part of the same narrative convention." for i in range(8)]
         result = self.extract(page("".join(f"<p>{p}</p>" for p in paras) + '<hr><h2>Examples</h2><p>Do not include this example.</p>'))

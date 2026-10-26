@@ -290,3 +290,306 @@ flow, with their visit side effects considered before running under this read-on
   `$HOME/.cache/gw-work/236-753/` on the measurement machine.
 - **Limits:** no member session, real phone, Safari, Firefox or field measurements. Navigation timing
   does not prove that destination images are visible at the first measured frame.
+
+## Complete phone coverage and member measurements — October 26, 2026 (#753)
+
+This section supersedes the partial phone aggregate and the open member-measurement status above.
+Application source was unchanged. Measurements used production `https://goodwatch.app`, Chromium
+1248 (Chrome for Testing 156.0.8078.4), Playwright 1.58.2, five fresh-browser rounds for each of
+six identity/profile/mode combinations. Desktop remains 1440 × 900; phone remains Pixel 7,
+150 ms network latency, 1.6 Mbit/s download, 750 kbit/s upload and 4× CPU throttling.
+The 1.2 s reader pause, 300 ms desktop hover and 3.5 s settling period remain in the harness.
+No local server, production environment file or application changes were used.
+
+### What was wrong with the phone harness
+
+The earlier phone result contained **24/39 timings**, nine selector errors and six missing
+commit/paint timings. The desktop-only `header` selector could not reach the phone's **Browse
+GoodWatch** dock button: two hub failures per round caused six errors and left the later
+shows/category selector on the wrong page, causing the other three. The category step now
+selects the documented `/shows/best` destination explicitly.
+
+The other six failures were first taps on action-enabled poster cards. Those taps reveal an
+action overlay and deliberately prevent navigation; no route commit exists to time. The harness
+now waits for that asynchronous reveal and taps **only its Open anchor**, checking its destination.
+It never taps the overlay's centre, Seen, score, Want to See or other action buttons. It records
+`preparationTap` and `preparationMs` separately. Navigation latency remains from the **navigation
+press** to the frame after the router commit; add `preparationMs` for the measured automated
+first-tap-to-frame duration. That extra time includes harness processing, not a human decision pause.
+
+The timing hook freezes the first commit and its frame for each navigation press. A later internal
+query restoration cannot overwrite that pair or produce paint before commit. A bare `/discover`
+link may restore its member-default query (observed: `?foryou=0`); explicit queries and history
+entries still match exactly. A regression test reproduced the overwrite before the fix.
+
+Every step now records its actual source and destination, checks the expected destination (including
+Back/Forward's expected history entry), and requires non-null commit/paint timings. A failure stops
+the journey and makes the command exit unsuccessfully; later steps cannot silently inherit the
+wrong page. Output is saved after each round. Resource evidence also includes requests begun before
+the press that finished afterward (`start < 0`), first-party loader/script/API timing and
+`Server-Timing`. Images and external resources are omitted from the saved resource list to avoid
+member-avatar identifiers. The router build version is recorded to detect deployment changes.
+
+### Member access and read-only method
+
+`ghostex browser --help` documented the embedded CEF CDP connection. Playwright connected to
+`http://127.0.0.1:9334` only to read goodwatch.app cookies once. The export was stored exclusively at
+`~/goodwatch-private/753/cookies.json` (directory 0700, file 0600), imported into separate headless
+contexts, and deleted after the runs. No owner's tab was navigated or reused. Each fresh context
+verified the root loader's member boolean before measuring; an expired session would fail the run.
+No identity, response body, cookie or authentication header is included in evidence.
+
+The harness blocks write fetch/XHR methods, form submission and beacons in page APIs.
+It permits the app’s documented catalog-query POST endpoints (including anonymous Discover
+queries); these read data and do not change member state. Telemetry and poster impressions
+are blocked equally in every profile. It avoids Playwright request routing, which disables the browser HTTP cache and would change the measurement.
+The flow visits catalog pages and history only; it does not change member data or settings.
+
+### Complete results
+
+Final runs: **01:50–02:26 UTC**, October 26. All 30 fresh browsers reported Remix manifest
+**`27679bb9`**. All **390/390** steps verified their destination and recorded commit/paint; all
+were SPA navigations. Both phone identities recorded **65/65**, including **39/39** in the first
+three rounds, against the earlier anonymous **24/39**. Every final batch used the corrected
+first-commit hook, query handling and read-only query guard. Exploratory runs that exposed these
+harness defects were discarded before these final batches; no failed or null slot enters this table.
+Raw evidence: [remeasure-2026-10-26-complete/](remeasure-2026-10-26-complete/).
+
+Navigation press → first frame, milliseconds; median and nearest-rank p90:
+
+| Profile | Anonymous median, p90 | Member median, p90 | Timed coverage (each identity) |
+| --- | --- | --- | --- |
+| Desktop, hover | 21, 41 | 24, 288 | 65/65 |
+| Desktop, tap | 73, 176 | 89, 407 | 65/65 |
+| Phone, tap | 56, 2464 | 97, 2744 | 65/65 |
+
+**Phone two-tap cost:** each identity revealed a card overlay on ten of its 65 steps (title → title
+and Discover → title in each round). Preparation took 116–348 ms for anonymous visitors and
+134–349 ms for members. Including that measured preparation, first tap → frame is **317, 2,464 ms
+anonymous** and **374, 2,744 ms member** (median, p90). The primary table times the Open/navigation
+press; the inclusive figures expose the extra gesture rather than treating the first tap as a
+missing page change. A person's pause before choosing Open would add to these automated figures.
+
+Per-route median, p90 in ms. Each ordinary cell has five samples (so p90 is its maximum);
+Back/Forward pools 20 samples per profile. Automatic title/person choices can differ across identities.
+
+| Step | Anonymous phone | Member desktop hover | Member desktop tap | Member phone |
+| --- | --- | --- | --- | --- |
+| List → first title | 1264, 1274 | 20, 171 | 380, 574 | 1064, 1139 |
+| Title → first person | 1072, 1082 | 25, 288 | 90, 137 | 1103, 1330 |
+| Person → title | 48, 51 | 20, 21 | 21, 21 | 56, 71 |
+| Title → title | 55, 56 | 23, 1455 | 269, 353 | 85, 97 |
+| Back / Forward | 27.5, 35 | 22.5, 37 | 23, 67 | 33, 42 |
+| Hub → Discover | 580, 585 | 593, 1106 | 357, 589 | 660, 797 |
+| Discover → title | 55, 58 | 21, 21 | 20, 33 | 76, 286 |
+| Hub → shows | 317, 379 | 25, 38 | 89, 134 | 289, 428 |
+| Shows → best list | 3476, 3695 | 89, 491 | 225, 420 | 4064, 4219 |
+| Best list → title | 2461, 2546 | 159, 209 | 258, 605 | 2699, 3905 |
+
+### Slowest member routes and what they wait on
+
+- **Phone `/shows` → `/shows/best`: 4,064 ms median, 4,219 ms p90.** In member-phone round 4,
+  the 20 KB loader starts 5 ms after the press and lasts 4,186 ms. TTFB is 430 ms and the server
+  reports 385 ms total (346 ms session). Most of that wait remains after the first response byte.
+  Anonymous phone median is also high: 3,476 ms. This newly covered step was absent from the old
+  phone aggregate.
+- **Phone best list → Avatar: 2,699 ms median, 3,905 ms p90.** In round 2, the 19 KB title loader
+  starts at +8 ms and lasts 3,852 ms, with TTFB 146 ms and server total 100 ms (42 ms session).
+  Its request finishes close to the commit. These two multi-second paths point to a browser/network
+  transfer or scheduling bottleneck; headers alone do not identify the competing resource or prove
+  a request-priority cause.
+- **First phone title/person pages: 1,064 / 1,103 ms member medians, p90 1,139 / 1,330 ms.**
+  Title round 2 loads `detailsMeta-C0Wav1cc.js` at +13 ms for 1,076 ms, close to its 1,139 ms paint.
+  Person round 2 loads `person._personKey-BHVctQO9.js` at +6 ms for 1,147 ms; its loader began
+  577 ms before the navigation press and finishes around +1,296 ms, near the 1,330 ms paint.
+  The first title is primarily aligned with late route code; the person tail can wait for both
+  route code and an unfinished loader prefetch. This remains about a second despite fast cached steps.
+- **Hub → Discover: member hover 593/1,106 ms, desktop tap 357/589 ms, phone 660/797 ms.**
+  Hover round 5 begins its loader 270 ms before the press, but that request lasts 1,352 ms
+  (TTFB 1,348 ms): server total 1,261 ms, session 393 ms. Phone round 1 spends 756 ms on the
+  loader (TTFB 703 ms), with server total 623 ms and session 326 ms. Server work, including
+  session resolution and discovery reads, is material here; hover's head start cannot always hide it.
+- **Session resolution can dominate member desktop waits.** Hover round 5's title → title takes 1,455 ms;
+  the loader lasts 1,715 ms after starting 273 ms before the press. Server total is 1,625 ms,
+  of which session resolution reports 1,483 ms. Desktop tap's first-title median is 380 ms;
+  its worst response reports session 406 ms within 447 ms server total. Cached medians alone
+  conceal this cost. `Server-Timing` fields can overlap, so do not add session and data durations.
+- **History is usually fast, with one member-phone outlier:** median 33 ms, p90 42 ms across
+  20 steps; one Forward takes 1,058 ms. It refetches Avatar's loader for 1,012 ms (353 ms server,
+  including 290 ms session). These captures establish the refetch, not why that history entry
+  was unavailable in the client cache.
+
+### Recommended follow-up
+
+**Prioritize the phone's critical network path on catalog navigations.** The biggest newly verified
+waits are 2.7–4.2 seconds while the corresponding loaders report only 0.1–0.4 seconds on the server.
+Start with a CDP network/priority trace and a controlled experiment that gives the navigation loader
+and required route modules precedence over competing image/speculative work. Test a small,
+byte-budgeted warm-up of the first reachable title/person module after catalog load: late code still
+costs roughly a second. Measure the full repaired journey, including preparation taps, and retain
+payload/TBT/LCP guardrails. Scope this work to catalog/navigation preparation and coordinate shared
+root changes with #236's separate home-LCP thread; this benchmark changed no webapp file.
+
+**Next, investigate member session-store latency and Discover's server work.** The 1,483 ms session
+outlier and repeated 300–400 ms session spans warrant a backend investigation; Discover can also spend
+well over that in total server work. Earlier preparation when the hub opens may hide some of the wait,
+but does not make the backend cheaper. Preserve next-request sign-out enforcement. Cross-request
+session memoization or cookie caching still needs a separate owner decision; this task authorizes
+measurement, not that behavior change. Neither another cache/history tweak nor a universal route-code
+warm-up alone addresses the measured multi-second phone loader transfers.
+
+Reproduction uses an external Playwright installation, keeping dependencies outside the benchmark tree:
+
+```sh
+export TMPDIR="$HOME/.cache/gw-work/753"
+export PLAYWRIGHT_FROM="$TMPDIR/package.json"
+export CHROME_PATH="$HOME/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome"
+node goodwatch-benchmark/navigation/nav.mjs https://goodwatch.app desktop hover 5 /path/to/results.json
+# Repeat for desktop tap and mobile tap. For members, append the private cookie path.
+# The export used here was deleted; a future run needs a newly authorized session export.
+python goodwatch-benchmark/navigation/stats.py docs/benchmarks/remeasure-2026-10-26-complete/*.json
+```
+
+### Validation and limits
+
+- The original evidence confirms 24/39 timed phone slots, nine explicit selector errors and six
+  null timings. A fresh original-harness phone reproduction again produced a title-to-title tap
+  with null commit/paint and no destination change. The corrected production pilot completed 13/13.
+- New browser regression checks exercise the hidden desktop header/visible phone dock, an
+  asynchronously revealed card overlay, safe Open-anchor navigation, the write guard (including
+  allowing Discover's read-only POST), first-commit timing under query restoration, destination-query
+  validation, and rejection of missing/unverified timings: **4 passed**.
+  Existing benchmark Node tests: **51 passed, 0 failed**. The benchmark self-test passed summaries,
+  abort reporting, trimming, medians, deltas and 1,535 long-tail entries.
+- `npm ci --include=dev` with `SHARP_IGNORE_GLOBAL_LIBVIPS=1` succeeded. On unchanged webapp source,
+  `npx tsc --noEmit` exited 2 with **192 diagnostics**. `npm test` exited 1 with **5,289 tests:
+  5,273 passed, 8 failed, 8 skipped**. Failures cover combined-search/title-snapshot module loading,
+  committed interaction invalidation, IMDb ratings refresh, auth-notice assertions and library-picker
+  wording. These checks do not pass on the starting main; no webapp file was edited to fix them here.
+- `pytest goodwatch-flows` exited 2 during collection with **87 collection errors**, including missing
+  `mongomock`, `mongoengine`, `pymongo`, `crate`, `croniter`, `duckdb` and other flow dependencies.
+  No flows were changed. Logs for all checks remain under `~/.cache/gw-work/753/` on this machine.
+- These are headless synthetic production measurements, not real-phone, Safari/Firefox or field data.
+  The metric is the frame after the router commit, not completion of destination pictures. Automatic
+  link choices and member discovery preferences can differ between profiles and rounds; the identity
+  comparison is a journey comparison, not an isolated causal test of session lookup cost. Server timings
+  and overlapping resources identify candidates to investigate, not proof of isolated critical paths.
+
+The final combined benchmark test command passed **55 tests, 0 failures**. A separate evidence
+check verified all six files: five rounds each, the exact 13-step flow, intended destinations,
+member/anonymous identity flags, nonnegative commit ≤ paint, a recorded build, and no document loads.
+A private audit checked the report and evidence against the session's identifiers and exported cookie
+values before deleting the cookie export. No cookies or member identifiers are committed.
+
+## Phone follow-up: hub pictures and route code — October 26, 2026 (#753)
+
+### What the slow phone steps waited on
+
+A diagnostic copy of `nav.mjs` (kept outside the repository; it also logged every request through CDP, images
+included) ran the anonymous phone journey on production. During **`/shows` → `/shows/best`** (3,476 ms; loader
+3,444 ms with a 429 ms first byte), 38 requests were in flight: about 30 of them `w1280` backdrops (40–120 KB each)
+that the `/shows` hub had started 4.8 seconds before the press. During **best list → title** (2,459 ms; loader
+2,419 ms with a 349 ms first byte), 27 of those backdrops, started 13 seconds earlier, were still loading. The hub
+drew its category tiles with CSS `background-image`, which a browser never defers: every tile's file started with the
+page. On 1.6 Mbit/s that is more than ten seconds of a busy connection, and the loader data shared it.
+
+The **first title page** waited for the title route's code: on phones, code loaded only on press, hover or focus,
+and the title route needs about 111 KB compressed in 29 files beyond the shell (the person route 26 KB).
+
+### Changes
+
+- The hub tiles draw an `img` with `object-cover` and a `srcset` sized to the grid (`ui/explore/TileBackdrop.tsx`):
+  the first section's first two rows at once, every other tile lazily. No tile is fetched ahead of the rest: the
+  hubs' largest content is their intro text (Lighthouse, phone and desktop).
+- A phone's viewport prefetch (after load and when scrolling stops) also warms the code of those links' page types,
+  once per type, at low priority and three files at a time; not on the start page, not on 3G
+  (`app/navigation/instant-navigation.ts`, [navigation-cache.md](../navigation-cache.md#prefetch)). Chrome doesn't
+  raise a request already loading: in a DevTools-protocol check, a changed `fetchPriority`, a second
+  `modulepreload` or `import()` all left a low request at low (a `prefetch` warm-up let a later high request
+  attach to the low transfer, with no speed-up). So the warm-up keeps little in flight, and a press, hover or focus
+  drops the waiting files: its own preload asks for them at normal priority.
+  `goodwatch-benchmark/navigation/warmup-check.mjs` checks this in a browser (phone, slow 4G): a best list warms the
+  title code, at most three files at once, a tap takes the rest at high priority, and the start page warms nothing
+  after scrolling to its title links (the first version of this change started 20 low-priority scripts there).
+
+### Before and after, local production build
+
+`nav.mjs` unchanged, anonymous, five fresh-browser rounds per profile, on a local production build of `a5c278b26`
+(before) and of the two commits (after). Served over TLS and HTTP/2 with the 103 response, `env -i`, egress blocked.
+Data: the bench Crate copied into a separate local Crate, plus the cast, crew and people of its 206 titles read from
+production with `SELECT` only (4,098 cast rows, 5,719 crew rows, 7,212 people), so title → person runs locally.
+The local `/shows` hub shows its category tiles but no title rows, and local loaders are smaller than production's,
+so local waits are shorter than production's; the comparison is between the two local builds.
+
+Phone (Pixel 7, 150 ms, 1.6 Mbit/s, 4× CPU), median and maximum of five, milliseconds; before and after measured
+in the same session:
+
+| Step | Before | After |
+| --- | --- | --- |
+| List → first title | 1,308 (1,327) | 92 (93) |
+| Title → first person | 228 (229) | 62 (78) |
+| Shows → best list | 1,011 (1,014) | 211 (266) |
+| Best list → title | 878 (881) | 193 (207) |
+| Hub → Discover | 710 (723) | 731 (735) |
+| All steps, median and p90 | 228, 1,014 | 92, 247 |
+
+Desktop hover is unchanged (median of all steps 23 → 22 ms, p90 56 → 35). Desktop tap's median of all steps is
+44 → 42 ms; its list → first title is 40 → 53 ms in these runs, with no warm-up on a desktop (one round of the after
+set stopped with `ERR_CERT_VERIFIER_CHANGED` before its first page and was run again in full). Every counted round
+of every profile verified 13/13 destinations.
+
+Costs and limits:
+- A phone on a best list now downloads the title route's code (about 111 KB compressed) after load at low priority;
+  the start page warms nothing, so its LCP and TBT don't change.
+- Hub → Discover still waits on the server (local: about 700 ms of loader). Member session resolution and Discover's
+  server work remain the backend follow-up named in the preceding recommendation; sign-out still takes effect on the
+  next request.
+- Members were not measured: a local member needs a local sign-in flow, and production member runs need a new
+  owner-authorized session export.
+- Production numbers after deploy are pending.
+
+### Production after deploy — October 26, 2026
+
+Production served `990419700` from 05:44:06 UTC; both deployments of it had finished by 05:44:34. Runs:
+**05:45–06:09 UTC**, unchanged `nav.mjs`, anonymous, five fresh-browser rounds per profile, same desktop and phone
+settings as the [complete remeasurement](#complete-phone-coverage-and-member-measurements--october-26-2026-753).
+The browser's host-resolver rules made Google Analytics, Google Tag Manager, Sentry, PostHog and DoubleClick hosts
+unresolvable (checked first: no request to them succeeded), in addition to the harness's own write guard; the harness
+itself and its request handling are unchanged. All 65/65 steps of every profile verified their destination.
+
+Navigation press → first frame, milliseconds, median and p90, against the anonymous columns of the earlier production
+measurement (01:50–02:26 UTC):
+
+| Profile | Before | After |
+| --- | --- | --- |
+| Phone, tap | 56, 2,464 | 98, 787 |
+| Desktop, tap | 73, 176 | 95, 405 (rerun 06:03–06:09: 90, 306) |
+| Desktop, hover | 21, 41 | 21, 157 |
+
+Phone per route, median and p90 (= maximum of five):
+
+| Step | Before | After |
+| --- | --- | --- |
+| List → first title | 1,264, 1,274 | 100, 113 |
+| Title → first person | 1,072, 1,082 | 991, 1,514 |
+| Hub → Discover | 580, 585 | 779, 802 |
+| Hub → shows | 317, 379 | 316, 448 |
+| Shows → best list | 3,476, 3,695 | 313, 445 |
+| Best list → title | 2,461, 2,546 | 292, 391 |
+
+- **The multi-second phone waits are gone:** shows → best list and best list → title no longer wait behind the hub's
+  pictures, and the first title page no longer waits for its code.
+- **Title → first person stays about a second.** The person page's code and data are prefetched when the reader scrolls
+  to the cast (they start about 605 ms before the press), but on the title page they share the connection with the
+  title page's own loads: the related map (about 1.6 s), the social section (about 2.2 s) and its pictures. The
+  person data (11 KB) took about 1.57 s and the code 1.15 s. This is the next phone lever: the title page's late
+  requests, not missing preparation.
+- **Desktop tap** waits on the loader's first byte: for example hub → shows reports 0.1–0.2 ms of server time with a
+  39–362 ms first byte, and list → title 16–105 ms of server time with 114–336 ms. No changed code runs on a desktop
+  (the code warm-up is phone-only, the hub change affects only the hubs); the difference to the earlier run is in the
+  path to production at this hour. The first desktop runs also started one minute after the deploy, with cold caches.
+- **`warmup-check.mjs` against production** (06:02:49–06:03:18 UTC, same host blocking): all five checks pass; a best
+  list warms 3 title files at low priority, at most three at once, the tap takes the other 20 at high priority, and
+  the start page's 4 title prefetches start no code.
+
+Raw files are under `~/.cache/gw-work/753p/prod/` on the measuring machine.

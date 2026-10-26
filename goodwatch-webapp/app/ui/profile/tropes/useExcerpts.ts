@@ -6,12 +6,14 @@ import { useQuery } from "@tanstack/react-query"
 interface Example {
 	key: string
 	text: string
+	label?: string
+	labels?: string[]
 }
 
 export function useExcerpts(handle: string, trope: string, keys: string[]) {
 	const joined = keys.join(",")
 	const query = useQuery<Example[]>({
-		queryKey: ["profile-trope-excerpts", handle, trope, joined],
+		queryKey: ["profile-trope-excerpts-v2", handle, trope, joined],
 		enabled: keys.length > 0,
 		queryFn: async ({ signal }) => {
 			const q = new URLSearchParams({ trope, keys: joined })
@@ -28,5 +30,6 @@ export function useExcerpts(handle: string, trope: string, keys: string[]) {
 	return {
 		loading: keys.length > 0 && query.isPending && !query.isError,
 		textOf: (key: string) => list?.find((e) => e.key === key)?.text ?? null,
+		labelOf: (key: string) => list?.find((e) => e.key === key)?.label ?? null,
 	}
 }

@@ -19,17 +19,95 @@ Owner decisions (2026-09-21 and 2026-09-26), all binding:
 
 ## General trope catalog
 
-The Crate `trope_catalog` table is the source of truth for general trope definitions, separate from the `trope`
-table's per-title excerpts. Each exact name has an optional known Main-page URL and an optional description. Names with
-unresolved URL mappings have null URLs and remain queued for review. Direct HTTP descriptions retain the raw response's
+
+### Linked page identity (owner decision, 2026-10-26)
+
+The owner chose to use the linked page's general description and actual title,
+including contextual labels and links to broader tropes. The original per-title
+label stays separate. A label such as “Bad End” pointing to “Multiple Endings”
+therefore carries the actual “Multiple Endings” title and its general description;
+it does not claim that the page defines the literal contextual label.
+
+`trope_catalog_page` stores source-verified general pages under their actual canonical URLs, with
+its actual primary title, general introduction and capture/archive provenance.
+`trope_catalog_reference` maps an observed reference URL to that page and retains
+its own evidence, so updating a page cannot erase redirect evidence. Both tables
+are declared in the standard Windmill Crate initializer. The legacy exact-name
+`trope_catalog` remains available as the original label inventory and import audit.
+Missing rows in that legacy table alone no longer measure page coverage: coverage
+is the global inventory's known Main reference URLs joined to described pages.
+
+Source identity checks still require the real page metadata to agree with the
+observed URL. Linked mode removes only the requirement that contextual text equal
+the primary title. A redirect/alias needs captured route evidence; a different
+unrelated canonical, a work/creator namespace, an unavailable page or a browser
+challenge does not qualify. No title or route is generated from a label.
+
+Original discovery and network requests remain restricted to known Main URLs.
+An actual captured redirect can identify an approved general notes, analysis or
+index namespace as its canonical destination; `GENERAL_PAGE_NAMESPACES` in the
+catalog module lists those namespaces. These records keep their actual published
+header, including its namespace context when present. Creator and individual
+movie/show pages remain separate subjects. A verified page with no published
+introduction retains its title and reference with a null description, rather than
+borrowing an epigraph or turning its navigation list into a definition.
+
+The page population command reuses the existing single source worker's lock,
+saved captures, durable six-second pace, source-block state and transient-error
+supervisor. Its immutable queue contains unique known Main URLs, so two labels
+sharing a target do not cause duplicate requests. Already described targets are
+reconciled before fetching, and ready writes replay after an interruption.
+
+```sh
+python goodwatch-flows/scripts/populate_trope_pages.py \
+  --inventory GLOBAL_PAIRS.json --output PAGE_RUN \
+  --saved EXISTING_CAPTURE_RUN --until-complete
+```
+
+Verified cached captures and published archives are imported before a remaining
+network pass. Source precedence is verified direct HTTP, then the pinned 2025
+archive, then the pinned 2023 archive; equal-priority conflicts require inspection.
+Metadata-only captures never erase an existing definition. An empty page may be
+filled from an available definition, adopting that definition's complete title and
+provenance rather than borrowing a newer metadata-only capture's HTTP evidence.
+Neither archive supplies original HTTP hashes or capture dates. The frontend groups
+associations by resolved page before qualification, counts each title once, and
+retains the original labels for per-title excerpts. Description reads remain
+independent of expensive profile calculations, with only the first 30 bands loaded
+for the initial page.
+
+The filtering request opts into `GET /u/:handle/tropes/data?format=thin-v1` and
+returns the compact matrix without article text or server-only original-label and
+reference maps. Older clients retain the full response contract during rolling
+deployment. `POST /u/:handle/tropes/descriptions` takes a JSON array of at most
+60 IDs and at most 256 KiB of actual streamed input, checks current profile
+visibility and membership in the owner's pool, then reads only those definitions.
+Visible bands keep their server-rendered text while filters, pagination and
+optional description requests settle. A failed optional read does not disable
+filters or erase successful text. Browser query generation 3 is independent of
+the durable pool schema 2; durable schema-2 rows use `v2:<ownerId>` keys so an older
+instance cannot read a URI matrix as if it contained display labels.
+
+
+The legacy Crate `trope_catalog` table retains exact original labels and their previously imported definitions,
+separate from the `trope` table's per-title excerpts. The URI-keyed page/reference tables above now supply runtime
+general definitions. Each legacy name has an optional known Main-page URL and description; unresolved label mappings
+remain available for audit and review. Direct HTTP descriptions retain the raw response's
 SHA256, the exact text's SHA256, actual fetch time, source, and import/update times. Unknown provenance stays null.
 
-Archived HTML fragments use nullable `source_archive` metadata instead of claiming a direct HTTP capture. This small
+Archived HTML uses nullable `source_archive` metadata instead of claiming a direct HTTP capture. This small
 object records the public Hugging Face dataset, full pinned revision and immutable file URL, verified file SHA256,
-exact JSONL-record SHA256, literal article-string UTF-8 SHA256, `payload_kind: article_html_fragment`, and the actual
-archive retrieval time. A byte offset/length pair can locate the exact record slice. Raw HTML stays in the local
-verified archive, never in this object. Archived descriptions keep both `source_hash` and `fetched_at` null: a
-repository revision, dataset year or archive download date is not evidence of when TV Tropes served that page.
+exact archived-record SHA256, literal HTML-string UTF-8 SHA256, payload kind, and the actual archive retrieval time.
+`payload_kind: article_html_fragment` identifies an article fragment; `payload_kind: html_document` identifies a
+saved full HTML document. Even a full document does not establish the original HTTP wire bytes or capture date.
+The record digest uses the source format's documented original byte boundaries; the HTML digest covers the
+literal archived string encoded as UTF-8. Neither digest becomes a direct HTTP `source_hash`.
+
+A byte offset/length pair can locate a contiguous record slice in an uncompressed source file. For compressed
+records, including records inside a ZIP member, omit these DB fields: member names and decompressed offsets stay
+in local verification evidence. Raw HTML stays in the local verified archive, never in this object. Archived
+descriptions keep both `source_hash` and `fetched_at` null: a repository revision, dataset year or archive download
+date is not evidence of when TV Tropes served that page.
 Their `source` remains `tvtropes`; `description_hash` still identifies the extracted text. Existing populated
 HTTP rows are preserved by the normal missing-only import guard, including their capture provenance.
 
@@ -99,8 +177,9 @@ It uses the existing recovery client's identifying user agent, a single worker l
 least six seconds. It stores validated introductions directly in Crate, preserving existing definitions and recording
 the source hash, exact text hash and original fetch time. Canonical URL and page heading must identify the subject.
 A renamed subject is also accepted when its exact old name matches the requested known URL and the source
-response explicitly redirects from that same URL to a validated canonical page. Contextual labels that merely link
-to a differently named trope do not meet that rule. Reviewed redirect evidence stays beside the run journals.
+response explicitly redirects from that same URL to a validated canonical page. The legacy label importer does not accept contextual labels merely linking
+to a differently named trope. The linked-page path above handles those references
+under their actual source title instead. Reviewed redirect evidence stays beside the run journals.
 Raw responses, the immutable queue, request/outcome journals and `progress.json` stay in the output directory.
 Saved pages are reused without fetching them again; a database interruption leaves a replayable record.
 `--priority-names FILE` accepts a JSON array of exact queued names to visit first, for example unprocessed known
@@ -108,7 +187,15 @@ URLs absent from the verified archive. It changes in-memory visit order only; th
 source cache, shared lock, six-second pace and source-block state stay authoritative. The progress checkpoint records
 the priority file SHA256.
 
-The one-off user service is `goodwatch-trope-catalog-full.service`, with no recurring crawl schedule.
+The original one-off label service was `goodwatch-trope-catalog-full.service`, with no recurring crawl schedule.
+After its saved queue completed, it was disabled in favor of `goodwatch-trope-pages-full.service`.
+The latter waits for verified cache imports, queues only globally missing Main-reference URLs,
+reuses all original captures and source-block/pacing state, and never refetches completed pages.
+Its receipts and immutable URI queue are in `~/.cache/goodwatch/trope-catalog/pages-full-2026-10-26/`.
+A source write with an uncertain result requires inspection before resumption; complete write
+receipts are checked before repairing a torn journal tail. Cache-only staging/import continuations
+are separate one-off services, skip sealed completed batches and resume on reboot. They issue no
+source requests and are not recurring crawlers.
 Its output is `~/.cache/goodwatch/trope-catalog/full-2026-10-25/`; `inventory/` there holds the global inventory and
 URL review evidence. The run has no request-count cap with `--all`. Allow roughly 2½ days for the known URLs at
 the minimum pace for a fully uncached HTTP pass, plus review. A 403, 429 or challenge records a shared cooldown and stops; three consecutive
@@ -118,8 +205,11 @@ backs off before retrying transient failures. Code/configuration errors and unre
 inspection; they are not retried in a loop. Never move the run to another network to bypass a block. The user
 service is enabled for reboot resumption, with user lingering enabled so logout does not stop it.
 
+The following commands describe the original label-pass checkpoint, retained for audit.
+The active URI pass uses the page service and run directory above.
+
 ```sh
-# Monitor the active service and its local checkpoint.
+# Inspect the original service and its local checkpoint.
 systemctl --user status goodwatch-trope-catalog-full.service
 python goodwatch-flows/scripts/populate_trope_catalog.py status \
   --output ~/.cache/goodwatch/trope-catalog/full-2026-10-25 --with-database

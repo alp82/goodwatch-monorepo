@@ -1,11 +1,22 @@
 import type { ProfileTitle } from "../../domain/profile.ts"
 import type { MediaKey, UserData } from "../../types/user-data.ts"
 import { isSeen } from "../../types/user-data.ts"
-import { htmlToText } from "./trope-text.ts"
 import {
-	withTropeDescriptions,
+	type ProfileTropeDescriptions,
+	descriptionIds,
+} from "../../utils/profile-trope-descriptions.ts"
+import {
 	type TropeDescriptions,
+	catalogVersion,
+	withTropeDescriptions,
 } from "./trope-catalog-data.ts"
+import {
+	type TropePageReferences,
+	mainTropeUrl,
+	tropePageUrl,
+} from "./trope-pages.ts"
+import { htmlToText } from "./trope-text.ts"
+import { buildUriTropePool, tropeTarget } from "./trope-uri-pool.ts"
 import {
 	type TropeLength,
 	type TropePool,
@@ -61,7 +72,12 @@ export interface TropesDependencies {
 		readFrom: number,
 	) => Promise<void>
 	titlePath: (mediaType: "movie" | "show", id: number, title: string) => string
-	readDescriptions: (names: string[]) => Promise<TropeDescriptions>
+	readDescriptions: (
+		names: string[],
+		options?: { strict?: boolean },
+	) => Promise<TropeDescriptions>
+	/** Omitted only by legacy dependency adapters. Production always groups by resolved URI. */
+	resolveReferences?: (urls: string[]) => Promise<TropePageReferences>
 }
 
 export interface ProfileTropes extends TropePool {
@@ -141,9 +157,11 @@ export function createTropesLoader(deps: TropesDependencies) {
 		)
 		// Query completion order must not change the payload or its indexes.
 		titles.sort((a, b) => a.title.key.localeCompare(b.title.key))
-		const names = qualifyingTropes(titles)
+		const names = deps.resolveReferences
+			? new Set(titles.flatMap((t) => t.names))
+			: qualifyingTropes(titles)
 		const lengths: TropeLength[] = []
-		if (names.size)
+		if (deps.resolveReferences || names.size)
 			await Promise.all(
 				(["movie", "show"] as const).flatMap((mediaType) =>
 					batches(
@@ -162,7 +180,7 @@ export function createTropesLoader(deps: TropesDependencies) {
 								[mediaType, ...ids],
 							)
 							for (const row of rows)
-								if (names.has(row.name))
+								if (deps.resolveReferences || names.has(row.name))
 									lengths.push({
 										key: `${mediaType}-${Number(row.media_tmdb_id)}`,
 										name: row.name,
@@ -174,6 +192,12 @@ export function createTropesLoader(deps: TropesDependencies) {
 					}),
 				),
 			)
+		if (deps.resolveReferences) {
+			const references = await deps.resolveReferences([
+				...new Set(lengths.flatMap((row) => row.url ?? [])),
+			])
+			return buildUriTropePool(titles, lengths, references)
+		}
 		return buildTropePool(titles, lengths, {})
 	}
 	function refreshProfileTropes(
@@ -209,6 +233,43 @@ export function createTropesLoader(deps: TropesDependencies) {
 	}
 	return {
 		refreshProfileTropes,
+		async loadProfileTropeDescriptions(
+			ownerId: string,
+			shell: TropeSight,
+			input: unknown,
+		): Promise<ProfileTropeDescriptions> {
+			const ids = descriptionIds(input)
+			if (!ids) throw new RangeError("At most 60 bounded trope IDs")
+			if (!seesTropes(shell))
+				return {
+					entries: {},
+					catalogVersion: catalogVersion({}),
+					pending: false,
+				}
+			const pool = await ownerPool(ownerId, false)
+			if (!pool)
+				return {
+					entries: {},
+					catalogVersion: catalogVersion({}),
+					pending: true,
+				}
+			const allowed = new Set(pool.tropes)
+			const visible = ids.filter((id) => allowed.has(id))
+			const current = visible.length
+				? await deps.readDescriptions(visible, { strict: true })
+				: {}
+			const entries = Object.fromEntries(
+				visible.map((id) => [
+					id,
+					current[id] ?? { url: pool.urls[id] ?? "", title: null, text: null },
+				]),
+			)
+			return {
+				entries,
+				catalogVersion: catalogVersion(entries),
+				pending: false,
+			}
+		},
 		async loadProfileTropes(
 			ownerId: string,
 			shell: TropeSight,
@@ -240,7 +301,9 @@ export function createTropesLoader(deps: TropesDependencies) {
 			shell: TropeSight,
 			trope: string,
 			keys: string[],
-		): Promise<{ key: string; text: string }[]> {
+		): Promise<
+			{ key: string; text: string; label?: string; labels?: string[] }[]
+		> {
 			if (!seesTropes(shell)) return []
 			if (keys.length > 16) throw new RangeError("At most 16 title keys")
 			const pool = await ownerPool(ownerId, false)
@@ -251,6 +314,85 @@ export function createTropesLoader(deps: TropesDependencies) {
 				pool.pool.filter((t) => t.r.includes(index)).map((t) => t.k),
 			)
 			const visible = [...new Set(keys)].filter((k) => allowed.has(k))
+			if (pool.schema === 2) {
+				const sourceUrls = pool.references?.[trope] ?? []
+				const identities: TropePageReferences = Object.fromEntries(
+					sourceUrls.flatMap((url) => {
+						const reference = tropePageUrl(url)
+						return reference &&
+							tropePageUrl(trope) &&
+							(mainTropeUrl(reference) || reference === trope)
+							? [[reference, { url: trope, title: null }]]
+							: []
+					}),
+				)
+				const examples = new Map<
+					string,
+					{ text: string; label: string; labels: Set<string> }
+				>()
+				await Promise.all(
+					(["movie", "show"] as const).map(async (mediaType) => {
+						const ids = visible
+							.filter((k) => k.startsWith(`${mediaType}-`))
+							.map((k) => Number(k.split("-")[1]))
+						if (!ids.length) return
+						// Raw routes remain separate from normalized identities: SQL must match the actual stored value.
+						const routes: (string[] | null)[] = sourceUrls.length
+							? batches(sourceUrls)
+							: [null]
+						for (const routesBatch of routes) {
+							const fallback = pool.labels?.[trope]?.[0]
+							if (!routesBatch && !fallback) continue
+							for (let offset = 0; ; offset += TROPE_PAGE) {
+								const rows = await deps.read<{
+									media_tmdb_id: number
+									name: string
+									url: string | null
+									content: string | null
+								}>(
+									`SELECT media_tmdb_id, name, url, content FROM trope WHERE media_type = ? AND media_tmdb_id IN (${placeholders(ids.length)}) AND ${routesBatch ? `url IN (${placeholders(routesBatch.length)})` : "url IS NULL AND match(name, ?)"} ORDER BY media_tmdb_id, name, url LIMIT ${TROPE_PAGE} OFFSET ${offset}`,
+									[mediaType, ...ids, ...(routesBatch ?? [fallback ?? ""])],
+								)
+								for (const row of rows) {
+									const key = `${mediaType}-${Number(row.media_tmdb_id)}`
+									if (
+										!visible.includes(key) ||
+										tropeTarget(row.name, row.url, identities) !== trope ||
+										(routesBatch && !routesBatch.includes(row.url ?? ""))
+									)
+										continue
+									const text = trimExample(htmlToText(row.content ?? ""))
+									if (!text) continue
+									const previous = examples.get(key)
+									const labels = previous?.labels ?? new Set<string>()
+									labels.add(row.name)
+									if (
+										!previous ||
+										text.length > previous.text.length ||
+										(text.length === previous.text.length &&
+											row.name.localeCompare(previous.label) < 0)
+									)
+										examples.set(key, { text, label: row.name, labels })
+								}
+								if (rows.length < TROPE_PAGE) break
+							}
+						}
+					}),
+				)
+				return visible.flatMap((key) => {
+					const example = examples.get(key)
+					return example
+						? [
+								{
+									key,
+									text: example.text,
+									label: example.label,
+									labels: [...example.labels].sort(),
+								},
+							]
+						: []
+				})
+			}
 			const examples = new Map<string, string>()
 			await Promise.all(
 				(["movie", "show"] as const).map(async (mediaType) => {

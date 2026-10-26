@@ -1006,3 +1006,44 @@ requests, two blocking requests and 817,152 total bytes limits. No budget thresh
   default from anonymous results.
 - **Do nothing for now:** reasonable if the owner accepts these lab results and the payload/TBT budget
   overruns; it leaves #236's 2 s goal unmet. Real phones, field LCP, Safari and Firefox remain unmeasured.
+
+## Production after the #236 fixes, October 26, 2026
+
+Same method as the remeasurement in the preceding section: `./bench.sh lighthouse --where generator` on worker3,
+Lighthouse 13.5.0 in `gw-bench-lighthouse:13.5.0-6dd25f05`, mobile, simulated slow 4G, CPU slowdown 2.7, seven
+fresh browsers, anonymous `https://goodwatch.app/`. Production served `a5c278b26` from 03:58:57 UTC (the manifest
+link on the site's host and the new style sheet hash confirmed it); the runs started at 03:59:20 UTC. Run directory
+`goodwatch-benchmark/results/20261026T035915Z-lighthouse-prod-home-236-after` on the measuring machine; selected
+audits in [remeasure-2026-10-26-after/home-lighthouse.json](remeasure-2026-10-26-after/home-lighthouse.json).
+
+By the validity rule six runs count: run 2 had CPU benchmark 993.5. Valid runs' benchmark range is 1,197.5–1,328.5.
+
+| Measure | October 26, before | October 26, after | Change |
+| --- | --- | --- | --- |
+| Mobile LCP, median | 2,349 ms | 1,696 ms | −653 ms |
+| Mobile LCP, p90 | 2,535 ms | 1,736 ms | −799 ms |
+| Script requests | 33 | 30 | −3 |
+| Script transfer bytes | 393,659 | 351,047 | −42,612 |
+| TBT, median | 986 ms | 989 ms | about the same |
+
+| Run | Simulated LCP (ms) | Scripts | Script bytes | Observed FCP (ms) | CPU benchmark | Included |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1,736 | 30 | 350,992 | 757 | 1,197.5 | Yes |
+| 2 | 1,716 | 30 | 351,099 | 248 | 993.5 | No: CPU |
+| 3 | 1,716 | 30 | 351,046 | 717 | 1,276 | Yes |
+| 4 | 1,697 | 30 | 351,018 | 240 | 1,263.5 | Yes |
+| 5 | 1,695 | 30 | 351,058 | 518 | 1,264 | Yes |
+| 6 | 1,693 | 30 | 351,048 | 661 | 1,328.5 | Yes |
+| 7 | 1,193 | 30 | 351,081 | 537 | 1,251.5 | Yes |
+
+The LCP element is still the hand (`hand--zEoEhaM.avif`) in all seven runs. Median LCP phases of the valid runs:
+TTFB 50 ms, resource load delay 47 ms, load 92 ms, render delay 435 ms. The render delay is about what it was
+(402 ms): the fixes removed what the simulation charged before the paint (an unhinted style sheet and logos on
+connections of their own, high-priority pictures under the boot screen, the manifest on the static hostname), not
+the paint's own work. **The home page meets #236's 2 s mobile LCP goal** in these lab runs; real phones, field LCP,
+Safari and Firefox remain unmeasured. The other home budget lines that failed before (requests, images, bytes,
+TBT) were not part of the fix.
+
+What changed (commits on main): `eea7b9f5a` start-row sheet with the home sheets, high-priority room hints, hinted
+marks, low-priority TV pictures, a lighter Feedback drawer; `c4a87106d` one request mode per mark file;
+`18534d7e3` the web manifest on the site's own host; `a5c278b26` four dead safelist lines.

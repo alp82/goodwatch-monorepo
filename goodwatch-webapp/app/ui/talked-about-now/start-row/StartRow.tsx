@@ -4,7 +4,8 @@
 // there is no panel: each row goes to that title on the Hot on socials page (routes/hot-on-socials.tsx), which
 // has every post. The heading's link goes there too.
 //
-// Rendered with the start page and its loader data, before the visitor scrolls.
+// Rendered with the start page and its loader data, before the visitor scrolls. Its styles are in start-row.css,
+// which the start page links with its own sheets (living-room/home-sheets.ts), and the Hot on socials page itself.
 import { Link } from "@remix-run/react"
 import { useState } from "react"
 import {
@@ -17,7 +18,6 @@ import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { Move, ReasonIcon, backupSources, buzzLabel, hrefOf, isBackup, isMultiple, tmdb, why } from "../parts"
 import { Platform, SourceMark } from "./Items"
 import { Spark } from "./Spark"
-import "./start-row.css"
 
 /** The Hot on socials page, opened at a title when one is given. */
 export const pageHref = (title?: TalkedTitle) =>

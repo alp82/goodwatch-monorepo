@@ -1,21 +1,41 @@
 import { noteMediaReadFailure } from "~/server/media-read-health.server"
 import { query } from "~/utils/crate"
 import { createTropeCatalogReader } from "./trope-catalog-data"
+import {
+	createTropePageReader,
+	createTropeReferenceReader,
+} from "./trope-pages"
 
 const read = createTropeCatalogReader((sql, params) =>
 	query(sql, params, { timeoutMs: 400 }),
 )
+const pages = createTropePageReader((sql, params) =>
+	query(sql, params, { timeoutMs: 400 }),
+)
+/** A failed identity read must fail the background build, never persist a degraded grouping. */
+export const resolveTropeReferences = createTropeReferenceReader(
+	(sql, params) => query(sql, params, { timeoutMs: 800 }),
+)
 
 /** Optional text must not hold up a profile when the catalog is unavailable. A later request retries. */
-export async function readTropeDescriptions(names: string[]) {
+export async function readTropeDescriptions(
+	names: string[],
+	options: { strict?: boolean } = {},
+) {
 	try {
-		return await read(names)
+		// The old reader remains for callers holding the legacy name contract during rollout.
+		return names.some(
+			(name) => name.startsWith("https://") || name.startsWith("label:"),
+		)
+			? await pages(names)
+			: await read(names)
 	} catch (error) {
 		noteMediaReadFailure()
 		console.error(
 			"Profile tropes: reading the shared description catalog failed:",
 			error,
 		)
+		if (options.strict) throw error
 		return {}
 	}
 }

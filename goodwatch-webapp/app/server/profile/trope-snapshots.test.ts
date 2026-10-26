@@ -3,7 +3,7 @@ import { test } from "node:test"
 import { createTropeSnapshots } from "./trope-snapshots.ts"
 import { buildTropePool } from "./tropes-model.ts"
 
-const pool = buildTropePool([], [], {})
+const pool = { ...buildTropePool([], [], {}), schema: 2 }
 const raw = (readFrom: number) => JSON.stringify({ readFrom, stats: pool })
 function fixture() {
 	let fast: string | null = null
@@ -113,4 +113,16 @@ test("corrupt fast copies fall back to the durable snapshot", async () => {
 		version: 900_000,
 		fresh: true,
 	})
+})
+
+test("legacy label-grouped snapshots are invalid even when fresh in both cache tiers", async () => {
+	const f = fixture()
+	const old = JSON.stringify({
+		readFrom: 900_000,
+		stats: buildTropePool([], [], {}),
+	})
+	f.setFast(old)
+	f.setStored(old)
+	assert.equal(await f.read("owner"), null)
+	assert.equal(f.reads, 1)
 })

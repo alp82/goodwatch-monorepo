@@ -1,0 +1,9 @@
+summary: URI-keyed reviewed TV Tropes pages and references
+description: 'Pure import library with source precedence, guarded single-row writes and stored-document verification. No source requests; main does nothing. Callers persist import_document events before writes.'
+lock: '!inline f/tvtropes_catalog/pages.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

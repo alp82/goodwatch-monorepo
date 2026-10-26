@@ -1,10 +1,31 @@
 // The Taste page's sections as chips, sticky under the site header; the section in view is marked.
-import { useEffect, useState } from "react"
+import { type MouseEvent, useEffect, useState } from "react"
 import { WRAP } from "~/ui/my-pages/bits"
 
 export interface Section {
 	id: string
 	label: string
+}
+
+/**
+ * A chip scrolls to its section itself. Left to the browser, the hash change reaches Remix as a Back/Forward step, and
+ * its ScrollRestoration puts back a saved offset: every hash entry shares the key "default", so the scroll often stops.
+ * The hash is replaced without a history entry, keeping Remix's state, so Back still leaves the page in one step.
+ */
+function goTo(event: MouseEvent<HTMLAnchorElement>, id: string) {
+	if (
+		event.button !== 0 ||
+		event.metaKey ||
+		event.ctrlKey ||
+		event.shiftKey ||
+		event.altKey
+	)
+		return
+	const el = document.getElementById(id)
+	if (!el) return
+	event.preventDefault()
+	el.scrollIntoView({ block: "start" })
+	window.history.replaceState(window.history.state, "", `#${id}`)
 }
 
 export function SectionChips({ sections }: { sections: Section[] }) {
@@ -36,7 +57,7 @@ export function SectionChips({ sections }: { sections: Section[] }) {
 	return (
 		<nav
 			aria-label="Taste sections"
-			className="sticky top-16 z-20 border-b border-white/5 bg-gray-950/95"
+			className="sticky top-16 z-40 border-b border-white/5 bg-gray-950/95"
 		>
 			<ul
 				className={`${WRAP} flex gap-1.5 overflow-x-auto py-2 [scrollbar-width:none]`}
@@ -45,6 +66,7 @@ export function SectionChips({ sections }: { sections: Section[] }) {
 					<li key={s.id} className="shrink-0">
 						<a
 							href={`#${s.id}`}
+							onClick={(event) => goTo(event, s.id)}
 							aria-current={here === s.id ? "true" : undefined}
 							className={`inline-flex min-h-8 items-center rounded-full px-3 text-xs font-semibold whitespace-nowrap ring-1 transition-colors ${
 								here === s.id

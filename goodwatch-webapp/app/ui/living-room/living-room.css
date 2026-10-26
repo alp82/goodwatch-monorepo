@@ -381,6 +381,9 @@ main:has(.lr-page) + footer {
 }
 
 .lrb-in {
+	/* Every section heading below the room is one size, and the sections sit one gap apart. */
+	--lrb-h2: clamp(2rem, 5vw, 3rem);
+	--lrb-gap: clamp(4.5rem, 10vw, 7rem);
 	max-width: 76rem;
 	margin: 0 auto;
 	padding: 2.25rem 1.25rem 2.5rem;
@@ -404,12 +407,11 @@ main:has(.lr-page) + footer {
 	font-weight: 800;
 	letter-spacing: -0.01em;
 	color: #fff;
-	font-size: 1.6rem;
+	font-size: var(--lrb-h2);
 	line-height: 1.1;
 }
 .lrb-head h2 {
 	margin-top: 0.35rem;
-	font-size: clamp(2rem, 5vw, 3rem);
 }
 .lrb-back {
 	display: inline-flex;
@@ -449,10 +451,7 @@ main:has(.lr-page) + footer {
 
 /* A member's arrivals this week (#489): six cards, two rows of three on a phone and one row of six from 640 px. */
 .lrb-new {
-	margin-bottom: 2.75rem;
-}
-.lrb-new .lrb-head h2 {
-	font-size: clamp(1.6rem, 4vw, 2.25rem);
+	margin-bottom: var(--lrb-gap);
 }
 .lrb-new .lrb-titles {
 	margin-top: 1.25rem;
@@ -465,7 +464,7 @@ main:has(.lr-page) + footer {
 
 /* The ways to browse: each hub a card with its own coloured tile and mark, then the category shortcuts. */
 .lrb-hubs {
-	margin-top: 3.5rem;
+	margin-top: var(--lrb-gap);
 }
 .lrb-cards {
 	display: grid;

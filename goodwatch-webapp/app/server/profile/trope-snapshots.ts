@@ -41,6 +41,7 @@ export function createTropeSnapshots(deps: Dependencies) {
 					}
 					if (
 						!Number.isFinite(entry.readFrom) ||
+						entry.stats?.schema !== 2 ||
 						!Array.isArray(entry.stats?.pool) ||
 						!Array.isArray(entry.stats.tropes)
 					)

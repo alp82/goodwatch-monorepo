@@ -9,6 +9,8 @@ import {
 	mergeProfileTropeResource,
 	profileTropeQueryKey,
 	profileTropeResource,
+	profileTropeRequestParams,
+	wantsThinTropes,
 } from "./profile-trope-resource.ts"
 
 const empty = (): UserData => ({
@@ -79,7 +81,7 @@ test("an unchanged owner pool refreshes independent viewer Seen state without re
 		false,
 		new URLSearchParams({
 			version: String(first.version),
-			catalogVersion: first.catalogVersion!,
+			catalogVersion: initial.tropes?.catalogVersion ?? "",
 		}),
 	)
 	assert.equal(compact.unchanged, true)
@@ -95,7 +97,7 @@ test("an unchanged owner pool refreshes independent viewer Seen state without re
 		false,
 		new URLSearchParams({
 			version: String(first.version),
-			catalogVersion: first.catalogVersion!,
+			catalogVersion: initial.tropes?.catalogVersion ?? "",
 		}),
 	)
 	assert.deepEqual(
@@ -176,4 +178,88 @@ test("changing the root display language does not reuse another language's uncha
 		"English title",
 	)
 	client.clear()
+})
+
+test("filter matrices contain neither article text nor server-only source labels/routes", () => {
+	const ids = Array.from(
+		{ length: 1000 },
+		(_, i) => `https://tvtropes.org/pmwiki/pmwiki.php/Main/Page${i}`,
+	)
+	const pool = {
+		...buildTropePool([], [], {}),
+		schema: 2,
+		tropes: ids,
+		seen: [],
+		version: 123,
+		names: Object.fromEntries(ids.map((id) => [id, "Actual title"])),
+		urls: Object.fromEntries(ids.map((id) => [id, id])),
+		descriptions: Object.fromEntries(
+			ids.map((id) => [id, "Long article paragraph. ".repeat(350)]),
+		),
+		references: Object.fromEntries(ids.map((id) => [id, [id]])),
+		labels: Object.fromEntries(ids.map((id) => [id, ["Contextual label"]])),
+	}
+	const resource = profileTropeResource(
+		pool,
+		false,
+		profileTropeRequestParams(),
+	)
+	assert.deepEqual(resource.tropes?.descriptions, {})
+	assert.equal("references" in (resource.tropes ?? {}), false)
+	assert.equal("labels" in (resource.tropes ?? {}), false)
+	assert.ok(JSON.stringify(resource).length < JSON.stringify(pool).length / 10)
+	const changed = profileTropeResource(
+		{
+			...pool,
+			catalogVersion: "new definitions",
+			descriptions: { other: "Changed" },
+		},
+		false,
+		new URLSearchParams({
+			format: "thin-v1",
+			version: "123",
+			catalogVersion: resource.tropes?.catalogVersion ?? "",
+		}),
+	)
+	assert.equal(changed.unchanged, true)
+})
+
+test("thin format is explicitly negotiated on cold and warm requests while legacy clients retain their full contract", () => {
+	const pool = {
+		...buildTropePool([], [], {}),
+		seen: [],
+		version: 321,
+		catalogVersion: "legacy-definition-version",
+		descriptions: { Context: "Full general definition" },
+		labels: { Context: ["Original label"] },
+		references: {
+			Context: ["https://tvtropes.org/pmwiki/pmwiki.php/Main/Actual"],
+		},
+	}
+	const cold = profileTropeRequestParams()
+	assert.equal(cold.get("format"), "thin-v1")
+	assert.equal(cold.has("version"), false)
+	const thin = profileTropeResource(pool, false, cold)
+	assert.deepEqual(thin.tropes?.descriptions, {})
+	assert.equal(thin.tropes?.catalogVersion, "thin-v1")
+	const warm = profileTropeRequestParams(thin)
+	assert.equal(warm.get("format"), "thin-v1")
+	assert.equal(profileTropeResource(pool, false, warm).unchanged, true)
+	for (const params of [
+		new URLSearchParams(),
+		new URLSearchParams({ format: "unknown" }),
+	]) {
+		assert.equal(wantsThinTropes(params), false)
+		const legacy = profileTropeResource(pool, false, params)
+		assert.equal(legacy.tropes, pool)
+		assert.equal(legacy.tropes?.descriptions.Context, "Full general definition")
+		assert.deepEqual(legacy.tropes?.labels, pool.labels)
+		assert.deepEqual(legacy.tropes?.references, pool.references)
+		assert.equal(legacy.tropes?.catalogVersion, "legacy-definition-version")
+	}
+	const legacyWarm = new URLSearchParams({
+		version: "321",
+		catalogVersion: "legacy-definition-version",
+	})
+	assert.equal(profileTropeResource(pool, false, legacyWarm).unchanged, true)
 })

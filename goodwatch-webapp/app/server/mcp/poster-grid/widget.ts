@@ -560,7 +560,7 @@ async function start() {
 	reportSize()
 }
 
-// The paths of app/img/goodwatch-logo-amber.svg (app/ui/brand/GoodWatchWordmark.tsx draws the same G).
+// The paths of app/img/goodwatch-logo-white.svg (app/ui/brand/GoodWatchWordmark.tsx draws the same G).
 const G_PATHS: [string, string | null][] = [
 	["__G_RING__", null],
 	["__G_PLAY__", "matrix(0.26458333,0,0,0.26458333,9.3401336,-32.149027)"],
