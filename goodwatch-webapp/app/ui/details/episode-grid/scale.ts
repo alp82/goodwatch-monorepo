@@ -9,7 +9,7 @@
 // The colour is never the only signal: the number is printed in the cell, and it is in the
 // cell's accessible name and in the hover or tap tip.
 import type { EpisodeGrid, ProviderScore, SeasonScores } from "~/server/episode-grid.server"
-import { goodwatchVibeIndex, scoreLabels } from "~/utils/ratings"
+import { goodwatchVibeIndex, scoreWord } from "~/utils/ratings"
 
 /**
  * Whether a show gets the episode grid, and with it the link to the grid in the score bar.
@@ -56,7 +56,7 @@ export const formatScore = (score: number) => (Math.round(score * 10) / 10).toFi
 export const imdbVibe = (score: number) => goodwatchVibeIndex(Math.round(score * 10))
 
 /** The site's word for a vibe step: vibe-80 is "Great". */
-export const vibeLabel = (vibe: number) => scoreLabels[Math.max(1, vibe / 10)]
+export const vibeLabel = (vibe: number) => scoreWord(vibe)
 
 /**
  * How far each vibe step is darkened for an episode tile, as its share in an oklab mix with

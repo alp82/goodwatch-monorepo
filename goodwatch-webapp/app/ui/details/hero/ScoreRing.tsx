@@ -1,5 +1,5 @@
 import React from "react"
-import { goodwatchScoreDisplay, goodwatchVibeIndex, hasGoodwatchScore, scoreLabels } from "~/utils/ratings"
+import { goodwatchScoreDisplay, goodwatchVibeIndex, hasGoodwatchScore, scoreWord } from "~/utils/ratings"
 
 // The GoodWatch score as a ring filled to the score. With `label` its verdict word and caption
 // sit beside it; without, the ring carries them as its accessible name and tooltip.
@@ -12,7 +12,7 @@ export default function ScoreRing({ media, size = 56, label = true }: { media: S
 	const percent = media.details.goodwatch_overall_score_normalized_percent
 	const score = hasGoodwatchScore(percent) ? goodwatchScoreDisplay(percent) : null
 	const vibe = hasGoodwatchScore(percent) ? goodwatchVibeIndex(percent) : null
-	const verdict = score == null ? "Not rated yet" : scoreLabels[Math.max(1, Math.round(score / 10))]
+	const verdict = scoreWord(score) ?? "Not rated yet"
 	const stroke = size / 11
 	const r = (size - stroke) / 2
 	const c = 2 * Math.PI * r

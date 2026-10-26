@@ -5,7 +5,7 @@
 import logoWhite from "~/img/goodwatch-logo-white.svg"
 import type { ReactNode } from "react"
 import { assetUrl } from "~/utils/asset-url"
-import { goodwatchVibeIndex, scoreLabels } from "~/utils/ratings"
+import { goodwatchVibeIndex, scoreWord } from "~/utils/ratings"
 import { tmdbFixedImage, tmdbImageUrl } from "~/utils/tmdb-image"
 
 // Discord's dark theme.
@@ -43,9 +43,6 @@ const runtime = (minutes: number) =>
 	minutes >= 60
 		? `${Math.floor(minutes / 60)}h${minutes % 60 ? ` ${minutes % 60}m` : ""}`
 		: `${minutes}m`
-
-const scoreWord = (score: number) =>
-	scoreLabels[Math.min(10, Math.max(1, Math.round(score / 10)))]
 
 const vibeColor = (score: number) =>
 	`var(--color-vibe-${goodwatchVibeIndex(score)})`

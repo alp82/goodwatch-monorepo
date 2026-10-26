@@ -5,7 +5,7 @@ import logoWhite from "~/img/goodwatch-logo-white.svg"
 import type { IntroCard } from "~/ui/living-room/intro/data"
 import type { IntroData } from "~/ui/living-room/intro/scene"
 import { assetUrl } from "~/utils/asset-url"
-import { goodwatchVibeIndex, scoreLabels } from "~/utils/ratings"
+import { goodwatchVibeIndex, scoreWord } from "~/utils/ratings"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 
 // ---------- timing ----------
@@ -107,8 +107,6 @@ export function pickTitles(
 // ---------- Discord look ----------
 
 const vibe = (score: number) => `var(--color-vibe-${goodwatchVibeIndex(score)})`
-const scoreWord = (score: number) =>
-	scoreLabels[Math.min(10, Math.max(1, Math.round(score / 10)))]
 const runtime = (m: number) =>
 	m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}` : `${m}m`
 

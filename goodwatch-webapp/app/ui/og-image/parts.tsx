@@ -14,7 +14,7 @@ import { SUBTEXT_MAX_LENGTH } from "~/ui/og-image/copy"
 import {
 	goodwatchScoreDisplay,
 	goodwatchVibeIndex,
-	scoreLabels,
+	scoreWord,
 } from "~/utils/ratings"
 
 export const WIDTH = 1200
@@ -50,8 +50,6 @@ const VIBE_COLORS: Record<number, string> = {
 
 export const vibeColor = (score: number) =>
 	VIBE_COLORS[goodwatchVibeIndex(score)]
-const scoreWord = (score: number) =>
-	scoreLabels[Math.min(10, Math.floor(score / 10) + 1)]
 
 export const row = (s: CSSProperties = {}): CSSProperties => ({
 	display: "flex",

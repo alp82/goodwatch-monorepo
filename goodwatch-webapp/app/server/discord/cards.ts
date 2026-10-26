@@ -6,6 +6,7 @@ import {
 	goodwatchScoreDisplay,
 	hasGoodwatchScore,
 	scoreLabels,
+	scoreWord,
 } from "../../utils/ratings.ts"
 import { titlePath } from "../../utils/helpers.ts"
 import { providerIdentity } from "./provider-aliases.ts"
@@ -211,10 +212,6 @@ export function scoreAccent(
 	]
 	return colors[Math.min(10, Math.floor(goodwatchScoreDisplay(score) / 10))]
 }
-
-/** The site's score word for a displayed score: the title page rule, rounded to the nearest band. */
-export const scoreWord = (score: number) =>
-	scoreLabels[Math.min(10, Math.max(1, Math.round(score / 10)))]
 
 /** The score's app emoji, or "" when the emoji isn't uploaded yet. */
 export function scoreEmoji(score: number, emojis: EmojiIds = {}) {

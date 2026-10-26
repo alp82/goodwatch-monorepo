@@ -57,8 +57,8 @@ test("versioned key, binary header, expiry, store hit fills memory", async () =>
 	const first = await createOgStore(deps).getOgImage(path)
 	assert.equal(first.status, "ok")
 	if (first.status === "ok") assert.equal(first.source, "rendered")
-	assert.equal(CACHE_PREFIX + path, "og-card:v7:/movie/603")
-	assert.equal(f.writes[0].key, "og-card:v7:/movie/603")
+	assert.equal(CACHE_PREFIX + path, "og-card:v8:/movie/603")
+	assert.equal(f.writes[0].key, "og-card:v8:/movie/603")
 	assert.equal(f.writes.length, 1)
 	assert.equal(f.writes[0].seconds, 1800)
 	assert.deepEqual(f.expires, [])
@@ -233,10 +233,10 @@ test("memory keeps a card once and only touches versioned keys", async () => {
 	assert.deepEqual(second, { ...first, source: "memory", kept: true })
 	await store.getOgImage(path)
 	assert.deepEqual(f.expires, [
-		{ key: "og-card:v7:/movie/603", seconds: 604800 },
+		{ key: "og-card:v8:/movie/603", seconds: 604800 },
 	])
 	assert.equal(f.writes.length, 1)
-	assert.ok(f.keys.every((key) => key.startsWith("og-card:v7:")))
+	assert.ok(f.keys.every((key) => key.startsWith("og-card:v8:")))
 })
 
 test("keeping an evicted card writes the same bytes with the long lifetime", async () => {

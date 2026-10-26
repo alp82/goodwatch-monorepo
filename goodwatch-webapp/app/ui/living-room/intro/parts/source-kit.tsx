@@ -6,7 +6,7 @@ import type { IntroData } from "~/ui/living-room/intro/scene"
 import {
 	goodwatchScoreDisplay,
 	goodwatchVibeIndex,
-	scoreLabels,
+	scoreWord,
 } from "~/utils/ratings"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 
@@ -24,7 +24,7 @@ export const logo = (path: string) => tmdbImageUrl(path, "w154")
 export const extraOf = (data: IntroData) =>
 	(data.extra.sources ?? null) as SourceData | null
 export const verdictOf = (percent: number) =>
-	scoreLabels[Math.max(1, Math.round(goodwatchScoreDisplay(percent) / 10))]
+	scoreWord(goodwatchScoreDisplay(percent))
 export const vibeColor = (percent: number) =>
 	`var(--color-vibe-${goodwatchVibeIndex(percent)})`
 export const score = (c: IntroCard) =>
