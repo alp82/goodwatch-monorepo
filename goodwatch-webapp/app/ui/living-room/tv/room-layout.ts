@@ -76,14 +76,15 @@ const REMOTE_FOOT = 8
 export const TV_MIN_WIDTH = TV_CANVAS.w * 0.9
 
 /**
- * A scene wider than this is a wide screen's (wider than a 1080p monitor's window): its TV sits a little lower
- * (`WIDE_TOP`) and leaves room under it for the whole Remote, at REMOTE_MIN_UNDER or larger, so nothing scrolls (the
- * owner, 2026-10-25). Up to it, the TV keeps the full width (the owner, 2026-10-21), and in a short window the room
- * scrolls to its bottom.
+ * The room around the TV, so the living room always shows (the owner, 2026-10-26: "I'd rather have a smaller screen
+ * than something that does not show me the living room vibes"): a margin above it of this share of the scene's
+ * height (at least `TV_TOP_MIN`), and one on each side of this share of its width.
  */
-export const WIDE_FROM = 1920
-/** A wide screen's TV top margin, as a share of the scene's height. */
-const WIDE_TOP = 0.025
+const TV_TOP_SHARE = 0.025
+const TV_TOP_MIN = 12
+const TV_SIDE_SHARE = 0.05
+/** The smallest TV: in a scene too short for this and the whole Remote, the Remote goes below the fold instead. */
+export const TV_MIN_HEIGHT = 200
 
 /** Where the desktop's Remote is: under the TV, always (the owner, 2026-10-21: no Remote beside a smaller TV). */
 export type RemotePlace = "below"
@@ -119,35 +120,32 @@ function canvasIn(tv: Rect, canvas: { w: number; h: number }) {
 
 /**
  * The desktop room, in a scene of `w` x `h` (the window without the site's header, and without a scrollbar's
- * gutter): the TV at the top, as wide as the scene but for its margins, and the Remote centred under it, in the
- * hand, free to swing toward the cursor. At every size (the owner, 2026-10-21: only full-width TVs, with the
- * Remote centred).
- * - The TV's height follows from its width: in a short window it is taller than the scene, and the room
- *   scrolls to its bottom and to the Remote. On a wide screen (wider than WIDE_FROM) it is never taller than the
- *   scene: narrower there, centred, a little lower, and with the whole Remote under it.
- * - Where the height leaves room, the Remote shows down to its streaming keys inside the scene, at the size the
- *   height suggests or smaller, down to REMOTE_MIN_UNDER; its top reaches a little over the picture's bottom
- *   margin, which lets it sit higher and be larger.
- * - Where it doesn't, the Remote keeps the size the height suggests and stands under the TV, below the fold: the
- *   room's content is taller than the scene (`height`), and the room scrolls to it.
+ * gutter): the TV at the top, centred, with the room showing above and beside it, and the Remote centred under it,
+ * in the hand, free to swing toward the cursor (the owner, 2026-10-21: the Remote under the TV, centred).
+ * - The TV is as large as leaves the whole Remote under it, at REMOTE_MIN_UNDER or larger, and no wider than the
+ *   scene but for its side margins: nothing of the TV or the Remote is under the fold, at any size (the owner,
+ *   2026-10-26).
+ * - The Remote shows whole inside the scene, at the size the height leaves it, up to 0.8; its top reaches a little
+ *   over the picture's bottom margin, which lets it sit higher and be larger.
+ * - Only a scene too short for a TV of TV_MIN_HEIGHT and the Remote keeps the Remote at the size the height
+ *   suggests, under the TV and below the fold: the room's content is taller than the scene (`height`), and the
+ *   room scrolls to it.
  */
 export function layoutRoom(w: number, h: number): RoomLayout {
 	const aspect = ROOM_PHOTO.tv.w / ROOM_PHOTO.tv.h
-	const pad = Math.max(14, Math.min(28, w * 0.0125))
-	const wide = w > WIDE_FROM
-	const top = Math.max(6, h * (wide ? WIDE_TOP : 0.008))
-	const fullW = w - 2 * pad
-	// On a wide screen the TV is no taller than leaves the Remote whole under it: `fits` below holds.
+	const top = Math.max(TV_TOP_MIN, h * TV_TOP_SHARE)
+	const maxW = w - 2 * w * TV_SIDE_SHARE
+	// As tall as leaves the whole Remote under it (`fits` below holds), but never under TV_MIN_HEIGHT.
 	const roomForRemote =
 		h -
 		top +
 		REMOTE_OVER_TV -
 		REMOTE_FOOT -
 		REMOTE_SHOWN_UNDER * REMOTE_MIN_UNDER
-	const tvW = wide ? Math.min(fullW, roomForRemote * aspect) : fullW
+	const tvW = Math.min(maxW, Math.max(TV_MIN_HEIGHT, roomForRemote) * aspect)
 	const tvH = tvW / aspect
 	const under = h - top - tvH + REMOTE_OVER_TV - REMOTE_FOOT
-	// A wide screen's capped TV leaves exactly this much: a rounding error must not tip it under the fold.
+	// A TV capped by the height leaves exactly this much: a rounding error must not tip it under the fold.
 	const fits = under >= REMOTE_SHOWN_UNDER * REMOTE_MIN_UNDER - 1e-6
 	const scale = fits
 		? Math.max(REMOTE_MIN_UNDER, Math.min(0.8, under / REMOTE_SHOWN_UNDER))

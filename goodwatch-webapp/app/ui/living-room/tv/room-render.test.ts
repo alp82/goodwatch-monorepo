@@ -118,18 +118,13 @@ test("living-room.css's first paint seats the room where the layouts do, at ever
 		/@container tvr \(min-width: [\d.]+px\) and \(min-height/,
 	)
 	assert.doesNotMatch(css, /data-remote-place="beside"/)
-	// The desktop, as written there: the TV across the room but for its margins; on a wide screen (WIDE_FROM) never
-	// taller than the room; the Remote inside the room where it fits down to its streaming keys (--f-fit), else under
-	// the TV, below the fold.
+	// The desktop, as written there: the room above and beside the TV, which leaves the whole Remote under it
+	// (--f-fit), or in a room too short for both a TV of 200 px and the Remote under the fold.
 	const first = css.slice(css.indexOf('.tvr[data-room="unmeasured"] > * {'))
-	assert.match(first, /--f-tvfull: calc\(var\(--f-w\) - 2 \* var\(--f-pad\)\);/)
+	assert.match(first, /--f-tvt: max\(12px, var\(--f-h\) \* 0\.025\);/)
 	assert.match(
 		first,
-		/--f-wide: clamp\(0px, \(var\(--f-w\) - 1920px\) \* 1000, 1px\);/,
-	)
-	assert.match(
-		first,
-		/min\(var\(--f-tvfull\), \(var\(--f-h\) - var\(--f-tvt\) \+ 10px - 280\.6px\) \* 1\.851515151515\)/,
+		/--f-tvw: min\(\s*var\(--f-w\) \* 0\.9,\s*max\(200px, var\(--f-h\) - var\(--f-tvt\) \+ 10px - 280\.6px\) \* 1\.851515151515\s*\);/,
 	)
 	assert.match(
 		first,
@@ -144,21 +139,19 @@ test("living-room.css's first paint seats the room where the layouts do, at ever
 		css,
 		/\.tvr\[data-room="unmeasured"\] \.tvr-stage \{\s*height: var\(--f-height\);/,
 	)
-	const pad = (w: number) => Math.max(14, Math.min(28, w * 0.0125))
-	for (let w = 768; w <= 2560; w += 61)
+	for (let w = 768; w <= 3840; w += 61)
 		for (let h = 420; h <= 1500; h += 53) {
 			// The CSS's math, step by step.
-			const wide = Math.min(1, Math.max(0, (w - 1920) * 1000))
-			const tvt = Math.max(6, h * (0.008 + 0.017 * wide))
-			const full = w - 2 * pad(w)
-			const tvw =
-				full -
-				wide * (full - Math.min(full, (h - tvt + 10 - 280.6) * 1.851515151515))
+			const tvt = Math.max(12, h * 0.025)
+			const tvw = Math.min(
+				w * 0.9,
+				Math.max(200, h - tvt + 10 - 280.6) * 1.851515151515,
+			)
 			const tvh = tvw / 1.851515151515
 			const under = h - tvt - tvh + 18 - 8
 			const fit = Math.min(1, Math.max(0, (under - 280.6) * 10000 + 1))
 			const free = Math.min(0.68, Math.max(0.5, h / 1800))
-			const r = free + (Math.min(0.8, under / 610) - free) * fit
+			const r = free + (Math.max(0.46, Math.min(0.8, under / 610)) - free) * fit
 			const rt = tvt + tvh - 18 + (h - 8 - 610 * r - tvt - tvh + 18) * fit
 			const height = Math.max(h, rt + 610 * r + 8)
 			const L = layoutRoom(w, h)

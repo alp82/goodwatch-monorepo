@@ -945,26 +945,20 @@ html[data-tv-transition] .tvr-bracket {
 .tvr[data-room="unmeasured"] {
 	container: tvr / size;
 }
-/* The desktop (`layoutRoom`): the TV at the top, as wide as the room but for its margins (on a wide screen, no
-   taller than the room), its height by its aspect; the Remote centred under it, inside the room where it fits down to its streaming keys, else under the TV
+/* The desktop (`layoutRoom`): the TV at the top, centred, with the room above and beside it, its height by its
+   aspect; the Remote centred under it, whole inside the room, or in a room too short for both under the TV
    below the fold, where the room scrolls to it (`--f-height`, the stage's). Which of the two: --f-fit, 1px where
    it fits, 0px where not, chosen with a clamp as the forms are. */
 .tvr[data-room="unmeasured"] > * {
 	--f-w: 100cqw;
 	--f-h: 100cqh;
-	--f-pad: clamp(14px, var(--f-w) * 0.0125, 28px);
-	/* Full width; on a wide screen (wider than WIDE_FROM, 1920 px; --f-wide is 1px there, 0px elsewhere) a top
-	   margin of 2.5% of the height, and no taller than leaves the whole Remote under it at 0.46 (280.6 px). */
-	--f-wide: clamp(0px, (var(--f-w) - 1920px) * 1000, 1px);
-	--f-tvt: max(
-		6px,
-		var(--f-h) * (0.008 + 0.017 * tan(atan2(var(--f-wide), 1px)))
-	);
-	--f-tvfull: calc(var(--f-w) - 2 * var(--f-pad));
-	--f-tvw: calc(
-		var(--f-tvfull) - tan(atan2(var(--f-wide), 1px)) *
-		(var(--f-tvfull) -
-			min(var(--f-tvfull), (var(--f-h) - var(--f-tvt) + 10px - 280.6px) * 1.851515151515))
+	/* The room around the TV (TV_TOP_SHARE, TV_SIDE_SHARE): 2.5% of the height above it, at least 12 px, and 5% of
+	   the width on each side; as tall as leaves the whole Remote under it at 0.46 (280.6 px), never under 200 px
+	   (TV_MIN_HEIGHT). */
+	--f-tvt: max(12px, var(--f-h) * 0.025);
+	--f-tvw: min(
+		var(--f-w) * 0.9,
+		max(200px, var(--f-h) - var(--f-tvt) + 10px - 280.6px) * 1.851515151515
 	);
 	--f-tvh: calc(var(--f-tvw) / 1.851515151515);
 	--f-tvl: calc((var(--f-w) - var(--f-tvw)) / 2);
@@ -972,7 +966,7 @@ html[data-tv-transition] .tvr-bracket {
 	--f-fit: clamp(0px, (var(--f-under) - 280.6px) * 10000 + 1px, 1px);
 	--f-r: calc(
 		clamp(0.5px, var(--f-h) / 1800, 0.68px) +
-		(min(0.8px, var(--f-under) / 610) - clamp(0.5px, var(--f-h) / 1800, 0.68px)) *
+		(max(0.46px, min(0.8px, var(--f-under) / 610)) - clamp(0.5px, var(--f-h) / 1800, 0.68px)) *
 		tan(atan2(var(--f-fit), 1px))
 	);
 	--f-rl: calc(var(--f-w) / 2 - 156 * var(--f-r));
