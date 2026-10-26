@@ -32,7 +32,8 @@ per-item comments as v4 improvements; authenticated v4 coverage is not establish
 by this change. The tested v3 list details carry no per-entry comments; imported
 notes are empty. No source-added or viewing dates are invented. A returned `tv`
 identity is preserved as a show; that is not a claim that v3 enumerates all mixed
-or private lists. Final owner disposition of these limits is recorded on
+or private lists. On October 26, 2026, the owner explicitly chose to ship v3 lists with these limits;
+a v4 connection upgrade is deferred. The owner disposition is recorded on
 [Complete TMDB custom-list acquisition through the shared import pipeline](https://github.com/alp82/goodwatch-monorepo/issues/769).
 
 Primary contracts, checked October 26, 2026:
