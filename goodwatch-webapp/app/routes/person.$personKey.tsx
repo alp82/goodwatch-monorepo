@@ -58,6 +58,7 @@ import {
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta"
 import { Portrait } from "~/ui/person/Portrait"
+import { PERSON_GRID_POSTER, PERSON_PORTRAIT } from "~/ui/person/person-images"
 import {
 	countCrawlerTurnedAway,
 	hasBrowserCookie,
@@ -363,7 +364,12 @@ function TitleCard({ c }: { c: Credit }) {
 	const role = subtitle(c)
 	return (
 		<div>
-			<MovieTvCard details={details} mediaType={c.media_type} />
+			<MovieTvCard
+				details={details}
+				mediaType={c.media_type}
+				posterSizes={PERSON_GRID_POSTER.sizes}
+				posterMinWidth={PERSON_GRID_POSTER.minWidth}
+			/>
 			{(role || c.media_type === "show") && (
 				<p className="truncate px-2 text-xs text-gray-400" title={role}>
 					{c.media_type === "show" && "TV show"}
@@ -421,7 +427,7 @@ function Hero({ data, children }: { data: Data; children?: React.ReactNode }) {
 					<Portrait
 						path={p.profile_path}
 						name={p.name}
-						width={120}
+						{...PERSON_PORTRAIT}
 						priority="eager"
 						className="h-36 w-24 shrink-0 rounded-lg shadow-2xl sm:h-44 sm:w-30"
 					/>

@@ -2,6 +2,7 @@
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { test } from "node:test"
+import { pick as pickFile } from "../../utils/srcset-pick.test-support.ts"
 
 const html = JSON.parse(
 	execFileSync(
@@ -17,33 +18,7 @@ const html = JSON.parse(
 		.at(-1) ?? "",
 ) as string
 
-const attr = (name: string) =>
-	new RegExp(`${name}="([^"]*)"`).exec(html)?.[1] ?? ""
-const candidates = attr("srcSet")
-	.split(", ")
-	.map((entry) => {
-		const [url, w] = entry.split(" ")
-		return { url, w: Number.parseInt(w) }
-	})
-/** The slot `sizes` gives for a window, as a browser evaluates it (min-width and min-resolution only). */
-function slot(width: number, dpr: number): number {
-	for (const rule of attr("sizes").split(", ")) {
-		const cond =
-			/^\((min-width|min-resolution): ([\d.]+)(px|dppx)\) (.+)$/.exec(rule)
-		const length = cond ? cond[4] : rule
-		if (cond) {
-			const value = Number.parseFloat(cond[2])
-			if (cond[1] === "min-width" ? width < value : dpr < value) continue
-		}
-		const calc = /^calc\(([\d.]+)px \* ([\d.]+)\)$/.exec(length)
-		return calc ? Number(calc[1]) * Number(calc[2]) : Number.parseFloat(length)
-	}
-	return 0
-}
-/** The file a browser takes: the smallest candidate at least slot × pixel ratio wide, or the largest. */
-const pick = (width: number, dpr: number) =>
-	(candidates.find((c) => c.w >= slot(width, dpr) * dpr) ?? candidates.at(-1))
-		?.url ?? ""
+const pick = (width: number, dpr: number) => pickFile(html, width, dpr)
 
 test("a phone takes the 185 px file at every pixel ratio", () => {
 	for (const [width, dpr] of [
@@ -65,8 +40,8 @@ test("wider screens keep the file they had: 144 px at their own pixel ratio", ()
 	assert.match(pick(1440, 2), /\/h632\/face\.jpg/)
 	assert.match(pick(820, 2), /\/h632\/face\.jpg/)
 	// The box is the same: 144 px wide, 216 px high, cropped to the circle by its parent.
-	assert.equal(attr("width"), "144")
-	assert.equal(attr("height"), "216")
+	assert.match(html, /width="144"/)
+	assert.match(html, /height="216"/)
 })
 
 test("the phone rule ends at 768 px: 767 px takes the 185 px file, 768 px the one for 144 px", () => {

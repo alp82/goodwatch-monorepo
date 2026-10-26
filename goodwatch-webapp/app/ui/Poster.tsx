@@ -19,6 +19,8 @@ export interface PosterProps {
 	priority?: TmdbImageProps["priority"]
 	/** The widest the poster is drawn, for a grid of smaller cards than POSTER_CARD_MAX_WIDTH: fewer files in srcset. */
 	maxWidth?: number
+	/** The narrowest file width in srcset (PHONE_185_SLOT in utils/tmdb-image.ts uses 185). */
+	minWidth?: number
 }
 
 // A card in the grid (2 to 6 columns) or in a row (3 to 8 slides) is at most this wide.
@@ -54,6 +56,7 @@ export function Poster({
 	sizes = POSTER_GRID_SIZES,
 	priority = "lazy",
 	maxWidth = POSTER_CARD_MAX_WIDTH,
+	minWidth = POSTER_CARD_MIN_WIDTH,
 }: PosterProps) {
 	const impressionRef = usePosterImpression(
 		loading ? undefined : mediaType,
@@ -83,7 +86,7 @@ export function Poster({
 			kind="poster"
 			path={path}
 			sizes={sizes}
-			minWidth={POSTER_CARD_MIN_WIDTH}
+			minWidth={minWidth}
 			maxWidth={maxWidth}
 			priority={priority}
 			className={className}

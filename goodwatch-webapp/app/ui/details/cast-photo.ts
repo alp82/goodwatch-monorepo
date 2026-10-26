@@ -5,11 +5,11 @@
 // between. `sizes` is how a browser picks the file: a phone's slot is given as 52 px, so that even at a pixel ratio of
 // 3.5 the 185 px file covers it. The circle is drawn 144 px wide as before; wider screens take the file for 144 px at
 // their own pixel ratio, as before.
-import type { SizeRule } from "~/utils/tmdb-image"
+import { PHONE_185_SLOT, type SizeRule } from "~/utils/tmdb-image"
 
 const CAST_PHOTO_SIZES: SizeRule[] = [
 	["(min-width: 768px)", "144px"],
-	[null, "52px"],
+	PHONE_185_SLOT,
 ]
 
 /** The props of a cast photo's TmdbImage (kind "profile"). */

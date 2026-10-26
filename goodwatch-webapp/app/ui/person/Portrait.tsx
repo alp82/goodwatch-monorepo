@@ -7,6 +7,9 @@ export function Portrait({
 	className,
 	width,
 	priority,
+	sizes,
+	minWidth,
+	maxWidth,
 }: {
 	path: string | null
 	name: string
@@ -14,12 +17,19 @@ export function Portrait({
 	/** The widest the portrait is displayed, in CSS pixels. */
 	width: number
 	priority?: TmdbImageProps["priority"]
+	/** Displayed widths per window, with the narrowest and widest file width (person-images.ts). */
+	sizes?: TmdbImageProps["sizes"]
+	minWidth?: number
+	maxWidth?: number
 }) {
 	return path ? (
 		<TmdbImage
 			kind="profile"
 			path={path}
 			width={width}
+			sizes={sizes}
+			minWidth={minWidth}
+			maxWidth={maxWidth}
 			priority={priority}
 			alt={`Portrait of ${name}`}
 			className={`object-cover ${className}`}

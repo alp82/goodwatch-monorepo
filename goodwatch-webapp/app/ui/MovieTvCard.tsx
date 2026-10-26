@@ -118,6 +118,8 @@ interface MovieTvCardProps {
 	posterSizes?: PosterProps["sizes"]
 	/** The widest the poster is drawn, with `posterSizes`, when the cards are smaller than the grid's. */
 	posterMaxWidth?: PosterProps["maxWidth"]
+	/** The narrowest poster file in srcset, with `posterSizes` (PHONE_185_SLOT in utils/tmdb-image.ts). */
+	posterMinWidth?: PosterProps["minWidth"]
 	/** Set by a page for the cards it shows without scrolling. Every other poster loads lazily. */
 	posterPriority?: PosterProps["priority"]
 	/**
@@ -158,6 +160,7 @@ export function MovieTvCard({
 	discover,
 	rating,
 	posterSizes,
+	posterMinWidth,
 	posterMaxWidth,
 	posterPriority,
 	skipOffscreen = false,
@@ -244,6 +247,7 @@ export function MovieTvCard({
 						tmdbId={details.tmdb_id}
 						sizes={posterSizes}
 						maxWidth={posterMaxWidth}
+						minWidth={posterMinWidth}
 						priority={posterPriority}
 					/>
 				</div>

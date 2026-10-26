@@ -92,6 +92,14 @@ export function tmdbFixedImage(
 /** One entry of a sizes attribute: a media condition, or null for the last entry, and a CSS length. */
 export type SizeRule = [condition: string | null, length: string]
 
+/**
+ * The last rule of `sizes` for an image that takes TMDB's 185 px file on a phone (under 768 px wide; owner Q38, Q40b,
+ * #753): a 52 px slot, so that every phone pixel ratio up to 3.5 is covered by the 185 px file. Pair it with a
+ * `minWidth` of the drawn width or more, so that the srcset starts at that file and a 2x phone doesn't drop to a smaller
+ * one. The image is drawn at its own size as before; only the file is smaller.
+ */
+export const PHONE_185_SLOT: SizeRule = [null, "52px"]
+
 // The browser requests slot width times pixel ratio, and takes the smallest file that covers it.
 // Phones have pixel ratios of 2.6 to 3.5, so for them sizes reports a narrower slot, and the
 // request lands at 1.8 to 2.1 times the displayed width. That keeps a full-width backdrop at w780
