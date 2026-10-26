@@ -85,6 +85,14 @@ class PagePopulationTests(unittest.TestCase):
             handle.write(json.dumps({'document_sha256': 'a' * 64, 'phase': 'complete'}) + '\n')
         self.assertEqual(len(self.catalog.prepare(self.db, output)), 1)
 
+    def test_only_audited_exact_duplicate_origin_is_repaired(self):
+        self.inventory.write_text(json.dumps([
+            {'url': 'https://tvtropes.org' + BASE + 'Recovered'},
+            {'url': 'https://evil.test' + BASE + 'Foreign'},
+            {'url': 'https://tvtropes.orghttps://tvtropes.org' + BASE + 'Triple'},
+        ]))
+        self.assertEqual(inventory_urls([self.inventory]), [BASE + 'Recovered'])
+
     def test_changed_inventory_or_saved_queue_fails_closed(self):
         output = self.root / 'run'
         self.catalog.prepare(self.db, output)

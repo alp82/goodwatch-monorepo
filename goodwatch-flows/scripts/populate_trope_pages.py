@@ -30,7 +30,13 @@ def inventory_urls(paths):
             raise ValueError('Inventory must contain a record array')
         for row in rows:
             try:
-                url = canonical_url(row.get('url'))
+                value = row.get('url')
+                # The global URL audit proved this exact historic concatenation
+                # error. Repair only that literal prefix, then validate normally.
+                prefix = 'https://tvtropes.org'
+                if isinstance(value, str) and value.startswith(prefix + prefix + '/pmwiki/pmwiki.php/Main/'):
+                    value = value[len(prefix):]
+                url = canonical_url(value)
             except ValueError:
                 continue
             if url:
