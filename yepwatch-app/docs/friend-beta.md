@@ -6,7 +6,7 @@ Send testers **https://yepwatch.com**. The home page has both install QR codes a
 
 The owner has created the Expo project [@alperortac/yepwatch](https://expo.dev/accounts/alperortac/projects/yepwatch), ID `0772c2db-91d8-4862-80eb-1d816f243072`, and reports Play and Apple developer accounts ready. `app.json` records the public Expo owner/project for all build variants. Account creation does not sign this machine into EAS or configure store signing credentials.
 
-Build 13 fixes cached-poster flashes, keeps Save visible in room settings, enables GoodWatch sign-in before entering a nickname, suggests a country from the device locale, and adds the animated home intro on native. It retains branded streaming links and native Back navigation. Apple approved external testing in **Friends beta**, and its public link is enabled. Internal testing uses **Team (Expo)**. Google Play developer verification is pending; Android friends use the direct preview APK. Later Play submission needs the app record and an EAS Submit service-account key (or a manual AAB upload in Play Console).
+Build 15 adds the active-room home, secondary History, remembered names, the shared header/navigation, final decision review, and owner-controlled Start again. Tapping the final poster throws shared popcorn; everyone holding adds marquee lights. It also preserves GoodWatch sign-in across admission retries and keeps covered controls out of keyboard focus. See [the release record](../artifacts/releases/build-15.json) for exact build, deployment and TestFlight status. Google Play developer verification has not been confirmed in this release; Android friends continue to use the signed preview APK. Later Play submission needs the app record and an EAS Submit service-account key (or a manual AAB upload in Play Console).
 
 1. Create a free [Expo account](https://expo.dev/signup). Choose the account/organization that should own YepWatch.
 2. Open [Google Play Console](https://play.google.com/console). **Google Cloud Console is a different product.** If needed, register a Play developer account, pay its one-time US$25 fee and complete Google's identity/device verification. Create the YepWatch app for `com.yepwatch.app`.
@@ -26,7 +26,7 @@ Build 13 fixes cached-poster flashes, keeps Save visible in room settings, enabl
 ## Prepare the first build
 
 - `eas.json` profile **beta** produces store-signed Android AAB / physical-device iOS builds, both `com.yepwatch.app`, using `https://yepwatch.com` and `wss://yepwatch.com`. Increment the checked-in build number for every later upload. Check the store's highest existing build first.
-- Profile **preview** remains a separate APK / iOS **Simulator** build. It is not the iPhone/TestFlight profile. Preview build 13 uses the corrected Android navigation source and the original preview signing key; older preview APKs should not be distributed as current.
+- Profile **preview** remains a separate APK / iOS **Simulator** build. It is not the iPhone/TestFlight profile. Preview build 15 uses the approved rooms and cheering source and the original preview signing key; older preview APKs should not be distributed as current.
 - Use owner-controlled store credentials. Keep `com.yepwatch.preview` and its local preview signing key separate. Store beta installs coexist with that preview.
 - Before uploading, inspect the EAS archive: `npx eas-cli@latest build:inspect --platform android --profile beta --stage archive --output .expo/beta-archive`. Verify it includes the sibling `goodwatch-webapp/packages/yepwatch-contracts`, excludes credentials/local environment files/build artifacts, and installs with `npm ci --install-links`.
 - EAS reads `.easignore` at the Git repository root. That file limits uploads to this app and its sibling contract; the app-local ignore file alone does not protect a monorepo upload.
@@ -42,7 +42,7 @@ No account creation, cloud builds, purchase, upload, review or store invitation 
 
 ## Android while Play verification is pending
 
-The home page links to the [Expo download page for preview build 13](https://expo.dev/accounts/alperortac/projects/yepwatch/builds/238804a8-6e85-472b-8846-c799f00ea14a). Open it on Android, tap Install, open the downloaded APK and allow installation from that browser if Android asks. It installs as **YepWatch Beta** without USB, Metro or an Expo account. The eventual Play app is a separate install; its local room credentials do not transfer automatically.
+The home page links to the [Expo download page for preview build 15](https://expo.dev/accounts/alperortac/projects/yepwatch/builds/2a03e410-5de5-4c3f-a0be-9fcb41dceb45). Open it on Android, tap Install, open the downloaded APK and allow installation from that browser if Android asks. It installs as **YepWatch Beta** without USB, Metro or an Expo account. The eventual Play app is a separate install; its local room credentials do not transfer automatically.
 
 The preview profile uses EAS **local credentials** to preserve the existing `com.yepwatch.preview` signing identity. A private, git-ignored `credentials.json` points to the original preview keystore. Keep that keystore and its passwords backed up privately; never generate a replacement for an upgrade. Then build with:
 
@@ -74,7 +74,7 @@ Set the verified invitation URLs in `src/features/beta/invitations.json` and red
 
 Use real Android + iPhone devices, with Wi-Fi and mobile data, without USB/Metro. Verify: fresh install/cold launch; invitation opens the correct app/room; guest and GoodWatch sign-in return; shared providers and prompt save; Yep/Nope/Undo; remote presence; proposal replacement, agreement withdrawal and Done; trailer playback/audio; background/reconnect; explicit leave and same-device return. Test an app upgrade preserving the room too. Record device, OS and build with each result. A browser or simulator pass does not establish these device behaviors.
 
-The beta page and Room drawer have **Send feedback**. It opens email to the existing GoodWatch support address with app/build/platform and a short report template; nothing is sent automatically and no room link, invitation or account credential is added. Friends can attach a screenshot. TestFlight's screenshot feedback also works.
+The app and Room drawer have **Send feedback**. It opens email to the existing GoodWatch support address with app/build/platform and a short report template; nothing is sent automatically and no room link, invitation or account credential is added. Friends can attach a screenshot. TestFlight's screenshot feedback also works.
 
 Website deployments do not update installed apps. Distribute new builds through the testing tracks; OTA updates are not configured. Add manual CI build/submission automation only after the first signed build and account setup succeed. Keep mobile releases separate from Coolify website deploys.
 

@@ -1,0 +1,149 @@
+{
+  "sourceCommit": "ccbe3ee001a5fff62d84f2c4ed9cc76f65b04370",
+  "buildNumber": 15,
+  "features": [
+    "Active rooms home; History holds decisions and left rooms",
+    "Remembered nickname and real GoodWatch sign-in",
+    "Shared header, navigation and aligned controls",
+    "Final decision remains final; owner can Start again",
+    "Randomized falling popcorn; all-held Marquee; no Projector cheer"
+  ],
+  "web": {
+    "url": "https://yepwatch.com",
+    "deployment": "ncouuiucmmyfjaqjibxbwmro",
+    "status": "finished",
+    "completedAt": "2026-10-26T19:10:24Z",
+    "liveFlow": {
+      "at": "2026-10-26T19:07:07.347Z",
+      "origin": "https://yepwatch.com",
+      "checks": [
+        "two guests create/join/readiness/start",
+        "shared match/proposal/explicit agreement/final decision",
+        "actual public WSS shared popcorn/all-hold Marquee/release",
+        "read-only final review; cancelling Start again preserves decision",
+        "decided room is in History"
+      ],
+      "commands": [
+        {
+          "client": 0,
+          "type": "configure"
+        },
+        {
+          "client": 0,
+          "type": "start"
+        },
+        {
+          "client": 0,
+          "type": "vote"
+        },
+        {
+          "client": 1,
+          "type": "vote"
+        },
+        {
+          "client": 0,
+          "type": "propose"
+        },
+        {
+          "client": 1,
+          "type": "agree"
+        }
+      ],
+      "cheerFrames": 9,
+      "errors": []
+    },
+    "postDeployment": {
+      "at": "2026-10-26T19:12:00.346Z",
+      "checks": [
+        "existing test-room recovered after deployment",
+        "covered controls excluded from keyboard focus",
+        "public shared all-hold and release still work"
+      ],
+      "cheerFrames": 10,
+      "errors": []
+    }
+  },
+  "checks": {
+    "unit": 96,
+    "browser": {
+      "fullSuite": 94,
+      "fullSuiteCommit": "13d4300d284ec47b4d6fc9d3855c7a2657837f4d",
+      "finalNavigation": 24,
+      "finalRetryAndFocus": 9
+    },
+    "gateway": {
+      "passed": 43,
+      "optInSkipped": 4
+    },
+    "backendLocal": {
+      "passed": 31,
+      "optInSkipped": 1
+    },
+    "githubRun": 40383946369,
+    "githubConclusion": "success",
+    "githubCoverage": [
+      "client and gateway",
+      "disposable Crate typed storage and controls",
+      "compose and all three Docker images"
+    ],
+    "typecheck": "pass",
+    "lint": "zero errors; one pre-existing unused import warning",
+    "nativeExports": [
+      "ios",
+      "android"
+    ]
+  },
+  "ios": {
+    "easBuild": "d10ec675-27c6-47dd-86f0-91e1bd36d136",
+    "submission": "ca1ac0c9-4477-4204-b20e-9fc4a30e427f",
+    "status": "finished",
+    "archiveVerification": {
+      "CFBundleIdentifier": "com.yepwatch.app",
+      "CFBundleShortVersionString": "0.1.0",
+      "CFBundleVersion": "15",
+      "MinimumOSVersion": "16.4",
+      "sha256": "258b3afd2381a552835694494e3519450f18a0650d5fc6dba8687fdb29444690"
+    },
+    "testflight": {
+      "appId": "6826403019",
+      "buildId": "7d91cf80-0a83-4729-a348-b89387901399",
+      "buildNumber": "15",
+      "groupId": "32f094d4-7cb6-43b9-bab3-e38e911ef63c",
+      "reviewId": "7d91cf80-0a83-4729-a348-b89387901399",
+      "reviewState": "APPROVED",
+      "assigned": true,
+      "details": [
+        {
+          "autoNotifyEnabled": true,
+          "internalBuildState": "IN_BETA_TESTING",
+          "externalBuildState": "BETA_APPROVED"
+        }
+      ],
+      "publicLinkEnabled": true
+    }
+  },
+  "android": {
+    "easBuild": "2a03e410-5de5-4c3f-a0be-9fcb41dceb45",
+    "source": "ccbe3ee001a5fff62d84f2c4ed9cc76f65b04370",
+    "package": "com.yepwatch.preview",
+    "version": "0.1.0",
+    "build": 15,
+    "sha256": "9440764850cca78fe479aaf2f4aff77d38216c7568a38a02b1267db5c806ea23",
+    "certificateSha256": "7a4b9faa194c068222940ebe1661ab6f8fd3d714785a15bf76d23352a9752d1d",
+    "anonymousDownload": true,
+    "bytes": 100543876,
+    "status": "finished",
+    "anonymousInstallPage": true,
+    "emulator": {
+      "device": "Pixel 8 API 35",
+      "coldLaunch": "passed",
+      "homeRendered": "passed",
+      "metroRequired": false,
+      "appErrors": 0
+    }
+  },
+  "limits": [
+    "Physical-device audio, native member return and physical app-upgrade flow were not exercised for build 15.",
+    "Android distribution remains the standalone signed preview APK; no Google Play release is claimed."
+  ]
+}
