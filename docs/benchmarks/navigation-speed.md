@@ -480,3 +480,58 @@ check verified all six files: five rounds each, the exact 13-step flow, intended
 member/anonymous identity flags, nonnegative commit ≤ paint, a recorded build, and no document loads.
 A private audit checked the report and evidence against the session's identifiers and exported cookie
 values before deleting the cookie export. No cookies or member identifiers are committed.
+
+## Phone follow-up: hub pictures and route code — October 26, 2026 (#753)
+
+### What the slow phone steps waited on
+
+A diagnostic copy of `nav.mjs` (kept outside the repository; it also logged every request through CDP, images
+included) ran the anonymous phone journey on production. During **`/shows` → `/shows/best`** (3,476 ms; loader
+3,444 ms with a 429 ms first byte), 38 requests were in flight: about 30 of them `w1280` backdrops (40–120 KB each)
+that the `/shows` hub had started 4.8 seconds before the press. During **best list → title** (2,459 ms; loader
+2,419 ms with a 349 ms first byte), 27 of those backdrops, started 13 seconds earlier, were still loading. The hub
+drew its category tiles with CSS `background-image`, which a browser never defers: every tile's file started with the
+page. On 1.6 Mbit/s that is more than ten seconds of a busy connection, and the loader data shared it.
+
+The **first title page** waited for the title route's code: on phones, code loaded only on press, hover or focus,
+and the title route needs about 111 KB compressed in 29 files beyond the shell (the person route 26 KB).
+
+### Changes
+
+- `e466c9f46`: the hub tiles draw a lazy `img` with `object-cover` and a `srcset` (`ui/explore/TileBackdrop.tsx`).
+- `b23e02086`: a phone's viewport prefetch (after load and when scrolling stops) also preloads the code of those
+  links' page types, once per type, at low priority; a press, hover or focus raises the links still waiting
+  (`app/navigation/instant-navigation.ts`, [navigation-cache.md](../navigation-cache.md#prefetch)).
+
+### Before and after, local production build
+
+`nav.mjs` unchanged, anonymous, five fresh-browser rounds per profile, on a local production build of `a5c278b26`
+(before) and of the two commits (after). Served over TLS and HTTP/2 with the 103 response, `env -i`, egress blocked.
+Data: the bench Crate copied into a separate local Crate, plus the cast, crew and people of its 206 titles read from
+production with `SELECT` only (4,098 cast rows, 5,719 crew rows, 7,212 people), so title → person runs locally.
+The local `/shows` hub shows its category tiles but no title rows, and local loaders are smaller than production's,
+so local waits are shorter than production's; the comparison is between the two local builds.
+
+Phone (Pixel 7, 150 ms, 1.6 Mbit/s, 4× CPU), median and maximum of five, milliseconds:
+
+| Step | Before | After |
+| --- | --- | --- |
+| List → first title | 1,307 (1,325) | 94 (115) |
+| Title → first person | 226 (229) | 71 (125) |
+| Shows → best list | 1,013 (1,015) | 194 (208) |
+| Best list → title | 873 (877) | 196 (207) |
+| Hub → Discover | 715 (721) | 713 (729) |
+| All steps, median and p90 | 209, 1,013 | 100, 247 |
+
+Desktop tap and desktop hover are unchanged (median of all steps 42 → 43 ms and 22 → 22 ms). Every round of every
+profile verified 13/13 destinations.
+
+Costs and limits:
+- A phone on a best list now downloads the title route's code (about 111 KB compressed) after load at low priority;
+  the start page warms nothing, so its LCP and TBT don't change.
+- Hub → Discover still waits on the server (local: about 700 ms of loader). Member session resolution and Discover's
+  server work remain the backend follow-up named in the preceding recommendation; sign-out still takes effect on the
+  next request.
+- Members were not measured: a local member needs a local sign-in flow, and production member runs need a new
+  owner-authorized session export.
+- Production numbers after deploy are pending.
