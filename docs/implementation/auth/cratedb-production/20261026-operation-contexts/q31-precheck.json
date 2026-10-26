@@ -1,0 +1,789 @@
+{
+  "issue": 644,
+  "approval": "Q31",
+  "source_commit": "93521e697a650d742be278831542b902c30afe17",
+  "outcome": "STOPPED_PRECHECK_MISMATCH",
+  "cancellations_executed": 0,
+  "production_mutations": 0,
+  "post_cancel_observation_performed": false,
+  "approved_copies": [
+    {
+      "schema": "doc",
+      "table": "person_appeared_in",
+      "shard": 4,
+      "source": "crate-01",
+      "primary": true,
+      "target": "crate-02"
+    },
+    {
+      "schema": "doc",
+      "table": "person_appeared_in",
+      "shard": 5,
+      "source": "crate-03",
+      "primary": false,
+      "target": "crate-02"
+    }
+  ],
+  "samples": [
+    {
+      "utc": "2026-10-26T08:15:22.034687+00:00",
+      "host": 11,
+      "queries": {
+        "nodes": {
+          "sql": "SELECT id,name,version['number'] FROM sys.nodes ORDER BY name",
+          "result": {
+            "cols": [
+              "id",
+              "name",
+              "version['number']"
+            ],
+            "rows": [
+              [
+                "xlclgwGeSHe18p5J4WvfFA",
+                "crate-01",
+                "5.10.16"
+              ],
+              [
+                "r0IgCe17SPOgudkQIGsRQA",
+                "crate-02",
+                "5.10.16"
+              ],
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                "5.10.16"
+              ]
+            ],
+            "rowcount": 3,
+            "duration": 6.736844
+          }
+        },
+        "health": {
+          "sql": "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health",
+          "result": {
+            "cols": [
+              "health",
+              "count(*)",
+              "sum(missing_shards)",
+              "sum(underreplicated_shards)"
+            ],
+            "rows": [
+              [
+                "GREEN",
+                145,
+                0,
+                0
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 4.753212
+          }
+        },
+        "nonstarted": {
+          "sql": "SELECT node['id'],node['name'],schema_name,table_name,id,primary,state,routing_state,relocating_node FROM sys.shards WHERE state <> 'STARTED' OR routing_state <> 'STARTED' ORDER BY schema_name,table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "node['id']",
+              "node['name']",
+              "schema_name",
+              "table_name",
+              "id",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                "doc",
+                "person_appeared_in",
+                4,
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                "doc",
+                "person_worked_on",
+                5,
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 10.918314
+          }
+        },
+        "copies": {
+          "sql": "SELECT node['id'],node['name'],id,primary,state,routing_state,relocating_node FROM sys.shards WHERE schema_name='doc' AND table_name='person_appeared_in' AND id IN (4,5) ORDER BY id,node['name']",
+          "result": {
+            "cols": [
+              "node['id']",
+              "node['name']",
+              "id",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "xlclgwGeSHe18p5J4WvfFA",
+                "crate-01",
+                4,
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                4,
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "xlclgwGeSHe18p5J4WvfFA",
+                "crate-01",
+                5,
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                5,
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ]
+            ],
+            "rowcount": 4,
+            "duration": 9.506989
+          }
+        },
+        "write_blocks": {
+          "sql": "SELECT table_schema,table_name,settings['blocks'] FROM information_schema.tables WHERE settings['blocks']['write']=true OR settings['blocks']['read_only']=true OR settings['blocks']['read_only_allow_delete']=true ORDER BY table_schema,table_name",
+          "result": {
+            "cols": [
+              "table_schema",
+              "table_name",
+              "settings['blocks']"
+            ],
+            "rows": [],
+            "rowcount": 0,
+            "duration": 7.989423
+          }
+        },
+        "checks": {
+          "sql": "SELECT id,description,passed FROM sys.checks WHERE NOT passed",
+          "result": {
+            "cols": [
+              "id",
+              "description",
+              "passed"
+            ],
+            "rows": [],
+            "rowcount": 0,
+            "duration": 2.538989
+          }
+        },
+        "node_checks": {
+          "sql": "SELECT node_id,id,description,passed FROM sys.node_checks WHERE NOT passed",
+          "result": {
+            "cols": [
+              "node_id",
+              "id",
+              "description",
+              "passed"
+            ],
+            "rows": [],
+            "rowcount": 0,
+            "duration": 5.181558
+          }
+        },
+        "alloc_columns": {
+          "sql": "SELECT column_name,data_type FROM information_schema.columns WHERE table_schema='sys' AND table_name='allocations' ORDER BY ordinal_position",
+          "result": {
+            "cols": [
+              "column_name",
+              "data_type"
+            ],
+            "rows": [
+              [
+                "current_state",
+                "text"
+              ],
+              [
+                "decisions",
+                "object_array"
+              ],
+              [
+                "decisions['explanations']",
+                "text_array_array"
+              ],
+              [
+                "decisions['node_id']",
+                "text_array"
+              ],
+              [
+                "decisions['node_name']",
+                "text_array"
+              ],
+              [
+                "explanation",
+                "text"
+              ],
+              [
+                "node_id",
+                "text"
+              ],
+              [
+                "partition_ident",
+                "text"
+              ],
+              [
+                "primary",
+                "boolean"
+              ],
+              [
+                "shard_id",
+                "integer"
+              ],
+              [
+                "table_name",
+                "text"
+              ],
+              [
+                "table_schema",
+                "text"
+              ]
+            ],
+            "rowcount": 12,
+            "duration": 11.636448
+          }
+        }
+      }
+    },
+    {
+      "utc": "2026-10-26T08:15:22.034901+00:00",
+      "host": 12,
+      "queries": {
+        "nodes": {
+          "sql": "SELECT id,name,version['number'] FROM sys.nodes ORDER BY name",
+          "result": {
+            "cols": [
+              "id",
+              "name",
+              "version['number']"
+            ],
+            "rows": [
+              [
+                "xlclgwGeSHe18p5J4WvfFA",
+                "crate-01",
+                "5.10.16"
+              ],
+              [
+                "r0IgCe17SPOgudkQIGsRQA",
+                "crate-02",
+                "5.10.16"
+              ],
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                "5.10.16"
+              ]
+            ],
+            "rowcount": 3,
+            "duration": 3.587383
+          }
+        },
+        "health": {
+          "sql": "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health",
+          "result": {
+            "cols": [
+              "health",
+              "count(*)",
+              "sum(missing_shards)",
+              "sum(underreplicated_shards)"
+            ],
+            "rows": [
+              [
+                "GREEN",
+                145,
+                0,
+                0
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 2.067412
+          }
+        },
+        "nonstarted": {
+          "sql": "SELECT node['id'],node['name'],schema_name,table_name,id,primary,state,routing_state,relocating_node FROM sys.shards WHERE state <> 'STARTED' OR routing_state <> 'STARTED' ORDER BY schema_name,table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "node['id']",
+              "node['name']",
+              "schema_name",
+              "table_name",
+              "id",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                "doc",
+                "person_appeared_in",
+                4,
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                "doc",
+                "person_worked_on",
+                5,
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 8.26782
+          }
+        },
+        "copies": {
+          "sql": "SELECT node['id'],node['name'],id,primary,state,routing_state,relocating_node FROM sys.shards WHERE schema_name='doc' AND table_name='person_appeared_in' AND id IN (4,5) ORDER BY id,node['name']",
+          "result": {
+            "cols": [
+              "node['id']",
+              "node['name']",
+              "id",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "xlclgwGeSHe18p5J4WvfFA",
+                "crate-01",
+                4,
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                4,
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "xlclgwGeSHe18p5J4WvfFA",
+                "crate-01",
+                5,
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                5,
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ]
+            ],
+            "rowcount": 4,
+            "duration": 8.716099
+          }
+        },
+        "write_blocks": {
+          "sql": "SELECT table_schema,table_name,settings['blocks'] FROM information_schema.tables WHERE settings['blocks']['write']=true OR settings['blocks']['read_only']=true OR settings['blocks']['read_only_allow_delete']=true ORDER BY table_schema,table_name",
+          "result": {
+            "cols": [
+              "table_schema",
+              "table_name",
+              "settings['blocks']"
+            ],
+            "rows": [],
+            "rowcount": 0,
+            "duration": 6.945871
+          }
+        },
+        "checks": {
+          "sql": "SELECT id,description,passed FROM sys.checks WHERE NOT passed",
+          "result": {
+            "cols": [
+              "id",
+              "description",
+              "passed"
+            ],
+            "rows": [],
+            "rowcount": 0,
+            "duration": 2.122781
+          }
+        },
+        "node_checks": {
+          "sql": "SELECT node_id,id,description,passed FROM sys.node_checks WHERE NOT passed",
+          "result": {
+            "cols": [
+              "node_id",
+              "id",
+              "description",
+              "passed"
+            ],
+            "rows": [],
+            "rowcount": 0,
+            "duration": 4.466874
+          }
+        },
+        "alloc_columns": {
+          "sql": "SELECT column_name,data_type FROM information_schema.columns WHERE table_schema='sys' AND table_name='allocations' ORDER BY ordinal_position",
+          "result": {
+            "cols": [
+              "column_name",
+              "data_type"
+            ],
+            "rows": [
+              [
+                "current_state",
+                "text"
+              ],
+              [
+                "decisions",
+                "object_array"
+              ],
+              [
+                "decisions['explanations']",
+                "text_array_array"
+              ],
+              [
+                "decisions['node_id']",
+                "text_array"
+              ],
+              [
+                "decisions['node_name']",
+                "text_array"
+              ],
+              [
+                "explanation",
+                "text"
+              ],
+              [
+                "node_id",
+                "text"
+              ],
+              [
+                "partition_ident",
+                "text"
+              ],
+              [
+                "primary",
+                "boolean"
+              ],
+              [
+                "shard_id",
+                "integer"
+              ],
+              [
+                "table_name",
+                "text"
+              ],
+              [
+                "table_schema",
+                "text"
+              ]
+            ],
+            "rowcount": 12,
+            "duration": 8.762294
+          }
+        }
+      }
+    },
+    {
+      "utc": "2026-10-26T08:15:22.035093+00:00",
+      "host": 13,
+      "queries": {
+        "nodes": {
+          "sql": "SELECT id,name,version['number'] FROM sys.nodes ORDER BY name",
+          "result": {
+            "cols": [
+              "id",
+              "name",
+              "version['number']"
+            ],
+            "rows": [
+              [
+                "xlclgwGeSHe18p5J4WvfFA",
+                "crate-01",
+                "5.10.16"
+              ],
+              [
+                "r0IgCe17SPOgudkQIGsRQA",
+                "crate-02",
+                "5.10.16"
+              ],
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                "5.10.16"
+              ]
+            ],
+            "rowcount": 3,
+            "duration": 3.900739
+          }
+        },
+        "health": {
+          "sql": "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health",
+          "result": {
+            "cols": [
+              "health",
+              "count(*)",
+              "sum(missing_shards)",
+              "sum(underreplicated_shards)"
+            ],
+            "rows": [
+              [
+                "GREEN",
+                145,
+                0,
+                0
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 2.74374
+          }
+        },
+        "nonstarted": {
+          "sql": "SELECT node['id'],node['name'],schema_name,table_name,id,primary,state,routing_state,relocating_node FROM sys.shards WHERE state <> 'STARTED' OR routing_state <> 'STARTED' ORDER BY schema_name,table_name,id,node['name']",
+          "result": {
+            "cols": [
+              "node['id']",
+              "node['name']",
+              "schema_name",
+              "table_name",
+              "id",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                "doc",
+                "person_appeared_in",
+                4,
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                "doc",
+                "person_worked_on",
+                5,
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ]
+            ],
+            "rowcount": 2,
+            "duration": 16.74698
+          }
+        },
+        "copies": {
+          "sql": "SELECT node['id'],node['name'],id,primary,state,routing_state,relocating_node FROM sys.shards WHERE schema_name='doc' AND table_name='person_appeared_in' AND id IN (4,5) ORDER BY id,node['name']",
+          "result": {
+            "cols": [
+              "node['id']",
+              "node['name']",
+              "id",
+              "primary",
+              "state",
+              "routing_state",
+              "relocating_node"
+            ],
+            "rows": [
+              [
+                "xlclgwGeSHe18p5J4WvfFA",
+                "crate-01",
+                4,
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                4,
+                false,
+                "STARTED",
+                "RELOCATING",
+                "r0IgCe17SPOgudkQIGsRQA"
+              ],
+              [
+                "xlclgwGeSHe18p5J4WvfFA",
+                "crate-01",
+                5,
+                true,
+                "STARTED",
+                "STARTED",
+                null
+              ],
+              [
+                "ch8EXZwrQVmCls79_T_vUg",
+                "crate-03",
+                5,
+                false,
+                "STARTED",
+                "STARTED",
+                null
+              ]
+            ],
+            "rowcount": 4,
+            "duration": 12.063192
+          }
+        },
+        "write_blocks": {
+          "sql": "SELECT table_schema,table_name,settings['blocks'] FROM information_schema.tables WHERE settings['blocks']['write']=true OR settings['blocks']['read_only']=true OR settings['blocks']['read_only_allow_delete']=true ORDER BY table_schema,table_name",
+          "result": {
+            "cols": [
+              "table_schema",
+              "table_name",
+              "settings['blocks']"
+            ],
+            "rows": [],
+            "rowcount": 0,
+            "duration": 5.605514
+          }
+        },
+        "checks": {
+          "sql": "SELECT id,description,passed FROM sys.checks WHERE NOT passed",
+          "result": {
+            "cols": [
+              "id",
+              "description",
+              "passed"
+            ],
+            "rows": [],
+            "rowcount": 0,
+            "duration": 1.977629
+          }
+        },
+        "node_checks": {
+          "sql": "SELECT node_id,id,description,passed FROM sys.node_checks WHERE NOT passed",
+          "result": {
+            "cols": [
+              "node_id",
+              "id",
+              "description",
+              "passed"
+            ],
+            "rows": [],
+            "rowcount": 0,
+            "duration": 4.570514
+          }
+        },
+        "alloc_columns": {
+          "sql": "SELECT column_name,data_type FROM information_schema.columns WHERE table_schema='sys' AND table_name='allocations' ORDER BY ordinal_position",
+          "result": {
+            "cols": [
+              "column_name",
+              "data_type"
+            ],
+            "rows": [
+              [
+                "current_state",
+                "text"
+              ],
+              [
+                "decisions",
+                "object_array"
+              ],
+              [
+                "decisions['explanations']",
+                "text_array_array"
+              ],
+              [
+                "decisions['node_id']",
+                "text_array"
+              ],
+              [
+                "decisions['node_name']",
+                "text_array"
+              ],
+              [
+                "explanation",
+                "text"
+              ],
+              [
+                "node_id",
+                "text"
+              ],
+              [
+                "partition_ident",
+                "text"
+              ],
+              [
+                "primary",
+                "boolean"
+              ],
+              [
+                "shard_id",
+                "integer"
+              ],
+              [
+                "table_name",
+                "text"
+              ],
+              [
+                "table_schema",
+                "text"
+              ]
+            ],
+            "rowcount": 12,
+            "duration": 15.893062
+          }
+        }
+      }
+    }
+  ],
+  "validation": "All three coordinator readbacks agree. Exact-copy assertion failed before either mutation. No further production calls after the mismatch."
+}

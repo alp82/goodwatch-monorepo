@@ -6,6 +6,46 @@ setting change, client repair, snapshot mutation or file write was performed.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Q31 production cancellation — stopped at the pre-check, 2026-10-26
+
+Started from fetched `origin/main` **93521e697**, on branch `fix/644-q31-cancel-relocations`.
+The owner authorized exactly two cancellations, conditional on an unchanged pre-check. Read-only
+queries through the runbook's SSH/trusted-loopback `crate_sql` route began at **08:15:22 UTC** on
+all three coordinators. **The exact-copy guard failed. Neither CANCEL statement was sent.** No
+production data/settings/process/schedule change, restart, repeated cancellation or KILL occurred.
+
+All three coordinators agreed on these two non-STARTED/STARTED rows, both targeting crate-02
+(`r0IgCe17SPOgudkQIGsRQA`):
+
+| Relation | Shard | Current source/copy | Current state | Q31-approved copy |
+| --- | --- | --- | --- | --- |
+| `doc.person_appeared_in` | 4 | **crate-03 replica** | STARTED/RELOCATING | crate-01 **primary** of this relation/shard |
+| `doc.person_worked_on` | 5 | **crate-03 replica** | STARTED/RELOCATING | crate-03 replica of **person_appeared_in**, shard5 |
+
+The approved `person_appeared_in` shard4 primary on crate-01 and shard5 replica on crate-03 are
+both already **STARTED/STARTED**, with no relocation target. `person_appeared_in` shards4/5 have
+no copy on crate-02 in the captured query. That targeted copy query did **not** cover
+`person_worked_on` shard5; do not infer the absence of its target from it.
+
+Other pre-checks passed: **145 GREEN health rows**, zero missing/underreplicated shards, no failed
+cluster/node checks, all three members still5.10.16, and no table write/read-only/write-on-disk-full
+blocks. Exactly the two rows in the table were non-STARTED/STARTED; no INITIALIZING row was returned.
+
+[The structured pre-check receipt](q31-precheck.json) preserves every query, explicit result column
+and all three coordinator responses. Local validation confirmed their agreement and that the exact
+approved source/table/primary tuple check fails before reaching any mutation. No application code
+changed, so no application test suite was run for this evidence-only update.
+
+**The post-cancel verification,30-minute observation and conditional crate-02 log collection were
+not performed:** the owner's stop-on-difference condition took precedence, and there was no approved
+cancellation to observe. The samples do not establish how long the current relocations have existed,
+whether the older copies completed naturally or were changed by another operator, or why these two
+replicas are relocating. No additional production reads were made after identifying the mismatch.
+
+Production remains unchanged by this attempt. Retain it as-is unless the owner explicitly approves
+a revised operation for the actual two replicas, with a fresh exact-copy/target/health pre-check.
+The prior Q31 statements must not be adapted or replayed under their original approval.
+
 ## Isolated follow-up — owner option A, 2026-10-26 00:43–00:56 UTC
 
 **Reproduced: yes on 5.10.16. The tested newer version, 6.4.6, still reproduced a residual failure.**
