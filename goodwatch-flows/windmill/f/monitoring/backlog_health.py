@@ -347,8 +347,52 @@ def assess_backlogs(
                 "failure_unacknowledged": bool(active_failure),
             }
         )
+    if 'availability' in country_snapshot:
+        availability = assess_availability(country_snapshot['availability'], previous.get('availability'), now)
+        reports.extend(availability['reports'])
+        progress['availability'] = availability['progress']
     return {"reports": reports, "progress": progress}
 
 
 def main() -> None:
     """Import-only Windmill module."""
+
+
+def assess_availability(snapshot, previous, now):
+    """Overdue demand stays pending through backoff, leases and a blocked gate."""
+    previous = previous or {}
+    reports = []
+    progress = dict(previous)
+    for kind in ('opened', 'changed', 'parse'):
+        metric = snapshot.get(kind) or {}
+        complete = metric.get('complete') is True
+        count = count_value(metric.get('count'))
+        oldest = timestamp(metric.get('oldest_at'))
+        complete = complete and count is not None and (not count or oldest is not None)
+        causes = []
+        first = timestamp(previous.get('parse_first_observed_at'))
+        if kind == 'parse':
+            active = previous.get('parse_sustained_active') is True
+            if complete:
+                if count < 3:
+                    first, active = None, False
+                elif first is None or (previous.get('parse_observation_complete') is not True and not active):
+                    first = now
+                progress.update(parse_first_observed_at=first.isoformat() if first else None,
+                                parse_observation_complete=True)
+            else:
+                progress['parse_observation_complete'] = False
+            if complete and count is not None and count >= 3 and first and (active or (now - first).total_seconds() >= 600):
+                active = True
+                causes.append('sustained_parse_errors')
+            progress['parse_sustained_active'] = active
+        elif count and oldest and (now - oldest).total_seconds() >= 86400:
+            causes.append('availability_' + kind + '_overdue')
+        reports.append(dict(path='f/monitoring/availability_' + kind,
+            source_pipeline='f/tmdb_web/tmdb_crawl_providers',
+            status='unhealthy' if causes else 'healthy' if complete else 'unknown',
+            causes=causes, observation_complete=complete, counts_are_lower_bounds=not complete,
+            pending_pair_count=count, oldest_pending_at=oldest.isoformat() if oldest else None,
+            oldest_pending_age_seconds=max(0, (now - oldest).total_seconds()) if oldest else None,
+            parse_first_observed_at=first.isoformat() if kind == 'parse' and first else None))
+    return dict(reports=reports, progress=progress)

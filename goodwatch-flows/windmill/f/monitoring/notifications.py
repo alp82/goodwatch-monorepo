@@ -37,6 +37,7 @@ CAUSES = {
     "material_child_failures",
     "material_outcome_failures",
     "controlled_failure",
+    "availability_opened_overdue", "availability_changed_overdue", "sustained_parse_errors",
     "country_backlog_stalled",
     "publication_unacknowledged",
     "publication_retry_exhausted",
@@ -77,6 +78,9 @@ NAMES = {
     "f/monitoring/tmdb_watch_upstream": "Streaming availability upstream",
     "f/priority/crawl_all": "Catalog updates",
     "f/monitoring/country_backlog": "Streaming availability",
+    "f/monitoring/availability_opened": "Opened streaming checks",
+    "f/monitoring/availability_changed": "Changed streaming checks",
+    "f/monitoring/availability_parse": "Streaming page parsing",
     "f/monitoring/publication_backlog": "Search catalog updates",
     "f/monitoring/crate_shards": "Database replication",
     "f/monitoring/crate_disk": "Database storage",
@@ -108,6 +112,12 @@ def format_notification(notice: dict[str, Any]) -> str:
     elif causes & {"crate_backup_missing", "crate_backup_stale", "crate_backup_unreadable"}:
         problem = "A recent successful database backup could not be confirmed."
         action = "Check the backup job and repository."
+    elif "sustained_parse_errors" in causes:
+        problem = "At least three country page parses remain failed after ten minutes."
+        action = "Inspect parser classification and fixtures before expanding availability work."
+    elif causes & {"availability_opened_overdue", "availability_changed_overdue"}:
+        problem = "Streaming checks have remained pending for more than twenty-four hours."
+        action = "Inspect tier backlog, source backoff and the shared admission budgets."
     elif "country_backlog_stalled" in causes:
         problem = f"Availability refreshes stalled: {notice.get('overdue_country_count', '?')} country updates overdue."
         action = "Inspect the provider crawler's failed work."

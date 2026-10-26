@@ -43,7 +43,7 @@ def observation(document):
     payload, proof = document.get('watch_providers'), document.get('watch_providers_check') or {}
     at = proof.get('checked_at')
     if (document.get('tmdb_deleted') is True or validated_results(payload) is None
-            or type(at) is not int or at <= 0 or proof.get('payload_hash') != snapshot_id(payload)
+            or not isinstance(at, int) or isinstance(at, bool) or at <= 0 or proof.get('payload_hash') != snapshot_id(payload)
             or proof.get('countries') != sorted(payload['results'])):
         return None
     return dict(payload=payload, proof=proof, checked_at=at,
@@ -86,8 +86,18 @@ def propagate_pending(db, media_type, tmdb_id):
             'provider_change_revision': {'$ne': change['revision']}, '$or': [
                 {'provider_change_observed_at': {'$lt': change['checked_at']}},
                 {'provider_change_observed_at': None},
-            ]}, {'$set': {'provider_change_pending': True, 'provider_change_revision': change['revision'],
-                         'provider_change_observed_at': change['checked_at']}})
+            ]}, [{'$set': {
+                # Coalescing a newer revision must not restart an unserved
+                # change's age. This update and the revision fence are atomic.
+                'provider_change_pending_since': {'$cond': [
+                    {'$eq': ['$provider_change_pending', True]},
+                    {'$ifNull': ['$provider_change_pending_since',
+                                   {'$ifNull': ['$provider_change_observed_at', change['checked_at']]}]},
+                    change['checked_at'],
+                ]},
+                'provider_change_pending': True, 'provider_change_revision': change['revision'],
+                'provider_change_observed_at': change['checked_at'],
+            }}])
 
 
 def record_attempt(db, media_type, tmdb_id, checked_at, error):
@@ -101,7 +111,7 @@ def record_attempt(db, media_type, tmdb_id, checked_at, error):
 
 def _datetime(value):
     millis = utc_ms(value) if isinstance(value, datetime) else value
-    if type(millis) is not int or millis <= 0:
+    if not isinstance(millis, int) or isinstance(millis, bool) or millis <= 0:
         raise ValueError('Expected a positive observation time in milliseconds or datetime')
     return datetime.fromtimestamp(millis / 1000, timezone.utc).replace(tzinfo=None)
 
@@ -134,7 +144,7 @@ def save_observation(db, media_type, tmdb_id, payload, checked_at, *, cache_bypa
         previous = observation(source)
         old_proof = source.get('watch_providers_check') or {}
         old_at = old_proof.get('checked_at')
-        if type(old_at) is int and old_at >= millis:
+        if isinstance(old_at, int) and not isinstance(old_at, bool) and old_at >= millis:
             status = 'reused' if old_at == millis and old_proof.get('payload_hash') == snapshot_id(normalized) else 'stale'
             if not dry_run:
                 if previous:

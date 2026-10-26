@@ -16,6 +16,7 @@ def actionable_causes(report: dict[str, Any]) -> list[str]:
     causes = set(report.get("causes", []))
     actionable = causes & {
         "consecutive_failures", "excessive_runtime", "controlled_failure",
+        "availability_opened_overdue", "availability_changed_overdue", "sustained_parse_errors",
         "country_backlog_stalled", "publication_unacknowledged",
         "publication_retry_exhausted", "publication_failed",
         "crate_checkpoint_stalled", "crate_disk_near_watermark", "crate_disk_watermark",

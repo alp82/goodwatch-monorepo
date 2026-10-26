@@ -3,10 +3,15 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from pathlib import Path
 import sys
+import os
 import unittest
+from urllib.parse import urlsplit
+from uuid import uuid4
 from unittest.mock import patch
 
 import mongomock
+from bson import BSON
+from pymongo import MongoClient
 from mongoengine import connect, disconnect
 
 sys.path.insert(0, str(Path(__file__).parents[1] / 'windmill'))
@@ -50,6 +55,31 @@ class ObservationTests(unittest.TestCase):
         data['results']['US']['rent'] = [{'provider_id': 2}]
         self.assertEqual(self.save(data, self.now + timedelta(hours=2))['changed_countries'], ['US'])
 
+    def test_coalescing_retains_oldest_pending_age_and_only_matching_success_clears_it(self):
+        from f.tmdb_web import country_state
+        col = self.db.tmdb_movie_providers
+        self.save(payload(8))
+        first = self.now + timedelta(hours=1)
+        self.save(payload(9), first)
+        row = col.find_one({'country_code': 'US'})
+        claimed = country_state.claim(self.db, col, row['_id'], now=first, availability_tier='changed')
+        self.assertIsNotNone(claimed)
+        self.save(payload(10), first + timedelta(minutes=1))
+        pending = col.find_one({'_id': row['_id']})
+        self.assertEqual(pending['provider_change_pending_since'], utc_ms(first))
+        self.assertEqual(pending['provider_change_observed_at'], utc_ms(first + timedelta(minutes=1)))
+        # A page for the older revision does not clear the newer work's age.
+        self.assertTrue(country_state.save_success(col, claimed, [], first + timedelta(minutes=2)))
+        self.assertTrue(col.find_one({'_id': row['_id']})['provider_change_pending'])
+        newer = country_state.claim(self.db, col, row['_id'], now=first + timedelta(minutes=3), availability_tier='changed')
+        self.assertIsNotNone(newer)
+        self.assertTrue(country_state.save_success(col, newer, [], first + timedelta(minutes=4)))
+        self.assertNotIn('provider_change_pending_since', col.find_one({'_id': row['_id']}))
+        # The next distinct pending period starts its own age.
+        self.save(payload(11), first + timedelta(hours=1))
+        self.assertEqual(col.find_one({'_id': row['_id']})['provider_change_pending_since'],
+                         utc_ms(first + timedelta(hours=1)))
+
     def test_stale_equal_and_invalid_do_not_refresh_evidence(self):
         saved = self.save(payload(8))
         self.assertEqual(self.save(payload(9), self.now - timedelta(seconds=1))['status'], 'stale')
@@ -59,6 +89,22 @@ class ObservationTests(unittest.TestCase):
                     {'results': {}, 'total_pages': 2}, {'success': False, 'results': {}}):
             self.assertEqual(self.save(bad, self.now + timedelta(hours=1))['status'], 'invalid')
         self.assertEqual(observations.read_observation(self.db, 'movie', 42)['proof'], saved['proof'])
+
+    def test_bson_int64_timestamps_remain_valid_ordered_provider_evidence(self):
+        from f.tmdb_api.provider_evidence import api_excludes_older_web_offer
+        self.save(payload(9))
+        source = self.db.tmdb_movie_details.find_one()
+        source = BSON.encode(source).decode()
+        self.db.tmdb_movie_details.replace_one({'_id': source['_id']}, source)
+        proof_at = source['watch_providers_check']['checked_at']
+        self.assertIsNot(type(proof_at), int)  # Real BSON decoding yields Int64.
+        self.assertIsNotNone(observations.read_observation(self.db, 'movie', 42))
+        self.assertEqual(self.save(payload(9), proof_at)['status'], 'reused')
+        self.assertEqual(self.save(payload(8), self.now - timedelta(seconds=1))['status'], 'stale')
+        self.assertTrue(api_excludes_older_web_offer(source, 'US', 'flatrate', 8,
+                                                    utc_ms(self.now - timedelta(seconds=1))))
+        source['watch_providers_check']['checked_at'] = True
+        self.assertIsNone(observations.observation(source))
 
     def test_omission_unknown_and_explicit_empty(self):
         self.save({'results': {'US': {'free': [{'provider_id': 8}]}, 'DE': {}}})
@@ -154,6 +200,24 @@ class ObservationTests(unittest.TestCase):
         self.save(payload(8))
         self.db.tmdb_movie_details.update_one({'tmdb_id': 42}, {'$set': {'watch_providers_check.payload_hash': 'corrupt'}})
         self.assertIsNone(observations.read_observation(self.db, 'movie', 42))
+
+
+@unittest.skipUnless(os.environ.get('PROVIDER_TEST_MONGO_URI'), 'disposable loopback Mongo required')
+class PendingAgeMongoTests(unittest.TestCase):
+    def setUp(self):
+        uri = os.environ['PROVIDER_TEST_MONGO_URI']
+        if urlsplit(uri).hostname not in ('127.0.0.1', 'localhost', '::1'):
+            raise ValueError('Only disposable loopback Mongo is allowed')
+        self.client = MongoClient(uri, serverSelectionTimeoutMS=3000)
+        self.db = self.client['provider_pending_test_' + uuid4().hex]
+        self.addCleanup(self.client.close)
+        self.addCleanup(lambda: self.client.drop_database(self.db.name))
+        self.now = datetime(2026, 10, 22, 12)
+        self.db.tmdb_movie_details.insert_one(dict(tmdb_id=42))
+        self.db.tmdb_movie_providers.insert_one(dict(tmdb_id=42, country_code='US'))
+
+    save = ObservationTests.save
+    test_atomic_coalescing_and_revision_fenced_completion = ObservationTests.test_coalescing_retains_oldest_pending_age_and_only_matching_success_clears_it
 
 
 class MetadataRaceTests(unittest.TestCase):

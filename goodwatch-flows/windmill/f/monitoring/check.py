@@ -298,7 +298,7 @@ def poll(
                     if all(
                         snapshots[name].get("complete")
                         for name in ["country", "publication"]
-                    )
+                    ) and snapshots['country'].get('availability', {'complete': True}).get('complete') is True
                     else "degraded"
                 )
             except Exception:

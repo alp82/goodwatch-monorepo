@@ -74,11 +74,14 @@ class BaseTmdbProviders(Document):
     selected_at = DateTimeField()
     failed_at = DateTimeField()
     error_message = StringField()
+    failure_classification = StringField()
+    parse_failed_at = DateTimeField()
     is_selected = BooleanField(default=False)
     # Copied from the TMDB details flag when TMDB permanently removed the title; missing means not deleted.
     tmdb_deleted = BooleanField(default=False)
 
     provider_change_observed_at = IntField()
+    provider_change_pending_since = IntField()
     provider_change_pending = BooleanField()
     provider_change_revision = StringField()
     provider_observed_at = DateTimeField()

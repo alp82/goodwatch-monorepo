@@ -40,7 +40,7 @@ def outcome_evidence(result: Any, source_context: bool = False) -> tuple[str, li
             state = value.get("outcome", value.get("status"))
             if isinstance(state, str):
                 work += state in USEFUL_OUTCOMES
-                saved_retry = source_context and state == "failed" and (
+                saved_retry = source_context and state == "failed" and value.get("failure_classification") != "parse" and (
                     value.get("retry_saved") is True or value.get("rate_limit_reached") is True
                 )
                 failures |= state in FAILURE_OUTCOMES and not saved_retry
@@ -96,23 +96,35 @@ SOURCE_FETCH_PATH = "f/tmdb_web/tmdb_crawl_providers/fetch"
 
 
 def source_evidence(job: dict[str, Any], observed: dict[str, Any]) -> None:
-    if job.get("script_path") != SOURCE_FETCH_PATH:
+    path = job.get('script_path')
+    if path not in {SOURCE_FETCH_PATH, 'f/tmdb_web/tmdb_crawl_providers/batch'}:
         return
-    result = job.get("result")
-    if not isinstance(result, dict):
-        return
-    if job.get("success") is True and result.get("outcome") == "fetched":
-        observed["source_success_count"] += 1
-        completed = completion_time(job)
-        if completed and completed > (observed["source_last_success_at"] or ""):
-            observed["source_last_success_at"] = completed
-    elif result.get("outcome") == "failed" or job.get("success") is False:
-        observed["source_failure_count"] += 1
-        # Only this explicit producer result proves saved external backoff.
-        if job.get("success") is True and result.get("outcome") == "failed" and (
-            result.get("rate_limit_reached") is True or result.get("retry_saved") is True
-        ):
-            observed["tolerable_external_failure_count"] += 1
+    value = job.get('result')
+    if path.endswith('/batch'):
+        if not isinstance(value, list):
+            return
+        if len(value) > 20:
+            observed['evidence_incomplete'] = True
+        results = value[:20]
+    else:
+        results = [value] if isinstance(value, dict) else []
+    for result in results:
+        if not isinstance(result, dict):
+            observed['evidence_incomplete'] = True
+            continue
+        if job.get('success') is True and result.get('outcome') == 'fetched':
+            observed['source_success_count'] += 1
+            completed = completion_time(job)
+            if completed and completed > (observed['source_last_success_at'] or ''):
+                observed['source_last_success_at'] = completed
+        elif result.get('outcome') == 'failed' or job.get('success') is False:
+            observed['source_failure_count'] += 1
+            parse = result.get('failure_classification') == 'parse'
+            if parse:
+                observed['source_parse_failure_count'] = observed.get('source_parse_failure_count', 0) + 1
+            elif job.get('success') is True and (result.get('rate_limit_reached') is True
+                                                or result.get('retry_saved') is True):
+                observed['tolerable_external_failure_count'] += 1
 
 
 PUBLICATION_CLASSIFICATIONS = {

@@ -299,20 +299,26 @@ def fetch_one(db, next_id: dict, refresh_for_mapping: bool = False, client=None,
             country_state.release_claim(collection, claimed)
             return {**outcome, "outcome": "upstream_blocked",
                     "block_reason": "probe_failed", "upstream_retry_at": state["blocked_until"]}
-        saved = country_state.save_failure(db, collection, claimed, error)
+        classification = ('parse' if isinstance(error, ValueError) else
+                          'transport' if isinstance(error, httpx.TransportError) else
+                          'http' if isinstance(error, requests.HTTPError) else 'unknown')
+        saved = country_state.save_failure(db, collection, claimed, error,
+                                          failure_classification=classification)
         return {**outcome, "outcome": "failed" if saved else "deferred",
-                "retry_saved": saved, "error": str(error)}
+                "retry_saved": saved, "error": str(error), "failure_classification": classification}
     if permit["probe_token"] and result.block_reason:
         state = country_state.block_upstream(db, permit, "probe_failed")
         country_state.release_claim(collection, claimed)
         return {**outcome, "outcome": "upstream_blocked", "block_reason": "probe_failed", "upstream_retry_at": state["blocked_until"]}
     if result.block_reason == "page_not_found":
         collection.update_one(country_state.fence(claimed, datetime.utcnow()), {"$set": {"api_confirmation_pending": True}})
-        country_state.save_failure(db, collection, claimed, "page_not_found")
-        return {**outcome, "outcome": "page_not_found"}
+        country_state.save_failure(db, collection, claimed, "page_not_found",
+                                   failure_classification="page_not_found")
+        return {**outcome, "outcome": "page_not_found", "failure_classification": "page_not_found"}
     if result.block_reason == "server_error":
-        country_state.save_failure(db, collection, claimed, "server_error")
-        return {**outcome, "outcome": "failed", "http_status": result.http_status}
+        country_state.save_failure(db, collection, claimed, "server_error", failure_classification="http")
+        return {**outcome, "outcome": "failed", "http_status": result.http_status,
+                "failure_classification": "http"}
     if result.block_reason:
         state = country_state.block_upstream(
             db, permit, result.block_reason, retry_at=result.retry_at)

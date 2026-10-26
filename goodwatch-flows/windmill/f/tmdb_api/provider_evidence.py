@@ -50,11 +50,11 @@ def api_excludes_older_web_offer(details, country, kind, service_id, web_checked
     """Only newer, explicit, uncached country proof can supersede a page offer."""
     payload, proof = details.get('watch_providers') or {}, details.get('watch_providers_check') or {}
     results = validated_results(payload)
-    page_at = web_checked_at if type(web_checked_at) is int else utc_ms(web_checked_at)
+    page_at = web_checked_at if isinstance(web_checked_at, int) and not isinstance(web_checked_at, bool) else utc_ms(web_checked_at)
     api_at = proof.get('checked_at')
     if (results is None or country not in results or kind not in OFFER_TYPES
             or country not in proof.get('countries', []) or proof.get('cache_bypassed') is not True
-            or proof.get('payload_hash') != snapshot_id(payload) or type(api_at) is not int
+            or proof.get('payload_hash') != snapshot_id(payload) or not isinstance(api_at, int) or isinstance(api_at, bool)
             or page_at is None or api_at <= page_at):
         return False
     return not any(offer['provider_id'] == service_id for offer in results[country].get(kind, []))

@@ -130,13 +130,15 @@ def save_success(
                 "lease_token": "",
                 "lease_expires_at": "",
                 "error_message": "",
+                "failure_classification": "",
+                "parse_failed_at": "",
                 "failed_at": "",
                 "identity_repair_pending": "",
             },
         },
     )
     if result.modified_count == 1 and document.get("claim_provider_change_revision") is not None:
-        collection.update_one({"_id": document["_id"], "provider_change_revision": document["claim_provider_change_revision"], "updated_at": now}, {"$set": {"provider_change_pending": False}})
+        collection.update_one({"_id": document["_id"], "provider_change_revision": document["claim_provider_change_revision"], "updated_at": now}, {"$set": {"provider_change_pending": False}, "$unset": {"provider_change_pending_since": ""}})
     return result.modified_count == 1
 
 
@@ -234,6 +236,7 @@ def save_failure(
     rate_limited: bool = False,
     retry_at: datetime | None = None,
     now: datetime | None = None,
+    failure_classification: str = "unknown",
 ) -> bool:
     now = now or datetime.utcnow()
     if rate_limited:
@@ -253,6 +256,8 @@ def save_failure(
             "$set": {
                 "failed_at": now,
                 "error_message": str(error)[:1000],
+                "failure_classification": failure_classification,
+                **({"parse_failed_at": now} if failure_classification == "parse" else {}),
                 "next_fetch_at": deadline,
                 "consecutive_failures": failures,
                 "is_selected": False,
@@ -361,6 +366,14 @@ def normalize_document(
 
 
 def ensure_indexes(collection: Collection) -> None:
+    collection.create_index(
+        [("provider_change_pending", 1), ("provider_change_pending_since", 1), ("tmdb_id", 1)],
+        name="availability_pending_changes",
+    )
+    collection.create_index(
+        [("parse_failed_at", 1)],
+        name="availability_parse_failures",
+    )
     collection.create_index(
         [("updated_at", 1), ("has_streaming_links", 1), ("_id", 1)],
         name="availability_oldest_links",

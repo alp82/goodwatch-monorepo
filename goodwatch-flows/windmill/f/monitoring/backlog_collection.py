@@ -10,6 +10,8 @@ from f.tmdb_web.country_state import FRESHNESS, eligibility
 def iso(value: Any) -> str | None:
     if value is None:
         return None
+    if isinstance(value, bool):
+        raise ValueError("Boolean is not an evidence timestamp")
     if isinstance(value, (int, float)):
         value = datetime.fromtimestamp(value / 1000, timezone.utc)
     if value.tzinfo is None:
@@ -215,6 +217,128 @@ def collect_publication(db: Any, jobs: list[dict], now: datetime) -> dict:
     return result
 
 
+def collect_availability(db: Any, crate: Any, now: datetime, *, budget_seconds: float = 10,
+                         max_opens: int = 500, max_pairs: int = 5000) -> dict:
+    """Bounded lower bounds for demand older than 24h and unresolved parse failures.
+
+    Leases/backoff do not acknowledge pending work. A capped/failed collection
+    cannot produce a healthy zero or clear an existing incident.
+    """
+    from f.data_source.title_identity import canonical_title_id
+    deadline = monotonic() + budget_seconds
+    result = {name: {"complete": True, "count": 0, "oldest_at": None}
+              for name in ('opened', 'changed', 'parse')}
+    remaining_rows = max_pairs
+    cutoff = int((now - timedelta(days=1)).timestamp() * 1000)
+    excluded = {"country_identity_error": None, "tmdb_deleted": {"$ne": True},
+                "country_code": {"$ne": "NE"}, "provider_verified_empty": {"$ne": True}}
+    released = {**excluded, "provider_title_observed_at": {"$type": "date"}}
+
+    def add(kind, at):
+        metric = result[kind]
+        if at is None:
+            metric['complete'] = False
+            return
+        metric['count'] += 1
+        stamp = iso(at)
+        if metric['oldest_at'] is None or stamp < metric['oldest_at']:
+            metric['oldest_at'] = stamp
+
+    def read(collection, selector, projection, hint, kind, order=None):
+        nonlocal remaining_rows
+        budget = deadline - monotonic()
+        if budget <= 0 or remaining_rows <= 0:
+            result[kind]['complete'] = False
+            return []
+        cursor = collection.find(selector, projection, max_time_ms=max(1, int(budget * 1000))).hint(hint)
+        if order:
+            cursor = cursor.sort(order)
+        rows = list(cursor.limit(remaining_rows + 1))
+        if len(rows) > remaining_rows:
+            result[kind]['complete'] = False
+        rows = rows[:remaining_rows]
+        remaining_rows -= len(rows)
+        return rows
+
+    try:
+        cursor = None
+        while True:
+            if monotonic() >= deadline or remaining_rows <= 0:
+                result['opened']['complete'] = False
+                break
+            continuation = ""
+            params = [cutoff]
+            if cursor:
+                continuation = """AND (last_opened_at > ? OR
+                    (last_opened_at = ? AND media_type > ?) OR
+                    (last_opened_at = ? AND media_type = ? AND tmdb_id > ?))"""
+                stamp, media, identity = cursor
+                params.extend([stamp, stamp, media, stamp, media, identity])
+            params.append(max_opens)
+            opens = crate.select(f"""SELECT media_type, tmdb_id,
+                CAST(last_opened_at AS BIGINT) AS last_opened_at FROM crawl_priority
+                WHERE last_opened_at IS NOT NULL AND CAST(last_opened_at AS BIGINT) <= ?
+                {continuation}
+                ORDER BY last_opened_at ASC, media_type ASC, tmdb_id ASC LIMIT ?""", tuple(params))
+            by_media = {'movie': {}, 'show': {}}
+            for row in opens:
+                media = row['media_type']
+                if media not in by_media:
+                    result['opened']['complete'] = False
+                    continue
+                identity = canonical_title_id(media, row['tmdb_id'])
+                by_media[media][identity] = max(row['last_opened_at'], by_media[media].get(identity, 0))
+            for media, accepted in by_media.items():
+                collection = db['tmdb_movie_providers' if media == 'movie' else 'tmdb_tv_providers']
+                ids = list(accepted)
+                for offset in range(0, len(ids), 200):
+                    # Filter fresh countries inside Mongo rather than spending
+                    # the bounded row allowance on already satisfied opens.
+                    clauses = [{'tmdb_id': identity, '$or': [
+                        {'updated_at': None}, {'updated_at': {'$lt': datetime.fromtimestamp(
+                            accepted[identity] / 1000, timezone.utc)}}]}
+                        for identity in ids[offset:offset + 200]]
+                    rows = read(collection, {**released, '$or': clauses},
+                                {'tmdb_id': 1}, [('tmdb_id', 1)], 'opened')
+                    for row in rows:
+                        add('opened', accepted[row['tmdb_id']])
+            if len(opens) < max_opens:
+                break
+            last = opens[-1]
+            advanced = (last['last_opened_at'], last['media_type'], last['tmdb_id'])
+            if cursor is not None and advanced <= cursor:
+                raise ValueError('Accepted-open pagination did not advance')
+            cursor = advanced
+    except Exception:
+        result['opened']['complete'] = False
+    for media in ('movie', 'tv'):
+        collection = db[f'tmdb_{media}_providers']
+        for kind, selector, field, hint in (
+            ('changed', {**released, 'provider_change_pending': True,
+                         'provider_change_pending_since': {'$lte': cutoff}},
+             'provider_change_pending_since', 'availability_pending_changes'),
+            ('parse', {**excluded, 'parse_failed_at': {'$type': 'date'}},
+             'parse_failed_at', 'availability_parse_failures'),
+        ):
+            try:
+                rows = read(collection, selector, {field: 1}, hint, kind, [(field, 1)])
+                for row in rows:
+                    add(kind, row.get(field))
+                if kind == 'changed':
+                    budget = deadline - monotonic()
+                    if budget <= 0:
+                        raise TimeoutError('Availability collection budget exhausted')
+                    if next(collection.find({**released, 'provider_change_pending': True,
+                        'provider_change_pending_since': None}, {'_id': 1},
+                        max_time_ms=max(1, int(budget * 1000))).hint(hint).limit(1), None):
+                        result[kind]['complete'] = False
+            except Exception:
+                result[kind]['complete'] = False
+    result['complete'] = all(metric['complete'] for metric in result.values() if isinstance(metric, dict))
+    result['rows_scanned'] = max_pairs - remaining_rows
+    return result
+
+
 def collect_backlogs(store: Any, jobs: list[dict], now: datetime,
                      remaining_seconds: float) -> dict:
     import wmill
@@ -241,13 +365,17 @@ def collect_backlogs(store: Any, jobs: list[dict], now: datetime,
             socketTimeoutMS=45000, tz_aware=True,
         )
         budget = remaining_seconds - (monotonic() - start)
+        availability = collect_availability(client[name], store.db, now, budget_seconds=min(10, max(0, budget)))
+        budget = remaining_seconds - (monotonic() - start)
         repairs = collect_identity_repairs(client[name], now, budget_seconds=min(10, max(0, budget)))
         budget = remaining_seconds - (monotonic() - start)
         if budget > 0:
             country = collect_countries(client[name], now, budget_seconds=budget)
         country["identity_repair"] = repairs
+        country["availability"] = availability
     except Exception:
         country["collection_errors"] = ["country_connection_unavailable"]
+        country["availability"] = {"complete": False}
     finally:
         if client is not None:
             client.close()

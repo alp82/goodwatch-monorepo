@@ -121,6 +121,29 @@ class PageTests(unittest.TestCase):
         self.assertFalse(countries.save_success(col,claimed,[],now=NOW))
         self.assertNotIn('updated_at',col.find_one({'_id':key}))
 
+    def test_parse_failure_is_explicit_and_verified_success_clears_it(self):
+        col = self.db.tmdb_movie_providers
+        key = col.insert_one({'tmdb_id': 42, 'country_code': 'DO',
+                             'tmdb_watch_url': 'https://www.themoviedb.org/movie/42/watch?locale=DO'}).inserted_id
+        client = SimpleNamespace(get=lambda *a, **kw: SimpleNamespace(
+            status_code=200, headers={}, text='<html>Unrecognized markup</html>'))
+        result = fetch.fetch_one(self.db, {'id': str(key), 'type': 'movie'}, client=client)
+        self.assertEqual(result['failure_classification'], 'parse')
+        self.assertEqual(col.find_one({'_id': key})['failure_classification'], 'parse')
+        parse_at = col.find_one({'_id': key})['parse_failed_at']
+        self.assertNotIn('updated_at', col.find_one({'_id': key}))
+        col.update_one({'_id': key}, {'$set': {'next_fetch_at': datetime.utcnow() - timedelta(seconds=1)}})
+        retry = countries.claim(self.db, col, key)
+        self.assertIsNotNone(retry)
+        self.assertTrue(countries.save_failure(self.db, col, retry, '503', failure_classification='http'))
+        self.assertEqual(col.find_one({'_id': key})['failure_classification'], 'http')
+        self.assertEqual(col.find_one({'_id': key})['parse_failed_at'], parse_at)
+        col.update_one({'_id': key}, {'$set': {'next_fetch_at': datetime.utcnow() - timedelta(seconds=1)}})
+        client.get = lambda *a, **kw: SimpleNamespace(status_code=200, headers={}, text=VALID)
+        self.assertEqual(fetch.fetch_one(self.db, {'id': str(key), 'type': 'movie'}, client=client)['outcome'], 'fetched')
+        self.assertNotIn('failure_classification', col.find_one({'_id': key}))
+        self.assertNotIn('parse_failed_at', col.find_one({'_id': key}))
+
     def test_bounded_server_retries_are_wire_charged(self):
         key=self.db.tmdb_movie_providers.insert_one({'tmdb_id':42,'country_code':'DO','tmdb_watch_url':'https://www.themoviedb.org/movie/42/watch?locale=DO'}).inserted_id
         responses=iter([SimpleNamespace(status_code=503,headers={},text=''),SimpleNamespace(status_code=503,headers={},text=''),SimpleNamespace(status_code=200,headers={},text=VALID)])
