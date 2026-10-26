@@ -7,6 +7,7 @@ import { SwiperSlide } from "swiper/react"
 import type { CastMember } from "~/server/types/details-types"
 import ListSwiper from "~/ui/ListSwiper"
 import { TmdbImage } from "~/ui/TmdbImage"
+import { CAST_PHOTO } from "./cast-photo"
 import { personPath } from "~/utils/helpers"
 import {
 	CAST_FIRST_OFFSET,
@@ -149,7 +150,7 @@ export default function Actors({ cast, total, mediaType, tmdbId }: CastProps) {
 										<TmdbImage
 											kind="profile"
 											path={actor.profile_path}
-											width={144}
+											{...CAST_PHOTO}
 											className="w-full h-full object-cover"
 											alt={`${actor.name} profile`}
 										/>
