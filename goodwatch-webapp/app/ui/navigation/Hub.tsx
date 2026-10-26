@@ -124,7 +124,8 @@ function Tile({
 	)
 }
 
-/** A small key: the places to explore, Home among them. The last of an odd number takes the whole row. The side
+/** A small key: the places to explore, Home among them. The last of an odd number takes the whole row, counted
+ * among links only, because hover prefetch adds <link> siblings to the grid. The side
  * padding leaves "New arrivals" room at 360 px. */
 function SecondaryKey({
 	destination,
@@ -136,7 +137,7 @@ function SecondaryKey({
 			to={destination.href}
 			prefetch="intent"
 			aria-current={here ? "page" : undefined}
-			className={`flex h-12 min-w-0 items-center gap-2.5 rounded-2xl bg-white/[0.04] px-2.5 font-bold text-gray-100 hover:bg-white/[0.08] last:odd:col-span-2 ${here ? "shadow-[inset_0_0_0_1.5px_#fbbf24]" : ""}`}
+			className={`flex h-12 min-w-0 items-center gap-2.5 rounded-2xl bg-white/[0.04] px-2.5 font-bold text-gray-100 hover:bg-white/[0.08] [&:last-of-type:nth-of-type(odd)]:col-span-2 ${here ? "shadow-[inset_0_0_0_1.5px_#fbbf24]" : ""}`}
 		>
 			{destination.key === "home" ? (
 				<GoodWatchMark size={18} />
