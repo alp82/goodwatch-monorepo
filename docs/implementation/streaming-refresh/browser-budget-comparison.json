@@ -1,0 +1,843 @@
+{
+  "version": 1,
+  "status": "Matched browser baseline completed; no introduced failure labels. Overall budget remains red on preexisting baseline limits.",
+  "recorded_at": "2026-10-26T02:57:29.808Z",
+  "baseline": {
+    "commit": "a9f4cf06cd51aa73cf5e6bec6ad8eab7389751f2",
+    "verified_source_files": 2910,
+    "source_mismatches": [],
+    "build": {
+      "sha256": "fec7f5b81e4e2c063b00f36962008441b70d3d443bd03e647ed739b988679594",
+      "files": 3773
+    },
+    "run": "20261026T025138Z-lighthouse-streaming-baseline-matched",
+    "meta": {
+      "kind": "lighthouse",
+      "label": "streaming-baseline-matched",
+      "target_url": "https://127.0.0.1:34120",
+      "stage": "baseline",
+      "started_at": "2026-10-26T02:51:38.352Z",
+      "lighthouse": {
+        "runs": 1,
+        "where": "local",
+        "cpu_slowdown": 2.7
+      },
+      "browser": "Chrome/156.0.8078.4",
+      "guard": "Provided Puppeteer page intercepts requests before transport; only GET/HEAD to localTLS or image.tmdb.org allowed; local demand and telemetry sinks blocked. App outbound sockets restricted to loopback; SQL proxy readonly and shared response cache.",
+      "ended_at": "2026-10-26T02:52:56.107Z"
+    }
+  },
+  "feature": {
+    "source_tree_commit_at_verification": "2c27429f29cf4c261498773240fd982adb84d97e",
+    "build": {
+      "sha256": "4bba16dae420dfd888986ab8bdfb953bfb60121c726ed1ae7319a82db1cfd2f2",
+      "files": 3773
+    },
+    "initial_frozen_build_sha256": "4bba16dae420dfd888986ab8bdfb953bfb60121c726ed1ae7319a82db1cfd2f2",
+    "run": "20261026T024634Z-lighthouse-streaming-feature-matched",
+    "meta": {
+      "kind": "lighthouse",
+      "label": "streaming-feature-matched",
+      "target_url": "https://127.0.0.1:34120",
+      "stage": "feature",
+      "started_at": "2026-10-26T02:46:34.403Z",
+      "lighthouse": {
+        "runs": 1,
+        "where": "local",
+        "cpu_slowdown": 2.7
+      },
+      "browser": "Chrome/156.0.8078.4",
+      "guard": "Provided Puppeteer page intercepts requests before transport; only GET/HEAD to localTLS or image.tmdb.org allowed; local demand and telemetry sinks blocked. App outbound sockets restricted to loopback; SQL proxy readonly and shared response cache.",
+      "ended_at": "2026-10-26T02:47:52.439Z"
+    }
+  },
+  "release_parity": {
+    "release": "a9f4cf06cd51aa73cf5e6bec6ad8eab7389751f2",
+    "explanation": "The archived baseline has no .git, so initial Sentry autodetection omitted a 206-byte raw release wrapper per chunk. Baseline was rebuilt with explicit SENTRY_RELEASE matching the frozen feature. Only the corrected browser baseline is compared."
+  },
+  "environment": {
+    "node": "v24.15.0",
+    "lighthouse": "13.5.0",
+    "puppeteer": "25.14.0",
+    "samples_per_surface": 1,
+    "cpu_slowdown": 2.7,
+    "stages_sequential": true,
+    "final_comparison_order": [
+      "feature",
+      "corrected baseline"
+    ],
+    "form_factor": "mobile",
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.5600000000002,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 2.7
+    },
+    "network": "Local HTTPS app on identical origin/port. Browser image GETs remain live; local read proxies serve Crate and Qdrant. Successful identical Crate queries reuse cached responses; this is not a full immutable backend snapshot."
+  },
+  "safety": {
+    "browser": "Puppeteer request interception installed before Lighthouse navigation. Only GET/HEAD to local app or HTTPS image.tmdb.org allowed; demand and telemetry sinks fulfilled locally. Service workers bypassed.",
+    "app": "Child socket preload rejects all non-loopback connections. Only local read proxies can reach backends; no database mutation is forwarded.",
+    "crate": "Only SELECT/WITH queries without DML/DDL or multiple statements, and GET blob objects. Final matched stages recorded zero mutating SQL requests.",
+    "qdrant": "Exact gRPC read-method allowlist and REST read-route allowlist. Synthetic DELETE preflight returned403 locally. No write RPC is forwarded.",
+    "preflights": {
+      "synthetic_crate_update": 403,
+      "local_telemetry_post": 204,
+      "synthetic_qdrant_delete": 403
+    },
+    "not_deployed": true,
+    "build_stage_caveat": "The first corrected baseline npm build omitted the Node socket preload. Existing Sentry Vite plugin logs reported sending bundler telemetry twice, so build telemetry may have been emitted. No delivery proof is available. Auth token was unset and plugin reported no source-map uploads. No production database write occurred. Runtime/browser benchmark traffic remained guarded. This gap was corrected and the baseline build was repeated successfully with non-loopback sockets denied.",
+    "guarded_rebuild": {
+      "exit_code": 0,
+      "network_denials": 11,
+      "log": "/tmp/gw-streaming-baseline-denied-build.log",
+      "requested_client_scripts_revalidated": 75,
+      "missing_or_changed_asset_names_and_raw_lengths": 0,
+      "note": "All75 distinct requested content-hashed client script filenames and raw byte lengths remained unchanged after the guarded rebuild; no Lighthouse rerun was needed."
+    }
+  },
+  "surfaces": {
+    "home": {
+      "baseline": {
+        "html_bytes": 23006,
+        "host_requests": 54,
+        "origin_requests": 54,
+        "static_requests": 0,
+        "script_count": 33,
+        "script_bytes": 388659,
+        "image_count": 13,
+        "image_bytes": 132621,
+        "font_requests": 1,
+        "blocking_requests": 5,
+        "third_party_origins": 1,
+        "total_bytes": 675715,
+        "lcp_ms": 2478.663,
+        "tbt_ms": 0,
+        "cls": 0,
+        "score": 96,
+        "observed_fcp_ms": 139,
+        "benchmark_index": 4754.5,
+        "cpu_slowdown": 2.7
+      },
+      "feature": {
+        "html_bytes": 23006,
+        "host_requests": 54,
+        "origin_requests": 54,
+        "static_requests": 0,
+        "script_count": 33,
+        "script_bytes": 389391,
+        "image_count": 13,
+        "image_bytes": 132639,
+        "font_requests": 1,
+        "blocking_requests": 5,
+        "third_party_origins": 1,
+        "total_bytes": 676465,
+        "lcp_ms": 2477.9544,
+        "tbt_ms": 0,
+        "cls": 0,
+        "score": 96,
+        "observed_fcp_ms": 169,
+        "benchmark_index": 4682,
+        "cpu_slowdown": 2.7
+      },
+      "delta": {
+        "html_bytes": 0,
+        "host_requests": 0,
+        "origin_requests": 0,
+        "static_requests": 0,
+        "script_count": 0,
+        "script_bytes": 732,
+        "image_count": 0,
+        "image_bytes": 18,
+        "font_requests": 0,
+        "blocking_requests": 0,
+        "third_party_origins": 0,
+        "total_bytes": 750,
+        "lcp_ms": -0.7085999999999331,
+        "tbt_ms": 0,
+        "cls": 0,
+        "score": 0,
+        "observed_fcp_ms": 30,
+        "benchmark_index": -72.5,
+        "cpu_slowdown": 0
+      },
+      "baseline_failure_labels": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "blocking_requests"
+      ],
+      "feature_failure_labels": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "blocking_requests"
+      ],
+      "introduced_failure_labels": [],
+      "resolved_failure_labels": [],
+      "main_document_status": {
+        "baseline": 200,
+        "feature": 200
+      },
+      "raw_report_sha256": {
+        "baseline": "fa072099bbec2b7213e373da15564ad45cbf19192d6a975a09ffbe9206763086",
+        "feature": "935e2552b848e7399661c47cffcfd466c2eeb0a624a3cce0402457ec67098874"
+      }
+    },
+    "movie": {
+      "baseline": {
+        "html_bytes": 52978,
+        "host_requests": 61,
+        "origin_requests": 61,
+        "static_requests": 0,
+        "script_count": 44,
+        "script_bytes": 417228,
+        "image_count": 19,
+        "image_bytes": 130246,
+        "font_requests": 1,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 690653,
+        "lcp_ms": 2656.7147,
+        "tbt_ms": 2,
+        "cls": 0,
+        "score": 96,
+        "observed_fcp_ms": 278,
+        "benchmark_index": 4661.5,
+        "cpu_slowdown": 2.7
+      },
+      "feature": {
+        "html_bytes": 52985,
+        "host_requests": 61,
+        "origin_requests": 61,
+        "static_requests": 0,
+        "script_count": 44,
+        "script_bytes": 418087,
+        "image_count": 19,
+        "image_bytes": 130240,
+        "font_requests": 1,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 691513,
+        "lcp_ms": 2494.9354999999996,
+        "tbt_ms": 5,
+        "cls": 0,
+        "score": 97,
+        "observed_fcp_ms": 279,
+        "benchmark_index": 4786,
+        "cpu_slowdown": 2.7
+      },
+      "delta": {
+        "html_bytes": 7,
+        "host_requests": 0,
+        "origin_requests": 0,
+        "static_requests": 0,
+        "script_count": 0,
+        "script_bytes": 859,
+        "image_count": 0,
+        "image_bytes": -6,
+        "font_requests": 0,
+        "blocking_requests": 0,
+        "third_party_origins": 0,
+        "total_bytes": 860,
+        "lcp_ms": -161.7792000000004,
+        "tbt_ms": 3,
+        "cls": 0,
+        "score": 1,
+        "observed_fcp_ms": 1,
+        "benchmark_index": 124.5,
+        "cpu_slowdown": 0
+      },
+      "baseline_failure_labels": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "image_count",
+        "image_bytes",
+        "total_bytes"
+      ],
+      "feature_failure_labels": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "image_count",
+        "image_bytes",
+        "total_bytes"
+      ],
+      "introduced_failure_labels": [],
+      "resolved_failure_labels": [],
+      "main_document_status": {
+        "baseline": 200,
+        "feature": 200
+      },
+      "raw_report_sha256": {
+        "baseline": "f913a84dde62e0f5277d312c5545b925b6f9574e82ee031779cb2677901ae4d5",
+        "feature": "a5cc3b501eb3c6fe029492978b7e104209229a730949bd873b6b591d73c3475a"
+      }
+    },
+    "show": {
+      "baseline": {
+        "html_bytes": 55557,
+        "host_requests": 61,
+        "origin_requests": 61,
+        "static_requests": 0,
+        "script_count": 44,
+        "script_bytes": 417262,
+        "image_count": 20,
+        "image_bytes": 174678,
+        "font_requests": 1,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 738656,
+        "lcp_ms": 2882.1440000000002,
+        "tbt_ms": 4,
+        "cls": 0,
+        "score": 95,
+        "observed_fcp_ms": 262,
+        "benchmark_index": 4667.5,
+        "cpu_slowdown": 2.7
+      },
+      "feature": {
+        "html_bytes": 55546,
+        "host_requests": 61,
+        "origin_requests": 61,
+        "static_requests": 0,
+        "script_count": 44,
+        "script_bytes": 418124,
+        "image_count": 20,
+        "image_bytes": 174689,
+        "font_requests": 1,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 739518,
+        "lcp_ms": 2906.7712999999994,
+        "tbt_ms": 6.499999999999545,
+        "cls": 0,
+        "score": 95,
+        "observed_fcp_ms": 262,
+        "benchmark_index": 4634,
+        "cpu_slowdown": 2.7
+      },
+      "delta": {
+        "html_bytes": -11,
+        "host_requests": 0,
+        "origin_requests": 0,
+        "static_requests": 0,
+        "script_count": 0,
+        "script_bytes": 862,
+        "image_count": 0,
+        "image_bytes": 11,
+        "font_requests": 0,
+        "blocking_requests": 0,
+        "third_party_origins": 0,
+        "total_bytes": 862,
+        "lcp_ms": 24.627299999999195,
+        "tbt_ms": 2.4999999999995453,
+        "cls": 0,
+        "score": 0,
+        "observed_fcp_ms": 0,
+        "benchmark_index": -33.5,
+        "cpu_slowdown": 0
+      },
+      "baseline_failure_labels": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "total_bytes"
+      ],
+      "feature_failure_labels": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "total_bytes"
+      ],
+      "introduced_failure_labels": [],
+      "resolved_failure_labels": [],
+      "main_document_status": {
+        "baseline": 200,
+        "feature": 200
+      },
+      "raw_report_sha256": {
+        "baseline": "24944494135ede17ca1d266eddcb0dd81e872a4f9698d535c4a74c0384d30af2",
+        "feature": "112740b2f0fe40e6e1e22783e3d5716483787f859cb61b7e60d19d50cecb8254"
+      }
+    },
+    "person": {
+      "baseline": {
+        "html_bytes": 33801,
+        "host_requests": 31,
+        "origin_requests": 31,
+        "static_requests": 0,
+        "script_count": 24,
+        "script_bytes": 306288,
+        "image_count": 16,
+        "image_bytes": 179659,
+        "font_requests": 1,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 607168,
+        "lcp_ms": 3467.4531999999995,
+        "tbt_ms": 0,
+        "cls": 0,
+        "score": 85,
+        "observed_fcp_ms": 131,
+        "benchmark_index": 4695,
+        "cpu_slowdown": 2.7
+      },
+      "feature": {
+        "html_bytes": 33801,
+        "host_requests": 31,
+        "origin_requests": 31,
+        "static_requests": 0,
+        "script_count": 24,
+        "script_bytes": 306979,
+        "image_count": 16,
+        "image_bytes": 179624,
+        "font_requests": 1,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 607824,
+        "lcp_ms": 3471.1377,
+        "tbt_ms": 0,
+        "cls": 0.000364595122185176,
+        "score": 85,
+        "observed_fcp_ms": 96,
+        "benchmark_index": 4514.5,
+        "cpu_slowdown": 2.7
+      },
+      "delta": {
+        "html_bytes": 0,
+        "host_requests": 0,
+        "origin_requests": 0,
+        "static_requests": 0,
+        "script_count": 0,
+        "script_bytes": 691,
+        "image_count": 0,
+        "image_bytes": -35,
+        "font_requests": 0,
+        "blocking_requests": 0,
+        "third_party_origins": 0,
+        "total_bytes": 656,
+        "lcp_ms": 3.684500000000753,
+        "tbt_ms": 0,
+        "cls": 0.000364595122185176,
+        "score": 0,
+        "observed_fcp_ms": -35,
+        "benchmark_index": -180.5,
+        "cpu_slowdown": 0
+      },
+      "baseline_failure_labels": [
+        "html_bytes",
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "total_bytes"
+      ],
+      "feature_failure_labels": [
+        "html_bytes",
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "total_bytes"
+      ],
+      "introduced_failure_labels": [],
+      "resolved_failure_labels": [],
+      "main_document_status": {
+        "baseline": 200,
+        "feature": 200
+      },
+      "raw_report_sha256": {
+        "baseline": "075e33fccaf1663eb73fd8ed533c171caa982e684e19000edfef7bb574653138",
+        "feature": "a9ae5a64b92c99fe17f1013923dd66b47b76bd732abff0746c765d449f57da85"
+      }
+    },
+    "discover": {
+      "baseline": {
+        "html_bytes": 17548,
+        "host_requests": 49,
+        "origin_requests": 49,
+        "static_requests": 0,
+        "script_count": 38,
+        "script_bytes": 355199,
+        "image_count": 5,
+        "image_bytes": 16451,
+        "font_requests": 1,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 477809,
+        "lcp_ms": 3980.777100000001,
+        "tbt_ms": 15,
+        "cls": 0.02787271768963089,
+        "score": 79,
+        "observed_fcp_ms": 82,
+        "benchmark_index": 4708.5,
+        "cpu_slowdown": 2.7
+      },
+      "feature": {
+        "html_bytes": 17552,
+        "host_requests": 49,
+        "origin_requests": 49,
+        "static_requests": 0,
+        "script_count": 38,
+        "script_bytes": 355912,
+        "image_count": 5,
+        "image_bytes": 16449,
+        "font_requests": 1,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 478524,
+        "lcp_ms": 3981.657300000001,
+        "tbt_ms": 12,
+        "cls": 0.02787271768963089,
+        "score": 79,
+        "observed_fcp_ms": 63,
+        "benchmark_index": 4795.5,
+        "cpu_slowdown": 2.7
+      },
+      "delta": {
+        "html_bytes": 4,
+        "host_requests": 0,
+        "origin_requests": 0,
+        "static_requests": 0,
+        "script_count": 0,
+        "script_bytes": 713,
+        "image_count": 0,
+        "image_bytes": -2,
+        "font_requests": 0,
+        "blocking_requests": 0,
+        "third_party_origins": 0,
+        "total_bytes": 715,
+        "lcp_ms": 0.8802000000000589,
+        "tbt_ms": -3,
+        "cls": 0,
+        "score": 0,
+        "observed_fcp_ms": -19,
+        "benchmark_index": 87,
+        "cpu_slowdown": 0
+      },
+      "baseline_failure_labels": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "lcp_element"
+      ],
+      "feature_failure_labels": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "lcp_element"
+      ],
+      "introduced_failure_labels": [],
+      "resolved_failure_labels": [],
+      "main_document_status": {
+        "baseline": 200,
+        "feature": 200
+      },
+      "raw_report_sha256": {
+        "baseline": "4aa4daa6368ae62ef8172339ec50f676a32ec7787d7256147804bbd4f22a13d5",
+        "feature": "a13db089635e076b8d64d7ddd7e79960aa7ea01eae33524cb9e7b8dc4f008770"
+      }
+    },
+    "share_list": {
+      "baseline": {
+        "html_bytes": 18881,
+        "host_requests": 31,
+        "origin_requests": 31,
+        "static_requests": 0,
+        "script_count": 23,
+        "script_bytes": 316798,
+        "image_count": 10,
+        "image_bytes": 129911,
+        "font_requests": 2,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 551793,
+        "lcp_ms": 3804.784299999999,
+        "tbt_ms": 0,
+        "cls": 0,
+        "score": 82,
+        "observed_fcp_ms": 113,
+        "benchmark_index": 4692.5,
+        "cpu_slowdown": 2.7
+      },
+      "feature": {
+        "html_bytes": 18879,
+        "host_requests": 31,
+        "origin_requests": 31,
+        "static_requests": 0,
+        "script_count": 23,
+        "script_bytes": 316262,
+        "image_count": 10,
+        "image_bytes": 129921,
+        "font_requests": 2,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 551265,
+        "lcp_ms": 3765.5798999999997,
+        "tbt_ms": 0,
+        "cls": 0,
+        "score": 83,
+        "observed_fcp_ms": 97,
+        "benchmark_index": 4646.5,
+        "cpu_slowdown": 2.7
+      },
+      "delta": {
+        "html_bytes": -2,
+        "host_requests": 0,
+        "origin_requests": 0,
+        "static_requests": 0,
+        "script_count": 0,
+        "script_bytes": -536,
+        "image_count": 0,
+        "image_bytes": 10,
+        "font_requests": 0,
+        "blocking_requests": 0,
+        "third_party_origins": 0,
+        "total_bytes": -528,
+        "lcp_ms": -39.20439999999917,
+        "tbt_ms": 0,
+        "cls": 0,
+        "score": 1,
+        "observed_fcp_ms": -16,
+        "benchmark_index": -46,
+        "cpu_slowdown": 0
+      },
+      "baseline_failure_labels": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "total_bytes"
+      ],
+      "feature_failure_labels": [
+        "host_requests",
+        "script_count",
+        "script_bytes",
+        "total_bytes"
+      ],
+      "introduced_failure_labels": [],
+      "resolved_failure_labels": [],
+      "main_document_status": {
+        "baseline": 200,
+        "feature": 200
+      },
+      "raw_report_sha256": {
+        "baseline": "946bab12bd867e79ab1104fbf0c7bd4167e417b3514a09c8909ecc2d0eaa9068",
+        "feature": "1cc4cd82cf2537f3b4d5ad2fd93d2b240bf07d615c341e60a0212db0a7dcabd1"
+      }
+    }
+  },
+  "introduced_failure_labels": [],
+  "budget_before_reservation": {
+    "baseline_pass": false,
+    "feature_pass": false
+  },
+  "limits": [
+    "One sample per surface establishes payload/request comparison, not statistical timing significance. CPU benchmark readings retained per page. Other users processes were not stopped.",
+    "All timing/score limits passed on both builds; small timing deltas are not claimed as a performance improvement.",
+    "Old feature report had61 failed home images; preliminary no-release and Qdrant-disabled baselines are excluded. Matched corrected runs have equal image counts per surface.",
+    "Raw Lighthouse reports remain under ignored benchmark results; this artifact retains measured metrics, failure labels, exact report hashes, setup and harness sources for reproduction."
+  ],
+  "reproduction": {
+    "baseline_build_command": "cd /tmp/gw-opened-baseline/goodwatch-webapp && env -u SENTRY_AUTH_TOKEN -u SENTRY_ORG -u SENTRY_PROJECT NODE_OPTIONS='--require /tmp/gw-streaming-perf-deny.cjs' SENTRY_RELEASE=a9f4cf06cd51aa73cf5e6bec6ad8eab7389751f2 SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm run build",
+    "commands": [
+      "node /tmp/gw-streaming-read-qdrant.mjs",
+      "node /tmp/gw-streaming-perf-server.mjs",
+      "curl -X POST http://127.0.0.1:34123/baseline",
+      "node /tmp/gw-streaming-perf-run.mjs baseline",
+      "curl -X POST http://127.0.0.1:34123/feature",
+      "node /tmp/gw-streaming-perf-run.mjs feature",
+      "cd goodwatch-benchmark && ./bench.sh budget --run results/RUN_ID"
+    ],
+    "setup": "Restore the four harness source strings below to /tmp with the same filenames. Update checkout/cache paths if needed. Both builds use the same isolated node_modules; the archived baseline symlink targets the implementation checkout dependency installation. Use the prior local TLS certificate/key or create a local-only certificate. Read existing local service settings without printing credentials. Seed the six-surface URL file via the standard budget URL generator; keep the share-list path private. The harness runs only local app instances, never deploys and forwards only backend reads.",
+    "harness": {
+      "gw-streaming-perf-deny.cjs": {
+        "sha256": "29be4cffb26620416b0636244a1a12b1e868276f5a5b61228d351f6b4cc3b050",
+        "source": "const net = require('node:net');\nconst original = net.Socket.prototype.connect;\nnet.Socket.prototype.connect = function(...args) {\n  const opts = net._normalizeArgs(args)[0];\n  if (!opts.path && !['127.0.0.1','localhost','::1'].includes(opts.host || 'localhost')) {\n    const err = new Error('Benchmark process denied non-loopback network');\n    err.code = 'ERR_BENCH_NETWORK_DENIED';\n    process.stderr.write('BENCH_NETWORK_DENIED\\n');\n    throw err;\n  }\n  return original.apply(this,args);\n};\n"
+      },
+      "gw-streaming-perf-server.mjs": {
+        "sha256": "3a1a197f9ff6386a0a00a6967da33204581633ccfe8a11d87c83a4c786773dc5",
+        "source": "import {readFileSync,writeFileSync} from 'node:fs';\nimport {parseEnv} from 'node:util';\nimport http from 'node:http';\nimport https from 'node:https';\nimport {spawn} from 'node:child_process';\nimport {createHash} from 'node:crypto';\nconst config=parseEnv(readFileSync('/home/alp/dev/projects/goodwatch/goodwatch-monorepo/goodwatch-webapp/.env','utf8'));\nconst upstream=new URL(`http://${config.CRATE_HOSTS.split(',')[0].trim()}:${config.CRATE_PORT||'4200'}`);\nconst counts={sqlReads:0,cacheHits:0,blobReads:0,sqlBlocked:0,browserBlocked:0};\nconst cache=new Map();let app=null,stage='none';\nconst proxy=http.createServer(async(req,res)=>{\n const chunks=[];for await(const c of req)chunks.push(c);const body=Buffer.concat(chunks);\n let sql;try{sql=JSON.parse(body).stmt;}catch{}\n const path=req.url.split('?')[0];\n const blob=req.method==='GET'&&/^\\/_blobs\\/[a-z_]+\\/[a-f0-9]{40}$/.test(path);\n const read=req.method==='POST'&&path==='/_sql'&&/^\\s*(SELECT|WITH)\\b/i.test(sql||'')&&!/\\b(INSERT|UPDATE|DELETE|ALTER|DROP|CREATE|GRANT|REVOKE|COPY|REFRESH|BEGIN|COMMIT)\\b/i.test(sql||'')&&!(sql||'').trim().replace(/;\\s*$/,'').includes(';');\n if(!blob&&!read){counts.sqlBlocked++;res.writeHead(403,{'Content-Type':'application/json'});res.end(JSON.stringify({error:{message:'Benchmark read-only proxy refused request',code:4030}}));return;}\n const key=createHash('sha256').update(req.method+req.url).update(body).digest('hex');\n if(cache.has(key)){counts.cacheHits++;const saved=cache.get(key);res.writeHead(saved.status,saved.headers);res.end(saved.body);return;}\n if(blob)counts.blobReads++;else counts.sqlReads++;\n const outgoing=http.request(new URL(req.url,upstream),{method:req.method,headers:{'Content-Type':'application/json',Authorization:`Basic ${Buffer.from(`${config.CRATE_USER}:${config.CRATE_PASS}`).toString('base64')}`}},response=>{\n  const chunks=[];response.on('data',c=>chunks.push(c));response.on('end',()=>{const saved={status:response.statusCode,headers:response.headers,body:Buffer.concat(chunks)};if(response.statusCode===200)cache.set(key,saved);res.writeHead(saved.status,saved.headers);res.end(saved.body);});\n });outgoing.on('error',()=>{res.writeHead(502);res.end();});outgoing.end(body);\n});\nconst tls=https.createServer({key:readFileSync('/tmp/gw-opened-bench.key'),cert:readFileSync('/tmp/gw-opened-bench.crt')},(req,res)=>{\n if(!['GET','HEAD'].includes(req.method)||['/api/poster-impressions','/api/og-image-warm','/api/e'].includes(req.url.split('?')[0])){counts.browserBlocked++;res.writeHead(204);res.end();return;}\n const outgoing=http.request({hostname:'127.0.0.1',port:34121,path:req.url,method:req.method,headers:{...req.headers,'x-forwarded-proto':'https'}},response=>{res.writeHead(response.statusCode,response.headers);response.pipe(res);});outgoing.on('error',()=>{res.writeHead(502);res.end();});req.pipe(outgoing);\n});\nasync function switchStage(next){\n if(app){const previous=app;await new Promise(resolve=>{previous.once('exit',resolve);previous.kill('SIGTERM');});}\n stage=next;const cwd=next==='baseline'?'/tmp/gw-opened-baseline/goodwatch-webapp':'/home/alp/dev/projects/goodwatch/streaming-refresh-implementation/goodwatch-webapp';\n const env={PATH:process.env.PATH,NODE_ENV:'production',NODE_OPTIONS:'--require /tmp/gw-streaming-perf-deny.cjs',PORT:'34121',HOST:'127.0.0.1',APP_ORIGIN:'https://127.0.0.1:34120',CRATE_HOSTS:'127.0.0.1',CRATE_PORT:'34122',CRATE_USER:config.CRATE_USER,CRATE_PASS:config.CRATE_PASS,QDRANT_URL:'http://127.0.0.1:34124',BETTER_AUTH_ENABLED:'false',POSTHOG_DISABLED:'true'};\n app=spawn('./node_modules/.bin/remix-serve',['./build/server/index.js'],{cwd,env,stdio:'inherit'});app.once('exit',()=>{if(app===app){};});console.log('STAGE',stage);\n}\nconst control=http.createServer(async(req,res)=>{\n if(req.method==='POST'&&['/baseline','/feature'].includes(req.url)){await switchStage(req.url.slice(1));res.end('started');return;}\n if(req.method==='GET'&&req.url==='/stats'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify({stage,...counts,cacheEntries:cache.size}));return;}\n res.writeHead(404);res.end();\n});\nawait Promise.all([new Promise(r=>proxy.listen(34122,'127.0.0.1',r)),new Promise(r=>tls.listen(34120,'127.0.0.1',r)),new Promise(r=>control.listen(34123,'127.0.0.1',r))]);\nconsole.log('GUARDED_PERF_SERVER_READY');\nfor(const signal of ['SIGTERM','SIGINT'])process.on(signal,()=>{writeFileSync('/tmp/gw-streaming-perf-proxy-counts.json',JSON.stringify(counts));app?.kill();proxy.close();tls.close();control.close();});\n"
+      },
+      "gw-streaming-read-qdrant.mjs": {
+        "sha256": "f6f142a5bf84b7e1f50411a35a30a766e2ebb938ab63662c001c6ad65d28a08e",
+        "source": "import{readFileSync}from'node:fs';import{parseEnv}from'node:util';import http from'node:http';import http2 from'node:http2';import net from'node:net';\nconst config=parseEnv(readFileSync('/home/alp/dev/projects/goodwatch/goodwatch-monorepo/goodwatch-webapp/.env','utf8'));\nconst grpc=new URL(config.QDRANT_URL);const rest=new URL(grpc);if(rest.port==='6334')rest.port='6333';\nconst counts={grpcReads:0,restReads:0,blocked:0,failures:0};\nconst methods=new Set(['Get','List','Search','SearchBatch','Query','QueryBatch','Scroll','Count','Recommend','RecommendBatch','Discover','DiscoverBatch','HealthCheck','Check']);\nconst h2=http2.createServer();h2.on('stream',(stream,headers)=>{\n const method=String(headers[':path']).split('/').pop();\n if(headers[':method']!=='POST'||!methods.has(method)){counts.blocked++;stream.respond({':status':403});stream.end();return;}\n counts.grpcReads++;const session=http2.connect(grpc.origin);let trailers={'grpc-status':'0'};let replied=false;\n session.on('error',()=>{counts.failures++;if(!replied){stream.respond({':status':502});stream.end();}else stream.close();});\n const outgoing=session.request({':method':'POST',':path':headers[':path'],'content-type':'application/grpc','te':'trailers',...(config.QDRANT_API_KEY?{'api-key':config.QDRANT_API_KEY}:{})});\n outgoing.on('response',response=>{replied=true;const safe={...response};delete safe['connection'];stream.respond(safe,{waitForTrailers:true});});\n outgoing.on('data',chunk=>stream.write(chunk));outgoing.on('trailers',value=>{trailers=value;});outgoing.on('end',()=>{stream.end();session.close();});outgoing.on('error',()=>{counts.failures++;stream.close();session.close();});\n stream.on('wantTrailers',()=>stream.sendTrailers(trailers));stream.on('error',()=>session.close());stream.pipe(outgoing);\n});\nconst h1=http.createServer((req,res)=>{\n const read=req.method==='GET'&&/^\\/(collections(?:\\/[^/?]+)?|healthz|readyz|livez)(?:\\?|$)/.test(req.url)||req.method==='POST'&&/^\\/collections\\/[^/]+\\/points\\/(query|search|scroll|count|recommend|discover)(?:\\/batch)?(?:\\?|$)/.test(req.url);\n if(!read){counts.blocked++;res.writeHead(403);res.end();return;}\n counts.restReads++;\n const outgoing=http.request(new URL(req.url,rest),{method:req.method,headers:{'content-type':'application/json',...(config.QDRANT_API_KEY?{'api-key':config.QDRANT_API_KEY}:{})}},response=>{res.writeHead(response.statusCode,response.headers);response.pipe(res);});outgoing.on('error',()=>{counts.failures++;res.writeHead(502);res.end();});req.pipe(outgoing);\n});\nconst mux=net.createServer(socket=>socket.once('data',first=>{socket.pause();const port=first.subarray(0,14).toString().startsWith('PRI * HTTP/2.0')?34126:34125;const upstream=net.connect({host:'127.0.0.1',port},()=>{upstream.write(first);socket.pipe(upstream);upstream.pipe(socket);socket.resume();});upstream.on('error',()=>socket.destroy());socket.on('error',()=>upstream.destroy());}));\nawait Promise.all([new Promise(r=>h1.listen(34125,'127.0.0.1',r)),new Promise(r=>h2.listen(34126,'127.0.0.1',r)),new Promise(r=>mux.listen(34124,'127.0.0.1',r))]);\nhttp.createServer((req,res)=>{res.setHeader('content-type','application/json');res.end(JSON.stringify(counts));}).listen(34127,'127.0.0.1');console.log('READ_QDRANT_PROXY_READY');\n"
+      },
+      "gw-streaming-perf-run.mjs": {
+        "sha256": "13a168ddf3f7dd3c43a7cb3f555cd8dc71925b55f72c75d2378ed71931907a13",
+        "source": "import lighthouse from '/home/alp/.npm/_npx/1722e863ebfd623b/node_modules/lighthouse/core/index.js';\nimport puppeteer from '/home/alp/.npm/_npx/1722e863ebfd623b/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js';\nimport {readFileSync,writeFileSync,mkdirSync} from 'node:fs';\nimport {createHash} from 'node:crypto';\nconst stage=process.argv[2];const root='/home/alp/dev/projects/goodwatch/streaming-refresh-implementation';\nconst stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\\.\\d+Z/,'Z');\nconst out=`${root}/goodwatch-benchmark/results/${stamp}-lighthouse-streaming-${stage}-matched`;\nmkdirSync(out+'/lighthouse',{recursive:true});\nconst source=readFileSync(`${root}/goodwatch-benchmark/results/20261026T015809Z-lighthouse-streaming-opened-demand-https/lighthouse-urls.txt`,'utf8');\nconst urls=source.trim().split('\\n').map(line=>{const [label,url]=line.trim().split(/\\s+/);return [label,'https://127.0.0.1:34120'+new URL(url).pathname+new URL(url).search];});\nconst policy=[];const browser=await puppeteer.launch({executablePath:'/home/alp/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome',headless:true,acceptInsecureCerts:true,args:['--no-sandbox','--disable-dev-shm-usage','--hide-scrollbars','--ignore-certificate-errors','--disable-background-networking','--disable-component-update','--disable-sync','--disable-default-apps','--no-first-run','--no-default-browser-check']});\nwriteFileSync(out+'/meta.json',JSON.stringify({kind:'lighthouse',label:`streaming-${stage}-matched`,target_url:'https://127.0.0.1:34120',stage,started_at:new Date().toISOString(),lighthouse:{runs:1,where:'local',cpu_slowdown:2.7},browser:await browser.version(),guard:'Provided Puppeteer page intercepts requests before transport; only GET/HEAD to localTLS or image.tmdb.org allowed; local demand and telemetry sinks blocked. App outbound sockets restricted to loopback; SQL proxy readonly and shared response cache.'},null,2));\nconsole.log('RUN_DIRECTORY',out);\ntry{\n for(const [label,url] of urls){\n  const context=await browser.createBrowserContext();const page=await context.newPage();await page.setBypassServiceWorker(true);await page.setRequestInterception(true);\n  const events={label,allowed:0,blocked:[],failed:[],mainStatus:null};\n  page.on('request',async request=>{\n   try{\n    const parsed=new URL(request.url());const safeMethod=['GET','HEAD'].includes(request.method());\n    const local=parsed.origin==='https://127.0.0.1:34120';const image=parsed.protocol==='https:'&&parsed.hostname==='image.tmdb.org';\n    const sink=local&&['/api/e','/api/poster-impressions','/api/og-image-warm'].includes(parsed.pathname);\n    if(!safeMethod||(!local&&!image&&!['data:','blob:','about:'].includes(parsed.protocol))||sink){\n     events.blocked.push({method:request.method(),origin:parsed.origin,resourceType:request.resourceType(),sink});\n     await request.respond({status:204,body:''});return;\n    }\n    events.allowed++;await request.continue();\n   }catch(error){if(!request.isInterceptResolutionHandled())await request.abort('blockedbyclient');}\n  });\n  page.on('requestfailed',r=>events.failed.push({origin:(()=>{try{return new URL(r.url()).origin;}catch{return 'opaque';}})(),resourceType:r.resourceType(),error:r.failure()?.errorText}));\n  page.on('response',response=>{if(response.url()===url)events.mainStatus=response.status();});\n  console.log('BEGIN',stage,label,new Date().toISOString());\n  const result=await lighthouse(url,{onlyCategories:['performance'],formFactor:'mobile',logLevel:'error',throttling:{cpuSlowdownMultiplier:2.7}},undefined,page);\n  mkdirSync(out+'/lighthouse/'+label,{recursive:true});writeFileSync(out+`/lighthouse/${label}/run-1.json`,JSON.stringify(result.lhr));\n  policy.push(events);writeFileSync(out+'/request-policy.json',JSON.stringify(policy,null,2));\n  console.log('DONE',stage,label,'status',events.mainStatus,'score',result.lhr.categories.performance.score,'requests',events.allowed,'blocked',events.blocked.length);\n  await context.close();\n }\n}finally{await browser.close();}\nconst meta=JSON.parse(readFileSync(out+'/meta.json'));meta.ended_at=new Date().toISOString();writeFileSync(out+'/meta.json',JSON.stringify(meta,null,2));\nwriteFileSync(`/tmp/gw-streaming-${stage}-run-path`,out);\nconsole.log('COMPLETE',stage);\n"
+      }
+    }
+  },
+  "checks": {
+    "feature_build_unchanged": true,
+    "baseline_source_matches": true
+  },
+  "budget_after_first_view_reservation": {
+    "baseline": {
+      "command": "cd goodwatch-benchmark && ./bench.sh budget --run results/20261026T025138Z-lighthouse-streaming-baseline-matched",
+      "exit_code": 1,
+      "pass": false,
+      "failed_surfaces": [
+        "home",
+        "movie",
+        "show",
+        "person",
+        "discover",
+        "share_list"
+      ],
+      "failure_labels": {
+        "home": [
+          "host_requests",
+          "script_count",
+          "script_bytes",
+          "blocking_requests"
+        ],
+        "movie": [
+          "host_requests",
+          "script_count",
+          "script_bytes",
+          "image_count",
+          "image_bytes",
+          "total_bytes"
+        ],
+        "show": [
+          "host_requests",
+          "script_count",
+          "script_bytes",
+          "total_bytes"
+        ],
+        "person": [
+          "html_bytes",
+          "host_requests",
+          "script_count",
+          "script_bytes",
+          "total_bytes"
+        ],
+        "discover": [
+          "host_requests",
+          "script_count",
+          "script_bytes",
+          "lcp_element"
+        ],
+        "share_list": [
+          "host_requests",
+          "script_count",
+          "script_bytes",
+          "total_bytes"
+        ]
+      }
+    },
+    "feature": {
+      "command": "cd goodwatch-benchmark && ./bench.sh budget --run results/20261026T024634Z-lighthouse-streaming-feature-matched",
+      "exit_code": 1,
+      "pass": false,
+      "failed_surfaces": [
+        "home",
+        "movie",
+        "show",
+        "person",
+        "discover",
+        "share_list"
+      ],
+      "failure_labels": {
+        "home": [
+          "host_requests",
+          "script_count",
+          "script_bytes",
+          "blocking_requests"
+        ],
+        "movie": [
+          "host_requests",
+          "script_count",
+          "script_bytes",
+          "image_count",
+          "image_bytes",
+          "total_bytes"
+        ],
+        "show": [
+          "host_requests",
+          "script_count",
+          "script_bytes",
+          "total_bytes"
+        ],
+        "person": [
+          "html_bytes",
+          "host_requests",
+          "script_count",
+          "script_bytes",
+          "total_bytes"
+        ],
+        "discover": [
+          "host_requests",
+          "script_count",
+          "script_bytes",
+          "lcp_element"
+        ],
+        "share_list": [
+          "host_requests",
+          "script_count",
+          "script_bytes",
+          "total_bytes"
+        ]
+      }
+    },
+    "reservation_bytes": 1024,
+    "reserved_surfaces": [
+      "home",
+      "movie",
+      "show",
+      "person",
+      "discover"
+    ],
+    "unchanged_share_list": true,
+    "final_caps": {
+      "home": {
+        "script_bytes": 302080,
+        "total_bytes": 818176,
+        "note": "The social ranking now renders in the initial HTML. Reserve 32 KiB for markup and loader data, 16 KiB for the board, and two shared script chunks. Live Lighthouse calibration is pending. Opened-demand first-view transport reserves 1 KiB of script and total bytes; matched browser measurement adds 732 script bytes. Other caps retain their existing calibration."
+      },
+      "movie": {
+        "script_bytes": 331776,
+        "total_bytes": 541696,
+        "note": "Opened-demand first-view transport reserves 1 KiB of script and total bytes; matched browser measurement adds 859 script bytes. Other caps retain their existing calibration."
+      },
+      "show": {
+        "script_bytes": 361472,
+        "total_bytes": 717824,
+        "note": "Opened-demand first-view transport reserves 1 KiB of script and total bytes; matched browser measurement adds 862 script bytes. Other caps retain their existing calibration."
+      },
+      "person": {
+        "script_bytes": 198656,
+        "total_bytes": 505856,
+        "note": "Opened-demand first-view transport reserves 1 KiB of script and total bytes; matched browser measurement adds 691 script bytes. Other caps retain their existing calibration."
+      },
+      "discover": {
+        "script_bytes": 304128,
+        "total_bytes": 849920,
+        "note": "Opened-demand first-view transport reserves 1 KiB of script and total bytes; matched browser measurement adds 713 script bytes. Other caps retain their existing calibration."
+      },
+      "share_list": {
+        "script_bytes": 209920,
+        "total_bytes": 494592,
+        "note": null
+      }
+    },
+    "introduced_failure_labels": []
+  },
+  "cleanup": {
+    "owned_runtime_servers_stopped": true,
+    "local_ports_closed": [
+      34120,
+      34121,
+      34122,
+      34123,
+      34124,
+      34125,
+      34126,
+      34127
+    ],
+    "unrelated_jobs_untouched": true
+  }
+}

@@ -1,10 +1,10 @@
 {
   "command": "PYTHONPATH=goodwatch-flows/windmill:goodwatch-flows/tests python goodwatch-flows/tests/offline_unittest.py discover -s goodwatch-flows/tests -p test_*.py",
   "feature": {
-    "tests": 1863,
+    "tests": 1892,
     "failures": 79,
     "errors": 112,
-    "skipped": 97
+    "skipped": 109
   },
   "base_commit": "a9f4cf06cd51aa73cf5e6bec6ad8eab7389751f2",
   "baseline": {
@@ -22,5 +22,5 @@
     "ERROR: test_shared_registry_parity (test_provider_alias_resolution.AliasResolutionTests)",
     "ERROR: test_the_hand_written_table_has_the_columns_the_webapp_uses (test_mcp_action_schema.McpActionSchemaTests)"
   ],
-  "limits": "Same Python environment, network denied. Baseline exported goodwatch-flows only, so six extra errors reference unavailable sibling artifacts. Existing failures include missing optional dependencies and unrelated trope/social/sitemap checks. Focused current tests with disposable Mongo:99 passed."
+  "limits": "Same Python environment, network denied. Baseline exported goodwatch-flows only, so six extra errors reference unavailable sibling artifacts. Existing failures include missing optional dependencies and unrelated trope/social/sitemap checks. Final focused producer/monitor/publication run:201 tests,8 optional skips; separate real-Mongo monitor22 tests and provider21 tests passed. Disposable CrateDB7 integration tests and migration/queue14 unit checks passed."
 }

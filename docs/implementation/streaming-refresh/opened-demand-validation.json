@@ -86,7 +86,8 @@
       "PostHog",
       "Faststats"
     ],
-    "caps_changed": false
+    "caps_changed": false,
+    "superseded_by": "browser-budget-comparison.json"
   },
   "baseline_comparison": {
     "method": "Clean HEAD webapp archive built separately with same dependencies; compare Brotli sizes of matching JS chunk names actually requested by final Lighthouse run. Every observed script has a matching baseline chunk name; this is not a second baseline browser benchmark.",
@@ -136,7 +137,8 @@
         "delta": 3425
       }
     },
-    "interpretation": "Existing caps are below baseline matched-chunk bytes on every surface; this change adds approximately0.9\u20133.5KiB of Brotli script bytes in this comparison. No unrelated budget limit increases."
+    "interpretation": "Historical matching-chunk comparison used mismatched Sentry release build settings and must not be used to attribute its0.9\u20133.5KiB delta to feature source. Superseded by a real matched browser baseline with identical release settings.",
+    "superseded_by": "browser-budget-comparison.json"
   },
   "isolation_notes": [
     "All Crate traffic from local app used a temporary proxy permitting SELECT/WITH read statements and GET blob objects only; mutating SQL, multi-statements and blob writes were rejected.",
@@ -158,5 +160,20 @@
     "diff_check_passed": true,
     "contract": "source_kind omitted defaults poster; explicit opened; source-separated1800second dedupe; server current timestamp monotonic; canonical media/TMDB identity; no acknowledgment, cooldown, claim or lease changes",
     "ui": "Details hook independent of poster; hero duplicate removed; TV title/rating share hook gated by power/menu/intro and viewport visibility; responsive canvas replacement rebound"
+  },
+  "current_budget_reservation": {
+    "bytes": 1024,
+    "metrics": [
+      "script_bytes",
+      "total_bytes"
+    ],
+    "surfaces": [
+      "home",
+      "movie",
+      "show",
+      "person",
+      "discover"
+    ],
+    "reason": "Required first-view opened/impression demand transport; matched browser source-only script growth732\u2013862bytes. Share list shrinks and gets no increase. Other caps unchanged; no introduced failure labels, overall inherited budget still red."
   }
 }
