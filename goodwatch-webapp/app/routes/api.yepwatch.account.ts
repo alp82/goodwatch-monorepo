@@ -3,6 +3,7 @@ import { fillWebFetchGaps } from "../server/web-fetch-gaps.server";
 import { createMemberResource } from "../server/yepwatch/member-resource.server";
 import {
   goodwatchMemberPrefill,
+  goodwatchMemberDisplayName,
   goodwatchSavedProgress,
 } from "../server/yepwatch/continuous-member-reads.server";
 import { verifyOAuthResourceToken } from "../server/auth/oauth-access.server";
@@ -28,6 +29,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       });
       return { userId: grant.extra.userId, expiresAt: grant.expiresAt * 1000 };
     },
+    displayName: goodwatchMemberDisplayName,
     prefill: goodwatchMemberPrefill,
     progress: goodwatchSavedProgress,
   })(request);

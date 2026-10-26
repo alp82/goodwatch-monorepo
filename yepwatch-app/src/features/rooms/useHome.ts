@@ -62,10 +62,18 @@ export function useHome() {
   const left: HomeRoom[] = classified.flatMap((x) => (x.c?.kind === 'left' ? [x.c.room] : []));
   const unavailable = classified.flatMap((x) => (x.c?.kind === 'unavailable' ? [x.c] : []));
   const decidedRooms = new Set(decided.map((d) => d.roomId));
+  // A remembered nickname is not proof of sign-in. Only fresh room reads establish it.
+  const memberRoom = sorted.find(({ result }) => result?.data?.own.member.state === 'linked' && !result.data.own.left && !result.error);
+  const memberSnapshot = memberRoom?.result.data;
+  const memberName = memberSnapshot?.shared.participants.find(p => p.participantId === memberSnapshot.own.participantId)?.nickname;
+  const signInRoomId = sorted.find(({ result }) => result?.data && !result.data.own.left && !result.error)?.entry.roomId;
+
   return {
     ready: registry !== null,
     loadingRooms: classified.some((x) => x.c === null),
-    nickname: registry?.nickname ?? null,
+    nickname: registry?.nickname && registry.nickname !== 'Guest' ? registry.nickname : memberName ?? registry?.nickname ?? null,
+    member: memberRoom ? { roomId: memberRoom.entry.roomId } : null,
+    signInRoomId,
     hasRooms: (registry?.rooms.length ?? 0) > 0,
     active,
     left,

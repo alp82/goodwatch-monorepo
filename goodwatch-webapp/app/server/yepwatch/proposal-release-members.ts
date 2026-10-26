@@ -16,6 +16,7 @@ import type { Env } from "./proposal-release-config.ts";
 const identity = z.object({
   userId: z.string().min(1).max(256),
   expiresAt: z.number().finite().positive(),
+  displayName: z.string().max(1024).nullable().optional(),
 });
 const prefill = z
   .object({

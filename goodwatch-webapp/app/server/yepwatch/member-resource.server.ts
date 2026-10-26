@@ -7,6 +7,7 @@ import { fillWebFetchGaps } from "../web-fetch-gaps.server.ts";
 export const MEMBER_RESOURCE_PATH = "/api/yepwatch/account";
 export interface MemberResourceReads {
   verify(token: string): Promise<{ userId: string; expiresAt: number }>;
+  displayName?(userId: string): Promise<string | null>;
   prefill(userId: string): Promise<MemberPrefill>;
   progress(userId: string): Promise<MemberProgressResponse>;
 }
@@ -54,8 +55,10 @@ export function createMemberResource(reads: MemberResourceReads) {
           : view === "progress"
           ? await reads.progress(identity.userId)
           : undefined;
+      const displayName = view === "identity" && reads.displayName
+        ? await reads.displayName(identity.userId) : undefined;
       return Response.json(
-        { ...identity, ...(data === undefined ? {} : { data }) },
+        { ...identity, ...(displayName === undefined ? {} : { displayName }), ...(data === undefined ? {} : { data }) },
         { headers }
       );
     } catch {

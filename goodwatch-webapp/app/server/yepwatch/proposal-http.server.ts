@@ -306,12 +306,15 @@ export function createProposalHandler(
 				if (request.method === "POST" && operation === "preview")
 					return reply(await service.preview(id, actor, parse(proposalPreviewSchema, await body(request))))
 				if (request.method === "GET" && !operation) {
-					const snapshot = await service.read(id, actor)
-					if (options.members)
-						snapshot.own.member = await options.members.status(
-							id,
-							snapshot.own.participantId
-						)
+					let snapshot = await service.read(id, actor)
+					if (options.members) {
+						const member = await options.members.status(id, snapshot.own.participantId)
+						// Status may repair a legacy Guest name; return its newly committed roster.
+						if (member.state === "linked" && snapshot.shared.participants.find(
+							(p) => p.participantId === snapshot.own.participantId,
+						)?.nickname === "Guest") snapshot = await service.read(id, actor)
+						snapshot.own.member = member
+					}
 					return reply(snapshot)
 				}
 				if (request.method === "GET" && operation === "member/progress") {

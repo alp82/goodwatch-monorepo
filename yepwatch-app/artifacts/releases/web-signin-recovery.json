@@ -1,0 +1,25 @@
+{
+  "base": "7c9ca7bbc1660c8cec0cf807956b8075cb7cac5b",
+  "problem": "Successful GoodWatch links retained Guest nickname; returning home hid the account action; full browser return replayed boot.",
+  "fixes": [
+    "Canonical GoodWatch display name replaces only Guest placeholder, including existing linked rooms on ordinary snapshot read.",
+    "Profile uses authoritative member state and provides a recoverable sign-in action. Existing room is reused.",
+    "Browser return skips boot with a short-lived presentation-only hint; sign-in intent is consumed."
+  ],
+  "validation": {
+    "clientUnit": 96,
+    "clientTypecheck": "pass",
+    "clientLint": "0 errors, one pre-existing unused View warning",
+    "fullBrowser": "97 passed; one outdated Android installer expectation failed, then all 4 beta tests passed with current invitation config",
+    "finalMemberBrowser": "2 passed: full document return and interrupted retry with no extra admission",
+    "backendFocused": "34 passed, one opt-in skipped; final formatted member/domain subset 29 passed",
+    "goodwatchProductionBuild": "pass",
+    "yepwatchApiBundle": "pass",
+    "nativeExports": "iOS and Android passed"
+  },
+  "limits": [
+    "Browser login tests use a fixture issuer full-page redirect and authoritative fixture room reads. Backend callback tests use the actual service with a fixture canonical account resource.",
+    "No production account or user room was inspected or automated.",
+    "No new mobile binary is published by this web fix."
+  ]
+}

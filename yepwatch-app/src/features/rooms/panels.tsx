@@ -1,3 +1,4 @@
+import { GoodWatchButton } from '../home/Landing';
 import { useState, type ReactNode } from 'react';
 import { Image, TextInput, View } from 'react-native';
 import { parseInvite } from '../../core/invites';
@@ -58,7 +59,7 @@ export function JoinPanel({ nickname, initialCode = '', action, busy, error, edi
 }
 
 /** Edits the remembered name for future rooms. Names inside existing rooms don't change. */
-export function ProfilePanel({ nickname, save }: { nickname: string | null; save: (name: string) => void }) {
+export function ProfilePanel({ nickname, save, member = false, signIn, busy, error }: { nickname: string | null; save: (name: string) => void; member?: boolean; signIn?: () => void; busy?: boolean; error?: string }) {
   const [value, setValue] = useState(nickname ?? '');
   const ok = value.trim().length > 0;
   const go = () => { if (ok) save(value.trim()); };
@@ -67,6 +68,8 @@ export function ProfilePanel({ nickname, save }: { nickname: string | null; save
       <Label>Your name</Label>
       <TextInput accessibilityLabel="Your name" value={value} onChangeText={setValue} maxLength={MAX_NAME} autoCapitalize="words" returnKeyType="done" submitBehavior="blurAndSubmit" onSubmitEditing={go} style={input} />
       <Chip>Used for new rooms</Chip>
+      {member ? <Chip>Signed in with GoodWatch</Chip> : signIn ? <GoodWatchButton onPress={signIn} disabled={busy} /> : null}
+      {error ? <GText size={14} color="#fca5a5">{error}</GText> : null}
     </Panel>
   );
 }

@@ -28,7 +28,7 @@ export interface MemberIssuer {
 		verifier: string
 		redirectUri: string
 	}): Promise<MemberTokens>
-	verify(token: string): Promise<{ userId: string; expiresAt: number }>
+	verify(token: string): Promise<{ userId: string; expiresAt: number; displayName?: string | null }>
 }
 export interface MemberReads {
 	prefill(userId: string, accessToken?: string): Promise<MemberPrefill>
@@ -54,6 +54,11 @@ export interface MemberIntent {
 }
 export const pkce = (verifier: string) =>
 	createHash("sha256").update(verifier).digest("base64url")
+/** Never replace a chosen nickname or fall back to an email address. */
+function linkedNickname(current: string, name?: string | null) {
+	const clean = name?.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 40)
+	return current === "Guest" && clean ? clean : current
+}
 export class ContinuousMembers {
 	private repo: ContinuousRepository
 	private issuer: MemberIssuer
@@ -310,6 +315,7 @@ export class ContinuousMembers {
 				"conflict",
 				"This participant is linked to another account; do not replace its identity",
 			)
+			p.nickname = linkedNickname(p.nickname, grant.displayName)
 			p.memberUserId = grant.userId
 			p.member = { state: "linked", prefill }
 			p.memberGrant = {
@@ -332,7 +338,7 @@ export class ContinuousMembers {
 			true,
 		)
 	}
-	async identity(room: ContinuousRoom, participantId: string) {
+	private async verifiedIdentity(room: ContinuousRoom, participantId: string) {
 		const p = actor(room, participantId)
 		requireRoom(
 			p.memberGrant && p.memberGrant.expiresAt > this.now(),
@@ -347,7 +353,30 @@ export class ContinuousMembers {
 			"Linked identity changed",
 			401,
 		)
-		return grant.userId
+		return grant
+	}
+	async identity(room: ContinuousRoom, participantId: string) {
+		return (await this.verifiedIdentity(room, participantId)).userId
+	}
+	/** Repair previously linked Guest names without changing their actor or choices. */
+	private async restoreNickname(
+		id: string, participantId: string, userId: string, token: string, name?: string | null,
+	) {
+		for (let attempt = 0; attempt < 6; attempt++) {
+			const old = await this.get(id)
+			const room = structuredClone(old.room)
+			const p = actor(room, participantId)
+			requireRoom(
+				p.memberUserId === userId && p.memberGrant?.accessToken === token,
+				"conflict", "Account changed while restoring its name", 409,
+			)
+			const nickname = linkedNickname(p.nickname, name)
+			if (nickname === p.nickname) return
+			p.nickname = nickname
+			room.revision++
+			if (await this.repo.compareAndSwap(old, room, true)) return
+		}
+		throw new RoomError("busy", "Room busy; refresh your account", 503, true)
 	}
 	async progress(
 		room: ContinuousRoom,
@@ -373,8 +402,11 @@ export class ContinuousMembers {
 		const p = actor(room, participantId)
 		if (!p.memberGrant) return { state: "guest", prefill: null }
 		try {
-			const userId = await this.identity(room, p.id)
-			return { state: "linked", prefill: await this.reads.prefill(userId, p.memberGrant.accessToken) }
+			const grant = await this.verifiedIdentity(room, p.id)
+			const prefill = await this.reads.prefill(grant.userId, p.memberGrant.accessToken)
+			if (linkedNickname(p.nickname, grant.displayName) !== p.nickname)
+				await this.restoreNickname(id, p.id, grant.userId, p.memberGrant.accessToken, grant.displayName)
+			return { state: "linked", prefill }
 		} catch {
 			return { state: "unavailable", prefill: null }
 		}

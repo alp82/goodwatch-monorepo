@@ -113,7 +113,8 @@ export function GlowRoom({ id, signin: initialSignin = false }: { id: string; si
   useEffect(() => {
     if (!guestOnly && initialSignin && state.access && state.room.data && !signinStarted.current) {
       signinStarted.current = true;
-      void signin();
+      router.setParams({ signin: undefined });
+      if (state.room.data.own.member.state !== 'linked') void signin();
     }
   });
   const setActivityView = state.setView;

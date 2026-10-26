@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { isMemberReturn, clearMemberReturn } from "../../core/continuous/web-member-return";
 /** One persistent wordmark reveals, then flies to the actual home header. */
 export function Boot({
   ready,
@@ -11,11 +12,13 @@ export function Boot({
   onLayout: () => void;
   onRevealed?: () => void;
 }) {
+  const [returning] = useState(isMemberReturn);
   const logo = useRef<HTMLDivElement>(null),
     curtain = useRef<HTMLDivElement>(null);
   useEffect(onLayout, [onLayout]);
   useEffect(() => {
     if (!ready) return;
+    if (returning) { clearMemberReturn(); done(); return; }
     const quiet = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const animations: Animation[] = [];
@@ -63,7 +66,8 @@ export function Boot({
       timers.forEach(clearTimeout);
       animations.forEach((a) => a.cancel());
     };
-  }, [ready, done, onRevealed]);
+  }, [ready, done, onRevealed, returning]);
+  if (returning) return null;
   return (
     <div
       data-testid="yepwatch-boot"

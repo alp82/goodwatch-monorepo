@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test';
+import invitations from '../../src/features/beta/invitations.json';
 
 test('shared beta links redirect to the install-first home and both app links work', async ({ page }) => {
   const requests: string[] = [];
   await page.route('**/api/yepwatch/**', route => { requests.push(route.request().url()); return route.abort(); });
   await page.goto('/beta');
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole('link', { name: 'Install YepWatch on iPhone' })).toHaveAttribute('href', 'https://testflight.apple.com/join/V2gzwSFA');
-  await expect(page.getByRole('link', { name: 'Install YepWatch on Android' })).toHaveAttribute('href', 'https://expo.dev/accounts/alperortac/projects/yepwatch/builds/1513ddea-0de8-47af-916e-2d846b802979');
+  await expect(page.getByRole('link', { name: 'Install YepWatch on iPhone' })).toHaveAttribute('href', invitations.ios);
+  await expect(page.getByRole('link', { name: 'Install YepWatch on Android' })).toHaveAttribute('href', invitations.android ?? invitations.androidApk);
   await expect(page.getByText('Coming soon', { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Create a room', exact: true }).click();
   await expect(page.getByLabel('Your name')).toBeVisible();

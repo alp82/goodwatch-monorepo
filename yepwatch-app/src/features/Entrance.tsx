@@ -233,9 +233,13 @@ export function Entrance({ invite }: { invite?: string }) {
       else open(room.roomId);
     }).catch(() => setError('Could not restore your invitation. Try again.'));
   }
-  const create = () => { setError(''); if (known && !admission) void enter(false, false, undefined, known); else setPanel('name-create'); };
+  const create = () => { setError(''); if (known && !admission) void enter(false, Boolean(home.member), undefined, known); else setPanel('name-create'); };
   // GoodWatch supplies the name, so Continue with GoodWatch never asks for one first.
-  const signIn = guestOnly ? undefined : () => { setError(''); void enter(false, true, undefined, known ?? ''); };
+  const signIn = guestOnly ? undefined : () => {
+    setError('');
+    if (home.signInRoomId) router.push({ pathname: '/room/[id]', params: { id: home.signInRoomId, signin: '1' } });
+    else void enter(false, true, undefined, known ?? '');
+  };
   const returning = home.hasRooms || Boolean(known);
   const pending = admission ? (admission.code ? 'join' : 'name-create') : null;
   const shown: PanelKind | null = panel ?? pending ?? (restoreFailed || recoveryBlocked ? 'join' : null);
@@ -256,7 +260,7 @@ export function Entrance({ invite }: { invite?: string }) {
   return (
     <AppFrame
       onLogo={shown ? closePanel : undefined}
-      people={<Press label="Profile" onPress={() => { setError(''); setPanel('profile'); }} style={{ alignItems: 'flex-end' }}><Avatar name={known} /></Press>}
+      people={<Press label="Profile" disabled={home.loadingRooms} onPress={() => { setError(''); setPanel('profile'); }} style={{ alignItems: 'flex-end' }}><Avatar name={known} /></Press>}
       subheader={shown ? <SubHeader back={backTo} title={titles[shown]} /> : returning ? (
         <SubHeader large title={known ? `${greeting(new Date().getHours())}, ${known}` : greeting(new Date().getHours())}
           subtitle={<GText size={13} color={glow.muted}>{active ? `${active} ${active === 1 ? 'room' : 'rooms'} going` : 'No rooms going'}</GText>}
@@ -280,7 +284,7 @@ export function Entrance({ invite }: { invite?: string }) {
           editName={() => setPanel('profile')}
           submit={(c, name) => void enter(true, false, undefined, name, c)} extra={notices} />
       )}
-      {shown === 'profile' && <ProfilePanel nickname={known} save={(name) => { void home.setNickname(name).then(() => setPanel(invite ? 'join' : null)); }} />}
+      {shown === 'profile' && <ProfilePanel nickname={known} member={Boolean(home.member)} signIn={signIn} busy={locked || home.loadingRooms} error={error} save={(name) => { void home.setNickname(name).then(() => setPanel(invite ? 'join' : null)); }} />}
       {shown === 'history' && <HistoryPanel decisions={home.decisions} left={home.left} canOpen={(id) => home.decidedRooms.has(id)} openRoom={open} returnTo={returnTo} busy={locked} />}
       {shown && <EdgeBack back={closePanel} />}
     </AppFrame>

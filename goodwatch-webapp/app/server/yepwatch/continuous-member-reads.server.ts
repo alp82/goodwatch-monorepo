@@ -57,3 +57,14 @@ export async function goodwatchSavedProgress(
 	}
 	return { source: "goodwatch", shows, limitReached: keys.length > 30 }
 }
+
+/** Public display name only; the caller has already verified this account's live grant. */
+export async function goodwatchMemberDisplayName(userId: string): Promise<string | null> {
+	const { getBetterAuth } = await import("../auth/runtime.server.ts")
+	const context = await (await getBetterAuth()).$context
+	const user = await context.adapter.findOne<{ name?: string | null }>({
+		model: "user",
+		where: [{ field: "id", value: userId }],
+	})
+	return user?.name?.trim() || null
+}

@@ -11,6 +11,7 @@ import {
   proposalFixtureCatalog,
 } from "./proposal-test-support.ts";
 import { ProposalService } from "./proposal-service.server.ts";
+import { createProposalHandler } from "./proposal-http.server.ts";
 import { pkce } from "./continuous-members.server.ts";
 
 const origin = "https://yepwatch.example";
@@ -47,6 +48,7 @@ test("remote GoodWatch signup/login completion retains guest actor, votes and pr
       assert.equal(token, "fixture-grant");
       return { userId: linkedUser, expiresAt: Date.now() + 600000 };
     },
+    async displayName(user) { assert.equal(user, linkedUser); return "Alex"; },
     async prefill(user) {
       assert.equal(user, linkedUser);
       return { country: null, serviceIds: [], savedProgressAvailable: true };
@@ -99,6 +101,7 @@ test("remote GoodWatch signup/login completion retains guest actor, votes and pr
   assert.equal(linked.returnTo, `${origin}/room/${id}`);
   const after = (await repo.read(id))!.room;
   assert.equal(after.hostId, before.hostId);
+  assert.equal(after.participants[0].nickname, "Alex", "Successful GoodWatch sign-in must replace the placeholder Guest name");
   assert.equal(after.participants.length, before.participants.length);
   assert.deepEqual(after.participants[0].votes, before.participants[0].votes);
   assert.deepEqual(
@@ -118,6 +121,20 @@ test("remote GoodWatch signup/login completion retains guest actor, votes and pr
     false
   );
   assert.equal(JSON.stringify(snapshot.shared).includes("new-account"), false);
+  // A room linked by the previous release repairs itself on its ordinary authenticated read.
+  const old = (await repo.read(id))!;
+  const legacy = structuredClone(old.room); legacy.participants[0].nickname = "Guest";
+  assert.equal(await repo.compareAndSwap(old, legacy, false), true);
+  const handler = createProposalHandler(service, {allowedOrigins:[origin],serviceSecret:"test-service-secret-at-least-thirty-two",members});
+  const restored = await handler(new Request(`${origin}/api/yepwatch/v1/proposal/rooms/${id}`, {headers:{authorization:`Bearer ${guest.credential.token}`,"x-yepwatch-participant":participantId}}));
+  assert.equal(restored.status, 200);
+  const restoredSnapshot = await restored.json();
+  assert.equal(restoredSnapshot.shared.participants[0].nickname, "Alex");
+  assert.equal(restoredSnapshot.own.member.state, "linked");
+  const named = (await repo.read(id))!; const custom = structuredClone(named.room); custom.participants[0].nickname = "Movie pal";
+  assert.equal(await repo.compareAndSwap(named, custom, false), true);
+  await members.status(id, participantId);
+  assert.equal((await repo.read(id))!.room.participants[0].nickname, "Movie pal", "Keep a deliberately chosen room nickname");
   const verifier = randomBytes(32).toString("base64url");
   const native = await members.start(id, participantId, {
     roomId: id,
