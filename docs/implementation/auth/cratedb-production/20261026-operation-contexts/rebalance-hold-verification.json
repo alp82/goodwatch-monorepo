@@ -1,0 +1,863 @@
+{
+  "recorded_utc": "2026-10-26T13:07:04.953436+00:00",
+  "scope": "Owner approved only transient rebalance none until tonight; no CANCEL, DROP, CREATE, cron change or restart",
+  "before": [
+    {
+      "host": 11,
+      "utc": "2026-10-26T12:50:06.292817+00:00",
+      "settings": {
+        "cols": [
+          "settings['cluster']['routing']['rebalance']['enable']",
+          "settings['cluster']['routing']['allocation']['enable']"
+        ],
+        "rows": [
+          [
+            "all",
+            "all"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 1.663272
+      },
+      "health": {
+        "cols": [
+          "health",
+          "count(*)",
+          "sum(missing_shards)",
+          "sum(underreplicated_shards)"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            145,
+            0,
+            0
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 2.594561
+      },
+      "nonstarted": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_appeared_in",
+            5,
+            "crate-03",
+            false,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ],
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-01",
+            true,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 14.290905
+      }
+    },
+    {
+      "host": 12,
+      "utc": "2026-10-26T12:50:06.292955+00:00",
+      "settings": {
+        "cols": [
+          "settings['cluster']['routing']['rebalance']['enable']",
+          "settings['cluster']['routing']['allocation']['enable']"
+        ],
+        "rows": [
+          [
+            "all",
+            "all"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 1.391168
+      },
+      "health": {
+        "cols": [
+          "health",
+          "count(*)",
+          "sum(missing_shards)",
+          "sum(underreplicated_shards)"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            145,
+            0,
+            0
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 2.654719
+      },
+      "nonstarted": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_appeared_in",
+            5,
+            "crate-03",
+            false,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ],
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-01",
+            true,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 15.886624
+      }
+    },
+    {
+      "host": 13,
+      "utc": "2026-10-26T12:50:06.293245+00:00",
+      "settings": {
+        "cols": [
+          "settings['cluster']['routing']['rebalance']['enable']",
+          "settings['cluster']['routing']['allocation']['enable']"
+        ],
+        "rows": [
+          [
+            "all",
+            "all"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 1.020213
+      },
+      "health": {
+        "cols": [
+          "health",
+          "count(*)",
+          "sum(missing_shards)",
+          "sum(underreplicated_shards)"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            145,
+            0,
+            0
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 2.318836
+      },
+      "nonstarted": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_appeared_in",
+            5,
+            "crate-03",
+            false,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ],
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-01",
+            true,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 10.984974
+      }
+    }
+  ],
+  "mutation": {
+    "utc": "2026-10-26T12:50:09.296163+00:00",
+    "sql": "SET GLOBAL TRANSIENT \"cluster.routing.rebalance.enable\" = 'none'",
+    "exit": 0,
+    "stdout": "{\"cols\":[],\"rows\":[[]],\"rowcount\":1,\"duration\":66.63675}",
+    "stderr": ""
+  },
+  "after": [
+    {
+      "host": 11,
+      "utc": "2026-10-26T12:50:09.296489+00:00",
+      "settings": {
+        "cols": [
+          "settings['cluster']['routing']['rebalance']['enable']",
+          "settings['cluster']['routing']['allocation']['enable']"
+        ],
+        "rows": [
+          [
+            "none",
+            "all"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 1.181961
+      },
+      "health": {
+        "cols": [
+          "health",
+          "count(*)",
+          "sum(missing_shards)",
+          "sum(underreplicated_shards)"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            145,
+            0,
+            0
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 2.500216
+      },
+      "nonstarted": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_appeared_in",
+            5,
+            "crate-03",
+            false,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ],
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-01",
+            true,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 10.538129
+      }
+    },
+    {
+      "host": 12,
+      "utc": "2026-10-26T12:50:09.296606+00:00",
+      "settings": {
+        "cols": [
+          "settings['cluster']['routing']['rebalance']['enable']",
+          "settings['cluster']['routing']['allocation']['enable']"
+        ],
+        "rows": [
+          [
+            "none",
+            "all"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 0.970821
+      },
+      "health": {
+        "cols": [
+          "health",
+          "count(*)",
+          "sum(missing_shards)",
+          "sum(underreplicated_shards)"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            145,
+            0,
+            0
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 2.802368
+      },
+      "nonstarted": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_appeared_in",
+            5,
+            "crate-03",
+            false,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ],
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-01",
+            true,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 15.144827
+      }
+    },
+    {
+      "host": 13,
+      "utc": "2026-10-26T12:50:09.296804+00:00",
+      "settings": {
+        "cols": [
+          "settings['cluster']['routing']['rebalance']['enable']",
+          "settings['cluster']['routing']['allocation']['enable']"
+        ],
+        "rows": [
+          [
+            "none",
+            "all"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 1.028096
+      },
+      "health": {
+        "cols": [
+          "health",
+          "count(*)",
+          "sum(missing_shards)",
+          "sum(underreplicated_shards)"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            145,
+            0,
+            0
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 2.827129
+      },
+      "nonstarted": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_appeared_in",
+            5,
+            "crate-03",
+            false,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ],
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-01",
+            true,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 10.999337
+      }
+    }
+  ],
+  "after_1305": [
+    {
+      "host": 11,
+      "utc": "2026-10-26T13:05:52.010320+00:00",
+      "settings": {
+        "cols": [
+          "settings['cluster']['routing']['rebalance']['enable']",
+          "settings['cluster']['routing']['allocation']['enable']"
+        ],
+        "rows": [
+          [
+            "none",
+            "all"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 0.819822
+      },
+      "health": {
+        "cols": [
+          "health",
+          "count(*)",
+          "sum(missing_shards)",
+          "sum(underreplicated_shards)"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            145,
+            0,
+            0
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 2.614051
+      },
+      "nonstarted": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_appeared_in",
+            5,
+            "crate-03",
+            false,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ],
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-01",
+            true,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 16.282818
+      }
+    },
+    {
+      "host": 12,
+      "utc": "2026-10-26T13:05:52.010532+00:00",
+      "settings": {
+        "cols": [
+          "settings['cluster']['routing']['rebalance']['enable']",
+          "settings['cluster']['routing']['allocation']['enable']"
+        ],
+        "rows": [
+          [
+            "none",
+            "all"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 1.19914
+      },
+      "health": {
+        "cols": [
+          "health",
+          "count(*)",
+          "sum(missing_shards)",
+          "sum(underreplicated_shards)"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            145,
+            0,
+            0
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 2.790348
+      },
+      "nonstarted": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_appeared_in",
+            5,
+            "crate-03",
+            false,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ],
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-01",
+            true,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 11.054811
+      }
+    },
+    {
+      "host": 13,
+      "utc": "2026-10-26T13:05:52.011142+00:00",
+      "settings": {
+        "cols": [
+          "settings['cluster']['routing']['rebalance']['enable']",
+          "settings['cluster']['routing']['allocation']['enable']"
+        ],
+        "rows": [
+          [
+            "none",
+            "all"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 1.137778
+      },
+      "health": {
+        "cols": [
+          "health",
+          "count(*)",
+          "sum(missing_shards)",
+          "sum(underreplicated_shards)"
+        ],
+        "rows": [
+          [
+            "GREEN",
+            145,
+            0,
+            0
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 2.446331
+      },
+      "nonstarted": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_appeared_in",
+            5,
+            "crate-03",
+            false,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ],
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-01",
+            true,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 13.19709
+      }
+    }
+  ],
+  "initial_1305_snapshot": [
+    {
+      "host": 11,
+      "utc": "2026-10-26T13:05:52.007609+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_13%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_130501",
+            "IN_PROGRESS",
+            1793019901675,
+            0,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 17593.105
+      }
+    },
+    {
+      "host": 12,
+      "utc": "2026-10-26T13:05:52.007840+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_13%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_130501",
+            "IN_PROGRESS",
+            1793019901675,
+            0,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 17374.117
+      }
+    },
+    {
+      "host": 13,
+      "utc": "2026-10-26T13:05:52.008011+00:00",
+      "sql": "SELECT repository,name,state,started,finished,total_shards,failures FROM sys.snapshots WHERE repository='goodwatch-db-backup-v2' AND name LIKE 'hourly_20261026_13%' ORDER BY started DESC",
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "hourly_20261026_130501",
+            "IN_PROGRESS",
+            1793019901675,
+            0,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 16071.976
+      }
+    }
+  ],
+  "initial_1305_host": {
+    "utc": "2026-10-26T13:05:53.169645+00:00",
+    "cron_sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
+    "active_backup_jobs": 1,
+    "schedule_fields": [
+      [
+        "5",
+        "*",
+        "*",
+        "*",
+        "*"
+      ]
+    ],
+    "hold_marker_count": 0,
+    "backup_log_lines": [
+      "2026-10-26T13:05:01Z Creating snapshot: hourly_20261026_130501..."
+    ],
+    "cron_journal_exit": 0,
+    "cron_invocations": [
+      {
+        "realtime_us": "1793019901365616",
+        "pid": "1840032",
+        "job": "goodwatch-crate/backup.py",
+        "root_job": true
+      }
+    ]
+  },
+  "relocation_observations": [
+    {
+      "utc": "2026-10-26T12:56:25.073376+00:00",
+      "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE state<>'STARTED' OR routing_state<>'STARTED' ORDER BY table_name,id",
+      "result": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_appeared_in",
+            5,
+            "crate-03",
+            false,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ],
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-01",
+            true,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 14.002212
+      }
+    },
+    {
+      "utc": "2026-10-26T13:01:37.702479+00:00",
+      "sql": "SELECT schema_name,table_name,id,node['name'],primary,state,routing_state,relocating_node FROM sys.shards WHERE state<>'STARTED' OR routing_state<>'STARTED' ORDER BY table_name,id",
+      "result": {
+        "cols": [
+          "schema_name",
+          "table_name",
+          "id",
+          "node['name']",
+          "primary",
+          "state",
+          "routing_state",
+          "relocating_node"
+        ],
+        "rows": [
+          [
+            "doc",
+            "person_appeared_in",
+            5,
+            "crate-03",
+            false,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ],
+          [
+            "doc",
+            "person_worked_on",
+            4,
+            "crate-01",
+            true,
+            "STARTED",
+            "RELOCATING",
+            "r0IgCe17SPOgudkQIGsRQA"
+          ]
+        ],
+        "rowcount": 2,
+        "duration": 16.836037
+      }
+    }
+  ]
+}

@@ -8,6 +8,34 @@ and temporarily hold the backup cron; those changes were restored.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Rebalance hold — owner-approved,October26 12:50 UTC
+
+Applied **only** `SET GLOBAL TRANSIENT "cluster.routing.rebalance.enable"='none'` once,
+acknowledged **12:50:09.296 UTC**. All three coordinators independently read back rebalance none,
+allocationall and145 GREEN health rows, zero missing/underreplicated shards, immediately afterward
+and again at13:05:52. [Mutation and verification receipts](rebalance-hold-verification.json).
+
+Keepnone through tonight's crate-02 restart. [Q40 plan](q40-execution-plan.md) now permits restoringall
+**only after crate-02 has rejoined and closing-shard lock clearance is confirmed**. Generic cleanup,
+a failed gate, aborted drain, GREEN alone or the04:30 hard stop must not enable balancing. If proof
+is incomplete, keep the hold and hand it over for an owner decision. The plan includes targeted
+recovery/log/old-store checks before restoringall, followed by all-node readback and observation.
+
+Fresh pre-hold inspection found a different primary move already in flight:
+**doc.person_worked_on4 primary,crate-01→crate-02**; the other move is
+**doc.person_appeared_in5 replica,crate-03→crate-02**. Both source copies remain STARTED with
+RELOCATING routing. Setting rebalancenone does not cancel these in-flight moves. No CANCEL, DROP,
+manual snapshot, replica change, decommission, restart, KILL or cron change was performed.
+The12:49/12:50 preflight,12:56/13:01 observations and13:05 all-node readbacks retain this primary
+relocation; the owner was notified that it could still delay the next snapshot despite the hold.
+
+**13:05 backup verification ongoing at this record:** root cron invoked at13:05:01.365616 UTC;
+`hourly_20261026_130501` started13:05:01.675. At13:05:52–13:06:10 every coordinator returned
+IN_PROGRESS, finish0,567 shards, no listed failures. Do not treat this as SUCCESS. Original cron
+hash remains `374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37`, one active
+`5 * * * *` job, no hold marker. Continue read-only verification; no additional production action
+is authorized to complete that snapshot. This record will be supplemented with its outcome.
+
 ## Q42 — stopped at changed preflight,October26,12:44–12:46 UTC
 
 **Backups recovered before any Q42 mutation. All coordinators now verify both snapshots SUCCESS:**

@@ -1,12 +1,20 @@
 # Q40 — crate-02 guarded restart execution plan
 
 **Planning only, prepared October26. No Q40 mutation or monitoring loop was executed today.**
+**Current owner-approved hold,October26 12:50:09 UTC:** `cluster.routing.rebalance.enable=none`
+on every coordinator, allocationall,145 GREEN. Keep this hold through tonight's restart and all
+abort/recovery paths. **Restore rebalancingall only after crate-02 rejoins and the closing-shard
+locks are confirmed gone**, using step9 below. Do not restore it as generic cleanup, on failed
+gates, or simply because GREEN returned. Record and hand over a continuing hold if those conditions
+are unproven. A new primary relocation (person_worked_on4,crate-01→crate-02) had already started
+before the hold; existing moves are not cancelled by this setting. Revalidate exact identities tonight.
+
 Execute only after a fresh owner **go**, around **2026-10-27 03:00 UTC** (04:00 CET).
-**Latest Q42 update,12:44 UTC:** the11:05 snapshot ultimately finished SUCCESS at11:40:33;
+**Historical Q42 preflight update,12:44 UTC (before the12:50 hold above):** the11:05 snapshot ultimately finished SUCCESS at11:40:33;
 the12:05 scheduled snapshot also finished SUCCESS at12:05:17, verified through every coordinator.
 The failed client wait below is historical; the fresh-backup blocker at that observation cleared.
-Q42 stopped before mutation because the approved primary relocation had already cleared. Rebalance
-remainsall, not an applied hold. Revalidate all gates tonight; health-wait cancellation is still unqualified.
+Q42 stopped before mutation because the approved primary relocation had already cleared. At that observation rebalance
+remainedall; the later12:50 hold above supersedes that setting state. Revalidate all gates tonight; health-wait cancellation is still unqualified.
 
 **Historical fresh-backup blocker (superseded by the Q42 update):** the scheduled `hourly_20261026_110502` run logged BACKUP
 FAILED at11:35:02 after CREATE ReadTimeout; native snapshot still IN_PROGRESS at11:36. Latest verified
@@ -228,19 +236,35 @@ abort-qualification blocker above must also be resolved. No repeated drain attem
    copies STARTED/STARTED and GREEN through all coordinators. Only then run
    [q40-yepwatch-restore-waits.sql](q40-yepwatch-restore-waits.sql) to restore literal wait3 behind brief
    write blocks. Verify all145 original policies, zero unexpected blocks and REQUEST unchanged.
-   Restore original Docker restart policy and graceful timeout/settings layer. Never restore wait3
+   Restore original Docker restart policy and graceful timeout/settings layer. Keep rebalance none;
+   this restoration does not include enabling rebalancing. Never restore wait3
    before three copies are active. A recovery problem is not permission for another reduction.
 9. **Verify locks and member service:** Observe sys.shards/sys.allocations/recovery progress and
    crate-02 logs every2–3min for30–40min. Require successful placement/recovery on crate-02, including
    acknowledged pending shard IDs; no new `closing shard` lock failures. Inventory all eight historical
    blocked paths from Q35, not just today's pair. Check old operation rows disappeared after the new JVM.
    Unrelated successful placement alone does not prove those eight particular stores are unlocked.
+   Require confirmed old JVM exit/new PID and targeted evidence for the previously blocked stores:
+   successful relevant recovery/placement, no recurring closing-shard lock errors, and read-only
+   recheck of the eight formerly inactive open-store paths/FDs. An existing pending recovery may
+   proceed while new balancing is held; allocationall continues to allow required replica recovery.
+   **Only after crate-02 has rejoined and lock clearance is confirmed**, restore rebalancing:
+
+   ```sql
+   SET GLOBAL TRANSIENT "cluster.routing.rebalance.enable" = 'all';
+   ```
+
+   Read backall through all three coordinators, require GREEN, then observe placement/page checks
+   for a further10min. If relevant recovery never occurs or lock clearance cannot be established,
+   keepnone and report for an owner decision; do not enable balancing merely to test whether locks
+   cleared, and do not invent a manual REROUTE under this scope.
    If no relevant allocation occurs, report lock clearance unproven; do not force a REROUTE to test it.
    Keep the10-second page monitor throughout, plus read-only MCP/health checks.
 10. **Finish/stop:** Restore cron byte-for-byte and verify one active schedule/no hold marker.
     Record next scheduled run and confirm it when due; do not trigger a manual backup. Final all-node
     GREEN, all copies STARTED/STARTED, all original policies, normal pages and no residual decommission.
-    At04:30 stop new maintenance and hand over any incomplete recovery or unlimited stop; do not force
+    At04:30 stop new maintenance and hand over any incomplete recovery, continuing rebalance hold
+    or unlimited stop; do not force
     completion, silently leave cron held, launch a second drain or treat an unresolved shutdown as cancelled.
 
 ## Live page loop and exact pre-SIGTERM abort
@@ -276,7 +300,8 @@ If still in the preceding health-wait, changing the dynamic timeout is not a qua
 cancellation. That is a pre-execution NO-GO blocker, not permission to improvise during an incident.
 Wait for the native abort log **and** internal marker removal and successful direct crate-02 SQL.
 Only then restore the original timeout (`2h`, preserving its original layer), allocationall and restart
-policy. Restore changed replicas2; require all copies/GREEN before guarded wait3 restoration and cron
+policy. Keep the separately owner-approved rebalance holdnone; an aborted restart does not meet
+the rejoin-and-lock-clearance condition for restoringall. Restore changed replicas2; require all copies/GREEN before guarded wait3 restoration and cron
 restoration. Verify all three URLs3 times, each200/<3s, and GREEN on all coordinators. If no service
 recovery within5min, report immediately; no restart, KILL, manual-marker reset or further improvisation.
 If the daemon has already exited naturally, skip abort SQL and start only the same approved container;
