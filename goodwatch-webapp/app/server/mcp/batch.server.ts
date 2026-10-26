@@ -1,5 +1,3 @@
-import type { TitleMark, TitleMarksWritten } from "./title-marks.ts"
-import type { restoreTitleMark } from "./title-mark-store.server.ts"
 // Batches of MCP title writes: up to MAX_BATCH_ITEMS titles in one call of rate_title, set_want_to_see,
 // set_not_interested, set_show_status or log_watch, and undo_watch with batch_id to take a whole call back.
 //
@@ -15,6 +13,8 @@ import * as z from "zod4"
 import type { UserData } from "../../types/user-data"
 import { canonicalTitleId } from "../../utils/title-identity.ts"
 import type { CatalogTitle } from "./data.server.ts"
+import type { restoreTitleMark } from "./title-mark-store.server.ts"
+import type { TitleMark, TitleMarksWritten } from "./title-marks.ts"
 import type { PartTarget, Snapshot, TitleWrite } from "./title-write.server.ts"
 import type { ReadArgs } from "./tools.server.ts"
 import type { WriteToolName } from "./write-names.ts"
@@ -73,12 +73,12 @@ export interface Ports {
 		user_id: string
 		titles: { tmdb_id: number; media_type: "movie" | "show"; addedAt?: Date }[]
 		action: "add" | "remove"
-	}): Promise<{ written?: TitleMarksWritten } | void>
+	}): Promise<{ written?: TitleMarksWritten } | undefined>
 	notInterestedMany(input: {
 		user_id: string
 		titles: { tmdb_id: number; media_type: "movie" | "show" }[]
 		action: "add" | "remove"
-	}): Promise<{ written?: TitleMarksWritten } | void>
+	}): Promise<{ written?: TitleMarksWritten } | undefined>
 	/** Runs `work` with member data resets held back to one at its end. */
 	deferResets<T>(work: () => Promise<T>): Promise<T>
 	resetUserData(userId: string): Promise<unknown>
@@ -405,7 +405,7 @@ export async function runBatch(
 			group: typeof pending,
 			write: (
 				titles: { tmdb_id: number; media_type: "movie" | "show" }[],
-			) => Promise<{ written?: TitleMarksWritten } | void>,
+			) => Promise<{ written?: TitleMarksWritten } | undefined>,
 		) => {
 			if (!group.length) return
 			try {
@@ -940,8 +940,16 @@ export async function undoBatch(
 					if (!changes[key]) continue
 					const expected = item.title_written?.[key]
 					if (!expected) {
+						const legacyMark = {
+							score: { label: "your score", tool: "rate_title" },
+							want_to_see: { label: "Want to See", tool: "set_want_to_see" },
+							not_interested: {
+								label: "Not interested",
+								tool: "set_not_interested",
+							},
+						}[key]
 						result.notes.push(
-							`This ${key} write wasn't confirmed, so Undo can't restore it safely.`,
+							`This batch is older than Undo protection for ${legacyMark.label}, so it stays as it is. Set it again with ${legacyMark.tool} if needed.`,
 						)
 						continue
 					}
@@ -983,14 +991,15 @@ export async function undoBatch(
 						mark: key,
 						expected,
 						value: value as number | boolean | null,
-						addedAt:
-							typeof item.want_to_see_added_at === "string"
-								? item.want_to_see_added_at
-								: null,
+						...(key === "want_to_see" &&
+						typeof item.want_to_see_added_at === "string"
+							? { addedAt: item.want_to_see_added_at }
+							: {}),
 					})
 					if (restored === "restored") {
 						wrote = tasteWrite = true
-						;(result.marks ??= {})[key] = [expected.value, value]
+						result.marks ??= {}
+						result.marks[key] = [expected.value, value]
 					}
 					if (restored === "changed") result.skipped.push(key)
 					else if (key === "score") scoreAfter = value as number | null

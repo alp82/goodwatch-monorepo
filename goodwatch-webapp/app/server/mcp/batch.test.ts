@@ -443,7 +443,8 @@ function fakeLibrary() {
 									updatedAt:
 										args.score == null
 											? null
-											: titleStamps.get(`${keyOf(userId, title)}|score`)!,
+											: (titleStamps.get(`${keyOf(userId, title)}|score`) ??
+												null),
 								},
 								not_interested: { value: false, updatedAt: null },
 							}
@@ -2091,11 +2092,96 @@ test("Undo skips a whole-title write landing after its initial snapshot (#761)",
 	assert.equal(lib.get(ME, "show:3001").score, 9)
 })
 
-test("Old whole-title receipts without a write stamp cannot overwrite a score (#761)", async () => {
- const lib = fakeLibrary()
- const result = await write(lib, "rate_title", { action_id: "old-receipt", items: [{ title_id: "show:3001", score: 8 }] })
- delete (result.items as { title_written?: unknown }[])[0].title_written
- const undone = await write(lib, "undo_watch", { action_id: "undo-old-receipt", batch_id: "old-receipt" })
- assert.equal(itemsOf(undone)[0].status, "not_undoable")
- assert.equal(lib.get(ME, "show:3001").score, 8)
+for (const [tool, mark, value, label] of [
+	["rate_title", "score", 8, "your score"],
+	["set_want_to_see", "want_to_see", true, "Want to See"],
+	["set_not_interested", "not_interested", true, "Not interested"],
+] as const) {
+	test(`Older receipts explain missing Undo protection for ${label} (#761)`, async () => {
+		const lib = fakeLibrary()
+		const result = await write(lib, tool, {
+			action_id: "old-receipt",
+			items: [{ title_id: "show:3001", [mark]: value }],
+		})
+		;(result.items as { title_written?: unknown }[])[0].title_written =
+			undefined
+		const undone = await write(lib, "undo_watch", {
+			action_id: "undo-old-receipt",
+			batch_id: "old-receipt",
+		})
+		const [item] = undone.items as { status: string; notes: string[] }[]
+		assert.equal(item.status, "not_undoable")
+		assert.deepEqual(item.notes, [
+			`This batch is older than Undo protection for ${label}, so it stays as it is. Set it again with ${tool} if needed.`,
+		])
+		assert.equal(lib.get(ME, "show:3001")[mark], value)
+	})
+}
+
+test("Undo passes the original Wishlist time only for Want to See (#761)", async () => {
+	const lib = fakeLibrary()
+	const addedAt = "2026-01-02T03:04:05.000Z"
+	lib.set(ME, "movie:1001", {
+		want_to_see: true,
+		want_to_see_added_at: addedAt,
+	})
+	await write(lib, "set_not_interested", {
+		action_id: "hide-with-wishlist-time",
+		items: [{ title_id: "movie:1001", not_interested: true }],
+	})
+	const restore = lib.ports.restoreTitleMark
+	const inputs: Parameters<typeof restore>[0][] = []
+	lib.ports.restoreTitleMark = async (input) => {
+		inputs.push(input)
+		return restore(input)
+	}
+	await write(lib, "undo_watch", {
+		action_id: "undo-hide-with-wishlist-time",
+		batch_id: "hide-with-wishlist-time",
+	})
+	assert.deepEqual(
+		inputs.map(({ mark, addedAt }) => [mark, addedAt]),
+		[
+			["not_interested", undefined],
+			["want_to_see", addedAt],
+		],
+	)
+})
+
+test("Only a restored Wishlist row inherits the original Wishlist time (#761)", async () => {
+	const { restoreTitleMark } = await import("./title-mark-store.server.ts")
+	const addedAt = "2026-01-02T03:04:05.000Z"
+	for (const mark of ["score", "want_to_see", "not_interested"] as const) {
+		const statements: { sql: string; params: (string | number | Date)[] }[] = []
+		const answer = await restoreTitleMark(
+			{
+				user_id: ME,
+				tmdb_id: 1001,
+				media_type: "movie",
+				mark,
+				addedAt,
+				expected: { value: mark === "score" ? null : false, updatedAt: null },
+				value: mark === "score" ? 4 : true,
+			},
+			{
+				async query<T>() {
+					return [] as T[]
+				},
+				async execute(sql, params) {
+					statements.push({ sql, params })
+					return { rowcount: 1 }
+				},
+			},
+		)
+		assert.equal(answer, "restored")
+		const [statement] = statements
+		assert.match(statement.sql, /INSERT INTO/)
+		const [, , , createdAt, updatedAt] = statement.params
+		assert.ok(createdAt instanceof Date)
+		assert.ok(updatedAt instanceof Date)
+		assert.equal(
+			createdAt.toISOString(),
+			mark === "want_to_see" ? addedAt : updatedAt.toISOString(),
+		)
+	}
 })

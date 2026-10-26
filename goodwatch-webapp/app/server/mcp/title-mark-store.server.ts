@@ -65,7 +65,8 @@ export async function restoreTitleMark(
 		// An absent row has no version. DO NOTHING makes a concurrent insert win, without an upsert over it.
 		const columns = mark === "score" ? ", score" : ""
 		const values = mark === "score" ? ", ?" : ""
-		const added = input.addedAt ? new Date(input.addedAt) : now
+		const added =
+			mark === "want_to_see" && input.addedAt ? new Date(input.addedAt) : now
 		result = await db.execute(
 			`INSERT INTO ${table} (user_id, tmdb_id, media_type, created_at, updated_at${columns}) VALUES (?, ?, ?, ?, ?${values}) ON CONFLICT (user_id, tmdb_id, media_type) DO NOTHING`,
 			[
@@ -77,15 +78,16 @@ export async function restoreTitleMark(
 		)
 	} else {
 		const version = [Number(row._seq_no), Number(row._primary_term)]
-		result = present(value)
-			? await db.execute(
-					`UPDATE ${table} SET score = ?, updated_at = ? WHERE ${where} AND _seq_no = ? AND _primary_term = ?`,
-					[value as number, now, ...key, ...version],
-				)
-			: await db.execute(
-					`DELETE FROM ${table} WHERE ${where} AND _seq_no = ? AND _primary_term = ?`,
-					[...key, ...version],
-				)
+		result =
+			mark === "score" && present(value)
+				? await db.execute(
+						`UPDATE ${table} SET score = ?, updated_at = ? WHERE ${where} AND _seq_no = ? AND _primary_term = ?`,
+						[value as number, now, ...key, ...version],
+					)
+				: await db.execute(
+						`DELETE FROM ${table} WHERE ${where} AND _seq_no = ? AND _primary_term = ?`,
+						[...key, ...version],
+					)
 	}
 	return result.rowcount ? "restored" : "changed"
 }

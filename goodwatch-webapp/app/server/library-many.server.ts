@@ -1,4 +1,3 @@
-import type { TitleMarksWritten } from "./mcp/title-marks.ts"
 // Wishlist and Not interested changes for many titles of one member at once, for MCP batch writes: one multi-row
 // statement per change (and per media type for a delete) and one member data reset, where the single-title writers
 // in wishList.server.ts and not-interested.server.ts take several statements and a reset per title.
@@ -8,6 +7,7 @@ import { markTasteChanged } from "~/server/taste/index.server"
 import { resetUserDataCache } from "~/server/userData.server"
 import { execute, insertRows } from "~/utils/crate"
 import { canonicalTitleId } from "~/utils/title-identity"
+import type { TitleMarksWritten } from "./mcp/title-marks.ts"
 import { markPersonalOrderChanged } from "./personal-order/rebuild.server.ts"
 
 export interface ManyTitles {

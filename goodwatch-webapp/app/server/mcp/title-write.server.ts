@@ -1,4 +1,3 @@
-import type { TitleMarksWritten } from "./title-marks.ts"
 import type { UserData } from "../../types/user-data"
 import {
 	EpisodeScoreTargetError,
@@ -23,6 +22,7 @@ import { getUserData } from "../userData.server"
 import { applyWatchLogAction } from "../watch-log.server"
 import { updateWishList } from "../wishList.server"
 import { type CatalogTitle, readMemberTool } from "./data.server.ts"
+import type { TitleMarksWritten } from "./title-marks.ts"
 import type { WriteToolName } from "./write-names.ts"
 import type { WriteArgs } from "./write-tools.server.ts"
 
@@ -318,10 +318,14 @@ export async function applyTitleWrite(
 		wantToSeeAddedAt: string | null
 		notInterested: boolean
 	}) => {
-		if (cleared?.wantToSeeAddedAt)
-			(titleWritten ??= {}).want_to_see = { value: false, updatedAt: null }
-		if (cleared?.notInterested)
-			(titleWritten ??= {}).not_interested = { value: false, updatedAt: null }
+		if (cleared?.wantToSeeAddedAt) {
+			titleWritten ??= {}
+			titleWritten.want_to_see = { value: false, updatedAt: null }
+		}
+		if (cleared?.notInterested) {
+			titleWritten ??= {}
+			titleWritten.not_interested = { value: false, updatedAt: null }
+		}
 	}
 	let partWritten: PartWrite | undefined
 	let watchAdded: { id: string; created_at: number } | undefined
