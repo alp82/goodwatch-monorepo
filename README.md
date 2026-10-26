@@ -3,8 +3,12 @@
 <a href="https://goodwatch.app"><picture><source media="(prefers-reduced-motion: reduce)" srcset=".github/readme/banner.webp"><img src=".github/readme/banner.avif" alt="GoodWatch: find what to watch next. A soft spotlight moves across a slowly drifting wall of posters." width="100%"></picture></a>
 
 <p>
-  <a href="https://goodwatch.app"><img src="https://shieldcn.dev/badge/open-goodwatch.app-fbbf24.svg?logo=lu:Globe" alt="Open goodwatch.app"></a>
-  <a href="https://discord.gg/TVAcrfQzcA"><img src="https://shieldcn.dev/discord/members/TVAcrfQzcA.svg?variant=branded" alt="Discord members"></a>
+  <a href="https://goodwatch.app"><img src="https://shieldcn.dev/badge/open-goodwatch.app-fbbf24.svg?logo=lu:Globe&height=48&fontSize=18&iconSize=20&padX=18&radius=10" alt="Open goodwatch.app"></a>
+  <a href="https://discord.gg/TVAcrfQzcA"><img src="https://shieldcn.dev/discord/members/TVAcrfQzcA.svg?variant=branded&height=48&fontSize=18&iconSize=20&padX=18&radius=10" alt="Discord members"></a>
+  <a href="https://x.com/alperortac"><img src="https://shieldcn.dev/badge/follow-@alperortac-000000.svg?logo=x&variant=branded&height=48&fontSize=18&iconSize=20&padX=18&radius=10" alt="Follow @alperortac on X"></a>
+</p>
+
+<p>
   <a href="https://github.com/alp82/goodwatch-monorepo/stargazers"><img src="https://shieldcn.dev/github/stars/alp82/goodwatch-monorepo.svg?variant=secondary" alt="GitHub stars"></a>
   <a href="https://github.com/alp82/goodwatch-monorepo/commits/main"><img src="https://shieldcn.dev/github/last-commit/alp82/goodwatch-monorepo.svg?variant=secondary" alt="Last commit"></a>
   <a href="LICENSE"><img src="https://shieldcn.dev/github/license/alp82/goodwatch-monorepo.svg?variant=outline" alt="MIT license"></a>
