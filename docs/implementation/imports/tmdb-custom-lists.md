@@ -62,4 +62,8 @@ paging, not an authenticated member's complete list inventory. Aggregate evidenc
 Import/IMDb/import-UI/shared-list regression: **902 passed, 0 failed**. Typecheck
 has the same **334 output lines** as the untouched starting commit
 `7bdbbb95da7e3a20f229afaeb9acbc7c9289985f`; no diagnostic was added. These are local
-checks, not deployment or signed-in member acceptance.
+checks, not deployment or signed-in member acceptance. A clean dependency install
+(`npm ci --ignore-scripts`) followed by `npm run build` also passed. The first
+local build attempt used the shared workspace dependencies and was blocked by its
+missing `@mdx-js/rollup`; the isolated dependency install resolved that environment
+gap without changing the lockfile.
