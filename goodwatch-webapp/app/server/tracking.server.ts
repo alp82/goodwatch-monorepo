@@ -1095,6 +1095,13 @@ async function applyShowEventStored(
 			return refusal(applied.refused, stateOnly(before))
 		}
 		const { insert, deleteIds, state, stateWrite, clear } = applied.changes
+		// Every earlier round completed its log deletion before attempting the state CAS. Any row selected
+		// for deletion now was added/restored since that attempt, even if its watch id was reused. Never
+		// broaden an unwatch/season removal over that later choice. Let the member review it after a 409.
+		if (round > 0 && deleteIds.length) {
+			await finish(userId)
+			throw new TrackingConflictError()
+		}
 		// 4. The log rows: one insert, or one delete naming the rows the machine removed.
 		const { rowcount: written } = await insertLog(userId, insert, now)
 		if (guard && deleteIds.includes(guard.watchId)) {

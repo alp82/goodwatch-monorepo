@@ -1,0 +1,243 @@
+{
+  "baseCommit": "bb1265d4a5a980a4fcd32023fed85ac49029a7d0",
+  "issue633Commit": "63be93efed1f948b6baaf16b92bb49616414d63d",
+  "schemaChange": false,
+  "productionAccess": false,
+  "mcpBatchEdited": false,
+  "redControls": {
+    "633": {
+      "command": "node --test --test-name-pattern=\"a lost movie state INSERT\" app/server/tracking.test.ts",
+      "failure": "Movie stays Seen after its only watch is deleted"
+    },
+    "634": {
+      "command": "node --test --test-name-pattern=\"a conflicted\" app/server/tracking.test.ts",
+      "failures": 4,
+      "failure": "Unwatch and season-removal retries delete the replacement tick, with either a new or reused ID"
+    }
+  },
+  "relatedWebappTests": {
+    "tests": 211,
+    "pass": 211,
+    "fail": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "focusedImportTests": {
+    "tests": 2,
+    "pass": 2,
+    "fail": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "flows": {
+    "command": "PYTHONPATH=windmill python -m pytest tests/test_watch_migration.py tests/test_watch_migration_rules.py tests/test_awaited_titles.py",
+    "passed": 70
+  },
+  "typecheck": {
+    "command": "npx tsc --noEmit",
+    "branchDiagnostics": 192,
+    "baselineDiagnostics": 192,
+    "identicalAfterNormalizingLineNumbers": true
+  },
+  "fullWebapp": {
+    "tests": 5251,
+    "pass": 5232,
+    "fail": 11,
+    "skipped": 8,
+    "todo": 0
+  },
+  "baselineFullWebapp": {
+    "tests": 5244,
+    "pass": 5225,
+    "fail": 10,
+    "skipped": 8,
+    "todo": 1
+  },
+  "fullWebappAssessment": {
+    "sharedBaselineFailures": 9,
+    "additionalTransientFailures": [
+      "all library and own recipes retain at least 15 quota winners; cap and 12k selection budget",
+      "question and completed analytics retain deterministic UUIDs across restarted passes"
+    ],
+    "transientRechecks": {
+      "branch": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "baseline": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    "baselineAlsoHadTimingBenchmarkFailure": "ranking 1,200 titles with default reasons stays under 5 ms after warmup"
+  },
+  "crateTrackingProof": {
+    "file": "tracking-write-races-proof.json",
+    "passed": true,
+    "showFirstInserts": 10,
+    "movieFirstInserts": 10,
+    "removalConflicts": 6,
+    "sourceHashesMatchFinalFiles": true,
+    "cleanupFile": "tracking-write-races-proof-cleanup.json"
+  },
+  "gracefulAttempts": [
+    {
+      "passed": false,
+      "error": "No failed page loaders/actions\n\n5 !== 0\n",
+      "routes": {
+        "movie": {
+          "succeeded": 138,
+          "failed": 4
+        },
+        "show": {
+          "succeeded": 183,
+          "failed": 1
+        },
+        "person": {
+          "succeeded": 257,
+          "failed": 0
+        },
+        "library": {
+          "succeeded": 358,
+          "failed": 0
+        },
+        "explore": {
+          "succeeded": 466,
+          "failed": 0
+        },
+        "watch": {
+          "succeeded": 98,
+          "failed": 0
+        },
+        "score": {
+          "succeeded": 100,
+          "failed": 0
+        },
+        "catalog": {
+          "succeeded": 897,
+          "failed": 0
+        }
+      },
+      "cleanupVerified": true
+    },
+    {
+      "passed": false,
+      "error": "No failed page loaders/actions\n\n4 !== 0\n",
+      "routes": {
+        "movie": {
+          "succeeded": 236,
+          "failed": 2
+        },
+        "show": {
+          "succeeded": 242,
+          "failed": 2
+        },
+        "person": {
+          "succeeded": 328,
+          "failed": 0
+        },
+        "library": {
+          "succeeded": 404,
+          "failed": 0
+        },
+        "explore": {
+          "succeeded": 540,
+          "failed": 0
+        },
+        "watch": {
+          "succeeded": 100,
+          "failed": 0
+        },
+        "score": {
+          "succeeded": 119,
+          "failed": 0
+        },
+        "catalog": {
+          "succeeded": 1017,
+          "failed": 0
+        }
+      },
+      "cleanupVerified": true
+    }
+  ],
+  "gracefulAssessment": "Title-page three-second budgets fail before the post-load tracking scenarios. The original route gate is unchanged and remains a validation limitation.",
+  "scratchLogs": "/home/alp/.cache/gw-work",
+  "gracefulBaseline": {
+    "trackingBaselineCommit": "bb1265d4a",
+    "passed": false,
+    "error": "No failed page loaders/actions\n\n4 !== 0\n",
+    "routes": {
+      "movie": {
+        "succeeded": 161,
+        "failed": 3
+      },
+      "show": {
+        "succeeded": 181,
+        "failed": 1
+      },
+      "person": {
+        "succeeded": 270,
+        "failed": 0
+      },
+      "library": {
+        "succeeded": 348,
+        "failed": 0
+      },
+      "explore": {
+        "succeeded": 470,
+        "failed": 0
+      },
+      "watch": {
+        "succeeded": 92,
+        "failed": 0
+      },
+      "score": {
+        "succeeded": 80,
+        "failed": 0
+      },
+      "catalog": {
+        "succeeded": 818,
+        "failed": 0
+      }
+    },
+    "titleFailureExamples": {
+      "movie": [
+        {
+          "status": 503,
+          "text": "{\"data\":{},\"errors\":{\"movie\":{\"message\":\"Title temporarily unavailable. Please try again shortly.\"}}}",
+          "error": "movie: HTTP 503 {\"data\":{},\"errors\":{\"movie\":{\"message\":\"Title temporarily unavailable. Please try again shortly.\"}}}\n\n503 !== 200\n"
+        },
+        {
+          "status": 503,
+          "text": "{\"data\":{},\"errors\":{\"movie\":{\"message\":\"Title temporarily unavailable. Please try again shortly.\"}}}",
+          "error": "movie: HTTP 503 {\"data\":{},\"errors\":{\"movie\":{\"message\":\"Title temporarily unavailable. Please try again shortly.\"}}}\n\n503 !== 200\n"
+        },
+        {
+          "status": 503,
+          "text": "{\"data\":{},\"errors\":{\"movie\":{\"message\":\"Title temporarily unavailable. Please try again shortly.\"}}}",
+          "error": "movie: HTTP 503 {\"data\":{},\"errors\":{\"movie\":{\"message\":\"Title temporarily unavailable. Please try again shortly.\"}}}\n\n503 !== 200\n"
+        }
+      ],
+      "show": [
+        {
+          "status": 503,
+          "text": "{\"data\":{},\"errors\":{\"show\":{\"message\":\"Title temporarily unavailable. Please try again shortly.\"}}}",
+          "error": "show: HTTP 503 {\"data\":{},\"errors\":{\"show\":{\"message\":\"Title temporarily unavailable. Please try again shortly.\"}}}\n\n503 !== 200\n"
+        }
+      ]
+    },
+    "cleanup": {
+      "verifiedAt": "2026-10-26T00:28:43.744Z",
+      "project": "goodwatch-client-588",
+      "containersRemaining": 0,
+      "volumesRemaining": 0,
+      "networksRemaining": 0
+    }
+  }
+}

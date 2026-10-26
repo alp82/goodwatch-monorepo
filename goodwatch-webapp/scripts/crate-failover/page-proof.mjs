@@ -249,7 +249,7 @@ export async function preparePageProof(sql) {
 		],
 		["catalog", "/api/proof-catalog"],
 	]
-	const request = async ([kind, path, body]) => {
+	const request = async ([kind, path, body], expectedStatus = 200) => {
 		const start = performance.now()
 		stats[kind] ??= { succeeded: 0, failed: 0, maxMs: 0, examples: [] }
 		const row = stats[kind]
@@ -271,7 +271,7 @@ export async function preparePageProof(sql) {
 			text = await result.text()
 			assert.equal(
 				status,
-				200,
+				expectedStatus,
 				`${kind}: HTTP ${status} ${text.slice(0, 1000)}`,
 			)
 			const data = JSON.parse(text).data?.[kind]
@@ -295,7 +295,7 @@ export async function preparePageProof(sql) {
 				assert.equal(data.refused, null)
 				acknowledgedWatches.push(payload.action.watchId)
 			}
-			if (kind === "tracking") assert.equal(data.status, "applied")
+			if (kind === "tracking" && expectedStatus === 200) assert.equal(data.status, "applied")
 			row.succeeded++
 			return data
 		} catch (error) {
@@ -317,6 +317,7 @@ export async function preparePageProof(sql) {
 		stats,
 		acknowledgedWatches,
 		movieAction: (id, action) => request(["watch", "/api/watch-log", () => ({ tmdb_id: id, action })]),
+		trackingFailure: (id, event, status) => request(["tracking", "/api/tracking/show", () => ({ id, event })], status),
 		trackingAction: (id, event, actionId) => request(["tracking", "/api/tracking/show", () => ({ id, event, actionId })]),
 		requestRoute: (kind) => request(cases.find(([name]) => name === kind)),
 		warm: async () => {

@@ -4495,3 +4495,48 @@ for (const bulk of [false, true]) {
 		assert.equal(db.table("user_watch_state")[0].insert_token, receipt)
 	})
 }
+
+for (const removal of ["unwatch", "unmarkSeason"] as const) {
+	for (const replacementId of ["device-b-new-tick", "original-tick"]) {
+		test(`a conflicted ${removal} never removes another device's replacement tick (${replacementId})`, async () => {
+			await tick(1, 1, "original-tick")
+			const original = db.execute.bind(db)
+			let intercepted = false
+			db.execute = async (sql, params = []) => {
+				if (!intercepted && /^\s*UPDATE user_watch_state\b/.test(sql)) {
+					intercepted = true
+					// A has removed the watch but not acquired state ownership. B sees it unticked and ticks
+					// it again. An Undo/reused identity must be protected just like a newly generated tick id.
+					assert.deepEqual(ticks(), [])
+					assert.equal((await tick(1, 1, replacementId)).status, "applied")
+				}
+				return original(sql, params)
+			}
+			setCrateClientForTest(db)
+			const result = await act(removal === "unwatch"
+				? { type: "unwatch", season: 1, number: 1 }
+				: { type: "unmarkSeason", season: 1 }).catch((error) => error)
+			assert.deepEqual(ticks(), ["1.1"])
+			assert.deepEqual(logOf().map((row) => row.watch_id), [replacementId])
+			assert.ok(result instanceof TrackingConflictError)
+			assert.equal((await getShowTracking(user, SHOW)).state?.state, "watching")
+		})
+	}
+}
+
+test("an unwatch can retry a state conflict without deleting a replacement watch", async () => {
+	await tick(1, 1, "original-tick")
+	const original = db.execute.bind(db)
+	let intercepted = false
+	db.execute = async (sql, params = []) => {
+		if (!intercepted && /^\s*UPDATE user_watch_state\b/.test(sql)) {
+			intercepted = true
+			await tick(1, 2, "other-episode")
+		}
+		return original(sql, params)
+	}
+	setCrateClientForTest(db)
+	assert.equal((await act({ type: "unwatch", season: 1, number: 1 })).status, "applied")
+	assert.deepEqual(ticks(), ["1.2"])
+	assert.equal((await getShowTracking(user, SHOW)).state?.state, "watching")
+})

@@ -1,0 +1,2441 @@
+{
+  "startedAt": "2026-10-26T00:24:32.320Z",
+  "client": "../../app/utils/crate.ts",
+  "clientSha256": "62a8bc742b4ac52384bdabd54b6702e57379a7e52b56647ae64c4e42a54b915e",
+  "baselineCommit": null,
+  "trackingOnly": true,
+  "nodeVersion": "v24.15.0",
+  "endpointScope": [
+    "http://127.0.0.1:17430",
+    "http://127.0.0.2:17430",
+    "http://127.0.0.3:17430"
+  ],
+  "assertions": [
+    {
+      "label": "Pinned cluster nodes",
+      "actual": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ],
+      "expected": [
+        [
+          "node1",
+          "5.10.16"
+        ],
+        [
+          "node2",
+          "5.10.16"
+        ],
+        [
+          "node3",
+          "5.10.16"
+        ]
+      ]
+    },
+    {
+      "label": "show-first-insert-unwatch-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "show-first-insert-unwatch-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "show-first-insert-unwatch-reset: returned logical state",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "label": "show-first-insert-unwatch-reset: physical state",
+      "actual": "not_started",
+      "expected": "not_started"
+    },
+    {
+      "label": "show-first-insert-unwatch-reset: stored watches",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "show-first-insert-unwatch-reset: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "show-first-insert-unwatch-reset: immutable receipt",
+      "actual": "4c303395-9fbc-4f9b-9ff4-afdbeaa2e393",
+      "expected": "4c303395-9fbc-4f9b-9ff4-afdbeaa2e393"
+    },
+    {
+      "label": "show-first-insert-unwatch-reset: no write after the next action",
+      "actual": 4,
+      "expected": 4
+    },
+    {
+      "label": "show-first-insert-unwatch-reset: absent from member lists",
+      "actual": [
+        [
+          0
+        ]
+      ],
+      "expected": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "label": "show-first-insert-unwatch-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "show-first-insert-unwatch-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "show-first-insert-unwatch-timeout: returned logical state",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "label": "show-first-insert-unwatch-timeout: physical state",
+      "actual": "not_started",
+      "expected": "not_started"
+    },
+    {
+      "label": "show-first-insert-unwatch-timeout: stored watches",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "show-first-insert-unwatch-timeout: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "show-first-insert-unwatch-timeout: immutable receipt",
+      "actual": "e5cc7fdd-0418-484e-991a-0bc9976b40a6",
+      "expected": "e5cc7fdd-0418-484e-991a-0bc9976b40a6"
+    },
+    {
+      "label": "show-first-insert-unwatch-timeout: no write after the next action",
+      "actual": 6,
+      "expected": 6
+    },
+    {
+      "label": "show-first-insert-unwatch-timeout: absent from member lists",
+      "actual": [
+        [
+          0
+        ]
+      ],
+      "expected": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "label": "show-first-insert-unchanged-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "show-first-insert-unchanged-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "show-first-insert-unchanged-reset: returned logical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "show-first-insert-unchanged-reset: physical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "show-first-insert-unchanged-reset: stored watches",
+      "actual": [
+        "show-first-insert-unchanged-reset-first"
+      ],
+      "expected": [
+        "show-first-insert-unchanged-reset-first"
+      ]
+    },
+    {
+      "label": "show-first-insert-unchanged-reset: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "show-first-insert-unchanged-reset: immutable receipt",
+      "actual": "ab2fc30f-ac10-4f39-8229-75051490434d",
+      "expected": "ab2fc30f-ac10-4f39-8229-75051490434d"
+    },
+    {
+      "label": "show-first-insert-unchanged-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "show-first-insert-unchanged-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "show-first-insert-unchanged-timeout: returned logical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "show-first-insert-unchanged-timeout: physical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "show-first-insert-unchanged-timeout: stored watches",
+      "actual": [
+        "show-first-insert-unchanged-timeout-first"
+      ],
+      "expected": [
+        "show-first-insert-unchanged-timeout-first"
+      ]
+    },
+    {
+      "label": "show-first-insert-unchanged-timeout: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "show-first-insert-unchanged-timeout: immutable receipt",
+      "actual": "4d32a2a6-cbbe-48ed-8cba-3381079f2ff6",
+      "expected": "4d32a2a6-cbbe-48ed-8cba-3381079f2ff6"
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-reset: returned logical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-reset: physical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-reset: stored watches",
+      "actual": [
+        "show-first-insert-unwatch-and-rewatch-reset-later"
+      ],
+      "expected": [
+        "show-first-insert-unwatch-and-rewatch-reset-later"
+      ]
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-reset: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-reset: immutable receipt",
+      "actual": "0d0cc078-0b5c-4ac7-9ac8-99b472207121",
+      "expected": "0d0cc078-0b5c-4ac7-9ac8-99b472207121"
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-reset: no write after the next action",
+      "actual": 11,
+      "expected": 11
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-timeout: returned logical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-timeout: physical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-timeout: stored watches",
+      "actual": [
+        "show-first-insert-unwatch-and-rewatch-timeout-later"
+      ],
+      "expected": [
+        "show-first-insert-unwatch-and-rewatch-timeout-later"
+      ]
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-timeout: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-timeout: immutable receipt",
+      "actual": "ed24d1cc-ce2b-47b6-9fea-5e570da3ea65",
+      "expected": "ed24d1cc-ce2b-47b6-9fea-5e570da3ea65"
+    },
+    {
+      "label": "show-first-insert-unwatch-and-rewatch-timeout: no write after the next action",
+      "actual": 14,
+      "expected": 14
+    },
+    {
+      "label": "show-first-insert-not-applied-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "show-first-insert-not-applied-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "show-first-insert-not-applied-reset: returned logical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "show-first-insert-not-applied-reset: physical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "show-first-insert-not-applied-reset: stored watches",
+      "actual": [
+        "show-first-insert-not-applied-reset-first"
+      ],
+      "expected": [
+        "show-first-insert-not-applied-reset-first"
+      ]
+    },
+    {
+      "label": "show-first-insert-not-applied-reset: dispatched INSERT count",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "show-first-insert-not-applied-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "show-first-insert-not-applied-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "show-first-insert-not-applied-timeout: returned logical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "show-first-insert-not-applied-timeout: physical state",
+      "actual": "watching",
+      "expected": "watching"
+    },
+    {
+      "label": "show-first-insert-not-applied-timeout: stored watches",
+      "actual": [
+        "show-first-insert-not-applied-timeout-first"
+      ],
+      "expected": [
+        "show-first-insert-not-applied-timeout-first"
+      ]
+    },
+    {
+      "label": "show-first-insert-not-applied-timeout: dispatched INSERT count",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-reset: returned logical state",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-reset: physical state",
+      "actual": "not_started",
+      "expected": "not_started"
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-reset: stored watches",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-reset: dispatched INSERT count",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-reset: immutable receipt",
+      "actual": "c8dd8ec6-c949-4e40-bc59-e32c6aee89ac",
+      "expected": "c8dd8ec6-c949-4e40-bc59-e32c6aee89ac"
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-reset: no write after the next action",
+      "actual": 18,
+      "expected": 18
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-reset: absent from member lists",
+      "actual": [
+        [
+          0
+        ]
+      ],
+      "expected": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-timeout: returned logical state",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-timeout: physical state",
+      "actual": "not_started",
+      "expected": "not_started"
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-timeout: stored watches",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-timeout: dispatched INSERT count",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-timeout: immutable receipt",
+      "actual": "22874d07-4ce7-4f4c-83a9-9d5593e03d3f",
+      "expected": "22874d07-4ce7-4f4c-83a9-9d5593e03d3f"
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-timeout: no write after the next action",
+      "actual": 20,
+      "expected": 20
+    },
+    {
+      "label": "show-first-insert-pending-after-readback-timeout: absent from member lists",
+      "actual": [
+        [
+          0
+        ]
+      ],
+      "expected": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "label": "movie-first-insert-unwatch-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "movie-first-insert-unwatch-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "movie-first-insert-unwatch-reset: returned logical state",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "label": "movie-first-insert-unwatch-reset: physical state",
+      "actual": "not_started",
+      "expected": "not_started"
+    },
+    {
+      "label": "movie-first-insert-unwatch-reset: stored watches",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "movie-first-insert-unwatch-reset: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "movie-first-insert-unwatch-reset: immutable receipt",
+      "actual": "0bfe50c2-a41e-4f80-b5fe-38c1f70d9bd4",
+      "expected": "0bfe50c2-a41e-4f80-b5fe-38c1f70d9bd4"
+    },
+    {
+      "label": "movie-first-insert-unwatch-reset: no write after the next action",
+      "actual": 22,
+      "expected": 22
+    },
+    {
+      "label": "movie-first-insert-unwatch-reset: absent from member lists",
+      "actual": [
+        [
+          0
+        ]
+      ],
+      "expected": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "label": "movie-first-insert-unwatch-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "movie-first-insert-unwatch-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "movie-first-insert-unwatch-timeout: returned logical state",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "label": "movie-first-insert-unwatch-timeout: physical state",
+      "actual": "not_started",
+      "expected": "not_started"
+    },
+    {
+      "label": "movie-first-insert-unwatch-timeout: stored watches",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "movie-first-insert-unwatch-timeout: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "movie-first-insert-unwatch-timeout: immutable receipt",
+      "actual": "9e236aeb-2c25-4b8c-bd24-fa303ac31b46",
+      "expected": "9e236aeb-2c25-4b8c-bd24-fa303ac31b46"
+    },
+    {
+      "label": "movie-first-insert-unwatch-timeout: no write after the next action",
+      "actual": 24,
+      "expected": 24
+    },
+    {
+      "label": "movie-first-insert-unwatch-timeout: absent from member lists",
+      "actual": [
+        [
+          0
+        ]
+      ],
+      "expected": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "label": "movie-first-insert-unchanged-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "movie-first-insert-unchanged-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "movie-first-insert-unchanged-reset: returned logical state",
+      "actual": "seen",
+      "expected": "seen"
+    },
+    {
+      "label": "movie-first-insert-unchanged-reset: physical state",
+      "actual": "seen",
+      "expected": "seen"
+    },
+    {
+      "label": "movie-first-insert-unchanged-reset: stored watches",
+      "actual": [
+        "movie-first-insert-unchanged-reset-first"
+      ],
+      "expected": [
+        "movie-first-insert-unchanged-reset-first"
+      ]
+    },
+    {
+      "label": "movie-first-insert-unchanged-reset: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "movie-first-insert-unchanged-reset: immutable receipt",
+      "actual": "7e2e4219-0da8-47e1-ae96-c8da1967aff8",
+      "expected": "7e2e4219-0da8-47e1-ae96-c8da1967aff8"
+    },
+    {
+      "label": "movie-first-insert-unchanged-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "movie-first-insert-unchanged-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "movie-first-insert-unchanged-timeout: returned logical state",
+      "actual": "seen",
+      "expected": "seen"
+    },
+    {
+      "label": "movie-first-insert-unchanged-timeout: physical state",
+      "actual": "seen",
+      "expected": "seen"
+    },
+    {
+      "label": "movie-first-insert-unchanged-timeout: stored watches",
+      "actual": [
+        "movie-first-insert-unchanged-timeout-first"
+      ],
+      "expected": [
+        "movie-first-insert-unchanged-timeout-first"
+      ]
+    },
+    {
+      "label": "movie-first-insert-unchanged-timeout: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "movie-first-insert-unchanged-timeout: immutable receipt",
+      "actual": "2ce4466c-5e23-424e-88fd-adb0ff69713a",
+      "expected": "2ce4466c-5e23-424e-88fd-adb0ff69713a"
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-reset: returned logical state",
+      "actual": "seen",
+      "expected": "seen"
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-reset: physical state",
+      "actual": "seen",
+      "expected": "seen"
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-reset: stored watches",
+      "actual": [
+        "movie-first-insert-unwatch-and-rewatch-reset-later"
+      ],
+      "expected": [
+        "movie-first-insert-unwatch-and-rewatch-reset-later"
+      ]
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-reset: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-reset: immutable receipt",
+      "actual": "62d3ba2f-d4ee-4f98-96c7-7b3c0c6f29ad",
+      "expected": "62d3ba2f-d4ee-4f98-96c7-7b3c0c6f29ad"
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-reset: no write after the next action",
+      "actual": 29,
+      "expected": 29
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-timeout: returned logical state",
+      "actual": "seen",
+      "expected": "seen"
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-timeout: physical state",
+      "actual": "seen",
+      "expected": "seen"
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-timeout: stored watches",
+      "actual": [
+        "movie-first-insert-unwatch-and-rewatch-timeout-later"
+      ],
+      "expected": [
+        "movie-first-insert-unwatch-and-rewatch-timeout-later"
+      ]
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-timeout: dispatched INSERT count",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-timeout: immutable receipt",
+      "actual": "e7ca51fe-67e8-4ef6-863b-8d9e3947ff2c",
+      "expected": "e7ca51fe-67e8-4ef6-863b-8d9e3947ff2c"
+    },
+    {
+      "label": "movie-first-insert-unwatch-and-rewatch-timeout: no write after the next action",
+      "actual": 32,
+      "expected": 32
+    },
+    {
+      "label": "movie-first-insert-not-applied-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "movie-first-insert-not-applied-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "movie-first-insert-not-applied-reset: returned logical state",
+      "actual": "seen",
+      "expected": "seen"
+    },
+    {
+      "label": "movie-first-insert-not-applied-reset: physical state",
+      "actual": "seen",
+      "expected": "seen"
+    },
+    {
+      "label": "movie-first-insert-not-applied-reset: stored watches",
+      "actual": [
+        "movie-first-insert-not-applied-reset-first"
+      ],
+      "expected": [
+        "movie-first-insert-not-applied-reset-first"
+      ]
+    },
+    {
+      "label": "movie-first-insert-not-applied-reset: dispatched INSERT count",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "movie-first-insert-not-applied-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "movie-first-insert-not-applied-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "movie-first-insert-not-applied-timeout: returned logical state",
+      "actual": "seen",
+      "expected": "seen"
+    },
+    {
+      "label": "movie-first-insert-not-applied-timeout: physical state",
+      "actual": "seen",
+      "expected": "seen"
+    },
+    {
+      "label": "movie-first-insert-not-applied-timeout: stored watches",
+      "actual": [
+        "movie-first-insert-not-applied-timeout-first"
+      ],
+      "expected": [
+        "movie-first-insert-not-applied-timeout-first"
+      ]
+    },
+    {
+      "label": "movie-first-insert-not-applied-timeout: dispatched INSERT count",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-reset: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-reset: returned logical state",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-reset: physical state",
+      "actual": "not_started",
+      "expected": "not_started"
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-reset: stored watches",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-reset: dispatched INSERT count",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-reset: immutable receipt",
+      "actual": "c68fe311-59ec-4e4c-aeb5-d7a7fbdb4bd2",
+      "expected": "c68fe311-59ec-4e4c-aeb5-d7a7fbdb4bd2"
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-reset: no write after the next action",
+      "actual": 36,
+      "expected": 36
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-reset: absent from member lists",
+      "actual": [
+        [
+          0
+        ]
+      ],
+      "expected": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-timeout: route outcome",
+      "actual": "applied",
+      "expected": "applied"
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-timeout: returned logical state",
+      "actual": null,
+      "expected": null
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-timeout: physical state",
+      "actual": "not_started",
+      "expected": "not_started"
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-timeout: stored watches",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-timeout: dispatched INSERT count",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-timeout: immutable receipt",
+      "actual": "9e4af187-f176-4de4-bc09-4a673b4936f7",
+      "expected": "9e4af187-f176-4de4-bc09-4a673b4936f7"
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-timeout: no write after the next action",
+      "actual": 38,
+      "expected": 38
+    },
+    {
+      "label": "movie-first-insert-pending-after-readback-timeout: absent from member lists",
+      "actual": [
+        [
+          0
+        ]
+      ],
+      "expected": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "label": "removal-unwatch-conflict: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "removal-unwatch-conflict: replacement watch survives",
+      "actual": [
+        "removal-unwatch-conflict-replacement"
+      ],
+      "expected": [
+        "removal-unwatch-conflict-replacement"
+      ]
+    },
+    {
+      "label": "removal-unwatch-conflict: replacement state untouched",
+      "actual": [
+        [
+          "watching",
+          40
+        ]
+      ],
+      "expected": [
+        [
+          "watching",
+          40
+        ]
+      ]
+    },
+    {
+      "label": "removal-unwatch-conflict: original CAS and replacement CAS only",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "removal-unwatch-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "removal-unwatch-reset: replacement watch survives",
+      "actual": [
+        "removal-unwatch-reset-replacement"
+      ],
+      "expected": [
+        "removal-unwatch-reset-replacement"
+      ]
+    },
+    {
+      "label": "removal-unwatch-reset: replacement state untouched",
+      "actual": [
+        [
+          "watching",
+          42
+        ]
+      ],
+      "expected": [
+        [
+          "watching",
+          42
+        ]
+      ]
+    },
+    {
+      "label": "removal-unwatch-reset: original CAS and replacement CAS only",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "removal-unwatch-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "removal-unwatch-timeout: replacement watch survives",
+      "actual": [
+        "removal-unwatch-timeout-replacement"
+      ],
+      "expected": [
+        "removal-unwatch-timeout-replacement"
+      ]
+    },
+    {
+      "label": "removal-unwatch-timeout: replacement state untouched",
+      "actual": [
+        [
+          "watching",
+          44
+        ]
+      ],
+      "expected": [
+        [
+          "watching",
+          44
+        ]
+      ]
+    },
+    {
+      "label": "removal-unwatch-timeout: original CAS and replacement CAS only",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "removal-unmarkSeason-conflict: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "removal-unmarkSeason-conflict: replacement watch survives",
+      "actual": [
+        "removal-unmarkSeason-conflict-replacement"
+      ],
+      "expected": [
+        "removal-unmarkSeason-conflict-replacement"
+      ]
+    },
+    {
+      "label": "removal-unmarkSeason-conflict: replacement state untouched",
+      "actual": [
+        [
+          "watching",
+          46
+        ]
+      ],
+      "expected": [
+        [
+          "watching",
+          46
+        ]
+      ]
+    },
+    {
+      "label": "removal-unmarkSeason-conflict: original CAS and replacement CAS only",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "removal-unmarkSeason-reset: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "removal-unmarkSeason-reset: replacement watch survives",
+      "actual": [
+        "removal-unmarkSeason-reset-replacement"
+      ],
+      "expected": [
+        "removal-unmarkSeason-reset-replacement"
+      ]
+    },
+    {
+      "label": "removal-unmarkSeason-reset: replacement state untouched",
+      "actual": [
+        [
+          "watching",
+          48
+        ]
+      ],
+      "expected": [
+        [
+          "watching",
+          48
+        ]
+      ]
+    },
+    {
+      "label": "removal-unmarkSeason-reset: original CAS and replacement CAS only",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "removal-unmarkSeason-timeout: proxy errors",
+      "actual": [],
+      "expected": []
+    },
+    {
+      "label": "removal-unmarkSeason-timeout: replacement watch survives",
+      "actual": [
+        "removal-unmarkSeason-timeout-replacement"
+      ],
+      "expected": [
+        "removal-unmarkSeason-timeout-replacement"
+      ]
+    },
+    {
+      "label": "removal-unmarkSeason-timeout: replacement state untouched",
+      "actual": [
+        [
+          "watching",
+          50
+        ]
+      ],
+      "expected": [
+        [
+          "watching",
+          50
+        ]
+      ]
+    },
+    {
+      "label": "removal-unmarkSeason-timeout: original CAS and replacement CAS only",
+      "actual": 2,
+      "expected": 2
+    },
+    {
+      "label": "No proxy errors",
+      "actual": [],
+      "expected": []
+    }
+  ],
+  "failures": [],
+  "sourceSha256": {
+    "../../app/utils/crate.ts": "62a8bc742b4ac52384bdabd54b6702e57379a7e52b56647ae64c4e42a54b915e",
+    "../../app/utils/crate-diagnostics.ts": "1e4e070a8f1d73c7ee509e15bcf3b276ad15b110c65c1469f31dad2cd25f4e18",
+    "../../app/server/tracking.server.ts": "f64ea5652a28acb0f64b9e89c51697b04469e48cc2d7d9c82ac0fbed028d393e",
+    "../../app/server/combined-search/catalog.server.ts": "97c880db2d271b3c74639494972cdbcaa510875a07a3c4342b3f2d0170cae547",
+    "../../app/server/search-ranking/search-index-build.server.ts": "7456f61c6f4781582d05c9628901c039c11005f195e86a13b965ad1c1496a63b",
+    "../../app/server/page-cache.server.ts": "b974c43015f1986342ed6d1bec71ed6ae5903f47bfb4706ab992cc6a5ae4f1a0",
+    "./verify.mjs": "598612c171940094301a7df4495efc554d65d3a6294a80706a67a4579b3dbd24",
+    "./first-insert-proof.mjs": "0832da9fea44bc669d78e9054d9fe1f611cb9b9dbf958a4b559a45c029d1a9d8",
+    "./removal-retry-proof.mjs": "071eb683415c6a7a99aef5daadb0b01187dd32ef3c9a79b45b7a3abe7fecd0c1",
+    "./page-proof.mjs": "1e83742872e5f28e53d0cd77d36c0f6d654fd715d553a5097e7bf49fc6e1c5dc",
+    "./build-page-proof.mjs": "cd6c9e776a50fc0cd5408d406a4bed7a793af6deff96ba5bcfcad4de01d7afc4",
+    "./page-loaders.ts": "80c419f50e51429cb3084d01b8c4b0f58d1c93ceb62e8eb3d995b3c60d1e272c",
+    "./compose.yaml": "f10623e22b45f15205cbb89c6e15527d14e49e0831f936ab42286f7c5de35355",
+    "./run.sh": "4cc542cbbd698c6c95703aa35c534c48546c52a0bfc92b29fb925efaf5f35bc4",
+    "./page-loaders.generated.mjs": "4e0bf0f0015e06e6c1f4944f129e47de82120f090b914fe7a89ddb8454a2e21b"
+  },
+  "trackingBaselineCommit": null,
+  "trackingRuntimeSha256": "f64ea5652a28acb0f64b9e89c51697b04469e48cc2d7d9c82ac0fbed028d393e",
+  "nodes": [
+    [
+      "node1",
+      "5.10.16"
+    ],
+    [
+      "node2",
+      "5.10.16"
+    ],
+    [
+      "node3",
+      "5.10.16"
+    ]
+  ],
+  "beforeShards": [
+    [
+      0,
+      true,
+      "node3",
+      "STARTED"
+    ],
+    [
+      0,
+      false,
+      "node1",
+      "STARTED"
+    ],
+    [
+      0,
+      false,
+      "node2",
+      "STARTED"
+    ],
+    [
+      1,
+      true,
+      "node2",
+      "STARTED"
+    ],
+    [
+      1,
+      false,
+      "node1",
+      "STARTED"
+    ],
+    [
+      1,
+      false,
+      "node3",
+      "STARTED"
+    ],
+    [
+      2,
+      true,
+      "node1",
+      "STARTED"
+    ],
+    [
+      2,
+      false,
+      "node2",
+      "STARTED"
+    ],
+    [
+      2,
+      false,
+      "node3",
+      "STARTED"
+    ]
+  ],
+  "pageTables": [
+    "crawl_priority",
+    "anime_mapping_snapshot",
+    "age_certification",
+    "country",
+    "job",
+    "language",
+    "timezone",
+    "genre",
+    "streaming_service",
+    "movie",
+    "show",
+    "movie_series",
+    "season",
+    "episode",
+    "season_translation",
+    "episode_translation",
+    "imdb_episode",
+    "imdb_season",
+    "rotten_tomatoes_season",
+    "metacritic_season",
+    "media_image",
+    "media_video",
+    "profile_tropes_snapshot",
+    "trope_catalog",
+    "trope",
+    "alternative_title",
+    "translation",
+    "release_event",
+    "production_company",
+    "network",
+    "person",
+    "person_appeared_in",
+    "person_worked_on",
+    "streaming_evidence",
+    "availability_history",
+    "streaming_availability",
+    "user_setting",
+    "user_skipped",
+    "user_not_interested",
+    "user_wishlist",
+    "user_list_exposure",
+    "user_score",
+    "user_episode_score",
+    "user_favorite",
+    "user_watch_log",
+    "user_watch_state",
+    "search_terms",
+    "search_embedding_inputs",
+    "search_embedding_state",
+    "search_index_builds",
+    "search_control",
+    "search_interpretations",
+    "search_spending",
+    "search_history",
+    "search_shadow",
+    "user_list",
+    "user_profile",
+    "discord_together",
+    "discord_guild",
+    "user_handle",
+    "catalog_correction",
+    "catalog_correction_event",
+    "feedback_report",
+    "feedback_screenshot",
+    "user_avatar",
+    "user_discord_link",
+    "user_import_connection",
+    "user_import",
+    "user_import_item",
+    "social_image",
+    "social_relevance",
+    "social_content_quality",
+    "social_post",
+    "social_title_link",
+    "social_link_report",
+    "social_ingest_run"
+  ],
+  "trackingMigration": {
+    "legacyRowsPreserved": true,
+    "insertTokenNullable": true,
+    "backfillNeeded": false
+  },
+  "pageRoutes": {
+    "movie": {
+      "succeeded": 1,
+      "failed": 0,
+      "maxMs": 1671.2178400000012,
+      "examples": []
+    },
+    "show": {
+      "succeeded": 1,
+      "failed": 0,
+      "maxMs": 318.23905000000013,
+      "examples": []
+    },
+    "person": {
+      "succeeded": 1,
+      "failed": 0,
+      "maxMs": 368.29103100000066,
+      "examples": []
+    },
+    "library": {
+      "succeeded": 1,
+      "failed": 0,
+      "maxMs": 191.67089199999828,
+      "examples": []
+    },
+    "explore": {
+      "succeeded": 1,
+      "failed": 0,
+      "maxMs": 11.514918999997462,
+      "examples": []
+    },
+    "watch": {
+      "succeeded": 19,
+      "failed": 0,
+      "maxMs": 10095.728677000006,
+      "examples": []
+    },
+    "score": {
+      "succeeded": 1,
+      "failed": 0,
+      "maxMs": 76.23418300000048,
+      "examples": []
+    },
+    "catalog": {
+      "succeeded": 1,
+      "failed": 0,
+      "maxMs": 71.18210000000181,
+      "examples": []
+    },
+    "tracking": {
+      "succeeded": 36,
+      "failed": 0,
+      "maxMs": 10097.040539000001,
+      "examples": []
+    }
+  },
+  "beforeHealth": [
+    [
+      "GREEN",
+      77
+    ]
+  ],
+  "firstInserts": [
+    {
+      "id": "show-first-insert-unwatch-reset",
+      "timeout": false,
+      "disposition": "unwatch",
+      "writes": 1,
+      "state": "not_started",
+      "watches": 0,
+      "version": 4,
+      "finalActionVersion": 4,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "show-first-insert-unwatch-timeout",
+      "timeout": true,
+      "disposition": "unwatch",
+      "writes": 1,
+      "state": "not_started",
+      "watches": 0,
+      "version": 6,
+      "finalActionVersion": 6,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "show-first-insert-unchanged-reset",
+      "timeout": false,
+      "disposition": "unchanged",
+      "writes": 1,
+      "state": "watching",
+      "watches": 1,
+      "version": 7,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "show-first-insert-unchanged-timeout",
+      "timeout": true,
+      "disposition": "unchanged",
+      "writes": 1,
+      "state": "watching",
+      "watches": 1,
+      "version": 8,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "show-first-insert-unwatch-and-rewatch-reset",
+      "timeout": false,
+      "disposition": "unwatch-and-rewatch",
+      "writes": 1,
+      "state": "watching",
+      "watches": 1,
+      "version": 11,
+      "finalActionVersion": 11,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "show-first-insert-unwatch-and-rewatch-timeout",
+      "timeout": true,
+      "disposition": "unwatch-and-rewatch",
+      "writes": 1,
+      "state": "watching",
+      "watches": 1,
+      "version": 14,
+      "finalActionVersion": 14,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "show-first-insert-not-applied-reset",
+      "timeout": false,
+      "disposition": "not-applied",
+      "writes": 2,
+      "state": "watching",
+      "watches": 1,
+      "version": 15,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "show-first-insert-not-applied-timeout",
+      "timeout": true,
+      "disposition": "not-applied",
+      "writes": 2,
+      "state": "watching",
+      "watches": 1,
+      "version": 16,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "show-first-insert-pending-after-readback-reset",
+      "timeout": false,
+      "disposition": "pending-after-readback",
+      "writes": 2,
+      "state": "not_started",
+      "watches": 0,
+      "version": 18,
+      "finalActionVersion": 18,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "show-first-insert-pending-after-readback-timeout",
+      "timeout": true,
+      "disposition": "pending-after-readback",
+      "writes": 2,
+      "state": "not_started",
+      "watches": 0,
+      "version": 20,
+      "finalActionVersion": 20,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "movie-first-insert-unwatch-reset",
+      "timeout": false,
+      "disposition": "unwatch",
+      "writes": 1,
+      "state": "not_started",
+      "watches": 0,
+      "version": 22,
+      "finalActionVersion": 22,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "movie-first-insert-unwatch-timeout",
+      "timeout": true,
+      "disposition": "unwatch",
+      "writes": 1,
+      "state": "not_started",
+      "watches": 0,
+      "version": 24,
+      "finalActionVersion": 24,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "movie-first-insert-unchanged-reset",
+      "timeout": false,
+      "disposition": "unchanged",
+      "writes": 1,
+      "state": "seen",
+      "watches": 1,
+      "version": 25,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "movie-first-insert-unchanged-timeout",
+      "timeout": true,
+      "disposition": "unchanged",
+      "writes": 1,
+      "state": "seen",
+      "watches": 1,
+      "version": 26,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "movie-first-insert-unwatch-and-rewatch-reset",
+      "timeout": false,
+      "disposition": "unwatch-and-rewatch",
+      "writes": 1,
+      "state": "seen",
+      "watches": 1,
+      "version": 29,
+      "finalActionVersion": 29,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "movie-first-insert-unwatch-and-rewatch-timeout",
+      "timeout": true,
+      "disposition": "unwatch-and-rewatch",
+      "writes": 1,
+      "state": "seen",
+      "watches": 1,
+      "version": 32,
+      "finalActionVersion": 32,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "movie-first-insert-not-applied-reset",
+      "timeout": false,
+      "disposition": "not-applied",
+      "writes": 2,
+      "state": "seen",
+      "watches": 1,
+      "version": 33,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "movie-first-insert-not-applied-timeout",
+      "timeout": true,
+      "disposition": "not-applied",
+      "writes": 2,
+      "state": "seen",
+      "watches": 1,
+      "version": 34,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "movie-first-insert-pending-after-readback-reset",
+      "timeout": false,
+      "disposition": "pending-after-readback",
+      "writes": 2,
+      "state": "not_started",
+      "watches": 0,
+      "version": 36,
+      "finalActionVersion": 36,
+      "receiptConfirmed": true
+    },
+    {
+      "id": "movie-first-insert-pending-after-readback-timeout",
+      "timeout": true,
+      "disposition": "pending-after-readback",
+      "writes": 2,
+      "state": "not_started",
+      "watches": 0,
+      "version": 38,
+      "finalActionVersion": 38,
+      "receiptConfirmed": true
+    }
+  ],
+  "removalRetries": [
+    {
+      "id": "removal-unwatch-conflict",
+      "disposition": "conflict",
+      "removal": "unwatch",
+      "httpStatus": 409,
+      "replacementVersion": 40,
+      "watches": [
+        "removal-unwatch-conflict-replacement"
+      ],
+      "stateWrites": 2
+    },
+    {
+      "id": "removal-unwatch-reset",
+      "disposition": "reset",
+      "removal": "unwatch",
+      "httpStatus": 500,
+      "replacementVersion": 42,
+      "watches": [
+        "removal-unwatch-reset-replacement"
+      ],
+      "stateWrites": 2
+    },
+    {
+      "id": "removal-unwatch-timeout",
+      "disposition": "timeout",
+      "removal": "unwatch",
+      "httpStatus": 500,
+      "replacementVersion": 44,
+      "watches": [
+        "removal-unwatch-timeout-replacement"
+      ],
+      "stateWrites": 2
+    },
+    {
+      "id": "removal-unmarkSeason-conflict",
+      "disposition": "conflict",
+      "removal": "unmarkSeason",
+      "httpStatus": 409,
+      "replacementVersion": 46,
+      "watches": [
+        "removal-unmarkSeason-conflict-replacement"
+      ],
+      "stateWrites": 2
+    },
+    {
+      "id": "removal-unmarkSeason-reset",
+      "disposition": "reset",
+      "removal": "unmarkSeason",
+      "httpStatus": 500,
+      "replacementVersion": 48,
+      "watches": [
+        "removal-unmarkSeason-reset-replacement"
+      ],
+      "stateWrites": 2
+    },
+    {
+      "id": "removal-unmarkSeason-timeout",
+      "disposition": "timeout",
+      "removal": "unmarkSeason",
+      "httpStatus": 500,
+      "replacementVersion": 50,
+      "watches": [
+        "removal-unmarkSeason-timeout-replacement"
+      ],
+      "stateWrites": 2
+    }
+  ],
+  "passed": true,
+  "diagnostics": {
+    "events": 132,
+    "byEvent": {
+      "crate.attempt_failed": 24,
+      "crate.query": 24,
+      "crate.readback": 28,
+      "crate.recovery": 24,
+      "crate.http": 24,
+      "crate.replay": 8
+    },
+    "byErrorClass": {
+      "Error": 26,
+      "CrateTimeoutError": 26
+    },
+    "failedQueries": [
+      {
+        "time": "2026-10-26T00:24:52.352Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "0a4a4fc8-77ab-4eb9-ac0f-4374a75cbdf8",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "fc1c3d9e-c365-4bcf-9429-a9f51c8b1628",
+        "operation": "tracking.insertState",
+        "queryId": "cadb3283-8e2a-462e-b7c1-6ff9534c3df8",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:42289",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 121.0888300000006,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-26T00:25:02.411Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "1f43666f-42f4-4794-ba06-bd2b0b726f8c",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "4d06a4ad-7f8a-4431-a1dd-cbc1f0afef6d",
+        "operation": "tracking.insertState",
+        "queryId": "0ec38cb7-2101-4c13-bc60-612948c30ccd",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:43283",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.627929999999,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-26T00:25:02.491Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "2eb1f1ca-04da-423f-ae3c-787c51d8a8b9",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "816a19f1-68a1-4b5d-a51f-9bc5008cd9de",
+        "operation": "tracking.insertState",
+        "queryId": "56278571-d025-4110-83fc-ab4f394903d2",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:41323",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10.443036000000575,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-26T00:25:12.555Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "3b3de857-e638-4b99-8803-fd1cfb9fcfc2",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "bc4a702f-c525-4f2a-ad02-10c98cd7d0d1",
+        "operation": "tracking.insertState",
+        "queryId": "88554524-9147-4114-890c-7a5cfa443f02",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:40197",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.195397,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-26T00:25:12.804Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "cccd1dcf-8df7-45cd-bbc2-37b4f290225a",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "ffa22a96-2fdd-4ead-a1a3-0de0b798c40d",
+        "operation": "tracking.insertState",
+        "queryId": "5fae6386-a60d-4e1c-b501-5549c72cd68b",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:36089",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 188.5561549999984,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-26T00:25:22.917Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "427c9631-de9d-440a-9dff-488120eb3054",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "d8663861-93aa-4115-b2ce-081de33a07f3",
+        "operation": "tracking.insertState",
+        "queryId": "17b1e7d2-4d29-499b-95f6-b868e3b5c6a2",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:37149",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.543830999995,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-26T00:25:22.988Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "a379af63-4244-4f1e-8a76-ae82759bed25",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "f2803a80-f4cb-4cdb-96cb-1d5f16d409cc",
+        "operation": "tracking.insertState",
+        "queryId": "7557d4f1-5dc9-45c2-b136-cacb7ebd85c0",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:33283",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 0.6934170000022277,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-26T00:25:33.092Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "0caf087a-3051-4440-a019-0a144b14a455",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "6d0f87ab-9869-4fd9-b3c5-a1e3aad3d3f4",
+        "operation": "tracking.insertState",
+        "queryId": "21460fd8-93d5-41c3-925b-91da0508617f",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:40295",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.635949000003,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-26T00:25:33.162Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "786b4604-3604-4792-8c10-702f2faf6a09",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "ceaad7dd-0d6b-4db5-8c58-1c1d33e93f8b",
+        "operation": "tracking.insertState",
+        "queryId": "98a9ef38-9ab2-4734-82d5-307c392b8f8f",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:33803",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 0.49478699999599485,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-26T00:25:43.299Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "d84f6975-39f0-4ac8-9c55-8650335890ad",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "ed3637d8-629c-4ad2-962f-70230c7a7f0a",
+        "operation": "tracking.insertState",
+        "queryId": "e34b81dd-26d6-40c6-8f57-0434bcf4be84",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:37127",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.910369000005,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-26T00:25:43.609Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "01244a84-5700-4f22-8ccc-c4ab6e7fd3db",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "operationId": "06c1c8d4-af20-401d-87cc-73914515ddf0",
+        "operation": "tracking.insertState",
+        "queryId": "fb3d1a06-da85-4008-a65f-1f8b7792b661",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:45035",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 191.77765399999043,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-26T00:25:53.739Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "717cd24e-91a1-48db-bf66-563a22715779",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "operationId": "78902866-8bbe-4281-aeeb-8090e6c8cfd3",
+        "operation": "tracking.insertState",
+        "queryId": "18014de9-0737-4d03-9d3a-ee647c71ae1f",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:34253",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.459073999999,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-26T00:25:53.801Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "3cdf37d4-1e33-4ff9-a040-a84f81a4359a",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "operationId": "1cc7c3be-f9d0-4f6e-96d1-8dce3d29e854",
+        "operation": "tracking.insertState",
+        "queryId": "f848e879-5cb8-476c-8b3c-2879d91a58c0",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:34707",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 6.648896999991848,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-26T00:26:03.843Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "125dcbc4-a931-4e68-b332-e3fcfa02326b",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "operationId": "bd1e8cb5-827d-4d2c-86b5-ba7c059c35ec",
+        "operation": "tracking.insertState",
+        "queryId": "a5ae2fdc-5f1d-496e-87cd-43dd93f9afd4",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:39201",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.21957500001,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-26T00:26:03.970Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "eb8da4c8-f81e-4bd5-ac3d-3d9f5fd3127d",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "operationId": "28670782-3fb8-4495-a8f6-7d476b74e43d",
+        "operation": "tracking.insertState",
+        "queryId": "517f584a-f4e5-4374-acce-70154f0b8432",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:39085",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 79.30635100000654,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-26T00:26:14.031Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "169dfe00-b0e4-4356-ae49-8ec8f13bc2dd",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "operationId": "ab980b71-42b0-4385-95a8-d64739f83bc2",
+        "operation": "tracking.insertState",
+        "queryId": "b7e9d6d7-6477-48df-aa67-fa7a70b1b956",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:36631",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.782797000007,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-26T00:26:14.076Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "da4c409a-8f8f-4341-8aa1-282362b7cb91",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "operationId": "e8b8c98e-1e52-448e-95b9-5a904e86dd5e",
+        "operation": "tracking.insertState",
+        "queryId": "972c9cbf-dde6-4de5-92d9-2599cf50581e",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:44111",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 0.41128800000296906,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-26T00:26:24.124Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "6f8b3f85-c389-465d-ad86-663268a00365",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "operationId": "61bdd406-373e-4ecd-a3ac-0bea02b077d1",
+        "operation": "tracking.insertState",
+        "queryId": "f8fc641a-a91a-462b-b399-eb788432ee75",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:36017",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10001.232919000002,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-26T00:26:24.183Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "c8c2b24e-9fad-4a84-ae5b-0def662d4636",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "operationId": "c3ba5893-1829-4a68-be31-20475edb1253",
+        "operation": "tracking.insertState",
+        "queryId": "58d07ff9-ee63-4b02-8083-70d044712112",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:46759",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 0.5116569999954663,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-26T00:26:34.350Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "14762e75-5394-486b-998b-b8c22d33fd18",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "operationId": "ce51f35d-1bf9-4895-ba3c-4f1a8967b075",
+        "operation": "tracking.insertState",
+        "queryId": "1608f21f-01cb-4eec-8cfb-d2ce8db729a0",
+        "sqlShape": "INSERT INTO user_watch_state (\"user_id\", \"tmdb_id\", \"media_type\", \"state\", \"state_changed_at\", \"pass\", \"seen_press_group\", \"seen_press_from\", \"rate_prompt_dismissed_at\", \"seen_question\", \"created_at\", \"updated_at\", \"insert_token\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"user_id\", \"tmdb_id\", \"media_type\") DO NOTHING",
+        "sqlShapeId": "677adbfc2b18a5fc",
+        "source": "crate",
+        "host": "127.0.0.3:42233",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10001.427229000008,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-26T00:26:34.834Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "ada73d8f-93c7-4ca7-82a2-806323aa07a4",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "bd50fe42-99f5-4740-bc78-b939d0f3086e",
+        "operation": "tracking.writeState",
+        "queryId": "82e9f625-73ca-4a36-b28f-7935cedf836f",
+        "sqlShape": "UPDATE user_watch_state SET state = ?, state_changed_at = ?, pass = ?, seen_press_group = ?, seen_press_from = ?, rate_prompt_dismissed_at = ?, seen_question = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+        "sqlShapeId": "e24aa23dae7eb14d",
+        "source": "crate",
+        "host": "127.0.0.3:35245",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 71.00147099999595,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-26T00:26:44.900Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "88d8e662-ee76-4ec4-aeb8-a504b46b8ba2",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "6d7d1b17-2cf0-40e1-a344-331f92b900eb",
+        "operation": "tracking.writeState",
+        "queryId": "dd2d0344-0e03-444f-8567-4ac647afb4f9",
+        "sqlShape": "UPDATE user_watch_state SET state = ?, state_changed_at = ?, pass = ?, seen_press_group = ?, seen_press_from = ?, rate_prompt_dismissed_at = ?, seen_question = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+        "sqlShapeId": "e24aa23dae7eb14d",
+        "source": "crate",
+        "host": "127.0.0.3:39685",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.260339999993,
+        "errorClass": "CrateTimeoutError"
+      },
+      {
+        "time": "2026-10-26T00:26:45.318Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "518f5a18-64fa-4d2f-90a5-541691cc98f8",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "f93c2519-8008-4042-b531-b3f83c71b6dd",
+        "operation": "tracking.writeState",
+        "queryId": "28c0ee74-54aa-4bb8-8fcf-4e5faffa2419",
+        "sqlShape": "UPDATE user_watch_state SET state = ?, state_changed_at = ?, pass = ?, seen_press_group = ?, seen_press_from = ?, rate_prompt_dismissed_at = ?, seen_question = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+        "sqlShapeId": "e24aa23dae7eb14d",
+        "source": "crate",
+        "host": "127.0.0.3:35189",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 98.52959300001385,
+        "errorClass": "Error",
+        "errorCode": "ECONNRESET"
+      },
+      {
+        "time": "2026-10-26T00:26:55.497Z",
+        "event": "crate.query",
+        "role": "both",
+        "requestId": "e4a36271-0d30-40c2-b527-2580682841fb",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "operationId": "1b52ecc1-719d-40f8-abe6-4f6958da9e5c",
+        "operation": "tracking.writeState",
+        "queryId": "865305f5-1241-4778-b660-1071a21742ad",
+        "sqlShape": "UPDATE user_watch_state SET state = ?, state_changed_at = ?, pass = ?, seen_press_group = ?, seen_press_from = ?, rate_prompt_dismissed_at = ?, seen_question = ?, updated_at = ? WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?",
+        "sqlShapeId": "e24aa23dae7eb14d",
+        "source": "crate",
+        "host": "127.0.0.3:36099",
+        "attempt": 1,
+        "outcome": "failed",
+        "durationMs": 10000.033649999998,
+        "errorClass": "CrateTimeoutError"
+      }
+    ],
+    "httpOutcomes": [
+      {
+        "time": "2026-10-26T00:24:52.371Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "0a4a4fc8-77ab-4eb9-ac0f-4374a75cbdf8",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 174.22238300000026
+      },
+      {
+        "time": "2026-10-26T00:25:02.434Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "1f43666f-42f4-4794-ba06-bd2b0b726f8c",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10035.925996999998
+      },
+      {
+        "time": "2026-10-26T00:25:02.519Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "2eb1f1ca-04da-423f-ae3c-787c51d8a8b9",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 53.03672599999845
+      },
+      {
+        "time": "2026-10-26T00:25:12.576Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "3b3de857-e638-4b99-8803-fd1cfb9fcfc2",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10034.374090999998
+      },
+      {
+        "time": "2026-10-26T00:25:12.880Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "cccd1dcf-8df7-45cd-bbc2-37b4f290225a",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 277.14707199999975
+      },
+      {
+        "time": "2026-10-26T00:25:22.942Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "427c9631-de9d-440a-9dff-488120eb3054",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10038.283660000001
+      },
+      {
+        "time": "2026-10-26T00:25:23.022Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "a379af63-4244-4f1e-8a76-ae82759bed25",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 50.406794000002265
+      },
+      {
+        "time": "2026-10-26T00:25:33.126Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "0caf087a-3051-4440-a019-0a144b14a455",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10048.799826000002
+      },
+      {
+        "time": "2026-10-26T00:25:33.245Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "786b4604-3604-4792-8c10-702f2faf6a09",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 95.79990800000087
+      },
+      {
+        "time": "2026-10-26T00:25:43.381Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "d84f6975-39f0-4ac8-9c55-8650335890ad",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10096.521632000004
+      },
+      {
+        "time": "2026-10-26T00:25:43.704Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "01244a84-5700-4f22-8ccc-c4ab6e7fd3db",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 308.6799719999981
+      },
+      {
+        "time": "2026-10-26T00:25:53.760Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "717cd24e-91a1-48db-bf66-563a22715779",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10043.628828999994
+      },
+      {
+        "time": "2026-10-26T00:25:53.818Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "3cdf37d4-1e33-4ff9-a040-a84f81a4359a",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 44.10383199999342
+      },
+      {
+        "time": "2026-10-26T00:26:03.865Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "125dcbc4-a931-4e68-b332-e3fcfa02326b",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10039.737810999999
+      },
+      {
+        "time": "2026-10-26T00:26:04.003Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "eb8da4c8-f81e-4bd5-ac3d-3d9f5fd3127d",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 130.25640099999146
+      },
+      {
+        "time": "2026-10-26T00:26:14.049Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "169dfe00-b0e4-4356-ae49-8ec8f13bc2dd",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10037.865856000004
+      },
+      {
+        "time": "2026-10-26T00:26:14.100Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "da4c409a-8f8f-4341-8aa1-282362b7cb91",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 42.06310499999381
+      },
+      {
+        "time": "2026-10-26T00:26:24.155Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "6f8b3f85-c389-465d-ad86-663268a00365",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10048.301920999991
+      },
+      {
+        "time": "2026-10-26T00:26:24.323Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "c8c2b24e-9fad-4a84-ae5b-0def662d4636",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 159.1730830000015
+      },
+      {
+        "time": "2026-10-26T00:26:34.427Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "14762e75-5394-486b-998b-b8c22d33fd18",
+        "route": "/api/watch-log",
+        "method": "POST",
+        "status": 200,
+        "hadCrateFailure": true,
+        "outcome": "responded",
+        "durationMs": 10095.405438000002
+      },
+      {
+        "time": "2026-10-26T00:26:34.836Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "ada73d8f-93c7-4ca7-82a2-806323aa07a4",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 500,
+        "hadCrateFailure": true,
+        "outcome": "failed",
+        "durationMs": 86.842994000006
+      },
+      {
+        "time": "2026-10-26T00:26:44.905Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "88d8e662-ee76-4ec4-aeb8-a504b46b8ba2",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 500,
+        "hadCrateFailure": true,
+        "outcome": "failed",
+        "durationMs": 10028.619175
+      },
+      {
+        "time": "2026-10-26T00:26:45.321Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "518f5a18-64fa-4d2f-90a5-541691cc98f8",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 500,
+        "hadCrateFailure": true,
+        "outcome": "failed",
+        "durationMs": 114.43806700001005
+      },
+      {
+        "time": "2026-10-26T00:26:55.501Z",
+        "event": "crate.http",
+        "role": "both",
+        "requestId": "e4a36271-0d30-40c2-b527-2580682841fb",
+        "route": "/api/tracking/show",
+        "method": "POST",
+        "status": 500,
+        "hadCrateFailure": true,
+        "outcome": "failed",
+        "durationMs": 10074.263827999996
+      }
+    ]
+  },
+  "finishedAt": "2026-10-26T00:26:55.509Z"
+}

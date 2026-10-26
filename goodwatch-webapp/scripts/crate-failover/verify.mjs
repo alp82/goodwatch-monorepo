@@ -14,6 +14,10 @@ const compose = ["compose", "-f", `${directory}compose.yaml`, "-p", "goodwatch-c
 const endpoints = [1, 2, 3].map((i) => `http://127.0.0.${i}:17430`)
 assert.match(process.env.DOCKER_HOST ?? "", /^unix:\//, "Only a local Unix Docker socket is allowed")
 assert.ok(!process.env.DOCKER_CONTEXT, "Unset DOCKER_CONTEXT")
+if (process.env.CRATE_PROOF_TRACKING_ONLY === "1") {
+	assert.equal(process.env.CRATE_PROOF_PAGES, "1", "Tracking-only proof requires real HTTP routes")
+	assert.equal(process.env.CRATE_PROOF_FIRST_INSERT, "1", "Tracking-only proof requires tracking recovery scenarios")
+}
 Object.assign(process.env, {
 	CRATE_HOSTS: "127.0.0.1,127.0.0.2,127.0.0.3", CRATE_PORT: "17430",
 	CRATE_USER: "crate", CRATE_PASS: "", CRATE_TIMEOUT_MS: "10000",
@@ -23,9 +27,10 @@ const { query, execute, upsert, insertRows, setCrateClientForTest } = await impo
 const report = { startedAt: new Date().toISOString(), client: clientPath,
 	clientSha256: createHash("sha256").update(await readFile(new URL(clientPath, import.meta.url))).digest("hex"),
 	baselineCommit: process.env.CRATE_PROOF_BASELINE === "1" ? process.env.CRATE_PROOF_BASELINE_COMMIT : null,
+	trackingOnly: process.env.CRATE_PROOF_TRACKING_ONLY === "1",
 	nodeVersion: process.version, endpointScope: endpoints, assertions: [], failures: [] }
 report.sourceSha256 = {}
-for (const path of ["../../app/utils/crate.ts", "../../app/utils/crate-diagnostics.ts", "../../app/server/tracking.server.ts", "../../app/server/combined-search/catalog.server.ts", "../../app/server/search-ranking/search-index-build.server.ts", "../../app/server/page-cache.server.ts", "./verify.mjs", "./first-insert-proof.mjs", "./page-proof.mjs", "./build-page-proof.mjs", "./page-loaders.ts", "./compose.yaml", "./run.sh", ...(process.env.CRATE_PROOF_PAGES === "1" ? ["./page-loaders.generated.mjs"] : [])])
+for (const path of ["../../app/utils/crate.ts", "../../app/utils/crate-diagnostics.ts", "../../app/server/tracking.server.ts", "../../app/server/combined-search/catalog.server.ts", "../../app/server/search-ranking/search-index-build.server.ts", "../../app/server/page-cache.server.ts", "./verify.mjs", "./first-insert-proof.mjs", "./removal-retry-proof.mjs", "./page-proof.mjs", "./build-page-proof.mjs", "./page-loaders.ts", "./compose.yaml", "./run.sh", ...(process.env.CRATE_PROOF_PAGES === "1" ? ["./page-loaders.generated.mjs"] : [])])
  report.sourceSha256[path] = createHash("sha256").update(await readFile(new URL(path, import.meta.url))).digest("hex")
 report.trackingBaselineCommit = process.env.CRATE_PROOF_TRACKING_BASELINE_COMMIT ?? null
 report.trackingRuntimeSha256 = report.trackingBaselineCommit
@@ -171,6 +176,7 @@ try {
 		report.beforeHealth = await rows("SELECT health, count(*) FROM sys.health GROUP BY health")
 		progress("Real page loaders/actions warmed against disposable fixture tables")
 	}
+	if (process.env.CRATE_PROOF_TRACKING_ONLY !== "1") {
 	const stats = { reads: { succeeded: 0, failed: 0, maxMs: 0 }, keyed: { succeeded: 0, failed: 0 }, upsert: { succeeded: 0, failed: 0 }, generic: { succeeded: 0, failed: 0 } }
 	const written = { keyed: [], upsert: [], generic: [] }
 	let number = 0
@@ -288,13 +294,16 @@ try {
 		for (const timeout of [false, true]) report.lostResponses.push(await lostResponseProof(kind, timeout))
 	}
 	if (pageProof) for (const timeout of [false, true]) report.lostResponses.push(await lostResponseProof("tracking-cas", timeout))
+	}
 	if (pageProof && process.env.CRATE_PROOF_FIRST_INSERT === "1") {
 		const { firstInsertProof } = await import("./first-insert-proof.mjs")
 		report.firstInserts = await firstInsertProof({ pageProof, sql, endpoints, setCrateClientForTest, check })
+		const { removalRetryProof } = await import("./removal-retry-proof.mjs")
+		report.removalRetries = await removalRetryProof({ pageProof, sql, endpoints, setCrateClientForTest, check })
 	}
 	check("No proxy errors", report.failures.filter(({ phase }) => phase === "proxy"), [])
 	report.passed = true
-	progress(`Proof passed: ${stats.reads.succeeded} reads, ${stats.keyed.succeeded + stats.upsert.succeeded} safe writes; ${stats.generic.failed} generic writes returned errors without replay`)
+	progress(report.load ? `Proof passed: ${report.load.stats.reads.succeeded} reads; tracking recovery verified` : "Tracking-only lost-response proof passed")
 } catch (error) {
 	report.passed = false
 	report.error = { message: error.message, stack: error.stack }

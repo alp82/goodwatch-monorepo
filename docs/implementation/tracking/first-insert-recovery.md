@@ -96,8 +96,11 @@ Known residuals, unchanged by this fix:
   receipts. The proof now runs the original ten show scenarios plus ten matching movie watch-log scenarios.
   Deployments must drain older movie writers, which still physically delete these keys. Bulk updates now issue
   one CAS per existing movie; first inserts and log IO remain batched.
-- **A rerun after a removal.** If an unwatch loses its CAS to another device that saw the episode unticked and
-  ticked it again, the rerun takes away the new tick. Only the insert side is guarded above.
+- **Removal retries (#634 follow-up).** Each round completes its log deletion before its state CAS. If a later
+  round selects any log rows for deletion, they were added or restored after the previous deletion/snapshot;
+  return `TrackingConflictError` (409) before touching them. This also protects restored rows with reused IDs,
+  season removals and an initially empty selection. A retry with no fresh deletion targets can still converge.
+  The original insert-side conflict guard remains unchanged. No schema change or extra query is needed.
 - The generic watch-log insert retry behavior is unchanged.
 
 ## Verification
@@ -165,3 +168,35 @@ earlier attempt stopped before the tracking scenarios: a generic read during nod
 internal `NullPointerException` (code 5000, `ClusterService.state()` null) while the node shut down. Receipt:
 [conflict guard](../../../goodwatch-webapp/scripts/crate-failover/results/tracking-first-insert-conflict-guard.json).
 
+
+
+## Tracking write race proof (#633 and #634)
+
+The local loopback harness supports a focused run of the response-loss scenarios, independent of concurrent page
+load and graceful decommission. It still seeds the declared schema, verifies receipt rollout, and calls real HTTP
+tracking/watch-log actions with the real Crate client and writer. It does not prove graceful decommission safety:
+
+```sh
+TMPDIR="$HOME/.cache/gw-work/634" \
+CRATE_PROOF_TRACKING_ONLY=1 CRATE_PROOF_PAGES=1 CRATE_PROOF_FIRST_INSERT=1 \
+CRATE_PROOF_OUTPUT="$HOME/.cache/gw-work/634/proof.json" \
+bash scripts/crate-failover/run.sh
+```
+
+Without `CRATE_PROOF_TRACKING_ONLY`, the original graceful/failover load and lost-response client checks still run.
+The focused mode covers the original ten show first inserts plus ten equivalent movie watch-log cases (reset and
+timeout; unchanged, removed, removed/re-watched, unapplied and delayed-after-readback). Six removal cases interleave
+another device's replacement tick before the original state CAS reaches Crate: unwatch/season removal, with either
+a known conflict (409), or the conflicting CAS response dropped as a reset/timeout (500, no unsafe replay). The
+replacement watch and state version must survive unchanged in all six. The proof records expected error responses
+separately from the concurrent load's zero-failure requirement.
+
+Current main's title-page three-second deadline can fail the graceful route gate before the post-load tracking
+scenarios run. Two local graceful attempts during this work hit five and four title-page 503s respectively; watch,
+score, library and catalog routes had no failures in the second attempt. These results are retained separately,
+and the focused mode does not relax that gate or change application deadlines.
+
+The untouched-main writer (`bb1265d4a`) reproduced four title-page 503s under the same final harness (three movie,
+one show), with no watch, score, library or catalog route failures. The final focused proof passed all 26 cases
+and verified complete cleanup. The validation receipt in `scripts/crate-failover/results` records the red tests,
+full-suite baseline comparison, identical 192 typecheck diagnostics, 211 related webapp tests and 70 flows tests.
