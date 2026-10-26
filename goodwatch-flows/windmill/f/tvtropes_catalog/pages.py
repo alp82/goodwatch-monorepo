@@ -202,10 +202,15 @@ def _verify(actual, incoming, old, fields):
             and (old.get('updated_at') is None or actual['updated_at'] >= old['updated_at']))
 
 
-def import_document(db, document, *, apply=False, batch_size=25, on_event=lambda event: None):
-    """Import reviewed pages/routes. Receipt callbacks run before writes; uncertain writes are never retried."""
+def import_document(db, document, *, apply=False, batch_size=25, bulk_inserts=False, on_event=lambda event: None):
+    """Import reviewed pages/routes. Bulk mode groups fresh inserts only; guarded updates stay single-row.
+
+    Receipt callbacks run for every row before the request; uncertain writes are never retried.
+    """
     if not 1 <= batch_size <= 200:
         raise ValueError('batch_size must be 1–200')
+    if bulk_inserts and not callable(getattr(db, 'run_many', None)):
+        raise ValueError('Explicit bulk insert mode requires a run_many adapter returning per-row results')
     document = normalize_document(document)
     exists = {r['table_name'] for r in db.select('SELECT table_name FROM information_schema.tables WHERE table_schema=? AND table_name IN (?,?)', ('doc', PAGE_TABLE, REFERENCE_TABLE))}
     snapshots = {}
@@ -216,7 +221,7 @@ def import_document(db, document, *, apply=False, batch_size=25, on_event=lambda
     known_targets = _read(db, PAGE_TABLE, 'url', sorted(targets), batch_size) if PAGE_TABLE in exists else {}
     if targets - set(known_targets):
         raise ValueError('Reference target has no reviewed page: ' + ', '.join(sorted(targets - set(known_targets))[:5]))
-    plans = []; report = {'apply': apply, 'pages': len(document['pages']), 'references': len(document['references']), 'writes': 0, 'unchanged': 0, 'preserved': 0, 'conflicts': [], 'verified': False}
+    plans = []; report = {'apply': apply, 'pages': len(document['pages']), 'references': len(document['references']), 'writes': 0, 'unchanged': 0, 'preserved': 0, 'conflicts': [], 'verified': False, 'bulk_inserts': bulk_inserts}
     for table, key, fields, part in TABLES:
         for incoming in document[part]:
             old = snapshots[table].get(incoming[key]); desired, reason = choose_record(old, incoming, fields)
@@ -241,18 +246,43 @@ def import_document(db, document, *, apply=False, batch_size=25, on_event=lambda
                 _archive_mapping(db, table)
         for start in range(0, len(plans), batch_size):
             batch = plans[start:start + batch_size]
-            for index, plan in enumerate(batch, start):
+            position = 0
+            while position < len(batch):
+                plan = batch[position]
                 sql, params = _write_sql(plan['table'], plan['key'], plan['fields'], plan['incoming'], plan['before'])
-                on_event({'phase': 'before_write', 'index': index, 'table': plan['table'], 'key': plan['incoming'][plan['key']]})
+                group = [(start + position, plan, params)]
+                if bulk_inserts and plan['before'] is None:
+                    while position + len(group) < len(batch):
+                        following = batch[position + len(group)]
+                        if following['before'] is not None or following['table'] != plan['table']:
+                            break
+                        next_sql, next_params = _write_sql(following['table'], following['key'], following['fields'], following['incoming'], None)
+                        if next_sql != sql:
+                            break
+                        group.append((start + position + len(group), following, next_params))
+                use_bulk = bulk_inserts and plan['before'] is None
+                indexes = [index for index, _, _ in group]
+                for index, item, _ in group:
+                    on_event({'phase': 'before_write', 'index': index, 'table': item['table'], 'key': item['incoming'][item['key']],
+                              'bulk_insert': use_bulk, 'group_indexes': indexes})
                 try:
                     attempted_write = True
-                    response = db.run(sql, params)
-                    if response.get('rowcount') != 1:
-                        raise PageImportWriteError('Guard did not acknowledge exactly one row')
+                    if use_bulk:
+                        response = db.run_many(sql, [values for _, _, values in group])
+                        results = response.get('results') if isinstance(response, dict) else None
+                        if (not isinstance(results, list) or len(results) != len(group)
+                                or any(not isinstance(r, dict) or r.get('error') or type(r.get('rowcount')) is not int or r['rowcount'] != 1 for r in results)):
+                            raise PageImportWriteError('Bulk insert did not acknowledge exactly one row for every fresh key')
+                    else:
+                        response = db.run(sql, params)
+                        if response.get('rowcount') != 1:
+                            raise PageImportWriteError('Guard did not acknowledge exactly one row')
                 except BaseException as error:
-                    on_event({'phase': 'uncertain_write', 'index': index, 'error_type': type(error).__name__})
+                    on_event({'phase': 'uncertain_write', 'index': indexes[0], 'group_indexes': indexes, 'error_type': type(error).__name__})
                     raise PageImportWriteError('Page/reference write result is uncertain; inspect receipts and stored documents before any retry') from None
-                on_event({'phase': 'acknowledged', 'index': index, 'rowcount': 1})
+                for index in indexes:
+                    on_event({'phase': 'acknowledged', 'index': index, 'rowcount': 1})
+                position += len(group)
             for table, key, fields, part in TABLES:
                 selected = [p for p in batch if p['table'] == table]
                 if not selected: continue

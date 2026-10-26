@@ -23,7 +23,8 @@ class CatalogTransportTests(unittest.TestCase):
 
     def test_bulk_writes_send_every_row_and_check_every_result(self):
         with patch.object(cli, "urlopen", return_value=response({"results": [{"rowcount": 1}, {"rowcount": 1}]})) as opened:
-            self.client().run_many("INSERT INTO example (x) VALUES (?)", [(1,), (2,)])
+            bulk_result = self.client().run_many("INSERT INTO example (x) VALUES (?)", [(1,), (2,)])
+            self.assertEqual(bulk_result["results"], [{"rowcount": 1}, {"rowcount": 1}])
             payload = json.loads(opened.call_args.args[0].data)
             self.assertEqual(payload["bulk_args"], [[1], [2]])
             self.assertNotIn("args", payload)

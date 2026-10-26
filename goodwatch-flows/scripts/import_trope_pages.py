@@ -33,6 +33,8 @@ class Receipts:
                 raise ValueError('Current write plan differs from the reviewed plan; no writes attempted')
         elif phase == 'verified_batch':
             atomic(self.directory / 'readback' / f'{self.batch:05}.json', event); self.batch += 1
+        elif phase == 'before_write':
+            atomic(self.directory / 'pending' / f"{event['index']:06}.json", event)
         elif phase == 'acknowledged':
             atomic(self.directory / 'acknowledgements' / f"{event['index']:06}.json", event)
         elif phase == 'complete':
@@ -48,6 +50,7 @@ def main():
     parser.add_argument('--report', type=Path)
     parser.add_argument('--expect-plan-sha256')
     parser.add_argument('--batch-size', type=int, default=25)
+    parser.add_argument('--bulk-inserts', action='store_true', help='Batch fresh-key INSERTs only; guarded UPDATEs remain single-row')
     args = parser.parse_args()
     raw = args.input.read_bytes(); document = normalize_document(json.loads(raw))
     if args.apply and args.receipt_dir is None:
@@ -71,7 +74,7 @@ def main():
             if event['phase'] == 'planned' and event['report']['plan_sha256'] != args.expect_plan_sha256:
                 raise ValueError('Current write plan differs from reviewed plan')
     try:
-        report = import_document(Crate(settings()), document, apply=args.apply, batch_size=args.batch_size, on_event=callback)
+        report = import_document(Crate(settings()), document, apply=args.apply, batch_size=args.batch_size, bulk_inserts=args.bulk_inserts, on_event=callback)
     except BaseException as error:
         if args.receipt_dir and args.apply:
             atomic(args.receipt_dir / 'stopped.json', {'error_type': type(error).__name__, 'inspect_before_retry': True})

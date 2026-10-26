@@ -51,6 +51,17 @@ class Database:
         return {'rowcount':1}
 
 
+class BulkDatabase(Database):
+    def __init__(self,events=None):
+        super().__init__();self.bulk_calls=[];self.events=events
+    def run_many(self,sql,params):
+        assert sql.startswith('INSERT INTO '), 'Guarded UPDATE must never use the bulk transport'
+        self.bulk_calls.append((sql,len(params)))
+        if self.events is not None:
+            assert all(e['phase']=='before_write' for e in self.events[-len(params):])
+        return {'results':[self.run(sql,values) for values in params]}
+
+
 class PagesTests(unittest.TestCase):
     def test_context_label_is_not_a_page_key_or_verified_title(self):
         doc=normalize_document({'pages':[page()],'references':[ref()]})
@@ -161,6 +172,74 @@ class PagesTests(unittest.TestCase):
             self.assertTrue((root/'receipts/plan.json').exists())
             self.assertTrue((root/'receipts/complete.json').exists())
             self.assertTrue((root/'receipts/acknowledgements/000000.json').exists())
+
+    def test_bulk_inserts_are_opt_in_and_preserve_perrow_receipt_order_and_verification(self):
+        events=[];db=BulkDatabase(events)
+        doc={'pages':[page(url=URL+str(i)) for i in range(5)]}
+        self.assertTrue(import_document(db,doc,apply=True,batch_size=2,bulk_inserts=True,on_event=events.append)['verified'])
+        self.assertEqual([count for _,count in db.bulk_calls],[2,2,1])
+        self.assertEqual([e['index'] for e in events if e['phase']=='acknowledged'],list(range(5)))
+        self.assertEqual(len([e for e in events if e['phase']=='verified_batch']),3)
+        default=BulkDatabase();import_document(default,{'pages':[page()]},apply=True)
+        self.assertEqual(default.bulk_calls,[])
+
+    def test_bulk_mode_never_batches_guarded_updates(self):
+        db=BulkDatabase();import_document(db,{'pages':[page()]},apply=True)
+        doc={'pages':[page(source_hash='e'*64,fetched_at=200),page(url=URL+'New1'),page(url=URL+'New2')]}
+        self.assertTrue(import_document(db,doc,apply=True,bulk_inserts=True)['verified'])
+        self.assertEqual([count for _,count in db.bulk_calls],[2])
+        self.assertEqual(sum(sql.startswith('UPDATE ') for sql in db.writes),1)
+
+    def test_bulk_missing_acknowledgements_or_zero_error_row_counts_stop_without_retry(self):
+        invalid=[None,{}, {'results':[]},{'results':[{'rowcount':1}]},
+                 {'results':[{'rowcount':1},{'rowcount':0}]},
+                 {'results':[{'rowcount':1},{'rowcount':-2,'error':{'message':'failed'}}]},
+                 {'results':[{'rowcount':1},{'rowcount':'1'}]}]
+        for response in invalid:
+            with self.subTest(response=response):
+                class FaultyBulk(BulkDatabase):
+                    def run_many(self,sql,params):
+                        super().run_many(sql,params)
+                        return response
+                db=FaultyBulk();events=[]
+                with self.assertRaises(PageImportWriteError) as caught:
+                    import_document(db,{'pages':[page(url=URL+'1'),page(url=URL+'2'),page(url=URL+'3')]},apply=True,batch_size=2,bulk_inserts=True,on_event=events.append)
+                self.assertFalse(type(caught.exception).retryable)
+                self.assertEqual(len(db.bulk_calls),1)
+                self.assertEqual([e['phase'] for e in events].count('acknowledged'),0)
+                self.assertEqual(events[-1]['phase'],'uncertain_write')
+                self.assertEqual(events[-1]['group_indexes'],[0,1])
+
+    def test_bulk_transport_partial_failure_halts_after_first_request(self):
+        class PartialBulk(BulkDatabase):
+            def run_many(self,sql,params):
+                self.bulk_calls.append((sql,len(params)));self.run(sql,params[0]);raise URLError('response lost')
+        db=PartialBulk()
+        with self.assertRaises(PageImportWriteError):
+            import_document(db,{'pages':[page(url=URL+'1'),page(url=URL+'2'),page(url=URL+'3')]},apply=True,batch_size=2,bulk_inserts=True)
+        self.assertEqual(len(db.bulk_calls),1)
+        self.assertEqual(len(db.tables[PAGE_TABLE]),1)
+
+    def test_bulk_archive_inserts_still_require_full_stored_provenance(self):
+        db=BulkDatabase();db.drop_archive=True
+        with self.assertRaises(PageImportWriteError):
+            import_document(db,{'pages':[page(source_hash=None,fetched_at=None,source_archive=archive())]},apply=True,bulk_inserts=True)
+
+    def test_cli_bulk_flag_persists_each_pending_row_before_transport(self):
+        import import_trope_pages as cli
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);receipt=root/'receipts';input_path=root/'input.json'
+            input_path.write_text(json.dumps({'pages':[page(url=URL+'1'),page(url=URL+'2')]}))
+            class ReceiptCheckingBulk(BulkDatabase):
+                def run_many(self,sql,params):
+                    assert (receipt/'pending/000000.json').exists()
+                    assert (receipt/'pending/000001.json').exists()
+                    return super().run_many(sql,params)
+            db=ReceiptCheckingBulk();args=['import_trope_pages',str(input_path),'--apply','--bulk-inserts','--receipt-dir',str(receipt)]
+            with patch.object(cli,'Crate',return_value=db),patch.object(cli,'settings',return_value={}),patch.object(sys,'argv',args),redirect_stdout(io.StringIO()):
+                self.assertTrue(cli.main()['verified'])
+            self.assertEqual(len(db.bulk_calls),1)
+            self.assertEqual(len(list((receipt/'acknowledgements').glob('*.json'))),2)
 
     def test_receipts_persist_before_write_and_after_acknowledgement(self):
         with tempfile.TemporaryDirectory() as directory:

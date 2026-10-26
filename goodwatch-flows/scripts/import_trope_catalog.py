@@ -97,6 +97,7 @@ class Crate:
         failed = [row for row in results if row.get("error") or row.get("rowcount", -1) < 0]
         if len(results) != len(params) or failed:
             raise RuntimeError(f"CrateDB bulk import failed ({len(failed)} failed rows); inspect state and rerun the idempotent import")
+        return response
 
 
 def main():
