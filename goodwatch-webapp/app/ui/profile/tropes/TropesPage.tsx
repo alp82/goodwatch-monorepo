@@ -15,6 +15,7 @@ import type { ProfileShell } from "~/domain/profile"
 import type { TropesPreview } from "~/server/profile/tropes-preview"
 import type { ProfileTropes } from "~/server/profile/tropes.server"
 import { PosterImg, backdropUrl, posterUrl } from "~/ui/profile/parts"
+import { describeTrope } from "~/utils/profile-trope-descriptions"
 import { FilterStrip } from "./FilterStrip"
 import {
 	type RankedTrope,
@@ -39,6 +40,7 @@ import {
 	definingTitles,
 	useDetail,
 } from "./parts"
+import { useDescriptions } from "./useDescriptions"
 import { useExcerpts } from "./useExcerpts"
 import { type TropeFacets, useTropeFacets } from "./useTropeFacets"
 
@@ -48,12 +50,14 @@ export function TropesPage({
 	shell,
 	data,
 	preview,
+	descriptionSeed,
 	loading = false,
 	retry,
 }: {
 	shell: ProfileShell
 	data: ProfileTropes
 	preview?: TropesPreview
+	descriptionSeed?: TropesPreview
 	loading?: boolean
 	retry?: () => void
 }) {
@@ -62,6 +66,8 @@ export function TropesPage({
 	const [open, setOpen] = useState<string | null>(null)
 	const [focus, setFocus] = useState<string | null>(null)
 	const [shown, setShown] = useState(PAGE)
+	const visible = m.tropes.slice(0, shown)
+	const descriptions = useDescriptions(shell, visible, descriptionSeed)
 	const list = useRef<HTMLOListElement>(null)
 	const openRef = useRef<HTMLLIElement | null>(null)
 	const snap = useBandMotion(list, open)
@@ -85,7 +91,7 @@ export function TropesPage({
 		return () => cancelAnimationFrame(id)
 	}, [open])
 
-	const rows = m.tropes.slice(0, shown)
+	const rows = visible.map((tag) => describeTrope(tag, descriptions))
 	return (
 		<MotionConfig reducedMotion="user">
 			<div className="flex flex-col gap-4">

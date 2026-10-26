@@ -254,3 +254,95 @@ test("large alias route unions use bounded excerpt batches", async () => {
 		[402, 402, 3],
 	)
 })
+
+test("visible descriptions authorize owner target IDs, bound reads, refresh versions and isolate catalog failures from filters", async () => {
+	const pool = buildUriTropePool(
+		titles,
+		titles.map((t) => ({
+			key: t.title.key,
+			name: "Context",
+			url: a,
+			length: 100,
+		})),
+		{ [a]: { url: target, title: "Actual title" } },
+	)
+	const calls: string[][] = []
+	let failure = false
+	let text: string | null = "Definition one"
+	let heading = "Actual heading"
+	const loader = createTropesLoader({
+		read: async () => {
+			throw Error("no heavy recomputation")
+		},
+		userData: async () => user(),
+		readCache: async () => ({ pool, fresh: true, version: 123 }),
+		writeCache: async () => {
+			throw Error("no writes")
+		},
+		titlePath: () => "",
+		resolveReferences: async () => ({}),
+		readDescriptions: async (ids, options) => {
+			calls.push(ids)
+			if (failure) throw Error("optional catalog down")
+			assert.equal(options?.strict, true)
+			return Object.fromEntries(
+				ids.map((id) => [id, { url: id, title: heading, text }]),
+			)
+		},
+	})
+	const initial = await loader.loadProfileTropeDescriptions("owner", shell, [
+		target,
+		url("UnratedTarget"),
+		target,
+	])
+	assert.deepEqual(calls, [[target]])
+	assert.deepEqual(Object.keys(initial.entries), [target])
+	text = "Definition two"
+	heading = "Corrected actual heading"
+	const updated = await loader.loadProfileTropeDescriptions("owner", shell, [
+		target,
+	])
+	assert.notEqual(initial.catalogVersion, updated.catalogVersion)
+	assert.equal(updated.entries[target].title, heading)
+	text = null
+	assert.equal(
+		(await loader.loadProfileTropeDescriptions("owner", shell, [target]))
+			.entries[target].text,
+		null,
+	)
+	const before = calls.length
+	assert.deepEqual(
+		(
+			await loader.loadProfileTropeDescriptions("owner", shell, [
+				url("UnratedTarget"),
+			])
+		).entries,
+		{},
+	)
+	assert.deepEqual(
+		(
+			await loader.loadProfileTropeDescriptions(
+				"owner",
+				{ ...shell, visibility: { ...DEFAULT_VISIBILITY, scores: "me" } },
+				[target],
+			)
+		).entries,
+		{},
+	)
+	assert.equal(calls.length, before)
+	await assert.rejects(
+		loader.loadProfileTropeDescriptions("owner", shell, Array(61).fill(target)),
+		RangeError,
+	)
+	failure = true
+	await assert.rejects(
+		loader.loadProfileTropeDescriptions("owner", shell, [target]),
+		/optional catalog down/,
+	)
+	const matrix = await loader.loadProfileTropes("owner", shell, null, {
+		wait: false,
+		descriptions: false,
+	})
+	assert.equal(matrix?.tropes[0], target)
+	assert.deepEqual(matrix?.descriptions, {})
+})

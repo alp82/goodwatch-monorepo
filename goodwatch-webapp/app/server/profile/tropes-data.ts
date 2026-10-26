@@ -2,7 +2,12 @@ import type { ProfileTitle } from "../../domain/profile.ts"
 import type { MediaKey, UserData } from "../../types/user-data.ts"
 import { isSeen } from "../../types/user-data.ts"
 import {
+	type ProfileTropeDescriptions,
+	descriptionIds,
+} from "../../utils/profile-trope-descriptions.ts"
+import {
 	type TropeDescriptions,
+	catalogVersion,
 	withTropeDescriptions,
 } from "./trope-catalog-data.ts"
 import { type TropePageReferences, mainTropeUrl } from "./trope-pages.ts"
@@ -63,7 +68,10 @@ export interface TropesDependencies {
 		readFrom: number,
 	) => Promise<void>
 	titlePath: (mediaType: "movie" | "show", id: number, title: string) => string
-	readDescriptions: (names: string[]) => Promise<TropeDescriptions>
+	readDescriptions: (
+		names: string[],
+		options?: { strict?: boolean },
+	) => Promise<TropeDescriptions>
 	/** Omitted only by legacy dependency adapters. Production always groups by resolved URI. */
 	resolveReferences?: (urls: string[]) => Promise<TropePageReferences>
 }
@@ -221,6 +229,43 @@ export function createTropesLoader(deps: TropesDependencies) {
 	}
 	return {
 		refreshProfileTropes,
+		async loadProfileTropeDescriptions(
+			ownerId: string,
+			shell: TropeSight,
+			input: unknown,
+		): Promise<ProfileTropeDescriptions> {
+			const ids = descriptionIds(input)
+			if (!ids) throw new RangeError("At most 60 bounded trope IDs")
+			if (!seesTropes(shell))
+				return {
+					entries: {},
+					catalogVersion: catalogVersion({}),
+					pending: false,
+				}
+			const pool = await ownerPool(ownerId, false)
+			if (!pool)
+				return {
+					entries: {},
+					catalogVersion: catalogVersion({}),
+					pending: true,
+				}
+			const allowed = new Set(pool.tropes)
+			const visible = ids.filter((id) => allowed.has(id))
+			const current = visible.length
+				? await deps.readDescriptions(visible, { strict: true })
+				: {}
+			const entries = Object.fromEntries(
+				visible.map((id) => [
+					id,
+					current[id] ?? { url: pool.urls[id] ?? "", title: null, text: null },
+				]),
+			)
+			return {
+				entries,
+				catalogVersion: catalogVersion(entries),
+				pending: false,
+			}
+		},
 		async loadProfileTropes(
 			ownerId: string,
 			shell: TropeSight,

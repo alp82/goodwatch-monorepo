@@ -8,11 +8,12 @@ import {
 	erasOf,
 	rankTropes,
 } from "../../ui/profile/tropes/model.ts"
-import type { TropeDescriptions } from "./trope-catalog-data.ts"
+import { type TropeDescriptions, catalogVersion } from "./trope-catalog-data.ts"
 import type { ProfileTropes } from "./tropes-data.ts"
 
 export const FIRST_TROPES = 30
 export interface TropesPreview {
+	catalogVersion?: string
 	data: ProfileTropes
 	ranked: RankedTrope[]
 	usual: number
@@ -82,6 +83,7 @@ export function withPreviewDescriptions(
 ): TropesPreview {
 	return {
 		...preview,
+		catalogVersion: catalogVersion(entries),
 		ranked: preview.ranked.map((tag) => ({
 			...tag,
 			name: entries[tag.id ?? tag.name]?.title || tag.name,

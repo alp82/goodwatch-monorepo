@@ -18,7 +18,10 @@ export const resolveTropeReferences = createTropeReferenceReader(
 )
 
 /** Optional text must not hold up a profile when the catalog is unavailable. A later request retries. */
-export async function readTropeDescriptions(names: string[]) {
+export async function readTropeDescriptions(
+	names: string[],
+	options: { strict?: boolean } = {},
+) {
 	try {
 		// The old reader remains for callers holding the legacy name contract during rollout.
 		return names.some(
@@ -32,6 +35,7 @@ export async function readTropeDescriptions(names: string[]) {
 			"Profile tropes: reading the shared description catalog failed:",
 			error,
 		)
+		if (options.strict) throw error
 		return {}
 	}
 }

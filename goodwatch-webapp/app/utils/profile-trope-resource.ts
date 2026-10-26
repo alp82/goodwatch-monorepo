@@ -9,18 +9,25 @@ export interface ProfileTropeResource {
 	seen?: string[]
 }
 
+/** Definitions and source associations have their own small, authorized resources. */
+export function thinProfileTropes(tropes: ProfileTropes): ProfileTropes {
+	const { references, labels, descriptions, ...matrix } = tropes
+	return { ...matrix, descriptions: {}, catalogVersion: "thin-v1" }
+}
+
 export function profileTropeResource(
 	tropes: ProfileTropes | null,
 	pending: boolean,
 	params: URLSearchParams,
 ): ProfileTropeResource {
+	const thin = tropes ? thinProfileTropes(tropes) : null
 	const unchanged =
-		!!tropes?.version &&
-		params.get("version") === String(tropes.version) &&
-		params.get("catalogVersion") === tropes.catalogVersion
+		!!thin?.version &&
+		params.get("version") === String(thin.version) &&
+		params.get("catalogVersion") === thin.catalogVersion
 	return unchanged
-		? { tropes: null, pending, unchanged: true, seen: tropes.seen }
-		: { tropes, pending, unchanged: false }
+		? { tropes: null, pending, unchanged: true, seen: thin.seen }
+		: { tropes: thin, pending, unchanged: false }
 }
 
 export function mergeProfileTropeResource(
@@ -43,7 +50,7 @@ export function profileTropeQueryKey(
 	language: string,
 ) {
 	return [
-		"profile-tropes-data-v2",
+		"profile-tropes-data-v3",
 		shell.handle,
 		shell.viewer,
 		userId,

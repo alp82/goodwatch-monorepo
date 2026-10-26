@@ -14,7 +14,7 @@ export const loader = presentCatalogLoader(
 			loaded.ownerId,
 			loaded.shell,
 			loaded.viewerId,
-			{ wait: false },
+			{ wait: false, descriptions: false },
 		)
 		const pending = seesTropes(loaded.shell) && (!tropes || !!tropes.refreshing)
 

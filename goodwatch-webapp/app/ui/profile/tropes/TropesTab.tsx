@@ -1,19 +1,19 @@
-import { useEffect, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useEffect, useState } from "react"
 import { type ProfileShell, seesPart } from "~/domain/profile"
 import { seesTropes } from "~/server/profile/tropes-model"
 import type { TropesPreview } from "~/server/profile/tropes-preview"
 import { WRAP } from "~/ui/my-pages/bits"
 import { ProfileFrame } from "~/ui/profile/ProfileFrame"
 import { Body, TILE, count } from "~/ui/profile/parts"
-import { TropesPage } from "./TropesPage"
 import { useUser } from "~/utils/auth"
 import useLocale from "~/utils/locale"
 import {
+	type ProfileTropeResource,
 	mergeProfileTropeResource,
 	profileTropeQueryKey,
-	type ProfileTropeResource,
 } from "~/utils/profile-trope-resource"
+import { TropesPage } from "./TropesPage"
 
 export interface TropesTabProps {
 	shell: ProfileShell
@@ -77,6 +77,7 @@ export function TropesTab({ shell, preview, pending }: TropesTabProps) {
 						shell={shell}
 						data={tropes}
 						preview={initial}
+						descriptionSeed={preview ?? undefined}
 						loading={!full.isError}
 						retry={() => {
 							void full.refetch()

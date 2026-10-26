@@ -25,6 +25,7 @@ const loaders = createTropesLoader({
 /** Call with the context resolved by profileLoader or loadProfileShell. Hidden parts return null. */
 export const loadProfileTropes = loaders.loadProfileTropes
 export const loadProfileTropeExcerpts = loaders.loadProfileTropeExcerpts
+export const loadProfileTropeDescriptions = loaders.loadProfileTropeDescriptions
 export type { ProfileTropes } from "./tropes-data"
 export type { TropePool, PoolTitle } from "./tropes-model"
 

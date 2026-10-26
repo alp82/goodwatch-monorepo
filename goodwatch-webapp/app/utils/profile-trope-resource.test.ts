@@ -79,7 +79,7 @@ test("an unchanged owner pool refreshes independent viewer Seen state without re
 		false,
 		new URLSearchParams({
 			version: String(first.version),
-			catalogVersion: first.catalogVersion!,
+			catalogVersion: initial.tropes?.catalogVersion ?? "",
 		}),
 	)
 	assert.equal(compact.unchanged, true)
@@ -95,7 +95,7 @@ test("an unchanged owner pool refreshes independent viewer Seen state without re
 		false,
 		new URLSearchParams({
 			version: String(first.version),
-			catalogVersion: first.catalogVersion!,
+			catalogVersion: initial.tropes?.catalogVersion ?? "",
 		}),
 	)
 	assert.deepEqual(
@@ -176,4 +176,43 @@ test("changing the root display language does not reuse another language's uncha
 		"English title",
 	)
 	client.clear()
+})
+
+test("filter matrices contain neither article text nor server-only source labels/routes", () => {
+	const ids = Array.from(
+		{ length: 1000 },
+		(_, i) => `https://tvtropes.org/pmwiki/pmwiki.php/Main/Page${i}`,
+	)
+	const pool = {
+		...buildTropePool([], [], {}),
+		schema: 2,
+		tropes: ids,
+		seen: [],
+		version: 123,
+		names: Object.fromEntries(ids.map((id) => [id, "Actual title"])),
+		urls: Object.fromEntries(ids.map((id) => [id, id])),
+		descriptions: Object.fromEntries(
+			ids.map((id) => [id, "Long article paragraph. ".repeat(350)]),
+		),
+		references: Object.fromEntries(ids.map((id) => [id, [id]])),
+		labels: Object.fromEntries(ids.map((id) => [id, ["Contextual label"]])),
+	}
+	const resource = profileTropeResource(pool, false, new URLSearchParams())
+	assert.deepEqual(resource.tropes?.descriptions, {})
+	assert.equal("references" in (resource.tropes ?? {}), false)
+	assert.equal("labels" in (resource.tropes ?? {}), false)
+	assert.ok(JSON.stringify(resource).length < JSON.stringify(pool).length / 10)
+	const changed = profileTropeResource(
+		{
+			...pool,
+			catalogVersion: "new definitions",
+			descriptions: { other: "Changed" },
+		},
+		false,
+		new URLSearchParams({
+			version: "123",
+			catalogVersion: resource.tropes?.catalogVersion ?? "",
+		}),
+	)
+	assert.equal(changed.unchanged, true)
 })
