@@ -6,6 +6,164 @@ setting change, client repair, snapshot mutation or file write was performed.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Q35 lock-holder investigation — October26,09:10–09:27 UTC
+
+**Best-supported holder: closing Stores retained by unreleased reader/searcher references on
+crate-02 after the October22 rejoin.** Logs identify the lifecycle holder as `closing shard`;
+open old segment readers and the reference-lifetime code support that diagnosis. **The exact
+owning job/FetchTask object could not be identified** from the allowed diagnostics. Do not
+conflate a lifecycle holder description with a job/thread ID.
+
+Started from fresh main **9b5bd6435**. No SQL mutation, REROUTE, restart, KILL, table close/reopen,
+replica change, file deletion or logging/stat-setting change was performed. Exactly one
+owner-authorized `jcmd Thread.print -l` diagnostic was taken; its output was streamed to operator
+scratch, not a production output file. No GC request, heap dump or debugger was used.
+
+### Direct holder descriptions and when closing started
+
+Crate-02's logs at **October22 05:55:42–43 UTC** contain eight direct
+`ShardLockObtainFailedException` records from `TransportNodesListShardStoreMetadata`. Two examples:
+
+```text
+[person_appeared_in][4]: obtaining shard lock for [read metadata snapshot] timed out after [5000ms], lock already held for [closing shard] with age [8525ms]
+[person_worked_on][5]: obtaining shard lock for [read metadata snapshot] timed out after [5000ms], lock already held for [closing shard] with age [12925ms]
+```
+
+Subtracting the logged ages places the description changes at approximately **05:55:34.35 UTC**
+for `person_appeared_in`4 and **05:55:30.27 UTC** for `person_worked_on`5. These are approximate
+**closing-description** times, not original lock-acquisition times. `InternalShardLock.setDetails`
+resets the age clock; logging/scheduling adds small timing uncertainty. No current four-day age
+counter or exact holder object is exposed by SQL/the thread dump.
+
+All eight affected paths have the same pattern:
+
+| Relation/shard on crate-02 | Logged holder | Approximate closing time, Oct22 UTC | Current old segment FDs |
+| --- | --- | --- | ---: |
+| `person_appeared_in`0 | closing shard | 05:55:34.23 | 6 |
+| `person_appeared_in`1 | closing shard | 05:55:34.30 | 2 |
+| **`person_appeared_in`4** | closing shard | **05:55:34.35** | **4** |
+| `person_appeared_in`5 | closing shard | 05:55:34.41 | 4 |
+| `person_worked_on`0 | closing shard | 05:55:30.11 | 2 |
+| `person_worked_on`1 | closing shard | 05:55:30.17 | 2 |
+| `person_worked_on`4 | closing shard | 05:55:30.21 | 6 |
+| **`person_worked_on`5** | closing shard | **05:55:30.27** | **2** |
+
+The current JVM still has **28 segment-file descriptors** into exactly these eight directories,
+which are absent from its current SQL shard assignments. A full scan found399 physical shard
+directories versus391 assigned paths. Repeated filesystem/FD checks at09:19:33 and09:26:45 UTC
+found unchanged inventories and the same FD counts for all eight. The four requested/previously
+watched target identities are part of this larger set; **at least these eight shard IDs can impede
+future allocations to crate-02**, not just the two pending at one instant. No additional inactive
+open shard paths were found. This does not exclude retained references to currently assigned
+stores becoming a problem if those stores later close.
+
+### On-disk metadata: not an OS write.lock owner
+
+The requested directories are:
+
+- `person_appeared_in`4: `/data/nodes/0/indices/s45gGnNPT668rNeh8HDfkw/4`,154 files,
+  379,471,136 apparent bytes; newest file Oct22 05:55:34.396 UTC.
+- `person_worked_on`5: `/data/nodes/0/indices/FzH-GR-NQqm8P4Gs7lE8pQ/5`,124 files,
+  321,295,612 apparent bytes; newest file Oct22 05:55:30.304 UTC.
+
+Both contain the expected index/state/translog files. Their `index/write.lock` files are zero bytes,
+with mtimes **Oct15 23:51:07.333** and **Oct15 23:51:28.346 UTC** respectively. Those mtimes do not
+identify an acquisition time or a current owner. `/proc/locks` has **no matching OS advisory lock**
+for any of the eight inactive paths. As a positive control, **all391 assigned paths have OS WRITE
+locks owned by this same Java process**. This rules against the simple explanation that another
+process is holding these eight Lucene write locks; the failing category is Crate's **in-memory
+NodeEnvironment shard lock**, retained independently of those files. Do not delete any lock file.
+No shard-data file contents were read or touched.
+
+### Operations/jobs: strong timing correlation, no per-shard attribution
+
+Crate-02 has **112 operations older than1h without a matching `sys.jobs` row**:110 `fetchPhase`
+operations started **Oct22 05:55:10.706–05:55:22.333**, plus one collect and one distributed merge
+started Oct16. The110 fetch phases predate the closing transitions by seconds. The counts were
+unchanged in the09:24 final readback. However:
+
+- `sys.operations` exposes node/job/phase/name/start/bytes, **no relation or shard ID**.
+- The112 operations represent111 job IDs; the targeted `sys.jobs_log` lookup found **zero** retained
+  history matches. It returned no member statements or parameters.
+- A residual statistics row in5.10 can outlive the actual task. It is not by itself proof of an
+  addressable RootTask, or proof that that particular row owns one of these stores.
+- Therefore no particular orphaned operation can be claimed to reference either requested shard.
+  The timing, old readers and closing-store evidence support the mechanism, not a unique job mapping.
+
+The [tagged lifetime chain and upstream review](q35-upstream.md) explains why this is plausible:
+FetchTask/SharedShardContext searchers increment Engine/Store references; closing the shard removes
+it from active maps but releases its in-memory lock only when the last Store reference closes.
+Other query paths can own searchers too. Crate maintainers describe the same failure class in
+[issue18722](https://github.com/crate/crate/issues/18722) and note that cheap reference counting
+does not track individual job owners. This is not proof that our exact leak is identical.
+
+### One thread dump and the failed-attempt logs
+
+The only dump ran **09:14:12.731–09:14:15.730 UTC**:
+
+```text
+docker exec --user 1000 crate-02 /crate/jdk/bin/jcmd 1 Thread.print -l
+```
+
+Exit0; command latency **2.9984s**, including Docker/attach/output. The exact safepoint pause was
+not measured separately. It listed157 threads:62 RUNNABLE,62 WAITING,33 TIMED_WAITING, **zero BLOCKED**.
+There was no createShard, FetchTask, ShardLock or recovery-target stack. A RecoverySource substring
+was ordinary movie-segment merge pruning, not a blocked recovery handler. A semaphore permit and
+an idle object/reference graph need not have an executing/blocked owner thread, so this negative
+stack snapshot does not disprove the retained-store diagnosis. JVM addresses are tokenized consistently
+in [the published dump](q35-thread-dump.txt); the dump does not contain a heap reference graph.
+
+Six bounded failed-attempt windows—03:28:17,04:35:53,05:43:29,06:51:06,07:58:42 and09:06:18 UTC—
+show the same `IndicesService.createShard`→`LimitedExponentialBackoff.next` exhaustion. The09:06
+batch failed the requested `person_appeared_in`4 and `person_worked_on`5 targets again; the09:10
+and09:24 reads instead show `person_appeared_in`5 and `person_worked_on`4 relocating to crate-02.
+These rotating attempts are not successful recovery. Repeated log headers within a batch are not
+counted as distinct allocations. The original exception is swallowed in that retry path, and its
+WARN test expects5000ms while actual capped delays are5050ms, explaining the missing fresh
+holder-description details. The source review documents the exact calculation and citations.
+
+Health remained **145 GREEN**, with no failed checks. The JVM PID matched both FD samples; the
+initial Docker readback reported an Oct15 start and restart count0. No exact job/reader owner or
+safe job-scoped release was revealed by the dump.
+
+### Remedies and risks — nothing executed
+
+| Option | What it can do / risk |
+| --- | --- |
+| Keep observing | No immediate disruption, but four-day retained references and repeated failed creation do not show finite useful progress. Eight targets remain vulnerable and two rebalance slots stay occupied. |
+| **Target-only REROUTE CANCEL** after a fresh exact check | A narrower way to abort an INITIALIZING target attempt and reset the source's relocation, under new explicit approval. **Not a Store-reference release**; the allocator can immediately retry and hit the same lock. Not a validated cure. |
+| Cancel an active source copy | The command fails the specified copy/removes its allocation ID. It is not merely clearing a flag: redundancy can fall, primary cancellation can cause promotion/errors, and the old target Store still exists. Do not adapt Q31's source commands to this new situation. |
+| Job-specific cancellation | Would require an identified reachable owning task. The residual rows do not establish that, and cancellation can leave partial writes. **No KILL was run or is authorized.** |
+| Close/reopen, replica toggling or file manipulation | No validated reference-release cure. These broaden availability/redundancy risk; the analogous upstream report found replica toggling ineffective. File deletion can damage data and does not release the in-memory holder. Nothing was closed/reopened. |
+| **Guarded normal restart of only crate-02** | Best-established process-scoped reset: when the JVM actually exits, its retained references and in-memory locks cease to exist. This is not proof that no narrower remedy could ever work. Requires separate explicit approval, a fresh backup, safe copies/zero-primary drain gates, approved handling of current pending allocations and unlimited-grace normal stop. Member errors, reduced redundancy, recovery/heap load and another node loss are risks; normal exit may be slow. Do not force it. A restart can clear symptoms without preventing recurrence. |
+
+**Recommendation for the later owner decision:** prefer a separately reviewed guarded crate-02
+process reset over repeated allocation cancellation as the holder-release remedy, unless further
+evidence identifies a safely addressable live owner. Q35 does not authorize that reset. Do not
+couple it automatically to the major upgrade or claim6.4.6 cures every leak: some relevant fixes
+are already installed in5.10.16, and newer cleanup fixes are preventive evidence, not a diagnosis
+of this exact retained object. The upgrade's pending-relocation gate still fails today.
+
+### Evidence, verification and remaining limit
+
+- [q35-lock-holders.json](q35-lock-holders.json): eight holder/timing records, filesystem/OS-lock
+  controls, operation/history counts, diagnostic receipt and archive SHA256.
+- [q35-receipts.json.gz](q35-receipts.json.gz): UTF-8 map of explicit read-only SQL/results, bounded
+  sanitized lock/failure logs, two full FD/filesystem metadata samples, scripts, diagnostic receipt
+  and tagged source files. Issue API bodies remain in scratch; the archive keeps provenance hashes/links.
+- [q35-upstream.md](q35-upstream.md): source lifetime chain, matching first-party issue, fix-version
+  qualifications, missing WARN explanation and command-risk analysis.
+- Local checks verified eight matching holder/path identities,28 persistent old reader FDs, zero OS
+  locks for those paths versus391 active controls, unchanged file inventories,112 old operations,
+  zero matching historical jobs, exactly one successful diagnostic and GREEN before/after it.
+  JSON/archive/link/syntax checks passed; application suites were not rerun for this documentation-only task.
+
+The remaining limit is **the exact Java object/job retaining each Store**. Identifying it would need
+reference-owner instrumentation or a reference graph, beyond SQL and the one stack dump; no heap
+dump or new production instrumentation was attempted. The operator worktree was removed externally
+mid-task and recreated under `~/.cache/gw-work/644-q35/worktree`; scratch evidence survived, and the
+owner's main working files were not modified.
+
 ## Q31 production cancellation — stopped at the pre-check, 2026-10-26
 
 Started from fetched `origin/main` **93521e697**, on branch `fix/644-q31-cancel-relocations`.

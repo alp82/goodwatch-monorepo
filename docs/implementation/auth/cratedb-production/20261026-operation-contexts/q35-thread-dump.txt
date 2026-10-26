@@ -1,0 +1,2713 @@
+1:
+2026-10-26 09:14:13
+Full thread dump OpenJDK 64-Bit Server VM (23.0.2+7 mixed mode):
+
+Threads class SMR info:
+_java_thread_list=<addr_1>, length=157, elements={
+<addr_2>, <addr_3>, <addr_4>, <addr_5>,
+<addr_6>, <addr_7>, <addr_8>, <addr_9>,
+<addr_10>, <addr_11>, <addr_12>, <addr_13>,
+<addr_14>, <addr_15>, <addr_16>, <addr_17>,
+<addr_18>, <addr_19>, <addr_20>, <addr_21>,
+<addr_22>, <addr_23>, <addr_24>, <addr_25>,
+<addr_26>, <addr_27>, <addr_28>, <addr_29>,
+<addr_30>, <addr_31>, <addr_32>, <addr_33>,
+<addr_34>, <addr_35>, <addr_36>, <addr_37>,
+<addr_38>, <addr_39>, <addr_40>, <addr_41>,
+<addr_42>, <addr_43>, <addr_44>, <addr_45>,
+<addr_46>, <addr_47>, <addr_48>, <addr_49>,
+<addr_50>, <addr_51>, <addr_52>, <addr_53>,
+<addr_54>, <addr_55>, <addr_56>, <addr_57>,
+<addr_58>, <addr_59>, <addr_60>, <addr_61>,
+<addr_62>, <addr_63>, <addr_64>, <addr_65>,
+<addr_66>, <addr_67>, <addr_68>, <addr_69>,
+<addr_70>, <addr_71>, <addr_72>, <addr_73>,
+<addr_74>, <addr_75>, <addr_76>, <addr_77>,
+<addr_78>, <addr_79>, <addr_80>, <addr_81>,
+<addr_82>, <addr_83>, <addr_84>, <addr_85>,
+<addr_86>, <addr_87>, <addr_88>, <addr_89>,
+<addr_90>, <addr_91>, <addr_92>, <addr_93>,
+<addr_94>, <addr_95>, <addr_96>, <addr_97>,
+<addr_98>, <addr_99>, <addr_100>, <addr_101>,
+<addr_102>, <addr_103>, <addr_104>, <addr_105>,
+<addr_106>, <addr_107>, <addr_108>, <addr_109>,
+<addr_110>, <addr_111>, <addr_112>, <addr_113>,
+<addr_114>, <addr_115>, <addr_116>, <addr_117>,
+<addr_118>, <addr_119>, <addr_120>, <addr_121>,
+<addr_122>, <addr_123>, <addr_124>, <addr_125>,
+<addr_126>, <addr_127>, <addr_128>, <addr_129>,
+<addr_130>, <addr_131>, <addr_132>, <addr_133>,
+<addr_134>, <addr_135>, <addr_136>, <addr_137>,
+<addr_138>, <addr_139>, <addr_140>, <addr_141>,
+<addr_142>, <addr_143>, <addr_144>, <addr_145>,
+<addr_146>, <addr_147>, <addr_148>, <addr_149>,
+<addr_150>, <addr_151>, <addr_152>, <addr_153>,
+<addr_154>, <addr_155>, <addr_156>, <addr_157>,
+<addr_158>
+}
+
+"Reference Handler" #9 [21] daemon prio=10 os_prio=0 cpu=8453.53ms elapsed=898121.11s tid=<addr_2> nid=21 waiting on condition  [<addr_159>]
+   java.lang.Thread.State: RUNNABLE
+	at java.lang.ref.Reference.waitForReferencePendingList(java.base@23.0.2/Native Method)
+	at java.lang.ref.Reference.processPendingReferences(java.base@23.0.2/Reference.java:246)
+	at java.lang.ref.Reference$ReferenceHandler.run(java.base@23.0.2/Reference.java:208)
+
+   Locked ownable synchronizers:
+	- None
+
+"Finalizer" #10 [22] daemon prio=8 os_prio=0 cpu=0.80ms elapsed=898121.11s tid=<addr_3> nid=22 in Object.wait()  [<addr_160>]
+   java.lang.Thread.State: WAITING (on object monitor)
+	at java.lang.Object.wait0(java.base@23.0.2/Native Method)
+	- waiting on <<addr_161>> (a java.lang.ref.NativeReferenceQueue$Lock)
+	at java.lang.Object.wait(java.base@23.0.2/Object.java:378)
+	at java.lang.Object.wait(java.base@23.0.2/Object.java:352)
+	at java.lang.ref.NativeReferenceQueue.await(java.base@23.0.2/NativeReferenceQueue.java:48)
+	at java.lang.ref.ReferenceQueue.remove0(java.base@23.0.2/ReferenceQueue.java:166)
+	at java.lang.ref.NativeReferenceQueue.remove(java.base@23.0.2/NativeReferenceQueue.java:89)
+	- locked <<addr_161>> (a java.lang.ref.NativeReferenceQueue$Lock)
+	at java.lang.ref.Finalizer$FinalizerThread.run(java.base@23.0.2/Finalizer.java:173)
+
+   Locked ownable synchronizers:
+	- None
+
+"Signal Dispatcher" #11 [23] daemon prio=9 os_prio=0 cpu=1.41ms elapsed=898121.11s tid=<addr_4> nid=23 waiting on condition  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"Service Thread" #12 [24] daemon prio=9 os_prio=0 cpu=68006.87ms elapsed=898121.11s tid=<addr_5> nid=24 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"Monitor Deflation Thread" #13 [25] daemon prio=9 os_prio=0 cpu=217570.51ms elapsed=898121.11s tid=<addr_6> nid=25 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"C2 CompilerThread0" #14 [26] daemon prio=9 os_prio=0 cpu=750068.58ms elapsed=898121.11s tid=<addr_7> nid=26 waiting on condition  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+   No compile task
+
+   Locked ownable synchronizers:
+	- None
+
+"C1 CompilerThread0" #22 [27] daemon prio=9 os_prio=0 cpu=54994.97ms elapsed=898121.11s tid=<addr_8> nid=27 waiting on condition  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+   No compile task
+
+   Locked ownable synchronizers:
+	- None
+
+"Common-Cleaner" #26 [28] daemon prio=8 os_prio=0 cpu=2849.58ms elapsed=898120.94s tid=<addr_9> nid=28 waiting on condition  [<addr_163>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_164>> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:269)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(java.base@23.0.2/AbstractQueuedSynchronizer.java:1852)
+	at java.lang.ref.ReferenceQueue.await(java.base@23.0.2/ReferenceQueue.java:79)
+	at java.lang.ref.ReferenceQueue.remove0(java.base@23.0.2/ReferenceQueue.java:151)
+	at java.lang.ref.ReferenceQueue.remove(java.base@23.0.2/ReferenceQueue.java:229)
+	at jdk.internal.ref.CleanerImpl.run(java.base@23.0.2/CleanerImpl.java:140)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+	at jdk.internal.misc.InnocuousThread.run(java.base@23.0.2/InnocuousThread.java:186)
+
+   Locked ownable synchronizers:
+	- None
+
+"Notification Thread" #27 [30] daemon prio=9 os_prio=0 cpu=0.18ms elapsed=898120.88s tid=<addr_10> nid=30 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"JNA Cleaner" #47 [53] daemon prio=5 os_prio=0 cpu=8599.17ms elapsed=898118.16s tid=<addr_11> nid=53 waiting on condition  [<addr_165>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_166>> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:269)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(java.base@23.0.2/AbstractQueuedSynchronizer.java:1852)
+	at java.lang.ref.ReferenceQueue.await(java.base@23.0.2/ReferenceQueue.java:79)
+	at java.lang.ref.ReferenceQueue.remove0(java.base@23.0.2/ReferenceQueue.java:151)
+	at java.lang.ref.ReferenceQueue.remove(java.base@23.0.2/ReferenceQueue.java:229)
+	at com.sun.jna.internal.Cleaner$CleanerThread.run(Cleaner.java:154)
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-2" #49 [58] daemon prio=5 os_prio=0 cpu=0.95ms elapsed=898115.52s tid=<addr_12> nid=58 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-0" #51 [56] daemon prio=5 os_prio=0 cpu=1.29ms elapsed=898115.52s tid=<addr_13> nid=56 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-1" #50 [57] daemon prio=5 os_prio=0 cpu=0.97ms elapsed=898115.52s tid=<addr_14> nid=57 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-4" #52 [60] daemon prio=5 os_prio=0 cpu=0.55ms elapsed=898115.52s tid=<addr_15> nid=60 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-3" #55 [59] daemon prio=5 os_prio=0 cpu=1.48ms elapsed=898115.52s tid=<addr_16> nid=59 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-6" #56 [62] daemon prio=5 os_prio=0 cpu=1.15ms elapsed=898115.52s tid=<addr_17> nid=62 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-5" #57 [61] daemon prio=5 os_prio=0 cpu=1.45ms elapsed=898115.52s tid=<addr_18> nid=61 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-7" #53 [63] daemon prio=5 os_prio=0 cpu=0.65ms elapsed=898115.52s tid=<addr_19> nid=63 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-8" #54 [64] daemon prio=5 os_prio=0 cpu=0.73ms elapsed=898115.52s tid=<addr_20> nid=64 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-9" #59 [65] daemon prio=5 os_prio=0 cpu=1.20ms elapsed=898115.52s tid=<addr_21> nid=65 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-10" #58 [66] daemon prio=5 os_prio=0 cpu=0.53ms elapsed=898115.52s tid=<addr_22> nid=66 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-11" #61 [67] daemon prio=5 os_prio=0 cpu=0.47ms elapsed=898115.52s tid=<addr_23> nid=67 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-13" #60 [69] daemon prio=5 os_prio=0 cpu=0.54ms elapsed=898115.52s tid=<addr_24> nid=69 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-12" #63 [68] daemon prio=5 os_prio=0 cpu=0.97ms elapsed=898115.52s tid=<addr_25> nid=68 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-15" #62 [71] daemon prio=5 os_prio=0 cpu=0.38ms elapsed=898115.52s tid=<addr_26> nid=71 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"opendal-tokio-worker-14" #64 [70] daemon prio=5 os_prio=0 cpu=0.95ms elapsed=898115.52s tid=<addr_27> nid=70 runnable  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][[timer]]" #65 [72] daemon prio=5 os_prio=0 cpu=309392.72ms elapsed=898114.32s tid=<addr_28> nid=72 sleeping [<addr_167>]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleepNanos0(java.base@23.0.2/Native Method)
+	at java.lang.Thread.sleepNanos(java.base@23.0.2/Thread.java:496)
+	at java.lang.Thread.sleep(java.base@23.0.2/Thread.java:527)
+	at org.elasticsearch.threadpool.ThreadPool$CachedTimeThread.run(ThreadPool.java:474)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][scheduler][T#1]" #66 [76] daemon prio=5 os_prio=0 cpu=4639888.88ms elapsed=898112.56s tid=<addr_29> nid=76 runnable  [<addr_168>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_169>> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:269)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(java.base@23.0.2/AbstractQueuedSynchronizer.java:1763)
+	at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(java.base@23.0.2/ScheduledThreadPoolExecutor.java:1182)
+	at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(java.base@23.0.2/ScheduledThreadPoolExecutor.java:899)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"crate-udc" #68 [83] prio=5 os_prio=0 cpu=1767.37ms elapsed=898109.88s tid=<addr_30> nid=83 in Object.wait()  [<addr_170>]
+   java.lang.Thread.State: TIMED_WAITING (on object monitor)
+	at java.lang.Object.wait0(java.base@23.0.2/Native Method)
+	- waiting on <no object reference available>
+	at java.lang.Object.wait(java.base@23.0.2/Object.java:378)
+	at java.util.TimerThread.mainLoop(java.base@23.0.2/Timer.java:569)
+	- locked <<addr_171>> (a java.util.TaskQueue)
+	at java.util.TimerThread.run(java.base@23.0.2/Timer.java:522)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#1]" #69 [84] daemon prio=5 os_prio=0 cpu=3097996.35ms elapsed=898109.71s tid=<addr_31> nid=84 runnable  [<addr_172>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_173>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_174>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#1]" #70 [85] daemon prio=5 os_prio=0 cpu=15119196.91ms elapsed=898109.67s tid=<addr_32> nid=85 runnable  [<addr_175>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_176>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_177>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#2]" #71 [86] daemon prio=5 os_prio=0 cpu=3298133.60ms elapsed=898109.65s tid=<addr_33> nid=86 runnable  [<addr_178>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_179>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_180>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][clusterApplierService#updateTask][T#1]" #76 [93] daemon prio=5 os_prio=0 cpu=653907.97ms elapsed=898108.79s tid=<addr_34> nid=93 waiting on condition  [<addr_181>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_182>> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode.block(java.base@23.0.2/AbstractQueuedSynchronizer.java:519)
+	at java.util.concurrent.ForkJoinPool.unmanagedBlock(java.base@23.0.2/ForkJoinPool.java:4023)
+	at java.util.concurrent.ForkJoinPool.managedBlock(java.base@23.0.2/ForkJoinPool.java:3969)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(java.base@23.0.2/AbstractQueuedSynchronizer.java:1712)
+	at java.util.concurrent.PriorityBlockingQueue.take(java.base@23.0.2/PriorityBlockingQueue.java:535)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#3]" #79 [96] daemon prio=5 os_prio=0 cpu=10158082.52ms elapsed=898108.77s tid=<addr_35> nid=96 runnable  [<addr_183>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_184>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_185>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#4]" #80 [97] daemon prio=5 os_prio=0 cpu=7110653.19ms elapsed=898108.77s tid=<addr_36> nid=97 runnable  [<addr_186>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_187>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_188>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#5]" #82 [99] daemon prio=5 os_prio=0 cpu=7112663.56ms elapsed=898108.66s tid=<addr_37> nid=99 runnable  [<addr_189>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_190>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_191>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#6]" #83 [100] daemon prio=5 os_prio=0 cpu=13821151.54ms elapsed=898108.66s tid=<addr_38> nid=100 runnable  [<addr_192>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_193>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_194>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#7]" #84 [101] daemon prio=5 os_prio=0 cpu=13815668.40ms elapsed=898108.66s tid=<addr_39> nid=101 runnable  [<addr_195>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_196>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_197>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#8]" #85 [102] daemon prio=5 os_prio=0 cpu=11481364.62ms elapsed=898108.66s tid=<addr_40> nid=102 runnable  [<addr_198>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_199>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_200>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#9]" #86 [103] daemon prio=5 os_prio=0 cpu=7477618.45ms elapsed=898108.66s tid=<addr_41> nid=103 runnable  [<addr_201>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_202>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_203>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#10]" #87 [104] daemon prio=5 os_prio=0 cpu=11054484.50ms elapsed=898108.66s tid=<addr_42> nid=104 runnable  [<addr_204>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_205>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_206>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#11]" #88 [105] daemon prio=5 os_prio=0 cpu=15116051.16ms elapsed=898108.66s tid=<addr_43> nid=105 runnable  [<addr_207>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_208>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_209>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#12]" #89 [106] daemon prio=5 os_prio=0 cpu=10375703.77ms elapsed=898108.66s tid=<addr_44> nid=106 runnable  [<addr_210>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_211>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_212>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#13]" #90 [107] daemon prio=5 os_prio=0 cpu=8075339.34ms elapsed=898108.65s tid=<addr_45> nid=107 runnable  [<addr_213>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_214>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_215>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#14]" #91 [108] daemon prio=5 os_prio=0 cpu=10988415.50ms elapsed=898108.65s tid=<addr_46> nid=108 runnable  [<addr_216>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_217>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_218>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#15]" #92 [109] daemon prio=5 os_prio=0 cpu=11316717.84ms elapsed=898108.65s tid=<addr_47> nid=109 runnable  [<addr_219>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_220>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_221>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#16]" #93 [110] daemon prio=5 os_prio=0 cpu=7374538.00ms elapsed=898108.65s tid=<addr_48> nid=110 runnable  [<addr_222>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_223>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_224>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"crate[keepAlive/5.10.16]" #29 [111] prio=5 os_prio=0 cpu=0.67ms elapsed=898108.20s tid=<addr_49> nid=111 waiting on condition  [<addr_225>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_226>> (a java.util.concurrent.CountDownLatch$Sync)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:221)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquire(java.base@23.0.2/AbstractQueuedSynchronizer.java:754)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireSharedInterruptibly(java.base@23.0.2/AbstractQueuedSynchronizer.java:1099)
+	at java.util.concurrent.CountDownLatch.await(java.base@23.0.2/CountDownLatch.java:230)
+	at org.elasticsearch.bootstrap.BootstrapProxy.lambda$new$0(BootstrapProxy.java:99)
+	at org.elasticsearch.bootstrap.BootstrapProxy$$Lambda/<addr_227>.run(Unknown Source)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"DestroyJavaVM" #94 [13] prio=5 os_prio=0 cpu=11221.61ms elapsed=898108.20s tid=<addr_50> nid=13 waiting on condition  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][management][T#1]" #95 [112] daemon prio=5 os_prio=0 cpu=875671.67ms elapsed=898108.19s tid=<addr_51> nid=112 waiting on condition  [<addr_228>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_229>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#2]" #96 [113] daemon prio=5 os_prio=0 cpu=15204275.37ms elapsed=898108.04s tid=<addr_52> nid=113 runnable  [<addr_230>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_231>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_232>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#3]" #97 [114] daemon prio=5 os_prio=0 cpu=15036266.72ms elapsed=898108.00s tid=<addr_53> nid=114 runnable  [<addr_233>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_234>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_235>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#4]" #98 [119] daemon prio=5 os_prio=0 cpu=14931440.37ms elapsed=898107.67s tid=<addr_54> nid=119 runnable  [<addr_236>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_237>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_238>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#1]" #99 [125] daemon prio=5 os_prio=0 cpu=42393635.89ms elapsed=898107.03s tid=<addr_55> nid=125 waiting on condition  [<addr_239>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#2]" #100 [126] daemon prio=5 os_prio=0 cpu=42258336.22ms elapsed=898107.03s tid=<addr_56> nid=126 waiting on condition  [<addr_241>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#3]" #101 [127] daemon prio=5 os_prio=0 cpu=42351881.92ms elapsed=898107.02s tid=<addr_57> nid=127 waiting on condition  [<addr_242>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#4]" #102 [128] daemon prio=5 os_prio=0 cpu=42485637.95ms elapsed=898107.02s tid=<addr_58> nid=128 waiting on condition  [<addr_243>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#5]" #103 [129] daemon prio=5 os_prio=0 cpu=42398590.70ms elapsed=898106.95s tid=<addr_59> nid=129 waiting on condition  [<addr_244>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#6]" #104 [130] daemon prio=5 os_prio=0 cpu=42373223.62ms elapsed=898106.94s tid=<addr_60> nid=130 waiting on condition  [<addr_245>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#5]" #105 [133] daemon prio=5 os_prio=0 cpu=15196299.52ms elapsed=898105.96s tid=<addr_61> nid=133 runnable  [<addr_246>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_247>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_248>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#6]" #106 [138] daemon prio=5 os_prio=0 cpu=15425946.47ms elapsed=898105.77s tid=<addr_62> nid=138 runnable  [<addr_249>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_250>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_251>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#7]" #107 [140] daemon prio=5 os_prio=0 cpu=42483302.13ms elapsed=898105.64s tid=<addr_63> nid=140 waiting on condition  [<addr_252>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#8]" #108 [141] daemon prio=5 os_prio=0 cpu=42399615.97ms elapsed=898105.63s tid=<addr_64> nid=141 waiting on condition  [<addr_253>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#9]" #109 [142] daemon prio=5 os_prio=0 cpu=42605403.75ms elapsed=898105.49s tid=<addr_65> nid=142 waiting on condition  [<addr_254>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#10]" #110 [143] daemon prio=5 os_prio=0 cpu=42379733.04ms elapsed=898105.49s tid=<addr_66> nid=143 waiting on condition  [<addr_255>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#11]" #111 [144] daemon prio=5 os_prio=0 cpu=42566265.52ms elapsed=898105.39s tid=<addr_67> nid=144 waiting on condition  [<addr_256>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#12]" #112 [145] daemon prio=5 os_prio=0 cpu=42378956.06ms elapsed=898105.38s tid=<addr_68> nid=145 waiting on condition  [<addr_257>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#7]" #113 [146] daemon prio=5 os_prio=0 cpu=14998801.87ms elapsed=898105.21s tid=<addr_69> nid=146 runnable  [<addr_258>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_259>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_260>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#8]" #114 [147] daemon prio=5 os_prio=0 cpu=14991695.50ms elapsed=898105.21s tid=<addr_70> nid=147 runnable  [<addr_261>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_262>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_263>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#13]" #115 [148] daemon prio=5 os_prio=0 cpu=42395582.83ms elapsed=898105.16s tid=<addr_71> nid=148 waiting on condition  [<addr_264>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#14]" #116 [149] daemon prio=5 os_prio=0 cpu=42527124.01ms elapsed=898105.16s tid=<addr_72> nid=149 waiting on condition  [<addr_265>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#15]" #117 [150] daemon prio=5 os_prio=0 cpu=42563529.94ms elapsed=898105.14s tid=<addr_73> nid=150 waiting on condition  [<addr_266>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#16]" #118 [151] daemon prio=5 os_prio=0 cpu=42654779.72ms elapsed=898105.13s tid=<addr_74> nid=151 waiting on condition  [<addr_267>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#17]" #119 [152] daemon prio=5 os_prio=0 cpu=42285806.41ms elapsed=898105.13s tid=<addr_75> nid=152 waiting on condition  [<addr_268>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#18]" #120 [153] daemon prio=5 os_prio=0 cpu=42329014.30ms elapsed=898105.13s tid=<addr_76> nid=153 waiting on condition  [<addr_269>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#19]" #121 [154] daemon prio=5 os_prio=0 cpu=42341266.16ms elapsed=898105.12s tid=<addr_77> nid=154 waiting on condition  [<addr_270>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#20]" #122 [155] daemon prio=5 os_prio=0 cpu=42300859.78ms elapsed=898105.11s tid=<addr_78> nid=155 waiting on condition  [<addr_271>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#21]" #123 [156] daemon prio=5 os_prio=0 cpu=42252694.40ms elapsed=898105.11s tid=<addr_79> nid=156 waiting on condition  [<addr_272>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#22]" #124 [157] daemon prio=5 os_prio=0 cpu=42204360.57ms elapsed=898105.11s tid=<addr_80> nid=157 waiting on condition  [<addr_273>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#23]" #125 [158] daemon prio=5 os_prio=0 cpu=42462056.88ms elapsed=898105.11s tid=<addr_81> nid=158 waiting on condition  [<addr_274>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#24]" #126 [159] daemon prio=5 os_prio=0 cpu=42440688.89ms elapsed=898105.11s tid=<addr_82> nid=159 waiting on condition  [<addr_275>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][search][T#25]" #127 [160] daemon prio=5 os_prio=0 cpu=42574113.17ms elapsed=898105.11s tid=<addr_83> nid=160 waiting on condition  [<addr_276>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_240>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#9]" #128 [168] daemon prio=5 os_prio=0 cpu=15126414.02ms elapsed=898102.53s tid=<addr_84> nid=168 runnable  [<addr_277>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_278>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_279>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#10]" #129 [175] daemon prio=5 os_prio=0 cpu=15225696.98ms elapsed=898101.94s tid=<addr_85> nid=175 runnable  [<addr_280>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_281>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_282>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#11]" #130 [179] daemon prio=5 os_prio=0 cpu=14946084.78ms elapsed=898101.26s tid=<addr_86> nid=179 runnable  [<addr_283>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_284>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_285>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#12]" #131 [188] daemon prio=5 os_prio=0 cpu=15096574.75ms elapsed=898101.10s tid=<addr_87> nid=188 runnable  [<addr_286>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_287>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_288>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#13]" #132 [193] daemon prio=5 os_prio=0 cpu=15101948.46ms elapsed=898097.98s tid=<addr_88> nid=193 runnable  [<addr_289>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_290>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_291>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#14]" #133 [194] daemon prio=5 os_prio=0 cpu=14992402.81ms elapsed=898096.34s tid=<addr_89> nid=194 runnable  [<addr_292>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_293>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_294>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#15]" #134 [200] daemon prio=5 os_prio=0 cpu=15685801.07ms elapsed=898095.06s tid=<addr_90> nid=200 runnable  [<addr_295>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_296>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_297>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][netty-worker][T#16]" #135 [201] daemon prio=5 os_prio=0 cpu=15172680.56ms elapsed=898094.97s tid=<addr_91> nid=201 runnable  [<addr_298>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPoll.wait(java.base@23.0.2/Native Method)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(java.base@23.0.2/EPollSelectorImpl.java:121)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(java.base@23.0.2/SelectorImpl.java:130)
+	- locked <<addr_299>> (a io.netty.channel.nio.SelectedSelectionKeySet)
+	- locked <<addr_300>> (a sun.nio.ch.EPollSelectorImpl)
+	at sun.nio.ch.SelectorImpl.select(java.base@23.0.2/SelectorImpl.java:147)
+	at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:68)
+	at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:887)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:526)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:998)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][DanglingIndices#updateTask][T#1]" #168 [311] daemon prio=5 os_prio=0 cpu=4231.44ms elapsed=898019.10s tid=<addr_92> nid=311 waiting on condition  [<addr_301>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_302>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][refresh][T#1]" #169 [312] daemon prio=5 os_prio=0 cpu=6751258.80ms elapsed=898018.10s tid=<addr_93> nid=312 waiting on condition  [<addr_303>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_304>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][get][T#1]" #170 [313] daemon prio=5 os_prio=0 cpu=32139.76ms elapsed=898017.61s tid=<addr_94> nid=313 waiting on condition  [<addr_305>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_306>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][get][T#2]" #171 [314] daemon prio=5 os_prio=0 cpu=33462.50ms elapsed=898016.43s tid=<addr_95> nid=314 waiting on condition  [<addr_307>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_306>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#1]" #172 [317] daemon prio=5 os_prio=0 cpu=1675100.91ms elapsed=898013.16s tid=<addr_96> nid=317 waiting on condition  [<addr_308>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#2]" #173 [318] daemon prio=5 os_prio=0 cpu=1669210.85ms elapsed=898013.16s tid=<addr_97> nid=318 waiting on condition  [<addr_310>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][management][T#2]" #174 [319] daemon prio=5 os_prio=0 cpu=886029.67ms elapsed=898013.14s tid=<addr_98> nid=319 waiting on condition  [<addr_311>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_229>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#3]" #175 [320] daemon prio=5 os_prio=0 cpu=1624243.67ms elapsed=898012.47s tid=<addr_99> nid=320 runnable  [<addr_312>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.UnixFileDispatcherImpl.force0(java.base@23.0.2/Native Method)
+	at sun.nio.ch.UnixFileDispatcherImpl.force(java.base@23.0.2/UnixFileDispatcherImpl.java:85)
+	at sun.nio.ch.FileChannelImpl.implForce(java.base@23.0.2/FileChannelImpl.java:602)
+	at sun.nio.ch.FileChannelImpl.force(java.base@23.0.2/FileChannelImpl.java:617)
+	at org.elasticsearch.index.translog.TranslogWriter.syncUpTo(TranslogWriter.java:427)
+	- locked <<addr_313>> (a java.lang.Object)
+	at org.elasticsearch.index.translog.Translog.ensureSynced(Translog.java:760)
+	at org.elasticsearch.index.translog.Translog.ensureSynced(Translog.java:781)
+	at org.elasticsearch.index.engine.InternalEngine.ensureTranslogSynced(InternalEngine.java:516)
+	at org.elasticsearch.index.shard.IndexShard$5.write(IndexShard.java:2922)
+	at org.elasticsearch.common.util.concurrent.AsyncIOProcessor.processList(AsyncIOProcessor.java:107)
+	at org.elasticsearch.common.util.concurrent.AsyncIOProcessor.drainAndProcessAndRelease(AsyncIOProcessor.java:95)
+	at org.elasticsearch.common.util.concurrent.AsyncIOProcessor.put(AsyncIOProcessor.java:83)
+	at org.elasticsearch.index.shard.IndexShard.sync(IndexShard.java:2944)
+	at org.elasticsearch.action.support.replication.TransportWriteAction$AsyncAfterWriteAction.run(TransportWriteAction.java:284)
+	at org.elasticsearch.action.support.replication.TransportWriteAction$WriteReplicaResult.runPostReplicaActions(TransportWriteAction.java:192)
+	at org.elasticsearch.action.support.replication.TransportReplicationAction$AsyncReplicaAction.onResponse(TransportReplicationAction.java:557)
+	at org.elasticsearch.action.support.replication.TransportReplicationAction$AsyncReplicaAction.onResponse(TransportReplicationAction.java:535)
+	at org.elasticsearch.index.shard.IndexShard.lambda$innerAcquireReplicaOperationPermit$25(IndexShard.java:2852)
+	at org.elasticsearch.index.shard.IndexShard$$Lambda/<addr_314>.accept(Unknown Source)
+	at org.elasticsearch.action.ActionListener$3.onResponse(ActionListener.java:126)
+	at org.elasticsearch.index.shard.IndexShardOperationPermits.acquire(IndexShardOperationPermits.java:292)
+	at org.elasticsearch.index.shard.IndexShardOperationPermits.acquire(IndexShardOperationPermits.java:242)
+	at org.elasticsearch.index.shard.IndexShard.lambda$acquireReplicaOperationPermit$23(IndexShard.java:2787)
+	at org.elasticsearch.index.shard.IndexShard$$Lambda/<addr_315>.accept(Unknown Source)
+	at org.elasticsearch.index.shard.IndexShard.innerAcquireReplicaOperationPermit(IndexShard.java:2891)
+	at org.elasticsearch.index.shard.IndexShard.acquireReplicaOperationPermit(IndexShard.java:2786)
+	at org.elasticsearch.action.support.replication.TransportReplicationAction.acquireReplicaOperationPermit(TransportReplicationAction.java:880)
+	at org.elasticsearch.action.support.replication.TransportReplicationAction$AsyncReplicaAction.doRun(TransportReplicationAction.java:628)
+	at org.elasticsearch.common.util.concurrent.AbstractRunnable.run(AbstractRunnable.java:37)
+	at org.elasticsearch.action.support.replication.TransportReplicationAction.handleReplicaRequest(TransportReplicationAction.java:520)
+	at org.elasticsearch.action.support.replication.TransportReplicationAction$$Lambda/<addr_316>.messageReceived(Unknown Source)
+	at org.elasticsearch.transport.RequestHandlerRegistry.processMessageReceived(RequestHandlerRegistry.java:59)
+	at org.elasticsearch.transport.InboundHandler$RequestHandler.doRun(InboundHandler.java:413)
+	at org.elasticsearch.common.util.concurrent.AbstractRunnable.run(AbstractRunnable.java:37)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1144)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- <<addr_317>> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"cratedb[crate-02][refresh][T#2]" #176 [321] daemon prio=5 os_prio=0 cpu=6813843.02ms elapsed=898012.29s tid=<addr_100> nid=321 waiting on condition  [<addr_318>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_304>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][refresh][T#3]" #177 [322] daemon prio=5 os_prio=0 cpu=6862880.17ms elapsed=898012.29s tid=<addr_101> nid=322 waiting on condition  [<addr_319>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_304>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#4]" #178 [323] daemon prio=5 os_prio=0 cpu=1675779.73ms elapsed=898011.66s tid=<addr_102> nid=323 waiting on condition  [<addr_320>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][refresh][T#4]" #179 [324] daemon prio=5 os_prio=0 cpu=6755957.35ms elapsed=898011.08s tid=<addr_103> nid=324 waiting on condition  [<addr_321>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_304>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][refresh][T#5]" #180 [331] daemon prio=5 os_prio=0 cpu=6739815.35ms elapsed=898004.57s tid=<addr_104> nid=331 waiting on condition  [<addr_322>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_304>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][refresh][T#6]" #183 [343] daemon prio=5 os_prio=0 cpu=6840763.24ms elapsed=897999.57s tid=<addr_105> nid=343 runnable  [<addr_323>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.fs.UnixNativeDispatcher.open0(java.base@23.0.2/Native Method)
+	at sun.nio.fs.UnixNativeDispatcher.open(java.base@23.0.2/UnixNativeDispatcher.java:69)
+	at sun.nio.fs.UnixChannelFactory.open(java.base@23.0.2/UnixChannelFactory.java:258)
+	at sun.nio.fs.UnixChannelFactory.newFileChannel(java.base@23.0.2/UnixChannelFactory.java:133)
+	at sun.nio.fs.UnixChannelFactory.newFileChannel(java.base@23.0.2/UnixChannelFactory.java:146)
+	at sun.nio.fs.UnixFileSystemProvider.newByteChannel(java.base@23.0.2/UnixFileSystemProvider.java:260)
+	at java.nio.file.spi.FileSystemProvider.newOutputStream(java.base@23.0.2/FileSystemProvider.java:482)
+	at java.nio.file.Files.newOutputStream(java.base@23.0.2/Files.java:228)
+	at org.apache.lucene.store.FSDirectory$FSIndexOutput.<init>(FSDirectory.java:394)
+	at org.apache.lucene.store.FSDirectory$FSIndexOutput.<init>(FSDirectory.java:387)
+	at org.apache.lucene.store.FSDirectory.createOutput(FSDirectory.java:220)
+	at org.apache.lucene.store.FilterDirectory.createOutput(FilterDirectory.java:75)
+	at org.elasticsearch.index.store.ByteSizeCachingDirectory.createOutput(ByteSizeCachingDirectory.java:129)
+	at org.apache.lucene.store.FilterDirectory.createOutput(FilterDirectory.java:75)
+	at org.apache.lucene.store.LockValidatingDirectoryWrapper.createOutput(LockValidatingDirectoryWrapper.java:43)
+	at org.apache.lucene.store.TrackingDirectoryWrapper.createOutput(TrackingDirectoryWrapper.java:41)
+	at io.crate.lucene.codec.CustomLucene90DocValuesConsumer.<init>(CustomLucene90DocValuesConsumer.java:101)
+	at io.crate.lucene.codec.CustomLucene90DocValuesFormat.fieldsConsumer(CustomLucene90DocValuesFormat.java:53)
+	at org.apache.lucene.codecs.perfield.PerFieldDocValuesFormat$FieldsWriter.getInstance(PerFieldDocValuesFormat.java:225)
+	at org.apache.lucene.codecs.perfield.PerFieldDocValuesFormat$FieldsWriter.getInstance(PerFieldDocValuesFormat.java:156)
+	at org.apache.lucene.codecs.perfield.PerFieldDocValuesFormat$FieldsWriter.addSortedNumericField(PerFieldDocValuesFormat.java:121)
+	at org.apache.lucene.index.SortedNumericDocValuesWriter.flush(SortedNumericDocValuesWriter.java:182)
+	at org.apache.lucene.index.IndexingChain.writeDocValues(IndexingChain.java:424)
+	at org.apache.lucene.index.IndexingChain.flush(IndexingChain.java:282)
+	at org.apache.lucene.index.DocumentsWriterPerThread.flush(DocumentsWriterPerThread.java:445)
+	at org.apache.lucene.index.DocumentsWriter.doFlush(DocumentsWriter.java:502)
+	at org.apache.lucene.index.DocumentsWriter.maybeFlush(DocumentsWriter.java:456)
+	at org.apache.lucene.index.DocumentsWriter.flushAllThreads(DocumentsWriter.java:649)
+	at org.apache.lucene.index.IndexWriter.getReader(IndexWriter.java:579)
+	- locked <<addr_324>> (a java.lang.Object)
+	at org.apache.lucene.index.StandardDirectoryReader.doOpenFromWriter(StandardDirectoryReader.java:381)
+	at org.apache.lucene.index.StandardDirectoryReader.doOpenIfChanged(StandardDirectoryReader.java:355)
+	at org.apache.lucene.index.StandardDirectoryReader.doOpenIfChanged(StandardDirectoryReader.java:345)
+	at org.apache.lucene.index.FilterDirectoryReader.doOpenIfChanged(FilterDirectoryReader.java:112)
+	at org.apache.lucene.index.DirectoryReader.openIfChanged(DirectoryReader.java:170)
+	at org.elasticsearch.index.engine.ElasticsearchReaderManager.refreshIfNeeded(ElasticsearchReaderManager.java:61)
+	at org.elasticsearch.index.engine.ElasticsearchReaderManager.refreshIfNeeded(ElasticsearchReaderManager.java:39)
+	at org.apache.lucene.search.ReferenceManager.doMaybeRefresh(ReferenceManager.java:167)
+	at org.apache.lucene.search.ReferenceManager.maybeRefreshBlocking(ReferenceManager.java:240)
+	at org.elasticsearch.index.engine.InternalEngine$ExternalReaderManager.refreshIfNeeded(InternalEngine.java:363)
+	at org.elasticsearch.index.engine.InternalEngine$ExternalReaderManager.refreshIfNeeded(InternalEngine.java:348)
+	at org.apache.lucene.search.ReferenceManager.doMaybeRefresh(ReferenceManager.java:167)
+	at org.apache.lucene.search.ReferenceManager.maybeRefresh(ReferenceManager.java:213)
+	at org.elasticsearch.index.engine.InternalEngine.refresh(InternalEngine.java:1690)
+	at org.elasticsearch.index.engine.InternalEngine.maybeRefresh(InternalEngine.java:1668)
+	at org.elasticsearch.index.shard.IndexShard.scheduledRefresh(IndexShard.java:3100)
+	at org.elasticsearch.index.IndexService.maybeRefreshEngine(IndexService.java:662)
+	at org.elasticsearch.index.IndexService$AsyncRefreshTask.runInternal(IndexService.java:796)
+	at org.elasticsearch.common.util.concurrent.AbstractAsyncTask.run(AbstractAsyncTask.java:143)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1144)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- <<addr_325>> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+	- <<addr_326>> (a java.util.concurrent.locks.ReentrantLock$NonfairSync)
+	- <<addr_327>> (a java.util.concurrent.locks.ReentrantLock$NonfairSync)
+
+"cratedb[crate-02][get][T#3]" #185 [352] daemon prio=5 os_prio=0 cpu=32098.49ms elapsed=897995.09s tid=<addr_106> nid=352 waiting on condition  [<addr_328>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_306>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][refresh][T#7]" #186 [358] daemon prio=5 os_prio=0 cpu=6794210.13ms elapsed=897993.56s tid=<addr_107> nid=358 waiting on condition  [<addr_329>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_304>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][generic][T#5]" #187 [366] daemon prio=5 os_prio=0 cpu=69025.42ms elapsed=897989.65s tid=<addr_108> nid=366 waiting on condition  [<addr_330>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_331>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#5]" #188 [372] daemon prio=5 os_prio=0 cpu=1673332.22ms elapsed=897985.75s tid=<addr_109> nid=372 waiting on condition  [<addr_332>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#6]" #189 [373] daemon prio=5 os_prio=0 cpu=1672324.51ms elapsed=897985.74s tid=<addr_110> nid=373 waiting on condition  [<addr_333>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#7]" #190 [375] daemon prio=5 os_prio=0 cpu=1671716.41ms elapsed=897985.72s tid=<addr_111> nid=375 waiting on condition  [<addr_334>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#8]" #191 [376] daemon prio=5 os_prio=0 cpu=1696235.17ms elapsed=897985.72s tid=<addr_112> nid=376 waiting on condition  [<addr_335>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#9]" #192 [386] daemon prio=5 os_prio=0 cpu=1703361.93ms elapsed=897978.22s tid=<addr_113> nid=386 waiting on condition  [<addr_336>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#10]" #193 [387] daemon prio=5 os_prio=0 cpu=1661851.50ms elapsed=897978.16s tid=<addr_114> nid=387 waiting on condition  [<addr_337>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#11]" #194 [388] daemon prio=5 os_prio=0 cpu=1653732.61ms elapsed=897978.12s tid=<addr_115> nid=388 waiting on condition  [<addr_338>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#12]" #195 [389] daemon prio=5 os_prio=0 cpu=1659003.33ms elapsed=897978.12s tid=<addr_116> nid=389 waiting on condition  [<addr_339>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#13]" #196 [390] daemon prio=5 os_prio=0 cpu=1661463.37ms elapsed=897978.09s tid=<addr_117> nid=390 waiting on condition  [<addr_340>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#14]" #197 [392] daemon prio=5 os_prio=0 cpu=1652328.18ms elapsed=897978.09s tid=<addr_118> nid=392 waiting on condition  [<addr_341>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#15]" #198 [393] daemon prio=5 os_prio=0 cpu=1701346.41ms elapsed=897978.06s tid=<addr_119> nid=393 waiting on condition  [<addr_342>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][write][T#16]" #199 [394] daemon prio=5 os_prio=0 cpu=1666177.05ms elapsed=897978.06s tid=<addr_120> nid=394 waiting on condition  [<addr_343>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_309>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][get][T#4]" #203 [411] daemon prio=5 os_prio=0 cpu=31934.87ms elapsed=897971.98s tid=<addr_121> nid=411 waiting on condition  [<addr_344>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_306>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][management][T#3]" #205 [420] daemon prio=5 os_prio=0 cpu=874829.75ms elapsed=897961.15s tid=<addr_122> nid=420 waiting on condition  [<addr_345>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_229>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][get][T#5]" #207 [435] daemon prio=5 os_prio=0 cpu=31384.31ms elapsed=897949.42s tid=<addr_123> nid=435 waiting on condition  [<addr_346>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_306>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][get][T#6]" #210 [455] daemon prio=5 os_prio=0 cpu=33400.85ms elapsed=897926.80s tid=<addr_124> nid=455 waiting on condition  [<addr_347>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_306>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][refresh][T#8]" #211 [462] daemon prio=5 os_prio=0 cpu=6705673.63ms elapsed=897916.36s tid=<addr_125> nid=462 waiting on condition  [<addr_348>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_304>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][get][T#7]" #212 [466] daemon prio=5 os_prio=0 cpu=31808.92ms elapsed=897903.66s tid=<addr_126> nid=466 waiting on condition  [<addr_349>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_306>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][get][T#8]" #216 [487] daemon prio=5 os_prio=0 cpu=33102.67ms elapsed=897881.01s tid=<addr_127> nid=487 waiting on condition  [<addr_350>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_306>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at org.elasticsearch.common.util.concurrent.SizeBlockingQueue.take(SizeBlockingQueue.java:165)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][generic][T#10]" #218 [505] daemon prio=5 os_prio=0 cpu=62658.34ms elapsed=897827.38s tid=<addr_128> nid=505 waiting on condition  [<addr_351>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_331>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][management][T#4]" #227 [533] daemon prio=5 os_prio=0 cpu=883798.14ms elapsed=897718.59s tid=<addr_129> nid=533 waiting on condition  [<addr_352>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_229>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][management][T#5]" #228 [534] daemon prio=5 os_prio=0 cpu=882062.01ms elapsed=897718.59s tid=<addr_130> nid=534 waiting on condition  [<addr_353>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_229>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][listener][T#1]" #266 [648] daemon prio=5 os_prio=0 cpu=593.56ms elapsed=897226.80s tid=<addr_131> nid=648 waiting on condition  [<addr_354>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_355>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][listener][T#2]" #283 [698] daemon prio=5 os_prio=0 cpu=539.34ms elapsed=897130.49s tid=<addr_132> nid=698 waiting on condition  [<addr_356>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_355>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][listener][T#3]" #305 [727] daemon prio=5 os_prio=0 cpu=571.63ms elapsed=897079.43s tid=<addr_133> nid=727 waiting on condition  [<addr_357>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_355>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][listener][T#4]" #362 [787] daemon prio=5 os_prio=0 cpu=559.85ms elapsed=897009.37s tid=<addr_134> nid=787 waiting on condition  [<addr_358>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_355>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][listener][T#5]" #363 [788] daemon prio=5 os_prio=0 cpu=557.50ms elapsed=897009.36s tid=<addr_135> nid=788 waiting on condition  [<addr_359>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_355>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][listener][T#6]" #374 [799] daemon prio=5 os_prio=0 cpu=554.81ms elapsed=896966.52s tid=<addr_136> nid=799 waiting on condition  [<addr_360>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_355>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][listener][T#7]" #482 [914] daemon prio=5 os_prio=0 cpu=578.19ms elapsed=896825.16s tid=<addr_137> nid=914 waiting on condition  [<addr_361>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_355>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][listener][T#8]" #483 [915] daemon prio=5 os_prio=0 cpu=578.53ms elapsed=896825.14s tid=<addr_138> nid=915 waiting on condition  [<addr_362>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_355>> (a java.util.concurrent.LinkedTransferQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][generic][T#28]" #650 [1610] daemon prio=5 os_prio=0 cpu=53961.84ms elapsed=896272.67s tid=<addr_139> nid=1610 waiting on condition  [<addr_363>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_331>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][generic][T#38]" #7678 [10513] daemon prio=5 os_prio=0 cpu=49639.83ms elapsed=839345.74s tid=<addr_140> nid=10513 waiting on condition  [<addr_364>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_331>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][generic][T#50]" #103391 [106341] daemon prio=5 os_prio=0 cpu=32223.85ms elapsed=357527.53s tid=<addr_141> nid=106341 waiting on condition  [<addr_365>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_331>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][generic][T#51]" #103392 [106342] daemon prio=5 os_prio=0 cpu=32627.68ms elapsed=357527.53s tid=<addr_142> nid=106342 waiting on condition  [<addr_366>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_331>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][generic][T#52]" #103393 [106343] daemon prio=5 os_prio=0 cpu=32321.17ms elapsed=357527.51s tid=<addr_143> nid=106343 waiting on condition  [<addr_367>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_331>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][generic][T#53]" #103394 [106344] daemon prio=5 os_prio=0 cpu=39330.21ms elapsed=357527.45s tid=<addr_144> nid=106344 waiting on condition  [<addr_368>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_331>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][generic][T#54]" #103395 [106345] daemon prio=5 os_prio=0 cpu=32572.71ms elapsed=357527.44s tid=<addr_145> nid=106345 waiting on condition  [<addr_369>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_331>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][generic][T#55]" #103396 [106346] daemon prio=5 os_prio=0 cpu=32934.16ms elapsed=357527.44s tid=<addr_146> nid=106346 waiting on condition  [<addr_370>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_331>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][generic][T#56]" #103398 [106348] daemon prio=5 os_prio=0 cpu=32388.81ms elapsed=357526.37s tid=<addr_147> nid=106348 waiting on condition  [<addr_371>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_331>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][generic][T#57]" #103404 [106356] daemon prio=5 os_prio=0 cpu=32028.99ms elapsed=357521.04s tid=<addr_148> nid=106356 waiting on condition  [<addr_372>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_331>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][generic][T#58]" #103405 [106357] daemon prio=5 os_prio=0 cpu=33560.62ms elapsed=357521.04s tid=<addr_149> nid=106357 waiting on condition  [<addr_373>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_331>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][generic][T#59]" #144463 [147470] daemon prio=5 os_prio=0 cpu=12932.91ms elapsed=155271.16s tid=<addr_150> nid=147470 waiting on condition  [<addr_374>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_331>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][fetch_shard_store][T#145]" #162729 [165935] daemon prio=5 os_prio=0 cpu=2.24ms elapsed=24816.48s tid=<addr_151> nid=165935 waiting on condition  [<addr_375>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_376>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][snapshot][T#766]" #163152 [166489] daemon prio=5 os_prio=0 cpu=944.43ms elapsed=22152.89s tid=<addr_152> nid=166489 waiting on condition  [<addr_377>]
+   java.lang.Thread.State: WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_378>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.park(java.base@23.0.2/LockSupport.java:371)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:458)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.take(java.base@23.0.2/LinkedTransferQueue.java:1257)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1070)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][flush][T#428]" #166573 [170551] daemon prio=5 os_prio=0 cpu=142.34ms elapsed=1351.23s tid=<addr_153> nid=170551 waiting on condition  [<addr_379>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_380>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][flush][T#430]" #166832 [170810] daemon prio=5 os_prio=0 cpu=77.56ms elapsed=530.96s tid=<addr_154> nid=170810 waiting on condition  [<addr_381>]
+   java.lang.Thread.State: TIMED_WAITING (parking)
+	at jdk.internal.misc.Unsafe.park(java.base@23.0.2/Native Method)
+	- parking to wait for  <<addr_380>> (a org.elasticsearch.common.util.concurrent.EsExecutors$ExecutorScalingQueue)
+	at java.util.concurrent.locks.LockSupport.parkNanos(java.base@23.0.2/LockSupport.java:410)
+	at java.util.concurrent.LinkedTransferQueue$DualNode.await(java.base@23.0.2/LinkedTransferQueue.java:452)
+	at java.util.concurrent.LinkedTransferQueue.xfer(java.base@23.0.2/LinkedTransferQueue.java:613)
+	at java.util.concurrent.LinkedTransferQueue.poll(java.base@23.0.2/LinkedTransferQueue.java:1268)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(java.base@23.0.2/ThreadPoolExecutor.java:1069)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(java.base@23.0.2/ThreadPoolExecutor.java:1130)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(java.base@23.0.2/ThreadPoolExecutor.java:642)
+	at java.lang.Thread.runWith(java.base@23.0.2/Thread.java:1588)
+	at java.lang.Thread.run(java.base@23.0.2/Thread.java:1575)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][[movie][11]: Lucene Merge Thread #515]" #167115 [171157] daemon prio=5 os_prio=0 cpu=568.47ms elapsed=8.55s tid=<addr_155> nid=171157 runnable  [<addr_382>]
+   java.lang.Thread.State: RUNNABLE
+	at org.apache.lucene.index.MappingMultiPostingsEnum$MappingPostingsSub.nextDoc(MappingMultiPostingsEnum.java:48)
+	at org.apache.lucene.index.DocIDMerger$Sub.nextMappedDoc(DocIDMerger.java:60)
+	at org.apache.lucene.index.DocIDMerger$SequentialDocIDMerger.next(DocIDMerger.java:123)
+	at org.apache.lucene.index.MappingMultiPostingsEnum.nextDoc(MappingMultiPostingsEnum.java:100)
+	at org.apache.lucene.codecs.PushPostingsWriterBase.writeTerm(PushPostingsWriterBase.java:132)
+	at org.apache.lucene.codecs.lucene90.blocktree.Lucene90BlockTreeTermsWriter$TermsWriter.write(Lucene90BlockTreeTermsWriter.java:1080)
+	at org.apache.lucene.codecs.lucene90.blocktree.Lucene90BlockTreeTermsWriter.write(Lucene90BlockTreeTermsWriter.java:399)
+	at org.apache.lucene.codecs.FieldsConsumer.merge(FieldsConsumer.java:95)
+	at org.apache.lucene.codecs.perfield.PerFieldPostingsFormat$FieldsWriter.merge(PerFieldPostingsFormat.java:204)
+	at org.apache.lucene.index.SegmentMerger.mergeTerms(SegmentMerger.java:222)
+	at org.apache.lucene.index.SegmentMerger$$Lambda/<addr_383>.merge(Unknown Source)
+	at org.apache.lucene.index.SegmentMerger.mergeWithLogging(SegmentMerger.java:314)
+	at org.apache.lucene.index.SegmentMerger.merge(SegmentMerger.java:146)
+	at org.apache.lucene.index.IndexWriter.mergeMiddle(IndexWriter.java:5292)
+	at org.apache.lucene.index.IndexWriter.merge(IndexWriter.java:4758)
+	at org.apache.lucene.index.IndexWriter$IndexWriterMergeSource.merge(IndexWriter.java:6581)
+	at org.apache.lucene.index.ConcurrentMergeScheduler.doMerge(ConcurrentMergeScheduler.java:660)
+	at org.elasticsearch.index.engine.ElasticsearchConcurrentMergeScheduler.doMerge(ElasticsearchConcurrentMergeScheduler.java:88)
+	at org.apache.lucene.index.ConcurrentMergeScheduler$MergeThread.run(ConcurrentMergeScheduler.java:721)
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][[movie][11]: Lucene Merge Thread #517]" #167118 [171160] daemon prio=5 os_prio=0 cpu=2038.37ms elapsed=6.78s tid=<addr_156> nid=171160 runnable  [<addr_384>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.UnixFileDispatcherImpl.pread0(java.base@23.0.2/Native Method)
+	at sun.nio.ch.UnixFileDispatcherImpl.pread(java.base@23.0.2/UnixFileDispatcherImpl.java:57)
+	at sun.nio.ch.IOUtil.readIntoNativeBuffer(java.base@23.0.2/IOUtil.java:339)
+	at sun.nio.ch.IOUtil.read(java.base@23.0.2/IOUtil.java:307)
+	at sun.nio.ch.IOUtil.read(java.base@23.0.2/IOUtil.java:284)
+	at sun.nio.ch.FileChannelImpl.readInternal(java.base@23.0.2/FileChannelImpl.java:1188)
+	at sun.nio.ch.FileChannelImpl.implRead(java.base@23.0.2/FileChannelImpl.java:1152)
+	at sun.nio.ch.FileChannelImpl.read(java.base@23.0.2/FileChannelImpl.java:1134)
+	at org.apache.lucene.store.NIOFSDirectory$NIOFSIndexInput.readInternal(NIOFSDirectory.java:182)
+	at org.apache.lucene.store.BufferedIndexInput.refill(BufferedIndexInput.java:356)
+	at org.apache.lucene.store.BufferedIndexInput.readBytes(BufferedIndexInput.java:110)
+	at org.apache.lucene.store.BufferedIndexInput.readBytes(BufferedIndexInput.java:88)
+	at org.apache.lucene.util.compress.LZ4.decompress(LZ4.java:104)
+	at org.apache.lucene.codecs.lucene90.LZ4WithPresetDictCompressionMode$LZ4WithPresetDictDecompressor.decompress(LZ4WithPresetDictCompressionMode.java:136)
+	at org.apache.lucene.codecs.lucene90.compressing.Lucene90CompressingStoredFieldsReader$BlockState.doReset(Lucene90CompressingStoredFieldsReader.java:500)
+	at org.apache.lucene.codecs.lucene90.compressing.Lucene90CompressingStoredFieldsReader$BlockState.reset(Lucene90CompressingStoredFieldsReader.java:424)
+	at org.apache.lucene.codecs.lucene90.compressing.Lucene90CompressingStoredFieldsReader.serializedDocument(Lucene90CompressingStoredFieldsReader.java:607)
+	at org.apache.lucene.codecs.lucene90.compressing.Lucene90CompressingStoredFieldsReader.document(Lucene90CompressingStoredFieldsReader.java:628)
+	at org.elasticsearch.index.engine.RecoverySourcePruneMergePolicy$SourcePruningFilterCodecReader$FilterStoredFieldsReader.document(RecoverySourcePruneMergePolicy.java:209)
+	at org.elasticsearch.index.engine.RecoverySourcePruneMergePolicy$SourcePruningFilterCodecReader$RecoverySourcePruningStoredFieldsReader.document(RecoverySourcePruneMergePolicy.java:235)
+	at org.apache.lucene.codecs.lucene90.compressing.Lucene90CompressingStoredFieldsWriter.merge(Lucene90CompressingStoredFieldsWriter.java:641)
+	at org.apache.lucene.index.SegmentMerger.mergeFields(SegmentMerger.java:248)
+	at org.apache.lucene.index.SegmentMerger$$Lambda/<addr_385>.merge(Unknown Source)
+	at org.apache.lucene.index.SegmentMerger.mergeWithLogging(SegmentMerger.java:289)
+	at org.apache.lucene.index.SegmentMerger.merge(SegmentMerger.java:119)
+	at org.apache.lucene.index.IndexWriter.mergeMiddle(IndexWriter.java:5292)
+	at org.apache.lucene.index.IndexWriter.merge(IndexWriter.java:4758)
+	at org.apache.lucene.index.IndexWriter$IndexWriterMergeSource.merge(IndexWriter.java:6581)
+	at org.apache.lucene.index.ConcurrentMergeScheduler.doMerge(ConcurrentMergeScheduler.java:660)
+	at org.elasticsearch.index.engine.ElasticsearchConcurrentMergeScheduler.doMerge(ElasticsearchConcurrentMergeScheduler.java:88)
+	at org.apache.lucene.index.ConcurrentMergeScheduler$MergeThread.run(ConcurrentMergeScheduler.java:721)
+
+   Locked ownable synchronizers:
+	- None
+
+"Attach Listener" #167122 [171187] daemon prio=9 os_prio=0 cpu=1.42ms elapsed=1.94s tid=<addr_157> nid=171187 waiting on condition  [<addr_162>]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"cratedb[crate-02][[movie][1]: Lucene Merge Thread #510]" #167123 [171188] daemon prio=5 os_prio=0 cpu=17.80ms elapsed=1.85s tid=<addr_158> nid=171188 runnable  [<addr_386>]
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.UnixFileDispatcherImpl.write0(java.base@23.0.2/Native Method)
+	at sun.nio.ch.UnixFileDispatcherImpl.write(java.base@23.0.2/UnixFileDispatcherImpl.java:65)
+	at sun.nio.ch.IOUtil.writeFromNativeBuffer(java.base@23.0.2/IOUtil.java:137)
+	at sun.nio.ch.IOUtil.write(java.base@23.0.2/IOUtil.java:102)
+	at sun.nio.ch.IOUtil.write(java.base@23.0.2/IOUtil.java:72)
+	at sun.nio.ch.FileChannelImpl.implWrite(java.base@23.0.2/FileChannelImpl.java:371)
+	- locked <<addr_387>> (a java.lang.Object)
+	at sun.nio.ch.FileChannelImpl.write(java.base@23.0.2/FileChannelImpl.java:351)
+	at sun.nio.ch.ChannelOutputStream.writeFully(java.base@23.0.2/ChannelOutputStream.java:68)
+	at sun.nio.ch.ChannelOutputStream.write(java.base@23.0.2/ChannelOutputStream.java:105)
+	- locked <<addr_388>> (a sun.nio.ch.ChannelOutputStream)
+	at org.apache.lucene.store.FSDirectory$FSIndexOutput$1.write(FSDirectory.java:400)
+	at java.util.zip.CheckedOutputStream.write(java.base@23.0.2/CheckedOutputStream.java:73)
+	at java.io.BufferedOutputStream.implWrite(java.base@23.0.2/BufferedOutputStream.java:217)
+	at java.io.BufferedOutputStream.write(java.base@23.0.2/BufferedOutputStream.java:206)
+	- locked <<addr_389>> (a org.apache.lucene.store.OutputStreamIndexOutput$XBufferedOutputStream)
+	at org.apache.lucene.store.OutputStreamIndexOutput.writeBytes(OutputStreamIndexOutput.java:59)
+	at org.elasticsearch.common.lucene.store.FilterIndexOutput.writeBytes(FilterIndexOutput.java:60)
+	at org.apache.lucene.store.RateLimitedIndexOutput.writeBytes(RateLimitedIndexOutput.java:60)
+	at org.apache.lucene.store.DataOutput.copyBytes(DataOutput.java:290)
+	at org.apache.lucene.codecs.lucene90.compressing.Lucene90CompressingStoredFieldsWriter.copyChunks(Lucene90CompressingStoredFieldsWriter.java:582)
+	at org.apache.lucene.codecs.lucene90.compressing.Lucene90CompressingStoredFieldsWriter.merge(Lucene90CompressingStoredFieldsWriter.java:632)
+	at org.apache.lucene.index.SegmentMerger.mergeFields(SegmentMerger.java:248)
+	at org.apache.lucene.index.SegmentMerger$$Lambda/<addr_385>.merge(Unknown Source)
+	at org.apache.lucene.index.SegmentMerger.mergeWithLogging(SegmentMerger.java:289)
+	at org.apache.lucene.index.SegmentMerger.merge(SegmentMerger.java:119)
+	at org.apache.lucene.index.IndexWriter.mergeMiddle(IndexWriter.java:5292)
+	at org.apache.lucene.index.IndexWriter.merge(IndexWriter.java:4758)
+	at org.apache.lucene.index.IndexWriter$IndexWriterMergeSource.merge(IndexWriter.java:6581)
+	at org.apache.lucene.index.ConcurrentMergeScheduler.doMerge(ConcurrentMergeScheduler.java:660)
+	at org.elasticsearch.index.engine.ElasticsearchConcurrentMergeScheduler.doMerge(ElasticsearchConcurrentMergeScheduler.java:88)
+	at org.apache.lucene.index.ConcurrentMergeScheduler$MergeThread.run(ConcurrentMergeScheduler.java:721)
+
+   Locked ownable synchronizers:
+	- None
+
+"G1 Refine#3" os_prio=0 cpu=50.68ms elapsed=1606.38s tid=<addr_390> nid=170427 runnable
+
+"G1 Refine#2" os_prio=0 cpu=321.14ms elapsed=1606.48s tid=<addr_391> nid=170426 runnable
+
+"G1 Refine#1" os_prio=0 cpu=832.20ms elapsed=806376.42s tid=<addr_392> nid=14695 runnable
+
+"G1 Conc#2" os_prio=0 cpu=48505260.91ms elapsed=898118.61s tid=<addr_393> nid=49 runnable
+
+"G1 Conc#1" os_prio=0 cpu=48507621.31ms elapsed=898118.62s tid=<addr_394> nid=48 runnable
+
+"GC Thread#12" os_prio=0 cpu=1178936.80ms elapsed=898118.63s tid=<addr_395> nid=47 runnable
+
+"GC Thread#11" os_prio=0 cpu=1178458.04ms elapsed=898118.63s tid=<addr_396> nid=46 runnable
+
+"GC Thread#10" os_prio=0 cpu=1178701.87ms elapsed=898118.63s tid=<addr_397> nid=45 runnable
+
+"GC Thread#9" os_prio=0 cpu=1178717.37ms elapsed=898118.63s tid=<addr_398> nid=44 runnable
+
+"GC Thread#8" os_prio=0 cpu=1178932.22ms elapsed=898118.63s tid=<addr_399> nid=43 runnable
+
+"GC Thread#7" os_prio=0 cpu=1178934.22ms elapsed=898118.63s tid=<addr_400> nid=42 runnable
+
+"GC Thread#6" os_prio=0 cpu=1178614.66ms elapsed=898118.63s tid=<addr_401> nid=41 runnable
+
+"GC Thread#5" os_prio=0 cpu=1178298.03ms elapsed=898118.63s tid=<addr_402> nid=40 runnable
+
+"GC Thread#4" os_prio=0 cpu=1178967.57ms elapsed=898118.63s tid=<addr_403> nid=39 runnable
+
+"GC Thread#3" os_prio=0 cpu=1178942.62ms elapsed=898118.64s tid=<addr_404> nid=38 runnable
+
+"GC Thread#2" os_prio=0 cpu=1178986.12ms elapsed=898118.64s tid=<addr_405> nid=37 runnable
+
+"GC Thread#1" os_prio=0 cpu=1178928.04ms elapsed=898118.64s tid=<addr_406> nid=36 runnable
+
+"VM Thread" os_prio=0 cpu=1933745.54ms elapsed=898121.22s tid=<addr_407> nid=20 runnable
+
+"VM Periodic Task Thread" os_prio=0 cpu=1179438.11ms elapsed=898121.32s tid=<addr_408> nid=19 waiting on condition
+
+"G1 Service" os_prio=0 cpu=96297.85ms elapsed=898121.33s tid=<addr_409> nid=18 runnable
+
+"G1 Refine#0" os_prio=0 cpu=776892.66ms elapsed=898121.33s tid=<addr_410> nid=17 runnable
+
+"G1 Conc#0" os_prio=0 cpu=48508510.10ms elapsed=898121.41s tid=<addr_411> nid=16 runnable
+
+"G1 Main Marker" os_prio=0 cpu=46274.11ms elapsed=898121.41s tid=<addr_412> nid=15 runnable
+
+"GC Thread#0" os_prio=0 cpu=1179094.41ms elapsed=898121.41s tid=<addr_413> nid=14 runnable
+
+JNI global refs: 43, weak refs: 45

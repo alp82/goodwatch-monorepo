@@ -1,0 +1,442 @@
+{
+  "source_main": "9b5bd6435c2c5cff0bd76e09998999ee5993f6ee",
+  "branch": "fix/644-q35-lock-holders-evidence",
+  "worktree": "/home/alp/.cache/gw-work/644-q35/worktree",
+  "initial_utc": "2026-10-26T09:10:45.107173+00:00",
+  "final_sql_utc": "2026-10-26T09:24:31.502135+00:00",
+  "filesystem_samples": [
+    "2026-10-26T09:19:33.362160+00:00",
+    "2026-10-26T09:26:45.192514+00:00"
+  ],
+  "sql_mutations": 0,
+  "restarts": 0,
+  "kills": 0,
+  "thread_dump_count": 1,
+  "thread_dump": {
+    "started_utc": "2026-10-26T09:14:12.731349+00:00",
+    "finished_utc": "2026-10-26T09:14:15.729783+00:00",
+    "elapsed_seconds": 2.9984,
+    "command": [
+      "docker",
+      "exec",
+      "--user",
+      "1000",
+      "crate-02",
+      "/crate/jdk/bin/jcmd",
+      "1",
+      "Thread.print",
+      "-l"
+    ],
+    "exit": 0,
+    "pause_note": "One requested Thread.print diagnostic; command latency includes Docker/attach/output, exact safepoint pause not separately measured. No GC, heap dump, settings change or restart requested.",
+    "stderr": "",
+    "stdout_bytes": 191518,
+    "published_dump": "thread-dump.txt",
+    "address_tokens": 413,
+    "publication_normalization": "JVM addresses replaced with stable tokens; trailing whitespace/blank EOF normalized; raw dump retained only in operator scratch",
+    "raw_stdout_sha256": "dce1bb991dcf06623e5d4ca58a48eac7833800560890185f02157246dc455670",
+    "thread_states": {
+      "RUNNABLE": 62,
+      "WAITING": 62,
+      "TIMED_WAITING": 33
+    }
+  },
+  "health": [
+    [
+      "GREEN",
+      145,
+      0,
+      0
+    ]
+  ],
+  "old_operation_summary": {
+    "cols": [
+      "name",
+      "count(*)",
+      "min(started)",
+      "max(started)"
+    ],
+    "rows": [
+      [
+        "fetchPhase",
+        110,
+        1792648510706,
+        1792648522333
+      ],
+      [
+        "distributed merge",
+        1,
+        1792108866877,
+        1792108866877
+      ],
+      [
+        "collect",
+        1,
+        1792108866877,
+        1792108866877
+      ]
+    ],
+    "rowcount": 3,
+    "duration": 58.030888
+  },
+  "historical_job_matches": 0,
+  "old_operation_count": 112,
+  "old_job_ids": 111,
+  "affected_shards": [
+    {
+      "table": "doc.person_appeared_in",
+      "shard": 0,
+      "logged_holder": {
+        "table": "person_appeared_in",
+        "shard": 0,
+        "holder": "closing shard",
+        "age_ms": 8777,
+        "logged_utc": "2026-10-22T05:55:43.006452+00:00",
+        "approx_description_set_utc": "2026-10-22T05:55:34.229452+00:00"
+      },
+      "uuid": "s45gGnNPT668rNeh8HDfkw",
+      "path": "/data/nodes/0/indices/s45gGnNPT668rNeh8HDfkw/0",
+      "in_active_sql_snapshot": false,
+      "open_segment_fd_count": 6,
+      "directory_apparent_bytes": 366140375,
+      "files": 224,
+      "subdirectories": [
+        "_state",
+        "index",
+        "translog"
+      ],
+      "latest_file_mtime_utc": "2026-10-22T05:55:34.279728+00:00",
+      "write_lock": {
+        "exists": true,
+        "bytes": 0,
+        "mtime_ns": 1779610599493854691,
+        "inode": 2706562,
+        "os_locks": [],
+        "mtime_utc": "2026-05-24T08:16:39.493855+00:00"
+      },
+      "unchanged_file_inventory": true
+    },
+    {
+      "table": "doc.person_appeared_in",
+      "shard": 1,
+      "logged_holder": {
+        "table": "person_appeared_in",
+        "shard": 1,
+        "holder": "closing shard",
+        "age_ms": 8685,
+        "logged_utc": "2026-10-22T05:55:42.980749+00:00",
+        "approx_description_set_utc": "2026-10-22T05:55:34.295749+00:00"
+      },
+      "uuid": "s45gGnNPT668rNeh8HDfkw",
+      "path": "/data/nodes/0/indices/s45gGnNPT668rNeh8HDfkw/1",
+      "in_active_sql_snapshot": false,
+      "open_segment_fd_count": 2,
+      "directory_apparent_bytes": 300003425,
+      "files": 148,
+      "subdirectories": [
+        "_state",
+        "index",
+        "translog"
+      ],
+      "latest_file_mtime_utc": "2026-10-22T05:55:34.319731+00:00",
+      "write_lock": {
+        "exists": true,
+        "bytes": 0,
+        "mtime_ns": 1781772505200424140,
+        "inode": 4124579,
+        "os_locks": [],
+        "mtime_utc": "2026-06-18T08:48:25.200424+00:00"
+      },
+      "unchanged_file_inventory": true
+    },
+    {
+      "table": "doc.person_appeared_in",
+      "shard": 4,
+      "logged_holder": {
+        "table": "person_appeared_in",
+        "shard": 4,
+        "holder": "closing shard",
+        "age_ms": 8525,
+        "logged_utc": "2026-10-22T05:55:42.873740+00:00",
+        "approx_description_set_utc": "2026-10-22T05:55:34.348740+00:00"
+      },
+      "uuid": "s45gGnNPT668rNeh8HDfkw",
+      "path": "/data/nodes/0/indices/s45gGnNPT668rNeh8HDfkw/4",
+      "in_active_sql_snapshot": false,
+      "open_segment_fd_count": 4,
+      "directory_apparent_bytes": 379471136,
+      "files": 154,
+      "subdirectories": [
+        "_state",
+        "index",
+        "translog"
+      ],
+      "latest_file_mtime_utc": "2026-10-22T05:55:34.395735+00:00",
+      "write_lock": {
+        "exists": true,
+        "bytes": 0,
+        "mtime_ns": 1792108267332519072,
+        "inode": 2578616,
+        "os_locks": [],
+        "mtime_utc": "2026-10-15T23:51:07.332519+00:00"
+      },
+      "unchanged_file_inventory": true
+    },
+    {
+      "table": "doc.person_appeared_in",
+      "shard": 5,
+      "logged_holder": {
+        "table": "person_appeared_in",
+        "shard": 5,
+        "holder": "closing shard",
+        "age_ms": 8549,
+        "logged_utc": "2026-10-22T05:55:42.955727+00:00",
+        "approx_description_set_utc": "2026-10-22T05:55:34.406727+00:00"
+      },
+      "uuid": "s45gGnNPT668rNeh8HDfkw",
+      "path": "/data/nodes/0/indices/s45gGnNPT668rNeh8HDfkw/5",
+      "in_active_sql_snapshot": false,
+      "open_segment_fd_count": 4,
+      "directory_apparent_bytes": 394132391,
+      "files": 172,
+      "subdirectories": [
+        "_state",
+        "index",
+        "translog"
+      ],
+      "latest_file_mtime_utc": "2026-10-22T05:55:34.495740+00:00",
+      "write_lock": {
+        "exists": true,
+        "bytes": 0,
+        "mtime_ns": 1792108187592029298,
+        "inode": 2565998,
+        "os_locks": [],
+        "mtime_utc": "2026-10-15T23:49:47.592029+00:00"
+      },
+      "unchanged_file_inventory": true
+    },
+    {
+      "table": "doc.person_worked_on",
+      "shard": 0,
+      "logged_holder": {
+        "table": "person_worked_on",
+        "shard": 0,
+        "holder": "closing shard",
+        "age_ms": 12796,
+        "logged_utc": "2026-10-22T05:55:42.904715+00:00",
+        "approx_description_set_utc": "2026-10-22T05:55:30.108715+00:00"
+      },
+      "uuid": "FzH-GR-NQqm8P4Gs7lE8pQ",
+      "path": "/data/nodes/0/indices/FzH-GR-NQqm8P4Gs7lE8pQ/0",
+      "in_active_sql_snapshot": false,
+      "open_segment_fd_count": 2,
+      "directory_apparent_bytes": 338041949,
+      "files": 145,
+      "subdirectories": [
+        "_state",
+        "index",
+        "translog"
+      ],
+      "latest_file_mtime_utc": "2026-10-22T05:55:30.151495+00:00",
+      "write_lock": {
+        "exists": true,
+        "bytes": 0,
+        "mtime_ns": 1767906882951562164,
+        "inode": 3730961,
+        "os_locks": [],
+        "mtime_utc": "2026-01-08T21:14:42.951562+00:00"
+      },
+      "unchanged_file_inventory": true
+    },
+    {
+      "table": "doc.person_worked_on",
+      "shard": 1,
+      "logged_holder": {
+        "table": "person_worked_on",
+        "shard": 1,
+        "holder": "closing shard",
+        "age_ms": 13102,
+        "logged_utc": "2026-10-22T05:55:43.268291+00:00",
+        "approx_description_set_utc": "2026-10-22T05:55:30.166291+00:00"
+      },
+      "uuid": "FzH-GR-NQqm8P4Gs7lE8pQ",
+      "path": "/data/nodes/0/indices/FzH-GR-NQqm8P4Gs7lE8pQ/1",
+      "in_active_sql_snapshot": false,
+      "open_segment_fd_count": 2,
+      "directory_apparent_bytes": 319611279,
+      "files": 161,
+      "subdirectories": [
+        "_state",
+        "index",
+        "translog"
+      ],
+      "latest_file_mtime_utc": "2026-10-22T05:55:30.203498+00:00",
+      "write_lock": {
+        "exists": true,
+        "bytes": 0,
+        "mtime_ns": 1760387943087009220,
+        "inode": 2820561,
+        "os_locks": [],
+        "mtime_utc": "2025-10-13T20:39:03.087009+00:00"
+      },
+      "unchanged_file_inventory": true
+    },
+    {
+      "table": "doc.person_worked_on",
+      "shard": 4,
+      "logged_holder": {
+        "table": "person_worked_on",
+        "shard": 4,
+        "holder": "closing shard",
+        "age_ms": 12908,
+        "logged_utc": "2026-10-22T05:55:43.121029+00:00",
+        "approx_description_set_utc": "2026-10-22T05:55:30.213029+00:00"
+      },
+      "uuid": "FzH-GR-NQqm8P4Gs7lE8pQ",
+      "path": "/data/nodes/0/indices/FzH-GR-NQqm8P4Gs7lE8pQ/4",
+      "in_active_sql_snapshot": false,
+      "open_segment_fd_count": 6,
+      "directory_apparent_bytes": 360751383,
+      "files": 205,
+      "subdirectories": [
+        "_state",
+        "index",
+        "translog"
+      ],
+      "latest_file_mtime_utc": "2026-10-22T05:55:30.251501+00:00",
+      "write_lock": {
+        "exists": true,
+        "bytes": 0,
+        "mtime_ns": 1792109740287442163,
+        "inode": 2683740,
+        "os_locks": [],
+        "mtime_utc": "2026-10-16T00:15:40.287442+00:00"
+      },
+      "unchanged_file_inventory": true
+    },
+    {
+      "table": "doc.person_worked_on",
+      "shard": 5,
+      "logged_holder": {
+        "table": "person_worked_on",
+        "shard": 5,
+        "holder": "closing shard",
+        "age_ms": 12925,
+        "logged_utc": "2026-10-22T05:55:43.191228+00:00",
+        "approx_description_set_utc": "2026-10-22T05:55:30.266228+00:00"
+      },
+      "uuid": "FzH-GR-NQqm8P4Gs7lE8pQ",
+      "path": "/data/nodes/0/indices/FzH-GR-NQqm8P4Gs7lE8pQ/5",
+      "in_active_sql_snapshot": false,
+      "open_segment_fd_count": 2,
+      "directory_apparent_bytes": 321295612,
+      "files": 124,
+      "subdirectories": [
+        "_state",
+        "index",
+        "translog"
+      ],
+      "latest_file_mtime_utc": "2026-10-22T05:55:30.303504+00:00",
+      "write_lock": {
+        "exists": true,
+        "bytes": 0,
+        "mtime_ns": 1792108288345702184,
+        "inode": 2686325,
+        "os_locks": [],
+        "mtime_utc": "2026-10-15T23:51:28.345702+00:00"
+      },
+      "unchanged_file_inventory": true
+    }
+  ],
+  "active_control": {
+    "assigned_paths": 391,
+    "os_write_locks": 391
+  },
+  "inactive_control": {
+    "paths": 8,
+    "open_segment_fds": 28,
+    "os_write_locks": 0
+  },
+  "latest_pending_rows": {
+    "cols": [
+      "schema_name",
+      "table_name",
+      "id",
+      "node['name']",
+      "primary",
+      "state",
+      "routing_state",
+      "relocating_node",
+      "path",
+      "recovery"
+    ],
+    "rows": [
+      [
+        "doc",
+        "person_appeared_in",
+        5,
+        "crate-03",
+        false,
+        "STARTED",
+        "RELOCATING",
+        "r0IgCe17SPOgudkQIGsRQA",
+        "/data/nodes/0/indices/s45gGnNPT668rNeh8HDfkw/5",
+        {
+          "files": {
+            "recovered": 229,
+            "used": 229,
+            "percent": 100.0,
+            "reused": 0
+          },
+          "stage": "DONE",
+          "type": "PEER",
+          "total_time": 10929,
+          "size": {
+            "recovered": 388250578,
+            "used": 388250578,
+            "percent": 100.0,
+            "reused": 0
+          }
+        }
+      ],
+      [
+        "doc",
+        "person_worked_on",
+        4,
+        "crate-03",
+        false,
+        "STARTED",
+        "RELOCATING",
+        "r0IgCe17SPOgudkQIGsRQA",
+        "/data/nodes/0/indices/FzH-GR-NQqm8P4Gs7lE8pQ/4",
+        {
+          "files": {
+            "recovered": 148,
+            "used": 148,
+            "percent": 100.0,
+            "reused": 0
+          },
+          "stage": "DONE",
+          "type": "PEER",
+          "total_time": 9281,
+          "size": {
+            "recovered": 353371940,
+            "used": 353371940,
+            "percent": 100.0,
+            "reused": 0
+          }
+        }
+      ]
+    ],
+    "rowcount": 2,
+    "duration": 17.758133
+  },
+  "receipt_file_count": 33,
+  "receipt_sha256": "c38cbdd7f1f358ad70ca80c0f00a1e52764b4dbdc2eed3f32d4dc6fc5e31b394",
+  "findings": {
+    "confirmed": "Historical holders described as closing shard on all eight paths; current shard-creation failures are in-memory lock acquisition retries; closed paths retain open segment readers.",
+    "best_supported_holder": "Closing Store references retained by unreleased reader/searcher objects, consistent with orphaned query/fetch work after the October22 rejoin.",
+    "unresolved": "Exact FetchTask/job UUID/object retaining each Store; current descriptor age is not directly exposed by SQL/thread dump.",
+    "safe_cure_status": "No validated narrower SQL reference-release cure found. A separately approved guarded process reset is best established, not proof it is the only theoretically possible remedy."
+  }
+}
