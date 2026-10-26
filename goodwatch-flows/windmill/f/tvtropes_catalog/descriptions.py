@@ -12,6 +12,7 @@ import unicodedata
 from urllib.parse import parse_qsl, urljoin, urlparse
 
 from bs4 import BeautifulSoup, Comment, FeatureNotFound, NavigableString, Tag
+from f.tvtropes_catalog.pages import canonical_page_url
 
 MAX_DESCRIPTION_BYTES = 24_000
 MIN_DESCRIPTION_CHARS = 40
@@ -58,6 +59,23 @@ def _main_url(value, *, navigation=False):
     if parsed.fragment and not navigation:
         return None
     return "https://tvtropes.org" + parsed.path
+
+
+def _http_page_url(value, *, navigation=False, allow_general=False):
+    if not allow_general:
+        return _main_url(value, navigation=navigation)
+    try:
+        parsed = urlparse(value or '')
+    except (TypeError, ValueError):
+        return None
+    if parsed.scheme != 'https' or parsed.params or (parsed.fragment and not navigation):
+        return None
+    if parsed.query:
+        pairs = parse_qsl(parsed.query, keep_blank_values=True)
+        if (not navigation or len(pairs) != 1 or pairs[0][0] != 'from'
+                or not re.fullmatch(r'Main\.[A-Za-z0-9_]+', pairs[0][1])):
+            return None
+    return canonical_page_url(parsed._replace(query='', fragment='').geturl())
 
 
 def _identity(value):
@@ -269,7 +287,7 @@ def _following_in_content(article, content):
             return
 
 
-def extract_description(html, name, final_url, *, requested_url=None, linked=False):
+def extract_description(html, name, final_url, *, requested_url=None, linked=False, allow_general=False):
     """Return {description, error, heading, canonical_url}; never fetch a page.
 
     Exact primary Main subjects qualify after final/canonical URL verification.
@@ -280,15 +298,19 @@ def extract_description(html, name, final_url, *, requested_url=None, linked=Fal
     keep only complete paragraphs; a first paragraph that cannot fit is rejected.
     Linked mode returns the actual source title for a verified reference URI,
     independently of its contextual label; redirect URI evidence remains required.
+    Only explicit linked allow_general mode admits approved general namespaces;
+    original redirect routes remain bare Main URIs with exact captured from= proof.
     """
     result = {"description": None, "error": None, "heading": "", "canonical_url": None}
 
     def reject(message):
         return {**result, "error": message}
 
-    final = _main_url(final_url, navigation=True)
+    allow_general = linked and allow_general
+    final = _http_page_url(final_url, navigation=True, allow_general=allow_general)
     if not final:
-        return reject("Final URL is not a known HTTPS TV Tropes Main page")
+        return reject("Final URL is not an approved HTTPS TV Tropes general page" if allow_general
+                      else "Final URL is not a known HTTPS TV Tropes Main page")
     if not isinstance(html, (str, bytes)) or not html:
         return reject("Missing HTML")
     if not linked and (not isinstance(name, str) or not _identity(name)):
@@ -308,15 +330,17 @@ def extract_description(html, name, final_url, *, requested_url=None, linked=Fal
         if len(candidates) != 1:
             return reject("Missing or ambiguous scoped linked primary heading")
         heading = candidates[0]
+    preserve_namespace = allow_general and urlparse(final).path.split('/')[-2] != 'Main'
     if heading:
         # Only the page's primary heading identifies its title; AKA/watch UI is not the title.
-        for node in heading.select(".aka-title, .ns_parts, .watch_rank_wrap" if linked else ".aka-title"):
+        junk = ".aka-title, .watch_rank_wrap" if preserve_namespace else ".aka-title, .ns_parts, .watch_rank_wrap"
+        for node in heading.select(junk if linked else ".aka-title"):
             node.decompose()
         if linked:
             titles = heading.select(".wrapped_title, .wrap-entry-breadcrumb strong")
             if len(titles) > 1:
                 return reject("Ambiguous linked primary title")
-            if titles:
+            if titles and not (preserve_namespace and heading.select(".ns_parts")):
                 heading = titles[0]
     result["heading"] = re.sub(r"^Main\s*/\s*", "", _text(heading), flags=re.I) if heading else ""
     canonicals = {
@@ -327,12 +351,13 @@ def extract_description(html, name, final_url, *, requested_url=None, linked=Fal
     if len(canonicals) != 1:
         return reject("Missing or ambiguous canonical URL")
     result["canonical_url"] = next(iter(canonicals))
-    canonical = _main_url(result["canonical_url"])
+    canonical = _http_page_url(result["canonical_url"], allow_general=allow_general)
     # The site can serve a stored case variant without redirecting while its
     # canonical tag supplies the preferred spelling. Subject validation below
     # still applies; a genuinely different slug must never pass this check.
     if not canonical or canonical.casefold() != final.casefold():
-        return reject("Canonical URL does not match the final Main URL")
+        return reject("Canonical URL does not match the final page URL" if allow_general
+                      else "Canonical URL does not match the final Main URL")
     result["canonical_url"] = canonical
     heading_identity = _identity(result["heading"])
     if linked:
@@ -341,7 +366,8 @@ def extract_description(html, name, final_url, *, requested_url=None, linked=Fal
         reference = _main_url(requested_url) if requested_url is not None else final
         if (not reference or (reference.casefold() != canonical.casefold()
                               and not _requested_redirect_binds(requested_url, final_url, canonical))):
-            return reject("Requested reference URI does not identify the final Main page")
+            return reject("Requested reference URI does not identify the final page" if allow_general
+                          else "Requested reference URI does not identify the final Main page")
     elif heading_identity != _identity(name):
         if not heading_identity or not _requested_redirect_identifies(name, requested_url, final_url, canonical):
             return reject(f"Heading mismatch: {result['heading']!r}")

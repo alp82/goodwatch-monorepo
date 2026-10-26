@@ -63,6 +63,24 @@ class BulkDatabase(Database):
 
 
 class PagesTests(unittest.TestCase):
+    def test_approved_general_page_namespaces_and_strict_original_routes(self):
+        for namespace in GENERAL_PAGE_NAMESPACES:
+            url = URL.replace('/Main/', '/' + namespace + '/')
+            self.assertEqual(page(url=url)['url'], url)
+            self.assertEqual(ref(canonical_url=url)['canonical_url'], url)
+            self.assertEqual(ref(reference_url=url, canonical_url=url)['reference_url'], url)
+        general = URL.replace('/Main/', '/Mohs/')
+        with self.assertRaises(ValueError):
+            ref(reference_url=general, canonical_url=general + 'Other')
+        for url in (URL.replace('/Main/', '/Film/'), URL.replace('/Main/', '/Creator/'),
+                    URL.replace('/Main/', '/Series/'), URL.replace('tvtropes.org', 'evil.example'),
+                    URL + '?from=Main.OldAlias', URL + '#intro', URL.replace('tvtropes.org', 'tvtropes.org:443')):
+            with self.subTest(url=url):
+                self.assertIsNone(canonical_page_url(url))
+                with self.assertRaises(ValueError): page(url=url)
+                with self.assertRaises(ValueError): ref(canonical_url=url)
+        self.assertEqual(canonical_page_url(general.replace('https:', 'http:')), general)
+
     def test_context_label_is_not_a_page_key_or_verified_title(self):
         doc=normalize_document({'pages':[page()],'references':[ref()]})
         self.assertEqual(doc['pages'][0]['title'],'Actual Page');self.assertNotIn('name',doc['pages'][0])

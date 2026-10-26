@@ -152,7 +152,7 @@ class PageCatalog:
 
 
 def linked_description(html, name, final_url, *, requested_url=None):
-    return extract_description(html, name, final_url, requested_url=requested_url, linked=True)
+    return extract_description(html, name, final_url, requested_url=requested_url, linked=True, allow_general=True)
 
 
 def main():

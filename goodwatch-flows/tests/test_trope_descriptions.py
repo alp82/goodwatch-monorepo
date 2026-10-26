@@ -19,6 +19,35 @@ class TropeDescriptionTests(unittest.TestCase):
     def extract(self, html, name="Serious Business", url=URL):
         return extract_description(html, name, url)
 
+    def test_linked_general_opt_in_retains_actual_namespace_title_and_main_route_proof(self):
+        canonical = URL.replace('/Main/SeriousBusiness', '/Mohs/OneBigLie')
+        original = URL.replace('SeriousBusiness', 'OneBigLie')
+        final = canonical + '?from=Main.OneBigLie'
+        html = page(f'<p>{LEAD}</p><hr>', canonical=canonical,
+                    heading='<span class="ns_parts">Mohs / </span><span class="wrapped_title">One Big Lie</span>'
+                            '<div class="aka-title">aka: Old label</div><span class="watch_rank_wrap">Follow</span>')
+        result = extract_description(html, None, final, requested_url=original, linked=True, allow_general=True)
+        self.assertIsNone(result['error'])
+        self.assertEqual(result['heading'], 'Mohs / One Big Lie')
+        self.assertEqual(result['canonical_url'], canonical)
+        self.assertEqual(result['description'], LEAD)
+        self.assertIsNotNone(extract_description(html, None, final, requested_url=original, linked=True)['error'])
+        self.assertIsNotNone(extract_description(html, 'One Big Lie', final, allow_general=True)['error'])
+        for requested in (original+'Other', original.replace('tvtropes.org','evil.example'), canonical):
+            with self.subTest(requested=requested):
+                self.assertIsNotNone(extract_description(html,None,final,requested_url=requested,linked=True,allow_general=True)['error'])
+        for namespace in ('Creator', 'Film', 'Series'):
+            forbidden = html.replace('/Mohs/', '/'+namespace+'/')
+            self.assertIsNotNone(extract_description(forbidden,None,final.replace('/Mohs/','/'+namespace+'/'),
+                                                    requested_url=original,linked=True,allow_general=True)['error'])
+        wrong = html.replace('href="'+canonical+'"', 'href="'+canonical+'Other"')
+        self.assertIsNotNone(extract_description(wrong,None,final,requested_url=original,linked=True,allow_general=True)['error'])
+
+    def test_linked_general_opt_in_leaves_main_title_cleanup_unchanged(self):
+        html=page(f'<p>{LEAD}</p><hr>', heading='<span class="ns_parts">Main / </span>Serious Business')
+        self.assertEqual(extract_description(html,None,URL,linked=True,allow_general=True),
+                         extract_description(html,None,URL,linked=True))
+
     def test_linked_mode_returns_actual_title_without_relabeling_the_source(self):
         html = page(f'<p>{LEAD}</p><hr>')
         self.assertIsNotNone(extract_description(html, 'A contextual character label', URL)['error'])

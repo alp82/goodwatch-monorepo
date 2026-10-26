@@ -10,7 +10,7 @@ import unittest
 
 FLOWS = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(FLOWS / 'windmill'), str(FLOWS / 'scripts')]
-from populate_trope_pages import PageCatalog, inventory_urls
+from populate_trope_pages import PageCatalog, inventory_urls, linked_description
 from populate_trope_catalog import atomic_json, run, transient_backend_error
 from recover_tvtropes import LocalClient
 
@@ -156,6 +156,19 @@ class PagePopulationTests(unittest.TestCase):
         self.assertEqual(len(calls), 2)
         self.assertEqual(set(calls[1][1]), {BASE + 'Target', BASE + 'Missing'})
         self.assertTrue(all('JOIN' not in sql and 'SELECT description' not in sql for sql, _ in calls))
+
+    def test_network_wrapper_accepts_only_evidenced_approved_general_redirect(self):
+        canonical = BASE.replace('/Main/', '/Mohs/') + 'OneBigLie'
+        html = ('<head><link rel="canonical" href="' + canonical + '"></head><div id="main-content">'
+                '<h1><span class="ns_parts">Mohs / </span>One Big Lie</h1><div id="main-article">'
+                '<p>This is the actual complete published general introduction for this linked page.</p><hr></div></div>')
+        result = linked_description(html, None, canonical + '?from=Main.OneBigLie', requested_url=BASE+'OneBigLie')
+        self.assertIsNone(result['error'])
+        self.assertEqual(result['heading'], 'Mohs / One Big Lie')
+        record = self.catalog.record({'url':BASE+'OneBigLie'}, result,
+                                     {'sha256':'a'*64,'started_at':'2026-10-25T00:00:00+00:00'},None)
+        self.assertEqual(record['pages'][0]['url'], canonical)
+        self.assertEqual({r['reference_url'] for r in record['references']}, {BASE+'OneBigLie',canonical})
 
     def test_record_preserves_real_heading_and_separate_reference(self):
         result = {'canonical_url': BASE + 'Canonical', 'heading': 'Actual title', 'description': 'Actual source introduction.'}

@@ -1,8 +1,9 @@
-"""URI-keyed reviewed Main pages and independently evidenced original-route references.
+"""URI-keyed reviewed general pages and independently evidenced original-route references.
 
 No source requests. Legacy exact-name records are independent. Writers never retry uncertain writes.
 """
 from datetime import datetime, timezone
+from urllib.parse import urlsplit
 import hashlib
 import json
 import re
@@ -17,16 +18,37 @@ TABLES = ((PAGE_TABLE, 'url', PAGE_FIELDS, 'pages'), (REFERENCE_TABLE, 'referenc
 _HASH = re.compile(r'[0-9a-f]{64}\Z')
 
 
+GENERAL_PAGE_NAMESPACES = frozenset({
+    'Main', 'DuelingWorks', 'Headscratchers', 'Mohs', 'MediaNotes', 'Administrivia',
+    'NamesToKnowInAnime', 'ReferencedBy', 'ShoutOut', 'Analysis', 'UsefulNotes', 'HistoricalFiction',
+})
+
+
+def canonical_page_url(value):
+    """Normalize a bare approved general-page URI; never admit work/creator pages."""
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = urlsplit(value)
+    except ValueError:
+        return None
+    match = re.fullmatch(r'/pmwiki/pmwiki\.php/([A-Za-z]+)/[A-Za-z0-9_]+', parsed.path)
+    if (parsed.scheme not in {'http', 'https'} or parsed.netloc.lower() not in {'tvtropes.org', 'www.tvtropes.org'}
+            or parsed.query or parsed.fragment or not match or match[1] not in GENERAL_PAGE_NAMESPACES):
+        return None
+    return 'https://tvtropes.org' + parsed.path
+
+
+def _page_url(value):
+    normalized = canonical_page_url(value)
+    if not normalized:
+        raise ValueError('A bare approved general-page URL is required')
+    return normalized
+
+
 class PageImportWriteError(RuntimeError):
     """The write may have reached Crate: inspect receipts and read back; do not automatically replay."""
     retryable = False
-
-
-def _url(value):
-    value = canonical_url(value)
-    if not value:
-        raise ValueError('A bare known Main URL is required')
-    return value
 
 
 def _provenance(row):
@@ -62,7 +84,7 @@ def normalize_page(row):
         raise ValueError('Page description must be nonempty plain text')
     if row.get('source', 'tvtropes') != 'tvtropes':
         raise ValueError('Page source must be tvtropes')
-    return {'url': _url(row.get('url')), 'title': title, 'description': description,
+    return {'url': _page_url(row.get('url')), 'title': title, 'description': description,
             'description_hash': hashlib.sha256(description.encode()).hexdigest() if description is not None else None,
             'source': 'tvtropes', **_provenance(row)}
 
@@ -70,8 +92,16 @@ def normalize_page(row):
 def normalize_reference(row):
     if not isinstance(row, dict):
         raise ValueError('Reference must be an object')
-    return {'reference_url': _url(row.get('reference_url')), 'canonical_url': _url(row.get('canonical_url')),
-            **_provenance(row)}
+    canonical = _page_url(row.get('canonical_url'))
+    try:
+        reference = canonical_url(row.get('reference_url'))
+    except ValueError:
+        reference = None
+    if not reference:
+        reference = _page_url(row.get('reference_url'))
+        if reference != canonical:
+            raise ValueError('A general reference must be an evidenced canonical self-reference')
+    return {'reference_url': reference, 'canonical_url': canonical, **_provenance(row)}
 
 
 def normalize_document(document):
