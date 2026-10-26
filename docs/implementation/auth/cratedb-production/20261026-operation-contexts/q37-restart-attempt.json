@@ -1,0 +1,463 @@
+{
+  "approval": "Q37 Oct26 crate-02 only",
+  "source_main": "06944811362dcff9f21e469be9b423895af8defb",
+  "branch": "fix/644-q37-crate02-guarded-restart",
+  "result": "STOPPED_BEFORE_SIGTERM_ZERO_PRIMARY_GATE_FAILED",
+  "native_decommission_pending": true,
+  "decommission_request_utc": "2026-10-26T10:01:55.552015+00:00",
+  "request_client_timeout_seconds": 180,
+  "native_graceful_timeout": "2h unchanged",
+  "force": false,
+  "initial_primaries": 34,
+  "remaining_primaries": 17,
+  "remaining_tables": [
+    [
+      "yepwatch_agreement",
+      "2",
+      "3",
+      "REQUEST"
+    ],
+    [
+      "yepwatch_candidate",
+      "2",
+      "3",
+      "REQUEST"
+    ],
+    [
+      "yepwatch_command_receipt",
+      "2",
+      "3",
+      "REQUEST"
+    ],
+    [
+      "yepwatch_control",
+      "2",
+      "3",
+      "REQUEST"
+    ],
+    [
+      "yepwatch_decision",
+      "2",
+      "3",
+      "REQUEST"
+    ],
+    [
+      "yepwatch_invitation",
+      "2",
+      "3",
+      "REQUEST"
+    ],
+    [
+      "yepwatch_member_grant",
+      "2",
+      "3",
+      "REQUEST"
+    ],
+    [
+      "yepwatch_member_intent",
+      "2",
+      "3",
+      "REQUEST"
+    ],
+    [
+      "yepwatch_participant",
+      "2",
+      "3",
+      "REQUEST"
+    ],
+    [
+      "yepwatch_proposal",
+      "2",
+      "3",
+      "REQUEST"
+    ],
+    [
+      "yepwatch_room",
+      "2",
+      "3",
+      "REQUEST"
+    ],
+    [
+      "yepwatch_runtime",
+      "2",
+      "3",
+      "REQUEST"
+    ],
+    [
+      "yepwatch_ticket",
+      "2",
+      "3",
+      "REQUEST"
+    ],
+    [
+      "yepwatch_vote",
+      "2",
+      "3",
+      "REQUEST"
+    ]
+  ],
+  "remaining_allocations": {
+    "cols": [
+      "table_name",
+      "shard_id",
+      "explanation"
+    ],
+    "rows": [
+      [
+        "yepwatch_agreement",
+        0,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_candidate",
+        0,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_command_receipt",
+        0,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_control",
+        0,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_decision",
+        0,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_invitation",
+        0,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_member_grant",
+        0,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_member_intent",
+        0,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_participant",
+        0,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_proposal",
+        0,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_room",
+        0,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_room",
+        1,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_room",
+        2,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_room",
+        3,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_runtime",
+        0,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_ticket",
+        0,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ],
+      [
+        "yepwatch_vote",
+        0,
+        "cannot move shard to another node, even though it is not allowed to remain on its current node"
+      ]
+    ],
+    "rowcount": 17,
+    "duration": 12.441307
+  },
+  "stop_reason": "17 primaries on three-copy YepWatch tables have no eligible destination; no write-policy change authorized; native drain still pending",
+  "sigterm_sent": false,
+  "restart_performed": false,
+  "runtime_unchanged": {
+    "container_id": "49d9a2154c00e496c117955a094d0081764b7044763342c31537bc568553a469",
+    "pid": 3628315,
+    "started_at": "2026-10-15T23:45:26.513850873Z",
+    "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+    "config_sha256": "573498ce6248ec5e9cc336b1898727ca548e913b10e421724a29939cff260796",
+    "host_config_except_restart_sha256": "241135cd580b869663f126448539e352ffe8191adfea81cdeaf12feae9c5981f",
+    "restart_policy": {
+      "Name": "always",
+      "MaximumRetryCount": 0
+    }
+  },
+  "latest_backup_before": [
+    "goodwatch-db-backup-v2",
+    "hourly_20261026_090502",
+    "SUCCESS",
+    1793005502597,
+    1793005530639,
+    567,
+    []
+  ],
+  "cron_hold": {
+    "utc": "2026-10-26T10:01:37.166544+00:00",
+    "mode": "hold",
+    "state": "/root/.config/goodwatch/644-q37-20261026T100137Z",
+    "before_sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
+    "held_sha256": "1be3b650f2b627be3037b1b196c358fff241b7f5cca734c655400683e5291539",
+    "readback_exact": true
+  },
+  "cron_restore": {
+    "utc": "2026-10-26T10:11:43.897846+00:00",
+    "mode": "restore",
+    "status": "restored",
+    "state": "/root/.config/goodwatch/644-q37-20261026T100137Z",
+    "restored_sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
+    "readback_exact": true
+  },
+  "scheduled_run_held": "2026-10-26T10:05:00Z",
+  "next_scheduled_backup": "2026-10-26T11:05:00Z",
+  "next_scheduled_backup_verified": false,
+  "allocation_restored": "all",
+  "health_after_survivors": [
+    {
+      "host": 11,
+      "utc": "2026-10-26T10:15:17.224408+00:00",
+      "queries": {
+        "health": {
+          "sql": "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health",
+          "result": {
+            "cols": [
+              "health",
+              "count(*)",
+              "sum(missing_shards)",
+              "sum(underreplicated_shards)"
+            ],
+            "rows": [
+              [
+                "GREEN",
+                145,
+                0,
+                0
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 2.672626
+          }
+        },
+        "primaries": {
+          "sql": "SELECT count(*) FROM sys.shards WHERE primary=true AND node['id']='r0IgCe17SPOgudkQIGsRQA'",
+          "result": {
+            "cols": [
+              "count(*)"
+            ],
+            "rows": [
+              [
+                17
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 10.293694
+          }
+        },
+        "settings": {
+          "sql": "SELECT settings['cluster']['graceful_stop'],settings['cluster']['routing']['allocation']['enable'] FROM sys.cluster",
+          "result": {
+            "cols": [
+              "settings['cluster']['graceful_stop']",
+              "settings['cluster']['routing']['allocation']['enable']"
+            ],
+            "rows": [
+              [
+                {
+                  "min_availability": "PRIMARIES",
+                  "force": false,
+                  "timeout": "2h"
+                },
+                "all"
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 1.058124
+          }
+        }
+      }
+    },
+    {
+      "host": 13,
+      "utc": "2026-10-26T10:15:19.644271+00:00",
+      "queries": {
+        "health": {
+          "sql": "SELECT health,count(*),sum(missing_shards),sum(underreplicated_shards) FROM sys.health GROUP BY health",
+          "result": {
+            "cols": [
+              "health",
+              "count(*)",
+              "sum(missing_shards)",
+              "sum(underreplicated_shards)"
+            ],
+            "rows": [
+              [
+                "GREEN",
+                145,
+                0,
+                0
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 2.59312
+          }
+        },
+        "primaries": {
+          "sql": "SELECT count(*) FROM sys.shards WHERE primary=true AND node['id']='r0IgCe17SPOgudkQIGsRQA'",
+          "result": {
+            "cols": [
+              "count(*)"
+            ],
+            "rows": [
+              [
+                17
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 14.750198
+          }
+        },
+        "settings": {
+          "sql": "SELECT settings['cluster']['graceful_stop'],settings['cluster']['routing']['allocation']['enable'] FROM sys.cluster",
+          "result": {
+            "cols": [
+              "settings['cluster']['graceful_stop']",
+              "settings['cluster']['routing']['allocation']['enable']"
+            ],
+            "rows": [
+              [
+                {
+                  "min_availability": "PRIMARIES",
+                  "timeout": "2h",
+                  "force": false
+                },
+                "all"
+              ]
+            ],
+            "rowcount": 1,
+            "duration": 1.037842
+          }
+        }
+      }
+    }
+  ],
+  "crate02_direct_sql_after": "Timed out while native decommission remained active",
+  "orphan_check_after": {
+    "utc": "2026-10-26T10:23:29.942574+00:00",
+    "sql": "SELECT o.name,count(*) FROM sys.operations o LEFT JOIN sys.jobs j ON o.job_id=j.id WHERE o.node['name']='crate-02' AND j.id IS NULL AND o.started < current_timestamp - INTERVAL '1 hour' GROUP BY o.name",
+    "result": {
+      "cols": [
+        "name",
+        "count(*)"
+      ],
+      "rows": [
+        [
+          "fetchPhase",
+          110
+        ],
+        [
+          "distributed merge",
+          1
+        ],
+        [
+          "collect",
+          1
+        ]
+      ],
+      "rowcount": 3,
+      "duration": 84.600296
+    }
+  },
+  "web_before": {
+    "utc": "2026-10-26T09:55:36.304957+00:00",
+    "phase": "before",
+    "checks": [
+      {
+        "url": "https://goodwatch.app/",
+        "exit": 0,
+        "status": 200,
+        "seconds": 0.226,
+        "bytes": 206651,
+        "sha256": "18a50e4894afa61a9ca61d83d05a16e38325ab47b446678b70426091dae114d6",
+        "stderr": ""
+      },
+      {
+        "url": "https://goodwatch.app/mcp",
+        "exit": 0,
+        "status": 401,
+        "seconds": 0.103,
+        "bytes": 76,
+        "sha256": "465e9eb7a90fc9584214063c8f49583df9bc7269887272bf862a7a3baa9bccfe",
+        "stderr": ""
+      },
+      {
+        "url": "https://goodwatch.app/.well-known/oauth-protected-resource/mcp",
+        "exit": 0,
+        "status": 200,
+        "seconds": 0.644,
+        "bytes": 355,
+        "sha256": "285cca041729047a0f05600e4c259fd38264737bcb7ebc564abc52937c24fa30",
+        "stderr": ""
+      }
+    ]
+  },
+  "web_after": {
+    "utc": "2026-10-26T10:12:01.482799+00:00",
+    "phase": "after-stopped-at-drain",
+    "checks": [
+      {
+        "url": "https://goodwatch.app/",
+        "exit": 0,
+        "status": 200,
+        "seconds": 0.357,
+        "bytes": 206651,
+        "sha256": "18a50e4894afa61a9ca61d83d05a16e38325ab47b446678b70426091dae114d6",
+        "stderr": ""
+      },
+      {
+        "url": "https://goodwatch.app/mcp",
+        "exit": 0,
+        "status": 401,
+        "seconds": 0.082,
+        "bytes": 76,
+        "sha256": "465e9eb7a90fc9584214063c8f49583df9bc7269887272bf862a7a3baa9bccfe",
+        "stderr": ""
+      },
+      {
+        "url": "https://goodwatch.app/.well-known/oauth-protected-resource/mcp",
+        "exit": 0,
+        "status": 200,
+        "seconds": 17.096,
+        "bytes": 355,
+        "sha256": "285cca041729047a0f05600e4c259fd38264737bcb7ebc564abc52937c24fa30",
+        "stderr": ""
+      }
+    ]
+  },
+  "receipt_sha256": "308d4d7580004459a5dc64e4b560cec857adbdbce660ed5d1a3579b8578d4212",
+  "receipt_file_count": 44,
+  "recorded_utc": "2026-10-26T10:27:23.069151+00:00"
+}

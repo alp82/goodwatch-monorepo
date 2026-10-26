@@ -1,10 +1,127 @@
 # #644: operation-context investigation, 2026-10-26
 
-Read-only inspection of the production cluster at **00:11:04–00:12:38 UTC** through each of
+The initial read-only inspection of the production cluster was at **00:11:04–00:12:38 UTC** through each of
 crate-01/02/03. Starting revision: `origin/main` **bb1265d4a**. No production KILL, restart, decommission,
-setting change, client repair, snapshot mutation or file write was performed.
+setting change, client repair, snapshot mutation or file write was performed during that initial inspection.
+The separately authorized Q37 production drain attempt below did change allocation/restart policy
+and temporarily hold the backup cron; those changes were restored.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
+
+## Q37 guarded restart attempt — October26,09:52–10:27 UTC
+
+**STOPPED before SIGTERM: crate-02 still has17 primaries. The native decommission remains
+active; restoring allocation and cron did not cancel it. Do not resend the decommission.**
+No restart, host stop, KILL, force=true, timeout shortening, replica/write-policy change or
+lock-file manipulation was performed. Original PID3628315 and container start time
+October15 23:45:26.513850873 UTC were unchanged at **10:27:22 UTC**. This is an incomplete
+maintenance attempt requiring owner handover, not a successfully aborted native action.
+
+Started from fresh main `06944811362dcff9f21e469be9b423895af8defb`, on branch
+`fix/644-q37-crate02-guarded-restart`. Structured results are in
+[q37-restart-attempt.json](q37-restart-attempt.json); timestamped SQL/runtime/cron receipts,
+operator scripts and reviewed tagged5.10.16 source are in
+[q37-receipts.json.gz](q37-receipts.json.gz), a gzip-compressed JSON file map.
+Private cron contents, environment values and HTTP bodies/headers are excluded.
+
+### Gates and action timeline (UTC)
+
+- **09:52–09:57:** Repeated checks through all three coordinators:145 GREEN relations,
+  zero missing/underreplicated shards, no write blocks or failed node checks, no active snapshot,
+  and only the two known pending moves (`person_appeared_in`5 replica and
+  `person_worked_on`4 replica, both crate-03→crate-02). No other INITIALIZING copies.
+  Repeated old-operation/job inventories were separated by more than one minute.
+- **Backup gate:** Latest scheduled snapshot `hourly_20261026_090502` in
+  `goodwatch-db-backup-v2` was SUCCESS,567 shards, no failures,09:05:02.597–09:05:30.639.
+  No active maintenance/deployment was found in host processes/units, SQL maintenance jobs,
+  GitHub runs or Coolify deployment queue. Idle unattended-upgrade shutdown watchers were
+  distinguished from an actual package upgrade.
+- **Heap/load noted:** Crate-01/02/03 heap used12.55/7.52/9.12 GB of17.18 GB each;
+  load1/5/15 respectively3.83/4.27/4.89,1.77/1.91/1.97,4.82/5.10/5.44.
+- **10:01:37:** Held only the existing backup cron job, saving its exact original bytes in
+  a mode0700 directory on crate-01 (`/root/.config/goodwatch/644-q37-20261026T100137Z`).
+  Cron receipts contain hashes and exact readback verification, not cron contents.
+- **10:01:54–55:** Temporarily set crate-02's Docker restart policy to `no`, set transient
+  allocation to `primaries`, and issued native `ALTER CLUSTER DECOMMISSION
+  'r0IgCe17SPOgudkQIGsRQA'` once. Existing graceful settings remained
+  `min_availability=PRIMARIES`, `force=false`, `timeout=2h`.
+- **~10:04:55:** The caller timed out after180 seconds. **Procedural error:** the runbook's
+  long client wait (7500 seconds) should have been used. A client timeout does not cancel
+  decommission. The command was not retried. This error did not explain the independent
+  allocation blocker established below.
+- **10:04–10:19:** Primary count fell34→17, then stayed17; allocation explanations and
+  full copy topology established no eligible destination for the remaining copies.
+  Stopped the restart procedure at the zero-primary gate rather than forcing or changing tables.
+- **10:11:41–43:** Restored transient allocation `all`, original Docker restart policy
+  `always`, and original cron **byte-for-byte**, all with readback checks. Original and
+  restored cron SHA256: `374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37`.
+- **10:13:56 onward:** Logs changed to “There are still active requests on this node,
+  delaying graceful shutdown”, repeated every5 seconds. Reviewed native code first waits
+  globally for no relocating shards, then waits for active requests/tasks. The two old moves
+  had exhausted retries; that health wait completing **does not prove zero primaries**.
+- **10:15–10:27:** Crate-01/03 each reported145 GREEN relations with zero missing or
+  underreplicated copies,17 primaries still on crate-02, allocation `all`, force=false.
+  Direct new SQL probes to crate-02 timed out while native decommission remained active.
+  Final host inspection proved the same running container/PID/start time, zero restarts,
+  image digest/config/mount hashes unchanged, restart policy `always` restored.
+
+### Structural zero-primary blocker
+
+All17 remaining primary shards have **three STARTED/STARTED copies**, one on each existing
+node (51 copy rows). They belong to14 `doc.yepwatch_*` tables, all with replicas2,
+`write.wait_for_active_shards=3`, translog durability REQUEST:
+`agreement`, `candidate`, `command_receipt`, `control`, `decision`, `invitation`,
+`member_grant`, `member_intent`, `participant`, `proposal`, `room`, `runtime`, `ticket`, `vote`.
+`room` has four shards; the others have one each. Their remaining primary data totaled only
+4,033,251 bytes, so this was not a large-transfer delay. Every remaining primary's allocation
+explanation was “cannot move shard to another node, even though it is not allowed to remain
+on its current node”. A fourth destination does not exist; an existing replica occupies each
+other node. The Q32 rehearsal's copy-policy exception matters **before this drain too**.
+Q37 did not authorize changing replica counts or write requirements.
+
+### Still-active native action and service limitations
+
+Crate5.10.16's tagged `DecommissioningService` disables new SQL, sets an internal decommission
+marker and keeps a server-side wait independently of the caller. Its active-request check may
+schedule process exit later. `force=false` provides a timeout abort path; it is **not an immediate
+cancellation guarantee**, and its existing2h setting was not altered. No supported SQL cancel
+was established. Merely resetting the internal marker would not cancel the pending callback
+or reliably re-enable SQL, so that unapproved action was not attempted. Original restart
+policy was restored, but operators must treat this node as still under native maintenance.
+Source receipts: `DecommissioningService.java` and `DecommissionAllocationDecider.java`,
+from [Crate's5.10.16 source](https://github.com/crate/crate/tree/5.10.16/server/src/main/java/io/crate/cluster/gracefulstop).
+Do not send SIGTERM while primaries remain or assume client timeout cancelled maintenance.
+
+At10:23:29,112 old operations on crate-02 still had no matching current job:
+110 fetchPhase, one collect and one distributed merge. Locks were not cleared and successful
+post-restart allocations could not be tested because there was no restart.
+Homepage checks before/after returned200; unauthenticated `/mcp` returned its expected401
+with OAuth challenge, and resource discovery returned200. Discovery latency rose from0.644s
+to17.096s in the after check; do not characterize that as full normal-service proof.
+No authenticated MCP tool invocation or sustained member traffic validation was performed.
+
+The10:05 scheduled backup was skipped during the hold. Cron is restored to its original
+`5 * * * *` schedule (one active backup job, no hold marker, hash reconfirmed10:25).
+**The next11:05 UTC scheduled run is not yet verified.** The explicit gate-failure instruction
+was to stop and report; no manual backup was substituted. Latest verified snapshot remains09:05.
+
+### Owner decision before further changes
+
+Q37 is blocked at the zero-primary gate and the native drain is still pending. Prompt operator
+ownership of that state and the next scheduled backup check is required. Recommend a separately
+reviewed, bounded exception for these14 tables: protect writes, reduce wait3→2 and replicas2→1
+in the appropriate guarded order, allow the existing drain to reach zero, then use the approved
+normal-stop procedure and restore copies/full GREEN before wait3. **This is a proposal, not
+executed SQL**; exact write protection, native-action state and recovery gates must be reviewed
+before authorization. An alternative is extra compatible capacity that preserves three copies.
+Do not waive zero primaries, force the drain, repeat decommission, or delete shard locks.
+If neither approach is approved, keep staffed observation of the existing native timeout/abort
+and verify SQL availability before treating crate-02 as back in service; do not assume that
+restored settings alone establish cancellation.
+
+Validation for this evidence-only change: parsed summary/archive JSON, checked archive SHA256,
+matched original/final runtime identifiers and config hashes, exact cron restoration and51-copy
+blocker topology. No application code changed; webapp/flow suites and typecheck were not rerun.
 
 ## Q35 lock-holder investigation — October26,09:10–09:27 UTC
 
