@@ -53,6 +53,21 @@ export function safeReturnTo(value?: string | null) {
 		return value;
 	return "/taste/quiz";
 }
+/**
+ * The page the person came from, from the browser's referrer: a page of this site that sign-up or sign-in may return
+ * to, or undefined. For a sign-up link without a return page (one clicked before the page's scripts ran).
+ */
+export function referrerReturnTo(referrer: string, origin: string) {
+	let url: URL;
+	try {
+		url = new URL(referrer);
+	} catch {
+		return undefined;
+	}
+	if (url.origin !== origin) return undefined;
+	const path = url.pathname + url.search + url.hash;
+	return safeReturnTo(path) === path ? path : undefined;
+}
 export function discoveryReturnTo(value?: string | null) {
 	if (value) return safeReturnTo(value);
 	const discovery = read<{ last?: { url: string } }>("goodwatch_discovery", {});

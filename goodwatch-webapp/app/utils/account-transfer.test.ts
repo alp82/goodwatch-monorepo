@@ -25,3 +25,16 @@ test("pending transfers retain skips, including an immutable confirmed retry", (
 		assert.deepEqual(pendingTransfer("member"),confirmed)
 	} finally {globals.localStorage = priorStorage; globals.window = priorWindow}
 })
+
+test("sign-up returns to the page the person came from: a page of this site, never an auth page", async () => {
+	const { referrerReturnTo, safeReturnTo } = await import("./account-transfer.ts")
+	const origin = "https://goodwatch.app"
+	assert.equal(referrerReturnTo("https://goodwatch.app/taste/quiz?view=taste", origin), "/taste/quiz?view=taste")
+	assert.equal(referrerReturnTo("https://goodwatch.app/movie/603-the-matrix#cast", origin), "/movie/603-the-matrix#cast")
+	assert.equal(referrerReturnTo("https://elsewhere.example/taste", origin), undefined)
+	assert.equal(referrerReturnTo("https://goodwatch.app/sign-in?redirectTo=%2F", origin), undefined)
+	assert.equal(referrerReturnTo("", origin), undefined)
+	assert.equal(referrerReturnTo("not a url", origin), undefined)
+	// The rating flow's taste view, where Save your taste sends people back after sign-up, is a safe return page.
+	assert.equal(safeReturnTo("/taste/quiz?view=taste"), "/taste/quiz?view=taste")
+})

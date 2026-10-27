@@ -1,6 +1,6 @@
 import { getAuthPosters } from "~/server/auth-posters.server"
 import type { AuthPoster } from "~/ui/auth/PosterSpotlight"
-import { discoveryReturnTo } from "~/utils/account-transfer"
+import { discoveryReturnTo, referrerReturnTo } from "~/utils/account-transfer"
 import type { ActionFunctionArgs, LoaderFunction, LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { json, redirect } from "@remix-run/node"
 import { Link, useLoaderData, useNavigate } from "@remix-run/react"
@@ -92,6 +92,15 @@ function SignedInMovesOn({ redirectUri }: { redirectUri: string }) {
 /** Where a new account starts without a page to return to: the Taste page, which starts their taste. */
 const NEW_MEMBER_START = "/taste"
 
+/**
+ * Where a new account goes: the return page the link named, else the page the person came from (a link clicked before
+ * the page's scripts ran names none), else the Taste page.
+ */
+const returnPage = (redirectUri: string) =>
+	redirectUri ||
+	referrerReturnTo(document.referrer, window.location.origin) ||
+	NEW_MEMBER_START
+
 function SignUpRoute() {
 	const { redirectUri } = useLoaderData<LoaderData>()
 	const { user } = useUser()
@@ -116,7 +125,7 @@ function SignUpRoute() {
 		if (busy) return
 		setBusy(true)
 		setFailure(null)
-		const returnTo = discoveryReturnTo(redirectUri || NEW_MEMBER_START)
+		const returnTo = discoveryReturnTo(returnPage(redirectUri))
 		const result = await auth.signUp({ email, password, returnTo })
 		setBusy(false)
 		if (!result.ok) {
@@ -130,7 +139,7 @@ function SignUpRoute() {
 	const google = async () => {
 		setGoogleBusy(true)
 		setFailure(null)
-		const result = await auth.google(redirectUri || NEW_MEMBER_START)
+		const result = await auth.google(returnPage(redirectUri))
 		if (!result.ok) {
 			setFailure(result.failure)
 			setGoogleBusy(false)
