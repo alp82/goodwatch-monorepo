@@ -17,6 +17,7 @@
 // A change to the vector or the quantile table changes stored values: bump TASTE_KEY_VERSION in version.server.ts. The
 // scale is applied on every read, so tuning it needs no bump.
 import { shownMatch } from "~/domain/taste-match"
+import { LIKED_FROM, MIN_LIKED } from "~/domain/taste-rules"
 import type {
 	TitleKey,
 	TitleSnapshot,
@@ -24,10 +25,9 @@ import type {
 import { VALID_FINGERPRINT_KEYS } from "~/server/utils/fingerprint"
 
 export const TASTE_LENGTH = VALID_FINGERPRINT_KEYS.length
-/** Taste match shows from this many liked titles (owner, #193). Want to See doesn't count. */
-export const MIN_LIKED = 5
-/** Ratings of this and more are liked; below are disliked. */
-export const LIKED_FROM = 6
+// MIN_LIKED (liked titles a taste needs) and LIKED_FROM (the lowest liked score) live in ~/domain/taste-rules, which
+// the browser's rating flow reads too.
+export { LIKED_FROM, MIN_LIKED } from "~/domain/taste-rules"
 export const WANT_TO_SEE_WEIGHT = 0.5
 /**
  * The percentiles the quantile table holds: 0 to 99 in whole percents, then 99.1 to 99.9 in tenths, 99.91 to 99.99 in
