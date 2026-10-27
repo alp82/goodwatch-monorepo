@@ -22,6 +22,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: preview ? 'YepWatch Beta' : 'YepWatch',
     slug: 'yepwatch',
     version: '0.1.0',
+    runtimeVersion: { policy: 'fingerprint' },
+    updates: {
+      url: `https://u.expo.dev/${process.env.EAS_PROJECT_ID ?? config.extra?.eas?.projectId}`,
+      checkAutomatically: 'ON_LOAD',
+      fallbackToCacheTimeout: 0,
+    },
     scheme: preview ? 'yepwatch-preview' : 'yepwatch',
     ios: { ...config.ios, bundleIdentifier: id, buildNumber: String(build),
       associatedDomains: ['applinks:yepwatch.com'],

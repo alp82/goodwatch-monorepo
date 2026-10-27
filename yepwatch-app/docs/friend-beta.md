@@ -76,6 +76,6 @@ Use real Android + iPhone devices, with Wi-Fi and mobile data, without USB/Metro
 
 The app and Room drawer have **Send feedback**. It opens email to the existing GoodWatch support address with app/build/platform and a short report template; nothing is sent automatically and no room link, invitation or account credential is added. Friends can attach a screenshot. TestFlight's screenshot feedback also works.
 
-Website deployments do not update installed apps. Distribute new builds through the testing tracks; OTA updates are not configured. Add manual CI build/submission automation only after the first signed build and account setup succeed. Keep mobile releases separate from Coolify website deploys.
+Website deployments do not update installed apps. Build 16 introduces [OTA updates](ota-updates.md): compatible JavaScript/assets download on launch and apply on a later cold start. Build 15 and older still require a binary upgrade. Keep mobile releases separate from Coolify website deploys.
 
 References: [Expo build setup](https://docs.expo.dev/build/setup/), [EAS Submit](https://docs.expo.dev/deploy/submit-to-app-stores/), [Google internal testing](https://support.google.com/googleplay/android-developer/answer/9845334), [Apple TestFlight](https://developer.apple.com/testflight/).

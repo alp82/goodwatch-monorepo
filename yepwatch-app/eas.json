@@ -8,14 +8,15 @@
       "node": "24.15.0",
       "env": {
         "APP_VARIANT": "production",
-        "APP_BUILD_NUMBER": "15",
+        "APP_BUILD_NUMBER": "16",
         "EXPO_PUBLIC_API_ORIGIN": "https://yepwatch.com",
         "EXPO_PUBLIC_APP_ORIGIN": "https://yepwatch.com",
         "EXPO_PUBLIC_WS_ORIGIN": "wss://yepwatch.com",
         "EXPO_PUBLIC_ENABLE_FIXTURES": "false",
         "EXPO_PUBLIC_GUEST_ONLY": "false",
         "NPM_CONFIG_INSTALL_LINKS": "true"
-      }
+      },
+      "environment": "production"
     },
     "preview": {
       "extends": "base",
@@ -30,7 +31,9 @@
       },
       "ios": {
         "simulator": true
-      }
+      },
+      "environment": "preview",
+      "channel": "beta-preview"
     },
     "production": {
       "extends": "base",
@@ -38,13 +41,15 @@
       "developmentClient": false,
       "android": {
         "buildType": "app-bundle"
-      }
+      },
+      "channel": "production"
     },
     "beta": {
       "extends": "production",
       "ios": {
         "simulator": false
-      }
+      },
+      "channel": "beta"
     }
   },
   "submit": {

@@ -45,3 +45,20 @@ test('standalone submit profiles select the store app without build-profile envi
   assert.equal(eas.submit.beta.android.track, 'internal');
   assert.equal(eas.submit.beta.android.releaseStatus, 'draft');
 });
+
+
+test('OTA builds isolate beta/store variants and use native fingerprints without delaying launch', () => {
+  for (const variant of ['preview', 'production']) {
+    const config = configured(variant);
+    assert.deepEqual(config.runtimeVersion, { policy: 'fingerprint' });
+    assert.equal(config.updates?.url, 'https://u.expo.dev/0772c2db-91d8-4862-80eb-1d816f243072');
+    assert.equal(config.updates?.checkAutomatically, 'ON_LOAD');
+    assert.equal(config.updates?.fallbackToCacheTimeout, 0);
+  }
+  assert.equal(configured('development').updates, undefined);
+  assert.equal(eas.build.preview.channel, 'beta-preview');
+  assert.equal(eas.build.preview.environment, 'preview');
+  assert.equal(eas.build.beta.channel, 'beta');
+  assert.equal(eas.build.production.channel, 'production');
+  assert.equal(eas.build.base.environment, 'production');
+});
