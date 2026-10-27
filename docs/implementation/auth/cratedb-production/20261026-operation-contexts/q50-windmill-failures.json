@@ -1,0 +1,19 @@
+{
+  "start": "2026-10-27T08:24:00+00:00",
+  "end": "2026-10-27T08:35:00.866720+00:00",
+  "jobs": [
+    {
+      "id": "01a17ba4-baed-762d-3027-dee875df3b56",
+      "script_path": "f/sync/copy/vector_data",
+      "parent_job": null,
+      "started_at": "2026-10-27T08:30:00.036105Z",
+      "duration_ms": 112943,
+      "success": false,
+      "canceled": false,
+      "schedule_path": "f/sync/copy/vector_data",
+      "failed_at": "2026-10-27T08:31:52.979105+00:00",
+      "error": "{\"name\": \"ProgrammingError\", \"message\": \"401 Client Error: Unauthorized\", \"extra_message\": \"401 Client Error: Unauthorized\"}"
+    }
+  ],
+  "complete": true
+}

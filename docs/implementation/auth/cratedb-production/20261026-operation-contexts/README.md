@@ -8,6 +8,20 @@ and temporarily hold the backup cron; those changes were restored.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## Q50 October27 plain restart — completed, watcher abort before rebalance
+
+Owner-authorized plain crate-02 restart exited normally08:31:15 UTC and rejoined with its original
+identity. At08:32:54, discover returned200 in4.376s and triggered the mandatory3s abort. Stopped
+progression; no rebalance test or second restart. Safe restoration completed08:34:31:145 GREEN on
+all coordinators, all145 policies restored (YepWatch waits3), Dockeralways, allocationall, cron
+byte-for-byte restored; **rebalance remainsnone**. crate-02's112 historical orphaned operations are
+gone. Lock clearance remains unproven because the observed rebalance phase was omitted.
+
+[Execution and limitations](q50-execution.md), [receipts](q50-receipts.json.gz),
+[watcher samples](q50-pages.jsonl.gz), [failed Windmill jobs](q50-windmill-failures.json).
+One job failed: vector_data at08:31:52.979, Crate client401 Unauthorized; no rerun performed.
+Next hourly09:05 is not yet due at handover. No further production action is armed.
+
 ## October27 immediate GO — stopped at first workload gate,07:06 UTC
 
 Owner replaced the11:30 proposal with immediate gates around07:05 UTC, SIGTERM cutoff07:45 and
