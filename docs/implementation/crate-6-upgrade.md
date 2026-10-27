@@ -64,30 +64,35 @@ index publication jobs as approved; catalog/member reads/writes retain the norma
 
 ## Window and forecast
 
-Propose **23:00–04:00 UTC** (00:00–05:00 CET), recovery owner available until 06:00 UTC. Initial gates/watcher
-22:45–23:00 only after explicit go. Start backup protection/preparation 23:00; first SIGTERM only after it
-and fresh gates pass, likely 23:15–23:30. No new hop after 03:00, no SIGTERM after 03:30; hard stop for new
-maintenance 04:00. These proposed end/cutoff times still need confirmation. Q59 supersedes the shorter
-between-node heap assumption; do not compress its ten-minute history to fit the proposed slot.
+**Q63 approved window: October 27 23:00 → October 28 04:00 UTC** (00:00–05:00 CET).
+Initial gates/watcher begin around 22:45 only after explicit go. Start backup protection/preparation 23:00;
+first SIGTERM only after the protected baseline and fresh gates pass, likely 23:15–23:30.
+
+**Do not start a new hop unless its complete three-node upgrade, GREEN verification, homogeneous
+checkpoint and handover/restoration reserve fit before 04:00.** Reforecast from measured timings before
+admitting each hop. At 04:00 stop at the last finished, homogeneous hop and report; do not begin another.
+This replaces the earlier unapproved fixed03:00-hop/03:30-SIGTERM cutoff proposals. Do not shorten gates,
+force completion or silently extend the window. The Q62 first-failed-gate rule still takes priority over
+making versions homogeneous; an unexpected failure/overrun is not permission for another node change.
 
 | Work | Production allowance |
 | --- | --- |
 | Initial 10 min gates/watcher, image pulls, protected SQL snapshot + BLOB/config copy | 20–30 min after go; allow longer if backup not settled |
 | Each node: preparation/readbacks and replacement | 1–2 min |
 | Each node: stop → rejoin → original replication GREEN | 3–5 min, based on today's ~3 min;6.x upgrades may be slower |
-| Before every node: all-coordinator heap history, GREEN/policy/client checks | **Heap <80% for ten full minutes on every node**, sampled every 30s; a new JVM needs its own history |
+| Before every node: all-coordinator heap history, GREEN/policy/client checks | **Q63: <80% for 10 min before the first node of each hop; 2 min before its second and third nodes**. Sample every 30s; a new JVM needs its own history |
 | Each complete hop: version/access/BLOB/backup canaries | 5 min additional |
 | First snapshot into the new 6.x repository | **15–30 min extra** for the first full write; later snapshots are incremental |
 | Final waits/restart/policy/cron restoration and observation | 25–40 min including Q43 final rebalance observation; hand over if the hard stop prevents it |
 
-Q59 supersedes the earlier three-minute between-node assumption. Budget roughly **11–15 minutes per
-replacement** including the new node's ten-minute heap history before the next stop, plus the protected
-baseline, first full 6.x snapshot, hop checks and final restoration: **about 4–6 hours**. The last node's
-heap/recovery still needs checking before final restoration. Heap history may overlap recovery only when
-fresh readings remain below 80%; GREEN and original copies are required before progression regardless.
-The proposed23:00–04:00 slot may therefore finish fewer than five hops. Confirm the window; never compress
-the gate, silently extend the cutoff or force completion. Stop at a healthy complete-hop checkpoint if time
-runs out; at any first failed gate follow Q62, even if the resulting GREEN cluster is mixed.
+Q63 supersedes Q59's ten-minute gate before every node: each hop uses **10/2/2-minute** pre-node heap
+histories, below 80% on every cluster member. Preparation/recovery and fresh heap history may overlap
+when readings qualify; GREEN and original copies are independently required before progression.
+With the protected baseline, first full6.x snapshot, hop checks and final restoration, plan roughly
+**3–5 hours**, subject to measured production recovery. This is not a guarantee all five hops fit.
+Before each hop, budget every remaining node, its gates, snapshot/checkpoint, recovery margin and exact
+schedule/cron/settings restoration. If that budget does not fit before 04:00, stop at the current
+homogeneous checkpoint and hand over; do not start a partial hop merely to make more progress.
 
 Today's production stop-to-GREEN was about3min, not the full verification time. The local fixture does not
 predict production transfer throughput. Recovery can reuse segments, but the prior38.18GiB primary /
@@ -96,8 +101,9 @@ predict production transfer throughput. Recovery can reuse segments, but the pri
 ## Entry gates and gates before every node/hop
 
 Use all three coordinators while up, both survivors while down. Explicit columns in mixed versions.
-**Q59: before every node, every node must have fresh used/max heap readings below 80% for ten full minutes.**
-Sample every30s and retain timestamped history through recovery; a new JVM cannot inherit its predecessor's
+**Q63: every cluster member must have fresh used/max heap readings below 80% for 10 min before the first
+node of each hop, and 2 min before that hop's second and third nodes.**
+Sample every 30s and retain timestamped history through recovery; a new JVM cannot inherit its predecessor's
 history. Require GREEN and all original copies before progression as well. An entry/pre-node gate that
 fails ends progression under Q62; do not keep retrying a failed gate or reset its history silently.
 
@@ -111,7 +117,7 @@ fails ends progression under Q62; do not keep retrying a failed gate or reset it
   via `sys.allocations` and each node's localshardrows rather than identical clusterwideBLOB stat rows.
 - Every primary on the node to stop has a STARTED survivor copy; two survivors provide cluster quorum.
   No failed cluster/node checks, unexpected exclusion/write block or active decommission.
-- **Q59 heap gate: <80% used/max on every node for ten minutes before each node stop.** Any reading not
+- **Q63 heap gate: <80% on every node for 10 min before the first node of each hop, 2 min before its second/third nodes.** Any reading not
   below 80% fails that pre-node gate. **Stop immediately if heap is above 85%**; the old two-minute allowance
   is removed. OOM, repeated GC stalls or breaker pressure also stop progression. Loads5/15 must stay below
   available processors (historically16), with sane disk/recovery queues. No forced GC, heap or recovery-rate changes.
@@ -274,7 +280,7 @@ If path/labels/runtime differ, stop. Hosts01/02/03 are10.0.0.11/.12/.13.
    Read back primaries/none on all coordinators; require a complete live watcher round **started after**
    changes, a fresh heartbeat and no Q60 alarm, plus unchanged image/config/PID and valid StopSignal.
    A single logged slow or unexpected response does not independently fail this watcher gate. Recheck GREEN, no snapshot, placement and alarm immediately
-   before dispatch. **No decommission or zero-primary check.** Before the approved SIGTERM cutoff only:
+   before dispatch. **No decommission or zero-primary check.** Only while the admitted hop and its safe handover still fit inside the Q63 window:
 
    ```bash
    # On the host of the selected node-matrix row; example first row:
@@ -368,7 +374,8 @@ If path/labels/runtime differ, stop. Hosts01/02/03 are10.0.0.11/.12/.13.
    coordinators. Poll, don't treat the first coordinator's GREEN as simultaneous agreement. Verify exact
    replica strings and14wait 2/otherwaitsoriginal, no blocks, REQUEST, expected user/privileges, catalog/auth/
    YepWatch/search reads, password/missing/wrong-auth behavior and BLOB GET/HEAD. Never send fake production
-   writes as a canary. Require the Q59 ten-minute <80% heap history before the next node, plus stable GREEN/site checks.
+   writes as a canary. Require the Q63 <80% heap history before the next node: 2 min if within this hop, 10 min if it is the
+   first node of the next hop. GREEN/site/copy gates remain unchanged.
    Stop at the first failed gate or Q60 alarm; no next node after it.
 5. Restore target `docker update --restart=always crate-0N`; change onlyoverride.restart to`always` privately
    so future Compose recreation preserves it too. Recordall/none on all settings readbacks. Save timing,
@@ -376,11 +383,21 @@ If path/labels/runtime differ, stop. Hosts01/02/03 are10.0.0.11/.12/.13.
 
 ## Homogeneous checkpoints, BLOB grant and final restoration
 
-After each three-node row, confirm all at thattarget, all 145GREEN/all copiesSTARTED, stable heap, policies,
-client/auth/catalog/search/YepWatch/MCP access and no watcher alarm; take5 min checkpoint. Finish a row
-before the next hop. Do not intentionally leave a mixed cluster overnight: docs support transient rolling
-mixtures, not a vendor guarantee for multi-day mixtures. Safety may nevertheless require a staffed mixed
-GREEN handover on abort; never upgrade another node just to make versions uniform after an alarm.
+After each three-node row, confirm all at that target, all 145 GREEN/all copies STARTED, stable heap,
+policies, client/auth/catalog/search/YepWatch/MCP access and no watcher alarm; take 5 min checkpoint.
+**Q63: at each homogeneous checkpoint, admit another hop only if all three replacements, their 10/2/2
+heap gates, recovery/checkpoint and handover reserve fit before 04:00 UTC. Otherwise stop here.**
+At the deadline hand over a finished homogeneous hop and report its actual version, completed hops,
+remaining hops and restored/held settings. Restore wait 3 only with all original copies STARTED, all Docker
+policies`always`, allocation`all`, the approved schedules exactly and the backup cron when its writable
+repository/phase gates pass. Leave rebalance`none` if the final-version placement test was not reached.
+Reserve that work before 04:00 rather than starting another hop and leaving it for after the window.
+
+Do not intentionally leave a mixed cluster overnight: docs support transient rolling mixtures, not a
+vendor guarantee for multi-day mixtures. **Q62 still stops at the first failed gate**, even mid-hop;
+recover only the node already stopping/rejoining. Never change another node merely to make versions
+uniform after a failed gate, or force a stop/recovery to meet04:00. Report an unexpected overrun/state
+honestly, with no overnight rollback or data-directory downgrade.
 
 After homogeneous 6.0.8, create the **one** new 6.x writer repository with the helper's existing name:
 
@@ -518,12 +535,13 @@ The backup cron has its separate repository/phase safety rules; record its exact
 
 ## Owner approvals before 23:00 UTC
 
-Recorded owner decisions (production execution still waits for the explicit go around22:45 UTC):
+Recorded owner decisions (production execution still waits for the explicit go around 22:45 UTC):
 
-- [x] **Q53:** Rolling plain stops starting October27 at23:00 UTC; pinned five-hop path, original copies retained, only 14 YepWatch waits lowered across the campaign then restored, and one protected snapshot+BLOB pair with the backup cron held throughout.
+- [x] **Q53:** Rolling plain stops starting October 27 at23:00 UTC; pinned five-hop path, original copies retained, only 14 YepWatch waits lowered across the campaign then restored, and one protected snapshot+BLOB pair with the backup cron held throughout.
 - [x] **Q55:** `GRANT DQL ON SCHEMA blob TO goodwatch_search` before the first 6.2.11 node, followed by authenticated index-file GET/HEAD and SHA1 verification.
 - [x] **Q58:** Pause exactly the nine named Windmill job paths above for the window; capture their exact original schedule configurations, restore them exactly at handover, and do not catch up missed runs. No permission to cancel active jobs or pause other schedules.
-- [x] **Q59:** Every node's heap must stay below 80% for ten minutes before every node stop; stop if above 85%. This supersedes the proposed 75% gate, three-minute heap assumption and two-minute 85% grace.
+- [x] **Q59, timing superseded by Q63:** Start below 80% and stop above 85% remain in force; the initial requirement for ten minutes before every node no longer applies.
+- [x] **Q63:** Heap below 80% for ten minutes before the first node of each hop, two minutes before each later node in that hop; stop above 85%. Window 23:00–04:00 UTC: no new hop unless the whole hop and handover fit before 04:00; at 04:00 stop at a finished homogeneous hop and report. Q62 safety/first-failed-gate rules remain unchanged.
 - [x] **Q60:** Abort on three consecutive unexpected responses/transport failures per endpoint, or three responses over 3s within one minute across probes; a single slow response is only logged. Expected unauthenticated MCP401 remains healthy. Use `--policy q60`.
 - [x] **Q61:** Accept rollback data loss since the protected pre-upgrade snapshot. No separate write-loss-cap or write-freeze decision is pending for this window.
 - [x] **Q62:** Stop at the first failed gate and hand over GREEN, homogeneous where safely possible. No rollback during the night; the owner decides in the morning. Do not upgrade another node merely to make versions uniform after a failed gate.
@@ -532,6 +550,6 @@ Recorded owner decisions (production execution still waits for the explicit go a
 
 Operational confirmations still to record after go, not additional requests to reapprove the decisions above:
 
-- [ ] **Window and operators:** Confirm end/cutoff times and staffed handover. The previous proposal was 23:00–04:00UTC, last new hop 03:00 and SIGTERM cutoff 03:30. Q59 now raises the estimate to about 4–6 hours; do not shorten its ten-minute gate or silently extend a cutoff. Stop safely if the available window cannot cover another complete hop.
+- [ ] **Operators and admission forecast:** Record staffed handover and measured whole-hop forecasts. The 23:00–04:00 UTC window and 10/2/2-minute heap policy are approved by Q63, not pending approval. Do not begin a hop whose full completion and restoration budget cannot fit before 04:00.
 - [ ] **Shared storage/configuration:** Verify the new genuinely shared `/snapshots-v6` location, read-only old registrations and reviewed durable Compose/image/allowlist changes. Stop before the first node if storage is not shared or configuration differs.
 - [ ] **Restoration responsibility:** Record the schedule/backup-cron restoration owner and observed states at handover. Any later rollback/cutover owner, fresh restore capacity and 60–120 minute unqualified RTO are for the separately approved morning decision, not authority to restore tonight.
