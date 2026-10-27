@@ -1,6 +1,8 @@
 // The Feedback tab on every page: a quiet "Feedback" handle on the right edge, in the upper middle. This module is
 // all the page loads at first: the tab itself, rendered on the server, fixed, so it never moves the page. The drawer
 // and fix mode (FeedbackDock.tsx) load once the page is idle, or on the first pointer, focus or tap on the tab.
+// Where the phone dock is (below lg), the closed tab stays out of the page's way: Feedback is a link under the
+// account row in Go to… (navigation/Hub.tsx), and the tab shows only as the open drawer's handle.
 import { ChatBubbleLeftEllipsisIcon } from "@heroicons/react/20/solid"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import {
@@ -28,39 +30,15 @@ export type DockProps = {
 	sendOnly: boolean
 }
 
-/** Phones: hidden while the page scrolls down, back on the first scroll up (transform only). Never while open. */
-function useHideOnScrollDown(active: boolean) {
-	const [hidden, setHidden] = useState(false)
-	useEffect(() => {
-		if (!active) {
-			setHidden(false)
-			return
-		}
-		const narrow = window.matchMedia("(max-width: 767px)")
-		let last = window.scrollY
-		let frame = 0
-		const onScroll = () => {
-			if (frame) return
-			frame = requestAnimationFrame(() => {
-				frame = 0
-				const y = window.scrollY
-				if (Math.abs(y - last) < 8) return
-				setHidden(narrow.matches && y > last && y > 80)
-				last = y
-			})
-		}
-		window.addEventListener("scroll", onScroll, { passive: true })
-		return () => {
-			window.removeEventListener("scroll", onScroll)
-			cancelAnimationFrame(frame)
-		}
-	}, [active])
-	return hidden
-}
+/**
+ * Closed, on a page with the phone dock (below lg): hidden, as Go to… has the way to Feedback. CSS, so the server's
+ * first paint is already right; pages without the dock keep the tab.
+ */
+const OUT_OF_THE_WAY = "max-lg:[body:has([data-mobile-dock])_&]:hidden"
 
 /**
- * Desktop: a vertical "Feedback" label on the right edge. Phones: a slim tab with the icon, a little lower. It never
- * moves and never goes away: it's the drawer's handle. While the drawer is out the tab is pressed: it takes the
+ * Desktop: a vertical "Feedback" label on the right edge. Phones: a slim tab with the icon, a little lower, shown
+ * while the drawer is open (or where there is no dock to reach it from). It never moves: it's the drawer's handle. While the drawer is out the tab is pressed: it takes the
  * drawer's colour and edge, its inner corners square off and a strip over its inner edge hides the seam, so tab and
  * drawer read as one shape.
  */
@@ -68,7 +46,6 @@ const Tab = forwardRef<
 	HTMLButtonElement,
 	TabState & { onToggle: () => void; onWarm: () => void }
 >(function Tab({ open, out, away, onToggle, onWarm }, ref) {
-	const hidden = useHideOnScrollDown(!out && !away)
 	return (
 		<button
 			ref={ref}
@@ -87,7 +64,7 @@ const Tab = forwardRef<
 				out
 					? "z-[1002] rounded-l-none text-white ring-1 ring-amber-500/30"
 					: "z-[45] rounded-l-xl text-gray-200 shadow-[0_8px_30px_-6px_rgba(0,0,0,.7)] ring-1 ring-white/15 transition-[transform,opacity] ease-out hover:bg-gray-900 hover:text-white motion-reduce:transition-none"
-			} ${hidden || away ? "translate-x-full" : ""} ${away ? "opacity-0" : "focus:translate-x-0"}`}
+			} ${away ? "translate-x-full opacity-0" : "focus:translate-x-0"} ${open || out || away ? "" : OUT_OF_THE_WAY}`}
 		>
 			{/* Covers the drawer's right edge where it meets the tab, so the two join. */}
 			{out && (

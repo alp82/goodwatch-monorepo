@@ -1,5 +1,6 @@
 // The hub: every destination, laid out like the Living room remote's feature well. Your own pages come first as big
-// tiles, then the places to explore as small keys, then one link to your profile (Sign up for guests). On phones
+// tiles, then the places to explore as small keys, then one link to your profile (Sign up for guests), and on phones a
+// small Feedback link under it (the Feedback tab's place there, ui/feedback/FeedbackTab.tsx). On phones
 // it's a sheet above the dock (opened by the hub key); on desktop it's the Browse panel under the header. Both are the same labeled modal
 // dialog, with a focus trap, Escape to close, and focus returned to the key or button that opened it. The phone sheet
 // can also be dragged down to close.
@@ -9,6 +10,7 @@ import {
 	DialogPanel,
 	DialogTitle,
 } from "@headlessui/react"
+import { ChatBubbleLeftEllipsisIcon } from "@heroicons/react/20/solid"
 import {
 	ArrowRightIcon,
 	ChevronRightIcon,
@@ -19,6 +21,7 @@ import type React from "react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
 import { landedWords, showsWords } from "~/domain/newly-available-words"
 import { AccountAvatar } from "~/ui/account/AccountAvatar"
+import { openFeedback } from "~/ui/feedback/FeedbackTab"
 import { useAccountSummary } from "~/ui/account/useAccountSummary"
 import { PROFILE_PATH } from "~/ui/settings/paths"
 import { profilePath } from "~/ui/share-card/links"
@@ -313,6 +316,18 @@ function HubContent() {
 				)}
 			</Group>
 			<AccountRow />
+			{/* Phones: the way to Feedback, which has no tab on the page there. It opens the same drawer. */}
+			<button
+				type="button"
+				onClick={() => {
+					navigation.setHubOpen(false)
+					openFeedback()
+				}}
+				className="-my-1 inline-flex min-h-11 cursor-pointer items-center gap-1.5 justify-self-center px-3 text-xs font-semibold text-gray-500 hover:text-gray-300 lg:hidden"
+			>
+				<ChatBubbleLeftEllipsisIcon className="size-4" aria-hidden />
+				Feedback
+			</button>
 		</div>
 	)
 }
