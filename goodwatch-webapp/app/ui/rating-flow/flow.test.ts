@@ -374,3 +374,51 @@ test("the top row: the newest answers with known titles, each title once", () =>
 	assert.equal(answerWords({ type: "skip" }), "Haven't seen it")
 	assert.equal(answerWords({ type: "not-interested" }), "Not interested")
 })
+
+test("clearing a score below the last milestone takes it back: the glow ends, the strip steps back, and it lands again", () => {
+	// 19 → 20: the milestone at 20 lands; clearing one goes back to 19.
+	let state = run({ rated: 15, liked: 8 }, { rated: 19, liked: 9 })
+	state = add(state, { rated: 20, liked: 9 })
+	assert.deepEqual(state.milestone, { kind: "picks", rated: 20, of: 5 })
+	state = add(state, { rated: 19, liked: 9 })
+	assert.equal(state.milestone, null)
+	assert.equal(litMilestone(state), null)
+	assert.equal(state.lastMilestoneAt, 15)
+	assert.deepEqual(stepOf(state), { kind: "rated", done: 4, of: 5, left: 1 })
+	assert.equal(nextStepWords(stepOf(state)), "1 more to new picks")
+	// Scoring again lands the 20 milestone again.
+	state = add(state, { rated: 20, liked: 10 })
+	assert.deepEqual(state.milestone, { kind: "picks", rated: 20, of: 5 })
+	assert.deepEqual(litMilestone(state), state.milestone)
+	assert.equal(nextStepWords(stepOf(state)), "Your picks are ready")
+})
+
+test("a guest's lock at 20 follows the totals: unlocked at 19 after a clear, locked again at 20", () => {
+	let state = run({ rated: 15, liked: 8 }, { rated: 20, liked: 9 })
+	assert.equal(isLocked(state.tally, false), true)
+	state = add(state, { rated: 19, liked: 9 })
+	assert.equal(isLocked(state.tally, false), false)
+	assert.equal(nextStepWords(stepOf(state)), "1 more to new picks")
+	state = add(state, { rated: 20, liked: 9 })
+	assert.equal(isLocked(state.tally, false), true)
+	assert.equal(state.milestone?.rated, 20)
+	assert.equal(nextStepWords(stepOf(state)), "Your picks are ready")
+})
+
+test("a member's cleared score below a later milestone steps back on the schedule", () => {
+	let state = member({ rated: 20, liked: 9 }, { rated: 29, liked: 12 })
+	state = add(state, { rated: 30, liked: 12 }, true)
+	assert.equal(state.milestone?.rated, 30)
+	state = add(state, { rated: 29, liked: 12 }, true)
+	assert.equal(state.milestone, null)
+	assert.equal(state.lastMilestoneAt, 20)
+	state = add(state, { rated: 30, liked: 13 }, true)
+	assert.deepEqual(state.milestone, { kind: "picks", rated: 30, of: 10 })
+	// Ready at 7, then a cleared unliked score: still ready, back to the step at 5.
+	let ready = run({ rated: 6, liked: 4 }, { rated: 7, liked: 5 })
+	assert.equal(ready.milestone?.kind, "ready")
+	ready = add(ready, { rated: 6, liked: 5 })
+	assert.equal(ready.milestone, null)
+	assert.equal(ready.lastMilestoneAt, 5)
+	assert.equal(add(ready, { rated: 7, liked: 5 }).milestone, null)
+})

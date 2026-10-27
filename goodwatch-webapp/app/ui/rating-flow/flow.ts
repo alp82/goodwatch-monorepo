@@ -88,6 +88,18 @@ export const INITIAL_FLOW: FlowState = {
 	milestone: null,
 }
 
+/** The last step of the milestone schedule at or below `rated` (0 below the first). */
+export function milestoneAtOrBelow(rated: number, member: boolean): number {
+	let last = 0
+	for (
+		let at = nextMilestoneAt(0, member);
+		at != null && at <= rated;
+		at = nextMilestoneAt(at, member)
+	)
+		last = at
+	return last
+}
+
 export function ratingFlow(state: FlowState, action: FlowAction): FlowState {
 	switch (action.type) {
 		case "taste-opened":
@@ -111,6 +123,14 @@ export function ratingFlow(state: FlowState, action: FlowAction): FlowState {
 					tally: next,
 					lastMilestoneAt: next.rated,
 					milestone: { kind: "ready", rated: next.rated, of: MIN_LIKED },
+				}
+			// Fewer ratings than the last milestone (a score cleared): it is taken back. The glow ends, the strip steps
+			// back to the milestone before, and reaching the count again lands it again.
+			if (next.rated < state.lastMilestoneAt)
+				return {
+					tally: next,
+					lastMilestoneAt: milestoneAtOrBelow(next.rated, action.member),
+					milestone: null,
 				}
 			const at = nextMilestoneAt(state.lastMilestoneAt, action.member)
 			if (at != null && next.rated >= at)
