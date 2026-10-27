@@ -424,9 +424,9 @@ function OwnerBar() {
 				className={`${AMBER_BUTTON} shrink-0 whitespace-nowrap max-lg:px-3`}
 			>
 				<SparklesIcon className="size-4" aria-hidden />
-				<span className="lg:hidden">Rate more</span>
+				<span className="lg:hidden">Rate titles</span>
 				<span className="max-lg:hidden">
-					Rate more for better recommendations
+					Rate titles for better recommendations
 				</span>
 			</Link>
 			<Link

@@ -182,7 +182,7 @@ function Unready({ status }: { status: "empty" | "unavailable" }) {
 							to="/taste/quiz"
 							className="mt-4 inline-flex min-h-11 items-center rounded-full bg-amber-400 px-5 text-[14px] font-black text-gray-950 hover:bg-amber-300"
 						>
-							Take the quiz
+							Rate titles
 						</Link>
 					</>
 				) : (

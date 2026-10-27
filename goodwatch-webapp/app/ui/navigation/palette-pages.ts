@@ -324,9 +324,9 @@ const PAGES: Entry[] = [
 	}),
 
 	// Taste.
-	page("tasteQuiz", "Taste quiz", "/taste/quiz", FingerPrintIcon, {
+	page("tasteQuiz", "Rate titles", "/taste/quiz", FingerPrintIcon, {
 		sub: "Taste",
-		words: ["quiz", "rate titles", "start", "onboarding"],
+		words: ["quiz", "taste quiz", "start", "onboarding"],
 	}),
 	page(
 		"tasteFingerprint",

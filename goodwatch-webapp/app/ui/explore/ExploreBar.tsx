@@ -84,7 +84,7 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 						preventScrollReset
 						className="font-semibold text-cyan-300 hover:text-cyan-200"
 					>
-						← Taste quiz
+						← Rate titles
 					</Link>
 					<div className="flex items-center gap-3 sm:gap-4">
 						{previous ? (
@@ -218,7 +218,7 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 						End of this selection.
 						{filtered
 							? " Refine or reset filters to explore a different selection."
-							: " Go back to the Taste quiz to continue."}
+							: " Go back to Rate titles to continue."}
 					</p>
 				)}
 			</div>

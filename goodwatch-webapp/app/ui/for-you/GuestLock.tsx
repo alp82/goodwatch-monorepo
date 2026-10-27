@@ -1,7 +1,8 @@
 // Guests: the same page, locked. The heading and the print sit where a member's do, with the guest's own taste print
 // (or the example taste, labeled so) drawn without handles; beside it the one call to action. Below, twelve posters
 // picked for that taste sit in a static grid under one blur, a dark wash and a lock.
-// - Fewer than QUIZ_GOAL scores: "Take the quiz". QUIZ_GOAL or more (the quiz is done): "Sign up".
+// - Until the guest's taste is ready (MIN_LIKED liked titles, ~/domain/taste-rules): "Rate titles". Once it is:
+//   "Sign up".
 // - The guest's progress lives in this browser, so it is posted to /api/for-you/pool, again whenever it changes.
 //   Until the page has read it (the server's HTML can't know it), the call to action keeps its room but shows neither.
 // The blur sits on a container that never animates; nothing moves under it.
@@ -12,7 +13,7 @@ import type { ForYouGuest } from "~/domain/for-you-page/contract"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { useSignUpHref } from "~/ui/navigation/bits"
 import { Whorl } from "~/ui/profile/taste/Whorl"
-import { QUIZ_GOAL } from "~/ui/taste-quiz/quiz-flow"
+import { isReady, nextStep, nextStepWords, tally } from "~/ui/rating-flow/flow"
 import type { TasteInteraction } from "~/ui/taste/types"
 import {
 	snapshotGuestProgress,
@@ -54,8 +55,9 @@ export async function fetchGuest(
 	return (await response.json()) as ForYouGuest
 }
 
-const scoresIn = (interactions: TasteInteraction[]) =>
-	interactions.filter((i) => i.type === "score").length
+/** The guest's totals, from the scores in their browser. */
+const tallyOf = (interactions: TasteInteraction[]) =>
+	tally(interactions.map((i) => (i.type === "score" ? i.score : null)))
 
 export function GuestLock({ load = fetchGuest }: { load?: GuestLoader }) {
 	const { locale } = useLocale()
@@ -71,8 +73,8 @@ export function GuestLock({ load = fetchGuest }: { load?: GuestLoader }) {
 			return load({ interactions, country, services }, locale.language)
 		},
 	})
-	const ratings = preview.data?.guestRatings ?? scoresIn(interactions)
-	const done = ratings >= QUIZ_GOAL
+	const totals = tallyOf(interactions)
+	const done = isReady(totals)
 	const taste = preview.data?.taste ?? null
 	const example = !taste || taste.subject === "sample"
 	const posters = preview.data?.posters ?? []
@@ -115,7 +117,9 @@ export function GuestLock({ load = fetchGuest }: { load?: GuestLoader }) {
 					<p className="mt-1.5 max-w-xl text-[14px] leading-6 text-gray-400 lg:mt-3 lg:text-[15px]">
 						{done
 							? "Sign up free to see them and steer them by mood. Your ratings come with you."
-							: `Rate ${QUIZ_GOAL} titles you've seen, then pick a mood and drag your taste to steer.`}
+							: totals.rated
+								? `${nextStepWords(nextStep(totals, null))}. Then pick a mood and drag your taste to steer.`
+								: "Rate titles you've seen, then pick a mood and drag your taste to steer."}
 					</p>
 					<div className="mt-3 lg:mt-6">
 						<CallToAction done={read ? done : null} />
@@ -161,7 +165,7 @@ export function GuestLock({ load = fetchGuest }: { load?: GuestLoader }) {
 						<span
 							className={`text-[13px] font-semibold text-gray-200 ${read ? "" : "invisible"}`}
 						>
-							{done ? "Sign up to unlock" : "Take the quiz to unlock"}
+							{done ? "Sign up to unlock" : "Rate titles to unlock"}
 						</span>
 					</span>
 				</div>
@@ -182,7 +186,7 @@ function CallToAction({ done }: { done: boolean | null }) {
 				className={`${className} invisible`}
 				data-cta="pending"
 			>
-				Take the quiz
+				Rate titles
 			</span>
 		)
 	return done ? (
@@ -191,7 +195,7 @@ function CallToAction({ done }: { done: boolean | null }) {
 		</Link>
 	) : (
 		<Link to={QUIZ_PATH} className={className} data-cta="quiz">
-			Take the quiz
+			Rate titles
 		</Link>
 	)
 }

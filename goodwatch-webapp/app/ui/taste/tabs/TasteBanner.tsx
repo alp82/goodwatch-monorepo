@@ -1,16 +1,26 @@
-// The Taste banner: the way into the taste quiz, above every Taste tab. It grew out of the Sample taste band.
-//   guest, 0 ratings     Sample taste, Rate titles
-//   guest, 1-4 ratings   Sample taste with dots, Keep rating (the quiz resumes where they left off)
-//   guest, 5+ ratings    Your taste, Save my taste · free
-//   just saved           Saved to your account (after Continue with Google, `?saved=1`)
-//   new member           a slim Rate more band
-//   established member   no banner
+// The Taste banner: the way into the rating flow (Rate titles), above every Taste tab. It grew out of the Sample
+// taste band. Its rule is the rating flow's (~/domain/taste-rules): a taste is ready at MIN_LIKED liked titles.
+//   guest, nothing rated       Sample taste, Rate titles
+//   guest, taste not ready     Sample taste with dots toward MIN_LIKED liked, "3 more liked to your taste"
+//   guest, taste ready         Your taste, Save my taste · free
+//   just saved                 Saved to your account (after Continue with Google, `?saved=1`)
+//   member, taste not ready    "3 more liked to your taste", Rate titles
+//   new member                 a slim Rate titles band
+//   established member         no banner
 import { Link, useSearchParams } from "@remix-run/react"
-import { useScoresCount } from "~/hooks/useUserDataAccessors"
-import { GoogleMark } from "~/ui/taste-quiz/GoogleMark"
-import { FLOW_PATH } from "~/ui/rating-flow/flow"
+import { MIN_LIKED } from "~/domain/taste-rules"
+import { useUserData } from "~/routes/api.user-data"
+import { GoogleMark } from "~/ui/brand/GoogleMark"
+import {
+	FLOW_PATH,
+	type Tally,
+	isReady,
+	nextStep,
+	nextStepWords,
+	tally,
+	tasteBarWords,
+} from "~/ui/rating-flow/flow"
 import { RatingDots } from "~/ui/rating-flow/RatingDots"
-import { QUIZ_GOAL } from "~/ui/taste-quiz/quiz-flow"
 import { useContinueWithGoogle } from "~/utils/auth-client"
 import { useAuthHref } from "~/utils/auth-href"
 import { useGuestInteractions } from "~/utils/guest-progress"
@@ -27,12 +37,19 @@ export function TasteBanner({ member }: { member: boolean }) {
 	return member ? <MemberBanner /> : <GuestBanner />
 }
 
+/** "4 rated · 2 liked (6 or higher). 3 more liked to your taste.": where a taste that isn't ready stands. */
+const notReadyLine = (t: Tally) =>
+	`${tasteBarWords(t, null).line}. ${nextStepWords(nextStep(t, null))}.`
+
 function MemberBanner() {
 	const [params] = useSearchParams()
-	const rated = useScoresCount()
+	const { data } = useUserData()
+	const totals = tally(Object.values(data?.scores ?? {}).map((s) => s?.score))
+	const rated = totals.rated
 	if (params.get("saved") === "1")
 		return <YourTaste line="Saved to your account. Rate more to sharpen it." />
-	if (rated >= NEW_MEMBER_RATINGS) return null
+	// Nothing until the account's scores are known: an established member never sees a "not ready" flash.
+	if (!data || (rated >= NEW_MEMBER_RATINGS && isReady(totals))) return null
 	return (
 		<section
 			aria-label="Rate more"
@@ -40,11 +57,12 @@ function MemberBanner() {
 		>
 			<div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 md:px-8">
 				<p className="text-sm text-gray-300">
-					Your taste is from {rated} {rated === 1 ? "rating" : "ratings"}. A few
-					more and it gets sharper.
+					{isReady(totals)
+						? `Your taste is from ${rated} ${rated === 1 ? "rating" : "ratings"}. A few more and it gets sharper.`
+						: notReadyLine(totals)}
 				</p>
 				<Link to={FLOW_PATH} className={rateButton}>
-					Rate more →
+					Rate titles →
 				</Link>
 			</div>
 		</section>
@@ -53,16 +71,18 @@ function MemberBanner() {
 
 function GuestBanner() {
 	const authHref = useAuthHref()
-	const rated = useGuestInteractions().filter((i) => i.type === "score").length
+	const totals = tally(
+		useGuestInteractions().map((i) => (i.type === "score" ? i.score : null)),
+	)
 	const google = useContinueWithGoogle()
-	if (rated >= QUIZ_GOAL)
+	if (isReady(totals))
 		return (
 			<YourTaste
-				line={`From your ${rated} ratings on this device. Save it so it follows you.`}
+				line={`From your ${totals.rated} ratings on this device. Save it so it follows you.`}
 				save={() => google("/taste?saved=1")}
 			/>
 		)
-	const mid = rated > 0
+	const mid = totals.rated > 0
 	return (
 		<section
 			aria-label="Sample taste"
@@ -74,17 +94,17 @@ function GuestBanner() {
 						<span className="rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-black uppercase tracking-wide text-gray-950">
 							Sample taste
 						</span>
-						{mid && <RatingDots at={rated} of={QUIZ_GOAL} />}
+						{mid && <RatingDots at={totals.liked} of={MIN_LIKED} />}
 					</div>
 					<p className="mt-1.5 text-sm text-amber-50/90 md:text-base">
 						{mid
-							? `${rated} of ${QUIZ_GOAL} rated. ${QUIZ_GOAL - rated} more and this becomes your taste.`
-							: `This is someone else's taste. Rate ${QUIZ_GOAL} titles you've seen to see your own: one at a time, about a minute.`}
+							? notReadyLine(totals)
+							: "This is someone else's taste. Rate titles you've seen to see your own: one at a time, about a minute."}
 					</p>
 				</div>
 				<span className="flex flex-wrap items-center gap-x-4 gap-y-1">
 					<Link to={FLOW_PATH} className={rateButton}>
-						{mid ? "Keep rating" : "Rate titles"} →
+						Rate titles →
 					</Link>
 					<Link
 						rel="nofollow"
@@ -121,7 +141,7 @@ function YourTaste({ line, save }: { line: string; save?: () => void }) {
 						</button>
 					)}
 					<Link to={FLOW_PATH} className={rateLink}>
-						Rate more →
+						Rate titles →
 					</Link>
 				</span>
 			</div>
