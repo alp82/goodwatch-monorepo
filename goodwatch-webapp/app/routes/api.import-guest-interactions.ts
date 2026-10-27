@@ -29,7 +29,7 @@ import { getUserData } from "~/server/userData.server"
 const changeSchema = z
 	.object({
 		id: z.string().min(1),
-		kind: z.enum(["score", "plan", "not-interested", "country", "services"]),
+		kind: z.enum(["score", "plan", "skip", "not-interested", "country", "services"]),
 		tmdb_id: z.number().int().positive().optional(),
 		media_type: z.enum(["movie", "show"]).optional(),
 		value: z.string(),
@@ -37,7 +37,7 @@ const changeSchema = z
 	})
 	.superRefine((c, ctx) => {
 		const invalid =
-			(["score", "plan", "not-interested"].includes(c.kind) &&
+			(["score", "plan", "skip", "not-interested"].includes(c.kind) &&
 				(!c.tmdb_id || !c.media_type)) ||
 			(c.kind === "score" &&
 				(!/^(10|[1-9])$/.test(c.value) ||
@@ -237,7 +237,7 @@ async function persistChangeStored(userId: string, c: Change) {
 		)
 		return
 	}
-	const table = c.kind === "score" ? "user_score" : "user_wishlist"
+	const table = c.kind === "score" ? "user_score" : c.kind === "skip" ? "user_skipped" : "user_wishlist"
 	const read = () =>
 		query<{ score?: number }>(
 			`SELECT ${c.kind === "score" ? "score" : "tmdb_id"} FROM ${table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ?`,
@@ -281,7 +281,7 @@ async function persistChangeStored(userId: string, c: Change) {
 			conflictColumns: ["user_id", "tmdb_id", "media_type"],
 			ignoreUpdate: true,
 		})
-	await clearNotInterested(userId, id, c.media_type!)
+	if (c.kind !== "skip") await clearNotInterested(userId, id, c.media_type!)
 	await visible(
 		read,
 		(rows) =>

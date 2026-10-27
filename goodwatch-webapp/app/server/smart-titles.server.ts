@@ -140,14 +140,9 @@ async function _getSmartTitlesForGuest({
 export const getSmartTitlesForUser = async (
 	params: GetSmartTitlesForUserParams,
 ) => {
-	const titles = await cached<GetSmartTitlesForUserParams, SmartTitle[]>({
-		name: "smart-titles-user-recognition",
-		target: _getSmartTitlesForUser,
-		params,
-		ttlMinutes: 1,
-		staleMinutes: 0,
-		//ttlMinutes: 0,
-	})
+	// Read member marks on every request. A cached candidate list can replay answers after any score, mark,
+	// watch-state write or import, and resetting every count/locale/exclusion variant is unnecessary here.
+	const titles = await _getSmartTitlesForUser(params)
 	return excludeNotInterested(params.userId, titles)
 }
 
@@ -195,6 +190,10 @@ async function _getSmartTitlesForUser({
 				WHERE user_id = ? AND media_type = 'movie'
 			)
 			AND m.tmdb_id NOT IN (
+				SELECT tmdb_id FROM user_wishlist
+				WHERE user_id = ? AND media_type = 'movie'
+			)
+			AND m.tmdb_id NOT IN (
 				SELECT tmdb_id 
 				FROM user_skipped 
 				WHERE user_id = ? AND media_type = 'movie'
@@ -237,6 +236,10 @@ async function _getSmartTitlesForUser({
 				WHERE user_id = ? AND media_type = 'show'
 			)
 			AND s.tmdb_id NOT IN (
+				SELECT tmdb_id FROM user_wishlist
+				WHERE user_id = ? AND media_type = 'show'
+			)
+			AND s.tmdb_id NOT IN (
 				SELECT tmdb_id 
 				FROM user_skipped 
 				WHERE user_id = ? AND media_type = 'show'
@@ -253,8 +256,8 @@ async function _getSmartTitlesForUser({
 	`
 
 	// Build params arrays
-	const movieParams = [userId, userId, userId, ...excludeMovieIds, count]
-	const showParams = [userId, userId, userId, ...excludeShowIds, count]
+	const movieParams = [userId, userId, userId, userId, ...excludeMovieIds, count]
+	const showParams = [userId, userId, userId, userId, ...excludeShowIds, count]
 
 	// Get both movies and shows, then shuffle and mix them
 	const [movies, shows] = await Promise.all([

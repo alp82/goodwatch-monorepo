@@ -35,7 +35,11 @@ export const updateWishList = async ({
 	action,
 	addedAt,
 }: UpdateWishListParams): Promise<UpdateWishListResult> => {
-	if (!user_id || !tmdb_id) {
+	if (
+		!user_id || !Number.isSafeInteger(tmdb_id) || !tmdb_id || tmdb_id < 1 ||
+		(media_type !== "movie" && media_type !== "show") ||
+		(action !== "add" && action !== "remove")
+	) {
 		return {
 			status: "failed",
 		}
@@ -86,7 +90,7 @@ export const updateWishList = async ({
 	await resetOnboardingMediaCache({ userId: user_id, searchTerm: "" })
 
 	return {
-		status: (result.rowcount || 0) >= 1 ? "success" : "failed",
+		status: "success",
 		...(action === "remove" || result.rowcount ? { written: { value: action === "add", updatedAt: action === "add" ? writtenAt.toISOString() : null } } : {}),
 	}
 }

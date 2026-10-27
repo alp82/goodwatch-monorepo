@@ -28,7 +28,11 @@ export const updateSkipped = async ({
 	media_type,
 	action,
 }: UpdateSkippedParams): Promise<UpdateSkippedResult> => {
-	if (!user_id || !tmdb_id) {
+	if (
+		!user_id || !Number.isSafeInteger(tmdb_id) || !tmdb_id || tmdb_id < 1 ||
+		(media_type !== "movie" && media_type !== "show") ||
+		(action !== "add" && action !== "remove")
+	) {
 		return {
 			status: "failed",
 		}
@@ -75,6 +79,6 @@ export const updateSkipped = async ({
 	await resetOnboardingMediaCache({ userId: user_id, searchTerm: "" })
 
 	return {
-		status: (result.rowcount || 0) >= 1 ? "success" : "failed",
+		status: "success",
 	}
 }

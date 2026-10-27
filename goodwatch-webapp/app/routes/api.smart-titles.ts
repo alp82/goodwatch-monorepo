@@ -14,9 +14,22 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const userId = await getUserIdFromRequest({ request })
 	
 	// Parse query parameters
-	const count = Number.parseInt(url.searchParams.get('count') || '20', 10)
-	const excludeIdsParam = url.searchParams.get('excludeIds')
-	const excludeIds = excludeIdsParam ? JSON.parse(excludeIdsParam) as Array<{ tmdb_id: number; media_type: string }> : []
+	let input: { count?: unknown; excludeIds?: unknown }
+	try {
+		input = request.method === "POST"
+			? await request.json()
+			: { count: url.searchParams.get("count") ?? 20, excludeIds: JSON.parse(url.searchParams.get("excludeIds") || "[]") }
+	} catch {
+		throw new Response("Invalid smart titles request", { status: 400 })
+	}
+	const count = Number(input?.count ?? 20)
+	const items = input?.excludeIds ?? []
+	if (!Number.isInteger(count) || count < 1 || count > 300 || !Array.isArray(items) ||
+		items.some((item) => !item || !Number.isSafeInteger(item.tmdb_id) || item.tmdb_id < 1 ||
+			(item.media_type !== "movie" && item.media_type !== "show"))) {
+		throw new Response("Invalid smart titles request", { status: 400 })
+	}
+	const excludeIds = items as ExcludeItem[]
 	
 	// For authenticated users, fetch from DB
 	if (userId) {
@@ -78,7 +91,15 @@ export async function fetchSmartTitles({
 	}
 	
 	const url = mediaLanguageUrl(`/api/smart-titles?${params}`, language)
-	const response = await fetch(url)
+	// A long queue/history must not exceed proxy/browser request-target limits. Keep GET for small reads,
+	// and send the same read parameters in a POST body once the encoded URL approaches 2 KB.
+	const response = url.length <= 1800
+		? await fetch(url)
+		: await fetch(mediaLanguageUrl("/api/smart-titles", language), {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ count, excludeIds }),
+		})
 	
 	if (!response.ok) {
 		throw new Error('Failed to fetch smart titles')
@@ -106,3 +127,6 @@ export const useSmartTitles = ({ count, excludeIds = [], enabled = true }: Smart
 }
 
 export const loader = presentCatalogLoader(canonicalLoader, {})
+
+// POST is a read-only fallback for long exclusion lists.
+export const action = presentCatalogLoader(canonicalLoader, {})

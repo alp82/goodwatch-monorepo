@@ -25,16 +25,15 @@ import {
 	type ViewerContext,
 	getViewerContext,
 } from "~/server/viewer.server"
-import type { TasteInteraction } from "~/ui/taste/types"
 import { getUserIdFromRequest } from "~/utils/auth"
-import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
+import { type TitleKey, parseTitleKey } from "~/utils/title-key"
 import { readCachedPortrait, writeCachedPortrait } from "./cache.server"
 import { titleDisplays } from "./display.server"
 import { buildEveryone } from "./everyone.server"
 import { FAMILIES } from "./families.server"
 import { buildFingerprint } from "./fingerprint.server"
 import { type PortraitInput, readPerson, round1 } from "./person.server"
-import { SAMPLE_RATINGS, SAMPLE_WANT_TO_SEE } from "./sample-ratings"
+import { sampleContext, guestMarksKey } from "./sample-context.server"
 import { type OrderTitles, buildSides, franchiseOf } from "./sides.server"
 import {
 	GUEST_MIN_RATINGS,
@@ -194,9 +193,9 @@ async function guestPortrait(
 			return buildView(snapshot, portraitInput("guest", ctx, taste), tab)
 		})
 	}
-	// The sample taste is fixed; its suggestions also respect the guest's hidden titles.
+	// The sample signals are fixed; suggestions respect all of the guest's own marks.
 	return keep(
-		`sample:${snapshot.version}:${tab}:${where.join(":")}:${[...ctx.hidden].sort().join(",")}`,
+		`sample:${snapshot.version}:${tab}:${where.join(":")}:${guestMarksKey(ctx)}`,
 		SAMPLE_KEEP_MS,
 		async () => {
 			const sample = sampleContext(ctx)
@@ -204,50 +203,6 @@ async function guestPortrait(
 			return buildView(snapshot, portraitInput("sample", sample, taste), tab)
 		},
 	)
-}
-
-const keyOf = (id: string): TitleKey => {
-	const [mediaType, tmdbId] = id.split("-")
-	return titleKey(mediaType as "movie" | "show", Number(tmdbId))
-}
-
-/** The sample member, seen from where the guest watches. */
-function sampleContext(guest: ViewerContext): ViewerContext {
-	const now = Date.now()
-	const interactions: TasteInteraction[] = [
-		...Object.entries(SAMPLE_RATINGS).map(([id, score]) => {
-			const { mediaType, tmdbId } = parseTitleKey(keyOf(id))
-			return {
-				tmdb_id: tmdbId,
-				media_type: mediaType,
-				type: "score" as const,
-				score: score as TasteInteraction["score"],
-				timestamp: now,
-			}
-		}),
-		...SAMPLE_WANT_TO_SEE.map((id) => {
-			const { mediaType, tmdbId } = parseTitleKey(keyOf(id))
-			return {
-				tmdb_id: tmdbId,
-				media_type: mediaType,
-				type: "plan" as const,
-				timestamp: now,
-			}
-		}),
-	]
-	const scores = new Map(
-		Object.entries(SAMPLE_RATINGS).map(([id, score]) => [keyOf(id), score]),
-	)
-	return {
-		...guest,
-		viewer: { kind: "guest", progress: { interactions } },
-		seen: new Set(scores.keys()),
-		ratings: scores,
-		wishlist: new Map(
-			SAMPLE_WANT_TO_SEE.map((id) => [keyOf(id), new Date(now)]),
-		),
-		skipped: new Set(),
-	}
 }
 
 // ---------- building a view ----------

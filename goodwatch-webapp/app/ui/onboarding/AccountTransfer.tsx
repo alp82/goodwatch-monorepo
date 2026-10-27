@@ -107,8 +107,7 @@ export function AccountTransfer() {
 		const changes: TransferChange[] = [];
 		const account = review.data.data;
 		for (const i of pending.snapshot.interactions) {
-			// Skips are quiz navigation, not a preference. They stay in this browser only.
-			if (i.type === "skip") continue;
+			// Haven't seen it transfers too, so the account does not ask these titles again.
 			const key = `${i.media_type}-${i.tmdb_id}` as const;
 			const score = account.scores[key]?.score;
 			const before = i.type === "score" ? score : null;
@@ -126,7 +125,9 @@ export function AccountTransfer() {
 				(i.type === "score" && before === i.score) ||
 				// A title the account already rated, watched, or listed never regresses to plan-to-watch.
 				(i.type === "plan" && known !== null) ||
-				(i.type === "not-interested" && !!account.notInterested?.[key])
+				(i.type === "not-interested" && !!account.notInterested?.[key]) ||
+				// A title the account already rated or listed keeps that mark; a skip adds nothing.
+				(i.type === "skip" && (!!account.skipped[key] || known !== null))
 			)
 				continue;
 			changes.push({
@@ -140,7 +141,7 @@ export function AccountTransfer() {
 					titles.data[key] ||
 					`${i.media_type === "movie" ? "Movie" : "Show"} ${i.tmdb_id}`,
 				accountLabel: account.notInterested?.[key] ? "Not interested" : known ?? "Not added",
-				browserLabel: i.type === "score" ? `${i.score}/10` : i.type === "not-interested" ? "Not interested (clears Wishlist)" : "Add to Wishlist",
+				browserLabel: i.type === "score" ? `${i.score}/10` : i.type === "not-interested" ? "Not interested (clears Wishlist)" : i.type === "skip" ? "Haven't seen it" : "Add to Wishlist",
 				fresh: !before,
 			});
 		}
@@ -201,7 +202,7 @@ export function AccountTransfer() {
 		try {
 			const confirmed =
 				pending.confirmed ??
-				pending.changes!.filter((c) => pending.selected!.includes(c.id));
+				pending.changes!.filter((c) => c.kind === "skip" || pending.selected!.includes(c.id));
 			const transfer = { ...pending, confirmed };
 			saveTransfer(transfer);
 			const response = await fetch("/api/import-guest-interactions", {
@@ -303,6 +304,9 @@ export function AccountTransfer() {
 	const changes = pending.confirmed || pending.changes || [];
 	const selected =
 		pending.confirmed?.map((change) => change.id) || pending.selected || [];
+	// Skips go along on their own, so the button counts only the changes the person chose.
+	const skipIds = new Set(changes.filter((c) => c.kind === "skip").map((c) => c.id));
+	const chosen = selected.filter((id) => !skipIds.has(id)).length;
 	const changeSelection = (ids: string[]) => {
 		try {
 			saveTransfer({ ...pending, selected: ids });
@@ -391,13 +395,18 @@ export function AccountTransfer() {
 									Your account already has these interactions and preferences.
 								</p>
 							)}
+							{changes.some((c) => c.kind === "skip") && (
+								<p className="mt-3 text-sm text-slate-300">
+									{changes.filter((c) => c.kind === "skip").length} titles you haven't seen will transfer automatically.
+								</p>
+							)}
 							{["New entries", "Score changes", "Preferences"].map((group) => {
-								const entries = changes.filter((c) =>
+								const entries = changes.filter((c) => c.kind !== "skip" && (
 									c.kind === "country" || c.kind === "services"
 										? group === "Preferences"
 										: c.fresh
 											? group === "New entries"
-											: group === "Score changes",
+											: group === "Score changes"),
 								);
 								return (
 									entries.length > 0 && (
@@ -508,7 +517,7 @@ export function AccountTransfer() {
 										: locked
 											? "Retry transfer"
 											: changes.length
-												? `Transfer ${selected.length} selected ${selected.length === 1 ? "change" : "changes"}`
+												? `Transfer ${chosen} selected ${chosen === 1 ? "change" : "changes"}`
 												: "Finish and continue"}
 								</button>
 								{!locked && (
