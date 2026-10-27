@@ -1,6 +1,11 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import { EXCLUDE_LIMIT, accountAnsweredKeys, excludeIdsFor } from "./answered.ts"
+import {
+	EXCLUDE_LIMIT,
+	accountAnsweredKeys,
+	excludeIdsFor,
+	storedAnswerIs,
+} from "./answered.ts"
 
 const at = { updatedAt: new Date(0) }
 
@@ -45,5 +50,30 @@ describe("the titles a request for more leaves out", () => {
 
 	it("skips a key it can't read", () => {
 		assert.deepEqual(excludeIdsFor(["nonsense", "movie-603"]), [{ media_type: "movie", tmdb_id: 603 }])
+	})
+})
+
+describe("storedAnswerIs", () => {
+	const at = { updatedAt: new Date(0) }
+	const data = {
+		scores: { "movie-1": { score: 8, review: null, updatedAt: new Date(0) } },
+		skipped: { "movie-2": at, "movie-3": at },
+		wishlist: { "movie-3": { ...at, createdAt: new Date(0) }, "movie-4": { ...at, createdAt: new Date(0) } },
+		notInterested: { "movie-5": at },
+	} as never
+	it("confirms only the answer the account holds", () => {
+		assert.equal(storedAnswerIs(data, "movie-1", "score", 8), true)
+		assert.equal(storedAnswerIs(data, "movie-1", "score", 7), false)
+		assert.equal(storedAnswerIs(data, "movie-2", "skip"), true)
+		assert.equal(storedAnswerIs(data, "movie-3", "plan"), true)
+		assert.equal(storedAnswerIs(data, "movie-3", "skip"), false)
+		assert.equal(storedAnswerIs(data, "movie-5", "not-interested"), true)
+		assert.equal(storedAnswerIs(undefined, "movie-1", "score", 8), false)
+	})
+	it("a half-cleared Want to See is not Want to See", () => {
+		// The skip was removed and the Wishlist removal failed: only the Wishlist is left.
+		assert.equal(storedAnswerIs(data, "movie-4", "plan"), false)
+		// The Wishlist was removed and the skip removal failed: Haven't seen it alone.
+		assert.equal(storedAnswerIs(data, "movie-2", "plan"), false)
 	})
 })

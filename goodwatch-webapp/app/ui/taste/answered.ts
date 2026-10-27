@@ -50,3 +50,32 @@ export function excludeIdsFor(
 		return media_type && Number.isFinite(tmdb_id) ? [{ media_type, tmdb_id }] : []
 	})
 }
+
+/**
+ * Whether a member's account holds exactly this answer for the title with `key`, as the rating flow gives it: the
+ * score, Haven't seen it alone, Haven't seen it with the Wishlist (Want to See), or Not interested. The flow saves the
+ * same answer again only when this says the account already holds it; a half-done clear (one of Want to See's two
+ * marks removed) doesn't.
+ */
+export function storedAnswerIs(
+	data:
+		| Pick<UserData, "scores" | "skipped" | "wishlist" | "notInterested">
+		| null
+		| undefined,
+	key: string,
+	type: "score" | "skip" | "plan" | "not-interested",
+	score?: number,
+): boolean {
+	if (!data) return false
+	const k = key as keyof UserData["scores"]
+	switch (type) {
+		case "score":
+			return score != null && data.scores?.[k]?.score === score
+		case "plan":
+			return !!data.skipped?.[k] && !!data.wishlist?.[k]
+		case "skip":
+			return !!data.skipped?.[k] && !data.wishlist?.[k]
+		case "not-interested":
+			return !!data.notInterested?.[k]
+	}
+}

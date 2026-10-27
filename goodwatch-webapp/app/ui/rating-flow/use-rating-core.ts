@@ -22,7 +22,11 @@ import {
 import { ACK_FAILED, type AckAnswer } from "~/ui/scoring/score-ack"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { ackView, useScoreAck } from "~/ui/scoring/use-score-ack"
-import { accountAnsweredKeys, excludeIdsFor } from "~/ui/taste/answered"
+import {
+	accountAnsweredKeys,
+	excludeIdsFor,
+	storedAnswerIs,
+} from "~/ui/taste/answered"
 import { useTasteScoring } from "~/ui/taste/hooks/useTasteScoring"
 import { useTitleQueue } from "~/ui/taste/hooks/useTitleQueue"
 import { useKeptCards } from "~/ui/title-actions/hide-feedback"
@@ -42,6 +46,7 @@ import {
 	ratingFlow,
 	tally as tallyOf,
 } from "./flow"
+import { TitleWrites, answerPlan } from "./title-writes"
 import { usePicks } from "./use-picks"
 import { WORDS } from "./words"
 
@@ -114,6 +119,10 @@ export function useRatingCore({
 	} = useTasteScoring({ isAuthenticated: member })
 	// A member's account, or a guest's browser progress in the same shape.
 	const { data: userData } = useUserData()
+	// The account as of the latest draw, read when a save starts (the same answer again saves nothing only when the
+	// account is confirmed to hold it).
+	const latestUserData = useRef(userData)
+	latestUserData.current = userData
 	const hydrated = useHydrated()
 	const { locale } = useLocale()
 
@@ -192,11 +201,18 @@ export function useRatingCore({
 	// An answer lights at once, is saved, and holds for a moment before the next title. Presses while it is on its
 	// way or held change nothing; a failed save keeps the title and offers the next one.
 	const ack = useScoreAck()
+	// One write at a time per title (title-writes.ts): giving, changing and clearing an answer. Its lock ends when the
+	// write settles, not when the acknowledgement is cancelled, so a late clear never deletes a newer answer and a late
+	// score never brings back a cleared one. A title with a write on its way is busy: presses on it change nothing.
+	const [, redraw] = useReducer((n: number) => n + 1, 0)
+	const writes = useRef<TitleWrites>()
+	if (!writes.current) writes.current = new TitleWrites(redraw)
+	const titleWrites = writes.current
 	// A title answered before, opened again from the top row to change or clear its answer. Answering it goes back to
 	// the queue, which kept its place.
 	const [reopened, setReopened] = useState<ScoringMedia | null>(null)
-	// Clearing the answer of the title opened again: on its way, or failed (the page says so; the answer stays).
-	const [clearing, setClearing] = useState<"idle" | "saving" | "failed">("idle")
+	// The title whose clear failed (the page says so; the answer stays), until it is opened again or closed.
+	const [clearFailed, setClearFailed] = useState<string | null>(null)
 	const title = reopened ?? queue.current
 	const advance = useCallback(() => {
 		if (reopened) setReopened(null)
@@ -235,25 +251,33 @@ export function useRatingCore({
 	 */
 	const give = useCallback(
 		(given: AckAnswer, save: (media: ScoringMedia) => Promise<void>) => {
-			if (!title || ack.busy) return
+			if (!title) return
+			const key = keyOf(title)
+			if (ack.busy || titleWrites.busy(key)) return
 			const before = reopened ? reopenedAnswer : null
 			const mark = markOf(given)
+			const score = given.kind === "score" ? given.score : undefined
+			setClearFailed(null)
 			ack.answer(
-				keyOf(title),
+				key,
 				given,
-				async () => {
-					if (before) {
-						const score = given.kind === "score" ? given.score : undefined
-						if (before.type === mark && before.score === score) return
-						if (member && !(before.type === "score" && mark === "score"))
+				() =>
+					titleWrites.run(key, async () => {
+						const plan = answerPlan({
+							before,
+							given: { type: mark, score },
+							member,
+							stored: storedAnswerIs(latestUserData.current, key, mark, score),
+						})
+						if (plan === "nothing") return
+						if (plan === "clear-then-save" && before)
 							await clearAnswer(title, before.type)
-					}
-					await save(title)
-				},
+						await save(title)
+					}) ?? Promise.reject(new Error("A write for this title is on its way")),
 				advance,
 			)
 		},
-		[title, ack, reopened, reopenedAnswer, member, clearAnswer, advance],
+		[title, ack, titleWrites, reopened, reopenedAnswer, member, clearAnswer, advance],
 	)
 
 	// A guest at the limit: scores wait for sign-up. The page shows its locked panel instead of the score control
@@ -302,8 +326,9 @@ export function useRatingCore({
 		(key: string) => {
 			const t = met.current.get(key)
 			if (!t) return
+			// Ends the acknowledgement only: a write on its way keeps the title busy until it settles.
 			ack.cancel()
-			setClearing("idle")
+			setClearFailed(null)
 			setReopened(t)
 		},
 		[ack],
@@ -311,20 +336,24 @@ export function useRatingCore({
 	/** Back to the new titles without answering the one opened again. */
 	const closeReopened = useCallback(() => {
 		ack.cancel()
-		setClearing("idle")
+		setClearFailed(null)
 		setReopened(null)
 	}, [ack])
 
 	/** Clears the answer of the title opened again: it stays on show, unanswered, to be answered or left. */
 	const clear = useCallback(() => {
-		if (!reopened || !reopenedAnswer || clearing === "saving" || ack.busy)
-			return
-		setClearing("saving")
-		clearAnswer(reopened, reopenedAnswer.type).then(
-			() => setClearing("idle"),
-			() => setClearing("failed"),
+		if (!reopened || !reopenedAnswer || ack.busy) return
+		const key = keyOf(reopened)
+		const clearing = titleWrites.run(key, () =>
+			clearAnswer(reopened, reopenedAnswer.type),
 		)
-	}, [reopened, reopenedAnswer, clearing, ack.busy, clearAnswer])
+		if (!clearing) return
+		setClearFailed(null)
+		clearing.then(
+			() => {},
+			() => setClearFailed(key),
+		)
+	}, [reopened, reopenedAnswer, ack.busy, titleWrites, clearAnswer])
 
 	const shown = ackView(ack.state, title ? keyOf(title) : null)
 	const given =
@@ -333,8 +362,8 @@ export function useRatingCore({
 			: null
 	const answered = {
 		...shown,
-		/** Whether an answer is on its way or held: the marks wait. */
-		busy: ack.busy,
+		/** Whether an answer is on its way or held, or a write for the title on show is: the marks wait. */
+		busy: ack.busy || titleWrites.busy(title ? keyOf(title) : null),
 		/** What was given, in full, or that it could not be saved. */
 		line: given ? answerLine(given, shown.failed, shown.line) : null,
 		/** What was given, in a few words; null after a failed save (`line` says so). */
@@ -373,8 +402,9 @@ export function useRatingCore({
 			? {
 					key: keyOf(reopened),
 					answer: reopenedAnswer,
-					clearing: clearing === "saving",
-					clearFailed: clearing === "failed",
+					/** A write for it is on its way (a clear, or an answer given before it was opened again). */
+					clearing: titleWrites.busy(keyOf(reopened)),
+					clearFailed: clearFailed === keyOf(reopened),
 				}
 			: null,
 		clear,
