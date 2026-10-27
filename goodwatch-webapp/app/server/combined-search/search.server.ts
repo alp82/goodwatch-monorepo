@@ -188,8 +188,10 @@ function withPaletteTitles(tmdb: Title[], palette: Title[]): Title[] {
 }
 
 /** The title with the catalog's poster when the lookup had none (the palette's titles come without one). */
-const withPoster = (t: Title, m: Metadata | undefined): Title =>
-	t.poster || !m?.poster_path ? t : { ...t, poster: m.poster_path };
+const withPoster = (t: Title, m: Metadata | undefined): Title => ({
+	...t,
+	poster: t.poster?.trim() || m?.poster_path?.trim() || null,
+});
 
 async function lookupTitles(
 	q: string,
@@ -386,8 +388,8 @@ async function titleMatches(
 	);
 	for (const m of titleMeta) meta.set(`${m.media_type}:${m.tmdb_id}`, m);
 	const allowedTitles = titleRows
-		.filter((t) => eligible(meta.get(titleKey(t)), policy, false))
-		.map((t) => withPoster(t, meta.get(titleKey(t))));
+		.map((t) => withPoster(t, meta.get(titleKey(t))))
+		.filter((t) => eligible(meta.get(titleKey(t)), policy, false, t.poster));
 	return { title, meta, allowedTitles };
 }
 
@@ -553,8 +555,10 @@ async function rankedList(
 		const found = lookup.get(key);
 		const m = meta.get(key);
 		const shown = display.get(key);
+		const poster =
+			found?.poster?.trim() || shown?.poster_path?.trim() || m?.poster_path?.trim() || null;
 		// Same checks as today's list: eligibility from the catalog, and one row per IMDb title.
-		if (!eligible(m, policy, !found)) continue;
+		if (!eligible(m, policy, !found, poster)) continue;
 		if (!found && !shown && at < HEAD_LENGTH) continue;
 		const identity = m?.imdb_id?.trim() ? `imdb:${m.imdb_id.trim()}` : key;
 		if (identities.has(identity)) continue;
@@ -582,7 +586,7 @@ async function rankedList(
 				blended.year ||
 				found?.year ||
 				(shown?.release_year ? String(shown.release_year) : ""),
-			poster: found?.poster ?? shown?.poster_path ?? null,
+			poster,
 			adult: found?.adult,
 			popularity: found?.popularity ?? 0,
 			...(shown ? { discovery: { ...shown, rank: rows.length + 1 } } : {}),
@@ -1093,8 +1097,8 @@ export async function combinedSearch(
 				metadata.map((m) => [`${m.media_type}:${m.tmdb_id}`, m]),
 			);
 			const allowedTitles = titleRows
-				.filter((t) => eligible(meta.get(titleKey(t)), policy, false))
-				.map((t) => withPoster(t, meta.get(titleKey(t))));
+				.map((t) => withPoster(t, meta.get(titleKey(t))))
+				.filter((t) => eligible(meta.get(titleKey(t)), policy, false, t.poster));
 			const description = results.filter((r) =>
 				eligible(meta.get(`${r.media_type}:${r.tmdb_id}`), policy, true),
 			);
@@ -1104,7 +1108,10 @@ export async function combinedSearch(
 				{ results: description },
 				q,
 				"balanced",
-			).filter((r) => {
+			).map((r) => ({
+				...r,
+				poster: r.poster?.trim() || meta.get(r.key)?.poster_path?.trim() || null,
+			})).filter((r) => {
 				const m = meta.get(r.key),
 					identity = m?.imdb_id?.trim() ? `imdb:${m.imdb_id.trim()}` : r.key;
 				if (identities.has(identity)) return false;

@@ -149,19 +149,20 @@ export async function metadataFor(
 }
 /**
  * Whether the search may show the title. A discovery row, one the ranking found, must be a presentable title
- * (CONTEXT.md) with enough votes; a lesser-known search lifts the votes only. A title the person typed is shown
- * without either.
+ * (CONTEXT.md) with enough votes; a lesser-known search lifts the votes only. Typed titles need no score or votes,
+ * but every result needs a poster. The caller may supply its resolved display poster for titles not yet in Crate.
  */
 export function eligible(
 	metadata: Metadata | undefined,
 	policy: Eligibility,
 	discovery: boolean,
+	poster: string | null | undefined = metadata?.poster_path,
 ) {
 	return (
+		!!poster?.trim() &&
 		(policy.includeAdult || metadata?.adult !== true) &&
 		(!discovery ||
-			(!!metadata?.poster_path &&
-				metadata.goodwatch_overall_score_normalized_percent != null &&
+			(metadata?.goodwatch_overall_score_normalized_percent != null &&
 				(policy.lesserKnown ||
 					(metadata.goodwatch_overall_score_voting_count ?? 0) >=
 						ELIGIBLE_VOTES)))

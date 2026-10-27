@@ -3750,7 +3750,7 @@ test("an exact original name is shown before the ranking with its native name", 
 })
 
 // What this shows: titleMatches asks the real allowsTitle before it reads the catalog, asks `eligible` for each row
-// it read as a typed title (discovery false, the form that ignores votes and posters in catalog.server.ts), and the
+// it read as a typed title (discovery false, the form that ignores votes and scores in catalog.server.ts), and the
 // early batch keeps one row per IMDb title. What it does not show: catalog.server.ts's own `eligible`, which the stub
 // replaces with the gate set here. The stubbed catalog rows have no poster, no score and no votes throughout.
 test("the early batch holds only titles the filters allow and the catalog gate accepts, one row per IMDb title", async () => {
