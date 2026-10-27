@@ -1,8 +1,9 @@
 // The poster card, on every surface that shows titles as posters (Discover, rows, person credits, franchises, Watch
 // next, My movies tiers, and every scored poster on a profile). The poster links to the title page; over it sit the
 // score pill (top right: the GoodWatch score, the viewer's score, one state icon), the age badge (top left, while an
-// age limit is on), the logos of the viewer's own services (bottom left) and, on another member's pages, that
-// member's score as a filled square (`ownerScore`).
+// age limit is on), the title and year on a dark band at the foot with the logos of the viewer's own services above
+// them (ui/poster-card/TitleBand.tsx) and, on another member's pages, that member's score as a filled square
+// (`ownerScore`).
 //
 // What shows depends on the card's own width (`@container/card`, so the server's HTML is already right), and no part
 // covers more than ~40% of it:
@@ -12,7 +13,7 @@
 // | 6rem-7.5rem      | yours, else GoodWatch         | top right, instead of it  | 1     | score row as a number   |
 // | 4.5rem-6rem      | bare number                   | top right, instead of it  | 0     | no score row            |
 // | under 4.5rem     | bare number                   | top right, instead of it  | 0     | none: a tap opens it    |
-// The age badge sits top left, under 4.5rem bottom left (beside the score it wouldn't fit).
+// The age badge sits top left, under 4.5rem in the band above the title (beside the score it wouldn't fit).
 // The pill's rules are in ui/poster-card/ScorePill.tsx.
 //
 // The title actions (ui/poster-card/CardActions.tsx) load as their own chunk at the first interaction with the page
@@ -48,6 +49,7 @@ import type {
 import { HiddenCover } from "~/ui/poster-card/HiddenCover"
 import { OwnerScore } from "~/ui/poster-card/OwnerScore"
 import { TitleScorePill } from "~/ui/poster-card/ScorePill"
+import { TitleBand } from "~/ui/poster-card/TitleBand"
 import { FOCUS } from "~/ui/poster-card/look"
 import { setRevealed, useRevealed } from "~/ui/poster-card/reveal"
 import { type ServiceOffer, YourServiceLogos } from "~/ui/poster-card/services"
@@ -267,6 +269,29 @@ export function MovieTvCard({
 					data-card-badges=""
 					className={`pointer-events-none absolute inset-0 ${skipOffscreen ? "[content-visibility:auto]" : ""}`}
 				>
+					<TitleBand
+						title={
+							<MediaText
+								value={presentedText(details, "title", details.title)}
+							/>
+						}
+						year={details.release_year}
+						top={
+							<>
+								{rating && (
+									<RatingMark
+										rating={rating}
+										className="mb-1 @min-[4.5rem]/card:hidden!"
+									/>
+								)}
+								<YourServiceLogos
+									offers={offers}
+									newOn={newOn}
+									className={`mb-1 transition-opacity @min-[11rem]/card:mb-1.5 ${actions ? "can-hover:group-hover/card:opacity-0 can-hover:group-focus-within/card:opacity-0" : ""}`}
+								/>
+							</>
+						}
+					/>
 					<div className="absolute right-1 top-1 z-[25] flex flex-col items-end gap-1 @min-[11rem]/card:right-2 @min-[11rem]/card:top-2">
 						<TitleScorePill
 							mediaType={mediaType}
@@ -291,10 +316,14 @@ export function MovieTvCard({
 						)}
 					</div>
 					{(rating || ownerScore != null) && (
-						// Under 4.5rem the badge and the score don't fit side by side: the badge goes to the foot, where no logos
-						// show at that width.
-						<div className="absolute bottom-1 left-1 flex flex-col items-start gap-1 @min-[4.5rem]/card:top-1 @min-[4.5rem]/card:bottom-auto @min-[11rem]/card:left-2 @min-[11rem]/card:top-2">
-							{rating && <RatingMark rating={rating} />}
+						// Under 4.5rem the badge and the score don't fit side by side: the badge moves into the band.
+						<div className="absolute top-1 left-1 flex flex-col items-start gap-1 @min-[11rem]/card:top-2 @min-[11rem]/card:left-2">
+							{rating && (
+								<RatingMark
+									rating={rating}
+									className="hidden! @min-[4.5rem]/card:inline-flex!"
+								/>
+							)}
 							{ownerScore != null && (
 								<OwnerScore
 									score={ownerScore}
@@ -305,11 +334,6 @@ export function MovieTvCard({
 							)}
 						</div>
 					)}
-					<YourServiceLogos
-						offers={offers}
-						newOn={newOn}
-						className={`absolute bottom-1.5 left-1.5 transition-opacity @min-[11rem]/card:bottom-2 @min-[11rem]/card:left-2 ${actions ? "can-hover:group-hover/card:opacity-0 can-hover:group-focus-within/card:opacity-0" : ""}`}
-					/>
 				</div>
 			)}
 			{hidden && (

@@ -99,8 +99,10 @@ test("nothing in the section's HTML hides a link", () => {
 	for (const html of [rendered.full, rendered.empty]) {
 		// The two arrows and the lip's chevron are decoration and hold no link. A poster card's link name and its
 		// pill's words are read out, not drawn, as on every poster grid; the card's link itself is visible. The pill's
-		// logo shows on wider cards only, and the card clips the poster to its round corners.
+		// logo shows on wider cards only, and the card clips the poster to its round corners. The title band repeats the
+		// link's name for the eye and holds no link.
 		const withoutDecoration = html
+			.replace(/<div aria-hidden="true" data-title-band=""/g, "<div")
 			.replace(/<(span|i) aria-hidden="true">[^<]*<\/\1>/g, "")
 			.replace(
 				/<span class="sr-only">(<span lang="[^"]+">[^<]*<\/span>)?[^<]*<\/span>/g,

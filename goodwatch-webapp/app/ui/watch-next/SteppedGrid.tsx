@@ -164,11 +164,11 @@ function TierRow({
 								skipWant
 								newOn={newOn?.serviceOf(title.tmdb_id)}
 							/>
-							{/* A small poster has no room for logos: the service it just arrived on gets its sticker. */}
+							{/* A small poster has no room for logos: the service it just arrived on gets its sticker, top left (the title band fills the foot). */}
 							{!big &&
 								newOn?.sticker(
 									title.tmdb_id,
-									"pointer-events-none absolute bottom-1 left-1 z-10",
+									"pointer-events-none absolute top-1 left-1 z-10",
 								)}
 							{tier.size === "xl" && (
 								<div className="mt-1 truncate px-1 text-xs text-gray-400">

@@ -249,9 +249,6 @@ export function PosterRow({
 							skipOffscreen
 							newOn={title.service}
 						/>
-						<span className="mt-1 block truncate text-xs text-gray-300">
-							{title.title}
-						</span>
 					</li>
 				)
 			})}

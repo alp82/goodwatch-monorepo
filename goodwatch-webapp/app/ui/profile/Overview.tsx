@@ -98,10 +98,6 @@ export function Overview({
 									owner={posterOwner(shell)}
 									sizes={FAVORITE_SIZES}
 								/>
-								<p className="mt-2 truncate text-xs font-semibold text-gray-200 sm:text-sm">
-									{title.title}
-								</p>
-								<p className="text-xs text-gray-500">{title.year}</p>
 							</li>
 						))}
 					</ol>

@@ -486,17 +486,9 @@ export function Eras() {
 									className={i >= 8 ? "max-sm:hidden" : ""}
 								>
 									{t ? (
-										<>
-											<TastePoster title={t} sizes={DECADE_SIZES} />
-											<span className="mt-1 block truncate text-[11px] text-gray-500">
-												{t.year}
-											</span>
-										</>
+										<TastePoster title={t} sizes={DECADE_SIZES} />
 									) : (
-										<>
-											<span className="block aspect-[2/3] rounded-md bg-white/[0.03]" />
-											<span className="mt-1 block text-[11px]">&nbsp;</span>
-										</>
+										<span className="block aspect-[2/3] rounded-md bg-white/[0.03]" />
 									)}
 								</li>
 							)
