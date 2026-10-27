@@ -10,7 +10,8 @@ Use the [new plain-stop rehearsal](crate-6-upgrade/20261027-plain-rehearsal/READ
 [43-release compatibility audit](../research/crate-6-upgrade-compatibility.md), and
 [archived production preflight](crate-6-upgrade/20261026-preflight/README.md).
 Today's [Q50 restart](auth/cratedb-production/20261026-operation-contexts/q50-execution.md) returned GREEN
-in about3 min, but a discover200 taking4.376s triggered its abort. The watcher rule remains in force tonight.
+in about 3 minutes, but one discover200 taking4.376s triggered its old abort rule. **Q60 supersedes that
+single-event rule tonight**; see the watcher section below.
 Historical GREEN or a completed restart does not establish current allocation/heap/backup/lock health.
 
 ## Path, images and node order
@@ -41,7 +42,7 @@ remain. Highest-version active replicas are preferred for promotion, so an upgra
 with an existing older replica. An unexpected loss of that older copy may leave YELLOW until it is
 upgraded. Never remove copies to work around this. See [tagged source and promotion rules](../research/crate-q53-plain-rolling-source-check.md#why-preserving-existing-copies-matters-with-plain-stops).
 
-## Mixed 6.0/6.1 BLOB qualification — explicit approval required
+## Mixed 6.0/6.1 BLOB qualification — approved cross-check
 
 The145-table lab exposed behavior the earlier drain rehearsal missed: with6.0.8 and6.1.6 mixed,
 newer coordinators omit remote older-node BLOB rows from `sys.shards`, and `SELECT digest FROM
@@ -50,12 +51,12 @@ STARTED `sys.allocations`; collecting each node's own shard rows directly gives 
 including6BLOBcopies. Authenticated BLOB HTTP GET/HEAD and SHA1 content work through all 3nodes.
 [Source and mechanism](../research/crate-q53-plain-rolling-source-check.md).
 
-**Do not waive an unexplained missing copy.** Only for this qualified6.0/6.1 mixture, the proposed gate
+**Do not waive an unexplained missing copy.** Only for this qualified6.0/6.1 mixture, the approved gate
 requires full STARTED allocation counts/identities on all coordinators plus the union of directown-node
 `sys.shards` rows, every copySTARTED/STARTED and correctBLOB HTTP/SHA1. Non-BLOBrows must still agree;
 no missing allocation, failedHTTP, unexpectedversion or anyother tableerror is covered. Afterhomogeneous
-6.1 require full BLOB SQL/inventoryagreement again. Owner must approve this bounded visibility/SQL exception
-or the 6.1hop is NO-GO. It is not permission to ignore health or incomplete physical copies.
+6.1 require full BLOB SQL/inventory agreement again. **The owner approved this bounded cross-check and
+its documented holds.** No unexplained failure or incomplete physical copy is waived.
 
 Hold `f/search/build_indexes` (including itscleanup) through the campaign: itsline444 executes that
 BLOB SQL. Webapp/search index download uses HTTP (`search-index-build.server.ts:139`). Hold schema and
@@ -66,31 +67,39 @@ index publication jobs as approved; catalog/member reads/writes retain the norma
 Propose **23:00–04:00 UTC** (00:00–05:00 CET), recovery owner available until 06:00 UTC. Initial gates/watcher
 22:45–23:00 only after explicit go. Start backup protection/preparation 23:00; first SIGTERM only after it
 and fresh gates pass, likely 23:15–23:30. No new hop after 03:00, no SIGTERM after 03:30; hard stop for new
-maintenance 04:00. These end/cutoff times and shorter between-node soak require owner approval.
+maintenance 04:00. These proposed end/cutoff times still need confirmation. Q59 supersedes the shorter
+between-node heap assumption; do not compress its ten-minute history to fit the proposed slot.
 
 | Work | Production allowance |
 | --- | --- |
 | Initial 10 min gates/watcher, image pulls, protected SQL snapshot + BLOB/config copy | 20–30 min after go; allow longer if backup not settled |
 | Each node: preparation/readbacks and replacement | 1–2 min |
 | Each node: stop → rejoin → original replication GREEN | 3–5 min, based on today's ~3 min;6.x upgrades may be slower |
-| Each node: all-coordinator stable GREEN/policy/client/heap checks | 3 min minimum, samples every 30s |
+| Before every node: all-coordinator heap history, GREEN/policy/client checks | **Heap <80% for ten full minutes on every node**, sampled every 30s; a new JVM needs its own history |
 | Each complete hop: version/access/BLOB/backup canaries | 5 min additional |
 | First snapshot into the new 6.x repository | **15–30 min extra** for the first full write; later snapshots are incremental |
 | Final waits/restart/policy/cron restoration and observation | 25–40 min including Q43 final rebalance observation; hand over if the hard stop prevents it |
 
-Fifteen nodes at 7–10 min plus baseline/hop/final work and the first full 6.x snapshot give **roughly 3–4½ hours**; book 5 hours, not the old drain-based
-20–24h estimate. The local small-data timings are linked above; they do not predict production transfer
-throughput. Recovery may reuse local segments, but38.18GiB primary/75.17GiB across copies and40MiB/s
-configured recovery still bound a worst retransmission. No primary drain is budgeted. Do not start a node
-unless its measured forecast plus recovery/soak fits the remaining slot. If the first hop runs slower,
-finish safely and stop at a homogeneous checkpoint; do not compress the gates to meet the clock.
-Keeping 10 min settled GREEN after every node instead of the proposed 3 min adds 105 min: book about 6–7 hours.
+Q59 supersedes the earlier three-minute between-node assumption. Budget roughly **11–15 minutes per
+replacement** including the new node's ten-minute heap history before the next stop, plus the protected
+baseline, first full 6.x snapshot, hop checks and final restoration: **about 4–6 hours**. The last node's
+heap/recovery still needs checking before final restoration. Heap history may overlap recovery only when
+fresh readings remain below 80%; GREEN and original copies are required before progression regardless.
+The proposed23:00–04:00 slot may therefore finish fewer than five hops. Confirm the window; never compress
+the gate, silently extend the cutoff or force completion. Stop at a healthy complete-hop checkpoint if time
+runs out; at any first failed gate follow Q62, even if the resulting GREEN cluster is mixed.
+
+Today's production stop-to-GREEN was about3min, not the full verification time. The local fixture does not
+predict production transfer throughput. Recovery can reuse segments, but the prior38.18GiB primary /
+75.17GiB across copies and40MiB/s recovery rate remain capacity considerations. No primary drain is budgeted.
 
 ## Entry gates and gates before every node/hop
 
 Use all three coordinators while up, both survivors while down. Explicit columns in mixed versions.
-Before entry require10 min of heap/load/site baseline; after each node require3 min stable GREEN (subject
-to owner approval). Heap is sampled every 30s, including recovery. New JVMs get their own post-GREEN samples.
+**Q59: before every node, every node must have fresh used/max heap readings below 80% for ten full minutes.**
+Sample every30s and retain timestamped history through recovery; a new JVM cannot inherit its predecessor's
+history. Require GREEN and all original copies before progression as well. An entry/pre-node gate that
+fails ends progression under Q62; do not keep retrying a failed gate or reset its history silently.
 
 - Three expected persistent IDs; only the row's source/target versions, then homogeneous target before
   next hop. Initially all 5.10.16. Archived IDs:01 `xlclgwGeSHe18p5J4WvfFA`,02 `r0IgCe17SPOgudkQIGsRQA`,
@@ -102,9 +111,10 @@ to owner approval). Heap is sampled every 30s, including recovery. New JVMs get 
   via `sys.allocations` and each node's localshardrows rather than identical clusterwideBLOB stat rows.
 - Every primary on the node to stop has a STARTED survivor copy; two survivors provide cluster quorum.
   No failed cluster/node checks, unexpected exclusion/write block or active decommission.
-- **Heap <75% used/max on every node**, no upward/GC/breaker pressure; loads5/15 below available processors
-  (historically16), disk/recovery queues sane. Hold progression on a breach; >=85% for2 min, OOM, repeated
-  GC stalls or breaker pressure is abort/escalation. No forced GC, heap or recovery-rate changes.
+- **Q59 heap gate: <80% used/max on every node for ten minutes before each node stop.** Any reading not
+  below 80% fails that pre-node gate. **Stop immediately if heap is above 85%**; the old two-minute allowance
+  is removed. OOM, repeated GC stalls or breaker pressure also stop progression. Loads5/15 must stay below
+  available processors (historically16), with sane disk/recovery queues. No forced GC, heap or recovery-rate changes.
 - Latest hourly snapshot SUCCESS/no failures and **none IN_PROGRESS**, no DROP/RESTORE SNAPSHOT or active
   backup helper, no deploy or unrelated maintenance. Wait for an active snapshot; never stop mid-snapshot.
   Require protected baseline before first node and independently verified cron hold before every node.
@@ -150,15 +160,22 @@ include failures of jobs started before gates. Record name/ID/error/completion t
 ## Operator routes and watcher
 
 Set `TMPDIR=$HOME/.cache/gw-work/644-q53-execution`; scratch/private originals there, never/tmp.
-Use the [Q43 watcher](auth/cratedb-production/20261026-operation-contexts/q40-page-watch.py) every 10s from
-gates through restoration/observation,5s request timeout. Expected pages200 (Usual Suspects, Breaking Bad,
-discover), unauthenticated `/mcp`401 and discovery200. **First unexpected status/transport error OR any
-request>3s is a sticky abort**. No re-baselining away an alarm; heartbeat<=15s, controller checks<=5s.
+Use the existing [watcher](auth/cratedb-production/20261026-operation-contexts/q40-page-watch.py) with
+**`--policy q60`** every10s from gates through restoration/observation, with5s request timeout.
+Q60 aborts on **three consecutive unexpected-status/transport failures for the same endpoint**, or
+**three responses over 3s across the probes within a rolling 60-second window**. Healthy responses reset
+only that endpoint's failure streak; fast responses do not erase recent slow responses. A single slow or
+failed probe is logged, not an abort. The three page URLs and discovery expect200; unauthenticated
+`/mcp` expects401, which remains healthy. This expected401 is not counted as a non-200 page failure.
+
+The helper's default remains historical Q43; omitting `--policy q60` is not tonight's approved command.
+Q60 alarms remain sticky. Monitor failure/stale heartbeat still stops progression: heartbeat<=15s,
+controller checks<=5s. Do not discard an alarm or reinterpret thresholds during execution.
 
 ```bash
 mkdir -p "$TMPDIR"
 printf '%s' baseline > "$TMPDIR/phase"
-python3 docs/implementation/auth/cratedb-production/20261026-operation-contexts/q40-page-watch.py \
+python3 docs/implementation/auth/cratedb-production/20261026-operation-contexts/q40-page-watch.py --policy q60 \
   --phase-file "$TMPDIR/phase" --abort-file "$TMPDIR/abort" \
   --heartbeat "$TMPDIR/heartbeat" --stop-file "$TMPDIR/stop-watcher" > "$TMPDIR/pages.jsonl" 2>&1
 # Own terminal/session; keep it running, inspect marker/heartbeat throughout.
@@ -254,8 +271,9 @@ If path/labels/runtime differ, stop. Hosts01/02/03 are10.0.0.11/.12/.13.
    SET GLOBAL TRANSIENT "cluster.routing.allocation.enable" = 'primaries';
    ```
 
-   Read backprimaries/none on all coordinators; require a healthy watcher round **started after** changes,
-   unchanged image/config/PID and valid StopSignal. Recheck GREEN, no snapshot, placement and alarm immediately
+   Read back primaries/none on all coordinators; require a complete live watcher round **started after**
+   changes, a fresh heartbeat and no Q60 alarm, plus unchanged image/config/PID and valid StopSignal.
+   A single logged slow or unexpected response does not independently fail this watcher gate. Recheck GREEN, no snapshot, placement and alarm immediately
    before dispatch. **No decommission or zero-primary check.** Before the approved SIGTERM cutoff only:
 
    ```bash
@@ -350,7 +368,8 @@ If path/labels/runtime differ, stop. Hosts01/02/03 are10.0.0.11/.12/.13.
    coordinators. Poll, don't treat the first coordinator's GREEN as simultaneous agreement. Verify exact
    replica strings and14wait 2/otherwaitsoriginal, no blocks, REQUEST, expected user/privileges, catalog/auth/
    YepWatch/search reads, password/missing/wrong-auth behavior and BLOB GET/HEAD. Never send fake production
-   writes as a canary. Observe3 min stable GREEN/heap/site. No next node after an alarm.
+   writes as a canary. Require the Q59 ten-minute <80% heap history before the next node, plus stable GREEN/site checks.
+   Stop at the first failed gate or Q60 alarm; no next node after it.
 5. Restore target `docker update --restart=always crate-0N`; change onlyoverride.restart to`always` privately
    so future Compose recreation preserves it too. Recordall/none on all settings readbacks. Save timing,
    placement/version matrix, exit/rejoin/runtime hashes, logs and watcher receipts before the next node.
@@ -406,6 +425,14 @@ If it falls after the hardstop, hand it over as pending, not SUCCESS. Stop the l
 
 ## Abort, recovery, rollback and RPO
 
+**Q62: at the first failed gate, stop the upgrade and hand over GREEN, homogeneous where already possible.**
+Do not start another node/hop merely to make versions uniform. Only complete the approved normal recovery
+of the node already stopping/rejoining and restore safe settings/copies. **No rollback during the night**;
+the owner decides in the morning. No restore, data-directory downgrade, second restart or forced stop.
+If the already dispatched stop/rejoin cannot recover GREEN, report the actual state immediately and keep
+the safest supported state; Q62 does not authorize forcing GREEN or concealing YELLOW/missing primaries.
+**Q58 schedule restoration is required at handover even on this early-stop path**, as detailed below.
+
 - **Before SIGTERM:** stop progression; restoreallocation all, targetDocker always, leave rebalance none.
   With3members/original copiesGREEN restore changedwaits/blocks. If no6.x node was started, restore original
   repository registrations/options and exactcron; retain protectedbaseline safely. No decommission to cancel.
@@ -419,9 +446,11 @@ If it falls after the hardstop, hand it over as pending, not SUCCESS. Stop the l
   a verified writable6.xbackup repo; name its restoration owner/deadline and accept the explicit RPO extension.
   Once homogeneous with a verified compatiblewriter repo/no conflict, restorecron exactly. No silentindefinitehold.
 - Missing primaries, secondnode loss, failed backup, new locks, unexpectedwrites/auth/clientbehavior, unsafe heap/
-  disk/GC or any watcher failure stopprogression. Capturestate/logs; no REROUTE/replicareduction/restart improvisation.
+  disk/GC or a Q60 watcher alarm stop progression. Capturestate/logs; no REROUTE/replicareduction/restart improvisation.
 
-**Rollback from any6.xstage is restore-based to5.10.16**, all nodes in fresh directories/volumes, never
+**Reference for a separately approved morning decision only — do not execute tonight.**
+
+Rollback from any6.xstage is restore-based to5.10.16, all nodes in fresh directories/volumes, never
 in-place downgrade. Preserve stoppedupgradeddata for diagnosis; don't overwrite/delete it. Start a separate
 5.10.16 cluster/configuration with the old repo registeredreadonly and restore the protectedsnapshot's tables
 andUSERMANAGEMENT; recreate the BLOB table from archivedDDL, upload copiedfiles by SHA1, verify references,
@@ -441,52 +470,68 @@ Small-data restore was rehearsed previously; production-volumeRTO is **unqualifi
 for33.77GiB capturedSQLmetadata set, replicas,BLOB/auth checks andcutover;10–20MiB/s effective read rate alone
 implies29–58min transfer. Restorecapacity/owner must be ready before the first node, not arrangedafter failure.
 
-RPO decision: **continuing writes means every write after the one pre-upgrade snapshot can be lost on
-rollback**, including member/auth/YepWatch/ingestion and laterBLOBpublication. Recommend owner explicitly
-accepts the campaign loss window with a maximumelapsedlimit, rather than claiming retries preservewrites.
-Alternative: all-writer freeze/read-only maintenance or a separately qualified durablejournal/replay across
-members/auth/flows/BLOB/external effects. No such end-to-end journal is established by this rehearsal.
+**Q61 approved:** the owner accepts rollback data loss since the one protected pre-upgrade snapshot,
+including member/auth/YepWatch/ingestion writes and subsequent BLOB publication. No write freeze or durable
+replay is promised. Q62 defers any rollback decision to the morning; acceptance of data loss is not an
+instruction to restore tonight. Preserve the rollback point and record the actual snapshot/elapsed loss
+window, cluster state and backup-cron restoration responsibility at handover.
 
 ## Member impact and retry limits
 
 Each swap briefly removes one coordinator and promotes its primaries; replica recovery competes with
 normal reads. Pages may be slower, and a request can exhaust its deadline and return503. The deployed
 webapp's node-loss matcher must recognize both5.10 and6.x participating/coordinator disconnect wording;
-its bounded retry can choose a survivor, but cannot promise uninterrupted pages. The unchanged3s watcher
-rule can stop this campaign after even one slow 200, as Q50 demonstrated. The lab's keyed/idempotent write
+its bounded retry can choose a survivor, but cannot promise uninterrupted pages. Q60 replaces Q50's single-slow-response rule: three consecutive endpoint failures or three slow responses
+in one minute stop progression; a lone slow200 is logged. The lab's keyed/idempotent write
 ledger is not evidence that arbitrary member mutations may be blindly retried after uncertain outcomes.
 
-## Specific workload holds to approve and verify fresh
+## Q58 — exactly nine approved Windmill job holds
 
-The archived 08:25 UTC schedule listing is a forecast, not a current gate. It includes midnight-local
-`f/tmdb_web/tmdb_init_providers` (**23:00 UTC**), `f/sync/copy/all_ratings` (**00:00 UTC**),
-`f/sync/copy/vector_data` (**00:30 UTC**), `f/sync/copy/tmdb_streaming` and
-`f/tvtropes_web/tvtropes_init_ratings` (**01:00 UTC**), `f/sync/copy/tvtropes` and
-`f/dna/initialize_dna` (**02:00 UTC**), and `f/tmdb_api/provider_detector` hourly 00:00–11:00 UTC.
-Recommend owner-approved one-window deferral of these eight paths plus `f/search/build_indexes`
-(publication/cleanup), preserving exact schedule enabled/cron/timezone state and restoring it on handover.
-Record missed jobs; don't catch up or rerun them without approval. Freshly check all schedules/queue,
-including carry-over `read_daily_provider_lists`, at 22:45. No inherited Q50 heavy-workload waiver applies
-automatically to tonight. If owner declines deferral and a heavy job compromises the gates, stop/report;
-do not cancel running work or rewrite schedules on your own. Also freeze manual/deploy schema/SWAP/RENAME
-and index-publication writers for the protected baseline and mixed campaign.
+Pause schedules for **only these nine exact script paths** during the window:
+
+1. `f/tmdb_web/tmdb_init_providers`
+2. `f/sync/copy/all_ratings`
+3. `f/sync/copy/vector_data`
+4. `f/sync/copy/tmdb_streaming`
+5. `f/tvtropes_web/tvtropes_init_ratings`
+6. `f/sync/copy/tvtropes`
+7. `f/dna/initialize_dna`
+8. `f/tmdb_api/provider_detector`
+9. `f/search/build_indexes`
+
+Before changing any schedule, resolve its identity and save its **complete original configuration**
+privately: enabled state, cron, timezone, script/flow path, arguments and all other editable settings.
+Record every matching schedule identity and a sanitized configuration hash; never assume all were enabled.
+Pause only these schedules. Do not change their cron/timezone/arguments, cancel running jobs, purge queued
+work or touch unrelated schedules. Read schedules and active jobs fresh after go; archived timings are not
+proof no work is active. Any incompatible active work or other failed gate triggers Q62 rather than an
+unapproved cancellation or additional hold. The documented manual schema/publication holds remain in force.
+
+**At normal or early-stop handover, restore those nine schedule configurations and original enabled states
+exactly, then read them back. Do not catch up, manually rerun or enqueue missed executions.** Next scheduled
+runs must be future cron occurrences; record missed runs without replaying them. Managed timestamps are
+server-maintained, not a reason to alter the saved configuration or request a historical execution.
+The handover restoration applies even if Q62 leaves a GREEN mixed 6.0/6.1 cluster. Note the documented BLOB
+SQL risk for restored index cleanup in that case; do not silently extend its pause beyond the window.
+Report any restoration failure or concurrent configuration edit instead of overwriting an unrelated edit.
+The backup cron has its separate repository/phase safety rules; record its exact held/restored state too.
 
 ## Owner approvals before 23:00 UTC
 
-Already decided:
+Recorded owner decisions (production execution still waits for the explicit go around22:45 UTC):
 
-- [x] **Q53:** Rolling upgrades with plain stops, starting October 27 at 23:00 UTC. Wait for the explicit go around 22:45.
-- [x] **Q53 maintenance policy:** Keep only the 14 YepWatch waits at 2 across the campaign, as the owner delegated and rehearsal qualified; restore 3 afterwards. No replica changes or other wait changes.
-- [x] **Q53 backup scope:** One protected pre-upgrade SQL snapshot + BLOB SHA1 copy, with the hourly cron held throughout. The new shared location/configuration still needs readiness confirmation below.
-- [x] **Q43 final restoration procedure:** Once healthy at the final version, enable rebalance `all` and observe 20–30 minutes; return to `none` on lock/site alarm, with no second restart. If the hard stop prevents the test, leave `none` and hand that limitation over.
-- [x] **Q55:** `GRANT DQL ON SCHEMA blob TO goodwatch_search` before the first 6.2.11 node, followed by authenticated index-file GET/HEAD and SHA1 checks. No grant during preparation.
+- [x] **Q53:** Rolling plain stops starting October27 at23:00 UTC; pinned five-hop path, original copies retained, only 14 YepWatch waits lowered across the campaign then restored, and one protected snapshot+BLOB pair with the backup cron held throughout.
+- [x] **Q55:** `GRANT DQL ON SCHEMA blob TO goodwatch_search` before the first 6.2.11 node, followed by authenticated index-file GET/HEAD and SHA1 verification.
+- [x] **Q58:** Pause exactly the nine named Windmill job paths above for the window; capture their exact original schedule configurations, restore them exactly at handover, and do not catch up missed runs. No permission to cancel active jobs or pause other schedules.
+- [x] **Q59:** Every node's heap must stay below 80% for ten minutes before every node stop; stop if above 85%. This supersedes the proposed 75% gate, three-minute heap assumption and two-minute 85% grace.
+- [x] **Q60:** Abort on three consecutive unexpected responses/transport failures per endpoint, or three responses over 3s within one minute across probes; a single slow response is only logged. Expected unauthenticated MCP401 remains healthy. Use `--policy q60`.
+- [x] **Q61:** Accept rollback data loss since the protected pre-upgrade snapshot. No separate write-loss-cap or write-freeze decision is pending for this window.
+- [x] **Q62:** Stop at the first failed gate and hand over GREEN, homogeneous where safely possible. No rollback during the night; the owner decides in the morning. Do not upgrade another node merely to make versions uniform after a failed gate.
+- [x] **Mixed 6.0/6.1 BLOB exception:** The owner approved the documented allocation/local-copy/HTTP cross-check and holds. No unexplained missing copy, HTTP failure or unrelated SQL error is waived.
+- [x] **Q43 final restoration:** If the campaign completes safely, retain the approved final rebalance observation/abort procedure; if the hard stop prevents it, leave`none` and record the unproven placement test.
 
-Remaining decisions:
+Operational confirmations still to record after go, not additional requests to reapprove the decisions above:
 
-- [ ] **Window and operators:** Approve 23:00–04:00 UTC, last new hop at 03:00, SIGTERM cutoff 03:30, and recovery coverage until 06:00. Name operator/observer and review this commit, pinned images and the rehearsed 02→03→01 order.
-- [ ] **Heap and verification:** Approve <75% heap, a 10-minute initial baseline, three minutes stable GREEN between nodes and five-minute hop checks. Keeping ten minutes GREEN between nodes requires a six–seven-hour window. No silent gate waiver.
-- [ ] **Job holds:** Approve the nine exact schedule-path deferrals above and manual schema/publication freeze, or specify an alternative workload policy. Light writes may continue under the selected RPO; Q53's selected wait policy is already recorded above.
-- [ ] **Shared storage and persistent configuration:** Confirm the genuinely shared `/snapshots-v6` location is available, and review the read-only old registrations, mount/allowlist delta and durable Compose override/image pins/`COMPOSE_FILE`. Q53 already selects the baseline and cron hold; this confirms their exact storage/deployment implementation. If the new path is not shared or configuration differs, stop before the first node.
-- [ ] **RPO and backup owner:** Accept post-baseline write loss on restore, with an explicit maximum loss window and policy for a mixed-version abort; alternatively approve and qualify a complete write freeze. No durable replay solution is ready. Name the backup/cron restoration owner.
-- [ ] **Mixed-version BLOB exception:** Approve the bounded 6.0/6.1 SQL/stat visibility exception with full allocation/local-copy/HTTP checks and index-builder/schema/publication holds. Otherwise stop at homogeneous 6.0.8. Recommend the qualified exception with holds; do not waive an unexplained failure.
-- [ ] **Rollback owner and capacity:** Name rollback/cutover owner and substitute, confirm fresh 5.10 restore capacity/credentials, and accept the unqualified 60–120-minute RTO estimate or require volume qualification first.
+- [ ] **Window and operators:** Confirm end/cutoff times and staffed handover. The previous proposal was 23:00–04:00UTC, last new hop 03:00 and SIGTERM cutoff 03:30. Q59 now raises the estimate to about 4–6 hours; do not shorten its ten-minute gate or silently extend a cutoff. Stop safely if the available window cannot cover another complete hop.
+- [ ] **Shared storage/configuration:** Verify the new genuinely shared `/snapshots-v6` location, read-only old registrations and reviewed durable Compose/image/allowlist changes. Stop before the first node if storage is not shared or configuration differs.
+- [ ] **Restoration responsibility:** Record the schedule/backup-cron restoration owner and observed states at handover. Any later rollback/cutover owner, fresh restore capacity and 60–120 minute unqualified RTO are for the separately approved morning decision, not authority to restore tonight.

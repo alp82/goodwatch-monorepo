@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Q43 read-only HTTP watcher. Writes local alarms; never changes production settings."""
+"""Read-only HTTP watcher: historical Q43 default, opt-in Q60 rolling-upgrade policy."""
 import argparse
 import concurrent.futures
+from collections import deque
 import datetime
 import json
 import os
@@ -22,6 +23,24 @@ PHASES = {"baseline", "pre_stop", "stopping", "recovery", "rebalancing", "comple
 def assess(status, seconds, exit_code, previous_failures, expected=200):
     failures = previous_failures + 1 if exit_code or status != expected else 0
     return failures, bool(failures or seconds > 3.0)
+
+
+class Q60Policy:
+    """Three unexpected probes per endpoint, or three slow probes globally in 60s."""
+
+    def __init__(self):
+        self.failures = {}
+        self.slow = deque()
+
+    def observe(self, path, status, seconds, exit_code, expected=200, at=None):
+        at = time.monotonic() if at is None else at
+        self.failures[path] = self.failures.get(path, 0) + 1 if exit_code or status != expected else 0
+        while self.slow and self.slow[0] <= at - 60:
+            self.slow.popleft()
+        if seconds > 3.0:
+            self.slow.append(at)
+        alarm = self.failures[path] >= 3 or len(self.slow) >= 3
+        return self.failures[path], len(self.slow), alarm
 
 
 def probe(path, expected):
@@ -51,6 +70,8 @@ def marker(path, record):
 
 def watch(args):
     failures = {path: 0 for path, _ in ENDPOINTS}
+    policy = getattr(args, "policy", "q43")
+    q60 = Q60Policy() if policy == "q60" else None
     heartbeat, phase_file = Path(args.heartbeat), Path(args.phase_file)
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
         while not (args.stop_file and Path(args.stop_file).exists()):
@@ -59,7 +80,11 @@ def watch(args):
             pending = [pool.submit(probe, path, expected) for path, expected in ENDPOINTS]
             for future in concurrent.futures.as_completed(pending):
                 path, expected, status, seconds, exit_code, started_utc = future.result()
-                failures[path], alarm = assess(status, seconds, exit_code, failures[path], expected)
+                slow_count = None
+                if q60 is not None:
+                    failures[path], slow_count, alarm = q60.observe(path, status, seconds, exit_code, expected)
+                else:
+                    failures[path], alarm = assess(status, seconds, exit_code, failures[path], expected)
                 phase = phase_file.read_text().strip()
                 if phase not in PHASES:
                     raise ValueError("Invalid phase; stop progression")
@@ -68,6 +93,7 @@ def watch(args):
                     "probe_started_utc": started_utc, "phase": phase, "path": path,
                     "expected": expected, "status": status, "seconds": seconds,
                     "exit": exit_code, "failure_streak": failures[path], "alarm": alarm,
+                    "policy": policy, "slow_responses_60s": slow_count,
                 }
                 print(json.dumps(record), flush=True)
                 if alarm:
@@ -83,6 +109,7 @@ def main():
     for option in ("phase-file", "abort-file", "heartbeat"):
         parser.add_argument("--" + option, required=True)
     parser.add_argument("--stop-file")
+    parser.add_argument("--policy", choices=("q43", "q60"), default="q43")
     args = parser.parse_args()
     try:
         watch(args)
