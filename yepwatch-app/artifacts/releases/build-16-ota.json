@@ -1,0 +1,70 @@
+{
+  "buildNumber": 16,
+  "implementationCommit": "1d6f35b3754edd0aa726a883c0676f5a0bf89ace",
+  "cloudArchiveCommit": "c11e22a35fae8b14fe1b83b684001e2ba85689dd",
+  "sourceEquivalence": "No differences in yepwatch-app or contracts between cloud archive source and rebased implementation commit.",
+  "checks": {
+    "unit": 102,
+    "browser": 102,
+    "typecheck": "passed",
+    "lint": "zero errors; existing unused View warning",
+    "nativeExports": [
+      "ios",
+      "android"
+    ],
+    "githubRun": 40569712969,
+    "archive": "No env, credential, signing-key files; local contract included."
+  },
+  "updatePolicy": {
+    "runtime": "fingerprint",
+    "launchWaitMs": 0,
+    "check": "ON_LOAD",
+    "forcedReload": false,
+    "productionChannelPublished": false
+  },
+  "ios": {
+    "buildId": "412bb87a-8e16-4e0b-95e0-3321455fe1b0",
+    "buildStatus": "FINISHED",
+    "binary": {
+      "build": 16,
+      "bundleIdentifier": "com.yepwatch.app",
+      "runtime": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495",
+      "channel": "beta",
+      "updatesEnabled": true,
+      "launchWaitMs": 0,
+      "sha256": "6b968204b8222ef274fe180c0a748c6575a9048b8ab80ba9337d8944b5a7f97a"
+    },
+    "submissionId": "f0aa6e48-dc8b-4d9b-acd7-f6aa08723a29",
+    "distribution": "pending Expo upload and Apple processing"
+  },
+  "android": {
+    "buildId": "92acdd61-87f4-49ae-9c38-bea4881b5837",
+    "buildStatus": "IN_QUEUE",
+    "channel": "beta-preview",
+    "runtime": "e602b9da0532d0b6553acc72b771132638acce70"
+  },
+  "ota": {
+    "ios": {
+      "initialGroup": "dbbbc3ea-daaa-4224-bd7b-a03f306bd5e8",
+      "initialUpdate": "01a17ed8-6e88-71a2-aad4-95d1ce589330",
+      "runtime": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495",
+      "channel": "beta",
+      "publicManifestAndCdnHash": "passed",
+      "group": "18828484-bd0c-4f50-923b-a21d738b59b7",
+      "update": "01a17edf-bff8-7823-8dc3-12da0b2768d7",
+      "reason": "Republished after native embedded timestamp so installed build can select the remote baseline."
+    },
+    "android": {
+      "initialGroup": "5c1a238d-5d9d-4b41-b6fa-3b7da9d33c22",
+      "initialUpdate": "01a17ed8-63fd-7d18-bb63-03b801b79f71",
+      "runtime": "e602b9da0532d0b6553acc72b771132638acce70",
+      "channel": "beta-preview",
+      "publicManifestAndCdnHash": "passed"
+    }
+  },
+  "limits": [
+    "Installed build 15 and earlier cannot receive OTA; one binary upgrade is required.",
+    "Physical-device OTA execution is not yet verified.",
+    "Native iPhone connection failure remains under investigation."
+  ]
+}
