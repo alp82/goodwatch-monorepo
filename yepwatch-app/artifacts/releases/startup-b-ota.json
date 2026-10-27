@@ -1,0 +1,106 @@
+{
+  "sourceCommit": "0a3200c7371237fbc78f147fe35c2a5f39c817b4",
+  "selectedVariant": "B: dissolve into page",
+  "prototypeCommit": "3e361f1ab",
+  "implementationCommit": "11a15eca1",
+  "checks": {
+    "unitTests": 109,
+    "browserTests": 108,
+    "typecheck": "passed",
+    "lint": "zero errors; existing unused View warning",
+    "githubRun": 40601195599,
+    "githubConclusion": "success",
+    "nativeFingerprints": "exact match to installed build 16 on both platforms"
+  },
+  "ota": {
+    "ios": {
+      "platform": "ios",
+      "runtime": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495",
+      "channel": "beta",
+      "updateId": "01a17fa8-e236-7b1c-946e-df0d2ab468a8",
+      "createdAt": "2026-10-27T23:18:56.822Z",
+      "launchAssetBytes": 3343812,
+      "launchAssetSha256": "8241f7ebddd40888c4fb37fdf0cb57f6ff87933b97346837a09a18c95782c3c6",
+      "publicManifestAndCdnHash": "passed",
+      "groupId": "f8a501c1-bd3f-4a32-9ff7-be9e6c93e760"
+    },
+    "android": {
+      "platform": "android",
+      "runtime": "e602b9da0532d0b6553acc72b771132638acce70",
+      "channel": "beta-preview",
+      "updateId": "01a17fa8-e596-7dfb-b22d-32ce5690dd91",
+      "createdAt": "2026-10-27T23:18:57.686Z",
+      "launchAssetBytes": 3333884,
+      "launchAssetSha256": "d35e4cfcf9c370b1ebfffeef77f255fd24cef141fd214b1d49a169d863ae92f4",
+      "publicManifestAndCdnHash": "passed",
+      "groupId": "7ba9233f-d51d-41b7-98ad-0b3617e30164"
+    }
+  },
+  "androidExecution": {
+    "emulator": "Pixel8 API35 x86_64 read-only",
+    "package": "com.yepwatch.preview",
+    "installedBuild": 16,
+    "updateId": "01a17fa8-e596-7dfb-b22d-32ce5690dd91",
+    "downloadedThenColdLaunched": true,
+    "successfulLaunchCount": 1,
+    "failedLaunchCount": 0,
+    "newNativeBuild": false
+  },
+  "web": {
+    "deployment": "gpfu9hndcz1wvbbnqghanxgm",
+    "status": "finished",
+    "checks": {
+      "checkedAt": "2026-10-27T23:24:27.280Z",
+      "results": [
+        {
+          "width": 390,
+          "height": 844,
+          "status": 200,
+          "errors": [],
+          "scroll": false,
+          "android": "https://expo.dev/accounts/alperortac/projects/yepwatch/builds/92acdd61-87f4-49ae-9c38-bea4881b5837",
+          "bootSeen": true,
+          "twoLogos": false,
+          "horizontalTravel": 3.0517578125e-05,
+          "verticalTravel": 3.0517578125e-05
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "status": 200,
+          "errors": [],
+          "scroll": false,
+          "android": "https://expo.dev/accounts/alperortac/projects/yepwatch/builds/92acdd61-87f4-49ae-9c38-bea4881b5837",
+          "bootSeen": true,
+          "twoLogos": false,
+          "horizontalTravel": 0.0001220703125,
+          "verticalTravel": 3.0517578125e-05
+        }
+      ],
+      "dark": {
+        "html": "rgb(7, 7, 7)",
+        "body": "rgb(7, 7, 7)"
+      },
+      "health": {
+        "ready": true,
+        "status": "running",
+        "checks": {
+          "snapshot": true,
+          "catalog": true,
+          "rooms": true,
+          "control": true,
+          "realtime": true
+        },
+        "sourceCommit": "unknown",
+        "contractVersion": 3,
+        "mode": "member"
+      }
+    }
+  },
+  "newNativeBuilds": false,
+  "limits": [
+    "Native execution verified on Android emulator, not physical devices.",
+    "iOS verified through compatible runtime, public update manifest and launch-asset checksum; no iPhone execution test.",
+    "Build 16 must be installed once; older binaries cannot receive OTA."
+  ]
+}

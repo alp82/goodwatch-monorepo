@@ -88,5 +88,12 @@
     "Installed build 15 and earlier cannot receive OTA; one binary upgrade is required.",
     "Physical-device OTA execution is not yet verified.",
     "Native iPhone connection failure remains under investigation."
-  ]
+  ],
+  "latestOtaRelease": {
+    "name": "startup B",
+    "sourceCommit": "0a3200c7371237fbc78f147fe35c2a5f39c817b4",
+    "evidence": "startup-b-ota.json",
+    "iosUpdate": "01a17fa8-e236-7b1c-946e-df0d2ab468a8",
+    "androidUpdate": "01a17fa8-e596-7dfb-b22d-32ce5690dd91"
+  }
 }
