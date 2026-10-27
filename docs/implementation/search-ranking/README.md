@@ -340,8 +340,11 @@ Done in #142. What was built and decided:
 - **Code:** `f/search/build_indexes` reads the sources, stores the files and the build records, writes the profiles and
   cleans up. `f/search/index_builders` holds the builders as pure functions, ported rule for rule from
   `pull_credits.py --writer-creators` and `simp_combo.py`. Tests: `goodwatch-flows/tests/test_build_indexes.py`.
-- **Sources.** The eligible titles (`goodwatch_overall_score_voting_count >= 2000`, not adult in the payload or in
-  Crate) come from Qdrant (payload, `fingerprint_v1`, `text_en_v1`, `text_multi_v1`) and Crate, combined with
+- **Sources.** The indexed titles have at least 2000 votes or a release date less than 365 days ago (including
+  upcoming titles), and are not adult in the payload or in Crate. The rolling window uses UTC days and the exact
+  Crate `movie.release_date` or `show.first_air_date`; unknown dates do not bypass the vote threshold. This makes
+  recent and upcoming titles available to quick title lookup. Mood-based discovery retains its vote threshold.
+  The titles come from Qdrant (payload, `fingerprint_v1`, `text_en_v1`, `text_multi_v1`) and Crate, combined with
   `f/search/title_text.title_inputs` exactly as the embedding does, so the body terms are the terms of each title's
   `terms_bm25f_v1` vector. Credits come from Crate `person_worked_on` (director, writing, `Creator` and Executive
   Producer jobs) and `person_appeared_in` (billing order below 15 for movies and 40 for shows), companies from

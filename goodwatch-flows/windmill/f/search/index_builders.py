@@ -8,8 +8,9 @@ Every rule here is ported from the search ranker that was tuned offline, so the 
 can rank exactly like it. The formats are documented in
 docs/implementation/search-ranking/README.md ("Index files").
 
-Terms: an eligible title has `goodwatch_overall_score_voting_count >= 2000` and isn't
-adult. Rows are eligible titles in point id order.
+Terms: an indexed title has at least 2000 votes or a catalog release date less than
+365 days ago (including upcoming titles), and isn't adult. Rows are indexed titles
+in point id order.
 """
 
 import base64

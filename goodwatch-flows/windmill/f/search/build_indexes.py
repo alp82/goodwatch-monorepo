@@ -5,7 +5,8 @@
 
 Runs nightly and by hand after a full `f/search/embed_titles` run. One run:
 
-1. Reads the eligible titles (`goodwatch_overall_score_voting_count >= 2000`, not adult)
+1. Reads non-adult titles with at least 2000 votes or a release date less than 365 days
+   ago (including upcoming titles)
    from Qdrant (payload, `fingerprint_v1`, `text_en_v1`, `text_multi_v1`) and Crate (text
    fields, companies), plus their credits, people and studios from Crate, their term ids
    from `search_terms`, and their localized names from `translation` (the alias table).
@@ -75,23 +76,44 @@ def _chunks(items: list, size: int):
         yield items[start:start + size]
 
 
-def eligible_filter() -> qm.Filter:
+def recent_point_ids(crate, now: datetime) -> list[int]:
+    """Exact catalog dates, including future releases; unknown dates do not qualify.
+
+    Qdrant stores only the release year, so resolve the rolling window in Crate.
+    Use UTC days, as elsewhere in the catalog, and exclude the 365-day boundary.
+    """
+    today = now.astimezone(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    cutoff = int((today - timedelta(days=365)).timestamp() * 1000)
+    ids = []
+    for table, date_column, base in (("movie", "release_date", 1_000_000_000_000),
+                                     ("show", "first_air_date", 2_000_000_000_000)):
+        ids.extend(base + row["tmdb_id"] for row in crate.select(
+            f'SELECT tmdb_id FROM "{table}" WHERE {date_column} > ? ORDER BY tmdb_id', (cutoff,),
+        ))
+    return ids
+
+
+def eligible_filter(recent_ids: list[int] | None = None) -> qm.Filter:
+    choices = [qm.FieldCondition(key="goodwatch_overall_score_voting_count", range=qm.Range(gte=ib.ELIGIBLE_VOTES))]
+    if recent_ids:
+        choices.append(qm.HasIdCondition(has_id=recent_ids))
     return qm.Filter(
-        must=[qm.FieldCondition(key="goodwatch_overall_score_voting_count", range=qm.Range(gte=ib.ELIGIBLE_VOTES))],
+        should=choices,
         must_not=[qm.FieldCondition(key="adult", match=qm.MatchValue(value=True))],
     )
 
 
-def read_points(client: QdrantClient, stats: dict) -> tuple[list[dict], dict[str, np.ndarray]]:
+def read_points(client: QdrantClient, stats: dict, recent_ids: list[int] | None = None) -> tuple[list[dict], dict[str, np.ndarray]]:
     """Payloads and vectors of the eligible points, in point id order."""
     payloads, ids = [], []
     vectors = {FINGERPRINT_VECTOR: [], TEXT_EN_VECTOR: [], TEXT_MULTI_VECTOR: []}
     sizes = {FINGERPRINT_VECTOR: 74, **TEXT_DIMENSIONS}
     stats["missing_vectors"] = {name: 0 for name in vectors}
     offset = None
+    index_filter = eligible_filter(recent_ids)
     while True:
         points, offset = client.scroll(
-            MEDIA_COLLECTION, scroll_filter=eligible_filter(), limit=SCROLL_PAGE, offset=offset,
+            MEDIA_COLLECTION, scroll_filter=index_filter, limit=SCROLL_PAGE, offset=offset,
             with_payload=PAYLOAD_FIELDS, with_vectors=list(vectors),
         )
         for p in points:
@@ -217,7 +239,9 @@ def read_translations_or_none(crate, titles: list[ib.Title], stats: dict) -> lis
 
 def read_sources(crate, client: QdrantClient, stats: dict) -> ib.Sources:
     started = time.monotonic()
-    payloads, vectors = read_points(client, stats)
+    recent_ids = recent_point_ids(crate, datetime.now(timezone.utc))
+    stats["recent_catalog_titles"] = len(recent_ids)
+    payloads, vectors = read_points(client, stats, recent_ids)
     rows = read_media_rows(crate, payloads)
     titles, keep = eligible_titles(payloads, rows, stats)
     crew, cast = read_credit_rows(crate, titles)

@@ -11,9 +11,8 @@ import {
 } from "../combined-search/search-filters.ts"
 import type { TitleTable } from "./search-index.server.ts"
 
-// The indexed titles: at least this many votes and not adult. A normal search ranks only these. A lesser-known search
-// ranks every title that isn't adult; the title table still holds only the indexed ones, so the row test below covers
-// those, and the ranker reads the other titles' facts from Qdrant (rank-search.server.ts).
+// Mood-based discovery requires this many votes. The name index also includes recent and upcoming titles regardless
+// of votes; apply the discovery threshold to both Qdrant and the in-memory rows. A lesser-known search removes it.
 export const ELIGIBLE_VOTES = 2000
 const SHOW_POINT_IDS = 2_000_000_000_000
 
@@ -48,6 +47,8 @@ export function searchFilter(
 	]
 	const mustNot: unknown[] = [{ key: "adult", match: { value: true } }]
 	const tests: RowTest[] = []
+	if (!eligibility.lesserKnown)
+		tests.push((row) => table.votes[row] >= ELIGIBLE_VOTES)
 	const isShow = (row: number) => table.pointIds[row] >= SHOW_POINT_IDS
 	const filters = eligibility.filters
 	if (filters?.type)

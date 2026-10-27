@@ -3,6 +3,7 @@
 import gzip
 import hashlib
 import json
+import sqlite3
 import sys
 import types
 import unittest
@@ -44,6 +45,45 @@ def sources(titles, crew=(), cast=(), people=None, media=None, companies=None, n
 
 MOVIE = 1_000_000_000_000
 SHOW = 2_000_000_000_000
+
+
+class RecentTitleTests(unittest.TestCase):
+    def test_recent_dates_include_upcoming_but_not_unknown_or_365_days_old(self):
+        now = datetime(2026, 10, 27, tzinfo=timezone.utc)
+        cutoff = int((now - timedelta(days=365)).timestamp() * 1000)
+        db = sqlite3.connect(":memory:")
+        self.addCleanup(db.close)
+        db.row_factory = sqlite3.Row
+        for table, date_column in (("movie", "release_date"), ("show", "first_air_date")):
+            db.execute(f'CREATE TABLE "{table}" (tmdb_id INTEGER, {date_column} INTEGER)')
+            db.executemany(f'INSERT INTO "{table}" VALUES (?, ?)',
+                           [(1, cutoff - 1), (2, cutoff), (3, cutoff + 1),
+                            (4, int(now.timestamp() * 1000)), (5, None),
+                            (292741, int((now + timedelta(days=3)).timestamp() * 1000))])
+        crate = mock.Mock()
+        crate.select.side_effect = lambda sql, params: [dict(row) for row in db.execute(sql, params)]
+        self.assertEqual(flow.recent_point_ids(crate, now),
+                         [MOVIE + 3, MOVIE + 4, MOVIE + 292741,
+                          SHOW + 3, SHOW + 4, SHOW + 292741])
+
+    def test_index_reads_zero_vote_recent_titles_and_keeps_adult_exclusion(self):
+        from qdrant_client import QdrantClient, models as qm
+        client = QdrantClient(":memory:")
+        self.addCleanup(client.close)
+        client.create_collection(flow.MEDIA_COLLECTION, vectors_config={})
+        payloads = [
+            (MOVIE + 1, 2000, False), (MOVIE + 2, 1999, False),
+            (SHOW + 292741, 0, False), (SHOW + 4, 0, True),
+        ]
+        client.upsert(flow.MEDIA_COLLECTION, points=[
+            qm.PointStruct(id=pid, vector={}, payload={
+                "tmdb_id": pid % MOVIE, "media_type": "show" if pid >= SHOW else "movie",
+                "goodwatch_overall_score_voting_count": votes, "adult": adult,
+            }) for pid, votes, adult in payloads
+        ])
+        points, vectors = flow.read_points(client, {}, [SHOW + 292741, SHOW + 4, MOVIE + 1])
+        self.assertEqual([p["_point_id"] for p in points], [MOVIE + 1, SHOW + 292741])
+        self.assertEqual(vectors[flow.FINGERPRINT_VECTOR].shape, (2, 74))
 
 
 class CreditTests(unittest.TestCase):
