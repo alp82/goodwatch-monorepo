@@ -52,10 +52,19 @@ export default function Quiz({
 					>
 						{quiz.waiting
 							? "Finding titles you may have seen."
-							: "No more titles to ask about right now."}
+							: quiz.failed
+								? "Couldn't load more titles."
+								: "No more titles to ask about right now."}
 					</div>
-					{yourTaste && (
-						<div className={P ? "mt-4 flex" : "mt-8 flex"}>{yourTaste}</div>
+					{(yourTaste || items.includes("retry-titles")) && (
+						<div className={`${P ? "mt-4 gap-1.5" : "mt-8 gap-4"} flex`}>
+							{items.includes("retry-titles") && (
+								<Item id="retry-titles" className={key} style={{ height }}>
+									Try again
+								</Item>
+							)}
+							{yourTaste}
+						</div>
 					)}
 				</div>
 				<ExpandCorner items={items} />
@@ -82,9 +91,11 @@ export default function Quiz({
 					: undefined
 			}
 		>
+			{/* After a save that failed, the same key goes on to the next title without saving (tv-taste.ts,
+			    `carryOutQuiz`). */}
 			{items.includes("skip") && (
 				<Item id="skip" className={key} style={{ height }}>
-					Haven't seen it
+					{quiz.answered.failed ? "Next title" : "Haven't seen it"}
 				</Item>
 			)}
 			{/* The phone's row holds "Haven't seen it" and the Expand key; Your taste is in the menu there. */}

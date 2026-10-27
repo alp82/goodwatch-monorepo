@@ -152,6 +152,8 @@ export function RatingScreen({
 				// The phone: the question in the header, where the screen's name stands, and under it the band to answer
 				// with, as large as a thumb needs, and the keys under the band. Nothing else: no kicker, no line under
 				// the question (an answer just given takes the question's place for its moment, and the band lights).
+				// A save that failed never takes the title's place: the person must still see what they are asked
+				// about. It says so over the band instead.
 				// A screen without keys under the band (the rating) has room for the question over the band too.
 				<div
 					className="absolute inset-x-0 bottom-0 flex flex-col justify-end gap-1.5 px-4 pb-2.5"
@@ -160,6 +162,14 @@ export function RatingScreen({
 					<div aria-live="polite" className="sr-only">
 						{given}
 					</div>
+					{answered?.failed && (
+						<div
+							aria-hidden
+							className="shrink-0 text-[16px] font-semibold leading-tight text-red-300"
+						>
+							{given}
+						</div>
+					)}
 					{!(children || expands) && (
 						<div
 							key={titleKey}
@@ -228,17 +238,15 @@ export function RatingScreen({
 				</div>
 			)}
 			{/* The bar is last in the markup, as in `tvItems`: the items are met in reading order. On the phone it names
-			    the title asked about, or the answer just given. */}
+			    the title asked about, or the answer just given while it is saved and held. */}
 			{P ? (
 				<PhoneHeader
 					items={items}
-					name={
-						given
-							? phoneSays(given, Boolean(answered?.failed))
-							: children || expands
-								? (title ?? question)
-								: undefined
-					}
+					name={phoneHeaderName({
+						given,
+						failed: Boolean(answered?.failed),
+						title: children || expands ? (title ?? question) : undefined,
+					})}
 				/>
 			) : (
 				<CornerBar items={items} />
@@ -247,7 +255,18 @@ export function RatingScreen({
 	)
 }
 
-/** An answer's line, short enough for the phone's header: "Scored 8 · Great", "Not seen · next title". */
-export function phoneSays(line: string, failed: boolean): string {
-	return failed ? "Not saved. Try again." : line
+/**
+ * What the phone's header names: an answer's line while it is saved and held ("Scored 8 · Great", "Not seen · next
+ * title"), otherwise the title asked about. A failed save keeps the title: its words stand over the band.
+ */
+export function phoneHeaderName({
+	given,
+	failed,
+	title,
+}: {
+	given: string | null
+	failed: boolean
+	title: string | undefined
+}): string | undefined {
+	return given && !failed ? given : title
 }

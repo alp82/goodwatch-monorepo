@@ -87,6 +87,8 @@ export type TvQuizOnScreen = {
 	/** Null while the titles are on their way, and when there is none left to ask about. */
 	title: TvQuizTitle | null
 	waiting: boolean
+	/** No title because asking for more failed (not because there are none left). */
+	failed?: boolean
 	/** The person's scores toward the goal. */
 	rated: number
 	/** The answer just given: lit at once, held, then the next title (the same as on /taste/quiz). */
@@ -234,7 +236,7 @@ export function quizWords(quiz: Pick<TvQuizOnScreen, "rated" | "title">): {
 export function tasteContext(
 	screen: TvScreen,
 	shown: TvTasteScreens,
-): Pick<TvContext, "taste" | "sides" | "titles" | "quizProgress"> {
+): Pick<TvContext, "taste" | "sides" | "titles" | "quizProgress" | "quizFailed"> {
 	const { taste, quiz } = shown
 	const sides = taste.state === "sides" ? taste.sides : []
 	const titles =
@@ -256,6 +258,10 @@ export function tasteContext(
 		sides: sides.map((side) => side.id),
 		titles,
 		quizProgress: quiz.rated,
+		// Only when it failed, so the context is the same as ever otherwise.
+		...(screen.name === "quiz" && !quiz.title && quiz.failed
+			? { quizFailed: true }
+			: {}),
 	}
 }
 
@@ -288,18 +294,30 @@ export function tasteKnown(
  * Carries out the machine's two quiz effects with the quiz's own actions (`useTasteQuiz`): a score is stored
  * through `rate` exactly as the strip gave it, and "Haven't seen it" through `skip`. Answers whether the effect
  * was the quiz's. This is the quiz's whole write path on the TV: `rate` and `skip` are the ones /taste/quiz uses,
- * which store a guest's answer in their browser and a member's on their account.
+ * which store a guest's answer in their browser and a member's on their account. After a save that failed, the
+ * same key reads "Next title" (screens/Quiz.tsx) and goes on without saving (`pass`).
  */
 export function carryOutQuiz(
 	effect: TvEffect,
-	quiz: { rate: (score: Score) => void; skip: () => void },
+	quiz: {
+		rate: (score: Score) => void
+		skip: () => void
+		pass?: () => void
+		retryTitles?: () => void
+		answered?: Pick<TvQuizAnswered, "failed">
+	},
 ): boolean {
+	if (effect.type === "quiz-retry") {
+		quiz.retryTitles?.()
+		return true
+	}
 	if (effect.type === "quiz-rate") {
 		quiz.rate(effect.score)
 		return true
 	}
 	if (effect.type === "quiz-skip") {
-		quiz.skip()
+		if (quiz.answered?.failed && quiz.pass) quiz.pass()
+		else quiz.skip()
 		return true
 	}
 	return false

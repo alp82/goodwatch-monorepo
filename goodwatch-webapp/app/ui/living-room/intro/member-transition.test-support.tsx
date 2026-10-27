@@ -29,6 +29,22 @@ const { useHomeIntro } = await import("./HomeIntro")
 const { PROGRESS_KEY, TAPS_KEY } = await import("./progress")
 const { FILM_CHAPTER_EVENT } = await import("./events")
 const { TasteQuiz } = await import("./quiz/taste-quiz")
+const { QueryClient, QueryClientProvider } = await import("@tanstack/react-query")
+const { getQueryKeyUserData } = await import("~/routes/api.user-data")
+// The quiz reads the person's marks (never a pick they answered): a member with none, read already, never fetched.
+const queries = new QueryClient({
+	defaultOptions: { queries: { staleTime: Number.POSITIVE_INFINITY, retry: false } },
+})
+queries.setQueryData(getQueryKeyUserData("member"), {
+	scores: {},
+	wishlist: {},
+	watchState: {},
+	favorites: {},
+	skipped: {},
+	notInterested: {},
+})
+const withQueries = (child: ReturnType<typeof h>) =>
+	h(QueryClientProvider, { client: queries }, child)
 const host = document.createElement("div")
 document.body.append(host)
 const root = createRoot(host)
@@ -119,12 +135,14 @@ await act(async () =>
 			h(
 				AuthContext.Provider,
 				{ value: auth as never },
-				h(TasteQuiz, {
-					cards: cards as never,
-					onLeave: () => {
-						left = true
-					},
-				}),
+				withQueries(
+					h(TasteQuiz, {
+						cards: cards as never,
+						onLeave: () => {
+							left = true
+						},
+					}),
+				),
 			),
 		),
 	),
@@ -148,7 +166,7 @@ await act(async () =>
 			h(
 				AuthContext.Provider,
 				{ value: { ...auth, user: null } as never },
-				h(TasteQuiz, { cards: cards as never, onLeave() {} }),
+				withQueries(h(TasteQuiz, { cards: cards as never, onLeave() {} })),
 			),
 		),
 	),

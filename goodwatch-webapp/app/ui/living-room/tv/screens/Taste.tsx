@@ -66,7 +66,13 @@ function WithQuiz(props: DataProps & { read: TvTasteRead }) {
 
 export function TasteData(props: DataProps) {
 	const read = useTasteRead(props)
-	return read.quizzes ? (
+	// The quiz stays while Taste reads the portrait (after the quiz's goal, say): unmounting it would forget its
+	// titles, its answers and where it was, and its next mount would ask for the same titles again. It does nothing
+	// meanwhile (`quizOptions` holds its fetch back).
+	const hadQuiz = useRef(false)
+	const quizzes = read.quizzes || (hadQuiz.current && read.state === "reading")
+	hadQuiz.current = quizzes
+	return quizzes ? (
 		<WithQuiz {...props} read={read} />
 	) : (
 		<Report {...props} read={read} quiz={null} />

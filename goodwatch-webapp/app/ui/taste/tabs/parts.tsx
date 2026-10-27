@@ -40,8 +40,17 @@ export const vibe = (score10: number) =>
 export function PortraitCard({
 	t,
 	posterSizes,
-}: { t: PortraitTitle; posterSizes?: PosterProps["sizes"] }) {
-	return (
+	rated = false,
+}: {
+	t: PortraitTitle
+	posterSizes?: PosterProps["sizes"]
+	/**
+	 * The person's own rated title, not a suggestion: a ring in the panel's amber sets it apart from the suggestion
+	 * cards beside it, which have none.
+	 */
+	rated?: boolean
+}) {
+	const card = (
 		<MovieTvCard
 			details={{
 				tmdb_id: t.tmdbId,
@@ -55,6 +64,13 @@ export function PortraitCard({
 			mediaType={t.mediaType}
 			posterSizes={posterSizes}
 		/>
+	)
+	return rated ? (
+		<div className="rounded-lg ring-2 ring-amber-400/60 ring-offset-2 ring-offset-gray-950">
+			{card}
+		</div>
+	) : (
+		card
 	)
 }
 

@@ -1,8 +1,9 @@
 // What happens between answering "How was it?" and the next title, on every page that asks one title at a time:
 // /taste/quiz, the Taste page's start and the TV's Taste. The chosen score lights at once and the line under the
 // title says what was given ("Scored 8 · Great"). The answer is saved; once it is, the light holds until
-// `ACK_MS` after the press, then the next title comes in. A save that fails keeps the title, says so, and takes a
-// new answer. While an answer is on its way or held, another press changes nothing, so a quick second press never
+// `ACK_MS` after the press, then the next title comes in. A save that fails keeps the title and the chosen answer
+// lit, says so (`ACK_FAILED`, the same words on every page), and takes a new answer, or goes on to the next title
+// without saving (`pass`), so a save the server keeps turning down never holds the person on one title. While an answer is on its way or held, another press changes nothing, so a quick second press never
 // scores the next title.
 //
 // A pure state machine, so the tests run it as it is: `use-score-ack.ts` binds it to time and to the save.
@@ -10,6 +11,9 @@ import type { Score } from "~/server/scores.server"
 
 /** How long the chosen answer stays lit, from the press, before the next title. */
 export const ACK_MS = 700
+
+/** What every page says when an answer could not be saved. */
+export const ACK_FAILED = "Couldn't save. Try again, or go to the next title."
 
 /** An answer to "How was it?": a score (a level gives its own score), or "Haven't seen it". */
 export type AckAnswer = { kind: "score"; score: Score } | { kind: "skip" }
@@ -31,6 +35,8 @@ export type AckEvent =
 	| { type: "failed" }
 	/** The hold ended: the next title takes this one's place. */
 	| { type: "done" }
+	/** After a failed save: the next title takes this one's place, its answer not saved. */
+	| { type: "pass" }
 	/** The page or screen went away, or the title changed under the answer. */
 	| { type: "cancel" }
 
@@ -59,15 +65,19 @@ export function ackTransition(state: AckState, event: AckEvent): AckState {
 				: state
 		case "done":
 			return state.phase === "held" ? IDLE : state
+		case "pass":
+			return state.phase === "failed" ? IDLE : state
 		case "cancel":
 			return IDLE
 	}
 }
 
-/** The score to show as chosen while an answer is on its way or held, for the title with `key`. */
+/**
+ * The score to show as chosen while an answer is on its way or held, or failed to save (it stays as chosen, so
+ * the person sees what they gave), for the title with `key`.
+ */
 export function ackScore(state: AckState, key: string | null): Score | null {
-	if (state.phase === "idle" || state.phase === "failed" || state.key !== key)
-		return null
+	if (state.phase === "idle" || state.key !== key) return null
 	return state.answer.kind === "score" ? state.answer.score : null
 }
 

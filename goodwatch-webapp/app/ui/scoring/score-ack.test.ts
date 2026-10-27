@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import {
+	ACK_FAILED,
 	ACK_MS,
 	type AckState,
 	IDLE,
@@ -47,15 +48,30 @@ describe("the answer to How was it?", () => {
 		assert.equal(takesPress(held), false)
 	})
 
-	it("a failed save keeps the title, shows no score and takes a new answer", () => {
+	it("a failed save keeps the title, keeps the chosen score lit and takes a new answer", () => {
 		const failed = ackTransition(ackTransition(IDLE, press("movie-603")), { type: "failed" })
 		assert.equal(failed.phase, "failed")
-		assert.equal(ackScore(failed, "movie-603"), null)
+		assert.equal(ackScore(failed, "movie-603"), 8)
 		assert.equal(ackLeaving(failed, "movie-603"), false)
 		assert.equal(takesPress(failed), true)
 		assert.equal(ackTransition(failed, press("movie-603", 3000)).phase, "saving")
 		// A failure never moves on.
 		assert.equal(ackTransition(failed, { type: "done" }), failed)
+	})
+
+	it("after a failed save the person can go on to the next title without saving", () => {
+		const failed = ackTransition(ackTransition(IDLE, press("movie-603")), { type: "failed" })
+		assert.equal(ackTransition(failed, { type: "pass" }), IDLE)
+		// Only a failed answer can be passed: one on its way or held goes on by itself.
+		const saving = ackTransition(IDLE, press("movie-603"))
+		assert.equal(ackTransition(saving, { type: "pass" }), saving)
+		const held = ackTransition(saving, { type: "saved", at: 1100 })
+		assert.equal(ackTransition(held, { type: "pass" }), held)
+		assert.equal(ackTransition(IDLE, { type: "pass" }), IDLE)
+	})
+
+	it("says the same words for a failed save everywhere", () => {
+		assert.equal(ACK_FAILED, "Couldn't save. Try again, or go to the next title.")
 	})
 
 	it("Haven't seen it is acknowledged the same way, without a score", () => {

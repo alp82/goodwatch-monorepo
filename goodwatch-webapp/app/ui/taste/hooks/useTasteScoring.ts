@@ -199,7 +199,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 		[],
 	)
 	/** A write the server answered without saving: the person's marks are read again, so none stays half-done. */
-	const refused = useCallback(() => {
+	const refused = useCallback((): never => {
 		void queryClient.invalidateQueries({ queryKey: queryKeyUserData })
 		throw new Error("The answer was not saved")
 	}, [queryClient])
@@ -219,13 +219,15 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 				noteScoreSaved(media)
 				return
 			}
-			const result = await scoreMutation.mutateAsync({
-				mediaType: media.media_type,
-				tmdbId: media.tmdb_id,
-				score,
-				// A quiz score on a show never asks "Have you seen all of it?".
-				byHand: false,
-			})
+			const result = await scoreMutation
+				.mutateAsync({
+					mediaType: media.media_type,
+					tmdbId: media.tmdb_id,
+					score,
+					// A quiz score on a show never asks "Have you seen all of it?".
+					byHand: false,
+				})
+				.catch(refused)
 			if (result.status !== "success") refused()
 			noteScoreSaved(media)
 			record(media, "score", score)
@@ -240,11 +242,13 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 				updateGuestInteraction(media.media_type, media.tmdb_id, "skip")
 				return
 			}
-			const result = await skippedMutation.mutateAsync({
-				mediaType: media.media_type,
-				tmdbId: media.tmdb_id,
-				action: "add",
-			})
+			const result = await skippedMutation
+				.mutateAsync({
+					mediaType: media.media_type,
+					tmdbId: media.tmdb_id,
+					action: "add",
+				})
+				.catch(refused)
 			if (result.status !== "success") refused()
 			record(media, "skip")
 		},

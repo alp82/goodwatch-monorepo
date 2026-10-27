@@ -199,6 +199,8 @@ export type TvContext = {
 	draft: string
 	/** Taste quiz scores toward the goal. */
 	quizProgress: number
+	/** The quiz has no title because asking for more failed: it offers to ask again (`retry-titles`). */
+	quizFailed?: boolean
 	/** The person's two streaming services, by TMDB provider id: the Remote's keys and home's tiles after the apps. */
 	services: readonly number[]
 	/**
@@ -249,8 +251,10 @@ export type TvEffect =
 	| { type: "rate"; title: string; score: Score }
 	/** Taste quiz: score the title on screen. */
 	| { type: "quiz-rate"; score: Score }
-	/** Taste quiz: "Haven't seen it". */
+	/** Taste quiz: "Haven't seen it", or "Next title" after a save that failed. */
 	| { type: "quiz-skip" }
+	/** Taste quiz: ask again for titles after the request failed. */
+	| { type: "quiz-retry" }
 	/** Continue with Google, back to the same TV screen. */
 	| { type: "sign-in" }
 	/** The phone's search field: the browser's focus goes to the line, and the phone's own keyboard opens. */
@@ -754,6 +758,8 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 			]
 		// Taste on the TV is the quiz, with Your taste one key away.
 		case "quiz":
+			if (!ctx.titles.length && ctx.quizFailed)
+				return ["retry-titles", "your-taste"]
 			return [...stripItems(screen, ctx), "your-taste"]
 		case "rate":
 			return stripItems(screen, ctx)
@@ -1795,6 +1801,11 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 				: none(state)
 		case "your-taste":
 			return s.name === "quiz" ? push(state, APP_SCREEN.taste) : none(state)
+		// Asking for more titles failed: ask again.
+		case "retry-titles":
+			return s.name === "quiz"
+				? none(state, [{ type: "quiz-retry" }])
+				: none(state)
 		case "sign-up":
 			return s.name === "taste" && !ctx.member
 				? none(state, [{ type: "sign-up" }])

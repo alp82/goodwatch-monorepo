@@ -170,6 +170,7 @@ export function useTasteReport(
 	}, [state, rated, next, view, picks, picksLoading])
 
 	const waiting = quiz ? quiz.loadingTitles : true
+	const titlesFailed = quiz?.titlesFailed ?? false
 	const answered = quiz?.answered ?? NOT_ANSWERED
 	const { score, leaving, line, failed } = answered
 	const screens: TvTasteScreens = useMemo(
@@ -178,11 +179,12 @@ export function useTasteReport(
 			quiz: {
 				title: asked ? quizTitle(asked) : null,
 				waiting,
+				failed: titlesFailed,
 				rated,
 				answered: { score, leaving, line, failed },
 			},
 		}),
-		[taste, asked, waiting, rated, score, leaving, line, failed],
+		[taste, asked, waiting, titlesFailed, rated, score, leaving, line, failed],
 	)
 	// An answer on its way or held belongs to the quiz on show: leaving it for Taste ends the hold. The score is
 	// saved anyway; nothing moves on later.

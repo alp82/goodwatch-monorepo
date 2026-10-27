@@ -236,19 +236,25 @@ function Here({ side, titles }: { side: Side; titles: Titles }) {
 	return (
 		<Panel image={titlesOf(titles, [side.image])[0]} tone="amber">
 			<div>
-				<p className="text-sm font-semibold text-amber-300">Fits your taste</p>
+				<p className="text-sm font-semibold text-amber-300">You rated these</p>
 				<h2 className="mt-1 text-3xl font-bold leading-tight md:text-4xl">
 					{side.name}
 				</h2>
 				<ForYouLink recipe={side.id} className="mt-1">
-					Recommend me from this
+					Recommend me from these
 				</ForYouLink>
 			</div>
+			{/* The person's own titles, not suggestions: ringed, unlike the suggestion cards beside them. */}
 			<div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 max-sm:[&>*:nth-child(4)]:hidden">
 				{titlesOf(titles, side.here)
 					.slice(0, 4)
 					.map((t) => (
-						<PortraitCard key={t.key} t={t} posterSizes={PANEL_CARD_SIZES} />
+						<PortraitCard
+							key={t.key}
+							t={t}
+							posterSizes={PANEL_CARD_SIZES}
+							rated
+						/>
 					))}
 			</div>
 		</Panel>

@@ -19,10 +19,16 @@ const PICKS_PER_TYPE = MAX_PICK_PAGES * PICKS_PER_PAGE
 export function useQuizPicks({
 	scored,
 	exclude,
+	hide,
 	enabled,
 }: {
 	scored: ScoredItem[]
 	exclude: ExcludeItem[]
+	/**
+	 * More titles never to show as picks, left out here only, not sent: a member's whole account (scored, skipped,
+	 * Want to See, Not interested, watched), which the recommendations can't see and which can be long.
+	 */
+	hide?: ReadonlySet<string>
 	enabled: boolean
 }) {
 	const params = {
@@ -42,10 +48,13 @@ export function useQuizPicks({
 			...(movies.data?.recommendations ?? []),
 			...(shows.data?.recommendations ?? []),
 		]
-			.filter((p) => !done.has(`${p.media_type}-${p.tmdb_id}`))
+			.filter((p) => {
+				const key = `${p.media_type}-${p.tmdb_id}`
+				return !done.has(key) && !hide?.has(key)
+			})
 			.sort((a, b) => b.match_percentage - a.match_percentage)
 			.slice(0, PICKS_PER_TYPE)
-	}, [movies.data, shows.data, scored, exclude])
+	}, [movies.data, shows.data, scored, exclude, hide])
 
 	return {
 		picks,

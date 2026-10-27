@@ -51,6 +51,18 @@ interface UseSkippedMutationParams {
 
 type UseNotInterestedMutationParams = UseSkippedMutationParams
 
+/**
+ * The server's answer to a write, or a rejection when it didn't save: a failed request, or an answer that says
+ * `failed` (an expired session, a write the server turned down). Rejecting runs the mutation's rollback, so no
+ * optimistic mark stays on screen for a write that never happened.
+ */
+async function savedResult(response: Response, what: string): Promise<MutationResult> {
+	const result = (await response.json().catch(() => null)) as MutationResult | null
+	if (!response.ok || result?.status !== "success")
+		throw new Error(`Saving ${what} failed`)
+	return result
+}
+
 interface MutationContext {
 	previousData?: UserData
 }
@@ -159,13 +171,17 @@ export const useScoreMutation = () => {
 	>({
 		mutationFn: async ({ mediaType, tmdbId, score, review, byHand }) => {
 			if (!user) {
-				updateGuestInteraction(
-					mediaType,
-					tmdbId,
-					"score",
-					score,
-					score === null,
+				// Over the guest limit nothing is saved (and the limit prompt opens): a rejection, not a success.
+				if (
+					!updateGuestInteraction(
+						mediaType,
+						tmdbId,
+						"score",
+						score,
+						score === null,
+					)
 				)
+					throw new Error("Over the guest limit")
 				return { status: "success" }
 			}
 			const response = await productAnalyticsFetch("/api/update-scores", {
@@ -178,7 +194,7 @@ export const useScoreMutation = () => {
 					...(byHand === false ? { by_hand: false } : {}),
 				}),
 			})
-			return await response.json()
+			return savedResult(response, "the score")
 		},
 		onMutate: async ({ mediaType, tmdbId, score, review }) => {
 			if (!user) return {}
@@ -242,7 +258,7 @@ export const useWishlistMutation = () => {
 					action,
 				}),
 			})
-			return await response.json()
+			return savedResult(response, "Want to See")
 		},
 		onMutate: async ({ mediaType, tmdbId, action }) => {
 			if (!user) return {}
@@ -290,7 +306,7 @@ export const useWatchedMutation = () => {
 				}),
 			},
 			)
-			return await response.json()
+			return savedResult(response, "the watch")
 		},
 		onMutate: async ({ mediaType, tmdbId, action }) => {
 			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
@@ -340,7 +356,7 @@ export const useFavoriteMutation = () => {
 					action,
 				}),
 			})
-			return await response.json()
+			return savedResult(response, "the favorite")
 		},
 		onMutate: async ({ mediaType, tmdbId, action }) => {
 			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
@@ -391,7 +407,7 @@ export const useSkippedMutation = () => {
 					action,
 				}),
 			})
-			return await response.json()
+			return savedResult(response, "Haven't seen it")
 		},
 		onMutate: async ({ mediaType, tmdbId, action }) => {
 			if (!user) return {}
@@ -446,9 +462,7 @@ export const useNotInterestedMutation = () => {
 				}),
 			},
 			)
-			const result: MutationResult = await response.json()
-			if (!response.ok || result.status !== "success") throw new Error("Updating Not interested failed")
-			return result
+			return savedResult(response, "Not interested")
 		},
 		onMutate: async ({ mediaType, tmdbId, action }) => {
 			if (!user) return {}

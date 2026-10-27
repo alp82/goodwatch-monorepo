@@ -5,12 +5,24 @@
 // in the visitor's country, feeling words) and reveals the top pick with three more.
 //
 // The taps and the pick are kept for the tab (progress.ts), so coming back from sign-up shows the quiz as it was.
+//
+// A pick is never a title the visitor already answered: a guest's marks in this browser, a member's account
+// (ui/taste/answered.ts), nor one of the twelve they were just shown and passed over. With nothing left, the pick
+// says so plainly.
 import { Link } from "@remix-run/react"
-import { type CSSProperties, useEffect, useRef, useState } from "react"
+import {
+	type CSSProperties,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react"
+import { useUserData } from "~/routes/api.user-data"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import type { IntroCard } from "~/ui/living-room/intro/data"
 import { useUser } from "~/utils/auth"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
+import { accountAnsweredKeys, excludeIdsFor } from "../../../taste/answered"
 import { TAPS_KEY } from "../progress"
 
 const NEED = 3
@@ -22,7 +34,32 @@ type Rec = {
 	media_type: "movie" | "show"
 	match_percentage: number
 }
-type Pick = { top: IntroCard; more: IntroCard[]; fallback: boolean }
+/**
+ * The pick and three more; `top` null when nothing was left to pick. `cards` keeps every candidate in order, so the
+ * pick can be chosen again when the visitor's marks arrive or change (a pick saved before has none).
+ */
+type Pick = {
+	top: IntroCard | null
+	more: IntroCard[]
+	fallback: boolean
+	cards?: IntroCard[]
+}
+
+/** The pick to show: candidates the visitor already answered drop out, the best one left with a picture leads. */
+function shownPick(pick: Pick, answered: ReadonlySet<string>): Pick {
+	const cards = (
+		pick.cards ?? [pick.top, ...pick.more].filter((c): c is IntroCard => !!c)
+	).filter((c) => !answered.has(answerKey(c)))
+	const top =
+		cards.find((c) => c.backdrop_path && c.services?.length) ??
+		cards.find((c) => c.backdrop_path) ??
+		null
+	const more = cards.filter((c) => c !== top && c.poster_path).slice(0, 3)
+	return { ...pick, top, more }
+}
+
+const answerKey = (c: { media_type: string; tmdb_id: number }) =>
+	`${c.media_type}-${c.tmdb_id}`
 
 /** The mood words of the picks, the most shared first, with how many picks share each. */
 function tasteWords(picks: IntroCard[]) {
@@ -44,6 +81,7 @@ async function recsFor(
 	type: "movie" | "show",
 	picks: IntroCard[],
 	pool: IntroCard[],
+	answered: ReadonlySet<string>,
 ): Promise<Rec[]> {
 	const params = new URLSearchParams({
 		mediaType: type,
@@ -54,9 +92,11 @@ async function recsFor(
 				score: 10,
 			})),
 		),
-		excludeIds: JSON.stringify(
-			pool.map((p) => ({ tmdb_id: p.tmdb_id, media_type: p.media_type })),
-		),
+		excludeIds: JSON.stringify([
+			...pool.map((p) => ({ tmdb_id: p.tmdb_id, media_type: p.media_type })),
+			// The most recent of them; the answer is filtered by all of them below.
+			...excludeIdsFor([...answered], [], 60),
+		]),
 		limit: "8",
 	})
 	const res = await fetch(`/api/guest-recommendations?${params}`)
@@ -64,11 +104,17 @@ async function recsFor(
 	return (await res.json()).recommendations ?? []
 }
 
-async function findPick(picks: IntroCard[], pool: IntroCard[]): Promise<Pick> {
+async function findPick(
+	picks: IntroCard[],
+	pool: IntroCard[],
+	answered: ReadonlySet<string>,
+): Promise<Pick> {
 	try {
 		const types = [...new Set(picks.map((p) => p.media_type))]
 		const lists = await Promise.all(
-			types.map((t) => recsFor(t, picks, pool).catch(() => [] as Rec[])),
+			types.map((t) =>
+				recsFor(t, picks, pool, answered).catch(() => [] as Rec[]),
+			),
 		)
 		const seen = new Set<string>()
 		const recs = lists
@@ -76,7 +122,7 @@ async function findPick(picks: IntroCard[], pool: IntroCard[]): Promise<Pick> {
 			.sort((a, b) => b.match_percentage - a.match_percentage)
 			.filter((r) => {
 				const k = `${r.media_type}:${r.tmdb_id}`
-				if (seen.has(k)) return false
+				if (seen.has(k) || answered.has(answerKey(r))) return false
 				seen.add(k)
 				return true
 			})
@@ -85,29 +131,24 @@ async function findPick(picks: IntroCard[], pool: IntroCard[]): Promise<Pick> {
 		const res = await fetch(
 			`/api/intro?cards=${recs.map((r) => `${r.media_type}:${r.tmdb_id}`).join(",")}`,
 		)
-		const cards: IntroCard[] = (await res.json()).cards ?? []
+		const cards: IntroCard[] = ((await res.json()).cards ?? []).filter(
+			(c: IntroCard) => !answered.has(answerKey(c)),
+		)
 		const order = (c: IntroCard) =>
 			recs.findIndex(
 				(r) => r.tmdb_id === c.tmdb_id && r.media_type === c.media_type,
 			)
 		cards.sort((a, b) => order(a) - order(b))
-		const top =
-			cards.find((c) => c.backdrop_path && c.services?.length) ??
-			cards.find((c) => c.backdrop_path)
-		if (!top) throw new Error("no card with a picture")
-		const more = cards.filter((c) => c !== top && c.poster_path).slice(0, 3)
-		return { top, more, fallback: false }
-	} catch (error) {
-		console.error(
-			"The intro's quiz: the pick fell back to a title of the quiz",
-			error,
+		const found = shownPick(
+			{ top: null, more: [], fallback: false, cards },
+			answered,
 		)
-		const words = new Set(picks.flatMap((p) => p.feels))
-		const shared = (c: IntroCard) => c.feels.filter((f) => words.has(f)).length
-		const rest = pool
-			.filter((p) => !picks.includes(p) && p.backdrop_path)
-			.sort((a, b) => shared(b) - shared(a))
-		return { top: rest[0] ?? picks[0], more: rest.slice(1, 4), fallback: true }
+		if (!found.top) throw new Error("no card with a picture")
+		return found
+	} catch (error) {
+		// The pool's other titles were shown and passed over: never a pick. Nothing is left to pick.
+		console.error("The intro's quiz: no pick", error)
+		return { top: null, more: [], fallback: true }
 	}
 }
 
@@ -147,6 +188,11 @@ export function TasteQuiz({
 	onLeave,
 }: { cards: IntroCard[]; onLeave: () => void }) {
 	const { user } = useUser()
+	// What the visitor answered before: a guest's marks in this browser, a member's account. Never a pick.
+	const { data: marks } = useUserData()
+	const answered = useMemo(() => accountAnsweredKeys(marks), [marks])
+	const answeredRef = useRef(answered)
+	answeredRef.current = answered
 	const pool = cards.filter((c) => c.poster_path).slice(0, 12)
 	const [picked, setPicked] = useState<IntroCard[]>([])
 	const [pick, setPick] = useState<Pick | null>(null)
@@ -177,7 +223,7 @@ export function TasteQuiz({
 		if (!full || asked.current) return
 		asked.current = true
 		const started = Date.now()
-		findPick(picked, pool).then((found) => {
+		findPick(picked, pool, answeredRef.current).then((found) => {
 			setTimeout(
 				() => {
 					setPick(found)
@@ -206,6 +252,11 @@ export function TasteQuiz({
 		saveTaps(null)
 	}
 
+	// Chosen again on every change of the visitor's marks: a title they answered meanwhile is never shown as a pick.
+	const shown = useMemo(
+		() => (pick ? shownPick(pick, answered) : null),
+		[pick, answered],
+	)
 	const words = tasteWords(picked)
 	const names = picked.map((p) => short(p.title))
 
@@ -297,7 +348,7 @@ export function TasteQuiz({
 				</section>
 			)}
 
-			{full && !pick && (
+			{full && !shown && (
 				<div className="quiz-read" aria-live="polite">
 					<div className="quiz-fan">
 						{picked.map((p, i) => (
@@ -325,11 +376,43 @@ export function TasteQuiz({
 				</div>
 			)}
 
-			{pick && (
+			{shown && !shown.top && (
+				<section className="quiz-pick" aria-live="polite">
+					<div className="quiz-pick-shade" />
+					<div className="quiz-pick-words">
+						<div className="quiz-kicker quiz-in">Your taste</div>
+						<div
+							className="quiz-pick-title quiz-in"
+							style={{ "--d": "0.1s" } as CSSProperties}
+						>
+							No picks right now.
+						</div>
+						<p
+							className="quiz-why quiz-in"
+							style={{ "--d": "0.2s" } as CSSProperties}
+						>
+							Try three others, or look around.
+						</p>
+						<div
+							className="quiz-acts quiz-in"
+							style={{ "--d": "0.3s" } as CSSProperties}
+						>
+							<button type="button" className="quiz-cta" onClick={again}>
+								Try three others
+							</button>
+							<button type="button" className="quiz-ghost" onClick={onLeave}>
+								Look around
+							</button>
+						</div>
+					</div>
+				</section>
+			)}
+
+			{shown?.top && (
 				<section className="quiz-pick" aria-live="polite">
 					<img
 						className="quiz-pick-art"
-						src={tmdbImageUrl(pick.top.backdrop_path as string, "w1280")}
+						src={tmdbImageUrl(shown.top.backdrop_path as string, "w1280")}
 						alt=""
 						draggable={false}
 					/>
@@ -345,7 +428,7 @@ export function TasteQuiz({
 							className="quiz-pick-title quiz-in"
 							style={{ "--d": "0.25s" } as CSSProperties}
 						>
-							{pick.top.title}
+							{shown.top.title}
 						</div>
 						<div
 							className="quiz-facts quiz-in"
@@ -356,25 +439,25 @@ export function TasteQuiz({
 									{
 										details: {
 											goodwatch_overall_score_normalized_percent:
-												pick.top.goodwatch_overall_score_normalized_percent,
+												shown.top.goodwatch_overall_score_normalized_percent,
 										},
 									} as never
 								}
 								size={ring}
 							/>
-							{pick.top.feels.length > 0 && (
+							{shown.top.feels.length > 0 && (
 								<span className="quiz-feels">
-									{pick.top.feels.slice(0, 2).join(" · ")}
+									{shown.top.feels.slice(0, 2).join(" · ")}
 								</span>
 							)}
 						</div>
-						{pick.top.services?.length ? (
+						{shown.top.services?.length ? (
 							<div
 								className="quiz-where quiz-in"
 								style={{ "--d": "0.5s" } as CSSProperties}
 							>
 								<span className="quiz-where-on">On</span>
-								{pick.top.services.slice(0, 2).map((s) => (
+								{shown.top.services.slice(0, 2).map((s) => (
 									<span key={s.id} className="quiz-service">
 										{s.logo_path && (
 											<img src={tmdbImageUrl(s.logo_path, "w92")} alt="" />
@@ -417,11 +500,11 @@ export function TasteQuiz({
 							Free. It gets sharper with every title you rate.
 						</p>
 					</div>
-					{pick.more.length > 0 && (
+					{shown.more.length > 0 && (
 						<div className="quiz-more">
 							<div className="quiz-more-label">Also for you</div>
 							<div className="quiz-more-row">
-								{pick.more.map((c, i) => (
+								{shown.more.map((c, i) => (
 									<img
 										key={c.key}
 										className="quiz-in"

@@ -21,6 +21,7 @@ import { ackView, useScoreAck } from "~/ui/scoring/use-score-ack"
 import { RatingDots } from "~/ui/taste-quiz/TasteQuizPage"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import useLocale from "~/utils/locale"
+import { accountAnsweredKeys, excludeIdsFor } from "../answered"
 import { useTasteScoring } from "../hooks/useTasteScoring"
 import { SourceLogoRow } from "./SourceLogoRow"
 import {
@@ -74,6 +75,9 @@ export function TasteStart() {
 	const [waitingOn, setWaitingOn] = useState<ImportSourceId | null>(null)
 	const [titles, setTitles] = useState<ScoringMedia[]>([])
 	const [loading, setLoading] = useState(true)
+	// The last request for titles failed; `retries` asks again.
+	const [fetchFailed, setFetchFailed] = useState(false)
+	const [retries, setRetries] = useState(0)
 	const [done, setDone] = useState<string[]>([])
 	const [rated, setRated] = useState<{ title: ScoringMedia; score: Score }[]>(
 		[],
@@ -93,26 +97,29 @@ export function TasteStart() {
 		files.take(file)
 	}
 
-	// The best-known titles the member hasn't rated or skipped; more when the queue runs low.
+	// The best-known titles the member hasn't answered (rated, skipped, Not interested, Want to See or watched);
+	// more when the queue runs low.
 	const scores = userData?.scores
-	const scored = useMemo(() => new Set(Object.keys(scores ?? {})), [scores])
+	const answered = useMemo(() => accountAnsweredKeys(userData), [userData])
 	// The title whose answer was just given stays first while it is held, though its score is saved already.
 	const queue = titles.filter(
 		(t) =>
 			!done.includes(keyOf(t)) &&
-			(keyOf(t) === holding || !scored.has(keyOf(t))),
+			(keyOf(t) === holding || !answered.has(keyOf(t))),
 	)
 	const fetching = useRef(false)
 	useEffect(() => {
-		if (fetching.current || (titles.length > 0 && queue.length > 3)) return
+		if (
+			fetching.current ||
+			fetchFailed ||
+			(titles.length > 0 && queue.length > 3)
+		)
+			return
 		fetching.current = true
 		fetchSmartTitles({
 			count: titles.length === 0 ? WALL : 40,
 			language: locale.language,
-			excludeIds: done.map((k) => {
-				const [media_type, id] = k.split("-")
-				return { media_type, tmdb_id: Number(id) }
-			}),
+			excludeIds: excludeIdsFor(done),
 		})
 			.then((more) =>
 				setTitles((now) => {
@@ -120,12 +127,16 @@ export function TasteStart() {
 					return [...now, ...more.filter((t) => !known.has(keyOf(t)))]
 				}),
 			)
-			.catch(() => {})
+			.catch(() => setFetchFailed(true))
 			.finally(() => {
 				fetching.current = false
 				setLoading(false)
 			})
-	}, [titles.length, queue.length, done, locale.language])
+	}, [titles.length, queue.length, done, locale.language, fetchFailed, retries])
+	const retryTitles = () => {
+		setFetchFailed(false)
+		setRetries((n) => n + 1)
+	}
 
 	// Liked titles: the saved ones (imports included) with this visit's ratings on top.
 	const likedKeys = useMemo(() => {
@@ -203,6 +214,9 @@ export function TasteStart() {
 			() => saveSkip(title),
 			() => setDone((d) => [...d, keyOf(title)]),
 		)
+	// After a save that failed: on to the next title without saving.
+	const pass = (title: ScoringMedia) =>
+		ack.pass(keyOf(title), () => setDone((d) => [...d, keyOf(title)]))
 	const seeTaste = () => {
 		setAsked(true)
 		revalidator.revalidate()
@@ -336,8 +350,11 @@ export function TasteStart() {
 								title={queue[0]}
 								answered={ackView(ack.state, queue[0] ? keyOf(queue[0]) : null)}
 								loading={loading}
+								fetchFailed={fetchFailed}
+								onRetry={retryTitles}
 								onRate={rate}
 								onSkip={skip}
+								onPass={pass}
 							/>
 							{rated.length > 0 && (
 								<ul
@@ -398,17 +415,32 @@ function RateCard({
 	title: x,
 	answered: a,
 	loading,
+	fetchFailed,
+	onRetry,
 	onRate,
 	onSkip,
+	onPass,
 }: {
 	title: ScoringMedia | undefined
 	answered: ReturnType<typeof ackView>
 	loading: boolean
+	/** Asking for titles failed: not the same as having none left. */
+	fetchFailed: boolean
+	onRetry: () => void
 	onRate: (title: ScoringMedia, score: Score) => void
 	onSkip: (title: ScoringMedia) => void
+	/** After a save that failed: on to the next title without saving. */
+	onPass: (title: ScoringMedia) => void
 }) {
 	if (!x)
-		return (
+		return fetchFailed && !loading ? (
+			<div className="flex flex-col items-center gap-3 py-10 text-center text-gray-400">
+				<p>Couldn't load more titles.</p>
+				<button type="button" className={ghostButton} onClick={onRetry}>
+					Try again
+				</button>
+			</div>
+		) : (
 			<p
 				className={`py-10 text-center text-gray-400 ${loading ? "animate-pulse" : ""}`}
 			>
@@ -454,13 +486,25 @@ function RateCard({
 				>
 					{a.line}
 				</p>
-				<button
-					type="button"
-					className={`${ghostButton} mb-4`}
-					onClick={() => onSkip(x)}
-				>
-					Haven't seen it
-				</button>
+				<div className="mb-4 flex flex-wrap gap-2">
+					<button
+						type="button"
+						className={ghostButton}
+						onClick={() => onSkip(x)}
+					>
+						Haven't seen it
+					</button>
+					{/* A save that failed: on without saving it. */}
+					{a.failed && (
+						<button
+							type="button"
+							className={ghostButton}
+							onClick={() => onPass(x)}
+						>
+							Next title
+						</button>
+					)}
+				</div>
 				<ScoreControl
 					key={keyOf(x)}
 					value={a.score}

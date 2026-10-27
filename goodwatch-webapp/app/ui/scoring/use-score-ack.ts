@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { scoreLabels } from "~/utils/ratings"
 import {
+	ACK_FAILED,
 	type AckAnswer,
 	type AckState,
 	IDLE,
@@ -88,6 +89,23 @@ export function useScoreAck() {
 		[send],
 	)
 
+	/**
+	 * After a failed save of the title with `key`: on to the next title (`next`) without saving. Returns false when
+	 * nothing failed for that title.
+	 */
+	const pass = useCallback(
+		(key: string, next: () => void) => {
+			const state = latest.current
+			if (state.phase !== "failed" || state.key !== key) return false
+			clearTimeout(timer.current)
+			run.current += 1
+			send({ type: "pass" })
+			next()
+			return true
+		},
+		[send],
+	)
+
 	/** Ends whatever is on its way or held, without moving on. */
 	const cancel = useCallback(() => {
 		clearTimeout(timer.current)
@@ -95,7 +113,7 @@ export function useScoreAck() {
 		send({ type: "cancel" })
 	}, [send])
 
-	return { state, answer, cancel, busy: !takesPress(state) }
+	return { state, answer, pass, cancel, busy: !takesPress(state) }
 }
 
 export type ScoreAck = ReturnType<typeof useScoreAck>
@@ -104,7 +122,7 @@ export type ScoreAck = ReturnType<typeof useScoreAck>
 export function ackView(state: AckState, key: string | null) {
 	const mine = state.phase !== "idle" && state.key === key
 	return {
-		/** The score to light as chosen, before and after it is saved. */
+		/** The score to light as chosen, before and after it is saved, and after it failed to. */
 		score: ackScore(state, key),
 		/** The answer is saved and held: the title is on its way out. */
 		leaving: ackLeaving(state, key),
@@ -112,7 +130,7 @@ export function ackView(state: AckState, key: string | null) {
 		line: !mine
 			? null
 			: state.phase === "failed"
-				? "Couldn't save that. Try again."
+				? ACK_FAILED
 				: state.answer.kind === "skip"
 					? "Not seen · next title"
 					: `Scored ${state.answer.score} · ${scoreLabels[state.answer.score]}`,

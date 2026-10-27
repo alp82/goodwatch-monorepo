@@ -11,7 +11,10 @@ interface UseTitleQueueParams {
 	initialTitles: ScoringMedia[]
 	isAuthenticated: boolean
 	interactions: TasteInteraction[]
-	fetchMoreTitles: () => Promise<ScoringMedia[]>
+	/** More titles already answered (a member's account): left out of the queue like `interactions`. */
+	answeredKeys?: ReadonlySet<string>
+	/** Fetches more titles; `queued` are the keys of every title this queue has held, oldest first. */
+	fetchMoreTitles: (queued: readonly string[]) => Promise<ScoringMedia[]>
 	prefetchThreshold?: number
 	batchSize?: number
 }
@@ -22,6 +25,9 @@ interface TitleQueueState {
 	next: ScoringMedia | null
 	advance: () => void
 	isLoading: boolean
+	/** The last fetch for more titles failed (not: there are none left). `retry` asks again. */
+	failed: boolean
+	retry: () => void
 	isPrefetching: boolean
 	queueLength: number
 	reset: () => void
@@ -35,6 +41,7 @@ export function useTitleQueue({
 	initialTitles,
 	isAuthenticated,
 	interactions,
+	answeredKeys,
 	fetchMoreTitles,
 	prefetchThreshold = DEFAULT_PREFETCH_THRESHOLD,
 	batchSize = DEFAULT_BATCH_SIZE,
@@ -48,8 +55,13 @@ export function useTitleQueue({
 	// True once a fetch came back with nothing new. Until then an empty queue is still loading: the server
 	// render and the first client render have no queue yet, and must not read as "every title seen".
 	const [exhausted, setExhausted] = useState(false)
+	// The last fetch failed: not the same as having none left, and it can be asked again.
+	const [failed, setFailed] = useState(false)
 	// A new fetcher (e.g. the Living room TV enabling its quiz) may find titles again.
-	useEffect(() => setExhausted(false), [fetchMoreTitles])
+	useEffect(() => {
+		setExhausted(false)
+		setFailed(false)
+	}, [fetchMoreTitles])
 
 	// Track which items have been seen to avoid duplicates
 	const seenIds = useRef(new Set<string>())
@@ -62,8 +74,10 @@ export function useTitleQueue({
 
 	// Get IDs of items user has already interacted with
 	const interactedIds = useMemo(() => {
-		return new Set(interactions.map((i) => `${i.media_type}-${i.tmdb_id}`))
-	}, [interactions])
+		const ids = new Set(answeredKeys)
+		for (const i of interactions) ids.add(`${i.media_type}-${i.tmdb_id}`)
+		return ids
+	}, [interactions, answeredKeys])
 
 	// Helper to create unique key for a media item
 	const makeKey = useCallback((item: ScoringMedia) => {
@@ -112,10 +126,11 @@ export function useTitleQueue({
 		fetchInProgress.current = true
 		setIsPrefetching(true)
 		setExhausted(false)
+		setFailed(false)
 
 		try {
 			const language = locale.language
-			const newTitles = await fetchMoreTitles()
+			const newTitles = await fetchMoreTitles([...seenIds.current])
 			if (language !== activeLanguage.current) return
 			const filtered = filterNewTitles(newTitles)
 
@@ -128,20 +143,30 @@ export function useTitleQueue({
 			} else setExhausted(true)
 		} catch (error) {
 			console.error("[TitleQueue] Failed to prefetch:", error)
-			setExhausted(true)
+			setFailed(true)
 		} finally {
 			setIsPrefetching(false)
 			fetchInProgress.current = false
 		}
 	}, [fetchMoreTitles, filterNewTitles, makeKey, isPrefetching, locale.language])
 
-	// Check if we need to prefetch
+	// Check if we need to prefetch. Not again on its own after a fetch that failed (`retry` asks again) or found
+	// nothing new: the next answer asks again, since the answers change what the server leaves out.
 	useEffect(() => {
 		const remainingInQueue = queue.length - currentIndex
-		if (remainingInQueue <= prefetchThreshold && !fetchInProgress.current) {
+		if (
+			remainingInQueue <= prefetchThreshold &&
+			!fetchInProgress.current &&
+			!failed &&
+			!exhausted
+		) {
 			prefetchMore()
 		}
-	}, [currentIndex, queue.length, prefetchThreshold, prefetchMore])
+	}, [currentIndex, queue.length, prefetchThreshold, prefetchMore, failed, exhausted])
+	// biome-ignore lint/correctness/useExhaustiveDependencies: each step on may find titles again
+	useEffect(() => {
+		if (currentIndex > 0) setExhausted(false)
+	}, [currentIndex])
 
 	// Advance to next title
 	const advance = useCallback(() => {
@@ -167,7 +192,10 @@ export function useTitleQueue({
 	const next = queue[currentIndex + 1] ?? null
 
 	// Loading until there is a title, or a fetch has found nothing more.
-	const showLoading = current === null && !exhausted
+	const showLoading = current === null && !exhausted && !failed
+	const retry = useCallback(() => {
+		void prefetchMore()
+	}, [prefetchMore])
 
 	return {
 		remainingTitles: queue.slice(currentIndex),
@@ -175,6 +203,8 @@ export function useTitleQueue({
 		next,
 		advance,
 		isLoading: showLoading,
+		failed: failed && current === null,
+		retry,
 		isPrefetching,
 		queueLength: queue.length - currentIndex,
 		reset,

@@ -20,6 +20,7 @@ import { useUserData } from "~/routes/api.user-data"
 import type { Score } from "~/server/scores.server"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { ackView, useScoreAck } from "~/ui/scoring/use-score-ack"
+import { accountAnsweredKeys, excludeIdsFor } from "~/ui/taste/answered"
 import { useTasteScoring } from "~/ui/taste/hooks/useTasteScoring"
 import { useTitleQueue } from "~/ui/taste/hooks/useTitleQueue"
 import { useKeptCards } from "~/ui/title-actions/hide-feedback"
@@ -110,11 +111,34 @@ export function useTasteQuiz({
 		[],
 	)
 
-	// A new callback when `enabled` turns true makes the queue fetch again.
+	// Every title the person has answered: this visit's (all of a guest's in this browser), and a member's account,
+	// so a member is never asked again about a title they answered before, also after the quiz mounts again.
+	const accountAnswered = useMemo(
+		() => (member ? accountAnsweredKeys(userData) : undefined),
+		[member, userData],
+	)
+	const answeredKeys = useMemo(() => {
+		const keys = new Set(accountAnswered)
+		for (const i of interactions) keys.add(keyOf(i))
+		return keys
+	}, [accountAnswered, interactions])
+	// This visit's answers, oldest first, for the request for more titles: read when it is sent, so a new answer
+	// doesn't make a new fetcher (which would fetch again at once).
+	const answeredInOrder = useRef<string[]>([])
+	answeredInOrder.current = [...interactions]
+		.sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0))
+		.map(keyOf)
+
+	// A new callback when `enabled` turns true makes the queue fetch again. The titles answered and already queued
+	// are left out by the server, so a guest's quiz goes on past the first batch.
 	const fetchMoreTitles = useCallback(
-		() =>
+		(queued: readonly string[]) =>
 			enabled
-				? fetchSmartTitles({ count: 20, language: locale.language })
+				? fetchSmartTitles({
+						count: 20,
+						language: locale.language,
+						excludeIds: excludeIdsFor(answeredInOrder.current, queued),
+					})
 				: Promise.resolve([] as ScoringMedia[]),
 		[enabled, locale.language],
 	)
@@ -122,6 +146,7 @@ export function useTasteQuiz({
 		initialTitles: titles,
 		isAuthenticated: member,
 		interactions,
+		answeredKeys: accountAnswered,
 		fetchMoreTitles,
 		prefetchThreshold: 5,
 		batchSize: 20,
@@ -156,6 +181,9 @@ export function useTasteQuiz({
 	const { picks: listed, isLoading: picksLoading } = useQuizPicks({
 		scored,
 		exclude,
+		// The recommendations can't see a member's account: its skips, Want to See, Not interested and watched
+		// titles are left out here.
+		hide: accountAnswered,
 		enabled: wantPicks || state.pickedBefore || state.screen !== "quiz",
 	})
 	// Not interested on a pick takes it out of the picks at once. Its card stays in place, under its cover with Undo,
@@ -177,17 +205,12 @@ export function useTasteQuiz({
 	// Presses while it is on its way or held change nothing; a failed save keeps the title.
 	const ack = useScoreAck()
 	const title = queue.current
-	// The queue can fill before guest progress hydrates; step past titles already answered. Not the title whose
-	// answer was just given: it stays while the answer is held, and the hold moves on.
+	// The queue can fill before guest progress or a member's marks arrive; step past titles already answered. Not
+	// the title whose answer was just given: it stays while the answer is held (or failed), and the hold moves on.
 	const answering = ack.state.phase !== "idle" && title && ack.state.key === keyOf(title)
 	useEffect(() => {
-		if (
-			title &&
-			!answering &&
-			interactions.some((i) => keyOf(i) === keyOf(title))
-		)
-			queue.advance()
-	}, [title, answering, interactions, queue.advance])
+		if (title && !answering && answeredKeys.has(keyOf(title))) queue.advance()
+	}, [title, answering, answeredKeys, queue.advance])
 	const rate = useCallback(
 		(score: Score) => {
 			if (!title || ack.busy) return
@@ -220,6 +243,10 @@ export function useTasteQuiz({
 			queue.advance,
 		)
 	}, [title, saveSkip, queue.advance, ack])
+	/** After a failed save: on to the next title without saving the answer. */
+	const pass = useCallback(() => {
+		if (title) ack.pass(keyOf(title), queue.advance)
+	}, [title, ack, queue.advance])
 	const wantToSee = useCallback(() => {
 		if (!title || ack.busy) return
 		addPlanToWatch(title)
@@ -241,6 +268,9 @@ export function useTasteQuiz({
 		cancelAnswer: ack.cancel,
 		nextTitle: queue.next,
 		loadingTitles: !title && queue.isLoading,
+		/** No title, because asking for more failed (not because there are none left). `retryTitles` asks again. */
+		titlesFailed: !title && queue.failed,
+		retryTitles: queue.retry,
 		progress,
 		goal: state.goal,
 		/** This visit's scores (and Want to See titles, score null), newest last, for the "Keep these?" ask. */
@@ -254,6 +284,7 @@ export function useTasteQuiz({
 		picksLoading,
 		rate,
 		skip,
+		pass,
 		wantToSee,
 		showPicks: () => dispatch({ type: "show-picks" }),
 		rateMore: () => dispatch({ type: "rate-more", progress }),

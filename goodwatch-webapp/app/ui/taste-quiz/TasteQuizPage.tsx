@@ -188,11 +188,18 @@ function QuizStep({ q }: { q: TasteQuiz }) {
 					title={
 						q.loadingTitles
 							? "Finding titles for you…"
-							: "That's every title for now."
+							: q.titlesFailed
+								? "Couldn't load more titles."
+								: "That's every title for now."
 					}
 				/>
 				{!q.loadingTitles && (
-					<div className="mt-6">
+					<div className="mt-6 flex flex-wrap gap-3">
+						{q.titlesFailed && (
+							<button type="button" className={ghost} onClick={q.retryTitles}>
+								Try again
+							</button>
+						)}
 						<button type="button" className={amber} onClick={q.showPicks}>
 							♥ Show my picks
 						</button>
@@ -268,6 +275,12 @@ function QuizStep({ q }: { q: TasteQuiz }) {
 								<button type="button" className={ghost} onClick={q.skip}>
 									Haven't seen it
 								</button>
+								{/* A save that failed: on without saving it. */}
+								{a.failed && (
+									<button type="button" className={ghost} onClick={q.pass}>
+										Next title
+									</button>
+								)}
 								<button
 									type="button"
 									className="min-h-11 cursor-pointer px-3 text-sm font-semibold text-gray-400 hover:text-gray-200 md:min-h-10"
@@ -326,26 +339,37 @@ function KeepAsk({ q }: { q: TasteQuiz }) {
 		<Section>
 			<Heading
 				eyebrow={`${q.progress} ratings`}
-				title={q.member ? "Saved to your taste." : `Keep these ${q.progress}?`}
+				title={
+					q.member
+						? "Saved to your taste."
+						: `Save your ${q.progress} ${q.progress === 1 ? "rating" : "ratings"}?`
+				}
 				line={
 					q.member
-						? "Your picks moved with them."
-						: "Your picks are ready. Save your ratings and they follow you to every screen. Free."
+						? "Your ratings are on your account. Your picks come from them."
+						: "Save them and they follow you to every screen. Free. Your picks come from them."
 				}
 			/>
-			<div className="mt-6 flex flex-wrap gap-3">
-				{q.kept.slice(-8).map(({ title }) => (
-					<div
-						key={`${title.media_type}-${title.tmdb_id}`}
-						className="w-20 md:w-28"
-					>
-						<MovieTvCard
-							details={title}
-							mediaType={title.media_type}
-							posterSizes={KEPT_SIZES}
-						/>
-					</div>
-				))}
+			{/* The titles answered on this visit, not every rating: a returning guest has more than these. */}
+			<p className="mt-6 text-xs font-bold uppercase tracking-wider text-gray-400">
+				Rated this visit
+			</p>
+			<div className="mt-2 flex flex-wrap gap-3">
+				{q.kept
+					.filter((k) => k.score != null)
+					.slice(-8)
+					.map(({ title }) => (
+						<div
+							key={`${title.media_type}-${title.tmdb_id}`}
+							className="w-20 md:w-28"
+						>
+							<MovieTvCard
+								details={title}
+								mediaType={title.media_type}
+								posterSizes={KEPT_SIZES}
+							/>
+						</div>
+					))}
 			</div>
 			<div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
 				{q.member ? (
