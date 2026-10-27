@@ -3,6 +3,7 @@ import { GText, Icon, Press, glow } from '../glow/theme';
 import { Action, FaceStack, Thumb } from '../shell/parts';
 import { COLUMN } from '../shell/tokens';
 import type { HomeRoom } from './home-model';
+import { BootReveal } from '../home/BootReveal';
 
 /** One active room: mood, status, people and its match posters. A proposal gets an amber rule. */
 function Row({ room, first, open }: { room: HomeRoom; first: boolean; open: () => void }) {
@@ -47,13 +48,13 @@ export function Ledger({ rooms, unavailable, loading, open, newRoom, join, retry
     <View style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: COLUMN.maxWidth, alignSelf: 'center' }}>
       {rooms.length ? (
         <ScrollView testID="home-rooms" style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: COLUMN.inset, paddingBottom: 12 }}>
-          {rooms.map((r, i) => <Row key={r.roomId} room={r} first={i === 0} open={() => open(r.roomId)} />)}
+          {rooms.map((r, i) => <BootReveal key={r.roomId} index={i + 1}><Row room={r} first={i === 0} open={() => open(r.roomId)} /></BootReveal>)}
         </ScrollView>
       ) : (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, paddingHorizontal: 32 }}>
+        <BootReveal index={1} style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, paddingHorizontal: 32 }}>
           {!loading && <Icon name="tickets" size={44} color={glow.amber} />}
           <GText size={22} bold color={loading ? glow.muted : glow.ink}>{loading ? 'Opening your rooms…' : 'Start tonight’s room'}</GText>
-        </View>
+        </BootReveal>
       )}
       {unavailable.length > 0 && (
         <Press label="Retry rooms that didn’t load" onPress={retry} style={{ marginHorizontal: COLUMN.inset, minHeight: 44, flexDirection: 'row', gap: 8 }}>
@@ -61,10 +62,10 @@ export function Ledger({ rooms, unavailable, loading, open, newRoom, join, retry
           <GText size={13} color={glow.muted}>{unavailable.length === 1 ? 'One room didn’t load. Retry' : `${unavailable.length} rooms didn’t load. Retry`}</GText>
         </Press>
       )}
-      <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: COLUMN.inset, paddingTop: 10, paddingBottom: 12, borderTopWidth: rooms.length ? 1 : 0, borderTopColor: '#ffffff12' }}>
+      <BootReveal index={Math.max(rooms.length, 1) + 1} style={{ flexDirection: 'row', gap: 10, paddingHorizontal: COLUMN.inset, paddingTop: 10, paddingBottom: 12, borderTopWidth: rooms.length ? 1 : 0, borderTopColor: '#ffffff12' }}>
         <Action gold label="New room" icon="tickets" onPress={newRoom} disabled={disabled} style={{ flex: 3 }} />
         <Action label="Join" icon="people" onPress={join} disabled={disabled} style={{ flex: 2 }} />
-      </View>
+      </BootReveal>
     </View>
   );
 }

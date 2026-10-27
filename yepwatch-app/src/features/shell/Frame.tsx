@@ -1,7 +1,7 @@
-import { useContext, useRef, type ComponentRef, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Platform, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BootPhase, BootTarget } from '../home/boot-phase';
+import { BootReveal } from '../home/BootReveal';
 import { Backdrop } from '../glow/Backdrop';
 import { GText, Icon, Press, glow } from '../glow/theme';
 import { FRAME, R, column } from './tokens';
@@ -23,27 +23,18 @@ export function useFrameSize() {
 }
 
 /**
- * Launch flight destination. Wraps only the glyphs (Y, ep, Watch) with the boot word's letter-spacing
- * ratio so the scaled boot word lands exactly on it; invisible (size kept) until the boot is ready.
+ * The header wordmark. During the startup dissolve it appears after the boot word is gone (header
+ * role), so the two never share the screen.
  */
 export function BrandMark({ size }: { size: number }) {
-  const phase = useContext(BootPhase);
-  const { setTarget } = useContext(BootTarget);
-  const ref = useRef<ComponentRef<typeof View>>(null);
   const font = { fontFamily: 'GabaritoBold', fontSize: size, lineHeight: size * 1.2, letterSpacing: (-0.8 * size) / 64, color: glow.ink } as const;
   const web = Platform.OS === 'web' ? ({ dataSet: { homeBrand: '' } } as object) : {};
   return (
-    <View
-      ref={ref}
-      {...web}
-      onLayout={() => { if (Platform.OS !== 'web') ref.current?.measureInWindow((x, y, width, height) => setTarget({ x, y, width, height })); }}
-      accessibilityLabel="YepWatch"
-      style={{ flexDirection: 'row', alignSelf: 'center', opacity: phase === 'ready' ? 1 : 0 }}
-    >
+    <BootReveal part="header" index={0} {...web} accessibilityLabel="YepWatch" style={{ flexDirection: 'row', alignSelf: 'center' }}>
       <Text style={font}>Y</Text>
       <Text style={font}>ep</Text>
       <Text style={[font, { color: glow.amber }]}>Watch</Text>
-    </View>
+    </BootReveal>
   );
 }
 
@@ -56,12 +47,12 @@ export function AppFrame({ people, onLogo, subheader, children, testID }: { peop
   const size = useFrameSize();
   return (
     <SafeAreaView testID={testID} edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: glow.bg }}>
-      <Backdrop />
+      <BootReveal part="backdrop" pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}><Backdrop /></BootReveal>
       <View style={{ flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' }}>
         <View style={{ flex: 1, width: '100%', minHeight: 0, maxWidth: FRAME.maxWidth, maxHeight: FRAME.maxHeight }}>
           <View style={{ height: size.bar, flexShrink: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: size.edge }}>
             {onLogo ? <Press label="Your rooms" onPress={onLogo} style={{ alignItems: 'flex-start', paddingRight: 8 }}><BrandMark size={size.brand} /></Press> : <BrandMark size={size.brand} />}
-            {people}
+            {people ? <BootReveal part="header" index={1}>{people}</BootReveal> : null}
           </View>
           {subheader}
           <View style={{ flex: 1, minHeight: 0 }}>{children}</View>

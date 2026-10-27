@@ -10,6 +10,7 @@ import { Image, Platform, Pressable, View } from 'react-native';
 import { Link } from 'expo-router';
 import codes from './codes.json';
 import { BootPhase } from './boot-phase';
+import { BootReveal } from './BootReveal';
 import { GText, Press, glow } from '../glow/theme';
 import { IntroFilm } from './IntroFilm';
 import { GoodWatchMark, StoreLogo } from '../shell/marks';
@@ -98,7 +99,8 @@ export function Landing(actions: LandingActions) {
   const [filmBox, setFilmBox] = useState(200);
   const wide = box.width >= 860 && box.height >= 460;
   const landscape = !wide && box.height < 460 && box.width >= 560;
-  const obscured = phase !== 'ready';
+  // The film starts as the page appears, not behind the boot word.
+  const obscured = phase === 'boot';
   const headline = (size: number, center: boolean) => (
     <GText bold size={size} style={{ letterSpacing: -size * 0.025, lineHeight: size * 1.12, textAlign: center ? 'center' : 'left' }}>
       Choose something to watch, <GText bold size={size} color={glow.amber}>together.</GText>
@@ -109,42 +111,42 @@ export function Landing(actions: LandingActions) {
       {wide ? (
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 56, paddingHorizontal: 32, maxWidth: 1080, width: '100%', alignSelf: 'center' }}>
           <View style={{ flex: 1.1, gap: 36, alignItems: 'center' }}>
-            {headline(Math.min(50, box.width * 0.042), true)}
-            <IntroFilm obscured={obscured} height={Math.min(340, box.height * 0.46)} width={Math.min(560, box.width * 0.5)} />
+            <BootReveal index={0}>{headline(Math.min(50, box.width * 0.042), true)}</BootReveal>
+            <BootReveal index={1} style={{ alignSelf: 'stretch' }}><IntroFilm obscured={obscured} height={Math.min(340, box.height * 0.46)} width={Math.min(560, box.width * 0.5)} /></BootReveal>
           </View>
           <View style={{ flex: 1, maxWidth: 460, gap: 20 }}>
             {web && <>
-              <View style={{ flexDirection: 'row', gap: 16 }}>{stores.map((s) => <QrCard key={s.platform} store={s} width={Math.min(222, (Math.min(460, box.width * 0.42) - 16) / 2)} />)}</View>
-              <Divider text="Or start here in your browser" />
+              <BootReveal index={2} style={{ flexDirection: 'row', gap: 16 }}>{stores.map((s) => <QrCard key={s.platform} store={s} width={Math.min(222, (Math.min(460, box.width * 0.42) - 16) / 2)} />)}</BootReveal>
+              <BootReveal index={3}><Divider text="Or start here in your browser" /></BootReveal>
             </>}
-            <WebChoices size="wide" actions={actions} />
+            <BootReveal index={web ? 4 : 2}><WebChoices size="wide" actions={actions} /></BootReveal>
           </View>
         </View>
       ) : landscape ? (
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 24, paddingHorizontal: 20, paddingVertical: 10 }}>
           <View style={{ flex: 1, gap: 8, alignItems: 'center' }}>
-            {headline(22, true)}
-            <IntroFilm obscured={obscured} height={Math.max(110, Math.min(170, box.height - 90))} width={box.width / 2 - 40} />
+            <BootReveal index={0}>{headline(22, true)}</BootReveal>
+            <BootReveal index={1} style={{ alignSelf: 'stretch' }}><IntroFilm obscured={obscured} height={Math.max(110, Math.min(170, box.height - 90))} width={box.width / 2 - 40} /></BootReveal>
           </View>
           <View style={{ flex: 1, gap: 8 }}>
             {web && <>
-              <View style={{ flexDirection: 'row', gap: 8 }}>{stores.map((s) => <StoreButton key={s.platform} store={s} height={42} note={(box.width - 64) / 4 >= 180} />)}</View>
-              <Divider text="or in your browser" />
+              <BootReveal index={2} style={{ flexDirection: 'row', gap: 8 }}>{stores.map((s) => <StoreButton key={s.platform} store={s} height={42} note={(box.width - 64) / 4 >= 180} />)}</BootReveal>
+              <BootReveal index={3}><Divider text="or in your browser" /></BootReveal>
             </>}
-            <WebChoices size="compact" actions={actions} />
+            <BootReveal index={web ? 4 : 2}><WebChoices size="compact" actions={actions} /></BootReveal>
           </View>
         </View>
       ) : (
         <View style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 560, alignSelf: 'center', justifyContent: 'center', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12, gap: 12 }}>
-          {headline(box.width < 360 ? 24 : 28, true)}
-          <View onLayout={(e) => setFilmBox(e.nativeEvent.layout.height)} style={{ flex: 1, minHeight: 0, maxHeight: 300, justifyContent: 'center', overflow: 'hidden' }}>
+          <BootReveal index={0}>{headline(box.width < 360 ? 24 : 28, true)}</BootReveal>
+          <BootReveal index={1} onLayout={(e) => setFilmBox(e.nativeEvent.layout.height)} style={{ flex: 1, minHeight: 0, maxHeight: 300, justifyContent: 'center', overflow: 'hidden' }}>
             {filmBox >= 110 && <IntroFilm obscured={obscured} height={Math.min(240, filmBox - 8)} width={Math.min(560, box.width) - 40} />}
-          </View>
+          </BootReveal>
           {web && <>
-            <View style={{ flexDirection: 'row', gap: 10 }}>{stores.map((s) => <StoreButton key={s.platform} store={s} height={48} note={(Math.min(560, box.width) - 50) / 2 >= 180} />)}</View>
-            <Divider text="or in your browser" />
+            <BootReveal index={2} style={{ flexDirection: 'row', gap: 10 }}>{stores.map((s) => <StoreButton key={s.platform} store={s} height={48} note={(Math.min(560, box.width) - 50) / 2 >= 180} />)}</BootReveal>
+            <BootReveal index={3}><Divider text="or in your browser" /></BootReveal>
           </>}
-          <WebChoices size="stack" actions={actions} />
+          <BootReveal index={web ? 4 : 2}><WebChoices size="stack" actions={actions} /></BootReveal>
         </View>
       )}
     </View>

@@ -645,8 +645,14 @@ test('late newcomer can inspect and Agree to preserved nonmatch proposal with ex
 test('measured Yep exposure pauses for details and match inspection; missing reload measurements stay null', async ({
   page,
 }) => {
+  // Exposure cannot begin before the poster exists. Take that moment from the page itself: Playwright's
+  // visibility polling backs off, so its own detection can lag the poster by hundreds of milliseconds.
+  await page.addInitScript(() => {
+    const seen = () => { if (!(window as unknown as { posterAt?: number }).posterAt && document.querySelector('[data-testid="poster"]')) (window as unknown as { posterAt?: number }).posterAt = Date.now(); };
+    new MutationObserver(seen).observe(document, { childList: true, subtree: true });
+  });
   const f = await fixture(page);
-  const wallStart = Date.now();
+  const wallStart = await page.evaluate(() => (window as unknown as { posterAt: number }).posterAt);
   await page.waitForTimeout(200);
   await page.getByTestId('poster').click({ position: { x: 20, y: 20 } });
   await page.getByRole('dialog').waitFor();

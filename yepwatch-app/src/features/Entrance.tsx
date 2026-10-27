@@ -2,7 +2,7 @@ import { ConnectionDetails } from './rooms/ConnectionDetails';
 import type { ConnectionDiagnostic } from '../core/continuous/connection-diagnostic';
 import { EdgeBack } from './glow/EdgeBack';
 import { guestOnly } from '../core/config';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { BackHandler, Platform, View } from 'react-native';
 import { GText, Press, glow } from './glow/theme';
 import { router, useFocusEffect } from 'expo-router';
@@ -20,6 +20,8 @@ import type { AdmissionRecovery } from '../core/continuous/recovery-state';
 import { retainRequest, retryDeadline } from '../core/continuous/retry';
 import { useRetryCountdown } from '../core/continuous/useRetryCountdown';
 import { Landing } from './home/Landing';
+import { BootPageReady } from './home/boot-phase';
+import { BootReveal } from './home/BootReveal';
 import { greeting, type HomeRoom } from './rooms/home-model';
 import { Ledger } from './rooms/Ledger';
 import { HistoryPanel, JoinPanel, NamePanel, ProfilePanel } from './rooms/panels';
@@ -56,6 +58,9 @@ export function Entrance({ invite }: { invite?: string }) {
   const [restoreFailed, setRestoreFailed] = useState(false);
   const [restoreVersion, setRestoreVersion] = useState(0);
   const retrySeconds = useRetryCountdown(admission?.retryAt ?? 0);
+  // The startup dissolves into this page once its first content is known (rooms or the intro).
+  const markPageReady = useContext(BootPageReady);
+  useEffect(() => { if (home.ready && !restoring && !home.loadingRooms) markPageReady(); }, [home.ready, restoring, home.loadingRooms, markPageReady]);
   useEffect(() => {
     let active = true;
     void readAdmission(intent).then((saved) => {
@@ -275,9 +280,9 @@ export function Entrance({ invite }: { invite?: string }) {
       onLogo={shown ? closePanel : undefined}
       people={<Press label="Profile" disabled={home.loadingRooms} onPress={() => { setError(''); setPanel('profile'); }} style={{ alignItems: 'flex-end' }}><Avatar name={known} /></Press>}
       subheader={shown ? <SubHeader back={backTo} title={titles[shown]} /> : returning ? (
-        <SubHeader large title={known ? `${greeting(new Date().getHours())}, ${known}` : greeting(new Date().getHours())}
+        <BootReveal index={0}><SubHeader large title={known ? `${greeting(new Date().getHours())}, ${known}` : greeting(new Date().getHours())}
           subtitle={<GText size={13} color={glow.muted}>{active ? `${active} ${active === 1 ? 'room' : 'rooms'} going` : 'No rooms going'}</GText>}
-          right={<RoundButton label="History" icon="clock" onPress={() => setPanel('history')} />} />
+          right={<RoundButton label="History" icon="clock" onPress={() => setPanel('history')} />} /></BootReveal>
       ) : null}
     >
       <CoveredBody covered={Boolean(shown)}>

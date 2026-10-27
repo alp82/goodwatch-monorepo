@@ -40,7 +40,7 @@ for (const [width, height] of [[390,844],[1440,900]]) test(`first visit lands on
   await page.goto('/');
   await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);
   expect(Date.now() - start).toBeLessThan(5500);
-  // The boot word lands on the header wordmark: exactly one visible brand afterwards.
+  // The boot word dissolves in place: exactly one visible brand afterwards.
   const brand = page.locator('[data-home-brand]');
   await expect(brand).toHaveCount(1);
   await expect(brand).toHaveCSS('opacity', '1');
