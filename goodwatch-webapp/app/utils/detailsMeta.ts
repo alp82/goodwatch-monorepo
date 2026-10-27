@@ -35,6 +35,13 @@ export function detailsMetaTags(
 export function detailsPageMeta(media: MovieResult | ShowResult): PageMeta {
 	const { details, mediaType } = media
 	const name = `${details.title} (${details.release_year})`
+	const typedName = `${name} ${mediaType === "movie" ? "Movie" : "TV Show"}`
+	// Shorten the page's promise before ever shortening a proper name.
+	const title = [
+		`${typedName}: Ratings and Streaming`,
+		`${typedName}: Ratings`,
+		typedName,
+	].find((candidate) => candidate.length <= 60) ?? typedName
 	const lead = media.fingerprint
 		? `${summary({ title: details.title, mediaType, year: details.release_year, genres: details.genres, fingerprint: media.fingerprint })} ${pillarLine({ title: details.title, mediaType, year: details.release_year, genres: details.genres, fingerprint: media.fingerprint })}.`
 		: details.synopsis
@@ -45,7 +52,7 @@ export function detailsPageMeta(media: MovieResult | ShowResult): PageMeta {
 	const score = details.goodwatch_overall_score_normalized_percent
 	const cardParts = [details.poster_path && "poster", typeof score === "number" && score >= 0 && score <= 100 && "GoodWatch score"].filter(Boolean)
 	return {
-		title: `${name}: Where to Stream and Ratings | GoodWatch`,
+		title: `${title} | GoodWatch`,
 		description: `${name}: ${lead} See where to stream it legally and how critics and audiences rate it.`.replace(/\s+/g, " ").trim(),
 		url: `https://goodwatch.app${titlePath(mediaType, details.tmdb_id, canonicalMediaTitle(details))}`,
 		image: backdrop ? `https://image.tmdb.org/t/p/w1280${backdrop}` : `https://image.tmdb.org/t/p/w780${details.poster_path}`,

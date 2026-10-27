@@ -133,7 +133,7 @@ export function HeroPoster({ media, className = "" }: { media: Media; className?
 					path={media.details.poster_path}
 					sizes={HERO_POSTER_SIZES}
 					maxWidth={128}
-					alt=""
+					alt={`Poster for ${media.details.title}`}
 					className="h-full w-full object-cover"
 					draggable={false}
 				/>

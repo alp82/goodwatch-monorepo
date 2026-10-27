@@ -1,6 +1,6 @@
 // Discover's heading, shared by browsing and searching: one full-width row over a hairline, with the explanation
-// (taste chips, or "Read as" while searching) under it. Browsing, the row names the list ("Discover") with a Search
-// button; tapping either opens the field. With a search on, the row stays an input showing the query, so it can be
+// (taste chips, or "Read as" while searching) under it. Browsing, the row names the list with a Search button;
+// tapping either opens the field. With a search on, the row stays an input showing the query, so it can be
 // edited in place. Typing searches after 800 ms or on Enter; Escape puts the search back; Clear returns to browsing.
 //
 // The query's text shrinks to fit the row: from the title's size down to a floor (42 to 22 px wide, 32 to 18 px on
@@ -210,10 +210,10 @@ export function DiscoverHeading({
 					type="button"
 					onClick={() => setOpen(true)}
 					aria-label="Search Discover"
-					className="group flex h-14 w-full min-w-0 items-center gap-3 rounded-lg text-left cursor-text outline-none focus-visible:ring-2 focus-visible:ring-amber-400 lg:h-16"
+					className="group flex min-h-14 w-full min-w-0 items-center gap-3 py-2 rounded-lg text-left cursor-text outline-none focus-visible:ring-2 focus-visible:ring-amber-400 lg:min-h-16"
 				>
-					<h1 className="brand-header text-[32px] leading-tight text-white lg:text-[42px]">
-						Discover
+					<h1 className="brand-header min-w-0 text-[32px] leading-tight text-white lg:text-[42px]">
+						Discover movies and TV shows
 					</h1>
 					<span className="ml-auto inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-white/[0.06] px-3.5 text-sm font-semibold text-gray-200 transition-colors group-hover:bg-white/10 group-hover:text-white">
 						<MagnifyingGlassIcon className="h-4 w-4" aria-hidden />

@@ -52,7 +52,7 @@ export const meta: MetaFunction<typeof loader> = ({ data, location }) => {
 			{ name: "robots", content: "noindex, follow" },
 		]
 	const pageMeta: PageMeta = {
-		title: "Discover | GoodWatch",
+		title: "Discover Movies and TV Shows | GoodWatch",
 		description:
 			"Discover the best movies and tv shows to watch right now. From award-winning Netflix exclusives to classic films on Prime Video, Disney+ and HBO. Find movies and TV shows by genre, mood, or streaming service. Get personalized recommendations based on ratings from IMDb, Rotten Tomatoes, and Metacritic. Updated daily with new releases and trending titles.",
 		url: "https://goodwatch.app/discover",
