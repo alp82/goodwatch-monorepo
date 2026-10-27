@@ -1,3 +1,5 @@
+import { PersonFilterButton } from "~/ui/person/filter-button"
+import { normalizePersonQuery } from "~/server/person-query.server"
 import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
@@ -9,9 +11,8 @@ import {
 } from "@heroicons/react/20/solid"
 // Cast and crew page: who the person is, what their work feels like compared with the
 // catalog, who they work with, and all their titles, filtered and grouped on the server.
-// Links to titles and people are server-rendered <a href>. The filter combinations are endless, so a link to a
-// filtered view of this page gets its address only in the browser (see FilterLink): the HTML has none for a crawler to
-// follow. Crawlers that ask for a filtered view anyway are answered before this route (~/server/browser-gate.server).
+// Links to titles and people are server-rendered <a href>. Filter actions stay buttons after hydration, so they
+// never advertise a graph of combinations. The browser gate normalizes and budgets requests before this route.
 // The type filter is the site's shared control and goes to the filtered URL.
 import {
 	FilmIcon,
@@ -27,8 +28,6 @@ import {
 } from "@remix-run/node"
 import {
 	Link,
-	useHref,
-	useLinkClickHandler,
 	useLoaderData,
 	useNavigate,
 	useSearchParams,
@@ -63,13 +62,12 @@ import {
 	countCrawlerTurnedAway,
 	hasBrowserCookie,
 	isCrawler,
-	limitFilteredViews,
+	countFilteredView,
 	toUnfiltered,
 } from "~/server/crawlers.server"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { NoTitlesOfType, TypeFilter } from "~/ui/type-filter"
 import { personPath, pluralize, titleToDashed } from "~/utils/helpers"
-import { useHydrated } from "~/utils/hydrated"
 import { buildMeta } from "~/utils/meta"
 import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
 import { scoreBandWordsFor } from "~/utils/score-bands"
@@ -87,6 +85,12 @@ async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 
 	// Crawlers only get the unfiltered page, and get sent there before the profile is loaded.
 	const url = new URL(request.url)
+	const normalized = normalizePersonQuery(url.searchParams).toString()
+	if (url.search.slice(1) !== normalized)
+		return redirect(url.pathname + (normalized ? `?${normalized}` : ""), {
+			status: 308,
+			headers: { "Cache-Control": "private, no-store" },
+		})
 	if (url.search && isCrawler(request)) {
 		countCrawlerTurnedAway()
 		return redirect(url.pathname, 301)
@@ -95,9 +99,8 @@ async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 	// answers those before this loader runs; what gets here is navigation inside the app with cookies switched off.
 	if (url.search && !hasBrowserCookie(request)) return toUnfiltered(url)
 
-	const profile = url.search
-		? await limitFilteredViews(request, () => getPersonProfile(id))
-		: await getPersonProfile(id)
+	if (url.search) countFilteredView(request)
+	const profile = await getPersonProfile(id)
 	if (!profile) throw new Response("Not found", { status: 404 })
 
 	// One URL per person: /person/287 and misspelled slugs redirect to the canonical path.
@@ -313,30 +316,6 @@ const typeOf = (f: Data["filters"]): TitleTypeFilter => ({
 	format: f.type,
 	anime: f.anime,
 })
-
-/**
- * A link to a filtered view of this page. The server's HTML has the link without an address; the browser adds it when
- * it takes the page over, and from then on it is an ordinary link: mouse, keyboard, and a new tab all work. A crawler
- * that reads the HTML finds no filtered URL, and each one it would find leads to several more.
- */
-function FilterLink({
-	to,
-	prefetch,
-	preventScrollReset,
-	...rest
-}: React.ComponentProps<typeof Link>) {
-	const hydrated = useHydrated()
-	const href = useHref(to)
-	const onClick = useLinkClickHandler(to, { preventScrollReset })
-	return (
-		<a
-			{...rest}
-			rel="nofollow"
-			href={hydrated ? href : undefined}
-			onClick={hydrated ? onClick : undefined}
-		/>
-	)
-}
 
 /** Goes to this page with another type filter, the other filters kept. */
 function useSetType() {
@@ -559,13 +538,17 @@ function Fact({
 			<dd className="mt-1.5">{children}</dd>
 		</>
 	)
-	return href ? (
-		<FilterLink
+	return href?.startsWith("/") ? (
+		<Link to={href} className="block rounded-lg px-4 py-3 hover:bg-white/5">
+			<dl>{body}</dl>
+		</Link>
+	) : href ? (
+		<PersonFilterButton
 			to={href}
 			className="block rounded-lg px-4 py-3 hover:bg-white/5"
 		>
 			<dl>{body}</dl>
-		</FilterLink>
+		</PersonFilterButton>
 	) : (
 		<dl className="px-4 py-3">{body}</dl>
 	)
@@ -792,7 +775,7 @@ function TraitCards({ data }: { data: Data }) {
 			<ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
 				{above.map((t) => (
 					<li key={t.key}>
-						<FilterLink
+						<PersonFilterButton
 							to={traitHref(t.key)}
 							className={`block h-full rounded-lg border p-3 hover:border-amber-400 ${data.filters.trait === t.key ? "border-amber-400 bg-amber-400/10" : "border-gray-700 bg-gray-900"}`}
 						>
@@ -822,7 +805,7 @@ function TraitCards({ data }: { data: Data }) {
 									style={{ left: `${t.baseline * 10}%` }}
 								/>
 							</div>
-						</FilterLink>
+						</PersonFilterButton>
 					</li>
 				))}
 			</ul>
@@ -876,7 +859,7 @@ function GenresAndTags({ data }: { data: Data }) {
 				<ul className="flex flex-wrap gap-1.5">
 					{p.genres.map((g) => (
 						<li key={g.name}>
-							<FilterLink
+							<PersonFilterButton
 								to={href(
 									{ genre: data.filters.genre === g.name ? null : g.name },
 									"#titles",
@@ -884,7 +867,7 @@ function GenresAndTags({ data }: { data: Data }) {
 								className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${data.filters.genre === g.name ? "bg-amber-500 text-black" : "bg-gray-700 hover:bg-gray-600"}`}
 							>
 								{g.name} <span className="opacity-60">{g.count}</span>
-							</FilterLink>
+							</PersonFilterButton>
 						</li>
 					))}
 				</ul>
@@ -1017,7 +1000,7 @@ function FilterBox({ data }: { data: Data }) {
 							{g.label}
 						</span>
 						{g.options.map((o) => (
-							<FilterLink
+							<PersonFilterButton
 								key={o.value}
 								to={href({ [g.key]: o.value })}
 								preventScrollReset
@@ -1033,7 +1016,7 @@ function FilterBox({ data }: { data: Data }) {
 										{o.count}
 									</span>
 								)}
-							</FilterLink>
+							</PersonFilterButton>
 						))}
 					</div>
 				))}
@@ -1042,14 +1025,14 @@ function FilterBox({ data }: { data: Data }) {
 						<span className="w-16 shrink-0 text-xs uppercase tracking-wide text-gray-500">
 							Trait
 						</span>
-						<FilterLink
+						<PersonFilterButton
 							to={href({ trait: null })}
 							preventScrollReset
 							className="font-bold text-amber-400"
 						>
 							{traitEmoji(f.trait)} Strong {traitLabel(f.trait)}{" "}
 							<span className="font-normal text-gray-400">(remove)</span>
-						</FilterLink>
+						</PersonFilterButton>
 					</div>
 				)}
 			</div>
@@ -1074,38 +1057,38 @@ function Arrange({ data }: { data: Data }) {
 				Group by
 			</span>
 			<div className="flex overflow-hidden rounded-lg border border-gray-600 text-xs">
-				<FilterLink
+				<PersonFilterButton
 					to={href({ group: null, order: null })}
 					preventScrollReset
 					className={segment(group === "decade")}
 				>
 					Decades
-				</FilterLink>
-				<FilterLink
+				</PersonFilterButton>
+				<PersonFilterButton
 					to={href({ group: "score", order: null })}
 					preventScrollReset
 					className={segment(group === "score")}
 				>
 					Scores
-				</FilterLink>
+				</PersonFilterButton>
 			</div>
 			<div className="flex overflow-hidden rounded-lg border border-gray-600 text-xs">
-				<FilterLink
+				<PersonFilterButton
 					to={href({ order: null })}
 					preventScrollReset
 					className={segment(order === "desc")}
 				>
 					<ArrowDownIcon className="h-3.5 w-3.5" aria-hidden />
 					{directions.desc}
-				</FilterLink>
-				<FilterLink
+				</PersonFilterButton>
+				<PersonFilterButton
 					to={href({ order: "asc" })}
 					preventScrollReset
 					className={segment(order === "asc")}
 				>
 					<ArrowUpIcon className="h-3.5 w-3.5" aria-hidden />
 					{directions.asc}
-				</FilterLink>
+				</PersonFilterButton>
 			</div>
 		</div>
 	)
@@ -1210,7 +1193,7 @@ function Titles({ data }: { data: Data }) {
 							))}
 						</div>
 						{g.more && (
-							<FilterLink
+							<PersonFilterButton
 								to={
 									g.more.kind === "decade"
 										? href({ decade: g.more.value })
@@ -1224,7 +1207,7 @@ function Titles({ data }: { data: Data }) {
 									: g.more.kind === "decade"
 										? `All ${g.total} titles from the ${g.label}`
 										: `Show all ${g.total} titles`}
-							</FilterLink>
+							</PersonFilterButton>
 						)}
 					</details>
 				))}

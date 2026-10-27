@@ -1,3 +1,7 @@
+import {
+	checkPersonRequest,
+	type PersonAnswer,
+} from "./person-request.server.ts"
 // Answers requests for the site's endless URL sets before Express and Remix see them: the filtered views of a person
 // page, and sign-in and sign-up with a return page. A client without the cookie that every page sets with a script
 // (see ~/utils/browser-cookie) gets the browser check at the URL it asked for: one small fixed response, with no
@@ -132,27 +136,44 @@ export function takeGateCounts(): typeof counts {
  * Puts the gate in front of everything else the server does with a request. The listeners that were there get the
  * requests the gate doesn't answer.
  */
-export function putGateFirst(server: Server, staticHost = isStaticHost): void {
+export function putGateFirst(
+	server: Server,
+	staticHost = isStaticHost,
+	personPolicy = checkPersonRequest,
+): void {
 	if (state.gated.has(server)) return
 	state.gated.add(server)
 	const listeners = server.listeners("request")
 	server.removeAllListeners("request")
 	server.on("request", (request: IncomingMessage, response: ServerResponse) => {
-		let answer: GateAnswer | null = null
-		try {
-			if (!staticHost(request.headers.host))
-				answer = gateAnswer(request.method, request.url, request.headers)
-		} catch {
-			// The app answers.
+		const answerWith = (answer: GateAnswer | PersonAnswer) => {
+			if (response.destroyed || response.writableEnded) return
+			if (answer.kind in counts) counts[answer.kind as keyof typeof counts]++
+			response.writeHead(answer.status, answer.headers)
+			response.end(request.method === "HEAD" ? undefined : answer.body)
 		}
-		if (!answer) {
+		const serve = () => {
+			if (response.destroyed || response.writableEnded) return
+			let answer: GateAnswer | null = null
+			try {
+				if (!staticHost(request.headers.host))
+					answer = gateAnswer(request.method, request.url, request.headers)
+			} catch {
+				/* The app answers. */
+			}
+			if (answer) return answerWith(answer)
 			for (const listener of listeners)
 				Reflect.apply(listener, server, [request, response])
-			return
 		}
-		counts[answer.kind]++
-		response.writeHead(answer.status, answer.headers)
-		response.end(request.method === "HEAD" ? undefined : answer.body)
+		if (
+			!staticHost(request.headers.host) &&
+			request.url?.startsWith("/person/")
+		)
+			void personPolicy(request).then(
+				(answer) => (answer ? answerWith(answer) : serve()),
+				serve,
+			)
+		else serve()
 	})
 }
 

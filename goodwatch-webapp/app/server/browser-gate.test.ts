@@ -169,7 +169,7 @@ test("one request per filtered URL: no redirect, and the app never runs", async 
 	reachedApp = []
 	takeGateCounts()
 	for (let i = 0; i < 5; i++) {
-		const response = await get(`${FILTERED}&decade=${1970 + i * 10}`)
+		const response = await get(`/person/287-brad-pitt?genre=Drama&decade=${1970 + i * 10}&trait=crime`)
 		assert.equal(response.status, 403)
 		assert.equal(response.headers.get("location"), null)
 		await response.arrayBuffer()

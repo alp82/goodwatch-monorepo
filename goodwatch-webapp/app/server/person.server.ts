@@ -1,3 +1,4 @@
+import { createPersonProfileCache } from "./person-profile-cache.server.ts"
 import { applyCorrections } from "./feedback/apply-corrections.server"
 import { personBestCredit } from "../utils/person-best.ts"
 import type { PresentedMedia } from "~/utils/media-presentation"
@@ -477,19 +478,15 @@ export async function getPersonName(personId: number): Promise<string | null> {
 // Parsed profiles kept in this process: a profile is up to 1 MB of JSON, so repeated hits on
 // one person skip Redis and the parse. Least recently used first; a missing person is kept too.
 // Callers must not change a profile they get back: it is shared between requests.
-const RECENT_PROFILES_MAX = 50
-const RECENT_PROFILE_MS = 5 * 60 * 1000
-const recentProfiles = new Map<
-	number,
-	{ profile: PersonProfile | null; expires: number }
->()
-// Loads under way, so simultaneous requests for one person share a single load.
-const loadingProfiles = new Map<number, Promise<PersonProfile | null>>()
+const profiles = createPersonProfileCache<PersonProfile | null>({
+	read: getCachedPersonProfile,
+	load: loadPersonProfile,
+})
 
 export async function getPersonProfile(
 	personId: number,
 ): Promise<PersonProfile | null> {
-	return correctedProfile(personId, await getRecentPersonProfile(personId))
+	return correctedProfile(personId, await profiles.get(personId))
 }
 
 /** Live credit corrections on top of the cached profile. A corrected profile is a copy, so the shared one stays. */
@@ -498,45 +495,18 @@ async function correctedProfile(
 	profile: PersonProfile | null,
 ): Promise<PersonProfile | null> {
 	if (!profile) return profile
-	const effective = await applyCorrections({ kind: "person", id: personId }, profile)
+	const effective = await applyCorrections(
+		{ kind: "person", id: personId },
+		profile,
+	)
 	if (effective !== profile)
 		for (const c of effective.credits) c.weight = creditWeight(c)
 	return effective
 }
 
-async function getRecentPersonProfile(
-	personId: number,
-): Promise<PersonProfile | null> {
-	const recent = recentProfiles.get(personId)
-	if (recent) {
-		recentProfiles.delete(personId)
-		if (recent.expires > Date.now()) {
-			recentProfiles.set(personId, recent)
-			return recent.profile
-		}
-	}
-
-	const loading = loadingProfiles.get(personId)
-	if (loading) return loading
-
-	const load = getCachedPersonProfile(personId)
-		.then((profile) => {
-			recentProfiles.set(personId, {
-				profile,
-				expires: Date.now() + RECENT_PROFILE_MS,
-			})
-			if (recentProfiles.size > RECENT_PROFILES_MAX) {
-				recentProfiles.delete(recentProfiles.keys().next().value as number)
-			}
-			return profile
-		})
-		.finally(() => loadingProfiles.delete(personId))
-	loadingProfiles.set(personId, load)
-	return load
-}
-
 async function getCachedPersonProfile(
 	personId: number,
+	load: () => Promise<PersonProfile | null>,
 ): Promise<PersonProfile | null> {
 	// The cache stores objects only, so a missing person is wrapped too.
 	const { profile } = await cached<
@@ -546,7 +516,7 @@ async function getCachedPersonProfile(
 		// v2: credits carry `anime`.
 		name: "person-profile-v2",
 		target: async ({ personId }) => ({
-			profile: await loadPersonProfile(personId),
+			profile: await load(),
 		}),
 		params: { personId },
 		ttlMinutes: 60 * 24,

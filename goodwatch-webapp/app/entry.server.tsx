@@ -1,3 +1,4 @@
+import { startBrowserGate } from "~/server/browser-gate.server"
 import { registerSessionUserObserver } from "./utils/auth-session.ts"
 import { identifyProductUser } from "./telemetry/product-analytics.server.ts"
 // The server entry: renders a page with React and hands the HTML to the response.
@@ -82,6 +83,8 @@ if (processRole() !== "search") startNewPagesRefresh()
 configurePageCache({ routeLabel: routeLabelFor })
 routeLabelFor("/", 200)
 startPageCache()
+// Person abuse checks and URL normalization must run before cache misses, root loaders and rendering.
+startBrowserGate()
 // A page's 103 Early Hints response, before the render (see early-hints.server.ts). After the page cache, so that a
 // cached page gets its hints too, and before the static files, which answer files without them.
 startEarlyHints()
