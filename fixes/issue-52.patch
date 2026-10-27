@@ -1,0 +1,10 @@
+# GoodWatch Living Roadmap
+
+## Destination
+Continuously help GoodWatch focus on the right work: bring order to the backlog, give direction to priorities, and reassess what deserves attention as goals, evidence, and circumstances change. Use research from time to time to inform and challenge that direction. The product target can move. This map remains useful by explaining the current focus, why it matters now, and what could change it. Individual focused maps have bounded destinations and can finish.
+
+## Priority shortlist — owner update, 2026-10-26
+The owner put the following candidate efforts first, in this order. This is the current cross-backlog priority order for choosing focused work, not implementation approval, a schedule, or a claim that existing work has stopped. It supersedes older candidate ordering below. Earlier focus decisions remain history.
+
+1. **User-focused experience:** explore comments, member activity, discovering and exploring other members, and taste neighbors. Aim for useful interactions and discovery through people. Public profiles and share lists already exist; determine what meaningful experience to add around them. These examples define a candidate direction, not approved requirements. Visibility, consent, moderation, interaction rules, and how taste neighbors are identified remain open decisions.
+2. **Gamification:** explore badges, levels, achievements, and other ways to recognize participation and progress. Build on the retained [personal-milestones direction](https://github.com/alp82/goodwatch-monorepo/issues/70), with this broader owner-requested scope. Specific mechanics, rewards, eligibility, and measures of engagement remain open decisions.
