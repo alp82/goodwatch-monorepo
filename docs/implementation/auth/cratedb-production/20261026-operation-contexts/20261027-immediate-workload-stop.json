@@ -1,0 +1,191 @@
+{
+  "result": "STOPPED_AT_FIRST_WORKLOAD_GATE",
+  "authorization": "Immediate GO,gates07:05,TERMcutoff07:45,hardstop08:45UTC on2026-10-27; stop if any heavy flow running",
+  "branch": "fix/644-immediate-restart-workload-stop",
+  "base_origin_main": "c5b5a6cbeaba9d7311cc150b2c3f66c018f61ad8",
+  "observed_utc": "2026-10-27T07:06:15.501482+00:00",
+  "blocking_jobs": [
+    {
+      "id": "01a17702-467a-14c7-ff57-786979ec7686",
+      "type": "QueuedJob",
+      "job_kind": "flow",
+      "script_path": "f/metacritic_web/metacritic_init_ratings",
+      "schedule_path": "f/metacritic_web/metacritic_init_ratings",
+      "running": true,
+      "started_at": "2026-10-27T07:00:00.023345Z",
+      "duration_ms": null,
+      "success": null,
+      "canceled": false,
+      "suspend": 0,
+      "suspend_until": null,
+      "tag": "flow",
+      "module_states": [
+        {
+          "index": 0,
+          "type": "InProgress",
+          "job": "01a17c28-a1f4-802e-cea2-28b58778e3d8",
+          "job_count": 0
+        }
+      ],
+      "utc": "2026-10-27T07:06:52.994026+00:00",
+      "has_logs_field": false
+    },
+    {
+      "id": "01a17b0b-bef8-089d-6b50-cf6b74db901d",
+      "type": "QueuedJob",
+      "job_kind": "script",
+      "script_path": "f/sync/copy/tmdb_streaming",
+      "schedule_path": "f/sync/copy/tmdb_streaming",
+      "running": true,
+      "started_at": "2026-10-27T07:00:00.030740Z",
+      "duration_ms": null,
+      "success": null,
+      "canceled": false,
+      "suspend": 0,
+      "suspend_until": null,
+      "tag": "python3",
+      "module_states": [],
+      "utc": "2026-10-27T07:06:53.038891+00:00",
+      "has_logs_field": true
+    }
+  ],
+  "additional_long_flows": [
+    {
+      "id": "01a17ad5-e3ce-bb2b-4744-1811091bee77",
+      "type": "QueuedJob",
+      "job_kind": "flow",
+      "script_path": "f/social/deletion_sync",
+      "schedule_path": "f/social/deletion_sync",
+      "running": true,
+      "started_at": "2026-10-27T06:50:00.008218Z",
+      "duration_ms": null,
+      "success": null,
+      "canceled": false,
+      "suspend": 0,
+      "suspend_until": null,
+      "tag": "flow",
+      "module_states": [
+        {
+          "index": 0,
+          "type": "InProgress",
+          "job": "01a17c1f-7a3b-9d85-0868-ab6b29a9a458",
+          "job_count": 0
+        }
+      ],
+      "utc": "2026-10-27T07:06:53.065579+00:00",
+      "has_logs_field": false
+    },
+    {
+      "id": "01a17bdf-63c7-fc14-4110-574a57edcc77",
+      "type": "QueuedJob",
+      "job_kind": "flow",
+      "script_path": "f/social/discover",
+      "schedule_path": "f/social/discover_bluesky",
+      "running": true,
+      "started_at": "2026-10-27T06:40:00.006075Z",
+      "duration_ms": null,
+      "success": null,
+      "canceled": false,
+      "suspend": 0,
+      "suspend_until": null,
+      "tag": "flow",
+      "module_states": [
+        {
+          "index": 0,
+          "type": "InProgress",
+          "job": "01a17c16-530d-5f44-1ae9-c8e798c2fce7",
+          "job_count": 0
+        }
+      ],
+      "utc": "2026-10-27T07:06:53.075994+00:00",
+      "has_logs_field": false
+    }
+  ],
+  "aggregate_progress": [
+    {
+      "label": "metacritic",
+      "id": "01a17c28-a1f4-802e-cea2-28b58778e3d8",
+      "utc": "2026-10-27T07:07:18.717482+00:00",
+      "running": true,
+      "type": "QueuedJob",
+      "started_at": "2026-10-27T07:00:00.131123Z",
+      "last_progress": [
+        {
+          "kind": "copied",
+          "count": 338617,
+          "media": "movies",
+          "new": 0
+        },
+        {
+          "kind": "copied",
+          "count": 340582,
+          "media": "movies",
+          "new": 0
+        },
+        {
+          "kind": "copied",
+          "count": 342555,
+          "media": "movies",
+          "new": 0
+        },
+        {
+          "kind": "copied",
+          "count": 344521,
+          "media": "movies",
+          "new": 0
+        },
+        {
+          "kind": "copied",
+          "count": 346496,
+          "media": "movies",
+          "new": 0
+        },
+        {
+          "kind": "copied",
+          "count": 348469,
+          "media": "movies",
+          "new": 0
+        },
+        {
+          "kind": "copied",
+          "count": 350439,
+          "media": "movies",
+          "new": 0
+        },
+        {
+          "kind": "copied",
+          "count": 352388,
+          "media": "movies",
+          "new": 0
+        }
+      ],
+      "progress_records": 178
+    },
+    {
+      "label": "streaming",
+      "id": "01a17b0b-bef8-089d-6b50-cf6b74db901d",
+      "utc": "2026-10-27T07:07:18.728698+00:00",
+      "running": true,
+      "type": "QueuedJob",
+      "started_at": "2026-10-27T07:00:00.030740Z",
+      "last_progress": [
+        {
+          "kind": "upsert_batch",
+          "count": 1,
+          "table": "movie"
+        }
+      ],
+      "progress_records": 1
+    }
+  ],
+  "provider_list_reader_active": false,
+  "provider_initialization_active": false,
+  "full_crate_gates_started": false,
+  "watcher_started": false,
+  "production_mutations": [],
+  "sigterm_sent": false,
+  "restart_performed": false,
+  "rollback_needed": false,
+  "automatic_retry_scheduled": false,
+  "archive_sha256": "5908b1de3a5f6575be5aad010bf7f5edde97164a57da28a95f2cd6b5c9a0b566"
+}

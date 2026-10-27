@@ -8,6 +8,41 @@ and temporarily hold the backup cron; those changes were restored.
 The backup failover part is already complete (`ee610dd1d`); its actual production failover
 is recorded in [the enforcement execution](../20261015-enforcement/README.md).
 
+## October27 immediate GO — stopped at first workload gate,07:06 UTC
+
+Owner replaced the11:30 proposal with immediate gates around07:05 UTC, SIGTERM cutoff07:45 and
+hard stop08:45. The first instruction was to check heavy work and report before starting if any was
+running. **Stopped on that first check; no watcher/full Crate gates or production preparation ran.**
+No automatic retry, including the previous11:30 proposal, is armed.
+[Summary](20261027-immediate-workload-stop.json), [sanitized API/progress evidence](20261027-immediate-workload-stop.json.gz).
+
+Fresh read-only queue at **07:06:15 UTC** had67 jobs/16 running. The provider-list reader and23:00
+provider initialization were absent from the active set, but other bulk jobs were running:
+
+| Job | ID | Started UTC | Direct progress observation at07:07:18 |
+| --- | --- | --- | --- |
+| f/metacritic_web/metacritic_init_ratings | 01a17702-467a-14c7-ff57-786979ec7686 | 07:00:00.023 | Module0 InProgress; main script copied/scanned352,388 movies,0 new; total unknown |
+| f/sync/copy/tmdb_streaming | 01a17b0b-bef8-089d-6b50-cf6b74db901d | 07:00:00.030 | Script running; one logged movie upsert, no reliable total/completed-batch counter |
+| f/social/deletion_sync | 01a17ad5-e3ce-bb2b-4744-1811091bee77 | 06:50:00.008 | Additional long flow; module0 InProgress (metadata at07:06:53) |
+| f/social/discover (Bluesky schedule) | 01a17bdf-63c7-fc14-4110-574a57edcc77 | 06:40:00.006 | Additional long flow; module0 InProgress (metadata at07:06:53) |
+
+Metacritic's main script job is01a17c28-a1f4-802e-cea2-28b58778e3d8, started07:00:00.131.
+The count is a completed scan/copy checkpoint, not a total or percent-complete estimate. Streaming's
+single emitted upsert is not proof that only one record has been processed overall; no reliable ETA
+was inferred. Raw logs were read in memory only, filtered into whitelisted numeric progress records,
+and neither saved nor printed. No job arguments, results, resources or credentials were retained.
+
+No cron hold, wait/write-block change, Docker restart-policy change, allocation/rebalance change,
+job/schedule mutation, CANCEL, DROP/CREATE SNAPSHOT, decommission, drain, SIGTERM, start or KILL
+occurred. Nothing required rollback. No fresh claim about cluster health, current Crate settings or
+backup status is made because the workload gate stopped the sequence first. The owner was notified
+immediately, then given progress metadata for a decision on whether to accept that workload or wait.
+
+Prepared from freshorigin/main **c5b5a6cbeaba9d7311cc150b2c3f66c018f61ad8**, branch **fix/644-immediate-restart-workload-stop**.
+Validation: live queue and direct job-state agreement, progress counter shapes, absence of the two
+named provider jobs from active work, JSON/archive parsing/hash, credential/argument exclusion and
+diff checks. No application changes; app suites/typecheck were not rerun for this evidence-only stop.
+
 ## Q49 — October27 runner-up window,planning only
 
 Owner selected **October27 11:30–13:00 UTC**: gates11:20, lastSIGTERM12:00, hard stop13:00.
