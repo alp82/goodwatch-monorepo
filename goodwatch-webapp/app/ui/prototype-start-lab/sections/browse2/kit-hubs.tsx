@@ -84,6 +84,7 @@ export function SectionHead({
 	line,
 	href,
 	more = "See all",
+	aside,
 }: {
 	as?: "h2" | "h3"
 	id?: string
@@ -91,6 +92,8 @@ export function SectionHead({
 	line?: ReactNode
 	href?: string
 	more?: string
+	/** Optional controls placed just before "See all" (d and e put their phone row arrows here). */
+	aside?: ReactNode
 }) {
 	return (
 		<div className="mb-3 flex items-end justify-between gap-4">
@@ -100,14 +103,19 @@ export function SectionHead({
 				</H>
 				{line && <p className="mt-0.5 truncate text-sm text-gray-400">{line}</p>}
 			</div>
-			{href && (
-				<Link
-					to={href}
-					discover="none"
-					className="shrink-0 whitespace-nowrap rounded-full px-1 py-1 text-sm font-semibold text-amber-400 hover:text-amber-300"
-				>
-					{more} <span aria-hidden>→</span>
-				</Link>
+			{(href || aside) && (
+				<div className="flex shrink-0 items-center gap-2">
+					{aside}
+					{href && (
+						<Link
+							to={href}
+							discover="none"
+							className="shrink-0 whitespace-nowrap rounded-full px-1 py-1 text-sm font-semibold text-amber-400 hover:text-amber-300"
+						>
+							{more} <span aria-hidden>→</span>
+						</Link>
+					)}
+				</div>
 			)}
 		</div>
 	)

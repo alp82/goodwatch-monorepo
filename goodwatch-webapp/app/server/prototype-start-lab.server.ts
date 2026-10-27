@@ -108,6 +108,8 @@ export type LabShowSection = { name: string; titles: (LabCard & { next?: unknown
 
 export type LabMember = {
 	name: string
+	/** Titles rated or liked; For you needs a few before it's personal. The owner's account had 905 likes on 2026-10-27. */
+	ratings: number
 	tonight: LabCard[]
 	tonightRaw: unknown
 	shows: LabShowSection[]
@@ -249,6 +251,7 @@ function readMember(dir: string): LabMember | null {
 	)
 	return {
 		name: "Sam",
+		ratings: 905,
 		tonight: tonightCards,
 		tonightRaw: tonight?.raw ?? tonight ?? null,
 		shows,

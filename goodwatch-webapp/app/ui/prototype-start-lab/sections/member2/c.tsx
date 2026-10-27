@@ -10,11 +10,12 @@ import { titleHref } from "../../lab/kit"
 import { type BlockVariant, useLab } from "../../lab/types"
 import { DISPLAY, WRAP, greeting, posterSrc } from "../member/shared"
 import { Doors } from "./cd-doors"
-import { type Candidate, GHOST, SearchBox, WatchLink, factsLine, useDeck } from "./cd-shared"
+import { type Candidate, FirstSteps, GHOST, SearchBox, WatchLink, factsLine, useDeck } from "./cd-shared"
 
 function TonightRefined() {
 	const { Room } = useLab()
 	const { m, deck } = useDeck()
+	const { data } = useLab()
 	const [cur, setCur] = useState<number | null>(deck[0]?.card.key ?? null)
 	const [gone, setGone] = useState<Set<number>>(() => new Set())
 
@@ -49,7 +50,8 @@ function TonightRefined() {
 					{pick ? (
 						<Stage pick={pick} alts={alts} onPick={setCur} onNotThis={notThis} outOfPicks={outOfPicks} />
 					) : (
-						<p className="pt-10 text-gray-400">Nothing on your lists yet.</p>
+						// A member with nothing yet gets the same first steps as d.
+						<FirstSteps ratings={data.member?.ratings ?? 0} />
 					)}
 				</SearchBox>
 			</div>

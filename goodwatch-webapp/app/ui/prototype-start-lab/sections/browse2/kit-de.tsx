@@ -1,9 +1,11 @@
-// PROTOTYPE (start page lab, round 3): browse2 d/e's parts: a's rails (new, moods, services), c's Top 10 with big numbers, and c's genre cloud with one peek that follows hover, focus or a tap.
+// PROTOTYPE (start page lab, round 4): browse2 d/e's parts: a's rails (new, moods, services), c's Top 10 with big numbers, and c's genre cloud with one peek that follows hover, focus or a tap. Round 4: every rail gets previous/next arrows (the title page rows' round buttons at the edges on desktop, compact ones in the row header on phones).
 import { Link } from "@remix-run/react"
-import { type CSSProperties, type MouseEvent, type ReactNode, useEffect, useRef, useState } from "react"
+import { ChevronLeftIcon } from "@heroicons/react/24/outline"
+import { ChevronRightIcon } from "@heroicons/react/24/solid"
+import { type CSSProperties, type MouseEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import type { LabCard, LabData } from "../../lab/types"
-import { Fan, FanStyles, HUBS, type Kind, Poster, PosterRail, Rail, SectionHead, Stack, genreHref, moodHref, moodsOf, serviceHref, serviceLogo } from "./kit-hubs"
+import { Fan, FanStyles, HUBS, type Kind, POSTER_W, Poster, SectionHead, Stack, genreHref, moodHref, moodsOf, serviceHref, serviceLogo } from "./kit-hubs"
 
 /** The motion d and e share (transform and opacity only). */
 export function DeStyles() {
@@ -21,11 +23,103 @@ export function DeStyles() {
 	)
 }
 
+// ---- Rails with previous / next (round 4) ----
+
+type RailNav = { ref: (el: HTMLUListElement | null) => void; atStart: boolean; atEnd: boolean; step: (dir: 1 | -1) => void }
+
+/**
+ * Tracks a native scroll rail's ends (on scroll, once per frame, and on resize) and steps it by about one view of
+ * cards. State changes only when an end is reached or left, so scrolling stays cheap.
+ */
+function useRailNav(): RailNav {
+	const [el, setEl] = useState<HTMLUListElement | null>(null)
+	const [ends, setEnds] = useState({ atStart: true, atEnd: false })
+	useEffect(() => {
+		if (!el) return
+		let raf = 0
+		const read = () => {
+			raf = 0
+			const max = el.scrollWidth - el.clientWidth
+			const atStart = el.scrollLeft <= 4
+			const atEnd = el.scrollLeft >= max - 4
+			setEnds((e) => (e.atStart === atStart && e.atEnd === atEnd ? e : { atStart, atEnd }))
+		}
+		const later = () => {
+			if (!raf) raf = requestAnimationFrame(read)
+		}
+		read()
+		el.addEventListener("scroll", later, { passive: true })
+		const ro = new ResizeObserver(later)
+		ro.observe(el)
+		return () => {
+			el.removeEventListener("scroll", later)
+			ro.disconnect()
+			cancelAnimationFrame(raf)
+		}
+	}, [el])
+	const step = useCallback(
+		(dir: 1 | -1) => {
+			if (!el) return
+			const pad = Number.parseFloat(getComputedStyle(el).paddingLeft) || 0
+			const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+			// The visible width of cards (the rail bleeds by its padding); snap then lines up the next card.
+			el.scrollBy({ left: dir * Math.max(el.clientWidth - pad * 2 - 24, 120), behavior: reduced ? "auto" : "smooth" })
+		},
+		[el],
+	)
+	return { ref: setEl, ...ends, step }
+}
+
+/** The title page rows' arrow (ListSwiper): a round blue button with a chevron. */
+const ARROW =
+	"z-10 rounded-full bg-blue-600 text-white shadow-md hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-opacity-50 transition-[opacity,background-color] duration-200 ease-in-out cursor-pointer"
+
+/** Compact arrows for the row header, phones and small tablets only (desktop has the edge arrows). */
+function HeadArrows({ nav, name }: { nav: RailNav; name: string }) {
+	const cls = `${ARROW} flex h-8 w-8 items-center justify-center disabled:cursor-default disabled:opacity-30 disabled:hover:bg-blue-600`
+	return (
+		<span className="flex gap-1.5 md:hidden">
+			<button type="button" aria-label={`Previous: ${name}`} disabled={nav.atStart} onClick={() => nav.step(-1)} className={cls}>
+				<ChevronLeftIcon className="h-5 w-5" aria-hidden />
+			</button>
+			<button type="button" aria-label={`Next: ${name}`} disabled={nav.atEnd} onClick={() => nav.step(1)} className={cls}>
+				<ChevronRightIcon className="h-5 w-5" aria-hidden />
+			</button>
+		</span>
+	)
+}
+
+/**
+ * a's snap rail (same bleed and padding as kit-hubs' Rail) with the title page rows' arrows overlaying the first and
+ * last visible card from md up. At an end the arrow fades out (opacity only); it never takes room in the row.
+ */
+function NavRail({ nav, name, label, gap = "gap-3", children }: { nav: RailNav; name: string; label?: string; gap?: string; children: ReactNode }) {
+	const edge = `${ARROW} absolute top-1/2 hidden -translate-y-1/2 p-2 md:block disabled:pointer-events-none disabled:opacity-0`
+	return (
+		<div className="relative">
+			<ul
+				ref={nav.ref}
+				aria-label={label}
+				className={`-mx-4 flex snap-x snap-mandatory scroll-px-4 overflow-x-auto overscroll-x-contain px-4 pb-3 [scrollbar-width:none] sm:-mx-8 sm:scroll-px-8 sm:px-8 [&::-webkit-scrollbar]:hidden ${gap}`}
+			>
+				{children}
+			</ul>
+			<button type="button" aria-label={`Previous: ${name}`} disabled={nav.atStart} onClick={() => nav.step(-1)} className={`${edge} -left-2`}>
+				<ChevronLeftIcon className="h-6 w-6" aria-hidden />
+			</button>
+			<button type="button" aria-label={`Next: ${name}`} disabled={nav.atEnd} onClick={() => nav.step(1)} className={`${edge} -right-2`}>
+				<ChevronRightIcon className="h-6 w-6" aria-hidden />
+			</button>
+		</div>
+	)
+}
+
 // ---- Top 10 (c's, with a heading level to choose) ----
 
 /** The ten best, with big outlined rank numbers; Movies and Shows switch in place (same height). */
 export function TopTen({ movies, shows, id }: { movies: LabCard[]; shows: LabCard[]; id: string }) {
 	const [kind, setKind] = useState<Kind>(movies.length ? "movie" : "show")
+	const nav = useRailNav()
 	const cards = (kind === "movie" ? movies : shows).slice(0, 10)
 	if (!movies.length && !shows.length) return null
 	const tab = (k: Kind, label: string) => (
@@ -46,13 +140,14 @@ export function TopTen({ movies, shows, id }: { movies: LabCard[]; shows: LabCar
 				title="Top 10 on GoodWatch"
 				line="The highest scores of all time"
 				href={kind === "movie" ? HUBS.bestMovies : HUBS.bestShows}
+				aside={<HeadArrows nav={nav} name="Top 10" />}
 			/>
 			<div role="tablist" aria-label="Top 10" className="mb-3 inline-flex rounded-full bg-gray-800/80 p-1 ring-1 ring-white/10">
 				{movies.length > 0 && tab("movie", "Movies")}
 				{shows.length > 0 && tab("show", "Shows")}
 			</div>
 			<div key={kind} className="bw2de-fade">
-				<Rail label={kind === "movie" ? "Top 10 movies" : "Top 10 shows"} gap="gap-1 sm:gap-2">
+				<NavRail nav={nav} name="Top 10" label={kind === "movie" ? "Top 10 movies" : "Top 10 shows"} gap="gap-1 sm:gap-2">
 					{cards.map((card, i) => (
 						<li key={card.key} className="flex shrink-0 snap-start items-end">
 							<span
@@ -67,7 +162,7 @@ export function TopTen({ movies, shows, id }: { movies: LabCard[]; shows: LabCar
 							</div>
 						</li>
 					))}
-				</Rail>
+				</NavRail>
 			</div>
 			{/* Both lists stay one link away for a crawler, whichever tab shows. */}
 			<p className="mt-1 text-sm text-gray-400">
@@ -88,22 +183,42 @@ export function TopTen({ movies, shows, id }: { movies: LabCard[]; shows: LabCar
 
 export function NewOnRail({ data, id }: { data: LabData; id: string }) {
 	const cards = data.guest.browse.newOn
+	const nav = useRailNav()
 	if (!cards.length) return null
 	return (
 		<section aria-labelledby={id}>
-			<SectionHead id={id} title="New on streaming" line="Arrived on the big services this week" href={HUBS.newOn} />
-			<PosterRail cards={cards} label="New on streaming" />
+			<SectionHead
+				id={id}
+				title="New on streaming"
+				line="Arrived on the big services this week"
+				href={HUBS.newOn}
+				aside={<HeadArrows nav={nav} name="New on streaming" />}
+			/>
+			<NavRail nav={nav} name="New on streaming" label="New on streaming">
+				{cards.map((card) => (
+					<li key={card.key} className={`shrink-0 snap-start ${POSTER_W}`}>
+						<TitlePosterCard card={card} actions={false} />
+					</li>
+				))}
+			</NavRail>
 		</section>
 	)
 }
 
 export function MoodRail({ data, id }: { data: LabData; id: string }) {
 	const moods = moodsOf(data)
+	const nav = useRailNav()
 	if (!moods.length) return null
 	return (
 		<section aria-labelledby={id}>
-			<SectionHead id={id} title="By mood" line="Pick the kind of evening" href={HUBS.movieMoods} />
-			<Rail label="Moods">
+			<SectionHead
+				id={id}
+				title="By mood"
+				line="Pick the kind of evening"
+				href={HUBS.movieMoods}
+				aside={<HeadArrows nav={nav} name="By mood" />}
+			/>
+			<NavRail nav={nav} name="By mood" label="Moods">
 				{moods.map((m) => (
 					<li key={m.key} className="w-[11.5rem] shrink-0 snap-start sm:w-[13.5rem]">
 						<Link
@@ -121,18 +236,25 @@ export function MoodRail({ data, id }: { data: LabData; id: string }) {
 						</Link>
 					</li>
 				))}
-			</Rail>
+			</NavRail>
 		</section>
 	)
 }
 
 export function ServiceRail({ data, id }: { data: LabData; id: string }) {
 	const services = data.guest.browse.services
+	const nav = useRailNav()
 	if (!services.length) return null
 	return (
 		<section aria-labelledby={id}>
-			<SectionHead id={id} title="Streaming services" line="The top of each service" href={HUBS.showStreaming} />
-			<Rail label="Streaming services">
+			<SectionHead
+				id={id}
+				title="Streaming services"
+				line="The top of each service"
+				href={HUBS.showStreaming}
+				aside={<HeadArrows nav={nav} name="Streaming services" />}
+			/>
+			<NavRail nav={nav} name="Streaming services" label="Streaming services">
 				{services.map((s) => (
 					<li key={s.id} className="w-[15rem] shrink-0 snap-start sm:w-[17rem]">
 						<Link
@@ -152,7 +274,7 @@ export function ServiceRail({ data, id }: { data: LabData; id: string }) {
 						</Link>
 					</li>
 				))}
-			</Rail>
+			</NavRail>
 		</section>
 	)
 }

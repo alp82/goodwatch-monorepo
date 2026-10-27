@@ -7,5 +7,7 @@ import { variant as d } from "./d"
 import { variant as e } from "./e"
 import { variant as f } from "./f"
 import { variant as g } from "./g"
+import { variant as h } from "./h"
+import { variant as i } from "./i"
 
-export const VARIANTS: BlockVariant[] = [a, b, c, d, e, f, g]
+export const VARIANTS: BlockVariant[] = [a, b, c, d, e, f, g, h, i]

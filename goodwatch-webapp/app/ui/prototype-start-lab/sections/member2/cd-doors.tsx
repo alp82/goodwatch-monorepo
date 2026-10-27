@@ -1,12 +1,13 @@
 // PROTOTYPE (start page lab, round 3): member c and d's "Go deeper" doors: one always open (Continue watching on
 // load, rendered on the server), the open door filled amber with a notch into its section; the section links to
-// its page from its header and from a last "See all" tile; Hot on socials is a door only.
+// its page from its header and from a last "See all" tile; Hot on socials is a door only. Round 4: the doors follow
+// what the member has (sections with titles first), with empty, still-forming and few-titles states and their CTAs.
 import { ArrowRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { type ReactNode, useState } from "react"
 import { EASE } from "~/ui/watch-next/style"
-import type { LabCard } from "../../lab/types"
+import { type LabCard, useLab } from "../../lab/types"
 import { CHIP, chipTone } from "../hero/shared"
 import {
 	DISPLAY,
@@ -17,6 +18,7 @@ import {
 	interleave,
 	posterSrc,
 } from "../member/shared"
+import { PERSONAL_AT, PILL, PILL_GHOST, Progress, START_HREF } from "./cd-shared"
 
 type Open = "continue" | "movies" | "forYou"
 
@@ -36,12 +38,24 @@ type Dive = {
 	note: string
 	/** Media type and length are filters inside a section, not the page's navigation. */
 	filters?: Filter[]
+	/** What the section says when it has no titles: why it's empty and where to go. */
+	empty: { title: string; body: string; ctas: Cta[] }
+	/** The line under a short list (fewer than a row of titles), nudging the member to add more. */
+	nudge: { body: string; ctas: Cta[] }
 }
+
+type Cta = { label: string; href: string }
+
+/** Fewer titles than this is "a few": no filters, no See all tile, a short row and a nudge instead of a grid. */
+const SPARSE_BELOW = 6
+
+const BRING: Cta = { label: "Bring your ratings", href: START_HREF.imports }
 
 const ALL: Filter = { key: "all", label: "All", keep: () => true }
 
-function divesOf(m: Member): Dive[] {
+function divesOf(m: Member, ratings: number): Dive[] {
 	const forYou = interleave(m.forYou, m.forYouShows)
+	const forming = ratings < PERSONAL_AT
 	return [
 		{
 			key: "continue",
@@ -52,6 +66,15 @@ function divesOf(m: Member): Dive[] {
 			pageName: "My shows",
 			counted: true,
 			note: "The next episode of each show you're watching",
+			empty: {
+				title: "No shows yet",
+				body: "Shows you track show up here with their next episode, so you can pick up where you left off.",
+				ctas: [{ label: "Find a show", href: START_HREF.findShow }, BRING],
+			},
+			nudge: {
+				body: "Track more shows and their next episodes line up here.",
+				ctas: [{ label: "Find a show", href: START_HREF.findShow }],
+			},
 		},
 		{
 			key: "movies",
@@ -62,6 +85,18 @@ function divesOf(m: Member): Dive[] {
 			pageName: "My movies",
 			counted: true,
 			note: "Your Wishlist, best taste match first",
+			empty: {
+				title: "Your Wishlist is empty",
+				body: "Tap Want to See on any movie to save it for later. It shows up here, best match first.",
+				ctas: [
+					{ label: "Browse Discover", href: START_HREF.discover },
+					{ label: "See For you", href: START_HREF.forYou },
+				],
+			},
+			nudge: {
+				body: "Tap Want to See on any movie to add it here.",
+				ctas: [{ label: "Browse Discover", href: START_HREF.discover }],
+			},
 			filters: [
 				ALL,
 				{
@@ -79,12 +114,18 @@ function divesOf(m: Member): Dive[] {
 		{
 			key: "forYou",
 			label: "For you",
-			line: "Your taste",
+			line: forming ? `${Math.min(ratings, PERSONAL_AT)} of ${PERSONAL_AT} ratings` : "Your taste",
 			cards: forYou,
 			href: HREF.forYou,
 			pageName: "For you",
 			counted: false,
-			note: "Movies and shows picked for your taste",
+			note: forming ? "First picks while your taste is still forming" : "Movies and shows picked for your taste",
+			// While forming, the section's empty state is the forming card itself (see Forming below).
+			empty: { title: "", body: "", ctas: [] },
+			nudge: {
+				body: "Rate more titles and more picks come in.",
+				ctas: [{ label: "Rate a few titles", href: START_HREF.taste }],
+			},
 			filters: [
 				ALL,
 				{
@@ -113,18 +154,76 @@ const DOOR_OPEN =
 const DOOR_SHUT =
 	"cursor-pointer bg-white/[0.05] ring-1 ring-white/5 opacity-60 hover:bg-white/10 hover:opacity-100 hover:ring-white/20 focus-visible:opacity-100"
 
+/** A door's line when its section has no titles. */
+const EMPTY_LINE: Record<Open, string> = {
+	continue: "No shows yet",
+	movies: "Nothing saved yet",
+	forYou: "Needs ratings",
+}
+
 export function Doors({
 	m,
 	className = "",
 }: { m: Member; className?: string }) {
-	const dives = divesOf(m)
-	// One door is always open; the first on load, so its section is in the server's HTML.
-	const [open, setOpen] = useState<Open>("continue")
+	const ratings = useLab().data.member?.ratings ?? 0
+	/*
+	 * The doors follow what the member has. Sections with titles come first, in their usual order (Continue,
+	 * Wishlist, For you), then the Hot on socials link, then sections with nothing in them yet, still in that
+	 * order. The first section with titles is open on load; when none has any, the first door (Continue) is open
+	 * and shows its empty state. An empty door still opens, to say why it's empty and where to go next.
+	 * With the owner's data every section has titles, so the order and the open door are what they were.
+	 */
+	const all = divesOf(m, ratings)
+	const dives = [...all.filter((d) => d.cards.length), ...all.filter((d) => !d.cards.length)]
+	const filled = dives.filter((d) => d.cards.length)
+	const emptyDives = dives.filter((d) => !d.cards.length)
+	// One door is always open; decided from the data alone, so the server renders the same section.
+	const [open, setOpen] = useState<Open>(dives[0].key)
 	const [filter, setFilter] = useState("all")
 	const [first, setFirst] = useState(true)
 	const cur = dives.find((d) => d.key === open) ?? dives[0]
 	const f = cur.filters?.find((x) => x.key === filter) ?? ALL
 	const shown = cur.cards.filter(f.keep)
+	const sparse = cur.cards.length > 0 && cur.cards.length < SPARSE_BELOW
+	const forming = cur.key === "forYou" && ratings < PERSONAL_AT
+
+	const door = (d: Dive) => {
+		const on = open === d.key
+		const has = d.cards.length > 0
+		return (
+			<li key={d.key} className="relative min-w-0">
+				<button
+					type="button"
+					aria-expanded={on}
+					aria-controls="cd-dive"
+					onClick={() => {
+						if (on) return
+						setOpen(d.key)
+						setFilter("all")
+						setFirst(false)
+					}}
+					className={`${DOOR} ${on ? DOOR_OPEN : DOOR_SHUT}`}
+				>
+					<span className={`shrink-0 truncate text-base font-bold ${on ? "text-amber-100" : "text-white"}`}>{d.label}</span>
+					<span className="flex items-end justify-between gap-2">
+						<span className={`line-clamp-1 text-xs ${on ? "font-semibold text-amber-300" : "text-gray-400"}`}>
+							{has ? d.line : d.key === "forYou" && ratings > 0 ? d.line : EMPTY_LINE[d.key]}
+						</span>
+						{has ? <Few cards={d.cards} /> : null}
+					</span>
+				</button>
+				{/* The notch from the open door down into its section (one row of doors on desktop only). */}
+				{on ? (
+					<motion.span
+						layoutId="cd-notch"
+						aria-hidden
+						transition={{ duration: 0.25, ease: EASE }}
+						className="pointer-events-none absolute left-1/2 top-full z-10 mt-[17px] hidden h-4 w-4 -translate-x-1/2 rotate-45 border-l-2 border-t-2 border-amber-400 bg-gray-900 lg:block"
+					/>
+				) : null}
+			</li>
+		)
+	}
 
 	return (
 		<section className={`${WRAP} ${className}`} aria-labelledby="cd-doors">
@@ -135,48 +234,7 @@ export function Doors({
 				Go deeper
 			</h2>
 			<ul className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
-				{dives.map((d) => {
-					const on = open === d.key
-					return (
-						<li key={d.key} className="relative min-w-0">
-							<button
-								type="button"
-								aria-expanded={on}
-								aria-controls="cd-dive"
-								onClick={() => {
-									if (on) return
-									setOpen(d.key)
-									setFilter("all")
-									setFirst(false)
-								}}
-								className={`${DOOR} ${on ? DOOR_OPEN : DOOR_SHUT}`}
-							>
-								<span
-									className={`shrink-0 truncate text-base font-bold ${on ? "text-amber-100" : "text-white"}`}
-								>
-									{d.label}
-								</span>
-								<span className="flex items-end justify-between gap-2">
-									<span
-										className={`line-clamp-1 text-xs ${on ? "font-semibold text-amber-300" : "text-gray-400"}`}
-									>
-										{d.line}
-									</span>
-									<Few cards={d.cards} />
-								</span>
-							</button>
-							{/* The notch from the open door down into its section (one row of doors on desktop only). */}
-							{on ? (
-								<motion.span
-									layoutId="cd-notch"
-									aria-hidden
-									transition={{ duration: 0.25, ease: EASE }}
-									className="pointer-events-none absolute left-1/2 top-full z-10 mt-[17px] hidden h-4 w-4 -translate-x-1/2 rotate-45 border-l-2 border-t-2 border-amber-400 bg-gray-900 lg:block"
-								/>
-							) : null}
-						</li>
-					)
-				})}
+				{filled.map(door)}
 				<li className="min-w-0">
 					<Link
 						to={HREF.hot}
@@ -198,6 +256,7 @@ export function Doors({
 						</span>
 					</Link>
 				</li>
+				{emptyDives.map(door)}
 			</ul>
 
 			{/* The open section: a gray-900 panel whose amber top edge meets the notch. */}
@@ -219,16 +278,27 @@ export function Doors({
 							>
 								{cur.label}
 							</h3>
-							<Link to={cur.href} prefetch="intent" className={TEXT_LINK}>
-								<span>
-									<span className="max-sm:hidden">Open </span>
-									{cur.pageName}
-								</span>
-								<ArrowRightIcon aria-hidden className={`${ARROW} self-center`} />
-							</Link>
+							{cur.cards.length ? (
+								<Link to={cur.href} prefetch="intent" className={TEXT_LINK}>
+									<span>
+										<span className="max-sm:hidden">Open </span>
+										{cur.pageName}
+									</span>
+									<ArrowRightIcon aria-hidden className={`${ARROW} self-center`} />
+								</Link>
+							) : null}
 						</div>
-						<p className="mt-0.5 text-sm text-gray-400">{cur.note}</p>
+						{cur.cards.length ? <p className="mt-0.5 text-sm text-gray-400">{cur.note}</p> : null}
 					</div>
+					{forming ? <Forming ratings={ratings} hasPicks={cur.cards.length > 0} /> : null}
+					{!cur.cards.length ? (
+						forming ? null : (
+							<EmptyState title={cur.empty.title} body={cur.empty.body} ctas={cur.empty.ctas} />
+						)
+					) : sparse ? (
+						<ShortList cards={cur.cards} nudge={forming ? null : cur.nudge} />
+					) : (
+						<>
 					{cur.filters ? (
 						<div
 							className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0"
@@ -254,6 +324,8 @@ export function Doors({
 						</div>
 					) : null}
 					<DiveGrid dive={cur} cards={shown} />
+						</>
+					)}
 				</motion.div>
 			</div>
 		</section>
@@ -310,5 +382,87 @@ function Few({ cards }: { cards: LabCard[] }) {
 				/>
 			))}
 		</span>
+	)
+}
+
+/** Two CTAs: the first as the amber pill, the rest quiet. */
+function Ctas({ ctas, className = "" }: { ctas: Cta[]; className?: string }) {
+	return (
+		<div className={`flex flex-wrap gap-2 ${className}`}>
+			{ctas.map((c, i) => (
+				<Link key={c.href} to={c.href} prefetch="intent" className={i === 0 ? PILL : PILL_GHOST}>
+					{c.label}
+					{i === 0 ? <ArrowRightIcon aria-hidden className="h-4 w-4" /> : null}
+				</Link>
+			))}
+		</div>
+	)
+}
+
+/** The For you page's empty card (ForYouPage Unready): a soft panel, a short reason, the way forward. */
+function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
+	return <div className={`max-w-xl rounded-2xl bg-white/[0.035] p-5 ring-1 ring-white/10 sm:p-6 ${className}`}>{children}</div>
+}
+
+function EmptyState({ title, body, ctas }: { title: string; body: string; ctas: Cta[] }) {
+	return (
+		<Panel>
+			<p className="text-base font-bold text-white">{title}</p>
+			<p className="mt-1 text-[15px] leading-6 text-gray-300">{body}</p>
+			<Ctas ctas={ctas} className="mt-4" />
+		</Panel>
+	)
+}
+
+/** For you below PERSONAL_AT ratings: how far along it is and the two ways to get there. Its picks (if any) follow. */
+function Forming({ ratings, hasPicks }: { ratings: number; hasPicks: boolean }) {
+	return (
+		<Panel className={hasPicks ? "mb-5" : ""}>
+			<p className="text-base font-bold text-white">For you is still forming</p>
+			<p className="mt-1 text-[15px] leading-6 text-gray-300">
+				Picks get personal at {PERSONAL_AT} ratings.
+				{hasPicks ? " Until then, these are first guesses." : ""}
+			</p>
+			<Progress have={ratings} className="mt-3" />
+			<Ctas
+				ctas={[
+					{ label: "Rate a few titles", href: START_HREF.taste },
+					{ label: "Bring your ratings", href: START_HREF.imports },
+				]}
+				className="mt-4"
+			/>
+		</Panel>
+	)
+}
+
+/** How many columns the nudge spans after n posters, so the row stays one row (phones: always its own row). */
+const SPAN_SM = ["sm:col-span-4", "sm:col-span-3", "sm:col-span-2", "sm:col-span-4", "sm:col-span-4", "sm:col-span-4"]
+const SPAN_LG = ["lg:col-span-6", "lg:col-span-5", "lg:col-span-4", "lg:col-span-3", "lg:col-span-2", "lg:col-span-2"]
+
+/**
+ * One to a few titles: the same poster cards at the grid's size, and the rest of the row is a nudge to add more
+ * (on phones the nudge is its own row under them), so a single title never sits alone in an empty grid.
+ */
+function ShortList({ cards, nudge }: { cards: LabCard[]; nudge: Dive["nudge"] | null }) {
+	const n = cards.length
+	return (
+		<ul className="grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 lg:grid-cols-6">
+			{cards.map((card) => (
+				<li key={card.key} className="min-w-0">
+					<Poster card={card} />
+				</li>
+			))}
+			{nudge ? (
+				<li className={`col-span-3 min-w-0 ${SPAN_SM[n]} ${n === 5 ? "lg:col-span-6" : SPAN_LG[n]}`}>
+					<div className="flex h-full flex-col justify-center rounded-lg border-2 border-dashed border-gray-800 p-4 sm:p-5">
+						<p className="text-sm font-bold text-white">
+							{n === 1 ? "Just one so far" : `${n} so far`}
+						</p>
+						<p className="mt-0.5 text-sm text-gray-400">{nudge.body}</p>
+						<Ctas ctas={nudge.ctas} className="mt-3" />
+					</div>
+				</li>
+			) : null}
+		</ul>
 	)
 }

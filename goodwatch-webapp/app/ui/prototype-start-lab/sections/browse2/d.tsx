@@ -1,4 +1,4 @@
-// PROTOTYPE (start page lab, round 3): browse2 d · Rails with a top 10: a's rails, led by c's Top 10 (big numbers, Movies/Shows), with c's genre cloud and its peeks (hover or tap) in place of the genre tiles.
+// PROTOTYPE (start page lab, round 4): browse2 d · Rails with a top 10: a's rails, led by c's Top 10 (big numbers, Movies/Shows), with c's genre cloud and its peeks (hover or tap) in place of the genre tiles. Round 4: every rail has previous/next arrows.
 import type { BlockVariant } from "../../lab/types"
 import { useLab } from "../../lab/types"
 import { BrowseShell, GenreCloud, MoodRail, NewOnRail, ServiceRail, TopTen } from "./kit-de"

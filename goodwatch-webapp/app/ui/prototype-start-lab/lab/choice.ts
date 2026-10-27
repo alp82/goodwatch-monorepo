@@ -5,7 +5,7 @@
 // Round 1: layout + hero + recs + how + browse for guests. Round 2 (default): the stage (search and tap three on
 // the room) + how + browse, and new member pages; the owner's round 1 picks are the defaults.
 
-export type SectionId = "layout" | "stage" | "hero" | "recs" | "scene" | "shelf" | "tv" | "how" | "browse" | "member"
+export type SectionId = "layout" | "stage" | "hero" | "recs" | "scene" | "shelf" | "tv" | "how" | "browse" | "member" | "persona"
 
 export type Viewer = "guest" | "member"
 export type Round = 1 | 2
@@ -16,6 +16,7 @@ export const SECTIONS: { id: SectionId; name: string; for: Viewer[]; rounds: Rou
 	{ id: "hero", name: "Search hero", for: ["guest"], rounds: [1] },
 	{ id: "recs", name: "Recommendations", for: ["guest"], rounds: [1] },
 	{ id: "member", name: "Member start", for: ["member"], rounds: [1, 2] },
+	{ id: "persona", name: "Member data", for: ["member"], rounds: [2] },
 	{ id: "scene", name: "Room scene", for: ["guest", "member"], rounds: [1, 2] },
 	{ id: "shelf", name: "Posters in the room", for: ["guest", "member"], rounds: [1, 2] },
 	{ id: "tv", name: "TV and intro", for: ["guest"], rounds: [1, 2] },
@@ -26,8 +27,8 @@ export const SECTIONS: { id: SectionId; name: string; for: Viewer[]; rounds: Rou
 /** The owner's round 1 picks (2026-10-27) start round 2. */
 export const DEFAULTS: Record<Round, Partial<Record<SectionId, string>>> = {
 	1: {},
-	// Round 3: the owner's round 2 picks, refined (stage e-g refine a, browse d-e fold c into a, member d).
-	2: { scene: "nook-stage", shelf: "e", tv: "a", how: "b", stage: "e", browse: "d", member: "d" },
+	// Round 4: the owner's round 3 picks, refined (stage h-i refine e, browse d with arrows, member d with empty states).
+	2: { scene: "nook-stage", shelf: "e", tv: "a", how: "b", stage: "h", browse: "d", member: "d", persona: "full" },
 }
 
 export type Choice = Partial<Record<SectionId, string>> & { as: Viewer; sec: SectionId; round: Round }

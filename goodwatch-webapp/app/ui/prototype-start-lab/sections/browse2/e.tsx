@@ -1,4 +1,4 @@
-// PROTOTYPE (start page lab, round 3): browse2 e · Rails, new first, tighter: d's parts reordered for a first visit (new on streaming, Top 10, moods, services, genres) with less space between them.
+// PROTOTYPE (start page lab, round 4): browse2 e · Rails, new first, tighter: d's parts reordered for a first visit (new on streaming, Top 10, moods, services, genres) with less space between them. Round 4: every rail has previous/next arrows.
 import type { BlockVariant } from "../../lab/types"
 import { useLab } from "../../lab/types"
 import { BrowseShell, GenreCloud, MoodRail, NewOnRail, ServiceRail, TopTen } from "./kit-de"

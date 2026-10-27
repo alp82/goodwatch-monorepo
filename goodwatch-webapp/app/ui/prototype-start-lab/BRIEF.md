@@ -114,3 +114,20 @@ The owner's notes, verbatim:
 > * [the full-width gray "Open My shows" bar under an open door] nicer looking link to navigate
 
 Scenes: `nook-stage` and `nook-stage-portrait` are being repainted (no candles, at most two plants, no baskets, a bigger calm top: the top ~36% across the middle ~64% of the width on landscape, ~34% × 60% on the portrait). A new `nook-tv-corner` (the other side of the room, with a TV) replaces `nook-illustrated` as How it works' TV scene (`lab.tvScene`). The images change under you while you work; reload to see them.
+
+---
+
+# Round 4 (2026-10-27): detail on the picks
+
+Picks: guest **stage e** (shadow pool), **browse d** (rails with top 10 and genre peeks); member **member2 d** ("great").
+
+The owner's notes, verbatim:
+
+> guest:
+> * E looks good. the search presets should be a bit more obsious to be clickable. the moods should fit into one row. we will have much more than these so some kind of extra select step apart from the most common ones would be good. the results/quiz should be presented and highlighted in a better way that clearly sets them apart from the rest of the page. the posters themselves should be the loved it toggles, like in the tv quiz
+> * browse: d is good. each row needs controls to go left and right
+>
+> member:
+> * d is great. agree that the order should depend on what's available in those. we need good empty state with cta too for members that dont have any show, any wishlist item, not enough ratings. or only 1 to a few
+
+New in the lab: a **Member data** section (`?persona=full|few|no-shows|no-wishlist|new`, `lab/personas.ts`) trims the owner's data to test sparse and empty members; `data.member.ratings` is the member's rating count (905 for the owner, 4 for "few", 0 for "new").

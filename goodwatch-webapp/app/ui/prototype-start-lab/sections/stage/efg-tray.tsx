@@ -17,12 +17,11 @@ export function EfgTray({ f }: { f: StageFlow }) {
 	// into view. Never on first paint or a restore: only on a change after mount.
 	const box = useRef<HTMLDivElement>(null)
 	const sourceKey = `${f.source.kind}:${"q" in f.source ? f.source.q : "key" in f.source ? f.source.key : ""}:${showPicks}`
-	const first = useRef(true)
+	// Compare with the last key, not a first-run flag: dev runs effects twice on mount.
+	const last = useRef(sourceKey)
 	useEffect(() => {
-		if (first.current) {
-			first.current = false
-			return
-		}
+		if (last.current === sourceKey) return
+		last.current = sourceKey
 		const el = box.current
 		if (!el) return
 		const r = el.getBoundingClientRect()

@@ -1,5 +1,7 @@
 // PROTOTYPE (start page lab, round 2): what member c and d share: the deck of tonight candidates from Sam's own
-// lists, the Watch button, and the slim search whose results take over a fixed box in place.
+// lists, the Watch button, and the slim search whose results take over a fixed box in place. Round 4: the deck
+// follows what the member has, and FirstSteps stands in for the deck when there is nothing on any list yet.
+import { ArrowRightIcon } from "@heroicons/react/20/solid"
 import { PlayIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
@@ -43,6 +45,11 @@ const obj = (v: unknown): Record<string, unknown> | null => (v && typeof v === "
  *    interleaved, in the order the server ranked them). Taking turns means every list shows up in the first few
  *    titles, so "Not this one" and the pairs move between kinds of evening, not down one list.
  * 3. Each title once (Loki is in Want to See and For you; the first list that reaches it wins).
+ *
+ * Round 4, members with less data: a list with no titles simply drops out of the turns, so the pairs only ever
+ * draw on lists that have something (with one list left, "this or that" happens within it). While For you is
+ * still forming (fewer than PERSONAL_AT ratings) its picks are guesses, so they wait until the member's own lists
+ * (Continue, Wishlist) run out instead of taking turns with them. The owner's data (905 ratings) is unchanged.
  */
 export function buildDeck(data: LabData, m: Member): Candidate[] {
 	const backdrops = new Map<number, string>()
@@ -82,10 +89,12 @@ export function buildDeck(data: LabData, m: Member): Candidate[] {
 	}
 
 	const byMatch = (a: LabCard, b: LabCard) => (b.match ?? 0) - (a.match ?? 0)
+	const forming = (data.member?.ratings ?? 0) < PERSONAL_AT
+	const forYou = interleave(m.forYou, m.forYouShows)
 	const lists: [Source, LabCard[]][] = [
 		["continue", m.continueShows],
 		["wishlist", [...m.movies].sort(byMatch)],
-		["forYou", interleave(m.forYou, m.forYouShows)],
+		["forYou", forming ? [] : forYou],
 	]
 	const out: Candidate[] = []
 	const keys = new Set<number>()
@@ -101,16 +110,120 @@ export function buildDeck(data: LabData, m: Member): Candidate[] {
 	}
 	const longest = Math.max(...lists.map(([, l]) => l.length))
 	for (let i = 0; i < longest; i++) for (const [source, list] of lists) add(list[i], source)
+	if (forming) for (const card of forYou) add(card, "forYou")
 	return out
 }
 
-export function useDeck(): { m: Member; deck: Candidate[] } {
+export function useDeck(): { m: Member; deck: Candidate[]; ratings: number } {
 	const { data } = useLab()
 	const m = useMember()
 	// useMember reads only the fixtures, so the deck never changes after the first render.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: m derives from data
 	const deck = useMemo(() => buildDeck(data, m), [data])
-	return { m, deck }
+	return { m, deck, ratings: data.member?.ratings ?? 0 }
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Members with little or no data (round 4)
+// ---------------------------------------------------------------------------------------------------------
+
+/** For you gets personal from this many ratings; below it, it is "still forming". */
+export const PERSONAL_AT = 10
+
+/** The real pages the empty states lead to. */
+export const START_HREF = {
+	taste: "/taste",
+	imports: "/settings/imports",
+	findShow: "/discover?type=show",
+	discover: "/discover",
+	forYou: "/for-you",
+}
+
+/** The For you page's own buttons (ForYouPage Unready): an amber pill, and a quiet ringed one. */
+export const PILL =
+	"inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-full bg-amber-400 px-5 text-sm font-black text-gray-950 hover:bg-amber-300 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+export const PILL_GHOST =
+	"inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-full px-5 text-sm font-semibold text-gray-200 ring-1 ring-inset ring-white/15 hover:bg-white/5 hover:text-white outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+
+/**
+ * What a brand new member sees where the deck would be: three first steps instead of an empty pair. Each step is
+ * one big link (a phone row, a desktop column), so nothing here waits for data and the box keeps its size.
+ */
+export function FirstSteps({ ratings }: { ratings: number }) {
+	const steps = [
+		{
+			n: 1,
+			title: "Rate a few titles",
+			line: `Tap the ones you've seen. Picks get personal at ${PERSONAL_AT} ratings.`,
+			cta: "Start rating",
+			href: START_HREF.taste,
+			progress: true,
+		},
+		{
+			n: 2,
+			title: "Bring your ratings",
+			line: "From IMDb, Letterboxd, Trakt, Plex and more.",
+			cta: "Import",
+			href: START_HREF.imports,
+			progress: false,
+		},
+		{
+			n: 3,
+			title: "Find something",
+			line: "Search by mood above, or browse Discover.",
+			cta: "Open Discover",
+			href: START_HREF.discover,
+			progress: false,
+		},
+	]
+	return (
+		<div className="flex h-full flex-col pt-3">
+			<div className="flex h-10 items-center">
+				<h2 className="truncate text-base font-bold text-white lg:text-lg">Start here</h2>
+			</div>
+			<p className="text-sm text-gray-300">Three ways to get your first picks.</p>
+			<ol className="mt-4 grid gap-3 sm:grid-cols-3 lg:gap-5">
+				{steps.map((s) => (
+					<li key={s.n} className="min-w-0">
+						<Link
+							to={s.href}
+							prefetch="intent"
+							className="group flex h-full items-center gap-3 rounded-2xl bg-gray-900/90 p-4 ring-1 ring-white/10 outline-none transition-colors hover:bg-gray-900 hover:ring-amber-400/50 focus-visible:ring-2 focus-visible:ring-amber-300 sm:flex-col sm:items-start sm:gap-2 sm:p-5 lg:p-6"
+						>
+							<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-400/15 text-sm font-black text-amber-300 ring-1 ring-amber-400/40 sm:mb-1">
+								{s.n}
+							</span>
+							<span className="min-w-0 flex-1">
+								<span className="block text-base font-bold text-white lg:text-lg">{s.title}</span>
+								<span className="mt-0.5 block text-sm leading-snug text-gray-400">{s.line}</span>
+								{s.progress ? <Progress have={ratings} className="mt-2.5 max-sm:hidden" /> : null}
+							</span>
+							<ArrowRightIcon aria-hidden className="h-5 w-5 shrink-0 text-amber-400 sm:hidden" />
+							<span className={`${PILL} mt-3 max-sm:hidden sm:mt-auto`}>
+								{s.cta}
+								<ArrowRightIcon aria-hidden className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+							</span>
+						</Link>
+					</li>
+				))}
+			</ol>
+		</div>
+	)
+}
+
+/** "4 of 10 ratings" with a thin amber bar (a static width, nothing animates). */
+export function Progress({ have, className = "" }: { have: number; className?: string }) {
+	const n = Math.min(have, PERSONAL_AT)
+	return (
+		<span className={`block ${className}`}>
+			<span className="block text-xs font-semibold tabular-nums text-amber-300">
+				{n} of {PERSONAL_AT} ratings
+			</span>
+			<span className="mt-1 block h-1.5 w-full max-w-[12rem] overflow-hidden rounded-full bg-white/10" aria-hidden>
+				<span className="block h-full rounded-full bg-amber-400" style={{ width: `${(n / PERSONAL_AT) * 100}%` }} />
+			</span>
+		</span>
+	)
 }
 
 /** "2h 1m" for a movie, "24 min" for a show's episode. */

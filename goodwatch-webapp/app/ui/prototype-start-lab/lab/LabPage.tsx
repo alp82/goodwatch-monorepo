@@ -4,12 +4,19 @@ import { useCallback, useMemo, useState } from "react"
 import { LabBar, type BarSection } from "./LabBar"
 import { Room, RoomParts } from "./Room"
 import { DEFAULTS, SECTIONS, type SectionId, choiceFromParams } from "./choice"
+import { PERSONAS, personaFor } from "./personas"
 import { REGISTRY, pick } from "./registry"
 import { type IntroFrom, type Lab, type LabCard, LabContext, type LabData } from "./types"
 
-export function LabPage({ data }: { data: LabData }) {
+export function LabPage({ data: loaded }: { data: LabData }) {
 	const [params] = useSearchParams()
 	const choice = useMemo(() => choiceFromParams(params), [params])
+	// Round 4: the member's data as the chosen persona has it (lab/personas.ts).
+	const persona = personaFor(choice.round === 2 ? choice.persona : undefined)
+	const data = useMemo<LabData>(
+		() => (loaded.member ? { ...loaded, member: persona.make(loaded.member) } : loaded),
+		[loaded, persona],
+	)
 	const reg = REGISTRY[choice.round]
 	const def = DEFAULTS[choice.round]
 	const want = (id: SectionId) => choice[id] ?? def[id]
@@ -60,6 +67,7 @@ export function LabPage({ data }: { data: LabData }) {
 		how: how.key,
 		browse: browse.key,
 		member: member.key,
+		persona: persona.key,
 	}
 	const sections: BarSection[] = SECTIONS.map((s) => ({
 		id: s.id,
@@ -68,6 +76,8 @@ export function LabPage({ data }: { data: LabData }) {
 		variants:
 			s.id === "scene"
 				? data.scenes.map((p) => ({ key: p.id, name: `${p.landscape.title} · ${p.landscape.style}` }))
+				: s.id === "persona"
+					? PERSONAS.map((p) => ({ key: p.key, name: p.name }))
 				: ((reg as Record<string, readonly { key: string; name: string }[]>)[s.id] ?? []).map((v) => ({ key: v.key, name: v.name })),
 	}))
 
@@ -79,7 +89,7 @@ export function LabPage({ data }: { data: LabData }) {
 	const Member = member.C
 	const Theater = tv.Theater
 	// A new variant starts fresh: its key changes with every choice that shapes it.
-	const pageKey = [choice.round, choice.as, layout.key, stage.key, hero.key, recs.key, how.key, browse.key, member.key].join(".")
+	const pageKey = [choice.round, choice.as, persona.key, layout.key, stage.key, hero.key, recs.key, how.key, browse.key, member.key].join(".")
 	return (
 		<LabContext.Provider value={lab}>
 			<RoomParts.Provider value={{ shelf, tv }}>

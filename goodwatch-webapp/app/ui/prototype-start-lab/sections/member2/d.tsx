@@ -2,6 +2,8 @@
 // side by side over the room; tap the one you'd rather watch, the winner stays and a challenger from another list
 // takes the other side; three taps give tonight's pick. "Neither" deals a new pair, Start over reshuffles.
 // Search sits above with its results in the same fixed box; the doors open each list inline below.
+// Round 4: the pairs draw only on lists with titles (cd-shared buildDeck); fewer titles mean fewer rounds, one title
+// is simply tonight's pick, and a member with nothing yet gets three first steps in the same box.
 import { ArrowPathIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
@@ -11,9 +13,22 @@ import { titleHref } from "../../lab/kit"
 import { type BlockVariant, useLab } from "../../lab/types"
 import { DISPLAY, HREF, WRAP, greeting, posterSrc } from "../member/shared"
 import { Doors } from "./cd-doors"
-import { type Candidate, GHOST, SOURCE_LABEL, SearchBox, type Source, WatchLink, factsLine, useDeck } from "./cd-shared"
+import {
+	type Candidate,
+	FirstSteps,
+	GHOST,
+	SOURCE_LABEL,
+	START_HREF,
+	SearchBox,
+	type Source,
+	WatchLink,
+	factsLine,
+	useDeck,
+} from "./cd-shared"
 
+/** Three taps make tonight's pick; a short deck plays fewer (two titles: one tap). */
 const ROUNDS = 3
+const roundsFor = (deck: Candidate[]) => Math.max(1, Math.min(ROUNDS, deck.length - 1))
 
 type Duel = {
 	/** Rotates the deck on Start over, so a new run deals different titles. */
@@ -45,7 +60,8 @@ function deal(order: Candidate[], epoch: number, seenBefore: number[] = []): Due
 
 function ThisOrThat() {
 	const { Room } = useLab()
-	const { m, deck } = useDeck()
+	const { m, deck, ratings } = useDeck()
+	const rounds = roundsFor(deck)
 	const [duel, setDuel] = useState<Duel>(() => deal(deck, 0))
 	// Each run starts four titles further down the deck (Tonight's pick leads the first run).
 	const order = useMemo(() => {
@@ -58,6 +74,8 @@ function ThisOrThat() {
 	const right = duel.right != null ? (byKey.get(duel.right) ?? null) : null
 	const done = duel.done != null ? (byKey.get(duel.done) ?? null) : null
 	const runnerUp = duel.runnerUp != null ? (byKey.get(duel.runnerUp) ?? null) : null
+	// One title on all of Sam's lists: no pair to play, it is simply tonight's pick.
+	const only = deck.length === 1 ? deck[0] : null
 
 	const choose = (side: "left" | "right") => {
 		const win = side === "left" ? left : right
@@ -65,7 +83,7 @@ function ThisOrThat() {
 		if (!win) return
 		const taps = duel.taps + 1
 		const seen = new Set(duel.seen)
-		const challenger = taps < ROUNDS ? next(order, seen, win.source) : null
+		const challenger = taps < rounds ? next(order, seen, win.source) : null
 		if (!challenger) {
 			setDuel({ ...duel, taps, chose: side, done: win.card.key, runnerUp: lose?.card.key ?? null })
 			return
@@ -97,7 +115,11 @@ function ThisOrThat() {
 				{/* The room behind it all, dimmed; its shelves hold the titles still in the running. */}
 				<Room
 					style={{ position: "absolute", inset: 0, zIndex: -1 }}
-					posters={order.filter((c) => !duel.seen.includes(c.card.key) || c.card.key === duel.left || c.card.key === duel.right).map((c) => c.card)}
+					posters={
+						deck.length
+							? order.filter((c) => !duel.seen.includes(c.card.key) || c.card.key === duel.left || c.card.key === duel.right).map((c) => c.card)
+							: m.popular
+					}
 					noTv
 					noOverlay
 				>
@@ -111,20 +133,26 @@ function ThisOrThat() {
 						<div className="relative h-full">
 							<AnimatePresence initial={false}>
 								<motion.div
-									key={done ? `done:${done.card.key}` : `duel:${duel.epoch}`}
+									key={only ? "only" : done ? `done:${done.card.key}` : `duel:${duel.epoch}`}
 									className="absolute inset-0"
 									initial={{ opacity: 0, scale: 0.98 }}
 									animate={{ opacity: 1, scale: 1 }}
 									exit={{ opacity: 0 }}
 									transition={{ duration: 0.3, ease: EASE }}
 								>
-									{done ? (
+									{!deck.length ? (
+										<FirstSteps ratings={ratings} />
+									) : only ? (
+										<Result pick={only} runnerUp={null} onAgain={null} />
+									) : done ? (
 										<Result pick={done} runnerUp={runnerUp} onAgain={restart} />
 									) : (
 										<Pair
 											left={left}
 											right={right}
 											taps={duel.taps}
+											rounds={rounds}
+											canSkip={deck.length > 2}
 											chose={duel.chose}
 											onChoose={choose}
 											onNeither={neither}
@@ -147,6 +175,8 @@ function Pair({
 	left,
 	right,
 	taps,
+	rounds,
+	canSkip,
 	chose,
 	onChoose,
 	onNeither,
@@ -155,6 +185,9 @@ function Pair({
 	left: Candidate | null
 	right: Candidate | null
 	taps: number
+	rounds: number
+	/** Neither needs titles beyond the two on screen; with only two, a nudge to add more takes its place. */
+	canSkip: boolean
 	chose: "left" | "right" | null
 	onChoose: (side: "left" | "right") => void
 	onNeither: () => void
@@ -165,12 +198,14 @@ function Pair({
 			<div className="flex h-10 items-center gap-3">
 				<h2 className="min-w-0 flex-1 truncate text-base font-bold text-white lg:text-lg">
 					This or that?
-					<span className="ml-2 text-sm font-semibold text-gray-400">
-						{Math.min(taps + 1, ROUNDS)} of {ROUNDS}
-					</span>
+					{rounds > 1 ? (
+						<span className="ml-2 text-sm font-semibold text-gray-400">
+							{Math.min(taps + 1, rounds)} of {rounds}
+						</span>
+					) : null}
 				</h2>
 				<span className="flex gap-1" aria-hidden>
-					{Array.from({ length: ROUNDS }, (_, i) => (
+					{Array.from({ length: rounds }, (_, i) => (
 						<span key={i} className={`h-1.5 w-5 rounded-full transition-colors ${i < taps ? "bg-amber-400" : i === taps ? "bg-amber-400/40" : "bg-white/15"}`} />
 					))}
 				</span>
@@ -192,9 +227,15 @@ function Pair({
 
 			<div className="mt-3 flex items-center justify-between gap-3">
 				<p className="text-xs text-gray-400 sm:text-sm">Tap the one you'd rather watch.</p>
-				<button type="button" onClick={onNeither} className={`${GHOST} !h-9 !text-sm`}>
-					Neither
-				</button>
+				{canSkip ? (
+					<button type="button" onClick={onNeither} className={`${GHOST} !h-9 !text-sm`}>
+						Neither
+					</button>
+				) : (
+					<Link to={START_HREF.discover} prefetch="intent" className={`${GHOST} !h-9 !text-sm`}>
+						Add more
+					</Link>
+				)}
 			</div>
 		</div>
 	)
@@ -241,7 +282,7 @@ function Side({ c, side, nod, onChoose }: { c: Candidate | null; side: "left" | 
 	)
 }
 
-function Result({ pick, runnerUp, onAgain }: { pick: Candidate; runnerUp: Candidate | null; onAgain: () => void }) {
+function Result({ pick, runnerUp, onAgain }: { pick: Candidate; runnerUp: Candidate | null; onAgain: (() => void) | null }) {
 	return (
 		<div className="flex h-full flex-col pt-3">
 			<div className="relative -mx-4 min-h-0 flex-1 overflow-hidden bg-gray-900 sm:mx-0 sm:rounded-2xl">
@@ -262,14 +303,23 @@ function Result({ pick, runnerUp, onAgain }: { pick: Candidate; runnerUp: Candid
 					<p className="h-5 truncate text-sm text-gray-400">{factsLine(pick.card)}</p>
 					<div className="mt-4 flex items-center gap-2">
 						<WatchLink c={pick} className="min-w-0 flex-1 lg:w-[15rem] lg:flex-none" />
-						<button type="button" onClick={onAgain} className={GHOST}>
-							<ArrowPathIcon className="h-4 w-4" aria-hidden /> Again
-						</button>
+						{onAgain ? (
+							<button type="button" onClick={onAgain} className={GHOST}>
+								<ArrowPathIcon className="h-4 w-4" aria-hidden /> Again
+							</button>
+						) : null}
 					</div>
 				</div>
 			</div>
 			<p className="mt-3 h-5 truncate text-sm text-gray-400">
-				{runnerUp ? (
+				{!onAgain ? (
+					<>
+						Add a few more for this or that.{" "}
+						<Link to={START_HREF.discover} className="font-semibold text-amber-400 hover:text-amber-300">
+							Find something →
+						</Link>
+					</>
+				) : runnerUp ? (
 					<>
 						Runner-up:{" "}
 						<Link to={titleHref(runnerUp.card)} className="font-semibold text-gray-200 hover:text-white">
@@ -278,9 +328,11 @@ function Result({ pick, runnerUp, onAgain }: { pick: Candidate; runnerUp: Candid
 						{" · "}
 					</>
 				) : null}
-				<Link to={HREF.watchNext} className="font-semibold text-amber-400 hover:text-amber-300">
-					More in Watch next →
-				</Link>
+				{onAgain ? (
+					<Link to={HREF.watchNext} className="font-semibold text-amber-400 hover:text-amber-300">
+						More in Watch next →
+					</Link>
+				) : null}
 			</p>
 		</div>
 	)
