@@ -3,8 +3,14 @@ import "../title-filter/test-alias.ts"
 import assert from "node:assert/strict"
 import { readFile } from "node:fs/promises"
 import { test } from "node:test"
-const { createOgStore, CACHE_PREFIX, FIRST_SECONDS, STORE_SECONDS, FRESH_MS } =
-	await import("./store.server.ts")
+const {
+	createOgStore,
+	CACHE_PREFIX,
+	FIRST_SECONDS,
+	STORE_SECONDS,
+	FRESH_MS,
+	cardKey,
+} = await import("./store.server.ts")
 const { CardRendererBusyError } = await import(
 	"../card-renderer/pool.server.ts"
 )
@@ -388,4 +394,16 @@ test("share list images keep their own key and lifetime", async () => {
 	assert.match(source, /setex\(key, STORE_SECONDS, png\)/)
 	assert.doesNotMatch(source, /FIRST_SECONDS|og-card/)
 	assert.ok(!"share-card:v3:".startsWith(CACHE_PREFIX))
+})
+
+test("a card with its own version has a key of its own; every other card keeps its key", async () => {
+	assert.equal(cardKey("/movie/603"), "og-card:v8:/movie/603")
+	assert.equal(cardKey("/taste/quiz"), "og-card:v8:/taste/quiz@2")
+	const f = fixture()
+	await createOgStore({
+		redis: () => f.redis,
+		canonical,
+		render: async () => image,
+	}).getOgImage("/taste/quiz")
+	assert.equal(f.writes[0].key, "og-card:v8:/taste/quiz@2")
 })

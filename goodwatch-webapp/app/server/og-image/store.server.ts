@@ -11,6 +11,7 @@
 // This module has no JSX and takes its Redis client, its renderer, and its clock as arguments, so it runs in tests.
 import { createHash } from "node:crypto"
 import { CardRendererBusyError } from "~/server/card-renderer/pool.server"
+import { cardVersionSuffix } from "../../ui/og-image/card-versions.ts"
 
 // The key holds the card's version: bump it when the card's design, its text rules, or the image format change, so
 // that stored cards are drawn again. Keys of an older version expire by themselves.
@@ -19,7 +20,11 @@ import { CardRendererBusyError } from "~/server/card-renderer/pool.server"
 // v5: member profile cards (the fingerprint card, one card per profile tab).
 // v6: the /for-you card (a v5 render repeated posters).
 // v7: the /for-you card shows each poster picture once.
+// A change to one card bumps that card's own version instead (ui/og-image/card-versions.ts, `cardKey` below).
 export const CACHE_PREFIX = "og-card:v8:"
+/** The Valkey key of a card: the prefix, its canonical path, and the card's own version when it has one ("@2"). */
+export const cardKey = (path: string) =>
+	`${CACHE_PREFIX}${path}${cardVersionSuffix(path, "@")}`
 // First renders expire soon so cards fetched only once do not fill Valkey.
 export const FIRST_SECONDS = 30 * 60
 // How long Valkey keeps a requested-again card. The cluster's LFU policy may evict it sooner.
@@ -80,7 +85,7 @@ export async function forgetStoredCard(
 	try {
 		await bounded(
 			Promise.all([
-				redis.del?.(CACHE_PREFIX + path),
+				redis.del?.(cardKey(path)),
 				redis.setex(RESET_PREFIX + path, keptSeconds, Buffer.from(String(now))),
 			]),
 			timeoutMs,
@@ -162,7 +167,7 @@ export function createOgStore(deps: Dependencies) {
 		}
 		try {
 			const value = await bounded(
-				Promise.resolve(deps.redis()?.getBuffer(CACHE_PREFIX + path)),
+				Promise.resolve(deps.redis()?.getBuffer(cardKey(path))),
 				deps.redisTimeoutMs ?? 1000,
 				undefined,
 			)
@@ -198,7 +203,7 @@ export function createOgStore(deps: Dependencies) {
 				card.kept = false
 				return
 			}
-			const key = CACHE_PREFIX + path
+			const key = cardKey(path)
 			const seconds = deps.keptSeconds ?? STORE_SECONDS
 			if ((await redis.expire(key, seconds)) === 0)
 				await redis.setex(key, seconds, value(card))
@@ -231,7 +236,7 @@ export function createOgStore(deps: Dependencies) {
 							deps
 								.redis()
 								?.setex(
-									CACHE_PREFIX + path,
+									cardKey(path),
 									kept
 										? (deps.keptSeconds ?? STORE_SECONDS)
 										: (deps.firstSeconds ?? FIRST_SECONDS),

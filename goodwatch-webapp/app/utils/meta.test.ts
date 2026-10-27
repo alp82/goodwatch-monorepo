@@ -138,6 +138,17 @@ test("a page's Open Graph image is the JPEG under /og/, with index for the home 
 	)
 })
 
+test("a card with its own version names it in its image address, so previews fetch the new design", () => {
+	assert.equal(
+		ogImageUrl("https://goodwatch.app/taste/quiz?view=taste"),
+		"https://goodwatch.app/og/taste/quiz.jpg?brand=D2&card=2",
+	)
+	assert.equal(
+		ogImageUrl("https://goodwatch.app/taste"),
+		"https://goodwatch.app/og/taste.jpg?brand=D2",
+	)
+})
+
 const jsonLdTags = (tags: Record<string, unknown>[]) =>
 	tags.filter((tag) => "script:ld+json" in tag)
 

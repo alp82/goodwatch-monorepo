@@ -1,6 +1,6 @@
 // Every piece of text the Open Graph cards show, in one place to review and edit.
-// After changing anything here, bump CACHE_PREFIX in app/server/og-image/og-image.server.tsx,
-// or cached cards keep the old text for up to a day.
+// After changing a card's text, bump its version in card-versions.ts (or, for every card, CACHE_PREFIX in
+// app/server/og-image/store.server.ts), or cached cards keep the old text for up to a day.
 //
 // Text that comes from elsewhere:
 // - Mood, streaming, and genre names and subtitles: app/ui/explore/category/*.ts and
@@ -127,10 +127,11 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 		title: "Your taste",
 		subtitle: "We understand what you really love in movies and shows.",
 	},
+	// Drawn as the taste bar card (TASTE_QUIZ_CARD_COPY). Listed here so the path has a card of its own.
 	"/taste/quiz": {
-		tag: "Taste quiz",
-		title: "Rate 5 movies. Get great picks.",
-		subtitle: "Recommendations that fit your taste, in 30 seconds.",
+		tag: "Your taste",
+		title: "5 liked titles. Your taste is ready.",
+		subtitle: "",
 	},
 	"/lists/new": {
 		tag: "Top 5",
@@ -219,6 +220,17 @@ export const AI_CHAT_COPY = {
 	providerId: "8",
 	toolLine: "Used GoodWatch",
 	reply: "Top picks on Netflix for your taste.",
+} as const
+
+// The /taste/quiz card: the rating flow's taste bar, lit as at a milestone, with its words (ui/rating-flow/words.ts,
+// tasteBarWords) across the seam between the backdrop and the band, and the band's headline under it.
+export const TASTE_QUIZ_CARD_COPY = {
+	tag: "Your taste",
+	title: "5 liked titles. Your taste is ready.",
+	bar: "Your taste is ready",
+	line: "5 liked · picks waiting",
+	// The dots of the flow's top row, all lit.
+	dots: 5,
 } as const
 
 // The /for-you card. The family words match the pills on the page.

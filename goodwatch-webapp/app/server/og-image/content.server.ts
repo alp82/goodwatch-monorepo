@@ -476,6 +476,9 @@ async function staticPageContent(path: string): Promise<OgContent> {
 	const backdrop = path.startsWith("/taste")
 		? backdrops[2]
 		: rotateByPath(backdrops, path)[0]
+	// Rate titles: the taste bar card over the same backdrop (TasteQuizCard.tsx).
+	if (path === "/taste/quiz")
+		return { kind: "taste-quiz", backdrop: backdrop ?? null }
 	return { kind: "page", ...page, backdrop: backdrop ?? null }
 }
 
