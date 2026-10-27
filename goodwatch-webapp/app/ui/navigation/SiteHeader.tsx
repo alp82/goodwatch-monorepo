@@ -23,6 +23,7 @@ function BrowseButton() {
 		<button
 			type="button"
 			onClick={() => navigation.setHubOpen(!open)}
+			data-hub-key
 			aria-expanded={open}
 			aria-controls={open ? "site-hub" : undefined}
 			aria-haspopup="dialog"

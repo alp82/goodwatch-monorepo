@@ -30,6 +30,7 @@ function DockButton({ docked, leftFree }: { docked: boolean; leftFree: boolean }
 		<button
 			type="button"
 			onClick={() => navigation.setHubOpen(!open)}
+			data-hub-key
 			aria-expanded={open}
 			aria-controls={open ? "site-hub" : undefined}
 			aria-haspopup="dialog"

@@ -713,6 +713,7 @@ function Drawer({
 	setTab,
 	toggleRef,
 	openNow,
+	focusBack,
 	check,
 	setSpot,
 	setPinned,
@@ -794,7 +795,7 @@ function Drawer({
 		const esc = (e: KeyboardEvent) => {
 			if (e.key !== "Escape") return
 			close()
-			tabRef.current?.focus({ preventScroll: true })
+			focusBack()
 		}
 		window.addEventListener("keydown", esc)
 		return () => window.removeEventListener("keydown", esc)
@@ -841,13 +842,15 @@ function Drawer({
 			if (
 				!a ||
 				a === document.body ||
+				// The tab as the open drawer's handle: hidden once closed on phones with the dock.
+				a === tabRef.current ||
 				panelRef.current?.contains(a) ||
 				a.closest("[data-fix-sheet]")
 			)
-				tabRef.current?.focus({ preventScroll: true })
+				focusBack()
 		}
 		shownBefore.current = showing
-	}, [open, phoneFix, tabRef])
+	}, [open, phoneFix, tabRef, focusBack])
 
 	const title =
 		fix?.picked && fixing
@@ -1012,6 +1015,7 @@ export default function FeedbackDock({
 	toggleRef,
 	openNow,
 	sendOnly,
+	focusBack,
 }: DockProps) {
 	const { user } = useUser()
 	const guest = !user
@@ -1148,6 +1152,7 @@ export default function FeedbackDock({
 				setTab={setTab}
 				toggleRef={toggleRef}
 				openNow={openNow}
+				focusBack={focusBack}
 				check={check}
 				setSpot={setSpot}
 				setPinned={setPinned}

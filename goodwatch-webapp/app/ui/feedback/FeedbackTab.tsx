@@ -28,6 +28,11 @@ export type DockProps = {
 	openNow: MutableRefObject<boolean>
 	/** An error page: nothing on it to fix. */
 	sendOnly: boolean
+	/**
+	 * Gives focus back as the drawer closes: to the tab where it shows when closed, else (phones with the dock, where the
+	 * closed tab is hidden) to what opened the drawer, or the Go to… key once the sheet that held it has closed.
+	 */
+	focusBack: () => void
 }
 
 /**
@@ -35,6 +40,21 @@ export type DockProps = {
  * first paint is already right; pages without the dock keep the tab.
  */
 const OUT_OF_THE_WAY = "max-lg:[body:has([data-mobile-dock])_&]:hidden"
+
+/** Whether the closed tab is hidden by OUT_OF_THE_WAY: below lg (64rem), on a page with the phone dock. */
+const closedTabHidden = () =>
+	!window.matchMedia("(min-width: 64rem)").matches &&
+	!!document.querySelector("[data-mobile-dock]")
+
+/** Can take focus where it is: still on the page, drawn, and not in an inert part. */
+const focusable = (el: HTMLElement | null | undefined): el is HTMLElement =>
+	!!el && el.isConnected && el.getClientRects().length > 0 && !el.closest("[inert]")
+
+/** The Go to… key that opens the hub (navigation/MobileDock.tsx, SiteHeader.tsx) that is on show. */
+const hubKey = () =>
+	[...document.querySelectorAll<HTMLElement>("[data-hub-key]")].find((el) =>
+		focusable(el),
+	) ?? null
 
 /**
  * Desktop: a vertical "Feedback" label on the right edge. Phones: a slim tab with the icon, a little lower, shown
@@ -88,12 +108,21 @@ const loadDock = () => import("./FeedbackDock")
 const loadDockOnIntent = reloadOnStaleChunk(loadDock)
 
 /** Opens the drawer of the tab on the page, as tapping the tab does; null while no tab is mounted. */
-let openFromElsewhere: (() => void) | null = null
+let openFromElsewhere: ((opener: HTMLElement | null) => void) | null = null
 
-/** Opens the Feedback drawer (the command palette's "Send feedback"). False when the page has no Feedback tab. */
-export function openFeedback(): boolean {
+/**
+ * Opens the Feedback drawer (the command palette's "Send feedback", Go to…'s Feedback link). `opener` is what opened
+ * it, which gets the focus back when the drawer closes where the tab is hidden; the focused element by default.
+ * False when the page has no Feedback tab.
+ */
+export function openFeedback(opener?: HTMLElement | null): boolean {
 	if (!openFromElsewhere) return false
-	openFromElsewhere()
+	openFromElsewhere(
+		opener ??
+			(document.activeElement instanceof HTMLElement
+				? document.activeElement
+				: null),
+	)
 	return true
 }
 
@@ -125,9 +154,23 @@ export function FeedbackTab({ sendOnly = false }: { sendOnly?: boolean }) {
 	const openRef = useRef(false)
 	// Open, or handed over to phone fix mode: either way the drawer is already in use.
 	openRef.current = tab.open || tab.away
+	// What opened the drawer from elsewhere; null when the tab did.
+	const opener = useRef<HTMLElement | null>(null)
+	const focusBack = useCallback(() => {
+		const tab = tabRef.current
+		const to = !closedTabHidden()
+			? tab
+			: focusable(opener.current)
+				? opener.current
+				: hubKey()
+		opener.current = null
+		to?.focus({ preventScroll: true })
+	}, [])
 	useEffect(() => {
-		openFromElsewhere = () => {
-			if (!openRef.current) toggleRef.current()
+		openFromElsewhere = (from) => {
+			if (openRef.current) return
+			opener.current = from
+			toggleRef.current()
 		}
 		return () => {
 			openFromElsewhere = null
@@ -151,7 +194,10 @@ export function FeedbackTab({ sendOnly = false }: { sendOnly?: boolean }) {
 			<Tab
 				ref={tabRef}
 				{...tab}
-				onToggle={() => toggleRef.current()}
+				onToggle={() => {
+					opener.current = null
+					toggleRef.current()
+				}}
 				onWarm={() => warm(true)}
 			/>
 			{Dock && (
@@ -161,6 +207,7 @@ export function FeedbackTab({ sendOnly = false }: { sendOnly?: boolean }) {
 					toggleRef={toggleRef}
 					openNow={openNow}
 					sendOnly={sendOnly}
+					focusBack={focusBack}
 				/>
 			)}
 		</>

@@ -319,9 +319,10 @@ function HubContent() {
 			{/* Phones: the way to Feedback, which has no tab on the page there. It opens the same drawer. */}
 			<button
 				type="button"
-				onClick={() => {
+				onClick={(event) => {
 					navigation.setHubOpen(false)
-					openFeedback()
+					// Focus comes back here as the drawer closes, or to the Go to… key once this sheet is gone.
+					openFeedback(event.currentTarget)
 				}}
 				className="-my-1 inline-flex min-h-11 cursor-pointer items-center gap-1.5 justify-self-center px-3 text-xs font-semibold text-gray-500 hover:text-gray-300 lg:hidden"
 			>
