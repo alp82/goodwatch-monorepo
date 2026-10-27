@@ -1646,6 +1646,23 @@ describe("the rating strip", () => {
 })
 
 describe("Rate titles", () => {
+	it("a guest at the rating limit gets sign-up and Your taste in place of the strip; a member never", () => {
+		const locked = { ...guest, quizLocked: true }
+		assert.deepEqual(tvItems({ name: "quiz" }, locked).slice(0, 2), [
+			"sign-up",
+			"your-taste",
+		])
+		assert.ok(!tvItems({ name: "quiz" }, locked).includes("level:7"))
+		const up = choose("tv=quiz", "sign-up", locked)
+		assert.equal(up.history, "none")
+		assert.deepEqual(up.effects, [{ type: "sign-up" }])
+		assert.ok(
+			tvItems({ name: "quiz" }, { ...member, quizLocked: true }).includes(
+				"level:7",
+			),
+		)
+	})
+
 	it("Haven't seen it and Not interested go on to the next title and never end rating", () => {
 		const t = choose("tv=quiz", "skip")
 		assert.equal(t.history, "none")

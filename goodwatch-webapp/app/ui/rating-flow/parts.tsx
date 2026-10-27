@@ -1,6 +1,10 @@
-// The rating flow's pieces: the title asked about, the two marks, the top strip's dots, the taste bar, picks, Your
-// ratings, and a guest's Save your taste. Motion is transform and opacity only (main.css, score-ack-*).
+// The rating flow's pieces: the title asked about, the two marks and the Want to See question they turn into, the top
+// row (the next step's dots, the last answers), the taste bar and a guest's sign-up line under it, the locked panel,
+// picks, Your ratings, and a guest's Save your taste. Motion is transform and opacity only (main.css, score-ack-* and
+// want-*).
 import {
+	ArrowLeftIcon,
+	BookmarkIcon,
 	ChevronRightIcon,
 	EyeSlashIcon,
 	FingerPrintIcon,
@@ -8,24 +12,36 @@ import {
 	UserPlusIcon,
 } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import { type ReactNode, useEffect, useState } from "react"
-import { MILESTONE_EVERY, MIN_LIKED } from "~/domain/taste-rules"
+import {
+	type MouseEvent as ReactMouseEvent,
+	type ReactNode,
+	useEffect,
+	useRef,
+	useState,
+} from "react"
 import type { Score } from "~/server/scores.server"
+import { GoogleMark } from "~/ui/brand/GoogleMark"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import type { ScoringMedia } from "~/ui/scoring/types"
+import type { TasteInteraction } from "~/ui/taste/types"
 import type { FlowPick } from "./use-picks"
 import { useAuthHref } from "~/utils/auth-href"
+import { useContinueWithGoogle } from "~/utils/auth-client"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { getVibeColorValue } from "~/utils/ratings"
 import type { SizeRule } from "~/utils/tmdb-image"
 import {
+	FLOW_PATH,
 	type Milestone,
 	type NextStep,
 	TASTE_VIEW_PATH,
 	type Tally,
+	answerWords,
 	nextStepWords,
+	takesWantPress,
 	tasteBarWords,
 } from "./flow"
+import type { AnsweredTitle } from "./use-rating-core"
 import { RatingDots } from "./RatingDots"
 import { WORDS } from "./words"
 
@@ -62,39 +78,162 @@ export function TitleLine({ t }: { t: ScoringMedia }) {
 	)
 }
 
-/** The two marks: one about asking, one about recommending. Each its own icon, color and hint. */
+/**
+ * The two marks: one about asking, one about recommending. Each its own icon, color and hint. After "Haven't seen it"
+ * (`asking`) they turn into the Want to See question in exactly their box, so nothing else moves: the left half asks
+ * "Want to see it?" and goes back to the marks when pressed (nothing saved), the right half answers No (Haven't seen
+ * it) or Yes, add (Haven't seen it with Want to See). No timer. Presses in its first moment and a double click's
+ * second click don't count (flow.ts, `takesWantPress`); the keys are the page's (RatingFlow.tsx).
+ */
 export function Marks({
 	onUnseen,
 	onNotInterested,
 	disabled,
+	asking = false,
+	onWant,
+	onNo,
+	onBack,
 }: {
 	onUnseen: () => void
 	onNotInterested: () => void
 	disabled?: boolean
+	/** The Want to See question is up. */
+	asking?: boolean
+	onWant?: () => void
+	onNo?: () => void
+	onBack?: () => void
 }) {
+	const box = useRef<HTMLDivElement>(null)
+	const shownAt = useRef(0)
+	useEffect(() => {
+		shownAt.current = asking ? performance.now() : 0
+		// The focus follows the press that changed the box: to No (the safe answer) when the question comes, back to
+		// Haven't seen it when it goes. Only when it was in the box, so a key press elsewhere keeps its place.
+		const el = box.current
+		if (!el || !el.contains(document.activeElement)) return
+		el.querySelector<HTMLElement>(
+			asking ? "[data-want-no]" : "[data-mark-unseen]",
+		)?.focus()
+	}, [asking])
+	const guard = (fn?: () => void) => (e: ReactMouseEvent) => {
+		if (takesWantPress(shownAt.current, performance.now(), e.detail)) fn?.()
+	}
+	const off = asking ? { inert: "" } : {}
+	const seg =
+		"want-btn group relative isolate flex min-w-0 cursor-pointer items-center justify-center gap-1.5 px-2 text-sm font-bold focus-visible:outline-2 focus-visible:-outline-offset-4"
 	return (
-		<div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-			<MarkButton
-				onClick={onUnseen}
-				disabled={disabled}
-				icon={
-					<EyeSlashIcon className="size-5 shrink-0 text-gray-300" aria-hidden />
-				}
-				label={WORDS.unseen}
-				hint={WORDS.unseenHint}
-				shortcut="H"
-			/>
-			<MarkButton
-				onClick={onNotInterested}
-				disabled={disabled}
-				icon={
-					<NoSymbolIcon className="size-5 shrink-0 text-pink-300" aria-hidden />
-				}
-				label={WORDS.notInterested}
-				hint={WORDS.notInterestedHint}
-				shortcut="N"
-			/>
+		<div
+			ref={box}
+			data-asking={asking || undefined}
+			className="want relative grid grid-cols-2 gap-2 sm:w-fit sm:gap-3"
+		>
+			<div className="want-mark want-mark-l grid" {...off}>
+				<MarkButton
+					onClick={onUnseen}
+					disabled={disabled}
+					icon={
+						<EyeSlashIcon
+							className="size-5 shrink-0 text-gray-300"
+							aria-hidden
+						/>
+					}
+					label={WORDS.unseen}
+					hint={WORDS.unseenHint}
+					shortcut="H"
+					data-mark-unseen
+				/>
+			</div>
+			<div className="want-mark want-mark-r grid" {...off}>
+				<MarkButton
+					onClick={onNotInterested}
+					disabled={disabled}
+					icon={
+						<NoSymbolIcon
+							className="size-5 shrink-0 text-pink-300"
+							aria-hidden
+						/>
+					}
+					label={WORDS.notInterested}
+					hint={WORDS.notInterestedHint}
+					shortcut="N"
+				/>
+			</div>
+			{onWant && (
+				// biome-ignore lint/a11y/useSemanticElements: one joined control in the marks' box; a fieldset adds nothing here
+				<div
+					role="group"
+					aria-label={WORDS.wantAsk}
+					className={`want-shell absolute inset-0 flex select-none overflow-hidden rounded-xl border-2 border-gray-700 bg-gray-900 ${asking ? "" : "pointer-events-none"}`}
+					{...(asking ? {} : { inert: "" })}
+				>
+					<button
+						type="button"
+						onClick={guard(onBack)}
+						disabled={disabled}
+						aria-label={`${WORDS.wantAsk} ${WORDS.wantBack}`}
+						aria-keyshortcuts="Escape Backspace"
+						className="want-btn flex min-w-0 basis-1/2 cursor-pointer items-center gap-2 px-3 text-left hover:bg-white/5 focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-amber-300 active:bg-white/10"
+					>
+						<span className="want-c flex min-w-0 flex-1 items-center gap-2">
+							<ArrowLeftIcon
+								className="size-5 shrink-0 text-gray-400"
+								aria-hidden
+							/>
+							<span className="text-sm font-bold text-gray-100">
+								{WORDS.wantAsk}
+							</span>
+							<KeyHint k="Esc" />
+						</span>
+					</button>
+					<span aria-hidden className="want-div w-0.5 shrink-0 bg-gray-700" />
+					<div className="flex min-w-0 basis-1/2">
+						<button
+							type="button"
+							data-want-no
+							onClick={guard(onNo)}
+							disabled={disabled}
+							aria-keyshortcuts="N"
+							className={`${seg} flex-1 text-gray-200 hover:bg-white/5 focus-visible:outline-amber-300 active:bg-white/10`}
+						>
+							<span className="want-c inline-flex items-center gap-1.5">
+								{WORDS.wantNo}
+								<KeyHint k="N" />
+							</span>
+						</button>
+						<span aria-hidden className="want-div w-0.5 shrink-0 bg-gray-950" />
+						<button
+							type="button"
+							onClick={guard(onWant)}
+							disabled={disabled}
+							aria-keyshortcuts="Y W"
+							className={`${seg} flex-[1.7] text-gray-950 focus-visible:outline-gray-950`}
+						>
+							<span
+								aria-hidden
+								className="want-fill absolute inset-0 -z-10 bg-amber-500 group-hover:bg-amber-400 group-active:bg-amber-600"
+							/>
+							<span className="want-c inline-flex items-center gap-1.5">
+								<BookmarkIcon className="size-4 shrink-0" aria-hidden />
+								{WORDS.wantYes}
+								<KeyHint k="Y" />
+							</span>
+						</button>
+					</div>
+				</div>
+			)}
 		</div>
+	)
+}
+
+/** A key's name beside its button, on screens with a keyboard. */
+function KeyHint({ k }: { k: string }) {
+	return (
+		<kbd
+			aria-hidden
+			className="hidden rounded border border-current/30 px-1 font-sans text-[10px] font-normal leading-4 opacity-70 md:inline"
+		>
+			{k}
+		</kbd>
 	)
 }
 
@@ -105,6 +244,7 @@ function MarkButton({
 	label,
 	hint,
 	shortcut,
+	...data
 }: {
 	onClick: () => void
 	disabled?: boolean
@@ -112,6 +252,7 @@ function MarkButton({
 	label: string
 	hint: string
 	shortcut: string
+	"data-mark-unseen"?: boolean
 }) {
 	return (
 		<button
@@ -120,6 +261,7 @@ function MarkButton({
 			disabled={disabled}
 			aria-keyshortcuts={shortcut}
 			className="flex min-h-11 cursor-pointer items-start gap-2 rounded-xl border-2 border-gray-700 px-3 py-2 text-left hover:border-gray-500 disabled:cursor-wait disabled:opacity-60 md:min-h-10"
+			{...data}
 		>
 			<span className="mt-px">{icon}</span>
 			<span className="min-w-0">
@@ -156,21 +298,21 @@ export function NextStepDots({
 		return () => clearTimeout(id)
 	}, [at])
 	const showFull = landed != null && full === landed.rated
-	const fullOf = landed?.kind === "ready" ? MIN_LIKED : MILESTONE_EVERY
+	const fullOf = landed?.of ?? 0
 	const said = nextStepWords(step)
+	const dots = showFull ? fullOf : step.of
 	return (
 		<div
 			key={showFull ? `full-${wave}` : `step-${wave}`}
-			className={`${showFull || wave > 0 ? "score-ack-enter" : ""} flex min-h-6 items-center gap-x-3`}
+			className={`${showFull || wave > 0 ? "score-ack-enter" : ""} flex min-h-6 min-w-0 items-center gap-x-3`}
 		>
-			<span aria-hidden className="flex">
-				<RatingDots
-					at={showFull ? fullOf : step.done}
-					of={showFull ? fullOf : step.of}
-				/>
-			</span>
+			{dots > 0 && (
+				<span aria-hidden className="flex shrink-0">
+					<RatingDots at={showFull ? fullOf : step.done} of={dots} />
+				</span>
+			)}
 			<span
-				className={`text-sm font-semibold text-gray-200 ${showFull ? "opacity-0" : ""}`}
+				className={`min-w-0 truncate text-xs font-semibold text-gray-200 min-[420px]:text-sm ${showFull ? "opacity-0" : ""}`}
 			>
 				{said}
 			</span>
@@ -238,6 +380,191 @@ export function TasteBar({
 				{on ? head : ""}
 			</span>
 		</>
+	)
+}
+
+/**
+ * The top row: the next step's dots and words on the left, the last answers on the right as small posters with the
+ * answer's badge (two under 420 px), one row that never wraps. A poster opens its title again to change or clear the
+ * answer.
+ */
+export function TopRow({
+	left,
+	recent,
+	openKey,
+	onOpen,
+}: {
+	left: ReactNode
+	recent: AnsweredTitle[]
+	/** The title opened again, outlined. */
+	openKey: string | null
+	onOpen: (key: string) => void
+}) {
+	return (
+		<div className="flex min-h-12 items-center justify-between gap-3">
+			<div className="min-w-0">{left}</div>
+			{recent.length > 0 && (
+				<ul
+					aria-label={WORDS.lastAnswered}
+					className="flex shrink-0 items-center gap-2"
+				>
+					{recent.map((r, n) => (
+						<li key={r.key} className={n === 2 ? "max-[419px]:hidden" : ""}>
+							<button
+								type="button"
+								onClick={() => onOpen(r.key)}
+								aria-label={`${r.title.title}: ${answerWords(r.answer)}. ${WORDS.changeIt}`}
+								aria-pressed={openKey === r.key}
+								className={`relative block h-11 w-[1.875rem] cursor-pointer rounded-[5px] ring-2 transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none ${openKey === r.key ? "ring-amber-400" : "ring-gray-800"}`}
+							>
+								{r.title.poster_path ? (
+									<img
+										src={image(r.title.poster_path, "w92")}
+										alt=""
+										className="h-full w-full rounded-[inherit] object-cover"
+									/>
+								) : (
+									<span className="block h-full w-full rounded-[inherit] bg-gray-800" />
+								)}
+								<AnswerBadge answer={r.answer} />
+							</button>
+						</li>
+					))}
+				</ul>
+			)}
+		</div>
+	)
+}
+
+/** The answer on a top row poster: the score, or the mark's icon. */
+function AnswerBadge({ answer }: { answer: TasteInteraction }) {
+	const base =
+		"absolute -right-1 -bottom-1 flex size-4 items-center justify-center rounded-[5px] text-[10px] font-black leading-none ring-2 ring-gray-950"
+	if (answer.type === "score")
+		return (
+			<span className={`${base} bg-amber-400 tabular-nums text-gray-950`}>
+				{answer.score}
+			</span>
+		)
+	const [Icon, tint] =
+		answer.type === "skip"
+			? [EyeSlashIcon, "text-gray-200"]
+			: answer.type === "plan"
+				? [BookmarkIcon, "text-amber-300"]
+				: [NoSymbolIcon, "text-pink-300"]
+	return (
+		<span className={`${base} bg-gray-700`}>
+			<Icon className={`size-2.5 ${tint}`} aria-hidden />
+		</span>
+	)
+}
+
+/** A title opened again from the top row: its answer, and the ways out. */
+export function ReopenedNote({
+	answer,
+	clearing,
+	onClear,
+	onClose,
+}: {
+	answer: TasteInteraction | null
+	clearing: boolean
+	onClear: () => void
+	onClose: () => void
+}) {
+	const link =
+		"inline-flex min-h-11 cursor-pointer items-center font-semibold underline-offset-2 hover:underline disabled:cursor-wait disabled:opacity-60 md:min-h-8"
+	return (
+		<div className="mt-1 flex flex-wrap items-center gap-x-3 text-sm">
+			<span className="text-gray-300">
+				{answer ? (
+					<>
+						{WORDS.yourAnswer}{" "}
+						<strong className="text-white">{answerWords(answer)}</strong>
+					</>
+				) : (
+					WORDS.noAnswer
+				)}
+			</span>
+			{answer && (
+				<button
+					type="button"
+					onClick={onClear}
+					disabled={clearing}
+					className={`${link} text-gray-400 hover:text-white`}
+				>
+					{WORDS.clearIt}
+				</button>
+			)}
+			<button
+				type="button"
+				onClick={onClose}
+				className={`${link} text-amber-300`}
+			>
+				{WORDS.backToNew}
+			</button>
+		</div>
+	)
+}
+
+/** A guest's quiet sign-up line under the taste bar, from a few ratings on: keep them, back to the taste view. */
+export function SignUpLine({ rated }: { rated: number }) {
+	const authHref = useAuthHref()
+	return (
+		<p className="mt-2 px-1 text-xs text-gray-400">
+			{WORDS.signUpLine(rated)}{" "}
+			<Link
+				rel="nofollow"
+				to={authHref("sign-up", TASTE_VIEW_PATH)}
+				data-cta="sign-up"
+				className="font-semibold text-amber-300 underline-offset-2 hover:underline"
+			>
+				{WORDS.signUpLineLink}
+			</Link>
+		</p>
+	)
+}
+
+/**
+ * A guest at the limit (~/domain/taste-rules): in place of the score control, calm, with sign-up. The marks, the taste
+ * view and the picks stay. Sign-up returns to the flow, and the guest's ratings move to the account.
+ */
+export function LockedPanel({ rated }: { rated: number }) {
+	const authHref = useAuthHref()
+	const google = useContinueWithGoogle()
+	return (
+		<div className="score-ack-enter rounded-2xl bg-white/[0.03] px-4 py-4 ring-1 ring-white/10 sm:px-5">
+			<p className="text-base font-extrabold text-white">
+				{WORDS.lockedHead(rated)}
+			</p>
+			<p className="mt-1 text-sm leading-snug text-gray-300">
+				{WORDS.lockedLine}
+			</p>
+			<div className="mt-4 flex flex-wrap items-center gap-2">
+				<Link
+					rel="nofollow"
+					to={authHref("sign-up", FLOW_PATH)}
+					data-cta="sign-up"
+					className="inline-flex min-h-11 items-center gap-2 rounded-full bg-linear-to-b from-amber-400 to-amber-600 px-5 text-sm font-black text-gray-950 hover:brightness-110"
+				>
+					<UserPlusIcon className="size-4" aria-hidden />
+					{WORDS.signUpFree}
+				</Link>
+				<button
+					type="button"
+					onClick={() => google(FLOW_PATH)}
+					className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-gray-100 px-4 text-sm font-bold text-gray-900 ring-2 ring-inset ring-gray-400 hover:bg-white"
+				>
+					<GoogleMark size={16} /> {WORDS.continueWithGoogle}
+				</button>
+			</div>
+			<Link
+				rel="nofollow"
+				to={authHref("sign-in", FLOW_PATH)}
+				className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-gray-400 hover:text-gray-200 md:min-h-9"
+			>
+				{WORDS.haveAccount}
+			</Link>
+		</div>
 	)
 }
 

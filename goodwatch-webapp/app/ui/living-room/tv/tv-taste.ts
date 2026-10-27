@@ -112,6 +112,8 @@ export type TvQuizOnScreen = {
 	lit: Milestone | null
 	/** The answer just given: lit at once, held, then the next title (the same as on /taste/quiz). */
 	answered: TvQuizAnswered
+	/** A guest at the rating limit: sign-up in place of the strip (the rating flow's locked panel). */
+	locked?: boolean
 }
 
 /** What Your taste, a side's screen and Rate titles draw from. */
@@ -271,7 +273,7 @@ export const quizHeaderName = (title: Pick<TvQuizTitle, "title" | "year">) =>
 export function tasteContext(
 	screen: TvScreen,
 	shown: TvTasteScreens,
-): Pick<TvContext, "taste" | "sides" | "titles" | "quizFailed"> {
+): Pick<TvContext, "taste" | "sides" | "titles" | "quizFailed" | "quizLocked"> {
 	const { taste, quiz } = shown
 	const sides = taste.state === "sides" ? taste.sides : []
 	const titles =
@@ -296,6 +298,7 @@ export function tasteContext(
 		...(screen.name === "quiz" && !quiz.title && quiz.failed
 			? { quizFailed: true }
 			: {}),
+		...(screen.name === "quiz" && quiz.locked ? { quizLocked: true } : {}),
 	}
 }
 

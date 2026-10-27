@@ -10,8 +10,9 @@ import { mediaFieldLanguage } from "~/utils/media-presentation"
 // to new picks"). Your taste is the web's taste bar: a key beside the marks on the desktop, in the menu on the phone,
 // that turns amber at a milestone ("Your taste is ready", "Your picks changed") and opens Your taste. A milestone never
 // ends rating. On the phone the header always names the title with its year, and says the next step, or the answer
-// just given, under it. Its page is the site's /taste/quiz (the Expand key). A chunk the TV asks for on first use
-// (screen-code.tsx).
+// just given, under it. A guest at the rating limit gets the web's locked panel in simple form: what they rated, that
+// sign-up keeps rating going, and the keys Sign up free and Your taste. Its page is the site's /taste/quiz (the Expand
+// key). A chunk the TV asks for on first use (screen-code.tsx).
 import { RatingScreen } from "../RatingStrip"
 import {
 	CornerBar,
@@ -63,6 +64,35 @@ export default function Quiz({
 			{lit ? words.taste : ""}
 		</span>
 	)
+	if (quiz.locked && items.includes("sign-up"))
+		return (
+			<>
+				<Shade dim={0.82} />
+				<div
+					className={`absolute inset-0 flex flex-col justify-center ${P ? "px-5 pb-3 pt-[84px]" : "px-14 pt-16"}`}
+				>
+					<div
+						className={`font-bold ${P ? "text-[26px] leading-[30px]" : "text-[56px] leading-[1.05]"}`}
+					>
+						{WORDS.lockedHead(quiz.tally?.rated ?? 0)}
+					</div>
+					<div
+						className={`text-white/80 ${P ? "mt-2 text-[18px]" : "mt-3 text-[30px]"}`}
+					>
+						{WORDS.lockedLine}
+					</div>
+					<div className={`${P ? "mt-4 gap-1.5" : "mt-8 gap-4"} flex`}>
+						<Item id="sign-up" className={`${key} tvc-cta`} style={{ height }}>
+							{WORDS.signUpFree}
+						</Item>
+						{yourTaste}
+					</div>
+					{announce}
+				</div>
+				<ExpandCorner items={items} />
+				<CornerBar items={items} />
+			</>
+		)
 	if (!quiz.title)
 		return (
 			<>

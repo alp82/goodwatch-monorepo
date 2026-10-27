@@ -15,10 +15,14 @@ export const ACK_MS = 700
 /** What every page says when an answer could not be saved. */
 export const ACK_FAILED = "Couldn't save. Try again, or go to the next title."
 
-/** An answer to "How was it?": a score (a level gives its own score), "Haven't seen it", or "Not interested". */
+/**
+ * An answer to "How was it?": a score (a level gives its own score), "Haven't seen it", "Haven't seen it" with Want to
+ * See (the rating flow's question after it), or "Not interested".
+ */
 export type AckAnswer =
 	| { kind: "score"; score: Score }
 	| { kind: "skip" }
+	| { kind: "want" }
 	| { kind: "not-interested" }
 
 export type AckState =

@@ -1,5 +1,6 @@
 import { captureProductEvent } from "~/telemetry/product-analytics"
 import { canonicalTitleId } from "~/utils/title-identity"
+import { GUEST_RATING_LIMIT } from "~/domain/taste-rules"
 import { useSyncExternalStore } from "react"
 import type { TasteInteraction } from "~/ui/taste/types"
 import type { Score } from "~/server/scores.server"
@@ -12,6 +13,7 @@ import {
 
 const changed = "goodwatch:guest-progress"
 export const guestLimitEvent = "goodwatch:guest-rating-limit"
+/** Where browsers remember dismissing the old "Keep your progress" strip (removed 2026-10-28); cleared at sign-up. */
 export const reminderKey = "guest_progress_reminder_dismissed"
 let fallback = "[]"
 let memoryOnly = false
@@ -96,7 +98,7 @@ export function canGuestRate(mediaType: MediaType, tmdbId: number) {
 				i.media_type === mediaType &&
 				i.tmdb_id === tmdbId &&
 				i.type === "score",
-		) || items.filter((i) => i.type === "score").length < 20
+		) || items.filter((i) => i.type === "score").length < GUEST_RATING_LIMIT
 	)
 }
 export function updateGuestInteraction(

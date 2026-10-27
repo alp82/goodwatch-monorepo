@@ -12,11 +12,12 @@ import type { ScoringMedia } from "~/ui/scoring/types"
 import {
 	clearGuestProgress,
 	readGuestInteractions,
+	restoreGuestInteractions,
 	updateGuestInteraction,
 	useGuestInteractions,
 } from "~/utils/guest-progress"
 import { FIRST_UNLOCK_COUNT_KEY } from "../constants"
-import type { TasteInteraction } from "../types"
+import type { InteractionType, TasteInteraction } from "../types"
 import { useRatingsCount } from "./useRatingsCount"
 
 interface UseTasteScoringProps {
@@ -186,7 +187,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 	const record = useCallback(
 		(
 			media: ScoringMedia,
-			type: "score" | "skip" | "not-interested",
+			type: InteractionType,
 			score?: Score,
 		) =>
 			setInteractions((prev) => [
@@ -281,6 +282,90 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 		[isAuthenticated, notInterestedMutation, record, refused],
 	)
 
+	/**
+	 * Saves "Haven't seen it" with Want to See (the rating flow's question after Haven't seen it) and settles when it
+	 * is saved, as `saveScore` does. A member's account keeps both marks: skipped (never asked again) and the
+	 * Wishlist. A guest's browser keeps one mark per title, and Want to See is the one that says both (it is never
+	 * asked again either, and moves to the Wishlist at sign-up).
+	 */
+	const saveWantToSee = useCallback(
+		async (media: ScoringMedia) => {
+			if (!isAuthenticated) {
+				updateGuestInteraction(media.media_type, media.tmdb_id, "plan")
+				return
+			}
+			const params = {
+				mediaType: media.media_type,
+				tmdbId: media.tmdb_id,
+				action: "add" as const,
+			}
+			const results = await Promise.all([
+				skippedMutation.mutateAsync(params).catch(refused),
+				wishlistMutation.mutateAsync(params).catch(refused),
+			])
+			if (results.some((result) => result.status !== "success")) refused()
+			record(media, "plan")
+		},
+		[isAuthenticated, skippedMutation, wishlistMutation, record, refused],
+	)
+
+	/**
+	 * Takes an answer back, so the title is unanswered again (the rating flow's top row): a score is cleared, Haven't
+	 * seen it, Not interested and Want to See (with its Haven't seen it) are removed. Settles when that is saved, as
+	 * `saveScore` does; a guest's browser forgets every mark of the title.
+	 */
+	const clearAnswer = useCallback(
+		async (media: ScoringMedia, type: InteractionType) => {
+			const forget = () =>
+				setInteractions((prev) =>
+					prev.filter(
+						(i) =>
+							!(
+								i.tmdb_id === media.tmdb_id && i.media_type === media.media_type
+							),
+					),
+				)
+			if (!isAuthenticated) {
+				restoreGuestInteractions(media.media_type, media.tmdb_id, [])
+				return
+			}
+			const params = {
+				mediaType: media.media_type,
+				tmdbId: media.tmdb_id,
+				action: "remove" as const,
+			}
+			const writes =
+				type === "score"
+					? [
+							scoreMutation.mutateAsync({
+								mediaType: media.media_type,
+								tmdbId: media.tmdb_id,
+								score: null,
+								byHand: false,
+							}),
+						]
+					: type === "not-interested"
+						? [notInterestedMutation.mutateAsync(params)]
+						: type === "plan"
+							? [
+									skippedMutation.mutateAsync(params),
+									wishlistMutation.mutateAsync(params),
+								]
+							: [skippedMutation.mutateAsync(params)]
+			const results = await Promise.all(writes.map((w) => w.catch(refused)))
+			if (results.some((result) => result.status !== "success")) refused()
+			forget()
+		},
+		[
+			isAuthenticated,
+			scoreMutation,
+			skippedMutation,
+			wishlistMutation,
+			notInterestedMutation,
+			refused,
+		],
+	)
+
 	const clearInteractions = useCallback(() => {
 		if (!isAuthenticated) {
 			setInteractions([])
@@ -300,6 +385,8 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 		saveScore,
 		saveSkip,
 		saveNotInterested,
+		saveWantToSee,
+		clearAnswer,
 		addPlanToWatch,
 		clearInteractions,
 		ratingsCount,

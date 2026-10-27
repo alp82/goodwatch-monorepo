@@ -1,16 +1,23 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import {
+	GUEST_RATING_LIMIT,
 	LIKED_FROM,
 	MILESTONE_EVERY,
 	MIN_LIKED,
+	isRatingLocked,
+	nextMilestoneAt,
 } from "../../domain/taste-rules.ts"
 import {
 	type FlowState,
 	INITIAL_FLOW,
 	MILESTONE_GLOW,
 	type Tally,
+	WANT_GUARD_MS,
+	answerWords,
+	isLocked,
 	justLanded,
+	lastAnswered,
 	litMilestone,
 	nextStep,
 	nextStepWords,
@@ -18,17 +25,31 @@ import {
 	ratingFlow,
 	ratingRows,
 	readFlowPress,
+	readWantPress,
 	resumeWords,
+	showsSignUpLine,
+	takesWantPress,
 	tally,
 	tasteBarWords,
 	viewOf,
 } from "./flow.ts"
 
-const run = (...tallies: Tally[]): FlowState =>
-	tallies.reduce(
-		(state, t) => ratingFlow(state, { type: "tally", tally: t }),
-		INITIAL_FLOW,
-	)
+const runAs =
+	(member: boolean) =>
+	(...tallies: Tally[]): FlowState =>
+		tallies.reduce(
+			(state, t) => ratingFlow(state, { type: "tally", tally: t, member }),
+			INITIAL_FLOW,
+		)
+const run = runAs(false)
+const member = runAs(true)
+const add = (state: FlowState, t: Tally, isMember = false) =>
+	ratingFlow(state, { type: "tally", tally: t, member: isMember })
+/** The top strip's next step of a state whose totals are known. */
+const stepOf = (state: FlowState, isMember = false) => {
+	assert.ok(state.tally)
+	return nextStep(state.tally, state.lastMilestoneAt, isMember)
+}
 const press = (key: string, more: Partial<KeyboardEvent> = {}) => ({
 	key,
 	repeat: false,
@@ -38,10 +59,38 @@ const press = (key: string, more: Partial<KeyboardEvent> = {}) => ({
 	...more,
 })
 
-test("the rules are the server's: 5 liked titles, liked from 6, a milestone every 10", () => {
+test("the rules are the server's: 5 liked titles, liked from 6, guests stop at 20, members' milestones every 10", () => {
 	assert.equal(MIN_LIKED, 5)
 	assert.equal(LIKED_FROM, 6)
+	assert.equal(GUEST_RATING_LIMIT, 20)
 	assert.equal(MILESTONE_EVERY, 10)
+})
+
+test("the milestone schedule: 5, 10, 15, 20, then every 10 for members and none for guests", () => {
+	const schedule = (isMember: boolean, upTo: number) => {
+		const out: number[] = []
+		for (
+			let at = nextMilestoneAt(0, isMember);
+			at != null && at <= upTo;
+			at = nextMilestoneAt(at, isMember)
+		)
+			out.push(at)
+		return out
+	}
+	assert.deepEqual(schedule(false, 60), [5, 10, 15, 20])
+	assert.deepEqual(schedule(true, 60), [5, 10, 15, 20, 30, 40, 50, 60])
+	assert.equal(nextMilestoneAt(7, false), 10)
+	assert.equal(nextMilestoneAt(20, false), null)
+	assert.equal(nextMilestoneAt(23, true), 30)
+	assert.equal(nextMilestoneAt(30, true), 40)
+})
+
+test("a guest is locked at 20 ratings, a member never", () => {
+	assert.equal(isRatingLocked(19, false), false)
+	assert.equal(isRatingLocked(20, false), true)
+	assert.equal(isRatingLocked(80, true), false)
+	assert.equal(isLocked(null, false), false)
+	assert.equal(isLocked({ rated: 20, liked: 2 }, false), true)
 })
 
 test("a tally counts every score as rated and 6 or higher as liked", () => {
@@ -51,39 +100,67 @@ test("a tally counts every score as rated and 6 or higher as liked", () => {
 test("the taste is ready at the fifth liked title, and that is a milestone", () => {
 	const before = run({ rated: 6, liked: 4 }, { rated: 7, liked: 4 })
 	assert.equal(before.milestone, null)
-	const ready = ratingFlow(before, {
-		type: "tally",
-		tally: { rated: 8, liked: 5 },
-	})
-	assert.deepEqual(ready.milestone, { kind: "ready", rated: 8 })
+	const ready = add(before, { rated: 8, liked: 5 })
+	assert.deepEqual(ready.milestone, { kind: "ready", rated: 8, of: 5 })
 	assert.equal(ready.lastMilestoneAt, 8)
 	assert.deepEqual(justLanded(ready), ready.milestone)
 })
 
-test("after the taste is ready a milestone lands every 10 ratings, liked or not", () => {
+test("after the taste is ready a milestone lands at the next step of the schedule, liked or not", () => {
 	let state = run({ rated: 5, liked: 5 })
 	assert.equal(state.milestone, null, "ready before the visit is no milestone")
-	for (let rated = 6; rated < 15; rated++)
-		state = ratingFlow(state, { type: "tally", tally: { rated, liked: 5 } })
+	for (let rated = 6; rated < 10; rated++)
+		state = add(state, { rated, liked: 5 })
 	assert.equal(state.milestone, null)
-	state = ratingFlow(state, { type: "tally", tally: { rated: 15, liked: 5 } })
-	assert.deepEqual(state.milestone, { kind: "picks", rated: 15 })
-	assert.equal(state.lastMilestoneAt, 15)
+	state = add(state, { rated: 10, liked: 5 })
+	assert.deepEqual(state.milestone, { kind: "picks", rated: 10, of: 5 })
+	assert.equal(state.lastMilestoneAt, 10)
+})
+
+test("the first milestone waits for the taste: ready at 7, then picks at 10, 15 and 20", () => {
+	const ready = run({ rated: 0, liked: 0 }, { rated: 7, liked: 5 })
+	assert.equal(ready.milestone?.kind, "ready")
+	assert.deepEqual(stepOf(ready), {
+		kind: "rated",
+		done: 0,
+		of: 3,
+		left: 3,
+	})
+	const ten = add(ready, { rated: 10, liked: 6 })
+	assert.deepEqual(ten.milestone, { kind: "picks", rated: 10, of: 3 })
+	const twenty = add(add(ten, { rated: 15, liked: 8 }), { rated: 20, liked: 9 })
+	assert.deepEqual(twenty.milestone, { kind: "picks", rated: 20, of: 5 })
+})
+
+test("a guest has no milestone after 20; a member's go on every 10", () => {
+	const guest = run({ rated: 20, liked: 9 })
+	assert.deepEqual(stepOf(guest), {
+		kind: "done",
+		done: 0,
+		of: 0,
+		left: 0,
+	})
+	assert.equal(nextStepWords(stepOf(guest)), "Your picks are ready")
+	let state = member({ rated: 20, liked: 9 })
+	assert.deepEqual(stepOf(state, true), {
+		kind: "rated",
+		done: 0,
+		of: 10,
+		left: 10,
+	})
+	state = add(state, { rated: 29, liked: 12 }, true)
+	assert.equal(state.milestone, null)
+	state = add(state, { rated: 30, liked: 12 }, true)
+	assert.deepEqual(state.milestone, { kind: "picks", rated: 30, of: 10 })
 })
 
 test("the taste bar stays lit for 3 ratings, or until the taste view opens", () => {
 	let state = run({ rated: 4, liked: 4 }, { rated: 5, liked: 5 })
 	assert.equal(litMilestone(state)?.kind, "ready")
-	state = ratingFlow(state, {
-		type: "tally",
-		tally: { rated: 5 + MILESTONE_GLOW - 1, liked: 7 },
-	})
+	state = add(state, { rated: 5 + MILESTONE_GLOW - 1, liked: 7 })
 	assert.equal(litMilestone(state)?.kind, "ready")
 	assert.equal(justLanded(state), null)
-	state = ratingFlow(state, {
-		type: "tally",
-		tally: { rated: 5 + MILESTONE_GLOW, liked: 8 },
-	})
+	state = add(state, { rated: 5 + MILESTONE_GLOW, liked: 8 })
 	assert.equal(litMilestone(state), null)
 
 	const opened = ratingFlow(
@@ -97,19 +174,13 @@ test("the taste bar stays lit for 3 ratings, or until the taste view opens", () 
 
 test("the same totals again change nothing", () => {
 	const state = run({ rated: 3, liked: 2 })
-	assert.equal(
-		ratingFlow(state, { type: "tally", tally: { rated: 3, liked: 2 } }),
-		state,
-	)
+	assert.equal(add(state, { rated: 3, liked: 2 }), state)
 })
 
 test("dropping below the rule takes the taste back, and reaching it again is a milestone again", () => {
 	const lost = run({ rated: 5, liked: 5 }, { rated: 5, liked: 4 })
 	assert.equal(lost.lastMilestoneAt, null)
-	const again = ratingFlow(lost, {
-		type: "tally",
-		tally: { rated: 6, liked: 5 },
-	})
+	const again = add(lost, { rated: 6, liked: 5 })
 	assert.equal(again.milestone?.kind, "ready")
 })
 
@@ -117,10 +188,16 @@ test("the top strip counts liked titles to the taste, then ratings to new picks,
 	const forming = nextStep({ rated: 6, liked: 2 }, null)
 	assert.deepEqual(forming, { kind: "liked", done: 2, of: 5, left: 3 })
 	assert.equal(nextStepWords(forming), "3 more liked to your taste")
-	const after = nextStep({ rated: 26, liked: 9 }, 20)
+	const after = nextStep({ rated: 26, liked: 9 }, 20, true)
 	assert.deepEqual(after, { kind: "rated", done: 6, of: 10, left: 4 })
 	assert.equal(nextStepWords(after), "4 more to new picks")
-	assert.equal(nextStep({ rated: 20, liked: 9 }, 20).done, 0)
+	assert.equal(nextStep({ rated: 20, liked: 9 }, 20, true).done, 0)
+	assert.deepEqual(nextStep({ rated: 12, liked: 9 }, 10), {
+		kind: "rated",
+		done: 2,
+		of: 5,
+		left: 3,
+	})
 })
 
 test("the taste bar says the totals, and what liked means until the taste is ready", () => {
@@ -133,11 +210,13 @@ test("the taste bar says the totals, and what liked means until the taste is rea
 		"6 rated · 5 liked",
 	)
 	assert.equal(
-		tasteBarWords({ rated: 6, liked: 5 }, { kind: "ready", rated: 6 }).head,
+		tasteBarWords({ rated: 6, liked: 5 }, { kind: "ready", rated: 6, of: 5 })
+			.head,
 		"Your taste is ready",
 	)
 	assert.equal(
-		tasteBarWords({ rated: 16, liked: 9 }, { kind: "picks", rated: 16 }).head,
+		tasteBarWords({ rated: 16, liked: 9 }, { kind: "picks", rated: 16, of: 10 })
+			.head,
 		"Your picks changed",
 	)
 })
@@ -223,4 +302,75 @@ test("your ratings: newest first, each title once with its latest score", () => 
 			["movie-3", 6],
 		],
 	)
+})
+
+test("the quiet sign-up line: guests from 5 ratings until the lock, never members", () => {
+	assert.equal(showsSignUpLine(null, false), false)
+	assert.equal(showsSignUpLine({ rated: 4, liked: 4 }, false), false)
+	assert.equal(showsSignUpLine({ rated: 5, liked: 1 }, false), true)
+	assert.equal(showsSignUpLine({ rated: 19, liked: 9 }, false), true)
+	assert.equal(showsSignUpLine({ rated: 20, liked: 9 }, false), false)
+	assert.equal(showsSignUpLine({ rated: 8, liked: 6 }, true), false)
+})
+
+test("Want to See keys: Y or W adds, N says no, Escape or Backspace goes back; nothing else, held or with a modifier", () => {
+	assert.equal(readWantPress(press("y")), "yes")
+	assert.equal(readWantPress(press("W")), "yes")
+	assert.equal(readWantPress(press("n")), "no")
+	assert.equal(readWantPress(press("Escape")), "back")
+	assert.equal(readWantPress(press("Backspace")), "back")
+	assert.equal(readWantPress(press("h")), null)
+	assert.equal(readWantPress(press("8")), null)
+	assert.equal(readWantPress(press("y", { repeat: true })), null)
+	assert.equal(readWantPress(press("y", { metaKey: true })), null)
+})
+
+test("Want to See ignores presses right after it appears and a double click's second click", () => {
+	assert.equal(takesWantPress(0, 5000, 1), false, "not shown")
+	assert.equal(takesWantPress(1000, 1000 + WANT_GUARD_MS - 1, 1), false)
+	assert.equal(takesWantPress(1000, 1000 + WANT_GUARD_MS, 1), true)
+	assert.equal(takesWantPress(1000, 2000, 2), false)
+	assert.equal(takesWantPress(1000, 2000, 0), true, "a key press on the button")
+})
+
+test("the top row: the newest answers with known titles, each title once", () => {
+	const known = new Set(["movie-1", "movie-2", "show-3", "movie-4"])
+	const answers = [
+		{
+			media_type: "movie",
+			tmdb_id: 1,
+			type: "score" as const,
+			score: 8,
+			timestamp: 10,
+		},
+		{ media_type: "movie", tmdb_id: 9, type: "skip" as const, timestamp: 50 },
+		{ media_type: "movie", tmdb_id: 2, type: "plan" as const, timestamp: 20 },
+		{
+			media_type: "show",
+			tmdb_id: 3,
+			type: "not-interested" as const,
+			timestamp: 30,
+		},
+		{
+			media_type: "movie",
+			tmdb_id: 1,
+			type: "score" as const,
+			score: 6,
+			timestamp: 40,
+		},
+		{ media_type: "movie", tmdb_id: 4, type: "skip" as const, timestamp: 5 },
+	]
+	assert.deepEqual(
+		lastAnswered(answers, known).map((a) => [a.tmdb_id, a.score ?? a.type]),
+		[
+			[1, 6],
+			[3, "not-interested"],
+			[2, "plan"],
+		],
+	)
+	assert.equal(lastAnswered([], known).length, 0)
+	assert.equal(answerWords({ type: "score", score: 8 }), "Scored 8")
+	assert.equal(answerWords({ type: "plan" }), "Want to See")
+	assert.equal(answerWords({ type: "skip" }), "Haven't seen it")
+	assert.equal(answerWords({ type: "not-interested" }), "Not interested")
 })

@@ -115,7 +115,7 @@ const READY: Partial<TvQuizOnScreen> = {
 const LIT: Partial<TvQuizOnScreen> = {
 	tally: { rated: 7, liked: 5 },
 	next: { kind: "rated", done: 0, of: 10, left: 10 },
-	lit: { kind: "ready", rated: 7 },
+	lit: { kind: "ready", rated: 7, of: 5 },
 }
 /** The machine's context as the scene builds it: Taste's part; both editions have exact scores. */
 const ctxOf = (

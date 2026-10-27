@@ -200,6 +200,11 @@ export type TvContext = {
 	draft: string
 	/** The quiz has no title because asking for more failed: it offers to ask again (`retry-titles`). */
 	quizFailed?: boolean
+	/**
+	 * A guest at the rating limit (~/domain/taste-rules): Rate titles shows sign-up and Your taste instead of the strip,
+	 * the rating flow's locked panel at TV size.
+	 */
+	quizLocked?: boolean
 	/** The person's two streaming services, by TMDB provider id: the Remote's keys and home's tiles after the apps. */
 	services: readonly number[]
 	/**
@@ -754,6 +759,7 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 		// Rate titles: the strip and its two marks, with Your taste one key away. Reaching a milestone never ends it:
 		// Your taste lights amber (screens/Quiz.tsx), and the person goes on rating or opens it.
 		case "quiz":
+			if (ctx.quizLocked && !ctx.member) return ["sign-up", "your-taste"]
 			if (!ctx.titles.length && ctx.quizFailed)
 				return ["retry-titles", "your-taste"]
 			return [...stripItems(screen, ctx), "your-taste"]
@@ -1808,7 +1814,7 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 				? none(state, [{ type: "quiz-retry" }])
 				: none(state)
 		case "sign-up":
-			return s.name === "taste" && !ctx.member
+			return (s.name === "taste" || s.name === "quiz") && !ctx.member
 				? none(state, [{ type: "sign-up" }])
 				: none(state)
 		// Seen it asks how it was.

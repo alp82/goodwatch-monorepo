@@ -1,9 +1,17 @@
 // The rating flow's core, shared by /taste/quiz (use-rating-flow.ts) and the living room TV (living-room/tv/
 // use-tv-taste.ts), so the two can't diverge: the title queue from smart-titles without the titles the person answered
 // before, the answers saved through useTasteScoring (guest progress for guests, the account for members) with the
-// shared acknowledgement (ui/scoring/score-ack.ts), and the totals and milestones (flow.ts). `useFlowPicks` adds the
-// picks the person's scores make. Each surface draws from what these return, in its own layout.
-import { useCallback, useEffect, useMemo, useReducer, useRef } from "react"
+// shared acknowledgement (ui/scoring/score-ack.ts), the totals, milestones and the guest lock (flow.ts), and the last
+// answers, any of which opens again to be changed or cleared. `useFlowPicks` adds the picks the person's scores make.
+// Each surface draws from what these return, in its own layout.
+import {
+	useCallback,
+	useEffect,
+	useMemo,
+	useReducer,
+	useRef,
+	useState,
+} from "react"
 import { fetchSmartTitles } from "~/routes/api.smart-titles"
 import { useUserData } from "~/routes/api.user-data"
 import type { Score } from "~/server/scores.server"
@@ -22,10 +30,13 @@ import { canGuestRate } from "~/utils/guest-progress"
 import { useHydrated } from "~/utils/hydrated"
 import useLocale from "~/utils/locale"
 import { titleKey } from "~/utils/title-key"
+import type { InteractionType, TasteInteraction } from "~/ui/taste/types"
 import {
 	INITIAL_FLOW,
+	isLocked,
 	isReady,
 	justLanded,
+	lastAnswered,
 	litMilestone,
 	nextStep,
 	ratingFlow,
@@ -45,6 +56,8 @@ function answerLine(
 ) {
 	if (failed) return ACK_FAILED
 	if (answer.kind === "skip") return `${WORDS.unseen}. ${WORDS.unseenHint}`
+	if (answer.kind === "want")
+		return `${WORDS.wantToSee}. ${WORDS.wantToSeeHint}`
 	if (answer.kind === "not-interested")
 		return `${WORDS.notInterested}. ${WORDS.notInterestedHint}`
 	return scoreLine
@@ -53,8 +66,20 @@ function answerLine(
 /** The answer just given, short: "Scored 8 · Great", "Haven't seen it", "Not interested" (the phone TV's header). */
 function answerShort(answer: AckAnswer, scoreLine: string | null) {
 	if (answer.kind === "skip") return WORDS.unseen
+	if (answer.kind === "want") return WORDS.wantToSee
 	if (answer.kind === "not-interested") return WORDS.notInterested
 	return scoreLine
+}
+
+/** The mark an answer leaves (ui/taste/types.ts). */
+const markOf = (answer: AckAnswer): InteractionType =>
+	answer.kind === "want" ? "plan" : answer.kind
+
+/** A title met in this flow, with its latest answer: the top row's posters. */
+export type AnsweredTitle = {
+	key: string
+	title: ScoringMedia
+	answer: TasteInteraction
 }
 
 export function useRatingCore({
@@ -79,8 +104,14 @@ export function useRatingCore({
 }) {
 	const track = useProductAnalytics({ source })
 	useProductExposure("taste quiz started", exposure, { source })
-	const { interactions, addScore, saveScore, saveSkip, saveNotInterested } =
-		useTasteScoring({ isAuthenticated: member })
+	const {
+		interactions,
+		saveScore,
+		saveSkip,
+		saveNotInterested,
+		saveWantToSee,
+		clearAnswer,
+	} = useTasteScoring({ isAuthenticated: member })
 	// A member's account, or a guest's browser progress in the same shape.
 	const { data: userData } = useUserData()
 	const hydrated = useHydrated()
@@ -98,8 +129,8 @@ export function useRatingCore({
 	)
 	const [state, send] = useReducer(ratingFlow, INITIAL_FLOW)
 	useEffect(() => {
-		if (known) send({ type: "tally", tally: totals })
-	}, [known, totals])
+		if (known) send({ type: "tally", tally: totals, member })
+	}, [known, totals, member])
 	useEffect(() => {
 		if (tasteOpen) send({ type: "taste-opened" })
 	}, [tasteOpen])
@@ -161,53 +192,139 @@ export function useRatingCore({
 	// An answer lights at once, is saved, and holds for a moment before the next title. Presses while it is on its
 	// way or held change nothing; a failed save keeps the title and offers the next one.
 	const ack = useScoreAck()
-	const title = queue.current
+	// A title answered before, opened again from the top row to change or clear its answer. Answering it goes back to
+	// the queue, which kept its place.
+	const [reopened, setReopened] = useState<ScoringMedia | null>(null)
+	// Clearing the answer of the title opened again: on its way, or failed (the page says so; the answer stays).
+	const [clearing, setClearing] = useState<"idle" | "saving" | "failed">("idle")
+	const title = reopened ?? queue.current
+	const advance = useCallback(() => {
+		if (reopened) setReopened(null)
+		else queue.advance()
+	}, [reopened, queue.advance])
 	// The queue can fill before the person's marks arrive: step past titles already answered, but not the one whose
-	// answer was just given (it stays while held or failed, and the hold moves on).
+	// answer was just given (it stays while held or failed, and the hold moves on), nor one opened again.
 	const answering =
 		ack.state.phase !== "idle" && title && ack.state.key === keyOf(title)
+	const current = queue.current
 	useEffect(() => {
-		if (title && !answering && answeredKeys.has(keyOf(title))) queue.advance()
-	}, [title, answering, answeredKeys, queue.advance])
+		if (!reopened && current && !answering && answeredKeys.has(keyOf(current)))
+			queue.advance()
+	}, [reopened, current, answering, answeredKeys, queue.advance])
 
-	const rate = useCallback(
-		(score: Score) => {
+	/** The latest answer of a title, as this flow knows it (a guest's browser, a member's answers in this visit). */
+	const answerOf = useCallback(
+		(key: string) => {
+			let found: TasteInteraction | undefined
+			for (const i of interactions)
+				if (
+					keyOf(i) === key &&
+					(!found || (i.timestamp ?? 0) >= (found.timestamp ?? 0))
+				)
+					found = i
+			return found ?? null
+		},
+		[interactions],
+	)
+	const reopenedAnswer = reopened ? answerOf(keyOf(reopened)) : null
+
+	/**
+	 * Gives `given` to the title on show. On a title opened again the earlier answer goes first, unless the new one
+	 * replaces it anyway (a score over a score, any answer of a guest, whose browser keeps one per title); the same
+	 * answer again saves nothing.
+	 */
+	const give = useCallback(
+		(given: AckAnswer, save: (media: ScoringMedia) => Promise<void>) => {
 			if (!title || ack.busy) return
-			if (!member && !canGuestRate(title.media_type, title.tmdb_id)) {
-				addScore(title, score) // Raises the guest limit prompt, as everywhere.
-				return
-			}
+			const before = reopened ? reopenedAnswer : null
+			const mark = markOf(given)
 			ack.answer(
 				keyOf(title),
-				{ kind: "score", score },
-				() => saveScore(title, score),
-				queue.advance,
+				given,
+				async () => {
+					if (before) {
+						const score = given.kind === "score" ? given.score : undefined
+						if (before.type === mark && before.score === score) return
+						if (member && !(before.type === "score" && mark === "score"))
+							await clearAnswer(title, before.type)
+					}
+					await save(title)
+				},
+				advance,
 			)
 		},
-		[title, member, addScore, saveScore, queue.advance, ack],
+		[title, ack, reopened, reopenedAnswer, member, clearAnswer, advance],
 	)
-	const unseen = useCallback(() => {
-		if (!title || ack.busy) return
-		ack.answer(
-			keyOf(title),
-			{ kind: "skip" },
-			() => saveSkip(title),
-			queue.advance,
-		)
-	}, [title, saveSkip, queue.advance, ack])
-	const notInterested = useCallback(() => {
-		if (!title || ack.busy) return
-		ack.answer(
-			keyOf(title),
-			{ kind: "not-interested" },
-			() => saveNotInterested(title),
-			queue.advance,
-		)
-	}, [title, saveNotInterested, queue.advance, ack])
+
+	// A guest at the limit: scores wait for sign-up. The page shows its locked panel instead of the score control
+	// (never the site's limit dialog); a score on a title already scored is a change and goes through.
+	const locked = isLocked(state.tally, member)
+	const rate = useCallback(
+		(score: Score) => {
+			if (!title) return
+			if (!member && !canGuestRate(title.media_type, title.tmdb_id)) return
+			give({ kind: "score", score }, (media) => saveScore(media, score))
+		},
+		[title, member, give, saveScore],
+	)
+	const unseen = useCallback(
+		() => give({ kind: "skip" }, saveSkip),
+		[give, saveSkip],
+	)
+	const wantToSee = useCallback(
+		() => give({ kind: "want" }, saveWantToSee),
+		[give, saveWantToSee],
+	)
+	const notInterested = useCallback(
+		() => give({ kind: "not-interested" }, saveNotInterested),
+		[give, saveNotInterested],
+	)
 	/** After a failed save: on to the next title without saving the answer. */
 	const pass = useCallback(() => {
-		if (title) ack.pass(keyOf(title), queue.advance)
-	}, [title, ack, queue.advance])
+		if (title) ack.pass(keyOf(title), advance)
+	}, [title, ack, advance])
+
+	// ---------------------------------------------------------------- the last answers
+
+	/** The newest answers to titles met in this flow, newest first (flow.ts, `lastAnswered`). */
+	const recent: AnsweredTitle[] = useMemo(
+		() =>
+			lastAnswered(interactions, met.current).flatMap((answer) => {
+				const key = keyOf(answer)
+				const t = met.current.get(key)
+				return t ? [{ key, title: t, answer }] : []
+			}),
+		[interactions],
+	)
+
+	/** Opens an answered title again; its answer stays until a new one is given or it is cleared. */
+	const reopen = useCallback(
+		(key: string) => {
+			const t = met.current.get(key)
+			if (!t) return
+			ack.cancel()
+			setClearing("idle")
+			setReopened(t)
+		},
+		[ack],
+	)
+	/** Back to the new titles without answering the one opened again. */
+	const closeReopened = useCallback(() => {
+		ack.cancel()
+		setClearing("idle")
+		setReopened(null)
+	}, [ack])
+
+	/** Clears the answer of the title opened again: it stays on show, unanswered, to be answered or left. */
+	const clear = useCallback(() => {
+		if (!reopened || !reopenedAnswer || clearing === "saving" || ack.busy)
+			return
+		setClearing("saving")
+		clearAnswer(reopened, reopenedAnswer.type).then(
+			() => setClearing("idle"),
+			() => setClearing("failed"),
+		)
+	}, [reopened, reopenedAnswer, clearing, ack.busy, clearAnswer])
 
 	const shown = ackView(ack.state, title ? keyOf(title) : null)
 	const given =
@@ -229,7 +346,11 @@ export function useRatingCore({
 		/** Totals known yet: until then the strips stay empty rather than say 0. */
 		tally: state.tally,
 		ready: state.tally ? isReady(state.tally) : false,
-		next: state.tally ? nextStep(state.tally, state.lastMilestoneAt) : null,
+		next: state.tally
+			? nextStep(state.tally, state.lastMilestoneAt, member)
+			: null,
+		/** A guest at the limit: more scores wait for sign-up (members never). Changing a score still goes through. */
+		locked,
 		lit: litMilestone(state),
 		landed: justLanded(state),
 		title,
@@ -240,8 +361,24 @@ export function useRatingCore({
 		retryTitles: queue.retry,
 		rate,
 		unseen,
+		/** "Haven't seen it" with Want to See. */
+		wantToSee,
 		notInterested,
 		pass,
+		/** The last answers, newest first (up to flow.ts's LAST_ANSWERED), for the top row. */
+		recent,
+		reopen,
+		/** The title opened again from the top row, its answer (null once cleared), and how clearing it went. */
+		reopened: reopened
+			? {
+					key: keyOf(reopened),
+					answer: reopenedAnswer,
+					clearing: clearing === "saving",
+					clearFailed: clearing === "failed",
+				}
+			: null,
+		clear,
+		closeReopened,
 		/** Ends an answer on its way or held without moving on (the TV leaves its rating screen). */
 		cancel: ack.cancel,
 		/** Every score the person holds, by title key. */

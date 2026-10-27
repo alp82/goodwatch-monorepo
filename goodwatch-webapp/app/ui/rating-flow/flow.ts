@@ -6,18 +6,23 @@
 // Rules (owner, October 27, 2026; docs/design/rating-onboarding/README.md):
 // - The taste is ready at the server's rule: MIN_LIKED liked titles, a score of LIKED_FROM or higher
 //   (~/domain/taste-rules, shared with server/taste/formula.server.ts).
-// - After that a milestone lands every MILESTONE_EVERY ratings. A milestone never stops rating: the taste bar turns
-//   amber for MILESTONE_GLOW ratings, or until the taste view is opened.
+// - After that a milestone lands at 5, 10, 15 and 20 ratings (MILESTONE_STEPS), then every MILESTONE_EVERY for a
+//   member (owner, October 28, 2026). The taste bar turns amber for MILESTONE_GLOW ratings, or until the taste view is
+//   opened, and the picks update.
+// - A guest's ratings stop at GUEST_RATING_LIMIT until sign-up: the flow shows its locked panel in place of the score
+//   control (never the site's limit dialog), and the marks, the taste view and the picks stay. Members are never locked.
 // - "Haven't seen it" (don't ask me about this title again) and "Not interested" (don't recommend it) are two marks of
 //   their own. Neither is a score, so neither counts as rated.
 // - Counts are the person's totals: a member's account, a guest's browser progress. Earlier ratings count too.
 import type { Score } from "~/server/scores.server"
 import {
 	LIKED_FROM,
-	MILESTONE_EVERY,
 	MIN_LIKED,
 	isLikedScore,
+	isRatingLocked,
+	nextMilestoneAt,
 } from "../../domain/taste-rules.ts"
+import type { InteractionType } from "../taste/types.ts"
 import { isRepeatPress } from "../scoring/score-ack.ts"
 
 /** The rating flow's page. */
@@ -56,8 +61,11 @@ export function tally(scores: Iterable<number | null | undefined>): Tally {
 
 export const isReady = (t: Tally) => t.liked >= MIN_LIKED
 
-/** "ready": the taste is ready. "picks": MILESTONE_EVERY more ratings since the last milestone. */
-export type Milestone = { kind: "ready" | "picks"; rated: number }
+/**
+ * "ready": the taste is ready. "picks": the next step of the schedule (~/domain/taste-rules, `nextMilestoneAt`).
+ * `of`: the dots the top strip shows full when it lands (MIN_LIKED for "ready", the ratings the step took for "picks").
+ */
+export type Milestone = { kind: "ready" | "picks"; rated: number; of: number }
 
 export interface FlowState {
 	/** The person's totals; null until they are known (guest progress after hydration, a member's data loaded). */
@@ -69,8 +77,8 @@ export interface FlowState {
 }
 
 export type FlowAction =
-	/** The person's totals, whenever they change. */
-	| { type: "tally"; tally: Tally }
+	/** The person's totals, whenever they change. A guest's milestones end at the guest limit; a member's go on. */
+	| { type: "tally"; tally: Tally; member: boolean }
 	/** The taste view was opened: the milestone has been seen. */
 	| { type: "taste-opened" }
 
@@ -102,13 +110,18 @@ export function ratingFlow(state: FlowState, action: FlowAction): FlowState {
 				return {
 					tally: next,
 					lastMilestoneAt: next.rated,
-					milestone: { kind: "ready", rated: next.rated },
+					milestone: { kind: "ready", rated: next.rated, of: MIN_LIKED },
 				}
-			if (next.rated >= state.lastMilestoneAt + MILESTONE_EVERY)
+			const at = nextMilestoneAt(state.lastMilestoneAt, action.member)
+			if (at != null && next.rated >= at)
 				return {
 					tally: next,
 					lastMilestoneAt: next.rated,
-					milestone: { kind: "picks", rated: next.rated },
+					milestone: {
+						kind: "picks",
+						rated: next.rated,
+						of: at - state.lastMilestoneAt,
+					},
 				}
 			return { ...state, tally: next }
 		}
@@ -130,34 +143,51 @@ export function justLanded(state: FlowState): Milestone | null {
 
 /**
  * The next milestone and how far along it is, for the top strip's dots, which reset after each one. Before the taste
- * is ready: liked titles toward MIN_LIKED. After: ratings since the last milestone toward MILESTONE_EVERY.
+ * is ready: liked titles toward MIN_LIKED. After: ratings since the last milestone toward the next one of the schedule.
+ * "done": there is no next one (a guest at the limit, whose picks are as good as they get before sign-up).
  */
 export interface NextStep {
-	kind: "liked" | "rated"
+	kind: "liked" | "rated" | "done"
 	done: number
 	of: number
 	left: number
 }
 
-export function nextStep(t: Tally, lastMilestoneAt: number | null): NextStep {
+/** `member` matters only once a milestone has passed: a guest's last one is at the guest limit. */
+export function nextStep(
+	t: Tally,
+	lastMilestoneAt: number | null,
+	member = false,
+): NextStep {
 	if (!isReady(t) || lastMilestoneAt == null) {
 		const done = Math.min(t.liked, MIN_LIKED)
 		return { kind: "liked", done, of: MIN_LIKED, left: MIN_LIKED - done }
 	}
-	const done = Math.min(Math.max(0, t.rated - lastMilestoneAt), MILESTONE_EVERY)
-	return {
-		kind: "rated",
-		done,
-		of: MILESTONE_EVERY,
-		left: MILESTONE_EVERY - done,
-	}
+	const at = nextMilestoneAt(lastMilestoneAt, member)
+	if (at == null) return { kind: "done", done: 0, of: 0, left: 0 }
+	const of = at - lastMilestoneAt
+	const done = Math.min(Math.max(0, t.rated - lastMilestoneAt), of)
+	return { kind: "rated", done, of, left: of - done }
 }
 
-/** The next step in words: "3 more liked to your taste", "4 more to new picks". */
+/** The next step in words: "3 more liked to your taste", "4 more to new picks", "Your picks are ready". */
 export const nextStepWords = (s: NextStep) =>
 	s.kind === "liked"
 		? `${s.left} more liked to your taste`
-		: `${s.left} more to new picks`
+		: s.kind === "done"
+			? "Your picks are ready"
+			: `${s.left} more to new picks`
+
+/** Whether the person's next rating waits for sign-up (~/domain/taste-rules): a guest at the limit. */
+export const isLocked = (t: Tally | null, member: boolean) =>
+	!!t && isRatingLocked(t.rated, member)
+
+/** Ratings from which a guest sees the quiet sign-up line under the taste bar ("only on value"). */
+export const SIGN_UP_LINE_FROM = 5
+
+/** Whether the quiet sign-up line shows: a guest with SIGN_UP_LINE_FROM ratings, until the locked panel says it. */
+export const showsSignUpLine = (t: Tally | null, member: boolean) =>
+	!member && !!t && t.rated >= SIGN_UP_LINE_FROM && !isLocked(t, member)
 
 /** The taste bar's words: its head (amber at a milestone) and the totals under it. */
 export function tasteBarWords(t: Tally, lit: Milestone | null) {
@@ -229,6 +259,79 @@ export function readFlowPress(
 	const intent = readFlowKey(press.key)
 	if (!intent) return null
 	return isRepeatPress(press) ? "held" : intent
+}
+
+/**
+ * After "Haven't seen it" the two marks become the Want to See question (parts.tsx, `WantToSee`): "yes" saves Haven't
+ * seen it with Want to See, "no" saves Haven't seen it alone, "back" returns to the marks and saves nothing. Its keys:
+ * Y or W, N, Escape or Backspace. Any other key, a modifier, or a held key's repeat: null, so the page treats it as it
+ * would without the question.
+ */
+export type WantKey = "yes" | "no" | "back"
+
+export function readWantPress(
+	press: Pick<
+		KeyboardEvent,
+		"key" | "repeat" | "metaKey" | "ctrlKey" | "altKey"
+	>,
+): WantKey | null {
+	if (press.metaKey || press.ctrlKey || press.altKey || isRepeatPress(press))
+		return null
+	const key = press.key.toLowerCase()
+	if (key === "y" || key === "w") return "yes"
+	if (key === "n") return "no"
+	if (key === "escape" || key === "backspace") return "back"
+	return null
+}
+
+/** How soon after the Want to See question appears a press counts: earlier ones are the tail of the first press. */
+export const WANT_GUARD_MS = 400
+
+/**
+ * Whether a press on the Want to See question counts: not within WANT_GUARD_MS of it appearing, and not the second
+ * click of a double click (`detail` counts the clicks; 0 for a key press on a button).
+ */
+export const takesWantPress = (shownAt: number, now: number, detail: number) =>
+	shownAt > 0 && now - shownAt >= WANT_GUARD_MS && detail <= 1
+
+// ---------------------------------------------------------------------------------------------------------
+// The top row's last answers: the newest few, tapping one opens its title again to change or clear the answer.
+
+/** Answers the top row shows (two under 420 px). */
+export const LAST_ANSWERED = 3
+
+export interface Answer {
+	media_type: string
+	tmdb_id: number
+	type: InteractionType
+	score?: number
+	timestamp: number
+}
+
+/** The newest answers whose titles are known (`known` has their key), newest first, each title once. */
+export function lastAnswered<T extends Answer>(
+	answers: Iterable<T>,
+	known: { has: (key: string) => boolean },
+	count = LAST_ANSWERED,
+): T[] {
+	const byKey = new Map<string, T>()
+	for (const a of answers) {
+		const key = `${a.media_type}-${a.tmdb_id}`
+		const had = byKey.get(key)
+		if (known.has(key) && (!had || a.timestamp >= had.timestamp))
+			byKey.set(key, a)
+	}
+	return [...byKey.values()]
+		.sort((a, b) => b.timestamp - a.timestamp)
+		.slice(0, count)
+}
+
+/** An answer in a few words, as the top row's posters name it: "Scored 8", "Want to See". */
+export function answerWords(a: Pick<Answer, "type" | "score">): string {
+	if (a.type === "score") return `Scored ${a.score}`
+	if (a.type === "skip") return "Haven't seen it"
+	if (a.type === "plan") return "Want to See"
+	return "Not interested"
 }
 
 // ---------------------------------------------------------------------------------------------------------

@@ -338,7 +338,7 @@ describe("what Your taste and Rate titles say", () => {
 				title: asked,
 				tally: t(7, 5),
 				next: { kind: "rated", done: 0, of: 10, left: 10 },
-				lit: { kind: "ready", rated: 7 },
+				lit: { kind: "ready", rated: 7, of: 5 },
 			}).taste,
 			"Your taste is ready",
 		)
@@ -347,7 +347,7 @@ describe("what Your taste and Rate titles say", () => {
 				title: asked,
 				tally: t(17, 9),
 				next: { kind: "rated", done: 0, of: 10, left: 10 },
-				lit: { kind: "picks", rated: 17 },
+				lit: { kind: "picks", rated: 17, of: 10 },
 			}).taste,
 			"Your picks changed",
 		)
@@ -499,6 +499,21 @@ describe("the machine's context for Taste, and the items it gives", () => {
 		// The picks are no list of a side's screen.
 		const side: TvScreen = { name: "taste", side: "dark-crime" }
 		assert.deepEqual(tasteContext(side, shown).titles, [])
+	})
+
+	it("Rate titles for a guest at the rating limit: sign-up and Your taste, the rating flow's locked panel", () => {
+		const shown = screensOf(
+			{ state: "picks", picks: [], waiting: false },
+			{ title: asked, tally: t(20), locked: true },
+		)
+		assert.equal(tasteContext(QUIZ, shown).quizLocked, true)
+		assert.equal(tasteContext(TASTE, shown).quizLocked, undefined)
+		assert.deepEqual(tvItems(QUIZ, ctxOf(QUIZ, shown)), [
+			"sign-up",
+			"your-taste",
+			"expand",
+			...NAV,
+		])
 	})
 
 	it("Rate titles: the strip and its two marks while there is a title to ask about, then Your taste", () => {

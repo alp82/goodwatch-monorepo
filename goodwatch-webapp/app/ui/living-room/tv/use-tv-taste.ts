@@ -178,7 +178,7 @@ export function useTasteReport(
 		}
 	}, [state, tally, next, view, picks, picksLoading])
 
-	const { loadingTitles: waiting, titlesFailed, lit } = flow
+	const { loadingTitles: waiting, titlesFailed, lit, locked } = flow
 	const step = flow.next
 	const { score, leaving, line, short, failed } = flow.answered
 	const screens: TvTasteScreens = useMemo(
@@ -194,6 +194,7 @@ export function useTasteReport(
 				next: step,
 				lit,
 				answered: { score, leaving, line, short, failed },
+				locked,
 			},
 		}),
 		[
@@ -204,6 +205,7 @@ export function useTasteReport(
 			flow.tally,
 			step,
 			lit,
+			locked,
 			score,
 			leaving,
 			line,
