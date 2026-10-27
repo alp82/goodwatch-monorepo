@@ -1,0 +1,860 @@
+{
+  "start_utc": "2026-10-27T22:45:51.213330+00:00",
+  "end_utc": "2026-10-27T23:33:58.436384+00:00",
+  "result": "STOPPED after first node; mixed GREEN incident handover; no further upgrade armed",
+  "versions": {
+    "crate-01": "5.10.16",
+    "crate-02": "6.0.8",
+    "crate-03": "5.10.16"
+  },
+  "first_failed_gate": {
+    "utc": "2026-10-27T23:28:13.337457+00:00",
+    "source": "after-608-02 node gate",
+    "error": "Failed Crate check",
+    "check_id": 3,
+    "severity": 1,
+    "details_file": "first-failed-check-details.json",
+    "note": "Concurrent app canary overwrote gate-failure.json at23:28:20.515; original first-gate event and log retained. No next node after either alarm."
+  },
+  "cluster": [
+    {
+      "host": 11,
+      "health": [
+        [
+          "GREEN",
+          145,
+          0,
+          0
+        ]
+      ],
+      "allocation_states": [
+        [
+          "STARTED",
+          1175
+        ]
+      ],
+      "settings": [
+        [
+          "all",
+          "none",
+          {
+            "min_availability": "PRIMARIES",
+            "force": false,
+            "timeout": "2h"
+          },
+          {
+            "_id": "",
+            "_host": "",
+            "_name": "",
+            "_ip": ""
+          }
+        ]
+      ],
+      "policies_match_original": true,
+      "policy_inventory_same": true,
+      "policy_differences": [],
+      "snapshot": [
+        [
+          "goodwatch-pre6",
+          "q53_pre6_20261027",
+          "SUCCESS",
+          1793142132378,
+          1793142154012,
+          567,
+          []
+        ]
+      ]
+    },
+    {
+      "host": 12,
+      "health": [
+        [
+          "GREEN",
+          145,
+          0,
+          0
+        ]
+      ],
+      "allocation_states": [
+        [
+          "STARTED",
+          1175
+        ]
+      ],
+      "settings": [
+        [
+          "all",
+          "none",
+          {
+            "timeout": "2h",
+            "force": false,
+            "min_availability": "PRIMARIES"
+          },
+          {
+            "_id": "",
+            "_host": "",
+            "_name": "",
+            "_ip": ""
+          }
+        ]
+      ],
+      "policies_match_original": false,
+      "policy_inventory_same": true,
+      "policy_differences": [
+        {
+          "before": [
+            "doc",
+            "yepwatch_agreement",
+            1,
+            "2",
+            "3",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ],
+          "after": [
+            "doc",
+            "yepwatch_agreement",
+            1,
+            "2",
+            "2",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ]
+        },
+        {
+          "before": [
+            "doc",
+            "yepwatch_candidate",
+            1,
+            "2",
+            "3",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ],
+          "after": [
+            "doc",
+            "yepwatch_candidate",
+            1,
+            "2",
+            "2",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ]
+        },
+        {
+          "before": [
+            "doc",
+            "yepwatch_command_receipt",
+            1,
+            "2",
+            "3",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ],
+          "after": [
+            "doc",
+            "yepwatch_command_receipt",
+            1,
+            "2",
+            "2",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ]
+        },
+        {
+          "before": [
+            "doc",
+            "yepwatch_control",
+            1,
+            "2",
+            "3",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ],
+          "after": [
+            "doc",
+            "yepwatch_control",
+            1,
+            "2",
+            "2",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ]
+        },
+        {
+          "before": [
+            "doc",
+            "yepwatch_decision",
+            1,
+            "2",
+            "3",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ],
+          "after": [
+            "doc",
+            "yepwatch_decision",
+            1,
+            "2",
+            "2",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ]
+        },
+        {
+          "before": [
+            "doc",
+            "yepwatch_invitation",
+            1,
+            "2",
+            "3",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ],
+          "after": [
+            "doc",
+            "yepwatch_invitation",
+            1,
+            "2",
+            "2",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ]
+        },
+        {
+          "before": [
+            "doc",
+            "yepwatch_member_grant",
+            1,
+            "2",
+            "3",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ],
+          "after": [
+            "doc",
+            "yepwatch_member_grant",
+            1,
+            "2",
+            "2",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ]
+        },
+        {
+          "before": [
+            "doc",
+            "yepwatch_member_intent",
+            1,
+            "2",
+            "3",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ],
+          "after": [
+            "doc",
+            "yepwatch_member_intent",
+            1,
+            "2",
+            "2",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ]
+        },
+        {
+          "before": [
+            "doc",
+            "yepwatch_participant",
+            1,
+            "2",
+            "3",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ],
+          "after": [
+            "doc",
+            "yepwatch_participant",
+            1,
+            "2",
+            "2",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ]
+        },
+        {
+          "before": [
+            "doc",
+            "yepwatch_proposal",
+            1,
+            "2",
+            "3",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ],
+          "after": [
+            "doc",
+            "yepwatch_proposal",
+            1,
+            "2",
+            "2",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ]
+        },
+        {
+          "before": [
+            "doc",
+            "yepwatch_room",
+            4,
+            "2",
+            "3",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ],
+          "after": [
+            "doc",
+            "yepwatch_room",
+            4,
+            "2",
+            "2",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ]
+        },
+        {
+          "before": [
+            "doc",
+            "yepwatch_runtime",
+            1,
+            "2",
+            "3",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ],
+          "after": [
+            "doc",
+            "yepwatch_runtime",
+            1,
+            "2",
+            "2",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ]
+        },
+        {
+          "before": [
+            "doc",
+            "yepwatch_ticket",
+            1,
+            "2",
+            "3",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ],
+          "after": [
+            "doc",
+            "yepwatch_ticket",
+            1,
+            "2",
+            "2",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ]
+        },
+        {
+          "before": [
+            "doc",
+            "yepwatch_vote",
+            1,
+            "2",
+            "3",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ],
+          "after": [
+            "doc",
+            "yepwatch_vote",
+            1,
+            "2",
+            "2",
+            "REQUEST",
+            {
+              "metadata": false,
+              "read": false,
+              "read_only_allow_delete": false,
+              "read_only": false,
+              "write": false
+            }
+          ]
+        }
+      ],
+      "snapshot": [
+        [
+          "goodwatch-pre6",
+          "q53_pre6_20261027",
+          "SUCCESS",
+          1793142132378,
+          1793142154012,
+          567,
+          []
+        ]
+      ]
+    },
+    {
+      "host": 13,
+      "health": [
+        [
+          "GREEN",
+          145,
+          0,
+          0
+        ]
+      ],
+      "allocation_states": [
+        [
+          "STARTED",
+          1175
+        ]
+      ],
+      "settings": [
+        [
+          "all",
+          "none",
+          {
+            "min_availability": "PRIMARIES",
+            "timeout": "2h",
+            "force": false
+          },
+          {
+            "_id": "",
+            "_host": "",
+            "_name": "",
+            "_ip": ""
+          }
+        ]
+      ],
+      "policies_match_original": true,
+      "policy_inventory_same": true,
+      "policy_differences": [],
+      "snapshot": [
+        [
+          "goodwatch-pre6",
+          "q53_pre6_20261027",
+          "SUCCESS",
+          1793142132378,
+          1793142154012,
+          567,
+          []
+        ]
+      ]
+    }
+  ],
+  "docker": [
+    {
+      "node": "crate-01",
+      "container": "4152810b9494514169176de232d72cf026885ff271e43a791088239de758d0a7",
+      "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "pid": 2548623,
+      "running": true,
+      "oom": false,
+      "started": "2026-10-16T00:19:54.139365228Z",
+      "restart": "always"
+    },
+    {
+      "node": "crate-02",
+      "container": "dc65046d5baf1aace906dea415e8a9d5e4e6635958f7aa7df5b4811fa20bc4d3",
+      "image": "crate:6.0.8@sha256:7b6af0abb4792123cfa225c8186471bbe81e039ef336af33095a181f4e8c17bf",
+      "pid": 3196234,
+      "running": true,
+      "oom": false,
+      "started": "2026-10-27T23:20:21.903551368Z",
+      "restart": "always"
+    },
+    {
+      "node": "crate-03",
+      "container": "da097c78fc77c4918f16d0201e6dd95c6d93e8f350cbb671ef0615ce1ac13ed3",
+      "image": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+      "pid": 2223579,
+      "running": true,
+      "oom": false,
+      "started": "2026-10-16T00:01:38.667288036Z",
+      "restart": "always"
+    }
+  ],
+  "page_watcher": {
+    "first_probe_utc": "2026-10-27T22:45:51.336568+00:00",
+    "last_probe_utc": "2026-10-27T23:33:57.319674+00:00",
+    "probes": 1310,
+    "unexpected_status_or_transport": 0,
+    "over3s": 0,
+    "max_seconds": 2.368074,
+    "Q60_page_alarm": false,
+    "monitor_error": {
+      "start_utc": "2026-10-27T23:28:41.267978+00:00",
+      "detected_utc": "2026-10-27T23:33:04.627743+00:00",
+      "cause": "Operator set unsupported phase handover-restoration; watcher exited. Progression already stopped; cleanup SQL continued without live watcher. No continuity claim.",
+      "last_valid_probe_utc": "2026-10-27T23:28:31.505145+00:00",
+      "first_resumed_probe_utc": "2026-10-27T23:33:17.336348+00:00",
+      "sticky_monitor_abort": {
+        "monitor_error": "ValueError"
+      },
+      "note": "Sticky monitor abort retained. Resumed watcher only for handover observations, never to admit another node."
+    },
+    "last_round": [
+      {
+        "utc": "2026-10-27T23:33:57.213951+00:00",
+        "probe_started_utc": "2026-10-27T23:33:57.112788+00:00",
+        "phase": "recovery",
+        "path": "/.well-known/oauth-protected-resource/mcp",
+        "expected": 200,
+        "status": 200,
+        "seconds": 0.096891,
+        "exit": 0,
+        "failure_streak": 0,
+        "alarm": false,
+        "policy": "q60",
+        "slow_responses_60s": 0
+      },
+      {
+        "utc": "2026-10-27T23:33:57.293216+00:00",
+        "probe_started_utc": "2026-10-27T23:33:57.112718+00:00",
+        "phase": "recovery",
+        "path": "/discover",
+        "expected": 200,
+        "status": 200,
+        "seconds": 0.175715,
+        "exit": 0,
+        "failure_streak": 0,
+        "alarm": false,
+        "policy": "q60",
+        "slow_responses_60s": 0
+      },
+      {
+        "utc": "2026-10-27T23:33:57.212208+00:00",
+        "probe_started_utc": "2026-10-27T23:33:57.112541+00:00",
+        "phase": "recovery",
+        "path": "/mcp",
+        "expected": 401,
+        "status": 401,
+        "seconds": 0.09455,
+        "exit": 0,
+        "failure_streak": 0,
+        "alarm": false,
+        "policy": "q60",
+        "slow_responses_60s": 0
+      },
+      {
+        "utc": "2026-10-27T23:33:57.277048+00:00",
+        "probe_started_utc": "2026-10-27T23:33:57.112498+00:00",
+        "phase": "recovery",
+        "path": "/movie/629-the-usual-suspects",
+        "expected": 200,
+        "status": 200,
+        "seconds": 0.159691,
+        "exit": 0,
+        "failure_streak": 0,
+        "alarm": false,
+        "policy": "q60",
+        "slow_responses_60s": 0
+      },
+      {
+        "utc": "2026-10-27T23:33:57.319674+00:00",
+        "probe_started_utc": "2026-10-27T23:33:57.112875+00:00",
+        "phase": "recovery",
+        "path": "/show/1396-breaking-bad",
+        "expected": 200,
+        "status": 200,
+        "seconds": 0.201272,
+        "exit": 0,
+        "failure_streak": 0,
+        "alarm": false,
+        "policy": "q60",
+        "slow_responses_60s": 0
+      }
+    ]
+  },
+  "windmill_failures": {
+    "count": 0,
+    "complete": true,
+    "start": "2026-10-27T22:45:00+00:00",
+    "end": "2026-10-27T23:33:58.436384+00:00"
+  },
+  "schedules_restored": {
+    "utc": "2026-10-27T23:28:54.232946+00:00",
+    "schedule_count": 9,
+    "mode": "restore",
+    "verified": true
+  },
+  "cron_restored": {
+    "utc": "2026-10-27T23:28:54.888853+00:00",
+    "mode": "restore",
+    "status": "restored",
+    "state": "/root/.config/goodwatch/644-q37-20261027T230151Z",
+    "restored_sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
+    "readback_exact": true
+  },
+  "backup_writer_operational": false,
+  "backup_writer_reason": "V2 registration absent, old repos readonly; mixed phase prevents planned writer registration; cron restored by latest GO. Next00:05 pending, expected unable to create snapshot.",
+  "last_recoverable_point": {
+    "snapshot": "goodwatch-pre6.q53_pre6_20261027",
+    "finished_utc": "2026-10-27T23:02:34.012+00:00",
+    "blob": {
+      "all_reference_digests_present": true,
+      "metadata_unchanged": true,
+      "build_rows": 3,
+      "referenced_objects": [
+        {
+          "sha1": "0337a768ff9594aa5ed4eff50b1b67cb39a79503",
+          "actual_bytes": 1559543
+        },
+        {
+          "sha1": "c4fc436d7d96d51c6b3aaa3df66a51ea9c305def",
+          "actual_bytes": 4259448
+        },
+        {
+          "sha1": "ae9f69c913a7e62851bcdbe4a545fb062cd5c520",
+          "actual_bytes": 5280978
+        },
+        {
+          "sha1": "15f09283e8bc1ef92c8c7ad65092baa8e8b6cd40",
+          "actual_bytes": 264056
+        },
+        {
+          "sha1": "5b8876a98f86bc6483e926f86302099c48fc242a",
+          "actual_bytes": 613275
+        },
+        {
+          "sha1": "61eb736ecb2e4a39bb3c03ec036f8af5c816680d",
+          "actual_bytes": 1799616
+        },
+        {
+          "sha1": "a0e8aa3be231392e9c93ae202e1f3587553f5c2d",
+          "actual_bytes": 800887
+        },
+        {
+          "sha1": "ea7e32f2b94426f4cba826ded91d9ae4dea8ed91",
+          "actual_bytes": 3712097
+        },
+        {
+          "sha1": "40cda44aea139d735c03128cfd134596b43124ee",
+          "actual_bytes": 916
+        },
+        {
+          "sha1": "b207b1d10fdd684e8b85570b473c68744d16e2d9",
+          "actual_bytes": 60395
+        },
+        {
+          "sha1": "78f98bf44782bb972daeecfb5c18e988556098ae",
+          "actual_bytes": 50614482
+        },
+        {
+          "sha1": "b64fb1cdc88f5f887328be3c114a87e8107d3ae1",
+          "actual_bytes": 1734564
+        },
+        {
+          "sha1": "59134f7ab8e80364d28c1be3f0afb2424176c9d9",
+          "actual_bytes": 4410906
+        },
+        {
+          "sha1": "7c88a771c434f326d124d1d397ee0eeaa8322bb6",
+          "actual_bytes": 5719249
+        },
+        {
+          "sha1": "b00139e4681c7c912eb648914ce1c08b7b54bbdf",
+          "actual_bytes": 291969
+        },
+        {
+          "sha1": "5fd0440f308dcecaf2cb5846a987cde38ec95b65",
+          "actual_bytes": 684961
+        },
+        {
+          "sha1": "322909af2183731f8278e492c5c57d3411183794",
+          "actual_bytes": 1835411
+        },
+        {
+          "sha1": "d3c755e557624147f1c988fdd55015f824d734f3",
+          "actual_bytes": 817287
+        },
+        {
+          "sha1": "fc33cdf05bc804eaea6856e739939eb60a7c0a11",
+          "actual_bytes": 4096437
+        },
+        {
+          "sha1": "603a436a9626eff88f58c87b34c8a3cfe872bc99",
+          "actual_bytes": 1082
+        },
+        {
+          "sha1": "d7f581e866f63c4e4e3b1fc8f700f476c0d9aaf3",
+          "actual_bytes": 56207997
+        }
+      ],
+      "unique_copied_objects": 38,
+      "copied_bytes": 271593347
+    }
+  },
+  "lock_clearance_proven": false,
+  "lock_test": "Final rebalance phase not reached; none retained. No ShardLockObtainFailedException in new crate02 JVM log through capture.",
+  "restoration_limitation": "Wait3 restoration statements acknowledged and reflected on5.10 coordinators;6.0.8 coordinator still reports2 for14 tables. All blocks removed; replicas unchanged. No enforcement write probe."
+}

@@ -1,5 +1,14 @@
 # #644: operation-context investigation, 2026-10-26
 
+## Q64 October27 rolling upgrade — stopped after crate-02 to6.0.8
+
+Only crate-02 reached6.0.8; crate-01/03 remain5.10.16. RecoveredGREEN, then stopped at the
+first post-node gate (future-major table-recreation advisory). A separate mixed-coordinator YepWatch
+policy readback disagreement remains after restoration. Schedules/cron restored exactly; the V2
+writer registration is absent, so hourly backups are not yet operational. Rebalance remainsnone;
+no automatic continuation or rollback. [Execution, exact residual state and decision](q64-execution.md),
+[summary](q64-summary.json), [receipts](q64-receipts.json.gz), [watcher](q64-pages.jsonl.gz).
+
 The initial read-only inspection of the production cluster was at **00:11:04–00:12:38 UTC** through each of
 crate-01/02/03. Starting revision: `origin/main` **bb1265d4a**. No production KILL, restart, decommission,
 setting change, client repair, snapshot mutation or file write was performed during that initial inspection.
