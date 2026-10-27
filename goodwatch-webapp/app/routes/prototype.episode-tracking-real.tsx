@@ -56,6 +56,10 @@ import {
 	withMemberSettings,
 } from "~/ui/prototype-episode-tracking/hero-fixture"
 import { TrackedEpisodes, useEpisodeTracking } from "~/ui/tracking/gate"
+import {
+	episodeLayoutOf,
+	type EpisodeLayout,
+} from "~/domain/tracking/episode-layout"
 import { deviceClock } from "~/ui/tracking/store"
 import { AuthContext } from "~/utils/auth"
 import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
@@ -180,6 +184,19 @@ function Harness({
 		[show, differs, presentation],
 	)
 	const [ready, setReady] = useState(false)
+	const layout = useMemo(
+		() =>
+			noList
+				? null
+				: episodeLayoutOf(
+						presentation?.episodes ??
+							show.seasons.flatMap((season) =>
+								season.episodes.map(() => ({ season: season.number })),
+							),
+						presentation?.note ?? null,
+					),
+		[show, presentation, noList],
+	)
 	const [, refresh] = useState(0)
 
 	const server = useMemo(
@@ -371,6 +388,7 @@ function Harness({
 					</MediaPreferenceProvider>
 					<div className="mt-12 flex flex-col gap-12">
 						<Episodes
+							layout={layout}
 							media={media}
 							data={grid.seasons.length ? grid : null}
 							grid={grid.seasons.length ? <EpisodeGrid grid={grid} /> : null}
@@ -387,14 +405,20 @@ function Harness({
 
 /** The episodes section as ui/details/DetailsContent.tsx renders it. */
 function Episodes({
+	layout,
 	media,
 	data,
 	grid,
-}: { media: ShowResult; data: EpisodeGridData | null; grid: React.ReactNode }) {
+}: {
+	layout: EpisodeLayout | null
+	media: ShowResult
+	data: EpisodeGridData | null
+	grid: React.ReactNode
+}) {
 	const tracking = useEpisodeTracking(media)
 	if (!tracking) return grid ? <div>{grid}</div> : null
 	return (
-		<TrackedEpisodes media={media} grid={data} wrapper={{}}>
+		<TrackedEpisodes media={media} grid={data} layout={layout} wrapper={{ id: "harness-episodes" }}>
 			{grid}
 		</TrackedEpisodes>
 	)

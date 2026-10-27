@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react"
+import type { EpisodeLayout } from "~/domain/tracking/episode-layout"
 import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
 import type { GenreRow as GenreRowData } from "~/server/genre-row/genre-row.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
@@ -30,14 +31,12 @@ import {
 } from "~/ui/details/section-heights"
 import type { SectionIds } from "~/ui/details/sections"
 import type { TitleQuestion } from "~/ui/details/titleQuestions"
-import Ratings from "~/ui/ratings/Ratings"
 import RelatedMap, { useRelatedMap } from "~/ui/related-map/RelatedMap"
-import Streaming from "~/ui/streaming/Streaming"
 import { TrackedEpisodes, useEpisodeTracking } from "~/ui/tracking/gate"
-import { extractRatings } from "~/utils/ratings"
 import type { PropsForSection, Section, SectionProps } from "~/utils/scroll"
 
 export interface DetailsContentProps {
+	episodeLayout?: EpisodeLayout | null
 	media: MovieResult | ShowResult
 	country: string
 	episodeGrid?: EpisodeGridData | null
@@ -50,6 +49,7 @@ export interface DetailsContentProps {
 }
 
 export default function DetailsContent({
+	episodeLayout,
 	media,
 	country,
 	episodeGrid,
@@ -75,7 +75,9 @@ export default function DetailsContent({
 	// A member with episode tracking gets the episode list in the grid's place, once they come near it.
 	const tracking = useEpisodeTracking(media)
 	// A long grid comes as its newest part; the rest loads when the visitor asks or the member's list needs it.
-	const whole = useWholeEpisodeGrid(hasEpisodeGrid(episodeGrid) ? episodeGrid : null)
+	const whole = useWholeEpisodeGrid(
+		hasEpisodeGrid(episodeGrid) ? episodeGrid : null,
+	)
 	const grid = whole.shown
 	// The button for the rest goes when every season is in; the keyboard focus moves to the grid's heading.
 	const partial = Boolean(grid?.window)
@@ -100,12 +102,15 @@ export default function DetailsContent({
 				<TrackedEpisodes
 					media={media}
 					grid={whole.scores}
+					layout={episodeLayout}
 					onWanted={whole.load}
 					wrapper={{
-						...section(
-							grid ? episodeGridHeight(grid) : { phone: 0, desktop: 0 },
-							sectionProps.episodes,
-						),
+						...(episodeLayout
+							? sectionProps.episodes
+							: section(
+									grid ? episodeGridHeight(grid) : { phone: 0, desktop: 0 },
+									sectionProps.episodes,
+								)),
 						"data-feedback-area": "episodes",
 					}}
 				>
@@ -121,15 +126,6 @@ export default function DetailsContent({
 					</div>
 				)
 			)}
-			{/*<div>*/}
-			{/*	<Streaming*/}
-			{/*		details={details}*/}
-			{/*		media_type={media_type}*/}
-			{/*		links={streaming_links}*/}
-			{/*		currentCountryCode={country}*/}
-			{/*		countryCodes={streaming_country_codes}*/}
-			{/*	/>*/}
-			{/*</div>*/}
 			<div
 				{...section(aboutHeight(), sectionProps.about)}
 				data-feedback-area="details"

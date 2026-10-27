@@ -30,6 +30,13 @@ import {
 import { seenPressLine } from "~/domain/tracking/seen-press"
 import type { PageEpisode, ShowView } from "~/domain/tracking/show-page"
 import type { LogRow } from "~/domain/tracking/storage"
+import {
+	episodeLayoutOf,
+	sameEpisodeLayout,
+	type EpisodeLayout,
+} from "~/domain/tracking/episode-layout"
+import EpisodeSkeleton from "~/ui/details/episode-grid/EpisodeSkeleton"
+import EpisodeHeading from "~/ui/details/episode-grid/EpisodeHeading"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { useBelowFold } from "~/ui/details/below-fold"
 import RatingsGrid from "~/ui/details/episode-grid/RatingsGrid"
@@ -72,16 +79,48 @@ import {
 export default function EpisodeList({
 	media,
 	grid,
+	layout,
 	children,
 }: {
 	media: TrackedMedia
 	/** The ratings grid's data in IMDb's numbering, for every site's season score; null for a show without one. */
 	grid: EpisodeGrid | null
+	layout?: EpisodeLayout | null
 	/** Today's episode grid, shown until the list is ready; nothing for a show without one. */
 	children: ReactNode
 }) {
 	const tracking = useShowTracking(media.details.tmdb_id)
 	const actions = useTrackingActions(tracking.store, media.details.title)
+	const [acceptChanged, setAcceptChanged] = useState(false)
+	const changed =
+		!acceptChanged &&
+		layout &&
+		tracking.page &&
+		!sameEpisodeLayout(
+			layout,
+			episodeLayoutOf(
+				tracking.page.episodes,
+				tracking.page.presentation?.note ?? null,
+			),
+		)
+	// The guard is only for the initial handoff; later watches must not unmount an open season.
+	useEffect(() => {
+		if (tracking.ready && tracking.view && !changed) setAcceptChanged(true)
+	}, [tracking.ready, tracking.view, changed])
+	if (layout) {
+		if (!tracking.ready || !tracking.view || (changed && !acceptChanged))
+			return (
+				<EpisodeSkeleton
+					layout={layout}
+					state={changed ? "changed" : tracking.failed ? "failed" : "loading"}
+					onRetry={() =>
+						changed && tracking.ready
+							? setAcceptChanged(true)
+							: tracking.store.refetch()
+					}
+				/>
+			)
+	}
 	if (!tracking.ready || !tracking.view) return <>{children}</>
 	return (
 		<List
@@ -179,7 +218,8 @@ function useNav(model: Model): Nav {
 	const [opened, setOpened] = useState<number | null>(null)
 	const [target, setTarget] = useState<Target | null>(null)
 	const [selected, setSelected] = useState<number | null>(null)
-	const open = many ? opened : (seasons[0]?.number ?? null)
+	// The overview has the same initial layout before and after watches arrive, including a one-season show.
+	const open = opened
 	const next = useMemo(
 		() =>
 			nextId === null
@@ -306,8 +346,6 @@ function useModel(
 
 type View = "grid" | "consistency"
 
-const SWITCH = `inline-flex h-10 items-center rounded-lg px-3 text-xs font-semibold cursor-pointer lg:h-8 ${FOCUS}`
-
 function List({
 	tracking,
 	view,
@@ -392,53 +430,16 @@ function List({
 					"@keyframes gwt-flash{0%,40%{background-color:rgb(255 255 255/.22)}100%{background-color:transparent}}.gwt-flash{animation:gwt-flash 1.5s ease-out}@media (prefers-reduced-motion:reduce){.gwt-flash{animation:none;outline:2px solid white;outline-offset:-2px}}"
 				}
 			</style>
-			<div className="flex flex-wrap items-center gap-2">
-				<h2
-					id="episode-list-title"
-					tabIndex={-1}
-					className="mr-auto text-xl font-bold focus:outline-none lg:text-2xl"
-				>
-					Episodes
-				</h2>
-				{next && (
-					<button
-						type="button"
-						data-jump-next
-						onClick={() => nav.jumpNext()}
-						title={next.name ?? undefined}
-						className={`inline-flex h-10 cursor-pointer items-center gap-1 rounded-lg bg-green-500/15 px-2.5 text-xs font-semibold text-green-300 hover:bg-green-500/25 lg:h-8 ${FOCUS}`}
-					>
-						Next <span className="tabular-nums">{episodeLabel(next)}</span>
-					</button>
-				)}
-				{nav.many && (
-					<div
-						role="radiogroup"
-						aria-label="Show the episodes as"
-						data-view-toggle
-						className="flex items-center gap-1"
-					>
-						{(
-							[
-								["grid", "Grid"],
-								["consistency", "Consistency"],
-							] as const
-						).map(([key, word]) => (
-							<button
-								key={key}
-								type="button"
-								// biome-ignore lint/a11y/useSemanticElements: a two-way switch drawn as buttons, as the site's other switches
-								role="radio"
-								aria-checked={shown === key}
-								onClick={() => setShown(key)}
-								className={`${SWITCH} ${shown === key ? "bg-white text-gray-900" : "bg-white/10 text-gray-100 hover:bg-white/20"}`}
-							>
-								{word}
-							</button>
-						))}
-					</div>
-				)}
-			</div>
+			<EpisodeHeading
+				chart={shown === "consistency"}
+				onChart={(on) => setShown(on ? "consistency" : "grid")}
+				next={
+					next
+						? { label: episodeLabel(next), title: next.name ?? undefined }
+						: undefined
+				}
+				onNext={() => nav.jumpNext()}
+			/>
 			{tracking.page?.presentation?.note && (
 				<p className="mt-2 text-sm text-gray-400">
 					{tracking.page.presentation.note}

@@ -1,4 +1,5 @@
 import type { NewPagesHere } from "~/server/new-on-services-page.server"
+import type { EpisodeLayout } from "~/domain/tracking/episode-layout"
 import React from "react"
 import { useTitleOpened } from "~/hooks/useTitleOpened"
 import DetailsContent from "~/ui/details/DetailsContent"
@@ -32,6 +33,7 @@ import { canonicalMediaTitle } from "~/utils/media-presentation"
 import type { GenreRow } from "~/server/genre-row/genre-row.server"
 
 export interface DetailsProps {
+	episodeLayout?: EpisodeLayout | null
 	media: MovieResult | ShowResult
 	country: string
 	episodeGrid?: EpisodeGrid | null
@@ -64,6 +66,7 @@ export default function Details(props: DetailsProps) {
 }
 
 function DetailsPage({
+	episodeLayout,
 	media: loadedMedia,
 	country: loadedCountry,
 	episodeGrid,
@@ -180,6 +183,7 @@ function DetailsPage({
 			<div className="isolate flex flex-col items-center">
 				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
 					<DetailsContent
+						episodeLayout={episodeLayout}
 						media={media}
 						country={country}
 						episodeGrid={episodeGrid}

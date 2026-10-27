@@ -18,6 +18,8 @@ import { useUser } from "~/utils/auth"
 import { onFirstInteraction } from "~/utils/first-interaction"
 import { useHydrated } from "~/utils/hydrated"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import type { EpisodeLayout } from "~/domain/tracking/episode-layout"
+import EpisodeSkeleton from "~/ui/details/episode-grid/EpisodeSkeleton"
 
 const HeroTracking = lazy(reloadOnStaleChunk(() => import("./HeroTracking")))
 const loadEpisodeList = reloadOnStaleChunk(() => import("./EpisodeList"))
@@ -94,13 +96,13 @@ export function TrackedTitleActions({
 }
 
 /**
- * The page's episodes section for a member with tracking. It shows today's episode grid until the member comes
- * near it or asks for the episode list; then the list's code loads, and the list takes the grid's place when the
- * show has one.
+ * Reserve the catalog's real season layout from the first paint. Tracking code and history fill that space when
+ * the member comes near it. A missing catalog leaves the existing grid until an explicit request.
  */
 export function TrackedEpisodes({
 	media,
 	grid = null,
+	layout,
 	onWanted,
 	wrapper,
 	children,
@@ -108,6 +110,8 @@ export function TrackedEpisodes({
 	media: TrackedMedia
 	/** The ratings grid's data, which the list reads every site's season scores from; null for a show without one. */
 	grid?: EpisodeGrid | null
+	/** Public catalog counts, present from the server's first paint. */
+	layout?: EpisodeLayout | null
 	/** Called once the list is wanted, so a long grid's other seasons load for their scores. */
 	onWanted?: () => void
 	/** The section's wrapper on the title page: its class, reserved height, and the page navigation's id and ref. */
@@ -132,7 +136,8 @@ export function TrackedEpisodes({
 		window.addEventListener(OPEN_EPISODES_EVENT, want)
 		const observer = new IntersectionObserver(
 			(entries) => {
-				if (entries.some((entry) => entry.isIntersecting)) want()
+				// Without known dimensions keep the existing grid until an explicit request; never insert late content.
+				if (layout && entries.some((entry) => entry.isIntersecting)) want()
 			},
 			{ rootMargin: "800px 0px" },
 		)
@@ -143,7 +148,8 @@ export function TrackedEpisodes({
 			window.removeEventListener(OPEN_EPISODES_EVENT, want)
 			observer.disconnect()
 		}
-	}, [])
+	}, [layout])
+	const first = layout ? <EpisodeSkeleton layout={layout} /> : children
 	return (
 		// With neither a grid nor a list the section is empty, and must not leave the page's gap between sections.
 		<div
@@ -155,13 +161,13 @@ export function TrackedEpisodes({
 			className={`${wrapper.className ?? ""} empty:-mb-12`}
 		>
 			{wanted ? (
-				<Suspense fallback={children}>
-					<EpisodeList media={media} grid={grid}>
+				<Suspense fallback={first}>
+					<EpisodeList media={media} grid={grid} layout={layout}>
 						{children}
 					</EpisodeList>
 				</Suspense>
 			) : (
-				children
+				first
 			)}
 		</div>
 	)

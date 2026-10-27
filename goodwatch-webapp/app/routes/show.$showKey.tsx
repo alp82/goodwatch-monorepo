@@ -63,6 +63,8 @@ import { heroHints } from "~/server/hero-hints.server"
 import { heroBackdropFiles } from "~/ui/details/hero/Trailer"
 import { mergeDehydratedStates } from "~/utils/title-extras"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
+import type { EpisodeLayout } from "~/domain/tracking/episode-layout"
+import { getEpisodeLayout } from "~/server/episode-layout.server"
 
 export { pageHeaders as headers } from "~/utils/headers"
 // The page paints from the server's HTML alone; its scripts start after that (utils/start-after-paint.ts). A tap
@@ -75,6 +77,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 }
 
 type LoaderData = {
+	episodeLayout: EpisodeLayout | null
 	media: ShowQueryResult
 	/** The whole grid, or its newest part when it is long (see episode-grid/window.ts). */
 	episodeGrid: EpisodeGridWire | null
@@ -94,16 +97,21 @@ type LoaderData = {
 	newPages?: NewPagesHere
 }
 
-const titleLoader = async ({
-	params,
-	request,
-}: LoaderFunctionArgs) => {
+const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	const showId = (params.showKey || "").split("-")[0]
 
 	// The canonical episode grid is independent of member and media preferences.
 	const gridWork = getEpisodeGrid({ showId })
 	gridWork.catch(() => {})
 	const userId = await getUserIdFromRequest({ request })
+	// Public counts are small and cached with the catalog. Slow member history stays out of the page's critical path.
+	const layoutWork = userId
+		? optionalTitlePart(
+				"episode layout",
+				() => getEpisodeLayout(Number(showId)),
+				TITLE_EPISODES_BUDGET_MS,
+			).then((result) => result.value)
+		: Promise.resolve(null)
 	// Taste groups for a signed-in member, alongside the reads below; the page waits for it within its budget only.
 	const sidesStart = Date.now()
 	const sidesWork = titleSides(request, userId, "show", Number(showId))
@@ -116,10 +124,12 @@ const titleLoader = async ({
 	const language = canonicalContent ? "en" : effectiveContext.language
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
 	const details = titleDetailsWithin(
-		timeRequestWork(request, "data", () => getDetailsForShow(
-			{ showId, country, language },
-			{ canonical: canonicalContent },
-		)),
+		timeRequestWork(request, "data", () =>
+			getDetailsForShow(
+				{ showId, country, language },
+				{ canonical: canonicalContent },
+			),
+		),
 	)
 	let episodeGridFailed = false
 	const relatedWork = relatedMapLookup({
@@ -238,13 +248,18 @@ const titleLoader = async ({
 		titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS),
 		genreWork,
 	])
+	const episodeLayout = await layoutWork
 	// The brands with a page of new arrivals in the country (#489): the last links this process loaded, never waited
 	// for. Without them the page has no "More new on" link and is just as complete.
 	const newPages = newPagesNow(country)
 	// The page's next 103 Early Hints response names its hero (server/hero-hints.ts).
 	if (media.details.backdrop_path)
-		heroHints.remember(new URL(request.url).pathname, heroBackdropFiles(media.details.backdrop_path))
+		heroHints.remember(
+			new URL(request.url).pathname,
+			heroBackdropFiles(media.details.backdrop_path),
+		)
 	const data = {
+		episodeLayout,
 		media,
 		episodeGrid,
 		params: {
@@ -273,6 +288,7 @@ export const loader: LoaderFunction = withRequestTiming(titleLoader)
 
 export default function DetailsTV() {
 	const {
+		episodeLayout,
 		media,
 		episodeGrid: episodeGridWire,
 		params,
@@ -326,7 +342,17 @@ export default function DetailsTV() {
 	}, [media, country, countryIsFallback])
 
 	return (
-		<Details media={media} country={country} episodeGrid={episodeGrid} talkedAboutNow={talkedAboutNow} sides={sides} breadcrumb={breadcrumb} genreRow={genreRow} newPages={newPages} />
+		<Details
+			media={media}
+			country={country}
+			episodeGrid={episodeGrid}
+			episodeLayout={episodeLayout}
+			talkedAboutNow={talkedAboutNow}
+			sides={sides}
+			breadcrumb={breadcrumb}
+			genreRow={genreRow}
+			newPages={newPages}
+		/>
 	)
 }
 
