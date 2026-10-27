@@ -16,6 +16,7 @@ import {
 import { useStreamingProviders } from "~/routes/api.streaming-providers";
 import { getCountryName } from "~/server/resources/country-names";
 import type { UserData } from "~/types/user-data";
+import { RatingResumeStrip } from "~/ui/rating-flow/ResumeStrip";
 import { ProfilesStrip } from "~/ui/site-strip/ProfilesStrip";
 import { STRIP_BUTTON, SiteStrip } from "~/ui/site-strip/SiteStrip";
 import { SmartOnboardingBanner } from "./SmartOnboardingBanner";
@@ -275,9 +276,15 @@ export function AccountTransfer() {
 				className="mt-16 -mb-16"
 			/>
 		) : onListEditor ? null : (
-			// One strip at a time: onboarding first, then the profiles announcement.
+			// One strip at a time: onboarding first, then picking the rating flow up again, then the profiles
+			// announcement.
 			<SmartOnboardingBanner
-				fallback={<ProfilesStrip className="mt-16 -mb-16" />}
+				fallback={
+					<RatingResumeStrip
+						className="mt-16 -mb-16"
+						fallback={<ProfilesStrip className="mt-16 -mb-16" />}
+					/>
+				}
 			/>
 		);
 	// Do not open an empty dialog while differences load, or after a no-op comparison.
