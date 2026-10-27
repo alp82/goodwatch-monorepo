@@ -1,4 +1,6 @@
-"""Member profiles (/u/<handle>) for sitemap_profiles.xml: members with a handle whose scores are public and who have
+"""Dormant member-profile eligibility, held out until an internal discovery route exists.
+
+Member profiles (/u/<handle>) for sitemap_profiles.xml: members with a handle whose scores are public and who have
 enough of them that the profile page is indexed (docs/implementation/member-profile/README.md, Q5).
 
 The page decides `indexable` from scores the catalog still has (at least 20, app/server/profile/page.server.ts). A
@@ -11,6 +13,10 @@ until then (owesProfilesStrip)."""
 import json
 from datetime import date, datetime, timezone
 from typing import List, Optional, Tuple
+
+# Held out until public profiles have an intended internal discovery route.
+# This affects sitemap inclusion only; profile pages keep their indexing policy.
+PROFILES_IN_SITEMAP = False
 
 BASE_URL = "https://goodwatch.app"
 # INDEX_MIN_SCORES in app/server/profile/page.server.ts (owner decision Q5).
@@ -41,6 +47,8 @@ def valid_handle(handle) -> bool:
 
 def select_profiles(cursor) -> List[Tuple[str, Optional[date]]]:
     """(URL, lastmod) pairs, by handle. lastmod is the day of the member's latest score change."""
+    if not PROFILES_IN_SITEMAP:
+        return []
     cursor.execute(
         "SELECT p.user_id, p.handle, count(*), max(s.updated_at), p.created_at FROM doc.user_profile p "
         "JOIN doc.user_score s ON s.user_id = p.user_id "

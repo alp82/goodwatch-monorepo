@@ -1,6 +1,9 @@
 import unittest
 from datetime import date
-from unittest.mock import Mock
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from test_sitemap_blog import create_sitemaps
+from unittest.mock import Mock, patch
 from sitemap_profiles import MIN_SCORES, PUBLIC_SINCE_MS, scores_public, select_profiles, valid_handle
 
 DAY = 1792713600000  # 2026-10-21 UTC, as Crate returns timestamps
@@ -8,7 +11,34 @@ NEW = PUBLIC_SINCE_MS  # a profile created with the release or later
 OLD = DAY  # a profile that went public with the release
 
 
+class ProfilesHoldTest(unittest.TestCase):
+    def test_stale_profiles_cannot_be_written_or_reintroduced_in_the_index(self):
+        with TemporaryDirectory() as directory, patch.object(create_sitemaps, "SITEMAP_DIR", directory):
+            stale = Path(directory) / "sitemap_profiles.xml"
+            stale.write_text("old profiles")
+            result = create_sitemaps.write_profile_sitemap([("https://goodwatch.app/u/example", date.today())])
+            self.assertEqual(result, {"total_url_count": 0, "lastmod": None, "profiles": []})
+            self.assertFalse(stale.exists())
+            lastmods = dict.fromkeys(["movie", "show", "static", "categories", "people", "profiles", "new"], date.today())
+            create_sitemaps.create_master_sitemap_index(lastmods)
+            index = (Path(directory) / "sitemap.xml").read_text()
+            self.assertNotIn("sitemap_profiles", index)
+            self.assertEqual(index.count("<sitemap>"), 6)
+            self.assertIn("sitemap_new.xml", index)
+
+    def test_profiles_are_held_without_reading_member_data(self):
+        cursor = Mock()
+        self.assertEqual(select_profiles(cursor), [])
+        cursor.execute.assert_not_called()
+
+
 class ProfilesTest(unittest.TestCase):
+    # Keep the eligibility coverage for when the discovery route is ready.
+    def setUp(self):
+        flag = patch("sitemap_profiles.PROFILES_IN_SITEMAP", True)
+        flag.start()
+        self.addCleanup(flag.stop)
+
     def cursor(self, members, settings):
         cursor = Mock()
         cursor.fetchall.side_effect = [members, settings]

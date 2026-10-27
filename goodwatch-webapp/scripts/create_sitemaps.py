@@ -16,7 +16,7 @@ from sitemap_lastmod import SitemapHistory, title_lastmod
 from sitemap_query import detail_query
 from sitemap_selection import select_titles, state_comment
 from sitemap_people import select_people
-from sitemap_profiles import select_profiles
+from sitemap_profiles import PROFILES_IN_SITEMAP, select_profiles
 from sitemap_new import select_new_pages
 from utils import title_to_dashed
 
@@ -208,7 +208,7 @@ def write_profile_sitemap(profiles, skip=frozenset()):
     live check: a member changed their settings or scores since the list was read). An empty URL set fails the live
     check, so no profiles means no file (and no entry in the index)."""
     filename = "sitemap_profiles.xml"
-    kept = [(loc, day) for loc, day in profiles if loc not in skip]
+    kept = [(loc, day) for loc, day in profiles if loc not in skip] if PROFILES_IN_SITEMAP else []
     path = os.path.join(SITEMAP_DIR, filename)
     if not kept:
         if os.path.exists(path):
@@ -248,8 +248,8 @@ def create_master_sitemap_index(file_lastmods: dict):
         ("sitemap_show_detail_0.xml", file_lastmods["show"]),
         ("sitemap_people.xml", file_lastmods["people"]),
     ]
-    # Listed only when this run wrote it: no profiles qualify, or a caller that doesn't make them yet.
-    if file_lastmods.get("profiles"):
+    # Also guard callers with stale profile results (including the weekly Windmill wrapper).
+    if PROFILES_IN_SITEMAP and file_lastmods.get("profiles"):
         sitemap_files.append(("sitemap_profiles.xml", file_lastmods["profiles"]))
     if file_lastmods.get("new"):
         sitemap_files.append(("sitemap_new.xml", file_lastmods["new"]))

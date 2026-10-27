@@ -2,6 +2,10 @@
 
 How the sitemap files in `goodwatch-webapp/public/sitemaps/` are made, checked, and published. Built for [Regenerate the sitemap with honest dates, on a schedule](https://github.com/alp82/goodwatch-monorepo/issues/351).
 
+Public member profiles are held out of the sitemap until they have an intended internal discovery route.
+`PROFILES_IN_SITEMAP = False` in `scripts/sitemap_profiles.py` gates selection, writing and index inclusion, including
+the generator downloaded by the Saturday Windmill run. Profile pages keep their existing indexing policy.
+
 ## The weekly schedule
 
 ```sh
@@ -47,13 +51,13 @@ For the manual fallback:
 
 | File | Content |
 | --- | --- |
-| `sitemap.xml` | The index that Search Console has. It lists the URL sets below (profiles only when one qualifies). |
+| `sitemap.xml` | The index that Search Console has. It lists the URL sets below (public member profiles are held out). |
 | `sitemap_static.xml` | The landing pages, then `/blog` and every blog post. |
 | `sitemap_categories.xml` | The category pages of movies and shows. |
 | `sitemap_movie_detail_0.xml` | 700 movie pages. |
 | `sitemap_show_detail_0.xml` | 300 show pages. |
 | `sitemap_people.xml` | 30 stable cast/director pages linked from the selected title cohort. |
-| `sitemap_profiles.xml` | Member profiles that are indexed: a handle, public scores, and at least 25 scores. Left out when none qualifies. |
+| `sitemap_profiles.xml` | Held out until public profiles have an intended internal discovery route; no file is generated. |
 | `sitemap_index_movie_detail.xml`, `sitemap_index_show_detail.xml` | Legacy indexes, kept for their earlier Search Console submissions. |
 
 ### Title selection and stability
@@ -74,7 +78,10 @@ Thirty people are selected from top-five billed cast and directors of the select
 
 ### Member profiles
 
-`sitemap_profiles.py` lists `/u/<handle>` for every member with a handle (account not deleted) whose `profile_visibility` setting leaves scores open to everyone (unset counts as open) and who has at least 25 scores. Members whose profile predates profiles going public (`PROFILE_PUBLIC_SINCE`, October 23, 2026) are left out until they confirm Who sees what on Edit profile (`profile_public_notice_seen`); their page answers `noindex` until then. The profile page itself is indexed from 20 scores the catalog still has (`app/server/profile/page.server.ts`); the margin keeps a profile whose scored titles partly left the catalog from being listed while it answers `noindex`, which would block the run. Each URL's lastmod is the day of the member's latest score change. With no qualifying profile, no file is written and the index leaves it out, since an empty URL set fails the check.
+`sitemap_profiles.py` currently returns no profiles, without reading member data. The writer removes a stale profile
+file and the index excludes it even if a caller supplies an old profile lastmod. Windmill downloads these rules
+from its pinned `main` revision each Saturday, so a new run cannot restore profiles after this change reaches `main`.
+The retained eligibility rules are dormant; public profile routes and their indexability are unchanged.
 
 ### Blog posts
 
