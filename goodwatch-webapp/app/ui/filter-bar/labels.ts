@@ -60,8 +60,8 @@ export const tasteStateOf = (
 				? "ready"
 				: "rateMore"
 
-/** Where "Rate titles" goes: the taste quiz, picking up where the person left off. */
-export const RATE_TITLES_PATH = "/taste/quiz?resume=1"
+/** Where "Rate titles" goes: the rating flow, which leaves out every title the person answered before. */
+export const RATE_TITLES_PATH = "/taste/quiz"
 
 /** Best match's line while the person has too few liked titles. */
 export const RATE_MORE =

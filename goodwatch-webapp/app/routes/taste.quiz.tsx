@@ -6,6 +6,7 @@ import type {
 } from "@remix-run/node"
 import { json } from "@remix-run/node"
 import { useLoaderData, useSearchParams } from "@remix-run/react"
+import { useCallback } from "react"
 import {
 	type DehydratedState,
 	QueryClient,
@@ -19,7 +20,8 @@ import {
 import { prefetchUserSettings } from "~/server/user-settings.server"
 import { ImdbImportEntry } from "~/ui/imports/ImdbImportEntry"
 import type { ScoringMedia } from "~/ui/scoring/types"
-import { TasteQuizPage } from "~/ui/taste-quiz/TasteQuizPage"
+import { type FlowView, viewOf } from "~/ui/rating-flow/flow"
+import { RatingFlow } from "~/ui/rating-flow/RatingFlow"
 import { getUserFromRequest } from "~/utils/auth"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 
@@ -27,7 +29,7 @@ export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction<typeof loader> = () => {
 	const pageMeta: PageMeta = {
-		title: "Taste Quiz - GoodWatch",
+		title: "Rate titles - GoodWatch",
 		description:
 			"Rate movies and shows to get instant personalized recommendations. Discover what to watch next based on your unique taste.",
 		url: "https://goodwatch.app/taste/quiz",
@@ -77,16 +79,28 @@ const canonicalLoader: LoaderFunction = async ({
 	})
 }
 
+/** The rating flow. `?view=taste` opens its taste view, where sign-up from "Save your taste" returns. */
 export default function TasteQuizRoute() {
 	const { isLoggedIn, smartTitles } = useLoaderData<LoaderData>()
-	const [params] = useSearchParams()
+	const [params, setParams] = useSearchParams()
+	const view = viewOf(params)
+	// Each view is its own history entry, so Back from the taste view returns to rating. Other parameters (the old
+	// quiz's `?resume=1` and `?show=picks`) go.
+	const onView = useCallback(
+		(next: FlowView) =>
+			setParams(next === "taste" ? { view: "taste" } : {}, {
+				preventScrollReset: true,
+			}),
+		[setParams],
+	)
 	return (
 		<>
 			<ImdbImportEntry member={isLoggedIn} />
-			<TasteQuizPage
+			<RatingFlow
 				titles={smartTitles}
 				member={isLoggedIn}
-				showPicks={params.get("show") === "picks"}
+				view={view}
+				onView={onView}
 			/>
 		</>
 	)

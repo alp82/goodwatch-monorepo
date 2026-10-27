@@ -8,7 +8,8 @@
 import { Link, useSearchParams } from "@remix-run/react"
 import { useScoresCount } from "~/hooks/useUserDataAccessors"
 import { GoogleMark } from "~/ui/taste-quiz/GoogleMark"
-import { QUIZ_PATH, RatingDots } from "~/ui/taste-quiz/TasteQuizPage"
+import { FLOW_PATH } from "~/ui/rating-flow/flow"
+import { RatingDots } from "~/ui/rating-flow/RatingDots"
 import { QUIZ_GOAL } from "~/ui/taste-quiz/quiz-flow"
 import { useContinueWithGoogle } from "~/utils/auth-client"
 import { useAuthHref } from "~/utils/auth-href"
@@ -42,7 +43,7 @@ function MemberBanner() {
 					Your taste is from {rated} {rated === 1 ? "rating" : "ratings"}. A few
 					more and it gets sharper.
 				</p>
-				<Link to={QUIZ_PATH} className={rateButton}>
+				<Link to={FLOW_PATH} className={rateButton}>
 					Rate more →
 				</Link>
 			</div>
@@ -82,7 +83,7 @@ function GuestBanner() {
 					</p>
 				</div>
 				<span className="flex flex-wrap items-center gap-x-4 gap-y-1">
-					<Link to={QUIZ_PATH} className={rateButton}>
+					<Link to={FLOW_PATH} className={rateButton}>
 						{mid ? "Keep rating" : "Rate titles"} →
 					</Link>
 					<Link
@@ -119,7 +120,7 @@ function YourTaste({ line, save }: { line: string; save?: () => void }) {
 							<GoogleMark size={16} /> Save my taste · free
 						</button>
 					)}
-					<Link to={QUIZ_PATH} className={rateLink}>
+					<Link to={FLOW_PATH} className={rateLink}>
 						Rate more →
 					</Link>
 				</span>

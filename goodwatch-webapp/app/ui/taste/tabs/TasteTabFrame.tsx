@@ -1,13 +1,13 @@
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
 import type { PortraitTab, PortraitViewOf } from "~/server/taste-portrait/view"
-import { QUIZ_PATH } from "~/ui/taste-quiz/TasteQuizPage"
+import { FLOW_PATH } from "~/ui/rating-flow/flow"
 import { TasteStart } from "../start/TasteStart"
 import { TasteBanner } from "./TasteBanner"
 import { useTasteView } from "./useTasteView"
 
 /** Where a person rates titles they've seen. */
-const RATE_PATH = QUIZ_PATH
+const RATE_PATH = FLOW_PATH
 
 const EMPTY_LINES: Record<PortraitTab, string> = {
 	sides: "Rate a few more titles you love to see what they have in common.",

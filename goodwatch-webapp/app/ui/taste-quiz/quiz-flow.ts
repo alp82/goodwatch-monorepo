@@ -1,4 +1,4 @@
-// The taste quiz flow, shared by /taste/quiz and the Living room TV.
+// The Living room TV's taste quiz flow (/taste/quiz moved to ui/rating-flow; the TV follows in phase 2).
 //
 // A pure state machine: one widely seen title at a time, the "Keep these 5?" ask once the person has scored
 // `QUIZ_GOAL` titles, then their picks three at a time. Only scores count toward the goal; skips ("Haven't seen it")

@@ -133,7 +133,9 @@ export function ackView(state: AckState, key: string | null) {
 				? ACK_FAILED
 				: state.answer.kind === "skip"
 					? "Not seen · next title"
-					: `Scored ${state.answer.score} · ${scoreLabels[state.answer.score]}`,
+					: state.answer.kind === "not-interested"
+						? "Not interested · next title"
+						: `Scored ${state.answer.score} · ${scoreLabels[state.answer.score]}`,
 		failed: mine && state.phase === "failed",
 	}
 }

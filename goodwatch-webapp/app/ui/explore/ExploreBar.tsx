@@ -80,7 +80,7 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 				<div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
 					<Link
 						prefetch="render"
-						to="/taste/quiz?resume=1"
+						to="/taste/quiz"
 						preventScrollReset
 						className="font-semibold text-cyan-300 hover:text-cyan-200"
 					>

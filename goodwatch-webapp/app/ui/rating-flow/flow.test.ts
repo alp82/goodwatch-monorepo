@@ -51,7 +51,10 @@ test("a tally counts every score as rated and 6 or higher as liked", () => {
 test("the taste is ready at the fifth liked title, and that is a milestone", () => {
 	const before = run({ rated: 6, liked: 4 }, { rated: 7, liked: 4 })
 	assert.equal(before.milestone, null)
-	const ready = ratingFlow(before, { type: "tally", tally: { rated: 8, liked: 5 } })
+	const ready = ratingFlow(before, {
+		type: "tally",
+		tally: { rated: 8, liked: 5 },
+	})
 	assert.deepEqual(ready.milestone, { kind: "ready", rated: 8 })
 	assert.equal(ready.lastMilestoneAt, 8)
 	assert.deepEqual(justLanded(ready), ready.milestone)
@@ -71,27 +74,42 @@ test("after the taste is ready a milestone lands every 10 ratings, liked or not"
 test("the taste bar stays lit for 3 ratings, or until the taste view opens", () => {
 	let state = run({ rated: 4, liked: 4 }, { rated: 5, liked: 5 })
 	assert.equal(litMilestone(state)?.kind, "ready")
-	state = ratingFlow(state, { type: "tally", tally: { rated: 5 + MILESTONE_GLOW - 1, liked: 7 } })
+	state = ratingFlow(state, {
+		type: "tally",
+		tally: { rated: 5 + MILESTONE_GLOW - 1, liked: 7 },
+	})
 	assert.equal(litMilestone(state)?.kind, "ready")
 	assert.equal(justLanded(state), null)
-	state = ratingFlow(state, { type: "tally", tally: { rated: 5 + MILESTONE_GLOW, liked: 8 } })
+	state = ratingFlow(state, {
+		type: "tally",
+		tally: { rated: 5 + MILESTONE_GLOW, liked: 8 },
+	})
 	assert.equal(litMilestone(state), null)
 
-	const opened = ratingFlow(run({ rated: 4, liked: 4 }, { rated: 5, liked: 5 }), {
-		type: "taste-opened",
-	})
+	const opened = ratingFlow(
+		run({ rated: 4, liked: 4 }, { rated: 5, liked: 5 }),
+		{
+			type: "taste-opened",
+		},
+	)
 	assert.equal(litMilestone(opened), null)
 })
 
 test("the same totals again change nothing", () => {
 	const state = run({ rated: 3, liked: 2 })
-	assert.equal(ratingFlow(state, { type: "tally", tally: { rated: 3, liked: 2 } }), state)
+	assert.equal(
+		ratingFlow(state, { type: "tally", tally: { rated: 3, liked: 2 } }),
+		state,
+	)
 })
 
 test("dropping below the rule takes the taste back, and reaching it again is a milestone again", () => {
 	const lost = run({ rated: 5, liked: 5 }, { rated: 5, liked: 4 })
 	assert.equal(lost.lastMilestoneAt, null)
-	const again = ratingFlow(lost, { type: "tally", tally: { rated: 6, liked: 5 } })
+	const again = ratingFlow(lost, {
+		type: "tally",
+		tally: { rated: 6, liked: 5 },
+	})
 	assert.equal(again.milestone?.kind, "ready")
 })
 
@@ -110,7 +128,10 @@ test("the taste bar says the totals, and what liked means until the taste is rea
 		head: "Your taste",
 		line: "6 rated · 4 liked (6 or higher)",
 	})
-	assert.equal(tasteBarWords({ rated: 6, liked: 5 }, null).line, "6 rated · 5 liked")
+	assert.equal(
+		tasteBarWords({ rated: 6, liked: 5 }, null).line,
+		"6 rated · 5 liked",
+	)
 	assert.equal(
 		tasteBarWords({ rated: 6, liked: 5 }, { kind: "ready", rated: 6 }).head,
 		"Your taste is ready",
@@ -140,14 +161,50 @@ test("the address opens the taste view, also the old quiz's sign-up return", () 
 
 test("the resume bar: members with ratings and no taste yet, off the flow, until dismissed", () => {
 	const forming = { rated: 3, liked: 2 }
-	assert.equal(offersResume({ tally: forming, pathname: "/discover", dismissed: false }), true)
-	assert.equal(offersResume({ tally: forming, pathname: "/taste/quiz", dismissed: false }), false)
-	assert.equal(offersResume({ tally: forming, pathname: "/taste", dismissed: false }), false)
-	assert.equal(offersResume({ tally: forming, pathname: "/taste/fingerprint", dismissed: false }), true)
-	assert.equal(offersResume({ tally: forming, pathname: "/discover", dismissed: true }), false)
-	assert.equal(offersResume({ tally: { rated: 9, liked: 5 }, pathname: "/", dismissed: false }), false)
-	assert.equal(offersResume({ tally: { rated: 0, liked: 0 }, pathname: "/", dismissed: false }), false)
-	assert.equal(offersResume({ tally: null, pathname: "/", dismissed: false }), false)
+	assert.equal(
+		offersResume({ tally: forming, pathname: "/discover", dismissed: false }),
+		true,
+	)
+	assert.equal(
+		offersResume({ tally: forming, pathname: "/taste/quiz", dismissed: false }),
+		false,
+	)
+	assert.equal(
+		offersResume({ tally: forming, pathname: "/taste", dismissed: false }),
+		false,
+	)
+	assert.equal(
+		offersResume({
+			tally: forming,
+			pathname: "/taste/fingerprint",
+			dismissed: false,
+		}),
+		true,
+	)
+	assert.equal(
+		offersResume({ tally: forming, pathname: "/discover", dismissed: true }),
+		false,
+	)
+	assert.equal(
+		offersResume({
+			tally: { rated: 9, liked: 5 },
+			pathname: "/",
+			dismissed: false,
+		}),
+		false,
+	)
+	assert.equal(
+		offersResume({
+			tally: { rated: 0, liked: 0 },
+			pathname: "/",
+			dismissed: false,
+		}),
+		false,
+	)
+	assert.equal(
+		offersResume({ tally: null, pathname: "/", dismissed: false }),
+		false,
+	)
 	assert.equal(resumeWords(forming), "3 more liked to your taste")
 })
 

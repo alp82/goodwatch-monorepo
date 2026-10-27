@@ -14,7 +14,7 @@ import {
 	useTaste,
 } from "~/ui/profile/taste/model"
 import { PANEL, SectionHead } from "~/ui/profile/taste/parts"
-import { QUIZ_PATH } from "~/ui/taste-quiz/TasteQuizPage"
+import { FLOW_PATH } from "~/ui/rating-flow/flow"
 import { TasteBanner } from "../tabs/TasteBanner"
 import { Explorer } from "./Explorer"
 import { TasteGroups } from "./Groups"
@@ -117,7 +117,7 @@ function Sharpen() {
 			<p className="mr-auto text-sm font-bold text-gray-200">
 				Sharpen your taste
 			</p>
-			<Link to={QUIZ_PATH} className={QUIET_BUTTON}>
+			<Link to={FLOW_PATH} className={QUIET_BUTTON}>
 				Rate more
 			</Link>
 			<Link to={IMPORTS_PATH} className={QUIET_BUTTON}>

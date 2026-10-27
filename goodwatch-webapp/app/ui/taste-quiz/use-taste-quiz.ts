@@ -5,8 +5,9 @@ import {
 import useLocale from "~/utils/locale"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
 // Binds the taste quiz flow to the person: the title queue from smart-titles, scores through useTasteScoring (guest
-// progress for guests, the account for members), and the picks those scores make. Both the /taste/quiz page and the
-// Living room TV render from what this hook returns.
+// progress for guests, the account for members), and the picks those scores make. The Living room TV renders from
+// what this hook returns; /taste/quiz and the Taste start moved to the rating flow (ui/rating-flow), which the TV
+// joins in phase 2.
 import {
 	useCallback,
 	useEffect,

@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useState } from "react"
 import { queryKeyUserData } from "~/routes/api.user-data"
 import {
+	useNotInterestedMutation,
 	useScoreMutation,
 	useSkippedMutation,
 	useWishlistMutation,
@@ -48,6 +49,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 	const scoreMutation = useScoreMutation()
 	const skippedMutation = useSkippedMutation()
 	const wishlistMutation = useWishlistMutation()
+	const notInterestedMutation = useNotInterestedMutation()
 
 	const updateInteractions = useCallback(
 		(media: ScoringMedia, interaction: Omit<TasteInteraction, "timestamp">) => {
@@ -182,7 +184,11 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 
 	/** Puts an answer in this visit's list, after it was saved. */
 	const record = useCallback(
-		(media: ScoringMedia, type: "score" | "skip", score?: Score) =>
+		(
+			media: ScoringMedia,
+			type: "score" | "skip" | "not-interested",
+			score?: Score,
+		) =>
 			setInteractions((prev) => [
 				...prev.filter(
 					(i) =>
@@ -255,6 +261,26 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 		[isAuthenticated, skippedMutation, record, refused],
 	)
 
+	/** Saves "Not interested" (never recommend it) and settles when it is saved, as `saveScore` does. */
+	const saveNotInterested = useCallback(
+		async (media: ScoringMedia) => {
+			if (!isAuthenticated) {
+				updateGuestInteraction(media.media_type, media.tmdb_id, "not-interested")
+				return
+			}
+			const result = await notInterestedMutation
+				.mutateAsync({
+					mediaType: media.media_type,
+					tmdbId: media.tmdb_id,
+					action: "add",
+				})
+				.catch(refused)
+			if (result.status !== "success") refused()
+			record(media, "not-interested")
+		},
+		[isAuthenticated, notInterestedMutation, record, refused],
+	)
+
 	const clearInteractions = useCallback(() => {
 		if (!isAuthenticated) {
 			setInteractions([])
@@ -273,12 +299,14 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 		addSkip,
 		saveScore,
 		saveSkip,
+		saveNotInterested,
 		addPlanToWatch,
 		clearInteractions,
 		ratingsCount,
 		isSubmitting:
 			scoreMutation.isPending ||
 			skippedMutation.isPending ||
-			wishlistMutation.isPending,
+			wishlistMutation.isPending ||
+			notInterestedMutation.isPending,
 	}
 }

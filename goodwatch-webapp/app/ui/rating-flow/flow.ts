@@ -145,7 +145,12 @@ export function nextStep(t: Tally, lastMilestoneAt: number | null): NextStep {
 		return { kind: "liked", done, of: MIN_LIKED, left: MIN_LIKED - done }
 	}
 	const done = Math.min(Math.max(0, t.rated - lastMilestoneAt), MILESTONE_EVERY)
-	return { kind: "rated", done, of: MILESTONE_EVERY, left: MILESTONE_EVERY - done }
+	return {
+		kind: "rated",
+		done,
+		of: MILESTONE_EVERY,
+		left: MILESTONE_EVERY - done,
+	}
 }
 
 /** The next step in words: "3 more liked to your taste", "4 more to new picks". */
@@ -185,7 +190,9 @@ export function offersResume({
 	pathname,
 	dismissed,
 }: { tally: Tally | null; pathname: string; dismissed: boolean }): boolean {
-	return !!t && t.rated > 0 && !isReady(t) && !dismissed && !ON_FLOW.test(pathname)
+	return (
+		!!t && t.rated > 0 && !isReady(t) && !dismissed && !ON_FLOW.test(pathname)
+	)
 }
 
 /** The resume bar's sentence, after its bold "Pick up where you left off". */
@@ -213,7 +220,10 @@ export function readFlowKey(key: string): FlowKey | null {
  * modifier.
  */
 export function readFlowPress(
-	press: Pick<KeyboardEvent, "key" | "repeat" | "metaKey" | "ctrlKey" | "altKey">,
+	press: Pick<
+		KeyboardEvent,
+		"key" | "repeat" | "metaKey" | "ctrlKey" | "altKey"
+	>,
 ): FlowKey | "held" | null {
 	if (press.metaKey || press.ctrlKey || press.altKey) return null
 	const intent = readFlowKey(press.key)
