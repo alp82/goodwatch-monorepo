@@ -24,6 +24,16 @@ interface UseTasteScoringProps {
 	isAuthenticated: boolean
 }
 
+/** Waits for every write, saved or not, and says which were saved. */
+async function settleAll(
+	writes: Promise<{ status: string }>[],
+): Promise<boolean[]> {
+	const settled = await Promise.allSettled(writes)
+	return settled.map(
+		(result) => result.status === "fulfilled" && result.value.status === "success",
+	)
+}
+
 export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 	const guestInteractions = useGuestInteractions()
 	const [memberInteractions, setInteractions] = useState<TasteInteraction[]>([])
@@ -205,7 +215,10 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 			]),
 		[],
 	)
-	/** A write the server answered without saving: the person's marks are read again, so none stays half-done. */
+	/**
+	 * A write the server answered without saving: the person's marks are read again, so none stays half-done. With
+	 * more than one write, only after all of them settled (`settleAll`), so a read can't land before the last one.
+	 */
 	const refused = useCallback((): never => {
 		void queryClient.invalidateQueries({ queryKey: queryKeyUserData })
 		throw new Error("The answer was not saved")
@@ -299,11 +312,11 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 				tmdbId: media.tmdb_id,
 				action: "add" as const,
 			}
-			const results = await Promise.all([
-				skippedMutation.mutateAsync(params).catch(refused),
-				wishlistMutation.mutateAsync(params).catch(refused),
+			const saved = await settleAll([
+				skippedMutation.mutateAsync(params),
+				wishlistMutation.mutateAsync(params),
 			])
-			if (results.some((result) => result.status !== "success")) refused()
+			if (!saved.every(Boolean)) refused()
 			record(media, "plan")
 		},
 		[isAuthenticated, skippedMutation, wishlistMutation, record, refused],
@@ -352,9 +365,18 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 									wishlistMutation.mutateAsync(params),
 								]
 							: [skippedMutation.mutateAsync(params)]
-			const results = await Promise.all(writes.map((w) => w.catch(refused)))
-			if (results.some((result) => result.status !== "success")) refused()
-			forget()
+			const removed = await settleAll(writes)
+			if (removed.every(Boolean)) {
+				forget()
+				return
+			}
+			// Want to See is two marks; when only one of them was removed, the answer here says what is left, so the
+			// page never shows Want to See over an account that holds only Haven't seen it.
+			if (type === "plan") {
+				const [skipRemoved, wishlistRemoved] = removed
+				if (wishlistRemoved && !skipRemoved) record(media, "skip")
+			}
+			refused()
 		},
 		[
 			isAuthenticated,
@@ -362,6 +384,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 			skippedMutation,
 			wishlistMutation,
 			notInterestedMutation,
+			record,
 			refused,
 		],
 	)
