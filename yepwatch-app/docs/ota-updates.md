@@ -10,6 +10,10 @@ Build 16 is the first installed version able to receive EAS Update. Testers must
 
 The Android preview has a separate package/signature, so it deliberately has its own channel. Both currently call the live YepWatch backend. The production channel is not promoted automatically.
 
+## Release preference
+
+Use OTA for all compatible Android and iPhone changes. Do not start a new native build automatically. If a change requires a new native runtime, explain that requirement and obtain explicit approval before building. Web changes still deploy to the website through the existing web deployment flow.
+
 ## Publish a tested change
 
 From `yepwatch-app`, after committing the tested source:

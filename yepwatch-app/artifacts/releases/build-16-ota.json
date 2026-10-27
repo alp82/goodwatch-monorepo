@@ -35,13 +35,33 @@
       "sha256": "6b968204b8222ef274fe180c0a748c6575a9048b8ab80ba9337d8944b5a7f97a"
     },
     "submissionId": "f0aa6e48-dc8b-4d9b-acd7-f6aa08723a29",
-    "distribution": "pending Expo upload and Apple processing"
+    "distribution": "Friends beta assigned; waiting for Apple external beta review",
+    "submissionStatus": "FINISHED",
+    "betaReviewState": "WAITING_FOR_REVIEW"
   },
   "android": {
     "buildId": "92acdd61-87f4-49ae-9c38-bea4881b5837",
-    "buildStatus": "IN_QUEUE",
+    "buildStatus": "FINISHED",
     "channel": "beta-preview",
-    "runtime": "e602b9da0532d0b6553acc72b771132638acce70"
+    "runtime": "e602b9da0532d0b6553acc72b771132638acce70",
+    "completedAt": "2026-10-27T20:37:27.809Z",
+    "installUrl": "https://expo.dev/accounts/alperortac/projects/yepwatch/builds/92acdd61-87f4-49ae-9c38-bea4881b5837",
+    "binary": {
+      "build": 16,
+      "package": "com.yepwatch.preview",
+      "sha256": "2215290d5a72a684e6086ba2e014cc343ef6f26d0ed1afc40307d4c9867c2d1c",
+      "certificateSha256": "7a4b9faa194c068222940ebe1661ab6f8fd3d714785a15bf76d23352a9752d1d",
+      "runtime": "e602b9da0532d0b6553acc72b771132638acce70",
+      "channel": "beta-preview",
+      "updatesEnabled": true,
+      "launchWaitMs": 0
+    },
+    "verification": {
+      "signature": "passed; original preview key",
+      "publicInstaller": "anonymous 200; Succeeded and Install visible",
+      "emulator": "fresh read-only Pixel8/API35 emulator5564; install/launch/home rendered, no Metro; no physical actions",
+      "qr": "generated and decoded to exact installer URL"
+    }
   },
   "ota": {
     "ios": {
