@@ -1,12 +1,11 @@
 // The Taste page for a member with no taste yet, in three steps under a stepper: bring your history (drop an export
-// or pick where it lives), rate a few titles, and see the taste. Both paths count toward the same liked titles; once
-// there are enough, "See your taste" asks the page again and the taste takes this one's place.
+// or pick where it lives), rate a few titles (the rating flow, ui/rating-flow, the same as /taste/quiz), and see the
+// taste. Both paths count toward the same liked titles; once there are enough, the flow's taste bar turns amber and
+// opens the last step, whose "See your taste" asks the page again so the taste takes this one's place.
 import { useRevalidator } from "@remix-run/react"
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
 import { fetchSmartTitles } from "~/routes/api.smart-titles"
 import { useUserData } from "~/routes/api.user-data"
-import type { Score } from "~/server/scores.server"
-import { MovieTvCard } from "~/ui/MovieTvCard"
 import type { ImportHandoff } from "~/ui/imports/ImportFileRouting"
 import {
 	type ImportSourceId,
@@ -16,13 +15,10 @@ import {
 import { useSourceImports } from "~/ui/imports/SourceImportHooks"
 import { useImdbImports } from "~/ui/imports/api"
 import { primaryButton } from "~/ui/imports/shared"
+import type { FlowView } from "~/ui/rating-flow/flow"
+import { RatingFlow } from "~/ui/rating-flow/RatingFlow"
 import type { ScoringMedia } from "~/ui/scoring/types"
-import { ackView, useScoreAck } from "~/ui/scoring/use-score-ack"
-import { RatingDots } from "~/ui/taste-quiz/TasteQuizPage"
-import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import useLocale from "~/utils/locale"
-import { accountAnsweredKeys, excludeIdsFor } from "../answered"
-import { useTasteScoring } from "../hooks/useTasteScoring"
 import { SourceLogoRow } from "./SourceLogoRow"
 import {
 	PageDrop,
@@ -45,9 +41,6 @@ import {
 
 const keyOf = (t: { media_type: string; tmdb_id: number }) =>
 	`${t.media_type}-${t.tmdb_id}`
-/** "Rated so far": 48 px posters. */
-const STRIP_SIZES: [string | null, string][] = [[null, "48px"]]
-
 const image = (path: string | undefined, size: string) =>
 	path ? `https://image.tmdb.org/t/p/${size}${path}` : undefined
 const linkButton =
@@ -60,28 +53,20 @@ export function TasteStart() {
 	const { locale } = useLocale()
 	const revalidator = useRevalidator()
 	const { data: userData } = useUserData()
-	const { saveScore, saveSkip, isSubmitting } = useTasteScoring({
-		isAuthenticated: true,
-	})
-	// An answer lights at once, is saved, and holds for a moment before the next title (ui/scoring/score-ack.ts).
-	const ack = useScoreAck()
-	const holding = ack.state.phase === "idle" ? null : ack.state.key
 	const imdbImports = useImdbImports()
 	const sourceImports = useSourceImports()
 
 	const [step, setStep] = useState<StartStep>(1)
+	const [flowView, setFlowView] = useState<FlowView>("rate")
 	const [pick, setPick] = useState<ImportSourceId | null>(null)
 	const [handoff, setHandoff] = useState<StartHandoff | null>(null)
 	const [waitingOn, setWaitingOn] = useState<ImportSourceId | null>(null)
+	// The best-known titles: the wall behind the page, and the first titles the rating step asks about.
 	const [titles, setTitles] = useState<ScoringMedia[]>([])
-	const [loading, setLoading] = useState(true)
-	// The last request for titles failed; `retries` asks again.
-	const [fetchFailed, setFetchFailed] = useState(false)
-	const [retries, setRetries] = useState(0)
-	const [done, setDone] = useState<string[]>([])
-	const [rated, setRated] = useState<{ title: ScoringMedia; score: Score }[]>(
-		[],
-	)
+	// The wall arrived, or won't: the rating step starts from it (its queue takes first titles only once).
+	const [wallSettled, setWallSettled] = useState(false)
+	// Titles met while rating, for the liked posters of the last step.
+	const [met, setMet] = useState<ScoringMedia[]>([])
 	const [asked, setAsked] = useState(false)
 	const [short, setShort] = useState(false)
 
@@ -97,60 +82,33 @@ export function TasteStart() {
 		files.take(file)
 	}
 
-	// The best-known titles the member hasn't answered (rated, skipped, Not interested, Want to See or watched);
-	// more when the queue runs low.
-	const scores = userData?.scores
-	const answered = useMemo(() => accountAnsweredKeys(userData), [userData])
-	// The title whose answer was just given stays first while it is held, though its score is saved already.
-	const queue = titles.filter(
-		(t) =>
-			!done.includes(keyOf(t)) &&
-			(keyOf(t) === holding || !answered.has(keyOf(t))),
-	)
-	const fetching = useRef(false)
 	useEffect(() => {
-		if (
-			fetching.current ||
-			fetchFailed ||
-			(titles.length > 0 && queue.length > 3)
-		)
-			return
-		fetching.current = true
-		fetchSmartTitles({
-			count: titles.length === 0 ? WALL : 40,
-			language: locale.language,
-			excludeIds: excludeIdsFor(done),
-		})
-			.then((more) =>
-				setTitles((now) => {
-					const known = new Set(now.map(keyOf))
-					return [...now, ...more.filter((t) => !known.has(keyOf(t)))]
-				}),
-			)
-			.catch(() => setFetchFailed(true))
-			.finally(() => {
-				fetching.current = false
-				setLoading(false)
+		let gone = false
+		fetchSmartTitles({ count: WALL, language: locale.language })
+			.then((wall) => {
+				if (!gone) setTitles(wall)
 			})
-	}, [titles.length, queue.length, done, locale.language, fetchFailed, retries])
-	const retryTitles = () => {
-		setFetchFailed(false)
-		setRetries((n) => n + 1)
-	}
-
-	// Liked titles: the saved ones (imports included) with this visit's ratings on top.
-	const likedKeys = useMemo(() => {
-		const keys = new Set(
-			Object.entries(scores ?? {})
-				.filter(([, v]) => (v?.score ?? 0) >= LIKED)
-				.map(([k]) => k),
-		)
-		for (const r of rated) {
-			if (r.score >= LIKED) keys.add(keyOf(r.title))
-			else keys.delete(keyOf(r.title))
+			// Without the wall the page still works: the rating step asks for its own titles.
+			.catch(() => {})
+			.finally(() => {
+				if (!gone) setWallSettled(true)
+			})
+		return () => {
+			gone = true
 		}
-		return keys
-	}, [scores, rated])
+	}, [locale.language])
+
+	// Liked titles: the saved ones, imports and this visit's ratings included (a score is on the account at once).
+	const scores = userData?.scores
+	const likedKeys = useMemo(
+		() =>
+			new Set(
+				Object.entries(scores ?? {})
+					.filter(([, v]) => (v?.score ?? 0) >= LIKED)
+					.map(([k]) => k),
+			),
+		[scores],
+	)
 	const liked = likedKeys.size
 	const ready = liked >= GOAL
 
@@ -172,18 +130,6 @@ export function TasteStart() {
 			top.current?.scrollIntoView({ block: "start" })
 	}, [step])
 
-	// Rating up to enough liked titles moves the member on to their taste once, a beat later, so the last rating can
-	// be seen. A finished import stays on its receipt; step 1 offers "See your taste" instead.
-	const movedOn = useRef(false)
-	useEffect(() => {
-		if (step !== 2 || !ready || movedOn.current || isSubmitting) return
-		const t = setTimeout(() => {
-			movedOn.current = true
-			setStep(3)
-		}, 1200)
-		return () => clearTimeout(t)
-	}, [step, ready, isSubmitting])
-
 	// Asked for the taste and still here: the server wants a few more liked titles to find groups.
 	const wasLoading = useRef(false)
 	useEffect(() => {
@@ -192,31 +138,11 @@ export function TasteStart() {
 			wasLoading.current = false
 			setAsked(false)
 			setShort(true)
-			movedOn.current = false
+			setFlowView("rate")
 			setStep(2)
 		}
 	}, [revalidator.state, asked])
 
-	const rate = (title: ScoringMedia, score: Score) =>
-		ack.answer(
-			keyOf(title),
-			{ kind: "score", score },
-			() => saveScore(title, score),
-			() => {
-				setRated((r) => [...r, { title, score }])
-				setDone((d) => [...d, keyOf(title)])
-			},
-		)
-	const skip = (title: ScoringMedia) =>
-		ack.answer(
-			keyOf(title),
-			{ kind: "skip" },
-			() => saveSkip(title),
-			() => setDone((d) => [...d, keyOf(title)]),
-		)
-	// After a save that failed: on to the next title without saving.
-	const pass = (title: ScoringMedia) =>
-		ack.pass(keyOf(title), () => setDone((d) => [...d, keyOf(title)]))
 	const seeTaste = () => {
 		setAsked(true)
 		revalidator.revalidate()
@@ -327,52 +253,45 @@ export function TasteStart() {
 
 					{step === 2 && (
 						<div className="flex w-full max-w-5xl flex-col gap-5">
-							<div className="flex flex-wrap items-center justify-between gap-3">
-								<div className="flex items-center gap-3 text-sm text-gray-300">
-									<RatingDots at={liked} of={GOAL} />
-									{Math.min(liked, GOAL)} of {GOAL} liked
-								</div>
-								<button
-									type="button"
-									className={linkButton}
-									onClick={() => setStep(1)}
-								>
-									I do track somewhere
-								</button>
-							</div>
-							{waitingOn && (
-								<p className="rounded-lg border border-slate-700 bg-slate-900/85 px-4 py-3 text-sm text-gray-300">
-									Your {sourceEntry(waitingOn).name} file is on its way. When
-									it's ready, drop it anywhere on this page.
+							{/* The rating flow, the same as /taste/quiz. Once the taste is ready its taste bar opens the
+							    last step; before that, its own taste view. Reaching it never stops rating. */}
+							{wallSettled ? (
+								<RatingFlow
+									titles={titles}
+									member
+									view={flowView}
+									onView={setFlowView}
+									backdrop={false}
+									onOpenTaste={(flow) => {
+										if (!flow.ready) return false
+										setMet([...flow.met.values()])
+										setStep(3)
+										return true
+									}}
+									top={
+										<div className="mb-5 flex flex-col gap-3">
+											<div className="flex justify-end">
+												<button
+													type="button"
+													className={linkButton}
+													onClick={() => setStep(1)}
+												>
+													I do track somewhere
+												</button>
+											</div>
+											{waitingOn && (
+												<p className="rounded-lg border border-slate-700 bg-slate-900/85 px-4 py-3 text-sm text-gray-300">
+													Your {sourceEntry(waitingOn).name} file is on its way.
+													When it's ready, drop it anywhere on this page.
+												</p>
+											)}
+										</div>
+									}
+								/>
+							) : (
+								<p className="animate-pulse py-10 text-center text-gray-400">
+									Finding titles for you…
 								</p>
-							)}
-							<RateCard
-								title={queue[0]}
-								answered={ackView(ack.state, queue[0] ? keyOf(queue[0]) : null)}
-								loading={loading}
-								fetchFailed={fetchFailed}
-								onRetry={retryTitles}
-								onRate={rate}
-								onSkip={skip}
-								onPass={pass}
-							/>
-							{rated.length > 0 && (
-								<ul
-									className="flex gap-2 overflow-x-auto"
-									aria-label="Rated so far"
-								>
-									{rated.map((r) => (
-										<li key={keyOf(r.title)} className="w-12 shrink-0">
-											{/* The poster card at 48 px: the score alone, and a tap opens the title. */}
-											<MovieTvCard
-												details={r.title}
-												mediaType={r.title.media_type}
-												posterSizes={STRIP_SIZES}
-												actions={false}
-											/>
-										</li>
-									))}
-								</ul>
 							)}
 						</div>
 					)}
@@ -380,7 +299,7 @@ export function TasteStart() {
 					{step === 3 && (
 						<div className="flex w-full flex-col items-center gap-6">
 							<PosterFan
-								titles={[...rated.map((r) => r.title), ...titles].filter((t) =>
+								titles={[...met, ...titles].filter((t) =>
 									likedKeys.has(keyOf(t)),
 								)}
 							/>
@@ -398,121 +317,18 @@ export function TasteStart() {
 								<button
 									type="button"
 									className={ghostButton}
-									onClick={() => setStep(2)}
+									onClick={() => {
+										setFlowView("rate")
+										setStep(2)
+									}}
 								>
-									Rate a few more
+									Keep rating
 								</button>
 							</div>
 						</div>
 					)}
 				</div>
 			</PosterWall>
-		</div>
-	)
-}
-
-function RateCard({
-	title: x,
-	answered: a,
-	loading,
-	fetchFailed,
-	onRetry,
-	onRate,
-	onSkip,
-	onPass,
-}: {
-	title: ScoringMedia | undefined
-	answered: ReturnType<typeof ackView>
-	loading: boolean
-	/** Asking for titles failed: not the same as having none left. */
-	fetchFailed: boolean
-	onRetry: () => void
-	onRate: (title: ScoringMedia, score: Score) => void
-	onSkip: (title: ScoringMedia) => void
-	/** After a save that failed: on to the next title without saving. */
-	onPass: (title: ScoringMedia) => void
-}) {
-	if (!x)
-		return fetchFailed && !loading ? (
-			<div className="flex flex-col items-center gap-3 py-10 text-center text-gray-400">
-				<p>Couldn't load more titles.</p>
-				<button type="button" className={ghostButton} onClick={onRetry}>
-					Try again
-				</button>
-			</div>
-		) : (
-			<p
-				className={`py-10 text-center text-gray-400 ${loading ? "animate-pulse" : ""}`}
-			>
-				{loading ? "Finding titles for you…" : "That's every title for now."}
-			</p>
-		)
-	return (
-		<div className="relative flex flex-col gap-5 overflow-hidden rounded-2xl bg-gray-900 p-4 ring-1 ring-white/10 sm:flex-row md:p-6">
-			{x.backdrop_path && (
-				<img
-					src={image(x.backdrop_path, "w1280")}
-					alt=""
-					className="absolute inset-0 h-full w-full object-cover opacity-20"
-				/>
-			)}
-			{/* The title leaves after its answer's hold and the next one rises in (main.css, score-ack). */}
-			<img
-				key={keyOf(x)}
-				src={image(x.poster_path, "w342")}
-				alt=""
-				className={`${a.leaving ? "score-ack-leave" : "score-ack-enter"} relative w-32 shrink-0 self-start rounded-lg shadow-xl md:w-44`}
-			/>
-			<div className="relative min-w-0 flex-1">
-				<div className="text-xs font-bold uppercase tracking-wider text-amber-400/90">
-					Seen it? How was it?
-				</div>
-				<div
-					key={keyOf(x)}
-					className={a.leaving ? "score-ack-leave" : "score-ack-enter"}
-				>
-					<h2 className="mt-1 text-2xl font-extrabold md:text-3xl">
-						{x.title}
-					</h2>
-					<div className="text-sm text-gray-300">
-						{[x.release_year, x.genres?.slice(0, 3).join(", ")]
-							.filter(Boolean)
-							.join(" · ")}
-					</div>
-				</div>
-				<p
-					aria-live="polite"
-					className={`mb-3 mt-1 min-h-6 font-bold ${a.failed ? "text-red-300" : "text-amber-300"}`}
-				>
-					{a.line}
-				</p>
-				<div className="mb-4 flex flex-wrap gap-2">
-					<button
-						type="button"
-						className={ghostButton}
-						onClick={() => onSkip(x)}
-					>
-						Haven't seen it
-					</button>
-					{/* A save that failed: on without saving it. */}
-					{a.failed && (
-						<button
-							type="button"
-							className={ghostButton}
-							onClick={() => onPass(x)}
-						>
-							Next title
-						</button>
-					)}
-				</div>
-				<ScoreControl
-					key={keyOf(x)}
-					value={a.score}
-					acknowledged={a.score != null}
-					onRate={(v) => onRate(x, v)}
-					fit="screen"
-				/>
-			</div>
 		</div>
 	)
 }

@@ -1,5 +1,6 @@
 // The three steps of a member's Taste start, and what the page says at each: bring your history, rate a few, your
 // taste. Kept free of React so the wording can be tested.
+import { LIKED_FROM, MIN_LIKED } from "../../../domain/taste-rules.ts"
 
 export type StartStep = 1 | 2 | 3
 
@@ -9,9 +10,12 @@ export const STEP_LABELS: Record<StartStep, string> = {
 	3: "Your taste",
 }
 
-/** Liked titles (7 and up) before the taste is asked for. The server may want a few more to find groups. */
-export const GOAL = 5
-export const LIKED = 7
+/**
+ * Liked titles before the taste is asked for, and the lowest liked score: the server's rule (~/domain/taste-rules),
+ * shared with the rating flow. The server may want a few more to find groups.
+ */
+export const GOAL = MIN_LIKED
+export const LIKED = LIKED_FROM
 
 export interface StartState {
 	step: StartStep
