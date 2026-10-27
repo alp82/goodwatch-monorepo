@@ -192,11 +192,16 @@ function readMember(dir: string): LabMember | null {
 	const m = readJson(path.join(dir, "member.json")) as Record<string, unknown> | null
 	if (!m) return null
 	const tonight = m.tonight as Record<string, unknown> | undefined
-	const rawShows = m.shows as unknown
+	const rawShowsTop = m.shows as unknown
+	// get_my_shows: { sections: [{ group, label, titles }] }
+	const rawShows =
+		rawShowsTop && typeof rawShowsTop === "object" && Array.isArray((rawShowsTop as { sections?: unknown }).sections)
+			? (rawShowsTop as { sections: unknown[] }).sections
+			: rawShowsTop
 	let shows: LabShowSection[] = []
 	if (Array.isArray(rawShows)) {
 		shows = rawShows.map((s: Record<string, unknown>) => ({
-			name: String(s.name ?? s.section ?? s.title ?? "Shows"),
+			name: String(s.label ?? s.name ?? s.section ?? s.title ?? "Shows"),
 			titles: showCards(s.titles ?? s.items),
 		}))
 	} else if (rawShows && typeof rawShows === "object") {
@@ -208,13 +213,19 @@ function readMember(dir: string): LabMember | null {
 				titles: showCards(v),
 			}))
 	}
-	const tonightCards = cards(tonight?.cards ?? tonight?.normalized ?? (Array.isArray(tonight) ? tonight : []))
+	// get_tonight, normalized: { card, ... } or a list of cards.
+	const norm = tonight?.normalized as Record<string, unknown> | unknown[] | undefined
+	const tonightCards = cards(
+		Array.isArray(norm) ? norm : norm && typeof norm === "object" && "card" in norm ? [norm.card] : (tonight?.cards ?? []),
+	)
 	return {
 		name: "Sam",
 		tonight: tonightCards,
 		tonightRaw: tonight?.raw ?? tonight ?? null,
 		shows,
-		wishlistMovies: cards(m.wishlistMovies),
+		wishlistMovies: cards(
+			(Array.isArray(m.wishlistMovies) ? (m.wishlistMovies as RawCard[]) : []).filter((c) => c.status !== "seen"),
+		),
 		forYou: cards(m.forYou),
 		forYouShows: cards(m.forYouShows),
 	}

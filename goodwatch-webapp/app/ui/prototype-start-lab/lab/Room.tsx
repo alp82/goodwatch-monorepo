@@ -59,7 +59,8 @@ export function Room({
 		<div ref={box} className={`relative ${className}`} style={style} data-lab-room={lab.scene.id}>
 			<SceneStage
 				pair={lab.scene}
-				className="absolute inset-0"
+				// Inline: the stage's own `relative` class would beat an `absolute` class.
+				style={{ position: "absolute", inset: 0 }}
 				focal={focal}
 				zoom={zoom}
 				portraitBelow={portraitBelow}

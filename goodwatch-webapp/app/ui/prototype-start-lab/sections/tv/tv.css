@@ -1,0 +1,216 @@
+/* PROTOTYPE (start page lab): the tv variants' hints, labels and the small remote. Opacity and transform only. */
+
+/* a · the play button on the screen */
+.labtv-play {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	background: #f59e0b;
+	color: #000;
+	box-shadow: 0 0 0 0.12em rgba(0, 0, 0, 0.35), 0 0.2em 0.8em rgba(0, 0, 0, 0.5);
+	transition: transform 160ms ease-out;
+}
+.labtv-hint:hover .labtv-play,
+.labtv-hint:focus-visible .labtv-play {
+	transform: scale(1.08);
+}
+
+/* The label next to the TV. */
+.labtv-label {
+	position: absolute;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	white-space: nowrap;
+	border-radius: 9999px;
+	background: rgba(3, 7, 18, 0.72);
+	color: #fff;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1;
+	padding: 7px 12px 7px 9px;
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 4px 14px rgba(0, 0, 0, 0.45);
+	transition: transform 160ms ease-out, background 160ms;
+}
+.labtv-label:hover,
+.labtv-label:focus-visible {
+	background: rgba(3, 7, 18, 0.88);
+	transform: translateY(-1px);
+}
+.labtv-label:focus-visible {
+	outline: 2px solid #fbbf24;
+	outline-offset: 2px;
+}
+.labtv-label-dot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	border-radius: 9999px;
+	background: #f59e0b;
+	color: #000;
+}
+/* A label that arrives a moment after the room, so the eye catches it once. */
+.labtv-label-in {
+	animation: labtv-label-in 600ms cubic-bezier(0.2, 0.8, 0.2, 1) 700ms both;
+}
+@keyframes labtv-label-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+}
+
+/* b · standby: the screen's dark glass, a breathing amber light, a glow on the wall around the TV */
+.labtv-glass {
+	background: radial-gradient(120% 90% at 20% 0%, rgba(255, 255, 255, 0.09), transparent 55%), #050608;
+}
+.labtv-standby {
+	position: absolute;
+	left: 50%;
+	bottom: 9%;
+	border-radius: 9999px;
+	background: #fbbf24;
+	box-shadow: 0 0 10px 3px rgba(251, 191, 36, 0.55);
+	animation: labtv-breathe 2.6s ease-in-out infinite;
+}
+@keyframes labtv-breathe {
+	0%,
+	100% {
+		opacity: 0.35;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+.labtv-wall-glow {
+	position: absolute;
+	pointer-events: none;
+	border-radius: 50%;
+	background: radial-gradient(closest-side, transparent 48%, rgba(251, 191, 36, 0.3) 64%, rgba(251, 191, 36, 0.08) 82%, transparent);
+	animation: labtv-glow 3.2s ease-in-out infinite;
+}
+@keyframes labtv-glow {
+	0%,
+	100% {
+		opacity: 0.45;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+
+/* c · a soft pulse: rings leave the mark on the screen */
+.labtv-ring {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	border-radius: 9999px;
+	border: 2px solid rgba(251, 191, 36, 0.8);
+	animation: labtv-ring 2.8s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+.labtv-ring-2 {
+	animation-delay: 1.4s;
+}
+@keyframes labtv-ring {
+	from {
+		opacity: 0.9;
+		transform: translate(-50%, -50%) scale(0.6);
+	}
+	to {
+		opacity: 0;
+		transform: translate(-50%, -50%) scale(1.9);
+	}
+}
+
+/* d · the remote, after the start page's Remote (living-room.css `.remote-*`) */
+.labtv-remote {
+	border-radius: 34px;
+	background: radial-gradient(140% 50% at 50% -10%, rgba(255, 255, 255, 0.1), transparent 60%),
+		linear-gradient(180deg, #2c2e33 0%, #212226 45%, #18191c 100%);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+		inset 0 -3px 0 rgba(0, 0, 0, 0.45), 0 24px 50px rgba(0, 0, 0, 0.6);
+}
+.labtv-key {
+	color: rgba(255, 255, 255, 0.8);
+	background: linear-gradient(180deg, #34363b, #26272b);
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 2px 0 #0e0f11, 0 5px 10px rgba(0, 0, 0, 0.4);
+	transition: transform 80ms, color 120ms;
+}
+.labtv-key:hover {
+	color: #fff;
+	transform: translateY(-1px);
+}
+.labtv-key:active {
+	transform: translateY(2px);
+	transition-duration: 0ms;
+}
+.labtv-key:focus-visible,
+.labtv-ok:focus-visible,
+.labtv-arrow:focus-visible {
+	outline: 2px solid #fdba74;
+	outline-offset: 2px;
+}
+.labtv-key-power {
+	color: #fca5a5;
+}
+.labtv-wheel {
+	background: #121315;
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 2px 5px rgba(0, 0, 0, 0.8);
+}
+.labtv-face {
+	background: radial-gradient(circle at 50% 30%, #303237, #1d1e21 70%);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 -2px 6px rgba(0, 0, 0, 0.6);
+}
+.labtv-arrow {
+	color: rgba(255, 255, 255, 0.65);
+	transition: transform 80ms, color 120ms;
+}
+.labtv-arrow:hover {
+	color: #fff;
+}
+.labtv-arrow:active {
+	transform: scale(0.9);
+}
+.labtv-arrow:disabled {
+	color: rgba(255, 255, 255, 0.2);
+}
+.labtv-ok {
+	color: rgba(255, 255, 255, 0.9);
+	background: radial-gradient(circle at 50% 30%, #3e4046, #25262a 70%);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 3px 8px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.6);
+	transition: transform 80ms;
+}
+.labtv-ok:active {
+	transform: scale(0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.labtv-standby,
+	.labtv-wall-glow,
+	.labtv-ring,
+	.labtv-label-in {
+		animation: none;
+	}
+}
+
+/* Controls that come in once the picture has landed. */
+.labtv-rise {
+	animation: labtv-rise 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes labtv-rise {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+}
+.labtv-fade-in {
+	animation: labtv-fade-in 300ms ease-out both;
+}
+@keyframes labtv-fade-in {
+	from {
+		opacity: 0;
+	}
+}

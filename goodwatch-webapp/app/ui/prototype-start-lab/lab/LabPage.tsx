@@ -63,7 +63,8 @@ export function LabPage({ data }: { data: LabData }) {
 					)}
 				</div>
 				{theater ? <Theater from={theater.from} onClose={() => setTheater(null)} /> : null}
-				<LabBar choice={choice} sections={sections} />
+				{/* Out of the way while the intro plays: it would cover the film's chapter bar, and its keys switch variants. */}
+				{theater ? null : <LabBar choice={choice} sections={sections} />}
 			</RoomParts.Provider>
 		</LabContext.Provider>
 	)

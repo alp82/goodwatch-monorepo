@@ -14,8 +14,36 @@ import {
 
 const MAX_SCORED_ITEMS = 20
 
+// PROTOTYPE (start page lab): the offline lab answers the intro quiz from fixtures. Only titles in the captured intro
+// pool can become intro cards there (api.intro.ts), so the pool's titles after the quiz's twelve are ranked by how
+// often guest.json's `similar` lists them for the tapped titles, then by score.
+async function startLabRecommendations(url: URL) {
+	const { loadStartLab, startLabIntro } = await import("~/server/prototype-start-lab.server")
+	const mediaType = url.searchParams.get("mediaType")
+	const scored = JSON.parse(url.searchParams.get("scoredItems") || "[]") as ScoredItem[]
+	const id = (c: { media_type: string; tmdb_id: number }) => `${c.media_type}:${c.tmdb_id}`
+	const tapped = new Set(scored.map(id))
+	const pool = ((startLabIntro() as { pool?: GuestRecommendation[] } | null)?.pool ?? []).slice(13)
+	const similar = loadStartLab().guest.similar
+	const votes = new Map<string, number>()
+	for (const t of scored) {
+		const key = String((t.media_type === "movie" ? 1e12 : 2e12) + t.tmdb_id)
+		for (const c of similar[key] ?? []) votes.set(id(c), (votes.get(id(c)) ?? 0) + 1)
+	}
+	const recommendations = pool
+		.filter((c) => c.media_type === mediaType && !tapped.has(id(c)))
+		.map((c) => ({
+			...c,
+			match_percentage: Math.min(98, 70 + 6 * (votes.get(id(c)) ?? 0) + (c.goodwatch_overall_score_normalized_percent ?? 0) / 10),
+		}))
+		.sort((a, b) => b.match_percentage - a.match_percentage)
+		.slice(0, Number.parseInt(url.searchParams.get("limit") || "8", 10))
+	return { recommendations }
+}
+
 async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const url = new URL(request.url)
+	if (process.env.START_LAB_FIXTURES) return startLabRecommendations(url)
 	const mediaType = url.searchParams.get("mediaType")
 	const scoredItemsParam = url.searchParams.get("scoredItems")
 	const excludeIdsParam = url.searchParams.get("excludeIds")
