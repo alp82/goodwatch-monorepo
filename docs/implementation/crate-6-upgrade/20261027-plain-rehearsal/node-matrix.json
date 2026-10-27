@@ -1,0 +1,152 @@
+[
+  {
+    "step": 1,
+    "hop": 1,
+    "from": "5.10.16",
+    "to": "6.0.8",
+    "node": "crate-02",
+    "host": "10.0.0.12",
+    "unit": "gw-q53-608-02",
+    "image": "crate:6.0.8@sha256:7b6af0abb4792123cfa225c8186471bbe81e039ef336af33095a181f4e8c17bf"
+  },
+  {
+    "step": 2,
+    "hop": 1,
+    "from": "5.10.16",
+    "to": "6.0.8",
+    "node": "crate-03",
+    "host": "10.0.0.13",
+    "unit": "gw-q53-608-03",
+    "image": "crate:6.0.8@sha256:7b6af0abb4792123cfa225c8186471bbe81e039ef336af33095a181f4e8c17bf"
+  },
+  {
+    "step": 3,
+    "hop": 1,
+    "from": "5.10.16",
+    "to": "6.0.8",
+    "node": "crate-01",
+    "host": "10.0.0.11",
+    "unit": "gw-q53-608-01",
+    "image": "crate:6.0.8@sha256:7b6af0abb4792123cfa225c8186471bbe81e039ef336af33095a181f4e8c17bf"
+  },
+  {
+    "step": 4,
+    "hop": 2,
+    "from": "6.0.8",
+    "to": "6.1.6",
+    "node": "crate-02",
+    "host": "10.0.0.12",
+    "unit": "gw-q53-616-02",
+    "image": "crate:6.1.6@sha256:c59adf651f296ce372018ae7d82167beb6ab469052e67cccdbfc57db19f69e46"
+  },
+  {
+    "step": 5,
+    "hop": 2,
+    "from": "6.0.8",
+    "to": "6.1.6",
+    "node": "crate-03",
+    "host": "10.0.0.13",
+    "unit": "gw-q53-616-03",
+    "image": "crate:6.1.6@sha256:c59adf651f296ce372018ae7d82167beb6ab469052e67cccdbfc57db19f69e46"
+  },
+  {
+    "step": 6,
+    "hop": 2,
+    "from": "6.0.8",
+    "to": "6.1.6",
+    "node": "crate-01",
+    "host": "10.0.0.11",
+    "unit": "gw-q53-616-01",
+    "image": "crate:6.1.6@sha256:c59adf651f296ce372018ae7d82167beb6ab469052e67cccdbfc57db19f69e46"
+  },
+  {
+    "step": 7,
+    "hop": 3,
+    "from": "6.1.6",
+    "to": "6.2.11",
+    "node": "crate-02",
+    "host": "10.0.0.12",
+    "unit": "gw-q53-6211-02",
+    "image": "crate:6.2.11@sha256:696200f834ce187423ba40e4e83514747daad8ce37b28aeabec8f4b0949183b9"
+  },
+  {
+    "step": 8,
+    "hop": 3,
+    "from": "6.1.6",
+    "to": "6.2.11",
+    "node": "crate-03",
+    "host": "10.0.0.13",
+    "unit": "gw-q53-6211-03",
+    "image": "crate:6.2.11@sha256:696200f834ce187423ba40e4e83514747daad8ce37b28aeabec8f4b0949183b9"
+  },
+  {
+    "step": 9,
+    "hop": 3,
+    "from": "6.1.6",
+    "to": "6.2.11",
+    "node": "crate-01",
+    "host": "10.0.0.11",
+    "unit": "gw-q53-6211-01",
+    "image": "crate:6.2.11@sha256:696200f834ce187423ba40e4e83514747daad8ce37b28aeabec8f4b0949183b9"
+  },
+  {
+    "step": 10,
+    "hop": 4,
+    "from": "6.2.11",
+    "to": "6.3.7",
+    "node": "crate-02",
+    "host": "10.0.0.12",
+    "unit": "gw-q53-637-02",
+    "image": "crate:6.3.7@sha256:af6b41db307460e8189b6e84dfdc4b673ba36996c5a912cb3d776bcdfafe7f02"
+  },
+  {
+    "step": 11,
+    "hop": 4,
+    "from": "6.2.11",
+    "to": "6.3.7",
+    "node": "crate-03",
+    "host": "10.0.0.13",
+    "unit": "gw-q53-637-03",
+    "image": "crate:6.3.7@sha256:af6b41db307460e8189b6e84dfdc4b673ba36996c5a912cb3d776bcdfafe7f02"
+  },
+  {
+    "step": 12,
+    "hop": 4,
+    "from": "6.2.11",
+    "to": "6.3.7",
+    "node": "crate-01",
+    "host": "10.0.0.11",
+    "unit": "gw-q53-637-01",
+    "image": "crate:6.3.7@sha256:af6b41db307460e8189b6e84dfdc4b673ba36996c5a912cb3d776bcdfafe7f02"
+  },
+  {
+    "step": 13,
+    "hop": 5,
+    "from": "6.3.7",
+    "to": "6.4.6",
+    "node": "crate-02",
+    "host": "10.0.0.12",
+    "unit": "gw-q53-646-02",
+    "image": "crate:6.4.6@sha256:8d3e8778378236192724776877d2ea4546d5b5586362c8d174e6aa46177bb0fb"
+  },
+  {
+    "step": 14,
+    "hop": 5,
+    "from": "6.3.7",
+    "to": "6.4.6",
+    "node": "crate-03",
+    "host": "10.0.0.13",
+    "unit": "gw-q53-646-03",
+    "image": "crate:6.4.6@sha256:8d3e8778378236192724776877d2ea4546d5b5586362c8d174e6aa46177bb0fb"
+  },
+  {
+    "step": 15,
+    "hop": 5,
+    "from": "6.3.7",
+    "to": "6.4.6",
+    "node": "crate-01",
+    "host": "10.0.0.11",
+    "unit": "gw-q53-646-01",
+    "image": "crate:6.4.6@sha256:8d3e8778378236192724776877d2ea4546d5b5586362c8d174e6aa46177bb0fb"
+  }
+]
