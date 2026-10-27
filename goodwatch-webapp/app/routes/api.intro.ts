@@ -14,6 +14,16 @@ const HEADERS = { "Cache-Control": "private, max-age=600" }
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const cards = new URL(request.url).searchParams.get("cards")
+	// PROTOTYPE (start page lab): the offline lab serves the captured intro (server/prototype-start-lab.server.ts).
+	if (process.env.START_LAB_FIXTURES) {
+		const { startLabIntro } = await import("~/server/prototype-start-lab.server")
+		const intro = startLabIntro() as { pool?: { key: number }[] } | null
+		if (cards !== null) {
+			const keys = new Set(parseCardsParam(cards))
+			return json({ cards: (intro?.pool ?? []).filter((c) => keys.has(c.key)) }, { headers: HEADERS })
+		}
+		return json(intro ?? { pool: [], extra: {} }, { headers: HEADERS })
+	}
 	try {
 		if (cards !== null) {
 			const keys = parseCardsParam(cards)
