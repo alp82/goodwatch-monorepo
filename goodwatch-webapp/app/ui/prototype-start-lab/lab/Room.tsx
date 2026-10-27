@@ -19,6 +19,7 @@ export function Room({
 	children,
 	portraitBelow,
 	scene,
+	hideSlot,
 }: RoomProps) {
 	const lab = useLab()
 	const parts = useContext(RoomParts)
@@ -68,7 +69,15 @@ export function Room({
 				focal={focal}
 				zoom={zoom}
 				portraitBelow={portraitBelow}
-				renderSlot={Slot ? (slot, i, size) => <Slot card={cards[i] ?? null} slot={slot} index={i} size={size} /> : undefined}
+				renderSlot={
+					Slot
+						? (slot, i, size) => {
+								const rect = layout?.slots[i]?.rect
+								if (hideSlot && rect && hideSlot(rect, i)) return null
+								return <Slot card={cards[i] ?? null} slot={slot} index={i} size={size} />
+							}
+						: undefined
+				}
 				renderTv={noTv ? undefined : (size) => <Hint size={size} onPlay={onPlay} />}
 				onLayout={setLayout}
 			>

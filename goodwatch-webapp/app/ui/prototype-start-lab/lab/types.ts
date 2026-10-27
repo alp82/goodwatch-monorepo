@@ -85,6 +85,8 @@ export type RoomProps = {
 	portraitBelow?: number
 	/** Another scene than the lab's. */
 	scene?: ScenePair
+	/** Leave a slot empty when this returns true for its on-screen rect (box px), e.g. slots behind a block's controls. */
+	hideSlot?: (rect: Rect, index: number) => boolean
 }
 
 export type Lab = {

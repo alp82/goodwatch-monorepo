@@ -17,8 +17,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[2] / 'public/prototype-start-lab/scenes'
 SCENES = {
-    'nook-stage': ('Extended rainy painted nook', 'eye level, near frontal, wide', 'gouache', 'landscape', 'Calm search wall: x=0.18–0.82, y=0.00–0.36. Calm card tray rug: x=0.24–0.70, y=0.82–0.94. Lowered rainy window and sleeping dog on window seat. Two plants, two shaded electric lamps, outer shelf fairy lights; no candles, lanterns, baskets or TV. Accepted attempt 2 of 3.'),
-    'nook-stage-portrait': ('Extended rainy painted nook for a phone', 'eye level, frontal', 'gouache', 'portrait', 'Calm search wall: x=0.20–0.80, y=0.00–0.34. Calm card tray rug: x=0.27–0.74, y=0.79–0.94. Lowered rainy window and sleeping dog on window seat. Two plants, two shaded electric lamps, outer shelf fairy lights; no candles, lanterns, baskets or TV. Accepted attempt 2 of 3.'),
+    'nook-stage': ('Extended rainy painted nook', 'eye level, near frontal, wide', 'gouache', 'landscape', 'Calm search wall: x=0.18–0.82, y=0.00–0.36. Calm mood-chip wall right of window: x=0.50–0.85, y=0.39–0.55; four wall frames removed, leaving plain painted deep blue wall. Calm card tray rug: x=0.24–0.70, y=0.82–0.94. Lowered rainy window and sleeping dog on window seat. Two plants, two shaded electric lamps, outer shelf fairy lights; no candles, lanterns, baskets or TV. Accepted attempt 2 of 3; round 5 localized wall-frame edit.'),
+    'nook-stage-portrait': ('Extended rainy painted nook for a phone', 'eye level, frontal', 'gouache', 'portrait', 'Calm search wall: x=0.20–0.80, y=0.00–0.34. Calm mood-chip walls flanking window: x=0.18–0.28 and x=0.72–0.82, y=0.35–0.54; four wall frames removed, leaving plain painted deep blue wall. Calm card tray rug: x=0.27–0.74, y=0.79–0.94. Lowered rainy window and sleeping dog on window seat. Two plants, two shaded electric lamps, outer shelf fairy lights; no candles, lanterns, baskets or TV. Accepted attempt 2 of 3; round 5 localized wall-frame edit.'),
     'nook-stage-tv': ('Extended rainy painted nook with small side TV', 'eye level, near frontal, wide', 'gouache', 'landscape', 'Calm search wall: x=0.20–0.80, y=0.02–0.24; the window lintel limits the clear zone below y=0.24. Calm card tray rug: x=0.34–0.68, y=0.81–0.95. Small TV on right-side middle-band cabinet. Best of three attempts.'),
     'nook-tv-corner': ('Painted TV corner', 'eye level, near frontal', 'gouache', 'landscape', 'Other side of the same room: low media console, record player, records, plaid reading armchair and floor lamp. Calm rug: x=0.25–0.70, y=0.73–0.90. No reserved search wall zone. One plant; no window seat, dog, tall bookshelves, candles, lanterns or baskets. Accepted attempt 2 of 3.'),
 }
@@ -86,7 +86,7 @@ def process(scene_id):
         raise ValueError(f'{scene_id}: expected {expected}, got {(width, height)}')
     green, magenta = key_masks(rgb)
     televisions, slots = regions(green), regions(magenta)
-    slot_range = (6, 8) if scene_id == 'nook-tv-corner' else ((14, 18) if scene_id in CALM_TOP else (12, 18))
+    slot_range = (6, 8) if scene_id == 'nook-tv-corner' else ((12, 12) if scene_id in CALM_TOP else (12, 18))
     if len(televisions) != (1 if scene_id in ('nook-stage-tv', 'nook-tv-corner') else 0) or not slot_range[0] <= len(slots) <= slot_range[1]:
         raise ValueError(f'{scene_id}: {len(televisions)} TVs, {len(slots)} slots; review generation')
     tv = televisions[0] if televisions else None
@@ -105,6 +105,8 @@ def process(scene_id):
         Image.fromarray(rgb).save(ROOT / 'raw' / f'{scene_id}.png')
     # Wall frames flank the central window in portrait, and sit to its right in landscape.
     frames = {id(r) for r in slots if 0.18 < (r['box'][0] + r['box'][2] / 2) / width < 0.82}
+    if scene_id in CALM_TOP and frames:
+        raise ValueError(f'{scene_id}: wall-frame slots must be absent')
     slots.sort(key=lambda r: (r['box'][0], r['box'][1]))
     all_regions = ([(tv, (7, 8, 11))] if tv else []) + [(r, (28, 31, 38)) for r in slots]
     output = rgb.copy()

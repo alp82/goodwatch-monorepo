@@ -1,0 +1,109 @@
+/* PROTOTYPE (start page lab): tv a's one control, the amber "Watch the intro" pill, and the screen's standby glass. Opacity and transform only. */
+
+/* The screen: dark glass with a faint reflection, nothing else. */
+.labtv-push-glass {
+	cursor: pointer;
+	background: radial-gradient(130% 95% at 18% 0%, rgba(255, 255, 255, 0.08), transparent 55%),
+		linear-gradient(180deg, #07080b, #040507);
+}
+
+/* The pill's box: placed by JS, arrives once a moment after the room. */
+.labtv-pill-at {
+	position: absolute;
+	z-index: 2;
+	animation: labtv-pill-in 600ms cubic-bezier(0.2, 0.8, 0.2, 1) 500ms both;
+}
+@keyframes labtv-pill-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+}
+
+.labtv-pill {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	white-space: nowrap;
+	border-radius: 9999px;
+	background: #fbbf24; /* amber-400, the site's primary button */
+	color: #030712; /* gray-950 */
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 1;
+	height: 40px;
+	padding: 0 16px 0 6px;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25), 0 6px 18px rgba(0, 0, 0, 0.55);
+	transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (min-width: 768px) {
+	.labtv-pill {
+		font-size: 16px;
+		height: 44px;
+		padding: 0 18px 0 7px;
+	}
+}
+.labtv-pill-dot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 9999px;
+	background: #030712;
+	color: #fbbf24;
+}
+@media (min-width: 768px) {
+	.labtv-pill-dot {
+		width: 30px;
+		height: 30px;
+	}
+}
+/* The idle cue: a soft amber glow that breathes behind the pill. */
+.labtv-pill::before {
+	content: "";
+	position: absolute;
+	inset: -6px;
+	z-index: -1;
+	border-radius: inherit;
+	box-shadow: 0 0 18px 6px rgba(251, 191, 36, 0.55);
+	opacity: 0.25;
+	animation: labtv-pill-glow 2.8s ease-in-out infinite;
+	pointer-events: none;
+}
+@keyframes labtv-pill-glow {
+	0%,
+	100% {
+		opacity: 0.2;
+		transform: scale(0.96);
+	}
+	50% {
+		opacity: 0.8;
+		transform: scale(1.03);
+	}
+}
+
+/* Hover, focus and press: on the pill, and on any ancestor marked as the whole room's button (how b). */
+.labtv-pill:hover,
+.labtv-pill:focus-visible,
+[data-labtv-press]:hover .labtv-pill,
+[data-labtv-press]:focus-within .labtv-pill {
+	transform: translateY(-2px) scale(1.04);
+}
+.labtv-pill:active,
+[data-labtv-press]:active .labtv-pill {
+	transform: translateY(0) scale(0.97);
+	transition-duration: 60ms;
+}
+.labtv-pill:focus-visible {
+	outline: 2px solid #fde68a;
+	outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.labtv-pill-at,
+	.labtv-pill::before {
+		animation: none;
+	}
+}

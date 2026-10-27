@@ -1,5 +1,5 @@
-// PROTOTYPE (start page lab): tv a · Camera push-in. A play button sized to the tiny screen and a "Watch the intro"
-// label under the TV; pressing either pushes the camera into the room until the screen fills the window, and the film
+// PROTOTYPE (start page lab): tv a · Camera push-in. One amber "Watch the intro" pill on (or just under) the quiet
+// standby screen; pressing it (or the screen) pushes the camera into the room until the screen fills the window, and the film
 // fades in on it as it lands. Close pulls back out. Variant d reuses this Theater with a remote beside the picture.
 import { type ComponentType, useLayoutEffect, useRef, useState } from "react"
 import type { IntroFrom, Rect } from "../../lab/types"
@@ -9,7 +9,6 @@ import {
 	Film,
 	type FilmControl,
 	FilmFailed,
-	NearLabel,
 	PlayGlyph,
 	RoomCopy,
 	TurnHint,
@@ -23,32 +22,57 @@ import {
 	useTheater,
 	useViewport,
 } from "./kit"
+import "./push.css"
 
-export function PushHint({ size, onPlay }: { size: { w: number; h: number }; onPlay: () => void }) {
-	// The screen element is 300 px wide in its own space; the button is a quarter of the screen's height.
-	const d = Math.max(28, Math.round(size.h * 0.34))
-	return (
-		<button
-			type="button"
-			onClick={onPlay}
-			className="labtv-hint flex h-full w-full items-center justify-center bg-black/30"
-			aria-label="Watch the intro"
-		>
-			<span className="labtv-play" style={{ width: d, height: d }}>
-				<PlayGlyph style={{ width: d * 0.5, height: d * 0.5, marginLeft: d * 0.06 }} />
-			</span>
-		</button>
-	)
+export function PushHint({ onPlay }: { size: { w: number; h: number }; onPlay: () => void }) {
+	// The screen only shows standby glass; the pill (PushNear) is the one control. A tap on the screen still plays,
+	// but the screen isn't a second button for keyboards and screen readers.
+	return <div className="labtv-push-glass h-full w-full" onClick={onPlay} aria-hidden="true" />
 }
 
+/**
+ * The one control: an amber "Watch the intro" pill, centered on the screen when the screen is big enough to hold
+ * it, else just under the screen (above it when there's no room below), kept inside the room's box.
+ */
 export function PushNear({ tvRect, onPlay }: { tvRect: Rect; onPlay: () => void }) {
+	const ref = useRef<HTMLSpanElement>(null)
+	const [at, setAt] = useState<{ left: number; top: number } | null>(null)
+	useLayoutEffect(() => {
+		const el = ref.current
+		const parent = el?.offsetParent as HTMLElement | null
+		if (!el || !parent) return
+		const W = parent.clientWidth
+		const H = parent.clientHeight
+		const w = el.offsetWidth
+		const h = el.offsetHeight
+		const cx = tvRect.left + tvRect.width / 2
+		const onScreen = w <= tvRect.width - 12 && h <= tvRect.height * 0.62
+		const below = tvRect.top + tvRect.height + 10
+		const above = tvRect.top - 10 - h
+		let top = onScreen
+			? tvRect.top + (tvRect.height - h) / 2
+			: below + h <= H - 8
+				? below
+				: above >= 8
+					? above
+					: tvRect.top + tvRect.height - h - 6
+		top = Math.min(Math.max(8, top), Math.max(8, H - 8 - h))
+		const left = Math.min(Math.max(8, cx - w / 2), Math.max(8, W - 8 - w))
+		setAt({ left, top })
+	}, [tvRect.left, tvRect.top, tvRect.width, tvRect.height])
 	return (
-		<NearLabel tvRect={tvRect} onPlay={onPlay} className="labtv-label-in">
-			<span className="labtv-label-dot">
-				<PlayGlyph className="ml-px size-2.5" />
-			</span>
-			Watch the intro
-		</NearLabel>
+		<span
+			ref={ref}
+			className="labtv-pill-at"
+			style={at ? { left: at.left, top: at.top } : { left: 0, top: 0, visibility: "hidden" }}
+		>
+			<button type="button" onClick={onPlay} className="labtv-pill" data-labtv-play>
+				<span className="labtv-pill-dot">
+					<PlayGlyph className="ml-0.5 size-4" />
+				</span>
+				Watch the intro
+			</button>
+		</span>
 	)
 }
 

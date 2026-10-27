@@ -171,114 +171,6 @@
       ]
     },
     {
-      "kind": "frame",
-      "quad": [
-        [
-          0.1963,
-          0.3548
-        ],
-        [
-          0.2666,
-          0.3542
-        ],
-        [
-          0.2666,
-          0.4297
-        ],
-        [
-          0.1973,
-          0.4303
-        ]
-      ],
-      "box": [
-        0.1963,
-        0.3542,
-        0.0713,
-        0.0768
-      ]
-    },
-    {
-      "kind": "frame",
-      "quad": [
-        [
-          0.1963,
-          0.4512
-        ],
-        [
-          0.2666,
-          0.4512
-        ],
-        [
-          0.2666,
-          0.5267
-        ],
-        [
-          0.1963,
-          0.5267
-        ]
-      ],
-      "box": [
-        0.1963,
-        0.4512,
-        0.0713,
-        0.0762
-      ]
-    },
-    {
-      "kind": "frame",
-      "quad": [
-        [
-          0.7324,
-          0.3548
-        ],
-        [
-          0.8027,
-          0.3542
-        ],
-        [
-          0.8027,
-          0.4297
-        ],
-        [
-          0.7334,
-          0.4303
-        ]
-      ],
-      "box": [
-        0.7324,
-        0.3542,
-        0.0723,
-        0.0768
-      ]
-    },
-    {
-      "kind": "frame",
-      "quad": [
-        [
-          0.7324,
-          0.4512
-        ],
-        [
-          0.8037,
-          0.4512
-        ],
-        [
-          0.8027,
-          0.5267
-        ],
-        [
-          0.7324,
-          0.5267
-        ]
-      ],
-      "box": [
-        0.7324,
-        0.4505,
-        0.0723,
-        0.0768
-      ]
-    },
-    {
       "kind": "case-shelf",
       "quad": [
         [
@@ -441,5 +333,5 @@
       ]
     }
   ],
-  "notes": "Calm search wall: x=0.20\u20130.80, y=0.00\u20130.34. Calm card tray rug: x=0.27\u20130.74, y=0.79\u20130.94. Lowered rainy window and sleeping dog on window seat. Two plants, two shaded electric lamps, outer shelf fairy lights; no candles, lanterns, baskets or TV. Accepted attempt 2 of 3."
+  "notes": "Calm search wall: x=0.20\u20130.80, y=0.00\u20130.34. Calm mood-chip walls flanking window: x=0.18\u20130.28 and x=0.72\u20130.82, y=0.35\u20130.54; four wall frames removed, leaving plain painted deep blue wall. Calm card tray rug: x=0.27\u20130.74, y=0.79\u20130.94. Lowered rainy window and sleeping dog on window seat. Two plants, two shaded electric lamps, outer shelf fairy lights; no candles, lanterns, baskets or TV. Accepted attempt 2 of 3; round 5 localized wall-frame edit."
 }

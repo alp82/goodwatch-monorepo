@@ -131,3 +131,28 @@ The owner's notes, verbatim:
 > * d is great. agree that the order should depend on what's available in those. we need good empty state with cta too for members that dont have any show, any wishlist item, not enough ratings. or only 1 to a few
 
 New in the lab: a **Member data** section (`?persona=full|few|no-shows|no-wishlist|new`, `lab/personas.ts`) trims the owner's data to test sparse and empty members; `data.member.ratings` is the member's rating count (905 for the owner, 4 for "few", 0 for "new").
+
+---
+
+# Round 5 (2026-10-28): detail on the picks
+
+Picks: guest **stage h** (popover + framed tray), **browse d** ("okay now"); member **member2 d**.
+
+The owner's notes, verbatim:
+
+> guests:
+> h is nicer. we can borrow better filter chip designs from discover.
+>
+> the results section is still not getting the prominence raise it deservess. also, it should show some pretty empty state before the user didnt choose anything. the 1,2,3 steps are not so nice
+>
+> the 4 posters in the room overlap with the filters which is distracting
+>
+> the how it works image should combine the play circle with the watch the intro label. the whole room should be clickable
+>
+> browse d is okay now
+>
+> members:
+> * hot on socials should also show the top picks inline, like the other 3 tabs
+> * for you for few titles layout needs lots of improvements [screenshot: persona "few", the For you door open: a half-width "For you is still forming" box with a progress bar and two buttons, filter chips, six posters, then a lone "More in For you" tile on its own row with lots of empty space]
+
+The wall frames behind the mood row are being removed from `nook-stage` and `nook-stage-portrait` (only the side shelf slots stay). `<Room hideSlot={(rect, i) => ...} />` leaves any slot empty whose on-screen rect your block's controls cover, for the other scenes.
