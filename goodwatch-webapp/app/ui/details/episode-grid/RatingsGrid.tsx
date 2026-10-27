@@ -27,6 +27,7 @@ import {
 } from "~/ui/details/episode-grid/scale"
 import type { Season } from "~/ui/tracking/store"
 import { ScoreTile } from "./ScoreTile"
+import { consistencyScale } from "./consistency-scale"
 import { FOCUS, seasonShort } from "./presentation"
 
 const useIsoLayoutEffect =
@@ -170,19 +171,8 @@ export default function RatingsGrid({
 		const plotW = wrapped
 			? avail
 			: Math.max(cell * most + GAP * (most - 1), Math.min(avail, 560))
-		const scores = stats.flatMap((s) => s.rated.map((e) => e.rating ?? 0))
-		const min = scores.length ? Math.min(...scores) : 6
-		const max = scores.length ? Math.max(...scores) : 9
-		const span = Math.max(2, max - min + 0.2)
-		const lo = (min + max) / 2 - span / 2
-		const hi = (min + max) / 2 + span / 2
 		const pad = width < 520 ? 34 : 52
-		const x = (score: number) =>
-			pad + ((score - lo) / (hi - lo)) * (plotW - 2 * pad)
-		const step = span <= 3 ? 0.5 : 1
-		const ticks: number[] = []
-		for (let t = Math.ceil(lo / step) * step; t <= hi + 1e-9; t += step)
-			ticks.push(Math.round(t * 10) / 10)
+		const { x, ticks } = consistencyScale(plotW, pad)
 		const all = stats.flatMap((s) => s.rated)
 		const showAvg = all.length
 			? all.reduce((sum, e) => sum + (e.rating ?? 0), 0) / all.length
@@ -339,7 +329,7 @@ function Head({
 				))}
 				{layout.showAvg !== null && (
 					<span
-						className="absolute top-0 -translate-x-1/2 rounded bg-white/10 px-1 text-[10px] font-semibold tabular-nums text-gray-300"
+						className="absolute -top-3 -translate-x-1/2 rounded bg-white/10 px-1 text-[10px] font-semibold tabular-nums text-gray-300"
 						style={{ left: layout.x(layout.showAvg) }}
 					>
 						avg {formatScore(layout.showAvg)}

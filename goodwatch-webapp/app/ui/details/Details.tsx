@@ -32,6 +32,7 @@ import { canonicalMediaTitle } from "~/utils/media-presentation"
 import type { GenreRow } from "~/server/genre-row/genre-row.server"
 
 export interface DetailsProps {
+	episodesSection?: React.ReactNode
 	media: MovieResult | ShowResult
 	country: string
 	episodeGrid?: EpisodeGrid | null
@@ -64,6 +65,7 @@ export default function Details(props: DetailsProps) {
 }
 
 function DetailsPage({
+	episodesSection,
 	media: loadedMedia,
 	country: loadedCountry,
 	episodeGrid,
@@ -180,6 +182,7 @@ function DetailsPage({
 			<div className="isolate flex flex-col items-center">
 				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
 					<DetailsContent
+						episodesSection={episodesSection}
 						media={media}
 						country={country}
 						episodeGrid={episodeGrid}

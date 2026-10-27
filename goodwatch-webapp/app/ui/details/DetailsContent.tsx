@@ -38,6 +38,7 @@ import { extractRatings } from "~/utils/ratings"
 import type { PropsForSection, Section, SectionProps } from "~/utils/scroll"
 
 export interface DetailsContentProps {
+	episodesSection?: React.ReactNode
 	media: MovieResult | ShowResult
 	country: string
 	episodeGrid?: EpisodeGridData | null
@@ -50,6 +51,7 @@ export interface DetailsContentProps {
 }
 
 export default function DetailsContent({
+	episodesSection,
 	media,
 	country,
 	episodeGrid,
@@ -96,7 +98,7 @@ export default function DetailsContent({
 
 	return (
 		<div className="flex flex-col gap-12">
-			{tracking ? (
+			{episodesSection ?? (tracking ? (
 				<TrackedEpisodes
 					media={media}
 					grid={whole.scores}
@@ -120,7 +122,7 @@ export default function DetailsContent({
 						{gridView}
 					</div>
 				)
-			)}
+			))}
 			{/*<div>*/}
 			{/*	<Streaming*/}
 			{/*		details={details}*/}
