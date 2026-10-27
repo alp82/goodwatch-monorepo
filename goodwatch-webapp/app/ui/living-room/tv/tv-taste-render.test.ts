@@ -481,7 +481,7 @@ test("a line says what the focus would give, on a level and on an exact score", 
 	assert.equal(onScore.phone.focus, "score:8")
 })
 
-test("selected numerals stay white on a dark fill, with a colored inset rim independent of focus", () => {
+test("selected numerals stay white on their full score color, with one lighter inset edge of that color independent of focus", () => {
 	for (const edition of EDITIONS) {
 		for (const drawn of [
 			rendered.rate.again[edition],
@@ -489,8 +489,8 @@ test("selected numerals stay white on a dark fill, with a colored inset rim inde
 		]) {
 			assert.match(tag(drawn.html, "score:8"), /aria-pressed="true"/)
 			assert.match(styleOf(drawn.html, "score:8"), /color:#fff/)
-			assert.match(styleOf(drawn.html, "score:8"), /42%, #181b20/)
-			assert.match(styleOf(drawn.html, "score:8"), /inset 0 0 0 2px color-mix/)
+			assert.match(styleOf(drawn.html, "score:8"), /background:#25a73d/)
+			assert.match(styleOf(drawn.html, "score:8"), /inset 0 0 0 2px color-mix\(in srgb, #25a73d 45%, #fff\)/)
 			assert.match(tag(drawn.html, "level:7"), /aria-pressed="true"/)
 		}
 	}

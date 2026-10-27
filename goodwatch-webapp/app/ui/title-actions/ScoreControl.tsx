@@ -71,7 +71,7 @@ export function ScoreControl({
 						onMouseEnter={() => setHot(choice.level)}
 						onFocus={() => setHot(choice.level)}
 						style={choice.style}
-						className={`${choice.acknowledged ? "score-ack" : ""} flex min-w-0 cursor-pointer items-center justify-center gap-1.5 font-extrabold text-white transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-wait ${choice.kind === "level" ? "h-14 rounded-xl text-[11px] @lg:h-16 @lg:text-sm @xl:text-base" : "h-11 rounded-md text-xs tabular-nums @lg:h-12 @lg:text-sm"}`}
+						className={`${choice.acknowledged ? "score-ack" : ""} ${choice.selected ? "" : "enabled:hover:bg-(--score-hover)! focus-visible:bg-(--score-hover)!"} flex min-w-0 cursor-pointer items-center justify-center gap-1.5 font-extrabold text-white transition-[background-color,opacity] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-wait ${choice.kind === "level" ? "h-14 rounded-xl text-[11px] @lg:h-16 @lg:text-sm @xl:text-base" : "h-11 rounded-md text-xs tabular-nums @lg:h-12 @lg:text-sm"}`}
 					>
 						{choice.children}
 					</button>

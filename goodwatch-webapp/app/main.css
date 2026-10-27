@@ -345,12 +345,11 @@ html[data-tv-transition="out"] .tv-back {
 }
 
 /* The answer to "How was it?" (app/ui/scoring/score-ack.ts), the same on /taste/quiz, the Taste page's start and
-   the TV's Taste: the chosen choice pops and keeps an amber rim while the answer is held; the title leaves after
-   the hold (0.46 s into it) and the next one rises in. Transform and opacity only, once each. With reduced motion
-   the rim and the words stay, and nothing moves. */
+   the TV's Taste: the chosen choice pops once in its picked look (full color, one lighter edge) while the answer is
+   held; the title leaves after the hold (0.46 s into it) and the next one rises in. Transform and opacity only, once
+   each. With reduced motion the picked look and the words stay, and nothing moves. */
 .score-ack {
 	animation: score-ack-pop 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-	box-shadow: inset 0 0 0 3px #fbbf24 !important;
 }
 .score-ack-leave {
 	animation: score-ack-leave 0.22s ease-in 0.46s both;

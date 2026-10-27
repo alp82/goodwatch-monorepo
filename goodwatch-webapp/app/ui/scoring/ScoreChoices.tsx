@@ -1,10 +1,6 @@
 import type { CSSProperties, ReactNode } from "react"
 import type { Score } from "~/server/scores.server"
-import {
-	getVibeColorValue,
-	scoreLabels,
-	selectedScoreStyle,
-} from "~/utils/ratings"
+import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import { RATING_LEVELS, SCORES, levelOf } from "./score-model"
 
 export interface ScoreChoice {
@@ -30,7 +26,21 @@ export interface ScoreChoice {
  */
 export type ScoreLayout = "grid" | "band"
 
-/** The shared word/number layout. TV supplies its registered remote keys; web supplies ordinary buttons. */
+/**
+ * The chosen choice: the score's full color and white text, with one clean inner edge in a lighter tint of the same
+ * color. Unmistakable next to the resting keys, which stay a dim tint of their color, without a second ring.
+ */
+export const pickedChoiceStyle = (color: string): CSSProperties => ({
+	color: "#fff",
+	background: color,
+	boxShadow: `inset 0 0 0 2px color-mix(in srgb, ${color} 45%, #fff)`,
+	textShadow: "0 1px 2px rgb(0 0 0 / 0.45)",
+})
+
+/**
+ * The shared word/number layout. Each choice carries its color as `--score-color` and its hover fill as
+ * `--score-hover`, so a renderer can light the pointed or focused key in its own color (ScoreControl does). `hot`, the
+ * level pointed at or focused, lights that level and its numbers a step brighter than rest. TV supplies its registered remote keys; web supplies ordinary buttons. */
 export function ScoreChoices({
 	value,
 	hot,
@@ -52,6 +62,7 @@ export function ScoreChoices({
 	const mine = value == null ? -1 : levelOf(value)
 	const levels = RATING_LEVELS.map((level, i) => {
 		const color = getVibeColorValue(level.score)
+		const lit = hot === i
 		return renderChoice({
 			id: `level:${level.score}`,
 			score: level.score,
@@ -63,14 +74,11 @@ export function ScoreChoices({
 			style: {
 				gridColumn: `span ${level.hi - level.lo + 1}`,
 				borderTop: `3px solid ${color}`,
-				background:
-					mine === i ? `color-mix(in srgb, ${color} 35%, #22201f)` : "#343333",
-				...(mine === i
-					? {
-							boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${color} 70%, white)`,
-						}
-					: {}),
-			},
+				"--score-color": color,
+				"--score-hover": `color-mix(in srgb, ${color} 70%, #22201f)`,
+				background: lit ? `color-mix(in srgb, ${color} 38%, #2b2a29)` : "#343333",
+				...(mine === i ? pickedChoiceStyle(color) : {}),
+			} as CSSProperties,
 			children: (
 				<>
 					<span>{level.name}</span>
@@ -98,9 +106,11 @@ export function ScoreChoices({
 			acknowledged: acknowledged && selected,
 			style: {
 				color: "#fff",
-				background: `color-mix(in srgb, ${color} ${selected ? 42 : lit ? 35 : 25}%, #181b20)`,
-				...(selected ? selectedScoreStyle(score) : {}),
-			},
+				"--score-color": color,
+				"--score-hover": `color-mix(in srgb, ${color} 80%, #181b20)`,
+				background: `color-mix(in srgb, ${color} ${lit ? 50 : 25}%, #181b20)`,
+				...(selected ? pickedChoiceStyle(color) : {}),
+			} as CSSProperties,
 			children: score,
 		})
 	})
