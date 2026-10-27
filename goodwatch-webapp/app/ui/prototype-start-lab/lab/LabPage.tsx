@@ -17,7 +17,9 @@ export function LabPage({ data }: { data: LabData }) {
 	// The intro hint needs a TV: the chosen scene's own, or its room's TV corner (nook-stage → nook-illustrated).
 	const tvScene =
 		scene && !scene.landscape.tv
-			? (data.scenes.find((s) => s.landscape.tv && s.id === scene.id.replace(/-stage(-tv)?$/, "-illustrated")) ??
+			? // Round 3: the room's own TV corner, painted from the other side so it doesn't repeat the stage.
+				(data.scenes.find((s) => s.landscape.tv && s.id === `${scene.id.split("-")[0]}-tv-corner`) ??
+				data.scenes.find((s) => s.landscape.tv && s.id === scene.id.replace(/-stage(-tv)?$/, "-illustrated")) ??
 				data.scenes.find((s) => s.landscape.tv && s.id.startsWith(scene.id.split("-")[0])) ??
 				data.scenes.find((s) => s.landscape.tv) ??
 				scene)

@@ -93,3 +93,24 @@ Member:
 - **SEO floor:** the guest stage carries the page's one H1 (plain, describes the product, for example "Find something to watch by mood or anything"); every other block uses H2/H3. Real `<a>` links render on the server.
 - **Phones first:** 375 × 740 must show the field, the mood choices, and the start of results or the tap-three row on the first screen.
 - Keep using the existing components: `TitlePosterCard` (`actions={false}`), `DiscoverHeading`-style field, `ReadAsChips`, `ScoreRing`, `StartRow`, the site's mood visuals (look at the Discover filter sheet in `app/ui/filter-bar/` and the vibe colors, `bg-vibe-*` in `app/tailwind.css`) for richer mood choices.
+
+---
+
+# Round 3 (2026-10-27): refine the round 2 picks
+
+Picks: guest **stage a** (tray on the rug), scene `nook-stage`, shelf e, tv a, how b, **browse a** (rails); member **member2 d** (this or that; c was also liked).
+
+The owner's notes, verbatim:
+
+> guest:
+> * browse c has some nice elements too: the genres with their tooltips. the top 10 with the big numbers
+> * the search and tap is better in a, but there is still room for improvement. the search needs to be elevated and stand out, but nicely, without the opaque bg of b. we can use further padding and some kind of large shadowy feel. the presets look nice, but overlap too much with the bg, maybe make it bigger and have more room at the top
+> * the image should not have any candles in, also less repetitive elements like the plants and baskets
+> * the how it works tv scene is nice, but duplicates parts of the image above which feels weird
+>
+> member:
+> * member start: both c and d are nice but i like d more
+> * [the "Your lists" doors under d] rename your lists because that conflicts with the actual lists users can create. make the selected state more obvious and select first item by default
+> * [the full-width gray "Open My shows" bar under an open door] nicer looking link to navigate
+
+Scenes: `nook-stage` and `nook-stage-portrait` are being repainted (no candles, at most two plants, no baskets, a bigger calm top: the top ~36% across the middle ~64% of the width on landscape, ~34% × 60% on the portrait). A new `nook-tv-corner` (the other side of the room, with a TV) replaces `nook-illustrated` as How it works' TV scene (`lab.tvScene`). The images change under you while you work; reload to see them.

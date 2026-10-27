@@ -26,7 +26,8 @@ export const SECTIONS: { id: SectionId; name: string; for: Viewer[]; rounds: Rou
 /** The owner's round 1 picks (2026-10-27) start round 2. */
 export const DEFAULTS: Record<Round, Partial<Record<SectionId, string>>> = {
 	1: {},
-	2: { scene: "nook-stage", shelf: "e", tv: "a", how: "b" },
+	// Round 3: the owner's round 2 picks, refined (stage e-g refine a, browse d-e fold c into a, member d).
+	2: { scene: "nook-stage", shelf: "e", tv: "a", how: "b", stage: "e", browse: "d", member: "d" },
 }
 
 export type Choice = Partial<Record<SectionId, string>> & { as: Viewer; sec: SectionId; round: Round }
