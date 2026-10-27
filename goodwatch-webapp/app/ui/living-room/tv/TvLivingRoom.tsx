@@ -171,8 +171,8 @@ export function TvLivingRoom({
 		() => tonightPicks(data, pool, wished),
 		[data, pool, wished],
 	)
-	// Slice 8. The person's taste and the quiz are held by a component of Taste's chunk, which reports them here
-	// (`TasteData`, mounted below) while the address names Taste, a side or the quiz.
+	// Slice 8. The person's taste and Rate titles are held by a component of Your taste's chunk, which reports them
+	// here (`TasteData`, mounted below) while the address names Your taste, a side or Rate titles.
 	const [mine, setMine] = useState<TvTasteReport | null>(null)
 	const onTaste = screen.name === "taste" || screen.name === "quiz"
 	// Once Taste has shown sides, home's tile says so for the rest of the visit.
@@ -406,7 +406,7 @@ export function TvLivingRoom({
 		(effect: TvEffect) => {
 			// The title's own effects: Watch, Want to See, Seen it, the rating.
 			if (titleEffect?.(effect)) return
-			// Slice 8. The quiz's: a score and "Haven't seen it" go to `useTasteQuiz`.
+			// Slice 8. Rate titles': a score and the two marks go to the rating flow (ui/rating-flow/use-rating-core.ts).
 			if (tasteEffect?.(effect)) return
 			// My shows (slice 9): Seen it on a show the member is midway through.
 			if (episodeEffect?.(effect)) return
@@ -491,15 +491,6 @@ export function TvLivingRoom({
 		)
 			dispatch({ type: "browse-page", page: browseList.pages })
 	}, [screen, browseList, dispatch])
-	// The quiz reached its goal once its last answer was saved and held: Your taste takes its place, and the
-	// quiz asks on next time.
-	const quizDone = mine?.done ?? false
-	const rateMore = mine?.rateMore
-	useEffect(() => {
-		if (!quizDone) return
-		dispatch({ type: "quiz-done" })
-		rateMore?.()
-	}, [quizDone, rateMore, dispatch])
 	const onDraft = useCallback(
 		(text: string) => {
 			setDraft(text)

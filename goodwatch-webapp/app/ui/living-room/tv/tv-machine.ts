@@ -19,7 +19,7 @@ import {
 // the menu and power), and the effects the page must carry out (expand into a page, rate a title, sign in). It
 // never fetches, never measures and never touches the browser.
 //
-// Home is a row of apps: Tonight, Discover, Explorer, Taste and, for a member, My shows, then a tile for each of
+// Home is a row of apps: Tonight, Discover, Explorer, Your taste and, for a member, My shows, then a tile for each of
 // the person's two streaming services. A member with Sides of you gets home as a guide instead: see "Home's sides"
 // below. Each opens on the TV, and nothing on the TV leaves it but the Expand key (`destinationHref` says where it goes) and "Watch on
 // <service>". Every screen ends with the Expand key, where it has a page, and the top bar: Back, Search, Menu.
@@ -34,7 +34,8 @@ import {
 //
 // Discover's choice screen is three tabs (Moods, Themes, Styles) of six options each: see "Mini Discover" below.
 //
-// The answers of the quiz and of the rating after Seen it are the rating strip: see "The rating strip" below.
+// The answers of Rate titles (the screen `quiz`, the rating flow on the TV) and of the rating after Seen it are the
+// rating strip: see "The rating strip" below.
 //
 // The Remote's two streaming keys stand for the person's own two services. Each opens "On <service>", a list of
 // titles to watch there, and home has a tile per service after the apps: see "On a service" below.
@@ -116,7 +117,7 @@ export type TvScreen =
 	| { name: "explorer"; island: string | null }
 	/** The sides of the person's taste (or the way to one) without a side, a side's titles with one. */
 	| { name: "taste"; side: string | null }
-	/** The taste quiz: one title at a time, on the rating strip. */
+	/** Rate titles, the rating flow (ui/rating-flow): one title at a time, on the rating strip. */
 	| { name: "quiz" }
 	/** A member's My shows. */
 	| { name: "shows" }
@@ -197,8 +198,6 @@ export type TvContext = {
 	titleName: string | null
 	/** What is typed on the search screen. */
 	draft: string
-	/** Taste quiz scores toward the goal. */
-	quizProgress: number
 	/** The quiz has no title because asking for more failed: it offers to ask again (`retry-titles`). */
 	quizFailed?: boolean
 	/** The person's two streaming services, by TMDB provider id: the Remote's keys and home's tiles after the apps. */
@@ -230,7 +229,6 @@ export const EMPTY_CONTEXT: TvContext = {
 	toStart: [],
 	titleName: null,
 	draft: "",
-	quizProgress: 0,
 	services: [],
 	homeSides: [],
 	nextEpisode: false,
@@ -249,11 +247,13 @@ export type TvEffect =
 	/** Seen it on a show the member is midway through: mark its Next episode watched. */
 	| { type: "seen-episode"; title: string }
 	| { type: "rate"; title: string; score: Score }
-	/** Taste quiz: score the title on screen. */
+	/** Rate titles: score the title on screen. */
 	| { type: "quiz-rate"; score: Score }
-	/** Taste quiz: "Haven't seen it", or "Next title" after a save that failed. */
+	/** Rate titles: "Haven't seen it", or "Next title" after a save that failed. */
 	| { type: "quiz-skip" }
-	/** Taste quiz: ask again for titles after the request failed. */
+	/** Rate titles: "Not interested". */
+	| { type: "quiz-not-interested" }
+	/** Rate titles: ask again for titles after the request failed. */
 	| { type: "quiz-retry" }
 	/** Continue with Google, back to the same TV screen. */
 	| { type: "sign-in" }
@@ -286,11 +286,6 @@ export type TvAction =
 	| { type: "service-key"; service: number }
 	| { type: "power"; on: boolean }
 	| { type: "boot-done" }
-	/**
-	 * The quiz reached its goal: its last answer was saved and its acknowledgement held (ui/scoring/score-ack.ts).
-	 * The quiz gives way to Your taste.
-	 */
-	| { type: "quiz-done" }
 
 export type TvTransition = {
 	state: TvState
@@ -585,9 +580,9 @@ export function destinationName(
 		case "explorer":
 			return "Explorer"
 		case "taste":
-			return "Taste"
+			return "Your taste"
 		case "quiz":
-			return "the taste quiz"
+			return "Rate titles"
 		case "shows":
 			return "My shows"
 		case "title":
@@ -603,7 +598,7 @@ const PAGE_LABEL: Record<string, string> = {
 	"/my-shows": "All my shows",
 	"/discover": "Explore all titles",
 	"/taste": "Full taste profile",
-	"/taste/quiz": "Full taste quiz",
+	"/taste/quiz": "Full page",
 	"/explorer": "Full Explorer",
 }
 
@@ -756,7 +751,8 @@ function contentItems(screen: TvScreen, ctx: TvContext): string[] {
 				"start-quiz",
 				...(ctx.member ? [] : ["sign-up"]),
 			]
-		// Taste on the TV is the quiz, with Your taste one key away.
+		// Rate titles: the strip and its two marks, with Your taste one key away. Reaching a milestone never ends it:
+		// Your taste lights amber (screens/Quiz.tsx), and the person goes on rating or opens it.
 		case "quiz":
 			if (!ctx.titles.length && ctx.quizFailed)
 				return ["retry-titles", "your-taste"]
@@ -1364,9 +1360,10 @@ function chooseInDiscover(
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// The rating strip: the answers of the quiz and of the rating after Seen it (the plan's "The rating strip"). The
+// The rating strip: the answers of Rate titles and of the rating after Seen it (the plan's "The rating strip"). The
 // app's four labelled levels from low on the left to high on the right, and under them, on the desktop, the ten
-// exact scores. OK on a level gives the level's score; "Haven't seen it" is the quiz's own key.
+// exact scores. OK on a level gives the level's score; "Haven't seen it" and "Not interested" are Rate titles' own
+// keys.
 
 type StripScreen = Extract<TvScreen, { name: "quiz" | "rate" }>
 
@@ -1389,15 +1386,16 @@ const levelItem = (score: number) =>
 export const STRIP_START = levelItem(7)
 
 /**
- * The strip's items in reading order: the levels, the exact scores where they show, and in the quiz "Haven't seen
- * it". The quiz has them while it has a title to ask about (`titles`); the rating's title is in its address.
+ * The strip's items in reading order: the levels, the exact scores where they show, and on Rate titles its two marks,
+ * "Haven't seen it" and "Not interested". Rate titles has them while it has a title to ask about (`titles`); the
+ * rating's title is in its address.
  */
 function stripItems(screen: StripScreen, ctx: TvContext): string[] {
 	if (screen.name === "quiz" && !ctx.titles.length) return []
 	return [
 		...STRIP_LEVELS.map((score) => `level:${score}`),
 		...STRIP_SCORES.map((score) => `score:${score}`),
-		...(screen.name === "quiz" ? ["skip"] : []),
+		...(screen.name === "quiz" ? ["skip", "not-interested"] : []),
 	]
 }
 
@@ -1436,8 +1434,7 @@ function chooseScore(
 		return leave(state, { name: "title", title: screen.title }, [
 			{ type: "rate", title: screen.title, score },
 		])
-	// The focus stays where it was, so the next title takes the same press. The answer that reaches the goal ends
-	// the quiz once it is saved and held (`quiz-done`): the person sees what they gave before Your taste comes.
+	// The focus stays where it was, so the next title takes the same press. No answer ends Rate titles.
 	return none(state, [{ type: "quiz-rate", score }])
 }
 
@@ -1581,7 +1578,7 @@ const APP_SCREEN: Record<TvApp, TvScreen> = {
 	shows: { name: "shows" },
 }
 
-/** What Start's tiles open: Taste is the quiz, Your taste is Taste's screen. */
+/** What Start's tiles open: Rate titles is the rating flow, Your taste is Your taste's screen. */
 const START_SCREEN: Record<string, TvScreen | undefined> = {
 	tonight: APP_SCREEN.tonight,
 	popular: { name: "popular", pick: 0 },
@@ -1679,10 +1676,14 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 		return onStrip(s)
 			? chooseScore(state, s, Number(arg) as Score, ctx)
 			: none(state)
-	// "Haven't seen it" goes on to the next title and never ends the quiz.
+	// The two marks go on to the next title.
 	if (kind === "skip")
 		return s.name === "quiz"
 			? none(state, [{ type: "quiz-skip" }])
+			: none(state)
+	if (kind === "not-interested")
+		return s.name === "quiz"
+			? none(state, [{ type: "quiz-not-interested" }])
 			: none(state)
 	switch (kind) {
 		case "start": {
@@ -1826,7 +1827,7 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 			return submitSearch(state, arg)
 		case "got-it":
 			return back(state)
-		// What is GoodWatch? "Rate what I've seen": the quiz takes its place.
+		// What is GoodWatch? "Rate titles": Rate titles takes its place.
 		case "rate":
 			return replace(state, { name: "quiz" })
 		case "expand": {
@@ -1993,9 +1994,5 @@ export function transition(
 			return typedOnSearch(state)
 		case "service-key":
 			return serviceKey(state, action.service)
-		case "quiz-done":
-			return state.screen.name === "quiz"
-				? leave(closeMenu(state), APP_SCREEN.taste)
-				: none(state)
 	}
 }

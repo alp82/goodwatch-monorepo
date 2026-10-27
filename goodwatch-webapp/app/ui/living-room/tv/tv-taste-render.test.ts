@@ -1,13 +1,13 @@
-// Taste, a side's screen, the taste quiz and the rating as they are drawn: the items in the markup are the
+// Your taste, a side's screen, Rate titles and the rating as they are drawn: the items in the markup are the
 // machine's, in its order, in both editions; the rating strip is the app's levels from low to high with the ten
 // exact scores, under the levels on the desktop and in one band on the phone; and the Expand key is there once. The phone
-// draws its header (the white G and Menu), pages its sides with arrows (`jump:` items), and leaves the quiz's
+// draws its header (the white G and Menu), pages its sides with arrows (`jump:` items), and leaves Rate titles'
 // Your taste to the menu.
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { test } from "node:test"
 import { scoreLabels } from "../../../utils/ratings.ts"
-import { RATING_LEVELS } from "../../taste-quiz/quiz-flow.ts"
+import { RATING_LEVELS } from "../../scoring/score-model.ts"
 import { TASTE_GROUPS_NAME } from "../../taste/taste-groups-name.ts"
 
 type Drawn = { items: string[]; focus: string; html: string }
@@ -21,7 +21,12 @@ const rendered = JSON.parse(
 			"app/ui/imports/source-import-test-vite.config.ts",
 			"app/ui/living-room/tv/tv-taste-render.test-support.tsx",
 		],
-		{ encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+		{
+			encoding: "utf8",
+			stdio: ["ignore", "pipe", "pipe"],
+			// Every screen in both editions and on six phones: more than the default megabyte.
+			maxBuffer: 64 * 1024 * 1024,
+		},
 	)
 		.split("__TV_TASTE_RENDER__")
 		.at(-1) ?? "",
@@ -50,7 +55,11 @@ const rendered = JSON.parse(
 		| "onScore"
 		| "onLevel"
 		| "onSkip"
+		| "onNotInterested"
 		| "more"
+		| "lit"
+		| "given"
+		| "failed"
 		| "long"
 		| "waiting"
 		| "none",
@@ -188,7 +197,7 @@ test("exactly the focused item is marked, and the focus starts where the machine
 	}
 })
 
-test("Taste before five scores: the words, how many are rated, and the way into the quiz", () => {
+test("Your taste before the taste is ready: the next step, the totals, and Rate titles", () => {
 	const { start, started } = rendered.taste
 	for (const edition of EDITIONS) {
 		// A guest can sign up to keep what they rated.
@@ -201,14 +210,13 @@ test("Taste before five scores: the words, how many are rated, and the way into 
 			start[edition].html,
 			/aria-label="Sign up to save your scores and taste"/,
 		)
-		assert.match(start[edition].html, />Rate 5 titles you&#x27;ve seen\.</)
-		assert.match(
-			start[edition].html,
-			/>0 of 5 rated\. Then GoodWatch knows your taste\.</,
-		)
-		assert.match(start[edition].html, />Start rating</)
-		assert.match(started[edition].html, />3 of 5 rated\./)
-		assert.match(started[edition].html, />Keep rating</)
+		assert.match(start[edition].html, />5 more liked to your taste\.</)
+		assert.match(start[edition].html, />0 rated · 0 liked \(6 or higher\)\.</)
+		assert.match(start[edition].html, />Rate titles</)
+		// Liked titles count toward the taste, not every score.
+		assert.match(started[edition].html, />3 more liked to your taste\.</)
+		assert.match(started[edition].html, />3 rated · 2 liked \(6 or higher\)\.</)
+		assert.match(started[edition].html, />Rate titles</)
 	}
 	// The first title the quiz will ask about is the picture, once the quiz knows it.
 	assert.equal(count(start.desktop.html, "<img"), 0)
@@ -221,11 +229,11 @@ test("Taste while the portrait is read keeps its one key", () => {
 		const { html, items } = rendered.taste.reading[edition]
 		assert.deepEqual(drawn(items), ["start-quiz", "sign-up", ...barOf(edition)])
 		assert.match(html, />Reading your taste\.</)
-		assert.match(html, />Rate more</)
+		assert.match(html, />Rate titles</)
 	}
 })
 
-test("the sides are tiles, two to five of them, under the view's name in the bar, with Rate more after them", () => {
+test("the sides are tiles, two to five of them, under the view's name in the bar, with Rate titles after them", () => {
 	const { two, three, four, five } = rendered.taste
 	for (const [screen, sides] of [
 		[two, 2],
@@ -248,7 +256,7 @@ test("the sides are tiles, two to five of them, under the view's name in the bar
 				"sign-up",
 				...barOf(edition),
 			])
-			assert.match(html, />Rate more</)
+			assert.match(html, />Rate titles</)
 		}
 	assert.match(three.desktop.html, />Slow-burning crime stories</)
 	assert.match(three.desktop.html, />Warm comedies</)
@@ -323,8 +331,8 @@ test("a side's screen lists the titles of it the person rated, under the side's 
 			count(html, `/t/p/${edition === "phone" ? "w185" : "w342"}/poster-`),
 			4,
 		)
-		// No Rate more here.
-		assert.ok(!html.includes("Rate more"))
+		// No Rate titles here.
+		assert.ok(!html.includes("Rate titles"))
 		// There can be fewer than four.
 		assert.deepEqual(drawn(sideShort[edition].items), [
 			"title:movie-20",
@@ -349,7 +357,7 @@ test("on the phone a side's screen names the side, and the quiz's picks say Made
 	assert.match(rendered.taste.picks.phone.html, />Made for you</)
 })
 
-test("five scores and no sides yet: the quiz's picks as Made for you, four of them, with Rate more", () => {
+test("a ready taste and no sides yet: the flow's picks as Made for you, four of them, with Rate titles", () => {
 	const { picks, picksSecond, picksWaiting, picksNone } = rendered.taste
 	for (const edition of EDITIONS) {
 		const { html, items } = picks[edition]
@@ -364,9 +372,9 @@ test("five scores and no sides yet: the quiz's picks as Made for you, four of th
 		])
 		if (edition === "desktop") assert.match(html, />Made for you</)
 		assert.match(html, />Title 1</)
-		assert.match(html, />Rate more</)
+		assert.match(html, />Rate titles</)
 		assert.match(picksSecond[edition].html, />Title 2</)
-		// Without picks the screen says why, and Rate more is still there.
+		// Without picks the screen says why, and Rate titles is still there.
 		for (const [screen, words] of [
 			[picksWaiting, "Your picks are on their way."],
 			[picksNone, "No picks right now. Rate a few more titles."],
@@ -382,7 +390,7 @@ test("five scores and no sides yet: the quiz's picks as Made for you, four of th
 	}
 })
 
-test("the Expand key stands in its corner on Taste and a side, the quiz has it once, and the rating has none", () => {
+test("the Expand key stands in its corner on Your taste and a side, Rate titles has it once, and the rating has none", () => {
 	for (const screen of all(rendered.taste)) {
 		// In its corner on the desktop; on the phone with the screen's keys, never in a corner over them.
 		const corner =
@@ -398,7 +406,7 @@ test("the Expand key stands in its corner on Taste and a side, the quiz has it o
 		assert.ok(screen.items.includes("expand"))
 		assert.equal(count(screen.html, 'data-tv-item="expand"'), 1)
 	}
-	// The quiz grows into the site's quiz.
+	// Rate titles grows into the site's /taste/quiz.
 	for (const screen of all(rendered.quiz)) {
 		assert.ok(screen.items.includes("expand"), screen.name)
 		assert.equal(
@@ -472,11 +480,15 @@ test("a line says what the focus would give, on a level and on an exact score", 
 	assert.match(asking.desktop.html, />Good · OK gives it 7</)
 	assert.match(onLevel.desktop.html, />Bad · OK gives it 3</)
 	assert.match(onScore.desktop.html, />8 · Great</)
-	// Off the strip the line is the quiz's question.
+	// Off the strip the line is Rate titles' question.
 	assert.match(onSkip.desktop.html, />2005 · Show\. Have you seen it\?</)
-	// The phone has no line: its keys say their words, and the header names the title asked about.
+	// The phone has no line: its keys say their words, and the header names the title asked about, with its year,
+	// and the next step under it.
 	assert.ok(!asking.phone.html.includes("Good · gives 7"))
-	assert.match(onSkip.phone.html, /<nav aria-label="TV"[\s\S]*?>The Office</)
+	assert.match(
+		onSkip.phone.html,
+		/<nav aria-label="TV"[\s\S]*?>The Office \(2005\)<\/span><span[^>]*>3 more liked to your taste</,
+	)
 	// The phone keeps its exact-score focus, just like desktop.
 	assert.equal(onScore.phone.focus, "score:8")
 })
@@ -496,42 +508,85 @@ test("selected numerals stay white on their full score color, with one lighter i
 	}
 })
 
-test("the quiz asks about one title: its name, how far the person is, and Haven't seen it as its own key", () => {
+test("Rate titles asks about one title: its name, the next step, and its two marks as keys of their own", () => {
 	const { asking, more, long, waiting, none } = rendered.quiz
 	for (const edition of EDITIONS) {
 		const { html, items } = asking[edition]
 		const nav = edition === "phone" ? HEADER : NAV
-		assert.match(html, />The Office</)
-		// Haven't seen it and Your taste are keys of their own after the strip.
+		assert.match(html, edition === "desktop" ? />The Office</ : />The Office \(2005\)</)
+		// The two marks and Your taste are keys of their own after the strip.
 		const mine = drawn(items).slice(0, -nav.length)
-		assert.deepEqual(mine.slice(-2), ["skip", "your-taste"])
+		assert.deepEqual(mine.slice(-3), ["skip", "not-interested", "your-taste"])
 		assert.deepEqual(drawn(items).slice(-nav.length), nav)
 		assert.match(html, /data-tv-item="skip"[^>]*>Haven&#x27;t seen it</)
-		// The phone's row has room for Haven't seen it and the Expand key: Your taste is in its menu there.
+		assert.match(html, /data-tv-item="not-interested"[^>]*>Not interested</)
+		// The top line is the web's top strip: liked titles toward the taste, then ratings toward new picks.
+		assert.match(html, />3 more liked to your taste</)
+		assert.match(more[edition].html, />4 more to new picks</)
+		assert.ok(!/\bquiz\b|of 5 rated|Taste ·/i.test(html.replace(/data-tv-item="[^"]*"/g, "")))
 		if (edition === "desktop") {
-			assert.match(html, />Taste · 2 of 5 rated</)
+			// Your taste is the web's taste bar: a key beside the marks (the row's end is the Expand key's), and with
+			// its totals beside it where there is no title to ask about.
 			assert.match(html, /data-tv-item="your-taste"[^>]*>Your taste</)
-			assert.match(more[edition].html, />Taste · 7 rated</)
+			assert.ok(!html.includes("2 rated · 2 liked"))
+			assert.match(none[edition].html, /data-tv-item="your-taste"/)
 			assert.match(
 				long[edition].html,
 				/line-clamp-2[^>]*>The Lord of the Rings: The Fellowship of the Ring</,
 			)
 		} else {
-			assert.match(html, />2 of 5</)
+			// The phone's row has room for the two marks and the Expand key: Your taste is in its menu there. The
+			// header names the title with its year, and says the next step under it.
 			assert.ok(!html.includes('data-tv-item="your-taste"'))
-			assert.match(more[edition].html, />7 rated</)
+			assert.match(html, />The Office \(2005\)</)
 		}
 		// Without a title to ask about there is no strip, only Your taste, the navigation and words.
 		assert.deepEqual(drawn(waiting[edition].items), ["your-taste", ...nav])
-		assert.match(waiting[edition].html, />Finding titles you may have seen\.</)
+		assert.match(waiting[edition].html, />Finding titles for you…</)
 		assert.deepEqual(drawn(none[edition].items), ["your-taste", ...nav])
-		assert.match(
-			none[edition].html,
-			/>No more titles to ask about right now\.</,
-		)
+		assert.match(none[edition].html, />That&#x27;s every title for now\.</)
 	}
 	assert.equal(count(asking.desktop.html, "/t/p/w1280/office.jpg"), 1)
 	assert.equal(count(asking.phone.html, "/t/p/w780/office.jpg"), 1)
+})
+
+test("a milestone lights Your taste amber and never ends rating", () => {
+	const { lit, asking } = rendered.quiz
+	for (const edition of EDITIONS) {
+		// The strip and the marks stay: rating goes on.
+		assert.ok(lit[edition].items.includes("level:7"))
+		assert.ok(lit[edition].items.includes("skip"))
+		assert.match(lit[edition].html, /aria-live="polite">Your taste is ready</)
+		assert.ok(!asking[edition].html.includes("Your taste is ready"))
+	}
+	// The desktop's key turns amber and says so; the phone's header says it in amber under the title.
+	assert.match(
+		lit.desktop.html,
+		/data-tv-item="your-taste"[^>]*class="[^"]*tvc-cta[^"]*"[^>]*>Your taste is ready</,
+	)
+	assert.ok(!/data-tv-item="your-taste"[^>]*tvc-cta/.test(asking.desktop.html))
+	assert.match(lit.phone.html, /text-amber-300[^"]*">Your taste is ready</)
+})
+
+test("an answer just given and a save that failed: the title stays named on the phone", () => {
+	const { given, failed, onNotInterested } = rendered.quiz
+	// The answer in full under the question on the desktop; in a few words under the title on the phone.
+	assert.match(
+		given.desktop.html,
+		/>Haven&#x27;t seen it\. We won&#x27;t ask about it again\.</,
+	)
+	assert.match(given.phone.html, />The Office \(2005\)</)
+	assert.match(given.phone.html, /text-amber-300[^"]*">Haven&#x27;t seen it</)
+	for (const edition of EDITIONS) {
+		// A failed save says so, keeps the title, and its "Haven't seen it" key reads Next title.
+		assert.match(
+			failed[edition].html,
+			/>Couldn&#x27;t save\. Try again, or go to the next title\.</,
+		)
+		assert.match(failed[edition].html, /data-tv-item="skip"[^>]*>Next title</)
+		assert.equal(onNotInterested[edition].focus, "not-interested")
+	}
+	assert.match(failed.phone.html, />The Office \(2005\)</)
 })
 
 test("the rating is the same strip without Haven't seen it, and marks the score the title has", () => {
@@ -579,9 +634,9 @@ test("on every phone of the room's table every key is 44 px or more on the phone
 	assert.ok(heightOf(narrow.quiz.html, "score:7") * narrow.scale >= 44)
 })
 
-test("on the phone the last row ends with the Expand key, with or without Rate more", () => {
+test("on the phone the last row ends with the Expand key, with or without Rate titles", () => {
 	for (const p of rendered.phones) {
-		// The sides: Rate more and the Expand key share a row (a member) under the tiles; never a corner.
+		// The sides: Rate titles and the Expand key share a row (a member) under the tiles; never a corner.
 		assert.equal(count(p.sides.html, 'data-tv-item="expand"'), 1, p.phone)
 		assert.ok(!p.sides.html.includes("data-tv-expand-place"), p.phone)
 	}
@@ -616,6 +671,6 @@ test("a screen in a chunk of its own is not in the server's HTML: its bar alone 
 	for (const html of Object.values(rendered.first)) {
 		assert.ok(!html.includes("<template"))
 		assert.equal(count(html, "<h1"), 0)
-		assert.ok(!html.includes("Rate 5 titles"))
+		assert.ok(!html.includes("more liked to your taste"))
 	}
 })

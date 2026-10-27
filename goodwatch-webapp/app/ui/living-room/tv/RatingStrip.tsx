@@ -19,6 +19,7 @@ import {
 	Item,
 	PHONE_HEAD,
 	PhoneHeader,
+	type PhoneHeaderLine,
 	Shade,
 	backdropSize,
 	keySize,
@@ -83,7 +84,7 @@ const questionSize = (question: string, large: number, small: number) =>
 
 /**
  * A question over a title's picture, and the strip to answer it with, the width of the picture. The bar stands in
- * the picture's corner; the Expand key, where the screen has a page (the quiz), in the opposite one on the desktop
+ * the picture's corner; the Expand key, where the screen has a page (Rate titles), in the opposite one on the desktop
  * and at the end of the keys under the strip on the phone. An answer just given (`answered`) lights on the strip,
  * the line under the question says what it was, and once it is held the title leaves for the next one.
  */
@@ -101,13 +102,13 @@ export function RatingScreen({
 	titleKey,
 	children,
 	title,
-	progress,
+	headerLine,
 }: {
 	/** The screen's items, from `tvItems`. */
 	items: readonly string[]
 	/** The title's backdrop, a TMDB path. */
 	backdrop?: string | null
-	/** What stands over the question: "Seen it", "Taste · 2 of 5 rated". */
+	/** What stands over the question: "Seen it", "3 more liked to your taste". */
 	kicker: string
 	questionLanguage?: string
 	questionMedia?: { text: string; lang: string; at?: number }
@@ -116,7 +117,7 @@ export function RatingScreen({
 	line?: string | null
 	/** The score the title has already. */
 	value?: number | null
-	/** The keys under the strip: the quiz's "Haven't seen it" and "Your taste". */
+	/** The keys under the strip: Rate titles' two marks and Your taste. */
 	children?: ReactNode
 	/** The title's poster, a TMDB path: beside the question on the desktop. */
 	poster?: string | null
@@ -124,10 +125,10 @@ export function RatingScreen({
 	answered?: TvQuizAnswered
 	/** The title asked about: a new one rises in. */
 	titleKey?: string
-	/** The title's name alone, for the phone's header: the quiz's question is the title. */
+	/** The title's name with its year, for the phone's header: Rate titles' question is the title. */
 	title?: string
-	/** How far the person is, on the phone beside the keys: "2 of 5". */
-	progress?: string
+	/** The phone's header, under the title: the next step, a milestone, or the answer just given. */
+	headerLine?: PhoneHeaderLine
 }) {
 	const { canvas, focused } = useTvView()
 	const P = canvas.edition === "phone"
@@ -151,9 +152,9 @@ export function RatingScreen({
 			{P ? (
 				// The phone: the question in the header, where the screen's name stands, and under it the band to answer
 				// with, as large as a thumb needs, and the keys under the band. Nothing else: no kicker, no line under
-				// the question (an answer just given takes the question's place for its moment, and the band lights).
-				// A save that failed never takes the title's place: the person must still see what they are asked
-				// about. It says so over the band instead.
+				// the question (the header's second line says the next step, or the answer just given for its moment,
+				// and the band lights). Nothing ever takes the title's place: the person must always see what they are
+				// asked about. A save that failed says so over the band, or in the header's line where it has one.
 				// A screen without keys under the band (the rating) has room for the question over the band too.
 				<div
 					className="absolute inset-x-0 bottom-0 flex flex-col justify-end gap-1.5 px-4 pb-2.5"
@@ -162,7 +163,7 @@ export function RatingScreen({
 					<div aria-live="polite" className="sr-only">
 						{given}
 					</div>
-					{answered?.failed && (
+					{answered?.failed && !headerLine && (
 						<div
 							aria-hidden
 							className="shrink-0 text-[16px] font-semibold leading-tight text-red-300"
@@ -190,12 +191,7 @@ export function RatingScreen({
 					{(children || expands) && (
 						<div className="flex shrink-0 items-center gap-1.5">
 							{children}
-							{expands && <Expand />}
-							{progress && (
-								<span className="ml-auto min-w-0 shrink text-right text-[17px] font-semibold leading-tight text-white/65">
-									{progress}
-								</span>
-							)}
+							{expands && <Expand compact />}
 						</div>
 					)}
 				</div>
@@ -238,35 +234,16 @@ export function RatingScreen({
 				</div>
 			)}
 			{/* The bar is last in the markup, as in `tvItems`: the items are met in reading order. On the phone it names
-			    the title asked about, or the answer just given while it is saved and held. */}
+			    the title asked about, always, and under it what `headerLine` says. */}
 			{P ? (
 				<PhoneHeader
 					items={items}
-					name={phoneHeaderName({
-						given,
-						failed: Boolean(answered?.failed),
-						title: children || expands ? (title ?? question) : undefined,
-					})}
+					name={children || expands ? (title ?? question) : undefined}
+					line={headerLine}
 				/>
 			) : (
 				<CornerBar items={items} />
 			)}
 		</>
 	)
-}
-
-/**
- * What the phone's header names: an answer's line while it is saved and held ("Scored 8 · Great", "Not seen · next
- * title"), otherwise the title asked about. A failed save keeps the title: its words stand over the band.
- */
-export function phoneHeaderName({
-	given,
-	failed,
-	title,
-}: {
-	given: string | null
-	failed: boolean
-	title: string | undefined
-}): string | undefined {
-	return given && !failed ? given : title
 }

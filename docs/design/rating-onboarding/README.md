@@ -1,6 +1,6 @@
 # Rating onboarding: inventory, state machine, and issues
 
-Status: audited on October 27, 2026 against `origin/main` at `16a23dbe4`. The P0 issues and most P1 issues were fixed the same day, in the commits that added this folder. The single-flow redesign is next.
+Status: audited on October 27, 2026 against `origin/main` at `16a23dbe4`. The P0 issues and most P1 issues were fixed the same day, in the commits that added this folder. The single-flow redesign followed the same day: `/taste/quiz` and the Taste start became one rating flow (`app/ui/rating-flow/`), and then the living room TV's Rate titles screen moved onto the same core (`use-rating-core.ts`), rule and words. The old quiz (`ui/taste-quiz/`) is gone.
 Line references point at that commit.
 
 This document covers every place where a guest or a new member rates titles to build their taste: the scoring

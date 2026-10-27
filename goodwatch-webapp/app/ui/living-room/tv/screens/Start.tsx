@@ -1,5 +1,5 @@
 // Start: a member's home on the TV. Watch next is the big tile, a selection of the member's own picks (their posters
-// fanned, the next one first); beside it a tile each for Popular, Discover, Search and Taste, and under them Your
+// fanned, the next one first); beside it a tile each for Popular, Discover, Search and Rate titles, and under them Your
 // taste and What is GoodWatch?. Every tile opens a TV screen; nothing here leaves the TV. The white G of the
 // navigation and the Remote's Home key come back here.
 //
@@ -7,7 +7,7 @@
 // tiles say what the TV offers.
 //
 // On the phone Start is two pages, nothing scrolls: Watch next and a tile each for Popular, Discover, Search and
-// Taste, then (by the arrow) Your taste, My shows and What is GoodWatch?.
+// Rate titles, then (by the arrow) Your taste, My shows and What is GoodWatch?.
 import { useContext, useRef } from "react"
 // A file of its own, not inlined into the script: Start is a member's home, and an inlined copy, shared with the
 // title page's, became a script that every guest's start page and every title page loaded.
@@ -239,7 +239,7 @@ export function Start({
 		),
 		tile(
 			"start:quiz",
-			"Taste",
+			"Rate titles",
 			"Score what you've seen",
 			// The site's fingerprint mark (the title page's Fingerprint heading) over the areas' colours.
 			<span aria-hidden className={`absolute flex items-start ${P ? "inset-x-2.5 top-2 gap-2" : "inset-x-5 top-5 gap-3"}`}>

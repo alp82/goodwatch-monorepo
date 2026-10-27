@@ -193,7 +193,7 @@ What a person's ratings and Want to See say about the fingerprints they enjoy. A
 _Avoid_: Taste profile
 
 **Score acknowledgement**:
-What a score press shows while one-title-at-a-time scoring moves on: the chosen score stays marked, a line names it ("Scored 8 · Great", or "Not seen · next title"), and the title leaves 0.7 seconds after the press, or when the write succeeds if that takes longer. The first press counts; presses during the acknowledgement do nothing. A refused write keeps the title and says "Couldn't save that. Try again." The taste quiz page, the taste start on /taste, and the TV's Taste screen share it (`ui/scoring/score-ack.ts`).
+What a score press shows while one-title-at-a-time scoring moves on: the chosen score stays marked, a line names it ("Scored 8 · Great", or "Not seen · next title"), and the title leaves 0.7 seconds after the press, or when the write succeeds if that takes longer. The first press counts; presses during the acknowledgement do nothing. A refused write keeps the title, says "Couldn't save. Try again, or go to the next title.", and offers Next title. The rating flow shares it wherever it shows: /taste/quiz, the taste start on /taste, and Rate titles on the TV (`ui/scoring/score-ack.ts`).
 
 **Taste match**:
 How well a title's fingerprint fits the person's taste, shown from 50 to 99 percent once the person has rated 5 titles they liked. It places the title within the person's own range, and high numbers are rare: 90 means the title fits better than about 99 percent of well-known titles would. The highest numbers need more liked titles: with 5 the scale ends at 85, from 100 at 99.

@@ -1,4 +1,5 @@
-// Taste's three states, what its screens say, the machine's context for them, and the quiz's write path.
+// Your taste's three states, what its screens and Rate titles say, the machine's context for them, and Rate titles'
+// write path (the rating flow's).
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import type { Score } from "~/server/scores.server"
@@ -8,7 +9,8 @@ import type {
 	SidesView,
 } from "~/server/taste-portrait/view"
 import type { ScoringMedia } from "~/ui/scoring/types"
-import type { QuizPick } from "~/ui/taste-quiz/use-quiz-picks"
+import type { Tally } from "~/ui/rating-flow/flow"
+import type { FlowPick } from "~/ui/rating-flow/use-picks"
 import {
 	EMPTY_CONTEXT,
 	STRIP_LEVELS,
@@ -26,6 +28,7 @@ import {
 	carryOutQuiz,
 	pickListTitle,
 	portraitListTitle,
+	quizHeaderName,
 	quizTitle,
 	quizWords,
 	sideLine,
@@ -113,47 +116,55 @@ const view = (
 	...rest,
 })
 
-describe("Taste's three states", () => {
+/** Totals: `rated` scores of which `liked` are 6 or higher. */
+const t = (rated: number, liked = rated): Tally => ({ rated, liked })
+
+describe("Your taste's three states", () => {
 	it("sides, when the portrait has the person's own", () => {
-		assert.equal(tasteState(view(), 12), "sides")
-		assert.equal(tasteState(view({}, "member"), 40), "sides")
-		// Sides do not depend on how many scores the browser counts.
-		assert.equal(tasteState(view(), 0), "sides")
+		assert.equal(tasteState(view(), t(12)), "sides")
+		assert.equal(tasteState(view({}, "member"), t(40)), "sides")
+		// Sides do not depend on what the browser counts.
+		assert.equal(tasteState(view(), t(0)), "sides")
+		assert.equal(tasteState(view(), null), "sides")
 	})
 
-	it("start under five scores: no portrait, the sample taste, or no sides yet", () => {
-		assert.equal(tasteState(null, 0), "start")
-		assert.equal(tasteState(null, 4), "start")
-		assert.equal(tasteState(view({}, "sample"), 3), "start")
-		assert.equal(tasteState(view({ status: "empty", sides: [] }), 4), "start")
+	it("start until five liked titles: no portrait, the sample taste, or no sides yet", () => {
+		assert.equal(tasteState(null, t(0)), "start")
+		assert.equal(tasteState(null, null), "start")
+		assert.equal(tasteState(null, t(4)), "start")
+		assert.equal(tasteState(view({}, "sample"), t(3)), "start")
+		assert.equal(tasteState(view({ status: "empty", sides: [] }), t(4)), "start")
 		assert.equal(
-			tasteState(view({ status: "unavailable", sides: [] }), 2),
+			tasteState(view({ status: "unavailable", sides: [] }), t(2)),
 			"start",
 		)
+		// Five scores aren't a taste: five liked ones are (the rating flow's rule, ~/domain/taste-rules).
+		assert.equal(tasteState(null, t(5, 4)), "start")
+		assert.equal(tasteState(null, t(12, 2)), "start")
 	})
 
-	it("picks from five scores on, while there are no sides", () => {
-		assert.equal(tasteState(view({ status: "empty", sides: [] }), 5), "picks")
+	it("picks from five liked titles on, while there are no sides", () => {
+		assert.equal(tasteState(view({ status: "empty", sides: [] }), t(5)), "picks")
 		assert.equal(
-			tasteState(view({ status: "empty", sides: [] }, "member"), 30),
+			tasteState(view({ status: "empty", sides: [] }, "member"), t(30, 9)),
 			"picks",
 		)
 		// The portrait did not come, or the title snapshot is not loaded yet.
-		assert.equal(tasteState(null, 5), "picks")
+		assert.equal(tasteState(null, t(7, 5)), "picks")
 		assert.equal(
-			tasteState(view({ status: "unavailable", sides: [] }), 9),
+			tasteState(view({ status: "unavailable", sides: [] }), t(9)),
 			"picks",
 		)
 	})
 
 	it("never shows the sample taste's sides as the person's", () => {
-		assert.equal(tasteState(view({}, "sample"), 0), "start")
-		// Five scores of which the portrait could read fewer: the answer is the sample.
-		assert.equal(tasteState(view({}, "sample"), 5), "picks")
+		assert.equal(tasteState(view({}, "sample"), t(0)), "start")
+		// A ready taste of which the portrait could read less: the answer is the sample.
+		assert.equal(tasteState(view({}, "sample"), t(5)), "picks")
 	})
 
 	it("a ready portrait without a side is no sides", () => {
-		assert.equal(tasteState(view({ sides: [] }), 8), "picks")
+		assert.equal(tasteState(view({ sides: [] }), t(8)), "picks")
 	})
 })
 
@@ -249,7 +260,7 @@ describe("what a list says of a title", () => {
 			backdrop_path: "/b.jpg",
 			goodwatch_overall_score_normalized_percent: 86.6,
 			match_percentage: 92.4,
-		} as QuizPick
+		} as FlowPick
 		assert.deepEqual(pickListTitle(pick), {
 			key: "movie-603",
 			title: "The Matrix",
@@ -269,19 +280,23 @@ describe("what a list says of a title", () => {
 	})
 })
 
-describe("what Taste and the quiz say", () => {
-	it("before five scores: how many are rated, and Start or Keep rating", () => {
-		assert.deepEqual(startWords(0), {
-			headline: "Rate 5 titles you've seen.",
-			line: "0 of 5 rated. Then GoodWatch knows your taste.",
-			key: "Start rating",
+describe("what Your taste and Rate titles say", () => {
+	it("before the taste is ready: the next step in the rating flow's words, the totals, and Rate titles", () => {
+		assert.deepEqual(startWords(t(0)), {
+			headline: "5 more liked to your taste.",
+			line: "0 rated · 0 liked (6 or higher).",
+			key: "Rate titles",
 		})
-		assert.equal(startWords(3).key, "Keep rating")
-		assert.match(startWords(3).line, /^3 of 5 rated\./)
-		assert.match(startWords(9).line, /^5 of 5 rated\./)
+		assert.deepEqual(startWords(t(6, 3)), {
+			headline: "2 more liked to your taste.",
+			line: "6 rated · 3 liked (6 or higher).",
+			key: "Rate titles",
+		})
+		// Scores below 6 bring the taste no closer.
+		assert.equal(startWords(t(4, 0)).headline, "5 more liked to your taste.")
 	})
 
-	it("the quiz: the progress toward the goal, then how many are rated", () => {
+	it("Rate titles: the next milestone on top, as the web's top strip says it, and Your taste as the taste bar", () => {
 		const asked = quizTitle({
 			tmdb_id: 2316,
 			media_type: "show",
@@ -293,23 +308,63 @@ describe("what Taste and the quiz say", () => {
 		assert.deepEqual(asked, {
 			key: "show-2316",
 			title: "The Office",
+			year: "2005",
 			backdrop: "/b.jpg",
 			poster: "/p.jpg",
 			facts: "2005 · Show",
 		})
-		assert.deepEqual(quizWords({ rated: 0, title: asked }), {
-			kicker: "Taste · 0 of 5 rated",
-			line: "2005 · Show. Have you seen it?",
+		const liked = { kind: "liked", done: 2, of: 5, left: 3 } as const
+		assert.deepEqual(
+			quizWords({ title: asked, tally: t(4, 2), next: liked, lit: null }),
+			{
+				kicker: "3 more liked to your taste",
+				line: "2005 · Show. Have you seen it?",
+				taste: "Your taste",
+				totals: "4 rated · 2 liked (6 or higher)",
+			},
+		)
+		// After the taste is ready: ratings toward new picks, and Your taste lights at a milestone.
+		const rated = { kind: "rated", done: 6, of: 10, left: 4 } as const
+		const words = quizWords({
+			title: asked,
+			tally: t(16, 9),
+			next: rated,
+			lit: null,
 		})
+		assert.equal(words.kicker, "4 more to new picks")
+		assert.equal(words.totals, "16 rated · 9 liked")
 		assert.equal(
-			quizWords({ rated: 4, title: asked }).kicker,
-			"Taste · 4 of 5 rated",
+			quizWords({
+				title: asked,
+				tally: t(7, 5),
+				next: { kind: "rated", done: 0, of: 10, left: 10 },
+				lit: { kind: "ready", rated: 7 },
+			}).taste,
+			"Your taste is ready",
 		)
 		assert.equal(
-			quizWords({ rated: 7, title: asked }).kicker,
-			"Taste · 7 rated",
+			quizWords({
+				title: asked,
+				tally: t(17, 9),
+				next: { kind: "rated", done: 0, of: 10, left: 10 },
+				lit: { kind: "picks", rated: 17 },
+			}).taste,
+			"Your picks changed",
 		)
-		assert.equal(quizWords({ rated: 2, title: null }).line, null)
+		// Before the totals are known: the screen's name on top, and no totals.
+		const unknown = quizWords({ title: null, tally: null, next: null, lit: null })
+		assert.equal(unknown.kicker, "Rate titles")
+		assert.equal(unknown.line, null)
+		assert.equal(unknown.taste, "Your taste")
+		assert.equal(unknown.totals, null)
+	})
+
+	it("the phone's header names the title with its year", () => {
+		assert.equal(
+			quizHeaderName({ title: "The Office", year: "2005" }),
+			"The Office (2005)",
+		)
+		assert.equal(quizHeaderName({ title: "Bare", year: null }), "Bare")
 	})
 
 	it("a title without a backdrop or a year still has its words", () => {
@@ -322,6 +377,7 @@ describe("what Taste and the quiz say", () => {
 		assert.deepEqual(bare, {
 			key: "movie-1",
 			title: "Bare",
+			year: null,
 			backdrop: null,
 			poster: "/p.jpg",
 			facts: "Movie",
@@ -334,10 +390,13 @@ const screensOf = (
 	quiz: Partial<TvTasteScreens["quiz"]> = {},
 ): TvTasteScreens => ({
 	taste,
+	tasteLit: null,
 	quiz: {
 		title: null,
 		waiting: false,
-		rated: 0,
+		tally: null,
+		next: null,
+		lit: null,
 		answered: NOT_ANSWERED,
 		...quiz,
 	},
@@ -347,6 +406,7 @@ const QUIZ: TvScreen = { name: "quiz" }
 const asked = {
 	key: "show-2316",
 	title: "The Office",
+	year: "2005",
 	backdrop: null,
 	poster: null,
 	facts: "",
@@ -374,17 +434,16 @@ const ctxOf = (screen: TvScreen, shown: TvTasteScreens): TvContext => ({
 })
 
 describe("the machine's context for Taste, and the items it gives", () => {
-	it("start, and while the portrait is read: the way into the quiz alone", () => {
+	it("start, and while the portrait is read: Rate titles alone", () => {
 		for (const taste of [
-			{ state: "start", rated: 2, backdrop: null } as const,
+			{ state: "start", tally: t(2), backdrop: null } as const,
 			{ state: "reading" } as const,
 		]) {
-			const shown = screensOf(taste, { rated: 2 })
+			const shown = screensOf(taste, { tally: t(2) })
 			assert.deepEqual(tasteContext(TASTE, shown), {
 				taste: false,
 				sides: [],
 				titles: [],
-				quizProgress: 2,
 			})
 			// A guest can sign up to keep it; a member cannot.
 			assert.deepEqual(tvItems(TASTE, ctxOf(TASTE, shown)), [
@@ -400,7 +459,7 @@ describe("the machine's context for Taste, and the items it gives", () => {
 		}
 	})
 
-	it("sides: each side, then Rate more", () => {
+	it("sides: each side, then Rate titles", () => {
 		const shown = screensOf({ state: "sides", sides: tvSides(view()) })
 		assert.deepEqual(tvItems(TASTE, ctxOf(TASTE, shown)), [
 			"side:dark-crime",
@@ -428,7 +487,7 @@ describe("the machine's context for Taste, and the items it gives", () => {
 		assert.deepEqual(tvItems(gone, ctxOf(gone, shown)), ["expand", ...BAR])
 	})
 
-	it("picks: up to four of the quiz's picks, then Rate more", () => {
+	it("picks: up to four of the flow's picks, then Rate titles", () => {
 		const shown = screensOf({ state: "picks", picks, waiting: false })
 		assert.deepEqual(tvItems(TASTE, ctxOf(TASTE, shown)), [
 			...picks.slice(0, 4).map((pick) => `title:${pick.key}`),
@@ -442,28 +501,28 @@ describe("the machine's context for Taste, and the items it gives", () => {
 		assert.deepEqual(tasteContext(side, shown).titles, [])
 	})
 
-	it("the quiz: the strip while there is a title to ask about, with exact scores on the desktop", () => {
+	it("Rate titles: the strip and its two marks while there is a title to ask about, then Your taste", () => {
 		const shown = screensOf(
-			{ state: "start", rated: 3, backdrop: null },
-			{ title: asked, rated: 3 },
+			{ state: "start", tally: t(3), backdrop: null },
+			{ title: asked, tally: t(3) },
 		)
 		assert.deepEqual(tasteContext(QUIZ, shown), {
 			taste: false,
 			sides: [],
 			titles: ["show-2316"],
-			quizProgress: 3,
 		})
 		const levels = STRIP_LEVELS.map((score) => `level:${score}`)
 		assert.deepEqual(tvItems(QUIZ, ctxOf(QUIZ, shown)), [
 			...levels,
 			...STRIP_SCORES.map((score) => `score:${score}`),
 			"skip",
+			"not-interested",
 			"your-taste",
 			"expand",
 			...NAV,
 		])
 		const waiting = screensOf(
-			{ state: "start", rated: 3, backdrop: null },
+			{ state: "start", tally: t(3), backdrop: null },
 			{ waiting: true },
 		)
 		assert.deepEqual(tvItems(QUIZ, ctxOf(QUIZ, waiting)), [
@@ -498,7 +557,7 @@ describe("what Taste's lists know of a title", () => {
 		assert.equal(tasteKnown(sides, "movie-1"), null)
 		assert.equal(
 			tasteKnown(
-				screensOf({ state: "start", rated: 0, backdrop: null }),
+				screensOf({ state: "start", tally: t(0), backdrop: null }),
 				"movie-603",
 			),
 			null,
@@ -507,86 +566,101 @@ describe("what Taste's lists know of a title", () => {
 	})
 })
 
-describe("the quiz's write path", () => {
-	/** A quiz that records what it was asked to store. */
+describe("Rate titles' write path", () => {
+	/** A rating flow that records what it was asked to store. */
 	const recorder = () => {
-		const stored: (Score | "skip")[] = []
+		const stored: (Score | "unseen" | "not-interested" | "pass")[] = []
+		const answered = { failed: false }
 		return {
 			stored,
-			quiz: {
+			answered,
+			flow: {
 				rate: (score: Score) => void stored.push(score),
-				skip: () => void stored.push("skip"),
+				unseen: () => void stored.push("unseen"),
+				notInterested: () => void stored.push("not-interested"),
+				pass: () => void stored.push("pass"),
+				answered,
 			},
 		}
 	}
-	/** Presses an item of the quiz as the TV does, and carries out what the machine names. */
+	/** Presses an item of Rate titles as the TV does, and carries out what the machine names. */
 	function press(
 		item: string,
 		ctx: TvContext,
-		quiz: ReturnType<typeof recorder>,
+		flow: ReturnType<typeof recorder>,
 	) {
 		const state = readTvState(new URLSearchParams("tv=quiz"), ctx, 1)
 		const next = transition(state, { type: "choose", item }, ctx)
-		for (const effect of next.effects) carryOutQuiz(effect, quiz.quiz)
+		for (const effect of next.effects) carryOutQuiz(effect, flow.flow)
 		return next
 	}
 	const shown = screensOf(
-		{ state: "start", rated: 0, backdrop: null },
+		{ state: "start", tally: t(0), backdrop: null },
 		{ title: asked },
 	)
 
 	it("OK on each level stores the level's score: 3, 5, 7 and 9", () => {
-		const quiz = recorder()
+		const flow = recorder()
 		for (const score of STRIP_LEVELS)
-			press(`level:${score}`, ctxOf(QUIZ, shown), quiz)
-		assert.deepEqual(quiz.stored, [3, 5, 7, 9])
+			press(`level:${score}`, ctxOf(QUIZ, shown), flow)
+		assert.deepEqual(flow.stored, [3, 5, 7, 9])
 	})
 
 	it("an exact score is stored as given", () => {
-		const quiz = recorder()
+		const flow = recorder()
 		for (const score of STRIP_SCORES)
-			press(`score:${score}`, ctxOf(QUIZ, shown), quiz)
-		assert.deepEqual(quiz.stored, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+			press(`score:${score}`, ctxOf(QUIZ, shown), flow)
+		assert.deepEqual(flow.stored, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 	})
 
 	it("on the phone an exact score is stored", () => {
-		const quiz = recorder()
-		press("score:8", ctxOf(QUIZ, shown), quiz)
-		assert.deepEqual(quiz.stored, [8])
+		const flow = recorder()
+		press("score:8", ctxOf(QUIZ, shown), flow)
+		assert.deepEqual(flow.stored, [8])
 	})
 
-	it("Haven't seen it skips, and stores no score", () => {
-		const quiz = recorder()
-		const next = press("skip", ctxOf(QUIZ, shown), quiz)
-		assert.deepEqual(quiz.stored, ["skip"])
-		assert.equal(next.history, "none")
-	})
-
-	it("the score that reaches the goal is stored and held; the quiz returns to Taste once done", () => {
-		const quiz = recorder()
-		const last = screensOf(
-			{ state: "start", rated: 4, backdrop: null },
-			{ title: asked, rated: 4 },
+	it("Haven't seen it and Not interested are two marks of their own, and store no score", () => {
+		const flow = recorder()
+		assert.equal(press("skip", ctxOf(QUIZ, shown), flow).history, "none")
+		assert.equal(
+			press("not-interested", ctxOf(QUIZ, shown), flow).history,
+			"none",
 		)
-		const ctx = ctxOf(QUIZ, last)
-		const next = press("level:7", ctx, quiz)
-		assert.deepEqual(quiz.stored, [7])
-		assert.equal(next.history, "none")
-		const done = transition(next.state, { type: "quiz-done" }, ctx)
-		assert.equal(done.history, "back")
-		assert.deepEqual(done.effects, [])
+		assert.deepEqual(flow.stored, ["unseen", "not-interested"])
+	})
+
+	it("after a save that failed, Haven't seen it is Next title: on without saving", () => {
+		const flow = recorder()
+		flow.answered.failed = true
+		press("skip", ctxOf(QUIZ, shown), flow)
+		assert.deepEqual(flow.stored, ["pass"])
+	})
+
+	it("a milestone never ends rating: every answer stays on Rate titles", () => {
+		const flow = recorder()
+		const ready = screensOf(
+			{ state: "start", tally: t(4), backdrop: null },
+			{ title: asked, tally: t(4) },
+		)
+		const ctx = ctxOf(QUIZ, ready)
+		for (const item of ["level:7", "score:9", "skip", "not-interested"]) {
+			const next = press(item, ctx, flow)
+			assert.equal(next.history, "none", item)
+			assert.equal(next.state.screen.name, "quiz", item)
+		}
+		assert.deepEqual(flow.stored, [7, 9, "unseen", "not-interested"])
 	})
 
 	it("without a title to ask about nothing can be pressed", () => {
-		const quiz = recorder()
-		const empty = screensOf({ state: "start", rated: 0, backdrop: null })
-		press("level:7", ctxOf(QUIZ, empty), quiz)
-		press("skip", ctxOf(QUIZ, empty), quiz)
-		assert.deepEqual(quiz.stored, [])
+		const flow = recorder()
+		const empty = screensOf({ state: "start", tally: t(0), backdrop: null })
+		for (const item of ["level:7", "skip", "not-interested"])
+			press(item, ctxOf(QUIZ, empty), flow)
+		assert.deepEqual(flow.stored, [])
 	})
 
-	it("is the quiz's alone: another screen's effect is not carried out", () => {
-		const quiz = recorder()
+	it("is Rate titles' alone: another screen's effect is not carried out", () => {
+		const flow = recorder()
 		const others: TvEffect[] = [
 			{ type: "rate", title: "movie-603", score: 8 },
 			{ type: "want-to-see", title: "movie-603" },
@@ -594,9 +668,13 @@ describe("the quiz's write path", () => {
 			{ type: "expand", href: "/taste" },
 		]
 		for (const effect of others)
-			assert.equal(carryOutQuiz(effect, quiz.quiz), false)
-		assert.deepEqual(quiz.stored, [])
-		assert.equal(carryOutQuiz({ type: "quiz-rate", score: 8 }, quiz.quiz), true)
-		assert.equal(carryOutQuiz({ type: "quiz-skip" }, quiz.quiz), true)
+			assert.equal(carryOutQuiz(effect, flow.flow), false)
+		assert.deepEqual(flow.stored, [])
+		assert.equal(carryOutQuiz({ type: "quiz-rate", score: 8 }, flow.flow), true)
+		assert.equal(carryOutQuiz({ type: "quiz-skip" }, flow.flow), true)
+		assert.equal(
+			carryOutQuiz({ type: "quiz-not-interested" }, flow.flow),
+			true,
+		)
 	})
 })

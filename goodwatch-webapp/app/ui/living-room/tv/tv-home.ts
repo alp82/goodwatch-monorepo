@@ -14,7 +14,6 @@ import { copyMediaPresentation } from "../../../utils/media-presentation.ts"
 // filled up with Netflix and Prime Video, which are a guest's. The Remote's two keys and home's two tiles after
 // the apps stand for them.
 import type { TitleCard } from "~/server/title-cards.server"
-import { QUIZ_GOAL } from "../../taste-quiz/quiz-flow.ts"
 import { TASTE_GROUPS_NAME } from "../../taste/taste-groups-name.ts"
 import type { StartTitle } from "../living-room-data"
 import type { TvListTitle } from "./TitleList.tsx"
@@ -288,7 +287,7 @@ export function knownHomePick(
 	return null
 }
 
-/** An app tile's picture: real art for Tonight, Discover and My shows, a drawing for Explorer and Taste. */
+/** An app tile's picture: real art for Tonight, Discover and My shows, a drawing for Explorer and Your taste. */
 export type TvAppArt =
 	/** A backdrop; without a path the tile is plain: dark, or of `color`, a service's own. */
 	| { kind: "backdrop"; path: string | null; color?: string | null }
@@ -314,7 +313,7 @@ const APP_NAME: Record<TvApp, string> = {
 	tonight: "Watch next",
 	discover: "Discover",
 	explorer: "Explorer",
-	taste: "Taste",
+	taste: "Your taste",
 	shows: "My shows",
 }
 
@@ -368,7 +367,7 @@ export function homeApps(
 		taste: {
 			line: taste
 				? `${TASTE_GROUPS_NAME.title}.`
-				: `Rate ${QUIZ_GOAL} titles, get picks made for you.`,
+				: "Rate titles you've seen, get picks made for you.",
 			art: { kind: "print" },
 		},
 		shows: {

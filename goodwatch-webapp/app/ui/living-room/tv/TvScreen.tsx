@@ -92,8 +92,8 @@ const SCREEN_NAME: Record<Screen["name"], string> = {
 	popular: "Popular",
 	discover: "Discover",
 	explorer: "Explorer",
-	taste: "Taste",
-	quiz: "Taste",
+	taste: "Your taste",
+	quiz: "Rate titles",
 	shows: "My shows",
 	title: "Title",
 	rate: "Seen it",
@@ -208,6 +208,8 @@ export function TvScreen({
 		? `nav:${screen.name === "home" ? "home" : screen.name}`
 		: null
 	const { member } = ctx
+	// Rate titles reached a milestone Your taste hasn't shown yet: the menu says so (screens/Menu.tsx).
+	const tasteLit = taste?.tasteLit ?? null
 	// The phone's header says the screen's name; a member's home is Start, and a service's screen its name.
 	const screenName =
 		screen.name === "home"
@@ -233,8 +235,10 @@ export function TvScreen({
 			unpoint,
 			screenName,
 			atHome: screen.name === "home",
+			tasteLit,
 		}),
 		[
+			tasteLit,
 			screen.name,
 			screenName,
 			canvas,
@@ -262,8 +266,9 @@ export function TvScreen({
 			ringOff,
 			unpoint,
 			screenName: "Menu",
+			tasteLit,
 		}),
-		[canvas, focused, dispatch, menuHere, member, ringOff, unpoint],
+		[canvas, focused, dispatch, menuHere, member, ringOff, unpoint, tasteLit],
 	)
 	// A screen arrives with a short fade. The screen the TV starts on is there at once. Discover's tabs are one
 	// screen: a change of tab is no arrival. Nor is another pick on Watch next or Popular: the pick follows the

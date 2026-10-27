@@ -1,6 +1,7 @@
 // The menu: an overlay on every screen, at the picture's right edge, under the GoodWatch wordmark. It lists the TV's
-// own screens and nothing else (the machine's `menuItems`): Start, Watch next, Popular, Discover, Search, Taste,
-// Your taste and What is GoodWatch?. The pages of the site open from the screen they belong to, with its Expand key.
+// own screens and nothing else (the machine's `menuItems`): Start, Watch next, Popular, Discover, Search, Rate
+// titles, Your taste and What is GoodWatch?. At a milestone of Rate titles, Your taste lights amber and says so
+// ("Your taste is ready", "Your picks changed"), as the taste key on the desktop's Rate titles does. The pages of the site open from the screen they belong to, with its Expand key.
 // The screen on show is marked, and the menu opens on it. A chunk the TV asks for at the first interaction
 // (screen-code.tsx).
 //
@@ -14,7 +15,7 @@ const LABEL: Record<string, string> = {
 	"menu:popular": "Popular",
 	"menu:discover": "Discover",
 	"menu:search": "Search",
-	"menu:quiz": "Taste",
+	"menu:quiz": "Rate titles",
 	"menu:taste": "Your taste",
 	"menu:shows": "My shows",
 	"menu:about": "What is GoodWatch?",
@@ -49,7 +50,7 @@ export default function Menu({ items }: { items: readonly string[] }) {
  * Back does. Each key's words may take two lines, so none is cut.
  */
 function PhoneMenu({ items }: { items: readonly string[] }) {
-	const { canvas, here, member } = useTvView()
+	const { canvas, here, member, tasteLit } = useTvView()
 	const key = keySize(canvas, 54)
 	// Three to a row upright, four on a phone's wide canvas.
 	const cols = phoneSpan(canvas) >= 600 ? 4 : 3
@@ -86,8 +87,8 @@ function PhoneMenu({ items }: { items: readonly string[] }) {
 							key={id}
 							id={id}
 							role="menuitem"
-							label={on ? `${label(id, member)}, showing now` : undefined}
-							className={`tvc-btn tvc-menu-key flex h-full min-w-0 items-center gap-2 px-3 text-[17px] leading-[1.1] ${on ? "tvc-here" : ""}`}
+							label={on ? `${label(id, member, tasteLit)}, showing now` : undefined}
+							className={`tvc-btn tvc-menu-key flex h-full min-w-0 items-center gap-2 px-3 text-[17px] leading-[1.1] ${on ? "tvc-here" : ""} ${lights(id, tasteLit)}`}
 						>
 							<svg
 								viewBox="0 0 24 24"
@@ -96,7 +97,7 @@ function PhoneMenu({ items }: { items: readonly string[] }) {
 							>
 								<path d={ICON[id]} fill="currentColor" />
 							</svg>
-							<span className="min-w-0 flex-1">{label(id, member)}</span>
+							<span className="min-w-0 flex-1">{label(id, member, tasteLit)}</span>
 						</Item>
 					)
 				})}
@@ -106,7 +107,7 @@ function PhoneMenu({ items }: { items: readonly string[] }) {
 }
 
 function TvMenu({ items }: { items: readonly string[] }) {
-	const { here, member } = useTvView()
+	const { here, member, tasteLit } = useTvView()
 	return (
 		<div
 			role="menu"
@@ -122,8 +123,8 @@ function TvMenu({ items }: { items: readonly string[] }) {
 							key={id}
 							id={id}
 							role="menuitem"
-							label={on ? `${label(id, member)}, showing now` : undefined}
-							className={`tvc-btn tvc-menu-key flex min-w-0 shrink-0 items-center ${on ? "tvc-here" : ""} h-[54px] gap-4 px-6 text-[23px]`}
+							label={on ? `${label(id, member, tasteLit)}, showing now` : undefined}
+							className={`tvc-btn tvc-menu-key flex min-w-0 shrink-0 items-center ${on ? "tvc-here" : ""} ${lights(id, tasteLit)} h-[54px] gap-4 px-6 text-[23px]`}
 						>
 							<svg
 								viewBox="0 0 24 24"
@@ -132,7 +133,7 @@ function TvMenu({ items }: { items: readonly string[] }) {
 							>
 								<path d={ICON[id]} fill="currentColor" />
 							</svg>
-							<span className="min-w-0 flex-1 truncate">{label(id, member)}</span>
+							<span className="min-w-0 flex-1 truncate">{label(id, member, tasteLit)}</span>
 							{on && <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full bg-amber-400" />}
 						</Item>
 					)
@@ -142,6 +143,16 @@ function TvMenu({ items }: { items: readonly string[] }) {
 	)
 }
 
-/** A member's home is Start; a guest's is Home. */
-const label = (id: string, member?: boolean) =>
-	id === "menu:home" ? (member ? "Start" : "Home") : (LABEL[id] ?? id)
+/** A member's home is Start; a guest's is Home. Your taste at a milestone says so. */
+const label = (id: string, member?: boolean, tasteLit?: string | null) =>
+	id === "menu:home"
+		? member
+			? "Start"
+			: "Home"
+		: id === "menu:taste" && tasteLit
+			? tasteLit
+			: (LABEL[id] ?? id)
+
+/** Your taste at a milestone is amber, as the taste key on the desktop's Rate titles is. */
+const lights = (id: string, tasteLit?: string | null) =>
+	id === "menu:taste" && tasteLit ? "tvc-cta score-ack-enter" : ""

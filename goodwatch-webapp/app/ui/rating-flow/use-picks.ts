@@ -1,5 +1,5 @@
-// The quiz picks: unseen movies and shows closest to the person's scores, best match first. New scores change the
-// query, so the picks re-rank while the person keeps rating; the previous picks stay on screen meanwhile.
+// The rating flow's picks: unseen movies and shows closest to the person's scores, best match first. New scores change
+// the query, so the picks re-rank while the person keeps rating; the previous picks stay on screen meanwhile.
 import { useMemo } from "react"
 import {
 	useGuestMovieRecommendations,
@@ -10,13 +10,13 @@ import type {
 	GuestRecommendation,
 	ScoredItem,
 } from "~/server/guest-recommendations.server"
-import { MAX_PICK_PAGES, PICKS_PER_PAGE } from "./quiz-flow"
 
-export type QuizPick = GuestRecommendation
+export type FlowPick = GuestRecommendation
 
-const PICKS_PER_TYPE = MAX_PICK_PAGES * PICKS_PER_PAGE
+/** Picks asked for of each kind (movies, shows); the merged list keeps as many. */
+export const PICKS_PER_TYPE = 12
 
-export function useQuizPicks({
+export function usePicks({
 	scored,
 	exclude,
 	hide,

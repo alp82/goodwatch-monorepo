@@ -1,4 +1,4 @@
-// What is GoodWatch? One sentence, one line and two answers: back to where the person was, or into the taste quiz.
+// What is GoodWatch? One sentence, one line and two answers: back to where the person was, or into Rate titles.
 // It has no page to grow into, so no Expand key. A chunk the TV asks for at the first interaction
 // (screen-code.tsx).
 //
@@ -15,7 +15,7 @@ import {
 
 const ANSWERS = [
 	{ id: "got-it", label: "Got it" },
-	{ id: "rate", label: "Rate what I've seen" },
+	{ id: "rate", label: "Rate titles" },
 ]
 
 export default function About({ items }: { items: readonly string[] }) {

@@ -56,7 +56,7 @@ test("members get Start in both editions, with no home taste duplication", () =>
 			"Watch next",
 			"Discover",
 			"Search",
-			"Taste",
+			"Rate titles",
 			...(phone ? [] : ["Your taste", "My shows"]),
 		])
 			assert.ok(html.includes(`>${word}<`), word)

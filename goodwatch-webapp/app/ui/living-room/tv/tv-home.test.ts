@@ -90,7 +90,7 @@ test("a guest's home before the pool is drawn from the start titles alone", () =
 		[
 			["tonight", "Watch next"],
 			["discover", "Discover"],
-			["taste", "Taste"],
+			["taste", "Your taste"],
 		],
 	)
 	assert.deepEqual(apps[0].art, {
@@ -104,7 +104,7 @@ test("a guest's home before the pool is drawn from the start titles alone", () =
 		paths: ["/start-0.jpg", "/start-2.jpg", "/start-3.jpg", "/start-4.jpg"],
 	})
 	assert.deepEqual(apps[2].art, { kind: "print" })
-	assert.equal(apps[2].line, "Rate 5 titles, get picks made for you.")
+	assert.equal(apps[2].line, "Rate titles you've seen, get picks made for you.")
 	// Nothing to pick from yet: Tonight has no items of its own.
 	assert.deepEqual(tvContextOf(guest, null).tonight, [])
 })

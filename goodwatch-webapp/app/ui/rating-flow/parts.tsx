@@ -13,7 +13,7 @@ import { MILESTONE_EVERY, MIN_LIKED } from "~/domain/taste-rules"
 import type { Score } from "~/server/scores.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import type { ScoringMedia } from "~/ui/scoring/types"
-import type { QuizPick } from "~/ui/taste-quiz/use-quiz-picks"
+import type { FlowPick } from "./use-picks"
 import { useAuthHref } from "~/utils/auth-href"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { getVibeColorValue } from "~/utils/ratings"
@@ -247,7 +247,7 @@ const PICK_SIZES: SizeRule[] = [
 ]
 
 /** Recommendations: the site's poster card, with the match under it. Never a title the person answered. */
-export function PicksGrid({ picks }: { picks: QuizPick[] }) {
+export function PicksGrid({ picks }: { picks: FlowPick[] }) {
 	return (
 		<div className="grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-6">
 			{picks.map((p) => (

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import { scoreLabels } from "../../../utils/ratings.ts"
-import { RATING_LEVELS } from "../../taste-quiz/quiz-flow.ts"
+import { RATING_LEVELS } from "../../scoring/score-model.ts"
 import {
 	EMPTY_CONTEXT,
 	STRIP_LEVELS,

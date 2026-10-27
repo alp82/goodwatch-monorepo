@@ -175,7 +175,7 @@ test("a member's Start shows their next pick and a key to each screen", () => {
 	for (const name of [
 		"Discover",
 		"Search",
-		"Taste",
+		"Rate titles",
 		"Your taste",
 		"My shows",
 		"What is GoodWatch?",
@@ -235,7 +235,7 @@ test("What is GoodWatch? and the menu draw the machine's items", () => {
 		"Watch next",
 		"Discover",
 		"Search",
-		"Taste",
+		"Rate titles",
 		"Your taste",
 		"What is GoodWatch?",
 	])

@@ -1,12 +1,12 @@
 // PROTOTYPE - throwaway. The unified action set's parts: the taste quiz's score control (a copy of
-// ~/ui/taste-quiz/StackControl.tsx that also shows the current score and clears it), and the list buttons (a copy of
+// the old quiz's StackControl.tsx that also shows the current score and clears it), and the list buttons (a copy of
 // ActionButton in ~/ui/title-actions/TitleActionSet.tsx with a Not interested kind and forced label lengths).
 import { BookmarkIcon, EyeIcon, NoSymbolIcon, StarIcon } from "@heroicons/react/24/solid"
 import type React from "react"
 import { useState } from "react"
 import type { Score } from "~/server/scores.server"
 import type { TitleCard } from "~/server/title-cards.server"
-import { RATING_LEVELS, levelOf } from "~/ui/taste-quiz/quiz-flow"
+import { RATING_LEVELS, levelOf } from "~/ui/scoring/score-model"
 import { getScoreLabelText, getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import { useStore } from "./store"
 

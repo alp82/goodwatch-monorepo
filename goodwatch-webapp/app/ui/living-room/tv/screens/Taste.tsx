@@ -1,12 +1,12 @@
-// Taste on the TV, in its three states (tv-taste.ts): the way into the quiz before the person has five scores, the
-// sides of their taste as tiles once there are some, and the quiz's picks as a list ("Made for you") when there
-// are five scores and no sides yet. A side's screen lists the titles of it the person rated. The Expand key opens
+// Your taste on the TV, in its three states (tv-taste.ts): the way into Rate titles before the taste is ready, the
+// sides of their taste as tiles once there are some, and the rating flow's picks as a list ("Made for you") when the
+// taste is ready and has no sides yet. A side's screen lists the titles of it the person rated. The Expand key opens
 // the Taste page, on the side on screen (`/taste?side=`); its place at the bottom right is the Frame's, and every
 // state keeps the corner free.
 // A chunk the TV asks for on first use (screen-code.tsx).
 import { type ReactNode, useRef } from "react"
 import { GoodWatchG } from "~/ui/brand/GoodWatchWordmark"
-import { useTasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
+import { useFlowPicks, useRatingCore } from "~/ui/rating-flow/use-rating-core"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { TASTE_GROUPS_NAME } from "../../../taste/taste-groups-name"
 import { TitleList } from "../TitleList"
@@ -25,19 +25,24 @@ import {
 	useTvView,
 } from "../kit"
 import type { TvScreen } from "../tv-machine"
-import { type TvSide, type TvTasteOnScreen, startWords } from "../tv-taste"
 import {
-	type TvTasteRead,
+	RATE_TITLES,
+	type TvSide,
+	type TvTasteOnScreen,
+	startWords,
+} from "../tv-taste"
+import {
 	type TvTasteReport,
-	quizOptions,
+	coreOptions,
 	useTasteRead,
 	useTasteReport,
 } from "../use-tv-taste"
 
 // ---------------------------------------------------------------------------------------------------------
-// The data (use-tv-taste.ts). Draws nothing. The scene mounts `TasteData` once while the address names Taste, a
-// side or the quiz, and gets what it holds through `report`. It is in this chunk, so the person's taste costs no
-// request of its own and nothing in the page's first view.
+// The data (use-tv-taste.ts). Draws nothing. The scene mounts `TasteData` once while the address names Your taste,
+// a side or Rate titles, and gets what it holds through `report`. It is in this chunk, so the person's taste costs no
+// request of its own and nothing in the page's first view. The rating flow's core stays mounted across the three
+// screens, so its titles, its answers and its milestones last while the person moves between them.
 
 type DataProps = {
 	screen: TvScreen
@@ -45,44 +50,18 @@ type DataProps = {
 	report: (taste: TvTasteReport | null) => void
 }
 
-function Report({
-	screen,
-	report,
-	read,
-	quiz,
-}: DataProps & {
-	read: TvTasteRead
-	quiz: Parameters<typeof useTasteReport>[2]
-}) {
-	useReport(report, useTasteReport(screen, read, quiz))
-	return null
-}
-
-/** The quiz, while it has something to do: its titles, the person's picks, and where its scores go. */
-function WithQuiz(props: DataProps & { read: TvTasteRead }) {
-	const quiz = useTasteQuiz(quizOptions(props.screen, props.read, props.member))
-	return <Report {...props} quiz={quiz} />
-}
-
 export function TasteData(props: DataProps) {
 	const read = useTasteRead(props)
-	// The quiz stays while Taste reads the portrait (after the quiz's goal, say): unmounting it would forget its
-	// titles, its answers and where it was, and its next mount would ask for the same titles again. It does nothing
-	// meanwhile (`quizOptions` holds its fetch back).
-	const hadQuiz = useRef(false)
-	const quizzes = read.quizzes || (hadQuiz.current && read.state === "reading")
-	hadQuiz.current = quizzes
-	return quizzes ? (
-		<WithQuiz {...props} read={read} />
-	) : (
-		<Report {...props} read={read} quiz={null} />
-	)
+	const flow = useRatingCore(coreOptions(props.screen, read, props.member))
+	const picks = useFlowPicks(flow, read.state === "picks")
+	useReport(props.report, useTasteReport(props.screen, read, flow, picks))
+	return null
 }
 
 // ---------------------------------------------------------------------------------------------------------
 // The screens.
 
-/** The words and one key: before the person has five scores, and while the portrait is on its way. */
+/** The words and one key: before the taste is ready, and while the portrait is on its way. */
 function Ask({
 	items,
 	headline,
@@ -126,7 +105,7 @@ function Ask({
 							{line}
 						</div>
 					)}
-					{/* In the machine's order: the way into the quiz, a guest's sign-up, then the Expand key, on a row of its
+					{/* In the machine's order: Rate titles, a guest's sign-up, then the Expand key, on a row of its
 					    own where the sign-up leaves it no room. */}
 					<div className="mt-1.5 flex items-center gap-2">
 						{start}
@@ -173,7 +152,7 @@ function Ask({
 	)
 }
 
-/** "Rate more": the way back into the quiz once the person has a taste. */
+/** "Rate titles": the way back into the rating flow once the person has a taste. */
 function RateMore() {
 	const { canvas } = useTvView()
 	const P = canvas.edition === "phone"
@@ -183,7 +162,7 @@ function RateMore() {
 			className={`tvc-btn flex shrink-0 items-center whitespace-nowrap ${P ? "px-5 text-[19px]" : "h-[70px] px-9 text-[27px]"}`}
 			style={P ? { height: keySize(canvas, 54) } : undefined}
 		>
-			Rate more
+			{RATE_TITLES}
 		</Item>
 	)
 }
@@ -273,8 +252,8 @@ function Sides({
 			: undefined,
 		dim: 0.86,
 	}
-	// The phone: three sides a page, with arrows where there are more, and Rate more and the Expand key under them.
-	// A guest's sign-up joins Rate more, the Expand key takes a row of its own, and the sides give up their height
+	// The phone: three sides a page, with arrows where there are more, and Rate titles and the Expand key under them.
+	// A guest's sign-up joins Rate titles, the Expand key takes a row of its own, and the sides give up their height
 	// for it (no line over them).
 	if (P) {
 		const guest = items.includes("sign-up")
@@ -292,7 +271,7 @@ function Sides({
 						className="flex shrink-0 items-center gap-2"
 						style={{ height: h }}
 					>
-						{/* In the machine's order: Rate more, a guest's sign-up, then the Expand key, on a row of its own
+						{/* In the machine's order: Rate titles, a guest's sign-up, then the Expand key, on a row of its own
 						    where the sign-up leaves it no room. */}
 						{more && <RateMore />}
 						{guest ? <SignUp /> : items.includes("expand") && <Expand />}
@@ -380,8 +359,8 @@ function SidesPage({
 	)
 }
 
-/** "Rate more" as a list's key. */
-const RATE_MORE = [{ id: "start-quiz", label: "Rate more" }]
+/** "Rate titles" as a list's key. */
+const RATE_MORE = [{ id: "start-quiz", label: RATE_TITLES }]
 /** A guest's sign-up, as a list's key. */
 const SIGN_UP = {
 	id: "sign-up",
@@ -421,17 +400,17 @@ export default function Taste({
 	switch (taste.state) {
 		case "reading":
 			return (
-				<Ask items={items} headline="Reading your taste." label="Rate more" />
+				<Ask items={items} headline="Reading your taste." label={RATE_TITLES} />
 			)
 		case "start": {
-			const words = startWords(taste.rated)
+			const words = startWords(taste.tally)
 			return (
 				<Ask
 					items={items}
 					headline={words.headline}
 					line={words.line}
 					label={words.key}
-					// The first title the quiz will ask about is the picture, as it is on the quiz itself.
+					// The first title Rate titles will ask about is the picture, as it is on Rate titles itself.
 					backdrop={taste.backdrop}
 				/>
 			)

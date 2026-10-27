@@ -31,7 +31,7 @@ import {
 	ratingFlow,
 	tally as tallyOf,
 } from "./flow"
-import { useQuizPicks as usePicks } from "~/ui/taste-quiz/use-quiz-picks"
+import { usePicks } from "./use-picks"
 import { WORDS } from "./words"
 
 const keyOf = (i: { media_type: string; tmdb_id: number }) =>

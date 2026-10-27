@@ -1,5 +1,5 @@
-// Run by tv-taste-render.test.ts through vite-node: renders Taste in its three states, a side's screen, the taste
-// quiz and the rating the way they are drawn once their code is there, and prints the HTML with the item ids the
+// Run by tv-taste-render.test.ts through vite-node: renders Your taste in its three states, a side's screen, Rate
+// titles and the rating the way they are drawn once their code is there, and prints the HTML with the item ids the
 // machine lists for each.
 import { renderToStaticMarkup } from "react-dom/server"
 import type { TvListTitle } from "./TitleList"
@@ -78,6 +78,7 @@ const PICKS = [1, 2, 3, 4, 5].map((n) => listTitle(`show-${900 + n}`, n))
 const ASKED = {
 	key: "show-2316",
 	title: "The Office",
+	year: "2005",
 	backdrop: "/office.jpg",
 	poster: "/office-poster.jpg",
 	facts: "2005 · Show",
@@ -88,14 +89,34 @@ const screensOf = (
 	quiz: Partial<TvQuizOnScreen> = {},
 ): TvTasteScreens => ({
 	taste,
+	tasteLit: null,
 	quiz: {
 		title: null,
 		waiting: false,
-		rated: 0,
+		tally: null,
+		next: null,
+		lit: null,
 		answered: NOT_ANSWERED,
 		...quiz,
 	},
 })
+
+/** Two rated, both liked: three more liked to the taste. */
+const ON_THE_WAY: Partial<TvQuizOnScreen> = {
+	tally: { rated: 2, liked: 2 },
+	next: { kind: "liked", done: 2, of: 5, left: 3 },
+}
+/** The taste is ready: six ratings since the last milestone, four more to new picks. */
+const READY: Partial<TvQuizOnScreen> = {
+	tally: { rated: 16, liked: 9 },
+	next: { kind: "rated", done: 6, of: 10, left: 4 },
+}
+/** The fifth liked title just landed: Your taste is lit. */
+const LIT: Partial<TvQuizOnScreen> = {
+	tally: { rated: 7, liked: 5 },
+	next: { kind: "rated", done: 0, of: 10, left: 10 },
+	lit: { kind: "ready", rated: 7 },
+}
 /** The machine's context as the scene builds it: Taste's part; both editions have exact scores. */
 const ctxOf = (
 	screen: Screen,
@@ -172,7 +193,7 @@ const tasteOf = (
 
 const quizOf = (quiz: Partial<TvQuizOnScreen>, focus?: string) =>
 	editions((canvas) => {
-		const shown = screensOf({ state: "start", rated: 0, backdrop: null }, quiz)
+		const shown = screensOf(start, quiz)
 		const ctx = ctxOf(QUIZ, shown, canvas)
 		const items = tvItems(QUIZ, ctx)
 		return {
@@ -245,7 +266,11 @@ function first(screen: Screen, taste?: TvTasteScreens) {
 	)
 }
 
-const start: TvTasteOnScreen = { state: "start", rated: 0, backdrop: null }
+const start: TvTasteOnScreen = {
+	state: "start",
+	tally: { rated: 0, liked: 0 },
+	backdrop: null,
+}
 const sidesOf = (count: number): TvTasteOnScreen => ({
 	state: "sides",
 	sides: SIDES.slice(0, count),
@@ -257,7 +282,11 @@ console.log(
 	`__TV_TASTE_RENDER__${JSON.stringify({
 		taste: {
 			start: tasteOf(start),
-			started: tasteOf({ state: "start", rated: 3, backdrop: "/next.jpg" }),
+			started: tasteOf({
+				state: "start",
+				tally: { rated: 3, liked: 2 },
+				backdrop: "/next.jpg",
+			}),
 			reading: tasteOf({ state: "reading" }),
 			two: tasteOf(sidesOf(2)),
 			three: tasteOf(sidesOf(3)),
@@ -274,11 +303,35 @@ console.log(
 			sideGone: tasteOf(sidesOf(3), { name: "taste", side: "no-such" }),
 		},
 		quiz: {
-			asking: quizOf({ title: ASKED, rated: 2 }),
-			onScore: quizOf({ title: ASKED, rated: 2 }, "score:8"),
-			onLevel: quizOf({ title: ASKED, rated: 2 }, "level:3"),
-			onSkip: quizOf({ title: ASKED, rated: 2 }, "skip"),
-			more: quizOf({ title: ASKED, rated: 7 }),
+			asking: quizOf({ title: ASKED, ...ON_THE_WAY }),
+			onScore: quizOf({ title: ASKED, ...ON_THE_WAY }, "score:8"),
+			onLevel: quizOf({ title: ASKED, ...ON_THE_WAY }, "level:3"),
+			onSkip: quizOf({ title: ASKED, ...ON_THE_WAY }, "skip"),
+			onNotInterested: quizOf({ title: ASKED, ...ON_THE_WAY }, "not-interested"),
+			more: quizOf({ title: ASKED, ...READY }),
+			lit: quizOf({ title: ASKED, ...LIT }),
+			given: quizOf({
+				title: ASKED,
+				...ON_THE_WAY,
+				answered: {
+					score: null,
+					leaving: false,
+					line: "Haven't seen it. We won't ask about it again.",
+					short: "Haven't seen it",
+					failed: false,
+				},
+			}),
+			failed: quizOf({
+				title: ASKED,
+				...ON_THE_WAY,
+				answered: {
+					score: 8,
+					leaving: false,
+					line: "Couldn't save. Try again, or go to the next title.",
+					short: null,
+					failed: true,
+				},
+			}),
 			long: quizOf({
 				title: {
 					...ASKED,
@@ -309,7 +362,7 @@ console.log(
 				const items = tvItems(screen, ctxOf(screen, shown, canvas))
 				return { items, html: html(canvas, items[0], node(items)) }
 			}
-			const asking = screensOf(start, { title: ASKED })
+			const asking = screensOf(start, { title: ASKED, ...ON_THE_WAY })
 			return {
 				phone,
 				scale,

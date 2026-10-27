@@ -57,6 +57,11 @@ export type TvView = {
 	screenName?: string
 	/** The screen is home (Start, or a guest's Home): the phone's header has no Back there. */
 	atHome?: boolean
+	/**
+	 * Rate titles reached a milestone that Your taste hasn't shown yet: its words ("Your taste is ready", "Your picks
+	 * changed"). The menu's Your taste says them in amber, and the phone's Menu key carries an amber dot.
+	 */
+	tasteLit?: string | null
 }
 
 const ViewContext = createContext<TvView | null>(null)
@@ -490,7 +495,7 @@ const NAV_TABS: Record<string, { label: string; short?: string }> = {
 	"nav:popular": { label: "Popular" },
 	"nav:discover": { label: "Discover" },
 	"nav:search": { label: "Search" },
-	"nav:quiz": { label: "Taste" },
+	"nav:quiz": { label: "Rate titles" },
 }
 
 /**
@@ -562,18 +567,30 @@ export function NavBar({ items }: { items: readonly string[] }) {
  * guest), the screen's name, and Menu, which lists every TV screen. No tabs: they crowded a phone's width. Back
  * is the Remote's.
  */
+/**
+ * A second line under the phone header's name: quiet, an answer just given or a milestone (both amber), or a save
+ * that failed (red, on up to two lines; the name keeps one).
+ */
+export type PhoneHeaderLine = {
+	text: string
+	tone: "quiet" | "answer" | "lit" | "failed"
+}
+
 export function PhoneHeader({
 	items,
 	name,
 	mark,
+	line,
 }: {
 	items: readonly string[]
 	/** The screen's name; the screen's own from the TV (`screenName`) when there is none. */
 	name?: string
 	/** What stands before the name: a service's mark. */
 	mark?: ReactNode
+	/** A line under the name (Rate titles: the next step, or the answer just given). */
+	line?: PhoneHeaderLine
 }) {
-	const { canvas, here, member, screenName, atHome } = useTvView()
+	const { canvas, here, member, screenName, atHome, tasteLit } = useTvView()
 	const side = keyLength(canvas, 54)
 	const words = name ?? screenName ?? ""
 	// The keys are every phone screen's (tv-machine.ts, `tvItems`): Back on every screen but home, the G and Menu.
@@ -610,19 +627,46 @@ export function PhoneHeader({
 			<div className="ml-1 flex min-w-0 flex-1 items-center gap-2.5 transition-opacity [[data-tv-toast]_&]:opacity-0">
 				{mark}
 				{/* A long name (a title's) takes two lines at a smaller size rather than losing its end. */}
-				<span
-					className={`font-bold ${words.length > 24 ? "line-clamp-2 text-[18px] leading-[1.1]" : "truncate text-[23px] leading-tight"}`}
-				>
-					{words}
-				</span>
+				{line ? (
+					// With a line under it: the name on one or two lines over it, the line on one.
+					<span className="flex min-w-0 flex-col">
+						<span
+							className={`font-bold ${line.tone === "failed" ? "truncate text-[17px] leading-tight" : words.length > 22 ? "line-clamp-2 text-[17px] leading-[1.1]" : "truncate text-[21px] leading-tight"}`}
+						>
+							{words}
+						</span>
+						<span
+							key={line.tone === "quiet" ? "quiet" : line.text}
+							className={
+								line.tone === "failed"
+									? "line-clamp-2 text-[14px] font-semibold leading-[1.1] text-red-300"
+									: `truncate text-[15px] leading-tight ${line.tone === "quiet" ? "text-white/65" : "score-ack-enter font-semibold text-amber-300"}`
+							}
+						>
+							{line.text}
+						</span>
+					</span>
+				) : (
+					<span
+						className={`font-bold ${words.length > 24 ? "line-clamp-2 text-[18px] leading-[1.1]" : "truncate text-[23px] leading-tight"}`}
+					>
+						{words}
+					</span>
+				)}
 			</div>
 			<Item
 				id="bar:menu"
-				label="Menu"
-				className="tvc-act flex shrink-0 items-center justify-center"
+				label={tasteLit ? `Menu: ${tasteLit}` : "Menu"}
+				className="tvc-act relative flex shrink-0 items-center justify-center"
 				style={{ width: side, height: side }}
 			>
 				<Icon d={MENU_ICON} className="h-[26px] w-[26px]" />
+				{tasteLit && (
+					<span
+						aria-hidden
+						className="score-ack-enter absolute right-[22%] top-[22%] h-2.5 w-2.5 rounded-full bg-amber-400"
+					/>
+				)}
 			</Item>
 		</nav>
 	)

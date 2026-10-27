@@ -1458,10 +1458,15 @@ html[data-tv-transition] .tvr-bracket {
 			transition: none;
 		}
 	}
-	/* Your taste's sign-up: amber like the site's own, white with the focus like every key. */
+	/* Your taste's sign-up, and Your taste at a milestone of Rate titles: amber like the site's own, white with the
+	   focus like every key. */
 	.tvc-cta:not(.tvc-on) {
 		background: linear-gradient(180deg, #fcd34d, #f59e0b);
 		color: #000;
+	}
+	/* The menu's Your taste at a milestone of Rate titles: amber too, over the menu keys' quiet plate. */
+	.tvc-menu-key.tvc-cta:not(.tvc-on) {
+		background: linear-gradient(180deg, #fcd34d, #f59e0b);
 	}
 	/* The Expand key: a dark glass pill with an amber outline, amber once it has the focus. */
 	.tvc-x {

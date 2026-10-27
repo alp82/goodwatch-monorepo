@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import { searchHref } from "../../navigation/destinations.ts"
-import { RATING_LEVELS, levelOf } from "../../taste-quiz/quiz-flow.ts"
+import { RATING_LEVELS, levelOf } from "../../scoring/score-model.ts"
 import { KEY_ITEMS } from "./tv-browse.ts"
 import {
 	DISCOVER_TABS,
@@ -539,7 +539,7 @@ describe("the screens and their items, in reading order", () => {
 		])
 	})
 
-	it("Taste without a taste: Start rating, after the quiz's picks once there are some", () => {
+	it("Your taste without a taste: Rate titles, after the flow's picks once there are some", () => {
 		// A guest can sign up to keep it.
 		assert.deepEqual(items("tv=taste", { ...guest, titles: [] }), [
 			"start-quiz",
@@ -564,7 +564,7 @@ describe("the screens and their items, in reading order", () => {
 		)
 	})
 
-	it("Taste with a taste: each side, then Rate more", () => {
+	it("Your taste with a taste: each side, then Rate titles", () => {
 		assert.deepEqual(items("tv=taste", member), [
 			"side:dark-crime",
 			"side:gentle-comedy",
@@ -586,20 +586,22 @@ describe("the screens and their items, in reading order", () => {
 		])
 	})
 
-	it("the quiz: the strip's four levels from low to high, Haven't seen it, Your taste, then Expand", () => {
+	it("Rate titles: the strip's four levels from low to high, its two marks, Your taste, then Expand", () => {
 		assert.deepEqual(items("tv=quiz"), [
 			...LEVELS, ...SCORES,
 			"skip",
+			"not-interested",
 			"your-taste",
 			"expand",
 			...NAV,
 		])
 	})
 
-	it("the quiz on the desktop: the ten exact scores under the levels", () => {
+	it("Rate titles on the desktop: the ten exact scores under the levels", () => {
 		assert.deepEqual(items("tv=quiz", desktop), [
 			...LEVELS, ...SCORES,
 			"skip",
+			"not-interested",
 			"your-taste",
 			"expand",
 			...NAV,
@@ -704,7 +706,7 @@ describe("the screens and their items, in reading order", () => {
 		])
 	})
 
-	it("What is GoodWatch?: Got it and Rate what I've seen, no Expand", () => {
+	it("What is GoodWatch?: Got it and Rate titles, no Expand", () => {
 		assert.deepEqual(items("tv=about"), ["got-it", "rate", ...BAR])
 	})
 
@@ -970,7 +972,7 @@ describe("history: what replaces", () => {
 		assert.equal(t.url, "tv=search&q=space")
 	})
 
-	it("Rate what I've seen on What is GoodWatch?", () => {
+	it("Rate titles on What is GoodWatch?", () => {
 		const t = choose("tv=about", "rate")
 		assert.equal(t.history, "replace")
 		assert.equal(t.url, "tv=quiz")
@@ -993,24 +995,12 @@ describe("history: what goes back", () => {
 		assert.equal(choose("tv=about", "got-it").history, "back")
 	})
 
-	it("the quiz score that reaches the goal stays, with the effect that stores it", () => {
-		const last = { ...guest, quizProgress: 4 }
-		const t = choose("tv=quiz", "level:7", last)
+	it("a score on Rate titles stays, with the effect that stores it", () => {
+		const t = choose("tv=quiz", "level:7")
 		assert.equal(t.history, "none")
 		assert.equal(t.url, "tv=quiz")
-		assert.equal(focusedItem(t.state, last), "level:7")
+		assert.equal(focusedItem(t.state, guest), "level:7")
 		assert.deepEqual(t.effects, [{ type: "quiz-rate", score: 7 }])
-	})
-
-	it("the quiz once its last answer is saved and held", () => {
-		const t = run(at("tv=quiz", 1), guest, { type: "quiz-done" })
-		assert.equal(t.history, "back")
-		assert.deepEqual(t.effects, [])
-		// Anywhere but the quiz it does nothing.
-		assert.equal(
-			run(at("tv=taste", 1), guest, { type: "quiz-done" }).history,
-			"none",
-		)
 	})
 
 	it("a rating level, with the effect that stores it", () => {
@@ -1051,15 +1041,14 @@ describe("history: a deep link has nothing to go back to", () => {
 		assert.equal(t.state, start)
 	})
 
-	it("the quiz, once done, shows Taste", () => {
-		const last = { ...guest, quizProgress: 4 }
-		const scored = choose("tv=quiz", "level:9", last, 0)
+	it("Rate titles from a deep link stays on Rate titles after a score; Your taste opens on top of it", () => {
+		const scored = choose("tv=quiz", "level:9", guest, 0)
 		assert.equal(scored.history, "none")
+		assert.equal(scored.url, "tv=quiz")
 		assert.deepEqual(scored.effects, [{ type: "quiz-rate", score: 9 }])
-		const t = run(scored.state, last, { type: "quiz-done" })
-		assert.equal(t.history, "replace")
+		const t = run(scored.state, guest, { type: "choose", item: "your-taste" })
+		assert.equal(t.history, "push")
 		assert.equal(t.url, "tv=taste")
-		assert.deepEqual(t.effects, [])
 	})
 
 	it("a rating level shows the title", () => {
@@ -1129,17 +1118,14 @@ describe("history: what changes nothing", () => {
 		)
 	})
 
-	it("an action that only has an effect: Watch, Want to See, a quiz score before the last", () => {
+	it("an action that only has an effect: Watch, Want to See, a score on Rate titles", () => {
 		const watch = choose("tv=title&title=movie-1", "watch")
 		assert.equal(watch.history, "none")
 		assert.deepEqual(watch.effects, [{ type: "watch", title: "movie-1" }])
 		const want = choose("tv=title&title=movie-1", "want-to-see")
 		assert.equal(want.history, "none")
 		assert.deepEqual(want.effects, [{ type: "want-to-see", title: "movie-1" }])
-		const answer = choose("tv=quiz", "level:3", {
-			...guest,
-			quizProgress: 3,
-		})
+		const answer = choose("tv=quiz", "level:3")
 		assert.equal(answer.history, "none")
 		assert.deepEqual(answer.effects, [{ type: "quiz-rate", score: 3 }])
 	})
@@ -1161,10 +1147,10 @@ describe("the Expand key's destinations", () => {
 		assert.equal(name("tv=discover&theme=crime"), "Discover")
 		assert.equal(name("tv=explorer"), "Explorer")
 		assert.equal(name("tv=explorer&island=i3"), "Explorer")
-		assert.equal(name("tv=taste"), "Taste")
+		assert.equal(name("tv=taste"), "Your taste")
 		assert.equal(name("tv=shows", member), "My shows")
 		assert.equal(name("tv=search&q=heist"), "Discover")
-		assert.equal(name("tv=quiz"), "the taste quiz")
+		assert.equal(name("tv=quiz"), "Rate titles")
 		assert.equal(name("tv=popular", member), "Discover")
 	})
 
@@ -1185,7 +1171,7 @@ describe("the Expand key's destinations", () => {
 			label("tv=taste&side=dark-crime", member),
 			"Full taste profile",
 		)
-		assert.equal(label("tv=quiz"), "Full taste quiz")
+		assert.equal(label("tv=quiz"), "Full page")
 		assert.equal(label("tv=explorer&island=i3"), "Full Explorer")
 		assert.equal(label("tv=shows", member), "All my shows")
 		for (const query of [
@@ -1453,8 +1439,8 @@ describe("the title screen and the rating", () => {
 })
 
 describe("the rating strip", () => {
-	// The strip as the desktop lays it out: each level as wide as its scores, the ten scores under them, and in the
-	// quiz Haven't seen it under those. The bar is above, at the right.
+	// The strip as the desktop lays it out: each level as wide as its scores, the ten scores under them, and on Rate
+	// titles its two marks, Haven't seen it and Not interested, under those. The bar is above, at the right.
 	const cell = 100
 	const span = [
 		["level:3", 0, 4],
@@ -1478,6 +1464,7 @@ describe("the rating strip", () => {
 			height: 64,
 		})),
 		{ id: "skip", left: 0, top: 492, width: 280, height: 64 },
+		{ id: "not-interested", left: 296, top: 492, width: 260, height: 64 },
 		{ id: "bar:back", left: 560, top: 20, width: 130, height: 64 },
 		{ id: "bar:search", left: 700, top: 20, width: 150, height: 64 },
 		{ id: "bar:menu", left: 860, top: 20, width: 132, height: 64 },
@@ -1504,6 +1491,12 @@ describe("the rating strip", () => {
 		assert.deepEqual(STRIP_SCORES, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 		assert.equal(STRIP_START, "level:7")
 		assert.equal(RATING_LEVELS[levelOf(7)].name, "Good")
+	})
+
+	it("the two marks sit side by side under the scores", () => {
+		assert.equal(move("tv=quiz", "skip", go("right")), "not-interested")
+		assert.equal(move("tv=quiz", "not-interested", go("left")), "skip")
+		assert.equal(move("tv=quiz", "score:2", go("down")), "skip")
 	})
 
 	it("OK on a level gives the level's score: 3, 5, 7 and 9", () => {
@@ -1652,12 +1645,16 @@ describe("the rating strip", () => {
 	})
 })
 
-describe("the taste quiz", () => {
-	it("Haven't seen it skips and never ends the quiz", () => {
-		const t = choose("tv=quiz", "skip", { ...guest, quizProgress: 4 })
+describe("Rate titles", () => {
+	it("Haven't seen it and Not interested go on to the next title and never end rating", () => {
+		const t = choose("tv=quiz", "skip")
 		assert.equal(t.history, "none")
 		assert.deepEqual(t.effects, [{ type: "quiz-skip" }])
 		assert.equal(focusedItem(t.state, guest), "skip")
+		const n = choose("tv=quiz", "not-interested")
+		assert.equal(n.history, "none")
+		assert.deepEqual(n.effects, [{ type: "quiz-not-interested" }])
+		assert.equal(focusedItem(n.state, guest), "not-interested")
 	})
 
 	it("keeps the focus where it was after a score, so the next title takes the same press", () => {
@@ -1677,33 +1674,34 @@ describe("the taste quiz", () => {
 		}
 	})
 
-	it("stays on the score that reaches the goal, whichever key gave it, until it is saved and held", () => {
-		const last = { ...desktop, quizProgress: 4 }
-		for (const item of ["level:5", "score:10"]) {
-			const t = choose("tv=quiz", item, last)
-			assert.equal(t.history, "none")
-			assert.equal(t.effects.length, 1)
-			assert.equal(run(t.state, last, { type: "quiz-done" }).history, "back")
+	it("a milestone never stops rating: every answer stays, whichever key gave it", () => {
+		for (const item of ["level:5", "score:10", "skip", "not-interested"]) {
+			const t = choose("tv=quiz", item, desktop)
+			assert.equal(t.history, "none", item)
+			assert.equal(t.url, "tv=quiz", item)
+			assert.equal(t.effects.length, 1, item)
 		}
 	})
 
-	it("Your taste opens Taste's screen from the quiz", () => {
+	it("Your taste opens Your taste's screen from Rate titles", () => {
 		const t = choose("tv=quiz", "your-taste")
 		assert.equal(t.history, "push")
 		assert.equal(t.url, "tv=taste")
 		assert.equal(choose("tv=taste", "your-taste").history, "none")
 	})
 
-	it("goes on past the goal when rating more", () => {
-		const t = choose("tv=quiz", "level:9", { ...member, quizProgress: 7 })
+	it("a member rates on too", () => {
+		const t = choose("tv=quiz", "level:9", member)
 		assert.equal(t.history, "none")
 	})
 
-	it("Haven't seen it is the quiz's alone", () => {
+	it("the two marks are Rate titles' alone", () => {
 		const start = at("tv=rate&title=movie-1", 1)
-		const t = run(start, guest, { type: "choose", item: "skip" })
-		assert.equal(t.state, start)
-		assert.deepEqual(t.effects, [])
+		for (const item of ["skip", "not-interested"]) {
+			const t = run(start, guest, { type: "choose", item })
+			assert.equal(t.state, start)
+			assert.deepEqual(t.effects, [])
+		}
 	})
 })
 
