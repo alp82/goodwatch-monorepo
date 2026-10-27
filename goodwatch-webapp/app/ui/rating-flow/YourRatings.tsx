@@ -1,11 +1,15 @@
 // "Your ratings" in the taste view: every score the person holds (earlier ones too), newest first, as compact rows
 // with a small poster, the title, its year and the score. Never poster cards, so they never read as recommendations.
-// Titles met in this flow are known; older ones are read from /api/wishlist-titles (public title data, 100 a request).
+// Titles met in this flow are known; older ones are read from /api/wishlist-titles (public title data, at most 100
+// a request). The list grows a page at a time, and each page reads its own titles with one request, so one failed
+// page never breaks the others and "Show more" never fires more than one request.
 import { Link } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { titlePath } from "~/utils/helpers"
+import useLocale from "~/utils/locale"
+import { mediaLanguageUrl } from "~/utils/media-presentation"
 import { RATINGS_SHOWN, type RatedEntry } from "./flow"
 import { ScoreSquare, image, quietButton } from "./parts"
 import { WORDS } from "./words"
@@ -15,22 +19,18 @@ type RowTitle = Pick<
 	"tmdb_id" | "media_type" | "title" | "poster_path" | "release_year"
 >
 
-const PER_REQUEST = 100
+// One page is one request: the endpoint takes at most 100 keys.
+const PAGE = RATINGS_SHOWN
 
-async function fetchTitles(keys: string[]): Promise<RowTitle[]> {
-	const parts: string[][] = []
-	for (let i = 0; i < keys.length; i += PER_REQUEST)
-		parts.push(keys.slice(i, i + PER_REQUEST))
-	const answers = await Promise.all(
-		parts.map(async (part) => {
-			const response = await fetch(
-				`/api/wishlist-titles?keys=${encodeURIComponent(part.join(","))}`,
-			)
-			if (!response.ok) throw new Error("Title details didn't load")
-			return ((await response.json()) as { titles: RowTitle[] }).titles
-		}),
+async function fetchTitles(keys: string[], language: string): Promise<RowTitle[]> {
+	const response = await fetch(
+		mediaLanguageUrl(
+			`/api/wishlist-titles?keys=${encodeURIComponent(keys.join(","))}`,
+			language,
+		),
 	)
-	return answers.flat()
+	if (!response.ok) throw new Error("Title details didn't load")
+	return ((await response.json()) as { titles: RowTitle[] }).titles
 }
 
 const keyOf = (t: { media_type: string; tmdb_id: number }) =>
@@ -40,45 +40,99 @@ export function YourRatings({
 	ratings,
 	met,
 }: { ratings: RatedEntry[]; met: ReadonlyMap<string, ScoringMedia> }) {
-	const [all, setAll] = useState(false)
-	const shown = all ? ratings : ratings.slice(0, RATINGS_SHOWN)
-	const missing = shown.map((r) => r.key).filter((key) => !met.has(key))
-	const { data: fetched } = useQuery({
-		queryKey: ["rating-flow-titles", [...missing].sort()],
-		queryFn: () => fetchTitles(missing),
-		enabled: missing.length > 0,
-		staleTime: Number.POSITIVE_INFINITY,
-		placeholderData: (previous) => previous,
-	})
-	const titles = new Map<string, RowTitle>(met)
-	for (const t of fetched ?? []) titles.set(keyOf(t), t)
-
+	const [pages, setPages] = useState(1)
 	if (!ratings.length)
 		return <p className="text-sm text-gray-500">{WORDS.noRatings}</p>
+	const shown = Math.min(ratings.length, pages * PAGE)
+	const pageList: RatedEntry[][] = []
+	for (let i = 0; i < shown; i += PAGE) pageList.push(ratings.slice(i, i + PAGE))
 	return (
 		<div>
 			<ul className="grid gap-x-6 md:grid-cols-2 xl:grid-cols-3">
-				{shown.map((r) => (
-					<li key={r.key} className="border-b border-white/5">
-						<Row entry={r} title={titles.get(r.key)} />
-					</li>
+				{pageList.map((entries, index) => (
+					<RatingsPage key={index} entries={entries} met={met} />
 				))}
 			</ul>
-			{ratings.length > RATINGS_SHOWN && (
-				<button
-					type="button"
-					className={`${quietButton} -ml-3`}
-					aria-expanded={all}
-					onClick={() => setAll(!all)}
-				>
-					{all ? "Show fewer" : `Show all ${ratings.length}`}
-				</button>
-			)}
+			<div className="flex flex-wrap">
+				{shown < ratings.length && (
+					<button
+						type="button"
+						className={`${quietButton} -ml-3`}
+						onClick={() => setPages(pages + 1)}
+					>
+						{WORDS.showMore} ({ratings.length - shown})
+					</button>
+				)}
+				{pages > 1 && (
+					<button
+						type="button"
+						className={`${quietButton} ${shown < ratings.length ? "" : "-ml-3"}`}
+						onClick={() => setPages(1)}
+					>
+						{WORDS.showFewer}
+					</button>
+				)}
+			</div>
 		</div>
 	)
 }
 
-function Row({ entry, title }: { entry: RatedEntry; title?: RowTitle }) {
+function RatingsPage({
+	entries,
+	met,
+}: { entries: RatedEntry[]; met: ReadonlyMap<string, ScoringMedia> }) {
+	const { locale } = useLocale()
+	const missing = entries.map((r) => r.key).filter((key) => !met.has(key))
+	const { data, isError, isFetching, isSuccess, refetch } = useQuery({
+		queryKey: ["rating-flow-titles", locale.language, [...missing].sort()],
+		queryFn: () => fetchTitles(missing, locale.language),
+		enabled: missing.length > 0,
+		placeholderData: (previous) => previous,
+		retry: 1,
+	})
+	const titles = new Map<string, RowTitle>(met)
+	for (const t of data ?? []) titles.set(keyOf(t), t)
+	// Answered for exactly these keys: a key the catalog did not return is gone, not loading.
+	const answered = isSuccess && !isFetching
+	return (
+		<>
+			{entries.map((r) => {
+				const title = titles.get(r.key)
+				return (
+					<li key={r.key} className="border-b border-white/5">
+						<Row
+							entry={r}
+							title={title}
+							state={title ? "ready" : answered ? "unavailable" : isError ? "failed" : "loading"}
+						/>
+					</li>
+				)
+			})}
+			{isError && !isFetching && (
+				<li className="col-span-full flex flex-wrap items-center gap-x-3 py-2 text-sm text-amber-200">
+					<span role="alert">{WORDS.ratingsFailed}</span>
+					<button
+						type="button"
+						className={`${quietButton} -ml-3 text-amber-200 hover:text-white`}
+						onClick={() => void refetch()}
+					>
+						{WORDS.tryAgain}
+					</button>
+				</li>
+			)}
+		</>
+	)
+}
+
+function Row({
+	entry,
+	title,
+	state,
+}: {
+	entry: RatedEntry
+	title?: RowTitle
+	state: "ready" | "loading" | "failed" | "unavailable"
+}) {
 	const body = (
 		<>
 			{title?.poster_path ? (
@@ -100,8 +154,12 @@ function Row({ entry, title }: { entry: RatedEntry; title?: RowTitle }) {
 							<span className="text-gray-500"> ({title.release_year})</span>
 						)}
 					</>
-				) : (
+				) : state === "loading" ? (
 					<span className="inline-block h-3 w-32 animate-pulse rounded bg-gray-800" />
+				) : state === "unavailable" ? (
+					<span className="text-gray-500">{WORDS.titleUnavailable}</span>
+				) : (
+					<span className="inline-block h-3 w-32 rounded bg-gray-800" />
 				)}
 			</span>
 			<ScoreSquare score={entry.score} />
