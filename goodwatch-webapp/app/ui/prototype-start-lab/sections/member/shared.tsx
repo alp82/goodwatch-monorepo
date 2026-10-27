@@ -324,8 +324,8 @@ export function TvAnchor({
 		return () => ro.disconnect()
 	}, [])
 	let tv: Rect | null = null
-	if (box) {
-		const meta = pickMeta(scene, box.w / Math.max(1, box.h), portraitBelow)
+	const meta = box ? pickMeta(scene, box.w / Math.max(1, box.h), portraitBelow) : null
+	if (box && meta?.tv) {
 		const fx = focal?.[0] ?? meta.tv.box[0] + meta.tv.box[2] / 2
 		const fy = focal?.[1] ?? meta.tv.box[1] + meta.tv.box[3] / 2
 		const cover = coverFit(box.w, box.h, meta.width, meta.height, fx, fy, zoom)

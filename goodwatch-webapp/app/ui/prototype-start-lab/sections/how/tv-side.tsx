@@ -5,10 +5,11 @@ import { useLab } from "../../lab/types"
 import { ESSENTIALS } from "./visuals"
 
 export function TvSide() {
-	const { Room, scene, playIntro } = useLab()
+	const { Room, tvScene, playIntro } = useLab()
 	const roomBox = useRef<HTMLDivElement>(null)
 	// Close enough that the TV is about a third of the crop's width, whatever the scene.
-	const tvWidth = scene.landscape.tv.box[2] || 0.2
+	// Round 2's stage scenes have no TV: the room shows its TV corner (Lab.tvScene).
+	const tvWidth = tvScene.landscape.tv?.box[2] || 0.2
 	const zoom = Math.min(4, Math.max(1, 0.36 / tvWidth))
 	// The text's button presses the TV's own hint when it is a button, so the intro grows out of the TV; otherwise it opens plain.
 	const watch = () => {

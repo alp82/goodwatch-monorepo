@@ -24,7 +24,8 @@ export type SceneMeta = {
 	orientation: "landscape" | "portrait"
 	width: number
 	height: number
-	tv: SceneRegion
+	/** Null for a scene without a TV (the round 2 stage scenes). */
+	tv: SceneRegion | null
 	slots: SceneSlot[]
 	notes?: string
 }

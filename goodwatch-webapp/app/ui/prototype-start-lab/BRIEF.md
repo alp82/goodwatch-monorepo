@@ -47,3 +47,49 @@ The owner's decisions:
 8. **Files:** only inside your own `sections/<section>/` folders, unless your assignment says otherwise. Put a one-line `// PROTOTYPE (start page lab): ...` comment at the top of each file saying what the variant is. Keep each variant in its own file.
 9. **Check before you finish:** `npx tsc --noEmit -p . 2>&1 | grep prototype-start-lab` shows nothing from your files, and `curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:3172/prototype/start-lab?<your section>=<key>"` returns 200 for every key (and the page HTML has no error boundary). No screenshot passes: the owner tests the feel himself. A single screenshot to check geometry is fine if you have a reliable way to take one.
 10. **Report:** a short list of your variants (key, name, the idea in one sentence, the question it answers for the owner), anything you couldn't do, and anything another section should know.
+
+---
+
+# Round 2 (2026-10-27): the owner's verdict on round 1 and what changes
+
+## Picks
+
+- **Guest:** layout c (hero, then a room band), hero b (mood chips), recs b (tap three), scene `nook-illustrated` (painted), shelf e (live changes), tv a (camera push-in), how b (TV on the side), browse a (hub chips).
+- **Member:** scene `nook-illustrated`, shelf e, member e (doors) layout; member c (tonight first) was "pretty good".
+
+## The owner's notes, verbatim
+
+Guest:
+> * the search does still look cramped, the chips too uninteresting
+> * dont like the layout shift when results are shown
+> * the scene could be extended to the top and bottom, like in a or b, but integrated with the search and taste quiz features. maybe both can be combined somehow. search something, then tap 3
+> * the scene does not need the tv to be in the foreground, because the how it works intro will be below in this section [how b, TV on the side]
+> * the browse section needs more love, like actual sections with good teaser content you can scroll through
+
+Member:
+> * no tv no intro here, that could be hidden somewhere at the bottom as an easteregg maybe but not necessary
+> * the scene we could still extend maybe.
+> * a: rows are not bad content-wise but a bit boringly presented (the hot section below is not a good fit)
+> * b: not enough content
+> * c: pretty good
+> * d: bad layout, content makes sense but weirdly balances. search should show results inline
+> * e: nice layout, not convinced about the movies shows split. goto section not bad
+> * none of these are an interactive way to quickly get to decisions. would be good to go in that direction with the option to deep dive into each section when needed
+
+## How round 2 is wired
+
+- `/prototype/start-lab` is round 2 by default (`?round=1` shows round 1; the bar's R1/R2 button switches). The round 1 picks are round 2's defaults (`lab/choice.ts` DEFAULTS).
+- **Guest page = `stage` + `how` + `browse`.** The `stage` section (`sections/stage/`) owns the whole first screen: the scene, the search, tap three. There is no separate layout, hero or recs in round 2. `how` b (TV on the side) follows, then `browse` (`sections/browse2/`).
+- **Members:** `sections/member2/`. No TV, no intro: pass `noTv` to every `<Room/>`.
+- **New scenes:** `nook-stage` (landscape, no TV, 16 slots), `nook-stage-portrait` (phone, no TV, 16 slots), `nook-stage-tv` (small TV at the side). Look at `public/prototype-start-lab/scenes/debug/contact-c.png` and `debug/nook-stage*.png`. Calm zones (normalized): top x .20-.80, y .02-.24; rug x .34-.68, y .81-.95 (landscape); portrait top x .21-.79, y .02-.26, rug x .36-.77, y .78-.97. Shelves run the full height at both sides. `nook-stage` is the default scene; other scenes must still work (they have a TV; pass `noTv`).
+- A `<Room/>` that shows the TV hint on a scene without a TV uses `lab.tvScene` (the same room's TV corner, `nook-illustrated`), so How it works b keeps its TV.
+- **Search timing:** `typedSearch(data, q, { signal, onReading })` in `lab/fixture-search.ts` answers a typed query the way the site does: the "Read as" reading after ~380 ms, titles after ~900 ms. Mood chips and example prompts are the free path (their answers could ship with the page): `moodAnswer`/`promptAnswer` answer at once. Design the loading moment for typed text.
+- **Picks:** `picksFrom(data, tapped)` now has similar titles for every title in moods, prompts, popular and topRated (238 titles), so "search, then tap three" gives real picks from search results.
+- **Browse data:** `data.guest.browse`: `genres.movie` (8 rows), `genres.show` (7 rows), `services` (Netflix, Prime Video, Disney Plus, HBO Max, Hulu, Apple TV, with `logo_path` and titles), `best.movie`/`best.show` (20 each), `newOn` (16 recent releases on those services). Plus `data.guest.moods` (11) and `data.talked`.
+
+## Rules added in round 2
+
+- **No layout shift.** Reserve the space results, loading states and picks will take before they arrive. Swapping content must not change the height of anything above the fold. Animate in place (crossfade, flip, slide within a fixed box).
+- **SEO floor:** the guest stage carries the page's one H1 (plain, describes the product, for example "Find something to watch by mood or anything"); every other block uses H2/H3. Real `<a>` links render on the server.
+- **Phones first:** 375 × 740 must show the field, the mood choices, and the start of results or the tap-three row on the first screen.
+- Keep using the existing components: `TitlePosterCard` (`actions={false}`), `DiscoverHeading`-style field, `ReadAsChips`, `ScoreRing`, `StartRow`, the site's mood visuals (look at the Discover filter sheet in `app/ui/filter-bar/` and the vibe colors, `bg-vibe-*` in `app/tailwind.css`) for richer mood choices.

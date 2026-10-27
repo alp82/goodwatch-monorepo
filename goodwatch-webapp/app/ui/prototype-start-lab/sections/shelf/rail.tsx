@@ -49,7 +49,7 @@ export function RailOverlay({ cards, layout }: { cards: LabCard[]; layout: Scene
 	// About a third of the room's height, never too small to read or too big for a short room.
 	const cardW = Math.round(Math.max(72, Math.min(128, (ch * 0.34) / 1.5)))
 	// The rail docks at the foot, or at the top when the TV sits low in the crop (coffee table), so it never hides the TV.
-	const tv = layout?.tv.rect
+	const tv = layout?.tv?.rect
 	const top = !!tv && tv.top + tv.height / 2 > ch * 0.55
 	return (
 		<div ref={ref} className="pointer-events-none absolute inset-0">

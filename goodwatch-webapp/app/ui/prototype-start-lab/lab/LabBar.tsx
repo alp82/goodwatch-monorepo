@@ -3,20 +3,18 @@
 // are left alone while a field has focus. Never rendered in a production build.
 import { useNavigate } from "@remix-run/react"
 import { useEffect, useState } from "react"
-import { type Choice, SECTIONS, type SectionId, paramsFromChoice } from "./choice"
+import { type Choice, type SectionId, paramsFromChoice, sectionsFor } from "./choice"
 
-export type BarSection = { id: SectionId; name: string; variants: { key: string; name: string }[] }
+export type BarSection = { id: SectionId; name: string; variants: { key: string; name: string }[]; current: string }
 
 export function LabBar({ choice, sections }: { choice: Choice; sections: BarSection[] }) {
 	const navigate = useNavigate()
 	const [hidden, setHidden] = useState(false)
 	const [open, setOpen] = useState(false)
-	const visible = sections.filter((s) => SECTIONS.find((x) => x.id === s.id)?.for.includes(choice.as))
+	const ids = new Set(sectionsFor(choice.as, choice.round).map((s) => s.id))
+	const visible = sections.filter((s) => ids.has(s.id))
 	const active = visible.find((s) => s.id === choice.sec) ?? visible[0]
-	const currentKey = (id: SectionId) => {
-		const s = visible.find((x) => x.id === id)
-		return choice[id] && s?.variants.some((v) => v.key === choice[id]) ? choice[id] : s?.variants[0]?.key
-	}
+	const currentKey = (id: SectionId) => visible.find((x) => x.id === id)?.current
 
 	const go = (next: Choice) =>
 		navigate(`?${paramsFromChoice(next).toString()}`, { replace: true, preventScrollReset: true })
@@ -95,13 +93,24 @@ export function LabBar({ choice, sections }: { choice: Choice; sections: BarSect
 							<button
 								key={as}
 								type="button"
-								onClick={() => go({ ...choice, as, sec: as === "member" ? "member" : "hero" })}
+								onClick={() => go({ ...choice, as, sec: sectionsFor(as, choice.round)[0]?.id ?? "member" })}
 								className={`px-2.5 py-1.5 font-semibold capitalize ${choice.as === as ? "bg-fuchsia-600" : "text-white/70"}`}
 							>
 								{as}
 							</button>
 						))}
 					</div>
+					<button
+						type="button"
+						title="Switch between round 1 and round 2"
+						onClick={() => {
+							const round = choice.round === 1 ? 2 : 1
+							go({ ...choice, round, sec: sectionsFor(choice.as, round)[0]?.id ?? "member" })
+						}}
+						className="rounded-full bg-white/10 px-2.5 py-1.5 font-semibold"
+					>
+						R{choice.round}
+					</button>
 					<select
 						aria-label="Section"
 						className="rounded-full bg-white/10 px-2 py-1.5 text-white"

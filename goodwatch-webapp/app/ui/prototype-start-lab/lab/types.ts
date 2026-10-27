@@ -83,6 +83,8 @@ export type RoomProps = {
 	children?: ReactNode
 	/** Use the phone version when the box's width/height is below this (0.8 by default). */
 	portraitBelow?: number
+	/** Another scene than the lab's. */
+	scene?: ScenePair
 }
 
 export type Lab = {
@@ -90,6 +92,10 @@ export type Lab = {
 	choice: Choice
 	/** The chosen scene. */
 	scene: ScenePair
+	/** A scene with a TV for the intro hint: the chosen scene if it has one, else the same room's TV corner. */
+	tvScene: ScenePair
+	/** 1 or 2 (`?round=1` shows round 1's sections). */
+	round: 1 | 2
 	/** The posters the room shows: popular titles until a block replaces them (a search's results, picks). */
 	shelfTitles: LabCard[]
 	setShelfTitles: (cards: LabCard[]) => void

@@ -17,7 +17,7 @@ type Point = [number, number]
 export type SceneLayout = {
 	meta: SceneMeta
 	cover: Cover
-	tv: { points: [Point, Point, Point, Point]; rect: { left: number; top: number; width: number; height: number } }
+	tv: { points: [Point, Point, Point, Point]; rect: { left: number; top: number; width: number; height: number } } | null
 	slots: { slot: SceneSlot; points: [Point, Point, Point, Point]; rect: ReturnType<typeof quadBounds> }[]
 }
 
@@ -84,17 +84,17 @@ export function SceneStage({
 	}, [])
 
 	const meta = size ? pickMeta(pair, size.w / Math.max(1, size.h), portraitBelow) : pair.landscape
-	const fx = focal?.[0] ?? meta.tv.box[0] + meta.tv.box[2] / 2
-	const fy = focal?.[1] ?? meta.tv.box[1] + meta.tv.box[3] / 2
+	const fx = focal?.[0] ?? (meta.tv ? meta.tv.box[0] + meta.tv.box[2] / 2 : 0.5)
+	const fy = focal?.[1] ?? (meta.tv ? meta.tv.box[1] + meta.tv.box[3] / 2 : 0.5)
 
 	const layout = useMemo<SceneLayout | null>(() => {
 		if (!size) return null
 		const cover = coverFit(size.w, size.h, meta.width, meta.height, fx, fy, zoom)
-		const tvPoints = quadToBox(cover, meta.tv.quad)
+		const tvPoints = meta.tv ? quadToBox(cover, meta.tv.quad) : null
 		return {
 			meta,
 			cover,
-			tv: { points: tvPoints, rect: quadBounds(tvPoints) },
+			tv: tvPoints ? { points: tvPoints, rect: quadBounds(tvPoints) } : null,
 			slots: meta.slots.map((slot) => {
 				const points = quadToBox(cover, slot.quad)
 				return { slot, points, rect: quadBounds(points) }
@@ -147,13 +147,14 @@ export function SceneStage({
 						)
 					})
 				: null}
-			{layout && renderTv
+			{layout?.tv && renderTv
 				? (() => {
-						const el = elementSize(layout.tv.points)
+						const tv = layout.tv as NonNullable<SceneLayout["tv"]>
+						const el = elementSize(tv.points)
 						return (
 							<div
 								className={`absolute left-0 top-0 origin-top-left ${tvClassName}`}
-								style={{ width: el.w, height: el.h, transform: quadTransform(layout.tv.points, el.w, el.h) }}
+								style={{ width: el.w, height: el.h, transform: quadTransform(tv.points, el.w, el.h) }}
 							>
 								{renderTv(el)}
 							</div>

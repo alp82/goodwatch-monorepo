@@ -171,7 +171,7 @@ export function LiftCaption({ cards, layout }: { cards: LabCard[]; layout: Scene
 						const h = 92
 						const left = Math.max(8, Math.min(cw - w - 8, rect.left + rect.width / 2 - w / 2))
 						// Below the slot, else above; and off the TV and the label a tv variant may put under it.
-						const tv = layout.tv.rect
+						const tv = layout.tv?.rect ?? { left: -9999, top: -9999, width: 0, height: 0 }
 						const hitsTv = (y: number) =>
 							left < tv.left + tv.width && left + w > tv.left && y < tv.top + tv.height + 56 && y + h > tv.top
 						const fits = (y: number) => y >= 8 && y + h <= ch - 8

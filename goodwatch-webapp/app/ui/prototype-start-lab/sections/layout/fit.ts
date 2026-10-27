@@ -52,8 +52,9 @@ export function tvAt(
 ) {
 	if (!box || box.w <= 0 || box.h <= 0) return { focal: undefined, zoom: 1 }
 	const meta = pickMeta(pair, box.w / box.h)
-	const fx = meta.tv.box[0] + meta.tv.box[2] / 2
-	const fy = meta.tv.box[1] + meta.tv.box[3] / 2
+	const tvBox = meta.tv?.box ?? [0.4, 0.4, 0.2, 0.2]
+	const fx = tvBox[0] + tvBox[2] / 2
+	const fy = tvBox[1] + tvBox[3] / 2
 	const base = Math.max(box.w / meta.width, box.h / meta.height) * meta.height
 	// The image's top can't come below the box's top, so the TV sits at most fy * height down: zoom until that reaches targetY.
 	const zoom = Math.min(maxZoom, Math.max(1, targetY / Math.max(1, fy * base)))
@@ -66,8 +67,8 @@ export function tvAt(
 export function tvFill(pair: ScenePair, w: number, h: number, fill = 0.7) {
 	const meta = pair.landscape
 	const base = Math.max(w / meta.width, h / meta.height)
-	const tvW = meta.tv.box[2] * meta.width * base
-	const tvH = meta.tv.box[3] * meta.height * base
+	const tvW = (meta.tv?.box[2] ?? 0.2) * meta.width * base
+	const tvH = (meta.tv?.box[3] ?? 0.2) * meta.height * base
 	return Math.max(
 		1,
 		Math.min((fill * w) / Math.max(1, tvW), (fill * h) / Math.max(1, tvH)),

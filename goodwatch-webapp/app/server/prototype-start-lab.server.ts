@@ -93,6 +93,15 @@ export type LabGuest = {
 	/** The famous titles a visitor taps (the intro quiz's pool), and what each one leads to. */
 	quizPool: LabCard[]
 	similar: Record<string, LabCard[]>
+	/** Teaser rows for the browse section (round 2), from Discover browse captures. */
+	browse: LabBrowse
+}
+
+export type LabBrowse = {
+	genres: { movie: { name: string; titles: LabCard[] }[]; show: { name: string; titles: LabCard[] }[] }
+	services: { id: number; name: string; logo_path: string | null; titles: LabCard[] }[]
+	best: { movie: LabCard[]; show: LabCard[] }
+	newOn: LabCard[]
 }
 
 export type LabShowSection = { name: string; titles: (LabCard & { next?: unknown })[] }
@@ -151,9 +160,9 @@ function readScenes(): ScenePair[] {
 	const metas = new Map<string, SceneMeta>()
 	for (const f of files) {
 		const meta = readJson(path.join(dir, f)) as SceneMeta | null
-		if (meta?.id && meta.tv && Array.isArray(meta.slots)) metas.set(meta.id, meta)
+		if (meta?.id && "tv" in meta && Array.isArray(meta.slots)) metas.set(meta.id, meta)
 	}
-	const order = ["sofa-shelves", "media-wall-angle", "shelf-closeup", "coffee-table", "projector-loft", "retro-den", "iso-cutaway", "pixel-iso", "miniature", "nook-illustrated", "papercraft", "flat-vector"]
+	const order = ["nook-stage", "nook-stage-tv", "nook-illustrated", "sofa-shelves", "media-wall-angle", "shelf-closeup", "coffee-table", "projector-loft", "retro-den", "iso-cutaway", "pixel-iso", "miniature", "papercraft", "flat-vector"]
 	const ids = [...metas.keys()].filter((id) => !id.endsWith("-portrait"))
 	ids.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99))
 	return ids.map((id) => ({
@@ -161,6 +170,25 @@ function readScenes(): ScenePair[] {
 		landscape: metas.get(id) as SceneMeta,
 		portrait: metas.get(`${id}-portrait`) ?? null,
 	}))
+}
+
+function readBrowse(raw: unknown): LabBrowse {
+	const b = (raw ?? {}) as Record<string, any>
+	const rows = (list: unknown) =>
+		Array.isArray(list) ? list.map((r: { name: string; titles: unknown }) => ({ name: r.name, titles: cards(r.titles) })) : []
+	return {
+		genres: { movie: rows(b.genres?.movie), show: rows(b.genres?.show) },
+		services: Array.isArray(b.services)
+			? b.services.map((s: { id: number; name: string; logo_path?: string; titles: unknown }) => ({
+					id: s.id,
+					name: s.name,
+					logo_path: s.logo_path ?? null,
+					titles: cards(s.titles),
+				}))
+			: [],
+		best: { movie: cards(b.best?.movie), show: cards(b.best?.show) },
+		newOn: cards(b.newOn),
+	}
 }
 
 function readGuest(dir: string): LabGuest {
@@ -176,6 +204,7 @@ function readGuest(dir: string): LabGuest {
 		topRated: cards(g.topRated),
 		quizPool: cards(g.quizPool),
 		similar,
+		browse: readBrowse(g.browse),
 	}
 }
 

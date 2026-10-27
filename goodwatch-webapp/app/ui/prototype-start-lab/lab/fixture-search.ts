@@ -102,3 +102,29 @@ export function picksFrom(data: LabData, tapped: LabCard[], limit = 12): LabCard
 		.slice(0, limit)
 		.map((e) => e.card)
 }
+
+/**
+ * How long a typed search takes on the site: a paid reading of the query, then ranking (about a second). Mood chips
+ * and example prompts are the free path: their answers could ship with the page, so they answer at once.
+ */
+export const TYPED_SEARCH_MS = 900
+/** When the "Read as" line would arrive, before the titles. */
+export const TYPED_READING_MS = 380
+
+/** A typed search with the site's timing. Resolves null when aborted or nothing matches. */
+export function typedSearch(
+	data: LabData,
+	q: string,
+	{ signal, onReading }: { signal?: AbortSignal; onReading?: (reading: unknown) => void } = {},
+): Promise<FixtureAnswer | null> {
+	const answer = fixtureSearch(data, q)
+	return new Promise((resolve) => {
+		const t1 = setTimeout(() => onReading?.(answer?.reading ?? null), TYPED_READING_MS)
+		const t2 = setTimeout(() => resolve(answer), TYPED_SEARCH_MS)
+		signal?.addEventListener("abort", () => {
+			clearTimeout(t1)
+			clearTimeout(t2)
+			resolve(null)
+		})
+	})
+}

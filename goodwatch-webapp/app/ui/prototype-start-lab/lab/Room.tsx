@@ -1,5 +1,7 @@
 // PROTOTYPE (start page lab): the room any block can place, with the chosen shelf and tv variants wired in.
 // Give it a size (className/style). See types.ts for the contract.
+// A block that wants the TV hint on a scene without a TV (the round 2 stage scenes) gets the lab's TV scene instead:
+// the same room's TV corner (Lab.tvScene).
 import { createContext, useCallback, useContext, useRef, useState } from "react"
 import { type SceneLayout, SceneStage } from "../scene/SceneStage"
 import { type IntroFrom, type RoomProps, type ShelfVariant, type TvVariant, useLab } from "./types"
@@ -16,16 +18,18 @@ export function Room({
 	noOverlay,
 	children,
 	portraitBelow,
+	scene,
 }: RoomProps) {
 	const lab = useLab()
 	const parts = useContext(RoomParts)
 	const box = useRef<HTMLDivElement>(null)
 	const [layout, setLayout] = useState<SceneLayout | null>(null)
 	const cards = posters ?? lab.shelfTitles
+	const pair = scene ?? (!noTv && !lab.scene.landscape.tv ? lab.tvScene : lab.scene)
 
 	const onPlay = useCallback(() => {
 		const el = box.current
-		if (!el || !layout) return lab.playIntro(null)
+		if (!el || !layout?.tv) return lab.playIntro(null)
 		const r = el.getBoundingClientRect()
 		const img = el.querySelector("img")
 		const tvPoints = layout.tv.points.map(([x, y]) => [x + r.left, y + r.top] as [number, number])
@@ -56,9 +60,9 @@ export function Room({
 	const Hint = tv.Hint
 	const Near = tv.Near
 	return (
-		<div ref={box} className={`relative ${className}`} style={style} data-lab-room={lab.scene.id}>
+		<div ref={box} className={`relative ${className}`} style={style} data-lab-room={pair.id}>
 			<SceneStage
-				pair={lab.scene}
+				pair={pair}
 				// Inline: the stage's own `relative` class would beat an `absolute` class.
 				style={{ position: "absolute", inset: 0 }}
 				focal={focal}
@@ -69,7 +73,7 @@ export function Room({
 				onLayout={setLayout}
 			>
 				{!noOverlay && Overlay ? <Overlay cards={cards} layout={layout} /> : null}
-				{!noTv && Near && layout ? <Near tvRect={layout.tv.rect} onPlay={onPlay} /> : null}
+				{!noTv && Near && layout?.tv ? <Near tvRect={layout.tv.rect} onPlay={onPlay} /> : null}
 				{children}
 			</SceneStage>
 		</div>
