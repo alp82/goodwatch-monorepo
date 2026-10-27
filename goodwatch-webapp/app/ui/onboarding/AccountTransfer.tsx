@@ -35,7 +35,16 @@ export function AccountTransfer() {
 	const [open, setOpen] = useState(true);
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState<string>();
-	const [finished, setFinished] = useState<string>();
+	// The receipt shows once, on the page where the transfer ended; the next page brings back the onboarding
+	// drawer or the resume strip.
+	const [receipt, setReceipt] = useState<{ text: string; path: string }>();
+	const finished = receipt && receipt.path === pathname ? receipt.text : undefined;
+	const currentPath = useRef(pathname);
+	currentPath.current = pathname;
+	const setFinished = (text: string) => setReceipt({ text, path: currentPath.current });
+	useEffect(() => {
+		setReceipt((current) => (current && current.path !== pathname ? undefined : current));
+	}, [pathname]);
 	const running = useRef(false);
 	const autoStarted = useRef<string>();
 	const { data: providers = [], isFetched: providersReady } =
