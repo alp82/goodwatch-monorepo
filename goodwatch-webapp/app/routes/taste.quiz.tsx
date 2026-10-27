@@ -18,7 +18,6 @@ import {
 	getSmartTitlesForUser,
 } from "~/server/smart-titles.server"
 import { prefetchUserSettings } from "~/server/user-settings.server"
-import { ImdbImportEntry } from "~/ui/imports/ImdbImportEntry"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { type FlowView, viewOf } from "~/ui/rating-flow/flow"
 import { RatingFlow } from "~/ui/rating-flow/RatingFlow"
@@ -94,15 +93,12 @@ export default function TasteQuizRoute() {
 		[setParams],
 	)
 	return (
-		<>
-			<ImdbImportEntry member={isLoggedIn} />
-			<RatingFlow
-				titles={smartTitles}
-				member={isLoggedIn}
-				view={view}
-				onView={onView}
-			/>
-		</>
+		<RatingFlow
+			titles={smartTitles}
+			member={isLoggedIn}
+			view={view}
+			onView={onView}
+		/>
 	)
 }
 
