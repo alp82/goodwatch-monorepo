@@ -35,9 +35,11 @@
       "sha256": "6b968204b8222ef274fe180c0a748c6575a9048b8ab80ba9337d8944b5a7f97a"
     },
     "submissionId": "f0aa6e48-dc8b-4d9b-acd7-f6aa08723a29",
-    "distribution": "Friends beta assigned; waiting for Apple external beta review",
+    "distribution": "Available to Friends beta via public TestFlight link",
     "submissionStatus": "FINISHED",
-    "betaReviewState": "WAITING_FOR_REVIEW"
+    "betaReviewState": "APPROVED",
+    "externalBuildState": "IN_BETA_TESTING",
+    "publicLink": "https://testflight.apple.com/join/V2gzwSFA"
   },
   "android": {
     "buildId": "92acdd61-87f4-49ae-9c38-bea4881b5837",
