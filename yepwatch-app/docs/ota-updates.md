@@ -19,13 +19,13 @@ Use OTA for all compatible Android and iPhone changes. Do not start a new native
 From `yepwatch-app`, after committing the tested source:
 
 ```sh
-npm run update:beta:ios -- --message "Describe the fix" --non-interactive
-npm run update:beta:android -- --message "Describe the fix" --non-interactive
+npm run update:beta:ios -- --input-dir .expo/updates/beta-ios --message "Describe the fix" --non-interactive
+npm run update:beta:android -- --input-dir .expo/updates/beta-android --message "Describe the fix" --non-interactive
 ```
 
 These commands publish JS/assets, not new app binaries. They consume update delivery allowance, not cloud build allowance. There is no automatic publication on every Git push.
 
-Builds and updates use `runtimeVersion.policy = fingerprint`. Native dependencies, configuration and install identity determine compatibility. A new native fingerprint requires a new binary; publishing an incompatible update does not upgrade an older native runtime. Keep the build number unchanged for JS-only releases. For native releases, increment it in `eas.json`, then synchronize the public EAS values before building:
+Builds and updates use `runtimeVersion.policy = fingerprint`. Native dependencies, configuration and install identity determine compatibility. A new native fingerprint requires a new binary; publishing an incompatible update does not upgrade an older native runtime. Keep the build number unchanged for JS-only releases. Package scripts also participate in the fingerprint: keep the existing scripts stable, and pass temporary export paths as CLI arguments. Compare the generated fingerprints to installed builds before publishing. For native releases, increment it in `eas.json`, then synchronize the public EAS values before building:
 
 ```sh
 npm run update:configure-env

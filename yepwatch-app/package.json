@@ -55,8 +55,8 @@
     "release:web": "node scripts/release-env.cjs export --platform web --output-dir .expo/exports/beta-web-shared-r1 --clear",
     "release:preview:android": "python3 scripts/build-preview-android.py",
     "update:configure-env": "node scripts/configure-ota-env.cjs",
-    "update:beta:ios": "npx eas-cli@latest update --channel beta --platform ios --environment production --input-dir .expo/updates/beta-ios",
-    "update:beta:android": "npx eas-cli@latest update --channel beta-preview --platform android --environment preview --input-dir .expo/updates/beta-android"
+    "update:beta:ios": "npx eas-cli@latest update --channel beta --platform ios --environment production",
+    "update:beta:android": "npx eas-cli@latest update --channel beta-preview --platform android --environment preview"
   },
   "private": true
 }
