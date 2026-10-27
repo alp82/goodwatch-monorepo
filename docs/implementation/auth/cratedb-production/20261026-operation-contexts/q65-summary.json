@@ -1,0 +1,56 @@
+{
+  "observed_utc_start": "2026-10-27T23:36:33.785190+00:00",
+  "observed_utc_end": "2026-10-27T23:46:05+00:00",
+  "read_only": true,
+  "production_mutations": [],
+  "armed_actions": [],
+  "versions": {
+    "crate-01": "5.10.16",
+    "crate-02": "6.0.8",
+    "crate-03": "5.10.16"
+  },
+  "health": "145GREEN all3, no missing/underreplicated shards",
+  "backup": {
+    "last_hourly": "hourly_20261027_220501",
+    "snapshot_finished_utc": "2026-10-27T22:05:38.217+00:00",
+    "helper_verified_and_finished_utc": "2026-10-27T22:06:43+00:00",
+    "protected_latest": "goodwatch-pre6.q53_pre6_20261027",
+    "protected_latest_finished_utc": "2026-10-27T23:02:34.012+00:00",
+    "failed_runs_after_last_hourly": [],
+    "skipped": "23:05 deliberately held",
+    "next_run": "2026-10-28T00:05:00+00:00 pending, predicted failure until repaired",
+    "v2_removed_ack_utc": "2026-10-27T23:10:01.496388+00:00",
+    "v2_absent_all_coordinators": true,
+    "proposal_only_sql": [
+      "DROP REPOSITORY \"goodwatch-db-backup\"",
+      "CREATE REPOSITORY \"goodwatch-db-backup-v2\" TYPE fs WITH (location='/snapshots/q65-mixed-20261027', compress=true, readonly=false)"
+    ],
+    "manual_snapshot_validation_executed": false,
+    "recommendation": "Separate approval for fresh isolated writer+unique validation snapshot, preserve protectedpre6. Mixedsnapshotrestoreability notproven."
+  },
+  "metadata": {
+    "term": 1419,
+    "accepted_state_version": 1144863,
+    "all14_legacy_wait": 3,
+    "all14_relation6_wait": 2,
+    "write_enforcement": "Source-backed normalSQLDEFAULT resolvesIndexMetadata wait3; no production write experiment",
+    "recommendation": "No repeatedALTER/reset/restart fordisplay; freeze metadata changes; review reconciliation after separatelyapproved homogeneoushop."
+  },
+  "check3": {
+    "id": 3,
+    "severity": 1,
+    "passed": false,
+    "listed_tables": 145,
+    "expected_future_major_advisory": true,
+    "next_major": "7.x for unchanged5.x indices",
+    "created_versions": {
+      "5.10.9": 94,
+      "5.10.16": 51
+    },
+    "recommendation": "Review futuregate toallow this exact advisory withverified5.xcreation; no gate/code/productionchange now."
+  },
+  "mixed_day": {
+    "unconditional_vendor_safety_guarantee": false,
+    "recommendation": "Promptdecision tofinish6.0hop afterbackuproute andgates reviewed; ifpause retainall/none+existingcopies, schemadeployrestraint+humanmonitoring. No jobholds/monitoringarmed."
+  }
+}

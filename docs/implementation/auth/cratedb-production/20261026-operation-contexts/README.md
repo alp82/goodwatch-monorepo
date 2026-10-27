@@ -1,5 +1,18 @@
 # #644: operation-context investigation, 2026-10-26
 
+## Q65 read-only follow-up — backups, persisted metadata and check3
+
+[Findings and exact proposed repair](q65-findings.md), [version-pinned source research](q65-upstream.md),
+[summary](q65-summary.json), [metadata comparison](q65-metadata-comparison.json),
+[read-only evidence](q65-evidence.json.gz). No production change or armed action.
+
+**Corrections to Q64:** no hourly run had failed at23:46 UTC:22:05 succeeded,23:05 was deliberately
+skipped,00:05 is pending. V2 was removed by Q64 at23:10:01, so its next CREATE will fail unless repaired.
+All3 persisted index metadata settings are wait3;6.0's persisted relation metadata is stale at2.
+Normal SQL write enforcement reads the index setting3 (source inference, no production write test).
+Check3 is the expected future7.x advisory for all145 five.x-created tables, not a6.0 readability failure.
+See the report for isolated-writer proposal and mixed-cluster restrictions; nothing resumes automatically.
+
 ## Q64 October27 rolling upgrade — stopped after crate-02 to6.0.8
 
 Only crate-02 reached6.0.8; crate-01/03 remain5.10.16. RecoveredGREEN, then stopped at the

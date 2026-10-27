@@ -1,0 +1,801 @@
+{
+  "state_version": 1144863,
+  "term": 1419,
+  "nodes": [
+    {
+      "host": 11,
+      "commit": {
+        "current_term": "1419",
+        "last_accepted_version": "1144863",
+        "node_id": "xlclgwGeSHe18p5J4WvfFA",
+        "node_version": "8101699"
+      },
+      "metadata_version": 38921,
+      "stream_version": "5.10.16",
+      "segments": "segments_ojdr"
+    },
+    {
+      "host": 12,
+      "commit": {
+        "current_term": "1419",
+        "last_accepted_version": "1144863",
+        "node_id": "r0IgCe17SPOgudkQIGsRQA",
+        "node_version": "9000899"
+      },
+      "metadata_version": 39004,
+      "stream_version": "6.0.8",
+      "segments": "segments_ok4p"
+    },
+    {
+      "host": 13,
+      "commit": {
+        "current_term": "1419",
+        "last_accepted_version": "1144863",
+        "node_id": "ch8EXZwrQVmCls79_T_vUg",
+        "node_version": "8101699"
+      },
+      "metadata_version": 38921,
+      "stream_version": "5.10.16",
+      "segments": "segments_oinv"
+    }
+  ],
+  "tables": [
+    {
+      "table": "doc.yepwatch_agreement",
+      "legacy": {
+        "11": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 48,
+          "settings_version": 21,
+          "index_uuid": "dbSZLiLNT3yadcEmwAJjsw"
+        },
+        "12": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": "9000899",
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 48,
+          "settings_version": 21,
+          "index_uuid": "dbSZLiLNT3yadcEmwAJjsw"
+        },
+        "13": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 48,
+          "settings_version": 21,
+          "index_uuid": "dbSZLiLNT3yadcEmwAJjsw"
+        }
+      },
+      "relation6": {
+        "settings": {
+          "index.blocks.write": "false",
+          "index.number_of_replicas": "2",
+          "index.version.created": "8101699",
+          "index.version.upgraded": "9000899",
+          "index.write.wait_for_active_shards": "2"
+        },
+        "table_version": 31,
+        "index_uuids": [
+          "dbSZLiLNT3yadcEmwAJjsw"
+        ]
+      }
+    },
+    {
+      "table": "doc.yepwatch_candidate",
+      "legacy": {
+        "11": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 41,
+          "settings_version": 17,
+          "index_uuid": "rsz6SI4bQW66x0rjBNrCLg"
+        },
+        "12": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": "9000899",
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 41,
+          "settings_version": 17,
+          "index_uuid": "rsz6SI4bQW66x0rjBNrCLg"
+        },
+        "13": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 41,
+          "settings_version": 17,
+          "index_uuid": "rsz6SI4bQW66x0rjBNrCLg"
+        }
+      },
+      "relation6": {
+        "settings": {
+          "index.blocks.write": "false",
+          "index.number_of_replicas": "2",
+          "index.version.created": "8101699",
+          "index.version.upgraded": "9000899",
+          "index.write.wait_for_active_shards": "2"
+        },
+        "table_version": 32,
+        "index_uuids": [
+          "rsz6SI4bQW66x0rjBNrCLg"
+        ]
+      }
+    },
+    {
+      "table": "doc.yepwatch_command_receipt",
+      "legacy": {
+        "11": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "Wg3LJo1RTgO3_uvgZc0pwg"
+        },
+        "12": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": "9000899",
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "Wg3LJo1RTgO3_uvgZc0pwg"
+        },
+        "13": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "Wg3LJo1RTgO3_uvgZc0pwg"
+        }
+      },
+      "relation6": {
+        "settings": {
+          "index.blocks.write": "false",
+          "index.number_of_replicas": "2",
+          "index.version.created": "8101699",
+          "index.version.upgraded": "9000899",
+          "index.write.wait_for_active_shards": "2"
+        },
+        "table_version": 31,
+        "index_uuids": [
+          "Wg3LJo1RTgO3_uvgZc0pwg"
+        ]
+      }
+    },
+    {
+      "table": "doc.yepwatch_control",
+      "legacy": {
+        "11": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "33k4mfI-R8uvFZwT4GMZqw"
+        },
+        "12": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": "9000899",
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "33k4mfI-R8uvFZwT4GMZqw"
+        },
+        "13": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "33k4mfI-R8uvFZwT4GMZqw"
+        }
+      },
+      "relation6": {
+        "settings": {
+          "index.blocks.write": "false",
+          "index.number_of_replicas": "2",
+          "index.version.created": "8101699",
+          "index.version.upgraded": "9000899",
+          "index.write.wait_for_active_shards": "2"
+        },
+        "table_version": 31,
+        "index_uuids": [
+          "33k4mfI-R8uvFZwT4GMZqw"
+        ]
+      }
+    },
+    {
+      "table": "doc.yepwatch_decision",
+      "legacy": {
+        "11": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 41,
+          "settings_version": 17,
+          "index_uuid": "JQ-xCinUSqe1Gci8nJ8jDQ"
+        },
+        "12": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": "9000899",
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 41,
+          "settings_version": 17,
+          "index_uuid": "JQ-xCinUSqe1Gci8nJ8jDQ"
+        },
+        "13": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 41,
+          "settings_version": 17,
+          "index_uuid": "JQ-xCinUSqe1Gci8nJ8jDQ"
+        }
+      },
+      "relation6": {
+        "settings": {
+          "index.blocks.write": "false",
+          "index.number_of_replicas": "2",
+          "index.version.created": "8101699",
+          "index.version.upgraded": "9000899",
+          "index.write.wait_for_active_shards": "2"
+        },
+        "table_version": 32,
+        "index_uuids": [
+          "JQ-xCinUSqe1Gci8nJ8jDQ"
+        ]
+      }
+    },
+    {
+      "table": "doc.yepwatch_invitation",
+      "legacy": {
+        "11": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "Gq0iu46lQVigfRs-6JVM0g"
+        },
+        "12": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": "9000899",
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "Gq0iu46lQVigfRs-6JVM0g"
+        },
+        "13": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "Gq0iu46lQVigfRs-6JVM0g"
+        }
+      },
+      "relation6": {
+        "settings": {
+          "index.blocks.write": "false",
+          "index.number_of_replicas": "2",
+          "index.version.created": "8101699",
+          "index.version.upgraded": "9000899",
+          "index.write.wait_for_active_shards": "2"
+        },
+        "table_version": 31,
+        "index_uuids": [
+          "Gq0iu46lQVigfRs-6JVM0g"
+        ]
+      }
+    },
+    {
+      "table": "doc.yepwatch_member_grant",
+      "legacy": {
+        "11": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "ali_oJFYQ-WyyPpRWX_IMw"
+        },
+        "12": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": "9000899",
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "ali_oJFYQ-WyyPpRWX_IMw"
+        },
+        "13": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "ali_oJFYQ-WyyPpRWX_IMw"
+        }
+      },
+      "relation6": {
+        "settings": {
+          "index.blocks.write": "false",
+          "index.number_of_replicas": "2",
+          "index.version.created": "8101699",
+          "index.version.upgraded": "9000899",
+          "index.write.wait_for_active_shards": "2"
+        },
+        "table_version": 31,
+        "index_uuids": [
+          "ali_oJFYQ-WyyPpRWX_IMw"
+        ]
+      }
+    },
+    {
+      "table": "doc.yepwatch_member_intent",
+      "legacy": {
+        "11": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "cvRQxmWwSsq3XuHAoxS-Ew"
+        },
+        "12": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": "9000899",
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "cvRQxmWwSsq3XuHAoxS-Ew"
+        },
+        "13": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "cvRQxmWwSsq3XuHAoxS-Ew"
+        }
+      },
+      "relation6": {
+        "settings": {
+          "index.blocks.write": "false",
+          "index.number_of_replicas": "2",
+          "index.version.created": "8101699",
+          "index.version.upgraded": "9000899",
+          "index.write.wait_for_active_shards": "2"
+        },
+        "table_version": 31,
+        "index_uuids": [
+          "cvRQxmWwSsq3XuHAoxS-Ew"
+        ]
+      }
+    },
+    {
+      "table": "doc.yepwatch_participant",
+      "legacy": {
+        "11": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 42,
+          "settings_version": 17,
+          "index_uuid": "k99LHscWQ_6Nv9ohXL0bQw"
+        },
+        "12": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": "9000899",
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 42,
+          "settings_version": 17,
+          "index_uuid": "k99LHscWQ_6Nv9ohXL0bQw"
+        },
+        "13": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 42,
+          "settings_version": 17,
+          "index_uuid": "k99LHscWQ_6Nv9ohXL0bQw"
+        }
+      },
+      "relation6": {
+        "settings": {
+          "index.blocks.write": "false",
+          "index.number_of_replicas": "2",
+          "index.version.created": "8101699",
+          "index.version.upgraded": "9000899",
+          "index.write.wait_for_active_shards": "2"
+        },
+        "table_version": 33,
+        "index_uuids": [
+          "k99LHscWQ_6Nv9ohXL0bQw"
+        ]
+      }
+    },
+    {
+      "table": "doc.yepwatch_proposal",
+      "legacy": {
+        "11": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "SFHglasKR026L_ULwce40Q"
+        },
+        "12": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": "9000899",
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "SFHglasKR026L_ULwce40Q"
+        },
+        "13": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "SFHglasKR026L_ULwce40Q"
+        }
+      },
+      "relation6": {
+        "settings": {
+          "index.blocks.write": "false",
+          "index.number_of_replicas": "2",
+          "index.version.created": "8101699",
+          "index.version.upgraded": "9000899",
+          "index.write.wait_for_active_shards": "2"
+        },
+        "table_version": 31,
+        "index_uuids": [
+          "SFHglasKR026L_ULwce40Q"
+        ]
+      }
+    },
+    {
+      "table": "doc.yepwatch_room",
+      "legacy": {
+        "11": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 59,
+          "settings_version": 17,
+          "index_uuid": "tt1jyCNwRIWBU-Fco_7fgA"
+        },
+        "12": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": "9000899",
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 59,
+          "settings_version": 17,
+          "index_uuid": "tt1jyCNwRIWBU-Fco_7fgA"
+        },
+        "13": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 59,
+          "settings_version": 17,
+          "index_uuid": "tt1jyCNwRIWBU-Fco_7fgA"
+        }
+      },
+      "relation6": {
+        "settings": {
+          "index.blocks.write": "false",
+          "index.number_of_replicas": "2",
+          "index.version.created": "8101699",
+          "index.version.upgraded": "9000899",
+          "index.write.wait_for_active_shards": "2"
+        },
+        "table_version": 47,
+        "index_uuids": [
+          "tt1jyCNwRIWBU-Fco_7fgA"
+        ]
+      }
+    },
+    {
+      "table": "doc.yepwatch_runtime",
+      "legacy": {
+        "11": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "yCuXHcsJQIOlF4iPxpMtnw"
+        },
+        "12": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": "9000899",
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "yCuXHcsJQIOlF4iPxpMtnw"
+        },
+        "13": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "yCuXHcsJQIOlF4iPxpMtnw"
+        }
+      },
+      "relation6": {
+        "settings": {
+          "index.blocks.write": "false",
+          "index.number_of_replicas": "2",
+          "index.version.created": "8101699",
+          "index.version.upgraded": "9000899",
+          "index.write.wait_for_active_shards": "2"
+        },
+        "table_version": 31,
+        "index_uuids": [
+          "yCuXHcsJQIOlF4iPxpMtnw"
+        ]
+      }
+    },
+    {
+      "table": "doc.yepwatch_ticket",
+      "legacy": {
+        "11": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "OTl3RXYRTo6ww2IicXVVbA"
+        },
+        "12": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": "9000899",
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "OTl3RXYRTo6ww2IicXVVbA"
+        },
+        "13": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "OTl3RXYRTo6ww2IicXVVbA"
+        }
+      },
+      "relation6": {
+        "settings": {
+          "index.blocks.write": "false",
+          "index.number_of_replicas": "2",
+          "index.version.created": "8101699",
+          "index.version.upgraded": "9000899",
+          "index.write.wait_for_active_shards": "2"
+        },
+        "table_version": 31,
+        "index_uuids": [
+          "OTl3RXYRTo6ww2IicXVVbA"
+        ]
+      }
+    },
+    {
+      "table": "doc.yepwatch_vote",
+      "legacy": {
+        "11": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "q-adGZZcSKWB4xqZ044uhg"
+        },
+        "12": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": "9000899",
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "q-adGZZcSKWB4xqZ044uhg"
+        },
+        "13": {
+          "settings": {
+            "index.blocks.write": "false",
+            "index.number_of_replicas": "2",
+            "index.version.created": "8101699",
+            "index.version.upgraded": null,
+            "index.write.wait_for_active_shards": "3"
+          },
+          "version": 40,
+          "settings_version": 17,
+          "index_uuid": "q-adGZZcSKWB4xqZ044uhg"
+        }
+      },
+      "relation6": {
+        "settings": {
+          "index.blocks.write": "false",
+          "index.number_of_replicas": "2",
+          "index.version.created": "8101699",
+          "index.version.upgraded": "9000899",
+          "index.write.wait_for_active_shards": "2"
+        },
+        "table_version": 31,
+        "index_uuids": [
+          "q-adGZZcSKWB4xqZ044uhg"
+        ]
+      }
+    }
+  ],
+  "conclusion": "All3 IndexMetadata wait3, replicas2, blocksfalse;6.0 persisted RelationMetadata wait2. No production write enforcement test."
+}
