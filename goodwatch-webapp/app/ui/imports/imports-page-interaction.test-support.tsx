@@ -294,16 +294,9 @@ async function page(props: Partial<PageProps> = {}) {
 				}),
 		/** Opens a source from Bring: an account to connect, or a file source under Where do I get my file?. */
 		open: async (name: string) => {
-			const find = () =>
-				buttons().find((b) => b.getAttribute("data-source-mark") === name)
-			if (!find()) {
-				const where = buttons().find(
-					(b) => b.textContent === "Where do I get my file?",
-				)
-				if (where && where.getAttribute("aria-expanded") !== "true")
-					await act(async () => where.click())
-			}
-			const mark = find()
+			const mark = buttons().find(
+				(b) => b.getAttribute("data-source-mark") === name,
+			)
 			if (!mark) throw new Error(`No source "${name}"`)
 			await act(async () => mark.click())
 			await settle()
@@ -455,7 +448,6 @@ const results: Record<string, unknown> = {}
 		],
 	})
 	const closed = view.text()
-	await view.unfold("Where do I get my file?")
 	await view.unfold("Past imports")
 	results.list = {
 		opened: view.opened(),

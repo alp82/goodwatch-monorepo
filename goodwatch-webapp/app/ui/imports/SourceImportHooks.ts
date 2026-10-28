@@ -434,7 +434,9 @@ export function useAcceptTvTimeSuggestions(id: string) {
 	})
 }
 
-function invalidateMemberData(client: ReturnType<typeof useQueryClient>) {
+export function invalidateMemberData(
+	client: ReturnType<typeof useQueryClient>,
+) {
 	return Promise.all([
 		client.invalidateQueries({ queryKey: ["user-data"] }),
 		client.invalidateQueries({ queryKey: ["member-data"] }),
