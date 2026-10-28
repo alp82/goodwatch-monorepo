@@ -1,5 +1,6 @@
-// The start page's own style sheets, in the order the page links them (routes/_index.tsx). The server's 103 Early
-// Hints response names them too (server/early-hints.server.ts), so the browser fetches them while the page renders.
+// The TV home's own style sheets, in the order its route linked them (`/` until the start page redesign; the start
+// page's are ui/start/start-sheets.ts). The server's 103 Early Hints response names them for `/` until the cut-over
+// (server/early-hints.server.ts), so the browser fetches them while the page renders.
 // Every sheet of the page's first load belongs here, not in a side-effect `import "./x.css"`: Remix links such a sheet
 // without `crossorigin` and the hints can't name it, so the browser opens a second connection to the static hostname
 // for it and the first paint waits for that (#236, home-sheets.test.ts).

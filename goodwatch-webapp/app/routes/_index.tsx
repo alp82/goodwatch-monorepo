@@ -1,47 +1,28 @@
-// The start page is the living room with its TV (docs/implementation/tv-screen-revamp): the room, the TV and the
-// Remote, and the section below the room with the start titles and the hubs (BelowRoom.tsx). The TV opens with its
-// boot screen, and plays a guest the intro film, with "How GoodWatch works" below the room
-// (docs/implementation/home-intro.md, living-room/intro/HomeIntro.tsx).
+// The start page (docs/implementation/start-page-redesign.md): a search-first page over a painted room. A guest
+// lands on the centered search over the dark room; a member gets their own start over the lit room. The old TV
+// living room's code stays in app/ui/living-room/ and app/server/living-room/ for a later easter egg; this page
+// doesn't load it, and `?tv=` is ignored.
 //
-// The TV's screen lives in the search params (`?tv=discover&mood=funny`); changing only those never reruns the
-// loader. Asking again for the address the page is on does: that is the page itself after the member changed
-// what the loader read, such as an episode marked watched on the TV (ui/living-room/tv/use-tv-episode.ts). The
-// pool the TV draws its picks from is the TV's own request, at the first interaction
-// (ui/living-room/tv/use-tv-pool.ts).
+// The page is complete in the server's HTML (the H1, the room's painting) and its scripts start after it has painted
+// (utils/start-after-paint.ts). Searches run in the browser only, never from the loader.
 import type { LinksFunction, MetaFunction } from "@remix-run/node"
-import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
-import type { tvHomeLoader } from "~/server/living-room/tv-loader.server"
-import { HOME_SHEETS } from "~/ui/living-room/home-sheets"
-import { QUIZ_SCENE, useHomeIntro } from "~/ui/living-room/intro/HomeIntro"
-import { introStartScript } from "~/ui/living-room/intro/progress"
-import { TvLivingRoom } from "~/ui/living-room/tv/TvLivingRoom"
-import { isTvOnlyChange } from "~/ui/living-room/tv/tv-machine"
+import { useLoaderData } from "@remix-run/react"
+import type { startPageLoader } from "~/server/start-page/loader.server"
+import { StartStage } from "~/ui/start/stage/StartStage"
+import { START_SHEETS } from "~/ui/start/start-sheets"
 import { assetBase, assetUrl } from "~/utils/asset-url"
-import useLocale from "~/utils/locale"
+import { buildMeta, ogImageUrl } from "~/utils/meta"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 
-export { tvHomeLoader as loader } from "~/server/living-room/tv-loader.server"
+export { startPageLoader as loader } from "~/server/start-page/loader.server"
 export { pageHeaders as headers } from "~/utils/headers"
 // The page paints from the server's HTML alone; its scripts start after that (utils/start-after-paint.ts).
 export const handle = START_AFTER_PAINT
-import { buildMeta, ogImageUrl } from "~/utils/meta"
-
-export const shouldRevalidate: ShouldRevalidateFunction = ({
-	currentUrl,
-	nextUrl,
-	formMethod,
-	defaultShouldRevalidate,
-}) =>
-	!formMethod &&
-	currentUrl.href !== nextUrl.href &&
-	isTvOnlyChange(currentUrl, nextUrl)
-		? false
-		: defaultShouldRevalidate
 
 export const links: LinksFunction = () => [
 	// Without credentials on the static hostname, like the site's style sheet in root.tsx: the 103 Early Hints response
 	// preloads them in that mode (server/early-hints.ts), and Chrome preloads a file of another host in no other.
-	...HOME_SHEETS.map((sheet) => ({
+	...START_SHEETS.map((sheet) => ({
 		rel: "stylesheet",
 		href: assetUrl(sheet),
 		...(assetBase() ? { crossOrigin: "anonymous" as const } : {}),
@@ -54,7 +35,7 @@ const HOME_TITLE = "GoodWatch - Find movies and TV shows to watch"
 const HOME_DESCRIPTION =
 	"Find your next movie or TV show by mood and taste. Compare IMDb, Rotten Tomatoes and Metacritic scores, explore titles, and check where they stream."
 
-// TV state and campaign parameters are views of the same page, not separate search results.
+// Campaign parameters (and the old TV's `?tv=`) are views of the same page, not separate search results.
 // This metadata is shared by guests and members, on every device.
 export const meta: MetaFunction = () => [
 	...buildMeta({
@@ -101,28 +82,20 @@ export const meta: MetaFunction = () => [
 	},
 ]
 
-const START_SCRIPT = introStartScript(QUIZ_SCENE)
+/** Before a guest asks: the room nearly dark, seen close up. A member's room is lit. */
+const GUEST_ROOM = { night: 0.9, camera: 1.12 }
+const MEMBER_ROOM = { night: 0, camera: 1 }
 
 export default function Index() {
-	const data = useLoaderData<typeof tvHomeLoader>()
-	const { locale } = useLocale()
-	const intro = useHomeIntro({ member: data.member })
+	const data = useLoaderData<typeof startPageLoader>()
+	const room = data.member ? MEMBER_ROOM : GUEST_ROOM
 	return (
-		<>
-			{/* Before the room paints: a reload restarts an unfinished intro; any other kept progress hides the boot
-			    screen (intro/progress.ts). */}
-			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed script of our own */}
-			<script dangerouslySetInnerHTML={{ __html: START_SCRIPT }} />
-			{/* The TV keeps previously visited titles in local state as well as the query cache. */}
-			<TvLivingRoom
-				key={locale.language}
-				data={data}
-				screenOverlay={intro.screen}
-				screenObscured={intro.screenObscured}
-				onPower={intro.onPower}
-				belowIntro={intro.below}
-				homeHeadingAs={intro.homeHeadingAs}
-			/>
-		</>
+		<StartStage
+			shelf={data.titles}
+			night={room.night}
+			camera={room.camera}
+			centered={!data.member}
+			cardHidden={!data.member}
+		/>
 	)
 }
