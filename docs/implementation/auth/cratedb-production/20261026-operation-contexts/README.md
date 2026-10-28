@@ -1,5 +1,24 @@
 # #644: operation-context investigation, 2026-10-26
 
+## October28: all nodes6.4.6; stopped at final health observation
+
+All14 remaining replacements completed; all three coordinators now6.4.6, 145GREEN/1175STARTED.
+At03:02:16UTC the final checkpoint health query returned HTTP500; concurrent Windmill errors prove
+full search executor queues oncrate-01/03. The exact health-query body was not retained; the workload
+trigger or a6.4 behavior change remains unverified. Q62 stopped progression despite queues clearing.
+
+Original145 policies restored (persisted index/relation wait3 proof onall3), Dockeralways/allocationall,
+nine exact schedules and byte-exact backupcron restored. **Rebalance none; final placement/lock test
+omitted, not proven.** Final `q65_stage_646_20261028` snapshotSUCCESS567/no failures onall3; next hourly
+04:05UTC pending. Watcher3,565probes/zero failures/zero alarms; nine failed Windmill records captured,
+none rerun. No restart/rollback/extra hold/thread-pool change afterthe failed gate. Nothing armed.
+
+[Stopped-run report, timings, errors and next owner decision](20261028-rolling-execution/README.md),
+[summary](20261028-rolling-execution/progress.json),
+[sanitized receipts](20261028-rolling-execution/receipts.json.gz).
+All sections below are historical entry/diagnosis records, not the current version/hold state.
+
+
 ## October28 immediate resume — stopped at first workloadgate,00:52UTC
 
 `f/tmdb_api/provider_detector` was active since00:00UTC, job`01a17fb1-feb6-c0d2-651f-9ab682b96648`,

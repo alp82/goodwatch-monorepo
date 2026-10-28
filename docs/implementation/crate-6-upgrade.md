@@ -1,4 +1,21 @@
-# Q65 — resume the rolling CrateDB upgrade to 6.4.6 with plain stops
+# CrateDB 6.4.6 rolling upgrade — replacements complete, validation stopped
+
+**October28 handover:** all three nodes are **6.4.6**, 145 GREEN / 1,175 STARTED. All14 remaining
+replacements completed, but the final homogeneous observation stopped at its first failed gate:
+03:02:16UTC, a health query returned HTTP500, coincident with search-pool exhaustion and failed jobs.
+The failure was not cleared or retried. All original table policies (including YepWatch wait3),
+Docker always, allocation all, nine schedule configurations/states and byte-exact backupcron were
+restored. **Rebalance remains none; the final crate-02 placement/lock test is unproven.** Final6.4.6
+snapshot is SUCCESS; next hourly04:05UTC is pending. No further action is armed.
+
+See the [stopped-run evidence and required next decision](auth/cratedb-production/20261026-operation-contexts/20261028-rolling-execution/README.md).
+Read-only diagnosis of the search-pool rejection burst is recommended before a separately approved
+rebalance observation. Do not replay the completed replacement matrix or downgrade a data directory.
+
+## Historical approved execution procedure
+
+The following records the instructions used for this execution; it is not a fresh authorization.
+
 
 **Latest owner override, October28:** resume immediately after an explicit GO and fresh gates,
 then continue hop after hop until6.4.6 is complete. **The04:00UTC limit is removed.** No clock-based
@@ -17,10 +34,10 @@ stop. After it finishes successfully, recheck GREEN and a fresh watcher round, t
 gates. Do not stop merely because the initial read found a deployment. The owner will not push main
 until completion; no Coolify setting change is needed or authorized. No concurrent node swap/deploy.
 
-[Live execution evidence](auth/cratedb-production/20261026-operation-contexts/20261028-rolling-execution/README.md).
+[Execution evidence](auth/cratedb-production/20261026-operation-contexts/20261028-rolling-execution/README.md).
 A first failed health/heap/site or overdue/failed-deploy gate still ends progression underQ62.
 
-Current handover: **crate-02 is already6.0.8; crate-01/03 remain5.10.16**, all145 GREEN.
+Entry handover before this execution: **crate-02 was already6.0.8; crate-01/03 remained5.10.16**, all145 GREEN.
 [Q64 execution](auth/cratedb-production/20261026-operation-contexts/q64-execution.md) stopped after the
 first node; [Q65 read-only diagnosis](auth/cratedb-production/20261026-operation-contexts/q65-findings.md)
 qualified the expected future-major check and identified stale6.0 relation metadata. Read all gates fresh;

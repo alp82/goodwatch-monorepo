@@ -1,8 +1,8 @@
 {
-  "updated_utc": "2026-10-28T03:00:05.467411+00:00",
+  "updated_utc": "2026-10-28T03:09:41.454441+00:00",
   "base": "de2749c94e8df87a9dd4e8b0acc4362578515142",
   "branch": "fix/644-rolling-upgrade-execution",
-  "state": "IN_PROGRESS",
+  "state": "STOPPED_AFTER_14_REPLACEMENTS",
   "owner_overrides": {
     "no_deadline": true,
     "existing_heavy_allowed_except_schema_index_publish": true,
@@ -14,7 +14,7 @@
     "crate-02": "6.4.6",
     "crate-03": "6.4.6"
   },
-  "phase": "recovery",
+  "phase": "complete",
   "completed_nodes": [
     {
       "started_utc": "2026-10-28T01:29:26.464793+00:00",
@@ -213,22 +213,22 @@
       "seconds": 205.72404300095513
     }
   ],
-  "cron_held": {
-    "utc": "2026-10-28T01:23:11.548041+00:00",
-    "mode": "hold",
+  "cron_held": false,
+  "cron_restored": {
+    "utc": "2026-10-28T03:07:08.324454+00:00",
+    "mode": "restore",
+    "status": "restored",
     "state": "/root/.config/goodwatch/644-q37-20261028T012311Z",
-    "before_sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
-    "held_sha256": "1be3b650f2b627be3037b1b196c358fff241b7f5cca734c655400683e5291539",
+    "restored_sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
     "readback_exact": true
   },
-  "cron_restored": null,
-  "schedules_held": {
-    "utc": "2026-10-28T01:15:18.218777+00:00",
+  "schedules_held": false,
+  "schedules_restored": {
+    "utc": "2026-10-28T03:07:10.144599+00:00",
     "schedule_count": 9,
-    "mode": "hold",
+    "mode": "restore",
     "verified": true
   },
-  "schedules_restored": null,
   "forward_snapshot": [
     {
       "host": 11,
@@ -427,16 +427,51 @@
     ]
   },
   "watcher": {
-    "probes": 3285,
+    "probes": 3565,
     "unexpected": 0,
     "over3s": 3,
     "alarms": 0,
     "max_seconds": 4.125801,
-    "last_utc": "2026-10-28T03:00:02.632024+00:00"
+    "last_utc": "2026-10-28T03:09:22.612039+00:00"
   },
-  "gate_failure": null,
+  "gate_failure": {
+    "utc": "2026-10-28T03:02:16.863766+00:00",
+    "source": "hopcheckpoint",
+    "version": "6.4.6",
+    "error": "curl: (22) The requested URL returned error: 500\n"
+  },
   "abort": null,
   "protected_5_rollback": "goodwatch-pre6.q53_pre6_20261027 finished2026-10-27T23:02:34.012Z,originalSHA1pairunchanged",
-  "rebalancing_lock_test": "Notyetperformed",
-  "operator_note": "Localmetadata-reader copy.py shadowedstdlib; localcontrollerinterrupted beforeSIGTERM, filenamefixed and all3legacyindexwait2/blockfalseverifiedbeforeguardedresume. Pre-stop settings not replayed. No productiongatealarm cleared."
+  "rebalancing_lock_test": {
+    "status": "OMITTED afterfirstfailedgate",
+    "rebalance": "none",
+    "new_placement_not_proven": true
+  },
+  "operator_note": "Localmetadata-reader copy.py shadowedstdlib; localcontrollerinterrupted beforeSIGTERM, filenamefixed and all3legacyindexwait2/blockfalseverifiedbeforeguardedresume. Pre-stop settings not replayed. No productiongatealarm cleared.",
+  "execution_end": "2026-10-28T03:09:40.763303+00:00",
+  "restoration": {
+    "utc": "2026-10-28T03:06:14.290352+00:00",
+    "GREEN_all3": true,
+    "all1175STARTED": true,
+    "all145originalpolicies": true,
+    "allocation": "all",
+    "rebalance": "none",
+    "Docker_always_all3": true,
+    "durable_646pins_original_mounts_HBA_memory_heap": true,
+    "V2_unchanged_writable_no_active_snapshot": true,
+    "first_failed_gate_preserved": true,
+    "lock_test": "OMITTED afterfailedgate;notproven"
+  },
+  "backup_next": {
+    "observed_utc": "2026-10-28T03:08:04.179946+00:00",
+    "one_active_hourly_entry": true,
+    "cron": "5 * * * *",
+    "sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
+    "next_expected_utc": "2026-10-28T04:05:00+00:00",
+    "next_run_status": "PENDING;notobservedSUCCESS",
+    "skipped_during_hold": [
+      "2026-10-28T02:05:00Z",
+      "2026-10-28T03:05:00Z"
+    ]
+  }
 }
