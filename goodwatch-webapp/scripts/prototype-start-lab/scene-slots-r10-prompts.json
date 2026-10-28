@@ -1,0 +1,44 @@
+{
+  "nook-r9-bay-sofa-a": {
+    "tool": "built-in image_gen",
+    "edit_target": "scenes/raw/nook-r9-bay.png",
+    "final_prompt": "Use case: precise-object-edit. Edit the supplied raw image itself. Replace ONLY the wooden bay bench and its seat with a warm oatmeal linen two-seat sofa with rounded arms and a low upholstered back, naturally in front of the window, the same width and footprint as the old bench. Keep the same golden retriever asleep on the sofa, one or two existing cushions and the cream knitted throw draped on it. Preserve EVERYTHING outside that furniture: exact bay window and rainy view, curtains, sill plants, lamp, side table, bookcases, every shelf ornament, fairy lights, navy wall, rug, floor, gouache brush strokes, light, framing and original image dimensions. All twelve magenta slots must remain exact flat uniform #FF00FF at their identical original positions and shapes. No candles, TV, plaid or new props. Do not redesign or repaint the surrounding room.",
+    "attempt": 1,
+    "source": "/home/alp/.codex/generated_images/01a1822a-4000-7482-b7dc-00badd8dbc1f/exec-d4d226d3-fd53-4778-908e-3c257f917dfd.png"
+  },
+  "nook-r9-bay-sofa-a-portrait": {
+    "tool": "built-in image_gen",
+    "edit_target": "scenes/raw/nook-r9-bay-portrait.png",
+    "final_prompt": "Use case: precise-object-edit. Edit the supplied raw image itself. Replace ONLY the wooden bay bench and its seat with a warm oatmeal linen two-seat sofa with rounded arms and a low upholstered back, naturally in front of the window, the same width and footprint as the old bench. Keep the same golden retriever asleep on the sofa, one or two existing cushions and the cream knitted throw draped on it. Preserve EVERYTHING outside that furniture: exact bay window and rainy view, curtains, sill plants, lamp, side table, bookcases, every shelf ornament, fairy lights, navy wall, rug, floor, gouache brush strokes, light, framing and original image dimensions. All twelve magenta slots must remain exact flat uniform #FF00FF at their identical original positions and shapes. No candles, TV, plaid or new props. Do not redesign or repaint the surrounding room.",
+    "attempt": 1,
+    "source": "/home/alp/.codex/generated_images/01a1822a-4000-7482-b7dc-00badd8dbc1f/exec-c8a2f610-0a44-4e15-b8ee-a5eef9e3626e.png"
+  },
+  "nook-r9-bay-sofa-b": {
+    "tool": "built-in image_gen",
+    "edit_target": "scenes/raw/nook-r9-bay.png",
+    "final_prompt": "Use case: precise-object-edit. Edit the supplied raw image itself. Replace ONLY the wooden bay bench and its seat with a deep blue velvet loveseat with tapered wooden legs, naturally in front of the window, the same width and footprint as the old bench. Keep the same golden retriever asleep on the sofa, one or two existing cushions and the cream knitted throw draped on it. Preserve EVERYTHING outside that furniture: exact bay window and rainy view, curtains, sill plants, lamp, side table, bookcases, every shelf ornament, fairy lights, navy wall, rug, floor, gouache brush strokes, light, framing and original image dimensions. All twelve magenta slots must remain exact flat uniform #FF00FF at their identical original positions and shapes. No candles, TV, plaid or new props. Do not redesign or repaint the surrounding room.",
+    "attempt": 1,
+    "source": "/home/alp/.codex/generated_images/01a1822a-4000-7482-b7dc-00badd8dbc1f/exec-01dbabfc-be07-4423-9fc7-b02fc4aa2e72.png"
+  },
+  "nook-r9-bay-sofa-b-portrait": {
+    "tool": "built-in image_gen",
+    "edit_target": "scenes/raw/nook-r9-bay-portrait.png",
+    "final_prompt": "Use case: precise-object-edit. Edit the supplied raw image itself. Replace ONLY the wooden bay bench and its seat with a deep blue velvet loveseat with tapered wooden legs, naturally in front of the window, the same width and footprint as the old bench. Keep the same golden retriever asleep on the sofa, one or two existing cushions and the cream knitted throw draped on it. Preserve EVERYTHING outside that furniture: exact bay window and rainy view, curtains, sill plants, lamp, side table, bookcases, every shelf ornament, fairy lights, navy wall, rug, floor, gouache brush strokes, light, framing and original image dimensions. All twelve magenta slots must remain exact flat uniform #FF00FF at their identical original positions and shapes. No candles, TV, plaid or new props. Do not redesign or repaint the surrounding room.",
+    "attempt": 1,
+    "source": "/home/alp/.codex/generated_images/01a1822a-4000-7482-b7dc-00badd8dbc1f/exec-e1bb4186-25ce-4a0e-8d28-d47a496a4419.png"
+  },
+  "nook-r9-bay-sofa-c": {
+    "tool": "built-in image_gen",
+    "edit_target": "scenes/raw/nook-r9-bay.png",
+    "final_prompt": "Use case: precise-object-edit. Edit the supplied raw image itself. Replace ONLY the wooden bay bench and its seat with a worn tan leather sofa with a low back, naturally in front of the window, the same width and footprint as the old bench. Keep the same golden retriever asleep on the sofa, one or two existing cushions and the cream knitted throw draped on it. Preserve EVERYTHING outside that furniture: exact bay window and rainy view, curtains, sill plants, lamp, side table, bookcases, every shelf ornament, fairy lights, navy wall, rug, floor, gouache brush strokes, light, framing and original image dimensions. All twelve magenta slots must remain exact flat uniform #FF00FF at their identical original positions and shapes. No candles, TV, plaid or new props. Do not redesign or repaint the surrounding room.",
+    "attempt": 1,
+    "source": "/home/alp/.codex/generated_images/01a1822a-4000-7482-b7dc-00badd8dbc1f/exec-444dc759-f75a-4208-8394-e819e35266ab.png"
+  },
+  "nook-r9-bay-sofa-c-portrait": {
+    "tool": "built-in image_gen",
+    "edit_target": "scenes/raw/nook-r9-bay-portrait.png",
+    "final_prompt": "Use case: precise-object-edit. Edit the supplied raw image itself. Replace ONLY the wooden bay bench and its seat with a worn tan leather sofa with a low back, naturally in front of the window, the same width and footprint as the old bench. Keep the same golden retriever asleep on the sofa, one or two existing cushions and the cream knitted throw draped on it. Preserve EVERYTHING outside that furniture: exact bay window and rainy view, curtains, sill plants, lamp, side table, bookcases, every shelf ornament, fairy lights, navy wall, rug, floor, gouache brush strokes, light, framing and original image dimensions. All twelve magenta slots must remain exact flat uniform #FF00FF at their identical original positions and shapes. No candles, TV, plaid or new props. Do not redesign or repaint the surrounding room.",
+    "attempt": 1,
+    "source": "/home/alp/.codex/generated_images/01a1822a-4000-7482-b7dc-00badd8dbc1f/exec-205661a4-9bae-48cd-9ffb-1a516ab2e0b0.png"
+  }
+}
