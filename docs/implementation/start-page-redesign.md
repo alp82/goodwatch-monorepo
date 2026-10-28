@@ -253,7 +253,7 @@ are never dimmed or refused; words are at three. Chips show a whole mix by its n
 `optionCounts` for every mood, theme, and style; the tiles read their counts from it and the chip row reads `total`.
 Fetch it when the panel opens and after each pick, cancel stale ones. Wording: "N titles" with scope `any`, "N on your
 services" with scope `mine`. A mix tile shows its parts line ("Funny · Feel-good") instead of a count (see
-[Open questions](#open-questions-for-the-owner)). Tile pictures: each mix's and word's backdrop from `ChoiceArt`; pick
+[Open questions](#owner-answers)). Tile pictures: each mix's and word's backdrop from `ChoiceArt`; pick
 backdrops that don't repeat.
 
 ## Room lighting
@@ -302,7 +302,7 @@ lab: 4 at 768, 6 at 1024 and 1440 × 900, 7 at 1280 × 800 and 1440 × 800, 8 at
 768, 5 at 1024, 6 at 1440, 7 at 1920. The card is up to `clamp(1200px, calc(100vw - 320px), 1600px)` wide.
 
 **Loved titles** (`useLovedThree`): tapping a poster saves it with `updateGuestInteraction(mediaType, tmdbId,
-"score", 10)`; undoing removes it. Fewer than three carry across searches. Once three are loved, any new choice (a
+"score", 9)` (owner, 2026-10-29: loved is a 9); undoing removes it. Fewer than three carry across searches. Once three are loved, any new choice (a
 pick, a preset, a typed search, Clear, Surprise me, Back) empties the three slots and starts over; the saved scores
 stay. If `canGuestRate` refuses (the guest has 20 scores), show the existing guest-limit prompt.
 
@@ -498,9 +498,9 @@ step 4 needs step 2; step 8 needs step 2; step 9 comes last.
 - **OG image for `/`:** `/og/index.jpg` still shows the old room.
 - **Larger scene source** if the owner finds the room soft on large screens.
 
-## Open questions for the owner
+## Owner answers
 
-1. **Score for a loved title.** This spec saves 10, as the TV quiz already treats a tap. It shows as the guest's
-   rating and counts toward the 20 guest ratings. Recommendation: 10.
-2. **Mix tile counts.** A mix's count needs its own request per mix (eight full filter runs per panel open). This spec
-   shows the parts line on mix tiles and counts on words only. Recommendation: parts line.
+1. **Score for a loved title:** 9 (owner, 2026-10-29). It shows as the guest's rating and counts toward the 20 guest
+   ratings.
+2. **Mix tile counts:** mix tiles show their parts line, and only single moods, themes, and styles show counts
+   (owner, 2026-10-29).
