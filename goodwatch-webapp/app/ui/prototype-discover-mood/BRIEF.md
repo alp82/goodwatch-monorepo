@@ -253,3 +253,60 @@ Lab changes: `SectionProps.viewer` ("guest" | "member", from the lab bar toggle;
 nowhere in the UI but keep it plausible: e.g. a member with Netflix, Prime Video and Disney Plus, a few loved titles).
 Sections that had their own preview toggle should use `viewer` instead. `SectionVariant.label` overrides the sub-tab
 label. New variants get the next free letters; keep the old ones (the owner compares).
+
+## Round 8 (2026-10-29): titles d and g
+
+Owner on round 7: d "really good" but the search lacked a clear action on its right, "Show 100 titles" was unclear,
+and empty steer boxes should not show; g "even stronger than d", but an example search should land in the bar's pill
+and close the panel.
+
+- Shell: `SectionProps.close?()` closes the panel (phones: the sheet). `SectionVariant.searchButton` puts a Search
+  button at the right of the bar's field (desktop bar and phone sheet field); it runs the text and closes, like Enter.
+  On for titles d and g only.
+- d: the action is "Show results" (runs the search and closes). The 100 was the search's cap (it ranks at most 100
+  titles, filters can leave fewer), so the count beside it reads "Top 100 matches" or "N matches". The pick tray
+  shows under the titles only once something is picked; no dashed slots.
+- g: the run row, a Try row and Enter all run the search, put it in the pill and close the panel. No dashed slots in
+  This list; picks show there as chips whenever the panel opens (phones: the block hides until something is picked).
+
+## Round 8 mood (2026-10-29)
+
+Owner on round 7: "mood: e is very good", but "1 of 3 moods" after Funny, Crime, Graphic read as a wrong count, and
+after picks e's left side was mostly empty. "g is nice too, but it might be better to AND every choice", and its
+headings could be calmer.
+
+- Counter (parts.tsx `PickCount`, used by e, d, g, h, i): "3 picked"; the mood limit shows only at three moods, in
+  amber ("4 picked · 3 of 3 moods"), nudged when a fourth is refused. f keeps "k of 3 moods" next to its Moods heading.
+- e: no empty half. Narrowing cards ("+ Talky") while at least eight exist; otherwise one row of steps (narrowing, then
+  "Without Crime" with what comes back, then "or Thrilling", a second pick in a picked group) and a row of the list's
+  top posters. At a dead end both rows are ways back (then ready mixes).
+- g: the picture headers are now the filter sheet's group heading (accent bar, name, count badge, "any of" on the
+  right, hairline). Shared with i in `columns.tsx`.
+- i "Columns, all of each": g with every choice ANDed, also within a group. Discover matches any of a group's picks, so
+  i counts the AND exactly from Discover's own results endpoint by inclusion-exclusion over the subsets of the picks
+  (2^N queries, five picks at most; `and.ts`), with every other filter as it is, also a running search. The recipe
+  line, rows, bars and Movies or shows counts are AND counts. A "Top titles" column shows the AND list's top posters
+  (each group cut to its rarest pick, its top 400 checked against the other picks through `ranked`); at zero it lists
+  "Without X" with what each drop brings back. The grid under the panel and the bar's Show button still show Discover's
+  any-of list. Explorer endpoints were not used: their pool (~12k) and mood rules differ from Discover's.
+
+## Round 8 taste (2026-10-29)
+
+Owner on Your taste: "duplicates the titles, we probably dont need them here anymore ... maybe we can expand on the
+contents to add more taste related filters here?" Titles (variant g) now steers by titles, so d, e, f drop the Loved /
+Disliked boxes and make the tab a home for taste filters. Shared code: `sections/taste/def-parts.tsx`.
+
+| Key | Name | Idea |
+|---|---|---|
+| d | Taste board | Four labeled blocks: Close to your taste (taste groups as picture tiles, 2x2) with Your strongest (top words as chips) under it, Taste match (with Outside your usual) + Order (Best match, For you), Your lists (Everything / Not seen yet / Your Wishlist / Seen before). |
+| e | Taste shelf, one row | Watch next's taste picker on Discover: one shelf of picture tiles mixing taste groups and strongest words, up to 3 picks; one row under it with Taste match, Your lists (segmented) and Best match. |
+| f | Taste in this list | Bars: taste groups as rows with loved posters and how much of this list sits in each (plus "In none of them"), Taste match as rows 90%+ down to Outside your usual with shares, Order and Your lists as switches. |
+
+Real (production filter or data exists): Taste match (`match=`, minMatch), Best match (`sort=match`), For you
+(`foryou=0|1`), Not seen yet (`unseen=1`), the strongest words as the real mood/theme/style tags (counts live), taste
+groups as a concept (Taste page groups, Discover's Sides of you `side=<id>` / `side=none`, Watch next's picker
+`taste=<key>`). Simulated: the member's four groups, their names, pictures and counts, which words are strongest, every
+member count (shares of the list), Outside your usual (no max-match filter exists), Wishlist and Seen before as Discover
+list scopes (Watch next / My movies read the Wishlist; Discover has no such scope). Group picks, Outside and the list
+scope live in a page store, so the grid doesn't follow them. Guests see the same blocks faint with a lock and one
+"Sign up for your taste" chip; Your lists stays usable for guests.

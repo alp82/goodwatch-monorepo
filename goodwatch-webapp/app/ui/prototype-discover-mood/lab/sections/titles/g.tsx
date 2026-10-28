@@ -1,7 +1,8 @@
 // PROTOTYPE (Discover lab, titles g "Suggestions list"): a classic search-suggest list under the bar. One list, grouped,
 // ↑ ↓ Enter: the first row runs the bar's text (the text shows once, as that row's action), then filters the text
 // points at, titles (steer with thumbs or Like this), people (Cast and crew). The right column holds what steers this
-// list now, as removable session chips.
+// list now, as removable session chips (only once something is picked).
+// Round 8: running a search (the first row, a Try row, Enter) puts it in the bar's pill and closes the panel.
 import {
 	ArrowTurnDownLeftIcon,
 	CheckIcon,
@@ -40,7 +41,12 @@ type Item =
 
 const PURPLE = "#c084fc"
 
-export function TitlesG({ d, phone, text, runSearch, setText }: SectionProps) {
+export function TitlesG({ d, phone, text, runSearch, setText, close }: SectionProps) {
+	const go = (q: string) => {
+		runSearch(q)
+		setText(q)
+		close?.()
+	}
 	const typed = text.trim()
 	const asking = typed.length >= 2
 	const titles = useQuickTitles(text)
@@ -63,7 +69,7 @@ export function TitlesG({ d, phone, text, runSearch, setText }: SectionProps) {
 	const act = (i: number) => {
 		const it = items[i]
 		if (!it) return
-		if (it.kind === "run" || it.kind === "prompt") runSearch(it.text)
+		if (it.kind === "run" || it.kind === "prompt") go(it.text)
 		else if (it.kind === "filter") it.m.toggle()
 		else if (it.kind === "title") {
 			known.remember(it.t)
@@ -87,7 +93,7 @@ export function TitlesG({ d, phone, text, runSearch, setText }: SectionProps) {
 	const listBody = (
 		<div ref={list} role="listbox" aria-label="Suggestions" className={phone ? "flex flex-col gap-1" : "flex flex-col gap-1"}>
 			{run && (
-				<Row i={at(run)} active={nav.active} onHover={nav.setActive} onClick={() => runSearch(typed)} tall>
+				<Row i={at(run)} active={nav.active} onHover={nav.setActive} onClick={() => go(typed)} tall>
 					<MagnifyingGlassIcon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden />
 					<span className="min-w-0 flex-1 truncate text-[16px] text-gray-300">
 						{typed === d.q ? "Showing" : "Search"}{" "}
@@ -122,7 +128,7 @@ export function TitlesG({ d, phone, text, runSearch, setText }: SectionProps) {
 
 			{prompts.length > 0 && <Head icon={<MagnifyingGlassIcon />}>Try</Head>}
 			{prompts.map((it) => (
-				<Row key={it.text} i={at(it)} active={nav.active} onHover={nav.setActive} onClick={() => runSearch(it.text)}>
+				<Row key={it.text} i={at(it)} active={nav.active} onHover={nav.setActive} onClick={() => go(it.text)}>
 					<MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-amber-400/60" aria-hidden />
 					<span className="min-w-0 flex-1 truncate text-[15px] text-gray-300">{it.text}</span>
 					<EnterKey show={nav.active === at(it)} />
@@ -298,6 +304,7 @@ function Shaping({
 	onExample: (k: (typeof EXAMPLE_KEYS)[number]["key"]) => void
 }) {
 	const any = uses.picked.length > 0 || people.chosen.length > 0
+	if (!any && phone) return null
 	return (
 		<div>
 			<h3 className={`${SECTION_LABEL} mb-3 flex h-5 items-center gap-2 px-1 text-gray-400`}>
@@ -306,17 +313,8 @@ function Shaping({
 			</h3>
 			{!any && (
 				<div className="flex flex-col gap-2">
-					{STEER_ORDER.map((u) => (
-						<span
-							key={u}
-							className={`flex h-9 items-center gap-1.5 rounded-full border border-dashed border-white/[0.12] px-3 text-[13px] font-semibold text-gray-500 [&>svg]:h-4 [&>svg]:w-4 ${STEER[u].text} opacity-60`}
-						>
-							{STEER[u].icon}
-							<span className="text-gray-500">{STEER[u].label}</span>
-						</span>
-					))}
 					{!phone && (
-						<div className="mt-3 flex flex-wrap gap-1.5">
+						<div className="flex flex-wrap gap-1.5">
 							{EXAMPLE_KEYS.slice(0, 2).map((t) => (
 								<motion.button
 									key={t.key}

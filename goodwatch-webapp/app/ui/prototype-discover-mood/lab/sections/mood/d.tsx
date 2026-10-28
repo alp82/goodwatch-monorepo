@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 import type { ReactNode } from "react"
 import type { ProtoDiscover, Tag } from "../../../kit"
 import type { SectionProps } from "../../types"
-import { MOOD_CHOICES, MoodCount, type Moods, STYLE_TAGS, THEME_TAGS, type Tap, TypeSwitch, clearAll, genreOptions, tagName, tagTap, useMoods } from "./parts"
+import { MOOD_CHOICES, type Moods, PickCount, STYLE_TAGS, THEME_TAGS, type Tap, TypeSwitch, clearAll, genreOptions, tagName, tagTap, useMoods } from "./parts"
 
 interface Row {
 	id: string
@@ -157,7 +157,7 @@ function Recipe({ d, m }: { d: ProtoDiscover; m: Moods }) {
 					</>
 				)}
 			</p>
-			<MoodCount m={m} />
+			<PickCount n={d.picked.length + m.words.length + genreOptions(d).filter((o) => o.active).length} m={m} />
 			{groups.length > 0 && (
 				<button
 					type="button"

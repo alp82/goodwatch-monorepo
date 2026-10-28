@@ -1,8 +1,9 @@
 // PROTOTYPE (Discover lab, titles d): the bar is the search. The panel never repeats the field or its text; it shows
 // only what the text would do. Left: how the text reads (Read as chips from the cheap preview), the first posters it
 // returns, and one action with the count. Right: titles whose name matches, to steer with the thumbs or Similar to.
-// Every pick lands as a filter chip in the funnel tray at the bottom.
-import { ArrowTurnDownLeftIcon, CheckIcon, FilmIcon, SparklesIcon } from "@heroicons/react/20/solid"
+// Every pick lands as a filter chip in the funnel tray under the titles; the tray shows only once something is picked.
+// Round 8: the action runs the search and closes the panel; its label says what it does.
+import { ArrowTurnDownLeftIcon, CheckIcon, FilmIcon, MagnifyingGlassIcon, SparklesIcon } from "@heroicons/react/20/solid"
 import { motion } from "framer-motion"
 import type { TitleCard } from "~/server/title-cards.server"
 import { ReadAsChips } from "~/ui/discover/ReadAsChips"
@@ -10,8 +11,11 @@ import { TAP } from "~/ui/filter-bar/motion"
 import { EXAMPLE_PROMPTS, short } from "../../../kit"
 import { type FoundTitle, POSTER_SM, PosterThumb, TitleRowsLoading, liveTitleUrl, useQuickTitles } from "../../shell-parts"
 import type { SectionProps } from "../../types"
-import { EmptySlots, SteerButtons, SteerTray, metaLine, useExampleTitles } from "./def-steer"
+import { SteerButtons, SteerTray, metaLine, useExampleTitles } from "./def-steer"
 import { LaneHead, type TitleUses, useKnown, useSearchPreview, useTitleUses } from "./shared"
+
+/** The search ranks at most this many titles (discover-search-request); filters can leave fewer. */
+const SEARCH_CAP = 100
 
 function ReadingSkeleton() {
 	return (
@@ -66,7 +70,7 @@ function TitleLine({ t, uses, onUse, phone }: { t: FoundTitle; uses: TitleUses; 
 	)
 }
 
-export function TitlesD({ d, phone, text, setText, runSearch }: SectionProps) {
+export function TitlesD({ d, phone, text, setText, runSearch, close }: SectionProps) {
 	const typed = text.trim()
 	const running = d.q !== null && typed === d.q
 	const typing = typed.length >= 3 && !running
@@ -98,7 +102,7 @@ export function TitlesD({ d, phone, text, setText, runSearch }: SectionProps) {
 					<div className="px-1">
 						<PosterStrip cards={cards} n={n} w={w} busy={busy} />
 					</div>
-					<div className="px-1">
+					<div className="flex items-center px-1">
 						{running ? (
 							<span className="inline-flex h-12 items-center gap-2 rounded-2xl bg-white/[0.05] px-4 text-[15px] font-semibold text-gray-300">
 								<CheckIcon className="h-4 w-4 text-amber-400" aria-hidden />
@@ -108,14 +112,21 @@ export function TitlesD({ d, phone, text, setText, runSearch }: SectionProps) {
 							<motion.button
 								type="button"
 								whileTap={TAP}
-								onClick={() => runSearch(typed)}
+								onClick={() => {
+									runSearch(typed)
+									close?.()
+								}}
 								className="inline-flex h-12 items-center gap-3 rounded-2xl bg-amber-400 px-5 text-[15px] font-bold text-gray-950 cursor-pointer outline-none hover:bg-amber-300 focus-visible:ring-2 focus-visible:ring-white"
 							>
-								{total != null ? `Show ${short(total)} titles` : "Show titles"}
+								<MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
+								Show results
 								<kbd className="hidden items-center rounded-md bg-black/15 px-1.5 py-0.5 font-sans text-xs sm:flex">
 									<ArrowTurnDownLeftIcon className="h-3.5 w-3.5" aria-hidden />
 								</kbd>
 							</motion.button>
+						)}
+						{!running && total != null && (
+							<span className="ml-4 text-[13px] tabular-nums text-gray-500">{total >= SEARCH_CAP ? `Top ${SEARCH_CAP} matches` : `${short(total)} matches`}</span>
 						)}
 					</div>
 				</div>
@@ -151,7 +162,7 @@ export function TitlesD({ d, phone, text, setText, runSearch }: SectionProps) {
 		</div>
 	)
 
-	const tray = <SteerTray uses={uses} known={known.known} empty={<EmptySlots />} wrap={phone} />
+	const tray = uses.picked.length > 0 && <SteerTray uses={uses} known={known.known} wrap />
 
 	if (phone)
 		return (
@@ -165,9 +176,11 @@ export function TitlesD({ d, phone, text, setText, runSearch }: SectionProps) {
 		<div className="flex h-full min-h-0 flex-col">
 			<div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
 				<div className="min-h-0 overflow-hidden border-r border-white/[0.06] px-6 py-5">{reads}</div>
-				<div className="min-h-0 overflow-hidden px-5 py-5">{found}</div>
+				<div className="min-h-0 overflow-y-auto overscroll-contain px-5 py-5">
+					{found}
+					{tray && <div className="mt-3 px-2">{tray}</div>}
+				</div>
 			</div>
-			<div className="flex h-14 shrink-0 items-center border-t border-white/[0.06] px-6">{tray}</div>
 		</div>
 	)
 }

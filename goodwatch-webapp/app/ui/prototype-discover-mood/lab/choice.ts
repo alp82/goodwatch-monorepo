@@ -18,10 +18,11 @@ export const SECTIONS: { id: SectionId; name: string }[] = [
 
 /** The owner's picks so far. Empty: every section shows `a`, the baseline. */
 export const DEFAULTS: Partial<Record<SectionId, string>> = {
-	// Round 6 verdict (2026-10-28).
-	titles: "a",
+	// Round 6 and 7 verdicts (2026-10-28, 2026-10-29).
+	titles: "g",
+	people: "c",
 	taste: "a",
-	mood: "c",
+	mood: "e",
 	services: "b",
 	origin: "a",
 	length: "d",

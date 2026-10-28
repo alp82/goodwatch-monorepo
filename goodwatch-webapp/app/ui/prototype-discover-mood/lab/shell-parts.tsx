@@ -346,6 +346,23 @@ export function PhoneBar({
 	)
 }
 
+/** The field's own action: runs the text and closes the panel. Quiet while the field is empty. */
+export function SearchGo({ onClick, empty, small = false, className = "" }: { onClick: () => void; empty: boolean; small?: boolean; className?: string }) {
+	return (
+		<motion.button
+			type="button"
+			whileTap={TAP}
+			onClick={onClick}
+			className={`flex shrink-0 items-center gap-2 rounded-full font-bold cursor-pointer ${small ? "h-10 px-3.5 text-[14px]" : "h-12 px-5 text-[15px]"} outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white ${
+				empty ? "bg-white/[0.08] text-gray-300 hover:bg-white/[0.12]" : "bg-amber-400 text-gray-950 hover:bg-amber-300"
+			} ${className}`}
+		>
+			<MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
+			Search
+		</motion.button>
+	)
+}
+
 /** The bar's Search segment as a real field. */
 export function SearchInput({
 	value,

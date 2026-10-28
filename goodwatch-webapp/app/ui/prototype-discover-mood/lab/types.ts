@@ -25,6 +25,8 @@ export interface SectionProps {
 	runSearch: (text: string) => void
 	/** Opens another place in the panel, e.g. open("watch", "services"). */
 	open: (seg: "search" | "mood" | "watch", sub?: string) => void
+	/** Closes the panel (phones: the sheet), e.g. after running a search so the grid shows it. */
+	close?: () => void
 }
 
 export interface SectionVariant {
@@ -34,5 +36,7 @@ export interface SectionVariant {
 	label?: string
 	/** Keep the results grid undimmed while this section is open (its preview is the grid). */
 	liveGrid?: boolean
+	/** Titles only: a Search button at the right of the bar's field (runs the text, closes the panel). */
+	searchButton?: boolean
 	View: (props: SectionProps) => ReactNode
 }

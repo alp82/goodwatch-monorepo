@@ -14,10 +14,10 @@ export const VARIANTS: SectionVariant[] = [
 	{ key: "a", name: "Lanes, one action set", View: TitlesA },
 	{ key: "b", name: "Posters that turn over", View: TitlesB },
 	{ key: "c", name: "One list for everything", View: TitlesC },
-	{ key: "d", name: "The bar is the search", label: "Titles", View: TitlesD },
+	{ key: "d", name: "The bar is the search", label: "Titles", searchButton: true, View: TitlesD },
 	{ key: "e", name: "Describe or find a title", label: "Describe or find", View: TitlesE },
 	{ key: "f", name: "The grid is the preview", label: "Titles and people", liveGrid: true, View: TitlesF },
-	{ key: "g", name: "Suggestions list", label: "Titles", View: TitlesG },
+	{ key: "g", name: "Suggestions list", label: "Titles", searchButton: true, View: TitlesG },
 	{ key: "h", name: "Steer board", label: "Steer", View: TitlesH },
 	{ key: "i", name: "One sentence", label: "Titles", View: TitlesI },
 ]

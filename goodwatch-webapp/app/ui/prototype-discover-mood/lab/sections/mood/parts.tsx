@@ -438,7 +438,7 @@ export function PickRow({
 					empty
 				)}
 			</div>
-			<MoodCount m={m} />
+			<PickCount n={picks.length} m={m} />
 			{picks.length > 0 && (
 				<button
 					type="button"
@@ -453,7 +453,7 @@ export function PickRow({
 	)
 }
 
-/** "k of 3" moods; amber and nudged when a fourth was refused. */
+/** "k of 3" moods; amber and nudged when a fourth was refused. Next to a Moods heading only (f). */
 export function MoodCount({ m }: { m: Moods }) {
 	return (
 		<motion.span
@@ -464,6 +464,33 @@ export function MoodCount({ m }: { m: Moods }) {
 			className={`shrink-0 text-sm tabular-nums ${m.full ? "font-semibold text-amber-300" : "text-gray-400"}`}
 		>
 			{m.used} of {MAX_MOODS} moods
+		</motion.span>
+	)
+}
+
+/**
+ * How many picks the tab holds ("3 picked"). The mood limit shows only once it matters: at three moods, in amber,
+ * nudged when a fourth was refused. Nothing while nothing is picked.
+ */
+export function PickCount({ n, m }: { n: number; m: Moods }) {
+	if (!n) return null
+	const limit = `${m.used} of ${MAX_MOODS} moods`
+	return (
+		<motion.span
+			key={m.refusedAt}
+			initial={m.refusedAt ? { x: -4 } : false}
+			animate={{ x: 0 }}
+			transition={{ type: "spring", stiffness: 900, damping: 12 }}
+			className="shrink-0 text-sm tabular-nums text-gray-400"
+		>
+			{m.full && n === m.used ? (
+				<span className="font-semibold text-amber-300">{limit}</span>
+			) : (
+				<>
+					{n} picked
+					{m.full && <span className="font-semibold text-amber-300"> · {limit}</span>}
+				</>
+			)}
 		</motion.span>
 	)
 }
@@ -583,17 +610,24 @@ const GENRE_FOLDS: { label: string; names: string[] }[] = [
 ]
 const FOLDED = new Set(GENRE_FOLDS.flatMap((f) => f.names))
 
-export function genreOptions(d: ProtoDiscover): Option[] {
+/** Genre choices as the tab shows them: folded pairs (Action = Action or Action & Adventure) and the rest one each. */
+export function genreUnits(d: ProtoDiscover): { label: string; names: string[]; on: boolean }[] {
 	const s = d.filters.state
-	const oc = d.counts?.optionCounts.genres
-	const all = Object.keys(oc ?? {})
+	const all = Object.keys(d.counts?.optionCounts.genres ?? {})
 	for (const g of s.genres) if (!all.includes(g)) all.push(g)
-	const c = (n: string) => oc?.[n] ?? null
 	const units = [
 		...GENRE_FOLDS.filter((f) => f.names.some((n) => all.includes(n))),
 		...all.filter((n) => !FOLDED.has(n)).map((n) => ({ label: n, names: [n] })),
 	]
-	const isOn = (u: { names: string[] }) => s.genres.includes(u.names[0])
+	return units.map((u) => ({ ...u, on: s.genres.includes(u.names[0]) }))
+}
+
+export function genreOptions(d: ProtoDiscover): Option[] {
+	const s = d.filters.state
+	const oc = d.counts?.optionCounts.genres
+	const c = (n: string) => oc?.[n] ?? null
+	const units = genreUnits(d)
+	const isOn = (u: { on: boolean }) => u.on
 	return units.map((u) => {
 		const parts = u.names.map(c).filter((x): x is number => x !== null)
 		return {
@@ -745,8 +779,8 @@ export function NarrowChips({ d, art, n = 6 }: { d: ProtoDiscover; art: WorldArt
 export const ROW_FADE = { maskImage: "linear-gradient(to right, black calc(100% - 3rem), transparent)" }
 
 /** Movies or shows as one segmented control, without a heading. */
-export function TypeSwitch({ d }: { d: ProtoDiscover }) {
-	const c = (o: string) => d.counts?.optionCounts.type?.[o] ?? null
+export function TypeSwitch({ d, count }: { d: ProtoDiscover; count?: (option: string) => number | null }) {
+	const c = count ?? ((o: string) => d.counts?.optionCounts.type?.[o] ?? null)
 	return (
 		<div className="w-[300px] max-w-full shrink-0">
 		<Segmented

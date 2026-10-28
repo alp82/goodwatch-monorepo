@@ -11,7 +11,7 @@ import { ShowTitlesButton, SnapSheet } from "~/ui/filter-bar"
 import { RollingNumber, TAP } from "~/ui/filter-bar/motion"
 import { HiddenMeter } from "~/ui/filter-bar/SubBar"
 import { useLabChoice } from "./LabBar"
-import { pick } from "./registry"
+import { pick, pick as variantOf } from "./registry"
 import { type ProtoDiscover, useFilterPieces } from "../kit"
 import {
 	GridUnder,
@@ -20,6 +20,7 @@ import {
 	type Pieces,
 	SEG_LABEL,
 	SEG_ORDER,
+	SearchGo,
 	SearchInput,
 	type SegKey,
 	segOf,
@@ -139,7 +140,13 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 		setText,
 		runSearch: (q) => d.setQ(q.trim() || null),
 		open: t.openAt,
+		close,
 	}
+	const submit = () => {
+		if (typed) d.setQ(typed)
+		close()
+	}
+	const button = variantOf(useLabChoice(), "titles").searchButton === true
 	return (
 		<div className="hidden lg:block">
 			<div className="relative mt-5">
@@ -151,21 +158,23 @@ function Desktop({ d, pieces, onOpenChange }: { d: ProtoDiscover; pieces: Pieces
 					onClearSearch={() => d.setQ(null)}
 					searchInput={
 						open ? (
-							<SearchInput
-								value={text}
-								onChange={(v) => {
-									setText(v)
-									toSearch()
-								}}
-								onFocus={toSearch}
-								inputRef={field}
-								autoFocus={false}
-								onEnter={() => {
-									if (typed) d.setQ(typed)
-									close()
-								}}
-								onEscape={close}
-							/>
+							<>
+								<div className={button ? "pr-28" : ""}>
+									<SearchInput
+										value={text}
+										onChange={(v) => {
+											setText(v)
+											toSearch()
+										}}
+										onFocus={toSearch}
+										inputRef={field}
+										autoFocus={false}
+										onEnter={submit}
+										onEscape={close}
+									/>
+								</div>
+								{button && <SearchGo onClick={submit} empty={!typed} className="absolute top-1/2 right-1 -translate-y-1/2" />}
+							</>
 						) : undefined
 					}
 				/>
@@ -292,7 +301,9 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 			setLast(k)
 			t.openAt(k, s)
 		},
+		close: () => t.go(null),
 	}
+	const button = variantOf(useLabChoice(), "titles").searchButton === true
 	const body = useRef<HTMLDivElement>(null)
 	useScrollTopOn(body, `${shown}|${sub}|${t.find.trim() ? "find" : ""}`)
 	return (
@@ -357,6 +368,17 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 												size="md"
 												autoFocus={false}
 											/>
+											{button && (
+												<SearchGo
+													onClick={() => {
+														if (typed) d.setQ(typed)
+														t.go(null)
+													}}
+													empty={!typed}
+													small
+													className="-mr-2"
+												/>
+											)}
 										</div>
 									)
 								}

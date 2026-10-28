@@ -12,7 +12,7 @@ import {
 	FoldHead,
 	type FoldKey,
 	MOOD_CHOICES,
-	MoodCount,
+	PickCount,
 	type Moods,
 	STYLE_TAGS,
 	THEME_TAGS,
@@ -139,7 +139,21 @@ function Part({ children, onRemove, color }: { children: ReactNode; onRemove: ()
 	)
 }
 
-export function RecipeLine({ d, m, size = "text-[19px]" }: { d: ProtoDiscover; m: Moods; size?: string }) {
+export function RecipeLine({
+	d,
+	m,
+	size = "text-[19px]",
+	within = "or",
+	total = d.total,
+}: {
+	d: ProtoDiscover
+	m: Moods
+	size?: string
+	/** How picks of one group join: "or" (Discover today) or "and" (mood i). */
+	within?: "or" | "and"
+	/** The count to lead with; Discover's own by default. */
+	total?: number | null
+}) {
 	const s = d.filters.state
 	const of = (g: Tag["group"]) => d.picked.filter((t) => t.group === g)
 	const moods = of("moods")
@@ -155,7 +169,7 @@ export function RecipeLine({ d, m, size = "text-[19px]" }: { d: ProtoDiscover; m
 			</Part>
 		))
 	const groups: ReactNode[] = []
-	if (moods.length) groups.push(<span key="moods">{join(tagParts(moods), "or")}</span>)
+	if (moods.length) groups.push(<span key="moods">{join(tagParts(moods), within)}</span>)
 	if (m.words.length)
 		groups.push(
 			<span key="words">
@@ -169,7 +183,7 @@ export function RecipeLine({ d, m, size = "text-[19px]" }: { d: ProtoDiscover; m
 				)}
 			</span>,
 		)
-	if (styles.length) groups.push(<span key="styles">{join(tagParts(styles), "or")}</span>)
+	if (styles.length) groups.push(<span key="styles">{join(tagParts(styles), within)}</span>)
 	if (themes.length)
 		groups.push(
 			<span key="about">
@@ -180,7 +194,7 @@ export function RecipeLine({ d, m, size = "text-[19px]" }: { d: ProtoDiscover; m
 							{t.name.toLowerCase()}
 						</Part>
 					)),
-					"or",
+					within,
 				)}
 			</span>,
 		)
@@ -192,11 +206,11 @@ export function RecipeLine({ d, m, size = "text-[19px]" }: { d: ProtoDiscover; m
 					{genreOptions(d)
 						.filter((o) => o.active)
 						.map((o) => o.label)
-						.join(" or ")}
+						.join(` ${within} `)}
 				</Part>
 			</span>,
 		)
-	const total = d.total
+	const genreN = genreOptions(d).filter((o) => o.active).length
 	return (
 		<div className="flex min-h-10 min-w-0 items-center gap-3">
 			<p className={`min-w-0 flex-1 truncate leading-tight text-gray-300 ${size}`}>
@@ -209,7 +223,7 @@ export function RecipeLine({ d, m, size = "text-[19px]" }: { d: ProtoDiscover; m
 					</>
 				)}
 			</p>
-			<MoodCount m={m} />
+			<PickCount n={d.picked.length + m.words.length + genreN} m={m} />
 			{groups.length > 0 && (
 				<button
 					type="button"
