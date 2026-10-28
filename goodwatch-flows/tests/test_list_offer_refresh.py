@@ -335,6 +335,57 @@ class RefreshTests(unittest.TestCase):
         self.assertTrue(self.db.tmdb_list_offer_refresh.find_one()['pending'])
         self.assertEqual(self.db.tmdb_daily_provider_lists.count_documents({}), 0)
 
+    def test_reused_bson_provider_proof_reaches_list_history_and_offer_handoff(self):
+        from bson import BSON, Int64
+        from contextlib import contextmanager
+        from f.tmdb_api.daily_provider_lists import TitleChecks
+        from f.tmdb_api.provider_observations import normalize_payload
+
+        payload = normalize_payload({'results': {'DE': {'flatrate': [{'provider_id': 8}]}}})
+        proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42,
+                                       self.now, bypass_cache=True)
+        source = BSON(BSON.encode(dict(tmdb_id=42, watch_providers=payload,
+                                      watch_providers_check=proof))).decode()
+        self.db.tmdb_movie_details.replace_one({'tmdb_id': 42}, source)
+        self.assertIsInstance(source['watch_providers_check']['checked_at'], Int64)
+        api = Mock()
+        api.get.side_effect = AssertionError('Matching same-day evidence must avoid HTTP')
+
+        @contextmanager
+        def owned_titles(db, media_type, ids):
+            self.assertIs(db, self.db)
+            self.assertEqual((media_type, ids), ('movie', [42]))
+            yield ids, lambda: None
+
+        crate = HistoryCrate()
+        store = ListStorage(db=self.db, connector=crate, dry_run=False)
+        with TitleChecks(api, lambda: self.now, self.db, dry_run=False) as reads:
+            _, reused_payload, reused_proof = reads.read(
+                'movie', [42], 'DE', 8, {42}, utc_ms(self.now))[0]
+            self.assertIsInstance(reused_proof['checked_at'], Int64)
+            key = OfferKey(42, 'movie', 'DE', 8, 'flatrate')
+            title = HistoryTitle(42, dict(watch_providers=reused_payload,
+                                         watch_providers_check=reused_proof),
+                                 {key: key._asdict()}, {}, [], [],
+                                 ListRead('DE', 8, utc_ms(self.now)))
+            store.publish('movie', title, lambda: None)
+            with patch('f.sync.copy.tmdb_streaming.publication_leases', owned_titles):
+                store.flush()
+        queued = self.db.tmdb_list_offer_refresh.find_one({'_id': 'movie:42'})
+        self.assertTrue(queued['pending'])
+        self.assertEqual(queued['scopes'], {'DE_8': proof['checked_at']})
+        self.assertEqual(len(crate.history), 1)
+        api.get.assert_not_called()
+        self.assertEqual(self.db.tmdb_movie_details.find_one()['watch_providers_check'],
+                         source['watch_providers_check'])
+
+    def test_scope_timestamps_reject_booleans_nonintegers_and_nonpositive_values(self):
+        for value in (True, False, 0, -1, 1.5, '1793109600000', None):
+            with self.subTest(value=value), self.assertRaisesRegex(
+                    ValueError, 'Invalid verified scope or check timestamp'):
+                refresh.enqueue(self.db, 'movie', 42, {'DE_8': value})
+        self.assertEqual(self.db.tmdb_list_offer_refresh.count_documents({}), 0)
+
     def test_only_unchanged_matching_offers_skip_a_refetch(self):
         payload = dict(id=42, results={'DE': {'flatrate': [dict(provider_id=8)]}})
         proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42, self.now, bypass_cache=True)

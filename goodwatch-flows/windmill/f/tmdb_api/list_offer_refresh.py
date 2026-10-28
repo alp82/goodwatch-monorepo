@@ -106,7 +106,8 @@ def enqueue(db, media_type, tmdb_id, scopes, *, priority=0):
     """
     if media_type not in ('movie', 'show') or type(tmdb_id) is not int or tmdb_id <= 0 or not scopes:
         raise ValueError('Invalid refresh identity or empty scopes')
-    if any(not re.fullmatch(r'[A-Z]{2}_[1-9][0-9]*', scope) or type(at) is not int or at <= 0
+    if any(not re.fullmatch(r'[A-Z]{2}_[1-9][0-9]*', scope)
+           or not isinstance(at, int) or isinstance(at, bool) or at <= 0
            for scope, at in scopes.items()):
         raise ValueError('Invalid verified scope or check timestamp')
     db.tmdb_list_offer_refresh.update_one({'_id': f'{media_type}:{tmdb_id}'}, {
