@@ -1,0 +1,11 @@
+{
+  "checked_at": "2026-10-28T12:52:40.028717+00:00",
+  "expected_commit": "814cedabd",
+  "source_matches": true,
+  "source_sha256": "b70ef43f3c471cf072131f8e0db5628caa093e696e7b8bd9b053163b9cf1330c",
+  "windmill_hash": "22aedc9f6abc6384",
+  "windmill_created_at": "2026-10-28T12:51:42.509118Z",
+  "deploy_completed_at": "2026-10-28T12:51:47Z",
+  "deploy_workflow_run": 40691256829,
+  "deploy_head": "a6b291e5c3ff8f69cf5a0c189a41b6ca9dfda298"
+}
