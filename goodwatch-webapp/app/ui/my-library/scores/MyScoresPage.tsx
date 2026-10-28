@@ -105,7 +105,7 @@ function Th({
 	)
 }
 
-/** The way back to Quick list, drawn like Quick list's strip that led here. */
+/** The way to Quick list, to score more titles, drawn like Quick list's strip that leads here. */
 function ScoreMore() {
 	return (
 		<Link
@@ -167,14 +167,14 @@ function ChangeBar({ changes, save, onUndo }: { changes: Change[]; save: SaveSta
 export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 	const s = useScores(titles)
 	const [f, setF] = useState<ScoreFilters>(NO_FILTERS)
-	// ?sort=rated opens the list last scored first (Quick list's link); ?from=quick adds Score more, back to Quick list.
+	// ?sort=rated opens the list last scored first (Quick list's link).
 	const [params] = useSearchParams()
 	const [sort, setSort] = useState<{ by: ScoreSort; dir: Direction }>(() => {
 		const by = params.get("sort")
 		return isSort(by) ? { by, dir: FIRST_DIRECTION[by] } : { by: "score", dir: "desc" }
 	})
 	const back = { label: "My library", to: LIBRARY_HUB }
-	const aside = params.get("from") === "quick" ? <ScoreMore /> : null
+	const aside = <ScoreMore />
 	const [grouping, setGrouping] = useState<ScoreGrouping>("none")
 	const [sheet, setSheet] = useState(false)
 	const [checked, setChecked] = useState<Set<string>>(new Set())

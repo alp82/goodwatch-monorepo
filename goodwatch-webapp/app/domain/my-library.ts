@@ -279,8 +279,8 @@ export const LIBRARY_HUB = "/my-library"
 export const SCORES_PAGE = "/my-library/scores"
 /** Quick list, the rating flow's table of unrated titles. */
 export const QUICK_LIST_PAGE = "/taste/quiz?mode=quick"
-/** Your scores, last scored first, opened from Quick list: the page then leads back to it. */
-export const SCORES_FROM_QUICK = `${SCORES_PAGE}?sort=rated&from=quick`
+/** Your scores, last scored first: Quick list's way there. */
+export const SCORES_FROM_QUICK = `${SCORES_PAGE}?sort=rated`
 
 /** The page of each status's list. */
 export const STATUS_SLUG: Record<LibraryStatus, string> = {
