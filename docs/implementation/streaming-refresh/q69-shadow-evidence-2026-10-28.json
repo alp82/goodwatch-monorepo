@@ -1,0 +1,5101 @@
+{
+  "review_utc": "2026-10-28T11:43:30.505932+00:00",
+  "base": "22ed33ea8",
+  "window_start": "2026-10-26T10:00:00Z",
+  "detector_schedule": {
+    "path": "f/tmdb_api/provider_detector",
+    "schedule": "0 0 0-11 * * *",
+    "timezone": "UTC",
+    "enabled": true,
+    "args": {
+      "mode": "shadow"
+    },
+    "no_flow_overlap": true
+  },
+  "detector_runs": [
+    {
+      "id": "01a1778d-8034-5e7d-bed3-4a3cf82facbc",
+      "started_at": "2026-10-26T10:00:00.052704Z",
+      "completed_at": "2026-10-26T11:00:02.561673Z",
+      "duration_ms": 3602502,
+      "success": true,
+      "args": {
+        "mode": "shadow"
+      },
+      "result": {
+        "due": 289253,
+        "mode": "shadow",
+        "fresh": 2084,
+        "failed": 0,
+        "reused": 7366,
+        "deleted": 3,
+        "invalid": 0,
+        "seconds": 3600.031,
+        "observed": 7343,
+        "requests": {
+          "title": 7346,
+          "catalog": 0,
+          "refused": 0,
+          "retries": 0,
+          "discover": 0,
+          "requests": 7346,
+          "statuses": {
+            "200": 7343,
+            "404": 3
+          },
+          "deleted_responses": 3
+        },
+        "selected": 7367,
+        "published": 0,
+        "registered": 387196,
+        "changed_pairs": {
+          "opened": 30,
+          "popular": 50682
+        },
+        "request_p95_ms": 150.31,
+        "deferred_reason": "runtime_budget"
+      }
+    },
+    {
+      "id": "01a177de-0ade-ba3d-b5d9-9dc751799443",
+      "started_at": "2026-10-27T00:00:00.238945Z",
+      "completed_at": "2026-10-27T01:00:03.705169Z",
+      "duration_ms": 3603456,
+      "success": true,
+      "args": {
+        "mode": "shadow"
+      },
+      "result": {
+        "due": 284188,
+        "mode": "shadow",
+        "fresh": 8787,
+        "failed": 0,
+        "reused": 7865,
+        "deleted": 7,
+        "invalid": 0,
+        "seconds": 3600.117,
+        "observed": 7535,
+        "requests": {
+          "title": 7543,
+          "catalog": 0,
+          "refused": 0,
+          "retries": 0,
+          "discover": 0,
+          "requests": 7543,
+          "statuses": {
+            "200": 7536,
+            "404": 7
+          },
+          "deleted_responses": 7
+        },
+        "selected": 7885,
+        "published": 0,
+        "registered": 419594,
+        "changed_pairs": {
+          "opened": 593,
+          "popular": 6180
+        },
+        "request_p95_ms": 157.67,
+        "deferred_reason": "runtime_budget"
+      }
+    },
+    {
+      "id": "01a17adf-19db-8915-0d61-dd8329230add",
+      "started_at": "2026-10-27T02:00:00.035180Z",
+      "completed_at": "2026-10-27T03:00:04.125338Z",
+      "duration_ms": 3604085,
+      "success": true,
+      "args": {
+        "mode": "shadow"
+      },
+      "result": {
+        "due": 276852,
+        "mode": "shadow",
+        "fresh": 16573,
+        "failed": 0,
+        "reused": 7492,
+        "deleted": 7,
+        "invalid": 0,
+        "seconds": 3600.131,
+        "observed": 7477,
+        "requests": {
+          "title": 7485,
+          "catalog": 0,
+          "refused": 0,
+          "retries": 0,
+          "discover": 0,
+          "requests": 7485,
+          "statuses": {
+            "200": 7478,
+            "404": 7
+          },
+          "deleted_responses": 7
+        },
+        "selected": 7513,
+        "published": 0,
+        "registered": 422698,
+        "changed_pairs": {
+          "opened": 12,
+          "popular": 18119
+        },
+        "request_p95_ms": 155.63,
+        "deferred_reason": "runtime_budget"
+      }
+    },
+    {
+      "id": "01a17b4c-f883-e0cd-220d-db68179bd559",
+      "started_at": "2026-10-27T04:00:00.040252Z",
+      "completed_at": "2026-10-27T05:00:04.229573Z",
+      "duration_ms": 3604112,
+      "success": true,
+      "args": {
+        "mode": "shadow"
+      },
+      "result": {
+        "due": 269587,
+        "mode": "shadow",
+        "fresh": 23952,
+        "failed": 0,
+        "reused": 7433,
+        "deleted": 8,
+        "invalid": 0,
+        "seconds": 3600.026,
+        "observed": 7419,
+        "requests": {
+          "title": 7427,
+          "catalog": 0,
+          "refused": 0,
+          "retries": 0,
+          "discover": 0,
+          "requests": 7427,
+          "statuses": {
+            "200": 7419,
+            "404": 8
+          },
+          "deleted_responses": 8
+        },
+        "selected": 7463,
+        "published": 0,
+        "registered": 425947,
+        "changed_pairs": {
+          "opened": 8,
+          "popular": 2346,
+          "confirmation": 0
+        },
+        "request_p95_ms": 155.99,
+        "deferred_reason": "runtime_budget"
+      }
+    },
+    {
+      "id": "01a17bba-d64a-c111-0cde-a78c3deb8579",
+      "started_at": "2026-10-27T06:00:00.044269Z",
+      "completed_at": "2026-10-27T07:00:03.129492Z",
+      "duration_ms": 3603078,
+      "success": true,
+      "args": {
+        "mode": "shadow"
+      },
+      "result": {
+        "due": 262388,
+        "mode": "shadow",
+        "fresh": 31222,
+        "failed": 0,
+        "reused": 10795,
+        "deleted": 22,
+        "invalid": 0,
+        "seconds": 3600.116,
+        "observed": 6553,
+        "requests": {
+          "title": 6575,
+          "catalog": 0,
+          "refused": 0,
+          "retries": 0,
+          "discover": 0,
+          "requests": 6575,
+          "statuses": {
+            "200": 6553,
+            "404": 22
+          },
+          "deleted_responses": 22
+        },
+        "selected": 10824,
+        "published": 0,
+        "registered": 429098,
+        "changed_pairs": {
+          "sweep": 8923,
+          "opened": 181,
+          "popular": 312
+        },
+        "request_p95_ms": 144.29,
+        "deferred_reason": "runtime_budget"
+      }
+    },
+    {
+      "id": "01a17c28-ae7f-28a4-7ece-224bb1f42d12",
+      "started_at": "2026-10-27T08:00:00.044338Z",
+      "completed_at": "2026-10-27T09:00:02.783217Z",
+      "duration_ms": 3602729,
+      "success": true,
+      "args": {
+        "mode": "shadow"
+      },
+      "result": {
+        "due": 256221,
+        "mode": "shadow",
+        "fresh": 41656,
+        "failed": 0,
+        "reused": 7683,
+        "deleted": 25,
+        "invalid": 0,
+        "seconds": 3600.153,
+        "observed": 7571,
+        "requests": {
+          "title": 7596,
+          "catalog": 0,
+          "refused": 0,
+          "retries": 0,
+          "discover": 0,
+          "requests": 7596,
+          "statuses": {
+            "200": 7571,
+            "404": 25
+          },
+          "deleted_responses": 25
+        },
+        "selected": 7853,
+        "published": 0,
+        "registered": 432375,
+        "changed_pairs": {
+          "sweep": 44872,
+          "opened": 58,
+          "popular": 3
+        },
+        "request_p95_ms": 152.43,
+        "deferred_reason": "runtime_budget"
+      }
+    },
+    {
+      "id": "01a17c96-8a44-217b-78ab-d102eb7f29b4",
+      "started_at": "2026-10-27T10:00:00.029709Z",
+      "completed_at": "2026-10-27T11:00:02.539392Z",
+      "duration_ms": 3602468,
+      "success": true,
+      "args": {
+        "mode": "shadow"
+      },
+      "result": {
+        "due": 251008,
+        "mode": "shadow",
+        "fresh": 47555,
+        "failed": 0,
+        "reused": 6045,
+        "deleted": 25,
+        "invalid": 0,
+        "seconds": 3600.042,
+        "observed": 7497,
+        "requests": {
+          "title": 7522,
+          "catalog": 0,
+          "refused": 0,
+          "retries": 0,
+          "discover": 0,
+          "requests": 7522,
+          "statuses": {
+            "200": 7497,
+            "404": 25
+          },
+          "deleted_responses": 25
+        },
+        "selected": 7787,
+        "published": 0,
+        "registered": 435836,
+        "changed_pairs": {
+          "sweep": 15784,
+          "opened": 16,
+          "popular": 736
+        },
+        "request_p95_ms": 153.59,
+        "deferred_reason": "runtime_budget"
+      }
+    },
+    {
+      "id": "01a17fb1-feb6-c0d2-651f-9ab682b96648",
+      "started_at": "2026-10-28T00:00:00.040195Z",
+      "completed_at": "2026-10-28T01:00:03.810381Z",
+      "duration_ms": 3603758,
+      "success": true,
+      "args": {
+        "mode": "shadow"
+      },
+      "result": {
+        "due": 249992,
+        "mode": "shadow",
+        "fresh": 44466,
+        "failed": 0,
+        "reused": 3313,
+        "deleted": 7,
+        "invalid": 0,
+        "seconds": 3600.116,
+        "observed": 7185,
+        "requests": {
+          "title": 7192,
+          "catalog": 0,
+          "refused": 0,
+          "retries": 0,
+          "discover": 0,
+          "requests": 7192,
+          "statuses": {
+            "200": 7185,
+            "404": 7
+          },
+          "deleted_responses": 7
+        },
+        "selected": 7449,
+        "published": 0,
+        "registered": 460754,
+        "changed_pairs": {
+          "opened": 282,
+          "popular": 329
+        },
+        "request_p95_ms": 153.27,
+        "deferred_reason": "runtime_budget"
+      }
+    },
+    {
+      "id": "01a18079-d2da-f63d-032f-44219312d792",
+      "started_at": "2026-10-28T04:00:00.047065Z",
+      "completed_at": "2026-10-28T05:00:02.495663Z",
+      "duration_ms": 3602441,
+      "success": true,
+      "args": {
+        "mode": "shadow"
+      },
+      "result": {
+        "due": 251689,
+        "mode": "shadow",
+        "fresh": 43088,
+        "failed": 0,
+        "reused": 437,
+        "deleted": 7,
+        "invalid": 0,
+        "seconds": 3600.143,
+        "observed": 7615,
+        "requests": {
+          "title": 7623,
+          "catalog": 0,
+          "refused": 0,
+          "retries": 0,
+          "discover": 0,
+          "requests": 7623,
+          "statuses": {
+            "200": 7616,
+            "404": 7
+          },
+          "deleted_responses": 7
+        },
+        "selected": 7696,
+        "published": 0,
+        "registered": 467116,
+        "changed_pairs": {
+          "opened": 53,
+          "popular": 469
+        },
+        "request_p95_ms": 150.73,
+        "deferred_reason": "runtime_budget"
+      }
+    },
+    {
+      "id": "01a180e1-2b3e-24e9-c764-975b5648c028",
+      "started_at": "2026-10-28T06:00:00.042739Z",
+      "completed_at": "2026-10-28T07:00:03.717436Z",
+      "duration_ms": 3603668,
+      "success": true,
+      "args": {
+        "mode": "shadow"
+      },
+      "result": {
+        "due": 250828,
+        "mode": "shadow",
+        "fresh": 42875,
+        "failed": 0,
+        "reused": 230,
+        "deleted": 7,
+        "invalid": 0,
+        "seconds": 3600.213,
+        "observed": 7182,
+        "requests": {
+          "title": 7190,
+          "catalog": 0,
+          "refused": 0,
+          "retries": 0,
+          "discover": 0,
+          "requests": 7190,
+          "statuses": {
+            "200": 7183,
+            "404": 7
+          },
+          "deleted_responses": 7
+        },
+        "selected": 7271,
+        "published": 0,
+        "registered": 470279,
+        "changed_pairs": {
+          "opened": 30,
+          "popular": 413
+        },
+        "request_p95_ms": 156.52,
+        "deferred_reason": "runtime_budget"
+      }
+    },
+    {
+      "id": "01a1814f-0cc9-2dc4-400d-9ba7bdaf06a2",
+      "started_at": "2026-10-28T08:00:00.047151Z",
+      "completed_at": "2026-10-28T09:00:03.566780Z",
+      "duration_ms": 3603470,
+      "success": true,
+      "args": {
+        "mode": "shadow"
+      },
+      "result": {
+        "due": 245987,
+        "mode": "shadow",
+        "fresh": 47784,
+        "failed": 0,
+        "reused": 4933,
+        "deleted": 23,
+        "invalid": 0,
+        "seconds": 3600.078,
+        "observed": 6000,
+        "requests": {
+          "title": 6023,
+          "catalog": 0,
+          "refused": 0,
+          "retries": 0,
+          "discover": 0,
+          "requests": 6023,
+          "statuses": {
+            "200": 6000,
+            "404": 23
+          },
+          "deleted_responses": 23
+        },
+        "selected": 10305,
+        "published": 0,
+        "registered": 473513,
+        "changed_pairs": {
+          "sweep": 1649,
+          "opened": 21,
+          "popular": 1134
+        },
+        "request_p95_ms": 152.9,
+        "deferred_reason": "runtime_budget"
+      }
+    },
+    {
+      "id": "01a181bc-e942-fb92-c2d1-2db05bc63ed9",
+      "started_at": "2026-10-28T10:00:00.014962Z",
+      "completed_at": "2026-10-28T11:00:03.424789Z",
+      "duration_ms": 3603404,
+      "success": true,
+      "args": {
+        "mode": "shadow"
+      },
+      "result": {
+        "due": 241562,
+        "mode": "shadow",
+        "fresh": 56733,
+        "failed": 0,
+        "reused": 6289,
+        "deleted": 22,
+        "invalid": 0,
+        "seconds": 3600.083,
+        "observed": 7020,
+        "requests": {
+          "title": 7042,
+          "catalog": 0,
+          "refused": 0,
+          "retries": 0,
+          "discover": 0,
+          "requests": 7042,
+          "statuses": {
+            "200": 7020,
+            "404": 22
+          },
+          "deleted_responses": 22
+        },
+        "selected": 7371,
+        "published": 0,
+        "registered": 476813,
+        "changed_pairs": {
+          "sweep": 13595,
+          "opened": 20,
+          "popular": 660
+        },
+        "request_p95_ms": 157.62,
+        "deferred_reason": "runtime_budget"
+      }
+    }
+  ],
+  "pipeline_reports": {
+    "f/tmdb_api/provider_detector": {
+      "updated_at": 1793187227759,
+      "report": {
+        "path": "f/tmdb_api/provider_detector",
+        "status": "unknown",
+        "root_count": 11,
+        "outcomes": {
+          "useful": 10,
+          "running": 1
+        },
+        "unknown_parent_count": 0,
+        "causes": [],
+        "due_count": 24,
+        "next_due": "2026-10-29T00:00:00+00:00",
+        "last_useful_at": "2026-10-28T09:00:03.566780+00:00",
+        "latest_job_id": "01a181bc-e942-fb92-c2d1-2db05bc63ed9",
+        "attention_job_id": null,
+        "material_child_failure_count": 0,
+        "tolerable_external_failure_count": 0,
+        "material_outcome_failure_count": 0,
+        "consecutive_failures": 0,
+        "missing_due_count": 0,
+        "coverage_start": "2026-10-26T11:30:01.435546+00:00",
+        "coverage_truncated": true,
+        "cron_valid": true,
+        "inventory_candidate_count": 13,
+        "uninspected_count": 2,
+        "unresolved_count": 0,
+        "history_incomplete": true
+      }
+    },
+    "f/tmdb_api/read_daily_provider_lists": {
+      "updated_at": 1793187227828,
+      "report": {
+        "path": "f/tmdb_api/read_daily_provider_lists",
+        "status": "unhealthy",
+        "root_count": 10,
+        "outcomes": {
+          "failure": 7,
+          "success_unknown": 3
+        },
+        "unknown_parent_count": 0,
+        "causes": [
+          "lack_of_progress",
+          "material_child_failures"
+        ],
+        "due_count": 10,
+        "next_due": "2026-10-28T14:00:00+00:00",
+        "last_useful_at": null,
+        "latest_job_id": "01a17882-cbff-f7fc-1298-e6dde023014d",
+        "attention_job_id": "01a17882-cbff-f7fc-1298-e6dde023014d",
+        "material_child_failure_count": 7,
+        "tolerable_external_failure_count": 0,
+        "material_outcome_failure_count": 0,
+        "consecutive_failures": 2,
+        "missing_due_count": 0,
+        "coverage_start": "2026-10-17T17:47:36.465863+00:00",
+        "coverage_truncated": true,
+        "cron_valid": true,
+        "inventory_candidate_count": 11,
+        "uninspected_count": 0,
+        "unresolved_count": 3,
+        "history_incomplete": true
+      }
+    },
+    "f/tmdb_web/tmdb_crawl_providers": {
+      "updated_at": 1793187236949,
+      "report": {
+        "path": "f/tmdb_web/tmdb_crawl_providers",
+        "status": "unknown",
+        "root_count": 108854,
+        "outcomes": {
+          "overlap": 2375,
+          "success_unknown": 2536,
+          "useful": 45679,
+          "external_deferred": 111,
+          "no_work": 58151,
+          "failure": 1,
+          "running": 1
+        },
+        "unknown_parent_count": 36,
+        "causes": [],
+        "due_count": 8640,
+        "next_due": "2026-10-28T11:30:18+00:00",
+        "last_useful_at": "2026-10-28T10:51:49.683021+00:00",
+        "latest_job_id": "01a18223-0f34-868c-07ba-3104279121fa",
+        "attention_job_id": null,
+        "material_child_failure_count": 5,
+        "tolerable_external_failure_count": 14658,
+        "material_outcome_failure_count": 42,
+        "consecutive_failures": 0,
+        "missing_due_count": 0,
+        "coverage_start": "2026-10-26T11:30:01.435546+00:00",
+        "coverage_truncated": true,
+        "cron_valid": true,
+        "inventory_candidate_count": 60238,
+        "uninspected_count": 20033,
+        "unresolved_count": 615,
+        "history_incomplete": true
+      }
+    },
+    "f/monitoring/tmdb_watch_upstream": {
+      "updated_at": 1793187240651,
+      "report": {
+        "path": "f/monitoring/tmdb_watch_upstream",
+        "source_pipeline": "f/tmdb_web/tmdb_crawl_providers",
+        "status": "healthy",
+        "causes": [],
+        "upstream": {
+          "blocked_until": null,
+          "blocked_since": null,
+          "probe_expires_at": null,
+          "last_success_at": "2026-10-28T11:32:16.407000+00:00",
+          "block_reason": null,
+          "consecutive_blocks": 0
+        },
+        "blocked_seconds": null,
+        "retry_in_seconds": null,
+        "probe_due": false
+      }
+    },
+    "f/monitoring/availability_opened": {
+      "updated_at": 1793187240751,
+      "report": {
+        "path": "f/monitoring/availability_opened",
+        "source_pipeline": "f/tmdb_web/tmdb_crawl_providers",
+        "status": "unknown",
+        "causes": [],
+        "observation_complete": false,
+        "counts_are_lower_bounds": true,
+        "pending_pair_count": 0,
+        "oldest_pending_at": null,
+        "oldest_pending_age_seconds": null,
+        "parse_first_observed_at": null,
+        "observed_at": "2026-10-28T11:33:47.630136+00:00"
+      }
+    },
+    "f/monitoring/availability_changed": {
+      "updated_at": 1793187240772,
+      "report": {
+        "path": "f/monitoring/availability_changed",
+        "source_pipeline": "f/tmdb_web/tmdb_crawl_providers",
+        "status": "unhealthy",
+        "causes": [
+          "availability_changed_overdue"
+        ],
+        "observation_complete": false,
+        "counts_are_lower_bounds": true,
+        "pending_pair_count": 5000,
+        "oldest_pending_at": "2026-10-26T08:39:17.502000+00:00",
+        "oldest_pending_age_seconds": 183270.128136,
+        "parse_first_observed_at": null,
+        "observed_at": "2026-10-28T11:33:47.630136+00:00"
+      }
+    },
+    "f/monitoring/availability_parse": {
+      "updated_at": 1793187240861,
+      "report": {
+        "path": "f/monitoring/availability_parse",
+        "source_pipeline": "f/tmdb_web/tmdb_crawl_providers",
+        "status": "unknown",
+        "causes": [],
+        "observation_complete": false,
+        "counts_are_lower_bounds": true,
+        "pending_pair_count": 0,
+        "oldest_pending_at": null,
+        "oldest_pending_age_seconds": null,
+        "parse_first_observed_at": null,
+        "observed_at": "2026-10-28T11:33:47.630136+00:00"
+      }
+    }
+  },
+  "country_latest_page_verifications": {
+    "2026-10-26_from_10_UTC": {
+      "movie": 25938,
+      "show": 25032
+    },
+    "2026-10-27": {
+      "movie": 42036,
+      "show": 42957
+    },
+    "2026-10-28_until_read": {
+      "movie": 21112,
+      "show": 18962
+    }
+  },
+  "published_comparison": [
+    {
+      "media": "movie",
+      "id": 2,
+      "popularity": 5.9615,
+      "shadow_at": 1793096299215,
+      "live_at": 1792001009414,
+      "shadow_offers": 37,
+      "live_offers": 37,
+      "published_offers": 178,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 125,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 37,
+      "published_api_min_at": 1792001009414,
+      "published_api_max_at": 1792001009414
+    },
+    {
+      "media": "movie",
+      "id": 3,
+      "popularity": 5.9905,
+      "shadow_at": 1793182897748,
+      "live_at": 1792465514179,
+      "shadow_offers": 30,
+      "live_offers": 30,
+      "published_offers": 168,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 122,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 30,
+      "published_api_min_at": 1792465514179,
+      "published_api_max_at": 1792465514179
+    },
+    {
+      "media": "movie",
+      "id": 5,
+      "popularity": 4.711,
+      "shadow_at": 1793168302340,
+      "live_at": 1792000364417,
+      "shadow_offers": 223,
+      "live_offers": 221,
+      "published_offers": 296,
+      "shadow_equals_live": false,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 53,
+      "shadow_equals_published_api": false,
+      "live_equals_published_api": true,
+      "published_api_offers": 221,
+      "published_api_min_at": 1792000364417,
+      "published_api_max_at": 1792000364417
+    },
+    {
+      "media": "movie",
+      "id": 11,
+      "popularity": 33.1834,
+      "shadow_at": 1793163613568,
+      "live_at": 1793163613568,
+      "shadow_offers": 312,
+      "live_offers": 312,
+      "published_offers": 314,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 98,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 312,
+      "published_api_min_at": 1793163613568,
+      "published_api_max_at": 1793163613568
+    },
+    {
+      "media": "movie",
+      "id": 12,
+      "popularity": 36.3276,
+      "shadow_at": 1793163613737,
+      "live_at": 1793163613737,
+      "shadow_offers": 315,
+      "live_offers": 315,
+      "published_offers": 315,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 90,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 315,
+      "published_api_min_at": 1793163613737,
+      "published_api_max_at": 1793163613737
+    },
+    {
+      "media": "movie",
+      "id": 13,
+      "popularity": 43.6999,
+      "shadow_at": 1793163613346,
+      "live_at": 1793163613346,
+      "shadow_offers": 540,
+      "live_offers": 540,
+      "published_offers": 558,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 132,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 540,
+      "published_api_min_at": 1793163613346,
+      "published_api_max_at": 1793163613346
+    },
+    {
+      "media": "movie",
+      "id": 14,
+      "popularity": 12.7712,
+      "shadow_at": 1793163615039,
+      "live_at": 1793163615039,
+      "shadow_offers": 420,
+      "live_offers": 420,
+      "published_offers": 448,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 124,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 420,
+      "published_api_min_at": 1793163615039,
+      "published_api_max_at": 1793163615039
+    },
+    {
+      "media": "movie",
+      "id": 15,
+      "popularity": 11.7851,
+      "shadow_at": 1793134953057,
+      "live_at": 1793134953057,
+      "shadow_offers": 299,
+      "live_offers": 299,
+      "published_offers": 306,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 94,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 299,
+      "published_api_min_at": 1793134953057,
+      "published_api_max_at": 1793134953057
+    },
+    {
+      "media": "movie",
+      "id": 16,
+      "popularity": 4.8792,
+      "shadow_at": 1793162182987,
+      "live_at": 1790758244127,
+      "shadow_offers": 163,
+      "live_offers": 184,
+      "published_offers": 185,
+      "shadow_equals_live": false,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 51,
+      "shadow_equals_published_api": false,
+      "live_equals_published_api": true,
+      "published_api_offers": 184,
+      "published_api_min_at": 1790758244127,
+      "published_api_max_at": 1790758244127
+    },
+    {
+      "media": "movie",
+      "id": 17,
+      "popularity": 2.5248,
+      "shadow_at": 1793097426768,
+      "live_at": 1793135722485,
+      "shadow_offers": 75,
+      "live_offers": 75,
+      "published_offers": 78,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 20,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 75,
+      "published_api_min_at": 1793135722485,
+      "published_api_max_at": 1793135722485
+    },
+    {
+      "media": "movie",
+      "id": 18,
+      "popularity": 22.8898,
+      "shadow_at": 1793136028013,
+      "live_at": 1793136028013,
+      "shadow_offers": 202,
+      "live_offers": 202,
+      "published_offers": 208,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 27,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 202,
+      "published_api_min_at": 1793136028013,
+      "published_api_max_at": 1793136028013
+    },
+    {
+      "media": "movie",
+      "id": 19,
+      "popularity": 7.9194,
+      "shadow_at": 1793168724206,
+      "live_at": 1792121534092,
+      "shadow_offers": 336,
+      "live_offers": 336,
+      "published_offers": 420,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 138,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 336,
+      "published_api_min_at": 1792121534092,
+      "published_api_max_at": 1792121534092
+    },
+    {
+      "media": "movie",
+      "id": 22,
+      "popularity": 34.9593,
+      "shadow_at": 1793163613917,
+      "live_at": 1793163613917,
+      "shadow_offers": 315,
+      "live_offers": 315,
+      "published_offers": 331,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 94,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 315,
+      "published_api_min_at": 1793163613917,
+      "published_api_max_at": 1793163613917
+    },
+    {
+      "media": "movie",
+      "id": 24,
+      "popularity": 27.3237,
+      "shadow_at": 1793163614703,
+      "live_at": 1793163614703,
+      "shadow_offers": 460,
+      "live_offers": 460,
+      "published_offers": 494,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 133,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 460,
+      "published_api_min_at": 1793163614703,
+      "published_api_max_at": 1793163614703
+    },
+    {
+      "media": "movie",
+      "id": 25,
+      "popularity": 7.0573,
+      "shadow_at": 1793169465414,
+      "live_at": 1792316534137,
+      "shadow_offers": 409,
+      "live_offers": 405,
+      "published_offers": 690,
+      "shadow_equals_live": false,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 134,
+      "shadow_equals_published_api": false,
+      "live_equals_published_api": true,
+      "published_api_offers": 405,
+      "published_api_min_at": 1792316534137,
+      "published_api_max_at": 1792316534137
+    },
+    {
+      "media": "movie",
+      "id": 27,
+      "popularity": 20.6313,
+      "shadow_at": 1793096921137,
+      "live_at": 1790336921718,
+      "shadow_offers": 19,
+      "live_offers": 26,
+      "published_offers": 27,
+      "shadow_equals_live": false,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 8,
+      "shadow_equals_published_api": false,
+      "live_equals_published_api": true,
+      "published_api_offers": 26,
+      "published_api_min_at": 1790336921718,
+      "published_api_max_at": 1790336921718
+    },
+    {
+      "media": "movie",
+      "id": 28,
+      "popularity": 18.6881,
+      "shadow_at": 1793163614871,
+      "live_at": 1793163614871,
+      "shadow_offers": 233,
+      "live_offers": 233,
+      "published_offers": 233,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 53,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 233,
+      "published_api_min_at": 1793163614871,
+      "published_api_max_at": 1793163614871
+    },
+    {
+      "media": "movie",
+      "id": 33,
+      "popularity": 20.1404,
+      "shadow_at": 1793096226603,
+      "live_at": 1793096226603,
+      "shadow_offers": 417,
+      "live_offers": 417,
+      "published_offers": 456,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 125,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 417,
+      "published_api_min_at": 1793096226603,
+      "published_api_max_at": 1793096226603
+    },
+    {
+      "media": "movie",
+      "id": 35,
+      "popularity": 14.4074,
+      "shadow_at": 1793176369607,
+      "live_at": 1792832507491,
+      "shadow_offers": 331,
+      "live_offers": 330,
+      "published_offers": 335,
+      "shadow_equals_live": false,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 97,
+      "shadow_equals_published_api": false,
+      "live_equals_published_api": true,
+      "published_api_offers": 330,
+      "published_api_min_at": 1792832507491,
+      "published_api_max_at": 1792832507491
+    },
+    {
+      "media": "movie",
+      "id": 38,
+      "popularity": 27.4971,
+      "shadow_at": 1793163614512,
+      "live_at": 1793163614512,
+      "shadow_offers": 334,
+      "live_offers": 334,
+      "published_offers": 364,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 136,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 334,
+      "published_api_min_at": 1793163614512,
+      "published_api_max_at": 1793163614512
+    },
+    {
+      "media": "movie",
+      "id": 55,
+      "popularity": 11.1318,
+      "shadow_at": 1793097048481,
+      "live_at": 1790339031851,
+      "shadow_offers": 298,
+      "live_offers": 301,
+      "published_offers": 416,
+      "shadow_equals_live": false,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 129,
+      "shadow_equals_published_api": false,
+      "live_equals_published_api": true,
+      "published_api_offers": 301,
+      "published_api_min_at": 1790339031851,
+      "published_api_max_at": 1790339031851
+    },
+    {
+      "media": "movie",
+      "id": 58,
+      "popularity": 31.8829,
+      "shadow_at": 1793163614341,
+      "live_at": 1793163614341,
+      "shadow_offers": 317,
+      "live_offers": 317,
+      "published_offers": 325,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 87,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 317,
+      "published_api_min_at": 1793163614341,
+      "published_api_max_at": 1793163614341
+    },
+    {
+      "media": "movie",
+      "id": 59,
+      "popularity": 7.0997,
+      "shadow_at": 1793170436817,
+      "live_at": 1792557569831,
+      "shadow_offers": 333,
+      "live_offers": 333,
+      "published_offers": 529,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 109,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 333,
+      "published_api_min_at": 1792557569831,
+      "published_api_max_at": 1792557569831
+    },
+    {
+      "media": "movie",
+      "id": 62,
+      "popularity": 32.7827,
+      "shadow_at": 1793167826877,
+      "live_at": 1793167826877,
+      "shadow_offers": 423,
+      "live_offers": 423,
+      "published_offers": 462,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 113,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 423,
+      "published_api_min_at": 1793167826877,
+      "published_api_max_at": 1793167826877
+    },
+    {
+      "media": "movie",
+      "id": 63,
+      "popularity": 16.5112,
+      "shadow_at": 1793163629167,
+      "live_at": 1793163629167,
+      "shadow_offers": 309,
+      "live_offers": 309,
+      "published_offers": 329,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 88,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 309,
+      "published_api_min_at": 1793163629167,
+      "published_api_max_at": 1793163629167
+    },
+    {
+      "media": "movie",
+      "id": 64,
+      "popularity": 4.6836,
+      "shadow_at": 1793069751136,
+      "live_at": 1792288079172,
+      "shadow_offers": 134,
+      "live_offers": 132,
+      "published_offers": 219,
+      "shadow_equals_live": false,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 57,
+      "shadow_equals_published_api": false,
+      "live_equals_published_api": true,
+      "published_api_offers": 132,
+      "published_api_min_at": 1792288079172,
+      "published_api_max_at": 1792288079172
+    },
+    {
+      "media": "movie",
+      "id": 65,
+      "popularity": 12.5742,
+      "shadow_at": 1793175963327,
+      "live_at": 1792752568376,
+      "shadow_offers": 411,
+      "live_offers": 408,
+      "published_offers": 433,
+      "shadow_equals_live": false,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 136,
+      "shadow_equals_published_api": false,
+      "live_equals_published_api": true,
+      "published_api_offers": 408,
+      "published_api_min_at": 1792752568376,
+      "published_api_max_at": 1792752568376
+    },
+    {
+      "media": "movie",
+      "id": 66,
+      "popularity": 5.6552,
+      "shadow_at": 1793147927114,
+      "live_at": 1790342362228,
+      "shadow_offers": 345,
+      "live_offers": 438,
+      "published_offers": 570,
+      "shadow_equals_live": false,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 101,
+      "shadow_equals_published_api": false,
+      "live_equals_published_api": true,
+      "published_api_offers": 438,
+      "published_api_min_at": 1790342362228,
+      "published_api_max_at": 1790342362228
+    },
+    {
+      "media": "movie",
+      "id": 67,
+      "popularity": 5.4307,
+      "shadow_at": 1793161005350,
+      "live_at": 1790367636246,
+      "shadow_offers": 74,
+      "live_offers": 84,
+      "published_offers": 135,
+      "shadow_equals_live": false,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 51,
+      "shadow_equals_published_api": false,
+      "live_equals_published_api": true,
+      "published_api_offers": 84,
+      "published_api_min_at": 1790367636246,
+      "published_api_max_at": 1790367636246
+    },
+    {
+      "media": "movie",
+      "id": 68,
+      "popularity": 7.4261,
+      "shadow_at": 1793174413623,
+      "live_at": 1793174413623,
+      "shadow_offers": 225,
+      "live_offers": 225,
+      "published_offers": 239,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 96,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 225,
+      "published_api_min_at": 1793088013300,
+      "published_api_max_at": 1793088013300
+    },
+    {
+      "media": "show",
+      "id": 1,
+      "popularity": 5.6759,
+      "shadow_at": 1793170341277,
+      "live_at": 1792533708323,
+      "shadow_offers": 4,
+      "live_offers": 4,
+      "published_offers": 4,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 1,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 4,
+      "published_api_min_at": 1792533708323,
+      "published_api_max_at": 1792533708323
+    },
+    {
+      "media": "show",
+      "id": 2,
+      "popularity": 10.7018,
+      "shadow_at": 1793168305998,
+      "live_at": 1792001009682,
+      "shadow_offers": 1,
+      "live_offers": 1,
+      "published_offers": 1,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 1,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 1,
+      "published_api_min_at": 1792001009682,
+      "published_api_max_at": 1792001009682
+    },
+    {
+      "media": "show",
+      "id": 6,
+      "popularity": 7.1466,
+      "shadow_at": 1793148610162,
+      "live_at": 1790352069493,
+      "shadow_offers": 10,
+      "live_offers": 11,
+      "published_offers": 12,
+      "shadow_equals_live": false,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 6,
+      "shadow_equals_published_api": false,
+      "live_equals_published_api": true,
+      "published_api_offers": 11,
+      "published_api_min_at": 1790352069493,
+      "published_api_max_at": 1790352069493
+    },
+    {
+      "media": "show",
+      "id": 7,
+      "popularity": 12.5903,
+      "shadow_at": 1793177297609,
+      "live_at": 1793085387183,
+      "shadow_offers": 2,
+      "live_offers": 2,
+      "published_offers": 3,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 4,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 2,
+      "published_api_min_at": 1793085387183,
+      "published_api_max_at": 1793085387183
+    },
+    {
+      "media": "show",
+      "id": 9,
+      "popularity": 80.8126,
+      "shadow_at": 1793175475985,
+      "live_at": 1792660514783,
+      "shadow_offers": 7,
+      "live_offers": 7,
+      "published_offers": 7,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 1,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 7,
+      "published_api_min_at": 1792660514783,
+      "published_api_max_at": 1792660514783
+    },
+    {
+      "media": "show",
+      "id": 13,
+      "popularity": 34.7041,
+      "shadow_at": 1793168895754,
+      "live_at": 1792167726768,
+      "shadow_offers": 7,
+      "live_offers": 7,
+      "published_offers": 7,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 3,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 7,
+      "published_api_min_at": 1792167726768,
+      "published_api_max_at": 1792167726768
+    },
+    {
+      "media": "show",
+      "id": 14,
+      "popularity": 6.9812,
+      "shadow_at": 1793169790509,
+      "live_at": 1792391024478,
+      "shadow_offers": 5,
+      "live_offers": 5,
+      "published_offers": 5,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 3,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 5,
+      "published_api_min_at": 1792391024478,
+      "published_api_max_at": 1792391024478
+    },
+    {
+      "media": "show",
+      "id": 15,
+      "popularity": 22.3767,
+      "shadow_at": 1793176480669,
+      "live_at": 1792855529367,
+      "shadow_offers": 34,
+      "live_offers": 34,
+      "published_offers": 34,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 22,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 34,
+      "published_api_min_at": 1792855529367,
+      "published_api_max_at": 1792855529367
+    },
+    {
+      "media": "show",
+      "id": 19,
+      "popularity": 9.2305,
+      "shadow_at": 1793168724563,
+      "live_at": 1792121534333,
+      "shadow_offers": 2,
+      "live_offers": 2,
+      "published_offers": 2,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 1,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 2,
+      "published_api_min_at": 1792121534333,
+      "published_api_max_at": 1792121534333
+    },
+    {
+      "media": "show",
+      "id": 20,
+      "popularity": 8.6905,
+      "shadow_at": 1793170559602,
+      "live_at": 1792586025624,
+      "shadow_offers": 13,
+      "live_offers": 13,
+      "published_offers": 16,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 6,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 13,
+      "published_api_min_at": 1792586025624,
+      "published_api_max_at": 1792586025624
+    },
+    {
+      "media": "show",
+      "id": 25,
+      "popularity": 11.865,
+      "shadow_at": 1793169465777,
+      "live_at": 1792316534515,
+      "shadow_offers": 52,
+      "live_offers": 52,
+      "published_offers": 67,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 67,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 52,
+      "published_api_min_at": 1792316534515,
+      "published_api_max_at": 1792316534515
+    },
+    {
+      "media": "show",
+      "id": 30,
+      "popularity": 50.8463,
+      "shadow_at": 1793170614618,
+      "live_at": 1792599190127,
+      "shadow_offers": 8,
+      "live_offers": 8,
+      "published_offers": 8,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 6,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 8,
+      "published_api_min_at": 1792599190127,
+      "published_api_max_at": 1792599190127
+    },
+    {
+      "media": "show",
+      "id": 31,
+      "popularity": 6.084,
+      "shadow_at": 1793175476348,
+      "live_at": 1792660527601,
+      "shadow_offers": 1,
+      "live_offers": 1,
+      "published_offers": 1,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 1,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 1,
+      "published_api_min_at": 1792660527601,
+      "published_api_max_at": 1792660527601
+    },
+    {
+      "media": "show",
+      "id": 33,
+      "popularity": 23.3303,
+      "shadow_at": 1793177298684,
+      "live_at": 1793085529018,
+      "shadow_offers": 27,
+      "live_offers": 27,
+      "published_offers": 27,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 10,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 27,
+      "published_api_min_at": 1793085529018,
+      "published_api_max_at": 1793085529018
+    },
+    {
+      "media": "show",
+      "id": 34,
+      "popularity": 21.6793,
+      "shadow_at": 1793176595350,
+      "live_at": 1792875728043,
+      "shadow_offers": 50,
+      "live_offers": 50,
+      "published_offers": 51,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 17,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 50,
+      "published_api_min_at": 1792875728043,
+      "published_api_max_at": 1792875728043
+    },
+    {
+      "media": "show",
+      "id": 35,
+      "popularity": 15.2793,
+      "shadow_at": 1793175669260,
+      "live_at": 1792697948835,
+      "shadow_offers": 22,
+      "live_offers": 22,
+      "published_offers": 27,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 76,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 22,
+      "published_api_min_at": 1792697948835,
+      "published_api_max_at": 1792697948835
+    },
+    {
+      "media": "show",
+      "id": 36,
+      "popularity": 5526.6599,
+      "shadow_at": 1793176521862,
+      "live_at": 1792865448115,
+      "shadow_offers": 86,
+      "live_offers": 86,
+      "published_offers": 87,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 42,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 86,
+      "published_api_min_at": 1792865448115,
+      "published_api_max_at": 1792865448115
+    },
+    {
+      "media": "show",
+      "id": 38,
+      "popularity": 5.9964,
+      "shadow_at": 1793171054509,
+      "live_at": 1793171054509,
+      "shadow_offers": 1,
+      "live_offers": 1,
+      "published_offers": 1,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 1,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 1,
+      "published_api_min_at": 1793171054509,
+      "published_api_max_at": 1793171054509
+    },
+    {
+      "media": "show",
+      "id": 40,
+      "popularity": 84.0407,
+      "shadow_at": 1793161481292,
+      "live_at": 1793020107449,
+      "shadow_offers": 62,
+      "live_offers": 62,
+      "published_offers": 62,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 40,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 62,
+      "published_api_min_at": 1793020107449,
+      "published_api_max_at": 1793020107449
+    },
+    {
+      "media": "show",
+      "id": 43,
+      "popularity": 9.8562,
+      "shadow_at": 1793176707363,
+      "live_at": 1792901548837,
+      "shadow_offers": 31,
+      "live_offers": 31,
+      "published_offers": 31,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 28,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 31,
+      "published_api_min_at": 1792901548837,
+      "published_api_max_at": 1792901548837
+    },
+    {
+      "media": "show",
+      "id": 44,
+      "popularity": 13.967,
+      "shadow_at": 1793165207769,
+      "live_at": 1793165207769,
+      "shadow_offers": 41,
+      "live_offers": 41,
+      "published_offers": 47,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 18,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 41,
+      "published_api_min_at": 1793165207769,
+      "published_api_max_at": 1793165207769
+    },
+    {
+      "media": "show",
+      "id": 45,
+      "popularity": 76.6492,
+      "shadow_at": 1793175722945,
+      "live_at": 1792708147976,
+      "shadow_offers": 92,
+      "live_offers": 90,
+      "published_offers": 93,
+      "shadow_equals_live": false,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 41,
+      "shadow_equals_published_api": false,
+      "live_equals_published_api": true,
+      "published_api_offers": 90,
+      "published_api_min_at": 1792708147976,
+      "published_api_max_at": 1792708147976
+    },
+    {
+      "media": "show",
+      "id": 47,
+      "popularity": 39.1198,
+      "shadow_at": 1793168895387,
+      "live_at": 1792167554556,
+      "shadow_offers": 119,
+      "live_offers": 119,
+      "published_offers": 119,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 30,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 119,
+      "published_api_min_at": 1792167554556,
+      "published_api_max_at": 1792167554556
+    },
+    {
+      "media": "show",
+      "id": 48,
+      "popularity": 6.3543,
+      "shadow_at": 1793176596443,
+      "live_at": 1792875828048,
+      "shadow_offers": 2,
+      "live_offers": 2,
+      "published_offers": 2,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 2,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 2,
+      "published_api_min_at": 1792875828048,
+      "published_api_max_at": 1792875828048
+    },
+    {
+      "media": "show",
+      "id": 50,
+      "popularity": 33.8986,
+      "shadow_at": 1793183349532,
+      "live_at": 1793091206961,
+      "shadow_offers": 38,
+      "live_offers": 38,
+      "published_offers": 43,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 28,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 38,
+      "published_api_min_at": 1793091206961,
+      "published_api_max_at": 1793091206961
+    },
+    {
+      "media": "show",
+      "id": 51,
+      "popularity": 5.6322,
+      "shadow_at": 1793169431693,
+      "live_at": 1792309367107,
+      "shadow_offers": 1,
+      "live_offers": 1,
+      "published_offers": 1,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 1,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 1,
+      "published_api_min_at": 1792309367107,
+      "published_api_max_at": 1792309367107
+    },
+    {
+      "media": "show",
+      "id": 52,
+      "popularity": 69.7829,
+      "shadow_at": 1793096468128,
+      "live_at": 1793007066988,
+      "shadow_offers": 4,
+      "live_offers": 4,
+      "published_offers": 7,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 4,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 4,
+      "published_api_min_at": 1793007066988,
+      "published_api_max_at": 1793007066988
+    },
+    {
+      "media": "show",
+      "id": 54,
+      "popularity": 20.8031,
+      "shadow_at": 1793176342015,
+      "live_at": 1792827059637,
+      "shadow_offers": 26,
+      "live_offers": 26,
+      "published_offers": 27,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 10,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 26,
+      "published_api_min_at": 1792827059637,
+      "published_api_max_at": 1792827059637
+    },
+    {
+      "media": "show",
+      "id": 55,
+      "popularity": 9.1649,
+      "shadow_at": 1793168635342,
+      "live_at": 1792096926808,
+      "shadow_offers": 0,
+      "live_offers": 0,
+      "published_offers": 0,
+      "shadow_equals_live": true,
+      "shadow_equals_published": true,
+      "live_equals_published": true,
+      "evidence_countries": 98,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 0,
+      "published_api_min_at": null,
+      "published_api_max_at": null
+    },
+    {
+      "media": "show",
+      "id": 57,
+      "popularity": 6.2934,
+      "shadow_at": 1793162708163,
+      "live_at": 1791331064397,
+      "shadow_offers": 0,
+      "live_offers": 0,
+      "published_offers": 1,
+      "shadow_equals_live": true,
+      "shadow_equals_published": false,
+      "live_equals_published": false,
+      "evidence_countries": 1,
+      "shadow_equals_published_api": true,
+      "live_equals_published_api": true,
+      "published_api_offers": 0,
+      "published_api_min_at": null,
+      "published_api_max_at": null
+    }
+  ],
+  "offline_reconciliation": [
+    {
+      "media": "movie",
+      "id": 2,
+      "actual": 178,
+      "live_replay": 174,
+      "shadow_replay": 160,
+      "live_additions": [],
+      "live_removals": [
+        [
+          "GB",
+          "buy",
+          350
+        ],
+        [
+          "GB",
+          "rent",
+          350
+        ],
+        [
+          "IE",
+          "buy",
+          350
+        ],
+        [
+          "IE",
+          "rent",
+          350
+        ]
+      ],
+      "shadow_additions": [],
+      "shadow_removals": [
+        [
+          "DK",
+          "flatrate",
+          11
+        ],
+        [
+          "DK",
+          "rent",
+          426
+        ],
+        [
+          "FI",
+          "free",
+          496
+        ],
+        [
+          "FI",
+          "rent",
+          426
+        ],
+        [
+          "FR",
+          "buy",
+          239
+        ],
+        [
+          "FR",
+          "rent",
+          239
+        ],
+        [
+          "GB",
+          "buy",
+          3
+        ],
+        [
+          "GB",
+          "buy",
+          350
+        ],
+        [
+          "GB",
+          "rent",
+          3
+        ],
+        [
+          "GB",
+          "rent",
+          350
+        ],
+        [
+          "IE",
+          "buy",
+          3
+        ],
+        [
+          "IE",
+          "buy",
+          350
+        ],
+        [
+          "IE",
+          "rent",
+          3
+        ],
+        [
+          "IE",
+          "rent",
+          350
+        ],
+        [
+          "NO",
+          "flatrate",
+          11
+        ],
+        [
+          "NO",
+          "free",
+          496
+        ],
+        [
+          "NO",
+          "rent",
+          426
+        ],
+        [
+          "SE",
+          "flatrate",
+          435
+        ]
+      ],
+      "shadow_delta_from_live_add": [],
+      "shadow_delta_from_live_remove": [
+        [
+          "DK",
+          "flatrate",
+          11
+        ],
+        [
+          "DK",
+          "rent",
+          426
+        ],
+        [
+          "FI",
+          "free",
+          496
+        ],
+        [
+          "FI",
+          "rent",
+          426
+        ],
+        [
+          "FR",
+          "buy",
+          239
+        ],
+        [
+          "FR",
+          "rent",
+          239
+        ],
+        [
+          "GB",
+          "buy",
+          3
+        ],
+        [
+          "GB",
+          "rent",
+          3
+        ],
+        [
+          "IE",
+          "buy",
+          3
+        ],
+        [
+          "IE",
+          "rent",
+          3
+        ],
+        [
+          "NO",
+          "flatrate",
+          11
+        ],
+        [
+          "NO",
+          "free",
+          496
+        ],
+        [
+          "NO",
+          "rent",
+          426
+        ],
+        [
+          "SE",
+          "flatrate",
+          435
+        ]
+      ],
+      "live_deferred": [],
+      "shadow_deferred": [],
+      "live_verified": 125,
+      "shadow_verified": 125,
+      "live_at": 1792001009414,
+      "shadow_at": 1793096299215
+    },
+    {
+      "media": "movie",
+      "id": 5,
+      "actual": 296,
+      "live_replay": 250,
+      "shadow_replay": 228,
+      "live_additions": [],
+      "live_removals": [
+        [
+          "AT",
+          "buy",
+          350
+        ],
+        [
+          "AT",
+          "rent",
+          350
+        ],
+        [
+          "BG",
+          "buy",
+          350
+        ],
+        [
+          "BG",
+          "rent",
+          350
+        ],
+        [
+          "CZ",
+          "buy",
+          350
+        ],
+        [
+          "CZ",
+          "rent",
+          350
+        ],
+        [
+          "DE",
+          "buy",
+          350
+        ],
+        [
+          "DE",
+          "rent",
+          350
+        ],
+        [
+          "DK",
+          "buy",
+          350
+        ],
+        [
+          "DK",
+          "rent",
+          350
+        ],
+        [
+          "ES",
+          "buy",
+          350
+        ],
+        [
+          "ES",
+          "rent",
+          350
+        ],
+        [
+          "FI",
+          "buy",
+          350
+        ],
+        [
+          "FI",
+          "rent",
+          350
+        ],
+        [
+          "FR",
+          "buy",
+          350
+        ],
+        [
+          "FR",
+          "rent",
+          350
+        ],
+        [
+          "GB",
+          "buy",
+          350
+        ],
+        [
+          "GB",
+          "rent",
+          350
+        ],
+        [
+          "GR",
+          "buy",
+          350
+        ],
+        [
+          "GR",
+          "rent",
+          350
+        ],
+        [
+          "IE",
+          "buy",
+          350
+        ],
+        [
+          "IE",
+          "rent",
+          350
+        ],
+        [
+          "IN",
+          "buy",
+          350
+        ],
+        [
+          "IN",
+          "rent",
+          350
+        ],
+        [
+          "JP",
+          "buy",
+          350
+        ],
+        [
+          "JP",
+          "rent",
+          350
+        ],
+        [
+          "MY",
+          "buy",
+          350
+        ],
+        [
+          "MY",
+          "rent",
+          350
+        ],
+        [
+          "NO",
+          "buy",
+          350
+        ],
+        [
+          "NO",
+          "rent",
+          350
+        ],
+        [
+          "PH",
+          "buy",
+          350
+        ],
+        [
+          "PH",
+          "rent",
+          350
+        ],
+        [
+          "PL",
+          "buy",
+          350
+        ],
+        [
+          "PL",
+          "rent",
+          350
+        ],
+        [
+          "PT",
+          "buy",
+          350
+        ],
+        [
+          "PT",
+          "rent",
+          350
+        ],
+        [
+          "RU",
+          "buy",
+          350
+        ],
+        [
+          "RU",
+          "rent",
+          350
+        ],
+        [
+          "SE",
+          "buy",
+          350
+        ],
+        [
+          "SE",
+          "rent",
+          350
+        ],
+        [
+          "SK",
+          "buy",
+          350
+        ],
+        [
+          "SK",
+          "rent",
+          350
+        ],
+        [
+          "US",
+          "buy",
+          350
+        ],
+        [
+          "US",
+          "rent",
+          350
+        ],
+        [
+          "ZA",
+          "buy",
+          350
+        ],
+        [
+          "ZA",
+          "rent",
+          350
+        ]
+      ],
+      "shadow_additions": [
+        [
+          "AU",
+          "rent",
+          2784
+        ],
+        [
+          "CZ",
+          "flatrate",
+          2536
+        ],
+        [
+          "GB",
+          "rent",
+          2784
+        ],
+        [
+          "IE",
+          "rent",
+          2784
+        ],
+        [
+          "US",
+          "rent",
+          2784
+        ]
+      ],
+      "shadow_removals": [
+        [
+          "AT",
+          "buy",
+          350
+        ],
+        [
+          "AT",
+          "rent",
+          350
+        ],
+        [
+          "BG",
+          "buy",
+          350
+        ],
+        [
+          "BG",
+          "rent",
+          350
+        ],
+        [
+          "CA",
+          "ads",
+          326
+        ],
+        [
+          "CZ",
+          "buy",
+          350
+        ],
+        [
+          "CZ",
+          "rent",
+          350
+        ],
+        [
+          "DE",
+          "buy",
+          350
+        ],
+        [
+          "DE",
+          "rent",
+          350
+        ],
+        [
+          "DK",
+          "buy",
+          3
+        ],
+        [
+          "DK",
+          "buy",
+          350
+        ],
+        [
+          "DK",
+          "rent",
+          3
+        ],
+        [
+          "DK",
+          "rent",
+          350
+        ],
+        [
+          "ES",
+          "buy",
+          3
+        ],
+        [
+          "ES",
+          "buy",
+          350
+        ],
+        [
+          "ES",
+          "rent",
+          3
+        ],
+        [
+          "ES",
+          "rent",
+          350
+        ],
+        [
+          "FI",
+          "buy",
+          3
+        ],
+        [
+          "FI",
+          "buy",
+          350
+        ],
+        [
+          "FI",
+          "rent",
+          3
+        ],
+        [
+          "FI",
+          "rent",
+          350
+        ],
+        [
+          "FR",
+          "buy",
+          138
+        ],
+        [
+          "FR",
+          "buy",
+          239
+        ],
+        [
+          "FR",
+          "buy",
+          350
+        ],
+        [
+          "FR",
+          "rent",
+          59
+        ],
+        [
+          "FR",
+          "rent",
+          138
+        ],
+        [
+          "FR",
+          "rent",
+          239
+        ],
+        [
+          "FR",
+          "rent",
+          350
+        ],
+        [
+          "GB",
+          "buy",
+          350
+        ],
+        [
+          "GB",
+          "rent",
+          350
+        ],
+        [
+          "GB",
+          "rent",
+          2285
+        ],
+        [
+          "GR",
+          "buy",
+          350
+        ],
+        [
+          "GR",
+          "rent",
+          350
+        ],
+        [
+          "IE",
+          "buy",
+          350
+        ],
+        [
+          "IE",
+          "rent",
+          350
+        ],
+        [
+          "IN",
+          "buy",
+          350
+        ],
+        [
+          "IN",
+          "rent",
+          350
+        ],
+        [
+          "IS",
+          "buy",
+          76
+        ],
+        [
+          "IS",
+          "rent",
+          76
+        ],
+        [
+          "IT",
+          "flatrate",
+          109
+        ],
+        [
+          "JP",
+          "buy",
+          3
+        ],
+        [
+          "JP",
+          "buy",
+          350
+        ],
+        [
+          "JP",
+          "rent",
+          3
+        ],
+        [
+          "JP",
+          "rent",
+          350
+        ],
+        [
+          "MY",
+          "buy",
+          350
+        ],
+        [
+          "MY",
+          "rent",
+          350
+        ],
+        [
+          "NO",
+          "buy",
+          3
+        ],
+        [
+          "NO",
+          "buy",
+          350
+        ],
+        [
+          "NO",
+          "rent",
+          3
+        ],
+        [
+          "NO",
+          "rent",
+          350
+        ],
+        [
+          "PE",
+          "rent",
+          167
+        ],
+        [
+          "PH",
+          "buy",
+          350
+        ],
+        [
+          "PH",
+          "rent",
+          350
+        ],
+        [
+          "PL",
+          "buy",
+          350
+        ],
+        [
+          "PL",
+          "buy",
+          2102
+        ],
+        [
+          "PL",
+          "rent",
+          350
+        ],
+        [
+          "PT",
+          "buy",
+          350
+        ],
+        [
+          "PT",
+          "rent",
+          350
+        ],
+        [
+          "RU",
+          "buy",
+          3
+        ],
+        [
+          "RU",
+          "buy",
+          350
+        ],
+        [
+          "RU",
+          "rent",
+          3
+        ],
+        [
+          "RU",
+          "rent",
+          350
+        ],
+        [
+          "SE",
+          "buy",
+          3
+        ],
+        [
+          "SE",
+          "buy",
+          350
+        ],
+        [
+          "SE",
+          "rent",
+          3
+        ],
+        [
+          "SE",
+          "rent",
+          350
+        ],
+        [
+          "SK",
+          "buy",
+          350
+        ],
+        [
+          "SK",
+          "rent",
+          350
+        ],
+        [
+          "US",
+          "buy",
+          350
+        ],
+        [
+          "US",
+          "rent",
+          350
+        ],
+        [
+          "US",
+          "rent",
+          2285
+        ],
+        [
+          "ZA",
+          "buy",
+          350
+        ],
+        [
+          "ZA",
+          "rent",
+          350
+        ]
+      ],
+      "shadow_delta_from_live_add": [
+        [
+          "AU",
+          "rent",
+          2784
+        ],
+        [
+          "CZ",
+          "flatrate",
+          2536
+        ],
+        [
+          "GB",
+          "rent",
+          2784
+        ],
+        [
+          "IE",
+          "rent",
+          2784
+        ],
+        [
+          "US",
+          "rent",
+          2784
+        ]
+      ],
+      "shadow_delta_from_live_remove": [
+        [
+          "CA",
+          "ads",
+          326
+        ],
+        [
+          "DK",
+          "buy",
+          3
+        ],
+        [
+          "DK",
+          "rent",
+          3
+        ],
+        [
+          "ES",
+          "buy",
+          3
+        ],
+        [
+          "ES",
+          "rent",
+          3
+        ],
+        [
+          "FI",
+          "buy",
+          3
+        ],
+        [
+          "FI",
+          "rent",
+          3
+        ],
+        [
+          "FR",
+          "buy",
+          138
+        ],
+        [
+          "FR",
+          "buy",
+          239
+        ],
+        [
+          "FR",
+          "rent",
+          59
+        ],
+        [
+          "FR",
+          "rent",
+          138
+        ],
+        [
+          "FR",
+          "rent",
+          239
+        ],
+        [
+          "GB",
+          "rent",
+          2285
+        ],
+        [
+          "IS",
+          "buy",
+          76
+        ],
+        [
+          "IS",
+          "rent",
+          76
+        ],
+        [
+          "IT",
+          "flatrate",
+          109
+        ],
+        [
+          "JP",
+          "buy",
+          3
+        ],
+        [
+          "JP",
+          "rent",
+          3
+        ],
+        [
+          "NO",
+          "buy",
+          3
+        ],
+        [
+          "NO",
+          "rent",
+          3
+        ],
+        [
+          "PE",
+          "rent",
+          167
+        ],
+        [
+          "PL",
+          "buy",
+          2102
+        ],
+        [
+          "RU",
+          "buy",
+          3
+        ],
+        [
+          "RU",
+          "rent",
+          3
+        ],
+        [
+          "SE",
+          "buy",
+          3
+        ],
+        [
+          "SE",
+          "rent",
+          3
+        ],
+        [
+          "US",
+          "rent",
+          2285
+        ]
+      ],
+      "live_deferred": [
+        "NZ"
+      ],
+      "shadow_deferred": [
+        "AU",
+        "NZ"
+      ],
+      "live_verified": 52,
+      "shadow_verified": 51,
+      "live_at": 1792000364417,
+      "shadow_at": 1793168302340
+    },
+    {
+      "media": "movie",
+      "id": 27,
+      "actual": 27,
+      "live_replay": 27,
+      "shadow_replay": 21,
+      "live_additions": [],
+      "live_removals": [],
+      "shadow_additions": [],
+      "shadow_removals": [
+        [
+          "AU",
+          "buy",
+          3
+        ],
+        [
+          "AU",
+          "rent",
+          3
+        ],
+        [
+          "GB",
+          "buy",
+          3
+        ],
+        [
+          "GB",
+          "flatrate",
+          224
+        ],
+        [
+          "GB",
+          "rent",
+          3
+        ],
+        [
+          "IE",
+          "buy",
+          3
+        ]
+      ],
+      "shadow_delta_from_live_add": [],
+      "shadow_delta_from_live_remove": [
+        [
+          "AU",
+          "buy",
+          3
+        ],
+        [
+          "AU",
+          "rent",
+          3
+        ],
+        [
+          "GB",
+          "buy",
+          3
+        ],
+        [
+          "GB",
+          "flatrate",
+          224
+        ],
+        [
+          "GB",
+          "rent",
+          3
+        ],
+        [
+          "IE",
+          "buy",
+          3
+        ]
+      ],
+      "live_deferred": [],
+      "shadow_deferred": [],
+      "live_verified": 8,
+      "shadow_verified": 8,
+      "live_at": 1790336921718,
+      "shadow_at": 1793096921137
+    },
+    {
+      "media": "movie",
+      "id": 66,
+      "actual": 570,
+      "live_replay": 496,
+      "shadow_replay": 383,
+      "live_additions": [],
+      "live_removals": [
+        [
+          "AR",
+          "buy",
+          350
+        ],
+        [
+          "AR",
+          "rent",
+          350
+        ],
+        [
+          "AT",
+          "buy",
+          350
+        ],
+        [
+          "AT",
+          "rent",
+          350
+        ],
+        [
+          "AU",
+          "buy",
+          350
+        ],
+        [
+          "AU",
+          "rent",
+          350
+        ],
+        [
+          "BG",
+          "buy",
+          350
+        ],
+        [
+          "BG",
+          "rent",
+          350
+        ],
+        [
+          "BO",
+          "buy",
+          350
+        ],
+        [
+          "BO",
+          "rent",
+          350
+        ],
+        [
+          "BR",
+          "buy",
+          350
+        ],
+        [
+          "CH",
+          "buy",
+          350
+        ],
+        [
+          "CH",
+          "rent",
+          350
+        ],
+        [
+          "CL",
+          "buy",
+          350
+        ],
+        [
+          "CL",
+          "rent",
+          350
+        ],
+        [
+          "CO",
+          "buy",
+          350
+        ],
+        [
+          "CO",
+          "rent",
+          350
+        ],
+        [
+          "CR",
+          "buy",
+          350
+        ],
+        [
+          "CR",
+          "rent",
+          350
+        ],
+        [
+          "CZ",
+          "buy",
+          350
+        ],
+        [
+          "CZ",
+          "rent",
+          350
+        ],
+        [
+          "DE",
+          "buy",
+          350
+        ],
+        [
+          "DE",
+          "rent",
+          350
+        ],
+        [
+          "DK",
+          "buy",
+          350
+        ],
+        [
+          "DK",
+          "rent",
+          350
+        ],
+        [
+          "EC",
+          "buy",
+          350
+        ],
+        [
+          "EC",
+          "rent",
+          350
+        ],
+        [
+          "ES",
+          "buy",
+          350
+        ],
+        [
+          "ES",
+          "rent",
+          350
+        ],
+        [
+          "FI",
+          "buy",
+          350
+        ],
+        [
+          "FI",
+          "rent",
+          350
+        ],
+        [
+          "FR",
+          "buy",
+          350
+        ],
+        [
+          "FR",
+          "rent",
+          350
+        ],
+        [
+          "GB",
+          "buy",
+          350
+        ],
+        [
+          "GB",
+          "rent",
+          350
+        ],
+        [
+          "GR",
+          "rent",
+          350
+        ],
+        [
+          "GT",
+          "buy",
+          350
+        ],
+        [
+          "GT",
+          "rent",
+          350
+        ],
+        [
+          "HU",
+          "buy",
+          350
+        ],
+        [
+          "HU",
+          "rent",
+          350
+        ],
+        [
+          "ID",
+          "buy",
+          350
+        ],
+        [
+          "ID",
+          "rent",
+          350
+        ],
+        [
+          "IE",
+          "buy",
+          350
+        ],
+        [
+          "IE",
+          "rent",
+          350
+        ],
+        [
+          "MX",
+          "buy",
+          350
+        ],
+        [
+          "MX",
+          "rent",
+          350
+        ],
+        [
+          "NL",
+          "buy",
+          350
+        ],
+        [
+          "NL",
+          "rent",
+          350
+        ],
+        [
+          "NO",
+          "buy",
+          350
+        ],
+        [
+          "NO",
+          "rent",
+          350
+        ],
+        [
+          "NZ",
+          "buy",
+          350
+        ],
+        [
+          "NZ",
+          "rent",
+          350
+        ],
+        [
+          "PE",
+          "buy",
+          350
+        ],
+        [
+          "PE",
+          "rent",
+          350
+        ],
+        [
+          "PH",
+          "buy",
+          350
+        ],
+        [
+          "PH",
+          "rent",
+          350
+        ],
+        [
+          "PL",
+          "buy",
+          350
+        ],
+        [
+          "PL",
+          "rent",
+          350
+        ],
+        [
+          "PT",
+          "buy",
+          350
+        ],
+        [
+          "PT",
+          "rent",
+          350
+        ],
+        [
+          "SE",
+          "buy",
+          350
+        ],
+        [
+          "SE",
+          "rent",
+          350
+        ],
+        [
+          "SG",
+          "buy",
+          350
+        ],
+        [
+          "SG",
+          "rent",
+          350
+        ],
+        [
+          "SK",
+          "buy",
+          350
+        ],
+        [
+          "SK",
+          "rent",
+          350
+        ],
+        [
+          "TR",
+          "buy",
+          350
+        ],
+        [
+          "TR",
+          "rent",
+          350
+        ],
+        [
+          "US",
+          "buy",
+          350
+        ],
+        [
+          "US",
+          "rent",
+          350
+        ],
+        [
+          "VE",
+          "buy",
+          350
+        ],
+        [
+          "VE",
+          "rent",
+          350
+        ],
+        [
+          "ZA",
+          "buy",
+          350
+        ],
+        [
+          "ZA",
+          "rent",
+          350
+        ]
+      ],
+      "shadow_additions": [
+        [
+          "FR",
+          "ads",
+          1967
+        ],
+        [
+          "NO",
+          "flatrate",
+          431
+        ],
+        [
+          "NO",
+          "flatrate",
+          578
+        ]
+      ],
+      "shadow_removals": [
+        [
+          "AR",
+          "buy",
+          3
+        ],
+        [
+          "AR",
+          "buy",
+          350
+        ],
+        [
+          "AR",
+          "flatrate",
+          1899
+        ],
+        [
+          "AR",
+          "rent",
+          3
+        ],
+        [
+          "AR",
+          "rent",
+          350
+        ],
+        [
+          "AT",
+          "buy",
+          3
+        ],
+        [
+          "AT",
+          "buy",
+          133
+        ],
+        [
+          "AT",
+          "buy",
+          350
+        ],
+        [
+          "AT",
+          "rent",
+          3
+        ],
+        [
+          "AT",
+          "rent",
+          133
+        ],
+        [
+          "AT",
+          "rent",
+          350
+        ],
+        [
+          "AU",
+          "ads",
+          132
+        ],
+        [
+          "AU",
+          "buy",
+          3
+        ],
+        [
+          "AU",
+          "buy",
+          350
+        ],
+        [
+          "AU",
+          "rent",
+          3
+        ],
+        [
+          "AU",
+          "rent",
+          350
+        ],
+        [
+          "BE",
+          "buy",
+          3
+        ],
+        [
+          "BE",
+          "rent",
+          3
+        ],
+        [
+          "BG",
+          "buy",
+          350
+        ],
+        [
+          "BG",
+          "rent",
+          350
+        ],
+        [
+          "BO",
+          "buy",
+          3
+        ],
+        [
+          "BO",
+          "buy",
+          350
+        ],
+        [
+          "BO",
+          "rent",
+          3
+        ],
+        [
+          "BO",
+          "rent",
+          350
+        ],
+        [
+          "BR",
+          "buy",
+          350
+        ],
+        [
+          "BR",
+          "flatrate",
+          1825
+        ],
+        [
+          "BR",
+          "flatrate",
+          1899
+        ],
+        [
+          "BZ",
+          "buy",
+          3
+        ],
+        [
+          "BZ",
+          "rent",
+          3
+        ],
+        [
+          "CA",
+          "buy",
+          3
+        ],
+        [
+          "CA",
+          "rent",
+          3
+        ],
+        [
+          "CH",
+          "buy",
+          133
+        ],
+        [
+          "CH",
+          "buy",
+          350
+        ],
+        [
+          "CH",
+          "rent",
+          133
+        ],
+        [
+          "CH",
+          "rent",
+          350
+        ],
+        [
+          "CL",
+          "buy",
+          3
+        ],
+        [
+          "CL",
+          "buy",
+          350
+        ],
+        [
+          "CL",
+          "flatrate",
+          1899
+        ],
+        [
+          "CL",
+          "rent",
+          3
+        ],
+        [
+          "CL",
+          "rent",
+          350
+        ],
+        [
+          "CO",
+          "buy",
+          3
+        ],
+        [
+          "CO",
+          "buy",
+          350
+        ],
+        [
+          "CO",
+          "flatrate",
+          1899
+        ],
+        [
+          "CO",
+          "rent",
+          3
+        ],
+        [
+          "CO",
+          "rent",
+          350
+        ],
+        [
+          "CR",
+          "buy",
+          3
+        ],
+        [
+          "CR",
+          "buy",
+          350
+        ],
+        [
+          "CR",
+          "flatrate",
+          1899
+        ],
+        [
+          "CR",
+          "rent",
+          3
+        ],
+        [
+          "CR",
+          "rent",
+          350
+        ],
+        [
+          "CY",
+          "buy",
+          3
+        ],
+        [
+          "CY",
+          "rent",
+          3
+        ],
+        [
+          "CZ",
+          "buy",
+          3
+        ],
+        [
+          "CZ",
+          "buy",
+          350
+        ],
+        [
+          "CZ",
+          "rent",
+          3
+        ],
+        [
+          "CZ",
+          "rent",
+          350
+        ],
+        [
+          "DE",
+          "buy",
+          3
+        ],
+        [
+          "DE",
+          "buy",
+          350
+        ],
+        [
+          "DE",
+          "rent",
+          3
+        ],
+        [
+          "DE",
+          "rent",
+          350
+        ],
+        [
+          "DK",
+          "buy",
+          3
+        ],
+        [
+          "DK",
+          "buy",
+          350
+        ],
+        [
+          "DK",
+          "rent",
+          3
+        ],
+        [
+          "DK",
+          "rent",
+          350
+        ],
+        [
+          "EC",
+          "buy",
+          3
+        ],
+        [
+          "EC",
+          "buy",
+          350
+        ],
+        [
+          "EC",
+          "flatrate",
+          1899
+        ],
+        [
+          "EC",
+          "rent",
+          3
+        ],
+        [
+          "EC",
+          "rent",
+          350
+        ],
+        [
+          "EE",
+          "buy",
+          3
+        ],
+        [
+          "EE",
+          "rent",
+          3
+        ],
+        [
+          "ES",
+          "buy",
+          3
+        ],
+        [
+          "ES",
+          "buy",
+          350
+        ],
+        [
+          "ES",
+          "flatrate",
+          149
+        ],
+        [
+          "ES",
+          "flatrate",
+          2241
+        ],
+        [
+          "ES",
+          "rent",
+          3
+        ],
+        [
+          "ES",
+          "rent",
+          350
+        ],
+        [
+          "FI",
+          "buy",
+          3
+        ],
+        [
+          "FI",
+          "buy",
+          350
+        ],
+        [
+          "FI",
+          "rent",
+          3
+        ],
+        [
+          "FI",
+          "rent",
+          350
+        ],
+        [
+          "FR",
+          "buy",
+          3
+        ],
+        [
+          "FR",
+          "buy",
+          138
+        ],
+        [
+          "FR",
+          "buy",
+          239
+        ],
+        [
+          "FR",
+          "buy",
+          350
+        ],
+        [
+          "FR",
+          "flatrate",
+          1899
+        ],
+        [
+          "FR",
+          "flatrate",
+          2472
+        ],
+        [
+          "FR",
+          "rent",
+          3
+        ],
+        [
+          "FR",
+          "rent",
+          59
+        ],
+        [
+          "FR",
+          "rent",
+          138
+        ],
+        [
+          "FR",
+          "rent",
+          239
+        ],
+        [
+          "FR",
+          "rent",
+          350
+        ],
+        [
+          "GB",
+          "buy",
+          3
+        ],
+        [
+          "GB",
+          "buy",
+          68
+        ],
+        [
+          "GB",
+          "buy",
+          350
+        ],
+        [
+          "GB",
+          "rent",
+          3
+        ],
+        [
+          "GB",
+          "rent",
+          68
+        ],
+        [
+          "GB",
+          "rent",
+          350
+        ],
+        [
+          "GR",
+          "buy",
+          3
+        ],
+        [
+          "GR",
+          "rent",
+          3
+        ],
+        [
+          "GR",
+          "rent",
+          350
+        ],
+        [
+          "GT",
+          "buy",
+          3
+        ],
+        [
+          "GT",
+          "buy",
+          350
+        ],
+        [
+          "GT",
+          "flatrate",
+          1899
+        ],
+        [
+          "GT",
+          "rent",
+          3
+        ],
+        [
+          "GT",
+          "rent",
+          350
+        ],
+        [
+          "HN",
+          "buy",
+          3
+        ],
+        [
+          "HN",
+          "rent",
+          3
+        ],
+        [
+          "HU",
+          "buy",
+          3
+        ],
+        [
+          "HU",
+          "buy",
+          350
+        ],
+        [
+          "HU",
+          "rent",
+          3
+        ],
+        [
+          "HU",
+          "rent",
+          350
+        ],
+        [
+          "ID",
+          "buy",
+          350
+        ],
+        [
+          "ID",
+          "rent",
+          350
+        ],
+        [
+          "IE",
+          "buy",
+          3
+        ],
+        [
+          "IE",
+          "buy",
+          350
+        ],
+        [
+          "IE",
+          "rent",
+          3
+        ],
+        [
+          "IE",
+          "rent",
+          350
+        ],
+        [
+          "IT",
+          "buy",
+          3
+        ],
+        [
+          "IT",
+          "rent",
+          3
+        ],
+        [
+          "JP",
+          "buy",
+          3
+        ],
+        [
+          "JP",
+          "rent",
+          3
+        ],
+        [
+          "LT",
+          "buy",
+          3
+        ],
+        [
+          "LT",
+          "rent",
+          3
+        ],
+        [
+          "LU",
+          "buy",
+          3
+        ],
+        [
+          "LU",
+          "rent",
+          3
+        ],
+        [
+          "LV",
+          "buy",
+          3
+        ],
+        [
+          "LV",
+          "rent",
+          3
+        ],
+        [
+          "MX",
+          "buy",
+          350
+        ],
+        [
+          "MX",
+          "flatrate",
+          1825
+        ],
+        [
+          "MX",
+          "flatrate",
+          1899
+        ],
+        [
+          "MX",
+          "rent",
+          350
+        ],
+        [
+          "NI",
+          "buy",
+          3
+        ],
+        [
+          "NI",
+          "rent",
+          3
+        ],
+        [
+          "NL",
+          "buy",
+          3
+        ],
+        [
+          "NL",
+          "buy",
+          350
+        ],
+        [
+          "NL",
+          "rent",
+          3
+        ],
+        [
+          "NL",
+          "rent",
+          350
+        ],
+        [
+          "NO",
+          "buy",
+          3
+        ],
+        [
+          "NO",
+          "buy",
+          350
+        ],
+        [
+          "NO",
+          "rent",
+          3
+        ],
+        [
+          "NO",
+          "rent",
+          350
+        ],
+        [
+          "NZ",
+          "buy",
+          3
+        ],
+        [
+          "NZ",
+          "buy",
+          350
+        ],
+        [
+          "NZ",
+          "rent",
+          3
+        ],
+        [
+          "NZ",
+          "rent",
+          350
+        ],
+        [
+          "PE",
+          "buy",
+          3
+        ],
+        [
+          "PE",
+          "buy",
+          350
+        ],
+        [
+          "PE",
+          "flatrate",
+          1899
+        ],
+        [
+          "PE",
+          "rent",
+          3
+        ],
+        [
+          "PE",
+          "rent",
+          350
+        ],
+        [
+          "PH",
+          "buy",
+          3
+        ],
+        [
+          "PH",
+          "buy",
+          350
+        ],
+        [
+          "PH",
+          "rent",
+          3
+        ],
+        [
+          "PH",
+          "rent",
+          350
+        ],
+        [
+          "PL",
+          "buy",
+          3
+        ],
+        [
+          "PL",
+          "buy",
+          350
+        ],
+        [
+          "PL",
+          "rent",
+          3
+        ],
+        [
+          "PL",
+          "rent",
+          350
+        ],
+        [
+          "PT",
+          "buy",
+          3
+        ],
+        [
+          "PT",
+          "buy",
+          350
+        ],
+        [
+          "PT",
+          "rent",
+          3
+        ],
+        [
+          "PT",
+          "rent",
+          350
+        ],
+        [
+          "PY",
+          "buy",
+          3
+        ],
+        [
+          "PY",
+          "rent",
+          3
+        ],
+        [
+          "SE",
+          "buy",
+          3
+        ],
+        [
+          "SE",
+          "buy",
+          350
+        ],
+        [
+          "SE",
+          "rent",
+          3
+        ],
+        [
+          "SE",
+          "rent",
+          350
+        ],
+        [
+          "SG",
+          "buy",
+          350
+        ],
+        [
+          "SG",
+          "rent",
+          350
+        ],
+        [
+          "SK",
+          "buy",
+          3
+        ],
+        [
+          "SK",
+          "buy",
+          350
+        ],
+        [
+          "SK",
+          "rent",
+          3
+        ],
+        [
+          "SK",
+          "rent",
+          350
+        ],
+        [
+          "TR",
+          "buy",
+          3
+        ],
+        [
+          "TR",
+          "buy",
+          350
+        ],
+        [
+          "TR",
+          "rent",
+          3
+        ],
+        [
+          "TR",
+          "rent",
+          350
+        ],
+        [
+          "TW",
+          "flatrate",
+          625
+        ],
+        [
+          "UA",
+          "buy",
+          3
+        ],
+        [
+          "UA",
+          "rent",
+          3
+        ],
+        [
+          "US",
+          "buy",
+          350
+        ],
+        [
+          "US",
+          "rent",
+          350
+        ],
+        [
+          "VE",
+          "buy",
+          3
+        ],
+        [
+          "VE",
+          "buy",
+          350
+        ],
+        [
+          "VE",
+          "rent",
+          3
+        ],
+        [
+          "VE",
+          "rent",
+          350
+        ],
+        [
+          "ZA",
+          "buy",
+          350
+        ],
+        [
+          "ZA",
+          "rent",
+          350
+        ]
+      ],
+      "shadow_delta_from_live_add": [
+        [
+          "FR",
+          "ads",
+          1967
+        ],
+        [
+          "NO",
+          "flatrate",
+          431
+        ],
+        [
+          "NO",
+          "flatrate",
+          578
+        ]
+      ],
+      "shadow_delta_from_live_remove": [
+        [
+          "AR",
+          "buy",
+          3
+        ],
+        [
+          "AR",
+          "flatrate",
+          1899
+        ],
+        [
+          "AR",
+          "rent",
+          3
+        ],
+        [
+          "AT",
+          "buy",
+          3
+        ],
+        [
+          "AT",
+          "buy",
+          133
+        ],
+        [
+          "AT",
+          "rent",
+          3
+        ],
+        [
+          "AT",
+          "rent",
+          133
+        ],
+        [
+          "AU",
+          "ads",
+          132
+        ],
+        [
+          "AU",
+          "buy",
+          3
+        ],
+        [
+          "AU",
+          "rent",
+          3
+        ],
+        [
+          "BE",
+          "buy",
+          3
+        ],
+        [
+          "BE",
+          "rent",
+          3
+        ],
+        [
+          "BO",
+          "buy",
+          3
+        ],
+        [
+          "BO",
+          "rent",
+          3
+        ],
+        [
+          "BR",
+          "flatrate",
+          1825
+        ],
+        [
+          "BR",
+          "flatrate",
+          1899
+        ],
+        [
+          "BZ",
+          "buy",
+          3
+        ],
+        [
+          "BZ",
+          "rent",
+          3
+        ],
+        [
+          "CA",
+          "buy",
+          3
+        ],
+        [
+          "CA",
+          "rent",
+          3
+        ],
+        [
+          "CH",
+          "buy",
+          133
+        ],
+        [
+          "CH",
+          "rent",
+          133
+        ],
+        [
+          "CL",
+          "buy",
+          3
+        ],
+        [
+          "CL",
+          "flatrate",
+          1899
+        ],
+        [
+          "CL",
+          "rent",
+          3
+        ],
+        [
+          "CO",
+          "buy",
+          3
+        ],
+        [
+          "CO",
+          "flatrate",
+          1899
+        ],
+        [
+          "CO",
+          "rent",
+          3
+        ],
+        [
+          "CR",
+          "buy",
+          3
+        ],
+        [
+          "CR",
+          "flatrate",
+          1899
+        ],
+        [
+          "CR",
+          "rent",
+          3
+        ],
+        [
+          "CY",
+          "buy",
+          3
+        ],
+        [
+          "CY",
+          "rent",
+          3
+        ],
+        [
+          "CZ",
+          "buy",
+          3
+        ],
+        [
+          "CZ",
+          "rent",
+          3
+        ],
+        [
+          "DE",
+          "buy",
+          3
+        ],
+        [
+          "DE",
+          "rent",
+          3
+        ],
+        [
+          "DK",
+          "buy",
+          3
+        ],
+        [
+          "DK",
+          "rent",
+          3
+        ],
+        [
+          "EC",
+          "buy",
+          3
+        ],
+        [
+          "EC",
+          "flatrate",
+          1899
+        ],
+        [
+          "EC",
+          "rent",
+          3
+        ],
+        [
+          "EE",
+          "buy",
+          3
+        ],
+        [
+          "EE",
+          "rent",
+          3
+        ],
+        [
+          "ES",
+          "buy",
+          3
+        ],
+        [
+          "ES",
+          "flatrate",
+          149
+        ],
+        [
+          "ES",
+          "flatrate",
+          2241
+        ],
+        [
+          "ES",
+          "rent",
+          3
+        ],
+        [
+          "FI",
+          "buy",
+          3
+        ],
+        [
+          "FI",
+          "rent",
+          3
+        ],
+        [
+          "FR",
+          "buy",
+          3
+        ],
+        [
+          "FR",
+          "buy",
+          138
+        ],
+        [
+          "FR",
+          "buy",
+          239
+        ],
+        [
+          "FR",
+          "flatrate",
+          1899
+        ],
+        [
+          "FR",
+          "flatrate",
+          2472
+        ],
+        [
+          "FR",
+          "rent",
+          3
+        ],
+        [
+          "FR",
+          "rent",
+          59
+        ],
+        [
+          "FR",
+          "rent",
+          138
+        ],
+        [
+          "FR",
+          "rent",
+          239
+        ],
+        [
+          "GB",
+          "buy",
+          3
+        ],
+        [
+          "GB",
+          "buy",
+          68
+        ],
+        [
+          "GB",
+          "rent",
+          3
+        ],
+        [
+          "GB",
+          "rent",
+          68
+        ],
+        [
+          "GR",
+          "buy",
+          3
+        ],
+        [
+          "GR",
+          "rent",
+          3
+        ],
+        [
+          "GT",
+          "buy",
+          3
+        ],
+        [
+          "GT",
+          "flatrate",
+          1899
+        ],
+        [
+          "GT",
+          "rent",
+          3
+        ],
+        [
+          "HN",
+          "buy",
+          3
+        ],
+        [
+          "HN",
+          "rent",
+          3
+        ],
+        [
+          "HU",
+          "buy",
+          3
+        ],
+        [
+          "HU",
+          "rent",
+          3
+        ],
+        [
+          "IE",
+          "buy",
+          3
+        ],
+        [
+          "IE",
+          "rent",
+          3
+        ],
+        [
+          "IT",
+          "buy",
+          3
+        ],
+        [
+          "IT",
+          "rent",
+          3
+        ],
+        [
+          "JP",
+          "buy",
+          3
+        ],
+        [
+          "JP",
+          "rent",
+          3
+        ],
+        [
+          "LT",
+          "buy",
+          3
+        ],
+        [
+          "LT",
+          "rent",
+          3
+        ],
+        [
+          "LU",
+          "buy",
+          3
+        ],
+        [
+          "LU",
+          "rent",
+          3
+        ],
+        [
+          "LV",
+          "buy",
+          3
+        ],
+        [
+          "LV",
+          "rent",
+          3
+        ],
+        [
+          "MX",
+          "flatrate",
+          1825
+        ],
+        [
+          "MX",
+          "flatrate",
+          1899
+        ],
+        [
+          "NI",
+          "buy",
+          3
+        ],
+        [
+          "NI",
+          "rent",
+          3
+        ],
+        [
+          "NL",
+          "buy",
+          3
+        ],
+        [
+          "NL",
+          "rent",
+          3
+        ],
+        [
+          "NO",
+          "buy",
+          3
+        ],
+        [
+          "NO",
+          "rent",
+          3
+        ],
+        [
+          "NZ",
+          "buy",
+          3
+        ],
+        [
+          "NZ",
+          "rent",
+          3
+        ],
+        [
+          "PE",
+          "buy",
+          3
+        ],
+        [
+          "PE",
+          "flatrate",
+          1899
+        ],
+        [
+          "PE",
+          "rent",
+          3
+        ],
+        [
+          "PH",
+          "buy",
+          3
+        ],
+        [
+          "PH",
+          "rent",
+          3
+        ],
+        [
+          "PL",
+          "buy",
+          3
+        ],
+        [
+          "PL",
+          "rent",
+          3
+        ],
+        [
+          "PT",
+          "buy",
+          3
+        ],
+        [
+          "PT",
+          "rent",
+          3
+        ],
+        [
+          "PY",
+          "buy",
+          3
+        ],
+        [
+          "PY",
+          "rent",
+          3
+        ],
+        [
+          "SE",
+          "buy",
+          3
+        ],
+        [
+          "SE",
+          "rent",
+          3
+        ],
+        [
+          "SK",
+          "buy",
+          3
+        ],
+        [
+          "SK",
+          "rent",
+          3
+        ],
+        [
+          "TR",
+          "buy",
+          3
+        ],
+        [
+          "TR",
+          "rent",
+          3
+        ],
+        [
+          "TW",
+          "flatrate",
+          625
+        ],
+        [
+          "UA",
+          "buy",
+          3
+        ],
+        [
+          "UA",
+          "rent",
+          3
+        ],
+        [
+          "VE",
+          "buy",
+          3
+        ],
+        [
+          "VE",
+          "rent",
+          3
+        ]
+      ],
+      "live_deferred": [
+        "NE"
+      ],
+      "shadow_deferred": [
+        "NE"
+      ],
+      "live_verified": 100,
+      "shadow_verified": 100,
+      "live_at": 1790342362228,
+      "shadow_at": 1793147927114
+    },
+    {
+      "media": "show",
+      "id": 6,
+      "actual": 12,
+      "live_replay": 12,
+      "shadow_replay": 11,
+      "live_additions": [],
+      "live_removals": [],
+      "shadow_additions": [],
+      "shadow_removals": [
+        [
+          "US",
+          "ads",
+          1971
+        ]
+      ],
+      "shadow_delta_from_live_add": [],
+      "shadow_delta_from_live_remove": [
+        [
+          "US",
+          "ads",
+          1971
+        ]
+      ],
+      "live_deferred": [],
+      "shadow_deferred": [],
+      "live_verified": 6,
+      "shadow_verified": 6,
+      "live_at": 1790352069493,
+      "shadow_at": 1793148610162
+    },
+    {
+      "media": "show",
+      "id": 45,
+      "actual": 93,
+      "live_replay": 93,
+      "shadow_replay": 95,
+      "live_additions": [],
+      "live_removals": [],
+      "shadow_additions": [
+        [
+          "AU",
+          "ads",
+          73
+        ],
+        [
+          "GB",
+          "ads",
+          73
+        ]
+      ],
+      "shadow_removals": [],
+      "shadow_delta_from_live_add": [
+        [
+          "AU",
+          "ads",
+          73
+        ],
+        [
+          "GB",
+          "ads",
+          73
+        ]
+      ],
+      "shadow_delta_from_live_remove": [],
+      "live_deferred": [],
+      "shadow_deferred": [],
+      "live_verified": 41,
+      "shadow_verified": 41,
+      "live_at": 1792708147976,
+      "shadow_at": 1793175722945
+    }
+  ],
+  "replay_source_checks": {
+    "f/sync/copy/tmdb_streaming": {
+      "deployed_hash": "81cf430a395db055",
+      "source_equal": true,
+      "sha256": "1c25c40f5d0c5bb8ddb44d0737ffb799f19c541a02265693fea838a2f9dc8235"
+    },
+    "f/tmdb_api/provider_evidence": {
+      "deployed_hash": "d9ba1ac569cdb5f1",
+      "source_equal": true,
+      "sha256": "9d8b2909e65804e9afdc5f909698545d8a5e372d6160f35b65a55261de898870"
+    },
+    "f/tmdb_web/provider_identity": {
+      "deployed_hash": "642e8720eeb8ddcf",
+      "source_equal": true,
+      "sha256": "5dcd2562e889eaae8d57fda4ebb491fe911664d6f2e3036f713b6e5072cce1c7"
+    }
+  },
+  "movie_daily_coverage": {
+    "at": "2026-10-28T11:43:58.879187+00:00",
+    "cutoff": 1793101438879,
+    "counts": [
+      {
+        "_id": null,
+        "titles": 8180,
+        "fresh_latest_live_or_shadow": 7632,
+        "has_shadow_timestamp": 8170
+      }
+    ]
+  },
+  "query_limits": {
+    "whole_registry_timestamp_aggregates": "movie and tv exceeded 20-second server budgets",
+    "tv_daily_timestamp_aggregate": "exceeded 15-second server budget"
+  },
+  "movie_registry_counts": [
+    {
+      "_id": {
+        "daily": false
+      },
+      "count": 376636
+    },
+    {
+      "_id": {
+        "daily": true
+      },
+      "count": 8180
+    }
+  ],
+  "tv_registry_counts": [
+    {
+      "_id": {
+        "daily": false
+      },
+      "count": 72844
+    },
+    {
+      "_id": {
+        "daily": true
+      },
+      "count": 22650
+    }
+  ],
+  "pacing-start": [
+    {
+      "_id": "tmdb_watch",
+      "consecutive_blocks": 0,
+      "last_success_at": {
+        "$date": "2026-10-28T11:40:06.180Z"
+      },
+      "generation": 17,
+      "fairness_sweep_count": 190827,
+      "next_wire_at": {
+        "$date": "2026-10-28T11:40:07.376Z"
+      },
+      "sweep_wire_count": 190827,
+      "wire_count": 190827
+    },
+    {
+      "_id": "tmdb_api_detector",
+      "requests": 35070,
+      "next_request_at": {
+        "$date": "2026-10-28T11:00:01.231Z"
+      },
+      "request_day": 20754
+    }
+  ],
+  "pacing-end": [
+    {
+      "_id": "tmdb_watch",
+      "consecutive_blocks": 0,
+      "last_success_at": {
+        "$date": "2026-10-28T11:40:42.117Z"
+      },
+      "generation": 17,
+      "fairness_sweep_count": 190872,
+      "next_wire_at": {
+        "$date": "2026-10-28T11:40:42.659Z"
+      },
+      "sweep_wire_count": 190872,
+      "wire_count": 190872
+    },
+    {
+      "_id": "tmdb_api_detector",
+      "requests": 35070,
+      "next_request_at": {
+        "$date": "2026-10-28T11:00:01.231Z"
+      },
+      "request_day": 20754
+    }
+  ]
+}
