@@ -312,8 +312,8 @@ export function useQuickList({ titles, member }: { titles: ScoringMedia[]; membe
 
 	return {
 		member,
-		/** The rows can show: a guest's answers are read. */
-		ready,
+		/** The rows can show: a guest's answers are read, and the first rows are drawn. */
+		ready: ready && state.list > 0,
 		tally: flow.tally,
 		next: flow.tally ? nextStep(flow.tally, flow.lastMilestoneAt, member) : null,
 		lit: litMilestone(flow) ?? justLanded(flow),
