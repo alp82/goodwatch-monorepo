@@ -13,6 +13,7 @@ import {
 } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import {
+	type ComponentPropsWithoutRef,
 	type MouseEvent as ReactMouseEvent,
 	type ReactNode,
 	useEffect,
@@ -119,8 +120,6 @@ export function Marks({
 		if (takesWantPress(shownAt.current, performance.now(), e.detail)) fn?.()
 	}
 	const off = asking ? { inert: "" } : {}
-	const seg =
-		"want-btn group relative isolate flex min-w-0 cursor-pointer items-center justify-center gap-1.5 px-2 text-sm font-bold focus-visible:outline-2 focus-visible:-outline-offset-4"
 	return (
 		<div
 			ref={box}
@@ -187,41 +186,86 @@ export function Marks({
 					</button>
 					<span aria-hidden className="want-div w-0.5 shrink-0 bg-gray-700" />
 					<div className="flex min-w-0 basis-1/2">
-						<button
-							type="button"
+						<WantAnswer
+							kind="no"
 							data-want-no
 							onClick={guard(onNo)}
 							disabled={disabled}
 							aria-keyshortcuts="N"
-							className={`${seg} flex-1 text-gray-200 hover:bg-white/5 focus-visible:outline-amber-300 active:bg-white/10`}
+							className="flex-1 gap-1.5 px-2 text-sm"
 						>
-							<span className="want-c inline-flex items-center gap-1.5">
-								{WORDS.wantNo}
-								<KeyHint k="N" />
-							</span>
-						</button>
-						<span aria-hidden className="want-div w-0.5 shrink-0 bg-gray-950" />
-						<button
-							type="button"
+							<EyeSlashIcon className="size-4 shrink-0" aria-hidden />
+							{WORDS.wantNo}
+							<KeyHint k="N" />
+						</WantAnswer>
+						<span aria-hidden className="want-div w-0.5 shrink-0 bg-gray-700" />
+						<WantAnswer
+							kind="yes"
 							onClick={guard(onWant)}
 							disabled={disabled}
 							aria-keyshortcuts="Y W"
-							className={`${seg} flex-[1.7] text-gray-950 focus-visible:outline-gray-950`}
+							className="flex-[1.7] gap-1.5 px-2 text-sm"
 						>
-							<span
-								aria-hidden
-								className="want-fill absolute inset-0 -z-10 bg-amber-500 group-hover:bg-amber-400 group-active:bg-amber-600"
-							/>
-							<span className="want-c inline-flex items-center gap-1.5">
-								<BookmarkIcon className="size-4 shrink-0" aria-hidden />
-								{WORDS.wantYes}
-								<KeyHint k="Y" />
-							</span>
-						</button>
+							<BookmarkIcon className="size-4 shrink-0" aria-hidden />
+							{WORDS.wantYes}
+							<KeyHint k="Y" />
+						</WantAnswer>
 					</div>
 				</div>
 			)}
 		</div>
+	)
+}
+
+// The Want to See answers: quiet at rest (No a faint slate with slate words and the eye-slash, Yes, add a faint amber with amber words), the clear color on
+// hover, keyboard focus and press. A touch keeps the clear color a moment after the finger lifts, so the tap shows
+// (data-flash). The clear color is its own layer that fades in (opacity), the words change color: nothing moves.
+const WANT_ANSWER = {
+	no: {
+		btn: "text-slate-300 hover:text-gray-950 focus-visible:text-gray-950 active:text-gray-950 data-flash:text-gray-950 focus-visible:outline-gray-950",
+		rest: "bg-slate-400/15",
+		hot: "bg-slate-400 group-hover:bg-slate-300 group-active:bg-slate-500",
+	},
+	yes: {
+		btn: "text-amber-300 hover:text-gray-950 focus-visible:text-gray-950 active:text-gray-950 data-flash:text-gray-950 focus-visible:outline-gray-950",
+		rest: "bg-amber-500/15",
+		hot: "bg-amber-500 group-hover:bg-amber-400 group-active:bg-amber-600",
+	},
+} as const
+const FLASH_MS = 320
+
+/**
+ * One answer of the Want to See question (the flow's Marks and Quick list's rows share it). `kind` sets the colors; the
+ * size and spacing come from `className`. Inside `.want` its fill sweeps in with the question (main.css, want-fill).
+ */
+export function WantAnswer({
+	kind,
+	className = "",
+	children,
+	onPointerUp,
+	...rest
+}: { kind: "no" | "yes"; children: ReactNode } & ComponentPropsWithoutRef<"button">) {
+	const c = WANT_ANSWER[kind]
+	return (
+		<button
+			type="button"
+			{...rest}
+			onPointerUp={(e) => {
+				onPointerUp?.(e)
+				if (e.pointerType === "mouse") return
+				const el = e.currentTarget
+				el.setAttribute("data-flash", "")
+				window.setTimeout(() => el.removeAttribute("data-flash"), FLASH_MS)
+			}}
+			className={`want-btn group relative isolate flex min-w-0 cursor-pointer items-center justify-center font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:-outline-offset-4 ${c.btn} ${className}`}
+		>
+			<span aria-hidden className={`want-fill absolute inset-0 -z-20 ${c.rest}`} />
+			<span
+				aria-hidden
+				className={`absolute inset-0 -z-10 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100 group-active:duration-0 group-data-flash:opacity-100 ${c.hot}`}
+			/>
+			<span className="want-c inline-flex min-w-0 items-center gap-[inherit]">{children}</span>
+		</button>
 	)
 }
 

@@ -164,13 +164,13 @@ function groupsOf(
 	]
 }
 
-function OptionChip({ option }: { option: Option }) {
-	const dead = !option.active && option.count === 0
+function OptionChip({ option, counted }: { option: Option; counted: boolean }) {
+	const dead = counted && !option.active && option.count === 0
 	return (
 		<motion.button
 			type="button"
 			aria-pressed={option.active}
-			aria-label={`${option.label}, ${option.count.toLocaleString("en")} titles`}
+			aria-label={counted ? `${option.label}, ${option.count.toLocaleString("en")} titles` : option.label}
 			whileTap={TAP}
 			onClick={option.toggle}
 			className={`flex h-9 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full pl-3 pr-2.5 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${
@@ -184,7 +184,7 @@ function OptionChip({ option }: { option: Option }) {
 			{option.swatch}
 			{option.label}
 			<span aria-hidden className="text-xs tabular-nums text-gray-500">
-				{option.active ? <CheckIcon className="h-3.5 w-3.5" /> : option.count.toLocaleString("en")}
+				{option.active ? <CheckIcon className="h-3.5 w-3.5" /> : counted ? option.count.toLocaleString("en") : null}
 			</span>
 		</motion.button>
 	)
@@ -255,6 +255,7 @@ export function FiltersSheet({
 	set,
 	standingOf,
 	shown,
+	only,
 }: {
 	open: boolean
 	onClose: () => void
@@ -262,15 +263,23 @@ export function FiltersSheet({
 	f: ScoreFilters
 	set: (f: ScoreFilters) => void
 	standingOf: (t: ScoredTitle) => Standing
-	/** Titles the filters leave now. */
-	shown: number
+	/**
+	 * Titles the filters leave now. Null where `titles` is only the part of a longer list loaded so far (Quick list):
+	 * then neither the button nor the options count.
+	 */
+	shown: number | null
+	/** The groups to show, in their usual order; all when left out (Quick list shows those that fit unscored titles). */
+	only?: readonly FilterGroup[]
 }) {
 	const panel = useRef<HTMLElement>(null)
 	const search = useRef<HTMLInputElement>(null)
 	const titleId = useId()
 	const [query, setQuery] = useState("")
 	useModalDialog({ open, onClose, container: panel, initialFocus: search })
-	const groups = useMemo(() => (open ? groupsOf(titles, f, set, standingOf) : []), [open, titles, f, set, standingOf])
+	const groups = useMemo(
+		() => (open ? groupsOf(titles, f, set, standingOf).filter((g) => !only || only.includes(g.key)) : []),
+		[open, titles, f, set, standingOf, only],
+	)
 	const q = query.trim().toLowerCase()
 	const visible = groups
 		.map((g) => ({
@@ -324,7 +333,7 @@ export function FiltersSheet({
 											</header>
 											<div className="flex flex-wrap gap-2">
 												{g.options.map((o) => (
-													<OptionChip key={o.id} option={o} />
+													<OptionChip key={o.id} option={o} counted={shown != null} />
 												))}
 											</div>
 										</section>
@@ -337,7 +346,10 @@ export function FiltersSheet({
 								Clear all
 							</button>
 							<span className="flex-1" />
-							<ShowTitlesButton counts={{ total: shown, hidden: 0, recoveries: [], optionCounts: {} as never }} onClick={onClose} />
+							<ShowTitlesButton
+								counts={shown == null ? null : { total: shown, hidden: 0, recoveries: [], optionCounts: {} as never }}
+								onClick={onClose}
+							/>
 						</footer>
 					</motion.aside>
 				</>
@@ -347,16 +359,25 @@ export function FiltersSheet({
 }
 
 /** The row's search, in the row's shell. */
-export function RowSearch({ q, onChange }: { q: string; onChange: (q: string) => void }) {
+export function RowSearch({
+	q,
+	onChange,
+	placeholder = "Search your scores",
+}: {
+	q: string
+	onChange: (q: string) => void
+	/** The field's words and name (Quick list searches the whole catalog). */
+	placeholder?: string
+}) {
 	return (
 		<label className={`flex h-12 min-w-0 flex-1 basis-56 items-center gap-2.5 px-3.5 focus-within:ring-amber-500/70 sm:max-w-sm ${SHELL}`}>
 			<MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-gray-500" aria-hidden />
-			<span className="sr-only">Search your scores</span>
+			<span className="sr-only">{placeholder}</span>
 			<input
 				type="search"
 				value={q}
 				onChange={(e) => onChange(e.target.value)}
-				placeholder="Search your scores"
+				placeholder={placeholder}
 				enterKeyHint="search"
 				data-search
 				className="min-w-0 flex-1 border-0 bg-transparent p-0 text-base text-white outline-none placeholder:text-gray-500 focus:ring-0 sm:text-sm [&::-webkit-search-cancel-button]:hidden"

@@ -37,6 +37,8 @@ export function TickBox({ on, mixed = false }: { on: boolean; mixed?: boolean })
 }
 
 const SCORES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const
+/** The hint on the chosen key where pressing it again clears the score. */
+export const CLEAR_SCORE = "Clear score"
 
 /**
  * The ten keys in the score control strip's colors: the score in its full color with a white ring, a dot under
@@ -51,6 +53,8 @@ export function ScoreKeys({
 	score,
 	gw,
 	onPick,
+	onClear,
+	disabled = false,
 	label,
 }: {
 	/** Null: none is lit (setting many titles at once). */
@@ -58,23 +62,31 @@ export function ScoreKeys({
 	/** GoodWatch's score on the 1-10 scale: a dot under that key. */
 	gw: number | null
 	onPick: (n: number) => void
+	/**
+	 * Set where a score can be taken back (Quick list): pressing the chosen key again clears it, and its hint says so.
+	 * Without it the chosen key gives the same score again (Your scores keeps every title scored).
+	 */
+	onClear?: () => void
+	/** The keys don't take presses (a guest at the rating limit). */
+	disabled?: boolean
 	label: string
 }) {
 	return (
-		<fieldset className="grid grid-cols-10 gap-1">
+		<fieldset className="grid grid-cols-10 gap-1" disabled={disabled}>
 			<legend className="sr-only">{label}</legend>
 			{SCORES.map((n) => {
 				const picked = score === n
+				const clears = picked && onClear != null
 				return (
 					<button
 						key={n}
 						type="button"
 						aria-pressed={score === null ? undefined : picked}
-						aria-label={`${n}, ${scoreLabels[n]}`}
-						title={`${n} · ${scoreLabels[n]}`}
-						onClick={() => onPick(n)}
+						aria-label={clears ? `${CLEAR_SCORE} (${n}, ${scoreLabels[n]})` : `${n}, ${scoreLabels[n]}`}
+						title={clears ? CLEAR_SCORE : `${n} · ${scoreLabels[n]}`}
+						onClick={() => (clears ? onClear() : onPick(n))}
 						data-give={n}
-						className={`relative flex h-7 cursor-pointer items-center justify-center rounded-md text-xs font-black tabular-nums transition focus-visible:outline-2 focus-visible:outline-amber-400 motion-reduce:transition-none ${picked ? "scale-110 text-gray-950 ring-2 ring-white" : "text-white/75 hover:ring-1 hover:ring-white/40"}`}
+						className={`relative flex h-7 cursor-pointer items-center justify-center rounded-md text-xs font-black tabular-nums transition focus-visible:outline-2 focus-visible:outline-amber-400 disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transition-none ${picked ? "scale-110 text-gray-950 ring-2 ring-white" : "text-white/75 hover:ring-1 hover:ring-white/40 disabled:hover:ring-0"}`}
 						style={{ background: `${getVibeColorValue(n as Score)}${picked ? "" : "44"}` }}
 					>
 						{n}
