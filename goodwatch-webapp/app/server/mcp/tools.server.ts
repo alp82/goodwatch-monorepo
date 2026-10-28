@@ -14,7 +14,8 @@ import {
 import { instrumentMcpServer } from "./analytics.server.ts"
 import { mcpServerInfo } from "./identity.ts"
 import { resultFacts, withPageLink } from "./links.ts"
-import { readToolEnabled } from "./policy.server.ts"
+import { readToolEnabled, writeToolEnabled } from "./policy.server.ts"
+import { registerPrompts } from "./prompts.server.ts"
 import {
 	POSTER_GRID_TOOLS,
 	posterGridToolMeta,
@@ -23,7 +24,10 @@ import {
 import type { RankedSearch } from "./ranked.server.ts"
 import { paging, selected, similarTitles, titleDetails } from "./schemas.ts"
 import type { enrichTitleResults } from "./title-results.server.ts"
-import { registerWriteTools } from "./write-tools.server.ts"
+import {
+	registerWriteTools,
+	writeToolDefinitions,
+} from "./write-tools.server.ts"
 
 const calls = counter(
 	"goodwatch_mcp_tool_calls_total",
@@ -408,6 +412,19 @@ export function createToolServer(
 			calls.inc([name, outcome])
 			durations.observe([name], elapsed)
 		})
+	registerPrompts(
+		server,
+		new Set([
+			...readToolDefinitions
+				.filter((tool) => readToolEnabled(userId, tool.name))
+				.map((tool) => tool.name),
+			...(writes
+				? writeToolDefinitions
+						.filter((tool) => writeToolEnabled(userId, tool.name))
+						.map((tool) => tool.name)
+				: []),
+		]),
+	)
 	return server
 }
 export const createReadToolServer = (userId: string, origin: string) =>

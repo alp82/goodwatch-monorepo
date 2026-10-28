@@ -435,7 +435,7 @@ test("Ranked catalog search is an explicit opt-in and documents its member quota
 	assert.match(search.description, /paging.*free/i)
 })
 
-test("Write scopes expose all writes with destructive hints on every write and no approval-token schema", async () => {
+test("Write scopes expose all writes with destructive hints except list creation and no approval-token schema", async () => {
 	const handle = createReadMcpHandler({
 		resource,
 		authorization: writer,
@@ -472,7 +472,7 @@ test("Write scopes expose all writes with destructive hints on every write and n
 			["create_list", "update_list_titles"].includes(tool.name),
 		)
 		assert.equal(tool.annotations.readOnlyHint, false)
-		assert.equal(tool.annotations.destructiveHint, true)
+		assert.equal(tool.annotations.destructiveHint, tool.name !== "create_list")
 		assert.equal(tool.annotations.idempotentHint, true)
 		assert.equal(tool.inputSchema.required.includes("action_id"), true)
 		assert.equal(
@@ -598,6 +598,34 @@ test("MCP initialization describes result fields without answer-formatting instr
 	assert.match(initialized.instructions, /match_label.*null means/)
 	assert.match(initialized.instructions, /runtime_minutes/)
 	assert.match(initialized.instructions, /stream_link/)
+	assert.match(initialized.instructions, /what to watch, where it streams/)
+	assert.match(
+		initialized.instructions,
+		/ratings, watches, Wishlist, shows, share lists and taste/,
+	)
+	assert.match(
+		initialized.instructions,
+		/saved country and streaming services: get_settings reads them/,
+	)
+	assert.match(initialized.instructions, /set_my_services replaces them/)
+	assert.match(
+		initialized.instructions,
+		/set_settings changes country or language while preserving services/,
+	)
+	assert.match(
+		initialized.instructions,
+		/write tools accept GoodWatch title IDs returned by search_titles or other read results/,
+	)
+	assert.match(initialized.instructions, /items with up to 50 entries per call/)
+	assert.match(
+		initialized.instructions,
+		/undo_watch with batch_id.*where undoable, preserving newer edits/,
+	)
+	assert.match(
+		initialized.instructions,
+		/get_tonight picks one.*discover_titles browses.*get_similar_titles finds neighbors/,
+	)
+	assert.ok(initialized.capabilities.prompts)
 	assert.doesNotMatch(
 		initialized.instructions,
 		/VERBATIM|See it on GoodWatch|always|never|bulleted list/i,
@@ -718,7 +746,11 @@ test("Batch write tools list items up to 50, the file import for whole histories
 			/[Ff]ull history \(hundreds of titles or more\).*http:\/\/localhost:3336\/settings\/imports/,
 			name,
 		)
-		assert.match(tool.description, /batch_id identifies the complete reversible batch/, name)
+		assert.match(
+			tool.description,
+			/batch_id identifies the complete reversible batch/,
+			name,
+		)
 		assert.equal(tool.annotations.destructiveHint, true, name)
 	}
 	const undo = byName.get("undo_watch") as {
@@ -915,4 +947,141 @@ test("A request with two batch writes is refused before any write or budget char
 	assert.equal(response.status, 400)
 	assert.match((await response.json()).error.message, /one batch write/)
 	assert.deepEqual(takes, ["mcp-read"])
+})
+
+test("MCP prompts list only workflows supported by the token's tools and fill arguments", async () => {
+	const examples: Record<string, Record<string, string>> = {
+		watch_tonight: {},
+		log_and_score: { title: "severance", episode: "s2e4", score: "9" },
+		more_like_this: { title: "arrival" },
+		where_to_stream: { title: "past lives" },
+		catch_up_shows: {},
+		bulk_mark_seen: { titles: "arrival (2016): 9\ndark (2017): 10" },
+		top_five_year: { year: "2025" },
+		compare_my_taste: { title: "arrival" },
+	}
+	const writePrompts = ["log_and_score", "bulk_mark_seen", "top_five_year"]
+	for (const authorization of [verifier, writer]) {
+		const handle = createReadMcpHandler({
+			resource,
+			authorization,
+			limiter: unlimited,
+		})
+		const tools = (await result(await handle(rpc("tools/list")))).result.tools
+		const toolNames = new Set(tools.map((tool: { name: string }) => tool.name))
+		const prompts = (await result(await handle(rpc("prompts/list")))).result
+			.prompts as {
+			name: string
+			title: string
+			description: string
+			arguments: { name: string; description: string; required: boolean }[]
+		}[]
+		assert.deepEqual(
+			prompts.map(({ name }) => name),
+			Object.keys(examples).filter(
+				(name) => authorization === writer || !writePrompts.includes(name),
+			),
+		)
+		for (const prompt of prompts) {
+			assert.ok(prompt.title)
+			assert.ok(prompt.description)
+			assert.equal(prompt.title, prompt.title.toLowerCase())
+			assert.doesNotMatch(prompt.title, /best match/)
+			for (const arg of prompt.arguments) assert.ok(arg.description)
+			const got = await result(
+				await handle(
+					rpc("prompts/get", {
+						name: prompt.name,
+						arguments: examples[prompt.name],
+					}),
+				),
+			)
+			assert.equal(got.error, undefined, prompt.name)
+			assert.equal(got.result.messages.length, 1)
+			assert.equal(got.result.messages[0].role, "user")
+			const text = got.result.messages[0].content.text as string
+			for (const value of Object.values(examples[prompt.name]))
+				assert.ok(text.includes(value), text)
+			const namedTools = [...text.matchAll(/^\d+\. (\w+):/gm)].map(
+				(match) => match[1],
+			)
+			assert.ok(namedTools.length >= 2)
+			for (const name of namedTools)
+				assert.ok(toolNames.has(name), `${prompt.name}: ${name}`)
+			assert.doesNotMatch(text, /best match/i)
+		}
+		const unknown = await result(
+			await handle(rpc("prompts/get", { name: "unknown_prompt" })),
+		)
+		assert.equal(unknown.error.code, -32602)
+		assert.match(unknown.error.message, /not found/i)
+		if (authorization === verifier) {
+			for (const name of writePrompts) {
+				const hidden = await result(
+					await handle(rpc("prompts/get", { name, arguments: examples[name] })),
+				)
+				assert.equal(hidden.error.code, -32602)
+			}
+		} else {
+			const logPrompt = prompts.find(({ name }) => name === "log_and_score")!
+			assert.deepEqual(
+				logPrompt.arguments.map(({ name, required }) => [name, required]),
+				[
+					["title", true],
+					["episode", false],
+					["score", true],
+				],
+			)
+			const optional = await result(
+				await handle(
+					rpc("prompts/get", {
+						name: "log_and_score",
+						arguments: { title: "dune 2", score: "9" },
+					}),
+				),
+			)
+			assert.match(
+				optional.result.messages[0].content.text,
+				/just watched dune 2, score it with 9/,
+			)
+			for (const args of [
+				{ title: "dune 2" },
+				{ title: "dune 2", score: "11" },
+			]) {
+				const invalid = await result(
+					await handle(
+						rpc("prompts/get", { name: "log_and_score", arguments: args }),
+					),
+				)
+				assert.equal(invalid.error.code, -32602)
+			}
+		}
+	}
+})
+
+test("MCP prompts follow member tool policy", async () => {
+	process.env.REC_MCP_TASTE = "off"
+	process.env.REC_MCP_CREATE_LIST = "off"
+	try {
+		const handle = createReadMcpHandler({
+			resource,
+			authorization: writer,
+			limiter: unlimited,
+		})
+		const listed = (await result(await handle(rpc("prompts/list")))).result
+			.prompts
+		for (const name of ["compare_my_taste", "top_five_year"]) {
+			assert.equal(
+				listed.some((prompt: { name: string }) => prompt.name === name),
+				false,
+			)
+			const got = await result(
+				await handle(rpc("prompts/get", { name, arguments: {} })),
+			)
+			assert.equal(got.error.code, -32602)
+		}
+	} finally {
+		Reflect.deleteProperty(process.env, "REC_MCP_TASTE")
+		Reflect.deleteProperty(process.env, "REC_MCP_CREATE_LIST")
+	}
 })

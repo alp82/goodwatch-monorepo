@@ -15,6 +15,18 @@ export const CHAT_DEMO_QUESTIONS = {
 // The first use case, also the prompt on the page's sharing image (og-image/copy.ts).
 export const TONIGHT_ASK = "anything good on netflix tonight"
 
+// Shared with the MCP prompt menu; these are the asks, separate from the tool workflow text.
+export const MCP_PROMPT_EXAMPLES = {
+	watch_tonight: "what should i watch tonight on my services",
+	log_and_score: "just watched severance s2e4, score it with 9",
+	more_like_this: "something like arrival",
+	where_to_stream: "where can i stream past lives",
+	catch_up_shows: "what's next in my shows",
+	bulk_mark_seen: "mark these as seen with my scores",
+	top_five_year: "make a top 5 list from 2025",
+	compare_my_taste: "would i like arrival and why",
+} as const
+
 // The use cases on /use-with-ai: three groups of things to ask, each with what GoodWatch does with it. Every ask maps to
 // one of the MCP tools (app/server/mcp), so the page promises only what the server does.
 export const USE_WITH_AI_GROUPS = [
@@ -40,7 +52,7 @@ export const USE_WITH_AI_GROUPS = [
 			},
 			{
 				key: "stream",
-				ask: "where can i stream past lives",
+				ask: MCP_PROMPT_EXAMPLES.where_to_stream,
 				does: "Where it streams in your country",
 			},
 			{
@@ -77,7 +89,7 @@ export const USE_WITH_AI_GROUPS = [
 			},
 			{
 				key: "next",
-				ask: "what's next in my shows",
+				ask: MCP_PROMPT_EXAMPLES.catch_up_shows,
 				does: "The next episode of each show you're watching",
 			},
 			{
@@ -117,6 +129,7 @@ export const USE_WITH_AI_GROUPS = [
 ] as const
 
 export const ALL_EXAMPLE_PROMPTS: readonly string[] = [
+	...Object.values(MCP_PROMPT_EXAMPLES),
 	DESCRIPTION_SEARCH_EXAMPLE,
 	...Object.values(CHAT_DEMO_QUESTIONS),
 	...USE_WITH_AI_GROUPS.flatMap(({ asks }) => asks.map(({ ask }) => ask)),

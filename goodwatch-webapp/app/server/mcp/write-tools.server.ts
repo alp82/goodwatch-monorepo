@@ -333,7 +333,7 @@ export const writeToolDefinitions: {
 		title: "Create a share list",
 		description:
 			"Create a share list of exactly five distinct titles in rank order. Requires an existing site handle; if missing, returns handle_required and the Lists page. Uses the site's default card and Ember theme. Public by default; unlisted is accessible to anyone with the share link. Returns the site's real share link. Does not change ratings or Wishlist.",
-		destructive: true,
+		destructive: false,
 		schema: z
 			.object({
 				...action,
