@@ -5,7 +5,8 @@
 // - `centered`: before a guest asks, the search block waits in the middle of the screen (CSS, from the first paint).
 // - `cardHidden`: the card waits out of sight and out of reach (`inert`) until the guest asks.
 // - The H1, the slots' contents and the card are marked `data-start-obstacle`: the shelf covers stay out from under
-//   them (room/ShelfCovers.tsx).
+//   them as drawn on screen, where the block and the camera come to rest; a hidden card counts where it arrives
+//   (room/obstacles.ts).
 import type { CSSProperties, ReactNode } from "react"
 import type { ShelfTitle } from "../room/ShelfCovers"
 import { StartRoom } from "../room/StartRoom"

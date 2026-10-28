@@ -4,7 +4,8 @@
 //
 // - The covers need the picture's place on screen, so they render after hydration; the room's picture is in the
 //   server HTML on its own. The place is read from the picture itself (its CSS box: start.css places it), and the
-//   slots that a control covers (`[data-start-obstacle]` in the stage) stay empty.
+//   slots that a control covers on screen (`[data-start-obstacle]` in the stage, through the camera's scale and the
+//   centered block's shift: obstacles.ts) stay empty.
 // - When `titles` change (the results on show), each cover flips to its new title, left to right, once its image has
 //   loaded.
 // - Only transform and opacity animate. A cover is a layer only while it flips: a resting layer drawn at the element's
@@ -25,15 +26,21 @@ import { TitleBand } from "~/ui/poster-card/TitleBand"
 import { titlePath } from "~/utils/helpers"
 import { TMDB_IMAGE_BASE } from "~/utils/tmdb-image"
 import { UPRIGHT_PHONE } from "~/utils/upright-phone"
+import { HALF_FLIP_MS, useCoverFlip } from "./cover-flip"
 import {
 	type Quad,
 	type Rect,
 	elementSize,
-	overlaps,
 	quadBounds,
 	quadToBox,
 	quadTransform,
 } from "./homography"
+import {
+	coveredSlots,
+	layoutRect,
+	obstacleBox,
+	restingChain,
+} from "./obstacles"
 import {
 	type RoomScene,
 	START_ROOM,
@@ -52,8 +59,6 @@ export type ShelfTitle = Pick<
 	| "goodwatch_overall_score_normalized_percent"
 > & { backdrop_path?: string | null }
 
-const keyOf = (t: ShelfTitle | null) =>
-	t ? `${t.media_type}:${t.tmdb_id}` : null
 const hrefOf = (t: ShelfTitle) => titlePath(t.media_type, t.tmdb_id, t.title)
 
 /** How far a cover reaches past its painted slot, as a share of the slot's width and height. */
@@ -63,8 +68,6 @@ const BLEED_Y = 0.03
 const BAND = 0.08
 /** How close a control may come to a cover before the slot stays empty (px). */
 const OBSTACLE_PAD = 8
-const HALF_FLIP_MS = 220
-const SWEEP_MS = 900
 const CAPTION_W = 176
 const CAPTION_H = 92
 /** A finger's least target (px): smaller slots get an invisible button over them on touch screens. */
@@ -85,20 +88,7 @@ type ShelfLayout = {
 	slots: PlacedSlot[]
 }
 
-/** An element's box in `stop`'s pixels, from the offset chain: transforms (the camera, a lifted block) don't count. */
-function layoutRect(el: HTMLElement, stop: HTMLElement): Rect {
-	let left = 0
-	let top = 0
-	let node: HTMLElement | null = el
-	while (node && node !== stop) {
-		left += node.offsetLeft
-		top += node.offsetTop
-		node = node.offsetParent as HTMLElement | null
-	}
-	return { left, top, width: el.offsetWidth, height: el.offsetHeight }
-}
-
-/** Where the slots are in the shelf's box (the camera's), and which ones a control covers. */
+/** Where the slots are in the shelf's box (the camera's), and which ones a control covers on screen (obstacles.ts). */
 function useShelfLayout(box: RefObject<HTMLDivElement | null>) {
 	const [layout, setLayout] = useState<ShelfLayout | null>(null)
 	useIsoLayoutEffect(() => {
@@ -121,23 +111,30 @@ function useShelfLayout(box: RefObject<HTMLDivElement | null>) {
 			const obstacles = [
 				...stage.querySelectorAll<HTMLElement>("[data-start-obstacle]"),
 			]
-				.map((o) => layoutRect(o, stage))
+				.map((o) => obstacleBox(o, stage))
 				.filter((r) => r.width > 0 && r.height > 0)
-			const slots = scene.slots.map((slot) => {
+			// The slots in the stage's layout px, then on screen through the camera's scale.
+			const at = layoutRect(camera, stage)
+			const cameraChain = restingChain(camera, stage)
+			const placedSlots = scene.slots.map((slot) => {
 				const points = quadToBox(placed, scene.width, scene.height, slot.quad)
-				const rect = quadBounds(points)
-				return {
-					slot,
-					points,
-					rect,
-					hidden: obstacles.some((o) => overlaps(rect, o, OBSTACLE_PAD)),
-				}
+				return { slot, points, rect: quadBounds(points) }
 			})
+			const covered = coveredSlots(
+				placedSlots.map(({ rect }) => ({
+					...rect,
+					left: rect.left + at.left,
+					top: rect.top + at.top,
+				})),
+				cameraChain,
+				obstacles,
+				OBSTACLE_PAD,
+			)
 			const next = {
 				scene,
 				width: camera.clientWidth,
 				height: camera.clientHeight,
-				slots,
+				slots: placedSlots.map((s, i) => ({ ...s, hidden: covered[i] })),
 			}
 			setLayout((prev) =>
 				prev && JSON.stringify(prev) === JSON.stringify(next) ? prev : next,
@@ -146,11 +143,26 @@ function useShelfLayout(box: RefObject<HTMLDivElement | null>) {
 		measure()
 		const observer = new ResizeObserver(measure)
 		observer.observe(stage)
-		for (const o of stage.querySelectorAll("[data-start-obstacle]"))
-			observer.observe(o)
+		const obstacles = stage.querySelectorAll("[data-start-obstacle]")
+		for (const o of obstacles) observer.observe(o)
+		// The transforms change without a resize: the stage's `data-centered`, the camera's scale (its style), a card's
+		// `data-hidden`. The measure reads where each transition ends, so it runs once when one starts; the
+		// `transitionend` (not a cover's own flip) is a fallback for browsers without a transition's keyframes.
+		const mutations = new MutationObserver(measure)
+		mutations.observe(stage, { attributeFilter: ["data-centered"] })
+		mutations.observe(camera, { attributeFilter: ["style"] })
+		for (const o of obstacles)
+			mutations.observe(o, { attributeFilter: ["data-hidden"] })
+		const settled = (e: TransitionEvent) => {
+			if (e.propertyName === "transform" && !el.contains(e.target as Node))
+				measure()
+		}
+		stage.addEventListener("transitionend", settled)
 		phone.addEventListener("change", measure)
 		return () => {
 			observer.disconnect()
+			mutations.disconnect()
+			stage.removeEventListener("transitionend", settled)
 			phone.removeEventListener("change", measure)
 		}
 	}, [box])
@@ -267,9 +279,7 @@ export function ShelfCovers({ titles }: { titles: readonly ShelfTitle[] }) {
 	)
 }
 
-type Flip = "out" | "in-start" | null
-
-/** One slot's cover: waits for its turn in the sweep and for its image, then flips to a new title. */
+/** One slot's cover: waits for its turn in the sweep and for its image, then flips to a new title (cover-flip.ts). */
 function CasedCover({
 	title,
 	slot,
@@ -288,60 +298,9 @@ function CasedCover({
 	order: number
 	handlers: CoverHandlers
 }) {
-	const [shown, setShown] = useState<ShelfTitle | null>(title)
-	const [flip, setFlip] = useState<Flip>(null)
-	const [glint, setGlint] = useState(false)
-
-	useEffect(() => {
-		if (keyOf(title) === keyOf(shown)) return
-		let dead = false
-		const timers: ReturnType<typeof setTimeout>[] = []
-		const delay = 60 + order * SWEEP_MS
-		const ready = title?.poster_path
-			? (() => {
-					const img = new Image()
-					img.src = coverSrc(title.poster_path)
-					return Promise.race([
-						img.decode().catch(() => {}),
-						new Promise((r) => setTimeout(r, 1200)),
-					])
-				})()
-			: Promise.resolve()
-		const started = performance.now()
-		ready.then(() => {
-			if (dead) return
-			const wait = Math.max(0, delay - (performance.now() - started))
-			timers.push(setTimeout(() => setFlip("out"), wait))
-			timers.push(
-				setTimeout(() => {
-					setShown(title)
-					setFlip("in-start")
-				}, wait + HALF_FLIP_MS),
-			)
-		})
-		return () => {
-			dead = true
-			for (const t of timers) clearTimeout(t)
-		}
-		// Keyed by the title, not the object.
-	}, [keyOf(title)])
-
-	useEffect(() => {
-		if (flip !== "in-start") return
-		let raf = requestAnimationFrame(() => {
-			raf = requestAnimationFrame(() => {
-				setFlip(null)
-				setGlint(true)
-			})
-		})
-		return () => cancelAnimationFrame(raf)
-	}, [flip])
-
-	useEffect(() => {
-		if (!glint) return
-		const t = setTimeout(() => setGlint(false), 450)
-		return () => clearTimeout(t)
-	}, [glint])
+	const { shown, flip, glint } = useCoverFlip(title, order, (t) =>
+		t.poster_path ? coverSrc(t.poster_path) : null,
+	)
 
 	const rotate =
 		flip === "out"
