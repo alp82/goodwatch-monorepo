@@ -600,6 +600,14 @@ test("MCP initialization describes result fields without answer-formatting instr
 	assert.match(initialized.instructions, /match_label.*null means/)
 	assert.match(initialized.instructions, /runtime_minutes/)
 	assert.match(initialized.instructions, /stream_link/)
+	assert.match(
+		initialized.instructions,
+		/Simple examples: "anything good on netflix tonight" uses get_tonight/,
+	)
+	assert.match(
+		initialized.instructions,
+		/Advanced examples: .*batch_id can undo/,
+	)
 	assert.match(initialized.instructions, /what to watch, where it streams/)
 	assert.match(
 		initialized.instructions,

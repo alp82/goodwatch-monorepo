@@ -7,6 +7,10 @@ import {
 } from "../../domain/my-library.ts"
 import { HIDDEN_PATH } from "~/ui/settings/paths"
 import {
+	MCP_PROMPT_EXAMPLES,
+	TONIGHT_ASK,
+} from "../../ui/connector/example-prompts.ts"
+import {
 	discoverParams,
 	hasDiscoverFilters,
 	isDiscoverySearch,
@@ -15,7 +19,9 @@ import type { ReadArgs, ReadToolName } from "./tools.server.ts"
 
 export const resultFacts =
 	"Results include canonical GoodWatch URLs in url and ready-made Markdown links in link for titles and people. List-like results include page_url for the corresponding page and may include page_note describing differences from that page. GoodWatch match (50–99 percent) and match_label describe taste fit; null means insufficient liked titles or a missing title fingerprint. runtime_minutes is movie duration or usual episode duration for shows. Availability offers include provider stream_link values; link_kind=where_to_watch identifies a TMDB fallback rather than a direct playback link. Different IDs can identify distinct works with the same title and year." +
-	"\n\nGoodWatch helps with what to watch, where it streams, and the member's own ratings, watches, Wishlist, shows, share lists and taste. Availability answers depend on the member's saved country and streaming services: get_settings reads them, set_my_services replaces them, and set_settings changes country or language while preserving services. Title write tools accept GoodWatch title IDs returned by search_titles or other read results, with title_name and optional year as a fallback. Batch-capable write tools accept items with up to 50 entries per call; undo_watch with batch_id takes back that batch's changes where undoable, preserving newer edits. get_tonight picks one thing to watch next; discover_titles browses with filters; get_similar_titles finds neighbors of a title."
+	"\n\nGoodWatch helps with what to watch, where it streams, and the member's own ratings, watches, Wishlist, shows, share lists and taste. Availability answers depend on the member's saved country and streaming services: get_settings reads them, set_my_services replaces them, and set_settings changes country or language while preserving services. Title write tools accept GoodWatch title IDs returned by search_titles or other read results, with title_name and optional year as a fallback. Batch-capable write tools accept items with up to 50 entries per call; undo_watch with batch_id takes back that batch's changes where undoable, preserving newer edits. get_tonight picks one thing to watch next; discover_titles browses with filters; get_similar_titles finds neighbors of a title." +
+	`\n\nSimple examples: "${TONIGHT_ASK}" uses get_tonight. "${MCP_PROMPT_EXAMPLES.log_and_score}" uses search_titles, log_watch, then rate_title.` +
+	`\nAdvanced examples: "${MCP_PROMPT_EXAMPLES.bulk_mark_seen}" uses search_titles, then batch items in log_watch (movies), set_show_status (shows) and rate_title; each result's batch_id can undo that batch. "${MCP_PROMPT_EXAMPLES.top_five_year}" uses get_library sorted by score, then create_list with five titles.`
 
 /** Escape display text, not markup; never invent a missing catalog year. */
 export function titleLink(
