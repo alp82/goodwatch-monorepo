@@ -98,7 +98,7 @@ function SimButton({ onClick, label = "Simulate: your AI app adds the list" }: {
 		<button
 			type="button"
 			onClick={onClick}
-			className="min-h-11 cursor-pointer self-start rounded-full border-2 border-dashed border-fuchsia-500 px-4 text-sm font-semibold text-fuchsia-300 hover:bg-fuchsia-500/10"
+			className="min-h-11 cursor-pointer rounded-full border-2 border-dashed border-fuchsia-500 px-4 text-sm font-semibold text-fuchsia-300 hover:bg-fuchsia-500/10"
 		>
 			Prototype · {label}
 		</button>
@@ -134,7 +134,7 @@ function NoteWindow({ lit = true, place = "notes" }: { lit?: boolean; place?: Pl
 	return (
 		<div className={`transition-opacity duration-500 ${lit ? "opacity-100" : "opacity-40"}`}>
 			<MockWindow title={p.window} tone="light">
-				<div key={p.key} className="h-80 overflow-y-auto">
+				<div key={p.key} className="h-80 overflow-hidden">
 					{p.preview}
 				</div>
 			</MockWindow>
@@ -152,7 +152,7 @@ function ChatWindow({
 	return (
 		<div className={`transition-opacity duration-500 ${lit ? "opacity-100" : "opacity-40"}`}>
 			<MockWindow title="Your AI app">
-				<div className="flex h-80 flex-col gap-3 overflow-y-auto p-4 text-sm">
+				<div className="flex h-80 flex-col gap-3 overflow-hidden p-4 text-sm">
 					<div className={`transition-opacity duration-500 ${promptLit ? "opacity-100" : "opacity-30"}`}>
 						<UserBubble>
 							<span className="block text-xs text-gray-300">{placeOf(place).attachment}</span>
@@ -252,8 +252,13 @@ function DoneBlock({ onAnother, focus }: { onAnother: () => void; focus: boolean
 	)
 }
 
-function Actions({ children }: { children: ReactNode }) {
-	return <div className="flex flex-wrap justify-end gap-3">{children}</div>
+function Actions({ back, children }: { back?: () => void; children: ReactNode }) {
+	return (
+		<div className="flex flex-wrap items-center justify-between gap-3">
+			{back ? <Back onClick={back} /> : <span />}
+			<div className="ml-auto flex flex-wrap justify-end gap-3">{children}</div>
+		</div>
+	)
 }
 
 function Back({ onClick }: { onClick: () => void }) {
@@ -301,7 +306,13 @@ export function FlowE({ onOther }: { onOther: () => void }) {
 	const [place, setPlace] = useState<PlaceKey>("sheet")
 	const [connected, setConnected] = useState(true)
 	const writes = useAiWrites(() => setStep(4))
-	useReportStep({ step, notes: notesFor(step, rules, writes.progress), allDone: step === 4, back: step === 2 ? () => setStep(1) : undefined })
+	const waiting = step === 3 && writes.progress === 0 && !writes.running
+	useReportStep({
+		step,
+		notes: notesFor(step, rules, writes.progress),
+		allDone: step === 4,
+		open: step === 2 || waiting ? (n) => setStep(n as Step) : undefined,
+	})
 	const prompt = promptFor(rules, place)
 	return (
 		<>
@@ -324,12 +335,11 @@ export function FlowE({ onOther }: { onOther: () => void }) {
 				)}
 				{step === 2 && (
 					<>
-						<Back onClick={() => setStep(1)} />
 						<StepHeading focus>What's in your list?</StepHeading>
 						<RuleAnswers rules={rules} setRules={setRules} place={place} />
 						<p className="text-gray-200">Send this with your {placeOf(place).label === "Anything else" ? "file" : placeOf(place).label.toLowerCase()}:</p>
 						<CopyField text={prompt} label="Copy the prompt" mono={false} size="lg" />
-						<Actions>
+						<Actions back={() => setStep(1)}>
 							<button type="button" className={primaryButton} onClick={() => setStep(3)}>
 								I sent it
 							</button>
@@ -338,7 +348,6 @@ export function FlowE({ onOther }: { onOther: () => void }) {
 				)}
 				{step === 3 && (
 					<>
-						{writes.progress === 0 && !writes.running && <Back onClick={() => setStep(2)} />}
 						<StepHeading focus>{writes.progress > 0 ? "Your AI app is adding titles" : "Waiting for your AI app"}</StepHeading>
 						<PosterLights posters={POSTERS} progress={writes.progress} />
 						<p className="text-gray-400">
@@ -346,7 +355,11 @@ export function FlowE({ onOther }: { onOther: () => void }) {
 								? "Titles show up here as it adds them."
 								: "Keep this page open. Titles show up here as soon as it starts."}
 						</p>
-						{!writes.running && writes.progress === 0 && <SimButton onClick={writes.start} />}
+						{waiting && (
+							<Actions back={() => setStep(2)}>
+								<SimButton onClick={writes.start} />
+							</Actions>
+						)}
 					</>
 				)}
 				{step === 4 && (

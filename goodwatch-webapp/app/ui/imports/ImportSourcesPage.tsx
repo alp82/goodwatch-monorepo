@@ -53,7 +53,17 @@ import {
 	ROUND2_VARIANTS,
 	type Round2Variant,
 } from "./prototype-ai-import/AiSourceFlow"
+import { ArrowRightIcon } from "@heroicons/react/24/outline"
 import { AppBadge } from "~/ui/connector/AppBadge"
+
+/** PROTOTYPE: the AI app's mark at a source mark's size (40 px), so its button matches the others. */
+function AiMark() {
+	return (
+		<span className="flex size-10 shrink-0 [&>span]:size-10 [&>span]:rounded-lg">
+			<AppBadge app="claude" size="sm" />
+		</span>
+	)
+}
 import { useSourceImports } from "./SourceImportHooks"
 import { SourceMark } from "./SourceMark"
 import { useImdbImports } from "./api"
@@ -259,19 +269,29 @@ export function ImportSourcesPage({
 									<>
 										<StartDropZone reading={files.reading} onFile={files.take}>
 											{round2 && (
-												<p className="text-sm text-gray-400">
-													No export file?{" "}
-													<button
-														type="button"
-														className={textLink}
-														onClick={() => {
-															setAiOpen(true)
-															setActed((n) => n + 1)
-														}}
-													>
-														Bring any list with your AI app
-													</button>
-												</p>
+												<button
+													type="button"
+													onClick={() => {
+														setAiOpen(true)
+														setActed((n) => n + 1)
+													}}
+													className="group mx-auto flex w-full max-w-lg cursor-pointer items-center gap-4 rounded-2xl bg-white/[0.04] px-4 py-3.5 text-left ring-1 ring-white/10 transition-colors hover:bg-white/[0.08] hover:ring-white/20"
+												>
+													<AiMark />
+													<span className="min-w-0 flex-1">
+														<span className="block font-semibold text-white">
+															No export file?
+														</span>
+														<span className="block text-sm text-gray-400">
+															Bring a spreadsheet, a note, a screenshot, or
+															anything else with your AI app
+														</span>
+													</span>
+													<ArrowRightIcon
+														className="size-5 shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5 group-hover:text-white"
+														aria-hidden
+													/>
+												</button>
 											)}
 										</StartDropZone>
 										<ConnectRow
@@ -345,14 +365,17 @@ function ConnectRow({
 					</li>
 				))}
 				{onAi && (
-					<li>
-						<button type="button" className={secondaryButton} onClick={onAi}>
-							<span className="-my-1 scale-75">
-								<AppBadge app="claude" size="sm" />
-							</span>
-							Your AI app
-						</button>
-					</li>
+					<>
+						<li aria-hidden className="mx-1 hidden w-px self-stretch bg-white/15 sm:block" />
+						<li>
+							<button type="button" className={secondaryButton} onClick={onAi}>
+								<span className="-my-1 scale-75">
+									<AiMark />
+								</span>
+								Your AI app
+							</button>
+						</li>
+					</>
 				)}
 			</ul>
 		</div>

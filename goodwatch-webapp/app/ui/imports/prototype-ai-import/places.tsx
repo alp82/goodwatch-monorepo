@@ -50,15 +50,22 @@ const SHEET = [
 	["Blade Runner 2049", "", ""],
 ]
 
-const EXPORT = `{"history": [
-  {"title": "Arrival", "watched_at": "2024-03-02"},
-  {"title": "Dune: Part Two", "rating": 9},
-  {"title": "Severance", "status": "completed"},
-  {"title": "Sicario", "rating": 6},
-  {"title": "Magnolia", "watched_at": "2019-11-20"}
-],
-"watchlist": ["Prisoners", "Incendies",
-  "Blade Runner 2049"]}`
+const EXPORT = `{
+  "history": [
+    { "title": "Arrival" },
+    { "title": "Dune: Part Two",
+      "rating": 9 },
+    { "title": "Severance" },
+    { "title": "Sicario",
+      "rating": 6 },
+    { "title": "Magnolia" }
+  ],
+  "watchlist": [
+    "Prisoners",
+    "Incendies",
+    "Blade Runner 2049"
+  ]
+}`
 
 export const PLACES: Place[] = [
 	{
@@ -144,7 +151,7 @@ export const PLACES: Place[] = [
 			want: { title: "The watchlist goes on Want to See", note: "Watchlist, planned, to watch", phrase: "the watchlist goes on my want to see" },
 		},
 		preview: (
-			<pre className="overflow-x-auto px-4 py-3 font-mono text-[11px] leading-relaxed">{EXPORT}</pre>
+			<pre className="whitespace-pre-wrap px-4 py-3 font-mono text-xs leading-snug">{EXPORT}</pre>
 		),
 	},
 ]
