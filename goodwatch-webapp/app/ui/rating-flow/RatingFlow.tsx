@@ -14,6 +14,7 @@ import {
 	type FlowView,
 	readFlowPress,
 	readWantPress,
+	pastCounting,
 	showsSignUpLine,
 } from "./flow"
 import {
@@ -199,7 +200,7 @@ function RateView({
 				{top}
 				<TopRow
 					left={
-						flow.next && <NextStepDots step={flow.next} landed={flow.landed} />
+						flow.next && !pastCounting(flow.tally, flow.member) && <NextStepDots step={flow.next} landed={flow.landed} />
 					}
 					recent={flow.recent}
 					openKey={re?.key ?? null}

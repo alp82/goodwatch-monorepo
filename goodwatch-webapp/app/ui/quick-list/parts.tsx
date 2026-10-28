@@ -13,6 +13,7 @@ import {
 	NoSymbolIcon,
 } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
+import { QUICK_LIST_PAGE, SCORES_FROM_QUICK } from "~/domain/my-library"
 import { type MouseEvent as ReactMouseEvent, useEffect, useRef, useSyncExternalStore } from "react"
 import {
 	FLOW_PATH,
@@ -31,7 +32,7 @@ import type { QuickAnswer } from "./model"
 import { QUICK_WORDS, answerLabel } from "./words"
 
 /** Quick list's address. */
-export const QUICK_PATH = `${FLOW_PATH}?mode=quick`
+export const QUICK_PATH = QUICK_LIST_PAGE
 
 /** One at a time | Quick list, above either mode. Each is its own address, so Back goes between them. */
 export function ModeSwitch({ mode }: { mode: "one" | "quick" }) {
@@ -55,14 +56,25 @@ export function ModeSwitch({ mode }: { mode: "one" | "quick" }) {
 
 /**
  * The flow's taste bar in one line: the next step in words and dots, the totals, and the way to the taste view. At a
- * milestone it turns amber, as the flow's bar does.
+ * milestone it turns amber, as the flow's bar does. From a member's 50th rating (`toScores`) it is the way to Your
+ * scores, last scored first, without dots or milestones.
  */
-export function TasteStrip({ tally, step, lit }: { tally: Tally; step: NextStep | null; lit: Milestone | null }) {
+export function TasteStrip({
+	tally,
+	step: nextStep,
+	lit: milestone,
+	toScores = false,
+}: { tally: Tally; step: NextStep | null; lit: Milestone | null; toScores?: boolean }) {
+	const step = toScores ? null : nextStep
+	const lit = toScores ? null : milestone
 	const on = lit != null
-	const { head, line } = tasteBarWords(tally, lit)
+	const words = tasteBarWords(tally, lit)
+	const head = toScores ? QUICK_WORDS.yourScores : words.head
+	const { line } = words
 	return (
 		<Link
-			to={TASTE_VIEW_PATH}
+			to={toScores ? SCORES_FROM_QUICK : TASTE_VIEW_PATH}
+			prefetch={toScores ? "intent" : undefined}
 			className="group relative isolate flex h-12 min-w-0 items-center gap-2.5 overflow-hidden rounded-full bg-white/[0.03] pr-3 pl-1.5 ring-1 ring-white/10 hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-amber-400"
 			data-taste-strip
 		>

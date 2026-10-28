@@ -209,6 +209,16 @@ export const SIGN_UP_LINE_FROM = 5
 export const showsSignUpLine = (t: Tally | null, member: boolean) =>
 	!member && !!t && t.rated >= SIGN_UP_LINE_FROM && !isLocked(t, member)
 
+/**
+ * Ratings from which a member's flow stops counting toward new picks: One at a time drops its dots line, and Quick
+ * list's taste strip leads to Your scores instead.
+ */
+export const PAST_COUNTING_FROM = 50
+
+/** Whether the flow has stopped counting toward new picks: a member with PAST_COUNTING_FROM ratings. */
+export const pastCounting = (t: Tally | null, member: boolean) =>
+	member && !!t && t.rated >= PAST_COUNTING_FROM
+
 /** The taste bar's words: its head (amber at a milestone) and the totals under it. */
 export function tasteBarWords(t: Tally, lit: Milestone | null) {
 	return {

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react"
 import { activeFilterCount } from "~/domain/my-scores"
 import { FilterChips, FiltersButton, FiltersSheet, RowSearch } from "~/ui/my-library/scores/ScoreFilters"
 import { WRAP } from "~/ui/my-pages/bits"
-import { showsSignUpLine } from "~/ui/rating-flow/flow"
+import { pastCounting, showsSignUpLine } from "~/ui/rating-flow/flow"
 import { LockedPanel, SignUpLine, ghostButton } from "~/ui/rating-flow/parts"
 import { WORDS } from "~/ui/rating-flow/words"
 import type { ScoringMedia } from "~/ui/scoring/types"
@@ -57,7 +57,7 @@ export function QuickList({ titles, member }: { titles: ScoringMedia[]; member: 
 					<ModeSwitch mode="quick" />
 					{q.tally && (
 						<div className="min-w-0 flex-1 basis-72 sm:max-w-md md:ml-auto">
-							<TasteStrip tally={q.tally} step={q.next} lit={q.lit} />
+							<TasteStrip tally={q.tally} step={q.next} lit={q.lit} toScores={pastCounting(q.tally, member)} />
 						</div>
 					)}
 				</div>

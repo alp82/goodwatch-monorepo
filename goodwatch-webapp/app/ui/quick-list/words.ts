@@ -7,6 +7,7 @@ export const QUICK_WORDS = {
 	mode: "Rating mode",
 	oneAtATime: "One at a time",
 	quick: "Quick list",
+	yourScores: "Your scores",
 	head: "Titles you haven't rated",
 	line: "Score what you've seen. Mark the rest Haven't seen it.",
 	search: "Search all titles",

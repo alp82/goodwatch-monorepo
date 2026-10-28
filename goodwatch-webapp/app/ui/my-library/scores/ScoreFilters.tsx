@@ -417,10 +417,15 @@ export function GroupControl<K extends string>({
 	options,
 	value,
 	onChange,
+	name = "Group",
+	icon: Icon = Squares2X2Icon,
 }: {
 	options: { key: K; label: string; hint: string }[]
 	value: K
 	onChange: (key: K) => void
+	/** The menu's name, beside the choice: Group or Sort. */
+	name?: string
+	icon?: typeof Squares2X2Icon
 }) {
 	const [open, setOpen] = useState(false)
 	const root = useRef<HTMLDivElement>(null)
@@ -434,18 +439,20 @@ export function GroupControl<K extends string>({
 				type="button"
 				aria-haspopup="menu"
 				aria-expanded={open}
-				aria-label={`Group: ${label}`}
+				aria-label={`${name}: ${label}`}
 				onClick={() => setOpen(!open)}
-				data-group
-				className={`flex h-12 cursor-pointer items-center gap-2 px-4 text-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-400 sm:w-56 ${SHELL} ${open ? "ring-white/25" : "hover:ring-white/20"}`}
+				data-group={name === "Group" ? "" : undefined}
+				data-menu={name.toLowerCase()}
+				className={`flex h-12 cursor-pointer items-center gap-2 px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-400 sm:w-56 sm:px-4 ${SHELL} ${open ? "ring-white/25" : "hover:ring-white/20"}`}
 			>
-				<Squares2X2Icon className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
-				<span className="text-gray-400">Group</span>
+				<Icon className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
+				{/* On a phone the icon and the choice say it; the name stays in the button's label. */}
+				<span className="hidden text-gray-400 sm:inline">{name}</span>
 				<span className="max-w-24 flex-1 truncate text-left font-bold text-white sm:max-w-none">{label}</span>
 				<ChevronDownIcon className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
 			</button>
 			{open && (
-				<div role="menu" aria-label="Group" className={`absolute right-0 z-40 mt-2 w-72 max-w-[calc(100vw-1.5rem)] origin-top-right p-1.5 ${MENU}`}>
+				<div role="menu" aria-label={name} className={`absolute right-0 z-40 mt-2 w-72 max-w-[calc(100vw-1.5rem)] origin-top-right p-1.5 ${MENU}`}>
 					<SortItems
 						options={options}
 						value={value}

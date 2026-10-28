@@ -27,6 +27,7 @@ import {
 	readFlowPress,
 	readWantPress,
 	resumeWords,
+	pastCounting,
 	showsSignUpLine,
 	takesWantPress,
 	tally,
@@ -421,4 +422,13 @@ test("a member's cleared score below a later milestone steps back on the schedul
 	assert.equal(ready.milestone, null)
 	assert.equal(ready.lastMilestoneAt, 5)
 	assert.equal(add(ready, { rated: 7, liked: 5 }).milestone, null)
+})
+
+test("the flow stops counting toward new picks from a member's 50th rating, never for a guest", () => {
+	const at = (rated: number) => ({ rated, liked: rated })
+	assert.equal(pastCounting(null, true), false)
+	assert.equal(pastCounting(at(49), true), false)
+	assert.equal(pastCounting(at(50), true), true)
+	assert.equal(pastCounting(at(1011), true), true)
+	assert.equal(pastCounting(at(50), false), false)
 })

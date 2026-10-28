@@ -6,10 +6,11 @@
 // together: all to one score, or each a step up or down. A change saves at once and Undo takes it back.
 //
 // The member's whole list comes with the page; rows are drawn in steps while scrolling, so a long list stays light.
-import { ArrowUturnLeftIcon, ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
+import { ArrowUturnLeftIcon, ArrowsUpDownIcon, ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
+import { useSearchParams } from "@remix-run/react"
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { STICKY_BAR } from "~/ui/layers"
-import { LIBRARY_HUB } from "~/domain/my-library"
+import { LIBRARY_HUB, QUICK_LIST_PAGE } from "~/domain/my-library"
 import {
 	type Direction,
 	NO_FILTERS,
@@ -19,6 +20,7 @@ import {
 	type ScoredTitle,
 	activeFilterCount,
 	arrange,
+	FIRST_DIRECTION,
 	nextSort,
 } from "~/domain/my-scores"
 import type { Score } from "~/server/scores.server"
@@ -37,6 +39,17 @@ const GROUPINGS: { key: ScoreGrouping; label: string; hint: string }[] = [
 	{ key: "kind", label: "Movies and shows", hint: "Movies, then shows" },
 	{ key: "rated", label: "Year rated", hint: "When you gave the score" },
 ]
+/** The sort menu: the columns' sorts, and Last scored, which has no column. Each starts in its column's direction. */
+const SORTS: { key: ScoreSort; label: string; hint: string }[] = [
+	{ key: "score", label: "My score", hint: "Your 10s first" },
+	{ key: "rated", label: "Last scored", hint: "Your latest scores first" },
+	{ key: "title", label: "Title", hint: "A to Z" },
+	{ key: "year", label: "Year", hint: "Newest first" },
+	{ key: "gw", label: "GoodWatch", hint: "Highest first" },
+	{ key: "gap", label: "Gap", hint: "Where you like it more first" },
+]
+const isSort = (value: string | null): value is ScoreSort => SORTS.some((o) => o.key === value)
+
 /** Rows drawn at first and added per step while scrolling. */
 const ROWS_STEP = 120
 const count = (n: number) => n.toLocaleString("en-US")
@@ -136,7 +149,14 @@ function ChangeBar({ changes, save, onUndo }: { changes: Change[]; save: SaveSta
 export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 	const s = useScores(titles)
 	const [f, setF] = useState<ScoreFilters>(NO_FILTERS)
-	const [sort, setSort] = useState<{ by: ScoreSort; dir: Direction }>({ by: "score", dir: "desc" })
+	// ?sort=rated opens the list last scored first (Quick list's link); ?from=quick leads back to Quick list.
+	const [params] = useSearchParams()
+	const [sort, setSort] = useState<{ by: ScoreSort; dir: Direction }>(() => {
+		const by = params.get("sort")
+		return isSort(by) ? { by, dir: FIRST_DIRECTION[by] } : { by: "score", dir: "desc" }
+	})
+	const back =
+		params.get("from") === "quick" ? { label: "Quick list", to: QUICK_LIST_PAGE } : { label: "My library", to: LIBRARY_HUB }
 	const [grouping, setGrouping] = useState<ScoreGrouping>("none")
 	const [sheet, setSheet] = useState(false)
 	const [checked, setChecked] = useState<Set<string>>(new Set())
@@ -198,7 +218,7 @@ export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 	if (!titles.length)
 		return (
 			<div className="pb-24" data-my-scores>
-				<PageHead name="My scores" line="Every title you have scored." back={{ label: "My library", to: LIBRARY_HUB }} />
+				<PageHead name="My scores" line="Every title you have scored." back={back} />
 				<div className={WRAP}>
 					<Empty title="No scores yet">A score you give a title on its page appears here, to change any time.</Empty>
 				</div>
@@ -211,7 +231,7 @@ export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 			<PageHead
 				name="My scores"
 				line={`${count(titles.length)} titles you have scored. Change any score right in the list.`}
-				back={{ label: "My library", to: LIBRARY_HUB }}
+				back={back}
 			/>
 			<div className={`${WRAP} flex flex-col gap-3`}>
 				<div className="flex flex-wrap items-center gap-2.5" data-controls>
@@ -221,7 +241,14 @@ export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 						count={titles.filter(s.changed).length}
 						onChange={(changedOnly) => setF((x) => ({ ...x, changedOnly }))}
 					/>
-					<div className="flex min-w-0 items-center gap-2.5 sm:ml-auto">
+					<div className="flex min-w-0 flex-wrap items-center gap-2.5 sm:ml-auto">
+						<GroupControl
+							name="Sort"
+							icon={ArrowsUpDownIcon}
+							options={SORTS}
+							value={sort.by}
+							onChange={(by) => setSort({ by, dir: FIRST_DIRECTION[by] })}
+						/>
 						<GroupControl options={GROUPINGS} value={grouping} onChange={setGrouping} />
 						<FiltersButton count={activeFilterCount(f)} expanded={sheet} onClick={() => setSheet(true)} />
 					</div>
