@@ -222,8 +222,10 @@ function Done({
 		(id) =>
 			!activity.undone.includes(id) && !activity.undoIncomplete.includes(id),
 	)
-	const takenBack = activity.batches.length > 0 && open.length === 0
+	// Taken back only when every batch's undo finished completely; an undo that left titles behind says so instead.
 	const incomplete = activity.undoIncomplete.length > 0
+	const takenBack =
+		activity.batches.length > 0 && open.length === 0 && !incomplete
 	const { seen, scored, wanted } = activity.counts
 	const tiles = [
 		{ key: "seen", name: "Seen", total: null, added: seen, removed: 0 },
@@ -239,7 +241,11 @@ function Done({
 	return (
 		<div className="flex flex-col gap-5">
 			<StepHeading focus>
-				{takenBack ? "Taken back" : "Your list is in"}
+				{takenBack
+					? "Taken back"
+					: incomplete
+						? "Undo didn't finish"
+						: "Your list is in"}
 			</StepHeading>
 			<PosterLights
 				posters={posters(activity)}
@@ -249,10 +255,10 @@ function Done({
 			<CountTiles tiles={tiles} />
 			<p className="text-gray-300">
 				{takenBack
-					? incomplete
-						? "Most of it is back the way it was, but some titles couldn't be taken back. Ask your AI app to fix those."
-						: "Everything your AI app added in batches is back the way it was. A title you changed again since keeps your newer change."
-					: "New titles your AI app adds still show up here."}
+					? "Everything your AI app added in batches is back the way it was. A title you changed again since keeps your newer change."
+					: incomplete
+						? "Some titles couldn't be taken back. To check them, ask your AI app what it changed."
+						: "New titles your AI app adds still show up here."}
 				{activity.singles > 0 &&
 					` ${formatCount(activity.singles)} ${activity.singles === 1 ? "change was" : "changes were"} made one title at a time. To take ${activity.singles === 1 ? "it" : "those"} back, ask your AI app.`}
 			</p>
