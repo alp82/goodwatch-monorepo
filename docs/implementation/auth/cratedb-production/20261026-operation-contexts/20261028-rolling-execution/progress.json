@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-10-28T02:33:06.746546+00:00",
+  "updated_utc": "2026-10-28T02:37:01.597896+00:00",
   "base": "de2749c94e8df87a9dd4e8b0acc4362578515142",
   "branch": "fix/644-rolling-upgrade-execution",
   "state": "IN_PROGRESS",
@@ -12,7 +12,7 @@
   "versions_last_observed": {
     "crate-01": "6.2.11",
     "crate-02": "6.3.7",
-    "crate-03": "6.2.11"
+    "crate-03": "6.3.7"
   },
   "phase": "recovery",
   "completed_nodes": [
@@ -141,6 +141,20 @@
       "recovered_utc": "2026-10-28T02:32:05.610328+00:00",
       "verified_utc": "2026-10-28T02:32:43.886932+00:00",
       "seconds": 212.1491241690237
+    },
+    {
+      "started_utc": "2026-10-28T02:33:07.341156+00:00",
+      "node": "crate-03",
+      "source": "6.2.11",
+      "target": "6.3.7",
+      "unit": "gw-q65-20261028-637-03",
+      "stop_dispatch_utc": "2026-10-28T02:34:23.443334+00:00",
+      "exited_utc": "2026-10-28T02:34:28.681915203Z",
+      "new_started_utc": "2026-10-28T02:34:32.802486289Z",
+      "rejoined_utc": "2026-10-28T02:34:49.152196+00:00",
+      "recovered_utc": "2026-10-28T02:36:13.498407+00:00",
+      "verified_utc": "2026-10-28T02:36:52.674517+00:00",
+      "seconds": 225.3333780260291
     }
   ],
   "cron_held": {
@@ -357,12 +371,12 @@
     ]
   },
   "watcher": {
-    "probes": 2475,
+    "probes": 2590,
     "unexpected": 0,
     "over3s": 3,
     "alarms": 0,
     "max_seconds": 4.125801,
-    "last_utc": "2026-10-28T02:33:02.579474+00:00"
+    "last_utc": "2026-10-28T02:36:52.734181+00:00"
   },
   "gate_failure": null,
   "abort": null,
