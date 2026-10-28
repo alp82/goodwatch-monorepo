@@ -333,6 +333,6 @@
       ]
     }
   ],
-  "notes": "Edited original r9 bay sofa A. Mostly thin spine-out Blu-ray and DVD cases, with face-out plastic cases whose cover inserts are exact #FF00FF in raw. No picture frames, TV, candles or plaid. Fairy lights, small disc stacks with propped face-out cases, rust throw, indigo cushions, ochre ceramic and record. Focus surrounds complete sofa, sleeping dog and throw. Visual QC: selected attempt 2 of at most 3; cover inserts checked on debug overlays inside thin plastic rims. QC: Slot 4 projected aspect 0.85 (target about 0.75).",
+  "notes": "Edited original r9 bay sofa A. Mostly thin spine-out Blu-ray and DVD cases, with face-out plastic cases whose cover inserts are exact #FF00FF in raw. No picture frames, TV, candles or plaid. Fairy lights, small disc stacks with propped face-out cases, rust throw, indigo cushions, ochre ceramic and record. Focus surrounds complete sofa, sleeping dog and throw. Visual QC: selected attempt 2 of at most 3; cover inserts checked on debug overlays inside thin plastic rims. QC: Slot 4 projected aspect 0.85 (target about 0.75). R12 processing: broad local magenta mask, 5px dilation, sampled dark case fill, 8px fringe desaturation; original undilated quads. QC: Slot 4 projected aspect 0.85 (target about 0.72); Slot 8 projected aspect 0.83 (target about 0.72).",
   "focus": [0.2539, 0.5215, 0.4922, 0.3105]
 }

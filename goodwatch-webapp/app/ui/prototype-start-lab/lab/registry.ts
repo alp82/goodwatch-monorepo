@@ -11,8 +11,10 @@ import { VARIANTS as RECS } from "../sections/recs"
 import { VARIANTS as SHELF } from "../sections/shelf"
 import { VARIANTS as STAGE } from "../sections/stage"
 import { VARIANTS as TV } from "../sections/tv"
+import { VARIANTS as SEARCHBAR } from "../sections/searchbar"
+import { VARIANTS as LIGHT } from "../sections/light"
 
-const SHARED = { shelf: SHELF, tv: TV, how: HOW }
+const SHARED = { shelf: SHELF, tv: TV, how: HOW, searchbar: SEARCHBAR, light: LIGHT }
 
 export const REGISTRY = {
 	1: { ...SHARED, layout: LAYOUT, hero: HERO, recs: RECS, browse: BROWSE, member: MEMBER, stage: STAGE },

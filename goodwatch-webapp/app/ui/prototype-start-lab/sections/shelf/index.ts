@@ -1,6 +1,8 @@
 // PROTOTYPE (start page lab): how live posters meet the scene, in bar order.
 import type { ShelfVariant } from "../../lab/types"
 import { CoverSlot } from "./cover"
+import { CleanCoverSlot } from "./cover2"
+import { CasedCoverSlot } from "./cover2-case"
 import { LiftCaption, LitSlot } from "./lit"
 import { LiveSlot } from "./live"
 import { PlainSlot } from "./plain"
@@ -14,4 +16,6 @@ export const VARIANTS: ShelfVariant[] = [
 	{ key: "d", name: "Pull from the shelf", Slot: PullSlot, Overlay: PullOverlay },
 	{ key: "e", name: "Live changes", Slot: LiveSlot, Overlay: LiftCaption },
 	{ key: "f", name: "Printed covers", Slot: CoverSlot, Overlay: LiftCaption },
+	{ key: "g", name: "Covers, clean edges", Slot: CleanCoverSlot, Overlay: LiftCaption },
+	{ key: "h", name: "Covers in a case", Slot: CasedCoverSlot, Overlay: LiftCaption },
 ]

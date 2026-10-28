@@ -333,6 +333,6 @@
       ]
     }
   ],
-  "notes": "Edited the original r9 bay raw image: replace only the bench with a linen sofa. Sleeping dog, cushions and cream throw on sofa. No candles, TV or plaid. Focus surrounds the complete sofa, dog and throw. Visual QC: room layout and furnishings retained; selected edit attempt 1. Original slot masks retained and normalized to uniform #FF00FF; minor generative brush-texture variation remains outside the sofa.",
+  "notes": "Edited the original r9 bay raw image: replace only the bench with a linen sofa. Sleeping dog, cushions and cream throw on sofa. No candles, TV or plaid. Focus surrounds the complete sofa, dog and throw. Visual QC: room layout and furnishings retained; selected edit attempt 1. Original slot masks retained and normalized to uniform #FF00FF; minor generative brush-texture variation remains outside the sofa. R12 processing: broad local magenta mask, 5px dilation, sampled dark case fill, 8px fringe desaturation; original undilated quads. QC: Slot 4 projected aspect 0.62 (target about 0.72); Slot 7 projected aspect 0.60 (target about 0.72); Slot 8 projected aspect 0.62 (target about 0.72); Slot 9 projected aspect 0.60 (target about 0.72); Slot 11 projected aspect 0.61 (target about 0.72); Slot 12 projected aspect 0.60 (target about 0.72).",
   "focus": [0.2539, 0.5215, 0.4922, 0.3105]
 }

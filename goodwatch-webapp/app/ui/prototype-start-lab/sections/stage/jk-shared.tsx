@@ -4,9 +4,13 @@
 // Round 7: a much larger gap between the mood row and the module, and the scene placed from the measured gap so the
 // scene's focus (the dog and its seat) always sits in it, below the chips and above the module.
 // Round 11: the room is graded to the mood on show (jk-grade), and the empty state is a fan of posters (jk-module).
+// Round 12: the lab's "Search bar" (`?searchbar=`, sections/searchbar) swaps the field and presets for a bar with a
+// button; "Mood lighting" (`?light=`) gets the scene's placement here for its effects (sections/light).
 import { type CSSProperties, type ReactNode, type RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { ScenePlace } from "../../scene/SceneStage"
-import type { SceneMeta, ScenePair } from "../../scene/types"
+import { sceneImage, type SceneMeta, type ScenePair } from "../../scene/types"
+import type { LightGeo } from "../light/effects"
+import { JK_REVEAL, SEARCH_BARS, useSearchbarKey } from "../searchbar/bars"
 import { type Rect, useLab } from "../../lab/types"
 import { type StageFlow, useStageFlow } from "./ab-shared"
 import { EfgField, NIGHT } from "./efg-shared"
@@ -266,8 +270,32 @@ function useGapPlacement(pair: ScenePair) {
 		const px = (v: number) => `${Math.round(v)}px`
 		return { "--jk-n0": px(p.n0), "--jk-n1": px(p.n1), "--jk-b0": px(p.b0), "--jk-b1": px(p.b1) } as CSSProperties
 	}, [box, meta])
+	// Round 12: where the image sits, and the band the letterbox leaves open (around the focus, inside the gap).
+	const geo = useMemo<LightGeo | null>(() => {
+		const sec = section.current
+		if (!box || !sec) return null
+		const w = sec.clientWidth
+		const p = placeFor(meta, w, box)
+		const sw = meta.width * p.scale
+		const sh = meta.height * p.scale
+		const [, fy, , fh] = focusOf(meta)
+		const f0 = p.dy + fy * sh
+		const f1 = f0 + fh * sh
+		// The bars crop to the focus: a little air above it, and the lower fifth of it (the seat's base, under the dog).
+		return {
+			src: sceneImage(meta.id, "webp"),
+			img: { left: Math.round(p.dx), top: Math.round(p.dy), width: Math.round(sw), height: Math.round(sh) },
+			slots: meta.slots.map((sl) => sl.quad as [number, number][]),
+			w,
+			h: sec.clientHeight,
+			band: {
+				top: Math.round(Math.max(box.top + 2, f0 - 0.08 * (f1 - f0))),
+				bottom: Math.round(Math.min(box.bottom - 2, f0 + 0.8 * (f1 - f0))),
+			},
+		}
+	}, [box, meta])
 	const css = useMemo(() => gapCss(pair), [pair])
-	return { section, spacer, scene, place, vars, css }
+	return { section, spacer, scene, place, vars, css, geo }
 }
 
 /**
@@ -306,7 +334,7 @@ export function JkStage({
 				<Room noTv scene={gap.scene} place={gap.place} hideSlot={hideSlot} style={{ position: "absolute", inset: 0 }} />
 			</div>
 			{/* Round 11: the room takes on the mood of what's on show (jk-grade). */}
-			<JkGrade f={f} />
+			<JkGrade f={f} geo={gap.geo} />
 			<div
 				aria-hidden
 				className="pointer-events-none absolute inset-0"
@@ -334,6 +362,8 @@ export function JkStage({
 
 /** H1, the lifted field, the example searches and the mood row, each registered so no room poster sits behind it. */
 function JkTop({ f, reg, onMore, moreOpen, moreSlot }: { f: StageFlow; reg: Reg; onMore: () => void; moreOpen: boolean; moreSlot: ReactNode }) {
+	// Round 12: b, c, d are bars with a button and the presets inside; "a" is round 11's field and presets row.
+	const Bar = SEARCH_BARS[useSearchbarKey()]
 	return (
 		<div className="jk-top relative isolate z-20">
 			<div
@@ -347,17 +377,25 @@ function JkTop({ f, reg, onMore, moreOpen, moreSlot }: { f: StageFlow; reg: Reg;
 			>
 				Find something to watch by mood or anything
 			</h1>
-			<div ref={reg("field")} className="jk-field-gap mx-auto mt-4 max-w-[880px] sm:mt-8">
-				<EfgField
-					f={f}
-					body="h-[62px] rounded-2xl bg-gray-900 ring-1 ring-white/12 sm:h-[84px] sm:rounded-[22px] lg:h-[88px]"
-					decor={<span aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl sm:rounded-[22px]" style={{ boxShadow: FIELD_SHADOW }} />}
-					glow="rounded-2xl ring-2 ring-amber-400/80 shadow-[0_0_0_6px_rgb(251_191_36/.12),0_0_70px_10px_rgb(251_191_36/.28)] sm:rounded-[22px]"
-				/>
-			</div>
-			<div ref={reg("presets")} className="jk-gap mx-auto mt-3 w-fit max-w-full sm:mt-5">
-				<JkPresets f={f} />
-			</div>
+			{Bar ? (
+				<div ref={reg("field")} className="jk-field-gap mx-auto mt-4 max-w-[880px] sm:mt-8">
+					<Bar f={f} />
+				</div>
+			) : (
+				<>
+					<div ref={reg("field")} className="jk-field-gap mx-auto mt-4 max-w-[880px] sm:mt-8">
+						<EfgField
+							f={f}
+							body="h-[62px] rounded-2xl bg-gray-900 ring-1 ring-white/12 sm:h-[84px] sm:rounded-[22px] lg:h-[88px]"
+							decor={<span aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl sm:rounded-[22px]" style={{ boxShadow: FIELD_SHADOW }} />}
+							glow="rounded-2xl ring-2 ring-amber-400/80 shadow-[0_0_0_6px_rgb(251_191_36/.12),0_0_70px_10px_rgb(251_191_36/.28)] sm:rounded-[22px]"
+						/>
+					</div>
+					<div ref={reg("presets")} className="jk-gap mx-auto mt-3 w-fit max-w-full sm:mt-5">
+						<JkPresets f={f} />
+					</div>
+				</>
+			)}
 			<div className="jk-gap relative mt-2.5 sm:mt-4">
 				<div ref={reg("moods")} data-jk-moods="" className="mx-auto w-fit max-w-full">
 					<JkMoodRow f={f} onMore={onMore} moreOpen={moreOpen} />
@@ -392,13 +430,25 @@ export function useJkBringIntoView(f: JkFlow) {
 		const was = prev.current
 		prev.current = sig
 		if (was === null || was === sig || !acted.current) return
-		const el = box.current
-		if (!el) return
-		const r = el.getBoundingClientRect()
-		const room = window.innerHeight - 64 // the lab bar
-		if (r.bottom > room + 2) window.scrollBy({ top: Math.min(r.top - 80, r.bottom - room), behavior: "smooth" })
+		// Round 12: a search that fires while the guest is still typing in the bar doesn't scroll the field away;
+		// Enter or the button (which blur the field) does, and sends JK_REVEAL when the text was already searched.
+		if (document.activeElement?.matches("[data-jk-bar-input]")) return
+		reveal(box.current)
 	}, [sig])
+	useEffect(() => {
+		const on = () => reveal(box.current)
+		window.addEventListener(JK_REVEAL, on)
+		return () => window.removeEventListener(JK_REVEAL, on)
+	}, [])
 	return box
+}
+
+/** Scrolls the module into view when it ends below the fold (above the lab bar). */
+function reveal(el: HTMLElement | null) {
+	if (!el) return
+	const r = el.getBoundingClientRect()
+	const room = window.innerHeight - 64 // the lab bar
+	if (r.bottom > room + 2) window.scrollBy({ top: Math.min(r.top - 80, r.bottom - room), behavior: "smooth" })
 }
 
 /** Whether the module shows a reading line ("Read as …") for what's on show. */

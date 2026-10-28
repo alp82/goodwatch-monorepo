@@ -1,0 +1,284 @@
+{
+  "id": "nook-r12-e",
+  "title": "Organized bay shelves E",
+  "perspective": "eye level, near frontal",
+  "style": "gouache",
+  "orientation": "landscape",
+  "width": 1536,
+  "height": 1024,
+  "tv": null,
+  "slots": [
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0605,
+          0.0605
+        ],
+        [
+          0.0866,
+          0.0674
+        ],
+        [
+          0.0885,
+          0.1289
+        ],
+        [
+          0.0625,
+          0.124
+        ]
+      ],
+      "box": [
+        0.0605,
+        0.0605,
+        0.0286,
+        0.0693
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0625,
+          0.3174
+        ],
+        [
+          0.0885,
+          0.3213
+        ],
+        [
+          0.0905,
+          0.3809
+        ],
+        [
+          0.0638,
+          0.3789
+        ]
+      ],
+      "box": [
+        0.0625,
+        0.3174,
+        0.0286,
+        0.0645
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0742,
+          0.1953
+        ],
+        [
+          0.0996,
+          0.2002
+        ],
+        [
+          0.1016,
+          0.2588
+        ],
+        [
+          0.0762,
+          0.2549
+        ]
+      ],
+      "box": [
+        0.0742,
+        0.1953,
+        0.028,
+        0.0645
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0957,
+          0.0703
+        ],
+        [
+          0.1198,
+          0.0771
+        ],
+        [
+          0.1224,
+          0.1357
+        ],
+        [
+          0.0983,
+          0.1309
+        ]
+      ],
+      "box": [
+        0.0957,
+        0.0703,
+        0.0273,
+        0.0664
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0977,
+          0.3223
+        ],
+        [
+          0.1217,
+          0.3252
+        ],
+        [
+          0.1243,
+          0.3838
+        ],
+        [
+          0.0996,
+          0.3828
+        ]
+      ],
+      "box": [
+        0.0977,
+        0.3223,
+        0.0273,
+        0.0625
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.1087,
+          0.2021
+        ],
+        [
+          0.1328,
+          0.207
+        ],
+        [
+          0.1348,
+          0.2637
+        ],
+        [
+          0.1107,
+          0.2598
+        ]
+      ],
+      "box": [
+        0.1087,
+        0.2021,
+        0.0267,
+        0.0625
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9049,
+          0.3262
+        ],
+        [
+          0.9323,
+          0.3223
+        ],
+        [
+          0.9303,
+          0.3848
+        ],
+        [
+          0.9023,
+          0.3867
+        ]
+      ],
+      "box": [
+        0.9023,
+        0.3223,
+        0.0312,
+        0.0654
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9049,
+          0.5762
+        ],
+        [
+          0.9323,
+          0.5762
+        ],
+        [
+          0.9303,
+          0.6377
+        ],
+        [
+          0.9023,
+          0.6367
+        ]
+      ],
+      "box": [
+        0.9023,
+        0.5762,
+        0.0306,
+        0.0635
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9427,
+          0.3223
+        ],
+        [
+          0.972,
+          0.3184
+        ],
+        [
+          0.9701,
+          0.3818
+        ],
+        [
+          0.9401,
+          0.3838
+        ]
+      ],
+      "box": [
+        0.9401,
+        0.3184,
+        0.0326,
+        0.0664
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9421,
+          0.5771
+        ],
+        [
+          0.9714,
+          0.5771
+        ],
+        [
+          0.9694,
+          0.6406
+        ],
+        [
+          0.9401,
+          0.6396
+        ]
+      ],
+      "box": [
+        0.9401,
+        0.5771,
+        0.0319,
+        0.0645
+      ]
+    }
+  ],
+  "notes": "Upper left and lower right film sections; other bays books and decoration; LEDs. Edited r11-d bookcases; grouped spine-out films, face-out cases, books, decoration and empty space. No TV, candles, plaid, people or readable titles. Focus surrounds sofa, sleeping dog and throw. R12 processing: broad local magenta mask, 5px dilation, sampled dark case fill, 8px fringe desaturation; original undilated quads. QC: Slot 3 short edge 39px (below 40px target); Slot 4 projected aspect 0.61 (target about 0.72); Slot 4 short edge 37px (below 40px target); Slot 5 projected aspect 0.61 (target about 0.72); Slot 5 short edge 38px (below 40px target); Slot 6 short edge 37px (below 40px target).",
+  "focus": [0.2539, 0.5215, 0.4922, 0.3105]
+}

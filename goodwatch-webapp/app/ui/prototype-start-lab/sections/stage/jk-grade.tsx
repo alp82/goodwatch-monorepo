@@ -1,7 +1,12 @@
 // PROTOTYPE (start page lab, round 11): stage j and k's room grade: the room takes on the mood of what's on show (a
 // mood chip, a More moods choice, or a search's reading), as stacked color layers over the scene that crossfade.
+// Round 12: the "Mood lighting" section (`?light=`) picks how strong: a is this file's GRADES; b, c and d use
+// sections/light (b about twice as strong, c adds film effects, d adds letterbox bars and dimmed shelves).
 import { useEffect, useRef, useState } from "react"
 import { MOODS } from "~/domain/moods"
+import { useLab } from "../../lab/types"
+import { type LightGeo, LightOver, LightUnder } from "../light/effects"
+import { COLOR_STRONG, GRADES_STRONG, lightKeyOf } from "../light/tables"
 import { moodHue } from "./ab-shared"
 import { vocabOf } from "./hi-vocab"
 import type { JkFlow } from "./jk-shared"
@@ -221,8 +226,10 @@ function gradeOf(f: JkFlow): string | null | undefined {
 	return gradeOfReading(reading) ?? gradeOfText(s.q) ?? answeredMood ?? null
 }
 
-const layersOf = (g: string): Layer[] =>
-	g.startsWith("color:") ? [{ bg: g.slice(6), blend: "soft-light", o: 0.4 }] : (GRADES[g] ?? [])
+const layersOf = (g: string, strong: boolean): Layer[] =>
+	g.startsWith("color:")
+		? [{ bg: g.slice(6), blend: "soft-light", o: strong ? COLOR_STRONG : 0.4 }]
+		: ((strong ? GRADES_STRONG : GRADES)[g] ?? [])
 
 const CSS = `.jk-grade{position:absolute;inset:0;pointer-events:none;transition:opacity .6s ease-out}
 @media (prefers-reduced-motion:reduce){.jk-grade{transition:none}}`
@@ -232,7 +239,10 @@ const CSS = `.jk-grade{position:absolute;inset:0;pointer-events:none;transition:
  * opacity 0, then faded in) and stay, so moving between grades is a crossfade. The layers sit straight in this
  * wrapper, which makes no stacking context, so they blend with the room under them.
  */
-export function JkGrade({ f }: { f: JkFlow }) {
+export function JkGrade({ f, geo = null }: { f: JkFlow; geo?: LightGeo | null }) {
+	const light = lightKeyOf(useLab().choice)
+	const strong = light !== "a"
+	const film = light === "c" || light === "d"
 	const wanted = gradeOf(f)
 	const last = useRef<string | null>(null)
 	if (wanted !== undefined) last.current = wanted
@@ -257,8 +267,9 @@ export function JkGrade({ f }: { f: JkFlow }) {
 	return (
 		<div aria-hidden className="pointer-events-none absolute inset-0" data-jk-grade={on ?? "none"}>
 			<style>{CSS}</style>
+			{film ? <LightUnder on={on} mounted={mounted} geo={geo} /> : null}
 			{mounted.flatMap((g) =>
-				layersOf(g).map((l, i) => (
+				layersOf(g, strong).map((l, i) => (
 					<div
 						// biome-ignore lint/suspicious/noArrayIndexKey: a grade's layers are fixed
 						key={`${g}-${i}`}
@@ -267,6 +278,7 @@ export function JkGrade({ f }: { f: JkFlow }) {
 					/>
 				)),
 			)}
+			{film ? <LightOver on={on} mounted={mounted} geo={geo} cinematic={light === "d"} /> : null}
 		</div>
 	)
 }

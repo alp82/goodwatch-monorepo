@@ -1,0 +1,230 @@
+{
+  "id": "nook-r12-d-portrait",
+  "title": "Organized bay shelves D for a phone",
+  "perspective": "eye level, near frontal",
+  "style": "gouache",
+  "orientation": "portrait",
+  "width": 1024,
+  "height": 1536,
+  "tv": null,
+  "slots": [
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0352,
+          0.5098
+        ],
+        [
+          0.0869,
+          0.5091
+        ],
+        [
+          0.0879,
+          0.5599
+        ],
+        [
+          0.0352,
+          0.5612
+        ]
+      ],
+      "box": [
+        0.0352,
+        0.5091,
+        0.0547,
+        0.0527
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0352,
+          0.6211
+        ],
+        [
+          0.0879,
+          0.6185
+        ],
+        [
+          0.0879,
+          0.6686
+        ],
+        [
+          0.0361,
+          0.6725
+        ]
+      ],
+      "box": [
+        0.0352,
+        0.6185,
+        0.0547,
+        0.0547
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0391,
+          0.3991
+        ],
+        [
+          0.0908,
+          0.4017
+        ],
+        [
+          0.0908,
+          0.4512
+        ],
+        [
+          0.0391,
+          0.4499
+        ]
+      ],
+      "box": [
+        0.0391,
+        0.3991,
+        0.0527,
+        0.0527
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.04,
+          0.2858
+        ],
+        [
+          0.0908,
+          0.2904
+        ],
+        [
+          0.0908,
+          0.3398
+        ],
+        [
+          0.04,
+          0.3366
+        ]
+      ],
+      "box": [
+        0.04,
+        0.2858,
+        0.0518,
+        0.0547
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.123,
+          0.6172
+        ],
+        [
+          0.1719,
+          0.6146
+        ],
+        [
+          0.1719,
+          0.6621
+        ],
+        [
+          0.1221,
+          0.666
+        ]
+      ],
+      "box": [
+        0.1221,
+        0.6146,
+        0.0508,
+        0.0521
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.123,
+          0.5098
+        ],
+        [
+          0.1719,
+          0.5098
+        ],
+        [
+          0.1719,
+          0.5579
+        ],
+        [
+          0.123,
+          0.5592
+        ]
+      ],
+      "box": [
+        0.123,
+        0.5098,
+        0.0498,
+        0.0501
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.125,
+          0.2936
+        ],
+        [
+          0.1729,
+          0.2975
+        ],
+        [
+          0.1719,
+          0.3451
+        ],
+        [
+          0.125,
+          0.3424
+        ]
+      ],
+      "box": [
+        0.125,
+        0.2936,
+        0.0488,
+        0.0521
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.125,
+          0.4036
+        ],
+        [
+          0.1729,
+          0.4056
+        ],
+        [
+          0.1729,
+          0.4538
+        ],
+        [
+          0.125,
+          0.4525
+        ]
+      ],
+      "box": [
+        0.125,
+        0.4036,
+        0.0488,
+        0.0508
+      ]
+    }
+  ],
+  "notes": "Lower left film library; upper left and right books and decoration; lamp glow. Edited r11-d bookcases; grouped spine-out films, face-out cases, books, decoration and empty space. No TV, candles, plaid, people or readable titles. Focus surrounds sofa, sleeping dog and throw. R12 processing: broad local magenta mask, 5px dilation, sampled dark case fill, 8px fringe desaturation; original undilated quads.",
+  "focus": [0.2188, 0.5286, 0.5430, 0.2220]
+}

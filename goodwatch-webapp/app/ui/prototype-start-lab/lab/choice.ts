@@ -5,30 +5,32 @@
 // Round 1: layout + hero + recs + how + browse for guests. Round 2 (default): the stage (search and tap three on
 // the room) + how + browse, and new member pages; the owner's round 1 picks are the defaults.
 
-export type SectionId = "layout" | "stage" | "hero" | "recs" | "scene" | "shelf" | "tv" | "how" | "browse" | "member" | "persona"
+export type SectionId = "layout" | "stage" | "hero" | "recs" | "scene" | "shelf" | "tv" | "how" | "browse" | "member" | "persona" | "searchbar" | "light"
 
 export type Viewer = "guest" | "member"
 export type Round = 1 | 2
 
 export const SECTIONS: { id: SectionId; name: string; for: Viewer[]; rounds: Round[] }[] = [
-	{ id: "stage", name: "Search + tap three", for: ["guest"], rounds: [2] },
+	{ id: "stage", name: "Search + tap three", for: ["guest"], rounds: [] },
 	{ id: "layout", name: "Page layout", for: ["guest"], rounds: [1] },
 	{ id: "hero", name: "Search hero", for: ["guest"], rounds: [1] },
 	{ id: "recs", name: "Recommendations", for: ["guest"], rounds: [1] },
-	{ id: "member", name: "Member start", for: ["member"], rounds: [1, 2] },
+	{ id: "member", name: "Member start", for: ["member"], rounds: [1] },
 	{ id: "persona", name: "Member data", for: ["member"], rounds: [2] },
+	{ id: "searchbar", name: "Search bar", for: ["guest"], rounds: [2] },
+	{ id: "light", name: "Mood lighting", for: ["guest"], rounds: [2] },
 	{ id: "scene", name: "Room scene", for: ["guest", "member"], rounds: [1, 2] },
 	{ id: "shelf", name: "Posters in the room", for: ["guest", "member"], rounds: [1, 2] },
-	{ id: "tv", name: "TV and intro", for: ["guest"], rounds: [1, 2] },
-	{ id: "how", name: "How it works", for: ["guest"], rounds: [1, 2] },
-	{ id: "browse", name: "Browse", for: ["guest"], rounds: [1, 2] },
+	{ id: "tv", name: "TV and intro", for: ["guest"], rounds: [1] },
+	{ id: "how", name: "How it works", for: ["guest"], rounds: [1] },
+	{ id: "browse", name: "Browse", for: ["guest"], rounds: [1] },
 ]
 
 /** The owner's round 1 picks (2026-10-27) start round 2. */
 export const DEFAULTS: Record<Round, Partial<Record<SectionId, string>>> = {
 	1: {},
 	// Round 6: the owner's picks: stage j, browse d, member d (rounds 1-5 verdicts in BRIEF.md).
-	2: { scene: "nook-r9-bay-sofa-a", shelf: "f", tv: "a", how: "b", stage: "j", browse: "d", member: "d", persona: "full" },
+	2: { scene: "nook-r9-bay-sofa-a", shelf: "g", tv: "a", how: "b", stage: "j", browse: "d", member: "d", persona: "full", searchbar: "b", light: "c" },
 }
 
 export type Choice = Partial<Record<SectionId, string>> & { as: Viewer; sec: SectionId; round: Round }
