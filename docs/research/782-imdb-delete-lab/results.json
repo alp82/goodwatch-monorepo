@@ -1,0 +1,215 @@
+{
+  "generated_utc": "2026-10-28T07:30:10.451644+00:00",
+  "verdict": "No reproducible steady-state regression of the original anti-list DELETE in this lab; no production saturation reproduced",
+  "production_contact": false,
+  "application_code_changes": false,
+  "images": {
+    "5.10.16": "crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307",
+    "6.4.6": "crate:6.4.6@sha256:8d3e8778378236192724776877d2ea4546d5b5586362c8d174e6aa46177bb0fb"
+  },
+  "resources_per_node": {
+    "memory_gib": 4,
+    "heap_gib": 2,
+    "cpu_quota": 4,
+    "JVM_active_processors": 16,
+    "search_threads": 25,
+    "write_threads": 16
+  },
+  "dataset": {
+    "utc": "2026-10-28T06:57:26.684687+00:00",
+    "counts": {
+      "imdb_episode": 825015,
+      "imdb_season": 77256,
+      "crawl_priority": 160000
+    },
+    "changed_shows": 2491,
+    "kept_episodes": 195382,
+    "kept_seasons": 11212,
+    "stale": [
+      133,
+      20
+    ],
+    "snapshot": {
+      "cols": [
+        "name",
+        "state",
+        "total_shards",
+        "failures"
+      ],
+      "rows": [
+        [
+          "baseline",
+          "SUCCESS",
+          15,
+          []
+        ]
+      ],
+      "rowcount": 1,
+      "duration": 6.136977
+    }
+  },
+  "warm_trials_each": 3,
+  "warm_results": [
+    {
+      "case": "alone",
+      "5.10.16": {
+        "wall_seconds": [
+          0.7522724639857188,
+          0.7005038110073656,
+          0.7048088520532474
+        ],
+        "median_seconds": 0.7048088520532474,
+        "median_delete_seconds": 0.7002568060997874,
+        "max_search_active": 2,
+        "max_search_queue": 0,
+        "max_write_active": 1,
+        "max_write_queue": 0,
+        "rejected_delta": 0,
+        "max_heap_pct": 59.80769991874695
+      },
+      "6.4.6": {
+        "wall_seconds": [
+          0.7188099840423092,
+          0.7126705760601908,
+          0.7041904099751264
+        ],
+        "median_seconds": 0.7126705760601908,
+        "median_delete_seconds": 0.7064117022091523,
+        "max_search_active": 2,
+        "max_search_queue": 0,
+        "max_write_active": 2,
+        "max_write_queue": 0,
+        "rejected_delta": 0,
+        "max_heap_pct": 60.64420789480209
+      },
+      "ratio_646_to_510": 1.011154405884717
+    },
+    {
+      "case": "paging",
+      "5.10.16": {
+        "wall_seconds": [
+          0.7395977340638638,
+          0.7092794750351459,
+          0.7070816409541294
+        ],
+        "median_seconds": 0.7092794750351459,
+        "median_delete_seconds": 0.7024239014135674,
+        "max_search_active": 2,
+        "max_search_queue": 0,
+        "max_write_active": 1,
+        "max_write_queue": 0,
+        "rejected_delta": 0,
+        "max_heap_pct": 51.504913717508316
+      },
+      "6.4.6": {
+        "wall_seconds": [
+          0.7122305969242007,
+          0.703166991006583,
+          0.7039549140026793
+        ],
+        "median_seconds": 0.7039549140026793,
+        "median_delete_seconds": 0.697691826033406,
+        "max_search_active": 2,
+        "max_search_queue": 0,
+        "max_write_active": 1,
+        "max_write_queue": 0,
+        "rejected_delta": 0,
+        "max_heap_pct": 60.264141857624054
+      },
+      "ratio_646_to_510": 0.9924929999811389
+    },
+    {
+      "case": "upsert-alone",
+      "5.10.16": {
+        "wall_seconds": [
+          2.7197070559486747,
+          2.509276336990297,
+          2.4246107609942555
+        ],
+        "median_seconds": 2.509276336990297,
+        "median_delete_seconds": 0.7029858477180824,
+        "max_search_active": 2,
+        "max_search_queue": 0,
+        "max_write_active": 3,
+        "max_write_queue": 0,
+        "rejected_delta": 0,
+        "max_heap_pct": 58.854326605796814
+      },
+      "6.4.6": {
+        "wall_seconds": [
+          2.5212805150076747,
+          2.4429408359574154,
+          2.427342751994729
+        ],
+        "median_seconds": 2.4429408359574154,
+        "median_delete_seconds": 0.6954613059060648,
+        "max_search_active": 0,
+        "max_search_queue": 0,
+        "max_write_active": 3,
+        "max_write_queue": 0,
+        "rejected_delta": 0,
+        "max_heap_pct": 66.4794921875
+      },
+      "ratio_646_to_510": 0.9735638916866182
+    },
+    {
+      "case": "upsert-paging",
+      "5.10.16": {
+        "wall_seconds": [
+          2.5351469750748947,
+          2.4720631989184767,
+          2.522393815102987
+        ],
+        "median_seconds": 2.522393815102987,
+        "median_delete_seconds": 0.688330548000522,
+        "max_search_active": 2,
+        "max_search_queue": 0,
+        "max_write_active": 4,
+        "max_write_queue": 0,
+        "rejected_delta": 0,
+        "max_heap_pct": 61.204664781689644
+      },
+      "6.4.6": {
+        "wall_seconds": [
+          2.513021370046772,
+          2.424624722916633,
+          2.4893089570105076
+        ],
+        "median_seconds": 2.4893089570105076,
+        "median_delete_seconds": 0.7041489760158584,
+        "max_search_active": 2,
+        "max_search_queue": 0,
+        "max_write_active": 3,
+        "max_write_queue": 0,
+        "rejected_delta": 0,
+        "max_heap_pct": 60.4736328125
+      },
+      "ratio_646_to_510": 0.9868835477258223
+    }
+  ],
+  "cleanup": {
+    "utc": "2026-10-28T07:21:08.136125+00:00",
+    "containers_remaining": "",
+    "network_remaining": "",
+    "data_dirs_remaining": [],
+    "snapshot_data_remaining": false,
+    "post_archive_scratch_cleanup": {
+      "utc": "2026-10-28T07:35:39.169111+00:00",
+      "task_scratch_tree_removed": true,
+      "containers_remaining": 0,
+      "networks_remaining": 0,
+      "database_snapshot_data_remaining": false
+    }
+  },
+  "rejected_candidate": {
+    "statement": "Per-show typed-key DELETE in one 200-item bulk request",
+    "six_timeout_seconds": 180,
+    "five_probe_timeout_seconds": 15,
+    "recommendation": "Do not deploy; it stalled on both versions with idle pools",
+    "original_regression_evidence": false
+  },
+  "tests": {
+    "fixture_and_isolation_unit": 5,
+    "result": "PASS"
+  }
+}
