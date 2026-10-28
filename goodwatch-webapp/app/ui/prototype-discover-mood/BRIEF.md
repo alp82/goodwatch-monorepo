@@ -102,3 +102,29 @@ Round 3 rules (on top of round 2):
 - `FilterGroups` renders all cards; to show only some cards (for tiers or tabs), either hide cards via CSS by their
   `#filter-card-<key>` ids (see E/H for the pattern; use `<style dangerouslySetInnerHTML>`, a plain `<style>{css}</style>`
   breaks hydration), or build controls yourself from `pieces.groups` state + `d.filters.set`.
+
+## Round 4 (2026-10-28)
+
+Owner verdict on round 3: "V + R are by FAR the best." Everything else is dropped. Notes:
+- The search isn't only for moods (that's what we highlight), but it must be obvious it also finds a title or
+  "something similar to X".
+- V: the More tab doesn't work well: a long list to scroll, and only a few filters at a time in the main content.
+- R: the full scroll of the palette is weird and confusing. R's More layout is a bit better.
+- More could have sub-tabs (like P and T, but more) and/or tiers like Q, with less clutter.
+- U has a nice layout too; maybe use it only for More.
+- Missing: the search for filters ("Find a filter: horror, a title, a name") from earlier rounds and today's sheet.
+
+Round 4 base (every variant, unless its own idea says otherwise):
+- Start from V (`variants/V.tsx` + `variants/R-parts.tsx`): static title, the segmented bar (Search, Mood, Streaming,
+  Watched, More), one status line, the panel under the bar that morphs between segments at a fixed height. Copy the
+  parts you need into your own files (`variants/<key>-*.tsx`); don't import from another variant's files and don't
+  edit R/V.
+- Search segment: label "Search", placeholder like "A mood, a title, or like Severance". Its panel shows what it
+  can do with one example of each kind (a mood phrase, a title, "like <title>"). While typing: "Search: <text>"
+  (runs d.setQ; the combined search also finds titles by name), plus up to 4 title matches (the title picker's fast
+  `/api/search` used in `~/ui/filter-bar/FilterPickers.tsx`), each with "Like this" that sets the Similar to filter
+  (`d.filters.set({ similarTo: [...] })`). Keep it calm: no explanation prose, the examples teach.
+- "Find a filter" (the real `FilterSearchField` + `<FilterGroups data={pieces.groups} query={text} />` results) is
+  reachable from the panel. Typing there replaces the panel content with matches from every filter.
+- The panel never scrolls a long list. More must show the niche filters in a way that needs at most a short scroll.
+- Variant keys are numbers: `variants/R4-<n>.tsx` exporting `NAME` and `VariantR4_<n>`, route keys "1".."10".

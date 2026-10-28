@@ -29,12 +29,32 @@ import * as U from "~/ui/prototype-discover-mood/variants/U"
 import * as V from "~/ui/prototype-discover-mood/variants/V"
 import * as W from "~/ui/prototype-discover-mood/variants/W"
 import * as X from "~/ui/prototype-discover-mood/variants/X"
+import * as R4_1 from "~/ui/prototype-discover-mood/variants/R4-1"
+import * as R4_2 from "~/ui/prototype-discover-mood/variants/R4-2"
+import * as R4_3 from "~/ui/prototype-discover-mood/variants/R4-3"
+import * as R4_4 from "~/ui/prototype-discover-mood/variants/R4-4"
+import * as R4_5 from "~/ui/prototype-discover-mood/variants/R4-5"
+import * as R4_6 from "~/ui/prototype-discover-mood/variants/R4-6"
+import * as R4_7 from "~/ui/prototype-discover-mood/variants/R4-7"
+import * as R4_8 from "~/ui/prototype-discover-mood/variants/R4-8"
+import * as R4_9 from "~/ui/prototype-discover-mood/variants/R4-9"
+import * as R4_10 from "~/ui/prototype-discover-mood/variants/R4-10"
 import * as Today from "~/ui/prototype-discover-mood/variants/Today"
 
 export const meta: MetaFunction = () => [{ title: "PROTOTYPE · Discover mood" }, { name: "robots", content: "noindex" }]
 export const shouldRevalidate: ShouldRevalidateFunction = () => false
 
 const VARIANTS = {
+	"1": { name: R4_1.NAME, View: R4_1.VariantR4_1 },
+	"2": { name: R4_2.NAME, View: R4_2.VariantR4_2 },
+	"3": { name: R4_3.NAME, View: R4_3.VariantR4_3 },
+	"4": { name: R4_4.NAME, View: R4_4.VariantR4_4 },
+	"5": { name: R4_5.NAME, View: R4_5.VariantR4_5 },
+	"6": { name: R4_6.NAME, View: R4_6.VariantR4_6 },
+	"7": { name: R4_7.NAME, View: R4_7.VariantR4_7 },
+	"8": { name: R4_8.NAME, View: R4_8.VariantR4_8 },
+	"9": { name: R4_9.NAME, View: R4_9.VariantR4_9 },
+	"10": { name: R4_10.NAME, View: R4_10.VariantR4_10 },
 	O: { name: O.NAME, View: O.VariantO },
 	P: { name: P.NAME, View: P.VariantP },
 	Q: { name: Q.NAME, View: Q.VariantQ },
@@ -61,14 +81,14 @@ const VARIANTS = {
 	D: { name: D.NAME, View: D.VariantD },
 	"0": { name: Today.NAME, View: Today.VariantToday },
 } as const
-// The switcher cycles round 3, its two parents (L, M) and the baseline; rounds 1-2 stay reachable by URL.
-const CYCLE = ["O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "L", "M", "0"] as const
+// The switcher cycles round 4 (1-10), its parents (V, R) and the baseline; earlier rounds stay reachable by URL.
+const CYCLE = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "V", "R", "0"] as const
 
 export default function PrototypeDiscoverMood() {
 	const [params] = useSearchParams()
-	const key = (params.get("variant") ?? "O") as keyof typeof VARIANTS
+	const key = (params.get("variant") ?? "1") as keyof typeof VARIANTS
 	const d = useProtoDiscover()
-	const { View } = VARIANTS[key] ?? VARIANTS.O
+	const { View } = VARIANTS[key] ?? VARIANTS["1"]
 	return (
 		<>
 			<View d={d} />
