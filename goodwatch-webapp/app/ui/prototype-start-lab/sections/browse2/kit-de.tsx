@@ -29,7 +29,7 @@ type RailNav = { ref: (el: HTMLUListElement | null) => void; atStart: boolean; a
 
 /**
  * Tracks a native scroll rail's ends (on scroll, once per frame, and on resize) and steps it by about one view of
- * cards. State changes only when an end is reached or left, so scrolling stays cheap.
+ * cards, card-aligned, jumping straight to an end when less than a card would be left. State changes only when an end is reached or left, so scrolling stays cheap.
  */
 function useRailNav(): RailNav {
 	const [el, setEl] = useState<HTMLUListElement | null>(null)
@@ -60,10 +60,39 @@ function useRailNav(): RailNav {
 	const step = useCallback(
 		(dir: 1 | -1) => {
 			if (!el) return
-			const pad = Number.parseFloat(getComputedStyle(el).paddingLeft) || 0
+			const cs = getComputedStyle(el)
+			const pad = Number.parseFloat(cs.paddingLeft) || 0
+			const snapPad = Number.parseFloat(cs.scrollPaddingLeft) || pad
+			const gap = Number.parseFloat(cs.columnGap) || 0
 			const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-			// The visible width of cards (the rail bleeds by its padding); snap then lines up the next card.
-			el.scrollBy({ left: dir * Math.max(el.clientWidth - pad * 2 - 24, 120), behavior: reduced ? "auto" : "smooth" })
+			const max = el.scrollWidth - el.clientWidth
+			const now = el.scrollLeft
+			const view = el.clientWidth - pad * 2
+			// Each card's snap position (its start at the rail's scroll padding), in scroll coordinates.
+			const box = el.getBoundingClientRect()
+			const cards = Array.from(el.children, (c) => {
+				const r = c.getBoundingClientRect()
+				return { at: r.left - box.left + now - snapPad, right: r.right - box.left + now, w: r.width }
+			})
+			const cardW = cards[0]?.w ?? 120
+			// Round 6: never a tiny last move. If what would be left after this step is under a card plus a gap (or
+			// about a third of the view), go straight to the end; the ends are snap positions too (they clamp there).
+			const tail = Math.max(cardW + gap, view * 0.35)
+			let target: number
+			if (dir === 1) {
+				// The first card not wholly in view becomes the first one.
+				const edge = now + el.clientWidth - pad + 1
+				target = cards.find((c) => c.right > edge && c.at > now + 4)?.at ?? now + view
+				if (max - target < tail) target = max
+			} else {
+				// The card now first becomes about the last one in view.
+				const want = now - view
+				target = cards.find((c) => c.at >= want - 1)?.at ?? want
+				if (target >= now - 4) target = want
+				if (target < tail) target = 0
+			}
+			target = Math.min(max, Math.max(0, target))
+			el.scrollTo({ left: target, behavior: reduced ? "auto" : "smooth" })
 		},
 		[el],
 	)

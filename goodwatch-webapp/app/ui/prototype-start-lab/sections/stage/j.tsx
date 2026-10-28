@@ -1,11 +1,13 @@
-// PROTOTYPE (start page lab, round 5): stage j · "Spotlight card": h with Discover's chips, and the results as a large
-// elevated card over the rug (about half the stage on desktop) with an amber halo, a lit empty state before any
-// choice, posters 164 px wide, and three header slots that take the loved posters (dropped in like the TV quiz's).
+// PROTOTYPE (start page lab, round 6): stage j · "Spotlight card": h with Discover's chips, and the module as a large
+// elevated card over the rug with an amber halo: "Tap three you loved" (lit empty frames, a dice, poster toggles that
+// dim the rest from the first loved, three Loved slots), then "For you" (one featured on its backdrop, Also for you).
+// The card is the intro film's hand-off target: #start-picks, and the `start-lab:try-tap-three` window event.
 import type { BlockVariant } from "../../lab/types"
 import { JkBody, JkHead, JkSlots } from "./jk-module"
-import { type JkFlow, JkStage, type Reg, useJkBringIntoView } from "./jk-shared"
+import { useRef } from "react"
+import { type JkFlow, JkStage, type Reg, useJkBringIntoView, useJkHandOff } from "./jk-shared"
 
-const CSS = `.jkj-mod{height:300px}.jkj-head{height:68px}.jkj-col{width:116px}.jkj-slot{width:24px}
+const CSS = `.jkj-mod{height:300px}.jkj-head{height:68px}.jkj-col{width:116px}.jkj-slot{width:20px}
 @media (min-width:640px){.jkj-mod{height:344px}.jkj-head{height:76px}.jkj-col{width:140px}.jkj-slot{width:30px}}
 @media (min-width:1024px){.jkj-mod{height:388px}.jkj-head{height:86px}.jkj-col{width:164px}.jkj-slot{width:34px}}
 @media (min-width:1024px) and (max-height:820px){.jkj-mod{height:360px}.jkj-head{height:80px}.jkj-col{width:150px}}`
@@ -13,8 +15,14 @@ const CSS = `.jkj-mod{height:300px}.jkj-head{height:68px}.jkj-col{width:116px}.j
 function SpotlightCard({ f, reg }: { f: JkFlow; reg: Reg }) {
 	const box = useJkBringIntoView(f)
 	const lit = f.view !== "empty"
+	const pulse = useRef<HTMLSpanElement>(null)
+	useJkHandOff(f, box, pulse)
 	return (
-		<div ref={box} className="relative mx-auto w-full max-w-[1180px]">
+		<div
+			ref={box}
+			id="start-picks"
+			className="relative mx-auto w-full max-w-[1180px] scroll-mt-20"
+		>
 			<style>{CSS}</style>
 			{/* The halo: amber light behind the card, a little stronger once there's something to tap. */}
 			<div
@@ -40,6 +48,12 @@ function SpotlightCard({ f, reg }: { f: JkFlow; reg: Reg }) {
 					<JkBody f={f} col="jkj-col" pad="px-4 sm:px-6 lg:px-7" />
 				</div>
 			</div>
+			{/* The hand-off pulse: an amber ring and glow around the card, shown only while it animates. */}
+			<span
+				ref={pulse}
+				aria-hidden
+				className="pointer-events-none absolute -inset-1.5 rounded-[26px] opacity-0 ring-[3px] ring-amber-400 shadow-[0_0_0_8px_rgb(251_191_36/.16),0_0_60px_8px_rgb(251_191_36/.4)] sm:-inset-2 sm:rounded-[32px]"
+			/>
 		</div>
 	)
 }

@@ -27,7 +27,7 @@ export const SECTIONS: { id: SectionId; name: string; for: Viewer[]; rounds: Rou
 /** The owner's round 1 picks (2026-10-27) start round 2. */
 export const DEFAULTS: Record<Round, Partial<Record<SectionId, string>>> = {
 	1: {},
-	// Round 5: the owner's round 4 picks, refined (stage j-k refine h, browse d, member d).
+	// Round 6: the owner's picks: stage j, browse d, member d (rounds 1-5 verdicts in BRIEF.md).
 	2: { scene: "nook-stage", shelf: "e", tv: "a", how: "b", stage: "j", browse: "d", member: "d", persona: "full" },
 }
 

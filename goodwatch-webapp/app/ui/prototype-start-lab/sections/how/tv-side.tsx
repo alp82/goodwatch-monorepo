@@ -1,4 +1,4 @@
-// PROTOTYPE (start page lab): how b · TV on the side: a short section with a crop of the room around the TV (the whole crop is one button that plays the intro from the TV) beside a few lines and the link.
+// PROTOTYPE (start page lab): how b · TV on the side: a short section with a crop of the room around the TV (the whole crop is one button that plays the intro from the TV) beside the three essentials and one "Read how it works" link.
 import { Link } from "@remix-run/react"
 import { useEffect, useRef } from "react"
 import { useLab } from "../../lab/types"
@@ -11,7 +11,7 @@ export function TvSide() {
 	// Round 2's stage scenes have no TV: the room shows its TV corner (Lab.tvScene).
 	const tvWidth = tvScene.landscape.tv?.box[2] || 0.2
 	const zoom = Math.min(4, Math.max(1, 0.36 / tvWidth))
-	// The room and the text's button press the TV's own control (tv a's pill, or another variant's hint or label), so
+	// The room's overlay presses the TV's own control (tv a's pill, or another variant's hint or label), so
 	// the intro grows out of the TV on screen; with no control there it opens plain.
 	const watch = () => {
 		const box = roomBox.current
@@ -69,18 +69,16 @@ export function TvSide() {
 							</li>
 						))}
 					</ul>
-					<div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 md:mt-6">
-						<button
-							type="button"
-							onClick={watch}
-							className="rounded-full bg-amber-400 px-4 py-2 text-sm font-bold text-gray-950 hover:bg-amber-300"
-						>
-							{"\u25B6\uFE0E"} Watch the intro
-						</button>
-						<Link to="/how-it-works" className="text-sm font-bold text-amber-300 hover:underline">
-							Read how it works →
-						</Link>
-					</div>
+					{/* Round 6: the room's "Watch the intro" pill is the one way into the film; the text's one link is the page. */}
+					<Link
+						to="/how-it-works"
+						className="group/read mt-5 inline-flex items-center gap-2 text-base font-bold text-amber-300 hover:underline md:mt-7 md:text-lg"
+					>
+						Read how it works
+						<span aria-hidden className="inline-block transition-transform duration-200 group-hover/read:translate-x-1">
+							→
+						</span>
+					</Link>
 				</div>
 			</div>
 		</section>

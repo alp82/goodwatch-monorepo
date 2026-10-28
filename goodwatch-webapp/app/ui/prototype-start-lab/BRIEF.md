@@ -156,3 +156,26 @@ The owner's notes, verbatim:
 > * for you for few titles layout needs lots of improvements [screenshot: persona "few", the For you door open: a half-width "For you is still forming" box with a progress bar and two buttons, filter chips, six posters, then a lone "More in For you" tile on its own row with lots of empty space]
 
 The wall frames behind the mood row are being removed from `nook-stage` and `nook-stage-portrait` (only the side shelf slots stay). `<Room hideSlot={(rect, i) => ...} />` leaves any slot empty whose on-screen rect your block's controls cover, for the other scenes.
+
+---
+
+# Round 6 (2026-10-28): final guest details
+
+Picks: guest **stage j** ("great"), tv a, how b, browse d; members "good" (member2 d, done).
+
+The owner's notes, verbatim:
+
+> guest:
+> * j is great
+> * watch the intro button in tv is enough: right hand side should only have read how it works
+> * arrows for 10 tiles should jump right to the end of the list, currently i can push it a second time for a tiny last move
+> * min gap between filters (mood chips) and results, even if that means scrolling
+> * empty state looks meh. surprise me should be dice close to the your picks title. the other two we can remove
+> * the dimming after 3 picks should happen already after 1 pick
+> * picks and picked sound very similar. lists look very similar too
+> * the long shelve with nothing on the wall looks weird. we need 3 more variations of this room that mek natural use of the space
+> * intro question: yes [the intro film ends by sending guests to the page's tap three, instead of running its own quiz on the TV]
+>
+> member: good
+
+Three new stage scenes are being painted: `nook-stage-window`, `nook-stage-armchair`, `nook-stage-records` (each with a `-portrait`), 10-14 shelf slots each, no TV, calm top ~38%.

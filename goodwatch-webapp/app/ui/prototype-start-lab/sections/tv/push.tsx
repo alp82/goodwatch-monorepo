@@ -1,7 +1,12 @@
 // PROTOTYPE (start page lab): tv a · Camera push-in. One amber "Watch the intro" pill on (or just under) the quiet
 // standby screen; pressing it (or the screen) pushes the camera into the room until the screen fills the window, and the film
 // fades in on it as it lands. Close pulls back out. Variant d reuses this Theater with a remote beside the picture.
-import { type ComponentType, useLayoutEffect, useRef, useState } from "react"
+// Round 6: the film no longer ends on its own taste quiz. Its last chapter, "Your turn", is a short end card whose
+// "Try it" (or a few quiet seconds) pulls back out and sends the guest to the page's tap three (start-lab:try-tap-three).
+import { type ComponentType, createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { FILM } from "~/ui/living-room/intro/film"
+import { Headline, at as animAt } from "~/ui/living-room/intro/parts/turn-kit"
+import type { ChapterId, Scene, SceneProps } from "~/ui/living-room/intro/scene"
 import type { IntroFrom, Rect } from "../../lab/types"
 import {
 	CloseButton,
@@ -76,6 +81,67 @@ export function PushNear({ tvRect, onPlay }: { tvRect: Rect; onPlay: () => void 
 	)
 }
 
+/** What the page's stage listens for: open its tap three (stage j's results card, #start-picks). */
+export const TRY_TAP_THREE_EVENT = "start-lab:try-tap-three"
+
+/** The end card's way out (the Theater's close, then the event), and whether the remote has paused the film. */
+const EndCard = createContext<{ tryIt: () => void; paused: boolean }>({ tryIt: () => {}, paused: false })
+
+/** How long the end card waits with no input before it goes on by itself; the chapter bar fills over it. */
+const END_MS = 8000
+/** After any input, how many quiet ms before it goes on. */
+const QUIET_MS = 6000
+
+/** The film's last chapter on the TV: "Your turn", one line, one amber button. */
+function YourTurn(_: SceneProps) {
+	const { tryIt, paused } = useContext(EndCard)
+	const button = useRef<HTMLButtonElement>(null)
+	const go = useRef(tryIt)
+	go.current = tryIt
+	useEffect(() => {
+		if (paused) return
+		let timer = setTimeout(() => go.current(), END_MS)
+		const poke = () => {
+			clearTimeout(timer)
+			timer = setTimeout(() => go.current(), QUIET_MS)
+		}
+		const events = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"] as const
+		for (const e of events) window.addEventListener(e, poke, { passive: true })
+		return () => {
+			clearTimeout(timer)
+			for (const e of events) window.removeEventListener(e, poke)
+		}
+	}, [paused])
+	// Keyboard users land on the button once it has risen in.
+	useEffect(() => {
+		const t = setTimeout(() => button.current?.focus({ preventScroll: true }), 900)
+		return () => clearTimeout(t)
+	}, [])
+	return (
+		<div className="labtv-end">
+			<Headline text="Your *turn" delay={150} />
+			<p className="labtv-end-line intro-turn-a" style={animAt(["labtv-end-rise", 520, 700])}>
+				Tap three titles you loved and get your first recommendations.
+			</p>
+			<span className="intro-turn-a inline-block" style={animAt(["labtv-end-rise", 720, 700])}>
+				<button ref={button} type="button" onClick={tryIt} className="labtv-end-try">
+					Try it
+				</button>
+			</span>
+		</div>
+	)
+}
+
+/**
+ * The film, ending on the end card: the quiz scene ("closer") becomes "Your turn". Its section is no longer "closer",
+ * so the player counts it as a chapter, and the chapter bar labels it with the name it falls back to (the section).
+ */
+const FILM_ENDS_ON_PAGE: Scene[] = FILM.map((s) =>
+	s.section === "closer"
+		? { id: "your-turn", section: "Your turn" as ChapterId, ms: END_MS, enter: "fade", C: YourTurn }
+		: s,
+)
+
 export type TheaterLayout = (vp: { w: number; h: number }) => { film: Rect; controls?: Rect }
 
 const fullLayout: TheaterLayout = (vp) => ({ film: filmBox({ left: 0, top: 0, width: vp.w, height: vp.h }) })
@@ -144,7 +210,7 @@ export function PushTheater({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
-	const close = useOnce(async () => {
+	const close = useOnce(async (then?: () => void) => {
 		const was = phaseNow.current
 		setPhase("out")
 		const target = boxNow.current.film
@@ -173,7 +239,14 @@ export function PushTheater({
 			await done(fade(root.current, 220))
 		}
 		onClose()
+		then?.()
 	})
+	const tryIt = () => close(() => window.dispatchEvent(new Event(TRY_TAP_THREE_EVENT)))
+	// Next on the end card steps past the film's last scene: that's "Try it" too.
+	const onAt = (i: number) => {
+		film.onAt(i)
+		if (i >= FILM_ENDS_ON_PAGE.length) tryIt()
+	}
 	useTheater(close, root)
 
 	return (
@@ -190,14 +263,17 @@ export function PushTheater({
 					<FilmFailed />
 				) : data && phase !== "in" ? (
 					<div className="labtv-fade-in absolute inset-0">
-						<Film
-							data={data}
-							boxRef={filmEl}
-							paused={film.control.paused}
-							startAt={film.startAt}
-							run={film.run}
-							onAt={film.onAt}
-						/>
+						<EndCard.Provider value={{ tryIt, paused: film.control.paused }}>
+							<Film
+								data={data}
+								scenes={FILM_ENDS_ON_PAGE}
+								boxRef={filmEl}
+								paused={film.control.paused}
+								startAt={film.startAt}
+								run={film.run}
+								onAt={onAt}
+							/>
+						</EndCard.Provider>
 						{film.control.paused ? (
 							<span className="pointer-events-none absolute left-3 top-3 z-[30] rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white">
 								Paused
@@ -213,10 +289,10 @@ export function PushTheater({
 							className="labtv-rise fixed z-[40]"
 							style={{ left: box.controls.left, top: box.controls.top, width: box.controls.width, height: box.controls.height }}
 						>
-							<Controls control={film.control} onPower={close} />
+							<Controls control={film.control} onPower={() => close()} />
 						</div>
 					) : null}
-					{Controls ? null : <CloseButton onClick={close} />}
+					{Controls ? null : <CloseButton onClick={() => close()} />}
 					{Controls ? null : <TurnHint box={T} vp={vp} />}
 				</div>
 			) : null}

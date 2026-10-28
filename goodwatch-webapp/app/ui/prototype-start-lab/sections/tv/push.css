@@ -107,3 +107,54 @@
 		animation: none;
 	}
 }
+
+/* Round 6: the film's last chapter, "Your turn", on the TV picture (container units: the film's stage). */
+.labtv-end {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: max(10px, 2.2cqh);
+	padding: 6cqh 8cqw 16cqh;
+	text-align: center;
+}
+.labtv-end-line {
+	margin: 0;
+	max-width: 34em;
+	font-size: max(13px, 2.1cqw);
+	line-height: 1.35;
+	color: rgba(255, 255, 255, 0.78);
+}
+.labtv-end-try {
+	display: inline-flex;
+	align-items: center;
+	height: max(36px, 6.4cqh);
+	padding: 0 max(18px, 2.6cqw);
+	border-radius: 9999px;
+	background: #fbbf24; /* amber-400 */
+	color: #030712;
+	font-size: max(14px, 1.7cqw);
+	font-weight: 700;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+	transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.labtv-end-try:hover,
+.labtv-end-try:focus-visible {
+	transform: translateY(-2px) scale(1.04);
+}
+.labtv-end-try:active {
+	transform: scale(0.97);
+	transition-duration: 60ms;
+}
+.labtv-end-try:focus-visible {
+	outline: 2px solid #fde68a;
+	outline-offset: 3px;
+}
+@keyframes labtv-end-rise {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+}

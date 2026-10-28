@@ -23,8 +23,28 @@ SCENES = {
     'nook-tv-corner': ('Painted TV corner', 'eye level, near frontal', 'gouache', 'landscape', 'Other side of the same room: low media console, record player, records, plaid reading armchair and floor lamp. Calm rug: x=0.25–0.70, y=0.73–0.90. No reserved search wall zone. One plant; no window seat, dog, tall bookshelves, candles, lanterns or baskets. Accepted attempt 2 of 3.'),
 }
 ROUND_D = ('nook-stage', 'nook-stage-portrait', 'nook-tv-corner')
+ROUND_F = tuple(f'nook-stage-{room}{suffix}' for room in ('window', 'armchair', 'records')
+                for suffix in ('', '-portrait'))
+for room, title, description in (
+    ('window', 'Rainy window wall', 'Wide rainy multi-pane window and long cushioned window seat with sleeping golden dog; no long cabinet.'),
+    ('armchair', 'Reading corner', 'Left rainy window seat with sleeping golden dog; right plaid reading armchair, floor lamp, books and mug on side table, rolled rug; no long cabinet.'),
+    ('records', 'Record console', 'Low wooden record console, turntable, decorative record sleeves in a wooden crate, leaning acoustic guitar, sleeping golden dog on round cushion; rain visible at outer edges. Plain wall above console.'),
+):
+    for portrait in (False, True):
+        scene_id = f'nook-stage-{room}' + ('-portrait' if portrait else '')
+        calm = 'x=0.20–0.80, y=0.00–0.34' if portrait else 'x=0.18–0.82, y=0.00–0.38'
+        attempt = 2 if room == 'records' or (room == 'armchair' and portrait) or (room == 'window' and not portrait) else 1
+        SCENES[scene_id] = (title + (' for a phone' if portrait else ''),
+                            'eye level, near frontal', 'gouache',
+                            'portrait' if portrait else 'landscape',
+                            f'Calm search and mood-chip wall: {calm}. Calm rug: x=0.30–0.70, y=0.82–0.94. '
+                            f'{description} Middle furnishings begin near y=0.40–0.42, below the calm top. '
+                            'At most two plants; shaded electric lamps and shelf fairy lights; no candles, lanterns, baskets or TV. '
+                            f'Accepted attempt {attempt} of 3; round 6.')
 CALM_TOP = {'nook-stage': (0.18, 0.0, 0.82, 0.36),
             'nook-stage-portrait': (0.20, 0.0, 0.80, 0.34)}
+CALM_TOP.update({scene_id: ((0.20, 0.0, 0.80, 0.34) if scene_id.endswith('-portrait')
+                          else (0.18, 0.0, 0.82, 0.38)) for scene_id in ROUND_F})
 
 
 def key_masks(rgb):
@@ -86,7 +106,7 @@ def process(scene_id):
         raise ValueError(f'{scene_id}: expected {expected}, got {(width, height)}')
     green, magenta = key_masks(rgb)
     televisions, slots = regions(green), regions(magenta)
-    slot_range = (6, 8) if scene_id == 'nook-tv-corner' else ((12, 12) if scene_id in CALM_TOP else (12, 18))
+    slot_range = (10, 14) if scene_id in ROUND_F else ((6, 8) if scene_id == 'nook-tv-corner' else ((12, 12) if scene_id in CALM_TOP else (12, 18)))
     if len(televisions) != (1 if scene_id in ('nook-stage-tv', 'nook-tv-corner') else 0) or not slot_range[0] <= len(slots) <= slot_range[1]:
         raise ValueError(f'{scene_id}: {len(televisions)} TVs, {len(slots)} slots; review generation')
     tv = televisions[0] if televisions else None
@@ -97,7 +117,7 @@ def process(scene_id):
             raise ValueError(f'{scene_id}: chroma slot intrudes into calm top zone')
     # Generated faces are almost pure keys. Normalize the retained raw masks so
     # they are uniform exact chroma colors, while preserving the painted room.
-    if scene_id in ROUND_D:
+    if scene_id in ROUND_D or scene_id in ROUND_F:
         for region in slots:
             rgb[region['mask'] > 0] = (255, 0, 255)
         if tv:
@@ -173,11 +193,11 @@ def process(scene_id):
 
 
 def contact_sheet(scene_ids, batch):
-    sheet = Image.new('RGB', (2100, 1100), '#111827')
+    sheet = Image.new('RGB', (2100, 1100 * ((len(scene_ids) + 2) // 3)), '#111827')
     draw = ImageDraw.Draw(sheet)
     font = ImageFont.truetype('DejaVuSans.ttf', 23)
     for index, scene_id in enumerate(scene_ids):
-        x, y = index * 700, 0
+        x, y = (index % 3) * 700, (index // 3) * 1100
         with Image.open(ROOT / f'{scene_id}.webp') as image:
             image.thumbnail((680, 1020))
             sheet.paste(image, (x + (700 - image.width) // 2, y + 40 + (1020 - image.height) // 2))
@@ -202,6 +222,7 @@ def main():
     if not args.id:
         contact_sheet(('nook-stage', 'nook-stage-portrait', 'nook-stage-tv'), 'c')
         contact_sheet(ROUND_D, 'd')
+        contact_sheet(ROUND_F, 'f')
 
 
 if __name__ == '__main__':

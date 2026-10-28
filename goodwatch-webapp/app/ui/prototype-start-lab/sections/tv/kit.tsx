@@ -6,7 +6,7 @@ import { FILM } from "~/ui/living-room/intro/film"
 import "~/ui/living-room/intro/intro.css"
 import { FilmPhone, isPhonePicture } from "~/ui/living-room/intro/parts/film-phone"
 import { Player, Stage, chapterCount } from "~/ui/living-room/intro/player"
-import type { IntroData } from "~/ui/living-room/intro/scene"
+import type { IntroData, Scene } from "~/ui/living-room/intro/scene"
 import type { IntroFrom, Rect } from "../../lab/types"
 import { quadTransform } from "../../scene/homography"
 import "./tv.css"
@@ -178,12 +178,12 @@ export function useTheater(close: () => void, root: React.RefObject<HTMLElement>
 }
 
 /** A close that runs once: the variant's way out, then onClose. */
-export function useOnce(fn: () => void) {
+export function useOnce<A extends unknown[]>(fn: (...args: A) => void) {
 	const ran = useRef(false)
-	return () => {
+	return (...args: A) => {
 		if (ran.current) return
 		ran.current = true
-		fn()
+		fn(...args)
 	}
 }
 
@@ -204,6 +204,7 @@ const PAUSED_K = 1000
  */
 export function Film({
 	data,
+	scenes = FILM,
 	paused = false,
 	startAt = 0,
 	run = 0,
@@ -211,6 +212,8 @@ export function Film({
 	boxRef,
 }: {
 	data: IntroData
+	/** The film's scenes; tv a ends on its own "Your turn" card instead of the quiz. */
+	scenes?: readonly Scene[]
 	paused?: boolean
 	startAt?: number
 	/** A new run remounts the Player at startAt. */
@@ -266,7 +269,7 @@ export function Film({
 				<Stage k={1}>
 					<Player
 						key={run}
-						scenes={FILM}
+						scenes={scenes}
 						data={data}
 						firstEnter={run ? "fade" : "deal"}
 						startAt={startAt}

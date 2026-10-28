@@ -1,11 +1,10 @@
-// PROTOTYPE (start page lab, round 5): what stage j and k share: h's shell (shadow pool, lifted field, night above the
-// room) with Discover chips, the flow with an empty state before any choice (plus one-tap starters), and the room's
-// slots kept empty wherever the search block, the chips or the results module sit (Room's hideSlot).
-import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
-import { type LabCard, type Rect, useLab } from "../../lab/types"
+// PROTOTYPE (start page lab, round 6): what stage j and k share: h's shell (shadow pool, lifted field, night above the
+// room) with Discover chips, the flow with an empty state before any choice (and a dice for a random mood), a minimum
+// gap above the module, and the room's slots kept empty wherever the search block, the chips or the module sit.
+import { type ReactNode, type RefObject, useCallback, useEffect, useRef, useState } from "react"
+import { type Rect, useLab } from "../../lab/types"
 import { type StageFlow, useStageFlow } from "./ab-shared"
 import { EfgField, NIGHT } from "./efg-shared"
-import { trayTitle } from "./hi-shared"
 import { vocabOf } from "./hi-vocab"
 import { JkMoodRow, JkMorePopover, JkPresets } from "./jk-chips"
 
@@ -40,48 +39,44 @@ const CSS = `@keyframes ab-in{from{opacity:0;transform:translateY(10px)}to{opaci
 .jk-drop{animation:jk-drop .4s cubic-bezier(.2,1.3,.4,1) both}
 @keyframes jk-breathe{0%,100%{opacity:.75}50%{opacity:1}}
 .jk-breathe{animation:jk-breathe 4.5s ease-in-out infinite}
-@media (prefers-reduced-motion:reduce){.jk-breathe,.jk-drop,.ab-in{animation:none}}
+/* Once one title is loved, the others dim a little (still tappable); at three they dim further and lock. */
+.jk-dim .hi-lift{opacity:.55}
+@media (hover:hover){.jk-dim:hover .hi-lift{opacity:.9}}
+.jk-dim:focus-within .hi-lift{opacity:.9}
+/* The sheen on the empty frames: a soft band that sweeps across each frame, one after another (transform only). */
+@keyframes jk-sheen{0%{transform:translateX(-120%) skewX(-12deg)}38%,100%{transform:translateX(220%) skewX(-12deg)}}
+.jk-sheen{position:absolute;inset:-10% auto -10% 0;width:60%;background:linear-gradient(90deg,transparent,rgb(255 236 200/.09) 45%,rgb(255 236 200/.14) 50%,rgb(255 236 200/.09) 55%,transparent);animation:jk-sheen 4.2s cubic-bezier(.45,0,.3,1) infinite;will-change:transform}
+.jk-paused .jk-sheen,.jk-paused .jk-breathe{animation-play-state:paused}
+@keyframes jk-roll{0%{transform:rotate(0) scale(1)}40%{transform:rotate(200deg) scale(.82)}100%{transform:rotate(360deg) scale(1)}}
+.jk-roll{animation:jk-roll .5s cubic-bezier(.3,.7,.3,1)}
+@keyframes jk-fade{from{opacity:0}}
+.jk-fade{animation:jk-fade .45s ease-out both}
+/* For you: the sizes of the featured title and the small posters beside it. */
+.jk-also{width:44px}.jk-fy-t{font-size:18px;line-height:24px}
+@media (min-width:640px){.jk-also{width:84px}.jk-fy-t{font-size:22px;line-height:28px}}
+@media (min-width:1024px){.jk-also{width:110px}.jk-fy-t{font-size:28px;line-height:34px}}
+@media (min-width:1024px) and (max-height:820px){.jk-also{width:98px}.jk-fy-t{font-size:24px;line-height:30px}}
+@media (prefers-reduced-motion:reduce){.jk-breathe,.jk-drop,.ab-in,.jk-sheen,.jk-roll,.jk-fade{animation:none}}
 .jk-top{padding-top:12px}
 @media (min-width:640px){.jk-top{padding-top:44px}}
 @media (min-width:1024px){.jk-top{padding-top:clamp(20px,3vh,48px)}}
 @media (min-width:1024px) and (max-height:820px){.jk-top{padding-top:20px}.jk-h1{font-size:40px!important}.jk-field-gap{margin-top:18px!important}.jk-gap{margin-top:12px!important}}`
 
-export type JkView = "empty" | "loading" | "results" | "picks"
-/** A one-tap start in the empty state that isn't a mood or a search: the popular or top rated titles. */
-export type Starter = "popular" | "top" | null
+export type JkView = "empty" | "loading" | "results" | "foryou"
 
-/** The stage flow plus the empty state: nothing is shown until the guest picks a mood, a prompt, a starter or searches. */
+/** The stage flow plus the empty state: nothing is shown until the guest picks a mood, a prompt, rolls the dice or searches. */
 export function useJkFlow(key: string) {
 	const f = useStageFlow(key)
-	const store = `start-lab-stage-${key}-starter`
-	const [starter, setStarter] = useState<Starter>(null)
-	const [restored, setRestored] = useState(false)
-	useEffect(() => {
-		try {
-			const s = sessionStorage.getItem(store)
-			if (s === "popular" || s === "top") setStarter(s)
-		} catch {}
-		setRestored(true)
-	}, [store])
-	useEffect(() => {
-		if (!restored) return
-		try {
-			if (starter) sessionStorage.setItem(store, starter)
-			else sessionStorage.removeItem(store)
-		} catch {}
-	}, [restored, store, starter])
-	// A mood or a search replaces the starter, so clearing it later goes back to the empty state.
-	useEffect(() => {
-		if (f.source.kind !== "popular") setStarter(null)
-	}, [f.source.kind])
-
-	const showPicks = f.done && f.picks.length > 0
-	const view: JkView = showPicks ? "picks" : f.loading ? "loading" : f.source.kind === "popular" && !starter ? "empty" : "results"
-	const results: LabCard[] = f.source.kind === "popular" && starter === "top" && f.data.guest.topRated.length ? f.data.guest.topRated : f.results
-	const heading = ((): { text: string; dot?: string } => {
-		if (view === "empty") return { text: "Your picks" }
-		if (view === "results" && f.source.kind === "popular") return { text: starter === "top" ? "Recent and top rated" : "Popular right now" }
-		return trayTitle(f)
+	const showForYou = f.done && f.picks.length > 0
+	const view: JkView = showForYou ? "foryou" : f.loading ? "loading" : f.source.kind === "popular" ? "empty" : "results"
+	/** The module's title: the selection step until three are loved, then the recommendations. */
+	const heading = view === "foryou" ? "For you" : "Tap three you loved"
+	/** What's on show in the selection step: a mood or vocabulary choice (with its color), or the search. */
+	const shown = ((): { text: string; dot?: string } | null => {
+		if (f.source.kind === "popular") return null
+		const v = vocabOf(f.source)
+		if (v) return { text: v.label, dot: v.color }
+		return { text: f.label }
 	})()
 	const surprise = useCallback(() => {
 		const moods = f.data.guest.moods
@@ -90,7 +85,7 @@ export function useJkFlow(key: string) {
 		const m = pool[Math.floor(Math.random() * pool.length)]
 		if (m) f.mood(m.key)
 	}, [f])
-	return { ...f, results, starter, setStarter, view, heading, surprise }
+	return { ...f, view, heading, shown, surprise }
 }
 
 export type JkFlow = ReturnType<typeof useJkFlow>
@@ -195,7 +190,8 @@ export function JkStage({
 				<div className="mx-auto w-full max-w-[1360px] px-4 sm:px-6">
 					<JkTop f={f} reg={reg} onMore={() => setMore((o) => !o)} moreOpen={more} moreSlot={<JkMorePopover f={f} open={more} onClose={close} />} />
 				</div>
-				<div className="min-h-4 flex-1" />
+				{/* At least this much air between the mood row and the module, even if the module then starts below the fold. */}
+				<div className="min-h-7 flex-1 sm:min-h-10 lg:min-h-12" />
 				{placement === "card" ? (
 					<div className="mx-auto w-full max-w-[1360px] px-4 pb-16 sm:px-6 sm:pb-[72px]">{module(f, reg)}</div>
 				) : (
@@ -233,7 +229,7 @@ function JkTop({ f, reg, onMore, moreOpen, moreSlot }: { f: StageFlow; reg: Reg;
 				<JkPresets f={f} />
 			</div>
 			<div className="jk-gap relative mt-2.5 sm:mt-4">
-				<div ref={reg("moods")} className="mx-auto w-fit max-w-full">
+				<div ref={reg("moods")} data-jk-moods="" className="mx-auto w-fit max-w-full">
 					<JkMoodRow f={f} onMore={onMore} moreOpen={moreOpen} />
 				</div>
 				{moreSlot}
@@ -248,7 +244,7 @@ function JkTop({ f, reg, onMore, moreOpen, moreSlot }: { f: StageFlow; reg: Reg;
  */
 export function useJkBringIntoView(f: JkFlow) {
 	const box = useRef<HTMLDivElement>(null)
-	const sig = `${f.view}:${f.starter}:${f.source.kind}:${"q" in f.source ? f.source.q : "key" in f.source ? f.source.key : ""}`
+	const sig = `${f.view}:${f.source.kind}:${"q" in f.source ? f.source.q : "key" in f.source ? f.source.key : ""}`
 	const prev = useRef<string | null>(null)
 	const acted = useRef(false)
 	useEffect(() => {
@@ -278,3 +274,61 @@ export function useJkBringIntoView(f: JkFlow) {
 /** Whether the module shows a reading line ("Read as …") for what's on show. */
 export const showsReading = (f: JkFlow) =>
 	f.view === "results" && !!f.answer && (f.source.kind === "typed" || (f.source.kind === "prompt" && !vocabOf(f.source)))
+
+/** The window event the intro film fires at its end to send the guest here. */
+export const TRY_TAP_THREE = "start-lab:try-tap-three"
+
+/**
+ * The intro's hand-off: on `start-lab:try-tap-three`, scroll the module to the middle of the screen, pulse its amber
+ * ring (opacity and transform only), and, if nothing is chosen yet, focus the dice (or the first mood chip). `card` is
+ * the module's box, `pulse` the ring element over it.
+ */
+export function useJkHandOff(f: JkFlow, card: RefObject<HTMLElement | null>, pulse: RefObject<HTMLElement | null>) {
+	const fresh = f.view === "empty" && f.loved.length === 0
+	const freshRef = useRef(fresh)
+	freshRef.current = fresh
+	useEffect(() => {
+		let t: ReturnType<typeof setTimeout> | undefined
+		const on = () => {
+			const el = card.current
+			if (!el) return
+			const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+			// Window scroll only: scrollIntoView would also scroll the overflow-hidden stage and shift its contents.
+			const r = el.getBoundingClientRect()
+			const room = window.innerHeight - 64 // the lab bar
+			const top = Math.max(0, window.scrollY + r.top - Math.max(16, (room - r.height) / 2))
+			window.scrollTo({ top, behavior: reduce ? "auto" : "smooth" })
+			if (freshRef.current) {
+				const target =
+					el.querySelector<HTMLElement>("[data-jk-dice]:not([disabled])") ??
+					document.querySelector<HTMLElement>("[data-jk-moods] button[aria-pressed]")
+				target?.focus({ preventScroll: true })
+			}
+			clearTimeout(t)
+			// After the smooth scroll has mostly settled.
+			t = setTimeout(
+				() => {
+					const ring = pulse.current
+					if (!ring || reduce) return
+					ring.getAnimations().forEach((a) => a.cancel())
+					ring.animate(
+						[
+							{ opacity: 0, transform: "scale(1.035)" },
+							{ opacity: 1, transform: "scale(1)", offset: 0.22 },
+							{ opacity: 0.35, transform: "scale(1)", offset: 0.5 },
+							{ opacity: 1, transform: "scale(1)", offset: 0.7 },
+							{ opacity: 0, transform: "scale(1.01)" },
+						],
+						{ duration: 1500, easing: "ease-out" },
+					)
+				},
+				reduce ? 0 : 420,
+			)
+		}
+		window.addEventListener(TRY_TAP_THREE, on)
+		return () => {
+			window.removeEventListener(TRY_TAP_THREE, on)
+			clearTimeout(t)
+		}
+	}, [card, pulse])
+}

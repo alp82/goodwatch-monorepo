@@ -164,7 +164,7 @@ function readScenes(): ScenePair[] {
 		const meta = readJson(path.join(dir, f)) as SceneMeta | null
 		if (meta?.id && "tv" in meta && Array.isArray(meta.slots)) metas.set(meta.id, meta)
 	}
-	const order = ["nook-stage", "nook-stage-tv", "nook-illustrated", "sofa-shelves", "media-wall-angle", "shelf-closeup", "coffee-table", "projector-loft", "retro-den", "iso-cutaway", "pixel-iso", "miniature", "papercraft", "flat-vector"]
+	const order = ["nook-stage", "nook-stage-window", "nook-stage-armchair", "nook-stage-records", "nook-stage-tv", "nook-tv-corner", "nook-illustrated", "sofa-shelves", "media-wall-angle", "shelf-closeup", "coffee-table", "projector-loft", "retro-den", "iso-cutaway", "pixel-iso", "miniature", "papercraft", "flat-vector"]
 	const ids = [...metas.keys()].filter((id) => !id.endsWith("-portrait"))
 	ids.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99))
 	return ids.map((id) => ({
