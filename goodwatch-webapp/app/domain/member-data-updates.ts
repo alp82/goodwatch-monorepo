@@ -126,3 +126,56 @@ export function afterScore(
 	}
 	return updated
 }
+
+/** The lists of the member data map that hold one entry per title. */
+export type TitleList = "scores" | "wishlist" | "watchState" | "favorites" | "skipped" | "notInterested"
+
+/** One title's entries in some of the map's lists, as they were before an action: undefined where it had none. */
+export type TitleEntries = Partial<Record<TitleList, unknown>>
+
+/** The lists each action's guess (above, and useUserDataMutations.ts) changes. */
+export const LISTS_CHANGED = {
+	score: ["scores", "notInterested", "watchState", "wishlist"],
+	wishlist: ["wishlist", "notInterested"],
+	watched: ["watchState", "wishlist", "notInterested"],
+	favorite: ["favorites"],
+	skipped: ["skipped"],
+	notInterested: ["notInterested", "wishlist"],
+} as const satisfies Record<string, readonly TitleList[]>
+
+/** The title's entries in `lists`, to put back with `restoreTitle` when the action isn't saved. */
+export function titleEntries(
+	data: UserData | undefined,
+	mediaType: MediaType,
+	tmdbId: number,
+	lists: readonly TitleList[],
+): TitleEntries | undefined {
+	if (!data) return undefined
+	const key = createMediaKey(mediaType, tmdbId)
+	const out: TitleEntries = {}
+	for (const list of lists) out[list] = (data[list] as Record<string, unknown> | undefined)?.[key]
+	return out
+}
+
+/**
+ * The map with one title's entries put back as `before` held them, every other title as it is now: a write that
+ * wasn't saved takes back its own guess only, never another title's guess made while it was on its way.
+ */
+export function restoreTitle(
+	data: UserData | undefined,
+	mediaType: MediaType,
+	tmdbId: number,
+	before: TitleEntries | undefined,
+): UserData | undefined {
+	if (!data || !before) return data
+	const key = createMediaKey(mediaType, tmdbId)
+	const updated: UserData = { ...data }
+	for (const list of Object.keys(before) as TitleList[]) {
+		const entries = { ...((data[list] as Record<string, unknown> | undefined) ?? {}) }
+		const entry = before[list]
+		if (entry === undefined) delete entries[key]
+		else entries[key] = entry
+		;(updated as Record<string, unknown>)[list] = entries
+	}
+	return updated
+}

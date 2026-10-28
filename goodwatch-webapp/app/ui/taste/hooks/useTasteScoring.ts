@@ -20,6 +20,14 @@ import { FIRST_UNLOCK_COUNT_KEY } from "../constants"
 import type { InteractionType, TasteInteraction } from "../types"
 import { useRatingsCount } from "./useRatingsCount"
 
+/**
+ * `deferSync`: the save is one of many, so neither it nor its writes read the member data again when they settle; the
+ * caller reads it once after all of them settled (Quick list's bulk answers).
+ */
+export interface SaveOptions {
+	deferSync?: boolean
+}
+
 interface UseTasteScoringProps {
 	isAuthenticated: boolean
 }
@@ -219,10 +227,13 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 	 * A write the server answered without saving: the person's marks are read again, so none stays half-done. With
 	 * more than one write, only after all of them settled (`settleAll`), so a read can't land before the last one.
 	 */
-	const refused = useCallback((): never => {
-		void queryClient.invalidateQueries({ queryKey: queryKeyUserData })
-		throw new Error("The answer was not saved")
-	}, [queryClient])
+	const refused = useCallback(
+		(options?: SaveOptions): never => {
+			if (!options?.deferSync) void queryClient.invalidateQueries({ queryKey: queryKeyUserData })
+			throw new Error("The answer was not saved")
+		},
+		[queryClient],
+	)
 
 	/**
 	 * Saves a score and settles when it is saved: in the browser for a guest (it fails over the guest limit, which
@@ -230,7 +241,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 	 * isn't saved, so a page that waits for it can keep the title (ui/scoring/score-ack.ts).
 	 */
 	const saveScore = useCallback(
-		async (media: ScoringMedia, score: Score) => {
+		async (media: ScoringMedia, score: Score, options?: SaveOptions) => {
 			if (!isAuthenticated) {
 				if (
 					!updateGuestInteraction(media.media_type, media.tmdb_id, "score", score)
@@ -246,9 +257,10 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 					score,
 					// A quiz score on a show never asks "Have you seen all of it?".
 					byHand: false,
+					deferSync: options?.deferSync,
 				})
-				.catch(refused)
-			if (result.status !== "success") refused()
+				.catch(() => refused(options))
+			if (result.status !== "success") refused(options)
 			noteScoreSaved(media)
 			record(media, "score", score)
 		},
@@ -257,7 +269,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 
 	/** Saves "Haven't seen it" (skipped in the taste quiz) and settles when it is saved, as `saveScore` does. */
 	const saveSkip = useCallback(
-		async (media: ScoringMedia) => {
+		async (media: ScoringMedia, options?: SaveOptions) => {
 			if (!isAuthenticated) {
 				updateGuestInteraction(media.media_type, media.tmdb_id, "skip")
 				return
@@ -268,8 +280,8 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 					tmdbId: media.tmdb_id,
 					action: "add",
 				})
-				.catch(refused)
-			if (result.status !== "success") refused()
+				.catch(() => refused(options))
+			if (result.status !== "success") refused(options)
 			record(media, "skip")
 		},
 		[isAuthenticated, skippedMutation, record, refused],
@@ -277,7 +289,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 
 	/** Saves "Not interested" (never recommend it) and settles when it is saved, as `saveScore` does. */
 	const saveNotInterested = useCallback(
-		async (media: ScoringMedia) => {
+		async (media: ScoringMedia, options?: SaveOptions) => {
 			if (!isAuthenticated) {
 				updateGuestInteraction(media.media_type, media.tmdb_id, "not-interested")
 				return
@@ -288,8 +300,8 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 					tmdbId: media.tmdb_id,
 					action: "add",
 				})
-				.catch(refused)
-			if (result.status !== "success") refused()
+				.catch(() => refused(options))
+			if (result.status !== "success") refused(options)
 			record(media, "not-interested")
 		},
 		[isAuthenticated, notInterestedMutation, record, refused],
@@ -302,7 +314,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 	 * asked again either, and moves to the Wishlist at sign-up).
 	 */
 	const saveWantToSee = useCallback(
-		async (media: ScoringMedia) => {
+		async (media: ScoringMedia, options?: SaveOptions) => {
 			if (!isAuthenticated) {
 				updateGuestInteraction(media.media_type, media.tmdb_id, "plan")
 				return
@@ -311,12 +323,13 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 				mediaType: media.media_type,
 				tmdbId: media.tmdb_id,
 				action: "add" as const,
+				deferSync: options?.deferSync,
 			}
 			const saved = await settleAll([
 				skippedMutation.mutateAsync(params),
 				wishlistMutation.mutateAsync(params),
 			])
-			if (!saved.every(Boolean)) refused()
+			if (!saved.every(Boolean)) refused(options)
 			record(media, "plan")
 		},
 		[isAuthenticated, skippedMutation, wishlistMutation, record, refused],
@@ -328,7 +341,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 	 * `saveScore` does; a guest's browser forgets every mark of the title.
 	 */
 	const clearAnswer = useCallback(
-		async (media: ScoringMedia, type: InteractionType) => {
+		async (media: ScoringMedia, type: InteractionType, options?: SaveOptions) => {
 			const forget = () =>
 				setInteractions((prev) =>
 					prev.filter(
@@ -346,6 +359,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 				mediaType: media.media_type,
 				tmdbId: media.tmdb_id,
 				action: "remove" as const,
+				deferSync: options?.deferSync,
 			}
 			const writes =
 				type === "score"
@@ -355,6 +369,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 								tmdbId: media.tmdb_id,
 								score: null,
 								byHand: false,
+								deferSync: options?.deferSync,
 							}),
 						]
 					: type === "not-interested"
@@ -376,7 +391,7 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 				const [skipRemoved, wishlistRemoved] = removed
 				if (wishlistRemoved && !skipRemoved) record(media, "skip")
 			}
-			refused()
+			refused(options)
 		},
 		[
 			isAuthenticated,

@@ -399,3 +399,41 @@ test("Undo of the first watch puts the movie back on the lists it was taken off,
 test("no member data, no guess about the log", () => {
 	assert.equal(afterWatchLog(undefined, 603, [logged("w1")]), undefined)
 })
+
+const { LISTS_CHANGED, restoreTitle, titleEntries } = await import("./member-data-updates.ts")
+
+test("a failed score takes back its own title's guess, not another title's guess made meanwhile", () => {
+	const start = data({ wishlist: { "movie-1": { createdAt: EARLIER, updatedAt: EARLIER } }, skipped: { "movie-9": stamp } })
+	// A's guess, then B's guess while A is on its way.
+	const beforeA = titleEntries(start, "movie", 1, LISTS_CHANGED.score)
+	let now = afterScore(start, "movie", 1, 8, null, NOW)
+	const beforeB = titleEntries(now, "movie", 2, LISTS_CHANGED.skipped)
+	now = { ...now!, skipped: { ...now!.skipped, "movie-2": stamp } }
+	// A fails.
+	now = restoreTitle(now, "movie", 1, beforeA)
+	assert.equal(now?.scores["movie-1"], undefined, "A's score is gone")
+	assert.equal(now?.watchState["movie-1"], undefined, "and the watch its score owned")
+	assert.ok(now?.wishlist["movie-1"], "A's Wishlist entry is back")
+	assert.ok(now?.skipped["movie-2"], "B's mark stays")
+	assert.ok(now?.skipped["movie-9"])
+	// B fails after.
+	now = restoreTitle(now, "movie", 2, beforeB)
+	assert.equal(now?.skipped["movie-2"], undefined)
+	assert.ok(now?.skipped["movie-9"])
+})
+
+test("a failed removal puts the title's entry back as it was", () => {
+	const start = data({ notInterested: { "show-5": stamp } })
+	const before = titleEntries(start, "show", 5, LISTS_CHANGED.notInterested)
+	const guessed = data({ scores: { "movie-1": { score: 7, review: null, updatedAt: NOW } } })
+	const now = restoreTitle(guessed, "show", 5, before)
+	assert.deepEqual(now?.notInterested["show-5"], stamp)
+	assert.ok(now?.scores["movie-1"], "other lists stay as they are")
+})
+
+test("no map, or nothing captured: nothing to put back", () => {
+	assert.equal(restoreTitle(undefined, "movie", 1, {}), undefined)
+	const d = data()
+	assert.equal(restoreTitle(d, "movie", 1, undefined), d)
+	assert.equal(titleEntries(undefined, "movie", 1, LISTS_CHANGED.score), undefined)
+})

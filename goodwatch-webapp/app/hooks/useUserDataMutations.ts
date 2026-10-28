@@ -2,7 +2,14 @@ import { productAnalyticsFetch } from "~/telemetry/product-analytics"
 import { updateGuestInteraction } from "~/utils/guest-progress"
 import { useCallback } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { afterScore, afterSeenPress } from "~/domain/member-data-updates"
+import {
+	LISTS_CHANGED,
+	type TitleEntries,
+	afterScore,
+	afterSeenPress,
+	restoreTitle,
+	titleEntries,
+} from "~/domain/member-data-updates"
 import type { UserData, MediaType, MediaKey } from "~/types/user-data"
 import { createMediaKey } from "~/types/user-data"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
@@ -13,7 +20,7 @@ interface MutationResult {
 	status: "success" | "failed"
 }
 
-interface UseScoreMutationParams {
+interface UseScoreMutationParams extends Batched {
 	mediaType: MediaType
 	tmdbId: number
 	score: Score | null
@@ -25,25 +32,25 @@ interface UseScoreMutationParams {
 	byHand?: boolean
 }
 
-interface UseWishlistMutationParams {
+interface UseWishlistMutationParams extends Batched {
 	mediaType: MediaType
 	tmdbId: number
 	action: "add" | "remove"
 }
 
-interface UseWatchedMutationParams {
+interface UseWatchedMutationParams extends Batched {
 	mediaType: MediaType
 	tmdbId: number
 	action: "add" | "remove"
 }
 
-interface UseFavoriteMutationParams {
+interface UseFavoriteMutationParams extends Batched {
 	mediaType: MediaType
 	tmdbId: number
 	action: "add" | "remove"
 }
 
-interface UseSkippedMutationParams {
+interface UseSkippedMutationParams extends Batched {
 	mediaType: MediaType
 	tmdbId: number
 	action: "add" | "remove"
@@ -63,8 +70,20 @@ async function savedResult(response: Response, what: string): Promise<MutationRe
 	return result
 }
 
+/**
+ * The title's entries before the mutation's guess. A write that isn't saved puts back these alone, so another title's
+ * guess made while it was on its way stays (member-data-updates.ts, `restoreTitle`).
+ */
 interface MutationContext {
-	previousData?: UserData
+	before?: TitleEntries
+}
+
+/**
+ * For a write that is one of many: it doesn't read the member data again when it settles, so the caller reads it
+ * once after all of them settled (Quick list's bulk answers and their undo).
+ */
+interface Batched {
+	deferSync?: boolean
 }
 
 const updateWishlistOptimistic = (
@@ -200,24 +219,30 @@ export const useScoreMutation = () => {
 			if (!user) return {}
 			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
-			const previousData = queryClient.getQueryData<UserData>(userDataQueryKey)
+			const before = titleEntries(
+				queryClient.getQueryData<UserData>(userDataQueryKey),
+				mediaType,
+				tmdbId,
+				LISTS_CHANGED.score,
+			)
 
 			// A rated movie is Seen: the server records the watch its score owns with the score.
 			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				afterScore(old, mediaType, tmdbId, score, review || null, new Date()),
 			)
 
-			return { previousData }
+			return { before }
 		},
-		onError: (_, __, context) => {
-			if (context?.previousData) {
-				queryClient.setQueryData(userDataQueryKey, context.previousData)
-			}
+		onError: (_, { mediaType, tmdbId }, context) => {
+			if (context?.before)
+				queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
+					restoreTitle(old, mediaType, tmdbId, context.before),
+				)
 		},
-		onSettled: (_, __, { mediaType, tmdbId, score }) => {
+		onSettled: (_, __, { mediaType, tmdbId, score, deferSync }) => {
 			if (!user || mediaType !== "movie") return
 			// Whether a movie stays Seen without its score depends on its watch log, which the map only sums up.
-			if (score === null)
+			if (score === null && !deferSync)
 				void queryClient.invalidateQueries({ queryKey: userDataQueryKey })
 			// A score adds or removes the watch it owns, so a log that was read before is read again when it next
 			// opens. The key is `watchLogKey` of ui/watch-log/useWatchLog.ts, whose code loads with the log.
@@ -264,18 +289,24 @@ export const useWishlistMutation = () => {
 			if (!user) return {}
 			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
-			const previousData = queryClient.getQueryData<UserData>(userDataQueryKey)
+			const before = titleEntries(
+				queryClient.getQueryData<UserData>(userDataQueryKey),
+				mediaType,
+				tmdbId,
+				LISTS_CHANGED.wishlist,
+			)
 
 			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateWishlistOptimistic(old, mediaType, tmdbId, action),
 			)
 
-			return { previousData }
+			return { before }
 		},
-		onError: (_, __, context) => {
-			if (context?.previousData) {
-				queryClient.setQueryData(userDataQueryKey, context.previousData)
-			}
+		onError: (_, { mediaType, tmdbId }, context) => {
+			if (context?.before)
+				queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
+					restoreTitle(old, mediaType, tmdbId, context.before),
+				)
 		},
 	})
 }
@@ -311,22 +342,28 @@ export const useWatchedMutation = () => {
 		onMutate: async ({ mediaType, tmdbId, action }) => {
 			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
-			const previousData = queryClient.getQueryData<UserData>(userDataQueryKey)
+			const before = titleEntries(
+				queryClient.getQueryData<UserData>(userDataQueryKey),
+				mediaType,
+				tmdbId,
+				LISTS_CHANGED.watched,
+			)
 
 			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				afterSeenPress(old, mediaType, tmdbId, action, new Date()),
 			)
 
-			return { previousData }
+			return { before }
 		},
-		onError: (_, __, context) => {
-			if (context?.previousData) {
-				queryClient.setQueryData(userDataQueryKey, context.previousData)
-			}
+		onError: (_, { mediaType, tmdbId }, context) => {
+			if (context?.before)
+				queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
+					restoreTitle(old, mediaType, tmdbId, context.before),
+				)
 		},
 		// The map can't say which episodes a show's press ticked, or which state taking it back returns to.
-		onSettled: (_, __, { mediaType, tmdbId }) => {
-			void queryClient.invalidateQueries({ queryKey: userDataQueryKey })
+		onSettled: (_, __, { mediaType, tmdbId, deferSync }) => {
+			if (!deferSync) void queryClient.invalidateQueries({ queryKey: userDataQueryKey })
 			// A movie's watches changed: its log is read again when it next opens (`watchLogKey` of useWatchLog.ts).
 			if (user && mediaType === "movie")
 				void queryClient.invalidateQueries({
@@ -361,18 +398,24 @@ export const useFavoriteMutation = () => {
 		onMutate: async ({ mediaType, tmdbId, action }) => {
 			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
-			const previousData = queryClient.getQueryData<UserData>(userDataQueryKey)
+			const before = titleEntries(
+				queryClient.getQueryData<UserData>(userDataQueryKey),
+				mediaType,
+				tmdbId,
+				LISTS_CHANGED.favorite,
+			)
 
 			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateFavoriteOptimistic(old, mediaType, tmdbId, action),
 			)
 
-			return { previousData }
+			return { before }
 		},
-		onError: (_, __, context) => {
-			if (context?.previousData) {
-				queryClient.setQueryData(userDataQueryKey, context.previousData)
-			}
+		onError: (_, { mediaType, tmdbId }, context) => {
+			if (context?.before)
+				queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
+					restoreTitle(old, mediaType, tmdbId, context.before),
+				)
 		},
 	})
 }
@@ -413,18 +456,24 @@ export const useSkippedMutation = () => {
 			if (!user) return {}
 			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
-			const previousData = queryClient.getQueryData<UserData>(userDataQueryKey)
+			const before = titleEntries(
+				queryClient.getQueryData<UserData>(userDataQueryKey),
+				mediaType,
+				tmdbId,
+				LISTS_CHANGED.skipped,
+			)
 
 			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateSkippedOptimistic(old, mediaType, tmdbId, action),
 			)
 
-			return { previousData }
+			return { before }
 		},
-		onError: (_, __, context) => {
-			if (context?.previousData) {
-				queryClient.setQueryData(userDataQueryKey, context.previousData)
-			}
+		onError: (_, { mediaType, tmdbId }, context) => {
+			if (context?.before)
+				queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
+					restoreTitle(old, mediaType, tmdbId, context.before),
+				)
 		},
 	})
 }
@@ -468,18 +517,24 @@ export const useNotInterestedMutation = () => {
 			if (!user) return {}
 			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
 
-			const previousData = queryClient.getQueryData<UserData>(userDataQueryKey)
+			const before = titleEntries(
+				queryClient.getQueryData<UserData>(userDataQueryKey),
+				mediaType,
+				tmdbId,
+				LISTS_CHANGED.notInterested,
+			)
 
 			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateNotInterestedOptimistic(old, mediaType, tmdbId, action),
 			)
 
-			return { previousData }
+			return { before }
 		},
-		onError: (_, __, context) => {
-			if (context?.previousData) {
-				queryClient.setQueryData(userDataQueryKey, context.previousData)
-			}
+		onError: (_, { mediaType, tmdbId }, context) => {
+			if (context?.before)
+				queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
+					restoreTitle(old, mediaType, tmdbId, context.before),
+				)
 		},
 	})
 }
