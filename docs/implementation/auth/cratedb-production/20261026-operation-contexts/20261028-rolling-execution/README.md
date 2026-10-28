@@ -8,7 +8,7 @@ health/heap/first-failure/Q60 safeguard remains; daytime06:00 traffic does not c
 No push or Coolify change. See[canonical runbook](../../../../crate-6-upgrade.md).
 
 [Live summary](progress.json),[sanitized receipts](receipts.json.gz),[page watcher](pages.jsonl.gz).
-UpdatedUTC:2026-10-28T02:02:24.470168+00:00. This record is committed locally at checkpoints; raw metadata/config/credentials
+UpdatedUTC:2026-10-28T02:09:32.268923+00:00. This record is committed locally at checkpoints; raw metadata/config/credentials
 remain private under`~/.cache/gw-work/644-q69` and root-private per-host backup paths.
 
 ## Verified preparation
