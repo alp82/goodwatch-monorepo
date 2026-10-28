@@ -1,0 +1,284 @@
+{
+  "id": "nook-r9-desk-portrait",
+  "title": "Rainy writing corner for a phone",
+  "perspective": "eye level, near frontal",
+  "style": "gouache",
+  "orientation": "portrait",
+  "width": 1024,
+  "height": 1536,
+  "tv": null,
+  "slots": [
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0322,
+          0.1543
+        ],
+        [
+          0.0801,
+          0.1595
+        ],
+        [
+          0.085,
+          0.2214
+        ],
+        [
+          0.0361,
+          0.2174
+        ]
+      ],
+      "box": [
+        0.0312,
+        0.1543,
+        0.0547,
+        0.0677
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0371,
+          0.2611
+        ],
+        [
+          0.0859,
+          0.2643
+        ],
+        [
+          0.0898,
+          0.3268
+        ],
+        [
+          0.042,
+          0.3249
+        ]
+      ],
+      "box": [
+        0.0371,
+        0.2611,
+        0.0537,
+        0.0664
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.04,
+          0.3665
+        ],
+        [
+          0.0889,
+          0.3678
+        ],
+        [
+          0.0928,
+          0.429
+        ],
+        [
+          0.0449,
+          0.4303
+        ]
+      ],
+      "box": [
+        0.04,
+        0.3665,
+        0.0537,
+        0.0645
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0459,
+          0.4714
+        ],
+        [
+          0.0938,
+          0.4701
+        ],
+        [
+          0.0986,
+          0.5312
+        ],
+        [
+          0.0508,
+          0.5339
+        ]
+      ],
+      "box": [
+        0.0459,
+        0.4701,
+        0.0537,
+        0.0645
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0508,
+          0.0482
+        ],
+        [
+          0.0986,
+          0.0547
+        ],
+        [
+          0.1025,
+          0.1178
+        ],
+        [
+          0.0557,
+          0.1113
+        ]
+      ],
+      "box": [
+        0.0508,
+        0.0482,
+        0.0527,
+        0.0703
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9004,
+          0.0553
+        ],
+        [
+          0.9482,
+          0.0482
+        ],
+        [
+          0.9434,
+          0.1113
+        ],
+        [
+          0.8945,
+          0.1185
+        ]
+      ],
+      "box": [
+        0.8945,
+        0.0482,
+        0.0547,
+        0.071
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9072,
+          0.4707
+        ],
+        [
+          0.9551,
+          0.472
+        ],
+        [
+          0.9473,
+          0.5352
+        ],
+        [
+          0.8994,
+          0.5326
+        ]
+      ],
+      "box": [
+        0.8994,
+        0.4707,
+        0.0566,
+        0.0651
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.917,
+          0.2676
+        ],
+        [
+          0.9658,
+          0.2637
+        ],
+        [
+          0.959,
+          0.3262
+        ],
+        [
+          0.9102,
+          0.3288
+        ]
+      ],
+      "box": [
+        0.9102,
+        0.2637,
+        0.0566,
+        0.0658
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9189,
+          0.3691
+        ],
+        [
+          0.9678,
+          0.3685
+        ],
+        [
+          0.9609,
+          0.4329
+        ],
+        [
+          0.9121,
+          0.4336
+        ]
+      ],
+      "box": [
+        0.9121,
+        0.3685,
+        0.0566,
+        0.0658
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9287,
+          0.1647
+        ],
+        [
+          0.9756,
+          0.1589
+        ],
+        [
+          0.9678,
+          0.2207
+        ],
+        [
+          0.9209,
+          0.2259
+        ]
+      ],
+      "box": [
+        0.9209,
+        0.1589,
+        0.0557,
+        0.0677
+      ]
+    }
+  ],
+  "notes": "Calm search/chip wall: x=0.22\u20130.78, y=0.00\u20130.30. Calm lower results-card rug: x=0.25\u20130.75, y=0.82\u20130.96. Small writing desk with lamp, books and notebook, cozy cushioned chair; golden dog in a basket-free round fabric bed. Rich painterly texture, deep blue walls, rain at night and warm amber electric lighting. Varied books, ceramics, fabrics and at most two distinct plants. No candles, lanterns, tea lights, TV, plaid or floor clutter. Round 9 batch 3. Focus tightly encloses sleeping dog and its supporting bed or complete daybed. Selected attempt 3 of at most 3. Known deviations: Window lintel starts near y=0.260, reducing calm wall below target 30%. A pair of similar amber bottles and terracotta bowls remains.",
+  "focus": [0.2637, 0.5456, 0.4443, 0.1283]
+}

@@ -164,7 +164,7 @@ function readScenes(): ScenePair[] {
 		const meta = readJson(path.join(dir, f)) as SceneMeta | null
 		if (meta?.id && "tv" in meta && Array.isArray(meta.slots)) metas.set(meta.id, meta)
 	}
-	const order = ["nook-stage-armchair", "nook-r8-armchair-real", "nook-r8-sofa", "nook-r8-desk", "nook-r8-piano", "nook-r8-bay", "nook-r8-loveseat", "nook-r8-daybed", "nook-r8-sideboard", "nook-r8-chess", "nook-r8-ladder", "nook-stage", "nook-stage-window", "nook-stage-records", "nook-stage-tv", "nook-tv-corner", "nook-illustrated", "sofa-shelves", "media-wall-angle", "shelf-closeup", "coffee-table", "projector-loft", "retro-den", "iso-cutaway", "pixel-iso", "miniature", "papercraft", "flat-vector"]
+	const order = ["nook-r9-classic", "nook-r9-reading", "nook-r9-bay", "nook-r9-sofa", "nook-r9-armchair", "nook-r9-tea", "nook-r9-corner", "nook-r9-records", "nook-r9-daybed", "nook-r9-desk", "nook-illustrated", "nook-stage-tv", "nook-stage-armchair", "nook-r8-armchair-real", "nook-r8-sofa", "nook-r8-desk", "nook-r8-piano", "nook-r8-bay", "nook-r8-loveseat", "nook-r8-daybed", "nook-r8-sideboard", "nook-r8-chess", "nook-r8-ladder", "nook-stage", "nook-stage-window", "nook-stage-records", "nook-stage-tv", "nook-tv-corner", "nook-illustrated", "sofa-shelves", "media-wall-angle", "shelf-closeup", "coffee-table", "projector-loft", "retro-den", "iso-cutaway", "pixel-iso", "miniature", "papercraft", "flat-vector"]
 	const ids = [...metas.keys()].filter((id) => !id.endsWith("-portrait"))
 	ids.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99))
 	return ids.map((id) => ({

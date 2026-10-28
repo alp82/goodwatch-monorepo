@@ -1,0 +1,338 @@
+{
+  "id": "nook-r9-reading",
+  "title": "Rainy reading armchair",
+  "perspective": "eye level, near frontal",
+  "style": "gouache",
+  "orientation": "landscape",
+  "width": 1536,
+  "height": 1024,
+  "tv": null,
+  "slots": [
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0306,
+          0.3096
+        ],
+        [
+          0.0605,
+          0.3145
+        ],
+        [
+          0.0618,
+          0.3848
+        ],
+        [
+          0.0319,
+          0.3809
+        ]
+      ],
+      "box": [
+        0.0306,
+        0.3096,
+        0.0319,
+        0.0762
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0319,
+          0.0576
+        ],
+        [
+          0.0625,
+          0.0684
+        ],
+        [
+          0.0638,
+          0.1406
+        ],
+        [
+          0.0326,
+          0.1318
+        ]
+      ],
+      "box": [
+        0.0319,
+        0.0576,
+        0.0326,
+        0.084
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0326,
+          0.6777
+        ],
+        [
+          0.0638,
+          0.6738
+        ],
+        [
+          0.0664,
+          0.749
+        ],
+        [
+          0.0352,
+          0.7549
+        ]
+      ],
+      "box": [
+        0.0326,
+        0.6738,
+        0.0345,
+        0.082
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0339,
+          0.5518
+        ],
+        [
+          0.0645,
+          0.5518
+        ],
+        [
+          0.0671,
+          0.625
+        ],
+        [
+          0.0358,
+          0.627
+        ]
+      ],
+      "box": [
+        0.0339,
+        0.5518,
+        0.0339,
+        0.0762
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.041,
+          0.4355
+        ],
+        [
+          0.0697,
+          0.4375
+        ],
+        [
+          0.071,
+          0.5049
+        ],
+        [
+          0.0423,
+          0.5039
+        ]
+      ],
+      "box": [
+        0.041,
+        0.4355,
+        0.0306,
+        0.0703
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0534,
+          0.1904
+        ],
+        [
+          0.0833,
+          0.1982
+        ],
+        [
+          0.0846,
+          0.2666
+        ],
+        [
+          0.0547,
+          0.2617
+        ]
+      ],
+      "box": [
+        0.0534,
+        0.1904,
+        0.0319,
+        0.0771
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9219,
+          0.0703
+        ],
+        [
+          0.9538,
+          0.0605
+        ],
+        [
+          0.9531,
+          0.1348
+        ],
+        [
+          0.9212,
+          0.1436
+        ]
+      ],
+      "box": [
+        0.9212,
+        0.0605,
+        0.0332,
+        0.084
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9303,
+          0.4336
+        ],
+        [
+          0.9609,
+          0.4316
+        ],
+        [
+          0.9596,
+          0.5049
+        ],
+        [
+          0.9284,
+          0.5049
+        ]
+      ],
+      "box": [
+        0.9284,
+        0.4316,
+        0.0332,
+        0.0742
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9375,
+          0.5488
+        ],
+        [
+          0.9681,
+          0.5498
+        ],
+        [
+          0.9655,
+          0.626
+        ],
+        [
+          0.9349,
+          0.623
+        ]
+      ],
+      "box": [
+        0.9349,
+        0.5488,
+        0.0339,
+        0.0781
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9375,
+          0.3145
+        ],
+        [
+          0.9674,
+          0.3096
+        ],
+        [
+          0.9655,
+          0.3809
+        ],
+        [
+          0.9362,
+          0.3838
+        ]
+      ],
+      "box": [
+        0.9362,
+        0.3096,
+        0.0319,
+        0.0752
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9408,
+          0.6719
+        ],
+        [
+          0.9707,
+          0.6748
+        ],
+        [
+          0.9674,
+          0.7529
+        ],
+        [
+          0.9375,
+          0.7461
+        ]
+      ],
+      "box": [
+        0.9375,
+        0.6719,
+        0.0339,
+        0.082
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9401,
+          0.1924
+        ],
+        [
+          0.9707,
+          0.1855
+        ],
+        [
+          0.9701,
+          0.2568
+        ],
+        [
+          0.9388,
+          0.2627
+        ]
+      ],
+      "box": [
+        0.9388,
+        0.1855,
+        0.0326,
+        0.0781
+      ]
+    }
+  ],
+  "notes": "Calm search and mood-chip wall target: x=0.20\u20130.80, y=0.00\u20130.32. Calm results-card rug: x=0.25\u20130.75, y=0.82\u20130.96. Indigo armchair, brass floor lamp, side table, footstool and dog on a round rug. No candles, lanterns, tea lights or TV. Selected attempt 3 of at most 3. Visual QC: Clear wall ends near y=0.24; dog extends to y=0.78, below target 0.72. Attempt limit reached. Two different plants. Similar patterned ceramic cups remain on opposite shelves. Focus includes sleeping dog and its complete seat (including cushions, base and throw), or complete small round rug; excludes adjacent furnishings.",
+  "focus": [0.3451, 0.6201, 0.3776, 0.1943]
+}

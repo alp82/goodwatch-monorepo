@@ -1,0 +1,257 @@
+{
+  "id": "nook-r9-records-portrait",
+  "title": "Rainy record corner for a phone",
+  "perspective": "eye level, near frontal",
+  "style": "gouache",
+  "orientation": "portrait",
+  "width": 1024,
+  "height": 1536,
+  "tv": null,
+  "slots": [
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0264,
+          0.0501
+        ],
+        [
+          0.0771,
+          0.0566
+        ],
+        [
+          0.0752,
+          0.1107
+        ],
+        [
+          0.0293,
+          0.1055
+        ]
+      ],
+      "box": [
+        0.0264,
+        0.0501,
+        0.0557,
+        0.0612
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.043,
+          0.1497
+        ],
+        [
+          0.0938,
+          0.1549
+        ],
+        [
+          0.1025,
+          0.2155
+        ],
+        [
+          0.0459,
+          0.2122
+        ]
+      ],
+      "box": [
+        0.043,
+        0.1497,
+        0.0605,
+        0.0677
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0449,
+          0.3581
+        ],
+        [
+          0.0918,
+          0.3581
+        ],
+        [
+          0.1016,
+          0.4154
+        ],
+        [
+          0.0479,
+          0.4167
+        ]
+      ],
+      "box": [
+        0.0449,
+        0.3581,
+        0.0576,
+        0.0592
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0518,
+          0.4564
+        ],
+        [
+          0.1055,
+          0.4538
+        ],
+        [
+          0.1045,
+          0.5104
+        ],
+        [
+          0.0566,
+          0.5124
+        ]
+      ],
+      "box": [
+        0.0498,
+        0.4538,
+        0.0586,
+        0.0592
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0518,
+          0.2585
+        ],
+        [
+          0.1055,
+          0.2604
+        ],
+        [
+          0.1035,
+          0.3203
+        ],
+        [
+          0.0547,
+          0.319
+        ]
+      ],
+      "box": [
+        0.0508,
+        0.2585,
+        0.0566,
+        0.0625
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.877,
+          0.0592
+        ],
+        [
+          0.9258,
+          0.0521
+        ],
+        [
+          0.9258,
+          0.1048
+        ],
+        [
+          0.8721,
+          0.1152
+        ]
+      ],
+      "box": [
+        0.8721,
+        0.0521,
+        0.0586,
+        0.0638
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.875,
+          0.2669
+        ],
+        [
+          0.9346,
+          0.252
+        ],
+        [
+          0.9336,
+          0.3164
+        ],
+        [
+          0.875,
+          0.3216
+        ]
+      ],
+      "box": [
+        0.8721,
+        0.252,
+        0.0674,
+        0.0703
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8848,
+          0.3587
+        ],
+        [
+          0.9336,
+          0.3574
+        ],
+        [
+          0.9316,
+          0.4167
+        ],
+        [
+          0.8779,
+          0.4173
+        ]
+      ],
+      "box": [
+        0.874,
+        0.3574,
+        0.0645,
+        0.0605
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9189,
+          0.1569
+        ],
+        [
+          0.9668,
+          0.1523
+        ],
+        [
+          0.9629,
+          0.2129
+        ],
+        [
+          0.9141,
+          0.2161
+        ]
+      ],
+      "box": [
+        0.9111,
+        0.1523,
+        0.0566,
+        0.0645
+      ]
+    }
+  ],
+  "notes": "Calm search/chip wall: x=0.22\u20130.78, y=0.00\u20130.30. Calm lower results-card rug: x=0.25\u20130.75, y=0.82\u20130.96. Compact record cabinet and turntable, armchair and floor lamp; golden dog on a fabric cushion bed. Rich painterly texture, deep blue walls, rain at night and warm amber electric lighting. Varied books, ceramics, fabrics and at most two distinct plants. No candles, lanterns, tea lights, TV, plaid or floor clutter. Round 9 batch 3. Focus tightly encloses sleeping dog and its supporting bed or complete daybed. Selected attempt 3 of at most 3. Known deviations: Only nine slots remain after three attempts, below the required ten. Window lintel starts near y=0.298. Only one chair cushion remains. Several shelf ceramics share blue spotted decoration.",
+  "focus": [0.2656, 0.5456, 0.4023, 0.1146]
+}

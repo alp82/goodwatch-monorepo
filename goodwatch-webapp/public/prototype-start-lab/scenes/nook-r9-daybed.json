@@ -1,0 +1,284 @@
+{
+  "id": "nook-r9-daybed",
+  "title": "Quilted rainy daybed",
+  "perspective": "eye level, near frontal",
+  "style": "gouache",
+  "orientation": "landscape",
+  "width": 1536,
+  "height": 1024,
+  "tv": null,
+  "slots": [
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0312,
+          0.2129
+        ],
+        [
+          0.0664,
+          0.2197
+        ],
+        [
+          0.0684,
+          0.3057
+        ],
+        [
+          0.0332,
+          0.3018
+        ]
+      ],
+      "box": [
+        0.0312,
+        0.2129,
+        0.0378,
+        0.0938
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0378,
+          0.4971
+        ],
+        [
+          0.0742,
+          0.4961
+        ],
+        [
+          0.0775,
+          0.5762
+        ],
+        [
+          0.0417,
+          0.5781
+        ]
+      ],
+      "box": [
+        0.0378,
+        0.4961,
+        0.0404,
+        0.083
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0384,
+          0.3623
+        ],
+        [
+          0.0755,
+          0.3662
+        ],
+        [
+          0.0781,
+          0.4443
+        ],
+        [
+          0.0417,
+          0.4434
+        ]
+      ],
+      "box": [
+        0.0384,
+        0.3623,
+        0.0404,
+        0.083
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0397,
+          0.6328
+        ],
+        [
+          0.0794,
+          0.6279
+        ],
+        [
+          0.082,
+          0.7148
+        ],
+        [
+          0.0417,
+          0.7227
+        ]
+      ],
+      "box": [
+        0.0397,
+        0.6279,
+        0.043,
+        0.0957
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0404,
+          0.0645
+        ],
+        [
+          0.0788,
+          0.0762
+        ],
+        [
+          0.0807,
+          0.1572
+        ],
+        [
+          0.043,
+          0.1484
+        ]
+      ],
+      "box": [
+        0.0404,
+        0.0645,
+        0.041,
+        0.0938
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.875,
+          0.2285
+        ],
+        [
+          0.9115,
+          0.2236
+        ],
+        [
+          0.9082,
+          0.3145
+        ],
+        [
+          0.8717,
+          0.3174
+        ]
+      ],
+      "box": [
+        0.8717,
+        0.2236,
+        0.0404,
+        0.0947
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8828,
+          0.085
+        ],
+        [
+          0.9206,
+          0.0752
+        ],
+        [
+          0.9167,
+          0.1553
+        ],
+        [
+          0.8802,
+          0.1621
+        ]
+      ],
+      "box": [
+        0.8802,
+        0.0752,
+        0.041,
+        0.0879
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8874,
+          0.373
+        ],
+        [
+          0.9232,
+          0.3711
+        ],
+        [
+          0.9193,
+          0.4482
+        ],
+        [
+          0.8835,
+          0.4492
+        ]
+      ],
+      "box": [
+        0.8835,
+        0.3711,
+        0.0404,
+        0.0791
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8926,
+          0.498
+        ],
+        [
+          0.9284,
+          0.499
+        ],
+        [
+          0.9238,
+          0.5811
+        ],
+        [
+          0.8887,
+          0.5781
+        ]
+      ],
+      "box": [
+        0.8887,
+        0.498,
+        0.0404,
+        0.084
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8945,
+          0.6289
+        ],
+        [
+          0.9329,
+          0.6348
+        ],
+        [
+          0.9284,
+          0.7217
+        ],
+        [
+          0.89,
+          0.7139
+        ]
+      ],
+      "box": [
+        0.89,
+        0.6289,
+        0.0436,
+        0.0938
+      ]
+    }
+  ],
+  "notes": "Calm search/chip wall: x=0.20\u20130.80, y=0.00\u20130.32. Calm lower results-card rug: x=0.25\u20130.75, y=0.82\u20130.96. Window-width daybed with quilt and varied cushions, bedside lamp and books; golden dog asleep at the foot. Rich painterly texture, deep blue walls, rain at night and warm amber electric lighting. Varied books, ceramics, fabrics and at most two distinct plants. No candles, lanterns, tea lights, TV, plaid or floor clutter. Round 9 batch 3. Focus tightly encloses sleeping dog and its supporting bed or complete daybed. Selected attempt 3 of at most 3. Known deviations: Dog fits middle band; full seat and hanging quilt extend to y=0.758. Several shelf ceramics share blue spotted decoration.",
+  "focus": [0.2500, 0.4629, 0.4453, 0.2949]
+}
