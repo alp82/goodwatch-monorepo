@@ -1,0 +1,338 @@
+{
+  "id": "nook-r8-loveseat",
+  "title": "Quilted loveseat nook",
+  "perspective": "eye level, near frontal",
+  "style": "gouache",
+  "orientation": "landscape",
+  "width": 1536,
+  "height": 1024,
+  "tv": null,
+  "slots": [
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0241,
+          0.1582
+        ],
+        [
+          0.0566,
+          0.165
+        ],
+        [
+          0.0566,
+          0.2422
+        ],
+        [
+          0.0241,
+          0.2373
+        ]
+      ],
+      "box": [
+        0.0234,
+        0.1582,
+        0.0345,
+        0.085
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0241,
+          0.3896
+        ],
+        [
+          0.0566,
+          0.3926
+        ],
+        [
+          0.0566,
+          0.4746
+        ],
+        [
+          0.0234,
+          0.4736
+        ]
+      ],
+      "box": [
+        0.0234,
+        0.3896,
+        0.0339,
+        0.0869
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0234,
+          0.6045
+        ],
+        [
+          0.056,
+          0.6006
+        ],
+        [
+          0.0566,
+          0.6699
+        ],
+        [
+          0.0241,
+          0.6748
+        ]
+      ],
+      "box": [
+        0.0234,
+        0.6006,
+        0.0339,
+        0.0752
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0651,
+          0.5996
+        ],
+        [
+          0.097,
+          0.5967
+        ],
+        [
+          0.097,
+          0.6641
+        ],
+        [
+          0.0651,
+          0.668
+        ]
+      ],
+      "box": [
+        0.0645,
+        0.5967,
+        0.0332,
+        0.0723
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0664,
+          0.168
+        ],
+        [
+          0.0983,
+          0.1729
+        ],
+        [
+          0.0977,
+          0.248
+        ],
+        [
+          0.0658,
+          0.2432
+        ]
+      ],
+      "box": [
+        0.0658,
+        0.168,
+        0.0332,
+        0.0811
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0658,
+          0.3926
+        ],
+        [
+          0.0977,
+          0.3945
+        ],
+        [
+          0.0977,
+          0.4756
+        ],
+        [
+          0.0658,
+          0.4746
+        ]
+      ],
+      "box": [
+        0.0658,
+        0.3926,
+        0.0326,
+        0.084
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9004,
+          0.1768
+        ],
+        [
+          0.9316,
+          0.1709
+        ],
+        [
+          0.931,
+          0.2461
+        ],
+        [
+          0.8997,
+          0.251
+        ]
+      ],
+      "box": [
+        0.8997,
+        0.1709,
+        0.0326,
+        0.0811
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9004,
+          0.3955
+        ],
+        [
+          0.9316,
+          0.3936
+        ],
+        [
+          0.931,
+          0.4746
+        ],
+        [
+          0.8997,
+          0.4756
+        ]
+      ],
+      "box": [
+        0.8997,
+        0.3936,
+        0.0332,
+        0.083
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9004,
+          0.5977
+        ],
+        [
+          0.9323,
+          0.5996
+        ],
+        [
+          0.9316,
+          0.6689
+        ],
+        [
+          0.8997,
+          0.6641
+        ]
+      ],
+      "box": [
+        0.8997,
+        0.5977,
+        0.0332,
+        0.0723
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9408,
+          0.1689
+        ],
+        [
+          0.974,
+          0.1611
+        ],
+        [
+          0.974,
+          0.2383
+        ],
+        [
+          0.9408,
+          0.2441
+        ]
+      ],
+      "box": [
+        0.9408,
+        0.1611,
+        0.0345,
+        0.084
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9408,
+          0.3926
+        ],
+        [
+          0.9746,
+          0.3906
+        ],
+        [
+          0.974,
+          0.4756
+        ],
+        [
+          0.9408,
+          0.4756
+        ]
+      ],
+      "box": [
+        0.9408,
+        0.3906,
+        0.0345,
+        0.0859
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9414,
+          0.6016
+        ],
+        [
+          0.9746,
+          0.6045
+        ],
+        [
+          0.974,
+          0.6758
+        ],
+        [
+          0.9408,
+          0.6709
+        ]
+      ],
+      "box": [
+        0.9408,
+        0.6016,
+        0.0345,
+        0.0752
+      ]
+    }
+  ],
+  "notes": "Target calm search and mood-chip wall: x=0.18\u20130.82, y=0.00\u20130.38. Calm foreground floor/rug: y=0.78\u20131.00. Oatmeal loveseat, arched electric floor lamp, reachable table with books and mug, roller-blind rainy window and radiator; sleeping golden dog in a low fabric bed. One quilt in landscape; portrait textile drifted to knit. No TV, candles, lanterns, baskets, rolled rugs, red-blue plaid or floor clutter. Round 8 batch 2; retained attempt 3 of at most 3. Visual QC: Window lintel begins near y=0.374, slightly inside the target 0.38 calm top; bed ends near y=0.782, below the ideal 0.75 middle-band limit. Best retained after three attempts.",
+  "focus": [0.4056, 0.6562, 0.2428, 0.1260]
+}

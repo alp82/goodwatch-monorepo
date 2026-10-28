@@ -1,0 +1,284 @@
+{
+  "id": "nook-r8-sideboard",
+  "title": "Walnut listening nook",
+  "perspective": "eye level, near frontal",
+  "style": "gouache",
+  "orientation": "landscape",
+  "width": 1536,
+  "height": 1024,
+  "tv": null,
+  "slots": [
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0189,
+          0.1475
+        ],
+        [
+          0.0527,
+          0.1553
+        ],
+        [
+          0.0527,
+          0.2373
+        ],
+        [
+          0.0182,
+          0.2324
+        ]
+      ],
+      "box": [
+        0.0182,
+        0.1475,
+        0.0352,
+        0.0908
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0189,
+          0.2666
+        ],
+        [
+          0.0527,
+          0.2715
+        ],
+        [
+          0.0527,
+          0.3555
+        ],
+        [
+          0.0182,
+          0.3525
+        ]
+      ],
+      "box": [
+        0.0182,
+        0.2666,
+        0.0352,
+        0.0898
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0182,
+          0.3867
+        ],
+        [
+          0.0527,
+          0.3887
+        ],
+        [
+          0.0527,
+          0.4727
+        ],
+        [
+          0.0189,
+          0.4736
+        ]
+      ],
+      "box": [
+        0.0182,
+        0.3867,
+        0.0352,
+        0.0879
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0182,
+          0.5059
+        ],
+        [
+          0.0527,
+          0.5049
+        ],
+        [
+          0.0534,
+          0.5908
+        ],
+        [
+          0.0189,
+          0.5938
+        ]
+      ],
+      "box": [
+        0.0182,
+        0.5049,
+        0.0358,
+        0.0898
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0182,
+          0.627
+        ],
+        [
+          0.0527,
+          0.6221
+        ],
+        [
+          0.0534,
+          0.7051
+        ],
+        [
+          0.0189,
+          0.7139
+        ]
+      ],
+      "box": [
+        0.0182,
+        0.6221,
+        0.0358,
+        0.0928
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.946,
+          0.1582
+        ],
+        [
+          0.9798,
+          0.1523
+        ],
+        [
+          0.9798,
+          0.2344
+        ],
+        [
+          0.946,
+          0.2402
+        ]
+      ],
+      "box": [
+        0.946,
+        0.1523,
+        0.0345,
+        0.0889
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.946,
+          0.2715
+        ],
+        [
+          0.9798,
+          0.2676
+        ],
+        [
+          0.9798,
+          0.3535
+        ],
+        [
+          0.946,
+          0.3564
+        ]
+      ],
+      "box": [
+        0.946,
+        0.2676,
+        0.0345,
+        0.0898
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.946,
+          0.3896
+        ],
+        [
+          0.9798,
+          0.3877
+        ],
+        [
+          0.9798,
+          0.4727
+        ],
+        [
+          0.946,
+          0.4736
+        ]
+      ],
+      "box": [
+        0.946,
+        0.3867,
+        0.0352,
+        0.0879
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.946,
+          0.5049
+        ],
+        [
+          0.9798,
+          0.5059
+        ],
+        [
+          0.9798,
+          0.5947
+        ],
+        [
+          0.946,
+          0.5918
+        ]
+      ],
+      "box": [
+        0.946,
+        0.5049,
+        0.0345,
+        0.0908
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.946,
+          0.6221
+        ],
+        [
+          0.9798,
+          0.626
+        ],
+        [
+          0.9792,
+          0.7129
+        ],
+        [
+          0.946,
+          0.7061
+        ]
+      ],
+      "box": [
+        0.946,
+        0.6221,
+        0.0345,
+        0.0918
+      ]
+    }
+  ],
+  "notes": "Target calm search and mood-chip wall: x=0.18\u20130.82, y=0.00\u20130.38. Calm foreground floor/rug: y=0.78\u20131.00. Low mid-century walnut sideboard, turntable, two small speakers, ceramic vase and electric lamp; curtained rainy window and radiator; golden dog asleep on the rug. No blanket or cushions. No TV, candles, lanterns, baskets, rolled rugs, red-blue plaid or floor clutter. Round 8 batch 2; retained attempt 3 of at most 3. Visual QC: Target calm top NOT fully met: left curtain rod near y=0.33 and lamp near y=0.36 intrude into y=0.38 target. Dog ends near y=0.77. Retained after three attempts, needs art correction before strict UI acceptance.",
+  "focus": [0.4141, 0.6660, 0.2246, 0.1064]
+}

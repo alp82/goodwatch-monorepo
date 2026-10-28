@@ -1,0 +1,338 @@
+{
+  "id": "nook-r8-chess",
+  "title": "Chess reading chairs",
+  "perspective": "eye level, near frontal",
+  "style": "gouache",
+  "orientation": "landscape",
+  "width": 1536,
+  "height": 1024,
+  "tv": null,
+  "slots": [
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.028,
+          0.1387
+        ],
+        [
+          0.0632,
+          0.1465
+        ],
+        [
+          0.0632,
+          0.2305
+        ],
+        [
+          0.028,
+          0.2236
+        ]
+      ],
+      "box": [
+        0.028,
+        0.1387,
+        0.0358,
+        0.0928
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.028,
+          0.376
+        ],
+        [
+          0.0632,
+          0.3789
+        ],
+        [
+          0.0632,
+          0.46
+        ],
+        [
+          0.028,
+          0.459
+        ]
+      ],
+      "box": [
+        0.028,
+        0.376,
+        0.0358,
+        0.085
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.028,
+          0.4922
+        ],
+        [
+          0.0632,
+          0.4922
+        ],
+        [
+          0.0632,
+          0.5771
+        ],
+        [
+          0.028,
+          0.5781
+        ]
+      ],
+      "box": [
+        0.028,
+        0.4912,
+        0.0358,
+        0.0879
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0755,
+          0.1494
+        ],
+        [
+          0.11,
+          0.1572
+        ],
+        [
+          0.1094,
+          0.2383
+        ],
+        [
+          0.0749,
+          0.2324
+        ]
+      ],
+      "box": [
+        0.0742,
+        0.1494,
+        0.0365,
+        0.0898
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0755,
+          0.4922
+        ],
+        [
+          0.1094,
+          0.4922
+        ],
+        [
+          0.11,
+          0.5752
+        ],
+        [
+          0.0755,
+          0.5771
+        ]
+      ],
+      "box": [
+        0.0742,
+        0.4922,
+        0.0365,
+        0.0859
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0755,
+          0.3799
+        ],
+        [
+          0.11,
+          0.3828
+        ],
+        [
+          0.1094,
+          0.4619
+        ],
+        [
+          0.0755,
+          0.4609
+        ]
+      ],
+      "box": [
+        0.0749,
+        0.3799,
+        0.0358,
+        0.083
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8906,
+          0.1572
+        ],
+        [
+          0.9238,
+          0.1494
+        ],
+        [
+          0.9245,
+          0.2324
+        ],
+        [
+          0.89,
+          0.2402
+        ]
+      ],
+      "box": [
+        0.89,
+        0.1494,
+        0.0358,
+        0.0918
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8906,
+          0.3828
+        ],
+        [
+          0.9238,
+          0.3799
+        ],
+        [
+          0.9238,
+          0.46
+        ],
+        [
+          0.89,
+          0.4619
+        ]
+      ],
+      "box": [
+        0.89,
+        0.3799,
+        0.0358,
+        0.083
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8906,
+          0.4932
+        ],
+        [
+          0.9238,
+          0.4922
+        ],
+        [
+          0.9238,
+          0.5762
+        ],
+        [
+          0.8906,
+          0.5752
+        ]
+      ],
+      "box": [
+        0.89,
+        0.4922,
+        0.0358,
+        0.085
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9368,
+          0.1465
+        ],
+        [
+          0.9714,
+          0.1387
+        ],
+        [
+          0.9714,
+          0.2256
+        ],
+        [
+          0.9362,
+          0.2314
+        ]
+      ],
+      "box": [
+        0.9362,
+        0.1387,
+        0.0371,
+        0.0938
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9368,
+          0.3789
+        ],
+        [
+          0.9714,
+          0.376
+        ],
+        [
+          0.9714,
+          0.458
+        ],
+        [
+          0.9362,
+          0.46
+        ]
+      ],
+      "box": [
+        0.9362,
+        0.376,
+        0.0371,
+        0.085
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9362,
+          0.4932
+        ],
+        [
+          0.9714,
+          0.4922
+        ],
+        [
+          0.9714,
+          0.5781
+        ],
+        [
+          0.9368,
+          0.5771
+        ]
+      ],
+      "box": [
+        0.9362,
+        0.4912,
+        0.0371,
+        0.0879
+      ]
+    }
+  ],
+  "notes": "Calm search/chip wall target: x=0.18\u20130.82, y=0.00\u20130.38. Calm results-card floor/rug: x=0.22\u20130.78, y=0.82\u20130.96. Two angled reading armchairs, small chess table, one oatmeal knit throw and dog under table. Rain at night, deep blue walls and warm amber lamps. No TV, candles, lanterns, baskets, plants, floor clutter or plaid. Focus encloses dog and complete seat for window-seat rooms; for rug-sleeping dogs, only the supporting local rug patch is included, not the entire room rug. Round 8 batch 3; selected attempt 3 of at most 3. Known deviation: After three attempts, window top and lamp begin near y=0.365, reducing full-width calm top to about 36.5%; dog extends to y=0.78.",
+  "focus": [0.3906, 0.6738, 0.1953, 0.1152]
+}

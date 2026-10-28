@@ -1,0 +1,338 @@
+{
+  "id": "nook-r8-armchair-real-portrait",
+  "title": "Tidy window-seat reading corner for a phone",
+  "perspective": "eye level, near frontal",
+  "style": "gouache",
+  "orientation": "portrait",
+  "width": 1024,
+  "height": 1536,
+  "tv": null,
+  "slots": [
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0273,
+          0.1836
+        ],
+        [
+          0.0703,
+          0.1862
+        ],
+        [
+          0.0674,
+          0.2422
+        ],
+        [
+          0.0264,
+          0.2389
+        ]
+      ],
+      "box": [
+        0.0264,
+        0.1836,
+        0.0449,
+        0.0592
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0264,
+          0.3451
+        ],
+        [
+          0.0693,
+          0.3457
+        ],
+        [
+          0.0674,
+          0.4023
+        ],
+        [
+          0.0264,
+          0.401
+        ]
+      ],
+      "box": [
+        0.0264,
+        0.3451,
+        0.0439,
+        0.0579
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0264,
+          0.5059
+        ],
+        [
+          0.0684,
+          0.5039
+        ],
+        [
+          0.0674,
+          0.5618
+        ],
+        [
+          0.0273,
+          0.5638
+        ]
+      ],
+      "box": [
+        0.0264,
+        0.5039,
+        0.043,
+        0.0605
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0801,
+          0.3464
+        ],
+        [
+          0.1211,
+          0.3477
+        ],
+        [
+          0.1201,
+          0.4036
+        ],
+        [
+          0.0801,
+          0.403
+        ]
+      ],
+      "box": [
+        0.0791,
+        0.3464,
+        0.043,
+        0.0579
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0791,
+          0.5046
+        ],
+        [
+          0.1191,
+          0.5039
+        ],
+        [
+          0.1201,
+          0.5599
+        ],
+        [
+          0.0801,
+          0.5612
+        ]
+      ],
+      "box": [
+        0.0791,
+        0.5039,
+        0.042,
+        0.0579
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0801,
+          0.1882
+        ],
+        [
+          0.1211,
+          0.1901
+        ],
+        [
+          0.1201,
+          0.2461
+        ],
+        [
+          0.0801,
+          0.2428
+        ]
+      ],
+      "box": [
+        0.0801,
+        0.1882,
+        0.043,
+        0.0586
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.877,
+          0.1901
+        ],
+        [
+          0.918,
+          0.1882
+        ],
+        [
+          0.918,
+          0.2428
+        ],
+        [
+          0.8779,
+          0.2454
+        ]
+      ],
+      "box": [
+        0.877,
+        0.1882,
+        0.043,
+        0.0579
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8779,
+          0.5039
+        ],
+        [
+          0.9199,
+          0.5039
+        ],
+        [
+          0.918,
+          0.5612
+        ],
+        [
+          0.8779,
+          0.5599
+        ]
+      ],
+      "box": [
+        0.877,
+        0.5039,
+        0.0439,
+        0.0579
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8779,
+          0.3483
+        ],
+        [
+          0.9189,
+          0.3464
+        ],
+        [
+          0.918,
+          0.403
+        ],
+        [
+          0.8779,
+          0.4036
+        ]
+      ],
+      "box": [
+        0.8779,
+        0.3464,
+        0.042,
+        0.0579
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9297,
+          0.1868
+        ],
+        [
+          0.9717,
+          0.1836
+        ],
+        [
+          0.9717,
+          0.2389
+        ],
+        [
+          0.9316,
+          0.2415
+        ]
+      ],
+      "box": [
+        0.9297,
+        0.1836,
+        0.0439,
+        0.0586
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9316,
+          0.3464
+        ],
+        [
+          0.9727,
+          0.3451
+        ],
+        [
+          0.9727,
+          0.4017
+        ],
+        [
+          0.9316,
+          0.4023
+        ]
+      ],
+      "box": [
+        0.9297,
+        0.3451,
+        0.0439,
+        0.0579
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9326,
+          0.5046
+        ],
+        [
+          0.9727,
+          0.5052
+        ],
+        [
+          0.9717,
+          0.5625
+        ],
+        [
+          0.9307,
+          0.5612
+        ]
+      ],
+      "box": [
+        0.9307,
+        0.5046,
+        0.043,
+        0.0586
+      ]
+    }
+  ],
+  "notes": "Calm search/chip wall target: x=0.20\u20130.80, y=0.00\u20130.34. Calm results-card floor/rug: x=0.22\u20130.78, y=0.82\u20130.96. Left window seat with sleeping dog and two cushions; right armchair, ottoman, side table and one plain flax linen throw. Rain at night, deep blue walls and warm amber lamps. No TV, candles, lanterns, baskets, plants, floor clutter or plaid. Focus encloses dog and complete seat for window-seat rooms; for rug-sleeping dogs, only the supporting local rug patch is included, not the entire room rug. Round 8 batch 3; selected attempt 2 of at most 3. Known deviation: Ottoman partly overlaps the seat base, but dog and seat cushion remain unobstructed. Ottoman and side table extend slightly below y=0.75.",
+  "focus": [0.2070, 0.5436, 0.3467, 0.1660]
+}

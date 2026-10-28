@@ -1,0 +1,392 @@
+{
+  "id": "nook-r8-ladder-portrait",
+  "title": "Leather library with ladder for a phone",
+  "perspective": "eye level, near frontal",
+  "style": "gouache",
+  "orientation": "portrait",
+  "width": 1024,
+  "height": 1536,
+  "tv": null,
+  "slots": [
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0381,
+          0.1465
+        ],
+        [
+          0.085,
+          0.1523
+        ],
+        [
+          0.085,
+          0.2083
+        ],
+        [
+          0.0381,
+          0.2038
+        ]
+      ],
+      "box": [
+        0.0381,
+        0.1465,
+        0.0479,
+        0.0625
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0381,
+          0.3503
+        ],
+        [
+          0.084,
+          0.3529
+        ],
+        [
+          0.084,
+          0.4108
+        ],
+        [
+          0.0381,
+          0.4089
+        ]
+      ],
+      "box": [
+        0.0381,
+        0.3503,
+        0.0469,
+        0.0612
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.04,
+          0.4505
+        ],
+        [
+          0.0859,
+          0.4518
+        ],
+        [
+          0.0859,
+          0.5085
+        ],
+        [
+          0.04,
+          0.5078
+        ]
+      ],
+      "box": [
+        0.04,
+        0.4505,
+        0.0469,
+        0.0586
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0439,
+          0.2487
+        ],
+        [
+          0.0908,
+          0.2533
+        ],
+        [
+          0.0908,
+          0.3086
+        ],
+        [
+          0.0439,
+          0.3053
+        ]
+      ],
+      "box": [
+        0.0439,
+        0.2487,
+        0.0479,
+        0.0605
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0957,
+          0.1543
+        ],
+        [
+          0.1416,
+          0.1602
+        ],
+        [
+          0.1406,
+          0.2148
+        ],
+        [
+          0.0957,
+          0.2103
+        ]
+      ],
+      "box": [
+        0.0947,
+        0.1543,
+        0.0479,
+        0.0612
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0957,
+          0.3542
+        ],
+        [
+          0.1406,
+          0.3568
+        ],
+        [
+          0.1406,
+          0.4128
+        ],
+        [
+          0.0957,
+          0.4115
+        ]
+      ],
+      "box": [
+        0.0957,
+        0.3542,
+        0.0459,
+        0.0592
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0957,
+          0.4518
+        ],
+        [
+          0.1406,
+          0.4531
+        ],
+        [
+          0.1406,
+          0.5085
+        ],
+        [
+          0.0957,
+          0.5085
+        ]
+      ],
+      "box": [
+        0.0957,
+        0.4518,
+        0.0459,
+        0.0573
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8574,
+          0.1608
+        ],
+        [
+          0.9033,
+          0.1549
+        ],
+        [
+          0.9033,
+          0.2103
+        ],
+        [
+          0.8574,
+          0.2155
+        ]
+      ],
+      "box": [
+        0.8574,
+        0.1549,
+        0.0469,
+        0.0612
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8574,
+          0.3574
+        ],
+        [
+          0.9023,
+          0.3548
+        ],
+        [
+          0.9023,
+          0.4121
+        ],
+        [
+          0.8574,
+          0.4134
+        ]
+      ],
+      "box": [
+        0.8574,
+        0.3548,
+        0.0459,
+        0.0592
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8584,
+          0.4544
+        ],
+        [
+          0.9033,
+          0.4531
+        ],
+        [
+          0.9033,
+          0.5091
+        ],
+        [
+          0.8584,
+          0.5091
+        ]
+      ],
+      "box": [
+        0.8584,
+        0.4531,
+        0.0459,
+        0.0566
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9082,
+          0.2539
+        ],
+        [
+          0.9551,
+          0.2493
+        ],
+        [
+          0.9551,
+          0.306
+        ],
+        [
+          0.9082,
+          0.3092
+        ]
+      ],
+      "box": [
+        0.9082,
+        0.2493,
+        0.0479,
+        0.0605
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9131,
+          0.1536
+        ],
+        [
+          0.9609,
+          0.1478
+        ],
+        [
+          0.9609,
+          0.2044
+        ],
+        [
+          0.9131,
+          0.2096
+        ]
+      ],
+      "box": [
+        0.9131,
+        0.1478,
+        0.0488,
+        0.0625
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9131,
+          0.3542
+        ],
+        [
+          0.958,
+          0.3522
+        ],
+        [
+          0.9551,
+          0.4102
+        ],
+        [
+          0.9131,
+          0.4115
+        ]
+      ],
+      "box": [
+        0.9131,
+        0.3522,
+        0.0459,
+        0.0599
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.915,
+          0.4531
+        ],
+        [
+          0.9531,
+          0.4525
+        ],
+        [
+          0.9492,
+          0.5091
+        ],
+        [
+          0.9141,
+          0.5091
+        ]
+      ],
+      "box": [
+        0.9141,
+        0.4525,
+        0.04,
+        0.0573
+      ]
+    }
+  ],
+  "notes": "Calm search/chip wall target: x=0.20\u20130.80, y=0.00\u20130.34. Calm results-card floor/rug: x=0.22\u20130.78, y=0.82\u20130.96. Rolling wooden library ladder, cognac leather chair and ottoman, one cream sheepskin; dog beside ottoman. Rain at night, deep blue walls and warm amber lamps. No TV, candles, lanterns, baskets, plants, floor clutter or plaid. Focus encloses dog and complete seat for window-seat rooms; for rug-sleeping dogs, only the supporting local rug patch is included, not the entire room rug. Round 8 batch 3; selected attempt 1 of at most 3. Known deviation: Curtain rod touches approximately y=0.34 calm boundary; dog extends to y=0.78. QC: Slot 14 short edge 38px (below 40px target).",
+  "focus": [0.4590, 0.6934, 0.3271, 0.0944]
+}
