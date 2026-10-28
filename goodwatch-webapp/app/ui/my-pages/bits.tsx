@@ -44,15 +44,18 @@ export function PageHead({
 	line,
 	links = [],
 	back,
+	aside,
 }: {
 	name: string
 	line: ReactNode
 	links?: HeadLink[]
 	/** A page under another one: the way back, above the name. */
 	back?: HeadLink
+	/** A larger key of the page's own after the links, beside the name; under it on a phone. */
+	aside?: ReactNode
 }) {
 	// With one key on a phone, the key stays beside the name and the line under the name wraps in its column.
-	const oneRowOnPhones = links.filter((link) => !link.fromSm).length <= 1
+	const oneRowOnPhones = !aside && links.filter((link) => !link.fromSm).length <= 1
 	return (
 		<header
 			className={`${WRAP} flex items-end gap-y-3 pb-4 pt-6 ${oneRowOnPhones ? "flex-nowrap gap-x-4 sm:flex-wrap sm:gap-x-6" : "flex-wrap gap-x-6"}`}
@@ -77,6 +80,7 @@ export function PageHead({
 			{links.map((link) => (
 				<LinkKey key={link.to} link={link} />
 			))}
+			{aside}
 		</header>
 	)
 }

@@ -6,8 +6,8 @@
 // together: all to one score, or each a step up or down. A change saves at once and Undo takes it back.
 //
 // The member's whole list comes with the page; rows are drawn in steps while scrolling, so a long list stays light.
-import { ArrowUturnLeftIcon, ArrowsUpDownIcon, ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
-import { useSearchParams } from "@remix-run/react"
+import { ArrowUturnLeftIcon, ArrowsUpDownIcon, ChevronDownIcon, ChevronRightIcon, StarIcon } from "@heroicons/react/20/solid"
+import { Link, useSearchParams } from "@remix-run/react"
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { STICKY_BAR } from "~/ui/layers"
 import { LIBRARY_HUB, QUICK_LIST_PAGE } from "~/domain/my-library"
@@ -105,6 +105,27 @@ function Th({
 	)
 }
 
+/** The way back to Quick list, drawn like Quick list's strip that led here. */
+function ScoreMore() {
+	return (
+		<Link
+			to={QUICK_LIST_PAGE}
+			prefetch="intent"
+			data-score-more
+			className="group flex h-12 shrink-0 items-center gap-2.5 rounded-full bg-white/[0.03] pr-3 pl-1.5 ring-1 ring-white/10 hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-amber-400"
+		>
+			<span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-gray-400">
+				<StarIcon className="size-5" aria-hidden />
+			</span>
+			<span className="flex flex-col leading-tight">
+				<span className="text-sm font-extrabold text-gray-100">Score more</span>
+				<span className="text-xs text-gray-400">Back to Quick list</span>
+			</span>
+			<ChevronRightIcon className="size-5 shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5" aria-hidden />
+		</Link>
+	)
+}
+
 /** The last change and Undo, or how saving goes. Above the phone's dock. */
 function ChangeBar({ changes, save, onUndo }: { changes: Change[]; save: SaveState; onUndo: () => void }) {
 	const last = changes[0]
@@ -149,14 +170,14 @@ function ChangeBar({ changes, save, onUndo }: { changes: Change[]; save: SaveSta
 export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 	const s = useScores(titles)
 	const [f, setF] = useState<ScoreFilters>(NO_FILTERS)
-	// ?sort=rated opens the list last scored first (Quick list's link); ?from=quick leads back to Quick list.
+	// ?sort=rated opens the list last scored first (Quick list's link); ?from=quick adds Score more, back to Quick list.
 	const [params] = useSearchParams()
 	const [sort, setSort] = useState<{ by: ScoreSort; dir: Direction }>(() => {
 		const by = params.get("sort")
 		return isSort(by) ? { by, dir: FIRST_DIRECTION[by] } : { by: "score", dir: "desc" }
 	})
-	const back =
-		params.get("from") === "quick" ? { label: "Quick list", to: QUICK_LIST_PAGE } : { label: "My library", to: LIBRARY_HUB }
+	const back = { label: "My library", to: LIBRARY_HUB }
+	const aside = params.get("from") === "quick" ? <ScoreMore /> : null
 	const [grouping, setGrouping] = useState<ScoreGrouping>("none")
 	const [sheet, setSheet] = useState(false)
 	const [checked, setChecked] = useState<Set<string>>(new Set())
@@ -218,7 +239,7 @@ export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 	if (!titles.length)
 		return (
 			<div className="pb-24" data-my-scores>
-				<PageHead name="My scores" line="Every title you have scored." back={back} />
+				<PageHead name="My scores" line="Every title you have scored." back={back} aside={aside} />
 				<div className={WRAP}>
 					<Empty title="No scores yet">A score you give a title on its page appears here, to change any time.</Empty>
 				</div>
@@ -232,6 +253,7 @@ export function MyScoresPage({ titles }: { titles: ScoredTitle[] }) {
 				name="My scores"
 				line={`${count(titles.length)} titles you have scored. Change any score right in the list.`}
 				back={back}
+				aside={aside}
 			/>
 			<div className={`${WRAP} flex flex-col gap-3`}>
 				<div className="flex flex-wrap items-center gap-2.5" data-controls>
