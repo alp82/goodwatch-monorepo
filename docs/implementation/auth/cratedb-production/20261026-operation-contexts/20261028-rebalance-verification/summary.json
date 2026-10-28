@@ -1,0 +1,25 @@
+{
+  "updated_utc": "2026-10-28T03:33:56.179628+00:00",
+  "base": "ca1545368cb2e644a98fcca83a374287761cdae2",
+  "state": "IN_PROGRESS",
+  "rebalance_started": {
+    "utc": "2026-10-28T03:19:01.613582+00:00",
+    "baseline_target_copies": 374
+  },
+  "rebalance_complete": null,
+  "last_rebalance_sample": {
+    "utc": "2026-10-28T03:33:49.850783+00:00",
+    "placements": 17,
+    "all_GREEN": true
+  },
+  "backup": null,
+  "watcher": {
+    "probes": 555,
+    "unexpected": 0,
+    "slow": 0,
+    "alarms": 0,
+    "max_seconds": 2.634778
+  },
+  "gate_failure": null,
+  "abort": null
+}
