@@ -1,0 +1,106 @@
+{
+  "base": "658edc8bb",
+  "branch": "fix/644-immediate-rolling-resume",
+  "approved_runbook": "cdf4e7e1e",
+  "approved_runbook_sha256": "db2dd28322abae505722d64ca739c6d3fa55ee035aff2d3fb5ecb5369383c79a",
+  "gates_start_utc": "2026-10-28T00:51:51+00:00",
+  "handover_cutoff_utc": "2026-10-28T00:54:39.926104+00:00",
+  "window_replaced": "ImmediateGO to2026-10-28T04:00:00Z, not tonight23:00",
+  "result": "STOPPED atfirst workloadgate;no productionmutation orretryarmed",
+  "blocking_job": {
+    "observed_utc": "2026-10-28T00:52:55.310772+00:00",
+    "job": {
+      "id": "01a17fb1-feb6-c0d2-651f-9ab682b96648",
+      "script_path": "f/tmdb_api/provider_detector",
+      "started_at": "2026-10-28T00:00:00.040195Z",
+      "running": true,
+      "job_kind": "script",
+      "duration_ms": null,
+      "success": null,
+      "completed_at": null,
+      "canceled": false,
+      "parent_job": null
+    },
+    "keys": [
+      "args",
+      "canceled",
+      "created_at",
+      "created_by",
+      "email",
+      "id",
+      "is_flow_step",
+      "is_retry",
+      "job_kind",
+      "language",
+      "last_ping",
+      "logs",
+      "mem_peak",
+      "permissioned_as",
+      "runnable_settings_handle",
+      "running",
+      "same_worker",
+      "schedule_path",
+      "scheduled_for",
+      "script_entrypoint_override",
+      "script_hash",
+      "script_path",
+      "started_at",
+      "suspend",
+      "tag",
+      "timeout",
+      "trigger_kind",
+      "type",
+      "visible_to_owner",
+      "worker",
+      "workspace_id"
+    ],
+    "selected_nonsecret_args": {
+      "mode": "shadow"
+    },
+    "progress": [],
+    "log_lines_total": 21,
+    "flow_status_keys": []
+  },
+  "workload_gate_interpretation": "Active provider_detector is one of nine designated window holds; no current waiver. Confirmed shadow mode, so not claiming Cratepublication or a measured overload. No cancellation/additionalhold authorized.",
+  "production_mutations": [],
+  "schedules_paused": false,
+  "cron_held": false,
+  "watcher_started": false,
+  "watcher_errors": "Notmeasured;stopped beforewatcher/heapfullgates/nodeaction",
+  "replacements": [],
+  "versions": {
+    "crate-01": "5.10.16",
+    "crate-02": "6.0.8",
+    "crate-03": "5.10.16"
+  },
+  "failed_jobs": {
+    "start": "2026-10-28T00:51:51+00:00",
+    "end": "2026-10-28T00:54:39.926104+00:00",
+    "jobs": [],
+    "complete": true
+  },
+  "lock_test_performed": false,
+  "lock_clearance_proven": false,
+  "recommendation": "Ownercan explicitlywaive activeprovider_detector shadowjob andsendfreshGO,or waitforitscompletion andsendfreshGO; no automaticretryatcompletionorlatertime.",
+  "cluster_health": "145GREEN/1175STARTED all3;allocationall/rebalancenone",
+  "backups": [
+    [
+      "goodwatch-db-backup-v2",
+      "daily_20261028_000501",
+      "SUCCESS",
+      1793146400369,
+      1793146412179,
+      567,
+      []
+    ],
+    [
+      "goodwatch-db-backup-v2",
+      "hourly_20261028_000501",
+      "SUCCESS",
+      1793145901821,
+      1793146399969,
+      567,
+      []
+    ]
+  ]
+}

@@ -1,5 +1,15 @@
 # #644: operation-context investigation, 2026-10-26
 
+## October28 immediate resume — stopped at first workloadgate,00:52UTC
+
+`f/tmdb_api/provider_detector` was active since00:00UTC, job`01a17fb1-feb6-c0d2-651f-9ab682b96648`,
+**mode=shadow**. Treated as a blocker because it is one of nine designated holds and has no waiver;
+no claim of Cratepublication or measured overload. No schedules/cron/settings/node changes or watcher
+started. Cluster145GREEN/1175STARTED; versions5.10.16/6.0.8/5.10.16;00:05 backupsSUCCESS. No retryarmed.
+[Stop record and owner options](20261028-immediate-resume-workload-stop.md),
+[summary](20261028-immediate-resume-workload-stop.json),
+[read-only receipts](20261028-immediate-resume-workload-stop.json.gz).
+
 ## October28 backup repair — scheduled00:05 SUCCESS; next upgrade awaitsGO
 
 OwnerQ64's two-statement repair completed23:59:25UTC: V2 nowwrites to
