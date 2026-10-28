@@ -128,3 +128,47 @@ Round 4 base (every variant, unless its own idea says otherwise):
   reachable from the panel. Typing there replaces the panel content with matches from every filter.
 - The panel never scrolls a long list. More must show the niche filters in a way that needs at most a short scroll.
 - Variant keys are numbers: `variants/R4-<n>.tsx` exporting `NAME` and `VariantR4_<n>`, route keys "1".."10".
+
+## Round 5 (2026-10-28): hierarchy and structure
+
+Owner verdict on round 4: "8 is nice." Everything else is dropped. Request: "base on that and ditch the More from the
+main filter bar and instead incorporate them into the 4 others. We can: have tabs for the 4 categories; have subtabs per
+selection (without getting messy UX); have the search bar across all tabs; make each tab's content unique to the needs,
+unlocks and filters it contains; rearrange More categories into the other ones; change the composition of main and sub
+categories. This round is more about the hierarchy and structure and less about the design."
+
+Base (every variant): variant 8 (`variants/R4-8.tsx`, `R4-8-parts.tsx`, `R4-8-lanes.tsx`). Copy what you need into your
+own files `variants/R5-<n>-*.tsx`; never import from another variant's files. Keep 8's look, Search lanes (Describe a
+mood / Find a title / Similar to), status line, fixed-height panel, and phone sheet. Rules from earlier rounds still
+hold (static title, max 3 rows above the grid, no long scrolling lists, labels not prose, no layout shift, phone 390 px
+and desktop 1440 px).
+
+Round 5 rules:
+- No More segment. Every filter lives in a main tab or one of its sub-tabs. The full list to place: search text (q),
+  Similar to, Cast and crew (people), Loved, Disliked, Mood, About (themes), Style, Genre, Movies or shows (type),
+  Streaming services (+ country line), Production country, Age and content (ageLimit, only when `pieces.groups.ladder`),
+  Length (runtime), Not seen yet, Score (minScore), Scores by source, Critics vs audiences (scoreGap), Taste match
+  (minMatch), Released. Nothing may be dropped.
+- Sub-tabs: at most one row of sub-tabs inside a tab, short labels, the first sub-tab holds that tab's most used
+  controls. A sub-tab with active values shows a small count. The bar segment's value line still summarizes all its
+  sub-tabs' values.
+- Search across all tabs: the search field is reachable from every tab (how exactly is part of each variant's idea).
+  "Find a filter" must still exist, either merged into that field or as its own entry.
+- Each tab's content is shaped for its job (a tag mixer for moods, logos for streaming, sliders for scores), not a
+  generic stack of the same cards.
+- Focus on structure: label each tab and sub-tab clearly, so the owner judges where things live. Polish is secondary.
+- Files: `variants/R5-<n>.tsx` (already a placeholder; replace it) exporting `NAME` (2-4 words) and `VariantR5_<n>`,
+  route keys "11".."20". Done = tsc clean for your files + `curl` 200 for `?variant=<n>`.
+
+| Key | Structure idea |
+|---|---|
+| 11 | Same four tabs, More spread by topic. Search: Describe a mood, Find a title, Similar to, Cast and crew. Mood: Mood, About, Style, Genre (with Movies or shows). Streaming: Services, Length, Age and content, Production country. Watched: Seen (Not seen yet, Loved, Disliked), Scores (score, by source, critics vs audiences, taste match), Released. |
+| 12 | Renamed for the questions people ask: Search, Mood, Where, Quality. Mood = mood, about, style, genre, type. Where = services, production country, age and content, length ("what fits tonight"). Quality = score, by source, critics vs audiences, taste match, released. Not seen yet, Loved, Disliked live under Search as "Your history". |
+| 13 | Same four tabs, sub-tabs as a short vertical list on the left of the panel (not a row on top); each tab's right side is unique. Phones: the list becomes a sideways row. |
+| 14 | Tiers inside tabs: each tab opens on an "Essentials" view with its common controls laid out big, and its niche filters as a quiet labeled list at the bottom that swaps the view in place (with a back link). No sub-tab row at all. |
+| 15 | One field across everything: the search field sits above the tabs and stays put on every tab. Typing filters every tab at once: Search shows titles and "Search: text", Mood shows matching moods/themes/styles, Streaming matching services and countries, Watched matching filters; tab labels show match counts. This merges Find a filter into the main field. |
+| 16 | Three tabs, deeper sub-tabs: Search (mood, title, similar, cast and crew, loved and disliked), Mood (mood, about, style, genre and type, length), Watch (services, seen, scores, released, production country, age and content). Bar gets the space back. |
+| 17 | Sub-tabs in the bar: when a tab opens, its segment in the bar widens and shows its sub-tabs inline, the other segments shrink to labels. The panel shows only the selected sub-tab. Same four tabs, More spread like 11. |
+| 18 | Mood as the deep tab: Mood becomes a mixer with sub-tabs Feel, About, Style, Genre, Length, each showing combination counts and the picked recipe as one line on top. Streaming adds Age and content and Production country. Watched becomes "Taste" with Seen, Loved and disliked, Taste match, Scores, Released. Search keeps its three lanes plus Cast and crew. |
+| 19 | Personal vs title split: Search, Mood, Streaming, For you. For you holds everything about the viewer (Not seen yet, Taste match, Loved, Disliked, Similar to). Mood holds what the title is (mood, about, style, genre, type, length, released). Streaming holds where and for whom (services, production country, age and content). Scores live as a sub-tab of Mood ("How good"). |
+| 20 | Drill-down with a path: each tab opens on a grid of its sub-categories as tiles (with live values on them); tapping one replaces the panel with that sub-category and shows a path "Watched › Scores" with a back step. No visible second row of tabs. Same four tabs, More spread like 11. |

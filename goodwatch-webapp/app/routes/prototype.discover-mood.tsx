@@ -39,12 +39,32 @@ import * as R4_7 from "~/ui/prototype-discover-mood/variants/R4-7"
 import * as R4_8 from "~/ui/prototype-discover-mood/variants/R4-8"
 import * as R4_9 from "~/ui/prototype-discover-mood/variants/R4-9"
 import * as R4_10 from "~/ui/prototype-discover-mood/variants/R4-10"
+import * as R5_11 from "~/ui/prototype-discover-mood/variants/R5-11"
+import * as R5_12 from "~/ui/prototype-discover-mood/variants/R5-12"
+import * as R5_13 from "~/ui/prototype-discover-mood/variants/R5-13"
+import * as R5_14 from "~/ui/prototype-discover-mood/variants/R5-14"
+import * as R5_15 from "~/ui/prototype-discover-mood/variants/R5-15"
+import * as R5_16 from "~/ui/prototype-discover-mood/variants/R5-16"
+import * as R5_17 from "~/ui/prototype-discover-mood/variants/R5-17"
+import * as R5_18 from "~/ui/prototype-discover-mood/variants/R5-18"
+import * as R5_19 from "~/ui/prototype-discover-mood/variants/R5-19"
+import * as R5_20 from "~/ui/prototype-discover-mood/variants/R5-20"
 import * as Today from "~/ui/prototype-discover-mood/variants/Today"
 
 export const meta: MetaFunction = () => [{ title: "PROTOTYPE · Discover mood" }, { name: "robots", content: "noindex" }]
 export const shouldRevalidate: ShouldRevalidateFunction = () => false
 
 const VARIANTS = {
+	"11": { name: R5_11.NAME, View: R5_11.VariantR5_11 },
+	"12": { name: R5_12.NAME, View: R5_12.VariantR5_12 },
+	"13": { name: R5_13.NAME, View: R5_13.VariantR5_13 },
+	"14": { name: R5_14.NAME, View: R5_14.VariantR5_14 },
+	"15": { name: R5_15.NAME, View: R5_15.VariantR5_15 },
+	"16": { name: R5_16.NAME, View: R5_16.VariantR5_16 },
+	"17": { name: R5_17.NAME, View: R5_17.VariantR5_17 },
+	"18": { name: R5_18.NAME, View: R5_18.VariantR5_18 },
+	"19": { name: R5_19.NAME, View: R5_19.VariantR5_19 },
+	"20": { name: R5_20.NAME, View: R5_20.VariantR5_20 },
 	"1": { name: R4_1.NAME, View: R4_1.VariantR4_1 },
 	"2": { name: R4_2.NAME, View: R4_2.VariantR4_2 },
 	"3": { name: R4_3.NAME, View: R4_3.VariantR4_3 },
@@ -81,14 +101,14 @@ const VARIANTS = {
 	D: { name: D.NAME, View: D.VariantD },
 	"0": { name: Today.NAME, View: Today.VariantToday },
 } as const
-// The switcher cycles round 4 (1-10), its parents (V, R) and the baseline; earlier rounds stay reachable by URL.
-const CYCLE = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "V", "R", "0"] as const
+// The switcher cycles round 5 (11-20), its parent (8) and the baseline; earlier rounds stay reachable by URL.
+const CYCLE = ["11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "8", "0"] as const
 
 export default function PrototypeDiscoverMood() {
 	const [params] = useSearchParams()
-	const key = (params.get("variant") ?? "1") as keyof typeof VARIANTS
+	const key = (params.get("variant") ?? "11") as keyof typeof VARIANTS
 	const d = useProtoDiscover()
-	const { View } = VARIANTS[key] ?? VARIANTS["1"]
+	const { View } = VARIANTS[key] ?? VARIANTS["11"]
 	return (
 		<>
 			<View d={d} />
