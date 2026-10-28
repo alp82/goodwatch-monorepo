@@ -9,8 +9,8 @@ import {
 	summarizeAiActions,
 } from "./ai-activity.ts"
 
-/** The most calls one read looks at: 50 titles each is far more than one list. */
-const MAX_ACTIONS = 200
+/** The most calls one read looks at: far more than one list, even one title per call. */
+const MAX_ACTIONS = 1000
 /** How far back a reading may start, so an old timestamp can't read a member's whole history. */
 export const MAX_LOOKBACK_MS = 6 * 60 * 60 * 1000
 
@@ -35,17 +35,29 @@ export const sinceFrom = (raw: string | null, now = Date.now()) => {
 	return Math.min(now, Math.max(value, now - MAX_LOOKBACK_MS))
 }
 
+type Row = {
+	action_id: string
+	created_at: number | string
+	result: string | null
+}
+
 async function readRows(userId: string, since: number) {
-	const rows = await query<{
-		action_id: string
-		created_at: number | string
-		result: string | null
-	}>(
-		`SELECT action_id, created_at, result FROM user_mcp_action
-		 WHERE user_id = ? AND created_at >= ? ORDER BY created_at LIMIT ${MAX_ACTIONS}`,
-		[userId, new Date(since)],
-	)
-	return rows.map(
+	// Undo receipts are read on their own, so a long run of calls never pushes them out of the window.
+	const [calls, undos] = await Promise.all([
+		query<Row>(
+			`SELECT action_id, created_at, result FROM user_mcp_action
+			 WHERE user_id = ? AND created_at >= ? AND action_id NOT LIKE 'batch-undo:%'
+			 ORDER BY created_at LIMIT ${MAX_ACTIONS}`,
+			[userId, new Date(since)],
+		),
+		query<Row>(
+			`SELECT action_id, created_at, result FROM user_mcp_action
+			 WHERE user_id = ? AND created_at >= ? AND action_id LIKE 'batch-undo:%'
+			 ORDER BY created_at LIMIT ${MAX_ACTIONS}`,
+			[userId, new Date(since)],
+		),
+	])
+	return [...calls, ...undos].map(
 		(row): AiActionRow => ({
 			action_id: row.action_id,
 			created_at: new Date(row.created_at).getTime(),
@@ -114,7 +126,11 @@ export async function undoAiActivity(
 	const origin = new URL(request.url).origin
 	const { writeMemberTool } = await import("~/server/mcp/writes.server")
 	for (const batchId of activity.batches) {
-		if (activity.undone.includes(batchId)) continue
+		if (
+			activity.undone.includes(batchId) ||
+			activity.undoIncomplete.includes(batchId)
+		)
+			continue
 		await writeMemberTool(userId, origin, "undo_watch", {
 			action_id: `imports-undo:${batchId}`,
 			batch_id: batchId,

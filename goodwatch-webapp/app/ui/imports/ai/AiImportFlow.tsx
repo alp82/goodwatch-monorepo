@@ -41,6 +41,7 @@ const POLL_MS = 2500
 /** After this long without a new change, the import counts as finished and Done shows. Done keeps listening. */
 const QUIET_MS = 20_000
 const ALL_RULES: Rules = { seen: true, scores: true, want: true }
+const newReading = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`
 
 async function call(init?: RequestInit, since?: number): Promise<Activity> {
 	const url = since ? `${API}?since=${since}` : API
@@ -54,9 +55,10 @@ async function call(init?: RequestInit, since?: number): Promise<Activity> {
 }
 
 /** What the AI app changed since the source opened. The first read fixes `since` on the server's clock. */
-function useAiActivity(round: number, since: number | null, fast: boolean) {
+function useAiActivity(reading: string, since: number | null, fast: boolean) {
 	return useQuery({
-		queryKey: ["imports", "ai-activity", round, since],
+		queryKey: ["imports", "ai-activity", reading, since],
+		gcTime: 0,
 		queryFn: () => call(undefined, since ?? undefined),
 		refetchInterval: fast ? POLL_MS : POLL_MS * 2,
 		refetchOnWindowFocus: true,
@@ -216,8 +218,12 @@ function Done({
 	undoFailed: boolean
 	onAnother: () => void
 }) {
-	const open = activity.batches.filter((id) => !activity.undone.includes(id))
+	const open = activity.batches.filter(
+		(id) =>
+			!activity.undone.includes(id) && !activity.undoIncomplete.includes(id),
+	)
 	const takenBack = activity.batches.length > 0 && open.length === 0
+	const incomplete = activity.undoIncomplete.length > 0
 	const { seen, scored, wanted } = activity.counts
 	const tiles = [
 		{ key: "seen", name: "Seen", total: null, added: seen, removed: 0 },
@@ -243,7 +249,9 @@ function Done({
 			<CountTiles tiles={tiles} />
 			<p className="text-gray-300">
 				{takenBack
-					? "Everything your AI app added in batches is back the way it was."
+					? incomplete
+						? "Most of it is back the way it was, but some titles couldn't be taken back. Ask your AI app to fix those."
+						: "Everything your AI app added in batches is back the way it was. A title you changed again since keeps your newer change."
 					: "New titles your AI app adds still show up here."}
 				{activity.singles > 0 &&
 					` ${formatCount(activity.singles)} ${activity.singles === 1 ? "change was" : "changes were"} made one title at a time. To take ${activity.singles === 1 ? "it" : "those"} back, ask your AI app.`}
@@ -278,12 +286,18 @@ const box =
 export function AiImportFlow({ onOther }: { onOther: () => void }) {
 	const client = useQueryClient()
 	const [step, setStep] = useState<Step>(1)
+	// Set when the member goes back to Bring, so its heading takes focus then (never on arrival).
+	const [cameBack, setCameBack] = useState(false)
+	const goTo = (next: Step) => {
+		if (next === 1) setCameBack(true)
+		setStep(next)
+	}
 	const [source, setSource] = useState<ListSourceKey>(LIST_SOURCES[0].key)
 	const [rules, setRules] = useState<Rules>(ALL_RULES)
 	const [since, setSince] = useState<number | null>(null)
-	// Each list brought starts a new reading.
-	const [round, setRound] = useState(0)
-	const query = useAiActivity(round, since, step >= 3)
+	// Each opening of the source and each list brought starts a reading of its own, never a cached earlier one.
+	const [reading, setReading] = useState(newReading)
+	const query = useAiActivity(reading, since, step >= 3)
 	const activity = query.data
 	// The first answer fixes the starting moment on the server's clock.
 	useEffect(() => {
@@ -316,7 +330,7 @@ export function AiImportFlow({ onOther }: { onOther: () => void }) {
 				body: JSON.stringify({ intent: "undo", since }),
 			}),
 		onSuccess: (data) => {
-			client.setQueryData(["imports", "ai-activity", round, since], data)
+			client.setQueryData(["imports", "ai-activity", reading, since], data)
 			void invalidateMemberData(client)
 		},
 	})
@@ -332,7 +346,7 @@ export function AiImportFlow({ onOther }: { onOther: () => void }) {
 			step === 4 ? `${formatCount(arrived)} added` : "",
 		],
 		allDone: step === 4,
-		openStep: step === 2 || waiting ? (n) => setStep(n as Step) : undefined,
+		openStep: step === 2 || waiting ? (n) => goTo(n as Step) : undefined,
 	})
 	const prompt = promptFor(rules, source)
 	const connected = activity?.connected !== false
@@ -343,7 +357,9 @@ export function AiImportFlow({ onOther }: { onOther: () => void }) {
 			<div className={box}>
 				{step === 1 && (
 					<>
-						<StepHeading focus={false}>Bring a list from anywhere</StepHeading>
+						<StepHeading focus={cameBack}>
+							Bring a list from anywhere
+						</StepHeading>
 						<p>
 							Your AI app reads it and adds the titles to GoodWatch. Where is
 							your list?
@@ -389,7 +405,7 @@ export function AiImportFlow({ onOther }: { onOther: () => void }) {
 							mono={false}
 							size="lg"
 						/>
-						<Actions back={() => setStep(1)}>
+						<Actions back={() => goTo(1)}>
 							<button
 								type="button"
 								className={primaryButton}
@@ -435,8 +451,8 @@ export function AiImportFlow({ onOther }: { onOther: () => void }) {
 						onAnother={() => {
 							undo.reset()
 							setSince(null)
-							setRound((n) => n + 1)
-							setStep(1)
+							setReading(newReading())
+							goTo(1)
 						}}
 					/>
 				)}

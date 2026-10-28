@@ -291,6 +291,7 @@ export async function writeMemberTool(
 						? "unchanged"
 						: "applied",
 				action_id: args.action_id,
+				tool: name,
 				title: ports.summary(title, origin),
 				...(part ? { part: partLabel(part) } : {}),
 				before: {

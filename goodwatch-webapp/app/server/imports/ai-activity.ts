@@ -29,8 +29,10 @@ export interface AiActivity {
 	counts: { seen: number; scored: number; wanted: number }
 	/** Batch calls that changed something, oldest first: what Undo all takes back. */
 	batches: string[]
-	/** Batch calls already taken back. */
+	/** Batch calls taken back completely (a title changed again since keeps its newer value, as designed). */
 	undone: string[]
+	/** Batch calls whose undo finished but left titles it couldn't take back, or failed. */
+	undoIncomplete: string[]
 	/** Single-title calls that changed something. Undo all can't take these back; the AI app can. */
 	singles: number
 	/** When the newest counted call was made, or null. */
@@ -101,13 +103,17 @@ function singleCall(result: Data) {
 	const after = isObject(result.after) ? result.after : null
 	const changes = isObject(result.changes) ? result.changes : {}
 	if (!before || !after) return null
+	// Watches added by this call, except a score's own watch, which an undo can put back.
 	const added = Array.isArray(changes.watches_added)
-		? changes.watches_added.length
+		? changes.watches_added.filter(
+				(watch) => !isObject(watch) || watch.origin !== "score",
+			).length
 		: 0
 	return {
+		// A show counts as newly seen only when it wasn't started before, so an undo that moves a finished show back to
+		// Watching isn't read as an import.
 		seen:
-			added > 0 ||
-			(before.status !== after.status && startedShow(after.status)),
+			added > 0 || (!startedShow(before.status) && startedShow(after.status)),
 		scored:
 			(after.score != null && after.score !== before.score) ||
 			(after.part_score != null && after.part_score !== before.part_score),
@@ -119,6 +125,7 @@ export function summarizeAiActions(rows: AiActionRow[]): AiActivity {
 	const titles = new Map<string, AiTitleChange>()
 	const batches: string[] = []
 	const undone: string[] = []
+	const undoIncomplete: string[] = []
 	let singles = 0
 	let lastChangeAt: number | null = null
 	const add = (
@@ -140,8 +147,15 @@ export function summarizeAiActions(rows: AiActionRow[]): AiActivity {
 	for (const row of sorted) {
 		if (row.action_id.startsWith(BATCH_UNDO_PREFIX)) {
 			const result = parse(row.result)
-			if (result && result.outcome !== "indeterminate")
-				undone.push(row.action_id.slice(BATCH_UNDO_PREFIX.length))
+			if (!result || result.outcome === "indeterminate") continue
+			const id = row.action_id.slice(BATCH_UNDO_PREFIX.length)
+			const summary = isObject(result.summary) ? result.summary : null
+			const complete =
+				!!summary &&
+				!summary.error &&
+				!summary.partly_undone &&
+				!summary.not_undoable
+			;(complete ? undone : undoIncomplete).push(id)
 			continue
 		}
 		const result = parse(row.result)
@@ -153,7 +167,7 @@ export function summarizeAiActions(rows: AiActionRow[]): AiActivity {
 					counted = true
 			if (counted && typeof result.batch_id === "string")
 				batches.push(result.batch_id)
-		} else if (result.outcome === "applied") {
+		} else if (result.outcome === "applied" && result.tool !== "undo_watch") {
 			counted = add(titleOf(result.title), singleCall(result))
 			if (counted) singles++
 		}
@@ -169,6 +183,7 @@ export function summarizeAiActions(rows: AiActionRow[]): AiActivity {
 		},
 		batches,
 		undone: undone.filter((id) => batches.includes(id)),
+		undoIncomplete: undoIncomplete.filter((id) => batches.includes(id)),
 		singles,
 		lastChangeAt,
 	}

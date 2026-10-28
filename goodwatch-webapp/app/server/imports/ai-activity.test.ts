@@ -184,7 +184,10 @@ test("a batch undo receipt marks its batch undone; a pending one doesn't", () =>
 	const activity = summarizeAiActions([
 		batch("b1", 1),
 		batch("b2", 2),
-		row("batch-undo:b1", 3, { outcome: "applied" }),
+		row("batch-undo:b1", 3, {
+			outcome: "applied",
+			summary: { undone: 1, partly_undone: 0, not_undoable: 0, error: 0 },
+		}),
 		row("batch-undo:b2", 4, { outcome: "indeterminate" }),
 		row("batch-undo:other", 5, { outcome: "applied" }),
 	])
@@ -200,4 +203,76 @@ test("unreadable and pending results are skipped", () => {
 	])
 	assert.equal(activity.titles.length, 0)
 	assert.equal(activity.lastChangeAt, null)
+})
+
+test("an undo that left titles behind, or failed, is incomplete, not undone", () => {
+	const batch = (id: string, at: number) =>
+		row(id, at, {
+			batch: true,
+			batch_id: id,
+			items: [
+				{
+					status: "done",
+					title: title(`movie:${at}`, id),
+					changes: {},
+					watches_added: 1,
+				},
+			],
+		})
+	const activity = summarizeAiActions([
+		batch("b1", 1),
+		batch("b2", 2),
+		batch("b3", 3),
+		row("batch-undo:b1", 4, {
+			outcome: "applied",
+			summary: {
+				undone: 1,
+				partly_undone: 0,
+				changed_since: 1,
+				not_undoable: 0,
+				error: 0,
+			},
+		}),
+		row("batch-undo:b2", 5, {
+			outcome: "applied",
+			summary: {
+				undone: 1,
+				partly_undone: 1,
+				changed_since: 0,
+				not_undoable: 0,
+				error: 0,
+			},
+		}),
+		row("batch-undo:b3", 6, { outcome: "refused", message: "nope" }),
+	])
+	assert.deepEqual(activity.undone, ["b1"])
+	assert.deepEqual(activity.undoIncomplete, ["b2", "b3"])
+})
+
+test("single undo calls and a score's own watch are not an import", () => {
+	const activity = summarizeAiActions([
+		row("s1", 1, {
+			outcome: "applied",
+			tool: "undo_watch",
+			title: title("movie:1", "Alpha"),
+			before: { score: 7, want_to_see: false, status: null },
+			after: { score: 8, want_to_see: false, status: null },
+			changes: {
+				watches_added: [{ id: "w", origin: "score" }],
+				watches_removed: [],
+			},
+		}),
+		// An older receipt without a tool: a finished show moved back to Watching isn't newly seen.
+		row("s2", 2, {
+			outcome: "applied",
+			title: title("show:2", "Beta"),
+			before: { score: null, want_to_see: false, status: "finished" },
+			after: { score: null, want_to_see: false, status: "watching" },
+			changes: {
+				watches_added: [{ id: "x", origin: "score" }],
+				watches_removed: [{ id: "y" }],
+			},
+		}),
+	])
+	assert.equal(activity.titles.length, 0)
 })

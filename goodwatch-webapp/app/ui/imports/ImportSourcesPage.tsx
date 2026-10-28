@@ -100,6 +100,14 @@ export function ImportSourcesPage({
 	const [acted, setActed] = useState(0)
 	// The "Your AI app" source, open in a source's place.
 	const [ai, setAi] = useState(false)
+	// Counts the member's asks to see where to get a file; each one scrolls there.
+	const [where, setWhere] = useState(0)
+	useEffect(() => {
+		if (!where) return
+		const section = document.getElementById(WHERE_ID)
+		section?.scrollIntoView?.({ block: "start", behavior: "smooth" })
+		section?.querySelector<HTMLElement>("h2")?.focus({ preventScroll: true })
+	}, [where])
 	const [reported, setReported] = useState<ImportStepState | null>(null)
 	const show = (next: Open) => {
 		setAi(false)
@@ -156,9 +164,18 @@ export function ImportSourcesPage({
 				</button>
 			</p>
 			<div>
-				<a href={`#${WHERE_ID}`} className={textLink}>
+				<button
+					type="button"
+					className={textLink}
+					onClick={() => {
+						// The file sources show on Bring only: go back there, then to them.
+						setAi(false)
+						setOpen(null)
+						setWhere((n) => n + 1)
+					}}
+				>
 					Where do I get my file?
-				</a>
+				</button>
 			</div>
 		</ProblemCard>
 	)
@@ -341,7 +358,8 @@ function WhereToGet({ onPick }: { onPick: (id: ImportSourceId) => void }) {
 		>
 			<h2
 				id={`${WHERE_ID}-heading`}
-				className="mb-3 text-lg font-bold text-white"
+				tabIndex={-1}
+				className="mb-3 text-lg font-bold text-white outline-none"
 			>
 				Where do I get my file?
 			</h2>
