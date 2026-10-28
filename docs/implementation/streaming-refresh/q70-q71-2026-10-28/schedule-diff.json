@@ -1,0 +1,11 @@
+{
+  "args": {
+    "before": {
+      "mode": "shadow"
+    },
+    "after": {
+      "mode": "shadow",
+      "max_seconds": 3300
+    }
+  }
+}

@@ -1,0 +1,64 @@
+diff --git a/goodwatch-flows/tests/test_list_offer_refresh.py b/goodwatch-flows/tests/test_list_offer_refresh.py
+index 579066729..794d94094 100644
+--- a/goodwatch-flows/tests/test_list_offer_refresh.py
++++ b/goodwatch-flows/tests/test_list_offer_refresh.py
+@@ -337,0 +338,51 @@ class RefreshTests(unittest.TestCase):
++    def test_reused_bson_provider_proof_reaches_list_history_and_offer_handoff(self):
++        from bson import BSON, Int64
++        from contextlib import contextmanager
++        from f.tmdb_api.daily_provider_lists import TitleChecks
++        from f.tmdb_api.provider_observations import normalize_payload
++
++        payload = normalize_payload({'results': {'DE': {'flatrate': [{'provider_id': 8}]}}})
++        proof = capture_provider_check({'id': 42, 'watch/providers': payload}, 42,
++                                       self.now, bypass_cache=True)
++        source = BSON(BSON.encode(dict(tmdb_id=42, watch_providers=payload,
++                                      watch_providers_check=proof))).decode()
++        self.db.tmdb_movie_details.replace_one({'tmdb_id': 42}, source)
++        self.assertIsInstance(source['watch_providers_check']['checked_at'], Int64)
++        api = Mock()
++        api.get.side_effect = AssertionError('Matching same-day evidence must avoid HTTP')
++
++        @contextmanager
++        def owned_titles(db, media_type, ids):
++            self.assertIs(db, self.db)
++            self.assertEqual((media_type, ids), ('movie', [42]))
++            yield ids, lambda: None
++
++        crate = HistoryCrate()
++        store = ListStorage(db=self.db, connector=crate, dry_run=False)
++        with TitleChecks(api, lambda: self.now, self.db, dry_run=False) as reads:
++            _, reused_payload, reused_proof = reads.read(
++                'movie', [42], 'DE', 8, {42}, utc_ms(self.now))[0]
++            self.assertIsInstance(reused_proof['checked_at'], Int64)
++            key = OfferKey(42, 'movie', 'DE', 8, 'flatrate')
++            title = HistoryTitle(42, dict(watch_providers=reused_payload,
++                                         watch_providers_check=reused_proof),
++                                 {key: key._asdict()}, {}, [], [],
++                                 ListRead('DE', 8, utc_ms(self.now)))
++            store.publish('movie', title, lambda: None)
++            with patch('f.sync.copy.tmdb_streaming.publication_leases', owned_titles):
++                store.flush()
++        queued = self.db.tmdb_list_offer_refresh.find_one({'_id': 'movie:42'})
++        self.assertTrue(queued['pending'])
++        self.assertEqual(queued['scopes'], {'DE_8': proof['checked_at']})
++        self.assertEqual(len(crate.history), 1)
++        api.get.assert_not_called()
++        self.assertEqual(self.db.tmdb_movie_details.find_one()['watch_providers_check'],
++                         source['watch_providers_check'])
++
++    def test_scope_timestamps_reject_booleans_nonintegers_and_nonpositive_values(self):
++        for value in (True, False, 0, -1, 1.5, '1793109600000', None):
++            with self.subTest(value=value), self.assertRaisesRegex(
++                    ValueError, 'Invalid verified scope or check timestamp'):
++                refresh.enqueue(self.db, 'movie', 42, {'DE_8': value})
++        self.assertEqual(self.db.tmdb_list_offer_refresh.count_documents({}), 0)
++
+diff --git a/goodwatch-flows/windmill/f/tmdb_api/list_offer_refresh.py b/goodwatch-flows/windmill/f/tmdb_api/list_offer_refresh.py
+index 642c7944d..a20fa330f 100644
+--- a/goodwatch-flows/windmill/f/tmdb_api/list_offer_refresh.py
++++ b/goodwatch-flows/windmill/f/tmdb_api/list_offer_refresh.py
+@@ -109 +109,2 @@ def enqueue(db, media_type, tmdb_id, scopes, *, priority=0):
+-    if any(not re.fullmatch(r'[A-Z]{2}_[1-9][0-9]*', scope) or type(at) is not int or at <= 0
++    if any(not re.fullmatch(r'[A-Z]{2}_[1-9][0-9]*', scope)
++           or not isinstance(at, int) or isinstance(at, bool) or at <= 0

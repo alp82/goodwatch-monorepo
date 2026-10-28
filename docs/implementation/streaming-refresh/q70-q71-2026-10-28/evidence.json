@@ -1,0 +1,3927 @@
+{
+  "at": "2026-10-28T12:43:10.801591+00:00",
+  "fix_commit": "814cedabd",
+  "october28": {
+    "id": "01a17da9-27c2-c213-30e8-2e680253940f",
+    "type": "QueuedJob",
+    "scheduled_for": "2026-10-28T14:00:00Z",
+    "started_at": null,
+    "running": false,
+    "success": null
+  },
+  "daily_list_runs": [
+    {
+      "day": "2026-10-22",
+      "id": "01a163e9-5b47-5209-9ff4-e0e867c77019",
+      "script_hash": "79a2aff7cff71c9e",
+      "started_at": "2026-10-22T14:00:00.084281Z",
+      "completed_at": "2026-10-22T20:20:29.562952Z",
+      "lists_completed": 3659,
+      "lists_failed": 1,
+      "failure_types": {
+        "IncompleteList": 1
+      },
+      "failed_scopes": [
+        {
+          "key": "PY:movie:337",
+          "error": "IncompleteList",
+          "reason": "Expected 2205 distinct titles, read 2203",
+          "tmdb_id": null,
+          "endpoint": "/discover/movie",
+          "media_type": "movie",
+          "http_status": null
+        }
+      ]
+    },
+    {
+      "day": "2026-10-24",
+      "id": "01a16e36-13e8-78a4-ccc4-c672a6db0e8b",
+      "script_hash": "7522e073082c8c72",
+      "started_at": "2026-10-24T14:00:00.246645Z",
+      "completed_at": "2026-10-24T17:21:55.101701Z",
+      "lists_completed": 4170,
+      "lists_failed": 0,
+      "failure_types": {},
+      "failed_scopes": []
+    },
+    {
+      "day": "2026-10-25",
+      "id": "01a1735c-6f3e-0842-ae74-aa8e45f93d10",
+      "script_hash": "7522e073082c8c72",
+      "started_at": "2026-10-25T14:00:00.072545Z",
+      "completed_at": "2026-10-25T17:29:11.621587Z",
+      "lists_completed": 4170,
+      "lists_failed": 0,
+      "failure_types": {},
+      "failed_scopes": []
+    },
+    {
+      "day": "2026-10-26",
+      "id": "01a17882-cc15-3f94-2df0-8e6deb515cdc",
+      "script_hash": "d60a19be1dde3583",
+      "started_at": "2026-10-26T14:00:00.290403Z",
+      "completed_at": "2026-10-26T21:30:04.483917Z",
+      "lists_completed": 4006,
+      "lists_failed": 164,
+      "failure_types": {
+        "ValueError": 163,
+        "RuntimeError": 1
+      },
+      "failed_scopes": [
+        {
+          "key": "LC:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AR:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AR:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BS:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CO:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CV:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CV:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "GH:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "GH:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "ID:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "ID:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "IQ:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "LC:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MA:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MA:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MC:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MC:movie:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MC:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MC:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MK:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MK:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MZ:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MZ:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "NG:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "NG:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PY:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PY:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SA:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SC:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SK:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SK:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SK:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SN:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SV:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SV:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TC:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TC:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CR:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "FI:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "FI:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "IE:movie:119",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "IE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "JO:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "LT:movie:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "LT:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MG:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MT:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MT:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PE:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PE:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SE:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SE:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SG:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SI:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SI:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TR:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TW:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TW:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TZ:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "UY:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "UY:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "UY:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BO:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BO:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BO:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BZ:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BZ:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "US:show:9",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "US:show:2100",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CY:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "DE:movie:9",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "DE:movie:2100",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "DO:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "DO:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "EC:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "GI:movie:119",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "GR:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "GR:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "JP:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "JP:movie:1796",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "ME:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "NO:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PF:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PH:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "RO:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "RO:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "UA:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "YE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "ZW:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AD:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AD:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AT:movie:9",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AT:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AT:movie:2100",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AT:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BA:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BR:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BY:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CH:movie:119",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CU:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CZ:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CZ:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "EE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "JM:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "KE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "KR:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "KR:show:1796",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "NI:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "NI:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PL:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PL:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PS:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "QA:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SM:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AL:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BE:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BG:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BG:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CI:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CM:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "DK:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "DZ:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "ES:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "FR:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "FR:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "IS:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "GB:movie:9",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "GB:movie:2100",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "IT:movie:119",
+          "error": "RuntimeError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "IT:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "IT:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "LU:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "LV:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "OM:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PA:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PT:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TD:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TH:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TH:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "VE:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "VE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "ZM:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AZ:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BB:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "GF:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "GQ:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "GT:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "HK:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "HN:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "HU:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "HU:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "LB:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "LI:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "ML:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MY:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "NE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "NL:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "NZ:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TN:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TT:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TT:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        }
+      ]
+    },
+    {
+      "day": "2026-10-27",
+      "id": "01a17da9-27dc-dde4-1fbc-a868e5e6979b",
+      "script_hash": "d60a19be1dde3583",
+      "started_at": "2026-10-27T14:00:00.230684Z",
+      "completed_at": "2026-10-27T21:30:05.556331Z",
+      "lists_completed": 3920,
+      "lists_failed": 250,
+      "failure_types": {
+        "ValueError": 249,
+        "RuntimeError": 1
+      },
+      "failed_scopes": [
+        {
+          "key": "LC:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "AR:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "AR:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "BS:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "CO:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "CV:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "CV:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "GH:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "GH:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "ID:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "ID:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "IQ:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "LC:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "MA:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "MA:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "MC:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "MC:movie:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "MC:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "MC:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "MK:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "MK:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "MZ:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "MZ:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "NG:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "NG:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "PY:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "PY:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SA:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SC:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SK:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SK:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SK:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SN:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SV:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SV:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "TC:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "TC:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "CR:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "FI:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "FI:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "IE:movie:119",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "IE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "JO:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "LT:movie:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "LT:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "MG:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "MT:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "MT:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "PE:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "PE:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "PE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SE:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SE:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SG:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SI:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SI:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "TR:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "TW:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "TW:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "TZ:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "UY:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "UY:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "UY:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "BO:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "BO:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "BO:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "BZ:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "BZ:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "US:show:9",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "US:show:2100",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "CY:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "DE:movie:9",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "DE:movie:2100",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "DO:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "DO:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "EC:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "GI:movie:119",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "GR:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "GR:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "JP:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "JP:movie:1796",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "ME:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "NO:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "PF:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "PH:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "RO:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "RO:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "UA:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "YE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "ZW:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "AD:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "AD:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "AT:movie:9",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "AT:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "AT:movie:2100",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "AT:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "BA:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "BR:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "BY:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "CH:movie:119",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "CU:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "CZ:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "CZ:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "EE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "JM:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "KE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "KR:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "KR:show:1796",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "NI:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "NI:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "PL:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "PL:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "PS:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "QA:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "SM:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "AL:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "BE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "BE:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "BG:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "BG:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "CI:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "CM:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "DK:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "DZ:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "ES:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "FR:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "FR:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "IS:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "GB:movie:9",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "GB:movie:2100",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "IT:movie:119",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "IT:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "IT:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "LU:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "LV:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "OM:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "PA:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "PT:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "TD:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "TH:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "TH:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "VE:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "VE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "ZM:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "AZ:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "BB:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "GF:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "GQ:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "GT:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "HK:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "HN:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "HU:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "HU:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "LB:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "LI:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "ML:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "MY:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "NE:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "NL:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "NZ:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "TN:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "TT:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "TT:show:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 2
+        },
+        {
+          "key": "PY:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AR:movie:531",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AR:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CO:movie:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CO:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CO:show:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PY:show:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SN:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AO:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BM:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CR:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CR:show:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "FI:show:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "IE:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "IE:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "JO:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "KW:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "LT:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MG:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MT:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MU:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PE:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PE:show:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SE:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "SG:show:119",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TR:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TW:show:119",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TW:show:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "TZ:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "UY:show:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "ZA:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "ZA:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AE:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AE:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AG:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BO:show:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "US:movie:9",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "US:movie:15",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "US:movie:2100",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "US:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "US:show:386",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "US:show:387",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CY:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "DE:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "DE:movie:1796",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "DE:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "DO:show:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "EC:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "EC:show:337",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "EG:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "GI:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "IN:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "JP:show:15",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "ME:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "NO:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PF:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PG:show:1899",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PH:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "RO:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "RS:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "UA:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "YE:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "ZW:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AD:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AT:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BR:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CA:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CZ:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MD:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "BE:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "ES:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "FR:movie:119",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "FR:movie:2100",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "FR:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "GB:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "IT:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "LU:movie:119",
+          "error": "RuntimeError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "PT:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "AU:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "CL:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MX:movie:531",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MX:movie:2303",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "MX:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "NL:movie:8",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "movie",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "NL:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        },
+        {
+          "key": "NZ:show:283",
+          "error": "ValueError",
+          "tmdb_id": null,
+          "endpoint": null,
+          "media_type": "show",
+          "http_status": null,
+          "consecutive_failure_days": 1
+        }
+      ]
+    }
+  ],
+  "source_readbacks": {
+    "daily_provider_lists": {
+      "hash": "d60a19be1dde3583",
+      "created_at": "2026-10-26T08:28:18.591704Z"
+    },
+    "daily_list_storage": {
+      "hash": "2fc7a977ce9a53b4",
+      "created_at": "2026-10-26T08:28:13.517080Z"
+    },
+    "list_offer_refresh": {
+      "hash": "6fed3ea9942260ab",
+      "created_at": "2026-10-26T08:28:08.442930Z"
+    },
+    "provider_observations": {
+      "hash": "f966f0517ddf32d8",
+      "created_at": "2026-10-26T08:27:53.316170Z"
+    },
+    "daily_list_ramp": {
+      "hash": "7829efb873328294",
+      "created_at": "2026-10-26T08:27:52.412225Z"
+    }
+  },
+  "access_gaps": {
+    "historical_generic_failures": "list_failure discards messages/tracebacks for generic ValueError/RuntimeError",
+    "archived_logs": "GET jobs_u/get_log_file/<job>/<file>: HTTP 404, missing server logs volume file and no distributed S3 logs",
+    "runtime_failure_scopes": {
+      "2026-10-26": "IT:movie:119",
+      "2026-10-27": "LU:movie:119"
+    }
+  },
+  "member_impact": {
+    "at": "2026-10-28T12:36:31.427317+00:00",
+    "confirmed_scoped_candidates": 6853,
+    "classifications": {
+      "omitted_country_unknown": 197,
+      "cached_proof": 67,
+      "unusable_candidates": 10
+    },
+    "mismatching_scopes": 1,
+    "mismatching_titles": 1,
+    "missing_offer_rows": 0,
+    "extra_offer_rows": 1,
+    "mismatches": [
+      {
+        "media": "movie",
+        "tmdb_id": 425126,
+        "country": "DE",
+        "service": 8,
+        "expected": [],
+        "actual": [
+          "flatrate"
+        ],
+        "observed_at": 1793132553192
+      }
+    ],
+    "pending_scopes": 250,
+    "pending_scope_candidate_attempts": 7127,
+    "distinct_candidate_titles": {
+      "movie": 1053,
+      "show": 182
+    },
+    "checkpoint_dates": {
+      "2026-10-25": 164,
+      "2026-10-26": 86
+    },
+    "all_candidate_source_timestamps_are_bson_int64": true,
+    "single_mismatch_evidence": {
+      "tmdb_id": 425126,
+      "country": "DE",
+      "service": 8,
+      "api_at": 1793132553192,
+      "api_state": "usable",
+      "api_service8_offers": [],
+      "web_at": 1737406135114,
+      "web_state": "unknown",
+      "web_reason": "mapping_incomplete",
+      "published_row": "flatrate with stream_url, no tmdb_link"
+    }
+  },
+  "tests": {
+    "red": "test_list_offer_refresh.RefreshTests.test_reused_bson_provider_proof_reaches_list_history_and_offer_handoff failed in ListStorage.flush -> enqueue_list_mismatches -> enqueue with Invalid verified scope or check timestamp",
+    "green": {
+      "tests_run": 159,
+      "skipped": 3,
+      "seconds": 16.368,
+      "suite_names": [
+        "test_list_offer_refresh",
+        "test_daily_provider_lists",
+        "test_daily_list_ramp",
+        "test_provider_observations"
+      ]
+    },
+    "network": "Non-loopback sockets/DNS forbidden by offline_unittest.py"
+  },
+  "q70_verification": {
+    "status": "waiting_for_scheduled_runs",
+    "hours": [
+      "2026-10-29T00:00:00Z",
+      "2026-10-29T01:00:00Z"
+    ],
+    "following_hour_check": "2026-10-29T02:00:00Z",
+    "service": "gw-q70-q71-20261028.service",
+    "rollback": "Restore saved full schedule through schedule update only if current operational settings still match the approved after-snapshot",
+    "thresholds": {
+      "work_seconds_max": 3310,
+      "wall_seconds_max": 3330,
+      "start_late_seconds_max": 90,
+      "missing_start_grace_seconds": 180
+    },
+    "watcher_started_utc": "2026-10-28T12:42:15Z",
+    "october28_list_followup": "GET-only collection at 23:57 UTC or when the watcher resumes after that time"
+  }
+}

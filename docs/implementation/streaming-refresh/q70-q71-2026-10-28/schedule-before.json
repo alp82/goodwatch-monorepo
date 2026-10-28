@@ -1,0 +1,22 @@
+{
+  "workspace_id": "goodwatch",
+  "path": "f/tmdb_api/provider_detector",
+  "edited_by": "Alp",
+  "edited_at": "2026-10-26T08:39:28.408621Z",
+  "schedule": "0 0 0-11 * * *",
+  "timezone": "UTC",
+  "enabled": true,
+  "script_path": "f/tmdb_api/provider_detector",
+  "is_flow": false,
+  "args": {
+    "mode": "shadow"
+  },
+  "extra_perms": {},
+  "email": "alportac@gmail.com",
+  "permissioned_as": "u/Alp",
+  "ws_error_handler_muted": false,
+  "no_flow_overlap": true,
+  "summary": "Hourly provider detector shadow, 00:00\u201311:00 UTC",
+  "cron_version": "v2",
+  "is_draft": false
+}
