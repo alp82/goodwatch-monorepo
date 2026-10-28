@@ -3,6 +3,7 @@
 // gap above the module, and the room's slots kept empty wherever the search block, the chips or the module sit.
 // Round 7: a much larger gap between the mood row and the module, and the scene placed from the measured gap so the
 // scene's focus (the dog and its seat) always sits in it, below the chips and above the module.
+// Round 11: the room is graded to the mood on show (jk-grade), and the empty state is a fan of posters (jk-module).
 import { type CSSProperties, type ReactNode, type RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { ScenePlace } from "../../scene/SceneStage"
 import type { SceneMeta, ScenePair } from "../../scene/types"
@@ -11,6 +12,7 @@ import { type StageFlow, useStageFlow } from "./ab-shared"
 import { EfgField, NIGHT } from "./efg-shared"
 import { vocabOf } from "./hi-vocab"
 import { JkMoodRow, JkMorePopover, JkPresets } from "./jk-chips"
+import { JkGrade } from "./jk-grade"
 
 const POOL = [
 	"radial-gradient(ellipse 34% 30% at 50% 42%, rgb(2 4 10 / .55), rgb(2 4 10 / 0) 100%)",
@@ -41,16 +43,14 @@ const CSS = `@keyframes ab-in{from{opacity:0;transform:translateY(10px)}to{opaci
 .jk-layer{position:absolute;inset:0;transition:opacity .3s ease-out,transform .3s ease-out}
 @keyframes jk-drop{from{opacity:0;transform:translateY(-40%) scale(1.3)}}
 .jk-drop{animation:jk-drop .4s cubic-bezier(.2,1.3,.4,1) both}
-@keyframes jk-breathe{0%,100%{opacity:.75}50%{opacity:1}}
-.jk-breathe{animation:jk-breathe 4.5s ease-in-out infinite}
 /* Once one title is loved, the others dim a little (still tappable); at three they dim further and lock. */
 .jk-dim .hi-lift{opacity:.55}
 @media (hover:hover){.jk-dim:hover .hi-lift{opacity:.9}}
 .jk-dim:focus-within .hi-lift{opacity:.9}
-/* The sheen on the empty frames: a soft band that sweeps across each frame, one after another (transform only). */
-@keyframes jk-sheen{0%{transform:translateX(-120%) skewX(-12deg)}38%,100%{transform:translateX(220%) skewX(-12deg)}}
-.jk-sheen{position:absolute;inset:-10% auto -10% 0;width:60%;background:linear-gradient(90deg,transparent,rgb(255 236 200/.09) 45%,rgb(255 236 200/.14) 50%,rgb(255 236 200/.09) 55%,transparent);animation:jk-sheen 4.2s cubic-bezier(.45,0,.3,1) infinite;will-change:transform}
-.jk-paused .jk-sheen,.jk-paused .jk-breathe{animation-play-state:paused}
+/* Round 11 empty state: the fan posters, each placed from its own size (translate %), then tilted. */
+.jk-fan{position:absolute;left:50%;top:0;transform:translate(calc(-50% + var(--fx)),var(--fy)) rotate(var(--fr));transform-origin:50% 100%}
+@keyframes jk-fan-in{from{opacity:0}}
+.jk-fan-in{animation:jk-fan-in .7s ease-out both}
 @keyframes jk-roll{0%{transform:rotate(0) scale(1)}40%{transform:rotate(200deg) scale(.82)}100%{transform:rotate(360deg) scale(1)}}
 .jk-roll{animation:jk-roll .5s cubic-bezier(.3,.7,.3,1)}
 @keyframes jk-fade{from{opacity:0}}
@@ -60,7 +60,7 @@ const CSS = `@keyframes ab-in{from{opacity:0;transform:translateY(10px)}to{opaci
 @media (min-width:640px){.jk-also{width:84px}.jk-fy-t{font-size:22px;line-height:28px}}
 @media (min-width:1024px){.jk-also{width:110px}.jk-fy-t{font-size:28px;line-height:34px}}
 @media (min-width:1024px) and (max-height:820px){.jk-also{width:98px}.jk-fy-t{font-size:24px;line-height:30px}}
-@media (prefers-reduced-motion:reduce){.jk-breathe,.jk-drop,.ab-in,.jk-sheen,.jk-roll,.jk-fade{animation:none}}
+@media (prefers-reduced-motion:reduce){.jk-drop,.ab-in,.jk-fan-in,.jk-roll,.jk-fade{animation:none}}
 .jk-top{padding-top:12px}
 @media (min-width:640px){.jk-top{padding-top:44px}}
 @media (min-width:1024px){.jk-top{padding-top:clamp(20px,3vh,48px)}}
@@ -305,6 +305,8 @@ export function JkStage({
 			<div ref={roomBox} className="absolute inset-0">
 				<Room noTv scene={gap.scene} place={gap.place} hideSlot={hideSlot} style={{ position: "absolute", inset: 0 }} />
 			</div>
+			{/* Round 11: the room takes on the mood of what's on show (jk-grade). */}
+			<JkGrade f={f} />
 			<div
 				aria-hidden
 				className="pointer-events-none absolute inset-0"

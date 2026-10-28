@@ -1,16 +1,19 @@
 // PROTOTYPE (start page lab, round 6): stage j · "Spotlight card": h with Discover's chips, and the module as a large
-// elevated card over the rug with an amber halo: "Tap three you loved" (lit empty frames, a dice, poster toggles that
+// elevated card over the rug with an amber halo: "Tap three you loved" (a poster fan before any choice, a dice, poster toggles that
 // dim the rest from the first loved, three Loved slots), then "For you" (one featured on its backdrop, Also for you).
 // The card is the intro film's hand-off target: #start-picks, and the `start-lab:try-tap-three` window event.
+// Round 11: a bigger card and posters, a poster-fan empty state, and the room graded to the mood (jk-grade).
 import type { BlockVariant } from "../../lab/types"
 import { JkBody, JkHead, JkSlots } from "./jk-module"
 import { useRef } from "react"
 import { type JkFlow, JkStage, type Reg, useJkBringIntoView, useJkHandOff } from "./jk-shared"
 
-const CSS = `.jkj-mod{height:300px}.jkj-head{height:68px}.jkj-col{width:116px}.jkj-slot{width:20px}
-@media (min-width:640px){.jkj-mod{height:344px}.jkj-head{height:76px}.jkj-col{width:140px}.jkj-slot{width:30px}}
-@media (min-width:1024px){.jkj-mod{height:388px}.jkj-head{height:86px}.jkj-col{width:164px}.jkj-slot{width:34px}}
-@media (min-width:1024px) and (max-height:820px){.jkj-mod{height:360px}.jkj-head{height:80px}.jkj-col{width:150px}}`
+// Round 11: a bigger card (up to 1200 px wide) with bigger posters: ~130 px on phones, 192-200 px on desktop.
+const CSS = `.jkj-mod{height:306px}.jkj-head{height:68px}.jkj-col{width:130px}.jkj-slot{width:22px}
+@media (min-width:640px){.jkj-mod{height:356px}.jkj-head{height:78px}.jkj-col{width:156px}.jkj-slot{width:30px}}
+@media (min-width:1024px){.jkj-mod{height:420px}.jkj-head{height:90px}.jkj-col{width:192px}.jkj-slot{width:38px}}
+@media (min-width:1024px) and (max-height:820px){.jkj-mod{height:378px}.jkj-head{height:82px}.jkj-col{width:168px}.jkj-slot{width:34px}}
+@media (min-width:1600px) and (min-height:1000px){.jkj-mod{height:436px}.jkj-col{width:200px}}`
 
 function SpotlightCard({ f, reg }: { f: JkFlow; reg: Reg }) {
 	const box = useJkBringIntoView(f)
@@ -21,7 +24,7 @@ function SpotlightCard({ f, reg }: { f: JkFlow; reg: Reg }) {
 		<div
 			ref={box}
 			id="start-picks"
-			className="relative mx-auto w-full max-w-[1180px] scroll-mt-20"
+			className="relative mx-auto w-full max-w-[1200px] scroll-mt-20"
 		>
 			<style>{CSS}</style>
 			{/* The halo: amber light behind the card, a little stronger once there's something to tap. */}

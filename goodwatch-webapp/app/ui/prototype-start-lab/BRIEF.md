@@ -190,3 +190,18 @@ The owner: "nice. i like it". He picked the armchair room (`nook-stage-armchair`
 > the gap between filtesr and results should be much much more. and the scene should never be pushed so high that the dog disappears behind the filters
 
 The armchair room is being tidied (fewer cushions and throws, no rolled carpet). Every stage scene's JSON gets `focus: [x, y, w, h]`: the box around the dog and its seat (`SceneMeta.focus`).
+
+---
+
+# Round 11 (2026-10-28): UX refinement on the settled design
+
+Scene: **`nook-r9-bay-sofa-a`** (now the default). The owner's notes, verbatim:
+
+> * the empty state looks pathetic [screenshot: the "Tap three you loved" card before any choice: a row of dark empty poster frames, three dashed ones with a heart] should be more elegant and fitting the design style of goodwatch in general
+> * the picker/results can be a bit more prominent, bigger
+> * the scene should get appropriate filters based on the moods chosen / attributes read
+> * the posters in the shelf look a bit artificial in those frames, need to look more natural, also are these photo frames, wouldn't it make more sense to replace most of the books with blu rays and just replace their backs?
+>
+> 10 more variations
+
+Ten repaints of the room are coming as `nook-r11-a` … `nook-r11-j` (+ `-portrait`): Blu-ray cases spine-out on the shelves, 10-14 face-out cases whose cover area is the magenta slot.

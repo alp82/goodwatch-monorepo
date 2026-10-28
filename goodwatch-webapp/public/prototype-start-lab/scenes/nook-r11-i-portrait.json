@@ -1,0 +1,284 @@
+{
+  "id": "nook-r11-i-portrait",
+  "title": "Bay sofa, Blu-ray shelves I for a phone",
+  "perspective": "eye level, near frontal",
+  "style": "gouache",
+  "orientation": "portrait",
+  "width": 1024,
+  "height": 1536,
+  "tv": null,
+  "slots": [
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0586,
+          0.5781
+        ],
+        [
+          0.1104,
+          0.5768
+        ],
+        [
+          0.1104,
+          0.6315
+        ],
+        [
+          0.0586,
+          0.6348
+        ]
+      ],
+      "box": [
+        0.0586,
+        0.5768,
+        0.0527,
+        0.0586
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0605,
+          0.4688
+        ],
+        [
+          0.1113,
+          0.4694
+        ],
+        [
+          0.1113,
+          0.5267
+        ],
+        [
+          0.0605,
+          0.5273
+        ]
+      ],
+      "box": [
+        0.0596,
+        0.4688,
+        0.0537,
+        0.0592
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0635,
+          0.1536
+        ],
+        [
+          0.1143,
+          0.1621
+        ],
+        [
+          0.1152,
+          0.2174
+        ],
+        [
+          0.0645,
+          0.2109
+        ]
+      ],
+      "box": [
+        0.0635,
+        0.1536,
+        0.0527,
+        0.0645
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0635,
+          0.3607
+        ],
+        [
+          0.1191,
+          0.3646
+        ],
+        [
+          0.1191,
+          0.4193
+        ],
+        [
+          0.0635,
+          0.4167
+        ]
+      ],
+      "box": [
+        0.0635,
+        0.3607,
+        0.0566,
+        0.0592
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.0674,
+          0.0521
+        ],
+        [
+          0.1182,
+          0.0618
+        ],
+        [
+          0.1191,
+          0.112
+        ],
+        [
+          0.0674,
+          0.1029
+        ]
+      ],
+      "box": [
+        0.0674,
+        0.0521,
+        0.0527,
+        0.0605
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8809,
+          0.1647
+        ],
+        [
+          0.9346,
+          0.1562
+        ],
+        [
+          0.9326,
+          0.2129
+        ],
+        [
+          0.8789,
+          0.2194
+        ]
+      ],
+      "box": [
+        0.8789,
+        0.1562,
+        0.0566,
+        0.0638
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8838,
+          0.3665
+        ],
+        [
+          0.9365,
+          0.3633
+        ],
+        [
+          0.9355,
+          0.418
+        ],
+        [
+          0.8828,
+          0.4199
+        ]
+      ],
+      "box": [
+        0.8828,
+        0.3633,
+        0.0547,
+        0.0573
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8867,
+          0.4707
+        ],
+        [
+          0.9385,
+          0.4694
+        ],
+        [
+          0.9365,
+          0.5273
+        ],
+        [
+          0.8857,
+          0.5267
+        ]
+      ],
+      "box": [
+        0.8857,
+        0.4694,
+        0.0537,
+        0.0586
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.8887,
+          0.0618
+        ],
+        [
+          0.9385,
+          0.0527
+        ],
+        [
+          0.9375,
+          0.1029
+        ],
+        [
+          0.8877,
+          0.1107
+        ]
+      ],
+      "box": [
+        0.8877,
+        0.0527,
+        0.0518,
+        0.0586
+      ]
+    },
+    {
+      "kind": "case-shelf",
+      "quad": [
+        [
+          0.9131,
+          0.5775
+        ],
+        [
+          0.9639,
+          0.5788
+        ],
+        [
+          0.9609,
+          0.6367
+        ],
+        [
+          0.9111,
+          0.6335
+        ]
+      ],
+      "box": [
+        0.9111,
+        0.5775,
+        0.0537,
+        0.0599
+      ]
+    }
+  ],
+  "notes": "Edited r9 bay sofa A original. Most shelf contents are thin spine-out Blu-ray/DVD cases; face-out movie covers sit within visible slim plastic cases, no picture frames. Airy rows with single face-out cases, loose fairy lights, terracotta plants, dark pitchers, dusty blue throw. No candles, TV, plaid, people or readable titles. Magenta cover masks normalized to uniform #FF00FF. Focus encloses the dog and complete sofa. Selected generation attempt 3; all overlays visually reviewed.",
+  "focus": [0.2188, 0.5286, 0.5430, 0.2148]
+}

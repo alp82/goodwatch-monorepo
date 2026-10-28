@@ -2,11 +2,13 @@
 // "Tap three you loved" (a row of poster toggles, three header slots labeled Loved, a dice for a random mood, lit
 // empty frames before any choice) and "For you" (one recommendation large on its backdrop with ScoreRing and why,
 // the others as a small "Also for you" row, like the TV quiz's result). Same box for every state.
+// Round 11: the empty state is a fan of popular posters, dimmed, behind "Start with a mood" and the dice as the one
+// button; the Loved slots are quiet filled frames instead of dashed ones.
 import { Link } from "@remix-run/react"
-import { HeartIcon as HeartOutline } from "@heroicons/react/24/outline"
 import { InformationCircleIcon } from "@heroicons/react/20/solid"
-import { type MutableRefObject, type ReactNode, useEffect, useMemo, useRef, useState } from "react"
+import { type CSSProperties, type MutableRefObject, type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
+import { DISPLAY } from "~/ui/my-pages/bits"
 import { tmdbImage, titleHref } from "../../lab/kit"
 import type { LabCard } from "../../lab/types"
 import { ReadingLine, SeeAll } from "../hero/shared"
@@ -15,7 +17,7 @@ import { inertProps, NEED } from "./ab-shared"
 import { SkeletonRow, ToggleCard } from "./hi-shared"
 import { type JkFlow, showsReading } from "./jk-shared"
 
-/** The three slots under a small "Loved" label: dashed frames that take the loved posters. A filled slot undoes it. */
+/** The three slots under a small "Loved" label: quiet frames that take the loved posters. A filled slot undoes it. */
 export function JkSlots({
 	f,
 	w,
@@ -51,7 +53,7 @@ export function JkSlots({
 							ref={(el) => {
 								if (slotRefs) slotRefs.current[i] = el
 							}}
-							className={`relative block aspect-[2/3] shrink-0 rounded-[5px] ${w} ${shown ? "" : "border-2 border-dashed border-white/25 bg-white/[0.03]"}`}
+							className={`relative block aspect-[2/3] shrink-0 rounded-[5px] ${w} ${shown ? "" : "bg-white/[0.05] ring-1 ring-inset ring-white/[0.12]"}`}
 						>
 							{c ? (
 								<button
@@ -90,20 +92,27 @@ function DieIcon({ className = "" }: { className?: string }) {
 	)
 }
 
-/** Surprise me: a random mood. Icon-led and compact, beside the module's title; the die rolls on a tap. */
-function Dice({ f }: { f: JkFlow }) {
+/**
+ * Surprise me: a random mood. Icon-led and compact, beside the module's title; the die rolls on a tap. `away` while
+ * the empty state shows its own big dice: it keeps its room, unseen and out of the tab order.
+ */
+function Dice({ f, away = false }: { f: JkFlow; away?: boolean }) {
 	const [roll, setRoll] = useState(0)
 	return (
 		<button
 			type="button"
-			data-jk-dice=""
+			data-jk-dice={away ? undefined : ""}
+			disabled={away}
+			aria-hidden={away || undefined}
+			tabIndex={away ? -1 : undefined}
 			onClick={() => {
 				setRoll((r) => r + 1)
 				f.surprise()
 			}}
 			aria-label="Surprise me: a random mood"
 			title="Surprise me"
-			className="group inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-white/[0.07] pr-1.5 pl-1.5 text-[13px] font-semibold tracking-normal text-gray-200 ring-1 ring-white/12 outline-none transition-colors hover:bg-amber-400/15 hover:text-white hover:ring-amber-400/40 focus-visible:ring-2 focus-visible:ring-amber-400 sm:pr-3 sm:pl-2 sm:text-sm"
+			style={{ opacity: away ? 0 : 1 }}
+			className="group transition-[opacity,background-color,color] duration-300 inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-white/[0.07] pr-1.5 pl-1.5 text-[13px] font-semibold tracking-normal text-gray-200 ring-1 ring-white/12 outline-none transition-colors hover:bg-amber-400/15 hover:text-white hover:ring-amber-400/40 focus-visible:ring-2 focus-visible:ring-amber-400 sm:pr-3 sm:pl-2 sm:text-sm"
 		>
 			<span key={roll} className={`grid place-items-center ${roll ? "jk-roll" : ""}`}>
 				<DieIcon className="h-[18px] w-[18px] text-amber-400" />
@@ -143,7 +152,7 @@ function JkLine({ f }: { f: JkFlow }) {
 				{f.view === "empty" ? <span className="max-sm:hidden">. Pick a mood or search.</span> : null}
 			</>
 		)
-	if (f.view === "empty") return <>Pick a mood or search to start.</>
+	if (f.view === "empty") return <>Then get picks for you.</>
 	if (showsReading(f) && f.answer) return <ReadingLine answer={f.answer} className="!text-xs sm:!text-sm" />
 	return (
 		<span className="inline-flex min-w-0 items-center gap-1.5">
@@ -169,7 +178,7 @@ export function JkHead({ f, slots, className = "", big = false }: { f: JkFlow; s
 					>
 						{f.heading}
 					</h2>
-					{forYou ? null : <Dice f={f} />}
+					{forYou ? null : <Dice f={f} away={f.view === "empty"} />}
 				</div>
 				<div className="mt-0.5 flex min-w-0 truncate text-[13px] leading-5 text-gray-300 sm:mt-1 sm:text-sm [&_p]:truncate">
 					<span className="min-w-0 truncate">
@@ -226,7 +235,7 @@ export function JkBody({
 	return (
 		<div ref={root} className="absolute inset-0">
 			<div className="jk-layer" {...layer(f.view === "empty", "up")}>
-				<JkEmpty col={col} paused={f.view !== "empty"} />
+				<JkEmpty f={f} col={col} />
 			</div>
 			<div className="jk-layer" {...layer(f.view === "results" || f.view === "loading", "down")}>
 				{f.view === "results" || f.view === "loading" ? (
@@ -270,44 +279,83 @@ function Row({ children, pad, className = "" }: { children: ReactNode; pad: stri
 	return <div className={`flex min-h-0 gap-3 overflow-x-auto pt-3.5 pb-2.5 [scrollbar-width:none] sm:gap-3.5 ${pad} ${className}`}>{children}</div>
 }
 
-const FRAMES = 13
+/** The fan's posters: d runs -FAN_HALF..FAN_HALF from the middle. */
+const FAN_HALF = 5
+
+/** How much of a fan poster shows: evenly dim, the middle one (behind the words) a little more. */
+const fanOpacity = (d: number) => (d === 0 ? 0.4 : 0.5)
 
 /**
- * Before any choice: a row of softly lit, empty poster frames under a slow lamp, a sheen passing over them one after
- * another; the middle three are dashed and carry a quiet heart, like the slots they will fill. Nothing else: the line
- * above says what to do. It fills exactly the box the posters take.
+ * Before any choice: popular posters at the results' own size, fanned in a shallow bowl (each placed relative to its
+ * own size, so it fits every breakpoint), dimmed, behind a short headline, one line and the dice as the button. The
+ * mood chips above are the other way in. It fills exactly the box the posters will take.
  */
-function JkEmpty({ col, paused }: { col: string; paused: boolean }) {
-	const mid = (FRAMES - 1) / 2
+function JkEmpty({ f, col }: { f: JkFlow; col: string }) {
+	const posters = useMemo(() => f.popular.filter((c) => c.poster_path).slice(0, FAN_HALF * 2 + 1), [f.popular])
+	const [roll, setRoll] = useState(0)
+	const n = f.loved.length
 	return (
-		<div aria-hidden className={`absolute inset-0 overflow-hidden ${paused ? "jk-paused" : ""}`}>
-			<div className="absolute inset-x-0 top-3.5 flex justify-center gap-3 sm:gap-3.5">
-				{Array.from({ length: FRAMES }, (_, i) => {
-					const d = Math.abs(i - mid)
-					const heart = d <= 1
+		<div className="absolute inset-0 overflow-hidden">
+			<div aria-hidden className="absolute inset-0">
+				{posters.map((c, i) => {
+					const d = i - FAN_HALF
 					return (
-						<div
-							// biome-ignore lint/suspicious/noArrayIndexKey: decoration
-							key={i}
-							className={`${col} relative aspect-[2/3] shrink-0 overflow-hidden rounded-lg border-2 ${
-								heart
-									? "border-dashed border-amber-200/25 bg-gradient-to-b from-amber-100/[0.09] via-white/[0.03] to-white/[0.015]"
-									: "border-white/[0.07] bg-gradient-to-b from-white/[0.07] via-white/[0.025] to-white/[0.01]"
-							}`}
-							style={{ opacity: Math.max(0.14, 1 - d * 0.16) }}
-						>
-							<span className="jk-sheen" style={{ animationDelay: `${(i * 0.11).toFixed(2)}s` }} />
-							{heart ? <HeartOutline className="absolute top-1/2 left-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 text-amber-200/35 sm:h-8 sm:w-8" /> : null}
-						</div>
+						<img
+							key={c.key}
+							src={tmdbImage(c.poster_path, "w342")}
+							alt=""
+							loading="lazy"
+							decoding="async"
+							draggable={false}
+							className={`${col} jk-fan jk-fan-in aspect-[2/3] rounded-lg object-cover shadow-[0_18px_40px_rgb(0_0_0/.6)] ring-1 ring-white/10 [filter:saturate(.7)]`}
+							style={
+								{
+									"--fx": `${d * 74}%`,
+									"--fy": `${48 - d * d * 1.9}%`,
+									"--fr": `${-d * 2.2}deg`,
+									zIndex: 10 - Math.abs(d),
+									opacity: fanOpacity(d),
+									animationDelay: `${Math.abs(d) * 60}ms`,
+								} as CSSProperties
+							}
+						/>
 					)
 				})}
 			</div>
-			{/* A lamp over the frames: amber light from above, breathing slowly (opacity only). */}
+			{/* The dimming: dark behind the words, a faint amber light from above, the sides and foot into the card. */}
 			<div
-				className="jk-breathe pointer-events-none absolute inset-0"
-				style={{ background: "radial-gradient(ellipse 42% 80% at 50% 0%, rgb(251 191 36 / .16), rgb(251 191 36 / .05) 55%, transparent 80%)" }}
+				aria-hidden
+				className="pointer-events-none absolute inset-0 z-20"
+				style={{
+					background: [
+						"radial-gradient(ellipse 34% 62% at 50% 26%, rgb(3 7 18 / .94) 0%, rgb(3 7 18 / .8) 45%, rgb(3 7 18 / 0) 100%)",
+						"radial-gradient(ellipse 40% 55% at 50% 0%, rgb(251 191 36 / .1), rgb(251 191 36 / 0) 70%)",
+						"linear-gradient(to right, rgb(3 7 18) 0%, rgb(3 7 18 / 0) 14%, rgb(3 7 18 / 0) 86%, rgb(3 7 18) 100%)",
+						"linear-gradient(to bottom, rgb(3 7 18 / 0) 55%, rgb(3 7 18 / .85) 100%)",
+					].join(", "),
+				}}
 			/>
-			<div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-b from-transparent to-gray-950/70" />
+			<div className="relative z-30 flex flex-col items-center px-4 pt-4 text-center sm:pt-7 lg:pt-9">
+				<h3 className={`${DISPLAY} text-[22px] leading-7 text-white sm:text-[28px] sm:leading-9 lg:text-[34px] lg:leading-10`}>
+					{n ? `${NEED - n} more to go` : "Start with a mood"}
+				</h3>
+				<p className="mt-1 text-[14px] leading-5 text-gray-300 sm:mt-1.5 lg:text-[15px] lg:leading-6">Pick one above or roll the dice.</p>
+				<button
+					type="button"
+					data-jk-dice=""
+					tabIndex={f.view === "empty" ? undefined : -1}
+					onClick={() => {
+						setRoll((r) => r + 1)
+						f.surprise()
+					}}
+					className="mt-3 inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full bg-amber-400 pr-5 pl-4 text-[14px] font-black text-gray-950 shadow-[0_8px_28px_rgb(251_191_36/.28)] outline-none transition-colors hover:bg-amber-300 focus-visible:ring-2 focus-visible:ring-white sm:mt-4 sm:min-h-11 lg:mt-5 lg:text-[15px]"
+				>
+					<span key={roll} className={`grid place-items-center ${roll ? "jk-roll" : ""}`}>
+						<DieIcon className="h-5 w-5" />
+					</span>
+					Surprise me
+				</button>
+			</div>
 		</div>
 	)
 }
