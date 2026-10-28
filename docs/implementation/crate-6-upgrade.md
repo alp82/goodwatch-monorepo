@@ -1,4 +1,15 @@
-# CrateDB 6.4.6 rolling upgrade — replacements complete, validation stopped
+# CrateDB 6.4.6 rolling upgrade — rebalance and scheduled backup verified
+
+**Latest October28 handover:** all three nodes6.4.6;145GREEN/1175STARTED, copies392/391/392.
+Owner's fresh follow-up GO passed the20m12s rebalance observation, including successful placements
+of both originally blocked shards onto crate-02 with no new lock errors. Allocation/rebalanceall;
+original waits/policies, Docker always, schedules and cron remain restored. The actual04:05 hourly
+`hourly_20261028_040501` isSUCCESS567/no failures onallcoordinators, finished2026-10-28T04:05:46.759000+00:00.
+[Final follow-up evidence and remaining IMDb-query uncertainty](auth/cratedb-production/20261026-operation-contexts/20261028-rebalance-verification/README.md).
+No maintenance is armed. No new node replacement or in-place downgrade is authorized.
+
+## Historical first-stop handover
+
 
 **October28 handover:** all three nodes are **6.4.6**, 145 GREEN / 1,175 STARTED. All14 remaining
 replacements completed, but the final homogeneous observation stopped at its first failed gate:

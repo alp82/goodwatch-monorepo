@@ -1,5 +1,23 @@
 # #644: operation-context investigation, 2026-10-26
 
+## October28 follow-up: rebalance/known locks and 04:05 backup verified
+
+Fresh owner GO after normal pool/GREEN samples: rebalance all enabled03:19:02UTC.
+The20m12s observation passed03:39:15:17 new shard groups onto crate-02, including both
+`doc.person_appeared_in` shard4 and`doc.person_worked_on` shard5, STARTED throughallcoordinators.
+No newShardLockObtainFailedException;760 page probes/zero failures/slow responses/alarms.
+Final copies392/391/392, all145GREEN/1175STARTED, allocationall/rebalanceall.
+
+Scheduled`hourly_20261028_040501` isSUCCESS567/no failures onall3; finished2026-10-28T04:05:46.759000+00:00.
+No restart, extrahold, jobrerun, logging change or manualbackup. Both monitors stopped.
+Search rejection counters stayed2,068/0/585 in observed samples. IMDb's batched anti-list DELETE
+and concurrent priority paging are the strongest03:02 leads; exact incident SQL ranking was evicted.
+The same IMDb script/arguments succeeded on5.10 yesterday with comparable volume, so a query-specific
+6.4.6 regression remains unproven, not dismissed. No comparable5.10SQL timing baseline was retained.
+[Follow-up report, latency comparison and receipts](20261028-rebalance-verification/README.md).
+The following stopped-run record is historical and remains unchanged as evidence ofQ62 compliance.
+
+
 ## October28: all nodes6.4.6; stopped at final health observation
 
 All14 remaining replacements completed; all three coordinators now6.4.6, 145GREEN/1175STARTED.

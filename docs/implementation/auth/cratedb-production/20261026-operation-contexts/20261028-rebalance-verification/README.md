@@ -1,6 +1,6 @@
 # October 28: search-pool diagnosis and approved rebalance follow-up
 
-**Rebalance test PASSED at 03:39:15 UTC; the 04:05 scheduled backup is still pending.**
+**Complete: rebalance and both former shard locks verified; the actual 04:05 hourly snapshot is SUCCESS on all coordinators.**
 Branch `fix/644-rebalance-verification`, fresh main `ca1545368`.
 The owner's new GO permits only `rebalance.enable = all` after normal pools/GREEN,
 and returning it to `none` on a lock error or watcher abort. No restart, extra hold,
@@ -90,11 +90,20 @@ allocation and rebalance all, no lock errors. Copies balanced 400/374/401 → 39
 The watcher completed 760 probes: zero failures, zero slow (>3 s) responses, zero alarms; max 2.635 s.
 The watcher exited normally after final readback at 03:40:41. No further write is armed.
 
-The normal 04:05 hourly backup remains scheduled. A read-only monitor checks it through
-all coordinators; **no SUCCESS claim until the actual snapshot is verified**.
+The scheduled `goodwatch-db-backup-v2.hourly_20261028_040501` is **SUCCESS**, 567 shards, no failures,
+identical metadata verified through all three coordinators. Started 2026-10-28T04:05:01.916000+00:00, finished 2026-10-28T04:05:46.759000+00:00
+(44.843 seconds). It was the normal cron run, not a manual substitute. No cron or schedule
+change was made during this follow-up. Dedicated helper-log evidence is preserved in the receipts;
+its completion/cleanup status must be read separately from snapshot SUCCESS.
+
+Final all-coordinator readback after the scheduled snapshot again verifies 6.4.6, GREEN/all copies
+STARTED, allocation/rebalance all. Both read-only monitors are stopped; no maintenance is armed.
 
 [Live summary](summary.json), [sanitized receipts](receipts.json.gz),
 [page watcher](pages.jsonl.gz), [initial pools](pool-samples.jsonl.gz),
 [rebalance routing/heap/pools/lock samples](rebalance-samples.jsonl.gz),
-[backup samples](backup-samples.jsonl.gz), [SQL change acknowledgements](events.jsonl.gz).
+[backup samples](backup-samples.jsonl.gz), [post-test pools](post-test-pools.jsonl.gz), [SQL change acknowledgements](events.jsonl.gz).
 Raw query text/values remain private outside Git. Local Q60 policy tests: 11 passed.
+
+The dedicated helper log also confirms **Backup run finished** after cleanup and final verification,
+with no BACKUP FAILED marker for this run.

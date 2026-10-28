@@ -1,7 +1,7 @@
 {
-  "updated_utc": "2026-10-28T03:42:55.763673+00:00",
+  "updated_utc": "2026-10-28T04:07:17.240737+00:00",
   "base": "ca1545368cb2e644a98fcca83a374287761cdae2",
-  "state": "BACKUP_PENDING",
+  "state": "COMPLETE",
   "rebalance_started": {
     "utc": "2026-10-28T03:19:01.613582+00:00",
     "baseline_target_copies": 374
@@ -171,7 +171,92 @@
     "placements": 17,
     "all_GREEN": true
   },
-  "backup": null,
+  "backup": {
+    "utc": "2026-10-28T04:06:14.777920+00:00",
+    "coordinators": [
+      {
+        "host": 11,
+        "result": {
+          "cols": [
+            "repository",
+            "name",
+            "state",
+            "started",
+            "finished",
+            "total_shards",
+            "failures"
+          ],
+          "rows": [
+            [
+              "goodwatch-db-backup-v2",
+              "hourly_20261028_040501",
+              "SUCCESS",
+              1793160301916,
+              1793160346759,
+              567,
+              []
+            ]
+          ],
+          "rowcount": 1,
+          "duration": 258.4694
+        }
+      },
+      {
+        "host": 12,
+        "result": {
+          "cols": [
+            "repository",
+            "name",
+            "state",
+            "started",
+            "finished",
+            "total_shards",
+            "failures"
+          ],
+          "rows": [
+            [
+              "goodwatch-db-backup-v2",
+              "hourly_20261028_040501",
+              "SUCCESS",
+              1793160301916,
+              1793160346759,
+              567,
+              []
+            ]
+          ],
+          "rowcount": 1,
+          "duration": 204.32841
+        }
+      },
+      {
+        "host": 13,
+        "result": {
+          "cols": [
+            "repository",
+            "name",
+            "state",
+            "started",
+            "finished",
+            "total_shards",
+            "failures"
+          ],
+          "rows": [
+            [
+              "goodwatch-db-backup-v2",
+              "hourly_20261028_040501",
+              "SUCCESS",
+              1793160301916,
+              1793160346759,
+              567,
+              []
+            ]
+          ],
+          "rowcount": 1,
+          "duration": 193.47472
+        }
+      }
+    ]
+  },
   "watcher": {
     "probes": 760,
     "unexpected": 0,
