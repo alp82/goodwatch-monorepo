@@ -43,6 +43,8 @@ export function LabPage({ data: loaded }: { data: LabData }) {
 	const how = pick(reg.how, want("how"))
 	const browse = pick(reg.browse, want("browse"))
 	const member = pick(reg.member, want("member"))
+	// PROTOTYPE · Round 17: the opening flow (sections/flow) replaces the stage when it isn't "none".
+	const flow = choice.round === 2 ? pick(REGISTRY[2].flow, want("flow"), "none") : null
 
 	const defaultShelf = choice.as === "member" ? (data.member?.forYou ?? []) : data.guest.popular
 	const [shelfOverride, setShelfTitles] = useState<{ as: string; cards: LabCard[] } | null>(null)
@@ -73,6 +75,7 @@ export function LabPage({ data: loaded }: { data: LabData }) {
 		persona: persona.key,
 		searchbar: pick(reg.searchbar, want("searchbar")).key,
 		light: pick(reg.light, want("light")).key,
+		flow: flow?.key,
 	}
 	const sections: BarSection[] = SECTIONS.map((s) => ({
 		id: s.id,
@@ -92,13 +95,13 @@ export function LabPage({ data: loaded }: { data: LabData }) {
 
 	if (!lab) return <p className="p-8 text-white">No scenes in public/prototype-start-lab/scenes.</p>
 	const Layout = layout.C
-	const Stage = stage.C
+	const Stage = flow && flow.key !== "none" ? flow.C : stage.C
 	const How = how.C
 	const Browse = browse.C
 	const Member = member.C
 	const Theater = tv.Theater
 	// A new variant starts fresh: its key changes with every choice that shapes it.
-	const pageKey = [choice.round, choice.as, persona.key, layout.key, stage.key, hero.key, recs.key, how.key, browse.key, member.key].join(".")
+	const pageKey = [choice.round, choice.as, persona.key, layout.key, stage.key, hero.key, recs.key, how.key, browse.key, member.key, flow?.key].join(".")
 	return (
 		<LabContext.Provider value={lab}>
 			<RoomParts.Provider value={{ shelf, tv }}>

@@ -3,6 +3,7 @@
 // dim the rest from the first loved, three Loved slots), then "For you" (one featured on its backdrop, Also for you).
 // The card is the intro film's hand-off target: #start-picks, and the `start-lab:try-tap-three` window event.
 // Round 11: a bigger card and posters, a poster-fan empty state, and the room graded to the mood (jk-grade).
+// Round 17: whole posters only in its rows (JkBody `fit`, jk-pager) and up to 1600 px wide on large screens.
 import type { BlockVariant } from "../../lab/types"
 import { JkBody, JkHead, JkSlots } from "./jk-module"
 import { useRef } from "react"
@@ -25,7 +26,8 @@ export function SpotlightCard({ f, reg }: { f: JkFlow; reg: Reg }) {
 		<div
 			ref={box}
 			id="start-picks"
-			className="relative mx-auto w-full max-w-[1200px] scroll-mt-20"
+			// Round 17: wider on large screens: 1200 px up to ~1520 px viewports, then growing to 1600 px at 1920.
+			className="relative mx-auto w-full max-w-[clamp(1200px,calc(100vw-320px),1600px)] scroll-mt-20"
 		>
 			<style>{CSS}</style>
 			{/* The halo: amber light behind the card, a little stronger once there's something to tap. */}
@@ -49,7 +51,7 @@ export function SpotlightCard({ f, reg }: { f: JkFlow; reg: Reg }) {
 					slots={<JkSlots f={f} w="jkj-slot" drop />}
 				/>
 				<div className="relative min-h-0 flex-1">
-					<JkBody f={f} col="jkj-col" pad="px-4 sm:px-6 lg:px-7" />
+					<JkBody f={f} col="jkj-col" pad="px-4 sm:px-6 lg:px-7" fit />
 				</div>
 			</div>
 			{/* The hand-off pulse: an amber ring and glow around the card, shown only while it animates. */}

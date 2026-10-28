@@ -261,8 +261,10 @@ const STAND_IN: [RegExp, ReadingChip][] = [
 	[/\b(animated|animation|anime|cartoons?)/, { kind: "attribute", text: "Animation" }],
 	[/\bunder (two|2) hours\b/, { kind: "attribute", text: "Under 2 hours" }],
 	[/\b(show|series|binge)\b/, { kind: "attribute", text: "TV show" }],
-	[/\bgrown-?ups?\b/, { kind: "attribute", text: "For adults" }],
+	// Round 17: the lazy presets ("grown up cartoons", "severance but funny").
+	[/\bgrown[- ]?ups?\b/, { kind: "attribute", text: "For adults" }],
 	[/\blike ([a-z][a-z' ]{2,24}?)(?= but| with|$)/, { kind: "phrase", text: "$1" }],
+	[/^([a-z][a-z']{2,24}) but\b/, { kind: "phrase", text: "$1" }],
 	[/\brainy (sunday|day|night)/, { kind: "phrase", text: "rainy day" }],
 ]
 

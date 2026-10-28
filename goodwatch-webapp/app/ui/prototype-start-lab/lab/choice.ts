@@ -5,12 +5,13 @@
 // Round 1: layout + hero + recs + how + browse for guests. Round 2 (default): the stage (search and tap three on
 // the room) + how + browse, and new member pages; the owner's round 1 picks are the defaults.
 
-export type SectionId = "layout" | "stage" | "hero" | "recs" | "scene" | "shelf" | "tv" | "how" | "browse" | "member" | "persona" | "searchbar" | "light"
+export type SectionId = "layout" | "stage" | "hero" | "recs" | "scene" | "shelf" | "tv" | "how" | "browse" | "member" | "persona" | "searchbar" | "light" | "flow"
 
 export type Viewer = "guest" | "member"
 export type Round = 1 | 2
 
 export const SECTIONS: { id: SectionId; name: string; for: Viewer[]; rounds: Round[] }[] = [
+	{ id: "flow", name: "Opening flow", for: ["guest"], rounds: [2] }, // Round 17: the old TV's boot, then the page (sections/flow)
 	{ id: "stage", name: "Search + tap three", for: ["guest"], rounds: [2] }, // Round 15: open again (j, l, m)
 	{ id: "layout", name: "Page layout", for: ["guest"], rounds: [1] },
 	{ id: "hero", name: "Search hero", for: ["guest"], rounds: [1] },
@@ -33,7 +34,8 @@ export const DEFAULTS: Record<Round, Partial<Record<SectionId, string>>> = {
 	// Round 15: stage l (the mood picker with mixes on the stage) was the default.
 	// Round 14: mood lighting e (sections/light) is the default.
 	// Round 6: the owner's picks: stage j, browse d, member d (rounds 1-5 verdicts in BRIEF.md).
-	2: { scene: "nook-r15-a", shelf: "h", tv: "a", how: "b", stage: "m", browse: "d", member: "d", persona: "full", searchbar: "d", light: "e" },
+	// Round 17: opening flow "none" (today's page, no boot) unless the bar picks one.
+	2: { scene: "nook-r15-a", shelf: "h", tv: "a", how: "b", stage: "m", browse: "d", member: "d", persona: "full", searchbar: "d", light: "e", flow: "none" },
 }
 
 export type Choice = Partial<Record<SectionId, string>> & { as: Viewer; sec: SectionId; round: Round }

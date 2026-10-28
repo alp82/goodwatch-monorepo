@@ -292,3 +292,43 @@ Built:
 - **Panel height:** the panel runs from where it opens down to 80 px above the viewport bottom (the lab bar plus a margin), so it grows with its open groups instead of stopping at 560 px. If less than 360 px is left there, the page scrolls it up to 72 px from the top first. Measured on open and on resizes (visualViewport too), never per scroll frame; it overlays, so nothing behind it moves.
 - **Presets** (`PRESETS`, `PRESET_SHORT`): Cheer me up, Rainy-day whodunit, Severance, but funny, Twist ending, Space adventure, Grown-up cartoons. Six, each one captured prompt, none using a picker label. They fit the bar's row at 1440 and 1920 (about 820 of 832 px) and scroll sideways on phones. The mind-bending sci-fi prompt stays out (a seventh wouldn't fit, and Space adventure plus the mind-bending mix cover it). The lab's stand-in reading knows the new words.
 - **H1** "Find something to watch" in j, l and m.
+
+# Round 17 fixes (2026-10-28): whole posters, reset after picks, lazy presets
+
+The owner's notes, verbatim:
+
+> - "in the results: [screenshot: the poster row inside the card is cut at both edges, half posters visible, \"Start over\" top right] either show an arrow or dont show incomplete posters. same for the picks: [screenshot: the 'Also for you' row, Interstellar whole and Bleach cut off at the card's right edge] (ideally we show 6 results that fit into the frame), we can allow this to grow further in width on large screens"
+> - "when i selected 3 and go back choosing, the selections should be reset"
+> - "the search presets should be all lower case and without \"-\" - like a lazy human would type them"
+
+Built (stages j, l, m: the spotlight card; k is unchanged):
+
+- **Whole posters only** (`sections/stage/jk-pager.tsx`, `JkBody fit`). The results row and both "Also for you" rows are size containers; per breakpoint a poster is at most the width the fixed card height holds, shrunk just enough that a whole number fits the row (CSS container queries, so the first paint is already right; card heights unchanged per breakpoint). The scroller's box ends less than a gap past the last whole poster, so the next never peeks. Rows snap to every poster (a swipe lands on whole posters); arrows page by one whole set.
+  - Results: 3 at 375 (97 px) and 414, 4 at 768, 6 at 1024 and at 1440×900 (179 px), 7 at 1280×800 / 1440×800 (151 px, the short-screen size), 8 at 1920 (181 px).
+  - Arrows: from 640 px the title page rows' round blue arrows (as browse d) over the first and last poster, fading out at an end; on phones page dots and the small blue arrows sit in the room under the posters (phone posters max 118 px to leave it).
+  - Also for you: small arrows in the label's line before "Start over". 6 whole on phones (~41 px), 3 at 768, 5 at 1024, 6 at 1440 (83 px), 7 at 1920 (98 px). From 1024 px the featured title and the row share the width evenly (was 1.3 : 1).
+- **Wider card:** `max-w-[clamp(1200px,calc(100vw-320px),1600px)]` (1200 up to ~1520 px viewports, 1600 at 1920); the module column allows 1648 px. The gap/scene placement is untouched.
+- **Reset after picks** (`useJkFlow`): once three are loved, Back or choosing anything new (a mood, preset, typed search, picker pick, Clear, the dice) empties the three and the Loved slots; fewer than three still carry across searches. Start over as before (it now also cancels the pending "show the picks" beat).
+- **Lazy presets** (`PRESET_SHORT`): cheer me up, rainy day whodunit, severance but funny, twist ending, space adventure, grown up cartoons (and the unshown "messes with my head"). The field fills with exactly that and searches it; the stand-in reading's "grown up" and "<title> but" ("like Severance") rules know the new spelling.
+
+# Round 17 opening flow
+
+The owner's note, verbatim:
+
+> for the lab, a new experiment:
+> * lets start the page with the boot animation from the previous tv
+> * it transitions into this landing page
+> * we can experiment with either what we have now or just the search section first [screenshot: the stage's top only: H1, the search field with "Try" presets, and the "Any mood · Pick up to three" button, over the dark room top]
+> * bg can adapt gradually during the flow
+> * different ux flows
+> * basic idea is: first search then recommend me
+
+Built: a new lab section **"Opening flow"** (`?flow=`, guest, round 2, first in the bar; default `none` = today's page, no boot). Code in `sections/flow/`: `boot-overlay.tsx` (the old TV's `Boot` from `ui/living-room/intro/boot.tsx` + `boot.css`, imported as they are, full screen over the page and the lab bar; its own fade-out is replaced by the hand-off), `shell.tsx` (stage m composed as it is: `JkStage` + `SpotlightCard` + `MoodButtonPicker`; nothing forked), one file per variant. Steps: 0 ask (search or mood), 1 pick (tap three; reached once the guest has asked: Enter, the button, a preset, the picker's Done, or the field losing focus), 2 For you. The background is a night layer over the room (opacity per step) and a scale on the room's box (the camera), plus a warm glow layer for the glow hand-off; the mood lighting runs underneath as before. Opacity and transform only; reduced motion gets a 0.7 s boot and fades.
+
+- **a "Boot, then the page":** fade through black into today's whole stage m; the room goes dark → lit and the camera eases from 1.08 to 1.
+- **b "Search first":** the boot's amber glow swells and stays as the room's warm light while the black fades; only the search block over an almost dark room. The first search or mood brings the card and half the light (a mood more, so its lighting shows); For you lights the room.
+- **c "Step by step":** glow hand-off; the search block waits alone in the middle of the screen over a near-black room seen close up (1.12). The first search slides it up to its place and the card in; each loved title lights the room more and pulls the camera back; For you is fully lit at the normal framing.
+- **d "Ask and answer":** three questions in one place with a step indicator and Back: "What are you in the mood for?" (search block), "Which of these did you love?" (the card fades in where the search block was), "Here's what to watch". Fade hand-off; the room lightens with each answer.
+- **e "TV hands off" (bolder):** the boot screen powers down like an old TV onto the search field (the black screen shrinks into the field's box), then the field glows once. Then as b.
+
+Every visit starts fresh (each flow's stage state `start-lab-stage-flow-<key>` is cleared on load); the round button under the header's right end replays the opening; a tap on the boot skips it. The stage stays in the server's HTML under the overlay.

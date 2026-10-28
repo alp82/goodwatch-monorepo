@@ -13,12 +13,13 @@ import { VARIANTS as STAGE } from "../sections/stage"
 import { VARIANTS as TV } from "../sections/tv"
 import { VARIANTS as SEARCHBAR } from "../sections/searchbar"
 import { VARIANTS as LIGHT } from "../sections/light"
+import { VARIANTS as FLOW } from "../sections/flow" // Round 17
 
 const SHARED = { shelf: SHELF, tv: TV, how: HOW, searchbar: SEARCHBAR, light: LIGHT }
 
 export const REGISTRY = {
 	1: { ...SHARED, layout: LAYOUT, hero: HERO, recs: RECS, browse: BROWSE, member: MEMBER, stage: STAGE },
-	2: { ...SHARED, layout: LAYOUT, hero: HERO, recs: RECS, browse: BROWSE2, member: MEMBER2, stage: STAGE },
+	2: { ...SHARED, layout: LAYOUT, hero: HERO, recs: RECS, browse: BROWSE2, member: MEMBER2, stage: STAGE, flow: FLOW },
 } as const
 
 export const pick = <T extends { key: string }>(list: readonly T[], key: string | undefined, fallback?: string): T =>

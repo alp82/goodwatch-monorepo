@@ -73,15 +73,17 @@ export function moodAnswer(data: LabData, key: string): FixtureAnswer | null {
  * Round 14: the search bar's presets as short phrases (2-4 words). A preset fills the field with its short phrase and
  * searches that phrase; the lab answers it with the captured prompt it stands for.
  * Round 16: moods are back in the presets, in words no picker label uses (no mood, theme, style or mix name).
+ * Round 17: the owner: "the search presets should be all lower case and without "-" - like a lazy human would type
+ * them". No capitals, hyphens or commas; the field fills with exactly this text and searches it.
  */
 export const PRESET_SHORT: Record<string, string> = {
-	"a cozy mystery for a rainy Sunday": "Rainy-day whodunit",
-	"something like Severance but funnier": "Severance, but funny",
-	"a mind-bending sci-fi movie under two hours": "Messes with my head",
-	"a feel-good show to binge with my partner": "Cheer me up",
-	"a dark thriller with a twist ending": "Twist ending",
-	"an animated movie adults will love": "Grown-up cartoons",
-	"a mind-blowing space adventure": "Space adventure",
+	"a cozy mystery for a rainy Sunday": "rainy day whodunit",
+	"something like Severance but funnier": "severance but funny",
+	"a mind-bending sci-fi movie under two hours": "messes with my head",
+	"a feel-good show to binge with my partner": "cheer me up",
+	"a dark thriller with a twist ending": "twist ending",
+	"an animated movie adults will love": "grown up cartoons",
+	"a mind-blowing space adventure": "space adventure",
 }
 
 /**

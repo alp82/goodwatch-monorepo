@@ -16,6 +16,27 @@ import { joinNames } from "../recs/shared"
 import { inertProps, NEED } from "./ab-shared"
 import { SkeletonRow, ToggleCard } from "./hi-shared"
 import { type JkFlow, showsReading } from "./jk-shared"
+import { EdgeArrows, fitCss, PageDots, SmallArrows, usePager } from "./jk-pager"
+
+// PROTOTYPE · Round 17: whole posters only. The results row (jkr) and the "Also for you" rows (jkp) fit a whole number
+// of posters to their width (jk-pager); colMax is the tallest poster each breakpoint's fixed card height holds. On
+// phones the results row keeps room under it for the page dots and arrows, so its posters are at most 118 px there.
+const FIT_CSS = [
+	fitCss("jkr", [
+		{ media: "", colMax: 118, gap: 10, pad: 16 },
+		{ media: "(min-width:640px)", colMax: 156, gap: 14, pad: 24 },
+		{ media: "(min-width:1024px)", colMax: 192, gap: 14, pad: 28 },
+		{ media: "(min-width:1024px) and (max-height:820px)", colMax: 168, gap: 14, pad: 28 },
+		{ media: "(min-width:1600px) and (min-height:1000px)", colMax: 200, gap: 14, pad: 28 },
+	]),
+	// pad 4: the row's own padding (inside a -mx-1 container), room for a focus ring at either end.
+	fitCss("jkp", [
+		{ media: "", colMax: 46, gap: 8, pad: 4 },
+		{ media: "(min-width:640px)", colMax: 90, gap: 12, pad: 4 },
+		{ media: "(min-width:1024px)", colMax: 96, gap: 12, pad: 4 },
+		{ media: "(min-width:1800px)", colMax: 110, gap: 12, pad: 4 },
+	]),
+].join("\n")
 
 /** The three slots under a small "Loved" label: quiet frames that take the loved posters. A filled slot undoes it. */
 export function JkSlots({
@@ -213,11 +234,14 @@ export function JkBody({
 	col,
 	pad,
 	onToggle,
+	fit = false,
 }: {
 	f: JkFlow
 	col: string
 	pad: string
 	onToggle?: (card: LabCard, el: HTMLElement | null) => void
+	/** Round 17: whole posters only (jk-pager), with arrows that page by a whole set. Stage j/l/m's card. */
+	fit?: boolean
 }) {
 	const root = useRef<HTMLDivElement>(null)
 	const toggle = (card: LabCard) => {
@@ -234,11 +258,14 @@ export function JkBody({
 	const sourceKey = `${f.source.kind}:${"q" in f.source ? f.source.q : "key" in f.source ? f.source.key : "ids" in f.source ? f.source.ids.join() : ""}`
 	return (
 		<div ref={root} className="absolute inset-0">
+			{fit ? <style>{FIT_CSS}</style> : null}
 			<div className="jk-layer" {...layer(f.view === "empty", "up")}>
 				<JkEmpty f={f} col={col} />
 			</div>
 			<div className="jk-layer" {...layer(f.view === "results" || f.view === "loading", "down")}>
-				{f.view === "results" || f.view === "loading" ? (
+				{(f.view === "results" || f.view === "loading") && fit ? (
+					<FitRow key={f.loading ? "loading" : sourceKey} f={f} toggle={toggle} some={some} full={full} />
+				) : f.view === "results" || f.view === "loading" ? (
 					<Row pad={pad} key={f.loading ? "loading" : sourceKey} className={f.loading ? "" : "ab-in"}>
 						{f.loading ? (
 							<SkeletonRow col={col} />
@@ -268,7 +295,7 @@ export function JkBody({
 				) : null}
 			</div>
 			<div className="jk-layer" {...layer(f.view === "foryou", "down")}>
-				{f.view === "foryou" ? <JkForYou f={f} pad={pad} /> : null}
+				{f.view === "foryou" ? <JkForYou f={f} pad={pad} fit={fit} /> : null}
 			</div>
 		</div>
 	)
@@ -277,6 +304,59 @@ export function JkBody({
 /** A poster row that scrolls sideways; top room for the lifted, ringed card and its badge. */
 function Row({ children, pad, className = "" }: { children: ReactNode; pad: string; className?: string }) {
 	return <div className={`flex min-h-0 gap-3 overflow-x-auto pt-3.5 pb-2.5 [scrollbar-width:none] sm:gap-3.5 ${pad} ${className}`}>{children}</div>
+}
+
+/**
+ * PROTOTYPE · Round 17: the results as whole posters. The row snaps to every poster (a swipe lands on whole ones);
+ * from 640 px round arrows over the first and last poster page by a whole set, on phones the page dots and small
+ * arrows sit in the room under the posters. The posters' middle is 14 px (the row's top room) plus 3/4 of a width.
+ */
+function FitRow({ f, toggle, some, full }: { f: JkFlow; toggle: (card: LabCard) => void; some: boolean; full: boolean }) {
+	const nav = usePager()
+	return (
+		<div className="jkr absolute inset-0">
+			<div className="jkr-box relative h-full">
+				<div
+					ref={nav.ref}
+					className={`jkr-row flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain pt-3.5 pb-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${f.loading ? "" : "ab-in"}`}
+				>
+					{f.loading ? (
+						<SkeletonRow col="jkr-c" />
+					) : (
+						f.results.slice(0, 18).map((card, i) => {
+							const on = f.isLoved(card)
+							return (
+								<div key={card.key} data-jk-key={card.key} className="jkr-c snap-start">
+									<ToggleCard
+										card={card}
+										className={`w-full ${some && !full && !on ? "jk-dim" : ""}`}
+										on={on}
+										full={full}
+										onToggle={() => toggle(card)}
+										priority={i < 6}
+									/>
+								</div>
+							)
+						})
+					)}
+					{f.seeAllQ && !f.loading ? (
+						<div className="jkr-c flex aspect-[2/3] snap-start items-center justify-center rounded-lg ring-1 ring-white/10 ring-inset">
+							<SeeAll q={f.seeAllQ} />
+						</div>
+					) : null}
+				</div>
+				{f.loading ? null : (
+					<>
+						<EdgeArrows nav={nav} name="results" className="max-sm:hidden" top="calc(14px + var(--jk-cw) * .75)" />
+						<div className="absolute inset-x-0 bottom-0 flex h-[42px] items-center justify-between px-4 pb-2.5 sm:hidden">
+							<PageDots nav={nav} />
+							<SmallArrows nav={nav} name="results" />
+						</div>
+					</>
+				)}
+			</div>
+		</div>
+	)
 }
 
 /** The fan's posters: d runs -FAN_HALF..FAN_HALF from the middle. */
@@ -372,7 +452,7 @@ const kind = (c: LabCard) => (c.media_type === "show" ? "Show" : "Movie")
  * and the others as a small "Also for you" row; tapping one features it (the two swap places). Phones: the row sits
  * over the backdrop's foot. Wider: the row is a column beside it.
  */
-function JkForYou({ f, pad }: { f: JkFlow; pad: string }) {
+function JkForYou({ f, pad, fit = false }: { f: JkFlow; pad: string; fit?: boolean }) {
 	const picks = f.picks
 	const sig = picks.map((c) => c.key).join(",")
 	// biome-ignore lint/correctness/useExhaustiveDependencies: keyed by the titles
@@ -401,7 +481,8 @@ function JkForYou({ f, pad }: { f: JkFlow; pad: string }) {
 	return (
 		<div className={`absolute inset-0 flex gap-4 pt-2.5 pb-3 sm:pt-3 sm:pb-4 lg:gap-6 ${pad}`}>
 			{/* The featured recommendation on its backdrop. */}
-			<div className="relative min-w-0 flex-1 overflow-hidden rounded-xl bg-gray-900 ring-1 ring-white/10 sm:flex-[1.3] sm:rounded-2xl">
+			<div className={`relative min-w-0 flex-1 overflow-hidden rounded-xl bg-gray-900 ring-1 ring-white/10 sm:flex-[1.3] sm:rounded-2xl ${fit ? "lg:flex-1" : ""}`}>
+				{/* Round 17 (fit): from 1024 px the featured title and "Also for you" share the width evenly, so six whole picks fit at 1440. */}
 				{top.backdrop_path ? (
 					<img
 						key={top.key}
@@ -481,51 +562,72 @@ function JkForYou({ f, pad }: { f: JkFlow; pad: string }) {
 				</div>
 				{/* Phones: the other recommendations over the backdrop's foot. */}
 				<div className="absolute inset-x-0 bottom-0 px-3 pb-2 sm:hidden">
-					<AlsoRow f={f} cards={rest} onFeature={feature} />
+					<AlsoRow f={f} cards={rest} onFeature={feature} fit={fit} />
 				</div>
 			</div>
 			{/* Wider: the other recommendations in a column beside it. */}
 			<div className="flex min-w-0 flex-1 flex-col justify-center max-sm:hidden">
-				<AlsoRow f={f} cards={rest} onFeature={feature} titles />
+				<AlsoRow f={f} cards={rest} onFeature={feature} titles fit={fit} />
 			</div>
 		</div>
 	)
 }
 
-/** "Also for you": small posters (the TV quiz's row); a tap features one. Start over sits at the label's end. */
-function AlsoRow({ f, cards, onFeature, titles = false }: { f: JkFlow; cards: LabCard[]; onFeature: (i: number) => void; titles?: boolean }) {
+/**
+ * "Also for you": small posters (the TV quiz's row); a tap features one. Start over sits at the label's end.
+ * Round 17 (`fit`): whole posters only (jkp, jk-pager), snapping to each, with small arrows in the label's line that
+ * page by a whole set.
+ */
+function AlsoRow({
+	f,
+	cards,
+	onFeature,
+	titles = false,
+	fit = false,
+}: { f: JkFlow; cards: LabCard[]; onFeature: (i: number) => void; titles?: boolean; fit?: boolean }) {
+	const nav = usePager()
+	const items = cards.map((c, i) => (
+		<li key={c.key} className={fit ? "jkp-c snap-start" : "jk-also shrink-0"}>
+			<button
+				type="button"
+				onClick={() => onFeature(i)}
+				aria-label={`Show ${c.title}`}
+				title={c.title}
+				className="hi-tog block w-full cursor-pointer rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+			>
+				<span className="hi-lift block">
+					<img
+						src={tmdbImage(c.poster_path, "w185")}
+						alt=""
+						loading="lazy"
+						draggable={false}
+						className="block aspect-[2/3] w-full rounded-md object-cover shadow-[0_6px_16px_rgb(0_0_0/.5)] ring-1 ring-white/10"
+					/>
+				</span>
+				{titles ? <span className="mt-1.5 block truncate text-xs text-gray-300">{c.title}</span> : null}
+			</button>
+		</li>
+	))
 	return (
 		<div className="min-w-0">
 			<div className="mb-1 flex items-center justify-between gap-3 sm:mb-2.5">
 				<h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-300 sm:text-xs">Also for you</h3>
-				<button type="button" onClick={f.startOver} className="-my-1 h-7 cursor-pointer rounded-md px-1.5 text-xs font-semibold text-gray-400 hover:text-white sm:text-sm">
-					Start over
-				</button>
+				<span className="flex items-center gap-2 sm:gap-3">
+					{fit ? <SmallArrows nav={nav} name="Also for you" size="h-6 w-6 sm:h-7 sm:w-7" className="-my-1" /> : null}
+					<button type="button" onClick={f.startOver} className="-my-1 h-7 cursor-pointer rounded-md px-1.5 text-xs font-semibold text-gray-400 hover:text-white sm:text-sm">
+						Start over
+					</button>
+				</span>
 			</div>
-			<ul className="-mx-1 flex gap-2 overflow-x-auto px-1 pt-0.5 pb-1 [scrollbar-width:none] sm:gap-3">
-				{cards.map((c, i) => (
-					<li key={c.key} className="jk-also shrink-0">
-						<button
-							type="button"
-							onClick={() => onFeature(i)}
-							aria-label={`Show ${c.title}`}
-							title={c.title}
-							className="hi-tog block w-full cursor-pointer rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-						>
-							<span className="hi-lift block">
-								<img
-									src={tmdbImage(c.poster_path, "w185")}
-									alt=""
-									loading="lazy"
-									draggable={false}
-									className="block aspect-[2/3] w-full rounded-md object-cover shadow-[0_6px_16px_rgb(0_0_0/.5)] ring-1 ring-white/10"
-								/>
-							</span>
-							{titles ? <span className="mt-1.5 block truncate text-xs text-gray-300">{c.title}</span> : null}
-						</button>
-					</li>
-				))}
-			</ul>
+			{fit ? (
+				<div className="jkp -mx-1">
+					<ul ref={nav.ref} className="jkp-box jkp-row flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain pt-0.5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+						{items}
+					</ul>
+				</div>
+			) : (
+				<ul className="-mx-1 flex gap-2 overflow-x-auto px-1 pt-0.5 pb-1 [scrollbar-width:none] sm:gap-3">{items}</ul>
+			)}
 		</div>
 	)
 }

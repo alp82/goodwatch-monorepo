@@ -202,6 +202,8 @@ export function useStageFlow(key: string, { shelfByStep = false }: { shelfByStep
 	}, [])
 	const backToResults = useCallback(() => setDone(false), [])
 	const startOver = useCallback(() => {
+		// Round 17: a third heart's pending "show the picks" can't fire after this.
+		if (doneTimer.current) clearTimeout(doneTimer.current)
 		setDone(false)
 		setLoved([])
 	}, [])

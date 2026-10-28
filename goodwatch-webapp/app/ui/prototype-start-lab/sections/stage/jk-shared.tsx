@@ -14,7 +14,7 @@ import { sceneImage, type SceneMeta, type ScenePair } from "../../scene/types"
 import type { LightGeo } from "../light/effects"
 import { JK_REVEAL, SEARCH_BARS, useSearchbarKey } from "../searchbar/bars"
 import { type Rect, useLab } from "../../lab/types"
-import { type StageFlow, useStageFlow } from "./ab-shared"
+import { NEED, type StageFlow, useStageFlow } from "./ab-shared"
 import { EfgField, NIGHT } from "./efg-shared"
 import { vocabOf } from "./hi-vocab"
 import { JkMoodRow, JkMorePopover, JkPresets } from "./jk-chips"
@@ -90,14 +90,27 @@ export function useJkFlow(key: string) {
 		if (v) return { text: v.label, dot: v.color }
 		return { text: f.label }
 	})()
+	// PROTOTYPE · Round 17: the owner: "when i selected 3 and go back choosing, the selections should be reset". Once
+	// three are loved, going back (Back) or choosing anything new (a mood, a preset, a search, the picker, Clear, the
+	// dice) starts the three over; fewer than three still carry across searches as before.
+	const full = f.loved.length >= NEED
+	const { startOver, mood: moodRaw, prompt: promptRaw, typed: typedRaw, mix: mixRaw, clear: clearRaw } = f
+	const leave = useCallback(() => {
+		if (full) startOver()
+	}, [full, startOver])
+	const mood = useCallback((k: string) => (leave(), moodRaw(k)), [leave, moodRaw])
+	const prompt = useCallback((q: string) => (leave(), promptRaw(q)), [leave, promptRaw])
+	const typed = useCallback((q: string) => (leave(), typedRaw(q)), [leave, typedRaw])
+	const mix = useCallback((ids: string[]) => (leave(), mixRaw(ids)), [leave, mixRaw])
+	const clear = useCallback(() => (leave(), clearRaw()), [leave, clearRaw])
 	const surprise = useCallback(() => {
 		const moods = f.data.guest.moods
 		const now = f.source.kind === "mood" ? f.source.key : null
 		const pool = moods.filter((m) => m.key !== now)
 		const m = pool[Math.floor(Math.random() * pool.length)]
-		if (m) f.mood(m.key)
-	}, [f])
-	return { ...f, view, heading, shown, surprise }
+		if (m) mood(m.key)
+	}, [f.data, f.source, mood])
+	return { ...f, view, heading, shown, surprise, mood, prompt, typed, mix, clear, backToResults: startOver }
 }
 
 export type JkFlow = ReturnType<typeof useJkFlow>
@@ -393,7 +406,8 @@ export function JkStage({
 				<div ref={gap.spacer} className={`jk-gapbox flex-1 ${placement === "card" ? "jk-gapcap" : ""}`} />
 				{placement === "card" ? (
 					<>
-						<div className="mx-auto w-full max-w-[1360px] px-4 pb-16 sm:px-6 sm:pb-[72px]">{module(f, reg)}</div>
+						{/* Round 17: room for the card's 1600 px on large screens (the card caps itself, j). */}
+						<div className="mx-auto w-full max-w-[1648px] px-4 pb-16 sm:px-6 sm:pb-[72px]">{module(f, reg)}</div>
 						<div aria-hidden className="[flex:0.001_1_0px]" />
 					</>
 				) : (
