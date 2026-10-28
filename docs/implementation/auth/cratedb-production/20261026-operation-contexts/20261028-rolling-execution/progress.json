@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-10-28T02:40:32.227680+00:00",
+  "updated_utc": "2026-10-28T02:46:01.720706+00:00",
   "base": "de2749c94e8df87a9dd4e8b0acc4362578515142",
   "branch": "fix/644-rolling-upgrade-execution",
   "state": "IN_PROGRESS",
@@ -385,12 +385,12 @@
     ]
   },
   "watcher": {
-    "probes": 2695,
+    "probes": 2860,
     "unexpected": 0,
     "over3s": 3,
     "alarms": 0,
     "max_seconds": 4.125801,
-    "last_utc": "2026-10-28T02:40:22.634901+00:00"
+    "last_utc": "2026-10-28T02:45:52.626651+00:00"
   },
   "gate_failure": null,
   "abort": null,
