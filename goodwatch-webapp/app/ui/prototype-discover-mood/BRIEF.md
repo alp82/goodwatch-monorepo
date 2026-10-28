@@ -172,3 +172,53 @@ Round 5 rules:
 | 18 | Mood as the deep tab: Mood becomes a mixer with sub-tabs Feel, About, Style, Genre, Length, each showing combination counts and the picked recipe as one line on top. Streaming adds Age and content and Production country. Watched becomes "Taste" with Seen, Loved and disliked, Taste match, Scores, Released. Search keeps its three lanes plus Cast and crew. |
 | 19 | Personal vs title split: Search, Mood, Streaming, For you. For you holds everything about the viewer (Not seen yet, Taste match, Loved, Disliked, Similar to). Mood holds what the title is (mood, about, style, genre, type, length, released). Streaming holds where and for whom (services, production country, age and content). Scores live as a sub-tab of Mood ("How good"). |
 | 20 | Drill-down with a path: each tab opens on a grid of its sub-categories as tiles (with live values on them); tapping one replaces the panel with that sub-category and shows a path "Watched › Scores" with a back step. No visible second row of tabs. Same four tabs, More spread like 11. |
+
+## Round 6 (2026-10-28): the Discover lab
+
+Owner verdict on round 5: "16 is really strong. Most others are either hard to navigate or complex or bad looking."
+From now on 16 plus the fixes below is the baseline, and anything that needs exploring gets separate variations per
+section, like the start page lab. Route: `/prototype/discover-mood?variant=lab` (default), lab bar at the bottom
+(← → variant, ↑ ↓ section, ☰ all sections). URL: `&titles=b&mood=c&sec=mood`.
+
+Owner notes on 16 (all must be addressed):
+1. Search › Moods and titles: "what's the difference between + Like this and Similar to? Sounds like the same thing.
+   Ideally it shows relevant dynamic results in here. Each found title can also be added in different ways: like
+   this, loved, disliked, etc."
+2. Search › Cast and crew: typing "james" in the bar, then opening Cast and crew, shows nothing until you type james
+   again in the card's own field. "Not intuitive." People must follow the bar's text.
+3. Mood: "the selection of moods/themes/etc. needs to be refined, see the better choices in explorer" (the explorer's
+   mood islands: Tense, Sad, Romantic, Cozy, Dark, Deep, Thrilling, Magical, Funny, Scary, Trippy, Quirky, each with
+   "N titles, X% your taste"; code in `~/ui/explorer/`, data via `/api/explorer/*` which the proxy allows). "Also check
+   the way better display design and choosing UX in My movies" (`~/ui/watch-next/MoodPicker.tsx`, `TasteShelf.tsx`:
+   "Pick up to three. Mix moods, themes, styles, and your taste." Large image cards for taste groups with "N on your
+   services", then "Everything else" accordions: Moods 11 · kinds of evening, Themes 13 · what it's about, Styles 10 ·
+   how it's told, each with hue dots). "Maybe not everything needs sub-tabs."
+4. Length moves to Watch.
+5. Streaming must have feature parity with today's Discover Streaming card (Anywhere / My services / Streaming in… with a
+   country select and search, Any service, service logos, "+224 more") and use the filter bar's "On my services" pill
+   design (green pill with stacked service logos, next to "Everywhere") across the whole filter UI.
+6. Scores need icons and color hints for the different sources (IMDb, Rotten Tomatoes, Metacritic, GoodWatch). Scores by
+   source more compact than the overall score filter.
+7. Taste match does not belong under Scores. "Overall design and layout needs to be improved in this and many other
+   tabs."
+8. Released can have many more useful controls; there's space.
+9. Origin (production country) is its own sub-tab next to Services (semantic closeness). Age and content is separate
+   from Origin, so both get generous controls and design.
+10. Placeholders must not mention horror (not mainstream enough). This includes Find a filter's placeholder: the real
+    `FilterSearchField` hardcodes it, so the lab uses its own field.
+
+Baseline structure (the shell owns it, `lab/shell-parts.tsx` TABS):
+- Search: Moods and titles [section `titles`] · Cast and crew [`people`] · Your taste [`taste`: Loved, Disliked,
+  Taste match]
+- Mood: the whole tab is section `mood` (moods, themes, styles, genre, movies or shows). The section decides its own
+  inner structure; it may have no sub-tabs.
+- Watch: Services [`services`: streaming + Not seen yet] · Made in [`origin`] · Length [`length`] · Scores [`scores`:
+  score, by source, critics vs audiences] · Released [`released`] · Age and content [`age`, only with a rating ladder]
+
+Lab code (`lab/`): `types.ts` (SectionProps, SectionVariant), `choice.ts`, `registry.ts`, `LabBar.tsx`, `shell*.tsx`
+(copied from R5-16), `sections/<id>/index.ts` exporting `VARIANTS: SectionVariant[]`, one file per variant
+`sections/<id>/<key>.tsx`. Variant `a` is the baseline (the fixed version of what 16 had); `b`, `c`, … explore. Each
+variant gets a 2-4 word name that says what's different. Sections may import shared helpers from `lab/shell-parts.tsx`
+read-only (copy into the section folder to change them). A section renders only its content area: no tabs, no
+sub-tab row, no outer panel chrome. It gets `{ d, pieces, phone, text, setText, runSearch, open }`; desktop content
+area is about 1400 × 400 px (fixed height, no long scrolling), phone is a stacked sheet at 390 px.

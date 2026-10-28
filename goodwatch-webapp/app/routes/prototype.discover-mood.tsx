@@ -49,12 +49,15 @@ import * as R5_17 from "~/ui/prototype-discover-mood/variants/R5-17"
 import * as R5_18 from "~/ui/prototype-discover-mood/variants/R5-18"
 import * as R5_19 from "~/ui/prototype-discover-mood/variants/R5-19"
 import * as R5_20 from "~/ui/prototype-discover-mood/variants/R5-20"
+import { LabShell } from "~/ui/prototype-discover-mood/lab/shell"
+import { LabBar } from "~/ui/prototype-discover-mood/lab/LabBar"
 import * as Today from "~/ui/prototype-discover-mood/variants/Today"
 
 export const meta: MetaFunction = () => [{ title: "PROTOTYPE · Discover mood" }, { name: "robots", content: "noindex" }]
 export const shouldRevalidate: ShouldRevalidateFunction = () => false
 
 const VARIANTS = {
+	lab: { name: "Discover lab", View: LabShell },
 	"11": { name: R5_11.NAME, View: R5_11.VariantR5_11 },
 	"12": { name: R5_12.NAME, View: R5_12.VariantR5_12 },
 	"13": { name: R5_13.NAME, View: R5_13.VariantR5_13 },
@@ -106,16 +109,16 @@ const CYCLE = ["11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "8", 
 
 export default function PrototypeDiscoverMood() {
 	const [params] = useSearchParams()
-	const key = (params.get("variant") ?? "11") as keyof typeof VARIANTS
+	const key = (params.get("variant") ?? "lab") as keyof typeof VARIANTS
 	const d = useProtoDiscover()
-	const { View } = VARIANTS[key] ?? VARIANTS["11"]
+	const { View } = VARIANTS[key] ?? VARIANTS.lab
 	return (
 		<>
 			<View d={d} />
-			<PrototypeSwitcher
+			{key === "lab" || !(key in VARIANTS) ? <LabBar /> : <PrototypeSwitcher
 				variants={Object.fromEntries(CYCLE.map((k) => [k, VARIANTS[k].name]))}
 				position="top-[4.5rem] right-2 scale-75 origin-top-right md:top-auto md:right-auto md:scale-100 md:bottom-6 md:left-1/2 md:-translate-x-1/2"
-			/>
+			/>}
 		</>
 	)
 }
