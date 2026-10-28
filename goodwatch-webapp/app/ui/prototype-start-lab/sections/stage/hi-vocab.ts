@@ -41,8 +41,10 @@ export const VOCAB_BY_ID = new Map(VOCAB.map((v) => [v.id, v]))
 const byLabel = new Map(VOCAB.map((v) => [v.label, v]))
 
 /** The vocabulary item a stage source stands for (a mood key, or a prompt whose text is a label), if any. */
-export function vocabOf(source: { kind: string; key?: string; q?: string }): VocabItem | null {
+export function vocabOf(source: { kind: string; key?: string; q?: string; lead?: string | null }): VocabItem | null {
 	if (source.kind === "mood" && source.key) return VOCAB_BY_ID.get(`mood:${source.key}`) ?? null
+	// PROTOTYPE · Round 15: stage l/m's picks stand for their first word (the room's light follows it).
+	if (source.kind === "mix") return source.lead ? (VOCAB_BY_ID.get(source.lead) ?? null) : null
 	if (source.kind === "prompt" && source.q) return byLabel.get(source.q) ?? null
 	return null
 }

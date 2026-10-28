@@ -35,7 +35,7 @@ export function TrayLayers({
 
 function Results({ f, col, pad, status }: { f: StageFlow; col: string; pad: string; status: string }) {
 	const full = f.loved.length >= NEED
-	const sourceKey = f.source.kind === "popular" ? "popular" : `${f.source.kind}:${"q" in f.source ? f.source.q : f.source.key}`
+	const sourceKey = f.source.kind === "popular" ? "popular" : `${f.source.kind}:${f.source.kind === "mix" ? f.source.ids.join() : "q" in f.source ? f.source.q : f.source.key}`
 	const reading = !f.loading && f.answer && (f.source.kind === "typed" || (f.source.kind === "prompt" && !vocabOf(f.source)))
 	return (
 		<>

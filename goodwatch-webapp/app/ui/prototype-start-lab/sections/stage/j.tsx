@@ -15,7 +15,8 @@ const CSS = `.jkj-mod{height:306px}.jkj-head{height:68px}.jkj-col{width:130px}.j
 @media (min-width:1024px) and (max-height:820px){.jkj-mod{height:378px}.jkj-head{height:82px}.jkj-col{width:168px}.jkj-slot{width:34px}}
 @media (min-width:1600px) and (min-height:1000px){.jkj-mod{height:436px}.jkj-col{width:200px}}`
 
-function SpotlightCard({ f, reg }: { f: JkFlow; reg: Reg }) {
+// Round 15: exported for stages l and m, which keep this card under their own picker.
+export function SpotlightCard({ f, reg }: { f: JkFlow; reg: Reg }) {
 	const box = useJkBringIntoView(f)
 	const lit = f.view !== "empty"
 	const pulse = useRef<HTMLSpanElement>(null)

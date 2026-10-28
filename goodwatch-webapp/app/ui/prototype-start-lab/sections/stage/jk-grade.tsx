@@ -232,6 +232,8 @@ function gradeOf(f: JkFlow): string | null | undefined {
 	if (f.loading && !f.reading) return undefined
 	const reading = f.loading ? f.reading : f.answer?.reading
 	const answeredMood = f.answer?.kind === "mood" ? MOOD_KEY_BY_NAME.get(f.answer.answeredAs as never) : undefined
+	// Round 15: a mix with no lead word (none of its words has a grade) stays neutral.
+	if (s.kind === "mix") return null
 	return gradeOfReading(reading) ?? gradeOfText(s.q) ?? answeredMood ?? null
 }
 

@@ -83,6 +83,16 @@ export const PRESET_SHORT: Record<string, string> = {
 	"a mind-blowing space adventure": "Space adventure",
 }
 
+/**
+ * PROTOTYPE · Round 15: the presets that show, in order: only what moods can't say (a comparison, a setting, an
+ * audience). The other captured prompts are moods in other words (cozy mystery, feel-good binge, mind-bending sci-fi,
+ * twisty thriller) and the mood picker covers them, so they stay out. The lab has no other captured prompts.
+ */
+export const PRESETS = ["something like Severance but funnier", "a mind-blowing space adventure", "an animated movie adults will love"]
+
+/** The captured prompts behind the presets, in PRESETS order. */
+export const presetPrompts = (data: LabData) => PRESETS.flatMap((q) => data.guest.prompts.find((p) => p.q === q) ?? [])
+
 export function promptAnswer(data: LabData, q: string): FixtureAnswer | null {
 	const p = data.guest.prompts.find((x) => x.q === q || PRESET_SHORT[x.q] === q)
 	return p ? { q: p.q, answeredAs: p.q, kind: "prompt", reading: p.reading, titles: p.titles } : null

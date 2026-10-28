@@ -220,7 +220,7 @@ function StepSearch({ f, onAnswer }: { f: StageFlow; onAnswer: () => void }) {
 
 function StepTap({ f }: { f: StageFlow }) {
 	const full = f.loved.length >= NEED
-	const key = f.source.kind === "popular" ? "popular" : `${f.source.kind}:${"q" in f.source ? f.source.q : f.source.key}`
+	const key = f.source.kind === "popular" ? "popular" : `${f.source.kind}:${f.source.kind === "mix" ? f.source.ids.join() : "q" in f.source ? f.source.q : f.source.key}`
 	return (
 		<div className="pt-3 sm:pt-5">
 			<div className="flex items-start gap-3">

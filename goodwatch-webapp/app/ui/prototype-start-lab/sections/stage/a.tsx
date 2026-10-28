@@ -139,7 +139,7 @@ function Tray({ f }: { f: StageFlow }) {
 
 function Results({ f }: { f: StageFlow }) {
 	const full = f.loved.length >= NEED
-	const sourceKey = f.source.kind === "popular" ? "popular" : `${f.source.kind}:${"q" in f.source ? f.source.q : f.source.key}`
+	const sourceKey = f.source.kind === "popular" ? "popular" : `${f.source.kind}:${f.source.kind === "mix" ? f.source.ids.join() : "q" in f.source ? f.source.q : f.source.key}`
 	return (
 		<>
 			<div className="flex h-[44px] flex-col justify-center sm:h-[48px]">

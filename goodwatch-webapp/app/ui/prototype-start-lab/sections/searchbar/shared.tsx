@@ -6,7 +6,7 @@ import { type ReactNode, type RefObject, useCallback, useEffect, useRef, useStat
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import { ReadAsChips, readAsChips } from "~/ui/discover/ReadAsChips"
 import { DEFAULTS } from "../../lab/choice"
-import { PRESET_SHORT, TYPED_READING_MS } from "../../lab/fixture-search"
+import { PRESET_SHORT, presetPrompts, TYPED_READING_MS } from "../../lab/fixture-search"
 import { useLab } from "../../lab/types"
 import { PRIVATE, readingChips } from "../hero/shared"
 import { moodHue, type StageFlow } from "../stage/ab-shared"
@@ -113,7 +113,7 @@ export function BarInput({
 				<input
 					ref={inputRef}
 					type="search"
-					aria-label="Search by mood or anything"
+					aria-label="Search by mood, plot, or title"
 					value={f.draft}
 					autoComplete="off"
 					enterKeyHint="search"
@@ -181,7 +181,8 @@ export function usePlaceholder() {
 
 /** The example searches as small chips (Discover's option chip, without the backing it needs over the room). */
 export function BarPresets({ f, lead = true, ghost = false, compact = false }: { f: StageFlow; lead?: boolean; ghost?: boolean; compact?: boolean }) {
-	const prompts = f.data.guest.prompts.slice(0, compact ? 6 : 3)
+	// Round 15: only the presets moods can't stand in for (PRESETS).
+	const prompts = presetPrompts(f.data)
 	if (compact)
 		// Round 13 (d): six short chips, no per-chip icon, one row on desktop; the row scrolls sideways on phones.
 		return (

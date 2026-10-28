@@ -9,7 +9,7 @@ import { REGISTRY, pick } from "./registry"
 import { type IntroFrom, type Lab, type LabCard, LabContext, type LabData } from "./types"
 
 // Round 12: the bar offers only what is still open; decided sections stay at DEFAULTS.
-const ROUND2_SCENES = (id: string) => id === "nook-r9-bay-sofa-a" || id === "nook-r11-d" || id.startsWith("nook-r12-")
+const ROUND2_SCENES = (id: string) => id === "nook-r9-bay-sofa-a" || id === "nook-r11-d" || id.startsWith("nook-r12-") || id.startsWith("nook-r15-")
 
 export function LabPage({ data: loaded }: { data: LabData }) {
 	const [params] = useSearchParams()
@@ -85,6 +85,8 @@ export function LabPage({ data: loaded }: { data: LabData }) {
 					? PERSONAS.map((p) => ({ key: p.key, name: p.name }))
 				: ((reg as Record<string, readonly { key: string; name: string }[]>)[s.id] ?? [])
 						.filter((v) => choice.round === 1 || s.id !== "shelf" || v.key >= "f")
+						// PROTOTYPE · Round 15: round 2 offers stage j and the two mood pickers (l, m) only.
+						.filter((v) => choice.round === 1 || s.id !== "stage" || ["j", "l", "m"].includes(v.key))
 						.map((v) => ({ key: v.key, name: v.name })),
 	}))
 

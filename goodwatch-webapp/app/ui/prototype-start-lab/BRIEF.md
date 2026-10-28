@@ -243,3 +243,30 @@ Built: mood lighting **e** ("Round 14", `?light=e`, now round 2's default; a-d u
 - **New effects:** halation, chroma, crt, vhs, teal, xpro, bleach, pop, leak, shafts, flare, lightning, rain, scratches, redrim (each described in tables.ts EFFECTS_E). Per mood: feel-good shafts + halation + flicker; romance halation + leak; mystery adds fog + rain; mind crt + chroma; heavy bleach + dust; history sepia + scratches; growing vhs + leak; worlds as c.
 - **Effect explorer:** `?fx=rain,leak` forces effects on (at FX_SOLO strength, on top of the mood's); while `fx` is in the URL (even `?fx=`) a small toggle list sits in the top left. The lab bar keeps `fx`.
 - The window is a guess (the box just above the scene's focus); the lamp is found per scene as before.
+
+# Round 15 room
+
+New default scene **`nook-r15-a`** (+ `-portrait`): nook-r12-b with the sleeping dog removed (the sofa seat is simply empty; cushions and the rust throw stay) and both bookcases lit by r12-e's hidden under-shelf warm LED strips instead of 12-b's neon edge lines (the left bookcase now glows too). Everything else is 12-b: the same 11 / 12 slots to within about a pixel, same lamp, window and rug. Made with one Codex image_gen edit per orientation (`scripts/prototype-start-lab/scene-slots-r15-prompts.json`), processed with `scene-slots-r15.py` (r13's inpainting, fresh metadata). `focus` is 12-b's box (seat and throw). Lamp detection still lands on the lamp shade.
+
+# Round 15 (2026-10-28): the mood picker from My movies
+
+The owner's notes on round 14, verbatim:
+
+> * the mood selection bar + more button looks amateurish. the chips are okay but also they duplicate some sentiments from the example searches
+> * in my movies we have these much nicer representation: [screenshot]
+> * the best ones are preset combinations but also the categories make more sense here and the selection is much better designed
+> * "Find something to watch by mood" - remove the or anything
+> * room: the dog needs to go away for now, not everyone like them and this is not a pet website. also, the lights inside the shelves should use the better designed strips from 12-e
+> * effects are not bad. some things are still not fitting, but lets park that for a while
+
+The room is "Round 15 room" above. Built for the picker:
+
+- **Stage l "Mixes on the stage"** (`?stage=l`, round 2's default) and **stage m "Mood button"** (`?stage=m`); the bar's stage section is open again with j, l, m. Both are j (same card, gap, light) with My movies' taste picker (watch-next/MoodPicker + TasteShelf) in place of the chips and More moods: its MoodButton ("Any mood" with the color fan, then "Add"/"Change"), PickChip, ChoiceArt and choiceHues render as they are; the tile, shelf and panel head are copies of TasteShelf's (not exported) with guest lines (`sections/stage/jl-picker.tsx`).
+  - **l:** the button and the first six mixes as image tiles in one row under the search bar (sideways on phones; fits from ~1250 px). Fixed sizes, so a pick moves nothing.
+  - **m:** only the button, the picks as poster chips, and "N titles" (or "Pick up to three"). The calmest stage.
+  - **The panel** (both): "Pick up to three. Mix moods, themes, and styles.", k of 3, Clear, Done; "Start with a mix" (eight mixes, 2 × 4 on desktop), then "Everything else": Moods 11, Themes 13, Styles 10, folded. Solid gray-900 (no blur: the light effects move behind it). Picks keep it open; Done brings the results into view.
+- **Mixes** (`jl-mixes.ts`): Warm, easy comedies (Funny · Feel-good); Dark, gritty crime (Crime & mystery · Scary · Graphic); Eerie, mind-bending stories (Mind-bending · Scary); Funny love stories (Romance · Funny); Smart, high-stakes action (Action · Mind-bending · Fast-paced); Warm coming-of-age stories (Coming of age · Feel-good); Moving period dramas (History · Heavy · Slow burn); Dark fantasy epics (Fantasy · Heavy · Spectacle). Up to three picks (mixes and words) combine; a fourth is refused with My movies' hint.
+- **Lab stand-ins:** a theme or style answers with its nearest mood's (or prompt's) fixture list; picks merge their lists (titles on more lists first); counts are list sizes ("34 titles"). Tile pictures are the lists' backdrops, none repeated.
+- **Presets** show only what moods can't say: "Severance, but funny", "Space adventure", "Adult animation" (`PRESETS` in lab/fixture-search.ts). Cozy mystery, Feel-good binge, Mind-bending sci-fi and Twisty thriller are moods in other words; the lab has no other captured prompts.
+- **H1** "Find something to watch by mood"; the input's label "Search by mood, plot, or title".
+- **Light:** picks drive the room by their first word (a mix by its first part).

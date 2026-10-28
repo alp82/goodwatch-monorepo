@@ -7,6 +7,7 @@
 // Round 12: the lab's "Search bar" (`?searchbar=`, sections/searchbar) swaps the field and presets for a bar with a
 // button; "Mood lighting" (`?light=`) gets the scene's placement here for its effects (sections/light).
 // Round 13: half the gap (only the dog band must fit), capped at 300 px on large screens, zooming out past that.
+// Round 15: the H1 says "by mood" only; stages l and m pass their own picker in place of the chips (jl-picker).
 import { type CSSProperties, type ReactNode, type RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { ScenePlace } from "../../scene/SceneStage"
 import { sceneImage, type SceneMeta, type ScenePair } from "../../scene/types"
@@ -83,6 +84,8 @@ export function useJkFlow(key: string) {
 	/** What's on show in the selection step: a mood or vocabulary choice (with its color), or the search. */
 	const shown = ((): { text: string; dot?: string } | null => {
 		if (f.source.kind === "popular") return null
+		// Round 15: stage l/m's picks by name, with the first word's color.
+		if (f.source.kind === "mix") return { text: f.source.name, dot: vocabOf(f.source)?.color }
 		const v = vocabOf(f.source)
 		if (v) return { text: v.label, dot: v.color }
 		return { text: f.label }
@@ -335,11 +338,14 @@ export function JkStage({
 	placement,
 	over,
 	module,
+	picker,
 }: {
 	k: string
 	placement: "card" | "band"
 	over?: (f: JkFlow) => ReactNode
 	module: (f: JkFlow, reg: Reg) => ReactNode
+	/** Round 15: replaces the mood chips and More moods (stage l/m). It must mark its row `data-jk-moods` for the gap. */
+	picker?: (f: JkFlow, reg: Reg) => ReactNode
 }) {
 	const { Room, scene: labScene } = useLab()
 	const f = useJkFlow(k)
@@ -372,7 +378,14 @@ export function JkStage({
 			{over?.(f)}
 			<div className="pointer-events-none relative z-10 flex min-h-[calc(100svh-4rem)] w-full flex-col">
 				<div className="mx-auto w-full max-w-[1360px] px-4 sm:px-6">
-					<JkTop f={f} reg={reg} onMore={() => setMore((o) => !o)} moreOpen={more} moreSlot={<JkMorePopover f={f} open={more} onClose={close} />} />
+					<JkTop
+						f={f}
+						reg={reg}
+						onMore={() => setMore((o) => !o)}
+						moreOpen={more}
+						moreSlot={<JkMorePopover f={f} open={more} onClose={close} />}
+						picker={picker ? picker(f, reg) : undefined}
+					/>
 				</div>
 				{/* Round 7: a window between the mood row and the module, tall enough for the scene's dog (gapCss), even if
 				    the module then starts below the fold. Round 13: half as tall, and on card stages it grows to GAP_CAP at
@@ -392,11 +405,19 @@ export function JkStage({
 }
 
 /** H1, the lifted field, the example searches and the mood row, each registered so no room poster sits behind it. */
-function JkTop({ f, reg, onMore, moreOpen, moreSlot }: { f: StageFlow; reg: Reg; onMore: () => void; moreOpen: boolean; moreSlot: ReactNode }) {
+function JkTop({
+	f,
+	reg,
+	onMore,
+	moreOpen,
+	moreSlot,
+	picker,
+}: { f: StageFlow; reg: Reg; onMore: () => void; moreOpen: boolean; moreSlot: ReactNode; picker?: ReactNode }) {
 	// Round 12: b, c, d are bars with a button and the presets inside; "a" is round 11's field and presets row.
 	const Bar = SEARCH_BARS[useSearchbarKey()]
 	return (
-		<div className="jk-top relative isolate z-20">
+		// Round 15: z-40 (was 20), so a picker panel that runs over the module stays above the module's own layers.
+		<div className="jk-top relative isolate z-40">
 			<div
 				aria-hidden
 				className="pointer-events-none absolute left-1/2 -top-24 -z-10 h-[calc(100%+260px)] w-[230%] -translate-x-1/2 sm:w-[min(1700px,170%)]"
@@ -406,7 +427,7 @@ function JkTop({ f, reg, onMore, moreOpen, moreSlot }: { f: StageFlow; reg: Reg;
 				ref={reg("h1")}
 				className="jk-h1 pointer-events-auto mx-auto w-fit text-center text-[26px] font-extrabold leading-8 tracking-tight text-white [text-shadow:0_2px_4px_rgb(0_0_0/.6),0_8px_40px_rgb(0_0_0/.85)] sm:text-5xl sm:leading-[1.1] lg:text-[52px]"
 			>
-				Find something to watch by mood or anything
+				Find something to watch by mood
 			</h1>
 			{Bar ? (
 				<div ref={reg("field")} className="jk-field-gap mx-auto mt-4 max-w-[880px] sm:mt-8">
@@ -427,12 +448,16 @@ function JkTop({ f, reg, onMore, moreOpen, moreSlot }: { f: StageFlow; reg: Reg;
 					</div>
 				</>
 			)}
-			<div className="jk-gap relative mt-2.5 sm:mt-4">
-				<div ref={reg("moods")} data-jk-moods="" className="mx-auto w-fit max-w-full">
-					<JkMoodRow f={f} onMore={onMore} moreOpen={moreOpen} />
+			{picker ? (
+				<div className="jk-gap relative mt-2.5 sm:mt-4">{picker}</div>
+			) : (
+				<div className="jk-gap relative mt-2.5 sm:mt-4">
+					<div ref={reg("moods")} data-jk-moods="" className="mx-auto w-fit max-w-full">
+						<JkMoodRow f={f} onMore={onMore} moreOpen={moreOpen} />
+					</div>
+					{moreSlot}
 				</div>
-				{moreSlot}
-			</div>
+			)}
 		</div>
 	)
 }
@@ -443,7 +468,7 @@ function JkTop({ f, reg, onMore, moreOpen, moreSlot }: { f: StageFlow; reg: Reg;
  */
 export function useJkBringIntoView(f: JkFlow) {
 	const box = useRef<HTMLDivElement>(null)
-	const sig = `${f.view}:${f.source.kind}:${"q" in f.source ? f.source.q : "key" in f.source ? f.source.key : ""}`
+	const sig = `${f.view}:${f.source.kind}:${"q" in f.source ? f.source.q : "key" in f.source ? f.source.key : "ids" in f.source ? f.source.ids.join() : ""}`
 	const prev = useRef<string | null>(null)
 	const acted = useRef(false)
 	useEffect(() => {
@@ -464,6 +489,8 @@ export function useJkBringIntoView(f: JkFlow) {
 		// Round 12: a search that fires while the guest is still typing in the bar doesn't scroll the field away;
 		// Enter or the button (which blur the field) does, and sends JK_REVEAL when the text was already searched.
 		if (document.activeElement?.matches("[data-jk-bar-input]")) return
+		// Round 15: picks made in stage l/m's open picker panel wait for Done (which sends JK_REVEAL).
+		if (document.querySelector("[data-jk-picker-open]")) return
 		reveal(box.current)
 	}, [sig])
 	useEffect(() => {

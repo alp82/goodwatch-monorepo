@@ -231,7 +231,7 @@ export function JkBody({
 	})
 	const full = f.loved.length >= NEED
 	const some = f.loved.length > 0
-	const sourceKey = `${f.source.kind}:${"q" in f.source ? f.source.q : "key" in f.source ? f.source.key : ""}`
+	const sourceKey = `${f.source.kind}:${"q" in f.source ? f.source.q : "key" in f.source ? f.source.key : "ids" in f.source ? f.source.ids.join() : ""}`
 	return (
 		<div ref={root} className="absolute inset-0">
 			<div className="jk-layer" {...layer(f.view === "empty", "up")}>

@@ -5,6 +5,7 @@ import { AdjustmentsHorizontalIcon, CheckIcon, ChevronDownIcon, MagnifyingGlassI
 import { motion } from "framer-motion"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { TAP } from "~/ui/filter-bar/motion"
+import { presetPrompts } from "../../lab/fixture-search"
 import { inertProps, moodHue, type StageFlow } from "./ab-shared"
 import { FilterBox, SearchInstead, useDismiss, useFocusOnOpen } from "./hi-picker"
 import { isChosen, pickVocab } from "./hi-shared"
@@ -63,7 +64,8 @@ export const Dot = ({ color }: { color: string }) => <span className="h-2.5 w-2.
 
 /** The example searches: "Try" and the prompts as chips with a magnifier. One line, scrolls on phones. */
 export function JkPresets({ f, className = "" }: { f: StageFlow; className?: string }) {
-	const prompts = f.data.guest.prompts.slice(0, 3)
+	// PROTOTYPE · Round 15: the presets moods can't stand in for (PRESETS).
+	const prompts = presetPrompts(f.data)
 	const on = f.source.kind === "prompt" ? f.source.q : null
 	return (
 		<div className={`pointer-events-auto -mx-4 overflow-x-auto px-4 py-1 [scrollbar-width:none] ${className}`}>

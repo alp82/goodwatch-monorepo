@@ -9,10 +9,18 @@ import { tmdbImage } from "../../lab/kit"
 import type { LabMood } from "~/server/prototype-start-lab.server"
 import { type LabCard, type LabData, useLab } from "../../lab/types"
 import { scoreRanked } from "../recs/shared"
+import { leadVocab, mixAnswer, pickLabel } from "./jl-mixes"
 
 export const NEED = 3
 
-export type Source = { kind: "popular" } | { kind: "mood"; key: string } | { kind: "prompt"; q: string } | { kind: "typed"; q: string }
+// PROTOTYPE · Round 15: "mix" is stage l/m's picker: up to three picks (mixes, moods, themes, styles, jl-mixes), with
+// the stage vocabulary id of the first pick's first word (`lead`, what the room's light reads) and the picks' names.
+export type Source =
+	| { kind: "popular" }
+	| { kind: "mood"; key: string }
+	| { kind: "prompt"; q: string }
+	| { kind: "typed"; q: string }
+	| { kind: "mix"; ids: string[]; lead: string | null; name: string }
 
 type Saved = { draft: string; source: Source; loved: LabCard[]; done: boolean; step?: number }
 
@@ -47,6 +55,7 @@ function answerFor(data: LabData, source: Source): FixtureAnswer | null {
 	if (source.kind === "mood") return moodAnswer(data, source.key)
 	if (source.kind === "prompt") return promptAnswer(data, source.q) ?? fixtureSearch(data, source.q)
 	if (source.kind === "typed") return fixtureSearch(data, source.q)
+	if (source.kind === "mix") return source.ids.length ? mixAnswer(data, source.ids) : null
 	return null
 }
 
@@ -157,6 +166,22 @@ export function useStageFlow(key: string, { shelfByStep = false }: { shelfByStep
 		},
 		[data],
 	)
+	// Round 15: the picker's picks (stage l/m); none is the empty state again.
+	const mix = useCallback(
+		(ids: string[]) => {
+			stop()
+			setDone(false)
+			setDraft("")
+			if (!ids.length) {
+				setSource({ kind: "popular" })
+				setAnswer(null)
+				return
+			}
+			setSource({ kind: "mix", ids, lead: leadVocab(ids), name: ids.map(pickLabel).join(" + ") })
+			setAnswer(mixAnswer(data, ids))
+		},
+		[data],
+	)
 	const clear = useCallback(() => {
 		stop()
 		setDraft("")
@@ -199,8 +224,15 @@ export function useStageFlow(key: string, { shelfByStep = false }: { shelfByStep
 	}, [sig])
 
 	const label =
-		source.kind === "popular" ? "Popular right now" : source.kind === "mood" ? (answer?.answeredAs ?? "Mood") : `“${source.q}”`
-	const seeAllQ = source.kind === "popular" ? null : source.kind === "mood" ? (answer?.answeredAs ?? null) : source.q
+		source.kind === "popular"
+			? "Popular right now"
+			: source.kind === "mood"
+				? (answer?.answeredAs ?? "Mood")
+				: source.kind === "mix"
+					? source.name
+					: `“${source.q}”`
+	const seeAllQ =
+		source.kind === "popular" ? null : source.kind === "mood" ? (answer?.answeredAs ?? null) : source.kind === "mix" ? source.name : source.q
 
 	return {
 		data,
@@ -224,6 +256,7 @@ export function useStageFlow(key: string, { shelfByStep = false }: { shelfByStep
 		typed,
 		mood,
 		prompt,
+		mix,
 		clear,
 		step,
 		setStep,
