@@ -19,7 +19,9 @@ export default function Settings() {
 	const { locale } = useLocale()
 	const navigate = useNavigate()
 	const { pathname, search } = useLocation()
-	const signedOut = !loading && !user
+	// PROTOTYPE - throwaway: the AI import hint prototype renders for guests on a local server without sign-in.
+	const preview = pathname === "/settings/imports" && search.includes("variant=")
+	const signedOut = !loading && !user && !preview
 	React.useEffect(() => {
 		if (signedOut)
 			navigate(`/sign-in?redirectTo=${encodeURIComponent(pathname + search)}`, {
@@ -27,7 +29,7 @@ export default function Settings() {
 			})
 	}, [signedOut, navigate, pathname, search])
 
-	if (loading || !user) {
+	if (!preview && (loading || !user)) {
 		return (
 			<div className="max-w-7xl mx-auto px-8 py-2 md:py-4 lg:py-8">
 				<Spinner size="large" />

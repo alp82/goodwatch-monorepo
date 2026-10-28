@@ -33,6 +33,18 @@ import {
 	type ImportSourceId,
 } from "./ImportSources"
 import { SourceImportFlow } from "./SourceImportFlow"
+// PROTOTYPE - throwaway: AI import hint variants (?variant=A|B|C|D).
+import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
+import {
+	AI_HINT_VARIANTS,
+	AiRescueLine,
+	VariantA,
+	VariantBButton,
+	VariantBPanel,
+	VariantC,
+	VariantD,
+	useAiHintVariant,
+} from "./prototype-ai-import/AiImportHint"
 import { useSourceImports } from "./SourceImportHooks"
 import { SourceMark } from "./SourceMark"
 import { useImdbImports } from "./api"
@@ -113,6 +125,8 @@ export function ImportSourcesPage({
 		show({ id })
 	}
 	const movieLensFiles = useState<MovieLensFiles>({})
+	const variant = useAiHintVariant()
+	const [aiOpen, setAiOpen] = useState(false)
 
 	// Focus moves to the source that opened, so it is announced, and the page scrolls to it.
 	const card = useRef<HTMLElement>(null)
@@ -134,6 +148,7 @@ export function ImportSourcesPage({
 			focus
 		>
 			<p>{files.unknown.hint}</p>
+			{variant === "A" && <AiRescueLine />}
 			<div>
 				<button
 					type="button"
@@ -208,11 +223,21 @@ export function ImportSourcesPage({
 									)}
 								</section>
 							) : (
-								<>
-									<StartDropZone reading={files.reading} onFile={files.take} />
-									<ConnectRow onConnect={pick} />
-									<WhereToGet open={where} onToggle={setWhere} onPick={pick} />
-								</>
+								variant === "B" && aiOpen ? (
+									<VariantBPanel onOther={() => setAiOpen(false)} />
+								) : (
+									<>
+										<StartDropZone reading={files.reading} onFile={files.take} />
+										<ConnectRow onConnect={pick} />
+										{variant === "A" && <VariantA />}
+										{variant === "B" && (
+											<VariantBButton onOpen={() => setAiOpen(true)} />
+										)}
+										{variant === "C" && <VariantC />}
+										{variant === "D" && <VariantD />}
+										<WhereToGet open={where} onToggle={setWhere} onPick={pick} />
+									</>
+								)
 							)}
 							{atBring && (
 								<History
@@ -227,6 +252,7 @@ export function ImportSourcesPage({
 							)}
 						</div>
 					</div>
+					<PrototypeSwitcher variants={AI_HINT_VARIANTS} />
 				</ImportStepReport.Provider>
 			</MovieLensFilesContext.Provider>
 		</ImportFileRouting.Provider>
