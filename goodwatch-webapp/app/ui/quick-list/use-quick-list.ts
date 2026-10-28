@@ -36,7 +36,6 @@ import {
 	type Order,
 	type QuickAnswer,
 	type QuickTitle,
-	ROWS,
 	SOURCE_ORDER,
 	afterBatch,
 	answerOf,
@@ -172,8 +171,10 @@ export function useQuickList({ titles, member }: { titles: ScoringMedia[]; membe
 		dispatch({ type: "rows", fill: fillOf(list, { ...stateNow.current, shown: [], gone: [] }, answeredKeys, inSearch) })
 	}, [listId, ready])
 	useEffect(() => {
-		if (ready && state.shown.length < ROWS && fill.length) dispatch({ type: "fill", fill })
-	}, [ready, state.shown.length, fill])
+		if (ready && state.shown.length < state.cap && fill.length) dispatch({ type: "fill", fill })
+	}, [ready, state.shown.length, state.cap, fill])
+	/** Scrolling reached the end of the rows: 20 more, from the titles behind them (more are fetched as they run low). */
+	const showMore = useCallback(() => dispatch({ type: "more", fill: fillNow.current }), [])
 	// Rows answered somewhere else (a guest's browser read late, another tab) go.
 	const stale = useMemo(() => staleRows(state, answeredKeys, inSearch), [state, answeredKeys, inSearch])
 	useEffect(() => {
@@ -395,6 +396,9 @@ export function useQuickList({ titles, member }: { titles: ScoringMedia[]; membe
 		moreFailed: paging.failed,
 		moreStopped: !atEnd(paging, request.exclusion) && paging.misses >= MISSES_MAX && pool.length < POOL_MAX,
 		lookFurther,
+		showMore,
+		/** Rows fill their cap, so scrolling to the end may show more. */
+		full: state.shown.length >= state.cap,
 	}
 }
 

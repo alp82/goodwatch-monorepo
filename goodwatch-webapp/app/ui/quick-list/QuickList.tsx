@@ -105,6 +105,21 @@ export function QuickList({ titles, member }: { titles: ScoringMedia[]; member: 
 							onAnswer={q.answer}
 						/>
 				)}
+				{!waiting && q.rows.length > 0 && (
+					<div className="flex min-h-12 flex-col items-center justify-center py-4" data-list-end>
+						{q.full && <EndWatch onReach={q.showMore} rows={q.rows.length} />}
+						{q.loadingMore ? (
+							<p className="text-sm text-gray-400">{QUICK_WORDS.loadingMore}</p>
+						) : (
+							!q.inSearch &&
+							(q.moreStopped || q.moreFailed) && (
+								<button type="button" className={ghostButton} onClick={q.lookFurther}>
+									{q.moreFailed ? WORDS.tryAgain : QUICK_WORDS.lookFurther}
+								</button>
+							)
+						)}
+					</div>
+				)}
 			</div>
 			<FiltersSheet
 				open={sheet}
@@ -123,4 +138,22 @@ export function QuickList({ titles, member }: { titles: ScoringMedia[]; member: 
 			)}
 		</div>
 	)
+}
+
+/**
+ * Infinite scrolling: calls `onReach` when the end of the rows comes within a screen of the view. Watching again
+ * whenever the rows change, so rows that still end within reach ask for more at once.
+ */
+function EndWatch({ onReach, rows }: { onReach: () => void; rows: number }) {
+	const end = useRef<HTMLDivElement>(null)
+	useEffect(() => {
+		const el = end.current
+		if (!el) return
+		const observer = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && onReach(), {
+			rootMargin: "0px 0px 100% 0px",
+		})
+		observer.observe(el)
+		return () => observer.disconnect()
+	}, [onReach, rows])
+	return <div ref={end} aria-hidden className="h-px w-full" />
 }

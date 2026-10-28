@@ -16,6 +16,7 @@ export const QUICK_WORDS = {
 	noResults: "No titles match this search.",
 	noMatch: "Nothing unrated matches these filters.",
 	lookFurther: "Look further",
+	loadingMore: "Loading more titles…",
 	title: "Title",
 	year: "Year",
 	selectRow: (title: string) => `Select ${title}`,

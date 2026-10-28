@@ -5,7 +5,7 @@
 // Rules (owner, October 28, 2026, from the approved prototype):
 // - The rows are the person's unanswered titles from the rating flow's own source, best known first (the source's
 //   order, unlabeled), or a search of the whole catalog, where titles the person answered before show that answer.
-// - 20 rows show. A row answered stays, dimmed with its answer, until another row is answered: then it slides out and
+// - 20 rows show at first, 20 more each time the end of the rows comes near (infinite scrolling). A row answered stays, dimmed with its answer, until another row is answered: then it slides out and
 //   the next title takes a place at the bottom. Only the latest answered rows stay.
 // - Undo takes back the latest change and brings back the rows it sent away, in their places, one step at a time.
 // - Pressing the chosen score again clears it (a change Undo takes back too).
@@ -16,7 +16,7 @@ import type { MediaKey } from "../../types/user-data.ts"
 import type { ScoringMedia } from "../scoring/types.ts"
 import { type ExcludeItem, excludeIdsFor } from "../taste/answered.ts"
 
-/** Rows shown at a time. */
+/** Rows shown at first, and added each time the end of the rows comes near. */
 export const ROWS = 20
 
 /** How long a row takes to slide out before the rows close up (QuickTable's row transition). */
@@ -172,6 +172,8 @@ export interface QuickState {
 	shown: string[]
 	/** Rows sliding out. */
 	leaving: string[]
+	/** How many rows may show: ROWS, and ROWS more each time scrolling reaches the end of them. */
+	cap: number
 	/** Rows the latest change answered: they stay, dimmed, until the next answer. */
 	latest: string[]
 	/** Rows Undo just brought back (they come in as they left). */
@@ -190,6 +192,7 @@ export const INITIAL_QUICK: QuickState = {
 	answers: {},
 	shown: [],
 	leaving: [],
+	cap: ROWS,
 	latest: [],
 	back: [],
 	gone: [],
@@ -203,8 +206,10 @@ export const UNDO_DEPTH = 50
 export type QuickAction =
 	/** A new list (search, filters, order): its first rows, in order. */
 	| { type: "rows"; fill: readonly string[] }
-	/** Titles that may take a free place, in order: the rows fill up to ROWS. */
+	/** Titles that may take a free place, in order: the rows fill up to the cap. */
 	| { type: "fill"; fill: readonly string[] }
+	/** Scrolling reached the end of the rows: ROWS more may show, once the rows fill the cap. */
+	| { type: "more"; fill: readonly string[] }
 	/**
 	 * Rows go and the rows fill up again: rows done sliding out (`left`: only those still on their way out, so a row
 	 * Undo brought back stays), or rows no longer wanted.
@@ -218,11 +223,11 @@ export type QuickAction =
 	| { type: "forget"; key: string }
 	| { type: "undo" }
 
-const fillUp = (shown: readonly string[], fill: readonly string[]) => {
+const fillUp = (shown: readonly string[], fill: readonly string[], cap: number) => {
 	const out = [...shown]
 	const have = new Set(out)
 	for (const key of fill) {
-		if (out.length >= ROWS) break
+		if (out.length >= cap) break
 		if (have.has(key)) continue
 		have.add(key)
 		out.push(key)
@@ -235,25 +240,33 @@ export function quickList(state: QuickState, action: QuickAction): QuickState {
 		case "rows":
 			return {
 				...state,
-				shown: fillUp([], action.fill),
+				shown: fillUp([], action.fill, ROWS),
 				leaving: [],
+				cap: ROWS,
 				latest: [],
 				back: [],
 				gone: [],
 				list: state.list + 1,
 			}
 		case "fill": {
-			if (state.shown.length >= ROWS) return state
-			const shown = fillUp(state.shown, action.fill)
+			if (state.shown.length >= state.cap) return state
+			const shown = fillUp(state.shown, action.fill, state.cap)
 			return shown.length === state.shown.length ? state : { ...state, shown }
+		}
+		case "more": {
+			// Only rows that fill the cap grow it. Titles still on their way take the new places when they come ("fill").
+			if (state.shown.length < state.cap) return state
+			const cap = state.cap + ROWS
+			return { ...state, cap, shown: fillUp(state.shown, action.fill, cap) }
 		}
 		case "settle": {
 			const gone = new Set(action.left ? action.keys.filter((k) => state.leaving.includes(k)) : action.keys)
-			if (!gone.size && state.shown.length >= ROWS) return state
+			if (!gone.size && state.shown.length >= state.cap) return state
 			const dismissed = new Set([...state.gone, ...(action.left ? gone : [])])
 			const shown = fillUp(
 				state.shown.filter((k) => !gone.has(k)),
 				action.fill.filter((k) => !dismissed.has(k)),
+				state.cap,
 			)
 			return {
 				...state,
@@ -331,7 +344,7 @@ export function quickList(state: QuickState, action: QuickAction): QuickState {
 				...state,
 				answers,
 				gone: state.gone.filter((k) => !missing.includes(k)),
-				shown: [...missing, ...state.shown].slice(0, Math.max(ROWS, missing.length)),
+				shown: [...missing, ...state.shown].slice(0, Math.max(state.cap, missing.length)),
 				back: missing,
 				latest: state.latest.filter((k) => !step.items.some((i) => i.key === k)),
 				steps,

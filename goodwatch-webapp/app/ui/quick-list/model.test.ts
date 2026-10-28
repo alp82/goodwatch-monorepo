@@ -322,3 +322,23 @@ test("paging: batches the filters let nothing through from stop it; Look further
 	assert.equal(mayAsk(p, "set-9"), true)
 	assert.equal(afterBatch(p, "set-9", 50, 3).misses, 0)
 })
+
+test("scrolling to the end shows 20 more rows while titles last, and a new list starts at 20 again", () => {
+	const s = start(50)
+	const more = run(s, { type: "more", fill: keys(50) })
+	assert.equal(more.cap, ROWS * 2)
+	assert.equal(more.shown.length, 40)
+	assert.deepEqual(more.shown.slice(20, 22), ["movie-21", "movie-22"])
+	const last = run(more, { type: "more", fill: keys(50) })
+	assert.equal(last.shown.length, 50)
+	// The rows don't fill the cap: nothing more to show, so it stays.
+	assert.equal(run(last, { type: "more", fill: keys(50) }), last)
+	// Nothing left yet: the places wait for the next titles, and the cap grows no further until they fill.
+	const waiting = run(start(20), { type: "more", fill: keys(20) })
+	assert.equal(waiting.cap, ROWS * 2)
+	assert.equal(run(waiting, { type: "more", fill: keys(20) }), waiting)
+	assert.equal(run(waiting, { type: "fill", fill: keys(30) }).shown.length, 30)
+	const again = run(last, { type: "rows", fill: keys(50) })
+	assert.equal(again.cap, ROWS)
+	assert.equal(again.shown.length, ROWS)
+})
