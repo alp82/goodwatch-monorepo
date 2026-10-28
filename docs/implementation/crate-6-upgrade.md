@@ -1,29 +1,48 @@
-# Q53 — rolling CrateDB 5.10.16 → 6.4.6 with plain stops
+# Q65 — resume the rolling CrateDB upgrade to 6.4.6 with plain stops
 
-**Local rehearsal and execution plan only. No production operation was performed for this revision.**
-Owner selected October 27 **23:00 UTC = October 28 00:00 CET**, with an explicit go expected around 22:45 UTC.
-Do not start checks or changes early. Outstanding approvals are at the end. The older Q32 drain/copy-reduction
-plan is superseded: **no decommission, no drain, no zero-primary gate, no replica removal, no KILL/SIGKILL**.
+**Next window: October 28 23:00 → October 29 04:00 UTC** (October 29 00:00–05:00 CET).
+Owner approved completing the remaining path next night, with fresh gates after a separate explicit GO
+around **October 28 22:45 UTC**. The current backup-repair GO does **not** start or arm this upgrade.
+
+Current handover: **crate-02 is already6.0.8; crate-01/03 remain5.10.16**, all145 GREEN.
+[Q64 execution](auth/cratedb-production/20261026-operation-contexts/q64-execution.md) stopped after the
+first node; [Q65 read-only diagnosis](auth/cratedb-production/20261026-operation-contexts/q65-findings.md)
+qualified the expected future-major check and identified stale6.0 relation metadata. Read all gates fresh;
+this recorded handover is not a substitute for current versions/copies/heap/backup health.
+
+The separately approved [backup repair](auth/cratedb-production/20261026-operation-contexts/20261028-backup-repair.md) restored the cluster-wide writer name **goodwatch-db-backup-v2**
+at **/snapshots/q65-mixed-20261027**. Keep that working registration/path throughout this campaign;
+**never repeat the stage that removed V2**. The original **goodwatch-pre6** registration at
+**/snapshots/v2** stays read-only and untouched. The legacy root alias is absent; never re-register
+/snapshots as a parent repository while its child writer is active. The actual scheduledOctober28 00:05
+hourly anddaily run was verifiedSUCCESS567/no failures onall coordinators; cron remains active until the
+next maintenanceGO/hold. First full hourly took8m18s; the immediately following incremental daily11.810s.
+
+The approved route remains **no decommission, no drain, no zero-primary gate, no replica removal,
+no KILL/SIGKILL, no in-place downgrade**. All prior Q55/Q58–Q63 safeguards still apply, with the
+bounded check3 qualification below. Nothing starts before the next explicit GO.
 
 Use the [new plain-stop rehearsal](crate-6-upgrade/20261027-plain-rehearsal/README.md),
 [tagged-source check](../research/crate-q53-plain-rolling-source-check.md),
 [43-release compatibility audit](../research/crate-6-upgrade-compatibility.md), and
 [archived production preflight](crate-6-upgrade/20261026-preflight/README.md).
-Today's [Q50 restart](auth/cratedb-production/20261026-operation-contexts/q50-execution.md) returned GREEN
+The October27 [Q50 restart](auth/cratedb-production/20261026-operation-contexts/q50-execution.md) returned GREEN
 in about 3 minutes, but one discover200 taking4.376s triggered its old abort rule. **Q60 supersedes that
 single-event rule tonight**; see the watcher section below.
 Historical GREEN or a completed restart does not establish current allocation/heap/backup/lock health.
 
 ## Path, images and node order
 
-Complete each row on **crate-02 → crate-03 → crate-01**, one node at a time. Re-read placement/master state;
+Finish hop1 on **crate-03 → crate-01**, skipping the already-upgraded crate-02; then complete each later
+row on **crate-02 → crate-03 → crate-01**, one node at a time. There are **14 remaining replacements**,
+not15. Never stop crate-02 again for6.0.8. Re-read placement/master state;
 02-first is a canary preference (historically fewest primaries), not a way around version compatibility.
 The order is the one qualified locally. Any order change requires review, not a silent in-flight experiment.
 
-| Hop | From, all nodes | Target image, all three replacements |
+| Hop | Starting state / remaining nodes | Target image |
 | --- | --- | --- |
 | Baseline/restore only | 5.10.16 | `crate:5.10.16@sha256:5d7cd92eb84d56d538e2222a436e432164b853fdf186aebb17c446787f23a307` |
-| 1 | 5.10.16 | `crate:6.0.8@sha256:7b6af0abb4792123cfa225c8186471bbe81e039ef336af33095a181f4e8c17bf` |
+| 1, resume | 02 already6.0.8; upgrade03 then01 from5.10.16 | `crate:6.0.8@sha256:7b6af0abb4792123cfa225c8186471bbe81e039ef336af33095a181f4e8c17bf` |
 | 2 | 6.0.8 | `crate:6.1.6@sha256:c59adf651f296ce372018ae7d82167beb6ab469052e67cccdbfc57db19f69e46` |
 | 3 | 6.1.6 | `crate:6.2.11@sha256:696200f834ce187423ba40e4e83514747daad8ce37b28aeabec8f4b0949183b9` |
 | 4 | 6.2.11 | `crate:6.3.7@sha256:af6b41db307460e8189b6e84dfdc4b673ba36996c5a912cb3d776bcdfafe7f02` |
@@ -64,11 +83,13 @@ index publication jobs as approved; catalog/member reads/writes retain the norma
 
 ## Window and forecast
 
-**Q63 approved window: October 27 23:00 → October 28 04:00 UTC** (00:00–05:00 CET).
+**Q65 approved window: October 28 23:00 → October 29 04:00 UTC** (00:00–05:00 CET).
 Initial gates/watcher begin around 22:45 only after explicit go. Start backup protection/preparation 23:00;
-first SIGTERM only after the protected baseline and fresh gates pass, likely 23:15–23:30.
+first SIGTERM (crate-03) only after the preserved5.10 rollback pair, fresh forward checkpoint and gates pass,
+likely23:15–23:30. Require a fresh **10-minute** heap entry gate before this first remaining node, then
+2minutes beforecrate-01; full later hops retain10/2/2.
 
-**Do not start a new hop unless its complete three-node upgrade, GREEN verification, homogeneous
+**Do not start a new hop unless its complete remaining-node upgrade (two for the resumed hop; three thereafter), GREEN verification, homogeneous
 checkpoint and handover/restoration reserve fit before 04:00.** Reforecast from measured timings before
 admitting each hop. At 04:00 stop at the last finished, homogeneous hop and report; do not begin another.
 This replaces the earlier unapproved fixed03:00-hop/03:30-SIGTERM cutoff proposals. Do not shorten gates,
@@ -77,24 +98,26 @@ making versions homogeneous; an unexpected failure/overrun is not permission for
 
 | Work | Production allowance |
 | --- | --- |
-| Initial 10 min gates/watcher, image pulls, protected SQL snapshot + BLOB/config copy | 20–30 min after go; allow longer if backup not settled |
+| Initial 10 min gates/watcher, image pulls, preserved rollback verification + current forward SQL/BLOB/config checkpoint | 20–30 min after go; allow longer if backup not settled |
 | Each node: preparation/readbacks and replacement | 1–2 min |
-| Each node: stop → rejoin → original replication GREEN | 3–5 min, based on today's ~3 min;6.x upgrades may be slower |
+| Each node: stop → rejoin → original replication GREEN | Budget3–6min plus margin; Q64 first6.0 node took5m55s from dispatch to verifiedGREEN; heavier nodes may be slower |
 | Before every node: all-coordinator heap history, GREEN/policy/client checks | **Q63: <80% for 10 min before the first node of each hop; 2 min before its second and third nodes**. Sample every 30s; a new JVM needs its own history |
 | Each complete hop: version/access/BLOB/backup canaries | 5 min additional |
-| First snapshot into the new 6.x repository | **15–30 min extra** for the first full write; later snapshots are incremental |
+| Forward/stage snapshots in the existing V2 writer | Incremental in the same repository; budget5–15min per checkpoint until measured. Do not create another full repository or repoint V2 |
 | Final waits/restart/policy/cron restoration and observation | 25–40 min including Q43 final rebalance observation; hand over if the hard stop prevents it |
 
 Q63 supersedes Q59's ten-minute gate before every node: each hop uses **10/2/2-minute** pre-node heap
 histories, below 80% on every cluster member. Preparation/recovery and fresh heap history may overlap
 when readings qualify; GREEN and original copies are independently required before progression.
-With the protected baseline, first full6.x snapshot, hop checks and final restoration, plan roughly
+With the preserved rollback pair, current forward checkpoint, remaining14 node swaps, hop checks and final restoration, plan roughly
 **3–5 hours**, subject to measured production recovery. This is not a guarantee all five hops fit.
 Before each hop, budget every remaining node, its gates, snapshot/checkpoint, recovery margin and exact
 schedule/cron/settings restoration. If that budget does not fit before 04:00, stop at the current
 homogeneous checkpoint and hand over; do not start a partial hop merely to make more progress.
 
-Today's production stop-to-GREEN was about3min, not the full verification time. The local fixture does not
+The morning Q50 plain restart returnedGREEN in about3min; Q64 first6.0 upgrade took5m55s from dispatch
+to verifiedGREEN (normalexit5.4s, then125.6s operator verification before newstart). Budget the full
+measured procedure and gates, not just JVM shutdown. The local fixture does not
 predict production transfer throughput. Recovery can reuse segments, but the prior38.18GiB primary /
 75.17GiB across copies and40MiB/s recovery rate remain capacity considerations. No primary drain is budgeted.
 
@@ -108,7 +131,7 @@ history. Require GREEN and all original copies before progression as well. An en
 fails ends progression under Q62; do not keep retrying a failed gate or reset its history silently.
 
 - Three expected persistent IDs; only the row's source/target versions, then homogeneous target before
-  next hop. Initially all 5.10.16. Archived IDs:01 `xlclgwGeSHe18p5J4WvfFA`,02 `r0IgCe17SPOgudkQIGsRQA`,
+  next hop. At resumed entry02 must be6.0.8 and01/03 must be5.10.16. Stop on a different starting matrix. Archived IDs:01 `xlclgwGeSHe18p5J4WvfFA`,02 `r0IgCe17SPOgudkQIGsRQA`,
   03 `ch8EXZwrQVmCls79_T_vUg`; stop on unexplained identity/config change.
 - **145 GREEN**, zero missing/underreplicated copies, all copies STARTED/STARTED; no RELOCATING primary,
   no RELOCATING/INITIALIZING/RECOVERING copy before the next stop. Do not advance on GREEN alone while
@@ -116,7 +139,7 @@ fails ends progression under Q62; do not keep retrying a failed gate or reset it
 - During the qualified6.0/6.1 mixture only, apply the BLOB cross-check above; require all physical copies
   via `sys.allocations` and each node's localshardrows rather than identical clusterwideBLOB stat rows.
 - Every primary on the node to stop has a STARTED survivor copy; two survivors provide cluster quorum.
-  No failed cluster/node checks, unexpected exclusion/write block or active decommission.
+  No failed cluster/node checks **except the exact qualified check3 advisory below**; no unexpected exclusion/write block or active decommission.
 - **Q63 heap gate: <80% on every node for 10 min before the first node of each hop, 2 min before its second/third nodes.** Any reading not
   below 80% fails that pre-node gate. **Stop immediately if heap is above 85%**; the old two-minute allowance
   is removed. OOM, repeated GC stalls or breaker pressure also stop progression. Loads5/15 must stay below
@@ -156,16 +179,47 @@ SELECT table_schema,table_name,number_of_shards,number_of_replicas,
 FROM information_schema.tables WHERE table_schema NOT IN ('sys','information_schema','pg_catalog')
 ORDER BY table_schema,table_name;
 SELECT table_schema,table_name,partition_ident,number_of_replicas,settings FROM information_schema.table_partitions;
-SELECT id,passed,description FROM sys.checks WHERE NOT passed;
+SELECT id,severity,passed,description FROM sys.checks WHERE NOT passed;
 SELECT node_id,id,passed,description FROM sys.node_checks WHERE NOT passed;
 ```
 
 Read job history again at the end for **every** failed Windmill root/step between gates and completion;
 include failures of jobs started before gates. Record name/ID/error/completion time, do not rerun them.
 
+## Expected check3 and first-hop metadata readbacks
+
+The owner approved accepting **only sys.checks id3/severity1 on6.x**, with its exact future-major
+recreation warning, when the actual listed index creation versions are verified5.x-compatible.
+[Exact6.0.8 source and production quote](auth/cratedb-production/20261026-operation-contexts/q65-upstream.md#check-3-is-expected-for-5x-indices-on-6x).
+Tagged sources6.0.8/6.1.6/6.2.11/6.3.7/6.4.6 were rechecked: all retainID3,LOW severity and the same
+creation-major comparison ([final-target implementation](https://github.com/crate/crate/blob/6.4.6/server/src/main/java/io/crate/expression/reference/sys/check/cluster/TablesNeedUpgradeSysCheck.java)).
+It is the expected advisory to recreate unchanged5.x tables before7.x, not an unreadable-table finding
+on6.x. Keep every other check/node-check and health gate. Reject4.x-created/unknown indexes, a different
+warning/severity/ID, unexplained table list or any other failed check. Re-inventory actual creation versions
+before every hop; do not blindly assert count(sys.checks WHERE NOT passed)=0 on6.x.
+
+Q65 proved term1419/state1144863 agreed across all nodes while the14 legacy index wait settings were3,
+but the6.0 relation representation remained2. **Normal SQL writes enforce the index setting**, not this
+stale catalog value. The existing14-table discrepancy is bounded; no other policy/schema drift is waived.
+Before the first remaining node, capture fresh stable private `_state` copies and locally decode the
+selected settings with [the read-only decoder](auth/cratedb-production/20261026-operation-contexts/q65-state-decoder/DecodeMetadata.java);
+compare accepted versions with live`sys.nodes.cluster_state_version`. Never publish raw global metadata.
+At entry require legacy wait3/replicas2/blocksfalse onall nodes; only the known6.0 relation wait2 is expected.
+
+Lower waits to2 once using the existing per-table block/RESET/SET/unblock sequence. While the master is
+5.10, use index metadata and5.10 coordinator readbacks for authoritative wait/block verification:6.0's
+relation/block display can remain stale even after acknowledged index changes. Compare index UUIDs and
+legacy settings across nodes; no synthetic writes or repeated ALTERs just to refresh a display. Before
+any node stop all legacy/index settings must bewait2 and all blocksfalse. The old6.0 relation's2 must
+agree with the maintenance wait; other discrepancy is a failed gate. At homogeneous6.0 require catalog
+and index settings to agree at maintenance wait2 before admitting6.1. If they do not, stop/report; no
+unapproved cache reset, metadata repair or extra restart. Restorewait3 behind blocks only with all original
+copiesGREEN; use authoritative index checks on an early mixed-stop handover and report a stale catalog
+explicitly. At normal homogeneous completion require both representations to agree at3.
+
 ## Operator routes and watcher
 
-Set `TMPDIR=$HOME/.cache/gw-work/644-q53-execution`; scratch/private originals there, never/tmp.
+Set `TMPDIR=$HOME/.cache/gw-work/644-q65-20261028-execution`; scratch/private originals there, never/tmp.
 Use the existing [watcher](auth/cratedb-production/20261026-operation-contexts/q40-page-watch.py) with
 **`--policy q60`** every10s from gates through restoration/observation, with5s request timeout.
 Q60 aborts on **three consecutive unexpected-status/transport failures for the same endpoint**, or
@@ -176,7 +230,12 @@ failed probe is logged, not an abort. The three page URLs and discovery expect20
 
 The helper's default remains historical Q43; omitting `--policy q60` is not tonight's approved command.
 Q60 alarms remain sticky. Monitor failure/stale heartbeat still stops progression: heartbeat<=15s,
-controller checks<=5s. Do not discard an alarm or reinterpret thresholds during execution.
+controller checks<=5s **during cleanup as well as progression**. Do not discard an alarm or reinterpret thresholds during execution.
+Only use supported phases`baseline`, `pre_stop`, `stopping`, `recovery`, `rebalancing`, `complete`.
+Use`recovery` for handover cleanup; **never write an invented phase such as handover-restoration**.
+Q64 lost monitoring because of that operator error. Validate phase values before writing them, inspect
+heartbeat/alarm/process continuously, and record any coverage gap honestly. A monitor failure stops
+progression; recovering monitoring for already-required safe cleanup never authorizes another node.
 
 ```bash
 mkdir -p "$TMPDIR"
@@ -208,57 +267,64 @@ crate_sql() {
    `ssh -o BatchMode=yes root@10.0.0.11 python3 - hold < "$TMPDIR/cron-hold.py"`.
    Save its returned state path/original/held hashes privately. Never `crontab -`. Verify no helper or
    snapshot remains active. Keep the cron held throughout all five hops; no retention writer may run.
-2. Hold the approved publication/schema jobs; preserve current search BLOB metadata and its SHA1 manifest,
-   user/privilege metadata, HBA/startup config, private credential/payload keys. Take **one** fresh protected
-   baseline before any6.x data directory is opened (use the long-snapshot route):
+2. Hold the approved nine publication/schema schedules and save their current complete configurations.
+   **Preserve the original5.10 rollback point, do not recreate or replace it:**
+   `goodwatch-pre6.q53_pre6_20261027` finishedOctober27 23:02:34.012UTC, with the verified SHA1 pair
+   `/mnt/backup-cratedb/q53-pre6-20261027/blob` and private original config backups. Read back SUCCESS,
+   readonly=true/compress=true/location=/snapshots/v2 through all coordinators. Verify its archived BLOB
+   manifest/references remain intact; no writes, retention or repository verification canaries in that path.
+   **A new mixed snapshot cannot refresh the5.10 rollback RPO.** Q61's loss window still begins at this
+   originalOctober27 snapshot, including the full intervening day. Record that elapsed loss window.
+
+   With cron held, no active backup and all nodesGREEN, take a **fresh forward-recovery checkpoint in
+   the existing working V2 repository** before the first remaining node; choose a name not already present:
 
    ```sql
-   CREATE SNAPSHOT "goodwatch-db-backup-v2".q53_pre6_20261027 ALL WITH (wait_for_completion=true);
+   CREATE SNAPSHOT "goodwatch-db-backup-v2".q65_pre_resume_20261028 ALL
+   WITH (wait_for_completion=true);
    ```
 
-   Re-read exact name SUCCESS/no failures on all coordinators. No DROP if slow; inspect/report. SQL snapshots
-   omit BLOBs. Copy all immutable SHA1 files for the only BLOB table from **all three nodes**, deduplicate by
-   digest, verify each file's SHA1/length and each referenced index object. The [copy helper](crate-6-upgrade/20261027-plain-rehearsal/copy-blob-sha1.py)
-   reads the inspected `/data` mount source and writes only an approved private sibling backup directory:
+   Require SUCCESS/no failures onall coordinators. This explicitly permitted pre-resume mixed checkpoint
+   is a6.x-forward recovery candidate, not a5.10 restore guarantee. Later stage snapshots are taken only
+   at homogeneous checkpoints. Pair the current checkpoint with current frozen search metadata and a
+   separate SHA1 copy/config archive, never by adding/replacing files in the original5.10 rollback folder:
 
    ```bash
-   # After go, on each11/12/13 host (pass its real container name):
-   ssh root@10.0.0.11 python3 - crate-01 /mnt/backup-cratedb/q53-pre6-20261027/blob \
+   # Only after the next GO, with publication held. Repeat for each real node/host.
+   ssh root@10.0.0.11 python3 - crate-01 /mnt/backup-cratedb/q65-resume-20261028/blob \
      < docs/implementation/crate-6-upgrade/20261027-plain-rehearsal/copy-blob-sha1.py
-   # Repeat .12/crate-02 and .13/crate-03. Merge per-node manifests; compare to frozen references. An empty node is valid;
-   # the union must cover every frozen reference (and must not be empty).
    ```
 
-   Snapshot + SHA1 copy is the single rollback point. Protect the **whole old repository**, including
-   dependencies; no per-minor full repository copies. If publication cannot be held or references cannot
-   be paired/verified, NO-GO. Resume only approved light work after the protected pair is complete.
-3. With no active snapshots, protect old registrations by unregistering/re-registering **the same existing
-   options** withreadonly=true. Archived options were onlylocation; recheck before using these statements:
+   Copy/verify the union from11/12/13, every SHA1/length and every frozen reference; keep current config
+   backups separate from pre6 originals. No per-minor full repository copies. Stop if either the original
+   rollback pair or current forward checkpoint/reference pairing cannot be verified.
+3. **Keep V2 registered and writable throughout every hop and any early-stop handover.** At entry and
+   before/after each node/checkpoint, read`sys.repositories` throughall coordinators. Require:
 
-   ```sql
-   DROP REPOSITORY "goodwatch-db-backup-v2";
-   CREATE REPOSITORY "goodwatch-pre6" TYPE fs WITH (location='/snapshots/v2', readonly=true);
-   DROP REPOSITORY "goodwatch-db-backup";
-   CREATE REPOSITORY "goodwatch-db-backup" TYPE fs WITH (location='/snapshots', readonly=true);
-   ```
+   - `goodwatch-db-backup-v2`:fs,location`/snapshots/q65-mixed-20261027`,compress=true,readonly=false.
+   - `goodwatch-pre6`:fs,location`/snapshots/v2`,compress=true,readonly=true.
+   - No legacy root registration at`/snapshots`; no overlapping writer alias.
 
-   DROP REPOSITORY unregisters; it does **not** delete snapshot files. The active writer name stays absent
-   until homogeneous 6.0; cron remains held. Do not drop either snapshot or filesystem contents. Readonlyfs
-   was locally qualified on5.10 and is supported by taggedsource; [details](../research/crate-q53-plain-rolling-source-check.md#one-protected-baseline-and-repository-transition).
+   **No DROP REPOSITORY or writer-path transition is part of this upgrade.** In particular do not repeat
+   Q64's removal of V2 and do not create V2 again at`/snapshots-v6`. The repaired sibling path is already
+   mounted/allowed onall nodes. Preserve the old files and rollback alias untouched. A missing/non-writable
+   writer, unexpected path/options or repository failure is a failed gate: stop/report, no automatic
+   unregister/re-register, permissions change or fallback to a protected path.
 4. Apply the exact14 YepWatch waits3→2 **once**, keeping2 across the entire campaign. All30 three-copy
    tables retain replicas2. Auth + user_mcp_action retainwait 1 and REQUEST; no other wait change was needed.
    Use [q40-yepwatch-lower.sql](auth/cratedb-production/20261026-operation-contexts/q40-yepwatch-lower.sql),
-   56 statements, **no number_of_replicas statement**. Each table: blockwrite, RESETwait, SET2, read2 on all
-   coordinators while blocked, then restore its original false block. Do not stream the file unattended.
+   56 statements, **no number_of_replicas statement**. Each table: blockwrite, RESETwait, SET2, verify authoritative index values while blocked as qualified above, then restore its original false block.
+   Before a stop verifywait2/blocksfalse onall nodes and the known relation view; do not trust a stale catalog alone. Do not stream the file unattended.
    Names:agreement,candidate,command_receipt,control,decision,invitation,member_grant,member_intent,participant,
    proposal,room,runtime,ticket,vote, all with `doc.yepwatch_`. This is weaker admission while maintenance
    runs, not a write-acknowledgement quorum. Restore3 only with all three original copies STARTED.
 5. Capture allocation/rebalance on every readback. Keep **rebalance `none`** throughout rolling replacements;
    allocation alternatesprimaries/all below. No recovery-rate, exclusion, graceful-stop or replica change.
 
-## Each of fifteen replacements: exact host procedure
+## Each of fourteen remaining replacements: exact host procedure
 
-Execute this template manually for each of the [15 exact node/hop rows](crate-6-upgrade/20261027-plain-rehearsal/node-matrix.json), order 02→03→01.
+Execute this template manually for each of the [14 remaining node/hop rows](crate-6-upgrade/20261028-rolling-resume/node-matrix.json):
+03→01 for6.0.8, then02→03→01 per later hop. The original15-row rehearsal is historical, not a replay list.
 Each row records the host, node, unique stop unit and full target image. Select only one row at a time. **No loop automatically
 starts the next node.** Production project directory is `/root/goodwatch/goodwatch-monorepo/goodwatch-crate`,
 Compose project`goodwatch-crate`, service`cratedb`; verify those against Docker's existing Compose labels.
@@ -266,11 +332,10 @@ If path/labels/runtime differ, stop. Hosts01/02/03 are10.0.0.11/.12/.13.
 
 1. Pass fresh gates and reserve enough time. Pin/pull this node's exact target image. Save root-private
    `.env`, Compose files/runtime hashes and original policy. Save exact`Config.Cmd` privately for
-   the replacement code below. Prepare shared host directory
-   `/mnt/backup-cratedb/snapshots-v6` **outside** old `/mnt/backup-cratedb/snapshots` and verify with `findmnt`
-   and a shared visibility canary across hosts; don't assume matching directory names are shared storage.
-   This approved new mount/path allowlist is the only first-hop config change. Never put the new repository
-   under`/snapshots/v6`: legacy repository owns`/snapshots` itself.
+   the replacement code below. Verify the existing shared`/snapshots` mount and repaired writer path. Preserve
+   each node's existing mounts/allowlist exactly:02 already has`/snapshots-v6`,01/03 need no new mount or
+   allowlist for the repaired writer. Do not add an unused repository or change the writer path. The old
+   root registration was removed by the separately approved repair; do not recreate it around the child writer.
 2. On target host, `docker update --restart=no crate-0N`. Through survivor:
 
    ```sql
@@ -284,33 +349,36 @@ If path/labels/runtime differ, stop. Hosts01/02/03 are10.0.0.11/.12/.13.
 
    ```bash
    # On the host of the selected node-matrix row; example first row:
-   Q53_NODE=crate-02
-   Q53_UNIT=gw-q53-608-02
+   Q53_NODE=crate-03
+   Q53_UNIT=gw-q65-20261028-608-03
    systemd-run --unit="$Q53_UNIT" --property=Type=exec \
      --property=TimeoutStopSec=infinity --property=SendSIGKILL=no \
      /usr/bin/docker stop --timeout=-1 "$Q53_NODE"
    ```
 
+   Capture live`systemctl show "$Q53_UNIT" --property=LoadState,ActiveState,MainPID,TimeoutStopUSec,SendSIGKILL`
+   immediately after dispatch, before the short-lived unit can be garbage-collected. A laternot-found unit
+   exposes generic defaults, not proof of the dispatched grace; retain literal dispatch/journal receipts.
    Watch unit and Docker State independently. After15 min still stopping: report, leave unlimited wait
    intact and two survivors staffed. Never kill the unit/docker/JVM or dispatch a second stop.
 3. Only after confirmed exit, PID0/no OOM/normal exit0 or143, recreate **that stopped service only** on the
-   same named data volume. Durable Compose override (JSON is valid YAML) example for first hop02 below;
+   same named data volume. Durable Compose override (JSON is valid YAML) example for the next hop1 node03 below;
    replaceimage using the table for every later hop. Preserve the complete originalcommand/HBA arguments,
-   changing only path.repo toallow`/snapshots,/snapshots-v6`; use the verified host substitutions from the
+   keeping its current path.repo and mounts; use the verified host substitutions from the
    existing effectivecommand, not a copied command with another host's address. Store the reviewed full
    command vector privately in`q53-command.json` (sanitized hash in evidence).
 
    ```bash
    cd /root/goodwatch/goodwatch-monorepo/goodwatch-crate
-   # Q53_HOST_IMAGE is selected from the pinned table, e.g. first hop02:
+   # Q53_HOST_IMAGE is selected from the pinned table, e.g. remaining hop1 node03:
    Q53_HOST_IMAGE='crate:6.0.8@sha256:7b6af0abb4792123cfa225c8186471bbe81e039ef336af33095a181f4e8c17bf'
    export Q53_HOST_IMAGE
-   export NODE_NAME=crate-02  # For this row/host only; usecrate-03/.13 orcrate-01/.11 as appropriate.
+   export NODE_NAME=crate-03  # For this row/host only; substitute the selected matrix node.
    python3 - <<'PY'
    import json,os,pathlib
    # Capture Config.Cmd privately before the first recreation; verify existing project/labels first.
    import subprocess,re,shutil,tempfile
-   private=pathlib.Path('/root/.config/goodwatch/q53');private.mkdir(parents=True,exist_ok=True,mode=0o700)
+   private=pathlib.Path('/root/.config/goodwatch/q65-20261028');private.mkdir(parents=True,exist_ok=True,mode=0o700)
    name=os.environ['NODE_NAME']  # Already-defined host .env value must also match inspected container.
    assert name in ('crate-01','crate-02','crate-03')
    item=json.loads(subprocess.check_output(['docker','inspect',name]))[0]
@@ -321,9 +389,12 @@ If path/labels/runtime differ, stop. Hosts01/02/03 are10.0.0.11/.12/.13.
    assert any(x.startswith('-Cauth.host_based.enabled=') for x in cmd)
    assert '-Cauth.host_based.enabled=true' in cmd
    assert sum(x.startswith('-Cpath.repo=') for x in cmd)==1
-   cmd=[('-Cpath.repo=/snapshots,/snapshots-v6' if x.startswith('-Cpath.repo=') else x) for x in cmd]
-   override={'services':{'cratedb':{'image':os.environ['Q53_HOST_IMAGE'],'restart':'no','command':cmd,
-     'volumes':['/mnt/backup-cratedb/snapshots-v6:/snapshots-v6']}}}
+   # Existing base Compose preserves /data and /snapshots. Retain any already-present extra repo mount.
+   extra=[m for m in item['Mounts'] if m['Destination']=='/snapshots-v6']
+   assert all(m['Type']=='bind' and m['Source']=='/mnt/backup-cratedb/snapshots-v6' and m['RW'] for m in extra)
+   service={'image':os.environ['Q53_HOST_IMAGE'],'restart':'no','command':cmd}
+   if extra:service['volumes']=['/mnt/backup-cratedb/snapshots-v6:/snapshots-v6']
+   override={'services':{'cratedb':service}}
    p=pathlib.Path('docker-compose.q53.yml');p.write_text(json.dumps(override,indent=2)+'\n');p.chmod(0o600)
    env=pathlib.Path('.env');original=env.read_bytes()
    backup=private/('env-before-'+os.environ['Q53_HOST_IMAGE'].split('@')[0].replace(':','-'))
@@ -350,11 +421,11 @@ If path/labels/runtime differ, stop. Hosts01/02/03 are10.0.0.11/.12/.13.
    docker compose --env-file .env -p goodwatch-crate -f docker-compose.yml -f docker-compose.q53.yml \
      up --no-start --no-deps --force-recreate cratedb
    # Inspect STOPPED replacement: correct image ID; same data-volume source and all existing mounts;
-   # same env/heap/network/HBA/command except approved path.repo; restart no. Stop on drift.
-   docker start crate-02
+   # same env/heap/network/HBA/command/mounts; restart no. Stop on drift.
+   docker start crate-03
    ```
 
-   For03/01 change only host/node and selectedimage. Never useCompose to stop a running target, never
+   For each later matrix row change only the selected host/node and pinnedimage; no completed row is replayed. Never useCompose to stop a running target, never
    `down -v`, never reinitialize a missing volume. New container ID is expected; persistent node ID is not.
    Preserve the override **durably** and add/verify `COMPOSE_FILE=docker-compose.yml:docker-compose.q53.yml`
    in the host-private `.env`, as the checked byte-preserving code above does; CRATE_VERSION also holds
@@ -383,14 +454,13 @@ If path/labels/runtime differ, stop. Hosts01/02/03 are10.0.0.11/.12/.13.
 
 ## Homogeneous checkpoints, BLOB grant and final restoration
 
-After each three-node row, confirm all at that target, all 145 GREEN/all copies STARTED, stable heap,
+After the resumed two-node row, and each later three-node row, confirm all at that target, all 145 GREEN/all copies STARTED, stable heap,
 policies, client/auth/catalog/search/YepWatch/MCP access and no watcher alarm; take 5 min checkpoint.
-**Q63: at each homogeneous checkpoint, admit another hop only if all three replacements, their 10/2/2
+**Q63: at each homogeneous checkpoint, admit another hop only if all of its remaining replacements (two in the resumed row, three thereafter), their 10/2 or 10/2/2
 heap gates, recovery/checkpoint and handover reserve fit before 04:00 UTC. Otherwise stop here.**
 At the deadline hand over a finished homogeneous hop and report its actual version, completed hops,
 remaining hops and restored/held settings. Restore wait 3 only with all original copies STARTED, all Docker
-policies`always`, allocation`all`, the approved schedules exactly and the backup cron when its writable
-repository/phase gates pass. Leave rebalance`none` if the final-version placement test was not reached.
+policies`always`, allocation`all`, the approved schedules exactly and the backup cron when the existing writer is verified/no snapshot or helper is active, including an early mixed-stop handover. Leave rebalance`none` if the final-version placement test was not reached.
 Reserve that work before 04:00 rather than starting another hop and leaving it for after the window.
 
 Do not intentionally leave a mixed cluster overnight: docs support transient rolling mixtures, not a
@@ -399,18 +469,19 @@ recover only the node already stopping/rejoining. Never change another node mere
 uniform after a failed gate, or force a stop/recovery to meet04:00. Report an unexpected overrun/state
 honestly, with no overnight rollback or data-directory downgrade.
 
-After homogeneous 6.0.8, create the **one** new 6.x writer repository with the helper's existing name:
+After homogeneous6.0.8, **reuse the already-registered V2 writer at its repaired path**:
 
 ```sql
-CREATE REPOSITORY "goodwatch-db-backup-v2" TYPE fs WITH (location='/snapshots-v6');
-CREATE SNAPSHOT "goodwatch-db-backup-v2".q53_stage_608 ALL WITH (wait_for_completion=true);
+CREATE SNAPSHOT "goodwatch-db-backup-v2".q65_stage_608_20261028 ALL WITH (wait_for_completion=true);
 ```
 
-Verify SUCCESS/no failures on every coordinator, activepath/sentinel/shared storage and old registrations
-readonly=true. Later homogeneous snapshots `q53_stage_616`, `q53_stage_6211`, `q53_stage_637`,
-`q53_stage_646` use **this same incremental repository**; no per-stage40GiB copies. Never snapshot in a
-mixed stage or overlap one with a stop. Cron stays held. Direct helper compatibility on the new repository
-and monitoring canaries must pass before restoration (no unapproved retention cleanup of the protected repo).
+Verify SUCCESS/no failures onall coordinators, unchanged writer path/options/shared mounts, preserved
+read-onlypre6 registration, and no parent-root alias. Later homogeneous snapshots
+`q65_stage_616_20261028`, `q65_stage_6211_20261028`, `q65_stage_637_20261028`, `q65_stage_646_20261028`
+use **this same incremental repository**. No per-stage40GiB copies and no unregister/re-register step.
+Never overlap a snapshot with a node stop; the only planned mixed checkpoint is the approved pre-resume
+snapshot above. Cron stays held only for the actual maintenance window. The verified helper and monitor
+must continue to resolve the same V2 name/path before exactcron restoration; no protected-repo retention.
 
 **Before the first 6.2.11 node, while homogeneous 6.1.6 — Q55 APPROVED:**
 
@@ -451,17 +522,18 @@ the safest supported state; Q62 does not authorize forcing GREEN or concealing Y
 **Q58 schedule restoration is required at handover even on this early-stop path**, as detailed below.
 
 - **Before SIGTERM:** stop progression; restoreallocation all, targetDocker always, leave rebalance none.
-  With3members/original copiesGREEN restore changedwaits/blocks. If no6.x node was started, restore original
-  repository registrations/options and exactcron; retain protectedbaseline safely. No decommission to cancel.
+  With3members/original copiesGREEN restore changedwaits/blocks. The writer is already registered: leave its name/path/options unchanged and restore exactcron after its
+  writable/no-active-backup gates; preserve protectedpre6. Never undo the approved repository repair. No decommission to cancel.
 - **After SIGTERM:** a normalstop cannot be cancelled safely. Reportalarm immediately; only recover the
   already stopped node using the approved targetimage/same data and unlimitedgrace. At15 min stillstopping,
   leave the unit intact, no secondstop/SIGKILL. Two-nodes/YELLOW onfixed replica2tables is expected, missing
   primaries is not. Keepwait 2/restart no/allocation primaries/rebalance none if stilldown; don't restore wait 3.
 - **After rejoin:** allocation all/rebalance none; recoverGREEN before restoringwait 3/Docker always. No next node
   after any alarm. A mixed GREEN cluster is an actively staffed incidenthandover; **do not automatically finish
-  the hop**, and never reopen a newer data directory with an olderimage. Leavecronheld whilemixed or without
-  a verified writable6.xbackup repo; name its restoration owner/deadline and accept the explicit RPO extension.
-  Once homogeneous with a verified compatiblewriter repo/no conflict, restorecron exactly. No silentindefinitehold.
+  the hop**, and never reopen a newer data directory with an olderimage. The working V2 registration remains in place even whilemixed. At handover verify it writable and no
+  active snapshot/helper, then restorecron exactly, including an early mixed-stop handover, and record its
+  next realrun. If the writer fails, report the exact error and explicit cron/restoration owner; no
+  automatic repository repair, rerun or silentindefinitehold. Do not drop V2 to protect an unrelated path.
 - Missing primaries, secondnode loss, failed backup, new locks, unexpectedwrites/auth/clientbehavior, unsafe heap/
   disk/GC or a Q60 watcher alarm stop progression. Capturestate/logs; no REROUTE/replicareduction/restart improvisation.
 
@@ -491,7 +563,8 @@ implies29–58min transfer. Restorecapacity/owner must be ready before the first
 including member/auth/YepWatch/ingestion writes and subsequent BLOB publication. No write freeze or durable
 replay is promised. Q62 defers any rollback decision to the morning; acceptance of data loss is not an
 instruction to restore tonight. Preserve the rollback point and record the actual snapshot/elapsed loss
-window, cluster state and backup-cron restoration responsibility at handover.
+window, cluster state and backup-cron restoration responsibility at handover. For this resumed campaign
+the5.10 rollback point is stillOctober27 23:02:34.012UTC; a new current mixed/6.x snapshot does not reset it.
 
 ## Member impact and retry limits
 
@@ -537,7 +610,9 @@ The backup cron has its separate repository/phase safety rules; record its exact
 
 Recorded owner decisions (production execution still waits for the explicit go around 22:45 UTC):
 
-- [x] **Q53:** Rolling plain stops starting October 27 at23:00 UTC; pinned five-hop path, original copies retained, only 14 YepWatch waits lowered across the campaign then restored, and one protected snapshot+BLOB pair with the backup cron held throughout.
+- [x] **Q53, resumed by Q65:** Rolling plain stops;October27 first02→6.0.8 is complete, resumeOctober28 at23:00 UTC; pinned five-hop path, original copies retained, only 14 YepWatch waits lowered across the campaign then restored, and one protected snapshot+BLOB pair with the backup cron held throughout.
+- [x] **Q65 next-night completion:** October28 23:00→October29 04:00 UTC, freshGO aroundOctober28 22:45; finish03/01→6.0.8 then all four later hops with the same safeguards. Accept only the verified check3 future7.x advisory; keep V2 registered/writable at its repaired path throughout. No upgrade begins under the backup-repair GO.
+- [x] **Q64 backup repair:** Unregister legacy read-only root alias; create V2 at`/snapshots/q65-mixed-20261027`; preservepre6. This separate execution is recorded in the dated evidence, not repeated as an upgrade stage.
 - [x] **Q55:** `GRANT DQL ON SCHEMA blob TO goodwatch_search` before the first 6.2.11 node, followed by authenticated index-file GET/HEAD and SHA1 verification.
 - [x] **Q58:** Pause exactly the nine named Windmill job paths above for the window; capture their exact original schedule configurations, restore them exactly at handover, and do not catch up missed runs. No permission to cancel active jobs or pause other schedules.
 - [x] **Q59, timing superseded by Q63:** Start below 80% and stop above 85% remain in force; the initial requirement for ten minutes before every node no longer applies.
@@ -551,5 +626,5 @@ Recorded owner decisions (production execution still waits for the explicit go a
 Operational confirmations still to record after go, not additional requests to reapprove the decisions above:
 
 - [ ] **Operators and admission forecast:** Record staffed handover and measured whole-hop forecasts. The 23:00–04:00 UTC window and 10/2/2-minute heap policy are approved by Q63, not pending approval. Do not begin a hop whose full completion and restoration budget cannot fit before 04:00.
-- [ ] **Shared storage/configuration:** Verify the new genuinely shared `/snapshots-v6` location, read-only old registrations and reviewed durable Compose/image/allowlist changes. Stop before the first node if storage is not shared or configuration differs.
+- [ ] **Shared storage/configuration:** Verify the existing repaired V2 sharedpath onall nodes, read-onlypre6, no root alias, and exact per-node mounts/allowlists/durable imagepins. No new repository transition is planned. Stop before the first node if storage is not shared or configuration differs.
 - [ ] **Restoration responsibility:** Record the schedule/backup-cron restoration owner and observed states at handover. Any later rollback/cutover owner, fresh restore capacity and 60–120 minute unqualified RTO are for the separately approved morning decision, not authority to restore tonight.

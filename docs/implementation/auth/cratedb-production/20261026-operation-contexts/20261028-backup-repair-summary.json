@@ -1,0 +1,179 @@
+{
+  "approved_scope": "OwnerQ64 repositoryrepair+nextscheduledrun;Q65 next-nightplanonly",
+  "branch": "fix/644-backup-writer-and-next-window",
+  "base": "84e855724",
+  "completed_utc": "2026-10-28T00:15:26.085463+00:00",
+  "production_sql": [
+    {
+      "started_utc": "2026-10-27T23:59:23.307634+00:00",
+      "finished_utc": "2026-10-27T23:59:24.225876+00:00",
+      "sql": "DROP REPOSITORY \"goodwatch-db-backup\"",
+      "exit": 0,
+      "response": {
+        "cols": [],
+        "rows": [
+          []
+        ],
+        "rowcount": 1,
+        "duration": 126.87588
+      },
+      "stderr": ""
+    },
+    {
+      "started_utc": "2026-10-27T23:59:24.226230+00:00",
+      "finished_utc": "2026-10-27T23:59:25.136749+00:00",
+      "sql": "CREATE REPOSITORY \"goodwatch-db-backup-v2\" TYPE fs WITH (location='/snapshots/q65-mixed-20261027', compress=true, readonly=false)",
+      "exit": 0,
+      "response": {
+        "cols": [],
+        "rows": [
+          []
+        ],
+        "rowcount": 1,
+        "duration": 171.40096
+      },
+      "stderr": ""
+    }
+  ],
+  "cron_changed": false,
+  "cron_final": {
+    "sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
+    "active_backup_entries": [
+      "5 * * * * CRATE_BACKUP_USER=goodwatch_backup CRATE_BACKUP_PASSWORD_FILE=/root/.config/goodwatch/crate-backup-password /root/.local/bin/uv run /root/goodwatch/goodwatch-monorepo/goodwatch-crate/backup.py >> /var/log/backup_crate.log 2>&1"
+    ]
+  },
+  "scheduled_snapshots": [
+    [
+      "goodwatch-db-backup-v2",
+      "daily_20261028_000501",
+      "SUCCESS",
+      1793146400369,
+      1793146412179,
+      567,
+      []
+    ],
+    [
+      "goodwatch-db-backup-v2",
+      "hourly_20261028_000501",
+      "SUCCESS",
+      1793145901821,
+      1793146399969,
+      567,
+      []
+    ]
+  ],
+  "helper_finished_utc": "2026-10-28T00:13:34Z",
+  "all_three_coordinators_SUCCESS": true,
+  "health": "145GREEN,1175STARTED all3",
+  "protected_pre6_untouched": true,
+  "protected_snapshot": "goodwatch-pre6.q53_pre6_20261027",
+  "writer": {
+    "name": "goodwatch-db-backup-v2",
+    "location": "/snapshots/q65-mixed-20261027",
+    "readonly": false,
+    "compress": true
+  },
+  "page_watch": {
+    "policy": "q60",
+    "probes": 500,
+    "first_utc": "2026-10-27T23:58:53.484094+00:00",
+    "last_utc": "2026-10-28T00:15:23.510537+00:00",
+    "unexpected_status_or_transport": 0,
+    "over3s": 0,
+    "alarms": 0,
+    "max_seconds": 1.308195,
+    "max_round_start_gap_seconds": 10.001,
+    "last_round": [
+      {
+        "utc": "2026-10-28T00:15:23.429043+00:00",
+        "probe_started_utc": "2026-10-28T00:15:23.321922+00:00",
+        "phase": "baseline",
+        "path": "/.well-known/oauth-protected-resource/mcp",
+        "expected": 200,
+        "status": 200,
+        "seconds": 0.102337,
+        "exit": 0,
+        "failure_streak": 0,
+        "alarm": false,
+        "policy": "q60",
+        "slow_responses_60s": 0
+      },
+      {
+        "utc": "2026-10-28T00:15:23.502936+00:00",
+        "probe_started_utc": "2026-10-28T00:15:23.321886+00:00",
+        "phase": "baseline",
+        "path": "/discover",
+        "expected": 200,
+        "status": 200,
+        "seconds": 0.17557,
+        "exit": 0,
+        "failure_streak": 0,
+        "alarm": false,
+        "policy": "q60",
+        "slow_responses_60s": 0
+      },
+      {
+        "utc": "2026-10-28T00:15:23.422802+00:00",
+        "probe_started_utc": "2026-10-28T00:15:23.321736+00:00",
+        "phase": "baseline",
+        "path": "/mcp",
+        "expected": 401,
+        "status": 401,
+        "seconds": 0.096109,
+        "exit": 0,
+        "failure_streak": 0,
+        "alarm": false,
+        "policy": "q60",
+        "slow_responses_60s": 0
+      },
+      {
+        "utc": "2026-10-28T00:15:23.510537+00:00",
+        "probe_started_utc": "2026-10-28T00:15:23.321654+00:00",
+        "phase": "baseline",
+        "path": "/movie/629-the-usual-suspects",
+        "expected": 200,
+        "status": 200,
+        "seconds": 0.183275,
+        "exit": 0,
+        "failure_streak": 0,
+        "alarm": false,
+        "policy": "q60",
+        "slow_responses_60s": 0
+      },
+      {
+        "utc": "2026-10-28T00:15:23.489496+00:00",
+        "probe_started_utc": "2026-10-28T00:15:23.321710+00:00",
+        "phase": "baseline",
+        "path": "/show/1396-breaking-bad",
+        "expected": 200,
+        "status": 200,
+        "seconds": 0.163085,
+        "exit": 0,
+        "failure_streak": 0,
+        "alarm": false,
+        "policy": "q60",
+        "slow_responses_60s": 0
+      }
+    ],
+    "stopped": true
+  },
+  "tests": {
+    "watcher_pytest": "21passedin0.03s",
+    "runbook": "14node matrix/order/digests/uniqueunits;noV2drop/create;window;bash-n;PythonAST;local links passed",
+    "check3_sources": "all5pinnedtargettagssameID3/LOW/creationmajorlogic"
+  },
+  "next_upgrade": {
+    "start": "2026-10-28T23:00:00Z",
+    "hard_stop": "2026-10-29T04:00:00Z",
+    "fresh_go_expected": "2026-10-28T22:45:00Z",
+    "started": false,
+    "armed": false,
+    "first_nodes": [
+      "crate-03",
+      "crate-01"
+    ],
+    "remaining_node_replacements": 14
+  },
+  "next_scheduled_backup": "2026-10-28T01:05:00Z future,notyetverified",
+  "restore_test_performed": false
+}

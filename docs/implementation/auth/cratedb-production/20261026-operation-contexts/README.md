@@ -1,5 +1,15 @@
 # #644: operation-context investigation, 2026-10-26
 
+## October28 backup repair — scheduled00:05 SUCCESS; next upgrade awaitsGO
+
+OwnerQ64's two-statement repair completed23:59:25UTC: V2 nowwrites to
+`/snapshots/q65-mixed-20261027`; protected`/snapshots/v2` staysread-only/untouched. Cronneverheld.
+`hourly_20261028_000501` and`daily_20261028_000501` areSUCCESS567/no failures onall3coordinators;
+helperfinished00:13:34UTC. Cluster145GREEN/1175STARTED; pagewatchhealthy, no gap.
+[Execution and evidence](20261028-backup-repair.md), [summary](20261028-backup-repair-summary.json).
+The next-night[runbook](../../../crate-6-upgrade.md) resumes03/01 thenfourhops, accepts onlyqualified
+check3, retains aworking V2 throughout;October28 23:00–October29 04:00UTC. **Nothingarmed; awaitGO.**
+
 ## Q65 read-only follow-up — backups, persisted metadata and check3
 
 [Findings and exact proposed repair](q65-findings.md), [version-pinned source research](q65-upstream.md),
