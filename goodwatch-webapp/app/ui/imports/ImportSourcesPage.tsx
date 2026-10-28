@@ -143,10 +143,14 @@ export function ImportSourcesPage({
 
 	// Focus moves to the source that opened, so it is announced, and the page scrolls to it.
 	const card = useRef<HTMLElement>(null)
+	const stepper = useRef<HTMLDivElement>(null)
 	useEffect(() => {
 		if (!acted) return
 		card.current?.focus({ preventScroll: true })
-		card.current?.scrollIntoView?.({ block: "start", behavior: "smooth" })
+		// PROTOTYPE: scroll to the stepper, not past it, so the rail stays in view; only when it's off screen.
+		const rail = stepper.current
+		if (rail && rail.getBoundingClientRect().top < 0)
+			rail.scrollIntoView?.({ block: "start", behavior: "smooth" })
 	}, [acted])
 
 	const source = open ? sourceEntry(open.id) : null
@@ -182,6 +186,7 @@ export function ImportSourcesPage({
 				<ImportStepReport.Provider value={setReported}>
 					<div className="flex flex-col gap-8 md:gap-10">
 						<PageDrop onFile={files.take} />
+						<div ref={stepper} className="scroll-mt-20">
 						<ImportStepper
 							state={{
 								...state,
@@ -193,7 +198,8 @@ export function ImportSourcesPage({
 								],
 							}}
 						/>
-						<div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+						</div>
+						<div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
 							{unknown}
 							{open && source ? (
 								<section

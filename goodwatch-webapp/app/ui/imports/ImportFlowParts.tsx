@@ -93,7 +93,7 @@ export function useReportStep(state: ImportStepState) {
 export function ImportStepper({ state }: { state: ImportStepState }) {
 	const { step, allDone, notes, back } = state
 	return (
-		<nav aria-label="Import steps" className="mx-auto w-full max-w-2xl">
+		<nav aria-label="Import steps" className="mx-auto w-full max-w-4xl">
 			<div className="relative">
 				<div
 					aria-hidden

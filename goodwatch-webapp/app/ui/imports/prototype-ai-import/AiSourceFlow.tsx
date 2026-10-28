@@ -14,6 +14,8 @@ import { MockWindow, ToolLine, UserBubble } from "~/ui/use-with-ai/ChatDemo"
 import { CountTiles } from "../ImportDone"
 import {
 	Answer,
+	BackArrow,
+	backClass,
 	type FlowPoster,
 	PosterLights,
 	StepHeading,
@@ -132,7 +134,7 @@ function NoteWindow({ lit = true, place = "notes" }: { lit?: boolean; place?: Pl
 	return (
 		<div className={`transition-opacity duration-500 ${lit ? "opacity-100" : "opacity-40"}`}>
 			<MockWindow title={p.window} tone="light">
-				<div key={p.key}>
+				<div key={p.key} className="h-80 overflow-y-auto">
 					{p.preview}
 				</div>
 			</MockWindow>
@@ -150,7 +152,7 @@ function ChatWindow({
 	return (
 		<div className={`transition-opacity duration-500 ${lit ? "opacity-100" : "opacity-40"}`}>
 			<MockWindow title="Your AI app">
-				<div className="flex min-h-56 flex-col gap-3 p-4 text-sm">
+				<div className="flex h-80 flex-col gap-3 overflow-y-auto p-4 text-sm">
 					<div className={`transition-opacity duration-500 ${promptLit ? "opacity-100" : "opacity-30"}`}>
 						<UserBubble>
 							<span className="block text-xs text-gray-300">{placeOf(place).attachment}</span>
@@ -236,17 +238,30 @@ function DoneBlock({ onAnother, focus }: { onAnother: () => void; focus: boolean
 					Your AI app asked about Arrival, which has no score yet. You can answer there, or score it here.
 				</p>
 			)}
-			<div className="flex flex-wrap gap-3">
-				<button type="button" className={primaryButton} onClick={onAnother}>
-					Bring another list
-				</button>
+			<Actions>
 				{!undone && (
 					<button type="button" className={secondaryButton} onClick={() => setUndone(true)}>
 						Undo all {LIST.length}
 					</button>
 				)}
-			</div>
+				<button type="button" className={primaryButton} onClick={onAnother}>
+					Bring another list
+				</button>
+			</Actions>
 		</div>
+	)
+}
+
+function Actions({ children }: { children: ReactNode }) {
+	return <div className="flex flex-wrap justify-end gap-3">{children}</div>
+}
+
+function Back({ onClick }: { onClick: () => void }) {
+	return (
+		<button type="button" onClick={onClick} className={backClass}>
+			<BackArrow />
+			Back
+		</button>
 	)
 }
 
@@ -283,7 +298,7 @@ const notesFor = (step: Step, rules: Rules, progress: number): [string, string, 
 export function FlowE({ onOther }: { onOther: () => void }) {
 	const [step, setStep] = useState<Step>(1)
 	const [rules, setRules] = useState<Rules>(ALL_RULES)
-	const [place, setPlace] = useState<PlaceKey>("notes")
+	const [place, setPlace] = useState<PlaceKey>("sheet")
 	const [connected, setConnected] = useState(true)
 	const writes = useAiWrites(() => setStep(4))
 	useReportStep({ step, notes: notesFor(step, rules, writes.progress), allDone: step === 4, back: step === 2 ? () => setStep(1) : undefined })
@@ -297,27 +312,33 @@ export function FlowE({ onOther }: { onOther: () => void }) {
 						<StepHeading focus={false}>Bring a list from anywhere</StepHeading>
 						<p>Your AI app reads it and adds the titles to GoodWatch. Where is your list?</p>
 						<PlaceChips place={place} onPick={setPlace} />
-						<p className="text-sm text-gray-400">{placeOf(place).how}</p>
+						<p className="min-h-[6.25rem] text-sm text-gray-400 sm:min-h-10">{placeOf(place).how}</p>
 						<Illustration prompt={prompt} progress={1} place={place} />
 						<ConnectedLine connected={connected} onToggle={() => setConnected(!connected)} />
-						<button type="button" className={`${primaryButton} self-start`} disabled={!connected} onClick={() => setStep(2)}>
-							Next
-						</button>
+						<Actions>
+							<button type="button" className={primaryButton} disabled={!connected} onClick={() => setStep(2)}>
+								Next
+							</button>
+						</Actions>
 					</>
 				)}
 				{step === 2 && (
 					<>
+						<Back onClick={() => setStep(1)} />
 						<StepHeading focus>What's in your list?</StepHeading>
 						<RuleAnswers rules={rules} setRules={setRules} place={place} />
 						<p className="text-gray-200">Send this with your {placeOf(place).label === "Anything else" ? "file" : placeOf(place).label.toLowerCase()}:</p>
 						<CopyField text={prompt} label="Copy the prompt" mono={false} size="lg" />
-						<button type="button" className={`${primaryButton} self-start`} onClick={() => setStep(3)}>
-							I sent it
-						</button>
+						<Actions>
+							<button type="button" className={primaryButton} onClick={() => setStep(3)}>
+								I sent it
+							</button>
+						</Actions>
 					</>
 				)}
 				{step === 3 && (
 					<>
+						{writes.progress === 0 && !writes.running && <Back onClick={() => setStep(2)} />}
 						<StepHeading focus>{writes.progress > 0 ? "Your AI app is adding titles" : "Waiting for your AI app"}</StepHeading>
 						<PosterLights posters={POSTERS} progress={writes.progress} />
 						<p className="text-gray-400">
@@ -428,7 +449,7 @@ function NumberedStep({ n, title, children }: { n: number; title: string; childr
 export function FlowG({ onOther }: { onOther: () => void }) {
 	const [step, setStep] = useState<Step>(1)
 	const [rules, setRules] = useState<Rules>(ALL_RULES)
-	const [place, setPlace] = useState<PlaceKey>("notes")
+	const [place, setPlace] = useState<PlaceKey>("sheet")
 	const [connected, setConnected] = useState(true)
 	const writes = useAiWrites(() => setStep(4))
 	useReportStep({ step, notes: notesFor(step, rules, writes.progress), allDone: step === 4, back: step === 2 ? () => setStep(1) : undefined })

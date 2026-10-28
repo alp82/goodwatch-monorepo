@@ -62,6 +62,34 @@ const EXPORT = `{"history": [
 
 export const PLACES: Place[] = [
 	{
+		key: "sheet",
+		label: "Spreadsheet",
+		how: "Attach the file, or copy the rows and paste them.",
+		window: "movies.xlsx",
+		attachment: "📎 movies.xlsx",
+		opener: "import this sheet into goodwatch.",
+		rules: {
+			seen: { title: "\"Watched: yes\" is Seen", note: "The Watched column", phrase: "watched = yes means seen" },
+			scores: { title: "The Rating column is my score", note: "Out of 10", phrase: "rating is my score out of 10" },
+			want: { title: "Unwatched rows go on Want to See", note: "Watched is empty", phrase: "the rest goes on my want to see" },
+		},
+		preview: (
+			<table className="w-full text-left text-xs">
+				<tbody>
+					{SHEET.map((row, i) => (
+						<tr key={i} className={i === 0 ? "bg-gray-200 font-semibold" : "border-t border-black/10"}>
+							{row.map((cell, j) => (
+								<td key={j} className={`px-2 py-1.5 ${j === 0 ? "" : "text-center tabular-nums"}`}>
+									{cell}
+								</td>
+							))}
+						</tr>
+					))}
+				</tbody>
+			</table>
+		),
+	},
+	{
 		key: "notes",
 		label: "Notes",
 		how: "Copy the note and paste it into the chat.",
@@ -101,34 +129,6 @@ export const PLACES: Place[] = [
 					</div>
 				))}
 			</div>
-		),
-	},
-	{
-		key: "sheet",
-		label: "Spreadsheet",
-		how: "Attach the file, or copy the rows and paste them.",
-		window: "movies.xlsx",
-		attachment: "📎 movies.xlsx",
-		opener: "import this sheet into goodwatch.",
-		rules: {
-			seen: { title: "\"Watched: yes\" is Seen", note: "The Watched column", phrase: "watched = yes means seen" },
-			scores: { title: "The Rating column is my score", note: "Out of 10", phrase: "rating is my score out of 10" },
-			want: { title: "Unwatched rows go on Want to See", note: "Watched is empty", phrase: "the rest goes on my want to see" },
-		},
-		preview: (
-			<table className="w-full text-left text-xs">
-				<tbody>
-					{SHEET.map((row, i) => (
-						<tr key={i} className={i === 0 ? "bg-gray-200 font-semibold" : "border-t border-black/10"}>
-							{row.map((cell, j) => (
-								<td key={j} className={`px-2 py-1.5 ${j === 0 ? "" : "text-center tabular-nums"}`}>
-									{cell}
-								</td>
-							))}
-						</tr>
-					))}
-				</tbody>
-			</table>
 		),
 	},
 	{
