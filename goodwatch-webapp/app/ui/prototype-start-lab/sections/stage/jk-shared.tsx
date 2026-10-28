@@ -7,7 +7,7 @@
 // Round 12: the lab's "Search bar" (`?searchbar=`, sections/searchbar) swaps the field and presets for a bar with a
 // button; "Mood lighting" (`?light=`) gets the scene's placement here for its effects (sections/light).
 // Round 13: half the gap (only the dog band must fit), capped at 300 px on large screens, zooming out past that.
-// Round 15: the H1 says "by mood" only; stages l and m pass their own picker in place of the chips (jl-picker).
+// Round 16: the H1 is "Find something to watch" (round 15 said "by mood"); stages l and m pass their own picker in place of the chips (jl-picker).
 import { type CSSProperties, type ReactNode, type RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { ScenePlace } from "../../scene/SceneStage"
 import { sceneImage, type SceneMeta, type ScenePair } from "../../scene/types"
@@ -427,7 +427,7 @@ function JkTop({
 				ref={reg("h1")}
 				className="jk-h1 pointer-events-auto mx-auto w-fit text-center text-[26px] font-extrabold leading-8 tracking-tight text-white [text-shadow:0_2px_4px_rgb(0_0_0/.6),0_8px_40px_rgb(0_0_0/.85)] sm:text-5xl sm:leading-[1.1] lg:text-[52px]"
 			>
-				Find something to watch by mood
+				Find something to watch
 			</h1>
 			{Bar ? (
 				<div ref={reg("field")} className="jk-field-gap mx-auto mt-4 max-w-[880px] sm:mt-8">

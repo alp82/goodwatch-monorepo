@@ -101,9 +101,54 @@ export function mergedTitles(data: LabData, ids: string[]): LabCard[] {
 /** A pick's name: the mix's or the word's. */
 export const pickLabel = (id: string) => MIX_BY_ID.get(id)?.name ?? WORD_BY_ID[id]?.name ?? id
 
-/** The stage vocabulary's id (hi-vocab) for the picks' first word: what the room's light reads. */
+/**
+ * PROTOTYPE · Round 16: a mix is its parts. The picks are words only (up to three); a mix is "on" while all its parts
+ * are picked, however they got there. Only one mix can be on: when two would be (Funny + Feel-good + Romance holds
+ * two), the one whose parts were picked first wins.
+ */
+export function activeMix(picks: string[]): Mix | null {
+	let best: Mix | null = null
+	let bestAt = Number.POSITIVE_INFINITY
+	for (const m of MIXES) {
+		if (!m.parts.every((p) => picks.includes(p))) continue
+		const at = Math.max(...m.parts.map((p) => picks.indexOf(p)))
+		if (at < bestAt) {
+			best = m
+			bestAt = at
+		}
+	}
+	return best
+}
+
+/** Round 16: the picks as the stage shows them: the mix while it's whole (by its name), then the other words. */
+export function displayPicks(picks: string[]): string[] {
+	const mix = activeMix(picks)
+	return mix ? [mix.id, ...picks.filter((p) => !mix.parts.includes(p))] : picks
+}
+
+/** Round 16: the picks' name ("Warm, easy comedies + Animated"). */
+export const picksName = (picks: string[]) => displayPicks(picks).map(pickLabel).join(" + ")
+
+/**
+ * Round 16: a tap on a mix. Mixes are either/or: the mix that's on comes off by its parts, the tapped one's parts go
+ * in first (they lead the light), and the other words stay while they fit (up to three in all; the latest ones stay).
+ * Tapping the mix that's on removes its parts and keeps the other words. A mix is never refused.
+ */
+export function pickMix(picks: string[], id: string): string[] {
+	const mix = MIX_BY_ID.get(id)
+	if (!mix) return picks
+	const on = activeMix(picks)
+	const others = picks.filter((p) => !on?.parts.includes(p) && !mix.parts.includes(p))
+	if (on?.id === id) return others
+	const room = MAX_PICKS - mix.parts.length
+	return [...mix.parts, ...(room > 0 ? others.slice(-room) : [])]
+}
+
+/** The stage vocabulary's id (hi-vocab) for the picks' first word: what the room's light reads. Round 16: the mix
+ *  that's on leads (its first part), even when another word was picked before it. */
 export function leadVocab(ids: string[]): string | null {
-	const first = ids[0] ? wordsOf(ids[0])[0] : null
+	const shown = displayPicks(ids)[0]
+	const first = shown ? wordsOf(shown)[0] : null
 	if (!first) return null
 	const [kind, key] = first.split(":")
 	return `${kind === "m" ? "mood" : kind === "t" ? "theme" : "style"}:${key}`
@@ -111,7 +156,7 @@ export function leadVocab(ids: string[]): string | null {
 
 /** What the picks answer with (the merged lists), shaped like a mood answer so the module shows it as one. */
 export function mixAnswer(data: LabData, ids: string[]): FixtureAnswer {
-	const name = ids.map(pickLabel).join(" + ")
+	const name = picksName(ids)
 	return { q: name, answeredAs: name, kind: "mood", reading: null, titles: mergedTitles(data, ids) }
 }
 
@@ -154,7 +199,8 @@ export function guestPicker(data: LabData, picks: string[]): WatchNextPicker {
 	}
 }
 
-/** Picks or unpicks a choice; a fourth is refused (the caller shows My movies' hint). */
+/** Picks or unpicks a word; a fourth is refused (the caller shows My movies' hint). Round 16: words only (mixes go
+ *  through pickMix). */
 export function togglePick(picks: string[], id: string): { picks: string[]; refused: boolean } {
 	if (picks.includes(id)) return { picks: picks.filter((p) => p !== id), refused: false }
 	if (picks.length >= MAX_PICKS) return { picks, refused: true }

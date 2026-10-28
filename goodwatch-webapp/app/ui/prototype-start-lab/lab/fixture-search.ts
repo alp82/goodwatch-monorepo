@@ -72,23 +72,32 @@ export function moodAnswer(data: LabData, key: string): FixtureAnswer | null {
 /**
  * Round 14: the search bar's presets as short phrases (2-4 words). A preset fills the field with its short phrase and
  * searches that phrase; the lab answers it with the captured prompt it stands for.
+ * Round 16: moods are back in the presets, in words no picker label uses (no mood, theme, style or mix name).
  */
 export const PRESET_SHORT: Record<string, string> = {
-	"a cozy mystery for a rainy Sunday": "Cozy mystery",
+	"a cozy mystery for a rainy Sunday": "Rainy-day whodunit",
 	"something like Severance but funnier": "Severance, but funny",
-	"a mind-bending sci-fi movie under two hours": "Mind-bending sci-fi",
-	"a feel-good show to binge with my partner": "Feel-good binge",
-	"a dark thriller with a twist ending": "Twisty thriller",
-	"an animated movie adults will love": "Adult animation",
+	"a mind-bending sci-fi movie under two hours": "Messes with my head",
+	"a feel-good show to binge with my partner": "Cheer me up",
+	"a dark thriller with a twist ending": "Twist ending",
+	"an animated movie adults will love": "Grown-up cartoons",
 	"a mind-blowing space adventure": "Space adventure",
 }
 
 /**
- * PROTOTYPE · Round 15: the presets that show, in order: only what moods can't say (a comparison, a setting, an
- * audience). The other captured prompts are moods in other words (cozy mystery, feel-good binge, mind-bending sci-fi,
- * twisty thriller) and the mood picker covers them, so they stay out. The lab has no other captured prompts.
+ * PROTOTYPE · Round 16: the presets that show, in order. Round 15 kept only what moods can't say; the owner wants
+ * moods back in other words, so all the lab's captured prompts but one show again: six fit the bar's row at 1440
+ * (about 800 of its 832 px; phones scroll it sideways). The mind-bending sci-fi prompt stays out: Space adventure and
+ * the "Eerie, mind-bending stories" mix already cover it, and a seventh wouldn't fit.
  */
-export const PRESETS = ["something like Severance but funnier", "a mind-blowing space adventure", "an animated movie adults will love"]
+export const PRESETS = [
+	"a feel-good show to binge with my partner",
+	"a cozy mystery for a rainy Sunday",
+	"something like Severance but funnier",
+	"a dark thriller with a twist ending",
+	"a mind-blowing space adventure",
+	"an animated movie adults will love",
+]
 
 /** The captured prompts behind the presets, in PRESETS order. */
 export const presetPrompts = (data: LabData) => PRESETS.flatMap((q) => data.guest.prompts.find((p) => p.q === q) ?? [])

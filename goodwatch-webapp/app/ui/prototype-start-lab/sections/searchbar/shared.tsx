@@ -181,7 +181,7 @@ export function usePlaceholder() {
 
 /** The example searches as small chips (Discover's option chip, without the backing it needs over the room). */
 export function BarPresets({ f, lead = true, ghost = false, compact = false }: { f: StageFlow; lead?: boolean; ghost?: boolean; compact?: boolean }) {
-	// Round 15: only the presets moods can't stand in for (PRESETS).
+	// Round 16: the presets (PRESETS), moods back in other words.
 	const prompts = presetPrompts(f.data)
 	if (compact)
 		// Round 13 (d): six short chips, no per-chip icon, one row on desktop; the row scrolls sideways on phones.
@@ -244,21 +244,24 @@ export function BarPresets({ f, lead = true, ghost = false, compact = false }: {
  */
 const STAND_IN: [RegExp, ReadingChip][] = [
 	[/\b(cozy|cosy|comfort|wholesome)/, { kind: "want", text: "Wholesome", key: "wholesome" }],
-	[/\b(feel-?good|uplifting|hopeful)/, { kind: "want", text: "Hopefulness", key: "hopefulness" }],
+	[/\b(feel-?good|uplifting|hopeful|cheer me up|cheer)/, { kind: "want", text: "Hopefulness", key: "hopefulness" }],
 	[/\b(mystery|whodunn?it|detective)/, { kind: "want", text: "Mystery", key: "mystery" }],
 	[/\b(thriller|tense|suspense)/, { kind: "want", text: "Tension", key: "tension" }],
 	[/\b(funn|comed|laugh|hilari)/, { kind: "want", text: "Situational comedy", key: "situational_comedy" }],
 	[/\b(witty|clever)/, { kind: "want", text: "Wit", key: "wit_wordplay" }],
 	[/\b(scary|horror|creepy|spooky)/, { kind: "want", text: "Scare", key: "scare" }],
-	[/\b(mind-?bending|psycholog|twist)/, { kind: "want", text: "Psychological", key: "psychological" }],
+	// Round 16: the presets' new words ("Twist ending", "Messes with my head", "Grown-up cartoons").
+	[/\b(see coming|ending)\b/, { kind: "want", text: "Tension", key: "tension" }],
+	[/\b(mind-?bending|psycholog|twist|with my head)/, { kind: "want", text: "Psychological", key: "psychological" }],
 	[/\b(sci-?fi|space|future)/, { kind: "want", text: "Futuristic", key: "futuristic" }],
 	[/\b(romanc|romantic|partner|date night|love story)/, { kind: "want", text: "Romance", key: "romance" }],
 	[/\b(dark|bleak|grim)/, { kind: "want", text: "Bleakness", key: "bleakness" }],
 	[/\b(sad|cry|tearjerk)/, { kind: "want", text: "Melancholy", key: "melancholy" }],
 	[/\b(action|explosi|chase)/, { kind: "want", text: "Adrenaline", key: "adrenaline" }],
-	[/\b(animated|animation|anime)/, { kind: "attribute", text: "Animation" }],
+	[/\b(animated|animation|anime|cartoons?)/, { kind: "attribute", text: "Animation" }],
 	[/\bunder (two|2) hours\b/, { kind: "attribute", text: "Under 2 hours" }],
 	[/\b(show|series|binge)\b/, { kind: "attribute", text: "TV show" }],
+	[/\bgrown-?ups?\b/, { kind: "attribute", text: "For adults" }],
 	[/\blike ([a-z][a-z' ]{2,24}?)(?= but| with|$)/, { kind: "phrase", text: "$1" }],
 	[/\brainy (sunday|day|night)/, { kind: "phrase", text: "rainy day" }],
 ]

@@ -3,17 +3,20 @@
 // (MoodButton, PickChip, ChoiceArt, choiceHues, the refusal hint); ChoiceTile, the shelf and the panel's head aren't
 // exported, so GuestTile, GuestShelf and GuestPanel repeat their markup with the guest's lines ("Your taste" dropped,
 // counts as titles). The panel is solid gray-900, not My movies' blur: the room's light effects move behind it.
-import { CheckIcon, ChevronDownIcon } from "@heroicons/react/24/solid"
+// Round 16: a mix is its parts (jl-mixes activeMix/pickMix): mixes are either/or, picking one ticks its moods, themes
+// and styles below; the chips by Add name the mix while it's whole. Chips get a darker scrim (GuestChip), and the
+// panel grows to the room left above the lab bar.
+import { CheckIcon, ChevronDownIcon, XMarkIcon } from "@heroicons/react/24/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ReactNode, type RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { MAX_PICKS, WORD_BY_ID, WORD_KINDS, type WordKind, WORDS } from "~/domain/taste-picker"
 import { MoodButton, type MoodControl, useRefusalHint } from "~/ui/watch-next/MoodPicker"
-import { ChoiceArt, choiceHues, PickChip } from "~/ui/watch-next/TasteShelf"
+import { ChoiceArt, choiceHues } from "~/ui/watch-next/TasteShelf"
 import { pickName } from "~/ui/watch-next/labels"
 import { inertProps } from "./ab-shared"
 import { useDismiss } from "./hi-picker"
 import { JK_REVEAL } from "../searchbar/bars"
-import { guestPicker, isMix, MIXES, mixLine, pickLabel, STAGE_MIXES, togglePick } from "./jl-mixes"
+import { activeMix, displayPicks, guestPicker, isMix, MIXES, mixLine, pickLabel, pickMix, STAGE_MIXES, togglePick } from "./jl-mixes"
 import type { JkFlow, Reg } from "./jk-shared"
 
 /** The picks on show: the picker's (a mix source), the dice's mood, or none (a search, the empty state). */
@@ -30,6 +33,8 @@ export function useGuestControl(f: JkFlow): MoodControl {
 	const [refused, setRefused] = useState<{ name: string; at: number } | null>(null)
 	const toggle = useCallback(
 		(id: string) => {
+			// Round 16: a mix swaps in its parts (never refused); a word toggles within the three.
+			if (isMix(id)) return f.mix(pickMix(picks, id))
 			const r = togglePick(picks, id)
 			if (r.refused) setRefused({ name: pickLabel(id), at: Date.now() })
 			else f.mix(r.picks)
@@ -78,10 +83,11 @@ export function GuestTile({
 }) {
 	const { picker } = control
 	const name = pickName(picker, id)
-	const on = picker.picks.includes(id)
-	const full = !on && picker.picks.length >= MAX_PICKS
-	const hues = choiceHues(picker, id)
 	const mix = isMix(id)
+	// Round 16: a mix is on while all its parts are picked (only one at a time), and never dimmed: it replaces.
+	const on = mix ? activeMix(picker.picks)?.id === id : picker.picks.includes(id)
+	const full = !mix && !on && picker.picks.length >= MAX_PICKS
+	const hues = choiceHues(picker, id)
 	const line = mix ? mixLine(id) : (WORD_BY_ID[id]?.description ?? null)
 	const tap = countText(countOf(control, id))
 	return (
@@ -144,7 +150,7 @@ function GuestShelf({ control }: { control: MoodControl }) {
 	const [open, setOpen] = useState<WordKind | null>(null)
 	return (
 		<>
-			<Heading note="Moods, themes, and styles that go well together">Start with a mix</Heading>
+			<Heading note="One at a time. Its moods, themes, and styles show below.">Start with a mix</Heading>
 			{MIXES.map((m) => (
 				<GuestTile key={m.id} control={control} id={m.id} />
 			))}
@@ -255,18 +261,11 @@ function GuestPanel({ control, returnFocus }: { control: MoodControl; returnFocu
 	const { open, setOpen } = control
 	const close = useCallback(() => setOpen(false), [setOpen])
 	useDismiss(open, close, panel)
+	const maxH = usePanelHeight(open, panel)
 	useEffect(() => {
 		if (!open) return
 		const r1 = requestAnimationFrame(() => panel.current?.querySelector<HTMLElement>("[data-choice]")?.focus({ preventScroll: true }))
-		const t = setTimeout(() => {
-			const r = panel.current?.getBoundingClientRect()
-			const room = window.innerHeight - 76
-			if (r && r.bottom > room) window.scrollBy({ top: Math.min(r.top - 72, r.bottom - room), behavior: "smooth" })
-		}, 30)
-		return () => {
-			cancelAnimationFrame(r1)
-			clearTimeout(t)
-		}
+		return () => cancelAnimationFrame(r1)
 	}, [open])
 	return (
 		<div
@@ -276,7 +275,12 @@ function GuestPanel({ control, returnFocus }: { control: MoodControl; returnFocu
 			{...(open ? { "data-jk-picker-open": "" } : {})}
 			{...inertProps(!open)}
 			className="absolute inset-x-0 top-full z-40 mx-auto mt-2 flex w-full max-w-[980px] origin-top flex-col overflow-hidden rounded-2xl bg-gray-900 shadow-[0_24px_70px_-12px_rgba(0,0,0,.95)] ring-1 ring-white/12 transition-[opacity,transform] duration-200 ease-out"
-			style={{ opacity: open ? 1 : 0, transform: open ? "none" : "translateY(-8px) scale(.985)", pointerEvents: open ? "auto" : "none" }}
+			style={{
+				opacity: open ? 1 : 0,
+				transform: open ? "none" : "translateY(-8px) scale(.985)",
+				pointerEvents: open ? "auto" : "none",
+				maxHeight: maxH,
+			}}
 		>
 			<PanelHead
 				control={control}
@@ -286,10 +290,95 @@ function GuestPanel({ control, returnFocus }: { control: MoodControl; returnFocu
 					if (control.picker.picks.length) window.dispatchEvent(new Event(JK_REVEAL))
 				}}
 			/>
-			<div className="grid max-h-[min(62svh,560px)] min-h-0 grid-cols-2 gap-2 overflow-y-auto overscroll-contain p-3 sm:grid-cols-3 lg:grid-cols-4">
+			<div className="grid min-h-0 flex-1 auto-rows-max grid-cols-2 gap-2 overflow-y-auto overscroll-contain p-3 sm:grid-cols-3 lg:grid-cols-4">
 				{open ? <GuestShelf control={control} /> : null}
 			</div>
 		</div>
+	)
+}
+
+/** Round 16: the space kept free under the panel: the lab bar (about 72 px from the bottom) plus a small margin. */
+const BELOW = 80
+/** Round 16: the least the panel shows before the page scrolls it up (it then opens from 72 px under the top). */
+const MIN_PANEL = 360
+const TOP = 72
+
+/**
+ * Round 16: the panel's height: everything from where it opens down to just above the lab bar (BELOW), so the list
+ * uses the screen instead of a fixed 560 px. If less than MIN_PANEL is left there, the page scrolls the panel up to
+ * TOP first and the height counts from there. Measured on open and on resizes only (not per scroll frame); the panel
+ * overlays, so a new height moves nothing on the page behind it.
+ */
+function usePanelHeight(open: boolean, panel: RefObject<HTMLDivElement | null>) {
+	const [maxH, setMaxH] = useState<number | undefined>(undefined)
+	useEffect(() => {
+		if (!open) return
+		const fit = (scroll: boolean) => {
+			const el = panel.current
+			if (!el) return
+			const vh = window.visualViewport?.height ?? window.innerHeight
+			// Where the open panel's top is (8px under the row it hangs from): its own rect is still mid-transition.
+			const top = (el.offsetParent ?? el).getBoundingClientRect().bottom + 8
+			let at = top
+			if (scroll && vh - BELOW - top < Math.min(MIN_PANEL, vh - BELOW - TOP)) {
+				const by = top - TOP
+				window.scrollBy({ top: by, behavior: "smooth" })
+				at = TOP
+			}
+			setMaxH(Math.max(200, Math.floor(vh - BELOW - at)))
+		}
+		fit(true)
+		const onResize = () => fit(false)
+		window.addEventListener("resize", onResize)
+		window.visualViewport?.addEventListener("resize", onResize)
+		return () => {
+			window.removeEventListener("resize", onResize)
+			window.visualViewport?.removeEventListener("resize", onResize)
+		}
+	}, [open, panel])
+	return maxH
+}
+
+/**
+ * Round 16: TasteShelf's PickChip on the stage, with a darker reading layer: the site's chip puts white text on the
+ * pick's own color (yellow for Funny) and a bright picture, which is hard to read over the room. Same shape, art,
+ * count and remove button; a black scrim under the text (strongest at the left, where the name sits) and a firmer
+ * text shadow. A mix chip's remove takes the mix's parts off and keeps the other words.
+ */
+function GuestChip({ control, id }: { control: MoodControl; id: string }) {
+	const { picker } = control
+	const name = pickName(picker, id)
+	const hues = choiceHues(picker, id)
+	return (
+		<motion.span
+			layout
+			initial={{ opacity: 0, scale: 0.9 }}
+			animate={{ opacity: 1, scale: 1 }}
+			className="relative isolate inline-flex h-9 max-w-[22rem] shrink-0 items-center overflow-hidden rounded-xl text-sm font-bold text-white ring-1 ring-white/25 [text-shadow:0_1px_2px_rgb(0_0_0/.9),0_0_10px_rgb(0_0_0/.55)]"
+			style={{ boxShadow: `0 4px 18px -6px ${hues[0]}` }}
+		>
+			<ChoiceArt hues={hues} path={pictureOf(control, id)} split={isMix(id)} />
+			<span aria-hidden className="absolute inset-0 -z-10 bg-linear-to-r from-black/60 via-black/45 to-black/25" />
+			<button
+				type="button"
+				data-moodbutton
+				aria-haspopup="dialog"
+				aria-expanded={control.open}
+				onClick={() => control.setOpen(!control.open)}
+				className="inline-flex h-full min-w-0 cursor-pointer items-center gap-2 pl-2.5 pr-1"
+			>
+				<span className="truncate">{name}</span>
+				<span className="shrink-0 rounded-md bg-black/45 px-1 text-xs tabular-nums">{countOf(control, id)}</span>
+			</button>
+			<button
+				type="button"
+				aria-label={`Remove ${name}`}
+				onClick={() => control.toggle(id)}
+				className="mr-1.5 flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full bg-black/40 hover:bg-black/60"
+			>
+				<XMarkIcon className="h-3.5 w-3.5" />
+			</button>
+		</motion.span>
 	)
 }
 
@@ -365,9 +454,10 @@ export function MoodButtonPicker({ f, reg }: { f: JkFlow; reg: Reg }) {
 				<div className="-mx-4 overflow-x-auto overscroll-x-contain px-4 py-1 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:mx-0 lg:px-1">
 					<div className="flex h-11 w-max items-center gap-2 lg:h-12">
 						<Trigger control={control} buttonRef={button} big />
-						{picks.map((id) => (
+						{/* Round 16: the mix by its name while it's whole, then the other words (displayPicks). */}
+						{displayPicks(picks).map((id) => (
 							<span key={id} className="inline-flex rounded-xl bg-gray-950/85 shadow-[0_8px_24px_rgb(0_0_0/.45)]">
-								<PickChip control={control} id={id} pinned={false} />
+								<GuestChip control={control} id={id} />
 							</span>
 						))}
 						<span className="shrink-0 whitespace-nowrap pl-1 text-sm text-gray-300 tabular-nums [text-shadow:0_1px_8px_rgb(0_0_0/.9)]">

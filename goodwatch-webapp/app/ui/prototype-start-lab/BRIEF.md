@@ -270,3 +270,25 @@ The room is "Round 15 room" above. Built for the picker:
 - **Presets** show only what moods can't say: "Severance, but funny", "Space adventure", "Adult animation" (`PRESETS` in lab/fixture-search.ts). Cozy mystery, Feel-good binge, Mind-bending sci-fi and Twisty thriller are moods in other words; the lab has no other captured prompts.
 - **H1** "Find something to watch by mood"; the input's label "Search by mood, plot, or title".
 - **Light:** picks drive the room by their first word (a mix by its first part).
+
+# Round 16 (2026-10-28): mixes are their parts, stage m by default
+
+The owner's notes on round 15, verbatim:
+
+> 1. mood: m!
+> 2. these can get a bit hard to read on the image bg
+> 3. these should be either or selections
+> 4. when selecting a mix it should also auto-select the individual ones like funny and feel good
+> 5. the panel's scrollbar is okay, but it should use the available vertical space we have
+> 6. we can and should have moods in the example searches, just use different words than we have in the selectors
+> 7. heading also drop the "by mood"
+
+Built:
+
+- **Stage m is round 2's default** (`DEFAULTS[2].stage`); j and l stay in the bar.
+- **A mix is its parts** (`jl-mixes.ts`: `activeMix`, `displayPicks`, `pickMix`). The picks are words only (moods, themes, styles; up to three). A mix tile is on while all its parts are picked, however they got there (tapping Funny then Feel-good lights "Warm, easy comedies" too); only one mix is on at a time (if two would be, the one picked first). Tapping a mix swaps the mix that's on for it: its parts go in first, other words stay while they fit in three (the latest ones stay), so a 3-part mix replaces everything. Tapping the mix that's on takes its parts off and keeps the other words. Mix tiles are never dimmed or refused; words still are at three. Unticking a part below turns the mix off and keeps the rest. "k of 3" and the group badges count parts.
+- **Chips by Add:** the mix by its name while it's whole ("Warm, easy comedies 30 ×"), then any other words ("Animated 17 ×"); once broken, the remaining words one by one. The mix chip's × removes its parts. The results' heading and the light follow the same order (the mix's first part leads the light).
+- **Chip legibility:** `GuestChip` (a copy of TasteShelf's PickChip): the same art, shape, count and ×, plus a black scrim (60 % at the left under the name, 25 % at the right), a firmer text shadow and darker count and × backings.
+- **Panel height:** the panel runs from where it opens down to 80 px above the viewport bottom (the lab bar plus a margin), so it grows with its open groups instead of stopping at 560 px. If less than 360 px is left there, the page scrolls it up to 72 px from the top first. Measured on open and on resizes (visualViewport too), never per scroll frame; it overlays, so nothing behind it moves.
+- **Presets** (`PRESETS`, `PRESET_SHORT`): Cheer me up, Rainy-day whodunit, Severance, but funny, Twist ending, Space adventure, Grown-up cartoons. Six, each one captured prompt, none using a picker label. They fit the bar's row at 1440 and 1920 (about 820 of 832 px) and scroll sideways on phones. The mind-bending sci-fi prompt stays out (a seventh wouldn't fit, and Space adventure plus the mind-bending mix cover it). The lab's stand-in reading knows the new words.
+- **H1** "Find something to watch" in j, l and m.

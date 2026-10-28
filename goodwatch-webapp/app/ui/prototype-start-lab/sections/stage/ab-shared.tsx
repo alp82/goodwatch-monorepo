@@ -9,7 +9,7 @@ import { tmdbImage } from "../../lab/kit"
 import type { LabMood } from "~/server/prototype-start-lab.server"
 import { type LabCard, type LabData, useLab } from "../../lab/types"
 import { scoreRanked } from "../recs/shared"
-import { leadVocab, mixAnswer, pickLabel } from "./jl-mixes"
+import { leadVocab, mixAnswer, picksName } from "./jl-mixes"
 
 export const NEED = 3
 
@@ -177,7 +177,7 @@ export function useStageFlow(key: string, { shelfByStep = false }: { shelfByStep
 				setAnswer(null)
 				return
 			}
-			setSource({ kind: "mix", ids, lead: leadVocab(ids), name: ids.map(pickLabel).join(" + ") })
+			setSource({ kind: "mix", ids, lead: leadVocab(ids), name: picksName(ids) }) // Round 16: the mix by its name while whole
 			setAnswer(mixAnswer(data, ids))
 		},
 		[data],
