@@ -117,10 +117,7 @@ function ScoreMore() {
 			<span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-gray-400">
 				<StarIcon className="size-5" aria-hidden />
 			</span>
-			<span className="flex flex-col leading-tight">
-				<span className="text-sm font-extrabold text-gray-100">Score more</span>
-				<span className="text-xs text-gray-400">Back to Quick list</span>
-			</span>
+			<span className="text-sm font-extrabold text-gray-100">Score more</span>
 			<ChevronRightIcon className="size-5 shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5" aria-hidden />
 		</Link>
 	)
