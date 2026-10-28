@@ -20,6 +20,7 @@ import {
 	useReportStep,
 } from "../ImportFlowParts"
 import { primaryButton, secondaryButton, textLink } from "../shared"
+import { PLACES, type PlaceKey, type Rules, placeOf, promptFor } from "./places"
 
 export const ROUND2_VARIANTS = {
 	E: "Four steps",
@@ -52,27 +53,7 @@ const SEEN = LIST.filter((l) => l.seen).length
 const SCORED = LIST.filter((l) => l.score).length
 const WANT = LIST.length - SEEN
 
-const PLACES = [
-	{ key: "notes", label: "Notes", how: "Copy the note and paste it into the chat." },
-	{ key: "screenshot", label: "Screenshot", how: "Attach the screenshot. Your AI app reads the titles off it." },
-	{ key: "sheet", label: "Spreadsheet", how: "Attach the file or paste the rows." },
-	{ key: "chat", label: "Group chat", how: "Copy the messages and paste them." },
-	{ key: "app", label: "Another app", how: "Attach that app's export. Any format works." },
-] as const
-type PlaceKey = (typeof PLACES)[number]["key"]
-
-/* ── Rules → prompt ──────────────────────────────────────────────────────────────────────────────────────────── */
-
-type Rules = { seen: boolean; scores: boolean; want: boolean }
 const ALL_RULES: Rules = { seen: true, scores: true, want: true }
-const promptFor = (r: Rules) => {
-	const parts = [
-		r.seen && "✓ means i've seen it",
-		r.scores && "numbers are my scores",
-		r.want && "the rest goes on my want to see",
-	].filter(Boolean)
-	return parts.length ? `add this list to goodwatch. ${parts.join(", ")}` : "add this list to goodwatch"
-}
 const ruleCount = (r: Rules) => Number(r.seen) + Number(r.scores) + Number(r.want)
 
 /* ── Simulated AI writes ─────────────────────────────────────────────────────────────────────────────────────── */
@@ -147,13 +128,13 @@ function ConnectedLine({ connected, onToggle }: { connected: boolean; onToggle: 
 }
 
 function NoteWindow({ lit = true, place = "notes" }: { lit?: boolean; place?: PlaceKey }) {
-	const title = { notes: "Notes", screenshot: "Screenshot", sheet: "Spreadsheet", chat: "Group chat", app: "export.csv" }[place]
+	const p = placeOf(place)
 	return (
 		<div className={`transition-opacity duration-500 ${lit ? "opacity-100" : "opacity-40"}`}>
-			<MockWindow title={title} tone="light">
-				<pre className="whitespace-pre-wrap px-4 py-3 font-sans text-sm leading-relaxed">
-					{["movies 🍿", ...LIST.map((l) => `- ${l.text}`)].join("\n")}
-				</pre>
+			<MockWindow title={p.window} tone="light">
+				<div key={p.key}>
+					{p.preview}
+				</div>
 			</MockWindow>
 		</div>
 	)
@@ -164,14 +145,15 @@ function ChatWindow({
 	progress,
 	lit = true,
 	promptLit = true,
-}: { prompt: string; progress: number; lit?: boolean; promptLit?: boolean }) {
+	place = "notes",
+}: { prompt: string; progress: number; lit?: boolean; promptLit?: boolean; place?: PlaceKey }) {
 	return (
 		<div className={`transition-opacity duration-500 ${lit ? "opacity-100" : "opacity-40"}`}>
 			<MockWindow title="Your AI app">
 				<div className="flex min-h-56 flex-col gap-3 p-4 text-sm">
 					<div className={`transition-opacity duration-500 ${promptLit ? "opacity-100" : "opacity-30"}`}>
 						<UserBubble>
-							<span className="block text-xs text-gray-300">📎 movies 🍿 ({LIST.length} lines)</span>
+							<span className="block text-xs text-gray-300">{placeOf(place).attachment}</span>
 							{prompt}
 						</UserBubble>
 					</div>
@@ -195,7 +177,7 @@ function Illustration({ prompt, progress, place }: { prompt: string; progress: n
 		<div className="grid items-center gap-3 md:grid-cols-[minmax(0,0.8fr)_auto_minmax(0,1.2fr)]">
 			<NoteWindow place={place} />
 			<ArrowRightIcon className="mx-auto size-6 rotate-90 text-gray-500 md:rotate-0" aria-hidden />
-			<ChatWindow prompt={prompt} progress={progress} />
+			<ChatWindow prompt={prompt} progress={progress} place={place} />
 		</div>
 	)
 }
@@ -219,12 +201,19 @@ function PlaceChips({ place, onPick }: { place: PlaceKey; onPick: (p: PlaceKey) 
 	)
 }
 
-function RuleAnswers({ rules, setRules }: { rules: Rules; setRules: (r: Rules) => void }) {
+function RuleAnswers({ rules, setRules, place = "notes" }: { rules: Rules; setRules: (r: Rules) => void; place?: PlaceKey }) {
+	const p = placeOf(place)
 	return (
 		<div className="flex flex-col gap-2">
-			<Answer selected={rules.seen} onClick={() => setRules({ ...rules, seen: !rules.seen })} title="Ticked titles are Seen" note="✓, x, done, watched" />
-			<Answer selected={rules.scores} onClick={() => setRules({ ...rules, scores: !rules.scores })} title="Numbers are scores" note="9/10, 4 stars, meh 6" />
-			<Answer selected={rules.want} onClick={() => setRules({ ...rules, want: !rules.want })} title="Everything else goes on Want to See" />
+			{(["seen", "scores", "want"] as const).map((k) => (
+				<Answer
+					key={k}
+					selected={rules[k]}
+					onClick={() => setRules({ ...rules, [k]: !rules[k] })}
+					title={p.rules[k].title}
+					note={p.rules[k].note}
+				/>
+			))}
 		</div>
 	)
 }
@@ -298,7 +287,7 @@ export function FlowE({ onOther }: { onOther: () => void }) {
 	const [connected, setConnected] = useState(true)
 	const writes = useAiWrites(() => setStep(4))
 	useReportStep({ step, notes: notesFor(step, rules, writes.progress), allDone: step === 4, back: step === 2 ? () => setStep(1) : undefined })
-	const prompt = promptFor(rules)
+	const prompt = promptFor(rules, place)
 	return (
 		<>
 			{step === 1 && <AiSourceHeader onOther={onOther} />}
@@ -308,6 +297,7 @@ export function FlowE({ onOther }: { onOther: () => void }) {
 						<StepHeading focus={false}>Bring a list from anywhere</StepHeading>
 						<p>Your AI app reads it and adds the titles to GoodWatch. Where is your list?</p>
 						<PlaceChips place={place} onPick={setPlace} />
+						<p className="text-sm text-gray-400">{placeOf(place).how}</p>
 						<Illustration prompt={prompt} progress={1} place={place} />
 						<ConnectedLine connected={connected} onToggle={() => setConnected(!connected)} />
 						<button type="button" className={`${primaryButton} self-start`} disabled={!connected} onClick={() => setStep(2)}>
@@ -318,8 +308,8 @@ export function FlowE({ onOther }: { onOther: () => void }) {
 				{step === 2 && (
 					<>
 						<StepHeading focus>What's in your list?</StepHeading>
-						<RuleAnswers rules={rules} setRules={setRules} />
-						<p className="text-gray-200">{PLACES.find((p) => p.key === place)?.how} Then send this with it:</p>
+						<RuleAnswers rules={rules} setRules={setRules} place={place} />
+						<p className="text-gray-200">Send this with your {placeOf(place).label === "Anything else" ? "file" : placeOf(place).label.toLowerCase()}:</p>
 						<CopyField text={prompt} label="Copy the prompt" mono={false} size="lg" />
 						<button type="button" className={`${primaryButton} self-start`} onClick={() => setStep(3)}>
 							I sent it
@@ -442,13 +432,13 @@ export function FlowG({ onOther }: { onOther: () => void }) {
 	const [connected, setConnected] = useState(true)
 	const writes = useAiWrites(() => setStep(4))
 	useReportStep({ step, notes: notesFor(step, rules, writes.progress), allDone: step === 4, back: step === 2 ? () => setStep(1) : undefined })
-	const prompt = promptFor(rules)
+	const prompt = promptFor(rules, place)
 	const caption: Record<Step, ReactNode> = {
 		1: (
 			<>
 				<p className="text-lg font-bold text-white">Where is your list?</p>
 				<PlaceChips place={place} onPick={setPlace} />
-				<p>{PLACES.find((p) => p.key === place)?.how}</p>
+				<p>{placeOf(place).how}</p>
 				<ConnectedLine connected={connected} onToggle={() => setConnected(!connected)} />
 				<button type="button" className={`${primaryButton} self-start`} disabled={!connected} onClick={() => setStep(2)}>
 					Next
@@ -458,7 +448,7 @@ export function FlowG({ onOther }: { onOther: () => void }) {
 		2: (
 			<>
 				<p className="text-lg font-bold text-white">What's in your list?</p>
-				<RuleAnswers rules={rules} setRules={setRules} />
+				<RuleAnswers rules={rules} setRules={setRules} place={place} />
 				<CopyField text={prompt} label="Copy the prompt" mono={false} />
 				<button type="button" className={`${primaryButton} self-start`} onClick={() => setStep(3)}>
 					I sent it
@@ -496,6 +486,7 @@ export function FlowG({ onOther }: { onOther: () => void }) {
 						<ChatWindow
 							prompt={prompt}
 							progress={step === 4 ? 1 : step === 3 ? writes.progress : 0}
+							place={place}
 							lit={step >= 2}
 							promptLit={step >= 2}
 						/>
