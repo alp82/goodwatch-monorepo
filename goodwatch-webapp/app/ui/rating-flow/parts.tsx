@@ -572,7 +572,14 @@ export function SignUpLine({ rated }: { rated: number }) {
  * A guest at the limit (~/domain/taste-rules): in place of the score control, calm, with sign-up. The marks, the taste
  * view and the picks stay. Sign-up returns to the flow, and the guest's ratings move to the account.
  */
-export function LockedPanel({ rated }: { rated: number }) {
+export function LockedPanel({
+	rated,
+	returnTo = FLOW_PATH,
+}: {
+	rated: number
+	/** Where sign-up and sign-in bring the person back to (Quick list returns to itself). */
+	returnTo?: string
+}) {
 	const authHref = useAuthHref()
 	const google = useContinueWithGoogle()
 	return (
@@ -586,7 +593,7 @@ export function LockedPanel({ rated }: { rated: number }) {
 			<div className="mt-4 flex flex-wrap items-center gap-2">
 				<Link
 					rel="nofollow"
-					to={authHref("sign-up", FLOW_PATH)}
+					to={authHref("sign-up", returnTo)}
 					data-cta="sign-up"
 					className="inline-flex min-h-11 items-center gap-2 rounded-full bg-linear-to-b from-amber-400 to-amber-600 px-5 text-sm font-black text-gray-950 hover:brightness-110"
 				>
@@ -595,7 +602,7 @@ export function LockedPanel({ rated }: { rated: number }) {
 				</Link>
 				<button
 					type="button"
-					onClick={() => google(FLOW_PATH)}
+					onClick={() => google(returnTo)}
 					className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-gray-100 px-4 text-sm font-bold text-gray-900 ring-2 ring-inset ring-gray-400 hover:bg-white"
 				>
 					<GoogleMark size={16} /> {WORDS.continueWithGoogle}
@@ -603,7 +610,7 @@ export function LockedPanel({ rated }: { rated: number }) {
 			</div>
 			<Link
 				rel="nofollow"
-				to={authHref("sign-in", FLOW_PATH)}
+				to={authHref("sign-in", returnTo)}
 				className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-gray-400 hover:text-gray-200 md:min-h-9"
 			>
 				{WORDS.haveAccount}

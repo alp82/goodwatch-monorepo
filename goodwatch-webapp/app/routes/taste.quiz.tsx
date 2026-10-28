@@ -21,6 +21,8 @@ import { prefetchUserSettings } from "~/server/user-settings.server"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { type FlowView, viewOf } from "~/ui/rating-flow/flow"
 import { RatingFlow } from "~/ui/rating-flow/RatingFlow"
+import { ModeSwitch } from "~/ui/quick-list/parts"
+import { QuickList } from "~/ui/quick-list/QuickList"
 import { getUserFromRequest } from "~/utils/auth"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 
@@ -78,7 +80,10 @@ const canonicalLoader: LoaderFunction = async ({
 	})
 }
 
-/** The rating flow. `?view=taste` opens its taste view, where sign-up from "Save your taste" returns. */
+/**
+ * The rating flow. `?view=taste` opens its taste view, where sign-up from "Save your taste" returns. `?mode=quick` is
+ * its Quick list mode: the titles in a table, many answered in a row. One at a time stays the default.
+ */
 export default function TasteQuizRoute() {
 	const { isLoggedIn, smartTitles } = useLoaderData<LoaderData>()
 	const [params, setParams] = useSearchParams()
@@ -92,12 +97,21 @@ export default function TasteQuizRoute() {
 			}),
 		[setParams],
 	)
+	if (view === "rate" && params.get("mode") === "quick")
+		return <QuickList titles={smartTitles} member={isLoggedIn} />
 	return (
 		<RatingFlow
 			titles={smartTitles}
 			member={isLoggedIn}
 			view={view}
 			onView={onView}
+			top={
+				view === "rate" ? (
+					<div className="mb-3">
+						<ModeSwitch mode="one" />
+					</div>
+				) : undefined
+			}
 		/>
 	)
 }
