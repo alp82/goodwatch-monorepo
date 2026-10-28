@@ -12,6 +12,7 @@ import { SpotlightCard } from "../stage/j"
 import { type JkFlow, type JkView, JkStage, type Reg } from "../stage/jk-shared"
 import { MoodButtonPicker } from "../stage/jl-picker"
 import { BootOverlay, type Handoff } from "./boot-overlay"
+import { BootStrip, type StripMode } from "./boot-strip"
 
 const NIGHT = "#050a16"
 /** The searchbar's event for Enter, its button, and the picker's Done (sections/searchbar/shared.tsx `JK_REVEAL`). */
@@ -29,6 +30,12 @@ export type FlowSpec = {
 	card: "always" | "after" | "swap"
 	/** C: the search block sits in the middle of the screen until the first search. */
 	center?: boolean
+	/**
+	 * Round 18 (f-i): no full-screen boot. The boot plays in a strip in the header's place (boot-strip) while the page
+	 * assembles under it from the first paint (CSS only: the room up from black, the search block centered as in C,
+	 * its parts in a short stagger), then hands over to the real header this way. `handoff` and `boot*` are unused.
+	 */
+	strip?: StripMode
 	/** The night over the room (0 lit, 1 black) and the camera's scale, during the boot and per step. */
 	bootDim: number
 	bootCam: number
@@ -79,8 +86,26 @@ const CSS = `.fl-root section[aria-label="Find something to watch"] > div:first-
 .fl-v-d:not([data-step="0"]) .jk-top{opacity:0}
 .fl-v-d:not([data-step="0"]) .jk-top *{pointer-events:none!important}
 @keyframes fl-q{from{opacity:0;transform:translateY(6px)}}
+.fl-early{--fl-pad:12px}
+@media (min-width:640px){.fl-early{--fl-pad:44px}}
+@media (min-width:1024px){.fl-early{--fl-pad:clamp(20px,3vh,48px)}}
+@media (min-width:1024px) and (max-height:820px){.fl-early{--fl-pad:20px}}
+.fl-early .jk-top{transition:none}
+.fl-early[data-step="0"] .jk-top{transform:translateY(calc(.46 * (100svh - 64px) - 50% - var(--fl-pad) / 2))}
+.fl-early:not([data-step="0"]) .jk-top{transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.fl-early[data-measure] .jk-top,.fl-early[data-measure] .jk-top>*{transform:none!important;translate:none!important}
+@keyframes fl-in{from{opacity:0;translate:0 14px}}
+@keyframes fl-fade{from{opacity:0}}
+@keyframes fl-night{from{opacity:1}}
+@keyframes fl-cam{from{transform:scale(calc(var(--fl-cam,1) * 1.05))}}
+.fl-early .jk-top>div[aria-hidden]:first-child{animation:fl-fade .9s ease-out .05s both}
+.fl-early .jk-top>h1{animation:fl-in .55s cubic-bezier(.2,.8,.2,1) .15s both}
+.fl-early .jk-top>.jk-field-gap{animation:fl-in .55s cubic-bezier(.2,.8,.2,1) .27s both}
+.fl-early .jk-top>.jk-gap{animation:fl-in .55s cubic-bezier(.2,.8,.2,1) .39s both}
+.fl-early .fl-dim{animation:fl-night 1.3s cubic-bezier(.4,0,.2,1) both}
+.fl-early section[aria-label="Find something to watch"]>div:first-of-type{animation:fl-cam 1.8s cubic-bezier(.22,.7,.2,1) both}
 .fl-q{animation:fl-q .45s ease-out both}
-@media (prefers-reduced-motion:reduce){.fl-root section > div:first-of-type,.fl-card,.fl-v-c .jk-top,.fl-v-d .jk-top{transition:opacity .3s ease-out!important}.fl-dim{transition-duration:.4s}.fl-warm{transition-duration:.8s}.fl-q{animation:none}}`
+@media (prefers-reduced-motion:reduce){.fl-root section > div:first-of-type,.fl-card,.fl-v-c .jk-top,.fl-early .jk-top,.fl-v-d .jk-top{transition:opacity .3s ease-out!important}.fl-dim{transition-duration:.4s}.fl-early .jk-top>*{animation:fl-fade .3s ease-out both!important}.fl-early section>div:first-of-type{animation:none!important}.fl-early .fl-dim{animation-duration:.5s}.fl-warm{transition-duration:.8s}.fl-q{animation:none}}`
 
 /** The background layers over the room (JkStage's `over`): the night at the step's opacity, and the boot's glow handing over. */
 function FlowBg() {
@@ -88,7 +113,7 @@ function FlowBg() {
 	return (
 		<>
 			<div aria-hidden className="fl-dim" style={{ opacity: dim }} />
-			{spec.handoff === "glow" ? <div aria-hidden className="fl-warm" style={{ opacity: phase === "boot" ? 1 : 0 }} /> : null}
+			{spec.handoff === "glow" && !spec.strip ? <div aria-hidden className="fl-warm" style={{ opacity: phase === "boot" ? 1 : 0 }} /> : null}
 		</>
 	)
 }
@@ -185,6 +210,54 @@ function useAsked(view: JkView) {
 	return asked
 }
 
+/**
+ * Round 18: the strip openings center the search block from the first paint (CSS), but the stage measures its gap
+ * (the room's placement) and its obstacles from on-screen boxes, and must see the block where it rests. While the
+ * block is lifted, each time the stage may have measured (mount, its first observer round, its 400 ms timer, a
+ * resize) the lift is switched off for one synchronous measuring pass: no frame is painted in between, and the step 0
+ * lift has no transition, so nothing moves. Once the block has moved up for good, one more pass.
+ */
+function useUnliftedMeasures(root: { current: HTMLDivElement | null }, on: boolean, step: Step) {
+	const lifted = on && step === 0
+	useEffect(() => {
+		const r = root.current
+		if (!on || !r) return
+		if (!lifted) {
+			const t = setTimeout(() => window.dispatchEvent(new Event("resize")), 950)
+			return () => clearTimeout(t)
+		}
+		let busy = false
+		const pass = () => {
+			if (busy) return
+			busy = true
+			r.setAttribute("data-measure", "")
+			window.dispatchEvent(new Event("resize"))
+			r.removeAttribute("data-measure")
+			busy = false
+		}
+		pass()
+		let f2 = 0
+		const f1 = requestAnimationFrame(() => {
+			f2 = requestAnimationFrame(pass)
+		})
+		const ts = [setTimeout(pass, 450), setTimeout(pass, 1200)]
+		// After the stage's own listeners (theirs were added first): a real resize is measured again, unlifted.
+		window.addEventListener("resize", pass)
+		const ro = new ResizeObserver(() => pass())
+		const top = r.querySelector(".jk-top")
+		const sec = r.querySelector("section")
+		if (top) ro.observe(top)
+		if (sec) ro.observe(sec)
+		return () => {
+			cancelAnimationFrame(f1)
+			cancelAnimationFrame(f2)
+			for (const t of ts) clearTimeout(t)
+			window.removeEventListener("resize", pass)
+			ro.disconnect()
+		}
+	}, [root, on, lifted])
+}
+
 function FlowRun({ spec, first, onReplay }: { spec: FlowSpec; first: boolean; onReplay: () => void }) {
 	const k = `flow-${spec.key}`
 	// Every visit starts from the first step: the stage's saved state goes before the stage reads it.
@@ -257,14 +330,17 @@ function FlowRun({ spec, first, onReplay }: { spec: FlowSpec; first: boolean; on
 		else top.removeAttribute("inert")
 	}, [spec.card, step])
 
-	const dim = phase === "boot" ? spec.bootDim : spec.dim(step, snap)
-	const cam = phase === "boot" ? spec.bootCam : spec.cam(step, snap)
+	// Round 18: a strip opening lights the room by the step from the first paint (its fade-up is CSS, .fl-early).
+	const boot = phase === "boot" && !spec.strip
+	const dim = boot ? spec.bootDim : spec.dim(step, snap)
+	const cam = boot ? spec.bootCam : spec.cam(step, snap)
+	useUnliftedMeasures(root, !!spec.strip, step)
 	const ctx: Ctx = { spec, step, phase, dim, swapY, setSnap, fRef }
 	return (
 		<FlowCtx.Provider value={ctx}>
 			<div
 				ref={root}
-				className={`fl-root relative fl-v-${spec.key}`}
+				className={`fl-root relative fl-v-${spec.key}${spec.strip ? " fl-early" : ""}`}
 				data-step={step}
 				{...(lift !== null ? { "data-lift": "" } : {})}
 				{...(phase === "live" ? { "data-live": "" } : {})}
@@ -290,7 +366,11 @@ function FlowRun({ spec, first, onReplay }: { spec: FlowSpec; first: boolean; on
 					<ArrowPathIcon className="h-4 w-4" aria-hidden />
 				</button>
 			</div>
-			{overlay ? <BootOverlay mode={spec.handoff} first={first} root={root} onHandoff={live} onDone={done} /> : null}
+			{overlay && spec.strip ? (
+				<BootStrip mode={spec.strip} first={first} root={root} onHandoff={live} onDone={done} />
+			) : overlay ? (
+				<BootOverlay mode={spec.handoff} first={first} root={root} onHandoff={live} onDone={done} />
+			) : null}
 		</FlowCtx.Provider>
 	)
 }

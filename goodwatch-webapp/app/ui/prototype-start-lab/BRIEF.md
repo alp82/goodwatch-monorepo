@@ -332,3 +332,24 @@ Built: a new lab section **"Opening flow"** (`?flow=`, guest, round 2, first in 
 - **e "TV hands off" (bolder):** the boot screen powers down like an old TV onto the search field (the black screen shrinks into the field's box), then the field glows once. Then as b.
 
 Every visit starts fresh (each flow's stage state `start-lab-stage-flow-<key>` is cleared on load); the round button under the header's right end replays the opening; a tap on the boot skips it. The stage stays in the server's HTML under the overlay.
+
+# Round 18 (2026-10-28): the boot in the header's place
+
+The owner's notes on round 17, verbatim:
+
+> i like C's initial experience with the centered search
+> instead of having the full screen boot, let's add that at the top of the screen while the rest of the page is also quickly assembling and then replace it with the header in a smooth quick transition. maybe we can reuse the e animation as well
+>
+> more iterations based on this
+
+Built: four new opening flows, **f, g, h, i**, all c's experience (the search block alone in the middle over a near-black room seen close up; the first search moves it up and brings in the card; each loved title lights the room and pulls the camera back; For you fully lit) through c's own spec (`C_SPEC` in `c.tsx`; f-i spread it via `STRIP_BASE` in `f.tsx`, with the room at 0.9 instead of 0.94 at the first step so its fade up shows). **g is the default flow** (`DEFAULTS[2].flow`); `?flow=none` is today's page, a-e are unchanged.
+
+- **No full-screen boot** (`sections/flow/boot-strip.tsx`): the old TV's `Boot` (boot.tsx + boot.css as they are) plays in a fixed strip exactly over the site header (64 px, 65 at lg, z above the header), sped up (G and arc ~0.9 s, "oodWatch" slides out by ~1.1 s). The real `SiteHeader` (root layout, fixed) is in the HTML underneath the whole time, so its box never moves (measured identical before and after the hand-off at 375, 1440 and 1920).
+- **The page assembles at the same time, CSS only from the first paint** (`.fl-early` in `shell.tsx`): the room fades up from black (night layer 1 → 0.9, 1.3 s) while the camera settles (5 % closer → c's 1.12, 1.8 s); the search block is centered by CSS (`translateY(.46 × (100svh − 64px) − 50% − pad/2)`, c's formula, so no jump when scripts start), and its parts come in staggered (H1 0.15 s, field 0.27 s, presets and mood button 0.39 s; 0.55 s each, opacity + translate).
+  - The stage measures its gap (the room's placement) and obstacles from on-screen boxes; while the block is lifted, `useUnliftedMeasures` switches the lift off for one synchronous measuring pass (mount, the stage's observer round, its 400 ms timer, resizes), so the room sits where c puts it and nothing paints in between. One more pass after the block has moved up.
+- **Hand-offs** (start at 1.15 s after the first paint; the strip is gone by ~1.6-1.75 s):
+  - **f "TV off into the header":** e's power-down on the strip: the picture squashes into a bright line (0.18 s), the line shrinks to nothing, and two black halves part from the middle so the header opens out of the line (0.46 s in all).
+  - **g "Logo hand-off":** the boot's G and "oodWatch" travel and shrink onto the header's wordmark (FLIP from G to G, 0.48 s) while the black fades and the header's Browse, search and Sign in show; the real wordmark (hidden until then) takes over where they land (0.12 s crossfade).
+  - **h "Glow sweep":** an amber glow runs across the strip left to right (0.48 s) and leaves the header behind it: a black cover moves right while its content moves left by the same amount (a wipe from two transforms, no clip-path).
+  - **i "Quiet":** a smaller boot (21/26 px), then the strip crossfades away with a 6 px lift while the header's parts rise 8 px into place (0.48 s), and the search field glows once (e's ring).
+- **Skip, replay, reduced motion:** a tap or key anywhere skips to the hand-off (the tap still reaches the page, which works under the strip); ↻ and reload play it again; reduced motion: the boot holds 0.6 s and the strip fades in 0.3 s, the page's parts only fade.

@@ -15,10 +15,14 @@ const HOLD_MS = 2300
 const HOLD_REDUCED_MS = 700
 
 /** The first paint's age: the boot plays from the server's HTML, so the first run's wait counts from the paint. */
-const sinceFirstPaint = () => {
+export const sinceFirstPaint = () => {
 	const paint = typeof performance !== "undefined" ? performance.getEntriesByName?.("first-contentful-paint")[0] : undefined
 	return paint ? Math.max(0, performance.now() - paint.startTime) : 0
 }
+
+/** e's single glow around the search field (Round 18: i reuses it). */
+export const RING_CSS = `@keyframes fl-ring{0%{opacity:0;transform:scale(1.04)}30%{opacity:1;transform:none}100%{opacity:0}}
+.fl-ring{position:fixed;pointer-events:none;box-shadow:0 0 0 2px rgb(251 191 36/.85),0 0 0 7px rgb(251 191 36/.14),0 0 70px 10px rgb(251 191 36/.3);animation:fl-ring 1.1s ease-out both}`
 
 const CSS = `.fl-boot{position:fixed;inset:0;z-index:2147483100;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .fl-boot .boot{animation:none;pointer-events:none;transition:opacity .9s ease-out}
@@ -34,15 +38,14 @@ const CSS = `.fl-boot{position:fixed;inset:0;z-index:2147483100;cursor:pointer;-
 .fl-screen{position:fixed;background:#000;transform-origin:50% 50%;will-change:transform}
 .fl-screen[data-go]{transition:transform .8s cubic-bezier(.7,0,.25,1)}
 .fl-boot[data-s=land] .fl-screen{opacity:0;transition:opacity .35s ease-out}
-@keyframes fl-ring{0%{opacity:0;transform:scale(1.04)}30%{opacity:1;transform:none}100%{opacity:0}}
-.fl-ring{position:fixed;pointer-events:none;box-shadow:0 0 0 2px rgb(251 191 36/.85),0 0 0 7px rgb(251 191 36/.14),0 0 70px 10px rgb(251 191 36/.3);animation:fl-ring 1.1s ease-out both}
+${RING_CSS}
 @media (prefers-reduced-motion:reduce){.fl-boot[data-s=out]{opacity:0!important;transition:opacity .3s linear!important}.fl-glow{display:none}}`
 
 type Stage = "boot" | "out" | "collapse" | "land"
-type Box = { left: number; top: number; width: number; height: number; radius: string; scale: number }
+export type Box = { left: number; top: number; width: number; height: number; radius: string; scale: number }
 
 /** The search field's box on screen (the first element in the field wrapper with rounded corners), or null when it isn't in view. */
-function fieldBox(root: HTMLElement | null): Box | null {
+export function fieldBox(root: HTMLElement | null): Box | null {
 	const wrap = root?.querySelector<HTMLElement>(".jk-field-gap")
 	if (!wrap) return null
 	const all = [wrap, ...Array.from(wrap.querySelectorAll<HTMLElement>("*"))]

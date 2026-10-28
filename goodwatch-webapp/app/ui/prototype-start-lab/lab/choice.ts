@@ -34,8 +34,9 @@ export const DEFAULTS: Record<Round, Partial<Record<SectionId, string>>> = {
 	// Round 15: stage l (the mood picker with mixes on the stage) was the default.
 	// Round 14: mood lighting e (sections/light) is the default.
 	// Round 6: the owner's picks: stage j, browse d, member d (rounds 1-5 verdicts in BRIEF.md).
-	// Round 17: opening flow "none" (today's page, no boot) unless the bar picks one.
-	2: { scene: "nook-r15-a", shelf: "h", tv: "a", how: "b", stage: "m", browse: "d", member: "d", persona: "full", searchbar: "d", light: "e", flow: "none" },
+	// Round 17: opening flow "none" (today's page, no boot) unless the bar picks one. Round 18: g (c's start, the boot
+	// in the header's strip, its logo handing over to the header's) leads; ?flow=none is today's page.
+	2: { scene: "nook-r15-a", shelf: "h", tv: "a", how: "b", stage: "m", browse: "d", member: "d", persona: "full", searchbar: "d", light: "e", flow: "g" },
 }
 
 export type Choice = Partial<Record<SectionId, string>> & { as: Viewer; sec: SectionId; round: Round }

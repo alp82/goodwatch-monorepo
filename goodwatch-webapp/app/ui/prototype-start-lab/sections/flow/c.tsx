@@ -5,7 +5,8 @@
 import type { BlockVariant } from "../../lab/types"
 import { type FlowSpec, OpeningFlow } from "./shell"
 
-const SPEC: FlowSpec = {
+/** Round 18: f-i start from c's steps (the same card timing, light and camera per step), shared from here. */
+export const C_SPEC: FlowSpec = {
 	key: "c",
 	handoff: "glow",
 	card: "after",
@@ -16,4 +17,4 @@ const SPEC: FlowSpec = {
 	cam: (step, s) => (step === 0 ? 1.12 : step === 1 ? 1.07 - s.loved * 0.017 : 1),
 }
 
-export const variant: BlockVariant = { key: "c", name: "Step by step", C: () => <OpeningFlow spec={SPEC} /> }
+export const variant: BlockVariant = { key: "c", name: "Step by step", C: () => <OpeningFlow spec={C_SPEC} /> }
