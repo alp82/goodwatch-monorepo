@@ -6,6 +6,8 @@
 // - On a box taller than wide (aspect < `portraitBelow`), the scene's phone version is used when it has one.
 // - renderSlot(slot, i) and renderTv() return what goes into a slot or onto the screen. It is drawn in an element of
 //   the slot's own proportions (300 px wide) and transformed onto the quad, so text and images sit in perspective.
+// - place(size, meta), when given, replaces the cover crop: it returns the image's scale and offset in the box, or null
+//   while it can't tell yet (the image then waits, invisible, and fades in once placed).
 // - onLayout reports the layout in the box's pixels whenever it changes, for transitions that start at the TV.
 // Overlays appear after the first measure in the browser; the server renders the image alone.
 import { type CSSProperties, type ReactNode, useLayoutEffect, useMemo, useRef, useState } from "react"
@@ -35,6 +37,9 @@ function elementSize(points: [Point, Point, Point, Point]) {
 	return { w: BASE_W, h: Math.max(1, Math.round((BASE_W * h) / Math.max(1, w))) }
 }
 
+/** A placement of the image in the box: its scale and its top-left corner, in the box's px. */
+export type ScenePlace = (size: { w: number; h: number }, meta: SceneMeta) => { scale: number; dx: number; dy: number } | null
+
 export function pickMeta(pair: ScenePair, aspect: number, portraitBelow = 0.8): SceneMeta {
 	return aspect < portraitBelow && pair.portrait ? pair.portrait : pair.landscape
 }
@@ -53,6 +58,7 @@ export function SceneStage({
 	children,
 	slotClassName = "",
 	tvClassName = "",
+	place,
 }: {
 	pair: ScenePair
 	focal?: Point
@@ -69,6 +75,8 @@ export function SceneStage({
 	tvClassName?: string
 	/** Drawn over the scene, filling the box. */
 	children?: ReactNode
+	/** Places the image instead of the cover crop around `focal` (see the top). */
+	place?: ScenePlace
 }) {
 	const box = useRef<HTMLDivElement>(null)
 	const [size, setSize] = useState<{ w: number; h: number } | null>(null)
@@ -89,7 +97,11 @@ export function SceneStage({
 
 	const layout = useMemo<SceneLayout | null>(() => {
 		if (!size) return null
-		const cover = coverFit(size.w, size.h, meta.width, meta.height, fx, fy, zoom)
+		const placed = place ? place(size, meta) : null
+		if (place && !placed) return null
+		const cover = placed
+			? { ...placed, cw: size.w, ch: size.h, iw: meta.width, ih: meta.height }
+			: coverFit(size.w, size.h, meta.width, meta.height, fx, fy, zoom)
 		const tvPoints = meta.tv ? quadToBox(cover, meta.tv.quad) : null
 		return {
 			meta,
@@ -100,7 +112,7 @@ export function SceneStage({
 				return { slot, points, rect: quadBounds(points) }
 			}),
 		}
-	}, [size, meta, fx, fy, zoom])
+	}, [size, meta, fx, fy, zoom, place])
 
 	const reported = useRef<SceneLayout | null>(null)
 	useIsoLayoutEffect(() => {
@@ -127,8 +139,9 @@ export function SceneStage({
 									top: layout.cover.dy,
 									width: layout.cover.iw * layout.cover.scale,
 									height: layout.cover.ih * layout.cover.scale,
+									...(place ? { opacity: 1, transition: "opacity .4s ease-out" } : null),
 								}
-							: { objectPosition: `${fx * 100}% ${fy * 100}%` }
+							: { objectPosition: `${fx * 100}% ${fy * 100}%`, ...(place ? { opacity: 0 } : null) }
 					}
 				/>
 			</picture>

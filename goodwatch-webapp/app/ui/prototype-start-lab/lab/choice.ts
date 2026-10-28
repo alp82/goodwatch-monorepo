@@ -28,7 +28,7 @@ export const SECTIONS: { id: SectionId; name: string; for: Viewer[]; rounds: Rou
 export const DEFAULTS: Record<Round, Partial<Record<SectionId, string>>> = {
 	1: {},
 	// Round 6: the owner's picks: stage j, browse d, member d (rounds 1-5 verdicts in BRIEF.md).
-	2: { scene: "nook-stage", shelf: "e", tv: "a", how: "b", stage: "j", browse: "d", member: "d", persona: "full" },
+	2: { scene: "nook-stage-armchair", shelf: "e", tv: "a", how: "b", stage: "j", browse: "d", member: "d", persona: "full" },
 }
 
 export type Choice = Partial<Record<SectionId, string>> & { as: Viewer; sec: SectionId; round: Round }

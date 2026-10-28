@@ -27,6 +27,9 @@ export type SceneMeta = {
 	/** Null for a scene without a TV (the round 2 stage scenes). */
 	tv: SceneRegion | null
 	slots: SceneSlot[]
+	/** Stage scenes (round 7): the box (x, y, w, h) around the dog and its seat, which the page keeps visible
+	 * between the search chips and the results. */
+	focus?: [number, number, number, number]
 	notes?: string
 }
 

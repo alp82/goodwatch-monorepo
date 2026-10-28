@@ -7,7 +7,7 @@
 // variant, which may use <Room/> the same way.
 import { createContext, useContext, type ComponentType, type CSSProperties, type ReactNode } from "react"
 import type { LabCard, LabData } from "~/server/prototype-start-lab.server"
-import type { SceneLayout } from "../scene/SceneStage"
+import type { SceneLayout, ScenePlace } from "../scene/SceneStage"
 import type { ScenePair, SceneSlot } from "../scene/types"
 import type { Choice } from "./choice"
 
@@ -87,6 +87,8 @@ export type RoomProps = {
 	scene?: ScenePair
 	/** Leave a slot empty when this returns true for its on-screen rect (box px), e.g. slots behind a block's controls. */
 	hideSlot?: (rect: Rect, index: number) => boolean
+	/** Places the scene image yourself instead of the cover crop around `focal` (SceneStage's `place`). */
+	place?: ScenePlace
 }
 
 export type Lab = {

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Process batch C chroma scenes; rerun from retained raw PNGs.
 
-Usage: scene-slots-c.py [--source ID GENERATED_PNG] [--id ID]
+Usage: scene-slots-c.py [--source ID GENERATED_PNG] [--id ID] [--focus-only]
 Without --id, processes all scenes and builds the indexes and contact sheets.
 """
 import argparse
 import json
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -45,6 +46,55 @@ CALM_TOP = {'nook-stage': (0.18, 0.0, 0.82, 0.36),
             'nook-stage-portrait': (0.20, 0.0, 0.80, 0.34)}
 CALM_TOP.update({scene_id: ((0.20, 0.0, 0.80, 0.34) if scene_id.endswith('-portrait')
                           else (0.18, 0.0, 0.82, 0.38)) for scene_id in ROUND_F})
+# Measured from retained raw images: dog plus its complete seat/bed, including
+# seat cushions and hanging throw, excluding the window and nearby furniture.
+# Normalized (x, y, width, height), rounded to four decimal places.
+FOCUS = {
+    'nook-stage': (0.1289, 0.5664, 0.3522, 0.2139),
+    'nook-stage-portrait': (0.1807, 0.5495, 0.6328, 0.2109),
+    'nook-stage-window': (0.1829, 0.5664, 0.6276, 0.2139),
+    'nook-stage-window-portrait': (0.1660, 0.5586, 0.6689, 0.2018),
+    'nook-stage-armchair': (0.1289, 0.5664, 0.3522, 0.2139),
+    'nook-stage-armchair-portrait': (0.1689, 0.5423, 0.3613, 0.1836),
+    'nook-stage-records': (0.2402, 0.6406, 0.2663, 0.1494),
+    'nook-stage-records-portrait': (0.3525, 0.6367, 0.3984, 0.1055),
+}
+
+
+def draw_focus(debug, scene_id):
+    if scene_id not in FOCUS:
+        return
+    x, y, w, h = FOCUS[scene_id]
+    width, height = debug.size
+    draw = ImageDraw.Draw(debug)
+    draw.rectangle((x * width, y * height, (x + w) * width, (y + h) * height),
+                   outline='#00ffff', width=3)
+    draw.text((x * width + 6, y * height + 5), 'Focus',
+              font=ImageFont.truetype('DejaVuSans.ttf', 20), fill='#00ffff',
+              stroke_width=2, stroke_fill='#07080b')
+
+
+def write_metadata(path, metadata):
+    serialized = json.dumps(metadata, indent=2)
+    if 'focus' in metadata:
+        # Keep measured precision visible, including trailing zeroes.
+        focus = '[' + ', '.join(f'{value:.4f}' for value in metadata['focus']) + ']'
+        serialized = re.sub(r'("focus": )\[[^\]]*\]',
+                            lambda match: match[1] + focus, serialized)
+    path.write_text(serialized + '\n')
+
+
+def update_focus(scene_id):
+    """Add focus without re-encoding images or changing existing metadata."""
+    path = ROOT / f'{scene_id}.json'
+    metadata = json.loads(path.read_text())
+    metadata['focus'] = list(FOCUS[scene_id])
+    write_metadata(path, metadata)
+    path = ROOT / 'debug' / f'{scene_id}.png'
+    with Image.open(path) as source:
+        debug = source.convert('RGB')
+    draw_focus(debug, scene_id)
+    debug.save(path)
 
 
 def key_masks(rgb):
@@ -172,7 +222,9 @@ def process(scene_id):
     metadata = dict(id=scene_id, title=title, perspective=perspective, style=style,
                     orientation=orientation, width=width, height=height, tv=normalized(tv, width, height) if tv else None,
                     slots=[dict(kind='frame' if id(r) in frames else 'case-shelf', **normalized(r, width, height)) for r in slots], notes=notes)
-    (ROOT / f'{scene_id}.json').write_text(json.dumps(metadata, indent=2) + '\n')
+    if scene_id in FOCUS:
+        metadata['focus'] = list(FOCUS[scene_id])
+    write_metadata(ROOT / f'{scene_id}.json', metadata)
     debug = image.copy()
     draw = ImageDraw.Draw(debug)
     font = ImageFont.truetype('DejaVuSans.ttf', 20)
@@ -185,6 +237,7 @@ def process(scene_id):
         draw.line(points + [points[0]], fill=color, width=3)
         x, y = points[0]
         draw.text((x + 4, y + 5), label, font=font, fill=color, stroke_width=2, stroke_fill='#07080b')
+    draw_focus(debug, scene_id)
     debug.save(ROOT / 'debug' / f'{scene_id}.png')
     tv_label = f'{tv_percent:.2f}%' if tv else 'none'
     print(f'{scene_id}: {len(slots)} slots, TV {tv_label}, '
@@ -210,7 +263,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', nargs=2, action='append', default=[], metavar=('ID', 'PNG'))
     parser.add_argument('--id', choices=SCENES)
+    parser.add_argument('--focus-only', action='store_true',
+                        help='Update stage focus metadata and overlays only')
     args = parser.parse_args()
+    if args.focus_only:
+        if args.source or (args.id and args.id not in FOCUS):
+            parser.error('--focus-only requires a stage scene and no --source')
+        for scene_id in ([args.id] if args.id else FOCUS):
+            update_focus(scene_id)
+        return
     for directory in (ROOT, ROOT / 'raw', ROOT / 'debug'):
         directory.mkdir(parents=True, exist_ok=True)
     for scene_id, source in args.source:

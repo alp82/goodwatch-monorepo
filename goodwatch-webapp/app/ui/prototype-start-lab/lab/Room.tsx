@@ -20,6 +20,7 @@ export function Room({
 	portraitBelow,
 	scene,
 	hideSlot,
+	place,
 }: RoomProps) {
 	const lab = useLab()
 	const parts = useContext(RoomParts)
@@ -80,6 +81,7 @@ export function Room({
 				}
 				renderTv={noTv ? undefined : (size) => <Hint size={size} onPlay={onPlay} />}
 				onLayout={setLayout}
+				place={place}
 			>
 				{!noOverlay && Overlay ? <Overlay cards={cards} layout={layout} /> : null}
 				{!noTv && Near && layout?.tv ? <Near tvRect={layout.tv.rect} onPlay={onPlay} /> : null}

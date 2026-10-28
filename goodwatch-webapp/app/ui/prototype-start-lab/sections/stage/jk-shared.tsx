@@ -1,7 +1,11 @@
 // PROTOTYPE (start page lab, round 6): what stage j and k share: h's shell (shadow pool, lifted field, night above the
 // room) with Discover chips, the flow with an empty state before any choice (and a dice for a random mood), a minimum
 // gap above the module, and the room's slots kept empty wherever the search block, the chips or the module sit.
-import { type ReactNode, type RefObject, useCallback, useEffect, useRef, useState } from "react"
+// Round 7: a much larger gap between the mood row and the module, and the scene placed from the measured gap so the
+// scene's focus (the dog and its seat) always sits in it, below the chips and above the module.
+import { type CSSProperties, type ReactNode, type RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import type { ScenePlace } from "../../scene/SceneStage"
+import type { SceneMeta, ScenePair } from "../../scene/types"
 import { type Rect, useLab } from "../../lab/types"
 import { type StageFlow, useStageFlow } from "./ab-shared"
 import { EfgField, NIGHT } from "./efg-shared"
@@ -147,6 +151,125 @@ function useObstacles() {
 	return { roomBox, reg, hideSlot }
 }
 
+const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
+
+/** The phone version of a scene takes over when the viewport is taller than this (as SceneStage's 0.8). */
+const PORTRAIT_MQ = "(max-aspect-ratio: 4/5)"
+
+/**
+ * The gap between the mood row and the module, per breakpoint: at least `min`, and always tall enough for the scene's
+ * focus at full width plus `above` (air under the chips) and `below` (air over the module).
+ */
+const GAP = [
+	{ from: 0, min: 128, above: 16, below: 12 },
+	{ from: 640, min: 160, above: 20, below: 14 },
+	{ from: 1024, min: 200, above: 24, below: 16 },
+] as const
+
+const gapAt = (vw: number) => [...GAP].reverse().find((g) => vw >= g.from) ?? GAP[0]
+
+/** The box (x, y, w, h) to keep in the gap: the scene's focus, or the band between the calm top and the rug. */
+const focusOf = (meta: SceneMeta): [number, number, number, number] => meta.focus ?? [0, 0.45, 1, 0.2]
+
+/** The gap's minimum height as CSS: the focus's height at full width (the scene is never narrower than the stage). */
+function gapCss(pair: ScenePair) {
+	const rule = (meta: SceneMeta, g: (typeof GAP)[number]) =>
+		`.jk-gapbox{min-height:max(${g.min}px,calc(${(focusOf(meta)[3] * meta.height) / meta.width} * 100cqw + ${g.above + g.below}px))}`
+	const at = (g: (typeof GAP)[number], extra = "") => {
+		const q = [g.from ? `(min-width:${g.from}px)` : "", extra].filter(Boolean).join(" and ")
+		return q ? `@media ${q}` : ""
+	}
+	const out: string[] = []
+	for (const g of GAP) {
+		const m = at(g)
+		out.push(m ? `${m}{${rule(pair.landscape, g)}}` : rule(pair.landscape, g))
+	}
+	if (pair.portrait) for (const g of GAP) out.push(`${at(g, PORTRAIT_MQ)}{${rule(pair.portrait, g)}}`)
+	return out.join("\n")
+}
+
+/** Where the mood row ends and the module starts, in the stage's px. */
+type GapBox = { top: number; bottom: number; vw: number; vh: number; roomTop: number }
+
+/**
+ * The scene's scale and offset for the gap: full width, its focus centered in the gap below the chips' air (zoomed out
+ * only if the gap can't hold it, which the CSS minimum prevents), plus where the night above and below it fades.
+ */
+function placeFor(meta: SceneMeta, w: number, g: GapBox) {
+	const [fx, fy, fw, fh] = focusOf(meta)
+	const air = gapAt(g.vw)
+	const room = Math.max(40, g.bottom - g.top - air.above - air.below)
+	// Within 1.5% of full width (the CSS minimum's rounding), stay full width and let the focus use a few px of air.
+	const fit = room / (fh * meta.height)
+	const scale = fit * meta.width >= w * 0.985 ? w / meta.width : fit
+	const sw = meta.width * scale
+	const sh = meta.height * scale
+	const focusH = fh * sh
+	const focusTop = g.top + air.above + (room - focusH) / 2
+	const dy = focusTop - fy * sh
+	// Full width: no horizontal crop. Zoomed out: the focus as close to the middle as the image's edges allow.
+	const dx = sw >= w ? 0 : Math.min(w - sw, Math.max(0, w / 2 - (fx + fw / 2) * sw))
+	const bottom = dy + sh
+	// The night: solid down to the calm top's start, then a fade that ends before the focus.
+	const n1 = Math.max(dy, Math.min(g.roomTop + 0.18 * g.vh, focusTop - 8))
+	const n0 = Math.max(dy, Math.min(g.roomTop, n1 - 60))
+	// The image's lower edge fades into the night when the stage runs past it (the rug under the module).
+	const b1 = bottom
+	const b0 = Math.max(focusTop + focusH + 4, bottom - 160)
+	return { scale, dx, dy, n0, n1, b0, b1 }
+}
+
+/** Measures the gap (the mood row's bottom, the spacer's bottom) and gives the room's placement and the scene to use. */
+function useGapPlacement(pair: ScenePair) {
+	const section = useRef<HTMLElement>(null)
+	const spacer = useRef<HTMLDivElement>(null)
+	const [box, setBox] = useState<GapBox | null>(null)
+	const [portrait, setPortrait] = useState(false)
+	useIsoLayoutEffect(() => {
+		const sec = section.current
+		const sp = spacer.current
+		if (!sec || !sp) return
+		const measure = () => {
+			const s = sec.getBoundingClientRect()
+			const moods = sec.querySelector("[data-jk-moods]")?.getBoundingClientRect()
+			const sr = sp.getBoundingClientRect()
+			const next: GapBox = {
+				top: Math.round((moods?.bottom ?? sr.top) - s.top),
+				bottom: Math.round(sr.bottom - s.top),
+				vw: window.innerWidth,
+				vh: window.innerHeight,
+				roomTop: Number.parseFloat(getComputedStyle(sec).getPropertyValue("--room-top")) || 0,
+			}
+			setBox((prev) => (prev && JSON.stringify(prev) === JSON.stringify(next) ? prev : next))
+			setPortrait(window.matchMedia(PORTRAIT_MQ).matches)
+		}
+		measure()
+		const ro = new ResizeObserver(measure)
+		ro.observe(sec)
+		ro.observe(sp)
+		const moods = sec.querySelector("[data-jk-moods]")
+		if (moods) ro.observe(moods)
+		window.addEventListener("resize", measure)
+		return () => {
+			ro.disconnect()
+			window.removeEventListener("resize", measure)
+		}
+	}, [])
+	const meta = portrait && pair.portrait ? pair.portrait : pair.landscape
+	// The room gets the chosen version only, so it can't pick the other one by its own box's proportions.
+	const scene = useMemo<ScenePair>(() => ({ ...pair, landscape: meta, portrait: null }), [pair, meta])
+	const place = useCallback<ScenePlace>((size, m) => (box ? placeFor(m, size.w, box) : null), [box])
+	const vars = useMemo(() => {
+		const w = section.current?.clientWidth
+		if (!box || !w) return undefined
+		const p = placeFor(meta, w, box)
+		const px = (v: number) => `${Math.round(v)}px`
+		return { "--jk-n0": px(p.n0), "--jk-n1": px(p.n1), "--jk-b0": px(p.b0), "--jk-b1": px(p.b1) } as CSSProperties
+	}, [box, meta])
+	const css = useMemo(() => gapCss(pair), [pair])
+	return { section, spacer, scene, place, vars, css }
+}
+
 /**
  * The stage: the room under the night, the search block on top, and the results module given by the variant.
  * `card` keeps the module in the page's column above the lab bar's space; `band` lets it run the full width to the
@@ -163,26 +286,30 @@ export function JkStage({
 	over?: (f: JkFlow) => ReactNode
 	module: (f: JkFlow, reg: Reg) => ReactNode
 }) {
-	const { Room } = useLab()
+	const { Room, scene: labScene } = useLab()
 	const f = useJkFlow(k)
 	const { roomBox, reg, hideSlot } = useObstacles()
+	const gap = useGapPlacement(labScene)
 	const [more, setMore] = useState(false)
 	const close = useCallback(() => setMore(false), [])
 	return (
 		<section
+			ref={gap.section}
 			aria-label="Find something to watch"
 			className="relative isolate overflow-hidden [container-type:inline-size] [--room-top:110px] sm:[--room-top:140px] lg:[--room-top:200px]"
-			style={{ background: NIGHT }}
+			style={{ background: NIGHT, ...gap.vars }}
 		>
 			<style>{CSS}</style>
-			<div ref={roomBox} className="absolute inset-x-0 bottom-0" style={{ top: "var(--room-top)" }}>
-				<Room noTv focal={[0.5, 0.9]} hideSlot={hideSlot} style={{ position: "absolute", inset: 0 }} />
+			<style>{gap.css}</style>
+			{/* The room spans the stage; its image is placed from the measured gap (useGapPlacement). */}
+			<div ref={roomBox} className="absolute inset-0">
+				<Room noTv scene={gap.scene} place={gap.place} hideSlot={hideSlot} style={{ position: "absolute", inset: 0 }} />
 			</div>
 			<div
 				aria-hidden
 				className="pointer-events-none absolute inset-0"
 				style={{
-					background: `linear-gradient(to bottom, ${NIGHT} 0, ${NIGHT} var(--room-top), rgb(5 10 22 / 0) calc(var(--room-top) + 18vh)), linear-gradient(to bottom, rgb(3 7 18 / 0) 60%, rgb(3 7 18 / .4) 80%, rgb(3 7 18 / .9) 100%)`,
+					background: `linear-gradient(to bottom, ${NIGHT} 0, ${NIGHT} var(--jk-n0, var(--room-top)), rgb(5 10 22 / 0) var(--jk-n1, calc(var(--room-top) + 18vh))), linear-gradient(to bottom, rgb(5 10 22 / 0) var(--jk-b0, 200%), ${NIGHT} var(--jk-b1, 200%)), linear-gradient(to bottom, rgb(3 7 18 / 0) 60%, rgb(3 7 18 / .4) 80%, rgb(3 7 18 / .9) 100%)`,
 				}}
 			/>
 			{over?.(f)}
@@ -190,8 +317,9 @@ export function JkStage({
 				<div className="mx-auto w-full max-w-[1360px] px-4 sm:px-6">
 					<JkTop f={f} reg={reg} onMore={() => setMore((o) => !o)} moreOpen={more} moreSlot={<JkMorePopover f={f} open={more} onClose={close} />} />
 				</div>
-				{/* At least this much air between the mood row and the module, even if the module then starts below the fold. */}
-				<div className="min-h-7 flex-1 sm:min-h-10 lg:min-h-12" />
+				{/* Round 7: a wide window between the mood row and the module, tall enough for the scene's focus (gapCss),
+				    even if the module then starts below the fold. */}
+				<div ref={gap.spacer} className="jk-gapbox flex-1" />
 				{placement === "card" ? (
 					<div className="mx-auto w-full max-w-[1360px] px-4 pb-16 sm:px-6 sm:pb-[72px]">{module(f, reg)}</div>
 				) : (

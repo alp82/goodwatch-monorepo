@@ -179,3 +179,14 @@ The owner's notes, verbatim:
 > member: good
 
 Three new stage scenes are being painted: `nook-stage-window`, `nook-stage-armchair`, `nook-stage-records` (each with a `-portrait`), 10-14 shelf slots each, no TV, calm top ~38%.
+
+---
+
+# Round 7 (2026-10-28): the room and the gap
+
+The owner: "nice. i like it". He picked the armchair room (`nook-stage-armchair`, now the default scene). His notes, verbatim:
+
+> the room needs less pillows and blankets on floor and chair. remove the rolled up carpet
+> the gap between filtesr and results should be much much more. and the scene should never be pushed so high that the dog disappears behind the filters
+
+The armchair room is being tidied (fewer cushions and throws, no rolled carpet). Every stage scene's JSON gets `focus: [x, y, w, h]`: the box around the dog and its seat (`SceneMeta.focus`).
