@@ -2,6 +2,7 @@
 // drop zone that takes any export file and names its source, the accounts to connect, how to get each source's file,
 // and the imports so far. A file, a picked source, a return from connecting TMDB or Plex, or a past import opens that
 // source's flow under the stepper, which reports back where it is.
+import { useSearchParams } from "@remix-run/react"
 import { useEffect, useRef, useState } from "react"
 import type { ImdbImportSummary } from "~/domain/imdb-import"
 import type { ImportSummary } from "~/domain/imports"
@@ -45,6 +46,14 @@ import {
 	VariantD,
 	useAiHintVariant,
 } from "./prototype-ai-import/AiImportHint"
+import {
+	FlowE,
+	FlowF,
+	FlowG,
+	ROUND2_VARIANTS,
+	type Round2Variant,
+} from "./prototype-ai-import/AiSourceFlow"
+import { AppBadge } from "~/ui/connector/AppBadge"
 import { useSourceImports } from "./SourceImportHooks"
 import { SourceMark } from "./SourceMark"
 import { useImdbImports } from "./api"
@@ -125,7 +134,11 @@ export function ImportSourcesPage({
 		show({ id })
 	}
 	const movieLensFiles = useState<MovieLensFiles>({})
-	const variant = useAiHintVariant()
+	const [params] = useSearchParams()
+	const raw = params.get("variant") ?? "E"
+	const round2 = raw in ROUND2_VARIANTS ? (raw as Round2Variant) : null
+	const hintVariant = useAiHintVariant()
+	const variant = round2 ? null : hintVariant
 	const [aiOpen, setAiOpen] = useState(false)
 
 	// Focus moves to the source that opened, so it is announced, and the page scrolls to it.
@@ -139,7 +152,7 @@ export function ImportSourcesPage({
 	const source = open ? sourceEntry(open.id) : null
 	const handed =
 		open && handoff?.recognition.source === open.id ? handoff : undefined
-	const state = open && reported ? reported : AT_BRING
+	const state = (open || (round2 && aiOpen)) && reported ? reported : AT_BRING
 	const atBring = state.step === 1
 	const unknown = files.unknown && (
 		<ProblemCard
@@ -148,7 +161,7 @@ export function ImportSourcesPage({
 			focus
 		>
 			<p>{files.unknown.hint}</p>
-			{variant === "A" && <AiRescueLine />}
+			{(variant === "A" || round2) && <AiRescueLine />}
 			<div>
 				<button
 					type="button"
@@ -223,12 +236,49 @@ export function ImportSourcesPage({
 									)}
 								</section>
 							) : (
-								variant === "B" && aiOpen ? (
+								round2 && aiOpen ? (
+									<section
+										ref={card}
+										tabIndex={-1}
+										aria-label="Your AI app import"
+										className="w-full scroll-mt-20 text-left outline-none"
+									>
+										{round2 === "E" && <FlowE onOther={() => setAiOpen(false)} />}
+										{round2 === "F" && <FlowF onOther={() => setAiOpen(false)} />}
+										{round2 === "G" && <FlowG onOther={() => setAiOpen(false)} />}
+									</section>
+								) : variant === "B" && aiOpen ? (
 									<VariantBPanel onOther={() => setAiOpen(false)} />
 								) : (
 									<>
-										<StartDropZone reading={files.reading} onFile={files.take} />
-										<ConnectRow onConnect={pick} />
+										<StartDropZone reading={files.reading} onFile={files.take}>
+											{round2 && (
+												<p className="text-sm text-gray-400">
+													No export file?{" "}
+													<button
+														type="button"
+														className={textLink}
+														onClick={() => {
+															setAiOpen(true)
+															setActed((n) => n + 1)
+														}}
+													>
+														Bring any list with your AI app
+													</button>
+												</p>
+											)}
+										</StartDropZone>
+										<ConnectRow
+											onConnect={pick}
+											onAi={
+												round2
+													? () => {
+															setAiOpen(true)
+															setActed((n) => n + 1)
+														}
+													: undefined
+											}
+										/>
 										{variant === "A" && <VariantA />}
 										{variant === "B" && (
 											<VariantBButton onOpen={() => setAiOpen(true)} />
@@ -252,7 +302,9 @@ export function ImportSourcesPage({
 							)}
 						</div>
 					</div>
-					<PrototypeSwitcher variants={AI_HINT_VARIANTS} />
+					<PrototypeSwitcher
+						variants={round2 ? ROUND2_VARIANTS : AI_HINT_VARIANTS}
+					/>
 				</ImportStepReport.Provider>
 			</MovieLensFilesContext.Provider>
 		</ImportFileRouting.Provider>
@@ -264,7 +316,8 @@ const CONNECTABLE = IMPORT_SOURCE_LIST.filter((source) => source.connect)
 /** The accounts GoodWatch connects to instead of a file. */
 function ConnectRow({
 	onConnect,
-}: { onConnect: (id: ImportSourceId) => void }) {
+	onAi,
+}: { onConnect: (id: ImportSourceId) => void; onAi?: () => void }) {
 	return (
 		<div className="flex flex-col items-center gap-3">
 			<p className="text-sm text-gray-400">Or connect an account</p>
@@ -285,6 +338,16 @@ function ConnectRow({
 						</button>
 					</li>
 				))}
+				{onAi && (
+					<li>
+						<button type="button" className={secondaryButton} onClick={onAi}>
+							<span className="-my-1 scale-75">
+								<AppBadge app="claude" size="sm" />
+							</span>
+							Your AI app
+						</button>
+					</li>
+				)}
 			</ul>
 		</div>
 	)
