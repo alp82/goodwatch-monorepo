@@ -9,19 +9,37 @@
 // - "sweep": an amber glow runs across the strip left to right and leaves the header behind it (a black cover moved
 //   right with its content moved left by the same amount: a wipe done with two transforms, no clip-path).
 // - "quiet": the boot plays small, then crossfades into the header with a slight lift, and the search field glows once.
+// Round 19 (the owner: g's "moving to the left ... grabs attention", "a variation where the boot animation is a bit
+// bigger and further down and the header just slides in while it transitions out in a smooth fade out"):
+// - "big" (j): the boot plays large in the empty room between the header and the centered search block (CSS from the
+//   block's own centering formula, so it's placed from the first paint); the header waits above the screen. Then the
+//   boot fades out with a slight shrink and lift while the header slides down into place, at the same time (~0.65 s).
+// - "fade" (k): g's strip, but no travel: the boot's wordmark fades and shrinks a little in place as the black goes,
+//   and the header's wordmark fades in a beat later where it always is.
+// - "slide" (l): i's small boot in the header's place, without the black: it fades while the header slides down over
+//   its place (j's slide), then the field glows once as in i.
+// Round 19: once a session (shell.tsx's gate script): every hide rule here is off for a returning visitor, so a
+// returning visitor's server-rendered page never hides the header for a frame before scripts start.
 // A tap or a key anywhere skips to the hand-off; reduced motion gets a short fade.
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react"
 import "~/ui/living-room/intro/boot.css"
 import { Boot } from "~/ui/living-room/intro/boot"
 import { type Box, fieldBox, RING_CSS, sinceFirstPaint } from "./boot-overlay"
 
-export type StripMode = "tv" | "logo" | "sweep" | "quiet"
+export type StripMode = "tv" | "logo" | "sweep" | "quiet" | "big" | "fade" | "slide"
 
 /** The boot in the strip ends at ~1.1 s (sped up below); the hand-off starts here, counted from the first paint. */
 const HOLD_MS = 1150
+/** Round 19: j's large boot holds a little longer, so the whole wordmark reads before it goes. */
+const HOLD_BIG_MS = 1400
 const HOLD_REDUCED_MS = 600
 /** Each hand-off's length (the strip is removed after it). */
-const OUT_MS: Record<StripMode, number> = { tv: 460, logo: 600, sweep: 500, quiet: 480 }
+const OUT_MS: Record<StripMode, number> = { tv: 460, logo: 600, sweep: 500, quiet: 480, big: 720, fade: 700, slide: 640 }
+
+/** Round 19: not a returning visitor (shell.tsx's gate); every rule that hides a header part is off otherwise. */
+const H = "html:not(:has(#fl-boot-gate:checked))"
+/** Round 19: the modes whose header slides down from above (j, l). */
+const SLIDE = ".fl-strip:is([data-mode=big],[data-mode=slide])"
 
 const HDR = "[data-site-header]"
 const WORDMARK = `${HDR} a[aria-label="GoodWatch home"]`
@@ -65,7 +83,7 @@ const CSS = `.fl-strip{position:fixed;left:0;right:0;top:0;height:64px;z-index:1
 .fl-strip[data-mode=logo][data-s=out] .fl-bg{opacity:0;transition:opacity .36s ease-out .1s}
 .fl-strip[data-mode=logo][data-s=land] .fl-bg{opacity:0}
 .fl-strip[data-mode=logo][data-s=land] .boot{opacity:0;transition:opacity .12s linear}
-body:has(.fl-strip[data-mode=logo]:not([data-s=land])) ${WORDMARK}{opacity:0}
+${H} body:has(.fl-strip[data-mode=logo]:not([data-s=land])) ${WORDMARK}{opacity:0}
 
 .fl-cover,.fl-cover-in{position:absolute;inset:0}
 .fl-cover{background:#000}
@@ -81,14 +99,47 @@ body:has(.fl-strip[data-mode=logo]:not([data-s=land])) ${WORDMARK}{opacity:0}
 @media (min-width:640px){.fl-strip[data-mode=quiet] .boot-lockup{font-size:26px}}
 .fl-strip[data-mode=quiet] .boot-standby{display:none}
 .fl-strip[data-mode=quiet]:is([data-s=out],[data-s=land]){opacity:0;transform:translateY(-6px);transition:opacity .34s ease-out,transform .42s cubic-bezier(.2,.8,.2,1)}
-body:has(.fl-strip[data-mode=quiet]) :is(${HDR_PARTS}){transition:opacity .36s ease-out .06s,translate .46s cubic-bezier(.2,.8,.2,1) .06s}
-body:has(.fl-strip[data-mode=quiet][data-s=boot]) :is(${HDR_PARTS}){opacity:0;translate:0 8px}
+${H} body:has(.fl-strip[data-mode=quiet]) :is(${HDR_PARTS}){transition:opacity .36s ease-out .06s,translate .46s cubic-bezier(.2,.8,.2,1) .06s}
+${H} body:has(.fl-strip[data-mode=quiet][data-s=boot]) :is(${HDR_PARTS}){opacity:0;translate:0 8px}
 ${RING_CSS}
 .fl-ring{z-index:1050}
 
+.fl-strip:is([data-mode=big],[data-mode=slide]) :is(.boot-standby,.fl-bg){display:none}
+.fl-strip[data-mode=big]{--fl-c:211px;--fl-space:calc(.46 * (100svh - 64px) - var(--fl-c) / 2);top:64px;height:var(--fl-space);overflow:visible;pointer-events:none;cursor:default}
+@media (min-width:640px){.fl-strip[data-mode=big]{--fl-c:252px}}
+@media (min-width:1024px){.fl-strip[data-mode=big]{--fl-c:281px;top:65px}}
+@media (min-width:1024px) and (max-height:820px){.fl-strip[data-mode=big]{--fl-c:249px}}
+.fl-strip[data-mode=big] .boot{overflow:visible}
+.fl-strip[data-mode=big] .boot-lockup{font-size:min(46px,12.5vw,calc(var(--fl-space) * .3))}
+@media (min-width:640px){.fl-strip[data-mode=big] .boot-lockup{font-size:min(62px,calc(var(--fl-space) * .3))}}
+@media (min-width:1024px){.fl-strip[data-mode=big] .boot-lockup{font-size:min(78px,calc(var(--fl-space) * .3))}}
+.fl-strip[data-mode=big] .boot-glow{animation-duration:1s;background:radial-gradient(30% 60% at 50% 50%,rgb(251 191 36/.13) 0,rgb(251 191 36/0) 72%)}
+.fl-strip[data-mode=big] .boot{transition:opacity .6s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.fl-strip[data-mode=big]:not([data-s=boot]) .boot{opacity:0;transform:translateY(-8px) scale(.96)}
+
+.fl-strip[data-mode=slide] .boot-lockup{font-size:21px}
+@media (min-width:640px){.fl-strip[data-mode=slide] .boot-lockup{font-size:26px}}
+.fl-strip[data-mode=slide] .boot{transition:opacity .3s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.2,.7,.2,1)}
+.fl-strip[data-mode=slide]:not([data-s=boot]) .boot{opacity:0;transform:scale(.96)}
+.fl-topcover{position:fixed;left:0;right:0;top:0;height:64px;z-index:999;pointer-events:none;background:#070c19;transition:opacity .5s ease-out .2s}
+@media (min-width:1024px){.fl-topcover{height:65px}}
+.fl-topcover[data-s=out],.fl-topcover[data-s=land]{opacity:0}
+${H} body:has(${SLIDE}:not([data-s=boot])) [data-site-header]{transition:translate .64s cubic-bezier(.22,.8,.24,1),opacity .42s ease-out}
+${H} body:has(${SLIDE}[data-s=boot]) [data-site-header]{translate:0 -100%;opacity:0}
+${H} body:has(${SLIDE}) [data-site-header]>*{-webkit-backdrop-filter:none;backdrop-filter:none}
+
+.fl-strip[data-mode=fade] .fl-bg{transition:opacity .46s cubic-bezier(.4,0,.2,1) .2s}
+.fl-strip[data-mode=fade]:not([data-s=boot]) .fl-bg{opacity:0}
+.fl-strip[data-mode=fade] .boot{transition:opacity .3s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.2,.7,.2,1)}
+.fl-strip[data-mode=fade]:not([data-s=boot]) .boot{opacity:0;transform:scale(.88)}
+${H} body:has(.fl-strip[data-mode=fade]:not([data-s=boot])) ${WORDMARK}{transition:opacity .42s ease-out .26s}
+${H} body:has(.fl-strip[data-mode=fade][data-s=boot]) ${WORDMARK}{opacity:0}
+
 @media (prefers-reduced-motion:reduce){.fl-strip .boot,.fl-strip .boot *{animation:none!important}.fl-strip .boot-arc,.fl-strip .boot-standby{display:none}
 .fl-strip[data-s=out]{opacity:0!important;transform:none!important;transition:opacity .3s linear!important}
-.fl-strip[data-s=out] *{animation:none!important;transition:none!important}}`
+.fl-strip[data-s=out] *{animation:none!important;transition:none!important}
+${H} body:has(${SLIDE}) [data-site-header]{translate:none!important;transition:opacity .3s linear!important}
+${H} body:has(.fl-strip[data-mode=fade]:not([data-s=boot])) ${WORDMARK}{transition:opacity .3s linear!important}}`
 
 type S = "boot" | "out" | "land"
 
@@ -105,6 +156,7 @@ function headerG(): DOMRect | null {
 export function BootStrip({
 	mode,
 	first,
+	firstRef,
 	root,
 	onHandoff,
 	onDone,
@@ -112,6 +164,8 @@ export function BootStrip({
 	mode: StripMode
 	/** The page's first run (the boot started at the first paint); a Replay starts it now. */
 	first: boolean
+	/** Round 19: read at the boot's start instead of `first` (the shell's gate knows only after its layout effect). */
+	firstRef?: { current: boolean }
 	root: RefObject<HTMLElement | null>
 	onHandoff: () => void
 	onDone: () => void
@@ -136,7 +190,7 @@ export function BootStrip({
 			later(500, () => setS("land"))
 			return later(OUT_MS.logo, onDone)
 		}
-		if (mode === "quiet") {
+		if (mode === "quiet" || mode === "slide") {
 			later(OUT_MS.quiet, () => {
 				const b = fieldBox(root.current)
 				if (!b) return onDone()
@@ -167,8 +221,9 @@ export function BootStrip({
 
 	useEffect(() => {
 		const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-		const hold = reduce ? HOLD_REDUCED_MS : HOLD_MS
-		const t = setTimeout(handoff, Math.max(120, hold - (first ? sinceFirstPaint() : 0)))
+		const hold = reduce ? HOLD_REDUCED_MS : mode === "big" ? HOLD_BIG_MS : HOLD_MS
+		const atPaint = firstRef ? firstRef.current : first
+		const t = setTimeout(handoff, Math.max(120, hold - (atPaint ? sinceFirstPaint() : 0)))
 		// A tap or a key anywhere skips the boot (the page under it already works; the tap goes through).
 		const skip = () => handoff()
 		window.addEventListener("pointerdown", skip, true)
@@ -179,7 +234,7 @@ export function BootStrip({
 			window.removeEventListener("keydown", skip, true)
 			for (const x of timers.current) clearTimeout(x)
 		}
-	}, [first, handoff])
+	}, [first, firstRef, handoff, mode])
 
 	const boot = <Boot />
 	return (
@@ -209,6 +264,8 @@ export function BootStrip({
 					</>
 				)}
 			</div>
+			{/* Round 19 (j, l): while the header waits above the screen, its place is night, not the page's gray. */}
+			{mode === "big" || mode === "slide" ? <div aria-hidden className="fl-topcover" data-s={s} /> : null}
 			{ring ? (
 				<div aria-hidden className="fl-ring" style={{ left: ring.left, top: ring.top, width: ring.width, height: ring.height, borderRadius: ring.radius }} />
 			) : null}

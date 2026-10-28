@@ -9,9 +9,10 @@ import { DEFAULTS } from "../../lab/choice"
 import { PRESET_SHORT, presetPrompts, TYPED_READING_MS } from "../../lab/fixture-search"
 import { useLab } from "../../lab/types"
 import { PRIVATE, readingChips } from "../hero/shared"
-import { moodHue, type StageFlow } from "../stage/ab-shared"
+import { moodHue, searchQ, type StageFlow } from "../stage/ab-shared"
 import { vocabOf } from "../stage/hi-vocab"
 import { DChip } from "../stage/jk-chips"
+import { displayPicks, pickHue, pickLabel } from "../stage/jl-mixes"
 import { VARIANTS } from "./index"
 
 /** Typing searches once it pauses this long (Discover waits 800 ms). */
@@ -28,7 +29,9 @@ export function useSearchbarKey(): string {
 }
 
 /** A search is on: typed text that was sent, or an example prompt (not a More moods choice, which only looks like one). */
-export const searchActive = (f: StageFlow) => f.source.kind === "typed" || (f.source.kind === "prompt" && !vocabOf(f.source))
+// Round 19: also a search beside mood picks.
+export const searchActive = (f: StageFlow) =>
+	f.source.kind === "typed" || (f.source.kind === "prompt" && !vocabOf(f.source)) || (f.source.kind === "mix" && !!f.source.q)
 
 /**
  * The field's behavior: every keystroke sets the draft and (re)starts the pause timer; when it runs out the text is
@@ -44,14 +47,15 @@ export function useBarSearch(f: StageFlow, input: RefObject<HTMLInputElement>) {
 		timer.current = null
 	}, [])
 	useEffect(() => cancel, [cancel])
-	const sentQ = (fl: StageFlow) => (fl.source.kind === "typed" || fl.source.kind === "prompt" ? fl.source.q : null)
+	const sentQ = (fl: StageFlow) => searchQ(fl.source)
 	const onChange = useCallback(
 		(v: string) => {
 			const fl = latest.current
 			fl.setDraft(v)
 			cancel()
 			if (!v.trim()) {
-				if (fl.source.kind === "typed" || (fl.source.kind === "prompt" && !vocabOf(fl.source))) fl.clear()
+				// Round 19: only the search goes; mood picks stay.
+				if (searchActive(fl)) fl.clearSearch()
 				return
 			}
 			timer.current = setTimeout(() => {
@@ -75,7 +79,7 @@ export function useBarSearch(f: StageFlow, input: RefObject<HTMLInputElement>) {
 	}, [cancel, input])
 	const clear = useCallback(() => {
 		cancel()
-		latest.current.clear()
+		latest.current.clearSearch() // Round 19: the field's Clear clears only the search
 		input.current?.focus()
 	}, [cancel, input])
 	return { onChange, submit, clear }
@@ -105,7 +109,7 @@ export function BarInput({
 	after?: ReactNode
 	placeholder?: string
 }) {
-	const has = f.draft.length > 0 || f.source.kind === "typed" || f.source.kind === "prompt"
+	const has = f.draft.length > 0 || searchQ(f.source) !== null
 	return (
 		<div className={`flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3 ${PRIVATE} ${className}`}>
 			<MagnifyingGlassIcon className={`h-5 w-5 shrink-0 ${f.draft ? "text-amber-400" : "text-gray-400"}`} aria-hidden />
@@ -295,7 +299,7 @@ function useReadingArrived(loading: boolean) {
 /** How the search read the text: "Reading…" until the reading arrives, then Discover's chips (or the mood it landed on). */
 export function BarReading({ f }: { f: StageFlow }) {
 	const arrived = useReadingArrived(f.loading)
-	const q = f.source.kind === "typed" || f.source.kind === "prompt" ? f.source.q : f.draft
+	const q = searchQ(f.source) ?? f.draft
 	const captured = readingChips(f.loading ? f.reading : f.answer?.reading)
 	const chips = captured.length ? captured : standInReading(q)
 	if (f.loading && !arrived && !f.reading)
@@ -306,11 +310,25 @@ export function BarReading({ f }: { f: StageFlow }) {
 			</span>
 		)
 	const label = <span className="shrink-0 text-[13px] text-gray-400 sm:text-sm">Read as</span>
+	// Round 19: mood picks beside the search join the line after the reading ("… · Funny").
+	const tail =
+		f.source.kind === "mix" ? (
+			<>
+				<span aria-hidden className="shrink-0 text-gray-500">·</span>
+				{displayPicks(f.source.ids).map((id) => (
+					<span key={id} className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white/[0.06] px-2 py-0.5 text-xs font-semibold text-gray-100 ring-1 ring-inset ring-white/10">
+						<span className="h-2 w-2 rounded-full" style={{ background: pickHue(id) }} />
+						{pickLabel(id)}
+					</span>
+				))}
+			</>
+		) : null
 	if (readAsChips(chips).length)
 		return (
 			<span className="flex w-max items-center gap-2">
 				{label}
 				<ReadAsChips reading={chips} className="!flex-nowrap [&>li]:shrink-0 [&>li]:whitespace-nowrap" />
+				{tail}
 			</span>
 		)
 	if (f.loading) return <span className="whitespace-nowrap text-[13px] text-gray-400 sm:text-sm">Searching “{q}”</span>
@@ -323,9 +341,15 @@ export function BarReading({ f }: { f: StageFlow }) {
 					<span className="h-2 w-2 rounded-full" style={{ background: moodHue(mood.key) }} />
 					{mood.label}
 				</span>
+				{tail}
 			</span>
 		)
-	return <span className="whitespace-nowrap text-[13px] text-gray-400 sm:text-sm">Searching “{q}”</span>
+	return (
+		<span className="flex w-max items-center gap-2">
+			<span className="whitespace-nowrap text-[13px] text-gray-400 sm:text-sm">Searching “{q}”</span>
+			{tail}
+		</span>
+	)
 }
 
 /**

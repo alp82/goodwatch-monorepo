@@ -232,9 +232,10 @@ function gradeOf(f: JkFlow): string | null | undefined {
 	if (f.loading && !f.reading) return undefined
 	const reading = f.loading ? f.reading : f.answer?.reading
 	const answeredMood = f.answer?.kind === "mood" ? MOOD_KEY_BY_NAME.get(f.answer.answeredAs as never) : undefined
-	// Round 15: a mix with no lead word (none of its words has a grade) stays neutral.
-	if (s.kind === "mix") return null
-	return gradeOfReading(reading) ?? gradeOfText(s.q) ?? answeredMood ?? null
+	// Round 15: a mix with no lead word (none of its words has a grade) stays neutral. Round 19: unless a search sits
+	// beside it, which then lights the room by its reading (the moods win when they have a grade, above).
+	if (s.kind === "mix" && !s.q) return null
+	return gradeOfReading(reading) ?? gradeOfText(s.q ?? "") ?? answeredMood ?? null
 }
 
 const layersOf = (g: string, strong: boolean, film: boolean, e: boolean): Layer[] =>

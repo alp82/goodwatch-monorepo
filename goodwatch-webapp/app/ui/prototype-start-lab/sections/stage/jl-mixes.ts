@@ -161,6 +161,8 @@ export function mixAnswer(data: LabData, ids: string[]): FixtureAnswer {
 }
 
 const hueOf = (id: string) => WORD_BY_ID[id]?.hue ?? "#6b7280"
+/** Round 19: a pick's color (a mix by its first part), for the "Read as" line beside a search. */
+export const pickHue = (id: string) => hueOf(wordsOf(id)[0] ?? id)
 
 /**
  * The picker's data in My movies' shape (WatchNextPicker), so its own pieces (PickChip, MoodButton, choiceHues,

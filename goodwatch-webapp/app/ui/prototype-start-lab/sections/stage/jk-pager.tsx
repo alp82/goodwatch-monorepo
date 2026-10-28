@@ -5,7 +5,12 @@
 // so a swipe lands on whole posters, and the arrows page by a whole set.
 import { ChevronLeftIcon } from "@heroicons/react/24/outline"
 import { ChevronRightIcon } from "@heroicons/react/24/solid"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useState } from "react"
+
+const useIso = typeof window === "undefined" ? useEffect : useLayoutEffect
+
+/** Round 19: the owner: "the arrows should only go right and left once, dont add more posters than that". */
+export const MAX_PAGES = 2
 
 /** One breakpoint of a row: the media query (empty for the base), the tallest poster width, the gap and side padding. */
 export type FitSpec = { media: string; colMax: number; gap: number; pad: number }
@@ -43,14 +48,16 @@ export function fitCss(name: string, specs: FitSpec[], maxN = 12) {
  */
 export function usePager() {
 	const [el, setEl] = useState<HTMLElement | null>(null)
-	const [st, setSt] = useState({ atStart: true, atEnd: true, page: 0, pages: 1 })
+	// Round 19: `perPage` (the row's --jk-n, from its container queries) caps a row at MAX_PAGES pages (`cap`).
+	const [st, setSt] = useState({ atStart: true, atEnd: true, page: 0, pages: 1, perPage: 0 })
 	const pageW = useCallback((e: HTMLElement) => {
 		const cs = getComputedStyle(e)
 		const pad = (Number.parseFloat(cs.paddingLeft) || 0) + (Number.parseFloat(cs.paddingRight) || 0)
 		const gap = Number.parseFloat(cs.columnGap) || 0
 		return Math.max(1, e.clientWidth - pad + gap)
 	}, [])
-	useEffect(() => {
+	// Before paint (Round 19), so a capped row never shows its uncapped length.
+	useIso(() => {
 		if (!el) return
 		let raf = 0
 		const read = () => {
@@ -62,8 +69,11 @@ export function usePager() {
 				atEnd: el.scrollLeft >= max - 4,
 				page: el.scrollLeft >= max - 4 ? Math.ceil(max / w - 0.02) : Math.round(el.scrollLeft / w),
 				pages: Math.ceil(max / w - 0.02) + 1,
+				perPage: Math.round(Number.parseFloat(getComputedStyle(el).getPropertyValue("--jk-n"))) || 0,
 			}
-			setSt((p) => (p.atStart === next.atStart && p.atEnd === next.atEnd && p.page === next.page && p.pages === next.pages ? p : next))
+			setSt((p) =>
+				p.atStart === next.atStart && p.atEnd === next.atEnd && p.page === next.page && p.pages === next.pages && p.perPage === next.perPage ? p : next,
+			)
 		}
 		const later = () => {
 			if (!raf) raf = requestAnimationFrame(read)
@@ -91,7 +101,9 @@ export function usePager() {
 		},
 		[el, pageW],
 	)
-	return { ref: setEl, ...st, step }
+	/** Round 19: how many items the row may hold (MAX_PAGES whole views), minus `extra` for a tile after the titles. */
+	const cap = useCallback((extra = 0) => (st.perPage ? Math.max(1, st.perPage * MAX_PAGES - extra) : 18), [st.perPage])
+	return { ref: setEl, ...st, step, cap }
 }
 
 export type Pager = ReturnType<typeof usePager>
@@ -137,7 +149,7 @@ export function PageDots({ nav }: { nav: Pager }) {
 	if (nav.pages < 2) return null
 	return (
 		<span aria-hidden className="flex items-center gap-1.5">
-			{Array.from({ length: Math.min(nav.pages, 10) }, (_, i) => (
+			{Array.from({ length: Math.min(nav.pages, MAX_PAGES) }, (_, i) => (
 				<span
 					// biome-ignore lint/suspicious/noArrayIndexKey: page positions
 					key={i}

@@ -14,7 +14,7 @@ import { sceneImage, type SceneMeta, type ScenePair } from "../../scene/types"
 import type { LightGeo } from "../light/effects"
 import { JK_REVEAL, SEARCH_BARS, useSearchbarKey } from "../searchbar/bars"
 import { type Rect, useLab } from "../../lab/types"
-import { NEED, type StageFlow, useStageFlow } from "./ab-shared"
+import { NEED, type StageFlow, sourceSig, useStageFlow } from "./ab-shared"
 import { EfgField, NIGHT } from "./efg-shared"
 import { vocabOf } from "./hi-vocab"
 import { JkMoodRow, JkMorePopover, JkPresets } from "./jk-chips"
@@ -85,7 +85,8 @@ export function useJkFlow(key: string) {
 	const shown = ((): { text: string; dot?: string } | null => {
 		if (f.source.kind === "popular") return null
 		// Round 15: stage l/m's picks by name, with the first word's color.
-		if (f.source.kind === "mix") return { text: f.source.name, dot: vocabOf(f.source)?.color }
+		// Round 19: a search beside the picks reads "rainy day whodunit · Funny".
+		if (f.source.kind === "mix") return { text: f.source.q ? `${f.source.q} · ${f.source.name}` : f.source.name, dot: vocabOf(f.source)?.color }
 		const v = vocabOf(f.source)
 		if (v) return { text: v.label, dot: v.color }
 		return { text: f.label }
@@ -94,7 +95,7 @@ export function useJkFlow(key: string) {
 	// three are loved, going back (Back) or choosing anything new (a mood, a preset, a search, the picker, Clear, the
 	// dice) starts the three over; fewer than three still carry across searches as before.
 	const full = f.loved.length >= NEED
-	const { startOver, mood: moodRaw, prompt: promptRaw, typed: typedRaw, mix: mixRaw, clear: clearRaw } = f
+	const { startOver, mood: moodRaw, prompt: promptRaw, typed: typedRaw, mix: mixRaw, clear: clearRaw, clearSearch: clearSearchRaw } = f
 	const leave = useCallback(() => {
 		if (full) startOver()
 	}, [full, startOver])
@@ -103,6 +104,7 @@ export function useJkFlow(key: string) {
 	const typed = useCallback((q: string) => (leave(), typedRaw(q)), [leave, typedRaw])
 	const mix = useCallback((ids: string[]) => (leave(), mixRaw(ids)), [leave, mixRaw])
 	const clear = useCallback(() => (leave(), clearRaw()), [leave, clearRaw])
+	const clearSearch = useCallback(() => (leave(), clearSearchRaw()), [leave, clearSearchRaw])
 	const surprise = useCallback(() => {
 		const moods = f.data.guest.moods
 		const now = f.source.kind === "mood" ? f.source.key : null
@@ -110,7 +112,7 @@ export function useJkFlow(key: string) {
 		const m = pool[Math.floor(Math.random() * pool.length)]
 		if (m) mood(m.key)
 	}, [f.data, f.source, mood])
-	return { ...f, view, heading, shown, surprise, mood, prompt, typed, mix, clear, backToResults: startOver }
+	return { ...f, view, heading, shown, surprise, mood, prompt, typed, mix, clear, clearSearch, backToResults: startOver }
 }
 
 export type JkFlow = ReturnType<typeof useJkFlow>
@@ -482,7 +484,7 @@ function JkTop({
  */
 export function useJkBringIntoView(f: JkFlow) {
 	const box = useRef<HTMLDivElement>(null)
-	const sig = `${f.view}:${f.source.kind}:${"q" in f.source ? f.source.q : "key" in f.source ? f.source.key : "ids" in f.source ? f.source.ids.join() : ""}`
+	const sig = `${f.view}:${sourceSig(f.source)}` // Round 19: search and picks both
 	const prev = useRef<string | null>(null)
 	const acted = useRef(false)
 	useEffect(() => {
@@ -525,7 +527,7 @@ function reveal(el: HTMLElement | null) {
 
 /** Whether the module shows a reading line ("Read as …") for what's on show. */
 export const showsReading = (f: JkFlow) =>
-	f.view === "results" && !!f.answer && (f.source.kind === "typed" || (f.source.kind === "prompt" && !vocabOf(f.source)))
+	f.view === "results" && !!f.answer && (f.source.kind === "typed" || (f.source.kind === "prompt" && !vocabOf(f.source)) || (f.source.kind === "mix" && !!f.source.q))
 
 /** The window event the intro film fires at its end to send the guest here. */
 export const TRY_TAP_THREE = "start-lab:try-tap-three"

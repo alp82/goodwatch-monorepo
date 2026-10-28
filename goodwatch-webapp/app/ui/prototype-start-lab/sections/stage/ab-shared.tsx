@@ -20,9 +20,54 @@ export type Source =
 	| { kind: "mood"; key: string }
 	| { kind: "prompt"; q: string }
 	| { kind: "typed"; q: string }
-	| { kind: "mix"; ids: string[]; lead: string | null; name: string }
+	// Round 19: a mix can carry a search too (`q`, typed or a preset): the owner: "it should be possible to combine
+	// search with moods". `lead` still drives the light (the moods win), `name` is the picks' name only.
+	| { kind: "mix"; ids: string[]; lead: string | null; name: string; q?: string; qKind?: "typed" | "prompt" }
+
+/** Round 19: the search half of what's on show (typed text or a preset), alone or beside mood picks. */
+type Query = { kind: "typed" | "prompt"; q: string } | { kind: "mood"; key: string }
 
 type Saved = { draft: string; source: Source; loved: LabCard[]; done: boolean; step?: number }
+
+/** Round 19: the search text on show, alone or combined with mood picks (null for moods only, a mood chip, popular). */
+export const searchQ = (s: Source): string | null => (s.kind === "typed" || s.kind === "prompt" ? s.q : s.kind === "mix" ? (s.q ?? null) : null)
+
+/** Round 19: a key that changes whenever what's on show changes (search text and picks both). */
+export const sourceSig = (s: Source) =>
+	`${s.kind}:${s.kind === "mood" ? s.key : ""}:${s.kind === "mix" ? s.ids.join() : ""}:${searchQ(s) ?? ""}`
+
+/**
+ * Round 19, LAB STAND-IN: a search and mood picks together. The site would send both to one search; here the search's
+ * fixture list is re-ranked by the picks' merged list: titles on both lists first (in the search's order), then the
+ * search's others and the picks' others taking turns (the captured lists overlap little, so adding a mood visibly
+ * changes the row). The reading stays the search's.
+ */
+function combinedAnswer(search: FixtureAnswer, moods: FixtureAnswer): FixtureAnswer {
+	const inMoods = new Set(moods.titles.map((t) => t.key))
+	const both = search.titles.filter((t) => inMoods.has(t.key))
+	const onlySearch = search.titles.filter((t) => !inMoods.has(t.key))
+	const seen = new Set(search.titles.map((t) => t.key))
+	const onlyMoods = moods.titles.filter((t) => !seen.has(t.key))
+	const turns: LabCard[] = []
+	for (let i = 0; i < Math.max(onlySearch.length, onlyMoods.length); i++) {
+		if (onlySearch[i]) turns.push(onlySearch[i])
+		if (onlyMoods[i]) turns.push(onlyMoods[i])
+	}
+	return { ...search, titles: [...both, ...turns] }
+}
+
+function sourceOf(query: Query | null, ids: string[]): Source {
+	if (!ids.length) return query ?? { kind: "popular" }
+	const mix: Source = { kind: "mix", ids, lead: leadVocab(ids), name: picksName(ids) } // Round 16: the mix by its name while whole
+	return query && query.kind !== "mood" ? { ...mix, q: query.q, qKind: query.kind } : mix
+}
+
+/** Round 19: a saved (or restored) source split back into its search and its picks. */
+function splitSource(s: Source): { query: Query | null; ids: string[] } {
+	if (s.kind === "mix") return { ids: s.ids, query: s.q ? { kind: s.qKind ?? "typed", q: s.q } : null }
+	if (s.kind === "popular") return { ids: [], query: null }
+	return { ids: [], query: s }
+}
 
 const short = (title: string) => title.replace(/:.*$/, "")
 /** A mood's color (the Discover filter's swatch), gray when the site has none. */
@@ -71,8 +116,12 @@ export function useStageFlow(key: string, { shelfByStep = false }: { shelfByStep
 	const popular = useMemo(() => (data.guest.popular.length ? data.guest.popular : scoreRanked(data, 18)), [data])
 
 	const [draft, setDraft] = useState("")
-	const [source, setSource] = useState<Source>({ kind: "popular" })
-	const [answer, setAnswer] = useState<FixtureAnswer | null>(null)
+	// Round 19: the search and the mood picks are kept apart and combined below (they used to replace each other).
+	const [query, setQuery] = useState<Query | null>(null)
+	const [qAnswer, setQAnswer] = useState<FixtureAnswer | null>(null)
+	const [ids, setIds] = useState<string[]>([])
+	const queryRef = useRef(query)
+	queryRef.current = query
 	const [loading, setLoading] = useState(false)
 	const [reading, setReading] = useState<unknown>(null)
 	const [loved, setLoved] = useState<LabCard[]>([])
@@ -82,6 +131,13 @@ export function useStageFlow(key: string, { shelfByStep = false }: { shelfByStep
 	const abort = useRef<AbortController | null>(null)
 	const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+	const source = useMemo(() => sourceOf(query, ids), [query, ids])
+	const answer = useMemo(() => {
+		if (!ids.length) return qAnswer
+		const moods = mixAnswer(data, ids)
+		return query && query.kind !== "mood" && qAnswer ? combinedAnswer(qAnswer, moods) : moods
+	}, [data, ids, query, qAnswer])
+
 	// Back from a title page: the same query, taps and step.
 	useEffect(() => {
 		try {
@@ -89,8 +145,10 @@ export function useStageFlow(key: string, { shelfByStep = false }: { shelfByStep
 			if (raw) {
 				const s = JSON.parse(raw) as Saved
 				setDraft(s.draft ?? "")
-				setSource(s.source ?? { kind: "popular" })
-				setAnswer(answerFor(data, s.source ?? { kind: "popular" }))
+				const split = splitSource(s.source ?? { kind: "popular" })
+				setQuery(split.query)
+				setIds(split.ids)
+				setQAnswer(split.query ? answerFor(data, split.query) : null)
 				setLoved(Array.isArray(s.loved) ? s.loved.slice(0, NEED) : [])
 				setDone(!!s.done && (s.loved?.length ?? 0) >= NEED)
 				setStep(typeof s.step === "number" ? s.step : 0)
@@ -108,6 +166,7 @@ export function useStageFlow(key: string, { shelfByStep = false }: { shelfByStep
 
 	useEffect(() => () => abort.current?.abort(), [])
 
+
 	const results = answer?.titles.length ? answer.titles : popular
 	const picks = useMemo(() => {
 		if (loved.length < NEED) return []
@@ -123,23 +182,32 @@ export function useStageFlow(key: string, { shelfByStep = false }: { shelfByStep
 		setReading(null)
 	}
 
+	// Round 19: clears the search only; mood picks stay (the field's Clear, an emptied field).
+	const clearSearch = useCallback(() => {
+		stop()
+		setDraft("")
+		setQuery(null)
+		setQAnswer(null)
+	}, [])
+	// Round 19: typing and presets keep the mood picks (a dice / chip mood is still a search of its own and goes).
 	const typed = useCallback(
 		(q: string) => {
 			const t = q.trim()
 			stop()
 			if (!t) {
-				setSource({ kind: "popular" })
-				setAnswer(null)
+				setQuery(null)
+				setQAnswer(null)
 				return
 			}
 			setDone(false)
-			setSource({ kind: "typed", q: t })
+			setQuery({ kind: "typed", q: t })
+			setQAnswer(null)
 			setLoading(true)
 			const ctl = new AbortController()
 			abort.current = ctl
 			typedSearch(data, t, { signal: ctl.signal, onReading: (r) => !ctl.signal.aborted && setReading(r) }).then((a) => {
 				if (ctl.signal.aborted) return
-				setAnswer(a)
+				setQAnswer(a)
 				setLoading(false)
 				setReading(null)
 			})
@@ -151,8 +219,9 @@ export function useStageFlow(key: string, { shelfByStep = false }: { shelfByStep
 			stop()
 			setDone(false)
 			setDraft("")
-			setSource({ kind: "mood", key: k })
-			setAnswer(moodAnswer(data, k))
+			setIds([])
+			setQuery({ kind: "mood", key: k })
+			setQAnswer(moodAnswer(data, k))
 		},
 		[data],
 	)
@@ -161,32 +230,27 @@ export function useStageFlow(key: string, { shelfByStep = false }: { shelfByStep
 			stop()
 			setDone(false)
 			setDraft(q)
-			setSource({ kind: "prompt", q })
-			setAnswer(promptAnswer(data, q) ?? fixtureSearch(data, q))
+			setQuery({ kind: "prompt", q })
+			setQAnswer(promptAnswer(data, q) ?? fixtureSearch(data, q))
 		},
 		[data],
 	)
-	// Round 15: the picker's picks (stage l/m); none is the empty state again.
-	const mix = useCallback(
-		(ids: string[]) => {
-			stop()
-			setDone(false)
-			setDraft("")
-			if (!ids.length) {
-				setSource({ kind: "popular" })
-				setAnswer(null)
-				return
-			}
-			setSource({ kind: "mix", ids, lead: leadVocab(ids), name: picksName(ids) }) // Round 16: the mix by its name while whole
-			setAnswer(mixAnswer(data, ids))
-		},
-		[data],
-	)
+	// Round 15: the picker's picks (stage l/m); none (and no search) is the empty state again. Round 19: the search on
+	// show stays (its text in the field, a typed search still running keeps running); a dice / chip mood goes.
+	const mix = useCallback((next: string[]) => {
+		setDone(false)
+		setIds(next)
+		if (queryRef.current?.kind === "mood") {
+			setQuery(null)
+			setQAnswer(null)
+		}
+	}, [])
 	const clear = useCallback(() => {
 		stop()
 		setDraft("")
-		setSource({ kind: "popular" })
-		setAnswer(null)
+		setQuery(null)
+		setQAnswer(null)
+		setIds([])
 	}, [])
 
 	const toggleLoved = useCallback((card: LabCard) => {
@@ -231,10 +295,20 @@ export function useStageFlow(key: string, { shelfByStep = false }: { shelfByStep
 			: source.kind === "mood"
 				? (answer?.answeredAs ?? "Mood")
 				: source.kind === "mix"
-					? source.name
+					? source.q
+						? `“${source.q}” · ${source.name}`
+						: source.name
 					: `“${source.q}”`
 	const seeAllQ =
-		source.kind === "popular" ? null : source.kind === "mood" ? (answer?.answeredAs ?? null) : source.kind === "mix" ? source.name : source.q
+		source.kind === "popular"
+			? null
+			: source.kind === "mood"
+				? (answer?.answeredAs ?? null)
+				: source.kind === "mix"
+					? source.q
+						? `${source.q}, ${source.name.toLowerCase()}`
+						: source.name
+					: source.q
 
 	return {
 		data,
@@ -260,6 +334,7 @@ export function useStageFlow(key: string, { shelfByStep = false }: { shelfByStep
 		prompt,
 		mix,
 		clear,
+		clearSearch,
 		step,
 		setStep,
 	}

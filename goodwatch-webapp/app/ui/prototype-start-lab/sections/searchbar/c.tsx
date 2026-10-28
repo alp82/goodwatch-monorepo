@@ -4,7 +4,7 @@
 // icon whose magnifier turns into ↵ on hover, on focus, and while there's text not searched yet.
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { useLayoutEffect, useRef, useState } from "react"
-import type { StageFlow } from "../stage/ab-shared"
+import { searchQ, type StageFlow } from "../stage/ab-shared"
 import { BAR_CSS, BAR_SHADOW, BarChipRow, BarInput, searchActive, useBarSearch } from "./shared"
 
 const TEXT = "text-[22px] sm:text-[32px] lg:text-[40px]"
@@ -38,7 +38,7 @@ export function SearchBarC({ f }: { f: StageFlow }) {
 	const input = useRef<HTMLInputElement>(null)
 	const s = useBarSearch(f, input)
 	const [focused, setFocused] = useState(false)
-	const sent = f.source.kind === "typed" || f.source.kind === "prompt" ? f.source.q : null
+	const sent = searchQ(f.source) // Round 19: also beside mood picks
 	const unsent = !!f.draft.trim() && f.draft.trim() !== sent
 	const on = searchActive(f)
 	// The hint row shows when the field is empty (presets) or a search is on and its text is the query (Read as).

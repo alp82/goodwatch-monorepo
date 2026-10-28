@@ -13,7 +13,7 @@ import { tmdbImage, titleHref } from "../../lab/kit"
 import type { LabCard } from "../../lab/types"
 import { ReadingLine, SeeAll } from "../hero/shared"
 import { joinNames } from "../recs/shared"
-import { inertProps, NEED } from "./ab-shared"
+import { inertProps, NEED, sourceSig } from "./ab-shared"
 import { SkeletonRow, ToggleCard } from "./hi-shared"
 import { type JkFlow, showsReading } from "./jk-shared"
 import { EdgeArrows, fitCss, PageDots, SmallArrows, usePager } from "./jk-pager"
@@ -174,7 +174,8 @@ function JkLine({ f }: { f: JkFlow }) {
 			</>
 		)
 	if (f.view === "empty") return <>Then get picks for you.</>
-	if (showsReading(f) && f.answer) return <ReadingLine answer={f.answer} className="!text-xs sm:!text-sm" />
+	// Round 19: a search beside mood picks names both ("rainy day whodunit · Funny"); the field's line reads them.
+	if (showsReading(f) && f.answer && f.source.kind !== "mix") return <ReadingLine answer={f.answer} className="!text-xs sm:!text-sm" />
 	return (
 		<span className="inline-flex min-w-0 items-center gap-1.5">
 			{f.shown?.dot ? <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: f.shown.dot }} /> : null}
@@ -255,7 +256,7 @@ export function JkBody({
 	})
 	const full = f.loved.length >= NEED
 	const some = f.loved.length > 0
-	const sourceKey = `${f.source.kind}:${"q" in f.source ? f.source.q : "key" in f.source ? f.source.key : "ids" in f.source ? f.source.ids.join() : ""}`
+	const sourceKey = sourceSig(f.source) // Round 19: search and picks both
 	return (
 		<div ref={root} className="absolute inset-0">
 			{fit ? <style>{FIT_CSS}</style> : null}
@@ -323,7 +324,8 @@ function FitRow({ f, toggle, some, full }: { f: JkFlow; toggle: (card: LabCard) 
 					{f.loading ? (
 						<SkeletonRow col="jkr-c" />
 					) : (
-						f.results.slice(0, 18).map((card, i) => {
+						// Round 19: two pages at most, See all included (the arrows page once).
+						f.results.slice(0, Math.min(18, nav.cap(f.seeAllQ ? 1 : 0))).map((card, i) => {
 							const on = f.isLoved(card)
 							return (
 								<div key={card.key} data-jk-key={card.key} className="jkr-c snap-start">
@@ -586,7 +588,8 @@ function AlsoRow({
 	fit = false,
 }: { f: JkFlow; cards: LabCard[]; onFeature: (i: number) => void; titles?: boolean; fit?: boolean }) {
 	const nav = usePager()
-	const items = cards.map((c, i) => (
+	// Round 19: two pages at most when the row pages (fit).
+	const items = (fit ? cards.slice(0, nav.cap()) : cards).map((c, i) => (
 		<li key={c.key} className={fit ? "jkp-c snap-start" : "jk-also shrink-0"}>
 			<button
 				type="button"

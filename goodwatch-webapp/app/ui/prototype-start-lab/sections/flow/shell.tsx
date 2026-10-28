@@ -15,6 +15,24 @@ import { BootOverlay, type Handoff } from "./boot-overlay"
 import { BootStrip, type StripMode } from "./boot-strip"
 
 const NIGHT = "#050a16"
+
+/**
+ * PROTOTYPE · Round 19: the owner: "boot animation should only happen once per session (session storage) and never for
+ * members". This inline script runs in the server's HTML before the stage paints: on a browser session's first load it
+ * sets `gw-boot-seen` and the boot plays; on later loads it ticks the hidden checkbox before it (`#fl-boot-gate`),
+ * and CSS keyed on `:has(#fl-boot-gate:checked)` hides the strip and switches off the page's assembly, so a returning
+ * visitor never sees a frame of the boot. A checkbox's checked state is a property, not an attribute, so hydration sees
+ * nothing new (an <html data-…> mark, the production intro's pattern, makes React warn in dev). `?boot=1` forces the
+ * boot (and keeps the flag). It also notes on the checkbox that it ran (an expando): only the document's first run
+ * honors the gate; a client-side mount (the lab bar switching flows, ↻) has a fresh, unticked box and plays the boot.
+ * Members never get the flow (the lab renders the member page instead; the real page would leave the boot out of a
+ * member's HTML).
+ */
+const BOOT_SEEN_KEY = "gw-boot-seen"
+const GATE_SCRIPT = `(function(){var me=document.currentScript,b=me&&me.previousElementSibling,v="play";try{var s=sessionStorage,k=${JSON.stringify(BOOT_SEEN_KEY)};if(s.getItem(k)&&!/[?&]boot=1(&|$)/.test(location.search))v="skip";else s.setItem(k,"1")}catch(e){}if(b){b.checked=v==="skip";b.gwBoot=v}})()`
+type GateEl = HTMLInputElement & { gwBoot?: "play" | "skip" }
+/** Round 19: the returning visitor's mark (GATE_SCRIPT), for CSS here and in boot-strip. */
+export const BOOT_SKIP = "html:has(#fl-boot-gate:checked)"
 /** The searchbar's event for Enter, its button, and the picker's Done (sections/searchbar/shared.tsx `JK_REVEAL`). */
 const REVEAL = "start-lab:jk-reveal"
 
@@ -105,6 +123,8 @@ const CSS = `.fl-root section[aria-label="Find something to watch"] > div:first-
 .fl-early .fl-dim{animation:fl-night 1.3s cubic-bezier(.4,0,.2,1) both}
 .fl-early section[aria-label="Find something to watch"]>div:first-of-type{animation:fl-cam 1.8s cubic-bezier(.22,.7,.2,1) both}
 .fl-q{animation:fl-q .45s ease-out both}
+${BOOT_SKIP} :is(.fl-strip,.fl-topcover){display:none}
+${BOOT_SKIP} .fl-early :is(.jk-top>*,.fl-dim,section[aria-label="Find something to watch"]>div:first-of-type){animation:none!important}
 @media (prefers-reduced-motion:reduce){.fl-root section > div:first-of-type,.fl-card,.fl-v-c .jk-top,.fl-early .jk-top,.fl-v-d .jk-top{transition:opacity .3s ease-out!important}.fl-dim{transition-duration:.4s}.fl-early .jk-top>*{animation:fl-fade .3s ease-out both!important}.fl-early section>div:first-of-type{animation:none!important}.fl-early .fl-dim{animation-duration:.5s}.fl-warm{transition-duration:.8s}.fl-q{animation:none}}`
 
 /** The background layers over the room (JkStage's `over`): the night at the step's opacity, and the boot's glow handing over. */
@@ -259,6 +279,10 @@ function useUnliftedMeasures(root: { current: HTMLDivElement | null }, on: boole
 }
 
 function FlowRun({ spec, first, onReplay }: { spec: FlowSpec; first: boolean; onReplay: () => void }) {
+	// Round 19: the session gate (GATE_SCRIPT). Before paint: a returning visitor's first run skips the boot; anything
+	// else plays it and drops the skip mark. `atPaint`: the boot started at the first paint (its hold counts from there).
+	const gate = useRef<GateEl>(null)
+	const atPaint = useRef(false)
 	const k = `flow-${spec.key}`
 	// Every visit starts from the first step: the stage's saved state goes before the stage reads it.
 	useState(() => {
@@ -282,6 +306,14 @@ function FlowRun({ spec, first, onReplay }: { spec: FlowSpec; first: boolean; on
 	const [overlay, setOverlay] = useState(true)
 	const live = useCallback(() => setPhase("live"), [])
 	const done = useCallback(() => setOverlay(false), [])
+	useIso(() => {
+		const ran = gate.current?.gwBoot
+		atPaint.current = first && ran === "play"
+		if (spec.strip && first && ran === "skip") {
+			setOverlay(false)
+			setPhase("live")
+		}
+	}, [])
 
 	// C's lift (search block to the middle) and D's swap (card up into the block's place), from the offset chain.
 	const [lift, setLift] = useState<number | null>(null)
@@ -346,6 +378,9 @@ function FlowRun({ spec, first, onReplay }: { spec: FlowSpec; first: boolean; on
 				{...(phase === "live" ? { "data-live": "" } : {})}
 				style={{ "--fl-cam": cam, "--fl-lift": `${lift ?? 0}px` } as CSSProperties}
 			>
+				{/* Round 19: first in the stage's HTML, so it runs before any of the boot or the page's assembly paints. */}
+				<input ref={gate} id="fl-boot-gate" type="checkbox" hidden tabIndex={-1} aria-hidden="true" />
+				<script dangerouslySetInnerHTML={{ __html: GATE_SCRIPT }} />
 				{/* As HTML: React would escape the selectors' quotes and > in the server's text. */}
 			<style dangerouslySetInnerHTML={{ __html: CSS }} />
 				<JkStage
@@ -367,7 +402,7 @@ function FlowRun({ spec, first, onReplay }: { spec: FlowSpec; first: boolean; on
 				</button>
 			</div>
 			{overlay && spec.strip ? (
-				<BootStrip mode={spec.strip} first={first} root={root} onHandoff={live} onDone={done} />
+				<BootStrip mode={spec.strip} first={first} firstRef={atPaint} root={root} onHandoff={live} onDone={done} />
 			) : overlay ? (
 				<BootOverlay mode={spec.handoff} first={first} root={root} onHandoff={live} onDone={done} />
 			) : null}
@@ -375,7 +410,10 @@ function FlowRun({ spec, first, onReplay }: { spec: FlowSpec; first: boolean; on
 	)
 }
 
-/** One opening flow: a run, replayed from the start by remounting it. */
+/**
+ * One opening flow: a run, replayed from the start by remounting it. Round 19: ↻ always plays the boot (the session
+ * flag stays set: a reload after it skips again); `?boot=1` forces it on load.
+ */
 export function OpeningFlow({ spec }: { spec: FlowSpec }) {
 	const [run, setRun] = useState(0)
 	const replay = useCallback(() => {
