@@ -1,8 +1,24 @@
 # Q65 — resume the rolling CrateDB upgrade to 6.4.6 with plain stops
 
-**Next window: October 28 23:00 → October 29 04:00 UTC** (October 29 00:00–05:00 CET).
-Owner approved completing the remaining path next night, with fresh gates after a separate explicit GO
-around **October 28 22:45 UTC**. The current backup-repair GO does **not** start or arm this upgrade.
+**Latest owner override, October28:** resume immediately after an explicit GO and fresh gates,
+then continue hop after hop until6.4.6 is complete. **The04:00UTC limit is removed.** No clock-based
+hop admission/stop deadline remains; every health/heap/watcher gate and first-failure rule remains.
+Daytime traffic rises around06:00UTC; expect more noise but **do not change abort thresholds**.
+The prior23:00–04:00 plan is historical, not a second automatic start.
+
+Existing provider_detector shadow job`01a17fb1-feb6-c0d2-651f-9ab682b96648` may finish. Other active heavy
+jobs are also allowed and recorded **except schema-changing or index-publishing work** (build_indexes,
+migrations), which still stops entry. Pause future starts of exactly the same nine approved schedules.
+This waiver does not permit cancellation, schema/publication overlap or extra holds; deploys follow the bounded wait rule below.
+
+**Current deploy rule:** if a deployment is building/rolling at any gate, wait for it to finish,
+up to15minutes, keeping the watcher/heap guard active. If it fails or remains active after15minutes,
+stop. After it finishes successfully, recheck GREEN and a fresh watcher round, then the normal node
+gates. Do not stop merely because the initial read found a deployment. The owner will not push main
+until completion; no Coolify setting change is needed or authorized. No concurrent node swap/deploy.
+
+[Live execution evidence](auth/cratedb-production/20261026-operation-contexts/20261028-rolling-execution/README.md).
+A first failed health/heap/site or overdue/failed-deploy gate still ends progression underQ62.
 
 Current handover: **crate-02 is already6.0.8; crate-01/03 remain5.10.16**, all145 GREEN.
 [Q64 execution](auth/cratedb-production/20261026-operation-contexts/q64-execution.md) stopped after the
@@ -83,18 +99,13 @@ index publication jobs as approved; catalog/member reads/writes retain the norma
 
 ## Window and forecast
 
-**Q65 approved window: October 28 23:00 → October 29 04:00 UTC** (00:00–05:00 CET).
-Initial gates/watcher begin around 22:45 only after explicit go. Start backup protection/preparation 23:00;
-first SIGTERM (crate-03) only after the preserved5.10 rollback pair, fresh forward checkpoint and gates pass,
-likely23:15–23:30. Require a fresh **10-minute** heap entry gate before this first remaining node, then
-2minutes beforecrate-01; full later hops retain10/2/2.
-
-**Do not start a new hop unless its complete remaining-node upgrade (two for the resumed hop; three thereafter), GREEN verification, homogeneous
-checkpoint and handover/restoration reserve fit before 04:00.** Reforecast from measured timings before
-admitting each hop. At 04:00 stop at the last finished, homogeneous hop and report; do not begin another.
-This replaces the earlier unapproved fixed03:00-hop/03:30-SIGTERM cutoff proposals. Do not shorten gates,
-force completion or silently extend the window. The Q62 first-failed-gate rule still takes priority over
-making versions homogeneous; an unexpected failure/overrun is not permission for another node change.
+**The latest owner override removes the04:00 cutoff and the earlier next-night start.** After a fresh
+GO, run the approved remaining14 replacements/hops until6.4.6, stopping at the first failed gate.
+Do not insert a time-based stop at04:00 or waive a failed gate in order to finish. Start the watcher,
+queue/schedule checks and10-minute heap history fresh; first remaining03 requires10min, then01 needs2min.
+Later complete hops retain10/2/2. Overlap preparation/recovery/checkpoint work with qualifying heap
+history where the approved gates allow it; no extra arbitrary waits. Continue measuring each hop for
+staffing and safe recovery, not a removed deadline. At06:00 traffic may rise; Q60/Q59 thresholds stayfixed.
 
 | Work | Production allowance |
 | --- | --- |
@@ -112,8 +123,8 @@ when readings qualify; GREEN and original copies are independently required befo
 With the preserved rollback pair, current forward checkpoint, remaining14 node swaps, hop checks and final restoration, plan roughly
 **3–5 hours**, subject to measured production recovery. This is not a guarantee all five hops fit.
 Before each hop, budget every remaining node, its gates, snapshot/checkpoint, recovery margin and exact
-schedule/cron/settings restoration. If that budget does not fit before 04:00, stop at the current
-homogeneous checkpoint and hand over; do not start a partial hop merely to make more progress.
+schedule/cron/settings restoration. No04:00 limit now applies. Preserve staffing and recovery capacity while continuing; the first failed
+gate still stops progression even mid-hop. Do not force homogeneity after a failed gate.
 
 The morning Q50 plain restart returnedGREEN in about3min; Q64 first6.0 upgrade took5m55s from dispatch
 to verifiedGREEN (normalexit5.4s, then125.6s operator verification before newstart). Budget the full
@@ -152,12 +163,16 @@ fails ends progression under Q62; do not keep retrying a failed gate or reset it
   no partitions. Any drift requires review, not a wildcard repair. All required clients/compatibility fixes
   deployed and exact versions/configuration recorded; no password/HBA change. #562 negative-auth canaries
   and trusted loopback administration must pass. No production synthetic test writes are implied.
-- No deploy for the whole slot. Owner-approved schema/SWAP/RENAME and index-publication hold prevents
+- No concurrent deploy/node swap. Use the bounded15-minute deployment-wait gate above; after completion recheckGREEN/watcher before proceeding. Owner-approved schema/SWAP/RENAME and index-publication hold prevents
   snapshot/BLOB pairing races; no schedule mutation beyond the approved list. Light member/workflow writes
   may continue under the selected RPO/write policy. If workload breaks heap/site gates, stop and report.
 - Same volume/data path, image digest, HBA/startup arguments, heap, network/publication addresses, mount
   sources, StopSignal unset/SIGTERM/15 and restart policy captured privately. Do not print `.env` or full
-  Docker/Compose configuration into evidence. Maintain a second SSH session and staffed observer.
+  Docker/Compose configuration into evidence. Maintain a second SSH session and staffed observer. Check
+  Coolify deploy status at the start, in parallel with workload/heap reads, before pausing schedules.
+  The owner will not push main during the upgrade; no Coolify setting change is needed. Repository policy
+  reserves Coolify settings to the owner UI; use read-only status inspection and never cancel a deploy or
+  disable auto-deploy through SQL/API.
 
 Representative reads, repeated through each coordinator:
 
@@ -292,7 +307,7 @@ crate_sql() {
    ```bash
    # Only after the next GO, with publication held. Repeat for each real node/host.
    ssh root@10.0.0.11 python3 - crate-01 /mnt/backup-cratedb/q65-resume-20261028/blob \
-     < docs/implementation/crate-6-upgrade/20261027-plain-rehearsal/copy-blob-sha1.py
+     < docs/implementation/crate-6-upgrade/20261028-rolling-resume/copy-forward-blob-sha1.py
    ```
 
    Copy/verify the union from11/12/13, every SHA1/length and every frozen reference; keep current config
@@ -345,7 +360,7 @@ If path/labels/runtime differ, stop. Hosts01/02/03 are10.0.0.11/.12/.13.
    Read back primaries/none on all coordinators; require a complete live watcher round **started after**
    changes, a fresh heartbeat and no Q60 alarm, plus unchanged image/config/PID and valid StopSignal.
    A single logged slow or unexpected response does not independently fail this watcher gate. Recheck GREEN, no snapshot, placement and alarm immediately
-   before dispatch. **No decommission or zero-primary check.** Only while the admitted hop and its safe handover still fit inside the Q63 window:
+   before dispatch. **No decommission or zero-primary check.** Only after the fresh approved gates pass (the old clock cutoff is removed):
 
    ```bash
    # On the host of the selected node-matrix row; example first row:
@@ -456,17 +471,16 @@ If path/labels/runtime differ, stop. Hosts01/02/03 are10.0.0.11/.12/.13.
 
 After the resumed two-node row, and each later three-node row, confirm all at that target, all 145 GREEN/all copies STARTED, stable heap,
 policies, client/auth/catalog/search/YepWatch/MCP access and no watcher alarm; take 5 min checkpoint.
-**Q63: at each homogeneous checkpoint, admit another hop only if all of its remaining replacements (two in the resumed row, three thereafter), their 10/2 or 10/2/2
-heap gates, recovery/checkpoint and handover reserve fit before 04:00 UTC. Otherwise stop here.**
-At the deadline hand over a finished homogeneous hop and report its actual version, completed hops,
-remaining hops and restored/held settings. Restore wait 3 only with all original copies STARTED, all Docker
-policies`always`, allocation`all`, the approved schedules exactly and the backup cron when the existing writer is verified/no snapshot or helper is active, including an early mixed-stop handover. Leave rebalance`none` if the final-version placement test was not reached.
-Reserve that work before 04:00 rather than starting another hop and leaving it for after the window.
+**Q63 heap timing remains10/2/2; its old04:00 time limit is superseded.** After a healthy homogeneous
+checkpoint, continue the next hop without waiting for another clock window. Restore waits/settings/jobs/
+cron at final completion or the first failed gate, as below. Keep V2 registered throughout and restore
+cron exactly when its writable/no-active-backup gates pass, including an early mixed-stop handover.
+Leave rebalancenone if the final-version placement test was not reached.
 
 Do not intentionally leave a mixed cluster overnight: docs support transient rolling mixtures, not a
 vendor guarantee for multi-day mixtures. **Q62 still stops at the first failed gate**, even mid-hop;
 recover only the node already stopping/rejoining. Never change another node merely to make versions
-uniform after a failed gate, or force a stop/recovery to meet04:00. Report an unexpected overrun/state
+uniform after a failed gate, or force a stop/recovery for speed. Report an unexpected overrun/state
 honestly, with no overnight rollback or data-directory downgrade.
 
 After homogeneous6.0.8, **reuse the already-registered V2 writer at its repaired path**:
@@ -594,8 +608,11 @@ privately: enabled state, cron, timezone, script/flow path, arguments and all ot
 Record every matching schedule identity and a sanitized configuration hash; never assume all were enabled.
 Pause only these schedules. Do not change their cron/timezone/arguments, cancel running jobs, purge queued
 work or touch unrelated schedules. Read schedules and active jobs fresh after go; archived timings are not
-proof no work is active. Any incompatible active work or other failed gate triggers Q62 rather than an
-unapproved cancellation or additional hold. The documented manual schema/publication holds remain in force.
+proof no work is active. Any active schema-changing/index-publishing work or other failed gate triggers Q62 rather than an
+unapproved cancellation or additional hold; existing heavy work otherwise has the explicit ownerwaiver. The documented manual schema/publication holds remain in force. The latest owner waiver allows existing
+heavy jobs (including the named shadow detector), except actual schema-changing or index-publishing
+work. Record each allowed heavy job; pause future starts of the nine, do not cancel active jobs. The
+no-deploy gate remains: even a docs-only commit can trigger an actual rolling Webapp deployment.
 
 **At normal or early-stop handover, restore those nine schedule configurations and original enabled states
 exactly, then read them back. Do not catch up, manually rerun or enqueue missed executions.** Next scheduled
@@ -606,17 +623,19 @@ SQL risk for restored index cleanup in that case; do not silently extend its pau
 Report any restoration failure or concurrent configuration edit instead of overwriting an unrelated edit.
 The backup cron has its separate repository/phase safety rules; record its exact held/restored state too.
 
-## Owner approvals before 23:00 UTC
+## Owner approvals before the next GO
 
-Recorded owner decisions (production execution still waits for the explicit go around 22:45 UTC):
+Recorded owner decisions (a failed attempt does not authorize an automatic retry; await fresh GO):
 
-- [x] **Q53, resumed by Q65:** Rolling plain stops;October27 first02→6.0.8 is complete, resumeOctober28 at23:00 UTC; pinned five-hop path, original copies retained, only 14 YepWatch waits lowered across the campaign then restored, and one protected snapshot+BLOB pair with the backup cron held throughout.
-- [x] **Q65 next-night completion:** October28 23:00→October29 04:00 UTC, freshGO aroundOctober28 22:45; finish03/01→6.0.8 then all four later hops with the same safeguards. Accept only the verified check3 future7.x advisory; keep V2 registered/writable at its repaired path throughout. No upgrade begins under the backup-repair GO.
+- [x] **Latest owner override:** No04:00 deadline; continue until6.4.6 unless a gate fails. Existing heavy jobs allowed except schema changes/index publication; nine future schedules still held. Daytime06:00 noise does not change thresholds. Active deploys may finish within15minutes; failed/overdue deploys stop the run, then recheckGREEN/watcher before any node change.
+
+- [x] **Q53, resumed by Q65:** Rolling plain stops;October27 first02→6.0.8 is complete; the oldOctober28 23:00 start is superseded by the latest immediateGO/no-deadline override; pinned five-hop path, original copies retained, only 14 YepWatch waits lowered across the campaign then restored, and one protected snapshot+BLOB pair with the backup cron held throughout.
+- [x] **Q65 next-night completion:** Original next-night timing superseded by immediate/no-deadline owneroverride; freshGO stillrequired; finish03/01→6.0.8 then all four later hops with the same safeguards. Accept only the verified check3 future7.x advisory; keep V2 registered/writable at its repaired path throughout. No upgrade begins under the backup-repair GO.
 - [x] **Q64 backup repair:** Unregister legacy read-only root alias; create V2 at`/snapshots/q65-mixed-20261027`; preservepre6. This separate execution is recorded in the dated evidence, not repeated as an upgrade stage.
 - [x] **Q55:** `GRANT DQL ON SCHEMA blob TO goodwatch_search` before the first 6.2.11 node, followed by authenticated index-file GET/HEAD and SHA1 verification.
 - [x] **Q58:** Pause exactly the nine named Windmill job paths above for the window; capture their exact original schedule configurations, restore them exactly at handover, and do not catch up missed runs. No permission to cancel active jobs or pause other schedules.
 - [x] **Q59, timing superseded by Q63:** Start below 80% and stop above 85% remain in force; the initial requirement for ten minutes before every node no longer applies.
-- [x] **Q63:** Heap below 80% for ten minutes before the first node of each hop, two minutes before each later node in that hop; stop above 85%. Window 23:00–04:00 UTC: no new hop unless the whole hop and handover fit before 04:00; at 04:00 stop at a finished homogeneous hop and report. Q62 safety/first-failed-gate rules remain unchanged.
+- [x] **Q63:** Heap below 80% for ten minutes before the first node of each hop, two minutes before each later node in that hop; stop above 85%. Its original23:00–04:00 window is superseded by the owner's no-deadline override; do not apply the old04:00 stop. Q62 safety/first-failed-gate rules remain unchanged.
 - [x] **Q60:** Abort on three consecutive unexpected responses/transport failures per endpoint, or three responses over 3s within one minute across probes; a single slow response is only logged. Expected unauthenticated MCP401 remains healthy. Use `--policy q60`.
 - [x] **Q61:** Accept rollback data loss since the protected pre-upgrade snapshot. No separate write-loss-cap or write-freeze decision is pending for this window.
 - [x] **Q62:** Stop at the first failed gate and hand over GREEN, homogeneous where safely possible. No rollback during the night; the owner decides in the morning. Do not upgrade another node merely to make versions uniform after a failed gate.
@@ -625,6 +644,6 @@ Recorded owner decisions (production execution still waits for the explicit go a
 
 Operational confirmations still to record after go, not additional requests to reapprove the decisions above:
 
-- [ ] **Operators and admission forecast:** Record staffed handover and measured whole-hop forecasts. The 23:00–04:00 UTC window and 10/2/2-minute heap policy are approved by Q63, not pending approval. Do not begin a hop whose full completion and restoration budget cannot fit before 04:00.
+- [ ] **Operators and admission forecast:** Record staffed handover and measured whole-hop forecasts. The10/2/2-minute heap policy remainsapproved; the04:00 deadline isremoved. Record staffed recovery/handover capacity while continuing under the latestGO.
 - [ ] **Shared storage/configuration:** Verify the existing repaired V2 sharedpath onall nodes, read-onlypre6, no root alias, and exact per-node mounts/allowlists/durable imagepins. No new repository transition is planned. Stop before the first node if storage is not shared or configuration differs.
 - [ ] **Restoration responsibility:** Record the schedule/backup-cron restoration owner and observed states at handover. Any later rollback/cutover owner, fresh restore capacity and 60–120 minute unqualified RTO are for the separately approved morning decision, not authority to restore tonight.

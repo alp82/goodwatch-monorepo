@@ -1,0 +1,245 @@
+{
+  "updated_utc": "2026-10-28T01:31:31.943099+00:00",
+  "base": "de2749c94e8df87a9dd4e8b0acc4362578515142",
+  "branch": "fix/644-rolling-upgrade-execution",
+  "state": "IN_PROGRESS",
+  "owner_overrides": {
+    "no_deadline": true,
+    "existing_heavy_allowed_except_schema_index_publish": true,
+    "deploy_wait_max_minutes": 15,
+    "deploy_failure_stops": true
+  },
+  "versions_last_observed": {
+    "crate-01": "5.10.16",
+    "crate-02": "6.0.8",
+    "crate-03": "6.0.8"
+  },
+  "phase": "recovery",
+  "completed_nodes": [],
+  "cron_held": {
+    "utc": "2026-10-28T01:23:11.548041+00:00",
+    "mode": "hold",
+    "state": "/root/.config/goodwatch/644-q37-20261028T012311Z",
+    "before_sha256": "374f2ac2eea0fee650130b13c5ae3cf24276f80dabee6b35c54fb2cf5f502e37",
+    "held_sha256": "1be3b650f2b627be3037b1b196c358fff241b7f5cca734c655400683e5291539",
+    "readback_exact": true
+  },
+  "cron_restored": null,
+  "schedules_held": {
+    "utc": "2026-10-28T01:15:18.218777+00:00",
+    "schedule_count": 9,
+    "mode": "hold",
+    "verified": true
+  },
+  "schedules_restored": null,
+  "forward_snapshot": [
+    {
+      "host": 11,
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "q65_pre_resume_20261028",
+            "SUCCESS",
+            1793150601336,
+            1793150612143,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 256.84125
+      }
+    },
+    {
+      "host": 12,
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "q65_pre_resume_20261028",
+            "SUCCESS",
+            1793150601336,
+            1793150612143,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 208.65326
+      }
+    },
+    {
+      "host": 13,
+      "result": {
+        "cols": [
+          "repository",
+          "name",
+          "state",
+          "started",
+          "finished",
+          "total_shards",
+          "failures"
+        ],
+        "rows": [
+          [
+            "goodwatch-db-backup-v2",
+            "q65_pre_resume_20261028",
+            "SUCCESS",
+            1793150601336,
+            1793150612143,
+            567,
+            []
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 185.16594
+      }
+    }
+  ],
+  "forward_blob": {
+    "utc": "2026-10-28T01:23:46.375742+00:00",
+    "destination": "/mnt/backup-cratedb/q65-resume-20261028/blob",
+    "receipts": [
+      {
+        "node": "crate-01",
+        "unique_objects": 20,
+        "bytes": 148699834,
+        "manifest": "/mnt/backup-cratedb/q65-resume-20261028/crate-01-manifest.json"
+      },
+      {
+        "node": "crate-02",
+        "unique_objects": 17,
+        "bytes": 128845855,
+        "manifest": "/mnt/backup-cratedb/q65-resume-20261028/crate-02-manifest.json"
+      },
+      {
+        "node": "crate-03",
+        "unique_objects": 23,
+        "bytes": 138873609,
+        "manifest": "/mnt/backup-cratedb/q65-resume-20261028/crate-03-manifest.json"
+      }
+    ],
+    "unique_objects": 38,
+    "bytes": 271593347,
+    "all_sha1_and_lengths_verified": true,
+    "metadata_unchanged": true,
+    "referenced_objects": [
+      {
+        "sha1": "0337a768ff9594aa5ed4eff50b1b67cb39a79503",
+        "bytes": 1559543
+      },
+      {
+        "sha1": "15f09283e8bc1ef92c8c7ad65092baa8e8b6cd40",
+        "bytes": 264056
+      },
+      {
+        "sha1": "322909af2183731f8278e492c5c57d3411183794",
+        "bytes": 1835411
+      },
+      {
+        "sha1": "40cda44aea139d735c03128cfd134596b43124ee",
+        "bytes": 916
+      },
+      {
+        "sha1": "59134f7ab8e80364d28c1be3f0afb2424176c9d9",
+        "bytes": 4410906
+      },
+      {
+        "sha1": "5b8876a98f86bc6483e926f86302099c48fc242a",
+        "bytes": 613275
+      },
+      {
+        "sha1": "5fd0440f308dcecaf2cb5846a987cde38ec95b65",
+        "bytes": 684961
+      },
+      {
+        "sha1": "603a436a9626eff88f58c87b34c8a3cfe872bc99",
+        "bytes": 1082
+      },
+      {
+        "sha1": "61eb736ecb2e4a39bb3c03ec036f8af5c816680d",
+        "bytes": 1799616
+      },
+      {
+        "sha1": "78f98bf44782bb972daeecfb5c18e988556098ae",
+        "bytes": 50614482
+      },
+      {
+        "sha1": "7c88a771c434f326d124d1d397ee0eeaa8322bb6",
+        "bytes": 5719249
+      },
+      {
+        "sha1": "a0e8aa3be231392e9c93ae202e1f3587553f5c2d",
+        "bytes": 800887
+      },
+      {
+        "sha1": "ae9f69c913a7e62851bcdbe4a545fb062cd5c520",
+        "bytes": 5280978
+      },
+      {
+        "sha1": "b00139e4681c7c912eb648914ce1c08b7b54bbdf",
+        "bytes": 291969
+      },
+      {
+        "sha1": "b207b1d10fdd684e8b85570b473c68744d16e2d9",
+        "bytes": 60395
+      },
+      {
+        "sha1": "b64fb1cdc88f5f887328be3c114a87e8107d3ae1",
+        "bytes": 1734564
+      },
+      {
+        "sha1": "c4fc436d7d96d51c6b3aaa3df66a51ea9c305def",
+        "bytes": 4259448
+      },
+      {
+        "sha1": "d3c755e557624147f1c988fdd55015f824d734f3",
+        "bytes": 817287
+      },
+      {
+        "sha1": "d7f581e866f63c4e4e3b1fc8f700f476c0d9aaf3",
+        "bytes": 56207997
+      },
+      {
+        "sha1": "ea7e32f2b94426f4cba826ded91d9ae4dea8ed91",
+        "bytes": 3712097
+      },
+      {
+        "sha1": "fc33cdf05bc804eaea6856e739939eb60a7c0a11",
+        "bytes": 4096437
+      }
+    ]
+  },
+  "watcher": {
+    "probes": 625,
+    "unexpected": 0,
+    "over3s": 0,
+    "alarms": 0,
+    "max_seconds": 2.223968,
+    "last_utc": "2026-10-28T01:31:22.581434+00:00"
+  },
+  "gate_failure": null,
+  "abort": null,
+  "protected_5_rollback": "goodwatch-pre6.q53_pre6_20261027 finished2026-10-27T23:02:34.012Z,originalSHA1pairunchanged",
+  "rebalancing_lock_test": "Notyetperformed",
+  "operator_note": "Localmetadata-reader copy.py shadowedstdlib; localcontrollerinterrupted beforeSIGTERM, filenamefixed and all3legacyindexwait2/blockfalseverifiedbeforeguardedresume. Pre-stop settings not replayed. No productiongatealarm cleared."
+}
