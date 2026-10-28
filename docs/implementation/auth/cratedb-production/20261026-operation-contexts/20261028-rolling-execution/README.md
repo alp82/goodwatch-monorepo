@@ -8,7 +8,7 @@ health/heap/first-failure/Q60 safeguard remains; daytime06:00 traffic does not c
 No push or Coolify change. See[canonical runbook](../../../../crate-6-upgrade.md).
 
 [Live summary](progress.json),[sanitized receipts](receipts.json.gz),[page watcher](pages.jsonl.gz).
-UpdatedUTC:2026-10-28T02:46:01.720706+00:00. This record is committed locally at checkpoints; raw metadata/config/credentials
+UpdatedUTC:2026-10-28T02:52:28.836318+00:00. This record is committed locally at checkpoints; raw metadata/config/credentials
 remain private under`~/.cache/gw-work/644-q69` and root-private per-host backup paths.
 
 ## Verified preparation
@@ -32,7 +32,7 @@ remain private under`~/.cache/gw-work/644-q69` and root-private per-host backup 
 
 ## Current progress
 
-Versions last directly observed:{"crate-01": "6.3.7", "crate-02": "6.3.7", "crate-03": "6.3.7"}. Phase:recovery.
+Versions last directly observed:{"crate-01": "6.3.7", "crate-02": "6.4.6", "crate-03": "6.3.7"}. Phase:recovery.
 
 - crate-03 5.10.16→6.0.8,verified2026-10-28T01:33:47.342799+00:00
 - crate-01 5.10.16→6.0.8,verified2026-10-28T01:38:41.257367+00:00
@@ -45,6 +45,7 @@ Versions last directly observed:{"crate-01": "6.3.7", "crate-02": "6.3.7", "crat
 - crate-02 6.2.11→6.3.7,verified2026-10-28T02:32:43.886932+00:00
 - crate-03 6.2.11→6.3.7,verified2026-10-28T02:36:52.674517+00:00
 - crate-01 6.2.11→6.3.7,verified2026-10-28T02:40:24.884924+00:00
+- crate-02 6.3.7→6.4.6,verified2026-10-28T02:52:08.447867+00:00
 
 The authoritative`progress.json` carries timestamps and failures, and the receipts preserve per-node
 same-ID/image/runtime/stop/recovery/canary data. Normalstops useSIGTERM withunlimitedgrace andnoSIGKILL;

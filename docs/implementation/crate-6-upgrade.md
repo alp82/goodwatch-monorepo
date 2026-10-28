@@ -115,7 +115,7 @@ staffing and safe recovery, not a removed deadline. At06:00 traffic may rise; Q6
 | Before every node: all-coordinator heap history, GREEN/policy/client checks | **Q63: <80% for 10 min before the first node of each hop; 2 min before its second and third nodes**. Sample every 30s; a new JVM needs its own history |
 | Each complete hop: version/access/BLOB/backup canaries | 5 min additional |
 | Forward/stage snapshots in the existing V2 writer | Incremental in the same repository; budget5–15min per checkpoint until measured. Do not create another full repository or repoint V2 |
-| Final waits/restart/policy/cron restoration and observation | 25–40 min including Q43 final rebalance observation; hand over if the hard stop prevents it |
+| Final waits/restart/policy/cron restoration and observation | 25–40 min including Q43 final rebalance observation; hand over explicitly if a failed gate prevents it |
 
 Q63 supersedes Q59's ten-minute gate before every node: each hop uses **10/2/2-minute** pre-node heap
 histories, below 80% on every cluster member. Preparation/recovery and fresh heap history may overlap
@@ -524,7 +524,7 @@ rebalance none immediately, allocation all; no second restart. If test is omitte
 hand that state over explicitly. Restore the backup cron **byte-for-byte** with the same returned state:
 `ssh root@10.0.0.11 python3 - restore RETURNED_STATE_PATH < "$TMPDIR/cron-hold.py"`; checkoriginalhash/oneactiveentry.
 Restore the approved job holds exactly, verify fresh6.4.6 snapshot and record next scheduledhourlyrun.
-If it falls after the hardstop, hand it over as pending, not SUCCESS. Stop the localwatcher last.
+If it falls after handover, record it as pending, not SUCCESS. Stop the localwatcher last.
 
 ## Abort, recovery, rollback and RPO
 
@@ -612,8 +612,8 @@ work or touch unrelated schedules. Read schedules and active jobs fresh after go
 proof no work is active. Any active schema-changing/index-publishing work or other failed gate triggers Q62 rather than an
 unapproved cancellation or additional hold; existing heavy work otherwise has the explicit ownerwaiver. The documented manual schema/publication holds remain in force. The latest owner waiver allows existing
 heavy jobs (including the named shadow detector), except actual schema-changing or index-publishing
-work. Record each allowed heavy job; pause future starts of the nine, do not cancel active jobs. The
-no-deploy gate remains: even a docs-only commit can trigger an actual rolling Webapp deployment.
+work. Record each allowed heavy job; pause future starts of the nine, do not cancel active jobs. A deployment prevents a concurrent node swap: apply the owner-approved15-minute wait,
+then recheck GREEN and the watcher; failed or overdue deploys stop progression.
 
 **At normal or early-stop handover, restore those nine schedule configurations and original enabled states
 exactly, then read them back. Do not catch up, manually rerun or enqueue missed executions.** Next scheduled
@@ -641,7 +641,7 @@ Recorded owner decisions (a failed attempt does not authorize an automatic retry
 - [x] **Q61:** Accept rollback data loss since the protected pre-upgrade snapshot. No separate write-loss-cap or write-freeze decision is pending for this window.
 - [x] **Q62:** Stop at the first failed gate and hand over GREEN, homogeneous where safely possible. No rollback during the night; the owner decides in the morning. Do not upgrade another node merely to make versions uniform after a failed gate.
 - [x] **Mixed 6.0/6.1 BLOB exception:** The owner approved the documented allocation/local-copy/HTTP cross-check and holds. No unexplained missing copy, HTTP failure or unrelated SQL error is waived.
-- [x] **Q43 final restoration:** If the campaign completes safely, retain the approved final rebalance observation/abort procedure; if the hard stop prevents it, leave`none` and record the unproven placement test.
+- [x] **Q43 final restoration:** If the campaign completes safely, retain the approved final rebalance observation/abort procedure; if an early safety stop prevents it, leave`none` and record the unproven placement test.
 
 Operational confirmations still to record after go, not additional requests to reapprove the decisions above:
 
