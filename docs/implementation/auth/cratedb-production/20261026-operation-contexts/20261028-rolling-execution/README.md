@@ -8,7 +8,7 @@ health/heap/first-failure/Q60 safeguard remains; daytime06:00 traffic does not c
 No push or Coolify change. See[canonical runbook](../../../../crate-6-upgrade.md).
 
 [Live summary](progress.json),[sanitized receipts](receipts.json.gz),[page watcher](pages.jsonl.gz).
-UpdatedUTC:2026-10-28T01:34:46.710433+00:00. This record is committed locally at checkpoints; raw metadata/config/credentials
+UpdatedUTC:2026-10-28T01:39:26.955205+00:00. This record is committed locally at checkpoints; raw metadata/config/credentials
 remain private under`~/.cache/gw-work/644-q69` and root-private per-host backup paths.
 
 ## Verified preparation
@@ -32,8 +32,9 @@ remain private under`~/.cache/gw-work/644-q69` and root-private per-host backup 
 
 ## Current progress
 
-Versions last directly observed:{"crate-01": "5.10.16", "crate-02": "6.0.8", "crate-03": "6.0.8"}. Phase:recovery.
+Versions last directly observed:{"crate-01": "6.0.8", "crate-02": "6.0.8", "crate-03": "6.0.8"}. Phase:recovery.
 
+- crate-01 5.10.16→6.0.8,verified2026-10-28T01:38:41.257367+00:00
 - crate-03 5.10.16→6.0.8,verified2026-10-28T01:33:47.342799+00:00
 
 The authoritative`progress.json` carries timestamps and failures, and the receipts preserve per-node
