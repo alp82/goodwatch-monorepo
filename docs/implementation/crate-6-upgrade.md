@@ -289,7 +289,8 @@ crate_sql() {
    readonly=true/compress=true/location=/snapshots/v2 through all coordinators. Verify its archived BLOB
    manifest/references remain intact; no writes, retention or repository verification canaries in that path.
    **A new mixed snapshot cannot refresh the5.10 rollback RPO.** Q61's loss window still begins at this
-   originalOctober27 snapshot, including the full intervening day. Record that elapsed loss window.
+   originalOctober27 snapshot, including all intervening writes. Calculate and record the actual elapsed
+   loss window for this immediate run; the earlier next-night/day-long estimate no longer applies.
 
    With cron held, no active backup and all nodesGREEN, take a **fresh forward-recovery checkpoint in
    the existing working V2 repository** before the first remaining node; choose a name not already present:
