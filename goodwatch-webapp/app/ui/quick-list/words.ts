@@ -22,6 +22,7 @@ export const QUICK_WORDS = {
 	selected: (n: number) => `${n} selected`,
 	scoreAs: (n: number) => `Score ${n} as`,
 	clearSelection: "Clear selection",
+	stillSaving: (n: number) => `${n === 1 ? "1 title was" : `${n} titles were`} still saving; try ${n === 1 ? "it" : "them"} again.`,
 	undo: "Undo",
 	cleared: "Score cleared",
 	titles: (n: number) => `${n} titles`,

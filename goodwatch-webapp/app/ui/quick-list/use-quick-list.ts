@@ -1,13 +1,13 @@
 // Binds Quick list (model.ts) to the person: the titles (the rating flow's source, paged as rows are answered, or a
 // search of the whole catalog), the filters and order, the person's answers, the saves and Undo's saves (the rating
 // flow's save functions, one write at a time per title), and the flow's totals, milestones and guest limit.
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { SEARCH_MIN_CHARS } from "~/domain/discover-search"
 import { NO_FILTERS, type ScoreFilters } from "~/domain/my-scores"
 import { GUEST_RATING_LIMIT } from "~/domain/taste-rules"
 import { fetchSmartTitles } from "~/routes/api.smart-titles"
-import { useUserData } from "~/routes/api.user-data"
+import { queryKeyUserData, useUserData } from "~/routes/api.user-data"
 import type { Score } from "~/server/scores.server"
 import { useProductAnalytics, useProductExposure } from "~/telemetry/useProductAnalytics"
 import {
@@ -22,24 +22,34 @@ import {
 import { TitleWrites, answerPlan } from "~/ui/rating-flow/title-writes"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { requestSearch } from "~/ui/search/search-client"
-import { accountAnsweredKeys, excludeIdsFor, storedAnswerIs } from "~/ui/taste/answered"
-import { useTasteScoring } from "~/ui/taste/hooks/useTasteScoring"
+import { accountAnsweredKeys, storedAnswerIs } from "~/ui/taste/answered"
+import { type SaveOptions, useTasteScoring } from "~/ui/taste/hooks/useTasteScoring"
 import { useHydrated } from "~/utils/hydrated"
 import useLocale from "~/utils/locale"
 import {
+	BULK_AT_ONCE,
+	INITIAL_PAGING,
 	INITIAL_QUICK,
 	LEAVE_MS,
+	MISSES_MAX,
+	type Change,
 	type Order,
 	type QuickAnswer,
 	type QuickTitle,
 	ROWS,
 	SOURCE_ORDER,
+	afterBatch,
 	answerOf,
+	atEnd,
+	bounded,
 	fillOf,
 	fromScoring,
 	fromSearchRow,
 	heldAnswer,
 	listOf,
+	lookFurther as lookFurtherFrom,
+	mayAsk,
+	moreRequest,
 	quickList,
 	sameAnswer,
 	scorable,
@@ -54,8 +64,6 @@ const BATCH = 50
 const SPARE = 10
 /** At most this many titles in the list: past it, more come only from a search. */
 const POOL_MAX = 1000
-/** Batches in a row that bring nothing the filters let through before the list stops asking (the person can ask again). */
-const MISSES_MAX = 3
 /** How long typing rests before a search starts. */
 const SEARCH_REST_MS = 400
 
@@ -134,7 +142,7 @@ export function useQuickList({ titles, member }: { titles: ScoringMedia[]; membe
 	const [order, setOrder] = useState<Order>(SOURCE_ORDER)
 	const search = useCatalogSearch(filters.q)
 	const [pool, setPool] = useState(() => uniqueTitles(titles.map(fromScoring)))
-	const [paging, setPaging] = useState({ fetching: false, exhausted: false, failed: false, misses: 0 })
+	const [paging, setPaging] = useState(INITIAL_PAGING)
 
 	// Every title met (the list and searches), for the saves and the undo bar.
 	const met = useRef(new Map<string, QuickTitle>())
@@ -161,7 +169,7 @@ export function useQuickList({ titles, member }: { titles: ScoringMedia[]; membe
 	// Deliberate dependencies: a new list (its id) or the first moment the rows can show
 	useEffect(() => {
 		if (!ready) return
-		dispatch({ type: "rows", fill: fillOf(list, { ...stateNow.current, shown: [] }, answeredKeys, inSearch) })
+		dispatch({ type: "rows", fill: fillOf(list, { ...stateNow.current, shown: [], gone: [] }, answeredKeys, inSearch) })
 	}, [listId, ready])
 	useEffect(() => {
 		if (ready && state.shown.length < ROWS && fill.length) dispatch({ type: "fill", fill })
@@ -176,43 +184,35 @@ export function useQuickList({ titles, member }: { titles: ScoringMedia[]; membe
 	// stop after a few batches the filters let nothing through from.
 	// Deliberate dependencies: new filters give the list another try
 	useEffect(() => setPaging((p) => (p.misses ? { ...p, misses: 0 } : p)), [sheetKey])
-	const answeredInOrder = useRef<string[]>([])
-	answeredInOrder.current = [...scoring.interactions]
-		.sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0))
-		.map((i) => `${i.media_type}-${i.tmdb_id}`)
+	const answeredInOrder = useMemo(
+		() =>
+			[...scoring.interactions]
+				.sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0))
+				.map((i) => `${i.media_type}-${i.tmdb_id}`),
+		[scoring.interactions],
+	)
+	// The next request names every title known, so it never brings back one the list has (moreRequest).
+	const request = useMemo(() => moreRequest(answeredInOrder, pool.map((t) => t.key)), [answeredInOrder, pool])
 	const wantsMore =
-		ready &&
-		!inSearch &&
-		fill.length < SPARE &&
-		!paging.fetching &&
-		!paging.exhausted &&
-		!paging.failed &&
-		paging.misses < MISSES_MAX &&
-		pool.length < POOL_MAX
+		ready && !inSearch && fill.length < SPARE && pool.length < POOL_MAX && mayAsk(paging, request.exclusion)
+	const requestNow = useRef(request)
+	requestNow.current = request
 	useEffect(() => {
 		if (!wantsMore) return
+		const { excludeIds, exclusion } = requestNow.current
 		setPaging((p) => ({ ...p, fetching: true }))
 		const have = new Set(pool.map((t) => t.key as string))
-		fetchSmartTitles({
-			count: BATCH,
-			language: locale.language,
-			excludeIds: excludeIdsFor(answeredInOrder.current, [...have]),
-		}).then(
+		fetchSmartTitles({ count: BATCH, language: locale.language, excludeIds }).then(
 			(more) => {
 				const added = uniqueTitles(more.map(fromScoring)).filter((t) => !have.has(t.key))
 				const passing = listOf(added, filters, SOURCE_ORDER).filter((t) => !answeredKeys.has(t.key)).length
 				setPool((p) => uniqueTitles([...p, ...added]))
-				setPaging((p) => ({
-					fetching: false,
-					failed: false,
-					exhausted: more.length === 0,
-					misses: passing ? 0 : p.misses + 1,
-				}))
+				setPaging((p) => afterBatch(p, exclusion, added.length, passing))
 			},
 			() => setPaging((p) => ({ ...p, fetching: false, failed: true })),
 		)
 	}, [wantsMore])
-	const lookFurther = useCallback(() => setPaging((p) => ({ ...p, failed: false, misses: 0 })), [])
+	const lookFurther = useCallback(() => setPaging((p) => lookFurtherFrom(p, requestNow.current.exclusion)), [])
 
 	// ---------------------------------------------------------------- answers and Undo
 
@@ -224,14 +224,23 @@ export function useQuickList({ titles, member }: { titles: ScoringMedia[]; membe
 	const timers = useRef<number[]>([])
 	useEffect(() => () => timers.current.forEach((id) => window.clearTimeout(id)), [])
 	const [error, setError] = useState<string | null>(null)
+	const queryClient = useQueryClient()
+	// A bulk answer's saves (and its undo's) wait their turn here, a few at a time.
+	const gate = useRef<ReturnType<typeof bounded>>()
+	if (!gate.current) gate.current = bounded(BULK_AT_ONCE)
+	const bulkGate = gate.current
 
 	const { saveScore, saveSkip, saveWantToSee, saveNotInterested, clearAnswer } = scoring
-	/** Takes a title from `from` to `to` through the rating flow's saves; null when a write for it is on its way. */
+	/**
+	 * Takes a title from `from` to `to` through the rating flow's saves; null when a write for it is on its way. In a
+	 * bulk change (`bulk`) the save waits its turn, and doesn't read the member data again: the caller does once.
+	 */
 	const write = useCallback(
-		(t: QuickTitle, from: QuickAnswer | null, to: QuickAnswer | null) =>
-			titleWrites.run(t.key, async () => {
+		(t: QuickTitle, from: QuickAnswer | null, to: QuickAnswer | null, bulk = false) => {
+			const options: SaveOptions | undefined = bulk ? { deferSync: true } : undefined
+			const save = async () => {
 				if (!to) {
-					if (from) await clearAnswer(t.media, from.type)
+					if (from) await clearAnswer(t.media, from.type, options)
 					return
 				}
 				const plan = answerPlan({
@@ -241,27 +250,56 @@ export function useQuickList({ titles, member }: { titles: ScoringMedia[]; membe
 					stored: storedAnswerIs(latestUserData.current, t.key, to.type, to.type === "score" ? to.score : undefined),
 				})
 				if (plan === "nothing") return
-				if (plan === "clear-then-save" && from) await clearAnswer(t.media, from.type)
-				if (to.type === "score") await saveScore(t.media, to.score as Score)
-				else if (to.type === "skip") await saveSkip(t.media)
-				else if (to.type === "plan") await saveWantToSee(t.media)
-				else await saveNotInterested(t.media)
-			}),
-		[titleWrites, member, clearAnswer, saveScore, saveSkip, saveWantToSee, saveNotInterested],
+				if (plan === "clear-then-save" && from) await clearAnswer(t.media, from.type, options)
+				if (to.type === "score") await saveScore(t.media, to.score as Score, options)
+				else if (to.type === "skip") await saveSkip(t.media, options)
+				else if (to.type === "plan") await saveWantToSee(t.media, options)
+				else await saveNotInterested(t.media, options)
+			}
+			// The title is busy from the press on, also while its save waits its turn.
+			return titleWrites.run(t.key, bulk ? () => bulkGate(save) : save)
+		},
+		[titleWrites, bulkGate, member, clearAnswer, saveScore, saveSkip, saveWantToSee, saveNotInterested],
 	)
 
-	/** Gives `to` to the rows with `keys` (null: takes a score back). Rows with a write on its way are left as they are. */
+	/**
+	 * Runs the writes of one change: one by itself; many a few at a time, the member data read once after all of them
+	 * settled. `failed` runs for each write that wasn't saved.
+	 */
+	const runWrites = useCallback(
+		(items: readonly Change[], from: (i: Change) => QuickAnswer | null, to: (i: Change) => QuickAnswer | null, failed: (i: Change, t: QuickTitle) => void) => {
+			const bulk = items.length > 1
+			const running: Promise<unknown>[] = []
+			for (const i of items) {
+				const t = met.current.get(i.key)
+				if (!t) continue
+				const w = write(t, from(i), to(i), bulk)
+				if (!w) continue
+				running.push(w.catch(() => failed(i, t)))
+			}
+			if (bulk && member && running.length)
+				void Promise.allSettled(running).then(() => queryClient.invalidateQueries({ queryKey: queryKeyUserData }))
+		},
+		[write, member, queryClient],
+	)
+
+	/**
+	 * Gives `to` to the rows with `keys` (null: takes a score back). Rows with a write on its way are left as they are:
+	 * `busy` names them, `written` the rows answered.
+	 */
 	const answer = useCallback(
-		(keys: readonly string[], to: QuickAnswer | null) => {
+		(keys: readonly string[], to: QuickAnswer | null): { written: string[]; busy: string[] } => {
 			const s = stateNow.current
-			let ks = keys.filter((k) => met.current.has(k) && !titleWrites.busy(k))
+			const known = keys.filter((k) => met.current.has(k))
+			const busy = known.filter((k) => titleWrites.busy(k))
+			let ks = known.filter((k) => !titleWrites.busy(k))
 			// A guest's scores stop at the limit; a title scored already is a change.
 			if (to?.type === "score")
 				ks = scorable(ks, (k) => answerOf(s, held, k)?.type === "score", totals.rated, GUEST_RATING_LIMIT, member)
 			const items = ks
 				.map((key) => ({ key, before: answerOf(s, held, key), after: to }))
 				.filter((i) => !sameAnswer(i.before, i.after))
-			if (!items.length) return
+			if (!items.length) return { written: [], busy }
 			setError(null)
 			const id = ++stepId.current
 			dispatch({ type: "answer", id, items })
@@ -272,16 +310,18 @@ export function useQuickList({ titles, member }: { titles: ScoringMedia[]; membe
 				timers.current.push(
 					window.setTimeout(() => dispatch({ type: "settle", keys: going, fill: fillNow.current, left: true }), LEAVE_MS),
 				)
-			for (const i of items) {
-				const t = met.current.get(i.key)
-				if (!t) continue
-				write(t, i.before, i.after)?.catch(() => {
+			runWrites(
+				items,
+				(i) => i.before,
+				(i) => i.after,
+				(i, t) => {
 					dispatch({ type: "failed", step: id, key: i.key })
 					setError(QUICK_WORDS.saveFailed(t.title))
-				})
-			}
+				},
+			)
+			return { written: items.map((i) => i.key), busy }
 		},
-		[titleWrites, held, totals.rated, member, write],
+		[titleWrites, held, totals.rated, member, runWrites],
 	)
 
 	const last = state.steps[0] ?? null
@@ -292,15 +332,16 @@ export function useQuickList({ titles, member }: { titles: ScoringMedia[]; membe
 		if (!step || step.items.some((i) => titleWrites.busy(i.key))) return
 		setError(null)
 		dispatch({ type: "undo" })
-		for (const i of step.items) {
-			const t = met.current.get(i.key)
-			if (!t) continue
-			write(t, i.after, i.before)?.catch(() => {
+		runWrites(
+			step.items,
+			(i) => i.after,
+			(i) => i.before,
+			(i, t) => {
 				dispatch({ type: "forget", key: i.key })
 				setError(QUICK_WORDS.undoFailed(t.title))
-			})
-		}
-	}, [titleWrites, write])
+			},
+		)
+	}, [titleWrites, runWrites])
 
 	const rows = useMemo(() => state.shown.flatMap((k) => met.current.get(k) ?? []), [state.shown])
 	const answers = useMemo(() => {
@@ -352,7 +393,7 @@ export function useQuickList({ titles, member }: { titles: ScoringMedia[]; membe
 		/** Asking for more of the person's titles: on its way, failed, or stopped for now (filters let nothing through). */
 		loadingMore: paging.fetching,
 		moreFailed: paging.failed,
-		moreStopped: !paging.exhausted && paging.misses >= MISSES_MAX && pool.length < POOL_MAX,
+		moreStopped: !atEnd(paging, request.exclusion) && paging.misses >= MISSES_MAX && pool.length < POOL_MAX,
 		lookFurther,
 	}
 }

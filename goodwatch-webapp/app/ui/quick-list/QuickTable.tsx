@@ -20,6 +20,7 @@ import {
 	type Order,
 	type QuickAnswer,
 	type QuickTitle,
+	afterBulk,
 	keepSelected,
 	nextOrder,
 	selectRange,
@@ -185,7 +186,7 @@ const Row = memo(function Row({
 					score={score}
 					gw={null}
 					label={`Your score for ${t.title}`}
-					disabled={locked && score == null}
+					disabled={busy || (locked && score == null)}
 					onPick={(n) => give({ type: "score", score: n })}
 					onClear={() => onAnswer(t.key, null)}
 				/>
@@ -195,6 +196,7 @@ const Row = memo(function Row({
 				<RowMarks
 					answer={answer}
 					asking={asking}
+					disabled={busy}
 					onUnseen={() => setAsking(true)}
 					onNotInterested={() => give({ type: "not-interested" })}
 					onBack={() => setAsking(false)}
@@ -280,12 +282,15 @@ function SelectionBar({
 	onScore,
 	onMark,
 	onClear,
+	note,
 }: {
 	n: number
 	locked: boolean
 	onScore: (score: number) => void
 	onMark: (a: QuickAnswer) => void
 	onClear: () => void
+	/** Rows that were still saving at the last bulk answer, to try again. */
+	note: string | null
 }) {
 	const mark =
 		"inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border-2 border-gray-700 px-2.5 text-xs font-bold text-gray-100 hover:border-gray-500 focus-visible:outline-2 focus-visible:outline-amber-400"
@@ -310,6 +315,11 @@ function SelectionBar({
 			<button type="button" onClick={onClear} className="ml-auto h-8 cursor-pointer px-2 text-xs text-gray-400 hover:text-white">
 				{QUICK_WORDS.clearSelection}
 			</button>
+			{note && (
+				<p className="basis-full text-xs text-amber-200/90" role="status" data-still-saving>
+					{note}
+				</p>
+			)}
 		</div>
 	)
 }
@@ -338,7 +348,7 @@ export function QuickTable({
 	selects: boolean
 	locked: boolean
 	busy: (key: string) => boolean
-	onAnswer: (keys: readonly string[], a: QuickAnswer | null) => void
+	onAnswer: (keys: readonly string[], a: QuickAnswer | null) => { written: string[]; busy: string[] }
 }) {
 	const latestSet = useMemo(() => new Set(latest), [latest])
 	const leavingSet = useMemo(() => new Set(leaving), [leaving])
@@ -361,10 +371,17 @@ export function QuickTable({
 	const open = present.filter((k) => !answers[k])
 	const allOn = open.length > 0 && open.every((k) => picked.has(k))
 	const someOn = !allOn && n > 0
+	// Rows still saving when a bulk answer was given keep their place in the selection, with a line that says so.
+	const [stillSaving, setStillSaving] = useState(0)
 	const many = (a: QuickAnswer) => {
-		onAnswer(chosen, a)
-		setPicked(new Set())
+		const { busy: skipped } = onAnswer(chosen, a)
+		const after = afterBulk(chosen, skipped)
+		setPicked(after.selected)
+		setStillSaving(after.stillSaving)
 	}
+	useEffect(() => {
+		if (n === 0) setStillSaving(0)
+	}, [n])
 	const body = useRowMotion(rows.map((t) => t.key).join(","))
 
 	return (
@@ -376,6 +393,7 @@ export function QuickTable({
 					onScore={(score) => many({ type: "score", score })}
 					onMark={many}
 					onClear={() => setPicked(new Set())}
+					note={stillSaving ? QUICK_WORDS.stillSaving(stillSaving) : null}
 				/>
 			)}
 			{/* biome-ignore lint/a11y/useSemanticElements: a CSS grid table: div rows keep their table roles where display on table elements would drop them */}

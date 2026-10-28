@@ -14,6 +14,7 @@ import type { FilterGroup, ScoreFilters, ScoredTitle } from "../../domain/my-sco
 import { passes } from "../../domain/my-scores.ts"
 import type { MediaKey } from "../../types/user-data.ts"
 import type { ScoringMedia } from "../scoring/types.ts"
+import { type ExcludeItem, excludeIdsFor } from "../taste/answered.ts"
 
 /** Rows shown at a time. */
 export const ROWS = 20
@@ -175,6 +176,11 @@ export interface QuickState {
 	latest: string[]
 	/** Rows Undo just brought back (they come in as they left). */
 	back: string[]
+	/**
+	 * Rows that slid out of this list after their answer: they don't take a place in it again. A new list (another
+	 * search, filters, order, or the search cleared) starts with none, so a search shows an answer given here.
+	 */
+	gone: string[]
 	/** What Undo takes back, the latest first. */
 	steps: Step[]
 	list: number
@@ -186,6 +192,7 @@ export const INITIAL_QUICK: QuickState = {
 	leaving: [],
 	latest: [],
 	back: [],
+	gone: [],
 	steps: [],
 	list: 0,
 }
@@ -232,6 +239,7 @@ export function quickList(state: QuickState, action: QuickAction): QuickState {
 				leaving: [],
 				latest: [],
 				back: [],
+				gone: [],
 				list: state.list + 1,
 			}
 		case "fill": {
@@ -242,13 +250,15 @@ export function quickList(state: QuickState, action: QuickAction): QuickState {
 		case "settle": {
 			const gone = new Set(action.left ? action.keys.filter((k) => state.leaving.includes(k)) : action.keys)
 			if (!gone.size && state.shown.length >= ROWS) return state
+			const dismissed = new Set([...state.gone, ...(action.left ? gone : [])])
 			const shown = fillUp(
 				state.shown.filter((k) => !gone.has(k)),
-				action.fill,
+				action.fill.filter((k) => !dismissed.has(k)),
 			)
 			return {
 				...state,
 				shown,
+				gone: action.left ? [...dismissed] : state.gone,
 				leaving: state.leaving.filter((k) => !gone.has(k)),
 				latest: state.latest.filter((k) => !gone.has(k)),
 				back: state.back.filter((k) => !gone.has(k)),
@@ -303,9 +313,11 @@ export function quickList(state: QuickState, action: QuickAction): QuickState {
 			if (step.list === state.list) {
 				// The rows as they were: the ones that slid out come back to their places, the ones that came in go.
 				const now = new Set(state.shown.filter((k) => !state.leaving.includes(k)))
+				const returning = new Set(step.shown)
 				return {
 					...state,
 					answers,
+					gone: state.gone.filter((k) => !returning.has(k)),
 					shown: step.shown,
 					leaving: [],
 					latest: step.latest,
@@ -318,6 +330,7 @@ export function quickList(state: QuickState, action: QuickAction): QuickState {
 			return {
 				...state,
 				answers,
+				gone: state.gone.filter((k) => !missing.includes(k)),
 				shown: [...missing, ...state.shown].slice(0, Math.max(ROWS, missing.length)),
 				back: missing,
 				latest: state.latest.filter((k) => !step.items.some((i) => i.key === k)),
@@ -333,21 +346,23 @@ export const answerOf = (state: Pick<QuickState, "answers">, held: (key: string)
 
 /**
  * The titles of `list` that may take a free place, in order. From the person's unanswered titles: those with no answer
- * at all (`answered` is the person's marks, every kind). From a search: those not answered in this visit (an earlier
- * answer shows, to be changed).
+ * at all (`answered` is the person's marks, every kind, and this visit's answers). From a search: every title but the
+ * rows that slid out of it (an answer, given before or in this visit, shows, to be changed).
  */
 export function fillOf(
 	list: readonly QuickTitle[],
-	state: Pick<QuickState, "answers" | "shown">,
+	state: Pick<QuickState, "answers" | "shown" | "gone">,
 	answered: { has: (key: string) => boolean },
 	search: boolean,
 ): string[] {
 	const shown = new Set(state.shown)
+	const gone = new Set(state.gone)
 	return list.flatMap((t) => {
-		if (shown.has(t.key)) return []
+		if (shown.has(t.key) || gone.has(t.key)) return []
+		if (search) return [t.key]
 		const here = state.answers[t.key]
 		if (here) return []
-		if (!search && here === undefined && answered.has(t.key)) return []
+		if (here === undefined && answered.has(t.key)) return []
 		return [t.key]
 	})
 }
@@ -467,3 +482,109 @@ export function keepSelected(selected: ReadonlySet<string>, rows: readonly strin
 	if (![...selected].some((k) => !rows.includes(k))) return selected
 	return new Set([...selected].filter((k) => rows.includes(k)))
 }
+
+/**
+ * The selection after a bulk answer to `chosen`: rows whose write was on its way (`busy`) weren't answered, so they
+ * stay selected, with a line that says so; the rest leave the selection.
+ */
+export function afterBulk(
+	chosen: readonly string[],
+	busy: readonly string[],
+): { selected: Set<string>; stillSaving: number } {
+	const left = new Set(busy)
+	const selected = new Set(chosen.filter((k) => left.has(k)))
+	return { selected, stillSaving: selected.size }
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Bulk writes
+
+/** How many saves of a bulk answer (or its undo) run at a time. */
+export const BULK_AT_ONCE = 4
+
+/** Runs tasks given to it with at most `limit` running at a time, the rest waiting in order. */
+export function bounded(limit: number) {
+	let running = 0
+	const waiting: (() => void)[] = []
+	const next = () => {
+		if (running >= limit) return
+		const start = waiting.shift()
+		if (start) start()
+	}
+	return function run<T>(task: () => Promise<T>): Promise<T> {
+		return new Promise<T>((resolve, reject) => {
+			waiting.push(() => {
+				running++
+				let p: Promise<T>
+				try {
+					p = task()
+				} catch (error) {
+					p = Promise.reject(error)
+				}
+				p.then(resolve, reject).finally(() => {
+					running--
+					next()
+				})
+			})
+			next()
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// More titles
+
+/**
+ * Paging the person's titles: one request at a time, a stop after `MISSES_MAX` batches the filters let nothing
+ * through from, and an end once a request brought nothing new. `endAt` is the exclusion set (`exclusionKey`) that
+ * request named: asking again with the same set would bring the same nothing, so it isn't asked again until the set
+ * changes.
+ */
+export interface Paging {
+	fetching: boolean
+	failed: boolean
+	misses: number
+	endAt: string | null
+}
+export const INITIAL_PAGING: Paging = { fetching: false, failed: false, misses: 0, endAt: null }
+export const MISSES_MAX = 3
+
+/** The titles a request for more names as known, as one string: what makes two requests the same. */
+export const exclusionKey = (keys: Iterable<string>) => [...new Set(keys)].sort().join(",")
+
+/**
+ * The next request for more titles: every title of this visit's answers (`answered`, oldest first) and of the list
+ * (`pool`, bounded) named as known, none cut off, so a batch never brings back a title the list already has.
+ */
+export function moreRequest(answered: readonly string[], pool: readonly string[]): { excludeIds: ExcludeItem[]; exclusion: string } {
+	return {
+		excludeIds: excludeIdsFor(answered, pool, answered.length + pool.length),
+		exclusion: exclusionKey([...answered, ...pool]),
+	}
+}
+
+/** Whether the list may ask for more titles now, with this exclusion set. */
+export const mayAsk = (p: Paging, exclusion: string) =>
+	!p.fetching && !p.failed && p.misses < MISSES_MAX && p.endAt !== exclusion
+
+/** After a batch: `added` new titles, `passing` of them through the filters, for the request naming `exclusion`. */
+export function afterBatch(p: Paging, exclusion: string, added: number, passing: number): Paging {
+	return {
+		fetching: false,
+		failed: false,
+		misses: passing ? 0 : p.misses + 1,
+		endAt: added === 0 ? exclusion : null,
+	}
+}
+
+/**
+ * "Look further" (or Try again): another try, unless the last request named this same exclusion set and brought
+ * nothing new: then it stays at the end and asks nothing.
+ */
+export function lookFurther(p: Paging, exclusion: string): Paging {
+	if (p.endAt === exclusion) return p.failed ? { ...p, failed: false } : p
+	return { ...p, failed: false, misses: 0 }
+}
+
+/** At the end of the person's titles for now: the last request brought nothing new, and nothing changed since. */
+export const atEnd = (p: Paging, exclusion: string) => p.endAt === exclusion

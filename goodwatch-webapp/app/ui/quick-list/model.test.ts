@@ -2,19 +2,28 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { NO_FILTERS } from "../../domain/my-scores.ts"
 import {
+	INITIAL_PAGING,
 	INITIAL_QUICK,
+	MISSES_MAX,
 	type QuickAction,
 	type QuickAnswer,
 	type QuickState,
 	type QuickTitle,
 	ROWS,
 	SOURCE_ORDER,
+	afterBatch,
+	afterBulk,
+	atEnd,
+	bounded,
 	fillOf,
 	fromScoring,
 	fromSearchRow,
 	heldAnswer,
 	keepSelected,
 	listOf,
+	lookFurther,
+	mayAsk,
+	moreRequest,
 	nextOrder,
 	quickList,
 	scorable,
@@ -140,18 +149,50 @@ test("a failed save takes the answer back to the person's marks and out of Undo"
 	assert.equal(s.steps[0].id, 1)
 })
 
-test("titles that may fill a place: unanswered ones; in a search also those answered before", () => {
-	const titles = keys(5).map((key, i) =>
-		fromScoring({ tmdb_id: i + 1, media_type: "movie", title: key, poster_path: "/p.jpg" }),
-	)
-	const state = { answers: { "movie-2": score(7), "movie-3": null }, shown: ["movie-1"] }
+const titlesOf = (ks: string[]) =>
+	ks.map((key) => fromScoring({ tmdb_id: Number(key.split("-")[1]), media_type: "movie", title: key, poster_path: "/p.jpg" }))
+
+test("titles that may fill a place: unanswered ones; in a search every title, also those answered here", () => {
+	const titles = titlesOf(keys(5))
+	const state = { answers: { "movie-2": score(7), "movie-3": null }, shown: ["movie-1"], gone: [] }
 	const answered = new Set(["movie-3", "movie-4"])
 	assert.deepEqual(fillOf(titles, state, answered, false), ["movie-3", "movie-5"])
-	assert.deepEqual(fillOf(titles, state, answered, true), ["movie-3", "movie-4", "movie-5"])
+	assert.deepEqual(fillOf(titles, state, answered, true), ["movie-2", "movie-3", "movie-4", "movie-5"])
+})
+
+test("a search shows a title answered in this visit with its answer; a row that slid out of it doesn't come back", () => {
+	const all = keys(30)
+	// Answered in the person's own list: movie-3, which slides out after the next answer.
+	let s = run(start(), answer(1, "movie-3", score(8)), answer(2, "movie-4", { type: "skip" }))
+	s = run(s, { type: "settle", keys: ["movie-3"], fill: fillOf(titlesOf(all), s, new Set(), false), left: true })
+	assert.deepEqual(s.gone, ["movie-3"])
+	// A new search: its first rows include movie-3, with its answer, to be changed.
+	const found = titlesOf(["movie-3", "movie-4", "movie-40"])
+	s = run(s, { type: "rows", fill: fillOf(found, { ...s, shown: [], gone: [] }, new Set(["movie-3", "movie-4"]), true) })
+	assert.deepEqual(s.shown, ["movie-3", "movie-4", "movie-40"])
+	assert.deepEqual(s.gone, [], "a new list starts with no rows dismissed")
+	assert.deepEqual(s.answers["movie-3"], score(8))
+	// In the search, movie-3 is answered again, slides out after the next answer, and doesn't fill back in.
+	s = run(s, answer(3, "movie-3", score(9), score(8)), answer(4, "movie-40", { type: "skip" }))
+	s = run(s, { type: "settle", keys: ["movie-3"], fill: fillOf(found, s, new Set(), true), left: true })
+	assert.ok(!s.shown.includes("movie-3"))
+	assert.deepEqual(fillOf(found, s, new Set(), true), [], "dismissed in this search")
+	// The query changes (or clears): a new list, and movie-3 shows again.
+	s = run(s, { type: "rows", fill: fillOf(found, { ...s, shown: [], gone: [] }, new Set(), true) })
+	assert.ok(s.shown.includes("movie-3"))
+})
+
+test("undo brings a dismissed row back, and it may fill a place again", () => {
+	let s = run(start(), answer(1, "movie-3", score(8)), answer(2, "movie-4", score(6)))
+	s = run(s, { type: "settle", keys: ["movie-3"], fill: [], left: true })
+	assert.deepEqual(s.gone, ["movie-3"])
+	s = run(s, { type: "undo" })
+	assert.deepEqual(s.gone, [])
+	assert.ok(s.shown.includes("movie-3"))
 })
 
 test("rows found answered elsewhere go, unless answered here or in a search", () => {
-	const state = { answers: { "movie-2": score(7) }, shown: ["movie-1", "movie-2", "movie-3"], leaving: [] }
+	const state = { answers: { "movie-2": score(7) }, shown: ["movie-1", "movie-2", "movie-3"], leaving: [], gone: [] }
 	const answered = new Set(["movie-1", "movie-2"])
 	assert.deepEqual(staleRows(state, answered, false), ["movie-1"])
 	assert.deepEqual(staleRows(state, answered, true), [])
@@ -219,4 +260,65 @@ test("selection: a press toggles a row, Shift adds the range from the last row p
 	const kept = new Set(["movie-1"])
 	assert.equal(keepSelected(kept, rows), kept, "unchanged selection keeps its identity")
 	assert.deepEqual([...keepSelected(new Set(["movie-1", "movie-9"]), rows)], ["movie-1"])
+})
+
+test("a bulk answer leaves out rows still saving: they stay selected, with a count for the line", () => {
+	const out = afterBulk(["movie-1", "movie-2", "movie-3", "movie-4"], ["movie-2", "movie-4"])
+	assert.deepEqual([...out.selected], ["movie-2", "movie-4"])
+	assert.equal(out.stillSaving, 2)
+	const all = afterBulk(["movie-1", "movie-2"], [])
+	assert.equal(all.selected.size, 0)
+	assert.equal(all.stillSaving, 0)
+})
+
+test("bulk saves run a few at a time, in order, and every one settles", async () => {
+	const run = bounded(4)
+	let running = 0
+	let most = 0
+	const started: number[] = []
+	const task = (n: number) => async () => {
+		started.push(n)
+		running++
+		most = Math.max(most, running)
+		await new Promise((r) => setTimeout(r, 2))
+		running--
+		if (n === 5) throw new Error("not saved")
+		return n
+	}
+	const settled = await Promise.allSettled(Array.from({ length: 10 }, (_, n) => run(task(n))))
+	assert.equal(most, 4)
+	assert.deepEqual(started, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+	assert.equal(settled.filter((r) => r.status === "rejected").length, 1, "a failed save doesn't stop the rest")
+})
+
+test("paging names every title known, also past 600, so a batch never brings back the list's titles", () => {
+	const pool = keys(950)
+	const answered = keys(80, 2000)
+	const { excludeIds } = moreRequest(answered, pool)
+	assert.equal(excludeIds.length, 1030)
+	assert.deepEqual(excludeIds[0], { media_type: "movie", tmdb_id: 2000 })
+	assert.deepEqual(excludeIds.at(-1), { media_type: "movie", tmdb_id: 950 })
+})
+
+test("paging: a batch with nothing new ends it; Look further doesn't send the same request again", () => {
+	const at650 = moreRequest([], keys(650)).exclusion
+	let p = afterBatch({ ...INITIAL_PAGING, fetching: true }, at650, 0, 0)
+	assert.ok(atEnd(p, at650))
+	assert.equal(mayAsk(p, at650), false)
+	p = lookFurther(p, at650)
+	assert.equal(mayAsk(p, at650), false, "same exclusion set: no request")
+	assert.ok(atEnd(p, at650), "the end state shows")
+	// A title answered in a search changes the set: the list may ask again.
+	const changed = moreRequest(["movie-9000"], keys(650)).exclusion
+	assert.equal(atEnd(p, changed), false)
+	assert.equal(mayAsk(p, changed), true)
+})
+
+test("paging: batches the filters let nothing through from stop it; Look further tries again", () => {
+	let p = INITIAL_PAGING
+	for (let i = 0; i < MISSES_MAX; i++) p = afterBatch(p, `set-${i}`, 50, 0)
+	assert.equal(mayAsk(p, "set-9"), false)
+	p = lookFurther(p, "set-9")
+	assert.equal(mayAsk(p, "set-9"), true)
+	assert.equal(afterBatch(p, "set-9", 50, 3).misses, 0)
 })

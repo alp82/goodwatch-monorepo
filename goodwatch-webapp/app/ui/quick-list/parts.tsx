@@ -275,5 +275,5 @@ export function useSelectsRows() {
 }
 
 /** Whether a key press belongs to a field. */
-export const inField = (e: KeyboardEvent) =>
+export const inField = (e: { target: EventTarget | null }) =>
 	!!(e.target as HTMLElement | null)?.closest?.("input, textarea, select, [contenteditable]")

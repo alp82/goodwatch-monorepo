@@ -2,7 +2,7 @@
 // answered, to score what they've seen and mark the rest. Above the table: the mode switch, the taste strip with the
 // flow's milestones (and a guest's sign-up line, then the locked panel at the limit), the search of the whole catalog
 // and the filters. Under it, the undo bar. State: model.ts; binding: use-quick-list.ts; rows: QuickTable.tsx.
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { activeFilterCount } from "~/domain/my-scores"
 import { FilterChips, FiltersButton, FiltersSheet, RowSearch } from "~/ui/my-library/scores/ScoreFilters"
 import { WRAP } from "~/ui/my-pages/bits"
@@ -18,17 +18,28 @@ import { QUICK_WORDS } from "./words"
 
 const NO_STANDING = () => ({ score: 0, changed: false })
 
+/** A dialog or sheet is open somewhere on the page (the filter sheet, a menu's sheet, a prompt): one that is drawn. */
+const dialogOpen = () =>
+	[...document.querySelectorAll('dialog[open], [role="dialog"], [role="alertdialog"], [aria-modal="true"]')].some(
+		(el) => el.getClientRects().length > 0,
+	)
+
 export function QuickList({ titles, member }: { titles: ScoringMedia[]; member: boolean }) {
 	const q = useQuickList({ titles, member })
 	const selects = useSelectsRows()
 	const [sheet, setSheet] = useState(false)
 
-	// U takes the latest change back (not while typing).
+	// U takes the latest change back: not while typing, not while the filter sheet or any other dialog is open, and not
+	// for a key something else already took.
 	const { undo } = q
+	const sheetOpen = useRef(sheet)
+	sheetOpen.current = sheet
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
-			if (inField(e) || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
+			if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
 			if (e.key !== "u" && e.key !== "U") return
+			if (inField(e) || inField({ target: document.activeElement })) return
+			if (sheetOpen.current || dialogOpen()) return
 			e.preventDefault()
 			undo()
 		}
