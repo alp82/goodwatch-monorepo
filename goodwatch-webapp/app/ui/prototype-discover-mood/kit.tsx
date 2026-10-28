@@ -23,8 +23,13 @@ import type { DiscoverResults } from "~/server/discover-results.server"
 import type { TitleCard } from "~/server/title-cards.server"
 import { DiscoverGrid } from "~/ui/discover/DiscoverGrid"
 import { runDiscoverSearch } from "~/ui/discover/discover-search-request"
-import type { FilterBarCounts } from "~/ui/filter-bar"
-import { useFilterState } from "~/ui/filter-bar"
+import type { FilterBarCounts, TasteState } from "~/ui/filter-bar"
+import { activeChips, useFilterState } from "~/ui/filter-bar"
+import type { FilterGroupsData } from "~/ui/filter-bar/FilterGroups"
+import type { ActiveChip } from "~/ui/filter-bar/labels"
+import { useMyServices, usePeopleNames, useTitleNames } from "~/ui/filter-bar/useFilterData"
+import { ladderStepFor } from "~/domain/age-content"
+import { type FilterState, secondaryFilterCount, stateAsApplied } from "~/domain/filter-state"
 import type { TitleKey } from "~/utils/title-key"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -217,3 +222,78 @@ export function ProtoGrid({ d }: { d: ProtoDiscover }) {
 /** A short count, for example 12.4k. */
 export const short = (n: number | null | undefined) =>
 	n == null ? "" : n >= 10_000 ? `${Math.round(n / 1000)}k` : n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n)
+
+// ---------------------------------------------------------------------------------------------------------------
+// Round 2: the pieces FilterBar builds for its own controls, so a variant can place the real controls, chips and
+// filter cards anywhere (inline, in a rail, in a panel) instead of only inside the bar and its side sheet.
+
+export function useFilterPieces(d: ProtoDiscover, taste: TasteState = "signUp") {
+	const { filters, counts } = d
+	const { state } = filters
+	const services = useMyServices({ country: state.streamingCountry, include: state.services })
+	const titles = useTitleNames([...(state.similarTo ?? []), ...(state.loved ?? []), ...(state.disliked ?? [])], "")
+	const people = usePeopleNames(state.people ?? [], "")
+	const lastLadder = useRef(counts?.ladder ?? null)
+	if (counts) lastLadder.current = counts.ladder ?? null
+	const ladder = lastLadder.current
+	const applied = useMemo(() => stateAsApplied(state, ladder), [state, ladder])
+	const chips: ActiveChip[] = useMemo(
+		() =>
+			activeChips(applied, {
+				service: (id) => services.countryProviders.find((p) => p.id === id)?.name,
+				serviceLogo: (id) => services.countryProviders.find((p) => p.id === id)?.logo_path,
+				title: (key) => titles.byKey.get(key)?.title,
+				poster: (key) => titles.byKey.get(key)?.poster,
+				person: (id) => people.byId.get(id)?.name,
+				ageStep: (age) => (ladder ? ladderStepFor(ladder.steps, age).label : undefined),
+			}),
+		[applied, services.countryProviders, titles.byKey, people.byId, ladder],
+	)
+	const onChange = (next: FilterState) => filters.update(() => next)
+	const notSeen = counts?.optionCounts.notSeenYet
+	const notSeenHides = notSeen ? Math.max(0, (notSeen.off ?? 0) - (notSeen.on ?? 0)) : null
+	/** Pass to <FilterGroups data={groups} query="" /> for the real card stack (or a search across all filters). */
+	const groups: FilterGroupsData = {
+		state,
+		counts,
+		onChange,
+		myServices: services.ids,
+		countryProviders: services.countryProviders,
+		streamingCountry: services.country,
+		taste,
+		ladder,
+	}
+	return {
+		groups,
+		/** Every active filter as a chip (services included); see activeChips. */
+		chips,
+		secondaryCount: secondaryFilterCount(applied),
+		notSeenHides,
+		services,
+		hasServices: filters.defaults.onMyServices || services.ids.length > 0,
+		/** Props for the real <ServicesControl />. */
+		servicesProps: {
+			on: state.onMyServices,
+			hasServices: filters.defaults.onMyServices || services.ids.length > 0,
+			providers: services.providers,
+			everywherePreview: chips.find((c) => c.key === "services"),
+			labels: {
+				everywhere:
+					!state.onMyServices && state.services?.length
+						? `${state.services.length} selected`
+						: !state.onMyServices && state.anyService
+							? "Any service"
+							: "Everywhere",
+			},
+			onChange: (on: boolean) => filters.set({ onMyServices: on, anyService: undefined, services: undefined }),
+			onAddServices: () => {},
+		},
+		/** Props for the real <NotSeenSwitch />. */
+		notSeenProps: {
+			on: state.notSeenYet,
+			hides: notSeenHides,
+			onChange: (on: boolean) => filters.set({ notSeenYet: on }),
+		},
+		onChange,
+	}
+}
