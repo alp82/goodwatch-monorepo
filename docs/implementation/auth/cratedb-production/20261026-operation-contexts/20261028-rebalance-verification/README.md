@@ -1,6 +1,6 @@
 # October 28: search-pool diagnosis and approved rebalance follow-up
 
-**IN PROGRESS — the 20-minute observation and 04:05 backup are not yet verified complete.**
+**Rebalance test PASSED at 03:39:15 UTC; the 04:05 scheduled backup is still pending.**
 Branch `fix/644-rebalance-verification`, fresh main `ca1545368`.
 The owner's new GO permits only `rebalance.enable = all` after normal pools/GREEN,
 and returning it to `none` on a lock error or watcher abort. No restart, extra hold,
@@ -58,8 +58,15 @@ The social joins remain materially slow despite normal global pools. The retaine
 server timings**; a SQL before/after ratio cannot honestly be supplied.
 
 Same-page HTTP comparisons against Q50's all-5.10.16 baseline are in the receipts.
-At the first comparison: movie median 0.279→0.431 s, show 0.278→0.459 s,
-discover 0.238→0.340 s. These include app/network/cache/load differences and cannot
+Frozen watcher-window comparison (24 baseline vs 152 current probes per endpoint):
+
+| Endpoint | 5.10 median / p95 | 6.4.6 median / p95 |
+| --- | --- | --- |
+| Movie | 0.279 / 0.453 s | 0.442 / 0.530 s |
+| Show | 0.278 / 0.650 s | 0.467 / 0.580 s |
+| Discover | 0.238 / 0.672 s | 0.349 / 0.454 s |
+
+ These include app/network/cache/load differences and cannot
 attribute the change to CrateDB. Normal current pools and subsequent successful
 priority jobs show no sustained executor saturation, but do not exclude a regression
 in the large IMDb anti-list DELETE. Confirmation needs a controlled isolated comparison
@@ -78,7 +85,10 @@ runs every 10 seconds, with the original thresholds. On a lock error, watcher al
 unsafe heap or failed observation read, the controller returns rebalance to `none`;
 no other production changes are armed. Seventeen new groups reached STARTED on
 crate-02 by 03:21, including both originally blocked copies: `doc.person_appeared_in`
-shard 4 and `doc.person_worked_on` shard 5. The full interval is still running.
+shard 4 and `doc.person_worked_on` shard 5. The 1,211.9-second interval completed successfully, all coordinators GREEN / 1,175 STARTED,
+allocation and rebalance all, no lock errors. Copies balanced 400/374/401 → 392/391/392.
+The watcher completed 760 probes: zero failures, zero slow (>3 s) responses, zero alarms; max 2.635 s.
+The watcher exited normally after final readback at 03:40:41. No further write is armed.
 
 The normal 04:05 hourly backup remains scheduled. A read-only monitor checks it through
 all coordinators; **no SUCCESS claim until the actual snapshot is verified**.

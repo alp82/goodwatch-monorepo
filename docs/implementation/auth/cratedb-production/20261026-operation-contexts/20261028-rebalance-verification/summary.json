@@ -1,20 +1,179 @@
 {
-  "updated_utc": "2026-10-28T03:33:56.179628+00:00",
+  "updated_utc": "2026-10-28T03:42:55.763673+00:00",
   "base": "ca1545368cb2e644a98fcca83a374287761cdae2",
-  "state": "IN_PROGRESS",
+  "state": "BACKUP_PENDING",
   "rebalance_started": {
     "utc": "2026-10-28T03:19:01.613582+00:00",
     "baseline_target_copies": 374
   },
-  "rebalance_complete": null,
+  "rebalance_complete": {
+    "utc": "2026-10-28T03:39:15.057852+00:00",
+    "seconds": 1211.8889192329952,
+    "new_placements": [
+      {
+        "first_observed_utc": "2026-10-28T03:19:51.629202+00:00",
+        "key": [
+          "doc",
+          "person_worked_on",
+          "",
+          5
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:19:51.629218+00:00",
+        "key": [
+          "doc",
+          "person_worked_on",
+          "",
+          4
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:20:27.179411+00:00",
+        "key": [
+          "doc",
+          "trope_catalog",
+          "",
+          2
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:20:27.179413+00:00",
+        "key": [
+          "doc",
+          "user_episode_score",
+          "",
+          3
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:20:27.179415+00:00",
+        "key": [
+          "doc",
+          "person_worked_on",
+          "",
+          2
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:20:27.179416+00:00",
+        "key": [
+          "doc",
+          "person_appeared_in",
+          "",
+          3
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:20:27.179420+00:00",
+        "key": [
+          "doc",
+          "trope_catalog_page",
+          "",
+          2
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:20:27.179421+00:00",
+        "key": [
+          "doc",
+          "user_episode_score",
+          "",
+          2
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:20:27.179422+00:00",
+        "key": [
+          "doc",
+          "person_appeared_in",
+          "",
+          5
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:20:27.179424+00:00",
+        "key": [
+          "doc",
+          "person_worked_on",
+          "",
+          3
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:20:27.179426+00:00",
+        "key": [
+          "doc",
+          "person_appeared_in",
+          "",
+          4
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:21:04.557064+00:00",
+        "key": [
+          "doc",
+          "catalog_correction_event",
+          "",
+          0
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:21:04.557083+00:00",
+        "key": [
+          "doc",
+          "age_certification",
+          "",
+          1
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:21:04.557084+00:00",
+        "key": [
+          "doc",
+          "workflow_monitoring",
+          "",
+          0
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:21:04.557091+00:00",
+        "key": [
+          "doc",
+          "person_appeared_in",
+          "",
+          2
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:21:04.557095+00:00",
+        "key": [
+          "doc",
+          "search_embedding_inputs",
+          "",
+          3
+        ]
+      },
+      {
+        "first_observed_utc": "2026-10-28T03:21:04.557096+00:00",
+        "key": [
+          "doc",
+          "feedback_report",
+          "",
+          0
+        ]
+      }
+    ],
+    "no_new_shard_lock_errors": true
+  },
   "last_rebalance_sample": {
-    "utc": "2026-10-28T03:33:49.850783+00:00",
+    "utc": "2026-10-28T03:39:15.056463+00:00",
     "placements": 17,
     "all_GREEN": true
   },
   "backup": null,
   "watcher": {
-    "probes": 555,
+    "probes": 760,
     "unexpected": 0,
     "slow": 0,
     "alarms": 0,
