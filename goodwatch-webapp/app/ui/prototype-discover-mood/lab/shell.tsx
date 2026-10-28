@@ -10,6 +10,8 @@ import { useEffect, useRef, useState } from "react"
 import { ShowTitlesButton, SnapSheet } from "~/ui/filter-bar"
 import { RollingNumber, TAP } from "~/ui/filter-bar/motion"
 import { HiddenMeter } from "~/ui/filter-bar/SubBar"
+import { useLabChoice } from "./LabBar"
+import { pick } from "./registry"
 import { type ProtoDiscover, useFilterPieces } from "../kit"
 import {
 	GridUnder,
@@ -372,13 +374,14 @@ function Phone({ d, pieces }: { d: ProtoDiscover; pieces: Pieces }) {
 export function LabShell({ d }: { d: ProtoDiscover }) {
 	const pieces = useFilterPieces(d)
 	const [dim, setDim] = useState(false)
+	const liveGrid = pick(useLabChoice(), "titles").liveGrid === true
 	return (
 		<MotionConfig reducedMotion="user">
 			<div className="mx-auto max-w-[1600px] px-4 pt-4 pb-16 lg:px-8 lg:pt-6">
 				<PageTitle />
 				<Desktop d={d} pieces={pieces} onOpenChange={setDim} />
 				<Phone d={d} pieces={pieces} />
-				<GridUnder d={d} dim={dim} />
+				<GridUnder d={d} dim={dim && !liveGrid} />
 				<WarmCards pieces={pieces} />
 			</div>
 		</MotionConfig>

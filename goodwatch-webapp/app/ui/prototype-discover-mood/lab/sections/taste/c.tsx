@@ -6,19 +6,17 @@ import { useState } from "react"
 import type { SectionProps } from "../../types"
 import {
 	ClearButton,
-	MatchScale,
 	SignUpBlock,
 	type Steer,
 	SteerButtons,
 	type SteerApi,
 	Thumb,
 	TitleField,
-	type ViewAs,
-	ViewAsToggle,
 	listPicks,
 	useSteer,
 	useTitleSearch,
 } from "./parts"
+import { MemberMatch } from "./member"
 
 function Marked({ steer, group }: { steer: SteerApi; group: Steer }) {
 	const keys = group === "loved" ? steer.loved : steer.disliked
@@ -53,10 +51,10 @@ function Marked({ steer, group }: { steer: SteerApi; group: Steer }) {
 	)
 }
 
-export function TasteC({ d, phone, text }: SectionProps) {
+export function TasteC({ d, phone, text, viewer }: SectionProps) {
 	const steer = useSteer(d)
 	const [find, setFind] = useState(text)
-	const [as, setAs] = useState<ViewAs>("guest")
+	const as = viewer
 	const { picks, loading } = useTitleSearch(find)
 	const searching = find.trim().length >= 2
 	const n = phone ? 10 : 11
@@ -107,12 +105,11 @@ export function TasteC({ d, phone, text }: SectionProps) {
 						<FingerPrintIcon className="h-5 w-5 shrink-0 text-amber-500" aria-hidden />
 						<span className="w-[96px] shrink-0 text-[14px] font-semibold text-gray-100">Taste match</span>
 						<div className="min-w-0 flex-1">
-							<MatchScale d={d} />
+							<MemberMatch d={d} compact />
 						</div>
 					</div>
 				)}
 			</div>
-			{!phone && <ViewAsToggle value={as} onChange={setAs} />}
 		</div>
 	)
 	return (
@@ -120,7 +117,6 @@ export function TasteC({ d, phone, text }: SectionProps) {
 			{top}
 			{wall}
 			{match}
-			{phone && <ViewAsToggle value={as} onChange={setAs} />}
 		</div>
 	)
 }

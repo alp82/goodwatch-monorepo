@@ -48,17 +48,17 @@ export interface Sub {
 
 export const TABS: Record<SegKey, Sub[]> = {
 	search: [
-		{ id: "titles", label: "Moods and titles", slots: ["q", "similarTo"] },
+		{ id: "titles", label: "Titles", slots: ["q", "similarTo"] },
 		{ id: "people", label: "Cast and crew", slots: ["people"] },
 		{ id: "taste", label: "Your taste", slots: ["loved", "disliked", "minMatch"] },
 	],
 	mood: [{ id: "mood", label: "Mood", slots: ["moods", "themes", "styles", "genres", "type"] }],
 	watch: [
 		{ id: "services", label: "Services", slots: ["services", "notSeenYet"] },
-		{ id: "origin", label: "Made in", slots: ["productionCountries"] },
-		{ id: "length", label: "Length", slots: ["runtime"] },
 		{ id: "scores", label: "Scores", slots: ["minScore", "sourceScores", "scoreGap"] },
+		{ id: "origin", label: "Made in", slots: ["productionCountries"] },
 		{ id: "released", label: "Released", slots: ["released"] },
+		{ id: "length", label: "Length", slots: ["runtime"] },
 		{ id: "age", label: "Age and content", slots: ["ageLimit"] },
 	],
 }

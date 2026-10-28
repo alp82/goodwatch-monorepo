@@ -9,7 +9,11 @@ export type { Pieces }
 
 export type SectionId = "titles" | "people" | "taste" | "mood" | "services" | "origin" | "length" | "scores" | "released" | "age"
 
+export type Viewer = "guest" | "member"
+
 export interface SectionProps {
+	/** Lab only: preview as a guest or a signed-in member (lab bar toggle). Member data is simulated. */
+	viewer: Viewer
 	d: ProtoDiscover
 	pieces: Pieces
 	/** Phone sheet (stacked, 390 px) or desktop panel (fixed height, wide). */
@@ -26,5 +30,9 @@ export interface SectionProps {
 export interface SectionVariant {
 	key: string
 	name: string
+	/** Optional sub-tab label this variant wants instead of the shell's default. */
+	label?: string
+	/** Keep the results grid undimmed while this section is open (its preview is the grid). */
+	liveGrid?: boolean
 	View: (props: SectionProps) => ReactNode
 }

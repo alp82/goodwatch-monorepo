@@ -1,7 +1,27 @@
 // PROTOTYPE - throwaway. Scores baseline: the GoodWatch score as the big control on the left with Critics vs audiences
-// under it, every source as one compact line with its logo on the right.
+// under it, every source as one compact line with its logo on the right. Round 7: every source on one shared scale
+// (6/60, 7/70, 8/80, 9/90), each in its own notation, so the columns line up.
 import type { SectionProps } from "../../types"
-import { ClearButton, GapChoices, GapLegend, GoodWatchMark, Head, SOURCES, ScoreHero, SourceRow, sourcesSet } from "./parts"
+import { ClearButton, GapChoices, GapLegend, GoodWatchMark, Head, SOURCES, ScoreHero, type Source, SourceLogo, SourceSteps, sourcesSet, sourceValue } from "./parts"
+import type { ProtoDiscover } from "../../../kit"
+
+/** One scale for every source, on the 0-100 the filter stores: IMDb 7.0 is 70, like Tomatometer 70% and Metascore 70. */
+const SCALE = [60, 70, 80, 90]
+
+function ScaleRow({ d, s, dense }: { d: ProtoDiscover; s: Source; dense: boolean }) {
+	return (
+		<div className={`flex items-center gap-3 ${dense ? "h-10" : "h-11"}`}>
+			<SourceLogo s={s} size={dense ? 26 : 28} />
+			<span className="w-[118px] shrink-0 leading-tight">
+				<span className="block text-[13px] font-semibold text-gray-100">{s.name}</span>
+				<span className="block text-[11px] text-gray-500">
+					{s.site === "IMDb" ? "Audience" : `${s.site === "Rotten Tomatoes" ? "RT" : s.site} ${s.who.toLowerCase()}`}
+				</span>
+			</span>
+			<SourceSteps d={d} s={{ ...s, steps: SCALE }} value={sourceValue(d, s.key)} />
+		</div>
+	)
+}
 
 export function ScoresA({ d, phone }: SectionProps) {
 	const minScore = d.filters.state.minScore
@@ -40,7 +60,7 @@ export function ScoresA({ d, phone }: SectionProps) {
 			</Head>
 			<div className="divide-y divide-white/[0.05]">
 				{SOURCES.map((s) => (
-					<SourceRow key={s.key} d={d} s={s} dense={phone} />
+					<ScaleRow key={s.key} d={d} s={s} dense={phone} />
 				))}
 			</div>
 		</section>

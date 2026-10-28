@@ -222,3 +222,34 @@ variant gets a 2-4 word name that says what's different. Sections may import sha
 read-only (copy into the section folder to change them). A section renders only its content area: no tabs, no
 sub-tab row, no outer panel chrome. It gets `{ d, pieces, phone, text, setText, runSearch, open }`; desktop content
 area is about 1400 × 400 px (fixed height, no long scrolling), phone is a stacked sheet at 390 px.
+
+## Round 7 (2026-10-28): lab round 2
+
+Owner verdict on round 6, per section (the picks are now DEFAULTS in `lab/choice.ts`):
+- Titles (was "Moods and titles"): a is better than the others, "but there are still lots of confusions":
+  - The search is shown twice: the bar field says "funny" and the panel's card says "Search: funny" again.
+  - "It says moods, but it does not show moods, and there is a second main tab for that anyway." The shell label is
+    now "Titles"; a variant may set its own `label` (SectionVariant.label).
+  - The Loved / Disliked thumbs (green up, red down) are nice, "but it should be clear to the user that these are not
+    permanent votes (love the colored thumbs, hopefully we can make it clear without prose)". They steer this list;
+    they're not ratings saved to the profile.
+  - "Maybe we need to separate keyword/title search from the rest somehow, but I prefer we could get this working in
+    an intuitive way." "Still a lot to do, probably needs more variations next round that go broad."
+- Cast and crew: "all too complicated. I like split by role though. More exploration needed."
+- Your taste: a is directionally good.
+- Mood: c looks nicest; d is very interesting and nice with the progress bars. "Let's explore more in both directions."
+- Services: b is nice. The lab bar now has a Guest / Member toggle (`?as=member`, `viewer` prop).
+- Made in: a is best, plus support Hollywood, Bollywood, rest of the world, etc.
+- Length: a, but two sliders, so movie length and episode length can be set separately at the same time.
+- Scores: moved between Services and Made in. a, plus Metacritic's audience (user) score, and all on the same scale
+  (6/60, 7/70, 8/80).
+- Released: moved between Made in and Length. c, but with a's range control and input fields.
+- Age: needs a country switcher and a free-form age control. a is a bit better, but the owner also kind of likes the
+  original (the real Age and content card).
+
+Watch order is now: Services · Scores · Made in · Released · Length · Age and content.
+
+Lab changes: `SectionProps.viewer` ("guest" | "member", from the lab bar toggle; member data is simulated, label it
+nowhere in the UI but keep it plausible: e.g. a member with Netflix, Prime Video and Disney Plus, a few loved titles).
+Sections that had their own preview toggle should use `viewer` instead. `SectionVariant.label` overrides the sub-tab
+label. New variants get the next free letters; keep the old ones (the owner compares).

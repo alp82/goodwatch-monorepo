@@ -1,11 +1,12 @@
 // PROTOTYPE (Discover lab) Age a: the country's rating ladder as one row of big steps (Off first, each step with its
-// show rating and count), and OK to show as a roomy checklist beside it.
+// show rating and count), and OK to show as a roomy checklist beside it. Round 7: a country switcher for whose ratings
+// decide, and a free age ("Watching with a 12 year old") that lands on the right step of that country's ladder.
 import { motion } from "framer-motion"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { TAP } from "~/ui/filter-bar/motion"
 import type { SectionProps } from "../../types"
 import { GroupLabel, ResetLink, pad } from "../released/parts"
-import { KINDS, KindRow, NoLadder, useAge } from "./parts"
+import { CountrySwitch, FreeAge, KINDS, KindRow, NoLadder, useAge } from "./parts"
 
 export function AgeA({ d, pieces, phone }: SectionProps) {
 	const age = useAge(d, pieces)
@@ -18,9 +19,13 @@ export function AgeA({ d, pieces, phone }: SectionProps) {
 	return (
 		<div className={`${pad(phone)} ${phone ? "flex flex-col gap-6" : "grid grid-cols-[1.35fr_1fr] gap-10"}`}>
 			<div>
-				<GroupLabel right={<span className="text-[12px] text-gray-500">{age.ladder.local ? `Ratings in ${age.ladder.country}` : "Plain ages"}</span>}>
-					Age limit
-				</GroupLabel>
+				<div className={`mb-2 flex gap-2 ${phone ? "flex-col" : "h-7 items-center"}`}>
+					<span className="text-[11px] font-bold tracking-wide text-gray-500 uppercase">Age limit</span>
+					{!age.ladder.local && <span className="text-[12px] text-gray-500">Plain ages</span>}
+					<span className={phone ? "" : "ml-auto"}>
+						<CountrySwitch d={d} age={age} phone={phone} />
+					</span>
+				</div>
 				<div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${phone ? 3 : age.steps.length + 1}, minmax(0, 1fr))` }}>
 					<motion.button type="button" aria-pressed={!age.selected} whileTap={TAP} onClick={age.off} className={tile(!age.selected)}>
 						<span className="text-[20px] font-semibold">Off</span>
@@ -38,6 +43,9 @@ export function AgeA({ d, pieces, phone }: SectionProps) {
 							</motion.button>
 						)
 					})}
+				</div>
+				<div className={phone ? "mt-5" : "mt-6"}>
+					<FreeAge age={age} phone={phone} />
 				</div>
 			</div>
 			<div>

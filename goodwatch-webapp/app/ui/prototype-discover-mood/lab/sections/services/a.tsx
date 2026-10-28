@@ -9,8 +9,8 @@ import { useState } from "react"
 import type { SectionProps } from "../../types"
 import { CountrySelect, ModePill, SearchToggle, cleanName, logo, useServiceSearch, useServices } from "./parts"
 
-export function ServicesA({ d, pieces, phone }: SectionProps) {
-	const sv = useServices(d, pieces)
+export function ServicesA({ d, pieces, phone, viewer }: SectionProps) {
+	const sv = useServices(d, pieces, viewer)
 	const find = useServiceSearch(sv)
 	const [open, setOpen] = useState(false)
 	const [all, setAll] = useState(false)

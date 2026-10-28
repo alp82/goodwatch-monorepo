@@ -1,6 +1,6 @@
 // PROTOTYPE - throwaway. Shared pieces of the Your taste section: Loved and Disliked as one set of titles that steer
 // the list (a title is in one or the other), a title search with both actions on every match, poster shelves, and
-// Taste match for a member or the one sign-up way in for a guest. The lab can preview the member layout.
+// Taste match for a member or the one sign-up way in for a guest.
 import { HandThumbDownIcon, HandThumbUpIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
@@ -17,34 +17,6 @@ import { PRIVATE, useQuickTitles } from "../../shell-parts"
 
 export const POSTER = "https://image.tmdb.org/t/p/w154"
 export type Steer = "loved" | "disliked"
-
-// ---------------------------------------------------------------------------------------------------------------
-// The lab's guest / member preview (the prototype always reads as a guest)
-
-export type ViewAs = "guest" | "member"
-
-export function ViewAsToggle({ value, onChange }: { value: ViewAs; onChange: (v: ViewAs) => void }) {
-	return (
-		<span className="flex items-center gap-1.5 text-[11px] text-gray-500">
-			Preview as
-			<span className="flex rounded-full bg-white/[0.05] p-0.5">
-				{(["guest", "member"] as const).map((v) => (
-					<button
-						key={v}
-						type="button"
-						aria-pressed={value === v}
-						onClick={() => onChange(v)}
-						className={`h-6 rounded-full px-2.5 text-[11px] cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
-							value === v ? "bg-white/[0.14] font-semibold text-white" : "text-gray-400 hover:text-gray-200"
-						}`}
-					>
-						{v === "guest" ? "Guest" : "Member"}
-					</button>
-				))}
-			</span>
-		</span>
-	)
-}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Loved and disliked
@@ -147,7 +119,7 @@ export function SteerRow({ steer, t }: { steer: SteerApi; t: SteerTitle }) {
 			<span className="min-w-0 flex-1">
 				<span className="block truncate text-[14px] font-semibold text-gray-100">{t.title}</span>
 				<span className={`block text-[12px] ${at === "loved" ? "text-emerald-300" : at === "disliked" ? "text-rose-300" : "text-gray-500"}`}>
-					{at === "loved" ? "Loved" : at === "disliked" ? "Disliked" : t.year}
+					{at === "loved" ? "More like this" : at === "disliked" ? "Less like this" : t.year}
 				</span>
 			</span>
 			<SteerButtons steer={steer} t={t} />

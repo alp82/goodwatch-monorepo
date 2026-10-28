@@ -40,8 +40,8 @@ function Tile({ sv, p }: { sv: Services; p: Services["providers"][number] }) {
 	)
 }
 
-export function ServicesB({ d, pieces, phone }: SectionProps) {
-	const sv = useServices(d, pieces)
+export function ServicesB({ d, pieces, phone, viewer }: SectionProps) {
+	const sv = useServices(d, pieces, viewer)
 	const find = useServiceSearch(sv)
 	const [all, setAll] = useState(false)
 	const limit = phone ? 9 : 18

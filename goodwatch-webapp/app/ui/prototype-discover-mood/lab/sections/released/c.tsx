@@ -12,7 +12,7 @@ interface Era {
 	range: [number, number]
 }
 
-function eras(): { id: string; label: string; items: Era[] }[] {
+export function eras(): { id: string; label: string; items: Era[] }[] {
 	const now = yearMax()
 	return [
 		{

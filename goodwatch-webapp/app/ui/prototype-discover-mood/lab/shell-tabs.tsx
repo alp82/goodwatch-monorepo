@@ -73,7 +73,7 @@ export function SubTabs({
 							on ? "text-white" : "text-gray-400 hover:text-gray-200"
 						} ${dim ? "opacity-50" : ""}`}
 					>
-						{s.label}
+						<SubLabel sub={s} />
 						{n > 0 && (
 							<span className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-amber-500 px-1 text-[11px] font-bold text-gray-950 tabular-nums">
 								{n}
@@ -139,15 +139,21 @@ function FindAll({ pieces, text, phone }: { pieces: Pieces; text: string; phone:
 	return <div className="h-full min-h-0 overflow-y-auto overscroll-contain px-7 py-5">{body}</div>
 }
 
+/** A sub-tab's label: the chosen variant's own label, else the shell's. */
+function SubLabel({ sub }: { sub: Sub }) {
+	return <>{pick(useLabChoice(), sub.id).label ?? sub.label}</>
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // A section, mounted as a component so its hooks work. A new variant remounts it.
 
-export type SectionBase = Omit<SectionProps, "phone">
+export type SectionBase = Omit<SectionProps, "phone" | "viewer">
 
-function Section({ id, props }: { id: SectionId; props: SectionProps }) {
-	const variant = pick(useLabChoice(), id)
+function Section({ id, props }: { id: SectionId; props: Omit<SectionProps, "viewer"> }) {
+	const choice = useLabChoice()
+	const variant = pick(choice, id)
 	const View = variant.View as ComponentType<SectionProps>
-	return <View key={`${id}:${variant.key}`} {...props} />
+	return <View key={`${id}:${variant.key}:${choice.as}`} {...props} viewer={choice.as} />
 }
 
 /** Desktop: the fixed content area. Overflow scrolls as a fallback; the sheet's cards scroll themselves into view as
@@ -196,7 +202,7 @@ export function TabPanel({
 		onFind("")
 		onSub(s)
 	}
-	const props: SectionProps = { ...section, phone }
+	const props: Omit<SectionProps, "viewer"> = { ...section, phone }
 	const body = finding ? (
 		<FindAll pieces={pieces} text={find} phone={phone} />
 	) : (

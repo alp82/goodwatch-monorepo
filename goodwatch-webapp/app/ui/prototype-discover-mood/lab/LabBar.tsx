@@ -86,6 +86,18 @@ export function LabBar() {
 					</div>
 				) : null}
 				<div className="flex items-center gap-1">
+					<div className="flex overflow-hidden rounded-full bg-white/10">
+						{(["guest", "member"] as const).map((as) => (
+							<button
+								key={as}
+								type="button"
+								onClick={() => go({ ...choice, as })}
+								className={`px-2.5 py-1.5 font-semibold capitalize ${choice.as === as ? "bg-fuchsia-600" : "text-white/70"}`}
+							>
+								{as}
+							</button>
+						))}
+					</div>
 					<a href="?variant=16" className="rounded-full bg-white/10 px-2.5 py-1.5 font-semibold text-white/70" title="Round 5 switcher">
 						R5
 					</a>

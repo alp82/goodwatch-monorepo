@@ -29,6 +29,36 @@ export const REGIONS: Region[] = [
 ]
 
 export const HOLLYWOOD = ["US"]
+
+export interface Industry {
+	id: string
+	name: string
+	codes: string[]
+}
+
+/** Film industries as country sets. Each is "made with at least one of these countries", co-productions included,
+ * since productionCountries can only include (there's no exclusion). */
+export const INDUSTRIES: Industry[] = [
+	{ id: "hollywood", name: "Hollywood", codes: ["US"] },
+	{ id: "bollywood", name: "Bollywood", codes: ["IN"] },
+	{ id: "korean", name: "Korean", codes: ["KR"] },
+	{ id: "japanese", name: "Japanese", codes: ["JP"] },
+	{ id: "british", name: "British", codes: ["GB"] },
+	{ id: "french", name: "French", codes: ["FR"] },
+	{ id: "nollywood", name: "Nollywood", codes: ["NG"] },
+	{ id: "hongkong", name: "Hong Kong", codes: ["HK"] },
+	{ id: "chinese", name: "Chinese", codes: ["CN"] },
+	{ id: "spanish", name: "Spanish", codes: ["ES"] },
+	{ id: "italian", name: "Italian", codes: ["IT"] },
+	{ id: "turkish", name: "Turkish", codes: ["TR"] },
+	{ id: "nordic", name: "Nordic", codes: ["SE", "DK", "NO", "FI", "IS"] },
+]
+
+/** The big industries "Rest of the world" leaves out. */
+export const BIG = ["US", "IN", "KR", "JP", "GB", "FR", "CN", "HK"]
+
+/** Every other country the catalog knows. A title made with one of them and one of the big ones still fits. */
+export const restOfWorld = (list: { code: string }[]) => list.map((c) => c.code).filter((c) => !BIG.includes(c)).sort()
 export const WORLD = REGIONS.flatMap((r) => r.codes).filter((c) => c !== "US")
 
 export const flagUrl = (code: string) => `https://flagcdn.com/w80/${code.toLowerCase()}.png`

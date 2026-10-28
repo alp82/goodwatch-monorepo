@@ -3,6 +3,7 @@
 // My services, Everywhere, Streaming in… (any service in a country, a tap narrows to the ones picked).
 import { GlobeAltIcon, MagnifyingGlassIcon, PlusIcon, TvIcon } from "@heroicons/react/20/solid"
 import { useNavigate } from "@remix-run/react"
+import { useQuery } from "@tanstack/react-query"
 import { motion } from "framer-motion"
 import { useId, useState } from "react"
 import { type FilterState } from "~/domain/filter-state"
@@ -14,33 +15,69 @@ import { SHELL, SPRING, TAP } from "~/ui/filter-bar/motion"
 import { PROVIDER_LOGO } from "~/ui/filter-bar/useFilterData"
 import { SERVICES_PATH } from "~/ui/settings/paths"
 import type { ProtoDiscover } from "../../../kit"
-import type { Pieces } from "../../types"
+import type { Pieces, Viewer } from "../../types"
 
 export type Mode = "mine" | "any" | "pick"
 
-export const modeOf = (s: FilterState): Mode => (s.onMyServices ? "mine" : s.anyService || s.services?.length ? "pick" : "any")
+/** The member the lab shows with `viewer === "member"`: Netflix, Amazon Prime Video and Disney Plus (TMDB ids). */
+export const MEMBER_SERVICES = [8, 9, 337]
+
+const sameIds = (a: number[], b: number[]) => a.length === b.length && b.every((x) => a.includes(x))
+
+export const modeOf = (s: FilterState, mine: number[] = []): Mode =>
+	s.onMyServices || (mine.length > 0 && !s.anyService && sameIds(s.services ?? [], mine))
+		? "mine"
+		: s.anyService || s.services?.length
+			? "pick"
+			: "any"
 export const cleanName = (n: string) => n.replace(/ (Amazon Channel|Apple TV Channel)$/, "")
 
-/** Everything the services variants read and write. */
-export function useServices(d: ProtoDiscover, pieces: Pieces) {
+/** Titles the member's services leave, with everything else as set. The live site sees a guest, so the services go
+ * in as an explicit list. */
+function useMineCount(d: ProtoDiscover, ids: number[], enabled: boolean): number | null {
+	const p = new URLSearchParams(d.filters.query)
+	p.delete("page")
+	p.set("services", ids.join(","))
+	p.set("page", "1")
+	const qs = p.toString()
+	const q = useQuery({
+		queryKey: ["lab-services-mine", qs],
+		enabled,
+		staleTime: 10 * 60_000,
+		queryFn: async ({ signal }) => {
+			const r = await fetch(`/api/discover/results?${qs}`, { signal })
+			if (!r.ok) throw new Error(`Results ${r.status}`)
+			return ((await r.json()) as { total: number }).total
+		},
+	})
+	return q.data ?? null
+}
+
+/** Everything the services variants read and write. A member's services apply as an explicit services list. */
+export function useServices(d: ProtoDiscover, pieces: Pieces, viewer: Viewer = "guest") {
 	const navigate = useNavigate()
 	const s = d.filters.state
-	const mode = modeOf(s)
-	const mine = pieces.services.ids
-	const hasMine = pieces.hasServices
-	const chosen = s.onMyServices ? mine : (s.services ?? [])
+	const member = viewer === "member"
+	const mine = member ? MEMBER_SERVICES : pieces.services.ids
+	const hasMine = member || pieces.hasServices
+	const mode = modeOf(s, member ? mine : [])
+	const chosen = mode === "mine" ? mine : (s.services ?? [])
 	const rank = (id: number) => (chosen.includes(id) ? 0 : mine.includes(id) ? 1 : 2)
 	const providers = pieces.services.countryProviders
 		.map((p, i) => ({ p, i }))
 		.sort((a, b) => rank(a.p.id) - rank(b.p.id) || a.i - b.i)
 		.map(({ p }) => p)
+	const mineProviders = member ? mine.flatMap((id) => providers.filter((p) => p.id === id)) : pieces.services.providers
 	const counts = d.counts?.optionCounts.services ?? {}
 	const countOf = (id: number | string): number | null => counts[String(id)] ?? null
+	const memberMine = useMineCount(d, mine, member)
 	const setMode = (m: Mode) => {
 		if (m === "mine" && !hasMine) return navigate(SERVICES_PATH)
 		d.filters.set(
 			m === "mine"
-				? { onMyServices: true, anyService: undefined, services: undefined }
+				? member
+					? { onMyServices: false, anyService: undefined, services: [...mine] }
+					: { onMyServices: true, anyService: undefined, services: undefined }
 				: m === "pick"
 					? { onMyServices: false, anyService: true, services: undefined }
 					: { onMyServices: false, anyService: undefined, services: undefined },
@@ -68,13 +105,13 @@ export function useServices(d: ProtoDiscover, pieces: Pieces) {
 		isOn,
 		chosen,
 		providers,
-		mine: pieces.services.providers,
+		mine: mineProviders,
 		hasMine,
 		country,
 		setCountry,
 		countOf,
 		anyService: Boolean(s.anyService),
-		totals: { all: countOf("all"), any: countOf("any"), mine: countOf("mine") },
+		totals: { all: countOf("all"), any: countOf("any"), mine: member ? memberMine : countOf("mine") },
 		addServices: () => navigate(SERVICES_PATH),
 	}
 }

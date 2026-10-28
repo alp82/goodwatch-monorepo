@@ -18,7 +18,7 @@ export function extraPicks(): { label: string; range: [number, number] }[] {
 	]
 }
 
-function YearField({ label, value, onCommit }: { label: string; value: number; onCommit: (y: number) => void }) {
+export function YearField({ label, value, onCommit }: { label: string; value: number; onCommit: (y: number) => void }) {
 	return (
 		<label className="flex flex-col gap-1">
 			<span className="text-[11px] font-bold tracking-wide text-gray-500 uppercase">{label}</span>

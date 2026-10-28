@@ -6,7 +6,6 @@ import type { SectionProps } from "../../types"
 import {
 	ClearButton,
 	Head,
-	MatchScale,
 	SIGN_UP_ITEMS,
 	Shelf,
 	SignUpBlock,
@@ -14,18 +13,17 @@ import {
 	SteerLabel,
 	Thumb,
 	TitleField,
-	type ViewAs,
-	ViewAsToggle,
 	clearSteer,
 	listPicks,
 	useSteer,
 	useTitleSearch,
 } from "./parts"
+import { MemberMatch } from "./member"
 
-export function TasteB({ d, phone, text }: SectionProps) {
+export function TasteB({ d, phone, text, viewer }: SectionProps) {
 	const steer = useSteer(d)
 	const [find, setFind] = useState(text)
-	const [as, setAs] = useState<ViewAs>("guest")
+	const as = viewer
 	const { picks, loading } = useTitleSearch(find)
 	const searching = find.trim().length >= 2
 	const n = phone ? 8 : 6
@@ -33,12 +31,12 @@ export function TasteB({ d, phone, text }: SectionProps) {
 
 	const match = (
 		<section>
-			<Head right={<ViewAsToggle value={as} onChange={setAs} />}>
+			<Head>
 				<FingerPrintIcon className="h-5 w-5 text-amber-500" aria-hidden />
 				<h4 className="text-[14px] font-semibold text-gray-100">Taste match</h4>
 				{as === "member" && <span className="text-[12px] text-gray-500">From your ratings</span>}
 			</Head>
-			{as === "guest" ? <SignUpBlock layout={phone ? "panel" : "wide"} items={phone ? undefined : SIGN_UP_ITEMS} /> : <MatchScale d={d} />}
+			{as === "guest" ? <SignUpBlock layout={phone ? "panel" : "wide"} items={phone ? undefined : SIGN_UP_ITEMS} /> : <MemberMatch d={d} compact />}
 		</section>
 	)
 	const lanes = (

@@ -142,7 +142,12 @@ export function SourceRow({ d, s, dense = false }: { d: ProtoDiscover; s: Source
 
 export function SourceSteps({ d, s, value }: { d: ProtoDiscover; s: Source; value: number }) {
 	return (
-		<div role="radiogroup" aria-label={s.name} className="grid min-w-0 flex-1 grid-cols-4 gap-1">
+		<div
+			role="radiogroup"
+			aria-label={s.name}
+			className="grid min-w-0 flex-1 gap-1"
+			style={{ gridTemplateColumns: `repeat(${s.steps.length + 1}, minmax(0, 1fr))` }}
+		>
 			{[0, ...s.steps].map((v) => {
 				const on = v === value
 				const lit = value !== 0 && v >= value
