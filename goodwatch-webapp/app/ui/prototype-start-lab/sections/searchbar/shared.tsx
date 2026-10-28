@@ -160,9 +160,64 @@ export function EnterKey({ tone = "on-amber", label = false, className = "" }: {
 	)
 }
 
+/**
+ * Round 13: d's presets as short labels (2-4 words) for the captured prompts; a chip still runs its full prompt
+ * (promptAnswer keys on the original text). A prompt without a label here keeps its full text.
+ */
+export const PRESET_SHORT: Record<string, string> = {
+	"a cozy mystery for a rainy Sunday": "Cozy mystery",
+	"something like Severance but funnier": "Severance, but funny",
+	"a mind-bending sci-fi movie under two hours": "Mind-bending sci-fi",
+	"a feel-good show to binge with my partner": "Feel-good binge",
+	"a dark thriller with a twist ending": "Twisty thriller",
+	"an animated movie adults will love": "Adult animation",
+	"a mind-blowing space adventure": "Space adventure",
+}
+
+/** Round 13: d's placeholder, which repeats no preset: the long one on desktop, a short one on phones. */
+export const PLACEHOLDER_LONG = "Describe a mood, a plot, or a title…"
+export const PLACEHOLDER_SHORT = "Mood, plot, title…"
+
+/** The long placeholder from 640 px up (the server renders it; phones switch after hydration, no layout change). */
+export function usePlaceholder() {
+	const [ph, setPh] = useState(PLACEHOLDER_LONG)
+	useEffect(() => {
+		const mq = window.matchMedia("(min-width: 640px)")
+		const on = () => setPh(mq.matches ? PLACEHOLDER_LONG : PLACEHOLDER_SHORT)
+		on()
+		mq.addEventListener("change", on)
+		return () => mq.removeEventListener("change", on)
+	}, [])
+	return ph
+}
+
 /** The example searches as small chips (Discover's option chip, without the backing it needs over the room). */
-export function BarPresets({ f, lead = true, ghost = false }: { f: StageFlow; lead?: boolean; ghost?: boolean }) {
-	const prompts = f.data.guest.prompts.slice(0, 3)
+export function BarPresets({ f, lead = true, ghost = false, compact = false }: { f: StageFlow; lead?: boolean; ghost?: boolean; compact?: boolean }) {
+	const prompts = f.data.guest.prompts.slice(0, compact ? 6 : 3)
+	if (compact)
+		// Round 13 (d): six short chips, no per-chip icon, one row on desktop; the row scrolls sideways on phones.
+		return (
+			<div className="flex w-max items-center gap-1.5">
+				{lead ? (
+					<span className="flex shrink-0 items-center gap-1 pr-0.5 text-[13px] text-gray-400">
+						<MagnifyingGlassIcon className="h-3.5 w-3.5 text-amber-400" aria-hidden />
+						Try
+					</span>
+				) : null}
+				{prompts.map((p) => (
+					<button
+						key={p.q}
+						type="button"
+						title={p.q}
+						onMouseDown={(e) => e.preventDefault()}
+						onClick={() => f.prompt(p.q)}
+						className="inline-flex h-7 shrink-0 cursor-pointer items-center whitespace-nowrap rounded-full bg-white/[0.06] px-2.5 text-[13px] text-gray-200 outline-none ring-1 ring-inset ring-white/10 transition-colors hover:bg-amber-400/10 hover:text-white hover:ring-amber-400/50 focus-visible:ring-2 focus-visible:ring-amber-400"
+					>
+						{PRESET_SHORT[p.q] ?? p.q}
+					</button>
+				))}
+			</div>
+		)
 	return (
 		<div className="flex w-max items-center gap-1.5">
 			{lead ? <span className="shrink-0 pr-0.5 text-[13px] text-gray-400 sm:text-sm">Try</span> : null}
@@ -283,14 +338,20 @@ export function BarReading({ f }: { f: StageFlow }) {
  * One fixed-height row that holds the presets, or the reading while a search is on: both are always mounted, the hidden
  * one at opacity 0 and inert, so swapping never changes a height. Scrolls sideways when it doesn't fit (phones).
  */
-export function BarChipRow({ f, className = "", ghost = false, lead = true }: { f: StageFlow; className?: string; ghost?: boolean; lead?: boolean }) {
+export function BarChipRow({
+	f,
+	className = "",
+	ghost = false,
+	lead = true,
+	compact = false,
+}: { f: StageFlow; className?: string; ghost?: boolean; lead?: boolean; compact?: boolean }) {
 	const on = searchActive(f)
 	const layer =
 		"absolute inset-0 flex items-center overflow-x-auto overscroll-x-contain [scrollbar-width:none] [mask-image:linear-gradient(to_right,#000_calc(100%-32px),transparent)] transition-[opacity,transform] duration-300 ease-out"
 	return (
 		<div className={`relative min-w-0 ${className}`}>
 			<div className={layer} style={{ opacity: on ? 0 : 1, transform: on ? "translateY(4px)" : "none", pointerEvents: on ? "none" : "auto" }} {...(on ? { inert: "" } : {})}>
-				<BarPresets f={f} ghost={ghost} lead={lead} />
+				<BarPresets f={f} ghost={ghost} lead={lead} compact={compact} />
 			</div>
 			<div className={layer} style={{ opacity: on ? 1 : 0, transform: on ? "none" : "translateY(-4px)", pointerEvents: on ? "auto" : "none" }} aria-live="polite" {...(on ? {} : { inert: "" })}>
 				{on ? <BarReading f={f} /> : null}

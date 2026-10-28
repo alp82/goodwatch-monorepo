@@ -1,13 +1,15 @@
 // PROTOTYPE (start page lab, round 12): search bar d · "Two-row bar": a taller bar. Row 1 is the input and a split
 // button (amber "Search" joined to a ↵ key segment); row 2, under a thin divider inside the bar, holds the "Try"
 // presets, or Discover's "Read as" chips while a search is on.
+// Round 13: six short presets (each runs its full prompt) in a smaller row, and a placeholder that repeats no preset.
 import { useRef } from "react"
 import type { StageFlow } from "../stage/ab-shared"
-import { BAR_CSS, BAR_SHADOW, BarChipRow, BarInput, EnterKey, useBarSearch } from "./shared"
+import { BAR_CSS, BAR_SHADOW, BarChipRow, BarInput, EnterKey, useBarSearch, usePlaceholder } from "./shared"
 
 export function SearchBarD({ f }: { f: StageFlow }) {
 	const input = useRef<HTMLInputElement>(null)
 	const s = useBarSearch(f, input)
+	const placeholder = usePlaceholder()
 	return (
 		<form
 			role="search"
@@ -25,7 +27,7 @@ export function SearchBarD({ f }: { f: StageFlow }) {
 			/>
 			<div className="relative overflow-hidden rounded-2xl bg-gray-900 ring-1 ring-white/12 sm:rounded-[22px]">
 				<div className="flex h-[58px] items-center gap-2 pl-4 pr-2 sm:h-[70px] sm:gap-3 sm:pl-6 sm:pr-3 lg:h-[74px]">
-					<BarInput f={f} inputRef={input} onChange={s.onChange} onClear={s.clear} text="text-[20px] sm:text-[28px] lg:text-[34px]" className="h-full" />
+					<BarInput f={f} inputRef={input} onChange={s.onChange} onClear={s.clear} text="text-[20px] sm:text-[28px] lg:text-[34px]" className="h-full" placeholder={placeholder} />
 					{/* The split button: the action and its key, two joined segments. */}
 					<button
 						type="submit"
@@ -39,7 +41,7 @@ export function SearchBarD({ f }: { f: StageFlow }) {
 					</button>
 				</div>
 				<div className="mx-4 h-px bg-white/[0.08] sm:mx-6" />
-				<BarChipRow f={f} className="h-[44px] [&>div]:px-4 sm:h-[48px] sm:[&>div]:px-6 lg:h-[50px]" />
+				<BarChipRow f={f} compact className="h-[42px] [&>div]:px-4 sm:h-[44px] sm:[&>div]:px-6" />
 			</div>
 		</form>
 	)

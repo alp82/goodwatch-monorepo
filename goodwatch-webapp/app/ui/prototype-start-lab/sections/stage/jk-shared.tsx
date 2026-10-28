@@ -6,6 +6,7 @@
 // Round 11: the room is graded to the mood on show (jk-grade), and the empty state is a fan of posters (jk-module).
 // Round 12: the lab's "Search bar" (`?searchbar=`, sections/searchbar) swaps the field and presets for a bar with a
 // button; "Mood lighting" (`?light=`) gets the scene's placement here for its effects (sections/light).
+// Round 13: half the gap (only the dog band must fit), capped at 300 px on large screens, zooming out past that.
 import { type CSSProperties, type ReactNode, type RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { ScenePlace } from "../../scene/SceneStage"
 import { sceneImage, type SceneMeta, type ScenePair } from "../../scene/types"
@@ -162,28 +163,39 @@ const PORTRAIT_MQ = "(max-aspect-ratio: 4/5)"
 
 /**
  * The gap between the mood row and the module, per breakpoint: at least `min`, and always tall enough for the scene's
- * focus at full width plus `above` (air under the chips) and `below` (air over the module).
+ * dog band (DOG_BAND of the focus, from its top) at full width plus `above` (air under the chips) and `below` (air
+ * over the module). Round 13: half of round 7's minimum and air (the owner: "reduce the min gap to half"), so the
+ * seat's lower half runs under the module; from 1024 px the gap never needs more than GAP_CAP (the room zooms out
+ * to keep the dog in it instead of filling the screen), and on `card` stages it never grows past GAP_CAP either.
  */
 const GAP = [
-	{ from: 0, min: 128, above: 16, below: 12 },
-	{ from: 640, min: 160, above: 20, below: 14 },
-	{ from: 1024, min: 200, above: 24, below: 16 },
+	{ from: 0, min: 64, above: 8, below: 6 },
+	{ from: 640, min: 80, above: 10, below: 7 },
+	{ from: 1024, min: 100, above: 12, below: 8 },
 ] as const
+
+/** The part of the focus box (from its top) the gap must show: the cushions and the dog, not the seat's base. */
+const DOG_BAND = 0.5
+
+/** The gap's ceiling on large screens and on card stages (px). */
+const GAP_CAP = 300
 
 const gapAt = (vw: number) => [...GAP].reverse().find((g) => vw >= g.from) ?? GAP[0]
 
 /** The box (x, y, w, h) to keep in the gap: the scene's focus, or the band between the calm top and the rug. */
 const focusOf = (meta: SceneMeta): [number, number, number, number] => meta.focus ?? [0, 0.45, 1, 0.2]
 
-/** The gap's minimum height as CSS: the focus's height at full width (the scene is never narrower than the stage). */
+/** The gap's minimum height as CSS: the dog band's height at full width (the scene is never narrower than the stage). */
 function gapCss(pair: ScenePair) {
-	const rule = (meta: SceneMeta, g: (typeof GAP)[number]) =>
-		`.jk-gapbox{min-height:max(${g.min}px,calc(${(focusOf(meta)[3] * meta.height) / meta.width} * 100cqw + ${g.above + g.below}px))}`
+	const rule = (meta: SceneMeta, g: (typeof GAP)[number]) => {
+		const need = `max(${g.min}px,calc(${(DOG_BAND * focusOf(meta)[3] * meta.height) / meta.width} * 100cqw + ${g.above + g.below}px))`
+		return `.jk-gapbox{min-height:${g.from >= 1024 ? `min(${GAP_CAP}px,${need})` : need}}`
+	}
 	const at = (g: (typeof GAP)[number], extra = "") => {
 		const q = [g.from ? `(min-width:${g.from}px)` : "", extra].filter(Boolean).join(" and ")
 		return q ? `@media ${q}` : ""
 	}
-	const out: string[] = []
+	const out: string[] = [`.jk-gapcap{max-height:${GAP_CAP}px}`]
 	for (const g of GAP) {
 		const m = at(g)
 		out.push(m ? `${m}{${rule(pair.landscape, g)}}` : rule(pair.landscape, g))
@@ -196,11 +208,13 @@ function gapCss(pair: ScenePair) {
 type GapBox = { top: number; bottom: number; vw: number; vh: number; roomTop: number }
 
 /**
- * The scene's scale and offset for the gap: full width, its focus centered in the gap below the chips' air (zoomed out
- * only if the gap can't hold it, which the CSS minimum prevents), plus where the night above and below it fades.
+ * The scene's scale and offset for the gap: full width, its dog band centered in the gap below the chips' air (zoomed
+ * out, never in, when the gap can't hold it: past GAP_CAP on very wide screens), plus where the night above, below
+ * and (zoomed out) beside it fades.
  */
 function placeFor(meta: SceneMeta, w: number, g: GapBox) {
-	const [fx, fy, fw, fh] = focusOf(meta)
+	const [fx, fy, fw, fh0] = focusOf(meta)
+	const fh = fh0 * DOG_BAND
 	const air = gapAt(g.vw)
 	const room = Math.max(40, g.bottom - g.top - air.above - air.below)
 	// Within 1.5% of full width (the CSS minimum's rounding), stay full width and let the focus use a few px of air.
@@ -220,7 +234,10 @@ function placeFor(meta: SceneMeta, w: number, g: GapBox) {
 	// The image's lower edge fades into the night when the stage runs past it (the rug under the module).
 	const b1 = bottom
 	const b0 = Math.max(focusTop + focusH + 4, bottom - 160)
-	return { scale, dx, dy, n0, n1, b0, b1 }
+	// Zoomed out, the image is narrower than the stage: its left and right edges fade into the night.
+	const side = sw < w - 1
+	const e = Math.min(160, sw * 0.12)
+	return { scale, dx, dy, n0, n1, b0, b1, x0: side ? dx : -1, x1: side ? dx + e : -1, x2: side ? dx + sw - e : w + 1, x3: side ? dx + sw : w + 1 }
 }
 
 /** Measures the gap (the mood row's bottom, the spacer's bottom) and gives the room's placement and the scene to use. */
@@ -268,7 +285,16 @@ function useGapPlacement(pair: ScenePair) {
 		if (!box || !w) return undefined
 		const p = placeFor(meta, w, box)
 		const px = (v: number) => `${Math.round(v)}px`
-		return { "--jk-n0": px(p.n0), "--jk-n1": px(p.n1), "--jk-b0": px(p.b0), "--jk-b1": px(p.b1) } as CSSProperties
+		return {
+			"--jk-n0": px(p.n0),
+			"--jk-n1": px(p.n1),
+			"--jk-b0": px(p.b0),
+			"--jk-b1": px(p.b1),
+			"--jk-x0": px(p.x0),
+			"--jk-x1": px(p.x1),
+			"--jk-x2": px(p.x2),
+			"--jk-x3": px(p.x3),
+		} as CSSProperties
 	}, [box, meta])
 	// Round 12: where the image sits, and the band the letterbox leaves open (around the focus, inside the gap).
 	const geo = useMemo<LightGeo | null>(() => {
@@ -292,6 +318,7 @@ function useGapPlacement(pair: ScenePair) {
 				top: Math.round(Math.max(box.top + 2, f0 - 0.08 * (f1 - f0))),
 				bottom: Math.round(Math.min(box.bottom - 2, f0 + 0.8 * (f1 - f0))),
 			},
+			focus: focusOf(meta),
 		}
 	}, [box, meta])
 	const css = useMemo(() => gapCss(pair), [pair])
@@ -339,7 +366,7 @@ export function JkStage({
 				aria-hidden
 				className="pointer-events-none absolute inset-0"
 				style={{
-					background: `linear-gradient(to bottom, ${NIGHT} 0, ${NIGHT} var(--jk-n0, var(--room-top)), rgb(5 10 22 / 0) var(--jk-n1, calc(var(--room-top) + 18vh))), linear-gradient(to bottom, rgb(5 10 22 / 0) var(--jk-b0, 200%), ${NIGHT} var(--jk-b1, 200%)), linear-gradient(to bottom, rgb(3 7 18 / 0) 60%, rgb(3 7 18 / .4) 80%, rgb(3 7 18 / .9) 100%)`,
+					background: `linear-gradient(to bottom, ${NIGHT} 0, ${NIGHT} var(--jk-n0, var(--room-top)), rgb(5 10 22 / 0) var(--jk-n1, calc(var(--room-top) + 18vh))), linear-gradient(to bottom, rgb(5 10 22 / 0) var(--jk-b0, 200%), ${NIGHT} var(--jk-b1, 200%)), linear-gradient(to right, ${NIGHT} var(--jk-x0, -1px), rgb(5 10 22 / 0) var(--jk-x1, -1px), rgb(5 10 22 / 0) var(--jk-x2, 200%), ${NIGHT} var(--jk-x3, 200%)), linear-gradient(to bottom, rgb(3 7 18 / 0) 60%, rgb(3 7 18 / .4) 80%, rgb(3 7 18 / .9) 100%)`,
 				}}
 			/>
 			{over?.(f)}
@@ -347,11 +374,15 @@ export function JkStage({
 				<div className="mx-auto w-full max-w-[1360px] px-4 sm:px-6">
 					<JkTop f={f} reg={reg} onMore={() => setMore((o) => !o)} moreOpen={more} moreSlot={<JkMorePopover f={f} open={more} onClose={close} />} />
 				</div>
-				{/* Round 7: a wide window between the mood row and the module, tall enough for the scene's focus (gapCss),
-				    even if the module then starts below the fold. */}
-				<div ref={gap.spacer} className="jk-gapbox flex-1" />
+				{/* Round 7: a window between the mood row and the module, tall enough for the scene's dog (gapCss), even if
+				    the module then starts below the fold. Round 13: half as tall, and on card stages it grows to GAP_CAP at
+				    most; the rest of a tall screen goes under the card. */}
+				<div ref={gap.spacer} className={`jk-gapbox flex-1 ${placement === "card" ? "jk-gapcap" : ""}`} />
 				{placement === "card" ? (
-					<div className="mx-auto w-full max-w-[1360px] px-4 pb-16 sm:px-6 sm:pb-[72px]">{module(f, reg)}</div>
+					<>
+						<div className="mx-auto w-full max-w-[1360px] px-4 pb-16 sm:px-6 sm:pb-[72px]">{module(f, reg)}</div>
+						<div aria-hidden className="[flex:0.001_1_0px]" />
+					</>
 				) : (
 					module(f, reg)
 				)}

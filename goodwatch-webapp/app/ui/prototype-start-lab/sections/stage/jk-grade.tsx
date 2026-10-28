@@ -2,11 +2,13 @@
 // mood chip, a More moods choice, or a search's reading), as stacked color layers over the scene that crossfade.
 // Round 12: the "Mood lighting" section (`?light=`) picks how strong: a is this file's GRADES; b, c and d use
 // sections/light (b about twice as strong, c adds film effects, d adds letterbox bars and dimmed shelves).
+// Round 13: c and d grade from GRADES_FILM (the bright moods softer), and mystery choices get a "mystery" grade
+// (crime's layers here; c adds a drifting fog).
 import { useEffect, useRef, useState } from "react"
 import { MOODS } from "~/domain/moods"
 import { useLab } from "../../lab/types"
 import { type LightGeo, LightOver, LightUnder } from "../light/effects"
-import { COLOR_STRONG, GRADES_STRONG, lightKeyOf } from "../light/tables"
+import { COLOR_STRONG, GRADES_FILM, GRADES_STRONG, lightKeyOf } from "../light/tables"
 import { moodHue } from "./ab-shared"
 import { vocabOf } from "./hi-vocab"
 import type { JkFlow } from "./jk-shared"
@@ -86,10 +88,13 @@ const GRADES: Record<string, Layer[]> = {
 	],
 }
 
+// Round 13: mystery looks like crime in a and b; c gives it fog (sections/light EFFECTS).
+GRADES.mystery = GRADES.crime
+
 /** More moods' themes, styles and genres onto a grade (by vocabulary id); unlisted ones tint with their own color. */
 const GRADE_OF_VOCAB: Record<string, string | null> = {
 	"theme:crime": "crime",
-	"theme:mystery": "crime",
+	"theme:mystery": "mystery",
 	"theme:war": "heavy",
 	"theme:politics": "crime",
 	"theme:true": "history",
@@ -117,7 +122,7 @@ const GRADE_OF_VOCAB: Record<string, string | null> = {
 	"genre:drama": "heavy",
 	"genre:horror": "scary",
 	"genre:music": "romance",
-	"genre:mystery": "crime",
+	"genre:mystery": "mystery",
 	"genre:science-fiction": "worlds",
 	"genre:thriller": "crime",
 	"genre:war": "heavy",
@@ -132,8 +137,8 @@ const GRADE_OF_KEY: Record<string, string> = {
 	grotesque: "scary",
 	tension: "crime",
 	crime: "crime",
-	mystery: "crime",
-	intrigue: "crime",
+	mystery: "mystery",
+	intrigue: "mystery",
 	adrenaline: "action",
 	violence: "action",
 	fast_pace: "action",
@@ -177,7 +182,8 @@ const GRADE_WORDS: [RegExp, string][] = [
 	[/\b(romanc|romantic|love|date night|partner)/, "romance"],
 	[/\b(action|explosi|chase|heist|adrenaline)/, "action"],
 	[/\b(scary|horror|creepy|spooky|halloween|terrify)/, "scary"],
-	[/\b(dark|thriller|noir|crime|detective|murder|mystery|mob)/, "crime"],
+	[/\b(mystery|mysteries|whodunn?it|detective)/, "mystery"],
+	[/\b(dark|thriller|noir|crime|murder|mob)/, "crime"],
 	[/\b(mind-?(bending|blowing)|twist|trippy|puzzle|surreal)/, "mind"],
 	[/\b(sad|cry|tearjerk|bleak|heavy|grief)/, "heavy"],
 	[/\b(space|sci-?fi|fantasy|alien|magic|dragon|epic)/, "worlds"],
@@ -226,10 +232,10 @@ function gradeOf(f: JkFlow): string | null | undefined {
 	return gradeOfReading(reading) ?? gradeOfText(s.q) ?? answeredMood ?? null
 }
 
-const layersOf = (g: string, strong: boolean): Layer[] =>
+const layersOf = (g: string, strong: boolean, film: boolean): Layer[] =>
 	g.startsWith("color:")
 		? [{ bg: g.slice(6), blend: "soft-light", o: strong ? COLOR_STRONG : 0.4 }]
-		: ((strong ? GRADES_STRONG : GRADES)[g] ?? [])
+		: ((film ? GRADES_FILM : strong ? GRADES_STRONG : GRADES)[g] ?? [])
 
 const CSS = `.jk-grade{position:absolute;inset:0;pointer-events:none;transition:opacity .6s ease-out}
 @media (prefers-reduced-motion:reduce){.jk-grade{transition:none}}`
@@ -269,7 +275,7 @@ export function JkGrade({ f, geo = null }: { f: JkFlow; geo?: LightGeo | null })
 			<style>{CSS}</style>
 			{film ? <LightUnder on={on} mounted={mounted} geo={geo} /> : null}
 			{mounted.flatMap((g) =>
-				layersOf(g, strong).map((l, i) => (
+				layersOf(g, strong, film).map((l, i) => (
 					<div
 						// biome-ignore lint/suspicious/noArrayIndexKey: a grade's layers are fixed
 						key={`${g}-${i}`}

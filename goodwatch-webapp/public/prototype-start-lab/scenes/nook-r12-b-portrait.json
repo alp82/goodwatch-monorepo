@@ -333,6 +333,6 @@
       ]
     }
   ],
-  "notes": "Right film library; left books and decoration; warm LED strips. Edited r11-d bookcases; grouped spine-out films, face-out cases, books, decoration and empty space. No TV, candles, plaid, people or readable titles. Focus surrounds sofa, sleeping dog and throw. R12 processing: broad local magenta mask, 5px dilation, sampled dark case fill, 8px fringe desaturation; original undilated quads. QC: Slot 5 projected aspect 0.56 (target about 0.72); Slot 5 short edge 39px (below 40px target).",
+  "notes": "Right film library; left books and decoration; warm LED strips. Edited r11-d bookcases; grouped spine-out films, face-out cases, books, decoration and empty space. No TV, candles, plaid, people or readable titles. Focus surrounds sofa, sleeping dog and throw. R13 processing: broad local magenta mask, 5px dilation, Telea inpainting radius 6px, dark quad interiors with 2px inward feather, neighbor-based fringe desaturation within 10px; original undilated quads. QC: Slot 5 projected aspect 0.56 (target about 0.72); Slot 5 short edge 39px (below 40px target).",
   "focus": [0.2188, 0.5286, 0.5430, 0.2220]
 }
