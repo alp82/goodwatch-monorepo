@@ -75,3 +75,30 @@ Round 2 principles (all variants):
   as desktop.
 - `useFilterPieces(d)` (kit.tsx) gives: groups (FilterGroupsData), chips (all active filters), secondaryCount,
   servicesProps, notSeenProps, onChange. Taste is the guest state ("signUp").
+
+## Round 3 (2026-10-28)
+
+Owner verdict on round 2: "L and M have lots of potential, let's go deeper those routes."
+- E rail: unorganized, hierarchy unclear, don't know where to look for what. F, H, K: too many rows. G: row
+  unorganized. I: too complicated. J: bad design, hard to understand.
+- L: "has potential. I like the filter palette, we can improve it though."
+- M: "nice mood filter. The expanding bar is cool too, but it needs to be organized more clearly. We could use tabs
+  or some other nice way of organizing. Recognize in the design that there are more common and more niche filters."
+- All: "weird that the search query and the title merge together, that is quite confusing. Let's find a way where the
+  search is a filter like the others, but still very prominent."
+
+Round 3 rules (on top of round 2):
+- The page title "Discover movies and TV shows" stays as a static title (today's heading look, may be smaller). Don't use
+  DiscoverHeading's merging behavior. The mood search is its own control: the most prominent one in the bar/palette
+  (largest, first, with the "What's the mood?" style placeholder), and once set it reads like any other filter value
+  (the query text + its Read as chips, removable), never as the page heading.
+- At most three rows above the grid: title, one control bar, one status line (count, active values, Clear all).
+- Filter tiers. Common (one tap away, shown first): Mood search, Mood, Streaming (my services / everywhere / pick),
+  Not seen yet, Movies or shows, Genre, Score, Released. Niche (grouped, behind one clear step): About (themes), Style,
+  Length, Taste match, Scores by source, Critics vs audiences, Similar to, Cast and crew, Production country, Age and
+  content, Loved / Disliked. The design should make the difference visible (size, placement, grouping).
+- Build on what the owner liked: L's palette (variants/L.tsx) and M's mood filter and expanding bar (variants/M.tsx,
+  M-vibe.tsx). Read both before you start, and lift their parts freely (copy into your own files).
+- `FilterGroups` renders all cards; to show only some cards (for tiers or tabs), either hide cards via CSS by their
+  `#filter-card-<key>` ids (see E/H for the pattern; use `<style dangerouslySetInnerHTML>`, a plain `<style>{css}</style>`
+  breaks hydration), or build controls yourself from `pieces.groups` state + `d.filters.set`.

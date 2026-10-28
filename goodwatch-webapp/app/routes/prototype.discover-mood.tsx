@@ -19,12 +19,32 @@ import * as K from "~/ui/prototype-discover-mood/variants/K"
 import * as L from "~/ui/prototype-discover-mood/variants/L"
 import * as M from "~/ui/prototype-discover-mood/variants/M"
 import * as N from "~/ui/prototype-discover-mood/variants/N"
+import * as O from "~/ui/prototype-discover-mood/variants/O"
+import * as P from "~/ui/prototype-discover-mood/variants/P"
+import * as Q from "~/ui/prototype-discover-mood/variants/Q"
+import * as R from "~/ui/prototype-discover-mood/variants/R"
+import * as S from "~/ui/prototype-discover-mood/variants/S"
+import * as T from "~/ui/prototype-discover-mood/variants/T"
+import * as U from "~/ui/prototype-discover-mood/variants/U"
+import * as V from "~/ui/prototype-discover-mood/variants/V"
+import * as W from "~/ui/prototype-discover-mood/variants/W"
+import * as X from "~/ui/prototype-discover-mood/variants/X"
 import * as Today from "~/ui/prototype-discover-mood/variants/Today"
 
 export const meta: MetaFunction = () => [{ title: "PROTOTYPE · Discover mood" }, { name: "robots", content: "noindex" }]
 export const shouldRevalidate: ShouldRevalidateFunction = () => false
 
 const VARIANTS = {
+	O: { name: O.NAME, View: O.VariantO },
+	P: { name: P.NAME, View: P.VariantP },
+	Q: { name: Q.NAME, View: Q.VariantQ },
+	R: { name: R.NAME, View: R.VariantR },
+	S: { name: S.NAME, View: S.VariantS },
+	T: { name: T.NAME, View: T.VariantT },
+	U: { name: U.NAME, View: U.VariantU },
+	V: { name: V.NAME, View: V.VariantV },
+	W: { name: W.NAME, View: W.VariantW },
+	X: { name: X.NAME, View: X.VariantX },
 	E: { name: E.NAME, View: E.VariantE },
 	F: { name: F.NAME, View: F.VariantF },
 	G: { name: G.NAME, View: G.VariantG },
@@ -41,14 +61,14 @@ const VARIANTS = {
 	D: { name: D.NAME, View: D.VariantD },
 	"0": { name: Today.NAME, View: Today.VariantToday },
 } as const
-// The switcher cycles round 2 and the baseline; round 1 (A-D) stays reachable by URL.
-const CYCLE = ["E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "0"] as const
+// The switcher cycles round 3, its two parents (L, M) and the baseline; rounds 1-2 stay reachable by URL.
+const CYCLE = ["O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "L", "M", "0"] as const
 
 export default function PrototypeDiscoverMood() {
 	const [params] = useSearchParams()
-	const key = (params.get("variant") ?? "E") as keyof typeof VARIANTS
+	const key = (params.get("variant") ?? "O") as keyof typeof VARIANTS
 	const d = useProtoDiscover()
-	const { View } = VARIANTS[key] ?? VARIANTS.E
+	const { View } = VARIANTS[key] ?? VARIANTS.O
 	return (
 		<>
 			<View d={d} />
